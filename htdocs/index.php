@@ -34,7 +34,12 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>November 18, 2002</b>. SynCE 0.3.1 released, including the GNOME 2 tray icon!</p>
+<p><b>November 20, 2002</b>. SynCE-Serial 0.4 released. This should fix the
+connection problems some people have experienced. <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&release_id=123266">Download</a>.</p>
+
+<p><b>November 18, 2002</b>. SynCE 0.3.1 released, including the GNOME 2 tray
+icon!</p>
 
 <p><b>November 17, 2002</b>. New homepage released!</p>
 
