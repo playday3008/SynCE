@@ -13,15 +13,3 @@ intltool-modules
 intltool-update
 libtool
 stamp-h1
-data/Makefile
-po/Makefile
-po/Makefile.in
-po/POTFILES
-po/missing
-po/notexist
-po/synce-software-manager.pot
-src/.deps
-src/.libs
-src/Makefile
-src/Makefile.in
-src/synce-software-manager
