@@ -317,10 +317,13 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
 
     kdDebug(2120) << "Finished syncing with " << offer << endl;
 
-    postSyncThreadEvent(SyncThread::setProgress, totalSteps());
-
     lastSynchronized = QDateTime(QDate::currentDate(), QTime::currentTime());
     firstSynchronization = false;
+
+    postSyncThreadEvent(SyncThread::setProgress, totalSteps());
+    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Finished"));
+
+    syncThread->synchronizeGui();
 
     return ret;
 }
