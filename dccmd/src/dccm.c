@@ -602,6 +602,8 @@ int main(int argc, char** argv)
 	char* path = NULL;
 	char pid_file[MAX_PATH];
 	bool wrote_pid_file = false;
+
+	umask(0077);
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
