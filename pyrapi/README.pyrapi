@@ -1,19 +1,22 @@
 
 pyrapi - A python wrapper class around the librapi2 library
-(http://synce.sourceforge.net/)
+         (http://synce.sourceforge.net/)
 
 
 Introduction
 ============
 
-This is a first try at a python wrapper. It is not complete and should
-not be trusted. It only implements a subset of the functions that
-librapi2 supports, in particular it only currently implements the file
-and database functions.  Having said that it is possible to use the
-wrapper to produce useful programmes, check out the calendar_sync.py
-program in the examples directory for the beginings of a PocketPC to
-ical converter. I have used this to import my task list and
-appointments into korganiser.
+This is a first try at a python wrapper. It only implements a subset
+of the functions that librapi2 supports, in particular it only
+currently implements the file and database functions.  Having said
+that it is possible to use the wrapper to produce useful programmes,
+check out the calendar_sync.py program in the examples directory for
+the beginings of a PocketPC to ical converter. I have used this to
+import my task list and appointments into korganiser.
+
+In addition to the low level wrapping of the librapi2 interface there
+is also two modules that provide more Pythonic interfaces to the
+Pocket PC database and file functions (database.py and file.py).
 
 Build Instructions
 ==================
@@ -22,18 +25,33 @@ Follow the instructions for installing libsynce and librapi2 at
 (http://synce.sourceforge.net/) then ensure that you have a working
 connection between your computer and the PocketPC. 
 
-You will also need Python 2.X (I built this with Python 2.2.1).
+You will also need Python 2.X (I have tested this with Python 2.2.1).
 
-If you have SWIG (http://www.swig.org/) installed and want to rebuild
-the wrapper code from scratch run bootstrap.sh otherwise just run.
+If you have SWIG-1.13 or later (http://www.swig.org/) installed and
+want to rebuild the wrapper code from scratch run bootstrap.sh
+otherwise just run.
 
-python setup.py build
+	python setup.py build
 
 Now 'su' to root and run the final stage of the install:
 
-python setup.py install
+	python setup.py install
 
-You should now be able to run python and 'from pyrapi import pyrapi'. 
+
+Usage Instructions
+==================
+
+I will try to finish some better documentation soon for now:
+
+python
+Python 2.2.2 (#1, Nov 26 2002, 23:34:12)
+[GCC 2.95.3 20010315 (release)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>>from pyrapi import pyrapi
+>>>from pyrapi import database
+>>>from pyrapi import file
+
+Look in the examples and the unittest for how to call the functions.
 
 Running the examples
 ====================
@@ -50,7 +68,7 @@ Ones to watch
 =============
 
 If Python locks up when you 'from pyrapi import rapi' check that the comms to the PocketPC is working. 
-The init for the rapi module needs to talk to the PocketPC.
+The init for the pyrapi module needs to talk to the PocketPC.
 
 
 License
@@ -64,6 +82,6 @@ Contacts
 ========
 
 This python wrapper: Richard Taylor (r.taylor@bcs.org.uk) jabber: RichardTaylor@jabber.org
-librapi: check out the README in librapi!
+librapi: check out the README in librapi2!
 
 

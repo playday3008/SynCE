@@ -1,4 +1,4 @@
-include README* bootstrap.sh
+include README* bootstrap.sh LICENSE
 include src/pyrapi_wrap.i
 include tests/*.py
 exclude *~
