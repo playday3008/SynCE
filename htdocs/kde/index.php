@@ -364,7 +364,7 @@ and Installing</h2>
   <ul>
     <li><a href="http://synce.sourceforge.net/synce/dynamite.php">libdynamite</a></li>
     <li><a href="http://synce.sourceforge.net/synce/unshield.php">libunshield</a></li>
-    <li><a href="lhttp://synce.sourceforge.net/synce/orange.php">liborange</a><br>
+    <li><a href="http://synce.sourceforge.net/synce/orange.php">liborange</a><br>
     </li>
   </ul>
   <li>Make the SynCE libraries work by <a
