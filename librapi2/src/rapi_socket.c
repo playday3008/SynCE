@@ -74,6 +74,7 @@ bool rapi_socket_close(RapiSocket* socket)
 	{
 		close(socket->fd);
 		socket->fd = RAPI_SOCKET_INVALID_FD;
+		return true;
 	}
 	return false;
 }
