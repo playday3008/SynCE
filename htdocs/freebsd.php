@@ -6,8 +6,11 @@
 
 <h1>SynCE - FreeBSD support</h1>
 
-<p>Visit <a href="http://sam.stral.net/freebsd/synce.html">SynCE on FreeBSD</a>
-by Sam Lawrance.</p>
+<p><strike>Visit <a href="http://sam.stral.net/freebsd/synce.html">SynCE on FreeBSD</a>
+by Sam Lawrance.</strike></p>
+
+<p>The above site has disappeared. This page will be updated when more
+information is available!</p>
 
 </div>
 <?php include 'footer.php'; ?>
