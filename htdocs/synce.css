@@ -28,7 +28,7 @@ BODY,P,DIV,LI,UL,TD,TH,TR,TABLE,EM,FONT,BLOCKQUOTE,FORM
 	font-size: 11px; 
 }
 
-PRE
+PRE,TT
 {
 	font-size: 11px;
 	font-family: Courier, Courier New, monospace;
