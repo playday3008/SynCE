@@ -1,6 +1,6 @@
 bin_PROGRAMS = asyncd
 asyncd_SOURCES = socket.c debug.c asyncd.c
-asyncd_LDADD   = 
+asyncd_LDADD   = @LIBICONV@
 
 EXTRA_DIST = asyncd.c asyncd.h debug.c debug.h socket.c socket.h README
 
