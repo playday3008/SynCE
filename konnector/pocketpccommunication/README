@@ -1,0 +1,101 @@
+Test Application For Windows CE 3.0 devices
+
+This readme should help you to find the necessary libraries, install this
+software and tell you how to use it. If something is missing feel free to
+write me a mail under cfremgen@users.sourceforge.net.
+
+1. Needed external libraries and applications
+
+Installation hint:
+For synCE-KDE, kitchensync and this software please use the following:
+./configure --prefix=/path/to/kde3
+
+
+1.1 synCE libraries
+
+The synCE libraries are absolutely necessary to enable communication with
+the external device. You can find them here: http://synce.sourceforge.net.
+Please notice that this piece of software is developed with the synce-0.9.0 
+libraries!
+Please check the functionality of these libraries with your device. 
+The tests within these libraries should work!
+
+
+1.2 synCE-KDE 
+
+As this is software in developement please use the vdccm utility instead
+of dccm. SynCE-KDE can be found here: http://synce.sourceforge.net/synce/kde/
+
+
+1.3 KDE and KDE-PIM
+
+You do need an installed KDE 3.3.x plus the new KDE-PIM 3.3.0.
+
+
+1.4 kitchensync
+
+As the kitchensync within KDE-PIM 3.3.0 is not very useful please download
+and install the 0.0.8-distribution from here: 
+http://handhelds.org/~zecke/kitchensync.html
+
+
+
+
+2. Basic functionality of this software
+
+This package is a testing software. It has been developed to learn about
+the synCE-libraries. Nevertheless it has some handy functions.
+Maybe the most important one is the possiblity to backup and restore data
+from/to the device. The data is stored in ~/.kde/share/apps/pocketpccommunication.
+Every dataset has the name of the partnership in the file name. So using
+multiple devices should be no problem (but as I only have one device this has
+not been testet!) 
+
+PLEASE NOTE:
+As this is testing software it is possible that the connection to the device
+breaks! If this happens please restart the connection to the device and the
+application. I also encountered this with the rra-get-types utility in
+conjunction with a Futjitsu Siemens LOOX with USB connection. 
+
+
+2.1 Get Types
+
+This returns all the types which are available on this device. The returned
+listview is clickable to get the ids and state of all the entries which are
+stored within this type. 
+
+
+2.2 Getting and Pushing Data
+
+You can separately get and push Addressbook- and Calendar-data. Additionally
+it is possible to deal with events and todos. The data is stored in the
+files which can be specified within the preferences.
+
+
+2.3 Syncing Data
+
+As you will see the menu entries for syncing data are disabled: 
+These were just tests with a rather old kitchensync version. Just ignore them.
+Also the konnector is disabled, because testing within kitchensync is 
+much better implemented than here.
+
+
+2.4 Backup and Restore
+
+Maybe the most useful functions in the application. You can make a full backup
+of your data to files in ~/.kde/share/apps/pocketpccommunication. The files have
+unique names. So although it is not tested multiple devices should work. 
+
+DELETE EVERYTHING does what the name tells you. The complete AddressBook and
+Calendar will be cleared. Please use with care.
+
+
+2.5 Preferences
+
+Please let me know if some of these entries are not clear. 
+Currently only the first register seems to be useful :)
+
+ATTENTION: Think twice before using the standard Addressbook!!
+If you use it do not forget to make a backup first!! It is called std.vcf.
+On my system it can be found here: ~/.kde/share/apps/kabc/std.vcf
+

@@ -1,0 +1,26 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<!DOCTYPE KDevPrjSession>
+<KDevPrjSession>
+ <DocsAndViews NumberOfDocuments="2" >
+  <Doc0 NumberOfViews="1" URL="file:/develop/fips/FipsSoft/pocketpccommunication/src/libPocketPCKonnector/PocketPCKonnector.h" >
+   <View0 line="28" Type="Source" />
+  </Doc0>
+  <Doc1 NumberOfViews="1" URL="file:/develop/fips/FipsSoft/pocketpccommunication/src/PocketPCMainWindow.cpp" >
+   <View0 line="695" Type="Source" />
+  </Doc1>
+ </DocsAndViews>
+ <pluginList>
+  <kdevbookmarks>
+   <bookmarks/>
+  </kdevbookmarks>
+  <kdevvalgrind>
+   <executable path="" params="" />
+   <valgrind path="/usr/bin/valgrind" params=" --leak-check=yes" />
+   <calltree path="calltree" params="" />
+   <kcachegrind path="/opt/kde3/bin/kcachegrind" />
+  </kdevvalgrind>
+  <kdevdebugger>
+   <breakpointList/>
+  </kdevdebugger>
+ </pluginList>
+</KDevPrjSession>

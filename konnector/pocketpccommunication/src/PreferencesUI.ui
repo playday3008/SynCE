@@ -1,0 +1,2122 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>PreferencesUI</class>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>PreferencesUI</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>457</width>
+            <height>640</height>
+        </rect>
+    </property>
+    <property name="sizePolicy">
+        <sizepolicy>
+            <hsizetype>5</hsizetype>
+            <vsizetype>5</vsizetype>
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+        </sizepolicy>
+    </property>
+    <property name="caption">
+        <string>Preferences</string>
+    </property>
+    <property name="sizeGripEnabled">
+        <bool>true</bool>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QTabWidget">
+            <property name="name">
+                <cstring>tabWidget2</cstring>
+            </property>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tab</cstring>
+                </property>
+                <attribute name="title">
+                    <string>General</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox1</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>PDA Configuration</string>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout11</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLabel">
+                                        <property name="name">
+                                            <cstring>textLabel2</cstring>
+                                        </property>
+                                        <property name="font">
+                                            <font>
+                                                <bold>0</bold>
+                                            </font>
+                                        </property>
+                                        <property name="text">
+                                            <string>PDA Name:</string>
+                                        </property>
+                                    </widget>
+                                    <widget class="QLineEdit">
+                                        <property name="name">
+                                            <cstring>m_textPdaName</cstring>
+                                        </property>
+                                        <property name="font">
+                                            <font>
+                                                <bold>0</bold>
+                                            </font>
+                                        </property>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </hbox>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer2</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Fixed</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>20</height>
+                            </size>
+                        </property>
+                    </spacer>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox2</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>AddressBook</string>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QCheckBox">
+                                <property name="name">
+                                    <cstring>m_checkUseStdAddrBook</cstring>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <bold>0</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>use standard address book</string>
+                                </property>
+                            </widget>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout3</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLabel">
+                                        <property name="name">
+                                            <cstring>textLabel4</cstring>
+                                        </property>
+                                        <property name="font">
+                                            <font>
+                                                <bold>0</bold>
+                                            </font>
+                                        </property>
+                                        <property name="text">
+                                            <string>AddressBook File:</string>
+                                        </property>
+                                    </widget>
+                                    <widget class="QLineEdit">
+                                        <property name="name">
+                                            <cstring>m_textAddrBookFile</cstring>
+                                        </property>
+                                        <property name="font">
+                                            <font>
+                                                <bold>0</bold>
+                                            </font>
+                                        </property>
+                                    </widget>
+                                    <widget class="QToolButton">
+                                        <property name="name">
+                                            <cstring>m_buttonGetAddrBook</cstring>
+                                        </property>
+                                        <property name="enabled">
+                                            <bool>true</bool>
+                                        </property>
+                                        <property name="font">
+                                            <font>
+                                                <bold>0</bold>
+                                            </font>
+                                        </property>
+                                        <property name="text">
+                                            <string>...</string>
+                                        </property>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer3</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Fixed</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>20</height>
+                            </size>
+                        </property>
+                    </spacer>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox3</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>Calendar</string>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout15</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout12</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel5</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Calendar:</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel1</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Events File:</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel3</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Todos File:</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout13</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textCalendarFile</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textEventFile</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textTodoFile</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout14</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonGetCalendarFile</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonGetEventFile</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonGetTodoFile</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                </vbox>
+            </widget>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tab</cstring>
+                </property>
+                <attribute name="title">
+                    <string>Merge Files</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox4</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>AddressBook Files</string>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout12</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout9</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel1_2</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Local:</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel2_2</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Output:</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout10</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textLocalAddressBook</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textOutputAddressBook</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout11</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonLocalAddressBook</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonOutputAddressBook</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer2_2</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Fixed</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>20</height>
+                            </size>
+                        </property>
+                    </spacer>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox5</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>Calendar Files</string>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout23</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout13</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel1_2_2</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Local:</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel2_2_2</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Output:</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout14</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textLocalCalendar</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textOutputCalendar</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout15</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonLocalCalendar</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonOutputCalendar</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer2_3</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Fixed</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>20</height>
+                            </size>
+                        </property>
+                    </spacer>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox6</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>Events Files</string>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout24</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout16</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel1_2_3</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Local:</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel2_2_3</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Output:</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout17</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textLocalEvents</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textOutputEvents</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout18</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonLocalEvents</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonOutputEvents</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer2_4</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Fixed</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>20</height>
+                            </size>
+                        </property>
+                    </spacer>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox7</cstring>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <bold>1</bold>
+                            </font>
+                        </property>
+                        <property name="title">
+                            <string>Todos Files</string>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout25</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout19</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel1_2_4</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Local:</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel">
+                                                <property name="name">
+                                                    <cstring>textLabel2_2_4</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Output:</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout20</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textLocalTodos</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLineEdit">
+                                                <property name="name">
+                                                    <cstring>m_textOutputTodos</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout21</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonLocalTodos</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QToolButton">
+                                                <property name="name">
+                                                    <cstring>m_buttonOutputTodos</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>0</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>...</string>
+                                                </property>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                </vbox>
+            </widget>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>TabPage</cstring>
+                </property>
+                <attribute name="title">
+                    <string>Syncing Options</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout29</cstring>
+                        </property>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLayoutWidget">
+                                <property name="name">
+                                    <cstring>layout27</cstring>
+                                </property>
+                                <hbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout26</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QButtonGroup">
+                                                <property name="name">
+                                                    <cstring>m_radioGroupAddressBookCont</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>1</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="title">
+                                                    <string>AddressBook</string>
+                                                </property>
+                                                <spacer>
+                                                    <property name="name">
+                                                        <cstring>spacer14</cstring>
+                                                    </property>
+                                                    <property name="orientation">
+                                                        <enum>Vertical</enum>
+                                                    </property>
+                                                    <property name="sizeType">
+                                                        <enum>Fixed</enum>
+                                                    </property>
+                                                    <property name="sizeHint">
+                                                        <size>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </size>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>83</x>
+                                                            <y>114</y>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </rect>
+                                                    </property>
+                                                </spacer>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkLogAddressBook</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>194</y>
+                                                            <width>165</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>load log</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QButtonGroup">
+                                                    <property name="name">
+                                                        <cstring>m_radioGroupAddressBook</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>5</x>
+                                                            <y>19</y>
+                                                            <width>178</width>
+                                                            <height>95</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="frameShadow">
+                                                        <enum>Plain</enum>
+                                                    </property>
+                                                    <property name="lineWidth">
+                                                        <number>0</number>
+                                                    </property>
+                                                    <property name="title">
+                                                        <string></string>
+                                                    </property>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton13</cstring>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>12</x>
+                                                                <y>12</y>
+                                                                <width>154</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>merge</string>
+                                                        </property>
+                                                        <property name="checked">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton14</cstring>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>12</x>
+                                                                <y>41</y>
+                                                                <width>154</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to device</string>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton15</cstring>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>12</x>
+                                                                <y>70</y>
+                                                                <width>154</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to local</string>
+                                                        </property>
+                                                    </widget>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkFirstSyncAddressBook</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>165</y>
+                                                            <width>150</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>treat as first syncing</string>
+                                                    </property>
+                                                    <property name="checked">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkAddressBookOverwrite</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>136</y>
+                                                            <width>165</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>overwrite</string>
+                                                    </property>
+                                                </widget>
+                                            </widget>
+                                            <spacer>
+                                                <property name="name">
+                                                    <cstring>spacer2_2_2</cstring>
+                                                </property>
+                                                <property name="orientation">
+                                                    <enum>Vertical</enum>
+                                                </property>
+                                                <property name="sizeType">
+                                                    <enum>Fixed</enum>
+                                                </property>
+                                                <property name="sizeHint">
+                                                    <size>
+                                                        <width>20</width>
+                                                        <height>20</height>
+                                                    </size>
+                                                </property>
+                                            </spacer>
+                                            <widget class="QButtonGroup">
+                                                <property name="name">
+                                                    <cstring>m_radioGroupEventsCont</cstring>
+                                                </property>
+                                                <property name="enabled">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>1</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="title">
+                                                    <string>Events</string>
+                                                </property>
+                                                <spacer>
+                                                    <property name="name">
+                                                        <cstring>spacer14_3</cstring>
+                                                    </property>
+                                                    <property name="orientation">
+                                                        <enum>Vertical</enum>
+                                                    </property>
+                                                    <property name="sizeType">
+                                                        <enum>Fixed</enum>
+                                                    </property>
+                                                    <property name="sizeHint">
+                                                        <size>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </size>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>83</x>
+                                                            <y>114</y>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </rect>
+                                                    </property>
+                                                </spacer>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkLogEvents</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>194</y>
+                                                            <width>165</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>load log</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkEventsOverwrite</cstring>
+                                                    </property>
+                                                    <property name="enabled">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>136</y>
+                                                            <width>165</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>overwrite</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkFirstSyncEvents</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>165</y>
+                                                            <width>150</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>treat as first syncing</string>
+                                                    </property>
+                                                    <property name="checked">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QButtonGroup">
+                                                    <property name="name">
+                                                        <cstring>m_radioGroupEvents</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>5</x>
+                                                            <y>21</y>
+                                                            <width>177</width>
+                                                            <height>91</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="frameShadow">
+                                                        <enum>Plain</enum>
+                                                    </property>
+                                                    <property name="lineWidth">
+                                                        <number>0</number>
+                                                    </property>
+                                                    <property name="title">
+                                                        <string></string>
+                                                    </property>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton8</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>7</x>
+                                                                <y>34</y>
+                                                                <width>163</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to device</string>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>1</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton9</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>7</x>
+                                                                <y>63</y>
+                                                                <width>163</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to local</string>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>2</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton7</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>7</x>
+                                                                <y>5</y>
+                                                                <width>163</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>merge</string>
+                                                        </property>
+                                                        <property name="checked">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>0</number>
+                                                        </property>
+                                                    </widget>
+                                                </widget>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <spacer>
+                                        <property name="name">
+                                            <cstring>spacer12</cstring>
+                                        </property>
+                                        <property name="orientation">
+                                            <enum>Horizontal</enum>
+                                        </property>
+                                        <property name="sizeType">
+                                            <enum>Fixed</enum>
+                                        </property>
+                                        <property name="sizeHint">
+                                            <size>
+                                                <width>20</width>
+                                                <height>20</height>
+                                            </size>
+                                        </property>
+                                    </spacer>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout29</cstring>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QButtonGroup">
+                                                <property name="name">
+                                                    <cstring>m_radioGroupCalendarCont</cstring>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>1</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="title">
+                                                    <string>Calendar</string>
+                                                </property>
+                                                <spacer>
+                                                    <property name="name">
+                                                        <cstring>spacer14_2</cstring>
+                                                    </property>
+                                                    <property name="orientation">
+                                                        <enum>Vertical</enum>
+                                                    </property>
+                                                    <property name="sizeType">
+                                                        <enum>Fixed</enum>
+                                                    </property>
+                                                    <property name="sizeHint">
+                                                        <size>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </size>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>83</x>
+                                                            <y>114</y>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </rect>
+                                                    </property>
+                                                </spacer>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkLogCalendar</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>194</y>
+                                                            <width>164</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>load log</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkCalendarOverwrite</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>136</y>
+                                                            <width>164</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>overwrite</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QButtonGroup">
+                                                    <property name="name">
+                                                        <cstring>m_radioGroupCalendar</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>4</x>
+                                                            <y>19</y>
+                                                            <width>178</width>
+                                                            <height>95</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="frameShadow">
+                                                        <enum>Plain</enum>
+                                                    </property>
+                                                    <property name="lineWidth">
+                                                        <number>0</number>
+                                                    </property>
+                                                    <property name="title">
+                                                        <string></string>
+                                                    </property>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton4</cstring>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>8</x>
+                                                                <y>7</y>
+                                                                <width>162</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>merge</string>
+                                                        </property>
+                                                        <property name="checked">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>0</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton5</cstring>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>8</x>
+                                                                <y>36</y>
+                                                                <width>162</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to device</string>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>1</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton6</cstring>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>8</x>
+                                                                <y>65</y>
+                                                                <width>162</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to local</string>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>2</number>
+                                                        </property>
+                                                    </widget>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkFirstSyncCalendar</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>165</y>
+                                                            <width>150</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>treat as first syncing</string>
+                                                    </property>
+                                                    <property name="checked">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                </widget>
+                                            </widget>
+                                            <spacer>
+                                                <property name="name">
+                                                    <cstring>spacer2_2_2_2</cstring>
+                                                </property>
+                                                <property name="orientation">
+                                                    <enum>Vertical</enum>
+                                                </property>
+                                                <property name="sizeType">
+                                                    <enum>Fixed</enum>
+                                                </property>
+                                                <property name="sizeHint">
+                                                    <size>
+                                                        <width>20</width>
+                                                        <height>20</height>
+                                                    </size>
+                                                </property>
+                                            </spacer>
+                                            <widget class="QButtonGroup">
+                                                <property name="name">
+                                                    <cstring>m_radioGroupTodosCont</cstring>
+                                                </property>
+                                                <property name="enabled">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <bold>1</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="title">
+                                                    <string>Todos</string>
+                                                </property>
+                                                <spacer>
+                                                    <property name="name">
+                                                        <cstring>spacer14_4</cstring>
+                                                    </property>
+                                                    <property name="orientation">
+                                                        <enum>Vertical</enum>
+                                                    </property>
+                                                    <property name="sizeType">
+                                                        <enum>Fixed</enum>
+                                                    </property>
+                                                    <property name="sizeHint">
+                                                        <size>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </size>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>83</x>
+                                                            <y>114</y>
+                                                            <width>20</width>
+                                                            <height>16</height>
+                                                        </rect>
+                                                    </property>
+                                                </spacer>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkTodosOverwrite</cstring>
+                                                    </property>
+                                                    <property name="enabled">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>136</y>
+                                                            <width>164</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>overwrite</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkLogTodos</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>194</y>
+                                                            <width>164</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>load log</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QButtonGroup">
+                                                    <property name="name">
+                                                        <cstring>m_radioGroupTodos</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>4</x>
+                                                            <y>21</y>
+                                                            <width>178</width>
+                                                            <height>91</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="frameShadow">
+                                                        <enum>Plain</enum>
+                                                    </property>
+                                                    <property name="lineWidth">
+                                                        <number>0</number>
+                                                    </property>
+                                                    <property name="title">
+                                                        <string></string>
+                                                    </property>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton12</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>8</x>
+                                                                <y>63</y>
+                                                                <width>162</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to local</string>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>2</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton11</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>8</x>
+                                                                <y>34</y>
+                                                                <width>162</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>to device</string>
+                                                        </property>
+                                                        <property name="checked">
+                                                            <bool>false</bool>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>1</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton">
+                                                        <property name="name">
+                                                            <cstring>radioButton10</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="geometry">
+                                                            <rect>
+                                                                <x>8</x>
+                                                                <y>5</y>
+                                                                <width>162</width>
+                                                                <height>23</height>
+                                                            </rect>
+                                                        </property>
+                                                        <property name="font">
+                                                            <font>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>merge</string>
+                                                        </property>
+                                                        <property name="checked">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                        <property name="buttonGroupId">
+                                                            <number>0</number>
+                                                        </property>
+                                                    </widget>
+                                                </widget>
+                                                <widget class="QCheckBox">
+                                                    <property name="name">
+                                                        <cstring>m_checkFirstSyncTodos</cstring>
+                                                    </property>
+                                                    <property name="geometry">
+                                                        <rect>
+                                                            <x>11</x>
+                                                            <y>165</y>
+                                                            <width>150</width>
+                                                            <height>23</height>
+                                                        </rect>
+                                                    </property>
+                                                    <property name="font">
+                                                        <font>
+                                                            <bold>0</bold>
+                                                        </font>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>treat as first syncing</string>
+                                                    </property>
+                                                    <property name="checked">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                </widget>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                </hbox>
+                            </widget>
+                        </vbox>
+                    </widget>
+                </vbox>
+            </widget>
+        </widget>
+        <spacer>
+            <property name="name">
+                <cstring>spacer4</cstring>
+            </property>
+            <property name="orientation">
+                <enum>Vertical</enum>
+            </property>
+            <property name="sizeType">
+                <enum>Fixed</enum>
+            </property>
+            <property name="sizeHint">
+                <size>
+                    <width>20</width>
+                    <height>20</height>
+                </size>
+            </property>
+        </spacer>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>Layout1</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>buttonHelp</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Help</string>
+                    </property>
+                    <property name="accel">
+                        <string>F1</string>
+                    </property>
+                    <property name="autoDefault">
+                        <bool>true</bool>
+                    </property>
+                    <property name="toolTip" stdset="0">
+                        <string>as this is a test application this feature is not implemented yet :)</string>
+                    </property>
+                </widget>
+                <spacer>
+                    <property name="name">
+                        <cstring>Horizontal Spacing2</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>buttonOk</cstring>
+                    </property>
+                    <property name="enabled">
+                        <bool>true</bool>
+                    </property>
+                    <property name="text">
+                        <string>&amp;OK</string>
+                    </property>
+                    <property name="accel">
+                        <string></string>
+                    </property>
+                    <property name="autoDefault">
+                        <bool>true</bool>
+                    </property>
+                    <property name="default">
+                        <bool>true</bool>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>buttonCancel</cstring>
+                    </property>
+                    <property name="enabled">
+                        <bool>true</bool>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Cancel</string>
+                    </property>
+                    <property name="accel">
+                        <string></string>
+                    </property>
+                    <property name="autoDefault">
+                        <bool>true</bool>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<connections>
+    <connection>
+        <sender>buttonOk</sender>
+        <signal>clicked()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>accept()</slot>
+    </connection>
+    <connection>
+        <sender>buttonCancel</sender>
+        <signal>clicked()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>reject()</slot>
+    </connection>
+    <connection>
+        <sender>m_checkUseStdAddrBook</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>textLabel4</receiver>
+        <slot>setDisabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>m_checkUseStdAddrBook</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>m_textAddrBookFile</receiver>
+        <slot>setDisabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>m_checkUseStdAddrBook</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>m_buttonGetAddrBook</receiver>
+        <slot>setDisabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonGetAddrBook</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetAddressBookFile()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonGetEventFile</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetEventsFile()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonGetTodoFile</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetTodosFile()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonGetCalendarFile</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetCalendarFile()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonLocalAddressBook</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetAddressBookLocal()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonOutputAddressBook</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetAddressBookOutput()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonLocalCalendar</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetCalendarLocal()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonOutputCalendar</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetCalendarOutput()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonLocalEvents</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetEventsLocal()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonOutputEvents</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetEventsOutput()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonLocalTodos</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetTodosLocal()</slot>
+    </connection>
+    <connection>
+        <sender>m_buttonOutputTodos</sender>
+        <signal>pressed()</signal>
+        <receiver>PreferencesUI</receiver>
+        <slot>slotGetTodosOutput()</slot>
+    </connection>
+</connections>
+<slots>
+    <slot access="protected">slotGetPdaName()</slot>
+    <slot access="protected">slotGetAddressBookFile()</slot>
+    <slot access="protected">slotGetEventsFile()</slot>
+    <slot access="protected">slotGetTodosFile()</slot>
+    <slot access="protected">accept()</slot>
+    <slot access="protected">reject()</slot>
+    <slot access="protected">slotGetCalendarFile()</slot>
+    <slot access="protected">slotGetAddressBookLocal()</slot>
+    <slot access="protected">slotGetAddressBookOutput()</slot>
+    <slot access="protected">slotGetCalendarLocal()</slot>
+    <slot access="protected">slotGetCalendarOutput()</slot>
+    <slot access="protected">slotGetEventsLocal()</slot>
+    <slot access="protected">slotGetEventsOutput()</slot>
+    <slot access="protected">slotGetTodosLocal()</slot>
+    <slot access="protected">slotGetTodosOutput()</slot>
+</slots>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

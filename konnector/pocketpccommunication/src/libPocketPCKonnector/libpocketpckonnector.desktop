@@ -1,0 +1,28 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+ServiceTypes=KitchenSync/Konnector,KResources/Plugin
+X-KDE-Library=libpocketpckonnector
+
+Name=PocketPC Konnector
+Name[cs]=PocketPC konektor
+Name[cy]=Kysylltydd PocketPC
+Name[de]=PocketPC-Konnector
+Name[es]=Konnector para PocketPC
+Name[fi]=PocketPC-Konnector
+Name[hi]=क्यूटोपिया कनेक्टर
+Name[hu]=PocketPC-konnektor
+Name[nso]=Mokgomaganyi wa PocketPC
+Name[pl]=Łącznik PocketPC
+Name[pt]=Konnector para o PocketPC
+Name[ro]=Konnector PocketPC
+Name[ru]=Коннектор к PocketPC
+Name[sl]=Konektor PocketPC
+Name[ta]=Qடோப்பியா இணைப்பான்
+Name[xx]=xxPocketPC Konnectorxx
+Group= PDA
+Vendor = Holger 'zecke' Freyther
+Id=PocketPC1.5
+
+X-KDE-ResourceFamily=konnector
+X-KDE-ResourceType=pocketpc
