@@ -44,12 +44,16 @@ make
 %doc README LICENSE
 %{prefix}/bin/pcp
 %{prefix}/bin/pls
+%{prefix}/bin/pmkdir
 %{prefix}/bin/pmv
 %{prefix}/bin/prm
+%{prefix}/bin/prmdir
 %{prefix}/include/rapi.h
 %{prefix}/lib/librapi.*
 %{_mandir}/man1/pcp.*
 %{_mandir}/man1/pls.*
+%{_mandir}/man1/pmkdir.*
 %{_mandir}/man1/pmv.*
 %{_mandir}/man1/prm.*
+%{_mandir}/man1/prmdir.*
 
