@@ -9,6 +9,16 @@
 
 #define VERBOSE 0
 
+typedef struct
+{
+  unsigned offset;
+  unsigned size;
+  unsigned filename_size;
+  unsigned unknown3;
+  unsigned unknown4;
+  char* filename;
+} FileEntry;
+
 /*
    .apk files used by TomTom products
  */
@@ -23,6 +33,14 @@ static uint8_t orange_read_byte(FILE* input_file)/*{{{*/
 #endif
   return byte;
 }/*}}}*/
+
+static uint32_t orange_read32(FILE* input_file)
+{
+  return orange_read_byte(input_file) |
+    (orange_read_byte(input_file) << 8) |
+    (orange_read_byte(input_file) << 16) |
+    (orange_read_byte(input_file) << 24);
+}
 
 static bool orange_write_byte(FILE* output_file, uint8_t byte)/*{{{*/
 {
@@ -82,11 +100,11 @@ bool orange_extract_apk(/*{{{*/
   else
     basename = input_filename;
 
-  snprintf(output_filename, sizeof(output_filename), "%s/%s.arh", output_directory, basename);
+  snprintf(output_filename, sizeof(output_filename), "%s/%s", output_directory, basename);
 
   p = strrchr(output_filename, '.');
   if (p && p > strrchr(output_filename, '/'))
-    *p = '\0';
+    strcat(p, ".arh");
 
   output_file = fopen(output_filename, "w+");
   if (!output_file)
@@ -193,3 +211,92 @@ exit:
   return success;
 }/*}}}*/
 
+bool orange_extract_arh(/*{{{*/
+    const char* input_filename,
+    const char* output_directory)
+{
+  bool success = false;
+  FILE* input_file = fopen(input_filename, "r");
+  size_t uncompressed_size;
+  unsigned count = 0;
+  unsigned i;
+  FileEntry* entries = NULL;
+  char* buffer = NULL;
+  size_t buffer_size = 0;
+  
+  if (!input_file)
+    goto exit;
+
+  if (orange_read_byte(input_file) != 'T' ||
+      orange_read_byte(input_file) != 'O' ||
+      orange_read_byte(input_file) != 'M' ||
+      orange_read_byte(input_file) != 'A')
+    goto exit;
+
+  synce_trace("Found TOMA signature");
+
+  uncompressed_size = orange_read32(input_file);
+  count = orange_read32(input_file);
+
+  entries = calloc(count, sizeof(FileEntry));
+  
+  for (i = 0; i < count; i++)
+  {
+    entries[i].offset         = orange_read32(input_file);
+    entries[i].size           = orange_read32(input_file);
+    entries[i].filename_size  = orange_read32(input_file);
+    entries[i].unknown3       = orange_read32(input_file);
+    entries[i].unknown4       = orange_read32(input_file);
+  }
+
+  synce_trace("File list offset: %08lx", ftell(input_file));
+
+  for (i = 0; i < count; i++)
+  {
+    char* p;
+    
+    entries[i].filename = malloc(entries[i].filename_size);
+    if (entries[i].filename_size != fread(entries[i].filename, 1, entries[i].filename_size, input_file))
+      goto exit;
+
+    for (p = entries[i].filename; *p; p++)
+      if (*p == '\\')
+        *p = '/';
+  }
+
+  for (i = 0; i < count; i++)
+  {
+    fseek(input_file, entries[i].offset, SEEK_SET);
+
+    if (buffer_size < entries[i].size)
+    {
+      buffer_size = entries[i].size;
+      buffer = realloc(buffer, buffer_size);
+      if (!buffer)
+        goto exit;
+    }
+
+    if (entries[i].size != fread(buffer, 1, entries[i].size, input_file))
+    {
+      goto exit;
+    }
+
+    synce_trace("Writing '%s'", entries[i].filename);
+    orange_write(buffer, entries[i].size, output_directory, entries[i].filename);
+  }
+
+  success = true;
+
+exit:
+  FREE(buffer);
+  if (entries)
+  {
+    for (i = 0; i < count; i++)
+    {
+      FREE(entries[i].filename);
+    }
+    free(entries);
+  }
+  FCLOSE(input_file);
+  return success;
+}
