@@ -19,7 +19,7 @@
    the variable names look the way they do, for example.
  */
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 #if VERBOSE
 static void dump(const char *desc, void* data, size_t len)/*{{{*/
@@ -65,9 +65,14 @@ int EntryStrings[] = { SetupTypeEntryStrings,
     SetupIniEntryStrings, SetupRegistryEntryStrings, SetupDeleteEntryStrings,
     SetupDeleteEntryStrings, SetupRunEntryStrings, SetupRunEntryStrings };
 
-static uint8_t SetupLdrOffsetTableID[] = 
+static uint8_t SetupLdrOffsetTableId2[] = 
 {
   'r','D','l','P','t','S','0','2',0x87,0x65,0x56,0x78
+};
+
+static uint8_t SetupLdrOffsetTableId7[] = 
+{
+  'r','D','l','P','t','S','0','7',0x87,0x65,0x56,0x78
 };
 
 
@@ -195,6 +200,9 @@ static bool InflateBlockReadBegin(FILE* F, TDeflateBlockReadData* Data)/*{{{*/
   Data->StartPos = ftell(F);
 
   /* TODO: check file pos */
+#if VERBOSE  
+  synce_trace("StartPos = %08x", Data->StartPos);
+#endif
 
   fread(&HdrCRC,  1, sizeof(HdrCRC),  F);
   fread(&Hdr,     1, sizeof(Hdr),     F);
@@ -363,7 +371,7 @@ static void SEInflateBlockRead(/*{{{*/
     size_t Count, 
     int NumStrings)
 {
-  void* P;
+  uint8_t* P;
   int I;
   int Len;
   char* S;
@@ -384,7 +392,7 @@ static void SEInflateBlockRead(/*{{{*/
 #endif
 
     *(char**)P = S;
-    (uint8_t*)P += sizeof(char*);
+    P += sizeof(char*);
   }
 
   Count -= NumStrings * sizeof(char*);
@@ -398,7 +406,7 @@ static void FreeStrings(/*{{{*/
 {
   if (Buf)
   {
-    void* P;
+    uint8_t* P;
     int I;
     char* S;
 
@@ -407,7 +415,7 @@ static void FreeStrings(/*{{{*/
     {
       S = *(char**)P;
       FREE(S);
-      (uint8_t*)P += sizeof(char*);
+      P += sizeof(char*);
     }
   }
 }/*}}}*/
@@ -456,7 +464,7 @@ static void ReadEntries(/*{{{*/
     void* Buf)
 {
   int I;
-  void* P;
+  uint8_t* P;
 
   P = Buf;
   for (I = 0; I < (int)Count; I++)
@@ -471,7 +479,7 @@ static void ReadEntries(/*{{{*/
     }
 #endif
     
-    (uint8_t*)P += Size;
+    P += Size;
   }
 }/*}}}*/
 
@@ -484,13 +492,13 @@ static void FreeEntries(/*{{{*/
   if (Buf)
   {
     int I;
-    void* P;
+    uint8_t* P;
 
     P = Buf;
     for (I = 0; I < (int)Count; I++)
     {
       FreeStrings(P, EntryStrings[EntryType]);
-      (uint8_t*)P += Size;
+      P += Size;
     }
 
     free(Buf);
@@ -502,6 +510,7 @@ static bool orange_get_inno_offset_table(FILE* SetupFile, TSetupLdrOffsetTable* 
   bool success = false;
   size_t SizeOfFile;
   TSetupLdrExeHeader ExeHeader;
+  uint8_t id[12];
 
   SizeOfFile = FSIZE(SetupFile);
 
@@ -513,6 +522,9 @@ static bool orange_get_inno_offset_table(FILE* SetupFile, TSetupLdrOffsetTable* 
   
   if (sizeof(TSetupLdrExeHeader) != fread(&ExeHeader, 1, sizeof(ExeHeader), SetupFile))
   {
+#if VERBOSE
+    synce_trace("Failed to read header");
+#endif
     goto exit;
   }
 
@@ -525,7 +537,7 @@ static bool orange_get_inno_offset_table(FILE* SetupFile, TSetupLdrOffsetTable* 
       (ExeHeader.OffsetTableOffset + sizeof(OffsetTable) > SizeOfFile))
   {
 #if VERBOSE
-    synce_trace("Not a valid Inno Setup file");
+    synce_error("Inno Setup header is not valid.");
 #endif
     goto exit;
   }
@@ -536,25 +548,61 @@ static bool orange_get_inno_offset_table(FILE* SetupFile, TSetupLdrOffsetTable* 
 
   fseek(SetupFile, ExeHeader.OffsetTableOffset, SEEK_SET);
 
-  if (sizeof(TSetupLdrOffsetTable) != fread(OffsetTable, 1, sizeof(TSetupLdrOffsetTable), SetupFile))
+  if (sizeof(id) != fread(id, 1, sizeof(id), SetupFile))
   {
+#if VERBOSE
+    synce_error("Failed to read offset table identifier");
     goto exit;
+#endif
   }
 
-  if (0 != memcmp(OffsetTable->ID, SetupLdrOffsetTableID, 12))
+  if (0 == memcmp(id, SetupLdrOffsetTableId2, 12))
   {
-    synce_trace("Not a valid Inno Setup file");
-    goto exit;
-  }
+    if (sizeof(TSetupLdrOffsetTable) != fread(OffsetTable, 1, sizeof(TSetupLdrOffsetTable), SetupFile))
+    {
+#if VERBOSE
+      synce_error("Failed to read offset table");
+#endif
+      goto exit;
+    }
 
-  /* TODO: convert more */
-  LETOH32(OffsetTable->Offset0);
-  LETOH32(OffsetTable->Offset1);
+    /* TODO: convert more */
+    LETOH32(OffsetTable->Offset0);
+    LETOH32(OffsetTable->Offset1);
 
 #if VERBOSE
-  synce_trace("OffsetTable.Offset0 = %08x", OffsetTable->Offset0);
-  synce_trace("OffsetTable.Offset1 = %08x", OffsetTable->Offset1);
+    synce_trace("OffsetTable.Offset0 = %08x", OffsetTable->Offset0);
+    synce_trace("OffsetTable.Offset1 = %08x", OffsetTable->Offset1);
 #endif
+
+  }
+  else if (0 == memcmp(id, SetupLdrOffsetTableId7, 12))
+  {
+    int i;
+    uint32_t table7[7];
+
+    if (sizeof(table7) != fread(&table7, 1, sizeof(table7), SetupFile))
+      goto exit;
+
+    memset(OffsetTable, 0, sizeof(OffsetTable));
+    
+    for (i = 0; i < 7; i++)
+    {
+      LETOH32(table7[i]);
+      synce_trace("Offset %i: %08x", i, table7[i]);
+    }
+
+    OffsetTable->Offset0 = table7[4]; /* "Inno Setup Setup Data..." */
+    OffsetTable->Offset1 = table7[5]; /* "zlb" */
+  }
+  else
+  {
+    synce_error("Unknown offset table identifier: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+        id[0], id[1], id[2], id[3],
+        id[4], id[5], id[6], id[7],
+        id[8], id[9], id[10], id[11]);
+    goto exit;
+  }
 
   success = true;
 
@@ -578,11 +626,15 @@ static bool orange_get_inno_setup_data(/*{{{*/
   
   if (sizeof(TestID) != fread(TestID, 1, sizeof(TestID), SetupFile))
   {
+#if VERBOSE
+    synce_error("Invalid TestID");
+#endif
     goto exit;
   }
 
   if (3 != sscanf(TestID, SETUP_ID_FORMAT, version+0, version+1, version+2))
   {
+    synce_error("Invalid version");
     goto exit;
   }
 
@@ -712,7 +764,9 @@ bool orange_extract_inno(/*{{{*/
 
   if (!orange_get_inno_offset_table(SetupFile, &OffsetTable))
   {
-    /* Not an Inno Setup executable */
+#if VERBOSE
+    synce_trace("Not an Inno Setup executable. (Failed to get offset table.)");
+#endif
     goto exit;
   }
 
@@ -725,6 +779,9 @@ bool orange_extract_inno(/*{{{*/
   if (!orange_get_inno_setup_data(SetupFile,
         &SetupHeader, &FileEntries, &FileLocationEntries))
   {
+#if VERBOSE
+    synce_trace("Not an Inno Setup executable. (Failed to get setup data.)");
+#endif
     goto exit;
   }
 
@@ -787,5 +844,3 @@ exit:
   FCLOSE(SetupFile);
   return success;  
 }/*}}}*/
-
-
