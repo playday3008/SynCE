@@ -70,6 +70,8 @@ Recommended: A Pocket PC device.</p>
 
 <h2>Links</h2>
 
+<p><a href="pwi/">Some info about the PWI file format</a>.</p>
+
 <p><a
 href="http://xml.openoffice.org/source/browse/xml/xmerge/java/org/openoffice/xmerge/converter/xml/sxw/pocketword/">OpenOffice
 source code for PWI file conversion</a>.</p>
