@@ -29,7 +29,7 @@ This application shows when a device is connected.
 %setup
 
 %build
-%configure --with-libsynce=$RPM_BUILD_ROOT%{prefix}
+%configure --with-librapi2=$RPM_BUILD_ROOT%{prefix}
 #--with-libsynce=%{prefix}
 make
 
@@ -37,7 +37,7 @@ make
 %makeinstall
 
 %files
-%doc README LICENSE
-%{prefix}/bin/dccm
-%{_mandir}/man1/dccm.*
+%{prefix}/bin/synce-trayicon
+%{prefix}/share/pixmaps/synce/synce-color.png
+%{prefix}/share/pixmaps/synce/synce-gray.png
 
