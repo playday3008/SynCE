@@ -68,18 +68,32 @@ int main(int argc, char** argv)
 				synce_strerror(hr));
 		goto exit;
 	}
-
-  value_name       = wstr_from_ascii("Instl");
-	parent_key_name  = wstr_from_ascii("Software\\Apps");
+	
+  
+  /* Path on SmartPhone 2002 */
+  parent_key_name = wstr_from_ascii("Security\\AppInstall");
 
 	result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
+  
 	if (ERROR_SUCCESS != result)
-	{
-		fprintf(stderr, "%s: Unable to open registry key: %s\n", 
-				argv[0],
-				synce_strerror(result));
-		goto exit;
-	}
+  {
+    wstr_free_string(parent_key_name);
+
+    /* Path on Pocket PC 2002 */
+    parent_key_name = wstr_from_ascii("Software\\Apps");
+
+    result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
+
+    if (ERROR_SUCCESS != result)
+    {
+      fprintf(stderr, "%s: Unable to open parent registry key: %s\n", 
+          argv[0],
+          synce_strerror(result));
+      goto exit;
+    }
+  }
+  
+  value_name = wstr_from_ascii("Instl");
 	
 	for (i = 0; ; i++)
 	{
