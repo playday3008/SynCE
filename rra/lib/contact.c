@@ -901,6 +901,10 @@ static bool parser_handle_field(/*{{{*/
 	{
 		/* TODO: something? */
 	}/*}}}*/
+  else if (STR_EQUAL(name, "CATEGORIES"))
+  {
+    add_string(parser, ID_CATEGORY, type, value);
+  }
 #if 0
 	else if (STR_EQUAL(name, ""))
 	{
