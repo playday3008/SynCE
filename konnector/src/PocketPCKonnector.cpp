@@ -93,6 +93,8 @@ namespace KSync
         delete mAddressBookSyncee;
         delete mCalendarSyncee;
         delete mAddrHandler;
+        delete mTodoHandler;
+        delete mEventHandler;
         delete mUidHelper;
 
         if (m_rra != NULL) {
