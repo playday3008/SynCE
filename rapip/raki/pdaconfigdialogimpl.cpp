@@ -184,21 +184,22 @@ QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::syncronizationTasks()
     if (!typesRead) {
         typesRead = true;
 
-        QPtrDict<ObjectType> types = pda->getSynchronizationTypes(); /* rra->getTypes();*/
-        
-        QPtrDictIterator<ObjectType> it(types);
-        
-        for( ; it.current(); ++it ) {
-            objectType = it.current();
-            item = new SyncTaskListItem(objectType, objectTypeList, objectType->name, QCheckListItem::CheckBox, pdaName, partnerId);
-            item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
-            item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
-            item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
-            item->makePersistent();
-            connect((const QObject *) item, SIGNAL(stateChanged(bool)),
-                    this, SLOT(changedSlot()));
-            objectTypeList->insertItem(item);
-            syncTaskItemList.append(item);
+        QPtrDict<ObjectType> types;
+
+        if (pda->getSynchronizationTypes(&types)) {
+            QPtrDictIterator<ObjectType> it(types);
+            for( ; it.current(); ++it ) {
+                objectType = it.current();
+                item = new SyncTaskListItem(objectType, objectTypeList, objectType->name, QCheckListItem::CheckBox, pdaName, partnerId);
+                item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
+                item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
+                item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
+                item->makePersistent();
+                connect((const QObject *) item, SIGNAL(stateChanged(bool)),
+                        this, SLOT(changedSlot()));
+                objectTypeList->insertItem(item);
+                syncTaskItemList.append(item);
+            }
         }
     }
 
@@ -218,7 +219,7 @@ QString PdaConfigDialogImpl::getDeviceIp()
     KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
     activeConnection.setGroup("device");
     QString deviceIp = activeConnection.readEntry("ip");
-    
+
     return deviceIp;
 }
 

@@ -70,11 +70,12 @@ public:
 
     Rra(QString pdaName);
     virtual ~Rra();
-    QPtrDict<ObjectType> getTypes();
-    struct Rra::ids& getIds(uint32_t type_id);
-    struct Rra::Partner getPartner(uint32_t index);
-    struct Rra::Partner getCurrentPartner();
-    uint32_t partnerCreate();
+
+    bool getTypes(QPtrDict<ObjectType> *);
+    bool getIds(uint32_t type_id, struct Rra::ids *ids);
+    bool getPartner(uint32_t index, struct Rra::Partner *partner);
+    bool getCurrentPartner(struct Rra::Partner *partner);
+    bool partnerCreate(uint32_t *index);
     bool partnerReplace(int index);
     bool setPartner(struct Rra::Partner& partner);
     bool setCurrentPartner(uint32_t index);

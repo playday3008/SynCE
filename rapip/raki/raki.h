@@ -121,7 +121,7 @@ private slots:
     void quit();
     void shutDown();
     void restartDccm();
-    void pdaInitialized(PDA *pda);
+    void pdaInitialized(PDA *pda, int);
 };
 
 #endif

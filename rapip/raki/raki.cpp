@@ -137,7 +137,7 @@ Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
     openDccmConnection();
 
     configDialog->checkRunningVersion();
-    
+
     KTipDialog::showTip(KApplication::kApplication()->dirs()->findResource("data", "raki/tips"));
 
     startTimer(1000);
@@ -186,29 +186,31 @@ void Raki::initializePda()
                     pda = new PDA(this, pdaName);
                     pdaList.insert(pdaName, pda);
                 }
-                connect(pda, SIGNAL(initialized(PDA *)), this, SLOT(pdaInitialized(PDA*)));
+                connect(pda, SIGNAL(initialized(PDA *, int)), this, SLOT(pdaInitialized(PDA*, int)));
                 pda->init();
             }
             break;
         case 'D':
-            pendingPdaList.remove(commandAndPda);
             if (pda) {
-                bool showAgain = false;
-                pda->setDisconnected();
-                if (rapiLeMenu->isVisible()) {
-                    rapiLeMenu->hide();
-                    showAgain = true;
+                if (!pda->running()) {
+                    pendingPdaList.remove(commandAndPda);
+                    bool showAgain = false;
+                    pda->setDisconnected();
+                    if (rapiLeMenu->isVisible()) {
+                        rapiLeMenu->hide();
+                        showAgain = true;
+                    }
+                    rapiLeMenu->removeItem(pda->getMenuIndex());
+                    if (showAgain && rapiLeMenu->count() > 3) {
+                        rapiLeMenu->show();
+                    }
+                    pdaList.take(pdaName);
+                    delete pda;
+                    if (pdaList.count() == 0)
+                        setConnectionStatus(false);
+                    else
+                        setConnectionStatus(true);
                 }
-                rapiLeMenu->removeItem(pda->getMenuIndex());
-                if (showAgain && rapiLeMenu->count() > 3) {
-                    rapiLeMenu->show();
-                }
-                pdaList.take(pdaName);
-                delete pda;
-                if (pdaList.count() == 0)
-                    setConnectionStatus(false);
-                else
-                    setConnectionStatus(true);
             }
             break;
         case 'P':
@@ -268,9 +270,9 @@ void Raki::dccmConnect()
     synce::synce_get_directory(&path);
 
     dccmConnection = new KSocket((QString(path) + QString("/csock")).ascii());
-    synce::wstr_free_string(path);  // use this wstr function to free a "normal" cstring. 
-                                    // It does the same.and doesn't require stdlib.h to
-                                    // be included.
+    synce::wstr_free_string(path);  // use this wstr function to free a "normal" cstring.
+    // It does the same.and doesn't require stdlib.h to
+    // be included.
 
     if (dccmConnection->socket() > 0) {
         dccmConnection->enableRead(true);
@@ -305,23 +307,25 @@ void Raki::closeDccmConnection(KSocket */*dccmSocket*/)
 }
 
 
-void Raki::pdaInitialized(PDA *pda)
+void Raki::pdaInitialized(PDA *pda, int initialized)
 {
     bool showAgain = false;
 
-    pda->setConnected();
-    if (rapiLeMenu->isVisible()) {
-        rapiLeMenu->hide();
-        showAgain = true;
+    if (initialized) {
+        pda->setConnected();
+        if (rapiLeMenu->isVisible()) {
+            rapiLeMenu->hide();
+            showAgain = true;
+        }
+        rapiLeMenu->insertItem(SmallIcon("pda_blue"),
+                               QString(((pda->isPartner()) ? "" : "* ")) + pda->getName(),
+                               pda->getMenu());
+        if (showAgain) {
+            rapiLeMenu->show();
+        }
+        setConnectionStatus(true);
+        pda->synchronize(false);
     }
-    rapiLeMenu->insertItem(SmallIcon("pda_blue"),
-                           QString(((pda->isPartner()) ? "" : "* ")) + pda->getName(),
-                           pda->getMenu());
-    if (showAgain) {
-        rapiLeMenu->show();
-    }
-    setConnectionStatus(true);
-    pda->synchronize(false);
 }
 
 
@@ -372,7 +376,7 @@ void Raki::dccmExited(KProcess */*oldDccm*/)
 
     if (dccmShouldRun) {
         KMessageBox::error(0, "Could not start dccm or dccm has exited.\n"
-                              "Maybe there is already a dccm running");
+                           "Maybe there is already a dccm running");
     }
 }
 
@@ -400,7 +404,7 @@ void Raki::startDccm()
     dccmProc.clearArguments();
     dccmProc.setExecutable(configDialog->getDccmPath());
     dccmProc << "-f" /* << "-d" << "3"*/;
-    
+
     dccmShouldRun = true;
 
     dccmProc.start(KProcess::NotifyOnExit,  (KProcess::Communication)
@@ -702,6 +706,7 @@ static KCmdLineOptions options[] =
         // INSERT YOUR COMMANDLINE OPTIONS HERE
     };
 
+#undef NOTUNIQUE
 
 int main(int argc, char *argv[])
 {
@@ -736,16 +741,16 @@ int main(int argc, char *argv[])
         KUniqueApplication a;
 #endif
 
-        Raki *raki = new Raki(&aboutData, new KAboutApplication(&aboutData));
+    Raki *raki = new Raki(&aboutData, new KAboutApplication(&aboutData));
 
-        if (raki->isInitialized()) {
-            a.setMainWidget(raki);
-            raki->connect (&a, SIGNAL (aboutToQuit()), raki, SLOT (shutDown()));
-            raki->show();
+    if (raki->isInitialized()) {
+        a.setMainWidget(raki);
+        raki->connect (&a, SIGNAL (aboutToQuit()), raki, SLOT (shutDown()));
+        raki->show();
 
-            return a.exec();
-        }
-#ifndef NOUNIQUE
+        return a.exec();
+    }
+#ifndef NOTUNIQUE
     }
 #endif
 }

@@ -103,14 +103,14 @@ bool Rra::ok()
 }
 
 
-QPtrDict<ObjectType> Rra::getTypes()
+bool Rra::getTypes(QPtrDict<ObjectType> *objectTypes)
 {
     size_t object_type_count = 0;
     ObjectType *objectType;
 
     rraOk = true;
 
-    objectTypes.clear();
+    objectTypes->clear();
 
     if (connect()) {
         _ids.object_types = NULL;
@@ -118,7 +118,7 @@ QPtrDict<ObjectType> Rra::getTypes()
             for (size_t i = 0; i < object_type_count; i++) {
                 objectType = new ObjectType();
                 *objectType = _ids.object_types[i];
-                objectTypes.insert((void *) objectType->id, objectType);
+                objectTypes->insert((void *) objectType->id, objectType);
             }
         } else {
             rraOk = false;
@@ -128,11 +128,11 @@ QPtrDict<ObjectType> Rra::getTypes()
         rraOk = false;
     }
 
-    return objectTypes;
+    return rraOk;
 }
 
 
-struct Rra::ids& Rra::getIds(uint32_t type_id)
+bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
 {
     size_t deleted_count = 0;
     unsigned id = 0;
@@ -171,80 +171,89 @@ struct Rra::ids& Rra::getIds(uint32_t type_id)
         rraOk = false;
     }
 
-    return _ids;
+    *ids = _ids;
+
+    return rraOk;
 }
 
-struct Rra::Partner Rra::getPartner(uint32_t index)
+bool Rra::getPartner(uint32_t index, struct Rra::Partner *partner)
 {
-    struct Rra::Partner partner;
     char *name = NULL;
 
-    if (!rra_partner_get_id(rra, index, &partner.id)) {
-        partner.id = 0;
+    rraOk = true;
+
+    if (!rra_partner_get_id(rra, index, &partner->id)) {
+        partner->id = 0;
+        rraOk = false;
     }
 
     if (!rra_partner_get_name(rra, index, &name)) {
-        partner.name = "";
+        partner->name = "";
+        rraOk = false;
     } else {
-        partner.name = name;
+        partner->name = name;
     }
     
-    partner.index = index;
+    partner->index = index;
 
-    return partner;
+    return rraOk;
 }
 
 
-struct Rra::Partner Rra::getCurrentPartner()
+bool Rra::getCurrentPartner(struct Rra::Partner *partner)
 {
     DWORD currentIndex;
-    struct Rra::Partner partner;
+
+    rraOk = true;
 
     if (rra_partner_get_current(rra, &currentIndex)) {
-        partner = getPartner(currentIndex);
+        if (!getPartner(currentIndex, partner)) {
+            rraOk = false;
+        }
     } else {
-        partner.id = 0;
-        partner.name = "";
-        partner.index = 0;
+        partner->id = 0;
+        partner->name = "";
+        partner->index = 0;
+        rraOk = false;
     }
 
-    return partner;
+    return rraOk;
 }
 
 
-uint32_t Rra::partnerCreate()
+bool Rra::partnerCreate(uint32_t *index)
 {
-    uint32_t index = 0;
+    rraOk = true;
 
-    if (rra_partner_create(rra, &index)) {
-        kdDebug(2120) << "Partnership creation succeeded. Using partnership index " << index << endl;
+    if (rra_partner_create(rra, index)) {
+        kdDebug(2120) << "Partnership creation succeeded. Using partnership index " << *index << endl;
     } else {
         kdDebug(2120) << "Partnership creation failed." << endl;
-        index = 0;
+        *index = 0;
+        rraOk = false;
     }
 
-    return index;
+    return rraOk;
 }
 
 
 bool Rra::partnerReplace(int index)
 {
-    bool ret;
+    rraOk = true;
 
     if (index == 1 || index == 2) {
         if (rra_partner_replace(rra, index)) {
             kdDebug(2120) << "Partnership replacement succeeded." << endl;
-            ret = true;
         } else {
             kdDebug(2120) << "Partnership replacement failed." << endl;
-            ret = false;
+            rraOk = false;
         }
     } else {
         kdDebug(2120) << "Invalid or missing index of partnership to replace." << endl;
-        ret = false;
+        rraOk = false;
     }
 
-    return ret;
+    return rraOk;
 }
 
 
