@@ -22,7 +22,6 @@
  ***************************************************************************/
 
 #include "raki.h"
-#include "rapiwrapper.h"
 #include "configdialogimpl.h"
 #include "rakiworkerthread.h"
 #include "pda.h"
