@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <syslog.h>
 #include "dccm_config.h"
 #if !HAVE_DAEMON
 int daemon(int nochdir, int noclose);
@@ -68,6 +69,7 @@ typedef struct _Client
 static Client * current_client = NULL;
 static bool running = true;
 static bool is_daemon = true;
+static bool allow_root = false;
 static char* password = NULL;
 
 static void disconnect_current_client()
@@ -142,7 +144,8 @@ static void write_help(char *name)
 			"\t                 3 - Everything\n"
 			"\t-f           Do not run as daemon\n"
 			"\t-h           Show this help message\n"
-			"\t-p PASSWORD  Use this password when device connects\n",
+			"\t-p PASSWORD  Use this password when device connects\n"
+      "\t-r           Allow dccm to run as root - USE AT YOUR OWN RISK!\n",
 			name);
 }
 
@@ -154,7 +157,7 @@ static bool handle_parameters(int argc, char** argv)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "d:fhp:")) != -1)
+	while ((c = getopt(argc, argv, "d:fhp:r")) != -1)
 	{
 		switch (c)
 		{
@@ -174,6 +177,10 @@ static bool handle_parameters(int argc, char** argv)
 					free(password);
 				password = strdup(optarg);
 				break;
+
+      case 'r':
+        allow_root = true;
+        break;
 
 			case 'h':
 			default:
@@ -245,7 +252,7 @@ static void run_scripts(char* action)
 		if (!(info.st_mode & S_IFREG))
 			continue;
 
-		synce_trace("Running script: %s", path);
+		synce_trace("Running command: %s %s", path, action);
 		snprintf(command, sizeof(command), "%s %s", path, action);
 		
 		/* Run script */
@@ -387,7 +394,7 @@ static bool client_read(Client* client)
     if (client->initialized && !client->has_information)
     {
       // Windows CE 1.0 has closed the socket
-      synce_trace("Assuming Windows CE 1.0 - is this correct?");
+      synce_info("Enabling special Windows CE 1.0 support");
       client->is_windows_ce_10 = true;
       success = true;
       client->disconnect = true;
@@ -399,14 +406,14 @@ static bool client_read(Client* client)
 	}
 
 	header = letoh32(header);
-	synce_trace("Read header: 0x%08x", header);
+	/* synce_trace("Read header: 0x%08x", header); */
 
 	if (0 == header)
 	{
 		/*
 		 * Empty - ignore
 		 */
-		synce_trace("empty package");
+		/* synce_trace("empty package"); */
     client->initialized = true;
 	}
 	else if (DCCM_PING == header)
@@ -414,7 +421,7 @@ static bool client_read(Client* client)
 		/*
 		 * This is a ping reply
 		 */
-		synce_trace("this is a ping reply");
+		/* synce_trace("this is a ping reply"); */
 		client->ping_count = 0;
 	}
 	else if (header < DCCM_MAX_PACKET_SIZE)
@@ -422,7 +429,7 @@ static bool client_read(Client* client)
 		/*
 		 * This is an information message
 		 */
-		synce_trace("this is an information message");
+		/* synce_trace("this is an information message"); */
 
 		if (header < DCCM_MIN_PACKET_SIZE)
 		{
@@ -466,9 +473,12 @@ static bool client_read(Client* client)
 		client->class     = string_at(buffer, header, 0x1c);
 		client->hardware  = string_at(buffer, header, 0x20);
 
-		synce_trace("name    : %s", client->name);
+    synce_info("Talking to '%s', a %s device of type %s",
+        client->name, client->class, client->hardware);
+
+		/*synce_trace("name    : %s", client->name);
 		synce_trace("class   : %s", client->class);
-		synce_trace("hardware: %s", client->hardware);
+		synce_trace("hardware: %s", client->hardware);*/
 
 		free(buffer);
 		buffer = NULL;
@@ -541,7 +551,7 @@ static bool client_handler(Client* client)
 			goto exit;	
 		}
 
-		synce_trace("got events 0x%08x", events);
+		/*synce_trace("got events 0x%08x", events);*/
 
 		if (events & EVENT_READ)
 		{
@@ -581,7 +591,7 @@ static bool client_handler(Client* client)
 		}
 		else if (events & EVENT_TIMEOUT)
 		{
-			synce_trace("timeout event: sending ping");
+			/* synce_trace("timeout event: sending ping"); */
 			
 			if (!synce_socket_write(client->socket, &ping, sizeof(ping)))
 			{
@@ -591,6 +601,11 @@ static bool client_handler(Client* client)
 
 			client->ping_count++;
 		}
+    else if (events & EVENT_INTERRUPTED)
+    {
+      synce_trace("Connection interrupted");
+      goto exit;
+    }
 		else
 		{
 			synce_error("unexpected events: %i", events);
@@ -677,7 +692,10 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv))
 		goto exit;
 
-	if (0 == getuid())
+  openlog("dccm", (is_daemon ? 0 : LOG_PERROR) | LOG_PID, LOG_DAEMON);
+  synce_log_use_syslog();
+
+	if (!allow_root && 0 == getuid())
 	{
 		synce_error("You should not run dccm as root.");
 		goto exit;
@@ -745,6 +763,8 @@ int main(int argc, char** argv)
 	
 	remove_connection_file();
 	run_scripts("start");
+  
+	synce_info("Listening for connections on port %i", DCCM_PORT);
 
 	while (running)
 	{
@@ -753,24 +773,32 @@ int main(int argc, char** argv)
 		 */
 
 		Client client;
-		memset(&client, 0, sizeof(client));
+    char ip_str[16];
+    memset(&client, 0, sizeof(client));
 
 		client.socket = synce_socket_accept(server, &client.address);
 		if (!client.socket)
 		{
-			synce_error("Failed to accept client");
+			/* synce_error("Failed to accept client"); */
 			goto exit;
 		}
 
-		synce_trace("client is connected");
+    if (!inet_ntop(AF_INET, &client.address.sin_addr, ip_str, sizeof(ip_str)))
+    {
+      synce_error("inet_ntop failed");
+      goto exit;
+    }
+
+    synce_info("Connection from %s accepted", ip_str);
 
 		current_client = &client;
 
 		if (!client_handler(&client))
 		{
-			synce_error("Failed to handle client connection");
 			/* Better luck on next client? :-) */
 		}
+			
+    synce_info("Connection from %s closed", ip_str);
 		
 		current_client = NULL;
 
@@ -795,6 +823,8 @@ int main(int argc, char** argv)
 
 	run_scripts("stop");
 	result = RESULT_SUCCESS;
+  
+	synce_info("Shutting down.");
 
 exit:
 	if (password)
