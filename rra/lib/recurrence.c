@@ -256,8 +256,8 @@ static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
       continue;
     }
 
-    synce_trace("RRULE part: key=%s, value=%s", 
-        pair[0], pair[1]);
+    /*synce_trace("RRULE part: key=%s, value=%s", 
+        pair[0], pair[1]);*/
 
     if (STR_EQUAL(pair[0], "BYDAY"))
       replace_string_with_copy(&rrule->byday, pair[1]);
@@ -300,6 +300,62 @@ static void recurrence_set_days_of_week_mask(
   strv_free(days);
 }
 
+bool recurrcence_set_dates(
+    RRA_RecurrencePattern* pattern, 
+    mdir_line* mdir_dtstart,
+    mdir_line* mdir_dtend)
+{
+  bool success = false;
+  struct tm start_struct;
+  struct tm tmp_struct;
+  time_t start;
+  time_t end;
+  int32_t minutes = 0;
+  ParserTimeFormat format = parser_get_time_format(mdir_dtstart);
+  bool start_is_utc = false;
+  bool end_is_utc = false;
+
+  /* XXX timezone handling? */
+
+  if (!parser_datetime_to_struct(mdir_dtstart->values[0], &start_struct, NULL))
+    goto exit;
+  if (!parser_datetime_to_unix_time(mdir_dtstart->values[0], &start, &start_is_utc))
+    goto exit;
+  if (!parser_datetime_to_unix_time(mdir_dtend->values[0], &end, &end_is_utc))
+    goto exit;
+
+  synce_trace("start is utc: %i, end is utc: %i", start_is_utc, end_is_utc);
+
+  tmp_struct = start_struct;
+  tmp_struct.tm_sec = 0;
+  tmp_struct.tm_min = 0;
+  tmp_struct.tm_hour = 0;
+  pattern->pattern_start_date = rra_minutes_from_struct(&tmp_struct);
+
+  pattern->start_minute = start_struct.tm_hour * 60 + start_struct.tm_sec;
+
+  switch (format)
+  {
+    case PARSER_TIME_FORMAT_UNKNOWN:
+      goto exit;
+
+    case PARSER_TIME_FORMAT_DATE_AND_TIME:
+      minutes = (end - start) / 60;
+      break;
+
+    case PARSER_TIME_FORMAT_ONLY_DATE:
+      minutes = (end - start - SECONDS_PER_DAY) / 60 + 1;
+      break;
+  }
+  
+  pattern->end_minute = pattern->start_minute + minutes;
+
+  success = true;
+
+exit:
+  return success;
+}
+
 bool recurrence_parse_rrule(
     struct _Parser* p, 
     mdir_line* mdir_dtstart,
@@ -310,6 +366,12 @@ bool recurrence_parse_rrule(
   bool success = false;
   RRule rrule;
   RRA_RecurrencePattern* pattern = rra_recurrence_pattern_new();
+
+  if (!recurrcence_set_dates(pattern, mdir_dtstart, mdir_dtend))
+  {
+    synce_error("Failed to set dates");
+    goto exit;
+  }
 
   memset(&rrule, 0, sizeof(RRule));
   if (!recurrence_initialize_rrule(mdir_rrule->values[0], &rrule))
@@ -387,7 +449,13 @@ bool recurrence_parse_rrule(
 
     if (!parser_add_blob(p, ID_RECURRENCE_PATTERN, buffer, size))
     {
-      synce_error("Failed to add BLOB");
+      synce_error("Failed to set recurrcence pattern in output");
+      goto exit;
+    }
+
+    if (parser_add_int16(p, ID_OCCURENCE, OCCURENCE_REPEATED))
+    {
+      synce_error("Failed to sett occurence in output");
       goto exit;
     }
   }
