@@ -1,6 +1,6 @@
 ## useful flags
 SRC = ../../src
-CXXFLAGS = -ggdb -Wall -I$(SRC) -I$(SRC)/support
+CXXFLAGS = -g -Wall -I$(SRC) -I$(SRC)/support
 LDADD = $(SRC)/librapi.la
 
 noinst_PROGRAMS = \

@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall
+AM_CFLAGS = -g -Wall
 
 bin_PROGRAMS = synce-serial-chat
 

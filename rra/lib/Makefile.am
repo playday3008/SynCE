@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I..
+AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I..
 ## @APPLE_CFLAGS@
 
 ## create this library

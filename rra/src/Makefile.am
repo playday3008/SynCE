@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
+AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
 LDADD = ../lib/librra.la
 
 noinst_PROGRAMS = rra-get-types rra-get-ids \
