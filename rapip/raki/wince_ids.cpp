@@ -730,7 +730,7 @@ bool setAdditionalCountry(MyAddress& myAddress, synce::CEPROPVAL *propval,
     return true;
 }
 
-
+#ifdef WITH_ICAL
 ICAL::icalproperty *sensitivity(ICAL::icalcomponent *event,
         synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
@@ -1093,3 +1093,4 @@ ICAL::icalproperty *unknownfffe(ICAL::icalcomponent *event, synce::CEPROPVAL *pr
     }
     return prop;
 }
+#endif

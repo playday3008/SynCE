@@ -31,9 +31,11 @@
 #include <rapi.h>
 
 #include <kabc/addressee.h>
+
 namespace ICAL {
     #include <ical.h>
 }
+
 #include <qstring.h>
 
 /**

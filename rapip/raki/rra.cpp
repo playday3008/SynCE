@@ -402,7 +402,7 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
         const char *vevent = vEvent.ascii();
 
         if (!rra_appointment_from_vevent(vevent, NULL, &buffer,
-                &buffer_size, 0, NULL)) {
+                &buffer_size, 0)) {
             rraOk = false;
         } else if (!rra_object_put(rra, type_id, object_id,
                 (object_id != 0) ? 0x40 : 2, buffer,
@@ -486,8 +486,10 @@ contact_ids_t contact_ids[] = {
     {0, 0, NULL}
 };
 
-
 event_ids_t event_ids[] = {
+#ifndef WITH_ICAL
+    { 0, 0, NULL, NULL}
+#else
     { 0x0001, 0x0000, unknown0001, NULL }, /* something about repeated appointemnts */
     { 0x0002, 0x0003, unknown0002, NULL }, /* Unknown */
     { 0x0004, 0x0002, sensitivity, NULL }, /* sensitivity */
@@ -532,8 +534,8 @@ event_ids_t event_ids[] = {
     { 0xfffd, 0x0013, unknownfffd, NULL }, /* Unknown */
     { 0xfffe, 0x0013, unknownfffe, NULL },
     { 0, 0, NULL, NULL }
+#endif //WITH_ICAL
 };
-
 
 #ifdef __cplusplus
 extern "C"
