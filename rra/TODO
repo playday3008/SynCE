@@ -3,5 +3,5 @@ $Id$
 TODO for the RRA module
 =======================
 
-- Don't use hard-coded database IDs
+- Handle ATTENDEE properties in VEVENT
 
