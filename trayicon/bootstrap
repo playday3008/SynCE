@@ -1,0 +1,10 @@
+#!/bin/sh
+rm -f config.cache
+#echo 'Please ignore "warning: AC_TRY_RUN called without default to allow cross compiling"'
+set -x -e
+aclocal -I m4
+autoheader
+libtoolize --automake
+automake --foreign --add-missing
+autoconf
+
