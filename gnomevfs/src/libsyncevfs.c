@@ -17,11 +17,7 @@ gnome_vfs_mime_type_from_name_or_default (const char *filename, const char *defa
 
 #define SHOW_APPLICATIONS   0
 
-#ifdef SYNCE_DEBUG
-#define D(x...) printf(x)
-#else
-#define D(x...)
-#endif
+#define D(x...) synce_debug(x)
 
 #ifdef G_THREADS_ENABLED
 #define MUTEX_NEW()     g_mutex_new ()
@@ -1448,6 +1444,10 @@ GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)
 {
 	if (!mutex)
 		mutex = MUTEX_NEW ();
+
+  synce_log_use_syslog();
+  synce_debug("vfs_module_init(method_name = '%s', args = '%s')",
+      method_name, args);
 
 	return &method;
 }
