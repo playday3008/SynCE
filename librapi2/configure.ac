@@ -55,6 +55,8 @@ AC_C_BIGENDIAN()
 AC_C_CONST
 
 dnl Checks for library functions.
+AC_REPLACE_FUNCS(inet_pton)
+
 AM_ICONV()
 if test "$am_cv_func_iconv" '!=' yes; then
 	AC_MSG_ERROR([iconv not found, try using --with-libiconv-prefix])
