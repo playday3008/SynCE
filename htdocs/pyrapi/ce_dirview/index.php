@@ -157,6 +157,6 @@ for writing the Python wrappers to the <a href="http://www.trolltech.com" target
 
 Thanks also to <a href="mailto:twogood@users.sourceforge.net">David Eriksson</a>, the current project manager of the <b>SynCE</b>-project.
 
-<p>Return to <a href="../../index.php">SynCE-KDE main page</a>.</p>
+<p>Return to <a href="../../index.php">SynCE main page</a>.</p>
 
 <?php include '../../footer.php'; ?>
