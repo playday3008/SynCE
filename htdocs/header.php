@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<title>SynCE<?php if ($title) echo ":: $title"; ?></title>
+	<title>SynCE<?php if ($title) echo " :: $title"; ?></title>
 	<link href="synce.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
