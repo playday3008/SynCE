@@ -293,7 +293,7 @@ RedHat 9.<br>
 </blockquote>
 <span style="font-weight: bold;"><a href="http://www.slackware.com/">Slackware</a>
 user</span><br>
-<blockquote>The precompiled package synce-kde-slack-0.6.1.tar.gz has
+<blockquote>The precompiled package synce-kde-0.6.1.tgz has
 been compiled on Slackware 9. <br>
   <br>
 </blockquote>
