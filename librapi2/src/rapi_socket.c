@@ -93,18 +93,12 @@ bool rapi_socket_close(RapiSocket* socket)
 	return false;
 }
 
-/**
- * Write a number of bytes of data to socket
- */
-static bool rapi_socket_write(RapiSocket* socket, void* data, unsigned size)
+bool rapi_socket_write(RapiSocket* socket, void* data, unsigned size)
 {
 	return write(socket->fd, data, size) == size;
 }
 
-/**
- * Read a number of bytes of data from a socket
- */
-static bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
+bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
 {
 	int bytes_needed = size;
 	

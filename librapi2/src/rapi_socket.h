@@ -38,5 +38,15 @@ bool rapi_socket_send(RapiSocket* socket, RapiBuffer* buffer);
  */
 bool rapi_socket_recv(RapiSocket* socket, RapiBuffer* buffer);
 
+/**
+ * Write a number of bytes of data to socket
+ */
+bool rapi_socket_write(RapiSocket* socket, void* data, unsigned size);
+
+	/**
+ * Read a number of bytes of data from a socket
+ */
+bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size);
+
 #endif
 
