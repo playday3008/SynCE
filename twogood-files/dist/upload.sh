@@ -1,2 +1,2 @@
 #!/bin/sh
-ncftpput upload.sourceforge.net /incoming/ $*
+ncftpput upload.sourceforge.net /incoming/ $@
