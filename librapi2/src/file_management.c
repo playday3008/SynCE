@@ -348,17 +348,18 @@ DWORD CeGetFileAttributes(
 		LPCWSTR lpFileName)
 {
 	RapiContext* context = rapi_context_current();
-	DWORD return_value = 0;
+	DWORD return_value = 0xFFFFFFFF;
 	
 	rapi_context_begin_command(context, 0x03);
-	rapi_buffer_write_optional_string(context->send_buffer, lpFileName);
+	rapi_buffer_write_string(context->send_buffer, lpFileName);
 
 	if ( !rapi_context_call(context) )
-		return 0;
+		goto exit;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
+exit:
 	return return_value;
 }
 
@@ -367,17 +368,20 @@ BOOL CeSetFileAttributes(
 		DWORD dwFileAttributes)
 {
 	RapiContext* context = rapi_context_current();
-	BOOL return_value = 0;
+	BOOL return_value = false;
+	
+	synce_trace("Setting attributes %08x", dwFileAttributes);
 	
 	rapi_context_begin_command(context, 0x04);
 	rapi_buffer_write_optional_string(context->send_buffer, lpFileName);
 	rapi_buffer_write_uint32(context->send_buffer, dwFileAttributes);
 
 	if ( !rapi_context_call(context) )
-		return 0;
+		goto exit;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
+exit:
 	return return_value;
 }
