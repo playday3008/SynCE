@@ -15,7 +15,7 @@ AC_ARG_PROGRAM
 dnl Automake doc recommends to do this only here. (Janos)
 AM_INIT_AUTOMAKE(@MODULENAME@, @VERSION@) dnl searches for some needed programs
 
-KDE_SET_PREFIX
+dnl KDE_SET_PREFIX
 
 dnl generate the config header
 AM_CONFIG_HEADER(config.h) dnl at the distribution this done
@@ -26,11 +26,21 @@ AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
 KDE_PROG_LIBTOOL
 
+dnl Test -fshort-wchar
+KDE_CHECK_COMPILER_FLAG(fshort-wchar,
+[ SHORT_WCHAR_FLAGS="-fshort-wchar" ],
+[ SHORT_WCHAR_FLAGS="-U__WCHAR_TYPE__ -D__WCHAR_TYPE__=short\ unsigned\ int" ] )
+AC_SUBST(SHORT_WCHAR_FLAGS)
+
 dnl for NLS support. Call them in this order!
 dnl WITH_NLS is for the po files
-AM_KDE_WITH_NLS
+dnl AM_KDE_WITH_NLS
 
-AC_PATH_KDE
+dnl AC_PATH_KDE replaced by the lines below
+all_libraries="$all_libraries $USER_LDFLAGS"
+all_includes="$all_includes $USER_INCLUDES"
+AC_SUBST(all_includes)
+AC_SUBST(all_libraries)
 
 dnl Perform program name transformation
 AC_ARG_PROGRAM
