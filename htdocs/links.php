@@ -23,6 +23,7 @@
 <h2>Applications for Pocket PC</h2>
 <ul>
 <li><a href="http://www.phm.lu/Products/PocketPC/">Pocket PC System Tools</a> by Philippe Majerus, including a great registry editor!</li>
+<li><a href="http://www.cs.utah.edu/~midgley/wince/vnc.html">VNC Viewer for Pocket PC</a></li>
 </ul>
 
 <h2>Other applications</h2>
