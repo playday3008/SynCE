@@ -18,6 +18,7 @@ PDF_DIR      = pdf
 
 # Location of xsl processor
 xsltproc = xsltproc
+fopproc  = fop.sh
 
 help:
 	@echo 
@@ -27,9 +28,11 @@ help:
 	@echo "setup       - create output directories."
 	@echo "html-one    - make document in one html file"
 	@echo "html-chunk  - make document split into seperate files."
+	@echo "pdf         - make document in pdf format."
 	@echo "all         - make all document types."
 	@echo "clean-one   - remove all-in-one html file."
 	@echo "clean-chunk - remove split html files."
+	@echo "clean-pdf   - remove all pdf files."
 	@echo "clean-all   - remove all generated files."
 	@echo "-----------------------------------------------------"
 	@echo
@@ -48,8 +51,9 @@ html-chunk: setup
 
 pdf: setup
 	(cd ${DOC_DIR}; ${xsltproc} -o ${PWD}/${PDF_DIR}/out.fo ${FO_STYLESHEET} ${ROOT_DOC})	
+	(cd ${PWD}/${PDF_DIR}; ${fopproc} out.fo -pdf synce.pdf)
 
-all: html-chunk html-one
+all: html-chunk html-one pdf
 
 
 clean-one:

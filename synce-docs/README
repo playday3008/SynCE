@@ -1,0 +1,16 @@
+This is the documentation for the SynCE project.
+
+The documentation is written in the DocBook XML format. Unfortunately
+turning the DocBook files into readable formats requires a rather
+complex tool chain. Currently the build process is known to work with
+the following tool chain: 
+
+	xsltproc 
+	fop-0.20.4
+	xsl-stylesheets-1.50.0
+
+If you have any luck with other tool chains please let me know.
+
+Richard Taylor
+r.taylor (at) bcs.org.uk
+
