@@ -6,6 +6,12 @@
 
 <h1>SynCE - installing Debian packages</h1>
 
+<p>See this <a
+href="http://qa.debian.org/developer.php?login=Volker+Christian">list of SynCE
+packages in Debian</a>.</p>
+
+<?php /*
+
 <p>SynCE is not yet available in the Debian distribution but we maintain an apt
 repository on this web site. These packages have been provided by <a
 href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a> and
@@ -76,6 +82,8 @@ or unstable:</p>
 please <a href="tarballs.php">download and compile the source code</a>.</li>
 
 </ol>
+
+*/ ?>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
