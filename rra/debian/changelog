@@ -1,6 +1,12 @@
 librra (0.8.4+cvs-1) unstable; urgency=low
 
-  * Initial Release.
+  * CVS build.
+ 
+ -- Jonathan McDowell <noodles@earth.li>  Thu, 25 Sep 2003 19:54:37 +0100
+ 
+librra (0.8.2-1) unstable; urgency=low
+
+  * Initial Debian upload.
 
  -- Thomas Butter <thomas@i.rule-the.net>  Mon, 25 Aug 2003 13:37:03 +0200
 
