@@ -17,12 +17,23 @@ export PWD USER TOPDIR TARBALLS APTDIR RPMS SRPMS
 
 all: tarballs rpms
 
+trayicon:
+	$(MAKE) -f Makefile.release NAME=trayicon tarball
+	$(MAKE) -f Makefile.release NAME=trayicon rpm
+
+tag:
+	$(MAKE) -f Makefile.release NAME=serial   tag
+	$(MAKE) -f Makefile.release NAME=libsynce tag
+	$(MAKE) -f Makefile.release NAME=librapi2 tag
+	$(MAKE) -f Makefile.release NAME=dccm     tag
+	$(MAKE) -f Makefile.release NAME=trayicon tag
+
 tarballs:
 	-mkdir $(TARBALLS)
 	$(MAKE) -f Makefile.release NAME=serial   tarball
 	$(MAKE) -f Makefile.release NAME=libsynce tarball
 	$(MAKE) -f Makefile.release NAME=librapi2 tarball
-	$(MAKE) -f Makefile.release NAME=dccmd    tarball
+	$(MAKE) -f Makefile.release NAME=dccm     tarball
 
 rpms:
 	-rm -rf /var/tmp/synce-root
@@ -33,7 +44,7 @@ rpms:
 	$(MAKE) -f Makefile.release NAME=serial   rpm
 	$(MAKE) -f Makefile.release NAME=libsynce rpm
 	$(MAKE) -f Makefile.release NAME=librapi2 rpm
-	$(MAKE) -f Makefile.release NAME=dccmd    rpm
+	$(MAKE) -f Makefile.release NAME=dccm     rpm
 
 apt:
 	genbasedir --flat --bloat --bz2only $(APTDIR) synce

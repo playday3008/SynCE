@@ -4,12 +4,17 @@ RPMROOT=/home/david/redhat
 
 DIR=$(TOPDIR)/$(NAME)
 VERSION=$(shell cat $(DIR)/$(NAME).spec | grep '%define ver' | sed 's/%define ver[ 	]*//')
+TAG="V$(shell echo $(VERSION) | sed 's/\./_/g')"
 DIRNAME=synce-$(NAME)-$(VERSION)
 TARBALL=$(TARBALLS)/$(DIRNAME).tar.gz
 EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
 	--exclude '.*.swp' --exclude '*.tar.gz'
 
 all: tarball
+
+tag:
+	@echo "TAG=$(TAG)"
+#	cd $(DIR) && cvs tag -F $(TAG)
 
 tarball:
 	@echo "VERSION=$(VERSION)"
@@ -18,12 +23,16 @@ tarball:
 	-rm $(TOPDIR)/$(DIRNAME)
 	cd $(TOPDIR) && ln -s $(NAME) $(DIRNAME)
 	cd $(TOPDIR) && tar cvfhz $(TARBALL) $(DIRNAME) $(EXCLUDE)
+	rm $(TOPDIR)/$(DIRNAME)
 
 rpm:
-	-rm $(RPMROOT)/SRPMS/$(NAME)*
-	-rm $(RPMROOT)/RPMS/$(NAME)*
+	-rm $(RPMS)/$(DIRNAME)*
+	-rm $(SRPMS)/$(DIRNAME)*
+	-rm $(RPMROOT)/SRPMS/$(DIRNAME)*
+	-rm $(RPMROOT)/RPMS/i386/$(DIRNAME)*
+	-rm $(RPMROOT)/RPMS/i386/$(DIRNAME)*
 	cp $(TARBALL) $(RPMROOT)/SOURCES/
 	rpmbuild -ba $(DIR)/$(NAME).spec
-	cp $(RPMROOT)/RPMS/i386/$(DIRNAME)*.rpm $(RPMS)/
+	cp $(RPMROOT)/RPMS/noarch/$(DIRNAME)*.rpm $(RPMS)/ || cp $(RPMROOT)/RPMS/i386/$(DIRNAME)*.rpm $(RPMS)/
 	cp $(RPMROOT)/SRPMS/$(DIRNAME)*.rpm $(SRPMS)/
 
