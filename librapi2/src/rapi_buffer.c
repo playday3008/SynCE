@@ -37,6 +37,8 @@ static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)
 	while (new_size < bytes_needed)
 		new_size <<= 1;
 	
+	rapi_log("trying to realloc %i bytes, buffet->data=%p", new_size, buffer->data);
+	
 	new_data = realloc(buffer->data, new_size);
 	if (new_data)
 	{
@@ -61,7 +63,17 @@ static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)
 	size_t bytes_needed = buffer->bytes_used + extra_size;
 
 	if (bytes_needed > buffer->max_size)
+	{
 		success = rapi_buffer_enlarge(buffer, bytes_needed);
+		if (!success)
+		{
+			rapi_log("failed to enlarge buffer, bytes_needed=%i\n", bytes_needed);
+		}
+	}
+	else
+	{
+		success = true;
+	}
 
 	return success;
 }
@@ -269,5 +281,37 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value)
 
 	return true;
 }
+
+bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
+{
+	u_int32_t exact_size = 0;
+	
+	if (!buffer || !unicode || !size)
+	{
+		rapi_log("bad parameter");
+		return false;
+	}
+
+	if ( !rapi_buffer_read_uint32(buffer, &exact_size) )
+		return false;
+	rapi_log("exact_size = %i = 0x%x", exact_size, exact_size);
+
+	if ( exact_size > *size )
+	{
+		rapi_log("buffer too small (have %i bytes, need %i bytes)", *size, exact_size);
+		return false;
+	}
+
+	*size = exact_size;
+
+	if ( !rapi_buffer_read_data(buffer, unicode, (exact_size+1) * sizeof(WCHAR)) )
+	{
+		rapi_log("failed to read buffer");
+		return false;
+	}
+	
+	return true;
+}
+
 
 
