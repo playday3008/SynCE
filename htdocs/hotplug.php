@@ -74,6 +74,9 @@ chmod +x $REMOVER</pre>
 
 </li>
 
+<li>When you have the hotplug script installed you should <b>not</b> run
+<tt>synce-serial-start</tt> yourself.</li>
+
 </ol>
 
 <p>Return to <a href="index.php">main page</a>.</p>
