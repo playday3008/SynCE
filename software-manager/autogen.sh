@@ -1,20 +1,49 @@
 #!/bin/sh
-# Run this to generate all the initial makefiles, etc.
+set -e
+VERSION=`cat VERSION`
 
-srcdir=`dirname $0`
-test -z "$srcdir" && srcdir=.
+if [ -z "$VERSION" ]; then
+	echo "Empty version"
+	exit 1
+fi
 
-PKG_NAME="synce_software_manager"
+# create configure.ac with correct version number
+ACFILE="configure.ac"
+ACFILE_IN="$ACFILE.in"
+if [ -f $ACFILE ]; then
+	rm $ACFILE
+fi
+echo -n "Creating $ACFILE..."
+cat $ACFILE_IN | sed "s/\\(AM_INIT_AUTOMAKE(.*,\\).*)/\\1 $VERSION)/" > $ACFILE
+if [ -s $ACFILE ]; then
+	echo "done."
+else
+	exit 1
+fi
 
-(test -f $srcdir/configure.in) || {
-    echo -n "**Error**: Directory "\`$srcdir\'" does not look like the"
-    echo " top-level $PKG_NAME directory"
-    exit 1
-}
+# create .spec file with correct version number
+for SPEC_IN in "*.spec.in"; do
+	SPEC=`basename $SPEC_IN .in`
+	if [ -f $SPEC ]; then
+		rm $SPEC
+	fi
+	echo -n "Creating $SPEC..."
+	cat $SPEC_IN | sed "s/^\\(Version:\\).*/\\1 $VERSION/" > $SPEC
+	if [ -s $SPEC ]; then
+		echo "done."
+	else
+		exit 1
+	fi
+done
+
+rm -f config.cache
+if [ -d "m4" ]; then
+	ACLOCAL_FLAGS="-I m4 $ACLOCAL_FLAGS"
+fi
 
 which gnome-autogen.sh || {
-	echo "You need to install gnome-common from the GNOME CVS"
-	exit 1
+        echo "You need to install gnome-common from the GNOME CVS"
+        exit 1
 }
-
-USE_GNOME2_MACROS=1 . gnome-autogen.sh
+ 
+USE_GNOME2_MACROS=1 . gnome-autogen.sh $@

@@ -7,9 +7,11 @@ config.h.in
 config.log
 config.status
 configure
+configure.ac
 intltool-extract
 intltool-merge
 intltool-modules
 intltool-update
 libtool
-stamp-h1
+software-manager.spec
+stamp-h*
