@@ -29,7 +29,7 @@
   <kdevautoproject>
     <general>
       <activetarget>raki/raki</activetarget>
-      <useconfiguration>debug</useconfiguration>
+      <useconfiguration>dist</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
@@ -89,8 +89,8 @@
         <f77flags/>
       </default>
       <dist>
-        <configargs>--with-agsync=../../thirdparty/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
-        <builddir/>
+        <configargs>--with-agsync=../thirdparty/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <builddir>.</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>

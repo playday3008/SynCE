@@ -11,3 +11,17 @@ runwindow.cpp
 runwindow.h
 configdialog.cpp
 configdialog.h
+initprogress.cpp
+initprogress.h
+installdialog.cpp
+installdialog.h
+passworddialog.cpp
+passworddialog.h
+pdaconfigdialog.cpp
+pdaconfigdialog.h
+removepartnershipdialog.cpp
+removepartnershipdialog.h
+syncdialog.cpp
+syncdialog.h
+welcomedialog.cpp
+welcomedialog.h

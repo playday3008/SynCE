@@ -4,3 +4,6 @@ Makefile.in
 .libs
 *.moc
 *.moc.cpp
+*.lo
+*.la
+
