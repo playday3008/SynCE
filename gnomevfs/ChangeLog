@@ -1,0 +1,12 @@
+2003-12-31  Mattias Eriksson  <snaggen@acc.umu.se>
+
+	* Added a ChangeLog and other files wanted by automake.
+	* Made the gnome-vfs module threadsafe.
+	* Use gnome_vfs functions for escaping the URI.
+	* Use UTF-8 instead of ascii (since this is what gnome-vfs uses).
+	* Replace printf for debug with a debug-macro D thats enabled
+	  with --enable-debug=yes
+	* Added gnome-vfs function for renaming files.
+	* Bugfix for deleting directories.
+	* Plugged some memleak.
+

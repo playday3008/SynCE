@@ -10,6 +10,24 @@
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
 #include <libgnomevfs/gnome-vfs-module.h>
 
+#ifdef SYNCE_DEBUG
+#define D(x...) printf(x)
+#else
+#define D(x...)
+#endif
+
+#ifdef G_THREADS_ENABLED
+#define MUTEX_NEW()     g_mutex_new ()
+#define MUTEX_FREE(a)   g_mutex_free (a)
+#define MUTEX_LOCK(a)   if ((a) != NULL) g_mutex_lock (a)
+#define MUTEX_UNLOCK(a) if ((a) != NULL) g_mutex_unlock (a)
+#else
+#define MUTEX_NEW()     NULL
+#define MUTEX_FREE(a)
+#define MUTEX_LOCK(a)
+#define MUTEX_UNLOCK(a)
+#endif
+
 typedef struct _DIR_HANDLE
 {
 	char *location;
@@ -17,6 +35,8 @@ typedef struct _DIR_HANDLE
 	int itemcount;
 	int count;
 } DIR_HANDLE;
+
+static GMutex * mutex = NULL;
 
 static char* g_convert_to_backward_slashes(GnomeVFSURI *uri)
 {
@@ -26,45 +46,30 @@ static char* g_convert_to_backward_slashes(GnomeVFSURI *uri)
 	int i;
 	char a, b;
 	int num;
+	gchar *p;
 
-	path = strdup(gnome_vfs_uri_get_path(uri));
+	D("g_convert_to_backward_slashes()\n");
+	D("unconverted: %s\n", gnome_vfs_uri_get_path(uri));
+	path = (char *) gnome_vfs_unescape_string(gnome_vfs_uri_get_path(uri),"");
 	location = path;
-
-	printf("g_convert_to_backward_slashes()\n");
-	printf("unconverted: %s\n", location);
 
 	if (gnome_vfs_uri_get_user_name(uri) != NULL
 	 || gnome_vfs_uri_get_password(uri) != NULL
 	 || gnome_vfs_uri_get_host_name(uri) != NULL
-	 || gnome_vfs_uri_get_host_port(uri) != 0)
+	 || gnome_vfs_uri_get_host_port(uri) != 0) {
+		g_free(path);	
 		return NULL;
-
-	for(i = 0; i < strlen(path); i++)
-	{
-		if(path[i] == '/')
-		{
-			path[i] = '\\';
-		}
-		else if(path[i] == '%')
-		{
-			a = path[i+1]-48;
-			b = path[i+2]-48;
-			num = a*10+b;
-			switch(num)
-			{
-				case 20:
-					path[i] = ' ';
-/*				default:
-					return NULL;*/
-			}
-			tpath = strdup(path+(i+3));
-			printf("tpath = %s\n", tpath);
-			path[i+1] = '\0';
-			strcat(path, tpath);
-			free(tpath);
-		}
 	}
-	printf("converted: %s\n", location);
+	
+	p = path;
+	while (*p != '\0') {
+		if (*p == '/') {
+			*p = '\\';
+		}
+		p = g_utf8_next_char (p);
+	}
+
+	D("converted: %s\n", location);
 
 	return location;
 }
@@ -106,23 +111,25 @@ static GnomeVFSResult synce_open
 	int synce_create_mode;
 	HANDLE handle;
 	char *tempstring;
+	int err;
 
-	printf("--------------------------------------------\n");
-	printf("synce_open()\n");
+	D("--------------------------------------------\n");
+	D("synce_open()\n");
 
 	location = g_convert_to_backward_slashes(uri);
 
-	printf("location: %s\n", location);
+	D("location: %s\n", location);
 
-	wide_path = wstr_from_ascii(location);
+	wide_path = wstr_from_utf8(location);
 
-	tempstring = wstr_to_ascii(wide_path);
-	printf("ajusted location: %s\n", tempstring); /* XXX: memory leak */
-	free(tempstring);
-
+	if (mode & GNOME_VFS_OPEN_RANDOM) {
+		return GNOME_VFS_ERROR_INVALID_OPEN_MODE;
+	}
+		
 	vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
 
-	printf("CeCreateFile()\n");
+	D("CeCreateFile()\n");
+	MUTEX_LOCK (mutex);
 	handle = CeCreateFile
 	(
 		wide_path,
@@ -133,30 +140,35 @@ static GnomeVFSResult synce_open
 		FILE_ATTRIBUTE_NORMAL,
 		0
 	);
+	MUTEX_UNLOCK (mutex);
 
 	free(location);
 	wstr_free_string(wide_path);
 
 	*((HANDLE *)method_handle_return) = handle;
 
-	printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("--------------------------------------------\n");
+	MUTEX_LOCK (mutex);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
+	
+	D("Synce Error: %d %s\n", err, synce_strerror(err));
+	D("--------------------------------------------\n");
 	if((handle == INVALID_HANDLE_VALUE) || (synce_open_mode & GENERIC_WRITE))
 	{
-		switch(CeGetLastError())
+		switch(err)
 		{
 			case 0:
 				return GNOME_VFS_OK;
 			case 2:
 			case 3:
 			case 123:
-				printf("Failed\n");
+				D("Failed\n");
 				return GNOME_VFS_ERROR_INVALID_URI;
 			case 80:
-				printf("Failed\n");
+				D("Failed\n");
 				return GNOME_VFS_ERROR_FILE_EXISTS;
 			default:
-				printf("Failed\n");
+				D("Failed\n");
 				return GNOME_VFS_ERROR_GENERIC;
 		}
 	}
@@ -183,21 +195,23 @@ static GnomeVFSResult synce_create
 	int synce_create_mode;
 	HANDLE handle;
 	char *tempstring;
+	int err;
 
-	printf("--------------------------------------------\n");
-	printf("synce_create()\n");
+	D("--------------------------------------------\n");
+	D("synce_create()\n");
 
 	location = g_convert_to_backward_slashes(uri);
-	printf("location: %s\n", location);
+	D("location: %s\n", location);
 
-	wide_path = wstr_from_ascii(location);
-	tempstring = wstr_to_ascii(wide_path);
-	printf("wide_path: %s\n", tempstring);
+	wide_path = wstr_from_utf8(location);
+	tempstring = wstr_to_utf8(wide_path);
+	D("wide_path: %s\n", tempstring);
 	free(tempstring);
 
 	vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
 
-	printf("CeCreateFile()");
+	D("CeCreateFile()");
+	MUTEX_LOCK (mutex);
 	handle = CeCreateFile
 	(
 		wide_path,
@@ -208,30 +222,35 @@ static GnomeVFSResult synce_create
 		FILE_ATTRIBUTE_NORMAL,
 		0
 	);
+	MUTEX_UNLOCK (mutex);
 
 	free(location);
 	wstr_free_string(wide_path);
 
 	*((HANDLE *)method_handle_return) = handle;
 
-	printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("--------------------------------------------\n");
+	MUTEX_LOCK (mutex);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
+	
+	D("Synce Error: %d %s\n", err, synce_strerror(err));
+	D("--------------------------------------------\n");
 	if((handle == INVALID_HANDLE_VALUE) || (synce_open_mode & GENERIC_WRITE))
 	{
-		switch(CeGetLastError())
+		switch(err)
 		{
 			case 0:
 				return GNOME_VFS_OK;
 			case 2:
 			case 3:
 			case 123:
-				printf("Failed\n");
+				D("Failed\n");
 				return GNOME_VFS_ERROR_INVALID_URI;
 			case 80:
-				printf("Failed\n");
+				D("Failed\n");
 				return GNOME_VFS_ERROR_FILE_EXISTS;
 			default:
-				printf("Failed\n");
+				D("Failed\n");
 				return GNOME_VFS_ERROR_GENERIC;
 		}
 	}
@@ -250,21 +269,27 @@ static GnomeVFSResult synce_close
 {
 	HANDLE handle;
 	int result;
+	int err;
 
-	printf("--------------------------------------------\n");
-	printf("synce_close()\n");
+	D("------------------- synce_close() -----------------------\n");
 
 	handle = (HANDLE) method_handle;
 
-	printf("CeCloseHandle()\n");
+	D("synce_close: CeCloseHandle()\n");
+	MUTEX_LOCK (mutex);
 	result = CeCloseHandle(handle);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
 
-	printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("--------------------------------------------\n");
-	if(!result)
+	
+	D("synce_close: Synce Error: %d %s\n", err, synce_strerror(err));
+	D("------------------- synce_close() end -------------------\n");
+
+	if(!result) {
 		return GNOME_VFS_ERROR_GENERIC;
-	else
+	} else {
 		return GNOME_VFS_OK;
+	}
 }
 
 static GnomeVFSResult synce_read
@@ -280,13 +305,15 @@ static GnomeVFSResult synce_read
 	int result;
 	size_t read_return;
 	HANDLE handle;
-
-	printf("--------------------------------------------\n");
-	printf("synce_read()\n");
+	int err;
+	
+	D("------------------ synce_read() ---------------------\n");
+	D("synce_read()\n");
 
 	handle = (HANDLE) method_handle;
 
-	printf("CeReadFile\n");
+	D("CeReadFile\n");
+	MUTEX_LOCK (mutex);
 	result = CeReadFile
 	(
 		handle,
@@ -295,26 +322,28 @@ static GnomeVFSResult synce_read
 		&read_return,
 		NULL
 	);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
 
-	printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("--------------------------------------------\n");
+	D("synce_read: Synce Error: %d %s\n", err, synce_strerror(err));
+	D("------------------ synce_read() end ---------------------\n");
 	if(result == 0)
 	{
-		switch(CeGetLastError())
+		switch(err)
 		{
 			case 0:
 				return GNOME_VFS_OK;
 			case 3:
-				printf("Failed\n");
+				D("synce_read: Failed\n");
 				return GNOME_VFS_ERROR_INVALID_URI;
 			case 80:
-				printf("Failed\n");
+				D("synce_read: Failed\n");
 				return GNOME_VFS_ERROR_FILE_EXISTS;
 		}
 	}
 	else if((result != 0) & (read_return == 0))
 	{
-		printf("Failed\n");
+		D("synce_read: Failed\n");
 		return GNOME_VFS_ERROR_EOF;
 	}
 	else
@@ -337,13 +366,14 @@ static GnomeVFSResult synce_write
 	int result;
 	HANDLE handle;
 	size_t bytes_written;
+	int err; 
 
-	printf("--------------------------------------------\n");
-	printf("synce_write()\n");
+	D("----------------- synce_write() -------------------\n");
 
 	handle = (HANDLE) method_handle;
 
-	printf("CeWriteFile()\n");
+	D("CeWriteFile()\n");
+	MUTEX_LOCK (mutex);
 	result = CeWriteFile
 	(
 		handle,
@@ -352,17 +382,19 @@ static GnomeVFSResult synce_write
 		&bytes_written,
 		NULL
 	);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
 
-	printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("--------------------------------------------\n");
+	D("synce_write: Synce Error: %d %s\n", err, synce_strerror(err));
+	D("----------------- synce_write() end ---------------\n");
 	if(result == 0)
 	{
-		printf("Failed\n");
+		D("synce_write: Failed\n");
 		return GNOME_VFS_ERROR_GENERIC;
 	}
 	else if((result != 0) && (bytes_written == 0))
 	{
-		printf("End of file\n");
+		D("synce_write: End of file\n");
 		*bytes_written_return = 0;
 		return GNOME_VFS_ERROR_EOF;
 	}
@@ -390,12 +422,11 @@ static GnomeVFSResult synce_open_dir
 	int itemcount;
 	WCHAR *tempwstr;
 	
-	printf("--------------------------------------------\n");
-	printf("synce_open_dir()\n");
+	D("------------------ synce_open_dir() -------------------\n");
 
 	location = g_convert_to_backward_slashes(uri);
 
-	printf("location: %s\n", location);
+	D("synce_open_dir: location: %s\n", location);
 
 	if(!location)
 	{
@@ -436,16 +467,20 @@ static GnomeVFSResult synce_open_dir
 		|	FAF_OID;
 
 	
-	tempwstr = wstr_from_ascii(location);
+	tempwstr = wstr_from_utf8(location);
+	
+	MUTEX_LOCK (mutex); 
 	if(!CeFindAllFiles(tempwstr, optionflags, &itemcount, &data))
 	{
 		free(location);
 		wstr_free_string(tempwstr);
-		printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-		printf("Fail\n");
-		printf("--------------------------------------------\n");
+		D("synce_open_dir: Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
+		D("synce_open_dir: Fail\n");
+		D("------------------ synce_open_dir() end ---------------\n");
+		MUTEX_UNLOCK (mutex); 
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
+	MUTEX_UNLOCK (mutex); 
 
 	wstr_free_string(tempwstr);
 
@@ -458,9 +493,13 @@ static GnomeVFSResult synce_open_dir
 
 	*((DIR_HANDLE **) method_handle) = dh;
 
-	printf("Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("Ok\n");
-	printf("--------------------------------------------\n");
+#ifdef SYNCE_DEBUG
+	MUTEX_LOCK (mutex); 
+	D("synce_open_dir: Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
+	MUTEX_UNLOCK (mutex);
+#endif
+	D("synce_open_dir: Ok\n");
+	D("------------------ synce_open_dir() end ---------------\n");
 
 	return GNOME_VFS_OK;
 }
@@ -475,27 +514,29 @@ static GnomeVFSResult synce_close_dir
 	DIR_HANDLE *dh;
 	HRESULT result; 
 
-	printf("--------------------------------------------\n");
-	printf("synce_close_dir()\n");
+	D("----------------- synce_close_dir() ------------------\n");
 
 	dh = (DIR_HANDLE *)method_handle;
 
 	free(dh->location);
-	dh->data;
+
+	MUTEX_LOCK (mutex); 
 	result = CeRapiFreeBuffer(dh->data);
+	MUTEX_UNLOCK (mutex); 
 
 	if(result != S_OK)
 	{
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("synce_close_dir: Failed\n");
+		D("----------------- synce_close_dir() end --------------\n");
 		return GNOME_VFS_ERROR_GENERIC;
 	}
 	else
 	{
-		printf("Ok\n");
-		printf("--------------------------------------------\n");
+		D("synce_close_dir: Ok\n");
+		D("----------------- synce_close_dir() end --------------\n");
 		return GNOME_VFS_OK;
 	}
+	free(dh);
 }
 
 /* Have to fix the mime-type conversion */
@@ -514,7 +555,7 @@ static BOOL get_file_attributes
 		| GNOME_VFS_FILE_INFO_FIELDS_MTIME
 		| GNOME_VFS_FILE_INFO_FIELDS_CTIME;
 
-	file_info->name = wstr_to_ascii(entry->cFileName);
+	file_info->name = wstr_to_utf8(entry->cFileName);
 
 	if(entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		file_info->size = 0;
@@ -588,36 +629,35 @@ static GnomeVFSResult synce_read_dir
 	HANDLE handle;
 	BOOL result;
 
-	printf("--------------------------------------------\n");
-	printf("synce_read_dir()\n");
+	D("------------------ synce_read_dir() --------------------\n");
 
 	dh = (DIR_HANDLE *)method_handle;
 
 	if(dh->itemcount == dh->count)
 	{
-		printf("Synce Error: %d %s\n", 38, "End of file");
-		printf("Ok\n");
-		printf("--------------------------------------------\n");
+		D("synce_read_dir: Synce Error: %d %s\n", 38, "End of file");
+		D("synce_read_dir: Ok\n");
+		D("------------------ synce_read_dir() end ----------------\n");
 		return GNOME_VFS_ERROR_EOF;
 	}
 
 	result = get_file_attributes(file_info, dh->data+dh->count);
 	dh->count++;
 
-	printf("Error %d: %s\n", 0, "Success");
+	D("synce_read_dir: Error %d: %s\n", 0, "Success");
 
 	if(!result)
 	{
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("synce_read_dir: Failed\n");
+		D("------------------ synce_read_dir() end ----------------\n");
 		return GNOME_VFS_ERROR_CORRUPTED_DATA;
 	}
 	else
 	{
-		printf("Name: %s\n", file_info->name);
-		printf("Mime-type: %s\n", file_info->mime_type);
-		printf("Ok\n");
-		printf("--------------------------------------------\n");
+		D("synce_read_dir: Name: %s\n", file_info->name);
+		D("synce_read_dir: Mime-type: %s\n", file_info->mime_type);
+		D("synce_read_dir: Ok\n");
+		D("------------------ synce_read_dir() end ----------------\n");
 		return GNOME_VFS_OK;
 	}
 }
@@ -637,55 +677,60 @@ static GnomeVFSResult synce_get_file_info
 	HANDLE handle;
 	int optionflags;
 	WCHAR *tempwstr;
+	int err;
 
-	printf("--------------------------------------------\n");
-	printf("synce_get_file_info()\n");
+	D("------------- synce_get_file_info() -----------------\n");
 
 	location = g_convert_to_backward_slashes(uri);
 
-	printf("%s\n", location);
+	D("%s\n", location);
 
 	if(!location)
 	{
-			printf("Synce Error: %d %s\n", 2, "ERROR_FILE_NOT_FOUND");
-			printf("Failed\n");
-			printf("--------------------------------------------\n");
+			D("synce_get_file_info Synce Error: %d %s\n", 2, "ERROR_FILE_NOT_FOUND");
+			D("synce_get_file_info Failed\n");
+			D("------------- synce_get_file_info() end --------------\n");
 			return GNOME_VFS_ERROR_INVALID_URI;
 	}
 	else if(strcmp(location, "\\") == 0)
 	{
-		printf("Root folder\n");
+		D("synce_get_file_info: Root folder\n");
 
 		get_root_attributes(file_info);
 
-		printf("Ok\n");
-		printf("--------------------------------------------\n");
+		D("synce_get_file_info: Ok\n");
+		D("------------- synce_get_file_info() end --------------\n");
 		return GNOME_VFS_OK;
 	}
 	else if(location[strlen(location)-1] == '\\')
 	{
-		printf("Folder with \\\n");
+		D("synce_get_file_info: Folder with \\\n");
 		/* This is a directory, chop of the \ to make it readable to FindFirstFile */
 		location[strlen(location)-1] = '\0';
 	}
 	else
 	{
-		printf("Folder/File\n");
+		D("synce_get_file_info: Folder/File\n");
 	}
 
-	printf("CeFindFirstFile()\n");
-	tempwstr = wstr_from_ascii(location);
+	D("synce_get_file_info: CeFindFirstFile()\n");
+	tempwstr = wstr_from_utf8(location);
+	
+	MUTEX_LOCK (mutex); 
 	if(CeFindFirstFile(tempwstr, &entry) == INVALID_HANDLE_VALUE)
 	{
-		printf("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
+		err = CeGetLastError();
+		MUTEX_UNLOCK (mutex); 
+
+		D("synce_get_file_info: Error %d: %s\n", err, synce_strerror(err));
 
 		wstr_free_string(tempwstr);
 		free(location);
 
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("synce_get_file_info: Failed\n");
+		D("------------- synce_get_file_info() end --------------\n");
 
-		switch(CeGetLastError())
+		switch(err)
 		{
 			case 2:
 			case 18:
@@ -698,15 +743,16 @@ static GnomeVFSResult synce_get_file_info
 	}
 	else
 	{
+		MUTEX_UNLOCK (mutex); 
 		get_file_attributes(file_info, &entry);
 
 		wstr_free_string(tempwstr);
 		free(location);
 
-		printf("Name: %s\n", file_info->name);
-		printf("Mime-type: %s\n", file_info->mime_type);
-		printf("Ok\n");
-		printf("--------------------------------------------\n");
+		D("synce_get_file_info: Name: %s\n", file_info->name);
+		D("synce_get_file_info: Mime-type: %s\n", file_info->mime_type);
+		D("synce_get_file_info: Ok\n");
+		D("------------- synce_get_file_info() end --------------\n");
 
 		return GNOME_VFS_OK;
 	}
@@ -721,7 +767,7 @@ static GnomeVFSResult synce_get_file_info_from_handle
   GnomeVFSContext *context
 )
 {
-//	printf("synce_get_files_info_from_handle\n");
+	D("synce_get_files_info_from_handle\n");
 
 	return GNOME_VFS_ERROR_ACCESS_DENIED;
 }
@@ -732,9 +778,7 @@ static gboolean synce_is_local
   const GnomeVFSURI *uri
 )
 {
-//	printf("synce_is_local\n");
-
-	return GNOME_VFS_OK;
+	return FALSE;
 }
 
 static GnomeVFSResult synce_mkdir
@@ -748,38 +792,41 @@ static GnomeVFSResult synce_mkdir
 	gchar *location;
 	WCHAR *tempwstr;
 
-	printf("--------------------------------------------\n");
-	printf("synce_mkdir()\n");
+	D("--------------------------------------------\n");
+	D("synce_mkdir()\n");
 
 	location = g_convert_to_backward_slashes(uri);
 
 	if(!location)
 	{
-		printf("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
+		D("Failed\n");
+		D("--------------------------------------------\n");
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
 
-	printf("CeCreateDirectory()\n");
-	tempwstr = wstr_from_ascii(location);
+	D("CeCreateDirectory()\n");
+	tempwstr = wstr_from_utf8(location);
+	MUTEX_LOCK (mutex);
 	if(!CeCreateDirectory(tempwstr, NULL))
 	{
 		free(location);
 		wstr_free_string(tempwstr);
-		printf("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
+		D("Failed\n");
+		D("--------------------------------------------\n");
+		MUTEX_UNLOCK (mutex);
 		return GNOME_VFS_ERROR_FILE_EXISTS;
 	}
 
 	free(location);
 	wstr_free_string(tempwstr);
 
-	printf("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	printf("Ok\n");
-	printf("--------------------------------------------\n");
-
+	D("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
+	D("Ok\n");
+	D("--------------------------------------------\n");
+	
+	MUTEX_UNLOCK (mutex);
 	return GNOME_VFS_OK;
 }
 
@@ -792,47 +839,56 @@ static GnomeVFSResult synce_rmdir
 {
 	gchar *location;
 	WCHAR *tempwstr;
+	int err;
+	int result;
 
-	printf("--------------------------------------------\n");
-	printf("synce_rmdir()\n");
+	D("----------------- synce_rmdir() -----------------------\n");
 
 	location = g_convert_to_backward_slashes(uri);
 
 	if(!location)
 	{
-		printf("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("synce_rmdir: Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
+		D("synce_rmdir: Failed\n");
+		D("----------------- synce_rmdir() end -------------------\n");
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
 
-	printf("CeRemoveDirectory()\n");
-	tempwstr = wstr_from_ascii(location);
-	CeRemoveDirectory(tempwstr);
+	D("CeRemoveDirectory()\n");
+	tempwstr = wstr_from_utf8(location);
+	MUTEX_LOCK (mutex);
+	result = CeRemoveDirectory(tempwstr);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
 	wstr_free_string(tempwstr);
 
 	free(location);
+	D("synce_rmdir:'Result %d\n", result);
+	D("synce_rmdir: Error %d: %s\n", err, synce_strerror(err));
 
-	printf("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	switch(CeGetLastError())
-	{
-		case 145:
-			printf("Failed\n");
-			printf("--------------------------------------------\n");
-			return GNOME_VFS_ERROR_DIRECTORY_NOT_EMPTY;
-		case 2:
-			printf("Failed\n");
-			printf("--------------------------------------------\n");
-			return GNOME_VFS_ERROR_NOT_FOUND;
-		case 0:
-			printf("Ok\n");
-			printf("--------------------------------------------\n");
-			return GNOME_VFS_OK;
-		default:
-			printf("Failed\n");
-			printf("--------------------------------------------\n");
-			return GNOME_VFS_ERROR_GENERIC;
+	/* In librapi tool prmdir result is used to see if things went OK */
+	if (!result) {
+		switch(err)
+		{
+			case 145:
+				D("synce_rmdir: Failed\n");
+				D("--------------------------------------------\n");
+				return GNOME_VFS_ERROR_DIRECTORY_NOT_EMPTY;
+			case 2:
+				D("synce_rmdir: Failed\n");
+				D("--------------------------------------------\n");
+				return GNOME_VFS_ERROR_NOT_FOUND;
+			case 0:
+				D("synce_rmdir: Ok\n");
+				D("--------------------------------------------\n");
+				return GNOME_VFS_OK;
+			default:
+				D("synce_rmdir: Failed\n");
+				D("--------------------------------------------\n");
+				return GNOME_VFS_ERROR_GENERIC;
+		}
 	}
+	return GNOME_VFS_OK;
 }
 
 static GnomeVFSResult synce_move
@@ -849,15 +905,16 @@ static GnomeVFSResult synce_move
 	gchar *old_location;
 	WCHAR *old_wstr;
 	int result;
+	int err;
 
-	printf("--------------------------------------------\n");
-	printf("synce_move()\n");
+	D("--------------------------------------------\n");
+	D("synce_move()\n");
 
 	new_location = g_convert_to_backward_slashes(new_uri);
 
 	if(!new_location)
 	{
-		printf("Failed\n");
+		D("Failed\n");
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
 
@@ -866,35 +923,44 @@ static GnomeVFSResult synce_move
 	if(!old_location)
 	{
 		free(new_location);
-		printf("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
+		D("Failed\n");
+		D("--------------------------------------------\n");
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
 
-	printf("CeMoveFile()\n");
-	old_wstr = wstr_from_ascii(old_location);
-	new_wstr = wstr_from_ascii(new_location);
+	D("CeMoveFile()\n");
+	old_wstr = wstr_from_utf8(old_location);
+	new_wstr = wstr_from_utf8(new_location);
+	MUTEX_LOCK (mutex);
 	result = CeMoveFile(old_wstr, new_wstr);
+	err = CeGetLastError();
+	MUTEX_UNLOCK (mutex);
 
-	if(CeGetLastError() == 183) /* If the destination file exists we end up here */
+	if(err == 183) /* If the destination file exists we end up here */
 	{
 		if(force_replace)
 		/* if the user wants we delete the dest file and moves the source there */
 		{
+			MUTEX_LOCK (mutex);
 			result = CeDeleteFile(new_wstr);
+			MUTEX_UNLOCK (mutex);
+			
 			if(result == 0)
 			{
 				free(old_location);
 				free(new_location);
 				wstr_free_string(old_wstr);
 				wstr_free_string(new_wstr);
-				printf("Synce Error: %d %s\n", 5, "ERROR_ACCESS_DENIED");
-				printf("Failed\n");
-				printf("--------------------------------------------\n");
+				D("Synce Error: %d %s\n", 5, "ERROR_ACCESS_DENIED");
+				D("Failed\n");
+				D("--------------------------------------------\n");
 				return GNOME_VFS_ERROR_ACCESS_DENIED;
 			}
+			MUTEX_LOCK (mutex);
 			result = CeMoveFile(old_wstr, new_wstr);
+			err = CeGetLastError();
+			MUTEX_UNLOCK (mutex);
 		}
 	}
 
@@ -903,25 +969,61 @@ static GnomeVFSResult synce_move
 	wstr_free_string(old_wstr);
 	wstr_free_string(new_wstr);
 
-	printf("CeGetLastError(): %d\n", CeGetLastError());
-	switch(CeGetLastError())
+	D("CeGetLastError(): %d\n", err);
+	switch(err)
 	{
 		case 0:
 		case 18:
-			printf("Ok\n");
-			printf("--------------------------------------------\n");
+			D("Ok\n");
+			D("--------------------------------------------\n");
 			return GNOME_VFS_OK;
 		case 183:
-			printf("Failed\n");
-			printf("--------------------------------------------\n");
+			D("Failed\n");
+			D("--------------------------------------------\n");
 			return GNOME_VFS_ERROR_FILE_EXISTS;
 		default:
-			printf("Failed\n");
-			printf("--------------------------------------------\n");
+			D("Failed\n");
+			D("--------------------------------------------\n");
 			return GNOME_VFS_ERROR_GENERIC;
 	}
 }
 
+
+static GnomeVFSResult
+synce_set_file_info (GnomeVFSMethod *method,
+		GnomeVFSURI *uri,
+		const GnomeVFSFileInfo *info,
+		GnomeVFSSetFileInfoMask mask,
+		GnomeVFSContext *context)
+{
+	GnomeVFSURI *parent_uri, *new_uri;
+	GnomeVFSResult result;
+
+	/* For now, we only support changing the name. */
+	if ((mask & ~(GNOME_VFS_SET_FILE_INFO_NAME)) != 0) {
+		return GNOME_VFS_ERROR_NOT_SUPPORTED;
+	}
+
+	/*
+	 * Returns an error for incoming names with "/" characters in them,
+	 * instead of moving the file.
+	 */
+	if (g_utf8_strchr(info->name,-1,'/') != NULL) {
+		return GNOME_VFS_ERROR_BAD_PARAMETERS;
+	}
+
+	/* Share code with do_move. */
+	parent_uri = gnome_vfs_uri_get_parent (uri);
+	if (parent_uri == NULL) {
+		return GNOME_VFS_ERROR_NOT_FOUND;
+	}
+	new_uri = gnome_vfs_uri_append_file_name (parent_uri, info->name);
+	gnome_vfs_uri_unref (parent_uri);
+	result = synce_move (method, uri, new_uri, FALSE, context);
+	gnome_vfs_uri_unref (new_uri);
+	return result;
+}
+				
 static GnomeVFSResult synce_unlink
 (
 	GnomeVFSMethod *method,
@@ -933,38 +1035,40 @@ static GnomeVFSResult synce_unlink
 	int result;
 	WCHAR *tempwstr;
 
-	printf("--------------------------------------------\n");
-	printf("synce_unlink()\n");
+	D("--------------------------------------------\n");
+	D("synce_unlink()\n");
 
 	location = g_convert_to_backward_slashes(uri);
-	tempwstr = wstr_from_ascii(location);
+	tempwstr = wstr_from_utf8(location);
 
 	if(!location)
 	{
 		free(location);
 		wstr_free_string(tempwstr);
-		printf("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
+		D("Failed\n");
+		D("--------------------------------------------\n");
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
 
-	printf("CeDeleteFile()\n");
+	D("CeDeleteFile()\n");
+	MUTEX_LOCK (mutex);
 	result = CeDeleteFile(tempwstr);
+	MUTEX_UNLOCK (mutex);
 
 	wstr_free_string(tempwstr);
 	free(location);
 
 	if(result == 0)
 	{
-		printf("Failed\n");
-		printf("--------------------------------------------\n");
+		D("Failed\n");
+		D("--------------------------------------------\n");
 		return GNOME_VFS_ERROR_NOT_FOUND;
 	}
 	else
 	{
-		printf("Ok\n");
-		printf("--------------------------------------------\n");
+		D("Ok\n");
+		D("--------------------------------------------\n");
 		return GNOME_VFS_OK;
 	}
 }
@@ -978,8 +1082,6 @@ static GnomeVFSResult synce_same_fs
   GnomeVFSContext *context
 )
 {
-//	printf("synce_same_fs\n");
-
 	*same_fs_return = 1;
 
 	return GNOME_VFS_OK;
@@ -1007,7 +1109,7 @@ static GnomeVFSMethod method =
 	synce_move,
 	synce_unlink,
 	synce_same_fs,
-	NULL, /* set_file_info */
+	synce_set_file_info, 
 	NULL,	/* truncate */
 	NULL, /* find_directory */
 	NULL, /* create_symbolic_link */
@@ -1015,7 +1117,11 @@ static GnomeVFSMethod method =
 
 GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)
 {
+	if (!mutex)
+		mutex = MUTEX_NEW ();
+	MUTEX_LOCK (mutex); 
 	HRESULT hr = CeRapiInit();
+	MUTEX_UNLOCK (mutex); 
 	
 	if (FAILED(hr))
 	{
@@ -1029,5 +1135,9 @@ GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)
 
 void vfs_module_shutdown(GnomeVFSMethod *method)
 {
+	MUTEX_LOCK (mutex);
 	CeRapiUninit();
+	MUTEX_UNLOCK (mutex);
+
+	MUTEX_FREE(mutex);
 }
