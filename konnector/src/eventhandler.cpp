@@ -12,6 +12,7 @@
 #include "eventhandler.h"
 
 #include <kdebug.h>
+#include <kapplication.h>
 #include <libkcal/icalformat.h>
 #include <libkcal/event.h>
 #include <libkcal/todo.h>
@@ -22,7 +23,7 @@
 
 namespace pocketPCCommunication
 {
-    EventHandler::EventHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
+    EventHandler::EventHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
             : PimHandler( p_rra )
     {
         initialized = false;
@@ -65,7 +66,9 @@ namespace pocketPCCommunication
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             count++;
-            kdDebug( 2120 ) << " ||| " << endl;
+
+            kdDebug(2120) << "Retrieving Event from device: " << "RRA-ID-" +
+                    QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
 
             QString vCal = vCalBegin + m_rra->getVEvent( mTypeId, *it ) + vCalEnd;
 
@@ -80,7 +83,12 @@ namespace pocketPCCommunication
                 mUidHelper->addId("SynCEEvent", incidence->uid(), incidence->uid());
             }
 
+            kdDebug(2120) << "    ID-Pair: KDEID: " << incidence->uid() << " DeviceID: " <<
+                "RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
+
             mEventList.push_back( dynamic_cast<KCal::Event*> (incidence) );
+
+            KApplication::kApplication()->processEvents();
         }
 
         return count;
@@ -93,15 +101,19 @@ namespace pocketPCCommunication
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             count++;
-            kdDebug( 2120 ) << " &&& " << endl;
+
             KCal::Event *event = new KCal::Event();
 
             QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
             QString kdeId;
 
             if ((kdeId = mUidHelper->kdeId("SynCEEvent", konId, "---")) != "---") {
+
+                kdDebug(2120) << "Faking Event for device: " << konId << endl;
+
                 event->setUid(kdeId);
                 mUidHelper->removeId("SynCEEvent", event->uid());
+                kdDebug(2120) << "    ID-Pair: KDEID: " << event->uid() << " DeviceID: " << konId << endl;
                 mEventList.push_back( event );
             }
 
@@ -114,7 +126,7 @@ namespace pocketPCCommunication
     bool EventHandler::getIds()
     {
         if ( !m_rra->getIds( mTypeId, &ids ) ) {
-            kdDebug( 2120 ) << "EventHandler::getIds: could not get the ids.. :(" << endl;
+            kdDebug( 2120 ) << "EventHandler::getIds: could not get the ids." << endl;
             return false;
         }
 
@@ -124,8 +136,6 @@ namespace pocketPCCommunication
 
     int EventHandler::getEventListFromDevice(KCal::Event::List &mEventList, int mRecType)
     {
-        kdDebug( 2120 ) << "[EventHandler]: got ids.. fetching information" << endl;
-
         int count = 0;
         int ret = 0;
 
@@ -160,13 +170,11 @@ namespace pocketPCCommunication
 
     void EventHandler::insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Event::List &list, int state)
     {
-        kdDebug(2120) << "Begin Inserting into EventSyncee State: " << state << endl;
         for(KCal::Event::List::Iterator it = list.begin(); it != list.end(); ++it) {
             KSync::CalendarSyncEntry entry(*it, mCalendarSyncee);
             entry.setState(state);
             mCalendarSyncee->addEntry(entry.clone());
         }
-        kdDebug(2120) << "End Inserting into EventSyncee" << endl;
     }
 
 
@@ -175,32 +183,27 @@ namespace pocketPCCommunication
         if (!initialized) {
             if (!init()) {
                 kdDebug(2120) << "Could not initialize EventHandler" << endl;
-//              emit synceeReadError(this);
                 return false;
             }
         }
 
         if (!getIds()) {
             kdDebug(2120) << "Could not retriev Event-IDs" << endl;
-//            emit synceeReadError(this);
             return false;
         }
 
         KCal::Event::List modifiedList;
         if (firstSync) {
             if (getEventListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
-//                emit synceeReadError(this);
                 return false;
             }
         } else {
             if (getEventListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
-//                emit synceeReadError(this);
                 return false;
             }
 
             KCal::Event::List removedList;
             if (getEventListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
-//                emit synceeReadError(this);
                 return false;
             }
             insertIntoCalendarSyncee(mCalendarSyncee, removedList, KSync::SyncEntry::Removed);
@@ -216,14 +219,11 @@ namespace pocketPCCommunication
 
     void EventHandler::getEvents (KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
     {
-        kdDebug( 2120 ) << "getEvent: " << endl;
-
         for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
             KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
             KCal::Event *event = dynamic_cast<KCal::Event*> (cse->incidence() );
             if (event) {
                 p_events.push_back ( event );
-                kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
             }
         }
     }
@@ -231,8 +231,6 @@ namespace pocketPCCommunication
 
     void EventHandler::getTodosAsFakedEvents(KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
     {
-        kdDebug(2120) << "getTodosAsEvents: " << endl;
-
         for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
             KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
             KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
@@ -241,7 +239,6 @@ namespace pocketPCCommunication
                     KCal::Event *event = new KCal::Event(); // This event is never deleted yet ... memory whole ... FIXME
                     event->setUid(todo->uid());
                     p_events.push_back ( event );
-                    kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
                 }
             }
         }
@@ -263,11 +260,18 @@ namespace pocketPCCommunication
             iCal.stripWhiteSpace();
             iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
 
+            kdDebug(2120) << "Adding Event on Device: " << (*it)->uid() << endl;
+
             uint32_t newObjectId = m_rra->putVEvent( iCal, mTypeId, 0 );
 
             mUidHelper->addId("SynCEEvent",
                 "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
                 (*it)->uid());
+
+            kdDebug(2120) << "    ID-Pair: KDEID: " << (*it)->uid() << " DeviceID: " <<
+                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ) << endl;
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -285,11 +289,15 @@ namespace pocketPCCommunication
             QString kUid = mUidHelper->konnectorId("SynCEEvent", (*it)->uid(), "---");
 
             if (kUid != "---") {
+                kdDebug(2120) << "Updating Event on Device: " << "ID-Pair: KDEID: " <<
+                    (*it)->uid() << " DeviceId: " << kUid << endl;
                 QString iCal = calFormat.toString(*it);
                 iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
 
                 m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
             }
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -304,9 +312,13 @@ namespace pocketPCCommunication
             QString kUid = mUidHelper->konnectorId("SynCEEvent", (*it)->uid(), "---");
 
             if (kUid != "---") {
+                kdDebug(2120) << "Removing Event on Device: " << "ID-Pair: KDEID: " <<
+                    (*it)->uid() << " DeviceId: " << kUid << endl;
                 deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
                 mUidHelper->removeId("SynCEEvent", kUid);
             }
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -316,7 +328,6 @@ namespace pocketPCCommunication
         if (!initialized) {
             if (!init()) {
                 kdDebug(2120) << "Could not initialize EventHandler" << endl;
-//              emit synceeReadError(this);
                 return false;
             }
         }
@@ -345,10 +356,10 @@ namespace pocketPCCommunication
     bool EventHandler::connectDevice()
     {
         if ( !m_rra->connect() ) {
-            kdDebug( 2120 ) << "PocketPCKonnector: could not connect to device!" << endl;
+            kdDebug( 2120 ) << "EventHandler: could not connect to device!" << endl;
             return false;
         } else {
-            kdDebug( 2120 ) << "PocketPCKonnector: connected to device!" << endl;;
+            kdDebug( 2120 ) << "EventHandler: connected to device!" << endl;;
         }
 
         return true;

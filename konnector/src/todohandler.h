@@ -26,7 +26,7 @@ namespace pocketPCCommunication {
 class TodoHandler : public PimHandler
 {
 public:
-    TodoHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
+    TodoHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper);
 
     bool init();
 

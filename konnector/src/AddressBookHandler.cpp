@@ -19,12 +19,13 @@
 ***************************************************************************/
 #include "AddressBookHandler.h"
 #include <kdebug.h>
+#include <kapplication.h>
 #include <kabc/vcardconverter.h>
 
 
 namespace pocketPCCommunication
 {
-    AddressBookHandler::AddressBookHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
+    AddressBookHandler::AddressBookHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
             : PimHandler( p_rra )
     {
         initialized = false;
@@ -55,12 +56,14 @@ namespace pocketPCCommunication
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             count++;
-            kdDebug( 2120 ) << " ||| " << endl;
+
+            kdDebug(2120) << "Retrieving Contact from device: " << "RRA-ID-" +
+                    QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
+
             QString vCard = m_rra->getVCard( mTypeId, *it );
 
             m_rra->markIdUnchanged( mTypeId, *it );
 
-            kdDebug( 2120 ) << vCard << endl;
             KABC::Addressee addr = vCardConv.parseVCard ( vCard );
             addr.setFormattedName(addr.formattedName().replace("\\,", ","));
 
@@ -72,7 +75,12 @@ namespace pocketPCCommunication
                 mUidHelper->addId("SynCEAddressbook", addr.uid(), addr.uid());
             }
 
+            kdDebug(2120) << "    ID-Pair: KDEID: " << addr.uid() << " DeviceID: " <<
+                "RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
+
             mAddresseeList.push_back( addr );
+
+            KApplication::kApplication()->processEvents();
         }
 
         return count;
@@ -85,15 +93,19 @@ namespace pocketPCCommunication
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             count++;
-            kdDebug( 2120 ) << " &&& " << endl;
+
             KABC::Addressee addr;
 
             QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
             QString kdeId;
 
             if ((kdeId = mUidHelper->kdeId("SynCEAddressbook", konId, "---")) != "---") {
+
+                kdDebug(2120) << "Faking Contact for device: " << konId << endl;
+
                 addr.setUid(kdeId);
                 mUidHelper->removeId("SynCEAddressbook", addr.uid());
+                kdDebug(2120) << "    ID-Pair: KDEID: " << addr.uid() << " DeviceID: " << konId << endl;
                 mAddresseeList.push_back( addr );
             }
         }
@@ -105,7 +117,7 @@ namespace pocketPCCommunication
     bool AddressBookHandler::getIds()
     {
         if ( !m_rra->getIds( mTypeId, &ids ) ) {
-            kdDebug( 2120 ) << "AddressBookHandler::getIds: could not get the ids.. :(" << endl;
+            kdDebug( 2120 ) << "AddressBookHandler::getIds: could not get the ids." << endl;
             return false;
         }
 
@@ -115,8 +127,6 @@ namespace pocketPCCommunication
 
     int AddressBookHandler::getAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, int mRecType )
     {
-        kdDebug( 2120 ) << "[AddressBookHandler]: got ids.. fetching information" << endl;
-
         int count = 0;
         int ret = 0;
 
@@ -151,13 +161,11 @@ namespace pocketPCCommunication
 
     void AddressBookHandler::insertIntoAddressBookSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, KABC::Addressee::List &list, int state)
     {
-        kdDebug(2120) << "Begin Inserting into AddressBookSyncee State: " << state << endl;
         for(KABC::Addressee::List::Iterator it = list.begin(); it != list.end(); ++it) {
             KSync::AddressBookSyncEntry entry(*it, mAddressBookSyncee);
             entry.setState(state);
             mAddressBookSyncee->addEntry(entry.clone());
         }
-        kdDebug(2120) << "End Inserting into AddressBookSyncee" << endl;
     }
 
 
@@ -172,7 +180,7 @@ namespace pocketPCCommunication
         }
 
         if (!getIds()) {
-            kdDebug(2120) << "Could not retriev Address-IDs" << endl;
+            kdDebug(2120) << "Could not retriev Contact-IDs" << endl;
 //            emit synceeReadError(this);
             return false;
         }
@@ -209,11 +217,9 @@ namespace pocketPCCommunication
 
     void AddressBookHandler::getAddressees ( KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList )
     {
-        kdDebug( 2120 ) << "getAddressees: " << endl;
         KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin();
         for ( ; it != p_ptrList.end(); ++it ) {
             p_addressees.push_back ( ( dynamic_cast<KSync::AddressBookSyncEntry*>( *it ) ) ->addressee() );
-            kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::AddressBookSyncEntry*>( *it ) ) ->id() << endl;
         }
     }
 
@@ -229,6 +235,8 @@ namespace pocketPCCommunication
         for (KABC::Addressee::List::Iterator it = p_addresseeList.begin();
                 it != p_addresseeList.end(); ++it ) {
 
+            kdDebug(2120) << "Adding Contact on Device: " << (*it).uid() << endl;
+
             vCard = vCardConv.createVCard ( ( *it ) );
 
             uint32_t newObjectId = m_rra->putVCard( vCard, mTypeId, 0 );
@@ -236,6 +244,11 @@ namespace pocketPCCommunication
             mUidHelper->addId("SynCEAddressbook",
                 "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
                 (*it).uid());
+
+            kdDebug(2120) << "    ID-Pair: KDEID: " << (*it).uid() << " DeviceID: " <<
+                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ) << endl;
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -253,9 +266,13 @@ namespace pocketPCCommunication
             QString kUid = mUidHelper->konnectorId("SynCEAddressbook", (*it).uid(), "---");
 
             if (kUid != "---") {
+                kdDebug(2120) << "Updating Contact on Device: " << "ID-Pair: KDEID: " <<
+                    (*it).uid() << " DeviceId: " << kUid << endl;
                 vCard = vCardConv.createVCard ( ( *it ) );
                 m_rra->putVCard ( vCard, mTypeId, getOriginalId( kUid ) );
             }
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -271,9 +288,13 @@ namespace pocketPCCommunication
             QString kUid = mUidHelper->konnectorId("SynCEAddressbook", (*it).uid(), "---");
 
             if (kUid != "---") {
+                kdDebug(2120) << "Removing Contact on Device: " << "ID-Pair: KDEID: " <<
+                    (*it).uid() << " DeviceId: " << kUid << endl;
                 deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
                 mUidHelper->removeId("SynCEAddressbook", kUid);
             }
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -309,10 +330,10 @@ namespace pocketPCCommunication
     bool AddressBookHandler::connectDevice()
     {
         if ( !m_rra->connect()) {
-            kdDebug( 2120 ) << "PocketPCKonnector: could not connect to device!" << endl;
+            kdDebug( 2120 ) << "AddressbookHandler: could not connect to device!" << endl;
             return false;
         } else {
-            kdDebug( 2120 ) << "PocketPCKonnector: connected to device!" << endl;;
+            kdDebug( 2120 ) << "AddressbookHandler: connected to device!" << endl;;
         }
 
         return true;

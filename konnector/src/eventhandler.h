@@ -26,7 +26,7 @@ namespace pocketPCCommunication {
 class EventHandler : public PimHandler
 {
 public:
-    EventHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
+    EventHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper);
 
     bool init();
 

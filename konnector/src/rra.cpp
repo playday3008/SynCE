@@ -110,12 +110,12 @@ bool Rra::connect()
         } else {
         */
 //            sleep(1);
+            kdDebug(2120) << "RRA-Connect" << endl;
             if (rra_syncmgr_connect(rra)) {
+                kdDebug(2120) << "Matchmaker-connect" << endl;
                 matchmaker = rra_matchmaker_new();
                 m_matchMaker = new MatchMaker (matchmaker);
-                kdDebug(2120) << "RRA-Connect" << endl;
                 if (getTimezone(&tzi)) {
-                    kdDebug(2120) << "rra_timezone_get ok" << endl;
                 } else {
                     kdDebug(2120) << "rra_timezone_get fault" << endl;
                     rraOk = false;
@@ -146,10 +146,10 @@ void Rra::disconnect()
     }
 
     if(useCount == 0 && rra_syncmgr_is_connected(rra)) {
-        kdDebug(2120) << "RRA-Disconnect" << endl;
-
+        kdDebug(2120) << "Matchmaker-Disconnect" << endl;
         rra_matchmaker_destroy(matchmaker);
         matchmaker = 0;
+        kdDebug(2120) << "RRA-Disconnect" << endl;
         rra_syncmgr_disconnect(rra);
 //        Ce::rapiUninit();
     }
@@ -217,15 +217,15 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
     switch(event) {
     case SYNCMGR_TYPE_EVENT_UNCHANGED:
         eventIds = &_ids->unchangedIds;
-        kdDebug(2120) << "------- unchanged --------  " << count << endl;
+        kdDebug(2120) << count << " IDs unchanged" << endl;
         break;
     case SYNCMGR_TYPE_EVENT_CHANGED:
         eventIds = &_ids->changedIds;
-        kdDebug(2120) << "-------- changed ---------  " << count << endl;
+        kdDebug(2120) << count << " IDs changed" << endl;
         break;
     case SYNCMGR_TYPE_EVENT_DELETED:
         eventIds = &_ids->deletedIds;
-        kdDebug(2120) << "-------- deleted ---------  " << count << endl;
+        kdDebug(2120) << count << " IDs deleted" << endl;
         break;
     default:
         eventIds = NULL;

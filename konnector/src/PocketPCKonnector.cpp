@@ -31,6 +31,7 @@
 #include <kitchensync/calendarsyncee.h>
 #include <kitchensync/konnectorinfo.h>
 
+
 class PocketPCKonnectorFactory : public KRES::PluginFactoryBase
 {
 public:
@@ -142,7 +143,6 @@ namespace KSync
 
     bool PocketPCKonnector::readSyncees()
     {
-        // clear the internal structures;
         if ( mSyncees.empty() ) {
             kdDebug( 2120 ) << "PocketPCKonnector::readSyncees: m_syncees is empty" << endl;
             emit synceeReadError( this );
@@ -225,6 +225,8 @@ namespace KSync
         }
 
         clearDataStructures();
+
+        firstSync = false;
 
         emit synceesWritten ( this );
 

@@ -12,6 +12,7 @@
 #include "todohandler.h"
 
 #include <kdebug.h>
+#include <kapplication.h>
 #include <libkcal/icalformat.h>
 #include <libkcal/event.h>
 #include <libkcal/calendarnull.h>
@@ -20,7 +21,7 @@
 
 namespace pocketPCCommunication
 {
-    TodoHandler::TodoHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
+    TodoHandler::TodoHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
             : PimHandler( p_rra )
     {
         initialized = false;
@@ -55,7 +56,9 @@ namespace pocketPCCommunication
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             count++;
-            kdDebug( 2120 ) << " ||| " << endl;
+
+            kdDebug(2120) << "Retrieving Todo from device: " << "RRA-ID-" +
+                    QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
 
             QString vCal = vCalBegin + m_rra->getVToDo( mTypeId, *it ) + vCalEnd;
 
@@ -71,7 +74,12 @@ namespace pocketPCCommunication
                 mUidHelper->addId("SynCETodo", incidence->uid(), incidence->uid());
             }
 
+            kdDebug(2120) << "    ID-Pair: KDEID: " << incidence->uid() << " DeviceID: " <<
+                "RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
+
             mTodoList.push_back( dynamic_cast<KCal::Todo*> (incidence) );
+
+            KApplication::kApplication()->processEvents();
         }
 
         return count;
@@ -84,15 +92,18 @@ namespace pocketPCCommunication
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             count++;
-            kdDebug( 2120 ) << " &&& " << endl;
             KCal::Todo *todo = new KCal::Todo();
 
             QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
             QString kdeId;
 
             if ((kdeId = mUidHelper->kdeId("SynCETodo", konId, "---")) != "---") {
+
+                kdDebug(2120) << "Faking Todo for device: " << konId << endl;
+
                 todo->setUid(kdeId);
                 mUidHelper->removeId("SynCETodo", todo->uid());
+                kdDebug(2120) << "    ID-Pair: KDEID: " << todo->uid() << " DeviceID: " << konId << endl;
                 mTodoList.push_back( todo );
             }
 
@@ -105,7 +116,7 @@ namespace pocketPCCommunication
     bool TodoHandler::getIds()
     {
         if ( !m_rra->getIds( mTypeId, &ids ) ) {
-            kdDebug( 2120 ) << "TodoHandler::getIds: could not get the ids.. :(" << endl;
+            kdDebug( 2120 ) << "TodoHandler::getIds: could not get the ids." << endl;
             return false;
         }
 
@@ -115,8 +126,6 @@ namespace pocketPCCommunication
 
     int TodoHandler::getTodoListFromDevice(KCal::Todo::List &mTodoList, int mRecType)
     {
-        kdDebug( 2120 ) << "[TodoHandler]: got ids.. fetching information" << endl;
-
         int count = 0;
         int ret = 0;
 
@@ -151,13 +160,11 @@ namespace pocketPCCommunication
 
     void TodoHandler::insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Todo::List &list, int state)
     {
-        kdDebug(2120) << "Begin Inserting into TodoSyncee State: " << state << endl;
         for(KCal::Todo::List::Iterator it = list.begin(); it != list.end(); ++it) {
             KSync::CalendarSyncEntry entry(*it, mCalendarSyncee);
             entry.setState(state);
             mCalendarSyncee->addEntry(entry.clone());
         }
-        kdDebug(2120) << "End Inserting into TodoSyncee" << endl;
     }
 
 
@@ -207,14 +214,11 @@ namespace pocketPCCommunication
 
     void TodoHandler::getTodos (KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
     {
-        kdDebug( 2120 ) << "getTodo: " << endl;
-
         for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
             KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
             KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
             if (todo) {
                 p_todos.push_back ( todo );
-                kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
             }
         }
     }
@@ -222,15 +226,12 @@ namespace pocketPCCommunication
 
     void TodoHandler::getTodosAsFakedTodos(KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
     {
-        kdDebug( 2120 ) << "getTodo: " << endl;
-
         for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
             KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
             KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
             if (todo) {
                 if (mUidHelper->konnectorId("SynCETodo", todo->uid(), "---") != "---") {
                     p_todos.push_back ( todo );
-                    kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
                 }
             }
         }
@@ -249,11 +250,18 @@ namespace pocketPCCommunication
 
             QString iCal = calFormat.toString(*it);
 
+            kdDebug(2120) << "Adding Todo on Device: " << (*it)->uid() << endl;
+
             uint32_t newObjectId = m_rra->putVToDo( iCal, mTypeId, 0 );
 
             mUidHelper->addId("SynCETodo",
                 "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
                 (*it)->uid());
+
+            kdDebug(2120) << "    ID-Pair: KDEID: " << (*it)->uid() << " DeviceID: " <<
+                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ) << endl;
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -271,9 +279,13 @@ namespace pocketPCCommunication
             QString kUid = mUidHelper->konnectorId("SynCETodo", (*it)->uid(), "---");
 
             if (kUid != "---") {
+                kdDebug(2120) << "Updating Todo on Device: " << "ID-Pair: KDEID: " <<
+                    (*it)->uid() << " DeviceId: " << kUid << endl;
                 QString iCal = calFormat.toString(*it);
                 m_rra->putVToDo( iCal, mTypeId, getOriginalId( kUid ) );
             }
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -288,9 +300,13 @@ namespace pocketPCCommunication
             QString kUid = mUidHelper->konnectorId("SynCETodo", (*it)->uid(), "---");
 
             if (kUid != "---") {
+                kdDebug(2120) << "Removing Event on Device: " << "ID-Pair: KDEID: " <<
+                    (*it)->uid() << " DeviceId: " << kUid << endl;
                 deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
                 mUidHelper->removeId("SynCETodo", kUid);
             }
+
+            KApplication::kApplication()->processEvents();
         }
     }
 
@@ -328,10 +344,10 @@ namespace pocketPCCommunication
     bool TodoHandler::connectDevice()
     {
         if ( !m_rra->connect() ) {
-            kdDebug( 2120 ) << "PocketPCKonnector: could not connect to device!" << endl;
+            kdDebug( 2120 ) << "TodoHandler: could not connect to device!" << endl;
             return false;
         } else {
-            kdDebug( 2120 ) << "PocketPCKonnector: connected to device!" << endl;;
+            kdDebug( 2120 ) << "TodoHandler: connected to device!" << endl;;
         }
 
         return true;
