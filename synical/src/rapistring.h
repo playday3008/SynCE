@@ -20,22 +20,24 @@
 #ifndef __rapistring_h__
 #define __rapistring_h__
 
+#include <iconv.h>
+
 class RapiString
 {
 	private:
-		mutable char* mAscii;
+		mutable char* mUtf8;
 		mutable WCHAR* mUcs2;
 	
 	public:
-		RapiString(const char* ascii)
-			: mAscii(NULL), mUcs2(NULL)
+		RapiString(const char* utf8)
+			: mUtf8(NULL), mUcs2(NULL)
 		{
-			mAscii = new char[strlen(ascii)+1];
-			strcpy(mAscii, ascii);
+			mUtf8 = new char[strlen(utf8)+1];
+			strcpy(mUtf8, utf8);
 		}
 
 		RapiString(const WCHAR* ucs2)
-			: mAscii(NULL), mUcs2(NULL)
+			: mUtf8(NULL), mUcs2(NULL)
 		{
 			mUcs2 = new WCHAR[wcslen(ucs2)+1];
 			wcscpy(mUcs2, ucs2);
@@ -43,38 +45,57 @@ class RapiString
 
 		~RapiString()
 		{
-			if (mAscii) delete mAscii;
+			if (mUtf8) delete mUtf8;
 			if (mUcs2) delete mUcs2;
 		}
 
+#if 0
 		operator const WCHAR*() const
 		{
 			if (!mUcs2)
 			{
-				mUcs2 = new WCHAR[strlen(mAscii)+1];
+				//iconv_t cd = iconv_open("UCS-2", "UTF-8");	// from UTF-8 to UCS-2
+				
+				mUcs2 = new WCHAR[strlen(mUtf8)+1];
 				// TODO: make nicer conversion
-				for (int i = 0; i <= strlen(mAscii); i++)
+				for (int i = 0; i <= strlen(mUtf8); i++)
 				{
-					mUcs2[i] = mAscii[i];
+					mUcs2[i] = mUtf8[i];
 				}
+
+				//iconv_close(cd);
 			}
 
 			return mUcs2;
 		}
+#endif
 
 		operator const char*() const
 		{
-			if (!mAscii)
+			if (!mUtf8)
 			{
-				mAscii = new char[wcslen(mUcs2)+1];
-				// TODO: make nicer conversion
-				for (int i = 0; i <= wcslen(mUcs2); i++)
+				iconv_t cd = iconv_open("UTF-8", "UCS-2"); // from UCS-2 to UTF-8
+				
+				// Make large enough buffer
+				
+				size_t inbytesleft = wcslen(mUcs2) * sizeof(WCHAR);
+				char * inbuf = (char *)mUcs2;
+				
+				size_t outbytesleft = inbytesleft + 1;
+				char * outbuf = mUtf8 = new char[outbytesleft];
+				memset(mUtf8, 0, outbytesleft);
+				
+				size_t result = iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+
+				if (result < 0)
 				{
-					mAscii[i] = (char)mUcs2[i];
+					strcpy(mUtf8, "(error)");
 				}
+				
+				iconv_close(cd);
 			}
 
-			return mAscii;
+			return mUtf8;
 		}
 
 };
