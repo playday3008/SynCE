@@ -10,6 +10,7 @@ noinst_PROGRAMS = \
 	CeFindFirstFile \
 	CeGetVersionEx \
 	CeGetSpecialFolderPath \
+	CeMoveFile \
 	CeRapiInit
 
 CeRapiInit_SOURCES = test.h CeRapiInit.cpp
@@ -19,4 +20,5 @@ CeCreateFile_SOURCES = test.h CeCreateFile.cpp
 CeFindFirstFile_SOURCES = test.h CeFindFirstFile.cpp
 CeFindAllFiles_SOURCES = test.h CeFindAllFiles.cpp
 CeCreateDirectory_SOURCES = test.h CeCreateDirectory.cpp
+CeMoveFile_SOURCES = test.h CeMoveFile.cpp
 

@@ -193,6 +193,10 @@ DWORD CeGetSpecialFolderPath(
 		DWORD nBufferLength, 
 		LPWSTR lpBuffer);
 
+BOOL CeMoveFile(
+		LPCWSTR lpExistingFileName, 
+		LPCWSTR lpNewFileName);
+
 BOOL CeRemoveDirectory(
 		LPCWSTR lpPathName);
 

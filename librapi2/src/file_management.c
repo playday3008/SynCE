@@ -289,6 +289,26 @@ fail:
 	return return_value;
 }
 
+BOOL CeMoveFile(
+		LPCWSTR lpExistingFileName, 
+		LPCWSTR lpNewFileName)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = 0;
+	
+	rapi_context_begin_command(context, 0x1a);
+	rapi_buffer_write_optional_string(context->send_buffer, lpExistingFileName);
+	rapi_buffer_write_optional_string(context->send_buffer, lpNewFileName);
+
+	if ( !rapi_context_call(context) )
+		return 0;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+	return return_value;
+}
+
 BOOL CeRemoveDirectory(
 		LPCWSTR lpPathName)
 {
