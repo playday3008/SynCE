@@ -6,5 +6,6 @@ autom4te-2.53.cache
 config.log
 config.status
 configure
+configure.in
 cvsclean
 libtool
