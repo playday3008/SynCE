@@ -179,7 +179,8 @@ void drawing(istream& input)
 
   unsigned drawing_size = read16(input);
 
-  cerr << "Drawing size: 0x" << hex << drawing_size << endl;
+  cerr << "Drawing: 0x" << hex << drawing_size << 
+    " bytes at offset 0x" << hex << input.tellg() << endl;
   
   // Skip drawing
   input.seekg(drawing_size, ios_base::cur);
