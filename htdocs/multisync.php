@@ -46,6 +46,24 @@ pair.</li>
 
 <h2>Questions and Answers</h2>
 
+<p><b>Q:</b> When I use the MultiSync plugin with SmartPhone 2003, I get a
+message saying I should upgrade ActiveSync. What shall I do?</p>
+
+<p><b>A:</b> Use the <a href="cvs.php">CVS version</a> of SynCE.</p>
+
+<hr size=1 width="50%">
+
+<p><b>Q:</b> When I use the MultiSync plugin with PocketPC 2003, I get a
+message saying I should upgrade ActiveSync. What shall I do?</p>
+
+<p><b>A:</b> This is not fixed yet. We need someone with a PocketPC 2003 device
+to <a href="capture.php">capture traffic between the PDA and a PC running
+ActiveSync</a>. Please see this <a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=2802972&forum_id=1226">mailing
+list thread</a> for more info.</p>
+
+<hr size=1 width="50%">
+
 <p>
 
 <b>Q:</b> All contacts from Evolution were synchronized to the Pocket PC, but
@@ -119,7 +137,7 @@ Christian</a> and slightly edited:</p>
 <p>Partnerships in Windows CE are relevant for synchronizing only. The
 synchronizing-algorithm in PocketPC traces by use of the partnerships which
 contact, task, ... are already synchronized with which partner. Thats why
-activesync forbits synchronizing when only a guest-partnership is active.</p>
+activesync forbids synchronizing when only a guest-partnership is active.</p>
 
 <p>The 1 and the 2 actualy numbers the partnerships in the registry.  What you
 have in the registry is:</p>

@@ -52,6 +52,10 @@ Creating libsynce.spec...done.
 + autoheader
 + libtoolize --copy --automake
 + automake --copy --foreign --add-missing
+configure.ac: installing `./install-sh'
+configure.ac: installing `./mkinstalldirs'
+configure.ac: installing `./missing'
+lib/Makefile.am: installing `./depcomp'
 + autoconf</pre>
 
 <p>See the <a href="tarballs.php">Installation from .tar.gz files</a> page for
