@@ -59,6 +59,54 @@ void printbuf( unsigned char * buf, int size )
 }
 #endif
 
+int compute_password( char *passphrase, char xorvalue, char *lockbuffer, unsigned int *lockbuffersize )
+{
+	int result = FALSE;
+        char * in;
+        char * out;
+        iconv_t cd;
+        size_t res;
+	size_t inlen;
+	size_t outlen;
+	size_t i;
+
+        inlen = 1 + strlen( passphrase );
+	outlen = *lockbuffersize;
+	log_debug ("compute_password : passphrase = %s, xorvalue = 0x%X, inlen = %d, outlen = %d", passphrase, xorvalue, inlen, outlen);
+        cd = iconv_open( "UNICODELITTLE", "latin1" );
+	if(cd == (iconv_t)-1)
+	{
+		log_debug("conversion not available");
+		return FALSE;
+	}
+
+        in = (char *) passphrase;
+        out = (char *) lockbuffer;
+        res = iconv( cd, &in, &inlen, &out, &outlen );
+
+	if(res==-1)
+	{
+		log_debug("iconv() failed");
+	}
+        iconv_close( cd );
+
+	log_debug ("compute_password : iconv Ok, passphrase = %s, xorvalue = 0x%X, res = %d, inlen = %d, outlen = %d", passphrase, xorvalue, res, inlen, outlen);
+
+	*lockbuffersize = *lockbuffersize - outlen;
+	for( i=0; i< *lockbuffersize; i++ )
+	{
+		lockbuffer[i] = (char) (lockbuffer[i] ^ xorvalue);
+	}
+
+#ifdef DEBUG
+	printbuf( lockbuffer, *lockbuffersize );
+#endif /* DEBUG */
+
+	result = TRUE;
+
+	return result;
+}
+
 int removeinfo( void )
 {
         struct stat st;
@@ -144,7 +192,7 @@ int checkpacket( unsigned char * buf, int size )
         printbuf( (char*)ptrlng, strglen );
 
         cd = iconv_open( "latin1", "UNICODELITTLE" );
-	if(cd == -1)
+	if(cd == (iconv_t)-1)
 	{
 		log_debug("conversion not available");
 		return FALSE;
@@ -192,6 +240,7 @@ int main (int ac, char **av)
 	int pending = FALSE;
 	int locked = FALSE;
 	int locked_pending = FALSE;
+	unsigned int locksignature = 0;
 
 #ifdef DEBUG
 	initdebug("asyncd");
@@ -247,11 +296,6 @@ int main (int ac, char **av)
 					end_connexion = TRUE;
 				}
 			}
-			else if( pktsz == 0x00EDF3FD)
-			{
-				log_debug(" device is locked");
-				locked = TRUE;
-			}
 			else
 			{
 				
@@ -275,9 +319,15 @@ int main (int ac, char **av)
 						buffer_ok = checkpacket( buffer, pktsz );
 						if(locked)
 						{
-							unsigned char lockbuffer[]={0xa, 0x0, 0xcc, 0xfd, 0xcf, 0xfd, 0xce, 0xfd, 0xc9, 0xfd, 0xfd, 0xfd};
+							//unsigned char lockbuffer[]={0xa, 0x0, 0xce, 0xfd, 0xc8, 0xfd, 0xc9, 0xfd, 0xcf, 0xfd, 0xfd, 0xfd};
+							unsigned char lockbuffer[15];
+							char *passphrase = "1234";
+							unsigned int lockbuffersize = 13;
+							compute_password( passphrase, locksignature & 0xFF, lockbuffer+2, &lockbuffersize ); 
+							lockbuffer[0] = 0x0A;
+							lockbuffer[1] = 0x00;
 							
-							error = write( ASYNCD_OUTPUT, lockbuffer, 0x000a +2 );
+							error = write( ASYNCD_OUTPUT, lockbuffer, lockbuffersize + 2 );
 
 							/* 1234: 0x0a 0x00 0xcc 0xfd 0xcf 0xfd 0xce 0xfd 0xc9 0xfd 0xfd 0xfd */
 							/* 1111: 0x0a 0x00 0xcc 0xfd 0xcc 0xfd 0xcc 0xfd 0xcc 0xfd 0xfd 0xfd */
@@ -290,7 +340,7 @@ int main (int ac, char **av)
 							*/
 
 #ifdef DEBUG				
-							log_debug(" sending ???");
+							log_debug(" sending passphrase");
 							printbuf( buffer, 0x000a + 2);
 #endif
 							locked_pending = TRUE;
@@ -300,10 +350,17 @@ int main (int ac, char **av)
 							goto ping;
 						}
 					} else {
+						if( pktsz > 0x00010000 )
+						{
+							log_debug(" device is locked");
+							locksignature = pktsz;
+							locked = TRUE;
+						} else {
 #ifdef DEBUG
-						log_debug(" buffer too small !! Aborting");
+							log_debug(" buffer too small !! Aborting");
 #endif
-						end_connexion = TRUE;
+							end_connexion = TRUE;
+						}
 					}
 				} else {
 #ifdef DEBUG
