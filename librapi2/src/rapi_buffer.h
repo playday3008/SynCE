@@ -40,7 +40,7 @@ unsigned char* rapi_buffer_get_raw(RapiBuffer* buffer);
 /**
  * Append raw data to buffer
  */
-bool rapi_buffer_write_data(RapiBuffer* buffer, void* data, size_t size);
+bool rapi_buffer_write_data(RapiBuffer* buffer, const void* data, size_t size);
 
 /**
  * Append a WORD parameter to buffer, with adjustment for endianness

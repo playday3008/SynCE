@@ -111,7 +111,7 @@ unsigned char* rapi_buffer_get_raw(RapiBuffer* buffer)
 	return buffer->data;
 }
 
-bool rapi_buffer_write_data(RapiBuffer* buffer, void* data, size_t size)
+bool rapi_buffer_write_data(RapiBuffer* buffer, const void* data, size_t size)
 {
 	if (!rapi_buffer_assure_size(buffer, size))
 		return false;
