@@ -883,7 +883,8 @@ static GnomeVFSResult synce_move
 
 	if(CeGetLastError() == 183) /* If the destination file exists we end up here */
 	{
-		if(force_replace) 
+		printf("1\n");
+		if(force_replace)
 		/* if the user wants we delete the dest file and moves the source there */
 		{
 			result = CeDeleteFile(new_wstr);
@@ -898,7 +899,8 @@ static GnomeVFSResult synce_move
 				printf("--------------------------------------------\n");
 				return GNOME_VFS_ERROR_ACCESS_DENIED;
 			}
-			result = result = CeMoveFile(old_wstr, new_wstr);
+			printf("2\n");
+			result = CeMoveFile(old_wstr, new_wstr);
 		}
 	}
 
@@ -907,9 +909,11 @@ static GnomeVFSResult synce_move
 	wstr_free_string(old_wstr);
 	wstr_free_string(new_wstr);
 
+	printf("CeGetLastError(): %d\n", CeGetLastError());
 	switch(CeGetLastError())
 	{
 		case 0:
+		case 18:
 			printf("Ok\n");
 			printf("--------------------------------------------\n");
 			return GNOME_VFS_OK;
