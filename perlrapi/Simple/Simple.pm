@@ -120,6 +120,7 @@ sub OpenDB
     {
       # Success.
       $self->{dbh}=$dbh;
+      $self->{type}="db";
       return 1;
     }
   }
