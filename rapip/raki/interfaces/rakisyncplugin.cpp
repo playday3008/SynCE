@@ -28,7 +28,7 @@
 #include "rakisyncplugin.h"
 #include "syncthread.h"
 #include "synctasklistitem.h"
-#include "installer.h"
+#include "rakiapi.h"
 
 #include <qapplication.h>
 #include <qstringlist.h>
@@ -99,7 +99,7 @@ void RakiSyncPlugin::install(QString cabFileName)
 {
     QStringList sl;
     sl.append(cabFileName);
-    Installer::install(pdaName, sl, true);
+    RakiApi::install(pdaName, sl, true);
 }
 
 

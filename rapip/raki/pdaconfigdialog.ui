@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>419</width>
-            <height>428</height>
+            <height>430</height>
         </rect>
     </property>
     <property name="caption">
@@ -293,6 +293,12 @@
         <receiver>PdaConfigDialog</receiver>
         <slot>kPushButton2_clicked()</slot>
     </connection>
+    <connection>
+        <sender>objectTypeList</sender>
+        <signal>clicked(QListViewItem*)</signal>
+        <receiver>PdaConfigDialog</receiver>
+        <slot>objectTypeList_clicked(QListViewItem*)</slot>
+    </connection>
 </connections>
 <tabstops>
     <tabstop>passwordEdit</tabstop>
@@ -315,6 +321,7 @@
     <slot>objectTypeList_rightButtonClicked( QListViewItem *, const QPoint &amp;, int )</slot>
     <slot>kPushButton2_clicked()</slot>
     <slot>objectTypeList_selectionChanged( QListViewItem * )</slot>
+    <slot>objectTypeList_clicked( QListViewItem * )</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>

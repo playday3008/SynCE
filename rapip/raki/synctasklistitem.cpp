@@ -63,15 +63,20 @@ SyncTaskListItem::~SyncTaskListItem()
 
 void SyncTaskListItem::stateChange(bool state)
 {
+    createSyncPlugin(state);
     emit stateChanged(state);
 }
 
 
 void SyncTaskListItem::undo()
 {
-    QCheckListItem::setOn(isOnStore);
-    preferedOfferTemp = preferedOffer;
-    preferedLibraryTemp = preferedLibrary;
+    if (preferedOffer != preferedOfferTemp ||
+            preferedLibrary != preferedLibraryTemp ||
+            isOnStore != QCheckListItem::isOn()) {
+        QCheckListItem::setOn(isOnStore);
+        preferedOfferTemp = preferedOffer;
+        preferedLibraryTemp = preferedLibrary;
+    }
 }
 
 
@@ -83,7 +88,6 @@ void SyncTaskListItem::makePersistent()
         isOnStore = QCheckListItem::isOn();
         preferedOffer = preferedOfferTemp;
         preferedLibrary = preferedLibraryTemp;
-        createSyncPlugin(isOnStore);
     }
 }
 
@@ -241,7 +245,8 @@ void SyncTaskListItem::clickedMenu(int item)
             }
         }
     }
-
+    
+    createSyncPlugin(QCheckListItem::isOn());
     emit serviceChanged();
 }
 

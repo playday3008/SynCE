@@ -67,17 +67,20 @@ public:
     void addSyncTask(RRA_SyncMgrType *objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
     void clearConfig();
+    virtual void show();
 
 public slots:
     void writeConfig();
     void applySlot();
     void changedSlot();
+    void setConfigButton();
 
 private slots:
     void masqChangedSlot();
     void disableApply();
     void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &,
             int);
+    void objectTypeList_clicked(QListViewItem *);
     void kPushButton2_clicked();
     
 private:

@@ -53,9 +53,9 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(QString pdaName, QWidget* parent,
     readConfig();
     updateFields();
     buttonApply->setEnabled(false);
+    buttonOk->setEnabled(false);
     objectTypeList->setFullWidth(true);
     syncTaskItemList.setAutoDelete(true);
-    syncAtConnectCheckbox->setEnabled(false);
 }
 
 
@@ -79,6 +79,7 @@ void PdaConfigDialogImpl::updateFields()
     }
 
     buttonApply->setDisabled(true);
+    buttonOk->setDisabled(true);
 }
 
 
@@ -134,8 +135,8 @@ void PdaConfigDialogImpl::readConfig()
         ksConfig->setGroup("MainConfig");
         masqEnabled = ksConfig->readBoolEntry("Masquerade");
         password = ksConfig->readEntry("Password");
-        syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect", false);
-        partnerName = ksConfig->readEntry("PartnerName", "");
+        syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect");
+        partnerName = ksConfig->readEntry("PartnerName");
         partnerId = ksConfig->readUnsignedLongNumEntry("PartnerId", 0);
         partnershipCreated = ksConfig->readDateTimeEntry("PartnershipCreated",
                 &partnershipCreated);
@@ -186,6 +187,7 @@ void PdaConfigDialogImpl::applySlot()
         }
         writeConfig();
         buttonApply->setDisabled(true);
+        buttonOk->setDisabled(true);
     }
 }
 
@@ -193,6 +195,7 @@ void PdaConfigDialogImpl::applySlot()
 void PdaConfigDialogImpl::masqChangedSlot()
 {
     buttonApply->setEnabled(true);
+    buttonOk->setEnabled(true);
 }
 
 
@@ -205,6 +208,7 @@ void PdaConfigDialogImpl::disableApply()
 void PdaConfigDialogImpl::changedSlot()
 {
     buttonApply->setEnabled(true);
+    buttonOk->setEnabled(true);
 }
 
 
@@ -221,6 +225,23 @@ void PdaConfigDialogImpl::objectTypeList_rightButtonClicked(
 }
 
 
+void PdaConfigDialogImpl::setConfigButton()
+{
+    SyncTaskListItem *item = (SyncTaskListItem *) objectTypeList->selectedItem();
+    if (item != 0) {
+        kPushButton2->setEnabled(((SyncTaskListItem *)item)->QCheckListItem::isOn());
+    } else {
+        kPushButton2->setEnabled(false);
+    }
+}
+
+
+void PdaConfigDialogImpl::objectTypeList_clicked(QListViewItem *item)
+{
+    setConfigButton();
+}
+
+
 bool PdaConfigDialogImpl::isNewPda()
 {
     return newPda;
@@ -231,10 +252,6 @@ void PdaConfigDialogImpl::setPartner(QString partnerName, uint32_t partnerId)
 {
     this->partnerName = partnerName;
     this->partnerId = partnerId;
-
-    if (partnerId != 0) {
-        syncAtConnectCheckbox->setEnabled(true);
-    }
 }
 
 
@@ -278,6 +295,8 @@ void PdaConfigDialogImpl::addSyncTask(RRA_SyncMgrType *objectType,
     item->setOn(ksConfig->readBoolEntry("Active"));
     connect((const QObject *) item, SIGNAL(stateChanged(bool)), this,
             SLOT(changedSlot()));
+    connect((const QObject *) item, SIGNAL(stateChanged(bool)), this,
+            SLOT(setConfigButton()));
     connect((const QObject *) item, SIGNAL(serviceChanged()), this,
             SLOT(changedSlot()));
     objectTypeList->insertItem(item);
@@ -299,4 +318,11 @@ void PdaConfigDialogImpl::kPushButton2_clicked()
     if (item != NULL) {
         item->configure();
     }
+}
+
+
+void PdaConfigDialogImpl::show()
+{
+    setConfigButton();
+    PdaConfigDialog::show();
 }
