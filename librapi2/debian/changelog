@@ -1,6 +1,17 @@
+librapi2 (0.8-1+cvs) unstable; urgency=low
+
+  * CVS version.
+
+ -- Jonathan McDowell <noodles@earth.li>  Thu, 07 Aug 2003 21:22:09 +0100
+
+librapi2 (0.8-1) unstable; urgency=low
+
+  * First proper Debian upload.
+
+ -- Jonathan McDowell <noodles@earth.li>  Thu, 07 Aug 2003 21:19:29 +0100
+
 librapi2 (0.7-2) unstable; urgency=low
 
-  * CVS version
   * added bootstrap to rules
   * changed description
 
