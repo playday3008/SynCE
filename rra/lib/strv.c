@@ -14,6 +14,9 @@ char** strsplit(const char* source, int separator)/*{{{*/
 	char** result = NULL;
 	size_t length = 0;
 
+  if (!source)
+    return NULL;
+
 	for (p = source; *p; p++)
 		if (separator == *p)
 			count++;
