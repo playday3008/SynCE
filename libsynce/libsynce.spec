@@ -1,5 +1,5 @@
 %define prefix   /usr
-%define name     libsynce
+%define name     synce-libsynce
 %define ver      0.1
 %define rel      1
 

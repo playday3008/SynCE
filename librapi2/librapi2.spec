@@ -1,5 +1,5 @@
 %define prefix   /usr
-%define name     librapi2
+%define name     synce-librapi2
 %define ver      0.1
 %define rel      1
 
@@ -16,7 +16,7 @@ Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Buildroot: %{_tmppath}/synce-root
-Requires: libsynce = 0.1
+Requires: synce-libsynce = 0.1
 
 %description
 Librapi2 is part of the SynCE project:
