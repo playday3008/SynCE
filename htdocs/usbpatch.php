@@ -40,7 +40,7 @@ you have to compile the kernel:</p>
 
 <p>In case these instructions are not enough to get your driver working, we
 would like you to first read <a
-href="http://www.tuxedo.org/~esr/faqs/smart-questions.html#intro">this
+href="http://www.catb.org/~esr/faqs/smart-questions.html#intro">this
 document</a> and search for the answer to your question in the <a
 href="http://sourceforge.net/mail/?group_id=30550">mailing list archives</a>.
 If your question remains unanswered, send mail to <a
