@@ -6,7 +6,7 @@ if test ${kdewarning} == yes; then
 	echo ""
 fi
 echo ""
-echo "Remember to install rapip/raki in the default KDEDIR."
+echo "Remember to install synce-kde in the default KDEDIR."
 echo "For this your KDEDIR environment variable has to be"
 echo "set according your KDE-Installation."
 echo "e.g. Slackware  export KDEDIR=/opt/kde"

@@ -12,8 +12,8 @@
       <keyword>KDE</keyword>
       <keyword>kioslave</keyword>
     </keywords>
-    <version></version>
-    <description></description>
+    <version/>
+    <description/>
     <ignoreparts/>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
@@ -21,25 +21,27 @@
   <kdevautoproject>
     <general>
       <activetarget>raki/raki</activetarget>
-      <useconfiguration>release</useconfiguration>
+      <useconfiguration>debian</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
       <envvar value="1" name="WANT_AUTOMAKE_1_6" />
     </makeenvvars>
     <run>
-      <mainprogram>./raki/raki</mainprogram>
-      <programargs></programargs>
+      <mainprogram/>
+      <programargs/>
       <terminal>false</terminal>
       <envvars/>
       <autocompile>true</autocompile>
+      <directoryradio>build</directoryradio>
+      <customdirectory>/</customdirectory>
     </run>
     <envvars/>
     <make>
       <abortonerror>false</abortonerror>
       <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
-      <makebin></makebin>
+      <makebin/>
       <envvars>
         <envvar value="1" name="WANT_AUTOCONF_2_5" />
         <envvar value="1" name="WANT_AUTOMAKE_1_6" />
@@ -80,7 +82,7 @@
       </default>
       <release>
         <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
-        <builddir>/home/voc/usr/software/mrapip/build/release</builddir>
+        <builddir>/home/voc/usr/software/rapip/build/release</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -110,6 +112,22 @@
         <cxxflags/>
         <f77flags/>
       </dist>
+      <debian>
+        <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre --with-qt-includes=/usr/include/qt3</configargs>
+        <builddir>/home/voc/usr/software/rapip/build/debian</builddir>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <ccompiler>GccOptions</ccompiler>
+        <cxxcompiler>GppOptions</cxxcompiler>
+        <f77compiler>G77Options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags/>
+        <cxxflags/>
+        <f77flags/>
+      </debian>
     </configurations>
   </kdevautoproject>
   <kdevfileview>
@@ -136,8 +154,8 @@
   <kdevdebugger>
     <general>
       <dbgshell>libtool</dbgshell>
-      <programargs></programargs>
-      <gdbpath></gdbpath>
+      <programargs/>
+      <gdbpath/>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
@@ -199,8 +217,8 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
     </classstore>
     <filetemplates>
       <choosefiles>true</choosefiles>
-      <interfaceURL>/home/voc/usr/software/mrapip/templates/h</interfaceURL>
-      <implementationURL>/home/voc/usr/software/mrapip/templates/cpp</implementationURL>
+      <interfaceURL>/home/voc/usr/software/rapip/templates/h</interfaceURL>
+      <implementationURL>/home/voc/usr/software/rapip/templates/cpp</implementationURL>
       <interfacesuffix>.h</interfacesuffix>
       <implementationsuffix>.cpp</implementationsuffix>
       <lowercasefilenames>true</lowercasefilenames>
@@ -230,4 +248,16 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
       <type ext="h" />
     </useglobaltypes>
   </kdevfilecreate>
+  <kdevcppsupport>
+    <codecompletion>
+      <includeGlobalFunctions>true</includeGlobalFunctions>
+      <includeTypes>true</includeTypes>
+      <includeEnums>true</includeEnums>
+      <includeTypedefs>false</includeTypedefs>
+      <automaticCodeCompletion>true</automaticCodeCompletion>
+      <automaticArgumentsHint>true</automaticArgumentsHint>
+      <codeCompletionDelay>250</codeCompletionDelay>
+      <argumentsHintDelay>400</argumentsHintDelay>
+    </codecompletion>
+  </kdevcppsupport>
 </kdevelop>

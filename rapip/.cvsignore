@@ -11,7 +11,7 @@ Makefile.in
 autom4te.cache
 libtool
 stamp-h1
-rapip.kdevses
+synce-kde.kdevses
 debug
 dmalloc
 html
