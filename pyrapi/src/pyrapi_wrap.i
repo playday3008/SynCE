@@ -103,7 +103,7 @@ typedef struct _FILETIME
 
 %typemap(in) LPCWSTR, LPWSTR {
   if (PyString_Check($input)) {
-    $1 = wstr_from_ascii(PyString_AsString($input));
+    $1 = wstr_from_utf8(PyString_AsString($input));
   } else {
     PyErr_SetString(PyExc_TypeError, "expected a string.");
     return NULL;
@@ -113,12 +113,12 @@ typedef struct _FILETIME
 %define WCHARGETSET(type,name)
      %{
   const char * type ## _ ## name ## _get(type *ptr) {
-    return (const char *) wstr_to_ascii(ptr-> ## name);
+    return (const char *) wstr_to_utf8(ptr-> ## name);
   }
 
   void type ## _ ## name ## _set(type *ptr, const char *value) {
     // TODO: check length of string.
-    wstr_strcpy(ptr-> ## name ,wstr_from_ascii(value));
+    wstr_strcpy(ptr-> ## name ,wstr_from_utf8(value));
   }
   %}
 %enddef
@@ -400,7 +400,7 @@ DWORD CeGetFileAttributes(
     return NULL;
   }
 
-  ascii_str = wstr_to_ascii($2);
+  ascii_str = wstr_to_utf8($2);
   $result = Py_BuildValue("s",ascii_str);
 }
 
