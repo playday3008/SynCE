@@ -34,6 +34,12 @@
 synchronizing Evolution and IrMC Mobile Client calendars. There is a SynCE
 plugin available for MultiSync.</li>
 
+<li><a href="http://www.itee.uq.edu.au/~leonard/personal/software/#ipaq">David
+Leonard's iPAQ tools</a>, including an OpenBSD USB driver and a client for
+Microsoft's <a
+href="http://www.microsoft.com/windowsmobile/resources/downloads/pocketpc/powertoys.mspx">Remote
+Display Control for Pocket PC</a> powertoy.</li>
+
 </ul>
 
 <h2>Windows CE and Pocket PC pages</h2>
