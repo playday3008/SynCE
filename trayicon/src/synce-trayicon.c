@@ -65,6 +65,11 @@ static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 	gtk_widget_show(about);
 }
 
+static void menu_disconnect(GtkWidget *button, EggTrayIcon *icon)
+{
+	system("killall -HUP dccm");
+}
+
 static void menu_exit(GtkWidget *button, EggTrayIcon *icon)
 {
 	gtk_main_quit();
@@ -83,12 +88,12 @@ static void trayicon_menu(GdkEventButton *event)
 	menu = gtk_menu_new();
 
 	if (is_connected)
-		snprintf(buffer, sizeof(buffer), "Connected to '%s'", device_name);
+		snprintf(buffer, sizeof(buffer), "Disconnect from '%s'", device_name);
 	else
 		strcpy(buffer, "(No device connected)");
 	
 	entry = gtk_menu_item_new_with_label(buffer);
-/*	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(auto_login), NULL);*/
+	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), NULL);
 	gtk_menu_append(GTK_MENU(menu), entry);
 
 	entry = gtk_menu_item_new_with_label("About");

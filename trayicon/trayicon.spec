@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-trayicon
-%define ver      0.2
+%define ver      0.3
 %define rel      1
 
 Summary: SynCE: Tray icon for GNOME 2.
