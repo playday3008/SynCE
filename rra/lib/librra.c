@@ -17,7 +17,7 @@
 #define SEND_COMMAND_6F_6   1
 #define SEND_COMMAND_6F_10  0
 #define SEND_COMMAND_70_2   0
-#define SEND_COMMAND_70_3   0
+#define SEND_COMMAND_70_3   1
 
 struct _RRA
 {
@@ -197,7 +197,8 @@ exit:
   return result;
 }/*}}}*/
 
-bool rra_get_changes(
+#if 0
+bool rra_get_changes(/*{{{*/
     RRA* rra, 
     uint32_t* object_type_ids, 
     size_t object_type_count, 
@@ -331,7 +332,8 @@ exit:
 	if (ignored_ids)
 		free(ignored_ids);
   return success;
-}
+}/*}}}*/
+#endif
 
 bool rra_get_object_ids(RRA* rra,/*{{{*/
                         uint32_t object_type_id,
