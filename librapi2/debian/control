@@ -1,0 +1,30 @@
+Source: librapi2
+Priority: optional
+Maintainer: Thomas Butter <thomas@i.rule-the.net>
+Build-Depends: debhelper (>> 4.0.0), libsynce0-dev (>= 0.7)
+Standards-Version: 3.5.8
+
+Package: librapi2-dev
+Section: devel
+Architecture: any
+Depends: librapi2 (= ${Source-Version})
+Description: The RAPI library is a library that works like RAPI.DLL
+ The library makes it possible to make remote calls to a pocket computer running
+ the Pocket PC (WinCE) OS.
+
+Package: librapi2
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: The RAPI library is a library that works like RAPI.DLL
+ The library makes it possible to make remote calls to a pocket computer
+ running Pocket PC (WinCE) OS.
+
+Package: librapi2-tools
+Section: utils
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: The RAPI library is a library that works like RAPI.DLL
+ The library makes it possible to make remote calls to a pocket computer
+ running Pocket PC (WinCE) OS.
+
