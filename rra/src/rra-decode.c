@@ -5,6 +5,37 @@
 #include <string.h>
 #include "dbstream.h"
 
+enum OlRecurrenceType
+{	olRecursDaily	= 0,
+  olRecursWeekly	= 1,
+  olRecursMonthly	= 2,
+  olRecursMonthNth	= 3,
+  olRecursYearly	= 5,
+  olRecursYearNth	= 6,
+  RECURRENCE_TYPE_COUNT = 7
+}	OlRecurrenceType;
+
+static const char* RECURRENCE_TYPE[] = 
+{
+  "Daily", "Weekly", "Monthly", "MonthNth", "Yearly", "YearNth"
+};
+
+enum OlDaysOfWeek
+{	olSunday	= 1,
+  olMonday	= 2,
+  olTuesday	= 4,
+  olWednesday	= 8,
+  olThursday	= 16,
+  olFriday	= 32,
+  olSaturday	= 64
+}	OlDaysOfWeek;
+
+static const char* DAY_OF_WEEK[] = 
+{
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+};
+
+
 static void
 dump(void* data, size_t len)
 {
@@ -188,7 +219,8 @@ bool decode_database_stream(uint8_t* buffer)
 					char* time_str = ctime(&unix_time);
 					time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
 					printf("%s", time_str);
-				}
+          db_dump(&propvals[i].val.filetime, sizeof(FILETIME));
+        }
 				break;
 				
 			case CEVT_BLOB:  
@@ -198,15 +230,92 @@ bool decode_database_stream(uint8_t* buffer)
 				/* special debug code for appointments */
 				if (0x4015 == (propvals[i].propid >> 16))
 				{
-					printf("\n                     X-RecurrenceType: %02x", 
-							propvals[i].val.blob.lpb[0x06]);
-					printf("\n                     X-Inteval:        %02x", 
-							propvals[i].val.blob.lpb[0x0e]);
-					printf("\n                     X-DaysOfWeek:     %02x", 
-							propvals[i].val.blob.lpb[0x16]);
-				}
-				
-				break;
+          int j;
+          uint32_t recurrence_type  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x06);
+          uint32_t interval         = *(uint32_t*)(propvals[i].val.blob.lpb + 0x0e);
+          uint32_t occurences = 0;
+          uint32_t flags = 0;
+          uint32_t instance = 0;
+
+					printf("\n                     RecurrenceType: 0x%08x %s", 
+							recurrence_type, 
+              (recurrence_type < RECURRENCE_TYPE_COUNT) ? RECURRENCE_TYPE[recurrence_type] : "Unknown");
+
+         
+          switch (recurrence_type)
+          {
+            case olRecursDaily:
+              flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
+              occurences  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
+              break;
+
+            case olRecursWeekly:
+            case olRecursMonthly:
+              flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
+              occurences  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
+              break;
+            
+            case olRecursMonthNth:
+              instance    = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
+              flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
+              occurences  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x22);
+
+              printf("\n                     Instance:       0x%08x %d", 
+                  instance, instance);
+              break;
+          }
+
+          /* 
+             DaysOfWeekMask 
+           */
+          if (recurrence_type == olRecursMonthNth ||
+              recurrence_type == olRecursWeekly ||
+              recurrence_type == olRecursYearNth)
+          {
+            uint32_t days_of_week_mask = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
+
+            printf("\n                     DaysOfWeek:     0x%08x", days_of_week_mask);
+
+            for (j = 0; j < 7; j++)
+              if (days_of_week_mask & (1 << j))
+                printf(" %s", DAY_OF_WEEK[j]);
+          }
+
+          /* 
+             Interval 
+           */
+          if (recurrence_type == olRecursDaily ||
+              recurrence_type == olRecursMonthly ||
+              recurrence_type == olRecursMonthNth||
+              recurrence_type == olRecursWeekly)
+          {
+            printf("\n                     Interval:       0x%08x %d", 
+                interval, interval);
+          }
+
+
+          printf("\n                     Flags:          0x%08x", flags);
+
+          switch (flags & 3)
+          {
+            case 0:
+              printf(" Bad flags?");
+              break;
+            case 1:
+              printf(" Ends on date");
+              printf("\n                     Occurences:     0x%08x %i", occurences, occurences);
+              break;
+            case 2:
+              printf(" Ends after X occurances");
+              printf("\n                     Occurences:     0x%08x %i", occurences, occurences);
+              break;
+            case 3:
+              printf(" Does not end");
+              break;
+          }
+
+        }
+        break;
 
 		}
 
