@@ -62,6 +62,7 @@ int main(int argc, char** argv)
 	RRA_SyncMgr* syncmgr = NULL;
   const char* type_id_str = NULL;
 	uint32_t type_id = 0;
+  bool got_event = false;
 	/*uint32_t* deleted_ids = NULL;
 	size_t deleted_count = 0;*/
 	
@@ -122,7 +123,7 @@ int main(int argc, char** argv)
   /* Process all events triggered by rra_syncmgr_start_events */
   while (running)
   {
-    if (rra_syncmgr_event_wait(syncmgr, 3))
+    if (rra_syncmgr_event_wait(syncmgr, 3, &got_event) && got_event)
       rra_syncmgr_handle_event(syncmgr);
   }
   

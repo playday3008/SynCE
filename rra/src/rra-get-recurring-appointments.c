@@ -11,6 +11,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#define GET_ALL 0
+
 typedef struct 
 {
   int index;
@@ -31,7 +33,6 @@ static bool writer
   Progress* p = (Progress*)cookie;
   uint32_t propval_count;
   CEPROPVAL* propvals;
-  unsigned i;
   unsigned saved_count = 0;
   bool save = false;
 
@@ -41,6 +42,11 @@ static bool writer
 
   if (dbstream_to_propvals(data + 8, propval_count, propvals))
   {
+#if GET_ALL
+    saved_count = propval_count;
+    save = true;
+#else
+    unsigned i;
     for (i = 0; i < propval_count; i++)
     {
       switch (propvals[i].propid >> 16)
@@ -61,6 +67,7 @@ static bool writer
           break;
       }
     }
+#endif
 
     if (save) 
     {
@@ -71,7 +78,11 @@ static bool writer
         char filename[30];
         FILE* file = NULL;
 
+#if GET_ALL
+        snprintf(filename, sizeof(filename), "appointment-%08x.bin", object_id);
+#else
         snprintf(filename, sizeof(filename), "recurrence-%08x.bin", object_id);
+#endif
         file = fopen(filename, "w");
 
         if (file)
@@ -107,8 +118,9 @@ int main(int argc, char** argv)
   uint32_t type_id = 0;
   RRA_Uint32Vector* all_ids = rra_uint32vector_new();
   Progress progress;
+  bool got_event = false;
 
-  synce_log_set_level(0);
+  /*synce_log_set_level(0);*/
 
   hr = CeRapiInit();
   if (FAILED(hr))
@@ -139,7 +151,7 @@ int main(int argc, char** argv)
   printf("Getting appointment ids...\n");
 
   /* Process all events triggered by rra_syncmgr_start_events */
-  while (rra_syncmgr_event_wait(syncmgr, 3))
+  while (rra_syncmgr_event_wait(syncmgr, 3, &got_event) && got_event)
   {
     rra_syncmgr_handle_event(syncmgr);
   }
