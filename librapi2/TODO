@@ -13,3 +13,6 @@ o Make the file system tools use "My Documents" as current directory.
 
 o Add tool "pcat"
 
+o Make SORTORDERSPEC stuff work in CeCreateDatabase()
+
+
