@@ -8,19 +8,52 @@
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
+#include <string.h>
+
+#define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
 /*
    Any on_propval_* functions not here are found in common_handlers.c
 */
 
+static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  bool success = false;
+  
+  switch (propval->propid & 0xffff)
+  {
+    case CEVT_FILETIME:
+      success = true;
+      break;
+
+    case CEVT_I2:
+      if (propval->val.iVal)
+      {
+        generator_add_simple(g, "PERCENT-COMPLETE", "100");
+        generator_add_simple(g, "STATUS",           "COMPLETED");
+      }
+      success = true;
+      break;
+
+    default:
+      synce_error("Unexpected data type: %08x", propval->propid);
+      break;
+  }
+
+  return success;
+}
+
 static bool on_propval_due(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  char date[16];
   time_t due_time = 
     filetime_to_unix_time(&propval->val.filetime);
 
-  strftime(date, sizeof(date), "%Y%m%d", gmtime(&due_time));
-  generator_add_with_type(g, "DUE", "DATE", date);
+  if (due_time > 0)
+  {
+    char date[16];
+    strftime(date, sizeof(date), "%Y%m%d", gmtime(&due_time));
+    generator_add_with_type(g, "DUE", "DATE", date);
+  }
   return true;
 }
 
@@ -32,12 +65,15 @@ static bool on_propval_importance(Generator* g, CEPROPVAL* propval, void* cookie
 
 static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  char date[16];
   time_t start_time = 
     filetime_to_unix_time(&propval->val.filetime);
 
-  strftime(date, sizeof(date), "%Y%m%d", gmtime(&start_time));
-  generator_add_with_type(g, "DTSTART", "DATE", date);
+  if (start_time > 0)
+  {
+    char date[16];
+    strftime(date, sizeof(date), "%Y%m%d", gmtime(&start_time));
+    generator_add_with_type(g, "DTSTART", "DATE", date);
+  }
   return true;
 }
 
@@ -52,7 +88,7 @@ bool rra_task_to_vtodo(
   Generator* generator = NULL;
   unsigned generator_flags = 0;
   /*EventGeneratorData event_generator_data;
-  memset(&event_generator_data, 0, sizeof(EventGeneratorData));*/
+    memset(&event_generator_data, 0, sizeof(EventGeneratorData));*/
 
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
@@ -70,12 +106,13 @@ bool rra_task_to_vtodo(
   if (!generator)
     goto exit;
 
-  generator_add_property(generator, ID_TASK_DUE,    on_propval_due);
-  generator_add_property(generator, ID_IMPORTANCE,  on_propval_importance);
-  generator_add_property(generator, ID_NOTES,       on_propval_notes);
-  generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
-  generator_add_property(generator, ID_TASK_START,  on_propval_start);
-  generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
+  generator_add_property(generator, ID_TASK_DUE,        on_propval_due);
+  generator_add_property(generator, ID_IMPORTANCE,      on_propval_importance);
+  generator_add_property(generator, ID_NOTES,           on_propval_notes);
+  generator_add_property(generator, ID_SENSITIVITY,     on_propval_sensitivity);
+  generator_add_property(generator, ID_TASK_COMPLETED,  on_propval_completed);
+  generator_add_property(generator, ID_TASK_START,      on_propval_start);
+  generator_add_property(generator, ID_SUBJECT,         on_propval_subject);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -115,6 +152,14 @@ static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
 static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
   return parser_add_time_from_line(p, ID_TASK_START, line);
+}
+
+static bool on_mdir_line_status(Parser* p, mdir_line* line, void* cookie)
+{
+  if (STR_EQUAL(line->values[0], "completed"))
+    return parser_add_int16(p, ID_TASK_COMPLETED, 1);
+  else
+    return parser_add_int16(p, ID_TASK_COMPLETED, 0);
 }
 
 
@@ -166,6 +211,8 @@ bool rra_task_from_vtodo(
   parser_component_add_parser_property(todo, 
       parser_property_new("Description", on_mdir_line_description));
   parser_component_add_parser_property(todo, 
+      parser_property_new("Status", on_mdir_line_status));
+  parser_component_add_parser_property(todo, 
       parser_property_new("Summary", on_mdir_line_summary));
 /*  parser_component_add_parser_property(todo, 
       parser_property_new("Transp", on_mdir_line_transp));*/
@@ -207,9 +254,9 @@ bool rra_task_from_vtodo(
 
 exit:
   /* destroy components (the order is important!) */
-  parser_component_destroy(todo);
-  parser_component_destroy(calendar);
   parser_component_destroy(base);
+  parser_component_destroy(calendar);
+  parser_component_destroy(todo);
   parser_destroy(parser);
 	return success;
 }

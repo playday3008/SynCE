@@ -19,6 +19,9 @@
 #define ID_TASK_START            0x4104
 #define ID_TASK_DUE              0x4105
 
+/* This ID exists both as a FILETIME and an 16-bit integer! */
+#define ID_TASK_COMPLETED        0x410f
+
 #define ID_REMINDER_MINUTES_BEFORE_START  0x4501
 #define ID_REMINDER_ENABLED               0x4503
 #define ID_REMINDER_SOUND_FILE            0x4509
