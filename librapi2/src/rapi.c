@@ -6,6 +6,7 @@
 #include "rapi_wstr.h"
 #include "rapi_endian.h"
 #include "config/config.h"
+#include <string.h>
 
 #define RAPI_PORT  990
 
