@@ -2,7 +2,9 @@
 CXXFLAGS = -ggdb -Wall -I../src -I../src/support
 LDADD = ../src/librapi.la
 
-bin_PROGRAMS = pcp
+bin_PROGRAMS = pput pget
 
-pcp_SOURCES = pcp.cpp
+pput_SOURCES = pput.cpp
+
+pget_SOURCES = pget.cpp
 
