@@ -60,7 +60,7 @@
  */
 #define PROPID_Size1                       0x0003
 #define PROPID_Date                        0x0004
-#define PROPID_Subject                     0x0007
+#define PROPID_MailSubject                 0x0007
 #define PROPID_Header                      0x0008  /* BLOB with 0x0000-separated unicode strings */
 #define PROPID_FolderOid                   0x0009
 #define PROPID_Body                        0x000a  /* BLOB with data (not unicode) */
@@ -97,7 +97,8 @@
 #define PROPID_Categories	                 0x0016
 #define PROPID_XNotes	                     0x0017
 #define PROPID_Subject	                   0x0037
-#define PROPID_X52bytes	                   0x0067
+#define PROPID_XSecret	                   0x0067
+	#define XSECRET_SIZE 52
 #define PROPID_Location	                   0x4208
 #define PROPID_Start	                     0x420d
 #define PROPID_Duration	                   0x4213 // see DurationUnit

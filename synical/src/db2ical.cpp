@@ -29,6 +29,7 @@
 #include <malloc.h>
 #include <iconv.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <string>
 using namespace std;
@@ -51,12 +52,19 @@ extern "C"
 
 #define ASSERT(value) if (!(value)) return FAILURE;
 
-#define TIMEZONE_OFFSET (2*60*60)		// seconds 
+struct icaltimetype icaltime_timet_as_local(time_t time, int is_date)
+{
+	icaltimetype tt = icaltime_as_zone(icaltime_from_timet(time, 0), tzname[0]);
+	tt.is_date = is_date;
+	return tt;
+}
+
 
 struct RawAppointment
 {
 	RawAppointment()
-		: Duration(0), XDurationUnit(0), ReminderMinutesBeforeStart(0), ReminderEnabled(0)
+		: Duration(0), XDurationUnit(0), ReminderMinutesBeforeStart(0), 
+			ReminderEnabled(0)
 	{
 		memset(&Start, 0, sizeof(Start));
 	}
@@ -68,6 +76,7 @@ struct RawAppointment
 	FILETIME Start;
 	LONG ReminderMinutesBeforeStart;
 	short ReminderEnabled;
+	unsigned char Secret[XSECRET_SIZE];
 };
 
 
@@ -114,6 +123,13 @@ int handle_property(PCEPROPVAL value, RawAppointment& appointment)
 			appointment.ReminderMinutesBeforeStart = value->val.lVal;
 			break;
 
+		case PROPID_XSecret:
+			ASSERT(CEVT_BLOB == type);
+			ASSERT(XSECRET_SIZE == value->val.blob.dwCount);
+			memcpy(appointment.Secret, value->val.blob.lpb, 
+					value->val.blob.dwCount);
+			break;
+
 		default:
 			break;
 	}
@@ -121,14 +137,16 @@ int handle_property(PCEPROPVAL value, RawAppointment& appointment)
 	return SUCCESS;
 }
 
-int handle_record(icalcomponent * calendar, PCEPROPVAL values, DWORD property_count)
+int handle_record(icalcomponent * calendar, PCEPROPVAL values, 
+		DWORD property_count)
 {
 	icalcomponent* event = icalcomponent_new(ICAL_VEVENT_COMPONENT);
 
-	// UID should really come from the 52 byte BLOB...
-	char temp[1024];
-	snprintf(temp, sizeof(temp), "synce-db2ical-%p", event);
-	icalcomponent_add_property(event, icalproperty_new_uid(temp));
+#if 0
+	icalproperty* x = icalproperty_new_x("David is testing");
+	icalproperty_set_x_name(x, "X-SYNICAL");
+	icalcomponent_add_property(event, x);
+#endif
 	
 	icalcomponent_add_property(event, icalproperty_new_sequence(0));
 	icalcomponent_add_property(event, icalproperty_new_class("PUBLIC"));
@@ -146,19 +164,33 @@ int handle_record(icalcomponent * calendar, PCEPROPVAL values, DWORD property_co
 				return FAILURE;
 	} // for every property
 
+	// use the 52 byte BLOB as UID...
+	char temp[1024];
+	snprintf(temp, sizeof(temp), "SYNICAL:", event);
+	char* offset = temp + strlen(temp);
+	for (int i = 0; i < XSECRET_SIZE; i++, offset+=2)
+	{
+		snprintf(offset, 3, "%02x", appointment.Secret[i]);
+	}
+//	printf("\nuid=%s\n", temp);
+	icalcomponent_add_property(event, icalproperty_new_uid(temp));
+	
 	// Subject/Summary
 	if (appointment.Subject.size())
 	{
-		icalcomponent_add_property(event, icalproperty_new_summary(appointment.Subject.c_str()));
+		icalcomponent_add_property(event, 
+				icalproperty_new_summary(appointment.Subject.c_str()));
 	}
 
 	// Location
 	if (appointment.Location.size())
 	{
-		icalcomponent_add_property(event, icalproperty_new_location(appointment.Location.c_str()));
+		icalcomponent_add_property(event,
+			 icalproperty_new_location(appointment.Location.c_str()));
 	}
 
-	time_t Start = DOSFS_FileTimeToUnixTime(&(appointment.Start), NULL) + TIMEZONE_OFFSET;
+	// This is UTC time
+	time_t Start = DOSFS_FileTimeToUnixTime(&(appointment.Start), NULL);
 
 	// Reminder/Alarm
 	if (appointment.ReminderEnabled)
@@ -166,8 +198,11 @@ int handle_record(icalcomponent * calendar, PCEPROPVAL values, DWORD property_co
 		icaltriggertype trigger;
 		memset(&trigger, 0, sizeof(trigger));
 		
-		trigger.time = icaltime_from_timet(Start - appointment.ReminderMinutesBeforeStart * 60, 0);
+		trigger.time = icaltime_timet_as_local(
+				Start - appointment.ReminderMinutesBeforeStart * 60, 0);
+//		printf("trigger.time.is_utc=%i\n", trigger.time.is_utc);
 		
+#if 0
 	{
 		printf("%i\n",appointment.ReminderMinutesBeforeStart );
 		char temp[256];
@@ -175,6 +210,7 @@ int handle_record(icalcomponent * calendar, PCEPROPVAL values, DWORD property_co
 		strftime(temp, sizeof(temp), "%c", localtime(&x));
 		printf("%s", temp);
 	}
+#endif
 
 		// Create alarm and add to event
 		icalcomponent* alarm = icalcomponent_new(ICAL_VALARM_COMPONENT);
@@ -190,7 +226,8 @@ int handle_record(icalcomponent * calendar, PCEPROPVAL values, DWORD property_co
 		icalproperty* prop = NULL;
 		
 		prop = icalproperty_new_dtstart(icaltime_null_time());
-		icalproperty_set_value(prop, icalvalue_new_date(icaltime_from_timet(Start, 1)));
+		icalproperty_set_value(prop, 
+				icalvalue_new_date(icaltime_timet_as_local(Start, 1)));
 		icalcomponent_add_property(event, prop);
 
 		if (appointment.Duration)
@@ -198,18 +235,22 @@ int handle_record(icalcomponent * calendar, PCEPROPVAL values, DWORD property_co
 			time_t dtend = Start + (appointment.Duration - 1) * 24 * 60 * 60;
 			
 			prop = icalproperty_new_dtend(icaltime_null_time());
-			icalproperty_set_value(prop, icalvalue_new_date(icaltime_from_timet(dtend, 1)));
+			icalproperty_set_value(prop, icalvalue_new_date(
+						icaltime_timet_as_local(dtend, 1)));
 			icalcomponent_add_property(event, prop);
 		}
 	}
 	else // minutes
 	{
-		icalcomponent_add_property(event, icalproperty_new_dtstart(icaltime_from_timet(Start, 0)));
+		icalproperty* prop = NULL;
+		prop = icalproperty_new_dtstart(icaltime_timet_as_local(Start, 0));
+		icalcomponent_add_property(event, prop);
 
 		if (appointment.Duration)
 		{
 			time_t dtend = Start + appointment.Duration*60;
-			icalcomponent_add_property(event, icalproperty_new_dtend(icaltime_from_timet(dtend, 0)));
+			icalcomponent_add_property(event, 
+					icalproperty_new_dtend(icaltime_timet_as_local(dtend, 0)));
 		}
 	}
 	
@@ -225,14 +266,17 @@ int handle_database(HANDLE db, DWORD num_records)
 	DWORD buffer_size = MYBUFSIZE;
 	
 	icalcomponent* calendar = icalcomponent_new(ICAL_VCALENDAR_COMPONENT);
-	icalcomponent_add_property(calendar, icalproperty_new_version("2.0"));
-	icalcomponent_add_property(calendar, icalproperty_new_prodid("-//Synical//NONSGML db2ical//EN"));
+	icalcomponent_add_property(calendar, 
+			icalproperty_new_version("2.0"));
+	icalcomponent_add_property(calendar, 
+			icalproperty_new_prodid("-//Synical//NONSGML db2ical//EN"));
 				
-	for (unsigned i = 0; i < MIN(5,num_records); i++)
+	for (unsigned i = 0; i < MIN(1000,num_records); i++)
 	{
 		WORD property_count;
 		CEOID oid;
-		oid = CeReadRecordProps(db, CEDB_ALLOWREALLOC, &property_count, NULL, (BYTE**)&values, &buffer_size);
+		oid = CeReadRecordProps(db, CEDB_ALLOWREALLOC, &property_count, NULL, 
+				(BYTE**)&values, &buffer_size);
 
 		if (!oid)
 		{
@@ -266,6 +310,8 @@ int handle_database(HANDLE db, DWORD num_records)
 
 int main()
 {
+	tzset();
+
 	HRESULT hr = CeRapiInit();
 	if (hr)
 	{
@@ -277,10 +323,12 @@ int main()
 	WORD db_count = 0;
 	
 	// Find database
-	BOOL success = CeFindAllDatabases(DBTYPE_APPOINTMENTS, 0xffff, &db_count, &find_data);
+	BOOL success = CeFindAllDatabases(DBTYPE_APPOINTMENTS, 0xffff, &db_count, 
+			&find_data);
 	if (!success)
 	{
-		printf("CeFindAllDatabases failed. Error code: %i=0x%x", CeGetLastError(), CeGetLastError());
+		printf("CeFindAllDatabases failed. Error code: %i=0x%x", 
+				CeGetLastError(), CeGetLastError());
 		return FAILURE;
 	}
 	
@@ -292,7 +340,8 @@ int main()
 
 	for (unsigned i = 0; i < db_count; i++)
 	{
-		HANDLE db = CeOpenDatabase(&find_data[i].OidDb, NULL, 0, CEDB_AUTOINCREMENT, NULL);
+		HANDLE db = CeOpenDatabase(&find_data[i].OidDb, NULL, 0, 
+				CEDB_AUTOINCREMENT, NULL);
 		
 		if (INVALID_HANDLE_VALUE == db)
 		{
