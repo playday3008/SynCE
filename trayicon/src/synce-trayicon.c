@@ -28,6 +28,9 @@
 */
 #include <rapi.h>
 #include <synce_log.h>
+#include <string.h>
+#include <unistd.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -37,6 +40,7 @@
 #include <libgnomeui/gnome-about.h>
 #include "eggtrayicon.h"
 
+static bool in_background = true;
 static bool is_connected = false;
 static char* device_name = NULL;
 
@@ -123,13 +127,15 @@ static void set_icon()
 	char* filename = NULL;
 
 	if (is_connected)
-		filename = "/tmp/synce-color.png";
+		filename = g_build_filename(DATADIR, "pixmaps", "synce", "synce-color.png", NULL);
 	else
-		filename = "/tmp/synce-gray.png";
+		filename = g_build_filename(DATADIR, "pixmaps", "synce", "synce-gray.png", NULL);
 
 	unscaled = gdk_pixbuf_new_from_file(filename, NULL);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(icon), unscaled);
 	g_object_unref(unscaled);
+
+	g_free(filename);
 	
 	while (gtk_events_pending ())
 		gtk_main_iteration ();
@@ -253,16 +259,84 @@ exit:
 	return success;
 }
 
-gint
+
+/**
+ * Write help message to stderr
+ */
+static void show_usage(char *name)
+{
+	fprintf(
+			stderr, 
+			"Syntax:\n"
+			"\n"
+			"\t%s [-d LEVEL] [-f] [-h]\n"
+			"\n"
+			"\t-d LEVEL     Set debug log level\n"
+			"\t                 0 - No logging (default)\n"
+			"\t                 1 - Errors only\n"
+			"\t                 2 - Errors and warnings\n"
+			"\t                 3 - Everything\n"
+			"\t-f           Run in foreground (default is to run in background)\n"
+			"\t-h           Show this help message\n",
+			name);
+}
+
+static bool handle_parameters(int argc, char** argv)
+{
+	int c;
+	int log_level = SYNCE_LOG_LEVEL_LOWEST;
+
+	while ((c = getopt(argc, argv, "d:fh")) != -1)
+	{
+		switch (c)
+		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
+			/*
+			 * The -f parameter specifies that we want to run in the foreground
+			 */
+			case 'f':
+				in_background = false;
+				break;
+
+			case 'h':
+			default:
+				show_usage(argv[0]);
+				return false;
+		}
+	}
+
+	synce_log_set_level(log_level);
+
+	return true;
+}
+
+
+int
 main (gint argc, gchar **argv)
 {
-  GtkWidget *button;
+	int result = 1;
   EggTrayIcon *tray_icon;
 	GtkWidget *box;
 
 	write_script();
 
   gtk_init (&argc, &argv);
+
+	if (!handle_parameters(argc, argv))
+		goto exit;
+
+	if (in_background)
+	{
+		synce_trace("Forking into background");
+		daemon(0,0);
+	}
+	else
+	{
+		synce_trace("Running in foreground");
+	}
 
   tray_icon = egg_tray_icon_new ("SynCE");
 	box = gtk_event_box_new();
@@ -274,28 +348,15 @@ main (gint argc, gchar **argv)
 
 	g_signal_connect(G_OBJECT(box), "button-press-event", G_CALLBACK(trayicon_clicked), NULL);
 
-	set_icon("/tmp/synce-red.png");
+	set_icon();
 	update();
 
 	signal(SIGHUP, sighup_handler);
-	
-#if 0	
-  button = gtk_button_new_with_label ("This is a cool\ntray icon");
-  g_signal_connect (button, "clicked",
-		    G_CALLBACK (first_button_pressed), tray_icon);
-  gtk_container_add (GTK_CONTAINER (tray_icon), button);
-  gtk_widget_show_all (GTK_WIDGET (tray_icon));
-
-  tray_icon = egg_tray_icon_new ("Our other cool tray icon");
-  button = gtk_button_new_with_label ("This is a another\ncool tray icon");
-  g_signal_connect (button, "clicked",
-		    G_CALLBACK (second_button_pressed), tray_icon);
-
-  gtk_container_add (GTK_CONTAINER (tray_icon), button);
-  gtk_widget_show_all (GTK_WIDGET (tray_icon));
-#endif
-
-  gtk_main ();
   
-  return 0;
+	gtk_main ();
+
+	result = 0;
+ 
+exit:
+  return result;
 }
