@@ -1,2 +1,2 @@
-SUBDIRS = script src
+SUBDIRS = pixmaps script src
 
