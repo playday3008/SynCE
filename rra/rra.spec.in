@@ -39,6 +39,10 @@ make
 %files
 %defattr(-,root,root)
 %doc README LICENSE
-%{prefix}/bin/rra
+#%{prefix}/bin/rra
+%{prefix}/include/librra.h
+%{prefix}/lib/librra.a
+%{prefix}/lib/librra.la
+%{prefix}/lib/librra.so.0.0.0
 %{_mandir}/man1/rra.*
 
