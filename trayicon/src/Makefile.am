@@ -1,5 +1,5 @@
 
-CFLAGS  = -Wall @GNOME2_CFLAGS@ -DDATADIR=\"$(datadir)\"
+AM_CFLAGS  = -Wall @GNOME2_CFLAGS@ -DDATADIR=\"$(datadir)\"
 LDADD = @GNOME2_LIBS@ @LDFLAGS@
 
 bin_PROGRAMS = synce-trayicon

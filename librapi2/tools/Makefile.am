@@ -1,6 +1,5 @@
 ## useful flags
-CFLAGS   = -ggdb -Wno-long-long -Wall @APPLE_CFLAGS@ -I../src -I../src/support
-CXXFLAGS = -ggdb -Werror -Wno-long-long -Wall -ansi -pedantic -I../src -I../src/support
+AM_CFLAGS   = -ggdb -Wno-long-long -Wall @APPLE_CFLAGS@ -I../src -I../src/support
 LDADD = ../src/librapi.la
 
 noinst_PROGRAMS = oidinfo
