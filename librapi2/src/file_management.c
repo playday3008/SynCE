@@ -112,6 +112,7 @@ BOOL CeFindAllFiles(
 			if (dwFlags & FAF_NAME)
 			{
 				rapi_buffer_read_data(context->recv_buffer, array[i].cFileName, name_size * sizeof(WCHAR) );
+				rapi_trace_wstr(array[i].cFileName);
 			}
 		}
 

@@ -2,7 +2,7 @@
 #include "rapi_context.h"
 #include <stdlib.h>
 
-#define RAPI_CONTEXT_DEBUG 0
+#define RAPI_CONTEXT_DEBUG 1
 
 #if RAPI_CONTEXT_DEBUG
 #define rapi_context_trace(args...)    rapi_trace(args)
@@ -75,19 +75,24 @@ bool rapi_context_call(RapiContext* context)
 {
 	if ( !rapi_socket_send(context->socket, context->send_buffer) )
 	{
+		rapi_context_error("rapi_socket_send failed");
 		/* TODO: set context->last_error */
 		return false;
 	}
 
 	if ( !rapi_socket_recv(context->socket, context->recv_buffer) )
 	{
+		rapi_context_error("rapi_socket_recv failed");
 		/* TODO: set context->last_error */
 		return false;
 	}
 
 	/* this is a boolean? */
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_1) )
+	{
+		rapi_context_error("reading result_1 failed");
 		return false;
+	}
 
 	rapi_context_trace("result 1 = 0x%08x", context->result_1);
 
@@ -95,7 +100,10 @@ bool rapi_context_call(RapiContext* context)
 	{
 		/* this is a HRESULT */
 		if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
+		{
+			rapi_context_error("reading result_2 failed");
 			return false;
+		}
 
 		rapi_context_trace("result 2 = 0x%08x", context->result_2);
 

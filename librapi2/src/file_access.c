@@ -77,17 +77,28 @@ BOOL CeReadFile(
 	rapi_buffer_write_optional_in(context->send_buffer, NULL, 0); /* lpOverlapped */
 
 	if ( !rapi_context_call(context) )
+	{
+		rapi_error("rapi_context_call failed");
+		return false;
+	}
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		return false;
+	rapi_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		return false;
+	rapi_trace("return_value=0x%08x", return_value);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &bytes_read) )
 		return false;
 
-	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
-
-	rapi_buffer_read_uint32(context->recv_buffer, &bytes_read);
 	if (lpNumberOfBytesRead)
 		*lpNumberOfBytesRead = bytes_read;
 
 	if (lpBuffer)
-		rapi_buffer_read_data(context->recv_buffer, lpBuffer, bytes_read);
+		if ( !rapi_buffer_read_data(context->recv_buffer, lpBuffer, bytes_read) )
+			return false;
 
 	return return_value;
 }
