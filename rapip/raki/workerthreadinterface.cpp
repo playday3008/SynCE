@@ -95,7 +95,6 @@ void WorkerThreadInterface::setEventReturnValue(void *value)
 }
 
 
-    
 void *WorkerThreadInterface::eventReturnValue()
 {
     return eventReturn;
