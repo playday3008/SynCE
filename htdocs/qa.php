@@ -12,18 +12,23 @@ the <a href="multisync.php">Using MultiSync</a> page.</p>
 <p>For issues regarding Mac OS X, please visit the <a
 href="macosx.php">Mac OS X hints</a> page.</p>
 
-<h2>Unable to initialize RAPI</h2>
+<h2>Unable to initialize RAPI / Failed to get connection info</h2>
 
 <p><b>Q:</b> I setup everything and connected my PDA but when I try the <a
 href="tools.php">tools</a> I get a message similar to this in SynCE 0.8 or later:</p>
 
 <pre>pstatus: Unable to initialize RAPI: An unspecified failure has occurred</pre>
 
-<p>Or this message in earlier versions of SynCE:</p>
+<p>Or this is the message from earlier versions of SynCE:</p>
 
 <pre>ReadConfigFile: stat: No such file or directory
 pstatus: Unable to initialize RAPI: Failure</pre>
 
+<p>If I add <tt>-d 3</tt> as parameters to pstatus, I get this a message like
+this too:</p>
+
+<pre>[synce_info_new:31] unable to open file: /home/david/.synce/active_connection
+[rapi_context_connect:88] Failed to get connection info</pre>
 
 <p><b>A:</b> This means that the PDA has not connected to dccm or that you run
 the tools and dccm as different users. Please make sure that:</p>
