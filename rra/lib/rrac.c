@@ -3,6 +3,7 @@
 #include "rrac_packet.h"
 #include <synce_log.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 
