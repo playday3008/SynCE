@@ -15,7 +15,7 @@ AC_DEFUN(AM_PATH_LIBSYNCE, [
 
 	AC_CHECK_LIB(synce,main,,[
 		AC_MSG_ERROR([Can't find synce library])
-		],${synce_lib})
+		])
 	AC_CHECK_HEADERS(synce.h,,[
 		AC_MSG_ERROR([Can't find synce.h])
 		])
