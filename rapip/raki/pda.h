@@ -73,18 +73,19 @@ public:
     void addURLByCopyJob(KIO::CopyJob *copyJob, KURL& url);
     void unregisterCopyJob(KIO::CopyJob *copyJob);
     KURL::List& getURLListByCopyJob(KIO::CopyJob *copyJob);
-    QPtrDict<ObjectType> getSynchronizationTypes();
+    bool getSynchronizationTypes(QPtrDict<ObjectType> *);
     void init();
     bool isPartner();
     
 signals:
     void resolvedPassword(QString pdaName, QString passwd, KSocket *dccmSocket);
-    void initialized(PDA *pda);
+    void initialized(PDA *pda, int initialized);
     
 private:
     bool startMasquerading(bool start);
-    void setPartnershipThread();
+    bool setPartnershipThread();
     void setPartnership(QThread *thread, void *data);
+    bool removePartnership(int *removedPartnerships);
     void *removePartnershipDialog(void *data);
     void *alreadyTwoPartnershipsDialog(void *data);
     void *progressDialogCancel(void *data);
