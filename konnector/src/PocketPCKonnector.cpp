@@ -173,13 +173,6 @@ namespace KSync
 
     bool PocketPCKonnector::writeSyncees()
     {
-        if ( mSyncees.empty() ) {
-            kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees: m_syncees is empty" << endl;
-            return false;
-        }
-
-        kdDebug( 2120 ) << "PocketPCKonnector:: m_syncees.addressBookSyncee() read" << endl;
-
         kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees..." << endl;
 
         // write m_syncees to the device
