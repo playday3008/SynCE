@@ -216,8 +216,8 @@ bool PocketPCKonnector::readSyncees()
         return false;
     }
     
-    if (addrStatusMap.begin() == addrStatusMap.end())
-        kdDebug(2120) << "PocketPCKonnector:: verdammt.. des kann doch nit wahr sein.." << endl;
+    //if (addrStatusMap.begin() == addrStatusMap.end())
+    //    kdDebug(2120) << "PocketPCKonnector:: verdammt.. des kann doch nit wahr sein.." << endl;
     
     QStringList remoteAdrIds = pdaIdHelper.createIdQStringList(addrStatusMap);
     QStringList addedAdrIds = pdaIdHelper.getPDAAddedIds(remoteAdrIds, adrIds);
@@ -302,6 +302,13 @@ bool PocketPCKonnector::readSyncees()
     {
         addrSyncee = new KSync::AddressBookSyncee (m_addressBook);
         calSyncee = new KSync::CalendarSyncee(m_calendar);
+        
+        addrSyncee->setIdentifier ("addrBook-device");
+        addrSyncee->setTitle ("pda device");    
+    
+        calSyncee->setIdentifier ("calendar-device");
+        calSyncee->setTitle ("device");    
+    
         m_syncees.append (addrSyncee);
         m_syncees.append (calSyncee); 
 
@@ -337,28 +344,20 @@ bool PocketPCKonnector::readSyncees()
         
         m_rra->finalDisconnect();               
         
-        updateCalendarSyncee(addedEventList, modifiedEventList, addedTodoList, modifiedTodoList, removedCalIds);                        
+        updateCalendarSyncee(addedEventList, modifiedEventList, addedTodoList, modifiedTodoList, removedCalIds);          
+        /*
+        m_syncees.clear();
+        m_syncees.append (addrSyncee);
+        m_syncees.append (calSyncee); 
+        */
     }
     
     addrSyncee->setIdentifier ("addrBook-device");
-//#ifdef __USE_ABOVE_KDEPIM_3_3_0__
-    addrSyncee->setTitle ("device");    
-    /*
-#else
-    addrSyncee->setSource ("device");
-    addrSyncee->setFirstSync (firstSync); 
-#endif  
-    */
+    addrSyncee->setTitle ("pda device");    
     
     calSyncee->setIdentifier ("calendar-device");
-//#ifdef __USE_ABOVE_KDEPIM_3_3_0__
     calSyncee->setTitle ("device");    
-    /*
-#else
-    calSyncee->setSource ("device");
-    calSyncee->setFirstSync(firstSync);     
-#endif
-    */                               
+    
     m_rra->finalDisconnect();
     m_rra->connect();
         
@@ -485,8 +484,11 @@ bool PocketPCKonnector::writeSyncees()
         KCal::Todo::List todosRemoved;
         KCal::Todo::List todosModified;
         
+        QStringList removedIds;
+        getRemovedCalendarItems(removedIds, calSyncee->removed());
+        
         getEvents(eventsAdded, todosAdded, calSyncee->added());
-        getEvents(eventsRemoved, todosRemoved, calSyncee->removed());
+        //getEvents(eventsRemoved, todosRemoved, calSyncee->removed());
         getEvents(eventsModified, todosModified, calSyncee->modified());
 
         pocketPCCommunication::CalendarHandler calHandler(m_rra);
@@ -495,7 +497,8 @@ bool PocketPCKonnector::writeSyncees()
         kdDebug(2120) << "    adding events: " << eventsAdded.size() << endl;
         calHandler.addEvents(eventsAdded);
         kdDebug(2120) << "    removing events" << endl;
-        calHandler.removeEvents(eventsRemoved);
+        //calHandler.removeEvents(eventsRemoved);
+        calHandler.removeEvents (removedIds);
         kdDebug(2120) << "    modifieing events" << endl;
         calHandler.updateEvents(eventsModified);
         
@@ -504,7 +507,8 @@ bool PocketPCKonnector::writeSyncees()
         kdDebug(2120) << "    adding todos: " << todosAdded.size() << endl;
         calHandler.addTodos(todosAdded);
         kdDebug(2120) << "    removing todos" << endl;
-        calHandler.removeTodos(todosRemoved);
+        //calHandler.removeTodos(todosRemoved);
+        calHandler.removeTodos(removedIds);
         kdDebug(2120) << "    modifieing todos" << endl;
         calHandler.updateTodos(todosModified);
                 
@@ -660,7 +664,7 @@ void PocketPCKonnector::setSyncEntry (KSync::SyncEntry* p_entry, KSync::SyncEntr
     {        
         kdDebug(2120) << "setSyncEntry: the proof that m_uidHelper exists" << endl;
         QString newId = m_uidHelper->kdeId( p_entry->type(), "Konnector-"+p_entry->id(),  "Konnector-"+p_entry->id());
-        kdDebug(2120) << "changing id from " << p_entry->id() << " to " << newId << endl;
+        kdDebug(2120) << "changing id from " << p_entry->id() << " to " << newId << " for entry of type: " << p_entry->name() << endl;
         p_entry->setId (newId);        
     }
     else
@@ -706,11 +710,12 @@ void PocketPCKonnector::saveIds (KSync::Syncee* p_syncee, const QString& p_name)
 
 void PocketPCKonnector::dumpIds (KSync::Syncee* p_syncee)
 {
+    kdDebug(2120) << "PocketPCKonnector:: dumping ids for: " << p_syncee->type() << ":" << p_syncee->title() << endl;
     if (p_syncee->isValid())
     {        
         KSync::SyncEntry* entry = p_syncee->firstEntry();
         while (entry)
-        {
+        {            
             kdDebug(2120) << "PocketPCKonnector:: current id: " << entry->id() << endl;
             kdDebug(2120) << "PocketPCKonnector:: status: " << entry->state() << endl;
             entry = p_syncee->nextEntry();
@@ -789,15 +794,50 @@ void PocketPCKonnector::getAddressees (KABC::Addressee::List& p_addressees, KSyn
 
 void PocketPCKonnector::getEvents (KCal::Event::List& p_events, KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList)
 {
+    kdDebug(2120) << "getEvents: " << endl;
     KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin();
     for (; it != p_ptrList.end(); ++it)
     {
         kdDebug(2120) << "PocketPCKonnector::getEvents type of entry: " << (dynamic_cast<KSync::CalendarSyncEntry*>(*it))->incidence()->type() << endl;
+        // and now get the real type.....
+        KSync::CalendarSyncEntry* syncEntry = dynamic_cast<KSync::CalendarSyncEntry*>(*it);
+        kdDebug(2120) << "PocketPCKonnector::getEvents: syncEntry->id: " << syncEntry->id() << endl;
+        kdDebug(2120) << "PocketPCKonnector::getEvents: syncEntry->type: " << syncEntry->type() << endl;
+        kdDebug(2120) << "PocketPCKonnector::getEvents: syncEntry->incidence()->type: " << syncEntry->incidence()->type() << endl;
+        KCal::Event* event = dynamic_cast<KCal::Event*>(syncEntry->incidence());
+        if (event)
+        {
+            kdDebug(2120) << "PocketPCKonnector::getEvents: pushing back event: " << event->uid() << endl;
+            p_events.push_back (event);
+        }
+        else
+        {
+            KCal::Todo* todo = dynamic_cast<KCal::Todo*>(syncEntry->incidence());
+            if (todo)
+            {
+                kdDebug(2120) << "PocketPCKonnector::getEvents:: pushing back todo: " << todo->uid() << endl;
+                p_todos.push_back (todo);
+            }
+        }
+                
+        /*
         QString type = (dynamic_cast<KSync::CalendarSyncEntry*>(*it))->incidence()->type();
         if (type == "Todo")
             p_todos.push_back (dynamic_cast<KCal::Todo*>((dynamic_cast<KSync::CalendarSyncEntry*>(*it))->incidence()));
         else if (type == "Event")
             p_events.push_back (dynamic_cast<KCal::Event*>((dynamic_cast<KSync::CalendarSyncEntry*>(*it))->incidence()));
+        */
+    }
+}
+
+
+void PocketPCKonnector::getRemovedCalendarItems (QStringList& p_removedItems, KSync::SyncEntry::PtrList p_ptrList)
+{
+    KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin();
+    for (; it != p_ptrList.end(); ++it)
+    {
+        kdDebug(2120) << "PocketPCKonnecotr::getRemovedCalendarItems: id: " << (*it)->id() << endl;
+        p_removedItems.push_back ((*it)->id());
     }
 }
 
@@ -859,6 +899,7 @@ void PocketPCKonnector::loadMetaData (const QString& p_dir)
         KCal::Event::List::Iterator eventIt = events.begin();
         for (; eventIt != events.end(); ++eventIt)
         {
+            kdDebug(2120) << "loadMetaData: adding event: " << (*eventIt)->uid() << endl;
             calSyncee->addEntry (new KSync::CalendarSyncEntry ((*eventIt)->clone(), calSyncee));
         }
         
@@ -866,6 +907,7 @@ void PocketPCKonnector::loadMetaData (const QString& p_dir)
         KCal::Todo::List::Iterator todoIt = todos.begin();
         for (; todoIt != todos.end(); ++todoIt)
         {
+            kdDebug(2120) << "loadMetaData: adding todo: " << (*todoIt)->uid() << endl;
             calSyncee->addEntry (new KSync::CalendarSyncEntry ((*todoIt)->clone(), calSyncee));
         }
                                    
@@ -1042,7 +1084,10 @@ void PocketPCKonnector::updateCalendarSyncee (KCal::Event::List& p_addedEvents, 
     for (; it2 != p_removedIds.end(); ++it2)
     {
         KSync::SyncEntry* entry = syncee->findEntry((*it2));
-        setSyncEntry (entry, KSync::SyncEntry::Removed);        
+        KSync::SyncEntry* clone = entry->clone();
+        //clone->setSyncee(syncee);
+        setSyncEntry (clone, KSync::SyncEntry::Removed);                
+        syncee->replaceEntry (syncEntry, clone);
     }
         
     
@@ -1052,8 +1097,22 @@ void PocketPCKonnector::updateCalendarSyncee (KCal::Event::List& p_addedEvents, 
     while (entry)
     {
         if (entry->state() == KSync::SyncEntry::Undefined)
-            setSyncEntry (entry, KSync::SyncEntry::Undefined);
+        {
+            KSync::SyncEntry* clone = entry->clone();            
+            setSyncEntry (clone, KSync::SyncEntry::Undefined);
+            syncee->replaceEntry(entry, clone);
+        }
         entry = syncee->nextEntry();                    
+    }
+    
+    kdDebug(2120) << endl << "dumping ids in CalendarSyncee after updating:" << endl;
+    KSync::SyncEntry* dump = syncee->firstEntry();
+    while (dump)
+    {
+        kdDebug(2120) << "     id: " << dump->id() << "     state: " << dump->state() << endl;
+        kdDebug(2120) << "     incidence id: " << (dynamic_cast<CalendarSyncEntry*>(dump))->incidence()->uid() << endl;
+        kdDebug(2120) << "     type: " << (dynamic_cast<CalendarSyncEntry*>(dump))->incidence()->type() << endl;
+        dump = syncee->nextEntry();
     }
 }
 

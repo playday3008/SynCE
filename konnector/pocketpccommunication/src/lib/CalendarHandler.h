@@ -80,10 +80,13 @@ public:
     void addEvents    (KCal::Event::List& p_events);
     void updateEvents (KCal::Event::List& p_evenst);
     void removeEvents (KCal::Event::List& p_events);
+    void removeEvents (const QStringList& p_events);
     
     void addTodos     (KCal::Todo::List& p_todos);
     void updateTodos  (KCal::Todo::List& p_todos);
     void removeTodos  (KCal::Todo::List& p_todos);
+    void removeTodos  (const QStringList& p_todos);
+    
     
     bool getEvents    (KCal::Event::List& p_events, const QStringList& p_ids);
     bool getTodos     (KCal::Todo::List&  p_todos,  const QStringList& p_ids);

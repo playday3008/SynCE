@@ -787,6 +787,55 @@ void CalendarHandler::removeTodos (KCal::Todo::List& p_todos)
     m_rra->disconnect();
 }
 
+void CalendarHandler::removeEvents (const QStringList& p_events)
+{
+    if (p_events.begin() == p_events.end())
+        return;
+    
+    m_rra->connect();
+    
+    if (!getTypeId())
+    {
+        m_rra->disconnect();
+        return;
+    }
+        
+    QStringList::const_iterator it = p_events.begin();
+    
+    for (; it != p_events.end(); ++it)
+    {
+        if (isARraId(*it))
+            deleteEventEntry (getOriginalId(*it));
+    }
+    
+    m_rra->disconnect();
+}
+
+
+void CalendarHandler::removeTodos (const QStringList& p_todos)
+{
+    if (p_todos.begin() == p_todos.end())
+        return;
+    
+    m_rra->connect();
+    
+    if (!getTypeId())
+    {
+        m_rra->disconnect();
+        return;
+    }
+    
+    QStringList::const_iterator it = p_todos.begin();
+    
+    for (; it != p_todos.end(); ++it)
+    {
+        if (isARraId(*it))
+            deleteTodoEntry(getOriginalId(*it));
+    }
+    
+    m_rra->disconnect();
+}
+
 
 bool CalendarHandler::getEvents (KCal::Event::List& p_events, const QStringList& p_ids)
 {
@@ -819,8 +868,8 @@ bool CalendarHandler::getEvents (KCal::Event::List& p_events, const QStringList&
             if (!vEvent.isEmpty())
             {
 				vEvent = vCalBegin + vEvent + vCalEnd;
-				//kdDebug() << "CalendarHandler::getEvents:" << endl;
-				//kdDebug() << vEvent << endl;
+				kdDebug() << "CalendarHandler::getEvents:" << endl;
+				kdDebug() << vEvent << endl;
                 event = conv.fromString (vEvent);                        
                 p_events.push_back (dynamic_cast<KCal::Event*>(event));        
             }
@@ -862,6 +911,9 @@ bool CalendarHandler::getTodos (KCal::Todo::List& p_todos, const QStringList& p_
             if (!vTodo.isEmpty())
             {
 				vTodo = vCalBegin + vTodo + vCalEnd;
+                kdDebug() << "CalendarHandler::getTodos:" << endl;
+                kdDebug() << vTodo << endl;
+                
                 todo = conv.fromString (vTodo);                        
                 p_todos.push_back (dynamic_cast<KCal::Todo*>(todo));        
             }
