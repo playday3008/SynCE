@@ -57,6 +57,15 @@ href="http://opensource.org/licenses/mit-license.php">MIT</a>)</li>
 href="http://sourceforge.net/project/showfiles.php?group_id=30550">SynCE File
 List</a>.</p>
 
+<h2>InstallShield cabinet files vs. Microsoft cabinet files</h2>
+
+<p>There are two types of .CAB files: InstallShield cabinet files and
+Microsoft cabinet files. Unshield only supports the InstallShield cabinets,
+  usually named <tt>data1.cab</tt>, <tt>data1.hdr</tt>, <tt>data2.cab</tt>,
+  etc.</p>
+
+<p>Microsoft cabinet files can be extracted with Stuart Caie's excellent <a
+href="http://www.kyz.uklinux.net/cabextract.php">cabextract</a> tool.</p>
 
 <br>
 
