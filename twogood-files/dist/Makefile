@@ -12,16 +12,16 @@
 # 4. Uninstall the "synce" and "synce-devel" RPMs
 #
 
-SYNCE_VERSION    = 0.8.3
+SYNCE_VERSION    = 0.8.4
 
 LIBRAPI2_VERSION = 0.8.1
 LIBSYNCE_VERSION = 0.8.1
 DCCM_VERSION     = 0.8
 SERIAL_VERSION   = 0.8
-RRA_VERSION      = 0.8.3
+RRA_VERSION      = 0.8.4
 TRAYICON_VERSION = 0.8
-MULTISYNC_PLUGIN_VERSION = 0.8.3
-
+MULTISYNC_PLUGIN_GNOME1_VERSION = 0.8.3
+MULTISYNC_PLUGIN_VERSION = 0.8.2
 GNOMEVFS_VERSION = 0.8
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
@@ -35,7 +35,9 @@ TARBALL_DIR   = $(PWD)/V$(SYNCE_VERSION)/tarballs/
 RPM_DIR        = $(PWD)/V$(SYNCE_VERSION)/rpms/
 SRPM_DIR       = $(PWD)/V$(SYNCE_VERSION)/srpms/
 
-export TARBALL_DIR RPM_DIR SRPM_DIR
+MODULE_PREFIX = synce-
+
+export TARBALL_DIR RPM_DIR SRPM_DIR MODULE_PREFIX
 
 .PHONY: tarballs rpms apt synce extras trayicon gnomevfs multisync_plugin
 
@@ -94,7 +96,7 @@ synce:
 	cp $(RPMROOT)/RPMS/i386/synce-devel-$(SYNCE_VERSION)-*.rpm  $(RPM_DIR)/
 
 extras: trayicon gnomevfs multisync_plugin_gnome1 
-#multisync_plugin_gnome2
+#multisync_plugin
 
 trayicon:
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  checkout
@@ -107,15 +109,14 @@ gnomevfs:
 	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  rpm
 
 multisync_plugin_gnome1:
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin_gnome1 VERSION=GNOME1_$(MULTISYNC_PLUGIN_VERSION)  checkout
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin_gnome1 VERSION=GNOME1_$(MULTISYNC_PLUGIN_VERSION)  tarball
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin_gnome1 VERSION=GNOME1_$(MULTISYNC_PLUGIN_VERSION)  rpm
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  checkout
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  tarball
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  rpm
 
-multisync_plugin_gnome2:
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin_gnome2 VERSION=GNOME2_$(MULTISYNC_PLUGIN_VERSION)  checkout
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin_gnome2 VERSION=GNOME2_$(MULTISYNC_PLUGIN_VERSION)  tarball
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin_gnome2 VERSION=GNOME2_$(MULTISYNC_PLUGIN_VERSION)  rpm
-
+multisync_plugin:
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  checkout
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  tarball
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  rpm
 
 #rpms:
 #	-rm -rf /var/tmp/synce-root

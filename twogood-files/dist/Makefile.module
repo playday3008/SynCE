@@ -11,9 +11,10 @@
 TAG="$(shell echo $(VERSION) | sed 's/\./_/g' | sed 's/^[^0-9]*[0-9]/V&/')"
 TMP=/var/tmp/$(MODULE)
 CVSROOT=-d :ext:twogood@cvs.synce.sourceforge.net:/cvsroot/synce
-DIRNAME=synce-$(MODULE)-$(VERSION)
+MODULE_NAME=$(MODULE_PREFIX)$(MODULE)
+DIRNAME=$(MODULE_NAME)-$(VERSION)
 TARBALL=$(TARBALL_DIR)/$(DIRNAME).tar.gz
-EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
+EXCLUDE=--exclude CVS --exclude .cvsignore --exclude 'autom4te*.cache' \
 	--exclude '.*.swp' --exclude '*.tar.gz'
 RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')
 SPECFILE=$(TMP)/$(DIRNAME)/$(MODULE).spec
@@ -50,13 +51,13 @@ $(TARBALL): bootstrap
 #	cd $(TMP)/$(DIRNAME) && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) --with-librapi2=$(PREFIX) && make install
 
 rpm: $(TARBALL)
-	-rm $(RPM_DIR)/$(DIRNAME)*
-	-rm $(SRPM_DIR)/$(DIRNAME)*
-	-rm $(RPMROOT)/SRPMS/$(DIRNAME)*
-	-rm $(RPMROOT)/RPMS/i386/$(DIRNAME)*
-	-rm $(RPMROOT)/RPMS/noarch/$(DIRNAME)*
+	@-rm $(RPM_DIR)/$(MODULE_NAME)-*$(VERSION)* 2>/dev/null
+	@-rm $(SRPM_DIR)/$(MODULE_NAME)-*$(VERSION)* 2>/dev/null
+	@-rm $(RPMROOT)/SRPMS/$(MODULE_NAME)-*$(VERSION)* 2>/dev/null
+	@-rm $(RPMROOT)/RPMS/i386/$(MODULE_NAME)-*$(VERSION)* 2>/dev/null
+	@-rm $(RPMROOT)/RPMS/noarch/$(MODULE_NAME)-*$(VERSION)* 2>/dev/null
 	cp $(TARBALL) $(RPMROOT)/SOURCES/
 	rpmbuild -ta $(TARBALL)
-	cp $(RPMROOT)/RPMS/noarch/$(DIRNAME)*.rpm $(RPM_DIR)/ || cp $(RPMROOT)/RPMS/i386/$(DIRNAME)*.rpm $(RPM_DIR)/
+	cp $(RPMROOT)/RPMS/noarch/$(MODULE_NAME)-*$(VERSION)*.rpm $(RPM_DIR)/ || cp $(RPMROOT)/RPMS/i386/$(MODULE_NAME)*$(VERSION)*.rpm $(RPM_DIR)/
 	cp $(RPMROOT)/SRPMS/$(DIRNAME)*.rpm $(SRPM_DIR)/
 
