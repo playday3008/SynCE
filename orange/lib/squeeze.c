@@ -157,6 +157,9 @@ bool orange_squeeze_file(/*{{{*/
         success = orange_extract_inno(filename, output_directory);
 
       if (!success)
+        success = orange_extract_vise(filename, output_directory);
+
+      if (!success)
         success = orange_extract_zip(filename, output_directory);
 
       if (!success)

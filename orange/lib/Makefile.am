@@ -15,7 +15,8 @@ liborange_la_SOURCES = \
 	suf.c \
 	synce-appmgr.h \
 	synce-appmgr-internal.h \
-	tomtom.c
+	tomtom.c \
+	vise.c
 
 liborange_la_LDFLAGS = -no-undefined -version-info 0:0:0
 

@@ -82,6 +82,13 @@ bool orange_extract_inno(
     const char* input_filename, 
     const char* output_directory);
 
+/**
+  Source in vise.c
+*/
+
+bool orange_extract_vise(
+    const char* input_filename, 
+    const char* output_directory);
 
 /**
   Separate installable Microsoft Cabinet Files from a file

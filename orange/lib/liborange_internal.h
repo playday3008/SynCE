@@ -13,6 +13,10 @@ bool orange_make_sure_directory_exists(const char* directory);
 long orange_fsize(FILE* file);
 bool orange_write(const uint8_t* output_buffer, size_t output_size, const char* output_directory, const char* basename);
 
+uint8_t orange_read_byte(FILE* input_file);
+uint32_t orange_read32(FILE* input_file);
+bool orange_write_byte(FILE* output_file, uint8_t byte);
+
 /*
    Macros for in-place byte order conversion
  */

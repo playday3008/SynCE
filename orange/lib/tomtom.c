@@ -23,30 +23,6 @@ typedef struct
    .apk files used by TomTom products
  */
 
-static uint8_t orange_read_byte(FILE* input_file)/*{{{*/
-{
-  uint8_t byte;
-  if (sizeof(byte) != fread(&byte, 1, sizeof(byte), input_file))
-    byte = 0;
-#if VERBOSE
-  fprintf(stderr, "%02x ", byte);
-#endif
-  return byte;
-}/*}}}*/
-
-static uint32_t orange_read32(FILE* input_file)
-{
-  return orange_read_byte(input_file) |
-    (orange_read_byte(input_file) << 8) |
-    (orange_read_byte(input_file) << 16) |
-    (orange_read_byte(input_file) << 24);
-}
-
-static bool orange_write_byte(FILE* output_file, uint8_t byte)/*{{{*/
-{
-  return sizeof(byte) == fwrite(&byte, 1, sizeof(byte), output_file);
-}/*}}}*/
-
 static void ugly_copy(FILE* output_file, size_t offset, size_t size)/*{{{*/
 {
   uint8_t* buffer = malloc(size);
