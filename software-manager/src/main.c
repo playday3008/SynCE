@@ -20,6 +20,7 @@
 #include "config.h"
 #endif
 
+#include <gnome.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gtk/gtksignal.h>
@@ -182,7 +183,7 @@ void on_install_add_button_clicked(GtkButton *button, gpointer user_data)
     filepath = g_strdup(gtk_entry_get_text(GTK_ENTRY(file_entry)));
     if (!g_str_has_suffix(filepath,".cab") && !g_str_has_suffix(filepath,".CAB")) {
         g_free(filepath);
-        synce_error_dialog("The file is not a valid cab-file, judging by the suffix.");
+        synce_error_dialog(_("The file is not a valid cab-file, judging by the suffix."));
         return;
     }
     gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(button)));
@@ -192,16 +193,16 @@ void on_install_add_button_clicked(GtkButton *button, gpointer user_data)
     rapi_mkdir("/Windows/AppMgr/Install");
     if (rapi_copy(filepath,":/Windows/AppMgr/Install/synce-install.cab") != 0) {
         g_free(filepath);
-        synce_error_dialog("Failed to install the program:\nCould not copy the file to the PDA.");
+        synce_error_dialog(_("Failed to install the program:\nCould not copy the file to the PDA."));
         return;
     }
     if (rapi_run("wceload.exe",NULL) != 0) {
         g_free(filepath);
-        synce_error_dialog("Failed to install the program:\nCould not execute the installer on the PDA.");
+        synce_error_dialog(_("Failed to install the program:\nCould not execute the installer on the PDA."));
         return;
     }
 
-    synce_info_dialog("The installation was successful!\nCheck your PDA to see if any additional steps are required.\nYou must manually refresh the program list\nfor the new program to be listed.");
+    synce_info_dialog(_("The installation was successful!\nCheck your PDA to see if any additional steps are required.\nYou must manually refresh the program list\nfor the new program to be listed."));
     g_free(filepath);
 }
 
@@ -250,11 +251,11 @@ void on_remove_button_clicked(GtkButton *button, gpointer user_data)
         gtk_tree_model_get (model, &iter, 1, &program,0,&number, -1);
         
         if (rapi_run("unload.exe",program) != 0) {
-            tmpstr = g_strdup_printf("The program \"%s\"\ncould not be removed!",program);
+            tmpstr = g_strdup_printf(_("The program \"%s\"\ncould not be removed!"),program);
             synce_error_dialog(tmpstr);
             g_free(tmpstr);
         } else {
-            tmpstr = g_strdup_printf("The program \"%s\"\nwas successfully removed!\nYou must manually refresh the program list\nto see any changes.",program);
+            tmpstr = g_strdup_printf(_("The program \"%s\"\nwas successfully removed!\nYou must manually refresh the program list\nto see any changes."),program);
             synce_info_dialog(tmpstr);
             g_free(tmpstr);
 
@@ -296,9 +297,16 @@ int main (int argc, char **argv)
     GtkWidget *quit_button;
     GtkWidget *refresh_button;
 
+#ifdef ENABLE_NLS
+	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
+#endif
+
     gnome_program_init ("synce-software-manager", VERSION,
             LIBGNOMEUI_MODULE,
             argc, argv,
+			GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce Software Manager"),
             NULL);
 
     gtk_init (&argc, &argv);
