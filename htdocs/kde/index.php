@@ -365,11 +365,11 @@ synce-kde-0.x.y.tar.gz</code><br>
   </li>
   <li>Configure your SynCE-KDE source tree by issuing the
 command<br>
-    <code>&nbsp;&nbsp;&nbsp; # ./configure</code><br>
+    <code>&nbsp;&nbsp;&nbsp; # ./configure --prefix=`kde-config --prefix`</code><br>
 If you want the AvantGo synchronization plugin also to be compiled,
 issue<br>
-    <code>&nbsp;&nbsp;&nbsp; # ./configure
---with-agsync=/path/to/agsync/source/dir/</code><br>
+    <code>&nbsp;&nbsp;&nbsp; # ./configure --prefix=`kde-config --prefix` \<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --with-agsync=/path/to/agsync/source/dir/</code><br>
     <br>
   </li>
   <li>After configuring SynCE-KDE compile and install it by simply
