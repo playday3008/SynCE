@@ -221,7 +221,7 @@ int main(int argc, char** argv)
   if (!handle_parameters(argc, argv))
     goto exit;
 
-  connection = rapi_connection_create(path);
+  connection = rapi_connection_from_path(path);
   rapi_connection_select(connection);
   hr = CeRapiInit();
 

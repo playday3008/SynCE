@@ -8,9 +8,22 @@
 struct _RapiConnection
 {
   RapiContext* context;
+  /* if the RapiConnection owns the SynceInfo object, it's here */
+  SynceInfo* owned_info;
 };
 
-RapiConnection* rapi_connection_create(const char* path)
+RapiConnection* rapi_connection_from_path(const char* path)
+{
+  SynceInfo* info = synce_info_new(path);
+
+  RapiConnection* result = rapi_connection_from_info(info);
+  if (result)
+    result->owned_info = info;
+
+  return result;
+}
+
+RapiConnection* rapi_connection_from_info(SynceInfo* info)
 {
   RapiConnection* connection = 
     (RapiConnection*)calloc(1, sizeof(RapiConnection));
@@ -25,8 +38,7 @@ RapiConnection* rapi_connection_create(const char* path)
       return NULL;
     }
 
-    if (path)
-      connection->context->path = strdup(path);
+    connection->context->info = info;
   }
 
   return connection;
@@ -37,8 +49,6 @@ void rapi_connection_select(RapiConnection* connection)
 {
   if (connection)
   {
-    synce_debug("Selecting context with path '%s'", 
-        connection->context->path);
     rapi_context_set(connection->context);
   }
   else
@@ -49,6 +59,9 @@ void rapi_connection_select(RapiConnection* connection)
 void rapi_connection_destroy(RapiConnection* connection)
 {
   if (connection)
+  {
+    synce_info_destroy(connection->owned_info);
     free(connection);
+  }
 }
 

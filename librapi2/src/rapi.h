@@ -31,14 +31,16 @@ extern "C"
 /*
  * SynCE support for switching between multiple devices
  *
+ * Example code for two devices follows!
  *
- * Example code for two devices:
+ * It shows two different ways to get a RapiConnection object.
  *
- *   RapiConnection* a = rapi_connection_create("/home/david/.synce/a")
+ *   RapiConnection* a = rapi_connection_from_path("/home/david/.synce/a");
  *   rapi_connection_select(a);
  *   CeRapiInit()
  *
- *   RapiConnection* b = rapi_connection_create("/home/david/.synce/b");
+ *   SynceInfo* info_b = synce_info_new("/home/david/.synce/b");
+ *   RapiConnection* b = rapi_connection_from_info(info_b);
  *   rapi_connection_select(b);
  *   CeRapiInit()
  *
@@ -64,7 +66,12 @@ typedef struct _RapiConnection RapiConnection;
  *
  * @path Parameter sent to synce_info_new() in libsynce/lib/info.c
  */
-RapiConnection* rapi_connection_create(const char* path);
+RapiConnection* rapi_connection_from_path(const char* path);
+
+/** 
+ * Create a connection - low-level version
+ */
+RapiConnection* rapi_connection_from_info(SynceInfo* info);
 
 /** Select what connection is used for RAPI calls */
 void rapi_connection_select(RapiConnection* connection);

@@ -69,8 +69,6 @@ void rapi_context_free(RapiContext* context)/*{{{*/
     if (context == rapi_context_current())
       rapi_context_set(NULL);
 
-    if (context->path)
-      free(context->path);
 		rapi_buffer_free(context->send_buffer);
 		rapi_buffer_free(context->recv_buffer);
 		synce_socket_free(context->socket);
@@ -89,7 +87,10 @@ HRESULT rapi_context_connect(RapiContext* context)
 		return CERAPI_E_ALREADYINITIALIZED;
 	}
   
-  info = synce_info_new(context->path);
+  if (context->info)
+    info = context->info;
+  else
+    info = synce_info_new(NULL);
   if (!info)
 	{
 		synce_error("Failed to get connection info");
@@ -150,7 +151,8 @@ HRESULT rapi_context_connect(RapiContext* context)
 	result = S_OK;
 
 fail:
-  synce_info_destroy(info);
+  if (!context->info)
+    synce_info_destroy(info);
 	return result;
 }
 
