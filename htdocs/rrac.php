@@ -92,10 +92,10 @@ object on the handheld. The desktop responds with a <a href="#packet65">command
 <td>Unknown</td></tr>
 
 <tr><td></td><td><a href="#packet69">69,&nbsp;subcommand&nbsp;4</a></td>
-<td>One packet for each object type</td></tr>
+<td>One or more packets for for Appointment, Contact, Task and File.</td></tr>
 
 <tr><td></td><td><a href="#packet69">69,&nbsp;subcommand&nbsp;6</a></td>
-<td>One packet for each object type</td></tr>
+<td>One packet for each object type, in type ID order.</td></tr>
 
 <tr><td><a href="#packet6f">6f,&nbsp;subcommand&nbsp;6</a></td><td></td>
 <td>Unknown</td></tr>
@@ -104,11 +104,6 @@ object on the handheld. The desktop responds with a <a href="#packet65">command
 <td>Reply</td></tr>
 
 </table>
-
-<h3>Deleting an item</h3>
-
-<table cellspacing=8 width="100%">
-<tr><th>From desktop</th><th>From handheld</th><th>Description</th></tr>
 
 <h3>Deleting an item</h3>
 
