@@ -120,7 +120,7 @@ to one of those in the <i>~synce/scripts/</i> directory.</p>
 
 <p>Librapi2 is a library that implements RAPI, the Remote Application
 Programming Interface. The RAPI function calls are <a
-href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_CeRapiInit.asp">documented
+href="http://msdn.microsoft.com/library/en-us/wcesdkr/html/_wcesdk_CeRapiInit.asp">documented
 by Microsoft</a> but not the transport protocol. The '2' in "librapi2" is there
 because this is the second implementation. The original implementation is found
 <a
