@@ -2,7 +2,7 @@
 
 import sys,time
 import getopt
-import pyrapi
+from pyrapi import pyrapi
 
 # list of task fields taken from
 # http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_ITask_Unknown.asp

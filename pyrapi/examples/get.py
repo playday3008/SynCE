@@ -3,7 +3,7 @@
 import sys
 import string
 import os.path
-import rapi
+from pyrapi import rapi
 
 # Fetch the file from the PocketPC
 file = rapi.openCeFile(sys.argv[1],'r')

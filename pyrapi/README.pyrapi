@@ -17,19 +17,18 @@ Build Instructions
 Get synce and librapi2 from (http://synce.sourceforge.net/) and follow the instructions for getting communication
 going between your PocketPC and desktop. You will also need Python 2.X (I built this with Python 2.2.1).
 
-Then cd into the 'src' directory. Workout the path name to the top of the librapi2 sources 
-(the file with  README.contributing in it) and plug that in where I have put <path_to_librapi> below.
+Then cd into the 'pyrapi' directory (i.e. the one with this README in it). Workout the path name to the top of 
+the librapi2 sources (the file with  README.contributing in it) and plug that in where I have put 
+<path_to_librapi> below. If you have installed librapi2 into your normal include and library paths you
+should just be able to run the final install stage and miss out the build_ext stage. 
 
+python setup.py build_ext --include-dirs=<path_to_librapi>:<path_to_librapi>/src:<path_to_librapi>/src/support/  --library-dirs=<path_to_librapi>/src/.libs/ --rpath=<path_to_librapi>/src/.libs/
 
-gcc -DNDEBUG -g -O3 -Wall -Wstrict-prototypes -fPIC -DMAJOR_VERSION=1 -DMINOR_VERSION=0 -I./support -I<path_to_librapi> -I<path_to_librapi>/src -I<path_to_librapi>/src/support -I/usr/include/python2.2 -c pyrapi.c -o pyrapi.o
+Now 'su' to root and run the final stage of the install:
 
-gcc -shared pyrapi.o -L<path_to_librapi>/src/.libs -lrapi -o pyrapi.so
+python setup.py install
 
-
-export LD_LIBRARY_PATH=<path_to_librapi>/src/.libs
-export PYTHON_PATH=`pwd`
-
-You should now be able to run python and 'import rapi'. 
+You should now be able to run python and 'from pyrapi import rapi'. 
 
 Running the examples
 ====================
@@ -45,8 +44,8 @@ calendar_sync.py -a -t test.ical             - will fetch both the appointment a
 Ones to watch
 =============
 
-If Python locks up when you 'import rapi' check that the comms to the PocketPC is working. The init for the rapi
-module needs to talk to the PocketPC.
+If Python locks up when you 'from pyrapi import rapi' check that the comms to the PocketPC is working. 
+The init for the rapi module needs to talk to the PocketPC.
 
 
 License

@@ -1,0 +1,3 @@
+include README*
+exclude *~
+recursive-include examples *.py

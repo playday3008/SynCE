@@ -2,7 +2,7 @@
 
 import sys,time
 import getopt
-import pyrapi
+from pyrapi import pyrapi
 
 opts, args = getopt.getopt(sys.argv[1:], 'r')
 print opts,args

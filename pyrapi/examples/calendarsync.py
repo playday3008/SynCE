@@ -2,7 +2,7 @@
 
 import sys,time
 import getopt
-import pyrapi
+from  pyrapi import pyrapi
 
 
 ##task_db_mapping = {16678: 'unknown',

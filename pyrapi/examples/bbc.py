@@ -6,7 +6,7 @@ THIS IS CURRENTLY VERY BROKEN  :-)
 
 """ 
 
-import rapi
+from pyrapi import rapi
 import urllib2
 import re
 
