@@ -43,6 +43,21 @@ BOOL CeGetVersionEx(
  * File functions
  */
 
+#define CSIDL_PROGRAMS           0x0002
+#define CSIDL_PERSONAL           0x0005
+#define CSIDL_FAVORITES_GRYPHON  0x0006
+#define CSIDL_STARTUP            0x0007
+#define CSIDL_RECENT             0x0008
+#define CSIDL_STARTMENU          0x000b
+#define CSIDL_DESKTOPDIRECTORY   0x0010
+#define CSIDL_FONTS              0x0014
+#define CSIDL_FAVORITES          0x0016
+
+DWORD CeGetSpecialFolderPath( 
+		int nFolder, 
+		DWORD nBufferLength, 
+		LPWSTR lpBuffer);
+
 BOOL CeCloseHandle( 
 		HANDLE hObject);
 

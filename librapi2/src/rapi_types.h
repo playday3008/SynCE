@@ -71,5 +71,13 @@ typedef int32_t  HRESULT;
 
 #define FAILED(x) (x<0)
 
+
+/*
+ * Other macros
+ */
+
+#define MAX_PATH  256
+
+
 #endif
 
