@@ -31,8 +31,8 @@ href="rpms.php">download RPM packages</a>.</li>
 <li class=SPACED>I'm a Gentoo user and I want to <a href="emerge.php">use
 emerge</a>.</l>
 
-<li class=SPACED>I'm a user of Debian <i>testing</i> or <i>unstable</i>, and I
-want to <a href="debian.php">download Debian packages</a>.</l>
+<li class=SPACED>I'm a Debian user, and I want to <a
+href="debian.php">download Debian packages</a>.</l>
 
 <li class=SPACED>I'll compile SynCE myself, so I want to <a
 href="tarballs.php">download .tar.gz archives</a>.</li>

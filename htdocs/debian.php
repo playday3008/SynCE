@@ -8,7 +8,8 @@
 
 <p>SynCE is not yet available in the Debian distribution but we maintain an apt
 repository on this web site. These packages have been provided by <a
-href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a>.</p>
+href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a> and
+<a href="mailto:jonmcd@users.sourceforge.net">Jonathan McDowell</a>.</p>
 
 <ol>
 
@@ -25,13 +26,19 @@ deb     http://synce.sourceforge.net/debian/woody ./
 </pre>
 </li>
 
-<li><p><b>For Debian testing (sarge) and unstable (sid)</b></p>
+<li><p><b>For Debian testing (sarge)</b></p>
 
 <p>Add this line to your /etc/apt/sources.list</p>
 
 <pre>
 deb     http://synce.sourceforge.net/debian/sid ./
 </pre>
+</li>
+
+<li><p><b>For Debian unstable (sid)</b></p>
+
+<p>Most parts of SynCE should be available in the main distribution!</p>
+
 </li>
 </ul>
 

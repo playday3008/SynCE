@@ -27,7 +27,9 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="http://sourceforge.net/mail/?group_id=30550">Mailing list information</a></li>
 <li class=SPACED><a href="links.php">Links</a></li>
 
-<li class=SPACED><a href="unshield.php">The Unshield tool</a></li>
+<li><a href="orange.php">The Orange tool and library</a></li>
+<li><a href="unshield.php">The Unshield tool and library</a></li>
+<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
 
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
 </ul>

@@ -6,20 +6,10 @@
 
 <h1>SynCE - Unshield</h1>
 
-<h2>About Unshield</h2>
+<h2>About</h2>
 
 <p>Extract from the <a
 href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/unshield/README?rev=HEAD&content-type=text/vnd.viewcvs-markup">README</a>:</p>
-
-<p>To install a Pocket PC application remotely, an installable
-Microsoft Cabinet File is copied to the /Windows/AppMgr/Install
-directory on the PDA and then the wceload.exe is executed to
-perform the actual install. That is a very simple procedure.</p>
-
-<p>Unfortunately, many applications for Pocket PC are distributed as <a
-href="http://installshield.com/">InstallShield</a> installers for Microsoft
-Windows, and not as individual Microsoft Cabinet Files. That is very
-impractical for users of other operating systems, such as Linux or FreeBSD.</p>
 
 <p>An installer created by the InstallShield software stores the
 files it will install inside of InstallShield Cabinet Files. It
@@ -63,10 +53,12 @@ href="http://opensource.org/licenses/mit-license.php">MIT</a>)</li>
 
 <h2>Download</h2>
 
-<p>Unshield is still under development and is currently only available as the
-<tt>unshield</tt> module in the SynCE <a
-href="http://synce.sourceforge.net/synce/cvs.php">CVS</a>. It depends on the
-<tt>libsynce</tt> module.</p>
+<p>See the <b>Tools</b> package in the <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550">SynCE File
+List</a>.</p>
+
+
+<br>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
