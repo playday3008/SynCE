@@ -41,81 +41,83 @@ public:
       * @param p_pdaName as the name says :)
       */
     CalendarHandler(const QString& p_pdaName);
-    
+
     CalendarHandler(KSharedPtr<Rra> p_rra);
-    
+
     virtual ~CalendarHandler();
-    
-    /** Get events from the device. 
+
+    /** Get events from the device.
       * @param p_calendar store events in this calendar
       * @param p_recType specify in which events your are interested (@see RecordType)
       */
     bool getCalendarEvents (KCal::Calendar& p_calendar, RecordType p_recType);
-    
-    /** Get todos from the device. 
+
+    /** Get todos from the device.
       * @param p_calendar store todos in this calendar
       * @param p_recType specify in which todos your are interested (@see RecordType)
       */
     bool getCalendarTodos (KCal::Calendar& p_calendar, RecordType p_recType);
-    
-    /** Put events to the device. 
+
+    /** Put events to the device.
       * @param p_calendar events are this calendar
       */
     bool putCalendarEvents (KCal::Calendar& p_calendar);
-    
-    /** Put todos to the device. 
+
+    /** Put todos to the device.
       * @param p_calendar events are this calendar
       */
     bool putCalendarTodos (KCal::Calendar& p_calendar);
-    
+
     /** Delete entries on the device. Currently this is just a convenience function, because events without
       * a specified time are stored on 01011970 and cannot be deleted within the calendar on the device.
       */
     void deleteCalendarEntries (const uint32_t& p_typeId, RecordType p_recType);
-    
+
     void deleteCalendar ();
-    
+
     bool getIdStatus (QMap<QString, RecordType>& p_statusMap);
-        
+
     void addEvents    (KCal::Event::List& p_events);
     void updateEvents (KCal::Event::List& p_evenst);
     void removeEvents (KCal::Event::List& p_events);
-    
+
     void addTodos     (KCal::Todo::List& p_todos);
     void updateTodos  (KCal::Todo::List& p_todos);
     void removeTodos  (KCal::Todo::List& p_todos);
-    
+
     bool getEvents    (KCal::Event::List& p_events, const QStringList& p_ids);
     bool getTodos     (KCal::Todo::List&  p_todos,  const QStringList& p_ids);
 
 protected:
     bool getTypeId ();
-    
+
 private:
-    
+
     /** This private method retrieves all the requested information to fill the calendar with events.
       * @param p_calendar events are stored in here
       * @param p_ids this struct holds all the ids (changed, unchanged, deleted)
       * @param p_recType specify in which information you are interested
       */
     void getEventEntry (KCal::Calendar& p_calendar, const struct Rra::ids& p_ids, RecordType p_recType);
-    
+
     /** This private method retrieves all the requested information to fill the calendar with todos.
       * @param p_calendar todos are stored in here
       * @param p_ids this struct holds all the ids (changed, unchanged, deleted)
       * @param p_recType specify in which information you are interested
       */
     void getTodoEntry (KCal::Calendar& p_calendar, const struct Rra::ids& p_ids, RecordType p_recType);
-    
+
     void deleteEventEntry (const uint32_t& p_objectId);
     void deleteTodoEntry     (const uint32_t& p_objectId);
 
     QString makeVIncidence (KCal::Incidence* p_incidence);
-    
+
     static uint32_t    s_typeIdEvent;   /**< This static member stores the typeId belonging to "Appointment" */
     static uint32_t    s_typeIdTodo;    /**< This static member stores the typeId belonging to "Task" */
-            
+
     QRegExp            m_incidenceRegexp;
+
+    QString sCurrentTimeZone;
 };
 
 };

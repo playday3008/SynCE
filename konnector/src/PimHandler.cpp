@@ -22,7 +22,6 @@
 
 namespace pocketPCCommunication {
 
-//Rra PimHandler::m_rra("synce");
 
 PimHandler::PimHandler(const QString& p_pdaName)
     : m_pdaName(p_pdaName), m_appName("POCKETPCCOMM"), m_keyName("REMOTE-ID"), m_partnerId("")
@@ -46,10 +45,10 @@ PimHandler::~PimHandler()
 bool PimHandler::getIdStatusPro (QMap<QString,RecordType>& p_statusMap, const uint32_t& p_typeId)
 {
     //m_rra->connect();
-    
+
     struct Rra::ids ids;
     /*
-    if (!m_rra->getIds (p_typeId, &ids))    
+    if (!m_rra->getIds (p_typeId, &ids))
     {
         m_rra->disconnect();
         return false;
@@ -57,14 +56,14 @@ bool PimHandler::getIdStatusPro (QMap<QString,RecordType>& p_statusMap, const ui
     */
     if (!m_rra->getIds (p_typeId, &ids))
         return false;
-    
+
     // now we have the necessary data...
     // iterate over the complete data structure and fill the map
-    
+
     fillStatusMap (p_statusMap, ids, CHANGED);
     fillStatusMap (p_statusMap, ids, DELETED);
     fillStatusMap (p_statusMap, ids, UNCHANGED);
-    
+
     //m_rra->disconnect();
     return true;
 }
@@ -73,15 +72,15 @@ bool PimHandler::getIdStatusPro (QMap<QString,RecordType>& p_statusMap, const ui
 void PimHandler::fillStatusMap(QMap<QString,RecordType>& p_statusMap, const struct Rra::ids& p_ids, RecordType p_recType)
 {
     //kdDebug() << "PimHandler::fillStatusMap" << endl;
-    
+
     QValueList<uint32_t>::const_iterator it;
     QValueList<uint32_t>::const_iterator end;
-     
+
     switch (p_recType)
     {
         case CHANGED:
             it = p_ids.changedIds.begin();
-            end = p_ids.changedIds.end();            
+            end = p_ids.changedIds.end();
             //size = p_ids.changedIds.size();
             break;
         case DELETED:
@@ -89,16 +88,16 @@ void PimHandler::fillStatusMap(QMap<QString,RecordType>& p_statusMap, const stru
             end = p_ids.deletedIds.end();
             //size = p_ids.deletedIds.size();
             break;
-        case UNCHANGED:            
+        case UNCHANGED:
             it = p_ids.unchangedIds.begin();
             end = p_ids.unchangedIds.end();
             //size = p_ids.unchangedIds.size();
             break;
         case ALL: // not reasonable to have ALL here! added to avoid warning of gcc
             break;
-    }    
-    
-    for (; it != end; ++it)    
+    }
+
+    for (; it != end; ++it)
     {
         //kdDebug() << "     " << QString::number(*it,16).rightJustify(8, '0') << endl;
         p_statusMap["RRA-ID-" + QString::number(*it,16).rightJustify(8, '0')] = p_recType; // number must be padded!
@@ -109,42 +108,42 @@ void PimHandler::fillStatusMap(QMap<QString,RecordType>& p_statusMap, const stru
 void PimHandler::deleteEntries (const struct Rra::ids& p_ids, const uint32_t& p_typeId, RecordType p_recType)
 {
     kdDebug() << "PimHandler::deleteEntries" << endl;
-    
-    m_rra->connect();  
+
+    m_rra->connect();
     QValueList<uint32_t>::const_iterator it;
     QValueList<uint32_t>::const_iterator end;
-    
+
     switch (p_recType)
     {
         case CHANGED:
             it = p_ids.changedIds.begin();
-            end = p_ids.changedIds.end();            
+            end = p_ids.changedIds.end();
             break;
         case DELETED:
             it = p_ids.deletedIds.begin();
             end = p_ids.deletedIds.end();
             break;
-        case UNCHANGED:            
+        case UNCHANGED:
             it = p_ids.unchangedIds.begin();
             end = p_ids.unchangedIds.end();
             break;
         case ALL: // not reasonable to have ALL here! added to avoid warning of gcc
             break;
     }
-    
+
     for (; it != end; ++it)
     {
         kdDebug() << "deleting: " << p_typeId << " " << *it << endl;
-        m_rra->deleteObject (p_typeId, *it);    
+        m_rra->deleteObject (p_typeId, *it);
     }
-    
+
     m_rra->disconnect();
 }
 
 
 void PimHandler::deleteSingleEntry (const uint32_t& p_typeId, const uint32_t& p_objectId)
-{    
-    m_rra->deleteObject (p_typeId, p_objectId);    
+{
+    m_rra->deleteObject (p_typeId, p_objectId);
 }
 
 
@@ -184,10 +183,10 @@ uint32_t PimHandler::getOriginalId(const QString& p_id)
 {
     QString id = p_id;
     bool ok;
-    
+
     return id.remove("RRA-ID-").toUInt(&ok, 16);
 }
-    
+
 
 bool PimHandler::isARraId (const QString& p_id)
 {

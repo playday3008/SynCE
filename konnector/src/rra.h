@@ -36,6 +36,7 @@
 extern "C" {
 #include <rra/syncmgr.h>
 #include <rra/matchmaker.h>
+#include <rra/timezone.h>
 }
 
 #include <qobject.h>
@@ -94,16 +95,17 @@ public:
 
     bool isConnected () const;
     QString getPdaName () const;
-    
+
     MatchMaker* getMatchMaker ();
-    
+
     bool ok();
     bool connect();
     void disconnect();
     void finalDisconnect();
-    
+
     void setLogLevel(int p_level);
-    
+    bool getTimezone(RRA_Timezone *tzi);
+
 
 private:
     HRESULT hr;
@@ -113,7 +115,8 @@ private:
     bool rraOk;
     struct ids _ids;
     int useCount;
-    
+    RRA_Timezone tzi;
+
     MatchMaker* m_matchMaker;
 };
 
