@@ -424,7 +424,6 @@ void kio_rapipProtocol::stat(const KURL & url)
 
             finished();
         } else {
-            error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
             closeConnection();
         }
     }
