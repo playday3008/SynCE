@@ -8,7 +8,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define RAPI_BUFFER_DEBUG 0
+#define RAPI_BUFFER_DEBUG 1
 
 #if RAPI_BUFFER_DEBUG
 #define rapi_buffer_trace(args...)    rapi_trace(args)

@@ -35,6 +35,74 @@ BOOL CeGetVersionEx(
 	return result;
 }
 
+BOOL CeOidGetInfo(/*{{{*/
+		CEOID oid, 
+		CEOIDINFO *poidInfo)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL result = false;
+	uint16_t size = 0;
+
+	if (!poidInfo)
+	{
+		rapi_error("poidInfo is NULL");
+		goto fail;
+	}
+	
+	rapi_context_begin_command(context, 0x0c);
+	rapi_buffer_write_uint32(context->send_buffer, oid);
+
+	if ( !rapi_context_call(context) )
+		goto fail;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_trace("last_error = %i", context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &result);
+	rapi_trace("result = %i", result);
+	
+	if ( !rapi_buffer_read_uint16(context->recv_buffer, &poidInfo->wObjType) )
+		goto fail;
+	rapi_trace("object type = %i", poidInfo->wObjType);
+
+	switch (poidInfo->wObjType)
+	{
+		case OBJTYPE_FILE:
+			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
+				goto fail;
+			rapi_trace("size = %i", size);
+			break;
+
+		case OBJTYPE_DIRECTORY:
+			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
+				goto fail;
+			rapi_trace("size = %i", size);
+			break;
+
+		case OBJTYPE_DATABASE:
+			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
+				goto fail;
+			rapi_trace("size = %i", size);
+			break;
+
+		case OBJTYPE_RECORD:
+			if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infRecord.oidParent) )
+				goto fail;
+			break;
+
+		default:
+			rapi_error("unknown object type = %i", poidInfo->wObjType);
+			goto fail;
+	}
+
+/*	if ( !rapi_buffer_read_data(context->recv_buffer, lpVersionInformation, size) )
+		return false;*/
+
+	return result;
+
+fail:
+	return false;
+}/*}}}*/
+
 /**
  * Undocumented function used by ActiveSync to begin synchronization
  *

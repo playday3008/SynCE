@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include "test.h"
 #include "rapi_filetime.h"
+#include "rapi_log.h"
 
 int handle_property(PCEPROPVAL value)
 {
@@ -129,7 +130,8 @@ int handle_property(PCEPROPVAL value)
 			break;
 
 		case CEVT_BLOB:
-			printf("BLOB (size=%lu) \"", value->val.blob.dwCount);
+			printf("BLOB (size=%lu)", value->val.blob.dwCount);
+/*			printf(" \"");
 			for (k = 0; k < value->val.blob.dwCount; k++)
 			{
 				int c = value->val.blob.lpb[k];
@@ -140,7 +142,7 @@ int handle_property(PCEPROPVAL value)
 			{
 				printf("%02x ", value->val.blob.lpb[k]);
 			}
-			printf("}");
+			printf("}");*/
 			break;
 			
 		default:
@@ -194,6 +196,8 @@ int main()
 {
 	VERIFY_HRESULT(CeRapiInit());
 
+	rapi_log_set_level(RAPI_LOG_LEVEL_ERROR);
+	
 	CEDB_FIND_DATA* find_data = NULL;
 	WORD db_count = 0;
 	

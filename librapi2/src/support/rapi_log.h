@@ -12,6 +12,13 @@
 
 #define RAPI_LOG_LEVEL_HIGHEST   4
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+void rapi_log_set_level(int level);
+
 void _rapi_log(int level, const char* file, int line, const char* format, ...);
 
 #define rapi_log(format, args...) \
@@ -30,6 +37,11 @@ void _rapi_log_wstr(int level, const char* file, int line, const char* name, con
 
 #define rapi_trace_wstr(wstr) \
 	_rapi_log_wstr(RAPI_LOG_LEVEL_TRACE,__PRETTY_FUNCTION__, __LINE__, #wstr, wstr)
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 	

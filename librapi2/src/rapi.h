@@ -22,29 +22,6 @@ HRESULT CeRapiInit(void);
 
 STDAPI CeRapiUninit(void);
 
-/*
- * Misc functions
- */
-
-BOOL CeCheckPassword( 
-		LPWSTR lpszPassword);
-
-DWORD CeGetLastError( void );
-
-typedef struct _CEOSVERSIONINFO{ 
-	DWORD dwOSVersionInfoSize; 
-	DWORD dwMajorVersion; 
-	DWORD dwMinorVersion; 
-	DWORD dwBuildNumber; 
-	DWORD dwPlatformId; 
-	WCHAR szCSDVersion[128]; 
-} CEOSVERSIONINFO, *LPCEOSVERSIONINFO; 
-
-BOOL CeGetVersionEx(
-		LPCEOSVERSIONINFO lpVersionInformation);
-
-DWORD CeStartReplication( void );
-
 
 /*
  * File access functions
@@ -334,6 +311,76 @@ CEOID CeReadRecordProps(
 		CEPROPID *rgPropID, 
 		LPBYTE *lplpBuffer, 
 		LPDWORD lpcbBuffer); 
+
+CEOID CeSeekDatabase(
+		HANDLE hDatabase, 
+		DWORD dwSeekType, 
+		DWORD dwValue, 
+		LPDWORD lpdwIndex);
+
+/*
+ * Misc functions
+ */
+
+BOOL CeCheckPassword( 
+		LPWSTR lpszPassword);
+
+DWORD CeGetLastError( void );
+
+typedef struct _CEOSVERSIONINFO{ 
+	DWORD dwOSVersionInfoSize; 
+	DWORD dwMajorVersion; 
+	DWORD dwMinorVersion; 
+	DWORD dwBuildNumber; 
+	DWORD dwPlatformId; 
+	WCHAR szCSDVersion[128]; 
+} CEOSVERSIONINFO, *LPCEOSVERSIONINFO; 
+
+BOOL CeGetVersionEx(
+		LPCEOSVERSIONINFO lpVersionInformation);
+
+typedef struct _CEFILEINFO {
+	DWORD dwAttributes; 
+	CEOID oidParent; 
+	WCHAR szFileName[MAX_PATH]; 
+	FILETIME ftLastChanged; 
+	DWORD dwLength; 
+} CEFILEINFO; 
+
+typedef struct _CEDIRINFO {
+	DWORD dwAttributes; 
+	CEOID oidParent; 
+	WCHAR szDirName[MAX_PATH]; 
+} CEDIRINFO; 
+
+typedef struct _CERECORDINFO {
+	CEOID oidParent; 
+} CERECORDINFO; 
+
+#define OBJTYPE_INVALID     0
+#define OBJTYPE_FILE        1
+#define OBJTYPE_DIRECTORY   2
+#define OBJTYPE_DATABASE    3
+#define OBJTYPE_RECORD      4
+
+typedef struct _CEOIDINFO { 
+	WORD wObjType;
+	WORD wPad;
+	union {
+		CEFILEINFO infFile;
+		CEDIRINFO infDirectory;
+		CEDBASEINFO infDatabase;
+		CERECORDINFO infRecord;
+	} u;
+} CEOIDINFO; 
+
+BOOL CeOidGetInfo(
+		CEOID oid, 
+		CEOIDINFO *poidInfo); 
+
+DWORD CeStartReplication( void );
+
+
 
 #ifdef __cplusplus
 }

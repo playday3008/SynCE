@@ -7,6 +7,11 @@
 /* evil static data */
 static int current_log_level = RAPI_LOG_LEVEL_HIGHEST;
 
+void rapi_log_set_level(int level)
+{
+	current_log_level = level;
+}
+
 void _rapi_log(int level, const char* file, int line, const char* format, ...)
 {
 	va_list ap;
