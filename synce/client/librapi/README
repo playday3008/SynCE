@@ -1,5 +1,81 @@
 
 This is the implementation of the client-side of RAPI API.
 
-
 See the file README in the main directory.
+
+Command codes:
+
+00 CeFindFirstFile
+01 CeFindNextFile
+02 CeFindClose
+03 CeGetFileAttributes
+04 CeSetFileAttributes
+05 CeCreateFile
+06 CeReadFile
+07 CeWriteFile
+08 CeCloseHandle
+09 CeFindAllFiles
+0A CeFindFirstDatabase
+0B CeFindNextDatabase
+0C CeOidGetInfo
+0D CeCreateDatabase
+0E CeOpenDatabase
+0F CeDeleteDatabase
+10 CeReadRecordPropsEx
+10 CeReadRecordProps
+11 CeWriteRecordProps
+12 CeDeleteRecord
+13 CeSeekDatabase
+14 CeSetDatabaseInfo
+15 CeSetFilePointer
+16 CeSetEndOfFile
+17 CeCreateDirectory
+18 CeRemoveDirectory
+19 CeCreateProcess
+1A CeMoveFile
+1B CeCopyFile
+1C CeDeleteFile
+1D CeGetFileSize
+1E CeRegOpenKeyEx
+1F CeRegEnumKeyEx
+20 CeRegCreateKeyEx
+21 CeRegCloseKey
+22 CeRegDeleteKey
+23 CeRegEnumValue
+24 CeRegDeleteValue
+25 CeRegQueryInfoKey
+26 CeRegQueryValueEx
+27 CeRegSetValueEx
+29 CeGetStoreInformation
+2A CeGetSystemMetrics
+2B CeGetDesktopDeviceCaps
+2C CeFindAllDatabases
+2F CeGetSystemInfo
+30 CeSHCreateShortcut
+31 CeSHGetShortcutTarget
+34 CeCheckPassword
+39 CeGetFileTime
+3A CeSetFileTime
+3B CeGetVersionEx
+3C CeGetWindow
+3D CeGetWindowLong
+3E CeGetWindowText
+3F CeGetClassName
+40 CeGlobalMemoryStatus
+41 CeGetSystemPowerStatusEx
+43 CeGetTempPat 
+44 CeGetSpecialFolderPath
+45 CeRapiInvoke
+4A CeFindFirstDatabaseEx
+4B CeFindNextDatabaseEx
+4C CeCreateDatabaseEx
+4D CeSetDatabaseInfoEx
+4E CeOpenDatabaseEx
+4F CeDeleteDatabaseEx
+51 CeMountDBVol
+52 CeUnmountDBVol
+53 CeFlushDBVol
+54 CeEnumDBVolumes
+55 CeOidGetInfoEx
+
+
