@@ -261,8 +261,7 @@ void s_hash_table_destroy(SHashTable *table, void (*func)(void *))
 			while ( (temp = (table->table)[i]) )
 			{
 				data = s_hash_table_remove(table, temp->key);
-				assert(data);
-				if (func)
+				if (func && data)
 					func(data);
 			}
 		}
