@@ -5,7 +5,7 @@
 	* Rapi2::Simple 0.02:
 	  * New methods: 
 	      store, DBList, OpenFile, CloseFile, ReadFile, WriteFile, CopyFile,
-	      MoveFile, DeleteFile,DeleteDir, FileList, FileAttr
+	      MoveFile, DeleteFile, DeleteDir, FileList, FileAttr, GetSpecialFolderPath
 	  * Documentation
 	  * Changed return value of fetch()
 	    (the hash contains now array references, to store the type of properties)
