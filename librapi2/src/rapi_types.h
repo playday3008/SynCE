@@ -19,6 +19,7 @@
 typedef u_int32_t  DWORD;
 typedef u_int32_t  BOOL;
 typedef u_int16_t  WCHAR;
+typedef WCHAR      TCHAR;
 
 /*
  * Pointer types
@@ -44,7 +45,9 @@ typedef const WCHAR*  LPCWSTR;
 
 /* A handle  is usually a void*, but we must guarantee 32-bit! */
 typedef u_int32_t  HANDLE;
-typedef u_int32_t  HRESULT;
+
+/* HRESULT must be a signed integer if the FAILED() macro should work */
+typedef int32_t  HRESULT;
 
 #define STDAPI HRESULT
 
@@ -66,6 +69,7 @@ typedef u_int32_t  HRESULT;
 #define S_FALSE         0x00000001
 #define S_OK            0x00000000
 
+#define FAILED(x) (x<0)
 
 #endif
 
