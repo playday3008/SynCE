@@ -2,12 +2,12 @@
 #include "rapi_context.h"
 #include <stdlib.h>
 
-#define RAPI_CONTEXT_DEBUG 1
+#define RAPI_CONTEXT_DEBUG 0
 
 #if RAPI_CONTEXT_DEBUG
-#define rapi_context_trace(args...)    rapi_trace(args)
-#define rapi_context_warning(args...)  rapi_warning(args)
-#define rapi_context_error(args...)    rapi_error(args)
+#define rapi_context_trace(args...)    synce_trace(args)
+#define rapi_context_warning(args...)  synce_warning(args)
+#define rapi_context_error(args...)    synce_error(args)
 #else
 #define rapi_context_trace(args...)
 #define rapi_context_warning(args...)
@@ -37,7 +37,7 @@ RapiContext* rapi_context_new()/*{{{*/
 		if (!(
 					(context->send_buffer  = rapi_buffer_new()) &&
 					(context->recv_buffer = rapi_buffer_new()) &&
-					(context->socket = rapi_socket_new())
+					(context->socket = synce_socket_new())
 				 ))
 		{
 			rapi_context_free(context);
@@ -54,7 +54,7 @@ void rapi_context_free(RapiContext* context)/*{{{*/
 	{
 		rapi_buffer_free(context->send_buffer);
 		rapi_buffer_free(context->recv_buffer);
-		rapi_socket_free(context->socket);
+		synce_socket_free(context->socket);
 		free(context);
 	}
 }/*}}}*/
@@ -75,14 +75,14 @@ bool rapi_context_call(RapiContext* context)/*{{{*/
 {
 	if ( !rapi_buffer_send(context->send_buffer, context->socket) )
 	{
-		rapi_context_error("rapi_socket_send failed");
+		rapi_context_error("synce_socket_send failed");
 		/* TODO: set context->last_error */
 		return false;
 	}
 
 	if ( !rapi_buffer_recv(context->recv_buffer, context->socket) )
 	{
-		rapi_context_error("rapi_socket_recv failed");
+		rapi_context_error("synce_socket_recv failed");
 		/* TODO: set context->last_error */
 		return false;
 	}

@@ -1,5 +1,4 @@
 #include "test.h"
-#include "rapi_filetime.h"
 
 static const char* database_name = "TestDatabase";
 static const DWORD database_type = 31337;
@@ -47,7 +46,7 @@ int main()
 	CEPROPVAL write_values[VALUE_COUNT];
 	memset(&write_values, 0, sizeof(write_values));
 
-	char* blob_data = "Binary Large Object";
+	char* blob_data = "Binary Large Object"; // Note: uneven length
 	write_values[0].propid = 0x10000 | CEVT_BLOB;
 	write_values[0].val.blob.dwCount = strlen(blob_data);
 	write_values[0].val.blob.lpb = (LPBYTE)blob_data;
@@ -56,16 +55,16 @@ int main()
 	write_values[1].val.boolVal = 1;
 	
 	write_values[2].propid = 0x30000 | CEVT_FILETIME;
-	rapi_filetime_from_unix_time(time(NULL), &write_values[2].val.filetime);
+	filetime_from_unix_time(time(NULL), &write_values[2].val.filetime);
 
 	write_values[3].propid = 0x40000 | CEVT_I2;
-	write_values[3].val.iVal = 0xabcd;
+	write_values[3].val.iVal = 0x1234;
 
 	write_values[4].propid = 0x50000 | CEVT_I4;
-	write_values[4].val.iVal = 0x12345678;
+	write_values[4].val.iVal = 0x23456789;
 
 	write_values[5].propid = 0x60000 | CEVT_LPWSTR;
-	write_values[5].val.lpwstr = to_unicode("String value");
+	write_values[5].val.lpwstr = to_unicode("Some string value"); // Note: uneven length
 
 	write_values[6].propid = 0x70000 | CEVT_UI2;
 	write_values[6].val.uiVal = 0xbcde;
@@ -133,7 +132,7 @@ int main()
 				break;
 
 			case 5:
-				if (!rapi_wstr_equal(write_values[i].val.lpwstr, read_value->val.lpwstr))
+				if (!wstr_equal(write_values[i].val.lpwstr, read_value->val.lpwstr))
 					printf("ERROR: string\n");
 				break;
 
@@ -148,8 +147,8 @@ int main()
 
 	/* Write all write_values */
 
-
-//	TEST_NOT_FALSE(record = CeWriteRecordProps(database, 0, VALUE_COUNT, write_values));
+	CEOID record;
+	TEST_NOT_FALSE(record = CeWriteRecordProps(database, 0, VALUE_COUNT, write_values));
 
 
 
@@ -157,7 +156,7 @@ int main()
 	
 	TEST_NOT_FALSE(CeCloseHandle(database));
 	
-	TEST_NOT_FALSE(CeDeleteDatabase(oid));
+//	TEST_NOT_FALSE(CeDeleteDatabase(oid));
 
 	return TEST_SUCCEEDED;
 }

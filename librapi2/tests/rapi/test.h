@@ -1,6 +1,5 @@
 // $Id$
 #include "rapi.h"
-#include "rapi_wstr.h"
 #include <stdio.h>
 
 #ifdef WIN32
@@ -63,12 +62,12 @@ VERIFY_NOT_EQUAL((value), (call)) else printf("ok.\n");
 //
 char* from_unicode(const WCHAR* inbuf)
 {
-	return rapi_wstr_to_ascii(inbuf);
+	return wstr_to_ascii(inbuf);
 }
 
 WCHAR* to_unicode(const char* inbuf)
 {
-	return rapi_wstr_from_ascii(inbuf);
+	return wstr_from_ascii(inbuf);
 }
 
 #if 0

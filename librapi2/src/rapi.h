@@ -2,7 +2,7 @@
 #ifndef __rapi_h__
 #define __rapi_h__
 
-#include "rapi_types.h"
+#include <synce.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -301,6 +301,12 @@ typedef struct _CEDB_FIND_DATA {
 
 #define FAD_SORT_SPECS                  0x0100
 
+CEOID CeCreateDatabase(
+		LPWSTR lpszName, 
+		DWORD dwDbaseType, 
+		WORD wNumSortOrder, 
+		SORTORDERSPEC *rgSortSpecs);
+
 BOOL CeDeleteDatabase(
 		CEOID oid);
 
@@ -336,6 +342,12 @@ CEOID CeSeekDatabase(
 		DWORD dwSeekType, 
 		DWORD dwValue, 
 		LPDWORD lpdwIndex);
+
+CEOID CeWriteRecordProps(
+		HANDLE hDbase, 
+		CEOID oidRecord, 
+		WORD cPropID, 
+		CEPROPVAL *rgPropVal );
 
 /*
  * Registry

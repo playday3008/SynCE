@@ -1,9 +1,6 @@
 /* $Id$ */
 #include "rapi_internal.h"
 #include "rapi_buffer.h"
-#include "rapi_endian.h"
-#include "rapi_wstr.h"
-#include "rapi_log.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -12,7 +9,7 @@
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
-#define RAPI_BUFFER_DEBUG 1
+#define RAPI_BUFFER_DEBUG 0
 
 #if RAPI_BUFFER_DEBUG
 #define rapi_buffer_trace(args...)    rapi_trace(args)
@@ -185,7 +182,7 @@ bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode)
 	 *     04  String length in number of unicode chars + 1
 	 *     08  String data 
 	 */
-	size_t length = rapi_wstr_strlen(unicode) + 1;
+	size_t length = wstr_strlen(unicode) + 1;
 	
 	rapi_buffer_trace("Writing string of length %i",length);
 	
@@ -209,7 +206,7 @@ bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode)
 	size_t size;
 	
 	if (unicode)
-	  size = (rapi_wstr_strlen(unicode) + 1) * sizeof(WCHAR);
+	  size = (wstr_strlen(unicode) + 1) * sizeof(WCHAR);
 	else
 		size = 0;
 	
@@ -466,14 +463,14 @@ bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWr
 	return success;
 }
 
-bool rapi_buffer_send(RapiBuffer* buffer, RapiSocket* socket)
+bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket)
 {
 	uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
 
-	if ( !rapi_socket_write(socket, &size_le, sizeof(size_le)) )
+	if ( !synce_socket_write(socket, &size_le, sizeof(size_le)) )
 		goto fail;
 
-	if ( !rapi_socket_write(socket, 
+	if ( !synce_socket_write(socket, 
 				rapi_buffer_get_raw(buffer), 
 				rapi_buffer_get_size(buffer)) )
 		goto fail;
@@ -482,17 +479,17 @@ bool rapi_buffer_send(RapiBuffer* buffer, RapiSocket* socket)
 
 fail:
 	/* XXX: is it wise to close the connection here? */
-	rapi_socket_close(socket);
+	synce_socket_close(socket);
 	return false;
 }
 
-bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket)
+bool rapi_buffer_recv(RapiBuffer* buffer, SynceSocket* socket)
 {
 	uint32_t      size_le = 0;
 	size_t         size    = 0;
 	unsigned char* data    = NULL;
 	
-	if ( !rapi_socket_read(socket, &size_le, sizeof(size_le)) )
+	if ( !synce_socket_read(socket, &size_le, sizeof(size_le)) )
 	{
 		rapi_buffer_error("Failed to read size");
 		goto fail;
@@ -509,7 +506,7 @@ bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket)
 		goto fail;
 	}
 
-	if ( !rapi_socket_read(socket, data, size) )
+	if ( !synce_socket_read(socket, data, size) )
 	{
 		rapi_buffer_error("Failed to read 0x%08x bytes", size);
 		goto fail;
@@ -526,7 +523,7 @@ bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket)
 	
 fail:
 	/* XXX: is it wise to close the connection here? */
-	rapi_socket_close(socket);
+	synce_socket_close(socket);
 	return false;	
 }
 

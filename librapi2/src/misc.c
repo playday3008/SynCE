@@ -1,8 +1,6 @@
 /* $Id$ */
 #include "rapi.h"
 #include "rapi_context.h"
-#include "rapi_endian.h"
-#include "rapi_log.h"
 
 DWORD CeGetLastError( void )
 {
@@ -23,9 +21,9 @@ BOOL CeGetVersionEx(/*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_log("last_error = %i", context->last_error);
+	synce_trace("last_error = %i", context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	rapi_log("result = %i", result);
+	synce_trace("result = %i", result);
 	
 	rapi_buffer_read_uint32(context->recv_buffer, &size);
 
@@ -45,7 +43,7 @@ BOOL CeOidGetInfo(/*{{{*/
 
 	if (!poidInfo)
 	{
-		rapi_error("poidInfo is NULL");
+		synce_error("poidInfo is NULL");
 		goto fail;
 	}
 	
@@ -56,32 +54,32 @@ BOOL CeOidGetInfo(/*{{{*/
 		goto fail;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_trace("last_error = %i", context->last_error);
+	synce_trace("last_error = %i", context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	rapi_trace("result = %i", result);
+	synce_trace("result = %i", result);
 	
 	if ( !rapi_buffer_read_uint16(context->recv_buffer, &poidInfo->wObjType) )
 		goto fail;
-	rapi_trace("object type = %i", poidInfo->wObjType);
+	synce_trace("object type = %i", poidInfo->wObjType);
 
 	switch (poidInfo->wObjType)
 	{
 		case OBJTYPE_FILE:
 			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				goto fail;
-			rapi_trace("size = %i", size);
+			synce_trace("size = %i", size);
 			break;
 
 		case OBJTYPE_DIRECTORY:
 			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				goto fail;
-			rapi_trace("size = %i", size);
+			synce_trace("size = %i", size);
 			break;
 
 		case OBJTYPE_DATABASE:
 			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				goto fail;
-			rapi_trace("size = %i", size);
+			synce_trace("size = %i", size);
 			break;
 
 		case OBJTYPE_RECORD:
@@ -90,7 +88,7 @@ BOOL CeOidGetInfo(/*{{{*/
 			break;
 
 		default:
-			rapi_error("unknown object type = %i, buffer size = %i", 
+			synce_error("unknown object type = %i, buffer size = %i", 
 					poidInfo->wObjType, rapi_buffer_get_size(context->recv_buffer));
 			goto fail;
 	}
@@ -122,7 +120,7 @@ DWORD CeStartReplication( void )/*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	rapi_log("result = %i", result);
+	synce_trace("result = %i", result);
 
 	return result;
 }/*}}}*/

@@ -11,7 +11,7 @@ int main()
 	DWORD length;
 	WCHAR dirname[MAX_PATH];
 	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, dirname))
-	rapi_wstr_append(dirname, to_unicode("\\librapi test directory"), sizeof(dirname));
+	wstr_append(dirname, to_unicode("\\librapi test directory"), sizeof(dirname));
 	
 	// First, remove directory (ignoring return value)
 	CeRemoveDirectory(dirname);

@@ -14,13 +14,12 @@ librapi_la_SOURCES = \
 	rapi.c                         \
 	registry.c                     \
 	window.c                       \
-	rapi_internal.h                \
-	rapi_socket.h   rapi_socket.c
+	rapi_internal.h
 
 librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
 librapi_la_LIBADD  = @LTLIBICONV@ config/libconfig.la support/libsupport.la
 
-include_HEADERS = rapi.h rapi_types.h rapi_socket.h
+include_HEADERS = rapi.h
 
 SUBDIRS = config support .
 

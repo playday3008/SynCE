@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "test.h"
-#include "rapi_filetime.h"
-#include "rapi_log.h"
+#include <synce_log.h>
 
 int handle_property(PCEPROPVAL value)
 {
@@ -10,6 +9,7 @@ int handle_property(PCEPROPVAL value)
 	unsigned id = value->propid >> 16;
 	switch (id)
 	{
+#if 0
 		// Mailbox list
 		case 0x0000: printf("FolderNumber"); break;
 		case 0x0001: printf("FolderName"); break;	// also used by Messages
@@ -91,9 +91,9 @@ int handle_property(PCEPROPVAL value)
 		case 0x4501: printf("ReminderMinutesBeforeStart"); break; // minutes
 		case 0x4503: printf("ReminderEnabled"); break;
 		case 0x4509: printf("ReminderSoundFile"); break;
-
+#endif
 		default:
-			printf("%x", id);
+			printf("%04x", id);
 			break;
 	}
 	printf("=");
@@ -101,10 +101,11 @@ int handle_property(PCEPROPVAL value)
 	unsigned type = value->propid & 0xffff;
 	switch (type)
 	{
-		case CEVT_I2: printf("%i", value->val.iVal); break;
-		case CEVT_I4: printf("%li", value->val.lVal); break;
-		case CEVT_UI2: printf("%u", value->val.uiVal); break;
-		case CEVT_UI4: printf("%u", value->val.ulVal); break;
+		case CEVT_I2:  printf("0x%04x/%i",  value->val.iVal,  value->val.iVal);  break;
+		case CEVT_I4:  printf("0x%08x/%li", value->val.lVal,  value->val.lVal);  break;
+		case CEVT_UI2: printf("0x%04x/%u",  value->val.uiVal, value->val.uiVal); break;
+		case CEVT_UI4: printf("0x%08x/%u",  value->val.ulVal, value->val.ulVal); break;
+		case CEVT_BOOL: printf("0x%08x/%u",  value->val.boolVal, value->val.boolVal); break;
 		
 		case CEVT_LPWSTR:
 			printf("\"%s\"", from_unicode(value->val.lpwstr));
@@ -119,7 +120,7 @@ int handle_property(PCEPROPVAL value)
 				else
 				{
 #ifndef WIN32
-					time_t unixtime = rapi_filetime_to_unix_time(&value->val.filetime);
+					time_t unixtime = filetime_to_unix_time(&value->val.filetime);
 					struct tm *tm = localtime(&unixtime);
 					char buffer[MAX_PATH];
 					strftime(buffer, MAX_PATH, "%c", tm);
@@ -184,8 +185,16 @@ int handle_database(HANDLE db, DWORD num_records)
 	
 		if (TEST_SUCCEEDED != handle_record(values, property_count))
 			return TEST_FAILED;
-	
+		
 		printf("\n");
+
+		unsigned char * p = property_count * sizeof(CEPROPVAL) + (BYTE*)values;
+		for (unsigned i = 0; i < (buffer_size - property_count * sizeof(CEPROPVAL)); i++)
+		{
+			int c = p[i];
+			printf("%02x %c\n", c, isprint(c) ? c : '.');
+		}
+	
 		
 	} // for every row
 
@@ -196,7 +205,7 @@ int main()
 {
 	VERIFY_HRESULT(CeRapiInit());
 
-	rapi_log_set_level(RAPI_LOG_LEVEL_ERROR);
+//	rapi_log_set_level(RAPI_LOG_LEVEL_ERROR);
 	
 	CEDB_FIND_DATA* find_data = NULL;
 	WORD db_count = 0;

@@ -39,20 +39,27 @@ fi
 dnl Checks for libraries.
 AC_LIB_RPATH
 
+dnl Check for libsynce
+AC_ARG_WITH(synce,
+		AC_HELP_STRING([--with-synce[=DIR]],[Search for libsynce in DIR/include and DIR/lib]),
+[case "${withval}" in
+  yes) synce=true ;;
+  no)  synce=false ;;
+  *) synce=true; synce_prefix="-L${withval}" ;;
+esac],[synce=true])
+
+if ${synce}; then
+	AC_CHECK_LIB(synce,main,,[
+			AC_MSG_ERROR([Can't find synce library])
+		],${synce_prefix})
+	AC_CHECK_HEADERS(synce.h,,[
+			AC_MSG_ERROR([Can't find synce.h])
+		])
+fi
+
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h)
-	
-AC_CHECK_HEADERS(inttypes.h,,[
-		AC_MSG_ERROR([Don't know how to get uint16_t and uint32_t on your system])
-		])
-
-AC_CHECK_HEADERS(stdbool.h,,[
-		AC_MSG_ERROR([Don't know how to get bool values on your system])
-		])
-
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_BIGENDIAN()
 AC_C_CONST
 
 dnl Checks for library functions.

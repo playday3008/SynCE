@@ -3,9 +3,6 @@
 #include "rapi.h"
 #include "rapi_buffer.h"
 #include "rapi_context.h"
-#include "rapi_wstr.h"
-#include "rapi_log.h"
-#include "rapi_endian.h"
 #include <string.h>
 
 BOOL CeCreateDirectory(
@@ -64,7 +61,7 @@ BOOL CeFindAllFiles(
 
 	rapi_buffer_read_uint32(context->recv_buffer, &count);
 
-	rapi_trace("found %i files", count);
+	synce_trace("found %i files", count);
 
 	if (count)
 	{
@@ -113,7 +110,7 @@ BOOL CeFindAllFiles(
 			if (dwFlags & FAF_NAME)
 			{
 				rapi_buffer_read_data(context->recv_buffer, array[i].cFileName, name_size * sizeof(WCHAR) );
-				rapi_trace_wstr(array[i].cFileName);
+				synce_trace_wstr(array[i].cFileName);
 			}
 		}
 
@@ -152,9 +149,9 @@ static bool rapi_read_find_data(
 		lpFindFileData->nFileSizeLow                    = letoh32(lpFindFileData->nFileSizeLow);
 		lpFindFileData->dwOID                           = letoh32(lpFindFileData->dwOID);
 		
-		rapi_trace("dwFileAttributes=0x%08x", lpFindFileData->dwFileAttributes);
-		rapi_trace("nFileSizeLow=0x%08x",     lpFindFileData->nFileSizeLow);
-		rapi_trace("dwOID=0x%08x",            lpFindFileData->dwOID);
+		synce_trace("dwFileAttributes=0x%08x", lpFindFileData->dwFileAttributes);
+		synce_trace("nFileSizeLow=0x%08x",     lpFindFileData->nFileSizeLow);
+		synce_trace("dwOID=0x%08x",            lpFindFileData->dwOID);
 
 	}
 
@@ -241,7 +238,7 @@ DWORD CeGetSpecialFolderPath(
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		return 0;
-	rapi_log("last_error = %i", context->last_error);
+	synce_trace("last_error = %i", context->last_error);
 
 	if ( !rapi_buffer_read_string(context->recv_buffer, lpBuffer, &string_length) )
 		return 0;
@@ -291,8 +288,8 @@ BOOL CeCopyFileA(
 	LPWSTR lpExistingFileNameW = NULL;
 	LPWSTR lpNewFileNameW = NULL;
 
-	lpExistingFileNameW = rapi_wstr_from_ascii(lpExistingFileName);
-	lpNewFileNameW      = rapi_wstr_from_ascii(lpNewFileName);
+	lpExistingFileNameW = wstr_from_ascii(lpExistingFileName);
+	lpNewFileNameW      = wstr_from_ascii(lpNewFileName);
 
 	if (lpExistingFileName && !lpExistingFileNameW)
 		goto fail;
@@ -303,8 +300,8 @@ BOOL CeCopyFileA(
 	return_value = CeCopyFile(lpExistingFileNameW, lpNewFileNameW, bFailIfExists);
 
 fail:
-	rapi_wstr_free_string(lpExistingFileNameW);
-	rapi_wstr_free_string(lpNewFileNameW);
+	wstr_free_string(lpExistingFileNameW);
+	wstr_free_string(lpNewFileNameW);
 	
 	return return_value;
 }

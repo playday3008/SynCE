@@ -3,13 +3,13 @@
 #define __rapi_context_h__
 
 #include "rapi_buffer.h"
-#include "rapi_socket.h"
+#include <synce_socket.h>
 
 typedef struct _RapiContext
 {
 	RapiBuffer* send_buffer;
 	RapiBuffer* recv_buffer;
-	RapiSocket* socket;
+	SynceSocket* socket;
 	uint32_t result_1;
 	uint32_t result_2;
 	uint32_t last_error;

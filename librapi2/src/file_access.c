@@ -3,8 +3,6 @@
 #include "rapi.h"
 #include "rapi_buffer.h"
 #include "rapi_context.h"
-#include "rapi_wstr.h"
-#include "rapi_log.h"
 
 
 BOOL CeCloseHandle( 
@@ -13,7 +11,7 @@ BOOL CeCloseHandle(
 	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 	
-	rapi_trace("begin");
+	synce_trace("begin");
 	
 	rapi_context_begin_command(context, 0x08);
 	rapi_buffer_write_uint32(context->send_buffer, hObject);
@@ -39,7 +37,7 @@ HANDLE CeCreateFile(
 	RapiContext* context = rapi_context_current();
 	HANDLE handle = INVALID_HANDLE_VALUE;
 
-	rapi_trace("begin");
+	synce_trace("begin");
 	
 	rapi_context_begin_command(context, 0x05);
 	rapi_buffer_write_uint32(context->send_buffer, dwDesiredAccess);
@@ -69,7 +67,7 @@ BOOL CeReadFile(
 	BOOL return_value = 0;
 	uint32_t bytes_read = 0;
 
-	rapi_trace("begin");
+	synce_trace("begin");
 	
 	rapi_context_begin_command(context, 0x06);
 	rapi_buffer_write_uint32(context->send_buffer, hFile);
@@ -78,17 +76,17 @@ BOOL CeReadFile(
 
 	if ( !rapi_context_call(context) )
 	{
-		rapi_error("rapi_context_call failed");
+		synce_error("rapi_context_call failed");
 		return false;
 	}
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		return false;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	synce_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
 		return false;
-	rapi_trace("return_value=0x%08x", return_value);
+	synce_trace("return_value=0x%08x", return_value);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &bytes_read) )
 		return false;
@@ -114,7 +112,7 @@ BOOL CeWriteFile(
 	BOOL return_value = 0;
 	uint32_t bytes_written = 0;
 
-	rapi_trace("begin");
+	synce_trace("begin");
 	
 	rapi_context_begin_command(context, 0x07);
 	rapi_buffer_write_uint32(context->send_buffer, hFile);

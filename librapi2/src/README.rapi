@@ -16,7 +16,7 @@ List of RAPI command codes:
 [i] 0a CeFindFirstDatabase	
 [i] 0b CeFindNextDatabase	
 [i] 0c CeOidGetInfo		
-[ ] 0d CeCreateDatabase	
+[i] 0d CeCreateDatabase	
 [i] 0e CeOpenDatabase		
 [i] 0f CeDeleteDatabase	
 

@@ -3,7 +3,7 @@
 #define __rapi_buffer_h__
 
 #include "rapi_internal.h"
-#include "rapi_socket.h"
+#include <synce_socket.h>
 
 struct _RapiBuffer;
 typedef struct _RapiBuffer RapiBuffer;
@@ -131,12 +131,12 @@ bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWr
 /**
  * Send a buffer on the socket
  */
-bool rapi_buffer_send(RapiBuffer* buffer, RapiSocket* socket);
+bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket);
 
 /**
  * Receive a buffer on the socket
  */
-bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket);
+bool rapi_buffer_recv(RapiBuffer* buffer, SynceSocket* socket);
 
 
 #endif

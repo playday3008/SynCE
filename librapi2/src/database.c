@@ -1,8 +1,67 @@
 /* $Id$ */
 #include "rapi.h"
 #include "rapi_context.h"
-#include "rapi_endian.h"
-#include "rapi_wstr.h"   /* for unicode length function */
+#include <string.h>
+
+#define RAPI_DATABASE_DEBUG 0
+
+#if RAPI_DATABASE_DEBUG
+#define rapi_database_trace(args...)    synce_trace(args)
+#define rapi_database_trace_wstr(args...)    synce_trace_wstr(args)
+#define rapi_database_warning(args...)  synce_warning(args)
+#define rapi_database_error(args...)    synce_error(args)
+#else
+#define rapi_database_trace(args...)
+#define rapi_database_trace_wstr(args...)
+#define rapi_database_warning(args...)
+#define rapi_database_error(args...)
+#endif
+
+
+CEOID CeCreateDatabase(
+		LPWSTR lpszName, 
+		DWORD dwDbaseType, 
+		WORD wNumSortOrder, 
+		SORTORDERSPEC *rgSortSpecs)
+{
+	RapiContext* context = rapi_context_current();
+	CEOID return_value = 0;
+	int i;
+	
+	rapi_database_trace("begin");
+	
+	rapi_context_begin_command(context, 0x0d);
+
+	/* NOTE: strange marshalling order for parameters */
+	
+	rapi_buffer_write_uint32(context->send_buffer, dwDbaseType);
+	rapi_buffer_write_uint16(context->send_buffer, wNumSortOrder);
+
+	/* NOTE: We can't write whole rgSortSpecs buffer directly because we need to
+	 * think about the byte order */
+	for (i = 0; i < wNumSortOrder; i++)
+	{
+		rapi_buffer_write_uint32(context->send_buffer, rgSortSpecs[i].propid);
+		rapi_buffer_write_uint32(context->send_buffer, rgSortSpecs[i].dwFlags);
+	}
+
+	rapi_buffer_write_string(context->send_buffer, lpszName);
+
+	if ( !rapi_context_call(context) )
+		goto fail;
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		goto fail;
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		goto fail;
+	
+	return return_value;
+
+fail:
+	return 0;
+}
 
 BOOL CeDeleteDatabase(/*{{{*/
 		CEOID oid)
@@ -10,7 +69,7 @@ BOOL CeDeleteDatabase(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	BOOL return_value = false;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	
 	rapi_context_begin_command(context, 0x0f);
 	rapi_buffer_write_uint32(context->send_buffer, oid);
@@ -20,7 +79,7 @@ BOOL CeDeleteDatabase(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto exit;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
 		goto exit;
@@ -38,7 +97,7 @@ BOOL CeFindAllDatabases(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	uint16_t count;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	
 	rapi_context_begin_command(context, 0x2c);
 	rapi_buffer_write_uint32(context->send_buffer, dwDbaseType);
@@ -49,7 +108,7 @@ BOOL CeFindAllDatabases(/*{{{*/
 
 	rapi_buffer_read_uint16(context->recv_buffer, &count);
 	
-	rapi_trace("found 0x%04x databases", count);
+	rapi_database_trace("found 0x%04x databases", count);
 
 	if (cFindData)
 		*cFindData = count;
@@ -71,7 +130,7 @@ BOOL CeFindAllDatabases(/*{{{*/
 				{
 					if ( !rapi_buffer_read_uint32(context->recv_buffer, &find_data[i].OidDb) )
 						goto fail;
-					rapi_trace("oid=%08x", find_data[i].OidDb);
+					rapi_database_trace("oid=%08x", find_data[i].OidDb);
 				}
 
 				if (wFlags & FAD_NAME)
@@ -85,11 +144,11 @@ BOOL CeFindAllDatabases(/*{{{*/
 					if (name_size)
 					{
 						rapi_buffer_read_data(context->recv_buffer, find_data[i].DbInfo.szDbaseName, name_size * sizeof(WCHAR) );
-						rapi_trace_wstr(find_data[i].DbInfo.szDbaseName);
+						rapi_database_trace_wstr(find_data[i].DbInfo.szDbaseName);
 					}
 					else
 					{
-						rapi_error("name_size is 0");
+						rapi_database_error("name_size is 0");
 						goto fail;
 					}
 				}
@@ -126,7 +185,7 @@ BOOL CeFindAllDatabases(/*{{{*/
 		}
 		else
 		{
-			rapi_error("failed to allocate memory");
+			rapi_database_error("failed to allocate memory");
 			goto fail;
 		}
 
@@ -147,7 +206,7 @@ HANDLE CeFindFirstDatabase(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	HANDLE return_value = INVALID_HANDLE_VALUE;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	
 	rapi_context_begin_command(context, 0x0a);
 	rapi_buffer_write_uint32(context->send_buffer, dwDbaseType);
@@ -157,7 +216,7 @@ HANDLE CeFindFirstDatabase(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto exit;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
 		goto exit;
@@ -172,7 +231,7 @@ CEOID CeFindNextDatabase(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	
 	rapi_context_begin_command(context, 0x0b);
 	rapi_buffer_write_uint32(context->send_buffer, hEnum);
@@ -182,7 +241,7 @@ CEOID CeFindNextDatabase(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto exit;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
 		goto exit;
@@ -201,9 +260,10 @@ HANDLE CeOpenDatabase(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	HANDLE handle = INVALID_HANDLE_VALUE;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	
 	rapi_context_begin_command(context, 0x0e);
+	/* TODO: support databse open by name */
 	rapi_buffer_write_uint32(context->send_buffer, poid ? *poid : 0);
 	rapi_buffer_write_uint32(context->send_buffer, propid);
 	rapi_buffer_write_uint32(context->send_buffer, dwFlags);
@@ -213,7 +273,7 @@ HANDLE CeOpenDatabase(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto exit;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &handle) )
 		goto exit;
@@ -237,7 +297,7 @@ CEOID CeReadRecordProps(/*{{{*/
 	uint32_t i;
 	unsigned char* buffer = NULL;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	
 	rapi_context_begin_command(context, 0x10);
 	rapi_buffer_write_uint32(context->send_buffer, hDbase);
@@ -252,22 +312,22 @@ CEOID CeReadRecordProps(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto fail;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
 		goto fail;
-	rapi_trace("return_value=0x%08x", return_value);
+	rapi_database_trace("return_value=0x%08x", return_value);
 	
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &size) )
 		goto fail;
-	rapi_trace("size=%i", size);
+	rapi_database_trace("size=%i", size);
 
 	if ( lpcbBuffer )
 		*lpcbBuffer = size;
 
 	if ( !rapi_buffer_read_uint16(context->recv_buffer, &prop_id_count) )
 		goto fail;
-	rapi_trace("prop_id_count=%i", prop_id_count);
+	rapi_database_trace("prop_id_count=%i", prop_id_count);
 
 	if (lpcPropID)
 		*lpcPropID = prop_id_count;
@@ -283,11 +343,13 @@ CEOID CeReadRecordProps(/*{{{*/
 		{
 			if ( !rapi_buffer_read_data(context->recv_buffer, *lplpBuffer, size) )
 			{
-				rapi_error("failed to read buffer");
+				rapi_database_error("failed to read buffer");
 				goto fail;
 			}
 
 			propval = (CEPROPVAL*)buffer;
+						
+			rapi_database_trace("buffer = %p", buffer);
 
 			for (i = 0; i < prop_id_count; i++)
 			{
@@ -296,14 +358,18 @@ CEOID CeReadRecordProps(/*{{{*/
 					/* XXX: we can get problems here on 64-bit platforms */
 					
 					case CEVT_BLOB:
+						rapi_database_trace("blob offset = %p", propval[i].val.blob.lpb);
 						propval[i].val.blob.lpb = (LPBYTE)
 							(buffer + letoh32((uint32_t)propval[i].val.blob.lpb));
+						rapi_database_trace("blob=%s",(char*)propval[i].val.blob.lpb);
 						break;
 
 					case CEVT_LPWSTR:
+						rapi_database_trace("string offset = %p", propval[i].val.lpwstr);
 						propval[i].val.lpwstr = (LPWSTR)
 							(buffer + letoh32((uint32_t)propval[i].val.lpwstr));
-						rapi_trace_wstr(propval[i].val.lpwstr);
+						rapi_database_trace_wstr(propval[i].val.lpwstr);
+						rapi_database_trace("propval[i].val.lpwstr = %p", propval[i].val.lpwstr);
 						break;
 
 					/* TODO: convert endians on other data types! */
@@ -312,16 +378,71 @@ CEOID CeReadRecordProps(/*{{{*/
 		}
 		else
 		{
- 			rapi_error("failed to allocate 0x%08x bytes", size);
+ 			rapi_database_error("failed to allocate 0x%08x bytes", size);
 		}
 	}
 
 	return return_value;
 
 fail:
- 	rapi_error("failed");
+ 	rapi_database_error("failed");
 	CeRapiFreeBuffer(buffer);
 	return 0;
+}/*}}}*/
+
+#define CONVERT_32(value) (propval->val.value = htole32(propval->val.value))
+
+static bool PreparePropValForWriting(unsigned* data_offset, CEPROPVAL* propval)/*{{{*/
+{
+	bool success = true;
+
+	rapi_database_trace("Preparing value of type %i", propval->propid & 0xffff);
+	
+	switch (propval->propid & 0xffff)
+	{
+		case CEVT_BLOB:
+			propval->val.blob.lpb = (LPBYTE)htole32(*data_offset);
+			rapi_database_trace("Blob offset: %p", propval->val.blob.lpb);
+			*data_offset += propval->val.blob.dwCount;
+			CONVERT_32(blob.dwCount);
+			break;
+
+		case CEVT_BOOL:
+			CONVERT_32(boolVal);
+			break;
+
+		case CEVT_FILETIME:
+			CONVERT_32(filetime.dwLowDateTime);
+			CONVERT_32(filetime.dwHighDateTime);
+			break;
+
+		case CEVT_I2:
+		case CEVT_I4:
+			CONVERT_32(iVal);
+			break;
+
+		case CEVT_LPWSTR:
+			{
+				size_t size = sizeof(WCHAR) * (wstr_strlen(propval->val.lpwstr) + 1);
+				rapi_database_trace_wstr(propval->val.lpwstr);
+				propval->val.lpwstr = (LPWSTR)htole32(*data_offset);
+				rapi_database_trace("String offset: %p", propval->val.lpwstr);
+				*data_offset += size;
+			}
+			break;
+
+		case CEVT_UI2:
+		case CEVT_UI4:
+			CONVERT_32(uiVal);
+			break;
+
+		default:
+			rapi_database_error("Don't know how to prepare value type 0x%04x", propval->propid & 0xffff);
+			success = false;
+			break;
+	}
+
+	return success;
 }/*}}}*/
 
 CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVAL* rgPropVal)/*{{{*/
@@ -329,9 +450,11 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 
-	uint32_t datalen, buflen;
-	uint32_t i;
-
+	CEPROPVAL* values = NULL;
+	unsigned data_offset = 0;
+	unsigned array_size = 0;
+	unsigned total_size = 0;
+	unsigned i;
 
 	/*
 	 *	Format of the CeWriteRecordProps packet - primitives are encoded in the CEPROPVAL structures, lpwstr and blob properties are
@@ -339,22 +462,13 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 	 *
 	 *		long hDBase | long oidRecord | long cPropID | long datalen (of following data) | n * CEPROPVAL | char[] data
 	 *
-	 *	Because CEPROPVAL is a union, the format is different for every type of prop:
-	 *
-	 *	long or short (iVal, uiVal, lVal, ulVal, boolVal): long propid | short wFlags | short wLenData (unused, set to 0) | short iVal or boolVal | short uiVal | long lVal or ulVal
-	 *
-	 *	FILETIME or double: long propid | short wFlags | short wLenData (unused) | DWORD FILETIME or double
-	 *
-	 *	lpwstr: long propid | short wFlags | short wLenData (unused) | long offset ( points to string data in data buffer, counted from beginning of CEPROPVALs)
-	 *
-	 *	blob: long propid | short wFlags | short wLenData (unused) | long blobsize | long offset (same as lpwstr)
 	 */
 
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 	rapi_context_begin_command(context, 0x11);
-	rapi_buffer_write_uint32(context->send_buffer, hDbase);    /* Parameter1 : */
-	rapi_buffer_write_uint32(context->send_buffer, oidRecord); /* Parameter2 : Flags ? */ 
-	rapi_buffer_write_uint16(context->send_buffer, cPropID);   /* Parameter3 */
+	rapi_buffer_write_uint32(context->send_buffer, hDbase); 
+	rapi_buffer_write_uint32(context->send_buffer, oidRecord);
+	rapi_buffer_write_uint16(context->send_buffer, cPropID);
 
 	/*
 	 * we have to go through the rgPropVals array three times:
@@ -365,110 +479,119 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 
 	/* calculate the length of the whole buffer, including the data segment at the end */
 
-	buflen = cPropID * sizeof( CEPROPVAL ); /* length of all cepropvals */
-
+	total_size = array_size = cPropID * sizeof(CEPROPVAL); /* length of all cepropvals */
+	
 	for ( i = 0; i < cPropID; i++ )
 	{	
 		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
 		{
 			case CEVT_BLOB:
-				buflen += rgPropVal[i].val.blob.dwCount;
+				total_size += rgPropVal[i].val.blob.dwCount;
 				break;
 			case CEVT_LPWSTR:
-				buflen += sizeof(WCHAR) * ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
+				total_size += sizeof(WCHAR) * ( wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
 				break;
+
 			default:
 				break;
 		}
+
+		if (total_size & 1)
+			total_size++;
 	}
 
-	rapi_buffer_write_uint32(context->send_buffer, buflen);
+	rapi_database_trace("Array size = %i", array_size);
+	rapi_database_trace("Total size = %i", total_size);
+
+	rapi_buffer_write_uint32(context->send_buffer, total_size);
 
 	/*
-		 second time: write n * CEPROPVAL. Can't do it in one block, as we have to adjust the buffer offsets
+	 * 2. write out the CEPROPVAL array
+	 * 
+	 * Make a copy of the buffer, modify the copy, and write the copy
+	 */
+	
+	values = calloc(1, total_size);
+	memcpy(values, rgPropVal, array_size);
+
+	;
+
+	for (i = 0, data_offset = array_size; i < cPropID; i++)
+	{
+		if (!PreparePropValForWriting(&data_offset, &values[i]))
+		{
+			rapi_database_error("PreparePropValForWriting failed");
+			goto exit;
+		}
+
+		if (data_offset & 1)
+			data_offset++;
+	}
+
+	if (data_offset != total_size)
+	{
+		rapi_database_error("Data offset is %08x but should be %08x", data_offset, total_size);
+		goto exit;
+	}
+
+	/* 
+	 * 3. write the data segment 
 	 */
 
-	datalen = cPropID * sizeof( CEPROPVAL ); /*  holds the offset to the end of the data buffer	*/
-
-	for ( i = 0; i < cPropID; i++ )
-	{
-		rapi_buffer_write_uint32(context->send_buffer,rgPropVal[i].propid );
-		rapi_buffer_write_uint16(context->send_buffer,rgPropVal[i].wLenData );
-		rapi_buffer_write_uint16(context->send_buffer,rgPropVal[i].wFlags );
-
-		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
-		{
-			case CEVT_BLOB:
-				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.blob.dwCount );
-				rapi_buffer_write_uint32(context->send_buffer, datalen );
-				datalen += rgPropVal[i].val.blob.dwCount;
-				break;
-			case CEVT_LPWSTR:
-				rapi_buffer_write_uint32(context->send_buffer, datalen );
-				rapi_buffer_write_uint32(context->send_buffer, 0);
-			        datalen += sizeof(WCHAR) * ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
-				break;
-			case CEVT_I2:
-			case CEVT_UI2:
-			case CEVT_I4:
-			case CEVT_UI4:
-				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.lVal );
-				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.iVal );
-				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.uiVal );
-				break;
-			case CEVT_BOOL:
-				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.boolVal  );
-				rapi_buffer_write_uint16(context->send_buffer, 0);
-				rapi_buffer_write_uint32(context->send_buffer, 0);
-				break;
-			case CEVT_FILETIME:
-				/* this assumes that the FILETIME is already in ole32 format! Is this a problem? */
-				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.filetime.dwLowDateTime );
-				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.filetime.dwHighDateTime );
-				break;
-			case CEVT_R8:
-				rapi_buffer_write_optional(context->send_buffer, &(rgPropVal[i].val.dblVal), 4, 1 );
-				break;
-			default:
-				break;
-		}
-	}	
-	/* 3. write the data segment */
-	for ( i = 0; i < cPropID; i++ )
+	for (i = 0, data_offset = array_size; i < cPropID; i++)
 	{	
-		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		switch ( rgPropVal[i].propid & 0xFFFF )
 		{
 			case CEVT_BLOB:
-				rapi_buffer_write_data(context->send_buffer, 
-						       rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount );
+				memcpy((LPBYTE)values + data_offset, rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount);
 				break;
+				
 			case CEVT_LPWSTR:
-			        rapi_buffer_write_data(context->send_buffer, 
-						 rgPropVal[i].val.lpwstr, sizeof(WCHAR) * ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1) );
-
+				memcpy((LPBYTE)values + data_offset, 
+						rgPropVal[i].val.lpwstr, sizeof(WCHAR) * (wstr_strlen(rgPropVal[i].val.lpwstr) + 1) );
 				break;
+
 			default:
 				break;
 		}
+
+		if (data_offset & 1)
+			data_offset++;
 	}	
+
+	if (!rapi_buffer_write_data(context->send_buffer, values, total_size))
+	{
+		rapi_database_error("rapi_buffer_write_data failed");
+		goto exit;
+	}
+	
+	CeRapiFreeBuffer(values);
+	values = NULL;
 
 	if ( !rapi_context_call(context) )
+	{
+		rapi_database_error("rapi_context_call failed");
 		goto fail;
+	}
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto fail;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+	{
+		rapi_database_trace("failed to read return value");
 		goto fail;
-	rapi_trace("return_value=0x%08x", return_value);
+	}
+	rapi_database_trace("return_value=0x%08x", return_value);
 
-
+exit:
+	CeRapiFreeBuffer(values);
 	return return_value;
+
 fail:
-	rapi_error("failed");
-	/*CeRapiFreeBuffer(buffer);*/
-	return 0;
+	return_value = 0;
+	goto exit;
 }/*}}}*/
 
 CEOID CeSeekDatabase(/*{{{*/
@@ -480,11 +603,11 @@ CEOID CeSeekDatabase(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 	
-	rapi_trace("begin");
+	rapi_database_trace("begin");
 
 	if (!lpdwIndex)
 	{
-		rapi_error("lpdwIndex is NULL");
+		rapi_database_error("lpdwIndex is NULL");
 		goto fail;
 	}
 	
@@ -498,7 +621,7 @@ CEOID CeSeekDatabase(/*{{{*/
 		case CEDB_SEEK_VALUEFIRSTEQUAL:
 		case CEDB_SEEK_VALUEGREATER:
 		case CEDB_SEEK_VALUENEXTEQUAL:
-			rapi_error("Seek type by value is not yet supported", dwSeekType);
+			rapi_database_error("Seek type by value is not yet supported", dwSeekType);
 			goto fail;
 	
 		default:
@@ -511,7 +634,7 @@ CEOID CeSeekDatabase(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		goto fail;
-	rapi_trace("context->last_error=0x%08x", context->last_error);
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
 		goto fail;

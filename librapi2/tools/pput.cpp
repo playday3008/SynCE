@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "rapi.h"
-#include "rapi_wstr.h"
 
 //
 // Return values from main()
@@ -74,9 +73,9 @@ int main(int argc, char**argv)
 	DWORD length;
 	WCHAR dest_file[MAX_PATH];
 	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, dest_file));
-	rapi_wstr_append(dest_file, rapi_wstr_from_ascii("\\"), sizeof(dest_file));
-	rapi_wstr_append(dest_file, rapi_wstr_from_ascii(basename(source_file)), sizeof(dest_file));
-	printf("Remote filename: \"%s\"\n", rapi_wstr_to_ascii(dest_file));
+	wstr_append(dest_file, wstr_from_ascii("\\"), sizeof(dest_file));
+	wstr_append(dest_file, wstr_from_ascii(basename(source_file)), sizeof(dest_file));
+	printf("Remote filename: \"%s\"\n", wstr_to_ascii(dest_file));
 	
 	FILE* source = fopen(source_file, "r");
 	if (!source)

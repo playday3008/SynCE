@@ -3,9 +3,8 @@
 #include "rapi.h"
 #include "rapi_buffer.h"
 #include "rapi_context.h"
-#include "rapi_wstr.h"
-#include "rapi_endian.h"
 #include "config/config.h"
+#include <synce_socket.h>
 #include <string.h>
 
 #define RAPI_PORT  990
@@ -17,7 +16,7 @@ HRESULT CeRapiFreeBuffer(
 	return S_OK;
 }
 
-static bool rapi_login(RapiSocket* socket, const char* password, int key, unsigned char* reply)/*{{{*/
+static bool rapi_login(SynceSocket* socket, const char* password, int key, unsigned char* reply)/*{{{*/
 {
 	bool success = false;
 	unsigned char* encoded = NULL;
@@ -26,17 +25,17 @@ static bool rapi_login(RapiSocket* socket, const char* password, int key, unsign
 	uint16_t size_le = 0;
 	size_t i = 0;
 	
-	rapi_trace("password=\"%s\", key=0x%08x", password, key);
+	synce_trace("password=\"%s\", key=0x%08x", password, key);
 	
 	if (!password)
 	{
-		rapi_error("password parameter is NULL");
+		synce_error("password parameter is NULL");
 		goto exit;
 	}
 
 	if (!reply)
 	{
-		rapi_error("reply parameter is NULL");
+		synce_error("reply parameter is NULL");
 		goto exit;
 	}
 	
@@ -44,11 +43,11 @@ static bool rapi_login(RapiSocket* socket, const char* password, int key, unsign
 	
 	if (4 != length)
 	{
-		rapi_error("password is not four bytes");
+		synce_error("password is not four bytes");
 		goto exit;
 	}
 
-	encoded = (unsigned char*)rapi_wstr_from_ascii(password);
+	encoded = (unsigned char*)wstr_from_ascii(password);
 
 	size = 2*(length+1);
 	for (i = 0; i < size; i++)
@@ -58,30 +57,30 @@ static bool rapi_login(RapiSocket* socket, const char* password, int key, unsign
 
 	size_le = htole16((uint16_t)size);
 
-	if ( !rapi_socket_write(socket, &size_le, sizeof(uint16_t)) )
+	if ( !synce_socket_write(socket, &size_le, sizeof(uint16_t)) )
 	{
-		rapi_error("failed to write buffer size to socket");
+		synce_error("failed to write buffer size to socket");
 		goto exit;
 	}
 
-	if ( !rapi_socket_write(socket, encoded, size) )
+	if ( !synce_socket_write(socket, encoded, size) )
 	{
-		rapi_error("failed to write encoded password to socket");
+		synce_error("failed to write encoded password to socket");
 		goto exit;
 	}
 
-	if ( !rapi_socket_read(socket, reply, 1) )
+	if ( !synce_socket_read(socket, reply, 1) )
 	{
-		rapi_error("failed to write encoded password to socket");
+		synce_error("failed to write encoded password to socket");
 		goto exit;
 	}
 
-	rapi_trace("reply=0x%02x", *reply);
+	synce_trace("reply=0x%02x", *reply);
 
 	success = true;
 	
 exit:
-	rapi_wstr_free_string(encoded);
+	wstr_free_string(encoded);
 	return success;
 }/*}}}*/
 
@@ -111,7 +110,7 @@ HRESULT CeRapiInit(void)/*{{{*/
 		goto fail;
 	}
 
-	if ( !rapi_socket_connect(context->socket, hostname, RAPI_PORT) )
+	if ( !synce_socket_connect(context->socket, hostname, RAPI_PORT) )
 	{
 		result = E_FAIL;
 		goto fail;
@@ -141,7 +140,7 @@ STDAPI CeRapiUninit(void)/*{{{*/
 	
 	if (context->is_initialized)
 	{
-		rapi_socket_close(context->socket);
+		synce_socket_close(context->socket);
 		context->is_initialized = false;
 		return S_OK;
 	}

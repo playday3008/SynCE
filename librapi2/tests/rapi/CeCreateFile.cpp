@@ -11,7 +11,7 @@ int main()
 	DWORD length;
 	WCHAR filename[MAX_PATH];
 	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, filename));
-	rapi_wstr_append(filename, to_unicode("\\librapi test file.txt"), sizeof(filename));
+	wstr_append(filename, to_unicode("\\librapi test file.txt"), sizeof(filename));
 
 	printf("File name: %s\n", from_unicode(filename));
 	
