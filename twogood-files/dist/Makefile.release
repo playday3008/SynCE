@@ -1,0 +1,26 @@
+# $Id$
+
+DIR=$(TOPDIR)/$(NAME)
+DIRNAME=$(NAME)-$(VERSION)
+TARBALL=$(TARBALLS)/$(DIRNAME).tar.gz
+EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
+	--exclude '.*.swp' --exclude '*.tar.gz'
+
+all: tarball
+
+tarball:
+	cd $(DIR) && ./cvsclean
+	cd $(DIR) && ./bootstrap
+	-rm $(TOPDIR)/$(DIRNAME)
+	cd $(TOPDIR) && ln -s $(NAME) $(DIRNAME)
+	cd $(TOPDIR) && tar cvfhz $(TARBALL) $(DIRNAME) $(EXCLUDE)
+
+# need to be root to do this...
+rpm:
+	-rm /usr/src/redhat/SRPMS/$(NAME)*
+	-rm /usr/src/redhat/RPMS/$(NAME)*
+	cp $(TARBALL) /usr/src/redhat/SOURCES/
+	rpmbuild -ba $(DIR)/$(NAME).spec
+	cp /usr/src/redhat/RPMS/i386/$(NAME)*.rpm $(RPMS)/
+	cp /usr/src/redhat/SRPMS/$(NAME)*.rpm $(SRPMS)/
+
