@@ -60,9 +60,9 @@ the files!</a></li>
 in order to limit the amount of support, we would like you to first read <a
 href="http://www.tuxedo.org/~esr/faqs/smart-questions.html#intro">this
 document</a> and search for the answer to your question in the <a
-href="http://sourceforge.net/mailarchive/forum.php?forum=synce-devel">mailing
-list archives</a>. If your question remains unanswered, send mail to <a
-href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>.</p>
+href="http://sourceforge.net/mail/?group_id=30550">mailing list archives</a>.
+If your question remains unanswered, send mail to <a
+href="mailto:synce-users@lists.sourceforge.net">synce-users@lists.sourceforge.net</a>.</p>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 

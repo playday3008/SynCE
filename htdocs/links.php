@@ -35,6 +35,18 @@ to make a SynCE plugin for MultiSync.</li>
 
 </ul>
 
+<h2>Windows CE and Pocket PC pages</h2>
+
+<ul>
+
+<li><a href="http://www.ppcnewswire.net/">Pocket PC Newswire</a> has Pocket PC
+related news.</li>
+
+<li><a href="http://www.pocketpcdn.com/">Pocket PC Developer Network</a> has 
+lots of cool information for Pocket PC developers.</li>
+
+</ul>
+
 <p>Return to <a href="index.php">main page</a>.</p>
 
 </div>
