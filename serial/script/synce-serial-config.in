@@ -141,9 +141,10 @@ noauth
 local
 ${IP_ADDRESSES}
 ms-dns ${DNS_SERVER}
-lcp-echo-failure 2
-lcp-echo-interval 2
+crtscts
 linkname ${PEER}" >${PEER_FILE}
+#lcp-echo-failure 2
+#lcp-echo-interval 2
 
 echo "
 You can now run synce-serial-start to start a serial connection.
