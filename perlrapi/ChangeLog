@@ -1,3 +1,17 @@
+2003-03-04
+	* Rapi2 0.01.1:
+	  * Fixed CeGetSpecialFolderPath typemap in the SWIG interface
+	  * Documentation
+	* Rapi2::Simple 0.02:
+	  * New methods: 
+	      store, DBList, OpenFile, CloseFile, ReadFile, WriteFile, CopyFile,
+	      MoveFile, DeleteFile,DeleteDir, FileList, FileAttr
+	  * Documentation
+	  * Changed return value of fetch()
+	    (the hash contains now array references, to store the type of properties)
+	    -> Sample/ldif_imp.pl (uses fetch(), so it had to be changed)
+	* Fixed Sample/ldif_imp.pl (import of CE_ADD_COUNTRY)
+	
 2003-02-25
 	* Initial Release of perlrapi 0.1
-	
+
