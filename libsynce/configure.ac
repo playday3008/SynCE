@@ -10,13 +10,11 @@ AM_CONFIG_HEADER(lib/synce_config.h)
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
-AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
-AM_PATH_CHECK()
+dnl AM_PATH_CHECK()
 
 dnl Check for dmalloc first
 AC_ARG_WITH(dmalloc,
