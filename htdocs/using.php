@@ -27,6 +27,8 @@ the files!</a></li>
 
 <li class=SPACED>I'm a RedHat 8.0 user and I want to <a href="rpms.php">download RPM packages</a>.</li>
 
+<li class=SPACED>I'm a Gentoo user and I want to <a href="emerge.php">use emerge</a>.</l>
+
 <li class=SPACED>I'll compile SynCE myself, so I want to <a href="tarballs.php">download .tar.gz archives</a>.</li>
 
 <li class=SPACED>I'm so cool that I want to <a href="http://sourceforge.net/cvs/?group_id=30550">get the files from CVS</a>.</li>
