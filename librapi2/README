@@ -27,9 +27,35 @@ libiconv (which is usally already present on your system :-)
 Design goals
 ------------
 
+- Requiring as little code as possible to implement a new RAPI function
 - Merge the functionality of the previous three libraries into one
 - Thread-safety
 - Support both 32- and 64-bit platforms
 - Support both little endian and big endian platforms
 
+
+Installation from CVS
+---------------------
+
+o Checkout "librapi2" as described on:
+
+    http://sourceforge.net/cvs/?group_id=30550
+
+o Generate scripts and things:
+
+    ./bootstrap
+
+o Configure:
+
+    ./configure
+ 
+	Use the --help parameter to view configuration options.
+
+o Build:
+
+    make
+
+o Install:
+
+    make install
 
