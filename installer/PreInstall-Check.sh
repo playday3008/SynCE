@@ -1,6 +1,6 @@
 #!/bin/sh
 #	Created:	Mit Jun 16 11:07:10 CEST 2004	by M. Biermaier	on linuxorange
-#	Version:	Wed Jun 16 16:30:42 CEST 2004	on macosbw
+#	Version:	Sam Jun 19 17:36:18 CEST 2004	on linuxorange
 #	$Id$
 
 USAGE="usage: $0 [-r]\n
@@ -10,7 +10,7 @@ SHELL_READABLE=
 
 if [ $# -gt 0 ]
 then
-	if [ "$1" == "-r" ]
+	if [ "$1" = "-r" ]
 	then
 		SHELL_READABLE=1
 	else
@@ -34,7 +34,9 @@ fi
 # 2. Determine Distri
 #--------------------------------------------------
 #ls /etc/*-release
-NUM_DISTRIS=`ls /etc/*-release | wc -l` 2>/dev/null
+#ls /etc/debian_version
+DISTRIS=`ls /etc/*-release /etc/debian_version 2>/dev/null`
+NUM_DISTRIS=`echo $DISTRIS | wc -w`
 # Omit leading spaces
 NUM_DISTRIS=$(($NUM_DISTRIS))
 
@@ -49,7 +51,14 @@ case $NUM_DISTRIS in
 		;;
 
 	1)
-		DISTRI=`basename /etc/*-release -release`
+		if [ -f /etc/*-release ]
+		then
+			DISTRI=`basename /etc/*-release -release`
+		fi
+		if [ -f /etc/debian_version ]
+		then
+			DISTRI=`basename /etc/debian_version _version`
+		fi
 		if [ $SHELL_READABLE ]
 		then
 			echo "DISTRI=$DISTRI"
@@ -57,6 +66,7 @@ case $NUM_DISTRIS in
 			echo "Your distribution is:     $DISTRI"
 		fi
 		;;
+
 	*)
 		if [ $SHELL_READABLE ]
 		then
@@ -66,9 +76,24 @@ case $NUM_DISTRIS in
 			echo "ATTENTION: $NUM_DISTRIS distributions found!"
 			echo "#--------------------------------------------------"
 		fi
-		for RELEASE in /etc/*-release
+		for RELEASE in $DISTRIS
 		do
-			DISTRI=`basename $RELEASE -release`
+			case $RELEASE in
+				/etc/*-release)
+					DISTRI=`basename $RELEASE -release`
+					;;
+
+				/etc/debian_version)
+					DISTRI=`basename /etc/debian_version _version`
+					;;
+
+				*)
+					echo "Programming error."
+					echo "Unknown value '$RELEASE' of variable RELEASE."
+					echo "Please contact the developer."
+					;;
+
+			esac
 			if [ $SHELL_READABLE ]
 			then
 				echo "DISTRI=$DISTRI"
@@ -84,9 +109,9 @@ esac
 #--------------------------------------------------
 if [ $SHELL_READABLE ]
 then
-	CheckPyQt.py $1 2>/dev/null || echo "PYTHON=0"
+	./CheckPyQt.py $1 2>/dev/null || echo "PYTHON=0"
 else
-	CheckPyQt.py $1 2>/dev/null || echo "Python was not found"
+	./CheckPyQt.py $1 2>/dev/null || echo "Python was not found"
 fi
 
 # vim: ts=4 sw=4
