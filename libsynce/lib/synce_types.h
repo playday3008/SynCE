@@ -87,7 +87,8 @@ typedef int32_t  HRESULT;
 #define S_FALSE         0x00000001
 #define S_OK            0x00000000
 
-#define FAILED(x) (x<0)
+#define SUCCEEDED(x) ((x)>=0)
+#define FAILED(x) ((x)<0)
 
 /*
  * Error codes for registry functions
@@ -95,10 +96,12 @@ typedef int32_t  HRESULT;
 
 #define ERROR_SUCCESS			   0
 #define ERROR_FILE_NOT_FOUND		   2
+#define ERROR_PATH_NOT_FOUND	3
 #define ERROR_NOT_ENOUGH_MEMORY		   8
 #define ERROR_SEEK			  25
 #define ERROR_INVALID_PARAMETER		  87
 #define ERROR_INSUFFICIENT_BUFFER	 122
+#define ERROR_DIR_NOT_EMPTY     145
 #define ERROR_NO_DATA		 	 232
 #define ERROR_NO_MORE_ITEMS         	 259
 #define ERROR_KEY_DELETED		1018
