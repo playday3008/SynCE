@@ -50,7 +50,7 @@
     <configurations>
       <debug>
         <configargs>--enable-debug=yes --with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
-        <builddir>/home/voc/usr/software/mrapip/build/debug</builddir>
+        <builddir>/home/voc/usr/software/synce-kde-0.6/build/debug</builddir>
         <topsourcedir/>
         <ccompiler>GccOptions</ccompiler>
         <cxxcompiler>GppOptions</cxxcompiler>
@@ -82,7 +82,7 @@
       </default>
       <release>
         <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
-        <builddir>/home/voc/usr/software/rapip/build/release</builddir>
+        <builddir>/home/voc/usr/software/synce-kde-0.6/build/release</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -98,8 +98,8 @@
       </release>
       <dist>
         <configargs/>
-        <builddir>/home/voc/usr/software/mrapip</builddir>
-        <topsourcedir>/home/voc/usr/software/mrapip</topsourcedir>
+        <builddir>/home/voc/usr/software/synce-kde-0.6</builddir>
+        <topsourcedir>/home/voc/usr/software/synce-kde-0.6</topsourcedir>
         <cppflags/>
         <ldflags/>
         <ccompiler>GccOptions</ccompiler>
@@ -114,7 +114,7 @@
       </dist>
       <debian>
         <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre --with-qt-includes=/usr/include/qt3</configargs>
-        <builddir>/home/voc/usr/software/rapip/build/debian</builddir>
+        <builddir>/home/voc/usr/software/synce-kde-0.6/build/debian</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -147,8 +147,8 @@
       <toc>perl</toc>
     </ignoretocs>
     <projectdoc>
-      <userdocDir>/home/voc/usr/software/mrapip/doc/en/</userdocDir>
-      <apidocDir>/home/voc/usr/software/mrapip/html/</apidocDir>
+      <userdocDir>/home/voc/usr/software/synce-kde-0.6/doc/en/</userdocDir>
+      <apidocDir>/home/voc/usr/software/synce-kde-0.6/html/</apidocDir>
     </projectdoc>
   </kdevdoctreeview>
   <kdevdebugger>

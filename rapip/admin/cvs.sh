@@ -206,8 +206,10 @@ if test -f Makefile.am.in; then
   done
 fi
 # echo "AC_OUTPUT( \\" >> configure.in.new
+#mfs=`find . -type d -print | fgrep -v "/." | \
+#     sed -e "s#\./##" -e "/^debian/d" | sort`    
 mfs=`find . -type d -print | fgrep -v "/." | \
-     sed -e "s#\./##" -e "/^debian/d" | sort`
+     sed -e "s#\./##" | sort`
 for i in $mfs; do
   topleveldir=`echo $i| sed -e "s#/.*##"`
   if test -f $topleveldir/configure.in; then

@@ -46,6 +46,17 @@ rm -rf %{buildroot}
 %defattr(-, root, root)
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
 %{_bindir}/*
-%{_libdir}/*
+%{_libdir}/*.so.*
+%{_libdir}/*.la
+%{_libdir}/kde3/*.so
+%{_libdir}/kde3/*.la
 %{_datadir}/*
+
+%package dev
+Summary: KDE-Integration of SynCE. Kio-slave and Tray-Icon.
+Group: Applications/Productivity
+%description dev
+This packaged contains all files necessary to create synchronizer plugins
+%files dev
+%{_libdir}/*.so
 %{_includedir}/*
