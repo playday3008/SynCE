@@ -6,8 +6,10 @@ Makefile.in
 pget
 pput
 pcp
+pinfo
 pls
 pmkdir
 pmv
 prm
 prmdir
+prun
