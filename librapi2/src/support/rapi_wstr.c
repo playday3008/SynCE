@@ -132,6 +132,8 @@ LPWSTR rapi_wstr_strcpy(LPWSTR dest, LPCWSTR src)
 	while (*src)
 		*p++ = *src++;
 
+	*p = 0;
+
 	return dest;
 }
 
