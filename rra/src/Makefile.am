@@ -1,12 +1,13 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
+AM_CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
 LDADD = ../lib/librra.la
 
 noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
 	rra-decode rra-db-vcal \
 	rra-partners \
-	rra-contact-to-vcard rra-contact-from-vcard
+	rra-contact-to-vcard rra-contact-from-vcard \
+	rra-appointment-from-vevent
 
 rra_get_types_SOURCES   = rra-get-types.c
 rra_get_ids_SOURCES     = rra-get-ids.c
@@ -19,6 +20,9 @@ rra_partners_SOURCES    = rra-partners.c
 
 rra_contact_to_vcard_SOURCES    = rra-contact-to-vcard.c
 rra_contact_from_vcard_SOURCES  = rra-contact-from-vcard.c
+
+#rra_appointment_to_vevent_SOURCES    = rra-appointment-to-vevent.c
+rra_appointment_from_vevent_SOURCES  = rra-appointment-from-vevent.c
 
 ##rra_lock_SOURCES = rra-lock.c
 

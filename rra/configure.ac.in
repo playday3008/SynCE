@@ -18,6 +18,44 @@ AC_PROG_MAKE_SET
 dnl Check for librapi2
 AM_PATH_LIBRAPI2
 
+  AC_ARG_WITH(libmimedir,
+    AC_HELP_STRING(
+      [--with-libmimedir[=DIR]],
+      [Search for libmimedir in DIR/include and DIR/lib]),
+      [
+				CPPFLAGS="$CPPFLAGS -I${withval}/include"
+				LDFLAGS="$LDFLAGS -L${withval}/lib"
+			]
+    )
+
+  AC_ARG_WITH(libmimedir-include,
+    AC_HELP_STRING(
+      [--with-libmimedir-include[=DIR]],
+      [Search for libmimedir header files in DIR]),
+      [
+				CPPFLAGS="$CPPFLAGS -I${withval}"
+			]
+    )
+
+  AC_ARG_WITH(libmimedir-lib,
+    AC_HELP_STRING(
+      [--with-libmimedir-lib[=DIR]],
+      [Search for libmimedir library files in DIR]),
+      [
+				LDFLAGS="$LDFLAGS -L${withval}"
+			]
+    )
+
+
+	AC_CHECK_LIB(mimedir,mdir_parse,,[
+		AC_MSG_ERROR([Can't find libmimedir (http://sourceforge.net/projects/libmimedir/)])
+		])
+	AC_CHECK_HEADERS(libmimedir.h,,[
+		AC_MSG_ERROR([Can't find libmimedir.h (http://sourceforge.net/projects/libmimedir/)])
+		])
+
+
+
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.

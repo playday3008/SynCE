@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	uint32_t* deleted_ids = NULL;
 	size_t deleted_count = 0;
 	
-	synce_log_set_level(0);
+/*	synce_log_set_level(0);*/
 
 	if (argc < 2)
 	{

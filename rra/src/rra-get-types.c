@@ -16,7 +16,7 @@ int main()
 	size_t object_type_count = 0;
 	int i;
 
-	synce_log_set_level(0);
+/*	synce_log_set_level(0);*/
 	
 	hr = CeRapiInit();
 	if (FAILED(hr))

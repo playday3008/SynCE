@@ -158,26 +158,34 @@ bool rra_contact_from_vcard(
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)
 
-#if 0
-bool rra_dbstream_to_string(
-		uint32_t type_id,
-		uint32_t object_id,
-		const uint8_t* data,
-		size_t data_size,
-		char** str);
+bool rra_appointment_to_vevent(
+    uint32_t id,
+    const uint8_t* data,
+    size_t data_size,
+    char** vevent,
+    uint32_t flags);
 
-bool rra_dbstream_from_string(
-		uint32_t type_id,
-		uint32_t object_id,
-		char** str,
-		uint8_t** data,
-		size_t* data_size);
-#endif
+bool rra_appointment_from_vevent(
+    const char* vevent,
+    uint32_t* id,
+    uint8_t** data,
+    size_t* data_size,
+    uint32_t flags);
 
-#if 0
-bool rra_lock(RRA* rra);
-bool rra_unlock(RRA* rra);
-#endif
+bool rra_task_to_vtodo(
+    uint32_t id,
+    const uint8_t* data,
+    size_t data_size,
+    char** vtodo,
+    uint32_t flags);
+
+bool rra_task_from_vtodo(
+    const char* vtodo,
+    uint32_t* id,
+    uint8_t** data,
+    size_t* data_size,
+    uint32_t flags);
+
 
 #ifdef __cplusplus
 }
