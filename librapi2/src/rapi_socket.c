@@ -234,9 +234,8 @@ bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
 		}
 
 		bytes_needed -= result;
-		data += result;
+		data = (char*)data + result;
 	}
-	
 	 
 	return 0 == bytes_needed;
 }
