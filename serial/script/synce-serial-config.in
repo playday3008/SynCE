@@ -22,7 +22,7 @@ help()
   echo "
 Syntax for ${THIS}:
 
-  ${THIS} serial-device [local_ip_address:remote_ip_address]
+  ${THIS} serial-device [local-ip-address:remote-ip_address [DNS-server-name]]
 
   The serial-device specifies the name of your serial port device."
 
@@ -117,7 +117,10 @@ else
   IP_ADDRESSES=${DEFAULT_IPS}
 fi
 
-LOCAL_IP=`echo $IP_ADDRESSES | sed 's/:.*$//'`
+DNS_SERVER="$3"
+if [ -z "$DNS_SERVER" ]; then
+  DNS_SERVER=`echo $IP_ADDRESSES | sed 's/:.*$//'`
+fi
 
 exec_prefix=@exec_prefix@
 echo "# Modifications to this file will be lost next time you run ${THIS}
@@ -127,7 +130,7 @@ nodefaultroute
 noauth
 local
 ${IP_ADDRESSES}
-ms-dns ${LOCAL_IP}
+ms-dns ${DNS_SERVER}
 lcp-echo-failure 2
 lcp-echo-interval 2
 linkname ${PEER}" >${PEER_FILE}
