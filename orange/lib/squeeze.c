@@ -166,19 +166,23 @@ bool orange_squeeze_file(/*{{{*/
           synce_trace("Found SetupFactory format.");
       }
 
+#if ENABLE_INNO
       if (!success)
       {
         success = orange_extract_inno(filename, output_directory);
         if (success)
           synce_trace("Found InnoSetup format.");
       }
+#endif
 
+#if ENABLE_VISE
       if (!success)
       {
         success = orange_extract_vise(filename, output_directory);
         if (success)
           synce_trace("Found VISE Setup format.");
       }
+#endif
 
       if (!success)
       {
