@@ -1,3 +1,13 @@
+2003-03-06 Andreas Pohl <osar@users.sourceforge.net>
+	* Rapi2::Simple:
+	  - Fixed OpenDB(): when opened by OID, the obejct type was not set
+	* perlrapi_wrap.i:
+	  - CEVALUNION: 'USHORT uiVal' to 'WORD uiVal'
+	                'ULONG ulVal' to 'DWORD ulVal'
+	    (to avoid mapping to pointers)
+	* Sample/dump.pl:
+	  - Stores a Database dump to an XML file.
+
 2003-03-05 Andreas Pohl <osar@users.sourceforge.net>
 	* Sample/ls.pl:
 	  - The pls implementation in Perl.
