@@ -64,7 +64,7 @@ of PDAs to interrested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</p>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
-<b>June 12, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
+<b>August 18, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
 <ul>
   <li>First of all the name of the project has changed. It is now
 called SynCE-KDE.</li>
@@ -96,10 +96,8 @@ needed. If you are interested in helping, please send mail to the <a
  href="http://sourceforge.net/mail/?group_id=30550">development
 mailing list.</a></li>
 </ul>
-<br>
-<b>June 12, 2003</b> The Web-Page of Rapip/Raki has a
-"Contents"-Section, "News"-Section, and a "Future"-Section", now.<br>
-<br>
+<h2><br>
+</h2>
 <h2><a name="Features" id="Features"></a>Features</h2>
 <b>RAPIP</b>
 <ul>
@@ -160,21 +158,21 @@ PDA which corresponds to the specified active_connection file. Use
 Konqueror as usual - e.g. drag and drop files to and from the PDA
 filesystem ...<br>
 If there is just one PDA connected, you can also use the short
-form <tt>rapip://</tt> to browse this PDA.<br>
+form <tt>rapip:/</tt> to browse this PDA.<br>
   </dd>
 </dl>
 <br>
 <b>RAKI</b>
 <dl>
   <dd>Launch the application from the "K-Menu-&gt;Utilities"-Menu
-or,&nbsp; if you don't have a K-Menu entry, start RAKI from the
-command line. You will get a new icon located in the
+or,&nbsp; if you don't have a "K-Menu-&gt;Utilities-&gt;Raki" entry,
+start RAKI from the
+command line by issuing "raki". You will get a new icon located in the
 system-tray.<br>
 Right click on that icon shows a popup menu containing
 infrastructure related items.<br>
-If there are connected devices left click opens a popup menu
-containing individual device menu items for every PDA that is connected
-at the moment.<br>
+If there are connected devices left click will open a popup menu
+containing individual device menu items for every connected PDA.<br>
 Drag and drop of CAB-files onto the RAKI system-tray icon installes
 them
 on a device. A dialog box lets you choose the destination
@@ -187,13 +185,12 @@ synchronizing that PDA and your desktop.<br>
 <b>VDCCM</b>
 <dl>
   <dd>RAKI can launch VDCCM at startup (see the "Configure" menu
-entry in the infrastructure menu). Under normal circumstances that
-is all.<br>
+entry in the infrastructure menu) - that's the common case.<br>
 Nevertheless, VDCCM supports a view command line arguments in
 addition to the usual DCCM command line arguments. Issue <tt>vdccm
 -h</tt> for a list of them. You can start VDCCM completely
 independent of RAKI by hand before or after RAKI has been started.
-Of course, (V)DCCM may not be running at this time.</dd>
+Of course, no (V)DCCM may be running at this time.</dd>
 </dl>
 <br>
 <h2><a name="Requirements" id="Requirements"></a>Requirements</h2>
@@ -213,6 +210,35 @@ You can download precompiled <tt>tgz</tt>, <tt>rpm</tt>, and
 <tt>deb</tt> packages from the <a
  href="http://sourceforge.net/projects/synce/">SourceForge Project
 Page</a>.<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-weight: bold;"><a
+ href="http://www.debian.org/">Debian</a> user:</span> <br>
+<ul>
+  <li>The SynCE-KDE debian packages are prepeared to honor all
+dependencies including those coming from the synce libraries. But -
+just now there are no&nbsp; official v0.8-synce packages aviable.
+Nevertheless, to be able to install SynCE-KDE please use the
+"--force-depends" switch of dpkg. Of course, the SynCE libraries have
+to be installed before.<br>
+  </li>
+</ul>
+<span style="font-weight: bold;"><a href="http://www.redhat.com/">RedHat</a>
+user:</span><br>
+<ul>
+  <li>The rpm packages are designed for RedHat 0.9.</li>
+</ul>
+<span style="font-weight: bold;"><a href="http://www.slackware.com/">Slackware</a>
+user:</span><br>
+<ul>
+  <li>Be aware that SynCE-KDE is not compatible with Slackware 0.9. It
+seems RAKI produces a deadlock in the <a
+ href="http://www.trolltech.com/">Qt-Library</a> provided by <a
+ href="http://www.slackware.com/">Slackware</a>. You can fix this by
+compiling Qt and KDE yourself as described <a
+ href="http://developer.kde.org/build/compile_kde3_1.html">here</a>.<br>
+  </li>
+</ul>
+</div>
 <br>
 If you are interested in testing bleding edge software you could
 also check out the latest code directly from <a
@@ -242,7 +268,8 @@ also have to download and compile <a
  href="http://www.mechlord.ca/%7Elownewulf/agsync-0.2-pre.tgz">agsync-0.2-pre.tgz</a>
 from&nbsp; <a href="http://www.mechlord.ca/%7Elownewulf/avantgo.html">AvantGo
 Synchronization with Pocket PC</a> provided by <a
- href="mailto:JudgeBeavis@hotmail.com">Michael Jarrett</a>. Note,
+ href="mailto:JudgeBeavis_at_hotmail_dot_com">Michael Jarrett</a>.
+Note,
 compilation of agsync-0.2-pre is enough - installation is not
 required but of course allowed ;-)<br>
   </li>
@@ -290,7 +317,8 @@ and as root<br>
 <br>
 <h2><a name="Related_Work" id="Related_Work"></a>Related Work</h2>
 <ul>
-  <li><a href="mailto:boris@brooknet.com.au">Sam Lawrance</a> is
+  <li><a href="mailto:boris_at_brooknet_dot_com_dot_au">Sam
+Lawrance</a> is
 working
 on porting SynCE and SynCE-KDE to <a href="http://www.freebsd.org/">FreeBSD</a>.
 You will find the port on
@@ -303,6 +331,6 @@ Wait and see ;-)<br>
 <p>Return to <a href="../index.php">main page</a>.</p>
 </div>
 <hr size="1">
-Last modified: Jun 22 2003
+Last modified: Aug 17 2003
 </body>
 </html>

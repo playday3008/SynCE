@@ -29,7 +29,7 @@ welcome.<br>
       <td colspan="2" rowspan="1" style="vertical-align: top;">
       <h2>25 Devices simultanously</h2>
 Posted on Wed Jun 18 14:36:46 2003 CET from <a
- href="mailto:pavel@kusto.com.ru">Pavel Stoliarov</a><br>
+ href="mailto:pavel_at_kusto_dot_com_dot_ru">Pavel Stoliarov</a><br>
       </td>
     </tr>
     <tr>
@@ -91,6 +91,6 @@ online average&nbsp; about 15 - 16 hours at a day.<br>
 <p>Return to <a href="index.php">SynCE-KDE main page</a>.</p>
 </div>
 <hr size="1">
-Last modified: Jun 22 2003
+Last modified: Aug 17 2003
 </body>
 </html>
