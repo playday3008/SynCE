@@ -58,7 +58,8 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 #define DUMP(desc,data,len)
 #endif
 
-#define RRAC_PORT 5678
+#define RRAC_PORT     5678
+#define RRAC_TIMEOUT    30
 
 struct _RRAC
 {
@@ -113,7 +114,7 @@ bool rrac_event_wait(RRAC* self, int timeoutInSeconds)
   if (self)
   {
     short events = EVENT_READ;
-    synce_trace("Wating for event");
+    /*synce_trace("Wating for event");*/
     if (synce_socket_wait(self->cmd_socket, timeoutInSeconds, &events))
       return (events & EVENT_READ) != 0;
     else
@@ -186,6 +187,12 @@ static bool rrac_recv_any(RRAC* rrac, CommandHeader* header, uint8_t** data)/*{{
 	bool success = false;
 
 	*data = NULL;
+
+  if (!rrac_event_wait(rrac, RRAC_TIMEOUT))
+  {
+ 		synce_error("No data received in %i seconds!", RRAC_TIMEOUT);
+		goto exit;
+ }
 
 	if (!synce_socket_read(rrac->cmd_socket, header, sizeof(CommandHeader)))
 	{
