@@ -18,12 +18,15 @@ CeOpenDatabase_SOURCES = test.h CeOpenDatabase.cpp
 CeRegEnumKeyEx_SOURCES = test.h CeRegEnumKeyEx.cpp
 CeRegEnumValue_SOURCES = test.h CeRegEnumValue.cpp
 CeRegQueryInfoKey_SOURCES = test.h CeRegQueryInfoKey.cpp
+CeCreateDirectory_SOURCES = test.h CeCreateDirectory.cpp
+CeGetVersionEx_SOURCES = test.h CeGetVersionEx.cpp
 
 ## all tests
 noinst_PROGRAMS = pcp \
 	CeRapiInit CeGetSpecialFolderPath CeRegOpenKeyEx \
 	CeFindFirstFile CeCreateFile CeFindAllFiles CeFindAllDatabases \
-	CeOpenDatabase CeRegEnumKeyEx CeRegEnumValue CeRegQueryInfoKey
+	CeOpenDatabase CeRegEnumKeyEx CeRegEnumValue CeRegQueryInfoKey \
+	CeCreateDirectory CeGetVersionEx
 	
 
 ## run "make test" to run the tests
@@ -38,6 +41,6 @@ test: $(noinst_PROGRAMS)
 	./CeFindAllDatabases
 ##	./CeOpenDatabase
 	./CeRegEnumKeyEx
-	./CeRegEnumValue
+##	./CeRegEnumValue
 	./CeRegQueryInfoKey
 

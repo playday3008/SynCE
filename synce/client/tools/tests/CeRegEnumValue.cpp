@@ -38,7 +38,7 @@ int main()
 	
 	if (ERROR_NO_MORE_ITEMS != result)
 	{
-		printf("Error: %li\n", result);
+		printf("Error: %li = 0x%lx\n", result, result);
 		return TEST_FAILED;
 	}
 

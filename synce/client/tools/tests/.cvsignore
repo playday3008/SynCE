@@ -3,11 +3,13 @@
 .deps
 .gdb_history
 .libs
+CeCreateDirectory
 CeCreateFile
 CeFindAllDatabases
 CeFindAllFiles
 CeFindFirstFile
 CeGetSpecialFolderPath
+CeGetVersionEx
 CeOpenDatabase
 CeRapiInit
 CeRegEnumKeyEx

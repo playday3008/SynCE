@@ -22,14 +22,15 @@ int main()
 
 	classname[0] = 0;
 	
+	// Test all parameters
 	TEST_EQUAL(ERROR_SUCCESS, CeRegQueryInfoKey(hkey, classname,
 				&classname_size, NULL, &subkey_count, &max_subkey_name_size, 
 				&max_subkey_class_size, &value_count, &max_value_name_size,
 			  &max_value_data_size, NULL, &filetime	));
 
-	printf("Classname=\"%s\", subkey_count=%lu, max_subkey_name_size=%lu, "
-			"max_subkey_class_size=%lu, value_count=%lu, max_value_name_size=%lu, "
-			"max_value_data_size=%lu\n", 
+	printf("Classname=\"%s\", subkey_count=%u, max_subkey_name_size=%u, "
+			"max_subkey_class_size=%u, value_count=%u, max_value_name_size=%u, "
+			"max_value_data_size=%u\n", 
 			from_unicode(classname), subkey_count, max_subkey_name_size,
 			max_subkey_class_size, value_count, max_value_name_size,
 			max_value_data_size);
