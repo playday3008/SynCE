@@ -76,7 +76,7 @@ static GList* synce_get_changed_objects(/*{{{*/
 							data,
 							data_size,
 							&object_string,
-							RRA_APPOINTMENT_UTF8))
+							RRA_APPOINTMENT_UTF8,NULL))
 				{
 					fprintf(stderr, "Failed to create vCard\n");
 					goto exit;
