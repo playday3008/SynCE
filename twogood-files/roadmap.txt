@@ -1,4 +1,4 @@
-$Id$
+$Id$ vim: expandtab
 
 1.      Foundation
 ==================
@@ -25,15 +25,15 @@ $Id$
 1.5.    NEW: Connection notification interface
 
         This will allow an application to run or get a callback when a device
-				connects to the daemon currently known as asyncd.
-				
-        Details about this later.
+        connects to the daemon currently known as asyncd.
+        
+        Details about this in connection_notification.txt
 
 1.6.    Building, installing and configuration stuff
 
         Making .deb packages, .rpm packages, etc.
-				Maybe get the packages available on http://freshrpms.net/ ?
-				
+        Maybe get the packages available on http://freshrpms.net/ ?
+        
 
 2.      Foundation applications
 ===============================
@@ -69,7 +69,7 @@ $Id$
         This is new stuff. I have some code for this hidden away for
         future use! :-)
 
-				(Credits to Max Muermann on this too!)
+        (Credits to Max Muermann on this too!)
 
 3.1     Synchronization daemon
 
@@ -110,8 +110,8 @@ $Id$
 
 4.3.1   Evolution is still only a GNOME 1 application, but would
         probably be the most wanted integration. However, it only supports
-				synchronization with Palm devices, and that seems to be quite
-				different.
+        synchronization with Palm devices, and that seems to be quite
+        different.
 
 4.x.    Your favorite personal information mangagement applications
         here.

@@ -1,0 +1,25 @@
+$Id$ vim: expandtab
+
+Microsoft docs about how this is done on Windows:
+
+http://msdn.microsoft.com/library/en-us/wceconct/htm/_wcesdk_handling_a_connection_notification.asp
+
+
+SynCE should provide the following interfaces:
+
+
+1.    Command line based (similar to "Registry-based Notification")
+
+      Maybe this could work like the ".d" directories found in /etc/ ?
+
+1.1.  Commands to run on connect
+
+1.2.  Commands to run on disconnect
+
+
+2.    Callback based (similar to "COM Interface-based Notification")
+
+      This interface should be provided by libsynce.
+
+      It will be similar to IDccMan/IDccManSink.
+
