@@ -36,6 +36,7 @@ make
 %makeinstall
 
 %files
+%defattr(-,root,root)
 %{prefix}/bin/synce-trayicon
 %{prefix}/share/pixmaps/synce/synce-color.png
 %{prefix}/share/pixmaps/synce/synce-gray.png
