@@ -6,11 +6,6 @@ guaranteed to be up to date.
 
 o Multi-threading
 
-	Librapi2 currently can't share connections between threads. This will be
-	changed in the future.
+  Librapi2 currently can't share connections between threads. This will be
+  changed in the future.
 
-o The dependency on "Check" can't be disabled
-
-  Users should not need to have Check installed to compile librapi2.
-
-	
