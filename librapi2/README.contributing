@@ -15,8 +15,8 @@ o Answering questions on the mailing list
 Testing
 -------
 
-If you only compile librapi2, run the test programs, and report any problems,
-then you have contributed to the development of librapi2!
+If you only compile librapi2, run the test programs, and report success or
+failure, then you have contributed to the development of SynCE!
 
 
 Donating
@@ -47,6 +47,9 @@ the PHP project. Just substitute "PHP" with "SynCE" :-)
   http://cvsweb.php.net/co.php/php4/README.SUBMITTING_PATCH
 
 If you submit lots of patches you will get access to the CVS repository.
+
+Please not that patches should have the same license as the rest of the module,
+see the file LICENSE for details.
 
 
 Answering questions on the mailing list
