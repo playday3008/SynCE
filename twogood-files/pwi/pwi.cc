@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdint.h>
 
-#define VERBOSE 1
+#define VERBOSE 2
 
 using namespace std;
 
@@ -77,8 +77,11 @@ void text(istream& input)/*{{{*/
     {
       cerr << "Warning, data byte is NULL!" << endl;
     }
-    else if (data[j] & 0x80)
+    else if ((data[j] & 0xc0) == 0xc0)
     {
+#if VERBOSE >= 2
+      cerr << "Command: " << hex << (int)data[j] << endl;
+#endif
       switch (data[j])
       {
         case 0xe5:    // Select font
@@ -114,6 +117,12 @@ void text(istream& input)/*{{{*/
           break;
 
         case 0xef:    // XXX unknown
+#if VERBOSE >= 2
+          cerr << "Parameters: " << hex 
+            << (int)data[j+1] << ' ' 
+            << (int)data[j+2] << ' ' 
+            << (int)data[j+3] << endl;
+#endif
           j+=3;
           break;
 
@@ -128,6 +137,9 @@ void text(istream& input)/*{{{*/
 
         case 0xc4:    // Control code
           j++;
+#if VERBOSE >= 2
+          cerr << "Subcommand: " << hex << (int)data[j] << endl;
+#endif
           switch (data[j])
           {
             case 0x00:   // End of paragraph
@@ -157,6 +169,12 @@ void text(istream& input)/*{{{*/
           break;
 
         case 0xf1:
+#if VERBOSE >= 2
+          cerr << "Parameters:" << hex;
+          for (int i = 1; i <= 7; i++)
+            cerr << ' ' << (int)data[j+i];
+          cerr << endl;
+#endif
           j+=7;
           break;
 
@@ -165,6 +183,12 @@ void text(istream& input)/*{{{*/
             " at offset 0x" << paragraph_data_offset + j << endl;
           abort();
       }
+    }
+    else if (data[j] & 0x80)
+    {
+      int c = (data[j] & ~0xc0) | (data[j+1] << 6);
+      cerr << "UTF-16 character: 0x" << hex << c << endl;
+      j++;
     }
     else
       cout << (char)data[j];
