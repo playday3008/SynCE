@@ -5,3 +5,7 @@ Makefile
 Makefile.in
 pget
 pput
+pcp
+pls
+pmv
+prm
