@@ -22,26 +22,40 @@ $Id$
 
         See the mailing list for info about this tool.
 
+1.5.    NEW: Connection notification interface
+
+        This will allow an application to run or get a callback when a device
+				connects to the daemon currently known as asyncd.
+				
+        Details about this later.
+
+1.6.    Building, installing and configuration stuff
+
+        Making .deb packages, .rpm packages, etc.
+				Maybe get the packages available on http://freshrpms.net/ ?
+				
 
 2.      Foundation applications
 ===============================
 
         These tools use librapi to access the Pocket PC device.
 
-2.1.    Command line tools
+2.1.    Maybe some library for common user interface functionality
 
-2.1.1.  Tool(s) to copy files to and from a Pocket PC device.
+2.2.    Command line tools
 
-2.2.    KDE 3 integration
+2.2.1.  Tool(s) to copy files to and from a Pocket PC device.
 
-2.2.1.  KDE I/O slave (updated version of kio_synce)
+2.3.    KDE 3 integration
+
+2.3.1.  KDE I/O slave (updated version of kio_synce)
 
         Allows browsing and manipulation of the Pocket PC device file
         system with Konqueror.
 
-2.2.2.  KDE system tray icon that shows connected devices
+2.3.2.  KDE system tray icon that shows connected devices
 
-2.3.    GNOME 2 integration
+2.4.    GNOME 2 integration
 
         Whatever corresponds to the KDE 3 applications listed in 2.2.
         (Please tell me what these are called!)
@@ -54,6 +68,8 @@ $Id$
 
         This is new stuff. I have some code for this hidden away for
         future use! :-)
+
+				(Credits to Max Muermann on this too!)
 
 3.1     Synchronization daemon
 
@@ -84,8 +100,6 @@ $Id$
 
 4.1     Command line tools
 
-        If anyone cares?
-
 4.2     KDE 3 integration
 
         This is about KMail, KAddressbook, KOrganizer, etc.
@@ -95,7 +109,9 @@ $Id$
 4.3.    GNOME 1/2 integration.
 
 4.3.1   Evolution is still only a GNOME 1 application, but would
-        probably be the most wanted integration.
+        probably be the most wanted integration. However, it only supports
+				synchronization with Palm devices, and that seems to be quite
+				different.
 
 4.x.    Your favorite personal information mangagement applications
         here.
