@@ -59,7 +59,9 @@ AC_SUBST(LIBICONV)
 dnl This will define WORDS_BIGENDIAN if we run on a big endian machine
 AC_C_BIGENDIAN()
 
-	
+dnl This will test for endian-swapping headers
+AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h sys/types.h)
+
 dnl for NLS support. Call them in this order!
 dnl WITH_NLS is for the po files
 dnl AM_KDE_WITH_NLS
