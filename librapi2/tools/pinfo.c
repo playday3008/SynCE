@@ -73,12 +73,94 @@ static const char* processor(int n)
 	return result;
 }
 
+#if 0
+static void print_flag(unsigned flags, unsigned flag, const char*name, bool* first)
+{
+	if (flags & flag)
+	{
+		if (*first)
+			*first = false;
+		else
+			putchar(' ');
+
+		printf("%s", name);
+	}
+}
+#endif
+
+static const char* get_battery_flag_string(unsigned flag)
+{
+	const char* name;
+	
+	switch (flag)
+	{
+		case BATTERY_FLAG_HIGH:        name = "High";       break;
+		case BATTERY_FLAG_LOW:         name = "Low";        break;
+		case BATTERY_FLAG_CRITICAL:    name = "Critical";   break;
+		case BATTERY_FLAG_CHARGING:    name = "Charging";   break;
+		case BATTERY_FLAG_NO_BATTERY:  name = "NoBattery";  break;
+
+		default: name = "Unknown"; break;
+	}
+
+	return name;
+}
+		
+static const char* get_ACLineStatus_string(unsigned ACLineStatus)
+{
+	const char* status;
+	
+	switch (ACLineStatus)
+	{
+		case AC_LINE_OFFLINE: status = "Offline"; break;
+		case AC_LINE_ONLINE: status = "Online"; break;
+		case AC_LINE_BACKUP_POWER: status = "Backup Power"; break;
+		case AC_LINE_UNKNOWN: status = "Unknown"; break;
+		default: status = "Invalid"; break;
+	}
+
+	return status;
+}
+
+void print_battery_status(const char* name, unsigned flag, unsigned lifePercent, unsigned lifeTime, unsigned fullLifeTime)
+{
+	printf(
+			"\nStatus for %s battery\n"
+			"=========================\n"
+			"Flag:          %i (%s)\n"
+			,
+			name,
+			flag,
+			get_battery_flag_string(flag));
+
+	printf("LifePercent:   ");
+	if (BATTERY_PERCENTAGE_UNKNOWN == lifePercent)
+		printf("Unknown\n");
+	else
+		printf("%i%%\n", lifePercent);
+
+	printf("LifeTime:      ");
+	if (BATTERY_LIFE_UNKNOWN == lifeTime)
+		printf("Unknown\n");
+	else
+		printf("%i\n", lifeTime);
+
+	printf("FullLifeTime:  ");
+	if (BATTERY_LIFE_UNKNOWN == fullLifeTime)
+		printf("Unknown\n");
+	else
+		printf("%i\n", fullLifeTime);
+
+		
+}
+
 int main(int argc, char** argv)
 {
 	int result = 1;
 	HRESULT hr;
 	CEOSVERSIONINFO version;
 	SYSTEM_INFO system;
+	SYSTEM_POWER_STATUS_EX power;
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
@@ -139,6 +221,7 @@ int main(int argc, char** argv)
 				"Processor architecture: %i (%s)\n"
 				"Processor type:         %i (%s)\n"
 				"Page size:              0x%x\n"
+				"\n"
 				,
 				system.wProcessorArchitecture,
 				(system.wProcessorArchitecture < PROCESSOR_ARCHITECTURE_COUNT) ?
@@ -148,6 +231,33 @@ int main(int argc, char** argv)
 				system.dwAllocationGranularity
 				
 				);
+	}
+
+	memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
+	
+	if (CeGetSystemPowerStatusEx(&power, false))
+	{
+		printf(
+				"Power\n"
+				"=====\n"
+				);
+
+		printf("ACLineStatus: %02x (%s)\n", 
+				power.ACLineStatus, get_ACLineStatus_string(power.ACLineStatus));
+
+		print_battery_status("main", power.BatteryFlag, power.BatteryLifePercent,
+				power.BatteryLifeTime, power.BatteryFullLifeTime);
+		
+		print_battery_status("backup", power.BackupBatteryFlag,
+				power.BackupBatteryLifePercent, power.BackupBatteryLifeTime,
+				power.BackupBatteryFullLifeTime);
+
+	}
+	else
+	{
+		fprintf(stderr, "%s: Failed to get battery status: %s\n", 
+				argv[0],
+				synce_strerror(CeGetLastError()));
 	}
 
 	result = 0;
