@@ -846,9 +846,7 @@ bool rrac_recv_data(/*{{{*/
     synce_trace("chunk_size = %04x, aligned_size = %04x, stuff = %04x",
         chunk_header.size, aligned_size, chunk_header.stuff);
 
-    if ((unsigned)((chunk_header.stuff & 0xc) >> 2) == (aligned_size - chunk_header.size))
-      synce_trace("Flags and sizes match");
-    else
+    if ((unsigned)((chunk_header.stuff & 0xc) >> 2) != (aligned_size - chunk_header.size))
       synce_warning("Flags and sizes do not match!");
  
 		if (!synce_socket_read(rrac->data_socket, *data + total_size, aligned_size))
@@ -1143,7 +1141,7 @@ bool sync_command_notify_ids(SyncCommand* self, uint32_t* ids)
 
     total = LE32(p);  p += sizeof(uint32_t);
 
-    synce_trace("total = %08x", total);
+    /* synce_trace("total = %08x", total); */
 
     if (self->size < (16 + total))
     {
