@@ -1023,7 +1023,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-
     if (!(management.client_server = local_listen_socket(control_socket_path, 2))) {
         synce_error("Could not create client-server-socket");
         return -1;
