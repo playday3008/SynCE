@@ -202,11 +202,25 @@ be used by SynCE and the other by ActiveSync. When you want to synchronize with
 SynCE and you last synchronized with ActiveSync, you have to change what
 parntership you use. This is described below.</p>
 
-<p>For SynCE 0.8 or later:</p>
+<h3>For SynCE 0.8.9 or later</h3>
+
+<p>Use the <tt>synce-matchmaker</tt> tool like this:</p>
+
+<blockquote><tt>synce-matchmaker create</tt></blockquote>
+
+<p>If you get the message "Partnership creation succeeded" everything is ok.</p>
+
+<p>If you get the message "Partnership creation failed" you need to replace an
+existing partnership on your device. To do this you first run
+<tt>synce-matchmaker status</tt> to list the current partnerships on your
+device. Decide which partnership (1 or 2) you want to replace. Second you run
+<tt>synce-matchmaker replace X</tt>, where X is the partnership number.</p>
+
+<h3>For SynCE 0.8.x (except 0.8.9)</h3>
 
 <p>Use the <tt>synce-partnership</tt> tool like this:</p>
 
-<p><tt>synce-partnership create</tt></p>
+<blockquote><tt>synce-partnership create</tt></blockquote>
 
 <p>If you get the message "Partnership creation succeeded" everything is ok.</p>
 
@@ -217,7 +231,7 @@ device. Decide which partnership (1 or 2) you want to replace. Second you run
 <tt>synce-partnership replace X</tt>, where X is the partnership number.</p>
 
 
-<p>For SynCE 0.7:</p>
+<h3>For SynCE 0.7</h3>
 
 <ol> 
 
