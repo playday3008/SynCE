@@ -118,6 +118,8 @@ void rapi_buffer_free(RapiBuffer* buffer)
 
 bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
 {
+	rapi_buffer_trace("size=0x%08x", size);
+	
 	if (!buffer)
 	{
 		rapi_buffer_error("buffer is NULL");
@@ -388,7 +390,7 @@ bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket)
 
 	size = letoh32(size_le);
 
-	rapi_buffer_trace("Size = 0x%08x\n", size);
+	rapi_buffer_trace("Size = 0x%08x", size);
 
 	data = malloc(size);
 	if (!data)
@@ -405,6 +407,7 @@ bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket)
 
 	if ( !rapi_buffer_reset(buffer, data, size) )
 	{
+		rapi_buffer_error("Failed to reset buffer with 0x%08x bytes", size);
 		free(data);
 		goto fail;
 	}
