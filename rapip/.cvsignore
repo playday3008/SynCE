@@ -12,6 +12,7 @@ Makefile
 Makefile.in
 autom4te.cache
 libtool
+subdirs
 stamp-h1
 synce-kde.kdevses
 debug
