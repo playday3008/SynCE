@@ -96,17 +96,18 @@ static bool on_property_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{
 {
   assert(CEVT_BLOB == (propval->propid & 0xffff));
 
-  if (str_is_print(&propval->val.blob))
+  if (propval->val.blob.dwCount)
   {
-    char* tmp = strndup((const char*)
-        propval->val.blob.lpb, 
-        propval->val.blob.dwCount);
-    generator_add_simple(g, "DESCRIPTION", tmp);
-    free(tmp);
-  }
-  else
-  {
-    synce_warning("Note format not yet supported");
+    if (str_is_print(&propval->val.blob))
+    {
+      char* tmp = strndup((const char*)
+          propval->val.blob.lpb, 
+          propval->val.blob.dwCount);
+      generator_add_simple(g, "DESCRIPTION", tmp);
+      free(tmp);
+    }
+    else
+      synce_warning("Note format not yet supported");
   }
   
   return true;
@@ -167,10 +168,23 @@ bool rra_appointment_to_vevent(/*{{{*/
 {
 	bool success = false;
   Generator* generator = NULL;
+  unsigned generator_flags = 0;
   EventGeneratorData event_generator_data;
   memset(&event_generator_data, 0, sizeof(EventGeneratorData));
 
-  generator = generator_new(0, &event_generator_data);
+  switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
+  {
+    case RRA_APPOINTMENT_UTF8:
+      generator_flags = GENERATOR_UTF8;
+      break;
+
+    case RRA_APPOINTMENT_ISO8859_1:
+    default:
+      /* do nothing */
+      break;
+  }
+
+  generator = generator_new(generator_flags, &event_generator_data);
   if (!generator)
     goto exit;
 
@@ -188,18 +202,29 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator_set_data(generator, data, data_size))
     goto exit;
 
+#if 0
   generator_add_simple(generator, "BEGIN", "VCALENDAR");
-  
-  switch (flags & RRA_VCALENDAR_VERSION_MASK)
+  generator_add_simple(generator, "PRODID", "-//SynCE//NONSGML SynCE RRA//EN");
+ 
+  switch (flags & RRA_APPOINTMENT_VERSION_MASK)
   {
-    case RRA_VCALENDAR_VERSION_2_0:
+    case RRA_APPOINTMENT_VERSION_2_0:
       generator_add_simple(generator, "VERSION", "2.0");
       break;
   }
-  
+       
+  generator_add_simple(generator, "METHOD", "PUBLISH");
+#endif
+ 
   generator_add_simple(generator, "BEGIN", "VEVENT");
 
-  if (!generator_run(generator))
+	if (id != RRA_APPOINTMENT_ID_UNKNOWN)
+	{
+		char id_str[32];
+		snprintf(id_str, sizeof(id_str), "RRA-ID-%08x", id);
+		generator_add_simple(generator, "UID", id_str);
+	}
+   if (!generator_run(generator))
     goto exit;
 
   if (event_generator_data.start && 
@@ -288,7 +313,9 @@ bool rra_appointment_to_vevent(/*{{{*/
   }
 
   generator_add_simple(generator, "END", "VEVENT");
+#if 0
   generator_add_simple(generator, "END", "VCALENDAR");
+#endif
   
   if (!generator_get_result(generator, vevent))
     goto exit;
@@ -432,9 +459,21 @@ bool rra_appointment_from_vevent(/*{{{*/
   ParserComponent* calendar;
   ParserComponent* event;
   ParserComponent* alarm;
-  int parser_flags = PARSER_UTF8; /* XXX */
+  int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
+
+  switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
+  {
+    case RRA_APPOINTMENT_UTF8:
+      parser_flags = PARSER_UTF8;
+      break;
+
+    case RRA_APPOINTMENT_ISO8859_1:
+    default:
+      /* do nothing */
+      break;
+  }
 
   alarm = parser_component_new("vAlarm");
 

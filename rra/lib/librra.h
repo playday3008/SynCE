@@ -158,9 +158,19 @@ bool rra_contact_from_vcard(
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)
 
-#define RRA_VCALENDAR_VERSION_UNKNOWN   0x000
-#define RRA_VCALENDAR_VERSION_2_0       0x200 /* RFC 2445 */
-#define RRA_VCALENDAR_VERSION_MASK      0xf00
+#define RRA_APPOINTMENT_ID_UNKNOWN  0
+
+#define RRA_APPOINTMENT_NEW     				0x1
+#define RRA_APPOINTMENT_UPDATE  				0x2
+#define RRA_APPOINTMENT_COMMAND_MASK		0xf
+
+#define RRA_APPOINTMENT_ISO8859_1				0x10
+#define RRA_APPOINTMENT_UTF8						0x20
+#define RRA_APPOINTMENT_CHARSET_MASK		0xf0
+
+#define RRA_APPOINTMENT_VERSION_UNKNOWN   0x000
+#define RRA_APPOINTMENT_VERSION_2_0   		0x200
+#define RRA_APPOINTMENT_VERSION_MASK			0xf00
 
 bool rra_appointment_to_vevent(
     uint32_t id,
