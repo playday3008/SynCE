@@ -6,6 +6,12 @@
 
 <h1>SynCE - USB connection - Linux</h1>
 
+<p>To use a USB connection on Linux, the following kernel module must be compiled:</p>
+
+<p><tt>USB Support -&gt;<br>
+USB Serial Converter support -&gt;<br>
+USB Compaq iPAQ / HP Jornada / Casio EM500 Driver</tt></p>
+
 <p>Useful reading: How to <a href="usbids.php">find the USB Vendor and Product
 IDs</a> for your PDA.</p>
 
@@ -18,9 +24,9 @@ a successful USB connection.</p>
 
 <li><a href="#none">Kernel prior to 2.4.18</a></li>
 
-<li><a href="#early">2.4.18 or 2.4.19 kernel</a></li>
+<li><a href="#early">2.4.18 to 2.4.20 kernel</a></li>
 
-<li><a href="#many">2.4.20 or newer 2.4.x kernel</a></li>
+<li><a href="#many">2.4.21 or newer 2.4.x kernel</a></li>
 
 <li><a href="#notyet">2.5.x or 2.6.x kernel</a></li>
 
@@ -33,11 +39,14 @@ a successful USB connection.</p>
 href="usb_linux_userspace.php">user-space USB driver</a>.</p>
 
 <a name="early"></a>
-<h2>2.4.18 or 2.4.19 kernel</h2>
+<h2>2.4.18 to 2.4.20 kernels</h2>
 
-<p>If you going to use SynCE on an SMP system with this kernel you must <a
-href="usbpatch.php">patch your kernel driver</a> or upgrade to <a
-href="#many">2.4.20 or newer 2.4.x kernel</a>.</p>
+<p>(If you have a RedHat 2.4.20 kernel, see <a href="#many">2.4.21 or newer
+2.4.x kernel</a>.)</p>
+
+<p>If you going to use SynCE on an SMP (multi-processor) system with this
+kernel you must <a href="usbpatch.php">patch your kernel driver</a> or upgrade
+to <a href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
 
 <p>These kernel version only support these devices:</p>
 
@@ -50,10 +59,12 @@ href="#many">2.4.20 or newer 2.4.x kernel</a>.</p>
 <p>If your device is in the list above, go ahead and <a
 href="usb_linux_setup.php">configure SynCE</a>, otherwise you need to <a
 href="usbpatch.php">patch your kernel driver</a> or upgrade to <a
-href="#many">2.4.20 or newer 2.4.x kernel</a>.</p>
+href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
 
 <a name="many"></a>
-<h2>2.4.20 or later 2.4.x kernel</h2>
+<h2>2.4.21 or newer 2.4.x kernel</h2>
+
+<p>(This also includes RedHat's 2.4.20 kernels.)</p>
 
 <p>This kernel supports many common and uncommon devices, but certain newer
 devices are missing.</p>
@@ -74,7 +85,7 @@ devices are missing.</p>
 <tr><td>FSC</td><td>0bf8</td><td>Loox</td><td>1001</td></tr>
 
 <tr><td>HP</td><td>03f0</td><td>
-Jornada 548<br>
+Jornada 540/548, iPAQ 5550<br>
 Jornada 568<br>
 Unknown
 </td><td>
@@ -121,8 +132,12 @@ E740
 </table>
 
 <p>If your device is in the list above, go ahead and <a
-href="usb_linux_setup.php">configure SynCE</a>, otherwise you need to <a
-href="usbpatch.php">patch your kernel driver</a>.</p>
+href="usb_linux_setup.php">configure SynCE</a>. If it is not, load the
+<tt>ipaq</tt> kernel module manual like this, but with the vendor and product
+ID for your device:</p>
+
+<pre>insmod usbserial
+insmod ipaq vendor=0x049f product=0x0032</pre>
 
 <p>If you can provide additional details above the devices listed above, please
 <a href="help.php">contact the SynCE developers</a>.</p>
@@ -138,7 +153,9 @@ to the driver.</p>
 <h2>Successful USB connection</h2>
 
 <p>When you connect your USB cable or insert your device into its cradle the
-following message (or similar) should appear in your logs:</p>
+following message (or similar) should appear in your logs.</p>
+
+<h3>Driver version 0.2</h3>
 
 <pre>kernel: hub.c: USB new device connect on bus1/1, assigned device number 2
 kernel: usb.c: USB device 2 (vend/prod 0x49f/0x3) is not claimed by any active driver.
@@ -150,6 +167,18 @@ kernel: usbserial.c: USB Serial support registered for Compaq iPAQ
 kernel: usbserial.c: Compaq iPAQ converter detected
 kernel: usbserial.c: Compaq iPAQ converter now attached to ttyUSB0 (or usb/tts/0 for devfs)
 kernel: ipaq.c: USB Compaq iPAQ, HP Jornada, Casio EM500 driver v0.2</pre>
+
+<h3>Driver version 0.5</h3>
+
+<pre>kernel: hub.c: new USB device 00:14.2-2, assigned address 3
+kernel: usb.c: USB device 3 (vend/prod 0x49f/0x3) is not claimed by any active driver.
+kernel: usb.c: registered new driver serial
+kernel: usbserial.c: USB Serial support registered for Generic
+kernel: usbserial.c: USB Serial Driver core v1.4
+kernel: ipaq.c: USB PocketPC PDA driver v0.5
+kernel: usbserial.c: USB Serial support registered for PocketPC PDA
+kernel: usbserial.c: PocketPC PDA converter detected
+kernel: usbserial.c: PocketPC PDA converter now attached to ttyUSB0 (or usb/tts/0 for devfs)</pre>
 
 
 </div>
