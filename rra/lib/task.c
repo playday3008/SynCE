@@ -101,7 +101,6 @@ bool rra_task_to_vtodo(
 exit:
   generator_destroy(generator);
   return success;
-
 }
 
 /*
@@ -207,10 +206,12 @@ bool rra_task_from_vtodo(
  	success = true;
 
 exit:
-  /* destroy top object */
+  /* destroy components (the order is important!) */
+  parser_component_destroy(todo);
   parser_component_destroy(calendar);
+  parser_component_destroy(base);
   parser_destroy(parser);
-	return success;  return false;
+	return success;
 }
 
 
