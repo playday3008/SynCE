@@ -35,7 +35,7 @@ static bool rapi_login(SynceSocket* socket, const char* password, int key, unsig
 		goto exit;
 	}
 
-	if (!synce_password_recv_reply(socket, &password_correct))
+	if (!synce_password_recv_reply(socket, 1, &password_correct))
 	{
 		synce_error("failed to get password reply");
 		goto exit;
@@ -51,8 +51,9 @@ HRESULT CeRapiInit(void)/*{{{*/
 {
 	RapiContext* context = rapi_context_current();
 	HRESULT result = E_UNEXPECTED;
+	char* filename = NULL;
 	struct configFile* config = NULL;
-	char* hostname = NULL;
+	char* ip_str = NULL;
 	char* password = NULL;
 	int key = 0;
 
@@ -62,19 +63,32 @@ HRESULT CeRapiInit(void)/*{{{*/
 		return CERAPI_E_ALREADYINITIALIZED;
 	}
 
-	config = readConfigFile("/tmp/rapi.conf"); /* XXX: maybe use another path :-) */
-	if (!config)
-		return E_INVALIDARG;
-
-	hostname = getConfigString(config, "device", "hostname");
-	if (!hostname)
+	if (!synce_get_connection_filename(&filename))
 	{
+		synce_error("failed to get connection filename");
 		result = E_FAIL;
 		goto fail;
 	}
 
-	if ( !synce_socket_connect(context->socket, hostname, RAPI_PORT) )
+	config = readConfigFile(filename);
+	if (!config)
 	{
+		synce_error("unable to open file: %s", filename);
+		result = E_FAIL;
+		goto fail;
+	}
+
+	ip_str = getConfigString(config, "device", "ip");
+	if (!ip_str)
+	{
+		synce_error("ip entry not found in %s", filename);
+		result = E_FAIL;
+		goto fail;
+	}
+
+	if ( !synce_socket_connect(context->socket, ip_str, RAPI_PORT) )
+	{
+		synce_error("failed to connect to %s", ip_str);
 		result = E_FAIL;
 		goto fail;
 	}
@@ -93,6 +107,8 @@ HRESULT CeRapiInit(void)/*{{{*/
 	result = S_OK;
 
 fail:
+	if (filename)
+		free(filename);
 	unloadConfigFile(config);
 	return result;
 }/*}}}*/

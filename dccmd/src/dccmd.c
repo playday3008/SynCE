@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #define DCCM_PORT           	5679
 #define DCCM_PING_INTERVAL   	10         /* seconds */
@@ -18,9 +22,11 @@
 typedef struct _Client
 {
 	SynceSocket* socket;
+	struct sockaddr_in address;
 	int ping_count;
 	bool locked;
 	bool expect_password_reply;
+	int key;
 } Client;
 
 /* Dump a block of data for debugging purposes */
@@ -63,40 +69,47 @@ dump(desc, data, len)
 
 
 
-bool is_daemon = true;
+static bool is_daemon = true;
+static char* password = NULL;
 
 /**
  * Write help message to stderr
  */
-void write_help(char *name)
+static void write_help(char *name)
 {
 	fprintf(
 			stderr, 
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d] [-h]\n"
+			"\t%s [-f] [-h] [-p password]\n"
 			"\n"
-			"\t-h Show this help message\n"
-			"\t-d Do not run as daemon\n",
+			"\t-f Do not run as daemon\n"
+			"\t-h Show this help message\n",
 			name);
 }
 
 /**
  * Parse parameters to daemon
  */
-bool handle_parameters(int argc, char** argv)
+static bool handle_parameters(int argc, char** argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, "dh")) != -1)
+	while ((c = getopt(argc, argv, "fhp:")) != -1)
 	{
 		switch (c)
 		{
 			/*
-			 * The -d parameter specifies that we don't want to run as a daemon
+			 * The -f parameter specifies that we want to run in the foreground
 			 */
-			case 'd':
+			case 'f':
 				is_daemon = false;
+				break;
+
+			case 'p':
+				if (password)
+					free(password);
+				password = strdup(optarg);
 				break;
 
 			case 'h':
@@ -151,7 +164,79 @@ static char* string_at(unsigned char* buffer, size_t size, size_t offset)
 	}
 }
 
-static bool read_client(Client* client)
+static bool client_write_file(Client* client)
+{
+	bool success = false;
+	char* filename = NULL;
+	FILE* file = NULL;
+	char ip_str[16];
+
+	if (!inet_ntop(AF_INET, &client->address.sin_addr, ip_str, sizeof(ip_str)))
+	{
+		synce_error("inet_ntop failed");
+		goto exit;
+	}
+
+	if (!synce_get_connection_filename(&filename))
+	{
+		synce_error("Unable to get connection filename");
+		goto exit;
+	}
+
+	if ((file = fopen(filename, "w")) == NULL)
+	{
+		synce_error("Failed to open file for writing: %s", filename);
+		goto exit;
+	}
+
+	fprintf(file,
+			"# Modifications to this file will be lost next time a client connects to dccmd\n"
+			"\n"
+			"[device]\n"
+			"ip=%s\n"
+			"port=%i\n",
+			ip_str,
+			ntohs(client->address.sin_port));
+	
+	if (client->locked)
+	{
+		fprintf(file,
+				"password=%s\n"
+				"key=%i\n",
+				password,
+				client->key
+				);
+	}
+
+	success = true;
+			
+exit:
+	if (file)
+		fclose(file);
+	if (filename)
+		free(filename);
+	return success;
+}
+
+static void remove_connection_file()
+{
+	char* filename = NULL;
+	
+	if (!synce_get_connection_filename(&filename))
+	{
+		synce_error("Unable to get connection filename");
+		goto exit;
+	}
+
+	unlink(filename);
+
+exit:
+	if (filename)
+		free(filename);
+}
+
+
+static bool client_read(Client* client)
 {
 	bool success = false;
 	char* buffer = NULL;
@@ -230,6 +315,8 @@ static bool read_client(Client* client)
 		free(buffer);
 		buffer = NULL;
 
+		client_write_file(client);
+
 		if (client->locked)
 			client->expect_password_reply = true;
 	}
@@ -239,17 +326,15 @@ static bool read_client(Client* client)
 		 * This is a password challenge
 		 */
 
-		int key = header & 0xff;
+		client->key = header & 0xff;
 
 		synce_trace("this is a password challenge");
 
-		if (!synce_password_send(client->socket, "1234", key))
+		if (!synce_password_send(client->socket, password, client->key))
 		{
 			synce_error("failed to send password");
 			goto exit;
 		}
-
-		/* XXX: not read anything? */
 
 		client->locked = true;
 	}
@@ -266,24 +351,20 @@ exit:
 /**
  * Take care of a client
  */
-static bool handle_client(SynceSocket* socket)
+static bool client_handler(Client* client)
 {
 	bool success = false;
-	Client client;
 	SocketEvents events;
 	const uint32_t ping = htole32(DCCM_PING);
 
-	memset(&client, 0, sizeof(client));
-	client.socket = socket;
-	
-	while (client.ping_count < DCCM_MAX_PING_COUNT)
+	while (client->ping_count < DCCM_MAX_PING_COUNT)
 	{
 		/*
 		 * Wait for event on socket
 		 */
 		events = EVENT_READ | EVENT_TIMEOUT;
 
-		if (!synce_socket_wait(socket, DCCM_PING_INTERVAL, &events))
+		if (!synce_socket_wait(client->socket, DCCM_PING_INTERVAL, &events))
 		{
 			synce_error("synce_socket_wait failed");
 			goto exit;	
@@ -293,26 +374,24 @@ static bool handle_client(SynceSocket* socket)
 
 		if (events & EVENT_READ)
 		{
-			if (client.expect_password_reply)
+			if (client->expect_password_reply)
 			{
-				uint16_t reply;
-				if (!synce_socket_read(socket, &reply, sizeof(reply)))
+				bool password_correct = false;
+
+				if (!synce_password_recv_reply(client->socket, 2, &password_correct))
 				{
 					synce_error("failed to read password reply");
 					goto exit;	
 				}
 
-				synce_trace("password reply = 0x%04x (%i)", reply, reply);
-
-				synce_trace("Password was %s", reply ? "correct!" : "incorrect :-(");
-				if (!reply)
+				if (!password_correct)
 					goto exit;
 
-				client.expect_password_reply = false;
+				client->expect_password_reply = false;
 			}
 			else
 			{
-				if (!read_client(&client))
+				if (!client_read(client))
 				{
 					synce_error("failed to read from client");
 					goto exit;
@@ -323,13 +402,13 @@ static bool handle_client(SynceSocket* socket)
 		{
 			synce_trace("timeout event: sending ping");
 			
-			if (!synce_socket_write(socket, &ping, sizeof(ping)))
+			if (!synce_socket_write(client->socket, &ping, sizeof(ping)))
 			{
 				synce_error("failed to send ping");
 				goto exit;	
 			}
 
-			client.ping_count++;
+			client->ping_count++;
 		}
 		else
 		{
@@ -353,7 +432,6 @@ int main(int argc, char** argv)
 {
 	int result = RESULT_FAILURE;
 	SynceSocket* server = NULL;
-	SynceSocket* client = NULL;
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
@@ -365,6 +443,9 @@ int main(int argc, char** argv)
 	}
 	else
 		synce_trace("Running in foreground");
+
+	/* ignore broken pipes */
+	signal(SIGPIPE, SIG_IGN);
 
 	server = start_socket_server();
 	if (!server)
@@ -379,10 +460,11 @@ int main(int argc, char** argv)
 		 * Currently only handles one client...
 		 */
 
-		struct sockaddr_in client_address;
+		Client client;
+		memset(&client, 0, sizeof(client));
 
-		client = synce_socket_accept(server, &client_address);
-		if (!client)
+		client.socket = synce_socket_accept(server, &client.address);
+		if (!client.socket)
 		{
 			synce_error("Failed to accept client");
 			goto exit;
@@ -390,20 +472,23 @@ int main(int argc, char** argv)
 
 		synce_trace("client is connected");
 
-		if (!handle_client(client))
+		if (!client_handler(&client))
 		{
 			synce_error("Failed to handle client connection");
-			goto exit;
+			/* Better luck on next client? :-) */
 		}
 
-		synce_socket_free(client);
+		synce_socket_free(client.socket);
+		remove_connection_file();
 	}
 
 	result = RESULT_SUCCESS;
 
 exit:
+	if (password)
+		free(password);
+
 	synce_socket_free(server);
-	synce_socket_free(client);
 	
 	return result;
 }
