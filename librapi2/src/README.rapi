@@ -46,7 +46,7 @@ List of RAPI command codes:
 [i] 25 CeRegQueryInfoKey	
 [ ] 26 CeRegQueryValueEx	
 [ ] 27 CeRegSetValueEx		
-[ ] 28 GetSystemMemoryDivision
+[i] 28 GetSystemMemoryDivision  [undocumented as RAPI function]
 [i] 29 CeGetStoreInformation	
 [ ] 2a CeGetSystemMetrics	
 [ ] 2b CeGetDesktopDeviceCaps	
@@ -74,7 +74,7 @@ List of RAPI command codes:
 
 [ ] 40 CeGlobalMemoryStatus	
 [ ] 41 CeGetSystemPowerStatusEx	
-[ ] 42 SetSystemMemoryDivision  [undocumented as RAPI function]
+[i] 42 SetSystemMemoryDivision  [undocumented as RAPI function]
 [ ] 43 CeGetTempPath		
 [i] 44 CeGetSpecialFolderPath	
 [ ] 45 CeRapiInvoke

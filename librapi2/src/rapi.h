@@ -704,6 +704,14 @@ BOOL CeOidGetInfo(
 
 DWORD CeStartReplication( void );
 
+BOOL CeGetSystemMemoryDivision(
+    LPDWORD lpdwStoragePages, 
+    LPDWORD lpdwRamPages, 
+    LPDWORD lpdwPageSize);
+
+DWORD CeSetSystemMemoryDivision(
+    DWORD dwStoragePages);
+
 #endif /* SWIG */
 
 /*

@@ -180,6 +180,7 @@ int main(int argc, char** argv)
 	SYSTEM_INFO system;
 	SYSTEM_POWER_STATUS_EX power;
 	STORE_INFORMATION store;
+  DWORD storage_pages = 0, ram_pages = 0, page_size = 0;
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
@@ -318,6 +319,16 @@ int main(int argc, char** argv)
 				argv[0],
 				synce_strerror(CeGetLastError()));
 	}
+
+  if (CeGetSystemMemoryDivision(&storage_pages, &ram_pages, &page_size))
+  {
+    printf(
+        "Memory for storage: %i bytes (%i megabytes)\n"
+        "Memory for RAM:     %i bytes (%i megabytes)\n"
+        "\n",
+        storage_pages * page_size, storage_pages * page_size / (1024*1024),
+        ram_pages     * page_size, ram_pages     * page_size / (1024*1024));
+  }
 
 	result = 0;
 

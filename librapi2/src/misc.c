@@ -298,3 +298,60 @@ DWORD CeStartReplication( void )/*{{{*/
 	return result;
 }/*}}}*/
 
+/*
+   SetSystemMemoryDivision and GetSystemMemoryDivision are not documented
+   as RAPI functions, but they are there. Docs for the functions:
+
+   http://www.pocketpcdn.com/qa/memorydivision.html
+*/
+
+BOOL CeGetSystemMemoryDivision(
+    LPDWORD lpdwStoragePages, 
+    LPDWORD lpdwRamPages, 
+    LPDWORD lpdwPageSize)
+{
+  RapiContext* context = rapi_context_current();
+  BOOL result = false;
+
+  rapi_context_begin_command(context, 0x28);
+  rapi_buffer_write_optional_uint32(context->send_buffer, lpdwStoragePages, false);
+  rapi_buffer_write_optional_uint32(context->send_buffer, lpdwRamPages,     false);
+  rapi_buffer_write_optional_uint32(context->send_buffer, lpdwPageSize,     false);
+
+  if ( !rapi_context_call(context) )
+    goto exit;
+
+  rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+  synce_trace("last_error = %i", context->last_error);
+  rapi_buffer_read_uint32(context->recv_buffer, &result);
+  synce_trace("result = %i", result);
+
+  rapi_buffer_read_optional_uint32(context->recv_buffer, lpdwStoragePages);
+  rapi_buffer_read_optional_uint32(context->recv_buffer, lpdwRamPages);
+  rapi_buffer_read_optional_uint32(context->recv_buffer, lpdwPageSize);
+
+exit:
+  return result;
+}
+
+DWORD CeSetSystemMemoryDivision(
+    DWORD dwStoragePages)
+{
+  RapiContext* context = rapi_context_current();
+  DWORD result = 3;
+
+  rapi_context_begin_command(context, 0x42);
+  rapi_buffer_write_uint32(context->send_buffer, dwStoragePages);
+
+  if ( !rapi_context_call(context) )
+    goto exit;
+
+  rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+  synce_trace("last_error = %i", context->last_error);
+  rapi_buffer_read_uint32(context->recv_buffer, &result);
+  synce_trace("result = %i", result);
+
+exit:
+  return result;
+}
+
