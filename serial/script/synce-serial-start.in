@@ -58,6 +58,37 @@ script again.
 fi
 
 #
+# Check for suspected firewall
+#
+
+MD5=/usr/bin/md5sum
+IPTABLES=/sbin/iptables
+EMPTY_IPTABLES_MD5SUM="f2384cfbed4d4fb64061368c4128d7ea"
+
+# Do we have md5 or md5sum?
+
+if [ -x $MD5 ]; then
+
+	# Do we have iptables?
+	if [ -x $IPTABLES ]; then
+		# Is iptables working?
+		if $IPTABLES -L > /dev/null; then
+			IPTABLES_MD5SUM=`$IPTABLES -L -n | $MD5 | sed 's/[ 	].*//'`
+			if [ "$EMPTY_IPTABLES_MD5SUM" != "$IPTABLES_MD5SUM" ]; then
+				echo "
+Warning!
+
+You have firewall rules that may prevent SynCE from working properly!"
+			fi
+		fi		
+	fi
+
+	# TODO: check for ipchains
+	# TODO: check for 
+
+fi
+
+#
 # Finally start pppd
 #
 

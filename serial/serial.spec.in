@@ -36,6 +36,7 @@ make
 %makeinstall
 
 %files
+%defattr(-,root,root)
 %doc README LICENSE
 %{prefix}/bin/synce-serial-*
 %{prefix}/share/synce/synce-serial-*
