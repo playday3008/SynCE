@@ -43,6 +43,9 @@ Project Page</a></li>
 href="http://www.kde-apps.org/content/show.php?content=14162">SynCE-KDE
 on www.kde-apps.org</a> </li>
 <li><a
+href="http://www.kde-apps.org/content/show.php?content=14276">SynCE-KCEMirror on
+www.kde-apps.org</a></li>
+<li><a
 href="http://freshmeat.net/projects/synce-kde/?topic_id=20%2C957%2C1015">SynCE-KDE
 on freshmeat.net </a></li>
 </ul>
