@@ -57,6 +57,7 @@ static const char* version_string(CEOSVERSIONINFO* version)
 		{
 			case 9348:	result = "Rapier: Pocket PC"; break;
 			case 11171: result = "Merlin: Pocket PC 2002"; break;
+      case 12255: result = "Stinger: Smart Phone 2002"; break;
 		}
 	}
 
