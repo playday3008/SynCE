@@ -9,6 +9,10 @@
 <p>If you are not running Linux, please request help on the mailing list: <a
 href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>.
 
+<p>Warning! The USB driver 'ipaq' in the Linux kernel <b>does not yet work on
+Linux 2.6</b> (or 2.5). We do not know when this will be fixed. If you have
+kernel skills, please submit patches to the driver.</p>
+
 <p>To be able to use SynCE with a USB connection, you need to be running Linux
 kernel version 2.4.18 or later.</p>
 
