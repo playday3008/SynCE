@@ -29,11 +29,10 @@ are supported by the underlying <a
   <li><a href="#Download">Download</a><br>
   </li>
   <li><a href="#Installation">Compiling and Installing</a></li>
-  <li><a href="stories.php">Success Stories</a><br>
-  </li>
-  <li><a href="#Related_Work">Related Work</a></li>
-  <li><a href="#Future">Future</a></li>
   <li><a href="screenshots.php">Screenshots</a></li>
+  <li><a href="#Related_Work">Related Work</a></li>
+  <li><a href="stories.php">Success Stories</a></li>
+  <li><a href="#Future">Future</a></li>
 </ul>
 <br>
 <h2><a name="Introduction" id="Introduction"></a>Introduction</h2>
@@ -46,7 +45,7 @@ general, they all support the same devices which are supported
 by the underlying SynCE libraries.</p>
 <p><b>RAPIP</b> is the short form for "<b>RAPI</b>-<b>P</b>rotocol".
 It is a full featured KDE io-slave used to browse through the PDA
-filesystem and to copy files to and from the PDA by drag and drop
+file system and to copy files to and from the PDA by drag and drop
 via <a href="http://konqueror.kde.org">Konqueror</a>.</p>
 <p><b>RAKI</b> is a synonym for
 "<b>R</b>emote-<b>A</b>ccess-<b>KI</b>cker-applet". As the name
@@ -60,7 +59,7 @@ PDA via the desktop.</p>
 but is fully compatible with it. In addition to all DCCM features
 it is capable of supporting more than one PDA connected at the same
 time. It is responsible for reporting all connects and disconnects
-of PDAs to interrested clients via an unix-socket by use of a simple
+of PDAs to interested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</p>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
@@ -81,7 +80,7 @@ section for a list of all goodies.</li>
   <li>RAPIP is considered to be stable and full functional.
 Nevertheless, there are some additional features and improvements
 planed in the future.</li>
-  <li>RAKI comes with a new plugin-architekture. Plugins, called
+  <li>RAKI comes with a new plugin-architecture. Plugins, called
 synchronizer, are used to synchronize PDAs with your desktop
 system.</li>
   <li>An alternative DCCM called VDCCM is also included in the new
@@ -116,17 +115,17 @@ PDA.</li>
   <li>uses a plugin-architecture for synchronization. Two
 synchronizer-plugins are already implemented:<br>
     <ul>
-      <li>Synchronizer for PDA-Contacts and KDE Standard-Addressbook
+      <li>Synchronizer for PDA-Contacts and standard KDE address book
 synchronization.<br>
       </li>
-      <li>AvantGO synchronizer.</li>
+      <li><a href="http://www.avantgo.com/">AvantGo</a> synchronizer.</li>
     </ul>
   </li>
   <li>creates a NAT-Route for your PDAs to the outer internet.</li>
   <li>supports configuration of passwords, NAT routes, and
 synchronization settings per device.<br>
   </li>
-  <li>installes cab-files on the device - you just have to drag them
+  <li>installs cab-files on the device - you just have to drag them
 over the system-tray or right-click on a <tt>cab</tt> file in
 Konqueror.</li>
   <li>lets you manage the software installed on the PDA.</li>
@@ -156,7 +155,7 @@ into
 the URL line of Konqueror. You should see the root-directory of the
 PDA which corresponds to the specified active_connection file. Use
 Konqueror as usual - e.g. drag and drop files to and from the PDA
-filesystem ...<br>
+file system ...<br>
 If there is just one PDA connected, you can also use the short
 form <tt>rapip:/</tt> to browse this PDA.<br>
   </dd>
@@ -173,7 +172,7 @@ Right click on that icon shows a popup menu containing
 infrastructure related items.<br>
 If there are connected devices left click will open a popup menu
 containing individual device menu items for every connected PDA.<br>
-Drag and drop of CAB-files onto the RAKI system-tray icon installes
+Drag and drop of CAB-files onto the RAKI system-tray icon installs
 them
 on a device. A dialog box lets you choose the destination
 PDA.<br>
@@ -220,12 +219,13 @@ packages for
 stable and testing as soon as possible. Until than you have to compile
 SynCE-KDE yourself from source if you are a debian-stable or
 debian-testing user. <br>
-The packages are prepeared to honor all
+The packages are prepared to honor all
 dependencies including those coming from the SynCE libraries.
 Most of the SynCE libraries are already part of debian-unstable. So
 these packages are installed automatically if you try to install
 SynCE-KDE. Unfortunately,
-just now there is no official debian packages of synce-rra-0.8 aviable.
+just now there is no official debian packages of synce-rra-0.8
+available.
 To
 still be able to install SynCE-KDE please compile and install
 synce-rra-0.8 before using SynCE-KDE.<br>
@@ -256,7 +256,7 @@ compiling Qt and KDE yourself as described <a
 </blockquote>
 <a href="http://sourceforge.net/cvs/?group_id=30550"><b>CVS</b></a><b>
 user</b><br>
-<blockquote>If you are interested in testing bleding edge software you
+<blockquote>If you are interested in testing bleeding edge software you
 could
 also check out the latest code directly from <a
  href="http://sourceforge.net/cvs/?group_id=30550">CVS</a> by issuing
@@ -284,7 +284,8 @@ and Installing</h2>
  href="http://synce.sourceforge.net/synce/using.php#gettingconnected">getting
 connected</a> for the first time.<br>
   </li>
-  <li>If you want the AvantGO synchronizer plugin to be compiled, you
+  <li>If you want the <a href="http://www.avantgo.com/">AvantGo</a>
+synchronizer plugin to be compiled, you
 also have to download and compile <a
  href="http://www.mechlord.ca/%7Elownewulf/agsync-0.2-pre.tgz">agsync-0.2-pre.tgz</a>
 from&nbsp; <a href="http://www.mechlord.ca/%7Elownewulf/avantgo.html">AvantGo

@@ -27,7 +27,7 @@ welcome.<br>
   <tbody>
     <tr>
       <td colspan="2" rowspan="1" style="vertical-align: top;">
-      <h2>25 Devices simultanously</h2>
+      <h2>25 Devices simultaneously</h2>
 Posted on Wed Jun 18 14:36:46 2003 CET from <a
  href="mailto:pavel_at_kusto_dot_com_dot_ru">Pavel Stoliarov</a><br>
       </td>
