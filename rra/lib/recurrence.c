@@ -242,7 +242,7 @@ static void replace_string_with_copy(char** str, const char* value)
   *str = strdup(value);
 }
 
-static bool recurrence_initlize_rrule(const char* str, RRule* rrule)
+static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
 {
   int i;
   char** strv = strsplit(str, ';');
@@ -312,7 +312,7 @@ bool recurrence_parse_rrule(
   RRA_RecurrencePattern* pattern = rra_recurrence_pattern_new();
 
   memset(&rrule, 0, sizeof(RRule));
-  if (!recurrence_initlize_rrule(mdir_rrule->values[0], &rrule))
+  if (!recurrence_initialize_rrule(mdir_rrule->values[0], &rrule))
   {
     synce_error("Failed to parse RRULE '%s'", mdir_rrule->values[0]);
     goto exit;
