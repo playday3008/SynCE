@@ -1,14 +1,15 @@
-libsynce (0.8pre-20030603) unstable; urgency=low
-
-  * added bootstrap to rules
-
- -- Thomas Butter <thomas@i.rule-the.net>  Sun,  8 Jun 2003 20:47:51 +0200
-
-libsynce (0.8pre-20030602) unstable; urgency=low
+libsynce (0.8-1+cvs) unstable; urgency=low
 
   * CVS version.
 
- -- Jonathan McDowell <noodles@earth.li>  Mon, 02 Jun 2003 22:34:54 +0100
+ -- Jonathan McDowell <noodles@earth.li>  Sun, 03 Aug 2003 17:29:50 +0100
+
+libsynce (0.8-1) unstable; urgency=low
+
+  * First proper Debian upload.
+  * added bootstrap to rules
+
+ -- Thomas Butter <thomas@i.rule-the.net>  Sun,  8 Jun 2003 20:47:51 +0200
 
 libsynce (0.7-2) unstable; urgency=low
 
