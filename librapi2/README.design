@@ -18,11 +18,6 @@ Module details
 --------------
 o rapi_buffer
 o rapi_context
-o rapi_endian
-o rapi_filetime
-o rapi_log
-o rapi_socket
-o rapi_wstr
 
 
 Design guidelines
@@ -50,7 +45,6 @@ The implementation of the actual RAPI calls are places in the following
 files in the src directory:
 
 rapi.h             Header file that declares all RAPI calls
-rapi_types.h       Header file with data types used by rapi.h
 
 database.c         Database functions
 file_access.c      File access functions (create, read, write, etc)
@@ -65,9 +59,9 @@ the already available RAPI calls.
 
 If you want to implement an ASCII version of a call, you append an 'A' to
 the end of the function name and wrap the real function. Many APIs in a
-certain commercial operating system has an 'A' (probably for "ASCII") or a
-'W' (for "wide") appended to separate different versions of the same
-function.
+certain commercial operating system has an 'A' (probably for "ASCII" or
+"ANSI") or a 'W' (for "wide") appended to separate different versions of
+the same function.
 
 
 Modules
@@ -104,7 +98,6 @@ The current objects in librapi2 are:
 
   RapiBuffer  (private)
   RapiContext (public) 
-  RapiSocket  (private)
 
 
 rapi_buffer
@@ -123,53 +116,4 @@ rapi_context.[hc] for details.
 The RapiContext structure is public and contains send and receive buffers,
 the socket used, and some data.
 
-
-rapi_endian
------------
-
-The file rapi_endian.h contains these macros for endian conversion:
-
-letoh16  Little endian to host, 16-bit
-letoh32  Little endian to host, 32-bit
-htole16  Host to little endian, 16-bit
-htole32  Host to little endian, 32-bit
-
-If something breaks on big endian machines, these were forgotten somewhere.
-The file rapi_endian.c contains implementation of byte order swapping
-routines in case they are not found on a big endian system.
-
-
-rapi_filetime
--------------
-
-The rapi_filetime module contains functions to convert between a FILETIME
-structure and a time_t value. See rapi_filetime.[hc] for details.
-
-This module is available to users outside of librapi2 itself. 
-
-
-rapi_log
---------
-
-The rapi_log module provides logging of what is happening inside librapi2.
-See rapi_log.[hc] for details.
-
-
-rapi_socket
------------
-
-The rapi_socket object is a simple abstraction of a client socket.  See
-rapi_socket.[hc] for details.
-
-
-rapi_wstr
----------
-
-The rapi_wstr module contains functions to work with wide character
-strings, including converting them to and from ISO8859-1. In the future it
-might be extended to support other charcter sets.
-
-See rapi_wstr.[hc] for details.
-
-This module is available to users outside of librapi2 itself. 
 
