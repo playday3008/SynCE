@@ -7,9 +7,12 @@
 #include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
 #include "common_handlers.h"
+#include "recurrence.h"
+#include "../rra_config.h"
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
@@ -270,16 +273,17 @@ exit:
 
 typedef struct _EventParserData
 {
-  bool have_alarm;
+  bool has_alarm;
   mdir_line* dtstart;
   mdir_line* dtend;
+  mdir_line* rrule;
 } EventParserData;
 
 static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
 
-  if (event_parser_data->have_alarm)
+  if (event_parser_data->has_alarm)
     goto exit;
 
   char** data_type = mdir_get_param_values(line, "VALUE");
@@ -326,7 +330,7 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
     parser_add_int16(p, ID_REMINDER_ENABLED, 1);
     parser_add_string(p, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
 
-    event_parser_data->have_alarm = true;
+    event_parser_data->has_alarm = true;
   }
 
 exit:
@@ -344,6 +348,13 @@ static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->dtstart = line;
+  return true;
+}
+
+static bool on_mdir_line_rrule(Parser* p, mdir_line* line, void* cookie)
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->rrule = line;
   return true;
 }
 
@@ -405,6 +416,8 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_property_new("dtStart", on_mdir_line_dtstart));
   parser_component_add_parser_property(event, 
       parser_property_new("Location", on_mdir_line_location));
+  parser_component_add_parser_property(event, 
+      parser_property_new("RRule", on_mdir_line_rrule));
   parser_component_add_parser_property(event, 
       parser_property_new("Summary", on_mdir_line_summary));
   parser_component_add_parser_property(event, 
@@ -475,7 +488,31 @@ bool rra_appointment_from_vevent(/*{{{*/
 
       parser_add_int32(parser, ID_DURATION, minutes);
     }
+
+#if ENABLE_RECURRENCE
+    if (!recurrence_parse_rrule(
+          parser, 
+          event_parser_data.rrule, 
+          event_parser_data.dtstart,
+          event_parser_data.dtend))
+    {
+      synce_error("Failed to parse recurrence rule");
+      goto exit;
+    }
+#endif
   }
+
+  if (!event_parser_data.has_alarm)
+  {
+    /* default stuff */
+    parser_add_int16 (parser, ID_REMINDER_ENABLED, 0);
+    parser_add_int32 (parser, ID_REMINDER_MINUTES_BEFORE_START, 15);
+    parser_add_int32 (parser, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
+    parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
+  }
+  
+  /* The calendar application on my HP 620LX just hangs without this! */
+  parser_add_int32(parser, ID_UNKNOWN_0002, 0);
 
   if (!parser_get_result(parser, data, data_size))
   {

@@ -14,6 +14,7 @@ librra_la_SOURCES = \
 	generator.h generator.c \
 	librra.h   librra.c \
 	parser.h   parser.c \
+	recurrence.h recurrence_internal.h recurrence.c \
 	rrac.h     rrac.c \
 	strbuf.h   strbuf.c \
 	task.c
