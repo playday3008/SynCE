@@ -24,4 +24,5 @@ pics
 acinclude.m4
 aclocal.m4
 *.tar.gz
-
+*.pcs
+*.kdevses
