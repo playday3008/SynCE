@@ -14,11 +14,13 @@
 #include <kdebug.h>
 #include <libkcal/icalformat.h>
 #include <libkcal/event.h>
+#include <libkcal/todo.h>
 #include <libkcal/calendarnull.h>
 #include <libkcal/calendarlocal.h>
 #include <qfile.h>
 
-namespace pocketPCCommunication {
+namespace pocketPCCommunication
+{
     EventHandler::EventHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
             : PimHandler( p_rra )
     {
@@ -48,37 +50,6 @@ namespace pocketPCCommunication {
     {
         mUidHelper->save();
     }
-
-
-
-#ifdef A
-    KCal::ICalFormat calFormat; // NEEDED FOR EVENTS!!
-//    KCal::CalendarLocal cal;
-    calFormat.setTimeZone(sCurrentTimeZone, false);
-
-    QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
-    QString vCalEnd = "END:VCALENDAR\n";
-
-    /*
-    uint32_t id;
-    m_rra->getMatchMaker()->get_partner_id(1, &id);
-    QString partnerId = QString::number (id, 16);
-    */
-    QString partnerId;
-    partnerId = getPartnerId();
-
-    for (;it != end; ++it)
-    {
-        //remoteId = "X-" + m_appName + "-" + m_keyName + "_" + partnerId + ":" + *it + "\n";
-
-        vCal = vCalBegin + m_rra->getVEvent(s_typeIdEvent, *it) + vCalEnd;
-        kdDebug(2120) << "[EventHandler2]::getEventEntry calendar: " << vCal << endl;
-
-        if (!calFormat.fromString (&p_calendar, vCal))
-            kdDebug(2120) << "[EventHandler]: getting of event failed!" << endl;
-        else
-        {
-#endif
 
 
     int EventHandler::retrieveEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList)
@@ -261,6 +232,25 @@ namespace pocketPCCommunication {
     }
 
 
+    void EventHandler::getTodosAsFakedEvents(KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
+    {
+        kdDebug(2120) << "getTodosAsEvents: " << endl;
+
+        for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
+            KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
+            KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
+            if (todo) {
+                if (mUidHelper->konnectorId("SynCEEvent", todo->uid(), "---") != "---") {
+                    KCal::Event *event = new KCal::Event(); // This event is never deleted yet ... memory whole ... FIXME
+                    event->setUid(todo->uid());
+                    p_events.push_back ( event );
+                    kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
+                }
+            }
+        }
+    }
+
+
     void EventHandler::addEvents(KCal::Event::List& p_eventList)
     {
         if ( p_eventList.begin() == p_eventList.end() )
@@ -337,6 +327,9 @@ namespace pocketPCCommunication {
 
             getEvents( eventAdded, mCalendarSyncee->added() );
             getEvents( eventRemoved, mCalendarSyncee->removed() );
+            // This is a bad hack - but ksync provides deleted calendar-entries only as todos
+            // So lets look if a removed "todo" is actually a removed event ...
+            getTodosAsFakedEvents( eventRemoved, mCalendarSyncee->removed() );
             getEvents( eventModified, mCalendarSyncee->modified() );
 
             addEvents( eventAdded );

@@ -15,10 +15,8 @@
 
 #include "PimHandler.h"
 #include "RecordType.h"
-#include <libkcal/calendar.h>
 #include <kitchensync/idhelper.h>
 #include <kitchensync/calendarsyncee.h>
-#include <qregexp.h>
 
 namespace pocketPCCommunication {
 
@@ -40,6 +38,7 @@ public:
     int getEventListFromDevice(KCal::Event::List &mEventList, int mRecType);
     bool readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync);
     void getEvents (KCal::Event::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
+    void getTodosAsFakedEvents(KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList );
     bool writeSyncee(KSync::CalendarSyncee *mCalendarSyncee);
     void insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Event::List &list, int state);
 

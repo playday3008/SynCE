@@ -223,6 +223,23 @@ namespace pocketPCCommunication
     }
 
 
+    void TodoHandler::getTodosAsFakedTodos(KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
+    {
+        kdDebug( 2120 ) << "getTodo: " << endl;
+
+        for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
+            KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
+            KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
+            if (todo) {
+                if (mUidHelper->konnectorId("SynCETodo", todo->uid(), "---") != "---") {
+                    p_todos.push_back ( todo );
+                    kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
+                }
+            }
+        }
+    }
+
+
     void TodoHandler::addTodos(KCal::Todo::List& p_todoList)
     {
         if ( p_todoList.begin() == p_todoList.end() )
@@ -297,7 +314,9 @@ namespace pocketPCCommunication
             KCal::Todo::List todoModified;
 
             getTodos( todoAdded, mCalendarSyncee->added() );
-            getTodos( todoRemoved, mCalendarSyncee->removed() );
+            // This is a bad hack - but ksync provides deleted calendar-entries only as todos
+            // So lets look if a removed "todo" is actually a removed todo ...
+            getTodosAsFakedTodos( todoRemoved, mCalendarSyncee->removed() );
             getTodos( todoModified, mCalendarSyncee->modified() );
 
             addTodos( todoAdded );

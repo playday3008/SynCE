@@ -15,8 +15,6 @@
 
 #include "PimHandler.h"
 #include "RecordType.h"
-#include <libkcal/calendar.h>
-#include <qregexp.h>
 #include <kitchensync/calendarsyncee.h>
 #include <kitchensync/idhelper.h>
 
@@ -40,6 +38,7 @@ public:
     int getTodoListFromDevice(KCal::Todo::List &mTodoList, int mRecType);
     bool readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync);
     void getTodos (KCal::Todo::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
+    void getTodosAsFakedTodos(KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList );
     bool writeSyncee(KSync::CalendarSyncee *mCalendarSyncee);
     void insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Todo::List &list, int state);
 
