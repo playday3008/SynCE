@@ -80,7 +80,7 @@ bool rapi_context_call(RapiContext* context)
 		return false;
 	}
 
-	if ( !rapi_buffer_recv(context->send_buffer, context->socket) )
+	if ( !rapi_buffer_recv(context->recv_buffer, context->socket) )
 	{
 		rapi_context_error("rapi_socket_recv failed");
 		/* TODO: set context->last_error */
