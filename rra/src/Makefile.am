@@ -9,6 +9,7 @@ synce_matchmaker_SOURCES = rra-partners.c
 noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
 	rra-decode rra-subscribe \
+	rra-get-recurring-appointments \
 	rra-contact-to-vcard rra-contact-from-vcard \
 	rra-appointment-from-vevent rra-appointment-to-vevent \
 	rra-task-from-vtodo rra-task-to-vtodo \
@@ -22,6 +23,8 @@ rra_delete_SOURCES      = rra-delete.c
 rra_decode_SOURCES      = rra-decode.c
 rra_subscribe_SOURCES    = rra-subscribe.c
 #rra_db_vcal_SOURCES     = rra-db-vcal.c appointment.h appointment.c
+
+rra_get_recurring_appointments_SOURCES = rra-get-recurring-appointments.c
 
 rra_contact_to_vcard_SOURCES    = rra-contact-to-vcard.c
 rra_contact_from_vcard_SOURCES  = rra-contact-from-vcard.c
