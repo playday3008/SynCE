@@ -1,22 +1,45 @@
 $Id$
 
-Contents of this document
--------------------------
-
-o How to contribute
-o Design goals
-
-
 How to contribute
 -----------------
 
 Contibutions to this project are always welcome. You can contribute in many
 different ways:
 
-o Testing on your configuration and reporting the results
-o Donations
-o Subitting patches
+o Testing
+o Donating
+o Sending patches
 o Answering questions on the mailing list
+
+
+Testing
+-------
+
+If you only compile librapi2, run the test programs, and report any problems,
+then you have contributed to the development of librapi2!
+
+
+Donating
+--------
+
+Librapi2 is developed on an non-profit basis. A gift will encourage further
+development.
+
+David Eriksson's book wishlist:
+
+  http://www.amazon.co.uk/exec/obidos/wishlist/wcbqewsjz4wz
+
+Or maybe donate money on www.paypal.com:
+
+	David Eriksson's e-mail address is twogood@users.sourceforge.net
+
+(Other developers of librapi2, feel free to add yourselves above! :-)
+	
+	
+Sending patches
+---------------
+
+A patch contains a fix for a bug or implements some missing functionality.
 
 A good document describing how to submit a patch is available here, thanks to
 the PHP project. Just substitute "PHP" with "SynCE" :-)
@@ -25,17 +48,8 @@ the PHP project. Just substitute "PHP" with "SynCE" :-)
 
 If you submit lots of patches you will get access to the CVS repository.
 
+Answering questions on the mailing list
+---------------------------------------
 
-
-
-Design goals
-------------
-
-o Requiring as little code as possible to implement a new RAPI function
-o Merge the functionality of the previous three libraries into one
-o Thread-safety
-o Support both 32- and 64-bit platforms
-o Support both little endian and big endian platforms
-
-
+Can't be that hard, can it? :-)
 
