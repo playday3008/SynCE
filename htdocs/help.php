@@ -97,15 +97,15 @@ the bash shell) in the environment before starting MultiSync.</li>
 href="http://www.catb.org/~esr/faqs/smart-questions.html#intro">how to ask
 questions the smart way</a>!</p>
 
-<p>When you know how to ask smart questions you can use one of these ways to
-reach the SynCE community:</p>
+<p>When you know that you can use one of these ways to reach the SynCE
+community:</p>
 
 <ul>
 
 <li class=SPACED>If you like IRC you can visit the IRC channel <tt>#synce</tt>
 on <b>irc.freenode.net</b> and see if anyone there can help you.</li>
 
-<li class=SPACED>In the <a
+<li class=SPACED>The <a
 href="http://sourceforge.net/forum/forum.php?forum_id=96106">SynCE Help
 Forum</a>.</li>
 
