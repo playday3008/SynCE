@@ -49,7 +49,7 @@ should:</p>
 
 <ol>
 <li>Be written in C or C++</li>
-<li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -ansi -pedantic</tt></li>
+<li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -Werror -ansi -pedantic</tt></li>
 <li>Be licensed with a BSD or MIT license</li>
 <li>Be able to perform these functions on InstallShield archive files:<ol>
 
@@ -94,7 +94,7 @@ Linux/BSD does for video codecs.</li>
 
 <h3>Prerequisites</h3>
 
-<p>Required: C programming knowledge on Linux/BSD.<br>
+<p>Required: C or C++ programming knowledge on Linux/BSD.<br>
 Useful: Ditto on Microsoft Windows.</p>
 
 <h3>Links</h3>
@@ -121,7 +121,7 @@ OpenOffice.</p>
 
 <ol>
 <li>Be written in C or C++</li>
-<li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -ansi -pedantic</tt></li>
+<li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -Werror -ansi -pedantic</tt></li>
 <li>Be licensed with a BSD or MIT license</li>
 <li>Be able to convert a PWI file to a plain text file</li>
 </ol>
