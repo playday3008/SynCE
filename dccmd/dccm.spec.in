@@ -36,6 +36,7 @@ make
 %makeinstall
 
 %files
+%defattr(-,root,root)
 %doc README LICENSE
 %{prefix}/bin/dccm
 %{prefix}/bin/synce-sound
