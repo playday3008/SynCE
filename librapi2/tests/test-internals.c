@@ -66,7 +66,7 @@ END_TEST/*}}}*/
 
 static const char UNICODE_VALUE[] = 
 {
-  '2',0,'G',0,'o',0,'o',0,'D',0,' ',0,'P',0,'r',0,'o',0,'d',0,'u',0,'c',0,'t',0,'i',0,'o',0,'n',0,'s',0,0
+  '2',0,'G',0,'o',0,'o',0,'D',0,' ',0,'P',0,'r',0,'o',0,'d',0,'u',0,'c',0,'t',0,'i',0,'o',0,'n',0,'s',0,0,0
 };
 
 static const char ASCII_VALUE[] = { "2GooD Productions" };
@@ -75,8 +75,9 @@ START_TEST(test_unicode_strlen)/*{{{*/
 {
 	size_t length;
 
-	length = rapi_wstr_string_length((WCHAR)UNICODE_VALUE);
+	length = rapi_wstr_string_length((WCHAR*)UNICODE_VALUE);
 	
+	printf("Length: ascii=%i, unicode=%i\n", strlen(ASCII_VALUE), length);
 	fail_unless( length == strlen(ASCII_VALUE), "rapi_wstr_string_length failed" );
 }
 END_TEST/*}}}*/
@@ -102,7 +103,7 @@ START_TEST(test_unicode_to_ascii)/*{{{*/
 {
 	char* ascii;
 
-	ascii = rapi_wstr_to_ascii(UNICODE_VALUE);
+	ascii = rapi_wstr_to_ascii((WCHAR*)UNICODE_VALUE);
 
 	fail_unless( ascii != 0, "rapi_wstr_to_ascii returned NULL" );
 
@@ -115,7 +116,7 @@ START_TEST(test_unicode_to_ascii)/*{{{*/
 }
 END_TEST/*}}}*/
 
-START_TEST(test_config_general)
+START_TEST(test_config_general)/*{{{*/
 {
 	struct configFile* config;
 	int number;
@@ -135,11 +136,11 @@ START_TEST(test_config_general)
 
 	unloadConfigFile(config);
 }
-END_TEST
+END_TEST/*}}}*/
 
 Suite *internals_suite (void) 
 { 
-	Suite *s = suite_create ("librapi internals"); 
+	Suite *s = suite_create ("librapi internals\n"); 
 	TCase *tc_buffer  = tcase_create ("rapi_buffer");
 	TCase *tc_unicode = tcase_create ("rapi_wstr");
 	TCase *tc_config = tcase_create ("config");
