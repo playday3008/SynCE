@@ -68,7 +68,7 @@ bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
 	return true;
 }
 
-unsigned rapi_buffer_get_size(RapiBuffer* buffer)
+size_t rapi_buffer_get_size(RapiBuffer* buffer)
 {
 	return buffer->bytes_used;
 }
