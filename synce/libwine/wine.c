@@ -27,13 +27,13 @@ size_t _WIN_wcstombs( char *s, const TCHAR *pwcs, size_t n )
 	size_t ibl, obl;
 	size_t result = 0;
 
-	cd = iconv_open( "latin1", "UCS-2" );
+	cd = iconv_open( "UTF-8", "UCS-2" );
 
 	iptr = ( char * ) pwcs;
 	ibl = n * sizeof( _WIN_WCHAR );
 	obl = n;
 	optr = s;
-	result = iconv( cd, (const char **) &iptr, &ibl, &optr, &obl );
+	result = iconv( cd, &iptr, &ibl, &optr, &obl );
 
 	iconv_close( cd );
 
@@ -184,13 +184,13 @@ size_t _WIN_mbstowcs( _WIN_WCHAR * strDestination, char * strSource, size_t n )
 	size_t ibl, obl;
 	size_t result = 0;
 
-	cd = iconv_open( "UCS-2", "latin1" );
+	cd = iconv_open( "UCS-2", "UTF-8" );
 
 	iptr = strSource;
 	ibl = n;
 	obl = n * sizeof( _WIN_WCHAR );
 	optr = ( char * ) strDestination;
-	result = iconv( cd, (const char **) &iptr, &ibl, &optr, &obl );
+	result = iconv( cd, &iptr, &ibl, &optr, &obl );
 
 	iconv_close( cd );
 
