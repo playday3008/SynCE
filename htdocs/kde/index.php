@@ -64,7 +64,7 @@ of PDAs to interrested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</p>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
-<b>August 18, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
+<b>August 17, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
 <ul>
   <li>First of all the name of the project has changed. It is now
 called SynCE-KDE.</li>
@@ -211,46 +211,62 @@ You can download precompiled <tt>tgz</tt>, <tt>rpm</tt>, and
  href="http://sourceforge.net/projects/synce/">SourceForge Project
 Page</a>.<br>
 <br>
-<div style="margin-left: 40px;"><span style="font-weight: bold;"><a
- href="http://www.debian.org/">Debian</a> user:</span> <br>
-<ul>
-  <li>The SynCE-KDE debian packages are prepeared to honor all
-dependencies including those coming from the synce libraries. But -
-just now there are no&nbsp; official v0.8-synce packages aviable.
-Nevertheless, to be able to install SynCE-KDE please use the
+<span style="font-weight: bold;"><a href="http://www.debian.org/">Debian</a>
+user</span><br>
+<blockquote>Just now, the SynCE-KDE <tt>deb</tt>
+packages are
+designed for debian unstable.&nbsp; I will try to provide packages for
+stable and testing as soon as possible. Until than you have to compile
+SynCE-KDE from source. <br>
+The packages are prepeared to honor all
+dependencies including those coming from the synce libraries.
+Unfortunatly,
+just now there are no official synce-0.8 debian packages aviable. To
+still be able to install SynCE-KDE please use the
 "--force-depends" switch of dpkg. Of course, the SynCE libraries have
 to be installed before.<br>
-  </li>
-</ul>
+As long as there are no official SynCE-0.8 packages the SynCE-KDE
+packages are only available from the <a
+ href="http://sourceforge.net/projects/synce/">SourceForge Project
+Page</a> and not from the <a
+ href="http://synce.sourceforge.net/synce/debian.php">SynCE-Debian-Repository</a>.<br>
+  <br>
+</blockquote>
 <span style="font-weight: bold;"><a href="http://www.redhat.com/">RedHat</a>
-user:</span><br>
-<ul>
-  <li>The rpm packages are designed for RedHat 0.9.</li>
-</ul>
+user</span><br>
+<blockquote>The <tt>rpm</tt> packages are designed for
+RedHat 0.9.<br>
+  <br>
+</blockquote>
 <span style="font-weight: bold;"><a href="http://www.slackware.com/">Slackware</a>
-user:</span><br>
-<ul>
-  <li>Be aware that SynCE-KDE is not compatible with Slackware 0.9. It
+user</span><br>
+<blockquote>Be aware that SynCE-KDE is not
+compatible with Slackware 0.9. It
 seems RAKI produces a deadlock in the <a
- href="http://www.trolltech.com/">Qt-Library</a> provided by <a
+ href="http://www.trolltech.com/">Qt-library</a> provided by <a
  href="http://www.slackware.com/">Slackware</a>. You can fix this by
 compiling Qt and KDE yourself as described <a
  href="http://developer.kde.org/build/compile_kde3_1.html">here</a>.<br>
-  </li>
-</ul>
-</div>
-<br>
-If you are interested in testing bleding edge software you could
+  <br>
+</blockquote>
+<a href="http://sourceforge.net/cvs/?group_id=30550"><b>CVS</b></a><b>
+user</b><br>
+<blockquote>If you are interested in testing bleding edge software you
+could
 also check out the latest code directly from <a
  href="http://sourceforge.net/cvs/?group_id=30550">CVS</a> by issuing
 the
-command<br>
-<div style="margin-left: 40px;"><code># cvs -z3
--d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/synce co
-rapip<br>
-</code></div>
-after <a href="http://sourceforge.net/cvs/?group_id=30550">logging
-in</a>.<br>
+command<code></code><br>
+  <br>
+  <code># cvs -z3
+-d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/synce \<br>
+&nbsp;&nbsp;&nbsp; co synce-kde</code><br>
+  <blockquote><code></code></blockquote>
+  <code></code>after <a
+ href="http://sourceforge.net/cvs/?group_id=30550">logging
+in</a>. Look at <a href="#Installation">Compiling and Installing</a>
+for a guid how to compile and install SynCE-KDE by yourself.<a href="#"><br>
+  </a></blockquote>
 <br>
 <h2><a name="Installation"
  href="http://sourceforge.net/cvs/?group_id=30550" id="Installation"></a>Compiling
