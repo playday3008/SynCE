@@ -19,6 +19,7 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="#future">Future</a></li>
 <li><a href="#developers">Developers</a></li>
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
+<li><a href="links.php">Links</a></li>
 </ul>
 
 <a name="introduction"></a>
@@ -80,7 +81,8 @@ SynCE project and did the hard work in figuring out the properitary
 interfaces.</p>
 
 <p><a href="mailto:twogood@users.sourceforge.net">David Eriksson</a> is the
-current project manager and most active developer.</p>
+current project manager and most active developer. Also the author of these
+simple web pages.</p>
 
 <p><a href="mailto:hippy@users.sourceforge.net">Richard Taylor</a> is working
 on PyRAPI, Python wrappers for RAPI.</p>
