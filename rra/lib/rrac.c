@@ -1165,6 +1165,39 @@ exit:
   return success;
 }
 
+bool sync_command_negotiation_get(
+    SyncCommand* self, 
+    SyncNegotiation* negotiation)
+{
+  bool success = false;
+
+  if (self && negotiation)
+  {
+    uint8_t* p = self->data;
+
+    if (self->size < 0x10)
+    {
+      synce_error("Invalid packet.");
+      goto exit;
+    }
+
+    if (self->size > 0x10)
+      synce_warning("Unexpected packet size %08x", self->size);
+
+    negotiation->type_id  = LE32(p);  p += sizeof(uint32_t);
+    negotiation->old_id   = LE32(p);  p += sizeof(uint32_t);
+    negotiation->new_id   = LE32(p);  p += sizeof(uint32_t);
+    negotiation->flags    = LE32(p);  p += sizeof(uint32_t);
+
+    success = true;
+  }
+  else
+    synce_error("Invalid parameters to function.");
+
+exit:
+  return success;
+}
+
 SyncCommand* rrac_recv_command(RRAC* self)/*{{{*/
 {
   SyncCommand* result = NULL;

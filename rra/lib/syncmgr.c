@@ -606,6 +606,34 @@ exit:
   return success;
 }/*}}}*/
 
+static bool rra_syncmgr_on_negotiation(RRA_SyncMgr* self, SyncCommand* command)/*{{{*/
+{
+  bool success = false;
+  SyncNegotiation negotiation;
+
+  if (!sync_command_negotiation_get(command, &negotiation))
+  {
+    synce_error("Failed to get negotiation info");
+    goto exit;
+  }
+
+  synce_trace("%08x %08x %08x %08x",
+      negotiation.type_id,
+      negotiation.old_id,
+      negotiation.new_id,
+      negotiation.flags);
+
+  if (negotiation.old_id != negotiation.new_id)
+  {
+    synce_error("We are supposed to reply!");
+  }
+
+  success = true;
+ 
+exit:
+  return success;
+}/*}}}*/
+
 static bool rra_syncmgr_on_notify(RRA_SyncMgr* self, SyncCommand* command)/*{{{*/
 {
   bool success = false;
@@ -645,6 +673,10 @@ bool rra_syncmgr_handle_event(RRA_SyncMgr* self)/*{{{*/
 
     switch (sync_command_code(command))
     {
+      case SYNC_COMMAND_NEGOTIATION:
+        success = rra_syncmgr_on_negotiation(self, command);
+        break;
+      
       case SYNC_COMMAND_NOTIFY:
         success = rra_syncmgr_on_notify(self, command);
         break;

@@ -122,8 +122,9 @@ bool rrac_send_data(
 struct _SyncCommand;
 typedef struct _SyncCommand SyncCommand;
 
-#define SYNC_COMMAND_ERROR    0x006e
-#define SYNC_COMMAND_NOTIFY   0x0069
+#define SYNC_COMMAND_ERROR              0x006e
+#define SYNC_COMMAND_NOTIFY             0x0069
+#define SYNC_COMMAND_NEGOTIATION        0x0065
 
 #define SYNC_COMMAND_NOTIFY_UPDATE      0x00000000
 #define SYNC_COMMAND_NOTIFY_PARTNERS    0x02000000
@@ -165,6 +166,18 @@ bool sync_command_notify_header(SyncCommand* self, SyncNotifyHeader* header);
 /** Get IDs if notify code is SYNC_COMMAND_NOTIFY_IDS_[46] */
 bool sync_command_notify_ids(SyncCommand* self, uint32_t* ids);
 
+typedef struct
+{
+	uint32_t    type_id;
+	uint32_t    old_id;
+	uint32_t    new_id;
+	uint32_t    flags;
+} SyncNegotiation;
+
+/** Get SYNC_COMMAND_NEGOTIATION data */
+bool sync_command_negotiation_get(
+    SyncCommand* self, 
+    SyncNegotiation* negotiation);
 
 SyncCommand* rrac_recv_command(RRAC* self);
 
