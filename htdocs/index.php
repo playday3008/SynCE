@@ -34,6 +34,8 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>November 18, 2002</b>. SynCE 0.3.1 released, including the GNOME 2 tray icon!</p>
+
 <p><b>November 17, 2002</b>. New homepage released!</p>
 
 <a name="helpwanted"></a>
@@ -44,20 +46,16 @@ on top of the SynCE project:</p>
 
 <ul>
 
-<li class=SPACED>GNOME 2 integration:<ul>
+<li class=SPACED>Debian packages: Of course we want to get into the Debian
+distribution some day!</li>
 
-<li>A <a
+<li class=SPACED>GNOME 2 integration: A <a
 href="http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html">GNOME-VFS
 module</a>.</li>
 
-</ul></li>
-
-<li>KDE 3 integration:<ul>
-
-<li>A KDE I/O slave for KDE 3. (There is already an I/O slave for KDE 2, you
-just need to make it work with KDE 3.)</li>
-
-</ul></li>
+<li>KDE 3 integration: A KDE I/O slave for KDE 3. (There is already an <a
+href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/kio_synce/">I/O
+slave for KDE 2</a>, you just need to make it work with KDE 3.)</li>
 
 </ul>
 
@@ -92,6 +90,11 @@ connected through SynCE.</td>
 use with SynCE.</td>
 </tr>
 
+<tr>
+<th>trayicon</th>
+<td>A tray icon for GNOME 2 showing if a device is connected or not.</td>
+</tr>
+
 </table>
 
 <a name="future"></a>
@@ -104,7 +107,7 @@ use with SynCE.</td>
 <a name="developers"></a><h2>The SynCE developers</h2>
 
 <p><a href="mailto:llange@users.sourceforge.net">Ludovic Lange</a> started the
-SynCE project and did the hard work in figuring out the properitary
+SynCE project and did the hard work in figuring out manu of the properitary
 interfaces.</p>
 
 <p><a href="mailto:twogood@users.sourceforge.net">David Eriksson</a> is the

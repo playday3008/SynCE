@@ -48,8 +48,18 @@ password=1234
 key=36
 </pre>
 
-<p>In the future, DCCM will be able to notify applications when a device is
-connected or disconnected.</p>
+<p>DCCM is capable of running programs or scripts on certain events. The
+following events are currently used:</p>
+
+<ul>
+<li>start - DCCM has started</li>
+<li>stop - DCCM will stop</li>
+<li>connect - A device has connected and authenticated</li>
+<li>disconnect - A device has disconnected</li>
+</ul>
+
+<p>In order to receive these events, put your program, script, or symbolic link
+to one of those in the <i>~synce/scripts/</i> directory.</p>
 
 <p>There is a special page documenting the <a href="dccm.php">DCCM protocol</a>.</p>
 
@@ -130,7 +140,7 @@ dccm            5679/udp   Direct Cable Connect Manager
 <h2>Questions?</h2>
 
 <p>Send an e-mail to <a
-href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net></a>!</p>
+href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>!</p>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
