@@ -6,19 +6,25 @@
 
 <h1>SynCE - USB connection - Linux</h1>
 
-<p>To use a USB connection on Linux, the following kernel module must be compiled:</p>
+<p>If you compile the Linux kernel yourself, make sure that this driver is
+included in your kernel configuration:</p>
 
-<p><tt>USB Support -&gt;<br>
+<blockquote><tt>USB Support -&gt;<br>
 USB Serial Converter support -&gt;<br>
-USB Compaq iPAQ / HP Jornada / Casio EM500 Driver</tt></p>
+USB Compaq iPAQ / HP Jornada / Casio EM500 Driver</tt></blockquote>
 
+<p>Pre-compiled Linux kernels usually includes the <tt>ipaq</tt> Linux kernel
+driver that is required to use SynCE with USB.</p>
+
+<!--
 <p>Useful reading: How to <a href="usbids.php">find the USB Vendor and Product
 IDs</a> for your PDA.</p>
 
 <p>See <a href="#success">Successful USB connection</a> for a log message from
 a successful USB connection.</p>
+-->
 
-<p>Select your kernel version to see if your device works with your kernel:</p>
+<p>Select your kernel version to see how to get your device working:</p>
 
 <ul>
 
@@ -33,9 +39,9 @@ a successful USB connection.</p>
 <a name="many"></a>
 <h2>2.4.21 or later kernels, including 2.6 series</h2>
 
-<p>Please note that no 2.5 kernels are supported!</p>
-
 <p>(This also includes RedHat's 2.4.20 kernels.)</p>
+
+<p>Please note that no 2.5 kernels are supported!</p>
 
 <h3>Special information for Mandrake 9.2 users with kernel 2.4</h3>
  
@@ -148,6 +154,13 @@ E740
 
 </table>
 
+<p>You are welcome to <a href="help.php">contact the SynCE developers</a> if
+you can provide additional details above the devices listed above.</p>
+
+<p>If you are unsure of whether your device is included in the list above,
+connect it via the USB cable and compare your logs with the log extract shown
+in the <a href="#success">Successful USB connection</a> section.</p>
+
 <p>If your device is in the list above, go ahead and <a
 href="usb_linux_setup.php">configure SynCE</a>.</p>
 
@@ -157,16 +170,19 @@ href="usb_linux_setup.php">configure SynCE</a>.</p>
 module manual like this, but with the vendor and product ID for your
 device:</p>
 
-<pre>insmod usbserial
-insmod ipaq vendor=0x049f product=0x0032</pre>
+<blockquote><pre>insmod usbserial
+insmod ipaq vendor=0x049f product=0x0032</pre></blockquote>
 
 <p>Or add a line similar to this to your <tt>/etc/modules.conf</tt> file before
 connecting your device:</p>
 
-<pre>options ipaq vendor=0x3340 product=0x3326</pre>
+<blockquote><pre>options ipaq vendor=0x3340 product=0x3326</pre></blockquote>
 
-<p>If you can provide additional details above the devices listed above, please
-<a href="help.php">contact the SynCE developers</a>.</p>
+<p>Useful reading: How to <a href="usbids.php">find the USB Vendor and Product
+IDs</a> for your PDA.</p>
+
+<p>See <a href="#success">Successful USB connection</a> for a log message from
+a successful USB connection.</p>
 
 <a name="early"></a>
 <h2>2.4.18 to 2.4.20 kernels</h2>
@@ -176,7 +192,7 @@ kernels, including 2.6 series</a>.)</p>
 
 <p>If you going to use SynCE on an SMP (multi-processor) system with this
 kernel you must <a href="usbpatch.php">patch your kernel driver</a> or upgrade
-to <a href="#many">2.4.21 or a later kernel</a>.</p>
+to <a href="#many">2.4.21 or a later kernel</a> (recommended).</p>
 
 <p>These kernel version only support these devices:</p>
 
@@ -189,7 +205,10 @@ to <a href="#many">2.4.21 or a later kernel</a>.</p>
 <p>If your device is in the list above, go ahead and <a
 href="usb_linux_setup.php">configure SynCE</a>, otherwise you need to <a
 href="usbpatch.php">patch your kernel driver</a> or upgrade to <a
-href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
+href="#many">2.4.21 or newer 2.4.x kernel</a> (recommended).</p>
+
+<p>See <a href="#success">Successful USB connection</a> for a log message from
+a successful USB connection.</p>
 
 <a name="none"></a>
 <h2>Kernel prior to 2.4.18</h2>
