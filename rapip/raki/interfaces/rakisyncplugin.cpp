@@ -27,24 +27,46 @@
 
 #include "rakisyncplugin.h"
 #include "syncthread.h"
+#include "synctasklistitem.h"
 
 #include <qapplication.h>
+#include <kmessagebox.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
 {}
 
 
-bool RakiSyncPlugin::doSync(SyncThread *syncThread, ObjectType *objectType,
-        QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra, bool firstSynchronize)
+bool RakiSyncPlugin::doSync(SyncThread *syncThread, Rra *rra,
+        SyncTaskListItem *progressItem, bool firstSynchronize)
 {
-    this->pdaName = pdaName;
+    this->syncThread = syncThread;
     this->progressItem = progressItem;
     this->rra = rra;
-    this->syncThread = syncThread;
-    this->objectType = objectType;
-    this->partnerId = partnerId;
     this->firstSynchronize = firstSynchronize;
     return sync();
+}
+
+
+void RakiSyncPlugin::init(QWidget *parent, KConfig *ksConfig,
+        ObjectType *objectType, QString pdaName, uint32_t partnerId)
+{
+    this->objectType = objectType;
+    this->partnerId = partnerId;
+    this->pdaName = pdaName;
+    this->parent = parent;
+    createConfigureObject(ksConfig);
+}
+
+
+void RakiSyncPlugin::configure()
+{
+    KMessageBox::information(parent, QString(objectType->name) +
+            " has nothing to configure.", QString(objectType->name) + " " + pdaName);
+}
+
+
+void RakiSyncPlugin::createConfigureObject(KConfig */*ksConfig*/)
+{
 }
 
 

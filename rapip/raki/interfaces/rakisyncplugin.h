@@ -30,6 +30,8 @@
 
 #include <librra.h>
 
+#include <kconfig.h>
+
 #include <qobject.h>
 #include <qstring.h>
 #include <qevent.h>
@@ -49,8 +51,8 @@ class RakiSyncPlugin : public QObject
 public:
     RakiSyncPlugin();
 
-    bool doSync(SyncThread *syncThread, ObjectType *objectTypeString, QString pdaName,
-            uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra, bool firstSynchronize);
+    bool doSync(SyncThread *syncThread, Rra *rra,
+            SyncTaskListItem *progressItem, bool firstSynchronize);
     uint32_t getObjectTypeId();
     bool running();
     bool stopRequested();
@@ -60,6 +62,10 @@ public:
     void setTotalSteps(int steps);
     void setProgress(int progress);
     void setTask(const char *task);
+    void init(QWidget *parent, KConfig *ksConfig, ObjectType *objectType,
+            QString pdaName, uint32_t partnerId);
+    virtual void createConfigureObject(KConfig *ksConfig);
+    virtual void configure();
 
 private:
     virtual bool sync() = 0;
@@ -72,6 +78,7 @@ protected:
     SyncThread *syncThread;
     uint32_t partnerId;
     bool firstSynchronize;
+    QWidget *parent;
 };
 
 #endif
