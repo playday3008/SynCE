@@ -31,6 +31,9 @@
 
 <li class=SPACED>Make sure you are running as the root user.</li>
 
+<li class=SPACED>If you are using USB or serial cable, connect the cable to the
+PC.</li>
+
 <li>Run synce-serial-start:<br>
 <pre>    synce-serial-start</pre></li>
 
