@@ -34,6 +34,7 @@ message like this too:</p>
 the tools and dccm as different users. Please make sure that:</p>
 
 <ul>
+<li>you have installed the patch for the <a href="usb_linux.php#werestuffed">"we're stuffed" bug</a></p>
 <li>you supplied a password to dccm if your device is password-protected</li>
 <li>dccm was started before you ran synce-serial-start</li>
 <li>that the PPP connection is successful (look in your system logs)</li>

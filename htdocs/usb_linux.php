@@ -43,6 +43,55 @@ a successful USB connection.</p>
 
 <p>Please note that no 2.5 kernels are supported!</p>
 
+<a name="werestuffed"></a>
+<h3>The "we're stuffed" bug</h3>
+
+<blockquote>
+
+<p><b>Symptoms</b> The <tt>ipaq</tt> kernel driver recognizes the USB device, but it
+is not possible to get a PPP connection.</p>
+
+<p><b>Showing the bug</b> If the <tt>ipaq</tt> kernel driver is
+loaded with options <tt>debug=1</tt>, the following is shown in the system log
+when <tt>synce-serial-start</tt> is started:</p>
+
+<pre>synce-serial-start: Executing '/usr/sbin/pppd call synce-device'
+pppd[6162]: pppd 2.4.2 started by root, uid 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_open - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 1, data = 00
+kernel: drivers/usb/serial/ipaq.c: ipaq_chars_in_buffer - queuelen 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 6, data = 43 4c 49 45 4e 54
+kernel: drivers/usb/serial/ipaq.c: ipaq_write - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_write_bulk - we're stuffed
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 6, data = 43 4c 49 45 4e 54
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 6, data = 43 4c 49 45 4e 54
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 6, data = 43 4c 49 45 4e 54
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
+kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - nonzero read bulk status received: -84
+kernel: usb 1-2: USB disconnect, address 9
+kernel: usbserial 1-2:1.0: device disconnected</pre>
+
+<p><b>Affected systems</b> At least:</p>
+
+<ul>
+
+<li>Suse 9.1</li>
+<li>Gentoo</li>
+<li>Debian Unstable</li>
+
+</ul>
+
+<p><b>Solution</b> Download <a
+href="http://synce.sourceforge.net/tmp/kernel-2.6-driver.tar.gz">kernel-2.6-driver.tar.gz</a>
+and follow the instructions in the README file.</p>
+
+</blockquote>
+
 <h3>Special information for Mandrake 9.2 users with kernel 2.4</h3>
  
 
@@ -89,73 +138,9 @@ this:</p>
 
 <h3>Supported vendor and product IDs</h3>
 
-<p>This kernel supports many common and uncommon devices, but certain newer
-devices are missing.</p>
-
-<table cellpadding=3>
-<tr><th>Vendor</th><th>Vendor ID</th><th>Product</th><th>Product ID</th></tr>
-
-<tr><td>Askey</td><td>1690</td><td>Unknown</td><td>0601</td></tr>
-
-<tr><td>Bcom</td><td>0960</td><td></td><td>0065<br>0066<br>0067</td></tr>
-
-<tr><td>Casio</td><td>07cf</td><td>Unknown<br>EM500 etc</td><td>2001<br>2002</td></tr>
-
-<tr><td>Compaq</td><td>049f</td><td>iPAQ<br>Unknown</td><td>0003<br>0032</td></tr>
-
-<tr><td>Dell</td><td>413c</td><td>Axim</td><td>3001</td></tr>
-
-<tr><td>Fujitsu-Siemens</td><td>0bf8</td><td>Loox</td><td>1001</td></tr>
-
-<tr><td>HP</td><td>03f0</td><td>
-Jornada&nbsp;540/548,&nbsp;iPAQ&nbsp;2215/5550/etc<br>
-Jornada 568<br>
-Unknown
-</td><td>
-1016<br>
-1116<br>
-2016<br>
-2116<br>
-2216<br>
-3016<br>
-3116<br>
-3216<br>
-4016<br>
-4116<br>
-4216<br>
-5016<br>
-5116<br>
-5216<br>
-</td></tr>
-
-<tr><td>Linkup</td><td>094b</td><td>Unknown</td><td>0001</td></tr>
-
-<tr><td>Microsoft</td><td>045e</td><td>Unknown</td><td>00ce</td><td>(Used by Motorola MPX200 SmartPhone)</td></tr>
-
-<tr><td>Portatec</td><td>0961</td><td>Unknown</td><td>0010</td></tr>
-
-<tr><td>Sagem</td><td>5e04</td><td>Unknown</td><td>ce00</td></tr>
-
-<tr><td>Socket</td><td>0104</td><td>Unknown</td><td>00be</td></tr>
-
-<tr><td>Toshiba</td><td>0930</td><td>
-Unknown<br>
-E740
-</td><td>
-0700<br>
-0706
-</td></tr>
-
-<tr><td>HTC</td><td>0bb4</td><td>Unknown</td><td>00ce</td></tr>
-
-<tr><td>NEC</td><td>0409</td><td>Unknown</td><td>00d5</td></tr>
-
-<tr><td>Asus</td><td>0b05</td><td>A600</td><td>4201</td></tr>
-
-</table>
-
-<p>You are welcome to <a href="help.php">contact the SynCE developers</a> if
-you can provide additional details above the devices listed above.</p>
+<p>See the list of <a href="usb_linux_ids.php">vendor/product IDs supported by
+the ipaq Linux kernel driver</a> to know if your device is
+supported.</p>
 
 <p>If you are unsure of whether your device is included in the list above,
 connect it via the USB cable and compare your logs with the log extract shown
