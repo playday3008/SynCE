@@ -25,7 +25,7 @@
 href="http://sourceforge.net/project/showfiles.php?group_id=30550">take me to
 the files!</a></li>
 
-<li class=SPACED>I'm a RedHat 8.0 user and I want to <a
+<li class=SPACED>I'm a RedHat 8 or 9 user and I want to <a
 href="rpms.php">download RPM packages</a>.</li>
 
 <li class=SPACED>I'm a Gentoo user and I want to <a href="emerge.php">use

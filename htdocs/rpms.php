@@ -30,6 +30,9 @@ rpm-src  http://synce.sourceforge.net/apt  redhat/en/i386/8.0 synce</pre></li>
 
 -->
 
+<p>The RPM packages are for normal users only. Developers should compile the
+SynCE modules from source code.</p>
+
 <p><b>Note:</b> X.X-X is used as version number below. You will have to
 substitute this for the version you are installing.</p>
 
@@ -41,7 +44,7 @@ the following RPM packages:<br/><br/>
 
 	<ul>
 		<li><b>synce-X.X-X.i386.rpm</b>  (Note: this package includes the modules libsynce, librapi2, dccm, serial and rra.)</li>
-		<li><b>synce-devel-X.X-X.i386.rpm</b>  (for developers, or if you will compile other modules from source code)</li>
+<!--		<li><b>synce-devel-X.X-X.i386.rpm</b>  (for developers, or if you will compile other modules from source code)</li> -->
 		<li><b>synce-multisync_plugin-X.X-X.i386.rpm</b> (for address book synchronization)</li>
 		<li><b>synce-trayicon-X.X-X.i386.rpm</b> (suggested for GNOME 2.x users)</li>
 		<li><b>synce-gnomevfs-X.X-X.i386.rpm</b> (suggested for GNOME 2.x users)</li>
