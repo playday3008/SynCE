@@ -13,9 +13,9 @@ rra-delete
 rra-get-data
 rra-get-ids
 rra-get-types
-rra-partners
 rra-put-data
 rra-task-to-vtodo
 rra-task-from-vtodo
 rra-appointment-from-vevent
 rra-appointment-to-vevent
+synce-partnership
