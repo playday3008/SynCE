@@ -17,6 +17,7 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="#overview">Overview</a></li>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="using.php">Download and use SynCE</a></li>
+<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
 <li><a href="#future">Future</a></li>
 <li><a href="#developers">The SynCE developers</a></li>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
@@ -35,7 +36,10 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>Februrary 23, 2003</b> SynCE 0.7 released!</p>
+<p><b>February 24, 2003</b> Added documentation on <a
+href="multisync.php">Using MultiSync for synchronization</a>.</p>
+
+<p><b>February 23, 2003</b> SynCE 0.7 released!</p>
 
 <p>SynCE now includes the possiblity to synchronize the Pocket PC address book
 with for example Evolution with a plugin to the <a
@@ -117,7 +121,9 @@ icon!</p>
 <h2>Help wanted!</h2>
 
 <p>We need some responsbile people who want to develop the following extensions
-on top of the SynCE project:</p>
+on top of the SynCE project. Please send a mail to <a
+href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>
+if you want to help us!</p>
 
 <ul>
 
@@ -125,6 +131,8 @@ on top of the SynCE project:</p>
 distribution some day!</li>
 
 <li class=SPACED>vCalendar <-> Pocket PC Tasks/Calendar conversion code</li>
+
+<li class=SPACED>Integration with KDE's KitchenSync framework.</li>
 
 <!--
 <li class=SPACED>GNOME 2 integration: A <a
@@ -167,6 +175,17 @@ connected through SynCE.</td>
 <th>serial</th>
 <td>Tools for configuring, starting and aborting a serial connection for 
 use with SynCE.</td>
+</tr>
+
+<tr>
+<th>rra</th>
+<td>A library needed for synchronization functions.</td>
+</tr>
+
+<tr>
+<th>multisync_plugin</th>
+<td>A plugin for <a href="http://multisync.sourceforge.net">MultiSync</a> to
+synchronize Contacts.</td> 
 </tr>
 
 <tr>
