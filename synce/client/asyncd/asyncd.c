@@ -48,10 +48,10 @@
 #define FALSE !TRUE
 
 #ifdef DEBUG
-void printbuf( unsigned char * buf, int size )
+void printbuf( unsigned char * buf, unsigned int size )
 {
 	char buffer[4096];
-	int i,j;
+	unsigned int i,j;
 	for( i=0,j=0; (i<size) && (i<40); i++ )
 	{
 		sprintf( (buffer+j), "%02X ", (unsigned) buf[i] );
@@ -62,7 +62,7 @@ void printbuf( unsigned char * buf, int size )
 }
 #endif
 
-int compute_password( char *passphrase, char xorvalue, char *lockbuffer, unsigned int *lockbuffersize )
+int compute_password( char *passphrase, char xorvalue, unsigned char *lockbuffer, unsigned int *lockbuffersize )
 {
 	int result = FALSE;
         char * in;
@@ -86,7 +86,7 @@ int compute_password( char *passphrase, char xorvalue, char *lockbuffer, unsigne
         out = (char *) lockbuffer;
         res = iconv( cd, &in, &inlen, &out, &outlen );
 
-	if(res==-1)
+	if(res==(size_t)-1)
 	{
 		log_debug("iconv() failed");
 	}
@@ -128,13 +128,13 @@ int removeinfo( void )
 
 int saveinfo( char * devicetype, char * platformtype, char * devicename )
 {
-        struct sockaddr_in sin;
+        struct sockaddr_in sockin;
         FILE * infofile;
         int result = -1;
         int file;
 
         socklen_t sinlen = sizeof( struct sockaddr_in );
-        result = getpeername( 0, (struct sockaddr *) &sin, (socklen_t *)&sinlen );
+        result = getpeername( 0, (struct sockaddr *) &sockin, (socklen_t *)&sinlen );
 
         if( result <0 )
         {
@@ -154,7 +154,7 @@ int saveinfo( char * devicetype, char * platformtype, char * devicename )
                 return result;
         }
         fprintf( infofile, "# This file lists the known devices connected to this computer.\n#\n\n" );
-        fprintf( infofile, "device %s {\n", inet_ntoa( (struct in_addr)(sin.sin_addr) ) );
+        fprintf( infofile, "device %s {\n", inet_ntoa( /*(struct in_addr)*/ (sockin.sin_addr) ) );
         fprintf( infofile, "\tdevice-type \"%s\";\n", devicetype );
         fprintf( infofile, "\tplatform-type \"%s\";\n", platformtype );
         fprintf( infofile, "\tdevice-name \"%s\";\n", devicename );
@@ -173,8 +173,9 @@ int checkpacket( unsigned char * buf, int size )
         char * in;
         char names[1024];
         char * out;
-        char * n2;
-        char * n3;
+	char * devicetype;
+        char * platformtype;
+        char * devicename;
         iconv_t cd;
         size_t res;
 
@@ -191,9 +192,10 @@ int checkpacket( unsigned char * buf, int size )
         ptrlng = (long*)(buf + offset1 + 4 );
 
 #ifdef DEBUG
-        printbuf( (char*)ptrlng, strglen );
+        printbuf( (unsigned char*)ptrlng, strglen );
 #endif
-
+	/* Conversion */
+	/* ---------- */
         cd = iconv_open( "latin1", "UNICODELITTLE" );
 	if(cd == (iconv_t)-1)
 	{
@@ -204,22 +206,31 @@ int checkpacket( unsigned char * buf, int size )
         out = (char *) names;
         nameslen = 1024;
         res = iconv( cd, &in, &strglen, &out, &nameslen );
-	if(res==-1)
+	if(res==(size_t)-1)
 	{
 		log_debug("iconv() failed");
 	}
         iconv_close( cd );
 	log_debug ("conv Ok, res = %d, strglen = %d, nameslen = %d, names = %s", res, strglen, nameslen, names);
+
+	/* Split the different parts of the device identification */
+	/* ------------------------------------------------------ */
+	devicename = names;
+	log_debug ("names = 0x%08X, names = %s, devicename = %s", names, names, devicename );
+
+	/* Skip first '\0' and bookmark the position */
         for( in=names; (in<out)&&((*in)!=0); in++ );
         in++;
-        n2 = in;
-	log_debug ("names = 0x%08X, out = 0x%08X, n2 = 0x%08X, name2 = %s", names, out, n2, n2);
+        platformtype = in;
+	log_debug ("names = 0x%08X, out = 0x%08X, platformtype = 0x%08X, platformtype = %s", names, out, platformtype, platformtype);
+
+	/* Skip second '\0' and bookmark the position */
         for( ; (in<out) && ( (*in)!=0); in++);
         in++;
-        n3 = in;
-	log_debug ("names = 0x%08X, out = 0x%08X, n3 = 0x%08X, name3 = %s", names, out, n3, n3);
+        devicetype = in;
+	log_debug ("names = 0x%08X, out = 0x%08X, devicetype = 0x%08X, devicetype = %s", names, out, devicetype, devicetype);
 
-        saveinfo( names, n2, n3 );
+        saveinfo( devicetype, platformtype, devicename );
 
 	/* We should check the packet, then, if it's ok, fork a process
 	   that mount the device as a filesystem. */
