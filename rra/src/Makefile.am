@@ -2,7 +2,9 @@
 AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
 LDADD = ../lib/librra.la
 
-bin_PROGRAMS = rra-partners
+bin_PROGRAMS = synce-partnership
+
+synce_partnership_SOURCES    = rra-partners.c
 
 noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
@@ -18,7 +20,6 @@ rra_put_data_SOURCES    = rra-put-data.c
 rra_delete_SOURCES      = rra-delete.c
 rra_decode_SOURCES      = rra-decode.c
 #rra_db_vcal_SOURCES     = rra-db-vcal.c appointment.h appointment.c
-rra_partners_SOURCES    = rra-partners.c
 
 rra_contact_to_vcard_SOURCES    = rra-contact-to-vcard.c
 rra_contact_from_vcard_SOURCES  = rra-contact-from-vcard.c
