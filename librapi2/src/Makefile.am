@@ -7,10 +7,13 @@ lib_LTLIBRARIES = librapi.la
 
 ## use these sources
 librapi_la_SOURCES = \
+	database.c                     \
 	file_access.c                  \
 	file_management.c              \
 	misc.c                         \
 	rapi.c                         \
+	registry.c                     \
+	window.c                       \
 	rapi_buffer.h   rapi_buffer.c  \
 	rapi_context.h  rapi_context.c \
 	rapi_internal.h                \
