@@ -51,26 +51,33 @@ LPWSTR wstr_from_ascii(const char* ascii);
 
 void wstr_free_string(void* str);
 
-size_t wstr_strlen(LPCWSTR unicode);
+size_t wstrlen(LPCWSTR unicode);
 
-LPWSTR wstr_strcpy(LPWSTR dest, LPCWSTR src);
+LPWSTR wstrcpy(LPWSTR dest, LPCWSTR src);
 
 bool wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length);
 
 bool wstr_equal(LPWSTR a, LPWSTR b);
 
+LPWSTR wstrdup(LPCWSTR string);
 
 #ifdef __cplusplus
 }
 #endif
 
+/*
+ * Old function names
+ */
+
+#define wstr_strlen(a)    wstrlen(a)
+#define wstr_strcpy(a,b)  wstrcpy(a,b)
 
 /*
  * Function names for compatibility with Microsoft Windows
  */
 
-#define wcslen(a)    wstr_strlen(a)
-#define wcscpy(a,b)  wstr_strcpy(a,b)
+#define wcslen(a)    wstrlen(a)
+#define wcscpy(a,b)  wstrcpy(a,b)
 
 
 /*
@@ -127,6 +134,13 @@ uint32_t bswap_32(uint32_t x);
 
 bool synce_get_directory(char** path);
 bool synce_get_connection_filename(char** filename);
+bool synce_get_script_directory(char** directory);
+
+/*
+ * Error handling
+ */
+
+char* synce_strerror(DWORD error);
 
 
 #endif

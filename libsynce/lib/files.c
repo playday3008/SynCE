@@ -14,6 +14,27 @@
 
 #define DIRECTORY_NAME   			".synce"
 #define CONNECTION_FILENAME		"active_connection"
+#define SCRIPT_DIRECTORY      "scripts"
+
+static bool make_sure_directory_exists(char* directory)
+{
+	struct stat dir_stat;
+
+	/*
+	 * Make sure that this directory exists
+	 */
+
+	if (stat(directory, &dir_stat) < 0)
+	{
+		if (mkdir(directory, 0700) < 0)
+		{
+			synce_error("Failed to create directory %s", directory);
+			return false;
+		}
+	}
+
+	return true;
+}
 
 /**
  * Get path to config files
@@ -21,7 +42,6 @@
 bool synce_get_directory(char** path)
 {
 	char buffer[256];
-	struct stat dir_stat;
 	
 	/* XXX: not very thread-safe? */
 	struct passwd* user = getpwuid(getuid());
@@ -36,19 +56,9 @@ bool synce_get_directory(char** path)
 	
 	snprintf(buffer, sizeof(buffer), "%s/" DIRECTORY_NAME, user->pw_dir);
 
-	/*
-	 * Make sure that this directory exists
-	 */
-
-	if (stat(buffer, &dir_stat) < 0)
-	{
-		if (mkdir(buffer, 0700) < 0)
-		{
-			synce_error("Failed to create directory %s", buffer);
-			return false;
-		}
-	}
-
+	if (!make_sure_directory_exists(buffer))
+		return false;
+	
 	*path = strdup(buffer);
 	
 	return true;
@@ -73,6 +83,35 @@ bool synce_get_connection_filename(char** filename)
 
 	snprintf(buffer, sizeof(buffer), "%s/" CONNECTION_FILENAME, path);
 	*filename = strdup(buffer);
+
+	success = true;
+
+exit:
+	if (path)
+		free(path);
+	return success;
+}
+
+bool synce_get_script_directory(char** directory)
+{
+	bool success = false;
+	char* path = NULL;
+	char buffer[256];
+
+	if (!directory)
+		goto exit;
+
+	*directory = NULL;
+	
+	if (!synce_get_directory(&path))
+		goto exit;
+
+	snprintf(buffer, sizeof(buffer), "%s/" SCRIPT_DIRECTORY, path);
+
+	if (!make_sure_directory_exists(buffer))
+		goto exit;
+	
+	*directory = strdup(buffer);
 
 	success = true;
 

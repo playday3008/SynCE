@@ -127,7 +127,7 @@ void wstr_free_string(void* str)
 /**
  * Return size of ascii string as unicode
  */
-size_t wstr_strlen(LPCWSTR unicode)
+size_t wstrlen(LPCWSTR unicode)
 {
 	unsigned length = 0;
 
@@ -142,7 +142,7 @@ size_t wstr_strlen(LPCWSTR unicode)
 /**
  * Copy strings
  */
-LPWSTR wstr_strcpy(LPWSTR dest, LPCWSTR src)
+LPWSTR wstrcpy(LPWSTR dest, LPCWSTR src)
 {
 	LPWSTR p = dest;
 
@@ -203,3 +203,20 @@ bool wstr_equal(LPWSTR a, LPWSTR b)
 	return *a == *b;
 }
 
+LPWSTR wstrdup(LPCWSTR string)
+{
+	LPWSTR result = NULL;
+
+	if (string)
+	{
+		size_t size = (wstrlen(string) + 1) * sizeof(WCHAR);
+		result = malloc(size);
+
+		if (result)
+		{
+			memcpy(result, string, size);
+		}
+	}
+
+	return result;
+}
