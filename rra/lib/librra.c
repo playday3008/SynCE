@@ -56,12 +56,6 @@ void rra_free(RRA* rra)/*{{{*/
 {
 	if (rra)
 	{
-		if (rra->partners_key)
-		{
-			CeRegCloseKey(rra->partners_key);
-			rra->partners_key = 0;
-		}
-
 		rra_disconnect(rra);
 
 		if (rra->object_types)
@@ -106,6 +100,12 @@ void rra_disconnect(RRA* rra)/*{{{*/
 {
 	if (rra)
 	{
+		if (rra->partners_key)
+		{
+			CeRegCloseKey(rra->partners_key);
+			rra->partners_key = 0;
+		}
+
 		synce_socket_free(rra->data_channel);
 		rra->data_channel = NULL;
 		synce_socket_free(rra->cmd_channel);
