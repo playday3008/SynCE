@@ -352,7 +352,6 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 
 	rapi_trace("begin");
 	rapi_context_begin_command(context, 0x11);
-
 	rapi_buffer_write_uint32(context->send_buffer, hDbase);    /* Parameter1 : */
 	rapi_buffer_write_uint32(context->send_buffer, oidRecord); /* Parameter2 : Flags ? */ 
 	rapi_buffer_write_uint16(context->send_buffer, cPropID);   /* Parameter3 */
@@ -376,7 +375,7 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 				buflen += rgPropVal[i].val.blob.dwCount;
 				break;
 			case CEVT_LPWSTR:
-				buflen += 2* ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
+				buflen += sizeof(WCHAR) * ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
 				break;
 			default:
 				break;
@@ -401,21 +400,21 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 		{
 			case CEVT_BLOB:
 				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.blob.dwCount );
-				datalen += rgPropVal[i].val.blob.dwCount;
 				rapi_buffer_write_uint32(context->send_buffer, datalen );
+				datalen += rgPropVal[i].val.blob.dwCount;
 				break;
 			case CEVT_LPWSTR:
-				datalen += 2* ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
 				rapi_buffer_write_uint32(context->send_buffer, datalen );
 				rapi_buffer_write_uint32(context->send_buffer, 0);
+			        datalen += sizeof(WCHAR) * ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
 				break;
 			case CEVT_I2:
 			case CEVT_UI2:
 			case CEVT_I4:
 			case CEVT_UI4:
+				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.lVal );
 				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.iVal );
 				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.uiVal );
-				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.lVal );
 				break;
 			case CEVT_BOOL:
 				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.boolVal  );
@@ -434,20 +433,19 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 				break;
 		}
 	}	
-
 	/* 3. write the data segment */
-
 	for ( i = 0; i < cPropID; i++ )
 	{	
 		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
 		{
 			case CEVT_BLOB:
-				rapi_buffer_write_optional_no_size(context->send_buffer, 
-						rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount );
+				rapi_buffer_write_data(context->send_buffer, 
+						       rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount );
 				break;
 			case CEVT_LPWSTR:
-				rapi_buffer_write_optional_no_size(context->send_buffer, 
-						rgPropVal[i].val.lpwstr, 2* ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1) );
+			        rapi_buffer_write_data(context->send_buffer, 
+						 rgPropVal[i].val.lpwstr, sizeof(WCHAR) * ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1) );
+
 				break;
 			default:
 				break;
