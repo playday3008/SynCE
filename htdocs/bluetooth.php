@@ -19,6 +19,14 @@ modules are at least:</p>
 <li>bluez-sdp</li>
 <li>bluez-pan</li>
 </ul>
+
+<p>Hint: You may have to create your /dev/rfcomm* devices manually like this:</p>
+
+<blockquote><pre>
+for i in `seq 0 255`; do
+  mknod -m 666 /dev/rfcomm$i c 216 $i
+done</pre></blockquote>
+
 </li>
 
 <li><p>Modify the device class in <tt>/etc/bluetooth/hcid.conf</tt>. Suitable
