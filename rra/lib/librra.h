@@ -9,14 +9,15 @@ extern "C"
 
 #include <synce.h>
 
-#define RRA_OBJECT_TYPE_MS_TABLE     0x2710
-#define RRA_OBJECT_TYPE_APPOINTMENT  0x2711
-#define RRA_OBJECT_TYPE_CONTACT      0x2712
-#define RRA_OBJECT_TYPE_TASK         0x2713
-#define RRA_OBJECT_TYPE_FILE         0x2714
-#define RRA_OBJECT_TYPE_MERLIN_MAIL  0x2715
-#define RRA_OBJECT_TYPE_FAVORITE     0x2716
-#define RRA_OBJECT_TYPE_INK          0x2717
+#define RRA_TYPE_NAME_APPOINTMENT  "Appointment"
+#define RRA_TYPE_NAME_CONTACT      "Contact"
+#define RRA_TYPE_NAME_FAVORITE     "Favorite"
+#define RRA_TYPE_NAME_FILE         "File"
+#define RRA_TYPE_NAME_INBOX        "Inbox"
+#define RRA_TYPE_NAME_INK          "Ink"
+#define RRA_TYPE_NAME_MERLIN_MAIL  "Merlin Mail"
+#define RRA_TYPE_NAME_MS_TABLE     "MS Table"
+#define RRA_TYPE_NAME_TASK         "Task"
 
 struct _RRA;
 typedef struct _RRA RRA;
