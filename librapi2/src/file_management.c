@@ -122,7 +122,7 @@ BOOL CeFindAllFiles(
 	if (lpdwFoundCount)
 		*lpdwFoundCount = count;
 
-	return count;
+	return true;
 }
 
 static bool rapi_read_find_data(
