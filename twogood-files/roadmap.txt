@@ -139,6 +139,12 @@ B.      All libraries should be written i ANSI C.
         synchronization with Palm devices, and that seems to be quite
         different.
 
+        Have a look at this: http://multisync.sourceforge.net/ 
+
+4.4.    SyncML support
+
+        http://www.syncml.org/
+
 4.x.    Your favorite personal information mangagement applications
         here.
 
