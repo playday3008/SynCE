@@ -4,7 +4,7 @@
 pcp \- copy files
 
 .SH SYNOPSIS
-\fBpcp\fR [-h] [:]\fISOURCE\fR [[:]\fIDESTINATION\fR]
+\fBpcp\fR [-d \fILEVEL\fR] [-h] [:]\fISOURCE\fR [[:]\fIDESTINATION\fR]
 
 .SH "DESCRIPTION"
 
@@ -16,8 +16,22 @@ device connected through SynCE and host PC.
 Forward slashes ('/') in remote file names specified on the command line are
 converted to backward slashes ('\\').
 
+.PP
+This tool must be run as the same user as the dccmd daemon.
+
 .SH "OPTIONS"
 .TP
+-d \fILEVEL\fR
+Set debug log level:
+.IP
+0 - No logging (default)
+.IP
+1 - Errors only
+.IP
+2 - Errors and warnings
+.IP
+3 - Everything
+
 .TP
 -h
 Display help message.
