@@ -1,6 +1,6 @@
 /* packet-rapi.c
  * Routines for Windows CE Remote API dissection
- * Copyright 2000, YOUR_NAME <YOUR_EMAIL_ADDRESS>
+ * Copyright 2004, David Eriksson <twogood@users.sourceforge.net>
  *
  * $Id$
  *
@@ -8,12 +8,6 @@
  * By Gerald Combs <gerald@ethereal.com>
  * Copyright 1998 Gerald Combs
  *
- * Copied from WHATEVER_FILE_YOU_USED (where "WHATEVER_FILE_YOU_USED"
- * is a dissector file; if you just copied this from README.developer,
- * don't bother with the "Copied from" - you don't even need to put
- * in a "Copied from" if you copied an existing dissector, especially
- * if the bulk of the code in the new dissector is your code)
- * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -208,11 +202,27 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
     while (tvb_length_remaining(tvb, offset) > 0) {
 
-      guint32 packet_size = tvb_get_letohl(tvb, offset);
-
-      if ((guint)tvb_length_remaining(tvb, offset) < packet_size) {
+      /* Need at least 4 for size */
+      if (tvb_length_remaining(tvb, offset) < 4) {
         pinfo->desegment_offset = offset;
-        pinfo->desegment_len = packet_size - tvb_length_remaining(tvb, offset);
+        pinfo->desegment_len = 4;
+        return;
+      }
+
+      proto_item *size_item;
+      gint packet_size = tvb_get_letohl(tvb, offset);
+
+#if 0
+      if (packet_size > tvb_reported_length_remaining(tvb, offset)) {
+        /* provide a hint to TCP where the next PDU starts */
+        pinfo->want_pdu_tracking = 2;
+        pinfo->bytes_until_next_pdu = packet_size - tvb_reported_length_remaining(tvb, offset);
+      }
+#endif
+
+      if (tvb_length_remaining(tvb, offset) < packet_size) {
+        pinfo->desegment_offset = offset;
+        pinfo->desegment_len = 4 + packet_size;
         return;
       }
 
@@ -230,9 +240,14 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       RAPI_tree = proto_item_add_subtree(ti, ett_RAPI);
       
       /* add an item to the subtree, see section 1.6 for more information */
-      proto_tree_add_item(RAPI_tree,
+      size_item = proto_tree_add_item(RAPI_tree,
           hf_RAPI_size, tvb, 0, 4, TRUE);
       offset += 4;
+
+      if (packet_size < 8) {
+        proto_item_append_text(size_item, " ERROR: Should be at least 8!");
+        return;
+      }
 
       if (pinfo->srcport == RAPI_TCP_PORT) {
         /* Reply package */
@@ -258,28 +273,35 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
         if (command < array_length(rapi_command_names))
           proto_item_append_text(command_item, " %s", rapi_command_names[command]);
         else
-          proto_item_append_text(command_item, " (Unknown or invalid command code.)");
+          proto_item_append_text(command_item, " (Unknown or invalid command code)");
         
         offset += 4;
         packet_size -= 4;
       }
-
-      bytes = tvb_length_remaining(tvb, offset);
+     
       if (packet_size > 0) {
-        const guint8 *data = tvb_get_ptr(tvb, offset, packet_size);
+        const guint8 *data;
+
+        bytes = tvb_length_remaining(tvb, offset);
+        if (bytes > packet_size)
+          bytes = packet_size;
+
+        data = tvb_get_ptr(tvb, offset, bytes);
         proto_tree_add_bytes_format(RAPI_tree, hf_RAPI_data, tvb,
             offset,
-            packet_size,
+            bytes,
             data,
             "Data (%i bytes)", packet_size);
-          offset += packet_size;
+
+        offset += bytes;
+        packet_size -= bytes;
       }
+      
+    } /* while (...) */
 
-    }
+  } /* if (tree) */
 
-	}
-
-/* If this protocol has a sub-dissector call it here, see section 1.8 */
+  /* If this protocol has a sub-dissector call it here, see section 1.8 */
 }
 
 

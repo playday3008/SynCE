@@ -3,16 +3,16 @@
 
 Summary: SynCE: Core programs needed to use SynCE.
 Name: synce
-Version: 0.8.4
+Version: 0.8.9
 Release: %{rel}
 License: MIT
 Group: Applications/Communications
-Source0: synce-libsynce-0.8.1.tar.gz
-Source1: synce-librapi2-0.8.1.tar.gz
-Source2: synce-dccm-0.8.tar.gz
-Source3: synce-serial-0.8.tar.gz
+Source0: synce-libsynce-0.8.9.tar.gz
+Source1: synce-librapi2-0.8.9.tar.gz
+Source2: synce-dccm-0.8.9.tar.gz
+Source3: synce-serial-0.8.9.tar.gz
 Source4: libmimedir-0.3.tar.gz
-Source5: synce-rra-0.8.4.tar.gz
+Source5: synce-rra-0.8.9.tar.gz
 URL: http://synce.sourceforge.net/
 Distribution: SynCE RPM packages
 Vendor: The SynCE Project
@@ -52,12 +52,19 @@ done
 
 %build
 rm -rf $RPM_BUILD_ROOT
-for S in %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE3} %{SOURCE4} %{SOURCE5}; do
+for S in %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE3} %{SOURCE4}; do
 	cd `basename $S .tar.gz`
 	%configure --with-libsynce=$RPM_BUILD_ROOT%{prefix} --with-librapi2=$RPM_BUILD_ROOT%{prefix} --with-libmimedir=$RPM_BUILD_ROOT%{prefix}
 	%makeinstall
 	cd ..
 done
+S=%{SOURCE5}
+cd `basename $S .tar.gz`
+#%{includedir}=%{includedir}/rra
+%configure --with-libsynce=$RPM_BUILD_ROOT%{prefix} --with-librapi2=$RPM_BUILD_ROOT%{prefix} --with-libmimedir=$RPM_BUILD_ROOT%{prefix} \
+%makeinstall
+cd ..
+
 
 %install
 rm -f $RPM_BUILD_ROOT%{prefix}/include/libmimedir.h
@@ -84,6 +91,7 @@ sed -i "s/$PATTERN//g" $RPM_BUILD_ROOT%{_libdir}/*.la
 %files devel
 %defattr(-,root,root)
 %{_includedir}
+%{_includedir}/rra
 %{_libdir}/*.so
 %{_libdir}/*.a
 %{_libdir}/*.la

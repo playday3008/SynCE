@@ -12,16 +12,16 @@
 # 4. Uninstall the "synce" and "synce-devel" RPMs
 #
 
-SYNCE_VERSION    = 0.8.4
+SYNCE_VERSION    = 0.8.9
 
-LIBRAPI2_VERSION = 0.8.1
-LIBSYNCE_VERSION = 0.8.1
-DCCM_VERSION     = 0.8
-SERIAL_VERSION   = 0.8
-RRA_VERSION      = 0.8.4
+LIBRAPI2_VERSION = 0.8.9
+LIBSYNCE_VERSION = 0.8.9
+DCCM_VERSION     = 0.8.9
+SERIAL_VERSION   = 0.8.9
+RRA_VERSION      = 0.8.9
 TRAYICON_VERSION = 0.8
-MULTISYNC_PLUGIN_GNOME1_VERSION = 0.8.3
-MULTISYNC_PLUGIN_VERSION = 0.8.2
+#MULTISYNC_PLUGIN_GNOME1_VERSION = 0.8.3
+MULTISYNC_PLUGIN_VERSION = 0.8.9
 GNOMEVFS_VERSION = 0.8
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
@@ -95,7 +95,8 @@ synce:
 	cp $(RPMROOT)/RPMS/i386/synce-$(SYNCE_VERSION)-*.rpm        $(RPM_DIR)/
 	cp $(RPMROOT)/RPMS/i386/synce-devel-$(SYNCE_VERSION)-*.rpm  $(RPM_DIR)/
 
-extras: trayicon gnomevfs multisync_plugin_gnome1 
+extras: trayicon gnomevfs 
+#multisync_plugin_gnome1 
 #multisync_plugin
 
 trayicon:
@@ -108,10 +109,10 @@ gnomevfs:
 	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  tarball
 	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  rpm
 
-multisync_plugin_gnome1:
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  checkout
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  tarball
-	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  rpm
+#multisync_plugin_gnome1:
+#	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  checkout
+#	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  tarball
+#	$(MAKE) -f Makefile.module MODULE=multisync_plugin-gnome1 VERSION=$(MULTISYNC_PLUGIN_GNOME1_VERSION)  rpm
 
 multisync_plugin:
 	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  checkout

@@ -1,6 +1,6 @@
 UNSHIELD_VERSION = 0.2
 DYNAMITE_VERSION = 0.1
-ORANGE_VERSION   = 0.1
+ORANGE_VERSION   = 0.2
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
 RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')
