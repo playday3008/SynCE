@@ -172,7 +172,7 @@ int32 pPerformCommand(void *pStoreVoid, int32 *err, AGReader *r)
 
     // All commands except goodbye should return 0
     if(1 != result && 0 != cmd)
-        kdDebug(2120) << "ERROR ON COMMAND " << cmd;
+        kdDebug(2120) << "ERROR ON COMMAND " << cmd << endl;
 
     asPerformCommand(((PStoreStruct *)pStoreVoid)->r,
                      ((PStoreStruct *)pStoreVoid)->w,
