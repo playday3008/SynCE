@@ -415,10 +415,10 @@ void *PDA::advanceTotalStepsEvent(void *data)
 }
 
 
-#define advanceProgress(a) \
+#define advanceInitProgress(a) \
     postThreadEvent(&PDA::advanceProgressEvent, a, noBlock);
 
-#define advanceTotalSteps(a) \
+#define advanceInitTotalSteps(a) \
     postThreadEvent(&PDA::advanceTotalStepsEvent, a, noBlock);
 
 
@@ -486,9 +486,9 @@ bool PDA::removePartnership(int *removedPartnerships)
     struct Rra::Partner partners[2];
     bool removePartnershipOk = true;
 
-    advanceProgress(1);
+    advanceInitProgress(1);
     if (rra->getPartner(1, &partners[0])) {
-        advanceProgress(1);
+        advanceInitProgress(1);
         if (rra->getPartner(2, &partners[1])) {
             int deletedItems = (int) postThreadEvent(&PDA::removePartnershipDialog, partners, block);
             if (deletedItems > 0) {
@@ -498,7 +498,7 @@ bool PDA::removePartnership(int *removedPartnerships)
                         deletedPartner.name = "";
                         deletedPartner.id = 0;
                         deletedPartner.index = 1;
-                        advanceProgress(1);
+                        advanceInitProgress(1);
                         if (!rra->setPartner(deletedPartner)) {
                             removePartnershipOk = false;
                         }
@@ -507,7 +507,7 @@ bool PDA::removePartnership(int *removedPartnerships)
                         deletedPartner.name = "";
                         deletedPartner.id = 0;
                         deletedPartner.index = 2;
-                        advanceProgress(1);
+                        advanceInitProgress(1);
                         if (!rra->setPartner(deletedPartner)) {
                             removePartnershipOk = false;
                         }
@@ -531,7 +531,7 @@ bool PDA::setPartnershipThread()
     bool setPartnerOk = true;
     unsigned int index;
 
-    advanceProgress(1);
+    advanceInitProgress(1);
     if (!rra->partnerCreate(& index)) {
         int removedPartnerships = 0;
         if (removePartnership(&removedPartnerships)) {
@@ -542,7 +542,7 @@ bool PDA::setPartnershipThread()
                 kdDebug(2120) << "Using Guest" << endl;
                 partnerName = "";
                 partnerId = 0;
-                advanceProgress(7);
+                advanceInitProgress(7);
                 if (rra->setCurrentPartner(0)) {
                     setPartnerOk = false;
                 }
@@ -552,7 +552,7 @@ bool PDA::setPartnershipThread()
         }
     } else {
         struct Rra::Partner partner;
-        advanceProgress(7);
+        advanceInitProgress(7);
         if (rra->getPartner(index, &partner)) {
             partnerOk = true;
             partnerName = partner.name;
