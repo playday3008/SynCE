@@ -71,6 +71,36 @@
     </itemizedlist>
   </sect1>
 
+  <!-- History -->
+  <sect1 id="history">
+    <title>History</title>
+
+    <para>The SynCE project was started by Ludovic Lange and David
+      Eriksson in July 2001. The sourceforge project pages were
+      established at this time and the first version of the RAPI library appeared
+      in the CVS. In the following few months the basic functions of
+      the library (initialization and file handling) took shape and a
+      few simple tools appeared.
+    </para> 
+    <para>Progress was fairly slow until David Eriksson reorganized
+      the library code into separate libraries with cleaner interfaces
+      in July 2002. This was followed by new modules for connecting to
+      the PDA (synce-serial) and a replacement for the ayncd program
+      (dccm). In October 2002 the database write functions were made
+      to work and September 2002 the registry functions made their
+      first appearance. 
+    </para>
+    <para>In November 2002 David released the first packaged
+      distribution of the SynCE code and established the user mailing
+      list. In December 2002 Richard Taylor released the first version
+      of the Python wrappers for librapi2.
+    </para>
+    <para>With all of the main foundations for SynCE now in place work
+      has started on the activesync protocols and more developers are
+      started to appear on the mailing list.
+    </para>
+  </sect1>
+
   <!-- Feedback -->
   <sect1 id="feedback">
     <title>Feedback</title>
