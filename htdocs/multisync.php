@@ -18,16 +18,32 @@ appointments and tasks.</p>
 <p><b>Warning:</b> This is experimental software. Anything can happen. Use it
 at your own risk.</p>
 
+<h2>About Evolution and MultiSync versions</h2>
+
+<p>This table tries to help you find the correct versions of MultiSync and SynCE's <tt>multisync_plugin</tt> module.</p>
+
+<table cellspacing=5 width="100%">
+
+<tr><th>Evolution<br>release</th><th>MultiSync<br>release</th><th>MultiSync<br>CVS branch</th><th>multisync_plugin<br>release</th><th>multisync_plugin<br>CVS branch</th></tr>
+
+<tr><td>1.2.x or earlier</td><td>0.72</td><td>gnome-1</td><td>SynCE 0.7</td><td>BRANCH_GNOME_1</tr>
+
+<tr><td>1.4.0 or later</td><td>0.80<sup>*</sup></td><td>HEAD</td><td>SynCE 0.8<sup>*</sup></td><td>HEAD</tr>
+
+</table>
+
+<p><sup>*</sup> Not yet released at the time of writing.</p>
+
 <h2>Getting started</h2>
 
 <p>These instructions will hopefully get you started:</p>
 
 <ol>
 
-<li class=SPACED>Get <a href="http://multisync.sourceforge.net/">MultiSync</a>
-up and running. Verify that MultiSync works with your version of Evolution by
-creating and testing a synchronization pair with the Evolution and Backup
-plugins.</li>
+<li class=SPACED>Get the correct version of <a
+href="http://multisync.sourceforge.net/">MultiSync</a> up and running. Verify
+that MultiSync works with your version of Evolution by creating and testing a
+synchronization pair with the Evolution and Backup plugins.</li>
 
 <li class=SPACED><a href="using.php">Install SynCE</a> including the
 <tt>rra</tt> and <tt>multisync_plugin</tt> modules.</li>
@@ -46,21 +62,10 @@ pair.</li>
 
 <h2>Questions and Answers</h2>
 
-<p><b>Q:</b> When I use the MultiSync plugin with SmartPhone 2003, I get a
-message saying I should upgrade ActiveSync. What shall I do?</p>
+<p><b>Q:</b> When I use the MultiSync plugin with SmartPhone 2003 or Pocket PC
+2003, I get a message saying I should upgrade ActiveSync. What shall I do?</p>
 
-<p><b>A:</b> Use the <a href="cvs.php">CVS version</a> of SynCE.</p>
-
-<hr size=1 width="50%">
-
-<p><b>Q:</b> When I use the MultiSync plugin with PocketPC 2003, I get a
-message saying I should upgrade ActiveSync. What shall I do?</p>
-
-<p><b>A:</b> This is not fixed yet. We need someone with a PocketPC 2003 device
-to <a href="capture.php">capture traffic between the PDA and a PC running
-ActiveSync</a>. Please see this <a
-href="http://sourceforge.net/mailarchive/forum.php?thread_id=2802972&forum_id=1226">mailing
-list thread</a> for more info.</p>
+<p><b>A:</b> Use the <a href="cvs.php">CVS version</a> of SynCE or wait for SynCE version 0.8.</p>
 
 <hr size=1 width="50%">
 
@@ -169,8 +174,7 @@ be used by SynCE and the other by ActiveSync. When you want to synchronize with
 SynCE and you last synchronized with ActiveSync, you have to change what
 parntership you use. This is described below.</p>
 
-<p>Note: This manual operation will not be neccessary in future versions of
-SynCE.</p>
+<p>For SynCE 0.7:</p>
 
 <ol> 
 
@@ -187,7 +191,22 @@ PC</a>. Tip: You can install a .cab file on your Pocket PC with the
 
 </ol>
 
-<p>Return to <a href="index.php">main page</a>.</p>
+<p>For newer SynCE releases or the <a href="cvs.php">CVS version</a> of SynCE:</p>
+
+<p>Use the <tt>synce-partnership</tt> tool like this:</p>
+
+<p><tt>synce-partnership create</tt></p>
+
+<p>If you get the message "Partnership creation succeeded" everything is ok.</p>
+
+<p>If you get the message "Partnership creation failed" you need to replace an
+existing partnership on your device. To do this you first run
+<tt>synce-partnership status</tt> to list the current partnerships on your
+device. Decide which partnership (1 or 2) you want to replace. Second you run
+<tt>synce-partnership replace X</tt>, where X is the partnership number.</p>
+
+
+<p><br>Return to <a href="index.php">main page</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>
