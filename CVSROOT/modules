@@ -28,6 +28,5 @@
 dccm dccmd
 librapi librapi2
 
-multisync_plugin_gnome1 multisync_plugin
-multisync_plugin_gnome2 multisync_plugin
+multisync_plugin-gnome1 multisync_plugin
 
