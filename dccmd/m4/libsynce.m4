@@ -1,7 +1,7 @@
 dnl $Id$ vim: syntax=config
 dnl Check for libsynce
 
-AC_DEFUN(AM_PATH_LIBSYNCE, [
+AC_DEFUN([AM_PATH_LIBSYNCE], [
 
   AC_ARG_WITH(libsynce,
     AC_HELP_STRING(
