@@ -1,8 +1,8 @@
 <?xml version = '1.0'?>
 <kdevelop>
   <general>
-    <author>Volker Christian,,,</author>
-    <email>voc@soft.uni-linz.ac.at</email>
+    <author>Volker Christian</author>
+    <email>voc@users.sourceforge.net</email>
     <projectmanagement>KDevKDEAutoProject</projectmanagement>
     <primarylanguage>C++</primarylanguage>
     <keywords>
@@ -21,7 +21,7 @@
   <kdevautoproject>
     <general>
       <activetarget>raki/raki</activetarget>
-      <useconfiguration>debian</useconfiguration>
+      <useconfiguration>dist</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
@@ -50,7 +50,7 @@
     <configurations>
       <debug>
         <configargs>--enable-debug=yes --with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
-        <builddir>/home/voc/usr/software/synce-kde-0.6/build/debug</builddir>
+        <builddir>/home/voc/usr/software/synce-kde/src/build/debug</builddir>
         <topsourcedir/>
         <ccompiler>GccOptions</ccompiler>
         <cxxcompiler>GppOptions</cxxcompiler>
@@ -82,7 +82,7 @@
       </default>
       <release>
         <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
-        <builddir>/home/voc/usr/software/synce-kde-0.6/build/release</builddir>
+        <builddir>/home/voc/usr/software/synce-kde/src/build/release</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -97,9 +97,9 @@
         <f77flags/>
       </release>
       <dist>
-        <configargs/>
-        <builddir>/home/voc/usr/software/synce-kde-0.6</builddir>
-        <topsourcedir>/home/voc/usr/software/synce-kde-0.6</topsourcedir>
+        <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <builddir>/home/voc/usr/software/synce-kde/src/</builddir>
+        <topsourcedir>/home/voc/usr/software/synce-kde/src/</topsourcedir>
         <cppflags/>
         <ldflags/>
         <ccompiler>GccOptions</ccompiler>
@@ -114,7 +114,7 @@
       </dist>
       <debian>
         <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre --with-qt-includes=/usr/include/qt3</configargs>
-        <builddir>/home/voc/usr/software/synce-kde-0.6/build/debian</builddir>
+        <builddir>/home/voc/usr/software/synce-kde/src/build/debian</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -147,8 +147,8 @@
       <toc>perl</toc>
     </ignoretocs>
     <projectdoc>
-      <userdocDir>/home/voc/usr/software/synce-kde-0.6/doc/en/</userdocDir>
-      <apidocDir>/home/voc/usr/software/synce-kde-0.6/html/</apidocDir>
+      <userdocDir>/home/voc/usr/software/synce-kde/src/doc/en/</userdocDir>
+      <apidocDir>/home/voc/usr/software/synce-kde/src/html/</apidocDir>
     </projectdoc>
   </kdevdoctreeview>
   <kdevdebugger>
@@ -160,6 +160,9 @@
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <runappinappdirectory>true</runappinappdirectory>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
     </general>
     <display>
       <staticmembers>false</staticmembers>
@@ -230,13 +233,13 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
   </kdevclassview>
   <kdevcvs>
     <cvsoptions>-f</cvsoptions>
-    <commitoptions></commitoptions>
+    <commitoptions/>
     <updateoptions>-dP</updateoptions>
-    <addoptions></addoptions>
+    <addoptions/>
     <removeoptions>-f</removeoptions>
     <diffoptions>-u3 -p</diffoptions>
-    <logoptions></logoptions>
-    <rshoptions></rshoptions>
+    <logoptions/>
+    <rshoptions/>
     <revertoptions>-C -d -P</revertoptions>
   </kdevcvs>
   <kdevfilecreate>
