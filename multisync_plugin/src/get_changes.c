@@ -26,6 +26,12 @@ static GList* synce_get_changed_objects(/*{{{*/
 
 	synce_trace("here");
 
+	if (!sc)
+	{
+		synce_error("No connection");
+		goto exit;
+	}
+
 	type_id = synce_object_type_to_id(object_type);
 	if (!type_id)
 	{
@@ -69,8 +75,8 @@ static GList* synce_get_changed_objects(/*{{{*/
 							object_ids->ids[id],
 							data,
 							data_size,
-							RRA_CONTACT_VCARD_3_0,
-							&object_string))
+							&object_string,
+							RRA_CONTACT_VERSION_2_1 | RRA_CONTACT_UTF8))
 				{
 					fprintf(stderr, "Failed to create vCard\n");
 					goto exit;
@@ -121,6 +127,9 @@ static GList* synce_get_changed_objects(/*{{{*/
 	success = true;
 
 exit:
+	rra_free_object_ids(object_ids);
+	rra_free_deleted_object_ids(deleted_ids);
+
 	return changes;
 }/*}}}*/
 

@@ -127,11 +127,11 @@ void syncobj_modify(/*{{{*/
 	{
 		case SYNC_OBJECT_TYPE_PHONEBOOK: 
 			if (!rra_contact_from_vcard(
-						uid ? RRA_CONTACT_UPDATE : RRA_CONTACT_NEW,
 						object,
 						NULL,
 						&data,
-						&data_size))
+						&data_size,
+						(uid ? RRA_CONTACT_UPDATE : RRA_CONTACT_NEW) | RRA_CONTACT_UTF8))
 			{
 				synce_error("Failed to create data");
 				goto exit;
