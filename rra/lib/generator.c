@@ -134,7 +134,7 @@ void generator_add_property(Generator* self, uint16_t id, GeneratorPropertyFunc 
 
 bool generator_run(Generator* self)
 {
-  int i;
+  unsigned i;
   bool success = false;
 
   for (i = 0; i < self->propval_count; i++)
