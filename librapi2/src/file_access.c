@@ -11,7 +11,7 @@ BOOL CeCloseHandle(
 	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 	
-	synce_trace("begin");
+	/*synce_trace("begin");*/
 	
 	rapi_context_begin_command(context, 0x08);
 	rapi_buffer_write_uint32(context->send_buffer, hObject);
