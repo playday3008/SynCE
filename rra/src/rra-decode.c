@@ -172,7 +172,7 @@ bool decode_database_stream(uint8_t* buffer)
 	bool success = false;
 	CEPROPVAL* propvals = NULL;
 	uint32_t field_count = 0;
-	int i;
+	unsigned i;
 
 	field_count = letoh32(*(uint32_t*)(buffer + 0));
 	/*printf("Field count: %i\n", field_count);*/

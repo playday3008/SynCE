@@ -14,7 +14,7 @@ int main()
 	RRA* rra = NULL;
 	ObjectType* object_types = NULL;
 	size_t object_type_count = 0;
-	int i;
+	unsigned i;
 
 /*	synce_log_set_level(0);*/
 	
