@@ -11,7 +11,7 @@ int main()
 	WCHAR filename1[MAX_PATH];
 	WCHAR filename2[MAX_PATH];
 	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, filename1));
-	wcscpy(filename2, filename1);
+	wstrcpy(filename2, filename1);
 	wstr_append(filename1, to_unicode("\\librapi test file 1.txt"), sizeof(filename1));
 	wstr_append(filename2, to_unicode("\\librapi test file 2.txt"), sizeof(filename2));
 
