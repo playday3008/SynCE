@@ -7,6 +7,13 @@
 
 #define RAPI_PORT  990
 
+HRESULT CeRapiFreeBuffer( 
+		LPVOID Buffer)
+{
+	free(Buffer);
+	return S_OK;
+}
+
 HRESULT CeRapiInit(void)
 {
 	RapiContext* context = rapi_context_current();

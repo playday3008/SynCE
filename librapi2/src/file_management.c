@@ -25,6 +25,87 @@ BOOL CeDeleteFile(
 	return return_value;
 }
 
+BOOL CeFindAllFiles(
+		LPCWSTR szPath, 
+		DWORD dwFlags, 
+		LPDWORD lpdwFoundCount, 
+		LPLPCE_FIND_DATA ppFindDataArray)
+{
+	RapiContext* context = rapi_context_current();
+	u_int32_t count = 0;
+	
+	rapi_context_begin_command(context, 0x09);
+	rapi_buffer_write_string(context->send_buffer, szPath);
+	rapi_buffer_write_uint32(context->send_buffer, dwFlags);
+
+	if ( !rapi_context_call(context) )
+		return false;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &count);
+
+	rapi_trace("found %i files", count);
+
+	if (count)
+	{
+		unsigned i;
+		u_int32_t name_size;
+		CE_FIND_DATA* array = calloc(count, sizeof(CE_FIND_DATA));
+			
+		if (!array)
+			return false;
+
+		for (i = 0; i < count; i++)
+		{
+			if (dwFlags & FAF_NAME)
+				rapi_buffer_read_uint32(context->recv_buffer, &name_size);
+
+			if (dwFlags & FAF_ATTRIBUTES)
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].dwFileAttributes);
+
+			if (dwFlags & FAF_CREATION_TIME)
+			{
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].ftCreationTime.dwLowDateTime);
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].ftCreationTime.dwHighDateTime);
+			}
+
+			if (dwFlags & FAF_LASTACCESS_TIME)
+			{
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].ftLastAccessTime.dwLowDateTime);
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].ftLastAccessTime.dwHighDateTime);
+			}
+
+			if (dwFlags & FAF_LASTWRITE_TIME)
+			{
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].ftLastWriteTime.dwLowDateTime);
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].ftLastWriteTime.dwHighDateTime);
+			}
+
+			if (dwFlags & FAF_SIZE_HIGH)
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].nFileSizeHigh);
+
+			if (dwFlags & FAF_SIZE_LOW)
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].nFileSizeLow);
+
+			if (dwFlags & FAF_OID)
+				rapi_buffer_read_uint32(context->recv_buffer, &array[i].dwOID);
+
+			if (dwFlags & FAF_NAME)
+			{
+				rapi_buffer_read_data(context->recv_buffer, array[i].cFileName, name_size * sizeof(WCHAR) );
+			}
+		}
+
+		if (ppFindDataArray)
+			*ppFindDataArray = array;
+
+	}
+
+	if (lpdwFoundCount)
+		*lpdwFoundCount = count;
+
+	return count;
+}
+
 static bool rapi_read_find_data(
 		RapiContext* context,
 		LPCE_FIND_DATA lpFindFileData)

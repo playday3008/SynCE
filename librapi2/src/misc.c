@@ -4,6 +4,12 @@
 #include "rapi_endian.h"
 #include "rapi_log.h"
 
+DWORD CeGetLastError( void )
+{
+	RapiContext* context = rapi_context_current();
+	return context->last_error;
+}
+
 BOOL CeGetVersionEx(
 		LPCEOSVERSIONINFO lpVersionInformation)
 {

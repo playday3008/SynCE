@@ -5,6 +5,7 @@ LDADD = $(SRC)/librapi.la
 
 noinst_PROGRAMS = \
 	CeCreateFile \
+	CeFindAllFiles \
 	CeFindFirstFile \
 	CeGetVersionEx \
 	CeGetSpecialFolderPath \
@@ -15,4 +16,5 @@ CeGetVersionEx_SOURCES = test.h CeGetVersionEx.cpp
 CeGetSpecialFolderPath_SOURCES = test.h CeGetSpecialFolderPath.cpp
 CeCreateFile_SOURCES = test.h CeCreateFile.cpp
 CeFindFirstFile_SOURCES = test.h CeFindFirstFile.cpp
+CeFindAllFiles_SOURCES = test.h CeFindAllFiles.cpp
 

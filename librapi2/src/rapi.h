@@ -10,22 +10,26 @@ extern "C"
 #endif
 
 /*
- * Initialization functions
+ * Main RAPI functions
  */
 
 #define CERAPI_E_ALREADYINITIALIZED  0x8004101
+
+HRESULT CeRapiFreeBuffer( 
+		LPVOID Buffer);
 
 HRESULT CeRapiInit(void);
 
 STDAPI CeRapiUninit(void);
 
-BOOL CeCheckPassword( 
-		LPWSTR lpszPassword);
-
-
 /*
  * Misc functions
  */
+
+BOOL CeCheckPassword( 
+		LPWSTR lpszPassword);
+
+DWORD CeGetLastError( void );
 
 typedef struct _CEOSVERSIONINFO{ 
 	DWORD dwOSVersionInfoSize; 
@@ -117,18 +121,23 @@ BOOL CeWriteFile(
  * File management functions
  */
 
-#define CSIDL_PROGRAMS           0x0002
-#define CSIDL_PERSONAL           0x0005
-#define CSIDL_FAVORITES_GRYPHON  0x0006
-#define CSIDL_STARTUP            0x0007
-#define CSIDL_RECENT             0x0008
-#define CSIDL_STARTMENU          0x000b
-#define CSIDL_DESKTOPDIRECTORY   0x0010
-#define CSIDL_FONTS              0x0014
-#define CSIDL_FAVORITES          0x0016
-
 BOOL CeDeleteFile(
 		LPCWSTR lpFileName);
+
+#define FAF_ATTRIBUTES      0x00001
+#define FAF_CREATION_TIME   0x00002
+#define FAF_LASTACCESS_TIME   0x00004
+#define FAF_LASTWRITE_TIME    0x00008
+
+#define FAF_SIZE_HIGH     0x00010
+#define FAF_SIZE_LOW      0x00020
+#define FAF_OID       0x00040
+#define FAF_NAME      0x00080
+
+#define FAF_ATTRIB_CHILDREN   0x01000
+#define FAF_ATTRIB_NO_HIDDEN    0x02000
+#define FAF_FOLDERS_ONLY    0x04000
+#define FAF_NO_HIDDEN_SYS_ROMMODULES  0x08000
 
 typedef struct _CE_FIND_DATA {
 	DWORD dwFileAttributes; 
@@ -139,7 +148,13 @@ typedef struct _CE_FIND_DATA {
 	DWORD nFileSizeLow; 
 	DWORD dwOID; 
 	WCHAR cFileName[MAX_PATH]; 
-} CE_FIND_DATA, *LPCE_FIND_DATA; 
+} CE_FIND_DATA, *LPCE_FIND_DATA, **LPLPCE_FIND_DATA; 
+
+BOOL CeFindAllFiles(
+		LPCWSTR szPath, 
+		DWORD dwFlags, 
+		LPDWORD lpdwFoundCount, 
+		LPLPCE_FIND_DATA ppFindDataArray);
 
 HANDLE CeFindFirstFile(
 		LPCWSTR lpFileName, 
@@ -148,6 +163,16 @@ HANDLE CeFindFirstFile(
 BOOL CeFindNextFile( 
 		HANDLE hFindFile, 
 		LPCE_FIND_DATA lpFindFileData); 
+
+#define CSIDL_PROGRAMS           0x0002
+#define CSIDL_PERSONAL           0x0005
+#define CSIDL_FAVORITES_GRYPHON  0x0006
+#define CSIDL_STARTUP            0x0007
+#define CSIDL_RECENT             0x0008
+#define CSIDL_STARTMENU          0x000b
+#define CSIDL_DESKTOPDIRECTORY   0x0010
+#define CSIDL_FONTS              0x0014
+#define CSIDL_FAVORITES          0x0016
 
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 

@@ -9,8 +9,8 @@ lib_LTLIBRARIES = librapi.la
 librapi_la_SOURCES = \
 	file_access.c                  \
 	file_management.c              \
-	init.c                         \
 	misc.c                         \
+	rapi.c                         \
 	rapi_buffer.h   rapi_buffer.c  \
 	rapi_context.h  rapi_context.c \
 	rapi_internal.h                \
