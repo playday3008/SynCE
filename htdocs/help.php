@@ -8,7 +8,7 @@
 
 <p>Instructions on how to get help from the SynCE community.</p>
 
-<h2>Before asking for help</h2>
+<h2>Look for previous messages about the same problem</h2>
 
 <p>If others have had the same problem before, the solution may already be
 available!</p>
