@@ -53,6 +53,7 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self);
 
 bool rra_syncmgr_connect(RRA_SyncMgr* self);
 void rra_syncmgr_disconnect(RRA_SyncMgr* self);
+bool rra_syncmgr_is_connected(RRA_SyncMgr* self);
 
 /* 
    Get information about the available object types 

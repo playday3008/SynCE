@@ -29,6 +29,8 @@ bool rrac_connect(RRAC* rrac);
 
 void rrac_disconnect(RRAC* rrac);
 
+bool rrac_is_connected(RRAC* rrac);
+
 /** Get file descriptor for use with select() or poll() */
 int rrac_get_event_descriptor(RRAC* self);
 

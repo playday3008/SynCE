@@ -124,6 +124,9 @@ static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)/*{{{*/
     goto exit;
   }
 
+  if (self->types)
+    free(self->types);
+
   self->types = malloc(self->type_count * sizeof(RRA_SyncMgrType));
 
   for (i = 0; i < self->type_count; i++)
@@ -198,6 +201,11 @@ void rra_syncmgr_disconnect(RRA_SyncMgr* self)/*{{{*/
     self->receiving_events = FALSE;
   }
 }/*}}}*/
+
+bool rra_syncmgr_is_connected(RRA_SyncMgr* self)
+{
+  return self && rrac_is_connected(self->rrac);
+}
 
 uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)/*{{{*/
 {
@@ -381,6 +389,8 @@ bool rra_syncmgr_get_deleted_object_ids(/*{{{*/
   success = true;
 
 exit:
+  if (directory)
+    free(directory);
   rra_uint32vector_destroy(previous_ids, true);
   return success;
 }/*}}}*/

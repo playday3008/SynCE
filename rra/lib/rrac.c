@@ -182,6 +182,11 @@ void rrac_disconnect(RRAC* rrac)/*{{{*/
   }
 }/*}}}*/
 
+bool rrac_is_connected(RRAC* rrac)
+{
+  return rrac && rrac->data_socket;
+}
+
 static bool rrac_recv_any(RRAC* rrac, CommandHeader* header, uint8_t** data)/*{{{*/
 {
 	bool success = false;
