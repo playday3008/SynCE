@@ -41,7 +41,7 @@ struct _RapiBuffer
 /**
  * Enlarge buffer to at least a specified size
  */
-static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)
+static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)/*{{{*/
 {
 	size_t new_size = buffer->max_size;
 	unsigned char* new_data = NULL;
@@ -68,12 +68,12 @@ static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)
 	}
 	
 	return success;
-}
+}/*}}}*/
 
 /**
  * See if the buffer is large enough, try to enlarge if it is too small
  */
-static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)
+static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)/*{{{*/
 {
 	bool success = false;
 	size_t bytes_needed = buffer->bytes_used + extra_size;
@@ -92,7 +92,7 @@ static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)
 	}
 
 	return success;
-}
+}/*}}}*/
 
 
 RapiBuffer* rapi_buffer_new()

@@ -17,7 +17,7 @@ HRESULT CeRapiFreeBuffer(
 	return S_OK;
 }
 
-static bool rapi_login(RapiSocket* socket, const char* password, int key, unsigned char* reply)
+static bool rapi_login(RapiSocket* socket, const char* password, int key, unsigned char* reply)/*{{{*/
 {
 	bool success = false;
 	unsigned char* encoded = NULL;
@@ -83,9 +83,9 @@ static bool rapi_login(RapiSocket* socket, const char* password, int key, unsign
 exit:
 	rapi_wstr_free_string(encoded);
 	return success;
-}
+}/*}}}*/
 
-HRESULT CeRapiInit(void)
+HRESULT CeRapiInit(void)/*{{{*/
 {
 	RapiContext* context = rapi_context_current();
 	HRESULT result = E_UNEXPECTED;
@@ -133,9 +133,9 @@ HRESULT CeRapiInit(void)
 fail:
 	unloadConfigFile(config);
 	return result;
-}
+}/*}}}*/
 
-STDAPI CeRapiUninit(void)
+STDAPI CeRapiUninit(void)/*{{{*/
 {
 	RapiContext* context = rapi_context_current();
 	
@@ -149,9 +149,9 @@ STDAPI CeRapiUninit(void)
 	{
 		return E_FAIL;
 	}
-}
+}/*}}}*/
 
-BOOL CeCheckPassword( 
+BOOL CeCheckPassword( /*{{{*/
 		LPWSTR lpszPassword)
 {
 	RapiContext* context = rapi_context_current();
@@ -167,5 +167,5 @@ BOOL CeCheckPassword(
 	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
 	return return_value;
-}
+}/*}}}*/
 

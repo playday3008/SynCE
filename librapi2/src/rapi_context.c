@@ -16,7 +16,7 @@
 
 static RapiContext* current_context;
 
-RapiContext* rapi_context_current()
+RapiContext* rapi_context_current()/*{{{*/
 {
 	/* TODO: make thread-safe version of this with thread private variables */
 
@@ -26,9 +26,9 @@ RapiContext* rapi_context_current()
 	}
 
 	return current_context;
-}
+}/*}}}*/
 
-RapiContext* rapi_context_new()
+RapiContext* rapi_context_new()/*{{{*/
 {
 	RapiContext* context = calloc(sizeof(RapiContext), 1);
 
@@ -46,9 +46,9 @@ RapiContext* rapi_context_new()
 	}
 
 	return context;
-}
+}/*}}}*/
 
-void rapi_context_free(RapiContext* context)
+void rapi_context_free(RapiContext* context)/*{{{*/
 {
 	if (context)
 	{
@@ -57,9 +57,9 @@ void rapi_context_free(RapiContext* context)
 		rapi_socket_free(context->socket);
 		free(context);
 	}
-}
+}/*}}}*/
 
-bool rapi_context_begin_command(RapiContext* context, uint32_t command)
+bool rapi_context_begin_command(RapiContext* context, uint32_t command)/*{{{*/
 {
 	rapi_context_trace("command=0x%02x", command);
 	
@@ -69,9 +69,9 @@ bool rapi_context_begin_command(RapiContext* context, uint32_t command)
 		return false;
 
 	return true;
-}
+}/*}}}*/
 	
-bool rapi_context_call(RapiContext* context)
+bool rapi_context_call(RapiContext* context)/*{{{*/
 {
 	if ( !rapi_buffer_send(context->send_buffer, context->socket) )
 	{
@@ -112,5 +112,5 @@ bool rapi_context_call(RapiContext* context)
 	}
 
 	return true;
-}
+}/*}}}*/
 
