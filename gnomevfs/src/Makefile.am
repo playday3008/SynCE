@@ -3,9 +3,6 @@ module_flags = -export_dynamic -avoid-version
 
 INCLUDES = $(rapi_cflags) $(synce_cflags) $(VFS_CFLAGS)
 
-# /etc is a more sane default it seems to me
-# modulesconfdir=$(sysconfdir)/gnome-vfs-2.0/modules
-
 modulesconfdir=@modulesconfdir@
 modulesconf_DATA=synce-module.conf
 
