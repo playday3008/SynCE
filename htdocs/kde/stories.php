@@ -60,26 +60,26 @@ online average&nbsp; about 15 - 16 hours at a day.<br>
         <tbody>
           <tr>
             <td style="vertical-align: top; text-align: center;"><a
- href="images/pavel_18_06_2003/S3400012.JPG"><img src="S3400012_s.JPG"
- title="" alt="Image1"
+ href="images/pavel_18_06_2003/S3400012.JPG"><img
+ src="images/pavel_18_06_2003/S3400012_s.JPG" title="" alt="Image1"
  style="border: 0px solid ; width: 130px; height: 98px;" width="130"
  height="98" border="0"></a><br>
             </td>
             <td style="vertical-align: top; text-align: center;"><a
- href="images/pavel_18_06_2003/S3400013.JPG"><img src="S3400013_s.JPG"
- title="" alt="Image2"
+ href="images/pavel_18_06_2003/S3400013.JPG"><img
+ src="images/pavel_18_06_2003/S3400013_s.JPG" title="" alt="Image2"
  style="border: 0px solid ; width: 130px; height: 98px;" width="130"
  height="98" border="0"></a><br>
             </td>
             <td style="vertical-align: top; text-align: center;"><a
- href="images/pavel_18_06_2003/S3400014.JPG"><img src="S3400014_s.JPG"
- title="" alt="Image3"
+ href="images/pavel_18_06_2003/S3400014.JPG"><img
+ src="images/pavel_18_06_2003/S3400014_s.JPG" title="" alt="Image3"
  style="border: 0px solid ; width: 130px; height: 98px;" width="130"
  height="98" border="0"></a><br>
             </td>
             <td style="vertical-align: top; text-align: center;"><a
- href="images/pavel_18_06_2003/S3400015.JPG"><img src="S3400015_s.JPG"
- title="" alt="Image4"
+ href="images/pavel_18_06_2003/S3400015.JPG"><img
+ src="images/pavel_18_06_2003/S3400015_s.JPG" title="" alt="Image4"
  style="border: 0px solid ; width: 130px; height: 98px;" width="130"
  height="98" border="0"></a><br>
             </td>

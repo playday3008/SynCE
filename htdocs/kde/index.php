@@ -10,11 +10,11 @@
 </head>
 <body>
 <div class="PAGE">
-<p>Return to <a href="../index.php">main page</a>.</p>
+<p>Return to <a href="../index.php">SynCE main page</a>.</p>
 <h1><a name="SynCE-KDE" class="mozTocH1" id="SynCE-KDE"></a>SynCE -
 KDE Integration</h1>
 <p>In this text the term "PDA"&nbsp; is used as a synonym for all
-devices running Windows CE Version 2.0 or greater as long as they
+devices running Windows CE Version 2.0 or later as long as they
 are supported by the underlying <a
  href="http://synce.sourceforge.net/synce/">SynCE libraries</a>.</p>
 <br>
@@ -32,7 +32,12 @@ are supported by the underlying <a
   <li><a href="screenshots.php">Screenshots</a></li>
   <li><a href="#Related_Work">Related Work</a></li>
   <li><a href="stories.php">Success Stories</a></li>
-  <li><a href="#Future">Future</a></li>
+  <li><a href="#Future">Future<br>
+    <a href="http://sourceforge.net/projects/synce/"><br>
+    </a></a></li>
+  <li><a href="http://sourceforge.net/projects/synce/">SourceForge
+Project Page</a><br>
+  </li>
 </ul>
 <br>
 <h2><a name="Introduction" id="Introduction"></a>Introduction</h2>
@@ -40,29 +45,46 @@ are supported by the underlying <a
  href="http://synce.sourceforge.net/synce">SynCE</a> into <a
  href="http://www.kde.org">KDE</a> is the SynCE-KDE project - formerly
 Rapip/Raki. SynCE-KDE essentially consists of the three
-subprojects <b>RAPIP,</b> <b>RAKI,</b> and <b>VDCCM</b>. In
+subproject <b>RAPIP,</b> <b>RAKI,</b> and <b>VDCCM</b>. In
 general, they all support the same devices which are supported
 by the underlying SynCE libraries.</p>
-<p><b>RAPIP</b> is the short form for "<b>RAPI</b>-<b>P</b>rotocol".
+<p><b>RAPIP</b> <br>
+</p>
+<blockquote>is the short form for "<b>RAPI</b>-<b>P</b>rotocol".
 It is a full featured KDE io-slave used to browse through the PDA
 file system and to copy files to and from the PDA by drag and drop
-via <a href="http://konqueror.kde.org">Konqueror</a>.</p>
-<p><b>RAKI</b> is a synonym for
-"<b>R</b>emote-<b>A</b>ccess-<b>KI</b>cker-applet". As the name
+via <a href="http://konqueror.kde.org">Konqueror</a>.</blockquote>
+<p><b>RAKI</b> <br>
+</p>
+<blockquote>is a synonym for
+"<b>R</b>emote-<b>A</b>ccess-<b>Ki</b>cker-applet". As the name
 suggests it has first been an applet for kicker, the KDE panel but
 as time goes by the application-type changed. Today RAKI&nbsp; is
 an application docking into the KDE system-tray. It is responsible
 for all additional tasks which are desired for interacting with the
-PDA via the desktop.</p>
-<p><b>VDCCM</b> is a generalization of the native <a
+PDA via the desktop.</blockquote>
+<p><b>VDCCM</b> <br>
+</p>
+<blockquote>is a generalization of the native <a
  href="http://synce.sourceforge.net/synce/architecture.php#dccm">SynCE-DCCM</a>
 but is fully compatible with it. In addition to all DCCM features
 it is capable of supporting more than one PDA connected at the same
 time. It is responsible for reporting all connects and disconnects
 of PDAs to interested clients via an unix-socket by use of a simple
-protocol. E.g. RAKI is one of such an interested client.</p>
+protocol. E.g. RAKI is one of such an interested client.</blockquote>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
+<b>September 9, 2003 </b>SynCE-KDE 0.6.1 is released!<br>
+<ul>
+  <li>This is a bug fix release. The annoying "33%" bug which has
+prevented RAKI to run on some Linux distributions is fixed.</li>
+  <li>Some unnecessary calls into librra has been removed. RAKI should
+be a little faster now.</li>
+  <li>Debian packages could now be installed directly over the network.
+Have a look at the <a href="#Download">download</a> section for
+informations about that.<br>
+  </li>
+</ul>
 <b>August 18, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
 <ul>
   <li>First of all the name of the project has changed. It is now
@@ -205,7 +227,7 @@ SynCE libraries</a> version 0.8.</li>
 </ul>
 <br>
 <h2><a name="Download" id="Download"></a>Download</h2>
-You can download precompiled <tt>tgz</tt>, <tt>rpm</tt>, and
+You can download precompiled <tt>tar.gz</tt>, <tt>rpm</tt>, and
 <tt>deb</tt> packages from the <a
  href="http://sourceforge.net/projects/synce/">SourceForge Project
 Page</a>.<br>
@@ -229,29 +251,52 @@ available.
 To
 still be able to install SynCE-KDE please compile and install
 synce-rra-0.8 before using SynCE-KDE.<br>
-As long as there are not all parts of SynCE-0.8 part of
-debian-unstable&nbsp; the SynCE-KDE
-packages will only be available from the <a
+Packages could be downloaded from the <a
  href="http://sourceforge.net/projects/synce/">SourceForge Project
-Page</a> and not from the <a
- href="http://synce.sourceforge.net/synce/debian.php">SynCE-Debian-Repository</a>.<br>
+Page</a> or installed directly over the network from our debian
+repository at SourceForge.<br>
+  <ol>
+    <li>Add the following two lines to your /etc/apt/sources.list:<br>
+      <tt>&nbsp;&nbsp;&nbsp; deb http://synce.sourceforge.net/debian/
+unstable/$(ARCH)/<br>
+&nbsp;&nbsp;&nbsp; deb-src http://synce.sourceforge.net/debian/
+unstable/source/</tt><br>
+      <br>
+    </li>
+    <li>Update your package lists:<tt><br>
+&nbsp;&nbsp;&nbsp; # apt-get update</tt><br>
+      <br>
+    </li>
+    <li>Install SynCE-KDE:<br>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-get install synce-kde</tt><br>
+      <br>
+    </li>
+    <li>Install the development packages. This is only needed it you
+intend to develop synchronizer for RAKI:<br>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-get install synce-kde-dev</tt></li>
+  </ol>
+The source of SynCE-KDE is also available from the repository.<br>
+  <ol>
+    <li>Install the source package:<br>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-src install synce-kde</tt><br>
+      <br>
+    </li>
+    <li>Build the binary packages:<br>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-src build synce-kde</tt><br>
+    </li>
+  </ol>
   <br>
 </blockquote>
 <span style="font-weight: bold;"><a href="http://www.redhat.com/">RedHat</a>
 user</span><br>
 <blockquote>The <tt>rpm</tt> packages are designed for
-RedHat 0.9.<br>
+RedHat 9.<br>
   <br>
 </blockquote>
 <span style="font-weight: bold;"><a href="http://www.slackware.com/">Slackware</a>
 user</span><br>
-<blockquote>Be aware that SynCE-KDE is not
-compatible with Slackware 0.9. It
-seems RAKI produces a deadlock in the <a
- href="http://www.trolltech.com/">Qt-library</a> provided by <a
- href="http://www.slackware.com/">Slackware</a>. You can fix this by
-compiling Qt and KDE yourself as described <a
- href="http://developer.kde.org/build/compile_kde3_1.html">here</a>.<br>
+<blockquote>The precompiled package synce-kde-slack-0.6.1.tar.gz has
+been compiled on Slackware 9. <br>
   <br>
 </blockquote>
 <a href="http://sourceforge.net/cvs/?group_id=30550"><b>CVS</b></a><b>
@@ -263,9 +308,9 @@ also check out the latest code directly from <a
 the
 command<code></code><br>
   <br>
-  <code># cvs -z3
+  <code>&nbsp;&nbsp;&nbsp; # cvs -z3
 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/synce \<br>
-&nbsp;&nbsp;&nbsp; co synce-kde</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; co synce-kde</code><br>
   <blockquote><code></code></blockquote>
   <code></code>after <a
  href="http://sourceforge.net/cvs/?group_id=30550">logging
@@ -318,7 +363,7 @@ and go to step 5.<br>
   <li>Unpack the downloaded synce-kde-0.6.tar.gz into your favorite
 source directory<br>
     <code>&nbsp;&nbsp;&nbsp; # tar -xzf
-synce-kde-0.6.tar.gz</code><br>
+synce-kde-0.6.1.tar.gz</code><br>
     <br>
   </li>
   <li>Configure your SynCE-KDE source tree by issuing the
@@ -350,9 +395,9 @@ on FreeBSD</a> page.</li>
 <br>
 <h2><a name="Future" id="Future"></a>Future</h2>
 Wait and see ;-)<br>
-<p>Return to <a href="../index.php">main page</a>.</p>
+<p>Return to <a href="../index.php">SynCE main page</a>.</p>
 </div>
 <hr size="1">
-Last modified: Aug 17 2003
+Last modified: Sep 9 2003
 </body>
 </html>
