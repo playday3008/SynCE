@@ -4,6 +4,8 @@ config.h
 config.h.in
 config.log
 config.files
+config.guess
+config.sub
 configure.files
 config.status
 Makefile
