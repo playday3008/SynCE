@@ -12,3 +12,6 @@ pdamirror_SOURCES = imageviewer.cpp pdamirror.cpp rapiwrapper.cpp huffman.c cesc
 pdamirror_LDADD = -lkdeprint -lkio $(LIB_KDEUI)
 
 
+
+
+applnkUtilitiesdir = $(kde_appsdir)/Utilities

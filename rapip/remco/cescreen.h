@@ -213,30 +213,17 @@ class CeScreen : public KMainWindow
 {
     Q_OBJECT
 public:
-    CeScreen(KAboutData *aboutData, KAboutApplication *aboutApplication);
+    CeScreen(KAboutApplication *aboutApplication);
     ~CeScreen();
     bool connectPda(QString pdaName, bool isSynCeDevice = true, bool forceInstall = false);
 
 public slots:
-    virtual void fileNew();
-    virtual void fileOpen();
     virtual void fileSave();
-    virtual void fileSaveAs();
     virtual void filePrint();
-    virtual void fileExit();
-    virtual void editUndo();
-    virtual void editRedo();
-    virtual void editCut();
-    virtual void editPaste();
-    virtual void editFind();
-    virtual void helpIndex();
-    virtual void helpContents();
-    virtual void helpAbout();
-    virtual void editCopy();
+    virtual void showAboutApplication();
 
 private slots:
     void readSocket(KSocket *socket);
-    void readSocketRLE(KSocket *socket);
     void closeSocket(KSocket *socket);
     void mousePressed(ButtonState button, int x, int y);
     void mouseReleased(ButtonState button, int x, int y);
@@ -244,8 +231,8 @@ private slots:
     void wheelRolled(int delta);
     void keyPressed(int ascii, int code);
     void keyReleased(int ascii, int code);
-    size_t rle_decode(unsigned char *target, unsigned char *source, size_t size, unsigned char *oldData);
     void resizeWindow();
+    void updatePause();
 
 signals:
     void printContent();
@@ -256,13 +243,21 @@ private:
     KSocket *pdaSocket;
     unsigned char *oldData;
 
+    size_t rle_decode(unsigned char *target, unsigned char *source, size_t size, unsigned char *oldData);
     void sendMouseEvent(long int button, long int cmd, long int x, long int y);
     void sendKeyEvent(long int code, long int cmd);
+    void readEncodedImage(KSocket *socket);
+    void readSizeMessage(KSocket *socket);
     QString getDeviceIp(QString pdaAddress);
     int mapKey(int code);
     ImageViewer *imageViewer;
     uint32_t width;
     uint32_t height;
+    bool pause;
+    KToolBar *tb;
+    KPopupMenu *filemenu;
+    KAboutApplication *aboutApplication;
+    int pauseItem;
 
     static struct _keymap {
         int winVkCode;

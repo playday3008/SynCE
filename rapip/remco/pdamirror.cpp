@@ -33,7 +33,7 @@
 #include "cescreen.h"
 
 static const char *description = I18N_NOOP(
-    "PDA-Mirror, a PocketPC-Control Tool");
+    "PDAMirror, a PocketPC-Control Tool");
 
 static const char *MITlicense = I18N_NOOP(
     "Copyright (c) 2003 Volker Christian\n"
@@ -74,7 +74,7 @@ static KCmdLineOptions options[] =
 
 int main(int argc, char *argv[])
 {
-    KAboutData aboutData("pdamirror", I18N_NOOP("PDAMirror"), VERSION, description,
+    KAboutData aboutData("PDAMirror", I18N_NOOP("PDAMirror"), VERSION, description,
             KAboutData::License_Custom,
             "(c) 2003, Volker Christian (voc)", 0,
             "http://synce.sourceforge.net/synce/kde/",
@@ -89,9 +89,6 @@ int main(int argc, char *argv[])
     aboutData.addCredit("Ganesh Varadarajan",
             I18N_NOOP("has developed the serial-over-USB driver."),
             "vganesh@users.sourceforge.net");
-    aboutData.addCredit("Michael Jarrett",
-            I18N_NOOP("ported the AvantGo support from Malsync to SynCE."),
-            "JudgeBeavis@hotmail.com");
     aboutData.setLicenseText(MITlicense);
 
     KCmdLineArgs::init( argc, argv, &aboutData );
@@ -107,9 +104,9 @@ int main(int argc, char *argv[])
     kdDebug(2120) << "Synce: " << synce << endl;
     kdDebug(2120) << "ForceInstall: " << forceInstall << endl;
 
-    KApplication a;
+    KApplication a(argc, argv, "raki");
 
-    CeScreen *ceScreen = new CeScreen(&aboutData, new KAboutApplication(&aboutData));
+    CeScreen *ceScreen = new CeScreen(new KAboutApplication(&aboutData));
 
     if (!ceScreen->connectPda(pdaName, synce, forceInstall)) {
         kdDebug(2120) << "Could not contact PDA " << pdaName << endl;

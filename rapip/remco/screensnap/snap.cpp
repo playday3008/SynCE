@@ -39,8 +39,9 @@ Snap::SnapImage Snap::createSnapImage()
     newImage.pbmi.bmiHeader.biPlanes = 1;
 	newImage.pbmi.bmiHeader.biBitCount = cClrBits;
     newImage.pbmi.bmiHeader.biCompression = BI_RGB;
-	newImage.pbmi.bmiHeader.biSizeImage = ((newImage.pbmi.bmiHeader.biWidth * cClrBits + 31) 
-				& ~31) / 8 * newImage.pbmi.bmiHeader.biHeight;
+	newImage.pbmi.bmiHeader.biSizeImage = 
+			((newImage.pbmi.bmiHeader.biWidth * cClrBits + 31) & ~31) / 8 
+			* newImage.pbmi.bmiHeader.biHeight;
 	newImage.pbmi.bmiHeader.biXPelsPerMeter = 3780;
     newImage.pbmi.bmiHeader.biYPelsPerMeter = 3780;
     newImage.pbmi.bmiHeader.biClrUsed = 0;

@@ -38,7 +38,8 @@ Q_OBJECT
 public:
     ImageViewer(QWidget *parent = 0, const char *name = 0, WFlags f = 0);
     ~ImageViewer();
-    void drawImage(uchar *data, size_t size);
+    void drawImage();
+    void loadImage(uchar *data, size_t size);
     void paintEvent(QPaintEvent *e);
     void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
@@ -46,8 +47,6 @@ public:
     void wheelEvent(QWheelEvent *e);
     void keyPressEvent(QKeyEvent *e);
     void keyReleaseEvent(QKeyEvent *e);
-    void enterEvent(QEvent *e);
-    void leaveEvent(QEvent *e);
 
 signals:
     void mousePressed(ButtonState button, int x, int y);

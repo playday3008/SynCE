@@ -25,6 +25,7 @@
 
 #include <kfiledialog.h>
 #include <kprinter.h>
+#include <kmessagebox.h>
 #include <qpainter.h>
 
 ImageViewer::ImageViewer(QWidget *parent, const char * name, WFlags f)
@@ -32,6 +33,7 @@ ImageViewer::ImageViewer(QWidget *parent, const char * name, WFlags f)
 {
     this->setFocusPolicy(QWidget::StrongFocus);
     this->setBackgroundColor(QColor(0, 0, 0));
+    this->setBackgroundMode(Qt::NoBackground);
 //    this->setFixedSize(240, 320);
     this->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, sizePolicy().hasHeightForWidth() ) );
 //    this->setSizePolicy(QSizePolicy::Fixed);
@@ -52,14 +54,16 @@ void ImageViewer::setPdaSize(int x, int y)
 }
 
 
-void ImageViewer::drawImage(uchar *data, size_t size)
+void ImageViewer::drawImage()
 {
-//    this->setFixedSize(240, 320);
-    image.loadFromData(data, size);
     pm.convertFromImage(image, 0);
-    setBackgroundMode(Qt::NoBackground);
     update();
-    
+}
+
+
+void ImageViewer::loadImage(uchar *data, size_t size)
+{
+    image.loadFromData(data, size);
 }
 
 
@@ -80,16 +84,23 @@ void ImageViewer::printImage()
 
 void ImageViewer::saveImage()
 {
-    QString fileName = KFileDialog::getSaveFileName("", "*.png *.bmp *.xbm *.xpm *.pnm *.jpeg *.mng *.pbm *.pgm *.ppm", this, "Save Screenshot");
+    QString fileName = KFileDialog::getSaveFileName("",
+            "*.png *.bmp *.xbm *.xpm *.pnm *.jpeg *.mng *.pbm *.pgm *.ppm",
+            this, "Save Screenshot");
 
-    QString suffix = fileName.section('.', -1).upper();
+    QString suffix = fileName.section('.', -1);
 
-    if (!suffix.isEmpty()) {
-        if (!fileName.isEmpty()) {
-            pm.save(fileName, suffix.upper(), 100);
+
+    if (!fileName.isEmpty()) {
+        if (!suffix.isEmpty()) {
+            if (!pm.save(fileName, suffix.upper(), 100)) {
+                KMessageBox::error(this, "Wrong image format suffix. Please specify a valid one.",
+                        "Error Saving");
+            }
+        } else {
+            KMessageBox::error(this, "Wrong image format suffix. Please specify a valid one.",
+                    "Error Saving");
         }
-    } else {
-        kdDebug(2120) << "Could not save - no suffix found" << endl;
     }
 }
 
@@ -107,68 +118,34 @@ void ImageViewer::paintEvent(QPaintEvent *e)
 void ImageViewer::mousePressEvent(QMouseEvent *e)
 {
     e->accept();
-    kdDebug(2120) << "Mouse Press: x = " << e->x() << ", y = " << e->y() << endl;
 
     emit mousePressed(e->button(), e->x(), e->y());
 
     currentButton = e->button();
-
-    if (e->button() == Qt::LeftButton) {
-        kdDebug(2120) << "    Left Button" << endl;
-    } else if (e->button() == Qt::RightButton) {
-        kdDebug(2120) << "    Right Button" << endl;
-    } else if (e->button() == Qt::MidButton) {
-        kdDebug(2120) << "    Mid Button" << endl;
-    } else if (e->button() == Qt::NoButton) {
-        kdDebug(2120) << "    No Button" << endl;
-    }
 }
 
 
 void ImageViewer::mouseReleaseEvent(QMouseEvent *e)
 {
     e->accept();
-    kdDebug(2120) << "Mouse Release: x = " << e->x() << ", y = " << e->y() << endl;
 
     emit mouseReleased(e->button(), e->x(), e->y());
 
     currentButton = Qt::NoButton;
-
-    if (e->button() == Qt::LeftButton) {
-        kdDebug(2120) << "    Left Button" << endl;
-    } else if (e->button() == Qt::RightButton) {
-        kdDebug(2120) << "    Right Button" << endl;
-    } else if (e->button() == Qt::MidButton) {
-        kdDebug(2120) << "    Mid Button" << endl;
-    } else if (e->button() == Qt::NoButton) {
-        kdDebug(2120) << "    No Button" << endl;
-    }
 }
 
 
 void ImageViewer::mouseMoveEvent(QMouseEvent *e)
 {
     e->accept();
-    kdDebug(2120) << "Mouse Move: x = " << e->x() << ", y = " << e->y() << endl;
 
     emit mouseMoved(currentButton, e->x(), e->y());
-
-    if (e->button() == Qt::LeftButton) {
-        kdDebug(2120) << "    Left Button" << endl;
-    } else if (e->button() == Qt::RightButton) {
-        kdDebug(2120) << "    Right Button" << endl;
-    } else if (e->button() == Qt::MidButton) {
-        kdDebug(2120) << "    Mid Button" << endl;
-    } else if (e->button() == Qt::NoButton) {
-        kdDebug(2120) << "    No Button" << endl;
-    }
 }
 
 
 void ImageViewer::wheelEvent(QWheelEvent *e)
 {
     e->accept();
-    kdDebug(2120) << "WheelEvent" << endl;
 
     emit wheelRolled(e->delta());
 }
@@ -193,18 +170,6 @@ void ImageViewer::keyReleaseEvent(QKeyEvent *e)
                      ", Key = " << e->key() << endl;
 
     emit keyReleased(e->ascii(), e->key());
-}
-
-
-void ImageViewer::enterEvent(QEvent */*e*/)
-{
-    kdDebug(2120) << "Enter Event" << endl;
-}
-
-
-void ImageViewer::leaveEvent(QEvent */*e*/)
-{
-    kdDebug(2120) << "Leave Event" << endl;
 }
 
 

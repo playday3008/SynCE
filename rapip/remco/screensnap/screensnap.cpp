@@ -29,10 +29,6 @@ DWORD WINAPI snapProc(LPVOID lpParameter)
 
 	do {
 		if (snap->snap(image2)) {
-/*
-			snap->writeSocket(as, image2);
-		}
-*/
 			if (snap->xorBits(image, image2)) {
 				if (!(ret = snap->writeSocketRLE(as, image, &written))) {
 					MessageBox(NULL, L"WriteRLE failed", L"WriteRLE", MB_OK);

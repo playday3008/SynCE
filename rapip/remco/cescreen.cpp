@@ -157,28 +157,43 @@ struct CeScreen::_keymap CeScreen::keymap[] =
     };
 
 
-CeScreen::CeScreen(KAboutData *aboutData, KAboutApplication *aboutApplication)
+CeScreen::CeScreen(KAboutApplication *aboutApplication)
         : KMainWindow(NULL, "PdaScreen")
 {
+    pdaSocket = NULL;
+    pause = false;
+    setFixedSize(0, 0);
+    this->aboutApplication = aboutApplication;
+
     imageViewer = new ImageViewer(this);
-    this->setCentralWidget(imageViewer);
-    KPopupMenu *filemenu = new KPopupMenu();
-    filemenu->insertItem(SmallIcon("ksnapshot"), i18n("&Screenshot..."), this, SLOT(fileSave()));
-    filemenu->insertItem(SmallIcon("fileprint"), i18n("&Print..."), this, SLOT(filePrint()));
-    filemenu->insertSeparator();
-    filemenu->insertItem(SmallIcon("exit"), i18n("&Quit"), kapp, SLOT(quit()));
+    setCentralWidget(imageViewer);
+
+    filemenu = new KPopupMenu();
+    filemenu->insertItem(SmallIcon("ksnapshot"), i18n("&Screenshot..."),
+            this, SLOT(fileSave()), 0, 1, 1);
+    filemenu->insertItem(SmallIcon("fileprint"), i18n("&Print..."),
+            this, SLOT(filePrint()), 0, 2, 2);
+    filemenu->insertSeparator(3);
+    pauseItem = filemenu->insertItem(SmallIcon("stop"), i18n("&Pause"),
+            this, SLOT(updatePause()), 0, 3, 4);
+    filemenu->insertSeparator(5);
+    filemenu->insertItem(SmallIcon("exit"), i18n("&Quit"),
+            kapp, SLOT(quit()), 0, 4, 6);
     menuBar()->insertItem(i18n("&File"), filemenu);
 
-    KPopupMenu *helpmenu = helpMenu("PDAMirror");
+    KPopupMenu *helpmenu = customHelpMenu("PDAMirror");
     menuBar()->insertItem(i18n("&Help"), helpmenu);
 
-    KToolBar *tb = new KToolBar(this, QMainWindow::Top, false, "Utils", true, true);
+    tb = new KToolBar(this, QMainWindow::Top, false, "Utils", true, true);
     tb->insertButton("exit", 1, SIGNAL(clicked()), kapp, SLOT(quit()), true, "Quit");
     tb->insertButton("ksnapshot", 2, SIGNAL(clicked()), this, SLOT(fileSave()), true, "Screenshot");
     tb->insertButton("fileprint", 3, SIGNAL(clicked()), this, SLOT(filePrint()), true, "Print");
+    tb->insertButton("stop", 4, SIGNAL(clicked()), this, SLOT(updatePause()), true, "Pause");
+
     connect(tb, SIGNAL(placeChanged(QDockWindow::Place )), this, SLOT(resizeWindow()));
+    connect(tb, SIGNAL(modechange()), this, SLOT(resizeWindow()));
+
     statusBar()->insertItem(i18n("Connecting..."), 1);
-    pdaSocket = NULL;
 }
 
 
@@ -190,9 +205,38 @@ CeScreen::~CeScreen()
 }
 
 
+void CeScreen::showAboutApplication()
+{
+    aboutApplication->show();
+}
+
+
 void CeScreen::resizeWindow()
 {
-    this->adjustSize();
+    adjustSize();
+}
+
+
+void CeScreen::updatePause()
+{
+    pause = !pause;
+
+    if (pause) {
+        statusBar()->insertItem(i18n("Pause"), 3);
+        tb->removeItem(4);
+        tb->insertButton("redo", 4, SIGNAL(clicked()), this, SLOT(updatePause()), true, "Restart");
+        filemenu->removeItem(pauseItem);
+        pauseItem = filemenu->insertItem(SmallIcon("redo"), i18n("&Restart"),
+                this, SLOT(updatePause()), 0, 3, 3);
+    } else {
+        statusBar()->removeItem(3);
+        tb->removeItem(4);
+        tb->insertButton("stop", 4, SIGNAL(clicked()), this, SLOT(updatePause()), true, "Pause");
+        filemenu->removeItem(pauseItem);
+        pauseItem = filemenu->insertItem(SmallIcon("stop"), i18n("&Pause"),
+                this, SLOT(updatePause()), 0, 3, 3);
+        imageViewer->drawImage();
+    }
 }
 
 
@@ -203,8 +247,9 @@ QString CeScreen::getDeviceIp(QString pdaName)
     QString synceDir = QString(path);
     QString deviceIp = "";
 
-    if (path)
+    if (path) {
         delete path;
+    }
 
     KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
     if (activeConnection.hasGroup("device")) {
@@ -227,8 +272,12 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
             return false;
         }
 
-        Ce::rapiInit(pdaName);
+        if (!Ce::rapiInit(pdaName)) {
+            return false;
+        }
+
         synce::SYSTEM_INFO system;
+
         Ce::getSystemInfo(&system);
 
         QString arch;
@@ -252,10 +301,12 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
             KStandardDirs *dirs = KApplication::kApplication()->dirs();
             QString screensnap = dirs->findResource("data", "raki/scripts/" + binaryVersion);
             KIO::NetAccess::upload(screensnap,
-                    "rapip://" + pdaName + "/Windows/screensnap.exe");
+                                   "rapip://" + pdaName + "/Windows/screensnap.exe");
         }
         if (!Ce::createProcess(QString("\\Windows\\screensnap.exe").ucs2(), NULL,
-                NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {}
+                NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
+            return false;
+        }
         Ce::rapiUninit();
     }
 
@@ -281,7 +332,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
 
     oldData = NULL;
 
-    connect(pdaSocket, SIGNAL(readEvent(KSocket* )), this, SLOT(readSocketRLE(KSocket* )));
+    connect(pdaSocket, SIGNAL(readEvent(KSocket* )), this, SLOT(readSocket(KSocket* )));
     connect(pdaSocket, SIGNAL(closeEvent(KSocket *)), this, SLOT(closeSocket(KSocket* )));
     connect(imageViewer, SIGNAL(wheelRolled(int)), this, SLOT(wheelRolled(int)));
     connect(imageViewer, SIGNAL(keyPressed(int, int)), this, SLOT(keyPressed(int, int)));
@@ -290,6 +341,8 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
             this, SLOT(mousePressed(ButtonState, int, int )));
     connect(imageViewer, SIGNAL(mouseReleased(ButtonState, int, int )),
             this, SLOT(mouseReleased(ButtonState, int, int )));
+    connect(imageViewer, SIGNAL(mouseMoved(ButtonState, int, int )),
+            this, SLOT(mouseMoved(ButtonState, int, int )));
     connect(this, SIGNAL(printContent()), imageViewer, SLOT(printImage()));
     connect(this, SIGNAL(saveContent()), imageViewer, SLOT(saveImage()));
     connect(this, SIGNAL(pdaSize(int, int )), imageViewer, SLOT(setPdaSize(int, int )));
@@ -311,6 +364,8 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
         width = ntohl(xN);
         height = ntohl(yN);
         emit pdaSize((int) width, (int) height);
+    } else {
+        return false;
     }
 
     return true;
@@ -376,16 +431,111 @@ size_t CeScreen::rle_decode(unsigned char *target, unsigned char *source, size_t
 }
 
 
-void CeScreen::readSocketRLE(KSocket *socket)
+void CeScreen::readEncodedImage(KSocket *socket)
 {
     uint32_t headerSizeN;
     uint32_t rleSizeN;
     uint32_t bmpSizeN;
-    uint32_t xN;
-    uint32_t yN;
     int n;
     int m;
     int k;
+
+    n = read(socket->socket(), &headerSizeN, sizeof(long));
+    m = read(socket->socket(), &rleSizeN, sizeof(long));
+    k = read(socket->socket(), &bmpSizeN, sizeof(long));
+    if (n > 0 && m > 0 && k > 0) {
+        uint32_t headerSize = ntohl(headerSizeN);
+        uint32_t rleSize = ntohl(rleSizeN);
+        uint32_t bmpSize = ntohl(bmpSizeN);
+
+        uchar *bmData = new uchar[bmpSize];
+        uchar *rleData = new uchar[rleSize];
+
+//        kdDebug(2120) << "H: " << headerSize << ", D: " << rleSize << ", S: " << bmpSize << endl;
+
+        uint32_t rsize = 0;
+        int rsize_tmp;
+        do {
+            rsize_tmp = read(socket->socket(), bmData + rsize, headerSize - rsize);
+            if (rsize_tmp == 0) {
+                kdDebug(2120) << "<Header> Unexpected end of file - " << rsize <<
+                " Bytes read instead of " << headerSize << endl;
+                delete socket;
+                socket = NULL;
+                break;
+            }
+            if (rsize_tmp < 0) {
+                kdDebug(2120) << "Error during read" << endl;
+                delete socket;
+                socket = NULL;
+                break;
+            }
+            rsize += rsize_tmp;
+        } while (rsize < headerSize);
+
+        rsize = 0;
+        do {
+            rsize_tmp = read(socket->socket(), rleData + rsize, rleSize - rsize);
+            if (rsize_tmp == 0) {
+                kdDebug(2120) << "<RLE-Data> Unexpected end of file - " << rsize <<
+                " Bytes read instead of " << rleSize << endl;
+                delete socket;
+                socket = NULL;
+                break;
+            }
+            if (rsize_tmp < 0) {
+                kdDebug(2120) << "Error during read" << endl;
+                delete socket;
+                socket = NULL;
+                break;
+            }
+            rsize += rsize_tmp;
+        } while (rsize < rleSize);
+
+        if (oldData == NULL) {
+            oldData = new unsigned char[bmpSize];
+            memset(oldData, 0, bmpSize);
+        }
+
+        unsigned char *newrleData;
+        size_t newrleSize;
+
+        huffman_decode_memory(rleData, rleSize, &newrleData, &newrleSize);
+        rle_decode(bmData + headerSize, newrleData, newrleSize, oldData + headerSize);
+
+        delete oldData;
+        delete newrleData;
+        oldData = bmData;
+
+        imageViewer->loadImage(oldData, bmpSize);
+        if (!pause) {
+            imageViewer->drawImage();
+        }
+
+        delete rleData;
+    }
+}
+
+
+void CeScreen::readSizeMessage(KSocket *socket)
+{
+    uint32_t xN;
+    uint32_t yN;
+    int m;
+    int k;
+
+    m = read(socket->socket(), &xN, sizeof(long));
+    k = read(socket->socket(), &yN, sizeof(long));
+    if (m > 0 && k > 0) {
+        uint32_t x = ntohl(xN);
+        uint32_t y = ntohl(yN);
+        emit pdaSize((int) x, (int) y);
+    }
+}
+
+
+void CeScreen::readSocket(KSocket *socket)
+{
     unsigned char packageType;
 
     if (socket != NULL) {
@@ -397,132 +547,13 @@ void CeScreen::readSocketRLE(KSocket *socket)
         }
         switch(packageType) {
         case XOR_IMAGE:
-            n = read(socket->socket(), &headerSizeN, sizeof(long));
-            m = read(socket->socket(), &rleSizeN, sizeof(long));
-            k = read(socket->socket(), &bmpSizeN, sizeof(long));
-            if (n > 0 && m > 0 && k > 0) {
-                uint32_t headerSize = ntohl(headerSizeN);
-                uint32_t rleSize = ntohl(rleSizeN);
-                uint32_t bmpSize = ntohl(bmpSizeN);
-
-                uchar *bmData = new uchar[bmpSize];
-                uchar *rleData = new uchar[rleSize];
-
-                kdDebug(2120) << "H: " << headerSize << ", D: " << rleSize << ", S: " << bmpSize << endl;
-
-                uint32_t rsize = 0;
-                int rsize_tmp;
-                do {
-                    rsize_tmp = read(socket->socket(), bmData + rsize, headerSize - rsize);
-                    if (rsize_tmp == 0) {
-                        //                    kmessagebox
-                        kdDebug(2120) << "<Header> Unexpected end of file - " << rsize <<
-                        " Bytes read instead of " << headerSize << endl;
-                        delete socket;
-                        socket = NULL;
-                        break;
-                    }
-                    if (rsize_tmp < 0) {
-                        kdDebug(2120) << "Error during read" << endl;
-                        delete socket;
-                        socket = NULL;
-                        break;
-                    }
-                    rsize += rsize_tmp;
-                } while (rsize < headerSize);
-
-                rsize = 0;
-                do {
-                    rsize_tmp = read(socket->socket(), rleData + rsize, rleSize - rsize);
-                    if (rsize_tmp == 0) {
-                        kdDebug(2120) << "<RLE-Data> Unexpected end of file - " << rsize <<
-                        " Bytes read instead of " << rleSize << endl;
-                        delete socket;
-                        socket = NULL;
-                        break;
-                    }
-                    if (rsize_tmp < 0) {
-                        kdDebug(2120) << "Error during read" << endl;
-                        delete socket;
-                        socket = NULL;
-                        break;
-                    }
-                    rsize += rsize_tmp;
-                } while (rsize < rleSize);
-
-                kdDebug(2120) << "Read ready" << endl;
-
-                if (oldData == NULL) {
-                    oldData = new unsigned char[bmpSize];
-                    memset(oldData, 0, bmpSize);
-                }
-
-                unsigned char *newrleData;
-                size_t newrleSize;
-
-                huffman_decode_memory(rleData, rleSize, &newrleData,&newrleSize);
-
-                rle_decode(bmData + headerSize, newrleData, newrleSize, oldData + headerSize);
-
-                delete oldData;
-                delete newrleData;
-                oldData = bmData;
-
-                imageViewer->drawImage(oldData, bmpSize);
-
-                delete rleData;
-            }
+            this->readEncodedImage(socket);
             break;
         case SIZE_MESSAGE:
-            m = read(socket->socket(), &xN, sizeof(long));
-            k = read(socket->socket(), &yN, sizeof(long));
-            if (m > 0 && k > 0) {
-                uint32_t x = ntohl(xN);
-                uint32_t y = ntohl(yN);
-                emit pdaSize((int) x, (int) y);
-            }
+            this->readSizeMessage(socket);
             break;
         case KEY_IMAGE:
             break;
-        }
-    }
-}
-
-
-void CeScreen::readSocket(KSocket *socket)
-{
-    uint32_t sizeN;
-
-    if (socket != NULL) {
-        int n = read(socket->socket(), &sizeN, sizeof(long));
-
-        if (n > 0) {
-            uint32_t size = ntohl(sizeN);
-            uchar *bmData = new uchar[size];
-            uint32_t rsize = 0;
-            int rsize_tmp;
-            do {
-                rsize_tmp = read(socket->socket(), bmData + rsize, size - rsize);
-                if (rsize_tmp == 0) {
-                    kdDebug(2120) << "Zero Bytes read but not at end of input - should not happen" << endl;
-                    delete socket;
-                    socket = NULL;
-                    break;
-                }
-                if (rsize_tmp < 0) {
-                    kdDebug(2120) << "Error during read" << endl;
-                    delete socket;
-                    socket = NULL;
-                    break;
-                }
-                rsize += rsize_tmp;
-            } while (rsize < size);
-
-            if (rsize == size) {
-                imageViewer->drawImage(bmData, rsize);
-            }
-
-            delete bmData;
         }
     }
 }
@@ -684,79 +715,15 @@ void CeScreen::keyReleased(int ascii, int code)
 }
 
 
-void CeScreen::fileNew()
-{
-    qWarning( "PdaScreen::fileNew(): Not implemented yet" );
-}
-
-void CeScreen::fileOpen()
-{
-    qWarning( "PdaScreen::fileOpen(): Not implemented yet" );
-}
-
 void CeScreen::fileSave()
 {
     emit saveContent();
 }
 
-void CeScreen::fileSaveAs()
-{
-    qWarning( "PdaScreen::fileSaveAs(): Not implemented yet" );
-}
 
 void CeScreen::filePrint()
 {
     emit printContent();
-}
-
-void CeScreen::fileExit()
-{
-    qWarning( "PdaScreen::fileExit(): Not implemented yet" );
-}
-
-void CeScreen::editUndo()
-{
-    qWarning( "PdaScreen::editUndo(): Not implemented yet" );
-}
-
-void CeScreen::editRedo()
-{
-    qWarning( "PdaScreen::editRedo(): Not implemented yet" );
-}
-
-void CeScreen::editCut()
-{
-    qWarning( "PdaScreen::editCut(): Not implemented yet" );
-}
-
-void CeScreen::editPaste()
-{
-    qWarning( "PdaScreen::editPaste(): Not implemented yet" );
-}
-
-void CeScreen::editFind()
-{
-    qWarning( "PdaScreen::editFind(): Not implemented yet" );
-}
-
-void CeScreen::helpIndex()
-{
-    qWarning( "PdaScreen::helpIndex(): Not implemented yet" );
-}
-
-void CeScreen::helpContents()
-{
-    qWarning( "PdaScreen::helpContents(): Not implemented yet" );
-}
-
-void CeScreen::helpAbout()
-{
-    qWarning( "PdaScreen::helpAbout(): Not implemented yet" );
-}
-
-void CeScreen::editCopy()
-{
-    qWarning( "PdaScreen::editCopy(): Not implemented yet" );
 }
 
 #include "cescreen.moc"
