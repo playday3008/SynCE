@@ -7,6 +7,9 @@
 #include <string.h>
 #include <zlib.h>
 
+#define VERBOSE 0
+#define DEBUG_ZLIB 1
+
 /*
    Installer VISE - http://www.mindvision.com
  */
@@ -18,18 +21,22 @@ typedef struct
   uint8_t* buffer;
 } FileEntry;
 
+#ifdef DEBUG_ZLIB
+extern int z_verbose;
+#endif
 
 
 #define OUTPUT_BUFFER_SIZE 0x8000
 
-/* almost the same as DllInflate in dllinflate.c, only different initialization of zlib */
-static bool orange_decompress_to_file(const uint8_t* input_buffer, size_t input_size, const char* output_filename)/*{{{*/
+static bool orange_decompress_to_file(uint8_t* input_buffer, size_t input_size, const char* output_filename)/*{{{*/
 {
   bool success = false;
-  z_stream stream;
-  int error;
   Byte* output_buffer = malloc(OUTPUT_BUFFER_SIZE);
-  FILE* output = fopen(output_filename, "w");
+  bool decompress = true;
+#if 0
+  unsigned bad_offset = (unsigned)-1;
+#endif
+  uint8_t* fixed_buffer = NULL;
 
   if (!output_buffer)
   {
@@ -37,54 +44,172 @@ static bool orange_decompress_to_file(const uint8_t* input_buffer, size_t input_
     goto exit;
   }
 
-  if (!output)
+  while (decompress)
   {
-    synce_error("Failed to open file for writing: '%s'", output_filename);
-    goto exit;
-  }
+    FILE* output = fopen(output_filename, "w");
+    z_stream stream;
+    int error;
 
-  stream.next_in  = (Byte*)input_buffer;
-  stream.avail_in = input_size;
-  
-  stream.zalloc = NULL;
-  stream.zfree  = NULL;
-
-  error = inflateInit2(&stream, -MAX_WBITS);
-  if (Z_OK != error)
-  {
-    synce_error("inflateInit failed with error %i", error);
-    goto exit;
-  }
-
-  while (error != Z_STREAM_END)
-  {
-    uInt bytes_to_write;
-
-    stream.next_out   = output_buffer;
-    stream.avail_out  = OUTPUT_BUFFER_SIZE;
-
-    error = inflate(&stream, Z_NO_FLUSH);
-
-    if (error < Z_OK)
+    decompress = false;
+    
+    if (!output)
     {
-      synce_error("inflate failed with error %i", error);
+      synce_error("Failed to open file for writing: '%s'", output_filename);
       goto exit;
     }
 
-    bytes_to_write = OUTPUT_BUFFER_SIZE - stream.avail_out;
+    stream.next_in  = (Byte*)input_buffer;
+    stream.avail_in = input_size;
 
-    if (bytes_to_write != fwrite(output_buffer, 1, bytes_to_write, output))
+    stream.zalloc = NULL;
+    stream.zfree  = NULL;
+
+    error = inflateInit2(&stream, -MAX_WBITS);
+    if (Z_OK != error)
     {
-      synce_error("Failed to write %i bytes to output file '%s'", 
-          bytes_to_write, output_filename);
+      synce_error("inflateInit failed with error %i", error);
       goto exit;
     }
-  }
 
-  success = (input_size == stream.total_in) || (input_size == stream.total_in+1);
+    while (error != Z_STREAM_END)
+    {
+      uInt bytes_to_write;
+
+      stream.next_out   = output_buffer;
+      stream.avail_out  = OUTPUT_BUFFER_SIZE;
+
+      error = inflate(&stream, Z_NO_FLUSH);
+
+      bytes_to_write = OUTPUT_BUFFER_SIZE - stream.avail_out;
+
+      if (bytes_to_write != fwrite(output_buffer, 1, bytes_to_write, output))
+      {
+        synce_error("Failed to write %i bytes to output file '%s'", 
+            bytes_to_write, output_filename);
+        goto exit;
+      }
+
+      if (error < Z_OK)
+      {
+#if 0
+        unsigned offset;
+        int high,low;
+
+        /*
+           the algoritm used by the VISE installer has a peculiar format of the
+           stored blocks that makes zlib fail...
+         */
+
+        offset = input_size - stream.avail_in;
+
+        low   = input_buffer[offset-4] | input_buffer[offset-3] << 8;
+        high  = input_buffer[offset-2] | input_buffer[offset-1] << 8;
+
+        synce_trace("offset=%08x, code=%02x, high=%04x, ~high=%04x, low=%04x, ~low=%04x",
+            offset, input_buffer[offset-5], high, ~high & 0xffff, low, ~low & 0xffff);
+
+         if (bad_offset != offset)
+        {
+          bad_offset = offset;
+
+#if 1
+          if (low == ((0xff80-high) & 0xffff))
+#endif
+          {
+            int next_code;
+            
+            synce_trace("Fixing incorrect stored block length! (offset=%08x, high=%04x, low=%04x)", 
+                offset, high, low);
+            
+#if 1
+            high = ~low;
+            input_buffer[offset-2] = high & 0xff;
+            input_buffer[offset-1] = (high >> 8) & 0xff;
+
+            high  = input_buffer[offset-2] | input_buffer[offset-1] << 8;
+            synce_trace("New high: %04x", high);
+#else
+            low = ~high;
+            input_buffer[offset-4] = low & 0xff;
+            input_buffer[offset-3] = (low >> 8) & 0xff;
+#endif
+
+            next_code = input_buffer[offset+low];
+            synce_trace("Next code: %02x", next_code);
+            
+            synce_trace("[offset]: %02x", input_buffer[offset]);
+
+#if 0
+            if (0x11 == next_code)
+              input_buffer[offset+low] = next_code & ~1;
+#endif
+
+#if 0
+            if ((next_code & 7) >> 1 != 0)
+            {
+              synce_trace("Next code is unexpected");
+            }
+
+            if (next_code & 1) 
+            {
+              unsigned next_offset = offset + low;
+              
+              /* 
+                 next code is the last stored block... but... it seems like the
+                 last stored block is always empty, so we tweak a little
+                 more... 
+               */
+
+              input_size--;
+              memmove(input_buffer + next_offset, input_buffer + next_offset + 1, input_size - next_offset);
+            }
+#endif
+
+            decompress = true;
+            goto exit;
+          }
+#if 0
+          else
+          {
+            /* The last stored block is always zero bytes? */
+            uint8_t* old_fixed_buffer = fixed_buffer;
+
+            synce_trace("Fixing last stored block! (offset=%08x, high=%04x, low=%04x)", offset, high, low);
+            fixed_buffer = malloc(input_size + 4);
+            
+            memcpy(fixed_buffer, input_buffer, offset-4);
+            fixed_buffer[offset-1] = 0xff;
+            fixed_buffer[offset-2] = 0xff;
+            fixed_buffer[offset-3] = 0x00;
+            fixed_buffer[offset-4] = 0x00;
+            memcpy(fixed_buffer+offset, input_buffer, input_size-offset);
+          
+            input_size +=4;
+            input_buffer = fixed_buffer;
+            
+            FREE(old_fixed_buffer);
+
+            decompress = true;
+            goto exit;
+          }
+#endif
+        }
+#endif
+       
+        synce_error("inflate failed with error %i '%s' avail_in=%08x, total_out=%08x", 
+            error, stream.msg, stream.avail_in, stream.total_out);
+         goto exit;
+      }
+
+    }
+
+    success = (input_size == stream.total_in) || (input_size == stream.total_in+1);
 
 exit:
-  FCLOSE(output);
+    FCLOSE(output);
+  }
+
+  FREE(fixed_buffer);
   FREE(output_buffer);
   return success;
 }/*}}}*/
@@ -122,10 +247,510 @@ static char* orange_read_vise_string(FILE* input_file, int size_bytes)/*{{{*/
   result[size] = '\0';
 
   for (p = result; *p != '\0'; p++)
-    if (!isprint(*p))
+    if (!isprint(*p) && !iscntrl(*p))
       abort();
 
   return result;
+}/*}}}*/
+
+static void orange_correct_compressed_vise_buffer(uint8_t* buffer, size_t compressed_size)/*{{{*/
+{
+  unsigned k;
+
+#if 0
+  synce_trace("Last two bytes in buffer: %02x %02x",
+      buffer[compressed_size-2], buffer[compressed_size-1]);
+#endif
+
+  /* who the hell thought up this obfuscation? */
+  for (k = 0; k < compressed_size; k+=2)
+  {
+    uint8_t tmp = buffer[k];
+    buffer[k] = buffer[k+1];
+    buffer[k+1] = tmp;
+  }
+}/*}}}*/
+
+static bool orange_read_vise_files(/*{{{*/
+    FILE* input_file, 
+    const char* output_directory)
+{
+  bool success = false;
+  int file_count;
+  int j;
+  unsigned unknown;
+
+#if VERBOSE
+  synce_trace("Offset: %08lx", ftell(input_file));
+#endif
+
+  file_count = 
+    orange_read_byte(input_file) |
+    orange_read_byte(input_file) << 8;
+
+#if VERBOSE
+  synce_trace("File count: %04x", file_count);
+#endif
+
+  for (j = 0; j < file_count; j++)
+  {
+    unsigned filename_size;
+#if VERBOSE
+    synce_trace("Offset: %08lx", ftell(input_file));
+#endif
+    filename_size = orange_read_byte(input_file);
+
+    if (filename_size)
+    {
+      FileEntry entry;
+      char output_filename[256];
+#if VERBOSE
+      synce_trace("Filename size: %02x", filename_size);
+#endif
+
+      entry.filename = malloc(filename_size + 1);
+      if (!entry.filename)
+        goto exit;
+
+      if (filename_size != fread(entry.filename, 1, filename_size, input_file))
+        goto exit;
+
+      entry.filename[filename_size] = '\0';
+
+      unknown = orange_read32(input_file);
+#if VERBOSE
+      synce_trace("Unknown 1: %08x", unknown);
+#endif
+
+      unknown = orange_read32(input_file);
+#if VERBOSE
+      if (unknown != 0)
+        synce_trace("Unknown 2 not zero but %08x", unknown);
+#endif
+
+      unknown = orange_read32(input_file);
+#if VERBOSE
+      if (unknown != 0)
+        synce_trace("Unknown 3 not zero but %08x", unknown);
+#endif
+
+      entry.compressed_size = orange_read32(input_file);
+
+#if VERBOSE
+      synce_trace("%s %08x", entry.filename, entry.compressed_size);
+#endif
+
+      entry.buffer = malloc(entry.compressed_size);
+      if (!entry.buffer)
+        goto exit;
+
+      if (entry.compressed_size & 1)
+        synce_trace("File size not even!");
+
+      if (entry.compressed_size != fread(entry.buffer, 1, entry.compressed_size, input_file))
+        goto exit;
+
+      orange_correct_compressed_vise_buffer(entry.buffer, entry.compressed_size);
+
+      snprintf(output_filename, sizeof(output_filename), "%s/%s", 
+          output_directory, entry.filename);
+      if (!orange_decompress_to_file(entry.buffer, entry.compressed_size, output_filename))
+        goto exit;
+
+      FREE(entry.buffer);
+      FREE(entry.filename);
+    }
+    else
+    {
+      goto exit;
+    }
+  } /* for() */
+
+  success = true;
+
+exit:
+  return success;
+}/*}}}*/
+
+static bool orange_read_vise_data1(/*{{{*/
+    FILE* input_file)
+{
+  bool success = false;
+  char* str;
+  int j;
+  int key_value_pairs;
+  unsigned unknown;
+
+#if VERBOSE
+  synce_trace("Offset: %08lx", ftell(input_file));
+#endif
+
+  unknown =
+    orange_read32(input_file);
+#if VERBOSE
+  synce_trace("Unknown: %08x", unknown);
+#endif
+
+  for (j = 0; j < 2; j++)
+  {
+    str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+    synce_trace("'%s'", str);
+#endif
+    FREE(str);
+  }
+
+  unknown =
+    orange_read_byte(input_file) |
+    orange_read_byte(input_file) << 8;
+
+#if VERBOSE
+  synce_trace("Unknown: %04x", unknown);
+#endif
+
+  for (j = 0; j < 2; j++)
+  {
+    str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+    synce_trace("'%s'", str);
+#endif
+    FREE(str);
+  }
+
+  unknown =
+    orange_read_byte(input_file) |
+    orange_read_byte(input_file) << 8;
+#if VERBOSE
+  synce_trace("Unknown: %04x", unknown);
+#endif
+
+  unknown = orange_read32(input_file);
+#if VERBOSE
+  synce_trace("Unknown: %08x", unknown);
+#endif
+
+  /* skip block */
+#if 0
+  {
+    char output_filename[256];
+    char*buffer = malloc(unknown);
+
+    fread(buffer, 1, unknown, input_file);
+
+    snprintf(output_filename, sizeof(output_filename), "%s/unknown", 
+        output_directory);
+    if (!orange_decompress_to_file(buffer, unknown, output_filename))
+      synce_trace("unknown data not compressed");
+    free(buffer);
+  }
+#else
+  fseek(input_file, unknown, SEEK_CUR);
+#endif
+
+  unknown = orange_read_byte(input_file);
+#if VERBOSE
+  synce_trace("Unknown: %02x", unknown);
+#endif
+
+  unknown = orange_read32(input_file);
+#if VERBOSE
+  synce_trace("Unknown: %08x", unknown);
+#endif
+
+  key_value_pairs = orange_read32(input_file);
+
+  for (j = 0; j < key_value_pairs; j++)
+  {
+    char* key;
+    char* value;
+
+    key   = orange_read_vise_string(input_file, 2);
+    value = orange_read_vise_string(input_file, 2);
+
+#if VERBOSE
+    synce_trace("'%s'='%s'", key, value);
+#endif
+
+    FREE(key);
+    FREE(value);
+  }
+
+  /* skip block */
+  fseek(input_file, 8, SEEK_CUR);
+
+  success = true;
+
+  return success;
+}/*}}}*/
+
+static bool orange_read_vise_data2(/*{{{*/
+    FILE* input_file, 
+    unsigned base_offset,
+    const char* output_directory)
+{
+  int i;
+  int file_count = 0;
+  int object_count =
+    orange_read_byte(input_file) |
+    orange_read_byte(input_file) << 8 |
+    orange_read_byte(input_file) << 16 |
+    orange_read_byte(input_file) << 24;
+
+  for (i = 0; i < object_count; i++)
+  {
+    int type;
+
+#if VERBOSE
+    synce_trace("Offset: %08lx", ftell(input_file));
+#endif
+
+    type =
+      orange_read_byte(input_file) |
+      orange_read_byte(input_file) << 8;
+
+#if VERBOSE
+    synce_trace("Type 0x%04x", type);
+#endif
+
+    switch (type)
+    {
+      case 0x02:
+        {/*{{{*/
+          char* filename;
+          char* directory;
+          size_t original_size;
+          size_t compressed_size;
+          unsigned offset;
+          char* p;
+
+          fseek(input_file, 0x65, SEEK_CUR);
+
+          filename = orange_read_vise_string(input_file, 2);
+
+          fseek(input_file, 0x4, SEEK_CUR);
+
+          original_size =
+            orange_read_byte(input_file) |
+            orange_read_byte(input_file) << 8 |
+            orange_read_byte(input_file) << 16 |
+            orange_read_byte(input_file) << 24;
+
+          compressed_size =
+            orange_read_byte(input_file) |
+            orange_read_byte(input_file) << 8 |
+            orange_read_byte(input_file) << 16 |
+            orange_read_byte(input_file) << 24;
+
+          fseek(input_file, 0x4, SEEK_CUR);
+
+          offset =
+            orange_read_byte(input_file) |
+            orange_read_byte(input_file) << 8 |
+            orange_read_byte(input_file) << 16 |
+            orange_read_byte(input_file) << 24;
+
+          fseek(input_file, 0x25, SEEK_CUR);
+
+          directory = orange_read_vise_string(input_file, 2);
+
+          fseek(input_file, 0x28, SEEK_CUR);
+
+          for (p = directory; *p != '\0'; p++)
+            if (*p == '\\')
+              *p = '/';
+
+          synce_trace("offset %08x uncompressed size %08x compressed size %08x file '%s/%s' ", 
+              offset, original_size, compressed_size, directory, filename);
+
+          {
+            uint8_t* buffer = malloc(compressed_size);
+            if (buffer)
+            {
+              long old_offset = ftell(input_file);
+              
+              fseek(input_file, base_offset + offset, SEEK_SET);
+
+              if (compressed_size == fread(buffer, 1, compressed_size, input_file))
+              {
+                char output_filename[256];
+
+                /* create directory */
+                snprintf(output_filename, sizeof(output_filename), "%s/%s",
+                    output_directory, directory);
+                orange_make_sure_directory_exists(output_filename);
+                
+                /* decompress file */
+                snprintf(output_filename, sizeof(output_filename), "%s/%s/%s",
+                    output_directory, directory, filename);
+
+                if (compressed_size & 1)
+                  synce_trace("File size not even!");
+
+                orange_correct_compressed_vise_buffer(buffer, compressed_size);
+                if (orange_decompress_to_file(buffer, compressed_size, output_filename))
+                  file_count++;
+              }
+
+              fseek(input_file, old_offset, SEEK_SET);
+           
+              free(buffer);   
+            }
+            else
+            {
+              synce_error("Failed to allocate %i bytes", compressed_size);
+            }
+          }
+          
+          FREE(filename);
+          FREE(directory);
+        }/*}}}*/
+        break;
+
+      case 0x05:
+        {/*{{{*/
+          char* str;
+          int unknown;
+          int j;
+
+          fseek(input_file, 0x66, SEEK_CUR);
+
+#if 0
+          unknown =
+            orange_read_byte(input_file) |
+            orange_read_byte(input_file) << 8;
+
+          synce_trace("Unknown = %04x", unknown);
+#endif
+
+          str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+          synce_trace("'%s'", str);
+#endif
+          FREE(str);
+
+          unknown = orange_read_byte(input_file);
+          if (2 != unknown)
+          {
+            synce_trace("Unknown = %02x", unknown);
+            abort();
+          }
+
+          for (j = 0; j < 3; j++)
+          {
+            str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+            synce_trace("'%s'", str);
+#endif
+            FREE(str);
+          }
+
+          fseek(input_file, 0x5, SEEK_CUR);
+        }/*}}}*/
+        break;
+
+      case 0x10:
+        {/*{{{*/
+          char* key;
+          char* value;
+          int unknown;
+
+          fseek(input_file, 0x66, SEEK_CUR);
+
+          key   = orange_read_vise_string(input_file, 2);
+
+          unknown = orange_read_byte(input_file);
+          if (unknown)
+          {
+            synce_trace("Unknown = %02x", unknown);
+            abort();
+          }
+
+          value = orange_read_vise_string(input_file, 2);
+
+          fseek(input_file, 0x7, SEEK_CUR);
+
+#if VERBOSE
+          synce_trace("'%s'='%s'", key, value);
+#endif
+
+          FREE(key);
+          FREE(value);
+        }/*}}}*/
+        break;
+
+      case 0x11:
+        {/*{{{*/
+          int j;
+          fseek(input_file, 0x65, SEEK_CUR);
+
+          for (j = 0; j < 2; j++)
+          {
+            char* str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+            synce_trace("'%s'", str);
+#endif
+            FREE(str);
+          }
+
+          fseek(input_file, 0x5, SEEK_CUR);
+        }/*}}}*/
+        break;
+
+      case 0x1f:
+        fseek(input_file, 0x65, SEEK_CUR);
+        break;
+
+      case 0x24:
+        {/*{{{*/
+          int j;
+          int string_count = 4;
+          int unknown;
+
+          fseek(input_file, 0x65, SEEK_CUR);
+
+          unknown = 
+            orange_read_byte(input_file) |
+            orange_read_byte(input_file) << 8;
+
+          switch (unknown)
+          {
+            case 1+2:
+              string_count = 5;
+              break;
+
+            case 1+8:
+              string_count = 6;
+              break;
+
+            case 1+4+8:
+              string_count = 1;
+              break;
+
+            default:
+              synce_trace("Unknown = %02x", unknown);
+              abort();
+          }
+
+          fseek(input_file, 4, SEEK_CUR);
+
+          for (j = 0; j < string_count; j++)
+          {
+            char* str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+            synce_trace("'%s'", str);
+#endif
+            FREE(str);
+          }
+        }/*}}}*/
+        break;
+
+      default:
+        synce_trace("Unknown type: %04x", type);
+        abort();
+    }
+  }
+
+  return file_count > 0;
 }/*}}}*/
 
 bool orange_extract_vise(
@@ -134,8 +759,11 @@ bool orange_extract_vise(
 {
   bool success = false;
   FILE* input_file = fopen(input_filename, "r");
-  int i;
-  unsigned start_offset;
+  unsigned base_offset;
+
+#if DEBUG_ZLIB
+  z_verbose = 1;
+#endif
 
   if (!input_file)
     goto exit;
@@ -150,9 +778,9 @@ bool orange_extract_vise(
 
   synce_trace("ESIV end signature found");
 
-  start_offset = orange_read32(input_file);
+  base_offset = orange_read32(input_file);
   
-  fseek(input_file, start_offset, SEEK_SET);
+  fseek(input_file, base_offset, SEEK_SET);
 
   if (orange_read_byte(input_file) != 'E' ||
       orange_read_byte(input_file) != 'S' ||
@@ -165,160 +793,39 @@ bool orange_extract_vise(
   /* skip unknown stuff */
   fseek(input_file, 0x3f, SEEK_CUR);
 
-  for (i = 0; i < 2; i++)
+  orange_read_vise_files(input_file, output_directory);
+  orange_read_vise_data1(input_file);
+  orange_read_vise_files(input_file, output_directory);
+
+#if VERBOSE
+  synce_trace("Offset: %08lx", ftell(input_file));
+#endif
   {
-    unsigned unknown;
-    int file_count;
-    int j;
-
-    synce_trace("Offset: %08lx", ftell(input_file));
-
-    file_count = 
+    int i;
+    int setup_type_count =
       orange_read_byte(input_file) |
       orange_read_byte(input_file) << 8;
 
-    synce_trace("File count: %04x", file_count);
-
-    for (j = 0; j < file_count; j++)
+    for (i = 0; i < setup_type_count; i++)
     {
-      unsigned filename_size;
-      synce_trace("Offset: %08lx", ftell(input_file));
-      filename_size = orange_read_byte(input_file);
-
-      if (filename_size)
-      {
-        FileEntry entry;
-        unsigned k;
-        char output_filename[256];
-        synce_trace("Filename size: %02x", filename_size);
-
-        entry.filename = malloc(filename_size + 1);
-        if (!entry.filename)
-          goto exit;
-
-        if (filename_size != fread(entry.filename, 1, filename_size, input_file))
-          goto exit;
-
-        entry.filename[filename_size] = '\0';
-
-        unknown = orange_read32(input_file);
-        synce_trace("Unknown 1: %08x", unknown);
-
-        unknown = orange_read32(input_file);
-        if (unknown != 0)
-          synce_trace("Unknown 2 not zero but %08x", unknown);
-
-        unknown = orange_read32(input_file);
-        if (unknown != 0)
-          synce_trace("Unknown 3 not zero but %08x", unknown);
-
-        entry.compressed_size = orange_read32(input_file);
-
-        synce_trace("%s %08x", entry.filename, entry.compressed_size);
-
-        entry.buffer = malloc(entry.compressed_size);
-        if (!entry.buffer)
-          goto exit;
-
-        if (entry.compressed_size & 1)
-          synce_trace("File size not even!");
-
-        if (entry.compressed_size != fread(entry.buffer, 1, entry.compressed_size, input_file))
-          goto exit;
-
-        /* who the hell thought up this obfuscation? */
-        for (k = 0; k < entry.compressed_size; k+=2)
-        {
-          uint8_t tmp = entry.buffer[k];
-          entry.buffer[k] = entry.buffer[k+1];
-          entry.buffer[k+1] = tmp;
-        }
-
-        snprintf(output_filename, sizeof(output_filename), "%s/%s", 
-            output_directory, entry.filename);
-        if (!orange_decompress_to_file(entry.buffer, entry.compressed_size, output_filename))
-          goto exit;
-
-        FREE(entry.buffer);
-        FREE(entry.filename);
-      }
-      else
-      {
-        goto exit;
-      }
-    } /* for() */
-
-    synce_trace("End of file data");
-
-    {
-      char* str;
-      int j;
-      int key_value_pairs;
-
-      synce_trace("Offset: %08lx", ftell(input_file));
-      
-      unknown =
-        orange_read32(input_file);
-      synce_trace("Unknown: %08x", unknown);
-
-      str = orange_read_vise_string(input_file, 2);
-      synce_trace("'%s'", str);
+      char* str = orange_read_vise_string(input_file, 2);
+#if VERBOSE
+      synce_trace("Setyp type %i: %s", i, str);
+#endif
+      fseek(input_file, 0x55, SEEK_CUR);
       FREE(str);
-
-      str = orange_read_vise_string(input_file, 2);
-      synce_trace("'%s'", str);
-      FREE(str);
-
-      unknown =
-        orange_read_byte(input_file) |
-        orange_read_byte(input_file) << 8;
-      synce_trace("Unknown: %04x", unknown);
-
-      str = orange_read_vise_string(input_file, 2);
-      synce_trace("'%s'", str);
-      FREE(str);
-
-      str = orange_read_vise_string(input_file, 2);
-      synce_trace("'%s'", str);
-      FREE(str);
-
-      unknown =
-        orange_read_byte(input_file) |
-        orange_read_byte(input_file) << 8;
-      synce_trace("Unknown: %04x", unknown);
-
-      unknown = orange_read32(input_file);
-      synce_trace("Unknown: %08x", unknown);
-
-      /* skip block */
-      fseek(input_file, unknown, SEEK_CUR);
-
-      unknown = orange_read_byte(input_file);
-      synce_trace("Unknown: %02x", unknown);
-
-      unknown = orange_read32(input_file);
-      synce_trace("Unknown: %08x", unknown);
-
-      key_value_pairs = orange_read32(input_file);
-
-      for (j = 0; j < key_value_pairs; j++)
-      {
-        char* key;
-        char* value;
-        
-        key   = orange_read_vise_string(input_file, 2);
-        value = orange_read_vise_string(input_file, 2);
-
-        synce_trace("'%s'='%s'", key, value);
-        
-        FREE(key);
-        FREE(value);
-      }
-
-      /* skip block */
-      fseek(input_file, 8, SEEK_CUR);
     }
   }
+
+#if VERBOSE
+  synce_trace("Offset: %08lx", ftell(input_file));
+#endif
+  
+  success = orange_read_vise_data2(input_file, base_offset, output_directory);
+
+#if VERBOSE
+  synce_trace("Offset: %08lx", ftell(input_file));
+#endif
 
 exit:
   FCLOSE(input_file);
