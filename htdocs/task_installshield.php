@@ -41,6 +41,7 @@ should:</p>
 </ol>
 <li>Work with both single- and multi-volume archive files</li>
 <li>Work with archives from InstallShield versions 5.x and 6.x</li>
+<li>Have a command line syntax similar to tar, unzip or unrar</li>
 </ol>
 
 
