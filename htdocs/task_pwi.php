@@ -32,9 +32,13 @@ OpenOffice.</p>
 href="http://cvs.sourceforge.net/viewcvs.py/synce/twogood-files/pwi/">A working
 PWI decoder</a>.</p></li>
 
-<li class=SPACED><p>Update the tool in (1) to support conversion from a PWI
-file to a <a href="http://www.w3.org/TR/xhtml1/">XHTML 1.0 Transitional</a> file,
-supporting the following kinds of formatting:</p>
+<li><p>Separate the tool in (1) into a tool and a library with a suitable API.
+I would suggest something similar to the XML parser expat: create parser, set
+element handler, set character data handler, parse, free parser.</p></li>
+
+<li class=SPACED><p>Update the tool and library to support conversion from a
+PWI file to a <a href="http://www.w3.org/TR/xhtml1/">XHTML 1.0 Transitional</a>
+file, supporting at least the following kinds of formatting:</p>
 
 <ol>
 <li>Font name</li>
@@ -49,21 +53,22 @@ supporting the following kinds of formatting:</p>
 
 </li>
 
-<li class=SPACED>Update the tool in (2) to supprt conversion from a <a
-href="http://www.w3.org/TR/xhtml1/">XHTML 1.0 Transitional</a> file to a PWI file,
-supporting the same kinds of formatting as listed above. (Should probably
+<li class=SPACED>Update the tool and library to support conversion from a <a
+href="http://www.w3.org/TR/xhtml1/">XHTML 1.0 Transitional</a> file to a PWI
+file, supporting the same kinds of formatting as listed above. (Should probably
 use <a href="http://expat.sourceforge.net/">expat</a> or <a
-href="http://xmlsoft.org/">libxml2</a> to comply with the
-license requirement.)</li>
+href="http://xmlsoft.org/">libxml2</a> to comply with the license
+requirement.)</li>
 
-<li class=SPACED>Update the tool in (1) to be able to extract ink drawings
-from a PWI file and store them as a PNG file. The image should look just
-like the document looks on the PDA. This is not documented and has not
-been implemented in OpenOffice.</li>
+<li class=SPACED>Update the tool and library to be able to extract ink drawings
+from a PWI file and store them as a PNG file. The image should look just like
+the document looks on the PDA. This is not documented and has not been
+implemented in OpenOffice.</li>
 
-<li>Update the tool in (1) to be able to extract sound clips from a PWI
-file and store each sound clip as a separate WAV file. This is not
-documented and has not been implemented in OpenOffice.</li>
+<li>Update the tool and library to be able to extract sound clips from a PWI
+file and store each sound clip as a separate WAV file. This is not documented
+and has not been implemented in OpenOffice. (Probably means to support code
+0xc5.)</li>
 
 </ol>
 
