@@ -31,6 +31,7 @@ format.</p>
 <li><a href="#packet70">Command packet 70</a></li>
 <li><a href="#dataheader">Data header</a></li>
 <li><a href="#datachunk">Data chunk</a></li>
+<li><a href="#datastream">Data stream</a></li>
 
 </ul>
 
@@ -420,7 +421,7 @@ identifiers</td></tr>
 </table>
 
 <p>If the object id is 0xffffffff, this is the end of an object sequence.
-Otherwise it is followed by a <a href="#datachunkheader">data chunk header</a>.</p>
+Otherwise it is followed by a <a href="#datachunk">data chunk</a>.</p>
 
 <h3>Flags</h3>
 
@@ -445,6 +446,72 @@ Otherwise it is followed by a <a href="#datachunkheader">data chunk header</a>.<
 <p>If the special value is similar to 0xffa0, 0xffa4 or 0xffa8 this is the last
 chunk. Otherwise the special value is the data offset of next chunk, which
 follows after this chunk's data.</p>
+
+<hr size=1 />
+<a name="datastream"></a>
+<h2>Data stream</h2>
+
+<p>The <i>data stream</i> is all chunk data concatenated.</p>
+
+<p>There is an example program called <a
+href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/rra/src/rra-decode.c?rev=HEAD&content-type=text/vnd.viewcvs-markup">rra-decode</a>
+that reads a data stream from a file and decodes it as described here.</p>
+
+<p>There are three known data formats:</p>
+
+<ul>
+<li>Directory entry</li>
+<li>File entry</li>
+<li>Database record</li>
+</ul>
+
+<h3>Directory entry</h3>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>4</td><td>00000010</td><td>Data type for directory entry</td></tr>
+<tr><td>0004</td><td>unknown</td><td>Directory name</td><td>2-byte UNICODE string with terminating NULL character.</td></tr>
+</table>
+
+<h3>File entry</h3>
+
+<p>The total stream size is specified as <i>total_size</i> below.</p>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>4</td><td>00000020</td><td>Data type for file entry</td></tr>
+<tr><td>0004</td><td><i>name_size</i></td><td>File name</td><td>2-byte UNICODE string with terminating NULL character.</td></tr>
+<tr><td>0004 + <i>name_size</i></td><td><i>total_size</i> - 4 - <i>name_size</i></td><td>File data</td><td></td></tr>
+</table>
+
+
+<h3>Database record</h3>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>4</td><td><i>count</i></td><td>Number of property values</td></tr>
+<tr><td>0004</td><td>4</td><td>0</td><td>Always zero</td></tr>
+</table>
+
+<p>The following is then repeated <i>count</i> times:</p>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>4</td><td><i>propid</i></td><td><a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_cepropval.asp">CEPROPID</a> value.</td></tr>
+<tr><td>0004</td><td>Depends on <i>propid</i></td><td><i>value</i></td><td>Data of the type specified with <i>propid</i></td></tr>
+</table>
+
+<p>If (<i>propid</i> &amp; 0x400) is true, then no data follows. This flag is
+used to remove a property value.</p>
+
+<p>Code to convert between a database record stream and an array of <a
+href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_cepropval.asp">CEPROVAL</a>
+structures is available in the the RRA library (<a
+href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/rra/lib/dbstream.c?rev=HEAD&content-type=text/vnd.viewcvs-markup">dbstream.c</a> to be exact)
+which exports <a
+href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/rra/lib/dbstream.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">these
+functions</a>.</p>
+
 
 <p><br>Return to <a href="index.php">main page</a>.</p>
 
