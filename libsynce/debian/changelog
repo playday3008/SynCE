@@ -1,8 +1,16 @@
-libsynce (0.8-1+cvs) unstable; urgency=low
+libsynce (0.8.9-2) unstable; urgency=low
 
-  * CVS version.
+  * Changed the section of the dev package to libdevel
 
- -- Jonathan McDowell <noodles@earth.li>  Sun, 03 Aug 2003 17:29:50 +0100
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 29 Feb 2004 22:47:03 +0100
+
+libsynce (0.8.9-1) unstable; urgency=low
+
+  * New upstream release
+  * New maintainer Volker Christian
+  * Added --disable-rpath
+
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 14 Feb 2004 20:27:01 +0100
 
 libsynce (0.8-1) unstable; urgency=low
 

@@ -1,12 +1,13 @@
 Source: librapi2
+Section: libs
 Priority: optional
-Maintainer: Thomas Butter <thomas@i.rule-the.net>
-Uploaders: Jonathan McDowell <noodles@earth.li>
-Build-Depends: debhelper (>> 4.0.0), libsynce0-dev (>= 0.7)
+Maintainer: Volker Christian <voc@users.sourceforge.net>
+Uploaders: Volker Christian <voc@users.sourceforge.net>
+Build-Depends: debhelper (>> 4.0.0), libsynce0 (>= 0.8.9), libsynce0-dev (>= 0.8.9)
 Standards-Version: 3.5.8
 
 Package: librapi2-dev
-Section: devel
+Section: libdevel
 Architecture: any
 Depends: librapi2 (= ${Source-Version})
 Description: Make RAPI calls to a WinCE device, development libraries

@@ -1,8 +1,9 @@
-librapi2 (0.8-1+cvs) unstable; urgency=low
+librapi2 (0.8.9-1) unstable; urgency=low
 
-  * CVS version.
+  * New upstream release
+  * New Maintainer Volker Christian
 
- -- Jonathan McDowell <noodles@earth.li>  Thu, 07 Aug 2003 21:22:09 +0100
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 14 Feb 2004 20:34:43 +0100
 
 librapi2 (0.8-1) unstable; urgency=low
 

@@ -1,12 +1,13 @@
 Source: librra
+Section: libs
 Priority: optional
-Maintainer: Thomas Butter <thomas@i.rule-the.net>
-Uploaders: Jonathan McDowell <noodles@earth.li>
-Build-Depends: debhelper (>> 4.0.0), libsynce0-dev (>= 0.8), libsynce0 (>= 0.8), librapi2 (>=0.8), librapi2-dev (>=0.8), libmimedir-dev
+Maintainer: Volker Christian <voc@users.sourceforge.net>
+Uploaders: Volker Christian <voc@users.sourceforge.net>
+Build-Depends: debhelper (>> 4.0.0), libsynce0-dev (>= 0.8.9), libsynce0 (>= 0.8.9), librapi2 (>=0.8.9), librapi2-dev (>=0.8.9), libmimedir-dev
 Standards-Version: 3.5.8
 
 Package: librra0-dev
-Section: devel
+Section: libdevel
 Architecture: any
 Depends: librra0 (= ${Source-Version}), libsynce0-dev (>= 0.8), librapi2-dev (>= 0.8)
 Description: Library to deal with synchronisation with WinCE devices (dev files)
