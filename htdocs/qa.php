@@ -17,18 +17,18 @@ href="macosx.php">Mac OS X hints</a> page.</p>
 <p><b>Q:</b> I setup everything and connected my PDA but when I try the <a
 href="tools.php">tools</a> I get a message similar to this in SynCE 0.8 or later:</p>
 
-<pre>pstatus: Unable to initialize RAPI: An unspecified failure has occurred</pre>
+<blockquote><pre>pstatus: Unable to initialize RAPI: An unspecified failure has occurred</pre></blockquote>
 
 <p>Or this message in earlier versions of SynCE:</p>
 
-<pre>ReadConfigFile: stat: No such file or directory
-pstatus: Unable to initialize RAPI: Failure</pre>
+<blockquote><pre>ReadConfigFile: stat: No such file or directory
+pstatus: Unable to initialize RAPI: Failure</pre></blockquote>
 
-<p>If I add <tt>-d 3</tt> as parameters to pstatus, I get this a message like
-this too:</p>
+<p>If I add <tt>-d 4</tt> as parameters to <tt>pstatus</tt>, I get this a
+message like this too:</p>
 
-<pre>[synce_info_new:31] unable to open file: /home/david/.synce/active_connection
-[rapi_context_connect:88] Failed to get connection info</pre>
+<blockquote><pre>[synce_info_new:31] unable to open file: /home/david/.synce/active_connection
+[rapi_context_connect:88] Failed to get connection info</pre></blockquote>
 
 <p><b>A:</b> This means that the PDA has not connected to dccm or that you run
 the tools and dccm as different users. Please make sure that:</p>
@@ -49,24 +49,24 @@ the tools and dccm as different users. Please make sure that:</p>
 terminated by peer" after a very short connection time. I see something like
 this in my logs:</p>
 
-<pre>Mar 26 08:51:36 localhost pppd[21318]: pppd 2.4.2 started by root, uid 0
-Mar 26 08:51:38 localhost pppd[21318]: Serial connection established.
-Mar 26 08:51:38 localhost pppd[21318]: Using interface ppp0
-Mar 26 08:51:38 localhost pppd[21318]: Connect: ppp0 <--> /dev/ttyUSB0
-Mar 26 08:51:38 localhost kernel: PPP BSD Compression module registered
-Mar 26 08:51:38 localhost kernel: PPP Deflate Compression module registered
-Mar 26 08:51:38 localhost pppd[21318]: local  IP address 192.168.131.102
-Mar 26 08:51:38 localhost pppd[21318]: remote IP address 192.168.131.201
-Mar 26 08:51:42 localhost pppd[21318]: LCP terminated by peer
-Mar 26 08:51:45 localhost pppd[21318]: Connection terminated.
-Mar 26 08:51:45 localhost pppd[21318]: Connect time 0.1 minutes.
-Mar 26 08:51:45 localhost pppd[21318]: Sent 579 bytes, received 857 bytes.
-Mar 26 08:51:46 localhost pppd[21318]: Connect time 0.1 minutes.
-Mar 26 08:51:46 localhost pppd[21318]: Sent 579 bytes, received 857 bytes.
-Mar 26 08:51:46 localhost pppd[21318]: Exit.</pre>
+<blockquote><pre>pppd[21318]: pppd 2.4.2 started by root, uid 0
+pppd[21318]: Serial connection established.
+pppd[21318]: Using interface ppp0
+pppd[21318]: Connect: ppp0 <--> /dev/ttyUSB0
+kernel: PPP BSD Compression module registered
+kernel: PPP Deflate Compression module registered
+pppd[21318]: local  IP address 192.168.131.102
+pppd[21318]: remote IP address 192.168.131.201
+pppd[21318]: LCP terminated by peer
+pppd[21318]: Connection terminated.
+pppd[21318]: Connect time 0.1 minutes.
+pppd[21318]: Sent 579 bytes, received 857 bytes.
+pppd[21318]: Connect time 0.1 minutes.
+pppd[21318]: Sent 579 bytes, received 857 bytes.
+pppd[21318]: Exit.</pre></blockquote>
 
-<p><b>A:</b> You forgot to provide the device password to <tt>dccm</tt>. See <a
-href="start.php">Connect</a> for more information.</p>
+<p><b>A:</b> The device password provided to <tt>dccm</tt> is either wrong or
+missing. See <a href="start.php">Connect</a> for more information.</p>
 
 <h2>PPP error: "Couldn't set tty to PPP discipline"</h2>
 
@@ -74,18 +74,18 @@ href="start.php">Connect</a> for more information.</p>
 <tt>synce-serial-start</tt> I get messages similar to this in my system
 log:</p>
 
-<pre>kernel: PPP generic driver version 2.4.2
+<blockquote><pre>kernel: PPP generic driver version 2.4.2
 pppd[2156]: pppd 2.4.1 started by root, uid 0
 pppd[2156]: Serial connection established.
 modprobe: modprobe: Can't locate module tty-ldisc-3
 pppd[2156]: Couldn't set tty to PPP discipline: Invalid argument
-pppd[2156]: Exit.</pre>
+pppd[2156]: Exit.</pre></blockquote>
 
 <p><b>A:</b> The missing "tty-ldisc-3" module is the "ppp_async" kernel module.
 Make sure that you have compiled that module. You may also have to add this
 line to /etc/modules.conf:</p>
 
-<pre>alias tty-ldisc-3 ppp_async</pre>
+<blockquote><pre>alias tty-ldisc-3 ppp_async</pre></blockquote>
 
 
 <h2>PPP error: "Connect script failed"</h2>
@@ -94,10 +94,10 @@ line to /etc/modules.conf:</p>
 <tt>synce-serial-start</tt> I get messages similar to this in my system
 log:</p>
 
-<pre>pppd[6083]: pppd 2.4.1 started by root, uid 0
+<blockquote><pre>pppd[6083]: pppd 2.4.1 started by root, uid 0
 pppd[6083]: Terminating on signal 15.
 pppd[6083]: Connect script failed
-pppd[6083]: Exit.</pre>
+pppd[6083]: Exit.</pre></blockquote>
 
 <p><b>A:</b> Please use this checklist to find a solution to your problem:</p>
 
@@ -115,7 +115,7 @@ page.</li>
 <li class=SPACED>Make sure you are using the correct serial port (serial cable only)</li>
 
 <li class=SPACED>Decrease the connection speed by changing 115200 to 19200
-in /etc/ppp/peers/synce-device</li>
+in <tt>/etc/ppp/peers/synce-device</tt></li>
 
 <li class=SPACED>Remove hotplug script for SynCE (USB cable only)</li>
   
@@ -136,19 +136,19 @@ in /etc/ppp/peers/synce-device</li>
 my PC. My PPP connection dies when I transfer large files to my PDA. I see a
 message similar to this in my logs:</p>
 
-<pre>Apr 27 17:41:09 localhost pppd[10387]: No response to 2 echo-requests
-Apr 27 17:41:09 localhost pppd[10387]: Serial link appears to be disconnected.
-Apr 27 17:41:09 localhost pppd[10387]: Connection terminated.</pre>
+<blockquote><pre>pppd[10387]: No response to 2 echo-requests
+pppd[10387]: Serial link appears to be disconnected.
+pppd[10387]: Connection terminated.</pre></blockquote>
 
 <p><b>A:</b> This is a known problem with SynCE 0.7 and earlier. After running
 <tt>synce-serial-config</tt>, please edit <tt>/etc/ppp/peers/synce-device</tt>. Remove these two lines:</p>
 
-<pre>lcp-echo-failure 2
-lcp-echo-interval 2</pre>
+<blockquote><pre>lcp-echo-failure 2
+lcp-echo-interval 2</pre></blockquote>
 
 <p>Add this line:</p>
 
-<pre>crtscts</pre>
+<blockquote><pre>crtscts</pre></blockquote>
 
 <p>You can also upgrade to SynCE 0.8 or later and re-run
 synce-serial-config.</p>
