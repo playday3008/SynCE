@@ -404,7 +404,7 @@ help out with Debian packages and other things.</p>
 the GNOME applications in SynCE.</p>
 
 <p><a href="mailto:mbier@users.sourceforge.net">Markus Biermaier</a> works with
-<a href="http://localhost/synce/pyrapi/ce_dirview/">CE_DirView</a>.</p>
+<a href="pyrapi/ce_dirview/">CE_DirView</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>
