@@ -28,16 +28,17 @@
 
 #define wstr_WIDE   "UNICODELITTLE"
 #define wstr_ASCII  "ISO_8859-1"
+#define wstr_UTF8   "UTF-8"
 
 #define INVALID_ICONV_HANDLE ((iconv_t)(-1))
 
 /**
- * Convert a string from UCS2 to iso8859-1
+ * Convert a string from UCS2 to some other code
  */
-char* wstr_to_ascii(LPCWSTR inbuf)
+static char* wstr_to_x(LPCWSTR inbuf, const char* code, size_t multiplier)
 {
 	size_t length = wstr_strlen(inbuf);
-	size_t inbytesleft = length * 2, outbytesleft = length;
+	size_t inbytesleft = length * 2, outbytesleft = length * multiplier;
 	char* outbuf = malloc(outbytesleft+sizeof(char));
   char* outbuf_iterator = outbuf;
   ICONV_CONST char* inbuf_iterator = (ICONV_CONST char*)inbuf;
@@ -50,7 +51,7 @@ char* wstr_to_ascii(LPCWSTR inbuf)
 		return NULL;
 	}
 	
-  cd = iconv_open(wstr_ASCII, wstr_WIDE);
+  cd = iconv_open(code, wstr_WIDE);
 	if (INVALID_ICONV_HANDLE == cd)
 	{
 		wstr_error("iconv_open failed");
@@ -74,9 +75,26 @@ char* wstr_to_ascii(LPCWSTR inbuf)
 }
 
 /**
+ * Convert a string from UCS2 to iso8859-1
+ */
+char* wstr_to_ascii(LPCWSTR unicode)
+{
+	return wstr_to_x(unicode, wstr_ASCII, 1);
+}
+
+/*
+ * Convert a string from UCS2 to UTF8
+ */
+char* wstr_to_utf8(LPCWSTR unicode)
+{
+	return wstr_to_x(unicode, wstr_UTF8, 2);
+}
+
+
+/**
  * Convert a string from iso8859-1 to UCS2
  */
-LPWSTR wstr_from_ascii(const char* inbuf)
+static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 {
 	size_t length = strlen(inbuf);
 	size_t inbytesleft = length, outbytesleft = (length+1)* 2;
@@ -92,7 +110,7 @@ LPWSTR wstr_from_ascii(const char* inbuf)
 		return NULL;
 	}
 	
-	cd = iconv_open(wstr_WIDE, wstr_ASCII);
+	cd = iconv_open(wstr_WIDE, code);
 	if (INVALID_ICONV_HANDLE == cd)
 	{
 		wstr_error("iconv_open failed");
@@ -113,6 +131,22 @@ LPWSTR wstr_from_ascii(const char* inbuf)
 	outbuf[length] = 0;
 
 	return outbuf;
+}
+
+/**
+ * Convert a string from iso8859-1 to UCS2
+ */
+LPWSTR wstr_from_ascii(const char* inbuf)
+{
+	return wstr_from_x(inbuf, wstr_ASCII);
+}
+
+/**
+ * Convert a string from UTF8 to UCS2
+ */
+LPWSTR wstr_from_utf8(const char* inbuf)
+{
+	return wstr_from_x(inbuf, wstr_UTF8);
 }
 
 /**
