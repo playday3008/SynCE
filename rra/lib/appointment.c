@@ -395,6 +395,12 @@ typedef struct _EventParserData
 #endif
 } EventParserData;
 
+static bool on_timezone_tzid(Parser* p, mdir_line* line, void* cookie)
+{
+  synce_trace("TZID = '%s'", line->values[0]);
+  return true;
+}
+
 static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
@@ -521,7 +527,7 @@ bool rra_appointment_from_vevent(/*{{{*/
   ParserComponent* calendar;
   ParserComponent* event;
   ParserComponent* alarm;
-  ParserComponent* daylight;
+  ParserComponent* timezone;
   int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
@@ -542,7 +548,9 @@ bool rra_appointment_from_vevent(/*{{{*/
       break;
   }
 
-  daylight = parser_component_new("Daylight");
+  timezone = parser_component_new("vTimeZone");
+  parser_component_add_parser_property(timezone, 
+      parser_property_new("tzid", on_timezone_tzid));
   
   alarm = parser_component_new("vAlarm");
 
@@ -581,7 +589,7 @@ bool rra_appointment_from_vevent(/*{{{*/
 
   calendar = parser_component_new("vCalendar");
   parser_component_add_parser_component(calendar, event);
-  parser_component_add_parser_component(calendar, daylight);
+  parser_component_add_parser_component(calendar, timezone);
 
   /* allow parsing to start with either vCalendar or vEvent */
   base = parser_component_new(NULL);
@@ -723,7 +731,7 @@ exit:
   parser_component_destroy(calendar);
   parser_component_destroy(event);
   parser_component_destroy(alarm);
-  parser_component_destroy(daylight);
+  parser_component_destroy(timezone);
   parser_destroy(parser);
 	return success;
 }/*}}}*/
