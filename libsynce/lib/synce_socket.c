@@ -232,7 +232,7 @@ bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size)
 		return false;
 	}
 
-	return write(socket->fd, data, size) == size;
+	return write(socket->fd, data, size) == (int)size;
 }
 
 bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
@@ -254,6 +254,10 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 		if (result <= 0)
 		{
 			synce_socket_error("read failed, error: %i \"%s\"", errno, strerror(errno));
+
+      /* Close socket on unrecoverable errors */
+      if (ECONNRESET == errno)  /* Connection reset by peer */
+        synce_socket_close(socket);
 			break;
 		}
 

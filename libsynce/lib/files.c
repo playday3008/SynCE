@@ -81,7 +81,7 @@ bool synce_set_connection_filename(const char* filename)
     int n = snprintf(connection_filename, sizeof(connection_filename), "%s", filename);
 
     /* Return false if file name was too long or some other error occured */
-    success = (n >= 0 && n < sizeof(connection_filename));
+    success = (n >= 0 && n < (int)sizeof(connection_filename));
   }
 
   if (!success)
