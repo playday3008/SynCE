@@ -31,8 +31,8 @@
 <ul>
 
 <li><a href="http://multisync.sourceforge.net/">MultiSync</a> is capable of
-synchronizing Evolution and IrMC Mobile Client calendars. A future project is
-to make a SynCE plugin for MultiSync.</li>
+synchronizing Evolution and IrMC Mobile Client calendars. There is a SynCE
+plugin available for MultiSync.</li>
 
 </ul>
 
