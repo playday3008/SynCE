@@ -4,6 +4,8 @@
 #include <synce_log.h>
 #include <stdio.h>
 
+#define WIDE_BACKSLASH   htole16('\\')
+
 void convert_to_backward_slashes(char* path)
 {
 	while (*path)
@@ -23,14 +25,17 @@ bool is_remote_file(const char* filename)
 	return filename && ':' == filename[0];
 }
 
-static const WCHAR wide_backslash[] = {'\\', '\0'};
 
 WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path)
 {
+	WCHAR wide_backslash[2];
 	WCHAR path[MAX_PATH];
 
+	wide_backslash[0] = WIDE_BACKSLASH;
+	wide_backslash[1] = '\0';
+
 	/* Nothing to adjust if we have an absolute path */
-	if ('\\' == old_path[0])
+	if (WIDE_BACKSLASH == old_path[0])
 		return old_path;
 
 	if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path))

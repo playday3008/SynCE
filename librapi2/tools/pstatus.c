@@ -83,6 +83,7 @@ static const char* processor(int n)
 	switch (n)
 	{
 		case PROCESSOR_STRONGARM: result = "StrongARM"; break;
+		case PROCESSOR_HITACHI_SH3: result = "SH3"; break;
 
 		default: result = "Unknown"; break;
 	}

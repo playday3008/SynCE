@@ -118,10 +118,10 @@ void CeGetSystemInfo( /*{{{*/
 		lpSystemInfo->wProcessorArchitecture       = letoh16(lpSystemInfo->wProcessorArchitecture);
 		lpSystemInfo->wReserved                    = letoh16(lpSystemInfo->wReserved);
 		lpSystemInfo->dwPageSize                   = letoh32(lpSystemInfo->dwPageSize);
-		lpSystemInfo->lpMinimumApplicationAddress  = letoh32(lpSystemInfo->lpMinimumApplicationAddress);
-		lpSystemInfo->lpMaximumApplicationAddress  = letoh32(lpSystemInfo->lpMaximumApplicationAddress);
+		lpSystemInfo->lpMinimumApplicationAddress  = (LPVOID)letoh32((uint32_t)lpSystemInfo->lpMinimumApplicationAddress);
+		lpSystemInfo->lpMaximumApplicationAddress  = (LPVOID)letoh32((uint32_t)lpSystemInfo->lpMaximumApplicationAddress);
 		lpSystemInfo->dwActiveProcessorMask        = letoh32(lpSystemInfo->dwActiveProcessorMask);
-		lpSystemInfo->dwNumberOfProcessors	       = letoh32(lpSystemInfo->dwNumberOfProcessors);
+		lpSystemInfo->dwNumberOfProcessors         = letoh32(lpSystemInfo->dwNumberOfProcessors);
 		lpSystemInfo->dwProcessorType              = letoh32(lpSystemInfo->dwProcessorType);
 		lpSystemInfo->dwAllocationGranularity      = letoh32(lpSystemInfo->dwAllocationGranularity);
 		lpSystemInfo->wProcessorLevel              = letoh16(lpSystemInfo->wProcessorLevel);
@@ -153,6 +153,11 @@ BOOL CeGetSystemPowerStatusEx( /*{{{*/
 	if ( !rapi_buffer_read_optional(context->recv_buffer, pSystemPowerStatus, sizeof(SYSTEM_POWER_STATUS_EX)) )
 		goto exit;
 
+	pSystemPowerStatus->BatteryLifeTime           = letoh32(pSystemPowerStatus->BatteryLifeTime);
+	pSystemPowerStatus->BatteryFullLifeTime       = letoh32(pSystemPowerStatus->BatteryFullLifeTime);
+	pSystemPowerStatus->BackupBatteryLifeTime     = letoh32(pSystemPowerStatus->BackupBatteryLifeTime);
+	pSystemPowerStatus->BackupBatteryFullLifeTime = letoh32(pSystemPowerStatus->BackupBatteryFullLifeTime);
+
 exit:
 	return result;
 }/*}}}*/
@@ -178,6 +183,12 @@ BOOL CeGetVersionEx(/*{{{*/
 
 	if ( !rapi_buffer_read_data(context->recv_buffer, lpVersionInformation, size) )
 		return false;
+
+	lpVersionInformation->dwOSVersionInfoSize  = letoh32(lpVersionInformation->dwOSVersionInfoSize);
+	lpVersionInformation->dwMajorVersion       = letoh32(lpVersionInformation->dwMajorVersion);
+	lpVersionInformation->dwMinorVersion       = letoh32(lpVersionInformation->dwMinorVersion);
+	lpVersionInformation->dwBuildNumber        = letoh32(lpVersionInformation->dwBuildNumber);
+	lpVersionInformation->dwPlatformId         = letoh32(lpVersionInformation->dwPlatformId);
 
 	return result;
 }/*}}}*/
