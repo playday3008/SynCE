@@ -368,7 +368,7 @@ extern "C"
 	typedef struct _SYSTEM_INFO {
 			union {
 					DWORD dwOemId;
-					struct {
+					struct _dummy {
 							WORD wProcessorArchitecture;
 							WORD wReserved;
 					};
