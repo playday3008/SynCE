@@ -323,6 +323,8 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
     /* set alarm */
     parser_add_int32(p, ID_REMINDER_MINUTES_BEFORE_START, -duration / 60);
     parser_add_int16(p, ID_REMINDER_ENABLED, 1);
+    parser_add_string(p, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
+
     event_parser_data->have_alarm = true;
   }
 
