@@ -10,8 +10,7 @@
 #include <string.h>
 
 #include "rapi.h"            /* librapi2 headers */
-#include "rapi_wstr.h"
-#include "rapi_filetime.h" 
+#include "synce.h"
 
 
 
