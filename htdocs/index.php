@@ -2,9 +2,7 @@
 
 <div class="PAGE">
 
-<A href="http://sourceforge.net"><IMG
-src="http://sourceforge.net/sflogo.php?group_id=30550&amp;type=5" width="210"
-height="62" border="0" alt="SourceForge Logo" align=right></A> 
+<table borde="0"><tr><td rowspan="2">
 
 <h1>The SynCE Project</h1>
 
@@ -20,8 +18,44 @@ operating system.</p>
 href="http://sourceforge.net/donate/index.php?group_id=30550">Donate!</a>
 </blockquote>
 
+</td><td>
+
+<A href="http://sourceforge.net"><IMG
+src="http://sourceforge.net/sflogo.php?group_id=30550&amp;type=5" width="210"
+height="62" border="0" alt="SourceForge Logo" align=right></A> 
+
+</td></tr>
+
+<tr><td align="center">
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_xclick">
+<input type="hidden" name="business" value="twogood@users.sourceforge.net">
+<input type="hidden" name="item_name" value="The SynCE Project">
+<input type="hidden" name="no_shipping" value="1">
+<input type="hidden" name="return" value="http://synce.sourceforge.net/synce/thanks.php">
+<input type="hidden" name="cancel_return" value="http://synce.sourceforge.net/synce/">
+<input type="hidden" name="cn" value="Comments">
+<input type="hidden" name="currency_code" value="USD">
+<input type="hidden" name="tax" value="0">
+
+<p>Show your support!</p>
+<input type="image"
+src="https://www.paypal.com/images/x-click-but21.gif" border="0" name="submit"
+alt="Make a donation" title="Make a donation">
+</form>
+
+
+
+</td></tr></table>
+
 <a name="news"></a>
 <h2>News</h2>
+
+<p><a href="http://www.PocketPCmag.com/awards"><img border="0"
+src="Nominated_Smartphone_phonet.gif" align=right></a><b>August 24, 2004</b>
+SynCE has been nominated for the Pocket PC magazine Best Software Awards 2004!
+Click on the image to the right to read more!</p>
 
 <p><b>August 18, 2004</b> SynCE 0.9.0 released! Please be aware that SynCE is
 still under development, so there may still have issues, especially with
