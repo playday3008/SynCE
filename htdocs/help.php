@@ -44,6 +44,7 @@ that might be useful to include when you ask for help:</p>
 <li class=SPACED><p><b>For connection problems</b></p>
 
 <ul>
+<li>Information from the <tt>usbview</tt> tool for the device</li>
 <li>Relevant log extracts from kernel driver and pppd</li>
 <li>Your <tt>/etc/ppp/peers/synce-device</tt> file (created by synce-serial-config)</li>
 <li>Kill dccm, and restart it like this: <tt>dccm -f -d 3</tt>. Now connect
