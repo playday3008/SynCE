@@ -17,6 +17,3 @@ $Id$ vim: expandtab
 
 (4) Create /etc/ppp/peers/dun
 
-
-Why is port 990 not available when bluetooth is enabled? :-(
-
