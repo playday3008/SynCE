@@ -1,0 +1,6 @@
+rrac            5678/tcp   Remote Replication Agent Connection  
+rrac            5678/udp   Remote Replication Agent Connection  
+dccm            5679/tcp   Direct Cable Connect Manager
+dccm            5679/udp   Direct Cable Connect Manager
+#                          Mark Miller <mmiller@MICROSOFT.com>
+
