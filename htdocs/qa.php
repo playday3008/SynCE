@@ -73,6 +73,13 @@ pppd[6083]: Exit.</pre>
 
 <ul>
 
+<li class=SPACED>If you are using Mandrake 9.2, make sure you read the special
+Mandrake 9.2 section on the <a href="usb_linux.php">USB on Linux</a> page.</li>
+
+<li class=SPACED>If you are using an iPAQ 5550 or similar, make sure you read
+the special iPAQ 5550 section on the <a href="usb_linux.php">USB on Linux</a>
+page.</li>
+
 <li class=SPACED>Make sure that the serial port is enabled in BIOS (serial cable only)</li>
 
 <li class=SPACED>Make sure you are using the correct serial port (serial cable only)</li>
@@ -88,36 +95,6 @@ in /etc/ppp/peers/synce-device</li>
 <li class=SPACED>Make sure your device works with Microsoft ActiveSync</li>
 
 </ul>
-
-<h3>If it still doesn't work...</h3>
-
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-
-<input type="hidden" name="cmd" value="_xclick">
-<input type="hidden" name="business" value="twogood@users.sourceforge.net">
-<input type="hidden" name="item_name" value="The SynCE Project">
-<input type="hidden" name="no_shipping" value="1">
-<input type="hidden" name="return" value="http://synce.sourceforge.net/synce/thanks.php">
-<input type="hidden" name="cancel_return" value="http://synce.sourceforge.net/synce/">
-<input type="hidden" name="cn" value="Comments">
-<input type="hidden" name="currency_code" value="USD">
-<input type="hidden" name="tax" value="0">
-
-<table cellpadding=5 width="100%"><tr>
-
-<td class=MIDDLE>If you have tried everything above and it still doesn't work,
-maybe you are using a USB connection with a newer Pocket PC model such as the
-iPAQ H5550, for which several persons have reported problems. Unfortunately no
-SynCE developer has such a device, which makes it very hard for us to give
-support. If we get enough donations to the project, we will have a much better
-chance to help.</td>
-
-<td class=MIDDLE><input type="image"
-src="https://www.paypal.com/images/x-click-but21.gif" border="0" name="submit"
-alt="Make a donation" title="Make a donation"></td>
-
-</tr></table>
-</form>
 
 
 

@@ -66,10 +66,47 @@ href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
 
 <p>(This also includes RedHat's 2.4.20 kernels.)</p>
 
-<p><b>Important</b> If you are using the Mandrake 9.2 kernels, for example
-2.4.22-18mdk or 2.4.22-21mdk, SynCE will not work. The problem is in the
-<tt>usbserial</tt> kernel module. The version shipped with Mandrake 9.1
-(2.4.20?) works correctly.</p>
+<h3>Special information for Mandrake 9.2 users</h3>
+ 
+<table><tr><td width="5%">&nbsp;</td><td width="90%">
+
+If you are using the Mandrake 9.2 kernels, for
+example 2.4.22-18mdk or 2.4.22-21mdk, the <tt>ipaq</tt> kernel module needed by
+SynCE will not work. The problem is in the <tt>usbserial</tt> kernel module.
+Apply <a
+href="patches/usbserial.patch-mandrake-9.2">usbserial.patch-mandrake-9.2</a>
+(courtesy of Olivier Dugeon) to make the ipaq driver work.
+
+</td><td width="5%">&nbsp;</td></tr></table>
+
+<h3>Special information for HP iPAQ 5550 owners</h3>
+
+<table><tr><td width="5%">&nbsp;</td><td width="90%">
+
+The HP iPAQ 5550 and some other newer devices, probably including the HP iPAQ 4150, do not work 
+with any currently existing  version of
+the <tt>ipaq</tt> module.
+
+<p>The problem is that these devices
+have more than one pair of USB endpoints. (Compare the output from the
+<tt>usbview</tt> program for <a
+href="usbview/Hewlett-Packard_iPAQ_3970.txt">iPAQ 3970</a> and <a
+href="usbview/Hewlett-Packard_iPAQ_5550.txt">iPAQ 5550</a>.)</p>
+
+<p> To fix this, apply <a
+href="patches/ipaq-0.6-olivier.patch">ipaq-0.6-olivier.patch</a> (courtesy of
+Olivier Dugeon), compile, and insert it like this:</p>
+
+<pre>modprobe ipaq ttyUSB=1</pre>
+
+<p>You could also put a line in your <tt>/etc/modules.conf</tt> file for
+this:</p>
+
+<pre>option ipaq ttyUSB=1</pre>
+
+</td><td width="5%">&nbsp;</td></tr></table>
+
+<h3>General</h3>
 
 <p>This kernel supports many common and uncommon devices, but certain newer
 devices are missing.</p>
@@ -87,7 +124,7 @@ devices are missing.</p>
 
 <tr><td>Dell</td><td>413c</td><td>Axim</td><td>3001</td></tr>
 
-<tr><td>FSC</td><td>0bf8</td><td>Loox</td><td>1001</td></tr>
+<tr><td>Fujitsu-Siemens</td><td>0bf8</td><td>Loox</td><td>1001</td></tr>
 
 <tr><td>HP</td><td>03f0</td><td>
 Jornada 540/548, iPAQ 5550<br>
