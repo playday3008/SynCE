@@ -100,12 +100,14 @@ noted otherwise. All libraries should be written i ANSI C.
 
         Also includes code to convert between vCard and Contacts database.
 
-3.2     Appointments and Tasks synchronization                     [?????]
+3.2     Appointments and Tasks synchronization                   [twogood]
 
         Code to convert between vCalendar and Appointments and Tasks
         databases.
 
 3.3     Notes synchronization                                      [?????]
+
+        Requires encoding and decoding of the PWI file format, see 5.7.
 
 3.4     Mail synchronization                                       [?????]
         
@@ -120,7 +122,7 @@ noted otherwise. All libraries should be written i ANSI C.
 
         This enables synchronization of contacts with Evolution 1.x
 
-4.2     KDE 3 synchronization                                      [?????]
+4.2     KDE 3 synchronization                                        [voc]
 
         This is about KMail, KAddressbook, KOrganizer, etc.
 
@@ -160,7 +162,9 @@ noted otherwise. All libraries should be written i ANSI C.
 
         This app will need root access.
 
-5.4.    Allowing more than one connected device.                   [?????]
+5.4.    Allowing more than one connected device.                     [voc]
+
+        Use vdccm instead of dccm...
 
 5.5     File system driver                                         [?????]
 
@@ -173,17 +177,27 @@ noted otherwise. All libraries should be written i ANSI C.
 
         How should we get SynCE more user-friendly?
 
+5.7.    PocketWord Ink conversion
+
+        http://synce.sourceforge.net/synce/task_pwi.php
+
+5.8.    Backup/restore support
+
+        http://synce.sourceforge.net/synce/task_backup.php
+
          
 A.      Packaging
 =================
 
-A.1.    RedHat 8.0                                               [twogood]
+A.1.    RedHat, Fedora Core                                      [twogood]
 
-A.2     Debian                                                     [?????]
+A.2.    Debian                                                     [?????]
 
-A.3     Gentoo                                                [Zach Welch]
+A.3.    Gentoo                                                [Zach Welch]
 
         http://bugs.gentoo.org/show_bug.cgi?id=11184
+
+A.4.    ALT Linux                                       [Michael Shigorin]
 
         
 B.      Documentation
