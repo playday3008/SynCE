@@ -207,7 +207,9 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
     KABC::AddressBook *pdaBook = new KABC::AddressBook();
 
     if (rra->connect()) {
-        struct Rra::ids& ids = rra->getIds(getObjectTypeId());
+        struct Rra::ids ids;
+
+        rra->getIds(getObjectTypeId(), &ids);   // errorcheck
 
         incTotalSteps(ids.changedIds.count() + ids.deletedIds.count());
 
