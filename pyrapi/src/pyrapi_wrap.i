@@ -53,9 +53,9 @@ static PyObject *PyRapiError;
 */
 
 typedef unsigned int WORD;
-typedef unsigned int DWORD;
+typedef unsigned long DWORD;
 typedef unsigned int BOOL;
-typedef unsigned int * LPDWORD;
+typedef unsigned long * LPDWORD;
 
 typedef char * LPCSTR;
 typedef char * WCHAR;
@@ -100,7 +100,7 @@ typedef struct _FILETIME
   character arrays.
 */
 
-%typemap(python,in) LPCWSTR, LPWSTR {
+%typemap(in) LPCWSTR, LPWSTR {
   if (PyString_Check($input)) {
     $1 = wstr_from_ascii(PyString_AsString($input));
     printf("String is : \"%s\"\n", wstr_to_ascii($1));
@@ -138,9 +138,9 @@ typedef struct _FILETIME
   This should not be returning TypeError.
 */
 
-%typemap(python,out) HANDLE {
+%typemap(out) HANDLE {
 
-  if (result == INVALID_HANDLE_VALUE) {
+  if ($1 == INVALID_HANDLE_VALUE) {
       PyErr_SetString(PyExc_TypeError, "bad file handle.");
       return NULL;    
   }
@@ -228,7 +228,7 @@ WCHARGETSET(CE_FIND_DATA,cFileName)
 
 %typemap(python,out) BOOL {
 
-  if (result < 1) {
+  if ($1 < 1) {
     {
       char err[256];
       snprintf(err, sizeof(err), "Rapi function failed, last error code was: %d", CeGetLastError());

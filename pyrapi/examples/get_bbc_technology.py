@@ -4,6 +4,9 @@
     format that can be downloaded on the the PDA. This is then
     downloaded to a file in My Documents.
 
+    The script is meant to be placed in the ~/.synce/scripts directory
+    and will run when the PocketPC is attached.
+
 """
 from pyrapi import pyrapi
 from pyrapi import rapi
@@ -33,7 +36,7 @@ def fetchAndFix(url):
 
 
         sub_url = urlparse.urlparse(url)[0]+"://"+urlparse.urlparse(url)[1]+midsection[link.start(1):link.end(1)]
-        print "Fetching ", sub_url
+        #print "Fetching ", sub_url
         
         new_page = urllib2.urlopen(sub_url).read()
         body_start = re.search('<body.*>',new_page)

@@ -199,8 +199,14 @@ class FileManagementFunctions(RapiFileTests):
         """CeFindClose"""
         pass # done by testCeFindFirstFile
         
-    def CeGetFileAttributes(self):
+    def estCeGetFileAttributes(self):
         """CeGetFileAttributes"""
+
+        attr = pyrapi.CeGetFileAttributes(RapiFileTests._test_directory)
+
+        print "attr = ", attr, " attr & pyrapi.FILE_ATTRIBUTE_DIRECTORY = ", ( attr & pyrapi.FILE_ATTRIBUTE_DIRECTORY )
+
+        self.failUnless(attr & pyrapi.FILE_ATTRIBUTE_DIRECTORY, "attribute should be a directory")
         
     def CeGetSpecialFolderPath(self):
         """CeGetSpecialFolderPath"""
@@ -217,6 +223,14 @@ class FileManagementFunctions(RapiFileTests):
 
 
 class RapiDatabaseTests(unittest.TestCase):
+
+    def setUp(self):
+        #Clean up any previous test run.
+        try:
+            new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == "pyrapi_test_db"]
+            pyrapi.CeDeleteDatabase(new_db[0].OidDb)
+        except: pass
+        
 
     def testCeCreateDatabase(self):
         """CeCreateDatabase"""
