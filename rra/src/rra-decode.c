@@ -1,40 +1,19 @@
 /* $Id$ */
 #include <stdio.h>
 #include <rapi.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "dbstream.h"
+#include "../lib/recurrence.h"
 
-enum OlRecurrenceType
-{	olRecursDaily	= 0,
-  olRecursWeekly	= 1,
-  olRecursMonthly	= 2,
-  olRecursMonthNth	= 3,
-  olRecursYearly	= 5,
-  olRecursYearNth	= 6,
-  RECURRENCE_TYPE_COUNT = 7
-}	OlRecurrenceType;
+#include "../rra_config.h"
 
-static const char* RECURRENCE_TYPE[] = 
-{
-  "Daily", "Weekly", "Monthly", "MonthNth", "Yearly", "YearNth"
-};
-
-enum OlDaysOfWeek
-{	olSunday	= 1,
-  olMonday	= 2,
-  olTuesday	= 4,
-  olWednesday	= 8,
-  olThursday	= 16,
-  olFriday	= 32,
-  olSaturday	= 64
-}	OlDaysOfWeek;
-
-static const char* DAY_OF_WEEK[] = 
-{
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-};
-
+#if HAVE_UIID_H
+#include <uuid.h>
+#elif HAVE_UUID_UUID_H
+#include <uuid/uuid.h>
+#endif
 
 static void
 dump(void* data, size_t len)
@@ -167,7 +146,7 @@ void decode_file(uint8_t* buffer, size_t size, const char* filename)
 	wstr_free_string(ascii);
 }
 
-bool decode_database_stream(uint8_t* buffer)
+bool decode_database_stream(uint8_t* buffer, unsigned id)
 {
 	bool success = false;
 	CEPROPVAL* propvals = NULL;
@@ -185,10 +164,14 @@ bool decode_database_stream(uint8_t* buffer)
 		goto exit;
 	}
 
-	printf("ID    TYPE           VALUE\n");
-	
+  if (!id)
+    printf("ID    TYPE           VALUE\n");
+
 	for (i = 0; i < field_count; i++)
 	{
+    if (id && (propvals[i].propid >> 16) != id)
+      continue;
+    
 		printf("%04x  %04x %-8s  ",
 				propvals[i].propid >> 16,
 				propvals[i].propid & 0xff,
@@ -216,7 +199,7 @@ bool decode_database_stream(uint8_t* buffer)
 			case CEVT_FILETIME:
 				{
 					time_t unix_time = filetime_to_unix_time(&propvals[i].val.filetime);
-					char* time_str = ctime(&unix_time);
+					char* time_str = asctime(gmtime(&unix_time));
 					time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
 					printf("%s  (%lu)", time_str, unix_time);
           db_dump(&propvals[i].val.filetime, sizeof(FILETIME));
@@ -224,139 +207,65 @@ bool decode_database_stream(uint8_t* buffer)
 				break;
 				
 			case CEVT_BLOB:  
-				printf("0x%x (%i) bytes:", propvals[i].val.blob.dwCount, propvals[i].val.blob.dwCount);
-				db_dump(propvals[i].val.blob.lpb, propvals[i].val.blob.dwCount);
-
-				/* special debug code for appointments */
-				if (0x4015 == (propvals[i].propid >> 16))
-				{
-          int j;
-          uint32_t flags0           = *(uint16_t*)(propvals[i].val.blob.lpb + 0x04);
-          uint32_t recurrence_type  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x06);
-          uint32_t day              = *(uint32_t*)(propvals[i].val.blob.lpb + 0x0a);
-          uint32_t interval         = *(uint32_t*)(propvals[i].val.blob.lpb + 0x0e);
-          uint32_t flags = 0;
-          uint32_t occurrences = 0;
-          uint32_t instance = 0;
-          uint32_t date = 0;
-
-					printf("\n                     RecurrenceType: 0x%08x %s", 
-							recurrence_type, 
-              (recurrence_type < RECURRENCE_TYPE_COUNT) ? RECURRENCE_TYPE[recurrence_type] : "Unknown");
-
-          printf("\n                     Flags 0       : 0x%04x     %d", 
-              flags0, flags0);
-
-          printf("\n                     Day           : 0x%08x = %i days + %i minutes", 
-              day, day / (60*24), day % (60*24));
-
-          switch (recurrence_type)
+        if (id == 0x67)
+        {
+         
+          if (propvals[i].val.blob.dwCount == 0x34)
           {
-            case olRecursDaily:
-              flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
-              occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
-              break;
+            static uint8_t header[20] = { 
+              0x04, 0x00, 0x00, 0x00, 
+              0x82, 0x00, 0xe0, 0x00,
+              0x74, 0xc5, 0xb7, 0x10,
+              0x1a, 0x82, 0xe0, 0x08,
+              0x00, 0x00, 0x00, 0x00 
+            };
 
-            case olRecursWeekly:
-            case olRecursMonthly:
-              flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
-              occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
-              date     = *(uint32_t*)(propvals[i].val.blob.lpb + 0x2e);
-              break;
+            if (0 == memcmp(propvals[i].val.blob.lpb, header, sizeof(header)))
+              printf("Header OK!\n");
+            else
+              printf("Unexpected header!\n");
             
-            case olRecursMonthNth:
-              instance    = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
-              flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
-              occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x22);
-              date     = *(uint32_t*)(propvals[i].val.blob.lpb + 0x32);
+#if 0 && HAVE_LIBUUID && (HAVE_UIID_H || HAVE_UUID_UUID_H)
+            {
+              char buffer[37];
+              int variant;
+              uuid_t uu;
+              
+              memcpy(&uu, propvals[i].val.blob.lpb + 20, sizeof(uuid_t));
+              uuid_unparse(uu, buffer);
+              variant = uuid_variant(uu);
+              printf("%s [%i]  ", buffer, variant);
+              
+              memcpy(&uu, propvals[i].val.blob.lpb + 36, sizeof(uuid_t));
+              uuid_unparse(uu, buffer);
+              variant = uuid_variant(uu);
+              printf("%s [%i]  ", buffer, variant);
+            }
+#else
+            {
+              unsigned j, k, l = 0;
 
-              printf("\n                     Instance:       0x%08x %d", 
-                  instance, instance);
-              break;
-          }
+               for (j = 0; j < 3; j++)
+              {
+                unsigned max = (j == 0) ? 20 : 16;
+                for (k = 0; k < max; k++)
+                  printf("%02x ", propvals[i].val.blob.lpb[l++]);
 
-          /* 
-             DaysOfWeekMask 
-           */
-          if (recurrence_type == olRecursMonthNth ||
-              recurrence_type == olRecursWeekly ||
-              recurrence_type == olRecursYearNth)
-          {
-            uint32_t days_of_week_mask = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
-
-            printf("\n                     DaysOfWeek:     0x%08x", days_of_week_mask);
-
-            for (j = 0; j < 7; j++)
-              if (days_of_week_mask & (1 << j))
-                printf(" %s", DAY_OF_WEEK[j]);
-          }
-
-          /* 
-             DayOfMonth
-           */
-          if (recurrence_type == olRecursMonthly ||
-              recurrence_type == olRecursYearly)
-          {
-            uint32_t day_of_month = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
-
-            printf("\n                     DayOfMonth:     0x%08x %d", 
-                day_of_month, day_of_month);
-          }
-
-          /* 
-             Interval 
-           */
-          if (recurrence_type == olRecursDaily ||
-              recurrence_type == olRecursMonthly ||
-              recurrence_type == olRecursMonthNth ||
-              recurrence_type == olRecursWeekly)
-          {
-            printf("\n                     Interval:       0x%08x %d", 
-                interval, interval);
-          }
-
-
-          printf("\n                     Flags:          0x%08x", flags);
-
-          switch (flags & 3)
-          {
-            case 0:
-              printf(" Bad flags?");
-              break;
-            case 1:
-              printf(" Ends on date");
-              printf("\n                     Occurrences:    0x%08x %i", occurrences, occurrences);
-              break;
-            case 2:
-              printf(" Ends after X occurances");
-              printf("\n                     Occurrences:    0x%08x %i", occurrences, occurrences);
-              break;
-            case 3:
-              printf(" Does not end");
-              break;
-          }
-
-          {
-            /* the constant is: minutes since 1 January 1601, 00:00:00 */
-            time_t unix_time = (date - 194074560) * 60;
-            char* time_str = asctime(gmtime(&unix_time));
-            time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
-
-            printf("\n                     Date          : 0x%08x %s", 
-                date, time_str);
-          }
-
-#if 0
-          printf("\n                     Flags 0 & 0xf : 0x%04x     %d", 
-              flags0 & 0xf, flags0 & 0xf);
-          printf("\n                     Flags 1 & 0xf : 0x%04x     %d", 
-              flags & 0xf, flags & 0xf);
-					printf("\n                     RecurrenceType: 0x%08x %d", 
-							recurrence_type, recurrence_type);
+                printf("   ");
+              }
+            }
 #endif
-         }
-        break;
+            printf("\n");
+            continue;
+          }
+          
+          printf("\n                     Unexpected BLOB 0067 size!");
+        }
 
+				printf("0x%x (%i) bytes:", propvals[i].val.blob.dwCount, propvals[i].val.blob.dwCount);
+
+  			db_dump(propvals[i].val.blob.lpb, propvals[i].val.blob.dwCount);
+        break;
 		}
 
 		printf("\n");
@@ -388,6 +297,7 @@ int main(int argc, char** argv)
 	FILE* file = NULL;
 	uint8_t* buffer = NULL;
 	long file_size = 0;
+  unsigned id = 0;
 
 	if (argc < 2)
 	{
@@ -401,6 +311,12 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Unable to open file '%s'\n", argv[1]);
 		goto exit;
 	}
+
+  if (argc > 2)
+  {
+    /* specific property id */
+    id = strtol(argv[2], NULL, 16);
+  }
 
 	/* find out file size */
 	fseek(file, 0, SEEK_END);
@@ -441,7 +357,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		if (decode_database_stream(buffer))
+		if (decode_database_stream(buffer, id))
 			result = 0;
 	}
 
