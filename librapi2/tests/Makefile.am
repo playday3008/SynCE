@@ -7,6 +7,7 @@ TESTS = test-internals
 
 check_PROGRAMS = $(TESTS) test-socket test-server
 
-
 test_internals_SOURCES = test-internals.c
+
+SUBDIRS = rapi .
 
