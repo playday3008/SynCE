@@ -32,6 +32,10 @@ bool rra_task_from_vtodo(
     size_t* data_size,
     uint32_t flags,
     struct _RRA_Timezone* tzi);
+
+#define rra_task_free_vtodo(p)  if (p) free(p)
+#define rra_task_free_data(p)   if (p) free(p)
+
 #endif /* SWIG */
 
 #endif

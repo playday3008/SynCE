@@ -32,6 +32,10 @@ bool rra_appointment_from_vevent(
     size_t* data_size,
     uint32_t flags,
     struct _RRA_Timezone* tzi);
+
+#define rra_appointment_free_vevent(p)  if (p) free(p)
+#define rra_appointment_free_data(p)    if (p) free(p)
+
 #endif /* SWIG */
 
 #endif
