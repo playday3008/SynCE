@@ -1,5 +1,7 @@
 # $Id$
 
+RPMROOT=/home/david/redhat
+
 DIR=$(TOPDIR)/$(NAME)
 DIRNAME=$(NAME)-$(VERSION)
 TARBALL=$(TARBALLS)/$(DIRNAME).tar.gz
@@ -15,12 +17,11 @@ tarball:
 	cd $(TOPDIR) && ln -s $(NAME) $(DIRNAME)
 	cd $(TOPDIR) && tar cvfhz $(TARBALL) $(DIRNAME) $(EXCLUDE)
 
-# need to be root to do this...
 rpm:
-	-rm /usr/src/redhat/SRPMS/$(NAME)*
-	-rm /usr/src/redhat/RPMS/$(NAME)*
-	cp $(TARBALL) /usr/src/redhat/SOURCES/
+	-rm $(RPMROOT)/SRPMS/$(NAME)*
+	-rm $(RPMROOT)/RPMS/$(NAME)*
+	cp $(TARBALL) $(RPMROOT)/SOURCES/
 	rpmbuild -ba $(DIR)/$(NAME).spec
-	cp /usr/src/redhat/RPMS/i386/$(NAME)*.rpm $(RPMS)/
-	cp /usr/src/redhat/SRPMS/$(NAME)*.rpm $(SRPMS)/
+	cp $(RPMROOT)/RPMS/i386/$(NAME)*.rpm $(RPMS)/
+	cp $(RPMROOT)/SRPMS/$(NAME)*.rpm $(SRPMS)/
 

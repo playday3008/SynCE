@@ -1,7 +1,6 @@
 # $Id$
 
 PWD     ?= $(shell pwd)
-USER    ?= $(shell whoami)
 
 TOPDIR   = $(PWD)/../..
 TARBALLS = $(PWD)/tarballs
@@ -27,15 +26,14 @@ tarballs:
 	$(MAKE) -f Makefile.release NAME=dccmd    VERSION=$(DCCMD_VERSION)    tarball
 
 rpms:
-	su -c "$(MAKE) rpms2"
-	genbasedir --flat --bloat --bz2only $(APTDIR) synce
-	cd $(APTDIR) && scp -r * shell.sourceforge.net:/home/users/t/tw/twogood/synce/htdocs/apt/redhat/en/i386/8.0/
-
-rpms2:
 	mkdir -p $(RPMS)
 	mkdir -p $(SRPMS)
 	$(MAKE) -f Makefile.release NAME=libsynce VERSION=$(LIBSYNCE_VERSION) rpm
 	$(MAKE) -f Makefile.release NAME=librapi2 VERSION=$(LIBRAPI2_VERSION) rpm
-	-$(MAKE) -f Makefile.release NAME=dccmd    VERSION=$(DCCMD_VERSION)    rpm
-	chown -R $(USER) $(APTDIR)
+	$(MAKE) -f Makefile.release NAME=dccmd    VERSION=$(DCCMD_VERSION)    rpm
+
+apt:
+	genbasedir --flat --bloat --bz2only $(APTDIR) synce
+	cd $(APTDIR) && scp -r * shell.sourceforge.net:/home/users/t/tw/twogood/synce/htdocs/apt/redhat/en/i386/8.0/
+
 
