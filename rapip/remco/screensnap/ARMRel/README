@@ -3,4 +3,11 @@ in an arbitrary directory. Start this program on the PDA and connect
 with 
 	pdamirror --pdaaddress ip.address.ofthe.ipaq
 
+You have to restart screensnap.exe after shuting down pdamirror on your
+desktop.
+YOu will not get any informations from screensnap.exe itself. To check
+if it is running use for example the "PHM Task Manager"
+(http://www.phm.lu/Products/PocketPC/) and search for an process named
+screensnap.
+
 Have fun!
