@@ -1,8 +1,11 @@
 /* $Id$ */
+#define _BSD_SOURCE 1
 #include "liborange_internal.h"
 #include <synce_log.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #define VERBOSE 0
 
@@ -10,10 +13,7 @@
    .apk files used by TomTom products
  */
 
-#define BUFFER_SIZE 0x8000
-
-
-static uint8_t orange_read_byte(FILE* input_file)
+static uint8_t orange_read_byte(FILE* input_file)/*{{{*/
 {
   uint8_t byte;
   if (sizeof(byte) != fread(&byte, 1, sizeof(byte), input_file))
@@ -22,14 +22,14 @@ static uint8_t orange_read_byte(FILE* input_file)
   fprintf(stderr, "%02x ", byte);
 #endif
   return byte;
-}
+}/*}}}*/
 
-static bool orange_write_byte(FILE* output_file, uint8_t byte)
+static bool orange_write_byte(FILE* output_file, uint8_t byte)/*{{{*/
 {
   return sizeof(byte) == fwrite(&byte, 1, sizeof(byte), output_file);
-}
+}/*}}}*/
 
-static void ugly_copy(FILE* output_file, size_t offset, size_t size)
+static void ugly_copy(FILE* output_file, size_t offset, size_t size)/*{{{*/
 {
   uint8_t* buffer = malloc(size);
   size_t bytes_copied;
@@ -56,27 +56,39 @@ static void ugly_copy(FILE* output_file, size_t offset, size_t size)
   
   bytes_copied = fwrite(buffer, 1, size, output_file);
   assert(size == bytes_copied);
-}
+}/*}}}*/
 
-bool orange_extract_arpk(
+bool orange_extract_apk(/*{{{*/
     const char* input_filename,
     const char* output_directory)
 {
   bool success = false;
   FILE* input_file = fopen(input_filename, "r");
-  FILE* output_file = fopen("/tmp/arpk.bin", "w+");
+  FILE* output_file = NULL;
   size_t uncompressed_size;
-  uint8_t block_start_stop;
+  uint8_t magic_byte;
   uint8_t current_byte;
-  uint8_t* dictionary = malloc(BUFFER_SIZE);
   size_t bytes_written = 0;
+  char output_filename[256];
+  const char* basename;
+  char* p;
 
-  if (!dictionary)
-    goto exit;
-  
   if (!input_file)
     goto exit;
 
+  basename = strrchr(input_filename, '/');
+  if (basename)
+    basename++;
+  else
+    basename = input_filename;
+
+  snprintf(output_filename, sizeof(output_filename), "%s/%s.arh", output_directory, basename);
+
+  p = strrchr(output_filename, '.');
+  if (p && p > strrchr(output_filename, '/'))
+    *p = '\0';
+
+  output_file = fopen(output_filename, "w+");
   if (!output_file)
     goto exit;
 
@@ -96,19 +108,19 @@ bool orange_extract_arpk(
 
   synce_trace("uncompressed size: %08x (%i)", uncompressed_size, uncompressed_size);
 
-  block_start_stop = orange_read_byte(input_file);
+  magic_byte = orange_read_byte(input_file);
 
 #if VERBOSE
   fprintf(stderr, "Block start\n");
 #endif
 
-  while (bytes_written < uncompressed_size /*0x50000*/)
+  while (bytes_written < uncompressed_size)
   {
     unsigned count;
 
     current_byte = orange_read_byte(input_file);
   
-    if (block_start_stop == current_byte)
+    if (magic_byte == current_byte)
     {
       unsigned offset;
 
@@ -118,7 +130,7 @@ bool orange_extract_arpk(
 
       current_byte = orange_read_byte(input_file);
 
-      if (block_start_stop == current_byte)
+      if (magic_byte == current_byte)
       {
         count = 1;
       }
@@ -168,9 +180,16 @@ bool orange_extract_arpk(
     }
   } /* for() */
 
+  success = (bytes_written == uncompressed_size);
+
+  if (success)
+    synce_trace("Wrote '%s'", output_filename);
+
 exit:
+  if (!success && output_file)  
+    unlink(output_filename);
   FCLOSE(input_file);
   FCLOSE(output_file);
   return success;
-}
+}/*}}}*/
 
