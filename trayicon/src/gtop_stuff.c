@@ -7,7 +7,6 @@
 #include <glibtop/proclist.h>
 #include <glibtop/procstate.h>
 #include <glibtop/procargs.h>
-#include <glibtop/xmalloc.h>
 #include <unistd.h>
 
 char *
@@ -88,16 +87,16 @@ dccm_is_running () {
 		if (g_ascii_strncasecmp("dccm", name, 4) == 0) {
 			result = TRUE;
 			g_free(name);
-			glibtop_free(arguments);
+			g_free(arguments);
 			break;
 		}	
 		g_free(name);
-		glibtop_free(arguments);
+		g_free(arguments);
 
 		i++;
 	 }
 
-	glibtop_free (pid_list);
+	g_free (pid_list);
 
 	return(result);
 }
