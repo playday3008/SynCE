@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-librapi2
-%define ver      0.3
+%define ver      0.4
 %define rel      1
 
 Summary: SynCE: Remote Application Programming Interface (RAPI) library.
