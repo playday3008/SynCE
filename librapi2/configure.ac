@@ -33,6 +33,9 @@ AC_C_CONST
 
 dnl Checks for library functions.
 AM_ICONV()
+AC_CHECK_LIB(socket,main)
+AC_CHECK_LIB(nsl,main)
+
 
 AC_OUTPUT([Makefile
            src/Makefile
