@@ -68,7 +68,7 @@ you tap the Bluetooth Manager icon on the Today screen.</p></li>
 
 <li><p>You can have something like this in <tt>/etc/rc.local</tt> or similar
 file to prepare your computer for Bluetooth connection from boot. This is for
-RedHat 9:</p>
+RedHat 9 and Fedora Core 1/2:</p>
 
 <pre>/sbin/service bluetooth restart
 /usr/bin/dund --listen --msdun call dun
@@ -78,6 +78,9 @@ RedHat 9:</p>
 <p>(The Bluetooth service is restarted because that made everything work much
     better for me on my Thinkpad T30... don't know why.)</p></li>
 
+<li>Please note that the <tt>synce-serial-config</tt> and
+<tt>synce-serial-start</tt> scripts are <b>never</b> used with Bluetooth
+connections!</li>
 
 </ol>
 
