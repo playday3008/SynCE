@@ -1,6 +1,5 @@
 /* $Id$ */
 #include "rapi_context.h"
-#include "rapi_unicode.h"
 #include <stdlib.h>
 
 static RapiContext* current_context;

@@ -2,6 +2,8 @@
 #ifndef __rapi_internal_h__
 #define __rapi_internal_h__
 
+#include "rapi_win.h"
+
 #if HAVE_CONFIG_H
 #include "rapi_config.h"
 #else

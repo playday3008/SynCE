@@ -3,6 +3,7 @@
 #include "rapi.h"
 #include "rapi_buffer.h"
 #include "rapi_context.h"
+#include "rapi_wstr.h"
 
 BOOL CeCloseHandle( 
 		HANDLE hObject)
@@ -63,8 +64,8 @@ BOOL CeCopyFileA(
 	LPWSTR lpExistingFileNameW = NULL;
 	LPWSTR lpNewFileNameW = NULL;
 
-	lpExistingFileNameW = rapi_unicode_from_ascii(lpExistingFileName);
-	lpNewFileNameW      = rapi_unicode_from_ascii(lpNewFileName);
+	lpExistingFileNameW = rapi_wstr_from_ascii(lpExistingFileName);
+	lpNewFileNameW      = rapi_wstr_from_ascii(lpNewFileName);
 
 	if (lpExistingFileName && !lpExistingFileNameW)
 		goto fail;
@@ -75,8 +76,8 @@ BOOL CeCopyFileA(
 	return_value = CeCopyFile(lpExistingFileNameW, lpNewFileNameW, bFailIfExists);
 
 fail:
-	rapi_unicode_free_string(lpExistingFileNameW);
-	rapi_unicode_free_string(lpNewFileNameW);
+	rapi_wstr_free_string(lpExistingFileNameW);
+	rapi_wstr_free_string(lpNewFileNameW);
 	
 	return return_value;
 }

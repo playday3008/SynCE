@@ -8,6 +8,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#if HAVE_DMALLOC_H
+#include "dmalloc.h"
+#endif
+
 #define RAPI_SOCKET_INVALID_FD -1
 
 struct _RapiSocket

@@ -1,5 +1,6 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -ansi -pedantic @CFLAGS@
+CFLAGS = -ggdb -Wall -ansi -pedantic @CFLAGS@ -Isupport
+@SET_MAKE@
 
 ## create this library
 lib_LTLIBRARIES = librapi.la
@@ -11,13 +12,12 @@ librapi_la_SOURCES = \
 	rapi_buffer.h   rapi_buffer.c  \
 	rapi_context.h  rapi_context.c \
 	rapi_internal.h                \
-	rapi_socket.h   rapi_socket.c  \
-	rapi_unicode.h  rapi_unicode.c
+	rapi_socket.h   rapi_socket.c
 
 librapi_la_LDFLAGS = -no-undefined -version-info 0:0:0
-librapi_la_LIBADD  = config/libconfig.la
+librapi_la_LIBADD  = config/libconfig.la support/libsupport.la
 
 include_HEADERS = rapi.h rapi_win.h
 
-SUBDIRS = config .
+SUBDIRS = config support .
 

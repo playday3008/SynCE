@@ -3,7 +3,6 @@
 #define __rapi_buffer_h__
 
 #include "rapi_internal.h"
-#include "rapi_unicode.h"
 
 struct _RapiBuffer;
 typedef struct _RapiBuffer RapiBuffer;
@@ -56,7 +55,7 @@ bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value);
 /**
  * Write a string with length
  */
-bool rapi_buffer_write_string(RapiBuffer* buffer, const uchar* unicode);
+bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode);
 
 /**
  * Write an optional parameter

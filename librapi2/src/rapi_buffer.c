@@ -1,9 +1,15 @@
 /* $Id$ */
+#include "rapi_internal.h"
 #include "rapi_buffer.h"
 #include "rapi_endian.h"
+#include "rapi_wstr.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#if HAVE_DMALLOC_H
+#include "dmalloc.h"
+#endif
 
 #define RAPI_BUFFER_INITIAL_SIZE 16
 
@@ -128,12 +134,12 @@ bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value)
 	return rapi_buffer_write_data(buffer, &little_endian_value, sizeof(u_int32_t));
 }
 
-bool rapi_buffer_write_string(RapiBuffer* buffer, const uchar* unicode)
+bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode)
 {
 	size_t size;
 	
 	if (unicode)
-	  size = (rapi_unicode_string_length(unicode) + 1) * sizeof(uchar);
+	  size = (rapi_wstr_string_length(unicode) + 1) * sizeof(WCHAR);
 	else
 		size = 0;
 	
