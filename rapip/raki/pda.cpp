@@ -128,10 +128,20 @@ PDA::PDA(Raki *raki, QString pdaName)
 
 PDA::~PDA()
 {
-    delete syncDialog;
+    if (syncDialog->running()) {
+        syncDialog->setDelayedDelete(true);
+        syncDialog->setStopRequested(true);
+    } else {
+        delete syncDialog;
+    }
     delete passwordDialog;
     delete runWindow;
-    delete managerWindow;
+    if (managerWindow->running()) {
+        managerWindow->setDelayedDelete(true);
+        managerWindow->WorkerThreadInterface::setStopRequested(true);
+    } else {
+        delete managerWindow;
+    }
     delete configDialog;
     delete associatedMenu;
     delete rra;
@@ -140,6 +150,24 @@ PDA::~PDA()
 
     if (masqueradeEnabled) {
         startMasquerading(false);
+    }
+}
+
+
+bool PDA::running()
+{
+    return (WorkerThreadInterface::running() || managerWindow->running() || syncDialog->running());
+}
+
+
+void PDA::setStopRequested(bool isStopRequested)
+{
+    if (managerWindow->running()) {
+        managerWindow->setStopRequested(isStopRequested);
+    } else if (syncDialog->running()) {
+        syncDialog->setStopRequested(isStopRequested);
+    } else if (WorkerThreadInterface::running()) {
+        WorkerThreadInterface::setStopRequested(isStopRequested);
     }
 }
 

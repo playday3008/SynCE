@@ -78,6 +78,8 @@ public:
     bool getSynchronizationTypes(QPtrDict<ObjectType> *);
     void init();
     bool isPartner();
+    bool running();
+    void setStopRequested(bool);
     
 signals:
     void resolvedPassword(QString pdaName, QString passwd, KSocket *dccmSocket);
