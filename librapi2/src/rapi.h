@@ -4,6 +4,16 @@
 
 #include "rapi_win.h"
 
+/*
+ * Initialization functions
+ */
+
+HRESULT CeRapiInit(void);
+
+/*
+ * File functions
+ */
+
 BOOL CeCloseHandle( 
 		HANDLE hObject);
 
