@@ -82,6 +82,7 @@ static void recurrence_append_byday(
       size -= strlen(buffer);
       buffer += strlen(buffer);
 
+#if 0
       switch (pattern->instance)
       {
         case 1:
@@ -94,12 +95,15 @@ static void recurrence_append_byday(
           snprintf(buffer, size, "-1%s", masks_and_names[i].name);
           break;
         case 0:
+#endif
           snprintf(buffer, size, "%s", masks_and_names[i].name);
+#if 0
           break;
         default:
           synce_error("Invalid instance: %08x", pattern->instance);
           break;
       }
+#endif
 
       size -= strlen(buffer);
       buffer += strlen(buffer);
@@ -152,8 +156,9 @@ static bool recurrence_generate_monthnth_rrule(
     RRA_RecurrencePattern* pattern)
 {
   char buffer[256];
-  snprintf(buffer, sizeof(buffer), "FREQ=MONTHLY;INTERVAL=%i",
-      pattern->interval);
+  snprintf(buffer, sizeof(buffer), "FREQ=MONTHLY;INTERVAL=%i;BYSETPOS=%i",
+      pattern->interval,
+      pattern->instance);
 
   recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
   recurrence_append_byday         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
