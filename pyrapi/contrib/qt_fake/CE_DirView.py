@@ -1,16 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 #	Created:	Fre Mär 26 18:28:40 CET 2004	by M. Biermaier	on linuxorange
-__FileVersion__ = """\
-#	Version:	Mit Apr 21 18:18:36 CEST 2004	on linuxorange
-"""
-#	$Id$
+"""Version:	Sam Mai  1 10:49:24 CEST 2004	on linuxorange
+$Id$
 
-"""
 GUI for files on PocketPC.
-
 Show files from PocketPC in a TreeView.
 
+Features:
+	- Runs on
+	  o Linux
+	  o MacOS X
+	  o Zaurus
+	- 'Drag & Drop'-support on Desktops.
+	  o Drag/drop files to/from konqueror on Linux.
+	  o Drag/drop files to/from Finder on MacOS X.
+	- Process local FileSystem with 'local'-option.
+	  o Multiple instances possible on same computer.
+	  o 'Drag & Drop' files to/from local FileSystem to/from PocketPC
+	- Transparent Client/Server solution possible.
+	  o Only one computer on the network needs SynCE installed
+	    and a PocketPC connected.
+	  o Other client-Computers on the network can access the PocketPC
+	    FileSystem.
+	  o Clients need only a Python-Fake-Modul installed (no SynCE,
+	    no direct PocketPC-connection).
 
 Based on:
 pyrapi - A python wrapper class around the librapi2 library
@@ -34,6 +48,7 @@ dirview.py
 __author__		= "M. Biermaier"
 __version__		= "$Revision$"
 __date__		= "$Date$"
+__FileVersion__ = __doc__.split ("\n") [0]			# The first line of the DocString.
 
 
 # Imports [
@@ -47,6 +62,7 @@ try:
 	# may raise other errors (e.g. missing libraries).
 	Qtopia			= 1
 	from qtpe import QPEApplication
+	from qtpe import QPEMenuBar
 except ImportError:
 	Qtopia			= 0
 
@@ -58,7 +74,7 @@ from qt import *
 theHOME			= os.getenv ("HOME")
 sys.path.append (theHOME + "/Python")
 
-import DebugPrint	# DebugPrinting
+import DebugPrint		# DebugPrinting
 
 from pyrapi import pyrapi
 import time
@@ -79,14 +95,20 @@ DEBUG_POSITIONS	= False
 DEBUG_COMPARE	= False
 DEBUG_RENAME	= False
 DEBUG_COPY		= False
+DEBUG_MOUSE		= False
+
+SHOW_SYM_LINKS	= False		# True:  show symbolic links
+							# False: follow symbolic links
+
+SIM_CONTEXT_MENU= Qtopia
+
+LocalDir		= False
 
 # Settings
 prefStatusWant	= True
 
-AppName			= "PocketPC_DirectoryBrowser"
-theCaption		= "PocketPC - Directory Browser - " + __version__.replace ("$", "")
-
-PATH_SEPEARATOR	= "\\"
+AppName			= "DirectoryBrowser"
+theCaption		= " - Directory Browser - " + __version__.replace ("$", "")
 
 # Column Numbers
 COL_NAME		= 0
@@ -99,6 +121,9 @@ ActionNone		= 0
 ActionCopy		= 1
 ActionMove		= 2
 ActionLink		= 3
+
+# For Qtopia
+STATUS_BAR_H	= 30
 
 folder_closed_xpm = [
 	"16 16 9 1",
@@ -233,9 +258,11 @@ fileNormal		= None
 # Trace2 [
 #--------------------------------------------------
 def TraceBeg ():
+	"""Universal trace entry."""
 	if DEBUG > 1: print ">>>>>", sys._getframe (1).f_code.co_name
 
 def TraceEnd ():
+	"""Universal trace exit."""
 	if DEBUG > 1: print "<<<<<", sys._getframe (1).f_code.co_name
 #--------------------------------------------------
 # Trace2 ]
@@ -243,7 +270,7 @@ def TraceEnd ():
 # dPrint [
 #--------------------------------------------------
 def dPrint (aLabel, aValue):
-	"""Allow printing of unicode-strings"""
+	"""Allow DebugPrinting of unicode-strings."""
 
 	if isinstance (aValue, QString):
 		dPrint1 (aLabel, aValue.latin1 ())
@@ -253,9 +280,53 @@ def dPrint (aLabel, aValue):
 # dPrint ]
 
 
+# TrimCvsString [
+#--------------------------------------------------
+def TrimCvsString (theString):
+	"""Trim "Revision", "Date", ..."""
+	return str(theString).replace ("$" "Revision: ", "").replace ("$" "Date: ", ""). replace (" $", "")
+#--------------------------------------------------
+# TrimCvsString ]
+
+
+# DoQuestionDialog [
+#--------------------------------------------------
+def DoQuestionDialog (Parent, Caption, Text):
+	"""Needed on Zaurus."""
+
+	import QuestionDialog
+
+	TraceBeg ()
+
+	theQuestionDialog	= QuestionDialog.Question (modal=True)
+
+	# Fill Values [
+	#--------------------------------------------------
+	theQuestionDialog.setCaption (Caption)
+	theQuestionDialog.textLabelQuestion.setText (Text)
+	#--------------------------------------------------
+	# Fill Values ]
+
+	theQuestionDialog.textLabelCvsInfo.setText (TrimCvsString (theQuestionDialog.textLabelCvsInfo.text ()))
+
+	# Show the Dialog
+	#--------------------------------------------------
+	ReturnValue	= theQuestionDialog.exec_loop ()
+	#--------------------------------------------------
+	# Show the Dialog
+
+	TraceEnd ()
+
+	return ReturnValue
+#--------------------------------------------------
+# DoQuestionDialog ]
+
+
 # CE_FileInfo [
 #--------------------------------------------------
 class CE_FileInfo (QFileInfo):
+	"""Implements PocketPC FileInfo."""
+
 	def __init__ (self):
 		QFileInfo.__init__ (self)
 		ce_file			= ""
@@ -264,6 +335,7 @@ class CE_FileInfo (QFileInfo):
 	# filePath [
 	#--------------------------------------------------
 	def filePath (self):
+		"""Path."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -274,6 +346,7 @@ class CE_FileInfo (QFileInfo):
 	# fileName [
 	#--------------------------------------------------
 	def fileName (self):
+		""""ce_file.cFileName"."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -284,8 +357,12 @@ class CE_FileInfo (QFileInfo):
 	# isFile [
 	#--------------------------------------------------
 	def isFile (self):
+		"""Check "ce_file.dwFileAttributes"."""
 		TraceBeg ()
 
+		# FIXME
+		# A file is an object, that's not a directory? Sure?
+		
 		TraceEnd ()
 		return self.ce_file.dwFileAttributes != 16
 	#--------------------------------------------------
@@ -294,6 +371,7 @@ class CE_FileInfo (QFileInfo):
 	# isDir [
 	#--------------------------------------------------
 	def isDir (self):
+		"""Directory."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -304,6 +382,7 @@ class CE_FileInfo (QFileInfo):
 	# fileSize [
 	#--------------------------------------------------
 	def fileSize (self):
+		""""ce_file.nFileSizeLow" (!)."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -314,6 +393,7 @@ class CE_FileInfo (QFileInfo):
 	# ftLastWriteTime [
 	#--------------------------------------------------
 	def ftLastWriteTime (self):
+		""""time.ctime (...)"."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -324,6 +404,7 @@ class CE_FileInfo (QFileInfo):
 	# ftLastWriteTimeRaw [
 	#--------------------------------------------------
 	def ftLastWriteTimeRaw (self):
+		""""ce_file.ftLastWriteTime"."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -337,6 +418,8 @@ class CE_FileInfo (QFileInfo):
 # CE_Dir [
 #--------------------------------------------------
 class CE_Dir (QDir):
+	"""Implements PocketPC directory-tree."""
+
 	def __init__ (self, filename=None):
 		QDir.__init__ (self, filename)
 		self.pathName	= filename
@@ -344,6 +427,7 @@ class CE_Dir (QDir):
 	# drives [
 	#--------------------------------------------------
 	def drives (self):
+		"""CE-root."""
 		TraceBeg ()
 
 		files	= []
@@ -363,6 +447,7 @@ class CE_Dir (QDir):
 	# entryInfoList [
 	#--------------------------------------------------
 	def entryInfoList (self):
+		"""Get FileInformation via "pyrapi"."""
 		TraceBeg ()
 
 		entries	= []
@@ -399,7 +484,11 @@ class CE_Dir (QDir):
 	# isReadable [
 	#--------------------------------------------------
 	def isReadable (self):
+		"""Always return true..."""
 		TraceBeg ()
+
+		# FIXME
+		# Should have some better indicator...
 
 		TraceEnd ()
 		return True
@@ -412,6 +501,8 @@ class CE_Dir (QDir):
 # CE_File [
 #--------------------------------------------------
 class CE_File (QFile):
+	"""Implements PocketPC File."""
+
 	def __init__ (self, filename=None):
 		QFile.__init__ (self, filename)
 		self.ce_fileName	= filename
@@ -419,6 +510,7 @@ class CE_File (QFile):
 	# name [
 	#--------------------------------------------------
 	def name (self):
+		""""ce_fileName"."""
 		TraceBeg ()
 
 		TraceEnd ()
@@ -432,6 +524,7 @@ class CE_File (QFile):
 # CE_compare [
 #--------------------------------------------------
 def CE_compare (aListViewItem, i, col, ascending):
+	"""Used for sorting."""
 	TraceBeg ()
 
 	theResult	= 0
@@ -489,8 +582,7 @@ def CE_compare (aListViewItem, i, col, ascending):
 # PathToFolder [
 #--------------------------------------------------
 def PathToFolder (thePath):
-	"""Build the first part of a pathName"""
-
+	"""Build the first part of a pathName."""
 	TraceBeg ()
 
 	NameList		= QStringList ()
@@ -510,6 +602,8 @@ def PathToFolder (thePath):
 # FileItem [
 #--------------------------------------------------
 class FileItem (QListViewItem):
+	"""File."""
+
 	def __init__ (self, parent=None, s1=None, s2=None):
 		QListViewItem.__init__ (self, parent, s1, s2)
 		self.pix					= None
@@ -517,12 +611,15 @@ class FileItem (QListViewItem):
 		self.p						= parent
 		self.NameLink				= parent
 		self.theFileSize			= 0
+# M.B. 2004-04-28
+		self.theFtLastWriteTime		= QString ()
 		self.theFtLastWriteTimeRaw	= 0
 		self.thePathName			= ""	# Used for rename
-	
+
 	# dump [
 	#--------------------------------------------------
 	def dump (self):
+		"""Dump info for debugging."""
 		TraceBeg ()
 
 		dPrint ("[ Begin of dump for", self)
@@ -553,6 +650,8 @@ class FileItem (QListViewItem):
 	# text [
 	#--------------------------------------------------
 	def text (self, column):
+		"""Take care of Unicode-names and FileTimes..."""
+
 		if column == COL_NAME:
 			tempString	= QListViewItem.text (self, column).latin1 ()
 			if len (tempString) > 0:
@@ -565,7 +664,11 @@ class FileItem (QListViewItem):
 		if column == COL_SIZE:
 			return str (self.theFileSize)
 		elif column == COL_LASTWRITETIME:
-			return str (self.theFtLastWriteTime)
+			# UNICODE
+			if LocalDir:
+				return str (self.theFtLastWriteTime.latin1 ())
+			else:
+				return str (self.theFtLastWriteTime)
 		else:
 			return QListViewItem.text (self, column)
 	#--------------------------------------------------
@@ -574,6 +677,8 @@ class FileItem (QListViewItem):
 	# compare [
 	#--------------------------------------------------
 	def compare (self, i, col, ascending):
+		"""Used for sorting."""
+
 		return CE_compare (self, i, col, ascending)
 	#--------------------------------------------------
 	# compare ]
@@ -581,6 +686,7 @@ class FileItem (QListViewItem):
 	# okRename [
 	#--------------------------------------------------
 	def okRename (self, col):
+		"""Rename file."""
 		TraceBeg ()
 
 		if DEBUG_RENAME:
@@ -590,6 +696,7 @@ class FileItem (QListViewItem):
 			print "OLD: type (self.text (col)):", type (self.text (col))
 			print "OLD: self.text (col):       ", self.text (col)
 
+		OldLeafName	= self.text (col)
 		OldName		= QString (self.thePathName)
 		OldName.append (PATH_SEPEARATOR)
 		OldName.append (self.text (col))
@@ -606,7 +713,26 @@ class FileItem (QListViewItem):
 			print "type (OldName):             ", type (OldName)
 			print "Rename: [%s] -> [%s]" % (OldName.latin1 (), NewName.latin1 ())
 
-		pyrapi.CeMoveFile (str (OldName.utf8 ()), str (NewName.utf8 ()))
+		#if 1:
+		try:
+			if LocalDir:
+				# M.B. Mit Apr 28 19:55:05 CEST 2004
+				# FIXME
+				# Duplicate items in view possible on Linux.
+				# Remove duplicate item by hand.
+				os.rename (str (OldName.utf8 ()), str (NewName.utf8 ()))
+			else:
+				pyrapi.CeMoveFile (str (OldName.utf8 ()), str (NewName.utf8 ()))
+
+		#if 0:
+		except:
+			QMessageBox.warning	(
+								None, AppName + " Rename File",
+								QString	("Could not rename\nfile \"%1\"\nto \"%2\".\n"
+										"Perhaps a file with this name allready exists?"
+										). arg (OldName, NewName)
+								)
+			self.setText (col, OldLeafName)
 
 		TraceEnd ()
 	#--------------------------------------------------
@@ -618,6 +744,8 @@ class FileItem (QListViewItem):
 # Directory [
 #--------------------------------------------------
 class Directory (QListViewItem):
+	"""Directory."""
+
 	def __init__ (self, parent=None, filename=None, col2=None):
 		QListViewItem.__init__ (self, parent, filename, col2)
 		self.pix					= None
@@ -654,13 +782,18 @@ class Directory (QListViewItem):
 			
 			### print filename.decode ('utf-8')
 
-		self.readable	= CE_Dir (self.fullName ()).isReadable ()
+		if LocalDir:
+			self.readable	= QDir (self.fullName ()).isReadable ()
+		else:
+			self.readable	= CE_Dir (self.fullName ()).isReadable ()
+
 		if not self.readable: self.setPixmap (folderLocked)
 		else: self.setPixmap (folderClosed)
 
 	# dump [
 	#--------------------------------------------------
 	def dump (self):
+		"""Dump info for debugging."""
 		TraceBeg ()
 
 		dPrint ("[ Begin of dump for", self)
@@ -693,13 +826,19 @@ class Directory (QListViewItem):
 		else: return self.pix
 	
 	def setOpen (self, o):
+
 		TraceBeg ()
 		if o: self.setPixmap (folderOpened)
 		else: self.setPixmap (folderClosed)
 
 		if o and not self.childCount ():
 			s	= QString (self.fullName ())
-			thisDir	= CE_Dir (s)
+
+			if LocalDir:
+				thisDir	= QDir (s)
+			else:
+				thisDir	= CE_Dir (s)
+
 			if not thisDir.isReadable ():
 				self.readable	= False
 				self.setExpandable (False)
@@ -711,6 +850,9 @@ class Directory (QListViewItem):
 
 			# Reset ProgressBar [
 			#--------------------------------------------------
+			if Qtopia:
+				theStatusBar.clear ()
+				theProgressBar.show ()
 			theProgressBar.reset ()
 			qApp.processEvents ()
 			#--------------------------------------------------
@@ -726,15 +868,29 @@ class Directory (QListViewItem):
 				theProgressBar.setProgress (0)
 				#--------------------------------------------------
 				# Init ProgressBar ]
-				fi	= CE_FileInfo ()
+
+				if LocalDir:
+					fi	= QFileInfo ()
+				else:
+					fi	= CE_FileInfo ()
+
 				for it in files:
 					fi	= it
+
 					if DEBUG > 3:
 						dPrint ("it", it)
 						dPrint ("fi.fileName ()", fi.fileName ())
-					if str (fi.fileName ()) == "." or str (fi.fileName ()) == "..":
+
+					# UNICODE
+					#if str (fi.fileName ()) == "." or str (fi.fileName ()) == "..":
+					if LocalDir:
+						theFileName		= str (fi.fileName ().latin1 ())
+					else:
+						theFileName		= str (fi.fileName ())
+
+					if theFileName == "." or theFileName == "..":
 						continue # nothing
-					elif fi.isSymLink () and not self.showDirsOnly:
+					elif fi.isSymLink () and not self.showDirsOnly and SHOW_SYM_LINKS:
 						item	= FileItem (self, fi.fileName (), "Symbolic Link")
 						item.setPixmap (fileNormal)
 					elif fi.isDir ():
@@ -742,9 +898,22 @@ class Directory (QListViewItem):
 					elif not self.showDirsOnly:
 						if fi.isFile ():
 							item	= FileItem (self, fi.fileName (), "File")
-							item.theFileSize			= fi.fileSize ()
-							item.theFtLastWriteTime		= fi.ftLastWriteTime ()
-							item.theFtLastWriteTimeRaw	= fi.ftLastWriteTimeRaw ()
+
+							if LocalDir:
+								item.theFileSize			= fi.size ()
+								item.theFtLastWriteTime		= fi.lastModified ().toString ()
+								if Qtopia:
+									#item.theFtLastWriteTimeRaw	= fi.lastModified ().toString ("yyyyMMddhhmmss")
+									#item.theFtLastWriteTimeRaw	= fi.lastModified ().toString ()
+									HelpDate					= QDateTime ()
+									item.theFtLastWriteTimeRaw	= int (fi.lastModified ().secsTo (HelpDate.currentDateTime ()))
+								else:
+									item.theFtLastWriteTimeRaw	= fi.lastModified ().toTime_t ()
+							else:
+								item.theFileSize			= fi.fileSize ()
+								item.theFtLastWriteTime		= fi.ftLastWriteTime ()
+								item.theFtLastWriteTimeRaw	= fi.ftLastWriteTimeRaw ()
+
 						else:
 							item	= FileItem (self, fi.fileName (), "Special")
 						item.setPixmap (fileNormal)
@@ -761,10 +930,27 @@ class Directory (QListViewItem):
 
 			else:
 				# If we have an empty directory, we want to show 100% complete...
-				theProgressBar.setProgress (100, 100)
+				if Qtopia:
+					theProgressBar.setTotalSteps (100)
+					theProgressBar.setProgress (100)
+				else:
+					theProgressBar.setProgress (100, 100)
+
+			# M.B. Mit Apr 28 12:05:39 CEST 2004
+			# Don't know, why we need this...
+			if LocalDir:
+				if Qtopia:
+					theProgressBar.setTotalSteps (100)
+					theProgressBar.setProgress (100)
+				else:
+					theProgressBar.setProgress (100, 100)
 
 			# Uncomment the following line if you don't want to see always the "100%" indicator.
 			#theProgressBar.reset ()
+
+			if Qtopia:
+				theProgressBar.hide ()
+				theStatusBar.message ((__version__ + " " + __date__).replace ("$", ""))
 
 			self.listView ().setUpdatesEnabled (True)
 			#--------------------------------------------------
@@ -821,6 +1007,8 @@ class Directory (QListViewItem):
 	# compare [
 	#--------------------------------------------------
 	def compare (self, i, col, ascending):
+		"""Used for sorting."""
+
 		return CE_compare (self, i, col, ascending)
 	#--------------------------------------------------
 	# compare ]
@@ -828,6 +1016,8 @@ class Directory (QListViewItem):
 	# okRename [
 	#--------------------------------------------------
 	def okRename (self, col):
+		"""Rename directory."""
+
 		TraceBeg ()
 
 		if DEBUG_RENAME:
@@ -836,6 +1026,7 @@ class Directory (QListViewItem):
 			print "self.thePathName:       ", self.thePathName.latin1 ()
 			print "OLD: self.text (col):   ", self.text (col)
 
+		OldLeafName		= self.text (col)
 		folderPath		= PathToFolder (self.thePathName)
 
 		QListViewItem.okRename (self, col)
@@ -849,7 +1040,23 @@ class Directory (QListViewItem):
 			print "NewName:                ", NewName.latin1 ()
 			print "Rename: [%s] -> [%s]" % (self.thePathName.latin1 (), NewName.latin1 ())
 
-		pyrapi.CeMoveFile (str (self.thePathName.utf8 ()), str (NewName.utf8 ()))
+		try:
+			if LocalDir:
+				# M.B. Mit Apr 28 19:55:05 CEST 2004
+				# FIXME
+				# Duplicate items in view possible on Linux.
+				# Remove duplicate item by hand.
+				os.rename (str (self.thePathName.utf8 ()), str (NewName.utf8 ()))
+			else:
+				pyrapi.CeMoveFile (str (self.thePathName.utf8 ()), str (NewName.utf8 ()))
+		except:
+			QMessageBox.warning	(
+								None, AppName + " Rename Folder",
+								QString	("Could not rename\nfolder \"%1\"\nto \"%2\".\n"
+										"Perhaps a folder with this name allready exists?"
+										). arg (self.thePathName, NewName)
+								)
+			self.setText (col, OldLeafName)
 
 		TraceEnd ()
 	#--------------------------------------------------
@@ -858,67 +1065,82 @@ class Directory (QListViewItem):
 # Directory ]
 	
 
-# FileDrag [
-#--------------------------------------------------
-class FileDrag (QIconDrag):
-	def __init__ (self, dragSource = None, name = None):
-		QIconDrag.__init__ (self, dragSource, name)
-		self.urls	= QStringList ()
+if not Qtopia:
+	# FileDrag [
+	#--------------------------------------------------
+	class FileDrag (QIconDrag):
+		"""WorkAround for our MacOS X FileDrag-problem."""
 
-	# format [
-	#--------------------------------------------------
-	def format (self, i):
-		TraceBeg ()
-		TraceEnd ()
-		if i == 0:
-			return "text/uri-list"
-		else:
-			return None
-	#--------------------------------------------------
-	# format ]
+		def __init__ (self, dragSource = None, name = None):
+			QIconDrag.__init__ (self, dragSource, name)
+			self.urls	= QStringList ()
 
-	# encodedData [
-	#--------------------------------------------------
-	def encodedData (self, mime):
-		TraceBeg ()
-		a	= ""
-		if mime == "text/uri-list":
-			a	= self.urls.join ("\r\n")
-		#print "mime:", mime
-		#print "a:   ", a
-		#mime: text/uri-list
-		#a:    /tmp/ImageBrowser-Cache/Cache_00000008
-		dPrint ("FileDrag.encodedData a", a)
-		TraceEnd ()
-		return QByteArray (str (a.utf8 ()))
-	#--------------------------------------------------
-	# encodedData ]
+		# format [
+		#--------------------------------------------------
+		def format (self, i):
+			"""We only support "text/uri-list"..."""
+			TraceBeg ()
+			TraceEnd ()
+			if i == 0:
+				return "text/uri-list"
+			else:
+				return None
+		#--------------------------------------------------
+		# format ]
 
-	# canDecode [
-	#--------------------------------------------------
-	def canDecode (self, e):
-		TraceBeg ()
-		TraceEnd ()
-		return e.provides ("text/uri-list")
-	#--------------------------------------------------
-	# canDecode ]
+		# encodedData [
+		#--------------------------------------------------
+		def encodedData (self, mime):
+			"""Construct "file:/x/y/z"."""
+			TraceBeg ()
 
-	# append [
+			a	= ""
+			if mime == "text/uri-list":
+				a	= self.urls.join ("\r\n")
+
+			#print "mime:    ", mime
+			#print "a:       ", a
+			#print "type (a):", type (a)
+			#mime: text/uri-list
+			#a:    /tmp/ImageBrowser-Cache/Cache_00000008
+			#type (a): <class '__main__.qt.QString'>
+
+			a.insert (0, "file:")
+			dPrint ("FileDrag.encodedData a", a)
+			TraceEnd ()
+			return QByteArray (str (a.utf8 ()))
+		#--------------------------------------------------
+		# encodedData ]
+
+		# canDecode [
+		#--------------------------------------------------
+		def canDecode (self, e):
+			"""We only support "text/uri-list"..."""
+			TraceBeg ()
+			TraceEnd ()
+			return e.provides ("text/uri-list")
+		#--------------------------------------------------
+		# canDecode ]
+
+		# append [
+		#--------------------------------------------------
+		def append (self, item, pr, tr, url):
+			"""Vehicle to carry the FileName ("url")."""
+			TraceBeg ()
+			TraceEnd ()
+			QIconDrag.append (self, item, pr, tr)
+			self.urls.append (url)
+		#--------------------------------------------------
+		# append ]
 	#--------------------------------------------------
-	def append (self, item, pr, tr, url):
-		TraceBeg ()
-		TraceEnd ()
-		QIconDrag.append (self, item, pr, tr)
-		self.urls.append (url)
-	#--------------------------------------------------
-	# append ]
-#--------------------------------------------------
-# FileDrag ]
+	# FileDrag ]
 
 
 # DirectoryView [
 #--------------------------------------------------
 class DirectoryView (QListView):
+	"""DirectoryView."""
+
 	def __init__ (self, parent=None, name=None, sdo=False):
 		QListView.__init__ (self, parent, name)
 		self.dirsOnly		= sdo
@@ -944,11 +1166,12 @@ class DirectoryView (QListView):
 		self.theLeafName	= QString ()
 	  
 		self.autoopen_timer	= QTimer (self)
+
 		if not folderLocked:
 			folderLocked	= QPixmap (folder_locked)
 			folderClosed	= QPixmap (folder_closed_xpm)
 			folderOpened	= QPixmap (folder_open_xpm)
-			fileNormal  	= QPixmap (pix_file)
+			fileNormal		= QPixmap (pix_file)
 		
 		#self.connect (self.button, PYSIGNAL ("sigClicked"),
 		#				self.doAppSpecificFunction)
@@ -957,8 +1180,17 @@ class DirectoryView (QListView):
 		self.connect (self, SIGNAL ("returnPressed (QListViewItem *)"),
 					  self.slotFolderSelected)
 
-		self.connect (self, SIGNAL ("contextMenuRequested (QListViewItem *, const QPoint &, int)"),
-					  self.slotRightPressed)
+		if not Qtopia:
+			if SIM_CONTEXT_MENU:
+				self.connect (self, SIGNAL ("rightButtonClicked (QListViewItem *, const QPoint &, int)"),
+							  self.slotRightPressed)
+			else:
+				self.connect (self, SIGNAL ("contextMenuRequested (QListViewItem *, const QPoint &, int)"),
+							  self.slotRightPressed)
+		else:
+			App.setStylusOperation (self.viewport (), QPEApplication.RightOnHold)
+			self.connect (self, SIGNAL ("rightButtonClicked (QListViewItem *, const QPoint &, int)"),
+						  self.slotRightPressed)
 
 		self.setAcceptDrops (True)
 		self.viewport ().setAcceptDrops (True)
@@ -967,9 +1199,20 @@ class DirectoryView (QListView):
 
 		self.setShowSortIndicator (True)
 
+		# M.B. 2004-04-27
+		#--------------------------------------------------
+		# Cut, Copy, Paste via Menu (Zaurus)
+		#--------------------------------------------------
+		self.SomeToPaste	= False
+		self.SourceToPaste	= None
+		self.LeafToPaste	= None
+		self.ItemToPaste	= None
+		#--------------------------------------------------
+
 	# dump [
 	#--------------------------------------------------
 	def dump (self):
+		"""Dump info for debugging."""
 		TraceBeg ()
 
 		dPrint ("[ Begin of dump for", self)
@@ -1063,6 +1306,7 @@ class DirectoryView (QListView):
 	# CopyFile [
 	#--------------------------------------------------
 	def CopyFile (self, source, target, pathSeperator):
+		"""Copy a file from PDA to PC - or local on the PC."""
 
 		from pyrapi import file
 
@@ -1094,7 +1338,10 @@ class DirectoryView (QListView):
 		dPrint ("CopyFile: leafName", leafName)
 
 		if pathSeperator == "/":
-			altPathSeperator	= "\\"
+			if LocalDir:
+				altPathSeperator	= "/"
+			else:
+				altPathSeperator	= "\\"
 		else:
 			altPathSeperator	= "/"
 
@@ -1110,7 +1357,11 @@ class DirectoryView (QListView):
 			# PC -> PDA [
 			#--------------------------------------------------
 			theInfile		= open (source.latin1 (), "r")
-			theOutFile		= file.openCeFile (str (targetFileName.utf8 ()), "w")
+
+			if LocalDir:
+				theOutFile		= open (str (targetFileName.utf8 ()), "w")
+			else:
+				theOutFile		= file.openCeFile (str (targetFileName.utf8 ()), "w")
 			#--------------------------------------------------
 			# PC -> PDA ]
 
@@ -1121,7 +1372,7 @@ class DirectoryView (QListView):
 			dPrint ("type (source)", type (source))
 			dPrint ("source", source)
 			#type (source):             <type 'instance'>
-		   
+
 			theInfile		= file.openCeFile (str (source.utf8 ()), "r")
 			theOutFile		= open (str (targetFileName.utf8 ()), "w")
 			#--------------------------------------------------
@@ -1158,6 +1409,7 @@ class DirectoryView (QListView):
 	# insertFileInView [
 	#--------------------------------------------------
 	def insertFileInView (self, anItem, target, targetFileName, leafName, ignoreChildCount):
+		"""Reflect the canges of a FileCopy / FileMove in the view."""
 		TraceBeg ()
 
 		dPrint ("insertFileInView", ">>>>>")
@@ -1175,17 +1427,26 @@ class DirectoryView (QListView):
 		dPrint ("insertFileInView", "<<<<<")
 
 		if (anItem.childCount () > 0) or ignoreChildCount:
-			fi				= CE_FileInfo ()
+			if LocalDir:
+				fi				= QFileInfo (targetFileName)
+			else:
+				fi				= CE_FileInfo ()
 
-			Handle, Data    = pyrapi.CeFindFirstFile (str (targetFileName.utf8 ()))
+				Handle, Data	= pyrapi.CeFindFirstFile (str (targetFileName.utf8 ()))
 
-			fi.ce_file		= Data
-			fi.ce_filePath	= target
+				fi.ce_file		= Data
+				fi.ce_filePath	= target
 
 			item			= FileItem (anItem, leafName, "File")
-			item.theFileSize			= fi.fileSize ()
-			item.theFtLastWriteTime		= fi.ftLastWriteTime ()
-			item.theFtLastWriteTimeRaw	= fi.ftLastWriteTimeRaw ()
+
+			if LocalDir:
+				item.theFileSize			= fi.size ()
+				item.theFtLastWriteTime		= fi.lastModified ().toString ()
+			else:
+				item.theFileSize			= fi.fileSize ()
+				item.theFtLastWriteTime		= fi.ftLastWriteTime ()
+				item.theFtLastWriteTimeRaw	= fi.ftLastWriteTimeRaw ()
+
 			item.setPixmap (fileNormal)
 
 		TraceEnd ()
@@ -1282,9 +1543,9 @@ class DirectoryView (QListView):
 				theActionStr.append (filename)
 				theActionStr.append ("\n")
 
-			#theStr 		+= str (QString ("\nTo\n\n%1").arg (self.fullPath (item)))
+			#theStr		+= str (QString ("\nTo\n\n%1").arg (self.fullPath (item)))
 			targetDir	= self.fullPath (item)
-			#theStr      += "\nTo\n\n" + targetDir.latin1 ()
+			#theStr		+= "\nTo\n\n" + targetDir.latin1 ()
 			theActionStr.append ("\nTo\n\n")
 			theActionStr.append (targetDir)
 
@@ -1307,7 +1568,15 @@ class DirectoryView (QListView):
 					#if 1:
 					try:
 						dPrint ("ActionMove: type (self.theSource)", type (self.theSource))
-						pyrapi.CeMoveFile (str (self.theSource.utf8 ()), str (destFile.utf8 ()))
+
+						if LocalDir:
+							# M.B. Mit Apr 28 19:55:05 CEST 2004
+							# FIXME
+							# Duplicate items in view possible on Linux.
+							# Remove duplicate item by hand.
+							os.rename (str (self.theSource.utf8 ()), str (destFile.utf8 ()))
+						else:
+							pyrapi.CeMoveFile (str (self.theSource.utf8 ()), str (destFile.utf8 ()))
 
 						# Update the view
 						dPrint ("ActionMove", ">>>>>")
@@ -1371,7 +1640,7 @@ class DirectoryView (QListView):
 
 					#if 1:
 					try:
-						pyrapi.CeCopyFile	(str (ExistingFile.utf8 ()), str (NewFile.utf8 ()), True)
+						pyrapi.CeCopyFile (str (ExistingFile.utf8 ()), str (NewFile.utf8 ()), True)
 
 						# Update the view
 						self.insertFileInView (item, targetDir, NewFile, self.theLeafName, True)
@@ -1395,10 +1664,11 @@ class DirectoryView (QListView):
 		else:
 			e.ignore ()
 		TraceEnd ()
-   
+
 	# fullPath [
 	#--------------------------------------------------
 	def fullPath (self, item):
+		"""Construct the full PathName dynamic!"""
 
 		TraceBeg ()
 
@@ -1442,9 +1712,27 @@ class DirectoryView (QListView):
 	
 	def contentsMousePressEvent (self, e):
 		TraceBeg ()
+
 		QListView.contentsMousePressEvent (self, e)
 		p	= QPoint (self.contentsToViewport (e.pos ()))
 		i	= self.itemAt (p)
+
+		# Simulate ContextMenu - on Qtopia [
+		#--------------------------------------------------
+		if SIM_CONTEXT_MENU:
+			if DEBUG_MOUSE:
+				print "e.button:", e.button ()
+
+			if e.button () == Qt.RightButton:
+				if DEBUG_MOUSE:
+					print "Right Button"
+				self.emit	(SIGNAL ("rightButtonClicked (QListViewItem *, const QPoint &, int)"),
+							(i, p, 1)
+							)
+				return
+		#--------------------------------------------------
+		# Simulate ContextMenu - on Qtopia ]
+
 		if i:
 			# if the user clicked into the root decoration of the item, don't try to start a drag!
 			if self.rootIsDecorated (): isdecorated	= 1
@@ -1500,14 +1788,17 @@ class DirectoryView (QListView):
 					# Copy PDA-File to SynCE-temporary-Directory ]
 
 					if sys.platform != "darwin":
-						ud	= QUriDrag (self.viewport ())
+						url	= QString ("file:")
+						url.append (targetFileName)
+
 						x	= QStringList ()
-						x.append (targetFileName)
+						x.append (url)
 						
 						#theUri	=  ud.localFileToUri (targetFileName)
 						#dPrint ("theUri", theUri)
 						#x.append (str (theUri))
 
+						ud	= QUriDrag (self.viewport ())
 						ud.setUnicodeUris (x)
 					else:
 						# WorkAround for our MacOS X FileDrag-problem. [
@@ -1520,7 +1811,7 @@ class DirectoryView (QListView):
 						#print dir (targetFileName)
 						#id.setData (targetFileName)
 						id.setData (targetFileName.utf8 ())
-						ud.append   (
+						ud.append	(
 									id,
 									QRect (0, 0, 10, 20),
 									QRect (0, 0, 10, 20),
@@ -1549,7 +1840,12 @@ class DirectoryView (QListView):
 		TraceBeg ()
 		it	= QListViewItem (self)
 		it.setOpen (False)
-		thisDir	= CE_Dir (s)
+
+		if LocalDir:
+			thisDir	= QDir (s)
+		else:
+			thisDir	= CE_Dir (s)
+
 		it	= QListViewItem (self)
 		it.setOpen (False)
 		lst	= QStringList (QStringList.split (PATH_SEPEARATOR, s))
@@ -1570,13 +1866,19 @@ class DirectoryView (QListView):
 	# ShowTextFile [
 	#--------------------------------------------------
 	def ShowTextFile (self, aFileName):
+		"""Show a TextFile on the fly."""
 
 		from pyrapi import file
 
 		TraceBeg ()
 
 		dPrint ("aFileName", aFileName)
-		theFile			= file.openCeFile (str (aFileName.utf8 ()), "r")
+
+		if LocalDir:
+			theFile			= open (str (aFileName.utf8 ()), "r")
+		else:
+			theFile			= file.openCeFile (str (aFileName.utf8 ()), "r")
+
 		buf				= theFile.read ()
 		theFile.close ()
 
@@ -1598,14 +1900,18 @@ class DirectoryView (QListView):
 	# ShowTextWindow [
 	#--------------------------------------------------
 	def ShowTextWindow (self, aTitle, aText):
+		"""Open a window on the fly to show a TextFile."""
 		TraceBeg ()
 
-		aDialog				= QDialog (None)
+		aDialog				= QDialog (self)
 		aGrid				= QGridLayout (aDialog, 1, 1)
-		aTextView			= QTextEdit (aDialog)
+		if Qtopia:
+			aTextView			= QTextView (aDialog)
+		else:
+			aTextView			= QTextEdit (aDialog)
+			aTextView.setReadOnly (True)
 		aDialog.setCaption (aTitle)
 		aTextView.setTextFormat (Qt.PlainText)
-		aTextView.setReadOnly (True)
 
 		# Make font fixed [
 		#--------------------------------------------------
@@ -1623,9 +1929,18 @@ class DirectoryView (QListView):
 		aTextView.setText (aText)
 
 		aGrid.addWidget (aTextView, 1, 1)
-		aDialog.resize (600, 200)
+
+		# Resize window [
+		#--------------------------------------------------
+		if Qtopia:
+			aDialog.resize (qApp.desktop().width (), qApp.desktop().height () - 50)
+		else:
+			aDialog.resize (600, 200)
+		#--------------------------------------------------
+		# Resize window ]
+
 		aDialog.show ()
-		aDialog.exec_loop ()
+		#aDialog.exec_loop ()
 
 		TraceEnd ()
 	#--------------------------------------------------
@@ -1634,12 +1949,17 @@ class DirectoryView (QListView):
 	# ShowPictFile [
 	#--------------------------------------------------
 	def ShowPictFile (self, aFileName):
+		"""Show a picture on the fly."""
 
 		from pyrapi import file
 
 		TraceBeg ()
 
-		theFile			= file.openCeFile (str (aFileName.utf8 ()), "r")
+		if LocalDir:
+			theFile			= open (str (aFileName.utf8 ()), "r")
+		else:
+			theFile			= file.openCeFile (str (aFileName.utf8 ()), "r")
+
 		thePict			= theFile.read ()
 		theFile.close ()
 
@@ -1650,11 +1970,12 @@ class DirectoryView (QListView):
 	# ShowPictWindow [
 	#--------------------------------------------------
 	def ShowPictWindow (self, aTitle, aPict):
+		"""Open a window on the fly to show a picture."""
 		TraceBeg ()
 
 		aPixmap				= QPixmap ()
 		if aPixmap.loadFromData (aPict):
-			aDialog				= QDialog (None)
+			aDialog				= QDialog (self)
 			aGrid				= QGridLayout (aDialog, 1, 1)
 			aPictView			= QLabel (aDialog)
 			aDialog.setCaption (aTitle)
@@ -1663,7 +1984,7 @@ class DirectoryView (QListView):
 
 			aGrid.addWidget (aPictView, 1, 1)
 			aDialog.show ()
-			aDialog.exec_loop ()
+			#aDialog.exec_loop ()
 
 		TraceEnd ()
 	#--------------------------------------------------
@@ -1672,6 +1993,7 @@ class DirectoryView (QListView):
 	# DeleteFile [
 	#--------------------------------------------------
 	def DeleteFile (self):
+		"""Experimental."""
 		TraceBeg ()
 
 		#print "in DeleteFile"
@@ -1683,6 +2005,7 @@ class DirectoryView (QListView):
 	# LargeView [
 	#--------------------------------------------------
 	def LargeView (self):
+		"""Not implemented."""
 		TraceBeg ()
 
 		print "in LargeView"
@@ -1694,6 +2017,7 @@ class DirectoryView (QListView):
 	# SmallView [
 	#--------------------------------------------------
 	def SmallView (self):
+		"""Not implemented."""
 		TraceBeg ()
 
 		print "in SmallView"
@@ -1705,6 +2029,7 @@ class DirectoryView (QListView):
 	# slotRightPressed [
 	#--------------------------------------------------
 	def slotRightPressed (self, anItem, aPos, aCol):
+		"""Show and execute context-menu."""
 		TraceBeg ()
 
 		dPrint ("slotRightPressed", "")
@@ -1715,21 +2040,38 @@ class DirectoryView (QListView):
 		if anItem:			# On item
 			aMenu				= QPopupMenu (self)
 
-			ShowTextFile_ITEM	= -1
-			ShowPictFile_ITEM	= -1
-			DeleteFile_ITEM		= -1
-			CreateNewDir_ITEM	= -1
-			DeleteDir_ITEM		= -1
+			# "-1" is returned, if no item is selected.
+			# So we use "-2" for non usage.
+			ShowTextFile_ITEM	= -2
+			ShowPictFile_ITEM	= -2
+			DeleteFile_ITEM		= -2
+			CreateNewDir_ITEM	= -2
+			DeleteDir_ITEM		= -2
+
+			CutFile_ITEM		= -2
+			CopyFile_ITEM		= -2
+			PasteFile_ITEM		= -2
 
 			ShowInfo_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Show Object Info"))
-			Rename_ITEM			= aMenu.insertItem (qApp.translate ("qApp", "Rename Item"))
 			if isinstance (anItem, FileItem): 
+				Rename_ITEM			= aMenu.insertItem (qApp.translate ("qApp", "Rename File"))
 				ShowTextFile_ITEM	= aMenu.insertItem (qApp.translate ("qApp", "Show File as Text"))
 				ShowPictFile_ITEM	= aMenu.insertItem (qApp.translate ("qApp", "Show File as Picture"))
 				DeleteFile_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Delete File"), self.DeleteFile)
+				Dummy_ITEM			= aMenu.insertSeparator (-1)
+				CutFile_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Cut"))
+				CopyFile_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Copy"))
+				PasteFile_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Paste"))
+				if not self.SomeToPaste:
+					aMenu.setItemEnabled (PasteFile_ITEM, False)
 			elif isinstance (anItem, Directory): 
+				Rename_ITEM			= aMenu.insertItem (qApp.translate ("qApp", "Rename Folder"))
 				CreateNewDir_ITEM	= aMenu.insertItem (qApp.translate ("qApp", "Create new Folder"))
 				DeleteDir_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Delete Folder"))
+				Dummy_ITEM			= aMenu.insertSeparator (-1)
+				PasteFile_ITEM		= aMenu.insertItem (qApp.translate ("qApp", "Paste"))
+				if not self.SomeToPaste:
+					aMenu.setItemEnabled (PasteFile_ITEM, False)
 
 			dPrint ("ShowInfo_ITEM", ShowInfo_ITEM)
 
@@ -1739,6 +2081,7 @@ class DirectoryView (QListView):
 
 			theFullPath			= self.fullPath (anItem)	# Because it's used so often here...
 
+			#--------------------------------------------------
 			if id == ShowInfo_ITEM:
 				# itemInfo [
 				#--------------------------------------------------
@@ -1767,6 +2110,7 @@ class DirectoryView (QListView):
 				#--------------------------------------------------
 				# itemInfo ]
 
+			#--------------------------------------------------
 			elif id == Rename_ITEM:
 				anItem.setRenameEnabled (COL_NAME, True)
 				if isinstance (anItem, FileItem):
@@ -1785,26 +2129,42 @@ class DirectoryView (QListView):
 				anItem.thePathName	= folderPath
 				anItem.startRename (COL_NAME)
 
+			#--------------------------------------------------
 			elif id == ShowTextFile_ITEM:
 				theText		= self.ShowTextFile (theFullPath)
 				self.ShowTextWindow (anItem.text (0), theText)
 
+			#--------------------------------------------------
 			elif id == ShowPictFile_ITEM:
 				thePict		= self.ShowPictFile (theFullPath)
 				self.ShowPictWindow (anItem.text (0), thePict)
 
+			#--------------------------------------------------
 			elif id == DeleteFile_ITEM:
-				answer		= QMessageBox.question	(
+				if Qtopia:
+					answer		= DoQuestionDialog	(
 													self, AppName + " Delete File",
-													#"Do you really want to delete the file \"" + theFullPath + "\"?\n",
 													QString ("Do you really want to delete the file \"%1\"?\n").arg (theFullPath),
-													QMessageBox.No,
-													QMessageBox.Yes,
 													)
+					if answer:
+						answer		= QMessageBox.Yes
+				else:
+					answer		= QMessageBox.question	(
+														self, AppName + " Delete File",
+														#"Do you really want to delete the file \"" + theFullPath + "\"?\n",
+														QString ("Do you really want to delete the file \"%1\"?\n").arg (theFullPath),
+														QMessageBox.No,
+														QMessageBox.Yes,
+														)
 				if answer == QMessageBox.Yes:
 					try:
-						pyrapi.CeDeleteFile (str (theFullPath.utf8 ()))
+						if LocalDir:
+							os.remove (str (theFullPath.utf8 ()))
+						else:
+							pyrapi.CeDeleteFile (str (theFullPath.utf8 ()))
+
 						anItem.parent().takeItem (anItem)
+
 					except:
 						QMessageBox.warning	(
 											self, AppName + " Delete File",
@@ -1813,6 +2173,87 @@ class DirectoryView (QListView):
 													).arg (theFullPath)
 											)
 
+			#--------------------------------------------------
+			elif id == CopyFile_ITEM:
+				dPrint ("CopyFile", "")
+				dPrint ("CopyFile anItem.text (0)", anItem.text (0))
+				dPrint ("CopyFile theFullPath", theFullPath)
+				self.SomeToPaste	= True
+				self.SourceToPaste	= theFullPath
+				self.LeafToPaste	= anItem.text (0)
+				self.ItemToPaste	= anItem
+
+			#--------------------------------------------------
+			elif id == PasteFile_ITEM:
+				dPrint ("PasteFile", "")
+				dPrint ("PasteFile theFullPath", theFullPath)
+				dPrint ("PasteFile self.SourceToPaste", self.SourceToPaste)
+				if isinstance (anItem, FileItem): 
+					targetDir			= PathToFolder (theFullPath)
+					theParent			= anItem.parent ()
+				else:
+					targetDir			= theFullPath
+					theParent			= anItem
+				dPrint ("PasteFile targetDir", targetDir)
+				dPrint ("PasteFile self.LeafToPaste", self.LeafToPaste)
+
+				ExistingFile		= self.SourceToPaste
+				NewFile				= targetDir
+				if isinstance (anItem, Directory): 
+					NewFile.append (PATH_SEPEARATOR)
+				NewFile.append (self.LeafToPaste)
+
+				if DEBUG_COPY:
+					print "Paste: [%s] -> [%s]" % (ExistingFile.latin1 (), NewFile.latin1 ())
+
+				#if 1:
+				try:
+					if LocalDir:
+						# Copy local file [
+						#--------------------------------------------------
+						# M.B. Mit Apr 28 20:56:26 CEST 2004
+						# FIXME
+						# Set file permissions.
+						# Or is something like "system 'cp -p ExistingFile NewFile'" better?
+
+						if 0:
+							theInfile		= open (str (ExistingFile.utf8 ()), "r")
+							theOutFile		= open (str (NewFile.utf8 ()), "w")
+							buf				= theInfile.read ()
+							result			= theOutFile.write (buf)
+							theInfile.close ()
+							theOutFile.close ()
+
+						os.system ("cp -p " + str (ExistingFile.utf8 ()) + " " + str (NewFile.utf8 ()))
+
+						#--------------------------------------------------
+						# Copy local file ]
+
+						# Update the view
+						#
+						# Works like a "move", not a "copy" :-(
+						# 
+						#if isinstance (anItem, FileItem): 
+						#	anItem.parent ().insertItem (self.ItemToPaste)
+						#else:
+						#	anItem.insertItem (self.ItemToPaste)
+
+					else:
+						pyrapi.CeCopyFile (str (ExistingFile.utf8 ()), str (NewFile.utf8 ()), True)
+
+					# Update the view
+					self.insertFileInView (theParent, targetDir, NewFile, QString (self.LeafToPaste), False)
+
+				#if 0:
+				except:
+					QMessageBox.warning	(
+										self, AppName + " Copy File",
+										QString	("Could not copy\nfile \"%1\"\nto \"%2\".\n"
+												"Perhaps a file with this name allready exists?"
+												).arg (ExistingFile, NewFile)
+										)
+
+			#--------------------------------------------------
 			elif id == CreateNewDir_ITEM:
 				NewFolderName	= "New Folder"
 				try:
@@ -1823,32 +2264,47 @@ class DirectoryView (QListView):
 				except:
 					QMessageBox.warning	(
 										self, AppName + " Create new Folder",
-										#"Could not create new folder \"" + NewFolderName + "\".\n"
 										QString	("Could not create new folder \"%1\".\n"
 												"Perhaps a folder with this name allready exists?"
 												).arg (NewFolderName)
 										)
 
+			#--------------------------------------------------
 			elif id == DeleteDir_ITEM:
-				answer		= QMessageBox.question	(
+				if Qtopia:
+					answer		= DoQuestionDialog	(
 													self, AppName + " Delete Folder",
-													#"Do you really want to delete the folder \"" + theFullPath + "\"?\n",
 													QString ("Do you really want to delete the folder \"%1\"?\n").arg (theFullPath),
-													QMessageBox.No,
-													QMessageBox.Yes,
 													)
+					if answer:
+						answer		= QMessageBox.Yes
+				else:
+					answer		= QMessageBox.question	(
+														self, AppName + " Delete Folder",
+														QString ("Do you really want to delete the folder \"%1\"?\n").arg (theFullPath),
+														QMessageBox.No,
+														QMessageBox.Yes,
+														)
 				if answer == QMessageBox.Yes:
+					#if 1:
 					try:
-						result	= pyrapi.CeRemoveDirectory (str (theFullPath.utf8 ()))
+						if LocalDir:
+							os.rmdir (str (theFullPath.utf8 ()))
+						else:
+							result	= pyrapi.CeRemoveDirectory (str (theFullPath.utf8 ()))
+
 						anItem.parent().takeItem (anItem)
+
+					#if 0:
 					except:
 						QMessageBox.warning	(
 											self, AppName + " Delete Folder",
-											#"Could not delete folder \"" + theFullPath + "\".\n"
 											QString	("Could not delete folder \"%1\".\n"
 													"Perhaps the folder is not empty?"
 													).arg (theFullPath)
 											)
+
+			#--------------------------------------------------
 
 		else:				# On view
 			aMenu				= QPopupMenu (self)
@@ -1869,14 +2325,25 @@ class DirectoryView (QListView):
 # main [
 #--------------------------------------------------
 def main (theArgs):
+	"""The main function."""
 
 	global DEBUG
 	global DEBUG_PRINT
 	global DEBUG_RENAME			# Preferences
 	global DEBUG_COPY			# Preferences
+	global DEBUG_MOUSE			# Preferences
+	global SHOW_SYM_LINKS		# Preferences
+
+	global LocalDir
+
+	global PATH_SEPEARATOR
+
 	global dPrint1
 	global TempDirectory
+	global theStatusBar
 	global theProgressBar
+	global App
+	global AppName
 
 	#--------------------------------------------------
 	# MenuCmds [
@@ -1912,6 +2379,8 @@ def main (theArgs):
 
 		global DEBUG_RENAME
 		global DEBUG_COPY
+		global DEBUG_MOUSE
+		global SHOW_SYM_LINKS
 
 		TraceBeg ()
 
@@ -1923,8 +2392,12 @@ def main (theArgs):
 		#--------------------------------------------------
 		PreferencesDialog.checkBoxDebugRename.setChecked (DEBUG_RENAME)
 		PreferencesDialog.checkBoxDebugCopy.setChecked (DEBUG_COPY)
+		PreferencesDialog.checkBoxDebugMouse.setChecked (DEBUG_MOUSE)
+		PreferencesDialog.checkBoxShowSymLinks.setChecked (SHOW_SYM_LINKS)
 		#--------------------------------------------------
 		# Fill Values ]
+
+		PreferencesDialog.textLabelCvsInfo.setText (TrimCvsString (PreferencesDialog.textLabelCvsInfo.text ()))
 
 		# Show the Dialog
 		#--------------------------------------------------
@@ -1935,6 +2408,8 @@ def main (theArgs):
 		if ReturnValue:
 			DEBUG_RENAME		= PreferencesDialog.checkBoxDebugRename.isChecked ()
 			DEBUG_COPY			= PreferencesDialog.checkBoxDebugCopy.isChecked ()
+			DEBUG_MOUSE			= PreferencesDialog.checkBoxDebugMouse.isChecked ()
+			SHOW_SYM_LINKS		= PreferencesDialog.checkBoxShowSymLinks.isChecked ()
 
 		TraceEnd ()
 	#--------------------------------------------------
@@ -1952,6 +2427,20 @@ def main (theArgs):
 
 	TraceBeg ()
 
+	if sys.platform == "darwin":
+		# Avoid warning on MacOS X
+		#--------------------------------------------------
+		# Mon Apr 26 11:09:36 CEST 2004
+		# Qt: QApplication: Warning argv[0] == 'CE_DirView.py' is relative.
+		# In order to dispatch events correctly Mac OS X may require applications to be run with the *full* path to the executable.
+		#>>> x=os.getcwd ()
+		#>>> x
+		#>>> '/home/mbier/Python/SynCE'
+		sys.argv [0]	= os.getcwd () + "/" + sys.argv [0]
+		#print "sys.argv [0]:", sys.argv [0]
+		#--------------------------------------------------
+		# Avoid warning on MacOS X
+
 	# Initialize DebugPrint [
 	#--------------------------------------------------
 	debugPrint		= DebugPrint.DebugPrint ()
@@ -1962,26 +2451,31 @@ def main (theArgs):
 
 	# Test
 	dPrint ("sys.argv", sys.argv)
-	debugPrint.String ("PATH_SEPEARATOR: [%s]" % PATH_SEPEARATOR)
 
 	# Read Settings [
 	#--------------------------------------------------
 	try:
-		SettingsFile    = open (SETTINGS_NAME, "r")
+		SettingsFile	= open (SETTINGS_NAME, "r")
 		Settings		= SettingsFile.readlines ()
 		SettingsFile.close ()
 		# ['host=linuxorange\n', 'port=4711\n']
 		dPrint ("Settings", Settings)
 
 		for Line in Settings:
-			 Line	= Line [:-1]	# Kill trailing "\n"
-			 Params	= Line.split ("=")
-			 if Params [0] == "DEBUG_RENAME":
-			 	DEBUG_RENAME	= Params [1] == "True"
+			Line	= Line [:-1]	# Kill trailing "\n"
+			Params	= Line.split ("=")
+			if Params [0] == "DEBUG_RENAME":
+				DEBUG_RENAME	= Params [1] == "True"
 				dPrint ("DEBUG_RENAME", DEBUG_RENAME)
-			 elif Params [0] == "DEBUG_COPY":
-			 	DEBUG_COPY	= Params [1] == "True"
+			elif Params [0] == "DEBUG_COPY":
+				DEBUG_COPY		= Params [1] == "True"
 				dPrint ("DEBUG_COPY", DEBUG_COPY)
+			elif Params [0] == "DEBUG_MOUSE":
+				DEBUG_MOUSE		= Params [1] == "True"
+				dPrint ("DEBUG_MOUSE", DEBUG_MOUSE)
+			elif Params [0] == "SHOW_SYM_LINKS":
+				SHOW_SYM_LINKS	= Params [1] == "True"
+				dPrint ("SHOW_SYM_LINKS", SHOW_SYM_LINKS)
 	except:
 		print "%s Warning: Could not read settings from [%s]." % (sys.argv [0], SETTINGS_NAME)
 	#--------------------------------------------------
@@ -1990,18 +2484,23 @@ def main (theArgs):
 	# Process Options [
 	#--------------------------------------------------
 	Usage		= \
-    """usage: %s [-d n] [-D] [-V]
-    -d n ...... debug-level 
-                0 = off
-                1 = general
-                2 = trace
-                3 = Debug-File
-    -D ........ DebugPrint
-    -V ........ print version and exit"""
+    """usage: %s [-d n] [-D] [-h] [-l] [-V]
+    -d n, --debugLevel=n ... debug-level 
+                             0 = off
+                             1 = general
+                             2 = trace
+                             3 = Debug-File
+    -D,   --DebugPrint ..... DebugPrint
+    -h,   --help ........... display this help and exit
+    -l,   --local .......... local
+    -V,   --version ........ print version and exit"""
+
+	LongOptions		= ["debugLevel=", "DebugPrint", "help", "local", "version"]
 
 	try:
-		opts, args	= getopt.getopt (theArgs [1:], 'd:DV')
-	except getopt.GetoptError:
+		opts, args	= getopt.getopt (theArgs [1:], 'd:DhlV', LongOptions)
+	except getopt.GetoptError, msg:
+		print msg
 		print Usage % sys.argv [0]
 		sys.exit (1)
 
@@ -2009,6 +2508,7 @@ def main (theArgs):
 		print opts, args
 
 	DEBUG_PRINT		= False
+	LocalDir		= False
 
 	for o, a in opts:
 		if o in ("-d", "--debugLevel"):
@@ -2020,18 +2520,48 @@ def main (theArgs):
 				sys.exit (1)
 		if o in ("-D", "--debugPrint"):
 			DEBUG_PRINT	= True
+		if o in ("-h", "--help"):
+			print Usage % sys.argv [0]
+			sys.exit (0)
+		if o in ("-l", "--local"):
+			LocalDir	= True
 		if o in ("-V", "--version"):
 			print sys.argv [0] \
 				+ " " + __version__.replace ("$", "") \
 				+ __date__.replace ("$", "")
+			print __FileVersion__	# only needed for developing...
 			sys.exit (0)
 	#--------------------------------------------------
 	# Process Options ]
 
+	if Qtopia:
+		# Trick to force a taskbar-icon [
+		#--------------------------------------------------
+		# Die Sep  9 21:09:22 CEST 2003
+		# We want a taskbar-icon
+		# "argv [0]" hat to correspodent with the "Name"-Entry in the ".desktop"-File.
+		# The "Icon"-Entry shows the taskbar-icon. Easy-huh?
+		if LocalDir:
+			sys.argv [0]	= "DirView"
+		else:
+			sys.argv [0]	= "CE_DirView"
+		#--------------------------------------------------
+		# Trick to force a taskbar-icon ]
+
 	debugPrint.doPrint= DEBUG_PRINT
 
-	App	= QApplication (theArgs)
-	
+	if LocalDir:
+		PATH_SEPEARATOR	= "/"
+	else:
+		PATH_SEPEARATOR	= "\\"
+
+	if Qtopia:
+		print "Using Qtopia"
+		App			 = QPEApplication (theArgs)
+	else:
+		print "Not using Qtopia"
+		App			 = QApplication (theArgs)
+
 	# Create MenuBar [
 	#--------------------------------------------------
 	theMainWindow		= QMainWindow ()
@@ -2039,10 +2569,10 @@ def main (theArgs):
 	fileMenu			= QPopupMenu (theMainWindow)
 	fileMenu.insertItem (qApp.translate ("qApp", "&Exit"), exit, Qt.CTRL+Qt.Key_Q)
 
-	optionsMenu    		= QPopupMenu (theMainWindow)
+	optionsMenu			= QPopupMenu (theMainWindow)
 	optionsMenu.insertItem (qApp.translate ("qApp", "Preferences..."), DoPreferencesDialog)
 
-	helpMenu       		= QPopupMenu (theMainWindow)
+	helpMenu			= QPopupMenu (theMainWindow)
 	helpMenu.insertItem (qApp.translate ("qApp", "&About"), about, Qt.CTRL+Qt.Key_H)
 
 	if Qtopia:
@@ -2054,7 +2584,9 @@ def main (theArgs):
 	theMenuBar.insertItem (qApp.translate ("qApp", "&Options"), optionsMenu)
 	theMenuBar.insertItem (qApp.translate ("qApp", "&About"),   helpMenu)
 
-	qApp.connect(qApp, SIGNAL('lastWindowClosed()'), qApp, SLOT('quit()'))
+	qApp.connect (qApp, SIGNAL('lastWindowClosed()'), qApp, SLOT('quit()'))
+	#--------------------------------------------------
+	# Create MenuBar ]
 
 	# StatusBar [
 	#--------------------------------------------------
@@ -2066,9 +2598,6 @@ def main (theArgs):
 			theStatusBar.setMinimumHeight (STATUS_BAR_H)
 	#--------------------------------------------------
 	# StatusBar ]
-
-	#--------------------------------------------------
-	# Create MenuBar ]
 
 	# Create DirectoryView [
 	#--------------------------------------------------
@@ -2083,19 +2612,38 @@ def main (theArgs):
 	
 	# Initialize ProgressBar [
 	#--------------------------------------------------
-	theProgressBar  = QProgressBar (0, None, "Reading Directory")
-	theStatusBar.addWidget (theProgressBar, 0, True)
+	if Qtopia:
+		if prefStatusWant:
+			parent			= theStatusBar
+		else:
+			parent			= None
+		theProgressBar  = QProgressBar (0, parent, "Reading Directory")
+		theDesktopWidth	= qApp.desktop().width ()
+		theProgressBar.resize (theDesktopWidth, STATUS_BAR_H)
+		theProgressBar.hide ()
+	else:
+		theProgressBar  = QProgressBar (0, None, "Reading Directory")
+		theStatusBar.addWidget (theProgressBar, 0, True)
 	#--------------------------------------------------
 	# Initialize ProgressBar ]
 	
-	try:
-		pyrapi.synce_log_set_level (pyrapi.SYNCE_LOG_LEVEL_LOWEST)
-	except:
-		print "%s Problem in contacting SynCE." % sys.argv [0]
-		print "%s Perhaps server not found." % sys.argv [0]
+	if not LocalDir:
+		try:
+			pyrapi.synce_log_set_level (pyrapi.SYNCE_LOG_LEVEL_LOWEST)
+		except:
+			QMessageBox.information	(
+									theMainView, AppName + " connect to SynCE",
+									"Problem in contacting SynCE.\n"
+									"Perhaps server not found."
+									)
+			print "%s Problem in contacting SynCE." % sys.argv [0]
+			print "%s Perhaps server not found." % sys.argv [0]
 
-	#roots	= CE_Dir.drives ()
-	theRoot	= CE_Dir ()
+	if LocalDir:
+		theRoot	= QDir ()
+	else:
+		theRoot	= CE_Dir ()
+
 	roots	= theRoot.drives ()
 	if roots:
 		for it in roots:
@@ -2104,18 +2652,27 @@ def main (theArgs):
 			dPrint ("fi.filePath ()", fi.filePath ())
 			root = Directory (theMainView, fi.filePath ())
 			if roots.count (it) <= 1:
+				#if 1:
 				try:
 					root.setOpen (True)  # be interesting
+				#if 0:
 				except:
+					QMessageBox.information	(
+											theMainView, AppName + " connect to PDA",
+											"Could not connect to PDA."
+											)
 					print "%s Could not connect to PDA." % sys.argv [0]
 	
 	theMainView.setAllColumnsShowFocus (True)
 
 	theMainWindow.resize (400, 400)
-	theMainWindow.setCaption (theCaption)
 
-	#App.setMainWidget (theMainWindow)
-	#theMainWindow.show ()
+	if LocalDir:
+		Description		= "Local"
+	else:
+		Description		= "PocketPC"
+	theMainWindow.setCaption (Description + theCaption)
+	AppName			= Description + "_DirectoryBrowser"
 
 	theMainWindow.setCentralWidget (theMainView)
 	if Qtopia:
@@ -2123,10 +2680,28 @@ def main (theArgs):
 	else:
 		theMainWindow.show ()
 	
+	# taskBar issue [
+	#--------------------------------------------------
+	if Qtopia:
+		# IMPORTANT for QTPE's window behaviour!!!
+		# If we don't do this the application is not selectable by the taksbar-icon
+		App.showMainWidget (theMainWindow)
+	
+		# M.B. 2003-01-16
+		# Funny: If we uncomment the following line, there is now toolbar-icon shown
+		# in Qtopia.
+		#App.connect (theMainDialog.ButtonCancel, SIGNAL ("pressed()"), App, SLOT("quit()"))
+	#--------------------------------------------------
+	# taskBar issue ]
+
 	# Initialize Temp Directory [
 	#--------------------------------------------------
 	TempDirectoryName	= AppName + "-Temp"
-	TempDirectory		= "/tmp/" + TempDirectoryName + "-" + os.getenv ("USER")
+	User				= os.getenv ("USER")
+	# We have a problem on the Zaurus...
+	if User == None:
+		User				= "unknown"
+	TempDirectory		= "/tmp/" + TempDirectoryName + "-" + User
 	#print "TempDirectory", TempDirectory
 	TempDir				= QDir (TempDirectory)
 	if not TempDir.exists ():
@@ -2142,10 +2717,12 @@ def main (theArgs):
 	# Write Settings [
 	#--------------------------------------------------
 	try:
-		SettingsFile    = open (SETTINGS_NAME, "w")
+		SettingsFile	= open (SETTINGS_NAME, "w")
 		Settings		= [
 						"DEBUG_RENAME=", str (DEBUG_RENAME), "\n", 
 						"DEBUG_COPY=", str (DEBUG_COPY), "\n", 
+						"DEBUG_MOUSE=", str (DEBUG_MOUSE), "\n", 
+						"SHOW_SYM_LINKS=", str (SHOW_SYM_LINKS), "\n", 
 						]
 		SettingsFile.writelines (Settings)
 		SettingsFile.close ()

@@ -2,13 +2,15 @@
 
 # Form implementation generated from reading ui file 'PreferencesDialog.ui'
 #
-# Created: Mit Apr 21 08:48:57 2004
-#      by: The PyQt User Interface Compiler (pyuic) 3.8.1
+# Created: Sam Mai 1 11:01:00 2004
+#      by: The PyQt User Interface Compiler (pyuic) 3.11
 #
 # WARNING! All changes made in this file will be lost!
 
 
 from qt import *
+# Needed for Qtopia / Zaurus
+Qt.WState_Polished      = 8192
 
 
 class Preferences(QDialog):
@@ -21,20 +23,18 @@ class Preferences(QDialog):
 
         PreferencesLayout = QGridLayout(self,1,1,11,6,"PreferencesLayout")
 
-        layout17 = QVBoxLayout(None,0,6,"layout17")
+        self.textLabelCvsInfo = QLabel(self,"textLabelCvsInfo")
+        self.textLabelCvsInfo.setAlignment(QLabel.AlignBottom | QLabel.AlignRight)
+
+        PreferencesLayout.addWidget(self.textLabelCvsInfo,5,0)
 
         self.checkBoxDebugRename = QCheckBox(self,"checkBoxDebugRename")
-        layout17.addWidget(self.checkBoxDebugRename)
+
+        PreferencesLayout.addWidget(self.checkBoxDebugRename,0,0)
 
         self.checkBoxDebugCopy = QCheckBox(self,"checkBoxDebugCopy")
-        layout17.addWidget(self.checkBoxDebugCopy)
 
-        PreferencesLayout.addLayout(layout17,0,0)
-
-        self.textLabel1 = QLabel(self,"textLabel1")
-        self.textLabel1.setAlignment(QLabel.AlignBottom | QLabel.AlignRight)
-
-        PreferencesLayout.addWidget(self.textLabel1,2,0)
+        PreferencesLayout.addWidget(self.checkBoxDebugCopy,1,0)
 
         layout18 = QHBoxLayout(None,0,6,"layout18")
 
@@ -44,11 +44,19 @@ class Preferences(QDialog):
         self.pushButtonOK = QPushButton(self,"pushButtonOK")
         layout18.addWidget(self.pushButtonOK)
 
-        PreferencesLayout.addLayout(layout18,1,0)
+        PreferencesLayout.addLayout(layout18,4,0)
+
+        self.checkBoxDebugMouse = QCheckBox(self,"checkBoxDebugMouse")
+
+        PreferencesLayout.addWidget(self.checkBoxDebugMouse,2,0)
+
+        self.checkBoxShowSymLinks = QCheckBox(self,"checkBoxShowSymLinks")
+
+        PreferencesLayout.addWidget(self.checkBoxShowSymLinks,3,0)
 
         self.languageChange()
 
-        self.resize(QSize(223,208).expandedTo(self.minimumSizeHint()))
+        self.resize(QSize(287,216).expandedTo(self.minimumSizeHint()))
         self.clearWState(Qt.WState_Polished)
 
         self.connect(self.pushButtonCancel,SIGNAL("clicked()"),self,SLOT("reject()"))
@@ -57,11 +65,13 @@ class Preferences(QDialog):
 
     def languageChange(self):
         self.setCaption(self.__tr("Preferences"))
+        self.textLabelCvsInfo.setText(self.__tr("$Revision$, $Date$"))
         self.checkBoxDebugRename.setText(self.__tr("Debug Rename"))
         self.checkBoxDebugCopy.setText(self.__tr("Debug Copy"))
-        self.textLabel1.setText(self.__tr("2004-04-21 1.0"))
         self.pushButtonCancel.setText(self.__tr("Cancel"))
         self.pushButtonOK.setText(self.__tr("OK"))
+        self.checkBoxDebugMouse.setText(self.__tr("Debug Mouse"))
+        self.checkBoxShowSymLinks.setText(self.__tr("Show Symbolic Links"))
 
 
     def __tr(self,s,c = None):
