@@ -35,6 +35,19 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>January 30, 2003</b> The absence of news does fortunately not mean that
+nothing is happening with the project. We have recevied several KDE I/O-slaves
+for KDE 3 and hope to release one of them as soon as possible. By the way,
+SynCE 0.6 was released a few weeks ago. Other good news is that Contacts
+synchronization with Pocket PC is now possible with the <tt>rra</tt> and
+<tt>multisync_plugin</tt> <a
+href="http://sourceforge.net/cvs/?group_id=30550">CVS modules</a> together with
+the <a href="http://multisync.sourceforge.net/">Multisync</a> program. If you
+want to try this right now you also need to get <tt>libsynce</tt> and <tt>librapi2</tt>
+from CVS.  People who want to write code to convert beteen vCalendar and
+Tasks/Calendar on Pocket PC, please send a mail to the development mailing
+list!</p>
+
 <p><b>December 16, 2002</b> We would like to welcome Fredrik Nilson as a
 developer in the SynCE project. He has authored a GNOME-VFS module for
 SynCE. We hope to include this module in the next SynCE release.</p>
@@ -77,6 +90,9 @@ on top of the SynCE project:</p>
 <li class=SPACED>Debian packages: Of course we want to get into the Debian
 distribution some day!</li>
 
+<li class=SPACED>vCalendar <-> Pocket PC Tasks/Calendar conversion code</li>
+
+<!--
 <li class=SPACED>GNOME 2 integration: A <a
 href="http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html">GNOME-VFS
 module</a>.</li>
@@ -84,6 +100,7 @@ module</a>.</li>
 <li>KDE 3 integration: A KDE I/O slave for KDE 3. (There is already an <a
 href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/kio_synce/">I/O
 slave for KDE 2</a>, you just need to make it work with KDE 3.)</li>
+-->
 
 </ul>
 
