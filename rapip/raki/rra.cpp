@@ -402,7 +402,7 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
         const char *vevent = vEvent.ascii();
 
         if (!rra_appointment_from_vevent(vevent, NULL, &buffer,
-                &buffer_size, 0)) {
+                &buffer_size, 0, NULL)) {
             rraOk = false;
         } else if (!rra_object_put(rra, type_id, object_id,
                 (object_id != 0) ? 0x40 : 2, buffer,
