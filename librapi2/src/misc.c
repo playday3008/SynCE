@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "rapi.h"
 #include "rapi_context.h"
+#include <stdlib.h>
 
 BOOL CeCreateProcess(/*{{{*/
 		LPCWSTR lpApplicationName, 
@@ -274,6 +275,63 @@ BOOL CeOidGetInfo(/*{{{*/
 fail:
 	return false;
 }/*}}}*/
+
+/**
+  Undocumented function used by the RapiConfig.exe tool
+*/
+
+HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
+{
+  RapiContext* context = rapi_context_current();
+  HRESULT result = E_UNEXPECTED;
+  BOOL has_reply = FALSE;
+  DWORD size = 0;
+  LPWSTR buffer = NULL;
+
+  if (!config || !reply)
+  {
+    synce_error("Bad parameter(s)");
+    goto exit;
+  }
+
+  rapi_context_begin_command(context, 0x56);
+
+  rapi_buffer_write_optional_string(context->send_buffer, config);
+  rapi_buffer_write_uint32(context->send_buffer, flags);
+
+  if ( !rapi_context_call(context) )
+    return false;
+
+  if (!rapi_buffer_read_uint32(context->recv_buffer, &result))
+    goto exit;
+  synce_trace("result = 0x%08x", result);
+
+  if (!rapi_buffer_read_uint32(context->recv_buffer, &has_reply))
+    goto exit;
+
+  if (!has_reply)
+    goto exit;
+
+  if (!rapi_buffer_read_uint32(context->recv_buffer, &size))
+    goto exit;
+  synce_trace("size = 0x%08x", size);
+
+  buffer = (LPWSTR)malloc(size);
+  if (!buffer)
+  {
+    synce_error("Failed to allocated %i bytes", size);
+    goto exit;
+  }
+
+  if (!rapi_buffer_read_data(context->recv_buffer, buffer, size))
+    goto exit;
+
+  *reply = buffer;
+
+exit:
+  return result;
+}
+
 
 /**
  * Undocumented function used by ActiveSync to begin synchronization

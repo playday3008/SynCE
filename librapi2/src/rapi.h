@@ -589,6 +589,10 @@ bool rapi_reg_set_string(
  */
 #define OBJTYPE_DELETED     8
 
+/* Flags for CeProcessConfig */
+
+#define CONFIG_PROCESS_DOCUMENT   1
+#define CONFIG_RETURN_METADATA    2
 
 #ifndef SWIG
 
@@ -705,6 +709,8 @@ typedef struct _CEOIDINFO {
 BOOL CeOidGetInfo(
 		CEOID oid, 
 		CEOIDINFO *poidInfo); 
+
+HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply);
 
 HRESULT CeStartReplication( void );
 
