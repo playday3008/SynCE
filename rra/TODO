@@ -5,3 +5,6 @@ TODO for the RRA module
 
 - Handle ATTENDEE properties in VEVENT
 
+- Use MAPI constants instead in *_ids.h:
+  http://cvs.winehq.org/cvsweb/wine/include/mapitags.h?rev=HEAD&content-type=text/x-cvsweb-markup
+
