@@ -226,7 +226,7 @@ static size_t rra_exceptions_summary_size(RRA_Exceptions* self)/*{{{*/
 
 static size_t rra_exceptions_details_size(RRA_Exceptions* self)/*{{{*/
 {
-  return 2 * (self->modified_count * 14);
+  return 2 + (self->modified_count * 14);
 }/*}}}*/
 
 static bool rra_exceptions_write_summary(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
