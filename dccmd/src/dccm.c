@@ -382,6 +382,10 @@ static bool client_read(Client* client)
 
 		dump("info package", buffer, header);
 
+		/* Offset 0004 contains the OS version, for example 03 00 = 3.0 */
+		/* Offset 0006 contains the build number, for example 0x2ba3 = 11171 */
+		/* Offset 0008 contains the processor type, for example 0x0a11 = 2577 */
+
 		client->name      = string_at(buffer, header, 0x18);
 		client->class     = string_at(buffer, header, 0x1c);
 		client->hardware  = string_at(buffer, header, 0x20);

@@ -39,5 +39,7 @@ make
 %files
 %doc README LICENSE
 %{prefix}/bin/dccm
+%{prefix}/bin/synce-sound
 %{_mandir}/man1/dccm.*
+%{_mandir}/man1/synce-sound.*
 

@@ -40,6 +40,10 @@ disown" > $SCRIPT
 		chmod 700 $SCRIPT
 		;;
 
+	uninstall)
+		rm $SCRIPT
+		;;
+
 	*)
 		echo "Help!"
 		;;
