@@ -115,17 +115,17 @@ bool synce_password_recv_reply(
 
 	if (size == 1)
 	{
-		synce_trace("password reply = 0x%02x (%i)", reply.byte, reply.byte);
+		/*synce_trace("password reply = 0x%02x (%i)", reply.byte, reply.byte);*/
 		*passwordCorrect = reply.byte;
 	}
 	else /* size == 2 */
 	{
 		reply.word = letoh16(reply.word);
-		synce_trace("password reply = 0x%04x (%i)", reply.word, reply.word);
+		/*synce_trace("password reply = 0x%04x (%i)", reply.word, reply.word);*/
 		*passwordCorrect = reply.word;
 	}
 
-	synce_trace("Password was %s", *passwordCorrect ? "correct!" : "incorrect :-(");
+	/*synce_trace("Password was %s", *passwordCorrect ? "correct!" : "incorrect :-(");*/
 	success = true;
 
 exit:
