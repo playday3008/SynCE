@@ -76,7 +76,11 @@ WCHAR* to_unicode(const char* inbuf)
 bool is_valid_ptr(void * ptr)
 {
 	size_t pagesize = getpagesize();
+#if __FreeBSD__
+	char vec;
+#else
 	unsigned char vec;
+#endif
 	
 	// align pointer
 	ptr = (void*)((unsigned)ptr & ~(pagesize-1));
