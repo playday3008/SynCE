@@ -967,7 +967,21 @@ bool rra_partner_get_id(RRA* rra, uint32_t index, uint32_t* id)
 	return success;
 }
 
-bool rra_partner_set_name(RRA* rra, uint32_t index, const char* name);
+bool rra_partner_set_name(RRA* rra, uint32_t index, const char* name)
+{
+	HKEY partner_key = 0;
+	
+	bool success =
+		(index == 1 || index == 2) &&
+		rra_partner_init(rra) &&
+		rra_partner_open(rra, index, &partner_key) &&
+		rapi_reg_set_string(partner_key, PARTNER_NAME, name);
+	
+	if (partner_key)
+		CeRegCloseKey(partner_key);
+	
+	return success;
+}
 
 bool rra_partner_get_name(RRA* rra, uint32_t index, char** name)
 {
