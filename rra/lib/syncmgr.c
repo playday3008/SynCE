@@ -9,6 +9,8 @@
 #include <string.h>
 #include <sys/param.h> /* for MIN(a,b) */
 
+#define SEND_COMMAND_6F_6 1
+
 #define FREE(ptr)   if (ptr) free(ptr)
 
 /*
@@ -102,7 +104,8 @@ static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)
   unsigned i = 0;
   bool success = false;
 
-  if (!rrac_send_6f(self->rrac, 0x3c1))
+  /* 0x7c1 is sent by ActiveSync 3.7.1 */
+  if (!rrac_send_6f(self->rrac, 0x7c1))
   {
     synce_error("Failed to send command 6f");
     goto exit;
@@ -182,7 +185,10 @@ bool rra_syncmgr_connect(RRA_SyncMgr* self)
 void rra_syncmgr_disconnect(RRA_SyncMgr* self)
 {
   if (self) 
+  {
     rrac_disconnect(self->rrac);
+    self->receiving_events = FALSE;
+  }
 }
 
 uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)
@@ -364,6 +370,9 @@ static bool rra_syncmgr_on_notify_ids(RRA_SyncMgr* self, SyncCommand* command)/*
     goto exit;
   }
 
+  /* assume success in case none of the following calls get called */
+  success = TRUE;
+
   /* Unchanged and deleted are never set in the same message */
   if (header.unchanged)
   {
@@ -407,6 +416,11 @@ static bool rra_syncmgr_on_notify_ids(RRA_SyncMgr* self, SyncCommand* command)/*
       SYNC_COMMAND_NOTIFY_IDS_6 == header.notify_code)
   {
     /* TODO: Figure out missing items and send SYNCMGR_TYPE_EVENT_DELETED for those */
+  }
+
+  if (SYNC_COMMAND_NOTIFY_UPDATE == header.notify_code)
+  {
+  
   }
 
 exit:
@@ -577,6 +591,30 @@ static bool rra_syncmgr_get_single_object_writer(/*{{{*/
   return true;
 }/*}}}*/
 
+bool rra_syncmgr_mark_object_unchanged(
+    RRA_SyncMgr* self, 
+    uint32_t type_id,
+    uint32_t object_id)
+{
+  bool success = false;
+
+  if (!rrac_send_65(
+        self->rrac, 
+        type_id, 
+        object_id, 
+        object_id,
+        0))
+  {
+    synce_error("Failed to send command 65");
+    goto exit;
+  }
+
+  success = true;
+
+exit:
+  return success;
+}
+
 bool rra_syncmgr_get_single_object(RRA_SyncMgr* self, /*{{{*/
     uint32_t type_id,
     uint32_t object_id,
@@ -714,13 +752,17 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
       goto exit;
     }
 
+    synce_trace("Received command 65: type = %08x, id1 = %08x, id2 = %08x, flags = %08x",
+        recv_type_id, recv_object_id1, recv_object_id2, recv_flags);
+
     if (recv_type_id != type_id || recv_object_id1 != object_id_array[i])
     {
       synce_error("Unexpected type or object id");
       goto exit;
     }
 
-    if (recv_flags != 2)
+    if (recv_flags != RRA_SYNCMGR_NEW_OBJECT &&
+        recv_flags != RRA_SYNCMGR_UPDATE_OBJECT)
     {
       synce_warning("Unexpected flags: %08x", recv_flags);
     }
@@ -742,6 +784,23 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
     if (recv_object_id_array)
       recv_object_id_array[i] = recv_object_id2;
   }
+
+#if SEND_COMMAND_6F_6
+	if (!rrac_send_6f(self->rrac, 6))
+	{
+		synce_error("rrac_send_6f failed");
+		goto exit;
+	}
+#endif
+
+#if SEND_COMMAND_6F_6
+	if (!rrac_recv_reply_6f_6(self->rrac))
+	{
+		synce_error("rrac_recv_reply_6f_6 failed");
+		goto exit;
+	}
+#endif
+
 
   success = true;
 
