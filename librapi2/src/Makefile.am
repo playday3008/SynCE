@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -Isupport
+AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -Isupport
 @SET_MAKE@
 
 ## create this library
