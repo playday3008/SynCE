@@ -6,9 +6,11 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <dirent.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #define DCCM_PORT           	5679
 #define DCCM_PING_INTERVAL   	5         /* seconds */
@@ -20,8 +22,18 @@
 #define RESULT_SUCCESS 0
 #define RESULT_FAILURE 1
 
+static bool running = true;
+static bool is_daemon = true;
+static char* password = NULL;
+
+static void handle_sigterm(int n)
+{
+	running = false;
+}
+
 typedef struct _Client
 {
+	bool connected;
 	SynceSocket* socket;
 	struct sockaddr_in address;
 	int ping_count;
@@ -69,12 +81,6 @@ dump(desc, data, len)
 	    printf("  %04x: %s %s\n", i, hex, chr);
 	}
 }
-
-
-
-
-static bool is_daemon = true;
-static char* password = NULL;
 
 /**
  * Write help message to stderr
@@ -160,6 +166,56 @@ error:
 		synce_socket_free(server);
 
 	return NULL;
+}
+
+/*
+ * Action is "connect" or "disconnect"
+ */
+static void run_scripts(char* action)
+{
+	char* directory = NULL;
+	DIR* dir = NULL;
+	struct dirent* entry = NULL;
+
+	if (!synce_get_script_directory(&directory))
+	{
+		synce_error("Failed to get script directory");
+		goto exit;
+	}
+
+	dir = opendir(directory);
+	if (!dir)
+	{
+		synce_error("Failed to open script directory");
+		goto exit;
+	}
+
+	while ((entry = readdir(dir)) != NULL)
+	{
+		char path[MAX_PATH];
+		char command[MAX_PATH];
+		struct stat info;
+		
+		snprintf(path, sizeof(path), "%s/%s", directory, entry->d_name);
+		if (lstat(path, &info) < 0)
+			continue;
+		
+		if (!(info.st_mode & S_IFREG))
+			continue;
+
+		synce_trace("Running script: %s", path);
+		snprintf(command, sizeof(command), "%s %s", path, action);
+		
+		/* Run script */
+		system(command);	
+	}
+
+exit:
+	if (directory)
+		free(directory);
+
+	if (dir)
+		closedir(dir);
 }
 
 /**
@@ -333,10 +389,16 @@ static bool client_read(Client* client)
 		free(buffer);
 		buffer = NULL;
 
-		client_write_file(client);
-
 		if (client->locked)
+		{
 			client->expect_password_reply = true;
+		}
+		else
+		{
+			client->connected = true;
+			client_write_file(client);
+			run_scripts("connect");
+		}
 	}
 	else
 	{
@@ -375,7 +437,7 @@ static bool client_handler(Client* client)
 	SocketEvents events;
 	const uint32_t ping = htole32(DCCM_PING);
 
-	while (client->ping_count < DCCM_MAX_PING_COUNT)
+	while (client->ping_count < DCCM_MAX_PING_COUNT && running)
 	{
 		/*
 		 * Wait for event on socket
@@ -404,6 +466,10 @@ static bool client_handler(Client* client)
 
 				if (!password_correct)
 					goto exit;
+
+				client->connected = true;
+				client_write_file(client);
+				run_scripts("connect");
 
 				client->expect_password_reply = false;
 			}
@@ -483,8 +549,10 @@ int main(int argc, char** argv)
 	else
 		synce_trace("Running in foreground");
 
-	/* ignore broken pipes */
+	/* signal handling */
 	signal(SIGPIPE, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
+	signal(SIGTERM, handle_sigterm);
 
 	server = start_socket_server();
 	if (!server)
@@ -492,8 +560,11 @@ int main(int argc, char** argv)
 		synce_error("Failed to start socket server");
 		goto exit;
 	}
+	
+	remove_connection_file();
+	run_scripts("start");
 
-	for (;;)
+	while (running)
 	{
 		/*
 		 * Currently only handles one client...
@@ -523,8 +594,12 @@ int main(int argc, char** argv)
 
 		synce_socket_free(client.socket);
 		remove_connection_file();
+
+		if (client.connected)
+			run_scripts("disconnect");
 	}
 
+	run_scripts("stop");
 	result = RESULT_SUCCESS;
 
 exit:
