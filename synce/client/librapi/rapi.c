@@ -106,7 +106,6 @@ STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved,
 {
 	long size = BUFSIZE;
 	long lng;
-	long index;
 	long errcode;
 	LONG result = ERROR_SUCCESS; /* May be result is really errcode. */
 
@@ -128,22 +127,22 @@ STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved,
 
 	size = getbufferlen( sock );
 
-	errcode = getLong( sock, &index );
+	errcode = getLong( sock, &size );
 	DBG_printf( "errpresent : %ld (0x%08lx)\n", errcode, errcode );
 	if ( errcode != 0 )
 	{
-		errcode = getLong( sock, &index );
+		errcode = getLong( sock, &size );
 		DBG_printf( "errcode : %ld (0x%08lx)\n", errcode, errcode );
 	}
 	else
 	{
-		lng = getLong( sock, &index );
+		lng = getLong( sock, &size );
 		DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
-		lng = getLong( sock, &index );
+		lng = getLong( sock, &size );
 		DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
-		*phkResult = ( HKEY ) getLong( sock, &index );
+		*phkResult = ( HKEY ) getLong( sock, &size );
 		DBG_printf( "pHkey : %ld (0x%08lx)\n", *phkResult, *phkResult );
-		*lpdwDisposition = ( DWORD ) getLong( sock, &index );
+		*lpdwDisposition = ( DWORD ) getLong( sock, &size );
 		DBG_printf( "lpdwDisposition : %ld (0x%08lx)\n", *lpdwDisposition, *lpdwDisposition );
 	}
 	return result;
@@ -187,7 +186,7 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 {
 	long size = BUFSIZE;
 	long lng;
-	long index;
+	long result;
 
 	DBG_printf( "CeRegCloseKey( hKey = 0x%08X )\n",
 	            hKey );
@@ -200,13 +199,13 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 	sendbuffer( sock, buffer );
 	size = getbufferlen( sock );
 
-	lng = getLong( sock, &index );
-	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
-	lng = getLong( sock, &index );
+	result = getLong( sock, &size );
+	DBG_printf( "result : %ld (0x%08lx)\n", result, result );
+	lng = getLong( sock, &size );
 	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
-	lng = getLong( sock, &index );
+	lng = getLong( sock, &size );
 	DBG_printf( "long 3 : %ld (0x%08lx)\n", lng, lng );
-	return ERROR_SUCCESS;
+	return result;
 }
 
 /*
@@ -225,8 +224,8 @@ static void pushParameter(long size, void * parameterData, size_t parameterSize,
 
 		if (pushValue)	/* pushValue is boolean */
 		{
-			unsigned long old_length;
-			unsigned long new_length;
+			long old_length;
+			long new_length;
 
 			pushLong( buffer, size, 1 );	/* data follows */
 
