@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 set -e
 VERSION=`cat VERSION`
 
@@ -13,7 +13,6 @@ ACFILE_IN="$ACFILE.in"
 if [ -f $ACFILE ]; then
 	rm $ACFILE
 fi
-
 echo -n "Creating $ACFILE..."
 cat $ACFILE_IN | sed "s/\\(AM_INIT_AUTOMAKE(.*,\\).*)/\\1 $VERSION)/" > $ACFILE
 if [ -s $ACFILE ]; then
@@ -42,8 +41,8 @@ if [ -d "m4" ]; then
 	INCLUDES="-I m4"
 fi
 set -x
-aclocal $INCLUDES
+aclocal $INCLUDES || aclocal-1.6 $INCLUDES
+autoheader
 libtoolize --copy --automake
 automake --copy --foreign --add-missing
 autoconf
-

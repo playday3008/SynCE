@@ -1,5 +1,6 @@
 AC_PREREQ(2.52)
 AC_INIT(gnome-vfs-synce-module, 0.1)
+AM_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR(src/libsyncevfs.c)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -19,85 +20,23 @@ PKG_CHECK_MODULES(VFS, gnome-vfs-2.0 >= $GNOME_VFS_REQUIRED gnome-vfs-module-2.0
 AC_SUBST(VFS_CFLAGS)
 AC_SUBST(VFS_LIBS)
 
-VFS_PREFIX=`pkg-config --variable=prefix gnome-vfs-2.0`;
-AC_SUBST(VFS_PREFIX)
+GNOME_VFS_LIBDIR=`pkg-config --variable=libdir gnome-vfs-2.0`;
+AC_SUBST(GNOME_VFS_LIBDIR)
 
-################################
+AM_PATH_LIBSYNCE
+AM_PATH_LIBRAPI2
 
-AC_MSG_CHECKING(for with-libsynce)
-AC_ARG_WITH(libsynce,
-[  --with-libsynce=dir       specify libsynce directory],
-[ 
-  AC_MSG_RESULT($with_libsynce)
+dnl Prevent "NONE" used as prefix!
+if test "x$prefix" = xNONE; then
+  prefix=$ac_default_prefix
+fi
+eval SYNCE_IN_COMPUTER_FOLDER_SH="${datadir}/synce/synce-in-computer-folder.sh"
+AC_DEFINE_UNQUOTED(SYNCE_IN_COMPUTER_FOLDER_SH, "$SYNCE_IN_COMPUTER_FOLDER_SH", "Script for use with dccm.")
 
-  if [[ ! -e $with_libsynce/include/synce.h ]]; then
-     echo "$with_libsynce/include/synce.h not found!"
-     exit 0
-  fi
-  
-  synce_cflags="-I$with_libsynce/include"
-  synce_libs="-L$with_libsynce/lib -lsynce"
-],
-[
-  AC_MSG_RESULT(none)
-
-  if [[ -e /usr/include/synce.h ]]; then
-     echo "libsynce found in /usr"
-     synce_cflags="-I/usr/include"
-     synce_libs="-L/usr/lib -lsynce"
-  elif [[ -e /usr/local/include/synce.h ]]; then
-     echo "libsynce found in /usr/local"
-     synce_cflags="-I/usr/local/include"
-     synce_libs="-L/usr/local/lib -lsynce"
-  else
-     echo "libsynce not found. please install libsynce or use --with-libsynce"
-     echo "to specify the installed directory"
-     exit 0
-  fi
-])
-
-AC_SUBST(synce_cflags)
-AC_SUBST(synce_libs)
-
-
-################################
-
-AC_MSG_CHECKING(for with-librapi)
-AC_ARG_WITH(librapi,
-[  --with-librapi=dir       specify librapi directory],
-[ 
-  AC_MSG_RESULT($with_librapi)
-
-  if [[ ! -e $with_librapi/include/rapi.h ]]; then
-     echo "$with_librapi/include/rapi.h not found!"
-     exit 0
-  fi
-  
-  rapi_cflags="-I$with_librapi/include"
-  rapi_libs="-L$with_librapi/lib -lrapi"
-],
-[
-  AC_MSG_RESULT(none)
-
-  if [[ -e /usr/include/rapi.h ]]; then
-     echo "librapi found in /usr"
-     rapi_cflags="-I/usr/include"
-     rapi_libs="-L/usr/lib -lrapi"
-  elif [[ -e /usr/local/include/rapi.h ]]; then
-     echo "librapi found in /usr/local"
-     rapi_cflags="-I/usr/local/include"
-     rapi_libs="-L/usr/local/lib -lrapi"
-  else
-     echo "librapi not found. please install libsynce or use --with-librapi"
-     echo "to specify the installed directory"
-     exit 0
-  fi
-])
-
-AC_SUBST(rapi_cflags)
-AC_SUBST(rapi_libs)
+AC_CONFIG_FILES( [script/synce-in-computer-folder.sh] )
 
 AC_OUTPUT([
 	Makefile
+  script/Makefile
 	src/Makefile
 ])

@@ -1,11 +1,17 @@
-This is a gnome-vfs module that enables access to the PPC file system
-through the gnome-vfs functions.
+This is a gnome-vfs module that enables access to the Windows CE or Pocket
+PC file system through the gnome-vfs functions.
 
 Install by running ./configure and  make, then make install as root. If
 libsynce or librapi isn't installed in /usr then run ./configure with
---with-libsynce=/path/to/libsynce or --with-librap=/path/to/librapi
+--with-libsynce=/path/to/libsynce or --with-librapi2=/path/to/librapi.
+
+You may also need to use the --sysconfdir=/etc parameter to configure.
 
 Then you should be able to access your PPC using synce:/ for example in
-Nautilus. Do not try to access your device when it's not connected, then
-you will not be able to access it later once it's connected until you
-restart Nautilus.
+Nautilus.
+
+If you want a "Mobile Device" entry in your "Computer" folder in Nautilus
+when your device is connected, run this command as the user (not root)
+after installation:
+
+  synce-in-computer-folder install

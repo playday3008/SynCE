@@ -4,3 +4,4 @@ Makefile
 Makefile.in
 libsyncevfs.la
 libsyncevfs.lo
+synce-in-computer-folder

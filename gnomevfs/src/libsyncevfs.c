@@ -15,6 +15,8 @@
 const char *
 gnome_vfs_mime_type_from_name_or_default (const char *filename, const char *defaultv);
 
+#define SHOW_APPLICATIONS   0
+
 #ifdef SYNCE_DEBUG
 #define D(x...) printf(x)
 #else
@@ -164,11 +166,13 @@ static int get_location(GnomeVFSURI *uri, gchar **location)/*{{{*/
     result = INDEX_DEVICE;
     *location = NULL;
   }
+#if SHOW_APPLICATIONS
   else if (0 == strcmp(path[1], NAME_APPLICATIONS))
   {
     result = INDEX_APPLICATIONS;
     *location = g_strdup(path[2]);
   }
+#endif
   else if (0 == strcmp(path[1], NAME_DOCUMENTS))
   {
     /* XXX: what are the name of this on non-english systems? */
@@ -827,15 +831,19 @@ static GnomeVFSResult synce_read_dir/*{{{*/
       switch (dh->count)
       {
         case 0:
-          get_special_directory_attributes(file_info, NAME_APPLICATIONS);
-          break;
-
-        case 1:
           get_special_directory_attributes(file_info, NAME_DOCUMENTS);
           break;
 
-        case 2:
+        case 1:
           get_special_directory_attributes(file_info, NAME_FILESYSTEM);
+          break;
+
+        case 2:
+#if SHOW_APPLICATIONS
+          get_special_directory_attributes(file_info, NAME_APPLICATIONS);
+#else
+          return GNOME_VFS_ERROR_EOF;
+#endif
           break;
 
         default:
