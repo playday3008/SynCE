@@ -1,7 +1,8 @@
 <?php include 'header.php'; ?>
 
-<div style="text-align:center"><h3>Syncing WinCE 3.0 Devices with kitchensync</h3></div>
-<p>
+<p>Return to <a href="../index.php">SynCE-KDE main page</a>.</p>
+<h1><a name="SynCE-KDE" class="mozTocH1" id="SynCE-KDE"></a></p>
+SynCE - Using KitchenSync for synchronization</h1>
 This page presents you information about the software necessary to sync AddressBook- and Calendar-data
 from/to a Windows CE 3.0 driven device. 
 </p>
@@ -121,5 +122,7 @@ Do not hesitate to ask for assistance at the following mailing lists:
     <li><a href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a></li>
 </ul>
 or send a mail directly to <a href="mailto:cfremgen@users.sourceforge.net">me</a>.
+<p>Return to <a href="../index.php">SynCE-KDE main page</a>.</p>
+
 
 <?php include 'footer.php'; ?>

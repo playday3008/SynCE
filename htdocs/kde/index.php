@@ -1,8 +1,7 @@
 <?php include 'header.php'; ?>
 
 <p>Return to <a href="../index.php">SynCE main page</a>.</p>
-<h1><a name="SynCE-KDE" class="mozTocH1" id="SynCE-KDE"></a>SynCE -
-KDE Integration</h1>
+<h1>SynCE - KDE Integration</h1>
 <p>In this text the term "PDA"&nbsp; is used as a synonym for all
 devices running Windows CE Version 2.0 or later as long as they
 are supported by the underlying <a
@@ -16,21 +15,22 @@ are supported by the underlying <a
         <li><a href="#Introduction">Introduction</a></li>
         <li><a href="#News">News</a></li>
         <li><a href="#Features">Features</a></li>
-        <li><a href="#Usage">Usage</a><br>
-        </li>
+        <li><a href="#Usage">Usage</a><br></li>
         <li><a href="#Requirements">Requirements</a></li>
-        <li><a href="#Download">Download</a><br>
-        </li>
+        <li><a href="#Download">Download</a><br></li>
         <li><a href="#Installation">Compiling and Installing</a></li>
         <li><a href="screenshots.php">Screenshots</a></li>
         <li><a href="#Related_Work">Related Work</a></li>
-	<li><a href="konnector/index.php">Kitchensync Konnector</a></li>
         <li><a href="stories.php">Success Stories</a></li>
         <li><a href="faq.php">Frequently asked Questions</a></li>
         <li><a href="#Future">Future</a></li>
       </ul>
       </td>
       <td valign="top" width="50%">
+      <h2><a name="Synchronization" id="Synchronization"></a>Synchronization</h2>
+      <ul>
+	<li><a href="konnector/index.php">KitchenSync Konnector</a></li>
+      </ul>
       <h2><a name="Add-on" id="Add-on"></a>Add-on</h2>
       <ul>
         <li><a href="kcemirror.php">KCEMirror</a></li>
@@ -39,7 +39,6 @@ are supported by the underlying <a
       <ul>
         <li><a href="http://sourceforge.net/projects/synce/">SourceForge
 Project Page</a></li>
-        <br>
         <li><a
  href="http://www.kde-apps.org/content/show.php?content=14162">SynCE-KDE
 on www.kde-apps.org</a> </li>
