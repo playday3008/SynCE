@@ -24,6 +24,7 @@
 
 #define BLOB0067_STR  "BLOB0067="
 
+#if 0
 static const uint8_t BLOB0067_HEADER[20] = { 
   0x04, 0x00, 0x00, 0x00, 
   0x82, 0x00, 0xe0, 0x00,
@@ -31,6 +32,7 @@ static const uint8_t BLOB0067_HEADER[20] = {
   0x1a, 0x82, 0xe0, 0x08,
   0x00, 0x00, 0x00, 0x00 
 };
+#endif
 
 typedef struct _EventGeneratorData
 {
@@ -666,6 +668,7 @@ bool rra_appointment_from_vevent(/*{{{*/
         synce_warning("Failed to parse recurrence rule");
 
       if (event_parser_data.uid)
+      {
         if (0 == strncmp(event_parser_data.uid->values[0], BLOB0067_STR, strlen(BLOB0067_STR)))
         {
           /* A binary UID from SynCE */
@@ -694,6 +697,7 @@ bool rra_appointment_from_vevent(/*{{{*/
               (uint8_t*)event_parser_data.uid->values[0], 
               strlen(event_parser_data.uid->values[0]));
         }
+      }
     }
     else
 #endif
