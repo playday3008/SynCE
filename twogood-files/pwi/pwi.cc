@@ -168,7 +168,7 @@ int main(int argc, char**argv)
     {
       if (data[j] == 0x00)
       {
-        cerr << "Warning, date byte is NULL!" << endl;
+        cerr << "Warning, data byte is NULL!" << endl;
       }
       else if (data[j] & 0x80)
       {
