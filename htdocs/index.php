@@ -84,7 +84,7 @@ alt="Make a donation" title="Make a donation">
 <h3>General</h3>
 
 <ul>
-<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
+<li><a href="multisync_guide.php">Using the SynCE plugin for MultiSync</a></li>
 <li><a href="qa.php">Questions and Answers</a></li>
 <li><a href="devel.php">Development information</a></li>
 <li><a href="links.php">Links</a></li>
@@ -110,11 +110,9 @@ href="openbsd.php">OpenBSD</a></blockquote>
 
 <h3>Extras</h3>
 
-<ul>
-<li><a href="orange.php">The Orange tool and library</a></li>
-<li><a href="unshield.php">The Unshield tool and library</a></li>
-<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
-</ul>
+<blockquote><a href="orange.php">Orange</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="unshield.php">Unshield</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="dynamite.php">Dynamite</a></blockquote>
 
 </td><td width="50%">
 
