@@ -119,11 +119,6 @@ fi
 
 LOCAL_IP=`echo $IP_ADDRESSES | sed 's/:.*$//'`
 
-echo "
-${THIS} will now write your configuration to the file:
-${PEER_FILE}
-"
-
 echo "# Modifications to this file will be lost next time you run ${THIS}
 ${DEVICE} 115200
 connect '${CHAT} -v -f ${CHAT_FILE}'
@@ -136,5 +131,8 @@ lcp-echo-failure 2
 lcp-echo-interval 2
 linkname ${PEER}" >${PEER_FILE}
 
-exit 0
+echo "
+You can now run synce-serial-start to start a serial connection.
+"
 
+exit 0
