@@ -7,7 +7,7 @@ install:
 	cd libsynce && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
 	cd librapi2 && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
 	cd dccm     && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
-	cd rra      && ./bootstrap && ./configure --prefix=$(PREFIX) --with-librapi2=$(PREFIX) && make install
+	cd rra      && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) --with-librapi2=$(PREFIX) && make install
 	cd trayicon && ./bootstrap && ./configure --prefix=$(PREFIX) --with-librapi2=$(PREFIX) && make install
 #	cd gnomevfs && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) --with-librapi=$(PREFIX) && make install
 

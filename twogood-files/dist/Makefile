@@ -12,16 +12,17 @@
 # 4. Uninstall the "synce" and "synce-devel" RPMs
 #
 
-SYNCE_VERSION    = 0.7
+SYNCE_VERSION    = 0.8
 
-LIBRAPI2_VERSION = 0.7
-LIBSYNCE_VERSION = 0.7
-DCCM_VERSION     = 0.7
-SERIAL_VERSION   = 0.7
-RRA_VERSION      = 0.7
-TRAYICON_VERSION = 0.7
+LIBRAPI2_VERSION = 0.8
+LIBSYNCE_VERSION = 0.8
+DCCM_VERSION     = 0.8
+SERIAL_VERSION   = 0.8
+RRA_VERSION      = 0.8
+TRAYICON_VERSION = 0.8
+MULTISYNC_PLUGIN_VERSION = 0.8
+
 GNOMEVFS_VERSION = 0.2
-MULTISYNC_PLUGIN_VERSION = 0.7
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
 RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')

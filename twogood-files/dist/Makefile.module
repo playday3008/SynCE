@@ -10,7 +10,7 @@
 
 TAG="V$(shell echo $(VERSION) | sed 's/\./_/g')"
 TMP=/var/tmp/$(MODULE)
-CVSROOT=-d :pserver:anonymous@cvs.synce.sourceforge.net:/cvsroot/synce
+CVSROOT=-d :ext:twogood@cvs.synce.sourceforge.net:/cvsroot/synce
 DIRNAME=synce-$(MODULE)-$(VERSION)
 TARBALL=$(TARBALL_DIR)/$(DIRNAME).tar.gz
 EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
