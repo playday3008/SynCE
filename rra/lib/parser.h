@@ -7,6 +7,8 @@
 #include <libmimedir.h>
 #include <time.h>
 
+struct _TimeZoneInformation;
+
 #define PARSER_UTF8 1
 
 typedef struct _Parser Parser;
@@ -27,13 +29,18 @@ void parser_component_add_parser_property (ParserComponent* self, ParserProperty
 
 /* helper functions */
 bool parser_duration_to_seconds  (const char* duration, int* seconds);
-bool parser_datetime_to_struct   (const char* datetime, struct tm* tm);
-bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time);
+bool parser_datetime_to_struct   (const char* datetime, struct tm* tm, bool* is_utc);
+bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time, bool* is_utc);
 
-Parser* parser_new(ParserComponent* base_parser_component, int flags, void* cookie);
+Parser* parser_new(
+    ParserComponent* base_parser_component, 
+    int flags,
+    struct _TimeZoneInformation* tzi, 
+    void* cookie);
 void parser_destroy(Parser* self);
 bool parser_set_mimedir(Parser* self, const char* mimedir);
 bool parser_run(Parser* self);
+void parser_call_unused_properties(Parser* self);
 bool parser_get_result(Parser* self, uint8_t** result, size_t* result_size);
 
 /* add database records */

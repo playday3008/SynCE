@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include "parser.h"
 #include "dbstream.h"
+#include "timezone.h"
 #include <synce_log.h>
 #include <synce_hash.h>
 #include <rapi.h>
@@ -29,6 +30,7 @@ struct _ParserProperty
 {
   char* name;
   ParserPropertyFunc func;
+  bool used;
 };
 
 struct _ParserComponent
@@ -41,6 +43,7 @@ struct _ParserComponent
 struct _Parser
 {
   ParserComponent* base_parser_component;
+  TimeZoneInformation* tzi;
   int flags;
   void* cookie;
   mdir_line** mimedir;
@@ -173,7 +176,7 @@ bool parser_duration_to_seconds(const char* duration, int* result)/*{{{*/
 
 }/*}}}*/
 
-bool parser_datetime_to_struct   (const char* datetime, struct tm* time_struct)
+bool parser_datetime_to_struct(const char* datetime, struct tm* time_struct, bool* is_utc)/*{{{*/
 {
   int count;
   char suffix = 0;
@@ -198,6 +201,9 @@ bool parser_datetime_to_struct   (const char* datetime, struct tm* time_struct)
   {
     if ('Z' != suffix)
       synce_warning("Unknown date-time suffix: '%c'", suffix);
+
+    if (is_utc)
+      *is_utc = ('Z' == suffix);
   }
 
   time_struct->tm_year -= 1900;
@@ -205,13 +211,13 @@ bool parser_datetime_to_struct   (const char* datetime, struct tm* time_struct)
   time_struct->tm_isdst = -1;
 
   return true;
-}
+}/*}}}*/
 
-bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time)/*{{{*/
+bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time, bool* is_utc)/*{{{*/
 {
   struct tm time_struct;
 
-  if (!parser_datetime_to_struct(datetime, &time_struct))
+  if (!parser_datetime_to_struct(datetime, &time_struct, is_utc))
   {
     synce_error("Failed to parse DATE or DATE-TIME to struct tm");
     return false;
@@ -308,7 +314,7 @@ bool parser_add_string_from_line(Parser* self, uint16_t id, mdir_line* line)/*{{
   return parser_add_string(self, id, line->values[0]);
 }/*}}}*/
 
-ParserTimeFormat parser_get_time_format(mdir_line* line)
+ParserTimeFormat parser_get_time_format(mdir_line* line)/*{{{*/
 {
   ParserTimeFormat format = PARSER_TIME_FORMAT_DATE_AND_TIME; /* default */
   char** types = mdir_get_param_values(line, "VALUE");
@@ -327,7 +333,7 @@ ParserTimeFormat parser_get_time_format(mdir_line* line)
   }
 
   return format;
-}
+}/*}}}*/
 
 bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{{*/
 {
@@ -336,13 +342,29 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
 
   ParserTimeFormat format = parser_get_time_format(line);
 
+  if (!line)
+    return false;
+
   if (format == PARSER_TIME_FORMAT_DATE_AND_TIME ||
       format == PARSER_TIME_FORMAT_ONLY_DATE)
   {
-    success = parser_datetime_to_unix_time(line->values[0], &some_time);
-    if (!success)
+    bool is_utc = false;
+    
+    success = parser_datetime_to_unix_time(line->values[0], &some_time, &is_utc);
+    if (success && is_utc)
+    {
+      if (self->tzi)
+      {
+        some_time = time_zone_convert_from_utc(self->tzi, some_time);
+      }
+      else
+        synce_warning("No time zone information available");
+    }
+    else if (!success)
+    {
       synce_error("Failed to convert DATE or DATE-TIME to UNIX time: '%s'",
           line->values[0]);
+    }
   }
 
   return success && parser_add_time(self, id, some_time);
@@ -356,6 +378,7 @@ ParserProperty* parser_property_new(const char* name, ParserPropertyFunc func)/*
   {
     self->name = name ? strdup(name) : NULL;
     self->func = func;
+    self->used = false;
   }
   
   return self;
@@ -482,6 +505,8 @@ static bool parser_handle_component(Parser* p, ParserComponent* ct)/*{{{*/
           synce_error("Failed to handle property '%s'", line->name);
           break;
         }
+
+        pt->used = true;
       }
       /*else
       {
@@ -497,15 +522,20 @@ static bool parser_handle_component(Parser* p, ParserComponent* ct)/*{{{*/
   return success;
 }/*}}}*/
 
-Parser* parser_new(ParserComponent* base_parser_component, int flags, void* cookie)/*{{{*/
+Parser* parser_new(/*{{{*/
+    ParserComponent* base_parser_component, 
+    int flags,
+    TimeZoneInformation* tzi, 
+    void* cookie)
 {
   Parser* self = (Parser*)calloc(1, sizeof(Parser));
 
   if (self)
   {
     self->base_parser_component = base_parser_component;
-    self->flags = flags;
-    self->cookie = cookie;
+    self->tzi                   = tzi;
+    self->flags                 = flags;
+    self->cookie                = cookie;
   }
 
   return self;
@@ -569,6 +599,30 @@ bool parser_run(Parser* self)/*{{{*/
 exit:
   return success;
 }/*}}}*/
+
+static void parser_on_property(const void* key, const void* data, void* cookie)/*{{{*/
+{
+  ParserProperty* property = (ParserProperty*)data;
+  if (!property->used)
+  {
+    Parser* p = (Parser*)cookie;
+
+    if (property->func(p, NULL, p->cookie))
+      property->used = true;
+  }
+}/*}}}*/
+
+static void parser_on_component(const void* key, const void* data, void* cookie)/*{{{*/
+{
+  const ParserComponent* component = (const ParserComponent*)data;
+  s_hash_table_foreach(component->parser_components, parser_on_component, cookie);
+  s_hash_table_foreach(component->parser_properties, parser_on_property,  cookie);
+}/*}}}*/
+
+void parser_call_unused_properties(Parser* self)
+{
+  parser_on_component(NULL, self->base_parser_component, self);
+}
 
 bool parser_get_result(Parser* self, uint8_t** result, size_t* result_size)/*{{{*/
 {
