@@ -52,7 +52,8 @@ public:
     bool doSync(SyncThread *syncThread, ObjectType *objectTypeString, QString pdaName,
             uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra, bool firstSynchronize);
     uint32_t getObjectTypeId();
-    bool isRunning();
+    bool running();
+    bool stopRequested();
     void incTotalSteps(int inc);
     void decTotalSteps(int dec);
     void advanceProgress();

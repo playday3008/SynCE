@@ -213,7 +213,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
 
         incTotalSteps(ids.changedIds.count() + ids.deletedIds.count());
 
-        for (v = ids.changedIds.first(); v && isRunning(); v = ids.changedIds.next()) {
+        for (v = ids.changedIds.first(); v && !stopRequested(); v = ids.changedIds.next()) {
             addressee = rra->getAddressee(getObjectTypeId(), *v);
             addressee.insertCustom("Raki", "Task", "changed");
             uidString = "RRA-ID-" + (QString("00000000") + QString::number((*v), 16)).right(8);
@@ -223,7 +223,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
             advanceProgress();
         }
 
-        for (v = ids.unchangedIds.first(); v && isRunning(); v = ids.unchangedIds.next()) {
+        for (v = ids.unchangedIds.first(); v && !stopRequested(); v = ids.unchangedIds.next()) {
             addressee = KABC::Addressee();
             if (firstSynchronize) {
                 addressee = rra->getAddressee(getObjectTypeId(), *v);
@@ -237,7 +237,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
             pdaBook->insertAddressee(addressee);
         }
 
-        for (v = ids.deletedIds.first(); v && isRunning(); v = ids.deletedIds.next()) {
+        for (v = ids.deletedIds.first(); v && !stopRequested(); v = ids.deletedIds.next()) {
             addressee = KABC::Addressee();
             addressee.insertCustom("Raki", "Task", "deleted");
             uidString = "RRA-ID-" + (QString("00000000") + QString::number((*v), 16)).right(8);
@@ -371,7 +371,7 @@ bool KdeAddressBookSync::sync()
     kdDebug(2120) << "+++++++++++ Updateing StdBook ++++++++++++++" << endl;
 
     setTask("Writing KDE");
-    for (it = pdaItaBook->begin(); it != pdaItaBook->end() && isRunning(); it++) {
+    for (it = pdaItaBook->begin(); it != pdaItaBook->end() && !stopRequested(); it++) {
         task = (*it).custom("Raki", "Task");
         if (task == "changed") {
             kdDebug(2120) << "Update of uid: " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
@@ -390,7 +390,7 @@ bool KdeAddressBookSync::sync()
     kdDebug(2120) << "++++++++++++ Updateing PdaBook +++++++++++++" << endl;
 
     setTask("Writing PDA");
-    for (it = pcItaBook->begin(); it != pcItaBook->end() && isRunning(); it++) {
+    for (it = pcItaBook->begin(); it != pcItaBook->end() && !stopRequested(); it++) {
         task = (*it).custom("Raki", "Task");
         if (task == "changed") {
             kdDebug(2120) << "Update of uid: " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
@@ -414,9 +414,9 @@ bool KdeAddressBookSync::sync()
         }
     }
 
-    if (isRunning() && pcItaBook->begin() != pcItaBook->end()) {
+    if (!stopRequested() && pcItaBook->begin() != pcItaBook->end()) {
         if (rra->connect()) {
-            for (it = pcItaBook->begin(); it != pcItaBook->end() && isRunning(); it++) {
+            for (it = pcItaBook->begin(); it != pcItaBook->end() && !stopRequested(); it++) {
                 task = (*it).custom("Raki", "Task");
                 if (task == "deleted") {
                     ceUid = (*it).custom("Raki", "PdaUid-" + QString::number(partnerId));
@@ -457,8 +457,6 @@ bool KdeAddressBookSync::sync()
 
     KABC::StdAddressBook::save();
     KABC::StdAddressBook::close();
-
-    setTask("Finished");
 
     return true;
 }

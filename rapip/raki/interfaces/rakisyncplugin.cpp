@@ -54,9 +54,15 @@ uint32_t RakiSyncPlugin::getObjectTypeId()
 }
 
 
-bool RakiSyncPlugin::isRunning()
+bool RakiSyncPlugin::running()
 {
     return syncThread->running();
+}
+
+
+bool RakiSyncPlugin::stopRequested()
+{
+    return syncThread->stopRequested();
 }
 
 

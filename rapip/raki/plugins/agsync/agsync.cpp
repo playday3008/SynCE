@@ -262,7 +262,8 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
 
         if(NULL == asGetDeviceInfo(r, w, devInfo)) {
             kdDebug(2120) << "Failed to retrieve device information!" << endl;
-            goto devEnd;
+//            goto devEnd;
+            break;
         }
 
         AGCommandProcessorStart(cmdProc); /* Error code unused */
@@ -282,14 +283,14 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
         /* Perform the synchronization */
         do {
             result= AGClientProcessorProcess(clientProc);
-        } while(AGCLIENT_CONTINUE == result && isRunning());
+        } while(AGCLIENT_CONTINUE == result && !stopRequested());
 
         AGClientProcessorFree(clientProc);
 
-    devEnd:
+//    devEnd:
         AGDeviceInfoFree(devInfo);
 
-    } while(AGCommandProcessorShouldSyncAgain(cmdProc) && isRunning());
+    } while(AGCommandProcessorShouldSyncAgain(cmdProc) && !stopRequested());
 
     AGCommandProcessorFree(cmdProc);
 
@@ -323,12 +324,12 @@ void AGSync::doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx)
 
     kdDebug(2120) << "Processing " << cnt << " servers." << endl;
 
-    for(i= 0; (i < cnt) && isRunning(); i++) {
+    for(i= 0; (i < cnt) && !stopRequested(); i++) {
         doServerSync(r, w, AGUserConfigGetServerByIndex(userConfig, i), ctx);
     }
 
     /* TODO: Write updated config */
-    if (isRunning()) {
+    if (!stopRequested()) {
         if(0 != asPutUserConfig(r, w, userConfig)) {
             kdDebug(2120) << "Failed to store user configuration to device." << endl;
         }
@@ -390,8 +391,6 @@ bool AGSync::sync()
     IRAPIStream_Release(s);
 
     Ce::rapiUninit();
-    
-    setTask("Finished");
 
     return true;
 }
