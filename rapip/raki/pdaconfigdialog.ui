@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
 <class>PdaConfigDialog</class>
 <widget class="QDialog">
     <property name="name">
@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>419</width>
-            <height>426</height>
+            <height>428</height>
         </rect>
     </property>
     <property name="caption">
@@ -121,7 +121,7 @@
         </widget>
         <widget class="QLayoutWidget">
             <property name="name">
-                <cstring>layout8</cstring>
+                <cstring>layout3</cstring>
             </property>
             <hbox>
                 <property name="name">
@@ -153,7 +153,32 @@
                     </property>
                     <property name="sizeHint">
                         <size>
-                            <width>100</width>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="KPushButton">
+                    <property name="name">
+                        <cstring>kPushButton2</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Config</string>
+                    </property>
+                </widget>
+                <spacer>
+                    <property name="name">
+                        <cstring>spacer2</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>20</width>
                             <height>20</height>
                         </size>
                     </property>
@@ -250,6 +275,12 @@
         <receiver>PdaConfigDialog</receiver>
         <slot>objectTypeList_rightButtonClicked(QListViewItem*,const QPoint&amp;,int)</slot>
     </connection>
+    <connection>
+        <sender>kPushButton2</sender>
+        <signal>clicked()</signal>
+        <receiver>PdaConfigDialog</receiver>
+        <slot>kPushButton2_clicked()</slot>
+    </connection>
 </connections>
 <tabstops>
     <tabstop>passwordEdit</tabstop>
@@ -270,11 +301,13 @@
     <slot>applySlot()</slot>
     <slot>disableApply()</slot>
     <slot>objectTypeList_rightButtonClicked( QListViewItem *, const QPoint &amp;, int )</slot>
+    <slot>kPushButton2_clicked()</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>
     <includehint>klineedit.h</includehint>
     <includehint>klistview.h</includehint>
+    <includehint>kpushbutton.h</includehint>
     <includehint>kpushbutton.h</includehint>
 </includehints>
 </UI>

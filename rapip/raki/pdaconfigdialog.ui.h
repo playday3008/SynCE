@@ -37,3 +37,9 @@ void PdaConfigDialog::objectTypeList_rightButtonClicked( QListViewItem *, const 
 {
 
 }
+
+
+void PdaConfigDialog::kPushButton2_clicked()
+{
+
+}
