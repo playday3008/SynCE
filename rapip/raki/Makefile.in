@@ -258,9 +258,9 @@ raki_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 raki_LDADD = $(LIB_KFILE) $(LIB_KDEPRINT)
 
 # which sources should be compiled for raki
-#>- raki_SOURCES = errorevent.cpp errorevent.h management.ui management.ui.h progressbar.ui progressbar.ui.h raki.cpp raki.h rakievent.cpp rakievent.h rakiworkerthread.cpp rakiworkerthread.h rapiwrapper.cpp rapiwrapper.h runwindow.ui runwindow.ui.h configdialog.ui
+#>- raki_SOURCES = errorevent.cpp errorevent.h management.ui management.ui.h raki.cpp raki.h rakievent.cpp rakievent.h rakiworkerthread.cpp rakiworkerthread.h rapiwrapper.cpp rapiwrapper.h runwindow.ui runwindow.ui.h configdialog.ui configdialog.ui.h runwindowimpl.h runwindowimpl.cpp managerimpl.h managerimpl.cpp configdialogimpl.h configdialogimpl.cpp workerthreadinterface.h workerthreadinterface.cpp installer.h installer.cpp
 #>+ 1
-raki_SOURCES=errorevent.cpp errorevent.h  management.ui.h  progressbar.ui.h raki.cpp raki.h rakievent.cpp rakievent.h rakiworkerthread.cpp rakiworkerthread.h rapiwrapper.cpp rapiwrapper.h  runwindow.ui.h  management.cpp progressbar.cpp runwindow.cpp configdialog.cpp
+raki_SOURCES=errorevent.cpp errorevent.h  management.ui.h raki.cpp raki.h rakievent.cpp rakievent.h rakiworkerthread.cpp rakiworkerthread.h rapiwrapper.cpp rapiwrapper.h  runwindow.ui.h  configdialog.ui.h runwindowimpl.h runwindowimpl.cpp managerimpl.h managerimpl.cpp configdialogimpl.h configdialogimpl.cpp workerthreadinterface.h workerthreadinterface.cpp installer.h installer.cpp management.cpp runwindow.cpp configdialog.cpp
 
 # let automoc handle all of the meta source files (moc)
 #>- METASOURCES = AUTO
@@ -284,14 +284,18 @@ PROGRAMS = $(bin_PROGRAMS)
 
 am_raki_OBJECTS = errorevent.$(OBJEXT) raki.$(OBJEXT) \
 	rakievent.$(OBJEXT) rakiworkerthread.$(OBJEXT) \
-	rapiwrapper.$(OBJEXT)
+	rapiwrapper.$(OBJEXT) runwindowimpl.$(OBJEXT) \
+	managerimpl.$(OBJEXT) configdialogimpl.$(OBJEXT) \
+	workerthreadinterface.$(OBJEXT) installer.$(OBJEXT)
 #>- raki_OBJECTS = $(am_raki_OBJECTS)
-#>+ 7
+#>+ 9
 raki_final_OBJECTS = raki.all_cpp.o 
 raki_nofinal_OBJECTS = errorevent.$(OBJEXT) raki.$(OBJEXT) \
 	rakievent.$(OBJEXT) rakiworkerthread.$(OBJEXT) \
-	rapiwrapper.$(OBJEXT) management.$(OBJEXT) progressbar.$(OBJEXT) runwindow.$(OBJEXT) configdialog.$(OBJEXT)\
-raki.moc.o 
+	rapiwrapper.$(OBJEXT) runwindowimpl.$(OBJEXT) \
+	managerimpl.$(OBJEXT) configdialogimpl.$(OBJEXT) \
+	workerthreadinterface.$(OBJEXT) installer.$(OBJEXT) management.$(OBJEXT) runwindow.$(OBJEXT) configdialog.$(OBJEXT)\
+installer.moc.o raki.moc.o 
 @KDE_USE_FINAL_FALSE@raki_OBJECTS = $(raki_nofinal_OBJECTS)
 @KDE_USE_FINAL_TRUE@raki_OBJECTS = $(raki_final_OBJECTS)
 raki_DEPENDENCIES =
@@ -305,19 +309,31 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/admin/depcomp
 am__depfiles_maybe = depfiles
-#>- @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/errorevent.Po ./$(DEPDIR)/raki.Po \
+#>- @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/configdialogimpl.Po \
+#>- @AMDEP_TRUE@	./$(DEPDIR)/errorevent.Po ./$(DEPDIR)/installer.Po \
+#>- @AMDEP_TRUE@	./$(DEPDIR)/managerimpl.Po ./$(DEPDIR)/raki.Po \
 #>- @AMDEP_TRUE@	./$(DEPDIR)/rakievent.Po \
 #>- @AMDEP_TRUE@	./$(DEPDIR)/rakiworkerthread.Po \
-#>- @AMDEP_TRUE@	./$(DEPDIR)/rapiwrapper.Po
-#>+ 9
-@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@DEP_FILES =  $(DEPDIR)/management.P $(DEPDIR)/progressbar.P $(DEPDIR)/runwindow.P $(DEPDIR)/configdialog.P $(DEPDIR)/raki.moc.P  $(DEPDIR)/raki.all_cpp.P  ./$(DEPDIR)/errorevent.Po ./$(DEPDIR)/raki.Po \
+#>- @AMDEP_TRUE@	./$(DEPDIR)/rapiwrapper.Po \
+#>- @AMDEP_TRUE@	./$(DEPDIR)/runwindowimpl.Po \
+#>- @AMDEP_TRUE@	./$(DEPDIR)/workerthreadinterface.Po
+#>+ 17
+@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@DEP_FILES =  $(DEPDIR)/management.P $(DEPDIR)/runwindow.P $(DEPDIR)/configdialog.P $(DEPDIR)/installer.moc.P $(DEPDIR)/raki.moc.P  $(DEPDIR)/raki.all_cpp.P  ./$(DEPDIR)/configdialogimpl.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/errorevent.Po ./$(DEPDIR)/installer.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/managerimpl.Po ./$(DEPDIR)/raki.Po \
 @AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/rakievent.Po \
 @AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/rakiworkerthread.Po \
-@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/rapiwrapper.Po
-@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@DEP_FILES =  $(DEPDIR)/management.P $(DEPDIR)/progressbar.P $(DEPDIR)/runwindow.P $(DEPDIR)/configdialog.P $(DEPDIR)/raki.moc.P  ./$(DEPDIR)/errorevent.Po ./$(DEPDIR)/raki.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/rapiwrapper.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/runwindowimpl.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_TRUE@	@AMDEP_TRUE@	./$(DEPDIR)/workerthreadinterface.Po
+@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@DEP_FILES =  $(DEPDIR)/management.P $(DEPDIR)/runwindow.P $(DEPDIR)/configdialog.P $(DEPDIR)/installer.moc.P $(DEPDIR)/raki.moc.P  ./$(DEPDIR)/configdialogimpl.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/errorevent.Po ./$(DEPDIR)/installer.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/managerimpl.Po ./$(DEPDIR)/raki.Po \
 @AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/rakievent.Po \
 @AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/rakiworkerthread.Po \
-@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/rapiwrapper.Po
+@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/rapiwrapper.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/runwindowimpl.Po \
+@AMDEP_TRUE@@KDE_USE_FINAL_FALSE@	@AMDEP_TRUE@	./$(DEPDIR)/workerthreadinterface.Po
 
 #>- CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 #>- 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -406,11 +422,16 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/configdialogimpl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errorevent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/installer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/managerimpl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/raki.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rakievent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rakiworkerthread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rapiwrapper.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/runwindowimpl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/workerthreadinterface.Po@am__quote@
 
 distclean-depend:
 	-rm -rf ./$(DEPDIR)
@@ -499,7 +520,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
 #>- DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 #>+ 4
-KDE_DIST=configdialog.ui.h hi16-app-raki.png runwindow.ui raki.sh hi64-app-raki_bw.png raki.lsm configdialog.ui hi64-app-raki.png hi32-app-raki_bw.png hi22-app-raki_bw.png raki.desktop hi32-app-raki.png progressbar.ui hi48-app-raki_bw.png hi48-app-raki.png management.ui hi16-app-raki_bw.png raki.pro hi22-app-raki.png 
+KDE_DIST=hi16-app-raki.png runwindow.ui raki.sh hi64-app-raki_bw.png raki.lsm configdialog.ui hi64-app-raki.png hi32-app-raki_bw.png management.h runwindow.h hi22-app-raki_bw.png raki.desktop hi32-app-raki.png hi48-app-raki_bw.png hi48-app-raki.png configdialog.h out management.ui hi16-app-raki_bw.png raki.pro hi22-app-raki.png 
 
 DISTFILES= $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
 
@@ -627,7 +648,8 @@ messages: rc.cpp
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
 
-#>+ 53
+
+#>+ 40
 management.cpp: $(srcdir)/management.ui management.h management.moc
 	rm -f management.cpp
 	echo '#include <klocale.h>' > management.cpp
@@ -641,19 +663,6 @@ management.h: $(srcdir)/management.ui
 
 management.moc: management.h
 	$(MOC) management.h -o management.moc
-progressbar.cpp: $(srcdir)/progressbar.ui progressbar.h progressbar.moc
-	rm -f progressbar.cpp
-	echo '#include <klocale.h>' > progressbar.cpp
-	$(UIC) -tr ${UIC_TR} -i progressbar.h $(srcdir)/progressbar.ui > progressbar.cpp.temp ; ret=$$?; \
-	sed -e "s,${UIC_TR}( \"\" ),QString::null,g" progressbar.cpp.temp | sed -e "s,${UIC_TR}( \"\"\, \"\" ),QString::null,g" | sed -e "s,image\([0-9][0-9]*\)_data,img\1_progressbar,g" >> progressbar.cpp ;\
-	rm -f progressbar.cpp.temp ;\
-	if test "$$ret" = 0; then echo '#include "progressbar.moc"' >> progressbar.cpp; else rm -f progressbar.cpp ; exit $$ret ; fi
-
-progressbar.h: $(srcdir)/progressbar.ui
-	$(UIC) -o progressbar.h $(srcdir)/progressbar.ui
-
-progressbar.moc: progressbar.h
-	$(MOC) progressbar.h -o progressbar.moc
 runwindow.cpp: $(srcdir)/runwindow.ui runwindow.h runwindow.moc
 	rm -f runwindow.cpp
 	echo '#include <klocale.h>' > runwindow.cpp
@@ -682,18 +691,21 @@ configdialog.moc: configdialog.h
 	$(MOC) configdialog.h -o configdialog.moc
 
 #>+ 3
+installer.moc.cpp: $(srcdir)/installer.h
+	$(MOC) $(srcdir)/installer.h -o installer.moc.cpp
+
+#>+ 3
 raki.moc.cpp: $(srcdir)/raki.h
 	$(MOC) $(srcdir)/raki.h -o raki.moc.cpp
 
 #>+ 3
 clean-metasources:
-	-rm -f  raki.moc.cpp
+	-rm -f  installer.moc.cpp raki.moc.cpp
 
-#>+ 7
+#>+ 6
 clean-ui:
 	-rm -f \
 	management.cpp management.h management.moc \
-	progressbar.cpp progressbar.h progressbar.moc \
 	runwindow.cpp runwindow.h runwindow.moc \
 	configdialog.cpp configdialog.h configdialog.moc 
 
@@ -738,11 +750,11 @@ force-reedit:
 
 
 #>+ 11
-raki.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/errorevent.cpp $(srcdir)/raki.cpp $(srcdir)/rakievent.cpp $(srcdir)/rakiworkerthread.cpp $(srcdir)/rapiwrapper.cpp management.cpp progressbar.cpp runwindow.cpp configdialog.cpp raki.moc.cpp  management.moc progressbar.moc runwindow.moc configdialog.moc
+raki.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/errorevent.cpp $(srcdir)/raki.cpp $(srcdir)/rakievent.cpp $(srcdir)/rakiworkerthread.cpp $(srcdir)/rapiwrapper.cpp $(srcdir)/runwindowimpl.cpp $(srcdir)/managerimpl.cpp $(srcdir)/configdialogimpl.cpp $(srcdir)/workerthreadinterface.cpp $(srcdir)/installer.cpp $(srcdir)/management.cpp $(srcdir)/runwindow.cpp $(srcdir)/configdialog.cpp installer.moc.cpp raki.moc.cpp  management.moc runwindow.moc configdialog.moc
 	@echo 'creating raki.all_cpp.cpp ...'; \
 	rm -f raki.all_cpp.files raki.all_cpp.final; \
 	echo "#define KDE_USE_FINAL 1" >> raki.all_cpp.final; \
-	for file in errorevent.cpp raki.cpp rakievent.cpp rakiworkerthread.cpp rapiwrapper.cpp management.cpp progressbar.cpp runwindow.cpp configdialog.cpp raki.moc.cpp ; do \
+	for file in errorevent.cpp raki.cpp rakievent.cpp rakiworkerthread.cpp rapiwrapper.cpp runwindowimpl.cpp managerimpl.cpp configdialogimpl.cpp workerthreadinterface.cpp installer.cpp management.cpp runwindow.cpp configdialog.cpp installer.moc.cpp raki.moc.cpp ; do \
 	  echo "#include \"$$file\"" >> raki.all_cpp.files; \
 	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> raki.all_cpp.final; \
 	done; \
@@ -773,17 +785,27 @@ cvs-clean:
 kde-rpo-clean:
 	-rm -f *.rpo
 
-#>+ 14
-$(srcdir)/rapiwrapper.cpp: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/rakiworkerthread.cpp: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/rakiworkerthread.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/raki.cpp: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/rakievent.cpp: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/rakievent.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/errorevent.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/raki.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/progressbar.ui.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/errorevent.cpp: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/management.ui.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/runwindow.ui.h: management.h progressbar.h runwindow.h configdialog.h 
-$(srcdir)/rapiwrapper.h: management.h progressbar.h runwindow.h configdialog.h 
+#>+ 24
+$(srcdir)/runwindowimpl.h: management.h runwindow.h configdialog.h 
+$(srcdir)/rapiwrapper.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/workerthreadinterface.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/rakiworkerthread.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/runwindowimpl.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/rakiworkerthread.h: management.h runwindow.h configdialog.h 
+$(srcdir)/raki.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/rakievent.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/installer.h: management.h runwindow.h configdialog.h 
+$(srcdir)/rakievent.h: management.h runwindow.h configdialog.h 
+$(srcdir)/errorevent.h: management.h runwindow.h configdialog.h 
+$(srcdir)/raki.h: management.h runwindow.h configdialog.h 
+$(srcdir)/errorevent.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/configdialogimpl.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/workerthreadinterface.h: management.h runwindow.h configdialog.h 
+$(srcdir)/installer.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/managerimpl.h: management.h runwindow.h configdialog.h 
+$(srcdir)/management.ui.h: management.h runwindow.h configdialog.h 
+$(srcdir)/configdialogimpl.h: management.h runwindow.h configdialog.h 
+$(srcdir)/managerimpl.cpp: management.h runwindow.h configdialog.h 
+$(srcdir)/runwindow.ui.h: management.h runwindow.h configdialog.h 
+$(srcdir)/configdialog.ui.h: management.h runwindow.h configdialog.h 
+$(srcdir)/rapiwrapper.h: management.h runwindow.h configdialog.h 

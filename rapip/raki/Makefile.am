@@ -14,7 +14,7 @@ raki_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 raki_LDADD = $(LIB_KFILE) $(LIB_KDEPRINT)
 
 # which sources should be compiled for raki
-raki_SOURCES = errorevent.cpp errorevent.h management.ui management.ui.h progressbar.ui progressbar.ui.h raki.cpp raki.h rakievent.cpp rakievent.h rakiworkerthread.cpp rakiworkerthread.h rapiwrapper.cpp rapiwrapper.h runwindow.ui runwindow.ui.h configdialog.ui
+raki_SOURCES = errorevent.cpp errorevent.h management.ui management.ui.h raki.cpp raki.h rakievent.cpp rakievent.h rakiworkerthread.cpp rakiworkerthread.h rapiwrapper.cpp rapiwrapper.h runwindow.ui runwindow.ui.h configdialog.ui configdialog.ui.h runwindowimpl.h runwindowimpl.cpp managerimpl.h managerimpl.cpp configdialogimpl.h configdialogimpl.cpp workerthreadinterface.h workerthreadinterface.cpp installer.h installer.cpp
 
 # let automoc handle all of the meta source files (moc)
 METASOURCES = AUTO

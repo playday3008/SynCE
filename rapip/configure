@@ -16560,80 +16560,6 @@ See http:://objprelink.sourceforge.net for details:
 
 
 
-echo "$as_me:$LINENO: checking for CeRapiInit in -lrapi" >&5
-echo $ECHO_N "checking for CeRapiInit in -lrapi... $ECHO_C" >&6
-if test "${ac_cv_lib_rapi_CeRapiInit+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lrapi  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char CeRapiInit ();
-int
-main ()
-{
-CeRapiInit ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_rapi_CeRapiInit=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_rapi_CeRapiInit=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_rapi_CeRapiInit" >&5
-echo "${ECHO_T}$ac_cv_lib_rapi_CeRapiInit" >&6
-if test $ac_cv_lib_rapi_CeRapiInit = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBRAPI 1
-_ACEOF
-
-  LIBS="-lrapi $LIBS"
-
-else
-
-	echo "=================================================="
-	echo "You have not installed the synce-librapi library."
-	echo "Get it from http://synce.sourceforge.net/ and"
-	echo "install it before trying to compile rapi-kioslave."
-	echo "=================================================="
-	exit 1
-
-fi
-
-
-
 
     # Extract the first word of "msgfmt", so it can be a program name with args.
 set dummy msgfmt; ac_word=$2
@@ -21003,12 +20929,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -z ""; then
   # Current default Qt version: 3.1
   kde_qtver=3
-  kde_qtsubver=1
+  kde_qtsubver=0
 else
   kde_qtsubver=`echo "" | sed -e 's#[0-9][0-9]*\.\([0-9][0-9]*\).*#\1#'`
   # following is the check if subversion isnt found in passed argument
   if test "$kde_qtsubver" = ""; then
-    kde_qtsubver=1
+    kde_qtsubver=0
   fi
   kde_qtver=`echo "" | sed -e 's#^\([0-9][0-9]*\)\..*#\1#'`
   if test "$kde_qtver" = "1"; then
@@ -21953,7 +21879,7 @@ for i in $jpeg_incdirs;
 do
   for j in jpeglib.h;
   do
-    echo "configure: 21956: $i/$j" >&5
+    echo "configure: 21882: $i/$j" >&5
     if test -r "$i/$j"; then
       echo "taking that" >&5
       jpeg_incdir=$i
@@ -22191,7 +22117,7 @@ for i in $qt_incdirs;
 do
   for j in $kde_qt_header;
   do
-    echo "configure: 22194: $i/$j" >&5
+    echo "configure: 22120: $i/$j" >&5
     if test -r "$i/$j"; then
       echo "taking that" >&5
       qt_incdir=$i
@@ -22983,7 +22909,7 @@ for i in $kde_incdirs;
 do
   for j in $kde_check_header;
   do
-    echo "configure: 22986: $i/$j" >&5
+    echo "configure: 22912: $i/$j" >&5
     if test -r "$i/$j"; then
       echo "taking that" >&5
       kde_incdir=$i
@@ -23013,7 +22939,7 @@ for i in $kde_libdirs;
 do
   for j in $kde_check_lib;
   do
-    echo "configure: 23016: $i/$j" >&5
+    echo "configure: 22942: $i/$j" >&5
     if test -r "$i/$j"; then
       echo "taking that" >&5
       kde_libdir=$i
@@ -23031,7 +22957,7 @@ for i in $kde_libdirs;
 do
   for j in "kde3/plugins/designer/kdewidgets.la";
   do
-    echo "configure: 23034: $i/$j" >&5
+    echo "configure: 22960: $i/$j" >&5
     if test -r "$i/$j"; then
       echo "taking that" >&5
       kde_widgetdir=$i
@@ -24133,7 +24059,7 @@ for i in $kde_sharedirs;
 do
   for j in apps/ksgmltools2/customization/kde-chunk.xsl;
   do
-    echo "configure: 24136: $i/$j" >&5
+    echo "configure: 24062: $i/$j" >&5
     if test -r "$i/$j"; then
       echo "taking that" >&5
       KDE_XSL_STYLESHEET=$i
@@ -24538,8 +24464,8 @@ _ACEOF
 if test "${with_libsynce+set}" = set; then
   withval="$with_libsynce"
 
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
 
 
 fi;
@@ -24549,7 +24475,7 @@ fi;
 if test "${with_libsynce_include+set}" = set; then
   withval="$with_libsynce_include"
 
-				CPPFLAGS="$CPPFLAGS -I${withval}"
+		CPPFLAGS="$CPPFLAGS -I${withval}"
 
 
 fi;
@@ -24559,7 +24485,7 @@ fi;
 if test "${with_libsynce_lib+set}" = set; then
   withval="$with_libsynce_lib"
 
-				LDFLAGS="$LDFLAGS -L${withval}"
+		LDFLAGS="$LDFLAGS -L${withval}"
 
 
 fi;
@@ -24626,7 +24552,9 @@ else
 echo "$as_me: error: Can't find synce library" >&2;}
    { (exit 1); exit 1; }; }
 
+
 fi
+
 
 
 for ac_header in synce.h
@@ -24772,11 +24700,10 @@ else
 echo "$as_me: error: Can't find synce.h" >&2;}
    { (exit 1); exit 1; }; }
 
+
 fi
 
 done
-
-
 
 
 
@@ -24784,8 +24711,8 @@ done
 if test "${with_librapi2+set}" = set; then
   withval="$with_librapi2"
 
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
 
 
 fi;
@@ -24795,7 +24722,7 @@ fi;
 if test "${with_librapi2_include+set}" = set; then
   withval="$with_librapi2_include"
 
-				CPPFLAGS="$CPPFLAGS -I${withval}"
+		CPPFLAGS="$CPPFLAGS -I${withval}"
 
 
 fi;
@@ -24805,11 +24732,10 @@ fi;
 if test "${with_librapi2_lib+set}" = set; then
   withval="$with_librapi2_lib"
 
-				LDFLAGS="$LDFLAGS -L${withval}"
+		LDFLAGS="$LDFLAGS -L${withval}"
 
 
 fi;
-
 
 
 echo "$as_me:$LINENO: checking for CeRapiInit in -lrapi" >&5
@@ -24879,7 +24805,9 @@ else
 echo "$as_me: error: Can't find RAPI library" >&2;}
    { (exit 1); exit 1; }; }
 
+
 fi
+
 
 
 for ac_header in rapi.h
@@ -25025,11 +24953,10 @@ else
 echo "$as_me: error: Can't find rapi.h" >&2;}
    { (exit 1); exit 1; }; }
 
+
 fi
 
 done
-
-
 
 
 

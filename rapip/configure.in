@@ -49,16 +49,6 @@ AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
 KDE_PROG_LIBTOOL
 
-AC_CHECK_LIB(rapi, CeRapiInit, ,
-[
-	echo "=================================================="
-	echo "You have not installed the synce-librapi library."
-	echo "Get it from http://synce.sourceforge.net/ and"
-	echo "install it before trying to compile rapi-kioslave."
-	echo "=================================================="
-	exit 1
-])
-
 dnl for NLS support. Call them in this order!
 dnl WITH_NLS is for the po files
 AM_KDE_WITH_NLS
@@ -71,80 +61,85 @@ dnl PACKAGE set before
 AC_C_BIGENDIAN
 AC_CHECK_KDEMAXPATHLEN
 
- AC_ARG_WITH(libsynce,
-    AC_HELP_STRING(
-      [--with-libsynce[=DIR]],
-      [Search for libsynce in DIR/include and DIR/lib]),
-      [
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
-			]
-    )
+AC_ARG_WITH(libsynce, 
+	AC_HELP_STRING(
+			[--with-libsynce[=DIR]],
+			[Search for libsynce in DIR/include and DIR/lib]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+	]
+)
 
-  AC_ARG_WITH(libsynce-include,
-    AC_HELP_STRING(
-      [--with-libsynce-include[=DIR]],
-      [Search for libsynce header files in DIR]),
-      [
-				CPPFLAGS="$CPPFLAGS -I${withval}"
-			]
-    )
+AC_ARG_WITH(libsynce-include,
+	AC_HELP_STRING(
+			[--with-libsynce-include[=DIR]],
+			[Search for libsynce header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
 
-  AC_ARG_WITH(libsynce-lib,
-    AC_HELP_STRING(
-      [--with-libsynce-lib[=DIR]],
-      [Search for libsynce library files in DIR]),
-      [
-				LDFLAGS="$LDFLAGS -L${withval}"
-			]
-    )
+AC_ARG_WITH(libsynce-lib,
+	AC_HELP_STRING(
+			[--with-libsynce-lib[=DIR]],
+			[Search for libsynce library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
 
-	AC_CHECK_LIB(synce,main,,[
+AC_CHECK_LIB(synce,main,,
+	[
 		AC_MSG_ERROR([Can't find synce library])
-		])
-	AC_CHECK_HEADERS(synce.h,,[
+	]
+)
+
+AC_CHECK_HEADERS(synce.h,,
+	[
 		AC_MSG_ERROR([Can't find synce.h])
-		])
+	]
+)
 
+AC_ARG_WITH(librapi2,
+	AC_HELP_STRING(
+			[--with-librapi2[=DIR]],
+			[Search for librapi2 in DIR/include and DIR/lib]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+	]
+)
 
+AC_ARG_WITH(librapi2-include,
+	AC_HELP_STRING(
+			[--with-librapi2-include[=DIR]],
+			[Search for librapi2 header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
 
-  AC_ARG_WITH(librapi2,
-    AC_HELP_STRING(
-      [--with-librapi2[=DIR]],
-      [Search for librapi2 in DIR/include and DIR/lib]),
-      [
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
-			]
-    )
+AC_ARG_WITH(librapi2-lib,
+	AC_HELP_STRING(
+			[--with-librapi2-lib[=DIR]],
+			[Search for librapi2 library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
 
-  AC_ARG_WITH(librapi2-include,
-    AC_HELP_STRING(
-      [--with-librapi2-include[=DIR]],
-      [Search for librapi2 header files in DIR]),
-      [
-				CPPFLAGS="$CPPFLAGS -I${withval}"
-			]
-    )
-
-  AC_ARG_WITH(librapi2-lib,
-    AC_HELP_STRING(
-      [--with-librapi2-lib[=DIR]],
-      [Search for librapi2 library files in DIR]),
-      [
-				LDFLAGS="$LDFLAGS -L${withval}"
-			]
-    )
-
-
-	AC_CHECK_LIB(rapi,CeRapiInit,,[
+AC_CHECK_LIB(rapi,CeRapiInit,,
+	[
 		AC_MSG_ERROR([Can't find RAPI library])
-		])
-	AC_CHECK_HEADERS(rapi.h,,[
+	]
+)
+
+AC_CHECK_HEADERS(rapi.h,,
+	[
 		AC_MSG_ERROR([Can't find rapi.h])
-		])
-
-
+	]
+)
 KDE_CREATE_SUBDIRSLIST
 AC_CONFIG_FILES([ Makefile ])
 AC_CONFIG_FILES([ doc/Makefile ])

@@ -8,38 +8,15 @@
  *   (at your option) any later version.                                   *
  ***************************************************************************/
 
-#ifndef _RakiWorkerThread_H_
-#define _RakiWorkerThread_H_
-
-#include <qthread.h>
-#include <klistbox.h>
-
 #include "workerthreadinterface.h"
 
 
-/**
- * 
- * Volker Christian,,,
- **/
+WorkerThreadInterface::WorkerThreadInterface()
 
-class RakiWorkerThread : public QThread
 {
+}
 
-protected:
-    RakiWorkerThread();
-    ~RakiWorkerThread();
-    
-public:
-    void run();
-    void start(WorkerThreadInterface *wti, 
-        enum WorkerThreadInterface::threadType type = (enum WorkerThreadInterface::threadType) 0);
-    void stop();
-    
-private:
-    WorkerThreadInterface *wti;
-    
-public:
-    static RakiWorkerThread *rakiWorkerThread;
-};
 
-#endif
+WorkerThreadInterface::~WorkerThreadInterface()
+{
+}

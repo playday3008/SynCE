@@ -8,38 +8,44 @@
  *   (at your option) any later version.                                   *
  ***************************************************************************/
 
-#ifndef _RakiWorkerThread_H_
-#define _RakiWorkerThread_H_
+#ifndef _CONFIGDIALOGIMPL_H_
+#define _CONFIGDIALOGIMPL_H_
 
-#include <qthread.h>
-#include <klistbox.h>
 
-#include "workerthreadinterface.h"
+#include <kconfig.h>
+#include <configdialog.h>
 
 
 /**
  * 
  * Volker Christian,,,
  **/
-
-class RakiWorkerThread : public QThread
+class ConfigDialogImpl : public ConfigDialog
 {
 
+public:
+    ConfigDialogImpl(QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    ~ConfigDialogImpl();
+
+    void updateFields();
+    bool getUsePassword();
+    bool getStartDccm();
+    QString getPassword();
+    QString getDccmPath();
+
+public slots:
+    void applySlot();
+    
 protected:
-    RakiWorkerThread();
-    ~RakiWorkerThread();
-    
-public:
-    void run();
-    void start(WorkerThreadInterface *wti, 
-        enum WorkerThreadInterface::threadType type = (enum WorkerThreadInterface::threadType) 0);
-    void stop();
-    
+    QString password;
+    QString dccmPath;
+    bool startDccm;
+    bool usePassword;
+    void readConfig();
+
 private:
-    WorkerThreadInterface *wti;
-    
-public:
-    static RakiWorkerThread *rakiWorkerThread;
+    KConfig *ksConfig;
+    void writeConfig();
 };
 
 #endif

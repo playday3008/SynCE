@@ -8,38 +8,40 @@
  *   (at your option) any later version.                                   *
  ***************************************************************************/
 
-#ifndef _RakiWorkerThread_H_
-#define _RakiWorkerThread_H_
+#ifndef _WORKERTHREADINTERFACE_H_
+#define _WORKERTHREADINTERFACE_H_
 
 #include <qthread.h>
-#include <klistbox.h>
-
-#include "workerthreadinterface.h"
-
+#include <rapi.h>
 
 /**
  * 
  * Volker Christian,,,
  **/
-
-class RakiWorkerThread : public QThread
+class WorkerThreadInterface
 {
 
-protected:
-    RakiWorkerThread();
-    ~RakiWorkerThread();
-    
 public:
-    void run();
-    void start(WorkerThreadInterface *wti, 
-        enum WorkerThreadInterface::threadType type = (enum WorkerThreadInterface::threadType) 0);
-    void stop();
+    struct sysinfo_s {
+        CEOSVERSIONINFO version;
+        SYSTEM_INFO system;
+        STORE_INFORMATION store;
+        SYSTEM_POWER_STATUS_EX power;
+    };
     
-private:
-    WorkerThreadInterface *wti;
+    enum threadType {
+        SOFTWARE_FETCHER= 1,
+        SYSINFO_FETCHER,
+        BATTERYSTATUS_FETCHER,
+        SOFTWARE_INSTALLER,
+        SOFTWARE_UNINSTALLER
+    };
     
-public:
-    static RakiWorkerThread *rakiWorkerThread;
+  WorkerThreadInterface();
+  virtual ~WorkerThreadInterface();
+  virtual void work(QThread *qThread) = 0;
+  enum threadType type;
+  int isRunning;
 };
 
 #endif

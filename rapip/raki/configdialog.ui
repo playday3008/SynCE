@@ -8,8 +8,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>368</width>
-            <height>168</height>
+            <width>394</width>
+            <height>195</height>
         </rect>
     </property>
     <property name="caption">
@@ -40,6 +40,35 @@
                     <property name="text">
                         <string>Start dccm at start up</string>
                     </property>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout3</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel1_2</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
+                            </property>
+                            <property name="text">
+                                <string>Path to dccm:</string>
+                            </property>
+                        </widget>
+                        <widget class="KLineEdit">
+                            <property name="name">
+                                <cstring>dccmPathInput</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
+                            </property>
+                        </widget>
+                    </hbox>
                 </widget>
                 <widget class="QCheckBox">
                     <property name="name">
@@ -96,7 +125,7 @@
             <property name="sizeHint">
                 <size>
                     <width>21</width>
-                    <height>16</height>
+                    <height>20</height>
                 </size>
             </property>
         </spacer>
@@ -202,12 +231,6 @@
         <slot>setEnabled(bool)</slot>
     </connection>
     <connection>
-        <sender>buttonApply</sender>
-        <signal>clicked()</signal>
-        <receiver>ConfigDialog</receiver>
-        <slot>applySlot()</slot>
-    </connection>
-    <connection>
         <sender>passwordCheckbox</sender>
         <signal>toggled(bool)</signal>
         <receiver>passwordEdit</receiver>
@@ -231,35 +254,44 @@
         <receiver>ConfigDialog</receiver>
         <slot>changedSlot()</slot>
     </connection>
+    <connection>
+        <sender>buttonApply</sender>
+        <signal>clicked()</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>applySlot()</slot>
+    </connection>
+    <connection>
+        <sender>startDccmCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>textLabel1_2</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>startDccmCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>dccmPathInput</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>dccmPathInput</sender>
+        <signal>textChanged(const QString&amp;)</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>changedSlot()</slot>
+    </connection>
 </connections>
 <includes>
-    <include location="global" impldecl="in declaration">kconfig.h</include>
-    <include location="global" impldecl="in declaration">kapplication.h</include>
     <include location="local" impldecl="in implementation">raki.h</include>
+    <include location="global" impldecl="in declaration">kapplication.h</include>
     <include location="local" impldecl="in implementation">configdialog.ui.h</include>
 </includes>
-<variables>
-    <variable access="private">KConfig *ksConfig;</variable>
-    <variable access="private">bool usePassword;</variable>
-    <variable access="private">bool startDccm;</variable>
-    <variable access="private">QString password;</variable>
-</variables>
 <slots>
-    <slot specifier="non virtual">applySlot()</slot>
     <slot specifier="non virtual">okSlot()</slot>
     <slot specifier="non virtual">changedSlot()</slot>
+    <slot>applySlot()</slot>
 </slots>
-<functions>
-    <function access="private" specifier="non virtual">init()</function>
-    <function specifier="non virtual">updateFields()</function>
-    <function specifier="non virtual" returnType="bool">getUsePassword()</function>
-    <function specifier="non virtual" returnType="bool">getStartDccm()</function>
-    <function specifier="non virtual" returnType="QString">getPassword()</function>
-    <function access="private" specifier="non virtual">writeConfig()</function>
-    <function access="private" specifier="non virtual">readConfig()</function>
-</functions>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>
+    <includehint>klineedit.h</includehint>
     <includehint>klineedit.h</includehint>
     <includehint>kpushbutton.h</includehint>
 </includehints>

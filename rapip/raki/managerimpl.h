@@ -8,38 +8,39 @@
  *   (at your option) any later version.                                   *
  ***************************************************************************/
 
-#ifndef _RakiWorkerThread_H_
-#define _RakiWorkerThread_H_
+#ifndef _MANAGERIMPL_H_
+#define _MANAGERIMPL_H_
 
-#include <qthread.h>
-#include <klistbox.h>
 
+#include "management.h"
 #include "workerthreadinterface.h"
-
+#include "rakievent.h"
 
 /**
  * 
  * Volker Christian,,,
  **/
-
-class RakiWorkerThread : public QThread
+class ManagerImpl : public Manager, WorkerThreadInterface
 {
+public:    
+    ManagerImpl(QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    ~ManagerImpl();
 
-protected:
-    RakiWorkerThread();
-    ~RakiWorkerThread();
+    void customEvent (QCustomEvent *e);
+    void closeEvent(QCloseEvent *e);
+    void work(QThread *qt);
     
-public:
-    void run();
-    void start(WorkerThreadInterface *wti, 
-        enum WorkerThreadInterface::threadType type = (enum WorkerThreadInterface::threadType) 0);
-    void stop();
-    
+public slots:
+    void uninstallSoftwareSlot();
+    void refreshSystemInfoSlot();
+    void refreshSoftwareSlot();
+    void refreshBatteryStatusSlot();
+
 private:
-    WorkerThreadInterface *wti;
-    
-public:
-    static RakiWorkerThread *rakiWorkerThread;
+    void uninstallSoftware();
+    void fetchSystemInfo();
+    void fetchBatteryStatus();
+    void fetchSoftwareList();
 };
 
 #endif

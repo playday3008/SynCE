@@ -17,12 +17,13 @@
 #include <kaboutapplication.h>
 #include <kaboutdata.h>
 #include <ksystemtray.h>
+#include <kprocess.h>
 
-#include "runwindow.h"
-#include "progressbar.h"
+#include "runwindowimpl.h"
 #include "errorevent.h"
-#include "management.h"
-#include "configdialog.h"
+#include "managerimpl.h"
+#include "configdialogimpl.h"
+#include "installer.h"
 
 
 class Raki : public KSystemTray, public DCOPObject
@@ -34,7 +35,7 @@ public:
   ~Raki();
   
   void setConnectionStatus(bool enable);
-
+  
 protected slots:
   void showPopupMenu(QPopupMenu *);
 
@@ -44,11 +45,11 @@ public:
 protected:
   void mousePressEvent(QMouseEvent *);
   void dropEvent(QDropEvent* event);
-  void installCabinetFile(QString file);
   void droppedFile(KURL url);
   void dragEnterEvent(QDragEnterEvent *event);
   void dragLeaveEvent(QDragLeaveEvent *event);
   void customEvent (QCustomEvent *event);
+  void deleteFile(KURL delFile);
 
 private slots:
   void quit();
@@ -67,10 +68,10 @@ private:
   DCOPClient *dcopClient;
   KPopupMenu *rapiLeMenu;
   KPopupMenu *rapiReMenu;
-  RunWindow *runWindow;
-  Manager *managerWindow;
-  Progress *progressBar;
-  ConfigDialog *configDialog;
+  RunWindowImpl *runWindow;
+  ManagerImpl *managerWindow;
+  ConfigDialogImpl *configDialog;
+  Installer *installer;
   QString appId;
   bool entered;
   bool running;
@@ -80,10 +81,12 @@ private:
   QPixmap *actualIcon;
   bool dccmRunning;
   int startDccmId;
-  int stopDccmId;
+  int stopDccmId; 
+  KProcess *dccmProc;
   
   enum {
     CONNECT_ITEM = 1,
+    OPEN_ITEM,
     SHUTDOWN_ITEM,
     EXECUTE_ITEM,
     INSTALL_ITEM,
@@ -93,49 +96,7 @@ private:
   };
 private slots: 
   void showAbout();
+  void dccmExited(KProcess *oldDccm);
 };
-
-/*
-class Raki : public KPanelApplet, public DCOPObject
-{
-  Q_OBJECT
-
-public:
-  Raki(const QString& configFile, Type t = Normal, int actions = 0,
-       QWidget *parent = 0, const char *name = 0);
-  ~Raki();
-  virtual int widthForHeight(int height) const;
-  virtual int heightForWidth(int width) const;
-  virtual void about();
-  virtual void help();
-  virtual void preferences();
-
-  virtual bool process(const QCString &fun, const QByteArray &data,
-                       QCString &replyType, QByteArray &replyData);
-  QString changeConnectionState(int state);
-
-  void updateIcon() const;
-
-  int actualIconSize;
-
-protected:
-  void resizeEvent(QResizeEvent *);
-
-private:
-  KConfig *ksConfig;
-  QWidget *mainView;
-
-  MyLabel *myLabel;
-  pthread_t checkConnection;
-  DCOPClient *dcopClient;
-  QString appId;
-  bool running;
-  bool connected;
-  pixmap_t connectedIcon;
-  pixmap_t disconnectedIcon;
-  pixmap_p actualIcon;
-  KAboutData *aboutData;
-};
-*/
 
 #endif

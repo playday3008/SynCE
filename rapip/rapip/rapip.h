@@ -13,6 +13,8 @@ class kio_rapipProtocol : public KIO::SlaveBase
 public:
     kio_rapipProtocol(const QCString &pool_socket, const QCString &app_socket);
     virtual ~kio_rapipProtocol();
+    virtual void openConnection ();
+    virtual void closeConnection ();
     virtual void mimetype(const KURL& url);
     virtual void get(const KURL& url);
     virtual void put(const KURL & url, int mode, bool overwrite, bool resume);
@@ -24,9 +26,10 @@ public:
     virtual void copy (const KURL &  src, const KURL & dest, int permissions, bool overwrite);
 
 private:
-    bool rapiInit();
-    WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path);
+    WCHAR* adjust_remote_path();
     bool list_matching_files(WCHAR* wide_path);
+    bool ceOk;
+    bool connected;
 };
 
 #endif

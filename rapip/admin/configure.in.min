@@ -49,16 +49,6 @@ AC_ENABLE_SHARED(yes)
 AC_ENABLE_STATIC(no)
 KDE_PROG_LIBTOOL
 
-AC_CHECK_LIB(rapi, CeRapiInit, ,
-[
-	echo "=================================================="
-	echo "You have not installed the synce-librapi library."
-	echo "Get it from http://synce.sourceforge.net/ and"
-	echo "install it before trying to compile rapi-kioslave."
-	echo "=================================================="
-	exit 1
-])
-
 dnl for NLS support. Call them in this order!
 dnl WITH_NLS is for the po files
 AM_KDE_WITH_NLS

@@ -7,21 +7,8 @@
 ** place of a destructor.
 *****************************************************************************/
 
-#include "rapiwrapper.h"
 
-void RunWindow::init()
-{
-    cancel->setFocus();
-}
-
-
-void RunWindow::setURL( const QString &url )
-{
-    this->url = new KURL(url);
-}
-
-
-void RunWindow::openFileDialog( KURLRequester *requester )
+void RunWindow::openFileDialog(KURLRequester *requester)
 {
     KURL url("rapip:/");
     KFileDialog *fd = requester->fileDialog();
@@ -36,9 +23,8 @@ void RunWindow::executeProgram()
     WCHAR* wide_program = NULL;
     WCHAR* wide_parameters = NULL;
     PROCESS_INFORMATION info = {0, 0, 0, 0 };
-    KURL url;
-    
-    url = KURL::fromPathOrURL(runUrlRequester->url());
+
+    KURL url(runUrlRequester->url());
     
     if (Ce::rapiInit()) {
         if ((wide_program = Ce::wpath_from_upath(url.path()))) {    

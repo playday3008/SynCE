@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>306</width>
-            <height>111</height>
+            <height>112</height>
         </rect>
     </property>
     <property name="maximumSize">
@@ -189,12 +189,6 @@
 <connections>
     <connection>
         <sender>runUrlRequester</sender>
-        <signal>urlSelected(const QString&amp;)</signal>
-        <receiver>RunWindow</receiver>
-        <slot>setURL(const QString&amp;)</slot>
-    </connection>
-    <connection>
-        <sender>runUrlRequester</sender>
         <signal>openFileDialog(KURLRequester*)</signal>
         <receiver>RunWindow</receiver>
         <slot>openFileDialog(KURLRequester*)</slot>
@@ -218,24 +212,16 @@
     <tabstop>execute</tabstop>
 </tabstops>
 <includes>
-    <include location="local" impldecl="in declaration">kurl.h</include>
-    <include location="local" impldecl="in declaration">kfiledialog.h</include>
-    <include location="local" impldecl="in declaration">kfile.h</include>
+    <include location="global" impldecl="in declaration">kurl.h</include>
+    <include location="global" impldecl="in declaration">kfiledialog.h</include>
     <include location="global" impldecl="in implementation">rapi.h</include>
-    <include location="global" impldecl="in implementation">syslog.h</include>
+    <include location="local" impldecl="in implementation">rapiwrapper.h</include>
     <include location="local" impldecl="in implementation">runwindow.ui.h</include>
 </includes>
-<variables>
-    <variable>KURL *url;</variable>
-</variables>
 <slots>
-    <slot access="protected" specifier="non virtual">setURL( const QString &amp; url )</slot>
     <slot access="protected" specifier="non virtual">openFileDialog( KURLRequester * requester )</slot>
     <slot access="protected" specifier="non virtual">executeProgram()</slot>
 </slots>
-<functions>
-    <function access="private" specifier="non virtual">init()</function>
-</functions>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>
     <includehint>kurlrequester.h</includehint>

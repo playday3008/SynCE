@@ -19,7 +19,7 @@ RakiEvent::RakiEvent(enum eventTypes lt)
 }
 
 
-RakiEvent::RakiEvent(enum eventTypes lt, struct RakiWorkerThread::sysinfo_s sysinfo)
+RakiEvent::RakiEvent(enum eventTypes lt, struct WorkerThreadInterface::sysinfo_s sysinfo)
   : QCustomEvent(QEvent::User)
 {
     this->lt = lt;
@@ -63,7 +63,7 @@ enum RakiEvent::eventTypes RakiEvent::eventType()
 
 
 
-struct RakiWorkerThread::sysinfo_s RakiEvent::getSysinfo()
+struct WorkerThreadInterface::sysinfo_s RakiEvent::getSysinfo()
 {
     return sysinfo;
 }

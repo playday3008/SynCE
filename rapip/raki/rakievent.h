@@ -14,7 +14,7 @@
 #include <qevent.h>
 #include <qapplication.h>
 #include <qlistbox.h>
-#include "rakiworkerthread.h"
+#include "workerthreadinterface.h"
 
 /**
  * 
@@ -37,14 +37,14 @@ public:
   
 public:
   RakiEvent(enum eventTypes lt);
-  RakiEvent(enum eventTypes lt, struct RakiWorkerThread::sysinfo_s sysinfo);
+  RakiEvent(enum eventTypes lt, struct WorkerThreadInterface::sysinfo_s sysinfo);
   RakiEvent(enum eventTypes lt, QString msg);
   RakiEvent(enum eventTypes lt, QListBoxItem *item);
   RakiEvent(enum eventTypes lt, int progressValue);
   
   ~RakiEvent();
   enum eventTypes eventType();
-  struct RakiWorkerThread::sysinfo_s getSysinfo();
+  struct WorkerThreadInterface::sysinfo_s getSysinfo();
   QString getMessage();
   int getProgress();
   QListBoxItem *getItem();
@@ -52,7 +52,7 @@ public:
 private:
     enum eventTypes lt;
     int progressValue; 
-    struct RakiWorkerThread::sysinfo_s sysinfo;
+    struct WorkerThreadInterface::sysinfo_s sysinfo;
     QString msg;
     QListBoxItem *item;
 };

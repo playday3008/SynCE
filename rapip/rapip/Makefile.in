@@ -574,6 +574,7 @@ messages: rc.cpp
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
 
+
 #>+ 8
 kio_rapip.la.closure: $(kio_rapip_la_OBJECTS) $(kio_rapip_la_DEPENDENCIES)
 	@echo "int main() {return 0;}" > kio_rapip_la_closure.cpp

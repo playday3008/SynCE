@@ -1,5 +1,34 @@
-2003-01-27  Volker Christian <voc@soft.uni-linz.ac.at>
-	* Initial Release
+2003-02-16  Volker Christian <voc@soft.uni-linz.ac.at>
+	+ Overall changes:
+		+ Fixed some compile-problems. The following compiler / kde / qt
+		  versions are now supported:
+		  	gcc-2.95.x, gcc-3.2.x, kde-3.0, kde-3.1, qt-3.0, qt-3.1
+		  Checked combinations:
+		  	gcc-2.95.x + kde-3.0 + qt-3.0
+			gcc-2.95.x + kde-3.1 + qt-3.1
+			gcc-3.2.x  + kde-3.1 + qt-3.1
+	* Changes in rapip:
+		+ The code has been completely restructured.
+		+ Much more error-checking is now done. It should now react
+		  rasonable on (hopefully) every error.
+		+ The librapi-library now is CeRapiUninit()´ed after every
+		  transaction.
+	+ Changes in raki:
+		+ The proprietary method for copying the dragged file up into 
+		  the /Windows/AppMgr/Install-directory of the PDA has been 
+		  replaced by a FileCopyJob. So it integrates cleanly into KDE. 
+		  One can now drag a cab-file from a remote ftp-server and 
+		  drop it on the systray-icon and the file gets installed.
+		+ ProgressBar-Dialog has gone and has been replaced by the
+		  progress-window of the FileCopyJob.
+		+ More than one file could now be installed onto the PDA 
+		  simultaniously.
+		+ dccm now started by a KProcess.
+		+ Startup and restart of dccm should now be reliable.
+		+ The path to the dccm-executable could now be configured via
+		  the config-dialog.
+		+ New menu-item for opening the filesystem "rapip:/" directly.
+		
 
 2003-02-10  Volker Christian <voc@soft.uni-linz.ac.at>
 	* Code-cleaning in the kio_slave - nevertheless it is still not perfect
@@ -17,3 +46,6 @@
 		+ Password for PDA-connection (configurable)
 		+ Start PocketPC-Applications on the PDA remotely from your
 		  Desktop
+
+2003-01-27  Volker Christian <voc@soft.uni-linz.ac.at>
+	* Initial Release

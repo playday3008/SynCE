@@ -8,38 +8,21 @@
  *   (at your option) any later version.                                   *
  ***************************************************************************/
 
-#ifndef _RakiWorkerThread_H_
-#define _RakiWorkerThread_H_
+#ifndef _RUNWINDOWIMPL_H_
+#define _RUNWINDOWIMPL_H_
 
-#include <qthread.h>
-#include <klistbox.h>
-
-#include "workerthreadinterface.h"
-
+#include "runwindow.h"
 
 /**
  * 
  * Volker Christian,,,
  **/
-
-class RakiWorkerThread : public QThread
+class RunWindowImpl : public RunWindow
 {
 
-protected:
-    RakiWorkerThread();
-    ~RakiWorkerThread();
-    
 public:
-    void run();
-    void start(WorkerThreadInterface *wti, 
-        enum WorkerThreadInterface::threadType type = (enum WorkerThreadInterface::threadType) 0);
-    void stop();
-    
-private:
-    WorkerThreadInterface *wti;
-    
-public:
-    static RakiWorkerThread *rakiWorkerThread;
+  RunWindowImpl(QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+  ~RunWindowImpl();
 };
 
 #endif

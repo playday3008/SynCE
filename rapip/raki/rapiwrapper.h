@@ -5,8 +5,6 @@
 #include <qstring.h>
 #include <rapi.h>
 
-#include <syslog.h>
-
 
 class Ce
 {
@@ -178,10 +176,13 @@ public:
   {
     WCHAR* wPath = NULL;
 
-    uPath.replace('/', "\\");
-
     if (uPath.ascii() != NULL)
       wPath = synce::wstr_from_ascii(uPath.ascii());
+      
+    if (wPath) 
+        for (WCHAR* p = wPath; *p; p++) 
+            if (*p == '/') 
+                *p = '\\'; 
 
     return wPath;
   }
@@ -203,10 +204,11 @@ private:
     FILE*  local;
   };
 
-  typedef struct _AnyFile AnyFile;
-
   static bool initialized;
   static int used;
+
+public:
+  typedef struct _AnyFile AnyFile;
 };
 
 
