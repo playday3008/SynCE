@@ -1,7 +1,7 @@
 # Makefile.PL for RRA.pm
 #
 # To build the wrapper run:
-#    perl Makefile.PL [-I<dir> [-I...]]
+#    perl Makefile.PL [INC="-I<dir> [-I...]"]
 #    make
 #    make install
 #
@@ -15,8 +15,9 @@ my $filename="perlrra_wrap";
 $|++;
 
 # Add the include parameters passed to this script.
-my $inc="-I/usr/include -I/usr/local/inlcude ".
-  join(" ", grep{substr($_, 0, 2) eq "-I"}@ARGV);
+(grep{ substr($_, 0, 3) eq "INC" }@ARGV)[0] =~ /^INC=(.+)$/;
+my $inc=$1 || "-I/usr/include -I/usr/local/inlcude";
+push @ARGV, "INC=$inc";
 
 # Create the wrapper
 print "Creating $filename.c\n";
