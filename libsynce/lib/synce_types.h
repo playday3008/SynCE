@@ -109,7 +109,9 @@ typedef int32_t  HRESULT;
 #define ERROR_ACCESS_DENIED            5
 #define ERROR_NOT_ENOUGH_MEMORY        8
 #define ERROR_SEEK                    25
+#define ERROR_SHARING_VIOLATION       32
 #define ERROR_NOT_SUPPORTED           50
+#define ERROR_DUP_NAME                52
 #define ERROR_FILE_EXISTS             80
 #define ERROR_INVALID_PARAMETER       87
 #define ERROR_INSUFFICIENT_BUFFER    122
