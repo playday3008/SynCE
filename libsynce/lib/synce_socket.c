@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/poll.h>
 
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
@@ -146,15 +147,18 @@ fail:
 	return false;
 }
 
-SynceSocket* synce_socket_accept(SynceSocket* server)
+SynceSocket* synce_socket_accept(SynceSocket* server, struct sockaddr_in* address)
 {
 	struct sockaddr_in cliaddr;
 	socklen_t clilen;
 	int connfd;
 	SynceSocket* client = NULL;
+
+	if (!address)
+		address = &cliaddr;
 	
-	clilen = sizeof(cliaddr);
-	if ( (connfd = accept(server->fd, (struct sockaddr*)&cliaddr, &clilen)) < 0 )
+	clilen = sizeof(struct sockaddr_in);
+	if ( (connfd = accept(server->fd, (struct sockaddr*)address, &clilen)) < 0 )
 	{
 		synce_socket_error("accept failed, error: %i \"%s\"", errno, strerror(errno));
 		goto exit;
@@ -170,8 +174,6 @@ SynceSocket* synce_socket_accept(SynceSocket* server)
 	}
 
 	client->fd = connfd;
-	
-	/* TODO: do something with client address? */
 
 exit:
 	return client;
@@ -238,4 +240,90 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 	return 0 == bytes_needed;
 }
 
+/**
+ * Convert from SocketEvents to poll events
+ */
+static short to_poll_events(SocketEvents events)
+{
+	short poll_events = 0;
+
+	if (events & EVENT_READ)
+		poll_events |= POLLIN;
+
+	if (events & EVENT_WRITE)
+		poll_events |= POLLOUT;
+	
+	return poll_events;
+}
+
+/**
+ * Convert to SocketEvents from poll events
+ */
+static SocketEvents from_poll_events(short poll_events)
+{
+	SocketEvents events = 0;
+
+	if (poll_events & POLLIN)
+		events |= EVENT_READ;
+
+	if (poll_events & POLLOUT)
+		events |= EVENT_WRITE;
+
+	return events;
+}
+
+bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* events)
+{
+	/**
+	 * This can easily be replaced by select() if needed on some platform
+	 */
+	bool success = false;
+	int result;
+	struct pollfd pfd;
+	
+	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	{
+		synce_socket_error("Invalid file descriptor");
+		return false;
+	}
+
+	if ( !events )
+	{
+		synce_socket_error("Events parameter is NULL");
+		return false;
+	}
+
+	pfd.fd = socket->fd;
+	pfd.events = to_poll_events(*events);
+	pfd.revents = 0;
+	
+	while (pfd.revents != 0)
+	{
+		synce_socket_trace("what?");
+		pfd.revents = 0;
+	}
+
+	result = poll(&pfd, 1, timeoutInSeconds * 1000);
+
+	switch (result)
+	{
+		case 0:
+			*events = EVENT_TIMEOUT;
+			break;
+
+		case 1:
+			*events = from_poll_events(pfd.revents);
+			break;
+
+		default:
+			synce_socket_error("poll failed (returned %i), error: %i \"%s\"", 
+					result, errno, strerror(errno));
+			goto exit;
+	}
+
+	success = true;
+
+exit:
+	return success;
+}
 
