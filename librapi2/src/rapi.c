@@ -19,68 +19,31 @@ HRESULT CeRapiFreeBuffer(
 static bool rapi_login(SynceSocket* socket, const char* password, int key, unsigned char* reply)/*{{{*/
 {
 	bool success = false;
-	unsigned char* encoded = NULL;
-	size_t length = 0;
-	size_t size = 0;
-	uint16_t size_le = 0;
-	size_t i = 0;
+	bool password_correct = false;
 	
 	synce_trace("password=\"%s\", key=0x%08x", password, key);
 	
-	if (!password)
-	{
-		synce_error("password parameter is NULL");
-		goto exit;
-	}
-
 	if (!reply)
 	{
 		synce_error("reply parameter is NULL");
 		goto exit;
 	}
-	
-	length = strlen(password);
-	
-	if (4 != length)
+
+	if (!synce_password_send(socket, password, key))
 	{
-		synce_error("password is not four bytes");
+		synce_error("failed to send password");
 		goto exit;
 	}
 
-	encoded = (unsigned char*)wstr_from_ascii(password);
-
-	size = 2*(length+1);
-	for (i = 0; i < size; i++)
+	if (!synce_password_recv_reply(socket, &password_correct))
 	{
-		encoded[i] ^= key;
-	}
-
-	size_le = htole16((uint16_t)size);
-
-	if ( !synce_socket_write(socket, &size_le, sizeof(uint16_t)) )
-	{
-		synce_error("failed to write buffer size to socket");
+		synce_error("failed to get password reply");
 		goto exit;
 	}
-
-	if ( !synce_socket_write(socket, encoded, size) )
-	{
-		synce_error("failed to write encoded password to socket");
-		goto exit;
-	}
-
-	if ( !synce_socket_read(socket, reply, 1) )
-	{
-		synce_error("failed to write encoded password to socket");
-		goto exit;
-	}
-
-	synce_trace("reply=0x%02x", *reply);
 
 	success = true;
 	
 exit:
-	wstr_free_string(encoded);
 	return success;
 }/*}}}*/
 
