@@ -7,6 +7,7 @@
 #define ID_SENSITIVITY     0x0004
 
 #define SENSITIVITY_PUBLIC  0
+#define SENSITIVITY_PRIVATE 1
 
 #define ID_BUSY_STATUS     0x000f
 

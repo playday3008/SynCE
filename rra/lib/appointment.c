@@ -7,6 +7,14 @@
 #include <libmimedir.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
+
+#define MINUTES_PER_DAY (24*60)
+
+#define SECONDS_PER_MINUTE  (60)
+#define SECONDS_PER_HOUR    (SECONDS_PER_MINUTE * 60)
+#define SECONDS_PER_DAY     (SECONDS_PER_HOUR   * 24)
+#define SECONDS_PER_WEEK    (SECONDS_PER_DAY    * 7)
 
 #define MAX_FIELD_COUNT 50 /* just a guess */
 
@@ -119,6 +127,7 @@ struct _AppointmentFromVevent
   uint32_t flags;
   mdir_line** lines;
   mdir_line** iter;
+  bool have_alarm;
 };
 
 typedef struct _AppointmentFromVevent AppointmentFromVevent;
@@ -147,10 +156,10 @@ static time_t datetime_to_unix_time(const char* datetime)/*{{{*/
       &time_struct.tm_sec,
       &suffix);
 
-  if (count < 6)
+  if (count != 3 && count != 6 && count != 7)
   {
     synce_error("Bad date-time: '%s'", datetime);
-    return 0;
+    return -1;
   }
   
   if (count >= 7)
@@ -166,10 +175,135 @@ static time_t datetime_to_unix_time(const char* datetime)/*{{{*/
   return mktime(&time_struct);
 }/*}}}*/
 
-static bool add_filetime(AppointmentFromVevent* afv, uint32_t id, mdir_line *line)/*{{{*/
+static bool duration_to_seconds(const char* duration, int* result)/*{{{*/
+{
+  enum { dur_start, dur_any, dur_time, dur_end } state = dur_start;
+  const char *p;
+  struct tm time_struct;
+  int sign = 1;
+  int value = 0;
+  int seconds = 0;
+
+  memset(&time_struct, 0, sizeof(time_struct));
+
+  for (p = duration; *p; p++)
+  {
+    switch (state)
+    {
+      case dur_start:/*{{{*/
+        switch (*p)
+        {
+          case '+':
+            /* default */
+            break;
+            
+          case '-':
+            sign = -1;
+            break;
+
+          case 'P':
+            state = dur_any;
+            break;
+
+          default:
+            synce_error("Unexpected char '%c' at offset %i in duration '%s'",
+                *p, p - duration, duration);
+            return false;
+        }
+        break;/*}}}*/
+
+      case dur_any:/*{{{*/
+        switch (*p)
+        {
+          case 'W':
+            seconds += value * SECONDS_PER_WEEK;
+            state = dur_end;
+            break;
+          case 'D':
+            seconds += value * SECONDS_PER_DAY;
+            value = 0;
+            break;
+          case 'T':
+            state = dur_time;
+            break;
+
+          default:
+            if (isdigit(*p))
+            {
+              value = (value * 10) + (*p - '0');
+            }
+            else 
+            {
+              synce_error("Unexpected char '%c' at offset %i in duration '%s'",
+                  *p, p - duration, duration);
+              return false;
+            }
+            break;
+        }
+        break;/*}}}*/
+
+      case dur_time:/*{{{*/
+        switch (*p)
+        {
+          case 'H':
+            seconds += value * SECONDS_PER_HOUR;
+            value = 0;
+            break;
+          case 'M':
+            seconds += value * SECONDS_PER_MINUTE;
+            value = 0;
+            break;
+          case 'S':
+            seconds += value;
+            state = dur_end;
+            break;
+
+          default:
+            if (isdigit(*p))
+            {
+              value = (value * 10) + (*p - '0');
+            }
+            else 
+            {
+              synce_error("Unexpected char '%c' at offset %i in duration '%s'",
+                  *p, p - duration, duration);
+              return false;
+            }
+            break;
+        }
+        break;/*}}}*/
+
+      case dur_end:
+        synce_error("Unexpected char '%c' at offset %i in duration '%s'",
+            *p, p - duration, duration);
+        return false;
+    }
+  }
+
+  *result = seconds * sign;
+  return true;
+}/*}}}*/
+
+static void add_int16(AppointmentFromVevent* afv, uint16_t id, int16_t value)/*{{{*/
 {
 	CEPROPVAL* field = &afv->fields[afv->field_index++];
-  char **data_type = mdir_get_param_values(line, "VALUE");
+
+	field->propid = (id << 16) | CEVT_I2;
+  field->val.iVal = value;
+}/*}}}*/
+
+static void add_int32(AppointmentFromVevent* afv, uint16_t id, int32_t value)/*{{{*/
+{
+	CEPROPVAL* field = &afv->fields[afv->field_index++];
+
+	field->propid = (id << 16) | CEVT_I4;
+  field->val.lVal = value;
+}/*}}}*/
+
+static bool add_filetime(AppointmentFromVevent* afv, uint16_t id, const mdir_line *line)/*{{{*/
+{
+	CEPROPVAL* field = &afv->fields[afv->field_index++];
+  char **data_type = mdir_get_param_values((mdir_line*)line, "VALUE");
 
 	assert(line);
 	
@@ -177,7 +311,8 @@ static bool add_filetime(AppointmentFromVevent* afv, uint32_t id, mdir_line *lin
 
   if (data_type) 
   {
-    if (0 != strcasecmp(data_type[0], "DATE-TIME"))
+    if (!STR_EQUAL(data_type[0], "DATE") &&
+        !STR_EQUAL(data_type[0], "DATE-TIME"))
     {
       synce_error("Unexpected data type: '%s'", data_type[0]);
       return false;
@@ -188,6 +323,29 @@ static bool add_filetime(AppointmentFromVevent* afv, uint32_t id, mdir_line *lin
 
   return true;
 }/*}}}*/
+
+static void add_string(AppointmentFromVevent* afv, uint16_t id, const mdir_line *line)/*{{{*/
+{
+	char* value = strdup(line->values[0]);
+	CEPROPVAL* field = &afv->fields[afv->field_index++];
+
+	assert(line);
+	
+	field->propid = (id << 16) | CEVT_LPWSTR;
+
+/*	unescape_string(value);
+	assert(value);*/
+
+/*	if (parser->utf8 || STR_IN_STR(type, "UTF-8"))*/
+		field->val.lpwstr = wstr_from_utf8(value);
+/*	else
+		field->val.lpwstr = wstr_from_ascii(value);*/
+
+	assert(field->val.lpwstr);
+
+  free(value);
+}/*}}}*/
+
 
 static bool rra_begin_any(/*{{{*/
     AppointmentFromVevent* afv,
@@ -230,10 +388,12 @@ static bool rra_begin_valarm(/*{{{*/
   bool success = false;
   mdir_line* line = NULL;
 
+  /* only handle the first alarm */
+  if (afv->have_alarm)
+    return rra_begin_any(afv, "VALARM");
+
   for (afv->iter++; (line = *afv->iter); afv->iter++)
   {
-    synce_trace("%s", line->name);
-    
     if (STR_EQUAL(line->name, "END"))/*{{{*/
     {
       if (STR_EQUAL(line->values[0], "VALARM"))
@@ -247,6 +407,53 @@ static bool rra_begin_valarm(/*{{{*/
         break;
       }
     }/*}}}*/
+    else if (STR_EQUAL(line->name, "TRIGGER"))
+    {
+      char** data_type = mdir_get_param_values(line, "VALUE");
+      char** related   = mdir_get_param_values(line, "RELATED");
+      int duration;
+
+      /* data type must be DURATION */
+      if (data_type && data_type[0])
+      {
+        if (STR_EQUAL(data_type[0], "DATE-TIME"))
+        {
+          synce_warning("Absolute date/time for alarm is not supported");
+          continue;
+        }
+        if (!STR_EQUAL(data_type[0], "DURATION"))
+        {
+          synce_warning("Unknown TRIGGER data type: '%s'", data_type[0]);
+          continue;
+        }
+      }
+
+      /* related must be START */
+      if (related && related[0])
+      {
+        if (STR_EQUAL(related[0], "END"))
+        {
+          synce_warning("Alarms related to event end are not supported");
+          continue;
+        }
+        if (!STR_EQUAL(related[0], "START"))
+        {
+          synce_warning("Unknown TRIGGER data type: '%s'", related[0]);
+          continue;
+        }
+      }
+
+      if (duration_to_seconds(line->values[0], &duration) && duration <= 0)
+      {
+        add_int32(afv, ID_REMINDER_MINUTES_BEFORE_START, -duration / 60);
+        add_int16(afv, ID_REMINDER_ENABLED, 1);
+        afv->have_alarm = true;
+      }
+    }
+    else
+    {
+      synce_warning("Unhandled attribute: '%s'", line->name);
+    }
   }
 
   return success;
@@ -257,10 +464,11 @@ static bool rra_begin_vevent(/*{{{*/
 {
   bool success = false;
   mdir_line* line = NULL;
+  mdir_line* dtstart = NULL;
+  mdir_line* dtend = NULL;
 
   for (afv->iter++; (line = *afv->iter); afv->iter++)
   {
-    synce_trace("%s", line->name);
     if (STR_EQUAL(line->name, "BEGIN"))/*{{{*/
     {
 #if 0
@@ -296,10 +504,60 @@ static bool rra_begin_vevent(/*{{{*/
         break;
       }
     }/*}}}*/
-    else if (STR_EQUAL(line->name, "DTSTART"))/*{{{*/
+    else if (STR_EQUAL(line->name, "CLASS"))
     {
-      add_filetime(afv, ID_START, line);
-    }/*}}}*/
+      if (STR_EQUAL(line->values[0], "PUBLIC"))
+        add_int16(afv, ID_SENSITIVITY, SENSITIVITY_PUBLIC);
+      else if (STR_EQUAL(line->values[0], "PRIVATE") ||
+          STR_EQUAL(line->values[0], "CONFIDENTIAL"))
+        add_int16(afv, ID_SENSITIVITY, SENSITIVITY_PRIVATE);
+      else
+        synce_warning("Unknown value for CLASS: '%s'", line->values[0]);
+    }
+    else if (STR_EQUAL(line->name, "DTSTART"))
+      dtstart = line;
+    else if (STR_EQUAL(line->name, "DTEND"))
+      dtend = line;
+    else if (STR_EQUAL(line->name, "LOCATION"))
+      add_string(afv, ID_LOCATION, line);
+    else if (STR_EQUAL(line->name, "SUMMARY"))
+      add_string(afv, ID_SUBJECT, line);
+    else if (STR_EQUAL(line->name, "TRANSP"))
+    {
+      if (STR_EQUAL(line->values[0], "OPAQUE"))
+        add_int16(afv, ID_BUSY_STATUS, BUSY_STATUS_BUSY);
+      else if (STR_EQUAL(line->values[0], "TRANSPARENT"))
+        add_int16(afv, ID_BUSY_STATUS, BUSY_STATUS_FREE);
+      else
+        synce_warning("Unknown value for TRANSP: '%s'", line->values[0]);
+    }
+    else
+    {
+      synce_warning("Unhandled attribute: '%s'", line->name);
+    }
+  }
+      
+  if (dtstart)
+  {
+    add_filetime(afv, ID_START, dtstart);
+    
+    if (dtend)
+    {
+      int32_t minutes = 
+        (datetime_to_unix_time(dtend->values[0]) - 
+        datetime_to_unix_time(dtstart->values[0])) / 60;
+
+      if (minutes % MINUTES_PER_DAY)
+      {
+        add_int32(afv, ID_DURATION,      minutes);
+        add_int32(afv, ID_DURATION_UNIT, DURATION_UNIT_MINUTES);
+      }
+      else
+      {
+        add_int32(afv, ID_DURATION,      minutes / MINUTES_PER_DAY);
+        add_int32(afv, ID_DURATION_UNIT, DURATION_UNIT_DAYS);
+      }
+    }
   }
 
   return success;
@@ -346,7 +604,7 @@ static bool rra_begin_vcalendar(/*{{{*/
   return success;
 }/*}}}*/
 
-static bool rra_appointment_from_vevent2(
+static bool rra_appointment_from_vevent2(/*{{{*/
     AppointmentFromVevent* afv)
 {
   bool success = false;
@@ -390,7 +648,7 @@ exit:
   mdir_free(afv->lines);
   afv->lines = NULL;
   return success;
-}
+}/*}}}*/
 
 bool rra_appointment_from_vevent(/*{{{*/
     const char* vevent,
