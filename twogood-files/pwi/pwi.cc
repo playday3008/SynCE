@@ -151,6 +151,7 @@ int main(int argc, char**argv)
 
     uint8_t* data = new uint8_t[total_size];
 
+    unsigned paragraph_data_offset = input.tellg();
     input.read((char*)data, total_size);
 
     unsigned align = 4 - (input.tellg() & 3);
@@ -234,9 +235,14 @@ int main(int argc, char**argv)
                 break;
 
               default:
-                cerr << "Unknown control char: 0x" << hex << (unsigned)data[j] << endl;
+                cerr << "Unknown control char: 0x" << hex << (unsigned)data[j] <<  
+                  " at offset 0x" << paragraph_data_offset + j << endl;
                 break;
             }
+            break;
+
+          case 0xc5:  // Reference to embedded data?
+            j+=2;
             break;
 
           case 0xf1:
@@ -244,7 +250,8 @@ int main(int argc, char**argv)
             break;
 
           default:
-            cerr << "Unknown code: 0x" << hex << (unsigned)data[j] << endl;
+            cerr << "Unknown code: 0x" << hex << (unsigned)data[j] << 
+              " at offset 0x" << paragraph_data_offset + j << endl;
             abort();
         }
       }
@@ -259,6 +266,8 @@ int main(int argc, char**argv)
     
     //cerr << "Paragraph " << dec << i << " ends at offset 0x" << hex << input.tellg() << endl;
   }
+  
+  cerr << "Decoding ends at offset 0x" << hex << input.tellg() << endl;
  
 	return 0;
 }
