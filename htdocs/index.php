@@ -87,7 +87,12 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>June 13, 2003</b> Some documentation improvements, mot notably a <a
+<p><b>July 30, 2003</b> SynCE 0.8 is released! SynCE now includes the
+possiblity to synchronize calendar and tasks, in addition to the previous
+address book synchronization support. However, recurring events are not yet
+supported. <a href="http://localhost/synce/using.php">Download</a>.</p>
+
+<p><b>June 13, 2003</b> Some documentation improvements, most notably a <a
 href="qa.php">Questions and Answers</a> page.</p>
 
 <p><b>June 8, 2003</b> The June issue of the swedish computer magazine <a
@@ -127,6 +132,8 @@ Please join the <a
 href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
 mailing list to discuss it!</p>
 
+<!--
+
 <p><b>February 24, 2003</b> Added documentation on <a
 href="multisync.php">Using MultiSync for synchronization</a>.</p>
 
@@ -159,8 +166,6 @@ files and development libraries.</li>
 project to improve the KDE integration. KDE 3.x users, please have look at the
 <tt>rapip</tt> module in <a
 href="cvs.php">CVS</a>!</p>
-
-<!--
 
 <p><b>January 30, 2003</b> The absence of news does fortunately not mean that
 nothing is happening with the project. We have recevied several KDE I/O-slaves
