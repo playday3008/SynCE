@@ -4,7 +4,7 @@
 
 <p>Return to <a href="../index.php">main page</a>.</p>
 
-<h1>KDE-Integration of SynCE</h1>
+<h1>KDE integration of SynCE</h1>
 
 <h2>Overview</h2>
 <p>
