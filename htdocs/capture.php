@@ -31,7 +31,8 @@ than 1024. You should not be running dccm as it binds to the same port as one
 of the datapipes.</p>
 
 <p>Ethereal is then set to listen on the interface that the Windows desktop
-machine is connected to.</p>
+machine is connected to. Filter on the IP of the Windows machine (<i>host
+192.168.0.148</i> for example).</p>
 
 <p>Now you can use synce-serial-start on your Linux machine and begin capturing!</p>
 

@@ -20,8 +20,9 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="#future">Future</a></li>
 <li><a href="#developers">The SynCE developers</a></li>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
+<li><a href="http://sourceforge.net/mail/?group_id=30550">Mailing list information</a></li>
+<li class=SPACED><a href="links.php">Links</a></li>
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
-<li><a href="links.php">Links</a></li>
 </ul>
 
 <a name="introduction"></a>
