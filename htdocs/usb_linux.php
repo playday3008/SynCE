@@ -132,8 +132,8 @@ and insert it like this:</p>
 
 <pre>modprobe ipaq ttyUSB=1</pre>
 
-<p>You could also put a line in your <tt>/etc/modules.conf</tt> file for
-this:</p>
+<p>You could also put a line in your <tt>/etc/modules.conf</tt> or
+<tt>/etc/modprobe.conf</tt> file for this:</p>
 
 <pre>option ipaq ttyUSB=1</pre>
 
@@ -162,8 +162,8 @@ device:</p>
 
 <blockquote><pre>modprobe ipaq vendor=0x049f product=0x0032</pre></blockquote>
 
-<p>Or add a line similar to this to your <tt>/etc/modules.conf</tt> file before
-connecting your device:</p>
+<p>Or add a line similar to this to the file <tt>/etc/modules.conf</tt> or
+<tt>/etc/modprobe.conf</tt> before connecting your device:</p>
 
 <blockquote><pre>options ipaq vendor=0x3340 product=0x3326</pre></blockquote>
 
