@@ -17,8 +17,8 @@ Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/synce-root
 
 Requires: gtk2 atk libgnomeui
-Requires: synce >= 0.7
-BuildRequires: synce-devel >= 0.7
+Requires: synce >= 0.8
+BuildRequires: synce-devel >= 0.8
 
 %description
 synce-trayicon is part of the SynCE project:
@@ -41,6 +41,6 @@ make
 %files
 %defattr(-,root,root)
 %{prefix}/bin/synce-trayicon
-%{prefix}/share/pixmaps/synce/synce-color.png
-%{prefix}/share/pixmaps/synce/synce-gray.png
+%{prefix}/share/pixmaps/synce/synce-color-small.png
+%{prefix}/share/pixmaps/synce/synce-gray-small.png
 
