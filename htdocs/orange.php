@@ -25,18 +25,37 @@ It currently supports the following kinds of installers:</p>
 <ul>
 
 <li><a href="http://installshield.com">InstallShield</a> versions 5 and 6,
-using <a href="unshield.php">Unshield</a></li>
+using <a href="unshield.php">Unshield</a> for extracting InstallShield Cabinet
+files.</li>
 
-<li><a href="http://www.indigorose.com">Setup
-Factory</a> versions 5 and 6 using <a href="dynamite.php">Dynamite</a></li>
+<li><a href="http://www.indigorose.com">Setup Factory</a> versions 5 and 6
+using <a href="dynamite.php">Dynamite</a> for data decompression.</li>
+
+<li>Some other installer (using a DLL called inflate.dll). This is used by for
+example <a
+href="http://www.macromedia.com/software/flashplayer/pocketpc/2002.html">Macromedia
+Flash Player 6 for Pocket PC 2002</a>.</li>
 
 <li>Microsoft Cabinets (also self-extracting) when you have <a
-href="www.kyz.uklinux.net/cabextract.php">Cabextract</a> installed</li>
+href="http://www.kyz.uklinux.net/cabextract.php">Cabextract</a> installed.</li>
 
-<li>Zip files (also self-extracting) when you have <a
-href="http://www.info-zip.org/UnZip.html">UnZip</a> installed</li>
+<li>Zip archives (also self-extracting) when you have <a
+href="http://www.info-zip.org/UnZip.html">UnZip</a> installed.</li>
 
 </ul>
+
+<p>Future support is planned for.</p>
+
+<ul>
+
+<li>RAR archives (also self-extracting) when you have Unrar installed.</li>
+
+</ul>
+
+<p>If you find an installer that Orange failes to handle and you have both
+Cabextract and UnZip installed, write to <a
+href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>
+and provide a link to where it can be downloaded.</p>
 
 <h2>Download</h2>
 
