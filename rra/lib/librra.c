@@ -587,7 +587,7 @@ void uint32vector_sort(Uint32Vector* v)
 
 void uint32vector_dump(Uint32Vector* v)
 {
-	int i;
+	unsigned i;
 	for (i = 0; i < v->used; i++)
 		synce_trace("%i: %08x", i, v->items[i]);
 }
@@ -611,7 +611,7 @@ bool rra_get_deleted_object_ids(RRA* rra,/*{{{*/
 	uint32_t partner_id = 0;
 	char filename[256];
 	FILE* file = NULL;
-	int previous, current;
+	unsigned previous, current;
 	Uint32Vector* previous_ids = uint32vector_new();
 	Uint32Vector* current_ids  = uint32vector_new();
 	Uint32Vector* deleted_ids  = uint32vector_new();
