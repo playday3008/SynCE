@@ -107,6 +107,27 @@ alt="Make a donation" title="Make a donation"></td>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>January 3, 2004</b> Happy New Year from the SynCE team!</p>
+
+<p><b>December 21, 2003</b> Released SynCE 0.8.9, a development preview of the
+upcoming SynCE 0.9.0 release. See the <a
+href="http://sourceforge.net/project/shownotes.php?release_id=205447">release
+notes</a> for more information. This release is only available for download as
+<a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=22569&release_id=205447">.tar.gz
+archives</a>.</p>
+
+<p><b>December 18, 2003</b> I just read that <a href="http://kernel.org/">Linux
+kernel 2.6.0</a> has been released. However, I'm not sure that the
+<tt>ipaq</tt> kernel driver <a
+href="http://synce.sourceforge.net/synce/usb_linux.php">used by SynCE</a> is
+working yet. I probably don't have time to test this before christmas, but
+reports about success/failure are welcome.</p>
+
+<p><b>December 8, 2003</b> New <a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=3562405&forum_id=1226">SynCE
+Developer's notes</a>.</p>
+
 <p><b>November 16, 2003</b> Created the IRC channel <tt>#synce</tt> on
 <tt>irc.freenode.net</tt>. You are all very welcome!</p>
 
