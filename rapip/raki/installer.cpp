@@ -185,6 +185,7 @@ RunInstallerThread::RunInstallerThread(QWidget *parent)
 RunInstallerThread::~RunInstallerThread()
 {}
 
+
 void RunInstallerThread::setPdaName(QString pdaName)
 {
     this->pdaName = pdaName;
