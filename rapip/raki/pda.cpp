@@ -160,7 +160,7 @@ void PDA::startPdaMirror()
 {
     pdaMirror.clearArguments();
     pdaMirror.setExecutable("pdamirror");
-    pdaMirror << "--syncename"  << pdaName;
+    pdaMirror << pdaName;
 
     associatedMenu->setItemEnabled(pdaMirrorItem, false);
 
