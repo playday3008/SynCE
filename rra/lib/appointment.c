@@ -7,25 +7,154 @@
 #include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
+#include <ctype.h>
+#include <assert.h>
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
 #define MINUTES_PER_DAY (24*60)
+#define SECONDS_PER_DAY (MINUTES_PER_DAY*60)
 
 typedef struct _EventGeneratorData
 {
-  CEPROPVAL* dummy;
+  CEPROPVAL* start;
+  CEPROPVAL* duration;
+  CEPROPVAL* duration_unit;
+  CEPROPVAL* reminder_minutes;
+  CEPROPVAL* reminder_enabled;
 } EventGeneratorData;
 
-static bool on_property_subject(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_property_busy_status(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
-  generator_add_simple_propval(g, "SUMMARY", propval);
+  switch (propval->val.iVal)
+  {
+    case BUSY_STATUS_FREE:
+      generator_add_simple(g, "TRANSP", "TRANSPARENT");
+      break;
+      
+    case BUSY_STATUS_TENTATIVE:
+      synce_warning("Busy status 'tentative' not yet supported");
+      break;
+      
+    case BUSY_STATUS_BUSY:
+      generator_add_simple(g, "TRANSP", "OPAQUE");
+      break;
+      
+    case BUSY_STATUS_OUT_OF_OFFICE:
+      synce_warning("Busy status 'out of office' not yet supported");
+      break;
+      
+    default:
+      synce_warning("Unknown busy status: %04x", propval->val.iVal);
+      break;
+  }
+  return true;
+}/*}}}*/
+
+static bool on_property_duration(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->duration = propval;
+  return true;
+}
+
+static bool on_property_duration_unit(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->duration_unit = propval;
   return true;
 }
 
 static bool on_property_location(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   generator_add_simple_propval(g, "LOCATION", propval);
+  return true;
+}
+
+static bool str_is_print(CEBLOB* blob)
+{
+  unsigned i;
+  
+  for (i = 0; i < blob->dwCount; i++)
+  {
+    switch (blob->lpb[i])
+    {
+      case 0x0a: /* LF */
+      case 0x0d: /* CR */
+        break;
+
+      default:
+        if (!isprint(blob->lpb[i]))
+          return false;
+    }
+  }
+
+  return true;
+}
+
+static bool on_property_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  assert(CEVT_BLOB == (propval->propid & 0xffff));
+
+  if (str_is_print(&propval->val.blob))
+  {
+    char* tmp = strndup((const char*)
+        propval->val.blob.lpb, 
+        propval->val.blob.dwCount);
+    generator_add_simple(g, "DESCRIPTION", tmp);
+    free(tmp);
+  }
+  else
+  {
+    synce_warning("Note format not yet supported");
+  }
+  
+  return true;
+}/*}}}*/
+
+static bool on_property_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->reminder_enabled = propval;
+  return true;
+}
+
+static bool on_property_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->reminder_minutes = propval;
+  return true;
+}
+
+static bool on_property_sensitivity(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  switch (propval->val.iVal)
+  {
+    case SENSITIVITY_PUBLIC:
+      generator_add_simple(g, "CLASS", "PUBLIC");
+      break;
+      
+    case SENSITIVITY_PRIVATE:
+      generator_add_simple(g, "CLASS", "PRIVATE");
+      break;
+
+    default:
+      synce_warning("Unknown sensitivity: %04x", propval->val.iVal);
+      break;
+  }
+  return true;
+}/*}}}*/
+
+static bool on_property_start(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->start = propval;
+  return true;
+}
+
+static bool on_property_subject(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  generator_add_simple_propval(g, "SUMMARY", propval);
   return true;
 }
 
@@ -45,8 +174,16 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator)
     goto exit;
 
-  generator_add_property(generator, ID_SUBJECT, on_property_subject);
-  generator_add_property(generator, ID_LOCATION, on_property_location);
+  generator_add_property(generator, ID_BUSY_STATUS, on_property_busy_status);
+  generator_add_property(generator, ID_DURATION,    on_property_duration);
+  generator_add_property(generator, ID_DURATION_UNIT, on_property_duration_unit);
+  generator_add_property(generator, ID_LOCATION,    on_property_location);
+  generator_add_property(generator, ID_NOTES,       on_property_notes);
+  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_START, on_property_reminder_minutes);
+  generator_add_property(generator, ID_REMINDER_ENABLED, on_property_reminder_enabled);
+  generator_add_property(generator, ID_SENSITIVITY, on_property_sensitivity);
+  generator_add_property(generator, ID_START,       on_property_start);
+  generator_add_property(generator, ID_SUBJECT,     on_property_subject);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -64,6 +201,78 @@ bool rra_appointment_to_vevent(/*{{{*/
 
   if (!generator_run(generator))
     goto exit;
+
+  if (event_generator_data.start && 
+      event_generator_data.duration &&
+      event_generator_data.duration_unit)
+  {
+    char buffer[32];
+    time_t start_time = 
+      filetime_to_unix_time(&event_generator_data.start->val.filetime);
+    time_t end_time = 0;
+    const char* type = NULL;
+    const char* format = NULL;
+    
+    switch (event_generator_data.duration_unit->val.lVal)
+    {
+      case DURATION_UNIT_DAYS:
+        type   = "DATE";
+        format = "%Y%m%d";
+
+        /* days to seconds */
+        end_time = start_time + 
+          event_generator_data.duration->val.lVal * SECONDS_PER_DAY;
+        break;
+
+
+      case DURATION_UNIT_MINUTES:
+        type   = "DATE-TIME";
+        format = "%Y%m%dT%H%M%S";
+
+        /* minutes to seconds */
+        end_time = start_time + 
+          event_generator_data.duration->val.lVal * 60;
+        break;
+
+      default:
+        synce_warning("Unknown duration unit: %i", 
+            event_generator_data.duration_unit->val.lVal);
+        break;
+    }
+
+    if (type && format)
+    {
+      strftime(buffer, sizeof(buffer), format, localtime(&start_time));
+      generator_add_with_type(generator, "DTSTART", type, buffer);
+      
+      if (end_time)
+      {
+        strftime(buffer, sizeof(buffer), format, localtime(&end_time));
+        generator_add_with_type(generator, "DTEND",   type, buffer);
+      }
+    }
+  }
+  else
+    synce_warning("Missing start, duration or duration unit");
+
+
+  if (event_generator_data.reminder_enabled &&
+      event_generator_data.reminder_minutes &&
+      event_generator_data.reminder_enabled->val.iVal)
+  {
+    char buffer[32];
+
+    generator_add_simple(generator, "BEGIN", "VALARM");
+
+    /* XXX. what if minutes > 59 */
+    snprintf(buffer, sizeof(buffer), "-PT%liM", 
+        event_generator_data.reminder_minutes->val.lVal);
+
+    /* XXX: missing RELATED=START */
+    generator_add_with_type(generator, "TRIGGER", "DURATION", buffer);
+
+    generator_add_simple(generator, "END", "VALARM");
+  }
 
   generator_add_simple(generator, "END", "VEVENT");
   generator_add_simple(generator, "END", "VCALENDAR");

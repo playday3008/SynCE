@@ -229,7 +229,16 @@ bool generator_add_simple(Generator* self, const char* name, const char* value)
   return true;
 }
 
-bool generator_add_with_type(Generator* self, const char* name, const char* type, const char* value);
+bool generator_add_with_type(Generator* self, const char* name, const char* type, const char* value)
+{
+  strbuf_append(self->buffer, name);
+  strbuf_append(self->buffer, ";VALUE=");
+  strbuf_append(self->buffer, type);
+  strbuf_append_c(self->buffer, ':');
+  generator_append_escaped(self, value);
+  strbuf_append_crlf(self->buffer);
+  return true;
+}
 
 bool generator_add_simple_propval(Generator* self, const char* name, struct _CEPROPVAL* propval)
 {
