@@ -302,31 +302,4 @@ namespace pocketPCCommunication
 
         return true;
     }
-
-
-    bool AddressBookHandler::connectDevice()
-    {
-        if ( !m_rra->connect()) {
-            kdDebug( 2120 ) << "AddressbookHandler: could not connect to device!" << endl;
-            return false;
-        } else {
-            kdDebug( 2120 ) << "AddressbookHandler: connected to device!" << endl;;
-        }
-
-        return true;
-    }
-
-
-    /** Disconnect the device.
-     * @see KSync::Konnector::disconnectDevice()
-     * @return true if device can be disconnect. false otherwise
-     */
-    bool AddressBookHandler::disconnectDevice()
-    {
-        m_rra->disconnect();
-
-        mUidHelper->save();
-
-        return true;
-    }
 }

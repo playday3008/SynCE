@@ -316,31 +316,4 @@ namespace pocketPCCommunication
 
         return true;
     }
-
-
-    bool TodoHandler::connectDevice()
-    {
-        if ( !m_rra->connect() ) {
-            kdDebug( 2120 ) << "TodoHandler: could not connect to device!" << endl;
-            return false;
-        } else {
-            kdDebug( 2120 ) << "TodoHandler: connected to device!" << endl;;
-        }
-
-        return true;
-    }
-
-
-    /** Disconnect the device.
-     * @see KSync::Konnector::disconnectDevice()
-     * @return true if device can be disconnect. false otherwise
-     */
-    bool TodoHandler::disconnectDevice()
-    {
-        m_rra->disconnect();
-
-        mUidHelper->save();
-
-        return true;
-    }
 }

@@ -84,21 +84,14 @@ namespace KSync
     void PocketPCKonnector::init()
     {
         if (!initialized) {
-            m_rra = new pocketPCCommunication::Rra( m_pdaName );
-            m_rra->setLogLevel( 0 );
             mBaseDir = storagePath();
 
             QDir dir;
             QString dirName = mBaseDir + m_pdaName;
+
             if ( !dir.exists( dirName ) ) {
                 dir.mkdir ( dirName );
             }
-
-            mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
-
-            mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
-            mTodoHandler = new pocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
-            mEventHandler = new pocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
 
             mAddressBookSyncee = new AddressBookSyncee();
             mAddressBookSyncee->setTitle("SynCE");
@@ -124,27 +117,6 @@ namespace KSync
         if (mCalendarSyncee) {
             delete mCalendarSyncee;
         }
-        if (mAddrHandler) {
-            delete mAddrHandler;
-        }
-        if (mTodoHandler) {
-            delete mTodoHandler;
-        }
-        if (mEventHandler) {
-            delete mEventHandler;
-        }
-        if (mUidHelper) {
-            delete mUidHelper;
-        }
-
-        if (m_rra != NULL) {
-            if ( m_rra.data() ) {
-                kdDebug( 2120 ) << "PocketPCKonnector::~PocketPCKonnector: before m_rra->finalDisconnect()" << endl;
-                m_rra->finalDisconnect();
-                delete m_rra;
-            }
-            kdDebug( 2120 ) << "PocketPCKonnector::~PocketPCKonnector: m_rra.count(): " << m_rra.count() << endl;
-        }
     }
 
 
@@ -163,8 +135,6 @@ namespace KSync
         }
 
         clearDataStructures();
-
-        m_rra->connect();
 
         if (mAddrHandler && contactsEnabled) {
             m_rra->subscribeForType(mAddrHandler->getTypeId());
@@ -251,8 +221,20 @@ namespace KSync
 
     bool PocketPCKonnector::connectDevice()
     {
-        if (m_rra) {
+        if (!m_pdaName.isEmpty()) {
+            m_rra = new pocketPCCommunication::Rra( m_pdaName );
+            m_rra->setLogLevel( 0 );
+
+            mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
+            mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
+            mTodoHandler = new pocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
+            mEventHandler = new pocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
+
             m_rra->initRapi();
+            m_rra->connect();
+        } else {
+            kdDebug(2120) << "You have didn't configure syncekonnector well - please repeat the configuration and start again" << endl;
+            return false;
         }
 
         return true;
@@ -261,9 +243,26 @@ namespace KSync
 
     bool PocketPCKonnector::disconnectDevice()
     {
-        if (m_rra) {
-            m_rra->uninitRapi();
+        mUidHelper->save();
+
+        if (mAddrHandler) {
+            delete mAddrHandler;
         }
+        if (mTodoHandler) {
+            delete mTodoHandler;
+        }
+        if (mEventHandler) {
+            delete mEventHandler;
+        }
+        if (mUidHelper) {
+            delete mUidHelper;
+        }
+
+        m_rra->disconnect();
+
+        m_rra->uninitRapi();
+
+        m_rra->finalDisconnect();
 
         return true;
     }

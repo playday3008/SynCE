@@ -46,18 +46,6 @@ public:
     void updateTodos (KCal::Todo::List& p_todoList);
     void removeTodos (KCal::Todo::List& p_todoList);
 
-    /** Connect the device.
-     * @see KSync::Konnector::connectDevice()
-     * @return true if device can be connected. false otherwise
-     */
-    virtual bool connectDevice();
-
-    /** Disconnect the device.
-     * @see KSync::Konnector::disconnectDevice()
-     * @return true if device can be disconnect. false otherwise
-     */
-    virtual bool disconnectDevice();
-
 private:
     KSync::KonnectorUIDHelper *mUidHelper;
     QString mBaseDir;

@@ -46,9 +46,6 @@ public:
     void updateEvents (KCal::Event::List& p_eventList);
     void removeEvents (KCal::Event::List& p_eventList);
 
-    virtual bool connectDevice();
-    virtual bool disconnectDevice();
-
 private:
     KSync::KonnectorUIDHelper *mUidHelper;
     QString mBaseDir;

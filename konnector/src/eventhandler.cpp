@@ -331,32 +331,4 @@ namespace pocketPCCommunication
 
         return true;
     }
-
-
-    bool EventHandler::connectDevice()
-    {
-        if ( !m_rra->connect() ) {
-            kdDebug( 2120 ) << "EventHandler: could not connect to device!" << endl;
-            return false;
-        } else {
-            kdDebug( 2120 ) << "EventHandler: connected to device!" << endl;;
-        }
-
-        return true;
-    }
-
-
-    /** Disconnect the device.
-     * @see KSync::Konnector::disconnectDevice()
-     * @return true if device can be disconnect. false otherwise
-     */
-    bool EventHandler::disconnectDevice()
-    {
-        m_rra->disconnect();
-
-        mUidHelper->save();
-
-        return true;
-    }
-
 }
