@@ -57,7 +57,7 @@ help faster when you ask your question!</p>
 
 <ul>
 
-<li>Information from <tt>usbview</tt> or <tt>lsusb -v</tt> for the device</li>
+<li>Output from <tt>cat /proc/bus/usb/devices</tt> for the device</li>
 
 <li>Relevant log extracts from kernel driver and pppd</li>
 
