@@ -56,6 +56,7 @@ public:
 	virtual void put(const KURL& url, int permissions, bool overwrite, bool resume);
 	virtual void del(const KURL& url, bool isfile);
 	virtual void mkdir(const KURL&url, int permissions);
+	virtual void rename(const KURL& src, const KURL& dest, bool overwrite);
 
 private:
 	bool init();

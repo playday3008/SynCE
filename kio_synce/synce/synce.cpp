@@ -249,12 +249,18 @@ void kio_synceProtocol::get(const KURL& url )
   kdDebug() << "kio_synce::get(const KURL& url)" << endl ;
 
 	RapiString rapi_path(slashToBackslash(url.path()));
+
+	kdDebug(7101) << "Calling CeCreateFile with path \"" << (QString)rapi_path << "\"" << endl;
+	
+	// Initialize RAPI if needed
+	if (!init())
+		return;
 	
 	// Open file for reading, fail if it does not exist
 	RAPI::HANDLE handle = RAPI::CeCreateFile(
 				rapi_path, 
 				GENERIC_READ, 
-				0, 
+				FILE_SHARE_READ, 
 				NULL, 
 				OPEN_EXISTING, 
 				FILE_ATTRIBUTE_NORMAL, 
@@ -300,6 +306,8 @@ void kio_synceProtocol::get(const KURL& url )
 		processedSize(total_read);
 	}
 	while(part_read);
+	
+	RAPI::CeCloseHandle(handle);
 
   finished();
 }
@@ -445,7 +453,7 @@ void kio_synceProtocol::del(const KURL &url, bool isfile)
 		if (0 == RAPI::CeDeleteFile(rapi_path))
 		{
 			kdDebug(7101) << "[kio_synceProtocol::del] CeDeleteFile failed with error code " << RAPI::CeGetLastError() << endl;
-			error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
+			error(KIO::ERR_CANNOT_DELETE, url.prettyURL());
 			return;
 		}
 	}
@@ -455,7 +463,7 @@ void kio_synceProtocol::del(const KURL &url, bool isfile)
 		if (0 == RAPI::CeRemoveDirectory(rapi_path))
 		{
 			kdDebug(7101) << "[kio_synceProtocol::del] CeRemoveDirectory failed with error code " << RAPI::CeGetLastError() << endl;
-			error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
+			error(KIO::ERR_CANNOT_DELETE, url.prettyURL());
 			return;
 		}
 	}
@@ -468,6 +476,8 @@ void kio_synceProtocol::del(const KURL &url, bool isfile)
 //
 void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite, bool resume)
 {
+  kdDebug(7101) << "[kio_synceProtocol::put]" << endl;
+
 	if (resume)
 	{
 		error(KIO::ERR_UNSUPPORTED_ACTION, url.prettyURL());
@@ -539,6 +549,8 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
 //
 void kio_synceProtocol::mkdir(const KURL&url, int /*permissions*/)
 {
+  kdDebug(7101) << "[kio_synceProtocol::mkdir]" << endl;
+
 	// Initialize RAPI if needed
 	if (!init())
 		return;
@@ -555,3 +567,29 @@ void kio_synceProtocol::mkdir(const KURL&url, int /*permissions*/)
 	finished();
 }
 
+void kio_synceProtocol::rename(const KURL& src, const KURL& dest, bool overwrite)
+{
+  kdDebug(7101) << "[kio_synceProtocol::rename]" << endl;
+
+	// Initialize RAPI if needed
+	if (!init())
+		return;
+
+	RapiString rapi_src(slashToBackslash(src.path()));
+	RapiString rapi_dest(slashToBackslash(dest.path()));
+
+	if (overwrite)
+	{
+		// TODO: Check return status and error code, fail if not File Not Found
+		RAPI::CeDeleteFile(rapi_dest);
+	}
+
+	if (0 == RAPI::CeMoveFile(rapi_src, rapi_dest))
+	{
+		kdDebug(7101) << "[kio_synceProtocol::rename] CeMoveFile failed with error code " << RAPI::CeGetLastError() << endl;
+		error(KIO::ERR_CANNOT_RENAME, src.prettyURL());
+		return;
+	}
+	
+	finished();
+}
