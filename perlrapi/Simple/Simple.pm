@@ -15,7 +15,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION='0.02';
+$VERSION='0.02.1';
 
 use Rapi2;
 use Rapi2::Defs;
@@ -114,7 +114,7 @@ sub OpenDB
   }
   if($param!~/[a-zA-Z]/)
   {
-    # Try to open a DB per CEOID.
+    # Try to open a DB by CEOID.
     eval '$dbh=Rapi2::CeOpenDatabase($param, "")';
     if(! $@)
     {
@@ -124,7 +124,7 @@ sub OpenDB
     }
   }
   # Now search the DB.
-  # NOTE: This is a work around becaus CeOpenDatabase supports no opening
+  # NOTE: This is a work around because CeOpenDatabase supports no opening
   # by name at this time.
   my ($access, $data);
   eval '($access, $data)=Rapi2::CeFindAllDatabases()';
@@ -595,10 +595,9 @@ sub DeleteDir
 
 sub FileList
 {
-  my ($self, $path)=@_;
+  my ($self, $path, $flags)=@_;
   $self->{errstr}=undef;
-  my $flags=FAF_ATTRIBUTES | FAF_CREATION_TIME | FAF_LASTACCESS_TIME |
-    FAF_LASTWRITE_TIME | FAF_SIZE_HIGH | FAF_SIZE_HIGH | FAF_OID | FAF_NAME;
+  $flags||=FAF_ATTRIBUTES | FAF_LASTWRITE_TIME | FAF_SIZE_LOW | FAF_OID | FAF_NAME;
   my ($access, $list);
   eval '($access, $list)=Rapi2::CeFindAllFiles($path, $flags)';
   if(! $access || $@)
@@ -704,7 +703,7 @@ B<Rapi2::Simple> - Very easy access to the Rapi2 Wrapper
 	        ::CE_FIRST_NAME => ['first', CEVT_LPWSTR],
 	        ::CE_LAST_NAME => ['last', CEVT_LPWSTR],
 	        ::CE_EMAIL => ['mail@aaa.bbb', CEVT_LPWSTR]
-	       });
+	       }) || die $rapi->geterror;
 
   $rapi->CloseDB() ||
     die $rapi->geterror;
@@ -806,10 +805,10 @@ On success I<TRUE> will be returned, I<FALSE> otherwise.
 Get a list of all databases. An array containing hash references, will
 be returned on success, I<FALSE> otherwise.
 
-Every hash has the following keys:
+Every hash has the following keys: (CEDB_FIND_DATA structure)
 
-  OidDb - CEOID of a database
-  DbInfo - hash reference:
+  OidDb
+  DbInfo (CEDBASEINFO structure)
     dwFlags
     szDbaseName
     dwDbaseType
@@ -817,9 +816,11 @@ Every hash has the following keys:
     wNumSortOrder
     dwSize
     ftLastModified
-    rgSortSpecs
+    rgSortSpecs (SORTORDERSPEC structure)
+      propid
+      dwFlags
 
-The best way to find out what the keys mean, is to contact the msdn.
+The best way to find out what the keys mean, is to contact the MSDN.
 
 =back
 
@@ -875,7 +876,7 @@ On success I<TRUE> is returned, I<FALSE> otherwise.
 Delete the directory DIR. DIR is a string, that specifies the directory
 name. On success I<TRUE> is returned, I<FALSE> otherwise.
 
-=item FileList (PATH)
+=item FileList (PATH [, FLAGS])
 
 Get a list of all files in PATH. An array containing hash references, will
 be returned on success, I<FALSE> otherwise.
@@ -891,12 +892,64 @@ Every hash has the following keys:
   dwLastWriteTime
   cFileName
 
-The best way to find out what the keys mean, is to contact the msdn.
+The best way to find out what the keys mean, is to contact the MSDN. The
+hash keys are the members of the CE_FIND_DATA structure.
+
+--- START - from the MSDN ---
+
+FLAGS - A combination of filter and retrieval flags. The filter flags
+specify what kinds of files to document, and the retrieval flags specify
+which members of the CE_FIND_DATA structure to retrieve.
+
+The I<filter flags> can be a combination of the following values:
+
+B<FAF_ATTRIB_CHILDREN>: Only retrieve information for directories which
+have child items.
+
+B<FAF_ATTRIB_NO_HIDDEN>: Do not retrieve information for files or
+directories which have the hidden attribute set.
+
+B<FAF_FOLDERS_ONLY>: Only retrieve information for directories.
+
+B<FAF_NO_HIDDEN_SYS_ROMMODULES>: Do not retrieve information for ROM
+files or directories.
+
+The I<retrieval flags> can be a combination of the following values:
+
+B<FAF_ATTRIBUTES>: Retrieve the file attributes and copy them to the
+I<dwFileAttributes> member.
+
+B<FAF_CREATION_TIME>: Retrieve the file creation time and copy it to the
+I<ftCreationTime> member.
+
+B<FAF_LASTACCESS_TIME>: Retrieve the time when the file was last accessed
+and copy it to the I<ftLastAccessTime> member.
+
+B<FAF_LASTWRITE_TIME>: Retrieve the time when the file was last written
+to and copy it to the I<ftLastWriteTime> member.
+
+B<FAF_SIZE_HIGH>: Retrieve the high-order DWORD value of the file size
+and copy it to the I<nFileSizeHigh> member.
+
+B<FAF_SIZE_LOW>: Retrieve the low-order DWORD value of the file size and
+copy it to the I<nFileSizeLow> member.
+
+B<FAF_OID>: Retrieve the object identifier of the file and copy it to the
+I<dwOID> member.
+
+B<FAF_NAME>: Retrieve the file name and copy it to the I<cFileName>
+member.
+
+--- END - from the MSDN ---
+
+If you do not specify FLAGS, the following combination will be use:
+
+  FAF_ATTRIBUTES | FAF_LASTWRITE_TIME | FAF_SIZE_LOW | FAF_OID | FAF_NAME
 
 =item GetSpecialFolderPath (NUM)
 
 The the path of a special folder specified by NUM. This parameter can be
-one of the following values:
+one of the following values: (from the MSDN)
 
 C<CSIDL_BITBUCKET>: Recycle bin - file system directory containing file
 objects in the user's recycle bin. The location of this directory is not
