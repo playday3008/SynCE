@@ -78,15 +78,10 @@ You need the following archives to start working. (The list can be found <a href
 <br>
 This is the base software. It gives you a C++ library for getting/pushing AddressBook- and Calendar-data. Along
 with it comes a KDE-application which can be used for testing and backup/restore purposes!
+The konnector is included since release 0.1.1!
+After successfull installation start kitchensync and you will see a new entry when adding new konnectors.
 <br>
-Get the <a href="http://prdownloads.sourceforge.net/synce/pocketpccommunication-0.1.tar.gz?download">archive</a>.
-<br><br>
-<em>libpocketpckonnector</em>
-<br>
-This is the konnector which can be used within kitchensync. After successfull installation start kitchensync
-and you will see a new entry when adding new konnectors!
-<br>
-Get the <a href="http://prdownloads.sourceforge.net/synce/libpocketpckonnector-0.1.tar.gz?download">archive</a>.
+Get the <a href="http://prdownloads.sourceforge.net/synce/pocketpccommunication_0_1_1.tar.gz?download">archive</a>.
 <br><br>
 <em>kitchensync include-file patches</em>
 <br>
