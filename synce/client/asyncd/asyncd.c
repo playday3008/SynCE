@@ -72,7 +72,6 @@ int compute_password( char *passphrase, char xorvalue, char *lockbuffer, unsigne
 
         inlen = 1 + strlen( passphrase );
 	outlen = *lockbuffersize;
-	log_debug ("compute_password : passphrase = %s, xorvalue = 0x%X, inlen = %d, outlen = %d", passphrase, xorvalue, inlen, outlen);
         cd = iconv_open( "UNICODELITTLE", "latin1" );
 	if(cd == (iconv_t)-1)
 	{
@@ -352,8 +351,8 @@ int main (int ac, char **av)
 					} else {
 						if( pktsz > 0x00010000 )
 						{
-							log_debug(" device is locked");
 							locksignature = pktsz;
+							log_debug(" device is locked, signature = 0x%08X", locksignature);
 							locked = TRUE;
 						} else {
 #ifdef DEBUG
@@ -392,7 +391,7 @@ int main (int ac, char **av)
 #ifdef DEBUG				
 				log_debug(" timeout, aborting");
 #endif
-				/* end_connexion = TRUE; */
+				end_connexion = TRUE;
 			}
 		}
 	}
