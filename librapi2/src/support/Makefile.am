@@ -13,4 +13,5 @@ libsupport_la_SOURCES = \
 
 include_HEADERS = \
 	rapi_filetime.h \
+	rapi_log.h \
 	rapi_wstr.h 

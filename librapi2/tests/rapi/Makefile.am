@@ -6,11 +6,13 @@ LDADD = $(SRC)/librapi.la
 noinst_PROGRAMS = \
 	CeCreateDirectory \
 	CeCreateFile \
+	CeFindAllDatabases \
 	CeFindAllFiles \
 	CeFindFirstFile \
 	CeGetVersionEx \
 	CeGetSpecialFolderPath \
 	CeMoveFile \
+	CeOpenDatabase \
 	CeRapiInit
 
 CeRapiInit_SOURCES = test.h CeRapiInit.cpp
@@ -21,4 +23,6 @@ CeFindFirstFile_SOURCES = test.h CeFindFirstFile.cpp
 CeFindAllFiles_SOURCES = test.h CeFindAllFiles.cpp
 CeCreateDirectory_SOURCES = test.h CeCreateDirectory.cpp
 CeMoveFile_SOURCES = test.h CeMoveFile.cpp
+CeOpenDatabase_SOURCES = test.h CeOpenDatabase.cpp
+CeFindAllDatabases_SOURCES = test.h CeFindAllDatabases.cpp
 

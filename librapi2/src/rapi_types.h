@@ -22,19 +22,28 @@
  * Simple types
  */
 
-typedef uint32_t  DWORD;
-typedef uint32_t  BOOL;
+typedef uint8_t   BYTE;
+
+typedef uint16_t  WORD;
+typedef uint16_t  USHORT;
 typedef uint16_t  WCHAR;
-typedef WCHAR      TCHAR;
+typedef WCHAR     TCHAR;
+
+typedef uint32_t  DWORD;
+typedef uint32_t  ULONG;
+typedef uint32_t  HWND;
+typedef uint32_t  BOOL;
 
 /*
  * Pointer types
  */
 
 typedef void*   LPVOID;
-typedef DWORD*  LPDWORD;
 typedef char*   LPSTR;
+typedef BYTE*   LPBYTE;
+typedef WORD*   LPWORD;
 typedef WCHAR*  LPWSTR;
+typedef DWORD*  LPDWORD;
 
 
 /*

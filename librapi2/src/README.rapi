@@ -50,7 +50,7 @@ List of RAPI command codes:
 [ ] 29 CeGetStoreInformation	
 [ ] 2a CeGetSystemMetrics	
 [ ] 2b CeGetDesktopDeviceCaps	
-[ ] 2c CeFindAllDatabases	
+[i] 2c CeFindAllDatabases	
 [ ] 2d RegCopyFile
 [ ] 2e RegRestoreFile
 [ ] 2f CeGetSystemInfo		
