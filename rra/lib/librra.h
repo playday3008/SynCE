@@ -88,6 +88,20 @@ bool rra_object_update(RRA* rra,
 bool rra_object_delete(RRA* rra, uint32_t type_id, uint32_t object_id);
 
 
+bool rra_partner_set_current(RRA* rra, uint32_t index);
+bool rra_partner_get_current(RRA* rra, uint32_t* index);
+
+bool rra_partner_set_id(RRA* rra, uint32_t index, uint32_t id);
+bool rra_partner_get_id(RRA* rra, uint32_t index, uint32_t* id);
+
+bool rra_partner_set_name(RRA* rra, uint32_t index, const char* name);
+bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
+
+#define rra_partner_free_name(name)  rapi_reg_free_string(name)
+
+
+
+
 #if 0
 bool rra_lock(RRA* rra);
 bool rra_unlock(RRA* rra);

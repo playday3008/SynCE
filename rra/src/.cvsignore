@@ -11,4 +11,5 @@ rra-delete
 rra-get-data
 rra-get-ids
 rra-get-types
+rra-partners
 rra-put-data

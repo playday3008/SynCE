@@ -1,9 +1,11 @@
 /* $Id$ */
+#define _BSD_SOURCE 1
 #include "librra.h"
 #include "rrac.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
+#include <stdio.h>
 
 #define SEND_COMMAND_6F_6   1
 #define SEND_COMMAND_6F_10  0
@@ -17,7 +19,16 @@ struct _RRA
 
 	ObjectType*   object_types;
 	size_t        object_type_count;
+
+	HKEY          partners_key;
 };
+
+static const char* PARTNERS =
+	"Software\\Microsoft\\Windows CE Services\\Partners";
+
+static const char* CURRENT_PARTNER  = "PCur";
+static const char* PARTNER_ID       = "PId";
+static const char* PARTNER_NAME     = "PName";
 
 RRA* rra_new()/*{{{*/
 {
@@ -26,8 +37,24 @@ RRA* rra_new()/*{{{*/
 
 void rra_free(RRA* rra)/*{{{*/
 {
-	rra_disconnect(rra);
-	free(rra);
+	if (rra)
+	{
+		if (rra->partners_key)
+		{
+			CeRegCloseKey(rra->partners_key);
+			rra->partners_key = 0;
+		}
+
+		rra_disconnect(rra);
+
+		if (rra->object_types)
+		{
+			free(rra->object_types);
+			rra->object_types = NULL;
+		}
+
+		free(rra);
+	}
 }/*}}}*/
 
 bool rra_connect(RRA* rra)/*{{{*/
@@ -55,11 +82,11 @@ void rra_disconnect(RRA* rra)/*{{{*/
 	if (rra)
 	{
 		synce_socket_free(rra->data_channel);
+		rra->data_channel = NULL;
 		synce_socket_free(rra->cmd_channel);
+		rra->cmd_channel = NULL;
 		synce_socket_free(rra->server);
-		
-		if (rra->object_types)
-			free(rra->object_types);
+		rra->server = NULL;
 	}
 }/*}}}*/
 
@@ -556,7 +583,7 @@ bool rra_object_update(RRA* rra,  /*{{{*/
 	return success;
 }/*}}}*/
 
-bool rra_object_delete(RRA* rra, uint32_t type_id, uint32_t object_id)
+bool rra_object_delete(RRA* rra, uint32_t type_id, uint32_t object_id)/*{{{*/
 {
 	bool success = false;
 	uint32_t recv_type_id;
@@ -597,7 +624,7 @@ bool rra_object_delete(RRA* rra, uint32_t type_id, uint32_t object_id)
 
 exit:
 	return success;
-}
+}/*}}}*/
 
 #if 0
 bool rra_lock(RRA* rra)
@@ -614,4 +641,97 @@ bool rra_unlock(RRA* rra)
 		rrac_recv_reply_70(rra->cmd_channel);
 }
 #endif
+
+static bool rra_partner_init(RRA* rra)
+{
+	if (!rra->partners_key)
+	{
+		return rapi_reg_create_key(
+				HKEY_LOCAL_MACHINE, 
+				PARTNERS, 
+				&rra->partners_key);
+	}
+
+	return true;
+}
+
+static bool rra_partner_create(RRA* rra, uint32_t index, HKEY* partner_key)
+{
+	char name[MAX_PATH];
+	snprintf(name, sizeof(name), "%s\\P%i", PARTNERS, index);
+	return rapi_reg_create_key(HKEY_LOCAL_MACHINE, name, partner_key);
+}
+
+static bool rra_partner_open(RRA* rra, uint32_t index, HKEY* partner_key)
+{
+	char name[MAX_PATH];
+	snprintf(name, sizeof(name), "%s\\P%i", PARTNERS, index);
+	return rapi_reg_open_key(HKEY_LOCAL_MACHINE, name, partner_key);
+}
+
+bool rra_partner_set_current(RRA* rra, uint32_t index)
+{
+	return 
+		(index == 1 || index == 2) &&
+		rra_partner_init(rra) &&
+		rapi_reg_set_dword(rra->partners_key, CURRENT_PARTNER, index);
+}
+
+bool rra_partner_get_current(RRA* rra, uint32_t* index)
+{
+	return 
+		rra_partner_init(rra) &&
+		rapi_reg_query_dword(rra->partners_key, CURRENT_PARTNER, index);
+}
+
+bool rra_partner_set_id(RRA* rra, uint32_t index, uint32_t id)
+{
+	HKEY partner_key = 0;
+
+	bool success = 
+		(index == 1 || index == 2) &&
+		rra_partner_init(rra) &&
+		rra_partner_create(rra, index, &partner_key) &&
+		rapi_reg_set_dword(partner_key, PARTNER_ID, id);
+
+	if (partner_key)
+		CeRegCloseKey(partner_key);
+
+	return success;
+}
+
+bool rra_partner_get_id(RRA* rra, uint32_t index, uint32_t* id)
+{
+	HKEY partner_key = 0;
+
+	bool success = 
+		(index == 1 || index == 2) &&
+		rra_partner_init(rra) &&
+		rra_partner_open(rra, index, &partner_key) &&
+		rapi_reg_query_dword(partner_key, PARTNER_ID, id);
+
+	if (partner_key)
+		CeRegCloseKey(partner_key);
+
+	return success;
+}
+
+bool rra_partner_set_name(RRA* rra, uint32_t index, const char* name);
+
+bool rra_partner_get_name(RRA* rra, uint32_t index, char** name)
+{
+	HKEY partner_key = 0;
+
+	bool success = 
+		(index == 1 || index == 2) &&
+		rra_partner_init(rra) &&
+		rra_partner_open(rra, index, &partner_key) &&
+		rapi_reg_query_string(partner_key, PARTNER_NAME, name);
+
+	if (partner_key)
+		CeRegCloseKey(partner_key);
+
+	return success;	
+}
+
 
