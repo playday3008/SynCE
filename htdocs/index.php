@@ -65,7 +65,7 @@ a Windows CE device from a computer running Linux, *BSD or other unices.</p>
 
 <ul>
 
-<li><a href="#helpwanted">Help wanted!</a></li>
+<li><a href="tasks.php">Help wanted!</a></li>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="#developers">The SynCE developers</a></li>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
@@ -138,7 +138,7 @@ possiblity to synchronize calendar and tasks, in addition to the previous
 address book synchronization support. However, recurring events are not yet
 supported. <a href="download.php">Download</a>.</p>
 
-<!--
+<?php /*
 
 <p><b>June 13, 2003</b> Some documentation improvements, most notably a <a
 href="qa.php">Questions and Answers</a> page.</p>
@@ -272,6 +272,8 @@ if you want to help us!</p>
 <li class=SPACED>Integration with KDE's KitchenSync framework.</li>
 
 </ul>
+
+*/ ?>
 
 <a name="overview"></a>
 <h2>Overview</h2>
