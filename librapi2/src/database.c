@@ -3,7 +3,7 @@
 #include "rapi_context.h"
 #include <string.h>
 
-#define RAPI_DATABASE_DEBUG 0
+#define RAPI_DATABASE_DEBUG 1
 
 #if RAPI_DATABASE_DEBUG
 #define rapi_database_trace(args...)    synce_trace(args)
@@ -353,12 +353,19 @@ CEOID CeReadRecordProps(/*{{{*/
 
 			for (i = 0; i < prop_id_count; i++)
 			{
+				rapi_database_trace("propval[%i].propid = %08x", i, propval[i].propid);
+				
 				switch (propval[i].propid & 0xffff)
 				{
 					/* XXX: we can get problems here on 64-bit platforms */
 					
 					case CEVT_BLOB:
-						rapi_database_trace("blob offset = %p", propval[i].val.blob.lpb);
+						
+						rapi_database_trace("propval[%i].val.blob.dwCount = %08x", 
+								i, propval[i].val.blob.dwCount);
+						rapi_database_trace("propval[%i].val.blob.lpb = %08x", 
+								i, propval[i].val.blob.lpb);
+						
 						propval[i].val.blob.lpb = (LPBYTE)
 							(buffer + letoh32((uint32_t)propval[i].val.blob.lpb));
 						rapi_database_trace("blob=%s",(char*)propval[i].val.blob.lpb);
@@ -392,6 +399,8 @@ fail:
 
 #define CONVERT_32(value) (propval->val.value = htole32(propval->val.value))
 
+#define ALIGN(value) ( value = ((value)+3) & ~3 )
+
 static bool PreparePropValForWriting(unsigned* data_offset, CEPROPVAL* propval)/*{{{*/
 {
 	bool success = true;
@@ -402,7 +411,12 @@ static bool PreparePropValForWriting(unsigned* data_offset, CEPROPVAL* propval)/
 	{
 		case CEVT_BLOB:
 			propval->val.blob.lpb = (LPBYTE)htole32(*data_offset);
-			rapi_database_trace("Blob offset: %p", propval->val.blob.lpb);
+			
+			rapi_database_trace("propval->val.blob.dwCount = %08x", 
+					propval->val.blob.dwCount);
+			rapi_database_trace("propval->val.blob.lpb = %08x", 
+					propval->val.blob.lpb);
+			
 			*data_offset += propval->val.blob.dwCount;
 			CONVERT_32(blob.dwCount);
 			break;
@@ -496,8 +510,7 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 				break;
 		}
 
-		if (total_size & 1)
-			total_size++;
+		ALIGN(total_size);
 	}
 
 	rapi_database_trace("Array size = %i", array_size);
@@ -524,8 +537,7 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 			goto exit;
 		}
 
-		if (data_offset & 1)
-			data_offset++;
+		ALIGN(data_offset);
 	}
 
 	if (data_offset != total_size)
@@ -540,24 +552,34 @@ CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVA
 
 	for (i = 0, data_offset = array_size; i < cPropID; i++)
 	{	
+		size_t size = 0;
+		
 		switch ( rgPropVal[i].propid & 0xFFFF )
 		{
 			case CEVT_BLOB:
-				memcpy((LPBYTE)values + data_offset, rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount);
+				size = rgPropVal[i].val.blob.dwCount;
+				memcpy((LPBYTE)values + data_offset, rgPropVal[i].val.blob.lpb, size);
 				break;
 				
 			case CEVT_LPWSTR:
+				size = sizeof(WCHAR) * (wstr_strlen(rgPropVal[i].val.lpwstr) + 1);
 				memcpy((LPBYTE)values + data_offset, 
-						rgPropVal[i].val.lpwstr, sizeof(WCHAR) * (wstr_strlen(rgPropVal[i].val.lpwstr) + 1) );
+						rgPropVal[i].val.lpwstr, size);
 				break;
 
 			default:
 				break;
 		}
 
-		if (data_offset & 1)
-			data_offset++;
+		data_offset += size;
+		ALIGN(data_offset);
 	}	
+
+	if (data_offset != total_size)
+	{
+		rapi_database_error("Data offset is %08x but should be %08x", data_offset, total_size);
+		goto exit;
+	}
 
 	if (!rapi_buffer_write_data(context->send_buffer, values, total_size))
 	{
