@@ -1,0 +1,70 @@
+1.	it works on redhat 7.2, kernel 2.4.7-10 with the uhci.o module. the
+	default loaded is usb-uhci.o which works only about half the time.
+	unload it and load uhci.o. not sure about ohci - it didn't work for me
+	on 7.1, couldn't even read the config descriptors without bulk/control
+	timeouts.
+
+2.	you need libusb sources. get them at http://libusb.sourceforge.net
+	compile and install it. ipaqd.c uses usbi.h, which is not present
+	in the libusb-devel rpm (it's internal to libusb). you need to copy
+	it from their source if you're using the rpm.
+
+3.	compile ipaqd:
+	cc -o ipaqd -I/path/to/libusbheaders ipaqd.c -lusb -lutil
+
+4.	modify /etc/hotplug/usb.agent so that it starts ipaqd (the driver),
+	something like this: (I know there are better ways)
+
+--- usb.agent.ORG       Wed Dec  5 15:39:00 2001
++++ usb.agent   Fri Dec  7 13:40:22 2001
+@@ -281,6 +281,10 @@
+     FOUND=false
+     LABEL="USB product $PRODUCT"
+ 
++       if [ "$PRODUCT" = "49f/3/0" ]; then
++               /etc/hotplug/usb/ipaq
++               exit 0
++       fi
+     # on 2.4 systems, modutils 2.4.2+ maintains MAP_CURRENT
+     # ... otherwise we can't rely on it (sigh)
+     case "$KERNEL" in
+
+5.	create the script /etc/hotplug/usb/ipaq
+
+#!/bin/bash
+
+killall -9 ipaqd
+date >/tmp/ipaqlog
+echo ipaq script invoked >>/tmp/ipaqlog
+[ -x /home/ganesh/work/usb/ipaqd ] && /home/ganesh/work/usb/ipaqd 2>>/tmp/ipaqlog
+
+6.	create the script /usr/local/bin/cebox.sh - this is the ppp script.
+	if you want a different location you must edit ipaqd.c
+	NOTE: no chat required - ipaqd does chatting itself.
+
+#!/bin/bash
+
+MYIP=10.212.2.107
+REMOTEIP=10.212.2.174
+MYDNS=10.212.2.75
+
+/usr/sbin/pppd nocrtscts local debug passive silent $MYIP:$REMOTEIP ms-dns $MYDNS noauth proxyarp
+
+7.	presumably you've already installed asyncd. just connect the ipaq
+	and wait for the magic tone to tell you you're connected. otherwise
+	look through /tmp/ipaqlog to see what went wrong. after a few failed
+	connections, it helps to soft-reset the ipaq before trying again.
+
+8.	browse http://www.tekguru.co.uk for instructions on how to browse the
+	net over usb, running windows. same trick works here as well. I had to
+	make a modification - disable activesync, and manually click on your
+	new connection "usbdial". enable IP forwarding on your linux box,
+	start pocket internet explorer and start browsing ! note that you
+	don't need asyncd enabled for this.
+
+9.	it's not very fast - windows activesync can transfer files almost
+	3 times faster. but at 36 kbytes per sec, it's much faster than
+	serial. I'll work on the performance once I'm sure the rest of
+	it actually works ...
+
+ganesh <vganesh@users.sourceforge.net>
