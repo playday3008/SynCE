@@ -476,9 +476,8 @@ main (gint argc, gchar **argv)
 	int result = 1;
 	GtkWidget *box;
 
-	/*
 	write_script();
-*/
+
 	gnome_program_init ("synce-trayicon", VERSION,
 			LIBGNOMEUI_MODULE,
 			argc, argv,
@@ -498,7 +497,7 @@ main (gint argc, gchar **argv)
 		synce_trace("Running in foreground");
 	}
 
-  tray_icon = egg_tray_icon_new ("SynCE");
+	tray_icon = egg_tray_icon_new ("SynCE");
 	box = gtk_event_box_new();
 	icon = gtk_image_new();
 
