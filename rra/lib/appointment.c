@@ -468,7 +468,7 @@ bool rra_appointment_from_vevent(/*{{{*/
           break;
 
         case PARSER_TIME_FORMAT_ONLY_DATE:
-          minutes = (end - start) / 60 + 1;
+          minutes = (end - start - SECONDS_PER_DAY) / 60 + 1;
           parser_add_int32(parser, ID_APPOINTMENT_TYPE, APPOINTMENT_TYPE_ALL_DAY);
           break;
       }
