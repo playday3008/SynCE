@@ -3,7 +3,7 @@
 %define ver      0.1
 %define rel      1
 
-Summary: SynCE: Communcation daemon.
+Summary: SynCE: Communication daemon.
 Name: %{name}
 Version: %{ver}
 Release: %{rel}
@@ -22,7 +22,7 @@ Dccmd is part of the SynCE project:
 
   http://synce.sourceforge.net/
 
-The DCCM Daemon is required to be able to communicate with a handheld device.
+This daemon is required to be able to communicate with a handheld device.
 
 %prep
 %setup
