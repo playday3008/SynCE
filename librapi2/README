@@ -107,8 +107,10 @@ You probably have libiconv in /sw so you use --with-libiconv-prefix=/sw as
 parameter to the configure script.
 
 If you get error messages about duplicate symbols, you can try to call the
-configure script with the --disable-shared parameter.
+configure script with the --disable-shared parameter or modify your libtool
+as descibed in this mail:
 
+  http://mail.gnu.org/pipermail/libtool-patches/2002-January/001706.html
 
 Solaris installation
 --------------------
