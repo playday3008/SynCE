@@ -28,7 +28,7 @@ a successful USB connection.</p>
 
 <li><a href="#many">2.4.21 or newer 2.4.x kernel</a></li>
 
-<li><a href="#notyet">2.5.x or 2.6.x kernel</a></li>
+<li><a href="#twosix">2.5.x or 2.6.x kernel</a></li>
 
 </ul>
 
@@ -151,7 +151,7 @@ Unknown
 
 <tr><td>Linkup</td><td>094b</td><td>Unknown</td><td>0001</td></tr>
 
-<tr><td>Microsoft</td><td>045e</td><td>Unknown</td><td>ce00</td></tr>
+<tr><td>Microsoft</td><td>045e</td><td>Unknown</td><td>00ce</td><td>(Used by Motorola MPX200 SmartPhone)</td></tr>
 
 <tr><td>Portatec</td><td>0961</td><td>Unknown</td><td>0010</td></tr>
 
@@ -186,12 +186,10 @@ insmod ipaq vendor=0x049f product=0x0032</pre>
 <p>If you can provide additional details above the devices listed above, please
 <a href="help.php">contact the SynCE developers</a>.</p>
 
-<a name="notyet"></a>
+<a name="twosix"></a>
 <h2>2.5.x or 2.6.x kernel</h2>
 
-<p>The <tt>ipaq</tt> USB driver does not yet work on these kernels. We do not
-know when this will be fixed. If you have kernel skills, please submit patches
-to the driver.</p>
+<p>You must use 2.6.0 or later in order for the <tt>ipaq</tt> to work!</p>
 
 <a name="success"></a>
 <h2>Successful USB connection</h2>
