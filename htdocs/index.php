@@ -39,6 +39,8 @@ a Windows CE device from a computer running Linux, *BSD or other unices.</p>
 <li><a href="gnome.php">GNOME</a></li>
 <li><a href="kde/">KDE</a></li>
 
+<li><a href="pyrapi/ce_dirview/">CE_DirView</a></li>
+
 </ul>
 
 <h3>Operating system-specific details</h3>
