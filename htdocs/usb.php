@@ -15,7 +15,7 @@ kernel version 2.4.18 or later.</p>
 <p>Are you running one of these devices?</p>
 
 <ul>
-<li>Compaq/HP iPAQ (any model?)</li>
+<li>Compaq/HP iPAQ (except the 1910)</li>
 <li>Casio (EM500 and probably others)
 </ul>
 

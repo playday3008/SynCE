@@ -18,10 +18,10 @@ box, you need to make some small modifications to this driver.</p>
 table:</p>
 
 <table cellpadding=3>
-<tr><th>Device</th><th>Vendor ID</th><th>Product ID</th></tr>
-<tr><td>Compaq/HP iPAQ (any model?)</td><td>049f</td><td>0003</td></tr>
-<tr><td>HP Jornada (548, 568, and probably others)</td><td>03f0</td><td>1016<br>1116</td><td>Need to patch this too!</td></tr>
-<tr><td>Casio (EM500 and probably others)</td><td>07cf</td><td>2002</td></tr>
+<tr><th>Vendor</th><th>Product</th><th>Vendor ID</th><th>Product ID</th></tr>
+<tr><td>Compaq</td><td>iPAQ (any model?)</td><td>049f</td><td>0003</td></tr>
+<tr><td>HP</td><td>Jornada 548/568, iPAQ 1910, and probably others</td><td>03f0</td><td>1016<br>1116</td><td>Need to patch this too!</td></tr>
+<tr><td>Casio</td><td>EM500 and probably others</td><td>07cf</td><td>2002</td></tr>
 </table>
 
 <p>The driver source code is located in these files in the kernel source tree:</p>
