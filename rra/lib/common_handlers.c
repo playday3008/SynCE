@@ -22,7 +22,10 @@
 
 bool on_mdir_line_location(Parser* p, mdir_line* line, void* cookie)
 {
-  return parser_add_string_from_line(p, ID_LOCATION, line);
+  if (line)
+    return parser_add_string_from_line(p, ID_LOCATION, line);
+  else
+    return false;
 }
 
 bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
@@ -37,10 +40,15 @@ bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
 
 bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 {
-  assert(line->values);
-  /* TODO: convert from utf-8 */
-  /* TODO: convert LF to CRLF */
-  return parser_add_blob(p, ID_NOTES, line->values[0], strlen(line->values[0]));
+  if (line)
+  {
+    assert(line->values);
+    /* TODO: convert from utf-8 */
+    /* TODO: convert LF to CRLF */
+    return parser_add_blob(p, ID_NOTES, line->values[0], strlen(line->values[0]));
+  }
+  else
+    return false;
 }
 
 static const char pwi_signature[] = "{\\pwi";
@@ -99,15 +107,20 @@ bool on_propval_sensitivity(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{
 
 bool on_mdir_line_class(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
-  if (STR_EQUAL(line->values[0], "PUBLIC"))
-    parser_add_int16(p, ID_SENSITIVITY, SENSITIVITY_PUBLIC);
-  else if (
-      STR_EQUAL(line->values[0], "PRIVATE") ||
-      STR_EQUAL(line->values[0], "CONFIDENTIAL"))
-    parser_add_int16(p, ID_SENSITIVITY, SENSITIVITY_PRIVATE);
+  if (line)
+  {
+    if (STR_EQUAL(line->values[0], "PUBLIC"))
+      parser_add_int16(p, ID_SENSITIVITY, SENSITIVITY_PUBLIC);
+    else if (
+        STR_EQUAL(line->values[0], "PRIVATE") ||
+        STR_EQUAL(line->values[0], "CONFIDENTIAL"))
+      parser_add_int16(p, ID_SENSITIVITY, SENSITIVITY_PRIVATE);
+    else
+      synce_warning("Unknown value for CLASS: '%s'", line->values[0]);
+    return true;
+  }
   else
-    synce_warning("Unknown value for CLASS: '%s'", line->values[0]);
-  return true;
+    return false;
 }/*}}}*/
 
 
@@ -117,7 +130,10 @@ bool on_mdir_line_class(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 bool on_mdir_line_summary(Parser* p, mdir_line* line, void* cookie)
 {
-  return parser_add_string_from_line(p, ID_SUBJECT, line);
+  if (line)
+    return parser_add_string_from_line(p, ID_SUBJECT, line);
+  else
+    return false;
 }
 
 bool on_propval_subject(Generator* g, CEPROPVAL* propval, void* cookie)
