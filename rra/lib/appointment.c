@@ -283,12 +283,12 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
 
-  if (event_parser_data->has_alarm)
-    goto exit;
-
   char** data_type = mdir_get_param_values(line, "VALUE");
   char** related   = mdir_get_param_values(line, "RELATED");
   int duration = 0;
+
+  if (event_parser_data->has_alarm)
+    goto exit;
 
   /* data type must be DURATION */
   if (data_type && data_type[0])
