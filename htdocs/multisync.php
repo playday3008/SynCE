@@ -33,8 +33,8 @@ plugins.</li>
 <tt>rra</tt> and <tt>multisync_plugin</tt> modules.</li>
 
 <li class=SPACED>If you have previously used ActiveSync to synchronize your
-Pocket PC handheld, follow the instructions at <i>Using both SynCE and
-ActiveSync</i> below to change the current partnership.</li>
+Pocket PC handheld, follow the instructions at <i>Using both the MultiSync
+plugin and ActiveSync</i> below to change the current partnership.</li>
 
 <li class=SPACED>Create a MultiSync synchronization pair with Evolution and the
 SynCE plugin. You should only have the SynCE plugin in <i>one</i> connection
@@ -55,8 +55,8 @@ that? </p>
 <p>
 
 <b>A:</b> You are probably using the same partnership as you have used with
-ActiveSync before. See <i>Using both SynCE and ActiveSync</i> below for more
-information.
+ActiveSync before. See <i>Using both the MultiSync plugin and ActiveSync</i>
+below for more information.
 
 </p>
 
@@ -82,7 +82,7 @@ SynCE.</p>
 <hr size=1 width="50%">
 
 <p><b>Q:</b> Synchronization from Pocket PC to Evolution fails with these
-messages:
+messages:</p>
 
 <pre>[rrac_recv_reply_6f_c1:402] Unexpected command
 [rra_get_object_types:118] Failed to receive reply
@@ -109,10 +109,41 @@ mailing list.</li>
 
 </ol>
 
-</p>
+<hr size=1 width="50%">
+
+<p><b>Q:</b> How do partnerships work?</p>
+
+<p><b>A:</b> Answer provided by <a href="voc@users.sourceforge.net">Volker
+Christian</a> and slightly edited:</p>
+
+<p>Partnerships in Windows CE are relevant for synchronizing only. The
+synchronizing-algorithm in PocketPC traces by use of the partnerships which
+contact, task, ... are already synchronized with which partner. Thats why
+activesync forbits synchronizing when only a guest-partnership is active.</p>
+
+<p>The 1 and the 2 actualy numbers the partnerships in the registry.  What you
+have in the registry is:</p>
+
+<p>\HKLM\SOFTWARE\Microsoft\Windows CE Services\Partners\PCur ... 1 or 2<br>
+\HKLM\SOFTWARE\Microsoft\Windows CE Services\Partners\P1\PId<br>
+\HKLM\SOFTWARE\Microsoft\Windows CE Services\Partners\P1\PName<br>
+\HKLM\SOFTWARE\Microsoft\Windows CE Services\Partners\P2\PId<br>
+\HKLM\SOFTWARE\Microsoft\Windows CE Services\Partners\P2\PName</p>
+
+<p>So 1 and 2 select either P1 or P2.  PId are random numbers generated on the
+desktop-machine during partnership setup and are stored in both, the desktop
+and the pda. PName are names of the desktop machines.</p>
+
+<p>On connect the desktop looks into P1 and P2 and compares the stored PName
+with its own name and if it finds a match it also compares the random number
+PId with its own stored number. If also the PId matches the desktop stores a 1
+or a 2 in PCur dependent on the matched partnership.</p>
+
+<p>Now Windows CE could manage the synchronization process in that way, that
+both partners and also the PDA have consistent states.</p>
 
 
-<h2>Using both SynCE and ActiveSync</h2>
+<h2>Using both the MultiSync plugin and ActiveSync</h2>
 
 <p>A Pocket PC device can only have two simultaneous partnerships with desktop
 computers. When using both SynCE and ActiveSync, one of these partnerships will
