@@ -1,13 +1,15 @@
 /* $Id$ */
 #include <check.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <string.h>
 
 #include "rapi_socket.h"
 
 #define HOST "127.0.0.1"
-#define PORT 9877
+#define PORT 0xde0
 
-static const char* MESSAGE = "2GooD Productions\n";
+static const char* MESSAGE = "2GooD Productions";
 
 START_TEST(test_echo_server)
 {
@@ -16,30 +18,40 @@ START_TEST(test_echo_server)
 	RapiBuffer* recv_buffer = rapi_buffer_new();
 	bool success;
 
-	socket = rapi_socket_new();
+	signal(SIGPIPE, SIG_IGN);
 	
-	fail_unless( socket != NULL, "rapi_socket_new failed" );
+	socket = rapi_socket_new();
+	success = socket != NULL;
+	
+	fail_unless( success, "rapi_socket_new failed" );
+	if (!success) goto fail;
 
-	if (socket)
-	{
-		success = rapi_socket_connect(socket, HOST, PORT);
-		fail_unless( success, "rapi_socket_connect failed" );
+	success = rapi_socket_connect(socket, HOST, PORT);
+	fail_unless( success, "rapi_socket_connect failed" );
+	if (!success) goto fail;
 
-		success = rapi_buffer_write_data(send_buffer, MESSAGE, strlen(MESSAGE));
-		fail_unless( success, "rapi_buffer_write_data failed" );
+	success = rapi_buffer_write_data(send_buffer, MESSAGE, strlen(MESSAGE));
+	fail_unless( success, "rapi_buffer_write_data failed" );
+	if (!success) goto fail;
 
-		success = rapi_socket_send(socket, send_buffer);
-		fail_unless( success, "rapi_socket_send failed" );
+	success = rapi_socket_send(socket, send_buffer);
+	fail_unless( success, "rapi_socket_send failed" );
+	if (!success) goto fail;
 
-		success = rapi_socket_recv(socket, recv_buffer);
-		fail_unless( success, "rapi_socket_recv failed" );
-		
-		success = strcmp(MESSAGE, rapi_buffer_get_raw(recv_buffer)) == 0;
-		fail_unless( success , "wrong data returned" );
-	}
+	success = rapi_socket_recv(socket, recv_buffer);
+	fail_unless( success, "rapi_socket_recv failed" );
+	if (!success) goto fail;
+
+	success = rapi_buffer_get_raw(recv_buffer) != NULL;
+	fail_unless( success, "arapi_socket_recv_buffer_get_raw returns null" );
+	if (!success) goto fail;
+
+	success = memcmp(MESSAGE, rapi_buffer_get_raw(recv_buffer), strlen(MESSAGE)) == 0;
+	fail_unless( success , "wrong data returned" );
+	if (!success) goto fail;
 
 fail:
-	
+	success = false;
 }
 END_TEST
 

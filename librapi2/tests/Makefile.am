@@ -3,9 +3,10 @@ CFLAGS = -ggdb -Wall -ansi -pedantic -I../src @CHECK_CFLAGS@
 LIBS = @CHECK_LIBS@
 LDADD = ../src/librapi.la
 
-check_PROGRAMS = test-internals test-socket
+TESTS = test-internals
 
-TESTS = $(check_PROGRAMS)
+check_PROGRAMS = $(TESTS) test-socket test-server
+
 
 test_internals_SOURCES = test-internals.c
 
