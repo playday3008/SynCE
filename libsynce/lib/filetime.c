@@ -8,7 +8,7 @@ static time_t DOSFS_FileTimeToUnixTime( const FILETIME *filetime, DWORD *remaind
 
 void filetime_from_unix_time(time_t unix_time, FILETIME *filetime)
 {
-	if (0 == unix_time)
+	if (0 == unix_time || -1 == unix_time)
 	{
 		filetime->dwLowDateTime   = 0;
 		filetime->dwHighDateTime  = 0;
