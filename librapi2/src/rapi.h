@@ -724,6 +724,10 @@ BOOL CeGetSystemMemoryDivision(
 DWORD CeSetSystemMemoryDivision(
     DWORD dwStoragePages);
 
+BOOL CeRegCopyFile(LPCWSTR filename);
+BOOL CeRegRestoreFile(LPCWSTR filename);
+
+
 #endif /* SWIG */
 
 /*

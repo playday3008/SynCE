@@ -413,3 +413,57 @@ exit:
   return result;
 }
 
+BOOL CeRegCopyFile(LPCWSTR filename)
+{
+  RapiContext* context = rapi_context_current();
+  BOOL result = FALSE;
+
+  if (!filename)
+  {
+    synce_error("Bad parameter(s)");
+    goto exit;
+  }
+
+  rapi_context_begin_command(context, 0x2d);
+
+  rapi_buffer_write_optional_string(context->send_buffer, filename);
+
+  if ( !rapi_context_call(context) )
+    return false;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+  if (!rapi_buffer_read_uint32(context->recv_buffer, &result))
+    goto exit;
+  synce_trace("result = 0x%08x", result);
+
+exit:
+  return result;
+}
+
+BOOL CeRegRestoreFile(LPCWSTR filename)
+{
+  RapiContext* context = rapi_context_current();
+  BOOL result = FALSE;
+
+  if (!filename)
+  {
+    synce_error("Bad parameter(s)");
+    goto exit;
+  }
+
+  rapi_context_begin_command(context, 0x2e);
+
+  rapi_buffer_write_optional_string(context->send_buffer, filename);
+
+  if ( !rapi_context_call(context) )
+    return false;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+  if (!rapi_buffer_read_uint32(context->recv_buffer, &result))
+    goto exit;
+  synce_trace("result = 0x%08x", result);
+
+exit:
+  return result;
+}
+

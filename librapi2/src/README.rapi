@@ -51,8 +51,8 @@ List of RAPI command codes:
 [ ] 2a CeGetSystemMetrics	
 [ ] 2b CeGetDesktopDeviceCaps	
 [i] 2c CeFindAllDatabases	
-[ ] 2d RegCopyFile              [undocumented as RAPI function]
-[ ] 2e RegRestoreFile           [undocumented as RAPI function]
+[i] 2d RegCopyFile              [undocumented as RAPI function]
+[i] 2e RegRestoreFile           [undocumented as RAPI function]
 [i] 2f CeGetSystemInfo		
 
 [ ] 30 CeSHCreateShortcut	
