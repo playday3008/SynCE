@@ -56,6 +56,7 @@ int main(int argc, char** argv)
 	WCHAR* parent_key_name = NULL;
 	WCHAR* value_name = NULL;
 	DWORD i;
+  bool smartphone = false;
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
@@ -76,8 +77,13 @@ int main(int argc, char** argv)
 
 	result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
   
-	if (ERROR_SUCCESS != result)
+	if (ERROR_SUCCESS == result)
   {
+    smartphone = true;
+  }
+  else
+  {
+    smartphone = false;
     wstr_free_string(parent_key_name);
 
     /* Path on Pocket PC 2002 */
@@ -109,21 +115,30 @@ int main(int argc, char** argv)
 		if (ERROR_SUCCESS != result)
 			break;
 
-		result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, &program_key);
-		if (ERROR_SUCCESS != result)
-			continue;
+    if (smartphone)
+    {
+      char* name = wstr_to_ascii(wide_name);
+      puts(name);
+      wstr_free_string(name);
+    }
+    else
+    {
+      result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, &program_key);
+      if (ERROR_SUCCESS != result)
+        continue;
 
-		result = CeRegQueryValueEx(program_key, value_name, NULL, NULL,
-				(LPBYTE)&installed, &value_size);
+      result = CeRegQueryValueEx(program_key, value_name, NULL, NULL,
+          (LPBYTE)&installed, &value_size);
 
-		if (ERROR_SUCCESS == result && installed)
-		{
-			char* name = wstr_to_ascii(wide_name);
-			puts(name);
-			wstr_free_string(name);
-		}
+      if (ERROR_SUCCESS == result && installed)
+      {
+        char* name = wstr_to_ascii(wide_name);
+        puts(name);
+        wstr_free_string(name);
+      }
+      CeRegCloseKey(program_key);
+    }
 
-		CeRegCloseKey(program_key);
 	}
 
 	CeRegCloseKey(parent_key);
