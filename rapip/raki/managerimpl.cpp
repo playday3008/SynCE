@@ -363,7 +363,7 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
         result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, QString("Software\\Apps").ucs2(), 0, 0,
                                        &parent_key);
         if (ERROR_SUCCESS == result) {
-            for (i = 0; running(); i++) {
+            for (i = 0; !stopRequested(); i++) {
                 WCHAR wide_name[MAX_PATH];
                 DWORD name_size = sizeof(wide_name);
                 HKEY program_key;
@@ -388,12 +388,14 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
                 result = synce::CeRegQueryValueEx(program_key, QString("Instl").ucs2(),
                                                   NULL, &type, (LPBYTE)&installed, &value_size);
 
+                synce::CeRegCloseKey(program_key);
+
                 if (ERROR_SUCCESS == result && installed) {
                     postThreadEvent(&ManagerImpl::insertInstalledItemEvent,
                                     qstrdup(QString::fromUcs2(wide_name).ascii()), noBlock);
+                } else if (ERROR_SUCCESS != result) {
+                    break;
                 }
-
-                synce::CeRegCloseKey(program_key);
             }
             synce::CeRegCloseKey(parent_key);
         }
