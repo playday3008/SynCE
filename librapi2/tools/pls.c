@@ -117,20 +117,16 @@ static bool print_entry(CE_FIND_DATA* entry)
 	return true;
 }
 
-static bool list_directory(const char* name)
+static bool list_matching_files(char* path)
 {
 	bool success = false;
 	BOOL result;
 	CE_FIND_DATA* find_data = NULL;
 	DWORD file_count = 0;
-	char ascii_path[256];
 	WCHAR* wide_path = NULL;
 	int i;
 
-	snprintf(ascii_path, sizeof(ascii_path), "%s\\*.*", name);
-	convert_to_backward_slashes(ascii_path);
-	
-	wide_path = wstr_from_ascii(ascii_path);
+	wide_path = wstr_from_ascii(path);
 
 	result = CeFindAllFiles(
 			wide_path,
@@ -172,10 +168,21 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
+	convert_to_backward_slashes(path);
 
-	/* TODO: handle files too */
-	if (!list_directory(path))
-		goto exit;
+	if (path[strlen(path)-1] == '\\')
+	{
+		/* This is a directory, append "*.*" to show its contents */
+		char new_path[MAX_PATH];
+		snprintf(new_path, sizeof(new_path), "%s*.*", path);
+		if (!list_matching_files(new_path))
+			goto exit;
+	}
+	else
+	{
+		if (!list_matching_files(path))
+			goto exit;
+	}
 
 	result = 0;
 

@@ -4,7 +4,7 @@
 pcp \- Copy a file on a Pocket PC device.
 
 .SH SYNOPSIS
-\fBpcp\fR [-h] [:]\fISOURCE\fR [:]\fIDESTINATION\fR
+\fBpcp\fR [-h] [:]\fISOURCE\fR [[:]\fIDESTINATION\fR]
 
 .SH "DESCRIPTION"
 
@@ -13,7 +13,8 @@ pcp \- Copy a file on a Pocket PC device.
 device and host PC.
 
 .PP
-Forward slashes ('/') on the command line are converted to backward slashes ('\\').
+Forward slashes ('/') in remote file names specified on the command line are
+converted to backward slashes ('\\').
 
 .SH "OPTIONS"
 .TP
@@ -32,6 +33,15 @@ Full path to the source filename. When the filename is prefixed with a colon
 
 Full path to the destination filename. When the filename is prefixed with a colon
 (':'), it will be treated as a remote filename, otherwise as a local filename.
+
+.IP
+If this parameter is omitted and the source filename is local, the local file
+will be copied to a file with the same name in the "My Documents" directory on
+the Pocket PC device.
+
+.IP
+If this parameter is omitted and the source filename is remote, the remote file
+will be copied to a file with the same name in the current directory.
 
 .SH EXAMPLES
 

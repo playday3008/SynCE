@@ -5,43 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 
-typedef struct
-{
-	union
-	{
-		HANDLE rapi;
-		FILE   local;
-	} handle;
-} AnyFile;
-
-typedef enum
-{
-	READ = 1,
-	WRITE = 2
-} ACCESS;
-
-typedef bool (*file_access)(unsigned char* buffer, size_t bytes, size_t* bytesUsed);
-
-#if 0
-static AnyFile* anyfile_open_
-
-static AnyFile* anyfile_open(const char* filename, ACCCESS access)
-{
-	AnyFile* result = (AnyFile*)calloc(1, sizeof(AnyFile));
-	
-	if (':' == filename[0])
-	{
-		WCHAR* wide_filename = wstr_from_ascii(filename);
-		result->rapi = CreateFile(wide);
-		wste_free_string(wide_filename);
-	}
-	else
-	{
-	
-	}
-}
-#endif
-
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
@@ -58,6 +21,7 @@ static void show_usage(const char* name)
 static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 {
 	int c;
+	int path_count;
 
 	while ((c = getopt(argc, argv, "h")) != -1)
 	{
@@ -70,7 +34,8 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 		}
 	}
 
-	if ((argc - optind) != 2)
+	path_count = argc - optind;
+	if (path_count < 1 || path_count > 2)
 	{
 		fprintf(stderr, "%s: You need to specify source and destination file names on command line\n\n", argv[0]);
 		show_usage(argv[0]);
@@ -78,9 +43,91 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 	}
 		
 	*source = strdup(argv[optind++]);
-	*dest   = strdup(argv[optind++]);
+	if (path_count > 1)
+		*dest   = strdup(argv[optind++]);
 
 	return true;
+}
+
+static bool remote_copy(const char* ascii_source, const char* ascii_dest)
+{
+	return CeCopyFileA(ascii_source, ascii_dest, false);
+}
+
+#define ANYFILE_BUFFER_SIZE (16*1024)
+
+static bool anyfile_copy(const char* source_ascii, const char* dest_ascii, const char* name)
+{
+	bool success = false;
+	size_t bytes_read;
+	size_t bytes_written;
+	char* buffer = NULL;
+	AnyFile* source = NULL;
+	AnyFile* dest   = NULL;
+
+	if (!(buffer = malloc(ANYFILE_BUFFER_SIZE)))
+	{
+		fprintf(stderr, "%s: Failed to allocate buffer of size %i\n", name, ANYFILE_BUFFER_SIZE);
+		goto exit;
+	}
+
+	if (!(source = anyfile_open(source_ascii, READ)))
+	{
+		fprintf(stderr, "%s: Failed to open source file '%s'\n", name, source_ascii);
+		goto exit;
+	}
+
+	if (!(dest = anyfile_open(dest_ascii, WRITE)))
+	{
+		fprintf(stderr, "%s: Failed to open destination file '%s'\n", name, dest_ascii);
+		goto exit;
+	}
+
+	for(;;)
+	{
+		if (!anyfile_read(source, buffer, ANYFILE_BUFFER_SIZE, &bytes_read))
+		{
+			fprintf(stderr, "%s: Failed to read from source file '%s'\n", name, source_ascii);
+			goto exit;
+		}
+
+		if (0 == bytes_read)
+		{
+			/* End of file */
+			break;
+		}
+
+		if (!anyfile_write(dest, buffer, bytes_read, &bytes_written))
+		{
+			fprintf(stderr, "%s: Failed to write to destination file '%s'\n", name, dest_ascii);
+			goto exit;
+		}
+
+		if (bytes_written != bytes_read)
+		{
+			fprintf(stderr, "%s: Only wrote %i bytes of %i to destination file '%s'\n", name, 
+					bytes_written, bytes_read, dest_ascii);
+			goto exit;
+		}
+	}
+
+exit:
+	if (buffer)
+		free(buffer);
+	
+	if (source)
+	{
+		anyfile_close(source);
+		free(source);
+	}
+
+	if (dest)
+	{
+		anyfile_close(dest);
+		free(dest);
+	}
+
+	return success;
 }
 
 int main(int argc, char** argv)
@@ -88,10 +135,7 @@ int main(int argc, char** argv)
 	int result = 1;
 	char* source = NULL;
 	char* dest = NULL;
-	/*BOOL success;*/
 	HRESULT hr;
-	WCHAR* wide_source = NULL;
-	WCHAR* wide_dest = NULL;
 	
 	if (!handle_parameters(argc, argv, &source, &dest))
 		goto exit;
@@ -103,33 +147,89 @@ int main(int argc, char** argv)
 		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
 				argv[0],
 				synce_strerror(hr));
-		goto exit;
+/*		goto exit;*/
 	}
 
-	convert_to_backward_slashes(source);
-	convert_to_backward_slashes(dest);
-
-	wide_source = wstr_from_ascii(source);
-	wide_dest   = wstr_from_ascii(dest);
-
-#if 0
-	if (!CeMoveFile(wide_source, wide_dest))
+	if (!dest)
 	{
-		fprintf(stderr, "%s: Cannot move '%s' to '%s': %s\n", 
-				argv[0],
-				source,
-				dest,
-				synce_strerror(CeGetLastError()));
-		goto exit;
+		char* p;
+
+		if (is_remote_file(source))
+		{
+
+			for (p = source + strlen(source); p != source; p--)
+			{
+				if (*p == '/' || *p == '\\')
+				{
+					dest = strdup(p+1);
+					break;
+				}
+			}
+
+			if (!dest || '\0' == dest[0])
+			{
+				fprintf(stderr, "%s: Unable to extract destination filename from source path '%s'\n",
+						argv[0], source);
+				goto exit;
+			}
+		}
+		else
+		{
+			WCHAR mydocuments[MAX_PATH];
+			char* mydocuments_ascii = NULL;
+			p = strrchr(source, '/');
+
+			if (p)
+				p++;
+			else
+				p = source;
+
+			if ('\0' == *p)
+			{
+				fprintf(stderr, "%s: Unable to extract destination filename from source path '%s'\n",
+						argv[0], source);
+				goto exit;
+			}
+
+			if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(mydocuments), mydocuments))
+			{
+				fprintf(stderr, "%s: Unable to get the \"My Documents\" path.\n",
+						argv[0]);
+				goto exit;
+			}
+
+			dest = calloc(1, wstr_strlen(mydocuments) + 1 + strlen(p) + 1);
+			
+			mydocuments_ascii = wstr_to_ascii(mydocuments);
+			
+			strcat(dest, mydocuments_ascii);
+			strcat(dest, "\\");
+			strcat(dest, p);
+			
+			wstr_free_string(mydocuments_ascii);
+		}
+	}
+
+	if (is_remote_file(source) && is_remote_file(dest))
+	{
+		/*
+		 * Both are remote; use CeCopyFile()
+		 */
+		if (!remote_copy(source, dest))
+			goto exit;
+	}
+	else
+	{
+		/*
+		 * At least one is local, Use the AnyFile functions
+		 */
+		if (!anyfile_copy(source, dest, argv[0]))
+			goto exit;
 	}
 
 	result = 0;
-#endif
 
 exit:
-	wstr_free_string(wide_source);
-	wstr_free_string(wide_dest);
-
 	if (source)
 		free(source);
 
