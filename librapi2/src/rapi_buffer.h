@@ -14,6 +14,11 @@ typedef struct _RapiBuffer RapiBuffer;
 RapiBuffer* rapi_buffer_new();
 
 /**
+ * Free the contents of a buffer, but keep the buffer object
+ */
+void rapi_buffer_free_data(RapiBuffer* buffer);
+
+/**
  * Free an allocated buffer
  */
 void rapi_buffer_free(RapiBuffer* buffer);

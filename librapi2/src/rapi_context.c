@@ -1,5 +1,6 @@
 /* $Id$ */
 #include "rapi_context.h"
+#include "rapi_unicode.h"
 #include <stdlib.h>
 
 static RapiContext* current_context;
@@ -49,8 +50,7 @@ void rapi_context_free(RapiContext* context)
 
 bool rapi_context_begin_command(RapiContext* context, u_int32_t command)
 {
-	if ( !rapi_buffer_free_data(context->send_buffer) )
-		return false;
+	rapi_buffer_free_data(context->send_buffer);
 	
 	if ( !rapi_buffer_write_uint32(context->send_buffer, command) )
 		return false;

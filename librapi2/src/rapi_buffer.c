@@ -12,6 +12,7 @@ struct _RapiBuffer
 	unsigned char* data;
 	size_t max_size;
 	unsigned bytes_used;
+	unsigned read_index;
 };
 
 RapiBuffer* rapi_buffer_new()
@@ -21,13 +22,15 @@ RapiBuffer* rapi_buffer_new()
 	return buffer;
 }
 
-static void rapi_buffer_free_data(RapiBuffer* buffer)
+void rapi_buffer_free_data(RapiBuffer* buffer)
 {
 	if (buffer && buffer->data)
 	{
 		free(buffer->data);
 		buffer->data = NULL;
 		buffer->max_size = 0;
+		buffer->bytes_used = 0;
+		buffer->read_index = 0;
 	}
 }
 
@@ -147,7 +150,7 @@ bool rapi_buffer_write_string(RapiBuffer* buffer, const uchar* unicode)
 	else
 		size = 0;
 	
-	return rapi_buffer_write_optional(buffer, unicode, size, true);
+	return rapi_buffer_write_optional(buffer, (void*)unicode, size, true);
 }
 
 bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data)
