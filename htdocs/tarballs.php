@@ -13,14 +13,23 @@ substitute this for the version you are installing.</p>
 
 <li class=SPACED>Visit the <a href="http://sourceforge.net/project/showfiles.php?group_id=30550"
 target=_blank>project filelist</a> (will be opened in a separate window) and download
-the following .tar.gz files:<br/><br/>
+the following .tar.gz files:<br/>
 
 	<ul>
-		<li><b>synce-librapi2-X.X.tar.gz</b></li>
-		<li><b>synce-synce-X.X.tar.gz</b></li>
-		<li><b>synce-dccm-X.X.tar.gz</b></li>
-		<li><b>synce-serial-X.X.tar.gz</b></li>
-		<li><b>synce-rra-X.X.tar.gz</b> (optional)</li>
+
+    <li class=SPACED><p><b>synce-X.X.tar.gz</b> for SynCE 0.8 or later includes the following
+    .tar.gz. archives. For earlier versions of SynCE each has to be downloaded
+    separately.</p>
+    
+    <ul>
+      <li><b>synce-librapi2-X.X.tar.gz</b></li>
+      <li><b>synce-synce-X.X.tar.gz</b></li>
+      <li><b>synce-dccm-X.X.tar.gz</b></li>
+      <li><b>synce-serial-X.X.tar.gz</b></li>
+      <li><b>synce-rra-X.X.tar.gz</b> (optional)</li>
+      <li><b>libmimedir-X.X.tar.gz</b> (only in SynCE 0.8 or later)</li>
+      </ul>
+    </li>
 		<li><b>synce-multisync_plugin-X.X.tar.g</b>z (for address book synchronization, requires rra)</li>
 		<li><b>synce-trayicon-X.X.tar.gz</b> (suggested for GNOME 2.x users)</li>
 		<li><b>synce-gnomevfs-X.X.tar.gz</b> (suggested for GNOME 2.x users)</li>
