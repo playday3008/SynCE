@@ -49,6 +49,33 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 
 </ul>
 
+<hr size=1>
+<p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_xclick">
+<input type="hidden" name="business" value="twogood@users.sourceforge.net">
+<input type="hidden" name="item_name" value="The SynCE Project">
+<input type="hidden" name="no_shipping" value="1">
+<input type="hidden" name="return" value="http://synce.sourceforge.net/synce/thanks.php">
+<input type="hidden" name="cancel_return" value="http://synce.sourceforge.net/synce/">
+<input type="hidden" name="cn" value="Comments">
+<input type="hidden" name="currency_code" value="USD">
+<input type="hidden" name="tax" value="0">
+
+<table cellpadding=5 width="100%"><tr>
+
+<td class=MIDDLE><input type="image"
+src="https://www.paypal.com/images/x-click-but21.gif" border="0" name="submit"
+alt="Make a donation" title="Make a donation"></td>
+
+<td class=MIDDLE>You can now support the SynCE project by donating!</td>
+
+</tr></table>
+</form>
+
+</p>
+<hr size=1>
 
 <a name="introduction"></a>
 <h2>Introduction</h2>

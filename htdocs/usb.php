@@ -12,7 +12,7 @@ href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.ne
 <p>To be able to use SynCE with a USB connection, you need to be running Linux
 kernel version 2.4.18 or later.</p>
 
-<p>Are you running one of these devices?</p>
+<p>Are you running one of these devices on a Linux kernel prior to 2.4.20?</p>
 
 <ul>
 <li>Compaq/HP iPAQ (except the 1910)</li>

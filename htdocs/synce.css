@@ -82,3 +82,8 @@ SPAN.RED
 {
 	color: red;
 }
+
+TD.MIDDLE
+{
+  vertical-align: middle;
+}
