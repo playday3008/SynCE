@@ -207,52 +207,98 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 	return ERROR_SUCCESS;
 }
 
-static void push_dword_if_valid(long size, LPDWORD pValue)
+/*
+ * Push parameter information to the buffer
+ */
+static void pushParameter(long size, void * parameterData, size_t parameterSize, int pushValue)
 {
-	if (pValue)
+	if (parameterData)
 	{
-		pushLong( buffer, size, 0x01 );
-		pushLong( buffer, size, 0x04 );
-		pushLong( buffer, size, 0x01 );	
-		pushLong( buffer, size, *pValue );
-	}
-	else
-	{
-		pushLong( buffer, size, 0x00 );	/* Probably FALSE = no parameter info */
-	}
-}
+		pushLong( buffer, size, 1 );
+		pushLong( buffer, size, parameterSize);
 
-static void get_long_if_valid(long * pSize, LPDWORD pValue)
-{
-	long lng;
-
-	if (*pSize < 4)
-	{
-		DBG_printf("Only %i bytes remaining\n", *pSize);
-		return;
-	}
-	
-	lng = getLong( sock, pSize );	
-
-	if (1 == lng)
-	{
-		lng = getLong( sock, pSize ); if (4 != lng) DBG_printf("Expected 4 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);
-		lng = getLong( sock, pSize ); if (1 != lng) DBG_printf("Expected 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);
-		
-		lng = getLong( sock, pSize ); 
-		
-		if (pValue)
+		if (pushValue)	/* pushValue is boolean */
 		{
-			*pValue = lng;
+			unsigned long old_length;
+			unsigned long new_length;
+
+			pushLong( buffer, size, 1 );	/* data follows */
+
+			old_length = _getbufferlen(buffer);
+			new_length = old_length + parameterSize;
+
+			if (new_length < size)
+			{
+				memcpy(((unsigned char*)&(buffer->data)) + old_length, parameterData, parameterSize);
+				_setbufferlen(buffer, new_length);
+			}
+			else
+			{
+				DBG_printf( "rapibuffer too small, this will fail\n");
+			}
 		}
 		else
 		{
-			DBG_printf("Value %i=0x%x received but not used (%i bytes remaining)\n", lng, lng, *pSize);
+			pushLong( buffer, size, 0 );	/* no data follows */
+		}
+	}
+	else
+	{
+		pushLong( buffer, size, 0 ); /* no parameter info */
+	}
+}
+
+/**
+ * Pop parameter info from the buffer
+ */
+static void popParameter(long* size, void * parameterData, size_t parameterMaxSize)
+{
+	long lng;
+	
+	lng = getLong(sock, size);	/* parameter info available? */
+
+	if (1 == lng)
+	{
+		size_t parameterRealSize = getLong(sock, size);	/* parameter value size in buffer */
+
+		lng = getLong(sock, size); /* parameter value available? */
+
+		if (1 == lng)
+		{
+			int overflow; 
+
+			if (parameterData)
+			{
+				/* read directly to buffer */
+				getbufferchunk(sock, size, parameterData, MIN(parameterRealSize, parameterMaxSize));
+				overflow = parameterRealSize - parameterMaxSize;
+			}
+			else
+			{
+				/* throw it all away */
+				overflow = parameterRealSize;
+			}
+				
+			if (overflow > 0)
+			{
+				/* read overflowed buffer */
+				void* tmp = malloc(overflow);
+				getbufferchunk(sock, size, tmp, overflow);
+				free(tmp);
+
+				if (parameterData)
+					DBG_printf("Overflow by %i bytes. Parameter size is %i bytes but max %i bytes was expected. (%i bytes remaining)\n",
+							overflow, parameterRealSize, parameterMaxSize , *size);
+			}
+		}
+		else if (0 != lng)
+		{
+			DBG_printf("popParameter (a): Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *size);
 		}
 	}
 	else if (0 != lng)
 	{
-		DBG_printf("Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);
+		DBG_printf("popParameter (b): Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *size);
 	}
 }
 
@@ -263,77 +309,54 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	int i=0;
 	LONG result = ERROR_SUCCESS;
 
+#if 0
 	DBG_printf( "CeRegQueryInfoKey( hKey = 0x%08X, lpClass = 0x%08X, lpcbClass = 0x%08X, lpReserved = 0x%08X, lpcSubKeys = 0x%08X, lpcbMaxSubKeyLen = 0x%08X, lpcbMaxClassLen = 0x%08X, lpcValues = 0x%08X, lpcbMaxValueNameLen = 0x%08X, lpcbMaxValueLen = 0x%08X, lpcbSecurityDescriptor = 0x%08X, lpftLastWriteTime = 0x%08X )\n",
 	            hKey, lpClass, lpcbClass, lpReserved, lpcSubKeys, lpcbMaxSubKeyLen, lpcbMaxClassLen, lpcValues, lpcbMaxValueNameLen, lpcbMaxValueLen, lpcbSecurityDescriptor, lpftLastWriteTime );
+#endif
 
 	initBuf( buffer, size );
 	pushLong( buffer, size, 0x25 ); 	/* Command */
 	pushLong( buffer, size, hKey ); 	/* hKey */
-	pushLong( buffer, size, 0x00 ); 	/* lpClass */
 
-	push_dword_if_valid(size, lpcbClass);
-	push_dword_if_valid(size, lpReserved);
-	push_dword_if_valid(size, lpcSubKeys);
-	push_dword_if_valid(size, lpcbMaxSubKeyLen);
-	push_dword_if_valid(size, lpcbMaxClassLen);
-	push_dword_if_valid(size, lpcValues);
-	push_dword_if_valid(size, lpcbMaxValueNameLen);
-	push_dword_if_valid(size, lpcbMaxValueLen);
-	push_dword_if_valid(size, lpcbSecurityDescriptor);
-	
-	if (lpftLastWriteTime)
-	{
-		pushLong( buffer, size, 0x01 );
-		pushLong( buffer, size, 0x08 );		/* lpftLastWriteTime */
-		pushLong( buffer, size, 0x00 ); 
-	}
-	else
-	{
-		pushLong( buffer, size, 0x00 ); 
-	}
+	pushParameter(size, lpClass, lpcbClass ? *lpcbClass: 0, 0);
+	pushParameter(size, lpcbClass, sizeof(DWORD), 1);
+	pushParameter(size, lpReserved, sizeof(DWORD), 0);
+	pushParameter(size, lpcSubKeys, sizeof(DWORD), 0);
+	pushParameter(size, lpcbMaxSubKeyLen, sizeof(DWORD), 0);
+	pushParameter(size, lpcbMaxClassLen, sizeof(DWORD), 0);
+	pushParameter(size, lpcValues, sizeof(DWORD), 0);
+	pushParameter(size, lpcbMaxValueNameLen, sizeof(DWORD), 0);
+	pushParameter(size, lpcbMaxValueLen, sizeof(DWORD), 0);
+	pushParameter(size, lpcbSecurityDescriptor, sizeof(DWORD), 1);
+	pushParameter(size, lpftLastWriteTime, sizeof(FILETIME), 0);
 
-	DBG_printbuf( buffer );
+/*	DBG_printbuf( buffer );*/
 	sendbuffer( sock, buffer );
 
 	size = getbufferlen( sock );
 
 	result = lng = getLong( sock, &size );
-/*	DBG_printf( "result %d : %ld (0x%08lx)\n", i, lng, lng );*/
 	_lasterror = lng = getLong( sock, &size );
-/*	DBG_printf( "lasterror %d : %ld (0x%08lx)\n", i, lng, lng );*/
+
 	if (ERROR_SUCCESS == result)
 	{
-		lng = getLong( sock, &size ); if (0 != lng) DBG_printf("Expected zero but got %i (%i bytes remaining)\n", lng, size);
-
-		get_long_if_valid(&size, lpcbClass);
-		get_long_if_valid(&size, lpReserved);
-		get_long_if_valid(&size, lpcSubKeys);
-		get_long_if_valid(&size, lpcbMaxSubKeyLen);
-		get_long_if_valid(&size, lpcbMaxClassLen);
-		get_long_if_valid(&size, lpcValues);
-		get_long_if_valid(&size, lpcbMaxValueNameLen);
-		get_long_if_valid(&size, lpcbMaxValueLen);
-		get_long_if_valid(&size, lpcbSecurityDescriptor);
-
-		if (lpftLastWriteTime)
-		{
-			lng = getLong( sock, &size ); if (1 != lng) DBG_printf("Expected 1 but got %i (%i bytes remaining)\n", lng, size);
-			lng = getLong( sock, &size ); if (8 != lng) DBG_printf("Expected 8 but got %i (%i bytes remaining)\n", lng, size);
-			lng = getLong( sock, &size ); if (1 != lng) DBG_printf("Expected 1 but got %i (%i bytes remaining)\n", lng, size);
-
-			lpftLastWriteTime->dwLowDateTime = getLong( sock, &size );
-			lpftLastWriteTime->dwHighDateTime = getLong( sock, &size );
-		}
-		else
-		{
-			lng = getLong( sock, &size ); if (0 != lng) DBG_printf("Expected zero but got %i (%i bytes remaining)\n", lng, size);
-		}
+		popParameter(&size, lpClass, lpcbClass ? *lpcbClass: 0);
+		popParameter(&size, lpcbClass, sizeof(DWORD));
+		popParameter(&size, lpReserved, sizeof(DWORD));
+		popParameter(&size, lpcSubKeys, sizeof(DWORD));
+		popParameter(&size, lpcbMaxSubKeyLen, sizeof(DWORD));
+		popParameter(&size, lpcbMaxClassLen, sizeof(DWORD));
+		popParameter(&size, lpcValues, sizeof(DWORD));
+		popParameter(&size, lpcbMaxValueNameLen, sizeof(DWORD));
+		popParameter(&size, lpcbMaxValueLen, sizeof(DWORD));
+		popParameter(&size, lpcbSecurityDescriptor, sizeof(DWORD));
+		popParameter(&size, lpftLastWriteTime, sizeof(FILETIME));
 	}
 
-	while (size > 0)
+	if ( size > 0 )
 	{
-		lng = getLong( sock, &size );
-		DBG_printf( "unexpected long %d : %ld (0x%08lx)\n", i++, lng, lng );
+		DBG_printf( "size : %d\n", size );
+/*		flushbuffer( sock );*/
 	}
 	return result;
 }
@@ -342,113 +365,54 @@ STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
 {
 	LONG result = ERROR_SUCCESS;
 	long size = BUFSIZE;
-	long lng;
-	int i = 0;
-	int maxsz;
 
+#if 0
 	DBG_printf( "CeRegEnumValue( hKey = 0x%08X, dwIndex = 0x%08X, lpszValueName = 0x%08X, lpcbValueName = 0x%08X, lpReserved = 0x%08X, lpType = 0x%08X, lpData = 0x%08X, lpcbData = 0x%08X )\n",
 	            hKey, dwIndex, lpszValueName, ( *lpcbValueName ), lpReserved, ( *lpType ), ( *lpData ), ( *lpcbData ) );
+#endif
 
-	if (!lpcbValueName)
+	/* maybe check more parameters */
+	if (!lpcbValueName || lpReserved)
 		return 87; /* ERROR_INVALID_PARAMETER */
 		
-	maxsz = *lpcbValueName;
-	
 	initBuf( buffer, size );
 	pushLong( buffer, size, 0x23 ); 	/* Command */
 	pushLong( buffer, size, hKey ); 	/* Parameter1 : */
 	pushLong( buffer, size, dwIndex ); 	/* Parameter2 : */
 
-	pushLong( buffer, size, 0x01 );		/* lpszValueName */
-	pushLong( buffer, size, *lpcbValueName);
-	pushLong( buffer, size, 0x00 );
+	pushParameter(size, lpszValueName, lpcbValueName ? *lpcbValueName : 0, 0);
+	pushParameter(size, lpcbValueName, sizeof(DWORD), 1);
+	pushParameter(size, lpReserved, sizeof(DWORD), 1);
+	pushParameter(size, lpType, sizeof(DWORD), 1);
+	pushParameter(size, lpData, lpcbData ? *lpcbData : 0, 0);
+	pushParameter(size, lpcbData, sizeof(DWORD), 1);
 
-	push_dword_if_valid(size, lpcbValueName);
-	
-	push_dword_if_valid(size, lpReserved);
-	push_dword_if_valid(size, lpType);
-
-	if (lpData && lpcbData)
-	{
-		pushLong( buffer, size, 0x01 );		/* lpData */
-		pushLong( buffer, size, *lpcbData);
-		pushLong( buffer, size, 0x00 );
-	}
-	else
-	{
-		pushLong( buffer, size, 0x00 );	/* lpData */
-	}
-		
-	push_dword_if_valid(size, lpcbData);
-
-	DBG_printbuf( buffer );
+/*	DBG_printbuf( buffer );*/
 	sendbuffer( sock, buffer );
 
 	size = getbufferlen( sock );
 	
-	lng = getLong( sock, &size ); if (0 != lng) DBG_printf("Expected zero but got %i (%i bytes remaining)\n", lng, size);
-	lng = getLong( sock, &size ); if (0 != lng) DBG_printf("Expected zero but got %i (%i bytes remaining)\n", lng, size);
+	result = getLong( sock, &size ); 
+	_lasterror = getLong( sock, &size );
 
-	result = lng = getLong( sock, &size );
-	DBG_printf( "result %d : %ld (0x%08lx)\n", i, lng, lng );
 	if (ERROR_SUCCESS == result)
 	{
-		lng = getLong( sock, &size );		/* did we get a name? */
-		if (1 == lng)
-		{
-			long strsz = getLong( sock, &size ); /* get buffer size */
-			lng = getLong(sock, &size);
-			if (1 == lng)
-			{
-				WCHAR* str = getString( sock, &size, strsz >> 1 );	/* get string */
-				if (lpszValueName && lpcbValueName)
-					memcpy(lpszValueName, str, MIN(strsz+sizeof(WCHAR), maxsz));
-			}
-			else if (0 != lng)
-			{
-				DBG_printf("Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, &size);
-			}
-		}
-		else if (0 != lng)
-		{
-			DBG_printf("Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, &size);
-		}
-
-		get_long_if_valid(&size, lpcbValueName);
-/*		get_long_if_valid(&size, lpReserved);*/
-		get_long_if_valid(&size, lpType);
+		/* here comes a result again! */
+		result = getLong( sock, &size );
+	}
 		
-		lng = getLong( sock, &size );		/* did we get data */
-		if (1 == lng)
-		{
-			long length = getLong( sock, &size ); /* get buffer size */
-			lng = getLong(sock, &size);
-			if (1 == lng)
-			{
-				char* buffer = (char*)malloc(length);
-				getbufferchunk( sock, &size, buffer, length );
-				if (lpData && lpcbData)
-					memcpy(lpData, buffer, MIN(length, *lpcbData));
-				free(buffer);
-			}
-			else if (0 != lng)
-			{
-				DBG_printf("Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, &size);
-			}
-		}
-		else if (0 != lng)
-		{
-			DBG_printf("Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, &size);
-		}
-
-		get_long_if_valid(&size, lpcbData);
-		
-		
+	if (ERROR_SUCCESS == result)
+	{
+		popParameter(&size, lpszValueName, lpcbValueName ? *lpcbValueName : 0);
+		popParameter(&size, lpcbValueName, sizeof(DWORD));
+		popParameter(&size, lpType, sizeof(DWORD));
+		popParameter(&size, lpData, lpcbData ? *lpcbData : 0);
+		popParameter(&size, lpcbData, sizeof(DWORD));
 	}
 
-	DBG_printf( "size : %d\n", size );
 	if ( size > 0 )
 	{
+		DBG_printf( "size : %d\n", size );
 /*		flushbuffer( sock );*/
 	}
 	return result;
