@@ -29,11 +29,14 @@ pstatus: Unable to initialize RAPI: Failure</pre>
 the tools and dccm as different users. Please make sure that:</p>
 
 <ul>
-<li>dccm is running</li>
+<li>you supplied a password to dccm if your device is password-protected</li>
+<li>dccm was started before you ran synce-serial-start</li>
 <li>that the PPP connection is successful (look in your system logs)</li>
 <li>no firewall configuration prevents the PDA from connecting to dccm</li>
 <li>you run dccm and the tools as the same user</li>
 </ul>
+
+<p>See <a href="start.php">connect</a> for more information.</p>
 
 <h2>PPP error: "Couldn't set tty to PPP discipline"</h2>
 
@@ -129,8 +132,7 @@ to make it work?</p>
 
 <li>Don't use a USB hub</li>
 
-<li>Try the user-space USB driver, which is the <tt>wince-usb</tt> module in <a
-href="http://sourceforge.net/cvs/?group_id=30550">CVS</a></li>
+<li>Try the <a href="usb_linux_userspace.php">user-space USB driver</a></li>
 
 </ul>
 

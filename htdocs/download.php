@@ -4,7 +4,7 @@
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
-<h1>SynCE - Download</h1>
+<h1>SynCE - Download and install</h1>
 
 <p>Please select one of these options to continue download:</p>
 

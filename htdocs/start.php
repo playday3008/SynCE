@@ -4,7 +4,9 @@
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
-<h1>SynCE - Starting connection</h1>
+<h1>SynCE - Connect</h1>
+
+<p>Remember that you must <a href="setup.php">setup</a> SynCE first! :-)</p>
 
 <ol>
 

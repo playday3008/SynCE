@@ -6,6 +6,9 @@
 
 <h1>SynCE - Setup</h1>
 
+<p>Remember that you must <a href="download.php">download and install</a>
+SynCE first! :-)</p>
+
 <h2>Open firewall</h2>
 
 <p>You need to allow your handheld device to access ports 5678 and 5679 on your
