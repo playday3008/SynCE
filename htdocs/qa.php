@@ -19,7 +19,7 @@ href="tools.php">tools</a> I get a message similar to this in SynCE 0.8 or later
 
 <pre>pstatus: Unable to initialize RAPI: An unspecified failure has occurred</pre>
 
-<p>Or this is the message from earlier versions of SynCE:</p>
+<p>Or this message in earlier versions of SynCE:</p>
 
 <pre>ReadConfigFile: stat: No such file or directory
 pstatus: Unable to initialize RAPI: Failure</pre>
