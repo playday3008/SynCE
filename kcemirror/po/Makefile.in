@@ -265,7 +265,7 @@ $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 #>+ 3
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  po/Makefile
-	cd $(top_srcdir) && perl admin/am_edit kcemirror-0.1/po/Makefile.in
+	cd $(top_srcdir) && perl admin/am_edit po/Makefile.in
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 
@@ -287,8 +287,6 @@ KDE_DIST=raki.pot fr.gmo fr.po
 
 #>- DISTFILES= $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
 #>+ 1
-DISTFILES = $(GMOFILES) $(POFILES) $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
-
 DISTFILES = $(GMOFILES) $(POFILES) $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
 
 
@@ -405,7 +403,6 @@ uninstall-am: uninstall-info-am
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
 
-
 #>+ 4
 fr.gmo: fr.po
 	rm -f fr.gmo; $(GMSGFMT) -o fr.gmo $(srcdir)/fr.po
@@ -454,7 +451,7 @@ docs-am:
 force-reedit:
 		cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  po/Makefile
-	cd $(top_srcdir) && perl admin/am_edit kcemirror-0.1/po/Makefile.in
+	cd $(top_srcdir) && perl admin/am_edit po/Makefile.in
 
 
 #>+ 2

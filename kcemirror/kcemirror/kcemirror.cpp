@@ -74,7 +74,7 @@ static KCmdLineOptions options[] =
 
 int main(int argc, char *argv[])
 {
-    KAboutData aboutData("PDAMirror", I18N_NOOP("PDAMirror"), VERSION, description,
+    KAboutData aboutData("kcemirror", I18N_NOOP("KCeMirror"), VERSION, description,
             KAboutData::License_Custom,
             "(c) 2003, Volker Christian (voc)", 0,
             "http://synce.sourceforge.net/synce/kde/",
@@ -104,7 +104,11 @@ int main(int argc, char *argv[])
     kdDebug(2120) << "Synce: " << synce << endl;
     kdDebug(2120) << "ForceInstall: " << forceInstall << endl;
 
-    KApplication a(argc, argv, "kcemirror");
+#if KDE_VERSION < KDE_MAKE_VERSION(3,2,0) // KDE-3.1
+    KApplication a(argc, argv, QCString("kcemirror"));
+#else
+    KApplication a;
+#endif
 
     CeScreen *ceScreen = new CeScreen(new KAboutApplication(&aboutData));
 

@@ -99,46 +99,6 @@ AC_CHECK_HEADERS(rapi.h,,
 	]
 )
 
-AC_ARG_WITH(librra,
-	AC_HELP_STRING(
-			[--with-librra[=DIR]],
-			[Search for librra in DIR/include and DIR/lib]),
-	[
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-	]
-)
-
-AC_ARG_WITH(librra-include,
-	AC_HELP_STRING(
-			[--with-librra-include[=DIR]],
-			[Search for librra header files in DIR]),
-	[
-		CPPFLAGS="$CPPFLAGS -I${withval}"
-	]
-)
-
-AC_ARG_WITH(librra-lib,
-	AC_HELP_STRING(
-			[--with-librra-lib[=DIR]],
-			[Search for librra library files in DIR]),
-	[
-		LDFLAGS="$LDFLAGS -L${withval}"
-	]
-)
-
-AC_CHECK_LIB(rra, rra_partner_create,,
-	[
-		AC_MSG_ERROR([Can't find RRA library])
-	]
-)
-
-AC_CHECK_HEADERS(librra.h,,
-	[
-		AC_MSG_ERROR([Can't find librra.h])
-	]
-)
-
 AM_WITH_DMALLOCTHCXX
 
 AC_DEFINE(QT_NO_ASCII_CAST, 1, [Define if you don't want QString casted to char *])
