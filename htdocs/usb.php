@@ -16,7 +16,7 @@ kernel version 2.4.18 or later.</p>
 
 <ul>
 <li>Compaq/HP iPAQ (except the 1910)</li>
-<li>Casio (EM500 and probably others)
+<li>Casio (EM500 and probably others)</li>
 </ul>
 
 <p>If not, you should first <a href="usbpatch.php">patch your kernel driver</a>.</p>

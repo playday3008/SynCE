@@ -13,14 +13,18 @@ substitute this for the version you are installing.</p>
 
 <li class=SPACED>Visit the <a href="http://sourceforge.net/project/showfiles.php?group_id=30550"
 target=_blank>project filelist</a> (will be opened in a separate window) and download
-the following .tar.gz files:<br/>
+the following .tar.gz files:<br/><br/>
 
 	<ul>
-		<li>synce-librapi2-X.X.tar.gz</li>
-		<li>synce-synce-X.X.tar.gz</li>
-		<li>synce-dccm-X.X.tar.gz</li>
-		<li>synce-serial-X.X.tar.gz</li>
-		<li>synce-trayicon-X.X.tar.gz (if you want it :-)</li>
+		<li><b>synce-librapi2-X.X.tar.gz</b></li>
+		<li><b>synce-synce-X.X.tar.gz</b></li>
+		<li><b>synce-dccm-X.X.tar.gz</b></li>
+		<li><b>synce-serial-X.X.tar.gz</b></li>
+		<li><b>synce-rra-X.X.tar.gz</b> (optional)</li>
+		<li><b>synce-multisync_plugin-X.X.tar.g</b>z (requires rra)</li>
+		<li><b>synce-trayicon-X.X.tar.gz</b> (suggested for GNOME 2.x users)</li>
+		<li><b>synce-gnomevfs-X.X.tar.gz</b> (suggested for GNOME 2.x users)</li>
+		<li><b>rapip-X.X.tar.gz</b> (suggested for KDE 3.x users)</li>
 	</ul>
 </li>
 
@@ -61,10 +65,49 @@ make install
 cd ..</pre>
 </li>
 
+<li>Compile rra:<br/>
+<pre>tar zxf synce-rra-X.X.tar.gz
+cd synce-rra-X.X
+./configure
+make
+make install
+cd ..</pre>
+</li>
+
+<li>Compile multisync_plugin:<br/>
+<p>Note that this module requires the source code for Multisync.</p>
+<pre>tar zxf synce-multisync_plugin-X.X.tar.gz
+cd synce-multisync_plugin-X.X
+./configure --with-multisync-source=<i>/path/to/multisync/source/code/</i>
+make
+make install
+cd ..</pre>
+</li>
+
 <li>Compile trayicon:<br/>
-<p>Note that requires a whole lot of GNOME 2 development packages.</p>
+<p>Note that this module requires a whole lot of GNOME 2 development packages.</p>
 <pre>tar zxf synce-trayicon-X.X.tar.gz
 cd synce-trayicon-X.X
+./configure
+make
+make install
+cd ..</pre>
+</li>
+
+<li>Compile gnomevfs:<br/>
+<p>Note that this module requires a whole lot of GNOME 2 development packages.</p>
+<pre>tar zxf synce-gnomevfs-X.X.tar.gz
+cd synce-gnomevfs-X.X
+./configure
+make
+make install
+cd ..</pre>
+</li>
+
+<li>Compile rapip:<br/>
+<p>Note that this module requires a whole lot of KDE 3.x development packages.</p>
+<pre>tar zxf rapip-X.X.tar.gz
+cd rapip-X.X
 ./configure
 make
 make install

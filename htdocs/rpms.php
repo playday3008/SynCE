@@ -6,6 +6,8 @@
 
 <h1>SynCE - installing RPM packages</h1>
 
+<!--
+
 <h2>If you want to use APT to install packages</h2>
 
 <p>More about using APT with RedHat Linux is available at <a href="http://freshrpms.net/apt/">freshrpms.net</a>.</p>
@@ -26,6 +28,8 @@ rpm-src  http://synce.sourceforge.net/apt  redhat/en/i386/8.0 synce</pre></li>
 
 <h2>If you want to download and install packages manually</h2>
 
+-->
+
 <p><b>Note:</b> X.X-X is used as version number below. You will have to
 substitute this for the version you are installing.</p>
 
@@ -33,13 +37,11 @@ substitute this for the version you are installing.</p>
 
 <li class=SPACED>Visit the <a href="http://sourceforge.net/project/showfiles.php?group_id=30550"
 target=_blank>project filelist</a> (will be opened in a separate window) and download
-the following RPM packages:<br/>
+the following RPM packages:<br/><br/>
 
 	<ul>
-		<li>synce-librapi2-X.X-X.i386.rpm</li>
-		<li>synce-synce-X.X-X.i386.rpm</li>
-		<li>synce-dccm-X.X-X.i386.rpm</li>
-		<li>synce-serial-X.X-X.noarch.rpm</li>
+		<li><b>synce-X.X-X.i386.rpm</b>  (Note: this package includes the modules libsynce, librapi2, dccm, serial and rra.)</li>
+<!-- 		<li><b>synce-multisync_plugin-X.X-X.i386.rpm</b></li> -->
 	</ul>
 </li>
 
@@ -48,6 +50,8 @@ the following RPM packages:<br/>
 <li class=SPACED>Install the packages:<br/>
 <pre>rpm -Uvh synce*.rpm</pre>
 </li>
+
+<li class=SPACED>If you want to use a module not available as RPM, please <a href="tarballs.php">download and compile the source code</a>.</li>
 
 </ol>
 

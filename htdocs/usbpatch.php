@@ -18,9 +18,9 @@ box, you need to make some small modifications to this driver.</p>
 table:</p>
 
 <table cellpadding=3>
-<tr><th>Vendor</th><th>Product</th><th>Vendor ID</th><th>Product ID</th></tr>
+<tr><th>Vendor</th><th>Product</th><th>Vendor ID</th><th>Product IDs</th></tr>
 <tr><td>Compaq</td><td>iPAQ (any model?)</td><td>049f</td><td>0003</td></tr>
-<tr><td>HP</td><td>Jornada 548/568, iPAQ 1910, and probably others</td><td>03f0</td><td>1016<br>1116</td><td>Need to patch this too!</td></tr>
+<tr><td>HP</td><td>Jornada 548/568, iPAQ 1910, and probably others</td><td>03f0</td><td>1016<br>1116</td><td>Need to patch this on kernels before 2.4.20!</td></tr>
 <tr><td>Casio</td><td>EM500 and probably others</td><td>07cf</td><td>2002</td></tr>
 </table>
 
@@ -51,6 +51,8 @@ href="mailto:synce-users@lists.sourceforge.net">synce-users@lists.sourceforge.ne
 
 <p>Some versions of the kernel module has the wrong vendor ID for HP devices.
 This section describes how to correct this problem.</p>
+
+<p><b>This is fixed in kernel version 2.4.20 and later!.</b></p>
 
 <ol>
 

@@ -35,6 +35,36 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>Februrary 23, 2003</b> SynCE 0.7 released!</p>
+
+<p>SynCE now includes the possiblity to synchronize the Pocket PC address book
+with for example Evolution with a plugin to the <a
+href="http://multisync.sourceforge.net">MultiSync</a> program.  This requires
+the <tt>rra</tt> and <tt>multisync_plugin</tt> modules. People who want to
+write code to convert beteen vCalendar and Tasks/Calendar on Pocket PC, please
+send a mail to the <a
+href="http://sourceforge.net/mail/?group_id=30550">development mailing
+list</a>!</p>
+
+<p>News for RedHat 8.0 RPM users:</p>
+<ul>
+
+<li>A single RPM (<tt>synce-0.7-1.i386.rpm</tt>) now includes the modules <tt>libsynce</tt>,
+<tt>librapi2</tt>, <tt>dccm</tt>, <tt>serial</tt> and <tt>rra</tt>.</li>
+
+
+<li>There is a separate RPM (<tt>synce-devel-0.7-1.i386.rpm</tt>) that contains header
+files and development libraries.</li>
+
+<li>The <tt>gnomevfs</tt> module is now also available as an RPM package.</li>
+
+</ul>
+
+<p>I would also like to mention that Volker Christian has joined the SynCE
+project to improve the KDE integration. KDE 3.x users, please have look at the
+<tt>rapip</tt> module in <a
+href="http://sourceforge.net/cvs/?group_id=30550">CVS</a>!</p>
+
 <p><b>January 30, 2003</b> The absence of news does fortunately not mean that
 nothing is happening with the project. We have recevied several KDE I/O-slaves
 for KDE 3 and hope to release one of them as soon as possible. By the way,
@@ -64,6 +94,8 @@ in case <a
 href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
 gets to technical for someone.</p>
 
+<!--
+
 <p><b>November 24, 2002</b> Released SynCE version 2002-11-24 which includes
 dccm 0.4, librapi2 0.4, libsynce 0.4, synce-serial 0.4 and trayicon 0.2.</p>
 
@@ -78,6 +110,8 @@ href="http://sourceforge.net/project/showfiles.php?group_id=30550&release_id=123
 icon!</p>
 
 <p><b>November 17, 2002</b>. New homepage released!</p>
+
+-->
 
 <a name="helpwanted"></a>
 <h2>Help wanted!</h2>
@@ -152,7 +186,7 @@ use with SynCE.</td>
 <a name="developers"></a><h2>The SynCE developers</h2>
 
 <p><a href="mailto:llange@users.sourceforge.net">Ludovic Lange</a> started the
-SynCE project and did the hard work in figuring out manu of the properitary
+SynCE project and did the hard work in figuring out many of the properitary
 interfaces.</p>
 
 <p><a href="mailto:twogood@users.sourceforge.net">David Eriksson</a> is the
@@ -168,6 +202,9 @@ versions.</p>
 
 <p><a href="mailto:sassur@users.sourceforge.net">Fredrik Nilsson</a> is the
 author of the SynCE GNOME-VFS module.</p>
+
+<p><a href="mailto:voc@users.sourceforge.net">Volker Christian</a> works with
+KDE 3.x integration in the <tt>rapip</tt> module.</p>
 
 </div>
 <?php include 'footer.php'; ?>
