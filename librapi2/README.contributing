@@ -31,7 +31,7 @@ David Eriksson's book wishlist:
 
 Or maybe donate money on www.paypal.com:
 
-	David Eriksson's e-mail address is twogood@users.sourceforge.net
+  David Eriksson's e-mail address is twogood@users.sourceforge.net
 
 (Other developers of librapi2, feel free to add yourselves above! :-)
 	
@@ -47,6 +47,7 @@ the PHP project. Just substitute "PHP" with "SynCE" :-)
   http://cvsweb.php.net/co.php/php4/README.SUBMITTING_PATCH
 
 If you submit lots of patches you will get access to the CVS repository.
+
 
 Answering questions on the mailing list
 ---------------------------------------
