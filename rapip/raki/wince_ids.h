@@ -169,10 +169,22 @@ ICAL::icalproperty *reminder_enabled(ICAL::icalcomponent *ical, synce::CEPROPVAL
 ICAL::icalproperty *reminder_sound_file(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
 ICAL::icalproperty *reminder_options(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
 
+
+ICAL::icalproperty *unknown0001(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknown0002(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknown0042(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknown0067(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknown4015(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknown4171(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknownfffd(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *unknownfffe(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+
+
 struct _event_ids {
     unsigned int id;
     int type;
     ICAL::icalproperty *(*function)(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+    ICAL::icalproperty *prop;
 };
 
 typedef struct _event_ids event_ids_t;

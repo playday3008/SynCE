@@ -488,50 +488,50 @@ contact_ids_t contact_ids[] = {
 
 
 event_ids_t event_ids[] = {
-    { 0x0001, 0x0000, NULL }, /* something about repeated appointemnts */
-    { 0x0002, 0x0003, NULL }, /* Unknown */
-    { 0x0004, 0x0002, sensitivity }, /* sensitivity */
+    { 0x0001, 0x0000, unknown0001, NULL }, /* something about repeated appointemnts */
+    { 0x0002, 0x0003, unknown0002, NULL }, /* Unknown */
+    { 0x0004, 0x0002, sensitivity, NULL }, /* sensitivity */
 #define SENSITIVITY_PUBLIC  0
 #define SENSITIVITY_PRIVATE 1
 
-    { 0x000f, 0x0002, NULL /* bussy_status */ }, /* bussy status */
+    { 0x000f, 0x0002, bussy_status, NULL }, /* bussy status */
 #define BUSY_STATUS_FREE           0
 #define BUSY_STATUS_TENTATIVE      1
 #define BUSY_STATUS_BUSY           2
 #define BUSY_STATUS_OUT_OF_OFFICE  3
 
-    { 0x0016, 0x0000, NULL /* categories */ }, /* Categories */
-    { 0x0017, 0x0041, NULL /* notes */ }, /* Notes */
-    { 0x0037, 0x001f, subject }, /* Subject */
-    { 0x0042, 0x001f, NULL }, /* Unknown */
-    { 0x0067, 0x0041, NULL }, /* Unknown */
-    { 0x4005, 0x001f, category }, /* Cetegory */
-    { 0x4015, 0x0003, NULL }, /* Unknown */
-    { 0x4171, 0x0003, NULL }, /* Unknown */
-    { 0x4208, 0x001f, location }, /* Location */
-    { 0x420d, 0x0040, appointment_start }, /* Appointment start */
-    { 0x4213, 0x0003, appointment_duration }, /* Appointment duration */
-    { 0x4215, 0x0003, NULL /* appointment_type */}, /* Appointment Type */
+    { 0x0016, 0x0000, categories, NULL }, /* Categories */
+    { 0x0017, 0x0041, notes, NULL }, /* Notes */
+    { 0x0037, 0x001f, subject, NULL }, /* Subject */
+    { 0x0042, 0x001f, unknown0042, NULL }, /* Unknown */
+    { 0x0067, 0x0041, unknown0067, NULL }, /* Unknown */
+    { 0x4005, 0x001f, category, NULL }, /* Cetegory */
+    { 0x4015, 0x0003, unknown4015, NULL }, /* Unknown */
+    { 0x4171, 0x0003, unknown4171, NULL }, /* Unknown */
+    { 0x4208, 0x001f, location, NULL }, /* Location */
+    { 0x420d, 0x0040, appointment_start, NULL }, /* Appointment start */
+    { 0x4213, 0x0003, appointment_duration, NULL }, /* Appointment duration */
+    { 0x4215, 0x0003, appointment_type, NULL }, /* Appointment Type */
 #define APPOINTMENT_TYPE_ALL_DAY     1
 #define APPOINTMENT_TYPE_NORMAL      2
 
-    { 0x4223, 0x0002, NULL /* occurance */ }, /* Occurance */
+    { 0x4223, 0x0002, occurance, NULL }, /* Occurance */
 #define OCCURANCE_ONCE      0
 #define OCCURANCE_REPEATED  1
 
-    { 0x4501, 0x0003, reminder_minutes_before_start }, /* Reminder_minutes_before_start*/
-    { 0x4503, 0x0002, reminder_enabled }, /* Reminder_enabled */
-    { 0x4509, 0x001f, reminder_sound_file }, /* Reminder_sound_file */
-    { 0x450a, 0x0003, reminder_options }, /* Reminder options */
+    { 0x4501, 0x0003, reminder_minutes_before_start, NULL }, /* Reminder_minutes_before_start*/
+    { 0x4503, 0x0002, reminder_enabled, NULL }, /* Reminder_enabled */
+    { 0x4509, 0x001f, reminder_sound_file, NULL }, /* Reminder_sound_file */
+    { 0x450a, 0x0003, reminder_options, NULL }, /* Reminder options */
 #define REMINDER_LED 1
 #define REMINDER_VIBRATE 2
 #define REMINDER_DIALOG 4
 #define REMINDER_SOUND 8
 #define REMINDER_REPEAT 16
 
-    { 0xfffd, 0x0013, NULL }, /* Unknown */
-    { 0xfffe, 0x0013, NULL },
-    { 0, 0, NULL }
+    { 0xfffd, 0x0013, unknownfffd, NULL }, /* Unknown */
+    { 0xfffe, 0x0013, unknownfffe, NULL },
+    { 0, 0, NULL, NULL }
 };
 
 
@@ -682,7 +682,7 @@ ICAL::icalcomponent *Rra::getEvent(uint32_t type_id, uint32_t object_id)
                     for (int j = 0; event_ids[j].id; j++) {
                         if (event_ids[j].id == (propvals[i].propid >> 16)) {
                             if (event_ids[j].function != NULL) {
-                                ICAL::icalproperty *prop = event_ids[j].function(
+                                event_ids[j].prop = event_ids[j].function(
                                         event, &propvals[i], NULL, false);
                             }
                         }
@@ -705,8 +705,8 @@ ICAL::icalcomponent *Rra::getEvent(uint32_t type_id, uint32_t object_id)
 }
 
 
-bool Rra::putEvent(const ICAL::icalcomponent *event, uint32_t type_id,
-        uint32_t ceUid, uint32_t *newCeUid)
+bool Rra::putEvent(const ICAL::icalcomponent */*event*/, uint32_t /*type_id*/,
+        uint32_t /*ceUid*/, uint32_t */*newCeUid*/)
 {
     return true;
 }

@@ -30,6 +30,7 @@
 
 namespace ICAL {
     #include <ical.h>
+    #include <icalss.h>
 };
 
 
@@ -43,6 +44,12 @@ void IcalSync::generatePdaDelta()
     uint32_t *v;
     ICAL::icalcomponent *comp;
 
+    ICAL::icalcomponent *calendar = ICAL::icalcomponent_new(ICAL::ICAL_VCALENDAR_COMPONENT);
+    ICAL::icalproperty *prop = ICAL::icalproperty_new_prodid("-//K Desktop Environment//SynCE-KDE RAKI//EN");
+    ICAL::icalcomponent_add_property(calendar, prop);
+    prop = ICAL::icalproperty_new_version("2.0");
+    ICAL::icalcomponent_add_property(calendar, prop);
+
     if (rra->connect()) {
         struct Rra::ids ids;
 
@@ -52,19 +59,38 @@ void IcalSync::generatePdaDelta()
 
         for (v = ids.changedIds.first(); v && !stopRequested(); v = ids.changedIds.next()) {
             comp = rra->getEvent(getObjectTypeId(), *v);
+            ICAL::icalcomponent_add_component(calendar, comp);
+            kdDebug(2120) << "=============================================" << endl;
             kdDebug(2120) << icalcomponent_as_ical_string(comp) << endl;
+            kdDebug(2120) << "---------------------------------------------" << endl;
+            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), *v) << endl;
+            kdDebug(2120) << "=============================================" << endl;
         }
 
         for (v = ids.unchangedIds.first(); v && !stopRequested(); v = ids.unchangedIds.next()) {
             comp = rra->getEvent(getObjectTypeId(), *v);
+            ICAL::icalcomponent_add_component(calendar, comp);
+            kdDebug(2120) << "=============================================" << endl;
             kdDebug(2120) << icalcomponent_as_ical_string(comp) << endl;
+            kdDebug(2120) << "---------------------------------------------" << endl;
+            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), *v) << endl;
+            kdDebug(2120) << "=============================================" << endl;
         }
 
         for (v = ids.deletedIds.first(); v && !stopRequested(); v = ids.deletedIds.next()) {
             comp = rra->getEvent(getObjectTypeId(), *v);
+            ICAL::icalcomponent_add_component(calendar, comp);
+            kdDebug(2120) << "=============================================" << endl;
             kdDebug(2120) << icalcomponent_as_ical_string(comp) << endl;
+            kdDebug(2120) << "---------------------------------------------" << endl;
+            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), *v) << endl;
+            kdDebug(2120) << "=============================================" << endl;
         }
         rra->disconnect();
+
+        ICAL::icalset *file = ICAL::icalfileset_new("/home/voc/myfile.ics");
+        ICAL::icalfileset_add_component(file, calendar);
+        ICAL::icalfileset_free(file);
     }
 }
 

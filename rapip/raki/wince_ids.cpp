@@ -47,7 +47,21 @@ static QDateTime extractQDateTime(synce::CEPROPVAL *propval)
     QDateTime date;
     
     time_t time = synce::filetime_to_unix_time(&propval->val.filetime);
-    date.setTime_t(time);
+    kdDebug(2120) << "C-Time: " << ctime(&time) << endl;
+    date.setTime_t(time, Qt::UTC);
+    tzset();
+    kdDebug(2120) << "CurrentTime (UTC): " << QDateTime::currentDateTime(Qt::UTC).toString() << endl;
+    kdDebug(2120) << "CurrentTime (LOCAL): " << QDateTime::currentDateTime(Qt::LocalTime).toString() << endl;
+    date.setTime_t(time, Qt::UTC);
+    kdDebug(2120) << "Valud (UTC): " << date.toString() << endl;
+    date.setTime_t(time, Qt::LocalTime);
+    kdDebug(2120) << "Valud (LOCAL): " << date.toString() << endl;
+    date.setTime_t(time, Qt::LocalTime);
+    kdDebug(2120) << "Name1: " << tzname[0] << endl;
+    kdDebug(2120) << "Name1: " << tzname[1] << endl;
+    kdDebug(2120) << "Timezone: " << timezone << endl;
+    kdDebug(2120) << "Daylight " << daylight << endl;
+
     return date;
 }
 
@@ -733,21 +747,23 @@ ICAL::icalproperty *sensitivity(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractShort(propval) << endl;
     }
     return prop;
 }
 
 ICAL::icalproperty *bussy_status(ICAL::icalcomponent *event,
-        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
 /* CEVT_I2 */
     ICAL::icalproperty *prop = NULL;
 
+    kdDebug(2120) << __FUNCTION__ << " - " << extractShort(propval) << endl;
+
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractShort(propval) << endl;
     }
     return prop;
 }
@@ -791,7 +807,7 @@ ICAL::icalproperty *subject(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractQString(propval) << endl;
     }
     return prop;
 }
@@ -807,7 +823,7 @@ ICAL::icalproperty *category(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractQString(propval) << endl;
     }
     return prop;
 }
@@ -823,7 +839,7 @@ ICAL::icalproperty *location(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractQString(propval) << endl;
     }
     return prop;
 }
@@ -837,9 +853,22 @@ ICAL::icalproperty *appointment_start(ICAL::icalcomponent *event,
 
     QDateTime time = extractQDateTime(propval);
 
-    icalTime = ICAL::icaltime_from_timet(time.toTime_t(), 0 /*const int is_date*/);
+    kdDebug(2120) << "Valud (LOCAL): " << time.toString() << endl;
+    kdDebug(2120) << "Secs: " << time.toTime_t() << endl;
+//    ICAL::icaltimezone *tz = ICAL::icaltimezone_get_builtin_timezone("Europe/Vienna");
+    ICAL::icaltimezone *tz = ICAL::icaltimezone_get_builtin_timezone_from_tzid("CET");
+    kdDebug(2120) << (void *) tz << endl;
+    icalTime = ICAL::icaltime_from_timet_with_zone(time.toTime_t(), 0,
+        ICAL::icaltimezone_get_builtin_timezone("Europe/London"));
 
-    prop = ICAL::icalproperty_new_dtstart(icalTime);
+//    icalTime = ICAL::icaltime_from_timet(time.toTime_t(), 0);
+    kdDebug(2120) << "Without Zone: " << ICAL::icaltime_as_timet(icalTime) << endl;
+    kdDebug(2120) << "With Zone: " << ICAL::icaltime_as_timet_with_zone(icalTime, tz) << endl;
+    kdDebug(2120) << "Zoneid: " << ICAL::icaltimezone_get_tzid(tz);
+
+//    icalTime = ICAL::icaltime_from_timet(time.toTime_t(), 0);
+    struct ICAL::icaltimetype tt = icaltime_convert_to_zone(icalTime, tz);
+    prop = ICAL::icalproperty_new_dtstart(tt);
 
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
@@ -863,13 +892,13 @@ ICAL::icalproperty *appointment_duration(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractInt(propval) << endl;
     }
     return prop;
 }
 
 ICAL::icalproperty *appointment_type(ICAL::icalcomponent *event,
-        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
 /* CEVT_I4 */
     ICAL::icalproperty *prop = NULL;
@@ -877,13 +906,13 @@ ICAL::icalproperty *appointment_type(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractInt(propval) << endl;
     }
     return prop;
 }
 
 ICAL::icalproperty *occurance(ICAL::icalcomponent *event,
-        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
 /* CEVT_I2 */
     ICAL::icalproperty *prop = NULL;
@@ -891,7 +920,7 @@ ICAL::icalproperty *occurance(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractShort(propval) << endl;
     }
     return prop;
 }
@@ -912,7 +941,7 @@ ICAL::icalproperty *reminder_minutes_before_start(ICAL::icalcomponent *ical,
 }
 
 ICAL::icalproperty *reminder_enabled(ICAL::icalcomponent *event,
-        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
 /* CEVT_I2 */
     ICAL::icalproperty *prop = NULL;
@@ -920,13 +949,13 @@ ICAL::icalproperty *reminder_enabled(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractShort(propval) << endl;
     }
     return prop;
 }
 
 ICAL::icalproperty *reminder_sound_file(ICAL::icalcomponent *event,
-        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
 /* CEVT_LPWSTR */
     ICAL::icalproperty *prop = NULL;
@@ -934,15 +963,29 @@ ICAL::icalproperty *reminder_sound_file(ICAL::icalcomponent *event,
     if (prop != NULL) {
         ICAL::icalcomponent_add_property(event, prop);
     } else {
-        kdDebug(2120) << __FUNCTION__ << endl;
+        kdDebug(2120) << __FUNCTION__ << " - " << extractQString(propval) << endl;
     }
     return prop;
 }
 
 ICAL::icalproperty *reminder_options(ICAL::icalcomponent *event,
-        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
 {
 /* CEVT_I4 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << " - " << extractInt(propval) << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknown0001(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* ??? */
     ICAL::icalproperty *prop = NULL;
 
     if (prop != NULL) {
@@ -953,4 +996,100 @@ ICAL::icalproperty *reminder_options(ICAL::icalcomponent *event,
     return prop;
 }
 
+ICAL::icalproperty *unknown0002(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x0003 */
+    ICAL::icalproperty *prop = NULL;
 
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << " - " << extractInt(propval) << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknown0042(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x001f */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << " - " << extractQString(propval) << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknown0067(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x0041 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknown4015(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x0003 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << " - " << extractInt(propval) << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknown4171(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x0003 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << " - " << extractInt(propval) << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknownfffd(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x0013 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *unknownfffe(ICAL::icalcomponent *event, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
+/* 0x0013 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
