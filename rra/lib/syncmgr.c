@@ -921,7 +921,7 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
       
       bytes_read = reader(
           type_id, 
-          object_id_array[i], 
+          i, 
           data + data_size, 
           SYNCMGRREADER_BUFFER_SIZE, 
           cookie);
