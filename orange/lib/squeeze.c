@@ -108,7 +108,15 @@ bool orange_squeeze_file(/*{{{*/
   
   if (suffix)
   {
-    if (STR_EQUAL(suffix, "cab"))
+    if (STR_EQUAL(suffix, "apk"))
+    {
+      success = orange_extract_apk(filename, output_directory);
+    }
+    else if (STR_EQUAL(suffix, "arh"))
+    {
+      success = orange_extract_arh(filename, output_directory);
+    }
+    else if (STR_EQUAL(suffix, "cab"))
     {
       /* Hopefully a Microsoft Cabinet File or an InstallShield Cabinet File */
       CabInfo cab_info;

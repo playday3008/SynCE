@@ -98,6 +98,22 @@ bool orange_separate2(
     void* cookie);
 
 /**
+   Extract a TomTom .apk file
+ */
+
+bool orange_extract_apk(
+    const char* input_filename,
+    const char* output_directory);
+
+/**
+   Extract a TomTom .arh file
+ */
+
+bool orange_extract_arh(
+    const char* input_filename,
+    const char* output_directory);
+
+/**
    Extract an InstallShield Cabinet File to a directory
  */
 

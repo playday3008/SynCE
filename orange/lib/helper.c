@@ -2,6 +2,7 @@
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
 #include <synce_log.h>
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -60,8 +61,16 @@ bool orange_write(const uint8_t* output_buffer, size_t output_size, const char* 
   bool success = false;
   char filename[256];
   FILE* output = NULL;
+  char*p;
 
-  if (!orange_make_sure_directory_exists(output_directory))
+  /* allow basename to contain path components... */
+  
+  snprintf(filename, sizeof(filename), "%s/%s", output_directory, basename);
+  p = strrchr(filename, '/');
+  assert(p);
+  *p = '\0';
+
+  if (!orange_make_sure_directory_exists(filename))
     goto exit;
 
   snprintf(filename, sizeof(filename), "%s/%s", output_directory, basename);

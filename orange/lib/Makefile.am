@@ -14,7 +14,8 @@ liborange_la_SOURCES = \
 	squeeze.c \
 	suf.c \
 	synce-appmgr.h \
-	synce-appmgr-internal.h
+	synce-appmgr-internal.h \
+	tomtom.c
 
 liborange_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
