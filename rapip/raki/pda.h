@@ -30,7 +30,9 @@
 
 #include "workerthreadinterface.h"
 
+extern "C" {
 #include <rra/syncmgr.h>
+}
 #include <qobject.h>
 #include <qptrdict.h>
 #include <qthread.h>
