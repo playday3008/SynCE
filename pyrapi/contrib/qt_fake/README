@@ -30,7 +30,8 @@ CE_DirView.py
 pyrapi (package)
 	Client who connects to a real pyrapi-server.
 	This means: On the other end "CE_DirViewServer.py" has to run and
-	import the real "pyrapi.py".
+	import the real "pyrapi.py". "CE_DirViewServer.py" is packages
+	with pyrapi in the contrib/qt directory.
 
 
 DebugPrint.py

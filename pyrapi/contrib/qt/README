@@ -37,7 +37,8 @@ CE_DirViewServer.py
 	the PDA connected.
 	The client needs only Python - and of course a connetion to the server ;-)
 	See "pydoc CE_DirViewServer".
-	You need also "synce-python-adds_fake_YY-MM-DD" installed.
+	You need also "synce-python-adds_fake_YY-MM-DD" installed (this is packaged
+	with pyrapi as contrib/qt_fake.
 
 
 DebugPrint.py
@@ -48,7 +49,7 @@ DebugPrint.py
 Depends:
 --------
 
-pyrapi-0_3, synce-0.8.4, (PyQt)
+pyrapi-0_4, synce-0.8.4, (PyQt)
 
 
 License:
