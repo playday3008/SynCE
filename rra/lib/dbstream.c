@@ -36,7 +36,7 @@ bool dbstream_to_propvals(/*{{{*/
 		uint32_t count,
 		CEPROPVAL* propval)
 {
-	int i;
+	unsigned i;
 
 	memset(propval, 0, count * sizeof(CEPROPVAL));
 
@@ -128,7 +128,7 @@ bool dbstream_from_propvals(/*{{{*/
 		size_t* result_size)
 {
 	bool success = false;
-	int i;
+	unsigned i;
 	uint8_t* data = NULL;
 	uint8_t* stream = NULL;
 	size_t size = 8;
