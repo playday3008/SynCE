@@ -56,6 +56,12 @@ on freshmeat.net </a></li>
 </table>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
+<b>September 4, 2004</b> <a href="mailto:jmcc_dot_stein_at_web_dot_de">
+Carsten Stein</a> has contributed a rpm-package designed for SuSE-9.1. 
+You could download this package from the 
+<a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=73834&release_id=264057">
+usual place at sourceforge</a>. - Thank you Carsten!<br><br>
 <b>August 30, 2004</b> SynCE-KDE 0.8.0 released! This new release is
 known to work with version 0.9.0 of the SynCE libraries and KDE-3.1,
 KDE-3.2, or KDE-3.3.<br>
