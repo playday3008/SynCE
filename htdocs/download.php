@@ -20,7 +20,7 @@ href="rpms.php">download RPM packages</a>.</li>
 <li class=SPACED>I'm a Gentoo user and I want to <a href="emerge.php">use
 emerge</a>.</l>
 
-<li class=SPACED>I'm a Debian user, and I want to <a
+<li class=SPACED>I'm a <a href="http://www.debian.org/">Debian</a> user, and I want to <a
 href="debian.php">download Debian packages</a>.</l>
 
 <li class=SPACED>I'll compile SynCE myself, so I want to <a
@@ -30,6 +30,9 @@ href="tarballs.php">download .tar.gz archives</a>.</li>
 from CVS</a>.</li>
 
 </ul>
+
+<p>If you're an <a href="http://altlinux.com/">ALT Linux</a> user, there should
+be ready-made packages available.</l>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
