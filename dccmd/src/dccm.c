@@ -26,15 +26,6 @@ int daemon(int nochdir, int noclose);
 #define RESULT_SUCCESS 0
 #define RESULT_FAILURE 1
 
-static bool running = true;
-static bool is_daemon = true;
-static char* password = NULL;
-
-static void handle_sigterm(int n)
-{
-	running = false;
-}
-
 typedef struct _Client
 {
 	bool connected;
@@ -47,7 +38,30 @@ typedef struct _Client
 	char* name;
 	char* class;
 	char* hardware;
+	bool disconnect;
 } Client;
+
+static Client * current_client = NULL;
+static bool running = true;
+static bool is_daemon = true;
+static char* password = NULL;
+
+static void disconnect_current_client()
+{
+	if (current_client)
+		current_client->disconnect = true;
+}
+
+static void handle_sighup(int n)
+{
+	disconnect_current_client();
+}
+
+static void handle_sigterm(int n)
+{
+	running = false;
+	disconnect_current_client();
+}
 
 /* Dump a block of data for debugging purposes */
 static void
@@ -445,7 +459,7 @@ static bool client_handler(Client* client)
 	SocketEvents events;
 	const uint32_t ping = htole32(DCCM_PING);
 
-	while (client->ping_count < DCCM_MAX_PING_COUNT && running)
+	while (client->ping_count < DCCM_MAX_PING_COUNT && !client->disconnect)
 	{
 		/*
 		 * Wait for event on socket
@@ -562,7 +576,7 @@ int main(int argc, char** argv)
 
 	/* signal handling */
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
+	signal(SIGHUP, handle_sighup);
 	signal(SIGTERM, handle_sigterm);
 
 	server = start_socket_server();
@@ -593,11 +607,15 @@ int main(int argc, char** argv)
 
 		synce_trace("client is connected");
 
+		current_client = &client;
+
 		if (!client_handler(&client))
 		{
 			synce_error("Failed to handle client connection");
 			/* Better luck on next client? :-) */
 		}
+		
+		current_client = NULL;
 
 		wstr_free_string(client.name);
 		wstr_free_string(client.class);

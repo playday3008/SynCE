@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-dccm
-%define ver      0.4
+%define ver      0.5
 %define rel      1
 
 Summary: SynCE: Communication application.
