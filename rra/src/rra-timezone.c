@@ -178,7 +178,7 @@ static bool get_rra_timezone_information(const char* argv0, RRA_Timezone* tzi, c
       else
       {
         fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
-            argv0, bytes_read, input, strerror(errno));
+            argv0, (int) bytes_read, input, strerror(errno));
       }
 
       fclose(file);

@@ -51,7 +51,7 @@ int main(int argc, char** argv)
       else
       {
         fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
-            argv[0], bytes_read, argv[2], strerror(errno));
+            argv[0], (int) bytes_read, argv[2], strerror(errno));
       }
 
       fclose(file);
