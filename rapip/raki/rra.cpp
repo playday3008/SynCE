@@ -53,7 +53,12 @@ Rra::Rra(QString pdaName)
 
 
 Rra::~Rra()
-{}
+{
+    if (useCount > 0) {
+        rra_free(rra);
+        Ce::rapiUninit();
+    }
+}
 
 
 bool Rra::connect()

@@ -137,6 +137,7 @@ PDA::~PDA()
     delete managerWindow;
     delete configDialog;
     delete associatedMenu;
+    delete rra;
 
     slaveDict.setAutoDelete(true);
 
