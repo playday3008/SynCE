@@ -1,218 +1,308 @@
-<?php include 'header.php'; ?>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="generator"
+ content="HTML Tidy for Linux/x86 (vers 1st June 2003), see www.w3.org">
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+  <title>SynCE-KDE</title>
+  <link href="synce.css" rel="stylesheet" type="text/css">
+  <meta name="author" content="Volker Christian">
+</head>
+<body>
 <div class="PAGE">
-
 <p>Return to <a href="../index.php">main page</a>.</p>
-
-<h1>KDE integration of SynCE</h1>
-
-<h2>Overview</h2>
-<p>
-One effort in integrating SynCE into KDE is the rapip/raki project.
-The name rapip/raki will change in the next revision of the project.
+<h1><a name="SynCE-KDE" class="mozTocH1" id="SynCE-KDE"></a>SynCE -
+KDE Integration</h1>
+<p>In this text the term "PDA"&nbsp; is used as a synonym for all
+devices running Windows CE Version 2.0 or greater as long as they
+are supported by the underlying <a
+ href="http://synce.sourceforge.net/synce/">SynCE libraries</a>.</p>
+<br>
+<h2><a name="Contents" id="Contents"></a>Contents</h2>
 <ul>
-<li><b>Rapip</b> is the short form of &quot;<b>RAPI</b>-<b>P</b>rotocol&quot;. Rapip itself
-is the io-slave used to browse through the PDA-Filesystem and copy files to and from the PDA.
-</li>
-<li><b>Raki</b> is a synonym for &quot;<b>R</b>emote-<b>A</b>ccess-<b>KI</b>cker-applet&quot;.
-Like the name suggests it has first been an applet for kicker, the KDE panel but as time goes by 
-the application-type changes. Today raki is an application docking into the KDE system-tray. 
-It is responsible for all additional tasks which are desired for interacting 
-with the PDA via the desktop.
-</li>
+  <li><a href="#Introduction">Introduction</a></li>
+  <li><a href="#News">News</a></li>
+  <li><a href="#Features">Features</a></li>
+  <li><a href="#Usage">Usage</a><br>
+  </li>
+  <li><a href="#Requirements">Requirements</a></li>
+  <li><a href="#Download">Download</a><br>
+  </li>
+  <li><a href="#Installation">Compiling and Installing</a></li>
+  <li><a href="stories.php">Success Stories</a><br>
+  </li>
+  <li><a href="#Related_Work">Related Work</a></li>
+  <li><a href="#Future">Future</a></li>
+  <li><a href="screenshots.php">Screenshots</a></li>
 </ul>
-</p>
-
-<h2>Features</h2>
+<br>
+<h2><a name="Introduction" id="Introduction"></a>Introduction</h2>
+<p>One effort in integrating <a
+ href="http://synce.sourceforge.net/synce">SynCE</a> into <a
+ href="http://www.kde.org">KDE</a> is the SynCE-KDE project - formerly
+Rapip/Raki. SynCE-KDE essentially consists of the three
+subprojects <b>RAPIP,</b> <b>RAKI,</b> and <b>VDCCM</b>. In
+general, they all support the same devices which are supported
+by the underlying SynCE libraries.</p>
+<p><b>RAPIP</b> is the short form for "<b>RAPI</b>-<b>P</b>rotocol".
+It is a full featured KDE io-slave used to browse through the PDA
+filesystem and to copy files to and from the PDA by drag and drop
+via <a href="http://konqueror.kde.org">Konqueror</a>.</p>
+<p><b>RAKI</b> is a synonym for
+"<b>R</b>emote-<b>A</b>ccess-<b>KI</b>cker-applet". As the name
+suggests it has first been an applet for kicker, the KDE panel but
+as time goes by the application-type changed. Today RAKI&nbsp; is
+an application docking into the KDE system-tray. It is responsible
+for all additional tasks which are desired for interacting with the
+PDA via the desktop.</p>
+<p><b>VDCCM</b> is a generalization of the native <a
+ href="http://synce.sourceforge.net/synce/architecture.php#dccm">SynCE-DCCM</a>
+but is fully compatible with it. In addition to all DCCM features
+it is capable of supporting more than one PDA connected at the same
+time. It is responsible for reporting all connects and disconnects
+of PDAs to interrested clients via an unix-socket by use of a simple
+protocol. E.g. RAKI is one of such an interested client.</p>
+<br>
+<h2><a name="News" id="News"></a>News</h2>
+<b>June 12, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
+<ul>
+  <li>First of all the name of the project has changed. It is now
+called SynCE-KDE.</li>
+  <li>Secondly - yes - the release number jumps directly from 0.4
+to 0.6. Release 0.5 was an internal release never published for
+public use.</li>
+  <li>The MULTIPLE_DEVICES branch is entirely merged into HEAD of <a
+ href="http://sourceforge.net/cvs/?group_id=30550">CVS</a>. This
+release is a snapshot of it. You can download <tt>tgz</tt>, <tt>rpm</tt>,
+and <tt>deb</tt> packages from the <a
+ href="http://sourceforge.net/projects/synce/">SourceForge Project
+Page</a>. Have a look at the <a href="#Features">features</a>
+section for a list of all goodies.</li>
+  <li>RAPIP is considered to be stable and full functional.
+Nevertheless, there are some additional features and improvements
+planed in the future.</li>
+  <li>RAKI comes with a new plugin-architekture. Plugins, called
+synchronizer, are used to synchronize PDAs with your desktop
+system.</li>
+  <li>An alternative DCCM called VDCCM is also included in the new
+release. You have to use this alternative DCCM if you intent to
+connect more than one PDA at the same time to your desktop.</li>
+  <li>Version 0.6 should be seen as a "Vertical Slice" and a "Proof
+of Concept". Almost all planed features are implemented. Of course
+there are rough edges and odd bugs. Some code is also still
+missing. At the moment there are only two synchronization plugins
+(synchronizer) available. Help, especially in this area is badly
+needed. If you are interested in helping, please send mail to the <a
+ href="http://sourceforge.net/mail/?group_id=30550">development
+mailing list.</a></li>
+</ul>
+<br>
+<b>June 12, 2003</b> The Web-Page of Rapip/Raki has a
+"Contents"-Section, "News"-Section, and a "Future"-Section", now.<br>
+<br>
+<h2><a name="Features" id="Features"></a>Features</h2>
+<b>RAPIP</b>
+<ul>
+  <li>copies files and directories via drag and drop to and from the
+PDA.</li>
+  <li>is capable of handling mime-types.</li>
+  <li>supports more than one connected device simultaneously.</li>
+</ul>
+<br>
+<b>RAKI</b>
+<ul>
+  <li>also supports more than one connected PDA at once.<br>
+  </li>
+  <li>knows how to handle PDA partnerships.<br>
+  </li>
+  <li>uses a plugin-architecture for synchronization. Two
+synchronizer-plugins are already implemented:<br>
+    <ul>
+      <li>Synchronizer for PDA-Contacts and KDE Standard-Addressbook
+synchronization.<br>
+      </li>
+      <li>AvantGO synchronizer.</li>
+    </ul>
+  </li>
+  <li>creates a NAT-Route for your PDAs to the outer internet.</li>
+  <li>supports configuration of passwords, NAT routes, and
+synchronization settings per device.<br>
+  </li>
+  <li>installes cab-files on the device - you just have to drag them
+over the system-tray or right-click on a <tt>cab</tt> file in
+Konqueror.</li>
+  <li>lets you manage the software installed on the PDA.</li>
+  <li>displays system information and power status about the
+PDA.</li>
+  <li>starts programs on the PDA.</li>
+  <li>answers password-requests of PDAs automatically.</li>
+  <li>notifies about connections, password requests and
+disconnections of PDAs with sound.</li>
+</ul>
+<br>
+<b>VDCCM</b>
+<ul>
+  <li>is responsible that RAPIP and RAKI can communicate with more
+than one PDA simultaneously.</li>
+  <li>creates an individual "active_connection" file for every
+connected PDA.</li>
+  <li>the names of individual "active_connection" files are either
+the PDA identifiers or the ip-addresses assigned to the PDAs.</li>
+</ul>
+<br>
+<h2><a name="Usage" id="Usage"></a>Usage</h2>
+<!--  <dl> --><b>RAPIP</b>
 <dl>
-  <dt><b>Rapip (io-slave):</b></dt>
-  <ul>
-  <li>... copies files and directories via drag and drop to and from the PDA.</li>
-  <li>... is capable to handle mime-types.</li>
-  <li>... supports more than one connected device simultanously.</li>
-  </ul><br>
-  <dt><b>Raki:</b></dt>
-  <ul>
-  <li>... also supports more than one connected PDA.</li>
-  <li>... installes cab-files on the device - you just have to drag them over the system-tray.</li>
-  <li>... creates a NAT-Route for your PDA to the outer internet.</li>
-  <li>... lets you manage the software installed on the PDA.</li>
-  <li>... displays system information and power status about the PDA.</li>
-  <li>... starts programs on the PDA.</li>
-  <li>... answers password-requests of PDAs automatically.</li>
-  <li>... synchronizes the contact-database of the PDA and the KDE-addressbook.</li>
-  <li>... notifies about connections, password requests and disconnections of
-  PDAs with sounds.</li>
-  </ul>
+  <dd>Open Konqueror and type <tt>rapip://&lt;name_of_an_active_connection_file&gt;/</tt>
+into
+the URL line of Konqueror. You should see the root-directory of the
+PDA which corresponds to the specified active_connection file. Use
+Konqueror as usual - e.g. drag and drop files to and from the PDA
+filesystem ...<br>
+If there is just one PDA connected, you can also use the short
+form <tt>rapip://</tt> to browse this PDA.<br>
+  </dd>
 </dl>
-
-<h2>Requirements</h2>
-<p>
-Rapip/raki requires 
-<ul><li>KDE-3.1</li>
-<li>Qt &gt;= Qt-3.1</li>
-<li>and the SynCE libraries version 0.7</li>
+<br>
+<b>RAKI</b>
+<dl>
+  <dd>Launch the application from the "K-Menu-&gt;Utilities"-Menu
+or,&nbsp; if you don't have a K-Menu entry, start RAKI from the
+command line. You will get a new icon located in the
+system-tray.<br>
+Right click on that icon shows a popup menu containing
+infrastructure related items.<br>
+If there are connected devices left click opens a popup menu
+containing individual device menu items for every PDA that is connected
+at the moment.<br>
+Drag and drop of CAB-files onto the RAKI system-tray icon installes
+them
+on a device. A dialog box lets you choose the destination
+PDA.<br>
+Choosing "Synchronize" from an individual device menu starts
+synchronizing that PDA and your desktop.<br>
+  </dd>
+</dl>
+<br>
+<b>VDCCM</b>
+<dl>
+  <dd>RAKI can launch VDCCM at startup (see the "Configure" menu
+entry in the infrastructure menu). Under normal circumstances that
+is all.<br>
+Nevertheless, VDCCM supports a view command line arguments in
+addition to the usual DCCM command line arguments. Issue <tt>vdccm
+-h</tt> for a list of them. You can start VDCCM completely
+independent of RAKI by hand before or after RAKI has been started.
+Of course, (V)DCCM may not be running at this time.</dd>
+</dl>
+<br>
+<h2><a name="Requirements" id="Requirements"></a>Requirements</h2>
+<p>SynCE-KDE 0.6 requires</p>
+<ul>
+  <li><a href="http://www.kde.org">KDE 3.1</a> or later,<br>
+  </li>
+  <li><a href="http://www.trolltech.com/products/qt/index.html">Qt
+3.1</a> or later, and of course</li>
+  <li>the <a
+ href="http://sourceforge.net/project/showfiles.php?group_id=30550&amp;release_id=142059">
+SynCE libraries</a> version 0.8.</li>
 </ul>
-</p>
-<h2>Installation</h2>
-<p>
-First of all: Read the <tt>INSTALL</tt>-file. There you will find
-the most actual installation instructions.<br>
-The next source of information is the <tt>ChangeLog</tt>-file.<br><br>
-Download rapip/raki (rapip-0.x.tar.gz) from the 
-<a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a> or check out
-the latest code from the <a href="http://sourceforge.net/cvs/?group_id=30550">CVS repository</a>.
-<br><br>
-Currently there are two development lines in the CVS repository:
+<br>
+<h2><a name="Download" id="Download"></a>Download</h2>
+You can download precompiled <tt>tgz</tt>, <tt>rpm</tt>, and
+<tt>deb</tt> packages from the <a
+ href="http://sourceforge.net/projects/synce/">SourceForge Project
+Page</a>.<br>
+<br>
+If you are interested in testing bleding edge software you could
+also check out the latest code directly from <a
+ href="http://sourceforge.net/cvs/?group_id=30550">CVS</a> by issuing
+the
+command<br>
+<div style="margin-left: 40px;"><code># cvs -z3
+-d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/synce co
+rapip<br>
+</code></div>
+after <a href="http://sourceforge.net/cvs/?group_id=30550">logging
+in</a>.<br>
+<br>
+<h2><a name="Installation"
+ href="http://sourceforge.net/cvs/?group_id=30550" id="Installation"></a>Compiling
+and Installing</h2>
+<h3>Requisites</h3>
+<ul>
+  <li>Install the base SynCE libraries as described <a
+ href="http://synce.sourceforge.net/synce/using.php#download">here</a>.</li>
+  <li>Make the SynCE libraries work by <a
+ href="http://synce.sourceforge.net/synce/using.php#gettingconnected">getting
+connected</a> for the first time.<br>
+  </li>
+  <li>If you want the AvantGO synchronizer plugin to be compiled, you
+also have to download and compile <a
+ href="http://www.mechlord.ca/%7Elownewulf/agsync-0.2-pre.tgz">agsync-0.2-pre.tgz</a>
+from&nbsp; <a href="http://www.mechlord.ca/%7Elownewulf/avantgo.html">AvantGo
+Synchronization with Pocket PC</a> provided by <a
+ href="mailto:JudgeBeavis@hotmail.com">Michael Jarrett</a>. Note,
+compilation of agsync-0.2-pre is enough - installation is not
+required but of course allowed ;-)<br>
+  </li>
+</ul>
+<h3>SynCE-KDE compilation and installation</h3>
 <ol>
-  <li>Main-trunk: Stable version but fewer features.</li>
-  <li>MULTIPLE_DEVICES branch: Actual development branch. Many features.</li>
+  <li>Download SynCE-KDE (synce-kde-0.6.tar.gz)&nbsp; from the <a
+ href="http://sourceforge.net/projects/synce/">SourceForge
+Project Page</a> or check out the latest code from the <a
+ href="http://sourceforge.net/cvs/?group_id=30550">CVS
+repository</a>.<br>
+    <br>
+  </li>
+  <li>If you have downloaded from the <a
+ href="http://sourceforge.net/projects/synce/">SourceForge Project
+Page</a> go ahead to step 4.<br>
+    <br>
+  </li>
+  <li>After checking out SynCE-KDE from CVS do a<br>
+    <code>&nbsp;&nbsp;&nbsp; # make -f Makefile.cvs</code><br>
+and go to step 5.<br>
+    <br>
+  </li>
+  <li>Unpack the downloaded synce-kde-0.6.tar.gz into your favorite
+source directory<br>
+    <code>&nbsp;&nbsp;&nbsp; # tar -xzf
+synce-kde-0.6.tar.gz</code><br>
+    <br>
+  </li>
+  <li>Configure your SynCE-KDE source tree by issuing the
+command<br>
+    <code>&nbsp;&nbsp;&nbsp; # ./configure</code><br>
+If you want the AvantGo synchronization plugin also to be compiled,
+issue<br>
+    <code>&nbsp;&nbsp;&nbsp; # ./configure
+--with-agsync=/path/to/agsync/source/dir/</code><br>
+    <br>
+  </li>
+  <li>After configuring SynCE-KDE compile and install it by simply
+doing a<br>
+    <code>&nbsp;&nbsp;&nbsp; # make</code><br>
+and as root<br>
+    <code>&nbsp;&nbsp;&nbsp; # make install</code></li>
 </ol>
-After having downloaded a rapip-package execute commands in the following order:
+<br>
+<h2><a name="Related_Work" id="Related_Work"></a>Related Work</h2>
 <ul>
-<li><tt>tar -xvzf rapip-0.x.tar.gz</tt></li>
-<li><tt>cd rapip-0.x</tt></li>
-<li><tt>make -f Makefile.cvs</tt></li>
-<li><tt>./configure</tt></li>
-<li><tt>make</tt></li>
-<li><tt>make install</tt> (as root)</li>
-<li><tt>cp raki/raki.sh ~/.synce/scripts/</tt> (for every rapip/raki user)</li>
-<li><tt>chmod 755 ~/.synce/scripts/raki.sh</tt> (also for every user who wants to use rapip/raki)</li>
+  <li><a href="mailto:boris@brooknet.com.au">Sam Lawrance</a> is
+working
+on porting SynCE and SynCE-KDE to <a href="http://www.freebsd.org/">FreeBSD</a>.
+You will find the port on
+his <a href="http://www.brooknet.com.au/%7Eboris/index.html">SynCE
+on FreeBSD</a> page.</li>
 </ul>
-</p>
-
-<h2>Usage</h2>
-<ul>
-<li><b>Rapip:</b> Open konqueror and type <tt>rapip:/</tt> into the URL-Line. You should see the 
-root-directory of your PDA</li>
-<li><b>Raki:</b> Launch the application from the &quot;KMenu-&gt;Utilities&quot;-Menu. You will
- get a new icon located in the system-tray. </li>
-</ul>
-<h2>Screenshots</h2>
-These are from the "MULTIPLE_DEVICES" CVS Branch<br><br>
-<table>
-  <tbody>
-    <tr>
-      <td>
-	  	<a href="images/menustructure-multiple-devices.png">
-				<img src="images/menustructure-multiple-devices-300.png" width="300" border="0">
-		</a>
-	  </td>
-      <td>
-	  	<a href="images/main-configure-dialog.png">
-				<img src="images/main-configure-dialog-300.png" width="300" border="0">
-		</a>
-	  </td>
-    </tr>
-    <tr>
-      <td> <div align="center">More than one PDA is connected<br>vLoox is selected</div> </td>
-      <td> <div align="center">Main Configuration Dialog</div> </td>
-    </tr>
-    <tr>
-      <td> <p></p> </td>
-      <td> <p></p> </td>
-    </tr>
-    <tr>
-      <td> 
-	  	<a href="images/pda-config.png">
-				<img src="images/pda-config-300.png" width="300" border="0">
-		</a>
-	  </td>
-      <td>
-	  	<a href="images/konqueror.png">
-				<img src="images/konqueror-300.png" width="300" border="0">
-		</a>
-	  </td>
-    </tr>
-    <tr>
-      <td> <div align="center">Configuration of a specific PDA</div> </td>
-      <td> <div align="center">Konqueror in action browsing vLoox</div>  </td>
-    </tr>
-    <tr>
-      <td> <p></p> </td>
-      <td> <p></p> </td>
-    </tr>
-    <tr>
-      <td> 
-	  	<a href="images/replication.png" rel="300">
-				<img src="images/replication-300.png" width="300" border="0">
-		</a>
-	  </td>
-      <td>
-	  	<a href="images/execute.png" rel="300">
-				<img src="images/execute-300.png" width="300" border="0">
-		</a>
-	  </td>
-    </tr>
-    <tr>
-      <td> <div align="center">Replication of PDA-Databases<br>(Now only "Contacts"
-	  is working) 
-	  </div> </td>
-      <td> <div align="center">Execution of a program on the PDA</div> </td>
-    </tr>
-    <tr>
-      <td> <p></p> </td>
-      <td> <p></p> </td>
-    </tr>
-	<tr>
-      <td> 
-	  	<a href="images/select-pda-for-install.png" rel="300">
-				<img src="images/select-pda-for-install-300.png" width="300" border="0">
-		</a>
-	  </td>
-      <td>
-	  	<a href="images/install.png" rel="300">
-				<img src="images/install-300.png" width="300" border="0">
-		</a>
-	  </td>
-    </tr>
-    <tr>
-      <td> <div align="center">Selection of an installation destination</div> </td>
-      <td> <div align="center">Installation process</div> </td>
-    </tr>
-    <tr>
-      <td> <p></p> </td>
-      <td> <p></p> </td>
-    </tr>
-    <tr>
-      <td> 
-	  	<a href="images/sysinfo.png" rel="300">
-				<img src="images/sysinfo-300.png" width="300" border="0">
-		</a>
-	  </td>
-      <td>
-	  	<a href="images/powerstatus.png" rel="300">
-				<img src="images/powerstatus-300.png" width="300" border="0">
-		</a>
-	  </td>
-    </tr>
-    <tr>
-      <td> <div align="center">System information</div> </td>
-      <td> <div align="center">Power status</div> </td>
-    </tr>
-    <tr>
-      <td> <p></p> </td>
-      <td> <p></p> </td>
-    </tr>
-    <tr>
-      <td> 
-	  	<a href="images/software-manager.png" rel="300">
-				<img src="images/software-manager-300.png" width="300" border="0">
-		</a>
-	  </td>
-	  <td>  
-		<a href="images/password.png" rel="300">
-				<img src="images/password-300.png" width="300" border="0">
-		</a>
-	  </td>
-    </tr>
-    <tr>
-      <td> <div align="center">Software Manager</div> </td>
-      <td> <div align="center">Password-request dialog</div> </td>
-    </tr>
-  </tbody>
-</table>
+<br>
+<h2><a name="Future" id="Future"></a>Future</h2>
+Wait and see ;-)<br>
 <p>Return to <a href="../index.php">main page</a>.</p>
-
 </div>
-<?php include 'footer.php'; ?>
+<hr size="1">
+Last modified: Jun 22 2003
+</body>
+</html>
