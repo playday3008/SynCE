@@ -4,6 +4,7 @@
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define WIDE_BACKSLASH   htole16('\\')
 
@@ -182,19 +183,22 @@ static AnyFile* anyfile_local_open(const char* filename, ANYFILE_ACCESS access)
 /**
  * Open file
  */
-AnyFile* anyfile_open(char* filename, ANYFILE_ACCESS access)
+AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access)
 {
+    char *tmpfilename;
 	AnyFile* file = NULL;
 	
-	if (is_remote_file(filename))
+    tmpfilename = (char *) strdup(filename);
+	if (is_remote_file(tmpfilename))
 	{
-		convert_to_backward_slashes(filename);
-		file = anyfile_remote_open(filename + 1, access);
+		convert_to_backward_slashes(tmpfilename);
+		file = anyfile_remote_open(tmpfilename + 1, access);
 	}
 	else
 	{
-		file = anyfile_local_open(filename, access);
+		file = anyfile_local_open(tmpfilename, access);
 	}
+    free (tmpfilename);
 
 	return file;
 }

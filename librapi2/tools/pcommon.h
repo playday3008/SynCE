@@ -16,7 +16,7 @@ typedef enum
 	WRITE = 2
 } ANYFILE_ACCESS;
 
-AnyFile* anyfile_open(char* filename, ANYFILE_ACCESS access);
+AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access);
 void anyfile_close(AnyFile* file);
 bool anyfile_read (AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed);
 bool anyfile_write(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed);
