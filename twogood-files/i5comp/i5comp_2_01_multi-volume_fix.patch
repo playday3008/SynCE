@@ -1,0 +1,77 @@
+--- i5comp21-original/Src/I5COMP.C	2003-04-05 19:12:57.000000000 +0200
++++ i5comp21-patched/Src/I5COMP.C	2003-04-05 19:32:06.000000000 +0200
+@@ -17,6 +17,7 @@
+ #include <is5cab.h>
+ #include "i5comp.h"
+ 
++#define _stricmp(s1,s2)     stricmp(s1,s2)
+ 
+ #define CSFG_MAX	512
+ 
+@@ -165,7 +166,7 @@
+ void StartMsg()
+ {
+ 	if (optPrintAll)
+-		fprintf(stderr, "InstallShield 5.x Cabinet Compression & Maintenance Util\nVersion 2.01 -] fOSSiL - 1999 [-\n");
++		fprintf(stderr, "InstallShield 5.x Cabinet Compression & Maintenance Util\nVersion 2.01 -] fOSSiL - 1999 [-\nMulti-volume bugs fixed by 2GooD.\n");
+ }
+ 
+ void Usage()
+@@ -405,9 +406,7 @@
+ 			continue;
+ 		
+ 		// check if the file is split
+-		if (i == curCabHdr.LastFile &&
+-			i < pCabDesc->cFiles - 1 &&
+-			curCabHdr.cbLastHere != pFile->cbCompressed)
++		if (i == curCabHdr.LastFile)
+ 		{
+ 			ToCopy = curCabHdr.cbLastHere;
+ 			FromOfs = curCabHdr.ofsLastData;
+@@ -420,7 +419,7 @@
+ 		TransferData(hRead, hMainCab, ToCopy, CRYPT_NONE);
+ 
+ 		// check if it is the last file in this volume
+-		if (i == curCabHdr.LastFile && i < pCabDesc->cFiles - 1) {
++		while (i == curCabHdr.LastFile) {
+ 			DWORD dwRead;
+ 
+ 			CloseHandle(hRead);
+@@ -435,7 +434,20 @@
+ 					CantReadFile(GetLastError());
+ 
+ 			// if current file is split
+-			if (i == curCabHdr.FirstFile) {
++			if (i == curCabHdr.LastFile) {
++				if (0 == curCabHdr.cbLastHere)
++				{
++					SetFilePointer(hRead, curCabHdr.ofsFirstData, NULL, FILE_BEGIN);
++					TransferData(hRead, hMainCab, curCabHdr.cbFirstHere, CRYPT_NONE);
++					break;
++				}
++				else
++				{
++					SetFilePointer(hRead, curCabHdr.ofsLastData, NULL, FILE_BEGIN);
++					TransferData(hRead, hMainCab, curCabHdr.cbLastHere, CRYPT_NONE);
++				}
++			}
++			else if (i == curCabHdr.FirstFile) {
+ 				SetFilePointer(hRead, curCabHdr.ofsFirstData, NULL, FILE_BEGIN);
+ 				TransferData(hRead, hMainCab, curCabHdr.cbFirstHere, CRYPT_NONE);
+ 			}
+@@ -503,6 +515,7 @@
+ 		if (!ReadFile(hFrom, pBuf, ToTran, &dwTran, NULL) || dwTran != ToTran)
+ 			CantReadFile(GetLastError());
+ 	
++#ifndef NO_ASM 
+ 		if (Crypt == CRYPT_ENCRYPT) {
+ 			DWORD i;
+ 			BYTE ts;
+@@ -522,6 +535,7 @@
+ 			}
+ 			Total += dwTran;
+ 		}
++#endif
+ 
+ 		if (!WriteFile(hTo, pBuf, ToTran, &dwTran, NULL) || dwTran != ToTran)
+ 			CantWriteFile(GetLastError());
