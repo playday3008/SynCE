@@ -60,6 +60,9 @@ typedef struct _Client
 	char* name;
 	char* class;
 	char* hardware;
+
+  /* is Windows CE 1.0 */
+  bool is_windows_ce_10;
 } Client;
 
 static Client * current_client = NULL;
@@ -385,8 +388,8 @@ static bool client_read(Client* client)
     {
       // Windows CE 1.0 has closed the socket
       synce_trace("Assuming Windows CE 1.0 - is this correct?");
+      client->is_windows_ce_10 = true;
       success = true;
-			client_write_file(client);
       client->disconnect = true;
     }
     else
@@ -776,10 +779,18 @@ int main(int argc, char** argv)
 		wstr_free_string(client.hardware);
 
 		synce_socket_free(client.socket);
-		remove_connection_file();
 
-		if (client.authenticated)
-			run_scripts("disconnect");
+    if (client.is_windows_ce_10)
+    {
+			client_write_file(&client);
+    }
+    else
+    {
+      remove_connection_file();
+
+      if (client.authenticated)
+        run_scripts("disconnect");
+    }
 	}
 
 	run_scripts("stop");
