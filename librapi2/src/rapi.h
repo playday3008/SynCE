@@ -442,6 +442,13 @@ typedef struct _CERECORDINFO {
 #define OBJTYPE_DATABASE    3
 #define OBJTYPE_RECORD      4
 
+/* 
+ * returned by CeOidGetInfo() for an ActiveSync notification when
+ * an object has been deleted. 
+ */
+#define OBJTYPE_DELETED     8
+
+
 typedef struct _CEOIDINFO { 
 	WORD wObjType;
 	WORD wPad;
