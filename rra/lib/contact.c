@@ -989,9 +989,11 @@ static bool parser_handle_field(/*{{{*/
 	else if (STR_EQUAL(name, "ORG"))/*{{{*/
 	{
 		char* separator = strchr(value, ';');
-		if (separator && separator[1])
+		if (separator)
 		{
-			add_string(parser, ID_DEPARTMENT, type, separator + 1);
+			if (separator[1]) {
+				add_string(parser, ID_DEPARTMENT, type, separator + 1);
+			}
 			*separator = '\0';
 		}
 
