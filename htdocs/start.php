@@ -33,7 +33,7 @@
 <pre>    synce-serial-start</pre></li>
 
 <li class=SPACED>If your device has not automatically connected, initiate the
-connection manually.</li>
+connection manually on your PDA.</li>
 
 <li>The following message (or similar) should appear in your logs:
 
