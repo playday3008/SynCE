@@ -39,6 +39,13 @@ AC_C_CONST
 
 AC_REPLACE_FUNCS(daemon)
 
+dnl Prevent "NONE" used as prefix!
+test "x$prefix" = xNONE && eval prefix=$ac_default_prefix
+test "x$exec_prefix" = xNONE && eval exec_prefix='${prefix}'
+
+eval SYNCE_BINDIR="${bindir}"
+AC_SUBST(SYNCE_BINDIR)
+
 AC_CONFIG_FILES(
 	[script/synce-sound],
 	[chmod +x script/synce-sound]

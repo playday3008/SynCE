@@ -1,7 +1,4 @@
 #!/bin/sh
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-
 SYNCE_DIR=$HOME/.synce
 
 SOUND_DIR=$SYNCE_DIR/sounds
@@ -12,19 +9,24 @@ DISCONNECT=$SOUND_DIR/disconnect.wav
 
 SCRIPT=$SCRIPT_DIR/synce-sound-runner.sh
 
+# play is in sox
+PLAY=play
+# playwave is in SDL_mixer
+#PLAY=playwave
+
 case "$1" in
 
 	connect)
 		mkdir -p $SOUND_DIR
 		if [ ! -f $CONNECT ]; then
-			@bindir@/pcp ":/Windows/Infbeg.wav" $SOUND_DIR/connect.wav
-			@bindir@/pcp ":/Windows/Infend.wav" $SOUND_DIR/disconnect.wav
+			@SYNCE_BINDIR@/pcp ":/Windows/Infbeg.wav" $SOUND_DIR/connect.wav
+			@SYNCE_BINDIR@/pcp ":/Windows/Infend.wav" $SOUND_DIR/disconnect.wav
 		fi
-		playwave $CONNECT
+		$PLAY $CONNECT
 		;;
 	
 	disconnect)
-		playwave $DISCONNECT
+		$PLAY $DISCONNECT
 		;;
 
 	start|stop)
@@ -35,7 +37,7 @@ case "$1" in
 		mkdir -p $SCRIPT_DIR
 		echo "#!/bin/sh
 # Modifications to this file will be lost next time 'synce-sound install' is run
-@bindir@/synce-sound \$1 &
+@SYNCE_BINDIR@/synce-sound \$1 &
 disown" > $SCRIPT
 		chmod 700 $SCRIPT
 		;;
@@ -45,7 +47,9 @@ disown" > $SCRIPT
 		;;
 
 	*)
-		echo "Help!"
+		echo "Syntax:"
+    echo "	$0 install | uninstall | connect | disconnect"
+    echo "See man page for details"
 		;;
 		
 
