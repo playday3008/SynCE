@@ -1,3 +1,6 @@
+//
+// Test CeCreateFile, CeCloseHandle, CeWriteFile, CeReadFile, CeDeleteFile
+//
 #include "test.h"
 
 int main()
@@ -8,8 +11,8 @@ int main()
 	DWORD length;
 	WCHAR filename[MAX_PATH];
 	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, filename));
-	wcscat(filename, to_unicode("\\librapi.txt"));
-	
+	wcscat(filename, to_unicode("\\librapi test file.txt"));
+
 	HANDLE handle;
 
 	// Open file for writing, create if it does not exist
@@ -30,7 +33,14 @@ int main()
 	TEST_NOT_FALSE(CeCloseHandle(handle));
 
 	// Open file for reading, fail if it does not exist
-	TEST_NOT_EQUAL(INVALID_HANDLE_VALUE, handle = CeCreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+	TEST_NOT_EQUAL(INVALID_HANDLE_VALUE, handle = CeCreateFile(
+				filename, 
+				GENERIC_READ, 
+				0, 
+				NULL, 
+				OPEN_EXISTING, 
+				FILE_ATTRIBUTE_NORMAL, 
+				NULL));
 	
 	// Read data from file
 	char read_buffer[MAX_PATH];
@@ -49,12 +59,14 @@ int main()
 		return TEST_FAILED;
 	}
 	
-	// Close file
+	// Delete file, should fail because it is open.
+	TEST_EQUAL(0, CeDeleteFile(filename));
+	
+	// Close file, should succeed.
 	TEST_NOT_FALSE(CeCloseHandle(handle));
 
-	// Delete file
-	// XXX: not implemented
-	//TEST_NOT_FALSE(CeDeleteFile(filename));
+	// Delete file, should succeed.
+	TEST_NOT_FALSE(CeDeleteFile(filename));
 	
 	VERIFY_HRESULT(CeRapiUninit());
 	return TEST_SUCCEEDED;
