@@ -121,6 +121,20 @@ BOOL CeWriteFile(
  * File management functions
  */
 
+BOOL CeCopyFileA(
+		LPCSTR lpExistingFileName, 
+		LPCSTR lpNewFileName, 
+		BOOL bFailIfExists);
+
+BOOL CeCopyFile(
+		LPCWSTR lpExistingFileName, 
+		LPCWSTR lpNewFileName, 
+		BOOL bFailIfExists);
+
+BOOL CeCreateDirectory(
+		LPCWSTR lpPathName, 
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
 BOOL CeDeleteFile(
 		LPCWSTR lpFileName);
 
@@ -179,15 +193,8 @@ DWORD CeGetSpecialFolderPath(
 		DWORD nBufferLength, 
 		LPWSTR lpBuffer);
 
-BOOL CeCopyFileA(
-		LPCSTR lpExistingFileName, 
-		LPCSTR lpNewFileName, 
-		BOOL bFailIfExists);
-
-BOOL CeCopyFile(
-		LPCWSTR lpExistingFileName, 
-		LPCWSTR lpNewFileName, 
-		BOOL bFailIfExists);
+BOOL CeRemoveDirectory(
+		LPCWSTR lpPathName);
 
 #ifdef __cplusplus
 }

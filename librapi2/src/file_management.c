@@ -7,6 +7,26 @@
 #include "rapi_log.h"
 #include "rapi_endian.h"
 
+BOOL CeCreateDirectory(
+		LPCWSTR lpPathName, 
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = 0;
+	
+	rapi_context_begin_command(context, 0x17);
+	rapi_buffer_write_optional_string(context->send_buffer, lpPathName);
+	rapi_buffer_write_optional_in(context->send_buffer, NULL, 0); /* lpSecurityAttributes */
+
+	if ( !rapi_context_call(context) )
+		return 0;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+	return return_value;
+}
+
 BOOL CeDeleteFile(
 		LPCWSTR lpFileName)
 {
@@ -269,4 +289,21 @@ fail:
 	return return_value;
 }
 
+BOOL CeRemoveDirectory(
+		LPCWSTR lpPathName)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = 0;
+	
+	rapi_context_begin_command(context, 0x18);
+	rapi_buffer_write_optional_string(context->send_buffer, lpPathName);
+
+	if ( !rapi_context_call(context) )
+		return 0;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+	return return_value;
+}
 
