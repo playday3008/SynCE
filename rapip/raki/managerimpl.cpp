@@ -398,8 +398,6 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
                     postThreadEvent(&ManagerImpl::insertInstalledItemEvent,
                             qstrdup(QString::fromUcs2(wide_name).ascii()),
                             noBlock);
-                } else if (ERROR_SUCCESS != result) {
-                    break;
                 }
             }
             synce::CeRegCloseKey(parent_key);
