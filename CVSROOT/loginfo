@@ -26,4 +26,4 @@
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
 CVSROOT $CVSROOT/CVSROOT/syncmail %{sVv} ludovic.lange@free.fr
 
-DEFAULT $CVSROOT/CVSROOT/syncmail %{sVv} synce-cvslog@lists.sourceforge.net
+DEFAULT $CVSROOT/CVSROOT/syncmail -u %{sVv} synce-cvslog@lists.sourceforge.net
