@@ -8,8 +8,26 @@ AC_DEFUN(AM_PATH_LIBSYNCE, [
       [--with-libsynce[=DIR]],
       [Search for libsynce in DIR/include and DIR/lib]),
       [
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
 				CPPFLAGS="$CPPFLAGS -I${withval}/include"
+				LDFLAGS="$LDFLAGS -L${withval}/lib"
+			]
+    )
+
+  AC_ARG_WITH(libsynce-include,
+    AC_HELP_STRING(
+      [--with-libsynce-include[=DIR]],
+      [Search for libsynce header files in DIR]),
+      [
+				CPPFLAGS="$CPPFLAGS -I${withval}"
+			]
+    )
+
+  AC_ARG_WITH(libsynce-lib,
+    AC_HELP_STRING(
+      [--with-libsynce-lib[=DIR]],
+      [Search for libsynce library files in DIR]),
+      [
+				LDFLAGS="$LDFLAGS -L${withval}"
 			]
     )
 
