@@ -6,7 +6,7 @@ int main()
 
 	HKEY hkey;
 
-	WCHAR * subkey = to_unicode("David");
+	WCHAR * subkey = to_unicode("ControlPanel\\Backlight");
 	VERIFY_EQUAL(ERROR_SUCCESS, CeRegOpenKeyEx(HKEY_CURRENT_USER, subkey, 0, 0, &hkey));
 
 	DWORD index = 0;
