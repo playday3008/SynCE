@@ -13,7 +13,7 @@
 #define HTOLE32(x)  x = htole32(x)
 
 
-#define DUMP_PACKETS 1
+#define DUMP_PACKETS 0
 
 #if DUMP_PACKETS
 #define DUMP(desc,data,len) dump(desc, data, len)
