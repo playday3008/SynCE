@@ -8,17 +8,9 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>581</width>
-            <height>485</height>
+            <width>599</width>
+            <height>488</height>
         </rect>
-    </property>
-    <property name="sizePolicy">
-        <sizepolicy>
-            <hsizetype>7</hsizetype>
-            <vsizetype>7</vsizetype>
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-        </sizepolicy>
     </property>
     <property name="caption">
         <string>PDA Info and Management</string>
@@ -40,12 +32,6 @@
             <property name="name">
                 <cstring>tabWidget</cstring>
             </property>
-            <property name="minimumSize">
-                <size>
-                    <width>0</width>
-                    <height>400</height>
-                </size>
-            </property>
             <widget class="QWidget">
                 <property name="name">
                     <cstring>sysInfo</cstring>
@@ -56,12 +42,6 @@
                 <vbox>
                     <property name="name">
                         <cstring>unnamed</cstring>
-                    </property>
-                    <property name="margin">
-                        <number>11</number>
-                    </property>
-                    <property name="spacing">
-                        <number>6</number>
                     </property>
                     <widget class="QGroupBox">
                         <property name="name">
@@ -430,12 +410,6 @@
                                         <property name="name">
                                             <cstring>details</cstring>
                                         </property>
-                                        <property name="minimumSize">
-                                            <size>
-                                                <width>0</width>
-                                                <height>0</height>
-                                            </size>
-                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -795,12 +769,6 @@
                 <hbox>
                     <property name="name">
                         <cstring>unnamed</cstring>
-                    </property>
-                    <property name="margin">
-                        <number>11</number>
-                    </property>
-                    <property name="spacing">
-                        <number>6</number>
                     </property>
                     <widget class="QLayoutWidget">
                         <property name="name">
@@ -1452,12 +1420,6 @@
                     <property name="name">
                         <cstring>unnamed</cstring>
                     </property>
-                    <property name="margin">
-                        <number>11</number>
-                    </property>
-                    <property name="spacing">
-                        <number>6</number>
-                    </property>
                     <widget class="QGroupBox">
                         <property name="name">
                             <cstring>groupBox3</cstring>
@@ -1480,64 +1442,58 @@
                                     <cstring>softwareList</cstring>
                                 </property>
                             </widget>
-                            <widget class="QLayoutWidget">
-                                <property name="name">
-                                    <cstring>layout24</cstring>
-                                </property>
-                                <hbox>
-                                    <property name="name">
-                                        <cstring>unnamed</cstring>
-                                    </property>
-                                    <property name="margin">
-                                        <number>0</number>
-                                    </property>
-                                    <property name="spacing">
-                                        <number>6</number>
-                                    </property>
-                                    <widget class="KPushButton">
-                                        <property name="name">
-                                            <cstring>uninstallButton</cstring>
-                                        </property>
-                                        <property name="text">
-                                            <string>Uninstall</string>
-                                        </property>
-                                    </widget>
-                                    <spacer>
-                                        <property name="name">
-                                            <cstring>spacer2</cstring>
-                                        </property>
-                                        <property name="orientation">
-                                            <enum>Horizontal</enum>
-                                        </property>
-                                        <property name="sizeType">
-                                            <enum>Expanding</enum>
-                                        </property>
-                                        <property name="sizeHint">
-                                            <size>
-                                                <width>20</width>
-                                                <height>20</height>
-                                            </size>
-                                        </property>
-                                    </spacer>
-                                    <widget class="KPushButton">
-                                        <property name="name">
-                                            <cstring>refreshButton</cstring>
-                                        </property>
-                                        <property name="text">
-                                            <string>Refresh</string>
-                                        </property>
-                                    </widget>
-                                    <widget class="KPushButton">
-                                        <property name="name">
-                                            <cstring>stopButton</cstring>
-                                        </property>
-                                        <property name="text">
-                                            <string>Stop</string>
-                                        </property>
-                                    </widget>
-                                </hbox>
-                            </widget>
                         </vbox>
+                    </widget>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout26</cstring>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="KPushButton">
+                                <property name="name">
+                                    <cstring>uninstallButton</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Uninstall</string>
+                                </property>
+                            </widget>
+                            <spacer>
+                                <property name="name">
+                                    <cstring>spacer2</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>299</width>
+                                        <height>20</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <widget class="KPushButton">
+                                <property name="name">
+                                    <cstring>stopButton</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Stop</string>
+                                </property>
+                            </widget>
+                            <widget class="KPushButton">
+                                <property name="name">
+                                    <cstring>refreshButton</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Refresh</string>
+                                </property>
+                            </widget>
+                        </hbox>
                     </widget>
                 </vbox>
             </widget>
