@@ -229,8 +229,9 @@ static bool checkForAllIdsRead(RRA_SyncMgr *rra, Rra::ids *ids, uint32_t type_id
 {
     RRA_SyncMgrType* type = rra_syncmgr_type_from_id(rra, type_id);
 
+    kdDebug(2120) << "-------------------------------------- " << (void *) type << endl;
     return ids->changedIds.count() + ids->unchangedIds.count() + ids->deletedIds.count() == type->count;
-} 
+}
 
 
 bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
@@ -238,7 +239,7 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
     rraOk = true;
 
     struct ids _ids;
-    
+
     _ids.changedIds.clear();
     _ids.unchangedIds.clear();
     _ids.deletedIds.clear();

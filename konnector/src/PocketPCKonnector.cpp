@@ -21,9 +21,12 @@
 #include "PocketPCKonnectorConfig.h"
 #include "PDAIdHelper.h"
 
-#include "CalendarHandler.h"
+
+//#include "CalendarHandler.h"
 #include "AddressBookHandler.h"
 
+#include "todohandler.h"
+#include "eventhandler.h"
 
 #include <qdir.h>
 #include <kstandarddirs.h>
@@ -156,10 +159,12 @@ namespace KSync
         m_syncees.clear();
 
         pocketPCCommunication::AddressBookHandler addrHandler( m_rra );
-        pocketPCCommunication::CalendarHandler calHandler( m_rra );
+//        pocketPCCommunication::CalendarHandler calHandler( m_rra );
+        pocketPCCommunication::EventHandler eventHandler(m_rra);
+        pocketPCCommunication::TodoHandler todoHandler(m_rra);
 
         QString base;
-        base = m_baseDir + calHandler.getPartnerId(); //QDir::homeDirPath() + "/.kitchensync/meta/pocketpc/" + calHandler.getPartnerId();
+        base = m_baseDir + eventHandler.getPartnerId(); //QDir::homeDirPath() + "/.kitchensync/meta/pocketpc/" + eventHandler.getPartnerId();
 
         bool firstSync = false;
 
@@ -192,7 +197,7 @@ namespace KSync
             m_rra->connect();
 
             // do just the same for getting the complete calendar (events and todos are separated)
-            if ( !calHandler.getCalendarEvents( *m_calendar, pocketPCCommunication::ALL ) ) {
+            if ( !eventHandler.getAllEvents( *m_calendar, pocketPCCommunication::ALL ) ) {
                 emit synceeReadError( this );
                 return false;
             }
@@ -200,7 +205,7 @@ namespace KSync
             m_rra->disconnect(); // think this is necessary.. *hmpf*
             m_rra->connect();
 
-            if ( !calHandler.getCalendarTodos( *m_calendar, pocketPCCommunication::ALL ) ) {
+            if ( !todoHandler.getAllTodos( *m_calendar, pocketPCCommunication::ALL ) ) {
                 emit synceeReadError( this );
                 return false;
             }
@@ -217,6 +222,11 @@ namespace KSync
             // well.. aeh.. read the ids from the id-files...
 
             PDAIdHelper pdaIdHelper( base );
+
+            addrSyncee = new KSync::AddressBookSyncee ( m_addressBook );
+            m_syncees.append ( addrSyncee );
+
+            loadAddressbookMetaData( m_baseDir + addrHandler.getPartnerId() );
 
             QStringList adrIds;
             pdaIdHelper.readPDAIds ( "AddressBook.ids", adrIds );
@@ -245,15 +255,6 @@ namespace KSync
             kdDebug( 2120 ) << "modifiedIds: " << endl;
             pdaIdHelper.dumpPDAIds( modifiedAdrIds );
 
-            addrSyncee = new KSync::AddressBookSyncee ( m_addressBook );
-            calSyncee = new KSync::CalendarSyncee( m_calendar );
-            m_syncees.append ( addrSyncee );
-            m_syncees.append ( calSyncee );
-
-            loadMetaData( m_baseDir + calHandler.getPartnerId() );
-            dumpIds( addrSyncee );
-            dumpIds( calSyncee );
-
             KABC::Addressee::List addedAdrList;
             addrHandler.getAddressees( addedAdrList, addedAdrIds );
 
@@ -265,55 +266,142 @@ namespace KSync
 
             pdaIdHelper.savePDAIds("AddressBook.ids", addrStatusMap);
 
+            {
+                // and now... setSyncEntry on all Undefined entries in the syncee!!
+                // this is just to get the correct local ids!!
+                KSync::SyncEntry* entry = addrSyncee->firstEntry();
+                while ( entry ) {
+                    if ( entry->state() == KSync::SyncEntry::Undefined )
+                        setSyncEntry ( entry, KSync::SyncEntry::Undefined );
+                    entry = addrSyncee->nextEntry();
+                }
+                kdDebug( 2120 ) << "PocketPCKonnector::updateAddressBookSyncee end" << endl;
+            }
+
+            dumpIds( addrSyncee );
+
             m_rra->disconnect();
             m_rra->connect();
 
-            QStringList calIds;
-            pdaIdHelper.readPDAIds ( "Calendar.ids", calIds );
+
+
+
+
+
+
+
+
+
+            calSyncee = new KSync::CalendarSyncee( m_calendar );
+            m_syncees.append ( calSyncee );
+
+            loadCalendarMetaData( m_baseDir + eventHandler.getPartnerId() );
+
+            QStringList eventIds;
+            pdaIdHelper.readPDAIds ( "Event.ids", eventIds );
 
             kdDebug( 2120 ) << "dumping pdaIdHelper-ids:" << endl;
-            pdaIdHelper.dumpPDAIds( calIds );
+            pdaIdHelper.dumpPDAIds( eventIds );
 
-            QMap<QString, pocketPCCommunication::RecordType> calStatusMap;
+            QMap<QString, pocketPCCommunication::RecordType> eventStatusMap;
 
-            if ( !calHandler.getIdStatus( calStatusMap ) ) {
+            if ( !eventHandler.getIdStatus( eventStatusMap ) ) {
                 emit synceeReadError( this );
                 return false;
             }
 
-            QStringList remoteCalIds = pdaIdHelper.createIdQStringList( calStatusMap );
-            QStringList addedCalIds = pdaIdHelper.getPDAAddedIds( remoteCalIds, calIds );
-            QStringList removedCalIds = pdaIdHelper.getPDARemovedIds( remoteCalIds, calIds );
-            QStringList modifiedCalIds = pdaIdHelper.getPDAModifiedIds( calStatusMap, addedCalIds );
+            QStringList remoteEventIds = pdaIdHelper.createIdQStringList( eventStatusMap );
+            QStringList addedEventIds = pdaIdHelper.getPDAAddedIds( remoteEventIds, eventIds );
+            QStringList removedEventIds = pdaIdHelper.getPDARemovedIds( remoteEventIds, eventIds );
+            QStringList modifiedEventIds = pdaIdHelper.getPDAModifiedIds( eventStatusMap, addedEventIds );
 
             kdDebug( 2120 ) << "Dumping Ids for CalendarSyncee: " << endl;
             kdDebug( 2120 ) << "all ids: " << endl;
-            pdaIdHelper.dumpPDAIds( remoteCalIds );
+            pdaIdHelper.dumpPDAIds( remoteEventIds );
             kdDebug( 2120 ) << "addedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( addedCalIds );
+            pdaIdHelper.dumpPDAIds( addedEventIds );
             kdDebug( 2120 ) << "removedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( removedCalIds );
+            pdaIdHelper.dumpPDAIds( removedEventIds );
             kdDebug( 2120 ) << "modifiedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( modifiedCalIds );
+            pdaIdHelper.dumpPDAIds( modifiedEventIds );
 
             m_rra->disconnect();
             m_rra->connect();
 
             KCal::Event::List addedEventList;
-            calHandler.getEvents( addedEventList, addedCalIds );
+            eventHandler.getEvents( addedEventList, addedEventIds );
 
             KCal::Event::List modifiedEventList;
-            calHandler.getEvents( modifiedEventList, modifiedCalIds );
+            eventHandler.getEvents( modifiedEventList, modifiedEventIds );
+
+            updateCalendarSyncee(addedEventList, modifiedEventList, removedEventIds);
+
+            pdaIdHelper.savePDAIds("Event.ids", eventStatusMap);
+
+
+
+
+
+
+
+
+            m_rra->disconnect();
+            m_rra->connect();
+
+            QStringList todoIds;
+            pdaIdHelper.readPDAIds ( "Todo.ids", todoIds );
+
+            kdDebug( 2120 ) << "dumping pdaIdHelper-ids:" << endl;
+            pdaIdHelper.dumpPDAIds( todoIds );
+
+            QMap<QString, pocketPCCommunication::RecordType> todoStatusMap;
+
+            if ( !todoHandler.getIdStatus( todoStatusMap ) ) {
+                emit synceeReadError( this );
+                return false;
+            }
+
+            QStringList remoteTodoIds = pdaIdHelper.createIdQStringList( todoStatusMap );
+            QStringList addedTodoIds = pdaIdHelper.getPDAAddedIds( remoteTodoIds, todoIds );
+            QStringList removedTodoIds = pdaIdHelper.getPDARemovedIds( remoteTodoIds, todoIds );
+            QStringList modifiedTodoIds = pdaIdHelper.getPDAModifiedIds( todoStatusMap, addedTodoIds );
+
+            kdDebug( 2120 ) << "Dumping Ids for CalendarSyncee: " << endl;
+            kdDebug( 2120 ) << "all ids: " << endl;
+            pdaIdHelper.dumpPDAIds( remoteTodoIds );
+            kdDebug( 2120 ) << "addedIds: " << endl;
+            pdaIdHelper.dumpPDAIds( addedTodoIds );
+            kdDebug( 2120 ) << "removedIds: " << endl;
+            pdaIdHelper.dumpPDAIds( removedTodoIds );
+            kdDebug( 2120 ) << "modifiedIds: " << endl;
+            pdaIdHelper.dumpPDAIds( modifiedTodoIds );
+
+            m_rra->disconnect();
+            m_rra->connect();
 
             KCal::Todo::List addedTodoList;
-            calHandler.getTodos( addedTodoList, addedCalIds );
+            todoHandler.getTodos( addedTodoList, addedTodoIds );
 
             KCal::Todo::List modifiedTodoList;
-            calHandler.getTodos( modifiedTodoList, modifiedCalIds );
+            todoHandler.getTodos( modifiedTodoList, modifiedTodoIds );
 
-            updateCalendarSyncee( addedEventList, modifiedEventList, addedTodoList, modifiedTodoList, removedCalIds );
+            updateCalendarSyncee(addedTodoList, modifiedTodoList, removedTodoIds);
 
-            pdaIdHelper.savePDAIds("Calendar.ids", calStatusMap);
+            pdaIdHelper.savePDAIds("Todo.ids", todoStatusMap);
+
+            {
+                // and now... setSyncEntry on all Undefined entries in the syncee!!
+                // this is just to get the corret local ids!!
+                KSync::SyncEntry* entry = calSyncee->firstEntry();
+                while ( entry ) {
+                    if ( entry->state() == KSync::SyncEntry::Undefined ) {
+                        setSyncEntry ( entry, KSync::SyncEntry::Undefined );
+                    }
+                    entry = calSyncee->nextEntry();
+                }
+            }
+
+            dumpIds( calSyncee );
         }
 
         addrSyncee->setIdentifier ( "addrBook-device" );
@@ -428,7 +516,11 @@ namespace KSync
             }
 
             partnerId = addrHandler.getPartnerId();
+
+            if ( !partnerId.isEmpty() )
+                saveAddressbookMetaData( m_baseDir + partnerId );
         }
+
 
         if ( calSyncee->isValid() ) {
             KCal::Event::List eventsAdded;
@@ -443,42 +535,45 @@ namespace KSync
             getEvents( eventsRemoved, todosRemoved, calSyncee->removed() );
             getEvents( eventsModified, todosModified, calSyncee->modified() );
 
-            pocketPCCommunication::CalendarHandler calHandler( m_rra );
+            pocketPCCommunication::EventHandler eventHandler( m_rra );
 
             kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees: writing events to pda" << endl;
             kdDebug( 2120 ) << "    adding events: " << eventsAdded.size() << endl;
-            calHandler.addEvents( eventsAdded );
+            eventHandler.addEvents( eventsAdded );
             kdDebug( 2120 ) << "    removing events" << endl;
-            calHandler.removeEvents( eventsRemoved );
+            eventHandler.removeEvents( eventsRemoved );
             kdDebug( 2120 ) << "    modifieing events" << endl;
-            calHandler.updateEvents( eventsModified );
+            eventHandler.updateEvents( eventsModified );
 
+            pocketPCCommunication::TodoHandler todoHandler( m_rra );
 
             kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees: writing todos to pda" << endl;
             kdDebug( 2120 ) << "    adding todos: " << todosAdded.size() << endl;
-            calHandler.addTodos( todosAdded );
+            todoHandler.addTodos( todosAdded );
             kdDebug( 2120 ) << "    removing todos" << endl;
-            calHandler.removeTodos( todosRemoved );
+            todoHandler.removeTodos( todosRemoved );
             kdDebug( 2120 ) << "    modifieing todos" << endl;
-            calHandler.updateTodos( todosModified );
+            todoHandler.updateTodos( todosModified );
 
             if ( m_uidHelper ) {
-                QStringList appIds = addNewIds( calSyncee, "CalendarSyncEntry", calHandler.getIdPairs() );
-                QString base = m_baseDir + calHandler.getPartnerId(); //QDir::homeDirPath() + "/.kitchensync/meta/pocketpc/" + calHandler.getPartnerId();
+                QStringList appIds = addNewIds( calSyncee, "CalendarSyncEntry", eventHandler.getIdPairs() );
+                QString base = m_baseDir + eventHandler.getPartnerId(); //QDir::homeDirPath() + "/.kitchensync/meta/pocketpc/" + calHandler.getPartnerId();
                 PDAIdHelper pdaIdHelper ( base );
                 pdaIdHelper.appendPDAIds ( "Calendar.ids", appIds );
 
                 removeOldIds( "CalendarSyncEntry", calSyncee->removed() );
             }
 
-            partnerId = calHandler.getPartnerId();
+            partnerId = eventHandler.getPartnerId();
+
+            if ( !partnerId.isEmpty() )
+                saveCalendarMetaData( m_baseDir + partnerId );
         }
+
+
 
         if ( m_uidHelper )
             m_uidHelper->save();
-
-        if ( !partnerId.isEmpty() )
-            saveMetaData( m_baseDir + partnerId );
 
         emit synceesWritten ( this );
 
@@ -721,18 +816,15 @@ namespace KSync
     }
 
 
-    void PocketPCKonnector::loadMetaData ( const QString& p_dir )
+    void PocketPCKonnector::loadAddressbookMetaData ( const QString& p_dir )
     {
         // read directly into the syncees!!! syncee has to be empty
         // so the syncees have to exist at this point!!
         // and they do that now :)
 
         QString addrFileName = p_dir + "/AddressBookMeta.vcf";
-        QString calFileName = p_dir + "/CalendarMeta.ics";
-
 
         kdDebug( 2120 ) << "loadMetaData: " << addrFileName << endl;
-        kdDebug( 2120 ) << "loadMetaData: " << calFileName << endl;
         // load the addressBook
         QFile addrFile( addrFileName );
         if ( addrFile.open ( IO_ReadOnly ) ) {
@@ -753,7 +845,14 @@ namespace KSync
 
             addrFile.close();
         }
+    }
 
+
+    void PocketPCKonnector::loadCalendarMetaData ( const QString& p_dir )
+    {
+        QString calFileName = p_dir + "/CalendarMeta.ics";
+
+        kdDebug( 2120 ) << "loadMetaData: " << calFileName << endl;
         QFile calFile( calFileName );
         if ( calFile.open ( IO_ReadOnly ) ) {
             QTextStream calStream( &calFile );
@@ -788,12 +887,11 @@ namespace KSync
     }
 
 
-    void PocketPCKonnector::saveMetaData ( const QString& p_dir )
+    void PocketPCKonnector::saveAddressbookMetaData ( const QString& p_dir )
     {
-        kdDebug( 2120 ) << "PocketPCKonnector: saveMetaData" << endl;
+        kdDebug( 2120 ) << "PocketPCKonnector: saveAddressbookMetaData" << endl;
 
         QString addrFileName = p_dir + "/AddressBookMeta.vcf";
-        QString calFileName = p_dir + "/CalendarMeta.ics";
 
         KSync::AddressBookSyncee* addrSyncee = m_syncees.addressBookSyncee();
         if ( addrSyncee->isValid() ) {
@@ -812,6 +910,15 @@ namespace KSync
                 addrFile.close();
             }
         }
+    }
+
+
+    void PocketPCKonnector::saveCalendarMetaData ( const QString& p_dir )
+    {
+
+        kdDebug( 2120 ) << "PocketPCKonnector: saveCalendarMetaData" << endl;
+
+        QString calFileName = p_dir + "/CalendarMeta.ics";
 
         KSync::CalendarSyncee* calSyncee = m_syncees.calendarSyncee();
         if ( calSyncee->isValid() ) {
@@ -873,63 +980,65 @@ namespace KSync
             KSync::SyncEntry* entry = syncee->findEntry( ( *it2 ) );
             setSyncEntry ( entry, KSync::SyncEntry::Removed );
         }
-
-        // and now... setSyncEntry on all Undefined entries in the syncee!!
-        // this is just to get the correct local ids!!
-        KSync::SyncEntry* entry = syncee->firstEntry();
-        while ( entry ) {
-            if ( entry->state() == KSync::SyncEntry::Undefined )
-                setSyncEntry ( entry, KSync::SyncEntry::Undefined );
-            entry = syncee->nextEntry();
-        }
-        kdDebug( 2120 ) << "PocketPCKonnector::updateAddressBookSyncee end" << endl;
     }
 
 
-    void PocketPCKonnector::updateCalendarSyncee ( KCal::Event::List& p_addedEvents, KCal::Event::List& p_modifiedEvents,
-            KCal::Todo::List& p_addedTodos, KCal::Todo::List& p_modifiedTodos, QStringList& p_removedIds )
+    void PocketPCKonnector::updateCalendarSyncee ( KCal::Event::List& p_added, KCal::Event::List& p_modified, QStringList& p_removedIds )
     {
-        KCal::Event::List::Iterator it;
-
         KSync::CalendarSyncee* syncee = m_syncees.calendarSyncee();
 
         KSync::CalendarSyncEntry* syncEntry = 0;
 
+        KCal::Event::List::Iterator it;
+
         // add new events
-        it = p_addedEvents.begin();
-        for ( ; it != p_addedEvents.end(); ++it ) {
+        it = p_added.begin();
+        for ( ; it != p_added.end(); ++it ) {
             syncEntry = new KSync::CalendarSyncEntry ( ( *it ) ->clone(), syncee );
             syncee->addEntry ( syncEntry );
             setSyncEntry ( syncEntry, KSync::SyncEntry::Added );
         }
 
         // replace modified events
-        kdDebug( 2120 ) << "updateCalendarSyncee: modifiedEvents:" << endl;
-        it = p_modifiedEvents.begin();
-        for ( ; it != p_modifiedEvents.end(); ++it ) {
-            kdDebug( 2120 ) << "updateCalendarSyncee: modifiedEvents: " << ( *it ) ->uid() << endl;
+        kdDebug( 2120 ) << "updateCalendarSyncee: modified:" << endl;
+        it = p_modified.begin();
+        for ( ; it != p_modified.end(); ++it ) {
+            kdDebug( 2120 ) << "updateCalendarSyncee: modified: " << ( *it ) ->uid() << endl;
             syncEntry = new KSync::CalendarSyncEntry( ( *it ) ->clone(), syncee );
             syncee->replaceEntry ( syncee->findEntry ( ( *it ) ->uid() ), syncEntry );
             setSyncEntry ( syncEntry, KSync::SyncEntry::Modified );
         }
 
+        // mark removed entries
+        QStringList::Iterator it2 = p_removedIds.begin();
+        for ( ; it2 != p_removedIds.end(); ++it2 ) {
+            KSync::SyncEntry* entry = syncee->findEntry( ( *it2 ) );
+            setSyncEntry ( entry, KSync::SyncEntry::Removed );
+        }
+    }
+
+
+    void PocketPCKonnector::updateCalendarSyncee ( KCal::Todo::List& p_added, KCal::Todo::List& p_modified, QStringList& p_removedIds )
+    {
+        KSync::CalendarSyncee* syncee = m_syncees.calendarSyncee();
+
+        KSync::CalendarSyncEntry* syncEntry = 0;
+
         KCal::Todo::List::Iterator ti;
 
         // add new todos
-        ti = p_addedTodos.begin();
-        for ( ; ti != p_addedTodos.end(); ++ti ) {
+        ti = p_added.begin();
+        for ( ; ti != p_added.end(); ++ti ) {
             syncEntry = new KSync::CalendarSyncEntry ( ( *ti ) ->clone(), syncee );
             syncee->addEntry ( syncEntry );
             setSyncEntry ( syncEntry, KSync::SyncEntry::Added );
         }
 
         // replace modified todos
-        kdDebug( 2120 ) << "updateCalendarSyncee: modifiedTodos:" << endl;
-        ti = p_modifiedTodos.begin();
-        for ( ; ti != p_modifiedTodos.end(); ++ti ) {
-            if ( !( *ti ) )
-                kdDebug( 2120 ) << "this should not be reached..." << endl;
-            kdDebug( 2120 ) << "updateCalendarSyncee: modifiedTodos: " << ( *ti ) ->uid() << endl;
+        kdDebug( 2120 ) << "updateCalendarSyncee: modified:" << endl;
+        ti = p_modified.begin();
+        for ( ; ti != p_modified.end(); ++ti ) {
+            kdDebug( 2120 ) << "updateCalendarSyncee: modified: " << ( *ti ) ->uid() << endl;
             syncEntry = new KSync::CalendarSyncEntry ( ( *ti ) ->clone(), syncee );
             syncee->replaceEntry ( syncee->findEntry ( ( *ti ) ->uid() ), syncEntry );
             setSyncEntry ( syncEntry, KSync::SyncEntry::Modified );
@@ -941,16 +1050,5 @@ namespace KSync
             KSync::SyncEntry* entry = syncee->findEntry( ( *it2 ) );
             setSyncEntry ( entry, KSync::SyncEntry::Removed );
         }
-
-
-        // and now... setSyncEntry on all Undefined entries in the syncee!!
-        // this is just to get the corret local ids!!
-        KSync::SyncEntry* entry = syncee->firstEntry();
-        while ( entry ) {
-            if ( entry->state() == KSync::SyncEntry::Undefined )
-                setSyncEntry ( entry, KSync::SyncEntry::Undefined );
-            entry = syncee->nextEntry();
-        }
     }
-
 };
