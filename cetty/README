@@ -7,7 +7,19 @@ for a new connection once PPPd frees the serial port.
 You can (try to) manually force a new connection by sending a TERM, USR1 or
 USR2 signal to the application (use the 'wakeup' script for example).
 
+
+Compilation :
+=============
+
+You need to download and install the serial library libezV24 :
+ http://ezv24.sourceforge.net/
+
+Then, all you need is to type 'make'.
+
+
+
 Syntax :
+========
 
 cetty <device> <path_to_pppd> [<pppd_arg1> [<pppd_arg2>] ...]
 
@@ -16,6 +28,9 @@ for example :
 ./cetty /dev/ttyS1 /usr/sbin/pppd -detach call ipaq
 
 
+
+Installation :
+==============
 
 You can put it in /etc/inittab if you want it to respawn on failure.
 
