@@ -240,7 +240,6 @@ bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, boo
 	}
 }
 
-#if 0
 bool rapi_buffer_write_optional_in(RapiBuffer* buffer, const void* data, size_t size)
 {
 	if (data)
@@ -288,7 +287,6 @@ bool rapi_buffer_write_optional_inout(RapiBuffer* buffer, void* data, size_t siz
 		return rapi_buffer_write_uint32(buffer, 0);
 	}
 }
-#endif
 
 bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size)
 {
