@@ -371,6 +371,17 @@ exit:
 	return success;
 }
 
+void decode_favorite(uint8_t* buffer, size_t size)
+{
+  const char* p = (const char*)(buffer + 4);
+
+  printf("Name:     %s\n", p);
+  p += strlen(p) + 1;
+  
+  printf("Address:  %s\n", p);
+  p += strlen(p) + 1;
+ }
+
 int main(int argc, char** argv)
 {
 	int result = 1;
@@ -402,22 +413,31 @@ int main(int argc, char** argv)
 	if (*(uint32_t*)(buffer + 4) != 0)
 	{
 		switch (*(uint32_t*)(buffer + 0))
-		{
-			case 0x10:	/* directory */
-				decode_directory(buffer);
-				result = 0;
-				break;
-				
-			case 0x20:	/* file*/
-				decode_file(buffer, file_size, argv[2]);
-				result = 0;
-				break;
+    {
+      case 2:
+        fprintf(stderr, "Maybe some Merlin Mail data?\n");
+        break;
 
-			default:
-				fprintf(stderr, "Unexpected file header: %08x\n",
-						*(uint32_t*)(buffer + 0));
-				break;
-		}
+      case 0x10:	/* directory */
+        decode_directory(buffer);
+        result = 0;
+        break;
+
+      case 0x20:	/* file*/
+        decode_file(buffer, file_size, argv[2]);
+        result = 0;
+        break;
+
+      case 0x4004:
+        decode_favorite(buffer, file_size);
+        result = 0;
+        break;
+
+      default:
+        fprintf(stderr, "Unexpected file header: %08x\n",
+            *(uint32_t*)(buffer + 0));
+        break;
+    }
 	}
 	else
 	{
