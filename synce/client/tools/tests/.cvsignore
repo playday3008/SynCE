@@ -5,11 +5,13 @@
 .libs
 CeCreateDirectory
 CeCreateFile
+CeCreateProcess
 CeFindAllDatabases
 CeFindAllFiles
 CeFindFirstFile
 CeGetSpecialFolderPath
 CeGetVersionEx
+CeMoveFile
 CeOpenDatabase
 CeRapiInit
 CeRegEnumKeyEx
