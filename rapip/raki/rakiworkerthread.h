@@ -70,6 +70,7 @@ private:
     QWaitCondition waitCondition;
     QWaitCondition eventCondition;
     QMutex eventMutex;
+    QMutex threadMutex;
     
 public:
     static RakiWorkerThread *rakiWorkerThread;

@@ -46,12 +46,14 @@ RakiWorkerThread::~RakiWorkerThread()
 
 void RakiWorkerThread::start(WorkerThreadInterface *wti, void (WorkerThreadInterface::*userRun)(QThread *thread, void *data = NULL), void *data)
 {
+    threadMutex.lock();
     this->wait();
     this->userRun = userRun;
     this->wti = wti;
     this->wti->setRunning(true);
     this->data = data;
     QThread::start();
+    threadMutex.unlock();
 }
 
 
@@ -107,7 +109,6 @@ void RakiWorkerThread::run()
     wti->unlock();
     wti = NULL;
     QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
-//    threadMutex.unlock();
     waitCondition.wakeOne();
 }
 
