@@ -31,6 +31,9 @@ problem that may be helpful would be most welcome!</p>
 
 <ul>
 
+<li class=SPACED>Decrease the connection speed by editing
+/etc/ppp/peers/synce-device and changing 115200 to 19200</li>
+
 <li class=SPACED><p>Try this procedure:</p> 
 
   <ol><li><p>Replace synce-serial/src/synce-serial-chat.c with this file:</p>
