@@ -7,9 +7,23 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#include <string.h>
 
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
+#endif
+
+#define RAPI_SOCKET_DEBUG 1
+
+#if RAPI_SOCKET_DEBUG
+#define rapi_socket_trace(args...)    rapi_trace(args)
+#define rapi_socket_warning(args...)  rapi_warning(args)
+#define rapi_socket_error(args...)    rapi_error(args)
+#else
+#define rapi_socket_trace(args...)
+#define rapi_socket_warning(args...)
+#define rapi_socket_error(args...)
 #endif
 
 #define RAPI_SOCKET_INVALID_FD -1
@@ -92,7 +106,30 @@ static bool rapi_socket_write(RapiSocket* socket, void* data, unsigned size)
  */
 static bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
 {
-	return read(socket->fd, data, size) == size;
+	int bytes_needed = size;
+	
+	while(bytes_needed > 0)
+	{
+		int result = read(socket->fd, data, size);
+	
+		rapi_socket_trace("read returned %i, needed %i bytes", result, bytes_needed);
+
+		if (result < 0)
+		{
+			rapi_socket_error("read failed, error: %i \"%s\"", errno, strerror(errno));
+			break;
+		}
+		else if (result == 0)
+		{
+			break;
+		}
+
+		bytes_needed -= result;
+		data += result;
+	}
+	
+	 
+	return 0 == bytes_needed;
 }
 
 bool rapi_socket_send(RapiSocket* socket, RapiBuffer* buffer)
@@ -125,19 +162,33 @@ bool rapi_socket_recv(RapiSocket* socket, RapiBuffer* buffer)
 	unsigned char* data    = NULL;
 	
 	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	{
+		rapi_socket_error("Invalid file descriptor");
 		goto fail;
+	}
 
 	if ( !rapi_socket_read(socket, &size_le, sizeof(size_le)) )
+	{
+		rapi_socket_error("Failed to read size");
 		goto fail;
+	}
 
 	size = letoh32(size_le);
 
+	rapi_socket_trace("Size = 0x%08x\n", size);
+
 	data = malloc(size);
 	if (!data)
+	{
+		rapi_socket_error("Failed to allocate 0x%08x bytes", size);
 		goto fail;
+	}
 
 	if ( !rapi_socket_read(socket, data, size) )
+	{
+		rapi_socket_error("Failed to read 0x%08x bytes", size);
 		goto fail;
+	}
 
 	if ( !rapi_buffer_reset(buffer, data, size) )
 	{
