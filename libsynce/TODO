@@ -3,5 +3,5 @@ $Id$
 TODO for libsynce
 =================
 
-o Change logging to use syslog and not stderr
+o Change logging to be able to use syslog and not only stderr
 
