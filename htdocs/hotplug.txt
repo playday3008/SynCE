@@ -7,6 +7,7 @@ echo "$time $uname $0: iPAQ added" >> /var/log/synce
 synce-serial-abort >> /dev/null
 synce-serial-start >> /var/log/synce
 
+:> $REMOVER
 echo "export time=\`date +\"%b %d %X\"\`" >> $REMOVER
 echo "export uname=\`uname -n\`" >> $REMOVER
 echo "echo \"\$time \$uname $0: iPAQ removed\" >> /var/log/synce" >> $REMOVER
