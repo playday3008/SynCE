@@ -276,10 +276,14 @@ bool generator_add_simple_propval(Generator* self, const char* name, struct _CEP
   switch (propval->propid & 0xffff)
   {
     case CEVT_LPWSTR:
-      strbuf_append(self->buffer, name);
-      strbuf_append_c(self->buffer, ':');
-      generator_append_escaped_wstr(self, propval->val.lpwstr);
-      strbuf_append_crlf(self->buffer);
+      /* do not add empty strings */
+      if (propval->val.lpwstr[0])
+      {
+        strbuf_append(self->buffer, name);
+        strbuf_append_c(self->buffer, ':');
+        generator_append_escaped_wstr(self, propval->val.lpwstr);
+        strbuf_append_crlf(self->buffer);
+      }
       success = true;
       break;
 
