@@ -33,7 +33,7 @@ dnl Checks for header files.
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
-ALL_LINGUAS="sv"
+ALL_LINGUAS="sv ru"
 
 GETTEXT_PACKAGE=AC_PACKAGE_NAME
 AC_SUBST(GETTEXT_PACKAGE)
