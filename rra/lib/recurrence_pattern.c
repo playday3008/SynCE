@@ -116,14 +116,29 @@ struct tm rra_minutes_to_struct(uint32_t minutes)
     memset(&result, 0, sizeof(struct tm));
   else
     /* XXX: localtime or gmtime? i always forget which one do what i want */
-    memcpy(&result, localtime(&unix_time), sizeof(struct tm));
+    gmtime_r(&unix_time, &result);
 
   return result;
 }
 
 uint32_t rra_minutes_from_struct(struct tm* t)
 {
-  return rra_minutes_from_unix_time(mktime(t));
+  /* fool around with the TZ environment variable in order to get mktime do
+   * what it is supposed to do */
+  uint32_t result = 0;
+  char* old_tz = getenv("TZ");
+  if (old_tz)
+    old_tz = strdup(old_tz);
+  setenv("TZ", "UTC", true);
+  result = rra_minutes_from_unix_time(mktime(t));
+  if (old_tz)
+  {
+    setenv("TZ", old_tz, true);
+    free(old_tz);
+  }
+  else
+    unsetenv("TZ");
+  return result;
 }
 
 
