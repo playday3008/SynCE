@@ -256,7 +256,7 @@ Packages could be downloaded from the <a
 Page</a> or installed directly over the network from our debian
 repository at SourceForge.<br>
   <ol>
-    <li>Add the following two lines to your /etc/apt/sources.list:<br>
+    <li>Add the following two lines to your <tt>/etc/apt/sources.list</tt>:<br>
       <tt>&nbsp;&nbsp;&nbsp; deb http://synce.sourceforge.net/debian/
 unstable/$(ARCH)/<br>
 &nbsp;&nbsp;&nbsp; deb-src http://synce.sourceforge.net/debian/
@@ -273,17 +273,15 @@ unstable/source/</tt><br>
     </li>
     <li>Install the development packages. This is only needed it you
 intend to develop synchronizer for RAKI:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-get install synce-kde-dev</tt></li>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-get install synce-kde-dev<br>
+      <br>
+      </tt></li>
   </ol>
 The source of SynCE-KDE is also available from the repository.<br>
   <ol>
     <li>Install the source package:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-src install synce-kde=0.6.1-1</tt><br>
-      <br>
-    </li>
-    <li>Build the binary packages:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-src build synce-kde</tt><br>
-    </li>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-get source synce-kde<br>
+      </tt></li>
   </ol>
   <br>
 </blockquote>
