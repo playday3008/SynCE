@@ -1,0 +1,41 @@
+$Id$
+
+Contents of this document
+-------------------------
+
+o How to contribute
+o Design goals
+
+
+How to contribute
+-----------------
+
+Contibutions to this project are always welcome. You can contribute in many
+different ways:
+
+o Testing on your configuration and reporting the results
+o Donations
+o Subitting patches
+o Answering questions on the mailing list
+
+A good document describing how to submit a patch is available here, thanks to
+the PHP project. Just substitute "PHP" with "SynCE" :-)
+
+  http://cvsweb.php.net/co.php/php4/README.SUBMITTING_PATCH
+
+If you submit lots of patches you will get access to the CVS repository.
+
+
+
+
+Design goals
+------------
+
+o Requiring as little code as possible to implement a new RAPI function
+o Merge the functionality of the previous three libraries into one
+o Thread-safety
+o Support both 32- and 64-bit platforms
+o Support both little endian and big endian platforms
+
+
+
