@@ -96,7 +96,7 @@ This section describes how to correct this problem.</p>
 
 <li>Find this part of <code>ipaq.c</code>:
 
-<pre>static __devinitdata struct usb_device_id ipaq_id_table [] = {
+<pre>static struct usb_device_id ipaq_id_table [] = {
 	{ USB_DEVICE(COMPAQ_VENDOR_ID, COMPAQ_IPAQ_ID) },
 	{ USB_DEVICE(HP_VENDOR_ID, HP_JORNADA_548_ID) },
 	{ USB_DEVICE(HP_VENDOR_ID, HP_JORNADA_568_ID) },
@@ -108,7 +108,7 @@ This section describes how to correct this problem.</p>
 
 <li>Add a line with information for your device similar to this:
 
-<pre>static __devinitdata struct usb_device_id ipaq_id_table [] = {
+<pre>static struct usb_device_id ipaq_id_table [] = {
 	<span class=RED>{ USB_DEVICE(MY_VENDOR_ID, MY_PRODUCT_ID) },</span>
 	{ USB_DEVICE(COMPAQ_VENDOR_ID, COMPAQ_IPAQ_ID) },
 	{ USB_DEVICE(HP_VENDOR_ID, HP_JORNADA_548_ID) },

@@ -183,6 +183,11 @@ ID for your device:</p>
 <pre>insmod usbserial
 insmod ipaq vendor=0x049f product=0x0032</pre>
 
+<p>Or add a line similar to this to your <tt>/etc/modules.conf</tt> file before
+connecting your device:</p>
+
+<pre>options ipaq vendor=0x3340 product=0x3326</pre>
+
 <p>If you can provide additional details above the devices listed above, please
 <a href="help.php">contact the SynCE developers</a>.</p>
 

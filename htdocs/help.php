@@ -56,7 +56,7 @@ your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
 </ul></li>
 
-<li class=SPACED><p><b>For synchronization problems</b></p>
+<li class=SPACED><p><b>For MultiSync synchronization problems</b></p>
 
 <ul>
 <li>MultiSync and Evolution versions</li>
