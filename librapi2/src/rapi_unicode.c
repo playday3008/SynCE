@@ -6,8 +6,8 @@
 #include <iconv.h>
 #endif
 
-#define RAPI_UNICODE_WIDE   "UCS-2LE"
-#define RAPI_UNICODE_ASCII  "iso8859-1"
+#define RAPI_UNICODE_WIDE   "UNICODELITTLE"
+#define RAPI_UNICODE_ASCII  "ISO-8859-1"
 
 #define INVALID_ICONV_HANDLE ((iconv_t)(-1))
 
