@@ -37,6 +37,27 @@ typedef struct _ObjectType
   char      name[100];
 } ObjectType;
 
+typedef struct _TimeZoneInformation
+{
+  int32_t Bias;                       /* 00 */
+  WCHAR StandardName[32];             /* 04 */
+  uint16_t unknown0;                  /* 44 */
+  uint16_t StandardMonthOfYear;       /* 46 */
+  uint16_t unknown1;                  /* 48 */
+  uint16_t StandardInstance;          /* 4a */
+  uint16_t StandardStartHour;         /* 4c */
+  uint8_t unknown2[6];                /* 4e */
+  int32_t StandardBias;               /* 54 */
+  WCHAR DaylightName[32];             /* 58 */
+  uint16_t unknown3;                  /* 98 */
+  uint16_t DaylightMonthOfYear;       /* 9a */
+  uint16_t unknown4;                  /* 9c */
+  uint16_t DaylightInstance;          /* 9e */
+  uint16_t DaylightStartHour;         /* a0 */
+  uint8_t unknown5[6];                /* a2 */
+  int32_t DaylightBias;               /* b0 */
+} TimeZoneInformation;
+
 /*typedef bool (*NotificationFunc)(
     uint32_t type_id,
     ObjectIdArray* object_id_array,
@@ -62,6 +83,8 @@ typedef struct _ObjectIdArray
 
 /* connection to RRA */
 
+void synce_log_set_level(int);
+
 %typemap (out) RRA *
 {
   $result=sv_newmortal();
@@ -73,6 +96,7 @@ typedef struct _ObjectIdArray
   {
     CeRapiInit();
     rapiinit=true;
+    //synce_log_set_level(4);
   }
 }
 
@@ -87,6 +111,15 @@ RRA* rra_new();
 void rra_free(RRA* rra);
 bool rra_connect(RRA* rra);
 void rra_disconnect(RRA* rra);
+
+%typemap (out) TimeZoneInformation *
+{
+  $result=sv_newmortal();
+  SWIG_MakePtr($result, $1, SWIGTYPE_p_TimeZoneInformation, 0);
+  argvi++;
+}
+
+TimeZoneInformation* rra_get_time_zone_information(RRA* rra);
 
 %typemap(out) bool {}
 
@@ -287,6 +320,9 @@ bool rra_object_delete(RRA* rra,
 bool rra_partner_set_current(RRA* rra, uint32_t index);
 bool rra_partner_get_current(RRA* rra, uint32_t* index);
 
+bool rra_partner_replace(RRA* rra, uint32_t index);
+bool rra_partner_create(RRA* rra, uint32_t* index);
+
 bool rra_partner_set_id(RRA* rra, uint32_t index, uint32_t id);
 bool rra_partner_get_id(RRA* rra, uint32_t index, uint32_t* id);
 
@@ -332,22 +368,26 @@ bool rra_appointment_to_vevent(uint32_t id,
 			       const uint8_t* data,
 			       size_t data_size,
 			       char** vevent,
-			       uint32_t flags);
+			       uint32_t flags,
+			       TimeZoneInformation* tzi);
 
 bool rra_appointment_from_vevent(const char* vevent,
 				 uint32_t* id,
 				 uint8_t** data,
 				 size_t* data_size,
-				 uint32_t flags);
+				 uint32_t flags,
+				 TimeZoneInformation* tzi);
 
 bool rra_task_to_vtodo(uint32_t id,
 		       const uint8_t* data,
 		       size_t data_size,
 		       char** vtodo,
-		       uint32_t flags);
+		       uint32_t flags,
+		       TimeZoneInformation* tzi);
 
 bool rra_task_from_vtodo(const char* vtodo,
 			 uint32_t* id,
 			 uint8_t** data,
 			 size_t* data_size,
-			 uint32_t flags);
+			 uint32_t flags,
+			 TimeZoneInformation* tzi);

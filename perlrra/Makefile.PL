@@ -9,25 +9,20 @@
 use strict;
 
 my $module="RRA";
-my $version="0.01";
+my $version="0.02";
 my $filename="perlrra_wrap";
 
 $|++;
 
-# Add the include parameters passed to this script.
-(grep{ substr($_, 0, 3) eq "INC" }@ARGV)[0] =~ /^INC=(.+)$/;
-my $inc=$1 || "-I/usr/include -I/usr/local/inlcude";
-push @ARGV, "INC=$inc";
-
 # Create the wrapper
 print "Creating $filename.c\n";
-my $ret=`swig $inc -perl -shadow -module $module -o $filename.c $filename.i`;
-die $ret if length $ret;
+system("swig -ignoremissing -perl -shadow -module $module -o $filename.c $filename.i")
+  == 0 or die "failed creating the wrapper";
 
 # Manipulate the resulting mudule
 print "Creating $module.pm\n";
-my ($file, $exp, @var, $c);
-open F, "<$module.pm";
+my ($file, $exp, @var, $c, $expc);
+open F, "<$module.pm" || die "failed opening $module.pm: $!";
 while(<F>)
 {
   if ($_!~/^\*swig/ && /^\*(.+) =/ && $c==1)
@@ -47,14 +42,16 @@ while(<F>)
     $file.=$_;
   }
   # Get everything to be exported.
-  $exp.="\n  $1" if $_!~/^\*swig/ && /^\*(.+) =/;
+  $expc=0 if /#/ && $expc;
+  $expc=1 if /FUNCTION WRAPPERS/;
+  $exp.="\n  $1" if ($_!~/^\*swig/ && /^\*(.+) =/ || /sub (.+) {/) && $expc;
   $c=1 if /VARIABLE STUBS/;
 }
 close F;
 
 $file=~s/EXPORT = qw\( \)/EXPORT = qw\($exp \)/;
 
-open F, ">$module.pm";
+open F, ">$module.pm" || die "failed opening $module.pm: $!";;
 print F $file;
 close F;
 
