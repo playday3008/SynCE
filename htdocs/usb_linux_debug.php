@@ -16,8 +16,10 @@
 <li><p>Make sure that <tt>/var/log/all.log</tt> exists with this command:</p>
 <blockquote><tt>touch /var/log/all.log</tt></blockquote></li>
 
-<li><p>Restart syslog with this command:</p>
-<blockquote><tt>service syslog restart</tt></blockquote></li>
+<li><p>Restart syslog with one of these commands:</p>
+<blockquote><tt>service syslog restart</tt> (e.g. Fedora Core)</blockquote>
+<blockquote><tt>/etc/init.d/sysklogd restart</tt> (e.g. Debian)</blockquote>
+</li>
 
 <li><p>Verify that <tt>/var/log/all.log</tt> contains something like this near
 the end:</p> <blockquote><tt>syslog: syslogd startup
