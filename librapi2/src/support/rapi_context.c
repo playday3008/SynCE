@@ -163,14 +163,14 @@ bool rapi_context_call(RapiContext* context)/*{{{*/
 {
 	if ( !rapi_buffer_send(context->send_buffer, context->socket) )
 	{
-		rapi_context_error("synce_socket_send failed");
+		rapi_context_error("rapi_buffer_send failed");
 		/* TODO: set context->last_error */
 		return false;
 	}
 
 	if ( !rapi_buffer_recv(context->recv_buffer, context->socket) )
 	{
-		rapi_context_error("synce_socket_recv failed");
+		rapi_context_error("rapi_buffer_recv failed");
 		/* TODO: set context->last_error */
 		return false;
 	}
