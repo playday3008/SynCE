@@ -16,14 +16,66 @@ assumed to be the most common setup for SynCE users.</p>
 modules. (If you don't know what this means, you probably don't have to worry
 about this!)</p>
 
-<h2>1. Installation of the SynCE software</h2>
+<h2>1. Special note for owners of Microsoft Smartphone devices</h2>
+
+<p>These devices <b>do not work</b> with any released Linux kernel!</p>
+
+<p>This note is known or probable to apply to the following devices, but may
+also apply to others:</p>
+
+<ul>
+
+<li>HTC Canary/Tanager (also known as <b>i-Mate Smartphone</b>, <b>Orange
+SPV/SPV e100</b>, <b>Qtek 7070</b>)</li>
+
+<li>HTC Voyager (also known as <b>i-Mate Smartphone 2</b>, <b>Orange SPV
+e200</b>, <b>Qtek 8080</b>)</li>
+
+<li>HTC Typhoon (also known as <b>Orange c500</b>, <b>Qtek 8010</b>)
+
+<li><b>Motorola MPx200</b></li>
+
+<li><b>Neonode N1</b></li>
+
+</ul>
+
+<p>If you follow the <a href="usb_linux_debug.php">USB debug</a> instructions
+for any of the device you will see something very similar to this in the debug
+log, here with the most important line marked with red color:</p>
+
+<blockquote><pre>pppd[1061]: pppd 2.4.2 started by root, uid 0
+kernel: usbserial.c: serial_open
+kernel: ipaq.c: ipaq_open - port 0
+kernel: host/usb-uhci.c: interrupt, status 3, frame# 1541
+kernel: ipaq.c: ipaq_read_bulk_callback - port 0
+<span class=RED>kernel: ipaq.c: ipaq_read_bulk_callback - nonzero read bulk status received: -84</span>
+kernel: usbserial.c: serial_ioctl - port 0, cmd 0x5416
+kernel: usbserial.c: serial_ioctl - port 0, cmd 0x5401
+kernel: usbserial.c: serial_ioctl - port 0, cmd 0x5401
+kernel: usbserial.c: serial_ioctl - port 0, cmd 0x5404
+kernel: usbserial.c: serial_chars_in_buffer = port 0
+kernel: ipaq.c: ipaq_chars_in_buffer - queuelen 0
+kernel: usbserial.c: serial_set_termios - port 0
+kernel: usbserial.c: serial_ioctl - port 0, cmd 0x5401
+kernel: usbserial.c: serial_open
+kernel: usbserial.c: serial_close - port 0</pre></blockquote>
+
+<p>If you have a device with the error above, you need a <a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=6339886&forum_id=1226">workaround</a>
+in order for your device to work with SynCE!</p>
+
+<p><i>Note: The support for Microsoft Smartphone will be simplied in the
+future!</i></p>
+
+<h2>2. Installation of the SynCE software</h2>
 
 <p><b>Please note that this HOWTO is not yet finished!</b></p>
 
 <p>For the time being, this part is very brief!</p>
 
 <p>If you are running an RPM-basen Linux distributions such as the ones in this
-list, <a href="http://synce.sourceforge.net/synce/rpms.php">install the latest RPM version</a> of SynCE:</p>
+list, <a href="http://synce.sourceforge.net/synce/rpms.php">install the latest
+RPM version</a> of SynCE:</p>
 
 <ul>
 
@@ -44,7 +96,7 @@ uses the latest SynCE version!</p>
 href="http://synce.sourceforge.net/synce/tarballs.php">compile SynCE
 yourself</a>.</p>
 
-<h2>2. Configuration of the kernel driver</h2>
+<h2>3. Configuration of the kernel driver</h2>
 
 <p><b>Please note that this HOWTO is not yet finished!</b></p>
 
@@ -58,6 +110,8 @@ successful USB connection.</p>
 <p>Everything in this section should be performed as the root user.</p>
 
 <h3>Kernel version</h3>
+
+<p><i>Note: The recommended Linux kernel version for SynCE is 2.6.10 or later!</i></p>
 
 <p>Run this command to find out your kernel version:</p>
 
@@ -142,42 +196,56 @@ your device, good!</p>
 <p><b>Driver=(none)</b> Your kernel driver did not recognize your device. You
 need to perform some special configuration:</p>
 
-<blockquote>
+<ol>
 
-<p>Use a text editor to open the file <tt>/etc/modprobe.conf</tt> if you have
-it, otherwise open <tt>/etc/modules.conf</tt>. <p>Add a line like this, but
-replace the red digits with the corresponding ones from the output from the
-command you ran earlier:</p>
+<li><p>If your Linux kernel is 2.6.10 or later, please send a mail to <a
+href="mailto:synce-devel@lists.sourceforge.net">
+synce-devel@lists.sourceforge.net</a> and tell us about your device and its
+vendor/product IDs.</p></li>
+
+<li><p>If you have the directory <tt>/etc/modutils</tt>, create the file
+<tt>/etc/modutils/synce</tt> with a text editor. If not, use a text editor to
+open the first of these files found on your system:</p>
+
+<ul>
+<li><tt>/etc/modprobe.conf</tt></li>
+<li><tt>/etc/modules.conf</tt></li>
+</ul>
+
+<p>Add a line like this, but replace the red digits with the corresponding ones
+from the output from the command you ran earlier:</p>
 
 <blockquote><tt>options ipaq vendor=0x<span class=RED>049f</span> product=0x<span
 class=RED>0003</span></tt></blockquote>
 
-<p>If you have the file <tt>/etc/rc.local</tt>, open it with a text editor and
+<p>If you used <tt>/etc/modutils/synce</tt>, run the <tt>update-modules</tt>
+command.</li>
+
+<li><p>If you have the file <tt>/etc/rc.local</tt>, open it with a text editor and
 add this line in order to have things working directly next time you restart
 your computer:</p>
 
-<blockquote><tt>/sbin/modprobe ipaq</tt></blockquote>
+<blockquote><tt>/sbin/modprobe ipaq</tt></blockquote></li>
 
-<p>Now run these commands to reload the ipaq module:</p>
+<li><p>Now run these commands to reload the ipaq module:</p>
 
 <blockquote><pre>rmmod ipaq
 modprobe ipaq</pre></blockquote>
 
 <p>If you get the message <i>ERROR: Module ipaq does not exist in
-/proc/modules</i> when running the <tt>rmmod</tt> command, just ignore it.</p>
+/proc/modules</i> when running the <tt>rmmod</tt> command, just ignore it.</p></li>
 
-<p>If you got no output from the <tt>modprobe</tt> command (meaning it
+<li><p>If you got no output from the <tt>modprobe</tt> command (meaning it
 succeeded), restart this HOWTO from the <a href="#usbinfo">Find out USB
-information about your device</a> section.</p>
+information about your device</a> section.</p></li>
 
-<p>If you get the message <i>FATAL: Module ipaq not found</i>, download <a
+<li><p>If you get the message <i>FATAL: Module ipaq not found</i>, download <a
 href="http://synce.sourceforge.net/tmp/kernel-2.6-driver.tar.gz">kernel-2.6-driver.tar.gz</a>,
-extract and follow the instructions in the README file.</p>
+extract and follow the instructions in the README file.</p></li>
 
-<p>If you got another
-error message, ask for <a href="help.php">help</a>!</p>
-
-</blockquote>
+<li><p>If you got another
+error message, ask for <a href="help.php">help</a>!</p></li>
+</ol>
 
 <p><b>Another Driver entry</b> Ask for <a href="help.php">help</a>!</p>
 </blockquote>
@@ -213,6 +281,9 @@ modprobe ipaq</pre></blockquote>
 
 <p>No output from the above commands means success.</p>
 
+<p><i>Note: The support for devices with four USB enpoints will be simplied in the
+future!</i></p>
+
 </blockquote>
 
 <p><b>Another number of endpoints</b> Ask for <a href="help.php">help</a>!</p>
@@ -220,7 +291,7 @@ modprobe ipaq</pre></blockquote>
 
 
 
-<h2>3. Configuration of the serial connection</h2>
+<h2>4. Configuration of the connection</h2>
 
 <p><b>Please note that this HOWTO is not yet finished!</b></p>
 
@@ -254,7 +325,7 @@ character device named...</i>, ask for <a href="help.php">help</a>!</p>
 
 </blockquote>
 
-<h2>4. Starting the serial connection</h2>
+<h2>5. Starting the connection</h2>
 
 <p>For the time being, this part is very brief!</p>
 
@@ -275,7 +346,7 @@ character device named...</i>, ask for <a href="help.php">help</a>!</p>
 
 </ol>
 
-<h2>5. Testing the connection</h2>
+<h2>6. Testing the connection</h2>
 
 <p>As your own user (not root), try this command:</p>
 
@@ -287,10 +358,34 @@ make sure that you followed all the steps in this HOWTO properly.</p>
 <blockquote><tt>pstatus: Unable to initialize RAPI: An unspecified failure has
 occurred</tt></blockquote>
 
+<h2>7. Disconnection</h2>
 
-<h2>6. Installing and using a hotplug script</h2>
+<p>Before you unplug your PDA from your PC, you should close the network
+connection between Windows CE and SynCE. There are a couple of ways to do this.</p>
 
-<p>TODO</p>
+<p>Just unplugging the USB cable is <b>not</b> proper disconnection when using
+SynCE. (This will hopefully be fixed in the kernel driver some day.)</p>
+
+<p>The suggested disconnection methods are, in order of preference:</p>
+
+<ol>
+
+<li class=SPACED>Disconnect with the GNOME Tray Icon or with SynCE-KDE</li>
+
+<li class=SPACED>Disconnect with the appropriate action on your PDA</li>
+
+<li class=SPACED>Run <tt>killall -HUP dccm</tt> from the command line</li>
+
+<li class=SPACED>Run <tt>synce-serial-abort</tt>. Please note that this command is only to
+be used when everything else fails. It also seems like it only works for USB
+connections while the USB cable is connected.</li>
+
+</ol>
+
+
+<!-- <h2>8. Installing and using a hotplug script</h2>
+
+<p>TODO</p> -->
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
