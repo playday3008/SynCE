@@ -1,11 +1,106 @@
 /* $Id$ */
+#define _POSIX_C_SOURCE 2 /* for getopt */
+#define _BSD_SOURCE
 #include "timezone.h"
 #include "generator.h"
 #include <rapi.h>
+#include <synce_log.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+typedef enum 
+{
+  FORMAT_UNKNOWN,
+  FORMAT_BINARY,
+  FORMAT_RAW,
+  FORMAT_VTIMEZONE
+} OutputFormat;
+
+static void show_usage(const char* name)/*{{{*/
+{
+  fprintf(stderr,
+      "Syntax:\n"
+      "\n"
+      "\t%s [-d LEVEL] [-h] [-i INPUT-FILE] [-o OUTPUT-FILE] [-r] [-v]\n"
+      "\n"
+      "\t-d LEVEL           Set debug log level\n"
+      "\t                     0 - No logging (default)\n"
+      "\t                     1 - Errors only\n"
+      "\t                     2 - Errors and warnings\n"
+      "\t                     3 - Everything\n"
+      "\t                   Binary output format\n"
+      "\t-h                 Show this help message\n"
+      "\t-i INPUT-FILE      Read binary time zone information from this file.\n"
+      "\t                   Time zone information is retrieved from PDA if this\n"
+      "\t                   parameter is left out.\n"
+      "\t-o OUTPUT-FILE     Write binary time zone information to this file.\n"
+      "\t                   Standard output is used if this parameter is missing.\n"
+      "\t-r                 Raw format\n"
+      "\t-v                 VTIMEZONE output format (Default)\n"
+      ,
+      name);
+}/*}}}*/
+
+static bool handle_parameters(int argc, char** argv, /*{{{*/
+    char** input, char** output, OutputFormat* format)
+{
+  int c;
+  int log_level = SYNCE_LOG_LEVEL_LOWEST;
+
+  if (!input || !output)
+    return false;
+  
+  *input = NULL;
+  *output = NULL;
+
+  *format = FORMAT_VTIMEZONE;
+
+  while ((c = getopt(argc, argv, "bd:hi:o:rv")) != -1)
+  {
+    switch (c)
+    {
+      case 'b':
+        *format = FORMAT_BINARY;
+        break;
+
+      case 'd':
+        log_level = atoi(optarg);
+        break;
+
+      case 'i': 
+        if (*input)
+          free(*input);
+        *input = strdup(optarg);
+        break;
+
+      case 'o': 
+        if (*output)
+          free(*output);
+        *output = strdup(optarg);
+        break;
+
+      case 'r':
+        *format = FORMAT_RAW;
+        break;
+
+      case 'v':
+        *format = FORMAT_VTIMEZONE;
+        break;
+            
+      case 'h':
+      default:
+        show_usage(argv[0]);
+        return false;
+    }
+  }
+
+  synce_log_set_level(log_level);
+
+  return true;
+}/*}}}*/
 
 const char* month_names[12] =/*{{{*/
 {
@@ -44,7 +139,7 @@ static const char* instance_string(unsigned instance)/*{{{*/
   }
 }/*}}}*/
 
-void dump_vtimezone(TimeZoneInformation* tzi)/*{{{*/
+void dump_vtimezone(FILE* output, TimeZoneInformation* tzi)/*{{{*/
 {
   Generator* generator = generator_new(0, NULL);
   
@@ -53,7 +148,7 @@ void dump_vtimezone(TimeZoneInformation* tzi)/*{{{*/
     char* result = NULL;
     if (generator_get_result(generator, &result))
     {
-      printf("%s", result);
+      fprintf(output, "%s", result);
       free(result);
     }
     else
@@ -65,80 +160,151 @@ void dump_vtimezone(TimeZoneInformation* tzi)/*{{{*/
   generator_destroy(generator);
 }/*}}}*/
 
-int main(int argc, char** argv)
+static bool get_time_zone_information(const char* argv0, TimeZoneInformation* tzi, char* input)/*{{{*/
 {
-  int result = 1;
-  HRESULT hr;
-  TimeZoneInformation tzi;
-  char* ascii_name = NULL;
-  char* ascii_description = NULL;
-  
-  hr = CeRapiInit();
-  if (FAILED(hr))
-    goto exit;
+  bool success = false;
 
-  if (!time_zone_get_information(&tzi))
+  if (input)
   {
-    fprintf(stderr, "%s: Failed to get time zone information\n", argv[0]);
-    goto exit;
-  }
-
-  if (argc >= 2)
-  {
-    const char* filename = argv[1];
-    FILE* file = fopen(filename, "w");
+    FILE* file = fopen(input, "r");
 
     if (file)
     {
-      fwrite(&tzi, sizeof(TimeZoneInformation), 1, file);
+      size_t bytes_read = fread(tzi, 1, sizeof(TimeZoneInformation), file);
+      if (sizeof(TimeZoneInformation) == bytes_read)
+      {
+        success = true;
+      }
+      else
+      {
+        fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
+            argv0, bytes_read, input, strerror(errno));
+      }
+
       fclose(file);
     }
     else
     {
+      fprintf(stderr, "%s: Unable to open time zone information file '%s': %s\n", 
+          argv0, input, strerror(errno));
+    }
+  }
+  else
+  {
+    HRESULT hr;
+
+    hr = CeRapiInit();
+    if (SUCCEEDED(hr))
+    {
+      if (time_zone_get_information(tzi))
+        success = true;
+      else
+        fprintf(stderr, "%s: Failed to get time zone information\n", argv0);
+
+      CeRapiUninit();
+    }
+    else
+    {
+      fprintf(stderr, "%s: Unable to connect to PDA: %s\n", 
+          argv0, synce_strerror(hr));
+    }
+
+  }
+
+  return success;
+}/*}}}*/
+
+int main(int argc, char** argv)
+{
+  int result = 1;
+  TimeZoneInformation tzi;
+  char* input_filename;
+  char* output_filename;
+  OutputFormat format;
+  FILE* output = stdout;
+
+  if (!handle_parameters(argc, argv, &input_filename, &output_filename, &format))
+    goto exit;
+
+  if (!get_time_zone_information(argv[0], &tzi, input_filename))
+    goto exit;
+
+  if (output_filename)
+  {
+    output = fopen(output_filename, "w");
+
+    if (!output)
+    {
       fprintf(stderr, "%s: Failed to open file %s: %s\n", 
-          argv[0], filename, strerror(errno));
+          argv[0], output_filename, strerror(errno));
+      goto exit;
     }
   }
 
-  ascii_name        = wstr_to_ascii(tzi.Name);
-  ascii_description = wstr_to_ascii(tzi.Description);
+  switch (format)
+  {
+    case FORMAT_BINARY:
+      if (stdout == output)
+      {
+        fprintf(stderr, "%s: Refusing to use binary format on standard output.\n", 
+            argv[0]);
+        goto exit;
+      }
+      
+      fwrite(&tzi, sizeof(TimeZoneInformation), 1, output);
+      break;
 
-  printf(
-      "Bias:                  %i\n"
-      "Name:                  %s\n"
-      "StandardMonthOfYear:   %i (%s)\n"
-      "StandardInstance:      %i (%s)\n"
-      "StandardStartHour:     %i\n"
-      "StandardBias:          %i\n"
-      "Description:           %s\n"
-      "DaylightMonthOfYear:   %i (%s)\n"
-      "DaylightInstance:      %i (%s)\n"
-      "DaylightStartHour:     %i\n"
-      "DaylightBias:          %i\n"
-/*      "Unknown #4:            %i\n"*/
-      ,
-      tzi.Bias,
-      ascii_name,
-      tzi.StandardMonthOfYear, month_string(tzi.StandardMonthOfYear),
-      tzi.StandardInstance, instance_string(tzi.StandardInstance),
-      tzi.StandardStartHour,
-      tzi.StandardBias,
-      ascii_description,
-      tzi.DaylightMonthOfYear, month_string(tzi.DaylightMonthOfYear),
-      tzi.DaylightInstance, instance_string(tzi.DaylightInstance),
-      tzi.DaylightStartHour,
-      tzi.DaylightBias/*,
-      tzi.unknown4*/
-        );
+    case FORMAT_RAW:
+      {
+        char* ascii_name        = wstr_to_ascii(tzi.Name);
+        char* ascii_description = wstr_to_ascii(tzi.Description);
 
-  dump_vtimezone(&tzi);
+        fprintf(output,
+            "Bias:                  %i\n"
+            "Name:                  %s\n"
+            "StandardMonthOfYear:   %i (%s)\n"
+            "StandardInstance:      %i (%s)\n"
+            "StandardStartHour:     %i\n"
+            "StandardBias:          %i\n"
+            "Description:           %s\n"
+            "DaylightMonthOfYear:   %i (%s)\n"
+            "DaylightInstance:      %i (%s)\n"
+            "DaylightStartHour:     %i\n"
+            "DaylightBias:          %i\n"
+            ,
+            tzi.Bias,
+            ascii_name,
+            tzi.StandardMonthOfYear, month_string(tzi.StandardMonthOfYear),
+            tzi.StandardInstance, instance_string(tzi.StandardInstance),
+            tzi.StandardStartHour,
+            tzi.StandardBias,
+            ascii_description,
+            tzi.DaylightMonthOfYear, month_string(tzi.DaylightMonthOfYear),
+            tzi.DaylightInstance, instance_string(tzi.DaylightInstance),
+            tzi.DaylightStartHour,
+            tzi.DaylightBias
+              );
+
+            wstr_free_string(ascii_name);
+            wstr_free_string(ascii_description);
+      }
+      break;
+
+    case FORMAT_VTIMEZONE:
+    default:
+      dump_vtimezone(output, &tzi);
+      break;
+  }
 
   result = 0;
 
 exit:
-  CeRapiUninit();
-  wstr_free_string(ascii_name);
-  wstr_free_string(ascii_description);
+  if (output && output != stdout)
+    fclose(output);
+  if (output_filename)
+    free(output_filename);
+  if (input_filename)
+    free(input_filename);
   return result;
 }
 
