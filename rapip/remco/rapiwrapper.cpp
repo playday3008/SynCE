@@ -20,48 +20,8 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
-#ifndef IMAGEVIEWER_H
-#define IMAGEVIEWER_H
 
-#include <qwidget.h>
-#include <qimage.h>
-#include <qpixmap.h>
-#include <kdebug.h>
-#include <qpainter.h>
+#include "rapiwrapper.h"
 
-/**
-@author Volker Christian
-*/
-class ImageViewer : public QWidget
-{
-Q_OBJECT
-public:
-    ImageViewer(QWidget *parent = 0, const char *name = 0, WFlags f = 0);
-    ~ImageViewer();
-    void drawImage(uchar *data, size_t size);
-    void paintEvent(QPaintEvent *e);
-    void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
-    void mouseMoveEvent(QMouseEvent *e);
-    void wheelEvent(QWheelEvent *e);
-    void keyPressEvent(QKeyEvent *e);
-    void keyReleaseEvent(QKeyEvent *e);
-    void enterEvent(QEvent *e);
-    void leaveEvent(QEvent *e);
-
-signals:
-    void mousePressed(ButtonState button, int x, int y);
-    void mouseReleased(ButtonState button, int x, int y);
-    void mouseMoved(ButtonState button, int x, int y);
-    void wheelRolled(int delta);
-    void keyPressed(int ascii, int code);
-    void keyReleased(int ascii, int code);
-
-private:
-    QImage image;
-    QPixmap pm;
-    ButtonState currentButton;
-    QPainter painter;
-};
-
-#endif
+bool Ce::initialized = false;
+int Ce::used = 0;

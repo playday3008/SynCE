@@ -118,17 +118,34 @@ void ImageViewer::mouseMoveEvent(QMouseEvent *e)
 }
 
 
+void ImageViewer::wheelEvent(QWheelEvent *e)
+{
+    e->accept();
+    kdDebug(2120) << "WheelEvent" << endl;
+
+    emit wheelRolled(e->delta());
+}
+
+
 void ImageViewer::keyPressEvent(QKeyEvent *e)
 {
     e->accept();
-    kdDebug(2120) << "Key Press: ASCII = " << e->ascii() << endl;
+    kdDebug(2120) << "Key Press: ASCII = " << e->ascii() <<
+                     ", State = " << e->state() <<
+                     ", Key = " << e->key() << endl;
+
+    emit keyPressed(e->ascii(), e->key());
 }
 
 
 void ImageViewer::keyReleaseEvent(QKeyEvent *e)
 {
     e->accept();
-    kdDebug(2120) << "Key Release: ASCII = " << e->ascii() << endl;
+    kdDebug(2120) << "Key Release: ASCII = " << e->ascii() <<
+                     ", State = " << e->state() <<
+                     ", Key = " << e->key() << endl;
+
+    emit keyReleased(e->ascii(), e->key());
 }
 
 

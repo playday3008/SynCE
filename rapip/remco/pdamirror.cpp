@@ -106,24 +106,20 @@ int main(int argc, char *argv[])
         kdDebug(2120) << "You have to specify an hostname" << endl;
     }
 
-    const char *pdaAddressP = NULL;
-
-    if (!pdaAddress.isEmpty()) {
-        pdaAddressP = pdaAddress.ascii();
-    }
-
     KApplication a;
 
     QString pdaName = "Volker";
 
     PdaScreenImpl *pdaScreen = new PdaScreenImpl(pdaName, &aboutData, new KAboutApplication(&aboutData));
 
-    if (!pdaScreen->connectPda(pdaAddressP)) {
-        kdDebug(2120) << "Could not contact PDA " << pdaAddressP << endl;
+    if (!pdaScreen->connectPda(pdaAddress, synceName)) {
+        kdDebug(2120) << "Could not contact PDA " << pdaAddress << endl;
         return -1;
-    } else
+    }
+
     a.setMainWidget(pdaScreen);
-//    remCo->connect (&a, SIGNAL (aboutToQuit()), remCo, SLOT (shutDown()));
+
     pdaScreen->show();
+
     return a.exec();
 }

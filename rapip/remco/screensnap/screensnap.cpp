@@ -3,6 +3,9 @@
 #define MOUSE_PRESSED	1
 #define MOUSE_RELEASED  2
 #define MOUSE_MOVED		3
+#define MOUSE_WHEEL		4
+#define KEY_PRESSED		5
+#define KEY_RELEASED	6
 
 #define LEFT_BUTTON		1
 #define RIGHT_BUTTON	2
@@ -48,11 +51,9 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 	WSADATA wsaData;	
 	SOCKET s;
 	int lo, hi;
+	int min = 1, maj = 1;
 
 	sigEvent = CreateEvent (NULL, FALSE, FALSE, TEXT("WriteEvent"));
-
-
-	int min = 1, maj = 1;
 
 	wVersion = MAKEWORD(maj, min);
 	
@@ -119,6 +120,9 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 		DWORD threadId;
 		HANDLE threadHandle;
 
+		BYTE bVk;
+		BYTE bScan;
+
 		FD_ZERO(&readFd);
 		FD_ZERO(&writeFd);
 		FD_ZERO(&exceptFd);
@@ -136,6 +140,8 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 					MB_OK | MB_ICONWARNING);
 		}
 
+		static int l = 0;
+		
 		do {
 			tv.tv_sec = 0;
 			tv.tv_usec = 100000;
@@ -162,6 +168,7 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 				dx = x;
 				dy = y;
 				dwFlags = MOUSEEVENTF_ABSOLUTE;
+				dwData = 0;
 				switch (cmd) {
 				case MOUSE_PRESSED:
 					switch(button) {
@@ -175,6 +182,7 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 						dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
 						break;
 					}
+					mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
 					break;
 				case MOUSE_RELEASED:
 					switch(button) {
@@ -188,6 +196,7 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 						dwFlags |= MOUSEEVENTF_MIDDLEUP;
 						break;
 					}
+					mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
 					break;
 				case MOUSE_MOVED:
 					dwFlags |= MOUSEEVENTF_MOVE;
@@ -199,9 +208,29 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 					case MID_BUTTON:
 						break;
 					}
+					mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
+					break;
+				case MOUSE_WHEEL:
+					dwFlags = MOUSEEVENTF_WHEEL;
+					dwData = dx;
+					mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
+					break;
+				case KEY_PRESSED:
+					bVk = (BYTE) button;
+					bScan = 0;
+					dwFlags = 0;
+					dwExtraInfo = 0;
+					keybd_event(bVk, bScan, dwFlags, dwExtraInfo);
+					break;
+				case KEY_RELEASED:
+					bVk = (BYTE) button;
+					bScan = 0;
+					dwFlags = KEYEVENTF_KEYUP;
+					dwExtraInfo = 0;
+					keybd_event(bVk, bScan, dwFlags, dwExtraInfo);
+					l++;
 					break;
 				}
-				mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
 				if (PulseEvent(sigEvent) == 0){
 					MessageBox(NULL, L"Could not Pulse Event", L"Snap", 
 						MB_OK | MB_ICONERROR);

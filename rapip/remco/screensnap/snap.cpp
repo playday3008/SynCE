@@ -1,5 +1,6 @@
 #include "snap.h"
 #include <math.h>
+#include "huffman.h"
 
 
 Snap::Snap(WORD cClrBits)
@@ -32,11 +33,11 @@ Snap::SnapImage Snap::createSnapImage()
 	newImage.pbmi.bmiHeader.biWidth = lprc.right;
 	newImage.pbmi.bmiHeader.biHeight = lprc.bottom;
     newImage.pbmi.bmiHeader.biPlanes = 1;
-    newImage.pbmi.bmiHeader.biBitCount = cClrBits;
+	newImage.pbmi.bmiHeader.biBitCount = cClrBits;
     newImage.pbmi.bmiHeader.biCompression = BI_RGB;
 	newImage.pbmi.bmiHeader.biSizeImage = ((newImage.pbmi.bmiHeader.biWidth * cClrBits + 31) 
 				& ~31) / 8 * newImage.pbmi.bmiHeader.biHeight;
-    newImage.pbmi.bmiHeader.biXPelsPerMeter = 3780;
+	newImage.pbmi.bmiHeader.biXPelsPerMeter = 3780;
     newImage.pbmi.bmiHeader.biYPelsPerMeter = 3780;
     newImage.pbmi.bmiHeader.biClrUsed = 0;
     newImage.pbmi.bmiHeader.biClrImportant = 0;
@@ -50,7 +51,10 @@ Snap::SnapImage Snap::createSnapImage()
 	newImage.bmp = CreateDIBSection(hDC, &newImage.pbmi, DIB_RGB_COLORS, 
 			(void **) &newImage.usPixels, NULL, 0);
 
-	
+	if (newImage.bmp == NULL) {
+		MessageBox(NULL, L"Could not create bitmap", L"Snap", MB_OK);
+	}
+
 	newImage.targetDC = CreateCompatibleDC(NULL);
 
 	newImage.oo = SelectObject(newImage.targetDC, newImage.bmp);
@@ -65,9 +69,7 @@ Snap::SnapImage Snap::createSnapImage()
 
 void Snap::snap(Snap::SnapImage image)
 {
-//	HGDIOBJ oo = SelectObject(image.targetDC, image.bmp);
 	BitBlt(image.targetDC, 0, 0, lprc.right, lprc.bottom, screen, 0, 0, /*SRCINVERT*/ SRCCOPY);
-//	SelectObject(image.targetDC, oo);
 }
 
 
@@ -173,19 +175,19 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 	size_t count = 0;
 	size_t samcount = 0;
 
-	do {
+	while (count < size) {
 		if ((*act1 == val1) && (*act2 == val2) && (*act3 == val3)) {
 			samcount++;
-			*tmp_target++ = *act1;
-			*tmp_target++ = *act2;
-			*tmp_target++ = *act3;
+			*tmp_target++ = val1;
+			*tmp_target++ = val2;
+			*tmp_target++ = val3;
 			act1 += 3;
 			act2 += 3;
 			act3 += 3;
 			count += 3;
 			if (samcount == 2) {
 				unsigned char samruncount = 0;
-				do {
+				while (count < size && samruncount < 255) {
 					if ((*act1 == val1) && (*act2 == val2) && (*act3 == val3)) {
 						samruncount++;
 						act1 += 3;
@@ -198,10 +200,8 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 						val3 = *act3;
 						break;
 					}
-				} while (count < size && samruncount < 255);
-//				if (count < size) {
-					*tmp_target++ = samruncount;
-//				}
+				}
+				*tmp_target++ = samruncount;
 				samcount = 0;
 			}
 		} else {
@@ -214,8 +214,7 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 			act3 += 3;
 			count += 3;
 		}
-	} while (count < size);
-
+	}
 
 	return tmp_target - target;
 }
@@ -235,6 +234,8 @@ bool Snap::writeSocketRLE(SOCKET socket, Snap::SnapImage image, bool *written)
 	u_long headerSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 	u_long headerSizeN = htonl(headerSize);
 	size_t rleSize = rle_encode(target, image.usPixels, image.pbmi.bmiHeader.biSizeImage);
+	unsigned char *buf;
+	size_t buflen;
 
 	if (rleSize != image.blackSize || target[0] != 0) {
 
@@ -242,6 +243,9 @@ bool Snap::writeSocketRLE(SOCKET socket, Snap::SnapImage image, bool *written)
 		u_long bmpSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) +
 				image.pbmi.bmiHeader.biSizeImage;
 		u_long bmpSizeN = htonl(bmpSize);
+
+		huffman_encode_memory(target, rleSize, &buf, &buflen);
+		rleSizeN = htonl((u_long) buflen);
 	
 		if (send(socket, (const char *) &headerSizeN, sizeof(u_long), 0) == SOCKET_ERROR) {
 			return false;
@@ -265,9 +269,17 @@ bool Snap::writeSocketRLE(SOCKET socket, Snap::SnapImage image, bool *written)
 			return false;
 		}
 
+/*
 		if (send(socket, (const char *) target, rleSize, 0) == SOCKET_ERROR) {
 			return false;
 		}
+*/
+		if (send(socket, (const char *) buf, buflen, 0) == SOCKET_ERROR) {
+			free(buf);
+			return false;
+		}
+
+		free(buf);
 		*written = true;
 	} else {
 		*written = false;
