@@ -1,6 +1,5 @@
-*.lo
-.deps
+.cvsignore
 .libs
 Makefile
 Makefile.in
-librapi.la
+libconfig.la
