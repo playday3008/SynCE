@@ -108,10 +108,12 @@ bool rra_syncmgr_handle_all_pending_events(RRA_SyncMgr* self);
 
 /** 
   Should work like the read(2) system call.
-  No rra_syncmgr_* functions should be called from this callback! 
+  No rra_syncmgr_* functions should be called from this callback!
+
+  The object ID is object_id_array[index]
  */
 typedef ssize_t (*RRA_SyncMgrReader)
-  (uint32_t type_id, uint32_t object_id, uint8_t* data, size_t data_size, void* cookie);
+  (uint32_t type_id, unsigned index, uint8_t* data, size_t data_size, void* cookie);
 
 /** 
   Should work like the write(2) system call, but must take care of all data

@@ -1034,13 +1034,15 @@ exit:
 }/*}}}*/
 
 static ssize_t rra_syncmgr_put_single_object_reader(/*{{{*/
-    uint32_t type_id, uint32_t object_id, uint8_t* data, size_t data_size, void* cookie)
+    uint32_t type_id, unsigned index, uint8_t* data, size_t data_size, void* cookie)
 {
-  ObjectData* object = (ObjectData*)cookie;
-
-  if (object_id == object->object_id)
+  if (index == 0)
   {
+    ObjectData* object = (ObjectData*)cookie;
     ssize_t result = MIN(data_size, object->data_size);
+
+    /* TODO: handle that object->data_size is > data_size and this function is
+       called more than once for the same object!  */
 
     if (result)
     {
@@ -1052,7 +1054,7 @@ static ssize_t rra_syncmgr_put_single_object_reader(/*{{{*/
   }
   else
   {
-    synce_error("Unexpected object ID");
+    synce_error("Unexpected index: %i", index);
     return -1;
   }
 }/*}}}*/
