@@ -20,8 +20,17 @@ static PyObject *PyRapiError;
 
 %}
 
+/*
+ * Include all of the constant definitions.
+ * Function and type definitions are masked by the SWIG 
+ * preprocessor directive.
+ */
+
+%include "rapi.h" 
 
 /* 
+   Declare new exception types for pyrapi errors.
+
    Call the rapi init function as part of the module load. This might not be 
    the correct thing to do but it will work for now.
 */
@@ -35,50 +44,7 @@ static PyObject *PyRapiError;
 
 %include "typemaps.i"
 
-/*
-  It would be nice if these constant could be pulled from a header file. 
-  There is a bug in my version of SWIG which stops it from recognising
-  hex values in #defines, so I have had to replicate the constants here.
-*/
 
-/* dwShareMode */
-%constant GENERIC_WRITE   =  0x40000000;
-%constant FILE_SHARE_READ =  0x00000001;
-%constant GENERIC_READ    =  0x80000000;
-
-/* dwCreationDisposition */
-%constant CREATE_NEW        =  1;
-%constant CREATE_ALWAYS     =  2;
-%constant OPEN_EXISTING     =  3;
-%constant OPEN_ALWAYS       =  4;
-%constant TRUNCATE_EXISTING =  5;
-%constant OPEN_FOR_LOADER   =  6;
-
-/* dwFlagsAndAttributes */
-%constant FILE_ATTRIBUTE_READONLY = 0x00000001;
-%constant FILE_ATTRIBUTE_HIDDEN   = 0x00000002;
-%constant FILE_ATTRIBUTE_SYSTEM   = 0x00000004;
-%constant FILE_ATTRIBUTE_1        = 0x00000008;
-
-%constant FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
-%constant FILE_ATTRIBUTE_ARCHIVE   = 0x00000020;
-%constant FILE_ATTRIBUTE_INROM     = 0x00000040;
-%constant FILE_ATTRIBUTE_NORMAL    = 0x00000080;
-
-%constant FILE_ATTRIBUTE_TEMPORARY  = 0x00000100;
-%constant FILE_ATTRIBUTE_2          = 0x00000200;
-%constant FILE_ATTRIBUTE_3          = 0x00000400;
-%constant FILE_ATTRIBUTE_COMPRESSED = 0x00000800;
-
-%constant FILE_ATTRIBUTE_ROMSTATICREF = 0x00001000;
-%constant FILE_ATTRIBUTE_ROMMODULE    = 0x00002000;
-%constant FILE_ATTRIBUTE_4            = 0x00004000;
-%constant FILE_ATTRIBUTE_5            = 0x00008000;
-
-%constant FILE_ATTRIBUTE_HAS_CHILDREN = 0x00010000;
-%constant FILE_ATTRIBUTE_SHORTCUT     = 0x00020000;
-%constant FILE_ATTRIBUTE_6            = 0x00040000;
-%constant FILE_ATTRIBUTE_7            = 0x00080000;
 
 
 /* 
@@ -163,7 +129,7 @@ typedef struct _FILETIME
   I don't think that lpSecurityAttributes are actually used at all. But I might be wrong.
 */
 
-%typemap(ignore) LPSECURITY_ATTRIBUTES lpSecurityAttributes ( LPSECURITY_ATTRIBUTES temp) {
+%typemap(in,numinputs=0) LPSECURITY_ATTRIBUTES lpSecurityAttributes ( LPSECURITY_ATTRIBUTES temp) {
   $1 = NULL;
 }
 
@@ -202,7 +168,7 @@ typedef struct _CE_FIND_DATA {
   DWORD nFileSizeLow; 
   DWORD dwOID; 
   //WCHAR cFileName[MAX_PATH]; 
-  %addmethods {
+  %extend {
     const unsigned int ftCreationTime;
     const unsigned int ftLastAccessTime;
     const unsigned int ftLastWriteTime;
@@ -251,7 +217,7 @@ WCHARGETSET(CE_FIND_DATA,cFileName)
   }	
 }
 
-%typemap(ignore) LPLPCE_FIND_DATA ppFindDataArray (LPCE_FIND_DATA temp) {
+%typemap(in,numinputs=0) LPLPCE_FIND_DATA ppFindDataArray (LPCE_FIND_DATA temp) {
   $1 = &temp;
 }
 
@@ -371,16 +337,6 @@ BOOL CeFindClose(
 DWORD CeGetFileAttributes(
 		LPCWSTR lpFileName);
 
-%constant CSIDL_PROGRAMS  =         0x0002;
-%constant CSIDL_PERSONAL  =         0x0005;
-%constant CSIDL_FAVORITES_GRYPHON = 0x0006;
-%constant CSIDL_STARTUP           = 0x0007;
-%constant CSIDL_RECENT            = 0x0008;
-%constant CSIDL_STARTMENU         = 0x000b;
-%constant CSIDL_DESKTOPDIRECTORY  = 0x0010;
-%constant CSIDL_FONTS             = 0x0014;
-%constant CSIDL_FAVORITES         = 0x0016;
-
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
 		DWORD nBufferLength, 
@@ -414,15 +370,6 @@ typedef struct _CEBLOB {
 	LPBYTE lpb;
 } CEBLOB;
 
-#define CEVT_I2         2
-#define CEVT_I4         3
-#define CEVT_R8         5
-#define CEVT_BOOL       11
-#define CEVT_UI2        18
-#define CEVT_UI4        19
-#define CEVT_LPWSTR     31
-#define CEVT_FILETIME   64
-#define CEVT_BLOB       65
 
 typedef union _CEVALUNION {
 	short iVal; 
@@ -431,7 +378,7 @@ typedef union _CEVALUNION {
 	ULONG ulVal; 
   //FILETIME filetime;
   //LPWSTR lpwstr; 
-        %addmethods {
+        %extend {
 	  const unsigned int filetime;
 	  const char * lpwstr; 
 	}
@@ -449,7 +396,7 @@ typedef struct _CEPROPVAL {
 	WORD wLenData;
 	WORD wFlags;
 	CEVALUNION val;
-  %addmethods {
+  %extend {
 	  const unsigned int type;
   }
 } CEPROPVAL;
@@ -478,7 +425,7 @@ typedef struct _CEDBASEINFO {
 	WORD wNumSortOrder;
 	DWORD dwSize;
   //FILETIME ftLastModified;
-        %addmethods {
+        %extend {
 	  const unsigned int ftLastModified;
 	  const char * szDbaseName; 
 	}
@@ -496,7 +443,7 @@ typedef struct _CEDB_FIND_DATA {
 
 CEOID CeCreateDatabase(
 		LPWSTR lpszName, 
-		DWORD dwDbaseType = 0, 
+		DWORD dwDbaseType, 
 		WORD wNumSortOrder, 
 		SORTORDERSPEC *rgSortSpecs);
 
@@ -537,11 +484,11 @@ BOOL CeDeleteDatabase(
   }	
 }
 
-%typemap(ignore) LPWORD cFindData (WORD temp) {
+%typemap(in,numinputs=0) LPWORD cFindData (WORD temp) {
   $1 = &temp;
 }
 
-%typemap(ignore) LPLPCEDB_FIND_DATA ppFindData (LPCEDB_FIND_DATA temp) {
+%typemap(in,numinputs=0) LPLPCEDB_FIND_DATA ppFindData (LPCEDB_FIND_DATA temp) {
   $1 = &temp;
 }
 
@@ -570,7 +517,7 @@ CEOID CeFindNextDatabase(
 
 }
 
-%typemap(ignore) HWND hwndNotify (HWND temp) {
+%typemap(in,numinputs=0) HWND hwndNotify (HWND temp) {
   $1 = temp;
 }
 
@@ -581,7 +528,7 @@ HANDLE CeOpenDatabase(
 		DWORD dwFlags = CEDB_AUTOINCREMENT, 
 		HWND hwndNotify); 
 
-%typemap(ignore) (LPWORD lpcPropID, 
+%typemap(in,numinputs=0) (LPWORD lpcPropID, 
 		  CEPROPID *rgPropID, 
 		  LPBYTE *lplpBuffer, 
 		  LPDWORD lpcbBuffer) (WORD temp1, 
