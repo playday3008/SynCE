@@ -1,7 +1,7 @@
 .\" $Id$
 .TH "SynCE" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
 .SH NAME
-SynCE \- A project for connecting to Pocket PC devices.
+SynCE \- A project for connecting to devices running Windows CE or Pocket PC.
 
 .SH "DESCRIPTION"
 The following steps are required to get started with SynCE:
@@ -12,16 +12,25 @@ The following steps are required to get started with SynCE:
 Use synce-serial-config(8) to setup a connection using serial cable or infrared.
 This configuration must be done with root privileges.
 
+.PP
+This only needs to be done the first time you run SynCE, or when you want to
+connect through a different port.
+
 .SS
 (2) Start the connection daemon (as user)
 .PP
-The dccmd(1) program handles the connection with your Pocket PC device. This
-daemon is run by the user.
+The dccmd(1) program handles the SynCE connection. This daemon is run by the
+user.
 
 .SS
 (3) Start the connection (as root)
 .PP
-Use synce-serial-start(8) to wait for a connection from you Pocket PC device.
+Use synce-serial-start(8) to make your device initiate a connection to dccmd.
+
+.SS
+(4) Run tools that access the device (as user)
+.PP
+See for example pls(1) and pcp(1).
 
 .PP
 See http://synce.sourceforge.net/ for more information about the SynCE project.
