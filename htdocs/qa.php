@@ -43,6 +43,31 @@ the tools and dccm as different users. Please make sure that:</p>
 
 <p>See <a href="start.php">connect</a> for more information.</p>
 
+<h2>PPP error: "LCP terminated by peer"</h2>
+
+<p><b>Q:</b> My PPP session was terminated with the message with "LCP
+terminated by peer" after a very short connection time. I see something like
+this in my logs:</p>
+
+<pre>Mar 26 08:51:36 localhost pppd[21318]: pppd 2.4.2 started by root, uid 0
+Mar 26 08:51:38 localhost pppd[21318]: Serial connection established.
+Mar 26 08:51:38 localhost pppd[21318]: Using interface ppp0
+Mar 26 08:51:38 localhost pppd[21318]: Connect: ppp0 <--> /dev/ttyUSB0
+Mar 26 08:51:38 localhost kernel: PPP BSD Compression module registered
+Mar 26 08:51:38 localhost kernel: PPP Deflate Compression module registered
+Mar 26 08:51:38 localhost pppd[21318]: local  IP address 192.168.131.102
+Mar 26 08:51:38 localhost pppd[21318]: remote IP address 192.168.131.201
+Mar 26 08:51:42 localhost pppd[21318]: LCP terminated by peer
+Mar 26 08:51:45 localhost pppd[21318]: Connection terminated.
+Mar 26 08:51:45 localhost pppd[21318]: Connect time 0.1 minutes.
+Mar 26 08:51:45 localhost pppd[21318]: Sent 579 bytes, received 857 bytes.
+Mar 26 08:51:46 localhost pppd[21318]: Connect time 0.1 minutes.
+Mar 26 08:51:46 localhost pppd[21318]: Sent 579 bytes, received 857 bytes.
+Mar 26 08:51:46 localhost pppd[21318]: Exit.</pre>
+
+<p><b>A:</b> You forgot to provide the device password to <tt>dccm</tt>. See <a
+href="start.php">Connect</a> for more information.</p>
+
 <h2>PPP error: "Couldn't set tty to PPP discipline"</h2>
 
 <p><b>Q:</b> I setup everything and connected my PDA but when I run
