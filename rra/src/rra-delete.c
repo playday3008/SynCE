@@ -16,6 +16,7 @@ int main(int argc, char** argv)
 	uint32_t type_id = 0;
 	uint32_t object_id = 0;
 	RRA_SyncMgrType* type = NULL;
+  int i;
 	
 	/* synce_log_set_level(0); */
 
@@ -27,7 +28,6 @@ int main(int argc, char** argv)
 	}
 
 	type_id_str = argv[1];
-	object_id   = strtol(argv[2], NULL, 16);
 	
 	hr = CeRapiInit();
 	if (FAILED(hr))
@@ -47,11 +47,16 @@ int main(int argc, char** argv)
   else
     type_id = strtol(type_id_str, NULL, 16);
 
-	if (!rra_syncmgr_delete_object(syncmgr, type_id, object_id))
-	{
-		fprintf(stderr, "Failed to delete object\n");
-		goto exit;
-	}
+  for (i = 2; argv[i] != NULL; i++) 
+  {
+    object_id = strtol(argv[i], NULL, 16);
+
+    if (!rra_syncmgr_delete_object(syncmgr, type_id, object_id))
+    {
+      fprintf(stderr, "Failed to delete object %08x\n", object_id);
+      goto exit;
+    }
+  }
 
 	result = 0;
 	
