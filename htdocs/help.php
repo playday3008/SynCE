@@ -29,14 +29,33 @@ that might be useful to include when you ask for help:</p>
 
 <ul>
 
+
+<li class=SPACED><p><b>General</b></p>
+
+<ul>
 <li>Device name and Windows CE version</li>
 <li>Connection method (serial cable, USB cable, IrDA, Bluetooth)</li>
 <li>Operating system name, distribution and kernel version</li>
-<li>SynCE, MultiSync and Evolution versions</li>
+<li>SynCE version</li>
 <li>If you compiled SynCE yourself or used pre-compiled packages</li>
+</ul></li>
+
+
+<li class=SPACED><p><b>For connection problems</b></p>
+
+<ul>
 <li>Relevant log extracts from kernel driver and pppd</li>
 <li>Your <tt>/etc/ppp/peers/synce-device</tt> file (created by synce-serial-config)</li>
-<li>Output from <tt>dccm -f -d 3</tt> from when your PDA connects</li>
+<li>Kill dccm, and restart it like this: <tt>dccm -f -d 3</tt>. Now connect
+your PDA and provide the output from dccm.</li>
+
+</ul></li>
+
+<li class=SPACED><p><b>For synchronization problems</b></p>
+
+<ul>
+<li>MultiSync and Evolution versions</li>
+<li>Messages in the terminal window when running MultiSync</li>
 
 </ul></li>
 
