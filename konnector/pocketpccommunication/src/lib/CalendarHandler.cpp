@@ -27,6 +27,7 @@
 #include <libkcal/event.h>
 #include <libkcal/calendarnull.h>
 #include <libkcal/calendarlocal.h>
+#include <libkdepim/kpimprefs.h>
 
 namespace pocketPCCommunication {
 
@@ -875,6 +876,10 @@ QString CalendarHandler::makeVIncidence(KCal::Incidence* p_incidence)
 {
     KCal::ICalFormat calFormat;
 
+    QString pref = KPimPrefs::timezone();
+    
+    calFormat.setTimeZone (pref, false);
+    
     QString vIncidence;
     
     vIncidence = calFormat.toICalString(p_incidence);

@@ -35,6 +35,8 @@
 
 #include <libkcal/icalformat.h>
 
+#include <libkdepim/kpimprefs.h>
+
 //#define __USE_ABOVE_KDEPIM_3_3_0__
 //#ifdef __USE_ABOVE_KDEPIM_3_3_0__
 #include <kitchensync/addressbooksyncee.h>
@@ -100,6 +102,11 @@ PocketPCKonnector::PocketPCKonnector(const KConfig* p_config)
     m_addressBook->addResource (new pocketPCCommunication::ResourceNull());
     
     m_calendar = new KCal::CalendarLocal();
+    QString pref = KPimPrefs::timezone();
+    //m_calendar->setTimeZoneId (pref);
+    kdDebug(2120) << "PocketPCKonnector: timeZone: " << pref << endl;
+    //m_calendar->setLocalTime();
+    
     
 //#ifdef __USE_ABOVE_KDEPIM_3_3_0__
     kdDebug(2120) << "PocketPCKonnector::storagePath: " << storagePath() << endl;
@@ -910,7 +917,9 @@ void PocketPCKonnector::saveMetaData (const QString& p_dir)
             KSync::CalendarSyncEntry* calEntry = calSyncee->firstEntry();
             
             calStream << vCalBegin;
-            
+            //conv.setTimeZone ("", false);
+            QString pref = KPimPrefs::timezone();
+            conv.setTimeZone (pref, false);
             while (calEntry)
             {                
                 kdDebug(2120) << "      saving cal id: " << calEntry->incidence()->uid() << endl;
