@@ -4,6 +4,8 @@
 #include "appointment_ids.h"
 #include "generator.h"
 #include "parser.h"
+#include "strbuf.h"
+#include "strv.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
@@ -73,6 +75,47 @@ static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cooki
   }
   return true;
 }/*}}}*/
+
+static bool on_propval_category(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  if (propval->val.lpwstr[0])
+  {
+    int i;
+    char* str = NULL;
+    StrBuf* strbuf = strbuf_new(NULL);
+    char** strv = NULL;
+
+    if (generator_utf8(g))
+      str = wstr_to_utf8(propval->val.lpwstr);
+    else
+      str = wstr_to_ascii(propval->val.lpwstr);
+
+    strv = strsplit(str, ',');
+
+    for (i = 0; strv[i]; i++)
+    {
+      char* p = strv[i];
+
+      while (*p == ' ')
+        p++;
+     
+      if (i > 0)
+      {
+        /*strbuf_append_c(strbuf, '\\');*/
+        strbuf_append_c(strbuf, ',');
+      }
+      
+      strbuf_append(strbuf, p);
+    }
+
+    generator_add_simple(g, "CATEGORIES", strbuf->buffer);
+    strbuf_destroy(strbuf, true);
+    strv_free(strv);
+    wstr_free_string(str);
+  }
+  
+  return true;
+}
 
 static bool on_propval_duration(Generator* g, CEPROPVAL* propval, void* cookie)
 {
@@ -160,6 +203,7 @@ bool rra_appointment_to_vevent(/*{{{*/
     goto exit;
 
   generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status);
+  generator_add_property(generator, ID_CATEGORIES,  on_propval_category);
   generator_add_property(generator, ID_DURATION,    on_propval_duration);
   generator_add_property(generator, ID_APPOINTMENT_TYPE, on_propval_type);
   generator_add_property(generator, ID_LOCATION,    on_propval_location);
@@ -446,6 +490,11 @@ exit:
   return true;
 }/*}}}*/
 
+static bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  return parser_add_string_from_line(p, ID_CATEGORIES, line);
+}/*}}}*/
+
 static bool on_mdir_line_dtend(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
@@ -542,6 +591,8 @@ bool rra_appointment_from_vevent(/*{{{*/
   event = parser_component_new("vEvent");
   parser_component_add_parser_component(event, alarm);
 
+  parser_component_add_parser_property(event, 
+      parser_property_new("Categories", on_mdir_line_categories));
   parser_component_add_parser_property(event, 
       parser_property_new("Class", on_mdir_line_class));
   parser_component_add_parser_property(event, 

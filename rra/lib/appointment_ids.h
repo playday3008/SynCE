@@ -16,14 +16,14 @@
 #define BUSY_STATUS_BUSY           2
 #define BUSY_STATUS_OUT_OF_OFFICE  3
 
-#define ID_CATEGORIES      0x0016
+#define ID_CATEGORIES_X      0x0016
 #define ID_NOTES           0x0017
 #define ID_SUBJECT         0x0037
 
 #define ID_UNKNOWN_0042    0x0042
 #define ID_UNIQUE          0x0067
 
-#define ID_CATEGORY        0x4005
+#define ID_CATEGORIES      0x4005
 #define ID_RECURRENCE_PATTERN 0x4015
 #define ID_UNKNOWN_4171    0x4171
 

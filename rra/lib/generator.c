@@ -202,17 +202,10 @@ static void generator_append_escaped(Generator* self, const char* str)/*{{{*/
 				break;
 	
 			case '\\':
-				strbuf_append_c(self->buffer, '\\');
-				strbuf_append_c(self->buffer, *p);
-				break;
-				
-#if 0
 			case ';':
-			case ',':
-				if (flags & RRA_CONTACT_VERSION_3_0)
-					strbuf_append_c(self->buffer, '\\');
-				/* fall through */
-#endif
+      case ',':
+        strbuf_append_c(self->buffer, '\\');
+        /* fall through */
 
 			default:
 				strbuf_append_c(self->buffer, *p);
