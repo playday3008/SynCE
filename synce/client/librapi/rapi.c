@@ -38,6 +38,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "little_endian.h"
+
 #include "chunk.h"
 #include "rapi.h"
 
@@ -209,6 +211,10 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 
 /*
  * Push parameter information to the buffer
+ *
+ * DWORD parameter values must be 4 byte little-endian
+ * WORD parameter values must be 2 byte little-endian
+ * WCHAR parameter values must be 2-byte UNICODE (is it endian stuff on these too?) 
  */
 static void pushParameter(long size, void * parameterData, size_t parameterSize, int pushValue)
 {
@@ -247,6 +253,20 @@ static void pushParameter(long size, void * parameterData, size_t parameterSize,
 		pushLong( buffer, size, 0 ); /* no parameter info */
 	}
 }
+
+/**
+ * Convert parameter to little endian before call to pushParameter
+ */
+#define pushParameterInt16(size, parameterData, pushValue) \
+if (pushValue && parameterData) \
+	{ *(u_int16_t*)parameterData = htole16(*(u_int16_t*)parameterData); } \
+pushParameter(size, parameterData, sizeof(u_int16_t), pushValue);
+
+#define pushParameterInt32(size, parameterData, pushValue) \
+if (pushValue && parameterData) \
+	{ *(u_int32_t*)parameterData = htole32(*(u_int32_t*)parameterData); } \
+pushParameter(size, parameterData, sizeof(u_int32_t), pushValue)
+
 
 /**
  * Pop parameter info from the buffer
@@ -302,11 +322,25 @@ static void popParameter(long* size, void * parameterData, size_t parameterMaxSi
 	}
 }
 
+/**
+ * Convert parameter data from little endian after call to popParameter
+ */
+#define popParameterInt16(size, parameterData) \
+popParameter(size, parameterData, sizeof(u_int16_t)); \
+if (parameterData) \
+	{ *(u_int16_t*)parameterData = letoh16(*(u_int16_t*)parameterData); }
+
+#define popParameterInt32(size, parameterData) \
+popParameter(size, parameterData, sizeof(u_int32_t)); \
+if (parameterData) \
+	{ *(u_int32_t*)parameterData = letoh32(*(u_int32_t*)parameterData); }
+
+
+
 STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime )
 {
 	long size = BUFSIZE;
 	long lng;
-	int i=0;
 	LONG result = ERROR_SUCCESS;
 
 #if 0
@@ -319,15 +353,20 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	pushLong( buffer, size, hKey ); 	/* hKey */
 
 	pushParameter(size, lpClass, lpcbClass ? *lpcbClass: 0, 0);
-	pushParameter(size, lpcbClass, sizeof(DWORD), 1);
-	pushParameter(size, lpReserved, sizeof(DWORD), 0);
-	pushParameter(size, lpcSubKeys, sizeof(DWORD), 0);
-	pushParameter(size, lpcbMaxSubKeyLen, sizeof(DWORD), 0);
-	pushParameter(size, lpcbMaxClassLen, sizeof(DWORD), 0);
-	pushParameter(size, lpcValues, sizeof(DWORD), 0);
-	pushParameter(size, lpcbMaxValueNameLen, sizeof(DWORD), 0);
-	pushParameter(size, lpcbMaxValueLen, sizeof(DWORD), 0);
-	pushParameter(size, lpcbSecurityDescriptor, sizeof(DWORD), 1);
+	pushParameterInt32(size, lpcbClass, 1);
+	pushParameterInt32(size, lpReserved, 0);
+	pushParameterInt32(size, lpcSubKeys, 0);
+	pushParameterInt32(size, lpcbMaxSubKeyLen, 0);
+	pushParameterInt32(size, lpcbMaxClassLen, 0);
+	pushParameterInt32(size, lpcValues, 0);
+	pushParameterInt32(size, lpcbMaxValueNameLen, 0);
+	pushParameterInt32(size, lpcbMaxValueLen, 0);
+	pushParameterInt32(size, lpcbSecurityDescriptor, 1);
+	if (lpftLastWriteTime)
+	{
+		lpftLastWriteTime->dwLowDateTime = (DWORD)htole32(lpftLastWriteTime->dwLowDateTime);
+		lpftLastWriteTime->dwHighDateTime = (DWORD)htole32(lpftLastWriteTime->dwHighDateTime);
+	}
 	pushParameter(size, lpftLastWriteTime, sizeof(FILETIME), 0);
 
 /*	DBG_printbuf( buffer );*/
@@ -341,16 +380,21 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	if (ERROR_SUCCESS == result)
 	{
 		popParameter(&size, lpClass, lpcbClass ? *lpcbClass: 0);
-		popParameter(&size, lpcbClass, sizeof(DWORD));
-		popParameter(&size, lpReserved, sizeof(DWORD));
-		popParameter(&size, lpcSubKeys, sizeof(DWORD));
-		popParameter(&size, lpcbMaxSubKeyLen, sizeof(DWORD));
-		popParameter(&size, lpcbMaxClassLen, sizeof(DWORD));
-		popParameter(&size, lpcValues, sizeof(DWORD));
-		popParameter(&size, lpcbMaxValueNameLen, sizeof(DWORD));
-		popParameter(&size, lpcbMaxValueLen, sizeof(DWORD));
-		popParameter(&size, lpcbSecurityDescriptor, sizeof(DWORD));
+		popParameterInt32(&size, lpcbClass);
+		popParameterInt32(&size, lpReserved);
+		popParameterInt32(&size, lpcSubKeys);
+		popParameterInt32(&size, lpcbMaxSubKeyLen);
+		popParameterInt32(&size, lpcbMaxClassLen);
+		popParameterInt32(&size, lpcValues);
+		popParameterInt32(&size, lpcbMaxValueNameLen);
+		popParameterInt32(&size, lpcbMaxValueLen);
+		popParameterInt32(&size, lpcbSecurityDescriptor);
 		popParameter(&size, lpftLastWriteTime, sizeof(FILETIME));
+		if (lpftLastWriteTime)
+		{
+			lpftLastWriteTime->dwLowDateTime = (DWORD)letoh32(lpftLastWriteTime->dwLowDateTime);
+			lpftLastWriteTime->dwHighDateTime = (DWORD)letoh32(lpftLastWriteTime->dwHighDateTime);
+		}
 	}
 
 	if ( size > 0 )
@@ -381,11 +425,11 @@ STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
 	pushLong( buffer, size, dwIndex ); 	/* Parameter2 : */
 
 	pushParameter(size, lpszValueName, lpcbValueName ? *lpcbValueName : 0, 0);
-	pushParameter(size, lpcbValueName, sizeof(DWORD), 1);
-	pushParameter(size, lpReserved, sizeof(DWORD), 1);
-	pushParameter(size, lpType, sizeof(DWORD), 1);
+	pushParameterInt32(size, lpcbValueName, 1);
+	pushParameterInt32(size, lpReserved, 1);
+	pushParameterInt32(size, lpType, 1);
 	pushParameter(size, lpData, lpcbData ? *lpcbData : 0, 0);
-	pushParameter(size, lpcbData, sizeof(DWORD), 1);
+	pushParameterInt32(size, lpcbData, 1);
 
 /*	DBG_printbuf( buffer );*/
 	sendbuffer( sock, buffer );
@@ -404,10 +448,10 @@ STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
 	if (ERROR_SUCCESS == result)
 	{
 		popParameter(&size, lpszValueName, lpcbValueName ? *lpcbValueName : 0);
-		popParameter(&size, lpcbValueName, sizeof(DWORD));
-		popParameter(&size, lpType, sizeof(DWORD));
+		popParameterInt32(&size, lpcbValueName);
+		popParameterInt32(&size, lpType);
 		popParameter(&size, lpData, lpcbData ? *lpcbData : 0);
-		popParameter(&size, lpcbData, sizeof(DWORD));
+		popParameterInt32(&size, lpcbData);
 	}
 
 	if ( size > 0 )
