@@ -1,0 +1,13 @@
+Makefile
+Makefile.in
+.deps
+.libs
+raki
+*.moc
+*.moc.cpp
+management.cpp
+management.h
+runwindow.cpp
+runwindow.h
+configdialog.cpp
+configdialog.h

@@ -1,0 +1,11 @@
+configure
+configure.in
+config.h
+config.h.in
+config.log
+config.files
+Makefile
+Makefile.in
+autom4te.cache
+libtool
+stamp-h1
