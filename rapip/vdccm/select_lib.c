@@ -42,6 +42,7 @@ select_p select_create(void)
     act->tv.tv_sec = 10;
     act->tv.tv_usec = 0;
     act->rlist = list_create();
+    act->maxfd = 0;
 
     return act;
 }
