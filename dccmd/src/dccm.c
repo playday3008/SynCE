@@ -16,6 +16,7 @@
 int daemon(int nochdir, int noclose);
 #endif
 
+#define DCCM_PID_FILE         "dccm.pid"
 #define DCCM_PORT           	5679
 #define DCCM_PING_INTERVAL   	5         /* seconds */
 #define DCCM_PING            	0x12345678
@@ -112,8 +113,8 @@ static void write_help(char *name)
 			"\t%s [-d LEVEL] [-f] [-h] [-p PASSWORD]\n"
 			"\n"
 			"\t-d LEVEL     Set debug log level\n"
-			"\t                 0 - No logging (default)\n"
-			"\t                 1 - Errors only\n"
+			"\t                 0 - No logging\n"
+			"\t                 1 - Errors only (default)\n"
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
 			"\t-f           Do not run as daemon\n"
@@ -128,7 +129,7 @@ static void write_help(char *name)
 static bool handle_parameters(int argc, char** argv)
 {
 	int c;
-	int log_level = SYNCE_LOG_LEVEL_LOWEST;
+	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
 	while ((c = getopt(argc, argv, "d:fhp:")) != -1)
 	{
@@ -531,6 +532,61 @@ exit:
 	return success;
 }
 
+bool write_pid_file(const char* filename)
+{
+	bool success = false;
+	struct stat dummy;
+	char pid_str[16];
+	FILE* file = NULL;
+
+	if (0 == stat(filename, &dummy))
+	{
+		/* File exists */
+		file = fopen(filename, "r");
+		
+		if (!file)
+		{
+			synce_error("Failed to open %s for reading.", filename);
+			goto exit;
+		}
+
+		if (fgets(pid_str, sizeof(pid_str), file))
+		{
+			pid_t pid = atoi(pid_str);
+			if (0 == kill(pid, 0))
+			{
+				synce_error("It seems like dccm is already running with PID %i. If this is wrong, please remove the file %s and run dccm again.",
+						pid, filename);
+				goto exit;
+			}
+		}
+
+		fclose(file);
+		file = NULL;
+	}
+
+	file = fopen(filename, "w");
+
+	if (!file)
+	{
+		synce_error("Failed to open %s for writing.", filename);
+		goto exit;
+	}
+
+	snprintf(pid_str, sizeof(pid_str), "%i", getpid());
+
+	fputs(pid_str, file);
+	fclose(file);
+	file = NULL;
+
+	success = true;
+
+exit:
+	if (file)
+		fclose(file);
+	return success;
+}
+
 /**
  * Start here...
  */
@@ -538,9 +594,34 @@ int main(int argc, char** argv)
 {
 	int result = RESULT_FAILURE;
 	SynceSocket* server = NULL;
+	char* path = NULL;
+	char pid_file[MAX_PATH];
+	bool wrote_pid_file = false;
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
+
+	if (0 == getuid())
+	{
+		synce_error("You should not run dccm as root.");
+		goto exit;
+	}
+
+	if (!synce_get_directory(&path))
+	{
+		synce_error("Failed to get configuration directory name.");
+		goto exit;
+	}
+
+	snprintf(pid_file, sizeof(pid_file), "%s/" DCCM_PID_FILE, path);
+	free(path);
+
+	if (!write_pid_file(pid_file))
+	{
+		goto exit;
+	}
+
+	wrote_pid_file = true;
 
 	if (password)
 	{
@@ -636,7 +717,10 @@ exit:
 		free(password);
 
 	synce_socket_free(server);
-	
+
+	if (wrote_pid_file)
+		unlink(pid_file);
+
 	return result;
 }
 
