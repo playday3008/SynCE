@@ -1,0 +1,17 @@
+Author: Mirko Kohns at KashmirEvolution.de
+
+PIMSync is an raki plugin working with pocketpccommunication libs
+place should be ./synce-kde/raki/plugins
+
+
+Install: ./configure --with-pimsync ... in top level
+
+TODO:
+
+-> configure.in.in must be recoded
+-> Syncing must be implemented
+-> Config-Files must be read and write
+-> 
+
+
+

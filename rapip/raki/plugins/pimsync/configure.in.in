@@ -1,0 +1,32 @@
+pimsync_cond=no
+unset PIMSYNC_lib
+AC_CHECK_LIB(pocketpckonnector, main,
+    [
+        AC_MSG_CHECKING(if pimsync-plugin should be compiled)
+        AC_ARG_WITH(pimsync,
+            AC_HELP_STRING([--without-pimsync], [disable the pimsync plugin (default = enabled)]),
+            [
+                if test "$withval" = yes; then
+                    AC_MSG_RESULT(yes)
+                    AC_DEFINE(WITH_PIMSYNC, 1, [Define if pimsync is compiled and used])
+                    pimsync_cond=yes
+                    PIMSYNC_lib="-lkcal -lpocketpckonnector"
+                else
+                    AC_MSG_RESULT(no)
+                fi
+            ],
+            [
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(WITH_PIMSYNC, 1, [Define if pimsync is compiled and used])
+                pimsync_cond=yes
+                PIMSYNC_lib="-lkcal -lpocketpckonnector"
+            ]
+        )
+    ],
+    [],
+    [
+        "-lkcal"
+    ]
+)
+AC_SUBST(PIMSYNC_lib)
+AM_CONDITIONAL(PIMSYNC, test ${pimsync_cond} == "yes")
