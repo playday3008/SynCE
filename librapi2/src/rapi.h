@@ -2,7 +2,24 @@
 #ifndef __rapi_h__
 #define __rapi_h__
 
+/*
+ * Note on #ifndef SWIG preprocessor token.
+ *
+ * The scripting langauge code in the pyrapi module uses
+ * SWIG to generate the python wrapper code. To enable SWIG to 
+ * parse this header file some parts of it must be 
+ * selectively removed. SWIG defines "SWIG" as a 
+ * preproccessor token when is it parsing headers.
+ * Therefore where you see #ifndef SWIG declarations
+ * in this header they are intended to remove elements for
+ * which the SWIG wrapper provides alternative
+ * declarations. In most cases this is type and function
+ * declarations. 
+ */
+
+#ifndef SWIG
 #include <synce.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -15,6 +32,8 @@ extern "C"
 
 #define CERAPI_E_ALREADYINITIALIZED  0x8004101
 
+#ifndef SWIG
+	
 HRESULT CeRapiFreeBuffer( 
 		LPVOID Buffer);
 
@@ -22,13 +41,12 @@ HRESULT CeRapiInit(void);
 
 STDAPI CeRapiUninit(void);
 
+#endif /* SWIG */
+
 
 /*
  * File access functions
  */
-
-BOOL CeCloseHandle( 
-		HANDLE hObject);
 
 /* dwShareMode */
 #define GENERIC_WRITE              0x40000000
@@ -69,6 +87,11 @@ BOOL CeCloseHandle(
 #define FILE_ATTRIBUTE_6          0x00040000
 #define FILE_ATTRIBUTE_7          0x00080000
 
+#ifndef SWIG
+
+BOOL CeCloseHandle( 
+		HANDLE hObject);
+
 typedef void* LPSECURITY_ATTRIBUTES;
 
 HANDLE CeCreateFile(
@@ -96,10 +119,39 @@ BOOL CeWriteFile(
 		LPDWORD lpNumberOfBytesWritten, 
 		LPOVERLAPPED lpOverlapped); 
 
+#endif /* SWIG */
+
 
 /*
  * File management functions
  */
+
+#define FAF_ATTRIBUTES      0x00001
+#define FAF_CREATION_TIME   0x00002
+#define FAF_LASTACCESS_TIME   0x00004
+#define FAF_LASTWRITE_TIME    0x00008
+
+#define FAF_SIZE_HIGH     0x00010
+#define FAF_SIZE_LOW      0x00020
+#define FAF_OID       0x00040
+#define FAF_NAME      0x00080
+
+#define FAF_ATTRIB_CHILDREN   0x01000
+#define FAF_ATTRIB_NO_HIDDEN    0x02000
+#define FAF_FOLDERS_ONLY    0x04000
+#define FAF_NO_HIDDEN_SYS_ROMMODULES  0x08000
+
+#define CSIDL_PROGRAMS           0x0002
+#define CSIDL_PERSONAL           0x0005
+#define CSIDL_FAVORITES_GRYPHON  0x0006
+#define CSIDL_STARTUP            0x0007
+#define CSIDL_RECENT             0x0008
+#define CSIDL_STARTMENU          0x000b
+#define CSIDL_DESKTOPDIRECTORY   0x0010
+#define CSIDL_FONTS              0x0014
+#define CSIDL_FAVORITES          0x0016
+
+#ifndef SWIG
 
 BOOL CeCopyFileA(
 		LPCSTR lpExistingFileName, 
@@ -117,21 +169,6 @@ BOOL CeCreateDirectory(
 
 BOOL CeDeleteFile(
 		LPCWSTR lpFileName);
-
-#define FAF_ATTRIBUTES      0x00001
-#define FAF_CREATION_TIME   0x00002
-#define FAF_LASTACCESS_TIME   0x00004
-#define FAF_LASTWRITE_TIME    0x00008
-
-#define FAF_SIZE_HIGH     0x00010
-#define FAF_SIZE_LOW      0x00020
-#define FAF_OID       0x00040
-#define FAF_NAME      0x00080
-
-#define FAF_ATTRIB_CHILDREN   0x01000
-#define FAF_ATTRIB_NO_HIDDEN    0x02000
-#define FAF_FOLDERS_ONLY    0x04000
-#define FAF_NO_HIDDEN_SYS_ROMMODULES  0x08000
 
 typedef struct _CE_FIND_DATA {
 	DWORD dwFileAttributes; 
@@ -164,16 +201,6 @@ BOOL CeFindClose(
 DWORD CeGetFileAttributes(
 		LPCWSTR lpFileName);
 
-#define CSIDL_PROGRAMS           0x0002
-#define CSIDL_PERSONAL           0x0005
-#define CSIDL_FAVORITES_GRYPHON  0x0006
-#define CSIDL_STARTUP            0x0007
-#define CSIDL_RECENT             0x0008
-#define CSIDL_STARTMENU          0x000b
-#define CSIDL_DESKTOPDIRECTORY   0x0010
-#define CSIDL_FONTS              0x0014
-#define CSIDL_FAVORITES          0x0016
-
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
 		DWORD nBufferLength, 
@@ -189,6 +216,8 @@ BOOL CeRemoveDirectory(
 BOOL CeSetFileAttributes(
 		LPCWSTR lpFileName,
 		DWORD dwFileAttributes);
+
+#endif /* SWIG */
 
 
 /*
@@ -228,16 +257,6 @@ BOOL CeSetFileAttributes(
 #define CEDB_MAXRECORDSIZE              (128*1024)
 #define CEDB_ALLOWREALLOC               0x00000001
 
-typedef DWORD CEPROPID;
-typedef CEPROPID *PCEPROPID;
-typedef DWORD CEOID;
-typedef CEOID *PCEOID;
-
-typedef struct _CEBLOB {
-	DWORD dwCount;
-	LPBYTE lpb;
-} CEBLOB;
-
 #define CEVT_I2         2
 #define CEVT_I4         3
 #define CEVT_R8         5
@@ -247,6 +266,30 @@ typedef struct _CEBLOB {
 #define CEVT_LPWSTR     31
 #define CEVT_FILETIME   64
 #define CEVT_BLOB       65
+
+#define FAD_OID                         0x0001
+#define FAD_FLAGS                       0x0002
+#define FAD_NAME                        0x0004
+#define FAD_TYPE                        0x0008
+
+#define FAD_NUM_RECORDS                 0x0010
+#define FAD_NUM_SORT_ORDER              0x0020
+#define FAD_SIZE                        0x0040
+#define FAD_LAST_MODIFIED               0x0080
+
+#define FAD_SORT_SPECS                  0x0100
+
+#ifndef SWIG
+
+typedef DWORD CEPROPID;
+typedef CEPROPID *PCEPROPID;
+typedef DWORD CEOID;
+typedef CEOID *PCEOID;
+
+typedef struct _CEBLOB {
+	DWORD dwCount;
+	LPBYTE lpb;
+} CEBLOB;
 
 typedef union _CEVALUNION {
 	short iVal; 
@@ -288,18 +331,6 @@ typedef struct _CEDB_FIND_DATA {
 	CEOID OidDb;
 	CEDBASEINFO DbInfo;
 } CEDB_FIND_DATA, *LPCEDB_FIND_DATA, **LPLPCEDB_FIND_DATA;
-
-#define FAD_OID                         0x0001
-#define FAD_FLAGS                       0x0002
-#define FAD_NAME                        0x0004
-#define FAD_TYPE                        0x0008
-
-#define FAD_NUM_RECORDS                 0x0010
-#define FAD_NUM_SORT_ORDER              0x0020
-#define FAD_SIZE                        0x0040
-#define FAD_LAST_MODIFIED               0x0080
-
-#define FAD_SORT_SPECS                  0x0100
 
 CEOID CeCreateDatabase(
 		LPWSTR lpszName, 
@@ -349,6 +380,8 @@ CEOID CeWriteRecordProps(
 		WORD cPropID, 
 		CEPROPVAL *rgPropVal );
 
+#endif /* SWIG */
+
 /*
  * Registry
  */
@@ -367,6 +400,8 @@ CEOID CeWriteRecordProps(
 #define REG_DWORD_BIG_ENDIAN        5
 #define REG_LINK                    6
 #define REG_MULTI_SZ                7
+
+#ifndef SWIG
 
 LONG CeRegCreateKeyEx( 
 		HKEY hKey, 
@@ -431,10 +466,64 @@ LONG CeRegEnumKeyEx(
 		LPDWORD lpcbClass, 
 		PFILETIME lpftLastWriteTime);
 
+#endif /* SWIG */
 
 /*
  * Misc functions
  */
+
+#define PROCESSOR_INTEL_386     386
+#define PROCESSOR_INTEL_486     486
+#define PROCESSOR_INTEL_PENTIUM 586
+#define PROCESSOR_INTEL_PENTIUMII 686
+#define PROCESSOR_MIPS_R4000    4000
+#define PROCESSOR_ALPHA_21064   21064
+#define PROCESSOR_PPC_403       403
+#define PROCESSOR_PPC_601       601
+#define PROCESSOR_PPC_603       603
+#define PROCESSOR_PPC_604       604
+#define PROCESSOR_PPC_620       620
+#define PROCESSOR_HITACHI_SH3   10003
+#define PROCESSOR_HITACHI_SH3E  10004
+#define PROCESSOR_HITACHI_SH4   10005
+#define PROCESSOR_MOTOROLA_821  821
+#define PROCESSOR_SHx_SH3       103
+#define PROCESSOR_SHx_SH4       104
+#define PROCESSOR_STRONGARM     2577
+#define PROCESSOR_ARM720        1824
+#define PROCESSOR_ARM820        2080
+#define PROCESSOR_ARM920        23360
+#define PROCESSOR_ARM_7TDMI     70001
+
+#define PROCESSOR_ARCHITECTURE_INTEL 0
+#define PROCESSOR_ARCHITECTURE_MIPS  1
+#define PROCESSOR_ARCHITECTURE_ALPHA 2
+#define PROCESSOR_ARCHITECTURE_PPC   3
+#define PROCESSOR_ARCHITECTURE_SHX   4
+#define PROCESSOR_ARCHITECTURE_ARM   5
+#define PROCESSOR_ARCHITECTURE_IA64  6
+#define PROCESSOR_ARCHITECTURE_ALPHA64 7
+#define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
+
+#define VER_PLATFORM_WIN32s             0
+#define VER_PLATFORM_WIN32_WINDOWS      1
+#define VER_PLATFORM_WIN32_NT           2
+#define VER_PLATFORM_WIN32_HH           3
+#define VER_PLATFORM_WIN32_CE           3
+
+#define OBJTYPE_INVALID     0
+#define OBJTYPE_FILE        1
+#define OBJTYPE_DIRECTORY   2
+#define OBJTYPE_DATABASE    3
+#define OBJTYPE_RECORD      4
+/* 
+ * returned by CeOidGetInfo() for an ActiveSync notification when
+ * an object has been deleted. 
+ */
+#define OBJTYPE_DELETED     8
+
+
+#ifndef SWIG
 
 BOOL CeCheckPassword( 
 		LPWSTR lpszPassword);
@@ -462,40 +551,6 @@ BOOL CeCreateProcess(
 
 DWORD CeGetLastError( void );
 
-#define PROCESSOR_INTEL_386     386
-#define PROCESSOR_INTEL_486     486
-#define PROCESSOR_INTEL_PENTIUM 586
-#define PROCESSOR_INTEL_PENTIUMII 686
-#define PROCESSOR_MIPS_R4000    4000
-#define PROCESSOR_ALPHA_21064   21064
-#define PROCESSOR_PPC_403       403
-#define PROCESSOR_PPC_601       601
-#define PROCESSOR_PPC_603       603
-#define PROCESSOR_PPC_604       604
-#define PROCESSOR_PPC_620       620
-#define PROCESSOR_HITACHI_SH3   10003
-#define PROCESSOR_HITACHI_SH3E  10004
-#define PROCESSOR_HITACHI_SH4   10005
-#define PROCESSOR_MOTOROLA_821  821
-#define PROCESSOR_SHx_SH3       103
-#define PROCESSOR_SHx_SH4       104
-#define PROCESSOR_STRONGARM     2577
-#define PROCESSOR_ARM720        1824
-#define PROCESSOR_ARM820        2080
-#define PROCESSOR_ARM920        23360
-#define PROCESSOR_ARM_7TDMI     70001
-
-
-#define PROCESSOR_ARCHITECTURE_INTEL 0
-#define PROCESSOR_ARCHITECTURE_MIPS  1
-#define PROCESSOR_ARCHITECTURE_ALPHA 2
-#define PROCESSOR_ARCHITECTURE_PPC   3
-#define PROCESSOR_ARCHITECTURE_SHX   4
-#define PROCESSOR_ARCHITECTURE_ARM   5
-#define PROCESSOR_ARCHITECTURE_IA64  6
-#define PROCESSOR_ARCHITECTURE_ALPHA64 7
-#define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
-
 typedef struct _SYSTEM_INFO {
 /*	DWORD dwOemId;*/
 	WORD wProcessorArchitecture;
@@ -513,12 +568,6 @@ typedef struct _SYSTEM_INFO {
 
 void CeGetSystemInfo( 
 		LPSYSTEM_INFO lpSystemInfo);
-
-#define VER_PLATFORM_WIN32s             0
-#define VER_PLATFORM_WIN32_WINDOWS      1
-#define VER_PLATFORM_WIN32_NT           2
-#define VER_PLATFORM_WIN32_HH           3
-#define VER_PLATFORM_WIN32_CE           3
 
 typedef struct _CEOSVERSIONINFO{ 
 	DWORD dwOSVersionInfoSize; 
@@ -550,19 +599,6 @@ typedef struct _CERECORDINFO {
 	CEOID oidParent; 
 } CERECORDINFO; 
 
-#define OBJTYPE_INVALID     0
-#define OBJTYPE_FILE        1
-#define OBJTYPE_DIRECTORY   2
-#define OBJTYPE_DATABASE    3
-#define OBJTYPE_RECORD      4
-
-/* 
- * returned by CeOidGetInfo() for an ActiveSync notification when
- * an object has been deleted. 
- */
-#define OBJTYPE_DELETED     8
-
-
 typedef struct _CEOIDINFO { 
 	WORD wObjType;
 	WORD wPad;
@@ -580,6 +616,7 @@ BOOL CeOidGetInfo(
 
 DWORD CeStartReplication( void );
 
+#endif /* SWIG */
 
 
 #ifdef __cplusplus
