@@ -345,6 +345,11 @@ static void uint32vector_enlarge(Uint32Vector* v, size_t size)
 			new_size <<= 1;
 
 		v->items = realloc(v->items, sizeof(uint32_t) * new_size);
+		if (!v->items)
+		{
+			synce_error("Failed to allocate space for %i elements - crashing!", new_size);
+		}
+
 		v->size  = new_size;
 	}
 }
@@ -366,7 +371,7 @@ void uint32vector_destroy(Uint32Vector* v, bool free_items)
 
 Uint32Vector* uint32vector_add(Uint32Vector* v, uint32_t value)
 {
-	uint32vector_enlarge(v, v->size + 1);
+	uint32vector_enlarge(v, v->used + 1);
 	v->items[v->used++] = value;
 	return v;
 }
