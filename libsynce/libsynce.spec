@@ -15,6 +15,7 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Buildroot: %{_tmppath}/synce-root
 
 %description
 Libsynce is part of the SynCE project:
@@ -31,11 +32,11 @@ SynCE project:
 %setup
 
 %build
-./configure --prefix=%{prefix}
+%configure
 make
 
 %install
-make install
+%makeinstall
 
 %files
 %{prefix}/include/synce.h
