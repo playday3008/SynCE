@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 
   if (!rra_syncmgr_put_single_object(syncmgr, type_id, object_id, flags, data, data_size, &new_object_id))
   {
-    fprintf(stderr, "Failed to get object\n");
+    fprintf(stderr, "Failed to put object\n");
     goto exit;
   }
 
