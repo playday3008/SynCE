@@ -13,8 +13,25 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 AM_PATH_CHECK()
 
-dnl Checks for libraries.
+dnl Check for dmalloc first
+AC_ARG_WITH(dmalloc,
+		AC_HELP_STRING([--with-dmalloc=PREFIX],[use dmalloc (default is NO)]),
+[case "${withval}" in
+  yes) dmalloc=true ;;
+  no)  dmalloc=false ;;
+  *) dmalloc=true; dmalloc_prefix="-L${withval}" ;;
+esac],[dmalloc=false])
 
+if ${dmalloc}; then
+	AC_CHECK_LIB(dmalloc,main,,[
+			AC_MSG_ERROR([Can't find dmalloc library])
+		],${dmalloc_prefix})
+	AC_CHECK_HEADERS(dmalloc.h,,[
+			AC_MSG_ERROR([Can't find dmalloc.h])
+		])
+fi
+
+dnl Checks for libraries.
 dnl Checks for header files.
 
 AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h iconv.h)
@@ -36,8 +53,8 @@ AM_ICONV()
 AC_CHECK_LIB(socket,main)
 AC_CHECK_LIB(nsl,main)
 
-
 AC_OUTPUT([Makefile
            src/Makefile
 					 src/config/Makefile
+					 src/support/Makefile
 					 tests/Makefile])
