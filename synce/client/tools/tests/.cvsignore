@@ -18,6 +18,7 @@ CeRegEnumKeyEx
 CeRegEnumValue
 CeRegOpenKeyEx
 CeRegQueryInfoKey
+DumpAppointmentSecret
 Makefile
 Makefile.in
 pcp

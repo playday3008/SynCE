@@ -6,6 +6,9 @@ LDADD = $(top_builddir)/client/librapi/librapi.la $(top_builddir)/libchunk/libch
 ## pcp - PocketCoPy
 pcp_SOURCES = test.h pcp.cpp
 
+## DumpAppointmentSecret
+DumpAppointmentSecret_SOURCES = test.h DumpAppointmentSecret.cpp
+
 ## sources for the tests
 CeRapiInit_SOURCES = test.h CeRapiInit.cpp
 CeGetSpecialFolderPath_SOURCES = test.h CeGetSpecialFolderPath.cpp
@@ -24,7 +27,7 @@ CeMoveFile_SOURCES = test.h CeMoveFile.cpp
 CeCreateProcess_SOURCES = test.h CeCreateProcess.cpp
 
 ## all tests
-noinst_PROGRAMS = pcp \
+noinst_PROGRAMS = pcp DumpAppointmentSecret \
 	CeRapiInit CeGetSpecialFolderPath CeRegOpenKeyEx \
 	CeFindFirstFile CeCreateFile CeFindAllFiles CeFindAllDatabases \
 	CeOpenDatabase CeRegEnumKeyEx CeRegEnumValue CeRegQueryInfoKey \
