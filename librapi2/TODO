@@ -1,0 +1,13 @@
+$Id$
+
+TODO for librapi2
+=================
+
+o Fix bug in CeWriteRecordProps
+
+o Implement more of RAPI
+
+o Make config use synce_log and not perror.
+
+o Make the file system tools use "My Documents" as current directory.
+

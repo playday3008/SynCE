@@ -53,5 +53,6 @@ AC_OUTPUT([Makefile
 					 src/support/Makefile
 					 tests/Makefile
 					 tests/rapi/Makefile
-					 tools/Makefile])
+					 tools/Makefile
+					 tools/man/Makefile])
 
