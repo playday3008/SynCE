@@ -9,6 +9,7 @@ liborange_la_SOURCES = \
 	dllinflate.c \
 	extract.c \
 	helper.c \
+	inno.c \
 	separate.c \
 	squeeze.c \
 	suf.c \

@@ -73,7 +73,15 @@ bool orange_dllinflate(
 bool orange_extract_setup_factory(
     const char* input_filename, 
     const char* output_directory);
-    
+
+/**
+  Source in inno.c
+*/
+
+bool orange_extract_inno(
+    const char* input_filename, 
+    const char* output_directory);
+
 
 /**
   Separate installable Microsoft Cabinet Files from a file
