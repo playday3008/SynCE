@@ -30,7 +30,7 @@ values:</p>
 </ul>
 
 <p>See <a
-href="http://www.bluetooth.org/assigned-numbers/baseband.htm">http://www.bluetooth.org/assigned-numbers/baseband.htm</a>
+href="https://www.bluetooth.org/foundry/assignnumb/document/baseband">https://www.bluetooth.org/foundry/assignnumb/document/baseband</a>
 for more.
 
 </li>
