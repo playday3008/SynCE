@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define VERBOSE 0
+
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
 #define MINUTES_PER_DAY   (60*24)
@@ -354,7 +356,9 @@ static bool recurrence_set_dates(
   if (!parser_datetime_to_unix_time(mdir_dtend->values[0], &end, &end_is_utc))
     goto exit;
 
+#if VERBOSE
   synce_trace("start is utc: %i, end is utc: %i", start_is_utc, end_is_utc);
+#endif
 
   tmp_struct = start_struct;
   tmp_struct.tm_sec = 0;

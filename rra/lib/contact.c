@@ -14,6 +14,8 @@
 #include <assert.h>
 #include "internal.h"
 
+#define VERBOSE 0
+
 static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
 
 /* 
@@ -756,8 +758,10 @@ static bool parser_handle_field(/*{{{*/
 {
 	bool success = false;
 
+#if VERBOSE
 	synce_trace("Found field '%s' with type '%s' and contents '%s'",
 			name, type, value);
+#endif
 
 	if (STR_EQUAL(name, "BEGIN"))/*{{{*/
 	{
@@ -915,7 +919,9 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
 	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))/*{{{*/
 	{
+#if VERBOSE
 		synce_trace("So, your contact has been in Evolution?");
+#endif
 	}/*}}}*/
 	else if (STR_EQUAL(name, "UID"))/*{{{*/
 	{

@@ -11,6 +11,8 @@
 #include <string.h>
 #include <sys/param.h> /* for MIN(a,b) */
 
+#define VERBOSE 0
+
 static const char* RRA_DIRECTORY    = "rra";
 
 #define SEND_COMMAND_6F_6 1
@@ -1000,8 +1002,10 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
       goto exit;
     }
 
+#if VERBOSE
     synce_trace("Received command 65: type = %08x, id1 = %08x, id2 = %08x, flags = %08x",
         recv_type_id, recv_object_id1, recv_object_id2, recv_flags);
+#endif
 
     if (recv_type_id != type_id || recv_object_id1 != object_id_array[i])
     {
