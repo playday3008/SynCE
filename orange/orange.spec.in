@@ -1,6 +1,6 @@
 # vim: tw=60
 %define prefix   /usr
-%define name     liborange
+%define name     orange
 %define rel      1
 
 Summary: Squeeze out installable Microsoft cabinet files
