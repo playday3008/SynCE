@@ -1,0 +1,85 @@
+--- ipaq-orig.h	2004-09-11 09:14:19.436602040 +0000
++++ ipaq.h	2004-09-11 09:03:47.331696592 +0000
+@@ -88,6 +88,9 @@
+ #define ASUS_VENDOR_ID		0x0b05
+ #define ASUS_A620_PRODUCT_ID	0x4202
+ 
++#define MITAC_VENDOR_ID		0x3340
++#define MITAC_MIO168_PRODUCT_ID	0x0e3a
++
+ /*
+  * Since we can't queue our bulk write urbs (don't know why - it just
+  * doesn't work), we can send down only one write urb at a time. The simplistic
+--- ipaq-orig.c	2004-09-11 09:14:12.873599768 +0000
++++ ipaq.c	2004-09-11 09:20:54.016616760 +0000
+@@ -9,6 +9,15 @@
+  *	the Free Software Foundation; either version 2 of the License, or
+  *	(at your option) any later version.
+  *
++ * (11/09/2004) Pascal
++ *      Added vendor and product id for MiTAC Mio 168 which is also sold as
++ *      Yakumo PDA delta 300 GPS and bluemedia PDA 255.
++ *      Use modprobe ipaq ttyUSB=1 for them.
++ *
++ * (18/11/2003) Olivier
++ *      Added insmod options to specify the ttyUSB port for new iPAQ
++ *      Use modprobe ipaq ttyUSB=1 or ttyUSB=0
++ *
+  * (12/12/2002) ganesh
+  * 	Added support for practically all devices supported by ActiveSync
+  * 	on Windows. Thanks to Wes Cilldhaire <billybobjoehenrybob@hotmail.com>.
+@@ -65,12 +74,13 @@
+  * Version Information
+  */
+ 
+-#define DRIVER_VERSION "v0.5"
++#define DRIVER_VERSION "v0.6"
+ #define DRIVER_AUTHOR "Ganesh Varadarajan <ganesh@veritas.com>"
+ #define DRIVER_DESC "USB PocketPC PDA driver"
+ 
+ static __u16 product, vendor;
+ static int debug;
++static int ttyUSB = 0;
+ 
+ /* Function prototypes for an ipaq */
+ static int  ipaq_open (struct usb_serial_port *port, struct file *filp);
+@@ -130,6 +140,7 @@
+ 	{ USB_DEVICE(NEC_VENDOR_ID, NEC_PRODUCT_ID) },
+ 	{ USB_DEVICE(ASUS_VENDOR_ID, ASUS_A600_PRODUCT_ID) },
+ 	{ USB_DEVICE(ASUS_VENDOR_ID, ASUS_A620_PRODUCT_ID) },
++	{ USB_DEVICE(MITAC_VENDOR_ID, MITAC_MIO168_PRODUCT_ID) },
+ 	{ }					/* Terminating entry */
+ };
+ 
+@@ -188,6 +199,7 @@
+ 	usb_set_serial_port_data(port, priv);
+ 	priv->active = 0;
+ 	priv->queue_len = 0;
++	priv->free_len = 0;
+ 	INIT_LIST_HEAD(&priv->queue);
+ 	INIT_LIST_HEAD(&priv->freelist);
+ 
+@@ -548,7 +560,13 @@
+ 		ipaq_id_table[0].idVendor = vendor;
+ 		ipaq_id_table[0].idProduct = product;
+ 	}
++
++	ipaq_device.num_bulk_in = ttyUSB + 1;
++	ipaq_device.num_bulk_out = ttyUSB + 1;
++	ipaq_device.num_ports = ttyUSB + 1;
++
+ 	retval = usb_register(&ipaq_driver);
++	dbg("%s - iPAQ module configured for port ttyUSB%d", __FUNCTION__, ttyUSB);
+ 	if (retval)
+ 		goto failed_usb_register;
+ 		  
+@@ -577,6 +595,9 @@
+ module_param(debug, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(debug, "Debug enabled or not");
+ 
++module_param(ttyUSB, int, 0);
++MODULE_PARM_DESC(ttyUSB, "User specified ttyUSB port number");
++
+ module_param(vendor, ushort, 0);
+ MODULE_PARM_DESC(vendor, "User specified USB idVendor");
+ 
