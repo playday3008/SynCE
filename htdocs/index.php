@@ -9,7 +9,8 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <h1>The SynCE Project</h1>
 
 <p>The purpose of the SynCE project is to provide a means of communication with
-a Windows CE device from a computer running Linux, *BSD or other unices.</p>
+a Windows CE device from a computer running Linux, *BSD or similar operating
+systems.</p>
 
 <a name="news"></a>
 <h2>News</h2>
