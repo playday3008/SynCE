@@ -188,7 +188,9 @@ int checkpacket( unsigned char * buf, int size )
 	log_debug ("strglen : 0x%08X", strglen);
         ptrlng = (long*)(buf + offset1 + 4 );
 
+#ifdef DEBUG
         printbuf( (char*)ptrlng, strglen );
+#endif
 
         cd = iconv_open( "latin1", "UNICODELITTLE" );
 	if(cd == (iconv_t)-1)
