@@ -161,7 +161,7 @@ fail:
 SynceSocket* synce_socket_accept(SynceSocket* server, struct sockaddr_in* address)
 {
 	struct sockaddr_in cliaddr;
-	int clilen;
+	socklen_t clilen;
 	int connfd;
 	SynceSocket* client = NULL;
 	fd_set read_set;
