@@ -36,6 +36,13 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>March 7, 2003</b> Since late february there is a Perl language binding
+available for RAPI. This has been implemented by <a
+href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> and is available <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&release_id=142515">as
+tarball</a> or <a href="http://sourceforge.net/cvs/?group_id=30550">directly
+from the CVS module <tt>perlrapi</tt></a>.</p>
+
 <p><b>March 1, 2003</b> Updated the <a
 href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap.txt?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">roadmap</a>.
 Please join the <a
@@ -92,6 +99,8 @@ list!</p>
 developer in the SynCE project. He has authored a GNOME-VFS module for
 SynCE. We hope to include this module in the next SynCE release.</p>
 
+<!--
+
 <p><b>November 30, 2002</b> Released SynCE version 0.5 which includes
 dccm 0.5, librapi2 0.5, libsynce 0.5, synce-serial 0.5 and trayicon 0.3. <a
 href="using.php">Download and use</a>.</p>
@@ -103,8 +112,6 @@ href="http://lists.sourceforge.net/mailman/listinfo/synce-users">synce-users</a>
 in case <a
 href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
 gets to technical for someone.</p>
-
-<!--
 
 <p><b>November 24, 2002</b> Released SynCE version 2002-11-24 which includes
 dccm 0.4, librapi2 0.4, libsynce 0.4, synce-serial 0.4 and trayicon 0.2.</p>
@@ -230,6 +237,9 @@ author of the SynCE GNOME-VFS module.</p>
 
 <p><a href="mailto:voc@users.sourceforge.net">Volker Christian</a> works with
 KDE 3.x integration in the <tt>rapip</tt> module.</p>
+
+<p><a href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> has created a
+Perl language mapping for RAPI.</p>
 
 </div>
 <?php include 'footer.php'; ?>
