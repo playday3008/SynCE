@@ -160,7 +160,12 @@ to be able to use the driver.</p>
 
 <ol>
 
-<li>Apply the patches you need to the files in your kernel source tree.</li>
+<li>Apply the patches you need to the files in your kernel source tree. Patch
+files are usually applied like this:
+
+<blockquote><tt>patch -p0 &lt; stuff.patch</tt></blockquote>
+
+</li>
 
 <li>Create a temporary directory, for example <tt>ipaq</tt>.</li>
 

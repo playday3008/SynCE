@@ -11,6 +11,4 @@ synce-serial-start >> /var/log/synce
 echo "export time=\`date +\"%b %d %X\"\`" >> $REMOVER
 echo "export uname=\`uname -n\`" >> $REMOVER
 echo "echo \"\$time \$uname $0: iPAQ removed\" >> /var/log/synce" >> $REMOVER
-echo "sleep 15 >> /var/log/synce" >> $REMOVER
-echo "synce-serial-abort >> /var/log/synce" >> $REMOVER
 chmod +x $REMOVER

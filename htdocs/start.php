@@ -51,6 +51,9 @@ pppd[2695]: remote IP address 192.168.131.201</pre>
 
 <li class=SPACED>Try the <a href="tools.php">tools</a> as your own user.</li>
 
+<li class=SPACED>Follow the instructions to <a
+href="disconnect.php">disconnect</a> properly.</li>
+
 </ol>
 
 <p>Return to <a href="index.php">main page</a>.</p>
