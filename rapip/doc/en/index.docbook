@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!DOCTYPE book PUBLIC "-//KDE//DTD DocBook XML V4.1-Based Variant V1.0//EN" "dtd/kdex.dtd" [
+<!DOCTYPE book PUBLIC "-//KDE//DTD DocBook XML V4.1.2-Based Variant V1.0//EN" "dtd/kdex.dtd" [
   <!ENTITY kappname "&rapip;">
   <!ENTITY % addindex "IGNORE">
   <!ENTITY % English "INCLUDE" > <!-- change language only here -->   
@@ -12,23 +12,21 @@
 <book lang="&language;">
 
   <bookinfo>
-    <title>The Rapip/Raki Handbook</title>
+    <title>The SynCE-KDE Handbook</title>
     <authorgroup>
       <author>
-	<firstname></firstname>
-	<surname>Volker Christian&#44;&#44;&#44;</surname>
-	<affiliation><address><email>voc&#64;soft&#46;uni&#45;linz&#46;ac&#46;at</email></address></affiliation>
+	<firstname>Volker</firstname>
+	<surname>Christian</surname>
+	<affiliation><address><email>voc&#64;users&#46;sourceforge&#46;net</email></address></affiliation>
       </author>
     </authorgroup>
     <date>date</date>
     <releaseinfo>0&#46;1</releaseinfo>
     <abstract>
-      <para>Rapip/Raki is a tool-combination which claims to integrate a PocketPC connection seemless into K Desktop Environment.</para>
-      <para>Rapip is a kde_ioslave.</para>
-      <para>Raki is a management application.</para>
-      <para>The low-level connection is handled by the
-      <ulink
-	url="http://synce.sourceforge.net/">synce-librariy</ulink> suit to communicate with the PDA.</para>
+    <para>SynCE-KDE (f/k/a Rapip / Raki) is a PC / Windows CE connection service application like
+    ActiveSync [msdn.microsoft.com]. It consists of three subprojects: a full-featured KIOSlave for browsing
+    the PDA (RAPIP), a panel applet for accessing the PDA (RAKI), and a daemon which listens for PDA
+    connections (VDCCM).</para>
     </abstract>
     <keywordset>
       <keyword>KDE</keyword>
@@ -38,10 +36,80 @@
 
   <chapter id="introduction">
     <title>Introduction</title>
-	
+    <para>One effort in integrating SynCE into KDE is the <ulink url="http://synce.sourceforge.net/synce/kde/">
+    SynCE-KDE</ulink> project - formerly Rapip/Raki. SynCE-KDE
+    essentially consists of the three subproject RAPIP, RAKI, and VDCCM. In general, they all support
+    the same devices which are supported by the underlying SynCE libraries.</para>
+
+    <para><emphasis>RAPIP</emphasis> is the short form for "RAPI-Protocol". It is a full featured KDE
+        io-slave used to browse through the PDA file system and to copy files to and from the PDA by drag
+        and drop via Konqueror.</para>
+
+    <para><emphasis>RAKI</emphasis> is a synonym for "Remote-Access-Kicker-applet". As the name suggests
+        it has first been an applet for kicker, the KDE panel but as time goes by the application-type
+        changed. Today RAKI is an application docking into the KDE system-tray. It is responsible for all
+        additional tasks which are desired for interacting with the PDA via the desktop.</para>
+
+    <para><emphasis>VDCCM</emphasis> is a generalization of the native SynCE-DCCM but is fully compatible
+        with it. In addition to all DCCM features it is capable of supporting more than one PDA connected
+        at the same time. It is responsible for reporting all connects and disconnects of PDAs to interested
+        clients via an unix-socket by use of a simple protocol. E.g. RAKI is one of such an interested
+        client.</para>
+
+    <para>The low-level connection to the PDA is handled by the
+    <ulink url="http://synce.sourceforge.net/synce/">SynCE-Library</ulink> suit.</para>
     <sect1 id="features">
       <title>Features</title>
-      <para></para>
+    <sect2 id="RAPIP">
+        <title>RAPIP</title>
+        <itemizedlist>
+            <listitem><para>copies files and directories via drag and drop to and from the
+                PDA.</para></listitem>
+            <listitem><para>is capable of handling mime-types.</para></listitem>
+            <listitem><para>supports more than one connected device simultaneously.</para></listitem>
+        </itemizedlist>
+    </sect2>
+
+    <sect2 id="RAKI">
+        <title>RAKI</title>
+        <itemizedlist>
+            <listitem><para>also supports more than one connected PDA at once.</para></listitem>
+            <listitem><para>knows how to handle PDA partnerships.</para></listitem>
+            <listitem><para>uses a plugin-architecture for synchronization. Two synchronizer-plugins are
+                already implemented:</para></listitem>
+            <listitem>
+            <itemizedlist>
+                <listitem><para>Synchronizer for PDA-Contacts and standard KDE address book
+                    synchronization.</para></listitem>
+                <listitem><para>AvantGo synchronizer.</para></listitem>
+            </itemizedlist>
+            </listitem>
+            <listitem><para>creates a NAT-Route for your PDAs to the outer internet.</para></listitem>
+            <listitem><para>supports configuration of passwords, NAT routes, and synchronization settings
+                per device.</para></listitem>
+            <listitem><para>installs cab-files on the device - you just have to drag them over the
+                system-tray or right-click on a cab file in Konqueror.</para></listitem>
+            <listitem><para>lets you manage the software installed on the PDA.</para></listitem>
+            <listitem><para>displays system information and power status about the PDA.</para></listitem>
+            <listitem><para>starts programs on the PDA.</para></listitem>
+            <listitem><para>answers password-requests of PDAs automatically.</para></listitem>
+            <listitem><para>notifies about connections, password requests and disconnections of PDAs
+                with sound.</para></listitem>
+        </itemizedlist>
+    </sect2>
+
+    <sect2 id="VDCCM">
+        <title>VDCCM</title>
+        <itemizedlist>
+            <listitem><para>is responsible that RAPIP and RAKI can communicate with more than one PDA
+                simultaneously.</para></listitem>
+            <listitem><para>creates an individual "active_connection" file for every connected
+                PDA.</para></listitem>
+            <listitem><para>the names of individual "active_connection" files are either the PDA
+                identifiers or the ip-addresses assigned to the PDAs.</para></listitem>
+        </itemizedlist>
+    </sect2>
+
     </sect1>
   </chapter>
 
@@ -49,36 +117,281 @@
     <title>Installation</title>
 
     <sect1 id="how-to-obtain-rapip">
-      <title>How to obtain rapip</title>
-      <para></para>
+      <title>How to obtain SynCE-KDE</title>
+      <para>You can download precompiled tar.gz, rpm, and deb packages from the SourceForge
+        Project Page.</para>
+      <sect2 id="debian">
+        <title>Debian User</title>
+        <para>Just now, the SynCE-KDE <computeroutput>deb</computeroutput> packages are
+            designed for debian unstable (sid). I will try to provide packages for stable
+            and testing as soon as possible. Until than you have to compile SynCE-KDE
+            yourself from source if you are a debian-stable or debian-testing user.</para>
+        <para>The packages are prepared to honor all dependencies including those coming
+            from the SynCE libraries. Most of the SynCE libraries are already part of
+            debian-unstable. So these packages are installed automatically if you try to
+            install SynCE-KDE. Unfortunately, just now there is no official debian packages
+            of synce-rra-0.8 available. To still be able to install SynCE-KDE please compile
+            and install synce-rra-0.8 before using SynCE-KDE.</para>
+        <para>Packages could be downloaded from the SourceForge Project Page or installed
+        directly over the network from our debian repository at SourceForge.</para>
+        <itemizedlist>
+            <listitem><para>
+Add the following two lines to your <computeroutput>/etc/apt/sources.list</computeroutput>:
+                <simplelist>
+                    <member>
+<computeroutput>deb http://synce.sourceforge.net/debian/ unstable/$(ARCH)/</computeroutput>
+                    </member>
+                    <member>
+<computeroutput>deb-src http://synce.sourceforge.net/debian/ unstable/source/</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+        <itemizedlist>
+            <listitem><para>
+Update your package lists:
+                <simplelist>
+                    <member>
+<computeroutput># apt-get update</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+        <itemizedlist>
+            <listitem><para>
+Install SynCE-KDE:
+                <simplelist>
+                    <member>
+<computeroutput># apt-get install synce-kde</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+        <itemizedlist>
+            <listitem><para>
+Install the development packages. This is only needed it you intend to develop synchronizer for RAKI:
+                <simplelist>
+                    <member>
+<computeroutput># apt-get install synce-kde-dev</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+        <para>The source of SynCE-KDE is also available from the repository.</para>
+        <itemizedlist>
+            <listitem><para>
+Install the development packages. This is only needed it you intend to develop synchronizer for RAKI:
+                <simplelist>
+                    <member>
+<computeroutput># apt-get install synce-kde-dev</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+      </sect2>
+      <sect2 id="redhat">
+        <title>RedHat User</title>
+        <para>The <computeroutput>rpm</computeroutput> packages are designed for RedHat 9.</para>
+      </sect2>
+
+      <sect2 id="slackware">
+        <title>Slackware User</title>
+        <para>The precompiled package synce-kde-0.6.1.tgz has been compiled on Slackware 9.</para>
+      </sect2>
+
+      <sect2 id="cvs">
+        <title>CVS User</title>
+        <para>If you are interested in testing bleeding edge software you could also check out
+        the latest code directly from CVS by issuing the command</para>
+        <simplelist>
+            <member>
+<computeroutput># cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/synce co
+        synce-kde</computeroutput>
+            </member>
+        </simplelist>
+        <para>
+after logging in. Look at Compiling and Installing for a guide how to compile and install
+        SynCE-KDE by yourself.
+        </para>
+      </sect2>
     </sect1>
 
     <sect1 id="requirements">
       <title>Requirements</title>
-      <para></para>
+      <para>SynCE-KDE 0.6 requires</para>
+      <itemizedlist>
+        <listitem><para>KDE 3.1 or later,</para></listitem>
+        <listitem><para>Qt 3.1 or later, and of course</para></listitem>
+        <listitem><para>the SynCE libraries version 0.8.</para></listitem>
+      </itemizedlist>
     </sect1>
 
     <sect1 id="compilation-and-installation">
       <title>Compilation and Installation</title>
-
-      <para>Compiling rapip is very easy.  The following should do
-	it: <screen>
-<prompt>%</prompt> <userinput><command>./configure</command></userinput>
-<prompt>%</prompt> <userinput><command>make</command></userinput>
-<prompt>%</prompt> <userinput><command>make</command> install</userinput></screen>
+      <para>To compile and install SynCE-KDE you have to prepare your environment like
+      described below:
       </para>
+      <sect2 id="prerequisits">
+        <title>Requisites</title>
+        <para>Folowing tasks have to be worked out before installing SynCE-KDE</para>
+        <itemizedlist>
+            <listitem><para>
+Install the base SynCE libraries as described here.
+            </para></listitem>
+            <listitem><para>
+Make the SynCE libraries work by getting connected for the first time.
+            </para></listitem>
+            <listitem><para>
+If you want the AvantGo synchronizer plugin to be compiled, you
+                    also have to download and compile agsync-0.2-pre.tgz from  AvantGo
+                    Synchronization with Pocket PC provided by Michael Jarrett. Note,
+                    compilation of agsync-0.2-pre is enough - installation is not
+                    required but of course allowed ;-)
+            </para></listitem>
+        </itemizedlist>
+      </sect2>
+      <sect2 id="compiling">
+        <title>Compilation and Installation</title>
+        <para>Download SynCE-KDE (synce-kde-0.6.tar.gz) from the SourceForge Project
+            Page or check out the latest code from the CVS repository.</para>
 
-      <para>That should do it! Should you run into any problems,
-	please report them to the <ulink
-	url="mailto:voc&#64;soft&#46;uni&#45;linz&#46;ac&#46;at">author</ulink></para>
+        <itemizedlist>
+            <listitem><para>
+If you have downloaded from the SourceForge Project Page:
+                <simplelist>
+                    <member>
+<computeroutput>leave out the next step.</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem><para>
+After checking out SynCE-KDE from CVS do a
+                <simplelist>
+                    <member>
+<computeroutput># make -f Makefile.cvs</computeroutput>
+                    </member>
+                </simplelist>
+and leave out the next step.
+            </para></listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem><para>
+Unpack the downloaded synce-kde-0.6.tar.gz into your favorite source directory
+                <simplelist>
+                    <member>
+<computeroutput># tar -xzf synce-kde-0.6.1.tar.gz</computeroutput>
+                    </member>
+                </simplelist>
+and leave out the next step.
+            </para></listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem><para>
+Configure your SynCE-KDE source tree by issuing the command
+                <simplelist>
+                    <member>
+<computeroutput># ./configure</computeroutput>
+                    </member>
+                </simplelist>
+If you want the AvantGo synchronization plugin also to be compiled, issue
+                <simplelist>
+                    <member>
+<computeroutput># ./configure --with-agsync=/path/to/agsync/source/dir/</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem><para>
+After configuring SynCE-KDE compile and install it by simply doing a
+                <simplelist>
+                    <member>
+<computeroutput># make</computeroutput>
+                    </member>
+                </simplelist>
+and as root
+                <simplelist>
+                    <member>
+<computeroutput>deb-src http://synce.sourceforge.net/debian/ unstable/source/</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem><para>
+Add the following two lines to your <computeroutput>/etc/apt/sources.list</computeroutput>:
+                <simplelist>
+                    <member>
+<computeroutput>deb http://synce.sourceforge.net/debian/ unstable/$(ARCH)/</computeroutput>
+                    </member>
+                    <member>
+<computeroutput>deb-src http://synce.sourceforge.net/debian/ unstable/source/</computeroutput>
+                    </member>
+                </simplelist>
+            </para></listitem>
+        </itemizedlist>
+
+      </sect2>
     </sect1>
   </chapter>
 
   <chapter id="using-rapip">
-    <title>Using rapip</title>
-    <para></para>
+    <title>Using SynCE-KDE</title>
+        <sect1 id="rapip-using">
+            <title>RAPIP</title>
+            <para>
+Open Konqueror and type <computeroutput>rapip://name_of_an_active_connection_file/
+</computeroutput> into the URL line of Konqueror. You should see the root-directory
+of the PDA which corresponds to the specified active_connection file. Use Konqueror
+as usual - e.g. drag and drop files to and from the PDA file system ...
+
+If there is just one PDA connected, you can also use the short form rapip:/ to browse
+this PDA.
+            </para>
+        </sect1>
+
+        <sect1 id="raki-using">
+            <title>RAKI</title>
+            <para>
+Launch the application from the "K-Menu->Utilities"-Menu or,  if you don't have a
+"K-Menu->Utilities->Raki" entry, start RAKI from the command line by issuing "raki".
+You will get a new icon located in the system-tray.
+
+Right click on that icon shows a popup menu containing infrastructure related items.
+If there are connected devices left click will open a popup menu containing individual
+device menu items for every connected PDA.
+
+Drag and drop of CAB-files onto the RAKI system-tray icon installs them on a device.
+A dialog box lets you choose the destination PDA.
+
+Choosing "Synchronize" from an individual device menu starts synchronizing that PDA
+and your desktop.
+            </para>
+        </sect1>
+
+        <sect1 id="vdccm-using">
+            <title>VDCCM</title>
+            <para>
+RAKI can launch VDCCM at startup (see the "Configure" menu entry in the infrastructure
+menu) - that's the common case.
+
+Nevertheless, VDCCM supports a view command line arguments in addition to the usual
+DCCM command line arguments. Issue vdccm -h for a list of them. You can start VDCCM
+completely independent of RAKI by hand before or after RAKI has been started. Of
+course, no (V)DCCM may be running at this time.
+            </para>
+        </sect1>
+
   </chapter>
 
+<!--
   <chapter id="questionsanswersandtips">
     <title>Questions, Answers, and Tips</title>
 
@@ -95,6 +408,8 @@
     </qandaset>
 
   </chapter>
+-->
+
 </book>
 <!--
 Local Variables:
