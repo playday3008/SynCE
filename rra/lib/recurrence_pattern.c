@@ -134,7 +134,7 @@ static bool rra_recurrence_pattern_read_daily(/*{{{*/
   uint32_t unknown_b;
 
   unknown_b = READ_UINT32(p);  p += 4;
-  synce_trace("Unknown      = %08x = (maybe duration of %f days?)", 
+  synce_trace("Unknown      = %08x (maybe a duration of %f days?)", 
       unknown_b, unknown_b / (60.0 * 24.0));
 
   self->interval      = READ_INT32(p);  p += 4;   /* 0x0e */
@@ -147,7 +147,7 @@ static bool rra_recurrence_pattern_read_daily(/*{{{*/
   self->flags         = READ_INT32(p);  p += 4;
   self->occurrences   = READ_INT32(p);  p += 4;
   
-  synce_trace("Flags        = %08x", self->interval);
+  synce_trace("Flags        = %08x", self->flags);
   synce_trace("Occurrences  = %08x", self->occurrences);
 
   *buffer = p;
@@ -163,7 +163,7 @@ static bool rra_recurrence_pattern_read_weekly(/*{{{*/
   uint32_t unknown_b;
 
   unknown_b = READ_UINT32(p);  p += 4;
-  synce_trace("Unknown         = %08x = (maybe something that is %f days?)", 
+  synce_trace("Unknown         = %08x (maybe something that is %f days?)", 
       unknown_b, unknown_b / (60.0 * 24.0));
 
   self->interval          = READ_INT32(p);  p += 4;   /* 0x0e */
@@ -235,7 +235,7 @@ static bool rra_recurrence_pattern_read_monthnth(/*{{{*/
 
   synce_trace("DaysOfWeekMask  = %08x", self->days_of_week_mask);
   synce_trace("Instance        = %08x", self->instance);
-  synce_trace("Flags           = %08x", self->interval);
+  synce_trace("Flags           = %08x", self->flags);
   synce_trace("Occurrences     = %08x", self->occurrences);
 
   *buffer = p;
@@ -343,8 +343,17 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
     goto exit;
   }
 
-  synce_trace("Unknown         = %08x", READ_INT32(p));
-  p += 4;
+  if ((self->flags & ~3) != 0x2020) 
+  {
+    synce_warning("Unexpected flags!");
+  }
+
+  {
+    uint32_t unknown = READ_INT32(p); p += 4;
+    synce_trace("Unknown         = %08x", unknown);
+    if (unknown != 0)
+      synce_trace("Expected 0 but got %08x", unknown);
+  }
   
   rra_exceptions_read_summary(self->exceptions, &p);
   
@@ -369,8 +378,10 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   
   self->start_minute = READ_INT32(p); p += 4;
   self->end_minute   = READ_INT32(p); p += 4;
-  synce_trace("Start time      = %02i:%02i", self->start_minute / 60, self->start_minute % 60);
-  synce_trace("End time        = %02i:%02i", self->end_minute   / 60, self->end_minute   % 60);
+  synce_trace("Start time      = %02i days, %02i hours, %02i min", 
+      self->start_minute / (60*24), (self->start_minute / 60) % 24, self->start_minute % 60);
+  synce_trace("End time        = %02i days, %02i hours, %02i min", 
+      self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
 
   rra_exceptions_read_details(self->exceptions, &p);
 
