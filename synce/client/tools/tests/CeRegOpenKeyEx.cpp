@@ -10,7 +10,8 @@ int main()
 	TEST_EQUAL(ERROR_SUCCESS, CeRegOpenKeyEx(HKEY_CLASSES_ROOT, clsid, 0, 0, &hkey));
 	TEST_EQUAL(ERROR_SUCCESS, CeRegCloseKey(hkey));
 
-#if 0
+#if 1
+	// This used to crash CeRegOpenKeyEx
 	TEST_EQUAL(ERROR_SUCCESS, CeRegOpenKeyEx(HKEY_CLASSES_ROOT, NULL, 0, 0, &hkey));
 	TEST_EQUAL(ERROR_SUCCESS, CeRegCloseKey(hkey));
 #endif
