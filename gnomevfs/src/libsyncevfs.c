@@ -9,6 +9,11 @@
 
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
 #include <libgnomevfs/gnome-vfs-module.h>
+#include <libgnomevfs/gnome-vfs-utils.h>
+
+/* Seems like this function is not declared in the gnome-vfs headers? */
+const char *
+gnome_vfs_mime_type_from_name_or_default (const char *filename, const char *defaultv);
 
 #ifdef SYNCE_DEBUG
 #define D(x...) printf(x)
@@ -28,8 +33,21 @@
 #define MUTEX_UNLOCK(a)
 #endif
 
+#define NAME_MY_DOCUMENTS  "My Documents"
+
+#define NAME_APPLICATIONS   "Applications"
+#define NAME_DOCUMENTS      "Documents"
+#define NAME_FILESYSTEM     "Filesystem"
+
+#define INDEX_INVALID       -1
+#define INDEX_DEVICE        1
+#define INDEX_APPLICATIONS  2
+#define INDEX_FILESYSTEM    3
+#define INDEX_DOCUMENTS     4
+
 typedef struct _DIR_HANDLE
 {
+  int index;
 	char *location;
 	CE_FIND_DATA *data;
 	int itemcount;
@@ -38,43 +56,148 @@ typedef struct _DIR_HANDLE
 
 static GMutex * mutex = NULL;
 
-static char* g_convert_to_backward_slashes(GnomeVFSURI *uri)
+static gboolean initialized_rapi = FALSE;
+
+typedef struct _ErrorCodeTriple
 {
-	char *path;
-	char *tpath;
-	char *location;
-	int i;
-	char a, b;
-	int num;
-	gchar *p;
+  GnomeVFSResult gnome_vfs_result;
+  DWORD error;
+  HRESULT hresult;
+} ErrorCodeTriple;
 
-	D("g_convert_to_backward_slashes()\n");
-	D("unconverted: %s\n", gnome_vfs_uri_get_path(uri));
-	path = (char *) gnome_vfs_unescape_string(gnome_vfs_uri_get_path(uri),"");
-	location = path;
+static ErrorCodeTriple error_codes[] =
+{
+  {GNOME_VFS_OK,                        ERROR_SUCCESS,        S_OK        },
+  {GNOME_VFS_ERROR_GENERIC,             0,                    E_FAIL      },
+  {GNOME_VFS_ERROR_INTERNAL,            0,                    E_UNEXPECTED},
+  {GNOME_VFS_ERROR_NOT_FOUND,           ERROR_FILE_NOT_FOUND, 0},
+  {GNOME_VFS_ERROR_NOT_FOUND,           ERROR_PATH_NOT_FOUND, 0},
+  {GNOME_VFS_ERROR_INVALID_URI,         ERROR_INVALID_NAME,   0},
+  {GNOME_VFS_ERROR_FILE_EXISTS,         ERROR_FILE_EXISTS,    0},
+  {GNOME_VFS_ERROR_FILE_EXISTS,         ERROR_ALREADY_EXISTS, 0},
+  {GNOME_VFS_ERROR_DIRECTORY_NOT_EMPTY, ERROR_DIR_NOT_EMPTY,  0},
+  {GNOME_VFS_ERROR_NOT_PERMITTED,       ERROR_ACCESS_DENIED,  0}
+};
 
-	if (gnome_vfs_uri_get_user_name(uri) != NULL
-	 || gnome_vfs_uri_get_password(uri) != NULL
-	 || gnome_vfs_uri_get_host_name(uri) != NULL
-	 || gnome_vfs_uri_get_host_port(uri) != 0) {
-		g_free(path);	
-		return NULL;
-	}
-	
-	p = path;
-	while (*p != '\0') {
-		if (*p == '/') {
-			*p = '\\';
-		}
-		p = g_utf8_next_char (p);
-	}
+static GnomeVFSResult gnome_vfs_result_from_rapi()/*{{{*/
+{
+  GnomeVFSResult result = GNOME_VFS_ERROR_GENERIC;
+  HRESULT hr;
+  unsigned error;
+  int i;
+  
+  hr    = CeRapiGetError();
+	error = CeGetLastError();
 
-	D("converted: %s\n", location);
+  if (FAILED(hr))
+  {
+    /* This is a connection error, so we close the connection */
+    CeRapiUninit();
+    initialized_rapi = FALSE;
 
-	return location;
-}
+    synce_trace("HRESULT = %08x", hr);
 
-static int vfs_to_synce_mode(GnomeVFSOpenMode mode, int *open_mode, int *create_mode)
+    for (i = 0; i < sizeof(error_codes)/sizeof(ErrorCodeTriple); i++)
+    {
+      if (error_codes[i].hresult == hr)
+      {
+        result = error_codes[i].gnome_vfs_result;
+        break;
+      }
+    }
+  }
+  else
+  {
+    synce_trace("error = %i", error);
+
+    for (i = 0; i < sizeof(error_codes)/sizeof(ErrorCodeTriple); i++)
+    {
+      if (error_codes[i].error == error)
+      {
+        result = error_codes[i].gnome_vfs_result;
+        break;
+      }
+    }
+  }
+
+  synce_trace("GnomeVFSResult = %s", gnome_vfs_result_to_string(result));
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult initialize_rapi()/*{{{*/
+{
+  if (!initialized_rapi)
+  {
+    MUTEX_LOCK (mutex); 
+    HRESULT hr = CeRapiInit();
+    MUTEX_UNLOCK (mutex); 
+
+    if (FAILED(hr))
+    {
+      fprintf(stderr, "Unable to initialize RAPI: %s\n", 
+          synce_strerror(hr));
+      return GNOME_VFS_ERROR_LOGIN_FAILED;
+    }
+
+    initialized_rapi = TRUE;
+  }
+    
+  return GNOME_VFS_OK;
+}/*}}}*/
+
+static int get_location(GnomeVFSURI *uri, gchar **location)/*{{{*/
+{
+  int result = INDEX_INVALID;
+  *location = NULL;
+  gchar **path = NULL;
+
+  path = g_strsplit(gnome_vfs_unescape_string(gnome_vfs_uri_get_path(uri),"\\"), "/", 0);
+
+  {
+    int i;
+    for (i = 0; path[i]; i++)
+      synce_trace("path[%i] = '%s'", i, path[i]);
+  }
+  
+  if (!path || !path[0] || !path[1])
+  {
+    result = INDEX_DEVICE;
+    *location = NULL;
+  }
+  else if (0 == strcmp(path[1], NAME_APPLICATIONS))
+  {
+    result = INDEX_APPLICATIONS;
+    *location = g_strdup(path[2]);
+  }
+  else if (0 == strcmp(path[1], NAME_DOCUMENTS))
+  {
+    /* XXX: what are the name of this on non-english systems? */
+    gchar *tmp = g_strjoinv("\\", &path[2]);
+    *location = g_strdup_printf("\\%s\\%s", NAME_MY_DOCUMENTS, tmp);
+    g_free(tmp);
+    result = INDEX_DOCUMENTS;
+  }
+  else if (0 == strcmp(path[1], NAME_FILESYSTEM))
+  {
+    gchar *tmp = g_strjoinv("\\", &path[2]);
+    *location = g_strdup_printf("\\%s", tmp);
+    g_free(tmp);
+    result = INDEX_FILESYSTEM;
+  }
+  else
+  {
+    result = INDEX_DEVICE;
+    *location = NULL;
+  }
+
+
+  synce_trace("index = %i, location = '%s'", result, *location);
+
+  g_strfreev(path);
+  return result;
+}/*}}}*/
+
+static int vfs_to_synce_mode(GnomeVFSOpenMode mode, int *open_mode, int *create_mode)/*{{{*/
 {
 	if(mode & GNOME_VFS_OPEN_READ)
 	{
@@ -95,9 +218,9 @@ static int vfs_to_synce_mode(GnomeVFSOpenMode mode, int *open_mode, int *create_
 		*open_mode = GENERIC_WRITE;
 	}
 	return 0;
-}
+}/*}}}*/
 
-static GnomeVFSResult synce_open
+static GnomeVFSResult synce_open/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle **method_handle_return,
@@ -105,18 +228,40 @@ static GnomeVFSResult synce_open
   GnomeVFSOpenMode mode,
   GnomeVFSContext *context)
 {
+  GnomeVFSResult result;
 	char *location = NULL;
 	WCHAR *wide_path = NULL;
 	int synce_open_mode;
 	int synce_create_mode;
 	HANDLE handle;
-	char *tempstring;
-	int err;
 
 	D("--------------------------------------------\n");
 	D("synce_open()\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch (get_location(uri, &location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      synce_trace("location = '%s'", location);
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
+
 
 	D("location: %s\n", location);
 
@@ -140,45 +285,24 @@ static GnomeVFSResult synce_open
 		FILE_ATTRIBUTE_NORMAL,
 		0
 	);
-	MUTEX_UNLOCK (mutex);
 
-	free(location);
+	g_free(location);
 	wstr_free_string(wide_path);
 
 	*((HANDLE *)method_handle_return) = handle;
 
-	MUTEX_LOCK (mutex);
-	err = CeGetLastError();
-	MUTEX_UNLOCK (mutex);
-	
-	D("Synce Error: %d %s\n", err, synce_strerror(err));
-	D("--------------------------------------------\n");
 	if((handle == INVALID_HANDLE_VALUE) || (synce_open_mode & GENERIC_WRITE))
-	{
-		switch(err)
-		{
-			case 0:
-				return GNOME_VFS_OK;
-			case 2:
-			case 3:
-			case 123:
-				D("Failed\n");
-				return GNOME_VFS_ERROR_INVALID_URI;
-			case 80:
-				D("Failed\n");
-				return GNOME_VFS_ERROR_FILE_EXISTS;
-			default:
-				D("Failed\n");
-				return GNOME_VFS_ERROR_GENERIC;
-		}
-	}
+    result = gnome_vfs_result_from_rapi();
 	else
-	{
-		return GNOME_VFS_OK;
-	}
-}
+		result = GNOME_VFS_OK;
 
-static GnomeVFSResult synce_create
+	MUTEX_UNLOCK (mutex);
+  
+exit:
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_create/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle **method_handle_return,
@@ -189,24 +313,47 @@ static GnomeVFSResult synce_create
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	char *location = NULL;
 	WCHAR *wide_path = NULL;
 	int synce_open_mode;
 	int synce_create_mode;
 	HANDLE handle;
 	char *tempstring;
-	int err;
 
 	D("--------------------------------------------\n");
 	D("synce_create()\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch (get_location(uri, &location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      synce_trace("location = '%s'", location);
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
+
 	D("location: %s\n", location);
 
 	wide_path = wstr_from_utf8(location);
 	tempstring = wstr_to_utf8(wide_path);
 	D("wide_path: %s\n", tempstring);
-	free(tempstring);
+	g_free(tempstring);
 
 	vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
 
@@ -222,77 +369,56 @@ static GnomeVFSResult synce_create
 		FILE_ATTRIBUTE_NORMAL,
 		0
 	);
-	MUTEX_UNLOCK (mutex);
 
-	free(location);
+	g_free(location);
 	wstr_free_string(wide_path);
 
 	*((HANDLE *)method_handle_return) = handle;
 
-	MUTEX_LOCK (mutex);
-	err = CeGetLastError();
-	MUTEX_UNLOCK (mutex);
-	
-	D("Synce Error: %d %s\n", err, synce_strerror(err));
-	D("--------------------------------------------\n");
 	if((handle == INVALID_HANDLE_VALUE) || (synce_open_mode & GENERIC_WRITE))
-	{
-		switch(err)
-		{
-			case 0:
-				return GNOME_VFS_OK;
-			case 2:
-			case 3:
-			case 123:
-				D("Failed\n");
-				return GNOME_VFS_ERROR_INVALID_URI;
-			case 80:
-				D("Failed\n");
-				return GNOME_VFS_ERROR_FILE_EXISTS;
-			default:
-				D("Failed\n");
-				return GNOME_VFS_ERROR_GENERIC;
-		}
-	}
-	else
-	{
-		return GNOME_VFS_OK;
-	}
-}
+    result = gnome_vfs_result_from_rapi();
+  else
+		result = GNOME_VFS_OK;
 
-static GnomeVFSResult synce_close
+	MUTEX_UNLOCK (mutex);
+
+exit:
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_close/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle *method_handle,
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	HANDLE handle;
-	int result;
-	int err;
+	int success;
 
 	D("------------------- synce_close() -----------------------\n");
+
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
 
 	handle = (HANDLE) method_handle;
 
 	D("synce_close: CeCloseHandle()\n");
 	MUTEX_LOCK (mutex);
-	result = CeCloseHandle(handle);
-	err = CeGetLastError();
+	success = CeCloseHandle(handle);
+	
+	if (success)
+		result = GNOME_VFS_OK;
+  else
+    result = gnome_vfs_result_from_rapi();
+
 	MUTEX_UNLOCK (mutex);
 
-	
-	D("synce_close: Synce Error: %d %s\n", err, synce_strerror(err));
-	D("------------------- synce_close() end -------------------\n");
+  return result;
+}/*}}}*/
 
-	if(!result) {
-		return GNOME_VFS_ERROR_GENERIC;
-	} else {
-		return GNOME_VFS_OK;
-	}
-}
-
-static GnomeVFSResult synce_read
+static GnomeVFSResult synce_read/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle *method_handle,
@@ -302,19 +428,22 @@ static GnomeVFSResult synce_read
   GnomeVFSContext *context
 )
 {
-	int result;
+  GnomeVFSResult result;
+	int success;
 	size_t read_return;
 	HANDLE handle;
-	int err;
 	
 	D("------------------ synce_read() ---------------------\n");
 	D("synce_read()\n");
+
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
 
 	handle = (HANDLE) method_handle;
 
 	D("CeReadFile\n");
 	MUTEX_LOCK (mutex);
-	result = CeReadFile
+	success = CeReadFile
 	(
 		handle,
 		buffer,
@@ -322,38 +451,26 @@ static GnomeVFSResult synce_read
 		&read_return,
 		NULL
 	);
-	err = CeGetLastError();
-	MUTEX_UNLOCK (mutex);
 
-	D("synce_read: Synce Error: %d %s\n", err, synce_strerror(err));
-	D("------------------ synce_read() end ---------------------\n");
-	if(result == 0)
+	if (!success)
 	{
-		switch(err)
-		{
-			case 0:
-				return GNOME_VFS_OK;
-			case 3:
-				D("synce_read: Failed\n");
-				return GNOME_VFS_ERROR_INVALID_URI;
-			case 80:
-				D("synce_read: Failed\n");
-				return GNOME_VFS_ERROR_FILE_EXISTS;
-		}
+    result = gnome_vfs_result_from_rapi();
 	}
-	else if((result != 0) & (read_return == 0))
+	else if (read_return == 0)
 	{
-		D("synce_read: Failed\n");
-		return GNOME_VFS_ERROR_EOF;
+		result = GNOME_VFS_ERROR_EOF;
 	}
 	else
 	{
 		*bytes_read_return = read_return;
-		return GNOME_VFS_OK;
+		result = GNOME_VFS_OK;
 	}
-}
 
-static GnomeVFSResult synce_write
+	MUTEX_UNLOCK (mutex);
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_write/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle *method_handle,
@@ -363,18 +480,21 @@ static GnomeVFSResult synce_write
 	GnomeVFSContext *context
 )
 {
-	int result;
+  GnomeVFSResult result;
+	int success;
 	HANDLE handle;
 	size_t bytes_written;
-	int err; 
 
 	D("----------------- synce_write() -------------------\n");
+
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
 
 	handle = (HANDLE) method_handle;
 
 	D("CeWriteFile()\n");
 	MUTEX_LOCK (mutex);
-	result = CeWriteFile
+	success = CeWriteFile
 	(
 		handle,
 		buffer,
@@ -382,30 +502,29 @@ static GnomeVFSResult synce_write
 		&bytes_written,
 		NULL
 	);
-	err = CeGetLastError();
-	MUTEX_UNLOCK (mutex);
-
-	D("synce_write: Synce Error: %d %s\n", err, synce_strerror(err));
-	D("----------------- synce_write() end ---------------\n");
-	if(result == 0)
+  
+	if (!success)
 	{
 		D("synce_write: Failed\n");
-		return GNOME_VFS_ERROR_GENERIC;
+    result = gnome_vfs_result_from_rapi();
 	}
-	else if((result != 0) && (bytes_written == 0))
+	else if (bytes_written == 0)
 	{
 		D("synce_write: End of file\n");
 		*bytes_written_return = 0;
-		return GNOME_VFS_ERROR_EOF;
+		result = GNOME_VFS_ERROR_EOF;
 	}
 	else
 	{
 		*bytes_written_return = bytes_written;
-		return GNOME_VFS_OK;
+		result = GNOME_VFS_OK;
 	}
-}
+	MUTEX_UNLOCK (mutex);
 
-static GnomeVFSResult synce_open_dir
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_open_dir/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle **method_handle,
@@ -414,6 +533,7 @@ static GnomeVFSResult synce_open_dir
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	char *location;
 	char *new_path;
 	DIR_HANDLE *dh;
@@ -421,39 +541,89 @@ static GnomeVFSResult synce_open_dir
 	int optionflags;
 	int itemcount;
 	WCHAR *tempwstr;
+  int index;
 	
-	D("------------------ synce_open_dir() -------------------\n");
+  D("------------------ synce_open_dir() -------------------\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch ((index = get_location(uri, &location)))
+  {
+    case INDEX_DEVICE:
+      synce_trace("location = '%s'", location);
+      dh = (DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
+
+      dh->index = INDEX_DEVICE;
+      dh->location = NULL;
+      dh->itemcount = 3;  /* Applications, Documents, Filesystem */
+      dh->count = 0;
+      dh->data = NULL;
+
+      *((DIR_HANDLE **) method_handle) = dh;
+
+      result = GNOME_VFS_OK;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      synce_trace("location = '%s'", location);
+      if (location && location[0] != '\0')
+      {
+        result = GNOME_VFS_ERROR_NOT_FOUND;
+        goto exit;
+      }
+
+      dh = (DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
+
+      dh->index = INDEX_APPLICATIONS;
+      dh->location = NULL;
+      dh->itemcount = 0;
+      dh->count = 0;
+      dh->data = NULL;
+
+      *((DIR_HANDLE **) method_handle) = dh;
+      result = GNOME_VFS_OK;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      synce_trace("location = '%s'", location);
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
 
 	D("synce_open_dir: location: %s\n", location);
 
 	if(!location)
 	{
-		location = strdup("*");
+		location = g_strdup("*");
 	}
 	else if(location[1] == '\0')
 	{
-		free(location);
-		location = strdup("*");
+		g_free(location);
+		location = g_strdup("*");
 	}
 	else if(location[strlen(location)-1] == '\\')
 	{
-		new_path = (char *)malloc(sizeof(char)*(strlen(location)+2));
+		new_path = (char *)g_malloc(sizeof(char)*(strlen(location)+2));
 		strcpy(new_path, location);
 		new_path[strlen(location)] = '*';
 		new_path[strlen(location)+1] = '\0';
-		free(location);
+		g_free(location);
 		location = new_path;
 	}
 	else
 	{
-		new_path = (char *)malloc(sizeof(char)*(strlen(location)+3));
+		new_path = (char *)g_malloc(sizeof(char)*(strlen(location)+3));
 		strcpy(new_path, location);
 		new_path[strlen(location)] = '\\';
 		new_path[strlen(location)+1] = '*';
 		new_path[strlen(location)+2] = '\0';
-		free(location);
+		g_free(location);
 		location = new_path;
 	}
 
@@ -465,27 +635,25 @@ static GnomeVFSResult synce_open_dir
 		| FAF_NAME
 		|	FAF_SIZE_LOW
 		|	FAF_OID;
-
 	
 	tempwstr = wstr_from_utf8(location);
 	
 	MUTEX_LOCK (mutex); 
-	if(!CeFindAllFiles(tempwstr, optionflags, &itemcount, &data))
+	if (!CeFindAllFiles(tempwstr, optionflags, &itemcount, &data))
 	{
-		free(location);
+		g_free(location);
 		wstr_free_string(tempwstr);
-		D("synce_open_dir: Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-		D("synce_open_dir: Fail\n");
-		D("------------------ synce_open_dir() end ---------------\n");
+    result = gnome_vfs_result_from_rapi();
 		MUTEX_UNLOCK (mutex); 
-		return GNOME_VFS_ERROR_INVALID_URI;
+		return result;
 	}
 	MUTEX_UNLOCK (mutex); 
 
 	wstr_free_string(tempwstr);
 
-	dh = (DIR_HANDLE*) malloc(sizeof(DIR_HANDLE));
+	dh = (DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
 
+  dh->index = index;
 	dh->location = location;
 	dh->itemcount = itemcount;
 	dh->count = 0;
@@ -493,38 +661,37 @@ static GnomeVFSResult synce_open_dir
 
 	*((DIR_HANDLE **) method_handle) = dh;
 
-#ifdef SYNCE_DEBUG
-	MUTEX_LOCK (mutex); 
-	D("synce_open_dir: Synce Error: %d %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-	MUTEX_UNLOCK (mutex);
-#endif
-	D("synce_open_dir: Ok\n");
-	D("------------------ synce_open_dir() end ---------------\n");
+  result = GNOME_VFS_OK;
 
-	return GNOME_VFS_OK;
-}
+exit:
+	return result;
+}/*}}}*/
 
-static GnomeVFSResult synce_close_dir
+static GnomeVFSResult synce_close_dir/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle *method_handle,
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	DIR_HANDLE *dh;
-	HRESULT result; 
+	HRESULT hr; 
 
 	D("----------------- synce_close_dir() ------------------\n");
 
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
 	dh = (DIR_HANDLE *)method_handle;
 
-	free(dh->location);
+	g_free(dh->location);
 
 	MUTEX_LOCK (mutex); 
-	result = CeRapiFreeBuffer(dh->data);
+	hr = CeRapiFreeBuffer(dh->data);
 	MUTEX_UNLOCK (mutex); 
 
-	if(result != S_OK)
+	if (FAILED(hr))
 	{
 		D("synce_close_dir: Failed\n");
 		D("----------------- synce_close_dir() end --------------\n");
@@ -536,24 +703,25 @@ static GnomeVFSResult synce_close_dir
 		D("----------------- synce_close_dir() end --------------\n");
 		return GNOME_VFS_OK;
 	}
-	free(dh);
-}
+	g_free(dh);
+}/*}}}*/
 
 /* Have to fix the mime-type conversion */
-static BOOL get_file_attributes
+static BOOL get_file_attributes/*{{{*/
 (
 	GnomeVFSFileInfo *file_info,
 	CE_FIND_DATA *entry
 )
 {
-	(int)file_info->valid_fields =
+	file_info->valid_fields =
 			GNOME_VFS_FILE_INFO_FIELDS_TYPE
 		| GNOME_VFS_FILE_INFO_FIELDS_PERMISSIONS
 		| GNOME_VFS_FILE_INFO_FIELDS_FLAGS
 		| GNOME_VFS_FILE_INFO_FIELDS_SIZE
 		| GNOME_VFS_FILE_INFO_FIELDS_ATIME
 		| GNOME_VFS_FILE_INFO_FIELDS_MTIME
-		| GNOME_VFS_FILE_INFO_FIELDS_CTIME;
+		| GNOME_VFS_FILE_INFO_FIELDS_CTIME
+    | GNOME_VFS_FILE_INFO_FIELDS_IO_BLOCK_SIZE;
 
 	file_info->name = wstr_to_utf8(entry->cFileName);
 
@@ -566,14 +734,14 @@ static BOOL get_file_attributes
 	file_info->mtime = filetime_to_unix_time(&entry->ftLastWriteTime);
 	file_info->ctime = filetime_to_unix_time(&entry->ftCreationTime);;
 
-	(int) file_info->permissions = 0664;
+	file_info->permissions = 0664;
 
 	if(entry->dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-		(int) file_info->permissions |= 0222;
+		file_info->permissions |= 0222;
 
 	if(entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	{
-		(int) file_info->permissions |= 0111;
+		file_info->permissions |= 0111;
 		file_info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 		file_info->mime_type = g_strdup("x-directory/normal");
 	}
@@ -590,34 +758,39 @@ static BOOL get_file_attributes
 	file_info->uid = getuid();
 	file_info->gid = getgid();
 
-	return TRUE;
-}
+  /* Should make read/write faster but with less feedback */
+  file_info->io_block_size = 64*1024;
 
-static void get_root_attributes
-(	
-	GnomeVFSFileInfo *file_info
-)
+	return TRUE;
+}/*}}}*/
+
+static void get_special_directory_attributes(GnomeVFSFileInfo *file_info, const gchar *name)/*{{{*/
 {
-	(int)file_info->valid_fields =
+	file_info->valid_fields =
 			GNOME_VFS_FILE_INFO_FIELDS_TYPE
 		| GNOME_VFS_FILE_INFO_FIELDS_PERMISSIONS
 		| GNOME_VFS_FILE_INFO_FIELDS_FLAGS
 		| GNOME_VFS_FILE_INFO_FIELDS_SIZE;
 
-	file_info->name = strdup("My Device");
+	file_info->name = g_strdup(name);
 
 	file_info->size = 0;
 
-	(int) file_info->permissions = 0775;
+	file_info->permissions = 0775;
 
 	file_info->type = GNOME_VFS_FILE_TYPE_DIRECTORY;
 	file_info->mime_type = g_strdup("x-directory/normal");
 
 	file_info->uid = getuid();
 	file_info->gid = getgid();
-}
+}/*}}}*/
 
-static GnomeVFSResult synce_read_dir
+static void get_root_attributes(GnomeVFSFileInfo *file_info)/*{{{*/
+{
+  get_special_directory_attributes(file_info, "Mobile Device");
+}/*}}}*/
+
+static GnomeVFSResult synce_read_dir/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle *method_handle,
@@ -625,11 +798,14 @@ static GnomeVFSResult synce_read_dir
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	DIR_HANDLE *dh;
-	HANDLE handle;
-	BOOL result;
+	BOOL success = FALSE;
 
 	D("------------------ synce_read_dir() --------------------\n");
+
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
 
 	dh = (DIR_HANDLE *)method_handle;
 
@@ -640,13 +816,59 @@ static GnomeVFSResult synce_read_dir
 		D("------------------ synce_read_dir() end ----------------\n");
 		return GNOME_VFS_ERROR_EOF;
 	}
+      
+  synce_trace("index = %i, location = '%s'", dh->index, dh->location);
 
-	result = get_file_attributes(file_info, dh->data+dh->count);
-	dh->count++;
+  switch (dh->index)
+  {
+    case INDEX_DEVICE:
+      success = TRUE;
+
+      switch (dh->count)
+      {
+        case 0:
+          get_special_directory_attributes(file_info, NAME_APPLICATIONS);
+          break;
+
+        case 1:
+          get_special_directory_attributes(file_info, NAME_DOCUMENTS);
+          break;
+
+        case 2:
+          get_special_directory_attributes(file_info, NAME_FILESYSTEM);
+          break;
+
+        default:
+          success = FALSE;
+          break;
+      }
+      break;
+
+    case INDEX_APPLICATIONS:
+		  return GNOME_VFS_ERROR_CORRUPTED_DATA;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      if (dh->location == NULL)
+      {
+        success = TRUE;
+        if (dh->index == INDEX_DOCUMENTS)
+          get_special_directory_attributes(file_info, NAME_DOCUMENTS);
+        else if (dh->index == INDEX_FILESYSTEM)
+          get_special_directory_attributes(file_info, NAME_FILESYSTEM);
+        else
+          success = FALSE;
+      }
+      else
+        success = get_file_attributes(file_info, dh->data+dh->count);
+      break;
+  }
+
+  dh->count++;
 
 	D("synce_read_dir: Error %d: %s\n", 0, "Success");
 
-	if(!result)
+	if(!success)
 	{
 		D("synce_read_dir: Failed\n");
 		D("------------------ synce_read_dir() end ----------------\n");
@@ -660,9 +882,9 @@ static GnomeVFSResult synce_read_dir
 		D("------------------ synce_read_dir() end ----------------\n");
 		return GNOME_VFS_OK;
 	}
-}
+}/*}}}*/
 
-static GnomeVFSResult synce_get_file_info
+static GnomeVFSResult synce_get_file_info/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSURI *uri,
@@ -671,18 +893,44 @@ static GnomeVFSResult synce_get_file_info
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	gchar *location;
-	WCHAR *wide_path;
 	CE_FIND_DATA entry;
-	HANDLE handle;
-	int optionflags;
 	WCHAR *tempwstr;
 	int err;
 
 	D("------------- synce_get_file_info() -----------------\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
 
+  switch (get_location(uri, &location))
+  {
+    case INDEX_DEVICE:
+      synce_trace("location = '%s'", location);
+      if (location == NULL)
+      {
+    		get_root_attributes(file_info);
+        result = GNOME_VFS_OK;
+      }
+      else
+        result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      get_special_directory_attributes(file_info, NAME_APPLICATIONS);
+      result = GNOME_VFS_OK;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
 	D("%s\n", location);
 
 	if(!location)
@@ -725,21 +973,12 @@ static GnomeVFSResult synce_get_file_info
 		D("synce_get_file_info: Error %d: %s\n", err, synce_strerror(err));
 
 		wstr_free_string(tempwstr);
-		free(location);
+		g_free(location);
 
 		D("synce_get_file_info: Failed\n");
 		D("------------- synce_get_file_info() end --------------\n");
 
-		switch(err)
-		{
-			case 2:
-			case 18:
-				return GNOME_VFS_ERROR_NOT_FOUND;
-			case 123:
-				return GNOME_VFS_ERROR_INVALID_URI;
-			default:
-				return GNOME_VFS_ERROR_GENERIC;
-		}
+    result = gnome_vfs_result_from_rapi();
 	}
 	else
 	{
@@ -747,18 +986,21 @@ static GnomeVFSResult synce_get_file_info
 		get_file_attributes(file_info, &entry);
 
 		wstr_free_string(tempwstr);
-		free(location);
+		g_free(location);
 
 		D("synce_get_file_info: Name: %s\n", file_info->name);
 		D("synce_get_file_info: Mime-type: %s\n", file_info->mime_type);
 		D("synce_get_file_info: Ok\n");
 		D("------------- synce_get_file_info() end --------------\n");
 
-		return GNOME_VFS_OK;
+		result = GNOME_VFS_OK;
 	}
-}
 
-static GnomeVFSResult synce_get_file_info_from_handle
+exit:
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_get_file_info_from_handle/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSMethodHandle *method_handle,
@@ -770,18 +1012,18 @@ static GnomeVFSResult synce_get_file_info_from_handle
 	D("synce_get_files_info_from_handle\n");
 
 	return GNOME_VFS_ERROR_ACCESS_DENIED;
-}
+}/*}}}*/
 
-static gboolean synce_is_local
+static gboolean synce_is_local/*{{{*/
 (
 	GnomeVFSMethod *method,
   const GnomeVFSURI *uri
 )
 {
 	return FALSE;
-}
+}/*}}}*/
 
-static GnomeVFSResult synce_mkdir
+static GnomeVFSResult synce_mkdir/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSURI *uri,
@@ -789,13 +1031,35 @@ static GnomeVFSResult synce_mkdir
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	gchar *location;
 	WCHAR *tempwstr;
 
 	D("--------------------------------------------\n");
 	D("synce_mkdir()\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch (get_location(uri, &location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
 
 	if(!location)
 	{
@@ -810,41 +1074,64 @@ static GnomeVFSResult synce_mkdir
 	MUTEX_LOCK (mutex);
 	if(!CeCreateDirectory(tempwstr, NULL))
 	{
-		free(location);
+		g_free(location);
 		wstr_free_string(tempwstr);
-		D("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
-		D("Failed\n");
-		D("--------------------------------------------\n");
+    result = gnome_vfs_result_from_rapi();
 		MUTEX_UNLOCK (mutex);
-		return GNOME_VFS_ERROR_FILE_EXISTS;
+		return result;
 	}
 
-	free(location);
+	g_free(location);
 	wstr_free_string(tempwstr);
 
 	D("Error %d: %s\n", CeGetLastError(), synce_strerror(CeGetLastError()));
 	D("Ok\n");
 	D("--------------------------------------------\n");
-	
-	MUTEX_UNLOCK (mutex);
-	return GNOME_VFS_OK;
-}
 
-static GnomeVFSResult synce_rmdir
+	MUTEX_UNLOCK (mutex);
+	result = GNOME_VFS_OK;
+  
+exit:
+	return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_rmdir/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSURI *uri,
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	gchar *location;
 	WCHAR *tempwstr;
 	int err;
-	int result;
+	int success;
 
 	D("----------------- synce_rmdir() -----------------------\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch (get_location(uri, &location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
 
 	if(!location)
 	{
@@ -857,41 +1144,26 @@ static GnomeVFSResult synce_rmdir
 	D("CeRemoveDirectory()\n");
 	tempwstr = wstr_from_utf8(location);
 	MUTEX_LOCK (mutex);
-	result = CeRemoveDirectory(tempwstr);
+	success = CeRemoveDirectory(tempwstr);
 	err = CeGetLastError();
-	MUTEX_UNLOCK (mutex);
 	wstr_free_string(tempwstr);
 
-	free(location);
-	D("synce_rmdir:'Result %d\n", result);
-	D("synce_rmdir: Error %d: %s\n", err, synce_strerror(err));
+	g_free(location);
+	D("synce_rmdir: success %d\n", success);
 
 	/* In librapi tool prmdir result is used to see if things went OK */
-	if (!result) {
-		switch(err)
-		{
-			case 145:
-				D("synce_rmdir: Failed\n");
-				D("--------------------------------------------\n");
-				return GNOME_VFS_ERROR_DIRECTORY_NOT_EMPTY;
-			case 2:
-				D("synce_rmdir: Failed\n");
-				D("--------------------------------------------\n");
-				return GNOME_VFS_ERROR_NOT_FOUND;
-			case 0:
-				D("synce_rmdir: Ok\n");
-				D("--------------------------------------------\n");
-				return GNOME_VFS_OK;
-			default:
-				D("synce_rmdir: Failed\n");
-				D("--------------------------------------------\n");
-				return GNOME_VFS_ERROR_GENERIC;
-		}
-	}
-	return GNOME_VFS_OK;
-}
+  if (success) 
+    result = GNOME_VFS_OK;
+  else
+    result = gnome_vfs_result_from_rapi();
 
-static GnomeVFSResult synce_move
+	MUTEX_UNLOCK (mutex);
+
+exit:
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_move/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSURI *old_uri,
@@ -900,17 +1172,40 @@ static GnomeVFSResult synce_move
   GnomeVFSContext *context
 )
 {
+  GnomeVFSResult result;
 	gchar *new_location;
 	WCHAR *new_wstr;
 	gchar *old_location;
 	WCHAR *old_wstr;
-	int result;
+	int success;
 	int err;
 
 	D("--------------------------------------------\n");
 	D("synce_move()\n");
 
-	new_location = g_convert_to_backward_slashes(new_uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch (get_location(new_uri, &new_location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
+
 
 	if(!new_location)
 	{
@@ -918,11 +1213,30 @@ static GnomeVFSResult synce_move
 		return GNOME_VFS_ERROR_INVALID_URI;
 	}
 
-	old_location = g_convert_to_backward_slashes(old_uri);
+  switch (get_location(old_uri, &old_location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
+
 
 	if(!old_location)
 	{
-		free(new_location);
+		g_free(new_location);
 		D("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
 		D("Failed\n");
 		D("--------------------------------------------\n");
@@ -933,63 +1247,41 @@ static GnomeVFSResult synce_move
 	old_wstr = wstr_from_utf8(old_location);
 	new_wstr = wstr_from_utf8(new_location);
 	MUTEX_LOCK (mutex);
-	result = CeMoveFile(old_wstr, new_wstr);
+	success = CeMoveFile(old_wstr, new_wstr);
 	err = CeGetLastError();
-	MUTEX_UNLOCK (mutex);
 
-	if(err == 183) /* If the destination file exists we end up here */
+	if (err == ERROR_ALREADY_EXISTS) /* If the destination file exists we end up here */
 	{
-		if(force_replace)
 		/* if the user wants we delete the dest file and moves the source there */
+		if (force_replace)
 		{
 			MUTEX_LOCK (mutex);
-			result = CeDeleteFile(new_wstr);
+			success = CeDeleteFile(new_wstr);
 			MUTEX_UNLOCK (mutex);
 			
-			if(result == 0)
-			{
-				free(old_location);
-				free(new_location);
-				wstr_free_string(old_wstr);
-				wstr_free_string(new_wstr);
-				D("Synce Error: %d %s\n", 5, "ERROR_ACCESS_DENIED");
-				D("Failed\n");
-				D("--------------------------------------------\n");
-				return GNOME_VFS_ERROR_ACCESS_DENIED;
-			}
-			MUTEX_LOCK (mutex);
-			result = CeMoveFile(old_wstr, new_wstr);
-			err = CeGetLastError();
-			MUTEX_UNLOCK (mutex);
+			if (success)
+			  success = CeMoveFile(old_wstr, new_wstr);
 		}
 	}
 
-	free(old_location);
-	free(new_location);
+	g_free(old_location);
+	g_free(new_location);
 	wstr_free_string(old_wstr);
 	wstr_free_string(new_wstr);
 
-	D("CeGetLastError(): %d\n", err);
-	switch(err)
-	{
-		case 0:
-		case 18:
-			D("Ok\n");
-			D("--------------------------------------------\n");
-			return GNOME_VFS_OK;
-		case 183:
-			D("Failed\n");
-			D("--------------------------------------------\n");
-			return GNOME_VFS_ERROR_FILE_EXISTS;
-		default:
-			D("Failed\n");
-			D("--------------------------------------------\n");
-			return GNOME_VFS_ERROR_GENERIC;
-	}
-}
+  if (success)
+    result = GNOME_VFS_OK;
+  else
+    result = gnome_vfs_result_from_rapi();
+  
+	MUTEX_UNLOCK (mutex);
+
+exit:
+  return result;
+}/*}}}*/
 
 
-static GnomeVFSResult
+static GnomeVFSResult/*{{{*/
 synce_set_file_info (GnomeVFSMethod *method,
 		GnomeVFSURI *uri,
 		const GnomeVFSFileInfo *info,
@@ -998,6 +1290,9 @@ synce_set_file_info (GnomeVFSMethod *method,
 {
 	GnomeVFSURI *parent_uri, *new_uri;
 	GnomeVFSResult result;
+
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
 
 	/* For now, we only support changing the name. */
 	if ((mask & ~(GNOME_VFS_SET_FILE_INFO_NAME)) != 0) {
@@ -1022,28 +1317,51 @@ synce_set_file_info (GnomeVFSMethod *method,
 	result = synce_move (method, uri, new_uri, FALSE, context);
 	gnome_vfs_uri_unref (new_uri);
 	return result;
-}
+}/*}}}*/
 				
-static GnomeVFSResult synce_unlink
+static GnomeVFSResult synce_unlink/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSURI *uri,
   GnomeVFSContext *context
 )
 {
+	GnomeVFSResult result;
 	gchar *location;
-	int result;
+	int success;
 	WCHAR *tempwstr;
 
 	D("--------------------------------------------\n");
 	D("synce_unlink()\n");
 
-	location = g_convert_to_backward_slashes(uri);
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    return result;
+
+  switch (get_location(uri, &location))
+  {
+    case INDEX_DEVICE:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      result = GNOME_VFS_ERROR_NOT_PERMITTED;
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      // Continue after switch() */
+      break;
+
+    default:
+      result = GNOME_VFS_ERROR_NOT_FOUND;
+      goto exit;
+  }
+
 	tempwstr = wstr_from_utf8(location);
 
-	if(!location)
+	if (!location)
 	{
-		free(location);
+		g_free(location);
 		wstr_free_string(tempwstr);
 		D("Synce Error: %d %s\n", 13, "ERROR_INVALID_DATA");
 		D("Failed\n");
@@ -1053,27 +1371,30 @@ static GnomeVFSResult synce_unlink
 
 	D("CeDeleteFile()\n");
 	MUTEX_LOCK (mutex);
-	result = CeDeleteFile(tempwstr);
+	success = CeDeleteFile(tempwstr);
 	MUTEX_UNLOCK (mutex);
 
 	wstr_free_string(tempwstr);
-	free(location);
+	g_free(location);
 
-	if(result == 0)
-	{
-		D("Failed\n");
-		D("--------------------------------------------\n");
-		return GNOME_VFS_ERROR_NOT_FOUND;
-	}
-	else
+	if (success)
 	{
 		D("Ok\n");
 		D("--------------------------------------------\n");
-		return GNOME_VFS_OK;
+		result = GNOME_VFS_OK;
 	}
-}
+	else
+	{
+		D("Failed\n");
+		D("--------------------------------------------\n");
+    result = gnome_vfs_result_from_rapi();
+	}
 
-static GnomeVFSResult synce_same_fs
+exit:
+  return result;
+}/*}}}*/
+
+static GnomeVFSResult synce_same_fs/*{{{*/
 (
 	GnomeVFSMethod *method,
   GnomeVFSURI *a,
@@ -1085,7 +1406,7 @@ static GnomeVFSResult synce_same_fs
 	*same_fs_return = 1;
 
 	return GNOME_VFS_OK;
-}
+}/*}}}*/
 
 static GnomeVFSMethod method = 
 {
@@ -1119,16 +1440,6 @@ GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)
 {
 	if (!mutex)
 		mutex = MUTEX_NEW ();
-	MUTEX_LOCK (mutex); 
-	HRESULT hr = CeRapiInit();
-	MUTEX_UNLOCK (mutex); 
-	
-	if (FAILED(hr))
-	{
-		fprintf(stderr, "Unable to initialize RAPI: %s\n", 
-				synce_strerror(hr));
-		return NULL;
-	}
 
 	return &method;
 }

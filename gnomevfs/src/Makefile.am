@@ -1,3 +1,4 @@
+AM_CFLAGS = -Wall -Werror
 module_flags = -export_dynamic -avoid-version
 
 INCLUDES=$(rapi_cflags) $(synce_cflags) $(VFS_CFLAGS)
