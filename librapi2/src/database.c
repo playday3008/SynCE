@@ -141,7 +141,7 @@ fail:
 }/*}}}*/
 
 HANDLE CeFindFirstDatabase(/*{{{*/
-		DWORD x)
+		DWORD dwDbaseType)
 {
 	RapiContext* context = rapi_context_current();
 	HANDLE return_value = INVALID_HANDLE_VALUE;
@@ -149,7 +149,7 @@ HANDLE CeFindFirstDatabase(/*{{{*/
 	rapi_trace("begin");
 	
 	rapi_context_begin_command(context, 0x0a);
-	rapi_buffer_write_uint32(context->send_buffer, x);
+	rapi_buffer_write_uint32(context->send_buffer, dwDbaseType);
 
 	if ( !rapi_context_call(context) )
 		goto exit;
@@ -166,7 +166,7 @@ exit:
 }/*}}}*/
 
 CEOID CeFindNextDatabase(/*{{{*/
-		HANDLE x)
+		HANDLE hEnum)
 {
 	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
@@ -174,7 +174,7 @@ CEOID CeFindNextDatabase(/*{{{*/
 	rapi_trace("begin");
 	
 	rapi_context_begin_command(context, 0x0b);
-	rapi_buffer_write_uint32(context->send_buffer, x);
+	rapi_buffer_write_uint32(context->send_buffer, hEnum);
 
 	if ( !rapi_context_call(context) )
 		goto exit;

@@ -311,10 +311,10 @@ BOOL CeFindAllDatabases(
 		LPLPCEDB_FIND_DATA ppFindData);
 
 HANDLE CeFindFirstDatabase(
-		DWORD x);
+		DWORD dwDbaseType);
 
 CEOID CeFindNextDatabase(
-		HANDLE x);
+		HANDLE hEnum);
 
 HANDLE CeOpenDatabase(
 		PCEOID poid, 
