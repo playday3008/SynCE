@@ -20,7 +20,7 @@ typedef struct _EventGeneratorData
 {
   CEPROPVAL* start;
   CEPROPVAL* duration;
-  CEPROPVAL* duration_unit;
+  CEPROPVAL* type;
   CEPROPVAL* reminder_minutes;
   CEPROPVAL* reminder_enabled;
 } EventGeneratorData;
@@ -63,10 +63,10 @@ static bool on_propval_duration(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
-static bool on_propval_duration_unit(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_type(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
-  data->duration_unit = propval;
+  data->type = propval;
   return true;
 }
 
@@ -122,7 +122,7 @@ bool rra_appointment_to_vevent(/*{{{*/
 
   generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status);
   generator_add_property(generator, ID_DURATION,    on_propval_duration);
-  generator_add_property(generator, ID_DURATION_UNIT, on_propval_duration_unit);
+  generator_add_property(generator, ID_APPOINTMENT_TYPE, on_propval_type);
   generator_add_property(generator, ID_LOCATION,    on_propval_location);
   generator_add_property(generator, ID_NOTES,       on_propval_notes);
   generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_START, on_propval_reminder_minutes);
@@ -161,7 +161,7 @@ bool rra_appointment_to_vevent(/*{{{*/
 
   if (event_generator_data.start && 
       event_generator_data.duration &&
-      event_generator_data.duration_unit)
+      event_generator_data.type)
   {
     char buffer[32];
     time_t start_time = 
@@ -170,19 +170,20 @@ bool rra_appointment_to_vevent(/*{{{*/
     const char* type = NULL;
     const char* format = NULL;
     
-    switch (event_generator_data.duration_unit->val.lVal)
+    switch (event_generator_data.type->val.lVal)
     {
-      case DURATION_UNIT_DAYS:
+      case APPOINTMENT_TYPE_ALL_DAY:
         type   = "DATE";
         format = "%Y%m%d";
 
         /* days to seconds */
         end_time = start_time + 
-          event_generator_data.duration->val.lVal * SECONDS_PER_DAY;
+          ((event_generator_data.duration->val.lVal / MINUTES_PER_DAY) + 1) *
+          SECONDS_PER_DAY;
         break;
 
 
-      case DURATION_UNIT_MINUTES:
+      case APPOINTMENT_TYPE_NORMAL:
         type   = "DATE-TIME";
         format = "%Y%m%dT%H%M%S";
 
@@ -192,8 +193,8 @@ bool rra_appointment_to_vevent(/*{{{*/
         break;
 
       default:
-        synce_warning("Unknown duration unit: %i", 
-            event_generator_data.duration_unit->val.lVal);
+        synce_warning("Unknown appintment type: %i", 
+            event_generator_data.type->val.lVal);
         break;
     }
 
@@ -448,25 +449,31 @@ bool rra_appointment_from_vevent(/*{{{*/
     {
       time_t start = 0;
       time_t end = 0;
-      int32_t minutes;
+      int32_t minutes = 0;
+      ParserTimeFormat format = parser_get_time_format(event_parser_data.dtstart);
 
       if (!parser_datetime_to_unix_time(event_parser_data.dtstart->values[0], &start))
         goto exit;
       if (!parser_datetime_to_unix_time(event_parser_data.dtend->values[0],   &end))
         goto exit;
 
-      minutes = (end - start) / 60;
-    
-      if (minutes % MINUTES_PER_DAY)
+      switch (format)
       {
-        parser_add_int32(parser, ID_DURATION,      minutes);
-        parser_add_int32(parser, ID_DURATION_UNIT, DURATION_UNIT_MINUTES);
+        case PARSER_TIME_FORMAT_UNKNOWN:
+          goto exit;
+
+        case PARSER_TIME_FORMAT_DATE_AND_TIME:
+          minutes = (end - start) / 60;
+          parser_add_int32(parser, ID_APPOINTMENT_TYPE, APPOINTMENT_TYPE_NORMAL);
+          break;
+
+        case PARSER_TIME_FORMAT_ONLY_DATE:
+          minutes = (end - start) / 60 + 1;
+          parser_add_int32(parser, ID_APPOINTMENT_TYPE, APPOINTMENT_TYPE_ALL_DAY);
+          break;
       }
-      else
-      {
-        parser_add_int32(parser, ID_DURATION,      minutes / MINUTES_PER_DAY);
-        parser_add_int32(parser, ID_DURATION_UNIT, DURATION_UNIT_DAYS);
-      }
+
+      parser_add_int32(parser, ID_DURATION, minutes);
     }
   }
 

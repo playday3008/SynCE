@@ -27,13 +27,13 @@
 #define ID_UNKNOWN_4015    0x4015 /* something about repeated appointemnts */
 #define ID_UNKNOWN_4171    0x4171
 
-#define ID_LOCATION        0x4208
-#define ID_APPOINTMENT_START 0x420d
-#define ID_DURATION        0x4213
-#define ID_DURATION_UNIT   0x4215
+#define ID_LOCATION             0x4208
+#define ID_APPOINTMENT_START    0x420d
+#define ID_DURATION             0x4213
+#define ID_APPOINTMENT_TYPE     0x4215
 
-#define DURATION_UNIT_DAYS     1
-#define DURATION_UNIT_MINUTES  2
+#define APPOINTMENT_TYPE_ALL_DAY     1
+#define APPOINTMENT_TYPE_NORMAL      2
 
 #define ID_OCCURANCE       0x4223 
 
