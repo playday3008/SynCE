@@ -3,9 +3,24 @@
 #include <stdlib.h>
 #include <synce_log.h>
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 
-#define MINUTES_FROM_1601_TO_1970      194074560
+struct _RRA_Exceptions
+{
+  int32_t total_count;
+  int32_t modified_count;
+  RRA_Exception* items;
+};
+
+#define MINUTES_PER_DAY     (24*60)
+
+#define UNKNOWN_FLAGS       0x2020
+#define KNOWN_FLAGS_MASK    3
+
+#define UNKNOWN_3004        0x3004
+#define UNKNOWN_3005        0x3005
+
 
 #define READ_INT16(p)   (*(int16_t*)(p))
 #define READ_INT32(p)   (*(int32_t*)(p))
@@ -13,117 +28,156 @@
 #define READ_UINT16(p)   (*(uint16_t*)(p))
 #define READ_UINT32(p)   (*(uint32_t*)(p))
 
+#define WRITE_INT16(p,v)   (*(int16_t*)(p) = (v))
+#define WRITE_INT32(p,v)   (*(int32_t*)(p) = (v))
+
+#define WRITE_UINT16(p,v)   (*(uint16_t*)(p) = (v))
+#define WRITE_UINT32(p,v)   (*(uint32_t*)(p) = (v))
+
+
 #define TRACE_DATE(format, date) \
 do { \
   char* _time_str = NULL; \
-  time_t _unix_time = date; \
-  if ((time_t)-1 == _unix_time) \
+  uint32_t _minutes = date; \
+  time_t _time = rra_minutes_to_unix_time(_minutes); \
+  if ((-1) == _time) \
   { \
-    _time_str = "(some time in year 2038 or later!)"; \
+    _time_str = "(date out of range)"; \
   } \
   else \
   { \
-    _time_str = asctime(gmtime(&_unix_time)); \
+    _time_str = asctime(gmtime(&_time)); \
     _time_str[strlen(_time_str)-1] = '\0'; \
   } \
   synce_trace(format, _time_str); \
 } \
 while (0)
-
-#define TRACE_DATE_INT(format, date) \
-do { \
-  char* _time_str = NULL; \
-  if ((date - MINUTES_FROM_1601_TO_1970) < 0x4444444) \
-  { \
-    time_t _unix_time = (date - MINUTES_FROM_1601_TO_1970) * 60; \
-    _time_str = asctime(gmtime(&_unix_time)); \
-    _time_str[strlen(_time_str)-1] = '\0'; \
-  } \
-  else \
-  { \
-    _time_str = "(some time in year 2038 or later!)"; \
-  } \
-  synce_trace(format, _time_str); \
-} \
-while (0)
-
 
 static const char* RECURRENCE_TYPE_NAME[] = 
 {
   "Daily", "Weekly", "Monthly", "MonthNth", "Yearly", "YearNth"
 };
 
-struct _RRA_Exceptions
+static const int DAYS_TO_MONTH[13] =
 {
-  int32_t total_count;
-  int32_t modified_count;
+  0,                                  /* jan */
+  31,                                 /* feb */
+  31+28,                              /* mar */
+  31+28+31,                           /* apr */
+  31+28+31+30,                        /* may */
+  31+28+31+30+31,                     /* jun */
+  31+28+31+30+31+30,                  /* jul */
+  31+28+31+30+31+30+31,               /* aug */
+  31+28+31+30+31+30+31+31,            /* sep */
+  31+28+31+30+31+30+31+31+30,         /* oct */
+  31+28+31+30+31+30+31+31+30+31,      /* nov */
+  31+28+31+30+31+30+31+31+30+31+30,   /* dec */
+  31+28+31+30+31+30+31+31+30+31+30+31 /* a whole year*/
 };
 
-int rra_exceptions_count(RRA_Exceptions *self)
+/*
+   Conversion to and from minutes from January 1, 1601
+ */
+
+time_t rra_minutes_to_unix_time(uint32_t minutes)
 {
-  return self->total_count;
+  /* We will run into problems with dates before 1970 and after 2038... */
+  if (minutes >= RRA_MINUTES_FROM_1601_TO_1970)
+  {
+    minutes -= RRA_MINUTES_FROM_1601_TO_1970;
+    if (minutes < 0x4444444)
+      return (time_t)(minutes * 60);
+  }
+
+  return (time_t)-1;
 }
 
-RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index)
+uint32_t rra_minutes_from_unix_time(time_t t)
 {
-  /* TODO: implement */
-  return NULL;
+  return (t / 60) + RRA_MINUTES_FROM_1601_TO_1970;
 }
 
-
-static time_t read_date(uint8_t* buffer)
+struct tm rra_minutes_to_struct(uint32_t minutes)
 {
-  int32_t minutes = READ_INT32(buffer);
+  struct tm result;
+  time_t unix_time = rra_minutes_to_unix_time(minutes);
 
-  /* Assuming time_t is 32-bit, we will run into problems with dates after 2038... */
-  
-  if ((minutes - MINUTES_FROM_1601_TO_1970) < 0x4444444) \
-    return (minutes - MINUTES_FROM_1601_TO_1970) * 60;
+  if ((time_t)-1 == unix_time)
+    memset(&result, 0, sizeof(struct tm));
   else
-    return (time_t)-1;
+    /* XXX: localtime or gmtime? i always forget which one do what i want */
+    memcpy(&result, localtime(&unix_time), sizeof(struct tm));
+
+  return result;
 }
 
-RRA_Exceptions* rra_exceptions_new()
+uint32_t rra_minutes_from_struct(struct tm* t)
+{
+  return rra_minutes_from_unix_time(mktime(t));
+}
+
+
+/*
+   Exceptions
+ */
+
+RRA_Exceptions* rra_exceptions_new()/*{{{*/
 {
   RRA_Exceptions* self = calloc(1, sizeof(RRA_Exceptions));
   return self;
-}
+}/*}}}*/
 
-void rra_exceptions_destroy(RRA_Exceptions* self)
+void rra_exceptions_destroy(RRA_Exceptions* self)/*{{{*/
 {
   if (self)
   {
     /* probably some contents to destroy */
     free(self);
   }
-}
+}/*}}}*/
 
-static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)
+int rra_exceptions_count(RRA_Exceptions *self)/*{{{*/
+{
+  return self->total_count;
+}/*}}}*/
+
+RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index)/*{{{*/
+{
+  /* TODO: implement */
+  return NULL;
+}/*}}}*/
+
+static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
 {
   uint8_t* p = *buffer;
   int i;
 
   self->total_count = READ_INT32(p);  p += 4;
 
+  self->items = (RRA_Exception*)calloc(self->total_count, sizeof(RRA_Exception));
+
   for (i = 0; i < self->total_count; i++)
   {
-    time_t date = read_date(p); p += 4;
+    uint32_t date = READ_UINT32(p); p += 4;
     TRACE_DATE("Exception date  = %s", date);
+
+    self->items[i].deleted = true;
+    self->items[i].original_date = date;
   }
 
   self->modified_count = READ_INT32(p);  p += 4;
 
   for (i = 0; i < self->modified_count; i++)
   {
-    time_t date = read_date(p); p += 4;
+    uint32_t date = READ_UINT32(p); p += 4;
     TRACE_DATE("Modified date   = %s", date);
   }
   
   *buffer = p;
   return true;
-}
+}/*}}}*/
 
-bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)
+static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
 {
   uint8_t* p = *buffer;
   int i;
@@ -136,21 +190,94 @@ bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)
 
   for (i = 0; i < self->modified_count; i++)
   {
-    time_t date;
-    int16_t unknown;
-    date = read_date(p); p += 4;
-    TRACE_DATE("Modified appointment start time  = %s", date);
-    date = read_date(p); p += 4;
-    TRACE_DATE("Modified appointment end time    = %s", date);
-    date = read_date(p); p += 4;
-    TRACE_DATE("Original appointment start time  = %s", date);
-    unknown = READ_INT16(p); p += 2;
-    synce_trace("Modified appointment unknown     = %04x", unknown);
+    RRA_Exception e;
+    int j;
+    
+    e.deleted         = false;
+    e.start_date      = READ_UINT32(p);   p += 4;
+    e.end_date        = READ_UINT32(p);   p += 4;
+    e.original_date   = READ_UINT32(p);   p += 4;
+    e.unknown         = READ_INT16(p);  p += 2;
+
+    TRACE_DATE ("Modified appointment start time  = %s",    e.start_date);
+    TRACE_DATE ("Modified appointment end time    = %s",    e.end_date);
+    TRACE_DATE ("Original appointment start time  = %s",    e.original_date);
+    synce_trace("Modified appointment unknown     = %04x",  e.unknown);
+
+    for (j = 0; j < self->total_count; j++)
+    {
+      if (memcmp(&e.original_date, &self->items[j].original_date, sizeof(struct tm)))
+      {
+        /* Copy data to this array item */
+        self->items[j] = e;
+        break;
+      }
+    }
   }
 
   *buffer = p;
   return true;
-}
+}/*}}}*/
+
+static size_t rra_exceptions_summary_size(RRA_Exceptions* self)/*{{{*/
+{
+  return 4 * (1 + self->total_count + 1 + self->modified_count);
+}/*}}}*/
+
+static size_t rra_exceptions_details_size(RRA_Exceptions* self)/*{{{*/
+{
+  return 2 * (self->modified_count * 14);
+}/*}}}*/
+
+static bool rra_exceptions_write_summary(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
+{
+  uint8_t* p = *buffer;
+  int i;
+
+  WRITE_INT32(p, self->total_count);  p += 4;
+
+  for (i = 0; i < self->total_count; i++)
+  {
+    /* TODO: write date */
+    p += 4;
+  }
+
+  WRITE_INT32(p, self->modified_count);  p += 4;
+
+  for (i = 0; i < self->modified_count; i++)
+  {
+    /* TODO: write date */
+    p += 4;
+  }
+  
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+static bool rra_exceptions_write_details(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
+{
+  uint8_t* p = *buffer;
+  int i;
+
+  WRITE_UINT16(p, self->modified_count); p += 2;
+
+  for (i = 0; i < self->modified_count; i++)
+  {
+    /* TODO: write dates */
+    p += 4;
+    p += 4;
+    p += 4;
+    WRITE_UINT16(p, 0); p += 2;
+  }
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+
+/*
+   Recurrence pattern
+ */
 
 RRA_RecurrencePattern* rra_recurrence_pattern_new()/*{{{*/
 {
@@ -227,6 +354,29 @@ static bool rra_recurrence_pattern_read_weekly(/*{{{*/
   return true;
 }/*}}}*/
 
+static uint32_t rra_recurrence_pattern_get_minutes_to_month(uint32_t minutes, uint32_t interval)
+{
+  uint32_t result = (uint32_t)-1;
+  time_t unix_time = rra_minutes_to_unix_time(minutes);
+  struct tm* time_struct = gmtime(&unix_time);
+
+  if (time_struct)
+  {
+    /*synce_trace("Month = %i", time_struct->tm_mon);*/
+    result = DAYS_TO_MONTH[time_struct->tm_mon] * MINUTES_PER_DAY;
+
+    if (interval > 12)
+    {
+      int extra_years = (interval - 1) / 12;
+      result += DAYS_TO_MONTH[12] * extra_years * MINUTES_PER_DAY;
+    }
+  }
+  else
+    synce_error("Minutes is probably out of range.");
+
+  return result;
+}
+
 static bool rra_recurrence_pattern_read_monthly(/*{{{*/
     RRA_RecurrencePattern* self,
     uint8_t** buffer, 
@@ -287,7 +437,7 @@ static bool rra_recurrence_pattern_read_monthnth(/*{{{*/
   return true;
 }/*}}}*/
 
-bool rra_recurrence_pattern_read_header(/*{{{*/
+static bool rra_recurrence_pattern_read_header(/*{{{*/
     RRA_RecurrencePattern* self,
     uint8_t** buffer)
 {
@@ -299,7 +449,7 @@ bool rra_recurrence_pattern_read_header(/*{{{*/
   for (i = 0; i < 3; i++)
   {
     unknown_a[i] = READ_UINT16(p);  p += 2;
-    synce_trace("Unknown         = %04x = %i", unknown_a[i], unknown_a[i]);
+    /*synce_trace("Unknown         = %04x = %i", unknown_a[i], unknown_a[i]);*/
   }
 
   if (unknown_a[0] != 0x3004)
@@ -350,15 +500,49 @@ bool rra_recurrence_pattern_read_header(/*{{{*/
   return true;
 }/*}}}*/
 
+static size_t rra_recurrence_pattern_size(RRA_RecurrencePattern* self)
+{
+  size_t size = 0;
+
+  switch (self->recurrence_type)
+  {
+    case olRecursDaily:
+      size = 58;
+      break;
+    case olRecursWeekly:
+      size = 62;
+      break;
+    case olRecursMonthly:
+      size = 62;
+      break;
+    case olRecursMonthNth:
+      size = 66;
+      break;
+    default:
+      break;
+  }
+
+  size += rra_exceptions_summary_size(self->exceptions);
+  size += rra_exceptions_details_size(self->exceptions);
+  
+  if (size < 0x68)
+    size = 0x68;
+
+  return size;
+}
+
 RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_t size)/*{{{*/
 {
   bool success;
   uint8_t* p = buffer;
+  uint8_t* p_saved = NULL;
   RRA_RecurrencePattern* self = rra_recurrence_pattern_new();
   if (!self)
     return NULL;
 
   rra_recurrence_pattern_read_header(self, &p);
+
+  p_saved = p;
 
   switch (self->recurrence_type)
   {
@@ -386,7 +570,7 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
     goto exit;
   }
 
-  if ((self->flags & ~3) != 0x2020) 
+  if ((self->flags & (~KNOWN_FLAGS_MASK)) != UNKNOWN_FLAGS) 
   {
     synce_warning("Unexpected flags!");
   }
@@ -400,22 +584,25 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   
   rra_exceptions_read_summary(self->exceptions, &p);
   
-  self->pattern_start_date = read_date(p);  p += 4;
+  self->pattern_start_date = READ_UINT32(p);  p += 4;
   TRACE_DATE("Pattern start date   = %s", self->pattern_start_date);
-  self->pattern_end_date   = read_date(p);  p += 4;
+  self->pattern_end_date   = READ_UINT32(p);  p += 4;
   TRACE_DATE("Pattern end date     = %s", self->pattern_end_date);
 
-#if 0
+  /* Testing */
+  if (self->recurrence_type == olRecursMonthly)
   {
-    uint32_t end_date = READ_INT32(p); p += 4;
-
-    synce_trace("End date        = %08x", end_date);
-    if (end_date == 0x5ae980df)
-      synce_trace("                = (never)");
-    else
-      TRACE_DATE_INT("                = %s", end_date);
+    uint32_t minutes_in_year = READ_UINT32(p_saved);
+    struct tm t = rra_minutes_to_struct(self->pattern_start_date);
+    uint32_t minutes;
+    t.tm_sec = 0;
+    t.tm_min = 0;
+    t.tm_hour = 0;
+    t.tm_mday = minutes_in_year / MINUTES_PER_DAY;
+    t.tm_mon = 0;
+    minutes = rra_minutes_from_struct(&t);
+    TRACE_DATE("Real start date?     = %s", minutes);
   }
-#endif
 
   {
     int i;
@@ -424,7 +611,7 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
     for (i = 0; i < 2; i++)
     {
       unknown[i] = READ_INT32(p); p += 4;
-      synce_trace("Unknown         = %08x", unknown[i]);
+      /*synce_trace("Unknown         = %08x", unknown[i]);*/
     }
 
     if (unknown[0] != unknown[1])
@@ -457,8 +644,48 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
     }
   }
 
+  if (size != rra_recurrence_pattern_size(self))
+    synce_warning("Calculated pattern size to %04x but it was %04x",
+        rra_recurrence_pattern_size(self), size);
+
+  /** DEBUG --> */
+  {
+    uint8_t* new_buffer = NULL;
+    size_t new_size = 0;
+    success = rra_recurrence_pattern_to_buffer(self, &new_buffer, &new_size);
+    if (success)
+    {
+      if (size == new_size)
+      {
+        if (0 == memcmp(buffer, new_buffer, size))
+          synce_info("rra_recurrence_pattern_to_buffer() works great!");
+        else
+        {
+          FILE* file;
+
+          synce_warning("rra_recurrence_pattern_to_buffer() returned a different buffer!");
+
+          file = fopen("pattern-right.bin", "w");
+          fwrite(buffer, size, 1, file);
+          fclose(file);
+          file = fopen("pattern-wrong.bin", "w");
+          fwrite(new_buffer, new_size, 1, file);
+          fclose(file);      
+        }
+      }
+      else
+      {
+        synce_warning("rra_recurrence_pattern_to_buffer() returned wrong size (expected %04x, got %04x)",
+            size, new_size);
+      }
+    }
+    else
+      synce_warning("rra_recurrence_pattern_to_buffer() failed");
+  }
+  /** <-- DEBUG */
+
   success = true;
-  
+
 exit:
   if (success)
     return self;
@@ -471,6 +698,119 @@ exit:
 
 bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buffer, size_t* size)
 {
-  return false;
+  bool success = false;
+  uint8_t* p = NULL;
+
+  if (!self || !buffer || !size) 
+  {
+    synce_error("One or more invalid function parameters");
+    return false;
+  }
+  
+  *size = rra_recurrence_pattern_size(self);
+  p = *buffer = calloc(1, *size);
+
+  WRITE_UINT16(p, UNKNOWN_3004); p += 2;
+  WRITE_UINT16(p, UNKNOWN_3004); p += 2;
+
+  switch (self->recurrence_type)
+  {
+    case olRecursDaily:
+      WRITE_UINT16(p, 0x200a); p += 2;
+      break;
+      
+    case olRecursWeekly:
+      WRITE_UINT16(p, 0x200b); p += 2;
+      break;
+      
+    case olRecursMonthly:
+      /* Write 0x200c or 0x200d? */
+      if (self->interval == 12)
+        WRITE_UINT16(p, 0x200d);
+      else
+        WRITE_UINT16(p, 0x200c);
+      p += 2;
+      break;
+
+    case olRecursMonthNth:
+      /* Write 0x200c or 0x200d? */
+      WRITE_UINT16(p, 0x200c); p += 2;
+      break;
+      
+    default:
+      synce_error("Unhandled recurrence type");
+      goto exit;
+  }
+
+  WRITE_UINT32(p, self->recurrence_type); p += 4;
+
+  switch (self->recurrence_type)
+  {
+    case olRecursDaily:
+      WRITE_UINT32(p, 0); p += 4;
+      WRITE_UINT32(p, self->interval);      p += 4;
+      WRITE_UINT32(p, 0);                   p += 4;
+      WRITE_UINT32(p, UNKNOWN_FLAGS | (self->flags & KNOWN_FLAGS_MASK)); p += 4;
+      WRITE_UINT32(p, self->occurrences);   p += 4;
+      break;
+      
+    case olRecursWeekly:
+      WRITE_UINT32(p, (self->interval * 7 - 1) * MINUTES_PER_DAY); p += 4;
+      WRITE_UINT32(p, self->interval);      p += 4;
+      WRITE_UINT32(p, 0);                   p += 4;
+      WRITE_UINT32(p, self->days_of_week_mask);  p += 4;
+      WRITE_UINT32(p, UNKNOWN_FLAGS | (self->flags & KNOWN_FLAGS_MASK)); p += 4;
+      WRITE_UINT32(p, self->occurrences);   p += 4;
+      break;
+      
+    case olRecursMonthly:
+      if (self->interval == 1)
+        WRITE_UINT32(p, 0);
+      else
+        WRITE_UINT32(p, rra_recurrence_pattern_get_minutes_to_month(
+              self->pattern_start_date, self->interval)); 
+      p += 4;
+      WRITE_UINT32(p, self->interval);      p += 4;
+      WRITE_UINT32(p, 0);                   p += 4;
+      WRITE_UINT32(p, self->day_of_month);  p += 4;
+      WRITE_UINT32(p, UNKNOWN_FLAGS | (self->flags & KNOWN_FLAGS_MASK)); p += 4;
+      WRITE_UINT32(p, self->occurrences);   p += 4;
+      break;
+
+#if 0
+    case olRecursMonthNth:
+      break;
+#endif
+      
+    default:
+      synce_error("Unhandled recurrence type");
+      goto exit;
+  }
+
+  WRITE_UINT32(p, 0); p += 4;
+
+  rra_exceptions_write_summary(self->exceptions, &p);
+
+  WRITE_UINT32(p, self->pattern_start_date); p += 4;
+  WRITE_UINT32(p, self->pattern_end_date); p += 4;
+
+  WRITE_UINT32(p, UNKNOWN_3005); p += 4;
+  WRITE_UINT32(p, UNKNOWN_3005); p += 4;
+
+  WRITE_UINT32(p, self->start_minute);  p += 4;
+  WRITE_UINT32(p, self->end_minute);    p += 4;
+
+  rra_exceptions_write_details(self->exceptions, &p);
+
+  success = true;
+
+exit:
+  if (!success)
+  {
+    free(*buffer);
+    *buffer = NULL;
+    *size = 0;
+  }
+  return success;
 }
 
