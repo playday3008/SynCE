@@ -66,6 +66,11 @@ href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
 
 <p>(This also includes RedHat's 2.4.20 kernels.)</p>
 
+<p><b>Important</b> If you are using the Mandrake 9.2 kernels, for example
+2.4.22-18mdk or 2.4.22-21mdk, SynCE will not work. The problem is in the
+<tt>usbserial</tt> kernel module. The version shipped with Mandrake 9.1
+(2.4.20?) works correctly.</p>
+
 <p>This kernel supports many common and uncommon devices, but certain newer
 devices are missing.</p>
 
