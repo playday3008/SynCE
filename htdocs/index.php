@@ -21,7 +21,6 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="using.php">Download and use SynCE</a></li>
 <li><a href="qa.php">Questions and Answers</a></li>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
-<li><a href="kde/index.php">KDE integration</a></li>
 <li><a href="#future">Future</a></li>
 <li><a href="#developers">The SynCE developers</a></li>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
