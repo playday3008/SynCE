@@ -46,3 +46,4 @@ aclocal $INCLUDES
 libtoolize --copy --automake
 automake --copy --foreign --add-missing
 autoconf
+

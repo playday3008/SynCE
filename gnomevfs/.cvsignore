@@ -6,6 +6,7 @@ autom4te-2.53.cache
 config.log
 config.status
 configure
-configure.in
+configure.ac.in
 cvsclean
 libtool
+gnomevfs.spec.in
