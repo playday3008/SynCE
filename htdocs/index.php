@@ -24,6 +24,7 @@ a Windows CE device from a computer running Linux, *BSD or other unices.</p>
 <li><a href="download.php">Download and install</a></li>
 <li><a href="setup.php">Setup</a></li>
 <li><a href="start.php">Connect</a></li>
+<li><a href="disconnect.php">Disconnect</a></li>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
 <li><a href="qa.php">Questions and Answers</a></li>
 <li class=SPACED><a href="help.php">Get help</a></li>
