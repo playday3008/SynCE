@@ -13,7 +13,7 @@ static int DeleteDatabases()
 
 	HANDLE enumerate = CeFindFirstDatabase(database_type);
 
-	while (oid = CeFindNextDatabase(enumerate))
+	while (0 != (oid = CeFindNextDatabase(enumerate)))
 	{
 		TEST_NOT_FALSE(CeDeleteDatabase(oid));
 	}

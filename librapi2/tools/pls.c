@@ -195,17 +195,23 @@ exit:
 	return success;
 }
 
-static const WCHAR wildcards[] = {'*', '.', '*', '\0'};
-static       WCHAR empty[]     = {'\0'};
+static const char *wildcards = "*.*";
+static       WCHAR empty[]   = {'\0'};
 
 bool list_directory(WCHAR* directory)
 {
 	WCHAR path[MAX_PATH];
 
+	if (!directory)
+	{
+		synce_error("Directory is NULL. How did that happen?");
+		return false;
+	}
+
 	synce_trace_wstr(directory);
 	wstrcpy(path, directory);
 	synce_trace_wstr(path);
-	wstr_append(path, wildcards, sizeof(path));
+	wstr_append(path, wstr_from_ascii(wildcards), sizeof(path));
 	return list_matching_files(path);
 }
 
