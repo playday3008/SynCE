@@ -231,34 +231,37 @@ bool decode_database_stream(uint8_t* buffer)
 				if (0x4015 == (propvals[i].propid >> 16))
 				{
           int j;
+          uint32_t flags0           = *(uint16_t*)(propvals[i].val.blob.lpb + 0x04);
           uint32_t recurrence_type  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x06);
           uint32_t interval         = *(uint32_t*)(propvals[i].val.blob.lpb + 0x0e);
-          uint32_t occurences = 0;
           uint32_t flags = 0;
+          uint32_t occurrences = 0;
           uint32_t instance = 0;
 
 					printf("\n                     RecurrenceType: 0x%08x %s", 
 							recurrence_type, 
               (recurrence_type < RECURRENCE_TYPE_COUNT) ? RECURRENCE_TYPE[recurrence_type] : "Unknown");
 
-         
+          printf("\n                     Flags 0:      : 0x%04x     %d", 
+              flags0, flags0);
+
           switch (recurrence_type)
           {
             case olRecursDaily:
               flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
-              occurences  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
+              occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
               break;
 
             case olRecursWeekly:
             case olRecursMonthly:
               flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
-              occurences  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
+              occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
               break;
             
             case olRecursMonthNth:
               instance    = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
               flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
-              occurences  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x22);
+              occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x22);
 
               printf("\n                     Instance:       0x%08x %d", 
                   instance, instance);
@@ -282,11 +285,23 @@ bool decode_database_stream(uint8_t* buffer)
           }
 
           /* 
+             DayOfMonth
+           */
+          if (recurrence_type == olRecursMonthly ||
+              recurrence_type == olRecursYearly)
+          {
+            uint32_t day_of_month = *(uint32_t*)(propvals[i].val.blob.lpb + 0x16);
+
+            printf("\n                     DayOfMonth:     0x%08x %d", 
+                day_of_month, day_of_month);
+          }
+
+          /* 
              Interval 
            */
           if (recurrence_type == olRecursDaily ||
               recurrence_type == olRecursMonthly ||
-              recurrence_type == olRecursMonthNth||
+              recurrence_type == olRecursMonthNth ||
               recurrence_type == olRecursWeekly)
           {
             printf("\n                     Interval:       0x%08x %d", 
@@ -303,18 +318,26 @@ bool decode_database_stream(uint8_t* buffer)
               break;
             case 1:
               printf(" Ends on date");
-              printf("\n                     Occurences:     0x%08x %i", occurences, occurences);
+              printf("\n                     Occurrences:    0x%08x %i", occurrences, occurrences);
               break;
             case 2:
               printf(" Ends after X occurances");
-              printf("\n                     Occurences:     0x%08x %i", occurences, occurences);
+              printf("\n                     Occurrences:    0x%08x %i", occurrences, occurrences);
               break;
             case 3:
               printf(" Does not end");
               break;
           }
 
-        }
+#if 0
+          printf("\n                     Flags 0 & 0xf : 0x%04x     %d", 
+              flags0 & 0xf, flags0 & 0xf);
+          printf("\n                     Flags 1 & 0xf : 0x%04x     %d", 
+              flags & 0xf, flags & 0xf);
+					printf("\n                     RecurrenceType: 0x%08x %d", 
+							recurrence_type, recurrence_type);
+#endif
+         }
         break;
 
 		}
