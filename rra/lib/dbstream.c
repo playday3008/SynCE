@@ -151,6 +151,7 @@ bool dbstream_from_propvals(/*{{{*/
 			case CEVT_I2:
 			case CEVT_UI2:
 				size += 2;
+        break;
 
 			case CEVT_I4:
 			case CEVT_UI4:
