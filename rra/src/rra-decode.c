@@ -329,6 +329,18 @@ bool decode_database_stream(uint8_t* buffer)
               break;
           }
 
+          {
+
+            uint32_t minutes = *(uint32_t*)(propvals[i].val.blob.lpb + 0x2e);
+            /* the constant is: minutes since 1 January 1601, 00:00:00 */
+            time_t unix_time = (minutes - 194074560) * 60;
+            char* time_str = asctime(gmtime(&unix_time));
+            time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
+
+            printf("\n                     Timestamp     : 0x%08x %s", 
+                minutes, time_str);
+          }
+
 #if 0
           printf("\n                     Flags 0 & 0xf : 0x%04x     %d", 
               flags0 & 0xf, flags0 & 0xf);
