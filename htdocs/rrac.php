@@ -263,14 +263,17 @@ identifiers</td></tr>
 <tr><td>0024</td><td><i>n</i> * 0x180</td><td></td><td>Object type records</td></tr>
 </table>
 
-<p>Format of a object type record:</p>
+<p>Format of an object type record:</p>
 
 <table cellspacing=5>
 <tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
 <tr><td>0000</td><td>4</td><td>00 00 00 00</td><td>Unknown</td></tr>
 <tr><td>0004</td><td>c8</td><td></td><td>Object type name</td></tr>
 <tr><td>00cc</td><td>50</td><td></td><td>Object type name again</td></tr>
-<tr><td>016c</td><td>a0</td><td></td><td>Object type name again</td></tr>
+<tr><td>011c</td><td>4</td><td></td><td>Object type id</td></tr>
+<tr><td>0120</td><td>4</td><td></td><td>Number of items of this type</td></tr>
+<tr><td>0124</td><td>4</td><td></td><td>Total size for items of this type</td></tr>
+<tr><td>0128</td><td>8</td><td>FILETIME</td><td>Last modification time for this type</td></tr>
 </table>
 
 
