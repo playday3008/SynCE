@@ -52,14 +52,22 @@ help faster when you ask your question!</p>
 <li>If you compiled SynCE yourself or used pre-compiled packages</li>
 </ul></li>
 
-
-<li class=SPACED><p><b>For connection problems</b></p>
+<li class=SPACED><p><b>For USB connection problems on Linux</b></p>
 
 <ul>
 
 <li>Output from <tt>cat /proc/bus/usb/devices</tt> for the device</li>
 
-<li>Relevant log extracts from kernel driver and pppd</li>
+<li>Log extracts from kernel driver. <a href="usb_linux_debug.php">Linux USB
+debugging</a> for instructions.</li>
+
+</ul>
+
+<li class=SPACED><p><b>For all connection problems</b></p>
+
+<ul>
+
+<li>Relevant log extracts from pppd</li>
 
 <li>The contents of your files <tt>/etc/ppp/peers/synce-device</tt> (created by
 <tt>synce-serial-config</tt>) and <tt>/etc/ppp/options</tt>.</li>
