@@ -1,7 +1,9 @@
 /* $Id$ */
 #include "timezone.h"
+#include "generator.h"
 #include <rapi.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 const char* month_names[12] =
 {
@@ -40,6 +42,27 @@ static const char* instance_string(unsigned instance)
   }
 }
 
+void dump_vtimezone(TimeZoneInformation* tzi)
+{
+  Generator* generator = generator_new(0, NULL);
+  
+  if (time_zone_generate_vtimezone(generator, tzi))
+  {
+    char* result = NULL;
+    if (generator_get_result(generator, &result))
+    {
+      printf("%s", result);
+      free(result);
+    }
+    else
+      fprintf(stderr, "Failed to get generated VTIMEZONE\n");
+  }
+  else
+    fprintf(stderr, "Failed to generate VTIMEZONE\n");
+
+  generator_destroy(generator);
+}
+
 int main(int argc, char** argv)
 {
   int result = 1;
@@ -52,7 +75,7 @@ int main(int argc, char** argv)
   if (FAILED(hr))
     goto exit;
 
-  if (!rra_get_time_zone_information(&tzi))
+  if (!time_zone_get_information(&tzi))
   {
     fprintf(stderr, "%s: Failed to get time zone information\n", argv[0]);
     goto exit;
@@ -88,6 +111,8 @@ int main(int argc, char** argv)
       tzi.DaylightBias/*,
       tzi.unknown4*/
         );
+
+  dump_vtimezone(&tzi);
 
   result = 0;
 

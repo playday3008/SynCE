@@ -1,9 +1,14 @@
 /* $Id$ */
+#define _BSD_SOURCE 1
 #include "timezone.h"
+#include "generator.h"
 #include <rapi.h>
 #include <synce.h>
 #include <synce_log.h>
 #include <assert.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define REGISTRY_KEY_NAME     "Time"
@@ -14,7 +19,7 @@
 
 static const uint8_t empty[6] = {0,0,0,0,0,0};
 
-bool rra_get_time_zone_information(TimeZoneInformation* tzi)
+bool time_zone_get_information(TimeZoneInformation* tzi)/*{{{*/
 {
   bool success = false;
   LONG error;
@@ -74,5 +79,187 @@ exit:
     CeRegCloseKey(key);
   wstr_free_string(wide_value_name);
   return success;
-}
+}/*}}}*/
 
+void time_zone_get_id(TimeZoneInformation* tzi, char** id)/*{{{*/
+{
+  char* name = wstr_to_ascii(tzi->Name);
+  char* p;
+  char buffer[128];
+
+  if (!id)
+    return;
+
+  for (p = name; *p != '\0'; p++)
+  {
+    if (!isalnum(*p))
+      *p = '_';
+  }
+
+  snprintf(buffer, sizeof(buffer), "/synce.sourceforge.net/SynCE/%s", name);
+  
+  *id = strdup(buffer);
+
+  wstr_free_string(name);
+}/*}}}*/
+
+static void offset_string(char* buffer, size_t size, int default_bias, int extra_bias)/*{{{*/
+{
+  int bias = default_bias + extra_bias;
+  snprintf(buffer, size, "%+03i%02i", -bias / 60, abs(bias) % 60);
+}/*}}}*/
+
+static const unsigned days_of_month[12] =/*{{{*/
+{
+  31,  /* jan */
+  28,
+  31,  /* mar */
+  30,
+  31,  /* may */
+  30,
+  31,  /* jul */
+  31,
+  30,  /* sep */
+  31,
+  30,  /* nov */
+  31
+};/*}}}*/
+
+/* http://www.visi.com/~pmk/new-dayofweek.html */
+static const unsigned month_skew[12] =/*{{{*/
+{
+  0,  /* jan */
+  3,
+  3,  /* mar */
+  6,
+  1,  /* may */
+  4,
+  6,  /* jul */
+  2,
+  5,  /* sep */
+  0,
+  3,  /* nov */
+  5
+};/*}}}*/
+
+static unsigned day_from_month_and_week(unsigned month, unsigned week)/*{{{*/
+{
+  /* don't ask... */
+  unsigned first_sunday = (8 - ((4 + month_skew[month-1]) % 7)) % 7;
+  unsigned result;
+
+  if (week < 1 || week > 5)
+  {
+    synce_error("Invalid week number %i", week);
+    return 0;
+  }
+
+  for (;;)
+  {
+    result = first_sunday + (week - 1) * 7;
+    if (result > days_of_month[month-1])
+      week--;
+    else
+      break;
+  }
+
+  return result;
+}/*}}}*/
+
+static bool time_string(char* buffer, size_t size, /*{{{*/
+    unsigned month, unsigned week, unsigned hour)
+{
+  if (week <= 5 || month <= 12)
+  {
+    unsigned day = day_from_month_and_week(month, week);
+
+    if (!day)
+    {
+      synce_error("Unknown month/week combination: week=%i, month=%i - report to SynCE developers!",
+          week, month);
+    }
+    
+    snprintf(buffer, size, "1970%02i%02iT%02i0000",
+        month, day, hour);
+    return true;
+  }
+  else
+  {
+    synce_error("Bad time zone information: week=%i, month=%i", week, month);
+    return false;
+  }
+}/*}}}*/
+
+static void add_rrule(Generator* generator, unsigned instance, unsigned month)/*{{{*/
+{
+  char rrule[128];
+  
+  snprintf(rrule, sizeof(rrule), 
+      "FREQ=YEARLY;INTERVAL=1;BYDAY=%iSU;BYMONTH=%i",
+      (5 == instance) ? -1 : instance, month);
+  
+  generator_add_simple(generator, "RRULE", rrule);
+}     /*}}}*/
+
+static void add_tzid(Generator* generator, TimeZoneInformation* tzi)/*{{{*/
+{
+  char* id = NULL;
+  time_zone_get_id(tzi, &id);
+  generator_add_simple(generator, "TZID", id);
+  time_zone_free_id(id);
+}/*}}}*/
+
+bool time_zone_generate_vtimezone(Generator* generator, TimeZoneInformation* tzi)/*{{{*/
+{
+  bool success = false;
+  char standard_offset[10];
+  char daylight_offset[10];
+  char dtstart[20];
+
+  /* UTC = local time + bias   -->   UTC - bias = local time */
+
+  offset_string(standard_offset, sizeof(standard_offset), tzi->Bias, tzi->StandardBias);
+  offset_string(daylight_offset, sizeof(daylight_offset), tzi->Bias, tzi->DaylightBias);
+
+  generator_add_simple(generator, "BEGIN", "VTIMEZONE");
+  add_tzid(generator, tzi);
+
+  /* 
+     Daylight time 
+   */
+
+  generator_add_simple(generator, "BEGIN", "DAYLIGHT");
+  /* required: dtstart / tzoffsetto / tzoffsetfrom */
+  generator_add_simple(generator, "TZOFFSETFROM", standard_offset);
+  generator_add_simple(generator, "TZOFFSETTO", daylight_offset);
+
+  if (!time_string(dtstart, sizeof(dtstart), tzi->DaylightMonthOfYear, tzi->DaylightInstance, tzi->DaylightStartHour))
+    goto exit;
+
+  generator_add_simple(generator, "DTSTART", dtstart);
+  add_rrule(generator, tzi->DaylightInstance, tzi->DaylightMonthOfYear);
+  generator_add_simple(generator, "END", "DAYLIGHT");
+
+  /* 
+     Standard time 
+   */
+
+  generator_add_simple(generator, "BEGIN", "STANDARD");
+  /* required: dtstart / tzoffsetto / tzoffsetfrom */
+  generator_add_simple(generator, "TZOFFSETFROM", daylight_offset);
+  generator_add_simple(generator, "TZOFFSETTO", standard_offset);
+
+  if (!time_string(dtstart, sizeof(dtstart), tzi->StandardMonthOfYear, tzi->StandardInstance, tzi->StandardStartHour))
+    goto exit;
+  
+  generator_add_simple(generator, "DTSTART", dtstart);
+  add_rrule(generator, tzi->StandardInstance, tzi->StandardMonthOfYear);
+  generator_add_simple(generator, "END", "STANDARD");
+
+  generator_add_simple(generator, "END", "VTIMEZONE");
+
+  success = true;
+
+exit:
+  return success;
+}/*}}}*/

@@ -3,6 +3,7 @@
 #define _SVID_SOURCE 1
 #include "librra.h"
 #include "rrac.h"
+#include "timezone.h"
 #include <rapi.h>
 #include <synce_ini.h>
 #include <synce_log.h>
@@ -27,6 +28,10 @@ struct _RRA
 	size_t        object_type_count;
 
 	HKEY          partners_key;
+
+  bool                  has_tzi;
+  TimeZoneInformation   tzi;
+  char*                 time_zone_id;
 };
 
 static const char* PARTNERS =
@@ -63,6 +68,9 @@ void rra_free(RRA* rra)/*{{{*/
 			free(rra->object_types);
 			rra->object_types = NULL;
 		}
+
+    if (rra->time_zone_id)
+      free(rra->time_zone_id);
 
 		free(rra);
 	}
@@ -1367,4 +1375,24 @@ exit:
   return success;
 }
 
+TimeZoneInformation* rra_get_time_zone_information(RRA* rra)
+{
+  if (!rra)
+    return NULL;
+
+  if (rra->has_tzi)
+    return &rra->tzi;
+
+  if (time_zone_get_information(&rra->tzi))
+  {
+    rra->has_tzi = true;
+
+    rra->time_zone_id = NULL;
+    time_zone_get_id(&rra->tzi, &rra->time_zone_id);
+    
+    return &rra->tzi;
+  }
+
+  return NULL;
+}
 
