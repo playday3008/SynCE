@@ -8,7 +8,7 @@
 
 <ul>
 
-<li><a href="linux_usb.php">USB connection on Linux</a></li>
+<li><a href="usb_linux.php">USB connection on Linux</a></li>
 <li><a href="hotplug.php">Linux hotplug script</a></li>
 <li><a href="ip_forward.php">IP forwarding</a></li>
 
