@@ -1,6 +1,6 @@
 /* $Id$ */
 #define _GNU_SOURCE 1
-#include "librra.h"
+#include "appointment.h"
 #include "appointment_ids.h"
 #include "generator.h"
 #include "parser.h"
@@ -101,7 +101,7 @@ bool rra_appointment_to_vevent(/*{{{*/
     size_t data_size,
     char** vevent,
     uint32_t flags,
-    TimeZoneInformation* tzi)
+    RRA_Timezone* tzi)
 {
 	bool success = false;
   Generator* generator = NULL;
@@ -201,8 +201,8 @@ bool rra_appointment_to_vevent(/*{{{*/
 
         if (tzi)
         {
-          start_time = time_zone_convert_to_utc(tzi, start_time);
-          end_time   = time_zone_convert_to_utc(tzi, end_time);
+          start_time = rra_timezone_convert_to_utc(tzi, start_time);
+          end_time   = rra_timezone_convert_to_utc(tzi, end_time);
         }
       
         break;
@@ -387,7 +387,7 @@ bool rra_appointment_from_vevent(/*{{{*/
     uint8_t** data,
     size_t* data_size,
     uint32_t flags,
-    TimeZoneInformation* tzi)
+    RRA_Timezone* tzi)
 {
 	bool success = false;
   Parser* parser = NULL;

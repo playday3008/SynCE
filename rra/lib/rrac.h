@@ -123,6 +123,7 @@ typedef struct _SyncCommand SyncCommand;
 #define SYNC_COMMAND_ERROR    0x006e
 #define SYNC_COMMAND_NOTIFY   0x0069
 
+#define SYNC_COMMAND_NOTIFY_UPDATE      0x00000000
 #define SYNC_COMMAND_NOTIFY_PARTNERS    0x02000000
 #define SYNC_COMMAND_NOTIFY_IDS_4       0x04000000
 #define SYNC_COMMAND_NOTIFY_IDS_6       0x06000000
@@ -148,8 +149,10 @@ bool sync_command_notify_partners(SyncCommand* self, SyncPartners* partners);
 
 typedef struct
 {
+  uint32_t  notify_code;
   uint32_t  type;
   uint32_t  total;
+  uint32_t  deleted;
   uint32_t  unchanged;
   uint32_t  changed;
 } SyncNotifyHeader;

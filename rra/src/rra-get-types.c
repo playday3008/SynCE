@@ -11,8 +11,8 @@ int main()
 {
 	int result = 1;
 	HRESULT hr;
-  SyncMgr* syncmgr = NULL;
-	SyncMgrType* object_types = NULL;
+  RRA_SyncMgr* syncmgr = NULL;
+	RRA_SyncMgrType* object_types = NULL;
 	size_t object_type_count = 0;
 	unsigned i;
 
@@ -22,17 +22,17 @@ int main()
 	if (FAILED(hr))
 		goto exit;
 
-	syncmgr = syncmgr_new();
+	syncmgr = rra_syncmgr_new();
 
-	if (!syncmgr_connect(syncmgr))
+	if (!rra_syncmgr_connect(syncmgr))
 	{
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
 	}
 
-  object_type_count = syncmgr_get_type_count(syncmgr);
+  object_type_count = rra_syncmgr_get_type_count(syncmgr);
 
-  object_types = syncmgr_get_types(syncmgr);
+  object_types = rra_syncmgr_get_types(syncmgr);
 
 	if (!object_types)
 	{
@@ -63,7 +63,7 @@ int main()
 	}
 	
 exit:
-	syncmgr_destroy(syncmgr);
+	rra_syncmgr_destroy(syncmgr);
 	
 	CeRapiUninit();
 	return result;

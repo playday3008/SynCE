@@ -1,9 +1,10 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
-#include "librra.h"
+#include "task.h"
+#include "task_ids.h"
+#include "timezone.h"
 #include "generator.h"
 #include "parser.h"
-#include "task_ids.h"
 #include "common_handlers.h"
 #include <rapi.h>
 #include <synce_log.h>
@@ -11,6 +12,11 @@
 #include <string.h>
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
+
+#define DEFAULT_REMINDER_SOUND_FILE  "Alarm1.wav"
+
+static uint8_t invalid_filetime_buffer[] = 
+{0x00, 0x40, 0xdd, 0xa3, 0x57, 0x45, 0xb3, 0x0c};
 
 /*
    Any on_propval_* functions not here are found in common_handlers.c
@@ -21,6 +27,11 @@ typedef struct
   bool completed;
   time_t completed_time;
 } TaskGeneratorData;
+
+static bool on_propval_categories(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  return generator_add_simple_propval(g, "CATEGORIES", propval);
+}
 
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
 {
@@ -105,7 +116,7 @@ bool rra_task_to_vtodo(
     size_t data_size,
     char** vtodo,
     uint32_t flags,
-    TimeZoneInformation* tzi)
+    RRA_Timezone* tzi)
 {
   bool success = false;
   Generator* generator = NULL;
@@ -129,6 +140,7 @@ bool rra_task_to_vtodo(
   if (!generator)
     goto exit;
 
+  generator_add_property(generator, ID_TASK_CATEGORIES, on_propval_categories);
   generator_add_property(generator, ID_TASK_DUE,        on_propval_due);
   generator_add_property(generator, ID_IMPORTANCE,      on_propval_importance);
   generator_add_property(generator, ID_NOTES,           on_propval_notes);
@@ -183,6 +195,16 @@ exit:
    Any on_mdir_line_* functions not here are found in common_handlers.c
 */
 
+static bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)
+{
+  if (line)
+  {
+    return parser_add_string_from_line(p, ID_TASK_CATEGORIES, line);
+  }
+  else
+    return false;
+}
+
 static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
@@ -195,12 +217,20 @@ static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
 
 static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
 {
-  return parser_add_time_from_line(p, ID_TASK_DUE, line);
+  if (line)
+    return parser_add_time_from_line(p, ID_TASK_DUE, line);
+  else
+    return parser_add_filetime(p, ID_TASK_DUE, 
+        (FILETIME*)invalid_filetime_buffer);
 }
 
 static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
-  return parser_add_time_from_line(p, ID_TASK_START, line);
+  if (line)
+    return parser_add_time_from_line(p, ID_TASK_START, line);
+  else
+    return parser_add_filetime(p, ID_TASK_START, 
+        (FILETIME*)invalid_filetime_buffer);
 }
 
 static bool on_mdir_line_status(Parser* p, mdir_line* line, void* cookie)
@@ -218,7 +248,7 @@ bool rra_task_from_vtodo(
     uint8_t** data,
     size_t* data_size,
     uint32_t flags,
-    TimeZoneInformation* tzi)
+    RRA_Timezone* tzi)
 {
 	bool success = false;
   Parser* parser = NULL;
@@ -250,6 +280,8 @@ bool rra_task_from_vtodo(
   todo = parser_component_new("vTodo");
 /*  parser_component_add_parser_component(todo, alarm);*/
 
+  parser_component_add_parser_property(todo, 
+      parser_property_new("Categories", on_mdir_line_categories));
   parser_component_add_parser_property(todo, 
       parser_property_new("Class", on_mdir_line_class));
   parser_component_add_parser_property(todo, 
@@ -295,6 +327,11 @@ bool rra_task_from_vtodo(
     synce_error("Failed to convert input data");
     goto exit;
   }
+    
+  /* Add some data that should always be included */
+  parser_add_string(parser, 
+      ID_REMINDER_SOUND_FILE, 
+      DEFAULT_REMINDER_SOUND_FILE);
 
   parser_call_unused_properties(parser);
   

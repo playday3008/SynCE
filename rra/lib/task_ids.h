@@ -16,8 +16,10 @@
 
 #define ID_SUBJECT          0x0037
 
-#define ID_TASK_START            0x4104
-#define ID_TASK_DUE              0x4105
+#define ID_TASK_CATEGORIES  0x4005
+
+#define ID_TASK_START       0x4104
+#define ID_TASK_DUE         0x4105
 
 /* This ID exists both as a FILETIME and an 16-bit integer! */
 #define ID_TASK_COMPLETED        0x410f

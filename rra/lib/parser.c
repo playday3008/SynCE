@@ -43,7 +43,7 @@ struct _ParserComponent
 struct _Parser
 {
   ParserComponent* base_parser_component;
-  TimeZoneInformation* tzi;
+  RRA_Timezone* tzi;
   int flags;
   void* cookie;
   mdir_line** mimedir;
@@ -309,6 +309,19 @@ bool parser_add_time  (Parser* self, uint16_t id, time_t value)/*{{{*/
   return true;
 }/*}}}*/
 
+bool parser_add_filetime(Parser* self, uint16_t id, FILETIME* filetime)
+{
+  CEPROPVAL* propval = parser_get_next_propval(self);
+  if (!propval)
+    return false;
+
+  propval->propid = (id << 16) | CEVT_FILETIME;
+
+  memcpy(&propval->val.filetime, filetime, sizeof(FILETIME));
+
+  return true;
+}
+
 bool parser_add_string_from_line(Parser* self, uint16_t id, mdir_line* line)/*{{{*/
 {
   return parser_add_string(self, id, line->values[0]);
@@ -355,7 +368,7 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
     {
       if (self->tzi)
       {
-        some_time = time_zone_convert_from_utc(self->tzi, some_time);
+        some_time = rra_timezone_convert_from_utc(self->tzi, some_time);
       }
       else
         synce_warning("No time zone information available");
@@ -525,7 +538,7 @@ static bool parser_handle_component(Parser* p, ParserComponent* ct)/*{{{*/
 Parser* parser_new(/*{{{*/
     ParserComponent* base_parser_component, 
     int flags,
-    TimeZoneInformation* tzi, 
+    RRA_Timezone* tzi, 
     void* cookie)
 {
   Parser* self = (Parser*)calloc(1, sizeof(Parser));

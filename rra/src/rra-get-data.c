@@ -1,6 +1,6 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
-#include "librra.h"
+#include "syncmgr.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
 	int result = 1;
 	HRESULT hr;
-	RRA* rra = NULL;
+	RRA_SyncMgr* syncmgr = NULL;
   const char* type_id_str = NULL;
   uint32_t type_id = 0;
 	uint32_t object_id = 0;
@@ -37,19 +37,25 @@ int main(int argc, char** argv)
 	if (FAILED(hr))
 		goto exit;
 
-	rra = rra_new();
+	syncmgr = rra_syncmgr_new();
 
-	if (!rra_connect(rra))
+	if (!rra_syncmgr_connect(syncmgr))
 	{
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
 	}
 
-  type_id = rra_type_id_from_name(rra, type_id_str);
-  if (!type_id)
+  type_id = rra_syncmgr_type_from_name(syncmgr, type_id_str);
+  if (RRA_SYNCMGR_INVALID_TYPE_ID == type_id)
     type_id = strtol(type_id_str, NULL, 16);
 
-	if (!rra_object_get(rra, type_id, object_id, &data, &data_size))
+  if (!type_id)
+  {
+ 		fprintf(stderr, "Invalid type ID '%s'\n", type_id_str);
+		goto exit;
+  }
+
+	if (!rra_syncmgr_get_single_object(syncmgr, type_id, object_id, &data, &data_size))
 	{
 		fprintf(stderr, "Failed to get object\n");
 		goto exit;
@@ -73,7 +79,7 @@ exit:
 	if (data)
 		free(data);
 
-	rra_free(rra);
+	rra_syncmgr_destroy(syncmgr);
 	
 	CeRapiUninit();
 	return result;

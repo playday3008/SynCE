@@ -1,8 +1,8 @@
 /* $Id$ */
 #define _POSIX_C_SOURCE 2 /* for getopt */
 #define _BSD_SOURCE
-#include "timezone.h"
-#include "generator.h"
+#include "../lib/timezone.h"
+#include "../lib/generator.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <errno.h>
@@ -139,11 +139,11 @@ static const char* instance_string(unsigned instance)/*{{{*/
   }
 }/*}}}*/
 
-void dump_vtimezone(FILE* output, TimeZoneInformation* tzi)/*{{{*/
+void dump_vtimezone(FILE* output, RRA_Timezone* tzi)/*{{{*/
 {
   Generator* generator = generator_new(0, NULL);
   
-  if (time_zone_generate_vtimezone(generator, tzi))
+  if (rra_timezone_generate_vtimezone(generator, tzi))
   {
     char* result = NULL;
     if (generator_get_result(generator, &result))
@@ -160,7 +160,7 @@ void dump_vtimezone(FILE* output, TimeZoneInformation* tzi)/*{{{*/
   generator_destroy(generator);
 }/*}}}*/
 
-static bool get_time_zone_information(const char* argv0, TimeZoneInformation* tzi, char* input)/*{{{*/
+static bool get_rra_timezone_information(const char* argv0, RRA_Timezone* tzi, char* input)/*{{{*/
 {
   bool success = false;
 
@@ -170,8 +170,8 @@ static bool get_time_zone_information(const char* argv0, TimeZoneInformation* tz
 
     if (file)
     {
-      size_t bytes_read = fread(tzi, 1, sizeof(TimeZoneInformation), file);
-      if (sizeof(TimeZoneInformation) == bytes_read)
+      size_t bytes_read = fread(tzi, 1, sizeof(RRA_Timezone), file);
+      if (sizeof(RRA_Timezone) == bytes_read)
       {
         success = true;
       }
@@ -196,7 +196,7 @@ static bool get_time_zone_information(const char* argv0, TimeZoneInformation* tz
     hr = CeRapiInit();
     if (SUCCEEDED(hr))
     {
-      if (time_zone_get_information(tzi))
+      if (rra_timezone_get(tzi))
         success = true;
       else
         fprintf(stderr, "%s: Failed to get time zone information\n", argv0);
@@ -217,7 +217,7 @@ static bool get_time_zone_information(const char* argv0, TimeZoneInformation* tz
 int main(int argc, char** argv)
 {
   int result = 1;
-  TimeZoneInformation tzi;
+  RRA_Timezone tzi;
   char* input_filename;
   char* output_filename;
   OutputFormat format;
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
   if (!handle_parameters(argc, argv, &input_filename, &output_filename, &format))
     goto exit;
 
-  if (!get_time_zone_information(argv[0], &tzi, input_filename))
+  if (!get_rra_timezone_information(argv[0], &tzi, input_filename))
     goto exit;
 
   if (output_filename)
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
         goto exit;
       }
       
-      fwrite(&tzi, sizeof(TimeZoneInformation), 1, output);
+      fwrite(&tzi, sizeof(RRA_Timezone), 1, output);
       break;
 
     case FORMAT_RAW:

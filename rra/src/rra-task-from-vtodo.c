@@ -1,5 +1,6 @@
 /* $Id$ */
-#include "librra.h"
+#include "../lib/task.h"
+#include "../lib/timezone.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,8 +14,8 @@ int main(int argc, char** argv)
 	long file_size = 0;
 	uint8_t* buffer = NULL;
 	size_t buffer_size = 0;
-  TimeZoneInformation tzi;
-  TimeZoneInformation* p_tzi = NULL;
+  RRA_Timezone tzi;
+  RRA_Timezone* p_tzi = NULL;
 
 	if (argc < 3)
 	{
@@ -45,8 +46,8 @@ int main(int argc, char** argv)
     FILE* file = fopen(argv[3], "r");
     if (file)
     {
-      size_t bytes_read = fread(&tzi, 1, sizeof(TimeZoneInformation), file);
-      if (sizeof(TimeZoneInformation) == bytes_read)
+      size_t bytes_read = fread(&tzi, 1, sizeof(RRA_Timezone), file);
+      if (sizeof(RRA_Timezone) == bytes_read)
       {
         p_tzi = &tzi;
       }

@@ -1,6 +1,6 @@
 /* $Id$ */
 #define _GNU_SOURCE 1
-#include "librra.h"
+#include "contact.h"
 #include "contact_ids.h"
 #include "strbuf.h"
 #include "dbstream.h"

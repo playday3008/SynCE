@@ -1,22 +1,111 @@
 $Id$
 
-Information about the librra architecture
-=========================================
+INTRODUCTION
+============
+
+This file contains some information that hopefully is useful for wannabe librra
+hackers.
+
+
+CODING CONVENTIONS
+==================
+
+Tab characters are never used. Two spaces are used for indentation.
+
+Curly braces are always on their own lines.
+
+Function names are lowercase with words separated by underscore.
+
+Variable names are lowercase with words separated by underscore.
+
+Structure names use camel case: first letter in each word uppercase, remaining
+letters lowercase. No underscores execpt between prefix (for example "RRA") and
+the wanted structure name (for example "SyncMgr").
+
+(Note that the above is not followed perfectly, but should be.)
+
+
+ABOUT MODULES IN THE RRA LIBRARY
+================================
+
+For an RRA module 'foo', there should be a file foo.c and foo.h. All functions
+in the foo module should be lowercase only and have the prefix 'rra_foo_'. All
+structures should have the prefix 'RRA_Foo' and use camel case after that.
+
+If 'Foo' is an object, there is a structure named RRA_Foo. but the contents of
+the structure should be internal to the module. The Foo object is created with
+'rra_foo_new' and destroyed with 'rra_foo_destroy'.
+
+(Note that the above is not followed perfectly, but should be.)
+
+
+ARCHITECTURE OVERVIEW
+=====================
+
+Synchronization is performed via functions in the syncmgr.c that uses the
+rrac.c module for low-level calls.
 
 Conversion between vCard/vCalendar and Windows CE database records is performed
-by appointment.c, contact.c and task.c.
+by the appointment.c, contact.c and task.c modules.
 
 The code in appointment.c and task.c uses libmimedir to parse vCalendar data,
 contact.c has its own parsing of vCards (because they have a slightly different
 format...)
 
-The parser.[hc] files contain helper functions to interpret vCalendar data
-after it has been parsed by libmimedir, and generator.[hc] contain helper
+The parser.c module contain helper functions to interpret vCalendar data
+after it has been parsed by libmimedir, and generator.c contain helper
 functions to generate vCalendar data.
 
-The dbstream.[hc] files contain helper functions to convert a database record
+The dbstream.c module contain helper functions to convert a database record
 between stream format and an array of CEPROPVAL structures.
 
-The timezone.[hc] files contain helper functions to get the timezone settings
+The timezone.c module contain helper functions to get the timezone settings
 from the PDA and handle timezone data in vCalendar files.
+
+See the rra/src directory for example programs that uses these modules.
+
+
+HOW TO ADD A PROPERTY CONVERSION FOR CONTACTS
+=============================================
+
+The exact code to be added is best deduced by studying the code for the
+previously supported properties, but the locations you need to modify are
+listed here.
+
+
+FIND OUT THE PROPERTY ID
+
+1. Use rra-get-data to retrieve an object with this property set
+
+2. Use rra-decode to dump the retrieved object
+
+3. Add the property ID to appointment_ids.h, contact_ids.h or task_ids.h (the
+constants in these files are sorted by ID value)
+
+
+FOR CONTACT OBJECTS
+
+1. Go to the switch() in the rra_contact_to_vcard2() function in contact.c and
+add code for handling the new property
+
+2. Go to the end of the function parser_handle_field() in contact.c and add
+code for handling the new property
+
+
+FOR APPOINTMENT AND TASK OBJECTS
+
+If you wish to add conversion between a vCalendar (vEvent/vTodo) property and
+an Appointment/Task property on the PDA, you do something like this:
+
+1. Find the calls to generator_add_property() in appointment.c or task.c, and
+add a new such call for the new property
+
+2. Implement the on_propval_* function for the property
+
+3. Find the calls to parser_component_add_parser_property() in appointment.c or
+task.c, and add a new such call for the new property
+
+4. Implement the on_mdir_line_* function for the property. If this function is
+called with the 'line' parameter set to NULL, the property is _not_ present in
+the vCalendar data and a default value may be provided.
 

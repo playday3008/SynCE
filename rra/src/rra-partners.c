@@ -2,7 +2,7 @@
 #define _BSD_SOURCE 1
 #include <rapi.h>
 #include <synce_log.h>
-#include "librra.h"
+#include "matchmaker.h"
 #include <stdio.h>
 #include <time.h>
 #include <strings.h>
@@ -11,11 +11,11 @@
 int main(int argc, char** argv)
 {
 	int result = 1;
-	RRA* rra = NULL;
+  RRA_Matchmaker* matchmaker = NULL;
 	DWORD current_partner;
 	HRESULT hr;
 	int i;
-  const char* command = "status";
+  const char* command = "";
 
 	hr = CeRapiInit();
 	if (FAILED(hr))
@@ -24,14 +24,19 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-	rra = rra_new();
+  matchmaker = rra_matchmaker_new();
+  if (!matchmaker)
+  {
+ 		synce_error("Failed to create match-maker");
+		goto exit;
+ }
 
   if (argc >= 2)
     command = argv[1];
 
   if (0 == strcasecmp(command, "status"))/*{{{*/
   {
-    if (!rra_partner_get_current(rra, &current_partner))
+    if (!rra_matchmaker_get_current_partner(matchmaker, &current_partner))
     {
       fprintf(stderr, "Failed to get current partner index");
       goto exit;
@@ -44,28 +49,28 @@ int main(int argc, char** argv)
       uint32_t id = 0;
       char* name = NULL;
 
-      if (rra_partner_get_id(rra, i, &id))
+      if (rra_matchmaker_get_partner_id(matchmaker, i, &id))
       {
         printf("Partner %i id:    0x%08x\n", i, id);
       }
 
-      if (rra_partner_get_name(rra, i, &name))
+      if (rra_matchmaker_get_partner_name(matchmaker, i, &name))
       {
         printf("Partner %i name:  \"%s\"\n", i, name);
-        rra_partner_free_name(name);
+        rra_matchmaker_free_partner_name(name);
       }
     }
   }/*}}}*/
   else if (0 == strcasecmp(command, "create"))/*{{{*/
   {
     uint32_t index = 0;
-    if (rra_partner_create(rra, &index))
+    if (rra_matchmaker_create_partnership(matchmaker, &index))
     {
       printf("Partnership creation succeeded. Using partnership index %i.\n", index);
     }
     else
     {
-      fprintf(stderr, "Partnership creation failed.\n");
+      fprintf(stderr, "Partnership creation failed. Maybe there is no empty partnership slot?\n");
       goto exit;
     }
   }/*}}}*/
@@ -78,7 +83,7 @@ int main(int argc, char** argv)
 
     if (index == 1 || index == 2)
     {
-      if (rra_partner_replace(rra, index))
+      if (rra_matchmaker_replace_partnership(matchmaker, index))
       {
         printf("Partnership replacement succeeded.\n");
       }
@@ -97,13 +102,16 @@ int main(int argc, char** argv)
   else
   {
     printf(
+        "The purpose of this program is to manage partnerships with the currently\n"
+        "connected device.\n"
+        "\n"
         "Syntax:\n"
         "\t%s [status|create|replace INDEX]\n"
         "\n"
-        "\tstatus   Show partnership status for device. (Default)\n"
-        "\tcreate   Create partnership with device.\n"
-        "\treplace  Replace partnership on device.\n"
-        "\tINDEX    The index number (1 or 2).\n",
+        "\tstatus   Show partnership status for device\n"
+        "\tcreate   Create partnership with device\n"
+        "\treplace  Replace partnership on device\n"
+        "\tINDEX    The partnership index (1 or 2)\n",
         argv[0]
         );
   }
@@ -111,8 +119,8 @@ int main(int argc, char** argv)
 	result = 0;
 	
 exit:
-	rra_free(rra);
-	CeRapiUninit();
+  rra_matchmaker_destroy(matchmaker);
+  CeRapiUninit();
 	return result;
 }
 

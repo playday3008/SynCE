@@ -1034,9 +1034,12 @@ exit:
 bool sync_command_notify_header(SyncCommand* self, SyncNotifyHeader* header)
 {
   bool success = false;
+
+  header->notify_code = sync_command_notify_code(self);
   
-  if ((sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_4 ||
-        sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_6) &&
+  if ((header->notify_code == SYNC_COMMAND_NOTIFY_UPDATE ||
+        header->notify_code == SYNC_COMMAND_NOTIFY_IDS_4 ||
+        header->notify_code == SYNC_COMMAND_NOTIFY_IDS_6) &&
       header)
   {
     uint8_t* p = self->data;
@@ -1054,12 +1057,23 @@ bool sync_command_notify_header(SyncCommand* self, SyncNotifyHeader* header)
     header->changed = LE32(p);      p += 4;
     header->total   = LE32(p) / 4;  p += 4;
 
-    synce_trace("type = %08x, changed = %08x, total = %08x",
-        header->type,
-        header->changed,
-        header->total);
+    if (SYNC_COMMAND_NOTIFY_UPDATE == header->notify_code)
+    {
+      header->unchanged = 0;
+      header->deleted   = header->total - header->changed;
+    }
+    else
+    {
+      header->unchanged = header->total - header->changed;
+      header->deleted   = 0;
+    }
 
-    header->unchanged = header->total - header->changed;
+    synce_trace("type = %08x, total = %i, unchanged = %i, changed = %0i, deleted = %i",
+        header->type,
+        header->total,
+        header->unchanged,
+        header->changed,
+        header->deleted);
 
     success = true;
   }
@@ -1074,7 +1088,8 @@ bool sync_command_notify_ids(SyncCommand* self, uint32_t* ids)
 {
   bool success = false;
   
-  if ((sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_4 ||
+  if ((sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_UPDATE ||
+        sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_4 ||
         sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_6) &&
       ids)
   {

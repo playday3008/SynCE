@@ -2,13 +2,13 @@
 AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
 LDADD = -L../lib ../lib/librra.la
 
-bin_PROGRAMS = synce-partnership
+bin_PROGRAMS = synce-matchmaker
 
-synce_partnership_SOURCES    = rra-partners.c
+synce_matchmaker_SOURCES = rra-partners.c
 
 noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
-	rra-decode \
+	rra-decode rra-subscribe \
 	rra-contact-to-vcard rra-contact-from-vcard \
 	rra-appointment-from-vevent rra-appointment-to-vevent \
 	rra-task-from-vtodo rra-task-to-vtodo \
@@ -20,6 +20,7 @@ rra_get_data_SOURCES    = rra-get-data.c
 rra_put_data_SOURCES    = rra-put-data.c
 rra_delete_SOURCES      = rra-delete.c
 rra_decode_SOURCES      = rra-decode.c
+rra_subscribe_SOURCES    = rra-subscribe.c
 #rra_db_vcal_SOURCES     = rra-db-vcal.c appointment.h appointment.c
 
 rra_contact_to_vcard_SOURCES    = rra-contact-to-vcard.c

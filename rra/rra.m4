@@ -8,7 +8,7 @@ AC_DEFUN(AM_PATH_RRA, [
       [--with-rra[=DIR]],
       [Search for RRA in DIR/include and DIR/lib]),
       [
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
+				CPPFLAGS="$CPPFLAGS -I${withval}/include/rra"
 				LDFLAGS="$LDFLAGS -L${withval}/lib"
 			]
     )
@@ -18,7 +18,7 @@ AC_DEFUN(AM_PATH_RRA, [
       [--with-rra-include[=DIR]],
       [Search for RRA header files in DIR]),
       [
-				CPPFLAGS="$CPPFLAGS -I${withval}"
+				CPPFLAGS="$CPPFLAGS -I${withval}/rra"
 			]
     )
 

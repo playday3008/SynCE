@@ -2,12 +2,11 @@
 #ifndef __parser_h__
 #define __parser_h__
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <synce.h>
 #include <libmimedir.h>
 #include <time.h>
 
-struct _TimeZoneInformation;
+struct _RRA_Timezone;
 
 #define PARSER_UTF8 1
 
@@ -35,7 +34,7 @@ bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time, bool*
 Parser* parser_new(
     ParserComponent* base_parser_component, 
     int flags,
-    struct _TimeZoneInformation* tzi, 
+    struct _RRA_Timezone* tzi, 
     void* cookie);
 void parser_destroy(Parser* self);
 bool parser_set_mimedir(Parser* self, const char* mimedir);
@@ -49,6 +48,7 @@ bool parser_add_int16 (Parser* self, uint16_t id, int16_t value);
 bool parser_add_int32 (Parser* self, uint16_t id, int32_t value);
 bool parser_add_string(Parser* self, uint16_t id, const char* str);
 bool parser_add_time  (Parser* self, uint16_t id, time_t value);
+bool parser_add_filetime(Parser* self, uint16_t id, FILETIME* filetime);
 
 bool parser_add_string_from_line(Parser* self, uint16_t id, mdir_line* line);
 bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line);

@@ -218,7 +218,7 @@ bool decode_database_stream(uint8_t* buffer)
 					time_t unix_time = filetime_to_unix_time(&propvals[i].val.filetime);
 					char* time_str = ctime(&unix_time);
 					time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
-					printf("%s", time_str);
+					printf("%s  (%lu)", time_str, unix_time);
           db_dump(&propvals[i].val.filetime, sizeof(FILETIME));
         }
 				break;

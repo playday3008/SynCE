@@ -20,15 +20,15 @@
 
 static const uint8_t empty[6] = {0,0,0,0,0,0};
 
-bool time_zone_get_information(TimeZoneInformation* tzi)/*{{{*/
+bool rra_timezone_get(RRA_Timezone* tzi)/*{{{*/
 {
   bool success = false;
   LONG error;
   HKEY key = 0;
   WCHAR* wide_value_name = NULL;
-  DWORD size = sizeof(TimeZoneInformation);
+  DWORD size = sizeof(RRA_Timezone);
   
-  assert(sizeof(TimeZoneInformation) == 172);
+  assert(sizeof(RRA_Timezone) == 172);
   /*assert(6 == sizeof(tzi->unknown2));
   assert(6 == sizeof(tzi->unknown5));*/
 
@@ -48,9 +48,9 @@ bool time_zone_get_information(TimeZoneInformation* tzi)/*{{{*/
     goto exit;
   }
 
-  if (sizeof(TimeZoneInformation) != size)
+  if (sizeof(RRA_Timezone) != size)
   {
-    synce_error("Expected value size %i but got %i", sizeof(TimeZoneInformation), size);
+    synce_error("Expected value size %i but got %i", sizeof(RRA_Timezone), size);
     goto exit;
   }
 
@@ -83,7 +83,7 @@ exit:
 }/*}}}*/
 
 /* XXX: improve ID generation */
-void time_zone_get_id(TimeZoneInformation* tzi, char** id)/*{{{*/
+void rra_timezone_create_id(RRA_Timezone* tzi, char** id)/*{{{*/
 {
   char* name = wstr_to_ascii(tzi->StandardName);
   char* p;
@@ -162,7 +162,7 @@ static unsigned day_from_month_and_week(unsigned month, unsigned week)/*{{{*/
   return result;
 }/*}}}*/
 
-static bool using_daylight_saving(TimeZoneInformation* tzi, struct tm* time_struct)
+static bool using_daylight_saving(RRA_Timezone* tzi, struct tm* time_struct)
 {
   int month = time_struct->tm_mon + 1;
 
@@ -216,9 +216,9 @@ static bool using_daylight_saving(TimeZoneInformation* tzi, struct tm* time_stru
   return false;
 }
 
-time_t time_zone_convert_from_utc(TimeZoneInformation* tzi, time_t unix_time)
+time_t rra_timezone_convert_from_utc(RRA_Timezone* tzi, time_t unix_time)
 {
-  time_t result = (time_t)0xffffffff;
+  time_t result = RRA_TIMEZONE_INVALID_TIME;
   struct tm time_struct;
   
   if (tzi && localtime_r(&unix_time, &time_struct))
@@ -236,9 +236,9 @@ time_t time_zone_convert_from_utc(TimeZoneInformation* tzi, time_t unix_time)
   return result;
 }
 
-time_t time_zone_convert_to_utc(TimeZoneInformation* tzi, time_t unix_time)
+time_t rra_timezone_convert_to_utc(RRA_Timezone* tzi, time_t unix_time)
 {
-  time_t result = (time_t)0xffffffff;
+  time_t result = RRA_TIMEZONE_INVALID_TIME;
   struct tm time_struct;
   
   if (tzi && localtime_r(&unix_time, &time_struct))
@@ -297,15 +297,15 @@ static void add_rrule(Generator* generator, unsigned instance, unsigned month)/*
   generator_add_simple(generator, "RRULE", rrule);
 }     /*}}}*/
 
-static void add_tzid(Generator* generator, TimeZoneInformation* tzi)/*{{{*/
+static void add_tzid(Generator* generator, RRA_Timezone* tzi)/*{{{*/
 {
   char* id = NULL;
-  time_zone_get_id(tzi, &id);
+  rra_timezone_create_id(tzi, &id);
   generator_add_simple(generator, "TZID", id);
-  time_zone_free_id(id);
+  rra_timezone_free_id(id);
 }/*}}}*/
 
-bool time_zone_generate_vtimezone(Generator* generator, TimeZoneInformation* tzi)/*{{{*/
+bool rra_timezone_generate_vtimezone(Generator* generator, RRA_Timezone* tzi)/*{{{*/
 {
   bool success = false;
   char standard_offset[10];

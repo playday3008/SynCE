@@ -7,12 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
+
+bool running = true;
+
+static void ctrl_c_handler(int unused)
+{
+  running = false;
+}
 
 static bool callback (
     RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count, uint32_t* ids, void* cookie)
 {
   const char* event_str;
   unsigned i;
+  time_t now;
+  char timestamp[32];
+
+  time(&now);
 
   synce_trace("event=%i, type=%08x, count=%08x",
       event, type, count);
@@ -33,8 +45,12 @@ static bool callback (
       break;
   }
 
+  strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+  printf("TIMESTAMP            TYPE      ID        EVENT     (%i items)\n", count);
+
 	for (i = 0; i < count; i++)
-		printf("%08x   %08x  %s\n", type, ids[i], event_str);
+		printf("%s  %08x  %08x  %s\n", timestamp, type, ids[i], event_str);
 
   return true;
 }
@@ -46,20 +62,11 @@ int main(int argc, char** argv)
 	RRA_SyncMgr* syncmgr = NULL;
   const char* type_id_str = NULL;
 	uint32_t type_id = 0;
-  int i;
 	/*uint32_t* deleted_ids = NULL;
 	size_t deleted_count = 0;*/
 	
 	synce_log_set_level(0);
 
-	if (argc < 2)
-	{
-		fprintf(stderr, "Missing object type id on command line\n");
-		goto exit;
-	}
-
-	type_id_str = argv[1];
-	
 	hr = CeRapiInit();
 	if (FAILED(hr))
 		goto exit;
@@ -72,15 +79,31 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-  for (i = 1; i < argc; i++)
+  if (argc < 2)
   {
-    type_id_str = argv[i];
+    /* Subcribe to all types */
+    unsigned i;
+    uint32_t count = rra_syncmgr_get_type_count(syncmgr);
+    RRA_SyncMgrType* types = rra_syncmgr_get_types(syncmgr);
+    for (i = 0; i < count; i++)
+    {
+      rra_syncmgr_subscribe(syncmgr, types[i].id, callback, NULL);
+    }
+  }
+  else
+  {
+    int i;
 
-    type_id = rra_syncmgr_type_from_name(syncmgr, type_id_str);
-    if (RRA_SYNCMGR_INVALID_TYPE_ID == type_id)
-      type_id = strtol(type_id_str, NULL, 16);
+    for (i = 1; i < argc; i++)
+    {
+      type_id_str = argv[i];
 
-    rra_syncmgr_subscribe(syncmgr, type_id, callback, NULL);
+      type_id = rra_syncmgr_type_from_name(syncmgr, type_id_str);
+      if (RRA_SYNCMGR_INVALID_TYPE_ID == type_id)
+        type_id = strtol(type_id_str, NULL, 16);
+
+      rra_syncmgr_subscribe(syncmgr, type_id, callback, NULL);
+    }
   }
     
   if (!rra_syncmgr_start_events(syncmgr))
@@ -89,11 +112,17 @@ int main(int argc, char** argv)
 		goto exit;
   }
 
+  signal(SIGINT, ctrl_c_handler);
+  printf("Press Ctrl+C to cancel subscription.\n");
+		
   /* Process all events triggered by rra_syncmgr_start_events */
-  while (rra_syncmgr_event_wait(syncmgr, 3))
+  while (running)
   {
-    rra_syncmgr_handle_event(syncmgr);
+    if (rra_syncmgr_event_wait(syncmgr, 3))
+      rra_syncmgr_handle_event(syncmgr);
   }
+  
+  printf("See you later!\n");
 
 exit:
 	rra_syncmgr_destroy(syncmgr);
