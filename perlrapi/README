@@ -20,8 +20,7 @@ Build
 =====
 
 # You have to proceed the following steps:
-./bootstrap
-perl Makefile.PL
+perl Makefile.PL [INC="-I<dir> [-I...]"]
 make
 make install (as root)
 
