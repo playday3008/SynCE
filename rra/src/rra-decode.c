@@ -233,6 +233,7 @@ bool decode_database_stream(uint8_t* buffer)
           int j;
           uint32_t flags0           = *(uint16_t*)(propvals[i].val.blob.lpb + 0x04);
           uint32_t recurrence_type  = *(uint32_t*)(propvals[i].val.blob.lpb + 0x06);
+          uint32_t day              = *(uint32_t*)(propvals[i].val.blob.lpb + 0x0a);
           uint32_t interval         = *(uint32_t*)(propvals[i].val.blob.lpb + 0x0e);
           uint32_t flags = 0;
           uint32_t occurrences = 0;
@@ -243,8 +244,11 @@ bool decode_database_stream(uint8_t* buffer)
 							recurrence_type, 
               (recurrence_type < RECURRENCE_TYPE_COUNT) ? RECURRENCE_TYPE[recurrence_type] : "Unknown");
 
-          printf("\n                     Flags 0:      : 0x%04x     %d", 
+          printf("\n                     Flags 0       : 0x%04x     %d", 
               flags0, flags0);
+
+          printf("\n                     Day           : 0x%08x = %i days + %i minutes", 
+              day, day / (60*24), day % (60*24));
 
           switch (recurrence_type)
           {
