@@ -46,6 +46,8 @@ class KProgress;
 class PdaConfigDialogImpl;
 class SyncThread;
 class Rra;
+class RakiSyncPlugin;
+class KConfig;
 typedef struct _ObjectType ObjectType;
 
 class SyncTaskListItem : public QObject, public QCheckListItem
@@ -75,11 +77,13 @@ public:
     QString getPreferedLibrary();  
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
-    bool synchronize(SyncThread *syncThread, Rra *rra, QString pdaName);
+    bool synchronize(SyncThread *syncThread, Rra *rra, QString pdaName,
+            KConfig *ksConfig);
     void setLastSynchronized(QDateTime lastSynchronized);
     void setFirstSynchronization(bool firstSynchronization);
     bool isFirstSynchronization();
     QDateTime &getLastSynchronized();
+    void configure(QWidget *parent, QString pdaName, KConfig *ksConfig);
 
 signals:
     void serviceChanged();
@@ -104,6 +108,11 @@ private:
     QDateTime lastSynchronized;
     uint32_t partnerId;
     bool firstSynchronization;
+    int createSyncPlugin(QWidget *parent, QString pdaName,
+            KConfig *ksConfig, RakiSyncPlugin **rakiSyncPlugin);
+    enum {
+        ERROR_NOFACTORY = 1, ERROR_WRONGLIBRARYTYPE, ERROR_NOSYNCHRONIZER
+    };
     
 signals:
     void stateChanged(bool state);

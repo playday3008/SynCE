@@ -28,6 +28,7 @@
 #include "rra.h"
 
 #include <kprogress.h>
+#include <kmessagebox.h>
 #include <kdebug.h>
 #include <qcursor.h>
 #include <qpoint.h>
@@ -272,15 +273,13 @@ void SyncTaskListItem::openPopup()
 }
 
 
-bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
-        QString pdaName)
+int SyncTaskListItem::createSyncPlugin(QWidget *parent, QString pdaName,
+        KConfig *ksConfig, RakiSyncPlugin **syncPlugin)
 {
-    bool ret = false;
     KTrader::OfferList offers;
+    int ret = 0;
+    *syncPlugin = NULL;
 
-    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Started"));
-    postSyncThreadEvent(SyncThread::setTotalSteps, (void *) 1);
-    
     QString library = getPreferedLibrary();
     QString offer = getPreferedOffer();
 
@@ -293,8 +292,6 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
         }
     }
 
-    kdDebug(2120) << "Start syncing with " << offer << endl;
-
     if (!library.isEmpty()) {
         kdDebug(2120) << "Name: " << offer + "; Library: " << library << endl;
         KLibFactory *factory = KLibLoader::self()->factory(library.ascii());
@@ -302,36 +299,103 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
             QString errorMessage = KLibLoader::self()->lastErrorMessage();
             kdDebug(2120) << "There was an error: " << offer << errorMessage <<
                     endl;
-            postSyncThreadEvent(SyncThread::setTask,
-                    (void *) qstrdup("Synchronizer Load-Error"));
+            ret = ERROR_NOFACTORY;
         } else {
             if (factory->inherits("RakiSyncFactory")) {
-                RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*> (
-                        factory);
-                RakiSyncPlugin *syncPlugin = static_cast<RakiSyncPlugin*> (
-                        syncFactory->create());
-                ret = syncPlugin->doSync(syncThread, objectType, pdaName,
-                        partnerId, this, rra, firstSynchronization);
+                RakiSyncFactory *syncFactory =
+                        static_cast<RakiSyncFactory*> (factory);
+                *syncPlugin = static_cast<RakiSyncPlugin*>
+                        (syncFactory->create());
+                (*syncPlugin)->init(parent, ksConfig, objectType, pdaName, partnerId);
                 syncFactory->callme(); // Fake call to link correct.
-                delete syncPlugin;
             } else {
                 kdDebug(2120) << "Library no Raki-Plugin" << endl;
+                ret = ERROR_WRONGLIBRARYTYPE;
             }
         }
     } else {
-        postSyncThreadEvent(SyncThread::setTask,
-                (void *) qstrdup("No Synchronizer found"));
+        ret = ERROR_NOSYNCHRONIZER;
     }
 
-    kdDebug(2120) << "Finished syncing with " << offer << endl;
+    return ret;
+}
 
-    lastSynchronized = QDateTime(QDate::currentDate(), QTime::currentTime());
-    firstSynchronization = false;
 
-    postSyncThreadEvent(SyncThread::setProgress, totalSteps());
-    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Finished"));
+bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
+        QString pdaName, KConfig *ksConfig)
+{
+    bool ret = false;
+
+    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Started"));
+    postSyncThreadEvent(SyncThread::setTotalSteps, (void *) 1);
+
+    RakiSyncPlugin *syncPlugin = NULL;
+
+    int createRet = createSyncPlugin(NULL, pdaName, ksConfig, &syncPlugin);
+
+    switch(createRet) {
+    case ERROR_NOSYNCHRONIZER:
+        postSyncThreadEvent(SyncThread::setTask,
+                (void *) qstrdup("No Synchronizer found"));
+        break;
+    case ERROR_WRONGLIBRARYTYPE:
+        postSyncThreadEvent(SyncThread::setTask,
+                (void *) qstrdup("Library found but not a Synchronizer"));
+        break;
+    case ERROR_NOFACTORY:
+        postSyncThreadEvent(SyncThread::setTask,
+                (void *) qstrdup("No Factory found for Synchronizer"));
+        break;
+    }
+
+    if (createRet == 0) {
+        ret = syncPlugin->doSync(syncThread, rra, this, firstSynchronization);
+        delete syncPlugin;
+
+        kdDebug(2120) << "Finished syncing with " << endl;
+        postSyncThreadEvent(SyncThread::setProgress, totalSteps());
+
+        if (ret) {
+            lastSynchronized = QDateTime(QDate::currentDate(),
+                    QTime::currentTime());
+            firstSynchronization = false;
+            postSyncThreadEvent(SyncThread::setTask,
+                    (void *) qstrdup("Finished"));
+        } else {
+            postSyncThreadEvent(SyncThread::setTask, (void *)
+                    qstrdup("Error during synchronization"));
+        }
+    }
 
     syncThread->synchronizeGui();
 
     return ret;
+}
+
+
+void SyncTaskListItem::configure(QWidget *parent, QString pdaName,
+        KConfig *ksConfig)
+{
+    RakiSyncPlugin *syncPlugin = NULL;
+
+    int ret = createSyncPlugin(parent, pdaName, ksConfig, &syncPlugin);
+
+    switch(ret) {
+    case ERROR_NOSYNCHRONIZER:
+        KMessageBox::information(parent, "No Synchronizer found for " +
+                QString(objectType->name), QString(objectType->name) + pdaName);
+        break;
+    case ERROR_WRONGLIBRARYTYPE:
+        KMessageBox::error(parent, "Wrong library type for " +
+                QString(objectType->name), QString(objectType->name) + pdaName);
+        break;
+    case ERROR_NOFACTORY:
+        KMessageBox::error(parent, "Wrong library type for " +
+                QString(objectType->name), QString(objectType->name) + pdaName);
+        break;
+    }
+    if (ret == 0) {
+        syncPlugin->configure();
+        delete syncPlugin;
+    }
 }
