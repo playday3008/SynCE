@@ -29,6 +29,8 @@
 #ifdef __cplusplus
 extern "C"
 {
+namespace synce
+{
 #endif
 
 /*
@@ -60,10 +62,6 @@ bool wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length);
 bool wstr_equal(LPWSTR a, LPWSTR b);
 
 LPWSTR wstrdup(LPCWSTR string);
-
-#ifdef __cplusplus
-}
-#endif
 
 /*
  * Old function names
@@ -137,6 +135,11 @@ bool synce_get_script_directory(char** directory);
  */
 
 char* synce_strerror(DWORD error);
+
+#ifdef __cplusplus
+}
+}
+#endif
 
 
 #endif
