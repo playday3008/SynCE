@@ -150,10 +150,10 @@ the context-menu to move files.<br>
 <a href="mailto:hippy@users.sourceforge.net">Richard Taylor</a> has written a Python
 interface <b>PyRAPI</b> to the rapi-library opening SynCE to Python developers.<br>
 
-<a href="http://www.office-m.at">Markus Biermaier</a> has written the Python- and PyQt-scripts.<br>
+<a href="http://www.office-m.at" target="_blank">Markus Biermaier</a> has written the Python- and PyQt-scripts.<br>
 
 Many thanks to <a href="http://www.riverbankcomputing.co.uk/pyqt/download.php" target="_blank">Phil Tompson</a>
-for writing the Python wrappers to the <a href="http://www.trolltech.com">Qt-Library</a>.<br>
+for writing the Python wrappers to the <a href="http://www.trolltech.com" target="_blank">Qt-Library</a>.<br>
 
 Thanks also to <a href="mailto:twogood@users.sourceforge.net">David Eriksson</a>, the current project manager of the <b>SynCE</b>-project.
 
