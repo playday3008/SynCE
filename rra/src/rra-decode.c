@@ -237,6 +237,7 @@ bool decode_database_stream(uint8_t* buffer)
           uint32_t flags = 0;
           uint32_t occurrences = 0;
           uint32_t instance = 0;
+          uint32_t date = 0;
 
 					printf("\n                     RecurrenceType: 0x%08x %s", 
 							recurrence_type, 
@@ -256,12 +257,14 @@ bool decode_database_stream(uint8_t* buffer)
             case olRecursMonthly:
               flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
               occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
+              date     = *(uint32_t*)(propvals[i].val.blob.lpb + 0x2e);
               break;
             
             case olRecursMonthNth:
               instance    = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1a);
               flags       = *(uint32_t*)(propvals[i].val.blob.lpb + 0x1e);
               occurrences = *(uint32_t*)(propvals[i].val.blob.lpb + 0x22);
+              date     = *(uint32_t*)(propvals[i].val.blob.lpb + 0x32);
 
               printf("\n                     Instance:       0x%08x %d", 
                   instance, instance);
@@ -330,15 +333,13 @@ bool decode_database_stream(uint8_t* buffer)
           }
 
           {
-
-            uint32_t minutes = *(uint32_t*)(propvals[i].val.blob.lpb + 0x2e);
             /* the constant is: minutes since 1 January 1601, 00:00:00 */
-            time_t unix_time = (minutes - 194074560) * 60;
+            time_t unix_time = (date - 194074560) * 60;
             char* time_str = asctime(gmtime(&unix_time));
             time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
 
-            printf("\n                     Timestamp     : 0x%08x %s", 
-                minutes, time_str);
+            printf("\n                     Date          : 0x%08x %s", 
+                date, time_str);
           }
 
 #if 0
