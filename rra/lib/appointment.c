@@ -233,10 +233,10 @@ bool rra_appointment_to_vevent(/*{{{*/
 
       case APPOINTMENT_TYPE_NORMAL:
         type   = "DATE-TIME";
-        /*if (tzi)*/
+        /*if (tzi)
           format = "%Y%m%dT%H%M%SZ";
-        /*else
-          format = "%Y%m%dT%H%M%S";*/
+        else*/
+          format = "%Y%m%dT%H%M%S";
 
         /* minutes to seconds */
         end_time = start_time + 
