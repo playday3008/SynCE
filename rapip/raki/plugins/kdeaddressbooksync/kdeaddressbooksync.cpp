@@ -215,7 +215,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
             addressee.insertCustom("Raki", "Task", "changed");
             uidString = "RRA-ID-" + (QString("00000000") + QString::number((*v), 16)).right(8);
             addressee.setUid(uidString);
-            addressee.insertCustom("Raki", "PdaUid-" + pdaName, addressee.uid());
+            addressee.insertCustom("Raki", "PdaUid-" + QString::number(partnerId), addressee.uid());
             pdaBook->insertAddressee(addressee);
             advanceProgress();
         }
@@ -225,7 +225,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
             addressee.insertCustom("Raki", "Task", "unchanged");
             uidString = "RRA-ID-" + (QString("00000000") + QString::number((*v), 16)).right(8);
             addressee.setUid(uidString);
-            addressee.insertCustom("Raki", "PdaUid-" + pdaName, addressee.uid());
+            addressee.insertCustom("Raki", "PdaUid-" + QString::number(partnerId), addressee.uid());
             pdaBook->insertAddressee(addressee);
         }
 
@@ -234,7 +234,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
             addressee.insertCustom("Raki", "Task", "deleted");
             uidString = "RRA-ID-" + (QString("00000000") + QString::number((*v), 16)).right(8);
             addressee.setUid(uidString);
-            addressee.insertCustom("Raki", "PdaUid-" + pdaName, addressee.uid());
+            addressee.insertCustom("Raki", "PdaUid-" + QString::number(partnerId), addressee.uid());
             pdaBook->insertAddressee(addressee);
             advanceProgress();
         }
@@ -258,14 +258,14 @@ KABC::AddressBook *KdeAddressBookSync::generateKappaBook(KABC::AddressBook *pcDe
     QString pdaTask;
 
     for (it = pcDeltaBook->begin(); it != pcDeltaBook->end(); it++) {
-        QString pdaUid = (*it).custom("Raki", "PdaUid-" + pdaName);
+        QString pdaUid = (*it).custom("Raki", "PdaUid-" + QString::number(partnerId));
         if (!pdaUid.isEmpty()) {
             pdaDeltaAddressee = pdaDeltaBook->findByUid(pdaUid);
             if (!pdaDeltaAddressee.isEmpty()) {
                 if (pdaDeltaAddressee.custom("Raki", "Task") == "changed") {
                     if ((*it).custom("Raki", "Task") == "changed") {
                         kappaAddressee = (*it);
-                        kappaAddressee.insertCustom("Raki", "PdaUid-" + pdaName, pdaUid);
+                        kappaAddressee.insertCustom("Raki", "PdaUid-" + QString::number(partnerId), pdaUid);
                         kappaBook->insertAddressee(kappaAddressee);
                     }
                 }
@@ -274,7 +274,7 @@ KABC::AddressBook *KdeAddressBookSync::generateKappaBook(KABC::AddressBook *pcDe
                 QString task = pdaDeltaAddressee.custom("Raki", "Task");
                 pdaDeltaAddressee.setCustoms((*it).customs());
                 pdaDeltaAddressee.insertCustom("Raki", "Task", task);
-                pdaDeltaAddressee.insertCustom("Raki", "PdaUid-" + pdaName, pdaUid);
+                pdaDeltaAddressee.insertCustom("Raki", "PdaUid-" + QString::number(partnerId), pdaUid);
                 pdaDeltaAddressee.setUid((*it).uid());
                 pdaDeltaBook->insertAddressee(pdaDeltaAddressee);
             }
@@ -295,7 +295,7 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaItaBook(KABC::AddressBook *pda
 
     for (it = kappaBook->begin(); it != kappaBook->end(); it++) {
         pdaAddressee = (*it);
-        QString pdaUid = (*it).custom("Raki", "PdaUid-" + pdaName);
+        QString pdaUid = (*it).custom("Raki", "PdaUid-" + QString::number(partnerId));
         pdaAddressee.setUid(pdaUid);
         pdaDeltaBook->removeAddressee(pdaAddressee);
         decTotalSteps(1);
@@ -339,7 +339,7 @@ bool KdeAddressBookSync::sync()
 
     KABC::AddressBook *pcRhoBook = new KABC::AddressBook();
     KABC::ResourceFile *rhoResource = new KABC::ResourceFile(pcRhoBook,
-                                      QFile::encodeName(locateLocal("data", (QString("raki/syncrefbook-") + pdaName + QString(".vcf")).ascii())));
+                                      QFile::encodeName(locateLocal("data", (QString("raki/syncrefbook-") + QString::number(partnerId) + QString(".vcf")).ascii())));
     pcRhoBook->addResource(rhoResource);
     pcRhoBook->load();
 
@@ -366,13 +366,13 @@ bool KdeAddressBookSync::sync()
     for (it = pdaItaBook->begin(); it != pdaItaBook->end() && isRunning(); it++) {
         task = (*it).custom("Raki", "Task");
         if (task == "changed") {
-            kdDebug(2120) << "Update of uid: " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + pdaName) << endl;
+            kdDebug(2120) << "Update of uid: " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
             pcStdBook->insertAddressee((*it));
         } else if (task == "new") {
-            kdDebug(2120) << "New Address " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + pdaName) << endl;
+            kdDebug(2120) << "New Address " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
             pcStdBook->insertAddressee((*it));
         } else if (task == "deleted") {
-            kdDebug(2120) << "Deleting of " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + pdaName) << endl;
+            kdDebug(2120) << "Deleting of " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
             pcStdBook->removeAddressee((*it));
         } else if (task == "unchanged") {
             // ??
@@ -385,23 +385,23 @@ bool KdeAddressBookSync::sync()
     for (it = pcItaBook->begin(); it != pcItaBook->end() && isRunning(); it++) {
         task = (*it).custom("Raki", "Task");
         if (task == "changed") {
-            kdDebug(2120) << "Update of uid: " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + pdaName) << endl;
-            ceUid = (*it).custom("Raki", "PdaUid-" + pdaName);
+            kdDebug(2120) << "Update of uid: " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
+            ceUid = (*it).custom("Raki", "PdaUid-" + QString::number(partnerId));
             (*it).setUid(ceUid);
             uid = ceUid.right(8).toULong(&ok, 16);
             rra->putAddressee(*it, getObjectTypeId(), uid, &newObjectId);
             if (newObjectId != uid) {
                 uidString = "RRA-ID-" + (QString("00000000") + QString::number(newObjectId, 16)).right(8);
-                (*it).insertCustom("Raki", "PdaUid-" + pdaName, uidString);
+                (*it).insertCustom("Raki", "PdaUid-" + QString::number(partnerId), uidString);
                 pcStdBook->insertAddressee((*it));
             }
             advanceProgress();
         } else if (task == "new") {
             rra->putAddressee(*it, getObjectTypeId(), 0, &newObjectId);
             uidString = "RRA-ID-" + (QString("00000000") + QString::number(newObjectId, 16)).right(8);
-            (*it).insertCustom("Raki", "PdaUid-" + pdaName, uidString);
+            (*it).insertCustom("Raki", "PdaUid-" + QString::number(partnerId), uidString);
             pcStdBook->insertAddressee((*it));
-            kdDebug(2120) << "New Address " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + pdaName) << endl;
+            kdDebug(2120) << "New Address " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
             advanceProgress();
         }
     }
@@ -411,11 +411,11 @@ bool KdeAddressBookSync::sync()
             for (it = pcItaBook->begin(); it != pcItaBook->end() && isRunning(); it++) {
                 task = (*it).custom("Raki", "Task");
                 if (task == "deleted") {
-                    ceUid = (*it).custom("Raki", "PdaUid-" + pdaName);
+                    ceUid = (*it).custom("Raki", "PdaUid-" + QString::number(partnerId));
                     uid = ceUid.right(8).toULong(&ok, 16);
                     rra->deleteObject(getObjectTypeId(), uid);
                     advanceProgress();
-                    kdDebug(2120) << "Deleting of " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + pdaName) << endl;
+                    kdDebug(2120) << "Deleting of " << (*it).uid() << "  " << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId)) << endl;
                 } else if (task == "unchanged") {
                     // ??
                 }
@@ -447,7 +447,6 @@ bool KdeAddressBookSync::sync()
     delete pcRhoBook;
 
     KABC::StdAddressBook::save();
-//    KABC::StdAddressBook::close();
     
     setTask("Finished");
 

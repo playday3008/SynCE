@@ -31,13 +31,14 @@ RakiSyncPlugin::RakiSyncPlugin()
 {}
 
 
-bool RakiSyncPlugin::doSync(WorkerThreadInterface *workerThread, ObjectType *objectType, QString pdaName, SyncTaskListItem *progressItem, Rra *rra)
+bool RakiSyncPlugin::doSync(WorkerThreadInterface *workerThread, ObjectType *objectType, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra)
 {
     this->pdaName = pdaName;
     this->progressItem = progressItem;
     this->rra = rra;
     this->workerThread = workerThread;
     this->objectType = objectType;
+    this->partnerId = partnerId;
     return sync();
 }
 

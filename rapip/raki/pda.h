@@ -75,6 +75,7 @@ public:
     KURL::List& getURLListByCopyJob(KIO::CopyJob *copyJob);
     QPtrDict<ObjectType> getSynchronizationTypes();
     void init();
+    bool isPartner();
     
 signals:
     void resolvedPassword(QString pdaName, QString passwd, KSocket *dccmSocket);
@@ -82,9 +83,7 @@ signals:
     
 private:
     bool startMasquerading(bool start);
-    
     void trySetPartner();
-    bool isPartner();
     void checkPartner();
     
     void *noPartnershipQuestion(void *data);
@@ -118,6 +117,7 @@ private:
     uint32_t partnerId;
     bool partnerOk;
     Rra *rra;
+    int syncItem;
 
 public:
     int installCounter;

@@ -86,7 +86,6 @@ private:
     QString partnerName;
     QPtrList<SyncTaskListItem> syncTaskItemList;
     bool syncAtConnect;
-    bool partnerOk;
     bool newPda;
     PDA *pda;
 };

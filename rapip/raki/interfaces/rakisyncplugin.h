@@ -48,7 +48,7 @@ class RakiSyncPlugin : public QObject
 public:
     RakiSyncPlugin();
 
-    bool doSync(WorkerThreadInterface *workerThread, ObjectType *objectTypeString, QString pdaName, SyncTaskListItem *progressItem, Rra *rra);
+    bool doSync(WorkerThreadInterface *workerThread, ObjectType *objectTypeString, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra);
     void incTotalSteps(int inc);
     void decTotalSteps(int dec);
     void advanceProgress();
@@ -60,7 +60,6 @@ public:
 
 private:
     virtual bool sync() = 0;
-    
     ObjectType *objectType;
 
 protected:
@@ -68,6 +67,7 @@ protected:
     SyncTaskListItem *progressItem;
     Rra *rra;
     WorkerThreadInterface *workerThread;
+    uint32_t partnerId;
 };
 
 #endif

@@ -38,11 +38,12 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(ObjectType *objectType, QListView* listView, const QString& name, Type tt, QString pdaName)
+SyncTaskListItem::SyncTaskListItem(ObjectType *objectType, QListView* listView, const QString& name, Type tt, QString pdaName, uint32_t partnerId)
         : QCheckListItem(listView, name, tt)
 {
     this->objectType = objectType;
     this->pdaName = pdaName;
+    this->partnerId = partnerId;
 }
 
 
@@ -278,7 +279,7 @@ bool SyncTaskListItem::synchronize(WorkerThreadInterface *workerThread, Rra *rra
             if (factory->inherits("RakiSyncFactory")) {
                 RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*>(factory);
                 RakiSyncPlugin *syncPlugin = static_cast<RakiSyncPlugin*> (syncFactory->create());
-                ret = syncPlugin->doSync(workerThread, objectType, pdaName, this, rra);
+                ret = syncPlugin->doSync(workerThread, objectType, pdaName, partnerId, this, rra);
                 syncFactory->callme(); // Fake call to link libinterfaces correct.
                 delete syncPlugin;
             } else {

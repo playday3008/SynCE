@@ -48,9 +48,7 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(PDA *pda, QString pdaName, QWidget* par
         WFlags fl)
         : PdaConfigDialog(parent, name, modal, fl)
 {
-    partnerOk = false;
     this->pdaName = pdaName;
-//    this->rra = rra;
     this->pda = pda;
     readConfig();
     updateFields();
@@ -58,6 +56,7 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(PDA *pda, QString pdaName, QWidget* par
     objectTypeList->setFullWidth(true);
     typesRead = false;
     syncTaskItemList.setAutoDelete(true);
+    syncAtConnectCheckbox->setEnabled(false);
 }
 
 
@@ -191,7 +190,7 @@ QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::syncronizationTasks()
         
         for( ; it.current(); ++it ) {
             objectType = it.current();
-            item = new SyncTaskListItem(objectType, objectTypeList, objectType->name, QCheckListItem::CheckBox, pdaName);
+            item = new SyncTaskListItem(objectType, objectTypeList, objectType->name, QCheckListItem::CheckBox, pdaName, partnerId);
             item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
             item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
             item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
@@ -225,7 +224,10 @@ QString PdaConfigDialogImpl::getDeviceIp()
 
 void PdaConfigDialogImpl::show()
 {
-    syncronizationTasks();
+    if(pda->isPartner()) {
+        syncronizationTasks();
+        syncAtConnectCheckbox->setEnabled(true);
+    }
     PdaConfigDialog::show();
 }
 

@@ -57,6 +57,7 @@ PDA::PDA(Raki *raki, QString pdaName)
     installed = 0;
     installCounter = 0;
     masqueradeEnabled = false;
+    partnerOk = false;
     this->raki = raki;
     this->pdaName = pdaName;
     this->rra = new Rra(pdaName);
@@ -88,8 +89,9 @@ PDA::PDA(Raki *raki, QString pdaName)
     associatedMenu->insertTitle(SmallIcon("rapip"), pdaName);
     menuCount++;
 
-    associatedMenu->insertItem(SmallIcon("connect_established"), i18n("&Synchronize"),
+    syncItem = associatedMenu->insertItem(SmallIcon("connect_established"), i18n("&Synchronize"),
                                this, SLOT(synchronize()));
+    associatedMenu->setItemEnabled(syncItem, false);
     menuCount++;
 
     associatedMenu->insertItem(SmallIcon("rotate_cw"),
@@ -195,7 +197,7 @@ void PDA::openFs()
 
 void PDA::synchronize(bool forced)
 {
-    if (forced || configDialog->getSyncAtConnect()) {
+    if ((forced || configDialog->getSyncAtConnect()) && isPartner()) {
         QPtrList<SyncTaskListItem>& syncItems = configDialog->syncronizationTasks();
         syncDialog->show(syncItems);
     }
@@ -435,6 +437,7 @@ void PDA::trySetPartner()
         partnerName = newPartner.name;
         partnerId = newPartner.id;
         partnerOk = true;
+        associatedMenu->setItemEnabled(syncItem, true);
     } else {
         partner[1] = rra->getPartner(2);
         advanceTotalSteps(1);
@@ -449,6 +452,7 @@ void PDA::trySetPartner()
             partnerName = newPartner.name;
             partnerId = newPartner.id;
             partnerOk = true;
+            associatedMenu->setItemEnabled(syncItem, true);
         }
     }
 
@@ -529,6 +533,7 @@ void PDA::checkPartner()
             partnerOk = true;
             rra->setCurrentPartner(1);
             advanceProgress(1);
+            associatedMenu->setItemEnabled(syncItem, true);
             return;
         }
 
@@ -543,6 +548,7 @@ void PDA::checkPartner()
             partnerOk = true;
             rra->setCurrentPartner(2);
             advanceProgress(1);
+            associatedMenu->setItemEnabled(syncItem, true);
             return;
         }
         kdDebug(2120) << "No match found ... " << endl;

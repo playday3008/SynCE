@@ -35,6 +35,8 @@
 #include <qlabel.h>
 #include <qstring.h>
 
+#include <rapi.h>
+
 /**
 @author Volker Christian,,,
 */
@@ -50,7 +52,7 @@ class SyncTaskListItem : public QObject, public QCheckListItem
     Q_OBJECT
     
 public:
-    SyncTaskListItem(ObjectType* objectType, QListView* listView, const QString& name, Type tt, QString pdaName);
+    SyncTaskListItem(ObjectType* objectType, QListView* listView, const QString& name, Type tt, QString pdaName, uint32_t partnerId);
     void undo();
     void makePersistent();
     bool isOn();
@@ -92,6 +94,7 @@ private:
     QString preferedLibraryTemp;
     PdaConfigDialogImpl *pdaConfig;
     QString pdaName;
+    uint32_t partnerId;
     
 signals:
     void stateChanged(bool state);

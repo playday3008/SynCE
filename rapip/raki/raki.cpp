@@ -316,7 +316,7 @@ void Raki::pdaInitialized(PDA *pda)
         showAgain = true;
     }
     rapiLeMenu->insertItem(SmallIcon("pda_blue"),
-                           pda->getName(),
+                           QString(((pda->isPartner()) ? "" : "* ")) + pda->getName(),
                            pda->getMenu());
     if (showAgain) {
         rapiLeMenu->show();
