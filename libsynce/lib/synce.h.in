@@ -5,6 +5,8 @@
 /* 
  * Include some files 
  */
+#include <sys/types.h>
+#include <time.h>
 #include <@INT_HEADER@>
 
 #ifndef __cplusplus
@@ -36,8 +38,6 @@ namespace synce
 /*
  * FILETIME and DATE conversion
  */
-
-#include <time.h>
 
 void filetime_from_unix_time(time_t unix_time, FILETIME *filetime);
 time_t filetime_to_unix_time(const FILETIME *filetime);
@@ -80,19 +80,10 @@ LPWSTR wstrdup(LPCWSTR string);
 #define wstr_strlen(a)    wstrlen(a)
 #define wstr_strcpy(a,b)  wstrcpy(a,b)
 
-/*
- * Function names for compatibility with Microsoft Windows
- */
-
-#define wcslen(a)    wstrlen(a)
-#define wcscpy(a,b)  wstrcpy(a,b)
-
 
 /*
  * Endian conversions
  */
-
-#include <sys/types.h>
 
 #if !defined(htole32) || !defined(htole16) || !defined(letoh16) || !defined(letoh32)
 #undef htole16
