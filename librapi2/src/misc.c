@@ -282,7 +282,7 @@ fail:
  * 
  * http://sourceforge.net/mailarchive/forum.php?thread_id=844008&forum_id=1226
  */
-DWORD CeStartReplication( void )/*{{{*/
+HRESULT CeStartReplication( void )/*{{{*/
 {
 	RapiContext* context = rapi_context_current();
 	DWORD result = false;
@@ -293,7 +293,7 @@ DWORD CeStartReplication( void )/*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	synce_trace("result = %i", result);
+	synce_trace("result = 0x%08x", result);
 
 	return result;
 }/*}}}*/

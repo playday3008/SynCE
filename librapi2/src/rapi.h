@@ -706,7 +706,7 @@ BOOL CeOidGetInfo(
 		CEOID oid, 
 		CEOIDINFO *poidInfo); 
 
-DWORD CeStartReplication( void );
+HRESULT CeStartReplication( void );
 
 BOOL CeGetSystemMemoryDivision(
     LPDWORD lpdwStoragePages, 
