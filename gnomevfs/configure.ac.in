@@ -101,4 +101,3 @@ AC_OUTPUT([
 	Makefile
 	src/Makefile
 ])
-
