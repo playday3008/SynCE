@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
+AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
 LDADD = -L../lib ../lib/librra.la
 
 bin_PROGRAMS = synce-partnership
