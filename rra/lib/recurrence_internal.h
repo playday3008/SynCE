@@ -60,6 +60,18 @@ typedef struct
   uint8_t   padding[0xc];       /* 0x22 */
 } RecurringMonthly P;
 
+/* size = 0x20 */
+typedef struct
+{
+  uint32_t  interval;           /* 0x0e */
+  uint32_t  unknown1;           /* 0x12 */
+  uint32_t  days_of_week_mask;  /* 0x16 */
+  uint32_t  instance;           /* 0x1a */
+  uint32_t  flags;              /* 0x1e */
+  uint32_t  occurrences;        /* 0x22 */
+  uint8_t   padding[8];         /* 0x26 */
+} RecurringMonthNth P;
+
 /* size = 0x68 */
 typedef struct
 {
@@ -70,6 +82,7 @@ typedef struct
   {
     RecurringWeekly   weekly P;
     RecurringMonthly  monthly P;
+    RecurringMonthNth month_nth P;
   } details P;
   uint8_t   unknown3[0x10] P;     /* 0x2e */
   uint32_t  start_minute P;       /* 0x3e */
@@ -107,11 +120,12 @@ typedef enum
 /* bitmasks for all possible recurrence properties */
 enum
 {
-  PROPERTY_FREQ = 1,
-  PROPERTY_UNTIL = 2,
-  PROPERTY_COUNT = 4,
-  PROPERTY_INTERVAL = 8,
-  PROPERTY_BYDAY = 16
+  PROPERTY_FREQ     = 1<<0,
+  PROPERTY_UNTIL    = 1<<1,
+  PROPERTY_COUNT    = 1<<2,
+  PROPERTY_INTERVAL = 1<<3,
+  PROPERTY_BYDAY    = 1<<4,
+  PROPERTY_BYSETPOS = 1<<5
 };
 
 typedef struct
@@ -121,6 +135,7 @@ typedef struct
   uint32_t    interval;
   uint32_t    count;
   char*       byday;
+  char*       bysetpos;
 } RecurrenceRule;
 
 #undef P
