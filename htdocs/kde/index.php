@@ -24,6 +24,7 @@ are supported by the underlying <a
         <li><a href="#Installation">Compiling and Installing</a></li>
         <li><a href="screenshots.php">Screenshots</a></li>
         <li><a href="#Related_Work">Related Work</a></li>
+	<li><a href="konnector/index.php">Kitchensync Konnector</a></li>
         <li><a href="stories.php">Success Stories</a></li>
         <li><a href="faq.php">Frequently asked Questions</a></li>
         <li><a href="#Future">Future</a></li>
