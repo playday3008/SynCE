@@ -55,7 +55,7 @@ uchar* rapi_unicode_from_ascii(const char* inbuf)
 	if (!inbuf)
 		return NULL;
 	
-	cd = iconv_open(RAPI_UNICODE_WIDE, RAPI_UNICODE_WIDE);
+	cd = iconv_open(RAPI_UNICODE_WIDE, RAPI_UNICODE_ASCII);
 	if (INVALID_ICONV_HANDLE == cd)
 		return false;
 
