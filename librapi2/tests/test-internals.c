@@ -1,6 +1,8 @@
 /* $Id$ */
 #include <check.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "rapi_buffer.h"
 #include "rapi_wstr.h"

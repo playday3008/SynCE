@@ -6,6 +6,7 @@
 #include "rapi_wstr.h"
 #include "rapi_log.h"
 #include "rapi_endian.h"
+#include <string.h>
 
 BOOL CeCreateDirectory(
 		LPCWSTR lpPathName, 

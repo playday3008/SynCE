@@ -2,6 +2,7 @@
 #include "rapi_wstr.h"
 #include "rapi_internal.h"
 #include <stdlib.h>
+#include <string.h>
 
 #if HAVE_ICONV_H
 #include <iconv.h>
@@ -14,9 +15,9 @@
 #define RAPI_WSTR_DEBUG 1
 
 #if RAPI_WSTR_DEBUG
-#define rapi_wstr_trace(args...)    rapi_trace(##args)
-#define rapi_wstr_warning(args...)  rapi_warning(##args)
-#define rapi_wstr_error(args...)    rapi_error(##args)
+#define rapi_wstr_trace(args...)    rapi_trace(args)
+#define rapi_wstr_warning(args...)  rapi_warning(args)
+#define rapi_wstr_error(args...)    rapi_error(args)
 #else
 #define rapi_wstr_trace(args...)
 #define rapi_wstr_warning(args...)
