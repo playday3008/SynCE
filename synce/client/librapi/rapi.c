@@ -100,6 +100,40 @@ static void pushParameter(long size, void * parameterData, size_t parameterSize,
 	}
 }
 
+/*
+ * Push parameter information to the buffer, omitting size information (needed for CeRecordWriteProps
+ */
+static void pushParameter_no_size(long size, void * parameterData, size_t parameterSize)
+{
+	long old_length;
+	long new_length;
+
+	if (parameterData)
+	{
+		pushLong( buffer, size, 1 );	/* data follows */
+	
+		old_length = _getbufferlen(buffer);
+		new_length = old_length + parameterSize;
+	
+		if (new_length < size)
+		{
+			memcpy(((unsigned char*)&(buffer->data)) + old_length, parameterData, parameterSize);
+			_setbufferlen(buffer, new_length);
+		}
+		else
+		{
+			DBG_printf( "rapibuffer too small, this will fail\n");
+		}
+	}
+	else
+	{
+		pushLong( buffer, size, 0 );	/* no data follows */
+	}	
+}
+
+
+
+
 /**
  * Convert parameter to little endian before call to pushParameter
  */
@@ -1245,6 +1279,158 @@ STDAPI_( CEOID ) CeReadRecordProps( HANDLE hDbase, DWORD dwFlags, LPWORD lpcProp
 	return result;
 }
 
+STDAPI_(CEOID) CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVAL* rgPropVal)
+{
+	long size = BUFSIZE;
+	long lng;
+	long datalen, buflen;
+	long i;
+	CEOID result;
+
+	DBG_printf( "CeWriteRecordProps( hDbase = 0x%08X, oidRecord = 0x%08X, cPropID = 0x%08X, rgPropVal = 0x%08X )\n",
+	            hDbase, oidRecord, cPropID, rgPropVal );
+
+	/*
+	*	Format of the CeWriteRecordProps packet - primitives are encoded in the CEPROPVAL structures, lpwstr and blob properties are
+	*	attached to the end of the buffer and referenced by offset pointers
+	*
+	*		long hDBase | long oidRecord | long cPropID | long datalen (of following data) | n * CEPROPVAL | char[] data
+	*
+	*	Because CEPROPVAL is a union, the format is different for every type of prop:
+	*
+	*	long or short (iVal, uiVal, lVal, ulVal, boolVal): long propid | short wFlags | short wLenData (unused, set to 0) | short iVal or boolVal | short uiVal | long lVal or ulVal
+	*
+	*	FILETIME or double: long propid | short wFlags | short wLenData (unused) | DWORD FILETIME or double
+	*
+	*	lpwstr: long propid | short wFlags | short wLenData (unused) | long offset ( points to string data in data buffer, counted from beginning of CEPROPVALs)
+	*
+	*	blob: long propid | short wFlags | short wLenData (unused) | long blobsize | long offset (same as lpwstr)
+	*/
+	
+	
+	initBuf( buffer, size );
+	pushLong( buffer, size, 0x11 ); 		/* Command */
+	pushLong( buffer, size, ( long ) hDbase ); 	/* Parameter1 : */
+	pushLong( buffer, size, oidRecord ); 		/* Parameter2 : Flags ? */
+	pushShort( buffer, size, cPropID ); 			/* Parameter3 */
+
+
+/*
+	* we have to go through the rgPropVals array three times:
+	*		1. to determine the size of the whole buffer, including data
+	*		2. to write out the CEPROPVAL array
+	*		3. to write the data segment
+	*/
+		
+	/* calculate the length of the whole buffer, including the data segment at the end */
+	
+	buflen = cPropID * sizeof( CEPROPVAL ); /* length of all cepropvals */
+	
+	for ( i = 0; i < cPropID; i++ )
+	{	
+		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		{
+			case CEVT_BLOB:
+					buflen += rgPropVal[i].val.blob.dwCount;
+				break;
+			case CEVT_LPWSTR:
+					buflen += 2* ( wcslen( rgPropVal[i].val.lpwstr ) + 1 );
+				break;
+			default:
+				break;
+		}
+	}
+	
+	pushLong( buffer, size, buflen);				
+	
+	/*
+	 second time: write n * CEPROPVAL. Can't do it in one block, as we have to adjust the buffer offsets
+	 */
+	
+	datalen = cPropID * sizeof( CEPROPVAL ); /*  holds the offset to the end of the data buffer	*/
+	
+	for ( i = 0; i < cPropID; i++ )
+	{
+		pushLong( buffer, size,  rgPropVal[i].propid );
+		pushShort( buffer, size,  rgPropVal[i].wLenData );
+		pushShort( buffer, size,  rgPropVal[i].wFlags );
+		
+		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		{
+			case CEVT_BLOB:
+					pushLong( buffer, size, rgPropVal[i].val.blob.dwCount );
+					datalen += rgPropVal[i].val.blob.dwCount;
+					pushLong( buffer, size, datalen );			
+				break;
+			case CEVT_LPWSTR:
+					datalen += 2* ( wcslen( rgPropVal[i].val.lpwstr ) + 1 );
+					pushLong( buffer, size, datalen );
+					pushLong( buffer, size, 0 );			
+				break;
+			case CEVT_I2:
+			case CEVT_UI2:
+			case CEVT_I4:
+			case CEVT_UI4:
+				pushShort( buffer, size, rgPropVal[i].val.iVal );
+				pushShort( buffer, size, rgPropVal[i].val.uiVal );
+				pushLong( buffer, size, rgPropVal[i].val.lVal );
+				break;
+			case CEVT_BOOL:
+				pushShort( buffer, size, rgPropVal[i].val.boolVal  );
+				pushShort( buffer, size, 0 );
+				pushLong( buffer, size, 0 );
+				break;
+			case CEVT_FILETIME:
+				/* this assumes that the FILETIME is already in ole32 format! Is this a problem? */
+				pushLong( buffer, size, rgPropVal[i].val.filetime.dwLowDateTime );
+				pushLong( buffer, size, rgPropVal[i].val.filetime.dwHighDateTime );
+				break;
+			case CEVT_R8:
+				pushParameter( size, &(rgPropVal[i].val.dblVal), 4, 1 );
+				break;
+			default:
+				break;
+		}
+	}	
+	
+	/* 3. write the data segment */
+	
+	for ( i = 0; i < cPropID; i++ )
+	{	
+		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		{
+			case CEVT_BLOB:
+					pushParameter_no_size( size, rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount );					
+				break;
+			case CEVT_LPWSTR:
+					pushParameter_no_size( size, rgPropVal[i].val.lpwstr, 2* ( wcslen( rgPropVal[i].val.lpwstr ) + 1) );
+				break;
+			default:
+				break;
+		}
+	}	
+	
+	DBG_printbuf( buffer );
+	sendbuffer( sock, buffer );
+
+	size = getbufferlen( sock );
+
+	lng = getLong( sock, &size );
+	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
+	_lasterror = getLong( sock, &size );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", _lasterror, _lasterror );
+	result = ( HANDLE ) getLong( sock, &size );
+	DBG_printf( "long 3 (HANDLE): %ld (0x%08lx)\n", result, result );
+
+	if ( size > 0 )
+	{
+		flushbuffer( sock );
+	}
+
+	return result;
+}
+
+
 /* ================================================================================================================= */
 /* ================================================================================================================= */
 /*  RAPI - Processes */
@@ -1558,6 +1744,15 @@ STDAPI_( HRESULT ) CeRapiUninit()
 	{
 		result = (close( sock )==0) ? TRUE : FALSE;
 		DBG_printf( "CeRapiUninit() %s\n", (result ? "ok" : "failed") );
+		
+		/* the following is needed to make subsequent init/uninit calls to RAPI
+		 * (e.g. device disconnect/reconnect) */
+	
+		if (result) {
+			sock = 0;
+			hostname = NULL;
+		}
+			
 	}
 	else
 	{
