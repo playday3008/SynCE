@@ -291,10 +291,10 @@ static bool recurrence_set_date_time(/*{{{*/
   struct tm start;
   struct tm end;
 
-  if (!parser_datetime_to_struct(dtstart->values[0], &start))
+  if (!parser_datetime_to_struct(dtstart->values[0], &start, NULL))
     goto exit;
   
-  if (!parser_datetime_to_struct(dtend->values[0], &end))
+  if (!parser_datetime_to_struct(dtend->values[0], &end, NULL))
     goto exit;
 
   if (!date || !start_minute || !end_minute)
@@ -433,7 +433,7 @@ static bool recurrence_parse_yearly(/*{{{*/
   bool success = false;
   struct tm start;
 
-  if (!parser_datetime_to_struct(dtstart->values[0], &start))
+  if (!parser_datetime_to_struct(dtstart->values[0], &start, NULL))
     goto exit;
   
    /* use monthly recursion with interval 12 */
@@ -461,7 +461,7 @@ static bool recurrence_parse_yearly(/*{{{*/
   {
     struct tm start;
 
-    if (!parser_datetime_to_struct(dtstart->values[0], &start))
+    if (!parser_datetime_to_struct(dtstart->values[0], &start, NULL))
       goto exit;
 
     pattern->day = DAYS_TO_MONTH[start.tm_mon] * MINUTES_PER_DAY;

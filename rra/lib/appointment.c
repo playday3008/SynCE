@@ -386,7 +386,8 @@ bool rra_appointment_from_vevent(/*{{{*/
     uint32_t* id,
     uint8_t** data,
     size_t* data_size,
-    uint32_t flags)
+    uint32_t flags,
+    TimeZoneInformation* tzi)
 {
 	bool success = false;
   Parser* parser = NULL;
@@ -443,7 +444,7 @@ bool rra_appointment_from_vevent(/*{{{*/
   parser_component_add_parser_component(base, calendar);
   parser_component_add_parser_component(base, event);
 
-  parser = parser_new(base, parser_flags, &event_parser_data);
+  parser = parser_new(base, parser_flags, tzi, &event_parser_data);
   if (!parser)
   {
     synce_error("Failed to create parser");
@@ -477,9 +478,9 @@ bool rra_appointment_from_vevent(/*{{{*/
       int32_t minutes = 0;
       ParserTimeFormat format = parser_get_time_format(event_parser_data.dtstart);
 
-      if (!parser_datetime_to_unix_time(event_parser_data.dtstart->values[0], &start))
+      if (!parser_datetime_to_unix_time(event_parser_data.dtstart->values[0], &start, NULL))
         goto exit;
-      if (!parser_datetime_to_unix_time(event_parser_data.dtend->values[0],   &end))
+      if (!parser_datetime_to_unix_time(event_parser_data.dtend->values[0],   &end, NULL))
         goto exit;
 
       switch (format)
