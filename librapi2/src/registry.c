@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "rapi.h"
 #include "rapi_context.h"
+#include <stdlib.h>
 
 LONG CeRegCreateKeyEx( /*{{{*/
 		HKEY hKey, 

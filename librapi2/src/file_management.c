@@ -4,6 +4,7 @@
 #include "rapi_buffer.h"
 #include "rapi_context.h"
 #include <string.h>
+#include <stdlib.h>
 
 BOOL CeCreateDirectory(
 		LPCWSTR lpPathName, 

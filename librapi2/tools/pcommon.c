@@ -3,6 +3,7 @@
 #include "rapi.h"
 #include <synce_log.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIDE_BACKSLASH   htole16('\\')
 

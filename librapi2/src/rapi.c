@@ -5,6 +5,7 @@
 #include "rapi.h"
 #include "rapi_buffer.h"
 #include "rapi_context.h"
+#include <stdlib.h>
 
 HRESULT CeRapiFreeBuffer( 
 		LPVOID Buffer)

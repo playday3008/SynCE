@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "rapi.h"
 #include "rapi_context.h"
+#include <stdlib.h>
 #include <string.h>
 
 #define RAPI_DATABASE_DEBUG 1
