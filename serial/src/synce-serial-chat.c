@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <syslog.h>
 
 #define CLIENT_SIZE        6
 #define CLIENTSERVER_SIZE  (CLIENT_SIZE + 6)
@@ -22,6 +23,8 @@ int main(int argc, char** argv)
 				argv[0], client, clientserver);
 		return 1;
 	}
+
+  openlog("synce-serial-chat", 0, LOG_DAEMON);
 	
 	memset(buffer, 0, sizeof(buffer));
 
@@ -40,19 +43,20 @@ int main(int argc, char** argv)
 
 	if (bytes_left != 0)
 	{
-		fprintf(stderr, "Unable to read %i bytes\n", CLIENT_SIZE);
+		syslog(LOG_INFO, "Failed to read last %i bytes. Only %i bytes read: '%s'", 
+        bytes_left, bytes_read_total, buffer);
 		return 1;
 	}
 
 	if (memcmp(buffer, client, CLIENT_SIZE) != 0)
 	{
-		fprintf(stderr, "Received string not 'CLIENT' but '%s'\n", buffer);
+		syslog(LOG_INFO, "Received string not 'CLIENT' but '%s'", buffer);
 		return 1;
 	}
 
 	if (write(STDOUT_FILENO, clientserver, CLIENTSERVER_SIZE) != CLIENTSERVER_SIZE)
 	{
-		fprintf(stderr, "Unable to write '%s'\n", clientserver);
+		syslog(LOG_INFO, "Unable to write '%s'", clientserver);
 		return 1;
 	}
 	
