@@ -24,6 +24,9 @@ It currently supports the following kinds of installers:</p>
 
 <ul>
 
+<li>Early support for installers created by <a
+href="http://www.mindvision.com">Installer VISE</a>. (Orange 0.3 or later)</li>
+
 <li>Support for some installers created by <a href="http://innosetup.com">Inno
 Setup</a>. (Orange 0.2 or later)</li>
 

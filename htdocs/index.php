@@ -8,28 +8,24 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 
 <h1>The SynCE Project</h1>
 
+<p>The purpose of the SynCE project is to provide a means of communication with
+a Windows CE device from a computer running Linux, *BSD or other unices.</p>
+
+
 <h2>Site contents</h2>
 
 <h3>General</h3>
 
 <ul>
-<li><a href="#introduction">Introduction</a></li>
 <li><a href="#news">News</a></li>
-<li><a href="#helpwanted">Help wanted!</a></li>
 <li><a href="#overview">Overview</a></li>
-<li><a href="architecture.php">Architecture</a></li>
-<li><a href="using.php">Download and use SynCE</a></li>
-<li><a href="qa.php">Questions and Answers</a></li>
-<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
-<li><a href="#future">Future</a></li>
-<li><a href="#developers">The SynCE developers</a></li>
-<li><a href="capture.php">How to capture packets for analyzing</a></li>
-<li><a href="http://sourceforge.net/mail/?group_id=30550">Mailing list information</a></li>
 <li class=SPACED><a href="links.php">Links</a></li>
 
-<li><a href="orange.php">The Orange tool and library</a></li>
-<li><a href="unshield.php">The Unshield tool and library</a></li>
-<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
+<li><a href="download.php">Download</a></li>
+<li><a href="setup.php">Setup</a></li>
+<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
+<li><a href="qa.php">Questions and Answers</a></li>
+<li class=SPACED><a href="help.php">Get help</a></li>
 
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
 </ul>
@@ -53,6 +49,30 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="openbsd.php">OpenBSD</a></li>
 
 </ul>
+
+<h3>Extras</h3>
+
+<ul>
+
+<li><a href="orange.php">The Orange tool and library</a></li>
+<li><a href="unshield.php">The Unshield tool and library</a></li>
+<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
+
+</ul>
+
+<h3>Development information</h3>
+
+<ul>
+
+<li><a href="#helpwanted">Help wanted!</a></li>
+<li><a href="architecture.php">Architecture</a></li>
+<li><a href="#developers">The SynCE developers</a></li>
+<li><a href="capture.php">How to capture packets for analyzing</a></li>
+<li><a href="#future">Future</a></li>
+
+
+</ul>
+
 
 <hr size=1>
 <p>
@@ -82,15 +102,10 @@ alt="Make a donation" title="Make a donation"></td>
 </p>
 <hr size=1>
 
-<a name="introduction"></a>
-<h2>Introduction</h2>
-
-<p>The purpose of the SynCE project is to provide a means of communication
-with a Windows CE or Pocket PC device from a computer running Linux,
-*BSD or other unices.</p>
-
 <a name="news"></a>
 <h2>News</h2>
+
+<p><b>October 28, 2003</a></b> Improved this web site.</p>
 
 <p><b>August 16, 2003</a></b> A GNOME 2 version of the MultiSync plugin was
 released today. It has version 0.8.2 and can be <a
@@ -110,6 +125,8 @@ InstallShield installers.</p>
 possiblity to synchronize calendar and tasks, in addition to the previous
 address book synchronization support. However, recurring events are not yet
 supported. <a href="using.php">Download</a>.</p>
+
+<!--
 
 <p><b>June 13, 2003</b> Some documentation improvements, most notably a <a
 href="qa.php">Questions and Answers</a> page.</p>
@@ -150,8 +167,6 @@ href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap
 Please join the <a
 href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
 mailing list to discuss it!</p>
-
-<!--
 
 <p><b>February 24, 2003</b> Added documentation on <a
 href="multisync.php">Using MultiSync for synchronization</a>.</p>

@@ -11,36 +11,11 @@
 <ul>
 <li><a href="#download">Download and installation</a></li>
 <li><a href="#gettingconnected">Getting connected</a></li>
-<li><a href="#support">Support</a></li>
 </ul>
 
 <a name="download"></a>
 <h2>Download and installation</h2>
 
-<p>Please select one of these options to continue download:</p>
-
-<ul>
-
-<li class=SPACED>I've done this before, <a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550">take me to
-the files!</a></li>
-
-<li class=SPACED>I'm a RedHat 8 or 9 user and I want to <a
-href="rpms.php">download RPM packages</a>.</li>
-
-<li class=SPACED>I'm a Gentoo user and I want to <a href="emerge.php">use
-emerge</a>.</l>
-
-<li class=SPACED>I'm a Debian user, and I want to <a
-href="debian.php">download Debian packages</a>.</l>
-
-<li class=SPACED>I'll compile SynCE myself, so I want to <a
-href="tarballs.php">download .tar.gz archives</a>.</li>
-
-<li class=SPACED>I'm so cool that I want to <a href="cvs.php">get the files
-from CVS</a>.</li>
-
-</ul>
 
 <a name="openfirewall"></a>
 <h2>Open your firewall</h2>
@@ -66,15 +41,13 @@ above.</p>
 <li><a href="serial.php">Serial cable</a></li>
 <li><a href="infrared.php">Infrared</a></li>
 <li><a href="usb.php">USB cable</a></li>
-<li>Bluetooth - not yet documented, but possible!</li>
+<li><a href="bluetooth.php">Bluetooth</a></li>
 
 </ul>
 
 <p>When you have configured your connection you are ready to <a href="start.php">start it</a>.</p>
 
 <p>When you have started your connection you can try the <a href="tools.php">tools</a>.</p>
-
-
 
 <a name="support"></a>
 <h2>Support</h2>
