@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS   = -g -Wall -Wsign-compare -Wno-long-long @APPLE_CFLAGS@ -I../src -I../src/support
+AM_CFLAGS   = -g -Werror -Wall -Wsign-compare -Wno-long-long @APPLE_CFLAGS@ -I../src -I../src/support
 LDADD = ../src/librapi.la
 
 noinst_PROGRAMS = oidinfo

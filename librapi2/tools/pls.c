@@ -169,7 +169,7 @@ static bool list_matching_files(WCHAR* wide_path)
 	BOOL result;
 	CE_FIND_DATA* find_data = NULL;
 	DWORD file_count = 0;
-	int i;
+	unsigned i;
 
 	synce_trace_wstr(wide_path);
 	wide_path = adjust_remote_path(wide_path, true);
