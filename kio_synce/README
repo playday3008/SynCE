@@ -44,6 +44,8 @@ o The configure script currently assumes that libchunk, libwine
 
 o You may need to add /usr/local/lib (or wherever libwine and
   librapi are located) to your /etc/ld.so.conf and run ldconfig.
+  If in doubt, run 'ldd kio_synce.so' cheack the path to libwine,
+  libchunk & librapi are correct.
 	
 o The configure script will probably fail if you have the real
   libwine installed.
