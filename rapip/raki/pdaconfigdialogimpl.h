@@ -36,6 +36,7 @@
 #include <klistview.h>
 #include <kpopupmenu.h>
 #include <qptrlist.h>
+#include <qdatetime.h>
 
 class PDA;
 class Rra;
@@ -61,11 +62,12 @@ public:
     QString getPartnerName();
     uint32_t getPartnerId();
     QPtrList<SyncTaskListItem>& syncronizationTasks();
-    
+    void setNewPartner(QString partnerName, uint32_t partnerId);
+
 public slots:
+    void writeConfig();
     void applySlot();
     void changedSlot();
-    void writeConfig();
     
 private slots:
     void masqChangedSlot();
@@ -82,6 +84,7 @@ private:
     bool masqEnabled;
     bool typesRead;
     QString pdaName;
+    QDateTime partnershipCreated;
     uint32_t partnerId;
     QString partnerName;
     QPtrList<SyncTaskListItem> syncTaskItemList;

@@ -77,7 +77,7 @@ PDA::PDA(Raki *raki, QString pdaName)
                                            false);
     configDialog->setCaption("Configuration for " + pdaName);
 
-    syncDialog = new SyncDialogImpl(rra, pdaName, raki, "SynchronizeDialog", true);
+    syncDialog = new SyncDialogImpl(configDialog, rra, pdaName, raki, "SynchronizeDialog", true);
     syncDialog->setCaption("Synchronize " + pdaName);
 
     associatedMenu = new KPopupMenu(raki, "PDA-Menu");
@@ -551,10 +551,19 @@ void PDA::setPartnership(QThread */*thread*/, void *)
     }
 
     if (setPartnerOk) {
-        configDialog->setPartner(partnerName, partnerId);
-        postThreadEvent(&PDA::progressDialogCancel, 1, block);
+        if (partnerId != configDialog->getPartnerId() && partnerId != 0) {
+            configDialog->setNewPartner(partnerName, partnerId);
+            kdDebug(2120) << "New Partnership" << endl;
+        } else if (partnerId != 0) {
+            configDialog->setPartner(partnerName, partnerId);
+            kdDebug(2120) << "Already known Partnership" << endl;
+        } else {
+            configDialog->setPartner("Guest", 0);
+            kdDebug(2120) << "Guest Partnership" << endl;
+        }
+        postThreadEvent(&PDA::progressDialogCancel, 1, noBlock);
     } else {
-        postThreadEvent(&PDA::progressDialogCancel, 0, block);
+        postThreadEvent(&PDA::progressDialogCancel, 0, noBlock);
     }
 }
 

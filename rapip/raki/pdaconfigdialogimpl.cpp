@@ -50,6 +50,7 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(PDA *pda, QString pdaName, QWidget* par
 {
     this->pdaName = pdaName;
     this->pda = pda;
+    partnershipCreated.setTime_t(0);
     readConfig();
     updateFields();
     buttonApply->setEnabled(false);
@@ -113,11 +114,12 @@ void PdaConfigDialogImpl::writeConfig()
         ksConfig->writeEntry(QString::number(syncTaskListItem->getObjectType()->id), syncTaskListItem->isOn());
         ksConfig->writeEntry(QString::number(syncTaskListItem->getObjectType()->id) + "-PreferedLibrary", syncTaskListItem->getPreferedLibrary());
         ksConfig->writeEntry(QString::number(syncTaskListItem->getObjectType()->id) + "-PreferedOffer", syncTaskListItem->getPreferedOffer());
+        ksConfig->writeEntry(QString::number(syncTaskListItem->getObjectType()->id) + "-LastSynchronized", syncTaskListItem->getLastSynchronized());
     }
     ksConfig->writeEntry("SyncObjectIDs", allTypeIds);
-    kdDebug(2120) << "Writeing: " << partnerName << " " << partnerId << endl;
     ksConfig->writeEntry("PartnerName", partnerName);
     ksConfig->writeEntry("PartnerId", partnerId);
+    ksConfig->writeEntry("PartnershipCreated", partnershipCreated);
     ksConfig->sync();
 }
 
@@ -132,6 +134,7 @@ void PdaConfigDialogImpl::readConfig()
         syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect");
         partnerName = ksConfig->readEntry("PartnerName", "");
         partnerId = ksConfig->readUnsignedLongNumEntry("PartnerId", 0);
+        partnershipCreated = ksConfig->readDateTimeEntry("PartnershipCreated", &partnershipCreated);
         newPda = false;
     } else {
         newPda = true;
@@ -194,7 +197,10 @@ QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::syncronizationTasks()
                 item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
                 item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
                 item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
+                QDateTime lastSynchronized = item->getLastSynchronized();
+                item->setLastSynchronized(ksConfig->readDateTimeEntry(QString::number(item->getObjectType()->id) + "-LastSynchronized", &lastSynchronized));
                 item->makePersistent();
+                item->setFirstSynchronization((this->partnershipCreated > item->getLastSynchronized()));
                 connect((const QObject *) item, SIGNAL(stateChanged(bool)),
                         this, SLOT(changedSlot()));
                 objectTypeList->insertItem(item);
@@ -249,6 +255,14 @@ void PdaConfigDialogImpl::setPartner(QString partnerName, uint32_t partnerId)
 {
     this->partnerName = partnerName;
     this->partnerId = partnerId;
+}
+
+
+void PdaConfigDialogImpl::setNewPartner(QString partnerName, uint32_t partnerId)
+{
+    setPartner(partnerName, partnerId);
+    partnershipCreated = QDateTime(QDate::currentDate(), QTime::currentTime());
+    kdDebug(2120) << "Partnership created: " << partnershipCreated.toString();
 }
 
 

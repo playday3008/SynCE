@@ -44,6 +44,7 @@ SyncTaskListItem::SyncTaskListItem(ObjectType *objectType, QListView* listView, 
     this->objectType = objectType;
     this->pdaName = pdaName;
     this->partnerId = partnerId;
+    this->lastSynchronized.setTime_t(0);
 }
 
 
@@ -80,6 +81,29 @@ void SyncTaskListItem::setOn(bool state)
     QCheckListItem::setOn(state);
 }
 
+
+void SyncTaskListItem::setLastSynchronized(QDateTime lastSynchronized)
+{
+    this->lastSynchronized = lastSynchronized;
+}
+
+
+QDateTime & SyncTaskListItem::getLastSynchronized()
+{
+    return lastSynchronized;
+}
+
+
+void SyncTaskListItem::setFirstSynchronization(bool firstSynchronization)
+{
+    this->firstSynchronization = firstSynchronization;
+}
+
+
+bool SyncTaskListItem::isFirstSynchronization()
+{
+    return firstSynchronization;
+}
 
 
 ObjectType* SyncTaskListItem::getObjectType()
@@ -280,7 +304,7 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
             if (factory->inherits("RakiSyncFactory")) {
                 RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*>(factory);
                 RakiSyncPlugin *syncPlugin = static_cast<RakiSyncPlugin*> (syncFactory->create());
-                ret = syncPlugin->doSync(syncThread, objectType, pdaName, partnerId, this, rra);
+                ret = syncPlugin->doSync(syncThread, objectType, pdaName, partnerId, this, rra, firstSynchronization);
                 syncFactory->callme(); // Fake call to link libinterfaces correct.
                 delete syncPlugin;
             } else {
@@ -294,6 +318,9 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
     kdDebug(2120) << "Finished syncing with " << offer << endl;
 
     postSyncThreadEvent(SyncThread::setProgress, totalSteps());
+
+    lastSynchronized = QDateTime(QDate::currentDate(), QTime::currentTime());
+    firstSynchronization = false;
 
     return ret;
 }

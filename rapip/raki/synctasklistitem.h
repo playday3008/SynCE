@@ -34,6 +34,7 @@
 #include <qlistview.h>
 #include <qlabel.h>
 #include <qstring.h>
+#include <qdatetime.h>
 
 #include <rapi.h>
 
@@ -74,6 +75,10 @@ public:
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
     bool synchronize(SyncThread *syncThread, Rra *rra);
+    void setLastSynchronized(QDateTime lastSynchronized);
+    void setFirstSynchronization(bool firstSynchronization);
+    bool isFirstSynchronization();
+    QDateTime &getLastSynchronized();
 
 private slots:
     void clickedMenu(int item);
@@ -93,8 +98,10 @@ private:
     QString preferedOfferTemp;
     QString preferedLibraryTemp;
     PdaConfigDialogImpl *pdaConfig;
+    QDateTime lastSynchronized;
     QString pdaName;
     uint32_t partnerId;
+    bool firstSynchronization;
     
 signals:
     void stateChanged(bool state);

@@ -38,6 +38,7 @@
 class KProgressDialog;
 class SyncTaskListItem;
 class Rra;
+class PdaConfigDialogImpl;
 
 /**
 @author Volker Christian,,,
@@ -46,16 +47,18 @@ class Rra;
 class SyncDialogImpl : public SyncDialog, public SyncThread
 {
 public:
-    SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    SyncDialogImpl(PdaConfigDialogImpl *pdaConfigDialog, Rra *rra, QString& pdaName, QWidget* parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ~SyncDialogImpl();
     void show(QPtrList<SyncTaskListItem>& syncItems);
     void work(QThread *qt = NULL, void *data = NULL);
     void reject();
 
 private:
+    PdaConfigDialogImpl *pdaConfigDialog;
     Rra *rra;
     QString pdaName;
     QPtrList<SyncTaskListItem> syncItems;
+    void *finishedSynchronization();
 };
 
 #endif

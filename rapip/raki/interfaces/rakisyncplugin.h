@@ -49,7 +49,8 @@ class RakiSyncPlugin : public QObject
 public:
     RakiSyncPlugin();
 
-    bool doSync(SyncThread *syncThread, ObjectType *objectTypeString, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra);
+    bool doSync(SyncThread *syncThread, ObjectType *objectTypeString, QString pdaName,
+            uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra, bool firstSynchronize);
     uint32_t getObjectTypeId();
     bool isRunning();
     void incTotalSteps(int inc);
@@ -69,6 +70,7 @@ protected:
     Rra *rra;
     SyncThread *syncThread;
     uint32_t partnerId;
+    bool firstSynchronize;
 };
 
 #endif

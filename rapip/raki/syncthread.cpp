@@ -34,7 +34,8 @@ SyncThread::SyncThread()
 SyncThread::~SyncThread()
 {
 }
-  
+
+
 void SyncThread::setActualSyncItem(SyncTaskListItem *actualSyncItem)
 {
     this->actualSyncItem = actualSyncItem;
@@ -76,4 +77,3 @@ void SyncThread::setTask(void *task)
     actualSyncItem->setTaskLabel((char *) task);
     delete (char *) task;
 }
-

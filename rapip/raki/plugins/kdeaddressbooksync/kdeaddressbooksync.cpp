@@ -20,7 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
- 
+
 #include "kdeaddressbooksync.h"
 
 #include <kdebug.h>
@@ -225,7 +225,12 @@ KABC::AddressBook *KdeAddressBookSync::generatePdaDelta()
 
         for (v = ids.unchangedIds.first(); v && isRunning(); v = ids.unchangedIds.next()) {
             addressee = KABC::Addressee();
-            addressee.insertCustom("Raki", "Task", "unchanged");
+            if (firstSynchronize) {
+                addressee = rra->getAddressee(getObjectTypeId(), *v);
+                addressee.insertCustom("Raki", "Task", "changed");
+            } else {
+                addressee.insertCustom("Raki", "Task", "unchanged");
+            }
             uidString = "RRA-ID-" + (QString("00000000") + QString::number((*v), 16)).right(8);
             addressee.setUid(uidString);
             addressee.insertCustom("Raki", "PdaUid-" + QString::number(partnerId), addressee.uid());
@@ -425,20 +430,21 @@ bool KdeAddressBookSync::sync()
             }
             rra->disconnect();
         }
+    }
+    
+    // Todo here: Resolving konflicts in kappa list
 
-        // Todo here: Resolving konflicts in kappa list
-
-        pcRhoBook->clear();
-        for (it = pcStdBook->begin(); it != pcStdBook->end(); it++) {
-            (*it).removeCustom("Raki", "Task");
-            KABC::Addressee rhoAddressee = (*it);
-            rhoAddressee.setResource(rhoResource);
-            pcRhoBook->insertAddressee(rhoAddressee);
-        }
+    pcRhoBook->clear();
+    for (it = pcStdBook->begin(); it != pcStdBook->end(); it++) {
+        (*it).removeCustom("Raki", "Task");
+        KABC::Addressee rhoAddressee = (*it);
+        rhoAddressee.setResource(rhoResource);
+        pcRhoBook->insertAddressee(rhoAddressee);
     }
 
     KABC::Ticket *t = pcRhoBook->requestSaveTicket(rhoResource);
     pcRhoBook->save(t);
+    rhoResource->close();
 
     pcDeltaBook->clear();
     pdaDeltaBook->clear();
@@ -451,7 +457,7 @@ bool KdeAddressBookSync::sync()
 
     KABC::StdAddressBook::save();
     KABC::StdAddressBook::close();
-    
+
     setTask("Finished");
 
     return true;

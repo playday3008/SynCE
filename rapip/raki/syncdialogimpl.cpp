@@ -24,6 +24,7 @@
 #include "syncdialogimpl.h"
 #include "synctasklistitem.h"
 #include "rakiworkerthread.h"
+#include "pdaconfigdialogimpl.h"
 
 #include <kdebug.h>
 #include <qpushbutton.h>
@@ -35,13 +36,14 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncDialogImpl::SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent,
+SyncDialogImpl::SyncDialogImpl(PdaConfigDialogImpl *pdaConfigDialog, Rra *rra, QString& pdaName, QWidget* parent,
                                const char* name, bool modal,
                                WFlags fl)
         : SyncDialog(parent, name, modal, fl)
 {
     this->pdaName = pdaName;
     this->rra = rra;
+    this->pdaConfigDialog = pdaConfigDialog;
     objectTypesTable->setLeftMargin(0);
     objectTypesTable->setShowGrid(false);
     objectTypesTable->setReadOnly(true);
@@ -100,6 +102,16 @@ void SyncDialogImpl::show(QPtrList<SyncTaskListItem>& syncItems)
 }
 
 
+void *SyncDialogImpl::finishedSynchronization()
+{
+    pdaConfigDialog->writeConfig();
+
+    buttonOk->setEnabled(true);
+
+    return NULL;
+}
+
+
 void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
 {
     SyncTaskListItem *item;
@@ -115,5 +127,6 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
         }
     }
 
-    buttonOk->setEnabled(true);
+
+    postThreadEvent(&SyncDialogImpl::finishedSynchronization, NULL, block);
 }

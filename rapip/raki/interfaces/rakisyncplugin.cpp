@@ -34,7 +34,8 @@ RakiSyncPlugin::RakiSyncPlugin()
 {}
 
 
-bool RakiSyncPlugin::doSync(SyncThread *syncThread, ObjectType *objectType, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra)
+bool RakiSyncPlugin::doSync(SyncThread *syncThread, ObjectType *objectType,
+        QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra, bool firstSynchronize)
 {
     this->pdaName = pdaName;
     this->progressItem = progressItem;
@@ -42,6 +43,7 @@ bool RakiSyncPlugin::doSync(SyncThread *syncThread, ObjectType *objectType, QStr
     this->syncThread = syncThread;
     this->objectType = objectType;
     this->partnerId = partnerId;
+    this->firstSynchronize = firstSynchronize;
     return sync();
 }
 
