@@ -14,7 +14,7 @@ href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.ne
 
 <ul>
 <li>Compaq/HP iPAQ (any model?)</li>
-<li>HP Jornada (548, 568, and probly others)</li>
+<li>HP Jornada (548, 568, and probably others)</li>
 <li>Casio (EM500 and probably others)
 </ul>
 
