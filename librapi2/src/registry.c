@@ -123,10 +123,12 @@ LONG CeRegQueryValueEx( /*{{{*/
     
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbData);
 	}
+#if 0
 	else
 	{
 		synce_trace("CeRegQueryValueEx returning %i", return_value);
 	}
+#endif
 
 	return return_value;
 }/*}}}*/
