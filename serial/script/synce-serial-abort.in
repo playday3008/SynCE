@@ -1,0 +1,31 @@
+#!/bin/sh
+
+THIS=`basename $0`
+
+# include common stuff
+prefix=@prefix@
+. @datadir@/synce/synce-serial-common
+
+exit_if_not_root
+
+get_pid
+
+if [ -z "${PID}" ]; then
+	echo "
+${THIS} was unable find a running SynCE connection. Will do nothing.
+"
+	exit 0
+fi
+
+if kill ${PID}; then
+	echo "
+${THIS} has requested shutdown of the current connection.
+"
+else
+	echo "
+${THIS} was unable stop the SynCE connection with PID ${PID}.
+" >&2
+	exit 1
+fi
+	
+

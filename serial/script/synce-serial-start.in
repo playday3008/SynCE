@@ -1,0 +1,76 @@
+#!/bin/sh
+#
+# $Id$
+#
+# Script for starting a PPP connection for SynCE
+#
+
+THIS=`basename $0`
+
+# include common stuff
+prefix=@prefix@
+. @datadir@/synce/synce-serial-common
+
+exit_if_not_root
+
+get_pid
+
+if [ "${PID}" ]; then
+	echo "
+${THIS} detected that a SynCE serial connection was already 
+started with PID ${PID}.
+
+To be able to start a new connection, you must first use synce-serial-stop to
+stop the already active connection.
+" >&2
+	exit 1
+fi
+
+
+#
+# Prevent some support requests by asking the user to remove the usepeerdns
+# option from the /etc/ppp/options file.
+#
+
+if grep -q usepeerdns ${PPP_OPTIONS}; then
+	echo "
+${THIS} encountered a problem with your ${PPP_OPTIONS} file:
+
+The 'usepeerdns' option is not compatible with SynCE.  Please edit
+${PPP_OPTIONS} and remove this option before running this script again.
+" >&2
+
+	exit 1
+fi
+
+#
+# Check for the peer file to prevent some confusing error from pppd.
+#
+
+if [ ! -e ${PEER_FILE} ]; then
+	echo "
+${THIS} was unable to find the file ${PEER_FILE}:
+
+Please run the synce-serial-config tool to create this file before running this
+script again.
+" >&2
+	exit 1
+fi
+
+#
+# Finally start pppd
+#
+
+if ${COMMAND}; then
+	echo "
+${THIS} is now waiting for your device to connect
+"
+	exit 0
+else
+	echo "
+${THIS} was unable to start the PPP daemon!
+" >&2
+	# return the error code we got from pppd
+	exit
+fi
+

@@ -1,0 +1,38 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(script/synce-serial-config.in)
+
+AM_INIT_AUTOMAKE(synce-serial, 0.1)
+AM_CONFIG_HEADER(config.h)
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_CC
+AC_PROG_LIBTOOL
+AC_PROG_MAKE_SET
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+           
+AC_CONFIG_FILES(
+	[script/synce-serial-config],
+	[chmod +x script/synce-serial-config]
+)
+
+AC_CONFIG_FILES(
+	[script/synce-serial-start],
+	[chmod +x script/synce-serial-start]
+)
+
+AC_CONFIG_FILES(
+	[script/synce-serial-abort],
+	[chmod +x script/synce-serial-abort]
+)
+
+AC_CONFIG_FILES( [script/synce-serial-common] )
+
+AC_OUTPUT([Makefile
+           script/Makefile])
+
