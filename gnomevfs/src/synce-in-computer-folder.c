@@ -13,7 +13,7 @@
 
 #define DISPLAY_NAME "Mobile Device"
 #define URI "synce:///"
-#define ICON "/home/david/src/synce/trayicon/pixmaps/synce-color.png"
+#define ICON SYNCE_ICON
 
 #define COMMAND_STRING_INSTALL      "install"
 #define COMMAND_STRING_UNINSTALL    "uninstall"
