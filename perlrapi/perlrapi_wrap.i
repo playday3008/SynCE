@@ -15,7 +15,8 @@
 #include "rapi.h"
 #include "synce_log.h"
 %}
-  
+
+
 /*
  * Include all of the constant definitions.
  * Function and type definitions are masked by the SWIG 
@@ -34,8 +35,8 @@ void synce_log_set_level(int);
 
 %typemap(out) HRESULT
 {
-  if(S_OK != $1)
-    croak("Failed to initialize rapi");
+  //if(S_OK != $1)
+  //  croak("Failed to initialize rapi");
 
   $result=sv_newmortal();
   sv_setiv($result, (IV)$1);
@@ -778,6 +779,7 @@ CEOID CeWriteRecordProps(HANDLE hDbase, CEOID oidRecord, WORD cPropID,
 typedef int LONG;
 typedef int HKEY;
 typedef int REGSAM;
+typedef unsigned int ULONG;
 
 %typemap(in,numinputs=0) PHKEY phkResult (HKEY k)
 {
@@ -1130,4 +1132,84 @@ LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved=0,
 		     DWORD dwType, const BYTE *lpData, DWORD cbData);
 
 
+
+
+/*
+ * CeRapiInvoke stuff
+ */
+
+ %typemap (in) IRAPIStream *
+ {
+   if ((SWIG_ConvertPtr($input, (void **) &$1, SWIGTYPE_p_IRAPIStream, 0)) < 0) 
+     croak("no IRAPIStream *");
+ }
+ 
+ ULONG IRAPIStream_Release(IRAPIStream* stream);
+ 
+ %typemap (in, numinputs=0) ULONG * (ULONG tmp) { $1=&tmp; }
+ %typemap (argout) ULONG *
+ {
+   $result=sv_2mortal(newSVuv(*$1));
+   argvi++;
+ }
+ 
+ %typemap (in, numinputs=0) void *pv {}
+ %typemap (in) ULONG cb
+ {
+   /* void *pv is arg2 */
+   if (! SvIOK($input))
+     croak("expected an unsigned long");
+   arg2=(void *)malloc(SvUV($input));
+ }
+ 
+ 
+ HRESULT IRAPIStream_Read(IRAPIStream* stream,
+ 			 void *pv, 
+ 			 ULONG cb, 
+ 			 ULONG *pcbRead);
+ 
+ %typemap (in, numinputs=0) ULONG cb {}
+ %typemap (in) void const *pv
+ {
+   /* ULONG cb is arg3 */
+   if (! SvPOK($input))
+     croak("expected a scalar");
+   $1=(void const *)SvPV($input, arg3);
+ }
+ 
+ HRESULT IRAPIStream_Write(IRAPIStream* stream,
+ 			  void const *pv, 
+ 			  ULONG cb, 
+ 			  ULONG *pcbWritten);
+ 
+ int IRAPIStream_GetRawSocket(IRAPIStream* stream);
+ 
+ 
+ %typemap (argout) IRAPIStream **
+ {
+   $result=sv_newmortal();
+   SWIG_MakePtr($result, *$1, SWIGTYPE_p_IRAPIStream, 0);
+   argvi++;
+ }
+ 
+ %typemap(in, numinputs=0) DWORD dwReserved { $1=0; }
+ 
+ HRESULT CeRapiInvoke(LPCWSTR pDllPath, 
+ 		     LPCWSTR pFunctionName, 
+ 		     DWORD cbInput, 
+ 		     const BYTE *pInput, 
+ 		     DWORD *pcbOutput, 
+ 		     BYTE **ppOutput, 
+ 		     IRAPIStream **ppIRAPIStream, 
+ 		     DWORD dwReserved);
+ 
+ HRESULT CeRapiInvokeA(LPCSTR pDllPath, 
+ 		      LPCSTR pFunctionName, 
+ 		      DWORD cbInput, 
+ 		      const BYTE *pInput, 
+ 		      DWORD *pcbOutput, 
+ 		      BYTE **ppOutput, 
+ 		      IRAPIStream **ppIRAPIStream, 
+ 		      DWORD dwReserved);
+ 
 /* EOF */
