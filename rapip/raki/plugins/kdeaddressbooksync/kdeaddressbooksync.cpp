@@ -25,6 +25,7 @@
 
 #include <kdebug.h>
 #include <kstandarddirs.h>
+#include <kdeversion.h>
 
 #include <kabc/vcardconverter.h>
 #include <kabc/addressee.h>
@@ -346,9 +347,13 @@ bool KdeAddressBookSync::sync()
     KABC::AddressBook *pcStdBook = KABC::StdAddressBook::self();
 
     KABC::AddressBook *pcRhoBook = new KABC::AddressBook();
+
+#if KDE_VERSION_RELEASE < 10
     KABC::ResourceFile *rhoResource = new KABC::ResourceFile(pcRhoBook,
                                       QFile::encodeName(locateLocal("data", (QString("raki/syncrefbook-") + QString::number(partnerId) + QString(".vcf")).ascii())));
     pcRhoBook->addResource(rhoResource);
+#endif
+
     pcRhoBook->load();
 
     setTask("Search for changes in KDE");
@@ -438,13 +443,17 @@ bool KdeAddressBookSync::sync()
     for (it = pcStdBook->begin(); it != pcStdBook->end(); it++) {
         (*it).removeCustom("Raki", "Task");
         KABC::Addressee rhoAddressee = (*it);
+#if KDE_VERSION_RELEASE < 10
         rhoAddressee.setResource(rhoResource);
+#endif
         pcRhoBook->insertAddressee(rhoAddressee);
     }
 
+#if KDE_VERSION_RELEASE < 10
     KABC::Ticket *t = pcRhoBook->requestSaveTicket(rhoResource);
     pcRhoBook->save(t);
     rhoResource->close();
+#endif
 
     pcDeltaBook->clear();
     pdaDeltaBook->clear();
