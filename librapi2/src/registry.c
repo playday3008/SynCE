@@ -109,15 +109,17 @@ LONG CeRegQueryValueEx( /*{{{*/
 
 	if (ERROR_SUCCESS == return_value)
 	{
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpType);
-		if (*lpType == REG_DWORD)
-		{
+    DWORD type = 0;
+
+    rapi_buffer_read_optional_uint32(context->recv_buffer, &type);
+    if (lpType)
+      *lpType = type;
+      
+		if (REG_DWORD == type)
 			rapi_buffer_read_optional_uint32(context->recv_buffer, (uint32_t*)lpData);
-		}
 		else
-		{
-		rapi_buffer_read_optional       (context->recv_buffer, lpData, lpcbData ? *lpcbData * sizeof(WCHAR) : 0);
-		}
+      rapi_buffer_read_optional(context->recv_buffer, lpData, lpcbData ? *lpcbData * sizeof(WCHAR) : 0);
+    
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbData);
 	}
 	else
