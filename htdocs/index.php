@@ -36,6 +36,12 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>March 1, 2003</b> Updated the <a
+href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap.txt?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">roadmap</a>.
+Please join the <a
+href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
+mailing list to discuss it!</p>
+
 <p><b>February 24, 2003</b> Added documentation on <a
 href="multisync.php">Using MultiSync for synchronization</a>.</p>
 
@@ -198,7 +204,7 @@ synchronize Contacts.</td>
 <a name="future"></a>
 <h2>Plans for the future</h2>
 
-<p>Future plans for SynCE include synchronization support.</p>
+<p>In the future, SynCE must be more user-friendly.</p>
 
 <p>Please read the <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap.txt?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">roadmap</a> for more details.</p>
 
