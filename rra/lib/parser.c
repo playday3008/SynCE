@@ -173,20 +173,19 @@ bool parser_duration_to_seconds(const char* duration, int* result)/*{{{*/
 
 }/*}}}*/
 
-bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time)/*{{{*/
+bool parser_datetime_to_struct   (const char* datetime, struct tm* time_struct)
 {
   int count;
   char suffix = 0;
-  struct tm time_struct;
-  memset(&time_struct, 0, sizeof(time_struct));
+  memset(time_struct, 0, sizeof(time_struct));
 
   count = sscanf(datetime, "%4d%2d%2dT%2d%2d%2d%1c", 
-      &time_struct.tm_year,
-      &time_struct.tm_mon,
-      &time_struct.tm_mday,
-      &time_struct.tm_hour,
-      &time_struct.tm_min,
-      &time_struct.tm_sec,
+      &time_struct->tm_year,
+      &time_struct->tm_mon,
+      &time_struct->tm_mday,
+      &time_struct->tm_hour,
+      &time_struct->tm_min,
+      &time_struct->tm_sec,
       &suffix);
 
   if (count != 3 && count != 6 && count != 7)
@@ -201,10 +200,18 @@ bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time)/*{{{*
       synce_warning("Unknown date-time suffix: '%c'", suffix);
   }
 
-  time_struct.tm_year -= 1900;
-  time_struct.tm_mon--;
-  time_struct.tm_isdst = -1;
+  time_struct->tm_year -= 1900;
+  time_struct->tm_mon--;
+  time_struct->tm_isdst = -1;
 
+  return true;
+}
+
+bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time)/*{{{*/
+{
+  struct tm time_struct;
+
+  parser_datetime_to_struct(datetime, &time_struct);
   *unix_time = mktime(&time_struct);
 
   return -1 != *unix_time;
