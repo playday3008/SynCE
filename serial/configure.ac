@@ -34,6 +34,7 @@ AC_CONFIG_FILES(
 AC_CONFIG_FILES( [script/synce-serial-common] )
 
 AC_OUTPUT([Makefile
+           src/Makefile
            script/Makefile
 					 man/Makefile])
 

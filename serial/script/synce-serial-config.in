@@ -119,9 +119,10 @@ fi
 
 LOCAL_IP=`echo $IP_ADDRESSES | sed 's/:.*$//'`
 
+exec_prefix=@exec_prefix@
 echo "# Modifications to this file will be lost next time you run ${THIS}
 ${DEVICE} 115200
-connect '${CHAT} -v -f ${CHAT_FILE}'
+connect '@bindir@/synce-serial-chat'
 nodefaultroute
 noauth
 local

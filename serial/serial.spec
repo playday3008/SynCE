@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-serial
-%define ver      0.3
+%define ver      0.4
 %define rel      1
 
 Summary: SynCE: Serial connection support.
@@ -17,7 +17,6 @@ Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Buildroot: %{_tmppath}/synce-root
 Requires: ppp synce-dccm
-BuildArch: noarch
 
 %description
 Synce-serial is part of the SynCE project:

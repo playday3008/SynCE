@@ -20,6 +20,9 @@ COMMAND="${PPPD} call ${PEER}"
 CHAT=/usr/sbin/chat
 CHAT_FILE=${datadir}/synce/synce-serial-chat
 
+# see the "linkname" option in the man page for pppd
+PID_FILE=/var/run/ppp-synce-device.pid
+
 DEFAULT_IPS=192.168.131.102:192.168.131.201
 
 exit_if_not_root()
@@ -32,7 +35,11 @@ exit_if_not_root()
 
 get_pid()
 {
-	PID=`ps x | grep "${COMMAND}" | grep -v grep | sed 's/^[ ]*\([0-9]*\) .*$/\1/'`
+	if [ -f "${PID_FILE}" ]; then
+		PID=`head -1 ${PID_FILE}`
+	else
+		PID=
+	fi
 
 	# pid empty?
 	if [ -z "${PID}" ]; then
