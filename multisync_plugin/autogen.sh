@@ -14,7 +14,7 @@ if [ -f $ACFILE ]; then
 	rm $ACFILE
 fi
 echo -n "Creating $ACFILE..."
-cat $ACFILE_IN | sed "s/\\(AC_INIT(.*,\\).*)/\\1 $VERSION)/" > $ACFILE
+cat $ACFILE_IN | sed "s/\\(AM_INIT_AUTOMAKE(.*,\\).*)/\\1 $VERSION)/" > $ACFILE
 if [ -s $ACFILE ]; then
 	echo "done."
 else
@@ -38,11 +38,12 @@ done
 
 rm -f config.cache
 if [ -d "m4" ]; then
-	INCLUDES="-I m4"
+	ACLOCAL_FLAGS="-I m4 $ACLOCAL_FLAGS"
 fi
-set -x
-aclocal $INCLUDES
-autoheader
-libtoolize --copy --automake
-automake --copy --foreign --add-missing
-autoconf
+
+which gnome-autogen.sh || {
+        echo "You need to install gnome-common from the GNOME CVS"
+        exit 1
+}
+ 
+USE_GNOME2_MACROS=1 . gnome-autogen.sh $@
