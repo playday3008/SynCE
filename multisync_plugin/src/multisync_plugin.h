@@ -2,7 +2,7 @@
 #ifndef __multisync_plugin_h__
 #define __multisync_plugin_h__
 
-#include <syncengine.h>
+#include <multisync.h>
 #include <librra.h>
 
 typedef struct 

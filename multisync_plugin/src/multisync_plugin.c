@@ -53,7 +53,7 @@ static char * get_state_filename(SynceConnection* sc)
 {
   return g_strdup_printf(
       "%s/%s_%s", 
-      sc->handle->datapath, 
+      sync_get_datapath(sc->handle), 
       (sc->type == CONNECTION_TYPE_LOCAL ? "local" : "remote"), 
       STATE_FILE);
 }

@@ -8,9 +8,8 @@
 #include <glade/glade-xml.h>
 #include <rapi.h>
 #include <synce_log.h>
-#include "syncengine.h"
-#include "gui.h"
 #include "multisync_plugin.h"
+#include "gui.h"
 
 GtkWidget *syncewindow = NULL;
 Synce_Partner synce_partner_1;

@@ -42,6 +42,10 @@ AM_PATH_LIBRAPI2
 AM_PATH_RRA
 
 AC_SUBST(MULTISYNC_INCLUDE)
+
+# default value
+MULTISYNC_INCLUDE=/usr/local/include/multisync
+
 AC_ARG_WITH(multisync-source,
 	AC_HELP_STRING(
 		[--with-multisync-source[=DIR]],
@@ -60,8 +64,9 @@ AC_ARG_WITH(multisync-include,
 		]
 	)
 
-AC_CHECK_FILES(${MULTISYNC_INCLUDE}/syncengine.h,,[
-	AC_MSG_ERROR([Can't find Multisync header syncengine.h])
+AC_CHECK_FILES(${MULTISYNC_INCLUDE}/multisync.h,,[
+	AC_MSG_ERROR([Can't find Multisync header multisync.h.
+Use one of the ---with-multisync-source or -with-multisync-include parameters.])
 	])
 
 dnl Prevent "NONE" used as prefix!

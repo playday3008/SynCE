@@ -1,7 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include "syncengine.h"
+#include "multisync_plugin.h"
 
 GtkWidget* open_option_window(sync_pair *pair, connection_type type);
 #include <stdlib.h>
@@ -11,8 +11,6 @@ GtkWidget* open_option_window(sync_pair *pair, connection_type type);
 #include <gtk/gtksignal.h>
 #include <rapi.h>
 #include <synce_log.h>
-#include "syncengine.h"
-#include "multisync_plugin.h"
 
 typedef struct _Synce_Partner
 {
