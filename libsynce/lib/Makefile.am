@@ -11,6 +11,7 @@ libsynce_la_SOURCES = \
 	errors.c \
 	files.c \
 	filetime.c \
+	info.c \
 	password.c \
 	synce.h \
 	synce_hash.h synce_hash.c \
@@ -19,7 +20,7 @@ libsynce_la_SOURCES = \
 	wstr.c
 
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libsynce_la_LIBADD  = @LTLIBICONV@ @LTLIBOBJS@ -lm
+libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ -lm
 
 include_HEADERS = \
 	synce.h synce_hash.h synce_log.h synce_socket.h synce_types.h
@@ -28,4 +29,6 @@ noinst_PROGRAMS = ftconv
 
 ftconv_SOURCES = ftconv.c
 ftconv_LDADD = libsynce.la
+
+SUBDIRS = config .
 
