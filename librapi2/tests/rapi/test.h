@@ -1,6 +1,10 @@
 // $Id$
-#include "rapi.h"
+extern "C" {
 #include <stdio.h>
+}
+
+#include "rapi.h"
+
 using namespace synce;
 
 #ifdef WIN32
