@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <synce_log.h>
 
 static void show_usage(const char* name)
 {
@@ -12,6 +13,11 @@ static void show_usage(const char* name)
 			"\n"
 			"\t%s [-h] SOURCE DESTINATION\n"
 			"\n"
+			"\t-d LEVEL     Set debug level\n"
+			"\t                 0 - No logging (default)\n"
+			"\t                 1 - Errors only\n"
+			"\t                 2 - Errors and warnings\n"
+			"\t                 3 - Everything\n"
 			"\t-h           Show this help message\n"
 			"\tSOURCE       The source filename\n"
 			"\tDESTINATION  The destination filename\n",
@@ -22,17 +28,24 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 {
 	int c;
 	int path_count;
+	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "h")) != -1)
+	while ((c = getopt(argc, argv, "d:h")) != -1)
 	{
 		switch (c)
 		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
 			case 'h':
 			default:
 				show_usage(argv[0]);
 				return false;
 		}
 	}
+				
+	synce_log_set_level(log_level);
 
 	path_count = argc - optind;
 	if (path_count < 1 || path_count > 2)
@@ -44,7 +57,7 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 		
 	*source = strdup(argv[optind++]);
 	if (path_count > 1)
-		*dest   = strdup(argv[optind++]);
+		*dest = strdup(argv[optind++]);
 
 	return true;
 }
@@ -56,7 +69,7 @@ static bool remote_copy(const char* ascii_source, const char* ascii_dest)
 
 #define ANYFILE_BUFFER_SIZE (16*1024)
 
-static bool anyfile_copy(const char* source_ascii, const char* dest_ascii, const char* name)
+static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name)
 {
 	bool success = false;
 	size_t bytes_read;
@@ -111,6 +124,8 @@ static bool anyfile_copy(const char* source_ascii, const char* dest_ascii, const
 		}
 	}
 
+	success = true;
+
 exit:
 	if (buffer)
 		free(buffer);
@@ -147,7 +162,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
 				argv[0],
 				synce_strerror(hr));
-/*		goto exit;*/
+		goto exit;
 	}
 
 	if (!dest)
@@ -198,10 +213,11 @@ int main(int argc, char** argv)
 				goto exit;
 			}
 
-			dest = calloc(1, wstr_strlen(mydocuments) + 1 + strlen(p) + 1);
+			dest = calloc(1, 1 + wstr_strlen(mydocuments) + 1 + strlen(p) + 1);
 			
 			mydocuments_ascii = wstr_to_ascii(mydocuments);
 			
+			strcat(dest, ":");
 			strcat(dest, mydocuments_ascii);
 			strcat(dest, "\\");
 			strcat(dest, p);

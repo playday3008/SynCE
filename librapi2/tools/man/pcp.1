@@ -1,7 +1,7 @@
 .\" $Id$
 .TH "PCP" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
 .SH NAME
-pcp \- Copy a file on a Pocket PC device.
+pcp \- copy files
 
 .SH SYNOPSIS
 \fBpcp\fR [-h] [:]\fISOURCE\fR [[:]\fIDESTINATION\fR]
@@ -9,8 +9,8 @@ pcp \- Copy a file on a Pocket PC device.
 .SH "DESCRIPTION"
 
 .PP
-\fBpcp\fR copies a file on your Pocket PC device or between your Pocket PC
-device and host PC.
+\fBpcp\fR copies a file on a device connected through SynCE or between a
+device connected through SynCE and host PC.
 
 .PP
 Forward slashes ('/') in remote file names specified on the command line are
@@ -37,7 +37,7 @@ Full path to the destination filename. When the filename is prefixed with a colo
 .IP
 If this parameter is omitted and the source filename is local, the local file
 will be copied to a file with the same name in the "My Documents" directory on
-the Pocket PC device.
+the device connected through SynCE.
 
 .IP
 If this parameter is omitted and the source filename is remote, the remote file
@@ -68,4 +68,4 @@ pcp ":/My Documents/important.pwi" ":/My Documents/important.backup.pwi"
 .PP
 This manual page was written by David Eriksson <twogood@users.sourceforge.net>.
 .SH "SEE ALSO"
-synce(1) pcp(1) pls(1) prm(1)
+synce(1) pcp(1) pls(1) prm(1) pmkdir(1) prmdir(1)

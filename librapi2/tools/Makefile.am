@@ -8,12 +8,14 @@ noinst_PROGRAMS = pput pget
 pput_SOURCES = pput.cpp
 pget_SOURCES = pget.cpp
 
-bin_PROGRAMS = pcp pls pmv prm
+bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir
 
-pcp_SOURCES = pcp.c pcommon.c
-pls_SOURCES = pls.c pcommon.c
-pmv_SOURCES = pmv.c pcommon.c
-prm_SOURCES = prm.c pcommon.c
+pcp_SOURCES    = pcommon.c pcp.c
+pls_SOURCES    = pcommon.c pls.c
+pmkdir_SOURCES = pcommon.c pmkdir.c
+pmv_SOURCES    = pcommon.c pmv.c
+prm_SOURCES    = pcommon.c prm.c
+prmdir_SOURCES = pcommon.c prmdir.c
 
 SUBDIRS = man
 

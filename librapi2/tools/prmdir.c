@@ -13,7 +13,7 @@ static void show_usage(const char* name)
 			"\t%s [-h] FILE\n"
 			"\n"
 			"\t-h    Show this help message\n"
-			"\tFILE  The remote file you want to remove\n",
+			"\tFILE  The remote directory you want to remove\n",
 			name);
 }
 
@@ -34,7 +34,7 @@ static bool handle_parameters(int argc, char** argv, char** path)
 
 	if (optind == argc)
 	{
-		fprintf(stderr, "%s: No file specified on command line\n\n", argv[0]);
+		fprintf(stderr, "%s: No directory name specified on command line\n\n", argv[0]);
 		show_usage(argv[0]);
 		return false;
 	}
@@ -68,9 +68,9 @@ int main(int argc, char** argv)
 	convert_to_backward_slashes(path);
 	wide_path = wstr_from_ascii(path);
 
-	if (!CeDeleteFile(wide_path))
+	if (!CeRemoveDirectory(wide_path))
 	{
-		fprintf(stderr, "%s: Failed to remove '%s': %s\n", 
+		fprintf(stderr, "%s: Failed to remove directory '%s': %s\n", 
 				argv[0],
 				path,
 				synce_strerror(CeGetLastError()));

@@ -22,6 +22,27 @@ bool is_remote_file(const char* filename)
 	return filename && ':' == filename[0];
 }
 
+const WCHAR wide_backslash[] = {'\\', 0};
+
+WCHAR* adjust_remote_path(WCHAR* old_path)
+{
+	/* Nothing to adjust if we have an absolute path */
+	if ('\\' == old_path[0])
+		return old_path;
+
+	WCHAR path[MAX_PATH];
+	if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path))
+	{
+		fprintf(stderr, "Unable to get the \"My Documents\" path.\n");
+		return NULL;
+	}
+
+	wstr_append(path, wide_backslash, sizeof(path));
+	wstr_append(path, old_path, sizeof(path));
+
+	return wstrdup(path);
+}
+
 
 typedef void (*ANYFILE_CLOSE)(AnyFile* file);
 typedef bool (*ANYFILE_ACCESSOR)(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed);
@@ -81,8 +102,6 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 {
 	WCHAR* wide_filename = wstr_from_ascii(filename);
 	AnyFile* file = (AnyFile*)calloc(1, sizeof(AnyFile));
-
-	convert_to_backward_slashes(filename);
 
 	switch (access)
 	{
@@ -149,13 +168,14 @@ static AnyFile* anyfile_local_open(const char* filename, ANYFILE_ACCESS access)
 /**
  * Open file
  */
-AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access)
+AnyFile* anyfile_open(char* filename, ANYFILE_ACCESS access)
 {
 	AnyFile* file = NULL;
 	
 	if (is_remote_file(filename))
 	{
-		file = anyfile_remote_open(filename, access);
+		convert_to_backward_slashes(filename);
+		file = anyfile_remote_open(filename + 1, access);
 	}
 	else
 	{

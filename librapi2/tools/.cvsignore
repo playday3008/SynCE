@@ -7,5 +7,7 @@ pget
 pput
 pcp
 pls
+pmkdir
 pmv
 prm
+prmdir
