@@ -8,208 +8,171 @@ A.      All daemons and progams are meant to run as user-land processes unless
 
 B.      All libraries should be written i ANSI C.
 
-C.      Responsiblity is denoted in square brackets.
+C.      Responsiblity is denoted with SourceForge user name in square brackets.  
+        Note the missing responsiblities!
+
+
+Contents
+========
+
+1.      Foundation
+2.      Foundation applications
+3.      Synchronization
+4.      Synchronization applications
+5.      Language support
 
 
 1.      Foundation
 ==================
 
-1.1.    DCCM                                                [twogood]
+1.1.    The connection manager (dccm)                            [twogood]
 
         The purpose of this application is to listen on port 5679 and
         maintain a list of currently connected Pocket PC devices.
 
         The application should support tcpwrappers.
 
-1.2.    The RAPI library (librapi2)                         [twogood]
+1.2.    The RAPI library (librapi)                               [twogood]
 
         This library implements the RAPI interface.
 
-1.3.    The SynCE library (libsynce)                        [twogood]
+1.3.    The SynCE library (libsynce)                             [twogood]
 
-        This library contains common functionality for the daemon and
-        RAPI library. Client applications may need to use it to convert
-        data types, etc.
+        This library contains common functionality for the connection manager,
+        RAPI library and other parts of SynCE. Client applications may need to
+        use it to convert data types, etc.
 
-1.4.    CeTTY                                                [llange]
+1.4     Connections
 
-        See the mailing list for info about this tool.
+1.4.1   Serial cable                                             [twogood]
 
-1.5.    Connection notification interface                   [twogood]
+1.4.2   IrDA                                                     [twogood]
 
-        This allows an application to run when a device connects to dccm.
-        
-        Details about this in connection_notification.txt
+1.4.3   USB                                                      [vganesh]
 
-1.6.    Packaging
+        TODO: Make stand-alone kernel module.
 
-1.6.1.  RedHat 8.0 packages                                 [twogood]
+1.4.4   Bluetooth                                                [twogood]
 
-1.6.2   Making .deb packages
+        Need to test with latest BlueZ before documenting.
 
-1.6.3   Gentoo packages
-
-        http://bugs.gentoo.org/show_bug.cgi?id=11184
-
-       
+      
 
 2.      Foundation applications
 ===============================
 
         These tools use librapi to access the Pocket PC device.
 
-2.1.    Maybe some library for common user interface functionality
+2.1.    Command line tools                                       [twogood]
 
-2.2.    Command line tools                                  [twogood]
+        Part of librapi.
 
-2.2.1.  Tool(s) to copy files to and from a Pocket PC device.
+2.2.    KDE 3 integration
 
-
-2.3.    KDE 3 integration
-
-2.3.1.  KDE I/O slave (updated version of kio_synce)
+2.2.1.  KDE I/O slave (updated version of kio_synce)             [twogood]
 
         Allows browsing and manipulation of the Pocket PC device file
         system with Konqueror.
 
-2.3.2.  KDE system tray icon that shows connected devices
+2.2.2.  KDE system tray icon that shows connected devices            [voc]
+
+        This is the "rapip" CVS module.
+
+2.3.    GNOME 2 integration
+
+2.3.1   Tray icon                                                [twogood]
+
+2.3.2   GNOME-VFS module                                          [sassur]
+
+2.x.    Tools for your favorite desktop environment here.
 
 
-2.4.    GNOME 2 integration
+3.      Synchronization
+=======================
 
-2.4.1   Tray icon                                           [twogood]
+3.1     Replication agent (rra)                                  [twogood]
 
-2.4.2   GNOME-VFS module
+        Library with low-level synchronization functions.
 
-        See Tamas Decsi's mail to synce-devel and this link:
+        Also includes code to convert between vCard and Contacts database.
 
-        http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html
+3.2     Appointments and Tasks synchronization                     [?????]
+
+        Code to convert between vCalendar and Appointments and Tasks
+        databases.
+
+3.3     Notes synchronization                                      [?????]
+
+3.4     Mail synchronization                                       [?????]
+        
+3.5     AvantGo support                                            [?????]
 
 
-2.5     File system driver
+
+4.      Synchronization applications
+====================================
+
+4.1     MultiSync plugin                                         [twogood]
+
+        This enables synchronization of contacts with Evolution 1.x
+
+4.2     KDE 3 synchronization                                      [?????]
+
+        This is about KMail, KAddressbook, KOrganizer, etc.
+
+        See http://pim.kde.org/ for more info.
+
+4.x.    Your favorite personal information mangagement applications
+        here.
+
+
+5.      Language support
+========================
+
+5.1     Python: PyRAPI                                             [hippy]
+
+5.2     Perl: PerlRAPI                                              [osar]
+
+
+ 
+5.      Add-ons
+===============
+
+5.1.    CeTTY                                                     [llange]
+
+        See the mailing list for info about this tool.
+
+5.2.    Connection notification interface                          [?????]
+
+        This allows an application to run when a device connects to dccm.
+        
+        Details about this in connection_notification.txt
+
+5.3.    Visual connection tool                                     [?????]
+
+        Help with selecting and configuring a connection.  This is important
+        to attract users and limit support requests.
+
+        This app will need root access.
+
+5.4.    Allowing more than one connected device.                   [?????]
+
+5.5     File system driver                                         [?????]
 
         See http://lufs.sourceforge.net/ - there is an old SynCE file system
         that needs to be updated:
         
         http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/lufs/lufs/lufsd/cefs/
 
-        
-2.x.    Tools for your favorite desktop environment here.
+         
+A.      Packaging
+=================
 
+A.1.    RedHat 8.0                                               [twogood]
 
-3.      Synchronization foundation
-==================================
+A.2     Debian                                                     [?????]
 
-        This is new stuff. I have some code for this hidden away for
-        future use! :-)
+A.3     Gentoo                                                [Zach Welch]
 
-        (Credits to Max Muermann on this too!)
-
-3.1     Synchronization daemon
-
-        The purpose of this daemon is to listen on port 5678 and
-        perform synchronization.
-
-        This port is registered with IANA as "Remote Replication Agent
-        Connection". Name suggestions: "rracd".
-        
-        The daemon should support tcpwrappers.
-
-3.2     Synchronization framework (this is what MS calls ActiveSync)
-
-3.3     Synchronization modules (also known as conduits)
-
-3.3.1.  Calendar (appointments)
-
-        This should essentially be able to convert between calendar
-        database entries on the Pocket PC and iCal/vCal.
-
-        Some work on this has been done in the "synical" CVS module.
-
-3.3.2.  Contacts
-
-        This should essentially be able to convert between contact
-        database entries on the Pocket PC and VCard.
-
-3.3.x.  Whatever else that may be synchronized.
-
-
-4.      Synchronization applications
-====================================
-
-4.1     Command line tools
-
-4.2     KDE 3 integration
-
-        This is about KMail, KAddressbook, KOrganizer, etc.
-
-        See http://pim.kde.org/ for more info.
-
-4.3.    GNOME 1/2 integration.
-
-4.3.1   Evolution is still only a GNOME 1 application, but would
-        probably be the most wanted integration. However, it only supports
-        synchronization with Palm devices, and that seems to be quite
-        different.
-
-        Have a look at this: http://multisync.sourceforge.net/ 
-
-4.4.    SyncML support
-
-        http://www.syncml.org/
-
-4.x.    Your favorite personal information mangagement applications
-        here.
-
-
-5.      Add-ons
-===============
-
-5.1.    Connection tools
-
-5.1.1.  Visual connection tool
-
-        Help with selecting and configuring a connection. It should probably
-        be divided into two parts: a library and a default user interface.
-        Other user interfaces may then be added quite easily.
-
-        This is important to attract users and limit support requests.
-
-        This app will need root access.
-
-5.1.1.  Serial connection
-
-        See the module "serial" in the SynCE CVS repository.
-
-5.1.2.  USB connection
-
-        See the module "wince-usb" in the SynCE CVS repository.
-
-5.1.3.  Bluetooth connection
-
-5.2     PyRAPI
-
-        Richard Taylor's Python wrappers for librapi2.
-
-5.3     Allowing more than one connected device.
-
-        
- 
-I will personally try to work as much as possible on the foundation
-(1.1, 1.2, 1.3, 1.5) and synchronization foundation (3.1).
-
-Others will have to take care of the other parts!
-
-The foundation applications section (2) is quite easy if you know the
-environment you are making your application for, just follow Microsoft's
-documentation but link with librapi and libsynce! :-)
-
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_cerapiinit.asp
-
-Synchronization is also (somewhat) documented by Microsoft, but I will
-later present how this will work with SynCE as we won't use COM. Here
-are the Microsoft docs anyway:
-
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnce21/html/activesync.asp
-
+        http://bugs.gentoo.org/show_bug.cgi?id=11184
 
