@@ -37,10 +37,15 @@ typedef struct _Client
 	bool locked;
 	bool expect_password_reply;
 	int key;
+	bool disconnect;
+  uint16_t os_version;
+  uint16_t build_number;
+  uint16_t processor_type;
+  uint32_t partner_id_1;
+  uint32_t partner_id_2;
 	char* name;
 	char* class;
 	char* hardware;
-	bool disconnect;
 } Client;
 
 static Client * current_client = NULL;
@@ -289,12 +294,23 @@ static bool client_write_file(Client* client)
 			"pid=%i\n"
 			"\n"
 			"[device]\n"
+      "os_version=%i\n"
+      "build_number=%i\n"
+      "processor_type=%i\n"
+      "partner_id_1=%i\n"
+      "partner_id_2=%i\n"
 			"name=%s\n"
 			"class=%s\n"
 			"hardware=%s\n"
 			"ip=%s\n"
-			"port=%i\n",
+			"port=%i\n"
+      ,
 			getpid(),
+      client->os_version,
+      client->build_number,
+      client->processor_type,
+      client->partner_id_1,
+      client->partner_id_2,
 			client->name,
 			client->class,
 			client->hardware,
@@ -400,12 +416,17 @@ static bool client_read(Client* client)
 
 		/* Offset 0000 is always 24 00 00 00 ? */
 		/* Offset 0004 contains the OS version, for example 03 00 = 3.0 */
+    client->os_version = letoh16(*(uint16_t*)(buffer + 0x04));
 		/* Offset 0006 contains the build number, for example 0x2ba3 = 11171 */
+    client->build_number = letoh16(*(uint16_t*)(buffer + 0x06));
 		/* Offset 0008 contains the processor type, for example 0x0a11 = 2577 */
+    client->processor_type = letoh16(*(uint16_t*)(buffer + 0x08));
 		/* Offset 000c is always 00 00 00 00 ? */
 
 		/* Offset 0010 contains the first partner id */
+    client->partner_id_1 = letoh32(*(uint32_t*)(buffer + 0x10));
 		/* Offset 0014 contains the second partner id */
+    client->partner_id_2 = letoh32(*(uint32_t*)(buffer + 0x14));
 
 		client->name      = string_at(buffer, header, 0x18);
 		client->class     = string_at(buffer, header, 0x1c);
