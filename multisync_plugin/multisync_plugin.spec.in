@@ -27,6 +27,7 @@ This plugin is allows synchronization of address book data.
 %setup
 
 %build
+%_prefix /usr/local
 %configure --with-multisync-source=/usr/local/src/multisync
 make
 
