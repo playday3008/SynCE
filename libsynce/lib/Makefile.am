@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -Wno-long-long -ansi @CFLAGS@ @APPLE_CFLAGS@ -I..
+AM_CFLAGS = -ggdb -Wall -Wno-long-long -ansi @CFLAGS@ @APPLE_CFLAGS@ -I..
 
 ## create this library
 lib_LTLIBRARIES = libsynce.la
