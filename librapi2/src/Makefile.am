@@ -10,6 +10,7 @@ librapi_la_SOURCES = \
 	database.c                     \
 	file_access.c                  \
 	file_management.c              \
+	invoke.c                       \
 	misc.c                         \
 	rapi.c                         \
 	registry.c                     \

@@ -706,6 +706,48 @@ DWORD CeStartReplication( void );
 
 #endif /* SWIG */
 
+/*
+ * CeRapiInvoke stuff
+ */
+
+struct _IRAPIStream;
+typedef struct _IRAPIStream IRAPIStream;
+
+ULONG IRAPIStream_Release(IRAPIStream* stream);
+
+HRESULT IRAPIStream_Read(
+		IRAPIStream* stream,
+		void *pv, 
+		ULONG cb, 
+		ULONG *pcbRead);
+
+HRESULT IRAPIStream_Write(
+		IRAPIStream* stream,
+		void const *pv, 
+		ULONG cb, 
+		ULONG *pcbWritten);
+
+int IRAPIStream_GetRawSocket(IRAPIStream* stream);
+
+HRESULT CeRapiInvoke( 
+		LPCWSTR pDllPath, 
+		LPCWSTR pFunctionName, 
+		DWORD cbInput, 
+		const BYTE *pInput, 
+		DWORD *pcbOutput, 
+		BYTE **ppOutput, 
+		IRAPIStream **ppIRAPIStream, 
+		DWORD dwReserved);
+
+HRESULT CeRapiInvokeA(
+		LPCSTR pDllPath, 
+		LPCSTR pFunctionName, 
+		DWORD cbInput, 
+		const BYTE *pInput, 
+		DWORD *pcbOutput, 
+		BYTE **ppOutput, 
+		IRAPIStream **ppIRAPIStream, 
+		DWORD dwReserved);
 
 #ifdef __cplusplus
 }

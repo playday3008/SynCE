@@ -31,6 +31,11 @@ RapiContext* rapi_context_new();
  */
 void rapi_context_free(RapiContext* context);
 
+/*
+ * Connect to device
+ */
+HRESULT rapi_context_connect(RapiContext* context);
+
 /**
  * Begin a command
  */
