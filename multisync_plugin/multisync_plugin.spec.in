@@ -28,6 +28,7 @@ This plugin is allows synchronization of address book data with
 Windows CE 3.0 (Pocket PC) or later.
 
 %prep
+rm -rf $RPM_BUILD_ROOT
 %setup
 
 %build
@@ -41,4 +42,3 @@ make
 %defattr(-,root,root)
 %doc LICENSE
 %{_prefix}/lib
-%{_prefix}/share
