@@ -397,9 +397,14 @@ static bool client_read(Client* client)
 
 		dump("info package", buffer, header);
 
+		/* Offset 0000 is always 24 00 00 00 ? */
 		/* Offset 0004 contains the OS version, for example 03 00 = 3.0 */
 		/* Offset 0006 contains the build number, for example 0x2ba3 = 11171 */
 		/* Offset 0008 contains the processor type, for example 0x0a11 = 2577 */
+		/* Offset 000c is always 00 00 00 00 ? */
+
+		/* Offset 0010 contains the first partner id */
+		/* Offset 0014 contains the second partner id */
 
 		client->name      = string_at(buffer, header, 0x18);
 		client->class     = string_at(buffer, header, 0x1c);
