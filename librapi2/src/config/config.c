@@ -84,6 +84,7 @@ really lazy and also moderately efficient.
 
 #include "config.h"
 
+#define myisblank(c)   ((c) == ' ' || (c) == '\t')
 
 /* Attempt to read and parse a config file. Return a handle to the config file
  * structure, or NULL if errors were encountered.
@@ -204,7 +205,7 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 				filePos++;
 				break;
 			case _cfgVALSTART:
-				if (!isspace(cfg->bbdg[filePos])) {
+				if (!myisblank(cfg->bbdg[filePos])) {
 					currentStringStart=&(cfg->bbdg[filePos]);
 					state=_cfgVALEND;
 				} else {
