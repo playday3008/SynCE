@@ -16,9 +16,9 @@ Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
-Requires:      multisync    >= 0.72
-Requires:      synce        >= 0.8
-BuildRequires: synce-devel  >= 0.8
+Requires:      multisync    >= 0.80
+Requires:      synce        >= 0.8.3
+BuildRequires: synce-devel  >= 0.8.3
 
 %description
 multisync_plugin is part of the SynCE project
@@ -33,7 +33,7 @@ rm -rf $RPM_BUILD_ROOT
 %setup
 
 %build
-%configure --with-multisync-source=/usr/local/src/multisync
+%configure --with-multisync-include=/usr/local/include/multisync
 make
 
 %install
