@@ -1,5 +1,6 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
+#define _SVID_SOURCE 1
 #include "librra.h"
 #include "rrac.h"
 #include <rapi.h>
