@@ -41,6 +41,12 @@ Design goals
 Installation from CVS
 ---------------------
 
+o Make sure you have these versions of autotools:
+
+    autoconf-2.53
+		automake-1.6.1
+		libtool-1.4.2
+
 o Checkout "librapi2" as described on:
 
     http://sourceforge.net/cvs/?group_id=30550
