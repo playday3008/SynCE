@@ -47,6 +47,11 @@ typedef struct
   uint32_t  flags;              /* 0x1a */
   uint32_t  occurrences;        /* 0x1e */
   uint8_t   padding[0xc];       /* 0x22 */
+  uint32_t  date P;               /* 0x2e */
+  uint8_t   unknown3[0xc] P;      /* 0x32 */
+  uint32_t  start_minute P;       /* 0x3e */
+  uint32_t  end_minute P;         /* 0x42 */
+  uint8_t   padding2[4] P;        /* 0x46 */
 } RecurringWeekly P;
 
 /* size = 0x20 */
@@ -58,6 +63,11 @@ typedef struct
   uint32_t  flags;              /* 0x1a */
   uint32_t  occurrences;        /* 0x1e */
   uint8_t   padding[0xc];       /* 0x22 */
+  uint32_t  date P;               /* 0x2e */
+  uint8_t   unknown3[0xc] P;      /* 0x32 */
+  uint32_t  start_minute P;       /* 0x3e */
+  uint32_t  end_minute P;         /* 0x42 */
+  uint8_t   padding2[4] P;        /* 0x46 */
 } RecurringMonthly P;
 
 /* size = 0x20 */
@@ -69,7 +79,11 @@ typedef struct
   uint32_t  instance;           /* 0x1a */
   uint32_t  flags;              /* 0x1e */
   uint32_t  occurrences;        /* 0x22 */
-  uint8_t   padding[8];         /* 0x26 */
+  uint8_t   padding[0xc] P;       /* 0x26 */
+  uint32_t  date P;               /* 0x32 */
+  uint8_t   unknown3[0xc] P;      /* 0x36 */
+  uint32_t  start_minute P;       /* 0x42 */
+  uint32_t  end_minute P;         /* 0x46 */
 } RecurringMonthNth P;
 
 /* size = 0x68 */
@@ -84,10 +98,7 @@ typedef struct
     RecurringMonthly  monthly P;
     RecurringMonthNth month_nth P;
   } details P;
-  uint8_t   unknown3[0x10] P;     /* 0x2e */
-  uint32_t  start_minute P;       /* 0x3e */
-  uint32_t  end_minute P;         /* 0x42 */
-  uint8_t   unknown4[0x22] P;     /* 0x46 */
+  uint8_t   unknown4[0x1e] P;     /* 0x4a */
 } RecurrencePattern P;
 
 enum

@@ -12,6 +12,8 @@
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
+#define MINUTES_FROM_1601_TO_1970   194074560
+
 static uint8_t blob_0001[104] =
 {
   0xc4,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
@@ -242,11 +244,28 @@ static bool recurrence_set_days_of_week_mask(
   }
 }
 
-static bool recurrence_parse_weekly(/*{{{*/
-    RecurrenceRule* rrule, 
-    RecurrencePattern* pattern,
+static void recurrence_set_unknown3(
+    uint8_t* unknown3)
+{
+  unknown3[0x00] = 0xdf;
+  unknown3[0x01] = 0x80;
+  unknown3[0x02] = 0xe9;
+  unknown3[0x03] = 0x5a;
+  unknown3[0x04] = 0x05;
+  unknown3[0x05] = 0x30;
+
+  unknown3[0x08] = 0x05;
+  unknown3[0x09] = 0x30;
+  
+  /*unknown3[0x14] = 0x01;*/
+}
+
+static bool recurrence_set_date_time(
     mdir_line* dtstart,
-    mdir_line* dtend)
+    mdir_line* dtend,
+    uint32_t* date,
+    uint32_t* start_minute,
+    uint32_t* end_minute)
 {
   bool success = false;
   struct tm start;
@@ -258,6 +277,29 @@ static bool recurrence_parse_weekly(/*{{{*/
   if (!parser_datetime_to_struct(dtend->values[0], &end))
     goto exit;
 
+  if (!date || !start_minute || !end_minute)
+  {
+    synce_error("Invalid parameters");
+    goto exit;
+  }
+
+  *date         = (mktime(&start) / (24*60*60)) * (24*60) + MINUTES_FROM_1601_TO_1970;
+  *start_minute = start.tm_hour * 60 + start.tm_min;
+  *end_minute   = end  .tm_hour * 60 + end  .tm_min;
+
+  success = true;
+
+exit:
+  return success;
+}
+
+static bool recurrence_parse_weekly(/*{{{*/
+    RecurrenceRule* rrule, 
+    RecurrencePattern* pattern,
+    mdir_line* dtstart,
+    mdir_line* dtend)
+{
+  bool success = false;
   pattern->recurrence_type          = olRecursWeekly;
   pattern->details.weekly.interval  = rrule->interval;
 
@@ -271,14 +313,20 @@ static bool recurrence_parse_weekly(/*{{{*/
     goto exit;
 
   /* some more info */
-  pattern->start_minute = start.tm_hour * 60 + start.tm_min;
-  pattern->end_minute   = end.  tm_hour * 60 + end  .tm_min;
+  recurrence_set_date_time(
+      dtstart, 
+      dtend, 
+      &pattern->details.weekly.date,
+      &pattern->details.weekly.start_minute,
+      &pattern->details.weekly.end_minute);
     
   /* always 0x0b for olRecursWeekly? */
   pattern->unknown1[4] = 0x0b;
 
   /* variable */
   pattern->unknown2 = 0x000021c0; /* 6*24*60 */
+
+  recurrence_set_unknown3(pattern->details.weekly.unknown3);
 
   success = true;
 
@@ -332,11 +380,21 @@ static bool recurrence_parse_monthly(/*{{{*/
   else
     synce_warning("BYSETPOS missing");
 
-  /* always 0x0c for olRecursMonthNth? */
+  /* some more info */
+  recurrence_set_date_time(
+      dtstart, 
+      dtend, 
+      &pattern->details.month_nth.date,
+      &pattern->details.month_nth.start_minute,
+      &pattern->details.month_nth.end_minute);
+
+   /* always 0x0c for olRecursMonthNth? */
   pattern->unknown1[4] = 0x0c;
 
   /* variable */
   pattern->unknown2 = 0x0002a300; /* 2*24*60*60 */
+
+  recurrence_set_unknown3(pattern->details.month_nth.unknown3);
 
   success = true;
 
@@ -347,7 +405,8 @@ exit:
 static bool recurrence_parse_yearly(/*{{{*/
     RecurrenceRule* rrule, 
     RecurrencePattern* pattern,
-    mdir_line* dtstart)
+    mdir_line* dtstart,
+    mdir_line* dtend)
 {
   bool success = false;
   struct tm start;
@@ -365,11 +424,21 @@ static bool recurrence_parse_yearly(/*{{{*/
       &pattern->details.monthly.occurrences))
     goto exit;
   
+  /* some more info */
+  recurrence_set_date_time(
+      dtstart, 
+      dtend, 
+      &pattern->details.monthly.date,
+      &pattern->details.monthly.start_minute,
+      &pattern->details.monthly.end_minute);
+
   /* always 0x0d for olRecursMonthly? */
   pattern->unknown1[4] = 0x0d;
 
   /* variable */
   pattern->unknown2 = 0x0002a300; /* 2*24*60*60 */
+
+  recurrence_set_unknown3(pattern->details.monthly.unknown3);
 
   success = true;
   
@@ -394,9 +463,9 @@ bool recurrence_parse_rrule(
   }
 
   /* verify the structures are packed correctly */
-  assert(sizeof(RecurringWeekly)   == 0x20);
-  assert(sizeof(RecurringMonthly)  == 0x20);
-  assert(sizeof(RecurringMonthNth) == 0x20);
+  assert(sizeof(RecurringWeekly)   == 0x3c);
+  assert(sizeof(RecurringMonthly)  == 0x3c);
+  assert(sizeof(RecurringMonthNth) == 0x3c);
   assert(sizeof(RecurrencePattern) == 0x68);
 
   memset(&pattern, 0, sizeof(RecurrencePattern));
@@ -413,25 +482,6 @@ bool recurrence_parse_rrule(
   /* always the same? */
   pattern.unknown1[5] = 0x20;
 
-  /* variable? */
-  pattern.unknown3[0x00] = 0x20; 
-  pattern.unknown3[0x01] = 0x63;
-  
-  /* always the same? */
-  pattern.unknown3[0x02] = 0x9d; 
-  pattern.unknown3[0x03] = 0x0c;
-  pattern.unknown3[0x04] = 0xdf;
-  pattern.unknown3[0x05] = 0x80;
-  pattern.unknown3[0x06] = 0xe9;
-  pattern.unknown3[0x07] = 0x5a;
-  pattern.unknown3[0x08] = 0x05;
-  pattern.unknown3[0x09] = 0x30;
-
-  pattern.unknown3[0x0c] = 0x05;
-  pattern.unknown3[0x0d] = 0x30;
-  
-  pattern.unknown3[0x14] = 0x01;
-
   recurrence_line_to_rrule(line, &rrule);
 
   switch (rrule.freq)
@@ -445,7 +495,7 @@ bool recurrence_parse_rrule(
       break;
 
     case FREQ_YEARLY:
-      success = recurrence_parse_yearly(&rrule, &pattern, dtstart);
+      success = recurrence_parse_yearly(&rrule, &pattern, dtstart, dtend);
       break;
 
     default:
