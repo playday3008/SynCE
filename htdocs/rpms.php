@@ -41,7 +41,10 @@ the following RPM packages:<br/><br/>
 
 	<ul>
 		<li><b>synce-X.X-X.i386.rpm</b>  (Note: this package includes the modules libsynce, librapi2, dccm, serial and rra.)</li>
-<!-- 		<li><b>synce-multisync_plugin-X.X-X.i386.rpm</b></li> -->
+		<li><b>synce-devel-X.X-X.i386.rpm</b>  (for developers, or if you will compile other modules from source code)</li>
+		<li><b>synce-multisync_plugin-X.X-X.i386.rpm</b> (for address book synchronization)</li>
+		<li><b>synce-trayicon-X.X-X.i386.rpm</b> (suggested for GNOME 2.x users)</li>
+		<li><b>synce-gnomevfs-X.X-X.i386.rpm</b> (suggested for GNOME 2.x users)</li>
 	</ul>
 </li>
 

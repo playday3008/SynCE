@@ -21,7 +21,7 @@ the following .tar.gz files:<br/><br/>
 		<li><b>synce-dccm-X.X.tar.gz</b></li>
 		<li><b>synce-serial-X.X.tar.gz</b></li>
 		<li><b>synce-rra-X.X.tar.gz</b> (optional)</li>
-		<li><b>synce-multisync_plugin-X.X.tar.g</b>z (requires rra)</li>
+		<li><b>synce-multisync_plugin-X.X.tar.g</b>z (for address book synchronization, requires rra)</li>
 		<li><b>synce-trayicon-X.X.tar.gz</b> (suggested for GNOME 2.x users)</li>
 		<li><b>synce-gnomevfs-X.X.tar.gz</b> (suggested for GNOME 2.x users)</li>
 		<li><b>rapip-X.X.tar.gz</b> (suggested for KDE 3.x users)</li>
