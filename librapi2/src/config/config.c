@@ -298,4 +298,6 @@ void unloadConfigFile (struct configFile *cfg)
 	if (!cfg)
 		return;
 	hashFreeTable (cfg->sections, unloadConfigSection);
+	free(cfg->bbdg);
+	free(cfg);
 }
