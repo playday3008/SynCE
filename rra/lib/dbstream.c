@@ -3,6 +3,7 @@
 #include <synce_log.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 
 static uint16_t dbstream_read16(const uint8_t** stream)
 {
