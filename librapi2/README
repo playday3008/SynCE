@@ -1,0 +1,35 @@
+$Id$
+
+Overview
+--------
+
+The RAPI library is an open source implementation that works like RAPI.DLL,
+available on Microsoft operating systems. The library makes it possible to make
+remote calls to a computer running Pocket PC.
+
+In order to use librapi, a daemon that the Pocket PC client connects to must be
+running on the computer using librapi.
+
+
+License
+-------
+
+MIT License, see the file LICENSE for details.
+
+
+
+External requirements
+---------------------
+
+libiconv (which is usally already present on your system :-)
+
+
+Design goals
+------------
+
+- Merge the functionality of the previous three libraries into one
+- Thread-safety
+- Support both 32- and 64-bit platforms
+- Support both little endian and big endian platforms
+
+

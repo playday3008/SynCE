@@ -1,0 +1,39 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(src/rapi_buffer.c)
+AM_INIT_AUTOMAKE(librapi, 0.1)
+AM_CONFIG_HEADER(config.h)
+	
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_CC
+AC_PROG_LIBTOOL
+AC_PROG_MAKE_SET
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+
+AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h iconv.h)
+	
+AC_CHECK_HEADERS(sys/types.h,,[
+		AC_MSG_ERROR([Don't know how to get u_int16_t and u_int32_t on your system])
+		])
+
+AC_CHECK_HEADERS(stdbool.h,,[
+		AC_MSG_ERROR([Don't know how to get bool values on your system])
+		])
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN()
+AC_C_CONST
+
+dnl Checks for library functions.
+
+sinclude(iconv.m4)
+AM_ICONV()
+
+AC_OUTPUT([Makefile
+           src/Makefile])
