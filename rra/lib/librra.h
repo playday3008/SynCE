@@ -63,6 +63,15 @@ bool rra_get_object_ids(RRA* rra,
 
 void rra_free_object_ids(ObjectIdArray* object_id_array);
 
+bool rra_get_deleted_object_ids(RRA* rra,
+                                uint32_t object_type_id,
+		                            ObjectIdArray* object_id_array,
+																uint32_t** deleted_id_array,
+																size_t* deleted_count);
+
+#define rra_free_deleted_object_ids(deleted_ids)  if(deleted_ids) free(deleted_ids);
+
+
 /* get, update, add object data 
    the data buffer must be in little endian format */ 
 

@@ -6,6 +6,7 @@
 #include <synce_log.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define SEND_COMMAND_6F_6   1
 #define SEND_COMMAND_6F_10  0
@@ -29,6 +30,8 @@ static const char* PARTNERS =
 static const char* CURRENT_PARTNER  = "PCur";
 static const char* PARTNER_ID       = "PId";
 static const char* PARTNER_NAME     = "PName";
+
+static const char* RRA_DIRECTORY    = "rra";
 
 RRA* rra_new()/*{{{*/
 {
@@ -322,6 +325,233 @@ exit:
 }/*}}}*/
 
 void rra_free_object_ids(ObjectIdArray* object_id_array);
+
+
+
+typedef struct _Uint32Vector
+{
+	uint32_t* items;
+	size_t used;
+	size_t size;
+} Uint32Vector;
+
+static void uint32vector_enlarge(Uint32Vector* v, size_t size)
+{
+	if (v->size < size)
+	{
+		size_t new_size = v->size ? v->size : 2;
+
+		while (new_size < size)
+			new_size <<= 1;
+
+		v->items = realloc(v->items, sizeof(uint32_t) * new_size);
+		v->size  = new_size;
+	}
+}
+
+Uint32Vector* uint32vector_new()
+{
+	return (Uint32Vector*)calloc(1, sizeof(Uint32Vector));
+}
+
+void uint32vector_destroy(Uint32Vector* v, bool free_items)
+{
+	if (v)
+	{
+		if (free_items && v->items)
+			free(v->items);
+		free(v);
+	}
+}
+
+Uint32Vector* uint32vector_add(Uint32Vector* v, uint32_t value)
+{
+	uint32vector_enlarge(v, v->size + 1);
+	v->items[v->used++] = value;
+	return v;
+}
+
+static int uint32vector_compare(const void* a, const void* b)
+{
+	return *(const uint32_t*)a - *(const uint32_t*)b;
+}
+
+void uint32vector_sort(Uint32Vector* v)
+{
+	qsort(v->items, v->used, sizeof(uint32_t), uint32vector_compare);
+}
+
+void uint32vector_dump(Uint32Vector* v)
+{
+	int i;
+	for (i = 0; i < v->used; i++)
+		synce_trace("%i: %08x", i, v->items[i]);
+}
+
+
+
+/*
+ * This function can be extended to find out which objects are new too.
+ * 
+ * Maybe not be the most optimal way to do this, but it will do for now.
+ */
+bool rra_get_deleted_object_ids(RRA* rra,/*{{{*/
+                                uint32_t object_type_id,
+		                            ObjectIdArray* object_id_array,
+																uint32_t** deleted_id_array,
+																size_t* deleted_count)
+{
+	bool success = false;
+	char* directory = NULL;
+	uint32_t index = 0;
+	uint32_t partner_id = 0;
+	char filename[256];
+	FILE* file = NULL;
+	int previous, current;
+	Uint32Vector* previous_ids = uint32vector_new();
+	Uint32Vector* current_ids  = uint32vector_new();
+	Uint32Vector* deleted_ids  = uint32vector_new();
+
+	if (!rra_partner_get_current(rra, &index))
+	{
+		synce_error("Failed to get current partner index");
+		goto exit;
+	}
+
+	/* XXX: maybe the partner ID should be stored in RRA struct? */
+	if (!rra_partner_get_id(rra, index, &partner_id))
+	{
+		synce_error("Failed to get current partner ID");
+		goto exit;
+	}
+
+	if (!synce_get_subdirectory(RRA_DIRECTORY, &directory))
+	{
+		synce_error("Failed to get rra directory path");
+		goto exit;
+	}
+
+	snprintf(filename, sizeof(filename), "%s/partner-%08x-type-%08x", directory,
+			partner_id, object_type_id);
+
+
+	/*
+	 * Read previous list of IDs to vector
+	 */
+	
+	file = fopen(filename, "r");
+	if (file)
+	{
+		char buffer[16];
+		while (fgets(buffer, sizeof(buffer), file))
+		{
+			uint32vector_add(previous_ids, strtol(buffer, NULL, 16));
+		}
+
+		/* uint32vector_dump(previous_ids); */
+		uint32vector_sort(previous_ids);
+		/* uint32vector_dump(previous_ids); */
+		fclose(file);
+	}
+
+	/*
+	 * Take obejcts from array and put in vector
+	 */
+
+	for (current = 0; 
+			 current < (object_id_array->unchanged + object_id_array->changed); 
+			 current++)
+	{
+		uint32vector_add(current_ids, object_id_array->ids[current]);
+	}
+	
+	/* uint32vector_dump(current_ids); */
+	uint32vector_sort(current_ids);
+	/* uint32vector_dump(current_ids); */
+
+	/*
+	 * Iterate both vectors and see what is missing from the previous
+	 */
+
+	for (current = 0, previous = 0;
+			 current < current_ids->used && previous < previous_ids->used; )
+	{
+		/* synce_trace("current id: %08x    previous id: %08x", 
+				current_ids->items[current], previous_ids->items[previous]); */
+
+		if (current_ids->items[current] > previous_ids->items[previous])
+		{
+			/* deleted item */
+			uint32vector_add(deleted_ids, previous_ids->items[previous]);
+			/* synce_trace("deleted item: %08x", previous_ids->items[previous]); */
+			previous++;
+		}
+		else if (current_ids->items[current] < previous_ids->items[previous])
+		{
+			/* new item */
+			current++;
+		}
+		else
+		{
+			/* the IDs are equal */
+			current++;
+			previous++;
+		}
+	}
+
+	/*
+	 * Check if there are any IDs left at the end of the vector
+	 */
+
+	for (; previous < previous_ids->used; previous++)
+	{
+		uint32vector_add(deleted_ids, previous_ids->items[previous]);
+		/* synce_trace("deleted item: %08x", previous_ids->items[previous]); */
+	}
+
+	/*
+	 * Save current ID list
+	 */
+
+	file = fopen(filename, "w");
+	if (!file)
+	{
+		synce_error("Failed to open '%s' for writing.", filename);
+		goto exit;
+	}
+	
+	if (file)
+	{
+		for (current = 0; current < current_ids->used; current++)
+		{
+			char buffer[16];
+			snprintf(buffer, sizeof(buffer), "%08x\n", current_ids->items[current]);
+			fwrite(buffer, strlen(buffer), 1, file);
+		}
+				
+		fclose(file);
+	}
+
+	/*
+	 * Return deleted ID array
+	 */
+
+	*deleted_id_array = deleted_ids->items;
+	*deleted_count    = deleted_ids->used;
+
+	success = true;
+	
+exit:
+	if (directory)
+		free(directory);
+
+	uint32vector_destroy(current_ids,  true);
+	uint32vector_destroy(previous_ids, true);
+	uint32vector_destroy(deleted_ids,  !success);
+
+	return success;
+}/*}}}*/
+
 
 bool rra_object_get(RRA* rra, /*{{{*/
                     uint32_t type_id,

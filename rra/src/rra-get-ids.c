@@ -15,6 +15,8 @@ int main(int argc, char** argv)
 	uint32_t type_id = 0;
 	ObjectIdArray* object_ids = NULL;
 	unsigned i, id = 0;
+	uint32_t* deleted_ids = NULL;
+	size_t deleted_count = 0;
 	
 	synce_log_set_level(0);
 
@@ -49,6 +51,20 @@ int main(int argc, char** argv)
 
 	for (i = 0; i < object_ids->changed; i++)
 		printf("%08x  Changed\n", object_ids->ids[id++]);
+
+	if (!rra_get_deleted_object_ids(
+				rra, 
+				type_id, 
+				object_ids, 
+				&deleted_ids, 
+				&deleted_count))
+	{
+		fprintf(stderr, "Failed to get deleted object ids\n");
+		goto exit;
+	}
+
+	for (id = 0; id < deleted_count; id++)
+		printf("%08x  Deleted\n", deleted_ids[id]);
 
 exit:
 	rra_free(rra);
