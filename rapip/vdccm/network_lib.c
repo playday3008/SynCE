@@ -17,8 +17,8 @@
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE S     *
- * OFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
 
@@ -137,9 +137,9 @@ local_p local_connect_socket(const char *path)
 	local_p local;
 	socklen_t len = sizeof(struct sockaddr);
 
-	
+
 	errno = 0;
-	
+
 	local = (local_p) malloc(sizeof(local_t));
 	local->rlocalwrap = NULL;
 	local->wlocalwrap = NULL;
@@ -149,26 +149,26 @@ local_p local_connect_socket(const char *path)
 	local->rsel = NULL;
 	local->wsel = NULL;
 	local->esel = NULL;
-	
+
 	if ((local->fd = socket(PF_LOCAL, SOCK_STREAM, 0)) < 0) {
 		local_close_socket(local);
 		return NULL;
 	}
-	
+
 	local->raddr.sun_family = AF_LOCAL;
 	strncpy(local->raddr.sun_path, path, sizeof(local->raddr.sun_path));
-	
+
 	size = (offsetof (struct sockaddr_un, sun_path)
 			+ strlen(local->raddr.sun_path) + 1);
-	
+
 	if (connect(local->fd, (struct sockaddr *) &local->raddr, sizeof(local->raddr)) < 0) {
 		return NULL;
 	}
-	
+
 	if (getsockname(local->fd, (struct sockaddr *) &local->laddr, &len) < 0) {
 		return NULL;
 	}
-	
+
 	return local;
 }
 

@@ -17,8 +17,8 @@
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE S     *
- * OFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
 
@@ -37,7 +37,7 @@ select_p select_create(void)
 
     if ((act = (select_p) malloc(sizeof(select_t))) == NULL)
         return NULL;
-        
+
     FD_ZERO(&act->rfds);
     act->tv.tv_sec = 10;
     act->tv.tv_usec = 0;
@@ -76,7 +76,7 @@ int select_addto_rlist(select_p s, int fd, select_fnc_p fdfn, void *data)
 
     if ((mylink = (select_fd_p) malloc(sizeof(select_fd_t))) == NULL)
         return -1;
-        
+
     mylink->fd = fd;
     mylink->fdfn = fdfn;
     mylink->data = data;

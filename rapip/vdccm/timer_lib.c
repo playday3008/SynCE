@@ -17,8 +17,8 @@
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE S     *
- * OFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
 
@@ -153,7 +153,7 @@ timer_node_p voc_timer_add_continous_node(timer_p timer, struct timeval interval
     timer_node_p timer_node;
 
     timer_node = (timer_node_p) malloc(sizeof(timer_node_t));
-    if (timer_node == NULL)    
+    if (timer_node == NULL)
         return NULL;
 
     timer_node->tmfnc = tmfnc;
@@ -163,7 +163,7 @@ timer_node_p voc_timer_add_continous_node(timer_p timer, struct timeval interval
     gettimeofday(&timer_node->insert_time, NULL);
 
     timer_node->trigger_time = timer_add_time(timer_node->interval_time, timer_node->insert_time);
-    
+
     if (list_insert_sorted(timer->timer_node_l, timer_sort_crit, timer_node) < 0)
         return NULL;
 
@@ -179,12 +179,12 @@ struct timer_s *voc_timer_create(void)
     timer_p timer;
 
     timer = (timer_p) malloc(sizeof(voc_timer_t));
-    
+
     if (timer == NULL)
         return NULL;
-    
+
     timer->timer_node_base_l = list_create();
     timer->timer_node_l = list_create();
-    
+
     return timer;
 }
