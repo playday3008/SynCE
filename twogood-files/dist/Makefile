@@ -19,11 +19,12 @@ LIBSYNCE_VERSION = 0.7
 DCCM_VERSION     = 0.7
 SERIAL_VERSION   = 0.7
 RRA_VERSION      = 0.7
-TRAYICON_VERSION = 0.4
+TRAYICON_VERSION = 0.7
 GNOMEVFS_VERSION = 0.2
 MULTISYNC_PLUGIN_VERSION = 0.7
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
+RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')
 
 TARBALL_DIR   = $(PWD)/V$(SYNCE_VERSION)/tarballs/
 
@@ -64,24 +65,35 @@ synce:
 	-rm $(SRPM_DIR)/*
 	-mkdir -p $(TARBALL_DIR)
 	-rm $(TARBALL_DIR)/*
+	$(MAKE) -f Makefile.module MODULE=libsynce  VERSION=$(LIBSYNCE_VERSION)  checkout
+	$(MAKE) -f Makefile.module MODULE=librapi2  VERSION=$(LIBRAPI2_VERSION)  checkout
+	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      checkout
+	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    checkout
+	$(MAKE) -f Makefile.module MODULE=rra       VERSION=$(RRA_VERSION)       checkout
 	$(MAKE) -f Makefile.module MODULE=libsynce  VERSION=$(LIBSYNCE_VERSION)  tarball
 	$(MAKE) -f Makefile.module MODULE=librapi2  VERSION=$(LIBRAPI2_VERSION)  tarball
 	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      tarball
 	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    tarball
 	$(MAKE) -f Makefile.module MODULE=rra       VERSION=$(RRA_VERSION)       tarball
 	rpmbuild -ba synce.spec
+	cp $(RPMROOT)/SRPMS/i386/synce-$(SYNCE_VERSION)-*.rpm       $(SRPM_DIR)/
+	cp $(RPMROOT)/RPMS/i386/synce-$(SYNCE_VERSION)-*.rpm        $(RPM_DIR)/
+	cp $(RPMROOT)/RPMS/i386/synce-devel-$(SYNCE_VERSION)-*.rpm  $(RPM_DIR)/
 
 extras: trayicon gnomevfs multisync_plugin
 
 trayicon:
+	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  checkout
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  tarball
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  rpm
 
 gnomevfs:
+	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  checkout
 	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  tarball
 	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  rpm
 
 multisync_plugin:
+	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  checkout
 	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  tarball
 	$(MAKE) -f Makefile.module MODULE=multisync_plugin VERSION=$(MULTISYNC_PLUGIN_VERSION)  rpm
 
