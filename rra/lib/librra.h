@@ -9,6 +9,15 @@ extern "C"
 
 #include <synce.h>
 
+#define RRA_OBJECT_TYPE_MS_TABLE     0x2710
+#define RRA_OBJECT_TYPE_APPOINTMENT  0x2711
+#define RRA_OBJECT_TYPE_CONTACT      0x2712
+#define RRA_OBJECT_TYPE_TASK         0x2713
+#define RRA_OBJECT_TYPE_FILE         0x2714
+#define RRA_OBJECT_TYPE_MERLIN_MAIL  0x2715
+#define RRA_OBJECT_TYPE_FAVORITE     0x2716
+#define RRA_OBJECT_TYPE_INK          0x2717
+
 struct _RRA;
 typedef struct _RRA RRA;
 
@@ -130,6 +139,22 @@ bool rra_contact_from_vcard(
 
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)
+
+#if 0
+bool rra_dbstream_to_string(
+		uint32_t type_id,
+		uint32_t object_id,
+		const uint8_t* data,
+		size_t data_size,
+		char** str);
+
+bool rra_dbstream_from_string(
+		uint32_t type_id,
+		uint32_t object_id,
+		char** str,
+		uint8_t** data,
+		size_t* data_size);
+#endif
 
 #if 0
 bool rra_lock(RRA* rra);

@@ -66,3 +66,12 @@ StrBuf* strbuf_append_c (StrBuf *strbuf, int c)
   return strbuf;
 }
 
+StrBuf* strbuf_append_newline (StrBuf *strbuf)
+{
+  strbuf_enlarge(strbuf, strbuf->length + 3);
+  strbuf->buffer[strbuf->length++] = '\r';
+  strbuf->buffer[strbuf->length++] = '\n';
+  strbuf->buffer[strbuf->length] = '\0';
+  return strbuf;
+}
+

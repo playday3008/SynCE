@@ -27,15 +27,15 @@
 #define ID_TITLE        0x4023
 #define ID_MIDDLE_NAME  0x4024
 
-#define ID_HOME_ADDRESS1     0x4040
-#define ID_HOME_ADDRESS2     0x4041
-#define ID_HOME_ADDRESS3     0x4042
-#define ID_HOME_ADDRESS4     0x4043
+#define ID_HOME_STREET       0x4040
+#define ID_HOME_LOCALITY     0x4041
+#define ID_HOME_REGION       0x4042
+#define ID_HOME_POSTAL_CODE  0x4043
 #define ID_HOME_COUNTRY      0x4044
 
 #define ID_WORK_STREET       0x4045
 #define ID_WORK_LOCALITY     0x4046
-#define ID_WORK_ADDRESS3     0x4047
+#define ID_WORK_REGION       0x4047
 #define ID_WORK_POSTAL_CODE  0x4048
 #define ID_WORK_COUNTRY      0x4049
 
