@@ -1,0 +1,18 @@
+These are a list of codes in PWI documents:
+
+c1 XX       iso8859-1 character XX
+
+e5 XX XX    select font 
+e6 XX XX    set font size
+
+e8 00       bold off
+e8 01       bold on
+e9 00       italic off
+e9 01       italic on
+ea 00       underline off
+ea 01       underline on
+
+
+The convert.cc file was created by José Sánchez Moreno.
+
+
