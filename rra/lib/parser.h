@@ -37,7 +37,7 @@ bool parser_run(Parser* self);
 bool parser_get_result(Parser* self, uint8_t** result, size_t* result_size);
 
 /* add database records */
-bool parser_add_blob  (Parser* self, uint16_t id, uint8_t* data, size_t data_size);
+bool parser_add_blob  (Parser* self, uint16_t id, const uint8_t* data, size_t data_size);
 bool parser_add_int16 (Parser* self, uint16_t id, int16_t value);
 bool parser_add_int32 (Parser* self, uint16_t id, int32_t value);
 bool parser_add_string(Parser* self, uint16_t id, const char* str);

@@ -233,7 +233,7 @@ static CEPROPVAL* parser_get_next_propval(Parser* self)/*{{{*/
     return &self->propvals[self->propval_count++];
 }/*}}}*/
 
-bool parser_add_blob(Parser* self, uint16_t id, uint8_t* data, size_t data_size)/*{{{*/
+bool parser_add_blob(Parser* self, uint16_t id, const uint8_t* data, size_t data_size)/*{{{*/
 {
   CEPROPVAL* propval = parser_get_next_propval(self);
   if (!propval)
