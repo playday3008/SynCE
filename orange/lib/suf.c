@@ -102,6 +102,7 @@ static bool orange_explode(/*{{{*/
     synce_error("Decompression of file '%s' failed with error code %i", 
         filename, result);
     FCLOSE(cookie.output_file);
+    abort();
     goto exit;
   }
 
@@ -109,6 +110,9 @@ static bool orange_explode(/*{{{*/
 
 exit:
   FCLOSE(cookie.output_file);
+#if DEBUG
+  synce_trace("Current offset: %08x", ftell(input_file));
+#endif
   fseek(input_file, next_file_offset, SEEK_SET);
   return success;
 }/*}}}*/
@@ -299,6 +303,8 @@ static bool orange_extract_setup_factory_2(/*{{{*/
       num = orange_read_uint32(&p);
 #if DEBUG
       synce_trace("Unknown               : 0x%08x (%i)", num, num);
+      if (num != 1)
+        abort();
 #endif
     }
 
@@ -366,24 +372,32 @@ static bool orange_extract_setup_factory_2(/*{{{*/
     synce_trace("Is compressed?        : %i", is_compressed);
 #endif
 
-    p += 0x11;
+    switch (version)
+    {
+      case 5:
+        p += 0x11;
+        break;
+
+      case 6:
+        p += 0x8;
+
+        str = orange_read_string1(&p);
+#if DEBUG
+        synce_trace("String                : '%s'", str);
+#endif
+        FREE(str);
+
+        p += 0x2;
+        break;
+    }
 
     size = orange_read_uint32(&p);
 #if DEBUG
     synce_trace("Compressed file size  : 0x%08x (%i)", size, size);
 #endif
     
-    switch (version)
-    {
-      case 5:
-        p += 0x2b;
-        break;
+    p += 0x2b;
 
-      case 6:
-        p += 0x25;
-        break;
-    }
-    
     snprintf(output_directory2, sizeof(output_directory2), "%s/%s", 
         output_directory, directory);
     FREE(directory);
@@ -398,8 +412,26 @@ static bool orange_extract_setup_factory_2(/*{{{*/
     }
     else
     {
-      /* TODO: just copy file data */
-      fseek(input_file, size, SEEK_CUR);
+      uint8_t* data = malloc(size);
+      if (!data)
+      {
+        synce_error("Failed to allocate %u bytes", data_size);
+        goto exit;
+      }
+
+      if (size != fread(data, 1, size, input_file))
+      {
+        synce_error("Failed to read %u bytes from inout file", size);
+        goto exit;
+      }
+
+      if (!orange_write(data, size, output_directory2, basename))
+      {
+        synce_error("Failed to write %u bytes to file '%s/%s'", size, output_directory2, basename);
+        goto exit;
+      }
+
+      FREE(data);
     }
 
     FREE(basename);
@@ -437,6 +469,10 @@ bool orange_extract_setup_factory(
 
   if (!orange_extract_setup_factory_1(input_file, output_directory, version))
     goto exit;
+
+#if DEBUG
+  synce_trace("Part two offset: 0x%08x", ftell(input_file));
+#endif
 
   /*
      Next read the irsetup.dat file to be able to get the installable data

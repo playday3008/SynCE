@@ -140,37 +140,6 @@ exit:
   return success;
 }/*}}}*/
 
-bool orange_write(const uint8_t* output_buffer, size_t output_size, const char* output_directory, const char* basename)/*{{{*/
-{
-  bool success = false;
-  char filename[256];
-  FILE* output = NULL;
-
-  if (!orange_make_sure_directory_exists(output_directory))
-    goto exit;
-
-  snprintf(filename, sizeof(filename), "%s/%s", output_directory, basename);
-
-  output = fopen(filename, "w");
-  if (!output)
-  {
-    synce_error("Failed to open file for writing: '%s'", filename);
-    goto exit;
-  }
-
-  if (output_size != fwrite(output_buffer, 1, output_size, output))
-  {
-    synce_error("Failed to write %i bytes to file '%s'", output_size, filename);
-    goto exit;
-  }
-
-  success = true;
-
-exit:
-  FCLOSE(output);
-  return success;
-}/*}}}*/
-
 typedef struct 
 {
   const char* output_directory;
