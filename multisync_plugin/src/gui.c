@@ -1,9 +1,11 @@
+#include <multisync_plugin_config.h>
 #include <stdlib.h>
 #include <glib.h>
 #include <gmodule.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
-#include <gnome.h>
+#include <libgnomeui/libgnomeui.h>
+#include <glade/glade-xml.h>
 #include <rapi.h>
 #include <synce_log.h>
 #include "syncengine.h"
@@ -13,9 +15,9 @@
 GtkWidget *syncewindow = NULL;
 Synce_Partner synce_partner_1;
 Synce_Partner synce_partner_2;
-GtkWidget *partner_option_menu;
 GtkWidget *partner_menu;
 GtkWidget *get_all_button;
+int new_partner_index = 0;
 
 uint32_t current_partner;
 SynceConnection *connection = NULL;
@@ -27,7 +29,7 @@ static void synce_error_dialog(const char *message)
   error_dialog = gnome_message_box_new (
       message,
       GNOME_MESSAGE_BOX_ERROR,
-      GNOME_STOCK_BUTTON_OK,
+          GTK_STOCK_OK, 
       NULL);
 
   gnome_dialog_run (GNOME_DIALOG (error_dialog));
@@ -35,15 +37,10 @@ static void synce_error_dialog(const char *message)
 
 GtkWidget* open_option_window(sync_pair *pair, connection_type type)
 {
-  GtkWidget *v_box;
-  GtkWidget *h_box;
-  GtkWidget *button_box;
-  GtkWidget *separator;
-
-  GtkWidget *label;
+    GladeXML *gladefile = NULL;
   
+  GtkWidget *partner_option_menu;
   GtkWidget *new_partner_button;
-  GtkWidget *replace_partner_button;
 
   GtkWidget *ok_button;
   GtkWidget *cancel_button;
@@ -125,69 +122,34 @@ GtkWidget* open_option_window(sync_pair *pair, connection_type type)
       synce_partner_2.current = TRUE;
     }
 
-    syncewindow = gtk_window_new(GTK_WINDOW_DIALOG);
-    gtk_window_set_title (GTK_WINDOW(syncewindow), "SynCE Options");
-    gtk_window_set_policy(GTK_WINDOW(syncewindow), FALSE, FALSE, TRUE);
+    gladefile = glade_xml_new(SYNCE_MULTISYNC_GLADEFILE, "syncewindow", NULL); 
+    syncewindow = glade_xml_get_widget(gladefile, "syncewindow");
     gtk_signal_connect(GTK_OBJECT(syncewindow), "delete_event", GTK_SIGNAL_FUNC(synce_window_closed), NULL);
 
-    v_box = gtk_vbox_new(TRUE, 5);
-    gtk_container_add(GTK_CONTAINER(syncewindow), v_box);
+    partner_option_menu = glade_xml_get_widget(gladefile,"partner_option_menu");
+    synce_build_partner_menu(partner_option_menu);
 
-    h_box = gtk_hbox_new(FALSE, 5);		
-    label = gtk_label_new("Current partner:");
-    partner_option_menu = gtk_option_menu_new();
-    synce_build_partner_menu();
-    gtk_box_pack_start(GTK_BOX(h_box), label, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(h_box), partner_option_menu, TRUE, TRUE, 0);
-    gtk_widget_show_all(h_box);
-    gtk_box_pack_start(GTK_BOX(v_box), h_box, TRUE, TRUE, 0);
+    get_all_button = glade_xml_get_widget(gladefile,"get_all_button");
 
-    /*		button_box =  gtk_hbutton_box_new();		
-          replace_partner_button = gtk_button_new_with_label("Replace old");
-          gtk_signal_connect (GTK_OBJECT(replace_partner_button), "clicked", GTK_SIGNAL_FUNC(synce_replace_old_partner), NULL);
-          new_partner_button = gtk_button_new_with_label("Create new");
-          gtk_signal_connect (GTK_OBJECT(new_partner_button), "clicked", GTK_SIGNAL_FUNC(synce_create_new_partner), NULL);
-          gtk_box_pack_start(GTK_BOX(button_box), replace_partner_button, FALSE, FALSE, 5);
-          gtk_box_pack_start(GTK_BOX(button_box), new_partner_button, FALSE, FALSE, 5);
-          gtk_widget_show_all(button_box);
-          gtk_box_pack_start(GTK_BOX(v_box), button_box, TRUE, TRUE, 0);*/
-
-    separator = gtk_hseparator_new();
-    gtk_widget_show(separator);
-    gtk_box_pack_start(GTK_BOX(v_box), separator, TRUE, TRUE, 0);
-
-    button_box =  gtk_hbutton_box_new();
-    get_all_button = gtk_check_button_new_with_label("Get all items from PDA on next synchronization");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(get_all_button), connection->get_all);
-    gtk_box_pack_start(GTK_BOX(button_box), get_all_button, FALSE, FALSE, 5);
-    gtk_widget_show_all(button_box);
-    gtk_box_pack_start(GTK_BOX(v_box), button_box, TRUE, TRUE, 0);
 
-    separator = gtk_hseparator_new();
-    gtk_widget_show(separator);
-    gtk_box_pack_start(GTK_BOX(v_box), separator, TRUE, TRUE, 0);
+    new_partner_button = glade_xml_get_widget(gladefile,"new_partner_button");
+    ok_button = glade_xml_get_widget(gladefile,"ok_button");
+    cancel_button = glade_xml_get_widget(gladefile,"cancel_button");
 
-    button_box =  gtk_hbutton_box_new();
-    ok_button = gnome_stock_button(GNOME_STOCK_BUTTON_OK);
-    cancel_button = gnome_stock_button(GNOME_STOCK_BUTTON_CANCEL);
+    gtk_signal_connect (GTK_OBJECT(new_partner_button), "clicked", GTK_SIGNAL_FUNC(synce_new_partner_button), NULL);
     gtk_signal_connect (GTK_OBJECT(ok_button), "clicked", GTK_SIGNAL_FUNC(synce_ok_button), NULL);
     gtk_signal_connect (GTK_OBJECT(cancel_button), "clicked", GTK_SIGNAL_FUNC(synce_cancel_button), NULL);
-    gtk_box_pack_start(GTK_BOX(button_box), ok_button, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(button_box), cancel_button, FALSE, FALSE, 5);
-    gtk_widget_show_all(button_box);
-    gtk_box_pack_start(GTK_BOX(v_box), button_box, TRUE, TRUE, 0);
-
-    gtk_widget_show(v_box);
-    gtk_container_set_border_width(GTK_CONTAINER(syncewindow), 10);
-    gtk_widget_realize(syncewindow);
-    gtk_widget_show(syncewindow);
+    
+    /*gtk_widget_realize(syncewindow); */
+    gtk_widget_show_all(syncewindow);
   }
 
 exit:
   return syncewindow;
 }
 
-void synce_build_partner_menu()
+void synce_build_partner_menu(GtkWidget *partner_option_menu)
 {
   GtkWidget *partner_item;
 
@@ -239,6 +201,213 @@ void synce_replace_old_partner(GtkButton *button, gpointer user_data)
 
 void synce_create_new_partner(GtkButton *button, gpointer user_data)
 {
+}
+
+gboolean synce_jump_to_page (GnomeDruidPage *druidpage,
+                                 GtkWidget *widget,
+                                 gpointer user_data) {
+    GnomeDruidPage *name_druidpage = (GnomeDruidPage *) user_data;
+    
+    gnome_druid_set_page (GNOME_DRUID(widget), name_druidpage);
+    return TRUE;
+}
+
+static void
+synce_tree_selection_changed (GtkTreeSelection *selection, gpointer user_data) 
+{
+    GtkWidget *druid = (GtkWidget *) user_data;
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    gint number;
+    gchar *author;
+
+    if (gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+        gtk_tree_model_get (model, &iter, 1, &author,0,&number, -1);
+
+        g_print ("You selcted %d: %s\n", number,author);
+        new_partner_index = number;
+        
+/* to be used to set next insensitive until something is 
+ * selected, it doesn't work for some reason */
+#if 0
+        gnome_druid_set_buttons_sensitive
+            (GNOME_DRUID(druid),
+             TRUE,
+             TRUE,
+             TRUE,
+             TRUE);
+#endif 
+        g_free (author);
+    }
+}
+
+void synce_setup_replace_treeview(GtkWidget *replace_treeview, GtkWidget *druid) {
+        
+    GtkListStore *store = gtk_list_store_new (2, G_TYPE_INT, G_TYPE_STRING);
+        GtkTreeIter iter;
+        GtkCellRenderer *renderer;
+        GtkTreeViewColumn *column;
+        GtkTreeSelection *selection;
+
+        
+        gtk_list_store_append (store, &iter);  /* Acquire an iterator */
+
+        gtk_list_store_set (store, &iter,
+                0, 1,
+                1, synce_partner_1.name,
+                -1);
+#if 0 
+        gtk_list_store_set (store, &iter,
+                0, 2,
+                1, synce_partner_2.name,
+                -1);
+#endif
+
+        gtk_tree_view_set_model (GTK_TREE_VIEW(replace_treeview), GTK_TREE_MODEL (store));
+        g_object_unref (G_OBJECT (store));
+        
+        
+        column = gtk_tree_view_column_new ();
+        renderer = gtk_cell_renderer_text_new ();
+        gtk_tree_view_column_pack_start (column, renderer, TRUE);
+        gtk_tree_view_column_set_attributes (column, renderer,
+                             "text", 0, NULL);
+       
+        gtk_tree_view_column_set_visible(GTK_TREE_VIEW_COLUMN(column), false);
+        gtk_tree_view_append_column (GTK_TREE_VIEW(replace_treeview), column);
+        
+        column = gtk_tree_view_column_new ();
+        gtk_tree_view_column_set_title (GTK_TREE_VIEW_COLUMN(column),"Name");
+        renderer = gtk_cell_renderer_text_new ();
+        gtk_tree_view_column_pack_start (column, renderer, TRUE);
+        gtk_tree_view_column_set_attributes (column, renderer,
+                             "text", 1, NULL);
+       
+        gtk_tree_view_append_column (GTK_TREE_VIEW(replace_treeview), column);
+       
+        selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (replace_treeview));
+        gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
+        g_signal_connect (G_OBJECT (selection), "changed",
+                G_CALLBACK (synce_tree_selection_changed), druid);
+        
+        gtk_widget_show (replace_treeview);
+
+}
+
+/* to be used to set next insensitive until something is 
+ * selected, it doesn't work for some reason */
+#if 0
+void  synce_prepare_replace_page (GnomeDruidPage *druidpage,
+        GtkWidget *widget,
+        gpointer user_data) 
+{
+    GtkWidget *replace_treeview = (GtkWidget *) user_data;
+    GtkTreeSelection *selection;
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (replace_treeview));
+    if (!gtk_tree_selection_count_selected_rows(selection)) {
+        printf ("gnome_druid_set_buttons_sensitive stuff\n"); 
+        gnome_druid_set_buttons_sensitive (
+                GNOME_DRUID(widget),
+                TRUE,
+                FALSE,
+                TRUE,
+                TRUE);
+    } else {
+        printf ("Keep all buttons sensitive\n"); 
+
+    }
+
+}
+#endif
+
+void synce_cancel_druid (GnomeDruid *druid,
+        gpointer user_data) {
+    gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(druid)));
+}
+
+void synce_finish_partnership_druid (GnomeDruidPage *druidpage,
+        GtkWidget *widget,
+        gpointer user_data)
+{
+    GtkWidget *new_partner_entry = (GtkWidget *) user_data;
+    const gchar *name;
+    name = gtk_entry_get_text(GTK_ENTRY(new_partner_entry));
+    if (new_partner_index == 0) {
+        /* Error */
+        synce_error_dialog ("You must select a partnership to replace!\nGo back and select one of the existing\npartnerships from the list, or click on\n the Cancel button if you want to keep\nyour current setup.");
+        return;
+    }
+    if (strlen(name) == 0) {
+        /* Error */
+        synce_error_dialog ("The name of the new partnership can't\nbe empty. Please go back and fill in a \nnice little name");
+        return;
+    }
+   
+  /* FIXME: The primary task left is to add the code to create a 
+   * new (or replace an old) partnership. Which one to create or 
+   * is stored in new_parner_index (global). The name is stored 
+   * in name.
+   */
+
+    gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(druidpage)));
+
+}
+
+void synce_new_partner_button(GtkButton *button, gpointer user_data)
+{
+    GladeXML *gladefile = NULL;
+    GtkWidget *newpartnershipwindow;
+    GtkWidget *replace_druidpage;
+    GtkWidget *name_druidpage;
+    GtkWidget *start_druidpage;
+    GtkWidget *finish_druidpage;
+    GtkWidget *replace_treeview;
+    GtkWidget *partnershipdruid;
+    GtkWidget *new_partner_entry;
+    
+        gladefile = glade_xml_new(SYNCE_MULTISYNC_GLADEFILE, "newpartnershipwindow", NULL); 
+
+    newpartnershipwindow = glade_xml_get_widget(gladefile,"newpartnershipwindow");
+    partnershipdruid = glade_xml_get_widget(gladefile,"partnershipdruid");
+    gtk_signal_connect(GTK_OBJECT(partnershipdruid), "cancel", GTK_SIGNAL_FUNC(synce_cancel_druid),NULL);
+    replace_treeview = glade_xml_get_widget(gladefile,"replace_treeview");
+    
+    replace_druidpage = glade_xml_get_widget(gladefile,"replace_druidpage");
+    name_druidpage = glade_xml_get_widget(gladefile,"name_druidpage");
+    start_druidpage = glade_xml_get_widget(gladefile,"start_druidpage");
+    finish_druidpage = glade_xml_get_widget(gladefile,"finish_druidpage");
+    new_partner_entry = glade_xml_get_widget(gladefile,"new_partner_entry");
+
+    gtk_signal_connect(GTK_OBJECT(finish_druidpage), "finish", GTK_SIGNAL_FUNC(synce_finish_partnership_druid), new_partner_entry);
+    
+/* to be used to set next insensitive until something is 
+ * selected, it doesn't work for some reason */
+#if 0
+    gtk_signal_connect(GTK_OBJECT(replace_druidpage), "prepare", GTK_SIGNAL_FUNC(synce_prepare_replace_page), replace_treeview);
+#endif
+
+    if (synce_partner_1.exist && synce_partner_2.exist) {
+        /* Must replace a partner */
+        synce_setup_replace_treeview(replace_treeview, partnershipdruid);
+        
+    } else {
+        gtk_signal_connect(GTK_OBJECT(start_druidpage), "next", GTK_SIGNAL_FUNC(synce_jump_to_page), name_druidpage);
+        gtk_signal_connect(GTK_OBJECT(name_druidpage), "back", GTK_SIGNAL_FUNC(synce_jump_to_page), start_druidpage);
+        if (synce_partner_1.exist) {
+            /* If only partner 1 exists, create new partner 2 */
+            new_partner_index = 2;
+
+        } else {
+            /* If only partner 2 exists, create new partner 1 */
+            new_partner_index = 1;
+
+        }
+    }
+
+    gtk_widget_show_all(newpartnershipwindow);
+
 }
 
 void synce_ok_button(GtkButton *button, gpointer user_data)

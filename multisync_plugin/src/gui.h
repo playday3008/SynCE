@@ -9,11 +9,9 @@ GtkWidget* open_option_window(sync_pair *pair, connection_type type);
 #include <gmodule.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
-#include <gnome.h>
 #include <rapi.h>
 #include <synce_log.h>
 #include "syncengine.h"
-#include "gui.h"
 #include "multisync_plugin.h"
 
 typedef struct _Synce_Partner
@@ -34,6 +32,8 @@ void synce_partner_menu_response_2(GtkMenuItem *menuitem, gpointer data);
 void synce_replace_old_partner(GtkButton *button, gpointer user_data);
 void synce_create_new_partner(GtkButton *button, gpointer user_data);
 
+gboolean synce_jump_to_page (GnomeDruidPage *druidpage, GtkWidget *widget, gpointer user_data);
+void synce_new_partner_button(GtkButton *button, gpointer user_data);
 void synce_ok_button(GtkButton *button, gpointer user_data);
 void synce_cancel_button(GtkButton *button, gpointer user_data);
 void synce_window_closed(void);

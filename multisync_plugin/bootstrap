@@ -37,27 +37,9 @@ for SPEC_IN in "*.spec.in"; do
 done
 
 rm -f config.cache
-
-
-for DIR in /usr/share/aclocal/gnome-macros /usr/share/glade/gnome; do
-	if [ -f $DIR/gnome.m4 ]; then
-		GNOME_MACROS=$DIR
-		break
-	fi
-done
-
-if [ -z "$GNOME_MACROS" ]; then
-	echo "Can't find GNOME m4 macros.
-If you use RedHat Linux, install glade or this package:
-http://psyche.freshrpms.net/rpm.html?id=199"
-	exit 1
-fi
-INCLUDES="$INCLUDES -I $GNOME_MACROS"
-
 if [ -d "m4" ]; then
-	INCLUDES="$INCLUDES -I m4"
+	INCLUDES="-I m4"
 fi
-
 set -x
 aclocal $INCLUDES
 autoheader

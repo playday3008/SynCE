@@ -379,5 +379,5 @@ const char* plugin_info()
 }
 
 int plugin_API_version(void) {
-    return(2);
+    return(3);
 }
