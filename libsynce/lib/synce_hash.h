@@ -5,6 +5,13 @@
 
 #include <stddef.h>           /* For size_t     */
 
+typedef unsigned (*SHashFunc)    (const void* key);
+typedef int      (*SCompareFunc) (const void* a, const void* b);
+
+unsigned s_str_hash(const void *key);
+int s_str_equal(const void* a, const void* b);
+int s_str_equal_no_case(const void* a, const void* b);
+
 /*
 ** A hash table consists of an array of these buckets.  Each bucket
 ** holds a copy of the key, a pointer to the data associated with the
@@ -13,7 +20,7 @@
 */
 
 typedef struct bucket {
-    char *key;
+    void *key;
     void *data;
     struct bucket *next;
 } bucket;
@@ -30,6 +37,8 @@ typedef struct bucket {
 typedef struct SHashTable {
     size_t size;
     bucket **table;
+    SHashFunc hash;
+    SCompareFunc equal;
 } SHashTable;
 
 /*
@@ -37,7 +46,7 @@ typedef struct SHashTable {
 ** the table's size to 0, and the pointer to the table to NULL.
 */
 
-SHashTable *s_hash_table_new(size_t size);
+SHashTable *s_hash_table_new(SHashFunc hash_func, SCompareFunc compare_func, size_t size);
 
 /*
 ** Inserts a pointer to 'data' in the table, with a copy of 'key' as its
@@ -45,14 +54,14 @@ SHashTable *s_hash_table_new(size_t size);
 ** associated data.
 */
 
-void *s_hash_table_insert(struct SHashTable *table, const char *key,void *data);
+void *s_hash_table_insert(struct SHashTable *table, void *key,void *data);
 
 /*
 ** Returns a pointer to the data associated with a key.  If the key has
 ** not been inserted in the table, returns NULL.
 */
 
-void *s_hash_table_lookup(struct SHashTable *table, const char *key);
+void *s_hash_table_lookup(struct SHashTable *table, const void *key);
 
 /*
 ** Deletes an entry from the table.  Returns a pointer to the data that
@@ -60,7 +69,7 @@ void *s_hash_table_lookup(struct SHashTable *table, const char *key);
 ** properly.
 */
 
-void *s_hash_table_remove(struct SHashTable *table, const char *key);
+void *s_hash_table_remove(struct SHashTable *table, const void *key);
 
 /*
 ** Goes through a hash table and calls the function passed to it

@@ -1,4 +1,4 @@
-/* +++Date last modified: 05-Jul-1997 */
+/* $Id$ */
 
 #define _GNU_SOURCE
 #include <string.h>
@@ -24,28 +24,29 @@
 ** can't allocate sufficient memory, signals error by returning NULL.
 */
 
-SHashTable *s_hash_table_new(size_t size)
+SHashTable *s_hash_table_new(SHashFunc hash_func, SCompareFunc compare_func, size_t size)
 {
-	size_t i;
-	bucket **temp;
-	SHashTable *table;
-	
-	table=malloc (sizeof (SHashTable));
-	if (table == NULL) return NULL;
-	
-	table -> size  = size;
-	table -> table = (bucket * *)malloc(sizeof(bucket *) * size);
-	temp = table -> table;
-	
-	if ( temp == NULL )
-	{
-		free (table);
-		return NULL;
-	}
-	
-	for (i=0;i<size;i++)
-		temp[i] = NULL;
-	return table;
+	SHashTable *self = calloc(1, sizeof (SHashTable));
+
+  if (self)
+  {
+    self->size  = size;
+    self->table = (bucket**)calloc(size, sizeof(bucket*));
+
+    if ( self->table == NULL )
+    {
+      free (self);
+      return NULL;
+    }
+
+    assert(hash_func);
+    assert(compare_func);
+
+    self->hash     = hash_func;
+    self->equal  = compare_func;
+  }
+
+	return self;
 }
 
 
@@ -54,10 +55,11 @@ SHashTable *s_hash_table_new(size_t size)
 ** sufficient for most purposes.
 */
 
-static unsigned s_str_hash(const char *string)
+unsigned s_str_hash(const void* key)
 {
       unsigned ret_val = 0;
       int i;
+      const char *string = (const char*)key;
 
       while (*string)
       {
@@ -69,15 +71,25 @@ static unsigned s_str_hash(const char *string)
       return ret_val;
 }
 
+int s_str_equal(const void* a, const void* b)
+{
+  return 0 == strcmp((const char*)a, (const char*)b);
+}
+
+int s_str_equal_no_case(const void* a, const void* b)
+{
+  return 0 == strcasecmp((const char*)a, (const char*)b);
+}
+
 /*
 ** Insert 'key' into hash table.
 ** Returns pointer to old data associated with the key, if any, or
 ** NULL if the key wasn't in the table previously.
 */
 
-void *s_hash_table_insert(SHashTable *table, const char *key, void *data)
+void *s_hash_table_insert(SHashTable *table, void *key, void *data)
 {
-      unsigned val = s_str_hash(key) % table->size;
+      unsigned val = table->hash(key) % table->size;
       bucket *ptr;
 
       /*
@@ -92,7 +104,7 @@ void *s_hash_table_insert(SHashTable *table, const char *key, void *data)
             if (NULL==(table->table)[val])
                   return NULL;
 
-            (table->table)[val] -> key = strdup(key);
+            (table->table)[val] -> key = key;
             (table->table)[val] -> next = NULL;
             (table->table)[val] -> data = data;
             return (table->table)[val] -> data;
@@ -104,7 +116,7 @@ void *s_hash_table_insert(SHashTable *table, const char *key, void *data)
       */
 
       for (ptr = (table->table)[val];NULL != ptr; ptr = ptr -> next)
-            if (0 == strcasecmp(key, ptr->key))
+            if (table->equal(key, ptr->key))
             {
                   void *old_data;
 
@@ -125,7 +137,7 @@ void *s_hash_table_insert(SHashTable *table, const char *key, void *data)
       ptr = (bucket *)malloc(sizeof(bucket));
       if (NULL==ptr)
             return 0;
-      ptr -> key = strdup(key);
+      ptr -> key = key;
       ptr -> data = data;
       ptr -> next = (table->table)[val];
       (table->table)[val] = ptr;
@@ -138,9 +150,9 @@ void *s_hash_table_insert(SHashTable *table, const char *key, void *data)
 ** the key is not in the table.
 */
 
-void *s_hash_table_lookup(SHashTable *table, const char *key)
+void *s_hash_table_lookup(SHashTable *table, const void *key)
 {
-      unsigned val = s_str_hash(key) % table->size;
+      unsigned val = table->hash(key) % table->size;
       bucket *ptr;
 
       if (NULL == (table->table)[val])
@@ -148,7 +160,7 @@ void *s_hash_table_lookup(SHashTable *table, const char *key)
 
       for ( ptr = (table->table)[val];NULL != ptr; ptr = ptr->next )
       {
-            if (0 == strcasecmp(key, ptr -> key ) )
+            if (table->equal(key, ptr -> key ) )
                   return ptr->data;
       }
       return NULL;
@@ -159,9 +171,9 @@ void *s_hash_table_lookup(SHashTable *table, const char *key)
 ** data, or NULL if not present.
 */
 
-void *s_hash_table_remove(SHashTable *table, const char *key)
+void *s_hash_table_remove(SHashTable *table, const void *key)
 {
-      unsigned val = s_str_hash(key) % table->size;
+      unsigned val = table->hash(key) % table->size;
       void *data;
       bucket *ptr, *last = NULL;
 
@@ -186,7 +198,6 @@ void *s_hash_table_remove(SHashTable *table, const char *key)
                   {
                         data = ptr -> data;
                         last -> next = ptr -> next;
-                        free(ptr->key);
                         free(ptr);
                         return data;
                   }
@@ -203,7 +214,6 @@ void *s_hash_table_remove(SHashTable *table, const char *key)
                   {
                         data = ptr->data;
                         (table->table)[val] = ptr->next;
-                        free(ptr->key);
                         free(ptr);
                         return data;
                   }
