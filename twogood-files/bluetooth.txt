@@ -1,0 +1,20 @@
+$Id$ vim: expandtab
+
+(1) Modify /etc/bluetooth/hcid.conf
+
+    Set device class to:
+
+      0x104 - Workstation
+      0x108 - Server
+      0x10c - Laptop
+
+    See http://www.bluetooth.org/assigned-numbers/baseband.htm for more.
+
+(2) Modify bluez-pan-1.1-pre2/dund:
+
+      Patch dun.c
+      Patch sdp.c
+
+(4) Create /etc/ppp/peers/dun
+
+

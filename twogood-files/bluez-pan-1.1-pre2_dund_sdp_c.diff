@@ -1,0 +1,20 @@
+82c82
+< 	apseq  = sdp_list_append(NULL, &proto[1]);
+---
+> 	apseq  = sdp_list_append(apseq, &proto[1]);
+87c87
+< 	sdp_create_uuid16(&dun, LAN_ACCESS_SVCLASS_ID);
+---
+> 	sdp_create_uuid16(&dun, SERIAL_PORT_SVCLASS_ID);
+91c91
+< 	sdp_create_uuid16(&profile[0].uuid, LAN_ACCESS_PROFILE_ID);
+---
+> 	sdp_create_uuid16(&profile[0].uuid, SERIAL_PORT_PROFILE_ID);
+96c96
+< 	sdp_set_info_attr(svcrec, "LAN Access Point", NULL, NULL);
+---
+> 	sdp_set_info_attr(svcrec, "Bluetooth-PDA-Sync", NULL, NULL);
+114c114
+< 	sdp_create_uuid16(&svclass, LAN_ACCESS_SVCLASS_ID);
+---
+> 	sdp_create_uuid16(&svclass, SERIAL_PORT_SVCLASS_ID);
