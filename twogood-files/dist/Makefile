@@ -2,9 +2,11 @@
 
 PWD     ?= $(shell pwd)
 
+REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
+
 TOPDIR   = $(PWD)/../..
 TARBALLS = $(PWD)/tarballs
-APTDIR   = $(PWD)/apt
+APTDIR   = $(PWD)/apt/$(REDHAT_VERSION)
 
 RPMS     = $(APTDIR)/RPMS.synce
 SRPMS    = $(APTDIR)/SRPMS.synce
