@@ -16,7 +16,7 @@
 #include "rapiwrapper.h"
 
 
-static const char* version_string(CEOSVERSIONINFO* version)
+static const char* version_string(synce::CEOSVERSIONINFO* version)
 {
     const char* result = "Unknown";
 
@@ -253,7 +253,7 @@ void ManagerImpl::uninstallSoftware()
 {
     WCHAR* wide_program = NULL;
     WCHAR* wide_parameters = NULL;
-    PROCESS_INFORMATION info = {0, 0, 0, 0 };
+    synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
     
     QListBoxItem *item = softwareList->item(softwareList->currentItem());
 
@@ -337,7 +337,7 @@ void ManagerImpl::fetchSoftwareList()
                                 "Retrieving software-list from the PDA ..."));
         value_name       = synce::wstr_from_ascii("Instl");
         parent_key_name  = synce::wstr_from_ascii("Software\\Apps");
-        result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, 
+        result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, 
                                 &parent_key);
         if (ERROR_SUCCESS == result) {
             for (i = 0; isRunning; i++) {
@@ -347,21 +347,21 @@ void ManagerImpl::fetchSoftwareList()
                 DWORD installed = 0;
                 DWORD value_size = sizeof(installed);
 
-                result = CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, 
+                result = synce::CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, 
                                         NULL, NULL, NULL, NULL);
 
                 if (ERROR_SUCCESS != result) {
                     break;
                 }
 
-                result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, 
+                result = synce::CeRegOpenKeyEx(parent_key, wide_name, 0, 0, 
                                         &program_key);
 
                 if (ERROR_SUCCESS != result) {
                     continue;
                 }
 
-                result = CeRegQueryValueEx(program_key, value_name, NULL, NULL,
+                result = synce::CeRegQueryValueEx(program_key, value_name, NULL, NULL,
                                            (LPBYTE)&installed, &value_size);
 
                 if (ERROR_SUCCESS == result && installed) {
@@ -372,9 +372,9 @@ void ManagerImpl::fetchSoftwareList()
                     synce::wstr_free_string(name);
                 }
 
-                CeRegCloseKey(program_key);
+                synce::CeRegCloseKey(program_key);
             }
-            CeRegCloseKey(parent_key);
+            synce::CeRegCloseKey(parent_key);
         }
         QApplication::postEvent(this, new RakiEvent(RakiEvent::END));
     }

@@ -101,7 +101,7 @@ void RunInstallerThread::work(QThread */*th*/)
 {
     WCHAR* wPath = NULL;
     WCHAR* wPara = NULL;
-    PROCESS_INFORMATION info = {0, 0, 0, 0 };
+    synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
 
     if (Ce::rapiInit()) {
         QString qs = "wceload.exe";

@@ -23,10 +23,10 @@ class WorkerThreadInterface
 
 public:
     struct sysinfo_s {
-        CEOSVERSIONINFO version;
-        SYSTEM_INFO system;
-        STORE_INFORMATION store;
-        SYSTEM_POWER_STATUS_EX power;
+        synce::CEOSVERSIONINFO version;
+        synce::SYSTEM_INFO system;
+        synce::STORE_INFORMATION store;
+        synce::SYSTEM_POWER_STATUS_EX power;
     };
     
     enum threadType {

@@ -15,7 +15,7 @@ public:
     bool ret = false;
 
     if (!initialized) {
-      hr = CeRapiInit();
+      hr = synce::CeRapiInit();
       if (!FAILED(hr)) {
         ret = true;
         initialized = true;
@@ -35,7 +35,7 @@ public:
     if (initialized) {
       used--;
       if (!used) {
-        CeRapiUninit();
+        synce::CeRapiUninit();
         initialized = false;
       }
     }
@@ -54,7 +54,7 @@ public:
     LPVOID lpEnvironment,
     LPWSTR lpCurrentDirectory,
     void* lpStartupInfo,
-    LPPROCESS_INFORMATION lpProcessInformation)
+    synce::LPPROCESS_INFORMATION lpProcessInformation)
   {
     bool ret = false;
 
@@ -68,8 +68,8 @@ public:
                               lpCurrentDirectory,
                               lpStartupInfo,
                               lpProcessInformation)) {
-      CeCloseHandle(lpProcessInformation->hProcess);
-      CeCloseHandle(lpProcessInformation->hThread);
+      synce::CeCloseHandle(lpProcessInformation->hProcess);
+      synce::CeCloseHandle(lpProcessInformation->hThread);
     }
 
     return ret;
@@ -78,11 +78,11 @@ public:
 
   static bool createDirectory(
     LPCWSTR lpPathName,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+    synce::LPSECURITY_ATTRIBUTES lpSecurityAttributes)
   {
     bool ret = false;
 
-    ret = CeCreateDirectory(lpPathName, lpSecurityAttributes);
+    ret = synce::CeCreateDirectory(lpPathName, lpSecurityAttributes);
 
     return ret;
   }
@@ -95,7 +95,7 @@ public:
   {
     bool ret = false;
 
-    ret = CeCopyFile(lpExistingFileName, lpNewFileName, bFailIfExists);
+    ret = synce::CeCopyFile(lpExistingFileName, lpNewFileName, bFailIfExists);
 
     return ret;
   }
@@ -105,14 +105,14 @@ public:
     LPCWSTR lpFileName,
     DWORD dwDesiredAccess,
     DWORD dwShareMode,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    synce::LPSECURITY_ATTRIBUTES lpSecurityAttributes,
     DWORD dwCreationDisposition,
     DWORD dwFlagsAndAttributes,
     HANDLE hTemplateFile)
   {
     HANDLE h;
 
-    h = CeCreateFile(lpFileName,
+    h = synce::CeCreateFile(lpFileName,
                      dwDesiredAccess,
                      dwShareMode,
                      lpSecurityAttributes,
@@ -129,9 +129,9 @@ public:
     LPCVOID lpBuffer,
     DWORD nNumberOfBytesToWrite,
     LPDWORD lpNumberOfBytesWritten,
-    LPOVERLAPPED lpOverlapped)
+    synce::LPOVERLAPPED lpOverlapped)
   {
-    return CeWriteFile(
+    return synce::CeWriteFile(
              hFile,
              lpBuffer,
              nNumberOfBytesToWrite,
@@ -140,7 +140,7 @@ public:
   }
   
   
-  static bool getVersionEx(CEOSVERSIONINFO *version) {
+  static bool getVersionEx(synce::CEOSVERSIONINFO *version) {
     memset(version, 0, sizeof(version));
     version->dwOSVersionInfoSize = sizeof(version);
     
@@ -148,27 +148,27 @@ public:
   }
   
   
-  static void getSystemInfo(SYSTEM_INFO *system) {
+  static void getSystemInfo(synce::SYSTEM_INFO *system) {
     memset(system, 0, sizeof(system));
     CeGetSystemInfo(system);
   }
   
   
-  static bool getSystemPowerStatusEx(SYSTEM_POWER_STATUS_EX *power, bool boolval) {
-    memset(power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
+  static bool getSystemPowerStatusEx(synce::SYSTEM_POWER_STATUS_EX *power, bool boolval) {
+    memset(power, 0, sizeof(synce::SYSTEM_POWER_STATUS_EX));
     return CeGetSystemPowerStatusEx(power, boolval);
   }
   
   
-  static bool getStoreInformation(STORE_INFORMATION *store) {
-    memset(store, 0, sizeof(store));
+  static bool getStoreInformation(synce::STORE_INFORMATION *store) {
+    memset(store, 0, sizeof(synce::STORE_INFORMATION));
     return CeGetStoreInformation(store);
   }
   
   
   static bool closeHandle(HANDLE hObject)
   {
-    return CeCloseHandle(hObject);
+    return synce::CeCloseHandle(hObject);
   }
 
 

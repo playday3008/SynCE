@@ -23,7 +23,7 @@ void RunWindow::executeProgram()
 {
     WCHAR* wide_program = NULL;
     WCHAR* wide_parameters = NULL;
-    PROCESS_INFORMATION info = {0, 0, 0, 0 };
+    synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
 
     KURL url(runUrlRequester->url());
     

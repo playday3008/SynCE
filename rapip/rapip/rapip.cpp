@@ -31,7 +31,7 @@ void kio_rapipProtocol::openConnection()
 
     ceOk = true;
 
-    hr = CeRapiInit();
+    hr = synce::CeRapiInit();
     if (FAILED(hr)) {
         error(KIO::ERR_COULD_NOT_CONNECT, "PDA");
         ceOk = false;
@@ -45,7 +45,7 @@ void kio_rapipProtocol::openConnection()
 void kio_rapipProtocol::closeConnection()
 {
     if (connected)
-        CeRapiUninit();
+        synce::CeRapiUninit();
 }
 
 
@@ -59,7 +59,7 @@ WCHAR* kio_rapipProtocol::adjust_remote_path()
     wide_backslash[1] = '\0';
 
     if (ceOk) {
-        if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path)) {
+        if (!synce::CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path)) {
             ceOk = false;
             returnPath = NULL;
         } else {
@@ -75,10 +75,10 @@ WCHAR* kio_rapipProtocol::adjust_remote_path()
 bool kio_rapipProtocol::list_matching_files(WCHAR *wide_path)
 {
     bool success = false;
-    CE_FIND_DATA *find_data = NULL;
+    synce::CE_FIND_DATA *find_data = NULL;
     DWORD file_count = 0;
     KIO::UDSEntry udsEntry;
-    CE_FIND_DATA *entry = NULL;
+    synce::CE_FIND_DATA *entry = NULL;
     KIO::UDSAtom atom;
     KMimeType::Ptr mt;
     KURL tmpUrl;
@@ -86,7 +86,7 @@ bool kio_rapipProtocol::list_matching_files(WCHAR *wide_path)
 
 
     if (ceOk) {
-        ceOk = CeFindAllFiles(
+        ceOk = synce::CeFindAllFiles(
                    wide_path,
                    (show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
                    FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
@@ -136,7 +136,7 @@ bool kio_rapipProtocol::list_matching_files(WCHAR *wide_path)
             listEntry(udsEntry, true);
             success = true;
         }
-        CeRapiFreeBuffer(find_data);
+        synce::CeRapiFreeBuffer(find_data);
     }
     return success;
 }
@@ -160,11 +160,12 @@ void kio_rapipProtocol::get(const KURL& url)
         mimeType(mt->name());
         fName = QFile::encodeName(url.path());
         if ((wide_filename = synce::wstr_from_ascii(fName))) {
-            remote = CeCreateFile(wide_filename, GENERIC_READ, 0, NULL,
+            remote = synce::CeCreateFile(wide_filename, GENERIC_READ, 0, NULL,
                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
             if (!(INVALID_HANDLE_VALUE == remote)) {
                 do {
-                    if (ceOk = CeReadFile(remote, buffer, ANYFILE_BUFFER_SIZE, &bytes_read, NULL)) {
+                    if (ceOk = synce::CeReadFile(remote, buffer, ANYFILE_BUFFER_SIZE,
+                                                 &bytes_read, NULL)) {
                         if (0 == bytes_read) {
                             break;
                         }
@@ -184,7 +185,7 @@ void kio_rapipProtocol::get(const KURL& url)
                 } else {
                     error(KIO::ERR_COULD_NOT_READ, url.path());
                 }
-                CeCloseHandle(remote);
+                synce::CeCloseHandle(remote);
             } else {
                 error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.path());
             }
@@ -217,9 +218,9 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
                 for (WCHAR* p = wide_filename; *p; p++)
                     if (*p == '/')
                         *p = '\\';
-            if (CeGetFileAttributes(wide_filename) !=  0xFFFFFFFF) {
+            if (synce::CeGetFileAttributes(wide_filename) !=  0xFFFFFFFF) {
                 if (overwrite) {
-                    if (!(ceOk = CeDeleteFile(wide_filename))) {
+                    if (!(ceOk = synce::CeDeleteFile(wide_filename))) {
                         error(KIO::ERR_CANNOT_DELETE, url.path());
                     }
                 } else {
@@ -227,14 +228,14 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
                 }
             }
             if (ceOk) {
-                remote = CeCreateFile(wide_filename, GENERIC_WRITE, 0, NULL,
+                remote = synce::CeCreateFile(wide_filename, GENERIC_WRITE, 0, NULL,
                                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
                 if (!(INVALID_HANDLE_VALUE == remote)) {
                     do {
                         dataReq();
                         result = readData(buffer);
                         if (result > 0) {
-                            ceOk = CeWriteFile(remote, (unsigned char *) buffer.data(), buffer.size(), &bytes_written, NULL);
+                            ceOk = synce::CeWriteFile(remote, (unsigned char *) buffer.data(), buffer.size(), &bytes_written, NULL);
                         }
                     } while (result > 0 && ceOk);
 
@@ -243,7 +244,7 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
                     } else {
                         error(KIO::ERR_COULD_NOT_WRITE, url.path());
                     }
-                    CeCloseHandle(remote);
+                    synce::CeCloseHandle(remote);
                 } else {
                     error(KIO::ERR_CANNOT_OPEN_FOR_WRITING, url.path());
                 }
@@ -320,7 +321,7 @@ void kio_rapipProtocol::mkdir(const KURL& url, int /* permissions */)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
                         *p = '\\';
-            if (CeCreateDirectory(wide_path, NULL)) {
+            if (synce::CeCreateDirectory(wide_path, NULL)) {
                 finished();
             } else {
                 error(KIO::ERR_DIR_ALREADY_EXIST, url.path());
@@ -349,9 +350,9 @@ void kio_rapipProtocol::del(const KURL& url, bool isFile)
                     if (*p == '/')
                         *p = '\\';
             if (isFile) {
-                ceOk = CeDeleteFile(wide_path);
+                ceOk = synce::CeDeleteFile(wide_path);
             } else {
-                ceOk = CeRemoveDirectory(wide_path);
+                ceOk = synce::CeRemoveDirectory(wide_path);
             }
             if(ceOk) {
                 finished();
@@ -386,7 +387,7 @@ void kio_rapipProtocol::stat(const KURL & url)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
                         *p = '\\';
-            if ((attributes = CeGetFileAttributes(wide_path)) !=  0xFFFFFFFF) {
+            if ((attributes = synce::CeGetFileAttributes(wide_path)) !=  0xFFFFFFFF) {
                 atom.m_uds = KIO::UDS_NAME;
                 atom.m_str = url.filename();
                 udsEntry.append(atom);
@@ -452,7 +453,7 @@ void kio_rapipProtocol::mimetype( const KURL& url)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
                         *p = '\\';
-            if ((attributes = CeGetFileAttributes(wide_path)) !=  0xFFFFFFFF) {
+            if ((attributes = synce::CeGetFileAttributes(wide_path)) !=  0xFFFFFFFF) {
                 if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
                     mimeType("inode/directory");
                 } else {
@@ -495,9 +496,9 @@ void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite
                     for (WCHAR* p = dst_path; *p; p++)
                         if (*p == '/')
                             *p = '\\';
-                if (CeGetFileAttributes(dst_path) !=  0xFFFFFFFF) {
+                if (synce::CeGetFileAttributes(dst_path) !=  0xFFFFFFFF) {
                     if (overwrite) {
-                        if (!(ceOk = CeDeleteFile(dst_path))) {
+                        if (!(ceOk = synce::CeDeleteFile(dst_path))) {
                             error(KIO::ERR_CANNOT_DELETE, dst.path());
                         }
                     } else {
@@ -506,8 +507,8 @@ void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite
                     }
                 }
                 if (ceOk) {
-                    if (CeGetFileAttributes(src_path) !=  0xFFFFFFFF) {
-                        if (CeMoveFile(src_path, dst_path)) {
+                    if (synce::CeGetFileAttributes(src_path) !=  0xFFFFFFFF) {
+                        if (synce::CeMoveFile(src_path, dst_path)) {
                             finished();
                         } else {
                             error(KIO::ERR_CANNOT_RENAME, dPath);
@@ -552,9 +553,9 @@ void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissio
                     for (WCHAR* p = dst_path; *p; p++)
                         if (*p == '/')
                             *p = '\\';
-                if (CeGetFileAttributes(dst_path) !=  0xFFFFFFFF) {
+                if (synce::CeGetFileAttributes(dst_path) !=  0xFFFFFFFF) {
                     if (overwrite) {
-                        if (!(ceOk = CeDeleteFile(dst_path))) {
+                        if (!(ceOk = synce::CeDeleteFile(dst_path))) {
                             error(KIO::ERR_CANNOT_DELETE, dst.path());
                         }
                     } else {
@@ -563,8 +564,8 @@ void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissio
                     }
                 }
                 if (ceOk) {
-                    if (CeGetFileAttributes(src_path) !=  0xFFFFFFFF) {
-                        if (CeCopyFile(src_path, dst_path, true)) {
+                    if (synce::CeGetFileAttributes(src_path) !=  0xFFFFFFFF) {
+                        if (synce::CeCopyFile(src_path, dst_path, true)) {
                             finished();
                         } else {
                             error(KIO::ERR_CANNOT_RENAME, dPath);
