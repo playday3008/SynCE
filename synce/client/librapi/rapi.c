@@ -352,7 +352,7 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	pushLong( buffer, size, 0x25 ); 	/* Command */
 	pushLong( buffer, size, hKey ); 	/* hKey */
 
-	pushParameter(size, lpClass, lpcbClass ? *lpcbClass: 0, 0);
+	pushParameter(size, lpClass, lpcbClass ? *lpcbClass * sizeof(WCHAR): 0, 0);
 	pushParameterInt32(size, lpcbClass, 1);
 	pushParameterInt32(size, lpReserved, 0);
 	pushParameterInt32(size, lpcSubKeys, 0);
@@ -424,7 +424,7 @@ STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
 	pushLong( buffer, size, hKey ); 	/* Parameter1 : */
 	pushLong( buffer, size, dwIndex ); 	/* Parameter2 : */
 
-	pushParameter(size, lpszValueName, lpcbValueName ? *lpcbValueName : 0, 0);
+	pushParameter(size, lpszValueName, lpcbValueName ? *lpcbValueName * sizeof(WCHAR): 0, 0);
 	pushParameterInt32(size, lpcbValueName, 1);
 	pushParameterInt32(size, lpReserved, 1);
 	pushParameterInt32(size, lpType, 1);
