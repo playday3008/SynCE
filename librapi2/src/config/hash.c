@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "hash.h"
 
@@ -235,16 +236,18 @@ void hashFreeTable(hash_table *table, void (*func)(void *))
 	
 	unsigned i;
 	bucket *temp;
-	
+	void *data;
+
 	for (i=0;i<table->size; i++)
 	{
 		if ((table->table)[i] != NULL)
 		{
-			for (temp = (table->table)[i];
-					NULL != temp; temp = temp -> next)
+			while (temp = (table->table)[i])
 			{
+				data = hashDel(temp->key, table);
+				assert(data);
 				if (func)
-					func(hashDel(temp->key, table));
+					func(data);
 			}
 		}
 	}
