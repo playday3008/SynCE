@@ -15,7 +15,7 @@ AC_PROG_MAKE_SET
 dnl Check for librapi2
 AM_PATH_LIBRAPI2
 
-PKG_CHECK_MODULES(GNOME2, gtk+-2.0 gdk-2.0 atk libgnomeui-2.0)
+PKG_CHECK_MODULES(GNOME2, gtk+-2.0 gdk-2.0 atk libgnomeui-2.0 libgtop-2.0 libglade-2.0)
 AC_SUBST(GNOME2_CFLAGS)
 AC_SUBST(GNOME2_LIBS)
 
@@ -24,7 +24,11 @@ dnl Checks for header files.
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
-AC_OUTPUT([Makefile
-           src/Makefile
-					 pixmaps/Makefile])
+AC_OUTPUT([
+	Makefile
+	src/Makefile
+	pixmaps/Makefile
+	data/Makefile
+])
+
 
