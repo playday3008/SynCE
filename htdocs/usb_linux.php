@@ -16,6 +16,11 @@ USB Compaq iPAQ / HP Jornada / Casio EM500 Driver</tt></blockquote>
 <p>Pre-compiled Linux kernels usually includes the <tt>ipaq</tt> Linux kernel
 driver that is required to use SynCE with USB.</p>
 
+<p><b>Important</b> Do not use an external USB hub when you are trying to get
+SynCE working for the first time! If you want to use a USB hub later you should
+first read the information regarding the <tt>ipaq</tt> kernel driver and use
+of an <a href="usb_linux_hub.php">external USB hub</a>.</p>
+
 <!--
 <p>Useful reading: How to <a href="usbids.php">find the USB Vendor and Product
 IDs</a> for your PDA.</p>

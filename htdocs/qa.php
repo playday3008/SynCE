@@ -34,7 +34,8 @@ message like this too:</p>
 the tools and dccm as different users. Please make sure that:</p>
 
 <ul>
-<li>you have installed the patch for the <a href="usb_linux.php#werestuffed">"we're stuffed" bug</a></p>
+<li>you are <i>not</i> using an <a href="usb_linux_hub.php">external USB hub</a></li>
+<li>you have installed the patch for the <a href="usb_linux.php#werestuffed">"we're stuffed" bug</a></li>
 <li>you supplied a password to dccm if your device is password-protected</li>
 <li>dccm was started before you ran synce-serial-start</li>
 <li>that the PPP connection is successful (look in your system logs)</li>
@@ -155,23 +156,6 @@ lcp-echo-interval 2</pre></blockquote>
 synce-serial-config.</p>
 
 <p>Thanks to Lamar Owen for the solution to this problem!</p>
-
-<h2>Using a USB hub</h2>
-
-<p><b>Q:</b> I can't use SynCE to connect to my PDA via a USB hub. What can I do
-to make it work?</p>
-
-<p><b>A:</b> You have a couple of options here, but no perfect solution:</p>
-
-<ul>
-
-<li>Fix the USB driver and share your patches with us</li>
-
-<li>Don't use a USB hub</li>
-
-<li>Try the <a href="usb_linux_userspace.php">user-space USB driver</a></li>
-
-</ul>
 
 <h2>Accessing the Internet from the PDA via the PC</h2>
 
