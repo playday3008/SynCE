@@ -296,16 +296,16 @@ bool synce_connect(SynceConnection* connection)/*{{{*/
 		goto exit;
 	}
 
-  if (!synce_create_thread(connection))
-  {
-    synce_error("Failed to create event handling thread");
-		goto exit;
-  }
-
   if (!synce_subscribe(connection))
   {
     synce_error("Failed to subscribe to synchronization events");
     goto exit;
+  }
+
+  if (!synce_create_thread(connection))
+  {
+    synce_error("Failed to create event handling thread");
+		goto exit;
   }
 
   success = true;
