@@ -33,7 +33,7 @@ int main()
 			"dwNumberOfProcessors=%i\n"
 			"dwProcessorType=%i\n"
 			"dwAllocationGranularity=%i\n"
-			"wProcessoOverflow byrLevel=%i\n"
+			"wProcessorLevel=%i\n"
 			"wProcessorRevision=%i\n"
 			"\n",
 			system_info.dwPageSize,
