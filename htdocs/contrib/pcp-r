@@ -1,0 +1,115 @@
+#! /bin/bash
+
+# recursively copy a directory to WinCE PDA
+# Now handles spaces/dash in names, and multiple sources.
+# Henrik Isacsson, <snout@ctrl-c.liu.se>  Apr 2004
+
+if [ "$2" == "" ]; then
+ echo "$0 source [source ..] dest"
+ echo "example: $0 /my/files \":/storage card/\""
+ echo "copies the 'files' directory to /storage card/files"
+ echo "'source' must be a directory! Not a wildcard or similar."
+ echo "'dest' must be a dir with a trailing slash, on the form \":/dir/\"."
+ echo "source _OR_ dest MUST have a colon ':'. NOT both and NOT neither."
+ exit
+fi
+
+# more than one source? handle them one at a time.
+if [ $# -gt 2 ]; then
+   THISPARAM=1
+   LASTPARAM=$#
+   while [ $THISPARAM -lt $LASTPARAM ]; do
+     $0 "${!THISPARAM}" "${!LASTPARAM}"
+     THISPARAM=$((THISPARAM+1))
+   done
+   exit 0
+fi
+
+if [ `echo "$2"|grep -cE "^:"` == 1 ]; then
+
+  # case 1, copy _to_ PDA:  pcp-r "src" ":dest"
+
+  # First, 'cd' to the base of the directory we're about to copy.
+  cd `dirname "$1"`
+
+  SRCDIR="`basename "$1"`"
+  DSTDIR="$2"
+
+  DSTNOCOLON="`echo "$DSTDIR"|sed 's/^://'`"
+
+  # make the directory structure
+  find "$SRCDIR" -type d|grep -vE '^.$'|sed 's/^.\///' | while read i; do
+    pmkdir "${DSTNOCOLON}/${i}"
+  done
+
+  # copy the files
+  find "$SRCDIR" -type f|sed 's/^.\///' | while read i; do
+    echo "writing file: $i"
+    pcp "$i" "${DSTDIR}${i}"
+  done
+
+elif [ `echo "$1"|grep -cE "^:"` == 1 ]; then
+
+  # case 2, copy _from_ PDA:  pcp-r ":src" "dest"
+  # recursive look,cd-or-copy,look.. problem.
+
+  # looks at the $1 path - makes dir and recurses if dir, or copies if file
+  # $1 - source, $2 - destination
+  function copy-item {
+    pls "$1"| while read i; do
+      # new method, as easily breakable but not worse than before.. we now
+      # rely on the filename starting at exactly position 61 in the line pls
+      # returns..
+      i="`echo "$i"|cut -b61-`"
+      if [ `echo "$i"|grep -cE "/$"` = 1 ]; then
+        # directory
+        echo "making dir: $2/$i"
+        mkdir "$i"
+        cd "$i"
+        copy-item "$1/$i" "$2/$i"
+        cd ..
+      else
+        # file
+        if [ `echo "$1"|grep -cE "/$"` = 1 ]; then
+          echo "reading file: [$2]$i"
+          pcp ":$1/$i" "$i"
+        else
+          echo "reading file: $i"
+          pcp ":$1" "$i"
+        fi
+      fi
+    done
+  }
+
+  SRC="`echo "$1"|sed 's/^://'`"
+  SRCLASTPART="`basename "$SRC"`"
+  DSTDIR="$2"
+  # check src: if dir, then make dir and append /.
+  if [ `echo "$SRC"|grep -cE "/$"` = 1 ]; then
+     # ends with slash? dir.
+     FILETYPE=Directory
+  else
+     # if not? We figure it out ourselves.
+     FILETYPE=`pls "$SRC"|cut -f1 -d" "`
+  fi
+    if [ "$FILETYPE" = "Directory" ]; then
+      mkdir "$DSTDIR/$SRCLASTPART"
+      cd "$DSTDIR/$SRCLASTPART"
+      # base cases: copy srcdir to 'this' directory.
+      copy-item "$SRC/" "$SRCLASTPART"
+    elif [ "$FILETYPE" = "Archive" ]; then
+    # if it's a file, just dump it in this directory..
+      copy-item "$SRC" "$SRCLASTPART"
+    else
+      echo "Unknown file type \"$FILETYPE\" returned from pls."
+      exit 1
+    fi
+
+else
+
+  # error case
+  echo "Neither source nor dest begins with ':' - don't know what to do."
+  echo "arguments: source \"$1\", dest \"$2\""
+  exit 1
+
+fi
