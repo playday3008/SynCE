@@ -34,7 +34,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wc
 %setup
 
 %build
-%configure --with-libsynce=%{_tmppath}/synce-libsynce-root%{prefix}
+%configure --with-libsynce=$RPM_BUILD_ROOT%{prefix}
 make
 
 %install
