@@ -58,8 +58,8 @@ help faster when you ask your question!</p>
 
 <li>Output from <tt>cat /proc/bus/usb/devices</tt> for the device</li>
 
-<li>Log extracts from kernel driver. <a href="usb_linux_debug.php">Linux USB
-debugging</a> for instructions.</li>
+<li>Log extracts from kernel driver. See <a href="usb_linux_debug.php">Linux
+USB debugging</a> for instructions.</li>
 
 </ul>
 
