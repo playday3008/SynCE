@@ -505,6 +505,22 @@ LONG CeRegEnumKeyEx(
 #define PROCESSOR_ARCHITECTURE_ALPHA64 7
 #define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
 
+#define AC_LINE_OFFLINE                 0x00
+#define AC_LINE_ONLINE                  0x01
+#define AC_LINE_BACKUP_POWER            0x02
+#define AC_LINE_UNKNOWN                 0xFF
+
+#define BATTERY_FLAG_HIGH               0x01
+#define BATTERY_FLAG_LOW                0x02
+#define BATTERY_FLAG_CRITICAL           0x04
+#define BATTERY_FLAG_CHARGING           0x08
+#define BATTERY_FLAG_NO_BATTERY         0x80
+#define BATTERY_FLAG_UNKNOWN            0xFF
+
+#define BATTERY_PERCENTAGE_UNKNOWN      0xFF
+
+#define BATTERY_LIFE_UNKNOWN        0xFFFFFFFF
+
 #define VER_PLATFORM_WIN32s             0
 #define VER_PLATFORM_WIN32_WINDOWS      1
 #define VER_PLATFORM_WIN32_NT           2
@@ -568,6 +584,23 @@ typedef struct _SYSTEM_INFO {
 
 void CeGetSystemInfo( 
 		LPSYSTEM_INFO lpSystemInfo);
+
+typedef struct _SYSTEM_POWER_STATUS_EX {
+	BYTE ACLineStatus;
+	BYTE BatteryFlag;
+	BYTE BatteryLifePercent;
+	BYTE Reserved1;
+	DWORD BatteryLifeTime;
+	DWORD BatteryFullLifeTime;
+	BYTE Reserved2;
+	BYTE BackupBatteryFlag;
+	BYTE BackupBatteryLifePercent;
+	BYTE Reserved3;
+	DWORD BackupBatteryLifeTime;
+	DWORD BackupBatteryFullLifeTime;
+} SYSTEM_POWER_STATUS_EX, *PSYSTEM_POWER_STATUS_EX, *LPSYSTEM_POWER_STATUS_EX;
+
+BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh);
 
 typedef struct _CEOSVERSIONINFO{ 
 	DWORD dwOSVersionInfoSize; 

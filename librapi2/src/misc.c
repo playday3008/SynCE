@@ -2,7 +2,7 @@
 #include "rapi.h"
 #include "rapi_context.h"
 
-BOOL CeCreateProcess(
+BOOL CeCreateProcess(/*{{{*/
 		LPCWSTR lpApplicationName, 
 		LPCWSTR lpCommandLine, 
 		void* lpProcessAttributes, 
@@ -50,8 +50,7 @@ BOOL CeCreateProcess(
 
 exit:
 	return result;
-}
-
+}/*}}}*/
 
 DWORD CeGetLastError( void )
 {
@@ -59,7 +58,7 @@ DWORD CeGetLastError( void )
 	return context->last_error;
 }
 
-void CeGetSystemInfo( 
+void CeGetSystemInfo( /*{{{*/
 		LPSYSTEM_INFO lpSystemInfo)
 {
 	RapiContext* context = rapi_context_current();
@@ -97,8 +96,33 @@ void CeGetSystemInfo(
 	}
 
 	return;
-}
+}/*}}}*/
 
+BOOL CeGetSystemPowerStatusEx( /*{{{*/
+		PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, 
+		BOOL refresh)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL result = false;
+
+	rapi_context_begin_command(context, 0x41);
+	rapi_buffer_write_optional_out(context->send_buffer, pSystemPowerStatus, sizeof(SYSTEM_POWER_STATUS_EX));
+	rapi_buffer_write_uint32(context->send_buffer, refresh);
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	synce_trace("last_error = %i", context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &result);
+	synce_trace("result = %i", result);
+
+	if ( !rapi_buffer_read_optional(context->recv_buffer, pSystemPowerStatus, sizeof(SYSTEM_POWER_STATUS_EX)) )
+		goto exit;
+
+exit:
+	return result;
+}/*}}}*/
 
 BOOL CeGetVersionEx(/*{{{*/
 		LPCEOSVERSIONINFO lpVersionInformation)
@@ -160,18 +184,30 @@ BOOL CeOidGetInfo(/*{{{*/
 			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				goto fail;
 			synce_trace("size = %i", size);
+
+			/* XXX: not portable to big-endian CPUs! */
+			if ( !rapi_buffer_read_data(context->recv_buffer, 4 + (char*)poidInfo, size) )
+				return false;
 			break;
 
 		case OBJTYPE_DIRECTORY:
 			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				goto fail;
 			synce_trace("size = %i", size);
+
+			/* XXX: not portable to big-endian CPUs! */
+			if ( !rapi_buffer_read_data(context->recv_buffer, 4 + (char*)poidInfo, size) )
+				return false;
 			break;
 
 		case OBJTYPE_DATABASE:
 			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				goto fail;
 			synce_trace("size = %i", size);
+
+			/* XXX: not portable to big-endian CPUs! */
+			if ( !rapi_buffer_read_data(context->recv_buffer, 4 + (char*)poidInfo, size) )
+				return false;
 			break;
 
 		case OBJTYPE_RECORD:
@@ -188,10 +224,6 @@ BOOL CeOidGetInfo(/*{{{*/
 					poidInfo->wObjType, rapi_buffer_get_size(context->recv_buffer));
 			goto fail;
 	}
-
-	/* XXX: not portable to big-endian CPUs! */
-	if ( !rapi_buffer_read_data(context->recv_buffer, 4 + (char*)poidInfo, size) )
-		return false;
 
 	return result;
 
