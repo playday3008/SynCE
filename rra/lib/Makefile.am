@@ -9,12 +9,14 @@ lib_LTLIBRARIES = librra.la
 librra_la_SOURCES = \
 	appointment.c \
 	dbstream.h dbstream.c \
+	common_handlers.h common_handlers.c \
 	contact.c \
 	generator.h generator.c \
 	librra.h   librra.c \
 	parser.h   parser.c \
 	rrac.h     rrac.c \
-	strbuf.h   strbuf.c
+	strbuf.h   strbuf.c \
+	task.c
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
 

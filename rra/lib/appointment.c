@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include "common_handlers.h"
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
@@ -24,7 +25,11 @@ typedef struct _EventGeneratorData
   CEPROPVAL* reminder_enabled;
 } EventGeneratorData;
 
-static bool on_property_busy_status(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+/*
+   Any on_propval_* functions not here are found in common_handlers.c
+*/
+
+static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
   switch (propval->val.iVal)
   {
@@ -51,111 +56,38 @@ static bool on_property_busy_status(Generator* g, CEPROPVAL* propval, void* cook
   return true;
 }/*}}}*/
 
-static bool on_property_duration(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_duration(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
   data->duration = propval;
   return true;
 }
 
-static bool on_property_duration_unit(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_duration_unit(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
   data->duration_unit = propval;
   return true;
 }
 
-static bool on_property_location(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  generator_add_simple_propval(g, "LOCATION", propval);
-  return true;
-}
-
-static bool str_is_print(CEBLOB* blob)
-{
-  unsigned i;
-  
-  for (i = 0; i < blob->dwCount; i++)
-  {
-    switch (blob->lpb[i])
-    {
-      case 0x0a: /* LF */
-      case 0x0d: /* CR */
-        break;
-
-      default:
-        if (!isprint(blob->lpb[i]))
-          return false;
-    }
-  }
-
-  return true;
-}
-
-static bool on_property_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
-{
-  assert(CEVT_BLOB == (propval->propid & 0xffff));
-
-  if (propval->val.blob.dwCount)
-  {
-    if (str_is_print(&propval->val.blob))
-    {
-      char* tmp = strndup((const char*)
-          propval->val.blob.lpb, 
-          propval->val.blob.dwCount);
-      generator_add_simple(g, "DESCRIPTION", tmp);
-      free(tmp);
-    }
-    else
-      synce_warning("Note format not yet supported");
-  }
-  
-  return true;
-}/*}}}*/
-
-static bool on_property_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
   data->reminder_enabled = propval;
   return true;
 }
 
-static bool on_property_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
   data->reminder_minutes = propval;
   return true;
 }
 
-static bool on_property_sensitivity(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
-{
-  switch (propval->val.iVal)
-  {
-    case SENSITIVITY_PUBLIC:
-      generator_add_simple(g, "CLASS", "PUBLIC");
-      break;
-      
-    case SENSITIVITY_PRIVATE:
-      generator_add_simple(g, "CLASS", "PRIVATE");
-      break;
-
-    default:
-      synce_warning("Unknown sensitivity: %04x", propval->val.iVal);
-      break;
-  }
-  return true;
-}/*}}}*/
-
-static bool on_property_start(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
   data->start = propval;
-  return true;
-}
-
-static bool on_property_subject(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  generator_add_simple_propval(g, "SUMMARY", propval);
   return true;
 }
 
@@ -188,16 +120,16 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator)
     goto exit;
 
-  generator_add_property(generator, ID_BUSY_STATUS, on_property_busy_status);
-  generator_add_property(generator, ID_DURATION,    on_property_duration);
-  generator_add_property(generator, ID_DURATION_UNIT, on_property_duration_unit);
-  generator_add_property(generator, ID_LOCATION,    on_property_location);
-  generator_add_property(generator, ID_NOTES,       on_property_notes);
-  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_START, on_property_reminder_minutes);
-  generator_add_property(generator, ID_REMINDER_ENABLED, on_property_reminder_enabled);
-  generator_add_property(generator, ID_SENSITIVITY, on_property_sensitivity);
-  generator_add_property(generator, ID_START,       on_property_start);
-  generator_add_property(generator, ID_SUBJECT,     on_property_subject);
+  generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status);
+  generator_add_property(generator, ID_DURATION,    on_propval_duration);
+  generator_add_property(generator, ID_DURATION_UNIT, on_propval_duration_unit);
+  generator_add_property(generator, ID_LOCATION,    on_propval_location);
+  generator_add_property(generator, ID_NOTES,       on_propval_notes);
+  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_START, on_propval_reminder_minutes);
+  generator_add_property(generator, ID_REMINDER_ENABLED, on_propval_reminder_enabled);
+  generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
+  generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
+  generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -398,44 +330,21 @@ exit:
   return true;
 }/*}}}*/
 
-static bool on_event_class(Parser* p, mdir_line* line, void* cookie)/*{{{*/
-{
-  if (STR_EQUAL(line->values[0], "PUBLIC"))
-    parser_add_int16(p, ID_SENSITIVITY, SENSITIVITY_PUBLIC);
-  else if (
-      STR_EQUAL(line->values[0], "PRIVATE") ||
-      STR_EQUAL(line->values[0], "CONFIDENTIAL"))
-    parser_add_int16(p, ID_SENSITIVITY, SENSITIVITY_PRIVATE);
-  else
-    synce_warning("Unknown value for CLASS: '%s'", line->values[0]);
-  return true;
-}/*}}}*/
-
-static bool on_event_dtend(Parser* p, mdir_line* line, void* cookie)
+static bool on_mdir_line_dtend(Parser* p, mdir_line* line, void* cookie)
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->dtend = line;
   return true;
 }
 
-static bool on_event_dtstart(Parser* p, mdir_line* line, void* cookie)
+static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->dtstart = line;
   return true;
 }
 
-static bool on_event_location(Parser* p, mdir_line* line, void* cookie)
-{
-  return parser_add_string_from_line(p, ID_LOCATION, line);
-}
-
-static bool on_event_summary(Parser* p, mdir_line* line, void* cookie)
-{
-  return parser_add_string_from_line(p, ID_SUBJECT, line);
-}
-
-static bool on_event_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+static bool on_mdir_line_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   if (STR_EQUAL(line->values[0], "OPAQUE"))
     parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_BUSY);
@@ -484,23 +393,25 @@ bool rra_appointment_from_vevent(/*{{{*/
   parser_component_add_parser_component(event, alarm);
 
   parser_component_add_parser_property(event, 
-      parser_property_new("class", on_event_class));
+      parser_property_new("class", on_mdir_line_class));
   parser_component_add_parser_property(event, 
-      parser_property_new("dtEnd", on_event_dtend));
+      parser_property_new("dtEnd", on_mdir_line_dtend));
   parser_component_add_parser_property(event, 
-      parser_property_new("dtStart", on_event_dtstart));
+      parser_property_new("dtStart", on_mdir_line_dtstart));
   parser_component_add_parser_property(event, 
-      parser_property_new("Location", on_event_location));
+      parser_property_new("Location", on_mdir_line_location));
   parser_component_add_parser_property(event, 
-      parser_property_new("Summary", on_event_summary));
+      parser_property_new("Summary", on_mdir_line_summary));
   parser_component_add_parser_property(event, 
-      parser_property_new("Transp", on_event_transp));
+      parser_property_new("Transp", on_mdir_line_transp));
 
   calendar = parser_component_new("vCalendar");
   parser_component_add_parser_component(calendar, event);
 
+  /* allow parsing to start with either vCalendar or vEvent */
   base = parser_component_new(NULL);
   parser_component_add_parser_component(base, calendar);
+  parser_component_add_parser_component(base, event);
 
   parser = parser_new(base, parser_flags, &event_parser_data);
   if (!parser)
@@ -523,7 +434,11 @@ bool rra_appointment_from_vevent(/*{{{*/
 
   if (event_parser_data.dtstart)
   {
-    parser_add_time_from_line(parser, ID_START, event_parser_data.dtstart);
+    if (!parser_add_time_from_line(parser, ID_APPOINTMENT_START, event_parser_data.dtstart))
+    {
+      synce_error("Failed add time from line");
+      goto exit;
+    }
     
     if (event_parser_data.dtend)
     {

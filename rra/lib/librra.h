@@ -168,10 +168,6 @@ bool rra_contact_from_vcard(
 #define RRA_APPOINTMENT_UTF8						0x20
 #define RRA_APPOINTMENT_CHARSET_MASK		0xf0
 
-#define RRA_APPOINTMENT_VERSION_UNKNOWN   0x000
-#define RRA_APPOINTMENT_VERSION_2_0   		0x200
-#define RRA_APPOINTMENT_VERSION_MASK			0xf00
-
 bool rra_appointment_to_vevent(
     uint32_t id,
     const uint8_t* data,
@@ -185,6 +181,16 @@ bool rra_appointment_from_vevent(
     uint8_t** data,
     size_t* data_size,
     uint32_t flags);
+
+#define RRA_TASK_ID_UNKNOWN  0
+
+#define RRA_TASK_NEW     				0x1
+#define RRA_TASK_UPDATE  				0x2
+#define RRA_TASK_COMMAND_MASK		0xf
+
+#define RRA_TASK_ISO8859_1				0x10
+#define RRA_TASK_UTF8						0x20
+#define RRA_TASK_CHARSET_MASK		0xf0
 
 bool rra_task_to_vtodo(
     uint32_t id,
