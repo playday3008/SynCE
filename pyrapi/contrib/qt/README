@@ -1,5 +1,5 @@
 #	Created:	Son Mär 28 16:46:15 CEST 2004	by M. Biermaier	on linuxorange
-#	Version:	Mit Apr 21 19:29:23 CEST 2004	on linuxorange
+#	Version:	Sam Mai  1 16:13:57 CEST 2004	on linuxorange
 #	$Id$
 
 Introduction:
@@ -104,6 +104,14 @@ ToDo:
 22.     COS     CE_DirView: Delay copying "Drag 'n' Drop" to local temporary directory.
 29.     NEW     CE_DirView: Allow multiple selections.
 30.     NEW     CE_DirView: Allow move / copy of folders.
+31.     BUG     CE_DirView: Drag of files to MacOS X doesn't work if filename contains blanks.
+32.     BUG     CE_DirView: When a file dragged to the PDA allready exists, it is duplicated in the view.
+33.     BUG     CE_DirView / Local: Remove possible duplicate items from view in "rename ...".
+34.     BUG     CE_DirView: Zaurus: Sorting of column "LastWriteTime" doesn't work.
+35.     COS     CE_DirView: "Cut" should be inactivated in context-menus, since it isn't implemented.
+36.     COS     CE_DirView: Update "About": (CE_)DirView!
+37.     NEW     CE_DirView / Local: "Show File as Picture": Use "ShowPic.py" optional.
+38.     NEW     CE_DirView / Local: Open file with application XXX.
 
 
 Have fun!
