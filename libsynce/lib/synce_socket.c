@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/poll.h>
+#include <sys/select.h>
 
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
@@ -154,9 +155,25 @@ SynceSocket* synce_socket_accept(SynceSocket* server, struct sockaddr_in* addres
 	socklen_t clilen;
 	int connfd;
 	SynceSocket* client = NULL;
+	fd_set read_set;
 
 	if (!address)
 		address = &cliaddr;
+
+	/* 
+	 * Section 15.6 of Unix Networking Programming by Richard Stevens have some
+	 * things to say about this select/accept combination...
+	 */
+	
+	FD_ZERO(&read_set);
+	FD_SET(server->fd, &read_set);
+
+	if ( select(server->fd + 1, &read_set, NULL, NULL, NULL) < 0 )
+	{
+		if (errno != EINTR)
+			synce_socket_error("select failed, error: %i \"%s\"", errno, strerror(errno));
+		goto exit;
+	}
 	
 	clilen = sizeof(struct sockaddr_in);
 	if ( (connfd = accept(server->fd, (struct sockaddr*)address, &clilen)) < 0 )
