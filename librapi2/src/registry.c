@@ -281,8 +281,10 @@ LONG CeRegEnumKeyEx( /*{{{*/
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpReserved);
 		rapi_buffer_read_optional       (context->recv_buffer, lpClass, lpcbClass ? *lpcbClass * sizeof(WCHAR) : 0);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbClass);
-		rapi_buffer_read_optional_filetime(context->recv_buffer, lpftLastWriteTime);
-	}
+
+    if (lpftLastWriteTime)
+      rapi_buffer_read_optional_filetime(context->recv_buffer, lpftLastWriteTime);
+  }
 
 	return return_value;
 }/*}}}*/
