@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>410</width>
-            <height>324</height>
+            <height>332</height>
         </rect>
     </property>
     <property name="paletteBackgroundColor">
@@ -90,10 +90,16 @@
                                             <property name="name">
                                                 <cstring>textLabel1</cstring>
                                             </property>
+                                            <property name="maximumSize">
+                                                <size>
+                                                    <width>32767</width>
+                                                    <height>45</height>
+                                                </size>
+                                            </property>
                                             <property name="font">
                                                 <font>
                                                     <family>Arial</family>
-                                                    <pointsize>28</pointsize>
+                                                    <pointsize>20</pointsize>
                                                     <bold>1</bold>
                                                 </font>
                                             </property>
