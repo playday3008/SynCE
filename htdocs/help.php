@@ -48,7 +48,7 @@ that might be useful to include when you ask for help:</p>
 <li>Relevant log extracts from kernel driver and pppd</li>
 <li>Your <tt>/etc/ppp/peers/synce-device</tt> file (created by synce-serial-config)</li>
 <li>Kill dccm, and restart it like this: <tt>dccm -f -d 3</tt>. Now connect
-your PDA and provide the output from dccm.</li>
+your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
 </ul></li>
 
