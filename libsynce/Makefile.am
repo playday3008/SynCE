@@ -9,5 +9,5 @@ m4data_DATA = libsynce.m4
 
 EXTRA_DIST = $(m4data_DATA)
 
-SUBDIRS = lib .
+SUBDIRS = lib man .
 

@@ -1,5 +1,6 @@
 /* $Id$ */
 #include "synce_socket.h"
+#include "synce_log.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -14,7 +15,7 @@
 #include "dmalloc.h"
 #endif
 
-#define RAPI_SOCKET_DEBUG 0
+#define RAPI_SOCKET_DEBUG 1
 
 #if RAPI_SOCKET_DEBUG
 #define synce_socket_trace(args...)    synce_trace(args)

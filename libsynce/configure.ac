@@ -69,5 +69,6 @@ AC_CHECK_LIB(nsl,main)
 
 AC_OUTPUT([Makefile
            lib/Makefile
-					 lib/config/Makefile])
+					 lib/config/Makefile
+					 man/Makefile])
 

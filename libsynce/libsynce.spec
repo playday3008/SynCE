@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-libsynce
-%define ver      0.1
+%define ver      0.2
 %define rel      1
 
 Summary: SynCE: Basic library used by applications in the SynCE project.
@@ -39,10 +39,12 @@ make
 %makeinstall
 
 %files
+%doc README LICENSE
 %{prefix}/include/synce.h
 %{prefix}/include/synce_log.h
 %{prefix}/include/synce_socket.h
 %{prefix}/include/synce_types.h
 %{prefix}/lib/libsynce.*
 %{prefix}/share/aclocal/libsynce.m4
+%{_mandir}/man1/synce.*
 
