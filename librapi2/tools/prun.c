@@ -87,9 +87,9 @@ int main(int argc, char** argv)
 	}
 
 	convert_to_backward_slashes(program);
-	wide_program = wstr_from_ascii(program);
+	wide_program = wstr_from_current(program);
 	if (parameters)
-		wide_parameters = wstr_from_ascii(parameters);
+		wide_parameters = wstr_from_current(parameters);
 
 	memset(&info, 0, sizeof(info));
 	

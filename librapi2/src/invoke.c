@@ -146,8 +146,8 @@ HRESULT CeRapiInvokeA( /*{{{*/
 		DWORD dwReserved)
 {
 	HRESULT hr;
-	WCHAR* wide_dll_path       = wstr_from_ascii(pDllPath);
-	WCHAR* wide_function_name  = wstr_from_ascii(pFunctionName);
+	WCHAR* wide_dll_path       = wstr_from_current(pDllPath);
+	WCHAR* wide_function_name  = wstr_from_current(pFunctionName);
 
 	hr = CeRapiInvoke( wide_dll_path, wide_function_name, cbInput, pInput,
 			pcbOutput, ppOutput, ppIRAPIStream, dwReserved);

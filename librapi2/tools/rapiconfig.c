@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     bytes_left -= bytes_read;
   }
 
-  config = wstr_from_ascii(buffer);
+  config = wstr_from_current(buffer);
   if (!config)
   {
     fprintf(stderr, "%s: Failed to convert file contents to UNICODE\n",
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
   if (SUCCEEDED(hr))
   {
     result = 0;
-    buffer = wstr_to_ascii(reply);
+    buffer = wstr_to_current(reply);
     printf("%s", buffer);
     CeRapiFreeBuffer(buffer);
     buffer = NULL;

@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 				printf("File object:\n"
 						   "============\n");
 				{
-					char *name = wstr_to_ascii(info.u.infFile.szFileName);
+					char *name = wstr_to_current(info.u.infFile.szFileName);
 					printf("Attributes:  %08x\n"
 							   "Name:        \"%s\"\n"
 								 , 
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 				printf("Directory object:\n"
 						   "=================\n");
 				{
-					char *name = wstr_to_ascii(info.u.infDirectory.szDirName);
+					char *name = wstr_to_current(info.u.infDirectory.szDirName);
 					printf("Attributes:  %08x\n"
 							   "Parent OID:  %08x\n"
 							   "Name:        \"%s\"\n"
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 						"Database:\n"
 						"=========\n");
 				{
-					char *name = wstr_to_ascii(info.u.infDatabase.szDbaseName);
+					char *name = wstr_to_current(info.u.infDatabase.szDbaseName);
 					printf(
 							"Flags: %08x\n"
 							"Name: \"%s\"\n"

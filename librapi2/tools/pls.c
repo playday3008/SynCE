@@ -77,7 +77,7 @@ static void print_attribute(CE_FIND_DATA* entry, DWORD attribute, int c)
 static bool print_entry(CE_FIND_DATA* entry)
 {
 	time_t seconds;
-	char time_string[30] = {0};
+	char time_string[50] = {0};
 	struct tm* time_struct = NULL;
 	char* filename = NULL;
 	
@@ -145,22 +145,21 @@ static bool print_entry(CE_FIND_DATA* entry)
 	 * OID
 	 */
 
-	printf("%08x", entry->dwOID);
+//	printf("%08x", entry->dwOID);
 	
-	printf("  ");
+//	printf("  ");
 
 	/*
 	 * Filename
 	 */
 
-	filename = wstr_to_ascii(entry->cFileName);
-	printf("%s", filename);
+	filename = wstr_to_current(entry->cFileName);
+        printf(filename);
 	wstr_free_string(filename);
 	if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		printf("/");
 
 	printf("\n");
-
 	return true;
 }
 
@@ -213,7 +212,7 @@ bool list_directory(WCHAR* directory)
 	synce_trace_wstr(directory);
 	wstrcpy(path, directory);
 	synce_trace_wstr(path);
-	wstr_append(path, (tmp = wstr_from_ascii(wildcards)), sizeof(path));
+	wstr_append(path, (tmp = wstr_from_current(wildcards)), sizeof(path));
   wstr_free_string(tmp);
 	return list_matching_files(path);
 }
@@ -251,7 +250,7 @@ int main(int argc, char** argv)
 		/* This is a directory, append "*" to show its contents */
 		char new_path[MAX_PATH];
 		snprintf(new_path, sizeof(new_path), "%s*", path);
-		wide_path = wstr_from_ascii(new_path);
+		wide_path = wstr_from_current(new_path);
 
 		if (!list_matching_files(wide_path))
 			goto exit;
@@ -259,7 +258,7 @@ int main(int argc, char** argv)
 	else
 	{
 
-		wide_path = wstr_from_ascii(path);
+		wide_path = wstr_from_current(path);
 		wide_path = adjust_remote_path(wide_path, true);
 
 		if (!list_matching_files(wide_path))

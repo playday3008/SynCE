@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 	
   
   /* Path on SmartPhone 2002 */
-  parent_key_name = wstr_from_ascii("Security\\AppInstall");
+  parent_key_name = wstr_from_current("Security\\AppInstall");
 
 	result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
   
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     wstr_free_string(parent_key_name);
 
     /* Path on Pocket PC 2002 */
-    parent_key_name = wstr_from_ascii("Software\\Apps");
+    parent_key_name = wstr_from_current("Software\\Apps");
 
     result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
 
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     }
   }
   
-  value_name = wstr_from_ascii("Instl");
+  value_name = wstr_from_current("Instl");
 	
 	for (i = 0; ; i++)
 	{
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 
     if (smartphone)
     {
-      char* name = wstr_to_ascii(wide_name);
+      char* name = wstr_to_current(wide_name);
       puts(name);
       wstr_free_string(name);
     }
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
 
       if (ERROR_SUCCESS == result && installed)
       {
-        char* name = wstr_to_ascii(wide_name);
+        char* name = wstr_to_current(wide_name);
         puts(name);
         wstr_free_string(name);
       }

@@ -221,7 +221,7 @@ int main(int argc, char** argv)
 
 			dest = calloc(1, 1 + wstr_strlen(mydocuments) + 1 + strlen(p) + 1);
 			
-			mydocuments_ascii = wstr_to_ascii(mydocuments);
+			mydocuments_ascii = wstr_to_current(mydocuments);
 			
 			strcat(dest, ":");
 			strcat(dest, mydocuments_ascii);

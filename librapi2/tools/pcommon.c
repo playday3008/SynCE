@@ -113,7 +113,7 @@ static bool anyfile_local_write(AnyFile* file, unsigned char* buffer, size_t byt
  */
 static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 {
-	WCHAR* wide_filename = wstr_from_ascii(filename);
+	WCHAR* wide_filename = wstr_from_current(filename);
 	AnyFile* file = (AnyFile*)calloc(1, sizeof(AnyFile));
 
 	switch (access)

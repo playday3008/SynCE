@@ -221,7 +221,7 @@ int main(int argc, char** argv)
 
   if (CeGetVersionEx(&version))
   {
-    char *details = wstr_to_ascii(version.szCSDVersion);
+    char *details = wstr_to_current(version.szCSDVersion);
     char *platform = NULL;
 
     if (VER_PLATFORM_WIN32_CE == version.dwPlatformId)

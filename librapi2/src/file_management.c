@@ -318,8 +318,8 @@ BOOL CeCopyFileA(
 	LPWSTR lpExistingFileNameW = NULL;
 	LPWSTR lpNewFileNameW = NULL;
 
-	lpExistingFileNameW = wstr_from_ascii(lpExistingFileName);
-	lpNewFileNameW      = wstr_from_ascii(lpNewFileName);
+	lpExistingFileNameW = wstr_from_current(lpExistingFileName);
+	lpNewFileNameW      = wstr_from_current(lpNewFileName);
 
 	if (lpExistingFileName && !lpExistingFileNameW)
 		goto fail;

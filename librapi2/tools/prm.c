@@ -83,9 +83,9 @@ int main(int argc, char** argv)
 	convert_to_backward_slashes(path);
   
   if (':' == path[0])
-	  wide_path = wstr_from_ascii(path + 1);
+	  wide_path = wstr_from_current(path + 1);
   else
-	  wide_path = wstr_from_ascii(path);
+	  wide_path = wstr_from_current(path);
   
 	wide_path = adjust_remote_path(wide_path, true);
 

@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     goto exit;
   }
 
-  value_name_wide = wstr_from_ascii(value_name);
+  value_name_wide = wstr_from_current(value_name);
 
   error = CeRegQueryValueEx(key, value_name_wide, NULL, NULL, NULL, &value_size);
   if (ERROR_SUCCESS != error)
