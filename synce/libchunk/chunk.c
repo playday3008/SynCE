@@ -51,7 +51,7 @@ void _DBG_printbuf( rapibuffer * buf )
 
         buflen += 4;
 
-	printf( "Buflen = %04ld  ", buflen );
+	DBG_printf( "Buflen = %04ld  ", buflen );
 	size = buflen / 16;
 	rem = buflen % 16;
         bufchar = (unsigned char *) buf;
@@ -60,48 +60,48 @@ void _DBG_printbuf( rapibuffer * buf )
 	{
 		for ( i = 0; i < 16; i++ )
 		{
-			printf( "%02X ", bufchar[ k * 16 + i ] );
+			DBG_printf( "%02X ", bufchar[ k * 16 + i ] );
 			if ( i == 7 )
 			{
-				printf( " " );
+				DBG_printf( " " );
 			}
 		}
-		printf( "  " );
+		DBG_printf( "  " );
 		for ( i = 0; i < 16; i++ )
 		{
-			printf( "%c", isprint( bufchar[ k * 16 + i ] ) ? bufchar[ k * 16 + i ] : '.' );
+			DBG_printf( "%c", isprint( bufchar[ k * 16 + i ] ) ? bufchar[ k * 16 + i ] : '.' );
 			if ( i == 7 )
 			{
-				printf( " " );
+				DBG_printf( " " );
 			}
 		}
-		printf( "\n                " );
+		DBG_printf( "\n               " );
 	}
 	if ( rem > 0 )
 	{
 		for ( i = 0; i < rem; i++ )
 		{
-			printf( "%02X ", bufchar[ k * 16 + i ] );
+			DBG_printf( "%02X ", bufchar[ k * 16 + i ] );
 			if ( i == 7 )
 			{
-				printf( " " );
+				DBG_printf( " " );
 			}
 		}
 		for ( i = rem; i < 16; i++ )
 		{
-			printf( "   " );
+			DBG_printf( "   " );
 		}
-		printf( "  " );
+		DBG_printf( "  " );
 		for ( i = 0; i < rem; i++ )
 		{
-			printf( "%c", isprint( bufchar[ k * 16 + i ] ) ? bufchar[ k * 16 + i ] : '.' );
+			DBG_printf( "%c", isprint( bufchar[ k * 16 + i ] ) ? bufchar[ k * 16 + i ] : '.' );
 			if ( i == 7 )
 			{
-				printf( " " );
+				DBG_printf( " " );
 			}
 		}
 	}
-	printf( "\n" );
+	DBG_printf( "\n" );
 }
 
 void _DBG_printf( const char * str, ... )
@@ -241,7 +241,9 @@ void flushbuffer( int sock )
 		if ( result )
 		{
 			result = read( sock, &szbuf, 4 );
+#ifdef DEBUG
 			if(result>0) DBG_printf("!!! flushbuffer: %d !!!\n",result);
+#endif
 		}
 	}
 	while ( result );
@@ -319,7 +321,7 @@ size_t getbufferchunk( int sock, long *counter, void * buffer, long nbbytes )
                                         {
 					        ( *counter ) -= result;
                                         }
-					buffer += result;
+					buffer = (void *) ( (char *) buffer + result );
 				}
 			}
 			else
@@ -390,7 +392,7 @@ long pushString( rapibuffer * destbuf, long destbuflen, LPCWSTR string )
 {
 	long buflen;
 	char * param;
-	int i;
+	unsigned int i;
 	size_t stlen;
         unsigned char * destbufchar;
 
