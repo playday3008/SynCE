@@ -152,6 +152,7 @@ local_p local_connect_socket(const char *path)
 
 	if ((local->fd = socket(PF_LOCAL, SOCK_STREAM, 0)) < 0) {
 		local_close_socket(local);
+        free(local);
 		return NULL;
 	}
 
@@ -162,10 +163,12 @@ local_p local_connect_socket(const char *path)
 			+ strlen(local->raddr.sun_path) + 1);
 
 	if (connect(local->fd, (struct sockaddr *) &local->raddr, sizeof(local->raddr)) < 0) {
+        free(local);
 		return NULL;
 	}
 
 	if (getsockname(local->fd, (struct sockaddr *) &local->laddr, &len) < 0) {
+        free(local);
 		return NULL;
 	}
 
