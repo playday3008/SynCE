@@ -12,15 +12,59 @@ href="multisync.php">Using MultiSync</a> page.</p>
 <p>For issues regarding Mac OS X, please visit the <a
 href="macosx.php">Mac OS X hints</a> page.</p>
 
+<h2>Connect script failed</h2>
+
+<p><b>Q:</b> I setup everything and connected my PDA but when I run
+<tt>synce-serial-start</tt> I get messages similar to this in my system
+log:</p>
+
+<pre>pppd[6083]: pppd 2.4.1 started by root, uid 0
+pppd[6083]: Terminating on signal 15.
+pppd[6083]: Connect script failed
+pppd[6083]: Exit.</pre>
+
+<p><b>A:</b> This is a strange problem that has been occuring lately.
+Unfortunately it has not been resolved yet. Any information relating to this
+problem that may be helpful would be most welcome!</p>
+
+<p>You can try things like these and see if anything helps:</p>
+
+<ul>
+
+<li class=SPACED><p>Try this procedure:</p> 
+
+  <ol><li><p>Replace synce-serial/src/synce-serial-chat.c with this file:</p>
+
+  <p>http://synce.sourceforge.net/tmp/synce-serial-chat.c</p></li>
+
+  <li>Compile and install synce-serial</li>
+
+  <li>Try to connect</li>
+
+  <li>Check /var/log/messages for messages from synce-serial-chat</li>
+  
+  </ol></li>
+
+<li class=SPACED>Remove hotplug script for SynCE</li>
+  
+<li class=SPACED>Make a soft reset of your PDA</li>
+<li class=SPACED>Disconnect other USB devices</li>
+<li class=SPACED>Reboot your PC</li>
+<li class=SPACED>Try your device with Microsoft ActiveSync</li>
+
+</ul>
+
+
 <h2>Unable to initialize RAPI</h2>
 
-<p><b>Q:</b> I setup everything and connected my device but when I try the <a
+<p><b>Q:</b> I setup everything and connected my PDA but when I try the <a
 href="tools.php">tools</a> I get a message similar to this:</p>
 
 <pre>ReadConfigFile: stat: No such file or directory
 pstatus: Unable to initialize RAPI: Failure</pre>
 
-<p><b>A:</b> This means that the PDA has not connected to dccm or that you run the tools or dccm as different users. Please make sure that:</p>
+<p><b>A:</b> This means that the PDA has not connected to dccm or that you run
+the tools or dccm as different users. Please make sure that:</p>
 
 <ul>
 <li>dccm is running</li>
