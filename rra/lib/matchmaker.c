@@ -1,5 +1,6 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
+#define _SVID_SOURCE 1
 #include "matchmaker.h"
 #include "rapi.h"
 #include <synce_log.h>
