@@ -17,8 +17,8 @@ Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 Requires:      multisync    >= 0.72
-Requires:      synce        >= 0.7
-BuildRequires: synce-devel  >= 0.7
+Requires:      synce        >= 0.8
+BuildRequires: synce-devel  >= 0.8
 
 %description
 multisync_plugin is part of the SynCE project
