@@ -150,7 +150,7 @@ bool generator_run(Generator* self)
     }
     else
     {
-      synce_trace("Unhandled property id: %04x", id);
+      /*synce_trace("Unhandled property id: %04x", id);*/
     }
   }
 
