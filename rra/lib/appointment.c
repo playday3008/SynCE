@@ -264,13 +264,26 @@ bool rra_appointment_to_vevent(/*{{{*/
 
     generator_add_simple(generator, "BEGIN", "VALARM");
 
-    /* XXX. what if minutes > 59 */
+    /* XXX: maybe this should correspond to ID_REMINDER_OPTIONS? */
+    generator_add_simple(generator, "ACTION", "DISPLAY");
+
+    /* XXX: what if minutes > 59 */
     snprintf(buffer, sizeof(buffer), "-PT%liM", 
         event_generator_data.reminder_minutes->val.lVal);
 
-    /* XXX: missing RELATED=START */
-    generator_add_with_type(generator, "TRIGGER", "DURATION", buffer);
+    generator_begin_line         (generator, "TRIGGER");
+    
+    generator_begin_parameter    (generator, "VALUE");
+    generator_add_parameter_value(generator, "DURATION");
+    generator_end_parameter      (generator);
+    
+    generator_begin_parameter    (generator, "RELATED");
+    generator_add_parameter_value(generator, "START");
+    generator_end_parameter      (generator);
 
+    generator_add_value          (generator, buffer);
+    generator_end_line           (generator);
+    
     generator_add_simple(generator, "END", "VALARM");
   }
 
@@ -345,6 +358,10 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
   if (parser_duration_to_seconds(line->values[0], &duration) && duration <= 0)
   {
+    /* XXX: use ACTION for this instead of defaults? */
+    parser_add_int32(p, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
+
+    /* set alarm */
     parser_add_int32(p, ID_REMINDER_MINUTES_BEFORE_START, -duration / 60);
     parser_add_int16(p, ID_REMINDER_ENABLED, 1);
     event_parser_data->have_alarm = true;

@@ -43,7 +43,14 @@
 #define ID_REMINDER_MINUTES_BEFORE_START  0x4501
 #define ID_REMINDER_ENABLED               0x4503
 #define ID_REMINDER_SOUND_FILE            0x4509
-#define ID_UNKNOWN_450A                   0x450a
+#define ID_REMINDER_OPTIONS               0x450a
+
+#define REMINDER_LED 1
+#define REMINDER_VIBRATE 2
+#define REMINDER_DIALOG 4
+#define REMINDER_SOUND 8
+#define REMINDER_REPEAT 16
+
 
 #define ID_UNKNOWN_FFFD  0xfffd
 #define ID_UNKNOWN_FFFE  0xfffe

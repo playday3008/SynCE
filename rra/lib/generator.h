@@ -11,6 +11,12 @@
 typedef struct _GeneratorProperty GeneratorProperty;
 typedef struct _Generator Generator;
 
+typedef struct _GeneratorParam
+{
+  char* name;
+  char** values;
+} GeneratorParam;
+
 struct _CEPROPVAL;
 typedef bool (*GeneratorPropertyFunc)(Generator* g, struct _CEPROPVAL* property, void* cookie);
 
@@ -27,6 +33,14 @@ bool generator_add_simple(Generator* self, const char* name, const char* value);
 bool generator_add_with_type(Generator* self, const char* name, const char* type, const char* value);
 
 bool generator_add_simple_propval(Generator* self, const char* name, struct _CEPROPVAL* propval);
+
+/* for multi-parameter or multi-value lines */
+bool generator_begin_line(Generator* self, const char* name);
+bool generator_begin_parameter(Generator* self, const char* name);
+bool generator_add_parameter_value(Generator* self, const char* value);
+bool generator_end_parameter(Generator* self);
+bool generator_add_value(Generator* self, const char* value);
+bool generator_end_line(Generator* self);
 
 #endif
 
