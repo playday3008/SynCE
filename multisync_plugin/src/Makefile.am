@@ -6,7 +6,7 @@ libdir=$(prefix)/lib/multisync
 
 lib_LTLIBRARIES = libsynce_plugin.la
 
-libsynce_plugin_la_SOURCES = multisync_plugin.c
+libsynce_plugin_la_SOURCES = multisync_plugin.c get_changes.c
 
 libsynce_plugin_la_LIBADD = $(GNOME_LIBDIR) $(GNOMEUI_LIBS)
 

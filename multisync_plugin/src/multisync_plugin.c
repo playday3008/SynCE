@@ -1,21 +1,36 @@
 /* $Id$ */
-#include <syncengine.h>
 #include <rapi.h>
 #include <synce_log.h>
 #include <librra.h>
 #include <string.h>
+#include "multisync_plugin.h"
 
-typedef struct 
+uint32_t synce_object_type_to_id(sync_object_type object_type)/*{{{*/
 {
-	client_connection  client;
-	sync_pair*         handle;
-	connection_type 	 type;
-} SynceConnection;
+	uint32_t type_id = 0;
+	
+	switch (object_type)
+	{
+		case SYNC_OBJECT_TYPE_CALENDAR:  
+			type_id = RRA_OBJECT_TYPE_APPOINTMENT; 
+			break;
+		case SYNC_OBJECT_TYPE_PHONEBOOK: 
+			type_id = RRA_OBJECT_TYPE_CONTACT; 
+			break;
+		case SYNC_OBJECT_TYPE_TODO: 		 
+			type_id = RRA_OBJECT_TYPE_TASK; 
+			break;
+		default:
+			break;
+	}
+
+	return type_id;
+}/*}}}*/
 
 /**
  * Create connection object
  */
-SynceConnection* sync_connect(sync_pair* handle, connection_type type) 
+SynceConnection* sync_connect(sync_pair* handle, connection_type type) /*{{{*/
 {
 	SynceConnection* sc = g_new0(SynceConnection, 1);
 
@@ -26,104 +41,7 @@ SynceConnection* sync_connect(sync_pair* handle, connection_type type)
 
 	sync_set_requestdone(sc->handle);
 	return sc;
-}
-
-/**
- * Get changed phonebook entries (contacts)
- */
-static GList* get_phonebook_changes(
-		SynceConnection* sc, 
-		GList* changes,
-		bool everything)
-{
-	bool success = false;
-	int id;
-	
-	/* RAPI data */
-	HRESULT hr;
-	
-	/* RRA data */
-	RRA* rra                   = NULL;
-	ObjectIdArray* object_ids  = NULL;
-	uint32_t type_id           = 0x2712;
-	uint8_t* data              = NULL;
-	size_t data_size           = 0;
-	char* vcard                = NULL;
-
-
-	synce_trace("here");
-	
-	hr = CeRapiInit();
-	if (FAILED(hr))
-	{
-		synce_error("Failed to initialize RAPI");
-		goto exit;
-	}
-
-	rra = rra_new();
-
-	if (!rra_connect(rra))
-	{
-		synce_error("Connection failed");
-		goto exit;
-	}
-	
-	if (!rra_get_object_ids(rra, 0x2712, &object_ids))
-	{
-		synce_error("Failed to get object ids");
-		goto exit;
-	}
-
-	/* Select start ID */
-	if (everything)
-		id = 0;
-	else
-		id = object_ids->unchanged;
-
-	for (; id < (object_ids->unchanged + object_ids->changed); id++)
-	{
-		changed_object* change = NULL;
-	
-		synce_trace("id %08x", object_ids->ids[id]);
-		
-		if (!rra_object_get(rra, type_id, object_ids->ids[id], &data, &data_size))
-		{
-			synce_error("Failed to get object");
-			goto exit;
-		}
-
-		if (!rra_contact_to_vcard(
-					object_ids->ids[id++],
-					data,
-					data_size,
-					RRA_CONTACT_VCARD_3_0,
-					&vcard))
-		{
-			fprintf(stderr, "Failed to create vCard\n");
-			goto exit;
-		}
-
-		change = g_new0(changed_object, 1);
-
-		change->comp        = g_strdup(vcard);
-		change->uid         = g_strdup_printf("%08x", object_ids->ids[id]);
-		change->change_type = SYNC_OBJ_MODIFIED;
-		change->object_type = SYNC_OBJECT_TYPE_PHONEBOOK;
-
-		changes = g_list_append(changes, change);
-	
-		free(data);
-		free(vcard);
-	}
-
-	success = true;
-
-exit:
-	rra_free(rra);
-	CeRapiUninit();
-
-	return changes;
-}
+}/*}}}*/
 
 typedef struct
 {
@@ -131,46 +49,35 @@ typedef struct
 	int newdbs;
 } GetChangesParameters;
 
-static gboolean get_changes_real(GetChangesParameters* p)
+static gboolean get_changes_proxy(GetChangesParameters* p)
 {
-	change_info* result = g_new0(change_info, 1);
-	
-	synce_trace("here");
-
-	result->newdbs = p->newdbs;
-
-	result->changes = get_phonebook_changes(
-			p->sc, 
-			result->changes, 
-			p->newdbs & SYNC_OBJECT_TYPE_PHONEBOOK);
-
-	sync_set_requestdata(result, p->sc->handle);
-
+	synce_get_changes(p->sc, p->newdbs);
 	return FALSE;
 }
 
 /**
  * Retrieve list of changes
  */
-void get_changes(SynceConnection* sc, int newdbs)
+void get_changes(SynceConnection* sc, int newdbs)/*{{{*/
 {
 	GetChangesParameters* p = g_new0(GetChangesParameters, 1);
+
+	synce_trace("here");
+
 	p->sc     = sc;
 	p->newdbs = newdbs;
 	
-	synce_trace("here");
-
-	g_idle_add((GSourceFunc)get_changes_real, p);
-}
+	g_idle_add((GSourceFunc)get_changes_proxy, p);
+}/*}}}*/
 
 /**
  * Modify object
  */
-void syncobj_modify(
+void syncobj_modify(/*{{{*/
 		SynceConnection* sc,
 		const char* object,
 		const char* uid,
-		sync_object_type type,
+		sync_object_type object_type,
 		char* result_uid,
 		int* result_uid_length)
 {
@@ -183,12 +90,19 @@ void syncobj_modify(
 	RRA* rra                   = NULL;
 	uint32_t object_id         = 0;
 	uint32_t new_object_id     = 0;
-	uint32_t type_id           = 0x2712;
+	uint32_t type_id           = 0;
 	uint8_t* data              = NULL;
 	size_t data_size           = 0;
 
-	synce_trace("uid='%s', type=%i", uid, type);
+	synce_trace("uid='%s', type=%i", uid, object_type);
 
+	type_id = synce_object_type_to_id(object_type);
+	if (!type_id)
+	{
+			synce_error("Unknown object type");
+			goto exit;
+	}
+	
 	if (uid)
 		object_id = strtol(uid, NULL, 16);
 	else
@@ -209,15 +123,24 @@ void syncobj_modify(
 		goto exit;
 	}
 
-	if (!rra_contact_from_vcard(
-			uid ? RRA_CONTACT_UPDATE : RRA_CONTACT_NEW,
-			object,
-			NULL,
-			&data,
-			&data_size))
+	switch (object_type)
 	{
-		synce_error("Failed to create data");
-		goto exit;
+		case SYNC_OBJECT_TYPE_PHONEBOOK: 
+			if (!rra_contact_from_vcard(
+						uid ? RRA_CONTACT_UPDATE : RRA_CONTACT_NEW,
+						object,
+						NULL,
+						&data,
+						&data_size))
+			{
+				synce_error("Failed to create data");
+				goto exit;
+			}
+			break;
+
+		default:
+			synce_error("Unknown object type");
+			goto exit;
 	}
 
 	if (!data_size)
@@ -254,22 +177,80 @@ exit:
 	if (data)
 		free(data);
 
-	sync_set_requestfailed(sc->handle);
-}
+	if (success)
+		sync_set_requestdone(sc->handle);
+	else
+		sync_set_requestfailed(sc->handle);
+}/*}}}*/
 
 /**
  * Delete object
  */
-void syncobj_delete(
+void syncobj_delete(/*{{{*/
 		SynceConnection* sc,
 		const char* uid,
-		sync_object_type type,
+		sync_object_type object_type,
 		int soft_delete)
 {
-	synce_trace("here");
+	bool success = false;
+	
+	/* RAPI data */
+	HRESULT hr;
+	
+	/* RRA data */
+	RRA* rra                   = NULL;
+	uint32_t object_id         = 0;
+	uint32_t type_id           = 0;
 
-	sync_set_requestfailed(sc->handle);
-}
+	synce_trace("uid='%s', type=%i", uid, object_type);
+
+	type_id = synce_object_type_to_id(object_type);
+	if (!type_id)
+	{
+			synce_error("Unknown object type");
+			goto exit;
+	}
+	
+	if (uid)
+		object_id = strtol(uid, NULL, 16);
+	else
+		object_id = RRA_CONTACT_ID_UNKNOWN;
+	
+	hr = CeRapiInit();
+	if (FAILED(hr))
+	{
+		synce_error("Failed to initialize RAPI");
+		goto exit;
+	}
+
+	rra = rra_new();
+
+	if (!rra_connect(rra))
+	{
+		synce_error("Connection failed");
+		goto exit;
+	}
+
+	if (!rra_object_delete(
+				rra,
+				type_id,
+				object_id))
+	{
+		synce_error("Failed to delete object");
+		goto exit;
+	}
+
+	success = true;
+
+exit:
+	rra_free(rra);
+	CeRapiUninit();
+
+	if (success)
+		sync_set_requestdone(sc->handle);
+	else
+		sync_set_requestfailed(sc->handle);
+}/*}}}*/
 
 gboolean always_connected()
 {

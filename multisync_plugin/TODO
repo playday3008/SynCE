@@ -1,0 +1,9 @@
+$Id$
+
+TODO for multisync_plugin
+=========================
+
+o Handle deletes on remote device. This requires that we maintain a list of
+  objects on the device and if any object is missing when we look for changes, 
+	we know it is deleted.
+
