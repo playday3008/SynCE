@@ -136,6 +136,10 @@ bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* 
 		else if (0x6e == header.command)
 		{
 			Packet_6e* packet = (Packet_6e*)*data;
+			LETOH32(packet->type_id);
+			LETOH32(packet->object_id);
+			LETOH32(packet->hr);
+			LETOH32(packet->unknown);
 			synce_trace("Error: type=%08x, object=%08x, hr=%08x, unknown=%08x",
 					packet->type_id, packet->object_id, packet->hr, packet->unknown);
 		}
@@ -561,6 +565,8 @@ bool rrac_recv_69_not_2(/*{{{*/
 	uint8_t* data = NULL;
 	size_t size = 0;
 	Subheader_69_X* subheader = NULL;
+	uint32_t *packet_ids;
+	int i;
 
 	if (!ids)
 	{
@@ -609,8 +615,11 @@ bool rrac_recv_69_not_2(/*{{{*/
 		}
 		
 		*ids = malloc(subheader->array_size);
-
-		memcpy(*ids, data + sizeof(Subheader_69_X), subheader->array_size);
+		packet_ids = (uint32_t *)(data + sizeof (Subheader_69_X));
+		for (i = 0; i < subheader->array_size / 4; i++)
+		{
+			(*ids)[i] = letoh32 (packet_ids[i]);
+		}
 
 		/*DUMP("packet 69 ids", *ids, subheader->array_size);*/
 	}
