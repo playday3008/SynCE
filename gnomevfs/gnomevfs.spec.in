@@ -4,7 +4,7 @@
 %define name synce-gnomevfs
 %define rel 1
 
-Summary: SynCE: GnomeVFS module for accessing PPC Devices.
+Summary: SynCE: GnomeVFS module for accessing Windows CE and Pocket PC Devices.
 Name: %{name}
 Version: YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT
 Release: %{rel}
@@ -21,7 +21,7 @@ Requires:       synce        >= 0.7
 BuildRequires:  synce-devel  >= 0.7
 
 %description
-Synce-GnomeVFS is part of the SynCE project:
+SynCE-GnomeVFS is part of the SynCE project:
 
   http://synce.sourceforge.net/
 
@@ -41,5 +41,4 @@ make %{_smp_mflags}
 %doc README LICENSE
 %{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.so
 %{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.la
-%{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.a
 %{_sysconfdir}/gnome-vfs-2.0/modules/synce-module.conf
