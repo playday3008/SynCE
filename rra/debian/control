@@ -1,0 +1,26 @@
+Source: librra
+Priority: optional
+Maintainer: Thomas Butter <thomas@i.rule-the.net>
+Build-Depends: debhelper (>> 4.0.0), libsynce0-dev (>= 0.8), libsynce0 (>= 0.8), librapi2 (>=0.8), librapi2-dev (>=0.8)
+Standards-Version: 3.5.8
+
+Package: librra0-dev
+Section: devel
+Architecture: any
+Depends: librra0 (= ${Source-Version}), libsynce0-dev (>= 0.8), librapi2-dev (>= 0.8)
+Description: part of the synce package
+ synce let you synchronize your WindowsCE/PocketPC Devices with linux
+
+Package: librra0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} 
+Description: part of the synce package
+ synce let you synchronize your WindowsCE/PocketPC Devices with linux
+
+Package: librra0-tools
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends} 
+Description: part of the synce package
+ synce let you synchronize your WindowsCE/PocketPC Devices with linux
