@@ -42,11 +42,11 @@ install</tt> I can't find the RAKI icon in my K-Menu hierarchy. I use
 Linux distribution xy. </h3>
 <blockquote><b>A11:</b> You haven't configured your SynCE-KDE package
 the right way. Every Linux distribution uses its own directory
-structure and <tt>./configure </tt>can't find out the right one. So
+structure and <tt>./configure </tt>couldn't find out the right one. So
 you have to help a little.<br>
   <ol>
     <li>Find out the base directory of your KDE installation. An easy
-way to find this out it to do a<br>
+way to do is is<br>
       <blockquote><tt># which konqueror<br>
 $KDEDIR/bin/konqueror</tt><br>
       </blockquote>
@@ -54,8 +54,8 @@ The answer of this call is the full path to konqueror. Above you will
 see which part of this path is the base KDE directory of your
 distribution.<br>
     </li>
-    <li>Fine out the directory where KDE expects the <tt>*.desktop</tt>
-files. Every <tt>*.desktop</tt> file appears in the K-Menu as an menu
+    <li>Find out the directory where KDE expects the <tt>*.desktop</tt>
+files. Every <tt>*.desktop</tt> file appears in the K-Menu as a menu
 item. To find out this directory<br>
       <blockquote>search for the file <tt>konqbrowser.desktop</tt><br>
       </blockquote>
@@ -66,7 +66,7 @@ $kde_appsdir. It is the leading part of the path to <tt>konqbrowser.desktop</tt>
 and follows the scheme<br>
       <blockquote><tt>$kde_appsdir/Internet/konqbrowser.desktop</tt></blockquote>
     </li>
-    <li>Set the <tt>$KDE_DIR</tt> and <tt>kde_appsdir</tt>
+    <li>Set the <tt>$KDEDIR</tt> and <tt>kde_appsdir</tt>
 environment variable and export them.<tt><br>
       </tt>
       <blockquote><tt># export KDEDIR=...<br>
@@ -98,16 +98,16 @@ system if you connect via USB.<br>
 <h3><a name="mozTocId147393" class="mozTocH3"></a>Q22: I have RAKI up
 and running but when I connect my PDA, RAKI didn't honor the connection
 and the icon didn't turn colorful.</h3>
-<blockquote><b>A22:</b> This problem could have a more than one reason:<br>
+<blockquote><b>A22:</b> This problem could have a more than one reasons:<br>
   <ol>
     <li>You have chosen a specific DCCM at the first start of RAKI but
 you have started the other DCCM by hand before you start RAKI. <br>
       <b>Solution:</b> Kill the DCCM you have started by hand and let
-RAKI start the right DCCM itself.</li>
+RAKI start the right DCCM itself.</li><br>
     <li>You have chosen a specific DCCM at the first start of RAKI but
 the connection management script <tt>~/.synce/scripts/dccm.sh</tt> is
 the one designed for the other DCCM.<br>
-Solution: Stop RAKI, open the file <tt>~/.kde/share/config/rakirc</tt>
+<b>Solution:</b> Stop RAKI, open the file <tt>~/.kde/share/config/rakirc</tt>
 with an
 editor and remove the line <tt>VERSION=x.y.z</tt> in the block <tt>[RAKI]</tt>
 and start
@@ -120,8 +120,8 @@ DCCM. RAKI will copy the right <tt>dccm.sh</tt> script for you.</li>
 <h2><a name="mozTocId293095" class="mozTocH2"></a>Handling</h2>
 <h3><a name="mozTocId451238" class="mozTocH3"></a>Q31: When I initiate
 a connection to my PDA RAKI brings up the initialization progress bar
-but blocks at a progress of 33%. I have only the possibility to kill
-raki.</h3>
+but blocks at a progress of 33%. I only have the possibility to kill
+it.</h3>
 <blockquote><b>A31:</b> This is a bug in SynCE-KDE-0.6.1 and before. It
 is fixed since SynCE-KDE-0.6.2.<br>
 </blockquote>
