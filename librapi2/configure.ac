@@ -1,8 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/rapi_buffer.c)
+
+dnl AC_CANONICAL_HOST
+dnl AC_CANONICAL_TARGET
+
 AM_INIT_AUTOMAKE(librapi, 0.1)
 AM_CONFIG_HEADER(rapi_config.h)
-	
+
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
@@ -32,9 +36,11 @@ if ${dmalloc}; then
 fi
 
 dnl Checks for libraries.
+AC_LIB_RPATH
+
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h iconv.h)
+AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h)
 	
 AC_CHECK_HEADERS(sys/types.h,,[
 		AC_MSG_ERROR([Don't know how to get u_int16_t and u_int32_t on your system])
@@ -50,6 +56,13 @@ AC_C_CONST
 
 dnl Checks for library functions.
 AM_ICONV()
+if test "$am_cv_func_iconv" '!=' yes; then
+	AC_MSG_ERROR([iconv not found, try using --with-libiconv-prefix])
+fi
+AC_CHECK_HEADERS(iconv.h,,[
+		AC_MSG_WARN([iconv.h not found (INCICONV=$INCICONV)])
+		])
+
 AC_CHECK_LIB(socket,main)
 AC_CHECK_LIB(nsl,main)
 
