@@ -14,34 +14,34 @@ using namespace std;
 
 static void dump(const char *desc, void* data, size_t len)/*{{{*/
 {
-	uint8_t* buf = (uint8_t*)data;
-	size_t i, j;
-	char hex[8 * 3 + 1];
-	char chr[8 + 1];
+  uint8_t* buf = (uint8_t*)data;
+  size_t i, j;
+  char hex[8 * 3 + 1];
+  char chr[8 + 1];
 
-	fprintf(stderr, "%s (%d bytes):\n", desc, len);
-	for (i = 0; i < len + 7; i += 8) {
-		for (j = 0; j < 8; j++) 
-			if (j + i >= len) {
-				hex[3*j+0] = ' ';
-				hex[3*j+1] = ' ';
-				hex[3*j+2] = ' ';
-				chr[j] = ' ';
-			} else {
-				uint8_t c = buf[j + i];
-				const char *hexchr = "0123456789abcdef";
-				hex[3*j+0] = hexchr[(c >> 4) & 0xf];
-				hex[3*j+1] = hexchr[c & 0xf];
-				hex[3*j+2] = ' ';
-				if (c > ' ' && c <= '~')
-					chr[j] = c;
-				else
-					chr[j] = '.';
-			}
-		hex[8*3] = '\0';
-		chr[8] = '\0';
-		fprintf(stderr, "  %04x: %s %s\n", i, hex, chr);
-	}
+  fprintf(stderr, "%s (%d bytes):\n", desc, len);
+  for (i = 0; i < len + 7; i += 8) {
+    for (j = 0; j < 8; j++) 
+      if (j + i >= len) {
+        hex[3*j+0] = ' ';
+        hex[3*j+1] = ' ';
+        hex[3*j+2] = ' ';
+        chr[j] = ' ';
+      } else {
+        uint8_t c = buf[j + i];
+        const char *hexchr = "0123456789abcdef";
+        hex[3*j+0] = hexchr[(c >> 4) & 0xf];
+        hex[3*j+1] = hexchr[c & 0xf];
+        hex[3*j+2] = ' ';
+        if (c > ' ' && c <= '~')
+          chr[j] = c;
+        else
+          chr[j] = '.';
+      }
+    hex[8*3] = '\0';
+    chr[8] = '\0';
+    fprintf(stderr, "  %04x: %s %s\n", i, hex, chr);
+  }
 }/*}}}*/
 
 static unsigned read16(istream& input)
@@ -53,41 +53,41 @@ static unsigned read16(istream& input)
 
 int main(int argc, char**argv)
 {
-	ifstream input(argv[1], ofstream::binary);
+  ifstream input(argv[1], ofstream::binary);
 
-	//
-	// Header
-	//
+  //
+  // Header
+  //
 
   char magic[PWI_MAGIC_SIZE];
-	input.read(magic, PWI_MAGIC_SIZE);
+  input.read(magic, PWI_MAGIC_SIZE);
 
-	if (0 != memcmp(magic, PWI_MAGIC, PWI_MAGIC_SIZE)) 
-	{
-		cerr << "Not a PWI file" << endl;
-		return 1;
-	}
+  if (0 != memcmp(magic, PWI_MAGIC, PWI_MAGIC_SIZE)) 
+  {
+    cerr << "Not a PWI file" << endl;
+    return 1;
+  }
 
   // Skip to font count
   input.seekg(0x13, ios_base::cur);
 
   unsigned font_count = read16(input);
-	//cerr << "Font count: " << dec << font_count << endl;
-  
+  //cerr << "Font count: " << dec << font_count << endl;
+
   // Skip to font table
   input.seekg(0xa, ios_base::cur);
 
   //cerr << "Font table starts at offset 0x" << hex << input.tellg() << endl;
-  
+
   // Skip font table
   input.seekg(font_count * FONT_ENTRY_SIZE, ios_base::cur);
-  
+
   //cerr << "Font table ends at offset 0x" << hex << input.tellg() << endl;
-  
+
   // Skip to paragraph count 1
   input.seekg(0xba, ios_base::cur);
   unsigned paragraph_count = read16(input);
-  
+
   // Skip to paragraph count 2
   input.seekg(0x2, ios_base::cur);
   /*unsigned paragraph_count_2 =*/ read16(input);
@@ -98,11 +98,11 @@ int main(int argc, char**argv)
 
   cerr << "Paragraph count: " << dec << 
     paragraph_count /*<< " = " << 
-    paragraph_count_2 << " = " << 
-    paragraph_count_3*/ << endl;
-  
-  input.seekg(0x6, ios_base::cur);
-  
+                      paragraph_count_2 << " = " << 
+                      paragraph_count_3*/ << endl;
+
+    input.seekg(0x6, ios_base::cur);
+
   //cerr << "Paragraph index starts at offset 0x" << hex << input.tellg() << endl;
 
 #if 0
@@ -120,11 +120,11 @@ int main(int argc, char**argv)
     cerr << endl;
   }
 #else
-    input.seekg(paragraph_count * PARAGRAPH_ENTRY_SIZE, ios_base::cur);
+  input.seekg(paragraph_count * PARAGRAPH_ENTRY_SIZE, ios_base::cur);
 #endif
 
   //cerr << "Paragraph index ends at offset 0x" << hex << input.tellg() << endl;
-  
+
   input.seekg(2, ios_base::cur);
 
   if (0x0 != read16(input))
@@ -144,7 +144,7 @@ int main(int argc, char**argv)
 
     /*unsigned plain_text_size      =*/ read16(input);
     unsigned total_size           = read16(input);
-    
+
     //cerr << "Total size: 0x" << hex << total_size << endl;
 
     input.seekg(0x14, ios_base::cur);
@@ -263,11 +263,11 @@ int main(int argc, char**argv)
     delete[] data;
 
     input.seekg(0x10, ios_base::cur);
-    
+
     //cerr << "Paragraph " << dec << i << " ends at offset 0x" << hex << input.tellg() << endl;
   }
-  
+
   cerr << "Decoding ends at offset 0x" << hex << input.tellg() << endl;
- 
-	return 0;
+
+  return 0;
 }
