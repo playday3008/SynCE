@@ -49,7 +49,6 @@ void ThreadEventObject::eventMutexUnlock()
 }
 
 
-
 void ThreadEventObject::waitOnEvent()
 {
     eventCondition.wait(&eventMutex);

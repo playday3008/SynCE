@@ -26,7 +26,7 @@
 
 #include "workerthreadinterface.h"
 #include "synctasklistitem.h"
-//class WorkerThreadInterface;
+
 /**
  * 
  * Volker Christian,,,
