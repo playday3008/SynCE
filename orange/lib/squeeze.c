@@ -2,15 +2,33 @@
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
 #include <synce_log.h>
+#include <dirent.h>
 #include <errno.h>
+#include <paths.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
-#include <string.h>
 #include <unistd.h>
 
-#define DELETE_FILES 0
+#define DELETE_FILES 1
+
+static char* orange_get_temporary_directory()
+{
+  char buffer[256];
+  const char* tmpdir = getenv("TMPDIR");
+ 
+  if (!tmpdir)
+    tmpdir = _PATH_TMP;
+
+  snprintf(buffer, sizeof(buffer), "%s/orange-XXXXXX", tmpdir);
+
+  if (mkdtemp(buffer))
+    return strdup(buffer);
+  else
+    return NULL;
+}
 
 static bool orange_is_dot_directory(const char* dirname)/*{{{*/
 {
@@ -58,7 +76,7 @@ exit:
   return success;
 }/*}}}*/
 
-bool orange_squeeze_file(
+bool orange_squeeze_file(/*{{{*/
     const char* filename,
     orange_filename_callback callback,
     void* cookie)
@@ -66,7 +84,7 @@ bool orange_squeeze_file(
   bool success = false;
   const char* suffix = NULL;
   const char* basename = NULL;
-  char output_directory[256];
+  char* output_directory = NULL;
 
   if (!filename)
   {
@@ -74,7 +92,7 @@ bool orange_squeeze_file(
     goto exit;
   }
 
-  snprintf(output_directory, sizeof(output_directory), "%s.contents", filename);
+  output_directory = orange_get_temporary_directory();
 
   basename = strrchr(filename, '/');
   if (basename)
@@ -162,10 +180,11 @@ exit:
 #if DELETE_FILES
   orange_rmdir(output_directory);
 #endif
+  FREE(output_directory);
   return success;
-}
+}/*}}}*/
 
-bool orange_squeeze_directory(
+bool orange_squeeze_directory(/*{{{*/
     const char* dirname,
     orange_filename_callback callback,
     void* cookie)
@@ -213,6 +232,6 @@ bool orange_squeeze_directory(
 exit:
   CLOSEDIR(dir);
   return success;
-}
+}/*}}}*/
 
 

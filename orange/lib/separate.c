@@ -174,7 +174,7 @@ exit:
 typedef struct 
 {
   const char* output_directory;
-  const char* basename;  
+  char* basename;  
 } SeparationCookie;
 
 static bool orange_separate_callback(/*{{{*/
@@ -188,12 +188,10 @@ static bool orange_separate_callback(/*{{{*/
   char cabfile[256];
   const char* processor_name = NULL;
 
-  synce_trace("Here");
-
   switch (info->processor)
   {
     case 0:
-      processor_name = "Unknown";
+      processor_name = "UnspecifiedProcessor";
       break;
 
     case 2577:
@@ -236,8 +234,6 @@ bool orange_separate2(/*{{{*/
   uint8_t* last = NULL;
   uint8_t* mscf = NULL;
   int cab_count = 0;
-
-  synce_trace("Here");
 
   last = input_buffer;
 
@@ -321,6 +317,8 @@ bool orange_separate(/*{{{*/
       input_size, 
       orange_separate_callback, 
       (void*)&cookie);
+
+  FREE(cookie.basename);
 
 exit:
   FCLOSE(input);
