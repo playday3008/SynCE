@@ -16,8 +16,8 @@ BOOL CeCloseHandle(
 	if ( !rapi_context_call(context) )
 		return false;
 
-	context->last_error = rapi_buffer_read_uint32(context->recv_buffer);
-	return_value = rapi_buffer_read_uint32(context->recv_buffer);
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
 	return return_value;
 }
@@ -43,8 +43,8 @@ BOOL CeCopyFile(
 	if ( !rapi_context_call(context) )
 		return false;
 
-	context->last_error = rapi_buffer_read_uint32(context->recv_buffer);
-	return_value = rapi_buffer_read_uint32(context->recv_buffer);
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
 	return return_value;
 }
@@ -100,10 +100,10 @@ BOOL CeReadFile(
 	if ( !rapi_context_call(context) )
 		return false;
 
-	context->last_error = rapi_buffer_read_uint32(context->recv_buffer);
-	return_value = rapi_buffer_read_uint32(context->recv_buffer);
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
-	bytes_read = rapi_buffer_read_uint32(context->recv_buffer);
+	rapi_buffer_read_uint32(context->recv_buffer, bytes_read);
 	if (lpNumberOfBytesRead)
 		*lpNumberOfBytesRead = bytes_read;
 

@@ -86,12 +86,12 @@ bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size);
 /**
  * Get a WORD parameter from buffer, with adjustment for endianness
  */
-u_int16_t rapi_buffer_read_uint16(RapiBuffer* buffer);
+bool rapi_buffer_read_uint16(RapiBuffer* buffer, u_int16_t* value);
 
 /**
  * Get a DWORD parameter from buffer, with adjustment for endianness
  */
-u_int32_t rapi_buffer_read_uint32(RapiBuffer* buffer);
+bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value);
 
 
 #endif

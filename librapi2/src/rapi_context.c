@@ -72,12 +72,14 @@ bool rapi_context_call(RapiContext* context)
 		return false;
 	}
 
-	context->result_1 = rapi_buffer_read_uint32(context->recv_buffer);
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_1) )
+		return false;
 
 	if (context->result_1 != 1)
 		return false;
 	
-	context->result_2 = rapi_buffer_read_uint32(context->recv_buffer);
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
+		return false;
 
 	return context->result_2;
 }

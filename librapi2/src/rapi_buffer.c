@@ -15,69 +15,6 @@ struct _RapiBuffer
 	unsigned read_index;
 };
 
-RapiBuffer* rapi_buffer_new()
-{
-	RapiBuffer* buffer = calloc(1, sizeof(RapiBuffer));
-	
-	return buffer;
-}
-
-void rapi_buffer_free_data(RapiBuffer* buffer)
-{
-	if (buffer && buffer->data)
-	{
-		free(buffer->data);
-		buffer->data = NULL;
-		buffer->max_size = 0;
-		buffer->bytes_used = 0;
-		buffer->read_index = 0;
-	}
-}
-
-void rapi_buffer_free(RapiBuffer* buffer)
-{
-	if (buffer)
-	{
-		rapi_buffer_free_data(buffer);
-		free(buffer);
-	}
-}
-
-bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
-{
-	unsigned char* new_data = NULL;
-	
-	if (!buffer)
-		return false;
-	
-	if (size)
-	{
-		new_data = malloc(size);
-		
-		if (!new_data)
-			return false;
-	}
-		
-	rapi_buffer_free_data(buffer);
-	buffer->data = new_data;
-	buffer->max_size = size;
-
-	if (data)
-		memcpy(new_data, data, size);
-
-	return true;
-}
-
-size_t rapi_buffer_get_size(RapiBuffer* buffer)
-{
-	return buffer->bytes_used;
-}
-
-unsigned char* rapi_buffer_get_raw(RapiBuffer* buffer)
-{
-	return buffer->data;
-}
-
 /**
  * Enlarge buffer to at least a specified size
  */
@@ -116,6 +53,67 @@ static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)
 		return rapi_buffer_enlarge(buffer, bytes_needed);
 
 	return true;
+}
+
+
+RapiBuffer* rapi_buffer_new()
+{
+	RapiBuffer* buffer = calloc(1, sizeof(RapiBuffer));
+	
+	return buffer;
+}
+
+void rapi_buffer_free_data(RapiBuffer* buffer)
+{
+	if (buffer && buffer->data)
+	{
+		free(buffer->data);
+		memset(buffer, 0, sizeof(RapiBuffer));
+	}
+}
+
+void rapi_buffer_free(RapiBuffer* buffer)
+{
+	if (buffer)
+	{
+		rapi_buffer_free_data(buffer);
+		free(buffer);
+	}
+}
+
+bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
+{
+	unsigned char* new_data = NULL;
+	
+	if (!buffer)
+		return false;
+	
+	if (!rapi_buffer_assure_size(buffer, size))
+		return false;
+	
+	if (data)
+	{
+		memcpy(new_data, data, size);
+		buffer->bytes_used = size;
+	}
+	else
+	{
+		buffer->bytes_used = 0;
+	}
+
+	buffer->read_index = 0;
+
+	return true;
+}
+
+size_t rapi_buffer_get_size(RapiBuffer* buffer)
+{
+	return buffer->bytes_used;
+}
+
+unsigned char* rapi_buffer_get_raw(RapiBuffer* buffer)
+{
+	return buffer->data;
 }
 
 bool rapi_buffer_write_data(RapiBuffer* buffer, void* data, size_t size)
@@ -218,12 +216,38 @@ bool rapi_buffer_write_optional_inout(RapiBuffer* buffer, void* data, size_t siz
 	}
 }
 
-bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size);
+bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size)
+{
+	if (!data)
+		return false;
 
-u_int16_t rapi_buffer_read_uint16(RapiBuffer* buffer);
+	if ( (buffer->read_index + size) > buffer->bytes_used )
+		return false;
 
-u_int32_t rapi_buffer_read_uint32(RapiBuffer* buffer);
+	memcpy(data, buffer->data + buffer->read_index, size);
+	buffer->read_index += size;
 
+	return true;
+}
 
+bool rapi_buffer_read_uint16(RapiBuffer* buffer, u_int16_t* value)
+{
+	if ( !rapi_buffer_read_data(buffer, value, sizeof(u_int16_t)) )
+		return false;
+
+	*value = letoh16(*value);
+
+	return true;
+}
+
+bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value)
+{
+	if ( !rapi_buffer_read_data(buffer, value, sizeof(u_int32_t)) )
+		return false;
+
+	*value = letoh32(*value);
+
+	return true;
+}
 
 
