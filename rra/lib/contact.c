@@ -510,7 +510,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	success = true;
 
 exit:
-	strbuf_free(vcard, !success);
+	strbuf_destroy(vcard, !success);
 	return success;
 }/*}}}*/
 

@@ -4,7 +4,7 @@ LDADD = ../lib/librra.la
 
 noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
-	rra-decode rra-db-vcal \
+	rra-decode \
 	rra-partners \
 	rra-contact-to-vcard rra-contact-from-vcard \
 	rra-appointment-from-vevent
@@ -15,7 +15,7 @@ rra_get_data_SOURCES    = rra-get-data.c
 rra_put_data_SOURCES    = rra-put-data.c
 rra_delete_SOURCES      = rra-delete.c
 rra_decode_SOURCES      = rra-decode.c
-rra_db_vcal_SOURCES     = rra-db-vcal.c appointment.h appointment.c
+#rra_db_vcal_SOURCES     = rra-db-vcal.c appointment.h appointment.c
 rra_partners_SOURCES    = rra-partners.c
 
 rra_contact_to_vcard_SOURCES    = rra-contact-to-vcard.c

@@ -303,8 +303,11 @@ ComponentType* component_type_new(const char* name)/*{{{*/
   if (self)
   {
     self->name = name ? strdup(name) : NULL;
-    self->component_types = s_hash_table_new(COMPONENT_TYPE_HASH_SIZE);
-    self->property_types  = s_hash_table_new(PROPERTY_TYPE_HASH_SIZE);
+    
+    self->component_types = s_hash_table_new(s_str_hash, s_str_equal_no_case,
+        COMPONENT_TYPE_HASH_SIZE);
+    self->property_types  = s_hash_table_new(s_str_hash, s_str_equal_no_case, 
+        PROPERTY_TYPE_HASH_SIZE);
   }
 
   return self;

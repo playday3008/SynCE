@@ -10,6 +10,7 @@ librra_la_SOURCES = \
 	appointment.c \
 	dbstream.h dbstream.c \
 	contact.c \
+	generator.h generator.c \
 	librra.h   librra.c \
 	parser.h   parser.c \
 	rrac.h     rrac.c \

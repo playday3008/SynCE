@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "strbuf.h"
 #include <stdlib.h>
+#include <string.h>
 
 static void strbuf_enlarge(StrBuf *strbuf, size_t size)
 {
@@ -24,7 +25,7 @@ StrBuf* strbuf_new (const char *init)
   return result;
 }
   
-void strbuf_free (StrBuf *strbuf, bool free_contents)
+void strbuf_destroy(StrBuf *strbuf, bool free_contents)
 {
   if (free_contents)
     free(strbuf->buffer);

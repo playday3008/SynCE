@@ -9,16 +9,11 @@
 
 #define PARSER_UTF8 1
 
-/*struct _Parser;*/
 typedef struct _Parser Parser;
+typedef struct _PropertyType PropertyType;
+typedef struct _ComponentType ComponentType;
 
 typedef bool (*PropertyFunc)(Parser* p, mdir_line* line, void* cookie);
-
-/*struct _PropertyType;*/
-typedef struct _PropertyType PropertyType;
-
-/*struct _ComponentType;*/
-typedef struct _ComponentType ComponentType;
 
 /* PropertyType functions */
 PropertyType* property_type_new(const char* name, PropertyFunc func);
