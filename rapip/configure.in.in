@@ -127,7 +127,7 @@ AC_ARG_WITH(librra-lib,
 	]
 )
 
-AC_CHECK_LIB(rra, rra_new,,
+AC_CHECK_LIB(rra, rra_partner_create,,
 	[
 		AC_MSG_ERROR([Can't find RRA library])
 	]
@@ -139,36 +139,85 @@ AC_CHECK_HEADERS(librra.h,,
 	]
 )
 
+agsync_cond=no
 
-AC_MSG_CHECKING([if AvantGo synchronization is wanted])
-AC_ARG_WITH(agsync, 
+
+AC_ARG_WITH(libmal-funcs,
 	AC_HELP_STRING(
-			[--with-agsync=DIR],
-			[Use compiled >= agsync-0.2 to support AvantGo-sync.
-	]),
+			[--with-libmal-funcs[=DIR]],
+			[Search for libmal-funcs in DIR/include and DIR/lib]),
 	[
-		agsync_dir=${withval}
-		AC_MSG_RESULT(yes)
-	],
-	[
-		AC_MSG_RESULT(no)
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
 	]
 )
 
-agsync_cond=no
+AC_ARG_WITH(libmal-funcs-include,
+	AC_HELP_STRING(
+			[--with-libmal-funcs-include[=DIR]],
+			[Search for libagsync header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
 
-if test x${agsync_dir} != x; then 
-	AC_CHECK_FILE(${agsync_dir}/mal-files/mal-funcs.a, [
-		if test x`echo ${agsync_dir} | grep ^/` == x; then
-			agsync_absdir=`pwd`/${agsync_dir}
-		else
-			agsync_absdir=${agsync_dir}
-		fi
-		CPPFLAGS="$CPPFLAGS -I${agsync_absdir}/mal-files -I${agsync_absdir}/mal-files/client"
-		AGSYNC_lib="${agsync_absdir}/mal-files/mal-funcs.a"
-		AC_DEFINE(WITH_AGSYNC, 1, [Define if agsync is compiled and used])
-		agsync_cond=yes
-	])
+AC_ARG_WITH(libmal-funcs-lib,
+	AC_HELP_STRING(
+			[--with-libmal-funcs-lib[=DIR]],
+			[Search for libmal-funcs library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
+
+AC_CHECK_LIB(mal-funcs, AGNetInit,
+	[
+		agsynclib=yes
+	],
+	[
+		AC_MSG_RESULT([Can't find AGSync library])
+	]
+)
+
+AC_CHECK_HEADERS(AGNet.h,agsyncheader=yes,
+	[
+		AC_MSG_RESULT([Can't find AGNet.h])
+	]
+)
+
+if test x${agsynclib} != x && test x${agsyncheader} != x; then
+	AC_DEFINE(WITH_AGSYNC, 1, [Define if agsync is compiled and used])		
+	agsync_cond=yes
+	AGSYNC_lib="-lmal-funcs"
+else
+	AC_MSG_CHECKING([if AvantGo synchronization is wanted])
+	AC_ARG_WITH(agsync, 
+		AC_HELP_STRING(
+				[--with-agsync=DIR],
+				[Use compiled >= agsync-0.2 to support AvantGo-sync.
+		]),
+		[
+			agsync_dir=${withval}
+			AC_MSG_RESULT(yes)
+		],
+		[
+			AC_MSG_RESULT(no)
+		]
+	)
+
+	if test x${agsync_dir} != x; then 
+	 	AC_CHECK_FILE(${agsync_dir}/mal-files/mal-funcs.a, [
+	 		if test x`echo ${agsync_dir} | grep ^/` == x; then
+	 			agsync_absdir=`pwd`/${agsync_dir}
+	 		else
+	 			agsync_absdir=${agsync_dir}
+	 		fi
+	 		CPPFLAGS="$CPPFLAGS -I${agsync_absdir}/mal-files -I${agsync_absdir}/mal-files/client"
+	 		AGSYNC_lib="${agsync_absdir}/mal-files/mal-funcs.a"
+	 		AC_DEFINE(WITH_AGSYNC, 1, [Define if agsync is compiled and used])
+	 		agsync_cond=yes
+	 	])
+	fi
 fi
 
 AM_CONDITIONAL(AGSYNC, test ${agsync_cond} == "yes")
