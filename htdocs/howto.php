@@ -78,8 +78,8 @@ that you upgrade to a 2.6.x kernel!</p>
 <a name="distro"></a>
 <h3>Linux distribution</h3>
 
-<p>If your Linux distribution is one of these you need to patch your Linux
-kernel:</p>
+<p>If your Linux distribution is one of these and you have a kernel version
+prior to 2.6.9 you need to patch your Linux kernel:</p>
 
 <ul>
 <li>Suse 9.1</li>
