@@ -202,6 +202,7 @@ static       WCHAR empty[]   = {'\0'};
 bool list_directory(WCHAR* directory)
 {
 	WCHAR path[MAX_PATH];
+  WCHAR* tmp = NULL;
 
 	if (!directory)
 	{
@@ -212,7 +213,8 @@ bool list_directory(WCHAR* directory)
 	synce_trace_wstr(directory);
 	wstrcpy(path, directory);
 	synce_trace_wstr(path);
-	wstr_append(path, wstr_from_ascii(wildcards), sizeof(path));
+	wstr_append(path, (tmp = wstr_from_ascii(wildcards)), sizeof(path));
+  wstr_free_string(tmp);
 	return list_matching_files(path);
 }
 
