@@ -15,6 +15,9 @@
 %module pyrapi
 %{
 #include "rapi.h"
+
+static PyObject *PyRapiError;
+
 %}
 
 
@@ -22,7 +25,11 @@
    Call the rapi init function as part of the module load. This might not be 
    the correct thing to do but it will work for now.
 */
+
 %init %{
+  PyRapiError = PyErr_NewException("pyrapi.error", NULL, NULL);
+  PyDict_SetItemString(d, "error", PyRapiError);
+
   CeRapiInit();
 %}
 
@@ -249,6 +256,19 @@ WCHARGETSET(CE_FIND_DATA,cFileName)
 }
 
 %apply unsigned int *OUTPUT { LPDWORD lpdwFoundCount };
+
+%typemap(python,out) BOOL {
+
+  if (result != 1) {
+      PyErr_SetString(PyExc_RuntimeError, "bad return value.");
+      return NULL;    
+  }
+  {
+    $result = Py_None; // Ignore a correct return
+  }
+
+}
+
 
 
 BOOL CeCloseHandle( 
