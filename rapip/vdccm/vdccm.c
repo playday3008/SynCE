@@ -17,14 +17,15 @@
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE S     *
- * OFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
 
 #include <stdio.h>
 #include <time.h>
 #include <dirent.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -51,6 +52,8 @@
 #define DCCM_MAX_PING_COUNT     3       /* max number of pings without reply */
 #define DCCM_MAX_PACKET_SIZE	512
 #define DCCM_MIN_PACKET_SIZE	0x24
+
+#define MAX_PASSWORD_LENGTH    16
 
 
 static bool is_daemon = true;
@@ -82,7 +85,7 @@ struct device_s
     bool locked;
     bool expect_password_reply;
     int key;
-    char password[5];
+    char password[MAX_PASSWORD_LENGTH];
     char ip_str[16];
     char *name;
     char *class;
@@ -139,13 +142,13 @@ static void handle_sigterm(int n)
 {
     char *path;
     char pid_file[MAX_PATH];
-    
+
     running = false;
     disconnect_current_devices();
     disconnect_current_clients();
-    
+
     if (!synce_get_directory(&path)) {
-        synce_error("Faild to get configuration directory name.\n");
+        synce_error("Faild to get configuration directory name.");
     } else {
         snprintf(pid_file, sizeof(pid_file), "%s/" DCCM_PID_FILE, path);
         unlink(pid_file);
@@ -186,7 +189,7 @@ static void run_scripts(device_p device, char* action)
         if (!(info.st_mode & S_IFREG))
             continue;
 
-        synce_trace("Running script: %s %s\n", path, action);
+        synce_trace("Running script: %s %s", path, action);
 
         if (device)
             snprintf(command, sizeof(command), "%s %s %s", path, action, device->name);
@@ -272,7 +275,7 @@ static bool client_write_files(device_p device)
     char *old_filename;
 
     if (!synce_get_directory(&path)) {
-        synce_error("Faild to get configuration directory name.\n");
+        synce_error("Faild to get configuration directory name.");
         exit (1);
     }
 
@@ -281,7 +284,7 @@ static bool client_write_files(device_p device)
     } else {
         snprintf(filename, sizeof(filename), "%s/%s", path, device->ip_str);
     }
-    
+
     client_write_file(filename, device);
 
     if (!synce_get_connection_filename(&old_filename)) {
@@ -302,7 +305,7 @@ static void client_send_connection_info(device_p device, char *command)
 {
     local_p local;
     char string[256];
-    
+
     if (!use_ipaddress)
         snprintf(string, 256, "%s%s;", command, device->name);
     else
@@ -310,7 +313,7 @@ static void client_send_connection_info(device_p device, char *command)
 
     list_iterator(device->manage->client_l, local) {
         if (local_write(local, string, strlen(string)) <= 0) {
-            synce_error("Could not write to client\n");
+            synce_error("Could not write to client");
             local_select_delfrom_rlist(local);
             list_delete_data(device->manage->client_l, local);
             free(local);
@@ -327,7 +330,6 @@ static void client_send_startup(local_p local, manage_p manage)
     count = list_get_count(manage->device_l);
 
     list_iterator(manage->device_l, device) {
-        printf("Sending: %s\n", device->name);
         client_send_connection_info(device, (char *) "C");
     }
 }
@@ -341,6 +343,7 @@ static int client_read(local_p local, void *manage_v)
     char *passwd;
     device_p device;
     int n;
+    int send = 0;
 
     if ((n = local_read(local, buffer, 256)) <= 0) {
         local_select_delfrom_rlist(local);
@@ -351,7 +354,7 @@ static int client_read(local_p local, void *manage_v)
 
     buffer[n] = '\0';
 
-    synce_trace("Received: %s\n", buffer);
+    synce_trace("Raki-Passwordreply: %s", buffer);
 
     switch(buffer[0]) {
     case 'R':
@@ -359,19 +362,23 @@ static int client_read(local_p local, void *manage_v)
         name = strsep(&passwd, "=");
 
         list_iterator(manage->pending_l, device) {
-            synce_trace("Trying: >%s<>%s< %d\n", device->name, name, strcmp(device->name, name));
             if (strcmp(device->name, name) == 0) {
-                sprintf(device->password, "%s", passwd);
+                send = 1;
+                synce_trace("Sending Password to: %s", device->name);
+                snprintf(device->password, MAX_PASSWORD_LENGTH, "%s", passwd);
                 /*                 strncpy(device->password, passwd, 4); */
                 if (!synce_password_send(device->socket, device->password, device->key)) {
-                    synce_error("failed to send password to %s\n", device->name);
+                    synce_error("failed to send password to %s", device->name);
                 }
                 list_delete_data(manage->pending_l, device);
             }
         }
+        if (!send) {
+            synce_trace("Got Password for %s from Raki but no device waiting", name);
+        }
         break;
     default:
-        printf("Unknown response\n");
+        printf("Unknown response from Raki");
         break;
     }
 
@@ -431,7 +438,7 @@ static char* string_at(char* buffer, size_t size, size_t offset)
     if (string_offset < size) {
         return wstr_to_ascii((WCHAR*)(buffer + string_offset));
     } else {
-        synce_error("String offset too large: 0x%08x\n", string_offset);
+        synce_error("String offset too large: 0x%08x", string_offset);
         return NULL;
     }
 }
@@ -444,7 +451,7 @@ static void remove_connection_file(device_p device)
     char filename[MAX_PATH];
 
     if (!synce_get_directory(&path)) {
-        synce_error("Faild to get configuration directory name.\n");
+        synce_error("Faild to get configuration directory name.");
         exit (1);
     }
 
@@ -452,7 +459,7 @@ static void remove_connection_file(device_p device)
         snprintf(filename, sizeof(filename), "%s/%s", path, device->name);
     else
         snprintf(filename, sizeof(filename), "%s/%s", path, device->ip_str);
-    
+
     free(path);
 
     unlink(filename);
@@ -494,7 +501,7 @@ static void device_remove(device_p device)
         run_scripts(device, (char *) "disconnect");
         client_send_connection_info(device, (char *) "D");
     }
-    synce_trace("Removed %s\n", device->name);
+    synce_trace("Removed %s", device->name);
     free_device(device);
 }
 
@@ -512,7 +519,7 @@ static void device_add(device_p device)
     device->is_main_device = true;
     run_scripts(device, (char *) "connect");
     client_send_connection_info(device, (char *) "C");
-    synce_trace("Connected %s\n", device->name);
+    synce_trace("Connected %s", device->name);
 }
 
 
@@ -521,38 +528,39 @@ static bool device_read_lowlevel(device_p device)
     bool success = false;
     char* buffer = NULL;
     uint32_t header;
+    int i;
 
     if (!synce_socket_read(device->socket, &header, sizeof(header))) {
-        synce_error("Failed to read header\n");
+        synce_error("Failed to read header");
         goto exit;
     }
 
     header = letoh32(header);
 
-    synce_trace("Read header: 0x%08x\n", header);
+    synce_trace("Read header: 0x%08x", header);
 
     if (0 == header) {
-        synce_trace("empty package\n");
+        synce_trace("empty package");
     } else if (DCCM_PING == header) {
-        synce_trace("this is a ping reply\n");
+        synce_trace("this is a ping reply");
         device->ping_count = 0;
     } else if (header < DCCM_MAX_PACKET_SIZE) {
-        synce_trace("this is an information message\n");
+        synce_trace("this is an information message");
 
         if (header < DCCM_MIN_PACKET_SIZE) {
-            synce_error("Packet is smaller than expected\n");
+            synce_error("Packet is smaller than expected");
             goto exit;
         }
 
         buffer = (char *) malloc(header);
 
         if (!buffer) {
-            synce_error("Failed to allocate %i (0x%08x) bytes\n", header, header);
+            synce_error("Failed to allocate %i (0x%08x) bytes", header, header);
             goto exit;
         }
 
         if (!synce_socket_read(device->socket, buffer, header)) {
-            synce_error("Failed to read package\n");
+            synce_error("Failed to read package");
             goto exit;
         }
 
@@ -573,12 +581,17 @@ static bool device_read_lowlevel(device_p device)
         device->partner_id_2 = letoh32(*(uint32_t*)(buffer + 0x14));
 
         device->name      = (char *) string_at(buffer, header, 0x18);
+
+        for (i = 0; i < strlen(device->name); i++) {
+            device->name[i] = tolower(device->name[i]);
+        }
+
         device->class     = (char *) string_at(buffer, header, 0x1c);
         device->hardware  = (char *) string_at(buffer, header, 0x20);
 
-        synce_trace("name    : %s\n", device->name);
-        synce_trace("class   : %s\n", device->class);
-        synce_trace("hardware: %s\n", device->hardware);
+        synce_trace("name    : %s", device->name);
+        synce_trace("class   : %s", device->class);
+        synce_trace("hardware: %s", device->hardware);
 
         free(buffer);
         buffer = NULL;
@@ -598,7 +611,7 @@ static bool device_read_lowlevel(device_p device)
             device_add(device);
         }
     } else {
-        synce_trace("This is a password challenge\n");
+        synce_trace("This is a password challenge");
         device->key = header & 0xff;
         device->locked = true;
         if (!password)
@@ -622,7 +635,7 @@ static int device_read(void *device_v)
     if (device->expect_password_reply) {
         if (!synce_password_recv_reply(device->socket, 2,
                                        &device->password_correct)) {
-            synce_error("Faild to read password reply\n");
+            synce_error("Failed to read password reply");
             select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
             synce_socket_free(device->socket);
             free_device(device);
@@ -630,7 +643,7 @@ static int device_read(void *device_v)
             if (device->password_correct) {
                 device_add(device);
             } else {
-                synce_trace("Password not accepted\n");
+                synce_trace("Password not accepted");
                 select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
                 synce_socket_free(device->socket);
                 client_send_connection_info(device, (char *) "R");
@@ -639,7 +652,7 @@ static int device_read(void *device_v)
         }
     } else {
         if (!device_read_lowlevel(device)) {
-            synce_error("Failed to read from device\n");
+            synce_error("Failed to read from device");
             device_remove(device);
         }
     }
@@ -654,7 +667,7 @@ static int device_accept(void *manage_v)
     device_p device;
 
     if ((device = (device_p) malloc(sizeof(device_t))) == NULL) {
-        synce_error("Out of memory by adding a device\n");
+        synce_error("Out of memory by adding a device");
         return 0;
     }
     device->manage = manage;
@@ -669,9 +682,9 @@ static int device_accept(void *manage_v)
     device->socket = synce_socket_accept(manage->server, &device->address);
 
     if (!device->socket) {
-        synce_error("Error clients TCP/IP-connection not accept()ed\n");
+        synce_error("Error clients TCP/IP-connection not accept()ed");
         free_device(device);
-    } else {        
+    } else {
         if (!inet_ntop(AF_INET, &device->address.sin_addr, device->ip_str, sizeof(device->ip_str))) {
             synce_error("inet_ntop failed");
             synce_socket_free(device->socket);
@@ -694,7 +707,7 @@ static int devices_send_ping( void *manage_v)
 
     list_iterator(manage->device_l, device) {
         if (!synce_socket_write(device->socket, &ping, sizeof(ping))) {
-            synce_error("failed to send ping\n");
+            synce_error("failed to send ping");
             device_remove(device);
         } else {
             if (++device->ping_count == missing_ping_count) {
@@ -718,14 +731,15 @@ static void write_help(char *name)
         "\t                 0 - No logging\n"
         "\t                 1 - Errors only (default)\n"
         "\t                 2 - Errors and warnings\n"
-        "\t                 3 - Everything\n"
+        "\t                 3 - Everything\n", name);
+    fprintf(
+        stderr,
         "\t-f           Do not run as daemon\n"
         "\t-h           Show this help message\n"
         "\t-p PASSWORD  Use this password when device connects\n"
         "\t-i           Use ip-address of device for identification\n"
         "\t-u           Allowed numbers of unanswered pings (default 3)\n"
-        "\t-s           Delay between pings in seconds (default 5)\n",
-        name);
+        "\t-s           Delay between pings in seconds (default 5)\n");
 }
 
 
@@ -739,7 +753,7 @@ static bool handle_parameters(int argc, char** argv)
         case 'd':
             log_level = atoi(optarg);
             break;
-            
+
         case 'f':
             is_daemon = false;
             break;
@@ -749,15 +763,15 @@ static bool handle_parameters(int argc, char** argv)
                 free(password);
             password = strdup(optarg);
             break;
-            
+
         case 'i':
             use_ipaddress = true;
             break;
-        
+
         case 'u':
             missing_ping_count = atoi(optarg);
             break;
-        
+
         case 's':
             ping_delay = atoi(optarg);
             break;
@@ -781,7 +795,7 @@ bool check_running(const char* filename, const char* socketpath)
     FILE* file = NULL;
     char pid_str[16];
     struct stat dummy;
-    
+
     if (0 == stat(filename, &dummy)) {
         /* File exists */
         file = fopen(filename, "r");
@@ -805,7 +819,7 @@ bool check_running(const char* filename, const char* socketpath)
         fclose(file);
         file = NULL;
     }
-    
+
     success = true;
 
 exit:
@@ -837,7 +851,7 @@ bool write_pid_file(const char* filename)
 exit:
     if (file)
         fclose(file);
-        
+
     return success;
 }
 
@@ -850,7 +864,7 @@ int main(int argc, char *argv[])
     struct timeval ping_interval;
     timer_p timer;
     char pid_file[MAX_PATH];
-    
+
     umask(0077);
 
     if (!handle_parameters(argc, argv))
@@ -862,7 +876,7 @@ int main(int argc, char *argv[])
     }
 
     if (!synce_get_directory(&path)) {
-        synce_error("Faild to get configuration directory name.\n");
+        synce_error("Faild to get configuration directory name.");
         return -1;
     }
 
@@ -887,7 +901,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    
+
     snprintf(control_socket_path, sizeof(control_socket_path), "%s/%s", path, "csock");
     free(path);
 
@@ -897,7 +911,7 @@ int main(int argc, char *argv[])
 
     ping_interval.tv_sec = ping_delay;
     ping_interval.tv_usec = 0;
-    
+
     signal(SIGPIPE, SIG_IGN);
     signal(SIGHUP, handle_sighup);
     signal(SIGTERM, handle_sigterm);
@@ -908,76 +922,76 @@ int main(int argc, char *argv[])
 
     main_manage.server = NULL;
     main_manage.control = NULL;
-    
+
     if (!(main_manage.sel = select_create())) {
-        synce_error("COuld not create select-object\n");
+        synce_error("COuld not create select-object");
         return -1;
     }
-    
+
     if (!(main_manage.device_l = list_create())) {
-        synce_error("Could not create list\n");
+        synce_error("Could not create list");
         return -1;
     }
-    
+
     if (!(main_manage.client_l = list_create())) {
-        synce_error("Could not create list\n");
+        synce_error("Could not create list");
     }
-    
+
     if (!(main_manage.pending_l = list_create())) {
-        synce_error("Could not create list\n");
+        synce_error("Could not create list");
         return -1;
     }
-    
+
     if ((timer = voc_timer_create()) == NULL) {
-        synce_error("Could not create timer\n");
+        synce_error("Could not create timer");
         return -1;
     }
 
     if (voc_timer_add_continous_node(timer, ping_interval,
                                      devices_send_ping, &main_manage) == NULL) {
-        synce_error("Could not set continous trigger\n");
+        synce_error("Could not set continous trigger");
         return -1;
     }
-        
+
     if (!(main_manage.server = synce_socket_new())) {
-        synce_error("Could not create pda-server-socket\n");
+        synce_error("Could not create pda-server-socket");
         return -1;
     }
 
     if (!(synce_socket_listen(main_manage.server, NULL, DCCM_PORT))) {
-        synce_error("Could not set pda-server-socket to listen mode\n");
+        synce_error("Could not set pda-server-socket to listen mode");
         return -1;
     }
-    
-    
+
+
     if (!(main_manage.control = local_listen_socket(control_socket_path, 2))) {
-        synce_error("Could not create client-server-socket\n");
+        synce_error("Could not create client-server-socket");
         return -1;
-    }    
-    
+    }
+
     if (local_select_addto_rlist(main_manage.sel, main_manage.control, client_accept,
                                  &main_manage) < 0) {
-        synce_error("Could not add local socket\n");
+        synce_error("Could not add local socket");
         return -1;
     }
 
     if (select_addto_rlist(main_manage.sel, synce_socket_get_descriptor(main_manage.server),
                            device_accept, &main_manage) < 0) {
-        synce_error("Could not add PDA-server-socket\n");
+        synce_error("Could not add PDA-server-socket");
         return -1;
     }
-    
+
     if (is_daemon) {
         synce_trace("Forking into background");
         daemon(0, 0);
     } else {
         synce_trace("Running in foreground");
     }
-    
+
     if (!write_pid_file(pid_file)) {
         return -1;
     }
-    
+
     run_scripts(NULL, (char *) "start");
 
     while(running) {
@@ -985,7 +999,7 @@ int main(int argc, char *argv[])
         select_set_timeval(main_manage.sel, timeout);
         select_select(main_manage.sel);
     }
-    
+
     run_scripts(NULL, (char *) "stop");
 
     return 0;
