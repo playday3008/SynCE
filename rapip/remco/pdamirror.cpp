@@ -64,8 +64,9 @@ static const char *MITlicense = I18N_NOOP(
 
 static KCmdLineOptions options[] =
     {
-        { "pdaaddress <argument>", I18N_NOOP("IP-Address or Hostname of the pda"), "" },
-        { "syncename <argument>", I18N_NOOP("Name of the PDA known by SynCE"), ""},
+        { "nosynce", I18N_NOOP("the pdaname is an IP-Address/Hostname."), NULL},
+        { "forceinstall", I18N_NOOP("force the installation of the pda component"), "0"},
+        { "+pdaname", I18N_NOOP("IP-Address/Hostname or SynCE-Name of the PDA"), "" },
         { 0, 0, 0 }
         // INSERT YOUR COMMANDLINE OPTIONS HERE
     };
@@ -99,21 +100,19 @@ int main(int argc, char *argv[])
 
     KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
 
-    QString pdaAddress = args->getOption("pdaaddress");
-    QString synceName = args->getOption("syncename");
+    QString pdaName = args->arg(0);
+    bool synce = args->isSet("synce");
+    bool forceInstall = args->isSet("forceinstall");
 
-    if (pdaAddress.isEmpty() && synceName.isEmpty()) {
-        kdDebug(2120) << "You have to specify an hostname" << endl;
-    }
+    kdDebug(2120) << "Synce: " << synce << endl;
+    kdDebug(2120) << "ForceInstall: " << forceInstall << endl;
 
     KApplication a;
 
-    QString pdaName = "Volker";
-
     PdaScreenImpl *pdaScreen = new PdaScreenImpl(pdaName, &aboutData, new KAboutApplication(&aboutData));
 
-    if (!pdaScreen->connectPda(pdaAddress, synceName)) {
-        kdDebug(2120) << "Could not contact PDA " << pdaAddress << endl;
+    if (!pdaScreen->connectPda(pdaName, synce, forceInstall)) {
+        kdDebug(2120) << "Could not contact PDA " << pdaName << endl;
         return -1;
     }
 
