@@ -14,8 +14,7 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
-Buildroot: %{_tmppath}/%{name}-root
-#Buildroot: %{_tmppath}/synce-root
+Buildroot: %{_tmppath}/synce-root
 Requires: synce-libsynce
 
 %description
