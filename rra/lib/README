@@ -65,8 +65,8 @@ from the PDA and handle timezone data in vCalendar files.
 See the rra/src directory for example programs that uses these modules.
 
 
-HOW TO ADD A PROPERTY CONVERSION FOR CONTACTS
-=============================================
+HOW TO ADD A PROPERTY CONVERSION FOR CONTACTS, APPOINTMENTS AND TASKS
+=====================================================================
 
 The exact code to be added is best deduced by studying the code for the
 previously supported properties, but the locations you need to modify are
@@ -84,6 +84,9 @@ constants in these files are sorted by ID value)
 
 
 FOR CONTACT OBJECTS
+
+Note that the "Parser" structure in contact.c is internal to this file and is
+not the same as the one in parser.[ch]. Sorry!
 
 1. Go to the switch() in the rra_contact_to_vcard2() function in contact.c and
 add code for handling the new property
@@ -108,4 +111,7 @@ task.c, and add a new such call for the new property
 4. Implement the on_mdir_line_* function for the property. If this function is
 called with the 'line' parameter set to NULL, the property is _not_ present in
 the vCalendar data and a default value may be provided.
+
+If the property exists for both appointments and tasks it might be added to
+common_handlers.[ch] and used by both object types.
 
