@@ -34,6 +34,10 @@ href="http://fink.sourceforge.net/doc/porting/libtool.php">patch the
 href="http://www.loolix.com/hacks/LoolixUSBPocketPC/">LoolixUSBPocketPC</a>
 driver to connect your Pocket PC device over USB to your Mac.</p></li>
 
+<li class=SPACED><a
+href="https://sourceforge.net/forum/message.php?msg_id=2727251">Changes needed
+to compile SynCE 0.9.0 on Mac OS X</a>.</li>
+
 </ul>
 
 <p>Return to <a href="index.php">main page</a>.</p>
