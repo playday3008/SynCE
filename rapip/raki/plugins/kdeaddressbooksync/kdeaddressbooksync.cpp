@@ -447,6 +447,7 @@ bool KdeAddressBookSync::sync()
     delete pcRhoBook;
 
     KABC::StdAddressBook::save();
+    KABC::StdAddressBook::close();
     
     setTask("Finished");
 
