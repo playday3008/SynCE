@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 	int result = 1;
 	HRESULT hr;
 	RRA* rra = NULL;
+	const char* type_id_str = NULL;
 	uint32_t type_id = 0;
 	uint32_t object_id = 0;
 	
@@ -24,8 +25,8 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-	type_id    = strtol(argv[1], NULL, 16);
-	object_id  = strtol(argv[2], NULL, 16);
+	type_id_str = argv[1];
+	object_id   = strtol(argv[2], NULL, 16);
 	
 	hr = CeRapiInit();
 	if (FAILED(hr))
@@ -38,6 +39,10 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
 	}
+
+  type_id = rra_type_id_from_name(rra, type_id_str);
+  if (!type_id)
+    type_id = strtol(type_id_str, NULL, 16);
 
 	if (!rra_object_delete(rra, type_id, object_id))
 	{
