@@ -29,8 +29,9 @@ versions.</p>
 author of the SynCE GNOME-VFS module.</p>
 
 <p>Project manager <a href="mailto:voc@users.sourceforge.net">Volker
-Christian</a> works with <a href="kde/">KDE integration</a> and he is the
-maintainer of the SynCE Debian packages.</p>
+Christian</a> works with <a href="kde/">KDE integration</a> and he is the <a
+href="http://qa.debian.org/developer.php?login=Volker+Christian">maintainer of
+the SynCE Debian packages</a>.</p>
 
 <p><a href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> has created a
 Perl language mapping for RAPI.</p>
