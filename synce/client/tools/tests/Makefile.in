@@ -1,0 +1,853 @@
+# KDE tags expanded automatically by am_edit - $Revision$ 
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+#>- 
+bindir = @bindir@
+#>+ 3
+DEPDIR = .deps
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ../../..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+build_alias = @build_alias@
+build_triplet = @build@
+host_alias = @host_alias@
+host_triplet = @host@
+target_alias = @target_alias@
+target_triplet = @target@
+ARTSCCONFIG = @ARTSCCONFIG@
+AS = @AS@
+AUTODIRS = @AUTODIRS@
+CC = @CC@
+CONF_FILES = @CONF_FILES@
+CPP = @CPP@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+DCOPIDL = @DCOPIDL@
+DCOPIDL2CPP = @DCOPIDL2CPP@
+DCOP_DEPENDENCIES = @DCOP_DEPENDENCIES@
+DLLTOOL = @DLLTOOL@
+DPMSINC = @DPMSINC@
+DPMSLIB = @DPMSLIB@
+EXEEXT = @EXEEXT@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
+GLINC = @GLINC@
+GLLIB = @GLLIB@
+GMSGFMT = @GMSGFMT@
+IDL = @IDL@
+IDL_DEPENDENCIES = @IDL_DEPENDENCIES@
+KDB2HTML = @KDB2HTML@
+KDECONFIG = @KDECONFIG@
+KDE_CXXFLAGS = @KDE_CXXFLAGS@
+KDE_EXTRA_RPATH = @KDE_EXTRA_RPATH@
+KDE_INCLUDES = @KDE_INCLUDES@
+KDE_LDFLAGS = @KDE_LDFLAGS@
+KDE_PLUGIN = @KDE_PLUGIN@
+KDE_RPATH = @KDE_RPATH@
+KDE_USE_CLOSURE_FALSE = @KDE_USE_CLOSURE_FALSE@
+KDE_USE_CLOSURE_TRUE = @KDE_USE_CLOSURE_TRUE@
+KDE_USE_FINAL_FALSE = @KDE_USE_FINAL_FALSE@
+KDE_USE_FINAL_TRUE = @KDE_USE_FINAL_TRUE@
+LIBCOMPAT = @LIBCOMPAT@
+LIBCRYPT = @LIBCRYPT@
+LIBDL = @LIBDL@
+LIBJPEG = @LIBJPEG@
+LIBMICO = @LIBMICO@
+LIBOBJS = @LIBOBJS@
+LIBPNG = @LIBPNG@
+LIBPTHREAD = @LIBPTHREAD@
+LIBPYTHON = @LIBPYTHON@
+LIBQIMGIO = @LIBQIMGIO@
+LIBSM = @LIBSM@
+LIBSOCKET = @LIBSOCKET@
+LIBTIFF = @LIBTIFF@
+LIBTOOL = @LIBTOOL@
+LIBUCB = @LIBUCB@
+LIBZ = @LIBZ@
+LIB_KAB = @LIB_KAB@
+LIB_KDECORE = @LIB_KDECORE@
+LIB_KDEUI = @LIB_KDEUI@
+LIB_KFILE = @LIB_KFILE@
+LIB_KFM = @LIB_KFM@
+LIB_KFORMULA = @LIB_KFORMULA@
+LIB_KHTML = @LIB_KHTML@
+LIB_KIMGIO = @LIB_KIMGIO@
+LIB_KIO = @LIB_KIO@
+LIB_KPARTS = @LIB_KPARTS@
+LIB_KSPELL = @LIB_KSPELL@
+LIB_KSYCOCA = @LIB_KSYCOCA@
+LIB_KWRITE = @LIB_KWRITE@
+LIB_QT = @LIB_QT@
+LIB_SMB = @LIB_SMB@
+LIB_X11 = @LIB_X11@
+LN_S = @LN_S@
+MAKEINFO = @MAKEINFO@
+MCOPIDL = @MCOPIDL@
+MICO_INCLUDES = @MICO_INCLUDES@
+MICO_LDFLAGS = @MICO_LDFLAGS@
+MOC = @MOC@
+MSGFMT = @MSGFMT@
+NOOPT_CXXFLAGS = @NOOPT_CXXFLAGS@
+NOREPO = @NOREPO@
+OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+PAMINC = @PAMINC@
+PAMLIBPATHS = @PAMLIBPATHS@
+PAMLIBS = @PAMLIBS@
+PYTHONINC = @PYTHONINC@
+PYTHONLIB = @PYTHONLIB@
+PYTHONMODDIR = @PYTHONMODDIR@
+QT_INCLUDES = @QT_INCLUDES@
+QT_LDFLAGS = @QT_LDFLAGS@
+RANLIB = @RANLIB@
+REPO = @REPO@
+STRIP = @STRIP@
+TOPSUBDIRS = @TOPSUBDIRS@
+UIC = @UIC@
+USER_INCLUDES = @USER_INCLUDES@
+USER_LDFLAGS = @USER_LDFLAGS@
+USE_EXCEPTIONS = @USE_EXCEPTIONS@
+USE_RTTI = @USE_RTTI@
+USE_THREADS = @USE_THREADS@
+VERSION = @VERSION@
+XGETTEXT = @XGETTEXT@
+XPMINC = @XPMINC@
+XPMLIB = @XPMLIB@
+X_EXTRA_LIBS = @X_EXTRA_LIBS@
+X_INCLUDES = @X_INCLUDES@
+X_LDFLAGS = @X_LDFLAGS@
+X_PRE_LIBS = @X_PRE_LIBS@
+all_includes = @all_includes@
+all_libraries = @all_libraries@
+idldir = @idldir@
+kde_appsdir = @kde_appsdir@
+kde_bindir = @kde_bindir@
+kde_confdir = @kde_confdir@
+kde_datadir = @kde_datadir@
+kde_htmldir = @kde_htmldir@
+kde_icondir = @kde_icondir@
+kde_includes = @kde_includes@
+kde_libraries = @kde_libraries@
+kde_libs_htmldir = @kde_libs_htmldir@
+kde_libs_prefix = @kde_libs_prefix@
+kde_locale = @kde_locale@
+kde_mimedir = @kde_mimedir@
+kde_moduledir = @kde_moduledir@
+kde_servicesdir = @kde_servicesdir@
+kde_servicetypesdir = @kde_servicetypesdir@
+kde_sounddir = @kde_sounddir@
+kde_templatesdir = @kde_templatesdir@
+kde_wallpaperdir = @kde_wallpaperdir@
+micodir = @micodir@
+qt_includes = @qt_includes@
+qt_libraries = @qt_libraries@
+x_includes = @x_includes@
+x_libraries = @x_libraries@
+
+CFLAGS = -Wall -ggdb
+INCLUDES = -I$(top_srcdir)/libwine -I$(top_srcdir)/client/librapi $(all_includes)
+LDADD = $(top_builddir)/client/librapi/librapi.la $(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+
+pcp_SOURCES = test.h pcp.cpp
+
+CeRapiInit_SOURCES = test.h CeRapiInit.cpp
+CeGetSpecialFolderPath_SOURCES = test.h CeGetSpecialFolderPath.cpp
+CeRegOpenKeyEx_SOURCES = test.h CeRegOpenKeyEx.cpp
+CeFindFirstFile_SOURCES = test.h CeFindFirstFile.cpp
+CeCreateFile_SOURCES = test.h CeCreateFile.cpp
+CeFindAllFiles_SOURCES = test.h CeFindAllFiles.cpp
+CeFindAllDatabases_SOURCES = test.h CeFindAllDatabases.cpp
+CeOpenDatabase_SOURCES = test.h CeOpenDatabase.cpp
+CeRegEnumKeyEx_SOURCES = test.h CeRegEnumKeyEx.cpp
+CeRegEnumValue_SOURCES = test.h CeRegEnumValue.cpp
+CeRegQueryInfoKey_SOURCES = test.h CeRegQueryInfoKey.cpp
+
+noinst_PROGRAMS = pcp 	CeRapiInit CeGetSpecialFolderPath CeRegOpenKeyEx 	CeFindFirstFile CeCreateFile CeFindAllFiles CeFindAllDatabases 	CeOpenDatabase CeRegEnumKeyEx CeRegEnumValue CeRegQueryInfoKey
+
+mkinstalldirs = $(SHELL) $(top_srcdir)/admin/mkinstalldirs
+CONFIG_HEADER = ../../../config.h
+CONFIG_CLEAN_FILES = 
+noinst_PROGRAMS =  pcp$(EXEEXT) CeRapiInit$(EXEEXT) \
+CeGetSpecialFolderPath$(EXEEXT) CeRegOpenKeyEx$(EXEEXT) \
+CeFindFirstFile$(EXEEXT) CeCreateFile$(EXEEXT) CeFindAllFiles$(EXEEXT) \
+CeFindAllDatabases$(EXEEXT) CeOpenDatabase$(EXEEXT) \
+CeRegEnumKeyEx$(EXEEXT) CeRegEnumValue$(EXEEXT) \
+CeRegQueryInfoKey$(EXEEXT)
+PROGRAMS =  $(noinst_PROGRAMS)
+
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../..
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+#>- pcp_OBJECTS =  pcp.$(OBJEXT)
+#>+ 1
+pcp_OBJECTS = pcp.$(OBJEXT)
+pcp_LDADD = $(LDADD)
+pcp_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+pcp_LDFLAGS = 
+#>- CeRapiInit_OBJECTS =  CeRapiInit.$(OBJEXT)
+#>+ 1
+CeRapiInit_OBJECTS = CeRapiInit.$(OBJEXT)
+CeRapiInit_LDADD = $(LDADD)
+CeRapiInit_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeRapiInit_LDFLAGS = 
+#>- CeGetSpecialFolderPath_OBJECTS =  CeGetSpecialFolderPath.$(OBJEXT)
+#>+ 1
+CeGetSpecialFolderPath_OBJECTS = CeGetSpecialFolderPath.$(OBJEXT)
+CeGetSpecialFolderPath_LDADD = $(LDADD)
+CeGetSpecialFolderPath_DEPENDENCIES =  \
+$(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeGetSpecialFolderPath_LDFLAGS = 
+#>- CeRegOpenKeyEx_OBJECTS =  CeRegOpenKeyEx.$(OBJEXT)
+#>+ 1
+CeRegOpenKeyEx_OBJECTS = CeRegOpenKeyEx.$(OBJEXT)
+CeRegOpenKeyEx_LDADD = $(LDADD)
+CeRegOpenKeyEx_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeRegOpenKeyEx_LDFLAGS = 
+#>- CeFindFirstFile_OBJECTS =  CeFindFirstFile.$(OBJEXT)
+#>+ 1
+CeFindFirstFile_OBJECTS = CeFindFirstFile.$(OBJEXT)
+CeFindFirstFile_LDADD = $(LDADD)
+CeFindFirstFile_DEPENDENCIES =  \
+$(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeFindFirstFile_LDFLAGS = 
+#>- CeCreateFile_OBJECTS =  CeCreateFile.$(OBJEXT)
+#>+ 1
+CeCreateFile_OBJECTS = CeCreateFile.$(OBJEXT)
+CeCreateFile_LDADD = $(LDADD)
+CeCreateFile_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeCreateFile_LDFLAGS = 
+#>- CeFindAllFiles_OBJECTS =  CeFindAllFiles.$(OBJEXT)
+#>+ 1
+CeFindAllFiles_OBJECTS = CeFindAllFiles.$(OBJEXT)
+CeFindAllFiles_LDADD = $(LDADD)
+CeFindAllFiles_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeFindAllFiles_LDFLAGS = 
+#>- CeFindAllDatabases_OBJECTS =  CeFindAllDatabases.$(OBJEXT)
+#>+ 1
+CeFindAllDatabases_OBJECTS = CeFindAllDatabases.$(OBJEXT)
+CeFindAllDatabases_LDADD = $(LDADD)
+CeFindAllDatabases_DEPENDENCIES =  \
+$(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeFindAllDatabases_LDFLAGS = 
+#>- CeOpenDatabase_OBJECTS =  CeOpenDatabase.$(OBJEXT)
+#>+ 1
+CeOpenDatabase_OBJECTS = CeOpenDatabase.$(OBJEXT)
+CeOpenDatabase_LDADD = $(LDADD)
+CeOpenDatabase_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeOpenDatabase_LDFLAGS = 
+#>- CeRegEnumKeyEx_OBJECTS =  CeRegEnumKeyEx.$(OBJEXT)
+#>+ 1
+CeRegEnumKeyEx_OBJECTS = CeRegEnumKeyEx.$(OBJEXT)
+CeRegEnumKeyEx_LDADD = $(LDADD)
+CeRegEnumKeyEx_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeRegEnumKeyEx_LDFLAGS = 
+#>- CeRegEnumValue_OBJECTS =  CeRegEnumValue.$(OBJEXT)
+#>+ 1
+CeRegEnumValue_OBJECTS = CeRegEnumValue.$(OBJEXT)
+CeRegEnumValue_LDADD = $(LDADD)
+CeRegEnumValue_DEPENDENCIES =  $(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeRegEnumValue_LDFLAGS = 
+#>- CeRegQueryInfoKey_OBJECTS =  CeRegQueryInfoKey.$(OBJEXT)
+#>+ 1
+CeRegQueryInfoKey_OBJECTS = CeRegQueryInfoKey.$(OBJEXT)
+CeRegQueryInfoKey_LDADD = $(LDADD)
+CeRegQueryInfoKey_DEPENDENCIES =  \
+$(top_builddir)/client/librapi/librapi.la \
+$(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
+CeRegQueryInfoKey_LDFLAGS = 
+CXXFLAGS = @CXXFLAGS@
+#>- CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+#>+ 1
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(KDE_CXXFLAGS)
+#>- LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+#>+ 1
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(KDE_CXXFLAGS)
+CXXLD = $(CXX)
+#>- CXXLINK = $(LIBTOOL) --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+#>+ 1
+CXXLINK = $(LIBTOOL) --mode=link --tag=CXX $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(KDE_CXXFLAGS) $(LDFLAGS) -o $@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+DIST_COMMON =  Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+#>- DEP_FILES =  .deps/CeCreateFile.P .deps/CeFindAllDatabases.P \
+#>- .deps/CeFindAllFiles.P .deps/CeFindFirstFile.P \
+#>- .deps/CeGetSpecialFolderPath.P .deps/CeOpenDatabase.P \
+#>- .deps/CeRapiInit.P .deps/CeRegEnumKeyEx.P .deps/CeRegEnumValue.P \
+#>- .deps/CeRegOpenKeyEx.P .deps/CeRegQueryInfoKey.P .deps/pcp.P
+#>+ 12
+@KDE_USE_FINAL_TRUE@DEP_FILES =   $(DEPDIR)/pcp.all_cpp.P $(DEPDIR)/CeRapiInit.all_cpp.P $(DEPDIR)/CeGetSpecialFolderPath.all_cpp.P $(DEPDIR)/CeRegOpenKeyEx.all_cpp.P $(DEPDIR)/CeFindFirstFile.all_cpp.P $(DEPDIR)/CeCreateFile.all_cpp.P $(DEPDIR)/CeFindAllFiles.all_cpp.P $(DEPDIR)/CeFindAllDatabases.all_cpp.P $(DEPDIR)/CeOpenDatabase.all_cpp.P $(DEPDIR)/CeRegEnumKeyEx.all_cpp.P $(DEPDIR)/CeRegEnumValue.all_cpp.P $(DEPDIR)/CeRegQueryInfoKey.all_cpp.P \
+	  .deps/CeCreateFile.P .deps/CeFindAllDatabases.P \
+.deps/CeFindAllFiles.P .deps/CeFindFirstFile.P \
+.deps/CeGetSpecialFolderPath.P .deps/CeOpenDatabase.P \
+.deps/CeRapiInit.P .deps/CeRegEnumKeyEx.P .deps/CeRegEnumValue.P \
+.deps/CeRegOpenKeyEx.P .deps/CeRegQueryInfoKey.P .deps/pcp.P
+@KDE_USE_FINAL_FALSE@DEP_FILES =    .deps/CeCreateFile.P .deps/CeFindAllDatabases.P \
+.deps/CeFindAllFiles.P .deps/CeFindFirstFile.P \
+.deps/CeGetSpecialFolderPath.P .deps/CeOpenDatabase.P \
+.deps/CeRapiInit.P .deps/CeRegEnumKeyEx.P .deps/CeRegEnumValue.P \
+.deps/CeRegOpenKeyEx.P .deps/CeRegQueryInfoKey.P .deps/pcp.P
+
+SOURCES = $(pcp_SOURCES) $(CeRapiInit_SOURCES) $(CeGetSpecialFolderPath_SOURCES) $(CeRegOpenKeyEx_SOURCES) $(CeFindFirstFile_SOURCES) $(CeCreateFile_SOURCES) $(CeFindAllFiles_SOURCES) $(CeFindAllDatabases_SOURCES) $(CeOpenDatabase_SOURCES) $(CeRegEnumKeyEx_SOURCES) $(CeRegEnumValue_SOURCES) $(CeRegQueryInfoKey_SOURCES)
+OBJECTS = $(pcp_OBJECTS) $(CeRapiInit_OBJECTS) $(CeGetSpecialFolderPath_OBJECTS) $(CeRegOpenKeyEx_OBJECTS) $(CeFindFirstFile_OBJECTS) $(CeCreateFile_OBJECTS) $(CeFindAllFiles_OBJECTS) $(CeFindAllDatabases_OBJECTS) $(CeOpenDatabase_OBJECTS) $(CeRegEnumKeyEx_OBJECTS) $(CeRegEnumValue_OBJECTS) $(CeRegQueryInfoKey_OBJECTS)
+
+#>- all: all-redirect
+#>+ 1
+all: docs-am  all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .cpp .lo .o .obj .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+#>- 	cd $(top_srcdir) && $(AUTOMAKE) --gnu client/tools/tests/Makefile
+#>+ 2
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu client/tools/tests/Makefile
+	cd $(top_srcdir) && perl admin/am_edit client/tools/tests/Makefile.in
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-noinstPROGRAMS:
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+
+distclean-noinstPROGRAMS:
+
+maintainer-clean-noinstPROGRAMS:
+
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+
+pcp$(EXEEXT): $(pcp_OBJECTS) $(pcp_DEPENDENCIES)
+	@rm -f pcp$(EXEEXT)
+	$(CXXLINK) $(pcp_LDFLAGS) $(pcp_OBJECTS) $(pcp_LDADD) $(LIBS)
+
+CeRapiInit$(EXEEXT): $(CeRapiInit_OBJECTS) $(CeRapiInit_DEPENDENCIES)
+	@rm -f CeRapiInit$(EXEEXT)
+	$(CXXLINK) $(CeRapiInit_LDFLAGS) $(CeRapiInit_OBJECTS) $(CeRapiInit_LDADD) $(LIBS)
+
+CeGetSpecialFolderPath$(EXEEXT): $(CeGetSpecialFolderPath_OBJECTS) $(CeGetSpecialFolderPath_DEPENDENCIES)
+	@rm -f CeGetSpecialFolderPath$(EXEEXT)
+	$(CXXLINK) $(CeGetSpecialFolderPath_LDFLAGS) $(CeGetSpecialFolderPath_OBJECTS) $(CeGetSpecialFolderPath_LDADD) $(LIBS)
+
+CeRegOpenKeyEx$(EXEEXT): $(CeRegOpenKeyEx_OBJECTS) $(CeRegOpenKeyEx_DEPENDENCIES)
+	@rm -f CeRegOpenKeyEx$(EXEEXT)
+	$(CXXLINK) $(CeRegOpenKeyEx_LDFLAGS) $(CeRegOpenKeyEx_OBJECTS) $(CeRegOpenKeyEx_LDADD) $(LIBS)
+
+CeFindFirstFile$(EXEEXT): $(CeFindFirstFile_OBJECTS) $(CeFindFirstFile_DEPENDENCIES)
+	@rm -f CeFindFirstFile$(EXEEXT)
+	$(CXXLINK) $(CeFindFirstFile_LDFLAGS) $(CeFindFirstFile_OBJECTS) $(CeFindFirstFile_LDADD) $(LIBS)
+
+CeCreateFile$(EXEEXT): $(CeCreateFile_OBJECTS) $(CeCreateFile_DEPENDENCIES)
+	@rm -f CeCreateFile$(EXEEXT)
+	$(CXXLINK) $(CeCreateFile_LDFLAGS) $(CeCreateFile_OBJECTS) $(CeCreateFile_LDADD) $(LIBS)
+
+CeFindAllFiles$(EXEEXT): $(CeFindAllFiles_OBJECTS) $(CeFindAllFiles_DEPENDENCIES)
+	@rm -f CeFindAllFiles$(EXEEXT)
+	$(CXXLINK) $(CeFindAllFiles_LDFLAGS) $(CeFindAllFiles_OBJECTS) $(CeFindAllFiles_LDADD) $(LIBS)
+
+CeFindAllDatabases$(EXEEXT): $(CeFindAllDatabases_OBJECTS) $(CeFindAllDatabases_DEPENDENCIES)
+	@rm -f CeFindAllDatabases$(EXEEXT)
+	$(CXXLINK) $(CeFindAllDatabases_LDFLAGS) $(CeFindAllDatabases_OBJECTS) $(CeFindAllDatabases_LDADD) $(LIBS)
+
+CeOpenDatabase$(EXEEXT): $(CeOpenDatabase_OBJECTS) $(CeOpenDatabase_DEPENDENCIES)
+	@rm -f CeOpenDatabase$(EXEEXT)
+	$(CXXLINK) $(CeOpenDatabase_LDFLAGS) $(CeOpenDatabase_OBJECTS) $(CeOpenDatabase_LDADD) $(LIBS)
+
+CeRegEnumKeyEx$(EXEEXT): $(CeRegEnumKeyEx_OBJECTS) $(CeRegEnumKeyEx_DEPENDENCIES)
+	@rm -f CeRegEnumKeyEx$(EXEEXT)
+	$(CXXLINK) $(CeRegEnumKeyEx_LDFLAGS) $(CeRegEnumKeyEx_OBJECTS) $(CeRegEnumKeyEx_LDADD) $(LIBS)
+
+CeRegEnumValue$(EXEEXT): $(CeRegEnumValue_OBJECTS) $(CeRegEnumValue_DEPENDENCIES)
+	@rm -f CeRegEnumValue$(EXEEXT)
+	$(CXXLINK) $(CeRegEnumValue_LDFLAGS) $(CeRegEnumValue_OBJECTS) $(CeRegEnumValue_LDADD) $(LIBS)
+
+CeRegQueryInfoKey$(EXEEXT): $(CeRegQueryInfoKey_OBJECTS) $(CeRegQueryInfoKey_DEPENDENCIES)
+	@rm -f CeRegQueryInfoKey$(EXEEXT)
+	$(CXXLINK) $(CeRegQueryInfoKey_LDFLAGS) $(CeRegQueryInfoKey_OBJECTS) $(CeRegQueryInfoKey_LDADD) $(LIBS)
+.cpp.o:
+	$(CXXCOMPILE) -c $<
+.cpp.obj:
+	$(CXXCOMPILE) -c `cygpath -w $<`
+.cpp.lo:
+	$(LTCXXCOMPILE) -c $<
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = client/tools/tests
+
+distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu client/tools/tests/Makefile
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+
+%.o: %.cpp
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.cpp
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am:
+install-exec: install-exec-am
+
+install-data-am:
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am:
+uninstall: uninstall-am
+all-am: Makefile $(PROGRAMS)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs:
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-noinstPROGRAMS mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-tags mostlyclean-depend \
+		mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+#>- clean-am:  clean-noinstPROGRAMS clean-compile clean-libtool clean-tags \
+#>- 		clean-depend clean-generic mostlyclean-am
+#>+ 2
+clean-am: clean-final   clean-noinstPROGRAMS clean-compile clean-libtool clean-tags \
+		clean-depend clean-generic mostlyclean-am
+
+#>- clean: clean-am
+#>+ 1
+clean: kde-rpo-clean  clean-am
+
+distclean-am:  distclean-noinstPROGRAMS distclean-compile \
+		distclean-libtool distclean-tags distclean-depend \
+		distclean-generic clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-noinstPROGRAMS \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
+clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool tags mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+test: $(noinst_PROGRAMS)
+	./CeRapiInit
+	./CeGetSpecialFolderPath
+	./CeRegOpenKeyEx
+	./CeFindFirstFile
+	./CeCreateFile
+	./CeFindAllFiles
+	./CeFindAllDatabases
+	./CeRegEnumKeyEx
+	./CeRegEnumValue
+	./CeRegQueryInfoKey
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:
+
+#>+ 2
+docs-am:
+
+#>+ 5
+force-reedit:
+		cd $(top_srcdir) && $(AUTOMAKE) --gnu client/tools/tests/Makefile
+	cd $(top_srcdir) && perl admin/am_edit client/tools/tests/Makefile.in
+
+
+#>+ 11
+pcp.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/pcp.cpp  
+	@echo 'creating pcp.all_cpp.cpp ...'; \
+	rm -f pcp.all_cpp.files pcp.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> pcp.all_cpp.final; \
+	for file in pcp.cpp ; do \
+	  echo "#include \"$$file\"" >> pcp.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> pcp.all_cpp.final; \
+	done; \
+	cat pcp.all_cpp.final pcp.all_cpp.files  > pcp.all_cpp.cpp; \
+	rm -f pcp.all_cpp.final pcp.all_cpp.files
+
+#>+ 11
+CeRapiInit.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeRapiInit.cpp  
+	@echo 'creating CeRapiInit.all_cpp.cpp ...'; \
+	rm -f CeRapiInit.all_cpp.files CeRapiInit.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeRapiInit.all_cpp.final; \
+	for file in CeRapiInit.cpp ; do \
+	  echo "#include \"$$file\"" >> CeRapiInit.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeRapiInit.all_cpp.final; \
+	done; \
+	cat CeRapiInit.all_cpp.final CeRapiInit.all_cpp.files  > CeRapiInit.all_cpp.cpp; \
+	rm -f CeRapiInit.all_cpp.final CeRapiInit.all_cpp.files
+
+#>+ 11
+CeGetSpecialFolderPath.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeGetSpecialFolderPath.cpp  
+	@echo 'creating CeGetSpecialFolderPath.all_cpp.cpp ...'; \
+	rm -f CeGetSpecialFolderPath.all_cpp.files CeGetSpecialFolderPath.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeGetSpecialFolderPath.all_cpp.final; \
+	for file in CeGetSpecialFolderPath.cpp ; do \
+	  echo "#include \"$$file\"" >> CeGetSpecialFolderPath.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeGetSpecialFolderPath.all_cpp.final; \
+	done; \
+	cat CeGetSpecialFolderPath.all_cpp.final CeGetSpecialFolderPath.all_cpp.files  > CeGetSpecialFolderPath.all_cpp.cpp; \
+	rm -f CeGetSpecialFolderPath.all_cpp.final CeGetSpecialFolderPath.all_cpp.files
+
+#>+ 11
+CeRegOpenKeyEx.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeRegOpenKeyEx.cpp  
+	@echo 'creating CeRegOpenKeyEx.all_cpp.cpp ...'; \
+	rm -f CeRegOpenKeyEx.all_cpp.files CeRegOpenKeyEx.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeRegOpenKeyEx.all_cpp.final; \
+	for file in CeRegOpenKeyEx.cpp ; do \
+	  echo "#include \"$$file\"" >> CeRegOpenKeyEx.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeRegOpenKeyEx.all_cpp.final; \
+	done; \
+	cat CeRegOpenKeyEx.all_cpp.final CeRegOpenKeyEx.all_cpp.files  > CeRegOpenKeyEx.all_cpp.cpp; \
+	rm -f CeRegOpenKeyEx.all_cpp.final CeRegOpenKeyEx.all_cpp.files
+
+#>+ 11
+CeFindFirstFile.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeFindFirstFile.cpp  
+	@echo 'creating CeFindFirstFile.all_cpp.cpp ...'; \
+	rm -f CeFindFirstFile.all_cpp.files CeFindFirstFile.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeFindFirstFile.all_cpp.final; \
+	for file in CeFindFirstFile.cpp ; do \
+	  echo "#include \"$$file\"" >> CeFindFirstFile.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeFindFirstFile.all_cpp.final; \
+	done; \
+	cat CeFindFirstFile.all_cpp.final CeFindFirstFile.all_cpp.files  > CeFindFirstFile.all_cpp.cpp; \
+	rm -f CeFindFirstFile.all_cpp.final CeFindFirstFile.all_cpp.files
+
+#>+ 11
+CeCreateFile.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeCreateFile.cpp  
+	@echo 'creating CeCreateFile.all_cpp.cpp ...'; \
+	rm -f CeCreateFile.all_cpp.files CeCreateFile.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeCreateFile.all_cpp.final; \
+	for file in CeCreateFile.cpp ; do \
+	  echo "#include \"$$file\"" >> CeCreateFile.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeCreateFile.all_cpp.final; \
+	done; \
+	cat CeCreateFile.all_cpp.final CeCreateFile.all_cpp.files  > CeCreateFile.all_cpp.cpp; \
+	rm -f CeCreateFile.all_cpp.final CeCreateFile.all_cpp.files
+
+#>+ 11
+CeFindAllFiles.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeFindAllFiles.cpp  
+	@echo 'creating CeFindAllFiles.all_cpp.cpp ...'; \
+	rm -f CeFindAllFiles.all_cpp.files CeFindAllFiles.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeFindAllFiles.all_cpp.final; \
+	for file in CeFindAllFiles.cpp ; do \
+	  echo "#include \"$$file\"" >> CeFindAllFiles.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeFindAllFiles.all_cpp.final; \
+	done; \
+	cat CeFindAllFiles.all_cpp.final CeFindAllFiles.all_cpp.files  > CeFindAllFiles.all_cpp.cpp; \
+	rm -f CeFindAllFiles.all_cpp.final CeFindAllFiles.all_cpp.files
+
+#>+ 11
+CeFindAllDatabases.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeFindAllDatabases.cpp  
+	@echo 'creating CeFindAllDatabases.all_cpp.cpp ...'; \
+	rm -f CeFindAllDatabases.all_cpp.files CeFindAllDatabases.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeFindAllDatabases.all_cpp.final; \
+	for file in CeFindAllDatabases.cpp ; do \
+	  echo "#include \"$$file\"" >> CeFindAllDatabases.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeFindAllDatabases.all_cpp.final; \
+	done; \
+	cat CeFindAllDatabases.all_cpp.final CeFindAllDatabases.all_cpp.files  > CeFindAllDatabases.all_cpp.cpp; \
+	rm -f CeFindAllDatabases.all_cpp.final CeFindAllDatabases.all_cpp.files
+
+#>+ 11
+CeOpenDatabase.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeOpenDatabase.cpp  
+	@echo 'creating CeOpenDatabase.all_cpp.cpp ...'; \
+	rm -f CeOpenDatabase.all_cpp.files CeOpenDatabase.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeOpenDatabase.all_cpp.final; \
+	for file in CeOpenDatabase.cpp ; do \
+	  echo "#include \"$$file\"" >> CeOpenDatabase.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeOpenDatabase.all_cpp.final; \
+	done; \
+	cat CeOpenDatabase.all_cpp.final CeOpenDatabase.all_cpp.files  > CeOpenDatabase.all_cpp.cpp; \
+	rm -f CeOpenDatabase.all_cpp.final CeOpenDatabase.all_cpp.files
+
+#>+ 11
+CeRegEnumKeyEx.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeRegEnumKeyEx.cpp  
+	@echo 'creating CeRegEnumKeyEx.all_cpp.cpp ...'; \
+	rm -f CeRegEnumKeyEx.all_cpp.files CeRegEnumKeyEx.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeRegEnumKeyEx.all_cpp.final; \
+	for file in CeRegEnumKeyEx.cpp ; do \
+	  echo "#include \"$$file\"" >> CeRegEnumKeyEx.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeRegEnumKeyEx.all_cpp.final; \
+	done; \
+	cat CeRegEnumKeyEx.all_cpp.final CeRegEnumKeyEx.all_cpp.files  > CeRegEnumKeyEx.all_cpp.cpp; \
+	rm -f CeRegEnumKeyEx.all_cpp.final CeRegEnumKeyEx.all_cpp.files
+
+#>+ 11
+CeRegEnumValue.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeRegEnumValue.cpp  
+	@echo 'creating CeRegEnumValue.all_cpp.cpp ...'; \
+	rm -f CeRegEnumValue.all_cpp.files CeRegEnumValue.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeRegEnumValue.all_cpp.final; \
+	for file in CeRegEnumValue.cpp ; do \
+	  echo "#include \"$$file\"" >> CeRegEnumValue.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeRegEnumValue.all_cpp.final; \
+	done; \
+	cat CeRegEnumValue.all_cpp.final CeRegEnumValue.all_cpp.files  > CeRegEnumValue.all_cpp.cpp; \
+	rm -f CeRegEnumValue.all_cpp.final CeRegEnumValue.all_cpp.files
+
+#>+ 11
+CeRegQueryInfoKey.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/CeRegQueryInfoKey.cpp  
+	@echo 'creating CeRegQueryInfoKey.all_cpp.cpp ...'; \
+	rm -f CeRegQueryInfoKey.all_cpp.files CeRegQueryInfoKey.all_cpp.final; \
+	echo "#define KDE_USE_FINAL 1" >> CeRegQueryInfoKey.all_cpp.final; \
+	for file in CeRegQueryInfoKey.cpp ; do \
+	  echo "#include \"$$file\"" >> CeRegQueryInfoKey.all_cpp.files; \
+	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> CeRegQueryInfoKey.all_cpp.final; \
+	done; \
+	cat CeRegQueryInfoKey.all_cpp.final CeRegQueryInfoKey.all_cpp.files  > CeRegQueryInfoKey.all_cpp.cpp; \
+	rm -f CeRegQueryInfoKey.all_cpp.final CeRegQueryInfoKey.all_cpp.files
+
+#>+ 3
+clean-final:
+	-rm -f pcp.all_cpp.cpp CeRapiInit.all_cpp.cpp CeGetSpecialFolderPath.all_cpp.cpp CeRegOpenKeyEx.all_cpp.cpp CeFindFirstFile.all_cpp.cpp CeCreateFile.all_cpp.cpp CeFindAllFiles.all_cpp.cpp CeFindAllDatabases.all_cpp.cpp CeOpenDatabase.all_cpp.cpp CeRegEnumKeyEx.all_cpp.cpp CeRegEnumValue.all_cpp.cpp CeRegQueryInfoKey.all_cpp.cpp
+
+#>+ 2
+final:
+	$(MAKE) all-am
+#>+ 2
+no-final:
+	$(MAKE) all-am
+#>+ 3
+cvs-clean:
+	$(MAKE) -f $(top_srcdir)/admin/Makefile.common cvs-clean
+
+#>+ 3
+kde-rpo-clean:
+	-rm -f *.rpo
