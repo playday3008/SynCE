@@ -85,6 +85,8 @@ bool CalendarHandler::getCalendarEvents (KCal::Calendar& p_calendar, RecordType 
         return false;
     }
 
+    p_calendar.setTimeZoneId(sCurrentTimeZone);
+
     struct Rra::ids ids;
 
     if (!m_rra->getIds (s_typeIdEvent, &ids))
@@ -195,7 +197,7 @@ void CalendarHandler::getEventEntry (KCal::Calendar& p_calendar, const struct Rr
     }
 
     KCal::ICalFormat calFormat; // NEEDED FOR EVENTS!!
-    KCal::CalendarLocal cal;
+//    KCal::CalendarLocal cal;
     calFormat.setTimeZone(sCurrentTimeZone, false);
 
     QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
