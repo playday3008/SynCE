@@ -256,37 +256,37 @@ int main(int argc, char** argv)
 
     case FORMAT_RAW:
       {
-        char* ascii_name        = wstr_to_ascii(tzi.Name);
-        char* ascii_description = wstr_to_ascii(tzi.Description);
+        char* ascii_standard_name = wstr_to_ascii(tzi.StandardName);
+        char* ascii_daylight_name = wstr_to_ascii(tzi.DaylightName);
 
         fprintf(output,
             "Bias:                  %i\n"
-            "Name:                  %s\n"
+            "StandardName:          %s\n"
             "StandardMonthOfYear:   %i (%s)\n"
             "StandardInstance:      %i (%s)\n"
             "StandardStartHour:     %i\n"
             "StandardBias:          %i\n"
-            "Description:           %s\n"
+            "DaylightName:          %s\n"
             "DaylightMonthOfYear:   %i (%s)\n"
             "DaylightInstance:      %i (%s)\n"
             "DaylightStartHour:     %i\n"
             "DaylightBias:          %i\n"
             ,
             tzi.Bias,
-            ascii_name,
+            ascii_standard_name,
             tzi.StandardMonthOfYear, month_string(tzi.StandardMonthOfYear),
             tzi.StandardInstance, instance_string(tzi.StandardInstance),
             tzi.StandardStartHour,
             tzi.StandardBias,
-            ascii_description,
+            ascii_daylight_name,
             tzi.DaylightMonthOfYear, month_string(tzi.DaylightMonthOfYear),
             tzi.DaylightInstance, instance_string(tzi.DaylightInstance),
             tzi.DaylightStartHour,
             tzi.DaylightBias
               );
 
-            wstr_free_string(ascii_name);
-            wstr_free_string(ascii_description);
+            wstr_free_string(ascii_standard_name);
+            wstr_free_string(ascii_daylight_name);
       }
       break;
 
