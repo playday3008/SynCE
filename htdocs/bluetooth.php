@@ -40,7 +40,7 @@ for more.
 <pre>nodefaultroute
 noauthlocal
 192.168.131.102:192.168.131.201
-ms-dns 192.168.0.1
+ms-dns 192.168.131.102
 linkname synce-device</pre></li>
 
 <li><p>Try the <tt>/usr/bin/bluepin</tt> program to see that it works. If not,
