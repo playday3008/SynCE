@@ -6,6 +6,11 @@
 
 <h1>SynCE - Linux hotplug script for USB connections</h1>
 
+<p>If you have the <b>devfs</b> daemon (for example on Gentoo), you can follow
+Stanislaw Pusep's <a
+href="https://sourceforge.net/forum/message.php?msg_id=2813010">tips for using
+"devfsd" instead of "hotplug"</a>.</p>
+
 <p>Instructions originally provided by <a
 href="mailto:sassur@users.sourceforge.net">Fredrik Nilsson</a>.</p>
 
