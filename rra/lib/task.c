@@ -23,6 +23,18 @@ static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
   switch (propval->propid & 0xffff)
   {
     case CEVT_FILETIME:
+      {
+        time_t completed_time = 
+          filetime_to_unix_time(&propval->val.filetime);
+
+        if (completed_time > 0)
+        {
+          char date[32];
+          /* always UTC format */
+          strftime(date, sizeof(date), "%Y%m%dT000000Z", gmtime(&completed_time));
+          generator_add_simple(g, "COMPLETED", date);
+        }
+      }
       success = true;
       break;
 
