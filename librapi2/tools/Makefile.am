@@ -1,12 +1,10 @@
 ## useful flags
-CFLAGS   = -ggdb -Wno-long-long -Wall -I../src -I../src/support
+CFLAGS   = -ggdb -Wno-long-long -Wall @APPLE_CFLAGS@ -I../src -I../src/support
 CXXFLAGS = -ggdb -Werror -Wno-long-long -Wall -ansi -pedantic -I../src -I../src/support
 LDADD = ../src/librapi.la
 
-noinst_PROGRAMS = pput pget oidinfo
+noinst_PROGRAMS = oidinfo
 
-pput_SOURCES = pput.cpp
-pget_SOURCES = pget.cpp
 oidinfo_SOURCES = oidinfo.c
 
 bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun pstatus

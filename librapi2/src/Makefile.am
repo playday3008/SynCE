@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -Isupport
+CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -Isupport
 @SET_MAKE@
 
 ## create this library

@@ -131,7 +131,7 @@ static bool rapi_read_find_data(
 {
 	if (lpFindFileData)
 	{
-		size_t size = 0;
+		uint32_t size = 0;
 		rapi_buffer_read_uint32(context->recv_buffer, &size);
 		
 		memset(&lpFindFileData->cFileName, 0, sizeof(lpFindFileData->cFileName));
@@ -227,7 +227,7 @@ DWORD CeGetSpecialFolderPath(
 		LPWSTR lpBuffer)
 {
 	RapiContext* context = rapi_context_current();
-	DWORD string_length = nBufferLength;
+	size_t string_length = nBufferLength;
 	
 	rapi_context_begin_command(context, 0x44);
 	rapi_buffer_write_uint32(context->send_buffer, (uint32_t)nFolder);
