@@ -1,13 +1,17 @@
 
 # Style sheet locations
-STYLE_SHEET_ROOT      = /usr/share/sgml/docbook/xsl-stylesheets-1.50.0
-HTML_ONE_STYLESHEET   = ${STYLE_SHEET_ROOT}/html/docbook.xsl
-HTML_CHUNK_STYLESHEET = ${STYLE_SHEET_ROOT}/html/chunk.xsl
-FO_STYLESHEET         = ${STYLE_SHEET_ROOT}/fo/docbook.xsl
+HTML_ONE_STYLESHEET   = docbook.xsl
+HTML_CHUNK_STYLESHEET = chunk.xsl
+FO_STYLESHEET         = fo-docbook.xsl
+
 
 # Document files
 DOC_DIR      = docbook
+XML_CATALOG  = catalog.xml 
 ROOT_DOC     = synce.xml  # Main root node file
+XSL_PARAMS   = --stringparam formal.title.placement "table after" \
+               --stringparam section.autolabel 1 \
+               --stringparam section.label.includes.component.label 1
 
 # Output locations
 ONE_FILE_OUT = synce.html # Output file name for one-in-one html
@@ -17,7 +21,7 @@ CHUNK_DIR    = ${HTML_DIR}/chunk
 PDF_DIR      = pdf
 
 # Location of xsl processor
-xsltproc = xsltproc
+xsltproc = XML_CATALOG_FILES=${XML_CATALOG}  xsltproc
 fopproc  = fop.sh
 
 help:
@@ -44,14 +48,18 @@ setup: force
 
 html-one: setup
 	PWD=`pwd`
-	(cd ${DOC_DIR}; ${xsltproc}  -o ${PWD}/${ONE_FILE_DIR}/${ONE_FILE_OUT} ${HTML_ONE_STYLESHEET} ${ROOT_DOC})
+	(cd ${DOC_DIR}; ${xsltproc} ${XSL_PARAMS} -o ${PWD}/${ONE_FILE_DIR}/${ONE_FILE_OUT} ${HTML_ONE_STYLESHEET} ${ROOT_DOC})
 
 html-chunk: setup
-	(cd ${DOC_DIR}; ${xsltproc} -o ${PWD}/${CHUNK_DIR}/ ${HTML_CHUNK_STYLESHEET} ${ROOT_DOC})
+	(cd ${DOC_DIR}; ${xsltproc} ${XSL_PARAMS} -o ${PWD}/${CHUNK_DIR}/ ${HTML_CHUNK_STYLESHEET} ${ROOT_DOC})
+
+html: html-one html-chunk
 
 pdf: setup
-	(cd ${DOC_DIR}; ${xsltproc} -o ${PWD}/${PDF_DIR}/out.fo ${FO_STYLESHEET} ${ROOT_DOC})	
-	(cd ${PWD}/${PDF_DIR}; ${fopproc} out.fo -pdf synce.pdf)
+	(cd ${DOC_DIR}; ${xsltproc} ${XSL_PARAMS} --stringparam paper.type "A4" -o ${PWD}/${PDF_DIR}/out.fo ${FO_STYLESHEET} ${ROOT_DOC})	
+	(cd ${PWD}/${PDF_DIR}; ${fopproc} out.fo -pdf synce_A4.pdf)
+	(cd ${DOC_DIR}; ${xsltproc} ${XSL_PARAMS} --stringparam paper.type "USletter" -o ${PWD}/${PDF_DIR}/out.fo ${FO_STYLESHEET} ${ROOT_DOC})
+	(cd ${PWD}/${PDF_DIR}; ${fopproc} out.fo -pdf synce_USLetter.pdf)
 
 all: html-chunk html-one pdf
 
