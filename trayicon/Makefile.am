@@ -1,8 +1,10 @@
-## Makefile.am -- Process this file with automake to produce Makefile.in
-@SET_MAKE@
+## Makefile.am -- Process thisdd file with automake to produce Makefile.in
+SUBDIRS = src pixmaps data po
 
-## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
-AUTOMAKE_OPTIONS = foreign 1.4
-
-SUBDIRS = src pixmaps data .
-
+EXTRA_DIST = \
+			 AUTHORS         \
+			 NEWS            \
+			 README          \
+			 intltool-merge.in   \
+			 intltool-update.in  \
+			 intltool-extract.in		

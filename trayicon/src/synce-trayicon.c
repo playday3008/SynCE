@@ -26,6 +26,10 @@
 	 This is quite a hack, so feel free to submit patches! :-)
 	 
 */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
@@ -35,6 +39,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <glib.h>
 #include <gtk/gtk.h>
 #include <gnome.h>
 #include <glade/glade.h>
@@ -42,9 +47,9 @@
 #include <libgnomeui/gnome-about.h>
 #include <gconf/gconf-client.h>
 #include "eggtrayicon.h"
-#include "config.h"
 #include "gtop_stuff.h"
 #include "properties.h"
+
 
 #define SYNCE_SOFTWARE_MANAGER "synce-software-manager"
 
@@ -69,13 +74,13 @@ static const char* get_battery_flag_string(unsigned flag)
 	
 	switch (flag)
 	{
-		case BATTERY_FLAG_HIGH:        name = "High";       break;
-		case BATTERY_FLAG_LOW:         name = "Low";        break;
-		case BATTERY_FLAG_CRITICAL:    name = "Critical";   break;
-		case BATTERY_FLAG_CHARGING:    name = "Charging";   break;
-		case BATTERY_FLAG_NO_BATTERY:  name = "NoBattery";  break;
+		case BATTERY_FLAG_HIGH:        name = _("High");       break;
+		case BATTERY_FLAG_LOW:         name = _("Low");        break;
+		case BATTERY_FLAG_CRITICAL:    name = _("Critical");   break;
+		case BATTERY_FLAG_CHARGING:    name = _("Charging");   break;
+		case BATTERY_FLAG_NO_BATTERY:  name = _("NoBattery");  break;
 
-		default: name = "Unknown"; break;
+		default: name = _("Unknown"); break;
 	}
 
 	return name;
@@ -114,25 +119,24 @@ static void set_status_tooltips()
 	}
 	else
 	{
-		power_str = g_strdup("Unknown");
+		power_str = g_strdup(_("Unknown"));
 	}
 	 
 	memset(&store, 0, sizeof(store));
 	if (CeGetStoreInformation(&store) && store.dwStoreSize != 0)
 	{
 		store_str = g_strdup_printf(
-				"%i%% (%i megabytes)", 
+				_("%i%% (%i megabytes)"), 
 				100 * store.dwFreeSize / store.dwStoreSize,
 				store.dwFreeSize >> 20);
 	}
 	else
 	{
-		store_str = g_strdup("Unknown");
+		store_str = g_strdup(_("Unknown"));
 	}
 
 	tooltip_str = g_strdup_printf(
-		"Battery life:\t%s\n"
-		"Free store:\t%s",
+		_("Battery life:\t%s\nFree store:\t%s"),
 		power_str,
 		store_str);
 
@@ -149,7 +153,7 @@ static void menu_explore (GtkWidget *button, EggTrayIcon *icon)
 		"nautilus","synce:"
 	};
 	if (gnome_execute_async(NULL,2, argv) == -1) {
-		synce_error_dialog("Can't explore the PDA with the filemanager,\nmake sure you have nautilus and the synce gnome-vfs module installed");
+		synce_error_dialog(_("Can't explore the PDA with the filemanager,\nmake sure you have nautilus and the synce gnome-vfs module installed"));
 	}
 }
 
@@ -159,13 +163,13 @@ static void menu_software (GtkWidget *button, EggTrayIcon *icon)
 		SYNCE_SOFTWARE_MANAGER
 	};
 	if (gnome_execute_async(NULL,1, argv) == -1) {
-		synce_error_dialog("Can't open the software manager\nmake sure you have synce-software-manager installed");
+		synce_error_dialog(_("Can't open the software manager\nmake sure you have synce-software-manager installed"));
 	}
 }
 
 static void menu_preferences (GtkWidget *button, EggTrayIcon *icon)
 {
-	GtkWidget *window = init_prefgui();
+	init_prefgui();
 }
 
 static void menu_about (GtkWidget *button, EggTrayIcon *icon)
@@ -173,14 +177,15 @@ static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 	GtkWidget *about;
 	const gchar* authors[] = {
 		"David Eriksson <twogood@users.sourceforge.net>",
+		"Mattias Eriksson <snaggen@users.sourceforge.net>",
 		NULL
 	};
 	
 	about = gnome_about_new (
-			"SynCE Tray Icon",
+			_("SynCE Tray Icon"),
 			VERSION,
-			"Copyright (c) 2002, David Eriksson",
-			"Displays information about devices connected through SynCE",
+			_("Copyright (c) 2002, David Eriksson"),
+			_("Displays information about devices connected through SynCE"),
 			authors,
 			NULL,
 			NULL,
@@ -227,12 +232,12 @@ static void trayicon_menu(GdkEventButton *event)
 
 	menu = gtk_menu_new();
 
-	entry = gtk_menu_item_new_with_label("Explore with Filemanager");
+	entry = gtk_menu_item_new_with_label(_("Explore with Filemanager"));
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_explore), NULL);
 	gtk_widget_set_sensitive(entry, is_connected);
 	gtk_menu_append(GTK_MENU(menu), entry);
 	
-	entry = gtk_menu_item_new_with_label("Add/Remove Programs");
+	entry = gtk_menu_item_new_with_label(_("Add/Remove Programs"));
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_software), NULL);
 	gtk_widget_set_sensitive(entry, is_connected);
 
@@ -248,9 +253,9 @@ static void trayicon_menu(GdkEventButton *event)
 	gtk_menu_append(GTK_MENU(menu), entry);
 		
 	if (is_connected)
-		snprintf(buffer, sizeof(buffer), "Disconnect from '%s'", device_name);
+		snprintf(buffer, sizeof(buffer), _("Disconnect from '%s'"), device_name);
 	else
-		strcpy(buffer, "(No device connected)");
+		strcpy(buffer, _("(No device connected)"));
 	
 	entry = gtk_menu_item_new_with_label(buffer);
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), NULL);
@@ -331,7 +336,7 @@ static void update()
 	{
 		is_connected = false;
 		set_icon();
-		gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), "Not connected", NULL);
+		gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), _("Not connected"), NULL);
 		return;
 	}
 
@@ -440,6 +445,7 @@ exit:
 /**
  * Write help message to stderr
  */
+#if 0
 static void show_usage(char *name)
 {
 	fprintf(
@@ -457,6 +463,7 @@ static void show_usage(char *name)
 			"\t-h           Show this help message\n",
 			name);
 }
+#endif 
 
 static bool handle_parameters(int argc, char** argv)
 {
@@ -522,7 +529,7 @@ void start_dccm ()
 	if (!dccm_is_running()) {
 		synce_trace("starting dccm");
 		if (gnome_execute_async(NULL,argc, argv) == -1) {
-			synce_error_dialog("Can't start dccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again.");
+			synce_error_dialog(_("Can't start dccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again."));
 			synce_trace("Failed to start dccm");
 		}
 	} else {
@@ -537,13 +544,20 @@ main (gint argc, gchar **argv)
 	int result = 1;
 	GtkWidget *box;
 
+#ifdef ENABLE_NLS
+	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
+#endif
+
 	write_script();
 
 	gnome_program_init ("synce-trayicon", VERSION,
 			LIBGNOMEUI_MODULE,
 			argc, argv,
             GNOME_PARAM_POPT_TABLE,options,
-			GNOME_PARAM_NONE);
+			GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce TrayIcon"),
+			NULL);
 
 	glade_gnome_init ();
 

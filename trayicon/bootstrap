@@ -44,5 +44,5 @@ set -x
 aclocal $INCLUDES
 autoheader
 libtoolize --automake
-automake --foreign --add-missing
+automake --add-missing
 autoconf
