@@ -18,6 +18,8 @@ href="mailto:sassur@users.sourceforge.net">Fredrik Nilsson</a>.</p>
 Hotplug</a> is installed on your system. (For RedHat Linux, this is an RPM
 called <tt>hotplug</tt>.)</li>
 
+<li><p>Create the directory <tt>/var/run/usb</tt> if it doesn't already exist.</p></li>
+
 <li><p>Add a line like this to your <tt>/etc/hotplug/usb.usermap</tt> file:</p>
 
 <pre>synce   0x0003  0x<span class="RED">VVVV</span>  0x<span class="RED">PPPP</span>  0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00</pre>
