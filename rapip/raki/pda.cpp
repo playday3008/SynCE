@@ -44,8 +44,6 @@
 #include <kmessagebox.h>
 #include <kdebug.h>
 
-#include <stdlib.h>
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #include <kde_dmalloc.h>
@@ -579,6 +577,8 @@ void PDA::init()
     progressBar->setTotalSteps(7);
     initProgress->pdaName->setText(pdaName);
     initProgress->show();
+
+    kapp->processEvents();
 
     startWorkerThread(this, &PDA::setPartnership, NULL);
 }

@@ -276,7 +276,7 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
     bool ret = false;
     KTrader::OfferList offers;
 
-    postSyncThreadEvent(SyncThread::setTask, (void *) "Started");
+    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Started"));
     postSyncThreadEvent(SyncThread::setTotalSteps, (void *) 1);
     
     QString library = getPreferedLibrary();
@@ -299,7 +299,7 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
         if (!factory) {
             QString errorMessage = KLibLoader::self()->lastErrorMessage();
             kdDebug(2120) << "There was an error: " << offer << errorMessage << endl;
-            postSyncThreadEvent(SyncThread::setTask, (void *) "Synchronizer Load-Error");
+            postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Synchronizer Load-Error"));
         } else {
             if (factory->inherits("RakiSyncFactory")) {
                 RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*>(factory);
@@ -312,7 +312,7 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
             }
         }
     } else {
-        postSyncThreadEvent(SyncThread::setTask, (void *) "No Synchronizer found");
+        postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("No Synchronizer found"));
     }
 
     kdDebug(2120) << "Finished syncing with " << offer << endl;

@@ -36,9 +36,8 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncDialogImpl::SyncDialogImpl(PdaConfigDialogImpl *pdaConfigDialog, Rra *rra, QString& pdaName, QWidget* parent,
-                               const char* name, bool modal,
-                               WFlags fl)
+SyncDialogImpl::SyncDialogImpl(PdaConfigDialogImpl *pdaConfigDialog, Rra *rra,
+        QString& pdaName, QWidget* parent, const char* name, bool modal, WFlags fl)
         : SyncDialog(parent, name, modal, fl)
 {
     this->pdaName = pdaName;
@@ -127,6 +126,5 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
         }
     }
 
-
-    postThreadEvent(&SyncDialogImpl::finishedSynchronization, NULL, block);
+    postThreadEvent(&SyncDialogImpl::finishedSynchronization, NULL, noBlock);
 }

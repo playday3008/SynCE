@@ -75,5 +75,5 @@ void SyncThread::setProgress(void *progress)
 void SyncThread::setTask(void *task)
 {
     actualSyncItem->setTaskLabel((char *) task);
-    delete (char *) task;
+    delete [] (char *) task;
 }
