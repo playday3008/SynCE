@@ -3,7 +3,10 @@ $Id$
 TODO for multisync_plugin
 =========================
 
-o Handle deletes on remote device. This requires that we maintain a list of
-  objects on the device and if any object is missing when we look for changes, 
-	we know it is deleted.
+o Listen for changes on remote device and call sync_object_changed() when
+  something has changed.
+	
+o To allow the Multisync plugin to be part of several synchronization pairs we
+  need to keep a list of changes locally for pair.
 
+	

@@ -269,7 +269,7 @@ const char* long_name()
 
 int object_types()
 {
-	return SYNC_OBJECT_TYPE_PHONEBOOK;;
+	return SYNC_OBJECT_TYPE_PHONEBOOK;
 }
 
 void plugin_init()

@@ -21,6 +21,8 @@ static GList* synce_get_changed_objects(/*{{{*/
 	uint8_t* data              = NULL;
 	size_t data_size           = 0;
 	char* object_string        = NULL;
+	uint32_t* deleted_ids      = NULL;
+	size_t deleted_count       = 0;
 
 	synce_trace("here");
 
@@ -64,7 +66,7 @@ static GList* synce_get_changed_objects(/*{{{*/
 		{
 			case SYNC_OBJECT_TYPE_PHONEBOOK: 
 				if (!rra_contact_to_vcard(
-							object_ids->ids[id++],
+							object_ids->ids[id],
 							data,
 							data_size,
 							RRA_CONTACT_VCARD_3_0,
@@ -91,6 +93,29 @@ static GList* synce_get_changed_objects(/*{{{*/
 	
 		free(data);
 		free(object_string);
+	}
+
+	if (!rra_get_deleted_object_ids(
+				sc->rra,
+				type_id,
+				object_ids,
+				&deleted_ids,
+				&deleted_count))
+	{
+		synce_error("Failed to get deleted object ids");
+		goto exit;
+	}
+	
+	for (id = 0; id < deleted_count; id++)
+	{
+		changed_object* change = g_new0(changed_object, 1);
+
+		change->comp        = NULL;
+		change->uid         = g_strdup_printf("%08x", deleted_ids[id]);
+		change->change_type = SYNC_OBJ_HARDDELETED;
+		change->object_type = object_type;
+
+		changes = g_list_append(changes, change);
 	}
 
 	success = true;
