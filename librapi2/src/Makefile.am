@@ -13,5 +13,5 @@ librapi_la_SOURCES = \
 	rapi_socket.h   rapi_socket.c  \
 	rapi_unicode.h  rapi_unicode.c
 
-include_HEADERS = rapi.h
+include_HEADERS = rapi.h rapi_win.h
 
