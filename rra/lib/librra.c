@@ -109,7 +109,7 @@ bool rra_get_object_types(RRA* rra, /*{{{*/
 	{
 		unsigned i = 0;
 
-		if (!rrac_send_6f(rra->cmd_channel, 0x1c1))
+		if (!rrac_send_6f(rra->cmd_channel, 0x3c1))
 		{
 			synce_error("Failed to send command 6f");
 			goto exit;
