@@ -3,9 +3,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void _rapi_log(const char* file, int line, const char* format, ...)
+/* evil static data */
+static int current_log_level = RAPI_LOG_LEVEL_NONE;
+
+void _rapi_log(int level, const char* file, int line, const char* format, ...)
 {
 	va_list ap;
+
+	if (level > current_log_level)
+		return;
 
 	fprintf(stderr, "[%s:%i] ", file, line);
 	

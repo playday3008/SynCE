@@ -1,5 +1,6 @@
 /* $Id$ */
 #include "rapi_context.h"
+#include "rapi_log.h"
 #include <stdlib.h>
 
 static RapiContext* current_context;
@@ -75,12 +76,16 @@ bool rapi_context_call(RapiContext* context)
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_1) )
 		return false;
 
+	rapi_log("result 1 = 0x%08x", context->result_1);
+
 /*	if (context->result_1 != 1)
 		return false;*/
 	
 	/* this is a HRESULT? */
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
 		return false;
+	
+	rapi_log("result 2 = 0x%08x", context->result_2);
 
 /*	if (context->result_2 != 0)
 		return false;*/

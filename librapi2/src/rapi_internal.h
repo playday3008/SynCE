@@ -20,5 +20,7 @@
 #endif
 #endif
 
+#include "rapi_log.h"
+
 #endif
 

@@ -30,13 +30,17 @@ char* rapi_wstr_to_ascii(LPCWSTR inbuf)
 	
   cd = iconv_open(rapi_wstr_ASCII, rapi_wstr_WIDE);
 	if (INVALID_ICONV_HANDLE == cd)
+	{
+		rapi_log("iconv_open failed");
 		return false;
+	}
 
   result = iconv(cd, &inbuf_iterator, &inbytesleft, &outbuf_iterator, &outbytesleft);
   iconv_close(cd);
 
   if ((size_t)-1 == result)
 	{
+		rapi_log("iconv failed: inbytesleft=%i, outbytesleft=%i", inbytesleft, outbytesleft);
 		rapi_wstr_free_string(outbuf);
 		return NULL;
 	}
@@ -61,13 +65,17 @@ LPWSTR rapi_wstr_from_ascii(const char* inbuf)
 	
 	cd = iconv_open(rapi_wstr_WIDE, rapi_wstr_ASCII);
 	if (INVALID_ICONV_HANDLE == cd)
+	{
+		rapi_log("iconv_open failed");
 		return false;
+	}
 
 	result = iconv(cd, &inbuf_iterator, &inbytesleft, (char**)&outbuf_iterator, &outbytesleft);
 	iconv_close(cd);
 
 	if ((size_t)-1 == result)
 	{
+		rapi_log("iconv failed: inbytesleft=%i, outbytesleft=%i", inbytesleft, outbytesleft);
 		rapi_wstr_free_string(outbuf);
 		return NULL;
 	}
