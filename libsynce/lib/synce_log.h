@@ -27,6 +27,10 @@ void _synce_log(int level, const char* file, int line, const char* format, ...);
 #define synce_warning(format, args...) \
 	_synce_log(SYNCE_LOG_LEVEL_WARNING,__PRETTY_FUNCTION__, __LINE__, format, ##args)
 
+#define synce_warning_unless(cond, format, args...) \
+	if (!(cond)) \
+	_synce_log(SYNCE_LOG_LEVEL_WARNING,__PRETTY_FUNCTION__, __LINE__, format, ##args)
+
 #define synce_error(format, args...) \
 	_synce_log(SYNCE_LOG_LEVEL_ERROR,__PRETTY_FUNCTION__, __LINE__, format, ##args)
 

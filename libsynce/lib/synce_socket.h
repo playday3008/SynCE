@@ -5,6 +5,11 @@
 #include "synce.h"
 #include <netinet/in.h> /* for sockaddr_in */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 struct _SynceSocket;
 typedef struct _SynceSocket SynceSocket;
 
@@ -81,6 +86,10 @@ bool synce_password_recv_reply(
 		SynceSocket* socket,
 		size_t size,
 		bool* passwordCorrect);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

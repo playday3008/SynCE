@@ -1,8 +1,6 @@
 /* $Id$ */
 #include "synce.h"
 
-typedef uint32_t UINT;
-
 static void DOSFS_UnixTimeToFileTime( time_t unix_time, FILETIME *filetime,
                                DWORD remainder );
 static time_t DOSFS_FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder );
@@ -10,12 +8,21 @@ static time_t DOSFS_FileTimeToUnixTime( const FILETIME *filetime, DWORD *remaind
 
 void filetime_from_unix_time(time_t unix_time, FILETIME *filetime)
 {
-	DOSFS_UnixTimeToFileTime(unix_time, filetime, 0);
+	if (0 == unix_time)
+	{
+		filetime->dwLowDateTime   = 0;
+		filetime->dwHighDateTime  = 0;
+	}
+	else
+		DOSFS_UnixTimeToFileTime(unix_time, filetime, 0);
 }
 
 time_t filetime_to_unix_time(const FILETIME *filetime)
 {
-	return DOSFS_FileTimeToUnixTime(filetime, NULL);
+	if (0 == filetime->dwLowDateTime && 0 == filetime->dwHighDateTime)
+		return 0;
+	else
+		return DOSFS_FileTimeToUnixTime(filetime, NULL);
 }
 
 

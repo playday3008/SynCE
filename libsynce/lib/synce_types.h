@@ -23,6 +23,7 @@ typedef int32_t   HKEY;
 typedef int32_t   REGSAM;
 
 typedef uint32_t  DWORD;
+typedef uint32_t  UINT;
 typedef uint32_t  ULONG;
 typedef uint32_t  HWND;
 typedef uint32_t  BOOL;
