@@ -55,12 +55,15 @@ AM_PATH_LIBRAPI2
 		AC_MSG_ERROR([Can't find libmimedir.h (http://sourceforge.net/projects/libmimedir/)])
 		])
 
+  enable_recurrence=1
   AC_ARG_ENABLE(recurrence,
     AC_HELP_STRING(
       [--enable-recurrence],
       [Enables experimential recurrence support]),
-    AC_DEFINE(ENABLE_RECURRENCE, [1], [Define to 1 to enable recurrence support])
+      [enable_recurrence=1],
+      [enable_recurrence=0]
     )
+  AC_DEFINE_UNQUOTED(ENABLE_RECURRENCE, $enable_recurrence, [Set to 1 when recurrrence is enabled])
 
 
 dnl Checks for header files.
