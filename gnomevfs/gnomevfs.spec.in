@@ -17,8 +17,8 @@ Vendor: The SynCE Project
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 Requires:       gnome-vfs2
-Requires:       synce        >= 0.7
-BuildRequires:  synce-devel  >= 0.7
+Requires:       synce        >= 0.8
+BuildRequires:  synce-devel  >= 0.8
 
 %description
 SynCE-GnomeVFS is part of the SynCE project:
