@@ -386,6 +386,40 @@ exit:
   return success;
 }
 
+static bool recurrence_set_exceptions(RRA_RecurrencePattern* pattern, RRA_MdirLineVector* exdates)
+{
+  unsigned i;
+  bool success = false;
+  RRA_Exceptions* exceptions = pattern->exceptions;
+
+  /* TODO: support more than one exception per EXDATE line */
+
+  rra_exceptions_make_reservation(exceptions, exdates->used);
+
+  for (i = 0; i < exdates->used; i++)
+  {
+    RRA_Exception* exception = rra_exceptions_item(exceptions, i);
+    struct tm exdate;
+
+    if (!parser_datetime_to_struct(exdates->items[i]->values[0], &exdate, NULL))
+      goto exit;
+    
+    exception->deleted = true;
+
+    /* Only date */
+    exception->date = rra_minutes_from_struct(&exdate);
+
+    /* Date and time */
+    exdate.tm_min = pattern->start_minute;
+    exception->original_time = rra_minutes_from_struct(&exdate);
+  }
+
+  success = true;
+
+exit:
+  return success;
+}
+
 bool recurrence_parse_rrule(
     struct _Parser* p, 
     mdir_line* mdir_dtstart,
@@ -498,6 +532,12 @@ bool recurrence_parse_rrule(
   {
     pattern->flags |= RecurrenceDoesNotEnd;
     pattern->pattern_end_date = RRA_DoesNotEndDate;
+  }
+
+  if (!recurrence_set_exceptions(pattern, exdates))
+  {
+    synce_error("Failed to store recurrence exceptions");
+    goto exit;
   }
 
   {
