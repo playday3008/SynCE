@@ -14,6 +14,7 @@
 <li><a href="#dccm">The DCCM application</a></li>
 <li><a href="#librapi2">The librapi2 library</a></li>
 <li><a href="#libsynce">The libsynce library</a></li>
+<li><a href="#rra">The rra module</a></li>
 <li><a href="#synce-serial">The synce-serial scripts</a></li>
 <li><a href="#ports">Registered IP ports used by SynCE</a></li>
 <li><a href="#questions">Questions?</a></li>
@@ -107,8 +108,14 @@ may be used by 3rd party applications:</p>
 <li>Conversion between big endian and little endian integers</li>
 </ul>
 
+<a name="rra"></a>
+<h2>The RRA module</h2>
+
+<p>The RRA module is used for synchronization. It implements the <a
+href="rrac.php">RRAC protocol</a>.</p>
+
 <a name="synce-serial"></a>
-<h2>synce-serial scripts</h2>
+<h2>The synce-serial scripts</h2>
 
 <h3>synce-serial-config</h3>
 

@@ -40,8 +40,8 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <h2>News</h2>
 
 <p><b>April 9, 2003</b> Added documentation on <a href="ip_forward.php">IP
-forwarding</a> and some very small <a href="macosx.php">documentation for Mac
-OS X users</a>.</p>
+forwarding</a> some very small <a href="macosx.php">documentation for Mac OS X
+users</a>, and documentation of the <a href="rrac.php">RRAC protocol</a>.</p>
 
 <p><b>March 23, 2003</b> The Debian packages are now available in an <a
 href="debian.php">apt repository</a>.</p>
