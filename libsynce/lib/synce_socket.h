@@ -68,12 +68,18 @@ typedef enum _SocketEvents SocketEvents;
 bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* events);
 
 
-/* This is really from password.c - but it uses SynceSocket */
-bool synce_password_send(
-		const char *asciiPassword,
-		unsigned char key,
-		SynceSocket *socket);
+/*
+ * Functions from password.c
+ */
 
+bool synce_password_send(
+		SynceSocket *socket,
+		const char *asciiPassword,
+		unsigned char key);
+
+bool synce_password_recv_reply(
+		SynceSocket* socket,
+		bool* passwordCorrect);
 
 #endif
 

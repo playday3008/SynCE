@@ -8,6 +8,7 @@ lib_LTLIBRARIES = libsynce.la
 libsynce_la_SOURCES = \
 	bswap.c \
 	filetime.c \
+	password.c \
 	synce.h \
 	synce_log.h synce_log.c \
 	synce_socket.h synce_socket.c \
