@@ -700,7 +700,10 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_add_int16(parser, ID_OCCURENCE, OCCURENCE_ONCE);
   }
   else
-    synce_warning("No DTSTART found");
+  {
+    synce_error("No DTSTART found");
+    goto exit;
+  }
 
   if (!event_parser_data.has_alarm)
   {
@@ -733,6 +736,12 @@ exit:
   parser_component_destroy(alarm);
   parser_component_destroy(timezone);
   parser_destroy(parser);
+
+  if (!success)
+  {
+    synce_trace("Failure on this vEvent: '%s'", vevent);
+  }
+  
 	return success;
 }/*}}}*/
 
