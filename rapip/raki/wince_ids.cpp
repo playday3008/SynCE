@@ -61,8 +61,7 @@ static bool insertQString(synce::CEPROPVAL *propval, QString& string)
     if (!string.isEmpty()) {
         propval->val.lpwstr = (WCHAR *) string.ucs2();
         propval->propid = CEVT_LPWSTR;
-        kdDebug(2120) << string.ascii();
-        
+        kdDebug(2120) << string.ascii() << endl;
         return true;
     }
     
