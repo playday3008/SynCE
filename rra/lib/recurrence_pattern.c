@@ -162,7 +162,7 @@ static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)/
     TRACE_DATE("Exception date  = %s", date);
 
     self->items[i].deleted = true;
-    self->items[i].original_date = date;
+    self->items[i].date = date;
   }
 
   self->modified_count = READ_INT32(p);  p += 4;
@@ -194,25 +194,29 @@ static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/
     int j;
     
     e.deleted         = false;
-    e.start_date      = READ_UINT32(p);   p += 4;
-    e.end_date        = READ_UINT32(p);   p += 4;
-    e.original_date   = READ_UINT32(p);   p += 4;
+    e.start_time      = READ_UINT32(p);   p += 4;
+    e.end_time        = READ_UINT32(p);   p += 4;
+    e.original_time   = READ_UINT32(p);   p += 4;
     e.unknown         = READ_INT16(p);  p += 2;
 
-    TRACE_DATE ("Modified appointment start time  = %s",    e.start_date);
-    TRACE_DATE ("Modified appointment end time    = %s",    e.end_date);
-    TRACE_DATE ("Original appointment start time  = %s",    e.original_date);
+    TRACE_DATE ("Modified appointment start time  = %s",    e.start_time);
+    TRACE_DATE ("Modified appointment end time    = %s",    e.end_time);
+    TRACE_DATE ("Original appointment start time  = %s",    e.original_time);
     synce_trace("Modified appointment unknown     = %04x",  e.unknown);
 
     for (j = 0; j < self->total_count; j++)
     {
-      if (memcmp(&e.original_date, &self->items[j].original_date, sizeof(struct tm)))
+      if (e.original_time / MINUTES_PER_DAY == self->items[j].date / MINUTES_PER_DAY)
       {
         /* Copy data to this array item */
+        e.date = self->items[j].date;
         self->items[j] = e;
         break;
       }
     }
+
+    if (j == self->total_count)
+      synce_warning("Failed to store exception details in the right place");
   }
 
   *buffer = p;
@@ -238,16 +242,17 @@ static bool rra_exceptions_write_summary(RRA_Exceptions* self, uint8_t** buffer)
 
   for (i = 0; i < self->total_count; i++)
   {
-    /* TODO: write date */
-    p += 4;
+    WRITE_UINT32(p, self->items[i].date); p += 4;
   }
 
   WRITE_INT32(p, self->modified_count);  p += 4;
 
-  for (i = 0; i < self->modified_count; i++)
+  for (i = 0; i < self->total_count; i++)
   {
-    /* TODO: write date */
-    p += 4;
+    if (!self->items[i].deleted)
+    {
+      WRITE_UINT32(p, self->items[i].date);     p += 4;
+    }
   }
   
   *buffer = p;
@@ -261,13 +266,15 @@ static bool rra_exceptions_write_details(RRA_Exceptions* self, uint8_t** buffer)
 
   WRITE_UINT16(p, self->modified_count); p += 2;
 
-  for (i = 0; i < self->modified_count; i++)
+  for (i = 0; i < self->total_count; i++)
   {
-    /* TODO: write dates */
-    p += 4;
-    p += 4;
-    p += 4;
-    WRITE_UINT16(p, 0); p += 2;
+    if (!self->items[i].deleted)
+    {
+      WRITE_UINT32(p, self->items[i].start_time);     p += 4;
+      WRITE_UINT32(p, self->items[i].end_time);       p += 4;
+      WRITE_UINT32(p, self->items[i].original_time);  p += 4;
+      WRITE_UINT16(p, self->items[i].unknown);        p += 2;
+    }
   }
 
   *buffer = p;
@@ -413,21 +420,25 @@ static bool rra_recurrence_pattern_read_monthnth(/*{{{*/
     size_t size)
 {
   uint8_t* p = *buffer;
-  uint32_t unknown_b;
+  uint32_t unknown_b, unknown_c;
 
   unknown_b = READ_UINT32(p);  p += 4;
   synce_trace("Days to month   = %08x = %u minutes = %f days", 
       unknown_b, unknown_b, unknown_b / (60.0 * 24.0));
 
   self->interval          = READ_INT32(p);  p += 4;   /* 0x0e */
+  synce_trace("Interval        = %08x", self->interval);
   
-  p += 4;
-  
+  unknown_c = READ_UINT32(p);  p += 4;
+  synce_trace("Unknown         = %08x", unknown_c);
+  if (unknown_c != 0)
+    synce_warning("Unknown not zero!");
+   
   self->days_of_week_mask = READ_INT32(p);  p += 4;   /* 0x16 */
   self->instance          = READ_INT32(p);  p += 4;
   self->flags             = READ_INT32(p);  p += 4;
   self->occurrences       = READ_INT32(p);  p += 4;
-
+ 
   synce_trace("DaysOfWeekMask  = %08x", self->days_of_week_mask);
   synce_trace("Instance        = %08x", self->instance);
   synce_trace("Flags           = %08x", self->flags);
@@ -460,18 +471,7 @@ static bool rra_recurrence_pattern_read_header(/*{{{*/
 
   self->recurrence_type = READ_INT32(p);  p += 4;
 
-  /*
-     I wish this was a flag to specify what fields are present, but I'm afraid not.
-
-     a = 1010 = interval
-     b = 1011 = interval + days_of_week_mask
-     c = 1100 = interval + days_of_week_mask + instance    (for olRecursMonthNth)
-     d = 1101 = interval + day_of_month                    (for olRecursMonthly)
-     d = 1101 = interval + day_of_month                    (for olRecursMonthly)
-     d = 1101 = interval + days_of_week_mask + instance    (for olRecursMonthNth)
-
-     Maybe it is the number of 4-byte
-  */
+  synce_trace("unknown_a[2]    = %04x", unknown_a[2]);
   switch (self->recurrence_type)
   {
     case olRecursDaily:
@@ -734,7 +734,11 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
 
     case olRecursMonthNth:
       /* Write 0x200c or 0x200d? */
-      WRITE_UINT16(p, 0x200c); p += 2;
+      if (self->interval == 12)
+        WRITE_UINT16(p, 0x200d);
+      else
+        WRITE_UINT16(p, 0x200c);
+      p += 2;
       break;
       
     default:
@@ -777,10 +781,20 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
       WRITE_UINT32(p, self->occurrences);   p += 4;
       break;
 
-#if 0
     case olRecursMonthNth:
+      if (self->interval == 1 || self->instance == 1)
+        WRITE_UINT32(p, 0);
+      else
+        WRITE_UINT32(p, rra_recurrence_pattern_get_minutes_to_month(
+              self->pattern_start_date, self->interval)); 
+      p += 4;
+      WRITE_UINT32(p, self->interval);            p += 4;
+      WRITE_UINT32(p, 0);                         p += 4;
+      WRITE_UINT32(p, self->days_of_week_mask);   p += 4;
+      WRITE_UINT32(p, self->instance);            p += 4;
+      WRITE_UINT32(p, UNKNOWN_FLAGS | (self->flags & KNOWN_FLAGS_MASK)); p += 4;
+      WRITE_UINT32(p, self->occurrences);         p += 4;
       break;
-#endif
       
     default:
       synce_error("Unhandled recurrence type");

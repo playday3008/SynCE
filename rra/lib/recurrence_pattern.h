@@ -38,14 +38,16 @@ typedef enum
 
 typedef struct _RRA_Exception
 {
+  /** Just date, not time, of the original appointment */
+  uint32_t date;
   /** If it is a deleted appointment (otherwise it is modified) */
   bool deleted;
-  /** Original start date (in minutes from January 1, 1601) */
-  uint32_t original_date;
-  /** Use this start date instead. (Only used if deleted is false.) */
-  uint32_t start_date;
-  /** Use this end date instead. (Only used if deleted is false.) */
-  uint32_t end_date;
+  /** Original start date and time (in minutes from January 1, 1601) */
+  uint32_t original_time;
+  /** Use this start date and time instead. (Only used if deleted is false.) */
+  uint32_t start_time;
+  /** Use this end date and time instead. (Only used if deleted is false.) */
+  uint32_t end_time;
   /** Unknown value. (Only used if deleted is false.) */
   uint16_t unknown;
 } RRA_Exception;
