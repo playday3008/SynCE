@@ -19,16 +19,15 @@ public:
 
 	Snap(WORD cClrBits = 24);
 	~Snap();
-	void snap(Snap::SnapImage image);
+	BOOL snap(Snap::SnapImage image);
 	void writeFile(Snap::SnapImage image, char *path, char *fileName);
 	bool writeSocket(SOCKET socket, Snap::SnapImage image);
 	bool writeSocketRLE(SOCKET socket, Snap::SnapImage image, bool *written);
 	SnapImage createSnapImage();
-	void xorBits(Snap::SnapImage image1, Snap::SnapImage image2);
-	void exchangeImages(Snap::SnapImage image1, Snap::SnapImage image2);
+	BOOL xorBits(Snap::SnapImage image1, Snap::SnapImage image2);
+	BOOL exchangeImages(Snap::SnapImage image1, Snap::SnapImage image2);
 
 private:
-	HDC screen;
 	RECT lprc;
 	HDC hDC;
 	WORD cClrBits;	

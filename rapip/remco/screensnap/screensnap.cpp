@@ -23,10 +23,26 @@ DWORD WINAPI snapProc(LPVOID lpParameter)
 	bool written = false;
 
 	do {
-		snap->snap(image2);
-		snap->xorBits(image, image2);
-		ret = snap->writeSocketRLE(as, image, &written);
-		snap->exchangeImages(image, image2);
+		if (snap->snap(image2)) {
+/*
+			snap->writeSocket(as, image2);
+		}
+*/
+			if (snap->xorBits(image, image2)) {
+				if (!(ret = snap->writeSocketRLE(as, image, &written))) {
+					MessageBox(NULL, L"WriteRLE failed", L"WriteRLE", MB_OK);
+				}
+				if (! snap->exchangeImages(image, image2)) {
+					MessageBox(NULL, L"ExchangeImages failed", L"Exchange", MB_OK);
+				}
+			} else {
+				written = true;
+				MessageBox(NULL, L"XorBits failed", L"XorBits", MB_OK);
+			}
+		} else {
+			written = true;
+			MessageBox(NULL, L"Snap failed", L"Snap", MB_OK);
+		}
 		if (!written) {
 			WaitForSingleObject(sigEvent, 300);
 		} else {
@@ -100,6 +116,12 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 
 	as = accept(s, NULL, NULL);
 
+	int myval = 300000;
+/*
+	if (setsockopt(as, SOL_SOCKET, SO_SNDBUF, (const char *) &myval, sizeof(int))) {
+		MessageBox(NULL, L"SetSockOpt", L"SetSockOpt", MB_OK);
+	}
+*/
 	if (as == INVALID_SOCKET) {
 		MessageBox(NULL, L"Could not accept on ServerSocket", L"Snap", 
 				MB_OK | MB_ICONERROR);
@@ -134,12 +156,12 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 					MB_OK | MB_ICONERROR);
 			return 1;
 		}
-
+/*
 		if (SetThreadPriority(threadHandle, THREAD_PRIORITY_BELOW_NORMAL) == 0) {
 			MessageBox(NULL, L"Could not set ThreadPriority", L"Snap", 
 					MB_OK | MB_ICONWARNING);
 		}
-
+*/
 		static int l = 0;
 		
 		do {
@@ -152,14 +174,10 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 			if (selret > 0) {
 				r = recv(as, (char *) buf, sizeof(u_long) * 4, 0);
 					
-				if (r == 0) {
+				if (r <= 0) {
 					break;
 				}
-				if (r < 0) {
-					MessageBox(NULL, L"Could not read on Socket", L"Snap", 
-							MB_OK | MB_ICONERROR);
-					break;
-				}
+
 				button = ntohl(*(u_long *) &buf[sizeof(UINT32) * 0]);
 				cmd = ntohl(*(u_long *) &buf[sizeof(UINT32) * 1]);
 				x = ntohl(*(u_long *) &buf[sizeof(UINT32) * 2]);

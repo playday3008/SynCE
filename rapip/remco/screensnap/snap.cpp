@@ -6,22 +6,23 @@
 Snap::Snap(WORD cClrBits)
 {
 	this->cClrBits = cClrBits;
-	
-	screen = CreateDC(L"DISPLAY", NULL, NULL, NULL);
-	if (!screen) {
-		MessageBox(NULL, L"Could not create dc", L"Snap", MB_OK);
-	}
-	
-	if (GetClipBox(screen, &lprc) == ERROR) {
-		MessageBox(NULL, L"Could not get clip box", L"Snap", MB_OK);
-	}
 
 	hDC = GetDC(NULL);
 	if (!hDC) {
 		MessageBox(NULL, L"Could not getDC", L"Snap", MB_OK);
 	}
 
+	if (GetClipBox(hDC, &lprc) == ERROR) {
+		MessageBox(NULL, L"Could not get clip box", L"Snap", MB_OK);
+	}
+
 	target = NULL;
+}
+
+
+Snap::~Snap()
+{
+	ReleaseDC(NULL, hDC);
 }
 
 
@@ -67,21 +68,21 @@ Snap::SnapImage Snap::createSnapImage()
 }
 
 
-void Snap::snap(Snap::SnapImage image)
+BOOL Snap::snap(Snap::SnapImage image)
 {
-	BitBlt(image.targetDC, 0, 0, lprc.right, lprc.bottom, screen, 0, 0, /*SRCINVERT*/ SRCCOPY);
+	return BitBlt(image.targetDC, 0, 0, lprc.right, lprc.bottom, hDC, 0, 0, SRCCOPY);
 }
 
 
-void Snap::xorBits(Snap::SnapImage image1, Snap::SnapImage image2)
+BOOL Snap::xorBits(Snap::SnapImage image1, Snap::SnapImage image2)
 {
-	BitBlt(image1.targetDC, 0, 0, lprc.right, lprc.bottom, image2.targetDC, 0, 0, SRCINVERT);
+	return BitBlt(image1.targetDC, 0, 0, lprc.right, lprc.bottom, image2.targetDC, 0, 0, SRCINVERT);
 }
 
 
-void Snap::exchangeImages(Snap::SnapImage image1, Snap::SnapImage image2)
+BOOL Snap::exchangeImages(Snap::SnapImage image1, Snap::SnapImage image2)
 {
-	BitBlt(image1.targetDC, 0, 0, lprc.right, lprc.bottom, image2.targetDC, 0, 0, SRCCOPY);
+	return BitBlt(image1.targetDC, 0, 0, lprc.right, lprc.bottom, image2.targetDC, 0, 0, SRCCOPY);
 /*
 	unsigned char *usPixels;
 
@@ -186,6 +187,7 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 			act3 += 3;
 			count += 3;
 			if (samcount == 2) {
+				samcount = 0;
 				unsigned char samruncount = 0;
 				while (count < size && samruncount < 255) {
 					if ((*act1 == val1) && (*act2 == val2) && (*act3 == val3)) {
@@ -195,14 +197,15 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 						act3 += 3;
 						count += 3;
 					} else {
-						val1 = *act1;
-						val2 = *act2;
-						val3 = *act3;
 						break;
 					}
 				}
+				if (count < size) {
+					val1 = *act1;
+					val2 = *act2;
+					val3 = *act3;
+				}
 				*tmp_target++ = samruncount;
-				samcount = 0;
 			}
 		} else {
 			samcount = 0;
