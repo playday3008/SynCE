@@ -1,27 +1,10 @@
-/*
- *  huffman - Encode/Decode files using Huffman encoding.
- *  Copyright (C) 2003  Douglas Ryan Richardson; Gauss Interprise, Inc
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+// huffmanencoder.cpp: implementation of the HuffmanEncoder class.
+//
+//////////////////////////////////////////////////////////////////////
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-#include <Winsock.h>
-#include "huffman.h"
+
+#include "huffmanencoder.h"
+
 
 typedef struct huffman_node_tag
 {
@@ -492,8 +475,9 @@ calculate_huffman_codes(SymbolFrequencies * pSF)
  * The last byte of each code may have extra bits, if the number of
  * bits in the code is not a multiple of 8.
  */
-static int
-write_code_table(FILE* out, SymbolEncoder *se, unsigned int symbol_count)
+static int 
+write_code_table(FILE* out, SymbolEncoder *se, 
+				 unsigned int symbol_count)
 {
 	unsigned long i, count = 0;
 	
@@ -539,7 +523,7 @@ write_code_table(FILE* out, SymbolEncoder *se, unsigned int symbol_count)
  * Allocates memory and sets *pbufout to point to it. The memory
  * contains the code table.
  */
-static int
+static int 
 write_code_table_to_memory(buf_cache *pc,
 						   SymbolEncoder *se,
 						   unsigned int symbol_count)
@@ -589,266 +573,7 @@ write_code_table_to_memory(buf_cache *pc,
 	return 0;
 }
 
-/*
- * read_code_table builds a Huffman tree from the code
- * in the in file. This function returns NULL on error.
- * The returned value should be freed with free_huffman_tree.
- */
-static huffman_node*
-read_code_table(FILE* in, unsigned int *pDataBytes)
-{
-	huffman_node *root = new_nonleaf_node(0, NULL, NULL);
-	unsigned int count;
-	
-	/* Read the number of entries.
-	   (it is stored in network byte order). */
-	if(fread(&count, sizeof(count), 1, in) != 1)
-	{
-		free_huffman_tree(root);
-		return NULL;
-	}
-
-	count = ntohl(count);
-
-	/* Read the number of data bytes this encoding represents. */
-	if(fread(pDataBytes, sizeof(*pDataBytes), 1, in) != 1)
-	{
-		free_huffman_tree(root);
-		return NULL;
-	}
-
-	*pDataBytes = ntohl(*pDataBytes);
-
-
-	/* Read the entries. */
-	while(count-- > 0)
-	{
-		int c;
-		unsigned int curbit;
-		unsigned char symbol;
-		unsigned char numbits;
-		unsigned char numbytes;
-		unsigned char *bytes;
-		huffman_node *p = root;
-		
-		if((c = fgetc(in)) == EOF)
-		{
-			free_huffman_tree(root);
-			return NULL;
-		}
-		symbol = (unsigned char)c;
-		
-		if((c = fgetc(in)) == EOF)
-		{
-			free_huffman_tree(root);
-			return NULL;
-		}
-		
-		numbits = (unsigned char) c;
-		numbytes = (unsigned char) numbytes_from_numbits(numbits);
-		bytes = (unsigned char*) malloc(numbytes);
-		if(fread(bytes, 1, numbytes, in) != numbytes)
-		{
-			free(bytes);
-			free_huffman_tree(root);
-			return NULL;
-		}
-
-		/*
-		 * Add the entry to the Huffman tree. The value
-		 * of the current bit is used switch between
-		 * zero and one child nodes in the tree. New nodes
-		 * are added as needed in the tree.
-		 */
-		for(curbit = 0; curbit < numbits; ++curbit)
-		{
-			if(get_bit(bytes, curbit))
-			{
-				if(p->one == NULL)
-				{
-					p->one = curbit == numbits - 1
-						? new_leaf_node(symbol)
-						: new_nonleaf_node(0, NULL, NULL);
-					p->one->parent = p;
-				}
-				p = p->one;
-			}
-			else
-			{
-				if(p->zero == NULL)
-				{
-					p->zero = curbit == numbits - 1
-						? new_leaf_node(symbol)
-						: new_nonleaf_node(0, NULL, NULL);
-					p->zero->parent = p;
-				}
-				p = p->zero;
-			}
-		}
-		
-		free(bytes);
-	}
-
-	return root;
-}
-
-static int
-memread(const unsigned char* buf,
-		unsigned int buflen,
-		unsigned int *pindex,
-		void* bufout,
-		unsigned int readlen)
-{
-//	assert(buf && pindex && bufout);
-//	assert(buflen >= *pindex);
-	if(buflen < *pindex)
-		return 1;
-	if(readlen + *pindex >= buflen)
-		return 1;
-	memcpy(bufout, buf + *pindex, readlen);
-	*pindex += readlen;
-	return 0;
-}
-
-static huffman_node*
-read_code_table_from_memory(const unsigned char* bufin,
-							unsigned int bufinlen,
-							unsigned int *pindex,
-							unsigned int *pDataBytes)
-{
-	huffman_node *root = new_nonleaf_node(0, NULL, NULL);
-	unsigned int count;
-	
-	/* Read the number of entries.
-	   (it is stored in network byte order). */
-	if(memread(bufin, bufinlen, pindex, &count, sizeof(count)))
-	{
-		free_huffman_tree(root);
-		return NULL;
-	}
-
-	count = ntohl(count);
-
-	/* Read the number of data bytes this encoding represents. */
-	if(memread(bufin, bufinlen, pindex, pDataBytes, sizeof(*pDataBytes)))
-	{
-		free_huffman_tree(root);
-		return NULL;
-	}
-
-	*pDataBytes = ntohl(*pDataBytes);
-
-	/* Read the entries. */
-	while(count-- > 0)
-	{
-		unsigned int curbit;
-		unsigned char symbol;
-		unsigned char numbits;
-		unsigned char numbytes;
-		unsigned char *bytes;
-		huffman_node *p = root;
-
-		if(memread(bufin, bufinlen, pindex, &symbol, sizeof(symbol)))
-		{
-			free_huffman_tree(root);
-			return NULL;
-		}
-
-		if(memread(bufin, bufinlen, pindex, &numbits, sizeof(numbits)))
-		{
-			free_huffman_tree(root);
-			return NULL;
-		}
-		
-		numbytes = (unsigned char) numbytes_from_numbits(numbits);
-		bytes = (unsigned char*)malloc(numbytes);
-		if(memread(bufin, bufinlen, pindex, bytes, numbytes))
-		{
-			free(bytes);
-			free_huffman_tree(root);
-			return NULL;
-		}
-
-		/*
-		 * Add the entry to the Huffman tree. The value
-		 * of the current bit is used switch between
-		 * zero and one child nodes in the tree. New nodes
-		 * are added as needed in the tree.
-		 */
-		for(curbit = 0; curbit < numbits; ++curbit)
-		{
-			if(get_bit(bytes, curbit))
-			{
-				if(p->one == NULL)
-				{
-					p->one = curbit == numbits - 1
-						? new_leaf_node(symbol)
-						: new_nonleaf_node(0, NULL, NULL);
-					p->one->parent = p;
-				}
-				p = p->one;
-			}
-			else
-			{
-				if(p->zero == NULL)
-				{
-					p->zero = curbit == numbits - 1
-						? new_leaf_node(symbol)
-						: new_nonleaf_node(0, NULL, NULL);
-					p->zero->parent = p;
-				}
-				p = p->zero;
-			}
-		}
-		
-		free(bytes);
-	}
-
-	return root;
-}
-
-static int
-do_file_encode(FILE* in, FILE* out, SymbolEncoder *se)
-{
-	unsigned char curbyte = 0;
-	unsigned char curbit = 0;
-	int c;
-	
-	while((c = fgetc(in)) != EOF)
-	{
-		unsigned char uc = (unsigned char)c;
-		huffman_code *code = (*se)[uc];
-		unsigned long i;
-		
-		for(i = 0; i < code->numbits; ++i)
-		{
-			/* Add the current bit to curbyte. */
-			curbyte |= get_bit(code->bits, i) << curbit;
-
-			/* If this byte is filled up then write it
-			 * out and reset the curbit and curbyte. */
-			if(++curbit == 8)
-			{
-				fputc(curbyte, out);
-				curbyte = 0;
-				curbit = 0;
-			}
-		}
-	}
-
-	/*
-	 * If there is data in curbyte that has not been
-	 * output yet, which means that the last encoded
-	 * character did not fall on a byte boundary,
-	 * then output it.
-	 */
-	if(curbit > 0)
-		fputc(curbyte, out);
-
-	return 0;
-}
-
-static int
+static int 
 do_memory_encode(buf_cache *pc,
 				 const unsigned char* bufin,
 				 unsigned int bufinlen,
@@ -893,10 +618,11 @@ do_memory_encode(buf_cache *pc,
 
 #define CACHE_SIZE 1024
 
-int huffman_encode_memory(const unsigned char *bufin,
-						  unsigned int bufinlen,
-						  unsigned char **pbufout,
-						  unsigned int *pbufoutlen)
+static int 
+huffman_encode_memory(const unsigned char *bufin,
+					  unsigned int bufinlen,
+					  unsigned char **pbufout,
+					  unsigned int *pbufoutlen)
 {
 	SymbolFrequencies sf;
 	SymbolEncoder *se;
@@ -935,50 +661,41 @@ int huffman_encode_memory(const unsigned char *bufin,
 	return rc;
 }
 
-int huffman_decode_memory(const unsigned char *bufin,
-						  unsigned int bufinlen,
-						  unsigned char **pbufout,
-						  unsigned int *pbufoutlen)
+
+HuffmanEncoder::HuffmanEncoder() : Encoder()
 {
-	huffman_node *root, *p;
-	unsigned int data_count;
-	unsigned int i = 0;
-	unsigned char *buf;
-	unsigned int bufcur = 0;
-
-	/* Ensure the arguments are valid. */
-	if(!pbufout || !pbufoutlen)
-		return 1;
-
-	/* Read the Huffman code table. */
-	root = read_code_table_from_memory(bufin, bufinlen, &i, &data_count);
-	if(!root)
-		return 1;
-
-	buf = (unsigned char*)malloc(data_count);
-
-	/* Decode the memory. */
-	p = root;
-	for(; i < bufinlen && data_count > 0; ++i) 
-	{
-		unsigned char byte = bufin[i];
-		unsigned char mask = 1;
-		while(data_count > 0 && mask)
-		{
-			p = byte & mask ? p->one : p->zero;
-			mask <<= 1;
-
-			if(p->isLeaf)
-			{
-				buf[bufcur++] = p->symbol;
-				p = root;
-				--data_count;
-			}
-		}
-	}
-
-	free_huffman_tree(root);
-	*pbufout = buf;
-	*pbufoutlen = bufcur;
-	return 0;
 }
+
+
+HuffmanEncoder::HuffmanEncoder(Encoder *chain) : Encoder(chain)
+{
+}
+
+
+size_t HuffmanEncoder::encode(unsigned char **encData, unsigned char *rawData, size_t rawSize)
+{
+	cleanUp();
+
+	huffman_encode_memory(rawData, rawSize, &this->encData, &encSize);
+	*encData = this->encData;
+
+	return encSize;
+}
+
+
+void HuffmanEncoder::cleanUp()
+{
+	if (encData != NULL) {
+		free (encData);
+		encData = NULL;
+	}
+}
+
+
+HuffmanEncoder::~HuffmanEncoder()
+{
+	if (encData != NULL) {
+		cleanUp();
+	}
+}
+

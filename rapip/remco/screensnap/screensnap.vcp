@@ -150,24 +150,117 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\huffman.cpp
+SOURCE=.\encoder.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_ENCOD=\
+	".\encoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_ENCOD=\
+	".\encoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_ENCOD=\
+	".\encoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\eventprocessor.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_EVENT=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_EVENT=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_EVENT=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\vnckeymap.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\huffmanencoder.cpp
 
 !IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
 
 DEP_CPP_HUFFM=\
-	".\huffman.h"\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
 
 DEP_CPP_HUFFM=\
-	".\huffman.h"\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
 
 DEP_CPP_HUFFM=\
-	".\huffman.h"\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\rleencoder.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_RLEEN=\
+	".\encoder.h"\
+	".\rleencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_RLEEN=\
+	".\encoder.h"\
+	".\rleencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_RLEEN=\
+	".\encoder.h"\
+	".\rleencoder.h"\
 	
 
 !ENDIF 
@@ -180,19 +273,53 @@ SOURCE=.\screensnap.cpp
 !IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
 
 DEP_CPP_SCREE=\
-	".\snap.h"\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\screensnap.h"\
+	".\serversocket.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
 
 DEP_CPP_SCREE=\
-	".\snap.h"\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\screensnap.h"\
+	".\serversocket.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
 
 DEP_CPP_SCREE=\
-	".\snap.h"\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\screensnap.h"\
+	".\serversocket.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\serversocket.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_SERVE=\
+	".\serversocket.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_SERVE=\
+	".\serversocket.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_SERVE=\
+	".\serversocket.h"\
 	
 
 !ENDIF 
@@ -205,22 +332,59 @@ SOURCE=.\snap.cpp
 !IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
 
 DEP_CPP_SNAP_=\
+	".\encoder.h"\
 	".\huffman.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
 	".\snap.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
 
 DEP_CPP_SNAP_=\
+	".\encoder.h"\
 	".\huffman.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
 	".\snap.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
 
 DEP_CPP_SNAP_=\
+	".\encoder.h"\
 	".\huffman.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
 	".\snap.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\vnckeymap.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_VNCKE=\
+	".\keysymdef.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_VNCKE=\
+	".\keysymdef.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_VNCKE=\
+	".\keysymdef.h"\
+	".\vnckeymap.h"\
 	
 
 !ENDIF 
@@ -232,11 +396,35 @@ DEP_CPP_SNAP_=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\huffman.h
+SOURCE=.\encoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\eventprocessor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\huffmanencoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\keysymdef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\rleencoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\serversocket.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\snap.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vnckeymap.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
