@@ -35,7 +35,7 @@ when you ask for help:</p>
 
 <ul>
 <li>Device name and Windows CE version</li>
-<li>Connection method (serial cable, USB cable, IrDA, Bluetooth, Ethernet, WLAN)</li>
+<li>Connection method(s): serial cable, USB cable, IrDA, Bluetooth, Ethernet or WLAN</li>
 <li>Operating system name, distribution and kernel version</li>
 <li>SynCE version</li>
 <li>If you compiled SynCE yourself or used pre-compiled packages</li>
