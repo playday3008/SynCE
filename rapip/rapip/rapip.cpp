@@ -149,7 +149,7 @@ void kio_rapipProtocol::get(const KURL& url)
     QByteArray array;
     KIO::filesize_t processed_size = 0;
     WCHAR* wide_filename;
-    QString fName;
+    QCString fName;
     KMimeType::Ptr mt;
 
 
@@ -159,7 +159,7 @@ void kio_rapipProtocol::get(const KURL& url)
         mt = KMimeType::findByURL(url);
         mimeType(mt->name());
         fName = QFile::encodeName(url.path());
-        if ((wide_filename = synce::wstr_from_ascii(fName.ascii()))) {
+        if ((wide_filename = synce::wstr_from_ascii(fName))) {
             remote = CeCreateFile(wide_filename, GENERIC_READ, 0, NULL,
                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
             if (!(INVALID_HANDLE_VALUE == remote)) {
@@ -204,8 +204,7 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
     size_t bytes_written;
     QByteArray buffer;
     KMimeType::Ptr mt;
-    QString qPath;
-
+    QCString qPath;
 
     openConnection();
 
@@ -213,8 +212,7 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
         mt = KMimeType::findByURL(url);
         emit mimeType(mt->name());
         qPath = QFile::encodeName(url.path());
-        //        qPath.replace('/', "\\");
-        if ((wide_filename = synce::wstr_from_ascii(qPath.ascii()))) {
+        if ((wide_filename = synce::wstr_from_ascii(qPath))) {
             if (wide_filename)
                 for (WCHAR* p = wide_filename; *p; p++)
                     if (*p == '/')
@@ -264,7 +262,7 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
 void kio_rapipProtocol::listDir(const KURL& _url)
 {
     KURL url(_url);
-    QString qPath;
+    QCString qPath;
     WCHAR* wide_path;
     char *myDocs;
 
@@ -285,11 +283,10 @@ void kio_rapipProtocol::listDir(const KURL& _url)
             redirection(url);
         } else {
             if (qPath.right(1) != "/") {
-                qPath = qPath.append('/');
+                qPath = qPath.append("/");
             }
-            //            qPath.replace('/', "\\");
-            qPath.append('*');
-            if ((wide_path = synce::wstr_from_ascii(qPath.ascii()))) {
+            qPath.append("*");
+            if ((wide_path = synce::wstr_from_ascii(qPath))) {
                 if (wide_path)
                     for (WCHAR* p = wide_path; *p; p++)
                         if (*p == '/')
@@ -301,8 +298,8 @@ void kio_rapipProtocol::listDir(const KURL& _url)
             } else {
                 error(KIO::ERR_MALFORMED_URL, url.path());
             }
+            finished();
         }
-        finished();
     }
     closeConnection();
 }
@@ -311,15 +308,14 @@ void kio_rapipProtocol::listDir(const KURL& _url)
 void kio_rapipProtocol::mkdir(const KURL& url, int /* permissions */)
 {
     WCHAR *wide_path;
-    QString qPath;
+    QCString qPath;
 
 
     openConnection();
 
     if (ceOk) {
         qPath = QFile::encodeName(url.path());
-        //        qPath.replace('/', "\\");
-        if ((wide_path = synce::wstr_from_ascii(qPath.ascii()))) {
+        if ((wide_path = synce::wstr_from_ascii(qPath))) {
             if (wide_path)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
@@ -341,14 +337,13 @@ void kio_rapipProtocol::mkdir(const KURL& url, int /* permissions */)
 void kio_rapipProtocol::del(const KURL& url, bool isFile)
 {
     WCHAR *wide_path;
-
+    QCString qPath;
 
     openConnection();
 
     if (ceOk) {
-        QString qPath( QFile::encodeName(url.path()));
-        //        qPath.replace('/', "\\");
-        if ((wide_path = synce::wstr_from_ascii(qPath.ascii()))) {
+        qPath =QFile::encodeName(url.path());
+        if ((wide_path = synce::wstr_from_ascii(qPath))) {
             if (wide_path)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
@@ -379,15 +374,14 @@ void kio_rapipProtocol::stat(const KURL & url)
     WCHAR* wide_path;
     DWORD attributes;
     KMimeType::Ptr mt;
-    QString qPath;
+    QCString qPath;
 
 
     openConnection();
 
     if (ceOk) {
         qPath = QFile::encodeName(url.path());
-        //        qPath.replace('/', "\\");
-        if ((wide_path = synce::wstr_from_ascii(qPath.ascii()))) {
+        if ((wide_path = synce::wstr_from_ascii(qPath))) {
             if (wide_path)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
@@ -443,7 +437,7 @@ void kio_rapipProtocol::stat(const KURL & url)
 
 void kio_rapipProtocol::mimetype( const KURL& url)
 {
-    QString qPath;
+    QCString qPath;
     WCHAR *wide_path;
     DWORD attributes;
     KMimeType::Ptr mt;
@@ -453,8 +447,7 @@ void kio_rapipProtocol::mimetype( const KURL& url)
 
     if (ceOk) {
         qPath = QFile::encodeName(url.path());
-        //        qPath.replace('/', "\\");
-        if ((wide_path = synce::wstr_from_ascii(qPath.ascii()))) {
+        if ((wide_path = synce::wstr_from_ascii(qPath))) {
             if (wide_path)
                 for (WCHAR* p = wide_path; *p; p++)
                     if (*p == '/')
@@ -481,8 +474,8 @@ void kio_rapipProtocol::mimetype( const KURL& url)
 
 void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite)
 {
-    QString sPath;
-    QString dPath;
+    QCString sPath;
+    QCString dPath;
     WCHAR *src_path;
     WCHAR *dst_path;
 
@@ -491,15 +484,13 @@ void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite
 
     if (ceOk) {
         sPath = QFile::encodeName(src.path());
-        //        sPath.replace('/', "\\");
-        if ((src_path = synce::wstr_from_ascii(sPath.ascii()))) {
+        if ((src_path = synce::wstr_from_ascii(sPath))) {
             if (src_path)
                 for (WCHAR* p = src_path; *p; p++)
                     if (*p == '/')
                         *p = '\\';
             dPath = QFile::encodeName(dst.path());
-            //            dPath.replace('/', "\\");
-            if ((dst_path = synce::wstr_from_ascii(dPath.ascii()))) {
+            if ((dst_path = synce::wstr_from_ascii(dPath))) {
                 if (dst_path)
                     for (WCHAR* p = dst_path; *p; p++)
                         if (*p == '/')
@@ -510,7 +501,7 @@ void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite
                             error(KIO::ERR_CANNOT_DELETE, dst.path());
                         }
                     } else {
-                        error(KIO::ERR_FILE_ALREADY_EXIST, dPath.ascii());
+                        error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
                         ceOk = false;
                     }
                 }
@@ -522,7 +513,7 @@ void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite
                             error(KIO::ERR_CANNOT_RENAME, dPath);
                         }
                     } else {
-                        error(KIO::ERR_DOES_NOT_EXIST, dPath.ascii());
+                        error(KIO::ERR_DOES_NOT_EXIST, sPath);
                     }
                 }
                 synce::wstr_free_string(dst_path);
@@ -540,8 +531,8 @@ void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite
 
 void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissions */, bool overwrite)
 {
-    QString sPath;
-    QString dPath;
+    QCString sPath;
+    QCString dPath;
     WCHAR *src_path;
     WCHAR *dst_path;
 
@@ -550,15 +541,13 @@ void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissio
 
     if (ceOk) {
         sPath = QFile::encodeName(src.path());
-        //        sPath.replace('/', "\\");
-        if ((src_path = synce::wstr_from_ascii(sPath.ascii()))) {
+        if ((src_path = synce::wstr_from_ascii(sPath))) {
             if (src_path)
                 for (WCHAR* p = src_path; *p; p++)
                     if (*p == '/')
                         *p = '\\';
             dPath = QFile::encodeName(dst.path());
-            //            dPath.replace('/', "\\");
-            if ((dst_path = synce::wstr_from_ascii(dPath.ascii()))) {
+            if ((dst_path = synce::wstr_from_ascii(dPath))) {
                 if (dst_path)
                     for (WCHAR* p = dst_path; *p; p++)
                         if (*p == '/')
@@ -569,7 +558,7 @@ void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissio
                             error(KIO::ERR_CANNOT_DELETE, dst.path());
                         }
                     } else {
-                        error(KIO::ERR_FILE_ALREADY_EXIST, dPath.ascii());
+                        error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
                         ceOk = false;
                     }
                 }
@@ -581,7 +570,7 @@ void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissio
                             error(KIO::ERR_CANNOT_RENAME, dPath);
                         }
                     } else {
-                        error(KIO::ERR_DOES_NOT_EXIST, dPath.ascii());
+                        error(KIO::ERR_DOES_NOT_EXIST, sPath);
                     }
                 }
                 synce::wstr_free_string(dst_path);
