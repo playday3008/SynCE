@@ -1,0 +1,17 @@
+$Id$
+
+The i5comp and i6comp tools are useful when you need to extract Windows CE
+.cab files from an InstallShield installation.
+
+These tools are available on the web:
+  
+  http://www.google.com/search?q=i5comp
+  http://www.google.com/search?q=i6comp
+
+This directory contains a patch for i5comp that fixes some bugs regarding
+multi-volume cabs.
+
+To find the correct i5comp version with source code:
+
+  http://www.google.com/search?q=i5comp21
+
