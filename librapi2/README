@@ -8,6 +8,8 @@ o License
 o How to get support
 o External requirements
 o Installation from CVS
+o MacOS X installation
+o Solaris installation
 
 
 Overview
@@ -90,4 +92,22 @@ o Build:
 o Install:
 
     make install
+
+
+MacOS X installation
+--------------------
+
+You probably have libiconv in /sw so you use --with-libiconv-prefix=/sw as
+parameter to the configure script.
+
+If you get error messages about duplicate symbols, you can try to call the
+configure script with the --disable-shared parameter.
+
+
+Solaris installation
+--------------------
+
+The libiconv provided by Sun sucks. Get GNU libiconv and install it for example
+in /usr/local and use --with-libiconv-prefix=/usr/local as parameter to the
+configure script.
 
