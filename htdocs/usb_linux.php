@@ -104,6 +104,8 @@ this:</p>
 
 <pre>option ipaq ttyUSB=1</pre>
 
+<p>Then configure SynCE to use ttyUSB1 instead of ttyUSB0.</p>
+
 </td><td width="5%">&nbsp;</td></tr></table>
 
 <h3>General</h3>
