@@ -560,6 +560,8 @@ bool rra_appointment_from_vevent(/*{{{*/
     }
 #endif
   }
+  else
+    synce_warning("No DTSTART found");
 
   if (!event_parser_data.has_alarm)
   {
