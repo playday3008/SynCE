@@ -52,6 +52,9 @@ href="http://www.info-zip.org/UnZip.html">UnZip</a> installed.</li>
 
 </ul>
 
+<p>When Orange has extracted an installable Microsoft Cabinet File, you can use
+<tt>synce-install-cab</tt> to install the program on your PDA.</p>
+
 <p>If you find an installer that Orange failes to handle and you have both
 Cabextract and UnZip installed, write to <a
 href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>
