@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 #	Created:	Sam Mär 27 18:58:28 CET 2004	by M. Biermaier	on linuxorange
-#	Version:	Die Apr 20 13:39:00 CEST 2004	on linuxorange
+#	Version:	Fre Apr 30 10:48:35 CEST 2004	on linuxorange
 #	$Id$
 
 """
@@ -556,7 +556,7 @@ class DirectoryMixinHandler:
 				+ __date__.replace ("$", "")
 		#--------------------------------------------------
 		else:
-			ErrorString		= "Cmd [%s] not recognizied." % Cmds [0]
+			ErrorString		= "Cmd [%s] not recognized." % Cmds [0]
 			print ErrorString
 			WriteLogFile (ErrorString)
 			TheResult		= ErrorString
@@ -720,22 +720,6 @@ def main (theArgs):
 	# Test
 	dPrint ("sys.argv", sys.argv)
 
-	Usage		= \
-    """usage: %s [-c] [-d n] [-D] [-e] [-l file] [-h host] [-p port] [-v] [-V]
-    -c ........ run as client
-    -d n ...... debug-level 
-                0 = off
-                1 = general
-                2 = trace
-                3 = Debug-File
-    -D ........ DebugPrint
-    -e ........ abort on Error
-    -l file ... logfile
-    -h host ... host
-    -p port ... port
-    -v ........ verbose
-    -V ........ print version and exit"""
-
 	# Define Defaults [
 	#--------------------------------------------------
 	logfile	= "CE_DirViewServer.Log"
@@ -753,16 +737,16 @@ def main (theArgs):
 		# ['host=linuxorange\n', 'port=4711\n']
 		dPrint ("Settings", Settings)
 		for Line in Settings:
-			 Line	= Line [:-1]	# Kill trailing "\n"
-			 Params	= Line.split ("=")
-			 if Params [0] == "logfile":
-			 	logfile	= Params [1]
+			Line	= Line [:-1]	# Kill trailing "\n"
+			Params	= Line.split ("=")
+			if Params [0] == "logfile":
+				logfile	= Params [1]
 				dPrint ("logfile", logfile)
-			 elif Params [0] == "host":
-			 	host	= Params [1]
+			elif Params [0] == "host":
+				host	= Params [1]
 				dPrint ("host", host)
-			 elif Params [0] == "port":
-			 	port	= int (Params [1])
+			elif Params [0] == "port":
+				port	= int (Params [1])
 				dPrint ("port", port)
 	except:
 		print "%s Warning: Could not read settings from [%s]." % (sys.argv [0], SETTINGS_NAME)
@@ -771,9 +755,40 @@ def main (theArgs):
 
 	# Process Options [
 	#--------------------------------------------------
+	Usage		= \
+    """usage: %s [-c] [-d n] [-D] [-e] [-l file] [-h host] [-p port] [-v] [-V]
+    -c,      --client ......... run as client
+    -d n,    --debugLevel=n ... debug-level 
+                                0 = off
+                                1 = general
+                                2 = trace
+                                3 = Debug-File
+    -D,      --DebugPrint ..... DebugPrint
+    -e,      --error .......... abort on Error
+             --help ........... display this help and exit
+    -h host, --host=host ...... host
+    -l file, --logfile=file ... logfile
+    -p port, --port=port ...... port
+    -v,      --verbose ........ explain what is being done
+    -V,      --version ........ print version and exit"""
+
+	LongOptions		=	[
+						"client",
+						"debugLevel=",
+						"DebugPrint",
+						"error",
+						"help",
+						"host=",
+						"logfile=",
+						"port=",
+						"verbose",
+						"version",
+						]
+
 	try:
-		opts, args	= getopt.getopt (theArgs [1:], 'cd:Del:h:p:vV')
-	except getopt.GetoptError:
+		opts, args	= getopt.getopt (theArgs [1:], 'cd:Deh:l:p:vV', LongOptions)
+	except getopt.GetoptError, msg:
+		print msg
 		print Usage % sys.argv [0]
 		sys.exit (1)
 
@@ -803,10 +818,13 @@ def main (theArgs):
 			DEBUG_PRINT	= True
 		if o in ("-e", "--error"):
 			ABORT_ON_ERR= True
-		if o in ("-l", "--logfile"):
-			logfile	= a
+		if o in ("--help"):
+			print Usage % sys.argv [0]
+			sys.exit (0)
 		if o in ("-h", "--host"):
 			host	= a
+		if o in ("-l", "--logfile"):
+			logfile	= a
 		if o in ("-p", "--port"):
 			try:
 				port	= int (a)
