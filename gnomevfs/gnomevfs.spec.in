@@ -35,7 +35,8 @@ make %{_smp_mflags}
 
 %install
 %makeinstall
-rm %{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.a
+FILE=%{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.a
+test -f $FILE && rm $FILE
 
 %files
 %defattr(-, root, root)
