@@ -60,7 +60,7 @@ namespace KABC {
 
 namespace pocketPCCommunication {
 
-class Rra : /*public QObject,*/ public KShared
+class Rra : public KShared
 {
 public:
     struct ids {
@@ -103,8 +103,6 @@ public:
     bool isConnected () const;
     QString getPdaName () const;
 
-    MatchMaker* getMatchMaker ();
-
     bool ok();
     bool connect();
     void disconnect();
@@ -117,14 +115,10 @@ public:
 private:
     HRESULT hr;
     RRA_SyncMgr* rra;
-    RRA_Matchmaker* matchmaker;
     QString pdaName;
     bool rraOk;
-//    struct ids _ids;
     int useCount;
     RRA_Timezone tzi;
-
-    MatchMaker* m_matchMaker;
 };
 
 } // namespace

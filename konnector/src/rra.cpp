@@ -51,8 +51,6 @@ Rra::Rra(QString pdaName)
     this->pdaName = pdaName;
     rra = 0;
     rra = rra_syncmgr_new();
-    matchmaker = 0;
-
     useCount = 0;
 }
 
@@ -65,16 +63,12 @@ Rra::Rra()
     rra = 0;
     rra = rra_syncmgr_new();
 
-    matchmaker = 0;
     useCount = 0;
 }
 
 
 Rra::~Rra()
 {
-    // should useCount be set to 0 here???
-    //useCount = 0; // make a real disconnect!!! nobody needs this anymore!
-    //disconnect();
     finalDisconnect();
     rra_syncmgr_destroy(rra);
 }
@@ -94,41 +88,20 @@ bool Rra::connect()
 {
     rraOk = true;
 
-    /*
-    if (!rra)
-    {
-        return false;
-    }
-    */
-
     if (useCount == 0) {
-        //if (!rra)
-        //    rra = rra_syncmgr_new();
-        /*
-        if (!Ce::rapiInit(pdaName)) {
-            rraOk = false;
-        } else {
-        */
-//            sleep(1);
-            kdDebug(2120) << "RRA-Connect" << endl;
-            if (rra_syncmgr_connect(rra)) {
-                kdDebug(2120) << "Matchmaker-connect" << endl;
-                matchmaker = rra_matchmaker_new();
-                m_matchMaker = new MatchMaker (matchmaker);
-                if (getTimezone(&tzi)) {
-                } else {
-                    kdDebug(2120) << "rra_timezone_get fault" << endl;
-                    rraOk = false;
-                    Ce::rapiUninit();
-                }
-            }
-            else {
+        kdDebug(2120) << "RRA-Connect" << endl;
+        if (rra_syncmgr_connect(rra)) {
+            if (getTimezone(&tzi)) {
+            } else {
+                kdDebug(2120) << "rra_timezone_get fault" << endl;
                 rraOk = false;
                 Ce::rapiUninit();
             }
-/*
         }
-*/
+        else {
+            rraOk = false;
+            Ce::rapiUninit();
+        }
     }
 
     if (rraOk) {
@@ -146,12 +119,8 @@ void Rra::disconnect()
     }
 
     if(useCount == 0 && rra_syncmgr_is_connected(rra)) {
-        kdDebug(2120) << "Matchmaker-Disconnect" << endl;
-        rra_matchmaker_destroy(matchmaker);
-        matchmaker = 0;
         kdDebug(2120) << "RRA-Disconnect" << endl;
         rra_syncmgr_disconnect(rra);
-//        Ce::rapiUninit();
     }
 }
 
@@ -512,12 +481,6 @@ void Rra::deleteObject(uint32_t type_id, uint32_t object_id)
         }
         disconnect();
     }
-}
-
-
-MatchMaker* Rra::getMatchMaker()
-{
-    return m_matchMaker;
 }
 
 
