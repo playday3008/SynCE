@@ -706,7 +706,6 @@ static KCmdLineOptions options[] =
         // INSERT YOUR COMMANDLINE OPTIONS HERE
     };
 
-#undef NOTUNIQUE
 
 int main(int argc, char *argv[])
 {
