@@ -74,6 +74,8 @@ public:
     struct Rra::ids& getIds(uint32_t type_id);
     struct Rra::Partner getPartner(uint32_t index);
     struct Rra::Partner getCurrentPartner();
+    uint32_t partnerCreate();
+    bool partnerReplace(int index);
     bool setPartner(struct Rra::Partner& partner);
     bool setCurrentPartner(uint32_t index);
     QString getVCard(uint32_t type_id, uint32_t object_id);

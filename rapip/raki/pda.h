@@ -83,10 +83,8 @@ signals:
     
 private:
     bool startMasquerading(bool start);
-    void trySetPartner();
-    void checkPartner();
-    
-    void *noPartnershipQuestion(void *data);
+    void setPartnershipThread();
+    void setPartnership(QThread *thread, void *data);
     void *removePartnershipDialog(void *data);
     void *alreadyTwoPartnershipsDialog(void *data);
     void *progressDialogCancel(void *data);
@@ -94,7 +92,6 @@ private:
     void *advanceTotalStepsEvent(void *data);
     void *rraConnectionError(void *data);
     void *initializationStarted(void *data);
-    void initThread(QThread *thread, void *data);
     
     KProgressDialog *progressDialog;
     KProgress *progressBar;

@@ -77,7 +77,7 @@ PDA::PDA(Raki *raki, QString pdaName)
     configDialog = new PdaConfigDialogImpl(this, pdaName, raki, "ConfigDialog",
                                            false);
     configDialog->setCaption("Configuration for " + pdaName);
-    
+
     syncDialog = new SyncDialogImpl(rra, pdaName, raki, "SynchronizeDialog", true);
     syncDialog->setCaption("Synchronize " + pdaName);
 
@@ -90,7 +90,7 @@ PDA::PDA(Raki *raki, QString pdaName)
     menuCount++;
 
     syncItem = associatedMenu->insertItem(SmallIcon("connect_established"), i18n("&Synchronize"),
-                               this, SLOT(synchronize()));
+                                          this, SLOT(synchronize()));
     associatedMenu->setItemEnabled(syncItem, false);
     menuCount++;
 
@@ -148,7 +148,7 @@ PDA::~PDA()
 
 QPtrDict<ObjectType> PDA::getSynchronizationTypes()
 {
-        return rra->getTypes();
+    return rra->getTypes();
 }
 
 
@@ -406,166 +406,9 @@ void *PDA::alreadyTwoPartnershipsDialog(void *)
 }
 
 
-void PDA::trySetPartner()
-{
-    struct Rra::Partner partner[2];
-    struct Rra::Partner newPartner;
-    char hostname[256];
-    partnerOk = false;
-
-    srandom(QDateTime::currentDateTime().toTime_t());
-
-    kdDebug(2120) << "Tryping to set a partnership" << endl;
-
-    if (gethostname(hostname, 256) != 0) {
-        return;
-    }
-
-    newPartner.name = hostname;
-    newPartner.id = random();
-
-    partner[0] = rra->getPartner(1);
-    advanceTotalSteps(1);
-    advanceProgress(1);
-    kdDebug(2120) << "   Trying partnership 1" << endl;
-    if (partner[0].name.isEmpty() || partner[0].id == 0) {
-        kdDebug(2120) << "      Partnership 1 free ... using this index" << endl;
-        newPartner.index = 1;
-        rra->setPartner(newPartner);
-        rra->setCurrentPartner(1);
-        advanceProgress(1);
-        partnerName = newPartner.name;
-        partnerId = newPartner.id;
-        partnerOk = true;
-        associatedMenu->setItemEnabled(syncItem, true);
-    } else {
-        partner[1] = rra->getPartner(2);
-        advanceTotalSteps(1);
-        advanceProgress(1);
-        kdDebug(2120) << "   Trying partnership 2" << endl;
-        if (partner[1].name.isEmpty() || partner[1].id == 0) {
-            kdDebug(2120) << "      Partnership 2 free ... using this index" << endl;
-            newPartner.index = 2;
-            rra->setPartner(newPartner);
-            rra->setCurrentPartner(2);
-            advanceProgress(1);
-            partnerName = newPartner.name;
-            partnerId = newPartner.id;
-            partnerOk = true;
-            associatedMenu->setItemEnabled(syncItem, true);
-        }
-    }
-
-    if (partnerOk) {
-        configDialog->setPartner(partnerName, partnerId);
-        return;
-    }
-
-    int deletedItems = (int) postThreadEvent(&PDA::removePartnershipDialog, partner, block);
-
-    if (deletedItems != 0) {
-        if (deletedItems & 1 | 2) { 
-            advanceTotalSteps(2);
-        } else { 
-            advanceTotalSteps(1);
-        }
-        if (deletedItems & 1) {
-            newPartner.name = "";
-            newPartner.id = 0;
-            newPartner.index = 1;
-            rra->setPartner(newPartner);
-            advanceProgress(1);
-        }
-        if (deletedItems & 2) {
-            newPartner.name = "";
-            newPartner.id = 0;
-            newPartner.index = 2;
-            rra->setPartner(newPartner);
-            advanceProgress(1);
-        }
-        trySetPartner();
-    } else {
-        postThreadEvent(&PDA::alreadyTwoPartnershipsDialog, NULL, block);
-
-        partnerName = "";
-        partnerId = 0;
-        rra->setCurrentPartner(0);
-        advanceProgress(1);
-    }
-}
-
-
 bool PDA::isPartner()
 {
     return partnerOk;
-}
-
-
-void *PDA::noPartnershipQuestion(void *)
-{
-    KGuiItem yesItem("Set Partnership");
-    KGuiItem noItem("Use Guest");
-
-    return (void *) KMessageBox::questionYesNo((QWidget *) parent(), "No valid Partnership found. "
-            "Do you wan't to set one "
-            "or connect as guest?", "Partnership", yesItem, noItem);
-}
-
-
-void PDA::checkPartner()
-{
-    struct Rra::Partner partner;
-
-    kdDebug(2120) << "Checking partner" << endl;
-
-    if (configDialog->getPartnerId() == 0) {
-        kdDebug(2120) << "No previous partnership found ... " << endl;
-    } else {
-        kdDebug(2120) << "Previous partnership found ... trying to match with pda" << endl;
-        advanceTotalSteps(1);
-        partner = rra->getPartner(1);
-        advanceProgress(1);
-        kdDebug(2120) << "Checking: " << partner.name << " " << partner.id << " " <<
-        configDialog->getPartnerName() << " " << configDialog->getPartnerId() << endl;
-        if (partner.name == configDialog->getPartnerName() &&
-                partner.id == configDialog->getPartnerId() && partner.id != 0 && !partner.name.isEmpty()) {
-            kdDebug(2120) << "Partnership 1 ... ok" << endl;
-            partnerOk = true;
-            rra->setCurrentPartner(1);
-            advanceProgress(1);
-            associatedMenu->setItemEnabled(syncItem, true);
-            return;
-        }
-
-        advanceTotalSteps(1); // 5
-        partner = rra->getPartner(2);
-        advanceProgress(1);
-        kdDebug(2120) << "Checking: " << partner.name << " " << partner.id << " " <<
-        configDialog->getPartnerName() << " " << configDialog->getPartnerId() << endl;
-        if (partner.name == configDialog->getPartnerName() &&
-                partner.id == configDialog->getPartnerId() && partner.id != 0 && !partner.name.isEmpty()) {
-            kdDebug(2120) << "Partnership 2 ... ok" << endl;
-            partnerOk = true;
-            rra->setCurrentPartner(2);
-            advanceProgress(1);
-            associatedMenu->setItemEnabled(syncItem, true);
-            return;
-        }
-        kdDebug(2120) << "No match found ... " << endl;
-    }
-
-    kdDebug(2120) << "trying to set one" << endl;
-
-    int answer = (int) postThreadEvent(&PDA::noPartnershipQuestion, NULL, block);
-
-    if (answer == KMessageBox::Yes) {
-        trySetPartner();
-    } else {
-        partnerName = "";
-        partnerId = 0;
-        rra->setCurrentPartner(0);
-        advanceProgress(1);
-    }
 }
 
 
@@ -594,28 +437,76 @@ void *PDA::initializationStarted(void *)
 }
 
 
-void PDA::initThread(QThread *, void *)
+void PDA::setPartnershipThread()
 {
-    postThreadEvent(&PDA::initializationStarted, NULL, noBlock);
-    
-    if (!configDialog->isNewPda()) {
-        if (rra->connect()) {
-            advanceProgress(1);
-            checkPartner();
-            rra->disconnect();
+    struct Rra::Partner partner;
+    kdDebug(2120) << "in PDE::init" << endl;
+
+    int index = rra->partnerCreate();
+    advanceProgress(1);
+    if (!index) {
+        advanceTotalSteps(2);
+        struct Rra::Partner partners[2];
+        partners[0] = rra->getPartner(1);
+        advanceProgress(1);
+        partners[1] = rra->getPartner(2);
+        advanceProgress(1);
+        int deletedItems = (int) postThreadEvent(&PDA::removePartnershipDialog, partners, block);
+        if (deletedItems > 0) {
+            if (deletedItems & 3) {
+                advanceTotalSteps(4);
+            } else {
+                advanceTotalSteps(3);
+            }
+            if (deletedItems != 0) {
+                struct Rra::Partner deletedPartner;
+                if (deletedItems & 1) {
+                    deletedPartner.name = "";
+                    deletedPartner.id = 0;
+                    deletedPartner.index = 1;
+                    rra->setPartner(deletedPartner);
+                    advanceProgress(1);
+                }
+                if (deletedItems & 2) {
+                    deletedPartner.name = "";
+                    deletedPartner.id = 0;
+                    deletedPartner.index = 2;
+                    rra->setPartner(deletedPartner);
+                    advanceProgress(1);
+                }
+            }
+            setPartnershipThread();
         } else {
-            postThreadEvent(&PDA::rraConnectionError, NULL, block);
+            postThreadEvent(&PDA::alreadyTwoPartnershipsDialog, NULL, block);
+            advanceTotalSteps(2);
+            kdDebug(2120) << "Using Guest" << endl;
+            partnerName = "";
+            partnerId = 0;
+            rra->setCurrentPartner(0);
+            advanceProgress(1);
         }
     } else {
-        if (rra->connect()) {
-            advanceProgress(1);
-            trySetPartner();
-            rra->disconnect();
-        } else {
-            postThreadEvent(&PDA::rraConnectionError, NULL, block);
-        }
+        partner = rra->getPartner(index);
+        advanceProgress(1);
+        partnerOk = true;
+        partnerName = partner.name;
+        partnerId = partner.id;
+        associatedMenu->setItemEnabled(syncItem, true);
     }
+}
 
+
+void PDA::setPartnership(QThread *, void *)
+{
+
+    if (rra->connect()) {
+        setPartnershipThread();
+    } else {
+        postThreadEvent(&PDA::rraConnectionError, NULL, block);
+    }
+    rra->disconnect();
+
+    configDialog->setPartner(partnerName, partnerId);
     postThreadEvent(&PDA::progressDialogCancel, NULL, noBlock);
 }
 
@@ -623,12 +514,15 @@ void PDA::initThread(QThread *, void *)
 void PDA::init()
 {
     kdDebug(2120) << "in pda-init" << endl;
+
     progressDialog = new KProgressDialog(raki, "Connecting",
-                                         "Connecting...", "Connecting " + pdaName + "...", true);
+            "Connecting...", "Connecting " + pdaName + "...", true);
     progressDialog->setAllowCancel(false);
-    progressBar = progressDialog->progressBar();
     progressDialog->setMinimumDuration(0);
+
+    progressBar = progressDialog->progressBar();
     progressBar->setTotalSteps(3);
     progressBar->advance(1);
-    startWorkerThread(this, &PDA::initThread, NULL);
+
+    startWorkerThread(this, &PDA::setPartnership, NULL);
 }

@@ -147,8 +147,7 @@ struct Rra::ids& Rra::getIds(uint32_t type_id)
     _ids.unchangedIds.clear();
     _ids.deletedIds.clear();
 
-    if (connect())
-    {
+    if (connect()) {
         if (rra_get_object_ids(rra, type_id, &_ids.object_ids)) {
             for (size_t i = 0; i < _ids.object_ids->unchanged; i++) {
                 _ids.unchangedIds.append(&_ids.object_ids->ids[id++]);
@@ -220,8 +219,44 @@ struct Rra::Partner Rra::getCurrentPartner()
     
     return partner;
 }
-    
-    
+
+
+uint32_t Rra::partnerCreate()
+{
+    uint32_t index = 0;
+
+    if (rra_partner_create(rra, &index)) {
+        kdDebug(2120) << "Partnership creation succeeded. Using partnership index " << index << endl;
+    } else {
+        kdDebug(2120) << "Partnership creation failed." << endl;
+        index = 0;
+    }
+
+    return index;
+}
+
+
+bool Rra::partnerReplace(int index)
+{
+    bool ret;
+
+    if (index == 1 || index == 2) {
+        if (rra_partner_replace(rra, index)) {
+            kdDebug(2120) << "Partnership replacement succeeded." << endl;
+            ret = true;
+        } else {
+            kdDebug(2120) << "Partnership replacement failed." << endl;
+            ret = false;
+        }
+    } else {
+        kdDebug(2120) << "Invalid or missing index of partnership to replace." << endl;
+        ret = false;
+    }
+
+    return ret;
+}
+
+
 bool Rra::setPartner(struct Rra::Partner& partner)
 {
     connect();
