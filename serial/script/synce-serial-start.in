@@ -62,13 +62,15 @@ fi
 #
 
 if [ "`uname -s`" = "Linux" ]; then
-  if ! modprobe ppp_async; then
- 	echo "
+  if ! grep -q ppp /proc/devices; then
+    if ! modprobe ppp_async; then
+    echo "
 ${THIS} was unable to load the ppp_async kernel module:
 
 Please add this module to your Linux kernel before running this script again.
 " >&2
-	exit 1
+    exit 1
+    fi
   fi
 fi
 
