@@ -8,9 +8,17 @@
 
 <ul>
 
-<li class=SPACED>To compile SynCE, you need the <a
+<li class=SPACED>To compile SynCE, you first need the <a
 href="http://developer.apple.com/tools/macosxtools.html">Mac OS X Developer
-Tools</a>. You probably need <a href="http://fink.sf.net/">Fink</a> too.</li>
+Tools</a>.</li>
+
+<li class=SPACED>You need <b>GNU libiconv</b> and <b>libpoll</b> from <a
+href="http://fink.sf.net/">Fink</a>.</li>
+
+<li class=SPACED>If you get the "multiple definitions of symbol" error message
+when compiling librapi2 you should <a
+href="http://fink.sourceforge.net/doc/porting/libtool.php">patch the
+"convenience library bug"</a> in libtool.</li>
 
 <li class=SPACED>Use the <a
 href="http://www.loolix.com/hacks/LoolixUSBPocketPC/">LoolixUSBPocketPC</a>
