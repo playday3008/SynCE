@@ -42,17 +42,33 @@ AC_ARG_WITH(iconv,
   	if test "$withval" != "yes"; then
 			AC_MSG_RESULT([$withval])
 			LDFLAGS="$LDFLAGS -L$withval/lib"
+			CPPFLAGS="$CPPFLAGS -I$withval/include"
 		else
 			AC_MSG_RESULT([(use default)])
    	fi
-	else
-		AC_MSG_RESULT([(use default)])
-	fi
-])
-AC_CHECK_LIB(iconv, iconv, [
-	LIBICONV="-liconv"
+  else
+	AC_MSG_RESULT([no])
+  fi
 ],[
-	LIBICONV=""
+	AC_MSG_RESULT([(use default)])
+])
+AC_MSG_CHECKING([for iconv_open()])
+LIBICONV=""
+dnl evil iconv.h redefines iconv_open() as a macro
+AC_TRY_LINK([#include <iconv.h>],[iconv_open(0,0);],[
+	AC_MSG_RESULT([yes])
+],[
+	AC_MSG_RESULT([no])
+	AC_MSG_CHECKING([for iconv_open() with -liconv])
+	LIBS_save="$LIBS"
+	LIBS="$LIBS -liconv"
+	AC_TRY_LINK([#include <iconv.h>],[iconv_open(0,0);],[
+		AC_MSG_RESULT([yes])
+		LIBICONV="-liconv"
+	],[
+		AC_MSG_RESULT([no])
+	])
+	LIBS="$LIBS_save"
 ])
 AC_SUBST(LIBICONV)
 
