@@ -14,6 +14,8 @@
 #ifndef WINDOWS_TYPES_H
 #define WINDOWS_TYPES_H
 
+#include "little_endian.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -26,42 +28,37 @@ extern "C" {
 #include <stdarg.h>
 #include <time.h>
 
-typedef unsigned char BYTE;
+typedef u_int8_t BYTE;
 typedef BYTE * PBYTE;
 typedef BYTE * LPBYTE;
 
-typedef unsigned short USHORT;
+typedef u_int16_t USHORT;
 
-typedef unsigned short WORD;
+typedef u_int16_t WORD;
 typedef WORD * LPWORD;
 
-typedef unsigned long DWORD;
+typedef u_int32_t DWORD;
 typedef DWORD * LPDWORD;
 
-typedef unsigned int UINT;
-typedef int INT;
+typedef u_int32_t UINT;
+typedef int32_t INT;
 
-typedef long BOOL;
-typedef BOOL * LPBOOL;
-
-typedef long LONG;
+typedef int32_t LONG;
 typedef LONG * PLONG;
+
+typedef LONG BOOL;
+typedef BOOL * LPBOOL;
 
 typedef DWORD ULONG;
 
 typedef double DOUBLE;
 
-typedef char CHAR;
+typedef int8_t CHAR;
 typedef CHAR * LPSTR;
 typedef const CHAR * LPCSTR;
 
-
-/*#ifdef REAL_WCHAR_T
-typedef wchar_t WCHAR;
-#else*/
-typedef unsigned short WCHAR;
-/*#endif*/
-typedef unsigned short _WIN_WCHAR;
+typedef u_int16_t WCHAR;
+typedef u_int16_t _WIN_WCHAR;
 
 typedef WCHAR TCHAR;
 typedef WCHAR * LPWSTR;
@@ -83,13 +80,13 @@ typedef HRESULT STDAPI;
 #define __stdcall
 #define STDAPICALLTYPE
 
-typedef char * LPSECURITY_ATTRIBUTES;
-typedef char * LPSTARTUPINFO;
-typedef char * LPPROCESS_INFORMATION;
-typedef char * LPOVERLAPPED;
-typedef long HKEY;
+typedef CHAR * LPSECURITY_ATTRIBUTES;
+typedef CHAR * LPSTARTUPINFO;
+typedef CHAR * LPPROCESS_INFORMATION;
+typedef CHAR * LPOVERLAPPED;
+typedef LONG HKEY;
 typedef HKEY * PHKEY;
-typedef long REGSAM;
+typedef LONG REGSAM;
 
 #define FAILED(a) (a<0)
 #define E_SUCCESS			   0
