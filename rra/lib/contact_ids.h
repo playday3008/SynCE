@@ -17,6 +17,8 @@
 #define ID_HOME_FAX     0x3a25
 #define ID_HOME2_TEL    0x3a2f
 
+#define ID_BIRTHDAY     0x4001
+#define ID_ANNIVERSARY  0x4003
 #define ID_CATEGORY     0x4005
 
 #define ID_WORK2_TEL    0x4007

@@ -120,6 +120,23 @@ static void strbuf_append_tel_type(StrBuf* strbuf, const char* value, uint32_t f
 	strbuf_append_type(strbuf, "TEL", value, flags);
 }
 
+static void strbuf_append_date(StrBuf* strbuf, const char* name, FILETIME* filetime)
+{
+  char buffer[12];
+  time_t unix_time;
+  struct tm* date;
+
+  unix_time = filetime_to_unix_time(filetime);
+  date = localtime(&unix_time);
+
+  snprintf(buffer, sizeof(buffer), "%04i-%02i-%02i", 1900 + date->tm_year, 1 + date->tm_mon, date->tm_mday);
+
+  strbuf_append(strbuf, name);
+  strbuf_append_c(strbuf, ':');
+  strbuf_append(strbuf, buffer);
+  strbuf_append_crlf(strbuf);
+}
+
 static bool rra_contact_to_vcard2(/*{{{*/
 		uint32_t id, 
 		CEPROPVAL* pFields, 
@@ -189,6 +206,14 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		/* TODO: validate data types */
 		switch (pFields[i].propid >> 16)
 		{
+      case ID_ANNIVERSARY:
+        strbuf_append_date(vcard, "X-EVOLUTION-ANNIVERSARY", &pFields[i].val.filetime);
+        break;
+
+      case ID_BIRTHDAY:
+        strbuf_append_date(vcard, "BDAY", &pFields[i].val.filetime);
+        break;
+      
 #if 0
 			case ID_NOTE:
 				{
@@ -650,6 +675,49 @@ static void unescape_string(char* value)/*{{{*/
 	*dest = '\0';
 }/*}}}*/
 
+static bool date_to_struct(const char* datetime, struct tm* time_struct)/*{{{*/
+{
+  int count;
+  memset(time_struct, 0, sizeof(struct tm));
+
+  count = sscanf(datetime, "%4d-%2d-%2d", 
+      &time_struct->tm_year,
+      &time_struct->tm_mon,
+      &time_struct->tm_mday);
+
+  if (count != 3)
+  {
+    synce_error("Bad date: '%s'", datetime);
+    return false;
+  }
+
+   
+  time_struct->tm_year -= 1900;
+  time_struct->tm_mon--;
+  time_struct->tm_hour = 12;
+  time_struct->tm_isdst = -1;
+
+  return true;
+}/*}}}*/
+
+static void add_date(Parser* parser, uint32_t id, const char* type, char* value)
+{
+  struct tm date_struct;
+
+  assert(value);
+
+  if (date_to_struct(value, &date_struct))
+  {
+    CEPROPVAL* propval = &parser->fields[parser->field_index++];
+    time_t unix_time;
+
+    unix_time = mktime(&date_struct);
+
+    propval->propid = (id << 16) | CEVT_FILETIME;
+    filetime_from_unix_time(unix_time, &propval->val.filetime);
+  }
+}
+
 static void add_string(Parser* parser, uint32_t id, const char* type, char* value)/*{{{*/
 {
 	char* converted = NULL;
@@ -904,6 +972,14 @@ static bool parser_handle_field(/*{{{*/
   else if (STR_EQUAL(name, "CATEGORIES"))
   {
     add_string(parser, ID_CATEGORY, type, value);
+  }
+  else if (STR_EQUAL(name, "BDAY"))
+  {
+    add_date(parser, ID_BIRTHDAY, type, value);
+  }
+  else if (STR_EQUAL(name, "X-EVOLUTION-ANNIVERSARY"))
+  {
+    add_date(parser, ID_ANNIVERSARY, type, value);
   }
 #if 0
 	else if (STR_EQUAL(name, ""))
