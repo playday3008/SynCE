@@ -21,7 +21,7 @@
 #define ID_SUBJECT         0x0037
 
 #define ID_UNKNOWN_0042    0x0042
-#define ID_UNKNOWN_0067    0x0067
+#define ID_UNIQUE          0x0067
 
 #define ID_CATEGORY        0x4005
 #define ID_RECURRENCE_PATTERN 0x4015
@@ -35,10 +35,10 @@
 #define APPOINTMENT_TYPE_ALL_DAY     1
 #define APPOINTMENT_TYPE_NORMAL      2
 
-#define ID_OCCURANCE       0x4223 
+#define ID_OCCURENCE       0x4223 
 
-#define OCCURANCE_ONCE      0
-#define OCCURANCE_REPEATED  1
+#define OCCURENCE_ONCE      0
+#define OCCURENCE_REPEATED  1
 
 #define ID_REMINDER_MINUTES_BEFORE_START  0x4501
 #define ID_REMINDER_ENABLED               0x4503
