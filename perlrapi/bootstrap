@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+#
+# To build the wrapper, just run this script.
+#
+# $Id$
+$module=Rapi2;
+$version='0.01';
+
+$|++;
+
+# Create the wrapper
+print "Running SWIG ...\n";
+$ret=`swig -I/usr/local/include -perl -shadow -module $module -o perlrapi_wrap.c perlrapi_wrap.i`;
+print $ret;
+
+# Manipulate the resulting mudule
+print "Creating $module.pm ...\n";
+open F, "<$module.pm";
+while(<F>)
+{
+    last if /^1;/;
+    # Put in the version.
+    $file.="\$VERSION='$version';\n\n" if /BASE METHODS/;
+    $file.=$_;
+}
+close F;
+
+# Write the documentation.
+open F, ">$module.pm";
+print F $file;
+print F<<EOF
+1;
+
+__END__
+
+# Sometimes a documentation will appear at this point.
+
+EOF
+;
+close F;
+
+# EOF
