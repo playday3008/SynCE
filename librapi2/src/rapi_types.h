@@ -46,6 +46,7 @@ typedef const WCHAR*  LPCWSTR;
 typedef u_int32_t  HANDLE;
 typedef u_int32_t  HRESULT;
 
+#define STDAPI HRESULT
 
 /*
  * Some error codes (HRESULTs)
