@@ -6,32 +6,43 @@
 
 <h1>SynCE - Getting help</h1>
 
-<p>How to get help from the SynCE community:</p>
+<p>Instructions on how to get help from the SynCE community.</p>
+
+<h2>Before asking for help</h2>
+
+<p>If others have had the same problem before, the solution may already be
+available!</p>
 
 <ol>
 
-<li class=SPACED>Learn how to <a
-href="http://www.catb.org/~esr/faqs/smart-questions.html#intro">ask smart
-questions</a></li>
+<li class=SPACED>Read the <a href="qa.php">Questions &amp; answers</a>
+page.</li>
 
-<li class=SPACED>Read the <a href="qa.php">Questions &amp; answers</a> page</li>
+<li class=SPACED>Search the <a
+href="http://sourceforge.net/forum/forum.php?forum_id=96106">SynCE Help
+Forum</a>. (Search box on the top left.)</li>
 
-<li>Search the <a href="http://sourceforge.net/mail/?group_id=30550">mailing
-list archives</a> and <a
-href="http://sourceforge.net/forum/?group_id=30550">forums</a> to see if your
-problem has been discussed before</li>
+<li class=SPACED>Search the <a
+href="http://sourceforge.net/mailarchive/forum.php?forum_id=15200">SynCE-Users
+mailing list archive</a>. (Search box on the top left.)</li>
 
-<li><p>If you still can't solve the problem send mail to a suitable <a
-href="http://sourceforge.net/mail/?group_id=30550">mailing list</a> or write a
-new entry in one of the <a
-href="http://sourceforge.net/forum/?group_id=30550">forums</a>. You may also
-join the IRC channel <tt>#synce</tt> on <tt>irc.freenode.net</tt> and see if
-anyone can help you.  These are some things that might be useful to include
-when you ask for help:</p>
+<li class=SPACED>Search the <a
+href="http://sourceforge.net/mailarchive/forum.php?forum_id=1226">SynCE-Devel
+mailing list archive</a>. (Search box on the top left.)</li>
+
+</ol>
+
+<p>If you can't find a previous solution to your problem, continue reading this
+document!</p>
+
+<h2>Information to collect before asking for help</h2>
+
+<p>Provide the information requested in this section and you will get better
+help faster when you ask your question!</p>
 
 <ul>
 
-<li class=SPACED><p><b>General</b></p>
+<li class=SPACED><p><b>Always provide these data!</b></p>
 
 <ul>
 <li>Device name and Windows CE version</li>
@@ -51,10 +62,11 @@ when you ask for help:</p>
 <li>Relevant log extracts from kernel driver and pppd</li>
 
 <li>The contents of your files <tt>/etc/ppp/peers/synce-device</tt> (created by
-synce-serial-config) and <tt>/etc/ppp/options</tt>.</li>
+<tt>synce-serial-config</tt>) and <tt>/etc/ppp/options</tt>.</li>
 
-<li>Kill dccm, and restart it like this: <tt>dccm -f -d 4</tt>. Now connect
-your PDA, run synce-serial-start, and provide the output from dccm.</li>
+<li>Kill <tt>dccm</tt>, and restart it like this: <tt>dccm -f -d 4</tt>. Now connect
+your PDA, run <tt>synce-serial-start</tt>, and provide the output from
+<tt>dccm</tt>.</li>
 
 <li>Is your device password-protected or not?</li>
 
@@ -62,9 +74,11 @@ your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
 <li class=SPACED><p><b>For MultiSync synchronization problems</b></p>
 
-<ul>
-<li>MultiSync and Evolution versions</li>
-<li>Messages in the terminal window when running MultiSync</li>
+<ul> <li>MultiSync and Evolution versions</li>
+
+<li>Messages in the terminal window when running MultiSync. Set
+<tt>MULTISYNC_DEBUG=1</tt> (for example with <tt>export</tt> if you are using
+the bash shell) in the environment before starting MultiSync.</li>
 
 </ul></li>
 
@@ -75,8 +89,36 @@ your PDA, run synce-serial-start, and provide the output from dccm.</li>
 <li>KDE version</li>
 
 </ul></li>
+</ul>
 
-</ol>
+<h2>Asking for help</h2>
+
+<p>First of all, you must learn <a
+href="http://www.catb.org/~esr/faqs/smart-questions.html#intro">how to ask
+questions the smart way</a>!</p>
+
+<p>When you know how to ask smart questions you can use one of these ways to
+reach the SynCE community:</p>
+
+<ul>
+
+<li class=SPACED>If you like IRC you can visit the IRC channel <tt>#synce</tt>
+on <b>irc.freenode.net</b> and see if anyone there can help you.</li>
+
+<li class=SPACED>In the <a
+href="http://sourceforge.net/forum/forum.php?forum_id=96106">SynCE Help
+Forum</a>.</li>
+
+<li class=SPACED>For end-user problems, you can use the SynCE-Users mailing list:
+<tt>synce-users at lists.sourceforge.net</tt></li>
+
+<li class=SPACED>For development problems, you can use the SynCE-Devel mailing list:
+<tt>synce-users at lists.sourceforge.net</tt></li>
+
+</ul>
+
+<p>If you do not get a reply within a week or two, it is OK to reply to your
+own message asking if it's really true that no one can help you!</p>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
