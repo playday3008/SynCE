@@ -49,7 +49,7 @@ typedef bool (*NotificationFunc)(
 typedef struct 
 {
   int32_t Bias;                       /* 00 */
-  WCHAR Name[32];                     /* 04 */
+  WCHAR StandardName[32];             /* 04 */
   uint16_t unknown0;                  /* 44 */
   uint16_t StandardMonthOfYear;       /* 46 */
   uint16_t unknown1;                  /* 48 */
@@ -57,7 +57,7 @@ typedef struct
   uint16_t StandardStartHour;         /* 4c */
   uint8_t unknown2[6];                /* 4e */
   int32_t StandardBias;               /* 54 */
-  WCHAR Description[32];              /* 58 */
+  WCHAR DaylightName[32];             /* 58 */
   uint16_t unknown3;                  /* 98 */
   uint16_t DaylightMonthOfYear;       /* 9a */
   uint16_t unknown4;                  /* 9c */

@@ -82,9 +82,10 @@ exit:
   return success;
 }/*}}}*/
 
+/* XXX: improve ID generation */
 void time_zone_get_id(TimeZoneInformation* tzi, char** id)/*{{{*/
 {
-  char* name = wstr_to_ascii(tzi->Name);
+  char* name = wstr_to_ascii(tzi->StandardName);
   char* p;
   char buffer[128];
 

@@ -91,7 +91,7 @@ static void strbuf_append_type(StrBuf* strbuf, const char* name, const char* val
 	if (flags & RRA_CONTACT_VERSION_2_1)
 	{
 		char* copy = strdup(value);
-		int i;
+		unsigned i;
 		
 		/* replace commas with semi-colons */
 		for (i = 0; i < strlen(copy); i++)
@@ -127,7 +127,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		char** ppVcard,
 		uint32_t flags)
 {
-	int i;
+	unsigned i;
 	StrBuf* vcard = strbuf_new(NULL);
 	bool have_fn = false; /* the FN property must be present! */
 	bool success = false;
