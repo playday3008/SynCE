@@ -263,14 +263,14 @@ time_t rra_timezone_convert_from_utc(RRA_Timezone* tzi, time_t unix_time)
   
   if (tzi && gmtime_r(&unix_time, &time_struct))
   {
-    time_struct.tm_min -= tzi->Bias;
+    unix_time -= tzi->Bias * 60;
 
     if (using_daylight_saving(tzi, &time_struct))
-      time_struct.tm_min -= tzi->DaylightBias;
+      unix_time -= tzi->DaylightBias * 60;
     else
-      time_struct.tm_min -= tzi->StandardBias;
+      unix_time -= tzi->StandardBias * 60;
 
-    result = mktime(&time_struct);
+    result = unix_time;
   }
 
   return result;
@@ -283,14 +283,14 @@ time_t rra_timezone_convert_to_utc(RRA_Timezone* tzi, time_t unix_time)
   
   if (tzi && gmtime_r(&unix_time, &time_struct))
   {
-    time_struct.tm_min += tzi->Bias;
-
+    unix_time += tzi->Bias * 60;
+    
     if (using_daylight_saving(tzi, &time_struct))
-      time_struct.tm_min += tzi->DaylightBias;
+      unix_time += tzi->DaylightBias * 60;
     else
-      time_struct.tm_min += tzi->StandardBias;
+      unix_time += tzi->StandardBias * 60;
 
-    result = mktime(&time_struct);
+    result = unix_time;
   }
 
   return result;
