@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>419</width>
-            <height>430</height>
+            <height>434</height>
         </rect>
     </property>
     <property name="caption">
@@ -295,9 +295,9 @@
     </connection>
     <connection>
         <sender>objectTypeList</sender>
-        <signal>clicked(QListViewItem*)</signal>
+        <signal>selectionChanged()</signal>
         <receiver>PdaConfigDialog</receiver>
-        <slot>objectTypeList_clicked(QListViewItem*)</slot>
+        <slot>setConfigButton()</slot>
     </connection>
 </connections>
 <tabstops>
@@ -305,6 +305,7 @@
     <tabstop>masqEnabledCheckbox</tabstop>
     <tabstop>objectTypeList</tabstop>
     <tabstop>syncAtConnectCheckbox</tabstop>
+    <tabstop>kPushButton2</tabstop>
     <tabstop>buttonOk</tabstop>
     <tabstop>buttonApply</tabstop>
     <tabstop>buttonCancel</tabstop>
@@ -321,7 +322,7 @@
     <slot>objectTypeList_rightButtonClicked( QListViewItem *, const QPoint &amp;, int )</slot>
     <slot>kPushButton2_clicked()</slot>
     <slot>objectTypeList_selectionChanged( QListViewItem * )</slot>
-    <slot>objectTypeList_clicked( QListViewItem * )</slot>
+    <slot>setConfigButton()</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>

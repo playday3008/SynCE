@@ -80,7 +80,6 @@ private slots:
     void disableApply();
     void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &,
             int);
-    void objectTypeList_clicked(QListViewItem *);
     void kPushButton2_clicked();
     
 private:

@@ -236,12 +236,6 @@ void PdaConfigDialogImpl::setConfigButton()
 }
 
 
-void PdaConfigDialogImpl::objectTypeList_clicked(QListViewItem *item)
-{
-    setConfigButton();
-}
-
-
 bool PdaConfigDialogImpl::isNewPda()
 {
     return newPda;
