@@ -1,0 +1,24 @@
+#!/bin/sh
+#	Created:	Mit Jun 16 12:37:53 CEST 2004	by M. Biermaier	on linuxorange
+#	Version:	Mit Jun 16 12:56:34 CEST 2004	on linuxorange
+#	$Id$
+
+LOGFILE=PreInstall-Check-`hostname`.Log
+
+echo -n > $LOGFILE
+echo "CheckFile for SynCE-Installer-SubProject" >> $LOGFILE
+echo "Please return this file to mbier@users.sourceforge.net" >> $LOGFILE
+echo 					>> $LOGFILE
+date					>> $LOGFILE
+echo 					>> $LOGFILE
+
+echo "Results:"			>> $LOGFILE
+echo "#--------------------------------------------------" >> $LOGFILE
+
+PreInstall-Check.sh		>> $LOGFILE
+
+echo "#--------------------------------------------------" >> $LOGFILE
+
+PreInstall-Check.sh -r	>> $LOGFILE
+
+# vim: ts=4 sw=4
