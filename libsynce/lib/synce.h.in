@@ -57,9 +57,13 @@ char* wstr_to_ascii(LPCWSTR unicode);
 
 char* wstr_to_utf8(LPCWSTR unicode);
 
+char* wstr_to_current(LPCWSTR unicode);
+
 LPWSTR wstr_from_ascii(const char* ascii);
 
 LPWSTR wstr_from_utf8(const char* utf8);
+
+LPWSTR wstr_from_current(const char* utf8);
 
 void wstr_free_string(void* str);
 

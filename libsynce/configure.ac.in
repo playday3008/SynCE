@@ -81,10 +81,17 @@ AC_CHECK_HEADERS(stdbool.h,,[
   AC_MSG_ERROR([Don't know how to get bool values on your system])
 ])
 
+dnl For setlocale
+AC_CHECK_HEADERS(locale.h)
+dnl For nl_langinfo
+AC_CHECK_HEADERS(langinfo.h)
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
 dnl Checks for library functions.
+AC_CHECK_FUNCS(nl_langinfo)
+AC_CHECK_FUNCS(setlocale)
 AC_CHECK_FUNCS(poll)
 AC_REPLACE_FUNCS(inet_pton)
 

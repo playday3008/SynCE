@@ -1,9 +1,18 @@
 /* $Id$ */
+#define _BSD_SOURCE 1
 #include "synce.h"
 #include "synce_log.h"
 #include "synce_config.h"
 #include <stdlib.h>
 #include <string.h>
+
+#if HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
+#if HAVE_LANGINFO_H
+#include <langinfo.h>
+#endif
 
 #if HAVE_ICONV_H
 #include <iconv.h>
@@ -31,6 +40,22 @@
 #define wstr_UTF8   "UTF-8"
 
 #define INVALID_ICONV_HANDLE ((iconv_t)(-1))
+
+#if HAVE_SETLOCALE && HAVE_NL_LANGINFO
+static char* current_codeset = NULL;
+
+static char* get_current_codeset()
+{
+  if (!current_codeset)
+  {
+    setlocale(LC_ALL, "");
+    current_codeset = strdup(nl_langinfo(CODESET));   /* XXX: memory leak */
+  }
+
+  return current_codeset;
+}
+#endif
+
 
 /**
  * Convert a string from UCS2 to some other code
@@ -90,6 +115,15 @@ char* wstr_to_utf8(LPCWSTR unicode)
 	return wstr_to_x(unicode, wstr_UTF8, 2);
 }
 
+#if HAVE_SETLOCALE && HAVE_NL_LANGINFO
+/*
+ * Convert a string from UCS2 to current locale charset
+ */
+char* wstr_to_current(LPCWSTR unicode)
+{
+  return wstr_to_x(unicode, get_current_codeset(), 2);
+}
+#endif
 
 /**
  * Convert a string from iso8859-1 to UCS2
@@ -100,7 +134,7 @@ static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 	size_t inbytesleft = length, outbytesleft = (length+1)* 2;
 	ICONV_CONST char * inbuf_iterator = (ICONV_CONST char*)inbuf;
 	LPWSTR outbuf = malloc(outbytesleft+sizeof(WCHAR));
-	LPWSTR outbuf_iterator = outbuf;
+	char *outbuf_iterator = (char*)outbuf;
 	size_t result;
 	iconv_t cd = INVALID_ICONV_HANDLE;
 
@@ -117,7 +151,7 @@ static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 		return NULL;
 	}
 
-	result = iconv(cd, &inbuf_iterator, &inbytesleft, (char**)&outbuf_iterator, &outbytesleft);
+	result = iconv(cd, &inbuf_iterator, &inbytesleft, &outbuf_iterator, &outbytesleft);
 	iconv_close(cd);
 
 	if ((size_t)-1 == result)
@@ -128,7 +162,7 @@ static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 		return NULL;
 	}
 
-	*outbuf_iterator = '\0';
+	*(LPWSTR)outbuf_iterator = '\0';
 
 	return outbuf;
 }
@@ -148,6 +182,16 @@ LPWSTR wstr_from_utf8(const char* inbuf)
 {
 	return wstr_from_x(inbuf, wstr_UTF8);
 }
+
+#if HAVE_SETLOCALE && HAVE_NL_LANGINFO
+/**
+ * Convert a string from current locale charset to UCS2
+ */
+LPWSTR wstr_from_current(const char* inbuf)
+{
+  return wstr_from_x(inbuf, get_current_codeset());
+}
+#endif
 
 /**
  * Free a string returned by a conversion function
