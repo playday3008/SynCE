@@ -6,3 +6,8 @@ AUTOMAKE_OPTIONS = foreign 1.4
 
 SUBDIRS = lib src man .
 
+m4datadir = $(datadir)/aclocal
+m4data_DATA = rra.m4
+
+EXTRA_DIST = $(m4data_DATA)
+
