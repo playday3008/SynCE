@@ -21,6 +21,8 @@ struct _RRA_Exceptions
 #define UNKNOWN_3004        0x3004
 #define UNKNOWN_3005        0x3005
 
+#define SHOW_AS_EXTRA       0x200a
+
 
 #define READ_INT16(p)   (*(int16_t*)(p))
 #define READ_INT32(p)   (*(int32_t*)(p))
@@ -495,9 +497,18 @@ static bool rra_recurrence_pattern_read_header(/*{{{*/
       break;
   }
 
+  {
+    unsigned show_type = unknown_a[2] - SHOW_AS_EXTRA;
+    const char* show_type_name = "Unknown";
+
+    if (show_type < RRA_RECURRENCE_TYPE_COUNT)
+      show_type_name = RECURRENCE_TYPE_NAME[show_type];
+    synce_trace("Show as recurrence type %i (%s)", show_type, show_type_name);
+  }
+
   if (self->recurrence_type < RRA_RECURRENCE_TYPE_COUNT)
     recurrence_type_name = RECURRENCE_TYPE_NAME[self->recurrence_type];
-  synce_trace("Recurrence type = %08x (%s)", self->recurrence_type, recurrence_type_name);
+  synce_trace("Recurrence type %i (%s)", self->recurrence_type, recurrence_type_name);
 
  
   *buffer = p;
