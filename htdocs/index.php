@@ -35,6 +35,10 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>November 30, 2002</b> Released SynCE version 0.5 which includes
+dccm 0.5, librapi2 0.5, libsynce 0.5, synce-serial 0.5 and trayicon 0.3. <a
+href="using.php">Download and use</a>.</p>
+
 <p><b>November 28, 2002</b> Created mailing lists <a
 href="http://lists.sourceforge.net/mailman/listinfo/synce-announce">synce-announce</a>
 and <a
