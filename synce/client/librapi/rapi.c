@@ -1479,3 +1479,50 @@ STDAPI_( HRESULT ) CeRapiFreeBuffer( LPVOID Buffer )
 	}
 	return ( HRESULT ) NULL;
 }
+
+STDAPI_(BOOL) CeGetVersionEx(LPCEOSVERSIONINFO lpVersion)
+{
+	long result = ERROR_SUCCESS;
+	long size = BUFSIZE;
+	
+	initBuf(buffer, size);
+	
+	pushLong(buffer, size, 0x3B); 	/* Command */
+	pushParameter(size, lpVersion, lpVersion->dwOSVersionInfoSize, 0);
+	
+	sendbuffer( sock, buffer );
+	size = getbufferlen( sock );
+
+	/*
+	 * The return package looks like this
+	 *
+	 * Offset  Size  Value
+	 * 00      4     0
+	 * 04      4     0
+	 * 08      4     1
+	 * 0c      4     n = real size of buffer
+	 * 10      n     first n bytes of struct
+	 */
+	
+	result = getLong(sock, &size); 
+	_lasterror = getLong(sock, &size);
+
+	if (0 == result)
+	{
+		long lng = getLong(sock, &size);
+		if (1 == lng)
+		{
+		 	long real_length = getLong(sock, &size);
+			getbufferchunk(sock, &size, lpVersion, real_length);
+		}
+	}
+	
+	if ( size > 0 )
+	{
+		DBG_printf( "size : %d\n", size );
+/*		flushbuffer( sock );*/
+	}	
+	
+	return TRUE;
+}
+

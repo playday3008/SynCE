@@ -366,7 +366,18 @@ extern "C"
 	STDAPI_(VOID) CeGetSystemInfo( LPSYSTEM_INFO );
 	STDAPI_(INT) CeGetSystemMetrics( INT );
 	STDAPI_(BOOL) CeGetSystemPowerStatusEx( PSYSTEM_POWER_STATUS_EX, BOOL );
+	*/
+	typedef struct _CEOSVERSIONINFO{ 
+		DWORD dwOSVersionInfoSize; 
+		DWORD dwMajorVersion; 
+		DWORD dwMinorVersion; 
+		DWORD dwBuildNumber; 
+		DWORD dwPlatformId; 
+		WCHAR szCSDVersion[128]; 
+	} CEOSVERSIONINFO, *LPCEOSVERSIONINFO; 
+
 	STDAPI_(BOOL) CeGetVersionEx( LPCEOSVERSIONINFO );
+	/*	
 	STDAPI_(HWND) CeGetWindow( HWND, UINT );
 	STDAPI_(LONG) CeGetWindowLong( HWND, int );
 	STDAPI_(int) CeGetWindowText( HWND, LPWSTR, int );
