@@ -221,7 +221,7 @@ namespace KSync
         } else {
             // well.. aeh.. read the ids from the id-files...
 
-            PDAIdHelper pdaIdHelper( base );
+            PDAIdHelper pdaAddressbookIdHelper( base );
 
             addrSyncee = new KSync::AddressBookSyncee ( m_addressBook );
             m_syncees.append ( addrSyncee );
@@ -229,10 +229,10 @@ namespace KSync
             loadAddressbookMetaData( m_baseDir + addrHandler.getPartnerId() );
 
             QStringList adrIds;
-            pdaIdHelper.readPDAIds ( "AddressBook.ids", adrIds );
+            pdaAddressbookIdHelper.readPDAIds ( "AddressBook.ids", adrIds );
 
             kdDebug( 2120 ) << "dumping pdaIdHelper-ids:" << endl;
-            pdaIdHelper.dumpPDAIds( adrIds );
+            pdaAddressbookIdHelper.dumpPDAIds( adrIds );
 
             QMap<QString, pocketPCCommunication::RecordType> addrStatusMap;
             if ( !addrHandler.getIdStatus( addrStatusMap ) ) {
@@ -240,20 +240,20 @@ namespace KSync
                 return false;
             }
 
-            QStringList remoteAdrIds = pdaIdHelper.createIdQStringList( addrStatusMap );
-            QStringList addedAdrIds = pdaIdHelper.getPDAAddedIds( remoteAdrIds, adrIds );
-            QStringList removedAdrIds = pdaIdHelper.getPDARemovedIds( remoteAdrIds, adrIds );
-            QStringList modifiedAdrIds = pdaIdHelper.getPDAModifiedIds( addrStatusMap, addedAdrIds );
+            QStringList remoteAdrIds = pdaAddressbookIdHelper.createIdQStringList( addrStatusMap );
+            QStringList addedAdrIds = pdaAddressbookIdHelper.getPDAAddedIds( remoteAdrIds, adrIds );
+            QStringList removedAdrIds = pdaAddressbookIdHelper.getPDARemovedIds( remoteAdrIds, adrIds );
+            QStringList modifiedAdrIds = pdaAddressbookIdHelper.getPDAModifiedIds( addrStatusMap, addedAdrIds );
 
             kdDebug( 2120 ) << "Dumping Ids for AddressBookSyncee: " << endl;
             kdDebug( 2120 ) << "all ids: " << endl;
-            pdaIdHelper.dumpPDAIds( remoteAdrIds );
+            pdaAddressbookIdHelper.dumpPDAIds( remoteAdrIds );
             kdDebug( 2120 ) << "addedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( addedAdrIds );
+            pdaAddressbookIdHelper.dumpPDAIds( addedAdrIds );
             kdDebug( 2120 ) << "removedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( removedAdrIds );
+            pdaAddressbookIdHelper.dumpPDAIds( removedAdrIds );
             kdDebug( 2120 ) << "modifiedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( modifiedAdrIds );
+            pdaAddressbookIdHelper.dumpPDAIds( modifiedAdrIds );
 
             KABC::Addressee::List addedAdrList;
             addrHandler.getAddressees( addedAdrList, addedAdrIds );
@@ -264,7 +264,7 @@ namespace KSync
             kdDebug( 2120 ) << "PocketPCKonnector: updating AddressBook Syncee" << endl;
             updateAddressBookSyncee( addedAdrList, modifiedAdrList, removedAdrIds );
 
-            pdaIdHelper.savePDAIds("AddressBook.ids", addrStatusMap);
+            pdaAddressbookIdHelper.savePDAIds("AddressBook.ids", addrStatusMap);
 
             {
                 // and now... setSyncEntry on all Undefined entries in the syncee!!
@@ -297,11 +297,13 @@ namespace KSync
 
             loadCalendarMetaData( m_baseDir + eventHandler.getPartnerId() );
 
+            PDAIdHelper pdaEventIdHelper( base );
+
             QStringList eventIds;
-            pdaIdHelper.readPDAIds ( "Event.ids", eventIds );
+            pdaEventIdHelper.readPDAIds ( "Event.ids", eventIds );
 
             kdDebug( 2120 ) << "dumping pdaIdHelper-ids:" << endl;
-            pdaIdHelper.dumpPDAIds( eventIds );
+            pdaEventIdHelper.dumpPDAIds( eventIds );
 
             QMap<QString, pocketPCCommunication::RecordType> eventStatusMap;
 
@@ -310,20 +312,20 @@ namespace KSync
                 return false;
             }
 
-            QStringList remoteEventIds = pdaIdHelper.createIdQStringList( eventStatusMap );
-            QStringList addedEventIds = pdaIdHelper.getPDAAddedIds( remoteEventIds, eventIds );
-            QStringList removedEventIds = pdaIdHelper.getPDARemovedIds( remoteEventIds, eventIds );
-            QStringList modifiedEventIds = pdaIdHelper.getPDAModifiedIds( eventStatusMap, addedEventIds );
+            QStringList remoteEventIds = pdaEventIdHelper.createIdQStringList( eventStatusMap );
+            QStringList addedEventIds = pdaEventIdHelper.getPDAAddedIds( remoteEventIds, eventIds );
+            QStringList removedEventIds = pdaEventIdHelper.getPDARemovedIds( remoteEventIds, eventIds );
+            QStringList modifiedEventIds = pdaEventIdHelper.getPDAModifiedIds( eventStatusMap, addedEventIds );
 
             kdDebug( 2120 ) << "Dumping Ids for CalendarSyncee: " << endl;
             kdDebug( 2120 ) << "all ids: " << endl;
-            pdaIdHelper.dumpPDAIds( remoteEventIds );
+            pdaEventIdHelper.dumpPDAIds( remoteEventIds );
             kdDebug( 2120 ) << "addedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( addedEventIds );
+            pdaEventIdHelper.dumpPDAIds( addedEventIds );
             kdDebug( 2120 ) << "removedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( removedEventIds );
+            pdaEventIdHelper.dumpPDAIds( removedEventIds );
             kdDebug( 2120 ) << "modifiedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( modifiedEventIds );
+            pdaEventIdHelper.dumpPDAIds( modifiedEventIds );
 
             m_rra->disconnect();
             m_rra->connect();
@@ -336,7 +338,7 @@ namespace KSync
 
             updateCalendarSyncee(addedEventList, modifiedEventList, removedEventIds);
 
-            pdaIdHelper.savePDAIds("Event.ids", eventStatusMap);
+            pdaEventIdHelper.savePDAIds("Event.ids", eventStatusMap);
 
 
 
@@ -348,11 +350,13 @@ namespace KSync
             m_rra->disconnect();
             m_rra->connect();
 
+            PDAIdHelper pdaTodoIdHelper( base );
+
             QStringList todoIds;
-            pdaIdHelper.readPDAIds ( "Todo.ids", todoIds );
+            pdaTodoIdHelper.readPDAIds ( "Todo.ids", todoIds );
 
             kdDebug( 2120 ) << "dumping pdaIdHelper-ids:" << endl;
-            pdaIdHelper.dumpPDAIds( todoIds );
+            pdaTodoIdHelper.dumpPDAIds( todoIds );
 
             QMap<QString, pocketPCCommunication::RecordType> todoStatusMap;
 
@@ -361,20 +365,20 @@ namespace KSync
                 return false;
             }
 
-            QStringList remoteTodoIds = pdaIdHelper.createIdQStringList( todoStatusMap );
-            QStringList addedTodoIds = pdaIdHelper.getPDAAddedIds( remoteTodoIds, todoIds );
-            QStringList removedTodoIds = pdaIdHelper.getPDARemovedIds( remoteTodoIds, todoIds );
-            QStringList modifiedTodoIds = pdaIdHelper.getPDAModifiedIds( todoStatusMap, addedTodoIds );
+            QStringList remoteTodoIds = pdaTodoIdHelper.createIdQStringList( todoStatusMap );
+            QStringList addedTodoIds = pdaTodoIdHelper.getPDAAddedIds( remoteTodoIds, todoIds );
+            QStringList removedTodoIds = pdaTodoIdHelper.getPDARemovedIds( remoteTodoIds, todoIds );
+            QStringList modifiedTodoIds = pdaTodoIdHelper.getPDAModifiedIds( todoStatusMap, addedTodoIds );
 
             kdDebug( 2120 ) << "Dumping Ids for CalendarSyncee: " << endl;
             kdDebug( 2120 ) << "all ids: " << endl;
-            pdaIdHelper.dumpPDAIds( remoteTodoIds );
+            pdaTodoIdHelper.dumpPDAIds( remoteTodoIds );
             kdDebug( 2120 ) << "addedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( addedTodoIds );
+            pdaTodoIdHelper.dumpPDAIds( addedTodoIds );
             kdDebug( 2120 ) << "removedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( removedTodoIds );
+            pdaTodoIdHelper.dumpPDAIds( removedTodoIds );
             kdDebug( 2120 ) << "modifiedIds: " << endl;
-            pdaIdHelper.dumpPDAIds( modifiedTodoIds );
+            pdaTodoIdHelper.dumpPDAIds( modifiedTodoIds );
 
             m_rra->disconnect();
             m_rra->connect();
@@ -387,7 +391,7 @@ namespace KSync
 
             updateCalendarSyncee(addedTodoList, modifiedTodoList, removedTodoIds);
 
-            pdaIdHelper.savePDAIds("Todo.ids", todoStatusMap);
+            pdaTodoIdHelper.savePDAIds("Todo.ids", todoStatusMap);
 
             {
                 // and now... setSyncEntry on all Undefined entries in the syncee!!
@@ -556,10 +560,16 @@ namespace KSync
             todoHandler.updateTodos( todosModified );
 
             if ( m_uidHelper ) {
-                QStringList appIds = addNewIds( calSyncee, "CalendarSyncEntry", eventHandler.getIdPairs() );
-                QString base = m_baseDir + eventHandler.getPartnerId(); //QDir::homeDirPath() + "/.kitchensync/meta/pocketpc/" + calHandler.getPartnerId();
-                PDAIdHelper pdaIdHelper ( base );
-                pdaIdHelper.appendPDAIds ( "Calendar.ids", appIds );
+                QStringList appEventIds = addNewIds( calSyncee, "CalendarSyncEntry", eventHandler.getIdPairs() );
+                QString eventBase = m_baseDir + eventHandler.getPartnerId();
+                PDAIdHelper pdaEventIdHelper ( eventBase );
+                pdaEventIdHelper.appendPDAIds ( "Event.ids", appEventIds );
+
+
+                QStringList appTodoIds = addNewIds( calSyncee, "CalendarSyncEntry", todoHandler.getIdPairs() );
+                QString todoBase = m_baseDir + todoHandler.getPartnerId();
+                PDAIdHelper pdaTodoIdHelper ( todoBase );
+                pdaTodoIdHelper.appendPDAIds ( "Todo.ids", appTodoIds );
 
                 removeOldIds( "CalendarSyncEntry", calSyncee->removed() );
             }
@@ -773,9 +783,11 @@ namespace KSync
 
     void PocketPCKonnector::removeOldIds ( const QString& p_name, KSync::SyncEntry::PtrList p_oldIds )
     {
+        kdDebug(2120) << "Removing old ids" << endl;
         KSync::SyncEntry::PtrList::iterator it = p_oldIds.begin();
         for ( ; it != p_oldIds.end(); ++it ) {
-            m_uidHelper->removeId ( p_name, ( *it ) ->id() );
+            kdDebug(2120) << "    ID: " << ( *it ) ->id() << endl;
+            m_uidHelper->removeId ( p_name, "Konnector-" + ( *it ) ->id() );
         }
     }
 
