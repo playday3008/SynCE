@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "rapi_socket.h"
 #include "rapi_endian.h"
+#include "rapi_internal.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -95,6 +96,12 @@ bool rapi_socket_close(RapiSocket* socket)
 
 bool rapi_socket_write(RapiSocket* socket, void* data, unsigned size)
 {
+	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	{
+		rapi_socket_error("Invalid file descriptor");
+		return false;
+	}
+
 	return write(socket->fd, data, size) == size;
 }
 
@@ -102,6 +109,12 @@ bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
 {
 	int bytes_needed = size;
 	
+	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	{
+		rapi_socket_error("Invalid file descriptor");
+		return false;
+	}
+
 	while(bytes_needed > 0)
 	{
 		int result = read(socket->fd, data, size);
@@ -126,75 +139,4 @@ bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
 	return 0 == bytes_needed;
 }
 
-bool rapi_socket_send(RapiSocket* socket, RapiBuffer* buffer)
-{
-	uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
-
-	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
-		goto fail;
-	
-	if ( !rapi_socket_write(socket, &size_le, sizeof(size_le)) )
-		goto fail;
-
-	if ( !rapi_socket_write(socket, 
-				rapi_buffer_get_raw(buffer), 
-				rapi_buffer_get_size(buffer)) )
-		goto fail;
-
-	return true;
-
-fail:
-	/* XXX: is it wise to close the connection here? */
-	rapi_socket_close(socket);
-	return false;
-}
-
-bool rapi_socket_recv(RapiSocket* socket, RapiBuffer* buffer)
-{
-	uint32_t      size_le = 0;
-	size_t         size    = 0;
-	unsigned char* data    = NULL;
-	
-	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
-	{
-		rapi_socket_error("Invalid file descriptor");
-		goto fail;
-	}
-
-	if ( !rapi_socket_read(socket, &size_le, sizeof(size_le)) )
-	{
-		rapi_socket_error("Failed to read size");
-		goto fail;
-	}
-
-	size = letoh32(size_le);
-
-	rapi_socket_trace("Size = 0x%08x\n", size);
-
-	data = malloc(size);
-	if (!data)
-	{
-		rapi_socket_error("Failed to allocate 0x%08x bytes", size);
-		goto fail;
-	}
-
-	if ( !rapi_socket_read(socket, data, size) )
-	{
-		rapi_socket_error("Failed to read 0x%08x bytes", size);
-		goto fail;
-	}
-
-	if ( !rapi_buffer_reset(buffer, data, size) )
-	{
-		free(data);
-		goto fail;
-	}
-
-	return true;
-	
-fail:
-	/* XXX: is it wise to close the connection here? */
-	rapi_socket_close(socket);
-	return false;	
-}
 

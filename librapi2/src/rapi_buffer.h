@@ -3,6 +3,7 @@
 #define __rapi_buffer_h__
 
 #include "rapi_internal.h"
+#include "rapi_socket.h"
 
 struct _RapiBuffer;
 typedef struct _RapiBuffer RapiBuffer;
@@ -101,6 +102,17 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value);
  * Get string with length in number of wide chars
  */
 bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size);
+
+/**
+ * Send a buffer on the socket
+ */
+bool rapi_buffer_send(RapiBuffer* buffer, RapiSocket* socket);
+
+/**
+ * Receive a buffer on the socket
+ */
+bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket);
+
 
 #endif
 

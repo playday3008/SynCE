@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "rapi_socket.h"
+#include "rapi_buffer.h"
 
 #define HOST "127.0.0.1"
 #define PORT 0xde0
@@ -34,11 +35,11 @@ START_TEST(test_echo_server)
 	fail_unless( success, "rapi_buffer_write_data failed" );
 	if (!success) goto fail;
 
-	success = rapi_socket_send(socket, send_buffer);
+	success = rapi_buffer_send(send_buffer, socket);
 	fail_unless( success, "rapi_socket_send failed" );
 	if (!success) goto fail;
 
-	success = rapi_socket_recv(socket, recv_buffer);
+	success = rapi_buffer_recv(send_buffer, socket);
 	fail_unless( success, "rapi_socket_recv failed" );
 	if (!success) goto fail;
 

@@ -147,6 +147,8 @@ START_TEST(test_filetime)/*{{{*/
 	time_t time1 = time(NULL);
 	time_t time2;
 
+	memset(&ft, 0, sizeof(ft));
+
 	rapi_filetime_from_unix_time(time1, &ft);
 
 	time2 = rapi_filetime_to_unix_time(&ft);

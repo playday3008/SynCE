@@ -354,5 +354,66 @@ bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
 	return true;
 }
 
+bool rapi_buffer_send(RapiBuffer* buffer, RapiSocket* socket)
+{
+	uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
 
+	if ( !rapi_socket_write(socket, &size_le, sizeof(size_le)) )
+		goto fail;
+
+	if ( !rapi_socket_write(socket, 
+				rapi_buffer_get_raw(buffer), 
+				rapi_buffer_get_size(buffer)) )
+		goto fail;
+
+	return true;
+
+fail:
+	/* XXX: is it wise to close the connection here? */
+	rapi_socket_close(socket);
+	return false;
+}
+
+bool rapi_buffer_recv(RapiBuffer* buffer, RapiSocket* socket)
+{
+	uint32_t      size_le = 0;
+	size_t         size    = 0;
+	unsigned char* data    = NULL;
+	
+	if ( !rapi_socket_read(socket, &size_le, sizeof(size_le)) )
+	{
+		rapi_buffer_error("Failed to read size");
+		goto fail;
+	}
+
+	size = letoh32(size_le);
+
+	rapi_buffer_trace("Size = 0x%08x\n", size);
+
+	data = malloc(size);
+	if (!data)
+	{
+		rapi_buffer_error("Failed to allocate 0x%08x bytes", size);
+		goto fail;
+	}
+
+	if ( !rapi_socket_read(socket, data, size) )
+	{
+		rapi_buffer_error("Failed to read 0x%08x bytes", size);
+		goto fail;
+	}
+
+	if ( !rapi_buffer_reset(buffer, data, size) )
+	{
+		free(data);
+		goto fail;
+	}
+
+	return true;
+	
+fail:
+	/* XXX: is it wise to close the connection here? */
+	rapi_socket_close(socket);
+	return false;	
+}
 

@@ -73,14 +73,14 @@ bool rapi_context_begin_command(RapiContext* context, uint32_t command)
 	
 bool rapi_context_call(RapiContext* context)
 {
-	if ( !rapi_socket_send(context->socket, context->send_buffer) )
+	if ( !rapi_buffer_send(context->send_buffer, context->socket) )
 	{
 		rapi_context_error("rapi_socket_send failed");
 		/* TODO: set context->last_error */
 		return false;
 	}
 
-	if ( !rapi_socket_recv(context->socket, context->recv_buffer) )
+	if ( !rapi_buffer_recv(context->send_buffer, context->socket) )
 	{
 		rapi_context_error("rapi_socket_recv failed");
 		/* TODO: set context->last_error */
