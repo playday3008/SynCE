@@ -27,31 +27,58 @@
 #include <qapplication.h>
 #include <qcursor.h>
 
+
 ThreadEvent::ThreadEvent(WorkerThreadInterface *wti, void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL), void *data)
         : QCustomEvent(QEvent::User)
 {
     this->wti = wti;
     this->userEventMethode = userEventMethode;
-    this->data = data;
+    this->threadData = data;
 }
 
 
-void ThreadEvent::customEvent (QCustomEvent *customEvent)
+void ThreadEventObject::eventMutexLock()
 {
+    eventMutex.lock();
+}
+
+
+void ThreadEventObject::eventMutexUnlock()
+{
+    eventMutex.unlock();
+}
+
+
+
+void ThreadEventObject::waitOnEvent()
+{
+    eventCondition.wait(&eventMutex);
+}
+
+
+void ThreadEventObject::wakeUpOnEvent()
+{
+    eventCondition.wakeAll();
+}
+
+
+void ThreadEventObject::customEvent (QCustomEvent *qCustomEvent)
+{
+    ThreadEvent *customEvent = (ThreadEvent *) qCustomEvent;
     switch ((int) customEvent->data()) {
     case WorkerThreadInterface::noBlock:
-        wti->setEventReturnValue((wti->*userEventMethode)(data));
+        customEvent->wti->setEventReturnValue((customEvent->wti->*customEvent->userEventMethode)(customEvent->threadData));
         break;
     case WorkerThreadInterface::block:
         QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
-        wti->setEventReturnValue((wti->*userEventMethode)(data));
+        customEvent->wti->setEventReturnValue((customEvent->wti->*customEvent->userEventMethode)(customEvent->threadData));
         QApplication::setOverrideCursor( QCursor(Qt::WaitCursor) );
-        // Wait for the thread to be in the waiting state
-        RakiWorkerThread::eventMutexLock();
-        // Imediately release the mutex again
-        RakiWorkerThread::eventMutexUnlock();
-        // Wake up the thread
-        RakiWorkerThread::wakeUpOnEvent();
+// Wait for the thread to be in the waiting state
+        this->eventMutexLock();
+// Imediately release the mutex again
+        this->eventMutexUnlock();
+// Wake up the thread
+        this->wakeUpOnEvent();
         break;
     }
 }

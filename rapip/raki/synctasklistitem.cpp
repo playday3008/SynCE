@@ -23,7 +23,7 @@
 
 #include "synctasklistitem.h"
 #include "pdaconfigdialogimpl.h"
-#include "syncevent.h"
+#include "syncthread.h"
 #include "rakisyncfactory.h"
 #include "rakisyncplugin.h"
 #include "rra.h"
@@ -247,13 +247,14 @@ void SyncTaskListItem::openPopup(PdaConfigDialogImpl *pdaConfig)
 }
 
 
-bool SyncTaskListItem::synchronize(WorkerThreadInterface *workerThread, Rra *rra)
+bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
 {
     bool ret = false;
     KTrader::OfferList offers;
 
-    SyncEvent::setTotalSteps(this, 1);
-
+    postSyncThreadEvent(SyncThread::setTask, (void *) "Started");
+    postSyncThreadEvent(SyncThread::setTotalSteps, (void *) 1);
+    
     QString library = getPreferedLibrary();
     QString offer = getPreferedOffer();
 
@@ -274,12 +275,12 @@ bool SyncTaskListItem::synchronize(WorkerThreadInterface *workerThread, Rra *rra
         if (!factory) {
             QString errorMessage = KLibLoader::self()->lastErrorMessage();
             kdDebug(2120) << "There was an error: " << offer << errorMessage << endl;
-            SyncEvent::setTask(this, "Synchronizer Load-Error");
+            postSyncThreadEvent(SyncThread::setTask, (void *) "Synchronizer Load-Error");
         } else {
             if (factory->inherits("RakiSyncFactory")) {
                 RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*>(factory);
                 RakiSyncPlugin *syncPlugin = static_cast<RakiSyncPlugin*> (syncFactory->create());
-                ret = syncPlugin->doSync(workerThread, objectType, pdaName, partnerId, this, rra);
+                ret = syncPlugin->doSync(syncThread, objectType, pdaName, partnerId, this, rra);
                 syncFactory->callme(); // Fake call to link libinterfaces correct.
                 delete syncPlugin;
             } else {
@@ -287,13 +288,12 @@ bool SyncTaskListItem::synchronize(WorkerThreadInterface *workerThread, Rra *rra
             }
         }
     } else {
-        SyncEvent::setTask(this, "No Synchronizer found");
+        postSyncThreadEvent(SyncThread::setTask, (void *) "No Synchronizer found");
     }
 
     kdDebug(2120) << "Finished syncing with " << offer << endl;
 
-
-    SyncEvent::setProgress(this, totalSteps());
+    postSyncThreadEvent(SyncThread::setProgress, totalSteps());
 
     return ret;
 }

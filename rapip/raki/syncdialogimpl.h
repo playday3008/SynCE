@@ -29,7 +29,7 @@
 #endif
 
 #include "syncdialog.h"
-#include "workerthreadinterface.h"
+#include "syncthread.h"
 
 #include <qptrlist.h>
 #include <qstring.h>
@@ -43,7 +43,7 @@ class Rra;
 @author Volker Christian,,,
 */
 
-class SyncDialogImpl : public SyncDialog, public WorkerThreadInterface
+class SyncDialogImpl : public SyncDialog, public SyncThread
 {
 public:
     SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);

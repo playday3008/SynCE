@@ -22,8 +22,7 @@
  ***************************************************************************/
 
 #include "rakisyncplugin.h"
-#include "syncevent.h"
-#include "workerthreadinterface.h"
+#include "syncthread.h"
 
 #include <qapplication.h>
 
@@ -31,12 +30,12 @@ RakiSyncPlugin::RakiSyncPlugin()
 {}
 
 
-bool RakiSyncPlugin::doSync(WorkerThreadInterface *workerThread, ObjectType *objectType, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra)
+bool RakiSyncPlugin::doSync(SyncThread *syncThread, ObjectType *objectType, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra)
 {
     this->pdaName = pdaName;
     this->progressItem = progressItem;
     this->rra = rra;
-    this->workerThread = workerThread;
+    this->syncThread = syncThread;
     this->objectType = objectType;
     this->partnerId = partnerId;
     return sync();
@@ -51,41 +50,41 @@ uint32_t RakiSyncPlugin::getObjectTypeId()
 
 bool RakiSyncPlugin::isRunning()
 {
-    return workerThread->running();
+    return syncThread->running();
 }
 
 
 void RakiSyncPlugin::incTotalSteps(int inc)
 {
-    SyncEvent::incTotalSteps(progressItem, inc);
+    postSyncThreadEvent(SyncThread::incTotalSteps, (void *) inc);
 }
 
 
 void RakiSyncPlugin::decTotalSteps(int dec)
 {
-    SyncEvent::decTotalSteps(progressItem, dec);
+    postSyncThreadEvent(SyncThread::decTotalSteps, (void *) dec);
 }
 
 
 void RakiSyncPlugin::advanceProgress()
 {
-    SyncEvent::advanceProgress(progressItem);
+    postSyncThreadEvent(SyncThread::advanceProgress, (void *) 0);
 }
 
 
 void RakiSyncPlugin::setTotalSteps(int steps)
 {
-    SyncEvent::setTotalSteps(progressItem, steps);
+    postSyncThreadEvent(SyncThread::setTotalSteps, (void *) steps);
 }
 
 
 void RakiSyncPlugin::setProgress(int progress)
 {
-    SyncEvent::setProgress(progressItem, progress);
+    postSyncThreadEvent(SyncThread::setProgress, (void *) progress);
 }
 
 
-void RakiSyncPlugin::setTask(QString task)
+void RakiSyncPlugin::setTask(const char *task)
 {
-    SyncEvent::setTask(progressItem, task);
+    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup(task));
 }

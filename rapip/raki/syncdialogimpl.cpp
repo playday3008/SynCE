@@ -109,6 +109,7 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
     for (item = syncItems.first(); item; item = syncItems.next()) {
         if (running()) {
             if (item->isOn()) {
+                setActualSyncItem(item);
                 item->synchronize(this, rra);
             }
         }

@@ -28,6 +28,8 @@
 #include <config.h>
 #endif
 
+#include "threadevent.h"
+
 #include <qmutex.h>
 
 /**
@@ -58,6 +60,7 @@ public:
 
 private:
     QMutex mutex;
+    ThreadEventObject threadEventObject;
     bool isRunning;
     void *eventReturn;
 };

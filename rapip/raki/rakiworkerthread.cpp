@@ -111,27 +111,3 @@ void RakiWorkerThread::run()
     QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
     waitCondition.wakeOne();
 }
-
-
-void RakiWorkerThread::eventMutexLock()
-{
-    rakiWorkerThread->eventMutex.lock();
-}
-
-
-void RakiWorkerThread::eventMutexUnlock()
-{
-    rakiWorkerThread->eventMutex.unlock();
-}
-
-
-void RakiWorkerThread::waitOnEvent()
-{
-    rakiWorkerThread->eventCondition.wait(&rakiWorkerThread->eventMutex);
-}
-
-
-void RakiWorkerThread::wakeUpOnEvent()
-{
-    rakiWorkerThread->eventCondition.wakeAll();
-}

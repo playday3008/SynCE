@@ -229,11 +229,8 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
     AGCommandProcessor *cmdProc;
 
     if(s->disabled) {
-        kdDebug(2120) << "Skipping disabled server " << s->friendlyName << endl;
         return;
     }
-
-    kdDebug(2120) << "Synchronizing \"" << s->friendlyName << "\"" << endl;
 
     /* Initialize the command processor */
     cmdProc= AGCommandProcessorNew(s);

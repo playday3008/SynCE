@@ -72,18 +72,18 @@ void WorkerThreadInterface::setRunning(bool isRunning)
 
 void *WorkerThreadInterface::postEvent(void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL), void *data, int blocking)
 {
-    ThreadEvent *te = new ThreadEvent(this, userEventMethode, data);
-    te->setData((void *) blocking);
+    ThreadEvent *threadEvent = new ThreadEvent(this, userEventMethode, data);
+    threadEvent->setData((void *) blocking);
     if (blocking == block && running()) {
 // Inhibit finishing of the event before we are not waiting for it to finish
-        RakiWorkerThread::eventMutexLock();
+        threadEventObject.eventMutexLock();
     }
-    QApplication::postEvent(te, te);
+    QApplication::postEvent(&threadEventObject, threadEvent);
     if (blocking == block && running()) {
 // Allow the event to finish and wait for an wake up event from it
-        RakiWorkerThread::waitOnEvent();
+        threadEventObject.waitOnEvent();
 // Unlock the event mutex correctly
-        RakiWorkerThread::eventMutexUnlock();
+        threadEventObject.eventMutexUnlock();
     }
 
     return eventReturnValue();

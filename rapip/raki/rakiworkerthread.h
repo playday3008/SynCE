@@ -58,18 +58,12 @@ public:
     static bool finished();
     bool isRunning();
     bool isFinished();
-    static void eventMutexLock();
-    static void eventMutexUnlock();
-    static void waitOnEvent();
-    static void wakeUpOnEvent();
       
 private:
     WorkerThreadInterface *wti;
     void (WorkerThreadInterface::*userRun)(QThread *thread = NULL, void *data = NULL);
     void *data;
     QWaitCondition waitCondition;
-    QWaitCondition eventCondition;
-    QMutex eventMutex;
     QMutex threadMutex;
     
 public:

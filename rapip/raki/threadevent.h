@@ -26,6 +26,8 @@
 
 #include <qobject.h>
 #include <qevent.h>
+#include <qmutex.h>
+#include <qwaitcondition.h>
 
 /**
 @author Volker Christian,,,
@@ -33,18 +35,30 @@
 
 class WorkerThreadInterface;
 
-class ThreadEvent : public QObject, public QCustomEvent
+class ThreadEvent : public QCustomEvent
 {
-Q_OBJECT
 public:
     ThreadEvent(WorkerThreadInterface *wti, void *(WorkerThreadInterface::*userEventMethode)(void *data = 0), void *data);
 
-private:
-    void customEvent (QCustomEvent *customEvent);
-
     void *(WorkerThreadInterface::*userEventMethode)(void *data = 0);
     WorkerThreadInterface *wti;
-    void *data;
+    void *threadData;
 };
+
+
+class ThreadEventObject : public QObject
+{
+Q_OBJECT
+public:
+    void eventMutexLock();
+    void eventMutexUnlock();
+    void waitOnEvent();
+    void wakeUpOnEvent();
+private:
+    void customEvent (QCustomEvent *customEvent);
+    QMutex eventMutex;
+    QWaitCondition eventCondition;
+};
+
 
 #endif

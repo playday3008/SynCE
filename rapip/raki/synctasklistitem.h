@@ -43,7 +43,7 @@
 
 class KProgress;
 class PdaConfigDialogImpl;
-class WorkerThreadInterface;
+class SyncThread;
 class Rra;
 typedef struct _ObjectType ObjectType;
 
@@ -73,7 +73,7 @@ public:
     QString getPreferedLibrary();  
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
-    bool synchronize(WorkerThreadInterface *workerThread, Rra *rra);
+    bool synchronize(SyncThread *syncThread, Rra *rra);
 
 private slots:
     void clickedMenu(int item);

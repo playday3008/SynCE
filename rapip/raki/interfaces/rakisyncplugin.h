@@ -34,11 +34,12 @@
 #include <qstring.h>
 #include <qevent.h>
 
+
 /**
 @author Volker Christian,,,
 */
 
-class WorkerThreadInterface;
+class SyncThread;
 class SyncTaskListItem;
 class Rra;
 
@@ -48,15 +49,15 @@ class RakiSyncPlugin : public QObject
 public:
     RakiSyncPlugin();
 
-    bool doSync(WorkerThreadInterface *workerThread, ObjectType *objectTypeString, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra);
+    bool doSync(SyncThread *syncThread, ObjectType *objectTypeString, QString pdaName, uint32_t partnerId, SyncTaskListItem *progressItem, Rra *rra);
+    uint32_t getObjectTypeId();
+    bool isRunning();
     void incTotalSteps(int inc);
     void decTotalSteps(int dec);
     void advanceProgress();
     void setTotalSteps(int steps);
     void setProgress(int progress);
-    void setTask(QString task);
-    uint32_t getObjectTypeId();
-    bool isRunning();
+    void setTask(const char *task);
 
 private:
     virtual bool sync() = 0;
@@ -66,7 +67,7 @@ protected:
     QString pdaName;
     SyncTaskListItem *progressItem;
     Rra *rra;
-    WorkerThreadInterface *workerThread;
+    SyncThread *syncThread;
     uint32_t partnerId;
 };
 
