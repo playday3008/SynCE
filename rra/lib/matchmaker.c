@@ -317,7 +317,7 @@ bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* ind
 
       if (!filename)
       {
-        synce_error("Failed to errorget filename for partner id %08x", ids[i]);
+        synce_error("Failed to get filename for partner id %08x", ids[i]);
         goto exit;
       }
 
