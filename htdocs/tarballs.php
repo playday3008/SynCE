@@ -93,10 +93,9 @@ cd ..</pre>
 </li>
 
 <li>Compile multisync_plugin:<br/>
-<p>Note that this module requires the source code for Multisync.</p>
 <pre>tar zxf synce-multisync_plugin-X.X.tar.gz
 cd synce-multisync_plugin-X.X
-./configure --with-multisync-source=<i>/path/to/multisync/source/code/</i>
+./configure --with-multisync-include=<i>/directory/where/the/multisync/header/is/installed/</i>
 make
 make install
 cd ..</pre>
