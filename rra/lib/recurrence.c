@@ -223,7 +223,7 @@ static bool recurrence_set_flags(/*{{{*/
   return true;
 }/*}}}*/
 
-static bool recurrence_set_days_of_week_mask(
+static bool recurrence_set_days_of_week_mask(/*{{{*/
     RecurrenceRule* rrule, 
     uint32_t* days_of_week_mask)
 {
@@ -261,9 +261,9 @@ static bool recurrence_set_days_of_week_mask(
     synce_error("BYDAY missing");
     return false;
   }
-}
+}/*}}}*/
 
-static void recurrence_set_unknown3(
+static void recurrence_set_unknown3(/*{{{*/
     uint8_t* unknown3)
 {
   unknown3[0x00] = 0xdf;
@@ -277,9 +277,9 @@ static void recurrence_set_unknown3(
   unknown3[0x09] = 0x30;
   
   /*unknown3[0x14] = 0x01;*/
-}
+}/*}}}*/
 
-static bool recurrence_set_date_time(
+static bool recurrence_set_date_time(/*{{{*/
     mdir_line* dtstart,
     mdir_line* dtend,
     uint32_t* date,
@@ -310,11 +310,11 @@ static bool recurrence_set_date_time(
 
 exit:
   return success;
-}
+}/*}}}*/
 
 static bool recurrence_parse_weekly(/*{{{*/
     RecurrenceRule* rrule, 
-    RecurrencePattern* pattern,
+    RecurrenceBlob* pattern,
     mdir_line* dtstart,
     mdir_line* dtend)
 {
@@ -355,7 +355,7 @@ exit:
 
 static bool recurrence_parse_monthly(/*{{{*/
     RecurrenceRule* rrule, 
-    RecurrencePattern* pattern,
+    RecurrenceBlob* pattern,
     mdir_line* dtstart,
     mdir_line* dtend)
 {
@@ -425,7 +425,7 @@ exit:
 
 static bool recurrence_parse_yearly(/*{{{*/
     RecurrenceRule* rrule, 
-    RecurrencePattern* pattern,
+    RecurrenceBlob* pattern,
     mdir_line* dtstart,
     mdir_line* dtend)
 {
@@ -474,7 +474,7 @@ exit:
   return success;
 }/*}}}*/
 
-bool recurrence_parse_rrule(
+bool recurrence_parse_rrule(/*{{{*/
     Parser* p, 
     mdir_line* line, 
     mdir_line* dtstart,
@@ -482,7 +482,7 @@ bool recurrence_parse_rrule(
 {
   bool success = false;
   RecurrenceRule rrule;
-  RecurrencePattern pattern;
+  RecurrenceBlob pattern;
 
   if (!line)
   {
@@ -494,9 +494,9 @@ bool recurrence_parse_rrule(
   assert(sizeof(RecurringWeekly)   == 0x3c);
   assert(sizeof(RecurringMonthly)  == 0x3c);
   assert(sizeof(RecurringMonthNth) == 0x3c);
-  assert(sizeof(RecurrencePattern) == 0x68);
+  assert(sizeof(RecurrenceBlob) == 0x68);
 
-  memset(&pattern, 0, sizeof(RecurrencePattern));
+  memset(&pattern, 0, sizeof(RecurrenceBlob));
  
   /* always the same? */
   pattern.unknown1[0] = 0x04; 
@@ -535,7 +535,7 @@ bool recurrence_parse_rrule(
 
   if (success)
     success = parser_add_blob(p, ID_UNKNOWN_4015, 
-        (uint8_t*)&pattern, sizeof(RecurrencePattern));
+        (uint8_t*)&pattern, sizeof(RecurrenceBlob));
 
   parser_add_blob(p, ID_UNKNOWN_0001, blob_0001, sizeof(blob_0001));
 
@@ -547,5 +547,5 @@ bool recurrence_parse_rrule(
   if (rrule.bysetpos)
     free(rrule.bysetpos);
   return success;
-}
+}/*}}}*/
 

@@ -79,7 +79,9 @@ typedef struct
   uint32_t  instance;           /* 0x1a */
   uint32_t  flags;              /* 0x1e */
   uint32_t  occurrences;        /* 0x22 */
-  uint8_t   padding[0xc] P;       /* 0x26 */
+  uint8_t   padding1[4] P;        /* 0x26 */
+  uint32_t  exception_count P;    /* 0x2a */
+  uint8_t   padding2[4] P;        /* 0x2e */
   uint32_t  date P;               /* 0x32 */
   uint8_t   unknown3[0xc] P;      /* 0x36 */
   uint32_t  start_minute P;       /* 0x42 */
@@ -99,7 +101,7 @@ typedef struct
     RecurringMonthNth month_nth P;
   } details P;
   uint8_t   unknown4[0x1e] P;     /* 0x4a */
-} RecurrencePattern P;
+} RecurrenceBlob P;
 
 enum
 {
