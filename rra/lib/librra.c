@@ -16,7 +16,8 @@
 
 #define SEND_COMMAND_6F_6   1
 #define SEND_COMMAND_6F_10  0
-#define SEND_COMMAND_70_2   1
+#define SEND_COMMAND_70_2   0
+#define SEND_COMMAND_70_3   0
 
 struct _RRA
 {
@@ -125,7 +126,7 @@ bool rra_get_object_types(RRA* rra, /*{{{*/
 	{
 		unsigned i = 0;
 
-		if (!rrac_send_6f(rra->cmd_channel, 0xc1))
+		if (!rrac_send_6f(rra->cmd_channel, 0x3c1))
 		{
 			synce_error("Failed to send command 6f");
 			goto exit;
@@ -240,12 +241,14 @@ bool rra_get_changes(
     }
   }
 
+#if SEND_COMMAND_70_3
 	rrac_send_70_3(rra->cmd_channel, ignored_ids, ignored_count);
 
 	if (!rrac_recv_reply_70(rra->cmd_channel))
 	{
 		goto exit;
 	}
+#endif
   
 	/*
 	 * Receive this first
@@ -373,12 +376,14 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 		goto exit;
 	}
 	
+#if SEND_COMMAND_70_3
 	rrac_send_70_3(rra->cmd_channel, ignored_ids, ignored_count);
 
 	if (!rrac_recv_reply_70(rra->cmd_channel))
 	{
 		goto exit;
 	}
+#endif
 
 	/*
 	 * test
