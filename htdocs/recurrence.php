@@ -28,7 +28,7 @@ for the object representing recurrence.</p>
 <tr><td>0012</td><td>4</td><td>00 00 00 00</td><td>Unknown</td></tr>
 <tr><td>0016</td><td>4</td><td>00 00 00 00</td><td>DaysOfWeekMask</td></tr>
 <tr><td>001a</td><td>4</td><td></td><td>Instance</td></tr>
-<tr><td>001e</td><td>4</td><td></td><td>Flags:</td></tr>
+<tr><td>001e</td><td>4</td><td></td><td>Flags (see below)</td></tr>
 <tr><td>0022</td><td>4</td><td></td><td>Occurrences</td></tr>
 <tr><td>0026</td><td>4</td><td>00 00 00 00</td><td>Unknown</td></tr>
 <tr><td>002a</td><td>4</td><td><i>total</i></td><td>Total number of exceptions (deleted and modified appointments within the recurrence)</td></tr>
@@ -72,6 +72,27 @@ for the object representing recurrence.</p>
 <tr><td>2021</td><td>Ends on date</td></tr>
 <tr><td>2022</td><td>Ends after a number of occurences</td></tr>
 <tr><td>2023</td><td>Does not end</td></tr>
+
+</table>
+
+<h2>BLOB 0067</h2>
+
+<p>Seems to be related to the recurrence BLOB.</p>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+
+<tr><td>0000</td><td>14</td><td>04 00 00 00<br/>
+82 00 e0 00<br/>
+74 c5 b7 10<br/>
+1a 82 e0 08<br/>
+00 00 00 00</td><td>Always the same</td></tr>
+
+<tr><td>0014</td><td>10</td><td></td><td>Different for different devices. Looks
+quite random.</td></tr>
+
+<tr><td>0024</td><td>10</td><td></td><td>Different for different appointments.
+(Maybe the same for some?) Looks quite random.</td></tr>
 
 </table>
 
