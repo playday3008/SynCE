@@ -34,7 +34,7 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>Today</b>. Working on a new homepage!</p>
+<p><b>November 17, 2002</b>. New homepage released!</p>
 
 <a name="helpwanted"></a>
 <h2>Help wanted!</h2>
@@ -50,16 +50,12 @@ on top of the SynCE project:</p>
 href="http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html">GNOME-VFS
 module</a>.</li>
 
-<li>An applet or similar that shows when a device is connected.</li>
-
 </ul></li>
 
 <li>KDE 3 integration:<ul>
 
 <li>A KDE I/O slave for KDE 3. (There is already an I/O slave for KDE 2, you
 just need to make it work with KDE 3.)</li>
-
-<li>A system tray icon that shows when a device is connected.</li>
 
 </ul></li>
 
