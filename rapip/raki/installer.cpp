@@ -56,12 +56,9 @@ void Installer::runInstaller(KURL destUrl)
     PDA *pda = (PDA *) pdaList->find(destUrl.host());
 
     if (pda != NULL) {
-        if (pda->currentInstalled) {
-            pda->currentInstalled = 0;
-            RakiWorkerThread::rakiWorkerThread->stop();
-            runInstallerThread->setPdaName(destUrl.host());
-            startWorkerThread(runInstallerThread, &RunInstallerThread::work, NULL);
-        }
+        RakiWorkerThread::rakiWorkerThread->stop();
+        runInstallerThread->setPdaName(destUrl.host());
+        startWorkerThread(runInstallerThread, &RunInstallerThread::work, NULL);
     }
 }
 
@@ -77,15 +74,14 @@ void Installer::deleteResult(KIO::Job *deleteJob)
     PDA *pda = (PDA *) pdaList->find(destUrls.first().host());
 
     if (pda != NULL) {
-        pda->installed++;
-        if (pda->installed == pda->installCounter) {
+        if (!pda->getNumberOfCopyJobs()) {
             runInstaller(destUrls.first());
         }
     }
 }
 
 
-void Installer::deleteFiles(KURL::List& delFiles)
+void Installer::deleteFiles(KURL::List delFiles)
 {
     KIO::DeleteJob *deleteJob = KIO::del (delFiles, true, false);
     connect(deleteJob, SIGNAL( result( KIO::Job *)),
@@ -100,20 +96,19 @@ void Installer::copyResult(KIO::Job *copyJob)
     PDA *pda = (PDA *) pdaList->find(destUrl.host());
 
     if (pda != NULL) {
-        KURL::List& copiedFiles = pda->getURLListByCopyJob(
-                                      (KIO::CopyJob *) copyJob);
+        KURL::List copiedFiles = pda->getURLListByCopyJob(
+                                     (KIO::CopyJob *) copyJob);
         if (copyJob->error()) {
             copyJob->showErrorDialog((QWidget *) parent());
+            pda->unregisterCopyJob((KIO::CopyJob *) copyJob);
             sleep(1);
             deleteFiles(copiedFiles);
         } else {
-            pda->installed++;
-            pda->currentInstalled++;
-            if (pda->installed == pda->installCounter) {
+            pda->unregisterCopyJob((KIO::CopyJob *) copyJob);
+            if (!pda->getNumberOfCopyJobs()) {
                 runInstaller(destUrl);
             }
         }
-        pda->unregisterCopyJob((KIO::CopyJob *) copyJob);
     }
 }
 
@@ -124,10 +119,7 @@ void Installer::procFiles(KIO::Job *job, const KURL& from, const KURL& to)
     KURL dest;
     PDA *pda = (PDA *) pdaList->find(pdaName);
 
-    disconnect(job, SIGNAL(copying(KIO::Job *, const KURL&, const KURL&)), 0, 0);
-
     if (pda != NULL) {
-        pda->installCounter++;
         dest = KURL("rapip://" + pdaName + "/Windows/AppMgr/Install/" + from.fileName());
         pda->addURLByCopyJob((KIO::CopyJob *) job, dest);
     }
@@ -163,7 +155,7 @@ void Installer::install()
 
         if (mkdirSuccess) {
             KIO::CopyJob *copyJob = KIO::copy(ul, KURL("rapip://" + pdaName +
-                    "/Windows/AppMgr/Install/"), true);
+                                              "/Windows/AppMgr/Install/"), true);
             connect(copyJob, SIGNAL(result(KIO::Job *)), this,
                     SLOT(copyResult(KIO::Job *)));
             connect(copyJob, SIGNAL(copying(KIO::Job *, const KURL&, const KURL&)),

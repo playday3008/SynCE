@@ -72,7 +72,7 @@ protected slots:
     void runInstaller(KURL destUrl);
     void copyResult(KIO::Job *fileCopyJob);
     void deleteResult(KIO::Job *deleteJob);
-    void deleteFiles(KURL::List& delFile);
+    void deleteFiles(KURL::List delFile);
     void install();
     void procFiles(KIO::Job *job, const KURL&, const KURL&);
 

@@ -73,7 +73,8 @@ public:
     void registerCopyJob(KIO::CopyJob *copyJob);
     void addURLByCopyJob(KIO::CopyJob *copyJob, KURL& url);
     void unregisterCopyJob(KIO::CopyJob *copyJob);
-    KURL::List& getURLListByCopyJob(KIO::CopyJob *copyJob);
+    unsigned int getNumberOfCopyJobs();
+    KURL::List getURLListByCopyJob(KIO::CopyJob *copyJob);
     bool getSynchronizationTypes(QPtrDict<ObjectType> *);
     void init();
     bool isPartner();
@@ -118,11 +119,6 @@ private:
     Rra *rra;
     int syncItem;
 
-public:
-    int installCounter;
-    int installed;
-    int currentInstalled;
-    
 private slots:
     void execute();
     void manage();

@@ -55,9 +55,6 @@ PDA::PDA(Raki *raki, QString pdaName)
         : QObject()
 {
     int menuCount = 0;
-    currentInstalled = 0;
-    installed = 0;
-    installCounter = 0;
     masqueradeEnabled = false;
     partnerOk = false;
     this->raki = raki;
@@ -355,11 +352,17 @@ void PDA::unregisterCopyJob(KIO::CopyJob *copyJob)
 }
 
 
-KURL::List& PDA::getURLListByCopyJob(KIO::CopyJob *copyJob)
+KURL::List PDA::getURLListByCopyJob(KIO::CopyJob *copyJob)
 {
     KURL::List *list = slaveDict.find(copyJob);
 
     return *list;
+}
+
+
+unsigned int PDA::getNumberOfCopyJobs()
+{
+    return slaveDict.count();
 }
 
 
