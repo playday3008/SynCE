@@ -324,6 +324,7 @@ identifiers</td></tr>
 <tr><td>06 00 00 00</td><td>Unknown</td></tr>
 <tr><td>10 00 00 00</td><td>Unknown</td></tr>
 <tr><td>c1 00 00 00</td><td>Request list of object types. This is the first request sent.</td></tr>
+<tr><td>c1 01 00 00</td><td>Same as above but required by the SmartPhone 2002.</td></tr>
 </table>
 
 <hr size=1 />
