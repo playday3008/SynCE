@@ -43,7 +43,7 @@ static void ugly_copy(FILE* output_file, size_t offset, size_t size)/*{{{*/
   if (size != bytes_copied)
   {
     fprintf(stderr, "Copy %08x bytes from offset %08x to offset %08lx failed\n",
-        size, offset, ftell(output_file));
+        (int) size, (int) offset, ftell(output_file));
     abort(); 
   }
   
