@@ -16,7 +16,7 @@ AC_DEFUN([AM_PATH_RRA], [
   AC_ARG_WITH(rra-include,
     AC_HELP_STRING(
       [--with-rra-include[=DIR]],
-      [Search for RRA header files in DIR]),
+      [Search for RRA header files in DIR/rra]),
       [
 				CPPFLAGS="$CPPFLAGS -I${withval}/rra"
 			]
@@ -31,12 +31,11 @@ AC_DEFUN([AM_PATH_RRA], [
 			]
     )
 
-
 	AC_CHECK_LIB(rra,rra_syncmgr_new,,[
 		AC_MSG_ERROR([Can't find RRA library])
 		])
-	AC_CHECK_HEADERS(syncmgr.h,,[
-		AC_MSG_ERROR([Can't find syncmgr.h])
+	AC_CHECK_HEADERS(rra/syncmgr.h,,[
+		AC_MSG_ERROR([Can't find rra/syncmgr.h])
 		])
 
 ])
