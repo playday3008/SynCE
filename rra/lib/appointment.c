@@ -27,6 +27,9 @@ typedef struct _EventGeneratorData
   CEPROPVAL* type;
   CEPROPVAL* reminder_minutes;
   CEPROPVAL* reminder_enabled;
+#if ENABLE_RECURRENCE
+  CEPROPVAL* recurrence_pattern;
+#endif
 } EventGeneratorData;
 
 /*
@@ -88,6 +91,17 @@ static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* 
   return true;
 }
 
+static bool on_propval_recurrence_pattern(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+#if ENABLE_RECURRENCE
+  data->recurrence_pattern = propval;
+#else
+  synce_warning("Recurrence support not enabled");
+#endif
+  return true;
+}
+
 static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
@@ -134,6 +148,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_REMINDER_ENABLED, on_propval_reminder_enabled);
   generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
+  generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);
   generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
 
   if (!generator_set_data(generator, data, data_size))
@@ -260,11 +275,18 @@ bool rra_appointment_to_vevent(/*{{{*/
     generator_add_simple(generator, "END", "VALARM");
   }
 
-  generator_add_simple(generator, "END", "VEVENT");
+#if ENABLE_RECURRENCE
+  if (event_generator_data.recurrence_pattern &&
+      !recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern))
+    synce_warning("Failed to generate RRULE from recurrence pattern.");
+#endif
+
+   generator_add_simple(generator, "END", "VEVENT");
 #if 0
   generator_add_simple(generator, "END", "VCALENDAR");
 #endif
   
+ 
   if (!generator_get_result(generator, vevent))
     goto exit;
 
@@ -288,7 +310,10 @@ typedef struct _EventParserData
   bool has_alarm;
   mdir_line* dtstart;
   mdir_line* dtend;
+#if ENABLE_RECURRENCE
+  RRA_MdirLineVector* exdates;
   mdir_line* rrule;
+#endif
 } EventParserData;
 
 static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
@@ -349,26 +374,39 @@ exit:
   return true;
 }/*}}}*/
 
-static bool on_mdir_line_dtend(Parser* p, mdir_line* line, void* cookie)
+static bool on_mdir_line_dtend(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->dtend = line;
   return true;
-}
+}/*}}}*/
 
-static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
+static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->dtstart = line;
   return true;
-}
+}/*}}}*/
 
-static bool on_mdir_line_rrule(Parser* p, mdir_line* line, void* cookie)
+#if ENABLE_RECURRENCE
+static bool on_mdir_line_exdate(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
-  event_parser_data->rrule = line;
+  rra_mdir_line_vector_add(event_parser_data->exdates, line);
   return true;
-}
+}/*}}}*/
+#endif
+
+static bool on_mdir_line_rrule(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+#if ENABLE_RECURRENCE
+  event_parser_data->rrule = line;
+#else
+  synce_warning("Recurrence support not enabled");
+#endif
+  return true;
+}/*}}}*/
 
 static bool on_mdir_line_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
@@ -398,6 +436,10 @@ bool rra_appointment_from_vevent(/*{{{*/
   int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
+  
+#if ENABLE_RECURRENCE
+  event_parser_data.exdates = rra_mdir_line_vector_new();
+#endif
 
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
   {
@@ -427,6 +469,10 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_property_new("dtEnd", on_mdir_line_dtend));
   parser_component_add_parser_property(event, 
       parser_property_new("dtStart", on_mdir_line_dtstart));
+#if ENABLE_RECURRENCE
+  parser_component_add_parser_property(event, 
+      parser_property_new("exDate", on_mdir_line_exdate));
+#endif
   parser_component_add_parser_property(event, 
       parser_property_new("Location", on_mdir_line_location));
   parser_component_add_parser_property(event, 
@@ -503,14 +549,14 @@ bool rra_appointment_from_vevent(/*{{{*/
     }
 
 #if ENABLE_RECURRENCE
-    if (!recurrence_parse_rrule(
+    if (event_parser_data.rrule && !recurrence_parse_rrule(
           parser, 
-          event_parser_data.rrule, 
           event_parser_data.dtstart,
-          event_parser_data.dtend))
+          event_parser_data.dtend,
+          event_parser_data.rrule, 
+          event_parser_data.exdates))
     {
-      synce_error("Failed to parse recurrence rule");
-      goto exit;
+      synce_warning("Failed to parse recurrence rule");
     }
 #endif
   }
@@ -536,6 +582,9 @@ bool rra_appointment_from_vevent(/*{{{*/
  	success = true;
 
 exit:
+#if ENABLE_RECURRENCE
+  rra_mdir_line_vector_destroy(event_parser_data.exdates, true);
+#endif
   /* destroy components (the order is important!) */
   parser_component_destroy(base);
   parser_component_destroy(calendar);
