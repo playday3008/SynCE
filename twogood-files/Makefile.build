@@ -9,7 +9,15 @@ install:
 	cd dccm     && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
 	cd trayicon && ./bootstrap && ./configure --prefix=$(PREFIX) --with-librapi2=$(PREFIX) && make install
 
+tag:
+	cd serial   && cvs tag -F V`cat VERSION | sed 's/\./_/g'`
+	cd libsynce && cvs tag -F V`cat VERSION | sed 's/\./_/g'`
+	cd librapi2 && cvs tag -F V`cat VERSION | sed 's/\./_/g'`
+	cd dccm     && cvs tag -F V`cat VERSION | sed 's/\./_/g'`
+	cd trayicon && cvs tag -F V`cat VERSION | sed 's/\./_/g'`
+
 clean:
+	rm -rf $(PREFIX)
 	cd serial   && ./cvsclean
 	cd libsynce && ./cvsclean
 	cd librapi2 && ./cvsclean
