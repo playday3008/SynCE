@@ -72,6 +72,7 @@ int main()
 	write_values[7].propid = 0x80000 | CEVT_UI4;
 	write_values[7].val.uiVal = 0x98765432;
 
+#if 0
 	/* Write each value */
 	
 	for (int i = 0; i < VALUE_COUNT; i++)
@@ -145,10 +146,24 @@ int main()
 		}
 	}
 
+#endif
+
 	/* Write all write_values */
 
 	CEOID record;
 	TEST_NOT_FALSE(record = CeWriteRecordProps(database, 0, VALUE_COUNT, write_values));
+
+	/* Seek */
+	DWORD index;
+	TEST_NOT_FALSE(CeSeekDatabase(database, CEDB_SEEK_BEGINNING, 0, &index));
+
+	/* Read value */
+	CEOID read_record;
+	CEPROPVAL* read_value = NULL;
+	DWORD read_size = 0;
+	WORD read_count = 0;
+	TEST_NOT_FALSE(read_record = CeReadRecordProps(database, CEDB_ALLOWREALLOC, 
+				&read_count, NULL, (LPBYTE*)&read_value, &read_size));
 
 
 
