@@ -299,6 +299,9 @@ static SocketEvents from_poll_events(short poll_events)
 	if (poll_events & POLLOUT)
 		events |= EVENT_WRITE;
 
+  if (poll_events & (POLLERR|POLLHUP|POLLNVAL))
+    events |= EVENT_ERROR;
+
 	return events;
 }
 
@@ -310,6 +313,12 @@ bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, short* events)
 	bool success = false;
 	int result;
 	struct pollfd pfd;
+
+  if (!socket)
+  {
+ 		synce_socket_error("SynceSocket is NULL");
+		return false;
+ }
 	
 	if ( SYNCE_SOCKET_INVALID_DESCRIPTOR == socket->fd )
 	{
@@ -329,11 +338,13 @@ bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, short* events)
 
   *events = 0;
 	
+#if 0
 	while (pfd.revents != 0)
 	{
 		synce_socket_trace("what?");
 		pfd.revents = 0;
 	}
+#endif
 
 	result = poll(&pfd, 1, timeoutInSeconds * 1000);
 

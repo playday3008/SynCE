@@ -71,6 +71,7 @@ enum _SocketEvents
 	EVENT_READ        = 2,
 	EVENT_WRITE       = 4,
 	EVENT_INTERRUPTED = 8,
+  EVENT_ERROR       = 16,
 };
 
 typedef enum _SocketEvents SocketEvents;
