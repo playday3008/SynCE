@@ -72,6 +72,7 @@ RedHat 9:</p>
 
 <pre>/sbin/service bluetooth restart
 /usr/bin/dund --listen --msdun call dun
+/usr/bin/sdptool add SP
 /usr/bin/sudo -u david /usr/bin/dccm</pre>
 
 <p>(The Bluetooth service is restarted because that made everything work much
