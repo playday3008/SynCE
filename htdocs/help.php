@@ -51,7 +51,7 @@ when you ask for help:</p>
 <li>The contents of your files <tt>/etc/ppp/peers/synce-device</tt> (created by
 synce-serial-config) and <tt>/etc/ppp/options</tt>.</li>
 
-<li>Kill dccm, and restart it like this: <tt>dccm -f -d 3</tt>. Now connect
+<li>Kill dccm, and restart it like this: <tt>dccm -f -d 4</tt>. Now connect
 your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
 <li>Is your device password-protected or not?</li>
