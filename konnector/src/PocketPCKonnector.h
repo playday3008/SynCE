@@ -33,13 +33,13 @@
 namespace KCal
 {
     class Event;
-};
+}
 
 namespace pocketPCCommunication {
     class AddressBookHandler;
     class TodoHandler;
     class EventHandler;
-};
+}
 
 class KABC::Addressee;
 
