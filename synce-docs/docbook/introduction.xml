@@ -55,18 +55,27 @@
     <title>Credits / Contributors</title>
 
     <para>
-	This is an evolving document. We will endevour to ensure that
-	all that contributions to it are credited here. Please let us
-	know if you think that you have been missed out.
+      This is an evolving document. We will endeavor to ensure that
+      all that contributions to it are credited here. Please let us
+      know if you think that you have been missed out. This list of
+      contributors includes both those that have contributed to the
+      documentation and those that have contributed to the program
+      code.
     </para>
 
     <!-- Please scramble addresses; help prevent spam/email harvesting -->
     <itemizedlist>
       <listitem> 
-        <para>David Eriksson <email>twogood (at) users.sourceforge.net</email></para>
+        <para>David Eriksson <email>twogood (at)
+	    users.sourceforge.net</email></para>
       </listitem>
       <listitem> 
-        <para>Richard Taylor <email>r.taylor (at) bcs.org.uk</email></para>
+        <para>Ganesh <email> ganesh (at)
+	    vxindia.veritas.com</email></para>
+      </listitem>
+      <listitem> 
+        <para>Richard Taylor <email>r.taylor (at)
+	    bcs.org.uk</email></para>
       </listitem>
     </itemizedlist>
   </sect1>
@@ -75,13 +84,16 @@
   <sect1 id="history">
     <title>History</title>
 
-    <para>The SynCE project was started by Ludovic Lange and David
-      Eriksson in July 2001. The sourceforge project pages were
-      established at this time and the first version of the RAPI library appeared
-      in the CVS. In the following few months the basic functions of
-      the library (initialization and file handling) took shape and a
-      few simple tools appeared.
+    <para>The SynCE project was started by Ludovic Lange. The
+      sourceforge project pages were established at this time and the
+      first version of the RAPI library appeared in the CVS. David
+      Eriksson joined the project in July 2001 and became a project
+      manager in October. In the following few months the basic
+      functions of the library (initialization and file handling) took
+      shape and a few simple tools appeared.
     </para> 
+    <para>Ganesh started to contribute the usb code about March 2002.
+    </para>
     <para>Progress was fairly slow until David Eriksson reorganized
       the library code into separate libraries with cleaner interfaces
       in July 2002. This was followed by new modules for connecting to
