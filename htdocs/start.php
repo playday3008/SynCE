@@ -6,7 +6,7 @@
 
 <h1>SynCE - Connect</h1>
 
-<p>Remember that you must <a href="setup.php">setup</a> SynCE first! :-)</p>
+<p>Remember that you must <a href="setup.php">configure</a> SynCE first! :-)</p>
 
 <ol>
 

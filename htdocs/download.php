@@ -14,14 +14,15 @@
 href="http://sourceforge.net/project/showfiles.php?group_id=30550">take me to
 the files!</a></li>
 
-<li class=SPACED>I'm a RedHat 8 or 9 user and I want to <a
+<li class=SPACED>I'm a <a href="http://www.redhat.com/">RedHat</a> or <a
+href="http://fedora.redhat.com/">Fedora</a> user and I want to <a
 href="rpms.php">download RPM packages</a>.</li>
 
-<li class=SPACED>I'm a Gentoo user and I want to <a href="emerge.php">use
-emerge</a>.</l>
+<li class=SPACED>I'm a <a href="http://www.gentoo.org/">Gentoo</a> user and I
+want to <a href="emerge.php">use emerge</a>.</l>
 
-<li class=SPACED>I'm a <a href="http://www.debian.org/">Debian</a> user, and I want to <a
-href="debian.php">download Debian packages</a>.</l>
+<li class=SPACED>I'm a <a href="http://www.debian.org/">Debian</a> user, and I
+want to <a href="debian.php">download Debian packages</a>.</l>
 
 <li class=SPACED>I'll compile SynCE myself, so I want to <a
 href="tarballs.php">download .tar.gz archives</a>.</li>

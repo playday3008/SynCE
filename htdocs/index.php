@@ -74,7 +74,7 @@ alt="Make a donation" title="Make a donation">
 <ol>
 
 <li><a href="download.php">Download and install</a></li>
-<li><a href="setup.php">Setup</a></li>
+<li><a href="setup.php">Configure</a></li>
 <li><a href="start.php">Connect</a></li>
 <li>Use the <a href="tools.php">tools</a></li>
 <li><a href="disconnect.php">Disconnect</a></li>

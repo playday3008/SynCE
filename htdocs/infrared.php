@@ -29,7 +29,7 @@ some of these links:
 
 <pre>synce-serial-config ircomm0</pre></li>
 
-<li class=SPACED>Time to <a href="start.php">start your connection</a>!</li>
+<li class=SPACED>Time to <a href="start.php">connect</a>!</li>
 
 </ol>
 

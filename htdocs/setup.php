@@ -4,7 +4,7 @@
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
-<h1>SynCE - Setup</h1>
+<h1>SynCE - Configure</h1>
 
 <p>Remember that you must <a href="download.php">download and install</a>
 SynCE first! :-)</p>
@@ -15,12 +15,13 @@ SynCE first! :-)</p>
 PC. The PC will need to access port 990 on your handheld device.</p>
 
 <p>If you are running Linux, you can list your firewall rules with <tt>ipchains
--L</tt> for Linux kernel 2.2 and <tt>iptables -L</tt> for Linux kernel 2.4.</p>
+-L</tt> for Linux kernel 2.2 and <tt>iptables -L</tt> for Linux kernel 2.4 and
+later.</p>
 
-<p>If you are running RedHat Linux, you may have RedHat's built-in firewall
-function enabled. Run either the <tt>lokkit</tt> or the
-<tt>redhat-config-securitylevel</tt> program as root to open the ports listed
-above.</p>
+<p>If you are running RedHat Linux or Fedora Core, you may have RedHat's
+built-in firewall function enabled. Run either the <tt>lokkit</tt>, the
+<tt>redhat-config-securitylevel</tt> (RedHat) or <tt>/src/synce/htdocs</tt>
+(Fedora Core) program as root to open the ports listed above.</p>
 
 
 <h2>Connection</h2>

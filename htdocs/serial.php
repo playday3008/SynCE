@@ -4,7 +4,7 @@
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
-<h1>SynCE - Serial connection</h1>
+<h1>SynCE - Serial cable connection</h1>
 
 <ol>
 
@@ -32,7 +32,7 @@ to add the serial ports on your favorite operating system to the above list!
 
 <pre>synce-serial-config ttyS0</pre></li>
 
-<li class=SPACED>Time to <a href="start.php">start your connection</a>!</li>
+<li class=SPACED>Time to <a href="start.php">connect</a>!</li>
 
 </ol>
 
