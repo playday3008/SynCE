@@ -4,6 +4,7 @@
 
 #include "rapi_buffer.h"
 #include "rapi_wstr.h"
+#include "rapi_filetime.h"
 #include "config/config.h"
 
 #if HAVE_DMALLOC_H
@@ -75,10 +76,10 @@ START_TEST(test_unicode_strlen)/*{{{*/
 {
 	size_t length;
 
-	length = rapi_wstr_string_length((WCHAR*)UNICODE_VALUE);
+	length = rapi_wstr_strlen((WCHAR*)UNICODE_VALUE);
 	
 	printf("Length: ascii=%i, unicode=%i\n", strlen(ASCII_VALUE), length);
-	fail_unless( length == strlen(ASCII_VALUE), "rapi_wstr_string_length failed" );
+	fail_unless( length == strlen(ASCII_VALUE), "rapi_wstr_strlen failed" );
 }
 END_TEST/*}}}*/
 
@@ -138,12 +139,30 @@ START_TEST(test_config_general)/*{{{*/
 }
 END_TEST/*}}}*/
 
+START_TEST(test_filetime)/*{{{*/
+{
+	FILETIME ft;
+	time_t time1 = time(NULL);
+	time_t time2;
+
+	rapi_filetime_from_unix_time(time1, &ft);
+
+	time2 = rapi_filetime_to_unix_time(&ft);
+
+	fail_unless(time1 == time2, "times differ");
+	
+}
+END_TEST/*}}}*/
+
+
+
 Suite *internals_suite (void) 
 { 
 	Suite *s = suite_create ("librapi internals\n"); 
 	TCase *tc_buffer  = tcase_create ("rapi_buffer");
 	TCase *tc_unicode = tcase_create ("rapi_wstr");
 	TCase *tc_config = tcase_create ("config");
+	TCase *tc_filetime = tcase_create ("filetime");
 
 	suite_add_tcase (s, tc_buffer);
 	tcase_add_test (tc_buffer, test_buffer_uint32); 
@@ -157,6 +176,9 @@ Suite *internals_suite (void)
 	suite_add_tcase (s, tc_config);
 	tcase_add_test (tc_config, test_config_general); 
 	
+	suite_add_tcase (s, tc_filetime);
+	tcase_add_test (tc_filetime, test_filetime); 
+
 	return s; 
 }
 

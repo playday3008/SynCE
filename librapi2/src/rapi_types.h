@@ -8,6 +8,12 @@
 #include <sys/types.h>
 #endif
 
+#ifndef __cplusplus
+#if HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+#endif
+
 #ifndef NULL
 #include <stdlib.h>
 #endif
@@ -43,6 +49,12 @@ typedef const WCHAR*  LPCWSTR;
 /*
  * Misc types
  */
+
+typedef struct _FILETIME
+{
+	DWORD dwLowDateTime;
+	DWORD dwHighDateTime;
+} FILETIME, *LPFILETIME;
 
 /* A handle  is usually a void*, but we must guarantee 32-bit! */
 typedef u_int32_t  HANDLE;

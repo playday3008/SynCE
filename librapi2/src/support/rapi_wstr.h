@@ -2,7 +2,7 @@
 #ifndef __rapi_wstr_h__
 #define __rapi_wstr_h__
 
-#include "rapi_internal.h"
+#include "rapi_types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -27,12 +27,21 @@ void rapi_wstr_free_string(void* str);
 /**
  * Return size of ascii string as unicode
  */
-size_t rapi_wstr_string_length(LPCWSTR unicode);
+size_t rapi_wstr_strlen(LPCWSTR unicode);
+
+/**
+ * Copy strings
+ */
+LPWSTR rapi_wstr_strcpy(LPWSTR dest, LPCWSTR src);
 
 /**
  * Append unicode strings, return success
  */
 bool rapi_wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length);
+
+
+#define wcslen(a)    rapi_wstr_strlen(a)
+#define wcscpy(a,b)  rapi_wstr_strcpy(a,b)
 
 #ifdef __cplusplus
 }

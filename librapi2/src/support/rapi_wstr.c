@@ -1,5 +1,6 @@
 /* $Id$ */
 #include "rapi_wstr.h"
+#include "rapi_internal.h"
 #include <stdlib.h>
 
 #if HAVE_ICONV_H
@@ -30,7 +31,7 @@
 
 char* rapi_wstr_to_ascii(LPCWSTR inbuf)
 {
-	size_t length = rapi_wstr_string_length(inbuf);
+	size_t length = rapi_wstr_strlen(inbuf);
 	size_t inbytesleft = length * 2, outbytesleft = length;
 	char* outbuf = malloc(outbytesleft+sizeof(char));
   char* outbuf_iterator = outbuf;
@@ -110,7 +111,7 @@ void rapi_wstr_free_string(void* str)
 		free(str);
 }
 
-size_t rapi_wstr_string_length(LPCWSTR unicode)
+size_t rapi_wstr_strlen(LPCWSTR unicode)
 {
 	unsigned length = 0;
 
@@ -122,10 +123,20 @@ size_t rapi_wstr_string_length(LPCWSTR unicode)
 	return length;
 }
 
+LPWSTR rapi_wstr_strcpy(LPWSTR dest, LPCWSTR src)
+{
+	LPWSTR p = dest;
+
+	while (*src)
+		*p++ = *src++;
+
+	return dest;
+}
+
 bool rapi_wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length)
 {
-	size_t dest_length = rapi_wstr_string_length(dest);
-	size_t src_length  = rapi_wstr_string_length(src);
+	size_t dest_length = rapi_wstr_strlen(dest);
+	size_t src_length  = rapi_wstr_strlen(src);
 
 	rapi_wstr_trace("dest=%p, dest_length=%i, src=%p, src_length=%i, max_dest_length=%i",
 			dest, dest_length, src, src_length, max_dest_length);

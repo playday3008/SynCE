@@ -179,7 +179,7 @@ bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode)
 	 *     04  String length in number of unicode chars + 1
 	 *     08  String data 
 	 */
-	size_t length = rapi_wstr_string_length(unicode) + 1;
+	size_t length = rapi_wstr_strlen(unicode) + 1;
 	
 	rapi_buffer_trace("Writing string of length %i",length);
 	
@@ -203,7 +203,7 @@ bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode)
 	size_t size;
 	
 	if (unicode)
-	  size = (rapi_wstr_string_length(unicode) + 1) * sizeof(WCHAR);
+	  size = (rapi_wstr_strlen(unicode) + 1) * sizeof(WCHAR);
 	else
 		size = 0;
 	
