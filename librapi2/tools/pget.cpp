@@ -9,7 +9,7 @@
 //
 #undef __STRICT_ANSI__
 #define __USE_GNU
-#include <malloc.h>
+#include <stdlib.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
