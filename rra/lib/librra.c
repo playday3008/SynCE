@@ -221,6 +221,8 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	{
 		goto exit;
 	}
+					
+	*object_id_array = calloc(1, sizeof(ObjectIdArray));
 
 	while (recv_subcommand != 0x06000000)
 	{
@@ -264,13 +266,12 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 					synce_trace("id[%i] = %08x", j, recv_ids[j]);
 				}
 
-				if (*object_id_array)
+				if ((**object_id_array).ids)
 				{
 					synce_warning("Already have an array of ids!");
 				}
 				else
 				{
-					*object_id_array               = calloc(1, sizeof(ObjectIdArray));
 					(**object_id_array).ids        = recv_ids;
 					(**object_id_array).unchanged  = recv_id_count - recv_some_count;
 					(**object_id_array).changed    = recv_some_count;
