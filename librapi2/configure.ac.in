@@ -56,9 +56,15 @@ dnl Check for libsynce
 AM_PATH_LIBSYNCE
 
 dnl Checks for header files.
+dnl For readv/writev
+AC_CHECK_HEADERS(sys/uio.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(readv)
+AC_CHECK_FUNCS(writev)
 
 AC_CONFIG_FILES(
 	[script/synce-install-cab],
