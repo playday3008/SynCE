@@ -983,7 +983,7 @@ int main(int argc, char *argv[])
     management.client_server = NULL;
 
     if (!(management.sel = select_create())) {
-        synce_error("COuld not create select-object");
+        synce_error("Could not create select-object");
         return -1;
     }
 
