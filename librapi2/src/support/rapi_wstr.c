@@ -14,9 +14,9 @@
 #define RAPI_WSTR_DEBUG 1
 
 #if RAPI_WSTR_DEBUG
-#define rapi_wstr_trace(args...)    rapi_trace(args)
-#define rapi_wstr_warning(args...)  rapi_warning(args)
-#define rapi_wstr_error(args...)    rapi_error(args)
+#define rapi_wstr_trace(args...)    rapi_trace(##args)
+#define rapi_wstr_warning(args...)  rapi_warning(##args)
+#define rapi_wstr_error(args...)    rapi_error(##args)
 #else
 #define rapi_wstr_trace(args...)
 #define rapi_wstr_warning(args...)
@@ -58,6 +58,7 @@ char* rapi_wstr_to_ascii(LPCWSTR inbuf)
   if ((size_t)-1 == result)
 	{
 		rapi_wstr_error("iconv failed: inbytesleft=%i, outbytesleft=%i", inbytesleft, outbytesleft);
+		/* it would be nice to use rapi_trace_wstr here, but that would cause recursion */
 		rapi_wstr_free_string(outbuf);
 		return NULL;
 	}
@@ -95,7 +96,8 @@ LPWSTR rapi_wstr_from_ascii(const char* inbuf)
 
 	if ((size_t)-1 == result)
 	{
-		rapi_wstr_error("iconv failed: inbytesleft=%i, outbytesleft=%i", inbytesleft, outbytesleft);
+		rapi_wstr_error("iconv failed: inbytesleft=%i, outbytesleft=%i, inbuf=\"%s\"", 
+				inbytesleft, outbytesleft, inbuf);
 		rapi_wstr_free_string(outbuf);
 		return NULL;
 	}

@@ -1,5 +1,8 @@
 /* $Id$ */
+#ifndef __rapi_log_h__
+#define __rapi_log_h__
 
+#include "rapi_types.h"
 
 #define RAPI_LOG_LEVEL_LOWEST    0
 
@@ -23,3 +26,10 @@ void _rapi_log(int level, const char* file, int line, const char* format, ...);
 #define rapi_error(format, args...) \
 	_rapi_log(RAPI_LOG_LEVEL_ERROR,__PRETTY_FUNCTION__, __LINE__, format, ##args)
 
+void _rapi_log_wstr(int level, const char* file, int line, const char* name, const WCHAR* wstr);
+
+#define rapi_trace_wstr(wstr) \
+	_rapi_log_wstr(RAPI_LOG_LEVEL_TRACE,__PRETTY_FUNCTION__, __LINE__, #wstr, wstr)
+
+#endif
+	

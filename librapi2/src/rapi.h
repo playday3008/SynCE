@@ -130,6 +130,25 @@ BOOL CeWriteFile(
 BOOL CeDeleteFile(
 		LPCWSTR lpFileName);
 
+typedef struct _CE_FIND_DATA {
+	DWORD dwFileAttributes; 
+	FILETIME ftCreationTime; 
+	FILETIME ftLastAccessTime; 
+	FILETIME ftLastWriteTime; 
+	DWORD nFileSizeHigh; 
+	DWORD nFileSizeLow; 
+	DWORD dwOID; 
+	WCHAR cFileName[MAX_PATH]; 
+} CE_FIND_DATA, *LPCE_FIND_DATA; 
+
+HANDLE CeFindFirstFile(
+		LPCWSTR lpFileName, 
+		LPCE_FIND_DATA lpFindFileData);
+
+BOOL CeFindNextFile( 
+		HANDLE hFindFile, 
+		LPCE_FIND_DATA lpFindFileData); 
+
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
 		DWORD nBufferLength, 

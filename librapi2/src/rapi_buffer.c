@@ -49,7 +49,7 @@ static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)
 	while (new_size < bytes_needed)
 		new_size <<= 1;
 	
-	rapi_buffer_trace("trying to realloc %i bytes, buffet->data=%p", new_size, buffer->data);
+	rapi_buffer_trace("trying to realloc %i bytes, buffer->data=%p", new_size, buffer->data);
 	
 	new_data = realloc(buffer->data, new_size);
 	if (new_data)
