@@ -87,6 +87,10 @@ BOOL CeOidGetInfo(/*{{{*/
 				goto fail;
 			break;
 
+		case OBJTYPE_DELETED:
+			synce_trace("This object is deleted");
+			break;
+
 		default:
 			synce_error("unknown object type = %i, buffer size = %i", 
 					poidInfo->wObjType, rapi_buffer_get_size(context->recv_buffer));
