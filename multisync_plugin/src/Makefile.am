@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -g -Wall @APPLE_CFLAGS@ @GNOME_INCLUDEDIR@ -I@MULTISYNC_INCLUDE@
+AM_CFLAGS = -g -Wall @APPLE_CFLAGS@ @GNOME_INCLUDEDIR@ -I@MULTISYNC_INCLUDE@
 
 ## install with other Multisync plugins
 libdir=$(prefix)/lib/multisync

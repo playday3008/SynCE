@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -I..
+AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -I..
 
 ## create this library
 noinst_LTLIBRARIES = libsupport.la

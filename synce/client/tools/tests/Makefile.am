@@ -1,5 +1,5 @@
 
-CFLAGS = -Wall -g
+AM_CFLAGS = -Wall -g
 INCLUDES = -I$(top_srcdir)/libwine -I$(top_srcdir)/client/librapi $(all_includes)
 LDADD = $(top_builddir)/client/librapi/librapi.la $(top_builddir)/libchunk/libchunk.la $(top_builddir)/libwine/libwine.la
 

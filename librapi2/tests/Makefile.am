@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -g -Wall -ansi -pedantic -I../src -I../src/support @CHECK_CFLAGS@
+AM_CFLAGS = -g -Wall -ansi -pedantic -I../src -I../src/support @CHECK_CFLAGS@
 LIBS = @CHECK_LIBS@
 LDADD = ../src/librapi.la
 
