@@ -68,7 +68,6 @@ private:
     void (WorkerThreadInterface::*userRun)(QThread *thread = NULL, void *data = NULL);
     void *data;
     QWaitCondition waitCondition;
-    QMutex threadMutex;
     QWaitCondition eventCondition;
     QMutex eventMutex;
     
