@@ -1,4 +1,6 @@
 
+Installation instructions below! :-)
+
 
 Introduction - purpose :
 ========================
@@ -48,12 +50,34 @@ This package is divided in the following blocks :
 - server/librapi :	(not existing yet)
 
 
+Installation from CVS
+=====================
+
+Note: Always use GNU make, known as gmake on *BSD systems.
+
+o Checkout the "synce" module from CVS. The directory you get from CVS is the
+<Synce ROOT> as used later in the installation process.
+
+o Run this command to prepare synce:
+
+    make -f Makefile.dist
+
+o Continue on the section "Common installation"
 
 
+Installation from tarball
+=========================
 
-Installation - Client ( Your computer is acting as a Client, and talks with a Windows CE device)
+Your computer is acting as a client, and talks with a Windows CE device, but is
+running a daemon:
 
-0) unpack the archive in <Synce ROOT>.
+o unpack the archive in <Synce ROOT>.
+
+o Continue on the section "Common installation"
+
+
+Common installation
+===================
 
 1) configure, make, [make install] : very standard (not ready for installation yet)
 
