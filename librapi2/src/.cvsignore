@@ -1,0 +1,10 @@
+.deps
+.libs
+Makefile
+Makefile.in
+file.lo
+librapi.la
+rapi_buffer.lo
+rapi_context.lo
+rapi_socket.lo
+rapi_unicode.lo
