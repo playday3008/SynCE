@@ -373,8 +373,8 @@ BOOL CeSetFileAttributes(
 	synce_trace("Setting attributes %08x", dwFileAttributes);
 	
 	rapi_context_begin_command(context, 0x04);
-	rapi_buffer_write_optional_string(context->send_buffer, lpFileName);
 	rapi_buffer_write_uint32(context->send_buffer, dwFileAttributes);
+	rapi_buffer_write_string(context->send_buffer, lpFileName);
 
 	if ( !rapi_context_call(context) )
 		goto exit;
