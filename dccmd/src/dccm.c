@@ -514,6 +514,7 @@ static bool client_read(Client* client)
     if (!password)
     {
       synce_error("A password is needed to connect to this device, but it was not supplied on the dccm command line.");
+      goto exit;
     }
 
 		if (!synce_password_send(client->socket, password, client->key))
@@ -705,7 +706,7 @@ int main(int argc, char** argv)
 
 	if (!allow_root && 0 == getuid())
 	{
-		synce_error("You should not run dccm as root.");
+		synce_error("You should not run dccm as root. Terminating immediately.");
 		goto exit;
 	}
 
