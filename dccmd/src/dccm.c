@@ -719,13 +719,6 @@ int main(int argc, char** argv)
 	snprintf(pid_file, sizeof(pid_file), "%s/" DCCM_PID_FILE, path);
 	free(path);
 
-	if (!write_pid_file(pid_file))
-	{
-		goto exit;
-	}
-
-	wrote_pid_file = true;
-
 	if (password)
 	{
 		int i;
@@ -757,6 +750,13 @@ int main(int argc, char** argv)
 	}
 	else
 		synce_trace("Running in foreground");
+
+	if (!write_pid_file(pid_file))
+	{
+		goto exit;
+	}
+
+	wrote_pid_file = true;
 
 	/* signal handling */
 	signal(SIGPIPE, SIG_IGN);
