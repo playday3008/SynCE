@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/raki -I$(top_srcdir)/raki/interfaces $(all_includes)
+INCLUDES = -I$(top_srcdir)/raki -I$(top_srcdir)/raki/interfaces -I../ $(all_includes)
 noinst_LIBRARIES =  libinterfaces.a
 libinterfaces_a_SOURCES = rakisyncfactory.cpp rakisyncplugin.cpp
 
