@@ -89,8 +89,7 @@ private:
     void sendMouseEvent(unsigned long int button, unsigned long int cmd,
             unsigned long int x, unsigned long int y);
     void sendKeyEvent(unsigned long int code, unsigned long int cmd);
-    void readEncodedImage(KSocket *socket);
-    bool readAndDecode(KSocket *socket);
+    bool readEncodedImage(KSocket *socket);
     void readSizeMessage(KSocket *socket);
     QString getDeviceIp(QString pdaAddress);
     unsigned long toKeySym(int ascii, int code);

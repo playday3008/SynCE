@@ -23,10 +23,12 @@
 
 #include "cescreen.h"
 
+/*
 extern "C"
 {
 #include "huffman.h"
 };
+*/
 #include <unistd.h>
 #include <qthread.h>
 #include <ksimpleconfig.h>
@@ -330,7 +332,7 @@ size_t CeScreen::rle_decode(unsigned char *target, unsigned char *source, size_t
 }
 
 
-bool CeScreen::readAndDecode(KSocket *socket)
+bool CeScreen::readEncodedImage(KSocket *socket)
 {
     uint32_t headerSizeN;
     uint32_t headerSize;
@@ -405,92 +407,6 @@ bool CeScreen::readAndDecode(KSocket *socket)
 }
 
 
-void CeScreen::readEncodedImage(KSocket *socket)
-{
-    uint32_t headerSizeN;
-    uint32_t rleSizeN;
-    uint32_t bmpSizeN;
-    int n;
-    int m;
-    int k;
-
-    n = read(socket->socket(), &headerSizeN, sizeof(long));
-    m = read(socket->socket(), &rleSizeN, sizeof(long));
-    k = read(socket->socket(), &bmpSizeN, sizeof(long));
-    if (n > 0 && m > 0 && k > 0) {
-        uint32_t headerSize = ntohl(headerSizeN);
-        uint32_t rleSize = ntohl(rleSizeN);
-        uint32_t bmpSize = ntohl(bmpSizeN);
-
-        uchar *bmData = new uchar[bmpSize];
-        uchar *rleData = new uchar[rleSize];
-
-        //        kdDebug(2120) << "H: " << headerSize << ", D: " << rleSize << ", S: " << bmpSize << endl;
-
-        uint32_t rsize = 0;
-        int rsize_tmp;
-        do {
-            rsize_tmp = read(socket->socket(), bmData + rsize, headerSize - rsize);
-            if (rsize_tmp == 0) {
-                kdDebug(2120) << "<Header> Unexpected end of file - " << rsize <<
-                " Bytes read instead of " << headerSize << endl;
-                delete socket;
-                socket = NULL;
-                break;
-            }
-            if (rsize_tmp < 0) {
-                kdDebug(2120) << "Error during read" << endl;
-                delete socket;
-                socket = NULL;
-                break;
-            }
-            rsize += rsize_tmp;
-        } while (rsize < headerSize);
-
-        rsize = 0;
-        do {
-            rsize_tmp = read(socket->socket(), rleData + rsize, rleSize - rsize);
-            if (rsize_tmp == 0) {
-                kdDebug(2120) << "<RLE-Data> Unexpected end of file - " << rsize <<
-                " Bytes read instead of " << rleSize << endl;
-                delete socket;
-                socket = NULL;
-                break;
-            }
-            if (rsize_tmp < 0) {
-                kdDebug(2120) << "Error during read" << endl;
-                delete socket;
-                socket = NULL;
-                break;
-            }
-            rsize += rsize_tmp;
-        } while (rsize < rleSize);
-
-        if (oldData == NULL) {
-            oldData = new unsigned char[bmpSize];
-            memset(oldData, 0, bmpSize);
-        }
-
-        unsigned char *newrleData;
-        size_t newrleSize;
-
-        huffman_decode_memory(rleData, rleSize, &newrleData, &newrleSize);
-        rle_decode(bmData + headerSize, newrleData, newrleSize, oldData + headerSize);
-
-        delete oldData;
-        delete newrleData;
-        oldData = bmData;
-
-        imageViewer->loadImage(oldData, bmpSize);
-        if (!pause) {
-            imageViewer->drawImage();
-        }
-
-        delete rleData;
-    }
-}
-
-
 void CeScreen::readSizeMessage(KSocket *socket)
 {
     uint32_t xN;
@@ -521,8 +437,7 @@ void CeScreen::readSocket(KSocket *socket)
         }
         switch(packageType) {
         case XOR_IMAGE:
-//            this->readEncodedImage(socket);
-            this->readAndDecode(socket);
+            this->readEncodedImage(socket);
             break;
         case SIZE_MESSAGE:
             this->readSizeMessage(socket);

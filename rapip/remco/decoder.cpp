@@ -90,7 +90,6 @@ bool Decoder::readSize(int s)
     if (recv(s, (void *) &encSizeN, sizeof(u_long), 0) == sizeof(u_long)) {
         ret = true;
         encSize = ntohl(encSizeN);
-        kdDebug(2120) << encSize << endl;
     }
 
     return ret;
@@ -139,7 +138,6 @@ size_t Decoder::chainRead(int s)
 
     if ((ret = (recv(s, (void *) &rawSizeN, sizeof(u_long), 0) == sizeof(u_long)))) {
         rawSize = ntohl(rawSizeN);
-        kdDebug(2120) << rawSize << endl;
         if (!(ret = chainReadSize(s))) {
             kdDebug(2120) << "Read sizes error" << endl;
         }
