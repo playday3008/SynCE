@@ -26,6 +26,9 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
 <li><a href="http://sourceforge.net/mail/?group_id=30550">Mailing list information</a></li>
 <li class=SPACED><a href="links.php">Links</a></li>
+
+<li class=SPACED><a href="unshield.php">The Unshield tool</a></li>
+
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
 </ul>
 
@@ -86,6 +89,10 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 
 <a name="news"></a>
 <h2>News</h2>
+
+<p><b>August 11, 2003</b> Added some information about the new <a
+href="unshield.php">Unshield</a> tool that can be used to extract files from
+InstallShield installers.</p>
 
 <p><b>July 30, 2003</b> SynCE 0.8 is released! SynCE now includes the
 possiblity to synchronize calendar and tasks, in addition to the previous
