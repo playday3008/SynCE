@@ -38,9 +38,8 @@ the files!</a></li>
 <a name="openfirewall"></a>
 <h2>Open your firewall</h2>
 
-<p>You need to allow your Windows CE / Pocket PC computer to access ports 5678
-and 5679 on your PC. The PC will need to access port 990 on your Windows CE /
-Pocket PC computer.</p>
+<p>You need to allow your handheld device to access ports 5678 and 5679 on your
+PC. The PC will need to access port 990 on your handheld device computer.</p>
 
 <p>If you are running Linux, you can list your firewall rules with <tt>ipchains
 -L</tt> for Linux kernel 2.2 and <tt>iptables -L</tt> for Linux kernel 2.4.</p>
