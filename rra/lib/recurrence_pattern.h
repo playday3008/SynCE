@@ -28,6 +28,8 @@ typedef enum
   olSaturday  = 64
 } RRA_DaysOfWeek;
 
+#define RRA_Weekdays (olMonday|olTuesday|olWednesday|olThursday|olFriday)
+
 typedef enum
 {
   RecurrenceEndsOnDate = 1,
@@ -35,6 +37,8 @@ typedef enum
   RecurrenceDoesNotEnd = 3,
   RecurrenceEndMask = 3
 } RRA_RecurrenceFlags;
+
+#define RRA_DoesNotEndDate    0x5ae980df
 
 typedef struct _RRA_Exception
 {

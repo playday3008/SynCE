@@ -479,11 +479,15 @@ static bool rra_recurrence_pattern_read_header(/*{{{*/
         synce_warning("Expected 0x200a, got %04x", unknown_a[2]);
       break;
     case olRecursWeekly:
-      if (unknown_a[2] != 0x200b)
-        synce_warning("Expected 0x200b, got %04x", unknown_a[2]);
+      /* 0x200a is used for "Daily - Every weekday" */
+      /* 0x200b is used for "Weekly - Mo,Tu,On,To,Fr */
+      if (unknown_a[2] != 0x200a && unknown_a[2] != 0x200b)
+        synce_warning("Expected 0x200a or 0x200b, got %04x", unknown_a[2]);
       break;
     case olRecursMonthly:
     case olRecursMonthNth:
+      /* 0x200c probably means "show as Monthly" */
+      /* 0x200d probably means "show as Yearly" */
       if (unknown_a[2] != 0x200c && unknown_a[2] != 0x200d)
         synce_warning("Expected 0x200c or 0x200d, got %04x", unknown_a[2]);
       break;
@@ -587,7 +591,14 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   self->pattern_start_date = READ_UINT32(p);  p += 4;
   TRACE_DATE("Pattern start date   = %s", self->pattern_start_date);
   self->pattern_end_date   = READ_UINT32(p);  p += 4;
+  /*synce_trace("Pattern end date     = %08x", self->pattern_end_date);*/
   TRACE_DATE("Pattern end date     = %s", self->pattern_end_date);
+
+  if ((self->flags & RecurrenceEndMask) == RecurrenceDoesNotEnd && 
+      self->pattern_end_date != RRA_DoesNotEndDate) 
+  {
+    synce_warning("Recurrence does not end, but the end date is not the expected value");
+  }
 
   /* Testing */
   if (self->recurrence_type == olRecursMonthly)
@@ -655,28 +666,21 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
     success = rra_recurrence_pattern_to_buffer(self, &new_buffer, &new_size);
     if (success)
     {
-      if (size == new_size)
-      {
-        if (0 == memcmp(buffer, new_buffer, size))
-          synce_info("rra_recurrence_pattern_to_buffer() works great!");
-        else
-        {
-          FILE* file;
-
-          synce_warning("rra_recurrence_pattern_to_buffer() returned a different buffer!");
-
-          file = fopen("pattern-right.bin", "w");
-          fwrite(buffer, size, 1, file);
-          fclose(file);
-          file = fopen("pattern-wrong.bin", "w");
-          fwrite(new_buffer, new_size, 1, file);
-          fclose(file);      
-        }
-      }
+      if (size == new_size && 0 == memcmp(buffer, new_buffer, size))
+        synce_info("rra_recurrence_pattern_to_buffer() works great!");
       else
       {
-        synce_warning("rra_recurrence_pattern_to_buffer() returned wrong size (expected %04x, got %04x)",
+        FILE* file;
+
+        synce_warning("rra_recurrence_pattern_to_buffer() returned a different buffer! (expected size %04x, got %04x)", 
             size, new_size);
+
+        file = fopen("pattern-right.bin", "w");
+        fwrite(buffer, size, 1, file);
+        fclose(file);
+        file = fopen("pattern-wrong.bin", "w");
+        fwrite(new_buffer, new_size, 1, file);
+        fclose(file);      
       }
     }
     else
@@ -720,18 +724,17 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
       break;
       
     case olRecursWeekly:
-      WRITE_UINT16(p, 0x200b); p += 2;
+      if (self->days_of_week_mask == RRA_Weekdays)
+      {
+        WRITE_UINT16(p, 0x200a); p += 2;
+      }
+      else
+      {
+        WRITE_UINT16(p, 0x200b); p += 2;
+      }
       break;
       
     case olRecursMonthly:
-      /* Write 0x200c or 0x200d? */
-      if (self->interval == 12)
-        WRITE_UINT16(p, 0x200d);
-      else
-        WRITE_UINT16(p, 0x200c);
-      p += 2;
-      break;
-
     case olRecursMonthNth:
       /* Write 0x200c or 0x200d? */
       if (self->interval == 12)
@@ -740,7 +743,7 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
         WRITE_UINT16(p, 0x200c);
       p += 2;
       break;
-      
+     
     default:
       synce_error("Unhandled recurrence type");
       goto exit;
