@@ -16,16 +16,22 @@
    Any on_propval_* functions not here are found in common_handlers.c
 */
 
+typedef struct
+{
+  bool completed;
+  time_t completed_time;
+} TaskGeneratorData;
+
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   bool success = false;
+  TaskGeneratorData* data = (TaskGeneratorData*)cookie;
   
   switch (propval->propid & 0xffff)
   {
     case CEVT_FILETIME:
-      {
-        time_t completed_time = 
-          filetime_to_unix_time(&propval->val.filetime);
+        data->completed_time = filetime_to_unix_time(&propval->val.filetime);;
+#if 0
 
         if (completed_time > 0)
         {
@@ -35,15 +41,19 @@ static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
           generator_add_simple(g, "COMPLETED", date);
         }
       }
+#endif
       success = true;
       break;
 
     case CEVT_I2:
-      if (propval->val.iVal)
+      data->completed = propval->val.iVal;
+#if 0
+      if ()
       {
         generator_add_simple(g, "PERCENT-COMPLETE", "100");
         generator_add_simple(g, "STATUS",           "COMPLETED");
       }
+#endif
       success = true;
       break;
 
@@ -94,13 +104,14 @@ bool rra_task_to_vtodo(
     const uint8_t* data,
     size_t data_size,
     char** vtodo,
-    uint32_t flags)
+    uint32_t flags,
+    TimeZoneInformation* tzi)
 {
   bool success = false;
   Generator* generator = NULL;
   unsigned generator_flags = 0;
-  /*EventGeneratorData event_generator_data;
-    memset(&event_generator_data, 0, sizeof(EventGeneratorData));*/
+  TaskGeneratorData task_generator_data;
+  memset(&task_generator_data, 0, sizeof(TaskGeneratorData));
 
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
@@ -114,7 +125,7 @@ bool rra_task_to_vtodo(
       break;
   }
 
-  generator = generator_new(generator_flags, NULL/*&event_generator_data*/);
+  generator = generator_new(generator_flags, &task_generator_data);
   if (!generator)
     goto exit;
 
@@ -137,8 +148,24 @@ bool rra_task_to_vtodo(
     snprintf(id_str, sizeof(id_str), "RRA-ID-%08x", id);
     generator_add_simple(generator, "UID", id_str);
   }
+
   if (!generator_run(generator))
     goto exit;
+
+  if (task_generator_data.completed)
+  {
+    generator_add_simple(generator, "PERCENT-COMPLETE", "100");
+    generator_add_simple(generator, "STATUS",           "COMPLETED");
+
+    if (task_generator_data.completed_time > 0)
+    {
+      char date[32];
+      /* always UTC format */
+      strftime(date, sizeof(date), "%Y%m%dT000000Z", 
+          gmtime(&task_generator_data.completed_time));
+      generator_add_simple(generator, "COMPLETED", date);
+    }
+  }
 
   generator_add_simple(generator, "END", "VTODO");
 
@@ -156,6 +183,16 @@ exit:
    Any on_mdir_line_* functions not here are found in common_handlers.c
 */
 
+static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
+{
+  if (line)
+  {
+    return parser_add_time_from_line(p, ID_TASK_COMPLETED, line);
+  }
+  else
+    return false;
+}
+
 static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
 {
   return parser_add_time_from_line(p, ID_TASK_DUE, line);
@@ -168,7 +205,7 @@ static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 
 static bool on_mdir_line_status(Parser* p, mdir_line* line, void* cookie)
 {
-  if (STR_EQUAL(line->values[0], "completed"))
+  if (line && STR_EQUAL(line->values[0], "completed"))
     return parser_add_int16(p, ID_TASK_COMPLETED, 1);
   else
     return parser_add_int16(p, ID_TASK_COMPLETED, 0);
@@ -180,7 +217,8 @@ bool rra_task_from_vtodo(
     uint32_t* id,
     uint8_t** data,
     size_t* data_size,
-    uint32_t flags)
+    uint32_t flags,
+    TimeZoneInformation* tzi)
 {
 	bool success = false;
   Parser* parser = NULL;
@@ -215,6 +253,8 @@ bool rra_task_from_vtodo(
   parser_component_add_parser_property(todo, 
       parser_property_new("Class", on_mdir_line_class));
   parser_component_add_parser_property(todo, 
+      parser_property_new("Completed", on_mdir_line_completed));
+  parser_component_add_parser_property(todo, 
       parser_property_new("dtStart", on_mdir_line_dtstart));
   parser_component_add_parser_property(todo, 
       parser_property_new("Due", on_mdir_line_due));
@@ -237,7 +277,7 @@ bool rra_task_from_vtodo(
   parser_component_add_parser_component(base, calendar);
   parser_component_add_parser_component(base, todo);
 
-  parser = parser_new(base, parser_flags, NULL /*&event_parser_data*/);
+  parser = parser_new(base, parser_flags, tzi, NULL /*&event_parser_data*/);
   if (!parser)
   {
     synce_error("Failed to create parser");
@@ -256,6 +296,8 @@ bool rra_task_from_vtodo(
     goto exit;
   }
 
+  parser_call_unused_properties(parser);
+  
   if (!parser_get_result(parser, data, data_size))
   {
     synce_error("Failed to retrieve result");
