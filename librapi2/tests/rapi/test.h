@@ -71,7 +71,7 @@ WCHAR* to_unicode(const char* inbuf)
 	return rapi_wstr_from_ascii(inbuf);
 }
 
-#ifndef WIN32
+#if 0
 // This does not work with Linux kernel 2.2 and earlier
 bool is_valid_ptr(void * ptr)
 {
