@@ -6,7 +6,7 @@
 
 int handle_property(PCEPROPVAL value)
 {
-	unsigned k;
+	//unsigned k;
 	unsigned id = value->propid >> 16;
 	switch (id)
 	{
@@ -104,7 +104,7 @@ int handle_property(PCEPROPVAL value)
 		case CEVT_I2: printf("%i", value->val.iVal); break;
 		case CEVT_I4: printf("%li", value->val.lVal); break;
 		case CEVT_UI2: printf("%u", value->val.uiVal); break;
-		case CEVT_UI4: printf("%lu", value->val.ulVal); break;
+		case CEVT_UI4: printf("%u", value->val.ulVal); break;
 		
 		case CEVT_LPWSTR:
 			printf("\"%s\"", from_unicode(value->val.lpwstr));
@@ -130,7 +130,7 @@ int handle_property(PCEPROPVAL value)
 			break;
 
 		case CEVT_BLOB:
-			printf("BLOB (size=%lu)", value->val.blob.dwCount);
+			printf("BLOB (size=%u)", value->val.blob.dwCount);
 /*			printf(" \"");
 			for (k = 0; k < value->val.blob.dwCount; k++)
 			{
@@ -180,7 +180,7 @@ int handle_database(HANDLE db, DWORD num_records)
 		CEOID oid;
 		TEST_NOT_FALSE(oid = CeReadRecordProps(db, CEDB_ALLOWREALLOC, &property_count, NULL, (BYTE**)&values, &buffer_size));
 	
-		printf("Row %u (oid=0x%lx): ", i, oid);
+		printf("Row %u (oid=0x%x): ", i, oid);
 	
 		if (TEST_SUCCEEDED != handle_record(values, property_count))
 			return TEST_FAILED;
@@ -212,7 +212,7 @@ int main()
 	for (unsigned i = 0; i < db_count; i++)
 	{
 		HANDLE db = INVALID_HANDLE_VALUE;
-		TEST_NOT_EQUAL(INVALID_HANDLE_VALUE, db = CeOpenDatabase(&find_data[i].OidDb, NULL, 0, CEDB_AUTOINCREMENT, NULL));
+		TEST_NOT_EQUAL(INVALID_HANDLE_VALUE, db = CeOpenDatabase(&find_data[i].OidDb, NULL, 0, CEDB_AUTOINCREMENT, 0));
 
 		handle_database(db, find_data[i].DbInfo.wNumRecords);
 	
