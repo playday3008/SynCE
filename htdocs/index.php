@@ -106,14 +106,25 @@ alt="Make a donation" title="Make a donation"></td>
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>October 28, 2003</a></b> Improved this web site.</p>
+<p><b>November 16, 2003</b> Created the IRC channel <tt>#synce</tt> on
+<tt>irc.freenode.net</tt>. You are all very welcome!</p>
 
-<p><b>August 16, 2003</a></b> A GNOME 2 version of the MultiSync plugin was
+<p><b>November 14, 2003</b> New <a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=3464828&forum_id=1226">SynCE
+Developer's notes</a>. (Previous notes: <a
+href="http://sourceforge.net/mailarchive/message.php?msg_id=5825027">August
+16</a>, <a
+href="http://sourceforge.net/mailarchive/message.php?msg_id=5874600">August
+22</a>.)</p>
+
+<p><b>October 28, 2003</b> Improved this web site.</p>
+
+<p><b>August 16, 2003</b> A GNOME 2 version of the MultiSync plugin was
 released today. It has version 0.8.2 and can be <a
 href="http://sourceforge.net/project/showfiles.php?group_id=30550">downloaded</a>
 in .tar.gz or RPM format.</p>
 
-<p><b>August 14, 2003</a></b> We would like to welcome <a
+<p><b>August 14, 2003</b> We would like to welcome <a
 href="mailto:snaggen@users.sourceforge.net">Mattias Eriksson</a> to the SynCE
 project!  He was the one who ported the <tt>multisync_plugin</tt> module to
 GNOME 2 and he will continue to support it.</p>
