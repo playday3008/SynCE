@@ -47,7 +47,7 @@ called <code>vdccm</code>. This is available <a href="http://synce.sourceforge.n
 <br>
 For synchronization you need kitchensync. As the version in KDE-PIM 3.3.0 is not very useful please get
 <a href="http://handhelds.org/~zecke/">kitchensync-0.0.8</a>. As there are some problems with the installed
-include-files please download and apply these <a href="./downloads/include_patch.tgz">patches</a>.
+include-files please download and apply these <a href="http://prdownloads.sourceforge.net/synce/kitchensync_include_patch.tgz?download">patches</a>.
 <br>
 applying the patch:<br><br>
 <div style="margin-left:1cm">
@@ -71,27 +71,27 @@ For installation of kitchensync please refer to <a href="http://handhelds.org/~z
 linking and installation.
 <h4><a name="Download" id="Download">Download</a></h4>
 <p>
-You need the following archives to start working.
+You need the following archives to start working. (The list can be found <a href="https://sourceforge.net/project/showfiles.php?group_id=30550&package_id=73834&release_id=264057">here</a>.)
 <br><br>
 <em>pocketpccommunication</em>
 <br>
 This is the base software. It gives you a C++ library for getting/pushing AddressBook- and Calendar-data. Along
 with it comes a KDE-application which can be used for testing and backup/restore purposes!
 <br>
-Get the <a href="./downloads/pocketpccommunication-0.1.tar.gz">archive</a>.
+Get the <a href="http://prdownloads.sourceforge.net/synce/pocketpccommunication-0.1.tar.gz?download">archive</a>.
 <br><br>
 <em>libpocketpckonnector</em>
 <br>
 This is the konnector which can be used within kitchensync. After successfull installation start kitchensync
 and you will see a new entry when adding new konnectors!
 <br>
-Get the <a href="./downloads/libpocketpckonnector-0.1.tar.gz">archive</a>.
+Get the <a href="http://prdownloads.sourceforge.net/synce/libpocketpckonnector-0.1.tar.gz?download">archive</a>.
 <br><br>
 <em>kitchensync include-file patches</em>
 <br>
 You need a working development installation of <code>kitchensync</code>. Please apply these patches:
 <br>
-Get the <a href="./downloads/include_patch.tgz">patches</a>.
+Get the <a href="http://prdownloads.sourceforge.net/synce/kitchensync_include_patch.tgz?download">patches</a>.
 </p>
 <h4><a name="Installation" id="Installation">Installation</a></h4>
 After downloading the complete software the installation should be straight forward. 
