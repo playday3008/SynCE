@@ -111,7 +111,7 @@ static bool copy_file(const char* input_filename, const char* output_filename)
 
   while (bytes_left)
   {
-    long bytes_to_copy = MIN(bytes_left, BUFFER_SIZE);
+    unsigned bytes_to_copy = MIN(bytes_left, BUFFER_SIZE);
 
     if (bytes_to_copy != fread(buffer, 1, bytes_to_copy, input_file))
       goto exit;
