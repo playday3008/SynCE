@@ -234,6 +234,10 @@ synchronize Contacts.</td>
 
 <a name="developers"></a><h2>The SynCE developers</h2>
 
+<p>Please note that if you have questions or comments about SynCE you should
+not mail the developers directly, but use a suitable <a
+href="http://sourceforge.net/mail/?group_id=30550">mailing list</a>.</p>
+
 <p><a href="mailto:llange@users.sourceforge.net">Ludovic Lange</a> started the
 SynCE project and did the hard work in figuring out many of the properitary
 interfaces.</p>
@@ -260,6 +264,9 @@ Perl language mapping for RAPI.</p>
 
 <p><a href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a> is
 responsible for making Debian packages of SynCE releases.</p>
+
+<p><a href="mailto:jonmcd@users.sourceforge.net">Jonathan McDowell</a> will
+help out with Debian packages and other things.</p>
 
 </div>
 <?php include 'footer.php'; ?>
