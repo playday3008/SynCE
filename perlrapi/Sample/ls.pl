@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # -*- cperl -*-
 #
-# ls.pl - Perl Implementation for an pls command.
+# ls.pl - Perl Implementation for a pls command.
 #
 # AUTHOR: Andreas Pohl (osar@users.sourceforge.net)
 #
@@ -49,7 +49,6 @@ foreach my $file (@files)
   printf "  %10d", $file->{nFileSizeLow};
   # Time
   my ($sec, $min, $hour, $day, $mon, $year)=localtime($file->{ftLastWriteTime});
-  print $file->{dwLastWriteTime};
   printf "  %04d-%02d-%02d %02d:%02d:%02d", 1900+$year, $mon+1, $day, $hour, $min, $sec;
   # OID, Name
   printf "  0x%08x  %s", $file->{dwOID}, $file->{cFileName};
