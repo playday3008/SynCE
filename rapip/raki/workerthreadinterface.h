@@ -31,6 +31,7 @@
 #include "threadevent.h"
 
 #include <qmutex.h>
+#include <qwaitcondition.h>
 
 /**
 @author Volker Christian,,,
@@ -44,14 +45,17 @@ class WorkerThreadInterface
 public:
     WorkerThreadInterface();
     ~WorkerThreadInterface();
-    void lock();
-    void unlock();
     int type;
     bool running();
-    void setRunning(bool isRunning);
+    void setRunning(bool);
+    bool stopRequested();
+    void setStopRequested(bool isStopRequested);
     void *postEvent(void *(WorkerThreadInterface::*userEventMethode)(void *data = 0), void *data = 0, int block = 0);
     void setEventReturnValue(void *value);
     void *eventReturnValue();
+    void *synchronizeGui();
+    void setDelayedDelete(bool delayedDelete);
+    bool delayedDelete();
     
     enum eventType {
         noBlock = 0,
@@ -59,10 +63,14 @@ public:
     };
 
 private:
-    QMutex mutex;
+    void *guiSynchronizator(void *data = 0);
     ThreadEventObject threadEventObject;
     bool isRunning;
+    bool isStopRequested;
+    bool isDelayedDelete;
     void *eventReturn;
+    QMutex syncMutex;
+    QWaitCondition syncWaitCondition;
 };
 
 

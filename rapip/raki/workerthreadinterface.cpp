@@ -33,7 +33,10 @@
 #endif
 
 WorkerThreadInterface::WorkerThreadInterface()
-{}
+{
+    isRunning = false;
+    isStopRequested = false;
+}
 
 
 WorkerThreadInterface::~WorkerThreadInterface()
@@ -45,27 +48,39 @@ WorkerThreadInterface::~WorkerThreadInterface()
 }
 
 
-void WorkerThreadInterface::lock()
-{
-    mutex.lock();
-}
-
-
-void WorkerThreadInterface::unlock()
-{
-    mutex.unlock();
-}
-
-
 bool WorkerThreadInterface::running()
 {
     return isRunning;
 }
 
 
-void WorkerThreadInterface::setRunning(bool isRunning)
+void WorkerThreadInterface::setRunning(bool running)
 {
-    this->isRunning = isRunning;
+    this->isRunning = running;
+}
+
+
+bool WorkerThreadInterface::stopRequested()
+{
+    return isStopRequested;
+}
+
+
+void WorkerThreadInterface::setStopRequested(bool isStopRequested)
+{
+    this->isStopRequested = isStopRequested;
+}
+
+
+void WorkerThreadInterface::setDelayedDelete(bool isDelayedDelete)
+{
+    this->isDelayedDelete = isDelayedDelete;
+}
+
+
+bool WorkerThreadInterface::delayedDelete()
+{
+    return isDelayedDelete;
 }
 
 
@@ -98,4 +113,26 @@ void WorkerThreadInterface::setEventReturnValue(void *value)
 void *WorkerThreadInterface::eventReturnValue()
 {
     return eventReturn;
+}
+
+
+void *WorkerThreadInterface::guiSynchronizator(void */*data*/)
+{
+    syncMutex.lock();
+    syncMutex.unlock();
+    syncWaitCondition.wakeAll();
+    return NULL;
+}
+
+
+void *WorkerThreadInterface::synchronizeGui()
+{
+    if (!isStopRequested) {
+        syncMutex.lock();
+        postThreadEvent(&WorkerThreadInterface::guiSynchronizator, NULL, noBlock);
+        syncWaitCondition.wait(&syncMutex);
+        syncMutex.unlock();
+    }
+    
+    return NULL;
 }
