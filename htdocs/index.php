@@ -119,6 +119,19 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>October 27, 2004</b> If you want to get SynCE working on your Linux
+system, feel free to try the initial version of the <a
+href="howto.php">HOWTO</a>!</p>
+
+<p><b>October 13, 2004</b> A <a href="kde/konnector/">KitchenSync Konnector</a>
+is now available. If you're a KDE user and want to synchronize your PIM data,
+give it a try!</p>
+
+<p><b>September 2, 2004</b> Adrian Dimulescu kindly reminded me of his <a
+href="http://adrian.dimulescu.free.fr/article.php3?id_article=10">PocketWord
+convertor</a>. It can convert .pwi/.psw documents into OpenOffice sxw, HTML,
+and plain text.</p>
+
 <p><b>August 30, 2004</b> During the past weekend, desktop environment add-ons
 <a
 href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=73834&release_id=264057">SynCE-KDE
@@ -142,6 +155,8 @@ this week! Also, if you have problems getting a PPP connection with USB
 connection on Linux, take a look at the <a href="usb_linux.php#werestuffed">The
 "we're stuffed" bug</a>.</p>
 
+<?php /*
+
 <p><b>July 7, 2004</b> Added a <a href="contrib/ipaq">start/stop script</a>
 contributed by Tony Stout. Added info about my packet decoders for Ethereal to
 the <a href="capture.php">How to capture packets for analyzing</a> page. </p>
@@ -149,8 +164,6 @@ the <a href="capture.php">How to capture packets for analyzing</a> page. </p>
 <p><b>May 28, 2004</b> New page linking to all <a href="notes.php">Developer's
 notes</a></p>
 
-
-<?php /*
 
 <p><b>May 4, 2004</b> Support for recurring appointments is coming along
 nicely, the PWI file format is getting decoded, a script called <a
