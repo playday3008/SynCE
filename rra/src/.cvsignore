@@ -4,6 +4,8 @@
 .libs
 Makefile
 Makefile.in
+rra-appointment-from-vevent
+rra-appointment-to-vevent
 rra-contact-from-vcard
 rra-contact-to-vcard
 rra-db-vcal
@@ -16,6 +18,5 @@ rra-get-types
 rra-put-data
 rra-task-to-vtodo
 rra-task-from-vtodo
-rra-appointment-from-vevent
-rra-appointment-to-vevent
+rra-timezone
 synce-partnership

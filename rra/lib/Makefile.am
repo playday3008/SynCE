@@ -17,12 +17,12 @@ librra_la_SOURCES = \
 	recurrence.h recurrence_internal.h recurrence.c \
 	rrac.h     rrac.c \
 	strbuf.h   strbuf.c \
-	task.c
+	task.c \
+	timezone.h timezone.c
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
 librra_la_LIBADD   = @LTLIBOBJS@
 
 include_HEADERS = \
 	librra.h
-
 

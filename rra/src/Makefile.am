@@ -1,6 +1,6 @@
 ## useful flags
 AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
-LDADD = ../lib/librra.la
+LDADD = -L../lib ../lib/librra.la
 
 bin_PROGRAMS = synce-partnership
 
@@ -11,7 +11,8 @@ noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-decode \
 	rra-contact-to-vcard rra-contact-from-vcard \
 	rra-appointment-from-vevent rra-appointment-to-vevent \
-	rra-task-from-vtodo rra-task-to-vtodo
+	rra-task-from-vtodo rra-task-to-vtodo \
+	rra-timezone
 
 rra_get_types_SOURCES   = rra-get-types.c
 rra_get_ids_SOURCES     = rra-get-ids.c
@@ -29,6 +30,8 @@ rra_appointment_from_vevent_SOURCES  = rra-appointment-from-vevent.c
 
 rra_task_to_vtodo_SOURCES    = rra-task-to-vtodo.c
 rra_task_from_vtodo_SOURCES  = rra-task-from-vtodo.c
+
+rra_timezone_SOURCES = rra-timezone.c
 
 ##rra_lock_SOURCES = rra-lock.c
 
