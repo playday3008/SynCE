@@ -76,6 +76,10 @@ bool rra_syncmgr_get_deleted_object_ids(
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, 
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie);
 
+/** Unsubscribe from a previously selected object type */
+void rra_syncmgr_unsubscribe(RRA_SyncMgr* self, 
+  uint32_t type);
+
 /* 
    Event handling 
  */

@@ -75,7 +75,7 @@ static Subscription* subscription_new(
   return self;
 }
 
-void subscription_destroy(Subscription* self)
+static void subscription_destroy(Subscription* self)
 {
   FREE(self);
 }
@@ -410,6 +410,20 @@ void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
   else
     synce_error("RRA_SyncMgr pointer is NULL");
 }/*}}}*/
+
+void rra_syncmgr_unsubscribe(RRA_SyncMgr* self, uint32_t type) /*{{{*/
+{
+  if (self)
+  {
+    Subscription* subscription =
+      s_hash_table_remove(self->subscriptions, &type);
+    
+    if (subscription) {
+      synce_trace("Unsubscribed from type %08x", type);
+      subscription_destroy(subscription);
+    }
+  }
+}/*}}}*/   
 
 bool rra_syncmgr_start_events(RRA_SyncMgr* self)/*{{{*/
 {
