@@ -75,6 +75,12 @@ B.      All libraries should be written i ANSI C.
         Whatever corresponds to the KDE 3 applications listed in 2.2.
         (Please tell me what these are called!)
 
+2.4.1   GNOME-VFS module
+
+        See Tamas Decsi's mail to synce-devel and this link:
+
+        http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html
+
 2.x.    Tools for your favorite desktop environment here.
 
 
