@@ -2,7 +2,7 @@ Source: synce-kde
 Section: utils
 Priority: optional
 Maintainer: Volker Christian <voc@users.sourceforge.net>
-Build-Depends: debhelper (>> 4.0.0), librra0-dev (>= 0.8), librapi2-dev (>= 0.8), libsynce0-dev (>= 0.8), libmimedir-dev, qt3-dev-tools (>= 3.1), libqt3-mt-dev (>= 3.1), libqt3-headers (>= 3.1), kdelibs4-dev (>= 3.1), autoconf, automake1.6 | automake1.7
+Build-Depends: debhelper (>> 4.0.0), agsync-dev (>= 0.2-pre), librra0-dev (>= 0.8), librapi2-dev (>= 0.8), libsynce0-dev (>= 0.8), libmimedir-dev, qt3-dev-tools (>= 3.1), libqt3-mt-dev (>= 3.1), libqt3-headers (>= 3.1), kdelibs4-dev (>= 3.1), autoconf, automake1.6 | automake1.7
 Standards-Version: 3.5.8
 
 Package: synce-kde-dev
