@@ -121,5 +121,13 @@ uint32_t bswap_32(uint32_t x);
 #endif
 
 
+/*
+ * Configuration directory and file name stuff
+ */
+
+bool synce_get_directory(char** path);
+bool synce_get_connection_filename(char** filename);
+
+
 #endif
 

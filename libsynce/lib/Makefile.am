@@ -7,6 +7,7 @@ lib_LTLIBRARIES = libsynce.la
 ## use these sources
 libsynce_la_SOURCES = \
 	bswap.c \
+	files.c \
 	filetime.c \
 	password.c \
 	synce.h \
