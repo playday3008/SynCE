@@ -8,7 +8,9 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 
 <h1>The SynCE Project</h1>
 
-<h2>Contents</h2>
+<h2>Site contents</h2>
+
+<h3>General</h3>
 
 <ul>
 <li><a href="#introduction">Introduction</a></li>
@@ -18,11 +20,8 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="using.php">Download and use SynCE</a></li>
 <li><a href="qa.php">Questions and Answers</a></li>
-<li><a href="ip_forward.php">IP forwarding</a></li>
-<li><a href="hotplug.php">Linux hotplug script</a></li>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
 <li><a href="kde/index.php">KDE integration</a></li>
-<li><a href="macosx.php">Mac OS X support</a></li>
 <li><a href="#future">Future</a></li>
 <li><a href="#developers">The SynCE developers</a></li>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
@@ -30,6 +29,26 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li class=SPACED><a href="links.php">Links</a></li>
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
 </ul>
+
+<h3>Integration with desktop environments</h3>
+
+<ul>
+
+<li><a href="gnome.php">GNOME</a></li>
+<li><a href="kde/">KDE</a></li>
+
+</ul>
+
+<h3>Operating system-specific details</h3>
+
+<ul>
+
+<li><a href="freebsd.php">FreeBSD</a></li>
+<li><a href="linux.php">Linux</a></li>
+<li><a href="macosx.php">MacOS X</a></li>
+
+</ul>
+
 
 <a name="introduction"></a>
 <h2>Introduction</h2>
@@ -72,7 +91,7 @@ href="debian.php">Debian packages</a> of SynCE available for download!</p>
 available for RAPI. This has been implemented by <a
 href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> and is available <a
 href="http://sourceforge.net/project/showfiles.php?group_id=30550&release_id=142515">as
-tarball</a> or <a href="http://sourceforge.net/cvs/?group_id=30550">directly
+tarball</a> or <a href="cvs.php">directly
 from the CVS module <tt>perlrapi</tt></a>.</p>
 
 <p><b>March 1, 2003</b> Updated the <a
@@ -112,7 +131,7 @@ files and development libraries.</li>
 <p>I would also like to mention that Volker Christian has joined the SynCE
 project to improve the KDE integration. KDE 3.x users, please have look at the
 <tt>rapip</tt> module in <a
-href="http://sourceforge.net/cvs/?group_id=30550">CVS</a>!</p>
+href="cvs.php">CVS</a>!</p>
 
 <!--
 

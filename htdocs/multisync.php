@@ -12,8 +12,8 @@
 href="http://www.ximian.com/products/evolution/">Ximian Evolution</a> using a
 plugin for <a href="http://multisync.sourceforge.net/">MultiSync</a>.</p>
 
-<p>The <a href="http://sourceforge.net/cvs/?group_id=30550">CVS version</a> of
-SynCE can also synchronize appointments and tasks.</p>
+<p>The <a href="cvs.php">CVS version</a> of SynCE can also synchronize
+appointments and tasks.</p>
 
 <p><b>Warning:</b> This is experimental software. Anything can happen. Use it
 at your own risk.</p>
