@@ -92,17 +92,17 @@ struct _RRA_SyncMgr
   SyncPartners partners;
 };
 
-static unsigned uint32_hash(const void *key)
+static unsigned uint32_hash(const void *key)/*{{{*/
 {
   return *(uint32_t*)key;
-}
+}/*}}}*/
 
-static int uint32_compare(const void* a, const void* b)
+static int uint32_compare(const void* a, const void* b)/*{{{*/
 {
   return *(uint32_t*)a == *(uint32_t*)b;
-}
+}/*}}}*/
 
-static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)
+static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)/*{{{*/
 {
   RawObjectType* raw_object_types = NULL;
   unsigned i = 0;
@@ -150,9 +150,9 @@ static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)
 exit:
 	rrac_free(raw_object_types);
   return success;
-}
+}/*}}}*/
 
-RRA_SyncMgr* rra_syncmgr_new()
+RRA_SyncMgr* rra_syncmgr_new()/*{{{*/
 {
   RRA_SyncMgr* self = (RRA_SyncMgr*)calloc(1, sizeof(RRA_SyncMgr));
 
@@ -161,9 +161,9 @@ RRA_SyncMgr* rra_syncmgr_new()
     s_hash_table_new(uint32_hash, uint32_compare, sizeof(uint32_t));
 
   return self;
-}
+}/*}}}*/
 
-void rra_syncmgr_destroy(RRA_SyncMgr* self)
+void rra_syncmgr_destroy(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
   {
@@ -173,9 +173,9 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self)
         (SHashTableDataDestroy)subscription_destroy);
     free(self);
   }
-}
+}/*}}}*/
 
-bool rra_syncmgr_connect(RRA_SyncMgr* self)
+bool rra_syncmgr_connect(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
   {
@@ -188,32 +188,32 @@ bool rra_syncmgr_connect(RRA_SyncMgr* self)
     synce_error("RRA_SyncMgr pointer is NULL");
     return false;
   }
-}
+}/*}}}*/
 
-void rra_syncmgr_disconnect(RRA_SyncMgr* self)
+void rra_syncmgr_disconnect(RRA_SyncMgr* self)/*{{{*/
 {
   if (self) 
   {
     rrac_disconnect(self->rrac);
     self->receiving_events = FALSE;
   }
-}
+}/*}}}*/
 
-uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)
+uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
     return self->type_count;
   else
     return 0;
-}
+}/*}}}*/
 
-RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)
+RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
     return self->types;
   else
     return NULL;
-}
+}/*}}}*/
 
 RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id)/*{{{*/
 {
@@ -264,7 +264,7 @@ exit:
   return result;
 }/*}}}*/
 
-bool rra_syncmgr_get_deleted_object_ids(
+bool rra_syncmgr_get_deleted_object_ids(/*{{{*/
     RRA_SyncMgr* self,
     uint32_t type_id,
     RRA_Uint32Vector* current_ids,
@@ -383,8 +383,7 @@ bool rra_syncmgr_get_deleted_object_ids(
 exit:
   rra_uint32vector_destroy(previous_ids, true);
   return success;
-}
-
+}/*}}}*/
 
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie)
@@ -402,7 +401,7 @@ void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
     synce_error("RRA_SyncMgr pointer is NULL");
 }/*}}}*/
 
-bool rra_syncmgr_start_events(RRA_SyncMgr* self)
+bool rra_syncmgr_start_events(RRA_SyncMgr* self)/*{{{*/
 {
   bool success = false;
   unsigned i;
@@ -448,7 +447,7 @@ bool rra_syncmgr_start_events(RRA_SyncMgr* self)
 exit:
   FREE(ignored_ids);
   return success;
-}
+}/*}}}*/
 
 int rra_syncmgr_get_event_descriptor(RRA_SyncMgr* self)/*{{{*/
 {
