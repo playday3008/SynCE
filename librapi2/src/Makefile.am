@@ -7,7 +7,8 @@ lib_LTLIBRARIES = librapi.la
 
 ## use these sources
 librapi_la_SOURCES = \
-	file.c                         \
+	file_access.c                  \
+	file_management.c              \
 	init.c                         \
 	misc.c                         \
 	rapi_buffer.h   rapi_buffer.c  \
