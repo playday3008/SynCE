@@ -637,8 +637,8 @@ typedef struct _SYSTEM_INFO {
 	WORD wProcessorArchitecture;
 	WORD wReserved;
 	DWORD dwPageSize;
-	LPVOID lpMinimumApplicationAddress;
-	LPVOID lpMaximumApplicationAddress;
+	ULONG lpMinimumApplicationAddress;
+	ULONG lpMaximumApplicationAddress;
 	DWORD dwActiveProcessorMask;
 	DWORD dwNumberOfProcessors;
 	DWORD dwProcessorType;

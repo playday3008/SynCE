@@ -119,9 +119,8 @@ void CeGetSystemInfo( /*{{{*/
 		lpSystemInfo->wProcessorArchitecture       = letoh16(lpSystemInfo->wProcessorArchitecture);
 		lpSystemInfo->wReserved                    = letoh16(lpSystemInfo->wReserved);
 		lpSystemInfo->dwPageSize                   = letoh32(lpSystemInfo->dwPageSize);
-    /* XXX: does not work on 64-bit platforms */
-		lpSystemInfo->lpMinimumApplicationAddress  = (LPVOID)letoh32((uint32_t)lpSystemInfo->lpMinimumApplicationAddress);
-		lpSystemInfo->lpMaximumApplicationAddress  = (LPVOID)letoh32((uint32_t)lpSystemInfo->lpMaximumApplicationAddress);
+		lpSystemInfo->lpMinimumApplicationAddress  = letoh32(lpSystemInfo->lpMinimumApplicationAddress);
+		lpSystemInfo->lpMaximumApplicationAddress  = letoh32(lpSystemInfo->lpMaximumApplicationAddress);
 		lpSystemInfo->dwActiveProcessorMask        = letoh32(lpSystemInfo->dwActiveProcessorMask);
 		lpSystemInfo->dwNumberOfProcessors         = letoh32(lpSystemInfo->dwNumberOfProcessors);
 		lpSystemInfo->dwProcessorType              = letoh32(lpSystemInfo->dwProcessorType);
