@@ -1,3 +1,147 @@
+2003-09-09 00:06  voc
+
+	* vdccm/vdccm.c: Code clean
+
+2003-09-08 23:30  voc
+
+	* raki/: installer.cpp, removepartnershipdialogimpl.cpp,
+	syncthread.cpp, syncthread.h, threadevent.h, welcomedialogimpl.cpp,
+	welcomedialogimpl.h, wince_ids.cpp, workerthreadinterface.cpp,
+	interfaces/rakisyncplugin.cpp,
+	plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Code cleaning
+
+2003-09-08 23:28  voc
+
+	* Doxyfile, synce-kde.kdevelop: Updated some infos
+
+2003-09-07 23:22  voc
+
+	* raki/Makefile.am: Don't install syncthread.h
+
+2003-09-07 22:45  voc
+
+	* raki/: syncthread.h, threadevent.cpp: Code cleanup
+
+2003-09-07 22:32  voc
+
+	* raki/: syncthread.cpp, syncthread.h: Major Bug fix: Raki didn't
+	produce a deadlock anymore.
+
+2003-09-07 22:24  voc
+
+	* raki/: syncevent.cpp, syncevent.h: Removed unecessary files
+
+2003-09-07 22:23  voc
+
+	* raki/: Makefile.am, rakiworkerthread.cpp, rakiworkerthread.h,
+	syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
+	synctasklistitem.h, threadevent.cpp, threadevent.h,
+	workerthreadinterface.cpp, workerthreadinterface.h,
+	interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h,
+	plugins/agsync/agsync.cpp: Major Bug fix: Raki didn't produce a
+	deadlock anymore.
+
+2003-09-07 13:29  voc
+
+	* raki/raki.cpp: Removed an unecessary header file
+
+2003-09-07 13:27  voc
+
+	* raki/: pda.cpp, rra.cpp: Removed some unnecessary rra->connect()s
+
+2003-09-07 02:27  voc
+
+	* vdccm/vdccm.c: Socket descriptor is removed from fd_set also in
+	case of an error during connection initiation:
+
+2003-09-05 01:18  voc
+
+	* raki/installer.cpp: [no log message]
+
+2003-09-05 01:17  voc
+
+	* raki/: pda.cpp, rra.cpp: Fixed a memory hole
+
+2003-09-05 01:16  voc
+
+	* raki/wince_ids.cpp: Fixed a debug format.
+
+2003-08-28 03:16  voc
+
+	* raki/: threadevent.cpp, workerthreadinterface.cpp: Changed
+	locking mechanism in QEvent handling.
+
+2003-08-28 03:14  voc
+
+	* raki/: rakiworkerthread.cpp, rakiworkerthread.h: Inserted a mutex
+	to avoid a race condition in thread creation.
+
+2003-08-28 03:12  voc
+
+	* raki/welcomedialog.ui: Changed font size to avioud wrong size of
+	the window
+
+2003-08-27 03:49  voc
+
+	* configure.in.bot, configure.in.in, configure.in.mid, subdirs,
+	synce-kde-0.6.1-1.spec, debian/changelog, debian/control,
+	debian/files, debian/rules: Version number update Configuration
+	script now needs the argument --prefix=... The KDEDIR variable is
+	not needed anymore.
+
+2003-08-27 03:48  voc
+
+	* raki/: rakiworkerthread.cpp, rakiworkerthread.h: Bug fix. Wrong
+	mutex handling fixed.
+
+2003-08-27 03:30  voc
+
+	* debian/changelog: This is the correct changelog file
+
+2003-08-26 03:05  voc
+
+	* debian/Makefile.am: [no log message]
+
+2003-08-23 18:29  voc
+
+	* synce-kde-0.6-1.spec, synce-kde.spec: Name convention for *.spec
+	honored
+
+2003-08-23 18:28  voc
+
+	* admin/cvs.sh: revert changes
+
+2003-08-20 14:26  voc
+
+	* debian/: README.Debian, changelog, control, copyright, docs,
+	files, rules, synce-kde-dev.docs, synce-kde.docs,
+	synce-kde.manpages, synce-kde.postinst.debhelper,
+	synce-kde.postrm.debhelper: Updated debian package configuration
+
+2003-08-20 14:24  voc
+
+	* README, TODO: Info-Update
+
+2003-08-20 14:24  voc
+
+	* raki.1, vdccm.1: Man-Pages added
+
+2003-08-18 20:55  voc
+
+	* debian/.cvsignore: Add file
+
+2003-08-18 20:53  voc
+
+	* debian/Makefile.am: Added file
+
+2003-08-18 17:33  voc
+
+	* debian/: changelog, control, files, rules: Update
+
+2003-08-18 13:15  voc
+
+	* ChangeLog: Update of ChangeLog
+
 2003-08-17 21:50  voc
 
 	* subdirs, synce-kde.kdevelop, synce-kde.spec, admin/cvs.sh: Last
