@@ -23,6 +23,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/*
+ * Recommended: to have "Allow subdissector to desegment TCP streams" turned on
+ * in the TCP dissector options.
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -39,6 +44,7 @@
 
 #include <epan/packet.h>
 /* #include "packet-RRAC.h" */
+#include "packet-tcp.h"
 
 #define RRAC_TCP_PORT 5678
 
@@ -51,17 +57,53 @@ static int hf_RRAC_subcommand = -1;
 static int hf_RRAC_object_id = -1;
 static int hf_RRAC_type_id = -1;
 static int hf_RRAC_data_flags = -1;
+static int hf_RRAC_chunk_size = -1;
+static int hf_RRAC_chunk_flags = -1;
 static int hf_RRAC_data = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_RRAC = -1;
 
+static gboolean is_rrac_command_stream(tvbuff_t *tvb, int offset)
+{
+  guint16 maybe_command = tvb_get_letohs(tvb, offset);
+
+  if (maybe_command >= 0x65 && maybe_command <= 0x70)
+    return TRUE;
+  
+#if 0
+  if (tvb_get_letohl(tvb, offset) == 0xffffffff || tvb_length_remaining(tvb, offset) >= 14) {
+    guint32 test_value = tvb_get_letohl(tvb, offset + 4);
+
+    if (test_value >= 10000 && test_value <= 10050) {
+      return TRUE;
+    }
+  }
+#endif
+
+  return FALSE;
+}
+
+static guint
+get_rrac_pdu_len(tvbuff_t *tvb, int offset)
+{
+#if 0
+  fprintf(stderr, "get_rrac_pdu_len: tvb_length_remaining = %04x\n", 
+      tvb_length_remaining(tvb, offset));
+#endif
+
+  if (is_rrac_command_stream(tvb, offset))
+    return 4 + tvb_get_letohs(tvb, offset + 2);
+  else  
+    return 12;
+}
+
 
 /* Code to actually dissect the packets */
 static void
-dissect_RRAC(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
+dissect_RRAC_pdu(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 {
-  int bytes;
+  int available_packet_data = 0;
 
 /* Set up structures needed to add the protocol subtree and manage it */
 	proto_item *ti;
@@ -100,10 +142,10 @@ dissect_RRAC(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
   if (check_col(pinfo->cinfo, COL_INFO))  {
     if (pinfo->srcport == RRAC_TCP_PORT) {
-      col_set_str(pinfo->cinfo, COL_INFO, "(request)");
+      col_set_str(pinfo->cinfo, COL_INFO, "Request");
     }
     else {
-      col_set_str(pinfo->cinfo, COL_INFO, "(reply)");
+      col_set_str(pinfo->cinfo, COL_INFO, "Reply");
     }
   }
 
@@ -113,94 +155,289 @@ dissect_RRAC(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
    "tree" is NULL or not. */
   if (tree) {
     int offset = 0;
-    const guint8 *data;
-    guint16 test_value;
 
-    /* Need at least 4 for size */
-    if (tvb_length_remaining(tvb, offset) < 4) {
-      pinfo->desegment_offset = offset;
-      pinfo->desegment_len = 4;
-      return;
-    }
+    while (tvb_length_remaining(tvb, offset) > 0) {
+      const guint8 *data;
 
-
-    /* NOTE: The offset and length values in the call to
-       "proto_tree_add_item()" define what data bytes to highlight in the hex
-       display window when the line in the protocol tree display
-       corresponding to that item is selected.
-
-       Supplying a length of -1 is the way to highlight all data from the
-       offset to the end of the packet. */
-
-    bytes = tvb_length_remaining(tvb, offset);
-
-    /* create display subtree for the protocol */
-    ti = proto_tree_add_item(tree, proto_RRAC, tvb, offset, bytes, FALSE);
-
-    RRAC_tree = proto_item_add_subtree(ti, ett_RRAC);
-
-    test_value = tvb_get_letohs(tvb, offset + 2);
-
-    if (test_value == 0)
-    {
-      /* Assume data protocol */
-      if (tvb_length_remaining(tvb, offset) < 12) {
+#if 0
+      /* Need at least 4 for size */
+      if (tvb_length_remaining(tvb, offset) < 4) {
         pinfo->desegment_offset = offset;
-        pinfo->desegment_len = 12;
+        pinfo->desegment_len = 4;
         return;
       }
+#endif
 
-      proto_tree_add_item(RRAC_tree, hf_RRAC_object_id, tvb, offset, 4, TRUE);
-      offset += 4;
-      proto_tree_add_item(RRAC_tree, hf_RRAC_type_id, tvb, offset, 4, TRUE);
-      offset += 4;
-      proto_tree_add_item(RRAC_tree, hf_RRAC_data_flags, tvb, offset, 4, TRUE);
-      offset += 4;
-    }
-    else
-    {
-      /* Assume command protocol */
-      guint16 command = tvb_get_letohs(tvb, offset);
-      guint16 packet_size = tvb_get_letohs(tvb, offset + 2);
-      /*proto_item *command_item =*/ proto_tree_add_item(RRAC_tree,
-          hf_RRAC_command, tvb, offset, 2, TRUE);
-      proto_tree_add_item(RRAC_tree, hf_RRAC_size, tvb, offset + 2, 2, TRUE);
+      /* NOTE: The offset and length values in the call to
+         "proto_tree_add_item()" define what data available_packet_data to highlight in the hex
+         display window when the line in the protocol tree display
+         corresponding to that item is selected.
 
-      if (tvb_length_remaining(tvb, offset) < packet_size) {
-        pinfo->desegment_offset = offset;
-        pinfo->desegment_len = 4 + packet_size;
-        return;
-      }
+         Supplying a length of -1 is the way to highlight all data from the
+         offset to the end of the packet. */
 
-      offset += 4;
-
-      switch (command)
+#if 0
+      if (test_value == 0)
       {
-        case 0x6c:
-          proto_tree_add_item(RRAC_tree, hf_RRAC_reply_to, tvb, offset, 4, TRUE);
-          offset += 4;
-          break;
+        int start_offset = offset;
+        guint32 object_id;
 
-        case 0x6f:
-          proto_tree_add_item(RRAC_tree, hf_RRAC_subcommand, tvb, offset, 4, TRUE);
-          offset += 4;
-          break;
+        /* Assume data protocol */
+        if (tvb_length_remaining(tvb, offset) < 12) {
+          pinfo->desegment_offset = offset;
+          pinfo->desegment_len = 12;
+          return;
+        }
+
+        object_id = tvb_get_letohs(tvb, offset);
+
+        proto_tree_add_item(RRAC_tree, hf_RRAC_object_id, tvb, offset, 4, TRUE);
+        offset += 4;
+        proto_tree_add_item(RRAC_tree, hf_RRAC_type_id, tvb, offset, 4, TRUE);
+        offset += 4;
+        proto_tree_add_item(RRAC_tree, hf_RRAC_data_flags, tvb, offset, 4, TRUE);
+        offset += 4;
+
+        if (object_id != 0xffffffff)
+        {
+          proto_tree_add_item(RRAC_tree, hf_RRAC_chunk_size, tvb, offset, 2, TRUE);
+          offset += 2;
+          proto_tree_add_item(RRAC_tree, hf_RRAC_chunk_flags, tvb, offset, 2, TRUE);
+          offset += 2;
+
+          available_packet_data = tvb_length_remaining(tvb, offset);
+          if (available_packet_data > 0)
+          {
+            data = tvb_get_ptr(tvb, offset, available_packet_data);
+            proto_tree_add_available_packet_data_format(RRAC_tree, hf_RRAC_data, tvb,
+                offset,
+                available_packet_data,
+                data,
+                "Data (%i available_packet_data)", available_packet_data);
+            offset += available_packet_data;
+          }
+        }
       }
-    }
+#endif
 
-    bytes = tvb_length_remaining(tvb, offset);
-    if (bytes > 0)
-    {
-      data = tvb_get_ptr(tvb, offset, bytes);
-      proto_tree_add_bytes_format(RRAC_tree, hf_RRAC_data, tvb,
-          offset,
-          bytes,
-          data,
-          "Data (%i bytes)", bytes);
-    }
+      if (is_rrac_command_stream(tvb, offset))
+      {
+        guint16 command = tvb_get_letohs(tvb, offset);
+        guint16 total_packet_data = tvb_get_letohs(tvb, offset + 2);
+
+        available_packet_data = tvb_length_remaining(tvb, offset + 4);
+
+#if 0
+        fprintf(stderr, 
+            "c=%04x t=%04x a=%04x  do=%04x dl=%04x cd=%i\n", 
+            command, total_packet_data, available_packet_data,
+            pinfo->desegment_offset, pinfo->desegment_len, pinfo->can_desegment);
+#endif
+
+        /* create display subtree for the protocol */
+        ti = proto_tree_add_item(tree, proto_RRAC, tvb, offset, total_packet_data + 4, FALSE);
+        RRAC_tree = proto_item_add_subtree(ti, ett_RRAC);
+
+
+#if 0
+        proto_tree_add_text(RRAC_tree, tvb, offset, 0, "(DEBUG) can_desegment: %i", pinfo->can_desegment);
+        proto_tree_add_text(RRAC_tree, tvb, offset, 0, "(DEBUG) desegment_offset: %04x", pinfo->desegment_offset);
+        proto_tree_add_text(RRAC_tree, tvb, offset, 0, "(DEBUG) desegment_len: %04x", pinfo->desegment_len);
+        proto_tree_add_text(RRAC_tree, tvb, offset, 4, "(DEBUG) Offset: %04x", offset);
+        proto_tree_add_text(RRAC_tree, tvb, offset + 4, available_packet_data, "(DEBUG) Bytes: %04x", available_packet_data);
+        /*proto_tree_add_text(RRAC_tree, tvb, offset, 2, "(DEBUG) My command: %04x", command);*/
+        proto_tree_add_text(RRAC_tree, tvb, offset + 2, 2, "(DEBUG) My packet size: %04x", total_packet_data);
+#endif
+
+        proto_tree_add_item(RRAC_tree, hf_RRAC_command, tvb, offset,     2, TRUE);
+        proto_tree_add_item(RRAC_tree, hf_RRAC_size,    tvb, offset + 2, 2, TRUE);
+
+        if (available_packet_data < total_packet_data) {
+          proto_tree_add_text(RRAC_tree, tvb, offset, -1, 
+              "Part of RRAC packet: %i available of %i total", 
+              available_packet_data, 4 + total_packet_data);
+
+#if 0
+          pinfo->desegment_offset = offset;
+          pinfo->desegment_len = 4 + total_packet_data;
+          return;
+#endif
+        }
+
+        offset += 4;
+
+        switch (command)
+        {
+          case 0x65:
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Object type: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Previous identifier: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "New identifier: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Flags: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            total_packet_data -= 4*4;
+            break;
+            
+          case 0x66:
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Unknown: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Object type: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Identifier: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Unknown: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            total_packet_data -= 4*4;
+            break;
+            
+          case 0x69:
+            proto_tree_add_item(RRAC_tree, hf_RRAC_subcommand, tvb, offset, 4, TRUE);
+            offset += 4;
+            total_packet_data -= 4;
+
+            switch (tvb_get_letohl(tvb, offset - 4))
+            {
+              case 0x02000000:
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Unknown: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Unknown: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Maybe size of remaining data: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Current partner index: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Partner 1 identifier: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Partner 2 identifier: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                total_packet_data -= 4*6;
+                break;
+
+              case 0:
+              case 0x04000000:
+              case 0x06000000:
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Object type: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Count: %08x", 
+                    tvb_get_letohl(tvb, offset));
+                offset += 4;
+
+                {
+                  guint size = tvb_get_letohl(tvb, offset);
+
+                  proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Size: %08x", size);
+                  offset += 4;
+                  total_packet_data -= 4*3;
+
+                  while (size >= 4)
+                  {
+                    proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Identifier: %08x", 
+                        tvb_get_letohl(tvb, offset));
+                    offset += 4;
+                    total_packet_data -= 4;
+                    size -= 4;
+                  }
+                }
+                break;
+            }
+            break;
+
+          case 0x6c:
+            proto_tree_add_item(RRAC_tree, hf_RRAC_reply_to, tvb, offset, 4, TRUE);
+            offset += 4;
+            total_packet_data -= 4;
+            break;
+
+          case 0x6f:
+            proto_tree_add_item(RRAC_tree, hf_RRAC_subcommand, tvb, offset, 4, TRUE);
+            offset += 4;
+            total_packet_data -= 4;
+            break;
+
+          case 0x70:
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Size of remaining packet: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Unknown: %08x", 
+                tvb_get_letohl(tvb, offset));
+            offset += 4;
+            
+            {
+              guint subcommand = tvb_get_letohl(tvb, offset);
+              proto_tree_add_item(RRAC_tree, hf_RRAC_subcommand, tvb, offset, 4, TRUE);
+              offset += 4;
+              total_packet_data -= 4*3;
+
+              if (subcommand == 3) {
+                unsigned i;
+                guint count;
+
+                for (i = 0; i < 4; i++) {
+                  proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Unknown: %08x", 
+                      tvb_get_letohl(tvb, offset));
+                  offset += 4;
+                  total_packet_data -= 4;
+                }
+
+                count = tvb_get_letohl(tvb, offset);
+                proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Count: %08x", count);
+                offset += 4;
+                total_packet_data -= 4;
+
+                for (i = 0; i < count; i++) {
+                  proto_tree_add_text(RRAC_tree, tvb, offset, 4, "Identifier: %08x", 
+                      tvb_get_letohl(tvb, offset));
+                  offset += 4;
+                  total_packet_data -= 4;
+                }
+              } /* subcommand == 3 */  
+            }
+            break;
+        }
+
+        if (total_packet_data > 0)
+        {
+          data = tvb_get_ptr(tvb, offset, total_packet_data);
+          proto_tree_add_bytes_format(RRAC_tree, hf_RRAC_data, tvb,
+              offset,
+              total_packet_data,
+              data,
+              "Data (%i bytes)", total_packet_data);
+          offset += total_packet_data;
+        }
+      }
+
+      /* XXX only show the first command */
+      break;
+    } /* while */
   } /* if (tree) */
 
   /* If this protocol has a sub-dissector call it here, see section 1.8 */
+}
+
+/* Code to actually dissect the packets */
+static void
+dissect_RRAC(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
+{
+  	tcp_dissect_pdus(tvb, pinfo, tree, TRUE, 4,
+		    get_rrac_pdu_len, dissect_RRAC_pdu);
 }
 
 
@@ -236,6 +473,12 @@ proto_register_RRAC(void)
     },
     { &hf_RRAC_data_flags,
       { "Data flags", "rrac.data_flags", FT_UINT32, BASE_HEX, NULL, 0, "Data flags", HFILL }
+    },
+    { &hf_RRAC_chunk_size,
+      { "Data chunk size", "rrac.chunk_size", FT_UINT16, BASE_HEX, NULL, 0, "Data chunk size", HFILL }
+    },
+    { &hf_RRAC_chunk_flags,
+      { "Data chunk flags", "rrac.chunk_flags", FT_UINT16, BASE_HEX, NULL, 0, "Data chunk flags", HFILL }
     },
 #if 0
 		{ &hf_RRAC_protocol_error_flag,

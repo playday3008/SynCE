@@ -59,7 +59,7 @@ static const char* const rapi_command_names[] = {
   "CeCreateDatabase",
   "CeOpenDatabase",
   "CeDeleteDatabase",
-  "CeReadRecordProps(Ex)",
+  "CeReadRecordPropsEx",
   "CeWriteRecordProps",
   "CeDeleteRecord",
   "CeSeekDatabase",
@@ -298,7 +298,7 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
          offset to the end of the packet. */
 
       /* create display subtree for the protocol */
-      ti = proto_tree_add_item(tree, proto_RAPI, tvb, offset, packet_size, FALSE);
+      ti = proto_tree_add_item(tree, proto_RAPI, tvb, offset, 4 + packet_size, FALSE);
 
       RAPI_tree = proto_item_add_subtree(ti, ett_RAPI);
       
@@ -456,7 +456,7 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
             }
             break;/*}}}*/
 
-          case 0x26: /* CeRegQueryValueEx */
+          case 0x26: /* CeRegQueryValueEx *//*{{{*/
             {
               int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
               offset += bytes;
@@ -468,9 +468,9 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
               /* TODO: remaining parameters when optional_uint32 is supported */
             }
-            break;
+            break;/*}}}*/
                      
-          case 0x27: /* CeRegSetValueEx */
+          case 0x27: /* CeRegSetValueEx *//*{{{*/
             {
               int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
               offset += bytes;
@@ -486,7 +486,16 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
               /* TODO: remaining parameters */
             }
-            break;
+            break;/*}}}*/
+
+          case 0x1c: /* CeDeleteFile */
+          case 0x2d: /* RegCopyFile *//*{{{*/
+            {
+              int bytes = add_optional_string(RAPI_tree, tvb, offset, "Filename");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
 
            case 0x56: /* CeProcessConfig *//*{{{*/
             {
@@ -517,7 +526,7 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
             offset,
             bytes,
             data,
-            "Data (%i bytes)", packet_size);
+            "Data (%i bytes)", bytes);
 
         offset += bytes;
         packet_size -= bytes;
