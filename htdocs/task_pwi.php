@@ -61,9 +61,9 @@ href="http://xmlsoft.org/">libxml2</a> to comply with the license
 requirement.)</li>
 
 <li class=SPACED>Update the tool and library to be able to extract ink drawings
-from a PWI file and store them as a PNG file. The image should look just like
-the document looks on the PDA. This is not documented and has not been
-implemented in OpenOffice.</li>
+from a PWI file and store them as a PNG (if it's a bitmap) or SVG file (if it's
+a vector image). The image should look just like the document looks on the PDA.
+This is not documented and has not been implemented in OpenOffice.</li>
 
 <li>Update the tool and library to be able to extract sound clips from a PWI
 file and store each sound clip as a separate WAV file. This is not documented
