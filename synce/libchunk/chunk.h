@@ -9,6 +9,7 @@
  ***************************************************************************/
 
 #include "windows.h"
+#include "little_endian.h"
 
 typedef struct {
         unsigned long bufferlen;
@@ -54,32 +55,12 @@ void _DBG_printf( const char * str, ... );
 
 __inline__ void _setbufferlen(rapibuffer *buffer, unsigned long bufferlen)
 {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-
-	buffer->bufferlen = bufferlen;
-
-#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
-
-	buffer->bufferlen = bswap_32(bufferlen);
-
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+	buffer->bufferlen = htole32(bufferlen);
 }
 
 __inline__ unsigned long _getbufferlen(rapibuffer *buffer)
 {
-	unsigned long buflen;
-	
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-
-        buflen = buffer->bufferlen;
-
-#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
-
-        buflen = bswap_32( buffer->bufferlen );
-
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
-	
-	return(buflen);
+	return letoh32(buffer->bufferlen);
 }
 
 /* A safer write(), since sockets might not write all but only some of
