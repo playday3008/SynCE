@@ -59,7 +59,7 @@ static const char* const rapi_command_names[] = {
   "CeCreateDatabase",
   "CeOpenDatabase",
   "CeDeleteDatabase",
-  "CeReadRecordProps/CeReadRecordPropsEx",
+  "CeReadRecordProps(Ex)",
   "CeWriteRecordProps",
   "CeDeleteRecord",
   "CeSeekDatabase",
@@ -143,6 +143,69 @@ static int hf_RAPI_data = -1;
 /* Initialize the subtree pointers */
 static gint ett_RAPI = -1;
 
+/* Return the number of bytes eaten */
+static int
+add_optional_string(proto_tree *tree, tvbuff_t *tvb, gint start_offset, const char *label)
+{
+  gint offset = start_offset;
+  guint32 has_string = tvb_get_letohl(tvb, offset);
+  offset += 4;
+
+  if (has_string)
+  {
+    guint32 size = tvb_get_letohl(tvb, offset);
+    has_string = tvb_get_letohl(tvb, offset + 4);
+
+    offset += 8;
+
+    if (has_string)
+    {
+      char *str = tvb_fake_unicode(tvb, offset, size / 2, TRUE);
+      proto_tree_add_text(tree, tvb, start_offset, size + 12, "%s: \"%s\"", label, str);
+      g_free(str);
+
+      offset += size;
+    }
+    else
+      proto_tree_add_text(tree, tvb, start_offset, 12, "%s: (0x%x bytes return buffer)", label, size);
+  }
+  else
+    proto_tree_add_text(tree, tvb, start_offset, 4, "%s: (NULL)", label);
+
+  return offset - start_offset;
+}
+
+static int
+add_string(proto_tree *tree, tvbuff_t *tvb, gint start_offset, const char *label)
+{
+  gint offset = start_offset;
+  guint32 has_string;
+
+  has_string = tvb_get_letohl(tvb, offset);
+  offset += 4;
+
+  if (has_string)
+  {
+    guint32 length = tvb_get_letohl(tvb, offset);
+    char *str = tvb_fake_unicode(tvb, offset + 4, length, TRUE);
+    proto_tree_add_text(tree, tvb, start_offset, 8 + length * 2, "%s: \"%s\"", label, str);
+    g_free(str);
+
+    offset += 4 + length * 2;
+  }
+
+  return offset - start_offset;
+}
+
+static int
+add_uint32(proto_tree *tree, tvbuff_t *tvb, gint start_offset, const char *label)
+{
+  guint32 value = tvb_get_letohl(tvb, start_offset);
+  proto_tree_add_text(tree, tvb, start_offset, 4, "%s: 0x%08x", label, value);
+  return 4;
+}
+
+
 /* Code to actually dissect the packets */
 static void
 dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
@@ -186,7 +249,7 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
   if (check_col(pinfo->cinfo, COL_INFO))  {
     if (pinfo->srcport == RAPI_TCP_PORT) {
-      col_set_str(pinfo->cinfo, COL_INFO, "Windows CE Remote API reply");
+      col_set_str(pinfo->cinfo, COL_INFO, "(reply)");
     }
     else {
       col_set_str(pinfo->cinfo, COL_INFO, "Windows CE Remote API call");
@@ -197,7 +260,7 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
    protocol tree and adding stuff to it if possible.  Note,
    however, that you must call subdissectors regardless of whether
    "tree" is NULL or not. */
-	if (tree) {
+	/*if (tree)*/ {
     int offset = 0;
 
     while (tvb_length_remaining(tvb, offset) > 0) {
@@ -244,8 +307,8 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
           hf_RAPI_size, tvb, 0, 4, TRUE);
       offset += 4;
 
-      if (packet_size < 8) {
-        proto_item_append_text(size_item, " ERROR: Should be at least 8!");
+      if (packet_size < 4) {
+        proto_item_append_text(size_item, " ERROR: Should be at least 4!");
         return;
       }
 
@@ -271,14 +334,177 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
             hf_RAPI_command, tvb, offset, 4, TRUE);
         
         if (command < array_length(rapi_command_names))
+        {
           proto_item_append_text(command_item, " %s", rapi_command_names[command]);
+          if (check_col(pinfo->cinfo, COL_INFO))  {
+            col_add_str(pinfo->cinfo, COL_INFO, rapi_command_names[command]);
+          }
+        }
         else
           proto_item_append_text(command_item, " (Unknown or invalid command code)");
         
         offset += 4;
         packet_size -= 4;
-      }
-     
+
+        switch (command)
+        {
+          case 0x03: /* CeFileGetAttributes *//*{{{*/
+            {
+              int bytes = add_string(RAPI_tree, tvb, offset, "lpFileName");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+            
+          case 0x05: /* CeCreateFile *//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "dwDesiredAccess");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "dwShareMode");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "dwCreationDisposition");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "dwFlagsAndAttributes");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "hTemplateFile");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_string(RAPI_tree, tvb, offset, "lpFilename");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+            
+          case 0x08: /* CeCloseHandle*//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "hObject");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x09: /* CeFindAllFiles *//*{{{*/
+            {
+              int bytes = add_string(RAPI_tree, tvb, offset, "szPath");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "dwFlags");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x1b: /* CeCopyFile *//*{{{*/
+            {
+              int bytes = add_string(RAPI_tree, tvb, offset, "lpExistingFileName");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_string(RAPI_tree, tvb, offset, "lpNewFileName");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "bFailIfExists");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x1e: /* CeRegOpenKeyEx *//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_string(RAPI_tree, tvb, offset, "lpszSubKey");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x20: /* CeRegCreateKeyEx *//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_string(RAPI_tree, tvb, offset, "lpszSubKey");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_string(RAPI_tree, tvb, offset, "lpszClass");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x21: /* CeRegCloseKey *//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x26: /* CeRegQueryValueEx */
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_optional_string(RAPI_tree, tvb, offset, "lpValueName");
+              offset += bytes;
+              packet_size -= bytes;
+
+              /* TODO: remaining parameters when optional_uint32 is supported */
+            }
+            break;
+                     
+          case 0x27: /* CeRegSetValueEx */
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "hKey");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_optional_string(RAPI_tree, tvb, offset, "lpValueName");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "dwType");
+              offset += bytes;
+              packet_size -= bytes;
+
+              /* TODO: remaining parameters */
+            }
+            break;
+
+           case 0x56: /* CeProcessConfig *//*{{{*/
+            {
+              int bytes = add_optional_string(RAPI_tree, tvb, offset, "Config");
+              offset += bytes;
+              packet_size -= bytes;
+
+              bytes = add_uint32(RAPI_tree, tvb, offset, "Flags");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          default:
+            break;
+        }        
+       }
+    
       if (packet_size > 0) {
         const guint8 *data;
 
