@@ -2,24 +2,38 @@
 #include <ctype.h>
 #include "test.h"
 
-int handle_property(PCEPROPVAL value)
+//  %s/ *\(BLOB.*}\)\(.*\)/\2 \1/
+
+int handle_secret(PCEPROPVAL value)
 {
 	unsigned k;
-	unsigned id = value->propid >> 16;
 	unsigned type = value->propid & 0xffff;
-
-	if (0x0067 != id)
-		return TEST_SUCCEEDED;
 
 	if (CEVT_BLOB != type)
 	{
-		printf("Property not a BLOB!\n");
+		printf("Secret property not a BLOB!\n");
 		return TEST_FAILED;
 	}
 
 	if (52 != value->val.blob.dwCount)
 	{
-		printf("Warning! BLOB size not 52!\n");
+		// Size 56 also found
+		printf(" Warning! BLOB size not 52!");
+	}
+
+	unsigned char always_equal[20] = 
+		{0x04, 0x00, 0x00, 0x00, 
+		 0x82, 0x00, 0xe0, 0x00, 
+		 0x74, 0xc5, 0xb7, 0x10, 
+		 0x1a, 0x82, 0xe0, 0x08, 
+		 0x00, 0x00, 0x00, 0x00};
+
+	if (20 >= value->val.blob.dwCount)
+	{
+		if (0 != memcmp(always_equal, value->val.blob.lpb, 20))
+		{
+			printf(" Warning! First 20 bytes unexpected!");
+		}
 	}
 
 	// the first 36 are always the same, on my system:
@@ -27,7 +41,7 @@ int handle_property(PCEPROPVAL value)
 	// 83 54 2d 00 90 00 75 50 72 27 14 79 56 8b 58 5d
 	// the last 16 varies in a very random way, proably a GUID
 
-	printf("BLOB (size=%lu) \"", value->val.blob.dwCount);
+	printf(" BLOB (size=%lu) \"", value->val.blob.dwCount);
 	for (k = 0; k < value->val.blob.dwCount; k++)
 	{
 		int c = value->val.blob.lpb[k];
@@ -41,6 +55,37 @@ int handle_property(PCEPROPVAL value)
 	printf("}");
 
 	return TEST_SUCCEEDED;
+}
+
+int handle_start(PCEPROPVAL value)
+{
+	unsigned type = value->propid & 0xffff;
+
+	if (CEVT_FILETIME != type)
+	{
+		printf("Start property not FILETIME!\n");
+		return TEST_FAILED;
+	}
+	
+	time_t unixtime = DOSFS_FileTimeToUnixTime(&(value->val.filetime), NULL);
+	struct tm *tm = localtime(&unixtime);
+	char buffer[MAX_PATH];
+	strftime(buffer, MAX_PATH, "%c", tm);
+	printf(" %08x %08x=%s",value->val.filetime.dwHighDateTime,value->val.filetime.dwLowDateTime, buffer);
+
+	return TEST_SUCCEEDED;
+}
+
+int handle_property(PCEPROPVAL value)
+{
+	unsigned id = value->propid >> 16;
+
+	if (0x0067 == id)
+		return handle_secret(value);
+	else if (0x420d == id)
+		return handle_start(value);
+	else
+		return TEST_SUCCEEDED;
 }
 
 int handle_record(PCEPROPVAL values, DWORD property_count)
@@ -67,7 +112,7 @@ int handle_database(HANDLE db, DWORD num_records)
 		CEOID oid;
 		TEST_NOT_FALSE(oid = CeReadRecordProps(db, CEDB_ALLOWREALLOC, &property_count, NULL, (BYTE**)&values, &buffer_size));
 	
-		printf("Row %u (oid=0x%lx): ", i, oid);
+		printf("Row %3u (oid=0x%08x):", i, oid);
 	
 		if (TEST_SUCCEEDED != handle_record(values, property_count))
 			return TEST_FAILED;
@@ -75,6 +120,7 @@ int handle_database(HANDLE db, DWORD num_records)
 		printf("\n");
 		
 	} // for every row
+
 
 	return TEST_SUCCEEDED;
 }
