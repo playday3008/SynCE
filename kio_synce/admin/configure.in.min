@@ -60,11 +60,10 @@ AC_LANG_C
 LD_FLAGS="-L/usr/local/lib $LD_FLAGS"
 
 dnl $(LIB_KIO) -L/usr/local/synce/synce/libwine/ -L/usr/local/synce/synce/libchunk/ -L/usr/local/synce/synce/client/librapi/ -lwine -lchunk -lrapi
-AC_CHECK_LIB(wine,main,,[AC_MSG_ERROR([libwine not found])])
-AC_CHECK_LIB(chunk,main,,[AC_MSG_ERROR([libchunk not found])])
 AC_CHECK_LIB(rapi,CeRapiInit,,[AC_MSG_ERROR([librapi not found])])
 
 dnl -I/usr/local/synce/synce/ -I/usr/local/synce/synce/libwine/ -I/usr/local/synce/synce/libchunk/ -I/usr/local/synce/synce/client/librapi/
 AC_CHECK_HEADER(rapi.h)
+AC_CHECK_HEADER(rapi_types.h)
 
 AC_LANG_RESTORE

@@ -271,7 +271,7 @@ void kio_synceProtocol::get(const KURL& url )
       NULL, 
       OPEN_EXISTING, 
       FILE_ATTRIBUTE_NORMAL, 
-      NULL);
+      0);
 
   if ((RAPI::HANDLE)-1 == handle)
   {
@@ -504,7 +504,7 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
       NULL,
       overwrite ? CREATE_ALWAYS : CREATE_NEW,
       FILE_ATTRIBUTE_NORMAL,
-      NULL);
+      0);
 
   if ((RAPI::HANDLE)-1 == handle)
   {

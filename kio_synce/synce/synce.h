@@ -33,10 +33,11 @@
 //
 namespace RAPI
 {
-	extern "C"
-	{
 #include "rapi.h"
-	};
+#include "rapi_wstr.h"
+#include "rapi_filetime.h"
+
+#define DOSFS_FileTimeToUnixTime(a,b) rapi_filetime_to_unix_time(a)
 };
 
 class QCString;
