@@ -61,14 +61,14 @@ class CeRecord(object):
         record - the return from the CeReadRecordProps call.
         """
 
-        print "Record -> ", repr(record)
+        #print "Record -> ", repr(record)
         self._dbh  = dbh
         self._oid    = record[0]
         self._record = record[1]
         self._field_mapping = field_mapping
 
         self._field_ids = [field.propid for field in self._record]
-        print "field ids: ", self._field_ids
+        #print "field ids: ", self._field_ids
         
         self._reverse_mapping = {}
         for mapping in self._field_mapping:
@@ -123,7 +123,7 @@ class CeRecord(object):
         """
         Write any changes back to the database.
         """
-        print self._dbh,self._oid,self._record
+        #print self._dbh,self._oid,self._record
         return pyrapi.CeWriteRecordProps(self._dbh,self._oid,self._record)
 
     def next(self):

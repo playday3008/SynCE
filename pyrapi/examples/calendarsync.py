@@ -9,11 +9,11 @@ def buildSimple(value):
     return value
 
 def buildDateTime(value):
-    return time.strftime(time_format,time.gmtime(value))
+    return time.strftime(time_format,time.localtime(value))
 
 def buildDuration(value):
-    return "-P%dDT%s" % ( value/(60*60*24),
-                         time.strftime("%HH%MM%SS", time.gmtime(value)))
+    return "P%dDT%s" % ( value/(60*60*24),
+            	         time.strftime("%HH%MM%SS", time.gmtime(value*60)))
 
 task_db_mapping = {"Subject":   ('SUMMARY',buildSimple),
                    "DueDate":   ('DUE',    buildDateTime),
@@ -61,8 +61,8 @@ def writeICALRecord(record):
     file.write(foldLine("UID","rapi_sync-%i" % (record.getoid(),)))
 
     for field_oid in record.keys():
-        print "Field_oid ->", repr(field_oid)
-        print "task_db_mapping ->", task_db_mapping
+        #print "Field_oid ->", repr(field_oid)
+        #print "task_db_mapping ->", task_db_mapping
         if task_db_mapping.has_key(field_oid):
             file.write(foldLine(task_db_mapping[field_oid][0],
                                 task_db_mapping[field_oid][1](record[field_oid])))
