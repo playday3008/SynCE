@@ -58,7 +58,7 @@ AC_SUBST(LDFLAGS)
 
 
 dnl i18n stuff
-ALL_LINGUAS="sv"
+ALL_LINGUAS="sv ru"
                                                                                 
 GETTEXT_PACKAGE=AC_PACKAGE_NAME
 AC_SUBST(GETTEXT_PACKAGE)
