@@ -1,6 +1,8 @@
 2003-03-05 Andreas Pohl <osar@users.sourceforge.net>
 	* Sample/ls.pl:
 	  - The pls implementation in Perl.
+	* Rapi2::Simple 0.02.1:
+	  - FLAGS argument for FileList(), to overwrite the default combination
 
 2003-03-04 Andreas Pohl <osar@users.sourceforge.net>
 	* Rapi2 0.01.1:
