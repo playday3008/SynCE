@@ -162,16 +162,14 @@ your computer:</p>
 <blockquote><pre>rmmod ipaq
 modprobe ipaq</pre></blockquote>
 
-<p>If you get the error message <i>rmmod: module ipaq is not loaded</i> or
-<i>ERROR: Module ipaq does not exist in /proc/modules</i> when running the
-<tt>rmmod</tt> command, just ignore it.</p>
+<p>If you get the message <i>ERROR: Module ipaq does not exist in
+/proc/modules</i> when running the <tt>rmmod</tt> command, just ignore it.</p>
 
 <p>If you got no output from the <tt>modprobe</tt> command (meaning it
 succeeded), restart this HOWTO from the <a href="#usbinfo">Find out USB
 information about your device</a> section.</p>
 
-<p>If you get the error message <i>modprobe: Can't locate module ipaq</i> or
-<i>FATAL: Module ipaq not found</i>, download <a
+<p>If you get the message <i>FATAL: Module ipaq not found</i>, download <a
 href="http://synce.sourceforge.net/tmp/kernel-2.6-driver.tar.gz">kernel-2.6-driver.tar.gz</a>,
 extract and follow the instructions in the README file.</p>
 
@@ -189,7 +187,7 @@ error message, ask for <a href="help.php">help</a>!</p>
 number of USB endpoints:</p>
 
 <blockquote>
-<p><b>Two USB endpoints</b> Nothing to do here, good!</p>
+<p><b>Two or three USB endpoints</b> Nothing to do here, good!</p>
 
 <p><b>Four USB endpoints</b> You need some special action here:</p>
 
@@ -279,7 +277,20 @@ the usual two.</p>
 
 </ol>
 
-<h2>5. Installing and using a hotplug script</h2>
+<h2>5. Testing the connection</h2>
+
+<p>As your own user (not root), try this command:</p>
+
+<blockquote><tt>pstatus</tt></blockquote>
+
+<p>If you get the message below, the connection <b>failed</b>, and you should
+make sure that you followed all the steps in this HOWTO properly.</p>
+
+<blockquote><tt>pstatus: Unable to initialize RAPI: An unspecified failure has
+occurred</tt></blockquote>
+
+
+<h2>6. Installing and using a hotplug script</h2>
 
 <p>TODO</p>
 
