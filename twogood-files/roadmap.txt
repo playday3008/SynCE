@@ -23,6 +23,7 @@ Contents
 4.      Synchronization applications
 5.      Language support
 A.      Packaging
+B.      Documentation
 
 
 1.      Foundation
@@ -169,7 +170,7 @@ noted otherwise. All libraries should be written i ANSI C.
 5.5     File system driver                                         [?????]
 
         See http://lufs.sourceforge.net/ - there is an old SynCE file system
-        that needs to be updated:
+        driver that needs to be updated:
         
         http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/lufs/lufs/lufsd/cefs/
 
@@ -188,4 +189,14 @@ A.2     Debian                                                     [?????]
 A.3     Gentoo                                                [Zach Welch]
 
         http://bugs.gentoo.org/show_bug.cgi?id=11184
+
+        
+B.      Documentation
+=====================
+
+1.      User documentation                           [hippy,twogood,?????]
+
+        More documentation is probably needed.
+
+2.      Developer documentation                                     [????]
 
