@@ -24,6 +24,12 @@ It currently supports the following kinds of installers:</p>
 
 <ul>
 
+<li>Support for some installers created by <a href="http://innosetup.com">Inno
+Setup</a>. (Orange 0.2 or later)</li>
+
+<li>Early support for the installer used by <a
+href="http://www.tomtom.com">TomTom</a> products. (Orange 0.2 or later)</li>
+
 <li><a href="http://installshield.com">InstallShield</a> versions 5 and 6,
 using <a href="unshield.php">Unshield</a> for extracting InstallShield Cabinet
 files.</li>
