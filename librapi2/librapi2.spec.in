@@ -52,6 +52,7 @@ make
 %{prefix}/bin/pstatus
 %{prefix}/bin/synce-install-cab
 %{prefix}/bin/synce-list-programs
+%{prefix}/bin/synce-registry
 %{prefix}/bin/synce-remove-program
 %{prefix}/include/rapi.h
 %{prefix}/lib/librapi.*
