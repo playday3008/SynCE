@@ -57,7 +57,7 @@ extern "C"
 namespace KSync
 {
     PocketPCKonnector::PocketPCKonnector( const KConfig* p_config )
-            : KSync::Konnector( p_config )
+            : KSync::Konnector( p_config ), firstSync(false)
     {
         if ( p_config ) {
             m_pdaName = p_config->readEntry( "PDAName" );
@@ -65,6 +65,16 @@ namespace KSync
             m_rra->setLogLevel( 0 );
             mBaseDir = storagePath();
 
+            QDir dir;
+            QString dirName = mBaseDir + m_pdaName; // check that dir does not exist!!!!!!!
+            if ( !dir.exists( dirName ) ) {
+                kdDebug(2120) << "Its the first sync ..." << endl;
+                // do something about firstSync!
+                firstSync = true;
+                dir.mkdir ( dirName );
+            } else {
+                firstSync = false;
+            }
             mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
 
             mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
@@ -139,17 +149,7 @@ namespace KSync
             return false;
         }
 
-        bool firstSync = false;
-
         clearDataStructures();
-
-        QDir dir;
-        QString dirName = mBaseDir + m_pdaName; // check that dir does not exist!!!!!!!
-        if ( !dir.exists( dirName ) ) {
-            // do something about firstSync!
-            firstSync = true;
-            dir.mkdir ( dirName );
-        }
 
         if (mAddrHandler) {
             if ( !mAddrHandler->connectDevice() ) {

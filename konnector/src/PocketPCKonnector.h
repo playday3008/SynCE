@@ -128,6 +128,8 @@ private:
 
     QString    mBaseDir;
 
+    bool firstSync;
+
     /** Just clear the internal data structures like m_addressBook.
      */
     void clearDataStructures ();
