@@ -203,7 +203,7 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
 	lng = getLong( sock, &index );
 	DBG_printf( "long 3 : %ld (0x%08lx)\n", lng, lng );
-	return TRUE;
+	return ERROR_SUCCESS;
 }
 
 STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime )
