@@ -25,8 +25,29 @@
 #define AGSYNCCONFIGIMPL_H
 
 #include "agsyncconfig.h"
+#include "serverconfigimpl.h"
 
 #include <kconfig.h>
+#include <klistview.h>
+#include <AGServerConfig.h>
+#include <AGUserConfig.h>
+
+class ServerCheckListItem : public QObject, public QCheckListItem
+{
+Q_OBJECT
+public:
+    ServerCheckListItem(QListView *parent, const QString & text) :
+        QCheckListItem(parent, text, QCheckListItem::CheckBox) {}
+    AGServerConfig *serverConfig;
+    
+protected:
+    virtual void stateChange(bool state) {
+        serverConfig->disabled = !QCheckListItem::isOn();
+        emit stateChanged(state);
+    };
+signals:
+    void stateChanged(bool state);
+};
 
 class AGSyncConfigImpl : public AGSyncConfig
 {
@@ -46,14 +67,29 @@ public:
     bool getHttpProxy();
     bool getSocksProxy();
     bool getUseAuthentication();
+    AGUserConfig *getUserConfig();
+    AGUserConfig *getAgreedConfig();
+    void setUserConfig(AGUserConfig *userConfig);
 
 private:
     KConfig *ksConfig;
+    ServerConfigImpl *serverConfigDialog;
+    ServerCheckListItem *currentItem;
     void readConfig();
+    void writeServerList();
+    void deleteServer(ServerCheckListItem *cli);
+    void readServerList();
+    void updateServerList();
+    AGUserConfig *userConfig;
+    AGUserConfig *agreedConfig;
 
 public slots:
     /*$PUBLIC_SLOTS$*/
     virtual void contentChanged();
+    virtual void newServer(QString hostName, int port, QString userName, QString passWord);
+    virtual void modifiedServer(QString hostName, int port, QString userName, QString passWord);
+    virtual void serverDialogCancel();
+    
 
 protected:
     /*$PROTECTED_FUNCTIONS$*/
@@ -62,6 +98,9 @@ protected slots:
     /*$PROTECTED_SLOTS$*/
     virtual void reject();
     virtual void accept();
+    virtual void addServerButton_clicked();
+    virtual void modifyServerButton_clicked();
+    virtual void deleteServerButton_clicked();
 };
 
 #endif

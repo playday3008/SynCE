@@ -45,11 +45,8 @@
 
 #include "rapiwrapper.h"
 #include "agsyncconfigimpl.h"
-
 #include "syncstream.h"
-
 #include <qcstring.h>
-
 
 static RakiSyncPlugin *plugin;
 
@@ -236,7 +233,6 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
     cmdProc->commands.performTaskFunc= taskPrinter;
     cmdProc->commands.performItemFunc= itemPrinter;
 
-
     /* Start server block */
     if(0 != asStartServer(r, w, s->uid)) {
         kdDebug(2120) << "AvantGo error on asStartServer: " << asErrno << "!" << endl;
@@ -257,8 +253,7 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
 
         if(NULL == asGetDeviceInfo(r, w, devInfo)) {
             kdDebug(2120) << "Failed to retrieve device information!" << endl;
-//            goto devEnd;
-            break;
+            goto devEnd;
         }
 
         AGCommandProcessorStart(cmdProc); /* Error code unused */
@@ -267,6 +262,7 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
            TRUE is for buffering of cmds. */
         clientProc= AGClientProcessorNew(s, devInfo, locConfig, &pCalls,
                                          TRUE, ctx);
+                                         
         /* Apparently we dont?? */
         AGClientProcessorSetBufferServerCommands(clientProc, FALSE);
 
@@ -282,7 +278,7 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
 
         AGClientProcessorFree(clientProc);
 
-//    devEnd:
+    devEnd:
         AGDeviceInfoFree(devInfo);
 
     } while(AGCommandProcessorShouldSyncAgain(cmdProc) && !stopRequested());
@@ -298,40 +294,43 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
 
 void AGSync::doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx)
 {
-    AGUserConfig *userConfig;
+    AGUserConfig *deviceConfig = NULL;
+    AGUserConfig *desktopConfig = NULL;
+    AGUserConfig *resultConfig = NULL;
+    AGUserConfig *agreedConfig = NULL;
+   
     int cnt, i;
 
-    /* Read configuration */
-    userConfig= AGUserConfigNew();
-
-    /* TODO: Most sync. apps will read a configuration from disk here,
-             determine an "agreed" configuration, and push that back
-      to the device. We should do this eventually.
-    */
-    if(NULL == asGetUserConfig(r, w, userConfig)) {
+    deviceConfig = AGUserConfigNew();    
+    if(NULL == asGetUserConfig(r, w, deviceConfig)) {
         kdDebug(2120) << "Failed to receive user configuration from device." << endl;
         goto confEnd;
     }
-
-
+    desktopConfig = configDialog->getUserConfig();
+    agreedConfig = configDialog->getAgreedConfig();
+    
+    resultConfig = AGUserConfigSynchronize(agreedConfig, deviceConfig, desktopConfig, false);
+    
+    asPutUserConfig(r, w, resultConfig);
+    
     /* Loop through servers and sync. */
-    cnt= AGUserConfigCount(userConfig);  /* Implied (Server)Count */
+    cnt = AGUserConfigCount(resultConfig);  /* Implied (Server)Count */
 
     kdDebug(2120) << "Processing " << cnt << " servers." << endl;
 
     for(i= 0; (i < cnt) && !stopRequested(); i++) {
-        doServerSync(r, w, AGUserConfigGetServerByIndex(userConfig, i), ctx);
+        doServerSync(r, w, AGUserConfigGetServerByIndex(resultConfig, i), ctx);
     }
 
     /* TODO: Write updated config */
-    if (!stopRequested()) {
-        if(0 != asPutUserConfig(r, w, userConfig)) {
-            kdDebug(2120) << "Failed to store user configuration to device." << endl;
-        }
+    if(0 != asPutUserConfig(r, w, resultConfig)) {
+        kdDebug(2120) << "Failed to store user configuration to device." << endl;
     }
+    configDialog->setUserConfig(resultConfig);
 
 confEnd:
-    AGUserConfigFree(userConfig);
+    AGUserConfigFree(deviceConfig);
+    AGUserConfigFree(resultConfig);
 }
 
 

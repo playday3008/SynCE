@@ -5,7 +5,7 @@ lib_LTLIBRARIES = librakiagsync.la
 endif
 
 librakiagsync_la_LDFLAGS = -module $(all_libraries) --whole_archive
-librakiagsync_la_SOURCES = agsync.cpp agsyncfactory.cpp syncstream.cpp agsyncconfig.ui agsyncconfigimpl.cpp
+librakiagsync_la_SOURCES = agsync.cpp agsyncfactory.cpp syncstream.cpp agsyncconfig.ui agsyncconfigimpl.cpp serverconfig.ui serverconfigimpl.cpp
 
 # the libraries to link against.
 librakiagsync_la_LIBADD = $(AGSYNC_lib)
@@ -16,4 +16,4 @@ METASOURCES = AUTO
 if AGSYNC
 kde_services_DATA =  rakiagsync.desktop
 endif
-noinst_HEADERS = agsyncconfigimpl.h agsync.h agsyncfactory.h syncstream.h
+noinst_HEADERS = agsyncconfigimpl.h agsync.h agsyncfactory.h syncstream.h serverconfigimpl.h

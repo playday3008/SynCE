@@ -8,49 +8,19 @@
 *****************************************************************************/
 
 
-void AGSyncConfig::noProxy_stateChanged( int )
+void serverSetting::cancelButton_clicked()
 {
 
 }
 
 
-void AGSyncConfig::httpProxy_stateChanged( int )
+void serverSetting::okButton_clicked()
 {
 
 }
 
 
-void AGSyncConfig::socksProxy_stateChanged( int )
-{
-
-}
-
-
-void AGSyncConfig::contentChanged()
-{
-
-}
-
-
-void AGSyncConfig::pushButton4_clicked()
-{
-
-}
-
-
-void AGSyncConfig::addServerButton_clicked()
-{
-
-}
-
-
-void AGSyncConfig::modifyServerButton_clicked()
-{
-
-}
-
-
-void AGSyncConfig::deleteServerButton_clicked()
+void serverSetting::widgetChanged()
 {
 
 }
