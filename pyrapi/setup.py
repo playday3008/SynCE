@@ -3,7 +3,7 @@
 from distutils.core import setup, Extension
 
 setup(name="pyrapi",
-      version="0_3",
+      version="0_4",
       description="syce wrapper",
       author="Richard Taylor",
       author_email="r.taylor@bcs.org.uk",

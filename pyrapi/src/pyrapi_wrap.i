@@ -287,16 +287,22 @@ BOOL CeReadFile(
 		LPDWORD lpNumberOfBytesRead, 
 		LPOVERLAPPED lpOverlapped = NULL);
 
-%typemap(python,in) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten) (DWORD tmp){
+
+%typemap(python,in) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten) (DWORD tmp, PyObject *buf){
   $3 = &tmp;
-  if (PyString_Check($input)) {
-    $1 = PyString_AsString($input);
-    $2 = strlen($1);
+  $2 = PySequence_Size($input);
+  buf = PyBuffer_FromObject($input,0,Py_END_OF_BUFFER); // convert to buffer
+
+  if (PyBuffer_Check(buf)) { // probably not needed.
+    if (PyObject_AsReadBuffer(buf,&$1,&$2) == -1){
+      // Failed read buffer creation.
+      PyErr_SetString(PyExc_TypeError, "unable to convert buffer.");
+      return NULL;
+    }
   } else {
-    PyErr_SetString(PyExc_TypeError, "expected a string.");
     return NULL;
   }
-  //printf("CeWriteFile writing string (length %d): %s\n", $2, $1);
+  //printf("CeWriteFile writing buffer (length %d): %s\n", $2, $1);
 }
 
 %typemap(python,argout) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten){
@@ -869,4 +875,19 @@ CEOID CeWriteRecordProps(
 		CEOID oidRecord, 
 		WORD cPropID, 
 		CEPROPVAL *rgPropVal );
+
+
+/*
+ * functions to control logging.
+ */
+
+#define SYNCE_LOG_LEVEL_LOWEST    0
+
+#define SYNCE_LOG_LEVEL_ERROR     1
+#define SYNCE_LOG_LEVEL_WARNING   2
+#define SYNCE_LOG_LEVEL_TRACE     3
+
+#define SYNCE_LOG_LEVEL_HIGHEST   4
+
+void synce_log_set_level(int level);
 

@@ -63,6 +63,19 @@ put.py  test.txt "\\my documents\\test.txt"  - will put it back again
 calendar_sync.py -a -t test.ical             - will fetch both the appointment and task db and write them to
                                                an ical file. (fingers crossed :-))
 
+Extras
+======
+
+Take a look at the addons in the contrib directory for scripts written using pyrapi.
+
+At present there is:
+
+	qt -      A collection of programs for using synce with qt but not requiring KDE. Including
+	          a file browser GUI and a server that allows you to have remote machines using 
+	          the pyrapi connection to your PDA. (Thanks to Markus Biermaier for providing this.)
+	qt_fake - The client end of the server code in 'qt', this can be run on machines that 
+	          can not run synce. It will send the commands to the PDA via a server machine
+		  that can run synce. (Thanks to Markus Biermaier for providing this.)
 
 Ones to watch
 =============
@@ -82,6 +95,8 @@ Contacts
 ========
 
 This python wrapper: Richard Taylor (r.taylor@bcs.org.uk) jabber: RichardTaylor@jabber.org
+
 librapi: check out the README in librapi2!
 
+pt/pt_fake scripts: Markus Biermaier <mbier@office-m.at>
 
