@@ -20,13 +20,9 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
+
 #include "cescreen.h"
-/*
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdlib.h>
-*/
+
 extern "C"
 {
 #include "huffman.h"
@@ -45,116 +41,14 @@ extern "C"
 #include <kiconloader.h>
 #include <kstatusbar.h>
 #include <khelpmenu.h>
+
 #include "rapiwrapper.h"
+#include "rledecoder.h"
+#include "huffmandecoder.h"
 
-
-struct CeScreen::_keymap CeScreen::keymap[] =
-    {
-        { 0x08, Qt::Key_Backspace, "BACK" },
-        { 0x09, Qt::Key_Tab, "Tab" },
-        { VK_CLEAR, Qt::Key_Clear, "Clear" },
-        { 0x0d, Qt::Key_Return, "Return" },
-        { 0x10, Qt::Key_Shift, "Shift" },
-        { 0x11, Qt::Key_Control, "Control" },
-        { VK_MENU, Qt::Key_Alt, "Alt" },
-        { VK_PAUSE, Qt::Key_Pause, "Pause" },
-        { 0x14, Qt::Key_CapsLock, "Capslock" },
-        { VK_ESCAPE, Qt::Key_Escape, "Escape" },
-        { 0x20, Qt::Key_Space, "Space" },
-        { VK_PRIOR, Qt::Key_Prior, "Prior" },
-        { VK_NEXT, Qt::Key_Next, "Next" },
-        { VK_END, Qt::Key_End, "End" },
-        { VK_HOME, Qt::Key_Home, "Home" },
-        { 0x25, Qt::Key_Left, "Left" },
-        { 0x26, Qt::Key_Up, "Up" },
-        { 0x27, Qt::Key_Right, "Right" },
-        { 0x28, Qt::Key_Down, "Down" },
-        { VK_SELECT, UNDEF, "Select" },
-        { VK_PRINT, UNDEF, "Print" },
-        { VK_EXECUTE, UNDEF, "Execute" },
-        { VK_SNAPSHOT, Qt::Key_Print, "Snapshot" },
-        { VK_INSERT, Qt::Key_Insert, "Insert" },
-        { 0x2e, Qt::Key_Delete, "Delete" },
-        { VK_HELP, Qt::Key_Help, "Help" },
-        { 0x31, 33, "!" },
-        { 0x32, 34, "\"" },
-        { 0x33, 0, "§" },
-        { 0x34, 36, "$" },
-        { 0x35, 37, "%" },
-        { 0x36, 38, "&" },
-        { 0x37, 47, "/" },
-        { 0x38, 40, "(" },
-        { 0x39, 41, ")" },
-        { 0x30, 61, "=" },
-        { 0xdb, 63, "?" },
-        { 0xdd, 96, "`" },
-        { 0x2e, 4103, "ENTF" },
-        { 0xbb, 42, "*" },
-        { 0xbc, 59, ";" },
-        { 0xbe, 58, ":" },
-        { 0xbd, 95, "_" },
-        { 0xbf, 39, "'" },
-        { 0xdc, 176, "°" },
-        { 0xbc, 44, "," },
-        { 0xbe, 46, "." },
-        { 0xbd, 45, "-" },
-        { 0xbf, 35, "#" },
-        { 0xdc, 94, "^" },
-        { 0x51, 64, "@" },
-        { 0xbb, 126, "~" },
-        { 0xb2, 178, "²" },
-        { 0xb3, 179, "³" },
-        { 0x37, 123, "{" },
-        { 0x38, 91, "[" },
-        { 0x39, 39, "]" },
-        { 0x30, 125, "}" },
-        { 0xe2, 60, "<" },
-        { 0xe2, 124, "|" },
-        { 0xe2, 62, ">" },
-        { 0xdb, 92, "\\" },
-        { 0xde, 228, "ä" },
-        { 0xc0, 246, "ö" },
-        { 0xba, 252, "ü" },
-        { VK_NUMLOCK, Qt::Key_NumLock, "Numlock" },
-        { VK_SCROLL, Qt::Key_ScrollLock, "ScrollLock" },
-        { '0', Qt::Key_0, "0" },
-        { '1', Qt::Key_1, "1" },
-        { '2', Qt::Key_2, "2" },
-        { '3', Qt::Key_3, "3" },
-        { '4', Qt::Key_4, "4" },
-        { '5', Qt::Key_5, "5" },
-        { '6', Qt::Key_6, "6" },
-        { '7', Qt::Key_7, "7" },
-        { '8', Qt::Key_8, "8" },
-        { '9', Qt::Key_9, "9" },
-        { 'A', Qt::Key_A, "A" },
-        { 'B', Qt::Key_B, "B" },
-        { 'C', Qt::Key_C, "C" },
-        { 'D', Qt::Key_D, "D" },
-        { 'E', Qt::Key_E, "E" },
-        { 'F', Qt::Key_F, "F" },
-        { 'G', Qt::Key_G, "G" },
-        { 'H', Qt::Key_H, "H" },
-        { 'I', Qt::Key_I, "I" },
-        { 'J', Qt::Key_J, "J" },
-        { 'K', Qt::Key_K, "K" },
-        { 'L', Qt::Key_L, "L" },
-        { 'M', Qt::Key_M, "M" },
-        { 'N', Qt::Key_N, "N" },
-        { 'O', Qt::Key_O, "O" },
-        { 'P', Qt::Key_P, "P" },
-        { 'Q', Qt::Key_Q, "Q" },
-        { 'R', Qt::Key_R, "R" },
-        { 'S', Qt::Key_S, "S" },
-        { 'T', Qt::Key_T, "T" },
-        { 'U', Qt::Key_U, "U" },
-        { 'V', Qt::Key_V, "V" },
-        { 'W', Qt::Key_W, "W" },
-        { 'X', Qt::Key_X, "X" },
-        { 'Y', Qt::Key_Y, "Y" },
-        { 'Z', Qt::Key_Z, "Z" },
-        { -1, 0, "" }
-    };
+#define XK_MISCELLANY
+#define XK_LATIN1
+#include <X11/keysymdef.h>
 
 
 CeScreen::CeScreen(KAboutApplication *aboutApplication)
@@ -170,15 +64,15 @@ CeScreen::CeScreen(KAboutApplication *aboutApplication)
 
     filemenu = new KPopupMenu();
     filemenu->insertItem(SmallIcon("ksnapshot"), i18n("&Screenshot..."),
-            this, SLOT(fileSave()), 0, 1, 1);
+                         this, SLOT(fileSave()), 0, 1, 1);
     filemenu->insertItem(SmallIcon("fileprint"), i18n("&Print..."),
-            this, SLOT(filePrint()), 0, 2, 2);
+                         this, SLOT(filePrint()), 0, 2, 2);
     filemenu->insertSeparator(3);
     pauseItem = filemenu->insertItem(SmallIcon("stop"), i18n("&Pause"),
-            this, SLOT(updatePause()), 0, 3, 4);
+                                     this, SLOT(updatePause()), 0, 3, 4);
     filemenu->insertSeparator(5);
     filemenu->insertItem(SmallIcon("exit"), i18n("&Quit"),
-            kapp, SLOT(quit()), 0, 4, 6);
+                         kapp, SLOT(quit()), 0, 4, 6);
     menuBar()->insertItem(i18n("&File"), filemenu);
 
     KPopupMenu *helpmenu = customHelpMenu("PDAMirror");
@@ -194,6 +88,11 @@ CeScreen::CeScreen(KAboutApplication *aboutApplication)
     connect(tb, SIGNAL(modechange()), this, SLOT(resizeWindow()));
 
     statusBar()->insertItem(i18n("Connecting..."), 1);
+
+    this->decoderChain = NULL;
+    this->decoderChain = new HuffmanDecoder();
+    decoderChain = new RleDecoder(this->decoderChain);
+    oldData = NULL;
 }
 
 
@@ -202,6 +101,8 @@ CeScreen::~CeScreen()
     if (pdaSocket != NULL) {
         delete pdaSocket;
     }
+
+    delete decoderChain;
 }
 
 
@@ -227,14 +128,14 @@ void CeScreen::updatePause()
         tb->insertButton("redo", 4, SIGNAL(clicked()), this, SLOT(updatePause()), true, "Restart");
         filemenu->removeItem(pauseItem);
         pauseItem = filemenu->insertItem(SmallIcon("redo"), i18n("&Restart"),
-                this, SLOT(updatePause()), 0, 3, 3);
+                                         this, SLOT(updatePause()), 0, 3, 3);
     } else {
         statusBar()->removeItem(3);
         tb->removeItem(4);
         tb->insertButton("stop", 4, SIGNAL(clicked()), this, SLOT(updatePause()), true, "Pause");
         filemenu->removeItem(pauseItem);
         pauseItem = filemenu->insertItem(SmallIcon("stop"), i18n("&Pause"),
-                this, SLOT(updatePause()), 0, 3, 3);
+                                         this, SLOT(updatePause()), 0, 3, 3);
         imageViewer->drawImage();
     }
 }
@@ -277,9 +178,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
         }
 
         synce::SYSTEM_INFO system;
-
         Ce::getSystemInfo(&system);
-
         QString arch;
 
         switch(system.wProcessorArchitecture) {
@@ -304,7 +203,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
                                    "rapip://" + pdaName + "/Windows/screensnap.exe");
         }
         if (!Ce::createProcess(QString("\\Windows\\screensnap.exe").ucs2(), NULL,
-                NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
+                               NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
             return false;
         }
         Ce::rapiUninit();
@@ -431,6 +330,81 @@ size_t CeScreen::rle_decode(unsigned char *target, unsigned char *source, size_t
 }
 
 
+bool CeScreen::readAndDecode(KSocket *socket)
+{
+    uint32_t headerSizeN;
+    uint32_t headerSize;
+    uint32_t bmpSizeN;
+    uint32_t bmpSize;
+    int m;
+    int n;
+
+    n = read(socket->socket(), &bmpSizeN, sizeof(long));
+
+    if (n > 0) {
+        bmpSize = ntohl(bmpSizeN);
+    } else {
+        kdDebug(2120) << "Error readeing bmpSize" << endl;
+        return false;
+    }
+
+    m = read (socket->socket(), &headerSizeN, sizeof(long));
+
+    if (m > 0) {
+        headerSize = ntohl(headerSizeN);
+        uint32_t readSize = 0;
+        unsigned char *bmpData = new unsigned char[bmpSize];
+
+        do {
+            int n = read(socket->socket(), bmpData + readSize, headerSize - readSize);
+            readSize += n;
+            if (n < 0) {
+                kdDebug(2120) << "Error reading bitmap header" << endl;
+                delete socket;
+                return false;
+            }
+
+            if (n == 0) {
+                kdDebug(2120) << "End of connection" << endl;
+                delete socket;
+                return false;
+            }
+        } while (readSize < headerSize);
+
+        uint32_t rawSize = decoderChain->chainRead(socket->socket());
+        if (rawSize > 0) {
+            decoderChain->chainDecode(bmpData + headerSize, rawSize);
+        } else {
+            kdDebug(2120) << "Error reading" << endl;
+        }
+
+        if (oldData != NULL) {
+            for (uint32_t i = headerSize; i < bmpSize; i++) {
+                bmpData[i] ^= oldData[i];
+            }
+        }
+
+        if (oldData != NULL) {
+            delete[] oldData;
+        }
+
+        oldData = bmpData;
+
+        imageViewer->loadImage(oldData, bmpSize);
+
+        if (!pause) {
+            imageViewer->drawImage();
+        }
+
+    } else {
+        kdDebug(2120) << "Error reading bmpHeaderSize" << endl;
+        return false;
+    }
+
+    return true;
+}
+
+
 void CeScreen::readEncodedImage(KSocket *socket)
 {
     uint32_t headerSizeN;
@@ -451,7 +425,7 @@ void CeScreen::readEncodedImage(KSocket *socket)
         uchar *bmData = new uchar[bmpSize];
         uchar *rleData = new uchar[rleSize];
 
-//        kdDebug(2120) << "H: " << headerSize << ", D: " << rleSize << ", S: " << bmpSize << endl;
+        //        kdDebug(2120) << "H: " << headerSize << ", D: " << rleSize << ", S: " << bmpSize << endl;
 
         uint32_t rsize = 0;
         int rsize_tmp;
@@ -547,7 +521,8 @@ void CeScreen::readSocket(KSocket *socket)
         }
         switch(packageType) {
         case XOR_IMAGE:
-            this->readEncodedImage(socket);
+//            this->readEncodedImage(socket);
+            this->readAndDecode(socket);
             break;
         case SIZE_MESSAGE:
             this->readSizeMessage(socket);
@@ -568,12 +543,13 @@ void CeScreen::closeSocket(KSocket *socket)
 }
 
 
-void CeScreen::sendMouseEvent(long int button, long int cmd, long int x, long int y)
+void CeScreen::sendMouseEvent(unsigned long int button, unsigned long int cmd,
+                              unsigned long int x, unsigned long int y)
 {
     unsigned char buf[4 * sizeof(uint32_t)];
 
-    *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(button);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(cmd);
+    *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(cmd);
+    *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(button);
     *(uint32_t *) &buf[sizeof(uint32_t) * 2] = htonl((long) (65535 * x / width));
     *(uint32_t *) &buf[sizeof(uint32_t) * 3] = htonl((long) (65535 * y / height));
 
@@ -581,12 +557,12 @@ void CeScreen::sendMouseEvent(long int button, long int cmd, long int x, long in
 }
 
 
-void CeScreen::sendKeyEvent(long int code, long int cmd)
+void CeScreen::sendKeyEvent(unsigned long int code, unsigned long int cmd)
 {
     unsigned char buf[4 * sizeof(uint32_t)];
 
-    *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(code);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(cmd);
+    *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(cmd);
+    *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(code);
     *(uint32_t *) &buf[sizeof(uint32_t) * 2] = 0;
     *(uint32_t *) &buf[sizeof(uint32_t) * 3] = 0;
 
@@ -669,48 +645,158 @@ void CeScreen::wheelRolled(int delta)
 }
 
 
-int CeScreen::mapKey(int code)
+unsigned long CeScreen::toKeySym(int ascii, int code)
 {
-    int i;
-
-    for (i = 0; CeScreen::keymap[i].winVkCode != -1; i++) {
-        if (CeScreen::keymap[i].qtVkCode == code) {
-            break;
-        }
+    if ( (ascii >= 'a') && (ascii <= 'z') ) {
+        ascii = code;
+        ascii = ascii + 0x20;
+        return ascii;
     }
 
-    return i;
-}
+    if ( ( code >= 0x0a0 ) && code <= 0x0ff )
+        return code;
 
+    if ( ( code >= 0x20 ) && ( code <= 0x7e ) )
+        return code;
+
+    switch( code ) {
+    case SHIFT:
+        return XK_Shift_L;
+    case CTRL:
+        return XK_Control_L;
+    case ALT:
+        return XK_Alt_L;
+
+    case Qt::Key_Escape:
+        return  XK_Escape;
+    case Qt::Key_Tab:
+        return XK_Tab;
+    case Qt::Key_Backspace:
+        return XK_BackSpace;
+    case Qt::Key_Return:
+        return XK_Return;
+    case Qt::Key_Enter:
+        return XK_Return;
+    case Qt::Key_Insert:
+        return XK_Insert;
+    case Qt::Key_Delete:
+        return XK_Delete;
+    case Qt::Key_Pause:
+        return XK_Pause;
+    case Qt::Key_Print:
+        return XK_Print;
+    case Qt::Key_SysReq:
+        return XK_Sys_Req;
+    case Qt::Key_Home:
+        return XK_Home;
+    case Qt::Key_End:
+        return XK_End;
+    case Qt::Key_Left:
+        return XK_Left;
+    case Qt::Key_Up:
+        return XK_Up;
+    case Qt::Key_Right:
+        return XK_Right;
+    case Qt::Key_Down:
+        return XK_Down;
+    case Qt::Key_Prior:
+        return XK_Prior;
+    case Qt::Key_Next:
+        return XK_Next;
+
+    case Qt::Key_Shift:
+        return XK_Shift_L;
+    case Qt::Key_Control:
+        return XK_Control_L;
+    case Qt::Key_Meta:
+        return XK_Meta_L;
+    case Qt::Key_Alt:
+        return XK_Alt_L;
+    case Qt::Key_CapsLock:
+        return XK_Caps_Lock;
+    case Qt::Key_NumLock:
+        return XK_Num_Lock;
+    case Qt::Key_ScrollLock:
+        return XK_Scroll_Lock;
+
+    case Qt::Key_F1:
+        return XK_F1;
+    case Qt::Key_F2:
+        return XK_F2;
+    case Qt::Key_F3:
+        return XK_F3;
+    case Qt::Key_F4:
+        return XK_F4;
+    case Qt::Key_F5:
+        return XK_F5;
+    case Qt::Key_F6:
+        return XK_F6;
+    case Qt::Key_F7:
+        return XK_F7;
+    case Qt::Key_F8:
+        return XK_F8;
+    case Qt::Key_F9:
+        return XK_F9;
+    case Qt::Key_F10:
+        return XK_F10;
+    case Qt::Key_F11:
+        return XK_F11;
+    case Qt::Key_F12:
+        return XK_F12;
+    case Qt::Key_F13:
+        return XK_F13;
+    case Qt::Key_F14:
+        return XK_F14;
+    case Qt::Key_F15:
+        return XK_F15;
+    case Qt::Key_F16:
+        return XK_F16;
+    case Qt::Key_F17:
+        return XK_F17;
+    case Qt::Key_F18:
+        return XK_F18;
+    case Qt::Key_F19:
+        return XK_F19;
+    case Qt::Key_F20:
+        return XK_F20;
+    case Qt::Key_F21:
+        return XK_F21;
+    case Qt::Key_F22:
+        return XK_F22;
+    case Qt::Key_F23:
+        return XK_F23;
+    case Qt::Key_F24:
+        return XK_F24;
+
+    case Qt::Key_unknown:
+        return 0;
+    default:
+        return 0;
+    }
+
+    return 0;
+}
 
 void CeScreen::keyPressed(int ascii, int code)
 {
-    int winVkCode = mapKey(code);
+    unsigned long vncCode = this->toKeySym(ascii, code);
 
-    if (CeScreen::keymap[winVkCode].winVkCode != -1) {
-        kdDebug(2120) << "Found key " << CeScreen::keymap[winVkCode].name <<
-        ", WinCode: " << CeScreen::keymap[winVkCode].winVkCode <<
-        ", QtCode: " << CeScreen::keymap[winVkCode].qtVkCode << endl;
-        sendKeyEvent(CeScreen::keymap[winVkCode].winVkCode, KEY_PRESSED);
+    if (vncCode != 0) {
+        sendKeyEvent(vncCode, KEY_PRESSED);
     } else {
-        kdDebug(2120) << "Key with code " << code << " not found in map using ascii value " << ascii << endl;
-        sendKeyEvent(ascii, KEY_PRESSED);
+        kdDebug(2120) << "Key with code " << code << " not found in map" << endl;
     }
 }
 
 
 void CeScreen::keyReleased(int ascii, int code)
 {
-    int winVkCode = mapKey(code);
+    unsigned long vncCode = this->toKeySym(ascii, code);
 
-    if (CeScreen::keymap[winVkCode].winVkCode != -1) {
-        kdDebug(2120) << "Found key " << CeScreen::keymap[winVkCode].name <<
-        ", WinCode: " << CeScreen::keymap[winVkCode].winVkCode <<
-        ", QtCode: " << CeScreen::keymap[winVkCode].qtVkCode << endl;
-        sendKeyEvent(CeScreen::keymap[winVkCode].winVkCode, KEY_RELEASED);
+    if (vncCode != 0) {
+        sendKeyEvent(vncCode, KEY_RELEASED);
     } else {
-        kdDebug(2120) << "Key with code " << code << " not found in map using ascii value " << ascii << endl;
-        sendKeyEvent(ascii, KEY_RELEASED);
+        kdDebug(2120) << "Key with code " << code << " not found in map" << endl;
     }
 }
 
