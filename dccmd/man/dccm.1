@@ -1,14 +1,14 @@
 .\" $Id$
-.TH "DCCMD" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
+.TH "DCCM" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
 .SH NAME
-dccmd \- Handle SynCE connection.
+dccm \- Handle SynCE connection.
 
 .SH SYNOPSIS
-\fBdccmd\fR [-d \fILEVEL\fR] [-f] [-h] [-p \fIpassword\fR]
+\fBdccm\fR [-d \fILEVEL\fR] [-f] [-h] [-p \fIpassword\fR]
 
 .SH "DESCRIPTION"
 .PP
-\fBdccmd\fR program handles the SynCE connection.
+\fBdccm\fR handles the SynCE connection.
 .PP
 This daemon should be run by the same user as will run any tools that connect
 to the device.
@@ -28,7 +28,7 @@ Set debug log level:
 
 .TP
 -f
-Run in foreground. If this paramter is not specified, dccmd will fork into the background.
+Run in foreground. If this paramter is not specified, dccm will fork into the background.
 
 .TP
 -h

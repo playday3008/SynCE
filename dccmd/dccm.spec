@@ -1,14 +1,14 @@
 %define prefix   /usr
-%define name     synce-dccmd
+%define name     synce-dccm
 %define ver      0.3
 %define rel      1
 
-Summary: SynCE: Communication daemon.
+Summary: SynCE: Communication application.
 Name: %{name}
 Version: %{ver}
 Release: %{rel}
 License: MIT
-Group: System Environment/Daemons
+Group: Applications/Communications
 Source: %{name}-%{version}.tar.gz
 URL: http://synce.sourceforge.net/
 Distribution: SynCE RPM packages
@@ -19,11 +19,11 @@ Buildroot: %{_tmppath}/synce-root
 Requires: synce-libsynce
 
 %description
-Dccmd is part of the SynCE project:
+DCCM is part of the SynCE project:
 
   http://synce.sourceforge.net/
 
-This daemon is required to be able to communicate with a handheld device.
+This application is required to be able to communicate with a remote device.
 
 %prep
 %setup
@@ -38,6 +38,6 @@ make
 
 %files
 %doc README LICENSE
-%{prefix}/bin/dccmd
-%{_mandir}/man1/dccmd.*
+%{prefix}/bin/dccm
+%{_mandir}/man1/dccm.*
 

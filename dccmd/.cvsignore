@@ -6,7 +6,7 @@ config.log
 config.status
 config.sub
 configure
-dccmd_config.h*
+dccm_config.h*
 depcomp
 install-sh
 libtool

@@ -297,8 +297,6 @@ static bool client_read(Client* client)
 		/*
 		 * This is an information message
 		 */
-		uint32_t offset = 0;
-
 		synce_trace("this is an information message");
 
 		if (header < DCCM_MIN_PACKET_SIZE)

@@ -1,7 +1,7 @@
 ## useful flags
-CXXFLAGS = -ggdb -Wall -pedantic
+CFLAGS = -ggdb -Wall
 
-bin_PROGRAMS = dccmd
+bin_PROGRAMS = dccm
 
-dccmd_SOURCES = dccmd.c
+dccm_SOURCES = dccm.c
 
