@@ -12,9 +12,9 @@
 #define RAPI_BUFFER_DEBUG 0
 
 #if RAPI_BUFFER_DEBUG
-#define rapi_buffer_trace(args...)    rapi_trace(args)
-#define rapi_buffer_warning(args...)  rapi_warning(args)
-#define rapi_buffer_error(args...)    rapi_error(args)
+#define rapi_buffer_trace(args...)    synce_trace(args)
+#define rapi_buffer_warning(args...)  synce_warning(args)
+#define rapi_buffer_error(args...)    synce_error(args)
 #else
 #define rapi_buffer_trace(args...)
 #define rapi_buffer_warning(args...)
