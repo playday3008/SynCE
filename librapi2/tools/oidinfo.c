@@ -117,6 +117,38 @@ int main(int argc, char** argv)
 				}
 				break;
 
+			case OBJTYPE_DATABASE:
+				printf(
+						"Database:\n"
+						"=========\n");
+				{
+					char *name = wstr_to_ascii(info.u.infDatabase.szDbaseName);
+					printf(
+							"Flags: %08x\n"
+							"Name: \"%s\"\n"
+							"Type: %08x\n"
+							"Record count: %i\n"
+							"Sort order count: %i\n"
+							"Size: %i\n"
+							,
+							info.u.infDatabase.dwFlags,
+							name,
+							info.u.infDatabase.dwDbaseType,
+							info.u.infDatabase.wNumRecords,
+							info.u.infDatabase.wNumSortOrder,
+							info.u.infDatabase.dwSize
+							);
+				}
+				break;
+
+			case OBJTYPE_RECORD:
+				printf(
+						"Database record:\n"
+						"================\n"
+						"Parent OID: %08x\n", 
+						info.u.infRecord.oidParent);
+				break;
+
 			default:
 				printf("Unknown object with type %i\n", info.wObjType);
 				break;

@@ -46,6 +46,23 @@ static bool handle_parameters(int argc, char** argv)
 	return true;
 }
 
+static const char* version_string(CEOSVERSIONINFO* version)
+{
+	const char* result = "Unknown";
+	
+	if (version->dwMajorVersion == 3 &&
+			version->dwMinorVersion == 0)
+	{
+		switch (version->dwBuildNumber)
+		{
+			case 9348:	result = "Rapier: Pocket PC"; break;
+			case 11171: result = "Merlin: Pocket PC 2002"; break;
+		}
+	}
+
+	return result;
+}
+
 #define PROCESSOR_ARCHITECTURE_COUNT 8
 
 static const char* architecture[] = {
@@ -112,11 +129,11 @@ static const char* get_ACLineStatus_string(unsigned ACLineStatus)
 	
 	switch (ACLineStatus)
 	{
-		case AC_LINE_OFFLINE: status = "Offline"; break;
-		case AC_LINE_ONLINE: status = "Online"; break;
-		case AC_LINE_BACKUP_POWER: status = "Backup Power"; break;
-		case AC_LINE_UNKNOWN: status = "Unknown"; break;
-		default: status = "Invalid"; break;
+		case AC_LINE_OFFLINE:       status = "Offline";       break;
+		case AC_LINE_ONLINE:        status = "Online";        break;
+		case AC_LINE_BACKUP_POWER:  status = "Backup Power";  break;
+		case AC_LINE_UNKNOWN:       status = "Unknown";       break;
+		default:                    status = "Invalid";       break;
 	}
 
 	return status;
@@ -194,7 +211,7 @@ int main(int argc, char** argv)
 		printf(
 				"Version\n"
 				"=======\n"
-				"Version:    %i.%i build %i\n"
+				"Version:    %i.%i.%i (%s)\n"
 				"Platform:   %i %s\n"
 				"Details:    \"%s\"\n"
 				"\n"
@@ -202,6 +219,7 @@ int main(int argc, char** argv)
 				version.dwMajorVersion,
 				version.dwMinorVersion,
 				version.dwBuildNumber,
+				version_string(&version),
 				version.dwPlatformId,
 				platform ? platform : "",
 				details

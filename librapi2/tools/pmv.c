@@ -82,10 +82,12 @@ int main(int argc, char** argv)
 	}
 
 	convert_to_backward_slashes(source);
-	convert_to_backward_slashes(dest);
-
 	wide_source = wstr_from_ascii(source);
+	wide_source = adjust_remote_path(wide_source, true);
+
+	convert_to_backward_slashes(dest);
 	wide_dest   = wstr_from_ascii(dest);
+	wide_dest   = adjust_remote_path(wide_dest, true);
 
 	if (!CeMoveFile(wide_source, wide_dest))
 	{

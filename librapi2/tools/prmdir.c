@@ -80,6 +80,7 @@ int main(int argc, char** argv)
 
 	convert_to_backward_slashes(path);
 	wide_path = wstr_from_ascii(path);
+	wide_path = adjust_remote_path(wide_path, true);
 
 	if (!CeRemoveDirectory(wide_path))
 	{
