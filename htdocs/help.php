@@ -18,13 +18,13 @@ questions</a></li>
 
 <li>Search the <a href="http://sourceforge.net/mail/?group_id=30550">mailing
 list archives</a> and <a
-href="http://sourceforge.net/projects/synce/">forums</a> to see if your
+href="http://sourceforge.net/forum/?group_id=30550">forums</a> to see if your
 problem has been discussed before</li>
 
 <li><p>If you still can't solve the problem send mail to a suitable <a
 href="http://sourceforge.net/mail/?group_id=30550">mailing list</a> or write a
 new entry in one of the <a
-href="http://sourceforge.net/projects/synce/">forums</a>. These are some things
+href="http://sourceforge.net/forum/?group_id=30550">forums</a>. These are some things
 that might be useful to include when you ask for help:</p>
 
 <ul>
