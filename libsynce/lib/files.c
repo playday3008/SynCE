@@ -92,13 +92,16 @@ exit:
 	return success;
 }
 
-bool synce_get_script_directory(char** directory)
+bool synce_get_subdirectory(const char* name, char** directory)
 {
 	bool success = false;
 	char* path = NULL;
 	char buffer[256];
 
-	if (!directory)
+	if (!name || !directory)
+		goto exit;
+
+	if (strchr(name, '/'))	/* prevent bad names */
 		goto exit;
 
 	*directory = NULL;
@@ -106,7 +109,7 @@ bool synce_get_script_directory(char** directory)
 	if (!synce_get_directory(&path))
 		goto exit;
 
-	snprintf(buffer, sizeof(buffer), "%s/" SCRIPT_DIRECTORY, path);
+	snprintf(buffer, sizeof(buffer), "%s/%s", path, name);
 
 	if (!make_sure_directory_exists(buffer))
 		goto exit;
@@ -120,4 +123,10 @@ exit:
 		free(path);
 	return success;
 }
+
+bool synce_get_script_directory(char** directory)
+{
+	return synce_get_subdirectory(SCRIPT_DIRECTORY, directory);
+}
+
 

@@ -34,13 +34,19 @@ namespace synce
 #endif
 
 /*
- * FILETIME conversion
+ * FILETIME and DATE conversion
  */
 
 #include <time.h>
 
 void filetime_from_unix_time(time_t unix_time, FILETIME *filetime);
 time_t filetime_to_unix_time(const FILETIME *filetime);
+
+#define DATE_TIMEVALUEONLY   1
+#define DATE_DATEVALUEONLY   2
+
+bool date_from_tm(struct tm* pTm, DATE *pDateOut);
+bool date_to_tm(DATE dateIn, DWORD dwFlags, struct tm* pTm);
 
 
 /*
@@ -131,6 +137,7 @@ uint32_t bswap_32(uint32_t x);
  */
 
 bool synce_get_directory(char** path);
+bool synce_get_subdirectory(const char* name, char** directory);
 bool synce_get_connection_filename(char** filename);
 bool synce_get_script_directory(char** directory);
 

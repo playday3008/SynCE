@@ -28,6 +28,9 @@ typedef uint32_t  ULONG;
 typedef uint32_t  HWND;
 typedef uint32_t  BOOL;
 
+/* XXX: sizeof(double) must be 8 */
+typedef double    DATE;
+
 /*
  * Pointer types
  */
@@ -113,6 +116,13 @@ typedef int32_t  HRESULT;
 
 #define MAX_PATH  256
 
+#ifndef FALSE
+#define FALSE false
+#endif
+
+#ifndef TRUE
+#define TRUE true
+#endif
 
 #endif
 
