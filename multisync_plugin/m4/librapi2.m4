@@ -1,7 +1,7 @@
 dnl $Id$ vim: syntax=config
 dnl Check for librapi2
 
-AC_DEFUN(AM_PATH_LIBRAPI2, [
+AC_DEFUN([AM_PATH_LIBRAPI2], [
 
   AC_ARG_WITH(librapi2,
     AC_HELP_STRING(
