@@ -1,0 +1,8 @@
+Makefile
+Makefile.in
+*.cpp~
+*.h~
+*.o
+.libs
+vdccm
+.libs
