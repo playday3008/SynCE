@@ -246,12 +246,13 @@ void s_hash_table_destroy(SHashTable *table, void (*func)(void *))
 	* tables.  - Wz 2002/02/10
 	*/
 
-  if (!table)
-    return;
-	
 	unsigned i;
 	bucket *temp;
 	void *data;
+	
+  	if (!table)
+		return;
+	
 
 	for (i=0;i<table->size; i++)
 	{
