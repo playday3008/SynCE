@@ -59,6 +59,88 @@ href="#packet65">command 65</a> for each object, specifying the id of the
 object on the handheld. The desktop responds with a <a href="#packet65">command
 65</a> to agree on the id.</p>
 
+
+<hr size=1 />
+<a name="dialogue"></a>
+<h2>Synchronization dialogue</h2>
+
+<h3>Initialization</h3>
+
+<table cellspacing=8 width="100%">
+<tr><th>From desktop</th><th>From handheld</th><th>Description</th></tr>
+
+<tr><td>CeStartReplication()</td><td></td><td></td></tr>
+
+<tr><td></td><td>TCP connection to port 5678</td><td>Command channel</td></tr>
+<tr><td></td><td>TCP connection to port 5678</td><td>Data channel</td></tr>
+
+<tr><td><a href="#packet6f">6f,&nbsp;subcommand&nbsp;c1</a></td><td></td>
+<td>Request list of object types</td></tr>
+
+<tr><td></td><td><a href="#packet6c">6c,&nbsp;reply&nbsp;to&nbsp;6f</a></td><td>Reply with list of object types</td></tr>
+
+<tr><td><a href="#packet70">70,&nbsp;subcommand&nbsp;3</a></td><td></td>
+<td>Specify what object types we don't want to synchronize</td></tr>
+
+<tr><td></td><td><a href="#packet6c">6c,&nbsp;reply&nbsp;to&nbsp;70</a></td>
+<td>Reply</td></tr>
+
+<tr><td></td><td><a href="#packet69">69,&nbsp;subcommand&nbsp;2</a></td>
+<td>Return partnership information</td></tr>
+
+<tr><td><a href="#packet6f">6f,&nbsp;subcommand&nbsp;10</a></td><td></td>
+<td>Unknown</td></tr>
+
+<tr><td></td><td><a href="#packet69">69,&nbsp;subcommand&nbsp;4</a></td>
+<td>One packet for each object type</td></tr>
+
+<tr><td></td><td><a href="#packet69">69,&nbsp;subcommand&nbsp;6</a></td>
+<td>One packet for each object type</td></tr>
+
+<tr><td><a href="#packet6f">6f,&nbsp;subcommand&nbsp;6</a></td><td></td>
+<td>Unknown</td></tr>
+
+<tr><td></td><td><a href="#packet6c">6c,&nbsp;reply&nbsp;to&nbsp;6f</a></td>
+<td>Reply</td></tr>
+
+</table>
+
+<h3>Deleting an item</h3>
+
+<table cellspacing=8 width="100%">
+<tr><th>From desktop</th><th>From handheld</th><th>Description</th></tr>
+
+<h3>Deleting an item</h3>
+
+<table cellspacing=8 width="100%">
+<tr><th>From desktop</th><th>From handheld</th><th>Description</th></tr>
+
+<tr><td><a href="#packet70">70,&nbsp;subcommand&nbsp;1</a></td><td></td><td>Unknown</td></tr>
+<tr><td></td><td><a href="#packet6c">6c,&nbsp;reply&nbsp;to&nbsp;70</a></td><td>Reply</td></tr>
+<tr><td><a href="#packet66">66</a></td><td></td><td>Delete object</td></tr>
+<tr><td></td><td><a href="#packet65">65</a></td><td>Agree on object IDs</td></tr>
+<tr><td><a href="#packet70">70,&nbsp;subcommand&nbsp;2</a></td><td></td><td>Unknown</td></tr>
+<tr><td><a href="#packet6f">6f,&nbsp;subcommand&nbsp;6</a></td><td></td><td></td></tr>
+<tr><td></td><td><a href="#packet6c">6c,&nbsp;reply&nbsp;to&nbsp;70</a></td><td>Reply</td></tr>
+<tr><td></td><td><a href="#packet6c">6c,&nbsp;reply&nbsp;to&nbsp;6f</a></td><td>Reply</td></tr>
+
+</table>
+
+<h3>dummy</h3>
+
+<table cellspacing=8 width="100%">
+<tr><th>From desktop</th><th>From handheld</th><th>Description</th></tr>
+
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+
+</table>
+
+
+
 <hr size=1 />
 <a name="packetmap"></a>
 <h2>Command packet map</h2>
@@ -338,7 +420,8 @@ identifiers</td></tr>
 <tr><td>06 00 00 00</td><td>Unknown</td></tr>
 <tr><td>10 00 00 00</td><td>Unknown</td></tr>
 <tr><td>c1 00 00 00</td><td>Request list of object types. This is the first request sent.</td></tr>
-<tr><td>c1 01 00 00</td><td>Same as above but required by the SmartPhone 2002.</td></tr>
+<tr><td>c1 01 00 00</td><td>Same as above but required by the SmartPhone 2002</td></tr>
+<tr><td>c1 07 00 00</td><td>Same as above but used my ActiveSync 3.7.1</td></tr>
 </table>
 
 <hr size=1 />
