@@ -7,9 +7,7 @@ extern "C"
 {
 #endif
 
-#ifndef SWIG
 #include <synce.h>
-#endif /* SWIG */
 
 #define RRA_TYPE_NAME_APPOINTMENT  "Appointment"
 #define RRA_TYPE_NAME_CONTACT      "Contact"
@@ -24,7 +22,6 @@ extern "C"
 struct _RRA;
 typedef struct _RRA RRA;
 
-#ifndef SWIG
 typedef struct _ObjectType
 {
   uint32_t  id;
@@ -94,7 +91,6 @@ bool rra_get_deleted_object_ids(RRA* rra,
 		                            ObjectIdArray* object_id_array,
 																uint32_t** deleted_id_array,
 																size_t* deleted_count);
-#endif /* SWIG */
 
 #define rra_free_deleted_object_ids(deleted_ids)  if(deleted_ids) free(deleted_ids);
 
@@ -102,7 +98,6 @@ bool rra_get_deleted_object_ids(RRA* rra,
 /* get, update, add object data 
    the data buffer must be in little endian format */ 
 
-#ifndef SWIG
 bool rra_object_get(RRA* rra, 
                     uint32_t type_id,
                     uint32_t object_id,
@@ -143,7 +138,6 @@ bool rra_partner_get_id(RRA* rra, uint32_t index, uint32_t* id);
 
 bool rra_partner_set_name(RRA* rra, uint32_t index, const char* name);
 bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
-#endif /* SWIG */
 
 #define rra_partner_free_name(name)  rapi_reg_free_string(name)
 
@@ -170,7 +164,6 @@ bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
 #define RRA_CONTACT_VERSION_MASK			0xf00
 
 
-#ifndef SWIG
 bool rra_contact_to_vcard(
 		uint32_t id, 
 		const uint8_t* data, 
@@ -184,7 +177,6 @@ bool rra_contact_from_vcard(
 		uint8_t** data, 
 		size_t* data_size,
 		uint32_t flags);
-#endif /* SWIG */
 
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)
@@ -199,7 +191,6 @@ bool rra_contact_from_vcard(
 #define RRA_APPOINTMENT_UTF8						0x20
 #define RRA_APPOINTMENT_CHARSET_MASK		0xf0
 
-#ifndef SWIG
 bool rra_appointment_to_vevent(
     uint32_t id,
     const uint8_t* data,
@@ -213,7 +204,6 @@ bool rra_appointment_from_vevent(
     uint8_t** data,
     size_t* data_size,
     uint32_t flags);
-#endif /* SWIG */
 
 #define RRA_TASK_ID_UNKNOWN  0
 
@@ -225,7 +215,6 @@ bool rra_appointment_from_vevent(
 #define RRA_TASK_UTF8						0x20
 #define RRA_TASK_CHARSET_MASK		0xf0
 
-#ifndef SWIG
 bool rra_task_to_vtodo(
     uint32_t id,
     const uint8_t* data,
@@ -239,7 +228,6 @@ bool rra_task_from_vtodo(
     uint8_t** data,
     size_t* data_size,
     uint32_t flags);
-#endif /* SWIG */
 
 
 #ifdef __cplusplus
