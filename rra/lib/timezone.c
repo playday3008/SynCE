@@ -175,7 +175,7 @@ static bool using_daylight_saving(TimeZoneInformation* tzi, struct tm* time_stru
     
     if (month == tzi->StandardMonthOfYear)
     {
-      unsigned day = day_from_month_and_week(tzi->StandardMonthOfYear, tzi->StandardInstance);
+      int day = day_from_month_and_week(tzi->StandardMonthOfYear, tzi->StandardInstance);
       if (time_struct->tm_mday < day)
         return !false;
       else if (time_struct->tm_mday > day)
@@ -191,7 +191,7 @@ static bool using_daylight_saving(TimeZoneInformation* tzi, struct tm* time_stru
     
     if (month == tzi->DaylightMonthOfYear)
     {
-      unsigned day = day_from_month_and_week(tzi->DaylightMonthOfYear, tzi->DaylightInstance);
+      int day = day_from_month_and_week(tzi->DaylightMonthOfYear, tzi->DaylightInstance);
       if (time_struct->tm_mday < day)
         return false;
       else if (time_struct->tm_mday > day)
@@ -272,7 +272,7 @@ static void add_rrule(Generator* generator, unsigned instance, unsigned month)/*
   
   snprintf(rrule, sizeof(rrule), 
       "FREQ=YEARLY;INTERVAL=1;BYDAY=%iSU;BYMONTH=%i",
-      (5 == instance) ? -1 : instance, month);
+      (5 == instance) ? (unsigned)-1 : instance, month);
   
   generator_add_simple(generator, "RRULE", rrule);
 }     /*}}}*/

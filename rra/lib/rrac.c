@@ -13,7 +13,7 @@
 #define HTOLE32(x)  x = htole32(x)
 
 
-#define DUMP_PACKETS 0
+#define DUMP_PACKETS 1
 
 #if DUMP_PACKETS
 #define DUMP(desc,data,len) dump(desc, data, len)
@@ -299,7 +299,7 @@ bool rrac_send_67(SynceSocket* socket, uint32_t type_id, uint32_t* ids, size_t c
 	bool success = false;
 	size_t size = sizeof(Command_67_Header) + count * sizeof(uint32_t);
 	uint32_t *packet_ids;
-	int i;
+	unsigned i;
 
 	packet = (uint8_t*)malloc(size);
 	header = (Command_67_Header*)packet;
@@ -561,7 +561,7 @@ bool rrac_recv_69_not_2(/*{{{*/
 	size_t size = 0;
 	Subheader_69_X* subheader = NULL;
 	uint32_t *packet_ids;
-	int i;
+	unsigned i;
 
 	if (!ids)
 	{
