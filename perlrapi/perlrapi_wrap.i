@@ -374,14 +374,18 @@ typedef struct _CEBLOB {
     }
 %}
 
-typedef union _CEVALUNION {
+typedef union _CEVALUNION
+{
   short iVal; 
-  USHORT uiVal; 
+  //USHORT uiVal;
+  WORD uiVal;
   long lVal; 
-  ULONG ulVal; 
+  //ULONG ulVal;
+  DWORD ulVal;
   //FILETIME filetime;
   //LPWSTR lpwstr; 
-  %extend {
+  %extend
+  {
     const unsigned int filetime;
     const char *lpwstr; 
   }
@@ -395,12 +399,14 @@ typedef union _CEVALUNION {
 FILETIMEGETSET(CEVALUNION, filetime)
 LPWSTRGETSET(CEVALUNION, lpwstr)
   
-typedef struct _CEPROPVAL { 
+typedef struct _CEPROPVAL
+{ 
   //CEPROPID propid;
   WORD wLenData;
   WORD wFlags;
   CEVALUNION val;
-  %extend {
+  %extend
+  {
     unsigned int type;
     unsigned int propid;
   }
