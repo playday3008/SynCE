@@ -5,11 +5,7 @@ TODO for dccmd
 
 o Use tcpwrappers
 
-o Hide password in process list (modify argv[0])
-
 o Write PID file (~/.synce/dccmd.pid)
 	
-o Clean shutdown on SIGTERM
-
-o Close active connection on SIGHUP
+o Allow connect/disconnect scripts to run slow
 
