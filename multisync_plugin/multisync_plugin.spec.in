@@ -1,4 +1,4 @@
-%define prefix   /usr/local
+%define _prefix   /usr/local
 %define name     synce-multisync_plugin
 %define rel      1
 
@@ -15,6 +15,7 @@ Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires: synce multisync
+BuildRequires: synce-devel
 
 %description
 multisync_plugin is part of the SynCE project
