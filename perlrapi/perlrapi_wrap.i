@@ -324,18 +324,9 @@ DWORD CeGetFileAttributes(LPCWSTR lpFileName);
 
 %typemap(argout) (DWORD nBufferLength, LPWSTR lpBuffer)
 {
-  DWORD c;        
-  if ($result && ($result != &PL_sv_undef))
-  {
-    c=SvUV($result);
-    if(! c)
-      croak("Error getting special folder name.");
-  }
-  else
-    croak("Error getting special folder name.");
-
   $result=sv_newmortal();
-  sv_setpvn($result, wstr_to_ascii($2), c);
+  sv_setpvn($result, wstr_to_ascii($2), result);
+  argvi++;
 }
 
 DWORD CeGetSpecialFolderPath(int nFolder, DWORD nBufferLength, LPWSTR lpBuffer);
