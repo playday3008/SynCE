@@ -63,8 +63,12 @@ static void recurrence_append_until_or_count(
   switch (pattern->flags & RecurrenceEndMask)
   {
     case RecurrenceEndsOnDate:
-      /* TODO: use UNTIL and not COUNT here */
-      /* fall through for now */
+      {
+        struct tm date = rra_minutes_to_struct(pattern->pattern_end_date);
+        strftime(buffer, size, ";UNTIL=%Y%m%d", &date);
+      }
+      break;
+
     case RecurrenceEndsAfterXOccurrences:
       snprintf(buffer, size, ";COUNT=%i", pattern->occurrences);
       break;
@@ -405,7 +409,7 @@ bool recurrence_parse_rrule(
     synce_error("Failed to parse RRULE '%s'", mdir_rrule->values[0]);
     goto exit;
   }
-  
+
   if (!rrule.freq)
   {
     synce_error("No FREQ part in RRULE '%s'", mdir_rrule->values[0]);
@@ -444,6 +448,23 @@ bool recurrence_parse_rrule(
     /* Convert to Monthly with 12 times the interval */
     pattern->recurrence_type = olRecursMonthly;
     rrule.interval *= 12;
+
+    if (rrule.bymonthday)
+    {
+      pattern->day_of_month = rrule.bymonthday;
+    }
+    else if (rrule.bysetpos)
+    {
+      synce_error("Don't know how to handle BYSETPOS in RRULE '%s'", 
+          mdir_rrule->values[0]);
+      goto exit;
+    }
+    else
+    {
+      /* Get BYMONTHDAY from start date */
+      struct tm start_date = rra_minutes_to_struct(pattern->pattern_start_date);
+      pattern->day_of_month = start_date.tm_mday;
+    }
   }
   else
   {
@@ -457,15 +478,24 @@ bool recurrence_parse_rrule(
   {
     pattern->occurrences = rrule.count;
     pattern->flags |= RecurrenceEndsAfterXOccurrences;
-    
+
     /* XXX calculate pattern->pattern_end_date */
+    pattern->pattern_end_date = RRA_DoesNotEndDate;
+  }
+  else if (rrule.until)
+  {
+    struct tm until;
+
+    if (!parser_datetime_to_struct(rrule.until, &until, NULL))
+      goto exit;
+
+    pattern->flags |= RecurrenceEndsOnDate;
+    pattern->pattern_end_date = rra_minutes_from_struct(&until);
+
+    /* XXX calculate pattern->occurrences */
   }
   else
   {
-    /* XXX support UNTIL */
-    if (rrule.until)
-      synce_warning("UNTIL not yet supported in RRULE '%s'", mdir_rrule->values[0]);
-
     pattern->flags |= RecurrenceDoesNotEnd;
     pattern->pattern_end_date = RRA_DoesNotEndDate;
   }
