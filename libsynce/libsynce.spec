@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-libsynce
-%define ver      0.3
+%define ver      0.4
 %define rel      1
 
 Summary: SynCE: Basic library used by applications in the SynCE project.
