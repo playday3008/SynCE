@@ -62,12 +62,32 @@ pair.</li>
 
 <h2>Questions and Answers</h2>
 
+<p><b>Q:</b> Tasks that were completed on my PDA were copied to evolution as
+uncompleted. Why?</p>
+
+<p><b>A:</b> It appears that Evolution requires a completion date to show the
+appointment as completed. This will be fixed in the next SynCE version.</p>
+
+<hr size=1 width="50%">
+
+<p><b>Q:</b> All of my calendar appointments are one hour earlier in Evolution
+than they are on my PDA. It looks like a time zone problem but I have the same
+timezone on both PC and PDA.</p>
+
+<p><b>A:</b> Time zones are a problem because we've not yet found a way to
+deduce what timezone the PDA is currently using! Any help on this would be most
+welcome. The problem may have something to do with daylight saving too.</p>
+
+<hr size=1 width="50%">
+
+<!--
 <p><b>Q:</b> When I use the MultiSync plugin with SmartPhone 2003 or Pocket PC
 2003, I get a message saying I should upgrade ActiveSync. What shall I do?</p>
 
 <p><b>A:</b> Use the <a href="cvs.php">CVS version</a> of SynCE or wait for SynCE version 0.8.</p>
 
 <hr size=1 width="50%">
+-->
 
 <p>
 
@@ -85,6 +105,7 @@ below for more information.
 
 <hr size=1 width="50%">
 
+<!--
 <p><b>Q:</b> Phone numbers and adresses are not synchronized properly from Pocket
 PC to Evolution.</p>
 
@@ -114,6 +135,7 @@ messages:</p>
 
 <p><b>A:</b> This seems to be a bug that is not yet fixed. You may make it easier
 to fix them by telling how you got them:</p>
+-->
 
 <ol>
 
