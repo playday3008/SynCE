@@ -24,7 +24,7 @@
 #define ID_UNKNOWN_0067    0x0067
 
 #define ID_CATEGORY        0x4005
-#define ID_UNKNOWN_4015    0x4015 /* something about repeated appointemnts */
+#define ID_RECURRENCE_PATTERN 0x4015
 #define ID_UNKNOWN_4171    0x4171
 
 #define ID_LOCATION             0x4208
