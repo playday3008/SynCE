@@ -6,8 +6,8 @@
 
 <h1>SynCE - USB connection</h1>
 
-<p>These instructions apply to systems with Linux kernel version 2.4.18 or
-later. On other systems, please request help on the mailing list: <a
+<p>These instructions apply to systems with non-SMP Linux kernel version 2.4.18
+or later. On other systems, please request help on the mailing list: <a
 href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>.</p>
 
 <p>Are you running one of these devices?</p>
