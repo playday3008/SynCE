@@ -104,7 +104,7 @@ BOOL CeReadFile(
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
 
-	rapi_buffer_read_uint32(context->recv_buffer, bytes_read);
+	rapi_buffer_read_uint32(context->recv_buffer, &bytes_read);
 	if (lpNumberOfBytesRead)
 		*lpNumberOfBytesRead = bytes_read;
 
