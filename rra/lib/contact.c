@@ -18,6 +18,54 @@ static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
  */
 #define MAX_FIELD_COUNT  60
 
+/* 
+   ESCAPED-CHAR = "\\" / "\;" / "\," / "\n" / "\N")
+        ; \\ encodes \, \n or \N encodes newline
+        ; \; encodes ;, \, encodes ,
+*/
+static void strbuf_append_escaped(StrBuf* result, char* source)/*{{{*/
+{
+	char* p;
+
+	for (p = source; *p; p++)
+	{
+		switch (*p)
+		{
+			case '\\':
+			case ';':
+			case ',':
+				strbuf_append_c(result, '\\');
+				strbuf_append_c(result, *p);
+				break;
+				
+			case '\r': 				/* CR */
+				/* ignore */
+				break;		
+
+			case '\n':				/* LF */
+				strbuf_append_c(result, '\\');
+				strbuf_append_c(result, 'n');
+				break;
+	
+			default:
+				strbuf_append_c(result, *p);
+				break;
+		}
+	}
+}/*}}}*/
+
+void strbuf_append_escaped_wstr(StrBuf* strbuf, WCHAR* wstr)/*{{{*/
+{
+	if (wstr)
+	{
+		char* ascii_str = wstr_to_ascii(wstr);
+		strbuf_append_escaped(strbuf, ascii_str);
+		wstr_free_string(ascii_str);
+	}
+}/*}}}*/
+
+
+
 static bool rra_contact_to_vcard2(/*{{{*/
 		uint32_t id, 
 		CEPROPVAL* pFields, 
@@ -66,7 +114,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 	strbuf_append(vcard, "PRODID:");
 	strbuf_append(vcard, product_id);
-	strbuf_append_newline(vcard);
+	strbuf_append_crlf(vcard);
 
 	if (id != RRA_CONTACT_ID_UNKNOWN)
 	{
@@ -93,7 +141,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						strbuf_append(vcard, "NOTE:");
 						/* XXX: need to handle newlines! */
 						strbuf_append(vcard, (const char*)pFields[i].val.blob.lpb);
-						strbuf_append_newline(vcard);
+						strbuf_append_crlf(vcard);
 					}
 					else
 					{
@@ -113,14 +161,14 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 			case ID_WORK_TEL:
 				strbuf_append(vcard, "TEL;TYPE=WORK,VOICE,PREF:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_HOME_TEL:
 				strbuf_append(vcard, "TEL;TYPE=HOME,VOICE,PREF:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_LAST_NAME:
@@ -133,8 +181,8 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 			case ID_JOB_TITLE:
 				strbuf_append(vcard, "TITLE:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_DEPARTMENT:
@@ -143,62 +191,62 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 			case ID_MOBILE_TEL:
 				strbuf_append(vcard, "TEL;TYPE=CELL:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_CAR_TEL:
 				strbuf_append(vcard, "TEL;TYPE=CAR:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_WORK_FAX:
 				strbuf_append(vcard, "TEL;TYPE=WORK,FAX:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_HOME_FAX:
 				strbuf_append(vcard, "TEL;TYPE=HOME,FAX:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_HOME2_TEL:
 				strbuf_append(vcard, "TEL;TYPE=HOME,VOICE:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_CATEGORY:
 				strbuf_append(vcard, "CATEGORIES:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_WORK2_TEL:
 				strbuf_append(vcard, "TEL;TYPE=WORK,VOICE:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_WEB_PAGE:
 				strbuf_append(vcard, "URL:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_PAGER:
 				strbuf_append(vcard, "TEL;TYPE=pager:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_FULL_NAME:
 				strbuf_append(vcard, "FN:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				have_fn = true;
 				break;
 
@@ -252,15 +300,15 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 			case ID_EMAIL:
 				strbuf_append(vcard, "EMAIL;TYPE=INTERNET,PREF:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			case ID_EMAIL2:
 			case ID_EMAIL3:
 				strbuf_append(vcard, "EMAIL;TYPE=INTERNET:");
-				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
-				strbuf_append_newline(vcard);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr);
+				strbuf_append_crlf(vcard);
 				break;
 
 			default:
@@ -271,17 +319,17 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 	if (first_name || last_name || middle_name || title || suffix)
 	{
-		strbuf_append      (vcard, "N:");
-		strbuf_append_wstr (vcard, last_name);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, first_name);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, middle_name);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, title);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, suffix);
-		strbuf_append_newline(vcard);
+		strbuf_append              (vcard, "N:");
+		strbuf_append_escaped_wstr (vcard, last_name);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, first_name);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, middle_name);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, title);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, suffix);
+		strbuf_append_crlf      (vcard);
 	}
 
 	/*
@@ -292,10 +340,10 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	if (company || department)
 	{
 		strbuf_append(vcard, "ORG:");
-		strbuf_append_wstr (vcard, company);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, department);
-		strbuf_append_newline(vcard);
+		strbuf_append_escaped_wstr (vcard, company);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, department);
+		strbuf_append_crlf      (vcard);
 	}
 
 	/* 
@@ -306,40 +354,40 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 	if (home_street || home_locality || home_postal_code || home_country)
 	{
-		strbuf_append      (vcard, "ADR;TYPE=HOME:");
-		strbuf_append_wstr (vcard, NULL); /* post office box */
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, NULL); /* extended address */
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, home_street);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, home_locality);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, home_region); /* region */
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, home_postal_code);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, home_country);
-		strbuf_append_newline(vcard);
+		strbuf_append              (vcard, "ADR;TYPE=HOME:");
+		strbuf_append_escaped_wstr (vcard, NULL); /* post office box */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, NULL); /* extended address */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, home_street);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, home_locality);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, home_region); /* region */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, home_postal_code);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, home_country);
+		strbuf_append_crlf      (vcard);
 	}
 
 	if (work_street || work_locality || work_postal_code || work_country)
 	{
-		strbuf_append      (vcard, "ADR;TYPE=WORK:");
-		strbuf_append_wstr (vcard, NULL); /* post office box */
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, NULL); /* extended address */
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, work_street);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, work_locality);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, work_region); /* region */
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, work_postal_code);
-		strbuf_append_c    (vcard, ';');
-		strbuf_append_wstr (vcard, work_country);
-		strbuf_append_newline(vcard);
+		strbuf_append              (vcard, "ADR;TYPE=WORK:");
+		strbuf_append_escaped_wstr (vcard, NULL); /* post office box */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, NULL); /* extended address */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, work_street);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, work_locality);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, work_region); /* region */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, work_postal_code);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, work_country);
+		strbuf_append_crlf      (vcard);
 	}
 
 
@@ -461,7 +509,7 @@ static uint32_t address_ids[ADDRESS_FIELD_COUNT][2] =
 {
 	{0, 0}, /* post office box */
 	{0, 0}, /* extended address */
-	{0, 0}, /* street */
+	{ID_HOME_STREET,      ID_WORK_STREET},      /* street */
 	{ID_HOME_LOCALITY,    ID_WORK_LOCALITY},    /* locality */
 	{ID_HOME_REGION,      ID_WORK_REGION},      /* region */
 	{ID_HOME_POSTAL_CODE, ID_WORK_POSTAL_CODE}, /* postal code */
@@ -498,6 +546,44 @@ static char* strdup_quoted_printable(const char* source)/*{{{*/
 	return result;
 }/*}}}*/
 
+/* the length of the unescaped string is always less than or equal to the escaped string,
+ * that's why we do this in place */
+static void unescape_string(char* value)/*{{{*/
+{
+	char* source = value;
+	char* dest = value;
+
+	while (*source)
+	{
+		if ('\\' == *source)
+		{
+			switch (source[1])
+			{
+				case '\\':
+				case ';':
+				case ',':
+					*dest++ = source[1];
+					source += 2;
+					break;
+
+				case 'n':
+					*dest++ = '\r';
+					*dest++ = '\n';
+					source += 2;
+					break;
+
+				default:
+					synce_warning("Unexpected escape: '%c%c'", source[0], source[1]);
+					break;
+			}
+		}
+		else
+			*dest++ = *source++;
+	}
+
+	*dest = '\0';
+}/*}}}*/
+
 static void set_string(CEPROPVAL* field, uint32_t id, const char* type, char* value)/*{{{*/
 {
 	char* converted = NULL;
@@ -509,10 +595,7 @@ static void set_string(CEPROPVAL* field, uint32_t id, const char* type, char* va
 		value = converted = strdup_quoted_printable(value);
 	}
 
-	if (strchr(value, '\n'))
-	{
-		synce_warning("value containts newlines, that's not supported yet!");
-	}
+	unescape_string(value);
 
 	if (strstr(type, "UTF-8"))
 		field->val.lpwstr = wstr_from_utf8(value);
@@ -523,7 +606,7 @@ static void set_string(CEPROPVAL* field, uint32_t id, const char* type, char* va
 		free(converted);
 }/*}}}*/
 
-static char** strsplit(const char* source, int separator)
+static char** strsplit(const char* source, int separator)/*{{{*/
 {
 	int i;
 	int count = 0;
@@ -548,17 +631,17 @@ static char** strsplit(const char* source, int separator)
 
 	result[i] = NULL;
 	return result;
-}
+}/*}}}*/
 
-static void strv_dump(char** strv)
+static void strv_dump(char** strv)/*{{{*/
 {
 	char** pp;
 
 	for (pp = strv; *pp; pp++)
 		synce_trace("'%s'", *pp);
-}
+}/*}}}*/
 
-static void strv_free(char** strv)
+static void strv_free(char** strv)/*{{{*/
 {
 	char** pp;
 
@@ -566,9 +649,9 @@ static void strv_free(char** strv)
 		free(*pp);
 
 	free(strv);
-}
+}/*}}}*/
 
-static bool parser_handle_field(
+static bool parser_handle_field(/*{{{*/
 		Parser* parser,
 		char* name, 
 		char* type, 
@@ -662,7 +745,10 @@ static bool parser_handle_field(
 		else if (strstr(type, "HOME"))
 			where = HOME;
 		else
+		{
+			synce_warning("Unknown address type: '%s'", type);
 			goto exit;
+		}
 		
 		strv_dump(address);
 		
@@ -783,12 +869,12 @@ exit:
 	free(value);
 
 	return success;
-}
+}/*}}}*/
 
 /*
  * Simple vCard parser
  */
-static bool rra_contact_from_vcard2(
+static bool rra_contact_from_vcard2(/*{{{*/
 		const char* vcard, 
 		uint32_t* id,
 		CEPROPVAL* fields,
@@ -893,9 +979,9 @@ static bool rra_contact_from_vcard2(
 			
 exit:
 	return success;
-}
+}/*}}}*/
 
-bool rra_contact_from_vcard(
+bool rra_contact_from_vcard(/*{{{*/
 		int command, 
 		const char* vcard, 
 		uint32_t* id,
@@ -930,5 +1016,5 @@ bool rra_contact_from_vcard(
 
 exit:
 	return success;
-}
+}/*}}}*/
 

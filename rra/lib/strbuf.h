@@ -19,7 +19,7 @@ void strbuf_free (StrBuf *strbuf, bool free_contents);
 StrBuf* strbuf_append (StrBuf *strbuf, const char* str);
 StrBuf* strbuf_append_wstr(StrBuf* strbuf, WCHAR* wstr);
 StrBuf* strbuf_append_c (StrBuf *strbuf, int c);
-StrBuf* strbuf_append_newline (StrBuf *strbuf);
+StrBuf* strbuf_append_crlf (StrBuf *strbuf);
 
 #endif
 
