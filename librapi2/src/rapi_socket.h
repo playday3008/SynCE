@@ -40,7 +40,7 @@ bool rapi_socket_close(RapiSocket* socket);
 /**
  * Write a number of bytes of data to socket
  */
-bool rapi_socket_write(RapiSocket* socket, void* data, unsigned size);
+bool rapi_socket_write(RapiSocket* socket, const void* data, unsigned size);
 
 	/**
  * Read a number of bytes of data from a socket
