@@ -8,6 +8,8 @@
 
 <ul>
 
+<li class=SPACED>Get SynCE from CVS, not from .tar.gz archives.</li>
+
 <li class=SPACED>To compile SynCE, you first need the <a
 href="http://developer.apple.com/tools/macosxtools.html">Mac OS X Developer
 Tools</a>.</li>
