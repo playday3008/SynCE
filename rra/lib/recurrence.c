@@ -387,6 +387,12 @@ bool recurrence_parse_rrule(
   RecurrenceRule rrule;
   RecurrencePattern pattern;
 
+  if (!line)
+  {
+    /* no recurrence */
+    return parser_add_int16(p, ID_OCCURANCE, OCCURANCE_ONCE);
+  }
+
   /* verify the structures are packed correctly */
   assert(sizeof(RecurringWeekly)   == 0x20);
   assert(sizeof(RecurringMonthly)  == 0x20);
