@@ -67,6 +67,9 @@ o Run this command to prepare synce:
 
     make -f Makefile.dist
 
+	(This needs autoconf and automake; autoconf version 2.13 and automake version
+	1.4-p4 should work.)
+
 o Continue on the section "Common installation"
 
 
