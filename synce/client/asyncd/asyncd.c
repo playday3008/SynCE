@@ -46,6 +46,7 @@
 #define MAXBUF 512
 #define TRUE (1==1)
 #define FALSE !TRUE
+#define LOCKBUFFERSIZE ( 2 * ( 4 + 1 ) )
 
 #ifdef DEBUG
 void printbuf( unsigned char * buf, unsigned int size )
@@ -126,12 +127,13 @@ int removeinfo( void )
 	return result;
 }
 
-int saveinfo( char * devicetype, char * platformtype, char * devicename )
+int saveinfo( char * devicetype, char * platformtype, char * devicename, unsigned char *lockbuffer, int lockbuffersize )
 {
         struct sockaddr_in sockin;
         FILE * infofile;
         int result = -1;
         int file;
+	int i;
 
         socklen_t sinlen = sizeof( struct sockaddr_in );
         result = getpeername( 0, (struct sockaddr *) &sockin, (socklen_t *)&sinlen );
@@ -158,12 +160,27 @@ int saveinfo( char * devicetype, char * platformtype, char * devicename )
         fprintf( infofile, "\tdevice-type \"%s\";\n", devicetype );
         fprintf( infofile, "\tplatform-type \"%s\";\n", platformtype );
         fprintf( infofile, "\tdevice-name \"%s\";\n", devicename );
+	if( (lockbuffer!=NULL) && (lockbuffersize>0) )
+	{
+        	fprintf( infofile, "\tpassphrase-size \"%d\";\n", lockbuffersize );
+        	fprintf( infofile, "\tpassphrase-data \"" );
+		
+		for( i=0; (i<lockbuffersize); i++ )
+		{
+			fprintf( infofile, "%02X", (unsigned) lockbuffer[i] );
+			if( (i+1)<lockbuffersize )
+			{
+				fprintf( infofile, " " );
+			}
+		}
+		fprintf( infofile, "\";\n" );
+	}
         fprintf( infofile, "}\n\n" );
         fclose( infofile );
 	return result;
 }
 
-int checkpacket( unsigned char * buf, int size )
+int checkpacket( unsigned char * buf, int size, unsigned char *lockbuffer, int lockbuffersize )
 {
 	int result = FALSE;
         long offset1;
@@ -230,7 +247,7 @@ int checkpacket( unsigned char * buf, int size )
         devicetype = in;
 	log_debug ("names = 0x%08X, out = 0x%08X, devicetype = 0x%08X, devicetype = %s", names, out, devicetype, devicetype);
 
-        saveinfo( devicetype, platformtype, devicename );
+        saveinfo( devicetype, platformtype, devicename, lockbuffer, lockbuffersize );
 
 	/* We should check the packet, then, if it's ok, fork a process
 	   that mount the device as a filesystem. */
@@ -255,6 +272,8 @@ int main (int ac, char **av)
 	int locked = FALSE;
 	int locked_pending = FALSE;
 	unsigned int locksignature = 0;
+	unsigned int lockbuffersize = LOCKBUFFERSIZE;
+	unsigned char lockbuffer[1+LOCKBUFFERSIZE];
 
 #ifdef DEBUG
 	initdebug("asyncd");
@@ -286,6 +305,7 @@ int main (int ac, char **av)
 				log_debug("locked reply pending:");
 				printbuf(buffer, 2);
 #endif
+			
 				locked_pending=FALSE;
 				goto ping;
 			}
@@ -329,16 +349,13 @@ int main (int ac, char **av)
 						/* Here, we should call a functionc to analyze the buffer
 						   and, if it's a valid Device identification, fork a
 						   process that will mount the filesystem. */
-						buffer_ok = checkpacket( buffer, pktsz );
+
 						if(locked)
 						{
 							/*unsigned char lockbuffer[]={0xa, 0x0, 0xce, 0xfd, 0xc8, 0xfd, 0xc9, 0xfd, 0xcf, 0xfd, 0xfd, 0xfd};*/
-							unsigned char lockbuffer[15];
-							char *passphrase = "1234";
-							unsigned int lockbuffersize = 13;
+							char *passphrase = "3542";
 							compute_password( passphrase, locksignature & 0xFF, lockbuffer+2, &lockbuffersize ); 
-							lockbuffer[0] = 0x0A;
-							lockbuffer[1] = 0x00;
+							*((short *)lockbuffer) = htole16( lockbuffersize );
 							
 							error = write( ASYNCD_OUTPUT, lockbuffer, lockbuffersize + 2 );
 
@@ -354,12 +371,16 @@ int main (int ac, char **av)
 
 #ifdef DEBUG				
 							log_debug(" sending passphrase");
-							printbuf( buffer, 0x000a + 2);
+							printbuf( buffer, lockbuffersize + 2);
 #endif
 							locked_pending = TRUE;
+
+							buffer_ok = checkpacket( buffer, pktsz, lockbuffer, lockbuffersize + 2 );
+
 						}
 						else
 						{
+							buffer_ok = checkpacket( buffer, pktsz, NULL, 0 );
 							goto ping;
 						}
 					} else {
@@ -390,7 +411,7 @@ int main (int ac, char **av)
 				end_connexion = TRUE;
 				break;
 			}
-			
+
 			if( buffer_ok && !pending )
 			{
 			  ping:
