@@ -73,8 +73,8 @@ struct {
 } devlist[] = {
 	{ 0x0000, 0x0000, "User-specified device" },
 	{ 0x049f, 0x0003, "Compaq iPAQ" },
-	{ 0x003f, 0x1016, "HP Jornada 548" },
-	{ 0x003f, 0x1116, "HP Jornada 568" },
+	{ 0x03f0, 0x1016, "HP Jornada 548" },
+	{ 0x03f0, 0x1116, "HP Jornada 568" },
 };
 
 pid_t forkpty(int *, char *, struct termios *, struct winsize *);
