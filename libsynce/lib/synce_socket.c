@@ -11,6 +11,11 @@
 #include <string.h>
 #include <sys/poll.h>
 #include <sys/select.h>
+#include "synce_config.h"
+
+#if !HAVE_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
 
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
@@ -152,7 +157,7 @@ fail:
 SynceSocket* synce_socket_accept(SynceSocket* server, struct sockaddr_in* address)
 {
 	struct sockaddr_in cliaddr;
-	socklen_t clilen;
+	int clilen;
 	int connfd;
 	SynceSocket* client = NULL;
 	fd_set read_set;
@@ -258,6 +263,8 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 	return 0 == bytes_needed;
 }
 
+#if HAVE_POLL
+
 /**
  * Convert from SocketEvents to poll events
  */
@@ -344,4 +351,6 @@ bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* 
 exit:
 	return success;
 }
+
+#endif /* HAVE_POLL */
 
