@@ -1,0 +1,32 @@
+$Id$
+
+Ideas for a proper implementation of USB support:
+
+(Inspired by http://jphoto.sourceforge.net/?selected=sync)
+
+(1) Require hotplug (http://linux-hotplug.sourceforge.net)
+
+(2) Modify /etc/hotplug/usb.usermap which has the following line format:
+
+															0x0001    0x0002       0x0004       0x0008       0x0010          0x0020          0x0040          0x0080             0x0100             0x0200
+		# usbmodule match_flags idVendor idProduct bcdDevice_lo bcdDevice_hi bDeviceClass bDeviceSubClass bDeviceProtocol bInterfaceClass bInterfaceSubClass bInterfaceProtocol driver_info
+
+		Something like this maybe?
+															
+		# Compaq iPAQ
+		synce 0x03 0x049f 0x0003 0 0 0 0 0 0 0 0 0
+		# HP Jornada 548
+		synce 0x03 0x03f0 0x1016 0 0 0 0 0 0 0 0 0
+		# HP Jornada 568
+		synce 0x03 0x03f0 0x1116 0 0 0 0 0 0 0 0 0
+		# Casio devices
+		synce 0x03 0x07cf 0x2002 0 0 0 0 0 0 0 0 0
+
+		Would be much easier if I knew the device class/subclass or interface class/subclass?
+		See also http://www.linux-usb.org/usb.ids
+
+
+(3) Add a /etc/hotplug/usb/synce script
+
+		Should set up / tear down the ppp connection as needed.
+
