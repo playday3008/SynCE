@@ -19,7 +19,7 @@ OpenOffice.</p>
 
 <ol>
 
-<li class=SPACED><p>Make a tool that should:</p>
+<li><p>Make a tool that should:</p>
 
 <ol>
 <li>Be written in C or C++</li>
@@ -27,6 +27,10 @@ OpenOffice.</p>
 <li>Be licensed with the <a href="http://opensource.org/licenses/mit-license.php">MIT license</a></li>
 <li>Be able to convert a PWI file to a plain text file</li>
 </ol>
+
+<p>This is now implemented! See <a
+href="http://cvs.sourceforge.net/viewcvs.py/synce/twogood-files/pwi/">A working
+PWI decoder</a>.</p></li>
 
 <li class=SPACED><p>Update the tool in (1) to support conversion from a PWI
 file to a <a href="http://www.w3.org/TR/xhtml1/">XHTML 1.0 Transitional</a> file,
