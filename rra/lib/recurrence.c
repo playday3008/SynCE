@@ -305,17 +305,24 @@ static void recurrence_set_days_of_week_mask(
   int i, j;
   char** days = strsplit(rrule->byday, ',');
 
-  for (i = 0; i < 7; i ++)
-    for (j = 0; days[j]; j++)
-    {
-      if (STR_EQUAL(masks_and_names[i].name, days[j]))
-        pattern->days_of_week_mask |= masks_and_names[i].mask;
-    }
+  if (days)
+  {
+    for (i = 0; i < 7; i ++)
+      for (j = 0; days[j]; j++)
+      {
+        if (STR_EQUAL(masks_and_names[i].name, days[j]))
+          pattern->days_of_week_mask |= masks_and_names[i].mask;
+      }
 
-  strv_free(days);
+    strv_free(days);
+  }
+  else
+  {
+    synce_warning("byday is '%s', that's not good", rrule->byday);
+  }
 }
 
-bool recurrcence_set_dates(
+static bool recurrence_set_dates(
     RRA_RecurrencePattern* pattern, 
     mdir_line* mdir_dtstart,
     mdir_line* mdir_dtend)
@@ -382,7 +389,7 @@ bool recurrence_parse_rrule(
   RRule rrule;
   RRA_RecurrencePattern* pattern = rra_recurrence_pattern_new();
 
-  if (!recurrcence_set_dates(pattern, mdir_dtstart, mdir_dtend))
+  if (!recurrence_set_dates(pattern, mdir_dtstart, mdir_dtend))
   {
     synce_error("Failed to set dates");
     goto exit;
@@ -427,6 +434,12 @@ bool recurrence_parse_rrule(
           mdir_rrule->values[0]);
       goto exit;
     }
+  }
+  else if (STR_EQUAL(rrule.freq, "YEARLY"))
+  {
+    /* Convert to Monthly with 12 times the interval */
+    pattern->recurrence_type = olRecursMonthly;
+    rrule.interval *= 12;
   }
   else
   {
