@@ -23,7 +23,7 @@
 
 namespace pocketPCCommunication {
 
-    enum RecordType {ALL = 0, CHANGED = 1, UNCHANGED = 2, DELETED = 3};
+    enum RecordType {ALL = 0x07, CHANGED = 0x01, UNCHANGED = 0x02, DELETED = 0x04};
 };
 
 

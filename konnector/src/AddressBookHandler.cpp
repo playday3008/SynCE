@@ -18,447 +18,229 @@
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
 #include "AddressBookHandler.h"
-#include <iostream>
 #include <kdebug.h>
 #include <kabc/vcardconverter.h>
-
-#include <qapplication.h>
-
-#include "matchmaker.h"
 
 
 namespace pocketPCCommunication
 {
-
-    uint32_t AddressBookHandler::s_typeId = 0;
-
-    AddressBookHandler::AddressBookHandler( const QString p_pdaName )
-            : PimHandler( p_pdaName )
-    {}
-
-
-    AddressBookHandler::AddressBookHandler( KSharedPtr<Rra> p_rra )
+    AddressBookHandler::AddressBookHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
             : PimHandler( p_rra )
-    {}
+    {
+        initialized = false;
+        mTypeId = 0;
+        this->mBaseDir = mBaseDir;
+        this->mUidHelper = mUidHelper;
+    }
+
+
+    bool AddressBookHandler::init()
+    {
+        mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_CONTACT );
+
+        return initialized = mTypeId != 0;
+    }
 
 
     AddressBookHandler::~AddressBookHandler()
-    {}
-
-
-    bool AddressBookHandler::getAddressBook ( KABC::AddressBook& p_addressBook, RecordType p_recType )
     {
-        //Rra rra(m_pdaName);
-        m_rra->connect();
-        //rra.connect();
+        mUidHelper->save();
+    }
 
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            //rra.disconnect();
+
+    int AddressBookHandler::retrieveAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
+    {
+        int count = 0;
+        KABC::VCardConverter vCardConv;
+
+        for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
+            count++;
+            kdDebug( 2120 ) << " ||| " << endl;
+            QString vCard = m_rra->getVCard( mTypeId, *it );
+
+            m_rra->markIdUnchanged( mTypeId, *it );
+
+            kdDebug( 2120 ) << vCard << endl;
+            KABC::Addressee addr = vCardConv.parseVCard ( vCard );
+            addr.setFormattedName(addr.formattedName().replace("\\,", ","));
+
+            QString kdeId;
+
+            if ((kdeId = mUidHelper->kdeId("SynCEAddressbook", addr.uid(), "---")) != "---") {
+                addr.setUid(kdeId);
+            } else {
+                mUidHelper->addId("SynCEAddressbook", addr.uid(), addr.uid());
+            }
+
+            mAddresseeList.push_back( addr );
+        }
+
+        return count;
+    }
+
+
+    int AddressBookHandler::fakeAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
+    {
+        int count = 0;
+
+        for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
+            count++;
+            kdDebug( 2120 ) << " &&& " << endl;
+            KABC::Addressee addr;
+
+            QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
+            QString kdeId;
+
+            if ((kdeId = mUidHelper->kdeId("SynCEAddressbook", konId, "---")) != "---") {
+                addr.setUid(kdeId);
+                mUidHelper->removeId("SynCEAddressbook", addr.uid());
+            }
+
+            mAddresseeList.push_back( addr );
+        }
+
+        return count;
+    }
+
+
+    bool AddressBookHandler::getIds()
+    {
+        if ( !m_rra->getIds( mTypeId, &ids ) ) {
+            kdDebug( 2120 ) << "AddressBookHandler::getIds: could not get the ids.. :(" << endl;
             return false;
         }
 
-        struct Rra::ids ids;
+        return true;
+    }
 
-        if ( !m_rra->getIds ( s_typeId, &ids ) )
-            //if (!rra.getIds (s_typeId, &ids))
-        {
-            m_rra->disconnect();
-            //rra.disconnect();
-            kdDebug( 2120 ) << "AddressBookHandler::getAddressBook: could not get the ids.. :(" << endl;
-            return false;
-        }
 
-        /*
-        kdDebug(2120) << "now getting partnership-info: " << endl;
-        uint32_t id;
-        m_rra->getMatchMaker()->get_partner_id(1, &id);
-        char* name;
-        m_rra->getMatchMaker()->get_partner_name(1, &name); // or mabybe 2??
-        kdDebug(2120) << "now getting partnership-info: " << "0x" << QString::number (id, 16) << "/" << name << endl;
-        */ 
-        // now we have all the necessary ids with their corresponding flag
-        // now get the vCards for all the ids and put them into the KABC::AddressBook
-
+    int AddressBookHandler::getAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, int mRecType )
+    {
         kdDebug( 2120 ) << "[AddressBookHandler]: got ids.. fetching information" << endl;
 
-        switch ( p_recType ) {
-        case ALL:
-            getAddressees ( p_addressBook, ids, CHANGED );
-            getAddressees ( p_addressBook, ids, DELETED );
-            getAddressees ( p_addressBook, ids, UNCHANGED );
-            break;
-        case CHANGED:
-            getAddressees ( p_addressBook, ids, CHANGED );
-            break;
-        case DELETED:
-            getAddressees ( p_addressBook, ids, DELETED );
-            break;
-        case UNCHANGED:
-            getAddressees ( p_addressBook, ids, UNCHANGED );
-            break;
-        }
-
-        //rra.disconnect();
-        m_rra->disconnect();
-        return true;
-    }
-
-
-    bool AddressBookHandler::putAddressBook ( KABC::AddressBook& p_addressBook )
-    {
-        //Rra rra(m_pdaName);
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return false;
-        }
-
-        // iteratore over all addressees
-        KABC::AddressBook::Iterator it = p_addressBook.begin();
-
-        clearIdPairs();
-
-        uint32_t objectId = 0;
-        uint32_t newObjectId;
-        bool ok;
-        KABC::VCardConverter vCardConv;
-        QString vCard;
-        //bool doPush;
-        /*
-        uint32_t id;
-        m_rra->getMatchMaker()->get_partner_id(1, &id);
-        QString partnerId = QString::number (id, 16);
-        */
-        QString partnerId;
-        partnerId = getPartnerId();
-
-        for ( ; it != p_addressBook.end(); ++it ) {
-            //doPush = false;
-            kdDebug( 2120 ) << "UID: " << ( *it ).uid() << endl;
-            QString curId = ( *it ).uid();
-            objectId = 0;
-            if ( ( *it ).uid().startsWith ( "RRA-ID-" ) ) {
-                //doPush = (*it).changed();
-                objectId = ( *it ).uid().remove( "RRA-ID-" ).toUInt( &ok, 16 );
-                if ( !ok )
-                    kdDebug( 2120 ) << "could not convert UID to uint32_t" << endl;
-                else
-                    kdDebug( 2120 ) << "RRA-ID: " << objectId << endl;
-            }
-            /*
-            else
-                doPush = true;
-            */ 
-            // now convert data to vCard and push it to the device
-            vCard = vCardConv.createVCard ( ( *it ) );
-
-            // only push the vCard if it is new (no RRA-ID-) or if it has changed (*it).changed()
-
-            newObjectId = 0;
-            newObjectId = m_rra->putVCard( vCard, s_typeId, objectId );
-            if ( newObjectId ) {
-                // the object was newly generated on the device!!
-                // so.. what shall we do with this id?
-                // ---> save it in the local addressBook!
-                //(*it).setUid ("RRA-ID-" + QString::number(newObjectId, 16));
-
-                //(*it).insertCustom (m_appName, m_keyName + "-" + partnerId, "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-
-                if ( "RRA-ID-" + QString::number( newObjectId, 16 ).rightJustify( 8, '0' ) != curId ) {
-                    kdDebug( 2120 ) << "getting new id: " << newObjectId << "    " << curId << endl;
-                    addIdPair( "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ), curId );
-                }
-            }
-        }
-
-        m_rra->disconnect();
-        return true;
-    }
-
-
-    bool AddressBookHandler::putAddressBook ( KABC::Addressee::List& p_addresseeList )
-    {
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return false;
-        }
-
-        clearIdPairs();
-
-        // iteratore over all addressees
-        //KABC::AddressBook::Iterator it = p_addressBook.begin();
-        KABC::Addressee::List::Iterator it = p_addresseeList.begin();
-
-        uint32_t objectId = 0;
-        uint32_t newObjectId;
-        bool ok;
-        KABC::VCardConverter vCardConv;
-        QString vCard;
-        /*
-        uint32_t id;
-        m_rra->getMatchMaker()->get_partner_id(1, &id);
-        QString partnerId = QString::number (id, 16);
-        */
-        QString partnerId;
-        partnerId = getPartnerId();
-
-        for ( ; it != p_addresseeList.end(); ++it ) {
-            kdDebug( 2120 ) << "UID: " << ( *it ).uid() << endl;
-            QString curId = ( *it ).uid();
-            objectId = 0;
-            if ( ( *it ).uid().startsWith ( "RRA-ID-" ) ) {
-                objectId = ( *it ).uid().remove( "RRA-ID-" ).toUInt( &ok, 16 );
-                if ( !ok )
-                    kdDebug( 2120 ) << "could not convert UID to uint32_t" << endl;
-                else
-                    kdDebug( 2120 ) << "RRA-ID: " << objectId << endl;
-            }
-            // now convert data to vCard and push it to the device
-            vCard = vCardConv.createVCard ( ( *it ) );
-
-            // only push the vCard if it is new (no RRA-ID-) or if it has changed (*it).changed()
-
-            newObjectId = 0;
-            newObjectId = m_rra->putVCard( vCard, s_typeId, objectId );
-            if ( newObjectId ) {
-                // the object was newly generated on the device!!
-                // so.. what shall we do with this id?
-                // ---> save it in the local addressBook!
-                //(*it).setUid ("RRA-ID-" + QString::number(newObjectId, 16));
-
-                //(*it).insertCustom (m_appName, m_keyName + "-" + partnerId, "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-
-                if ( "RRA-ID-" + QString::number( newObjectId, 16 ).rightJustify( 8, '0' ) != curId )
-                    addIdPair( "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ), curId );
-            }
-        }
-
-        m_rra->disconnect();
-        return true;
-
-    }
-
-
-    void AddressBookHandler::getAddressees ( KABC::AddressBook& p_addressBook, const struct Rra::ids& p_ids, RecordType p_recType )
-    {
-        QValueList<uint32_t>::const_iterator it;
+        QValueList<uint32_t>::const_iterator begin;
         QValueList<uint32_t>::const_iterator end;
-        QString vCard;
 
-        KABC::VCardConverter vCardConv;
-        KABC::Addressee addr;
+        int count = 0;
+        int ret = 0;
 
-        //emit progress(0);
-
-        //unsigned int size;
-
-        switch ( p_recType )
-        {
-        case CHANGED:
-            it = p_ids.changedIds.begin();
-            end = p_ids.changedIds.end();
-            //size = p_ids.changedIds.size();
-            break;
-        case DELETED:
-            it = p_ids.deletedIds.begin();
-            end = p_ids.deletedIds.end();
-            //size = p_ids.deletedIds.size();
-            break;
-        case UNCHANGED:
-            it = p_ids.unchangedIds.begin();
-            end = p_ids.unchangedIds.end();
-            //size = p_ids.unchangedIds.size();
-            break;
-        case ALL:  // not reasonable to have ALL here! added to avoid warning of gcc
-            break;
+        if ( ( mRecType & CHANGED ) && ( ret >= 0 ) ) {
+            ret = retrieveAddresseeListFromDevice( mAddresseeList, ids.changedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
         }
 
-        /*
-        uint32_t id;
-        m_rra->getMatchMaker()->get_partner_id(1, &id);
-        QString partnerId = QString::number (id, 16);
-        */
-        QString partnerId;
-        partnerId = getPartnerId();
-
-        for ( ;it != end; ++it )
-        {
-            vCard = m_rra->getVCard( s_typeId, *it );
-            addr = vCardConv.parseVCard ( vCard );
-            /*
-            kdDebug(2120) << "[AddressBookHandler]: addressee: " << addr.realName() << endl;
-            kdDebug(2120) << "[AddressBookHandler]: addressee: " << addr.assembledName() << endl;
-            kdDebug(2120) << "[AddressBookHandler]: vCard" << vCard << endl;
-            */ 
-            // manipulate addresse to get a real name!
-            addr.setNameFromString ( addr.assembledName() );
-            //addr.insertCustom (m_appName, m_keyName + "-" + partnerId, addr.uid());
-            p_addressBook.insertAddressee ( addr );
-            //emit progress (++prog * 100 / size);
-            //qApp->processEvents();
+        if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
+            ret = retrieveAddresseeListFromDevice( mAddresseeList, ids.deletedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
         }
+
+        if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
+            ret = fakeAddresseeListFromDevice( mAddresseeList, ids.unchangedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
+        }
+
+        if ( ret < 0 ) {
+            return -count - 1;
+        }
+
+        return count;
     }
 
 
-    bool AddressBookHandler::getAddressees ( KABC::Addressee::List& p_addresseeList, const QStringList& p_ids )
+    void AddressBookHandler::insertIntoAddressBookSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, KABC::Addressee::List &list, int state)
     {
-        if ( p_ids.begin() == p_ids.end() )
-            return true;
+        kdDebug(2120) << "Begin Inserting into AddressBookSyncee State: " << state << endl;
+        for(KABC::Addressee::List::Iterator it = list.begin(); it != list.end(); ++it) {
+            KSync::AddressBookSyncEntry entry(*it, mAddressBookSyncee);
+            entry.setState(state);
+            mAddressBookSyncee->addEntry(entry.clone());
+        }
+        kdDebug(2120) << "End Inserting into AddressBookSyncee" << endl;
+    }
 
-        //Rra rra(m_pdaName);
-        m_rra->connect();
-        //rra.connect();
 
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            //rra.disconnect();
+    bool AddressBookHandler::readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync)
+    {
+        if (!initialized) {
+            if (!init()) {
+                kdDebug(2120) << "Could not initialize AddressBookHandler" << endl;
+//              emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        if (!getIds()) {
+            kdDebug(2120) << "Could not retriev Address-IDs" << endl;
+//            emit synceeReadError(this);
             return false;
         }
 
-        QString vCard;
-        KABC::VCardConverter vCardConv;
-        KABC::Addressee addr;
+        mAddressBookSyncee->reset();
 
-        // and now.. geht the data.. :)
-        QStringList::const_iterator it = p_ids.begin();
-        for ( ; it != p_ids.end(); ++it ) {
-            kdDebug( 2120 ) << "getAddressees: " << *it << endl;
-            QString id = *it;
-            if ( isARraId ( id ) )  // this is not an RRA-ID!!
-            {
-                vCard = m_rra->getVCard( s_typeId, getOriginalId( ( id ) ) );
-                addr = vCardConv.parseVCard ( vCard );
-                addr.setNameFromString ( addr.assembledName() );
-                kdDebug( 2120 ) << "getAddressees: " << addr.uid() << "   " << addr.realName() << endl;
-                p_addresseeList.push_back ( addr );
-            } else
-                kdDebug( 2120 ) << "could not identify it as a RRA-ID!" << endl;
+        KABC::Addressee::List modifiedList;
+        if (firstSync) {
+            if (getAddresseeListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+        } else {
+            if (getAddresseeListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+
+            KABC::Addressee::List removedList;
+            if (getAddresseeListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+            insertIntoAddressBookSyncee(mAddressBookSyncee, removedList, KSync::SyncEntry::Removed);
         }
+        insertIntoAddressBookSyncee(mAddressBookSyncee, modifiedList, KSync::SyncEntry::Modified);
 
-        m_rra->disconnect();
+        mAddressBookSyncee->setTitle("SynCEAddressbook");
+        mAddressBookSyncee->setIdentifier(m_pdaName + "-Addressbook");
+
         return true;
     }
 
 
-    bool AddressBookHandler::getTypeId ()
+    void AddressBookHandler::getAddressees ( KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList )
     {
-        if ( !s_typeId )
-            s_typeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_CONTACT );
-
-        kdDebug( 2120 ) << "AddressBookHandler::s_typeId: " << s_typeId << endl;
-
-        if ( !s_typeId )
-            return false;
-        else
-            return true;
-    }
-
-
-    bool AddressBookHandler::getIdStatus ( QMap<QString, RecordType>& p_statusMap )
-    {
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return false;
+        kdDebug( 2120 ) << "getAddressees: " << endl;
+        KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin();
+        for ( ; it != p_ptrList.end(); ++it ) {
+            p_addressees.push_back ( ( dynamic_cast<KSync::AddressBookSyncEntry*>( *it ) ) ->addressee() );
+            kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::AddressBookSyncEntry*>( *it ) ) ->id() << endl;
         }
-        //m_rra->finalDisconnect();
-
-        bool ok = getIdStatusPro( p_statusMap, s_typeId );
-
-        m_rra->disconnect();
-
-        return ok;
-        //return getIdStatusPro(p_statusMap, s_typeId);
-    }
-
-
-    void AddressBookHandler::deleteAddressBook ()
-    {
-        kdDebug() << "AddressBookHandler::deleteAddressBook" << endl;
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return ;
-        }
-
-        struct pocketPCCommunication::Rra::ids ids;
-        if ( !m_rra->getIds ( s_typeId, &ids ) ) {
-            m_rra->disconnect();
-            return ;
-        }
-
-        kdDebug() << "AddressBookHandler:: calling deleteEntries" << endl;
-
-        deleteEntries( ids, s_typeId, CHANGED );
-        deleteEntries( ids, s_typeId, UNCHANGED );
-        deleteEntries( ids, s_typeId, DELETED );
-
-        m_rra->disconnect();
-    }
-
-
-    void AddressBookHandler::deleteEntry ( const uint32_t& p_objectId )
-    {
-        kdDebug() << "AddressBookHandler::deleteEntry" << endl;
-        if ( !getTypeId() ) {
-            //m_rra->disconnect();
-            return ;
-        }
-        deleteSingleEntry ( s_typeId, p_objectId );
     }
 
 
     void AddressBookHandler::addAddressees( KABC::Addressee::List& p_addresseeList )
     {
-        kdDebug() << "AddressBookHandler:: addAddressees" << endl;
         if ( p_addresseeList.begin() == p_addresseeList.end() )
             return ;
 
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return ;
-        }
-
-        clearIdPairs();
-
-        KABC::Addressee::List::Iterator it = p_addresseeList.begin();
-        uint32_t newObjectId;
         KABC::VCardConverter vCardConv;
         QString vCard;
 
-        for ( ; it != p_addresseeList.end(); ++it ) {
-            //if (!isARraId ((*it).uid())) // this is not an RRA-ID!!
-            {
-                QString curId = ( *it ).uid();
+        for (KABC::Addressee::List::Iterator it = p_addresseeList.begin();
+                it != p_addresseeList.end(); ++it ) {
 
-                uint32_t remId = 0;
-                if ( isARraId( curId ) )
-                    remId = getOriginalId( curId );
+            vCard = vCardConv.createVCard ( ( *it ) );
 
-                kdDebug() << "   isARraId: " << remId << endl;
-                vCard = vCardConv.createVCard ( ( *it ) );
+            uint32_t newObjectId = m_rra->putVCard( vCard, mTypeId, 0 );
 
-                newObjectId = 0;
-                newObjectId = m_rra->putVCard( vCard, s_typeId, remId ); //getOriginalId(curId));
-                if ( newObjectId )  // must be a new object id at this place!!!
-                {
-                    //(*it).insertCustom (m_appName, m_keyName + "-" + partnerId, "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-                    kdDebug() << "    adding new entry: " << "RRA-ID-" + QString::number( newObjectId, 16 ).rightJustify( 8, '0' ) << endl;
-                    if ( "RRA-ID-" + QString::number( newObjectId, 16 ).rightJustify( 8, '0' ) != curId )
-                        addIdPair( "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ), curId );
-                }
-            }
+            mUidHelper->addId("SynCEAddressbook",
+                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
+                (*it).uid());
         }
-
-        m_rra->disconnect();
     }
 
 
@@ -467,26 +249,18 @@ namespace pocketPCCommunication
         if ( p_addresseeList.begin() == p_addresseeList.end() )
             return ;
 
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return ;
-        }
-
         KABC::Addressee::List::Iterator it = p_addresseeList.begin();
         KABC::VCardConverter vCardConv;
         QString vCard;
 
         for ( ; it != p_addresseeList.end(); ++it ) {
-            if ( isARraId ( ( *it ).uid() ) ) {
-                vCard = vCardConv.createVCard ( ( *it ) );
+            QString kUid = mUidHelper->konnectorId("SynCEAddressbook", (*it).uid(), "---");
 
-                m_rra->putVCard ( vCard, s_typeId, getOriginalId( ( *it ).uid() ) );
+            if (kUid != "---") {
+                vCard = vCardConv.createVCard ( ( *it ) );
+                m_rra->putVCard ( vCard, mTypeId, getOriginalId( kUid ) );
             }
         }
-
-        m_rra->disconnect();
     }
 
 
@@ -495,22 +269,70 @@ namespace pocketPCCommunication
         if ( p_addresseeList.begin() == p_addresseeList.end() )
             return ;
 
-        m_rra->connect();
-
-        if ( !getTypeId() ) {
-            m_rra->disconnect();
-            return ;
-        }
-
         KABC::Addressee::List::Iterator it = p_addresseeList.begin();
 
         for ( ; it != p_addresseeList.end(); ++it ) {
-            if ( isARraId ( ( *it ).uid() ) ) {
-                deleteSingleEntry ( s_typeId, getOriginalId( ( *it ).uid() ) );
+            QString kUid = mUidHelper->konnectorId("SynCEAddressbook", (*it).uid(), "---");
+
+            if (kUid != "---") {
+                deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
+                mUidHelper->removeId("SynCEAddressbook", kUid);
+            }
+        }
+    }
+
+
+    bool AddressBookHandler::writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee)
+    {
+        if (!initialized) {
+            if (!init()) {
+                kdDebug(2120) << "Could not initialize AddressBookHandler" << endl;
+//              emit synceeReadError(this);
+                return false;
             }
         }
 
-        m_rra->disconnect();
+        if ( mAddressBookSyncee->isValid() ) {
+            KABC::Addressee::List addrAdded;
+            KABC::Addressee::List addrRemoved;
+            KABC::Addressee::List addrModified;
+
+            getAddressees( addrAdded, mAddressBookSyncee->added() );
+            getAddressees( addrRemoved, mAddressBookSyncee->removed() );
+            getAddressees( addrModified, mAddressBookSyncee->modified() );
+
+            addAddressees( addrAdded );
+            removeAddressees( addrRemoved );
+            updateAddressees( addrModified );
+        }
+
+        return true;
     }
 
+
+    bool AddressBookHandler::connectDevice()
+    {
+        if ( !m_rra->connect()) {
+            kdDebug( 2120 ) << "PocketPCKonnector: could not connect to device!" << endl;
+            return false;
+        } else {
+            kdDebug( 2120 ) << "PocketPCKonnector: connected to device!" << endl;;
+        }
+
+        return true;
+    }
+
+
+    /** Disconnect the device.
+     * @see KSync::Konnector::disconnectDevice()
+     * @return true if device can be disconnect. false otherwise
+     */
+    bool AddressBookHandler::disconnectDevice()
+    {
+        m_rra->disconnect();
+
+        mUidHelper->save();
+
+        return true;
+    }
 };

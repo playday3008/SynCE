@@ -21,73 +21,59 @@
 #define POCKETPCCOMMUNICATIONADDRESSBOOKHANDLER_H
 
 #include "PimHandler.h"
-#include <kabc/addressbook.h>
-#include "RecordType.h"
+#include <kitchensync/addressbooksyncee.h>
+#include <kitchensync/idhelper.h>
+
 
 namespace pocketPCCommunication {
 
 /**
 This class handles an AddressBook which can be read from and written to a Windows CE device.
 
-@author Christian Fremgen cfremgen@users.sourceforge.net
+@author Christian Fremgen cfremgen@users.sourceforge.net, Volker Christian voc@users.sourceforge.net
 */
 class AddressBookHandler : public PimHandler
 {
-public:   
-    /** Just a simple constructor.
-      * @param p_pdaName as the name says :)
-      */
-    AddressBookHandler(const QString p_pdaName);
+public:
+    AddressBookHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
 
-    AddressBookHandler (KSharedPtr<Rra> p_rra);
+    bool init();
 
     virtual ~AddressBookHandler();
 
-    /** This method gets the contacts from the device and stores them in p_addressBook.      
-      * @param p_addressBook the addressees are stored in here
-      * @param p_recType tell the method in what kind of records you are interested @see RecordType
-      */
-    bool getAddressBook (KABC::AddressBook& p_addressBook, RecordType p_recType = ALL);
-    
-    /** This method pushes the contacts from the addressBook to the device.      
-      * @param p_addressBook the addressees are stored in here
-      */
-    bool putAddressBook (KABC::AddressBook& p_addressBook); // needs RecordType??
+    int retrieveAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
+    int fakeAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
+    bool getIds();
+    int getAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, int mRecType);
+    bool readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync);
+    void getAddressees ( KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
+    bool writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee);
+    void insertIntoAddressBookSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, KABC::Addressee::List &list, int state);
 
-    /** Since KABC::AddressBook::insertAddressee does not always work, this method
-      * can work with a list of addressees.
-      */
-    bool putAddressBook (KABC::Addressee::List& p_addresseeList);
-        
-    
-    bool getIdStatus (QMap<QString, RecordType>& p_statusMap);
-    
-    void deleteAddressBook ();
-        
     void addAddressees    (KABC::Addressee::List& p_addresseeList);
     void updateAddressees (KABC::Addressee::List& p_addresseeList);
     void removeAddressees (KABC::Addressee::List& p_addresseeList);
-    
-    bool getAddressees    (KABC::Addressee::List& p_addresseeList, const QStringList& p_ids);
-    
-    /*)
-signals:
-    void progress (int p_progress);
-    */
-protected:
-    bool getTypeId ();
-    
-private:
-    /** This private method retrieves all the requested information to fill the address book.
-      * @param p_addressBook the addressees are stored in here
-      * @param p_ids this struct holds all the ids (changed, unchanged, deleted)
-      * @param p_recType specify in which information you are interested
-      */
-    void getAddressees (KABC::AddressBook& p_addressBook, const struct Rra::ids& p_ids, RecordType p_recType);
-    
-    virtual void deleteEntry (const uint32_t& p_objectId);
 
-    static uint32_t    s_typeId;   /**< This static member stores the typeId belonging to "Contact" */
+    /** Connect the device.
+     * @see KSync::Konnector::connectDevice()
+     * @return true if device can be connected. false otherwise
+     */
+    virtual bool connectDevice();
+
+    /** Disconnect the device.
+     * @see KSync::Konnector::disconnectDevice()
+     * @return true if device can be disconnect. false otherwise
+     */
+    virtual bool disconnectDevice();
+
+private:
+    uint32_t    mTypeId;   /**< This static member stores the typeId belonging to "Contact" */
+
+    bool initialized;
+
+    struct Rra::ids ids;
+    KSync::KonnectorUIDHelper *mUidHelper;
+    QString mBaseDir;
 };
 
 };

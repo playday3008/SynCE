@@ -79,6 +79,10 @@ public:
     Rra();
     virtual ~Rra();
 
+    bool initRapi();
+
+    bool uninitRapi();
+    bool markIdUnchanged(uint32_t type_id, uint32_t object_id);
     bool getTypes(QMap<int, RRA_SyncMgrType *> *);
     uint32_t getTypeForName (const QString& p_typeName);
     bool getIds(uint32_t type_id, struct Rra::ids *ids);

@@ -12,422 +12,328 @@
 #include "todohandler.h"
 
 #include <kdebug.h>
-//#include <qregexp.h>
-
-//#include <libkcal/vcalformat.h>
 #include <libkcal/icalformat.h>
 #include <libkcal/event.h>
 #include <libkcal/calendarnull.h>
 #include <libkcal/calendarlocal.h>
 #include <qfile.h>
 
-namespace pocketPCCommunication {
-
-uint32_t TodoHandler::s_typeIdTodo = 0;
-
-TodoHandler::TodoHandler(const QString& p_pdaName)
-    : PimHandler(p_pdaName)
+namespace pocketPCCommunication
 {
-    m_incidenceRegexp = QRegExp ("BEGIN.*VERSION:2.0");
-
-    s_typeIdTodo = 0;
-
-    QFile f("/etc/timezone");
-    if(f.open(IO_ReadOnly))
+    TodoHandler::TodoHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
+            : PimHandler( p_rra )
     {
-        QTextStream ts(&f);
-        ts >> sCurrentTimeZone;
+        initialized = false;
+        mTypeId = 0;
+        this->mBaseDir = mBaseDir;
+        this->mUidHelper = mUidHelper;
     }
 
-    f.close();
-}
 
-
-TodoHandler::TodoHandler(KSharedPtr<Rra> p_rra)
-    : PimHandler(p_rra)
-{
-    QFile f("/etc/timezone");
-    if(f.open(IO_ReadOnly))
+    bool TodoHandler::init()
     {
-        QTextStream ts(&f);
-        ts >> sCurrentTimeZone;
+        mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_TASK );
+
+        return initialized = mTypeId != 0;
     }
 
-    f.close();
-}
 
-
-TodoHandler::~TodoHandler()
-{
-}
-
-
-bool TodoHandler::getAllTodos (KCal::Calendar& p_calendar, RecordType p_recType)
-{
-    kdDebug(2120) << "[TodoHandler]: getCalendarTodos" << endl;
-
-    if (!getTypeId())
+    TodoHandler::~TodoHandler()
     {
-        return false;
+        mUidHelper->save();
     }
 
-    struct Rra::ids ids;
 
-    if (!m_rra->getIds (s_typeIdTodo, &ids))
+    int TodoHandler::retrieveTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList)
     {
-        return false;
-    }
+        int count = 0;
 
-    // and now.. get the object ids...
-    kdDebug(2120) << "[TodoHandler]: got todo ids.. fetching information" << endl;
+        KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
 
-    switch (p_recType)
-    {
-        case ALL:
-            getTodoEntry (p_calendar, ids, CHANGED);
-            getTodoEntry (p_calendar, ids, DELETED);
-            getTodoEntry (p_calendar, ids, UNCHANGED);
-            break;
-        case CHANGED:
-            getTodoEntry (p_calendar, ids, CHANGED);
-            break;
-        case DELETED:
-            getTodoEntry (p_calendar, ids, DELETED);
-            break;
-        case UNCHANGED:
-            getTodoEntry (p_calendar, ids, UNCHANGED);
-            break;
-    }
+        QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
+        QString vCalEnd = "END:VCALENDAR\n";
 
-    return true;
-}
+        for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
+            count++;
+            kdDebug( 2120 ) << " ||| " << endl;
 
+            QString vCal = vCalBegin + m_rra->getVToDo( mTypeId, *it ) + vCalEnd;
 
-void TodoHandler::getTodoEntry (KCal::Calendar& p_calendar, const struct Rra::ids& p_ids, RecordType p_recType)
-{
-    QValueList<uint32_t>::const_iterator it;
-    QValueList<uint32_t>::const_iterator end;
+            m_rra->markIdUnchanged( mTypeId, *it );
 
-    QString vCal;
+            KCal::Incidence *incidence = calFormat.fromString (vCal);
 
-    switch (p_recType)
-    {
-        case CHANGED:
-            it = p_ids.changedIds.begin();
-            end = p_ids.changedIds.end();
-            break;
-        case DELETED:
-            it = p_ids.deletedIds.begin();
-            end = p_ids.deletedIds.end();
-            break;
-        case UNCHANGED:
-            it = p_ids.unchangedIds.begin();
-            end = p_ids.unchangedIds.end();
-            break;
-        case ALL: // not reasonable to have ALL here! added to avoid warning of gcc
-            break;
-    }
+            QString kdeId;
 
-    KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
-    KCal::CalendarLocal cal;
+            if ((kdeId = mUidHelper->kdeId("SynCETodo", incidence->uid(), "---")) != "---") {
+                incidence->setUid(kdeId);
+            } else {
+                mUidHelper->addId("SynCETodo", incidence->uid(), incidence->uid());
+            }
 
-    QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
-    QString vCalEnd = "END:VCALENDAR\n";
-
-    /*
-    uint32_t id;
-    m_rra->getMatchMaker()->get_partner_id(1, &id);
-    QString partnerId = QString::number (id, 16);
-    */
-    QString partnerId;
-    partnerId = getPartnerId();
-
-    for (;it != end; ++it)
-    {
-        vCal = vCalBegin + m_rra->getVToDo(s_typeIdTodo, *it) + vCalEnd;
-        //kdDebug(2120) << "[TodoHandler]: calendar: " << vCal << endl;
-
-        if (!calFormat.fromString (&p_calendar, vCal))
-            kdDebug(2120) << "[TodoHandler]: getting of todo failed!" << endl;
-        else
-        {
-            /*
-            const QString key = m_keyName + "-" + partnerId;
-            const QString value = "RRA-ID-" + QString::number (*it, 16).rightJustify (8, '0');
-            */
-            //KCal::Todo* todo = p_calendar.todo(value);
-            //todo->setNonKDECustomProperty (("X-"+m_appName+"-"+key).latin1(), value);
-
-            //ev->updated();
+            mTodoList.push_back( dynamic_cast<KCal::Todo*> (incidence) );
         }
+
+        return count;
     }
-}
 
 
-bool TodoHandler::putTodos (KCal::Calendar& p_calendar)
-{
-    //Rra rra(m_pdaName);
-    //rra.connect();
+    int TodoHandler::fakeTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList)
+    {
+        int count = 0;
 
-    KCal::Todo::List eList = p_calendar.rawTodos();
-    KCal::Todo::List::iterator it = eList.begin();
+        for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
+            count++;
+            kdDebug( 2120 ) << " &&& " << endl;
+            KCal::Todo *todo = new KCal::Todo();
 
-    QString vTodo;
-    uint32_t objectId = 0;
-    uint32_t newObjectId;
-    bool ok;
+            QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
+            QString kdeId;
 
-    if (eList.begin() == eList.end())
+            if ((kdeId = mUidHelper->kdeId("SynCETodo", konId, "---")) != "---") {
+                todo->setUid(kdeId);
+                mUidHelper->removeId("SynCETodo", todo->uid());
+            }
+
+            mTodoList.push_back( todo );
+        }
+
+        return count;
+    }
+
+
+    bool TodoHandler::getIds()
+    {
+        if ( !m_rra->getIds( mTypeId, &ids ) ) {
+            kdDebug( 2120 ) << "TodoHandler::getIds: could not get the ids.. :(" << endl;
+            return false;
+        }
+
         return true;
-
-    if (!getTypeId())
-    {
-        return false;
-    }
-    /*
-    uint32_t id;
-    m_rra->getMatchMaker()->get_partner_id(1, &id);
-    QString partnerId = QString::number (id, 16);
-    */
-    QString partnerId;
-    partnerId = getPartnerId();
-
-    clearIdPairs();
-
-    for (; it != eList.end(); ++it)
-    {
-        kdDebug(2120) << "[TodoHandler]: putCalendarTasks: todo.summary(): " << (*it)->summary() << endl;
-        // convert this to a vTodo!
-        //vTodo = calFormat.toICalString (*it);
-        vTodo = makeVIncidence (*it);
-
-        //kdDebug(2120) << "[TodoHandler]: putCalendarTasks: calString: " << vTodo << endl;
-
-        // ok.. write them to the device!
-        QString curId;
-        curId = (*it)->uid();
-
-        objectId = 0;
-        if ((*it)->uid().startsWith ("RRA-ID-"))
-        {
-            //doPush = (*it).changed();
-            objectId = (*it)->uid().remove("RRA-ID-").toUInt(&ok, 16);
-            if (!ok)
-                kdDebug(2120) << "could not convert UID to uint32_t" << endl;
-            else
-                kdDebug(2120) << "RRA-ID: " << objectId << endl;
-        }
-        newObjectId = 0;
-
-        //kdDebug(2120) << "[TodoHandler]: putCalendarTodos: calString after removal: " << endl << vTodo << endl;
-
-
-        newObjectId = m_rra->putVToDo(vTodo, s_typeIdTodo, objectId);
-        if (newObjectId)
-        {
-            // the object was newly generated on the device!!
-            // so.. what shall we do with this id?
-            // ---> save it in the local addressBook!
-            //(*it)->setUid ("RRA-ID-" + QString::number(newObjectId, 16));
-
-            //(*it)->setNonKDECustomProperty (("X-"+m_appName+"-"+m_keyName + "-" + partnerId).latin1(), "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-
-            if ("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0') != curId)
-                addIdPair("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'), curId);
-        }
     }
 
-    return true;
-}
 
-
-bool TodoHandler::getTypeId ()
-{
-    if (!s_typeIdTodo)
-        s_typeIdTodo = m_rra->getTypeForName(RRA_SYNCMGR_TYPE_TASK);
-
-    if (!s_typeIdTodo)
-        return false;
-    else
-        return true;
-}
-
-
-bool TodoHandler::getIdStatus (QMap<QString, RecordType>& p_statusMap)
-{
-
-    if (!getTypeId())
+    int TodoHandler::getTodoListFromDevice(KCal::Todo::List &mTodoList, int mRecType)
     {
-        return false;
-    }
+        kdDebug( 2120 ) << "[TodoHandler]: got ids.. fetching information" << endl;
 
-    return getIdStatusPro(p_statusMap, s_typeIdTodo);
-}
+        QValueList<uint32_t>::const_iterator begin;
+        QValueList<uint32_t>::const_iterator end;
 
+        int count = 0;
+        int ret = 0;
 
-void TodoHandler::deleteTodoEntry(const uint32_t& p_objectId)
-{
-    kdDebug() << "TodoHandler::deleteTodoEntry" << endl;
-
-    if (!getTypeId())
-        return;
-
-    deleteSingleEntry (s_typeIdTodo, p_objectId);
-}
-
-
-void TodoHandler::addTodos (KCal::Todo::List& p_todos)
-{
-    if (p_todos.begin() == p_todos.end())
-        return;
-
-    if (!getTypeId())
-    {
-        return;
-    }
-
-    KCal::Todo::List::Iterator it = p_todos.begin();
-    QString vEvent;
-    uint32_t newObjectId;
-    QString curId;
-
-    for (; it != p_todos.end(); ++it)
-    {
-        //if (!isARraId ((*it)->uid())) // this must be a new entry!!!
-        {
-            curId = (*it)->uid();
-            vEvent = makeVIncidence (*it);
-            //kdDebug() << "TodoHandler vincidence: " << endl;
-            //kdDebug() << vEvent << endl;
-            uint32_t remId = 0;
-            if (isARraId(curId))
-                remId = getOriginalId(curId);
-
-            newObjectId = m_rra->putVToDo (vEvent, s_typeIdTodo, remId); //getOriginalId((*it)->uid()));
-
-            if (newObjectId) // must be!!!
-            {
-                //(*it)->setNonKDECustomProperty (("X-"+m_appName+"-"+m_keyName + "-" + partnerId).latin1(), "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-                if ("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0') != curId)
-                    addIdPair("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'), curId);
+        if ( ( mRecType & CHANGED ) && ( ret >= 0 ) ) {
+            ret = retrieveTodoListFromDevice( mTodoList, ids.changedIds );
+            if ( ret >= 0 ) {
+                count += 0;
             }
         }
-    }
-}
 
-
-void TodoHandler::updateTodos (KCal::Todo::List& p_todos)
-{
-    if (p_todos.begin() == p_todos.end())
-        return;
-
-    if (!getTypeId())
-    {
-        return;
-    }
-
-    KCal::Todo::List::Iterator it = p_todos.begin();
-    QString vEvent;
-    QString curId;
-
-    for (; it != p_todos.end(); ++it)
-    {
-        if (isARraId ((*it)->uid())) // must exist on device!!!
-        {
-            curId = (*it)->uid();
-            vEvent = makeVIncidence (*it);
-            m_rra->putVToDo (vEvent, s_typeIdTodo, getOriginalId((*it)->uid()));
+        if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
+            ret = retrieveTodoListFromDevice( mTodoList, ids.deletedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
         }
+
+        if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
+            ret = fakeTodoListFromDevice( mTodoList, ids.unchangedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
+        }
+
+        if ( ret < 0 ) {
+            return -count - 1;
+        }
+
+        return count;
     }
-}
 
 
-void TodoHandler::removeTodos (KCal::Todo::List& p_todos)
-{
-    if (p_todos.begin() == p_todos.end())
-        return;
-
-    if (!getTypeId()) {
-        return;
-    }
-
-    KCal::Todo::List::Iterator it = p_todos.begin();
-
-    for (; it != p_todos.end(); ++it)
+    void TodoHandler::insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Todo::List &list, int state)
     {
-        if (isARraId((*it)->uid()))
-            deleteTodoEntry(getOriginalId((*it)->uid()));
+        kdDebug(2120) << "Begin Inserting into TodoSyncee State: " << state << endl;
+        for(KCal::Todo::List::Iterator it = list.begin(); it != list.end(); ++it) {
+            KSync::CalendarSyncEntry entry(*it, mCalendarSyncee);
+            entry.setState(state);
+            mCalendarSyncee->addEntry(entry.clone());
+        }
+        kdDebug(2120) << "End Inserting into TodoSyncee" << endl;
     }
-}
 
 
-bool TodoHandler::getTodos (KCal::Todo::List& p_todos, const QStringList& p_ids)
-{
-    if (p_ids.begin() == p_ids.end())
+    bool TodoHandler::readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync)
+    {
+        if (!initialized) {
+            if (!init()) {
+                kdDebug(2120) << "Could not initialize TodoHandler" << endl;
+//              emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        if (!getIds()) {
+            kdDebug(2120) << "Could not retriev Todo-IDs" << endl;
+//            emit synceeReadError(this);
+            return false;
+        }
+
+        mCalendarSyncee->reset();
+
+        KCal::Todo::List modifiedList;
+        if (firstSync) {
+            if (getTodoListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+        } else {
+            if (getTodoListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+
+            KCal::Todo::List removedList;
+            if (getTodoListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+            insertIntoCalendarSyncee(mCalendarSyncee, removedList, KSync::SyncEntry::Removed);
+        }
+        insertIntoCalendarSyncee(mCalendarSyncee, modifiedList, KSync::SyncEntry::Modified);
+
+        mCalendarSyncee->setTitle("SynCETodo");
+        mCalendarSyncee->setIdentifier(m_pdaName + "-Todo");
+
         return true;
-
-    if (!getTypeId())
-    {
-        return false;
     }
 
-    QStringList::const_iterator it = p_ids.begin();
-    QString vTodo;
-    KCal::Incidence* todo;
-    KCal::ICalFormat conv;
 
-    QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
-    QString vCalEnd = "END:VCALENDAR\n";
-
-    for (; it != p_ids.end(); ++it)
+    void TodoHandler::getTodos (KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
     {
-        QString id = *it;
-        if (isARraId (id)) // this is not an RRA-ID!!
-        {
-            //vTodo = vCalBegin + m_rra->getVEvent(s_typeIdTodo, getOriginalId((id))) + vCalEnd;
-            vTodo = m_rra->getVToDo(s_typeIdTodo, getOriginalId((id)));
-            if (!vTodo.isEmpty())
-            {
-                vTodo = vCalBegin + vTodo + vCalEnd;
-                todo = conv.fromString (vTodo);
-                p_todos.push_back (dynamic_cast<KCal::Todo*>(todo));
+        kdDebug( 2120 ) << "getTodo: " << endl;
+
+        for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
+            KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
+            KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
+            if (todo) {
+                p_todos.push_back ( todo );
+                kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
             }
         }
     }
 
-    return true;
-}
 
-
-QString TodoHandler::makeVIncidence(KCal::Incidence* p_incidence)
-{
-    KCal::ICalFormat calFormat;
-
-    calFormat.setTimeZone(sCurrentTimeZone, false);
-
-    QString vIncidence;
-
-    vIncidence = calFormat.toICalString(p_incidence);
-
-    //kdDebug() << "TodoHandler::makeVIncidence: converted string" << endl;
-    //kdDebug() << vIncidence << endl;
-    // remove first three lines and the last line of the vEvent!
-    vIncidence = vIncidence.remove (QRegExp ("BEGIN.*VERSION:2.0"));
-    //vIncidence = vIncidence.remove (m_incidenceRegexp);
-    vIncidence = vIncidence.remove ("END:VCALENDAR");
-    vIncidence = vIncidence.stripWhiteSpace();
-    vIncidence = vIncidence + "\n";
-
-    int pos;
-    QString vAlarm = "END:VALARM";
-    if ((pos = vIncidence.find(vAlarm)) != -1) // remove the empty line after EDN:VALARM
+    void TodoHandler::addTodos(KCal::Todo::List& p_todoList)
     {
-        QChar newLine = vIncidence.at (pos + vAlarm.length());
-        if (vIncidence.at(pos+vAlarm.length()+1) == newLine)
-            vIncidence = vIncidence.remove(pos+vAlarm.length()+1, 1);
+        if ( p_todoList.begin() == p_todoList.end() )
+            return ;
+
+        KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
+
+        for (KCal::Todo::List::Iterator it = p_todoList.begin();
+                it != p_todoList.end(); ++it ) {
+
+            QString iCal = calFormat.toString(*it);
+
+            uint32_t newObjectId = m_rra->putVToDo( iCal, mTypeId, 0 );
+
+            mUidHelper->addId("SynCETodo",
+                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
+                (*it)->uid());
+        }
     }
 
-    return vIncidence;
-}
 
+    void TodoHandler::updateTodos (KCal::Todo::List& p_todoList)
+    {
+        if ( p_todoList.begin() == p_todoList.end() )
+            return ;
+
+        KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
+
+
+        for (KCal::Todo::List::Iterator it = p_todoList.begin();
+                it != p_todoList.end(); ++it ) {
+            QString kUid = mUidHelper->konnectorId("SynCETodo", (*it)->uid(), "---");
+
+            if (kUid != "---") {
+                QString iCal = calFormat.toString(*it);
+                m_rra->putVToDo( iCal, mTypeId, getOriginalId( kUid ) );
+            }
+        }
+    }
+
+
+    void TodoHandler::removeTodos (KCal::Todo::List& p_todoList)
+    {
+        if ( p_todoList.begin() == p_todoList.end() )
+            return ;
+
+        for (KCal::Todo::List::Iterator it = p_todoList.begin();
+                it != p_todoList.end(); ++it ) {
+            QString kUid = mUidHelper->konnectorId("SynCETodo", (*it)->uid(), "---");
+
+            if (kUid != "---") {
+                deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
+                mUidHelper->removeId("SynCETodo", kUid);
+            }
+        }
+    }
+
+
+    bool TodoHandler::writeSyncee(KSync::CalendarSyncee *mCalendarSyncee)
+    {
+        if (!initialized) {
+            if (!init()) {
+                kdDebug(2120) << "Could not initialize TodoHandler" << endl;
+//              emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        if ( mCalendarSyncee->isValid() ) {
+            KCal::Todo::List todoAdded;
+            KCal::Todo::List todoRemoved;
+            KCal::Todo::List todoModified;
+
+            getTodos( todoAdded, mCalendarSyncee->added() );
+            getTodos( todoRemoved, mCalendarSyncee->removed() );
+            getTodos( todoModified, mCalendarSyncee->modified() );
+
+            addTodos( todoAdded );
+            removeTodos( todoRemoved );
+            updateTodos( todoModified );
+        }
+
+        return true;
+    }
+
+
+    bool TodoHandler::connectDevice()
+    {
+        if ( !m_rra->connect() ) {
+            kdDebug( 2120 ) << "PocketPCKonnector: could not connect to device!" << endl;
+            return false;
+        } else {
+            kdDebug( 2120 ) << "PocketPCKonnector: connected to device!" << endl;;
+        }
+
+        return true;
+    }
+
+
+    /** Disconnect the device.
+     * @see KSync::Konnector::disconnectDevice()
+     * @return true if device can be disconnect. false otherwise
+     */
+    bool TodoHandler::disconnectDevice()
+    {
+        m_rra->disconnect();
+
+        mUidHelper->save();
+
+        return true;
+    }
 }

@@ -20,23 +20,12 @@
 #ifndef KSYNCPOCKETPCKONNECTOR_H
 #define KSYNCPOCKETPCKONNECTOR_H
 
-//#define __USE_ABOVE_KDEPIM_3_3_0__
-//#ifdef __USE_ABOVE_KDEPIM_3_3_0__
-#include <kitchensync/konnector.h>
-#include <kitchensync/konnectorinfo.h>
-//#include <kitchensync/kapabilities.h>
-#include <kitchensync/synceelist.h>
-//#else
-/*
-#include <konnector.h>
-#include <konnectorinfo.h>
-#include <kapabilities.h>
-#include <synceelist.h>
-*/
-//#endif
 #include <ksharedptr.h>
+
+#include <kitchensync/konnector.h>
+#include <kitchensync/synceelist.h>
+#include <kitchensync/idhelper.h>
 #include <libkcal/calendarlocal.h>
-#include <kabc/addressbook.h>
 
 #include "rra.h"
 #include "RecordType.h"
@@ -44,6 +33,11 @@
 namespace KCal
 {
     class Event;
+};
+
+namespace pocketPCCommunication {
+    class AddressBookHandler;
+    class TodoHandler;
 };
 
 class KABC::Addressee;
@@ -119,56 +113,29 @@ public:
     const QString getPdaName () const;
 
 private:
-    /** Modify the syncees in case of first sync.
-     * @param p_syncee the syncee we want to modify
-     */
-    void firstSyncModifications (KSync::Syncee* p_syncee);
 
-    /** Set the status of an entry and get or create a new Konnector-id.
-     * @param p_entry the entry which we want to change
-     * @param p_status the state we want to give this entry
-     */
-    void setSyncEntry    (KSync::SyncEntry* p_entry, KSync::SyncEntry::Status p_status);
+    KCal::CalendarLocal mCalendar;
 
-    /** When writing back to the device we want to have the original ids. This method reassigns them.
-     * @param p_syncee the syncee we want to change
-     * @param p_name name of the entries within the KonnectorUIDHelper
-     */
-    void setKonnectorId  (KSync::Syncee* p_syncee, const QString& p_name);
+    KSync::AddressBookSyncee *mAddressBookSyncee;
+    KSync::CalendarSyncee *mCalendarSyncee;
 
-    /** Save ids of added entries in the KonnectorUIDHelper.
-     * @param p_syncee the syncee with the ids
-     * @param p_name name of the entries within KonnectorUIDHelper
-     */
-    void saveIds         (KSync::Syncee* p_syncee, const QString& p_name);
+    pocketPCCommunication::AddressBookHandler *mAddrHandler;
+    pocketPCCommunication::TodoHandler *mTodoHandler;
+
+    SynceeList mSyncees;
+
+    QString    mBaseDir;
 
     /** Just dump the ids of a syncee
      * @param p_syncee syncee to dump
      */
     void dumpIds         (KSync::Syncee* p_syncee);
 
-    /** Add new ids to the KonnectorUIDHelper which are generated when writing to the device.
-     * @param p_syncee to have proper ids in the meta-file we need to adjust the ids in this syncee
-     * @param p_name name of the entries within KonnectorUIDHelper
-     * @param p_newIds just the new ids (in conjunction with the local ones!)
-     * @return a list of all the RRA-IDs which must be appended to the ids-File
-     */
-    QStringList addNewIds       (KSync::Syncee* p_syncee, const QString& p_name, QValueList<QPair<QString, QString> > p_newIds);
-    /** The other way round to the above method (@see addNewIds())
-     * @param p_name name of the entries within KonnectorUIDHelper
-     * @param p_oldIds removed ids which are no longer usefull
-     */
-    void removeOldIds    (const QString& p_name, KSync::SyncEntry::PtrList p_oldIds);
 
     /** Just clear the internal data structures like m_addressBook.
      */
     void clearDataStructures ();
 
-    /** Get a specified list of addressees to write to the device. e.g. all modified or added entries.
-     * @param p_addressees addressees are stored here
-     * @param p_ptrList a list of SyncEntries in which we are interestd (e.g. syncee->added() or syncee->modified())
-     */
-    void getAddressees (KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList);
     /** Get a specified list of events and todos to write to the device. e.g. all modified or added entries.
      * @param p_events events are stored here
      * @param p_todos todos are stored here
@@ -176,49 +143,10 @@ private:
      */
     void getEvents     (KCal::Event::List& p_events, KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList);
 
-    /** Load the meta data. This is the remote addressBook- and calendar-data which is stored locally.
-     * @param p_dir directory where this data can be found
-     */
-    void loadAddressbookMetaData  (const QString& p_dir);
-    void loadCalendarMetaData  (const QString& p_dir);
-    /** Save the meta data. This is the remote addressBook- and calendar-data which is stored locally.
-     * @param p_dir directory where this data can be found
-     */
-    void saveAddressbookMetaData  (const QString& p_dir);
-    void saveCalendarMetaData  (const QString& p_dir);
-
-    /** Update the addressBook after loading the data from the device after a first sync. This sets the correct state of the SyncEntries
-     * and does the necessary id-conversion.
-     * @param p_added added addressees
-     * @param p_modified modified addressees
-     * @param p_removed ids for the removed addressees. These entries do exist locally within the meta-data!
-     */
-    void updateAddressBookSyncee (KABC::Addressee::List& p_added, KABC::Addressee::List& p_modified, QStringList& p_removed);
-    /** Update the calendar after loading the data from the device after a first sync. This sets the correct state of the SyncEntries
-     * and does the necessary id-conversion.
-     * @param p_addedEvents new events
-     * @param p_modifiedEvents modified events
-     * @param p_addedTodos new todos
-     * @param p_modifiedTodos modified todos
-     * @param p_removedIds ids for the removed events and todos. These entries do exist locally within the meta-data!
-     */
-    void updateCalendarSyncee(KCal::Event::List& p_addedEvents, KCal::Event::List& p_modifiedEvents, QStringList& p_removedIds);
-
-    void updateCalendarSyncee(KCal::Todo::List& p_addedTodos, KCal::Todo::List& p_modifiedTodos,       QStringList& p_removedIds);
-
-
     QString    m_pdaName;
-    QString    m_baseDir;
-
-    KSync::SynceeList m_syncees;
-
     KSharedPtr<pocketPCCommunication::Rra>    m_rra;
-    bool                                      m_rraExists;
 
-    KSync::KonnectorUIDHelper*                m_uidHelper;
-
-    KABC::AddressBook*                        m_addressBook;
-    KCal::CalendarLocal*                      m_calendar;
+    KSync::KonnectorUIDHelper *mUidHelper;
 };
 
 };
