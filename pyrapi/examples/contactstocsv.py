@@ -4,6 +4,7 @@ import sys,time,string
 import getopt
 
 from pyrapi import database
+from pyrapi import pyrapi
 
 
 def writeCSVHead(file,db):
@@ -56,6 +57,5 @@ writeCSVHead(file,db)
 
 for record in db:
     writeContact(file,db,record)
-
 
 file.close()

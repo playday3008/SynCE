@@ -7,53 +7,130 @@ from __future__ import generators
 
 import pyrapi
 
+def get_field_value(field):
+    if field.type ==  pyrapi.CEVT_I2:
+        return field.val.iVal
+    if field.type ==  pyrapi.CEVT_I4:
+        return field.val.lVal
+    if field.type ==  pyrapi.CEVT_R8:
+        return field.val.dblVal
+    if field.type ==  pyrapi.CEVT_BOOL:
+        return field.val.boolVal
+    if field.type ==  pyrapi.CEVT_UI2:
+        return field.val.uiVal
+    if field.type ==  pyrapi.CEVT_UI4:
+        return field.val.ulVal
+    if field.type ==  pyrapi.CEVT_LPWSTR:
+        return field.val.lpwstr
+    if field.type ==  pyrapi.CEVT_FILETIME:
+        return field.val.filetime
+    if field.type ==  pyrapi.CEVT_BLOB:
+        # Not yet implemented
+        return "BLOB"
+        #return repr(field.blob)
+
+def set_field_value(field,value):
+    if field.type ==  pyrapi.CEVT_I2:
+        field.val.iVal = value
+    if field.type ==  pyrapi.CEVT_I4:
+       field.val.lVal = value
+    if field.type ==  pyrapi.CEVT_R8:
+        field.val.dblVal = value
+    if field.type ==  pyrapi.CEVT_BOOL:
+        field.val.boolVal = value
+    if field.type ==  pyrapi.CEVT_UI2:
+        field.val.uiVal = value
+    if field.type ==  pyrapi.CEVT_UI4:
+        field.val.ulVal = value
+    if field.type ==  pyrapi.CEVT_LPWSTR:
+        field.val.lpwstr = value
+    if field.type ==  pyrapi.CEVT_FILETIME:
+        field.val.filetime = value
+    if field.type ==  pyrapi.CEVT_BLOB:
+        field.blob = value
+    
+
 class CeRecord(object):
     """
     Base class for CeDatabase records.
     """
 
-    def __init__(self, record,field_mapping=None):
+    def __init__(self, dbh, record,field_mapping=None):
         """
         record - the return from the CeReadRecordProps call.
         """
 
+        print "Record -> ", repr(record)
+        self._dbh  = dbh
         self._oid    = record[0]
         self._record = record[1]
         self._field_mapping = field_mapping
+
+        self._field_ids = [field.propid for field in self._record]
+        print "field ids: ", self._field_ids
         
         self._reverse_mapping = {}
         for mapping in self._field_mapping:
-            if self._field_mapping[mapping] in self._record.keys():
+            if self._field_mapping[mapping] in self._field_ids:
                 self._reverse_mapping[self._field_mapping[mapping]] = mapping
 
-        print "Reverse mapping -> ",repr(self._reverse_mapping)
-        print "Record -> ", repr(self._record)
 
     def getoid(self):
         return self._oid
 
     def keys(self):
         if self._field_mapping == None:
-            return self._record.keys()
+            return self._field_ids
 
         return self._reverse_mapping.values()
+
+    def _lookup_field(self,field_oid):
+        field = None
+        
+        if self._field_mapping.has_key(field_oid):
+            # field_oid is a string name
+            candidate_fields = [field for field in self._record if field.propid == self._field_mapping[field_oid]]
+            if len(candidate_fields) != 0: field = candidate_fields[0]
+        else:
+            candidate_fields = [field for field in self._record if field.propid == field_oid]
+            if len(candidate_fields) != 0: field = candidate_fields[0]
+
+        return field
     
     def __getitem__(self,field_oid):
         """
         Accessor function so that record can be treated as a dictionary.
         """
-        if self._field_mapping.has_key(field_oid):
-            # field_oid is a string name
-            return self._record[self._field_mapping[field_oid]][1]
         
-        self._record[field_oid][1]
+        field = self._lookup_field(field_oid)
+
+        return get_field_value(field)
+    
+    def __setitem__(self,field_oid,new_value):
+        """
+        Setter function so that record can be treated as a dictionary.
+        """
+        field = self._lookup_field(field_oid)
+        
+        if field == None:
+            pass # Not yet implemented
+        
+        set_field_value(field,new_value)
+        
+
+    def update(self):
+        """
+        Write any changes back to the database.
+        """
+        print self._dbh,self._oid,self._record
+        return pyrapi.CeWriteRecordProps(self._dbh,self._oid,self._record)
 
     def next(self):
         """
         Return the next field in the record.
         """
-        for field in self._record.values():
-            yield field[1]
+        for field in self._record:
+            yield field
 
         raise StopIteration
     
@@ -62,16 +139,19 @@ class CeRecord(object):
 
     def __repr__(self):
         s = "Record oid = %s\n" % (str(self._oid),)
-        s += "oid\t name\t type\t value\n\n"
-        for oid,field in self._record.items():
+        s += "oid     \tname    \ttype     \tvalue\n\n"
+        for field in self._record:
             if self._field_mapping == None:
-                s += "%s\t None\t %s\t %s\n" % (oid,field[0],field[1])
+                s += "%s\t None\t %d\t " % (str(self._oid),field.propid)
             else:
                 field_name = "Unknown"
                 for mapping in self._field_mapping:
-                    if self._field_mapping[mapping] == oid:
+                    if self._field_mapping[mapping] == field.propid:
                         field_name = mapping
-                s += "%s\t %s\t %s\t %s\n" % (str(oid),field_name,field[0],str(field[1]))
+                s += "%s\t %s\t %d\t" % (str(self._oid),field_name,field.propid)
+            s += str(get_field_value(field))
+            s += "\n"
+
 
         return s
         
@@ -96,8 +176,8 @@ class CeDatabase(object):
             CeDatabase._database_list=pyrapi.CeFindAllDatabases()
 
         for db in CeDatabase._database_list:
-            if db[0] == self._database_name:
-                self._database_oid = pyrapi.CeOpenDatabase(db)
+            if db.DbInfo.szDbaseName == self._database_name:
+                self._database_oid = pyrapi.CeOpenDatabase(db.OidDb,db.DbInfo.szDbaseName)
 
     def getFieldMapping(self):
         return self._field_mapping
@@ -115,7 +195,7 @@ class CeDatabase(object):
         if record == None:
             raise StopIteration
 
-        return self._record_class(record,self._field_mapping)
+        return self._record_class(self._database_oid,record,self._field_mapping)
     
 
 # list of task fields taken from

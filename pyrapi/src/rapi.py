@@ -15,8 +15,14 @@ def openCeFile(file_name,mode):
     mode must be 'w' for writing to a file and 'r' for reading from a file.
     Returns a CeFile object. Raises an exception if the file could not be
     opened."""
+
+    if mode == 'r':
+        file_handle = pyrapi.CeCreateFile(file_name,pyrapi.GENERIC_READ)
+    elif mode == 'w':
+        file_handle = pyrapi.CeCreateFile(file_name,pyrapi.GENERIC_WRITE, 0, pyrapi.CREATE_ALWAYS)
+    else:
+        raise RapiException, "Unknown file mode"
     
-    file_handle = pyrapi.CeCreateFile(file_name,mode)
     return CeFile(file_handle,mode)
     
 
@@ -47,9 +53,8 @@ class CeFile:
         buf = ''
         while 1:
             res = pyrapi.CeReadFile(self._file_handle,self._read_buffer_size)
-            if res == None: break 
-            
-            buf = buf + res[0]
+            if res == None or res == "": break
+            buf = buf + res
 
         return buf
     
@@ -57,12 +62,13 @@ class CeFile:
         """Write the contents of buffer to the file."""
         if self._mode != 'w':
             raise RapiException,"Attempt to write to file not in write mode"
-        
+
         return pyrapi.CeWriteFile(self._file_handle,buffer)
         
     def close(self):
         """Close the open file handle."""
-        pyrapi.CeCloseHandle(self._file_handle)
+        if self._file_handle != -1:
+            pyrapi.CeCloseHandle(self._file_handle)
         self._set_defaults()
 
     

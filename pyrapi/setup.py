@@ -10,6 +10,6 @@ setup(name="pyrapi",
       url="http://synce.sourceforge.net/",
       packages=['pyrapi'],
       package_dir={'pyrapi':'src'},
-      ext_modules=[Extension("pyrapi.pyrapicmodule", ["src/pyrapi_wrap.c"],
+      ext_modules=[Extension("pyrapi._pyrapi", ["src/pyrapi_wrap.c"],
                              libraries=["rapi","synce"])]
      )

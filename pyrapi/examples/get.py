@@ -10,7 +10,6 @@ file = rapi.openCeFile(sys.argv[1],'r')
 buf = file.read()
 file.close()
 
-
 # Make the file name local
 outfilename = sys.argv[1]
 outfilename = os.path.basename(string.translate(outfilename,string.maketrans('\\','/')))

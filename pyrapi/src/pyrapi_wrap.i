@@ -183,15 +183,15 @@ FILETIMEGETSET(CE_FIND_DATA,ftLastWriteTime)
 WCHARGETSET(CE_FIND_DATA,cFileName)
 
 
-%typemap(python,argout) LPLPCE_FIND_DATA {
+%typemap(python,argout) (LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray) {
   PyObject *return_tuple, *o2, *o3;
   int i;
   LPCE_FIND_DATA entry;
-  return_tuple = PyTuple_New(*arg3);
+  return_tuple = PyTuple_New(*$1);
   //printf("Number of files: %u\n", *arg3);
 
-  entry = *$1;
-  for (i = 0; i < *arg3; i++) {
+  entry = *$2;
+  for (i = 0; i < *$1; i++) {
     if (PyTuple_SetItem(return_tuple, i,  
 			SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p_CE_FIND_DATA, 0))) {
       PyErr_SetString(PyExc_TypeError, "failed to build return tuple.");
@@ -217,17 +217,24 @@ WCHARGETSET(CE_FIND_DATA,cFileName)
   }	
 }
 
-%typemap(in,numinputs=0) LPLPCE_FIND_DATA ppFindDataArray (LPCE_FIND_DATA temp) {
-  $1 = &temp;
+
+%typemap(in,numinputs=0)  (LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray) 
+     (DWORD temp1, LPCE_FIND_DATA temp2) {
+  $1 = &temp1;
+  $2 = &temp2;
 }
 
-%apply unsigned int *OUTPUT { LPDWORD lpdwFoundCount };
+//%apply unsigned int *OUTPUT { LPDWORD lpdwFoundCount };
 
 %typemap(python,out) BOOL {
 
-  if (result != 1) {
-      PyErr_SetString(PyExc_RuntimeError, "bad return value.");
-      return NULL;    
+  if (result < 1) {
+    {
+      char err[256];
+      snprintf(err, sizeof(err), "Rapi function failed, last error code was: %d", CeGetLastError());
+      PyErr_SetString(PyExc_RuntimeError, err);
+      return NULL; 
+    }
   }
   {
     $result = Py_None; // Ignore a correct return
@@ -250,7 +257,8 @@ HANDLE CeCreateFile(
 		HANDLE hTemplateFile = 0); 
 
 
-%typemap(python,in) (LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead){
+%typemap(python,in) (LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead)(DWORD tmp){
+  $3 = &tmp;
   if (PyInt_Check($input)) {
     $2 = PyInt_AsLong($input);
     if (!($1 = ($1_ltype) malloc($2))){
@@ -264,7 +272,12 @@ HANDLE CeCreateFile(
 }
 
 %typemap(python,argout) (LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead){
-  $result = Py_BuildValue("(s#,i)",(char *)$1,*$3,*$3);
+  if ( *$3 == 0 ){
+    $result = Py_None;
+  }
+  else {
+    $result = Py_BuildValue("s#",(char *)$1,*$3);
+  }
   free($1);
 }
 
@@ -275,14 +288,16 @@ BOOL CeReadFile(
 		LPDWORD lpNumberOfBytesRead, 
 		LPOVERLAPPED lpOverlapped = NULL);
 
-%typemap(python,in) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten){
+%typemap(python,in) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten) (DWORD tmp){
+  $3 = &tmp;
   if (PyString_Check($input)) {
     $1 = PyString_AsString($input);
     $2 = strlen($1);
   } else {
-    PyErr_SetString(PyExc_TypeError, "expected a int.");
+    PyErr_SetString(PyExc_TypeError, "expected a string.");
     return NULL;
   }
+  printf("CeWriteFile writing string (length %d): %s\n", $2, $1);
 }
 
 %typemap(python,argout) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten){
@@ -302,9 +317,10 @@ BOOL CeCopyFileA(
 		LPCSTR lpNewFileName, 
 		BOOL bFailIfExists);
 
+//FAF_NAME|FAF_ATTRIBUTES|FAF_CREATION_TIME|FAF_LASTACCESS_TIME|FAF_LASTWRITE_TIME|FAF_SIZE_LOW, 
 BOOL CeFindAllFiles(
 		LPCWSTR szPath, 
-		DWORD dwFlags = FAF_NAME|FAF_ATTRIBUTES|FAF_CREATION_TIME|FAF_LASTACCESS_TIME|FAF_LASTWRITE_TIME|FAF_SIZE_LOW, 
+		DWORD dwFlags,
 		LPDWORD lpdwFoundCount, 
 		LPLPCE_FIND_DATA ppFindDataArray);
 
@@ -318,14 +334,47 @@ BOOL CeCopyFile(
 
 BOOL CeCreateDirectory(
 		LPCWSTR lpPathName, 
-		LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes = NULL);
 
 BOOL CeDeleteFile(
 		LPCWSTR lpFileName);
 
+%typemap(python,argout) (LPCWSTR lpFileName, LPCE_FIND_DATA lpFindFileData) {
+  PyObject *find_data, *o2, *o3;
+  
+  find_data = SWIG_NewPointerObj($2, SWIGTYPE_LPCE_FIND_DATA, 1);
+
+  if ((!result) || ($result == Py_None)) {
+    $result = find_data;
+  } else {
+    if (!PyTuple_Check($result)) {
+      PyObject *o2 = $result;
+      $result = PyTuple_New(1);
+      PyTuple_SetItem($result,0,o2);
+    }
+    o3 = PyTuple_New(1);
+    PyTuple_SetItem(o3,0,find_data);
+    o2 = $result;
+    $result = PySequence_Concat(o2,o3);
+    Py_DECREF(o2);
+    Py_DECREF(o3);
+  }	
+}
+
+%typemap(in,numinputs=0) (LPCE_FIND_DATA lpFindFileData) {
+  $1 = (LPCE_FIND_DATA) malloc(sizeof(CE_FIND_DATA));
+}
+
+
 HANDLE CeFindFirstFile(
 		LPCWSTR lpFileName, 
 		LPCE_FIND_DATA lpFindFileData);
+
+%typemap(python,argout) (HANDLE hFindFile, LPCE_FIND_DATA lpFindFileData) {
+  PyObject *find_data;
+  
+  $result = SWIG_NewPointerObj($2, SWIGTYPE_LPCE_FIND_DATA, 1);
+}
 
 BOOL CeFindNextFile( 
 		HANDLE hFindFile, 
@@ -392,12 +441,13 @@ FILETIMEGETSET(CEVALUNION,filetime)
 WCHARGETSET(CEVALUNION,lpwstr)
 
 typedef struct _CEPROPVAL { 
-	CEPROPID propid;
+  //CEPROPID propid;
 	WORD wLenData;
 	WORD wFlags;
 	CEVALUNION val;
   %extend {
-	  const unsigned int type;
+	  unsigned int type;
+	  unsigned int propid;
   }
 } CEPROPVAL;
 
@@ -406,7 +456,16 @@ typedef struct _CEPROPVAL {
     return ptr->propid & 0xFFFF;
   }
   void CEPROPVAL_type_set(CEPROPVAL *ptr, const unsigned int value) {
-    // Should raise an exception.
+    printf("Setting propid to: %d\n", value);
+    ptr->propid = (ptr->propid & 0xFFFF0000) | value;
+    printf("propid set to: %d\n", ptr->propid);
+  }
+  const unsigned int CEPROPVAL_propid_get(CEPROPVAL *ptr) {
+    return (ptr->propid >> 16);
+  }
+  void CEPROPVAL_propid_set(CEPROPVAL *ptr, const unsigned int value) {
+    CEPROPID tmp = (CEPROPID)value;
+    ptr->propid = (tmp << 16) | ( ptr->propid & 0xFFFF);
   }
 %}
 
@@ -443,9 +502,9 @@ typedef struct _CEDB_FIND_DATA {
 
 CEOID CeCreateDatabase(
 		LPWSTR lpszName, 
-		DWORD dwDbaseType, 
-		WORD wNumSortOrder, 
-		SORTORDERSPEC *rgSortSpecs);
+		DWORD dwDbaseType = 0, 
+		WORD wNumSortOrder = 0, 
+		SORTORDERSPEC *rgSortSpecs = NULL);
 
 BOOL CeDeleteDatabase(
 		CEOID oid);
@@ -528,13 +587,19 @@ HANDLE CeOpenDatabase(
 		DWORD dwFlags = CEDB_AUTOINCREMENT, 
 		HWND hwndNotify); 
 
-%typemap(in,numinputs=0) (LPWORD lpcPropID, 
-		  CEPROPID *rgPropID, 
-		  LPBYTE *lplpBuffer, 
-		  LPDWORD lpcbBuffer) (WORD temp1, 
-				       CEPROPID temp2, 
-				       BYTE *temp3, 
-				       DWORD temp4){
+
+/* 
+ * typemaps to support CeReadRecordProps
+ */
+
+%typemap(in,numinputs=0) 
+     (LPWORD lpcPropID, 
+      CEPROPID *rgPropID, 
+      LPBYTE *lplpBuffer, 
+      LPDWORD lpcbBuffer) (WORD temp1, 
+			   CEPROPID temp2, 
+			   BYTE *temp3, 
+			   DWORD temp4){
   $1 = &temp1;
   $2 = NULL;
   $3 = &temp3;
@@ -546,17 +611,21 @@ HANDLE CeOpenDatabase(
   PyObject *return_tuple, *o2, *o3;
   int i;
   PCEPROPVAL entry;
-  return_tuple = PyTuple_New(*arg3);
-  //printf("Number of databases: %u\n", *arg3);
 
-  entry = ( PCEPROPVAL )*$1;
-  for (i = 0; i < *arg3; i++) {
-    if (PyTuple_SetItem(return_tuple, i,  
-			SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p_CEPROPVAL, 0))) {
-      PyErr_SetString(PyExc_TypeError, "failed to build return tuple.");
-      return NULL;
+  if ( *arg3 > 0 ) {
+    return_tuple = PyTuple_New(*arg3);
+
+    entry = ( PCEPROPVAL )*$1;
+    for (i = 0; i < *arg3; i++) {
+      if (PyTuple_SetItem(return_tuple, i,  
+			  SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p_CEPROPVAL, 0))) {
+	PyErr_SetString(PyExc_TypeError, "failed to build return tuple.");
+	return NULL;
+      }
+
     }
-
+  } else {
+    return_tuple = Py_None;
   }
 
   if ((!result) || ($result == Py_None)) {
@@ -589,6 +658,49 @@ CEOID CeSeekDatabase(
 		DWORD dwSeekType, 
 		DWORD dwValue, 
 		LPDWORD lpdwIndex);
+
+/* 
+ * typemaps to support CeWriteRecordProps
+ *
+ * CeWriteRecordProps (dbh, rec_oid, values)
+ *     Returns the rec_oid for success 0 for failure. 
+ *     values is a tuple of of CEPROPVAL classes.
+ */
+
+%typemap(in) (WORD cPropID, 
+	      CEPROPVAL *rgPropVal) {
+
+  int i;
+  CEPROPVAL * tmp;
+
+  if (PyTuple_Check($input)) {
+    /* get size of tuple */
+    $1 =  PyTuple_Size($input);
+
+    printf("Got %d fields to write.", $1);
+
+    /* create array of CEPROPVAL elements */
+    $2 = (CEPROPVAL *) malloc($1*sizeof(CEPROPVAL));
+
+    /* unpack argument tuple into array */
+    for ( i = 0; i < $1; i++) {
+      if ((SWIG_ConvertPtr(PyTuple_GetItem($input,i),(void **) &tmp, 
+			   SWIGTYPE_p_CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
+	SWIG_fail;
+      memcpy(&($2[i]),tmp, sizeof(CEPROPVAL));
+      printf ("propid & 0xFFFF = %d\n", ($2[i].propid & 0xFFFF));
+      printf ("propid >> 16 = %d\n", ($2[i].propid >> 16));
+    }
+    for ( i = 0; i < $1; i++) {
+      printf ("real propid & 0xFFFF = %d\n", (($2[i].propid) & 0xFFFF));
+      printf ("real propid >> 16 = %d\n", (($2[i].propid) >> 16));
+    }
+  } else {
+    PyErr_SetString(PyExc_TypeError, "expected a tuple.");
+    return NULL;
+  }
+}
+
 
 CEOID CeWriteRecordProps(
 		HANDLE hDbase, 
