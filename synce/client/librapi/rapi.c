@@ -1454,21 +1454,22 @@ STDAPI_( HRESULT ) CeRapiInit()
 
 STDAPI_( HRESULT ) CeRapiUninit()
 {
-	if ( sock > 0 )
-	{
-		DBG_printf( "CeRapiUninit() ok\n" );
-		return TRUE;
-	}
-	else
-	{
-		DBG_printf( "CeRapiUninit() no need\n" );
-		return FALSE;
-	}
+	HRESULT result = FALSE;
         if( buffer )
         {
                 free( buffer );
                 buffer = NULL;
         }
+	if ( sock > 0 )
+	{
+		result = (close( sock )==0) ? TRUE : FALSE;
+		DBG_printf( "CeRapiUninit() %s\n", (result ? "ok" : "failed") );
+	}
+	else
+	{
+		DBG_printf( "CeRapiUninit() no need\n" );
+	}
+	return result;
 }
 
 STDAPI_( HRESULT ) CeRapiFreeBuffer( LPVOID Buffer )
