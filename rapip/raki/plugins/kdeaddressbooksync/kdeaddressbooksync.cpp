@@ -371,7 +371,7 @@ bool KdeAddressBookSync::preSync(SyncThread */*syncThread*/, Rra */*rra*/, bool 
     pdaDeltaBook = new KABC::AddressBook();
     kappaBook = new KABC::AddressBook();
 
-#if KDE_VERSION_RELEASE < 10
+#if KDE_VERSION < KDE_MAKE_VERSION(3,2,0)
     rhoResource = new KABC::ResourceFile(pcRhoBook,
             QFile::encodeName(locateLocal("data", (QString("raki/syncrefbook-") + QString::number(partnerId) + QString(".vcf")).ascii())));
 #else
