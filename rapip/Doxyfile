@@ -63,7 +63,10 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = raki \
                          rapip \
-                         vdccm
+                         vdccm \
+                         raki/interfaces \
+                         raki/plugins/agsync \
+                         raki/plugins/kdeaddressbooksync
 FILE_PATTERNS          = *.h \
                          *.cpp
 RECURSIVE              = NO
