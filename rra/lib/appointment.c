@@ -393,7 +393,9 @@ bool rra_appointment_from_vevent(/*{{{*/
   parser_component_add_parser_component(event, alarm);
 
   parser_component_add_parser_property(event, 
-      parser_property_new("class", on_mdir_line_class));
+      parser_property_new("Class", on_mdir_line_class));
+  parser_component_add_parser_property(event, 
+      parser_property_new("Description", on_mdir_line_description));
   parser_component_add_parser_property(event, 
       parser_property_new("dtEnd", on_mdir_line_dtend));
   parser_component_add_parser_property(event, 
@@ -475,8 +477,11 @@ bool rra_appointment_from_vevent(/*{{{*/
  	success = true;
 
 exit:
-  /* destroy top object */
+  /* destroy components (the order is important!) */
+  parser_component_destroy(base);
   parser_component_destroy(calendar);
+  parser_component_destroy(event);
+  parser_component_destroy(alarm);
   parser_destroy(parser);
 	return success;
 }/*}}}*/

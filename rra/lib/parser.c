@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <synce_log.h>
+#include <assert.h>
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
@@ -220,6 +221,23 @@ static CEPROPVAL* parser_get_next_propval(Parser* self)/*{{{*/
     return &self->propvals[self->propval_count++];
 }/*}}}*/
 
+bool parser_add_blob(Parser* self, uint16_t id, uint8_t* data, size_t data_size)/*{{{*/
+{
+  CEPROPVAL* propval = parser_get_next_propval(self);
+  if (!propval)
+    return false;
+
+  assert(data);
+
+  propval->propid = (id << 16) | CEVT_BLOB;
+  propval->val.blob.dwCount = data_size;
+  propval->val.blob.lpb     = malloc(data_size);
+  assert(propval->val.blob.lpb);
+  memcpy(propval->val.blob.lpb, data, data_size);
+
+  return true;
+}/*}}}*/
+
 bool parser_add_int16(Parser* self, uint16_t id, int16_t value)/*{{{*/
 {
   CEPROPVAL* propval = parser_get_next_propval(self);
@@ -363,9 +381,10 @@ void parser_component_destroy(ParserComponent* self)/*{{{*/
 {
   if (self)
   {
-    s_hash_table_destroy(self->parser_components, (void (*)(void *))parser_component_destroy);
+    s_hash_table_destroy(self->parser_components, NULL); /*(void (*)(void *))parser_component_destroy); */
     s_hash_table_destroy(self->parser_properties,  (void (*)(void *))parser_property_destroy);
-    free(self->name);
+    if (self->name)
+      free(self->name);
     free(self);
   }
 }/*}}}*/
@@ -501,8 +520,17 @@ void parser_destroy(Parser* self)/*{{{*/
     /* free strings in propvals array */
     for (i = 0; i < self->propval_count; i++)
     {
-      if (CEVT_LPWSTR == (self->propvals[i].propid & 0xffff))
-        wstr_free_string(self->propvals[i].val.lpwstr);
+      switch (self->propvals[i].propid & 0xffff)
+      {
+        case CEVT_BLOB:
+          assert(self->propvals[i].val.blob.lpb);
+          free(self->propvals[i].val.blob.lpb);
+          break;
+
+        case CEVT_LPWSTR:
+          wstr_free_string(self->propvals[i].val.lpwstr);
+          break;
+      }
     }
     
     mdir_free(self->mimedir);

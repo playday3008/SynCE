@@ -10,56 +10,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include "../rra_config.h"
-
-#if !HAVE_STRNDUP
-static char *strndup (const char *s, size_t n)/*{{{*/
-{
-	char *r;
-
-	if (!s)
-		return NULL;
-
-	if (strlen (s) < n)
-		n = strlen (s);
-
-	r = malloc (n + 1);
-	memcpy (r, s, n);
-	r[n] = '\0';
-	return r;
-}/*}}}*/
-#endif /* !HAVE_STRNDUP */
-
-#if !HAVE_STRCASESTR
-/* XXX: poorly tested version for libc without GNU extensions */
-static char *strcasestr(const char *haystack, const char *needle)/*{{{*/
-{
-	for(;;)
-	{
-		char *lower = strchr(haystack, tolower(needle[0]));
-		char *upper = strchr(haystack, toupper(needle[0]));
-
-		if (lower && (!upper || (lower < upper)))
-		{
-			if (0 == strncasecmp(lower, needle, strlen(needle)))
-				return lower;
-
-			haystack = lower + 1;
-		}
-		else if (upper)
-		{
-			if (0 == strncasecmp(upper, needle, strlen(needle)))
-				return upper;
-			
-			haystack = upper + 1;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-}/*}}}*/
-#endif
+#include "internal.h"
 
 static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
 

@@ -2,6 +2,7 @@
 #include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
+#include <assert.h>
 
 static uint16_t dbstream_read16(const uint8_t** stream)
 {
@@ -171,8 +172,7 @@ bool dbstream_from_propvals(/*{{{*/
 				break;
 
 			case CEVT_BLOB:
-				size += propval[i].val.blob.dwCount;
-				propval[i].val.blob.lpb = (void*)stream;
+				size += 4 + propval[i].val.blob.dwCount;
 				break;
 
 			default:
@@ -233,9 +233,10 @@ bool dbstream_from_propvals(/*{{{*/
 				break;
 
 			case CEVT_BLOB:
-				dbstream_write32(&stream, propval[i].val.blob.dwCount);
-				memcpy(stream, propval[i].val.blob.lpb, propval[i].val.blob.dwCount);
-				stream += propval[i].val.blob.dwCount;
+        assert(propval[i].val.blob.lpb);
+        dbstream_write32(&stream, propval[i].val.blob.dwCount);
+        memcpy(stream, propval[i].val.blob.lpb, propval[i].val.blob.dwCount);
+        stream += propval[i].val.blob.dwCount;
 				break;
 
 			default:

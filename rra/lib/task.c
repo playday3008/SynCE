@@ -165,6 +165,8 @@ bool rra_task_from_vtodo(
   parser_component_add_parser_property(todo, 
       parser_property_new("Location", on_mdir_line_location));
   parser_component_add_parser_property(todo, 
+      parser_property_new("Description", on_mdir_line_description));
+  parser_component_add_parser_property(todo, 
       parser_property_new("Summary", on_mdir_line_summary));
 /*  parser_component_add_parser_property(todo, 
       parser_property_new("Transp", on_mdir_line_transp));*/

@@ -16,6 +16,7 @@ bool on_propval_subject    (struct _Generator* g, struct _CEPROPVAL* propval, vo
 
 bool on_mdir_line_class   (struct _Parser* p, mdir_line* line, void* cookie);
 bool on_mdir_line_location(struct _Parser* p, mdir_line* line, void* cookie);
+bool on_mdir_line_description(struct _Parser* p, mdir_line* line, void* cookie);
 bool on_mdir_line_summary (struct _Parser* p, mdir_line* line, void* cookie);
 
 #endif

@@ -34,26 +34,21 @@ bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
    Notes / Description
 */
 
-bool str_is_print(CEBLOB* blob)/*{{{*/
+bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 {
-  unsigned i;
-  
-  for (i = 0; i < blob->dwCount; i++)
-  {
-    switch (blob->lpb[i])
-    {
-      case 0x0a: /* LF */
-      case 0x0d: /* CR */
-        break;
+  assert(line->values);
+  /* TODO: convert from utf-8 */
+  return parser_add_blob(p, ID_NOTES, line->values[0], strlen(line->values[0]));
+}
 
-      default:
-        if (!isprint(blob->lpb[i]))
-          return false;
-    }
-  }
+static const char pwi_signature[] = "{\\pwi";
 
-  return true;
-}/*}}}*/
+bool blob_is_pwi(CEBLOB* blob)
+{
+  return 
+    blob->dwCount >= 5 &&
+    0 == strncmp(pwi_signature, (const char*)blob->lpb, strlen(pwi_signature));
+}
 
 bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
@@ -61,16 +56,19 @@ bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 
   if (propval->val.blob.dwCount)
   {
-    if (str_is_print(&propval->val.blob))
+    if (blob_is_pwi(&propval->val.blob))
     {
+      synce_warning("PocketWord Ink format for notes is not yet supported");
+    }
+    else
+    {
+      /* TODO: convert to utf-8 */
       char* tmp = strndup((const char*)
           propval->val.blob.lpb, 
           propval->val.blob.dwCount);
       generator_add_simple(g, "DESCRIPTION", tmp);
       free(tmp);
     }
-    else
-      synce_warning("Note format not yet supported");
   }
   
   return true;
