@@ -16,6 +16,8 @@
 <ul>
 <li><a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_cerapiinit.asp">Microsoft's RAPI documentation</a></li>
 <li><a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnce21/html/activesync.asp">Programmer's Guide for ActiveSync</a></li>
+<li><a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnce30/html/richink.asp">Using Rich Ink Technology in Microsoft Windows CE 3.0
+</a></li>
 </ul>
 
 <h2>Applications for Pocket PC</h2>

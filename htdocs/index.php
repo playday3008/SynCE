@@ -35,7 +35,16 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>November 24, 2002</b> Released SynCE version 2002-11-24 which includes dccm 0.4, librapi2 0.4, libsynce 0.4, synce-serial 0.4 and trayicon 0.2.</p>
+<p><b>November 28, 2002</b> Created mailing lists <a
+href="http://lists.sourceforge.net/mailman/listinfo/synce-announce">synce-announce</a>
+and <a
+href="http://lists.sourceforge.net/mailman/listinfo/synce-users">synce-users</a>
+in case <a
+href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
+gets to technical for someone.</p>
+
+<p><b>November 24, 2002</b> Released SynCE version 2002-11-24 which includes
+dccm 0.4, librapi2 0.4, libsynce 0.4, synce-serial 0.4 and trayicon 0.2.</p>
 
 <p><b>November 21, 2002</b>. Added USB connection instructions to the <a
 href="using.php">Download and use</a> page.</p>
