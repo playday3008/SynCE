@@ -23,7 +23,6 @@
 
 #include "workerthreadinterface.h"
 #include "rakiworkerthread.h"
-#include "threadevent.h"
 
 #include <kdebug.h>
 #include <kapplication.h>

@@ -24,6 +24,10 @@
 #ifndef _SYNCTHREAD_H_
 #define _SYNCTHREAD_H_
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "workerthreadinterface.h"
 #include "synctasklistitem.h"
 

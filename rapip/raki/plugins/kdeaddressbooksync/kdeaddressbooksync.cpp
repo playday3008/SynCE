@@ -20,6 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
+ 
 #include "kdeaddressbooksync.h"
 
 #include <kdebug.h>
@@ -406,7 +407,7 @@ bool KdeAddressBookSync::sync()
         }
     }
 
-    if (isRunning()) {
+    if (isRunning() && pcItaBook->begin() != pcItaBook->end()) {
         if (rra->connect()) {
             for (it = pcItaBook->begin(); it != pcItaBook->end() && isRunning(); it++) {
                 task = (*it).custom("Raki", "Task");

@@ -22,7 +22,6 @@
  ***************************************************************************/
 
 #include "syncthread.h"
-
 #include "workerthreadinterface.h"
 
 

@@ -24,6 +24,10 @@
 #ifndef THREADEVENT_H
 #define THREADEVENT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <qobject.h>
 #include <qevent.h>
 #include <qmutex.h>
