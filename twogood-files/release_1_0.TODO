@@ -1,0 +1,31 @@
+$Id$ vim: expandtab
+
+TODO for release 1.0 of SynCE
+=============================
+
+o Make dccmd and librapi cooperate  [twogood]
+
+  Fixed!
+
+o Make password configurable for dccmd  [twogood]
+
+  Fixed!
+
+o Man pages for SynCE  [twogood]
+
+    synce                 (An overview page)
+    synce-serial-config
+    synce-serial-start
+    synce-serial-abort
+    dccmd
+
+  Fixed!
+
+o HOWTO document
+
+o Web site updates
+
+o USB support packages
+
+    What needs to be done with wince-usb?
+
