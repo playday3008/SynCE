@@ -119,6 +119,15 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>August 30, 2004</b> During the past weekend, desktop environment add-ons
+<a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=73834&release_id=264057">SynCE-KDE
+version 0.8</a> and <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=92164&release_id=261559">SynCE-GNOME
+tools 0.9.0</a> were released, including the new <i>SynCE Software Manager</i>,
+a graphical tool by Mattias Eriksson for installing and uninstalling Windows CE
+software.</p>
+
 <p><a href="http://www.PocketPCmag.com/awards"><img border="0"
 src="Nominated_Smartphone_phonet.gif" align=right></a><b>August 24, 2004</b>
 SynCE has been nominated for the Pocket PC magazine Best Software Awards 2004!
