@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 			vcard,
 			NULL,
 			&buffer,
-			&buffer_size))
+			&buffer_size,
+			RRA_CONTACT_ISO8859_1))
 	{
 		fprintf(stderr, "Failed to create data\n");
 		goto exit;
