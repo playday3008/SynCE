@@ -68,7 +68,7 @@ BOOL CeCheckPassword(
 	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 	
-	rapi_context_begin_command(context, 0x);
+	rapi_context_begin_command(context, 0x34);
 	rapi_buffer_write_string(context->send_buffer, lpszPassword);
 
 	if ( !rapi_context_call(context) )
