@@ -216,12 +216,32 @@ static bool using_daylight_saving(TimeZoneInformation* tzi, struct tm* time_stru
   return false;
 }
 
+time_t time_zone_convert_from_utc(TimeZoneInformation* tzi, time_t unix_time)
+{
+  time_t result = (time_t)0xffffffff;
+  struct tm time_struct;
+  
+  if (tzi && localtime_r(&unix_time, &time_struct))
+  {
+    time_struct.tm_min -= tzi->Bias;
+
+    if (using_daylight_saving(tzi, &time_struct))
+      time_struct.tm_min -= tzi->DaylightBias;
+    else
+      time_struct.tm_min -= tzi->StandardBias;
+
+    result = mktime(&time_struct);
+  }
+
+  return result;
+}
+
 time_t time_zone_convert_to_utc(TimeZoneInformation* tzi, time_t unix_time)
 {
   time_t result = (time_t)0xffffffff;
   struct tm time_struct;
   
-  if (localtime_r(&unix_time, &time_struct))
+  if (tzi && localtime_r(&unix_time, &time_struct))
   {
     time_struct.tm_min += tzi->Bias;
 
