@@ -2,6 +2,9 @@
 #include <math.h>
 #include "huffman.h"
 
+#define SIZE_MESSAGE	1
+#define XOR_IMAGE		2
+#define KEY_IMAGE		3
 
 Snap::Snap(WORD cClrBits)
 {
@@ -197,7 +200,7 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 						act3 += 3;
 						count += 3;
 					} else {
-						break;
+                        break;
 					}
 				}
 				if (count < size) {
@@ -220,6 +223,28 @@ size_t Snap::rle_encode(unsigned char *target, unsigned char *pixels, size_t siz
 	}
 
 	return tmp_target - target;
+}
+
+
+bool Snap::writeGeometry(SOCKET socket)
+{
+	u_long x = htonl(lprc.right);
+	u_long y = htonl(lprc.bottom);
+	unsigned char packageType = SIZE_MESSAGE;
+
+	if (send(socket, (const char *) &packageType, sizeof(unsigned char), 0) == SOCKET_ERROR) {
+		return false;
+	}
+
+	if (send(socket, (const char *) &x, sizeof(u_long), 0) == SOCKET_ERROR) {
+		return false;
+	}
+
+	if (send(socket, (const char *) &y, sizeof(u_long), 0) == SOCKET_ERROR) {
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -249,7 +274,12 @@ bool Snap::writeSocketRLE(SOCKET socket, Snap::SnapImage image, bool *written)
 
 		huffman_encode_memory(target, rleSize, &buf, &buflen);
 		rleSizeN = htonl((u_long) buflen);
-	
+		unsigned char packageType = XOR_IMAGE;
+
+		if (send(socket, (const char *) &packageType, sizeof(unsigned char), 0) == SOCKET_ERROR) {
+			return false;
+		}
+
 		if (send(socket, (const char *) &headerSizeN, sizeof(u_long), 0) == SOCKET_ERROR) {
 			return false;
 		}	

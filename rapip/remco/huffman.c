@@ -77,10 +77,11 @@ reverse_bits(unsigned char* bits, unsigned long numbits)
     unsigned long numbytes = numbytes_from_numbits(numbits);
     unsigned char *tmp =
         (unsigned char*)alloca(numbytes);
-    memset(tmp, 0, numbytes);
-
     long curbit;
     long curbyte = 0;
+
+    memset(tmp, 0, numbytes);
+
     for(curbit = 0; curbit < numbits; ++curbit) {
         unsigned int bitpos = curbit % 8;
 
@@ -117,7 +118,7 @@ new_code(const huffman_node* leaf)
            then allocate it. */
         if(cur_bit == 0) {
             size_t newSize = cur_byte + 1;
-            bits = (char*)realloc(bits, newSize);
+            bits = (unsigned char*)realloc(bits, newSize);
             bits[newSize - 1] = 0; /* Initialize the new byte. */
         }
 
@@ -285,8 +286,9 @@ static int write_cache(buf_cache* pc,
      * flush the cache and allocate enough space immediately,
      * that is, don't use the cache. */
     if(to_write_len > pc->cache_len - pc->cache_cur) {
+        unsigned int newlen;
         flush_cache(pc);
-        unsigned int newlen = *pc->pbufoutlen + to_write_len;
+        newlen = *pc->pbufoutlen + to_write_len;
         tmp = realloc(*pc->pbufout, newlen);
         if(!tmp)
             return 1;

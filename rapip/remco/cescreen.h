@@ -24,7 +24,7 @@
 #define PDASCREENIMPL_H
 
 
-#include "pdascreen.h"
+//#include "pdascreen.h"
 #include "imageviewer.h"
 
 #include <kmainwindow.h>
@@ -43,6 +43,10 @@
 #define LEFT_BUTTON     1
 #define RIGHT_BUTTON    2
 #define MID_BUTTON      3
+
+#define SIZE_MESSAGE    1
+#define XOR_IMAGE       2
+#define KEY_IMAGE       3
 
 /**
 @author Volker Christian
@@ -205,13 +209,12 @@
 #define VK_DBE_ENTERDLGCONVERSIONMODE    0x0fd
 
 
-class PdaScreenImpl : public PdaScreen
+class CeScreen : public KMainWindow
 {
     Q_OBJECT
 public:
-    PdaScreenImpl(QString pdaName, KAboutData *aboutData, KAboutApplication *aboutApplication);
-    ~PdaScreenImpl();
-    bool connectPda(QString pdaAddress, QString synceName = NULL, bool forceInstall = false);
+    CeScreen(QString pdaName, KAboutData *aboutData, KAboutApplication *aboutApplication);
+    ~CeScreen();
     bool connectPda(QString pdaName, bool isSynCeDevice = true, bool forceInstall = false);
 
 public slots:
@@ -242,6 +245,12 @@ private slots:
     void keyPressed(int ascii, int code);
     void keyReleased(int ascii, int code);
     size_t rle_decode(unsigned char *target, unsigned char *source, size_t size, unsigned char *oldData);
+    void resizeWindow();
+
+signals:
+    void printContent();
+    void saveContent();
+    void pdaSize(int, int );
 
 private:
     KSocket *pdaSocket;
@@ -251,6 +260,7 @@ private:
     void sendKeyEvent(long int code, long int cmd);
     QString getDeviceIp(QString pdaAddress);
     int mapKey(int code);
+    ImageViewer *imageViewer;
 
     static struct _keymap {
         int winVkCode;

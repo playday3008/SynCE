@@ -57,6 +57,11 @@ signals:
     void keyPressed(int ascii, int code);
     void keyReleased(int ascii, int code);
 
+public slots:
+    void printImage();
+    void saveImage();
+    void setPdaSize(int x, int y);
+
 private:
     QImage image;
     QPixmap pm;

@@ -26,6 +26,7 @@ public:
 	SnapImage createSnapImage();
 	BOOL xorBits(Snap::SnapImage image1, Snap::SnapImage image2);
 	BOOL exchangeImages(Snap::SnapImage image1, Snap::SnapImage image2);
+	bool writeGeometry(SOCKET socket);
 
 private:
 	RECT lprc;

@@ -30,7 +30,7 @@
 #include <kaboutdata.h>
 #include <kapplication.h>
 #include <kcmdlineargs.h>
-#include "pdascreenimpl.h"
+#include "cescreen.h"
 
 static const char *description = I18N_NOOP(
     "PDA-Mirror, a PocketPC-Control Tool");
@@ -74,7 +74,7 @@ static KCmdLineOptions options[] =
 
 int main(int argc, char *argv[])
 {
-    KAboutData aboutData("remco", I18N_NOOP("RemCo"), VERSION, description,
+    KAboutData aboutData("pdamirror", I18N_NOOP("PDAMirror"), VERSION, description,
             KAboutData::License_Custom,
             "(c) 2003, Volker Christian (voc)", 0,
             "http://synce.sourceforge.net/synce/kde/",
@@ -109,16 +109,16 @@ int main(int argc, char *argv[])
 
     KApplication a;
 
-    PdaScreenImpl *pdaScreen = new PdaScreenImpl(pdaName, &aboutData, new KAboutApplication(&aboutData));
+    CeScreen *ceScreen = new CeScreen(pdaName, &aboutData, new KAboutApplication(&aboutData));
 
-    if (!pdaScreen->connectPda(pdaName, synce, forceInstall)) {
+    if (!ceScreen->connectPda(pdaName, synce, forceInstall)) {
         kdDebug(2120) << "Could not contact PDA " << pdaName << endl;
         return -1;
     }
 
-    a.setMainWidget(pdaScreen);
+    a.setMainWidget(ceScreen);
 
-    pdaScreen->show();
+    ceScreen->show();
 
     return a.exec();
 }

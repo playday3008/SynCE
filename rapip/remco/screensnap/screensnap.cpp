@@ -11,6 +11,7 @@
 #define RIGHT_BUTTON	2
 #define MID_BUTTON		3
 
+
 static SOCKET as;
 static HANDLE sigEvent;
 
@@ -21,6 +22,10 @@ DWORD WINAPI snapProc(LPVOID lpParameter)
 	Snap::SnapImage image2 = snap->createSnapImage();
 	bool ret = true;
 	bool written = false;
+	
+	if (!snap->writeGeometry(as)) {
+		return 0;
+	}
 
 	do {
 		if (snap->snap(image2)) {
@@ -162,7 +167,6 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 					MB_OK | MB_ICONWARNING);
 		}
 */
-		static int l = 0;
 		
 		do {
 			tv.tv_sec = 0;
@@ -246,7 +250,6 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 					dwFlags = KEYEVENTF_KEYUP;
 					dwExtraInfo = 0;
 					keybd_event(bVk, bScan, dwFlags, dwExtraInfo);
-					l++;
 					break;
 				}
 				if (PulseEvent(sigEvent) == 0){

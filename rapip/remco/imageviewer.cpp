@@ -23,13 +23,21 @@
 
 #include "imageviewer.h"
 
+#include <kfiledialog.h>
+#include <kprinter.h>
+#include <qpainter.h>
 
 ImageViewer::ImageViewer(QWidget *parent, const char * name, WFlags f)
         : QWidget(parent, name, f), painter(this)
 {
     this->setFocusPolicy(QWidget::StrongFocus);
     this->setBackgroundColor(QColor(0, 0, 0));
-    this->setMinimumSize(240, 320);
+//    this->setFixedSize(240, 320);
+    this->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, sizePolicy().hasHeightForWidth() ) );
+//    this->setSizePolicy(QSizePolicy::Fixed);
+//    this->setMinimumSize(240, 320);
+//    this->setMaximumSize(240, 320);
+//    painter.rotate(-90);
 }
 
 
@@ -38,12 +46,51 @@ ImageViewer::~ImageViewer()
 }
 
 
+void ImageViewer::setPdaSize(int x, int y)
+{
+    this->setFixedSize(x, y);
+}
+
+
 void ImageViewer::drawImage(uchar *data, size_t size)
 {
+//    this->setFixedSize(240, 320);
     image.loadFromData(data, size);
     pm.convertFromImage(image, 0);
     setBackgroundMode(Qt::NoBackground);
     update();
+    
+}
+
+
+void ImageViewer::printImage()
+{
+    KPrinter printer;
+
+    printer.setFullPage(true);
+
+    if (printer.setup(this)) {
+        QPainter painter;
+        painter.begin( &printer );
+        painter.drawPixmap(100, 100, pm);
+        painter.end();
+    }
+}
+
+
+void ImageViewer::saveImage()
+{
+    QString fileName = KFileDialog::getSaveFileName("", "*.png *.bmp *.xbm *.xpm *.pnm *.jpeg *.mng *.pbm *.pgm *.ppm", this, "Save Screenshot");
+
+    QString suffix = fileName.section('.', -1).upper();
+
+    if (!suffix.isEmpty()) {
+        if (!fileName.isEmpty()) {
+            pm.save(fileName, suffix.upper(), 100);
+        }
+    } else {
+        kdDebug(2120) << "Could not save - no suffix found" << endl;
+    }
 }
 
 

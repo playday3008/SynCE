@@ -6,7 +6,9 @@ bin_PROGRAMS = pdamirror
 
 
 
-noinst_HEADERS = imageviewer.h pdascreenimpl.h rapiwrapper.h
+noinst_HEADERS = imageviewer.h rapiwrapper.h cescreen.h
 
-pdamirror_SOURCES = imageviewer.cpp pdamirror.cpp pdascreen.ui pdascreenimpl.cpp rapiwrapper.cpp huffman.c
-pdamirror_LDADD = -lkio $(LIB_KDEUI)
+pdamirror_SOURCES = imageviewer.cpp pdamirror.cpp rapiwrapper.cpp huffman.c cescreen.cpp
+pdamirror_LDADD = -lkdeprint -lkio $(LIB_KDEUI)
+
+
