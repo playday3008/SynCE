@@ -60,9 +60,10 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size);
  */
 enum _SocketEvents
 {
-	EVENT_TIMEOUT  = 1,
-	EVENT_READ     = 2,
-	EVENT_WRITE    = 4
+	EVENT_TIMEOUT     = 1,
+	EVENT_READ        = 2,
+	EVENT_WRITE       = 4,
+	EVENT_INTERRUPTED = 8,
 };
 
 typedef enum _SocketEvents SocketEvents;
@@ -71,6 +72,11 @@ typedef enum _SocketEvents SocketEvents;
  * Wait for an event on a socket
  */
 bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* events);
+
+/**
+ * Get the number of bytes available on a socket
+ */
+bool synce_socket_available(SynceSocket* socket, unsigned* count);
 
 
 /*

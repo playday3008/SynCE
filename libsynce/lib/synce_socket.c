@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/poll.h>
 #include <sys/select.h>
 #include "synce_config.h"
@@ -244,7 +245,7 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 	{
 		int result = read(socket->fd, data, size);
 	
-		synce_socket_trace("read returned %i, needed %i bytes", result, bytes_needed);
+		/* synce_socket_trace("read returned %i, needed %i bytes", result, bytes_needed); */
 
 		if (result < 0)
 		{
@@ -341,9 +342,18 @@ bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* 
 			break;
 
 		default:
-			synce_socket_error("poll failed (returned %i), error: %i \"%s\"", 
-					result, errno, strerror(errno));
-			goto exit;
+			if (errno == EINTR)
+			{
+				*events = EVENT_INTERRUPTED;
+			}
+			else
+			{
+				synce_socket_error("poll failed (returned %i), error: %i \"%s\"", 
+						result, errno, strerror(errno));
+				goto exit;
+
+			}
+			break;
 	}
 
 	success = true;
@@ -353,4 +363,20 @@ exit:
 }
 
 #endif /* HAVE_POLL */
+
+bool synce_socket_available(SynceSocket* socket, unsigned* count)
+{
+#ifdef FIONREAD
+	if (ioctl(socket->fd, FIONREAD, count) < 0)
+	{
+		synce_socket_error("FIONREAD failed, error: %i \"%s\"", 
+						errno, strerror(errno));
+		return false;
+	}
+
+	return true;
+#else
+	return false;
+#endif
+}
 
