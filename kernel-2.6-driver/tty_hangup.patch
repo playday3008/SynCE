@@ -1,0 +1,13 @@
+--- /lib/modules/2.4.20-30.9/build/drivers/usb/serial/ipaq.c	2004-02-05 02:25:28.000000000 +0100
++++ ipaq.c	2004-04-07 10:05:28.000000000 +0200
+@@ -299,6 +299,10 @@
+ 	kfree(priv);
+ 	port->private = NULL;
+ 
++	if (port->tty) {
++		tty_hangup(port->tty);
++	}
++
+ 	/* Uncomment the following line if you want to see some statistics in your syslog */
+ 	/* info ("Bytes In = %d  Bytes Out = %d", bytes_in, bytes_out); */
+ }
