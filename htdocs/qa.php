@@ -12,7 +12,27 @@ the <a href="multisync.php">Using MultiSync</a> page.</p>
 <p>For issues regarding Mac OS X, please visit the <a
 href="macosx.php">Mac OS X hints</a> page.</p>
 
-<h2>Connect script failed</h2>
+<h2>PPP error: "Couldn't set tty to PPP discipline"</h2>
+
+<p><b>Q:</b> I setup everything and connected my PDA but when I run
+<tt>synce-serial-start</tt> I get messages similar to this in my system
+log:</p>
+
+<pre>kernel: PPP generic driver version 2.4.2
+pppd[2156]: pppd 2.4.1 started by root, uid 0
+pppd[2156]: Serial connection established.
+modprobe: modprobe: Can't locate module tty-ldisc-3
+pppd[2156]: Couldn't set tty to PPP discipline: Invalid argument
+pppd[2156]: Exit.</pre>
+
+<p><b>A:</b> The missing "tty-ldisc-3" module is the "ppp_async" kernel module.
+Make sure that you have compiled that module. You may also have to add this
+line to /etc/modules.conf:</p>
+
+<pre>alias tty-ldisc-3 ppp_async</pre>
+
+
+<h2>PPP error: "Connect script failed"</h2>
 
 <p><b>Q:</b> I setup everything and connected my PDA but when I run
 <tt>synce-serial-start</tt> I get messages similar to this in my system
@@ -27,32 +47,17 @@ pppd[6083]: Exit.</pre>
 
 <ul>
 
-<li class=SPACED>Make sure that the serial port is enabled in BIOS</li>
+<li class=SPACED>Make sure that the serial port is enabled in BIOS (serial cable only)</li>
 
-<li class=SPACED>Make sure you are using the correct serial port</li>
+<li class=SPACED>Make sure you are using the correct serial port (serial cable only)</li>
 
 <li class=SPACED>Decrease the connection speed by changing 115200 to 19200
 in /etc/ppp/peers/synce-device</li>
 
-<!--
-<li class=SPACED><p>Try this procedure:</p> 
-
-  <ol><li><p>Replace synce-serial/src/synce-serial-chat.c with this file:</p>
-
-  <p>http://synce.sourceforge.net/tmp/synce-serial-chat.c</p></li>
-
-  <li>Compile and install synce-serial</li>
-
-  <li>Try to connect</li>
-
-  <li>Check /var/log/messages for messages from synce-serial-chat</li>
-  
-  </ol></li>
--->
-<li class=SPACED>Remove hotplug script for SynCE</li>
+<li class=SPACED>Remove hotplug script for SynCE (USB cable only)</li>
   
 <li class=SPACED>Make a soft reset of your PDA</li>
-<li class=SPACED>Disconnect other USB devices</li>
+<li class=SPACED>Disconnect other USB devices (USB cable only)</li>
 <li class=SPACED>Reboot your PC</li>
 <li class=SPACED>Make sure your device works with Microsoft ActiveSync</li>
 
@@ -82,7 +87,7 @@ the tools and dccm as different users. Please make sure that:</p>
 <li>you run dccm and the tools as the same user</li>
 </ul>
 
-<h2>Serial cable connection dies when transferring large files</h2>
+<h2>PPP error: "No response to 2 echo-requests"</h2>
 
 <p>(SynCE 0.7 or earlier)</p>
 
