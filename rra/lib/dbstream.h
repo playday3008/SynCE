@@ -13,7 +13,14 @@ bool dbstream_to_propvals(
 		uint32_t count,
 		CEPROPVAL* propval);
 
-#define dbstream_free_propvals(p) if(p) free(p)
+bool dbstream_from_propvals(
+		CEPROPVAL* propval,
+		uint32_t count,
+		uint8_t** result,
+		size_t* result_size);
+
+#define dbstream_free_propvals(p)  if(p) free(p)
+#define dbstream_free_stream(p)    if(p) free(p)
 
 #ifdef __cplusplus
 }

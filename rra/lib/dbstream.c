@@ -31,7 +31,7 @@ static WCHAR* dbstream_read_string(const uint8_t** stream)
  * No memory will be allocated; strings and BLOBs will point into the input stream.
  */
 
-bool dbstream_to_propvals(
+bool dbstream_to_propvals(/*{{{*/
 		const uint8_t* stream,
 		uint32_t count,
 		CEPROPVAL* propval)
@@ -95,5 +95,180 @@ bool dbstream_to_propvals(
 	}
 
 	return true;
+}/*}}}*/
+
+static void dbstream_write16(uint8_t** stream, uint16_t value)
+{
+	*(uint16_t*)*stream = htole16(value);
+	*stream += sizeof(uint16_t);
 }
+
+static void dbstream_write32(uint8_t** stream, uint32_t value)
+{
+	*(uint32_t*)*stream = htole32(value);
+	*stream += sizeof(uint32_t);
+}
+
+static void dbstream_write_string(uint8_t** stream, WCHAR* str)
+{
+	size_t size = sizeof(WCHAR) * (wstrlen(str) + 1);
+	memcpy(*stream, str, size);
+	*stream += size;
+}
+
+
+/*
+ * Code to convert an array of CEPROPVAL structures to a database stream.
+ */
+
+bool dbstream_from_propvals(/*{{{*/
+		CEPROPVAL* propval,
+		uint32_t count,
+		uint8_t** result,
+		size_t* result_size)
+{
+	bool success = false;
+	int i;
+	uint8_t* data = NULL;
+	uint8_t* stream = NULL;
+	size_t size = 8;
+
+	/*
+	 * Find out stream size
+	 */
+	for (i = 0; i < count; i++)/*{{{*/
+	{
+		size += 4;
+		
+		if (propval[i].propid & 0x400) /* CEVT_FLAG_EMPTY */
+		{
+			/* this flags seems to suggest an empty field */
+			continue;
+		}
+
+		switch (propval[i].propid & 0xffff)
+		{
+			case CEVT_I2:
+			case CEVT_UI2:
+				size += 2;
+
+			case CEVT_I4:
+			case CEVT_UI4:
+				size += 4;
+				break;
+
+#if 0
+				/* what size? */
+			case CEVT_BOOL: 
+#endif
+			case CEVT_LPWSTR:
+				size += (wstrlen(propval[i].val.lpwstr) + 1) * 2;
+				break;
+
+			case CEVT_FILETIME:
+				size += 8;
+				break;
+
+			case CEVT_BLOB:
+				size += propval[i].val.blob.dwCount;
+				propval[i].val.blob.lpb = (void*)stream;
+				break;
+
+			default:
+				synce_error("unknown data type for propid %08x", propval[i].propid);
+				goto exit;
+		}
+
+	}/*}}}*/
+
+	stream = data = calloc(1, size);
+
+	dbstream_write32(&stream, count);
+	dbstream_write32(&stream, 0);
+	
+	/*
+	 * Create stream
+	 */
+	for (i = 0; i < count; i++)/*{{{*/
+	{
+		dbstream_write32(&stream, propval[i].propid);
+
+		if (propval[i].propid & 0x400) /* CEVT_FLAG_EMPTY */
+		{
+			/* this flags seems to suggest an empty field */
+			continue;
+		}
+
+		switch (propval[i].propid & 0xffff)
+		{
+			case CEVT_I2:
+				dbstream_write16(&stream, propval[i].val.iVal);
+				break;
+
+			case CEVT_I4:
+				dbstream_write32(&stream, propval[i].val.lVal);
+				break;
+
+			case CEVT_UI2:
+				dbstream_write16(&stream, propval[i].val.uiVal);
+				break;
+
+			case CEVT_UI4:
+				dbstream_write32(&stream, propval[i].val.ulVal);
+				break;
+
+#if 0
+				/* what size? */
+			case CEVT_BOOL: 
+				printf("0x%08x/%u",  propval[i].val.boolVal, propval[i].val.boolVal); break;
+#endif
+			case CEVT_LPWSTR:
+				dbstream_write_string(&stream, propval[i].val.lpwstr);
+				break;
+
+			case CEVT_FILETIME:
+				dbstream_write32(&stream, propval[i].val.filetime.dwLowDateTime);
+				dbstream_write32(&stream, propval[i].val.filetime.dwHighDateTime);
+				break;
+
+			case CEVT_BLOB:
+				dbstream_write32(&stream, propval[i].val.blob.dwCount);
+				memcpy(stream, propval[i].val.blob.lpb, propval[i].val.blob.dwCount);
+				stream += propval[i].val.blob.dwCount;
+				break;
+
+			default:
+				synce_error("unknown data type for propid %08x", propval[i].propid);
+				goto exit;
+		}
+	}/*}}}*/
+
+	if (stream != (data + size))
+	{
+		synce_error("Unexpected stream size, your memory may have become corrupted.");
+		goto exit;
+	}
+
+	success = true;
+	
+exit:
+	if (success)
+	{
+		if (result)
+			*result = data;
+
+		if (result_size)
+			*result_size = size;
+	}
+	else
+	{
+		if (data)
+			free(data);
+
+		*result = NULL;
+		*result_size = 0;
+	}
+		
+	return success;
+}/*}}}*/
 

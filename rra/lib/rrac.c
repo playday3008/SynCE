@@ -148,7 +148,10 @@ bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* 
 	}
 
 	if (!success && *data)
-			free(*data);
+	{
+		free(*data);
+		*data = NULL;
+	}
 
 	return success;
 }/*}}}*/
@@ -669,6 +672,8 @@ bool rrac_recv_data(/*{{{*/
 		synce_error("Data parameter is NULL");
 		goto exit;
 	}
+
+	*data = NULL;
 
 	do
 	{

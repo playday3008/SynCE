@@ -465,21 +465,21 @@ static bool parser_handle_field(
 		else
 			parser->vcard_version = RRA_CONTACT_VCARD_UNKNOWN;
 	}/*}}}*/
-	else if (STR_EQUAL(name, "FN"))
+	else if (STR_EQUAL(name, "FN"))/*{{{*/
 	{
 		field = &parser->fields[parser->field_index++];
 		set_string(field, ID_FULL_NAME, type, value);
-	}
-	else if (STR_EQUAL(name, "N"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "N"))/*{{{*/
 	{
 		/* TODO: split string */
-	}
-	else if (STR_EQUAL(name, "ADR"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "ADR"))/*{{{*/
 	{
 		/* TODO: split string */
 		/* TODO: check type for "HOME" and "WORK" */
-	}
-	else if (STR_EQUAL(name, "TEL"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "TEL"))/*{{{*/
 	{
 		/* TODO: make type uppercase */
 		if (strstr(type, "HOME"))
@@ -502,8 +502,8 @@ static bool parser_handle_field(
 			synce_trace("Type '%s' for field '%s' not recognized.",
 					type, name);
 		}
-	}
-	else if (STR_EQUAL(name, "EMAIL"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "EMAIL"))/*{{{*/
 	{
 		/* TODO: make type uppercase */
 		/* TODO: handle multiple e-mail adresses */
@@ -515,34 +515,34 @@ static bool parser_handle_field(
 	
 		field = &parser->fields[parser->field_index++];
 		set_string(field, ID_EMAIL, type, value);
-	}
-	else if (STR_EQUAL(name, "URL"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "URL"))/*{{{*/
 	{
 		field = &parser->fields[parser->field_index++];
 		set_string(field, ID_WEB_PAGE, type, value);
-	}
-	else if (STR_EQUAL(name, "ORG"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "ORG"))/*{{{*/
 	{
 		field = &parser->fields[parser->field_index++];
 		set_string(field, ID_COMPANY, type, value);
-	}
-	else if (STR_EQUAL(name, "TITLE"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "TITLE"))/*{{{*/
 	{
 		field = &parser->fields[parser->field_index++];
 		set_string(field, ID_JOB_TITLE, type, value);
-	}
-	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))/*{{{*/
 	{
 		synce_trace("So, your contact has been in Evolution?");
-	}
-	else if (STR_EQUAL(name, "UID"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "UID"))/*{{{*/
 	{
 		/* TODO: save for later */
-	}
-	else if (STR_EQUAL(name, "PRODID"))
+	}/*}}}*/
+	else if (STR_EQUAL(name, "PRODID"))/*{{{*/
 	{
 		/* TODO: something? */
-	}
+	}/*}}}*/
 #if 0
 	else if (STR_EQUAL(name, ""))
 	{
@@ -588,7 +588,6 @@ static bool rra_contact_from_vcard2(
 	bool success = false;
 	Parser parser;
 	size_t max_field_count = *field_count;
-	size_t field_index = 0;
 	const char* p = vcard;
 	int state = VCARD_STATE_NEWLINE;
 	const char* name = NULL;
@@ -603,7 +602,7 @@ static bool rra_contact_from_vcard2(
 	parser.fields         = fields;
 	parser.field_index    = 0;
 
-	while (*p && field_index < max_field_count)
+	while (*p && parser.field_index < max_field_count)
 	{
 		switch (state)
 		{
@@ -679,6 +678,8 @@ static bool rra_contact_from_vcard2(
 		}
 	}
 
+	*field_count = parser.field_index;
+
 	success = true;
 			
 exit:
@@ -702,10 +703,21 @@ bool rra_contact_from_vcard(
 				fields,
 				&field_count))
 	{
+		synce_error("Failed to convert vCard to database entries");
 		goto exit;
 	}
 
-/*	success = true;*/
+	if (!dbstream_from_propvals(
+				fields,
+				field_count,
+				data,
+				data_size))
+	{
+		synce_error("Failed to convert database entries to stream");
+		goto exit;
+	}
+
+	success = true;
 
 exit:
 	return success;
