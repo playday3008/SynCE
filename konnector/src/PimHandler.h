@@ -91,6 +91,6 @@ private:
 //    QValueList<QPair<QString, QString> >    m_idPairs;
 };
 
-};
+}
 
 #endif

@@ -37,7 +37,7 @@ public:
     PocketPCKonnectorConfig(QWidget *parent = 0, const char *name = 0);
 
     ~PocketPCKonnectorConfig();
-    
+
     void loadSettings (KRES::Resource* p_res);
     void saveSettings (KRES::Resource* p_res);
 
@@ -47,6 +47,6 @@ private:
     QGridLayout*   m_layout;
 };
 
-};
+}
 
 #endif

@@ -24,7 +24,7 @@
 namespace pocketPCCommunication {
 
     enum RecordType {ALL = 0x07, CHANGED = 0x01, UNCHANGED = 0x02, DELETED = 0x04};
-};
+}
 
 
 #endif

@@ -140,6 +140,6 @@ private:
     KSync::KonnectorUIDHelper *mUidHelper;
 };
 
-};
+}
 
 #endif

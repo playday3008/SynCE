@@ -352,4 +352,4 @@ namespace pocketPCCommunication
 
         return true;
     }
-};
+}

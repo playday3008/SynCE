@@ -318,4 +318,4 @@ namespace KSync
         mCalendar.deleteAllTodos();
         mCalendar.deleteAllJournals();
     }
-};
+}

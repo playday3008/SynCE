@@ -30,12 +30,12 @@ PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *na
 {
     m_layout = new QGridLayout (this, 4, 5);
     m_layout->setSpacing (KDialog::spacingHint());
-            
+
     m_label = new QLabel (this, "PDA Name");
     m_label->setText ("PDA Name");
-    
+
     m_textPdaName = new QLineEdit(this, "pda name");
-    
+
     m_layout->addWidget (m_label, 0, 0);
     m_layout->addWidget (m_textPdaName, 0, 1);
 }
@@ -48,15 +48,15 @@ PocketPCKonnectorConfig::~PocketPCKonnectorConfig()
 void PocketPCKonnectorConfig::loadSettings (KRES::Resource* p_res)
 {
     kdDebug(2120) << "PocketPCConnectorConfig::loadSettings" << endl;
-    
+
     KSync::PocketPCKonnector* k = dynamic_cast<KSync::PocketPCKonnector*>(p_res);
-    
+
     if (!k)
     {
         kdError() << "PocketPCKonnectorConfig::loadSettings(): Wrong Konnector type." << endl;
         return;
     }
-    
+
     m_textPdaName->setText (k->getPdaName());
 }
 
@@ -64,18 +64,18 @@ void PocketPCKonnectorConfig::loadSettings (KRES::Resource* p_res)
 void PocketPCKonnectorConfig::saveSettings (KRES::Resource* p_res)
 {
     kdDebug(2120) << "PocketPCConnectorConfig::saveSettings" << endl;
-    
+
     KSync::PocketPCKonnector* k = dynamic_cast<KSync::PocketPCKonnector*>(p_res);
-    
+
     if (!k)
     {
         kdError() << "PocketPCKonnectorConfig::saveSettings(): Wrong Konnector type." << endl;
         return;
     }
-    
+
     k->setPdaName(m_textPdaName->text());
 }
 
 
-};
+}
 #include "PocketPCKonnectorConfig.moc"

@@ -45,4 +45,4 @@ uint32_t PimHandler::getOriginalId(const QString& p_id)
 
     return id.remove("RRA-ID-").toUInt(&ok, 16);
 }
-};
+}
