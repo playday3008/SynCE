@@ -14,7 +14,8 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
-Buildroot: %{_tmppath}/synce-root
+Buildroot: %{_tmppath}/%{name}-root
+#Buildroot: %{_tmppath}/synce-root
 Requires: synce-libsynce
 
 %description
@@ -33,7 +34,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wc
 %setup
 
 %build
-%configure --with-libsynce=$RPM_BUILD_ROOT%{prefix}
+%configure --with-libsynce=%{_tmppath}/synce-libsynce-root%{prefix}
 make
 
 %install
@@ -42,23 +43,23 @@ make
 %files
 %doc README LICENSE
 %{prefix}/bin/pcp
-%{prefix}/bin/pinfo
 %{prefix}/bin/pls
 %{prefix}/bin/pmkdir
 %{prefix}/bin/pmv
 %{prefix}/bin/prm
 %{prefix}/bin/prmdir
 %{prefix}/bin/prun
+%{prefix}/bin/pstatus
 %{prefix}/bin/synce-install-cab
 %{prefix}/include/rapi.h
 %{prefix}/lib/librapi.*
 %{_mandir}/man1/pcp.*
-%{_mandir}/man1/pinfo.*
 %{_mandir}/man1/pls.*
 %{_mandir}/man1/pmkdir.*
 %{_mandir}/man1/pmv.*
 %{_mandir}/man1/prm.*
 %{_mandir}/man1/prmdir.*
 %{_mandir}/man1/prun.*
+%{_mandir}/man1/pstatus.*
 %{_mandir}/man1/synce-install-cab.*
 

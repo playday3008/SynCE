@@ -1,11 +1,11 @@
 man_MANS = \
 	pcp.1 \
-	pinfo.1 \
 	pls.1 \
 	pmkdir.1 \
 	pmv.1 \
 	prm.1 \
 	prmdir.1 \
-	prun.1
+	prun.1 \
+	pstatus.1
 
 EXTRA_DIST = $(man_MANS)
