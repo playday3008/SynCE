@@ -41,7 +41,7 @@ if [ -d "m4" ]; then
 	INCLUDES="-I m4"
 fi
 set -x
-aclocal $INCLUDES || aclocal-1.6 $INCLUDES
+aclocal $INCLUDES
 autoheader
 libtoolize --copy --automake
 automake --copy --foreign --add-missing
