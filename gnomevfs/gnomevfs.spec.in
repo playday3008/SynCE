@@ -41,8 +41,9 @@ test -f $FILE && rm $FILE
 %files
 %defattr(-, root, root)
 %doc README LICENSE
-%{_bindir}/synce-in-computer-folder
 %{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.so
 %{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.la
 %{_sysconfdir}/gnome-vfs-2.0/modules/synce-module.conf
-
+%{prefix}/bin/synce-in-computer-folder
+%(prefix)/share/pixmaps/synce/synce-color.png
+%(prefix)/share/synce/synce-in-computer-folder.sh
