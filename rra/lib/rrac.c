@@ -2,16 +2,17 @@
 #include "rrac.h"
 #include "rrac_packet.h"
 #include <synce_log.h>
+#include <synce_socket.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <rapi.h>
 
 #define LETOH16(x)  x = letoh16(x)
 #define LETOH32(x)  x = letoh32(x)
 #define HTOLE16(x)  x = htole16(x)
 #define HTOLE32(x)  x = htole32(x)
-
 
 #define DUMP_PACKETS 1
 
@@ -54,14 +55,94 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 #define DUMP(desc,data,len)
 #endif
 
+#define RRAC_PORT 5678
 
-static bool rrac_recv_any(SynceSocket* socket, CommandHeader* header, uint8_t** data)/*{{{*/
+struct _RRAC
+{
+  SynceSocket*        server;
+  SynceSocket*        cmd_socket;
+  SynceSocket*        data_socket;
+  Command69Callback   command69_callback;
+  void*               command69_cookie;
+};
+
+RRAC* rrac_new()/*{{{*/
+{
+  return (RRAC*)calloc(1, sizeof(RRAC));
+}/*}}}*/
+
+void rrac_destroy(RRAC* rrac)/*{{{*/
+{
+  if (rrac)
+  {
+    rrac_disconnect(rrac);
+    free(rrac);
+  }
+}/*}}}*/
+
+bool rrac_set_command_69_callback(/*{{{*/
+    RRAC* rrac,
+    Command69Callback callback, 
+    void* cookie)
+{
+  if (rrac)
+  {
+    rrac->command69_callback = callback;
+    rrac->command69_cookie   = cookie;
+    return true;
+  }
+  else
+    return false;
+}/*}}}*/
+
+/* create server socket, call CeStartReplication(), accept command and
+ * data channel */
+bool rrac_connect(RRAC* rrac)/*{{{*/
+{
+  HRESULT hr;
+	rrac->server = synce_socket_new();
+
+	if (!synce_socket_listen(rrac->server, NULL, RRAC_PORT))
+		goto fail;
+
+	hr = CeStartReplication();
+  if (FAILED(hr))
+  {
+    synce_error("CeStartReplication failed: %s", synce_strerror(hr));
+    goto fail;
+  }
+
+	rrac->cmd_socket   = synce_socket_accept(rrac->server, NULL);
+	rrac->data_socket  = synce_socket_accept(rrac->server, NULL);
+
+	return true;
+
+fail:
+	rrac_disconnect(rrac);
+	return false;
+}/*}}}*/
+
+/* disconnect sockets */
+void rrac_disconnect(RRAC* rrac)/*{{{*/
+{
+  if (rrac)
+  {
+    synce_socket_free(rrac->data_socket);
+    rrac->data_socket = NULL;
+    synce_socket_free(rrac->cmd_socket);
+    rrac->cmd_socket = NULL;
+    synce_socket_free(rrac->server);
+    rrac->server = NULL;
+  }
+}/*}}}*/
+
+static bool rrac_recv_any(RRAC* rrac, CommandHeader* header, uint8_t** data)/*{{{*/
 {
 	bool success = false;
 
 	*data = NULL;
 
-	if (!synce_socket_read(socket, header, sizeof(CommandHeader)))
+	if (!synce_socket_read(rrac->cmd_socket, header, sizeof(CommandHeader)))
 	{
 		synce_error("Failed to read command header");
 		goto exit;
@@ -76,7 +157,7 @@ static bool rrac_recv_any(SynceSocket* socket, CommandHeader* header, uint8_t** 
 
 	*data = (uint8_t*)malloc(header->size);
 
-	if (!synce_socket_read(socket, *data, header->size))
+	if (!synce_socket_read(rrac->cmd_socket, *data, header->size))
 	{
 		synce_error("Failed to read data");
 		goto exit;
@@ -102,7 +183,7 @@ exit:
 /*
  * Be a little clever when reading packets
  */
-bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* size)/*{{{*/
+bool rrac_expect(RRAC* rrac, uint32_t command, uint8_t** data, size_t* size)/*{{{*/
 {
 	bool success = false;
 	CommandHeader header;
@@ -114,7 +195,7 @@ bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* 
 		if (*data)
 			free(*data);
 		
-		if (!rrac_recv_any(socket, &header, data))
+		if (!rrac_recv_any(rrac, &header, data))
 		{
 			synce_error("Failed to receive packet");
 			break;
@@ -127,12 +208,22 @@ bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* 
 		}
 		else if (0x69 == header.command)
 		{
-			Subheader_69* subheader = (Subheader_69*)*data;
-			if (0 == subheader->subcommand)
-			{
-				synce_trace("Some object was updated");
-				continue;
-			}
+      Subheader_69* subheader = (Subheader_69*)*data;
+      if (rrac->command69_callback)
+      {
+        rrac->command69_callback(
+            subheader->subcommand, 
+            *data, *size,
+            rrac->command69_cookie);
+      }
+      else
+      {
+        if (0 == subheader->subcommand)
+        {
+          synce_trace("Some object was updated");
+          continue;
+        }
+      }
 		}
 		else if (0x6e == header.command)
 		{
@@ -161,7 +252,7 @@ bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* 
 	return success;
 }/*}}}*/
 
-bool rrac_expect_reply(SynceSocket* socket, uint32_t reply_to, uint8_t** data, size_t* size)/*{{{*/
+bool rrac_expect_reply(RRAC* rrac, uint32_t reply_to, uint8_t** data, size_t* size)/*{{{*/
 {
 	bool success = false;
 	Subheader_6c* subheader = NULL;
@@ -170,7 +261,7 @@ bool rrac_expect_reply(SynceSocket* socket, uint32_t reply_to, uint8_t** data, s
 	
 	*data = NULL;
 
-	if (!rrac_expect(socket, 0x6c, data, size))
+	if (!rrac_expect(rrac, 0x6c, data, size))
 	{
 		synce_error("Failed to receive expected packet");
 		goto exit;
@@ -198,7 +289,7 @@ exit:
 }/*}}}*/
 
 bool rrac_send_65( /*{{{*/
-		SynceSocket* socket, 
+		RRAC* rrac, 
 		uint32_t type_id, 
 		uint32_t object_id1, 
 		uint32_t object_id2, 
@@ -216,7 +307,7 @@ bool rrac_send_65( /*{{{*/
 
 	DUMP("command 65", &packet, sizeof(packet));
 
-	if (!synce_socket_write(socket, &packet, sizeof(packet)))
+	if (!synce_socket_write(rrac->cmd_socket, &packet, sizeof(packet)))
 	{
 		printf("Failed to send packet");
 		goto exit;
@@ -229,7 +320,7 @@ exit:
 }/*}}}*/
 
 bool rrac_recv_65(/*{{{*/
-		SynceSocket* socket, 
+		RRAC* rrac, 
 		uint32_t* type_id, 
 		uint32_t* object_id1, 
 		uint32_t* object_id2,
@@ -240,7 +331,7 @@ bool rrac_recv_65(/*{{{*/
 	uint8_t* data = NULL;
 	size_t size = 0;
 
-	if (!rrac_expect(socket, 0x65, &data, &size))
+	if (!rrac_expect(rrac, 0x65, &data, &size))
 	{
 		synce_error("Failed to receive expected packet");
 		goto exit;
@@ -273,7 +364,7 @@ exit:
 }/*}}}*/
 
 bool rrac_send_66(/*{{{*/
-		SynceSocket* socket, 
+		RRAC* rrac, 
 		uint32_t type_id, 
 		uint32_t object_id, 
 		uint32_t flags)
@@ -289,10 +380,10 @@ bool rrac_send_66(/*{{{*/
 	command.packet.flags      = htole32(flags);
 	
 	DUMP("command 66", &command, sizeof(command));
-	return synce_socket_write(socket, &command, sizeof(command));
+	return synce_socket_write(rrac->cmd_socket, &command, sizeof(command));
 }	/*}}}*/
 
-bool rrac_send_67(SynceSocket* socket, uint32_t type_id, uint32_t* ids, size_t count)/*{{{*/
+bool rrac_send_67(RRAC* rrac, uint32_t type_id, uint32_t* ids, size_t count)/*{{{*/
 {
 	uint8_t* packet = NULL;
 	Command_67_Header* header;
@@ -317,13 +408,13 @@ bool rrac_send_67(SynceSocket* socket, uint32_t type_id, uint32_t* ids, size_t c
 	}
 
 	DUMP("packet 67", packet, size);
-	success = synce_socket_write(socket, packet, size);
+	success = synce_socket_write(rrac->cmd_socket, packet, size);
 
 	free(packet);
 	return success;
 }/*}}}*/
 
-bool rrac_send_6f(SynceSocket* socket, uint32_t subcommand)/*{{{*/
+bool rrac_send_6f(RRAC* rrac, uint32_t subcommand)/*{{{*/
 {	
 	Command_6f packet;
 	packet.command     = htole16(0x6f);
@@ -331,16 +422,16 @@ bool rrac_send_6f(SynceSocket* socket, uint32_t subcommand)/*{{{*/
 	packet.subcommand  = htole32(subcommand);
 
 	DUMP("command 6f", &packet, sizeof(packet));
-	return synce_socket_write(socket, &packet, sizeof(packet));
+	return synce_socket_write(rrac->cmd_socket, &packet, sizeof(packet));
 }/*}}}*/
 
-bool rrac_recv_reply_6f_6(SynceSocket* socket)/*{{{*/
+bool rrac_recv_reply_6f_6(RRAC* rrac)/*{{{*/
 {
 	bool success = false;
 	uint8_t* data = NULL;
 	size_t size = 0;
 	
-	if (!rrac_expect_reply(socket, 0x6f, &data, &size))
+	if (!rrac_expect_reply(rrac, 0x6f, &data, &size))
 	{
 		synce_error("Failed to receive reply packet");
 		goto exit;
@@ -357,13 +448,13 @@ exit:
 	return success;	
 }/*}}}*/
 
-bool rrac_recv_reply_6f_10(SynceSocket* socket)/*{{{*/
+bool rrac_recv_reply_6f_10(RRAC* rrac)/*{{{*/
 {
 	bool success = false;
 	uint8_t* data = NULL;
 	size_t size = 0;
 	
-	if (!rrac_expect_reply(socket, 0x6f, &data, &size))
+	if (!rrac_expect_reply(rrac, 0x6f, &data, &size))
 	{
 		synce_error("Failed to receive reply packet");
 		goto exit;
@@ -381,7 +472,7 @@ exit:
 }/*}}}*/
 
 bool rrac_recv_reply_6f_c1(/*{{{*/
-		SynceSocket* socket,
+		RRAC* rrac,
 		RawObjectType** object_type_array,
 		size_t* object_type_count)
 {
@@ -392,7 +483,7 @@ bool rrac_recv_reply_6f_c1(/*{{{*/
 	unsigned i;
 	Command_6c_Reply_6f_c1_Header* header = NULL;
 	
-	if (!rrac_expect_reply(socket, 0x6f, &data, &size))
+	if (!rrac_expect_reply(rrac, 0x6f, &data, &size))
 	{
 		synce_error("Failed to receive reply packet");
 		goto exit;
@@ -424,7 +515,7 @@ exit:
 	return success;	
 }/*}}}*/
 
-bool rrac_send_70_2(SynceSocket* socket, uint32_t subsubcommand)/*{{{*/
+bool rrac_send_70_2(RRAC* rrac, uint32_t subsubcommand)/*{{{*/
 {
 	Command_70_2 packet;
 
@@ -454,10 +545,10 @@ bool rrac_send_70_2(SynceSocket* socket, uint32_t subsubcommand)/*{{{*/
 	memset(packet.empty2, 0, sizeof(packet.empty2));
 
 	DUMP("packet 70:2", &packet, sizeof(packet));
-	return synce_socket_write(socket, &packet, sizeof(packet));
+	return synce_socket_write(rrac->cmd_socket, &packet, sizeof(packet));
 }/*}}}*/
 
-bool rrac_send_70_3(SynceSocket* socket, uint32_t* ids, size_t count)/*{{{*/
+bool rrac_send_70_3(RRAC* rrac, uint32_t* ids, size_t count)/*{{{*/
 {
 	bool success = false;
 	uint8_t* packet = NULL;
@@ -485,19 +576,19 @@ bool rrac_send_70_3(SynceSocket* socket, uint32_t* ids, size_t count)/*{{{*/
 		packet_ids[i] = htole32(ids[i]);
 
 	DUMP("packet 70:3", packet, size);
-	success = synce_socket_write(socket, packet, size);
+	success = synce_socket_write(rrac->cmd_socket, packet, size);
 
 	free(packet);
 	return success;
 }/*}}}*/
 
-bool rrac_recv_reply_70(SynceSocket* socket)/*{{{*/
+bool rrac_recv_reply_70(RRAC* rrac)/*{{{*/
 {
 	bool success = false;
 	uint8_t* data = NULL;
 	size_t size = 0;
 	
-	if (!rrac_expect_reply(socket, 0x70, &data, &size))
+	if (!rrac_expect_reply(rrac, 0x70, &data, &size))
 	{
 		synce_error("Failed to receive reply packet");
 		goto exit;
@@ -515,12 +606,12 @@ exit:
 	return success;
 }/*}}}*/
 
-bool rrac_recv_69_2(SynceSocket* socket)/*{{{*/
+bool rrac_recv_69_2(RRAC* rrac)/*{{{*/
 {
 	bool success = false;
 	Command_69_2 packet;
 
-	if (!synce_socket_read(socket, &packet, sizeof(packet)))
+	if (!synce_socket_read(rrac->cmd_socket, &packet, sizeof(packet)))
 	{
 		synce_error("Failed to read packet");
 		goto exit;
@@ -549,7 +640,7 @@ exit:
 }/*}}}*/
 
 bool rrac_recv_69_not_2(/*{{{*/
-		SynceSocket* socket,
+		RRAC* rrac,
 		uint32_t* subcommand,
 		uint32_t* type_id,
 		uint32_t* some_count,
@@ -569,7 +660,7 @@ bool rrac_recv_69_not_2(/*{{{*/
 		goto exit;
 	}
 
-	if (!rrac_expect(socket, 0x69, &data, &size))
+	if (!rrac_expect(rrac, 0x69, &data, &size))
 	{
 		synce_error("Failed to read command header");
 		goto exit;
@@ -633,7 +724,7 @@ exit:
 }/*}}}*/
 
 bool rrac_recv_data(/*{{{*/
-		SynceSocket* socket,
+		RRAC* rrac,
 		uint32_t* object_id,
 		uint32_t* type_id,
 		uint8_t** data, 
@@ -644,7 +735,7 @@ bool rrac_recv_data(/*{{{*/
 	ChunkHeader chunk_header;
 	size_t total_size = 0;
 
-	if (!synce_socket_read(socket, &header, sizeof(header)))
+	if (!synce_socket_read(rrac->data_socket, &header, sizeof(header)))
 	{
 		synce_error("Failed to read data header");
 		goto exit;
@@ -677,7 +768,7 @@ bool rrac_recv_data(/*{{{*/
 	{
 		size_t aligned_size;
 		
-		if (!synce_socket_read(socket, &chunk_header, sizeof(chunk_header)))
+		if (!synce_socket_read(rrac->data_socket, &chunk_header, sizeof(chunk_header)))
 		{
 			synce_error("Failed to read chunk header");
 			goto exit;
@@ -691,7 +782,7 @@ bool rrac_recv_data(/*{{{*/
 		aligned_size = (chunk_header.size + 3) & ~3;
 		*data = realloc(*data, total_size + aligned_size);
 
-		if (!synce_socket_read(socket, *data + total_size, aligned_size))
+		if (!synce_socket_read(rrac->data_socket, *data + total_size, aligned_size))
 		{
 			synce_error("Failed to read data");
 			goto exit;
@@ -713,7 +804,7 @@ exit:
 }/*}}}*/
 
 bool rrac_send_data(/*{{{*/
-		SynceSocket* socket,
+		RRAC* rrac,
 		uint32_t object_id,
 		uint32_t type_id,
 		uint32_t flags,
@@ -732,7 +823,7 @@ bool rrac_send_data(/*{{{*/
 	header.type_id   = htole32(type_id);
 	header.flags     = htole32(flags); /* maybe the RSF_ flags in cesync.h */
 
-	if (!synce_socket_write(socket, &header, sizeof(header)))
+	if (!synce_socket_write(rrac->data_socket, &header, sizeof(header)))
 	{
 		synce_error("Failed to write data header");
 		goto exit;
@@ -761,14 +852,14 @@ bool rrac_send_data(/*{{{*/
 	
 		DUMP("chunk header", &chunk_header, sizeof(chunk_header));
 
-		if (!synce_socket_write(socket, &chunk_header, sizeof(chunk_header)))
+		if (!synce_socket_write(rrac->data_socket, &chunk_header, sizeof(chunk_header)))
 		{
 			synce_error("Failed to write chunk header");
 			goto exit;
 		}
 		
 		DUMP("data", data + offset, chunk_size);
-		if (!synce_socket_write(socket, data + offset, chunk_size))
+		if (!synce_socket_write(rrac->data_socket, data + offset, chunk_size))
 		{
 			synce_error("Failed to write chunk data");
 			goto exit;
@@ -778,7 +869,7 @@ bool rrac_send_data(/*{{{*/
 		{
 			char pad[3] = {0,0,0};
 			synce_trace("Writing %i bytes padding", aligned_size - chunk_size);
-			if (!synce_socket_write(socket, pad, aligned_size - chunk_size))
+			if (!synce_socket_write(rrac->data_socket, pad, aligned_size - chunk_size))
 			{
 				synce_error("Failed to write padding");
 				goto exit;

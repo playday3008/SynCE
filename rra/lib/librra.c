@@ -21,9 +21,7 @@
 
 struct _RRA
 {
-	SynceSocket*  server;
-	SynceSocket*  cmd_channel;
-	SynceSocket*  data_channel;
+  RRAC*         rrac;
 
 	ObjectType*   object_types;
 	size_t        object_type_count;
@@ -73,27 +71,7 @@ void rra_free(RRA* rra)/*{{{*/
 
 bool rra_connect(RRA* rra)/*{{{*/
 {
-  HRESULT hr;
-	rra->server = synce_socket_new();
-
-	if (!synce_socket_listen(rra->server, NULL, RRAC_PORT))
-		goto fail;
-
-	hr = CeStartReplication();
-  if (FAILED(hr))
-  {
-    synce_error("CeStartReplication failed: %s", synce_strerror(hr));
-    goto fail;
-  }
-
-	rra->cmd_channel   = synce_socket_accept(rra->server, NULL);
-	rra->data_channel  = synce_socket_accept(rra->server, NULL);
-
-	return true;
-
-fail:
-	rra_disconnect(rra);
-	return false;
+	return rrac_connect(rra->rrac);
 }/*}}}*/
 
 void rra_disconnect(RRA* rra)/*{{{*/
@@ -106,12 +84,7 @@ void rra_disconnect(RRA* rra)/*{{{*/
 			rra->partners_key = 0;
 		}
 
-		synce_socket_free(rra->data_channel);
-		rra->data_channel = NULL;
-		synce_socket_free(rra->cmd_channel);
-		rra->cmd_channel = NULL;
-		synce_socket_free(rra->server);
-		rra->server = NULL;
+    rrac_disconnect(rra->rrac);
 	}
 }/*}}}*/
 
@@ -126,14 +99,14 @@ bool rra_get_object_types(RRA* rra, /*{{{*/
 	{
 		unsigned i = 0;
 
-		if (!rrac_send_6f(rra->cmd_channel, 0x3c1))
+		if (!rrac_send_6f(rra->rrac, 0x3c1))
 		{
 			synce_error("Failed to send command 6f");
 			goto exit;
 		}
 
 		if (!rrac_recv_reply_6f_c1(
-					rra->cmd_channel, 
+					rra->rrac, 
 					&raw_object_types, 
 					&rra->object_type_count))
 		{
@@ -243,9 +216,9 @@ bool rra_get_changes(/*{{{*/
   }
 
 #if SEND_COMMAND_70_3
-	rrac_send_70_3(rra->cmd_channel, ignored_ids, ignored_count);
+	rrac_send_70_3(rra->rrac, ignored_ids, ignored_count);
 
-	if (!rrac_recv_reply_70(rra->cmd_channel))
+	if (!rrac_recv_reply_70(rra->rrac))
 	{
 		goto exit;
 	}
@@ -255,7 +228,7 @@ bool rra_get_changes(/*{{{*/
 	 * Receive this first
 	 */
 
-	if (!rrac_recv_69_2(rra->cmd_channel))
+	if (!rrac_recv_69_2(rra->rrac))
 	{
 		synce_trace("rrac_recv_69_2 failed");
 		goto exit;
@@ -273,7 +246,7 @@ bool rra_get_changes(/*{{{*/
     uint32_t recv_id_count;
 
 		if (!rrac_recv_69_not_2(
-					rra->cmd_channel, 
+					rra->rrac, 
 					&recv_subcommand,
 					&recv_type_id,
 					&recv_some_count,
@@ -379,9 +352,9 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	}
 	
 #if SEND_COMMAND_70_3
-	rrac_send_70_3(rra->cmd_channel, ignored_ids, ignored_count);
+	rrac_send_70_3(rra->rrac, ignored_ids, ignored_count);
 
-	if (!rrac_recv_reply_70(rra->cmd_channel))
+	if (!rrac_recv_reply_70(rra->rrac))
 	{
 		goto exit;
 	}
@@ -392,7 +365,7 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	 */
 
 #if SEND_COMMAND_6F_10
-	if (!rrac_send_6f(rra->cmd_channel, 0x10))
+	if (!rrac_send_6f(rra->rrac, 0x10))
 	{
 		goto exit;
 	}
@@ -402,7 +375,7 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	 * Receive object ids
 	 */
 
-	if (!rrac_recv_69_2(rra->cmd_channel))
+	if (!rrac_recv_69_2(rra->rrac))
 	{
 		synce_trace("rrac_recv_69_2 failed");
 		goto exit;
@@ -415,7 +388,7 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 		unsigned i;
 		
 		if (!rrac_recv_69_not_2(
-					rra->cmd_channel, 
+					rra->rrac, 
 					&recv_subcommand,
 					&recv_type_id,
 					&recv_some_count,
@@ -483,19 +456,19 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	}
 
 #if SEND_COMMAND_6F_10
-	if (!rrac_recv_reply_6f_10(rra->cmd_channel))
+	if (!rrac_recv_reply_6f_10(rra->rrac))
 	{
 		goto exit;
 	}
 #endif
 
 #if 0 && SEND_COMMAND_6F_6
-	if (!rrac_send_6f(rra->cmd_channel, 6))
+	if (!rrac_send_6f(rra->rrac, 6))
 	{
 		goto exit;
 	}
 
-	if (!rrac_recv_reply_6f_6(rra->cmd_channel))
+	if (!rrac_recv_reply_6f_6(rra->rrac))
 	{
 		goto exit;
 	}
@@ -756,7 +729,6 @@ exit:
 	return success;
 }/*}}}*/
 
-
 bool rra_object_get(RRA* rra, /*{{{*/
                     uint32_t type_id,
                     uint32_t object_id,
@@ -769,31 +741,31 @@ bool rra_object_get(RRA* rra, /*{{{*/
 
 #if SEND_COMMAND_70_2
 	/* Lock data? */
-	if (!rrac_send_70_2(rra->cmd_channel, 1))
+	if (!rrac_send_70_2(rra->rrac, 1))
 	{
 		goto exit;
 	}
 
-	if (!rrac_recv_reply_70(rra->cmd_channel))
+	if (!rrac_recv_reply_70(rra->rrac))
 	{
 		goto exit;
 	}
 #endif
 	
 	/* Ask for object data */
-	if (!rrac_send_67(rra->cmd_channel, type_id, &object_id, 1))
+	if (!rrac_send_67(rra->rrac, type_id, &object_id, 1))
 	{
 		goto exit;
 	}
 
 	/* Receive object data */
-	if (!rrac_recv_data(rra->data_channel, &recv_object_id, &recv_type_id, data, data_size))
+	if (!rrac_recv_data(rra->rrac, &recv_object_id, &recv_type_id, data, data_size))
 	{
 		goto exit;
 	}
 
 	/* Received end-of-data object */
-	if (!rrac_recv_data(rra->data_channel, NULL, NULL, NULL, NULL))
+	if (!rrac_recv_data(rra->rrac, NULL, NULL, NULL, NULL))
 	{
 		synce_error("rrac_recv_data failed");
 		goto exit;
@@ -801,7 +773,7 @@ bool rra_object_get(RRA* rra, /*{{{*/
 	
 	/* This command will mark the packet as unchanged */	
 	if (!rrac_send_65(
-				rra->cmd_channel, 
+				rra->rrac, 
 				type_id, 
 				recv_object_id, 
 				recv_object_id,
@@ -813,14 +785,14 @@ bool rra_object_get(RRA* rra, /*{{{*/
 	
 #if SEND_COMMAND_70_2
 	/* Unlock data? */
-	if (!rrac_send_70_2(rra->cmd_channel, 2))
+	if (!rrac_send_70_2(rra->rrac, 2))
 	{
 		goto exit;
 	}
 #endif
 
 #if SEND_COMMAND_6F_6
-	if (!rrac_send_6f(rra->cmd_channel, 6))
+	if (!rrac_send_6f(rra->rrac, 6))
 	{
 		synce_error("rrac_send_6f failed");
 		goto exit;
@@ -828,14 +800,14 @@ bool rra_object_get(RRA* rra, /*{{{*/
 #endif
 
 #if SEND_COMMAND_70_2
-	if (!rrac_recv_reply_70(rra->cmd_channel))
+	if (!rrac_recv_reply_70(rra->rrac))
 	{
 		goto exit;
 	}
 #endif
 
 #if SEND_COMMAND_6F_6
-	if (!rrac_recv_reply_6f_6(rra->cmd_channel))
+	if (!rrac_recv_reply_6f_6(rra->rrac))
 	{
 		synce_error("rrac_recv_reply_6f_6 failed");
 		goto exit;
@@ -873,19 +845,19 @@ bool rra_object_put(RRA* rra,  /*{{{*/
 
 #if SEND_COMMAND_70_2
 	/* Lock data? */
-	if (!rrac_send_70_2(rra->cmd_channel, 1))
+	if (!rrac_send_70_2(rra->rrac, 1))
 	{
 		goto exit;
 	}
 
-	if (!rrac_recv_reply_70(rra->cmd_channel))
+	if (!rrac_recv_reply_70(rra->rrac))
 	{
 		goto exit;
 	}
 #endif
 	
 	if (!rrac_send_data(
-				rra->data_channel, 
+				rra->rrac, 
 				object_id, 
 				type_id, 
 				flags, 
@@ -896,14 +868,14 @@ bool rra_object_put(RRA* rra,  /*{{{*/
 		goto exit;	
 	}
 
-	if (!rrac_send_data(rra->data_channel, OBJECT_ID_STOP, type_id, 0, NULL, 0))
+	if (!rrac_send_data(rra->rrac, OBJECT_ID_STOP, type_id, 0, NULL, 0))
 	{
 		synce_error("Failed to send stop entry");
 		goto exit;	
 	}
 
 	if (!rrac_recv_65(
-				rra->cmd_channel, 
+				rra->rrac, 
 				&recv_type_id, 
 				&recv_object_id1, 
 				&recv_object_id2,
@@ -928,7 +900,7 @@ bool rra_object_put(RRA* rra,  /*{{{*/
 	if (recv_object_id1 != recv_object_id2)
 	{
 		if (!rrac_send_65(
-					rra->cmd_channel, 
+					rra->rrac, 
 					type_id, 
 					recv_object_id2, 
 					recv_object_id2,
@@ -942,28 +914,28 @@ bool rra_object_put(RRA* rra,  /*{{{*/
 
 #if SEND_COMMAND_70_2
 	/* Unlock data? */
-	if (!rrac_send_70_2(rra->cmd_channel, 2))
+	if (!rrac_send_70_2(rra->rrac, 2))
 	{
 		goto exit;
 	}
 #endif
 
 #if SEND_COMMAND_6F_6
-	if (!rrac_send_6f(rra->cmd_channel, 6))
+	if (!rrac_send_6f(rra->rrac, 6))
 	{
 		goto exit;
 	}
 #endif
 
 #if SEND_COMMAND_70_2
-	if (!rrac_recv_reply_70(rra->cmd_channel))
+	if (!rrac_recv_reply_70(rra->rrac))
 	{
 		goto exit;
 	}
 #endif
 
 #if SEND_COMMAND_6F_6
-	if (!rrac_recv_reply_6f_6(rra->cmd_channel))
+	if (!rrac_recv_reply_6f_6(rra->rrac))
 	{
 		goto exit;
 	}
@@ -1031,14 +1003,14 @@ bool rra_object_delete(RRA* rra, uint32_t type_id, uint32_t object_id)/*{{{*/
 	uint32_t recv_flags;
 	uint32_t index = 1;
 
-	if (!rrac_send_66(rra->cmd_channel, type_id, object_id, index))
+	if (!rrac_send_66(rra->rrac, type_id, object_id, index))
 	{
 		synce_error("Failed to senmd command 66");
 		goto exit;
 	}
 
 	if (!rrac_recv_65(
-				rra->cmd_channel, 
+				rra->rrac, 
 				&recv_type_id, 
 				&recv_object_id1,
 				&recv_object_id2,
@@ -1069,15 +1041,15 @@ exit:
 bool rra_lock(RRA* rra)
 {
 	return 
-		rrac_send_70_2(rra->cmd_channel, 1) &&
-		rrac_recv_reply_70(rra->cmd_channel);
+		rrac_send_70_2(rra->rrac, 1) &&
+		rrac_recv_reply_70(rra->rrac);
 }
 
 bool rra_unlock(RRA* rra)
 {
 	return 
-		rrac_send_70_2(rra->cmd_channel, 2) &&
-		rrac_recv_reply_70(rra->cmd_channel);
+		rrac_send_70_2(rra->rrac, 2) &&
+		rrac_recv_reply_70(rra->rrac);
 }
 #endif
 
