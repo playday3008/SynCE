@@ -14,14 +14,14 @@
 #include <kfileitem.h>
 #include <krun.h>
 #include <kstandarddirs.h>
+#include <qtooltip.h>
 
 #include "raki.h"
 #include "rapiwrapper.h"
 
 #define Icon(x) KGlobal::instance()->iconLoader()->loadIcon(x, KIcon::Toolbar)
 
-Raki::Raki(KAboutData* /*aboutDta*/, KDialog* d, QWidget* parent, 
-           const char *name)
+Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
         : KSystemTray(parent, name), DCOPObject ("Raki"), aboutDialog(d)
 {
     int leCount = 0;
@@ -29,7 +29,6 @@ Raki::Raki(KAboutData* /*aboutDta*/, KDialog* d, QWidget* parent,
     
     connectedIcon = Icon("raki");
     disconnectedIcon = Icon("raki_bw");
-    setPixmap(disconnectedIcon);
 
     rapiLeMenu = new KPopupMenu(0, "RakiMenu");
     rapiLeMenu->clear();
@@ -122,20 +121,21 @@ Raki::Raki(KAboutData* /*aboutDta*/, KDialog* d, QWidget* parent,
     
     char *path = NULL;
     synce::synce_get_directory(&path);
-    
-    KStandardDirs *dirs = KGlobal::dirs();
-    dirs->addResourceType("synce", "");
-    dirs->addPrefix(path);
-    
-    setAcceptDrops(false);
-    entered = false;
+    synceDir = QString(path);
 
+    entered = false;
+    
+    masqueradeStarted = false;
+
+    setConnectionStatus(false);
+    
     tryStartDccm();
 }
 
 
 Raki::~Raki()
 {
+    startMasquerading(false);
     stopDccm();
 }
 
@@ -207,59 +207,61 @@ void Raki::quit()
 }
 
 
-void Raki::postConnect(bool enable)
+void Raki::startMasquerading(bool start)
 {
-    if (enable) {
-        KConfig activeConnection("active_connection", true, false, "synce");
+    if (configDialog->getMasqueradeEnabled() || masqueradeStarted) {
+        KProcess ipTables;
+        ipTables.clearArguments();
+        ipTables.setExecutable("sudo");
     
-        activeConnection.setGroup("device");
+        ipTables << "-u" << "root" << configDialog->getIpTables() << "-t" << "nat"
+                 << ((start) ? "-A" : "-D") << "POSTROUTING" << "-s" << deviceIp 
+                 << "-d" << "0.0.0.0/0" << "-j" << "MASQUERADE";
     
-        // activeConnection.readEntry("name");
-        // activeConnection.readEntry("class");
-        // activeConnection.readEntry("hardware");
-        // activeConnection.readEntry("port");
+        ipTables.start(KProcess::DontCare);
         
-        deviceIp = activeConnection.readEntry("ip");
-    
-        if (configDialog->getMasqueradeEnabled()) {
-            KProcess ipTables;
-            ipTables.clearArguments();
-            ipTables.setExecutable("sudo");
-    
-            ipTables << "-u" << "root" << configDialog->getIpTables() << "-t" << "nat" 
-                     << "-A" << "POSTROUTING" << "-s" << deviceIp  << "-d" 
-                     << "0.0.0.0/0" << "-j" << "MASQUERADE";
-    
-            ipTables.start(KProcess::DontCare);
-            
-            masqueradeEnabled = true;
+        if (start) {
+            masqueradeStarted = true;
         } else {
-            masqueradeEnabled = false;
+            masqueradeStarted = false;
         }
-    } else {
-        if (masqueradeEnabled) {
-            masqueradeEnabled = false;
-            KProcess ipTables;
-            ipTables.clearArguments();
-            ipTables.setExecutable("sudo");
-    
-            ipTables << "-u" << "root" << configDialog->getIpTables() << "-t" << "nat" 
-                     << "-D" << "POSTROUTING" << "-s" << deviceIp  << "-d" 
-                     << "0.0.0.0/0" << "-j" << "MASQUERADE";
-    
-            ipTables.start(KProcess::DontCare);
-        }
-   }
+    }
 }
 
 
 void Raki::setConnectionStatus(bool enable)
 {
+    QToolTip::remove(this);
+    
     rapiLeMenu->setEnabled(enable);
     setAcceptDrops(enable);
     rapiReMenu->setItemEnabled(connectId, !enable);
     rapiReMenu->setItemEnabled(disconnectId, enable);
-    postConnect(enable);
+    
+    if (enable) {
+        connected = true;
+        actualIcon = &connectedIcon;
+        KSimpleConfig activeConnection(synceDir + "/active_connection", true);
+        activeConnection.setGroup("device");
+        QToolTip::add(this, "<b><center><u>Device Info</u></center></b><table>"
+            "<tr><td><b>Name:</b></td><td>" + 
+                    activeConnection.readEntry("name") 
+            + "</td></tr><tr><td><b>Class:</b></td><td>" + 
+                    activeConnection.readEntry("class") 
+            + "</td></tr><tr><td><b>Hardware:</b></td><td>" + 
+                    activeConnection.readEntry("hardware") 
+            + "</td></tr>");
+        // activeConnection.readEntry("port");
+        
+        deviceIp = activeConnection.readEntry("ip");
+        startMasquerading(true);
+    } else {
+        connected = false;
+        actualIcon = &disconnectedIcon;
+        QToolTip::add(this, "No Device connected");
+        startMasquerading(false);
+    }
+    setPixmap(*actualIcon);
 }
 
 
@@ -435,15 +437,12 @@ QString Raki::changeConnectionState(int state)
 {
     switch(state) {
     case 0:
-        actualIcon = &disconnectedIcon;
         setConnectionStatus(false);
         break;
     case 1:
-        actualIcon = &connectedIcon;
         setConnectionStatus(true);
         break;
     }
-    setPixmap(*actualIcon);
     return QString("Switched");
 }
 
@@ -475,6 +474,33 @@ void Raki::showAbout()
 }
 
 static const char *description = I18N_NOOP("Raki, a PocketPC-Management Tool");
+static const char *MITlicense = I18N_NOOP(
+"Copyright (c) 2003 Volker Christian\n"
+"\n"
+"Permission is hereby granted, free of charge, to\n"
+"any person obtaining a copy of this software and\n"
+"associated documentation files (the \"Software\"), to\n"
+"deal in the Software without restriction, including\n"
+"without limitation the rights to use, copy, modify,\n"
+"merge, publish, distribute, sublicense, and/or sell\n"
+"copies of the Software, and to permit persons to whom\n"
+"the Software is furnished to do so, subject to the\n"
+"following conditions:\n"
+"\n"
+"The above copyright notice and this permission notice\n"
+"shall be included in all copies or substantial portions\n"
+"of the Software.\n"
+"\n"
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF\n"
+"ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED\n"
+"TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n"
+"PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT\n"
+"SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR\n"
+"ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN\n"
+"ACTION OF CONTRACT,TORT OR OTHERWISE, ARISING FROM, OUT\n"
+"OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\n"
+"OTHER DEALINGS IN THE SOFTWARE.");
+
 static KCmdLineOptions options[] =
     {
         { 0, 0, 0 }
@@ -484,15 +510,24 @@ static KCmdLineOptions options[] =
 
 int main(int argc, char *argv[])
 {
-    KAboutData aboutData( "raki", I18N_NOOP("Raki"),
-                          VERSION, description, KAboutData::License_GPL,
-                          "(c) 2003, Volker Christian (voc)", 0, 0, "voc@users.sourceforge.net");
-    aboutData.addAuthor("Volker Christian",0, "voc@users.sourceforge.net");
-    aboutData.addCredit("Ludovic Lange", I18N_NOOP("is the Initiator of the SynCE-Project."), "llange@users.sourceforge.net");
-    aboutData.addCredit("David Eriksson", I18N_NOOP("is the current Project Manager."), "twogood@users.sourceforge.net");
-    aboutData.addCredit("Ganesh Varadarajan", I18N_NOOP("has developed the serial-over-USB driver."), "vganesh@users.sourceforge.net");
+    KAboutData aboutData("raki", I18N_NOOP("Raki"),
+                         VERSION, description, KAboutData::License_Custom,
+                         "(c) 2003, Volker Christian (voc)", 0, 0, 
+                         "voc@users.sourceforge.net");
+    aboutData.addAuthor("Volker Christian", 0, "voc@users.sourceforge.net");
+    aboutData.addCredit("Ludovic Lange",
+                        I18N_NOOP("is the Initiator of the SynCE-Project."), 
+                        "llange@users.sourceforge.net");
+    aboutData.addCredit("David Eriksson", 
+                        I18N_NOOP("is the current Project Manager."), 
+                        "twogood@users.sourceforge.net");
+    aboutData.addCredit("Ganesh Varadarajan", 
+                        I18N_NOOP("has developed the serial-over-USB driver."), 
+                        "vganesh@users.sourceforge.net");
+    aboutData.setLicenseText(MITlicense);
+
     KCmdLineArgs::init( argc, argv, &aboutData );
-    KCmdLineArgs::addCmdLineOptions( options ); // Add our own options.
+    KCmdLineArgs::addCmdLineOptions( options );
 
     if (!KUniqueApplication::start()) {
         fprintf(stderr, "Raki is already running!\n");

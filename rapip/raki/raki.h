@@ -50,7 +50,7 @@ private:
     void startDccm();
     void stopDccm();
     void tryStartDccm();
-    void postConnect(bool enable);
+    void startMasquerading(bool start);
 
     DCOPClient *dcopClient;
     KDialog *aboutDialog;
@@ -67,13 +67,15 @@ private:
     KProcess connectProc;
     KProcess disconnectProc;
     bool entered;
+    bool connected;
     int startDccmId;
     int stopDccmId;
     int connectId;
     int disconnectId;
     bool dccmRestart;
-    bool masqueradeEnabled;
+    bool masqueradeStarted;
     QString deviceIp;
+    QString synceDir;
 
     enum {
         OPEN_ITEM = 1,
