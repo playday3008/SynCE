@@ -353,6 +353,21 @@ CEOID CeWriteRecordProps(
  * Registry
  */
 
+#define HKEY_CLASSES_ROOT           ((HKEY)0x80000000)
+#define HKEY_CURRENT_USER           ((HKEY)0x80000001)
+#define HKEY_LOCAL_MACHINE          ((HKEY)0x80000002)
+#define HKEY_USERS                  ((HKEY)0x80000003)
+
+#define REG_NONE                    0
+#define REG_SZ                      1
+#define REG_EXPAND_SZ               2
+#define REG_BINARY                  3
+#define REG_DWORD                   4
+#define REG_DWORD_LITTLE_ENDIAN     4
+#define REG_DWORD_BIG_ENDIAN        5
+#define REG_LINK                    6
+#define REG_MULTI_SZ                7
+
 LONG CeRegCreateKeyEx( 
 		HKEY hKey, 
 		LPCWSTR lpszSubKey, 
@@ -387,6 +402,14 @@ LONG CeRegQueryInfoKey(
 		LPDWORD lpcbMaxValueLen, 
 		LPDWORD lpcbSecurityDescriptor, 
 		PFILETIME lpftLastWriteTime);
+
+LONG CeRegQueryValueEx( 
+		HKEY hKey, 
+		LPCWSTR lpValueName, 
+		LPDWORD lpReserved, 
+		LPDWORD lpType, 
+		LPBYTE lpData, 
+		LPDWORD lpcbData);
 
 LONG CeRegEnumValue( 
 		HKEY hKey, 
