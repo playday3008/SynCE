@@ -58,7 +58,7 @@ o Make sure you have these versions of the GNU autotools:
     automake-1.6.1
     libtool-1.4.2
 
-o Checkout "dccmd" (note the last 'd') as described on:
+o Checkout "dccm" as described on:
 
     http://sourceforge.net/cvs/?group_id=30550
 
