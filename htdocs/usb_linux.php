@@ -115,8 +115,11 @@ compiling the module.</p>
 
 <h3>Special information for HP iPAQ 5550 owners</h3>
 
-<blockquote><p>The HP iPAQ 5550 and some other newer devices, probably including the HP iPAQ 4150, do not work 
-with any currently existing  version of
+<p>Also applies to the <b>MiTAC Mio 168</b>, also known as <b>Bluemedia PDA
+255</b> and <b>Yakumo Delta GPS 300</b>!</p>
+
+<blockquote><p>The HP iPAQ 5550 and some other newer devices, probably
+including the HP iPAQ 4150, do not work with any currently existing  version of
 the <tt>ipaq</tt> module.</p>
 
 <p>The problem is that these devices
