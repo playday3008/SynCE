@@ -31,19 +31,20 @@ connection sequence.</p></li>
 <li class=SPACED>Connect your device to the Ethernet/WLAN and make sure there is a name server
 specified in the network settings of it.</li>
 
-<li class=SPACED>Open ActiveSync on your device and click on <tt>Extras</tt> in the lower left
-corner.</li>
+<li class=SPACED>Open ActiveSync on your device and click on <tt>Options</tt>
+(German version: <tt>Extras</tt>) in the lower left corner.</li>
 
 <li class=SPACED>Choose the <tt>Options...</tt> menu entry and make sure, the
-checkbox before "Include PC when synchronizing remotely and connect to". (German
-version: "PC bei Remotesynchronisierung einschliessen und verbinden mit".)</li>
+checkbox before "Include PC when synchronizing remotely and connect to".
+(German: "PC bei Remotesynchronisierung einschliessen und verbinden mit".)</li>
 
-<li class=SPACED>Choose your PC in the combobox below the checkbox and acknowledge with
-<tt>ok</tt>.</li>
+<li class=SPACED>Choose your PC in the drop-down list below the checkbox and
+acknowledge with <tt>ok</tt>.</li>
 
 <li class=SPACED>Make sure dccm is running on your desktop.</li>
 
-<li class=SPACED>On the main screen of ActiveSync on your PDA click <tt>Sync</tt>. (German version: <tt>Synchronisieren</tt>.)</li>
+<li class=SPACED>On the main screen of ActiveSync on your PDA click
+<tt>Sync</tt>. (German: <tt>Synchronisieren</tt>.)</li>
 
 </ol>
 
