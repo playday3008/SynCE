@@ -1,6 +1,7 @@
 /* $Id$ */
 #include <rapi.h>
 #include <synce_log.h>
+#include <string.h>
 
 static uint16_t dbstream_read16(uint8_t** stream)
 {
@@ -27,7 +28,7 @@ static WCHAR* dbstream_read_string(uint8_t** stream)
 /*
  * Code to convert a database stream to an array of CEPROPVAL structures.
  *
- * No memory will be allocated; strings and BLOBs will point into the stream.
+ * No memory will be allocated; strings and BLOBs will point into the input stream.
  */
 
 bool dbstream_to_propvals(
@@ -43,6 +44,12 @@ bool dbstream_to_propvals(
 	{
 		propval[i].propid = dbstream_read32(&stream);
 
+		if (propval[i].propid & 0x400) /* CEVT_FLAG_EMPTY */
+		{
+			/* this flags seems to suggest an empty field */
+			continue;
+		}
+
 		switch (propval[i].propid & 0xffff)
 		{
 			case CEVT_I2:
@@ -50,15 +57,15 @@ bool dbstream_to_propvals(
 				break;
 			
 			case CEVT_I4:
-				propval[i].val.iVal = (int32_t)dbstream_read32(&stream);
+				propval[i].val.lVal = (int32_t)dbstream_read32(&stream);
 				break;
 
 			case CEVT_UI2:
-				propval[i].val.iVal = dbstream_read16(&stream);
+				propval[i].val.uiVal = dbstream_read16(&stream);
 				break;
 			
 			case CEVT_UI4:
-				propval[i].val.iVal = dbstream_read32(&stream);
+				propval[i].val.ulVal = dbstream_read32(&stream);
 				break;
 
 #if 0

@@ -1,7 +1,14 @@
+.*.swp
 .deps
 .gdb_history
 .libs
 Makefile
 Makefile.in
-rra
-rradump
+rra-db-vcal
+rra-db-vcard
+rra-decode
+rra-delete
+rra-get-data
+rra-get-ids
+rra-get-types
+rra-put-data

@@ -43,6 +43,6 @@ fi
 set -x
 aclocal $INCLUDES
 autoheader
-libtoolize --automake
-automake --foreign --add-missing
+libtoolize --copy --automake
+automake --copy --foreign --add-missing
 autoconf

@@ -46,6 +46,18 @@ StrBuf* strbuf_append (StrBuf *strbuf, const char* str)
   return strbuf;
 }
 
+StrBuf* strbuf_append_wstr(StrBuf* strbuf, WCHAR* wstr)
+{
+	if (wstr)
+	{
+		char* ascii_str = wstr_to_ascii(wstr);
+		strbuf_append(strbuf, ascii_str);
+		wstr_free_string(ascii_str);
+	}
+
+	return strbuf;
+}
+
 StrBuf* strbuf_append_c (StrBuf *strbuf, int c)
 {
   strbuf_enlarge(strbuf, strbuf->length + 2);

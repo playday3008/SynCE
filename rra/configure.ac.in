@@ -25,5 +25,6 @@ AC_C_CONST
 
 AC_OUTPUT([Makefile
            src/Makefile
+           lib/Makefile
 					 man/Makefile])
 
