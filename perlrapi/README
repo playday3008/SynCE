@@ -38,8 +38,10 @@ Simple.pm - Simple access to the low level wrapper
 Samples
 =======
 
+dump.pl     - Stores a dump of all databases to a XML file
 ldif_imp.pl - Imports all contacts to a Mozilla-LDIF adressbook
               ('ldif_imp.pl -h' for more information)
+ls.pl       - pls implementation in Perl
 
 
 Authors

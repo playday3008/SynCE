@@ -16,5 +16,6 @@ Other files
 ===========
 
 Test/rapitest.pl   - test the Rapi2 module
+Sample/dump.pl     - dump databases to xml
 Sample/ldif_imp.pl - import contacts to Mozilla
-
+Sample/ls.pl       - list files
