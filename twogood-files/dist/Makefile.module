@@ -44,6 +44,7 @@ tarball: $(TARBALL)
 
 $(TARBALL): bootstrap
 	cd $(TMP) && GZIP="-9" tar cfhz $(TARBALL) $(DIRNAME) $(EXCLUDE)
+	cp $(TARBALL) $(RPMROOT)/SOURCES/
 	
 #install: bootstrap
 #	cd $(TMP)/$(DIRNAME) && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) --with-librapi2=$(PREFIX) && make install

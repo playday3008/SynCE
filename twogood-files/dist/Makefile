@@ -20,9 +20,9 @@ DCCM_VERSION     = 0.8
 SERIAL_VERSION   = 0.8
 RRA_VERSION      = 0.8
 TRAYICON_VERSION = 0.8
-MULTISYNC_PLUGIN_VERSION = 0.8
+MULTISYNC_PLUGIN_VERSION = 0.8.1
 
-GNOMEVFS_VERSION = 0.2
+GNOMEVFS_VERSION = 0.8
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
 RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')
@@ -39,7 +39,8 @@ export TARBALL_DIR RPM_DIR SRPM_DIR
 
 .PHONY: tarballs rpms apt synce extras trayicon gnomevfs multisync_plugin
 
-all: synce
+all:
+	@echo "What?"
 
 #trayicon:
 #	$(MAKE) -f Makefile.release NAME=trayicon tarball
@@ -59,6 +60,15 @@ all: synce
 #	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    checkout
 #	$(MAKE) -f Makefile.module MODULE=rra       VERSION=$(RRA_VERSION)       checkout
 
+LIBMIMEDIR_TGZ = $(PWD)/../../libmimedir-0.2.tar.gz
+
+#libmimedir:
+#	cd /var/tmp && \
+#	tar zxf $(LIBMIMEDIR_TGZ) && \
+#	cd `basename $(LIBMIMEDIR_TGZ) .tar.gz` && \
+#	./configure --prefix=/var/tmp/synce && \
+#	make all install
+
 synce:
 	mkdir -p $(RPM_DIR)
 	-rm $(RPM_DIR)/*
@@ -76,8 +86,10 @@ synce:
 	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      tarball
 	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    tarball
 	$(MAKE) -f Makefile.module MODULE=rra       VERSION=$(RRA_VERSION)       tarball
+	cp $(LIBMIMEDIR_TGZ) $(TARBALL_DIR)/
+	cp $(LIBMIMEDIR_TGZ) $(RPMROOT)/SOURCES/
 	rpmbuild -ba synce.spec
-	cp $(RPMROOT)/SRPMS/i386/synce-$(SYNCE_VERSION)-*.rpm       $(SRPM_DIR)/
+	cp $(RPMROOT)/SRPMS/synce-$(SYNCE_VERSION)-*.rpm       			$(SRPM_DIR)/
 	cp $(RPMROOT)/RPMS/i386/synce-$(SYNCE_VERSION)-*.rpm        $(RPM_DIR)/
 	cp $(RPMROOT)/RPMS/i386/synce-devel-$(SYNCE_VERSION)-*.rpm  $(RPM_DIR)/
 

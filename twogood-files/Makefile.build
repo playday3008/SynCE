@@ -1,8 +1,10 @@
 PREFIX=/var/tmp/synce
+LIBMIMEDIR_TGZ=/home/david/src/synce/libmimedir-0.2.tar.gz
 
 all: install
 
 install:
+	cd $(PREFIX) && tar zxf $(LIBMIMEDIR_TGZ) && cd `basename $(LIBMIMEDIR_TGZ) .tar.gz` && ./configure --prefix=$(PREFIX) && make install
 	cd serial   && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
 	cd libsynce && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
 	cd librapi2 && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
@@ -18,7 +20,7 @@ tag:
 	cd dccm     && cvs tag V`cat VERSION | sed 's/\./_/g'`
 	cd rra      && cvs tag V`cat VERSION | sed 's/\./_/g'`
 	cd trayicon && cvs tag V`cat VERSION | sed 's/\./_/g'`
-	cd gnomevfs && cvs tag V`cat VERSION | sed 's/\./_/g'`
+#	cd gnomevfs && cvs tag V`cat VERSION | sed 's/\./_/g'`
 
 clean:
 	rm -rf $(PREFIX)
@@ -28,5 +30,5 @@ clean:
 	cd dccm     && ./cvsclean
 	cd rra      && ./cvsclean
 	cd trayicon && ./cvsclean
-	cd gnomevfs && ./cvsclean
+#	cd gnomevfs && ./cvsclean
 
