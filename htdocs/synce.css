@@ -1,0 +1,79 @@
+BODY
+{
+	color: #505050;
+	background-color: white;
+}
+
+/* links */
+A
+{
+	color: blue;
+	text-decoration: none;
+}
+
+A:HOVER
+{
+	text-decoration: underline;
+}
+
+/* places just for text */
+BODY,P,DIV,LI,UL,TD,TH,TR,TABLE,EM,FONT,BLOCKQUOTE,FORM,H1,H2,H3
+{
+	font-family: Verdana,Geneva,Arial,Helvetica,sans-serif;
+	/*Helvetica, Lucida, Verdana, sans-serif;*/
+}
+
+BODY,P,DIV,LI,UL,TD,TH,TR,TABLE,EM,FONT,BLOCKQUOTE,FORM
+{
+	font-size: 11px; 
+}
+
+PRE
+{
+	font-size: 11px;
+	font-family: Courier, Courier New, monospace;
+}
+
+H1
+{
+	color: black;
+	font-size: 18px;
+}
+
+H2
+{
+	color: black;
+	font-size: 15px;
+}
+
+H3
+{
+	color: black;
+	font-size: 13px;
+}
+
+SMALL
+{
+	font-size: 9px;
+}
+
+TD
+{
+	vertical-align: top;
+}
+
+TH
+{
+	vertical-align: top;
+	text-align: left;
+}
+
+LI.SPACED
+{
+	padding-bottom: 1em;
+}
+
+DIV.PAGE
+{
+	width: 600px;
+}
