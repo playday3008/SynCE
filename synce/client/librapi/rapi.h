@@ -80,7 +80,7 @@ extern "C"
 	STDAPI CeRapiInitEx ( RAPIINIT* );
 	STDAPI_( BOOL ) CeCreateProcess ( LPCWSTR, LPCWSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES,
 	                                  BOOL, DWORD, LPVOID, LPWSTR, LPSTARTUPINFO, LPPROCESS_INFORMATION );
-	STDAPI CeRapiUninit ();
+	STDAPI CeRapiUninit(void);
 
 #define GENERIC_WRITE              0x40000000
 #define GENERIC_READ               0x80000000

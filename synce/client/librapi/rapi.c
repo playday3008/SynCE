@@ -106,6 +106,7 @@ STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved,
 	long lng;
 	long index;
 	long errcode;
+	LONG result = ERROR_SUCCESS; /* May be result is really errcode. */
 
 	DBG_printf( "CeRegCreatKeyEx( hKey = 0x%08X, lpszSubKey = 0x%08X, Reserved = 0x%08X, lpszClass = 0x%08X, ulOptions = 0x%08X, samDesired = 0x%08X, lpSecurityAttributes = 0x%08X, phkResult = 0x%08X, lpdwDisposition = 0x%08X )\n",
 	            hKey, lpszSubKey, Reserved, lpszClass, ulOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition );
@@ -143,7 +144,7 @@ STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved,
 		*lpdwDisposition = ( DWORD ) getLong( sock, &index );
 		DBG_printf( "lpdwDisposition : %ld (0x%08lx)\n", *lpdwDisposition, *lpdwDisposition );
 	}
-	return TRUE;
+	return result;
 }
 
 STDAPI_( LONG ) CeRegOpenKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult )
@@ -213,6 +214,7 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	int i;
 	long index;
 	long cSubKeys;
+	LONG result = ERROR_SUCCESS;
 
 	DBG_printf( "CeRegQueryInfoKey( hKey = 0x%08X, lpClass = 0x%08X, lpcbClass = 0x%08X, lpReserved = 0x%08X, lpcSubKeys = 0x%08X, lpcbMaxSubKeyLen = 0x%08X, lpcbMaxClassLen = 0x%08X, lpcValues = 0x%08X, lpcbMaxValueNameLen = 0x%08X, lpcbMaxValueLen = 0x%08X, lpcbSecurityDescriptor = 0x%08X, lpftLastWriteTime = 0x%08X )\n",
 	            hKey, lpClass, lpcbClass, lpReserved, lpcSubKeys, lpcbMaxSubKeyLen, lpcbMaxClassLen, lpcValues, lpcbMaxValueNameLen, lpcbMaxValueLen, lpcbSecurityDescriptor, lpftLastWriteTime );
@@ -266,11 +268,12 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 		lng = getLong( sock, &index );
 		DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
 	}
-	return TRUE;
+	return result;
 }
 
 STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, LPDWORD lpcbValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData )
 {
+	LONG result = ERROR_SUCCESS;
 	long size = BUFSIZE;
 
 	DBG_printf( "CeRegEnumValue( hKey = 0x%08X, dwIndex = 0x%08X, lpszValueName = 0x%08X, lpcbValueName = 0x%08X, lpReserved = 0x%08X, lpType = 0x%08X, lpDate = 0x%08X, lpcbDate = 0x%08X )\n",
@@ -310,7 +313,7 @@ STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
 
 	size = getbufferlen( sock );
 
-	return TRUE;
+	return result;
 }
 
 STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcbName, LPDWORD lpReserved, LPWSTR lpClass, LPDWORD lpcbClass, PFILETIME lpftLastWriteTime )
@@ -1216,6 +1219,8 @@ STDAPI_( DWORD ) CeGetLastError( void )
 /*  RAPI - Library */
 /* ================================================================================================================= */
 /* ================================================================================================================= */
+
+char * findhost( void );
 
 char * findhost( void )
 {
