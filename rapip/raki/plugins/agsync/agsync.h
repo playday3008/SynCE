@@ -55,7 +55,7 @@ public:
     ~AGSync();
     void createConfigureObject(KConfig *ksConfig);
     void configure();
-    
+    bool preSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
 
 private:
     bool sync();

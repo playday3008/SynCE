@@ -32,6 +32,7 @@
 #include <AGServerConfig.h>
 #include <AGUserConfig.h>
 
+
 class ServerCheckListItem : public QObject, public QCheckListItem
 {
 Q_OBJECT
@@ -49,10 +50,10 @@ signals:
     void stateChanged(bool state);
 };
 
+
 class AGSyncConfigImpl : public AGSyncConfig
 {
-    Q_OBJECT
-
+Q_OBJECT
 public:
     AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent = 0,
             const char* name = 0, bool modal = TRUE, WFlags fl = 0 );
@@ -70,6 +71,8 @@ public:
     AGUserConfig *getUserConfig();
     AGUserConfig *getAgreedConfig();
     void setUserConfig(AGUserConfig *userConfig);
+    bool installClient();
+    void resetInstallClient();
 
 private:
     KConfig *ksConfig;

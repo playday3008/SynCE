@@ -30,6 +30,7 @@
 #include <klineedit.h>
 #include <kdebug.h>
 #include <AGBase64.h>
+#include <kmessagebox.h>
 
 AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const char* name, bool modal, WFlags fl)
         : AGSyncConfig(parent, name, modal, fl)
@@ -39,7 +40,7 @@ AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const cha
     serverList->setColumnWidthMode(0, QListView::Manual);
     serverList->setColumnWidthMode(1, QListView::Manual);
     serverList->setFullWidth(true);
-    serverConfigDialog = new ServerConfigImpl(parent, "ServerConfig", true);
+    serverConfigDialog = new ServerConfigImpl(this, "ServerConfig", true);
     connect(serverConfigDialog, SIGNAL(newServer(QString, int, QString, QString)), this, 
             SLOT(newServer(QString, int, QString, QString)));
     connect(serverConfigDialog, SIGNAL(modifiedServer(QString, int, QString, QString)), this, 
@@ -115,14 +116,14 @@ void AGSyncConfigImpl::updateServerList()
 
     for(int i = 0; i < cnt; i++) {
         AGServerConfig *serverConfig = AGUserConfigGetServerByIndex(userConfig, i);
-        ServerCheckListItem *cli = new ServerCheckListItem(serverList, serverConfig->serverName);
+        ServerCheckListItem *cli = 
+                new ServerCheckListItem(serverList, serverConfig->serverName);
         cli->setText(1, QString::number(serverConfig->serverPort));
         cli->serverConfig = serverConfig;
         cli->setOn(!serverConfig->disabled);
         connect(cli, SIGNAL(stateChanged(bool)), this, SLOT(contentChanged()));
     }
     serverList->update();
-    writeServerList();
 }
 
 
@@ -138,6 +139,7 @@ void AGSyncConfigImpl::newServer(QString hostName, int port, QString userName, Q
     serverConfig->resetCookie = true;
     serverConfig->notRemovable = false;
     updateServerList();
+    writeServerList();
     contentChanged();
 }
 
@@ -151,7 +153,8 @@ void AGSyncConfigImpl::modifiedServer(QString hostName, int port, QString userNa
     currentItem->serverConfig->serverName = qstrdup(hostName.ascii());
     currentItem->serverConfig->serverPort = QString::number(port).toUShort();
     currentItem->serverConfig->userName = qstrdup(userName.ascii());
-    AGServerConfigChangePassword(currentItem->serverConfig, (char *) passWord.ascii());
+    AGServerConfigChangePassword(
+            currentItem->serverConfig, (char *)passWord.ascii());
     currentItem->serverConfig->disabled = !currentItem->isOn();
     serverList->update();
     writeServerList();
@@ -177,6 +180,7 @@ void AGSyncConfigImpl::accept()
     ksConfig->writeEntry("SocksProxyActive", socksProxy->isChecked());
     ksConfig->writeEntry("HttpProxyActive", httpProxy->isChecked());
     ksConfig->writeEntry("UseAuthentication", useAuthentication->isChecked());
+    ksConfig->writeEntry("InstallAGClient", installClientCheckbox->isChecked());
     ksConfig->sync();
     writeServerList();
 }
@@ -197,6 +201,8 @@ void AGSyncConfigImpl::readConfig()
         noProxy->setChecked(true);
     }
     useAuthentication->setChecked(ksConfig->readBoolEntry("UseAuthentication"));
+    installClientCheckbox->setChecked(
+            ksConfig->readBoolEntry("InstallAGClient", true));
     buttonOk->setEnabled(false);
 }
 
@@ -247,6 +253,25 @@ void AGSyncConfigImpl::readServerList()
 }
 
 
+bool AGSyncConfigImpl::installClient()
+{
+    return installClientCheckbox->isChecked();
+}
+
+
+void AGSyncConfigImpl::resetInstallClient()
+{
+    installClientCheckbox->setChecked(false);
+    accept();
+    KMessageBox::information(this, 
+        "The AvantGo Client has been installed on your device.\n" \
+        "Please finish the installation on the device but do not " \
+        "restart it until the first synchronization has finished!\n" \
+        "Press <OK> to start syncing your AvantGo channels",
+        "AvantGo Client installed");
+}
+
+
 AGUserConfig *AGSyncConfigImpl::getUserConfig()
 {
     return userConfig;
@@ -266,6 +291,7 @@ void AGSyncConfigImpl::setUserConfig(AGUserConfig *userConfig)
     AGUserConfigFree(agreedConfig);
     agreedConfig = AGUserConfigDup(userConfig);
     updateServerList();
+    writeServerList();
 }
 
 

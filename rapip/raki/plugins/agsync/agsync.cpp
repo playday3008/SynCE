@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <kdebug.h>
+#include <kstandarddirs.h>
+#include <kapplication.h>
 #include <AGTypes.h>
 #include <AGReader.h>
 #include <AGWriter.h>
@@ -291,6 +293,41 @@ void AGSync::doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx 
     }
 }
 
+bool AGSync::preSync(SyncThread */*syncThread*/, Rra */*rra*/, 
+        bool /*firstSynchronize*/, uint32_t /*partnerId*/)
+{
+    if (configDialog->installClient()) {
+        if (!Ce::rapiInit(pdaName)) {
+            return false;
+        }
+
+        synce::SYSTEM_INFO system;
+        Ce::getSystemInfo(&system);
+        Ce::rapiUninit();
+        
+        QString arch;
+
+        switch(system.wProcessorArchitecture) {
+        case 1: // Mips
+            arch = "rmips";
+            break;
+        case 4: // SHx
+            arch = "rsh3";
+            break;
+        case 5: // Arm
+            arch = "rarm";
+            break;
+        }
+        QString binaryVersion = "smelter." + arch + ".CAB";
+        KStandardDirs *dirs = KApplication::kApplication()->dirs();
+        QString agClient = dirs->findResource("data", "raki/clients/" + binaryVersion);
+        install(agClient);
+        configDialog->resetInstallClient();
+    }
+    
+    return true;
+}
+
 
 void AGSync::doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx)
 {
@@ -313,8 +350,7 @@ void AGSync::doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx)
     
     asPutUserConfig(r, w, resultConfig);
     
-    /* Loop through servers and sync. */
-    cnt = AGUserConfigCount(resultConfig);  /* Implied (Server)Count */
+    cnt = AGUserConfigCount(resultConfig);
 
     kdDebug(2120) << "Processing " << cnt << " servers." << endl;
 
@@ -328,9 +364,10 @@ void AGSync::doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx)
     }
     configDialog->setUserConfig(resultConfig);
 
+    AGUserConfigFree(resultConfig);
+    
 confEnd:
     AGUserConfigFree(deviceConfig);
-    AGUserConfigFree(resultConfig);
 }
 
 

@@ -1,3 +1,4 @@
+SUBDIRS = clients
 INCLUDES = -I$(top_srcdir)/raki -I$(top_srcdir)/raki/interfaces $(all_includes)
 
 if AGSYNC

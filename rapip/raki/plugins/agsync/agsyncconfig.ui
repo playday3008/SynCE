@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>465</width>
-            <height>366</height>
+            <height>368</height>
         </rect>
     </property>
     <property name="caption">
@@ -31,91 +31,142 @@
                     <cstring>tab</cstring>
                 </property>
                 <attribute name="title">
-                    <string>Sync Server</string>
+                    <string>Server/Client Setting</string>
                 </attribute>
-                <hbox>
+                <vbox>
                     <property name="name">
                         <cstring>unnamed</cstring>
                     </property>
-                    <widget class="KListView">
-                        <column>
-                            <property name="text">
-                                <string>Server Name                                                      </string>
-                            </property>
-                            <property name="clickable">
-                                <bool>false</bool>
-                            </property>
-                            <property name="resizable">
-                                <bool>false</bool>
-                            </property>
-                        </column>
-                        <column>
-                            <property name="text">
-                                <string>Server Port</string>
-                            </property>
-                            <property name="clickable">
-                                <bool>false</bool>
-                            </property>
-                            <property name="resizable">
-                                <bool>false</bool>
-                            </property>
-                        </column>
+                    <widget class="QGroupBox">
                         <property name="name">
-                            <cstring>serverList</cstring>
+                            <cstring>groupBox3_2</cstring>
                         </property>
-                    </widget>
-                    <widget class="QLayoutWidget">
-                        <property name="name">
-                            <cstring>layout12</cstring>
+                        <property name="title">
+                            <string>Server Setting</string>
                         </property>
-                        <vbox>
+                        <hbox>
                             <property name="name">
                                 <cstring>unnamed</cstring>
                             </property>
-                            <widget class="QPushButton">
+                            <widget class="KListView">
+                                <column>
+                                    <property name="text">
+                                        <string>Server Name                                                  </string>
+                                    </property>
+                                    <property name="clickable">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="resizable">
+                                        <bool>false</bool>
+                                    </property>
+                                </column>
+                                <column>
+                                    <property name="text">
+                                        <string>Server Port</string>
+                                    </property>
+                                    <property name="clickable">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="resizable">
+                                        <bool>false</bool>
+                                    </property>
+                                </column>
                                 <property name="name">
-                                    <cstring>addServerButton</cstring>
-                                </property>
-                                <property name="text">
-                                    <string>Add</string>
+                                    <cstring>serverList</cstring>
                                 </property>
                             </widget>
-                            <widget class="QPushButton">
+                            <widget class="QLayoutWidget">
                                 <property name="name">
-                                    <cstring>modifyServerButton</cstring>
+                                    <cstring>layout12</cstring>
                                 </property>
-                                <property name="text">
-                                    <string>Modify</string>
-                                </property>
+                                <vbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QPushButton">
+                                        <property name="name">
+                                            <cstring>addServerButton</cstring>
+                                        </property>
+                                        <property name="text">
+                                            <string>Add</string>
+                                        </property>
+                                    </widget>
+                                    <widget class="QPushButton">
+                                        <property name="name">
+                                            <cstring>modifyServerButton</cstring>
+                                        </property>
+                                        <property name="text">
+                                            <string>Modify</string>
+                                        </property>
+                                    </widget>
+                                    <widget class="QPushButton">
+                                        <property name="name">
+                                            <cstring>deleteServerButton</cstring>
+                                        </property>
+                                        <property name="text">
+                                            <string>Delete</string>
+                                        </property>
+                                    </widget>
+                                    <spacer>
+                                        <property name="name">
+                                            <cstring>spacer4</cstring>
+                                        </property>
+                                        <property name="orientation">
+                                            <enum>Vertical</enum>
+                                        </property>
+                                        <property name="sizeType">
+                                            <enum>Expanding</enum>
+                                        </property>
+                                        <property name="sizeHint">
+                                            <size>
+                                                <width>20</width>
+                                                <height>101</height>
+                                            </size>
+                                        </property>
+                                    </spacer>
+                                </vbox>
                             </widget>
-                            <widget class="QPushButton">
+                        </hbox>
+                    </widget>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>groupBox4</cstring>
+                        </property>
+                        <property name="title">
+                            <string>Client Setting</string>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QCheckBox">
                                 <property name="name">
-                                    <cstring>deleteServerButton</cstring>
+                                    <cstring>installClientCheckbox</cstring>
                                 </property>
                                 <property name="text">
-                                    <string>Delete</string>
+                                    <string>Install AvantGo Client-Software on the Device at next Sync</string>
                                 </property>
                             </widget>
                             <spacer>
                                 <property name="name">
-                                    <cstring>spacer4</cstring>
+                                    <cstring>spacer4_2</cstring>
                                 </property>
                                 <property name="orientation">
-                                    <enum>Vertical</enum>
+                                    <enum>Horizontal</enum>
                                 </property>
                                 <property name="sizeType">
                                     <enum>Expanding</enum>
                                 </property>
                                 <property name="sizeHint">
                                     <size>
-                                        <width>20</width>
-                                        <height>101</height>
+                                        <width>40</width>
+                                        <height>20</height>
                                     </size>
                                 </property>
                             </spacer>
-                        </vbox>
+                        </hbox>
                     </widget>
-                </hbox>
+                </vbox>
             </widget>
             <widget class="QWidget">
                 <property name="name">
@@ -614,6 +665,12 @@
         <signal>clicked()</signal>
         <receiver>AGSyncConfig</receiver>
         <slot>deleteServerButton_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>installClientCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>AGSyncConfig</receiver>
+        <slot>contentChanged()</slot>
     </connection>
 </connections>
 <includes>
