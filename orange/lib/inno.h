@@ -39,7 +39,6 @@ typedef struct
 
 typedef struct
 {
-  char ID[12];
   uint32_t TotalSize;
   uint32_t OffsetEXE;
   uint32_t CompressedSizeEXE;
