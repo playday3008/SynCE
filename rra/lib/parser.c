@@ -177,7 +177,7 @@ bool parser_datetime_to_struct   (const char* datetime, struct tm* time_struct)
 {
   int count;
   char suffix = 0;
-  memset(time_struct, 0, sizeof(time_struct));
+  memset(time_struct, 0, sizeof(struct tm));
 
   count = sscanf(datetime, "%4d%2d%2dT%2d%2d%2d%1c", 
       &time_struct->tm_year,
@@ -191,7 +191,7 @@ bool parser_datetime_to_struct   (const char* datetime, struct tm* time_struct)
   if (count != 3 && count != 6 && count != 7)
   {
     synce_error("Bad date-time: '%s'", datetime);
-    return -1;
+    return false;
   }
 
   if (count >= 7)
@@ -211,7 +211,12 @@ bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time)/*{{{*
 {
   struct tm time_struct;
 
-  parser_datetime_to_struct(datetime, &time_struct);
+  if (!parser_datetime_to_struct(datetime, &time_struct))
+  {
+    synce_error("Failed to parse DATE or DATE-TIME to struct tm");
+    return false;
+  }
+  
   *unix_time = mktime(&time_struct);
 
   return -1 != *unix_time;
@@ -335,6 +340,8 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
       format == PARSER_TIME_FORMAT_ONLY_DATE)
   {
     success = parser_datetime_to_unix_time(line->values[0], &some_time);
+    if (!success)
+      synce_error("Failed to convert DATE or DATE-TIME to UNIX time");
   }
 
   return success && parser_add_time(self, id, some_time);
