@@ -1,3 +1,7 @@
+//
+// Test CeCreateDirectory and CeRemoveDirectory
+//
+
 #include "test.h"
 
 int main()
@@ -6,15 +10,23 @@ int main()
 
 	DWORD length;
 	WCHAR dirname[MAX_PATH];
-	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, dirname));
+	VERIFY_NOT_FALSE(length = CeGetSpecialFolderPath(CSIDL_PERSONAL, MAX_PATH, dirname))
 	wcscat(dirname, to_unicode("\\librapi test directory"));
 	
-	// XXX: not yet implemented in librapi
-#ifdef WIN32
+	// First, remove directory (ignoring return value)
+	CeRemoveDirectory(dirname);
+	
+	// Create directroy. This should succeed.
 	TEST_NOT_EQUAL(0, CeCreateDirectory(dirname, NULL));
-#else
-	printf("not yet implemented in librapi\n");
-#endif
+	
+	// Create directroy again. This should fail.
+	TEST_EQUAL(0, CeCreateDirectory(dirname, NULL));
+	
+	// Remove directory. This should succeed.
+	TEST_NOT_EQUAL(0, CeRemoveDirectory(dirname));
+	
+	// Remove directory again. This should fail.
+	TEST_EQUAL(0, CeRemoveDirectory(dirname));
 	
 	VERIFY_HRESULT(CeRapiUninit());
 	return TEST_SUCCEEDED;
