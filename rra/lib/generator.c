@@ -76,6 +76,14 @@ void generator_destroy(Generator* self)/*{{{*/
   }
 }/*}}}*/
 
+bool generator_utf8(Generator* self)
+{
+  if (self)
+    return self->flags & GENERATOR_UTF8;
+  else
+    return false;
+}
+
 bool generator_set_data(Generator* self, const uint8_t* data, size_t data_size)/*{{{*/
 {
 	bool success = false;

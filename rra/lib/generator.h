@@ -22,6 +22,7 @@ typedef bool (*GeneratorPropertyFunc)(Generator* g, struct _CEPROPVAL* property,
 
 Generator* generator_new(int flags, void* cookie);
 void generator_destroy(Generator* self);
+bool generator_utf8(Generator* self);
 
 void generator_add_property(Generator* self, uint16_t id, GeneratorPropertyFunc func);
 

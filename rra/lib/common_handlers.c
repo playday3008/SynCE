@@ -13,8 +13,121 @@
 #include <string.h>
 #include <stdlib.h>
 #include "internal.h"
+#include "rra_config.h"
+
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+
+#define INVALID_ICONV_HANDLE ((iconv_t)(-1))
+
+#define CHARSET_ISO88591  "ISO_8859-1"
+#define CHARSET_UTF8      "UTF-8"
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
+
+static char* convert_string(const char* inbuf, const char* tocode, const char* fromcode)
+{
+  size_t length = strlen(inbuf);
+  size_t inbytesleft = length, outbytesleft = length * 2;
+  char* outbuf = malloc(outbytesleft + sizeof(char));
+  char* outbuf_iterator = outbuf;
+  ICONV_CONST char* inbuf_iterator = (ICONV_CONST char*)inbuf;
+  size_t result;
+  iconv_t cd = INVALID_ICONV_HANDLE;
+
+  cd = iconv_open(tocode, fromcode);
+
+  if (INVALID_ICONV_HANDLE == cd)
+  {
+    synce_error("iconv_open failed");
+    return NULL;
+  }
+
+  result = iconv(cd, &inbuf_iterator, &inbytesleft, &outbuf_iterator, &outbytesleft);
+  iconv_close(cd);
+
+  if ((size_t)-1 == result)
+  {
+		synce_error("iconv failed: inbytesleft=%i, outbytesleft=%i, inbuf=\"%s\"", 
+				inbytesleft, outbytesleft, inbuf);
+		free(outbuf);
+		return NULL;
+  }
+
+  *outbuf_iterator = '\0';
+
+  return outbuf;
+}
+
+static char* convert_to_utf8(const char* inbuf)
+{
+  char* utf8 = convert_string(inbuf, CHARSET_UTF8, CHARSET_ISO88591);
+
+  if (utf8)
+  {
+    char* result = NULL;
+    unsigned char* q;
+    StrBuf* euro_fix = strbuf_new(NULL);
+
+    if (!utf8)
+      return NULL;
+
+    for (q = (unsigned char*)utf8; *q != '\0'; q++)
+    {
+      /* Special treatment of the euro symbol */
+      if (*q == 0x80)
+      {
+        synce_warning("Euro symbol found, using workaround.");
+#if 0
+        strbuf_append_c(euro_fix, 0xe2);
+        strbuf_append_c(euro_fix, 0x82);
+        strbuf_append_c(euro_fix, 0xac);
+#else
+        strbuf_append(euro_fix, "[EURO]");
+#endif
+      }
+      else
+        strbuf_append_c(euro_fix, *q);
+    }
+
+    result = strdup(euro_fix->buffer);
+
+    free(utf8);
+    strbuf_destroy(euro_fix, true);
+    return result;
+  }
+  else
+    return NULL;
+}
+
+static char* convert_from_utf8(const char* source)
+{
+  char* result = NULL;
+  const unsigned char* q;
+  StrBuf* euro_fix = strbuf_new(NULL);
+
+  if (!source)
+    return NULL;
+
+  for (q = (const unsigned char*)source; *q != '\0'; q++)
+  {
+    /* Special treatment of the euro symbol */
+    if (q[0] == 0xe2 && q[1] == 0x82 && q[2] == 0xac)
+    {
+      synce_warning("Euro symbol found, using workaround.");
+      strbuf_append(euro_fix, "[EURO]");
+      q += 2;
+    }
+    else
+      strbuf_append_c(euro_fix, *q);
+  }
+
+  result = convert_string(euro_fix->buffer, CHARSET_ISO88591, CHARSET_UTF8);
+
+  strbuf_destroy(euro_fix, true);
+  return result;
+}
 
 
 /*
@@ -42,16 +155,28 @@ bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
 bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 {
   bool success = false;
-  if (line)
+  StrBuf* note = strbuf_new(NULL);
+
+  if (line && line->values)
   {
     char *q;
-    StrBuf* note = strbuf_new(NULL);
-    assert(line->values);
+    char* source = NULL;
 
-    /* TODO: convert from utf-8 */
+    if (parser_utf8(p))
+    {
+      source = convert_from_utf8(line->values[0]);
+      if (!source)
+      {
+        synce_error("Failed to convert string from UTF-8");
+        goto exit;
+      }
+    }
+    else
+      source = line->values[0];
+
 
     /* convert LF to CRLF */
-    for (q = line->values[0]; *q != '\0'; q++)
+    for (q = source; *q != '\0'; q++)
     {
       if (*q == '\n')
         strbuf_append_crlf(note);
@@ -61,9 +186,12 @@ bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 
     success = parser_add_blob(p, ID_NOTES, note->buffer, note->length);
 
-    strbuf_destroy(note, true);
+    if (parser_utf8(p))
+      free(source);
   }
 
+exit:
+  strbuf_destroy(note, true);
   return success;
 }
 
@@ -88,10 +216,22 @@ bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
     }
     else
     {
-      /* TODO: convert to utf-8 */
-      char* tmp = strndup((const char*)
-          propval->val.blob.lpb, 
-          propval->val.blob.dwCount);
+      char* tmp = malloc(propval->val.blob.dwCount + 1);
+      memcpy(tmp, propval->val.blob.lpb, propval->val.blob.dwCount);
+      tmp[propval->val.blob.dwCount] = '\0';
+
+      if (generator_utf8(g))
+      {
+        char* utf8 = convert_to_utf8(tmp);
+        free(tmp);
+        if (!utf8)
+        {
+          synce_error("Failed to convert string to UTF-8");
+          return false;
+        }
+        tmp = utf8;
+      }
+      
       generator_add_simple(g, "DESCRIPTION", tmp);
       free(tmp);
     }

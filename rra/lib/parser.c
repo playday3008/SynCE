@@ -603,6 +603,14 @@ void parser_destroy(Parser* self)/*{{{*/
   }
 }/*}}}*/
 
+bool parser_utf8(Parser* self)
+{
+  if (self)
+    return self->flags & PARSER_UTF8;
+  else
+    return false;
+}
+
 bool parser_run(Parser* self)/*{{{*/
 {
   bool success = false;

@@ -37,6 +37,7 @@ Parser* parser_new(
     struct _RRA_Timezone* tzi, 
     void* cookie);
 void parser_destroy(Parser* self);
+bool parser_utf8(Parser* self);
 bool parser_set_mimedir(Parser* self, const char* mimedir);
 bool parser_run(Parser* self);
 void parser_call_unused_properties(Parser* self);
