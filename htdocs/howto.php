@@ -226,41 +226,28 @@ modprobe ipaq</pre></blockquote>
 
 <p>Everything in this section should be performed as the root user.</p>
 
-<p>For many systems, this works:</p>
-
-<blockquote><tt>synce-serial-config ttyUSB0</tt></blockquote>
-
-<p><b>Important!</b> If you had four USB endpoints in the USB information for
-your device instead of the usual two, you should use ttyUSB1 instead of
-ttyUSB0 in the command above!</p>
-
-<p>If you get the error message <i>synce-serial-config was unable to find a
-character device named "ttyUSB0"</i>, you may be using <b>devfs</b> and need to
-do this a little differently:</p>
-
-<blockquote>
-
 <ol>
 
 <li>Connect your Windows CE device</li>
 
-<li><p>Run synce-serial-config like this:</p>
+<li><p>Try the following synce-serial-config commands until one of them succeed:</p>
 
-<blockquote><tt>synce-serial-config usb/tts/0</tt></blockquote>
+  <ul>
+    <li><tt>synce-serial-config ttyUSB0</tt></li>
+    <li><tt>synce-serial-config tts/USB0</tt></li>
+    <li><tt>synce-serial-config usb/tts/0</tt></li>
+    <li><tt>synce-serial-config usb/ttyUSB0</tt></li>
+  </ul>
 
-<p>Use usb/tts/1 as parameter instead if you have four USB endpoints instead of
-the usual two.</p>
+  </li>
+  
 
-</li>
+<p><b>Important!</b> If you had four USB endpoints in the USB information for
+your device instead of the usual two, you should use <b>1</b> instead of
+<b>0</b> in the command above!</p>
 
-<li><p>If the above failed with <i>synce-serial-config was unable to find a
-character device named "usb/tts/0"</i>, try this:</p>
-
-<blockquote><tt>synce-serial-config tts/USB0</tt></blockquote>
-
-<p>Use tts/USB1 as parameter instead if you have four USB endpoints instead of
-the usual two.</p>
-
+<p>If you get the error message <i>synce-serial-config was unable to find a
+character device named...</i>, ask for <a href="help.php">help</a>!</p>
 </li>
 
 </ol>
