@@ -1,15 +1,17 @@
 $Id$ vim: expandtab
 
-General notes
-=============
+Overview
+========
 
-A.      All daemons and progams are meant to run as user-land processes unless
-        noted otherwise.
+This document describes what is part of SynCE today and what should be part of
+SynCE in the future.
 
-B.      All libraries should be written i ANSI C.
+Existing modules, applications and functions are listed with the module owner
+specified inside square brackets. Future functions do not have someone
+responsible.
 
-C.      Responsiblity is denoted with SourceForge user name in square brackets.  
-        Note the missing responsiblities!
+Modules, applications and functions not listed here are of course also
+welcome. This is only suggestions.
 
 
 Contents
@@ -20,10 +22,14 @@ Contents
 3.      Synchronization
 4.      Synchronization applications
 5.      Language support
+A.      Packaging
 
 
 1.      Foundation
 ==================
+
+All daemons and applications are meant to run as user-land processes unless
+noted otherwise. All libraries should be written i ANSI C.
 
 1.1.    The connection manager (dccm)                            [twogood]
 
@@ -74,15 +80,17 @@ Contents
         Allows browsing and manipulation of the Pocket PC device file
         system with Konqueror.
 
+        TODO: package in RPM
+
 2.2.2.  KDE system tray icon that shows connected devices            [voc]
 
         This is the "rapip" CVS module.
 
 2.3.    GNOME 2 integration
 
-2.3.1   Tray icon                                                [twogood]
+2.3.1   Tray icon (trayicon)                                     [twogood]
 
-2.3.2   GNOME-VFS module                                          [sassur]
+2.3.2   GNOME-VFS module (gnomevfs)                               [sassur]
 
 2.x.    Tools for your favorite desktop environment here.
 
@@ -133,6 +141,7 @@ Contents
 
 5.2     Perl: PerlRAPI                                              [osar]
 
+5.x     Your favorite language here
 
  
 5.      Add-ons
@@ -163,6 +172,10 @@ Contents
         that needs to be updated:
         
         http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/lufs/lufs/lufsd/cefs/
+
+5.6.    Usability                                                  [?????]
+
+        How should we get SynCE more user-friendly?
 
          
 A.      Packaging
