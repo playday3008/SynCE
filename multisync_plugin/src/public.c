@@ -103,6 +103,14 @@ void get_changes(SynceConnection* connection, sync_object_type newdbs)
 
 	synce_trace("----->");
 
+  if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
+  {
+    sync_set_requestfailederror(
+        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
+        connection->handle);
+		goto exit;
+  }
+
   if (!synce_join_thread(connection))
   {
     sync_set_requestfailederror(
@@ -124,6 +132,7 @@ void get_changes(SynceConnection* connection, sync_object_type newdbs)
   }
 
 exit:
+  synce_create_thread(connection);
 	synce_trace("<-----");
 }
 
@@ -169,13 +178,22 @@ void syncobj_modify(
   size_t data_size = 0;
   uint32_t dummy_id;
   uint32_t new_object_id = 0;
+  SynceObject* synce_object = NULL;
   
 	synce_trace("----->");
 
-  if (!connection->syncmgr)
+  if (!synce_join_thread(connection))
   {
     sync_set_requestfailederror(
-        "The SynCE synchronization manager is not initialized. Please restart MultiSync.",
+        "Failed to wait for thread termination",
+        connection->handle);
+		goto exit;
+  }
+
+  if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
+  {
+    sync_set_requestfailederror(
+        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
         connection->handle);
 		goto exit;
   }
@@ -307,16 +325,39 @@ void syncobj_modify(
       rra_task_free_data(data);
       break;
   }
-
+  
   if (!uid)
   {
+    object_id = new_object_id;
     sprintf(returnuid, "%08x", new_object_id);
     *returnuidlen = strlen(returnuid);
   }
- 
+
+  synce_object = (SynceObject*)g_hash_table_lookup(
+      connection->objects[index],
+      &object_id);
+
+  if (!synce_object)
+  {
+    /* Create new object and add to hash table */
+    synce_object = g_new0(SynceObject, 1);
+
+    synce_object->type_index  = index;
+    synce_object->type_id     = connection->type_ids[index];
+    synce_object->object_id   = object_id;
+
+    g_hash_table_insert(
+        connection->objects[index],
+        &synce_object->object_id,
+        synce_object);  
+  }
+
+  synce_object->event = SYNCMGR_TYPE_EVENT_UNCHANGED;
+
   sync_set_requestdone(connection->handle);
 
 exit:
+  synce_create_thread(connection);
 	synce_trace("<-----");
   return;
 }
@@ -337,6 +378,14 @@ void syncobj_delete(
   uint32_t object_id;
 
   synce_trace("----->");
+
+  if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
+  {
+    sync_set_requestfailederror(
+        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
+        connection->handle);
+		goto exit;
+  }
 
   if (softdelete)
   {
@@ -417,10 +466,10 @@ void sync_done(SynceConnection* connection, gboolean success)
 {
 	synce_trace("----->");
 
-  if (!connection->syncmgr)
+  if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
   {
     sync_set_requestfailederror(
-        "The SynCE synchronization manager is not initialized. Please restart MultiSync.",
+        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
         connection->handle);
 		goto exit;
   }

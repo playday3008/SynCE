@@ -330,7 +330,7 @@ void synce_disconnect(SynceConnection* connection)/*{{{*/
   /* TODO: destroy hash tables */
   rra_syncmgr_destroy(connection->syncmgr);
   connection->syncmgr = NULL;
-  g_free(connection);
+  /*g_free(connection);*/
 
   CeRapiUninit();
 }/*}}}*/
@@ -466,22 +466,7 @@ static void synce_retrieve_object_data(/*{{{*/
   }
 }/*}}}*/
 
-/** Add object ID to array if we need to retreive its data */
-static void synce_add_existing_to_id_vector(/*{{{*/
-    RRA_Uint32Vector* vector,
-    SynceObject* object)
-{
-  if (object->event != SYNCMGR_TYPE_EVENT_DELETED && !object->data)
-  {
-    /*synce_trace("Adding ID %08x of type %08x to ID array", 
-        object->object_id, object->type_id);*/
-
-    rra_uint32vector_add(vector, object->object_id);
-  }
-}/*}}}*/
-
-/** Proxy to synce_add_existing_to_id_vector */
-static void synce_add_changed_to_id_vector_GHFunc(/*{{{*/
+static void synce_add_changed_to_id_vector_if_data_needed_GHFunc(/*{{{*/
     gpointer key,
     gpointer value, 
     gpointer cookie)
@@ -489,8 +474,13 @@ static void synce_add_changed_to_id_vector_GHFunc(/*{{{*/
   RRA_Uint32Vector* vector = (RRA_Uint32Vector*)cookie;
   SynceObject* object = (SynceObject*)value;
 
-  if (object->event != SYNCMGR_TYPE_EVENT_UNCHANGED)
-    synce_add_existing_to_id_vector(vector, object);
+  if (object->event == SYNCMGR_TYPE_EVENT_CHANGED && !object->data)
+  {
+    /*synce_trace("Adding ID %08x of type %08x to ID array", 
+        object->object_id, object->type_id);*/
+
+    rra_uint32vector_add(vector, object->object_id);
+  }
 }
 
 /** Proxy to for synce_add_object_to_change_info */
@@ -535,7 +525,9 @@ static void synce_add_existing_to_id_vector_GHFunc(/*{{{*/
   SynceObject* object = (SynceObject*)value;
 
   if (object->event != SYNCMGR_TYPE_EVENT_DELETED)
-    synce_add_existing_to_id_vector(vector, object);
+  {
+    rra_uint32vector_add(vector, object->object_id);
+  }
 }/*}}}*/
  
 static void synce_add_deleted_items_to_change_info(
@@ -548,9 +540,6 @@ static void synce_add_deleted_items_to_change_info(
 
   synce_trace("----->");
 
-  synce_trace("Getting deleted object IDs");
-
-  /* So, we know all items on the device now. Put them in a neat array. */
   g_hash_table_foreach(
       connection->objects[index], 
       synce_add_existing_to_id_vector_GHFunc, 
@@ -616,7 +605,7 @@ static bool synce_get_changes(/*{{{*/
 
   g_hash_table_foreach(
       connection->objects[index], 
-      synce_add_changed_to_id_vector_GHFunc, 
+      synce_add_changed_to_id_vector_if_data_needed_GHFunc, 
       changed_ids);
 
   synce_retrieve_object_data(connection, index, changed_ids);
@@ -629,6 +618,23 @@ static bool synce_get_changes(/*{{{*/
   rra_uint32vector_destroy(changed_ids, true);
   return true;
 }/*}}}*/
+
+static void synce_add_any_to_id_vector_if_data_needed_GHFunc(/*{{{*/
+    gpointer key,
+    gpointer value, 
+    gpointer cookie)
+{
+  RRA_Uint32Vector* vector = (RRA_Uint32Vector*)cookie;
+  SynceObject* object = (SynceObject*)value;
+
+  if (object->event != SYNCMGR_TYPE_EVENT_DELETED && !object->data)
+  {
+    /*synce_trace("Adding ID %08x of type %08x to ID array", 
+        object->object_id, object->type_id);*/
+
+    rra_uint32vector_add(vector, object->object_id);
+  }
+}
 
 
 /** Proxy to synce_add_object_to_change_info for hash table entries */
@@ -656,7 +662,7 @@ static bool synce_get_everything(/*{{{*/
 
   g_hash_table_foreach(
       connection->objects[index], 
-      synce_add_existing_to_id_vector_GHFunc, 
+      synce_add_any_to_id_vector_if_data_needed_GHFunc, 
       existing_ids);
 
   synce_retrieve_object_data(connection, index, existing_ids);
