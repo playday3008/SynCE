@@ -175,6 +175,7 @@ private:
      * @param p_ptrList a list of SyncEntries in which we are interested (e.g. syncee->added() or syncee->modified())
      */
     void getEvents     (KCal::Event::List& p_events, KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList);
+    void getRemovedCalendarItems (QStringList& p_removedItems, KSync::SyncEntry::PtrList p_ptrList);
     
     /** Load the meta data. This is the remote addressBook- and calendar-data which is stored locally.
      * @param p_dir directory where this data can be found
