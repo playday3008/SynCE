@@ -53,161 +53,6 @@ DWORD _lasterror = 0;
 rapibuffer * buffer = NULL;
 
 
-/*=================================================================================================================*
- *=================================================================================================================*
- * RAPI - Global
- *=================================================================================================================*
- *=================================================================================================================*/
-
-STDAPI_( DWORD ) CeGetSpecialFolderPath( int nFolder, DWORD nBufferLength, LPWSTR lpBuffer )
-{
-	long size = BUFSIZE;
-	long lng;
-	WCHAR * str;
-
-	initBuf( buffer, size );
-	pushLong( buffer, size, 0x44 ); 		/* Command */
-	pushLong( buffer, size, nFolder ); 		/* Parameter1 : the folder */
-	pushLong( buffer, size, nBufferLength ); 	/* Parameter2 : Buffer size that'll get the string */
-	DBG_printbuf( buffer );
-	sendbuffer( sock, buffer );
-
-	size = getbufferlen( sock );
-
-	lng = getLong( sock, &size );
-	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
-	lng = getLong( sock, &size );
-	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
-	lng = getLong( sock, &size );
-	DBG_printf( "string size : %ld (0x%08lx)\n", lng, lng );
-	str = getString( sock, &size, lng+1 );
-	DBG_printf( "string1 : %s\n", str );
-	if ( lpBuffer )
-	{
-		memcpy( lpBuffer, str, MIN( ((lng+1)*sizeof(WCHAR) ), nBufferLength*sizeof(WCHAR) ) );
-	}
-	return lng;
-}
-
-/* ================================================================================================================= */
-/* ================================================================================================================= */
-/*  RAPI - Registry */
-/* ================================================================================================================= */
-/* ================================================================================================================= */
-
-/*
-STDAPI_(LONG) CeRegDeleteKey( HKEY, LPCWSTR );
-STDAPI_(LONG) CeRegDeleteValue( HKEY, LPCWSTR );
-STDAPI_(LONG) CeRegQueryValueEx( HKEY, LPCWSTR, LPDWORD, LPDWORD, LPBYTE, LPDWORD );
-STDAPI_(LONG) CeRegSetValueEx( HKEY, LPCWSTR, DWORD, DWORD, LPBYTE, DWORD );
-*/
-
-STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition )
-{
-	long size = BUFSIZE;
-	long lng;
-	long errcode;
-	LONG result = ERROR_SUCCESS; /* May be result is really errcode. */
-
-	DBG_printf( "CeRegCreatKeyEx( hKey = 0x%08X, lpszSubKey = 0x%08X, Reserved = 0x%08X, lpszClass = 0x%08X, ulOptions = 0x%08X, samDesired = 0x%08X, lpSecurityAttributes = 0x%08X, phkResult = 0x%08X, lpdwDisposition = 0x%08X )\n",
-	            hKey, lpszSubKey, Reserved, lpszClass, ulOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition );
-
-	initBuf( buffer, size );
-	pushLong( buffer, size, 0x20 ); 			/* Command */
-	pushLong( buffer, size, hKey ); 			/* Parameter1 : */
-	pushLong( buffer, size, 0x01 ); 			/* Parameter2 : */
-	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	/* Parameter3 : */
-	pushString( buffer, size, lpszSubKey ); 		/* Parameter4 : the path */
-	pushLong( buffer, size, 0x01 ); 			/* Parameter5 : */
-	pushLong( buffer, size, 0x01 ); 			/* Parameter6 : */
-	pushShort( buffer, size, 0x00 );		 	/* Parameter7 : */
-
-	DBG_printbuf( buffer );
-	sendbuffer( sock, buffer );
-
-	size = getbufferlen( sock );
-
-	errcode = getLong( sock, &size );
-	DBG_printf( "errpresent : %ld (0x%08lx)\n", errcode, errcode );
-	if ( errcode != 0 )
-	{
-		errcode = getLong( sock, &size );
-		DBG_printf( "errcode : %ld (0x%08lx)\n", errcode, errcode );
-	}
-	else
-	{
-		lng = getLong( sock, &size );
-		DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
-		lng = getLong( sock, &size );
-		DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
-		*phkResult = ( HKEY ) getLong( sock, &size );
-		DBG_printf( "pHkey : %ld (0x%08lx)\n", *phkResult, *phkResult );
-		*lpdwDisposition = ( DWORD ) getLong( sock, &size );
-		DBG_printf( "lpdwDisposition : %ld (0x%08lx)\n", *lpdwDisposition, *lpdwDisposition );
-	}
-	return result;
-}
-
-STDAPI_( LONG ) CeRegOpenKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult )
-{
-	long size = BUFSIZE;
-	long errcode;
-
-	DBG_printf( "CeRegOpenKeyEx( hKey = 0x%08X, lpszSubKey = 0x%08X, ulOptions = 0x%08X, samDesired = 0x%08X, phkResult = 0x%08X )\n",
-	            hKey, lpszSubKey, ulOptions, samDesired, phkResult );
-
-	initBuf( buffer, size );
-	pushLong( buffer, size, 0x1E ); 	/* Command */
-	pushLong( buffer, size, hKey ); 		/* Parameter1 : */
-	pushLong( buffer, size, 0x01 ); 	/* Parameter2 : */
-	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	/* Parameter3 : */
-	pushString( buffer, size, lpszSubKey ); 	/* Parameter4 : the path */
-	DBG_printbuf( buffer );
-	sendbuffer( sock, buffer );
-
-	size = getbufferlen( sock );
-
-	errcode = getLong( sock, &size );
-	DBG_printf( "errcode : %ld (0x%08lx)\n", errcode, errcode );
-
-	errcode = getLong( sock, &size );
-	DBG_printf( "errpresent : %ld (0x%08lx)\n", errcode, errcode );
-	_lasterror = getLong( sock, &size );
-	DBG_printf( "long : %ld (0x%08lx)\n", _lasterror, _lasterror );
-	if ( errcode == 0 )
-	{
-		*phkResult = ( HKEY ) getLong( sock, &size );
-		DBG_printf( "pHkey : %ld (0x%08lx)\n", *phkResult, *phkResult );
-	}
-	return errcode;
-}
-
-STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
-{
-	long size = BUFSIZE;
-	long lng;
-	long result;
-
-	DBG_printf( "CeRegCloseKey( hKey = 0x%08X )\n",
-	            hKey );
-
-	initBuf( buffer, size );
-	pushLong( buffer, size, 0x21 ); 	/* Command */
-	pushLong( buffer, size, hKey ); 		/* Parameter1 : */
-
-	DBG_printbuf( buffer );
-	sendbuffer( sock, buffer );
-	size = getbufferlen( sock );
-
-	result = getLong( sock, &size );
-	DBG_printf( "result : %ld (0x%08lx)\n", result, result );
-	lng = getLong( sock, &size );
-	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
-	lng = getLong( sock, &size );
-	DBG_printf( "long 3 : %ld (0x%08lx)\n", lng, lng );
-	return result;
-}
-
 /*
  * Push parameter information to the buffer
  *
@@ -335,6 +180,167 @@ if (parameterData) \
 	{ *(u_int32_t*)parameterData = letoh32(*(u_int32_t*)parameterData); }
 
 
+/*=================================================================================================================*
+ *=================================================================================================================*
+ * RAPI - Global
+ *=================================================================================================================*
+ *=================================================================================================================*/
+
+STDAPI_( DWORD ) CeGetSpecialFolderPath( int nFolder, DWORD nBufferLength, LPWSTR lpBuffer )
+{
+	long size = BUFSIZE;
+	long lng;
+	WCHAR * str;
+
+	initBuf( buffer, size );
+	pushLong( buffer, size, 0x44 ); 		/* Command */
+	pushLong( buffer, size, nFolder ); 		/* Parameter1 : the folder */
+	pushLong( buffer, size, nBufferLength ); 	/* Parameter2 : Buffer size that'll get the string */
+	DBG_printbuf( buffer );
+	sendbuffer( sock, buffer );
+
+	size = getbufferlen( sock );
+
+	lng = getLong( sock, &size );
+	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
+	lng = getLong( sock, &size );
+	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
+	lng = getLong( sock, &size );
+	DBG_printf( "string size : %ld (0x%08lx)\n", lng, lng );
+	str = getString( sock, &size, lng+1 );
+	DBG_printf( "string1 : %s\n", str );
+	if ( lpBuffer )
+	{
+		memcpy( lpBuffer, str, MIN( ((lng+1)*sizeof(WCHAR) ), nBufferLength*sizeof(WCHAR) ) );
+	}
+	return lng;
+}
+
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Registry */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+
+/*
+STDAPI_(LONG) CeRegDeleteKey( HKEY, LPCWSTR );
+STDAPI_(LONG) CeRegDeleteValue( HKEY, LPCWSTR );
+STDAPI_(LONG) CeRegQueryValueEx( HKEY, LPCWSTR, LPDWORD, LPDWORD, LPBYTE, LPDWORD );
+STDAPI_(LONG) CeRegSetValueEx( HKEY, LPCWSTR, DWORD, DWORD, LPBYTE, DWORD );
+*/
+
+STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition )
+{
+	long size = BUFSIZE;
+	long lng;
+	long errcode;
+	LONG result = ERROR_SUCCESS; /* May be result is really errcode. */
+
+	DBG_printf( "CeRegCreatKeyEx( hKey = 0x%08X, lpszSubKey = 0x%08X, Reserved = 0x%08X, lpszClass = 0x%08X, ulOptions = 0x%08X, samDesired = 0x%08X, lpSecurityAttributes = 0x%08X, phkResult = 0x%08X, lpdwDisposition = 0x%08X )\n",
+	            hKey, lpszSubKey, Reserved, lpszClass, ulOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition );
+
+	initBuf( buffer, size );
+	pushLong( buffer, size, 0x20 ); 			/* Command */
+	pushLong( buffer, size, hKey ); 			/* Parameter1 : */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter2 : */
+	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	/* Parameter3 : */
+	pushString( buffer, size, lpszSubKey ); 		/* Parameter4 : the path */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter5 : */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter6 : */
+	pushShort( buffer, size, 0x00 );		 	/* Parameter7 : */
+
+	DBG_printbuf( buffer );
+	sendbuffer( sock, buffer );
+
+	size = getbufferlen( sock );
+
+	errcode = getLong( sock, &size );
+	DBG_printf( "errpresent : %ld (0x%08lx)\n", errcode, errcode );
+	if ( errcode != 0 )
+	{
+		errcode = getLong( sock, &size );
+		DBG_printf( "errcode : %ld (0x%08lx)\n", errcode, errcode );
+	}
+	else
+	{
+		lng = getLong( sock, &size );
+		DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
+		*phkResult = ( HKEY ) getLong( sock, &size );
+		DBG_printf( "pHkey : %ld (0x%08lx)\n", *phkResult, *phkResult );
+		*lpdwDisposition = ( DWORD ) getLong( sock, &size );
+		DBG_printf( "lpdwDisposition : %ld (0x%08lx)\n", *lpdwDisposition, *lpdwDisposition );
+	}
+	return result;
+}
+
+STDAPI_( LONG ) CeRegOpenKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult )
+{
+	long size = BUFSIZE;
+	long errcode;
+
+	DBG_printf( "CeRegOpenKeyEx( hKey = 0x%08X, lpszSubKey = 0x%08X, ulOptions = 0x%08X, samDesired = 0x%08X, phkResult = 0x%08X )\n",
+	            hKey, lpszSubKey, ulOptions, samDesired, phkResult );
+
+	initBuf( buffer, size );
+	pushLong( buffer, size, 0x1E ); 	/* Command */
+	pushLong( buffer, size, hKey ); 		/* Parameter1 : */
+#if 0
+	pushLong( buffer, size, 0x01 ); 	/* Parameter2 : */
+	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	/* Parameter3 : */
+	pushString( buffer, size, lpszSubKey ); 	/* Parameter4 : the path */
+#else
+	pushParameter(size, lpszSubKey, lpszSubKey ? (wcslen(lpszSubKey) + 1) * sizeof(WCHAR) : 0, 1);
+	pushLong( buffer, size, ulOptions);
+	pushLong( buffer, size, samDesired);
+	pushParameterInt32(size, phkResult, 0);
+#endif
+	DBG_printbuf( buffer );
+	sendbuffer( sock, buffer );
+
+	size = getbufferlen( sock );
+
+	errcode = getLong( sock, &size );
+	DBG_printf( "errcode : %ld (0x%08lx)\n", errcode, errcode );
+
+	errcode = getLong( sock, &size );
+	DBG_printf( "errpresent : %ld (0x%08lx)\n", errcode, errcode );
+	_lasterror = getLong( sock, &size );
+	DBG_printf( "long : %ld (0x%08lx)\n", _lasterror, _lasterror );
+	if ( errcode == 0 )
+	{
+		*phkResult = ( HKEY ) getLong( sock, &size );
+		DBG_printf( "pHkey : %ld (0x%08lx)\n", *phkResult, *phkResult );
+	}
+	return errcode;
+}
+
+STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
+{
+	long size = BUFSIZE;
+	long lng;
+	long result;
+
+	DBG_printf( "CeRegCloseKey( hKey = 0x%08X )\n",
+	            hKey );
+
+	initBuf( buffer, size );
+	pushLong( buffer, size, 0x21 ); 	/* Command */
+	pushLong( buffer, size, hKey ); 		/* Parameter1 : */
+
+	DBG_printbuf( buffer );
+	sendbuffer( sock, buffer );
+	size = getbufferlen( sock );
+
+	result = getLong( sock, &size );
+	DBG_printf( "result : %ld (0x%08lx)\n", result, result );
+	lng = getLong( sock, &size );
+	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
+	lng = getLong( sock, &size );
+	DBG_printf( "long 3 : %ld (0x%08lx)\n", lng, lng );
+	return result;
+}
 
 STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime )
 {
