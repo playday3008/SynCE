@@ -1,0 +1,12 @@
+usr/bin/*
+usr/share/icons/*
+usr/share/services/*
+usr/share/servicetypes/*
+usr/share/applnk/*
+usr/share/mimelnk/*
+usr/share/apps/konqueror/*
+usr/share/apps/raki/*
+usr/lib/*.so.*
+usr/lib/*.la
+usr/lib/kde3/*.so
+usr/lib/kde3/*.la
