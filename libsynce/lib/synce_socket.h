@@ -79,6 +79,7 @@ bool synce_password_send(
 
 bool synce_password_recv_reply(
 		SynceSocket* socket,
+		size_t size,
 		bool* passwordCorrect);
 
 #endif

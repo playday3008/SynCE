@@ -97,22 +97,40 @@ exit:
 
 bool synce_password_recv_reply(
 		SynceSocket* socket,
+		size_t size,
 		bool* passwordCorrect)
 {
 	bool success = false;
-	uint16_t reply;
+	union
+	{
+		uint8_t   byte;
+		uint16_t  word;
+	} reply;
 
-	if (!synce_socket_read(socket, &reply, sizeof(reply)))
+	if (size < 1 || size > 2)
+	{
+		synce_error("invalid size");
+		goto exit;	
+	}
+
+	if (!synce_socket_read(socket, &reply, size))
 	{
 		synce_error("failed to read password reply");
 		goto exit;	
 	}
 
-	synce_trace("password reply = 0x%04x (%i)", reply, reply);
+	if (size == 1)
+	{
+		synce_trace("password reply = 0x%02x (%i)", reply.byte, reply.byte);
+		*passwordCorrect = reply.byte;
+	}
+	else /* size == 2 */
+	{
+		synce_trace("password reply = 0x%04x (%i)", reply.word, reply.word);
+		*passwordCorrect = reply.word;
+	}
 
-	synce_trace("Password was %s", reply ? "correct!" : "incorrect :-(");
-
-	*passwordCorrect = reply;
+	synce_trace("Password was %s", *passwordCorrect ? "correct!" : "incorrect :-(");
 	success = true;
 
 exit:
