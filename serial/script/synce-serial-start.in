@@ -20,8 +20,8 @@ if [ "${PID}" ]; then
 ${THIS} detected that a SynCE serial connection was already 
 started with PID ${PID}.
 
-To be able to start a new connection, you must first use synce-serial-stop to
-stop the already active connection.
+To be able to start a new connection, you may use synce-serial-abort to
+force the already active connection to close.
 " >&2
 	exit 1
 fi
