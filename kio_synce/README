@@ -1,0 +1,47 @@
+
+    kio_synce - an ioslave for KDE2
+    Copyright (C) 2001  David Eriksson
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Library General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Library General Public License for more details.
+
+    You should have received a copy of the GNU Library General Public
+    License along with this library; if not, write to the Free
+    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+kio_synce - an ioslave for KDE2
+-------------------------------
+
+Copyright (c) 2001 David Eriksson.
+
+This work is licenced under the GNU Library General Public Licence (LGPL).
+
+To compile from CVS, do something like this:
+
+$ make -f Makefile.dist
+$ ./configure --prefix=/your/prefix/for/kde/programs/
+$ make
+$ make install
+
+
+Notes:
+
+o This is work in progress. Do not expect anything to function as expected!
+
+o The default prefix in the configure script is /usr/local/kde
+
+o The configure script currently assumes that libchunk, libwine and librapi is
+  installed with /usr/local as prefix.
+
+o The configure script will probably fail if you have the real libwine 
+  installed.
+
+
