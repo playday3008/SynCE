@@ -34,12 +34,6 @@ static bool synce_password_encode(
 
 	length = strlen(asciiPassword);
 
-	if (4 != length)
-	{
-		synce_error("password is not four bytes");
-		goto error;
-	}
-
 	*encodedPassword      = (unsigned char*)wstr_from_ascii(asciiPassword);
 	*encodedPasswordSize  = 2 * (length + 1);
 
@@ -126,6 +120,7 @@ bool synce_password_recv_reply(
 	}
 	else /* size == 2 */
 	{
+		reply.word = letoh16(reply.word);
 		synce_trace("password reply = 0x%04x (%i)", reply.word, reply.word);
 		*passwordCorrect = reply.word;
 	}

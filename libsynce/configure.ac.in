@@ -49,7 +49,20 @@ AC_LIB_RPATH
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h)
+dnl Big-endian stuff
+AC_SUBST(WORDS_BIGENDIAN)
+AC_SUBST(BYTESWAP_HEADER,dummy)
+AC_SUBST(HAVE_BYTESWAP_HEADER,0)
+
+AC_C_BIGENDIAN()
+
+if test "$ac_cv_c_bigendian" = yes; then
+  WORDS_BIGENDIAN=1
+  AC_CHECK_HEADERS(sys/byteswap.h,[BYTESWAP_HEADER=sys/byteswap.h; HAVE_BYTESWAP_HEADER=1])
+  AC_CHECK_HEADERS(byteswap.h,    [BYTESWAP_HEADER=byteswap.h;     HAVE_BYTESWAP_HEADER=1])
+else
+  WORDS_BIGENDIAN=0
+fi
 
 dnl Check where uint16_t and uint32_t may be found
 AC_SUBST(INT_HEADER)
@@ -69,7 +82,6 @@ AC_CHECK_HEADERS(stdbool.h,,[
 ])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_BIGENDIAN()
 AC_C_CONST
 
 dnl Checks for library functions.

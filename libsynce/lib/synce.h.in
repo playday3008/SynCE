@@ -86,22 +86,18 @@ LPWSTR wstrdup(LPCWSTR string);
 
 #include <sys/types.h>
 
-#ifdef HAVE_ENDIAN_H
-#include <endian.h>
-#elif HAVE_MACHINE_ENDIAN_H 
-#include <machine/endian.h>
-#endif
-
 #if !defined(htole32) || !defined(htole16) || !defined(letoh16) || !defined(letoh32)
+#undef htole16
+#undef htole32
+#undef letoh16
+#undef letoh32
 
 /* define host-to-little-endian and little-endian-to-host macros */
-#ifdef WORDS_BIGENDIAN
+#if @WORDS_BIGENDIAN@
 
 /* byte swapping */
-#ifdef HAVE_BYTESWAP_H
-#include <byteswap.h>
-#elif HAVE_SYS_BYTESWAP_H
-#include <sys/byteswap.h>
+#if @HAVE_BYTESWAP_HEADER@
+#include <@BYTESWAP_HEADER@>
 #else
 #define IMPLEMENT_BSWAP_XX  1
 uint16_t bswap_16(uint16_t x);
