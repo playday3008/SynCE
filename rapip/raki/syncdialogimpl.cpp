@@ -56,13 +56,20 @@ SyncDialogImpl::SyncDialogImpl(PdaConfigDialogImpl *pdaConfigDialog, Rra *rra,
 
 
 SyncDialogImpl::~SyncDialogImpl()
-{}
+{
+    if (this->running()) {
+        this->setStopRequested(true);
+    }
+}
 
 
 void SyncDialogImpl::reject()
 {
-    RakiWorkerThread::rakiWorkerThread->stop();
-    SyncDialog::reject();
+    if (this->running()) {
+        this->setStopRequested(true);
+    } else {
+        SyncDialog::reject();
+    }
 }
 
 
@@ -107,6 +114,10 @@ void *SyncDialogImpl::finishedSynchronization()
 
     buttonOk->setEnabled(true);
 
+    if (this->stopRequested()) {
+        SyncDialog::reject();
+    }
+
     return NULL;
 }
 
@@ -126,5 +137,5 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
         }
     }
 
-    postThreadEvent(&SyncDialogImpl::finishedSynchronization, NULL, noBlock);
+    postThreadEvent(&SyncDialogImpl::finishedSynchronization, NULL, block);
 }
