@@ -65,13 +65,24 @@ L<SUPPORTED FUNCTIONS>.
   CeSeekDatabase
   CeWriteRecordProps
 
+=item B<Registry>
+
+  CeRegOpenKeyEx
+  CeRegCloseKey
+  CeRegCreateKeyEx
+  CeRegQueryInfoKey
+  CeRegQueryValueEx
+  CeRegEnumValue
+  CeRegEnumKeyEx
+  CeRegSetValueEx
+
 =back
 
 =head1 SEE ALSO
 
 L<Rapi2::Simple>
 
-L<synce(1)> 
+L<synce(1)>
 
 =head1 AUTHOR
 

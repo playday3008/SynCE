@@ -4,7 +4,7 @@
 #
 # $Id$
 $module=Rapi2;
-$version='0.01.1';
+$version='0.02';
 
 $|++;
 

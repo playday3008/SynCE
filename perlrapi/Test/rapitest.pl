@@ -3,12 +3,14 @@
 # Test the Rapi2 wrapper. Uncomment the tests you want.
 #
 # $Id$
+$|++;
+
 use strict;
 use Rapi2;
 use Rapi2::Defs;
 
 Rapi2::CeRapiInit();
-Rapi2::synce_log_set_level(0);
+Rapi2::synce_log_set_level(4);
 
 # Uncomment the tests you want.
 # File access
@@ -29,6 +31,101 @@ Rapi2::synce_log_set_level(0);
 #t_createdb();
 #t_deletedb();
 
+# Registry access
+#t_openclosekey();
+#t_createkey();
+#t_queryinfokey();
+#t_queryval();
+#t_setval();
+#t_enumval();
+#t_enumkey();
+
+sub t_enumkey
+{
+  print "[Test CeRegEnumKeyEx: HKEY_CURRENT_USER]\n";
+  my $i=0;
+  my $r;
+  do
+  {
+    my $name;
+    ($r, $name)=Rapi2::CeRegEnumKeyEx(HKEY_CURRENT_USER, $i++);
+    print "name=$name\n" if ERROR_SUCCESS == $r;
+  } while (ERROR_SUCCESS == $r);
+  print "[DONE.]\n\n";
+}
+
+
+sub t_enumval
+{
+  print '[Test CeRegEnumValue: HKEY_CURRENT_USER\ControlPanel\Backlight]'."\n";
+  my ($r, $hkey)=Rapi2::CeRegOpenKeyEx(HKEY_CURRENT_USER, 'ControlPanel\Backlight');
+  die "open failed" unless ERROR_SUCCESS == $r;
+  my $i=0;
+  do
+  {
+    my ($name);
+    ($r, $name)=Rapi2::CeRegEnumValue($hkey, $i++);
+    print "name=$name\n" if ERROR_SUCCESS == $r;
+  } while(ERROR_SUCCESS == $r);
+  print "[DONE.]\n\n";
+}
+
+sub t_setval
+{
+  print '[Test CeRegSetValueEx: HKEY_CURRENT_USER\RapiTest->testval="testval"]'."\n";
+  my ($r, $hkey)=Rapi2::CeRegOpenKeyEx(HKEY_CURRENT_USER, "RapiTest");
+  die unless ERROR_SUCCESS == $r;
+  $r=Rapi2::CeRegSetValueEx($hkey, "testval", REG_DWORD, 7);
+  print "[DONE.]\n\n" if ERROR_SUCCESS == $r;;
+}
+
+sub t_queryval
+{
+  print '[Test CeRegQueryValueEx: HKEY_CURRENT_USER\ControlPanel\Desktop->wallpaper]'."\n";
+  my ($r, $hkey)=Rapi2::CeRegOpenKeyEx(HKEY_CURRENT_USER, 'ControlPanel\Desktop');
+  die unless ERROR_SUCCESS == $r;
+  my ($type, $ret);
+  ($r, $type, $ret)=Rapi2::CeRegQueryValueEx($hkey, "wallpaper");
+  print "type=$type, ret=$ret\n[DONE.]\n\n" if ERROR_SUCCESS == $r;
+}
+
+sub t_queryinfokey
+{
+  print "[Test CeRegQueryInfoKey: HKEY_CURRENT_USER/Start]\n";
+  my ($r, $hkey)=Rapi2::CeRegOpenKeyEx(HKEY_CURRENT_USER, "RapiTest");
+  die unless ERROR_SUCCESS == $r;
+  my ($r, $cSubKeys, $cbMaxSubKeyLen, $cbMaxClassLen, $cValues, $cbMaxValueNameLen,
+      $cbMaxValueLen, $cbSecurityDescriptor, $ftLastWriteTime)=
+	Rapi2::CeRegQueryInfoKey($hkey);
+  if(ERROR_SUCCESS == $r)
+  {
+    print "$cSubKeys, $cbMaxSubKeyLen, $cbMaxClassLen, $cValues, $cbMaxValueNameLen, ".
+      "$cbMaxValueLen, $cbSecurityDescriptor, ";
+    my ($sec, $min, $hour, $day, $mon, $year)=localtime($ftLastWriteTime);
+    printf "%04d-%02d-%02d %02d:%2d:%02d\n", $year+1900, $mon+1, $day, $hour, $min, $sec;
+    print "[DONE.]\n\n";
+  }
+}
+
+sub t_createkey
+{
+  print "[Test CeRegCreateKeyEx: HKEY_CURRENT_USER/RapiTest]\n";
+  my ($r, $hkey)=Rapi2::CeRegCreateKeyEx(HKEY_CURRENT_USER, "RapiTest");
+  print "hkey=$hkey\n[DONE.]\n\n" if ERROR_SUCCESS == $r;
+  $r=Rapi2::CeRegCloseKey($hkey);
+  $r=Rapi2::CeRegOpenKeyEx(HKEY_CURRENT_USER, "RapiTest");
+  print "[DONE.]\n\n" if ERROR_SUCCESS == $r;
+}
+
+sub t_openclosekey
+{
+  print "[Test CeRegOpenKeyEx: HKEY_CURRENT_USER/Start]\n";
+  my ($r, $hkey)=Rapi2::CeRegOpenKeyEx(HKEY_CURRENT_USER, "Start");
+  print "hkey=$hkey\n[DONE.]\n\n" if ERROR_SUCCESS == $r;
+  print "[Test CeRegCloseKey:]\n";
+  $r=Rapi2::CeRegCloseKey($hkey);
+  print "[DONE.]\n\n" if ERROR_SUCCESS == $r;
+}
 
 # Database access
 sub t_createdb

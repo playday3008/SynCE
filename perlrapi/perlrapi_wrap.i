@@ -1,6 +1,6 @@
 /* Perl Wrapper for librapi2 of the SynCE Project (http://synce.sourceforge.net)
  *
- * AUTHOR: Andreas Pohl
+ * AUTHOR: Andreas Pohl <osar@users.sourceforge.net>
  *
  * NOTE: A lot of work was done by Richard Taylor, the author of the PyRapi, so
  * have look at his project. I kept most of the behavior of the PyRapi, so both
@@ -27,7 +27,7 @@
 %include "typemaps.i"
 
 /*
- * Tracing finctions
+ * Tracing functions
  * TODO: Add synce_trace etc.
  */
 void synce_log_set_level(int);
@@ -44,10 +44,16 @@ void synce_log_set_level(int);
 
 HRESULT CeRapiInit(void);
 
+
+
+/******************************
+ ***  FILE ACCESS FUNTIONS  ***
+ ******************************/
+
 /* 
-   SWIG does not understand u_int style type declarations
-   so we have to tell it what the rapi types are.
-*/
+ * SWIG does not understand u_int style type declarations
+ * so we have to tell it what the rapi types are.
+ */
 
 typedef unsigned int WORD;
 typedef unsigned long DWORD;
@@ -59,10 +65,10 @@ typedef char * WCHAR;
 typedef const char * LPCSTR;
 
 /* 
-   FILETIME must be mapped to and from unixtime. The typemap is used for 
-   functions that take FILETIME as a parameter and the GETSET macro is 
-   used to add vertual members to classes that have FILETIME members.
-*/
+ * FILETIME must be mapped to and from unixtime. The typemap is used for 
+ * functions that take FILETIME as a parameter and the GETSET macro is 
+ * used to add vertual members to classes that have FILETIME members.
+ */
 
 typedef struct _FILETIME
 {
@@ -93,10 +99,10 @@ typedef struct _FILETIME
 %enddef
 
 /*
-  SWIG does not understand unicode so these macros and typemaps provide 
-  conversion to and from ascii for structures and functions that use wide 
-  character arrays.
-*/
+ * SWIG does not understand unicode so these macros and typemaps provide 
+ * conversion to and from ascii for structures and functions that use wide 
+ * character arrays.
+ */
 
 %typemap(in) LPCWSTR, LPWSTR
 {
@@ -141,8 +147,8 @@ typedef struct _FILETIME
 }
 
 /*
-  Checking the return value of functions that return handles.
-*/
+ * Checking the return value of functions that return handles.
+ */
 
 %typemap(out) HANDLE
 {
@@ -157,8 +163,8 @@ typedef struct _FILETIME
 }
 
 /* 
-   File handling functions.
-*/
+ *  File handling functions.
+ */
 
 typedef struct _CE_FIND_DATA
 {
@@ -338,9 +344,10 @@ BOOL CeRemoveDirectory(LPCWSTR lpPathName);
 BOOL CeSetFileAttributes(LPCWSTR lpFileName, DWORD dwFileAttributes);
 
 
-/*
-  Database functions.
-*/
+
+/***********************************
+ ***  DATABASE ACCESS FUNCTIONS  ***
+ ***********************************/
 
 typedef DWORD CEPROPID;
 typedef CEPROPID *PCEPROPID;
@@ -598,7 +605,7 @@ CEOID CeFindNextDatabase(HANDLE hEnum);
 
 BOOL CeOidGetInfo(CEOID oid, CEOIDINFO *poidInfo); 
 
-// Take a CEOID as input and pass a pinter to it to the C func.
+/* Take a CEOID as input and pass a pinter to it to the C func. */
 %typemap(in) PCEOID
 {
   CEOID temp;
@@ -760,6 +767,367 @@ CEOID CeSeekDatabase(HANDLE hDatabase, DWORD dwSeekType, DWORD dwValue,
 
 CEOID CeWriteRecordProps(HANDLE hDbase, CEOID oidRecord, WORD cPropID, 
 			 CEPROPVAL *rgPropVal);
+
+
+
+
+/***********************************
+ ***  REGISTRY ACCESS FUNCTIONS  ***
+ ***********************************/
+
+typedef int LONG;
+typedef int HKEY;
+typedef int REGSAM;
+
+%typemap(in,numinputs=0) PHKEY phkResult (HKEY k)
+{
+  $1=&k;
+}
+
+%typemap(argout) PHKEY phkResult
+{
+  $result=sv_newmortal();
+  sv_setiv($result, *$1);
+  argvi++;
+}
+
+LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions=0, REGSAM samDesired=0, 
+		    PHKEY phkResult);
+
+LONG CeRegCloseKey(HKEY hKey);
+
+%typemap(in, numinputs=0) (DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions=0,
+			   REGSAM samDesired,
+			   LPSECURITY_ATTRIBUTES lpSecurityAttributes) {}
+%typemap(in, numinputs=0) LPDWORD lpdwDisposition {}
+
+LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved=0,
+		      LPWSTR lpszClass=NULL, DWORD ulOptions=0, REGSAM samDesired=0,
+		      LPSECURITY_ATTRIBUTES lpSecurityAttributes=NULL, PHKEY phkResult, 
+		      LPDWORD lpdwDisposition=NULL);
+
+
+/*
+ * typmaps to support CeRegQueryInfoKey
+ */
+
+%typemap(in, numinputs=0) LPDWORD (DWORD t)
+{
+  $1=&t;
+}
+
+%typemap(in, numinputs=0) PFILETIME lpftLastWriteTime (FILETIME t)
+{
+  $1=&t;
+}
+
+%typemap(in, numinputs=0) (LPWSTR lpClass=NULL, LPDWORD lpcbClass,
+			   LPDWORD lpReserved) {}
+
+%typemap(argout) (LPDWORD lpcbClass, LPDWORD lpReserved) {}
+
+%typemap(argout) LPDWORD
+{
+  $result=sv_newmortal();
+  sv_setiv($result, *$1);
+  argvi++;
+}
+
+%typemap(argout) PFILETIME
+{
+  unsigned int ret;
+  if($1)
+  {
+    ret=(unsigned int)filetime_to_unix_time($1);
+    $result=sv_newmortal();
+    sv_setuv($result, ret);
+    argvi++;
+  }
+}
+
+LONG CeRegQueryInfoKey(HKEY hKey, LPWSTR lpClass=NULL, LPDWORD lpcbClass=0, 
+		       LPDWORD lpReserved=0, LPDWORD lpcSubKeys,
+		       LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, 
+		       LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, 
+		       LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, 
+		       PFILETIME lpftLastWriteTime);
+
+
+/*
+ * typmaps to support CeRegQueryValueEx
+ */
+
+%typemap(in, numinputs=0) (LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+  (DWORD type, DWORD s)
+{
+  // SWIG sets the arguments after the 'in'-typemaps, but we need it here.
+  arg1 = (HKEY) SvIV(ST(0));
+  if (SvPOK(ST(1))) 
+    arg2 = wstr_from_ascii(SvPV_nolen(ST(1)));
+  else 
+    croak("expected a string.");
+
+  // firstly get the needed size
+  LONG ret=CeRegQueryValueEx(arg1, arg2, NULL, NULL, NULL, &s);
+  if(ERROR_SUCCESS == ret)
+  {
+    // allocate memory
+    $2=(LPBYTE)malloc(s);
+    $1=&type;
+    $3=&s;
+  }
+  else
+    croak("can not receive the buffer size: CeRegQueryValueEx failed (ret=%d)",
+	  ret);
+}
+
+%typemap(in, numinputs=0) LPDWORD lpReserved {}
+%typemap(argout) LPDWORD lpReserved {}
+
+%typemap(argout) (LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+{
+  if(ERROR_SUCCESS == result)
+  {  
+    // put the type on the stack
+    $result=sv_newmortal();
+    sv_setiv($result, *$1);
+    argvi++;
+    // put the data on the stack
+    switch(*$1)
+    {
+    case REG_SZ:
+    case REG_EXPAND_SZ:
+      $result=sv_newmortal();
+      sv_setpv($result, wstr_to_ascii((WCHAR *)$2));
+      argvi++;
+      break;
+    case REG_MULTI_SZ: // An array of null-terminated strings, terminated by
+      // two null characters.
+      {
+	AV *ret=newAV();
+	SV *sv;
+	int i;
+	for(i=0; i<*$3; i++)
+	{
+	  if(! (short)$2[i])
+	  {
+	    sv=newSVpv(wstr_to_ascii((WCHAR *)&$2[i+2]), 0);
+	    av_push(ret, sv);
+	  }
+	}
+	$result=newRV((SV*)ret);
+	sv_2mortal($result);
+	argvi++;
+	break;
+      }
+    case REG_DWORD:
+    case REG_DWORD_BIG_ENDIAN:
+      $result=sv_newmortal();
+      sv_setiv($result, *$2);
+      argvi++;
+      break;
+    case REG_BINARY:
+    case REG_NONE:
+    case REG_LINK:
+      $result=sv_newmortal();
+      sv_setpvn($result, (const char *)$2, *$3);
+      argvi++;
+      break;
+    default:
+      croak("unknown type: 0x%x", *$1);
+    }
+  }
+}
+
+LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, 
+		       LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData);
+
+
+/*
+ * typmaps to support CeRegEnumValue
+ */
+
+%typemap(in, numinputs=0) (LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+  (DWORD type, DWORD NameLen, DWORD ValueLen)
+{
+  // SWIG sets the arguments after the 'in'-typemaps, but we need it here.
+  arg1 = (HKEY) SvIV(ST(0));
+
+  // firstly get the needed size
+  //LONG ret=CeRegQueryInfoKey(arg1, NULL, 0, 0, NULL, NULL, NULL, NULL,
+  //			     &NameLen, NULL /* &ValueLen */, NULL, NULL);
+
+  // TODO: Get the needed buffer size for a ValueName. CeRegQueryInfoKey works only
+  // before a call to the CeRegEnumValue function. I don't wanted to put this task
+  // on the Perl side. So I set the maximal buffersize to 512 bytes.
+  NameLen=512; //sizeof(WCHAR)*(NameLen+1);
+  
+  //if(ERROR_SUCCESS == ret)
+  {
+    // allocate memory
+    //$2=(LPBYTE)malloc(ValueLen);
+    $2=NULL;
+    //if(! $2)
+    //  croak("can not allocate memory for $2");
+    //$1=&type;
+    //$3=&ValueLen;
+    // lpszValueName
+    arg3=(LPWSTR)malloc(NameLen);
+    if(! arg3)
+      croak("can not allocate memory for arg3");
+    // lpcbValueName
+    arg4=&NameLen;
+  }
+  //else
+  //  croak("can not calculate the buffer size: CeRegQueryInfoKey failed (ret=%d)",
+  //	  ret);
+}
+
+%typemap(in, numinputs=0) (LPWSTR lpszValueName, LPDWORD lpcbValueName) {}
+
+/*
+ * NOTE: CeRegEnumValue returns wrong data. The values (lpData) stand in the type
+ * variable (lpType), and the count of databytes (lpcbData) in the data buffer
+ * (lpData). I do not really understand this, and I do not know where in detail
+ * lies the problem, maybe in the function on my CE device.
+ *
+ * TODO: Fix this problem and make CeRegEnumValue return the type and the data
+ * like the CeRegQueryValueEx function.
+ */
+%typemap(argout) (LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) {}
+
+%typemap(argout)
+  (LPWSTR lpszValueName, LPDWORD lpcbValueName),
+  (LPWSTR lpName, LPDWORD lpcbName)
+{
+  if($1 && $2)
+  {
+    if(*$2)
+    {
+      $result=sv_newmortal();
+      sv_setpvn($result, wstr_to_ascii($1), *$2);
+      argvi++;
+    }
+  }
+}
+
+LONG CeRegEnumValue(HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
+		    LPDWORD lpcbValueName, LPDWORD lpReserved=0,
+		    LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData);
+
+
+/*
+ * typemaps to support CeRegEnumKeyEx
+ */
+
+%typemap(in, numinputs=0)
+  (LPWSTR lpName, LPDWORD lpcbName),
+  (LPWSTR lpClass, LPDWORD lpcbClass)
+{
+  /*
+   * NOTE: Here we have same problem as in the last typemaps to support
+   * CeRegEnumValue: We do not know the needed buffer size. One way would
+   * be to call CeRegQueryValueEx from Perl to get the max length. But
+   * I would like to get rid of this from a Perl script, so I set the
+   * buffer size to 512.
+   *
+   * TODO: Find a way to get the needed buffer size.
+   */
+  DWORD MaxSize=512;
+  
+  $1=(LPWSTR)calloc(MaxSize, 1);
+  $2=&MaxSize;
+}
+
+
+LONG CeRegEnumKeyEx(HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcbName,
+		    LPDWORD lpReserved=0, LPWSTR lpClass, LPDWORD lpcbClass, 
+		    PFILETIME lpftLastWriteTime);
+
+
+/*
+ * typemaps to support CeRegSetValueEx
+ */
+
+%typemap(in) DWORD dwType
+{
+  if(! SvIOK($input))
+    croak("expected an integer for dwType");
+  $1=(DWORD)SvIV($input);
+}
+
+%typemap(in) const BYTE *lpData
+{
+  // arg4 is dwType, arg6 is cbData
+  switch (arg4)
+  {
+  case REG_SZ:
+  case REG_EXPAND_SZ:
+    if(! SvPOK($input))
+      croak("expected a string");
+    $1=(LPBYTE)wstr_from_ascii(SvPV($input, arg6));
+    arg6=sizeof(WCHAR)*arg6;
+    break;
+  case REG_DWORD:
+  case REG_DWORD_BIG_ENDIAN:
+    {
+      if(! SvIOK($input))
+	croak("expected an integer");
+      DWORD val=SvIV($input);
+      $1=(LPBYTE)&val;
+      arg6=sizeof(DWORD);
+      break;
+    }
+  case REG_MULTI_SZ:
+    {
+      if(! SvROK($input))
+	croak("expected an ARRAY reference");
+      if(SVt_PVAV != SvTYPE(SvRV($input)))
+	croak("expected an ARRAY reference");
+      AV *av=(AV *)SvRV($input);
+      
+      int bytes=0;
+      int i, j, len;
+      SV **psv;
+      // calculate the buffer size
+      for(i=0; i<av_len(av)+1; i++)
+      {
+	psv=av_fetch(av, i, 0);
+	SvPV(*psv, len);
+	bytes+=sizeof(WCHAR)*(len+1);
+      }
+      // copy the strings into the new buffer
+      arg6=bytes;
+      $1=(LPBYTE)malloc(bytes);
+      j=0;
+      for(i=0; i<av_len(av)+1; i++)
+      {
+	psv=av_fetch(av, i, 0);
+	char *str=SvPV(*psv, len);
+	memcpy(&$1[j], wstr_from_ascii(str), sizeof(WCHAR)*(len+1));
+	j+=len+1;
+      }
+      break;
+    }
+  case REG_BINARY:
+  case REG_NONE:
+  case REG_LINK:
+    if(! SvPOK($input))
+      croak("expected a string");
+    $1=SvPV($input, arg6);
+    break;  
+  default:
+    croak("unknown type: 0x%x", arg4);
+  }
+}
+
+// cbData is already set (by the last typemap)
+%typemap(in, numinputs=0) DWORD cbData {}
+
+%typemap(in, numinputs=0) DWORD Reserved {}
+
+LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved=0, 
+		     DWORD dwType, const BYTE *lpData, DWORD cbData);
 
 
 /* EOF */

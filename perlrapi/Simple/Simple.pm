@@ -4,9 +4,7 @@
 #
 # This module provides simple access to the Rapi2 Wrapper.
 #
-# AUTHOR: Andreas Pohl (osar@users.sourceforge.net)
-#
-# TODO: Implement access to the whole Rapi2. ;)
+# AUTHOR: Andreas Pohl <osar@users.sourceforge.net>
 #
 # $Id$
 package Rapi2::Simple;
@@ -15,7 +13,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION='0.02.1';
+$VERSION='0.03';
 
 use Rapi2;
 use Rapi2::Defs;
@@ -40,6 +38,8 @@ sub new
   $self->{dbh}=-1;
   # File handle
   $self->{fh}=-1;
+  # RegKey handle
+  $self->{hkey}=-1;
   # error string
   $self->{errstr}=undef;
 
@@ -65,6 +65,14 @@ sub new
       $self->OpenFile($self->{file});
     }
     delete $self->{file};
+  }
+  elsif(exists $self->{key})
+  {
+    if(ref($self->{key}) eq "ARRAY")
+    {
+      $self->OpenKey(@{$self->{key}});
+      delete $self->{key};
+    }
   }
   return $self;
 }
@@ -668,6 +676,255 @@ sub GetSpecialFolderPath
   return $str;
 }
 
+
+#######################################
+###  R E G I S T R Y   A C C E S S  ###
+#######################################
+
+# Open a registry key or a subkey of an already opened key.
+sub OpenKey
+{
+  my ($self, $hkey, $subkey)=@_;
+  $self->{errstr}=undef;
+
+  if(defined $self->{type} && $self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if(! defined($subkey))
+  {
+    return $self->OpenSubKey($hkey);
+  }
+  elsif($self->{hkey} != -1)
+  {
+    $self->{errstr}="already opened registry key, call CloseKey first";
+    return 0;
+  }
+  elsif(! length($subkey) && (HKEY_CLASSES_ROOT == $hkey ||
+			      HKEY_CURRENT_USER == $hkey ||
+			      HKEY_LOCAL_MACHINE == $hkey ||
+			      HKEY_USERS == $hkey))
+  {
+    $self->{hkey}=$hkey;
+  }
+  else
+  {
+    my ($access, $nhkey);
+    eval '($access, $nhkey)=Rapi2::CeRegOpenKeyEx($hkey, $subkey)';
+    if (ERROR_SUCCESS != $access || $@)
+    {
+      $self->{errstr}="CeRegOpenKeyEx failed: $@";
+      return 0;
+    }
+    $self->{hkey}=$nhkey;
+  }
+  $self->{type}="reg";
+  return 1;
+}
+
+# Open a subkey of an already opened registry key.
+sub OpenSubKey
+{
+  my ($self, $subkey)=@_;
+  $self->{errstr}=undef;
+
+  if(defined $self->{type} && $self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if($self->{hkey} == -1)
+  {
+    $self->{errstr}="no registry key opened";
+    return 0;
+  }
+  my ($access, $nhkey);
+  eval '($access, $nhkey)=Rapi2::CeRegOpenKeyEx($self->{hkey}, $subkey)';
+  if(ERROR_SUCCESS != $access || $@)
+  {
+    $self->{errstr}="CeRegOpenKeyEx failed: $@";
+    return 0;
+  }
+  # Now close the unneeded key.
+  eval '$access=Rapi2::CeRegCloseKey($self->{hkey})';
+  if(ERROR_SUCCESS != $access || $@)
+  {
+    # Set no error, if the close command failed, warn instead.
+    warn "CeRegCloseKey failed: $@";
+  }
+  $self->{hkey}=$nhkey;
+  $self->{type}="reg";
+  return 1;
+}
+
+# Close an opened registry key.
+sub CloseKey
+{
+  my $self=shift;
+  $self->{errstr}=undef;
+
+  if($self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if($self->{hkey} == -1)
+  {
+    $self->{errstr}="no registry key opened";
+    return 0;
+  }
+  my $access;
+  eval '$access=Rapi2::CeRegCloseKey($self->{hkey})';
+  if(ERROR_SUCCESS != $access || $@)
+  {
+    $self->{errstr}="CeRegCloseKey failed: $@";
+    return 0;
+  }
+  $self->{hkey}=-1;
+  $self->{type}=undef;
+  return 1;
+}
+
+# Get the names of all subkey names.
+sub GetSubKeyNames
+{
+  my $self=shift;
+  $self->{errstr}=undef;
+
+  if($self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if($self->{hkey} == -1)
+  {
+    $self->{errstr}="no registry key opened";
+    return 0;
+  }
+  my ($access, $name, @ret);
+  my $i=0;
+  do
+  {
+    eval '($access, $name)=Rapi2::CeRegEnumKeyEx($self->{hkey}, $i++)';
+    if($@)
+    {
+      $self->{errstr}="CeRegEnumKeyEx failed: $@";
+      return 0;
+    }
+    push @ret, $name if ERROR_SUCCESS == $access;
+  } while(ERROR_SUCCESS == $access);
+  return @ret;
+}
+
+# Get all value names.
+sub GetValueNames
+{
+  my $self=shift;
+  $self->{errstr}=undef;
+
+  if($self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if($self->{hkey} == -1)
+  {
+    $self->{errstr}="no registry key opened";
+    return 0;
+  }
+  my ($access, $name, @ret);
+  my $i=0;
+  do
+  {
+    eval '($access, $name)=Rapi2::CeRegEnumValue($self->{hkey}, $i++)';
+    if($@)
+    {
+      $self->{errstr}="CeRegEnumValue failed: $@";
+      return 0;
+    }
+    push @ret, $name if ERROR_SUCCESS == $access;
+  } while(ERROR_SUCCESS == $access);
+  return @ret;
+}
+
+# Set/Get a value.
+sub KeyValue
+{
+  my ($self, $name, $type, $val)=@_;
+  $self->{errstr}=undef;
+
+  if($self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if($self->{hkey} == -1)
+  {
+    $self->{errstr}="no registry key opened";
+    return 0;
+  }
+  if(defined($type) && defined($val))
+  {
+    # Set the value's type/data.
+    my $access;
+    eval '$access=Rapi2::CeRegSetValueEx($self->{hkey}, $name, $type, $val)';
+    if (ERROR_SUCCESS != $access || $@)
+    {
+      $self->{errstr}="CeRegSetValueEx failed: $@";
+      return 0;
+    }
+    return 1;
+  }
+  else
+  {
+    # Get the value's type/data.
+    my ($access, $type, $val);
+    eval '($access, $type, $val)=Rapi2::CeRegQueryValueEx($self->{hkey}, $name)';
+    if (ERROR_SUCCESS != $access || $@)
+    {
+      $self->{errstr}="CeRegQueryValueEx failed: $@";
+      return 0;
+    }
+    return ($type, $val);
+  }
+}
+
+# Get infos to for a key.
+sub GetInfoKey
+{
+  my $self=shift;
+  $self->{errstr}=undef;
+
+  if($self->{type} ne "reg")
+  {
+    $self->{errstr}="this is no registry object";
+    return 0;
+  }
+  if($self->{hkey} == -1)
+  {
+    $self->{errstr}="no registry key opened";
+    return 0;
+  }
+  my ($access, $cSubKeys, $cbMaxSubKeyLen, $cbMaxClassLen, $cValues,
+      $cbMaxValueNameLen, $cbMaxValueLen, $cbSecurityDescriptor,
+      $ftLastWriteTime);
+  eval
+  {
+    ($access, $cSubKeys, $cbMaxSubKeyLen, $cbMaxClassLen, $cValues,
+     $cbMaxValueNameLen, $cbMaxValueLen, $cbSecurityDescriptor,
+     $ftLastWriteTime)=Rapi2::CeRegQueryInfoKey($self->{hkey});
+  };
+  if(ERROR_SUCCESS != $access || $@)
+  {
+    $self->{errstr}="CeRegQueryInfoKey failed: $@";
+    return 0;
+  }
+  return ($cSubKeys, $cbMaxSubKeyLen, $cbMaxClassLen, $cValues,
+	  $cbMaxValueNameLen, $cbMaxValueLen, $cbSecurityDescriptor,
+	  $ftLastWriteTime);
+}
+
 1;
 
 
@@ -709,10 +966,15 @@ B<Rapi2::Simple> - Very easy access to the Rapi2 Wrapper
   $rapi->CloseDB() ||
     die $rapi->geterror;
 
+  # Read out some registry stuff.
+  $rapi=new Rapi2::Simple(key => [HKEY_CURRENT_USER, 'ControlPanel\Desktop']);
+  die $rapi->geterror if $rapi->errorstate;
+  printf "type=%d, data=%s\n", $rapi->KeyValue("wallpaper");
+
 =head1 DESCRIPTION
 
-B<Rapi2::Simple> is a class providing simple access to Pocket PCs using the
-Rapi2 librapi2 wrapper.
+B<Rapi2::Simple> is a class providing simple access to Pocket PCs
+using the Rapi2 librapi2 wrapper.
 
 =head1 CONSTRUCTOR
 
@@ -734,14 +996,20 @@ Available levels are:
   2 - Errors and warnings
   3 - Everything
 
-C<db =E<gt> NAME | CEOID> - If you want to to create a database object, you
-can specify the database you want to open either by the NAME or by the CEOID.
-You should check the error state after creating the object.
+C<db =E<gt> NAME | CEOID> - If you want to to create a database
+object, you can specify the database you want to open either by the
+NAME or by the CEOID.
 
-C<file =E<gt> EXPR | [MODE,NAME]> - If you want to create a file object, you
-can specify the file and the opening mode by an expression EXPR or the
-MODE and the NAME of the file. See OpenFile for details. You should check
-the error state after creating the object
+C<file =E<gt> EXPR | [MODE,NAME]> - If you want to create a file
+object, you can specify the file and the opening mode by an expression
+EXPR or the MODE and the NAME of the file. See I<OpenFile> for
+details.
+
+C<key =E<gt> [HKEY, SUBKEY]> - If you want to create a registry
+object, you can specify the registry key you want to open. See the
+I<OpenKey> method for details.
+
+You should check the error state after creating an object.
 
 =back
 
@@ -769,20 +1037,20 @@ B<Database access methods>
 
 =item OpenDB (NAME | CEOID)
 
-Open a database either by NAME or by the given CEOID. On success I<TRUE>
-will be returned, I<FALSE> otherwise.
+Open a database either by NAME or by the given CEOID. On success
+I<TRUE> will be returned, I<FALSE> otherwise.
 
 =item CloseDB ()
 
-Close an opened database. On success I<TRUE> will be returned, I<FALSE>
-otherwise.
+Close an opened database. On success I<TRUE> will be returned,
+I<FALSE> otherwise.
 
 =item fetch ()
 
 Get the next record from an opened database. A hash reference will be
-returned. The propids of the properties of a record are the keys.
-All values are array references to arrays that hold the properties
-value in the first field and the type in the second.
+returned. The propids of the properties of a record are the keys. All
+values are array references to arrays that hold the properties value
+in the first field and the type in the second.
 
 If this method will be called after the last record was returned, it
 returns I<FALSE>. On an error it set the error string and returns
@@ -790,14 +1058,14 @@ I<FALSE> too. So check the error state.
 
 =item store (DATA [, CEOID])
 
-Write a record to an opened database. DATA is a hash reference, that is
-from the same structure as the references you get from L<fetch ()>. The
-keys are the propids of the properties you want to write, and the
-values are array references. These arrays hold the properties value
-in the first field and the type in the second.
+Write a record to an opened database. DATA is a hash reference, that
+is from the same structure as the references you get from L<fetch
+()>. The keys are the propids of the properties you want to write, and
+the values are array references. These arrays hold the properties
+value in the first field and the type in the second.
 
-If you specify the CEOID of a record, the properties will be written to
-it, otherwise a new record will be created.
+If you specify the CEOID of a record, the properties will be written
+to it, otherwise a new record will be created.
 
 On success I<TRUE> will be returned, I<FALSE> otherwise.
 
@@ -833,11 +1101,11 @@ B<File access methods>
 
 Open a file. The mode (reading or writing) is specified in the kind of
 Perls normal open function. This means you can either specify an
-expression EXPR including both, the mode of opening and the filename, or
-you specify the MODE and NAME as separate arguments.
+expression EXPR including both, the mode of opening and the filename,
+or you specify the MODE and NAME as separate arguments.
 
-If MODE is '<' or nothing, the file will be opened for reading. If MODE
-is '>', the file will be opened for writing.
+If MODE is '<' or nothing, the file will be opened for reading. If
+MODE is '>', the file will be opened for writing.
 
 On success I<TRUE> will be returned, I<FALSE> otherwise.
 
@@ -849,8 +1117,8 @@ otherwise.
 =item ReadFile ([NUM])
 
 Read NUM bytes from an opened file. If NUM is not specified, 1024 will
-be used. On success a scalar containing the read bytes is returned,
-I<undef> otherwise.
+be used. On success a scalar containing the read bytes will be
+returned, I<undef> otherwise.
 
 =item WriteFile (DATA)
 
@@ -859,28 +1127,29 @@ returned, I<FALSE> otherwise.
 
 =item CopyFile (FILE1, FILE2)
 
-Copy FILE1 to FILE2. FILE1 and FILE2 are strings, that specify the file
-names. On success I<TRUE> is returned, I<FALSE> otherwise.
+Copy FILE1 to FILE2. FILE1 and FILE2 are strings, that specify the
+file names. On success I<TRUE> will be returned, I<FALSE> otherwise.
 
 =item MoveFile (FILE1, FILE2)
 
-Move FILE1 to FILE2. FILE1 and FILE2 are strings, that specify the file
-names. On success I<TRUE> is returned, I<FALSE> otherwise.
+Move FILE1 to FILE2. FILE1 and FILE2 are strings, that specify the
+file names. On success I<TRUE> will be returned, I<FALSE> otherwise.
 
 =item DeleteFile (FILE)
 
 Delete the file FILE. FILE is a string, that specifies the file name.
-On success I<TRUE> is returned, I<FALSE> otherwise.
+On success I<TRUE> will be returned, I<FALSE> otherwise.
 
 =item DeleteDir (DIR)
 
-Delete the directory DIR. DIR is a string, that specifies the directory
-name. On success I<TRUE> is returned, I<FALSE> otherwise.
+Delete the directory DIR. DIR is a string, that specifies the
+directory name. On success I<TRUE> will be returned, I<FALSE>
+otherwise.
 
 =item FileList (PATH [, FLAGS])
 
-Get a list of all files in PATH. An array containing hash references, will
-be returned on success, I<FALSE> otherwise.
+Get a list of all files in PATH. An array containing hash references,
+will be returned on success, I<FALSE> otherwise.
 
 Every hash has the following keys:
 
@@ -893,19 +1162,19 @@ Every hash has the following keys:
   dwLastWriteTime
   cFileName
 
-The best way to find out what the keys mean, is to contact the MSDN. The
-hash keys are the members of the CE_FIND_DATA structure.
+The best way to find out what the keys mean, is to contact the
+MSDN. The hash keys are the members of the CE_FIND_DATA structure.
 
 --- START - from the MSDN ---
 
 FLAGS - A combination of filter and retrieval flags. The filter flags
-specify what kinds of files to document, and the retrieval flags specify
-which members of the CE_FIND_DATA structure to retrieve.
+specify what kinds of files to document, and the retrieval flags
+specify which members of the CE_FIND_DATA structure to retrieve.
 
 The I<filter flags> can be a combination of the following values:
 
-B<FAF_ATTRIB_CHILDREN>: Only retrieve information for directories which
-have child items.
+B<FAF_ATTRIB_CHILDREN>: Only retrieve information for directories
+which have child items.
 
 B<FAF_ATTRIB_NO_HIDDEN>: Do not retrieve information for files or
 directories which have the hidden attribute set.
@@ -920,23 +1189,23 @@ The I<retrieval flags> can be a combination of the following values:
 B<FAF_ATTRIBUTES>: Retrieve the file attributes and copy them to the
 I<dwFileAttributes> member.
 
-B<FAF_CREATION_TIME>: Retrieve the file creation time and copy it to the
-I<ftCreationTime> member.
+B<FAF_CREATION_TIME>: Retrieve the file creation time and copy it to
+the I<ftCreationTime> member.
 
-B<FAF_LASTACCESS_TIME>: Retrieve the time when the file was last accessed
-and copy it to the I<ftLastAccessTime> member.
+B<FAF_LASTACCESS_TIME>: Retrieve the time when the file was last
+accessed and copy it to the I<ftLastAccessTime> member.
 
-B<FAF_LASTWRITE_TIME>: Retrieve the time when the file was last written
-to and copy it to the I<ftLastWriteTime> member.
+B<FAF_LASTWRITE_TIME>: Retrieve the time when the file was last
+written to and copy it to the I<ftLastWriteTime> member.
 
 B<FAF_SIZE_HIGH>: Retrieve the high-order DWORD value of the file size
 and copy it to the I<nFileSizeHigh> member.
 
-B<FAF_SIZE_LOW>: Retrieve the low-order DWORD value of the file size and
-copy it to the I<nFileSizeLow> member.
+B<FAF_SIZE_LOW>: Retrieve the low-order DWORD value of the file size
+and copy it to the I<nFileSizeLow> member.
 
-B<FAF_OID>: Retrieve the object identifier of the file and copy it to the
-I<dwOID> member.
+B<FAF_OID>: Retrieve the object identifier of the file and copy it to
+the I<dwOID> member.
 
 B<FAF_NAME>: Retrieve the file name and copy it to the I<cFileName>
 member.
@@ -952,17 +1221,17 @@ If you do not specify FLAGS, the following combination will be use:
 The the path of a special folder specified by NUM. This parameter can be
 one of the following values: (from the MSDN)
 
-C<CSIDL_BITBUCKET>: Recycle bin - file system directory containing file
-objects in the user's recycle bin. The location of this directory is not
-in the registry; it is marked with the hidden and system attributes to
-prevent the user from moving or deleting it.
+C<CSIDL_BITBUCKET>: Recycle bin - file system directory containing
+file objects in the user's recycle bin. The location of this directory
+is not in the registry; it is marked with the hidden and system
+attributes to prevent the user from moving or deleting it.
 
 C<CSIDL_COMMON_DESKTOP>: File system directory that contains files and
 folders that appear on the desktop for all users.
 
 C<CSIDL_COMMON_PROGRAMS>: File system directory that contains the
-directories for the common program groups that appear on the Start menu
-for all users.
+directories for the common program groups that appear on the Start
+menu for all users.
 
 C<CSIDL_COMMON_STARTMENU>: File system directory that contains the
 programs and folders that appear on the Start menu for all users.
@@ -982,14 +1251,14 @@ C<CSIDL_DESKTOPDIRECTORY>: File system directory used to physically
 store file objects on the desktop - not to be confused with the
 desktop folder itself.
 
-C<CSIDL_DRIVES>: My Computer - virtual folder containing everything
-on the local computer: storage devices, printers, and Control Panel.
-The folder can also contain mapped network drives.
+C<CSIDL_DRIVES>: My Computer - virtual folder containing everything on
+the local computer: storage devices, printers, and Control Panel.  The
+folder can also contain mapped network drives.
 
 C<CSIDL_FONTS>: Virtual folder containing fonts.
 
-C<CSIDL_NETHOOD>: File system directory containing objects that
-appear in the network neighborhood.
+C<CSIDL_NETHOOD>: File system directory containing objects that appear
+in the network neighborhood.
 
 C<CSIDL_NETWORK>: Network Neighborhood - virtual folder representing
 the top level of the network hierarchy.
@@ -1006,22 +1275,111 @@ program groups which are also file system directories.
 C<CSIDL_RECENT>: File system directory containing the user's most
 recently used documents.
 
-C<CSIDL_SENDTO>: File system directory containing Send To menu
-items.
+C<CSIDL_SENDTO>: File system directory containing Send To menu items.
 
-C<CSIDL_STARTMENU>: File system directory containing Start menu
-items.
+C<CSIDL_STARTMENU>: File system directory containing Start menu items.
 
-C<CSIDL_STARTUP>: File system directory that corresponds to the
-user's Startup program group.
+C<CSIDL_STARTUP>: File system directory that corresponds to the user's
+Startup program group.
 
 C<CSIDL_TEMPLATES>: File system directory that serves as a common
 repository for document templates.
 
-On success a scalar containing the the path is returned, I<undef>
+On success a scalar containing the the path will be returned, I<undef>
 otherwise.
 
 =back
+
+B<Registry access methods>
+
+=over
+
+=item OpenKey ([HKEY,] SUBKEY)
+
+Open a registry key or open a subkey of an already opened registry
+key.
+
+HKEY is a handle to a currently open key or any of the following
+predefined reserved handle values:
+
+  HKEY_CLASSES_ROOT
+  HKEY_CURRENT_CONFIG
+  HKEY_CURRENT_USER
+  HKEY_LOCAL_MACHINE
+
+SUBKEY is a string containing the name of the subkey to open. If this
+parameter empty, the key identified by the HKEY parameter will be
+opened.
+
+If only one parameter is given, the I<OpenSubKey> method will be
+called.
+
+On success I<TRUE> will be returned, I<FALSE> otherwise.
+
+=item OpenSubKey (SUBKEY)
+
+Open a subkey of a currently open key. SUBKEY is a string containing
+the name of the subkey to open. On success I<TRUE> will be returned,
+I<FALSE> otherwise.
+
+=item CloseKey ()
+
+Close a currently open key. On success I<TRUE> will be returned, I<FALSE>
+otherwise.
+
+=item GetSubKeyNames ()
+
+Get the names of all subkeys of a currently open key.
+
+An array containing all names will be returned on success, I<FALSE>
+otherwise.
+
+=item GetValueNames ()
+
+Get the names of all values of a currently open key.
+
+An array containing all names will be returned on success, I<FALSE>
+otherwise.
+
+=item KeyValue (NAME [, TYPE, DATA])
+
+Set or get the TYPE and the DATA of a specified value NAME of a
+currently open key. The value will be changed, if you specify the TYPE
+and the DATA aguments, and the method returns I<TRUE> on success. If
+you only sepcify the NAME of the value, an array, that holds the TYPE
+in the first field and the DATA in the second field, will be returned.
+
+If the method fails, it returns I<FALSE>.
+
+=item GetInfoKey ()
+
+Get information about the currently open registry key. The following
+array will be returned:
+
+($cSubKeys, $cbMaxSubKeyLen, $cbMaxClassLen, $cValues,
+$cbMaxValueNameLen, $cbMaxValueLen, $cbSecurityDescriptor,
+$ftLastWriteTime)
+
+  $cSubKeys             - the number of subkeys
+  $cbMaxSubKeyLen       - the length of the longest subkey name
+  $cbMaxClassLen        - the length of the longest subkey class
+                          string
+  $cValues              - the number of values
+  $cbMaxValueNameLen    - the length of the longest value name
+  $cbMaxValueLen        - the length, in bytes, of the longest data
+                          component
+  $cbSecurityDescriptor - the length, in bytes, of the key's
+                          security descriptor
+  $ftLastWriteTime      - the last time that the key or any of its
+                          value entries was modified
+
+If the method fails, I<FALSE> will be returned.
+
+=back
+
+=head1 TODO
+
+Translate this documentation to 'good' english. ;)
 
 =head1 SEE ALSO
 
