@@ -28,22 +28,19 @@ href="usbpatch.php">patch your kernel driver</a>.</p>
 
 <ol>
 
-<li class=SPACED>Make sure you are running as the root user.</li>
+<li>Connect your USB device. The following message (or similar) should appear in your logs:
 
-<li>Try to load the "ipaq" kernel module:
-
-<pre>modprobe ipaq</pre>
-
-<p>This should give the following message (or similar) in your logs:</p>
-
-<pre>kernel: usbserial.c: USB Serial support registered for Compaq iPAQ
+<pre>kernel: hub.c: USB new device connect on bus1/1, assigned device number 2
+kernel: usb.c: USB device 2 (vend/prod 0x49f/0x3) is not claimed by any active driver.
+/etc/hotplug/usb.agent: Setup ipaq for USB product 49f/3/0
+kernel: usb.c: registered new driver serial
+kernel: usbserial.c: USB Serial support registered for Generic
+kernel: usbserial.c: USB Serial Driver core v1.4
+kernel: usbserial.c: USB Serial support registered for Compaq iPAQ
+kernel: usbserial.c: Compaq iPAQ converter detected
+kernel: usbserial.c: Compaq iPAQ converter now attached to ttyUSB0 (or usb/tts/0 for devfs)
 kernel: ipaq.c: USB Compaq iPAQ, HP Jornada, Casio EM500 driver v0.2</pre>
 
-</li>
-
-<li>Now connect your USB device. The following message (or similar) should appear in your logs:
-
-<pre>kernel: usbserial.c: Compaq iPAQ converter now attached to ttyUSB0 (or usb/tts/0 for devfs)</pre>
 </li>
 
 <li>Run synce-serial-config with your serial-over-USB port as parameter. For most systems, this is ttyUSB0:

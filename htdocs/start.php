@@ -35,6 +35,18 @@
 <li class=SPACED>If your device has not automatically connected, initiate the
 connection manually.</li>
 
+<li>The following message (or similar) should appear in your logs:
+
+<pre>pppd[2695]: pppd 2.4.1 started by root, uid 0
+pppd[2695]: Serial connection established.
+pppd[2695]: Using interface ppp0
+pppd[2695]: Connect: ppp0 <--> /dev/ttyUSB0
+pppd[2695]: local  IP address 192.168.131.102
+pppd[2695]: remote IP address 192.168.131.201</pre>
+
+</li>
+
+
 <li class=SPACED>Try the <a href="tools.php">tools</a>.</li>
 
 </ol>
