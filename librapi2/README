@@ -30,6 +30,7 @@ See README.contributing for information about contributing to this project.
 
 See README.design for information about the design of librapi2.
 
+See BUGS for documented limitations of librapi2.
 
 License
 -------
@@ -107,7 +108,7 @@ configure script with the --disable-shared parameter.
 Solaris installation
 --------------------
 
-The libiconv provided by Sun sucks. Get GNU libiconv and install it for example
-in /usr/local and use --with-libiconv-prefix=/usr/local as parameter to the
-configure script.
+The libiconv provided by Sun sucks. Get GNU libiconv and install it in, for
+example, /usr/local and use --with-libiconv-prefix=/usr/local as parameter to
+the configure script.
 
