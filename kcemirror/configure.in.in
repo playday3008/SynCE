@@ -1,0 +1,144 @@
+#MIN_CONFIG
+
+AM_INIT_AUTOMAKE(kcemirror, 0.1)
+AC_C_BIGENDIAN
+AC_CHECK_KDEMAXPATHLEN
+
+AC_MSG_CHECKING(if unique application check should be disabled)
+AC_ARG_ENABLE(unique,
+	[  --disable-unique        disable unique application check],
+	[
+		if test "$enableval" = yes; then
+			AC_MSG_RESULT(no)
+		else
+  			AC_MSG_RESULT(yes)
+			AC_DEFINE(NOTUNIQUE, 1, 
+				[Define if disable unique application check])
+		fi
+	],
+	[AC_MSG_RESULT(no)]
+)
+
+AC_ARG_WITH(libsynce, 
+	AC_HELP_STRING(
+			[--with-libsynce[=DIR]],
+			[Search for libsynce in DIR/include and DIR/lib]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+	]
+)
+
+AC_ARG_WITH(libsynce-include,
+	AC_HELP_STRING(
+			[--with-libsynce-include[=DIR]],
+			[Search for libsynce header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
+
+AC_ARG_WITH(libsynce-lib,
+	AC_HELP_STRING(
+			[--with-libsynce-lib[=DIR]],
+			[Search for libsynce library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
+
+AC_CHECK_LIB(synce,main,,
+	[
+		AC_MSG_ERROR([Can't find synce library])
+	]
+)
+
+AC_CHECK_HEADERS(synce.h,,
+	[
+		AC_MSG_ERROR([Can't find synce.h])
+	]
+)
+
+AC_ARG_WITH(librapi2,
+	AC_HELP_STRING(
+			[--with-librapi2[=DIR]],
+			[Search for librapi2 in DIR/include and DIR/lib]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+	]
+)
+
+AC_ARG_WITH(librapi2-include,
+	AC_HELP_STRING(
+			[--with-librapi2-include[=DIR]],
+			[Search for librapi2 header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
+
+AC_ARG_WITH(librapi2-lib,
+	AC_HELP_STRING(
+			[--with-librapi2-lib[=DIR]],
+			[Search for librapi2 library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
+
+AC_CHECK_LIB(rapi,CeRapiInit,,
+	[
+		AC_MSG_ERROR([Can't find RAPI library])
+	]
+)
+
+AC_CHECK_HEADERS(rapi.h,,
+	[
+		AC_MSG_ERROR([Can't find rapi.h])
+	]
+)
+
+AC_ARG_WITH(librra,
+	AC_HELP_STRING(
+			[--with-librra[=DIR]],
+			[Search for librra in DIR/include and DIR/lib]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+	]
+)
+
+AC_ARG_WITH(librra-include,
+	AC_HELP_STRING(
+			[--with-librra-include[=DIR]],
+			[Search for librra header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
+
+AC_ARG_WITH(librra-lib,
+	AC_HELP_STRING(
+			[--with-librra-lib[=DIR]],
+			[Search for librra library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
+
+AC_CHECK_LIB(rra, rra_partner_create,,
+	[
+		AC_MSG_ERROR([Can't find RRA library])
+	]
+)
+
+AC_CHECK_HEADERS(librra.h,,
+	[
+		AC_MSG_ERROR([Can't find librra.h])
+	]
+)
+
+AM_WITH_DMALLOCTHCXX
+
+AC_DEFINE(QT_NO_ASCII_CAST, 1, [Define if you don't want QString casted to char *])

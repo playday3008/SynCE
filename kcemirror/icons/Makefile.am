@@ -1,0 +1,2 @@
+SUBDIRS = $(AUTODIRS)
+KDE_ICON = kcemirror

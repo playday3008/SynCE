@@ -1,0 +1,472 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2003-09-13 21:52+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: _translatorinfo.cpp:1
+msgid ""
+"_: NAME OF TRANSLATORS\n"
+"Your names"
+msgstr ""
+
+#: _translatorinfo.cpp:3
+msgid ""
+"_: EMAIL OF TRANSLATORS\n"
+"Your emails"
+msgstr ""
+
+#: pda.cpp:93
+msgid "&Synchronize"
+msgstr ""
+
+#: pda.cpp:99
+msgid "&Info && Management..."
+msgstr ""
+
+#: pda.cpp:106
+msgid "&Open rapip://"
+msgstr ""
+
+#: pda.cpp:110
+msgid "&Execute..."
+msgstr ""
+
+#: pda.cpp:117
+msgid "Configure "
+msgstr ""
+
+#: raki.cpp:72
+msgid "Connected Devices"
+msgstr ""
+
+#: raki.cpp:81
+msgid "Raki Applet"
+msgstr ""
+
+#: raki.cpp:88
+msgid "&Start DCCM"
+msgstr ""
+
+#: raki.cpp:91
+msgid "S&top DCCM"
+msgstr ""
+
+#: raki.cpp:98
+msgid "&Configure..."
+msgstr ""
+
+#: raki.cpp:675
+msgid "Raki, a PocketPC-Management Tool"
+msgstr ""
+
+#: raki.cpp:677
+msgid ""
+"Copyright (c) 2003 Volker Christian\n"
+"\n"
+"Permission is hereby granted, free of charge, to\n"
+"any person obtaining a copy of this software and\n"
+"associated documentation files (the \"Software\"), to\n"
+"deal in the Software without restriction, including\n"
+"without limitation the rights to use, copy, modify,\n"
+"merge, publish, distribute, sublicense, and/or sell\n"
+"copies of the Software, and to permit persons to whom\n"
+"the Software is furnished to do so, subject to the\n"
+"following conditions:\n"
+"\n"
+"The above copyright notice and this permission notice\n"
+"shall be included in all copies or substantial portions\n"
+"of the Software.\n"
+"\n"
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF\n"
+"ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED\n"
+"TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n"
+"PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT\n"
+"SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR\n"
+"ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN\n"
+"ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT\n"
+"OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\n"
+"OTHER DEALINGS IN THE SOFTWARE."
+msgstr ""
+
+#: raki.cpp:713
+msgid "Raki"
+msgstr ""
+
+#: raki.cpp:719
+msgid "is the Initiator of the SynCE-Project."
+msgstr ""
+
+#: raki.cpp:722
+msgid "is the current Project Manager."
+msgstr ""
+
+#: raki.cpp:725
+msgid "has developed the serial-over-USB driver."
+msgstr ""
+
+#: raki.cpp:728
+msgid "ported the AvantGo support from Malsync to SynCE."
+msgstr ""
+
+#: rc.cpp:1
+msgid "Raki Configuration"
+msgstr ""
+
+#: rc.cpp:2 rc.cpp:86
+msgid "Connection Setting"
+msgstr ""
+
+#: rc.cpp:3
+msgid "Start dccm at start up"
+msgstr ""
+
+#: rc.cpp:4
+msgid "Path to dccm:"
+msgstr ""
+
+#: rc.cpp:5
+msgid "Notifications"
+msgstr ""
+
+#: rc.cpp:6
+msgid "Connect:"
+msgstr ""
+
+#: rc.cpp:7
+msgid "Disconnect:"
+msgstr ""
+
+#: rc.cpp:8
+msgid "Password Request:"
+msgstr ""
+
+#: rc.cpp:9
+msgid "Password Rejected:"
+msgstr ""
+
+#: rc.cpp:10
+msgid "IP-Tables"
+msgstr ""
+
+#: rc.cpp:11
+msgid "Path to IP-Tables:"
+msgstr ""
+
+#: rc.cpp:13 rc.cpp:23 rc.cpp:70 rc.cpp:80 rc.cpp:94 rc.cpp:105 rc.cpp:118
+msgid "F1"
+msgstr ""
+
+#: rc.cpp:19 rc.cpp:20
+msgid "Installation"
+msgstr ""
+
+#: rc.cpp:21
+msgid "Destination:"
+msgstr ""
+
+#: rc.cpp:24
+msgid "&Install"
+msgstr ""
+
+#: rc.cpp:25
+msgid "Alt+I"
+msgstr ""
+
+#: rc.cpp:28
+msgid "PDA Info and Management"
+msgstr ""
+
+#: rc.cpp:29
+msgid "System Information"
+msgstr ""
+
+#: rc.cpp:30
+msgid "System"
+msgstr ""
+
+#: rc.cpp:31
+msgid "Major"
+msgstr ""
+
+#: rc.cpp:32
+msgid "Minor"
+msgstr ""
+
+#: rc.cpp:33
+msgid "Build"
+msgstr ""
+
+#: rc.cpp:34 rc.cpp:37
+msgid "Name"
+msgstr ""
+
+#: rc.cpp:35
+msgid "Platform"
+msgstr ""
+
+#: rc.cpp:36
+msgid "Id"
+msgstr ""
+
+#: rc.cpp:38
+msgid "Details"
+msgstr ""
+
+#: rc.cpp:39
+msgid "Processor"
+msgstr ""
+
+#: rc.cpp:40
+msgid "Architecture"
+msgstr ""
+
+#: rc.cpp:41
+msgid "Type"
+msgstr ""
+
+#: rc.cpp:42
+msgid "Page size"
+msgstr ""
+
+#: rc.cpp:43
+msgid "Storage"
+msgstr ""
+
+#: rc.cpp:44
+msgid "Size"
+msgstr ""
+
+#: rc.cpp:45
+msgid "Free"
+msgstr ""
+
+#: rc.cpp:46 rc.cpp:63 rc.cpp:68
+msgid "Refresh"
+msgstr ""
+
+#: rc.cpp:47
+msgid "Power status"
+msgstr ""
+
+#: rc.cpp:48
+msgid "AC Power Status"
+msgstr ""
+
+#: rc.cpp:49
+msgid "Online"
+msgstr ""
+
+#: rc.cpp:50
+msgid "Offline"
+msgstr ""
+
+#: rc.cpp:51
+msgid "Backup Power"
+msgstr ""
+
+#: rc.cpp:52
+msgid "Invalid"
+msgstr ""
+
+#: rc.cpp:53
+msgid "Main Battery"
+msgstr ""
+
+#: rc.cpp:54 rc.cpp:59
+msgid "Flag"
+msgstr ""
+
+#: rc.cpp:55 rc.cpp:60
+msgid "LifePercent"
+msgstr ""
+
+#: rc.cpp:56 rc.cpp:61
+msgid "LifeTime"
+msgstr ""
+
+#: rc.cpp:57 rc.cpp:62
+msgid "FullLifeTime"
+msgstr ""
+
+#: rc.cpp:58
+msgid "Backup Battery"
+msgstr ""
+
+#: rc.cpp:64
+msgid "Software Manager"
+msgstr ""
+
+#: rc.cpp:65
+msgid "Installed Software"
+msgstr ""
+
+#: rc.cpp:66
+msgid "Uninstall"
+msgstr ""
+
+#: rc.cpp:73
+msgid "Status Information:"
+msgstr ""
+
+#: rc.cpp:74
+msgid "PasswordDialog"
+msgstr ""
+
+#: rc.cpp:75
+msgid "Password"
+msgstr ""
+
+#: rc.cpp:76
+msgid "Enter Password for"
+msgstr ""
+
+#: rc.cpp:77 rc.cpp:87
+msgid "Password:"
+msgstr ""
+
+#: rc.cpp:78
+msgid "Remember Password"
+msgstr ""
+
+#: rc.cpp:85
+msgid "Pda Configuration"
+msgstr ""
+
+#: rc.cpp:88
+msgid "Masquerading"
+msgstr ""
+
+#: rc.cpp:89
+msgid "Enable Masquerading:"
+msgstr ""
+
+#: rc.cpp:90
+msgid "Synchronization Settings"
+msgstr ""
+
+#: rc.cpp:91
+msgid "Possible Synchronization Types"
+msgstr ""
+
+#: rc.cpp:92
+msgid "Syncronize at PDA-Connect"
+msgstr ""
+
+#: rc.cpp:100
+msgid "Remove Partnership"
+msgstr ""
+
+#: rc.cpp:101
+msgid ""
+"There are already two partnerships configured on the device.<br>You have to "
+"delete at least one before you can set up a new partnership."
+msgstr ""
+
+#: rc.cpp:102
+msgid "Current Partnerships"
+msgstr ""
+
+#: rc.cpp:103
+msgid "Remove marked Partnerships"
+msgstr ""
+
+#: rc.cpp:108
+msgid "Execute on PDA"
+msgstr ""
+
+#: rc.cpp:109
+msgid "File to execute: (rapip:/)"
+msgstr ""
+
+#: rc.cpp:110
+msgid "Execute"
+msgstr ""
+
+#: rc.cpp:112
+msgid "MyDialog1"
+msgstr ""
+
+#: rc.cpp:113
+msgid "Replication"
+msgstr ""
+
+#: rc.cpp:114
+msgid "Replication Task"
+msgstr ""
+
+#: rc.cpp:115
+msgid "Comment"
+msgstr ""
+
+#: rc.cpp:116
+msgid "Progress"
+msgstr ""
+
+#: rc.cpp:123
+msgid "WelcomeDialog"
+msgstr ""
+
+#: rc.cpp:124
+msgid "<p align=\"center\">Welcome to Raki</p>"
+msgstr ""
+
+#: rc.cpp:125
+msgid "(c) 2003 by V. Christian"
+msgstr ""
+
+#: rc.cpp:126
+msgid "You have either started Raki for the first time, or you have just"
+msgstr ""
+
+#: rc.cpp:127
+msgid "upgraded from a previous release. In case of upgrade, please"
+msgstr ""
+
+#: rc.cpp:128
+msgid "remove your previous raki.sh script from the ~/.synce/scripts"
+msgstr ""
+
+#: rc.cpp:129
+msgid "directory before you continue."
+msgstr ""
+
+#: rc.cpp:130
+msgid "In order to work properly, Raki needs to know"
+msgstr ""
+
+#: rc.cpp:131
+msgid "the version of dccm you want to use. It is"
+msgstr ""
+
+#: rc.cpp:132
+msgid "recommended to use vdccm because it enables"
+msgstr ""
+
+#: rc.cpp:133
+msgid "the \"multiple-devices\" feature of Raki."
+msgstr ""
+
+#: rc.cpp:135
+msgid "vdccm"
+msgstr ""
+
+#: rc.cpp:136
+msgid "dccm"
+msgstr ""
+
+#: rc.cpp:137
+msgid "This dialog will not appear again!"
+msgstr ""

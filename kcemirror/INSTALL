@@ -1,0 +1,49 @@
+Compiling and Installing
+Requisites
+    * Install the base SynCE libraries as described 
+      at http://synce.sourceforge.net/synce/using.php#download.
+    * Make the SynCE libraries work by getting connected for the first time.
+    * If you want the AvantGO synchronizer plugin to be compiled, you also have 
+      to download and compile agsync-0.2-pre.tgz from 
+      http://www.mechlord.ca/%7Elownewulf/avantgo.html provided by Michael 
+      Jarrett. Note, compilation of agsync-0.2-pre is enough - installation is 
+      not required but of course allowed ;-)
+
+SynCE-KDE compilation and installation
+   1. Download SynCE-KDE (synce-kde-0.6.tar.gz) from the SourceForge Project 
+      Page or check out the latest code from the CVS repository.
+
+   2. If you have downloaded from the SourceForge Project Page go ahead to 
+      step 4.
+
+   3. After checking out SynCE-KDE from CVS do a
+          # make -f Makefile.cvs
+      and go to step 5.
+
+   4. Unpack the downloaded synce-kde-0.6.tar.gz into your favorite source 
+      directory
+          # tar -xzf synce-kde-0.6.tar.gz
+
+   5. Configure your SynCE-KDE source tree by issuing the command
+          # ./configure
+      If you want the AvantGo synchronization plugin also to be compiled, issue
+          # ./configure --with-agsync=/path/to/agsync/source/dir/
+
+   6. After configuring SynCE-KDE compile and install it by simply doing a
+          # make
+      and as root
+          # make install
+
+First start:
+   - Launch Raki from the "KMenu->Utilities"-Menu. You should find a new 
+     black&white icon in your System-Tray.
+   - Right-klick on the icon lets you choose some actions to manipulate dccm and
+     to configure the Raki-Applet.
+   - Make sure dccm is running eighter via Raki or by starting it on the 
+     console.
+   - Initiate a connection by running "synce-serial-start".
+   - The icon in your System Tray should now be colored.
+   - By left-klick on the icon you can now interact with your PDA.
+
+Volker
+voc@users.sourceforge.net
