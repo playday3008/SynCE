@@ -1,5 +1,6 @@
 /* $Id$ */
 #include <rapi.h>
+#include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -11,6 +12,11 @@ static void show_usage(const char* name)
 			"\n"
 			"\t%s [-h] [DIRECTORY]\n"
 			"\n"
+			"\t-d LEVEL  Set debug log level\n"
+			"\t              0 - No logging (default)\n"
+			"\t              1 - Errors only\n"
+			"\t              2 - Errors and warnings\n"
+			"\t              3 - Everything\n"
 			"\t-h         Show this help message\n"
 			"\tDIRECTORY  The remote directory where you want to list files\n",
 			name);
@@ -19,11 +25,16 @@ static void show_usage(const char* name)
 static bool handle_parameters(int argc, char** argv, char** path)
 {
 	int c;
+	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "h")) != -1)
+	while ((c = getopt(argc, argv, "d:h")) != -1)
 	{
 		switch (c)
 		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
 			case 'h':
 			default:
 				show_usage(argv[0]);
@@ -31,9 +42,13 @@ static bool handle_parameters(int argc, char** argv, char** path)
 		}
 	}
 
+	synce_log_set_level(log_level);
+
+	if (optind == argc)
+		return false;
+
 	/* TODO: handle more than one path */
-	if (optind < argc)
-		*path = strdup(argv[optind]);
+	*path = strdup(argv[optind++]);
 
 	return true;
 }
@@ -87,9 +102,9 @@ static bool print_entry(CE_FIND_DATA* entry)
 	 */
 
 	if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		printf("      -");
+		printf("          ");
 	else
-		printf("%7u", entry->nFileSizeLow);
+		printf("%10u", entry->nFileSizeLow);
 
 	printf("  ");
 
@@ -111,6 +126,8 @@ static bool print_entry(CE_FIND_DATA* entry)
 	filename = wstr_to_ascii(entry->cFileName);
 	printf("%s", filename);
 	wstr_free_string(filename);
+	if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		printf("/");
 
 	printf("\n");
 

@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "pcommon.h"
 #include <rapi.h>
+#include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -10,27 +11,39 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-h] FILE\n"
+			"\t%s [-d] [-h] FILE\n"
 			"\n"
-			"\t-h    Show this help message\n"
-			"\tFILE  The remote directory you want to remove\n",
+			"\t-d LEVEL  Set debug log level\n"
+			"\t              0 - No logging (default)\n"
+			"\t              1 - Errors only\n"
+			"\t              2 - Errors and warnings\n"
+			"\t              3 - Everything\n"
+			"\t-h        Show this help message\n"
+			"\tFILE      The remote directory you want to remove\n",
 			name);
 }
 
 static bool handle_parameters(int argc, char** argv, char** path)
 {
 	int c;
+	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "h")) != -1)
+	while ((c = getopt(argc, argv, "d:h")) != -1)
 	{
 		switch (c)
 		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
 			case 'h':
 			default:
 				show_usage(argv[0]);
 				return false;
 		}
 	}
+
+	synce_log_set_level(log_level);
 
 	if (optind == argc)
 	{
