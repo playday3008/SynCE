@@ -1,3 +1,34 @@
+2003-02-18  Volker Christian <voc@soft.uni-linz.ac.at>
+	+ Overall changes:
+		+ Like always ... code polish.
+	+ Changes in rapip:
+		none
+	+ Changes in raki:
+		+ Added "Connect" and "Disconnect" menu entries to connect to and
+		  disconnect from a PDA.
+		+ "Masquerading"-Feature added. To enable this feature you have to
+		  do the following tasks:
+		  - grant permissions to the raki-user to execute /usr/sbin/iptables 
+		    as root via a sudo call. For this add a line similar to
+		  	    <raki-user>     ALL = (root) NOPASSWD: /usr/sbin/iptables
+		    to the /etc/suduers file of your machine. See soduers(5) for in
+		    depth details.
+		  - Setting up a nameservice for the PDA.
+		    Two possibilities (only do one of them):
+		    1. Setting up a forwarding nameserver on your machine.
+		       For this add a forwarders-section to the /etc/named.conf file       
+		       	     forwarders {
+                		uuu.vvv.xxx.yyy;
+        		     };
+		       with uuu.vvv.xxx.yyy be the ip-address of a valid nameserver.
+		    2. Change the ip-address on line
+		    	  ms-dns 192.168.xxx.yyy
+		       in the /etc/ppp/peers/synce-device file to point to a valid
+		       nameserver.
+		    After doing this steps you can download your daily newspaper with
+		    AvantGo, browse the www with IE ...
+		       
+		       
 2003-02-16  Volker Christian <voc@soft.uni-linz.ac.at>
 	+ Overall changes:
 		+ Fixed some compile-problems. The following compiler / kde / qt
