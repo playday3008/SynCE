@@ -15,6 +15,7 @@ char* synce_strerror(DWORD error)
 		case ERROR_FILE_NOT_FOUND: result = "File not found"; break;
 		case ERROR_PATH_NOT_FOUND: result = "Path not found"; break;
 		case ERROR_DIR_NOT_EMPTY:  result = "Directory not empty"; break;
+		case ERROR_INVALID_PARAMETER: result = "Invalid parameter"; break;
 		
 		default: 
 			synce_trace("Unknown error code: 0x%08x", error);
