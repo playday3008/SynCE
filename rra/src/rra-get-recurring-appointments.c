@@ -50,7 +50,7 @@ static bool writer
           /* fall through */
 
         case ID_UNKNOWN_0001:
-        case ID_UNKNOWN_0067:
+        case ID_UNIQUE:
         case ID_APPOINTMENT_START:
         case ID_DURATION:
         case ID_APPOINTMENT_TYPE:
