@@ -500,7 +500,7 @@ static bool on_mdir_line_uid(Parser* parser, mdir_line* line, void* cookie)/*{{{
   EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->uid = line;
   return true;
-}
+}/*}}}*/
 #endif
 
 bool rra_appointment_from_vevent(/*{{{*/
@@ -718,5 +718,4 @@ exit:
   parser_destroy(parser);
 	return success;
 }/*}}}*/
-
 
