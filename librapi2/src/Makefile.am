@@ -16,7 +16,7 @@ librapi_la_SOURCES = \
 	rapi_internal.h                \
 	rapi_socket.h   rapi_socket.c
 
-librapi_la_LDFLAGS = -no-undefined -version-info 0:0:0
+librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
 librapi_la_LIBADD  = @LTLIBICONV@ config/libconfig.la support/libsupport.la
 
 include_HEADERS = rapi.h rapi_types.h
