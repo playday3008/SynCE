@@ -48,7 +48,7 @@ HANDLE CeCreateFile(
 	rapi_buffer_write_string(context->send_buffer, lpFileName);
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return INVALID_HANDLE_VALUE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &handle);
