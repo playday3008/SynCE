@@ -212,7 +212,6 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	long size = BUFSIZE;
 	long lng;
 	int i;
-	long index;
 	long cSubKeys;
 	LONG result = ERROR_SUCCESS;
 
@@ -250,23 +249,41 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
-        size = getbufferlen( sock );
+	size = getbufferlen( sock );
 
-	for ( i = 0; i < 8; i++ )
+	result = lng = getLong( sock, &size );
+	DBG_printf( "result %d : %ld (0x%08lx)\n", i, lng, lng );
+	_lasterror = lng = getLong( sock, &size );
+	DBG_printf( "lasterror %d : %ld (0x%08lx)\n", i, lng, lng );
+	if (ERROR_SUCCESS == result)
 	{
-		lng = getLong( sock, &index );
-		DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
-	}
-	cSubKeys = getLong( sock, &index );
-	DBG_printf( "cSubKeys : %ld (0x%08lx)\n", cSubKeys, cSubKeys );
-	if ( lpcSubKeys != NULL )
-	{
-		*( lpcSubKeys ) = cSubKeys;
-	}
-	for ( i = 9; i < 25; i++ )
-	{
-		lng = getLong( sock, &index );
-		DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
+		for ( i = 2; i < 8; i++ )
+		{
+			lng = getLong( sock, &size );
+			DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
+		}
+		cSubKeys = getLong( sock, &size );
+		DBG_printf( "cSubKeys : %ld (0x%08lx)\n", cSubKeys, cSubKeys );
+		if ( lpcSubKeys != NULL )
+		{
+			*( lpcSubKeys ) = cSubKeys;
+		}
+		for ( i = 9; i < 20; i++ )
+		{
+			lng = getLong( sock, &size );
+			DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
+		}
+		
+		lng = getLong( sock, &size );
+		DBG_printf( "cValues: %ld (0x%08lx)\n", lng, lng);
+		if (lpcValues)
+			*lpcValues = lng;
+				
+		for ( i = 21; i < 25; i++ )
+		{
+			lng = getLong( sock, &size );
+			DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
+		}
 	}
 	return result;
 }
