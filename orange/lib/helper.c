@@ -67,7 +67,7 @@ bool orange_write(const uint8_t* output_buffer, size_t output_size, const char* 
   
   snprintf(filename, sizeof(filename), "%s/%s", output_directory, basename);
   p = strrchr(filename, '/');
-  assert(p);
+  assert(p != NULL);
   *p = '\0';
 
   if (!orange_make_sure_directory_exists(filename))
