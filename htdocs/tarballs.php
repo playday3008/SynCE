@@ -20,6 +20,7 @@ the following .tar.gz files:<br/>
 		<li>synce-synce-X.X.tar.gz</li>
 		<li>synce-dccm-X.X.tar.gz</li>
 		<li>synce-serial-X.X.tar.gz</li>
+		<li>synce-trayicon-X.X.tar.gz (if you want it :-)</li>
 	</ul>
 </li>
 
@@ -54,6 +55,16 @@ cd ..</pre>
 <li>Compile serial:<br/>
 <pre>tar zxf synce-serial-X.X.tar.gz
 cd synce-serial-X.X
+./configure
+make
+make install
+cd ..</pre>
+</li>
+
+<li>Compile trayicon:<br/>
+<p>Note that requires a whole lot of GNOME 2 development packages.</p>
+<pre>tar zxf synce-trayicon-X.X.tar.gz
+cd synce-trayicon-X.X
 ./configure
 make
 make install

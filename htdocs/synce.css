@@ -77,3 +77,8 @@ DIV.PAGE
 {
 	width: 600px;
 }
+
+SPAN.RED
+{
+	color: red;
+}

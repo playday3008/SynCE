@@ -6,19 +6,25 @@
 
 <h1>SynCE - USB connection</h1>
 
-<p>These instructions apply to systems with non-SMP Linux kernel version 2.4.18
-or later. On other systems, please request help on the mailing list: <a
-href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>.</p>
+<p>If you are not running Linux, please request help on the mailing list: <a
+href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>.
+
+<p>To be able to use SynCE with a USB connection, you need to be running Linux
+kernel version 2.4.18 or later.</p>
 
 <p>Are you running one of these devices?</p>
 
 <ul>
 <li>Compaq/HP iPAQ (any model?)</li>
-<li>HP Jornada (548, 568, and probably others)</li>
 <li>Casio (EM500 and probably others)
 </ul>
 
-<p>If your device was listed above, go ahead with these instructions:</p>
+<p>If not, you should first <a href="usbpatch.php">patch your kernel driver</a>.</p>
+
+<p>Also, if you going to use SynCE on an SMP system you should first <a
+href="usbpatch.php">patch your kernel driver</a>.</p>
+
+<p>When you have fulfilled the conditons above you can follow these steps:</p>
 
 <ol>
 
