@@ -261,7 +261,7 @@ static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
 
     if (STR_EQUAL(pair[0], "BYDAY"))
       replace_string_with_copy(&rrule->byday, pair[1]);
-    else if (STR_EQUAL(pair[0], "BYMONTDAY"))
+    else if (STR_EQUAL(pair[0], "BYMONTHDAY"))
       rrule->bymonthday = atoi(pair[1]);
     else if (STR_EQUAL(pair[0], "BYSETPOS"))
       rrule->bysetpos = atoi(pair[1]);
