@@ -38,6 +38,7 @@ namespace KCal
 namespace pocketPCCommunication {
     class AddressBookHandler;
     class TodoHandler;
+    class EventHandler;
 };
 
 class KABC::Addressee;
@@ -121,27 +122,15 @@ private:
 
     pocketPCCommunication::AddressBookHandler *mAddrHandler;
     pocketPCCommunication::TodoHandler *mTodoHandler;
+    pocketPCCommunication::EventHandler *mEventHandler;
 
     SynceeList mSyncees;
 
     QString    mBaseDir;
 
-    /** Just dump the ids of a syncee
-     * @param p_syncee syncee to dump
-     */
-    void dumpIds         (KSync::Syncee* p_syncee);
-
-
     /** Just clear the internal data structures like m_addressBook.
      */
     void clearDataStructures ();
-
-    /** Get a specified list of events and todos to write to the device. e.g. all modified or added entries.
-     * @param p_events events are stored here
-     * @param p_todos todos are stored here
-     * @param p_ptrList a list of SyncEntries in which we are interested (e.g. syncee->added() or syncee->modified())
-     */
-    void getEvents     (KCal::Event::List& p_events, KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList);
 
     QString    m_pdaName;
     KSharedPtr<pocketPCCommunication::Rra>    m_rra;

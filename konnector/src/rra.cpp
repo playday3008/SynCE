@@ -218,15 +218,15 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
     switch(event) {
     case SYNCMGR_TYPE_EVENT_UNCHANGED:
         eventIds = &_ids->unchangedIds;
-        kdDebug(2120) << "----------------------- unchanged --------" << endl;
+        kdDebug(2120) << "------- unchanged --------  " << count << endl;
         break;
     case SYNCMGR_TYPE_EVENT_CHANGED:
         eventIds = &_ids->changedIds;
-        kdDebug(2120) << "------------------------ changed ---------" << endl;
+        kdDebug(2120) << "-------- changed ---------  " << count << endl;
         break;
     case SYNCMGR_TYPE_EVENT_DELETED:
         eventIds = &_ids->deletedIds;
-        kdDebug(2120) << "------------------------ deleted ---------" << endl;
+        kdDebug(2120) << "-------- deleted ---------  " << count << endl;
         break;
     default:
         eventIds = NULL;
@@ -247,7 +247,6 @@ static bool checkForAllIdsRead(RRA_SyncMgr *rra, Rra::ids *ids, uint32_t type_id
 {
     RRA_SyncMgrType* type = rra_syncmgr_type_from_id(rra, type_id);
 
-    kdDebug(2120) << "-------------------------------------- " << (void *) type << "  -  " << ids->changedIds.count() + ids->unchangedIds.count() + ids->deletedIds.count()<< endl;
     return ids->changedIds.count() + ids->unchangedIds.count() + ids->deletedIds.count() == type->count;
 }
 
@@ -384,9 +383,6 @@ QString Rra::getVEvent(uint32_t type_id, uint32_t object_id)
 
     if (rraOk) {
         vEvent = vevent;
-        kdDebug(2120) << "getVEvent --------------" << endl;
-        kdDebug(2120) << vEvent << endl;
-        kdDebug(2120) << "------------------------" << endl;
     }
 
     if (data) {
@@ -408,9 +404,6 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
     size_t buffer_size = 0;
     rraOk = true;
 
-        kdDebug(2120) << "putVEvent --------------" << endl;
-        kdDebug(2120) << vEvent << endl;
-        kdDebug(2120) << "------------------------" << endl;
     if (connect()) {
         const char *vevent = vEvent.ascii();
         if (!rra_appointment_from_vevent(vevent, NULL, &buffer,

@@ -16,71 +16,57 @@
 #include "PimHandler.h"
 #include "RecordType.h"
 #include <libkcal/calendar.h>
+#include <kitchensync/idhelper.h>
+#include <kitchensync/calendarsyncee.h>
 #include <qregexp.h>
 
 namespace pocketPCCommunication {
 
 /**
-@author Christian Fremgen; Volker Christian
+@author Christian Fremgen cfremgen@users.sourceforge.net, Volker Christian voc@users.sourceforge.net
 */
 class EventHandler : public PimHandler
 {
 public:
-    /** Just a simple constructor.
-      * @param p_pdaName as the name says :)
-      */
-    EventHandler(const QString& p_pdaName);
+    EventHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
 
-    EventHandler(KSharedPtr<Rra> p_rra);
+    bool init();
 
     virtual ~EventHandler();
 
+    int retrieveEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList);
+    int fakeEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList);
+    bool getIds();
+    int getEventListFromDevice(KCal::Event::List &mEventList, int mRecType);
+    bool readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync);
+    void getEvents (KCal::Event::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
+    bool writeSyncee(KSync::CalendarSyncee *mCalendarSyncee);
+    void insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Event::List &list, int state);
 
-    /** Get events from the device.
-      * @param p_calendar store events in this calendar
-      * @param p_recType specify in which events your are interested (@see RecordType)
-      */
-    bool getAllEvents (KCal::Calendar& p_calendar, RecordType p_recType);
+    void addEvents    (KCal::Event::List& p_eventList);
+    void updateEvents (KCal::Event::List& p_eventList);
+    void removeEvents (KCal::Event::List& p_eventList);
 
+    /** Connect the device.
+     * @see KSync::Konnector::connectDevice()
+     * @return true if device can be connected. false otherwise
+     */
+    virtual bool connectDevice();
 
-    /** Put events to the device.
-      * @param p_calendar events are this calendar
-      */
-    bool putEvents (KCal::Calendar& p_calendar);
-
-
-
-    bool getIdStatus (QMap<QString, RecordType>& p_statusMap);
-
-    void addEvents    (KCal::Event::List& p_events);
-    void updateEvents (KCal::Event::List& p_evenst);
-    void removeEvents (KCal::Event::List& p_events);
-
-
-    bool getEvents    (KCal::Event::List& p_events, const QStringList& p_ids);
-
-protected:
-    bool getTypeId ();
-
+    /** Disconnect the device.
+     * @see KSync::Konnector::disconnectDevice()
+     * @return true if device can be disconnect. false otherwise
+     */
+    virtual bool disconnectDevice();
 
 private:
+    uint32_t    mTypeId;   /**< This static member stores the typeId belonging to "Contact" */
 
-    /** This private method retrieves all the requested information to fill the calendar with events.
-      * @param p_calendar events are stored in here
-      * @param p_ids this struct holds all the ids (changed, unchanged, deleted)
-      * @param p_recType specify in which information you are interested
-      */
-    void getEventEntry (KCal::Calendar& p_calendar, const struct Rra::ids& p_ids, RecordType p_recType);
+    bool initialized;
 
-    void deleteEventEntry (const uint32_t& p_objectId);
-
-    QString makeVIncidence (KCal::Incidence* p_incidence);
-
-    static uint32_t    s_typeIdEvent;   /**< This static member stores the typeId belonging to "Appointment" */
-
-
-    QRegExp m_incidenceRegexp;
-
+    struct Rra::ids ids;
+    KSync::KonnectorUIDHelper *mUidHelper;
+    QString mBaseDir;
     QString sCurrentTimeZone;
 };
 

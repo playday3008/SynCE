@@ -12,9 +12,6 @@
 #include "eventhandler.h"
 
 #include <kdebug.h>
-//#include <qregexp.h>
-
-//#include <libkcal/vcalformat.h>
 #include <libkcal/icalformat.h>
 #include <libkcal/event.h>
 #include <libkcal/calendarnull.h>
@@ -22,117 +19,39 @@
 #include <qfile.h>
 
 namespace pocketPCCommunication {
-
-
-uint32_t EventHandler::s_typeIdEvent = 0;
-
-EventHandler::EventHandler(const QString& p_pdaName)
-    : PimHandler(p_pdaName)
-{
-    m_incidenceRegexp = QRegExp ("BEGIN.*VERSION:2.0");
-
-    s_typeIdEvent = 0;
-
-    QFile f("/etc/timezone");
-    if(f.open(IO_ReadOnly))
+    EventHandler::EventHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper )
+            : PimHandler( p_rra )
     {
-        QTextStream ts(&f);
-        ts >> sCurrentTimeZone;
+        initialized = false;
+        mTypeId = 0;
+        this->mBaseDir = mBaseDir;
+        this->mUidHelper = mUidHelper;
+
+        QFile f("/etc/timezone");
+        if(f.open(IO_ReadOnly)) {
+            QTextStream ts(&f);
+            ts >> sCurrentTimeZone;
+        }
+        f.close();
     }
 
-    f.close();
-}
 
-
-EventHandler::EventHandler(KSharedPtr<Rra> p_rra)
-    : PimHandler(p_rra)
-{
-    QFile f("/etc/timezone");
-    if(f.open(IO_ReadOnly))
+    bool EventHandler::init()
     {
-        QTextStream ts(&f);
-        ts >> sCurrentTimeZone;
+        mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_APPOINTMENT );
+
+        return initialized = mTypeId != 0;
     }
 
-    f.close();
-}
 
-
-EventHandler::~EventHandler()
-{
-}
-
-
-bool EventHandler::getAllEvents (KCal::Calendar& p_calendar, RecordType p_recType)
-{
-    kdDebug(2120) << "[EventHandler]: getCalendarEvents" << endl;
-
-    if (!getTypeId())
+    EventHandler::~EventHandler()
     {
-        return false;
+        mUidHelper->save();
     }
 
-    p_calendar.setTimeZoneId(sCurrentTimeZone);
-
-    struct Rra::ids ids;
-
-    if (!m_rra->getIds (s_typeIdEvent, &ids))
-    {
-        return false;
-    }
-
-    // and now.. get the object ids...
-    kdDebug(2120) << "[EventHandler]: got event ids.. fetching information" << endl;
-
-    switch (p_recType)
-    {
-        case ALL:
-            getEventEntry (p_calendar, ids, CHANGED);
-            getEventEntry (p_calendar, ids, DELETED);
-            getEventEntry (p_calendar, ids, UNCHANGED);
-            break;
-        case CHANGED:
-            getEventEntry (p_calendar, ids, CHANGED);
-            break;
-        case DELETED:
-            getEventEntry (p_calendar, ids, DELETED);
-            break;
-        case UNCHANGED:
-            getEventEntry (p_calendar, ids, UNCHANGED);
-            break;
-    }
-
-    // iterate over calendar and add X-POCKETPCCOMM-REMOTE_ID_*
-
-    return true;
-}
 
 
-void EventHandler::getEventEntry (KCal::Calendar& p_calendar, const struct Rra::ids& p_ids, RecordType p_recType)
-{
-    QValueList<uint32_t>::const_iterator it;
-    QValueList<uint32_t>::const_iterator end;
-
-    QString vCal;
-
-    switch (p_recType)
-    {
-        case CHANGED:
-            it = p_ids.changedIds.begin();
-            end = p_ids.changedIds.end();
-            break;
-        case DELETED:
-            it = p_ids.deletedIds.begin();
-            end = p_ids.deletedIds.end();
-            break;
-        case UNCHANGED:
-            it = p_ids.unchangedIds.begin();
-            end = p_ids.unchangedIds.end();
-            break;
-        case ALL: // not reasonable to have ALL here! added to avoid warning of gcc
-            break;
-    }
-
+#ifdef A
     KCal::ICalFormat calFormat; // NEEDED FOR EVENTS!!
 //    KCal::CalendarLocal cal;
     calFormat.setTimeZone(sCurrentTimeZone, false);
@@ -159,284 +78,300 @@ void EventHandler::getEventEntry (KCal::Calendar& p_calendar, const struct Rra::
             kdDebug(2120) << "[EventHandler]: getting of event failed!" << endl;
         else
         {
-            /*
-            const QString key = m_keyName + "-" + partnerId;
-            const QString value = "RRA-ID-" + QString::number (*it, 16).rightJustify (8, '0');
-            */
-            //KCal::Event* ev = p_calendar.event(value);
+#endif
 
-            //ev->setNonKDECustomProperty (("X-"+m_appName+"-"+key).latin1(), value);
 
-            //ev->updated();
+    int EventHandler::retrieveEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList)
+    {
+        int count = 0;
+
+        KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
+        calFormat.setTimeZone(sCurrentTimeZone, false);
+
+        QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
+        QString vCalEnd = "END:VCALENDAR\n";
+
+        for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
+            count++;
+            kdDebug( 2120 ) << " ||| " << endl;
+
+            QString vCal = vCalBegin + m_rra->getVEvent( mTypeId, *it ) + vCalEnd;
+
+            m_rra->markIdUnchanged( mTypeId, *it );
+
+            KCal::Incidence *incidence = calFormat.fromString (vCal);
+
+            QString kdeId;
+
+            if ((kdeId = mUidHelper->kdeId("SynCEEvent", incidence->uid(), "---")) != "---") {
+                incidence->setUid(kdeId);
+            } else {
+                mUidHelper->addId("SynCEEvent", incidence->uid(), incidence->uid());
+            }
+
+            mEventList.push_back( dynamic_cast<KCal::Event*> (incidence) );
         }
+
+        return count;
     }
-}
 
 
-bool EventHandler::putEvents (KCal::Calendar& p_calendar)
-{
-    //Rra rra(m_pdaName);
-    //rra.connect();
+    int EventHandler::fakeEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList)
+    {
+        int count = 0;
 
-    KCal::Event::List eList = p_calendar.rawEvents();
-    KCal::Event::List::iterator it = eList.begin();
+        for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
+            count++;
+            kdDebug( 2120 ) << " &&& " << endl;
+            KCal::Event *event = new KCal::Event();
 
-    QString vEvent;
-    uint32_t objectId = 0;
-    uint32_t newObjectId;
-    bool ok;
+            QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
+            QString kdeId;
 
-    if (eList.begin() == eList.end()) {
+            if ((kdeId = mUidHelper->kdeId("SynCEEvent", konId, "---")) != "---") {
+                event->setUid(kdeId);
+                mUidHelper->removeId("SynCEEvent", event->uid());
+            }
+
+            mEventList.push_back( event );
+        }
+
+        return count;
+    }
+
+
+    bool EventHandler::getIds()
+    {
+        if ( !m_rra->getIds( mTypeId, &ids ) ) {
+            kdDebug( 2120 ) << "EventHandler::getIds: could not get the ids.. :(" << endl;
+            return false;
+        }
+
         return true;
     }
 
-    if (!getTypeId())
+
+    int EventHandler::getEventListFromDevice(KCal::Event::List &mEventList, int mRecType)
     {
-        return false;
-    }
-    /*
-    uint32_t id;
-    m_rra->getMatchMaker()->get_partner_id(1, &id);
-    QString partnerId = QString::number (id, 16);
-    */
-    QString partnerId;
-    partnerId = getPartnerId();
+        kdDebug( 2120 ) << "[EventHandler]: got ids.. fetching information" << endl;
 
-    clearIdPairs();
+        QValueList<uint32_t>::const_iterator begin;
+        QValueList<uint32_t>::const_iterator end;
 
-    for (; it != eList.end(); ++it)
-    {
-        kdDebug(2120) << "[EventHandler]: putCalendarEvents: event.summary(): " << (*it)->summary() << endl;
-        // convert this to a vEvent!
-        vEvent = makeVIncidence (*it);
-        //kdDebug(2120) << "[EventHandler]: putCalendarEvents: calString: " << vEvent << endl;
+        int count = 0;
+        int ret = 0;
 
-        // ok.. write them to the device!
-        QString curId;
-        curId = (*it)->uid();
-        objectId = 0;
-        if ((*it)->uid().startsWith ("RRA-ID-"))
-        {
-            //doPush = (*it).changed();
-            objectId = (*it)->uid().remove("RRA-ID-").toUInt(&ok, 16);
-            if (!ok)
-                kdDebug(2120) << "could not convert UID to uint32_t" << endl;
-            else
-                kdDebug(2120) << "RRA-ID: " << objectId << endl;
-        }
-
-
-        newObjectId = m_rra->putVEvent(vEvent, s_typeIdEvent, objectId);
-        if (newObjectId)
-        {
-            // the object was newly generated on the device!!
-            // so.. what shall we do with this id?
-            // ---> save it in the local addressBook!
-            //(*it)->setUid ("RRA-ID-" + QString::number(newObjectId, 16));
-
-            //(*it)->setNonKDECustomProperty (("X-"+m_appName+"-"+m_keyName + "-" + partnerId).latin1(), "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-
-            if ("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0') != curId)
-                addIdPair("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'), curId);
-        }
-
-    }
-
-    return true;
-}
-
-
-bool EventHandler::getTypeId ()
-{
-    if (!s_typeIdEvent)
-        s_typeIdEvent = m_rra->getTypeForName(RRA_SYNCMGR_TYPE_APPOINTMENT);
-
-    if (!s_typeIdEvent)
-        return false;
-    else
-        return true;
-}
-
-
-bool EventHandler::getIdStatus (QMap<QString, RecordType>& p_statusMap)
-{
-    if (!getTypeId())
-    {
-        return false;
-    }
-
-    return  getIdStatusPro (p_statusMap, s_typeIdEvent);
-}
-
-
-void EventHandler::deleteEventEntry (const uint32_t& p_objectId)
-{
-    kdDebug() << "EventHandler::deleteCalendarEntry" << endl;
-
-    if (!getTypeId())
-        return;
-
-    deleteSingleEntry (s_typeIdEvent, p_objectId);
-}
-
-
-void EventHandler::addEvents (KCal::Event::List& p_events)
-{
-    if (p_events.begin() == p_events.end())
-        return;
-
-    if (!getTypeId())
-    {
-        return;
-    }
-
-    KCal::Event::List::Iterator it = p_events.begin();
-    QString vEvent;
-    uint32_t newObjectId;
-    QString curId;
-
-    for (; it != p_events.end(); ++it)
-    {
-        //if (!isARraId ((*it)->uid())) // this must be a new entry!!!
-        {
-            curId = (*it)->uid();
-            vEvent = makeVIncidence (*it);
-            //kdDebug() << "EventHandler vincidence: " << endl;
-            //kdDebug() << vEvent << endl;
-            uint32_t remId = 0;
-            if (isARraId(curId))
-                remId = getOriginalId(curId);
-
-            newObjectId = m_rra->putVEvent (vEvent, s_typeIdEvent, remId); //getOriginalId((*it)->uid()));
-
-            if (newObjectId) // must be!!!
-            {
-                //(*it)->setNonKDECustomProperty (("X-"+m_appName+"-"+m_keyName + "-" + partnerId).latin1(), "RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'));
-                if ("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0') != curId)
-                    addIdPair("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'), curId);
+        if ( ( mRecType & CHANGED ) && ( ret >= 0 ) ) {
+            ret = retrieveEventListFromDevice( mEventList, ids.changedIds );
+            if ( ret >= 0 ) {
+                count += 0;
             }
         }
-    }
-}
 
-
-void EventHandler::updateEvents (KCal::Event::List& p_events)
-{
-    if (p_events.begin() == p_events.end())
-        return;
-
-    if (!getTypeId())
-    {
-        return;
-    }
-
-    KCal::Event::List::Iterator it = p_events.begin();
-    QString vEvent;
-    QString curId;
-
-    for (; it != p_events.end(); ++it)
-    {
-        if (isARraId ((*it)->uid())) // must exist on device!!!
-        {
-            curId = (*it)->uid();
-            vEvent = makeVIncidence (*it);
-            m_rra->putVEvent (vEvent, s_typeIdEvent, getOriginalId((*it)->uid()));
+        if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
+            ret = retrieveEventListFromDevice( mEventList, ids.deletedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
         }
+
+        if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
+            ret = fakeEventListFromDevice( mEventList, ids.unchangedIds );
+            if ( ret >= 0 ) {
+                count += 0;
+            }
+        }
+
+        if ( ret < 0 ) {
+            return -count - 1;
+        }
+
+        return count;
     }
-}
 
 
-void EventHandler::removeEvents (KCal::Event::List& p_events)
-{
-    if (p_events.begin() == p_events.end())
-        return;
-
-    if (!getTypeId())
+    void EventHandler::insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Event::List &list, int state)
     {
-        return;
+        kdDebug(2120) << "Begin Inserting into EventSyncee State: " << state << endl;
+        for(KCal::Event::List::Iterator it = list.begin(); it != list.end(); ++it) {
+            KSync::CalendarSyncEntry entry(*it, mCalendarSyncee);
+            entry.setState(state);
+            mCalendarSyncee->addEntry(entry.clone());
+        }
+        kdDebug(2120) << "End Inserting into EventSyncee" << endl;
     }
 
-    KCal::Event::List::Iterator it = p_events.begin();
 
-    for (; it != p_events.end(); ++it)
+    bool EventHandler::readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync)
     {
-        if (isARraId((*it)->uid()))
-            deleteEventEntry (getOriginalId((*it)->uid()));
-    }
-}
+        if (!initialized) {
+            if (!init()) {
+                kdDebug(2120) << "Could not initialize EventHandler" << endl;
+//              emit synceeReadError(this);
+                return false;
+            }
+        }
 
+        if (!getIds()) {
+            kdDebug(2120) << "Could not retriev Event-IDs" << endl;
+//            emit synceeReadError(this);
+            return false;
+        }
 
-bool EventHandler::getEvents (KCal::Event::List& p_events, const QStringList& p_ids)
-{
-    if (p_ids.begin() == p_ids.end())
+        KCal::Event::List modifiedList;
+        if (firstSync) {
+            if (getEventListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+        } else {
+            if (getEventListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+
+            KCal::Event::List removedList;
+            if (getEventListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
+//                emit synceeReadError(this);
+                return false;
+            }
+            insertIntoCalendarSyncee(mCalendarSyncee, removedList, KSync::SyncEntry::Removed);
+        }
+        insertIntoCalendarSyncee(mCalendarSyncee, modifiedList, KSync::SyncEntry::Modified);
+
+        mCalendarSyncee->setTitle("SynCEEvent");
+        mCalendarSyncee->setIdentifier(m_pdaName + "-Event");
+
         return true;
-
-    if (!getTypeId())
-    {
-        return false;
     }
 
 
-    QStringList::const_iterator it = p_ids.begin();
-    QString vEvent;
-    KCal::Incidence* event;
-    KCal::ICalFormat conv;
-    conv.setTimeZone(sCurrentTimeZone, false);
-
-    QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
-    QString vCalEnd = "END:VCALENDAR\n";
-
-    for (; it != p_ids.end(); ++it)
+    void EventHandler::getEvents (KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
     {
-        QString id = *it;
-        if (isARraId (id)) // this is not an RRA-ID!!
-        {
-            //vEvent = vCalBegin + m_rra->getVEvent(s_typeIdEvent, getOriginalId((id))) + vCalEnd;;
-            vEvent = m_rra->getVEvent(s_typeIdEvent, getOriginalId((id)));
-            if (!vEvent.isEmpty())
-            {
-                vEvent = vCalBegin + vEvent + vCalEnd;
-                //kdDebug() << "EventHandler::getEvents:" << endl;
-                //kdDebug() << vEvent << endl;
-                event = conv.fromString (vEvent);
-                p_events.push_back (dynamic_cast<KCal::Event*>(event));
+        kdDebug( 2120 ) << "getEvent: " << endl;
+
+        for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
+            KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
+            KCal::Event *event = dynamic_cast<KCal::Event*> (cse->incidence() );
+            if (event) {
+                p_events.push_back ( event );
+                kdDebug( 2120 ) << "     " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->id() << endl;
             }
         }
     }
 
-    return true;
-}
 
-
-QString EventHandler::makeVIncidence(KCal::Incidence* p_incidence)
-{
-    KCal::ICalFormat calFormat;
-
-    calFormat.setTimeZone(sCurrentTimeZone, false);
-
-    QString vIncidence;
-
-    vIncidence = calFormat.toICalString(p_incidence);
-
-    //kdDebug() << "EventHandler::makeVIncidence: converted string" << endl;
-    //kdDebug() << vIncidence << endl;
-    // remove first three lines and the last line of the vEvent!
-    vIncidence = vIncidence.remove (QRegExp ("BEGIN.*VERSION:2.0"));
-    //vIncidence = vIncidence.remove (m_incidenceRegexp);
-    vIncidence = vIncidence.remove ("END:VCALENDAR");
-    vIncidence = vIncidence.stripWhiteSpace();
-    vIncidence = vIncidence + "\n";
-
-    int pos;
-    QString vAlarm = "END:VALARM";
-    if ((pos = vIncidence.find(vAlarm)) != -1) // remove the empty line after EDN:VALARM
+    void EventHandler::addEvents(KCal::Event::List& p_eventList)
     {
-        QChar newLine = vIncidence.at (pos + vAlarm.length());
-        if (vIncidence.at(pos+vAlarm.length()+1) == newLine)
-            vIncidence = vIncidence.remove(pos+vAlarm.length()+1, 1);
+        if ( p_eventList.begin() == p_eventList.end() )
+            return ;
+
+        KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
+        calFormat.setTimeZone(sCurrentTimeZone, false);
+
+        for (KCal::Event::List::Iterator it = p_eventList.begin();
+                it != p_eventList.end(); ++it ) {
+
+            QString iCal = calFormat.toString(*it);
+
+            uint32_t newObjectId = m_rra->putVEvent( iCal, mTypeId, 0 );
+
+            mUidHelper->addId("SynCEEvent",
+                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
+                (*it)->uid());
+        }
     }
 
-    return vIncidence;
-}
+
+    void EventHandler::updateEvents (KCal::Event::List& p_eventList)
+    {
+        if ( p_eventList.begin() == p_eventList.end() )
+            return ;
+
+        KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
+        calFormat.setTimeZone(sCurrentTimeZone, false);
+
+        for (KCal::Event::List::Iterator it = p_eventList.begin();
+                it != p_eventList.end(); ++it ) {
+            QString kUid = mUidHelper->konnectorId("SynCEEvent", (*it)->uid(), "---");
+
+            if (kUid != "---") {
+                QString iCal = calFormat.toString(*it);
+                m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
+            }
+        }
+    }
+
+
+    void EventHandler::removeEvents (KCal::Event::List& p_eventList)
+    {
+        if ( p_eventList.begin() == p_eventList.end() )
+            return ;
+
+        for (KCal::Event::List::Iterator it = p_eventList.begin();
+                it != p_eventList.end(); ++it ) {
+            QString kUid = mUidHelper->konnectorId("SynCEEvent", (*it)->uid(), "---");
+
+            if (kUid != "---") {
+                deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
+                mUidHelper->removeId("SynCEEvent", kUid);
+            }
+        }
+    }
+
+
+    bool EventHandler::writeSyncee(KSync::CalendarSyncee *mCalendarSyncee)
+    {
+        if (!initialized) {
+            if (!init()) {
+                kdDebug(2120) << "Could not initialize EventHandler" << endl;
+//              emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        if ( mCalendarSyncee->isValid() ) {
+            KCal::Event::List eventAdded;
+            KCal::Event::List eventRemoved;
+            KCal::Event::List eventModified;
+
+            getEvents( eventAdded, mCalendarSyncee->added() );
+            getEvents( eventRemoved, mCalendarSyncee->removed() );
+            getEvents( eventModified, mCalendarSyncee->modified() );
+
+            addEvents( eventAdded );
+            removeEvents( eventRemoved );
+            updateEvents( eventModified );
+        }
+
+        return true;
+    }
+
+
+    bool EventHandler::connectDevice()
+    {
+        if ( !m_rra->connect() ) {
+            kdDebug( 2120 ) << "PocketPCKonnector: could not connect to device!" << endl;
+            return false;
+        } else {
+            kdDebug( 2120 ) << "PocketPCKonnector: connected to device!" << endl;;
+        }
+
+        return true;
+    }
+
+
+    /** Disconnect the device.
+     * @see KSync::Konnector::disconnectDevice()
+     * @return true if device can be disconnect. false otherwise
+     */
+    bool EventHandler::disconnectDevice()
+    {
+        m_rra->disconnect();
+
+        mUidHelper->save();
+
+        return true;
+    }
 
 }

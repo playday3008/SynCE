@@ -73,6 +73,7 @@ namespace KSync
 
         mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
         mTodoHandler = new pocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
+        mEventHandler = new pocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
 
         mAddressBookSyncee = new AddressBookSyncee();
         mAddressBookSyncee->setTitle("SynCE");
@@ -149,30 +150,18 @@ namespace KSync
         }
         mTodoHandler->disconnectDevice();
 
-#ifdef A
-        m_rra->connect();
 
-        pocketPCCommunication::EventHandler eventHandler(m_rra);
-        pocketPCCommunication::TodoHandler todoHandler(m_rra);
-        // do just the same for getting the complete calendar (events and todos are separated)
-        if ( !eventHandler.getAllEvents( mCalendar, pocketPCCommunication::ALL ) ) {
-            emit synceeReadError( this );
+        if ( !mEventHandler->connectDevice() ) {
+            emit synceeReadError(this);
             return false;
         }
-
-        m_rra->disconnect(); // think this is necessary.. *hmpf* but it should not
-        m_rra->connect();
-
-        if ( !todoHandler.getAllTodos( mCalendar, pocketPCCommunication::ALL ) ) {
-            emit synceeReadError( this );
+        if (!mEventHandler->readSyncee(mCalendarSyncee, firstSync)) {
+            emit synceeReadError(this);
             return false;
         }
+        mEventHandler->disconnectDevice();
 
-        m_rra->disconnect();
 
-        mCalendarSyncee->setTitle("SynCE");
-        mCalendarSyncee->setIdentifier(m_pdaName + "-Calendar");
-#endif
 
         emit synceesRead ( this );
 
@@ -188,10 +177,6 @@ namespace KSync
         }
 
         kdDebug( 2120 ) << "PocketPCKonnector:: m_syncees.addressBookSyncee() read" << endl;
-
-        dumpIds ( mAddressBookSyncee );
-        dumpIds ( mCalendarSyncee );
-
 
         kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees..." << endl;
 
@@ -212,47 +197,9 @@ namespace KSync
         mTodoHandler->writeSyncee(mCalendarSyncee);
         mTodoHandler->disconnectDevice();
 
-#ifdef A
-        m_rra->connect();
-        if ( mCalendarSyncee->isValid() ) {
-            KCal::Event::List eventsAdded;
-            KCal::Event::List eventsRemoved;
-            KCal::Event::List eventsModified;
-
-            KCal::Todo::List todosAdded;
-            KCal::Todo::List todosRemoved;
-            KCal::Todo::List todosModified;
-
-            getEvents( eventsAdded, todosAdded, mCalendarSyncee->added() );
-            getEvents( eventsRemoved, todosRemoved, mCalendarSyncee->removed() );
-            getEvents( eventsModified, todosModified, mCalendarSyncee->modified() );
-
-            pocketPCCommunication::EventHandler eventHandler( m_rra );
-
-            kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees: writing events to pda" << endl;
-            kdDebug( 2120 ) << "    adding events: " << eventsAdded.size() << endl;
-            eventHandler.addEvents( eventsAdded );
-            kdDebug( 2120 ) << "    removing events" << endl;
-            eventHandler.removeEvents( eventsRemoved );
-            kdDebug( 2120 ) << "    modifieing events" << endl;
-            eventHandler.updateEvents( eventsModified );
-
-            pocketPCCommunication::TodoHandler todoHandler( m_rra );
-
-            kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees: writing todos to pda" << endl;
-            kdDebug( 2120 ) << "    adding todos: " << todosAdded.size() << endl;
-            todoHandler.addTodos( todosAdded );
-            kdDebug( 2120 ) << "    removing todos" << endl;
-            todoHandler.removeTodos( todosRemoved );
-            kdDebug( 2120 ) << "    modifieing todos" << endl;
-            todoHandler.updateTodos( todosModified );
-
-            partnerId = eventHandler.getPartnerId();
-
-        }
-
-        m_rra->disconnect();
-#endif
+        mEventHandler->connectDevice();
+        mEventHandler->writeSyncee(mCalendarSyncee);
+        mEventHandler->disconnectDevice();
 
         clearDataStructures();
 
@@ -319,49 +266,13 @@ namespace KSync
     }
 
 
-    void PocketPCKonnector::dumpIds ( KSync::Syncee* p_syncee )
-    {
-        if ( p_syncee->isValid() ) {
-            kdDebug(2120) << "Entry valid" << endl;
-            KSync::SyncEntry * entry = p_syncee->firstEntry();
-            while ( entry ) {
-                kdDebug( 2120 ) << "PocketPCKonnector:: current id: " << entry->id() << endl;
-                kdDebug( 2120 ) << "PocketPCKonnector:: status: " << entry->state() << endl;
-                entry = p_syncee->nextEntry();
-            }
-
-            QMap<QString, Kontainer::ValueList> idMap = p_syncee->ids();
-            QMap<QString, Kontainer::ValueList>::iterator it = idMap.begin();
-            for ( ; it != idMap.end(); ++it ) {
-                kdDebug( 2120 ) << "   TypeName: " << it.key() << endl;
-                Kontainer::ValueList valList = it.data();
-                Kontainer::ValueList::iterator valIt = valList.begin();
-                for ( ; valIt != valList.end(); ++valIt ) {
-                    kdDebug( 2120 ) << "      ids in pair: " << ( *valIt ).first << "    " << ( *valIt ).second << endl;
-                }
-            }
-        }
-    }
-
-
     void PocketPCKonnector::clearDataStructures()
     {
+
+        mCalendarSyncee->reset();
+        mAddressBookSyncee->reset();
         mCalendar.deleteAllEvents();
         mCalendar.deleteAllTodos();
         mCalendar.deleteAllJournals();
-    }
-
-
-    void PocketPCKonnector::getEvents ( KCal::Event::List& p_events, KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
-    {
-        KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin();
-        for ( ; it != p_ptrList.end(); ++it ) {
-            kdDebug( 2120 ) << "PocketPCKonnector::getEvents type of entry: " << ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->incidence() ->type() << endl;
-            QString type = ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->incidence() ->type();
-            if ( type == "Todo" )
-                p_todos.push_back ( dynamic_cast<KCal::Todo*>( ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->incidence() ) );
-            else if ( type == "Event" )
-                p_events.push_back ( dynamic_cast<KCal::Event*>( ( dynamic_cast<KSync::CalendarSyncEntry*>( *it ) ) ->incidence() ) );
-        }
     }
 };

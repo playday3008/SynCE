@@ -180,8 +180,6 @@ namespace pocketPCCommunication
             return false;
         }
 
-        mCalendarSyncee->reset();
-
         KCal::Todo::List modifiedList;
         if (firstSync) {
             if (getTodoListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
