@@ -84,6 +84,53 @@ kio_synceProtocol::~kio_synceProtocol()
 }
 
 //
+// Helper function to initialize the RAPI library
+//
+// Returns true on success and false on failure
+//
+bool kio_synceProtocol::init()
+{
+	if (!mIsInitialized)
+	{
+		RAPI::HRESULT result = RAPI::CeRapiInit();
+
+		mIsInitialized = (0 == result);
+		if (!mIsInitialized)
+		{
+			error(KIO::ERR_COULD_NOT_CONNECT, QString::fromLatin1("Unable to initialize RAPI"));
+		}
+	}
+
+	return mIsInitialized;
+}
+
+//
+// Uninitialize the RAPI library
+//
+void kio_synceProtocol::uninit()
+{
+	if (mIsInitialized)
+	{
+		RAPI::CeRapiUninit();
+		mIsInitialized = false;
+	}
+}
+
+//
+// Convert forward slashes ('/') to back-slashes ('\')
+//
+QString kio_synceProtocol::slashToBackslash(const QString& path)
+{
+	QString tmp(path);
+	for (unsigned i = 0; i < tmp.length(); i++)
+	{
+		if (tmp[i].latin1() == '/')
+			tmp[i] = QChar('\\');
+	}
+	return tmp;
+}
+
+//
 // This is a helper class that does ugly conversions between QString and WCHAR*
 //
 class RapiString
@@ -167,12 +214,31 @@ void kio_synceProtocol::createUDSEntry( const RAPI::CE_FIND_DATA* source, UDSEnt
 	destination.append(atom);
 
 	atom.m_uds = UDS_ACCESS;
-	atom.m_long = 0777;
+	if (source->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		atom.m_long = 0777;
+	else if (source->dwFileAttributes & (FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_INROM))
+		atom.m_long = 0444;
+	else
+		atom.m_long = 0666;
 	destination.append(atom);
 
 	atom.m_uds = UDS_SIZE;
 	atom.m_long = source->nFileSizeLow;
 	destination.append( atom );
+
+	atom.m_uds = UDS_MODIFICATION_TIME;
+	atom.m_long = DOSFS_FileTimeToUnixTime(&source->ftLastWriteTime, NULL);
+	destination.append( atom );
+
+	atom.m_uds = UDS_ACCESS_TIME;
+	atom.m_long = DOSFS_FileTimeToUnixTime(&source->ftLastAccessTime, NULL);
+	destination.append( atom );
+
+	atom.m_uds = UDS_CREATION_TIME;
+	atom.m_long = DOSFS_FileTimeToUnixTime(&source->ftCreationTime, NULL);
+	destination.append( atom );
+
+
 }
 
 //
@@ -197,7 +263,7 @@ void kio_synceProtocol::get(const KURL& url )
 	if ((RAPI::HANDLE)-1 == handle)
 	{
   	kdDebug(7101) << "[kio_synceProtocol::stat] CeCreateFile failed with error code " << RAPI::CeGetLastError() << endl;
-		error(KIO::ERR_DOES_NOT_EXIST, url.path());
+		error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.prettyURL());
 		return;
 	}
 
@@ -344,7 +410,7 @@ void kio_synceProtocol::listDir( const KURL & url )
 	RAPI::DWORD file_count = 0;
 	
 	RAPI::CeFindAllFiles(rapi_pattern, 
-			FAF_ATTRIBUTES|FAF_NAME|FAF_SIZE_LOW,
+			FAF_ATTRIBUTES|FAF_CREATION_TIME|FAF_LASTACCESS_TIME|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW,
 			&file_count, &find_data);
 
   UDSEntry entry;
@@ -362,50 +428,130 @@ void kio_synceProtocol::listDir( const KURL & url )
   finished();
 }
 
-//
-// Helper function to initialize the RAPI library
-//
-// Returns true on success and false on failure
-//
-bool kio_synceProtocol::init()
-{
-	if (!mIsInitialized)
-	{
-		RAPI::HRESULT result = RAPI::CeRapiInit();
 
-		mIsInitialized = (0 == result);
-		if (!mIsInitialized)
+//
+// Delete file or directory
+//
+void kio_synceProtocol::del(const KURL &url, bool isfile)
+{
+	// Initialize RAPI if needed
+	if (!init())
+		return;
+
+	RapiString rapi_path(slashToBackslash(url.path()));
+	
+	if (isfile)
+	{
+		if (0 == RAPI::CeDeleteFile(rapi_path))
 		{
-			error(KIO::ERR_COULD_NOT_CONNECT, QString::fromLatin1("Unable to initialize RAPI"));
+			kdDebug(7101) << "[kio_synceProtocol::del] CeDeleteFile failed with error code " << RAPI::CeGetLastError() << endl;
+			error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
+			return;
+		}
+	}
+	else
+	{
+		// Let's not hope we have to to recursive remove here
+		if (0 == RAPI::CeRemoveDirectory(rapi_path))
+		{
+			kdDebug(7101) << "[kio_synceProtocol::del] CeRemoveDirectory failed with error code " << RAPI::CeGetLastError() << endl;
+			error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
+			return;
 		}
 	}
 
-	return mIsInitialized;
+	finished();
 }
 
 //
-// Uninitialize the RAPI library
+// Write file
 //
-void kio_synceProtocol::uninit()
+void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite, bool resume)
 {
-	if (mIsInitialized)
+	if (resume)
 	{
-		RAPI::CeRapiUninit();
-		mIsInitialized = false;
+		error(KIO::ERR_UNSUPPORTED_ACTION, url.prettyURL());
+		return;
 	}
+
+	// Initialize RAPI if needed
+	if (!init())
+		return;
+
+	RapiString rapi_path(slashToBackslash(url.path()));
+	
+	RAPI::HANDLE handle = RAPI::CeCreateFile(
+			rapi_path,
+			GENERIC_WRITE,
+			0,
+			NULL,
+			overwrite ? CREATE_ALWAYS : CREATE_NEW,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL);
+
+	if ((RAPI::HANDLE)-1 == handle)
+	{
+  	kdDebug(7101) << "[kio_synceProtocol::put] CeCreateFile failed with error code " << RAPI::CeGetLastError() << endl;
+		error(KIO::ERR_CANNOT_OPEN_FOR_WRITING, url.prettyURL());
+		return;
+	}
+
+	int part_read = 0;
+
+	do
+	{
+		QByteArray buffer;
+		unsigned part_written = 0;
+		
+		dataReq(); // Request for data
+		
+		part_read = readData( buffer );
+		
+		//kdDebug(7101)<<"kio_synceProtocol::put(): after readData(), read "<<result<<" bytes"<<endl;
+		if (part_read > 0)
+		{
+			RAPI::BOOL success = RAPI::CeWriteFile(
+					handle, 
+					buffer.data(), 
+					buffer.size(), 
+					&part_written, 
+					NULL);
+
+			if (!success || part_written != (unsigned)part_read)
+			{
+				RAPI::CeCloseHandle(handle);
+				
+				kdDebug(7101) << "[kio_synceProtocol::stat] CeWriteFile failed with error code " << RAPI::CeGetLastError() << endl;
+				error(KIO::ERR_COULD_NOT_WRITE, url.prettyURL());
+				return;
+			}
+		}
+	}
+	while (part_read > 0);
+				
+	RAPI::CeCloseHandle(handle);
+
+	finished();
 }
 
 //
-// Convert forward slashes ('/') to back-slashes ('\')
+// Create directory
 //
-QString kio_synceProtocol::slashToBackslash(const QString& path)
+void kio_synceProtocol::mkdir(const KURL&url, int /*permissions*/)
 {
-	QString tmp(path);
-	for (unsigned i = 0; i < tmp.length(); i++)
+	// Initialize RAPI if needed
+	if (!init())
+		return;
+
+	RapiString rapi_path(slashToBackslash(url.path()));
+	
+	if (0 == RAPI::CeCreateDirectory(rapi_path, NULL))
 	{
-		if (tmp[i].latin1() == '/')
-			tmp[i] = QChar('\\');
+		kdDebug(7101) << "[kio_synceProtocol::stat] CeCreateDirectory failed with error code " << RAPI::CeGetLastError() << endl;
+		error(KIO::ERR_COULD_NOT_MKDIR, url.prettyURL());
+		return;
 	}
-	return tmp;
+
+	finished();
 }
 

@@ -53,6 +53,9 @@ public:
   virtual void listDir( const KURL & url );
 	virtual void stat( const KURL & url );
 	virtual void get(const KURL& url);
+	virtual void put(const KURL& url, int permissions, bool overwrite, bool resume);
+	virtual void del(const KURL& url, bool isfile);
+	void mkdir(const KURL&url, int permissions);
 
 private:
 	bool init();
