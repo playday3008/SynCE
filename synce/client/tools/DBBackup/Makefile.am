@@ -8,5 +8,6 @@ INCLUDES = -I$(top_srcdir)/libwine -I$(top_srcdir)/client/librapi $(all_includes
 # the library search path.
 DBBackup_LDFLAGS = $(all_libraries) -L../../librapi
 SUBDIRS = 
-AM_CFLAGS = -fshort-wchar -DUNICODE
-AM_CXXFLAGS = -fshort-wchar -DUNICODE
+AM_CFLAG = @SHORT_WCHAR_FLAGS@ -DUNICODE
+AM_CXXFLAGS = @SHORT_WCHAR_FLAGS@ -DUNICODE
+
