@@ -27,11 +27,12 @@ static const WCHAR wide_backslash[] = {'\\', '\0'};
 
 WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path)
 {
+	WCHAR path[MAX_PATH];
+
 	/* Nothing to adjust if we have an absolute path */
 	if ('\\' == old_path[0])
 		return old_path;
 
-	WCHAR path[MAX_PATH];
 	if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path))
 	{
 		fprintf(stderr, "Unable to get the \"My Documents\" path.\n");
