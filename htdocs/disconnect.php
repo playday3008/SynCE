@@ -12,11 +12,13 @@ They are listed here with the most preferred ways first.</p>
 
 <ol>
 
+<!-- 
 <li class=SPACED>If you are running Linux, connecting via USB and have applied
 <a href="patches/ipaq_tty_hangup.patch">ipaq_tty_hangup.patch</a> to the kernel
 driver you can simply remove your device from the cradle or unplug the USB
 cable. See <a href="usbpatch.php#compile">Compile the kernel module</a> for
 help with patching and compiling the module.</li>
+-->
 
 <li class=SPACED>Disconnect with the appropriate action on your PDA</li>
 
