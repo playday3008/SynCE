@@ -72,7 +72,17 @@ static const char* version_string(CEOSVERSIONINFO* version)
     {
       case 9348:  result = "Rapier: Pocket PC"; break;
       case 11171: result = "Merlin: Pocket PC 2002"; break;
+
+      /* 
+       * From:     Jonathan McDowell
+       * To:       SynCE-Devel
+       * Subject:  Re: [Synce-devel] Smartphone & installing CABs.
+       * Date: 	   Mon, 26 May 2003 19:12:10 +0100  (20:12 CEST)
+       */
       case 12255: result = "Stinger: Smart Phone 2002"; break;
+
+      /* My Qtek 7070 */
+      case 13121: result = "Stinger: Smart Phone 2002"; break;
     }
   }
   else if (version->dwMajorVersion == 2 &&
