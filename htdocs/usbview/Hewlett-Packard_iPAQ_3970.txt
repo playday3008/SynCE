@@ -1,0 +1,38 @@
+serial
+Speed: 12Mb/s (full)
+USB Version:  1.00
+Device Class: ff(vend.)
+Device Subclass: ff
+Device Protocol: ff
+Maximum Default Endpoint Size: 16
+Number of Configurations: 1
+Vendor Id: 03f0
+Product Id: 1016
+Revision Number:  0.00
+
+Config Number: 1
+	Number of Interfaces: 1
+	Attributes: c0
+	MaxPower Needed:   2mA
+
+	Interface Number: 0
+		Name: serial
+		Alternate Number: 0
+		Class: ff(vend.) 
+		Sub Class: 0
+		Protocol: 0
+		Number of Endpoints: 2
+
+			Endpoint Address: 81
+			Direction: in
+			Attribute: 2
+			Type: Bulk
+			Max Packet Size: 64
+			Interval: 0ms
+
+			Endpoint Address: 02
+			Direction: out
+			Attribute: 2
+			Type: Bulk
+			Max Packet Size: 64
+			Interval: 0ms
