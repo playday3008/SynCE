@@ -140,6 +140,31 @@ bool synce_get_script_directory(char** directory);
 
 char* synce_strerror(DWORD error);
 
+
+/*
+ * Info from the ~/.synce/active_connection file
+ */
+
+typedef struct _SynceInfo
+{
+  pid_t dccm_pid;
+  char* ip;
+  char* password;
+  int key;
+  int os_version;
+  int build_number;
+  int processor_type;
+  int partner_id_1;
+  int partner_id_2;
+  char* name;
+  char* os_name;
+  char* model;
+} SynceInfo;
+
+SynceInfo* synce_info_new(const char* filename);
+void synce_info_destroy(SynceInfo* info);
+
+
 #ifdef __cplusplus
 }
 }
