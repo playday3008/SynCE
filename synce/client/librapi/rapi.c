@@ -21,7 +21,6 @@
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-#include <iconv.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,6 +50,9 @@ DWORD _lasterror = 0;
 #define BUFSIZE 16384
 /* unsigned char buffer[ BUFSIZE ]; */
 rapibuffer * buffer = NULL;
+char * hostname = NULL;
+unsigned char * lockbuffer = NULL;
+size_t lockbuffersize = 0;
 
 
 /*
@@ -179,7 +181,17 @@ popParameter(size, parameterData, sizeof(u_int32_t)); \
 if (parameterData) \
 	{ *(u_int32_t*)parameterData = letoh32(*(u_int32_t*)parameterData); }
 
-
+void checkpassword()
+{
+	char buf[4];
+	/* Is the device protected ? */
+	/* ------------------------- */
+	if( lockbuffersize != 0 )
+	{
+		safe_write( sock, lockbuffer, lockbuffersize );
+		read( sock, buf, 1 );
+	}
+}
 /*=================================================================================================================*
  *=================================================================================================================*
  * RAPI - Global
@@ -605,6 +617,8 @@ STDAPI_( BOOL ) CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFound
 	long i;
 	CE_FIND_DATA *ptr;
 
+	DBG_printf( "CeFindAllFiles : szPath = 0x%08X, dwFlags = 0x%08X, lpdwFoundCount = 0x%08X, ppFindDataArray = 0x%08X\n", szPath, dwFlags, lpdwFoundCount, ppFindDataArray );
+
 	initBuf( buffer, size );
 	pushLong( buffer, size, 0x09 ); 			/* Command */
 	pushLong( buffer, size, 0x01 ); 			/* Parameter1 : */
@@ -625,9 +639,9 @@ STDAPI_( BOOL ) CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFound
 	}
 	if ( ppFindDataArray )
 	{
-		DBG_printf( "Avant allocation\n" );
+		DBG_printf( "Before allocation\n" );
 		*ppFindDataArray = ( LPCE_FIND_DATA ) calloc( lng, sizeof( CE_FIND_DATA ) );
-		DBG_printf( "Après allocation : *ppFindDataArray = %08X\n", *ppFindDataArray );
+		DBG_printf( "After allocation : *ppFindDataArray = %08X\n", *ppFindDataArray );
 		if ( ( *ppFindDataArray ) )
 		{
 			for ( i = 0; i < lng; i++ )
@@ -994,6 +1008,8 @@ STDAPI_( BOOL ) CeFindAllDatabases( DWORD dwDbaseType, WORD wFlags, LPWORD cFind
 	WORD wrd;
 	CEDB_FIND_DATA *ptr;
 
+	checkpassword();
+
 	DBG_printf( "CeFindAllDatabases( dwDbaseType = 0x%08X, wFlags = 0x%04X, cFindData = 0x%08X, ppFindData = 0x%08X )\n",
 	            dwDbaseType, wFlags, cFindData, ppFindData );
 
@@ -1015,9 +1031,9 @@ STDAPI_( BOOL ) CeFindAllDatabases( DWORD dwDbaseType, WORD wFlags, LPWORD cFind
 	}
 	if ( ppFindData && ( wrd > 0 ) )
 	{
-		DBG_printf( "Avant allocation\n" );
+		DBG_printf( "Before allocation\n" );
 		*ppFindData = ( LPCEDB_FIND_DATA ) calloc( wrd, sizeof( CEDB_FIND_DATA ) );
-		DBG_printf( "Après allocation : *ppFindData = %08X\n", *ppFindData );
+		DBG_printf( "After allocation : *ppFindData = %08X\n", *ppFindData );
 		if ( ( *ppFindData ) )
 		{
 			for ( i = 0; i < wrd; i++ )
@@ -1169,9 +1185,9 @@ STDAPI_( CEOID ) CeReadRecordProps( HANDLE hDbase, DWORD dwFlags, LPWORD lpcProp
 	{
 		if ( *lplpBuffer == NULL )
 		{
-			DBG_printf( "Avant allocation\n" );
+			DBG_printf( "Before allocation\n" );
 			*lplpBuffer = ( LPBYTE ) calloc( 1, lng );
-			DBG_printf( "Après allocation : *ppFindData = %08X\n", *lplpBuffer );
+			DBG_printf( "After allocation : *ppFindData = %08X\n", *lplpBuffer );
 		}
 		ptr = ( CEPROPVAL * ) ( *lplpBuffer );
 		for ( i = 0; i < wrd; i++ )
@@ -1371,17 +1387,42 @@ STDAPI_( DWORD ) CeGetLastError( void )
 /* ================================================================================================================= */
 /* ================================================================================================================= */
 
-char * findhost( void );
-
-char * findhost( void )
+void findquotes( char * *ptrstart, char * *ptrstop )
 {
-	char * result = NULL;
+	/* Go to the first double quote */
+	/* ---------------------------- */
+	while( ( *(*ptrstart) != 0 ) && ( *(*ptrstart) != '"' ) )
+	{
+		(*ptrstart) ++;
+	}
+	if( *(*ptrstart) != 0 )
+	{
+		(*ptrstart) ++;
+		*ptrstop = *ptrstart;
+		/* Reach the next double quote */
+		/* --------------------------- */
+		while( ( *(*ptrstop) != 0 ) && ( *(*ptrstop) != '"' ) )
+		{
+			(*ptrstop) ++;
+		}
+	}
+}
+
+int parseinfofile( void );
+
+int parseinfofile( void )
+{
+	BOOL result = FALSE;
 	struct stat st;
 	int res;
 	FILE * f;
 	char line[ 1024 ];
 	char * ptrstart;
 	char * ptrstop;
+	BOOL devicefound;
+	int i;
+
+	devicefound = FALSE;
 
 	DBG_printf( "Before stat...\n" );
 	res = stat( INFOFILE, &st );
@@ -1392,7 +1433,7 @@ char * findhost( void )
 		DBG_printf( "fopen(), result = 0x%08X...\n", f );
 		if ( f )
 		{
-			while ( ( !feof( f ) ) && ( result == NULL ) )
+			while ( ( !feof( f ) ) && ( result == FALSE ) )
 			{
 				line[ 0 ] = '\0';
 				if ( fgets( line, 1024, f ) != NULL )
@@ -1400,13 +1441,60 @@ char * findhost( void )
 					DBG_printf( "fscanf(), line = '%s'...\n", line );
 					if ( line[ 0 ] != '#' )
 					{
-						if ( ( ptrstart = strstr( line, "device" ) ) != NULL )
-						{
+						/* Beginning of block : device <IP> { */
+						/* ---------------------------------- */
+						if( (hostname==NULL) && ( ( ptrstart = strstr( line, "device" ) ) != NULL ) )
+						{	
+							devicefound = TRUE;
 							ptrstart += 7;
 							for ( ptrstop = ptrstart; ( ( *ptrstop ) != 0 ) && ( ( *ptrstop ) != '{' ); ptrstop++ );
 							( *ptrstop ) = 0;
-							result = strdup( ptrstart );
-							DBG_printf( "strdup(), result = '%s'...\n", result );
+							hostname = strdup( ptrstart );
+							DBG_printf( "strdup(), hostname = '%s'...\n", hostname );
+						}
+
+						if( devicefound )
+						{
+
+							/* End of block : } */
+							/* ---------------- */
+							if( strstr( line, "}" ) != NULL )
+							{
+
+								devicefound = FALSE;
+								result = TRUE;
+
+							} else {
+
+								/* let's check for the passphrase */
+								/* ------------------------------ */
+								if( ( (lockbuffersize!=0) || (lockbuffer==NULL)) && ( ( ptrstart = strstr( line, "passphrase" ) ) != NULL ) )
+								{
+									DBG_printf( "found string passphrase = %s\n", line );
+									findquotes( &ptrstart, &ptrstop );
+
+									if( (*ptrstart) != 0 )
+									{
+										(*ptrstop) = '\0';
+										if( NULL != strstr( line, "size" ) )
+										{
+											DBG_printf( "found string passphrase-size = %s\n", ptrstart );
+											if( 1 == sscanf( ptrstart, "%d", &lockbuffersize ) )
+											{
+												DBG_printf( "found passphrase-size = %d\n", lockbuffersize );
+												lockbuffer = (unsigned char *) malloc( 1+ lockbuffersize );
+											}
+										} else {
+											for( i=0; i<lockbuffersize; i++ )
+											{
+												sscanf( ptrstart + (3*i), "%02X", (unsigned int *)&(lockbuffer[i]) );
+												DBG_printf("%02X ", lockbuffer[i] );
+											}
+											DBG_printf( "\nfound passphrase-data = %s\n", ptrstart );
+										}
+									}
+								}
+							}
 						}
 					}
 				}
@@ -1419,11 +1507,9 @@ char * findhost( void )
 
 STDAPI_( HRESULT ) CeRapiInit()
 {
-	char * hostname;
-
 	if ( sock == 0 )
 	{
-		hostname = findhost();
+		parseinfofile();
 		if ( hostname )
 		{
 			DBG_printf( "CeRapiInit(%s)\n", hostname );
@@ -1491,6 +1577,8 @@ STDAPI_(BOOL) CeGetVersionEx(LPCEOSVERSIONINFO lpVersion)
 	BOOL result = FALSE;
 	long size = BUFSIZE;
 	LONG lng;
+
+	checkpassword();
 	
 	initBuf(buffer, size);
 	
