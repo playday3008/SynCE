@@ -4,6 +4,7 @@
 #include "contact_ids.h"
 #include "strbuf.h"
 #include "dbstream.h"
+#include "strv.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
@@ -745,51 +746,6 @@ static void add_string(Parser* parser, uint32_t id, const char* type, char* valu
 
 	if (converted)
 		free(converted);
-}/*}}}*/
-
-static char** strsplit(const char* source, int separator)/*{{{*/
-{
-	int i;
-	int count = 0;
-	const char* p = NULL;
-	char** result = NULL;
-	size_t length = 0;
-
-	for (p = source; *p; p++)
-		if (separator == *p)
-			count++;
-
-	result = malloc((count + 2) * sizeof(char*));
-
-	for (p = source, i = 0; i < count; i++)
-	{
-		length = strchr(p, separator) - p;
-		result[i] = strndup(p, length);
-		p += length + 1;
-	}
-
-	result[i++] = strdup(p);
-
-	result[i] = NULL;
-	return result;
-}/*}}}*/
-
-static void strv_dump(char** strv)/*{{{*/
-{
-	char** pp;
-
-	for (pp = strv; *pp; pp++)
-		synce_trace("'%s'", *pp);
-}/*}}}*/
-
-static void strv_free(char** strv)/*{{{*/
-{
-	char** pp;
-
-	for (pp = strv; *pp; pp++)
-		free(*pp);
-
-	free(strv);
 }/*}}}*/
 
 static bool parser_handle_field(/*{{{*/

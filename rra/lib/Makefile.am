@@ -30,6 +30,7 @@ librra_la_SOURCES = \
 	mdir_line_vector.h mdir_line_vector.c \
 	rrac.h             rrac.c \
 	strbuf.h           strbuf.c \
+	strv.h             strv.c \
 	syncmgr.h          syncmgr.c \
 	task.h             task.c \
 	timezone.h         timezone.c \

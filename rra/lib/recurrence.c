@@ -5,17 +5,32 @@
 
 */
 #define _GNU_SOURCE 1
+#include "appointment_ids.h"
 #include "recurrence.h"
 #include "recurrence_pattern.h"
 #include "generator.h"
 #include "parser.h"
+#include "strv.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
 
+#define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
+
 #define MINUTES_PER_DAY   (60*24)
 #define SECONDS_PER_DAY   (60*MINUTES_PER_DAY)
+
+typedef struct
+{
+  char* byday;
+  int   bymonthday;
+  int   bysetpos;
+  int   count;
+  char* freq;
+  int   interval;
+  char* until;
+} RRule;
 
 static bool recurrence_generate_exceptions(
     Generator* g,
@@ -220,13 +235,167 @@ exit:
   return success;
 }
 
+static void replace_string_with_copy(char** str, const char* value)
+{
+  if (*str)
+    free(*str);
+  *str = strdup(value);
+}
+
+static bool recurrence_initlize_rrule(const char* str, RRule* rrule)
+{
+  int i;
+  char** strv = strsplit(str, ';');
+
+  for (i = 0; strv[i]; i++)
+  {
+    char** pair = strsplit(strv[i], '=');
+    if (!pair[0] || !pair[1])
+    {
+      synce_warning("Invalid rrule part: '%s'", strv[i]);
+      continue;
+    }
+
+    synce_trace("RRULE part: key=%s, value=%s", 
+        pair[0], pair[1]);
+
+    if (STR_EQUAL(pair[0], "BYDAY"))
+      replace_string_with_copy(&rrule->byday, pair[1]);
+    else if (STR_EQUAL(pair[0], "BYMONTDAY"))
+      rrule->bymonthday = atoi(pair[1]);
+    else if (STR_EQUAL(pair[0], "BYSETPOS"))
+      rrule->bysetpos = atoi(pair[1]);
+    else if (STR_EQUAL(pair[0], "COUNT"))
+      rrule->count = atoi(pair[1]);
+    else if (STR_EQUAL(pair[0], "FREQ"))
+      replace_string_with_copy(&rrule->freq, pair[1]);
+    else if (STR_EQUAL(pair[0], "INTERVAL"))
+      rrule->interval = atoi(pair[1]);
+    else if (STR_EQUAL(pair[0], "UNTIL"))
+      replace_string_with_copy(&rrule->until, pair[1]);
+    else
+      synce_warning("Unhandled part of RRULE: '%s'", strv[i]);
+
+    strv_free(pair);
+  }
+  
+  strv_free(strv);
+  return true;
+}
+
+static void recurrence_set_days_of_week_mask(
+    RRA_RecurrencePattern* pattern, 
+    RRule* rrule)
+{
+  int i, j;
+  char** days = strsplit(rrule->byday, ',');
+
+  for (i = 0; i < 7; i ++)
+    for (j = 0; days[j]; j++)
+    {
+      if (STR_EQUAL(masks_and_names[i].name, days[j]))
+        pattern->days_of_week_mask |= masks_and_names[i].mask;
+    }
+
+  strv_free(days);
+}
+
 bool recurrence_parse_rrule(
     struct _Parser* p, 
-    mdir_line* dtstart,
-    mdir_line* dtend,
-    mdir_line* rrule, 
+    mdir_line* mdir_dtstart,
+    mdir_line* mdir_dtend,
+    mdir_line* mdir_rrule, 
     RRA_MdirLineVector* exdates)
 {
-  return false;
+  bool success = false;
+  RRule rrule;
+  RRA_RecurrencePattern* pattern = rra_recurrence_pattern_new();
+
+  memset(&rrule, 0, sizeof(RRule));
+  if (!recurrence_initlize_rrule(mdir_rrule->values[0], &rrule))
+  {
+    synce_error("Failed to parse RRULE '%s'", mdir_rrule->values[0]);
+    goto exit;
+  }
+  
+  if (!rrule.freq)
+  {
+    synce_error("No FREQ part in RRULE '%s'", mdir_rrule->values[0]);
+    goto exit;
+  }
+
+  if (STR_EQUAL(rrule.freq, "DAILY"))
+    pattern->recurrence_type = olRecursDaily;
+  else if (STR_EQUAL(rrule.freq, "WEEKLY"))
+  {
+    pattern->recurrence_type = olRecursWeekly;
+    recurrence_set_days_of_week_mask(pattern, &rrule);
+  }
+  else if (STR_EQUAL(rrule.freq, "MONTHLY"))
+  {
+    if (rrule.bymonthday)
+    {
+      pattern->recurrence_type = olRecursMonthly;
+      pattern->day_of_month = rrule.bymonthday;
+    }
+    else if (rrule.bysetpos)
+    {
+      pattern->recurrence_type = olRecursMonthNth;
+      pattern->instance = rrule.bysetpos;
+      recurrence_set_days_of_week_mask(pattern, &rrule);
+    }
+    else
+    {
+      synce_error("Missing information for monthly recurrence in RRULE '%s'", 
+          mdir_rrule->values[0]);
+      goto exit;
+    }
+  }
+  else
+  {
+    synce_error("Unexpected frequencey in RRULE '%s'", mdir_rrule->values[0]);
+    goto exit;
+  }
+
+  pattern->interval = rrule.interval;
+
+  if (rrule.count)
+  {
+    pattern->occurrences = rrule.count;
+    pattern->flags |= RecurrenceEndsAfterXOccurrences;
+    
+    /* XXX calculate pattern->pattern_end_date */
+  }
+  else
+  {
+    /* XXX support UNTIL */
+    if (rrule.until)
+      synce_warning("UNTIL not yet supported in RRULE '%s'", mdir_rrule->values[0]);
+
+    pattern->flags |= RecurrenceDoesNotEnd;
+    pattern->pattern_end_date = RRA_DoesNotEndDate;
+  }
+
+  {
+    uint8_t* buffer = NULL;
+    size_t size = 0;
+    if (!rra_recurrence_pattern_to_buffer(pattern, &buffer, &size))
+    {
+      synce_error("Failed to convert recurrence pattern to buffer for RRULE '%s'", mdir_rrule->values[0]);
+      goto exit;
+    }
+
+    if (!parser_add_blob(p, ID_RECURRENCE_PATTERN, buffer, size))
+    {
+      synce_error("Failed to add BLOB");
+      goto exit;
+    }
+  }
+
+  success = true;
+
+exit:
+  rra_recurrence_pattern_destroy(pattern);
+  return success;
 }
 
