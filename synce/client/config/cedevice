@@ -1,0 +1,9 @@
+/dev/ttyS1 115200 modem
+connect '/usr/sbin/chat -v -f /usr/local/src/synce/cedevice.chat'
+noauth
+local
+192.168.131.102:192.168.131.201
+ms-dns 192.168.131.102
+lcp-echo-failure 2
+lcp-echo-interval 2
+linkname cedevice

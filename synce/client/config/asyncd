@@ -1,0 +1,13 @@
+# default: on
+service asyncd
+{
+	flags		= REUSE NOLIBWRAP
+	socket_type	= stream        
+	wait		= no
+	user		= root
+	server		= /usr/local/src/synce/client/asyncd/asyncd
+	log_on_failure	+= USERID
+        only_from               = 127.0.0.1 192.168.131.0/24
+	disable = no
+}
+

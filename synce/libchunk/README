@@ -1,0 +1,6 @@
+
+This library is a helper to deal with streams of bytes, and is needed by the client-side (and
+certainly the server-side once it exists) RAPI implementation.
+
+
+See the file README in the main directory.
