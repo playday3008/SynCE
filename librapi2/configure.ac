@@ -40,41 +40,12 @@ dnl Checks for libraries.
 AC_LIB_RPATH
 
 dnl Check for libsynce
-AC_ARG_WITH(synce,
-		AC_HELP_STRING([--with-synce[=DIR]],[Search for libsynce in DIR/include and DIR/lib]),
-[case "${withval}" in
-  yes) synce=true ;;
-  no)  synce=false ;;
-  *) synce=true; synce_prefix="-L${withval}" ;;
-esac],[synce=true])
-
-if ${synce}; then
-	AC_CHECK_LIB(synce,main,,[
-			AC_MSG_ERROR([Can't find synce library])
-		],${synce_prefix})
-	AC_CHECK_HEADERS(synce.h,,[
-			AC_MSG_ERROR([Can't find synce.h])
-		])
-fi
+AM_PATH_LIBSYNCE
 
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-
-dnl Checks for library functions.
-AC_REPLACE_FUNCS(inet_pton)
-
-AM_ICONV()
-if test "$am_cv_func_iconv" '!=' yes; then
-	AC_MSG_ERROR([iconv not found, try using --with-libiconv-prefix])
-fi
-AC_CHECK_HEADERS(iconv.h,,[
-		AC_MSG_WARN([iconv.h not found (INCICONV=$INCICONV)])
-		])
-
-AC_CHECK_LIB(socket,main)
-AC_CHECK_LIB(nsl,main)
 
 AC_OUTPUT([Makefile
            src/Makefile

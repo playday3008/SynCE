@@ -4,7 +4,5 @@
 ## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
 AUTOMAKE_OPTIONS = foreign 1.4
 
-include_HEADERS = rapi_config.h
-
 SUBDIRS = src tools tests .
 
