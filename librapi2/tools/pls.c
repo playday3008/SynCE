@@ -231,9 +231,9 @@ int main(int argc, char** argv)
 	}
 	else if (path[strlen(path)-1] == '\\')
 	{
-		/* This is a directory, append "*.*" to show its contents */
+		/* This is a directory, append "*" to show its contents */
 		char new_path[MAX_PATH];
-		snprintf(new_path, sizeof(new_path), "%s*.*", path);
+		snprintf(new_path, sizeof(new_path), "%s*", path);
 		wide_path = wstr_from_ascii(new_path);
 
 		if (!list_matching_files(wide_path))

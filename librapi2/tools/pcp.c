@@ -67,9 +67,9 @@ static bool remote_copy(const char* ascii_source, const char* ascii_dest)
 	return CeCopyFileA(ascii_source, ascii_dest, false);
 }
 
-#define ANYFILE_BUFFER_SIZE (16*1024)
+#define ANYFILE_BUFFER_SIZE (64*1024)
 
-static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name)
+static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name, size_t* bytes_copied)
 {
 	bool success = false;
 	size_t bytes_read;
@@ -122,6 +122,8 @@ static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name)
 					bytes_written, bytes_read, dest_ascii);
 			goto exit;
 		}
+
+		*bytes_copied += bytes_written;
 	}
 
 	success = true;
@@ -151,6 +153,9 @@ int main(int argc, char** argv)
 	char* source = NULL;
 	char* dest = NULL;
 	HRESULT hr;
+	time_t start;
+	time_t duration;
+	size_t bytes_copied = 0;
 	
 	if (!handle_parameters(argc, argv, &source, &dest))
 		goto exit;
@@ -226,6 +231,7 @@ int main(int argc, char** argv)
 		}
 	}
 
+
 	if (is_remote_file(source) && is_remote_file(dest))
 	{
 		/*
@@ -236,11 +242,19 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		/*
+		start = time(NULL);
+
+			/*
 		 * At least one is local, Use the AnyFile functions
 		 */
-		if (!anyfile_copy(source, dest, argv[0]))
+		if (!anyfile_copy(source, dest, argv[0], &bytes_copied))
 			goto exit;
+
+		duration = time(NULL) - start;
+
+		printf("File copy of %i bytes took %li minutes and %li seconds, that's %li bytes/s.\n",
+				bytes_copied, duration / 60, duration % 60, bytes_copied / duration);
+
 	}
 
 	result = 0;
