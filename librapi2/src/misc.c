@@ -72,9 +72,7 @@ BOOL CeGetStoreInformation( /*{{{*/
 		goto exit;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	synce_trace("last_error = %i", context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	synce_trace("result = %i", result);
 	
 	if ( !rapi_buffer_read_optional(context->recv_buffer, lpsi, sizeof(STORE_INFORMATION)) )
 	{
@@ -147,9 +145,7 @@ BOOL CeGetSystemPowerStatusEx( /*{{{*/
 		goto exit;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	synce_trace("last_error = %i", context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	synce_trace("result = %i", result);
 
 	if ( !rapi_buffer_read_optional(context->recv_buffer, pSystemPowerStatus, sizeof(SYSTEM_POWER_STATUS_EX)) )
 		goto exit;
@@ -380,9 +376,7 @@ BOOL CeGetSystemMemoryDivision(
     goto exit;
 
   rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-  synce_trace("last_error = %i", context->last_error);
   rapi_buffer_read_uint32(context->recv_buffer, &result);
-  synce_trace("result = %i", result);
 
   rapi_buffer_read_optional_uint32(context->recv_buffer, lpdwStoragePages);
   rapi_buffer_read_optional_uint32(context->recv_buffer, lpdwRamPages);
