@@ -353,7 +353,7 @@ int main (int ac, char **av)
 						if(locked)
 						{
 							/*unsigned char lockbuffer[]={0xa, 0x0, 0xce, 0xfd, 0xc8, 0xfd, 0xc9, 0xfd, 0xcf, 0xfd, 0xfd, 0xfd};*/
-							char *passphrase = "3542";
+							char *passphrase = "1234";
 							compute_password( passphrase, locksignature & 0xFF, lockbuffer+2, &lockbuffersize ); 
 							*((short *)lockbuffer) = htole16( lockbuffersize );
 							
