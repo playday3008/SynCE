@@ -26,7 +26,10 @@ AC_C_CONST
 
 AC_REPLACE_FUNCS(daemon)
 
+AC_CONFIG_FILES( [script/synce-sound] )
+
 AC_OUTPUT([Makefile
            src/Makefile
-					 man/Makefile])
+					 man/Makefile
+           script/Makefile])
 

@@ -1,0 +1,49 @@
+#!/bin/sh
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+SYNCE_DIR=$HOME/.synce
+
+SOUND_DIR=$SYNCE_DIR/sounds
+SCRIPT_DIR=$SYNCE_DIR/scripts
+
+CONNECT=$SOUND_DIR/connect.wav
+DISCONNECT=$SOUND_DIR/disconnect.wav
+
+SCRIPT=$SCRIPT_DIR/synce-sound-runner.sh
+
+case "$1" in
+
+	connect)
+		mkdir -p $SOUND_DIR
+		if [ ! -f $CONNECT ]; then
+			@bindir@/pcp ":/Windows/Infbeg.wav" $SOUND_DIR/connect.wav
+			@bindir@/pcp ":/Windows/Infend.wav" $SOUND_DIR/disconnect.wav
+		fi
+		playwave $CONNECT
+		;;
+	
+	disconnect)
+		playwave $DISCONNECT
+		;;
+
+	start|stop)
+		# do nothing
+		;;
+
+	install)
+		mkdir -p $SCRIPT_DIR
+		echo "#!/bin/sh
+# Modifications to this file will be lost next time 'synce-sound install' is run
+@bindir@/synce-sound \$1 &
+disown" > $SCRIPT
+		chmod 700 $SCRIPT
+		;;
+
+	*)
+		echo "Help!"
+		;;
+		
+
+esac
+
