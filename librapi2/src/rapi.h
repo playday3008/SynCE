@@ -4,6 +4,11 @@
 
 #include "rapi_types.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /*
  * Initialization functions
  */
@@ -42,6 +47,11 @@ BOOL CeReadFile(
 		DWORD nNumberOfBytesToRead, 
 		LPDWORD lpNumberOfBytesRead, 
 		LPOVERLAPPED lpOverlapped);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 

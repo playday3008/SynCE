@@ -4,6 +4,11 @@
 
 #include "rapi_internal.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * Convert a string from UCS2 to iso8859-1
  */
@@ -23,6 +28,11 @@ void rapi_wstr_free_string(void* str);
  * Return size of ascii string as unicode
  */
 size_t rapi_wstr_string_length(LPCWSTR unicode);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 
