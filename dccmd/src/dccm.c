@@ -52,7 +52,7 @@ dump(desc, data, len)
 	void *data;
 	size_t len;
 {
-	u_int8_t *buf = data;
+	uint8_t *buf = data;
 	int i, j;
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
@@ -66,7 +66,7 @@ dump(desc, data, len)
 			hex[3*j+2] = ' ';
 			chr[j] = ' ';
 		} else {
-			u_int8_t c = buf[j + i];
+			uint8_t c = buf[j + i];
 			const char *hexchr = "0123456789abcdef";
 			hex[3*j+0] = hexchr[(c >> 4) & 0xf];
 			hex[3*j+1] = hexchr[c & 0xf];
