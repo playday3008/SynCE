@@ -98,7 +98,8 @@ static const char* get_battery_flag_string(unsigned flag)
 }
 
 
-ManagerImpl::ManagerImpl(QWidget* parent, const char* name, bool modal, WFlags fl)
+ManagerImpl::ManagerImpl(QWidget* parent, const char* name, bool modal, 
+                         WFlags fl)
         : Manager(parent, name, modal, fl)
 {
     statusLine->setText("Ready");
@@ -148,29 +149,53 @@ void ManagerImpl::customEvent (QCustomEvent *e)
             id->setText(QString::number(sysinfo.version.dwPlatformId));
             platform->setText(platformString);
             details->setText(detailsString);
-            architecture->setText(QString::number(sysinfo.system.wProcessorArchitecture) + " " +
-                                  QString((sysinfo.system.wProcessorArchitecture <
-                                           PROCESSOR_ARCHITECTURE_COUNT) ?
-                                          architectures[sysinfo.system.wProcessorArchitecture] : "Unknown"));
-            procType->setText(QString::number(sysinfo.system.dwProcessorType) +" " +
-                          QString(processor(sysinfo.system.dwProcessorType)));
-            pageSize->setText("0x" + QString::number(sysinfo.system.dwAllocationGranularity, 16));
-            storageSize->setText(QString::number(sysinfo.store.dwStoreSize) + " B  (" +
-                                 QString::number(sysinfo.store.dwStoreSize / (1024 * 1024)) + " MB)");
-            freeSpace->setText(QString::number(sysinfo.store.dwFreeSize) + " B  (" +
-                               QString::number(sysinfo.store.dwFreeSize / (1024 * 1024)) + " MB)");
-
+            architecture->setText(
+                    QString::number(sysinfo.system.wProcessorArchitecture) + 
+                    " " + QString((sysinfo.system.wProcessorArchitecture <
+                    PROCESSOR_ARCHITECTURE_COUNT) ?
+                    architectures[sysinfo.system.wProcessorArchitecture] : 
+                    "Unknown"));
+            procType->setText(QString::number(sysinfo.system.dwProcessorType) +
+                    " " + QString(processor(sysinfo.system.dwProcessorType)));
+            pageSize->setText("0x" + 
+                    QString::number(sysinfo.system.dwAllocationGranularity, 16));
+            storageSize->setText(QString::number(sysinfo.store.dwStoreSize) + 
+                    " B  (" + QString::number(sysinfo.store.dwStoreSize / 
+                    (1024 * 1024)) + " MB)");
+            freeSpace->setText(QString::number(sysinfo.store.dwFreeSize) + 
+                    " B  (" + QString::number(sysinfo.store.dwFreeSize / 
+                    (1024 * 1024)) + " MB)");
             break;
         case RakiEvent::BATINFO:
             sysinfo = event->getSysinfo();
-            bat1Flag->setText(QString::number(sysinfo.power.BatteryFlag) + " (" + get_battery_flag_string(sysinfo.power.BatteryFlag) + ")");
-            bat1LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN == sysinfo.power.BatteryLifePercent) ? QString("Unknown") : QString::number(sysinfo.power.BatteryLifePercent) + "%");
-            bat1LifeTime->setText((BATTERY_LIFE_UNKNOWN == sysinfo.power.BatteryLifeTime) ? QString("Unknown") : QString::number(sysinfo.power.BatteryLifeTime));
-            bat1FullLife->setText((BATTERY_LIFE_UNKNOWN == sysinfo.power.BatteryFullLifeTime) ? QString("Unknown") : QString::number(sysinfo.power.BatteryFullLifeTime));
-            bat2Flag->setText(QString::number(sysinfo.power.BackupBatteryFlag) + " (" + get_battery_flag_string(sysinfo.power.BackupBatteryFlag) + ")");
-            bat2LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN == sysinfo.power.BackupBatteryLifePercent) ? QString("Unknown") : QString::number(sysinfo.power.BackupBatteryLifePercent) + "%");
-            bat2LifeTime->setText((BATTERY_LIFE_UNKNOWN == sysinfo.power.BackupBatteryLifeTime) ? QString("Unknown") : QString::number(sysinfo.power.BackupBatteryLifeTime));
-            bat2FullLife->setText((BATTERY_LIFE_UNKNOWN == sysinfo.power.BackupBatteryFullLifeTime) ? QString("Unknown") : QString::number(sysinfo.power.BackupBatteryFullLifeTime));
+            bat1Flag->setText(QString::number(sysinfo.power.BatteryFlag) + 
+                    " (" +
+                    get_battery_flag_string(sysinfo.power.BatteryFlag) + ")");
+            bat1LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN == 
+                    sysinfo.power.BatteryLifePercent) ? QString("Unknown") : 
+                    QString::number(sysinfo.power.BatteryLifePercent) + "%");
+            bat1LifeTime->setText((BATTERY_LIFE_UNKNOWN == 
+                    sysinfo.power.BatteryLifeTime) ? QString("Unknown") : 
+                    QString::number(sysinfo.power.BatteryLifeTime));
+            bat1FullLife->setText((BATTERY_LIFE_UNKNOWN == 
+                    sysinfo.power.BatteryFullLifeTime) ? QString("Unknown") : 
+                    QString::number(sysinfo.power.BatteryFullLifeTime));
+            bat2Flag->setText(QString::number(sysinfo.power.BackupBatteryFlag) +
+                    " (" + 
+                    get_battery_flag_string(sysinfo.power.BackupBatteryFlag) + 
+                    ")");
+            bat2LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN == 
+                    sysinfo.power.BackupBatteryLifePercent) ? 
+                    QString("Unknown") : 
+                    QString::number(sysinfo.power.BackupBatteryLifePercent) + 
+                    "%");
+            bat2LifeTime->setText((BATTERY_LIFE_UNKNOWN == 
+                    sysinfo.power.BackupBatteryLifeTime) ? QString("Unknown") : 
+                    QString::number(sysinfo.power.BackupBatteryLifeTime));
+            bat2FullLife->setText((BATTERY_LIFE_UNKNOWN == 
+                    sysinfo.power.BackupBatteryFullLifeTime) ? 
+                    QString("Unknown") : 
+                    QString::number(sysinfo.power.BackupBatteryFullLifeTime));
             switch (sysinfo.power.ACLineStatus) {
             case AC_LINE_OFFLINE:
                 online->off();
@@ -246,7 +271,8 @@ void ManagerImpl::uninstallSoftware()
                     NULL,
                     NULL,
                     &info)) {
-            QApplication::postEvent(this, new RakiEvent(RakiEvent::UNINSTALLED, item));
+            QApplication::postEvent(this, new RakiEvent(RakiEvent::UNINSTALLED, 
+                                    item));
             }
         }
     }
@@ -270,7 +296,8 @@ void ManagerImpl::fetchSystemInfo()
         Ce::getVersionEx(&sysinfo.version);
         Ce::getSystemInfo(&sysinfo.system);
         Ce::getStoreInformation(&sysinfo.store);
-        QApplication::postEvent(this, new RakiEvent(RakiEvent::SYSINFO, sysinfo));
+        QApplication::postEvent(this, 
+                                new RakiEvent(RakiEvent::SYSINFO, sysinfo));
     }
 
     QApplication::postEvent(this, new RakiEvent(RakiEvent::END));
@@ -287,7 +314,8 @@ void ManagerImpl::fetchBatteryStatus()
         QApplication::postEvent(this, new RakiEvent(RakiEvent::BEGIN,
                                 "Retrieving batery-info from the PDA ..."));
         Ce::getSystemPowerStatusEx(&sysinfo.power, false);
-        QApplication::postEvent(this, new RakiEvent(RakiEvent::BATINFO, sysinfo));
+        QApplication::postEvent(this, 
+                                new RakiEvent(RakiEvent::BATINFO, sysinfo));
     }
 
     QApplication::postEvent(this, new RakiEvent(RakiEvent::END));
@@ -309,7 +337,8 @@ void ManagerImpl::fetchSoftwareList()
                                 "Retrieving software-list from the PDA ..."));
         value_name       = synce::wstr_from_ascii("Instl");
         parent_key_name  = synce::wstr_from_ascii("Software\\Apps");
-        result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
+        result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, 
+                                &parent_key);
         if (ERROR_SUCCESS == result) {
             for (i = 0; isRunning; i++) {
                 WCHAR wide_name[MAX_PATH];
@@ -318,13 +347,15 @@ void ManagerImpl::fetchSoftwareList()
                 DWORD installed = 0;
                 DWORD value_size = sizeof(installed);
 
-                result = CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, NULL, NULL, NULL, NULL);
+                result = CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, 
+                                        NULL, NULL, NULL, NULL);
 
                 if (ERROR_SUCCESS != result) {
                     break;
                 }
 
-                result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, &program_key);
+                result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, 
+                                        &program_key);
 
                 if (ERROR_SUCCESS != result) {
                     continue;
@@ -335,7 +366,9 @@ void ManagerImpl::fetchSoftwareList()
 
                 if (ERROR_SUCCESS == result && installed) {
                     char* name = synce::wstr_to_ascii(wide_name);
-                    QApplication::postEvent(this, new RakiEvent(RakiEvent::INSTALLED, name));
+                    QApplication::postEvent(this, 
+                                            new RakiEvent(RakiEvent::INSTALLED, 
+                                            name));
                     synce::wstr_free_string(name);
                 }
 
@@ -374,7 +407,8 @@ void ManagerImpl::uninstallSoftwareSlot()
 {
     uninstallButton->setEnabled(false);
     RakiWorkerThread::rakiWorkerThread->stop();
-    RakiWorkerThread::rakiWorkerThread->start(this, WorkerThreadInterface::SOFTWARE_UNINSTALLER);
+    RakiWorkerThread::rakiWorkerThread->start(this, 
+                            WorkerThreadInterface::SOFTWARE_UNINSTALLER);
 }
 
 
@@ -392,7 +426,8 @@ void ManagerImpl::refreshSystemInfoSlot()
     pageSize->clear();
     storageSize->clear();
     freeSpace->clear();
-    RakiWorkerThread::rakiWorkerThread->start(this, WorkerThreadInterface::SYSINFO_FETCHER);
+    RakiWorkerThread::rakiWorkerThread->start(this, 
+                            WorkerThreadInterface::SYSINFO_FETCHER);
 }
 
 
@@ -410,7 +445,8 @@ void ManagerImpl::refreshBatteryStatusSlot()
     offline->off();
     backup->off();
     invalid->off();
-    RakiWorkerThread::rakiWorkerThread->start(this, WorkerThreadInterface::BATTERYSTATUS_FETCHER);
+    RakiWorkerThread::rakiWorkerThread->start(this, 
+                            WorkerThreadInterface::BATTERYSTATUS_FETCHER);
 }
 
 
@@ -418,5 +454,6 @@ void ManagerImpl::refreshSoftwareSlot()
 {
     softwareList->clear();
     uninstallButton->setDisabled(true);
-    RakiWorkerThread::rakiWorkerThread->start(this, WorkerThreadInterface::SOFTWARE_FETCHER);
+    RakiWorkerThread::rakiWorkerThread->start(this, 
+                            WorkerThreadInterface::SOFTWARE_FETCHER);
 }

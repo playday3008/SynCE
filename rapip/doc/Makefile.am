@@ -2,5 +2,5 @@
 # in this directory they are installed into the english dir
 
 KDE_LANG = en
-KDE_DOCS = rapip
+KDE_DOCS = raki
 SUBDIRS = $(AUTODIRS)  

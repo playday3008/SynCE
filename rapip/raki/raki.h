@@ -28,75 +28,73 @@
 
 class Raki : public KSystemTray, public DCOPObject
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  Raki(KAboutData* aboutDta, KDialog* d, QWidget* parent=0, const char *name=0);
-  ~Raki();
-  
-  void setConnectionStatus(bool enable);
-  
-protected slots:
-  void showPopupMenu(QPopupMenu *);
+    Raki(KAboutData* aboutDta, KDialog* d, QWidget* parent=0, const char *name=0);
+    ~Raki();
+    void restartDccm();
 
-public:
-  void restartDccm();
+private:
+    void setConnectionStatus(bool enable);
+    void mousePressEvent(QMouseEvent *);
+    void dropEvent(QDropEvent* event);
+    void droppedFile(KURL url);
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent *event);
+    void customEvent (QCustomEvent *event);
+    void deleteFile(KURL delFile);
+    bool process(const QCString &fun, const QByteArray &data,
+                 QCString &replyType, QByteArray &replyData);
+    QString changeConnectionState(int state);
+    void startDccm();
+    void stopDccm();
+    void tryStartDccm();
+    void postConnect(bool enable);
 
-protected:
-  void mousePressEvent(QMouseEvent *);
-  void dropEvent(QDropEvent* event);
-  void droppedFile(KURL url);
-  void dragEnterEvent(QDragEnterEvent *event);
-  void dragLeaveEvent(QDragLeaveEvent *event);
-  void customEvent (QCustomEvent *event);
-  void deleteFile(KURL delFile);
+    DCOPClient *dcopClient;
+    KDialog *aboutDialog;
+    KPopupMenu *rapiLeMenu;
+    KPopupMenu *rapiReMenu;
+    RunWindowImpl *runWindow;
+    ManagerImpl *managerWindow;
+    ConfigDialogImpl *configDialog;
+    Installer *installer;
+    QPixmap connectedIcon;
+    QPixmap disconnectedIcon;
+    QPixmap *actualIcon;
+    KProcess dccmProc;
+    KProcess connectProc;
+    KProcess disconnectProc;
+    bool entered;
+    int startDccmId;
+    int stopDccmId;
+    int connectId;
+    int disconnectId;
+    bool dccmRestart;
+    bool masqueradeEnabled;
+    QString deviceIp;
+
+    enum {
+        OPEN_ITEM = 1,
+        SHUTDOWN_ITEM,
+        EXECUTE_ITEM,
+        INSTALL_ITEM,
+        CONFIGURE_ITEM,
+        STARTDCCM_ITEM,
+        STOPDCCM_ITEM,
+        CONNECT_ITEM,
+        DISCONNECT_ITEM
+    };
 
 private slots:
-  void quit();
-  
-private slots:
-  void clickedMenu(int item);
-
-private:  
-  bool process(const QCString &fun, const QByteArray &data,
-                       QCString &replyType, QByteArray &replyData);
-  QString changeConnectionState(int state);
-  void startDccm();
-  void stopDccm();
-  void tryStartDccm();
-  KDialog *aboutDialog;
-  DCOPClient *dcopClient;
-  KPopupMenu *rapiLeMenu;
-  KPopupMenu *rapiReMenu;
-  RunWindowImpl *runWindow;
-  ManagerImpl *managerWindow;
-  ConfigDialogImpl *configDialog;
-  Installer *installer;
-  QString appId;
-  bool entered;
-  bool running;
-  bool connected;
-  QPixmap connectedIcon;
-  QPixmap disconnectedIcon;
-  QPixmap *actualIcon;
-  bool dccmRunning;
-  int startDccmId;
-  int stopDccmId; 
-  KProcess *dccmProc;
-  
-  enum {
-    CONNECT_ITEM = 1,
-    OPEN_ITEM,
-    SHUTDOWN_ITEM,
-    EXECUTE_ITEM,
-    INSTALL_ITEM,
-    CONFIGURE_ITEM,
-    STARTDCCM_ITEM,
-    STOPDCCM_ITEM
-  };
-private slots: 
-  void showAbout();
-  void dccmExited(KProcess *oldDccm);
+    void showPopupMenu(QPopupMenu *);
+    void clickedMenu(int item);
+    void showAbout();
+    void dccmExited(KProcess *oldDccm);
+    void connectExited(KProcess *oldProc);
+    void disconnectExited(KProcess *oldProc);
+    void quit();
 };
 
 #endif

@@ -14,7 +14,6 @@
 RakiEvent::RakiEvent(enum eventTypes lt)
   : QCustomEvent(QEvent::User)
 {
-    this->progressValue = 0;
     this->lt = lt;
 }
 
@@ -24,14 +23,6 @@ RakiEvent::RakiEvent(enum eventTypes lt, struct WorkerThreadInterface::sysinfo_s
 {
     this->lt = lt;
     this->sysinfo = sysinfo;
-}
-
-
-RakiEvent::RakiEvent(enum eventTypes lt, int progressValue)
-  : QCustomEvent(QEvent::User)
-{
-  this->progressValue = progressValue;
-  this->lt = lt;
 }
 
 
@@ -75,11 +66,11 @@ QString RakiEvent::getMessage()
 }
 
 
-
+/*
 int RakiEvent::getProgress()
 {
     return progressValue;
-}
+}*/
 
 
 QListBoxItem *RakiEvent::getItem()

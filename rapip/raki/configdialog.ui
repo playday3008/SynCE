@@ -8,8 +8,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>394</width>
-            <height>195</height>
+            <width>480</width>
+            <height>335</height>
         </rect>
     </property>
     <property name="caption">
@@ -106,6 +106,112 @@
                             </property>
                             <property name="echoMode">
                                 <enum>Password</enum>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout8</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout7</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>textLabel1_3</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Path to synce-serial-start:</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>textLabel1_4</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Path to synce-serial-abort:</string>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout6</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLineEdit">
+                                    <property name="name">
+                                        <cstring>synceStartInput</cstring>
+                                    </property>
+                                </widget>
+                                <widget class="QLineEdit">
+                                    <property name="name">
+                                        <cstring>synceStopInput</cstring>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                    </hbox>
+                </widget>
+            </vbox>
+        </widget>
+        <widget class="QGroupBox">
+            <property name="name">
+                <cstring>groupBox2</cstring>
+            </property>
+            <property name="title">
+                <string>Masquerading</string>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QCheckBox">
+                    <property name="name">
+                        <cstring>masqEnabledCheckbox</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Enable Masquerading:</string>
+                    </property>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout7</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel1_5</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
+                            </property>
+                            <property name="text">
+                                <string>Path to iptables:</string>
+                            </property>
+                        </widget>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>ipTablesInput</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
                             </property>
                         </widget>
                     </hbox>
@@ -278,6 +384,48 @@
         <receiver>ConfigDialog</receiver>
         <slot>changedSlot()</slot>
     </connection>
+    <connection>
+        <sender>synceStartInput</sender>
+        <signal>textChanged(const QString&amp;)</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>pathChangedSlot()</slot>
+    </connection>
+    <connection>
+        <sender>synceStopInput</sender>
+        <signal>textChanged(const QString&amp;)</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>pathChangedSlot()</slot>
+    </connection>
+    <connection>
+        <sender>masqEnabledCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>ipTablesInput</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>masqEnabledCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>textLabel1_5</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>masqEnabledCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>masqChangedSlot()</slot>
+    </connection>
+    <connection>
+        <sender>ipTablesInput</sender>
+        <signal>textChanged(const QString&amp;)</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>masqChangedSlot()</slot>
+    </connection>
+    <connection>
+        <sender>buttonCancel</sender>
+        <signal>clicked()</signal>
+        <receiver>ConfigDialog</receiver>
+        <slot>disableApply()</slot>
+    </connection>
 </connections>
 <includes>
     <include location="local" impldecl="in implementation">raki.h</include>
@@ -286,8 +434,11 @@
 </includes>
 <slots>
     <slot specifier="non virtual">okSlot()</slot>
-    <slot specifier="non virtual">changedSlot()</slot>
+    <slot>changedSlot()</slot>
     <slot>applySlot()</slot>
+    <slot>pathChangedSlot()</slot>
+    <slot>masqChangedSlot()</slot>
+    <slot>disableApply()</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>

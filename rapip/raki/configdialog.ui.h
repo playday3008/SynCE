@@ -17,11 +17,29 @@ void ConfigDialog::okSlot()
 
 void ConfigDialog::changedSlot()
 {
-    buttonApply->setEnabled(true);
+    
 }
 
 
 void ConfigDialog::applySlot()
+{
+
+}
+
+
+void ConfigDialog::pathChangedSlot()
+{
+    
+}
+
+
+void ConfigDialog::masqChangedSlot()
+{
+
+}
+
+
+void ConfigDialog::disableApply()
 {
 
 }

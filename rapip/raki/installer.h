@@ -35,27 +35,26 @@ private:
 };
 
 
-class Installer : public QWidget
+class Installer : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  Installer(QWidget *parent, const char *name);
-  virtual ~Installer();
-  void installCabinetFile(KURL fileUrl);
+    Installer(QWidget *parent);
+    virtual ~Installer();
+    void installCabinetFile(KURL fileUrl);
 
 protected slots:
-  void runInstaller();
-  void copyResult(KIO::Job *fileCopyJob);
-  void deleteResult(KIO::Job *deleteJob);
-  void deleteFile(KURL delFile);
+    void runInstaller();
+    void copyResult(KIO::Job *fileCopyJob);
+    void deleteResult(KIO::Job *deleteJob);
+    void deleteFile(KURL delFile);
 
 private:
-  int installCounter;
-  int installed;
-  int currentInstalled;
-  RunInstallerThread *runInstallerThread;
-  QWidget *parent;
+    RunInstallerThread *runInstallerThread;
+    int installCounter;
+    int installed;
+    int currentInstalled;
 };
 
 #endif

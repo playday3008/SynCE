@@ -40,18 +40,15 @@ public:
   RakiEvent(enum eventTypes lt, struct WorkerThreadInterface::sysinfo_s sysinfo);
   RakiEvent(enum eventTypes lt, QString msg);
   RakiEvent(enum eventTypes lt, QListBoxItem *item);
-  RakiEvent(enum eventTypes lt, int progressValue);
   
   ~RakiEvent();
   enum eventTypes eventType();
   struct WorkerThreadInterface::sysinfo_s getSysinfo();
   QString getMessage();
-  int getProgress();
   QListBoxItem *getItem();
 
 private:
     enum eventTypes lt;
-    int progressValue; 
     struct WorkerThreadInterface::sysinfo_s sysinfo;
     QString msg;
     QListBoxItem *item;

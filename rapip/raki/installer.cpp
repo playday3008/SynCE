@@ -14,9 +14,9 @@
 #include "errorevent.h"
 #include "rakiworkerthread.h"
 
-Installer::Installer(QWidget *parent, const char */*name*/)
+Installer::Installer(QWidget *parent)
+    : QObject(parent)
 {
-    this->parent = parent;
     currentInstalled = 0;
     installed = 0;
     installCounter = 0;
@@ -40,8 +40,8 @@ void Installer::runInstaller()
 
 void Installer::deleteResult(KIO::Job *deleteJob)
 {
-    if ( deleteJob->error() ) {
-        deleteJob->showErrorDialog(parent);
+    if (deleteJob->error()) {
+        deleteJob->showErrorDialog((QWidget *) parent());
     }
     installed++;
     if (installed == installCounter) {
@@ -60,8 +60,8 @@ void Installer::deleteFile(KURL delFile)
 
 void Installer::copyResult(KIO::Job *fileCopyJob)
 {
-    if ( fileCopyJob->error() ) {
-        fileCopyJob->showErrorDialog(parent);
+    if (fileCopyJob->error()) {
+        fileCopyJob->showErrorDialog((QWidget *) parent());
         KURL delUrl = ((KIO::FileCopyJob *)fileCopyJob)->destURL();
         sleep(1);
         deleteFile(delUrl);

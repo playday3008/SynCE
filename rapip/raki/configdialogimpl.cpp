@@ -19,13 +19,11 @@
 
 ConfigDialogImpl::ConfigDialogImpl(QWidget* parent, const char* name, bool modal, WFlags fl)
   : ConfigDialog(parent, name, modal, fl)
-{    
-    startDccm = true;
-    usePassword = false;
-    dccmPath = "/usr/local/bin/dccm";
-    password = "";
+{
     readConfig();
     updateFields();
+    buttonApply->setEnabled(false);
+    dccmChanged = false;
 }
 
 
@@ -39,8 +37,13 @@ void ConfigDialogImpl::updateFields()
     startDccmCheckbox->setChecked(startDccm);
     passwordCheckbox->setChecked(usePassword);
     passwordEdit->setText(password);
-    buttonApply->setDisabled(true);
     dccmPathInput->setText(dccmPath);
+    synceStartInput->setText(synceStart);
+    synceStopInput->setText(synceStop);
+    masqEnabledCheckbox->setChecked(masqEnabled);
+    ipTablesInput->setText(ipTables);
+    buttonApply->setDisabled(true);
+    dccmChanged = false;
 }
 
 
@@ -68,6 +71,30 @@ QString ConfigDialogImpl::getDccmPath()
 }
 
 
+QString ConfigDialogImpl::getSynceStart()
+{
+    return synceStart;
+}
+
+
+QString ConfigDialogImpl::getSynceStop()
+{
+    return synceStop;
+}
+
+
+QString ConfigDialogImpl::getIpTables()
+{
+    return ipTables;
+}
+
+
+bool ConfigDialogImpl::getMasqueradeEnabled()
+{
+    return masqEnabled;
+}
+
+
 void ConfigDialogImpl::writeConfig()
 {
     ksConfig->setGroup("DCCM");
@@ -75,6 +102,10 @@ void ConfigDialogImpl::writeConfig()
     ksConfig->writeEntry("UsePassword", usePassword);
     ksConfig->writeEntry("Password", password);
     ksConfig->writeEntry("DccmPath", dccmPath);
+    ksConfig->writeEntry("SynCEStart", synceStart);
+    ksConfig->writeEntry("SynCEStop", synceStop);
+    ksConfig->writeEntry("Masquerade", masqEnabled);
+    ksConfig->writeEntry("IpTables", ipTables);
     ksConfig->sync();
 }
 
@@ -85,10 +116,22 @@ void ConfigDialogImpl::readConfig()
     ksConfig->setGroup("DCCM");
     startDccm = ksConfig->readBoolEntry("StartDccm");
     usePassword = ksConfig->readBoolEntry("UsePassword");
+    masqEnabled = ksConfig->readBoolEntry("Masquerade");
     password = ksConfig->readEntry("Password");
     dccmPath = ksConfig->readEntry("DccmPath");
-    if (dccmPath.isEmpty())
+    ipTables = ksConfig->readEntry("IpTables");
+    if (dccmPath.isEmpty()) {
         dccmPath = "dccm";
+    }
+    if (synceStart.isEmpty()) {
+        synceStart = "synce-serial-start";
+    }
+    if (synceStop.isEmpty()) {
+        synceStop = "synce-serial-abort";
+    }
+    if (ipTables.isEmpty()) {
+        ipTables = "/usr/sbin/iptables";
+    }
 }
 
 
@@ -99,8 +142,40 @@ void ConfigDialogImpl::applySlot()
         this->dccmPath = dccmPathInput->text();
         startDccm = startDccmCheckbox->isChecked();
         usePassword = passwordCheckbox->isChecked();
+        synceStart = synceStartInput->text();
+        synceStop = synceStopInput->text();
+        masqEnabled = masqEnabledCheckbox->isChecked();
+        ipTables = ipTablesInput->text();
         writeConfig();
         buttonApply->setDisabled(true);
-        ((Raki *) parent())->restartDccm();
+        if (dccmChanged) {
+            ((Raki *) parent())->restartDccm();
+            dccmChanged = false;
+        }
     }
+}
+
+
+void ConfigDialogImpl::changedSlot()
+{
+    dccmChanged = true;
+    buttonApply->setEnabled(true);
+}
+
+
+void ConfigDialogImpl::pathChangedSlot()
+{
+    buttonApply->setEnabled(true);
+}
+
+
+void ConfigDialogImpl::masqChangedSlot()
+{
+    buttonApply->setEnabled(true);
+}
+
+
+void ConfigDialogImpl::disableApply()
+{
+    updateFields();
 }

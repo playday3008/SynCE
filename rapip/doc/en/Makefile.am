@@ -1,2 +1,2 @@
-KDE_DOCS = rapip
+KDE_DOCS = raki
 KDE_LANG = en

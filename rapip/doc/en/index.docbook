@@ -12,7 +12,7 @@
 <book lang="&language;">
 
   <bookinfo>
-    <title>The rapip Handbook</title>
+    <title>The Rapip/Raki Handbook</title>
     <authorgroup>
       <author>
 	<firstname></firstname>
@@ -23,8 +23,12 @@
     <date>date</date>
     <releaseinfo>0&#46;1</releaseinfo>
     <abstract>
-      <para>Raki is a small management application for Pocket-PCs. It uses the
-      synce-library suit to communicate with the PDA.</para>
+      <para>Rapip/Raki is a tool-combination which claims to integrate a PocketPC connection seemless into K Desktop Environment.</para>
+      <para>Rapip is a kde_ioslave.</para>
+      <para>Raki is a management application.</para>
+      <para>The low-level connection is handled by the
+      <ulink
+	url="http://synce.sourceforge.net/">synce-librariy</ulink> suit to communicate with the PDA.</para>
     </abstract>
     <keywordset>
       <keyword>KDE</keyword>
@@ -34,7 +38,7 @@
 
   <chapter id="introduction">
     <title>Introduction</title>
-
+	
     <sect1 id="features">
       <title>Features</title>
       <para></para>

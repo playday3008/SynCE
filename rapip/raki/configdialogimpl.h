@@ -26,26 +26,37 @@ class ConfigDialogImpl : public ConfigDialog
 public:
     ConfigDialogImpl(QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ~ConfigDialogImpl();
-
-    void updateFields();
-    bool getUsePassword();
-    bool getStartDccm();
     QString getPassword();
     QString getDccmPath();
-
-public slots:
-    void applySlot();
+    QString getSynceStart();
+    QString getSynceStop();
+    QString getIpTables();
+    bool getUsePassword();
+    bool getStartDccm();
+    bool getMasqueradeEnabled();
     
-protected:
+private slots:
+    void applySlot();
+    void changedSlot();
+    void pathChangedSlot();
+    void masqChangedSlot();
+    void disableApply();
+    
+private:
+    void readConfig();
+    void updateFields();
+    
+    KConfig *ksConfig;
     QString password;
     QString dccmPath;
+    QString synceStart;
+    QString synceStop;
+    QString ipTables;
     bool startDccm;
     bool usePassword;
-    void readConfig();
-
-private:
-    KConfig *ksConfig;
+    bool masqEnabled;
     void writeConfig();
+    bool dccmChanged;
 };
 
 #endif

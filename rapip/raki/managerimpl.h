@@ -26,11 +26,11 @@ public:
     ManagerImpl(QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ~ManagerImpl();
 
-    void customEvent (QCustomEvent *e);
     void closeEvent(QCloseEvent *e);
+    void customEvent (QCustomEvent *e);
     void work(QThread *qt);
     
-public slots:
+private slots:
     void uninstallSoftwareSlot();
     void refreshSystemInfoSlot();
     void refreshSoftwareSlot();

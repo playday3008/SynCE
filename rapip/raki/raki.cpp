@@ -13,66 +13,124 @@
 #include <qdragobject.h>
 #include <kfileitem.h>
 #include <krun.h>
+#include <kstandarddirs.h>
 
 #include "raki.h"
 #include "rapiwrapper.h"
 
 #define Icon(x) KGlobal::instance()->iconLoader()->loadIcon(x, KIcon::Toolbar)
 
-Raki::Raki(KAboutData* /*aboutDta*/, KDialog* d, QWidget* parent, const char *name)
+Raki::Raki(KAboutData* /*aboutDta*/, KDialog* d, QWidget* parent, 
+           const char *name)
         : KSystemTray(parent, name), DCOPObject ("Raki"), aboutDialog(d)
 {
+    int leCount = 0;
+    int reCount = 0;
+    
     connectedIcon = Icon("raki");
     disconnectedIcon = Icon("raki_bw");
     setPixmap(disconnectedIcon);
 
     rapiLeMenu = new KPopupMenu(0, "RakiMenu");
     rapiLeMenu->clear();
+    
     rapiLeMenu->insertTitle(SmallIcon("rapip"), i18n("Raki Applet"));
+    leCount++;
 
-    rapiLeMenu->insertItem(SmallIcon("run"), i18n("&Execute..."), EXECUTE_ITEM);
-    rapiLeMenu->insertItem(SmallIcon("rotate_cw"), i18n("&Info && Management..."), INSTALL_ITEM);
-    rapiLeMenu->insertItem(SmallIcon("pda_blue"),i18n("&Open rapip:/"), OPEN_ITEM); 
+    rapiLeMenu->insertItem(SmallIcon("run"), i18n("&Execute..."), 
+                           EXECUTE_ITEM);
+    leCount++;
+    
+    rapiLeMenu->insertItem(SmallIcon("rotate_cw"), 
+                           i18n("&Info && Management..."), INSTALL_ITEM);
+    leCount++;
+    
+    rapiLeMenu->insertItem(SmallIcon("pda_blue"),i18n("&Open rapip:/"), 
+                           OPEN_ITEM); 
+    leCount++;
+    
     rapiLeMenu->insertTearOffHandle(-1, -1);
+    leCount++;
 
+    connect(rapiLeMenu, SIGNAL(activated(int)), this, SLOT(clickedMenu(int)));
     rapiLeMenu->setEnabled(false);
 
     rapiReMenu = new KPopupMenu(0, "RakiMenu");
     rapiReMenu->clear();
+    
     rapiReMenu->insertTitle(SmallIcon("rapip"), i18n("Raki Applet"));
-
-    startDccmId = rapiReMenu->insertItem(SmallIcon("start"), i18n("&Start DCCM"), STARTDCCM_ITEM);
-    stopDccmId = rapiReMenu->insertItem(SmallIcon("stop"), i18n("S&top DCCM"), STOPDCCM_ITEM);
-    rapiReMenu->insertSeparator(3);
-
-    rapiReMenu->insertItem(SmallIcon("configure"), i18n("&Configure..."), CONFIGURE_ITEM);
-    rapiReMenu->insertSeparator(5);
+    reCount++;
+    
+    connectId = rapiReMenu->insertItem(SmallIcon("connect_established"), 
+                                       i18n("&Connect"), CONNECT_ITEM);
+    reCount++;
+    
+    disconnectId = rapiReMenu->insertItem(SmallIcon("connect_no"), 
+                                          i18n("&Disconnect"), 
+                                          DISCONNECT_ITEM);
+    reCount++;
+    
+    rapiReMenu->insertSeparator(reCount);
+    reCount++;
+    
+    startDccmId = rapiReMenu->insertItem(SmallIcon("start"), 
+                                         i18n("&Start DCCM"), STARTDCCM_ITEM);
+    reCount++;
+    
+    stopDccmId = rapiReMenu->insertItem(SmallIcon("stop"), i18n("S&top DCCM"), 
+                                        STOPDCCM_ITEM);
+    reCount++;
+    
+    rapiReMenu->insertSeparator(reCount);
+    reCount++;
+    
+    rapiReMenu->insertItem(SmallIcon("configure"), i18n("&Configure..."), 
+                           CONFIGURE_ITEM);
+    reCount++;
+    
+    rapiReMenu->insertSeparator(reCount);
+    reCount++;
+    
     KHelpMenu *help = new KHelpMenu( this, 0, false );
-    rapiReMenu->insertItem(i18n("&Help"), help->menu());
     connect (help, SIGNAL (showAboutApplication()), this, SLOT (showAbout()));
+    rapiReMenu->insertItem(i18n("&Help"), help->menu());
+    reCount++; 
 
     KActionCollection *actionCollection = new KActionCollection(this);
     KAction *quit = KStdAction::quit(this, SLOT (quit()), actionCollection);
-    rapiReMenu->insertSeparator(7);
-    quit->plug(rapiReMenu, 8);
+    rapiReMenu->insertSeparator(reCount);
+    reCount++;
+    quit->plug(rapiReMenu, reCount);
 
+    connect(rapiReMenu, SIGNAL(activated(int)), this, SLOT(clickedMenu(int)));
     rapiReMenu->setEnabled(true);
     
-    dccmProc = new KProcess();
+    rapiReMenu->setItemEnabled(connectId, true);
+    rapiReMenu->setItemEnabled(disconnectId, false);
+    
+    connect(&dccmProc, SIGNAL(processExited(KProcess *)),
+            this, SLOT(dccmExited(KProcess *)));
+    connect(&connectProc, SIGNAL(processExited(KProcess *)),
+            this, SLOT(connectExited(KProcess *)));
+    connect(&disconnectProc, SIGNAL(processExited(KProcess *)),
+            this, SLOT(disconnectExited(KProcess *)));
 
     configDialog = new ConfigDialogImpl(this, "ConfigDialog", true);
     runWindow = new RunWindowImpl(this, "RunWindow", false);
     managerWindow = new ManagerImpl(this, "ManagerWindow", false);
-    installer = new Installer(this, "Installer");
-
-    connect(rapiLeMenu, SIGNAL(activated(int)), this, SLOT(clickedMenu(int)));
-    connect(rapiReMenu, SIGNAL(activated(int)), this, SLOT(clickedMenu(int)));
-
-    tryStartDccm();
-
+    installer = new Installer(this);
+    
+    char *path = NULL;
+    synce::synce_get_directory(&path);
+    
+    KStandardDirs *dirs = KGlobal::dirs();
+    dirs->addResourceType("synce", "");
+    dirs->addPrefix(path);
+    
     setAcceptDrops(false);
     entered = false;
-    
+
+    tryStartDccm();
 }
 
 
@@ -84,7 +142,8 @@ Raki::~Raki()
 
 void Raki::tryStartDccm()
 {
-
+    dccmRestart = false;
+    
     if (configDialog->getStartDccm()) {
         startDccm();
     }
@@ -93,38 +152,38 @@ void Raki::tryStartDccm()
 
 void Raki::restartDccm()
 {
-    if (dccmProc->isRunning()) {
+    dccmRestart = true;
+    
+    if (dccmProc.isRunning()) {
         stopDccm();
     } else {
-        delete dccmProc;
         tryStartDccm();
     }
 }
 
 
-void Raki::dccmExited(KProcess *oldDccm)
+void Raki::dccmExited(KProcess */*oldDccm*/)
 {
-    delete oldDccm;
-    tryStartDccm();
+    if (dccmRestart) {
+        dccmRestart = false;
+        tryStartDccm();
+    }   
 }
 
 
 void Raki::startDccm()
 {   
-    dccmProc = new KProcess();
+    dccmProc.clearArguments();
     
-    connect(dccmProc, SIGNAL(processExited(KProcess *)),
-            this, SLOT(dccmExited(KProcess *)));
+    dccmProc.setExecutable(configDialog->getDccmPath());
     
-    dccmProc->setExecutable(configDialog->getDccmPath());
-    
-    *dccmProc << "-f";
+    dccmProc << "-f";
     
     if (configDialog->getUsePassword()) {
-        *dccmProc << "-p" << configDialog->getPassword();        
+        dccmProc << "-p" << configDialog->getPassword();        
     }
     
-    dccmProc->start();
+    dccmProc.start();
     
     rapiReMenu->setItemEnabled (startDccmId, false);
     rapiReMenu->setItemEnabled (stopDccmId, true);
@@ -133,9 +192,11 @@ void Raki::startDccm()
 
 void Raki::stopDccm()
 {
-    dccmProc->kill();
-    rapiReMenu->setItemEnabled (startDccmId, true);
-    rapiReMenu->setItemEnabled (stopDccmId, false);
+    if (dccmProc.isRunning()) {
+        dccmProc.kill();
+        rapiReMenu->setItemEnabled (startDccmId, true);
+        rapiReMenu->setItemEnabled (stopDccmId, false);
+    }
 }
 
 
@@ -146,10 +207,59 @@ void Raki::quit()
 }
 
 
+void Raki::postConnect(bool enable)
+{
+    if (enable) {
+        KConfig activeConnection("active_connection", true, false, "synce");
+    
+        activeConnection.setGroup("device");
+    
+        // activeConnection.readEntry("name");
+        // activeConnection.readEntry("class");
+        // activeConnection.readEntry("hardware");
+        // activeConnection.readEntry("port");
+        
+        deviceIp = activeConnection.readEntry("ip");
+    
+        if (configDialog->getMasqueradeEnabled()) {
+            KProcess ipTables;
+            ipTables.clearArguments();
+            ipTables.setExecutable("sudo");
+    
+            ipTables << "-u" << "root" << configDialog->getIpTables() << "-t" << "nat" 
+                     << "-A" << "POSTROUTING" << "-s" << deviceIp  << "-d" 
+                     << "0.0.0.0/0" << "-j" << "MASQUERADE";
+    
+            ipTables.start(KProcess::DontCare);
+            
+            masqueradeEnabled = true;
+        } else {
+            masqueradeEnabled = false;
+        }
+    } else {
+        if (masqueradeEnabled) {
+            masqueradeEnabled = false;
+            KProcess ipTables;
+            ipTables.clearArguments();
+            ipTables.setExecutable("sudo");
+    
+            ipTables << "-u" << "root" << configDialog->getIpTables() << "-t" << "nat" 
+                     << "-D" << "POSTROUTING" << "-s" << deviceIp  << "-d" 
+                     << "0.0.0.0/0" << "-j" << "MASQUERADE";
+    
+            ipTables.start(KProcess::DontCare);
+        }
+   }
+}
+
+
 void Raki::setConnectionStatus(bool enable)
 {
     rapiLeMenu->setEnabled(enable);
     setAcceptDrops(enable);
+    rapiReMenu->setItemEnabled(connectId, !enable);
+    rapiReMenu->setItemEnabled(disconnectId, enable);
+    postConnect(enable);
 }
 
 
@@ -189,27 +299,32 @@ void Raki::customEvent (QCustomEvent *e)
         ErrorEvent *event = (ErrorEvent *) e;
         switch(event->getErrorType()) {
         case ErrorEvent::REMOTE_FILE_CREATE_ERROR:
-            msg = QString("Could not create ") + QString(((QString *) event->data())->ascii());
+            msg = QString("Could not create ") + 
+                          QString(((QString *) event->data())->ascii());
             KMessageBox::error(0, i18n(msg));
             delete ((QString *) event->data());
             break;
         case ErrorEvent::REMOTE_FILE_WRITE_ERROR:
-            msg = QString("Could not write to ") + QString(((QString *) event->data())->ascii());
+            msg = QString("Could not write to ") + 
+                          QString(((QString *) event->data())->ascii());
             KMessageBox::error(0, i18n(msg));
             delete ((QString *) event->data());
             break;
         case ErrorEvent::LOCALE_FILE_OPEN_ERROR:
-            msg = QString("Could not open ") + QString(((QString *) event->data())->ascii());
+            msg = QString("Could not open ") + 
+                          QString(((QString *) event->data())->ascii());
             KMessageBox::error(0, i18n(msg));
             delete ((QString *) event->data());
             break;
         case ErrorEvent::LOCALE_FILE_READ_ERROR:
-            msg = QString("Could not read ") + QString(((QString *) event->data())->ascii());
+            msg = QString("Could not read ") + 
+                          QString(((QString *) event->data())->ascii());
             KMessageBox::error(0, i18n(msg));
             delete ((QString *) event->data());
             break;
         case ErrorEvent::REMOTE_FILE_EXECUTE_ERROR:
-            msg = QString("Could not execute ") + QString(((QString *) event->data())->ascii());
+            msg = QString("Could not execute ") + 
+                          QString(((QString *) event->data())->ascii());
             KMessageBox::error(0, i18n(msg));
             delete ((QString *) event->data());
             break;
@@ -227,19 +342,21 @@ void Raki::dragEnterEvent(QDragEnterEvent *event)
 {
     event->accept(QUrlDrag::canDecode(event));
 
-    if (entered==false)
+    if (entered == false) {
         setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
-
-    entered=true;
+    }
+    
+    entered = true;
 }
 
 
 void Raki::dragLeaveEvent(QDragLeaveEvent * /* event */)
 {
-    if (entered == true)
+    if (entered == true) {
         setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-
-    entered=false;
+    }
+    
+    entered = false;
 }
 
 
@@ -265,12 +382,30 @@ void Raki::dropEvent (QDropEvent *event)
 }
 
 
+void Raki::connectExited(KProcess */*oldProc*/)
+{ 
+}
+
+
+void Raki::disconnectExited(KProcess */*oldProc*/)
+{
+}
+
+
 void Raki::clickedMenu(int item)
 {
     switch (item) {
     case -1:
         break;
     case CONNECT_ITEM:
+        connectProc.clearArguments();
+        connectProc.setExecutable(configDialog->getSynceStart());
+        connectProc.start();
+        break;
+    case DISCONNECT_ITEM:
+        disconnectProc.clearArguments();
+        disconnectProc.setExecutable(configDialog->getSynceStop());
+        disconnectProc.start();
         break;
     case SHUTDOWN_ITEM:
         break;
@@ -281,7 +416,6 @@ void Raki::clickedMenu(int item)
         managerWindow->show();
         break;
     case CONFIGURE_ITEM:
-        configDialog->updateFields();
         configDialog->show();
         break;
     case STARTDCCM_ITEM:
@@ -301,12 +435,10 @@ QString Raki::changeConnectionState(int state)
 {
     switch(state) {
     case 0:
-        connected = false;
         actualIcon = &disconnectedIcon;
         setConnectionStatus(false);
         break;
     case 1:
-        connected = true;
         actualIcon = &connectedIcon;
         setConnectionStatus(true);
         break;
