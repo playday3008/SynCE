@@ -6,14 +6,17 @@
 
 <h1>SynCE - Bluetooth</h1>
 
+<p>Please note that this information is quite Linux-specific.</p>
+
 <ol>
 
 <li><p>Install <a href="http://bluez.sourceforge.net/">BlueZ</a>. The needed
-modules are:</p>
+modules are at least:</p>
 
 <ul>
 <li>bluez-libs</li>
 <li>bluez-utils</li>
+<li>bluez-sdp</li>
 <li>bluez-pan</li>
 </ul>
 </li>
@@ -62,8 +65,23 @@ disabled you forgot to modify <tt>/etc/bluetooth/hcid.conf</tt>.)</li>
 <li>You should now be able to use the "Start ActiveSync" menu entry found when
 you tap the Bluetooth Manager icon on the Today screen.</p></li>
 
+<li><p>You can have something like this in <tt>/etc/rc.local</tt> or similar
+file to prepare your computer for Bluetooth connection from boot. This is for
+RedHat 9:</p>
+
+<pre>/sbin/service bluetooth restart
+/usr/bin/dund --listen --msdun call dun
+/usr/bin/sudo -u david /usr/bin/dccm</pre>
+
+<p>(The Bluetooth service is restarted because that made everything work much
+    better for me on my Thinkpad T30... don't know why.)</p></li>
+
 
 </ol>
+
+<p>If this information is not enough, please see if <a
+href="http://www.grinta.net/howto/bluez-ipaq.html">Daniele Nicolodi's HOWTO</a>
+is helpful.</p>
 
 
 <p>Return to <a href="index.php">main page</a>.</p>

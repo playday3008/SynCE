@@ -41,8 +41,9 @@ href="http://multisync.sourceforge.net/">MultiSync</a> up and running. Verify
 that MultiSync works with your version of Evolution by creating and testing a
 synchronization pair with the Evolution and Backup plugins.</li>
 
-<li class=SPACED><a href="using.php">Install SynCE</a> including the
-<tt>rra</tt> and <tt>multisync_plugin</tt> modules.</li>
+<li class=SPACED><a href="download.php">Download</a> and <a
+href="setup.php">setup</a> SynCE including the <tt>rra</tt> and
+<tt>multisync_plugin</tt> modules.</li>
 
 <li class=SPACED>If you have previously used ActiveSync to synchronize your
 Pocket PC handheld, follow the instructions at <i>Using both the MultiSync

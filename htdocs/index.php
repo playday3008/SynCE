@@ -124,7 +124,7 @@ InstallShield installers.</p>
 <p><b>July 30, 2003</b> SynCE 0.8 is released! SynCE now includes the
 possiblity to synchronize calendar and tasks, in addition to the previous
 address book synchronization support. However, recurring events are not yet
-supported. <a href="using.php">Download</a>.</p>
+supported. <a href="download.php">Download</a>.</p>
 
 <!--
 

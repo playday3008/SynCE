@@ -31,7 +31,7 @@ BODY,P,DIV,LI,UL,TD,TH,TR,TABLE,EM,FONT,BLOCKQUOTE,FORM
 PRE,TT
 {
 	font-size: 11px;
-	font-family: Courier, Courier New, monospace;
+	font-family: Luxi Mono, Courier New, monospace, Courier;
 }
 
 H1

@@ -16,5 +16,8 @@ for connecting your PDA.</p>
 
 <p>Time to <a href="start.php">start your connection</a>!</p>
 
+<p>Tip of the day: When you are sure that your connection is working properly,
+  you may want to install a <a href="hotplug.php">hotplug script</a>.</p>
+
 </div>
 <?php include 'footer.php'; ?>
