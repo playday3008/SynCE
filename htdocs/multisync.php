@@ -24,13 +24,11 @@ at your own risk.</p>
 
 <tr><th>Evolution<br>version</th><th>MultiSync<br>version</th><th>MultiSync<br>CVS branch</th><th>multisync_plugin<br>version</th><th>multisync_plugin<br>CVS branch</th></tr>
 
-<tr><td>1.2.x or earlier</td><td>0.72</td><td>gnome-1</td><td>0.8.1</td><td>BRANCH_GNOME_1</td></tr>
+<tr><td>1.2.x or earlier</td><td>0.72</td><td>gnome-1</td><td>multisync_plugin-gnome1<br>0.8.3 or later</td><td>BRANCH_GNOME_1</td></tr>
 
-<tr><td>1.4.0 or later</td><td>0.80</td><td>HEAD</td><td>0.8.2<sup>*</sup></td><td>HEAD</td></tr>
+<tr><td>1.4.0 or later</td><td>0.80</td><td>HEAD</td><td>multisync_plugin<br>0.8.2 or later</td><td>HEAD</td></tr>
 
 </table>
-
-<p><sup>*</sup> Not yet released at the time of writing.</p>
 
 <h2>Getting started</h2>
 
