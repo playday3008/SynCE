@@ -267,6 +267,9 @@ BOOL CeSetFileAttributes(
 #define CEVT_FILETIME   64
 #define CEVT_BLOB       65
 
+/* Undocumented flag used by synchronization to denote an empty field */
+#define CEVT_FLAG_EMPTY                 0x0400
+
 #define FAD_OID                         0x0001
 #define FAD_FLAGS                       0x0002
 #define FAD_NAME                        0x0004
@@ -465,6 +468,44 @@ LONG CeRegEnumKeyEx(
 		LPWSTR lpClass, 
 		LPDWORD lpcbClass, 
 		PFILETIME lpftLastWriteTime);
+
+LONG CeRegSetValueEx( 
+		HKEY hKey, 
+		LPCWSTR lpValueName, 
+		DWORD Reserved, 
+		DWORD dwType, 
+		const BYTE *lpData, 
+		DWORD cbData);
+
+/*
+ * Convenience functions for easy registry access
+ */
+
+bool rapi_reg_create_key(
+		HKEY parent,
+		const char* name, 
+		HKEY* key);
+
+bool rapi_reg_open_key(
+		HKEY parent, const char* name, HKEY* key);
+
+bool rapi_reg_query_dword(
+		HKEY key, 
+		const char* name, 
+		DWORD* value);
+
+bool rapi_reg_query_string(
+		HKEY key, 
+		const char* name, 
+		char** value);
+
+#define rapi_reg_free_string(str) wstr_free_string(str)
+
+bool rapi_reg_set_dword(
+		HKEY key, 
+		const char* name, 
+		DWORD value);
+
 
 #endif /* SWIG */
 

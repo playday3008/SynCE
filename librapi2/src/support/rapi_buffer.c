@@ -14,12 +14,11 @@
 #if RAPI_BUFFER_DEBUG
 #define rapi_buffer_trace(args...)    synce_trace(args)
 #define rapi_buffer_warning(args...)  synce_warning(args)
-#define rapi_buffer_error(args...)    synce_error(args)
 #else
 #define rapi_buffer_trace(args...)
 #define rapi_buffer_warning(args...)
-#define rapi_buffer_error(args...)
 #endif
+#define rapi_buffer_error(args...)    synce_error(args)
 
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
@@ -148,6 +147,18 @@ unsigned char* rapi_buffer_get_raw(RapiBuffer* buffer)
 
 bool rapi_buffer_write_data(RapiBuffer* buffer, const void* data, size_t size)
 {
+	if (!buffer)
+	{
+		rapi_buffer_error("NULL buffer\n");
+		return false;
+	}
+	
+	if (!data)
+	{
+		rapi_buffer_error("NULL data\n");
+		return false;
+	}
+
 	if (!rapi_buffer_assure_size(buffer, size))
 	{
 		rapi_buffer_error("rapi_buffer_assure_size failed, size=%i\n", size);
@@ -182,14 +193,21 @@ bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode)
 	 *     04  String length in number of unicode chars + 1
 	 *     08  String data 
 	 */
-	size_t length = wstr_strlen(unicode) + 1;
-	
-	rapi_buffer_trace("Writing string of length %i",length);
-	
-	return 
-		rapi_buffer_write_uint32(buffer, 1) &&
-		rapi_buffer_write_uint32(buffer, length) &&
-		rapi_buffer_write_data(buffer, (void*)unicode, length * sizeof(WCHAR));
+	if (unicode)
+	{
+		size_t length = wstr_strlen(unicode) + 1;
+
+		rapi_buffer_trace("Writing string of length %i",length);
+
+		return 
+			rapi_buffer_write_uint32(buffer, 1) &&
+			rapi_buffer_write_uint32(buffer, length) &&
+			rapi_buffer_write_data(buffer, (void*)unicode, length * sizeof(WCHAR));
+	}
+	else
+	{
+		return rapi_buffer_write_uint32(buffer, 0);
+	}
 }
 
 bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode)
@@ -220,7 +238,7 @@ bool rapi_buffer_write_optional_uint32(RapiBuffer* buffer, uint32_t* data, bool 
 	return rapi_buffer_write_optional(buffer, data, sizeof(uint32_t), send_data);
 }
 
-bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data)
+bool rapi_buffer_write_optional(RapiBuffer* buffer, const void* data, size_t size, bool send_data)
 {
 	/* See http://sourceforge.net/mailarchive/message.php?msg_id=64440 */
 	if (data)

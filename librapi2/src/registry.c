@@ -75,7 +75,7 @@ LONG CeRegOpenKeyEx(/*{{{*/
 	return return_value;
 }/*}}}*/
 
-LONG CeRegQueryValueEx( 
+LONG CeRegQueryValueEx( /*{{{*/
 		HKEY hKey, 
 		LPCWSTR lpValueName, 
 		LPDWORD lpReserved, 
@@ -119,7 +119,7 @@ LONG CeRegQueryValueEx(
 	}
 
 	return return_value;
-}
+}/*}}}*/
 
 LONG CeRegCloseKey(/*{{{*/
 		HKEY hKey)
@@ -276,5 +276,158 @@ LONG CeRegEnumKeyEx( /*{{{*/
 	}
 
 	return return_value;
+}/*}}}*/
+
+LONG CeRegSetValueEx( /*{{{*/
+		HKEY hKey, 
+		LPCWSTR lpValueName, 
+		DWORD Reserved, 
+		DWORD dwType, 
+		const BYTE *lpData, 
+		DWORD cbData)
+{
+	RapiContext* context = rapi_context_current();
+	LONG return_value = 0;
+	
+	rapi_context_begin_command(context, 0x27);
+	rapi_buffer_write_uint32(context->send_buffer, hKey);
+	rapi_buffer_write_optional_string(context->send_buffer, lpValueName);
+	rapi_buffer_write_uint32(context->send_buffer, dwType);
+	rapi_buffer_write_optional(context->send_buffer, lpData, cbData, true);
+	rapi_buffer_write_uint32(context->send_buffer, cbData);
+
+	if ( !rapi_context_call(context) )
+		return false;
+	
+	if (!rapi_buffer_read_uint32(context->recv_buffer, &context->last_error))
+		return false;
+	if (!rapi_buffer_read_uint32(context->recv_buffer, &return_value))
+		return false;
+
+	return return_value;
+}/*}}}*/
+
+bool rapi_reg_create_key(/*{{{*/
+		HKEY parent, const char* name, HKEY* key)
+{
+	WCHAR* name_wide = wstr_from_ascii(name);
+
+	LONG result = CeRegCreateKeyEx(
+			parent,
+			name_wide,
+			0,
+			NULL,
+			0,
+			0,
+			NULL,
+			key,
+			NULL
+			);
+
+	wstr_free_string(name_wide);
+	
+	return ERROR_SUCCESS == result;
+}/*}}}*/
+
+bool rapi_reg_open_key(/*{{{*/
+		HKEY parent, const char* name, HKEY* key)
+{
+	WCHAR* name_wide = wstr_from_ascii(name);
+
+	LONG result = CeRegOpenKeyEx(
+			parent,
+			name_wide,
+			0,
+			0,
+			key
+			);
+
+	wstr_free_string(name_wide);
+	
+	return ERROR_SUCCESS == result;
+}/*}}}*/
+
+bool rapi_reg_query_dword(/*{{{*/
+		HKEY key, const char* name, DWORD* value)
+{
+	DWORD type;
+	DWORD size = sizeof(DWORD);
+	WCHAR* name_wide = wstr_from_ascii(name);
+	
+	LONG result = CeRegQueryValueEx(
+			key,
+			name_wide,
+			NULL,
+			&type,
+			(LPBYTE)value,
+			&size);
+	
+	wstr_free_string(name_wide);
+
+	return 
+		ERROR_SUCCESS == result &&
+		REG_DWORD == type && 
+		sizeof(DWORD) == size;
+}/*}}}*/
+
+bool rapi_reg_query_string(/*{{{*/
+		HKEY key, const char* name, char** value)
+{
+	bool success = false;
+	DWORD type;
+	DWORD size = 0;
+	WCHAR* unicode = NULL;
+	WCHAR* name_wide = wstr_from_ascii(name);
+	
+	LONG result = CeRegQueryValueEx(
+			key,
+			name_wide,
+			NULL,
+			&type,
+			NULL,
+			&size);
+
+	if (ERROR_SUCCESS == result && REG_SZ == type)
+	{
+		unicode = calloc(1, size);
+		
+		result = CeRegQueryValueEx(
+				key,
+				name_wide,
+				NULL,
+				&type,
+				(LPBYTE)unicode,
+				&size);
+		
+	}
+
+	if (ERROR_SUCCESS == result && REG_SZ == type)
+	{
+		*value = wstr_to_ascii(unicode);
+		success = true;
+	}
+
+	free(unicode);
+	wstr_free_string(name_wide);
+
+	return success;
+}/*}}}*/
+
+bool rapi_reg_set_dword(/*{{{*/
+		HKEY key, const char* name, DWORD value)
+{
+	WCHAR* name_wide = wstr_from_ascii(name);
+
+	LONG result = CeRegSetValueEx(
+			key,
+			name_wide,
+			0,
+			REG_DWORD,
+			(BYTE*)&value,
+			sizeof(DWORD));
+	
+	wstr_free_string(name_wide);
+
+	return ERROR_SUCCESS == result;
 }/*}}}*/
 

@@ -71,7 +71,7 @@ bool rapi_buffer_write_optional_uint32(RapiBuffer* buffer, uint32_t* data, bool 
 /**
  * Write an optional parameter
  */
-bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data);
+bool rapi_buffer_write_optional(RapiBuffer* buffer, const void* data, size_t size, bool send_data);
 
 /**
  * Write an optional input parameter by reference

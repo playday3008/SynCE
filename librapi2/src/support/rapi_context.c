@@ -7,12 +7,11 @@
 #if RAPI_CONTEXT_DEBUG
 #define rapi_context_trace(args...)    synce_trace(args)
 #define rapi_context_warning(args...)  synce_warning(args)
-#define rapi_context_error(args...)    synce_error(args)
 #else
 #define rapi_context_trace(args...)
 #define rapi_context_warning(args...)
-#define rapi_context_error(args...)
 #endif
+#define rapi_context_error(args...)    synce_error(args)
 
 static RapiContext* current_context;
 
@@ -105,7 +104,7 @@ bool rapi_context_call(RapiContext* context)/*{{{*/
 			return false;
 		}
 
-		rapi_context_trace("result 2 = 0x%08x", context->result_2);
+		rapi_context_error("result 2 = 0x%08x", context->result_2);
 
 		/*	if (context->result_2 != 0)
 				return false;*/
