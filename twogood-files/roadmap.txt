@@ -74,24 +74,19 @@ noted otherwise. All libraries should be written i ANSI C.
 
         Part of librapi.
 
-2.2.    KDE 3 integration
+        
+2.2.    KDE 3 integration                                            [voc]
+        
+        This is the "rapip" CVS module. It contains an I/O-slave, system
+        tray icon and more.
 
-2.2.1.  KDE I/O slave (updated version of kio_synce)             [twogood]
-
-        Allows browsing and manipulation of the Pocket PC device file
-        system with Konqueror.
-
-        TODO: package in RPM
-
-2.2.2.  KDE system tray icon that shows connected devices            [voc]
-
-        This is the "rapip" CVS module.
 
 2.3.    GNOME 2 integration
 
 2.3.1   Tray icon (trayicon)                                     [twogood]
 
 2.3.2   GNOME-VFS module (gnomevfs)                               [sassur]
+
 
 2.x.    Tools for your favorite desktop environment here.
 
