@@ -15,10 +15,15 @@ href="macosx.php">Mac OS X hints</a> page.</p>
 <h2>Unable to initialize RAPI</h2>
 
 <p><b>Q:</b> I setup everything and connected my PDA but when I try the <a
-href="tools.php">tools</a> I get a message similar to this:</p>
+href="tools.php">tools</a> I get a message similar to this in SynCE 0.8 or later:</p>
+
+<pre>pstatus: Unable to initialize RAPI: An unspecified failure has occurred</pre>
+
+<p>Or this message in earlier versions of SynCE:</p>
 
 <pre>ReadConfigFile: stat: No such file or directory
 pstatus: Unable to initialize RAPI: Failure</pre>
+
 
 <p><b>A:</b> This means that the PDA has not connected to dccm or that you run
 the tools and dccm as different users. Please make sure that:</p>
