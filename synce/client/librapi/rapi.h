@@ -24,11 +24,6 @@
 #ifndef _RAPI_H
 #define _RAPI_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif /* HAVE_CONFIG_H */
-
-#undef VERSION
 #include <windows.h>
 #include <string.h>
 
@@ -81,19 +76,24 @@ extern "C"
 	RAPIINIT;
 
 #define CERAPI_E_ALREADYINITIALIZED 0x8004101
-	STDAPI CeRapiInit();
+	STDAPI CeRapiInit(void);
 	STDAPI CeRapiInitEx ( RAPIINIT* );
 	STDAPI_( BOOL ) CeCreateProcess ( LPCWSTR, LPCWSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES,
 	                                  BOOL, DWORD, LPVOID, LPWSTR, LPSTARTUPINFO, LPPROCESS_INFORMATION );
 	STDAPI CeRapiUninit ();
 
-	STDAPI_( BOOL ) CeWriteFile ( HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED );
-
 #define GENERIC_WRITE              0x40000000
 #define GENERIC_READ               0x80000000
 #define FILE_SHARE_READ            0x00000001
-#define OPEN_EXISTING                       3
-#define CREATE_ALWAYS                       2
+
+/* dwCreationDisposition */
+#define CREATE_NEW          1
+#define CREATE_ALWAYS       2
+#define OPEN_EXISTING       3
+#define OPEN_ALWAYS         4
+#define TRUNCATE_EXISTING   5
+#define OPEN_FOR_LOADER     6
+
 	STDAPI_( HANDLE ) CeCreateFile ( LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE );
 	STDAPI_( BOOL ) CeCreateDirectory ( LPCWSTR, LPSECURITY_ATTRIBUTES );
 	STDAPI_( DWORD ) CeGetLastError ( void );
@@ -171,21 +171,23 @@ extern "C"
 	STDAPI_( DWORD ) CeGetFileAttributes( LPCWSTR lpFileName );
 	STDAPI_( DWORD ) CeGetFileSize( HANDLE hFile, LPDWORD lpFileSizeHigh );
 
-#define CSIDL_DESKTOPDIRECTORY          0x0000
-#define CSIDL_PROGRAMS                  0x0002
-#define CSIDL_PERSONAL                  0x0005
-#define CSIDL_STARTMENU                 0x0006
-#define CSIDL_STARTUP                   0x0007
-#define CSIDL_RECENT                    0x0008
-#define CSIDL_TRASH                     0x000a
-#define CSIDL_STARTMENU2                0x000b
-#define CSIDL_FONTS                     0x0014
-#define CSIDL_FAVORITES                 0x0016
+
+#define CSIDL_PROGRAMS           0x0002
+#define CSIDL_PERSONAL           0x0005
+#define CSIDL_FAVORITES_GRYPHON  0x0006
+#define CSIDL_STARTUP            0x0007
+#define CSIDL_RECENT             0x0008
+#define CSIDL_STARTMENU          0x000b
+#define CSIDL_DESKTOPDIRECTORY   0x0010
+#define CSIDL_FONTS		 0x0014
+#define CSIDL_FAVORITES		 0x0016
+
 	STDAPI_( DWORD )  CeGetSpecialFolderPath(  int nFolder,  DWORD nBufferLength,  LPWSTR lpBuffer );
 
 	STDAPI_( DWORD ) CeGetTempPath( DWORD nBufferLength, LPWSTR lpBuffer );
 	STDAPI_( BOOL ) CeMoveFile( LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName );
 	STDAPI_( BOOL ) CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped );
+        STDAPI_( BOOL ) CeWriteFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped );
 	STDAPI_( BOOL ) CeRemoveDirectory( LPCWSTR lpPathName );
 	STDAPI_( BOOL ) CeSetEndOfFile( HANDLE hFile );
 	STDAPI_( BOOL ) CeSetFileAttributes( LPCWSTR lpFileName, DWORD dwFileAttributes );

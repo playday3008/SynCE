@@ -33,7 +33,7 @@ size_t _WIN_wcstombs( char *s, const TCHAR *pwcs, size_t n )
 	ibl = n * sizeof( _WIN_WCHAR );
 	obl = n;
 	optr = s;
-	result = iconv( cd, &iptr, &ibl, &optr, &obl );
+	result = iconv( cd, (const char **) &iptr, &ibl, &optr, &obl );
 
 	iconv_close( cd );
 
@@ -42,7 +42,7 @@ size_t _WIN_wcstombs( char *s, const TCHAR *pwcs, size_t n )
 	return ( ibl == 0 ) ? n : ( size_t ) - 1;
 }
 
-//Stolen from Wine
+/*Stolen from Wine*/
 int _WIN_wprintf( const WCHAR * format, ... )
 {
 	unsigned int written = 0;
@@ -55,7 +55,7 @@ int _WIN_wprintf( const WCHAR * format, ... )
 	va_list valist;
 	va_start( valist, format );
 
-	//  TRACE("(%d,%s)\n",len,debugstr_w(format));
+	/*  TRACE("(%d,%s)\n",len,debugstr_w(format)); */
 
 	while ( *iter )
 	{
@@ -190,7 +190,7 @@ size_t _WIN_mbstowcs( _WIN_WCHAR * strDestination, char * strSource, size_t n )
 	ibl = n;
 	obl = n * sizeof( _WIN_WCHAR );
 	optr = ( char * ) strDestination;
-	result = iconv( cd, &iptr, &ibl, &optr, &obl );
+	result = iconv( cd, (const char **) &iptr, &ibl, &optr, &obl );
 
 	iconv_close( cd );
 
@@ -213,7 +213,7 @@ size_t _WIN_wcslen( const _WIN_WCHAR * str )
 	return result;
 }
 
-//Stolen from Wine !
+/* Stolen from Wine ! */
 unsigned int strlenW( const WCHAR * str )
 {
 	const WCHAR * s = str;
@@ -221,7 +221,7 @@ unsigned int strlenW( const WCHAR * str )
 	return s -str;
 }
 
-//Stolen from Wine !
+/* Stolen from Wine ! */
 WCHAR * strcpyW( WCHAR * dst, const WCHAR * src )
 {
 	WCHAR * p = dst;
@@ -229,14 +229,16 @@ WCHAR * strcpyW( WCHAR * dst, const WCHAR * src )
 	return dst;
 }
 
-//Stolen from Wine !
+/* Stolen from Wine ! */
 WCHAR * strcatW( WCHAR *dst, const WCHAR *src )
 {
+	printf("sizeof(WCHAR): %d\n",sizeof(WCHAR));
+
 	strcpyW( dst + strlenW( dst ), src );
 	return dst;
 }
 
-//Stolen from Wine !
+/* Stolen from Wine ! */
 /***********************************************************************
 *           DOSFS_FileTimeToUnixTime
 *
@@ -331,7 +333,7 @@ return ( ( ( ( time_t ) a2 ) << 16 ) << 16 ) + ( a1 << 16 ) + a0;
 #endif
 }
 
-//Stolen from Wine !
+/* Stolen from Wine ! */
 BOOL FileTimeToDosDateTime( const FILETIME * lpFileTime, LPWORD lpFatDate, LPWORD lpFatTime )
 {
 	time_t unixtime = DOSFS_FileTimeToUnixTime( lpFileTime, NULL );

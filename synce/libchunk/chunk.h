@@ -11,7 +11,7 @@
 #include "windows.h"
 
 typedef struct {
-        long bufferlen;
+        unsigned long bufferlen;
         unsigned char * data;
 } rapibuffer;
 
@@ -20,7 +20,7 @@ typedef struct {
 #define DBG_printf _DBG_printf
 #else
 #define DBG_printbuf(a)
-#define DBG_printf( str, ... )
+#define DBG_printf( str, args... )
 #endif
 
 /**
@@ -43,7 +43,61 @@ void _DBG_printbuf( rapibuffer * buf );
  * prints the string.
  * @param str : the format string.
  */
-void _DBG_printf( char * str, ... );
+void _DBG_printf( const char * str, ... );
+
+/***************************************************************************/
+/* internal inline functions                                               */
+/***************************************************************************/
+
+/* FIXME: conceptional fault: the next three functions are used in
+   rapi.c:CeWriteFile() */
+
+__inline__ void _setbufferlen(rapibuffer *buffer, unsigned long bufferlen)
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+
+	buffer->bufferlen = bufferlen;
+
+#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
+
+	buffer->bufferlen = bswap_32(bufferlen);
+
+#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+}
+
+__inline__ unsigned long _getbufferlen(rapibuffer *buffer)
+{
+	unsigned long buflen;
+	
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+
+        buflen = buffer->bufferlen;
+
+#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
+
+        buflen = bswap_32( buffer->bufferlen );
+
+#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+	
+	return(buflen);
+}
+
+/* A safer write(), since sockets might not write all but only some of
+   the bytes requested */
+
+__inline__ int safe_write(int fd, char *buf, int len)
+{
+	int done,todo=len;
+	
+	while(todo)
+	{
+		done=write(fd,buf,todo);
+		if(done<=0) return(done);
+		buf+=done;
+		todo-=done;
+	}
+	return(len);
+}
 
 /**
  * Opens a socket to a specified host/port.
@@ -76,7 +130,7 @@ int sendbuffer( int sock, rapibuffer * buffer );
  * @param size : number of bytes to read.
  * @returns number of bytes read. Same meaning as the read() function.
  */
-//int readbuffer( int sock, rapibuffer * destbuf, long size );
+/* int readbuffer( int sock, rapibuffer * destbuf, long size ); */
 
 /**
  * Flushes the remaining unread bytes from the socket. Use only when debugging.

@@ -116,7 +116,7 @@ typedef struct _PROCESS_INFORMATION {
 	DWORD  dwThreadId;
 } PROCESS_INFORMATION, *LPROCESS_INFORMATION;
 
-typedef struct _FILETIME { // ft seems to be : nbr of 100ns since Jan 1 1601 ???
+typedef struct _FILETIME { /* it seems to be : nbr of 100ns since Jan 1 1601 ??? */
 	DWORD dwLowDateTime;
 	DWORD dwHighDateTime;
 } FILETIME;

@@ -35,6 +35,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <iconv.h>
+#include <errno.h>
 
 #define ASYNCD_INPUT	0
 #define ASYNCD_OUTPUT	1
@@ -129,9 +130,9 @@ int checkpacket( unsigned char * buf, int size )
         size_t res;
 
 	log_debug ("buffer : 0x%08X", buf);
-        ptrlng = (long*)(buf+4);                //Start of buffer;
+        ptrlng = (long*)(buf+4);                /* Start of buffer; */
 	log_debug ("ptrlng : 0x%08X", ptrlng);
-        offset1 = (long)(* ptrlng );        //Offset to the string len, or 0x24
+        offset1 = (long)(* ptrlng );        /* Offset to the string len, or 0x24 */
 	log_debug ("offset1 : 0x%08X", offset1);
 
         ptrlng = (long*)(buf + offset1 );
@@ -142,11 +143,20 @@ int checkpacket( unsigned char * buf, int size )
 
         printbuf( (char*)ptrlng, strglen );
 
-        cd = iconv_open( "latin1", "UCS-2" );
+        cd = iconv_open( "latin1", "UNICODELITTLE" );
+	if(cd == -1)
+	{
+		log_debug("conversion not available");
+		return FALSE;
+	}
         in = (char *) ptrlng;
         out = (char *) names;
         nameslen = 1024;
         res = iconv( cd, &in, &strglen, &out, &nameslen );
+	if(res==-1)
+	{
+		log_debug("iconv() failed");
+	}
         iconv_close( cd );
 	log_debug ("conv Ok, res = %d, strglen = %d, nameslen = %d, names = %s", res, strglen, nameslen, names);
         for( in=names; (in<out)&&((*in)!=0); in++ );
@@ -160,8 +170,8 @@ int checkpacket( unsigned char * buf, int size )
 
         saveinfo( names, n2, n3 );
 
-	//We should check the packet, then, if it's ok, fork a process
-	// that mount the device as a filesystem.
+	/* We should check the packet, then, if it's ok, fork a process
+	   that mount the device as a filesystem. */
 	result = TRUE;
 	return result;
 }
@@ -180,6 +190,8 @@ int main (int ac, char **av)
 	int end_connexion = FALSE;
 	int buffer_ok = FALSE;
 	int pending = FALSE;
+	int locked = FALSE;
+	int locked_pending = FALSE;
 
 #ifdef DEBUG
 	initdebug("asyncd");
@@ -192,23 +204,36 @@ int main (int ac, char **av)
 		FD_ZERO( &set );
 		FD_SET( ASYNCD_INPUT, &set );
 		
-		tv.tv_sec = 5;	// 5sec
+		tv.tv_sec = 5;	/* 5sec */
 		tv.tv_usec = 0;	
 
 		retval = select( (1+ASYNCD_INPUT), &set, NULL, NULL, &tv );
 	
-		if( retval )	// Data read
+		if( retval )	/* Data read */
 		{
 #ifdef DEBUG
 			log_debug("Data received :");
 #endif
-			error=read( ASYNCD_INPUT, buffer, 4);		
+			if(locked_pending)
+			{
+				error=read( ASYNCD_INPUT, buffer, 2);
+				/* 1 -> correct password */
+				/* 0 -> wrong password, you have 3 attempts altogether */
+#ifdef DEBUG
+				log_debug("locked reply pending:");
+				printbuf(buffer, 2);
+#endif
+				locked_pending=FALSE;
+				goto ping;
+			}
+			
+			error=read( ASYNCD_INPUT, buffer, 4);
 		
 			pktsz = 0;
 			pktsz = ( (long) * ( (long *) (buffer) ) );
 			if( pktsz == PING )
 			{
-				//Is there a pending ping ?
+				/* Is there a pending ping ? */
 				if( pending )
 				{
 #ifdef DEBUG
@@ -221,7 +246,15 @@ int main (int ac, char **av)
 #endif
 					end_connexion = TRUE;
 				}
-			} else {
+			}
+			else if( pktsz == 0x00EDF3FD)
+			{
+				log_debug(" device is locked");
+				locked = TRUE;
+			}
+			else
+			{
+				
 #ifdef DEBUG
 				log_debug (" packet size (hex) : %02X %02X %02X %02X",buffer[0], buffer[1], buffer[2], buffer[3]);
 				log_debug (" packet size (int) : 0x%08X %lu",pktsz, pktsz);
@@ -229,17 +262,43 @@ int main (int ac, char **av)
 
 				if( pktsz > 0 )
 				{
-					if( pktsz < MAXBUF )
+					if( pktsz < MAXBUF-4 )
 					{
 						error=read(ASYNCD_INPUT, &buffer[4], pktsz);
 #ifdef DEBUG
 						log_debug(" buffer received");
 						printbuf( buffer, pktsz );
 #endif
-						//Here, we should call a functionc to analyze the buffer
-						// and, if it's a valid Device identification, fork a
-						// process that will mount the filesystem.
+						/* Here, we should call a functionc to analyze the buffer
+						   and, if it's a valid Device identification, fork a
+						   process that will mount the filesystem. */
 						buffer_ok = checkpacket( buffer, pktsz );
+						if(locked)
+						{
+							unsigned char lockbuffer[]={0xa, 0x0, 0xcc, 0xfd, 0xcf, 0xfd, 0xce, 0xfd, 0xc9, 0xfd, 0xfd, 0xfd};
+							
+							error = write( ASYNCD_OUTPUT, lockbuffer, 0x000a +2 );
+
+							/* 1234: 0x0a 0x00 0xcc 0xfd 0xcf 0xfd 0xce 0xfd 0xc9 0xfd 0xfd 0xfd */
+							/* 1111: 0x0a 0x00 0xcc 0xfd 0xcc 0xfd 0xcc 0xfd 0xcc 0xfd 0xfd 0xfd */
+							/* algorithm to "encrypt" password:
+							   
+							   take unicode representation of 4 letter password + 0 term
+							   xor each byte with 0xfd
+							   that's it!
+							   
+							*/
+
+#ifdef DEBUG				
+							log_debug(" sending ???");
+							printbuf( buffer, 0x000a + 2);
+#endif
+							locked_pending = TRUE;
+						}
+						else
+						{
+							goto ping;
+						}
 					} else {
 #ifdef DEBUG
 						log_debug(" buffer too small !! Aborting");
@@ -252,13 +311,20 @@ int main (int ac, char **av)
 #endif
 				}
 			}
-		} else {	// No data, timeout
+		} else {	/* No data, timeout */
 #ifdef DEBUG				
 			log_debug("Timeout received :");
 #endif
+			if( locked_pending)
+			{
+				end_connexion = TRUE;
+				break;
+			}
+			
 			if( buffer_ok && !pending )
 			{
-				( (long) * ( (long *) (buffer) ) ) = PING;
+			  ping:
+				*((long *) buffer) = PING;
 				error = write( ASYNCD_OUTPUT, buffer, 4 );
 #ifdef DEBUG				
 				log_debug(" sending ping");
@@ -269,7 +335,7 @@ int main (int ac, char **av)
 #ifdef DEBUG				
 				log_debug(" timeout, aborting");
 #endif
-				end_connexion = TRUE;
+				/* end_connexion = TRUE; */
 			}
 		}
 	}

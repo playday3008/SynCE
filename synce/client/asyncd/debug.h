@@ -37,9 +37,9 @@ EXTERN FILE *fp_console;
 EXTERN char service_name[64];
 #endif
 
-void log_debug (char *fmt,...);
-void log_err (char *s);
-void initdebug(char *service);
+void log_debug (const char *fmt,...);
+void log_err (const char *s);
+void initdebug(const char *service);
 void closedebug(void);
 
 #endif

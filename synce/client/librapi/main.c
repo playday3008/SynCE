@@ -17,17 +17,17 @@
 int main( int argc, char* argv[] )
 {
 
-//	int retval;
-//	unsigned char buffer[BUFSIZE];
-//	long size=BUFSIZE;
-//	long index =0, lng;
-//	int i;
-//	HKEY hKey;
+/* 	int retval; */
+/* 	unsigned char buffer[BUFSIZE]; */
+/* 	long size=BUFSIZE; */
+/* 	long index =0, lng; */
+/* 	int i; */
+/* 	HKEY hKey; */
 	WORD cFindData;
 	HANDLE hnd;
-//	unsigned char bufclass[BUFSIZE];
-//	long sizeclass=BUFSIZE;
-//	long cSubKeys;
+/* 	unsigned char bufclass[BUFSIZE]; */
+/* 	long sizeclass=BUFSIZE; */
+/* 	long cSubKeys; */
 	BOOL result;
 	CEDB_FIND_DATA *pFindData;
 	WORD cPropID;
@@ -35,7 +35,7 @@ int main( int argc, char* argv[] )
 	LPBYTE lpBuffer;
 	DWORD	cbBuffer;
 
-	if( CeRapiInit( "192.168.131.201") )
+	if( CeRapiInit( ) )
 	{
                 pFindData = NULL;
 /*		printf("Testing CeFindAllDatabase : ");

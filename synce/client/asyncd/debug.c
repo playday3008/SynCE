@@ -25,7 +25,7 @@
 /* Syslog or not syslog ? */
 #ifdef USE_SYSLOG
 
-void log_debug (char *fmt,...)
+void log_debug (const char *fmt,...)
 {
     char msg[256];
 
@@ -35,7 +35,7 @@ void log_debug (char *fmt,...)
     syslog(LOG_DEBUG, msg);
 }
 
-void	initdebug(char *service)
+void	initdebug(const char *service)
 {
     openlog(service, LOG_PID | LOG_CONS, LOG_DAEMON);
 }
@@ -45,7 +45,7 @@ void	closedebug(void)
 	closelog();
 }
 
-void log_err (char *s)
+void log_err (const char *s)
 {
     syslog(LOG_ERR, s);
 }

@@ -13,6 +13,12 @@
  * except SockOpen, (c) Unknown ? from socket.c / socket.h
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#undef VERSION
+
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 #include <iconv.h>
@@ -41,15 +47,15 @@
 int sock = 0;
 DWORD _lasterror = 0;
 #define BUFSIZE 16384
-//unsigned char buffer[ BUFSIZE ];
+/* unsigned char buffer[ BUFSIZE ]; */
 rapibuffer * buffer = NULL;
 
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Global
-//=================================================================================================================
-//=================================================================================================================
+/*=================================================================================================================*
+ *=================================================================================================================*
+ * RAPI - Global
+ *=================================================================================================================*
+ *=================================================================================================================*/
 
 STDAPI_( DWORD ) CeGetSpecialFolderPath( int nFolder, DWORD nBufferLength, LPWSTR lpBuffer )
 {
@@ -58,9 +64,9 @@ STDAPI_( DWORD ) CeGetSpecialFolderPath( int nFolder, DWORD nBufferLength, LPWST
 	WCHAR * str;
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x44 ); 	//Command
-	pushLong( buffer, size, nFolder ); 	//Parameter1 : the folder
-	pushLong( buffer, size, nBufferLength ); 	//Parameter2 : Buffer size that'll get the string
+	pushLong( buffer, size, 0x44 ); 		/* Command */
+	pushLong( buffer, size, nFolder ); 		/* Parameter1 : the folder */
+	pushLong( buffer, size, nBufferLength ); 	/* Parameter2 : Buffer size that'll get the string */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -72,20 +78,20 @@ STDAPI_( DWORD ) CeGetSpecialFolderPath( int nFolder, DWORD nBufferLength, LPWST
 	DBG_printf( "long 2 : %ld (0x%08lx)\n", lng, lng );
 	lng = getLong( sock, &size );
 	DBG_printf( "string size : %ld (0x%08lx)\n", lng, lng );
-	str = getString( sock, &size, 2 * lng );
+	str = getString( sock, &size, lng+1 );
 	DBG_printf( "string1 : %s\n", str );
 	if ( lpBuffer )
 	{
-		memcpy( lpBuffer, str, MIN( ( 2 * lng ), nBufferLength ) );
+		memcpy( lpBuffer, str, MIN( ((lng+1)*sizeof(WCHAR) ), nBufferLength*sizeof(WCHAR) ) );
 	}
-	return 2*lng;
+	return lng;
 }
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Registry
-//=================================================================================================================
-//=================================================================================================================
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Registry */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
 /*
 STDAPI_(LONG) CeRegDeleteKey( HKEY, LPCWSTR );
@@ -105,14 +111,14 @@ STDAPI_( LONG ) CeRegCreateKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved,
 	            hKey, lpszSubKey, Reserved, lpszClass, ulOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x20 ); 	//Command
-	pushLong( buffer, size, hKey ); 		//Parameter1 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter2 :
-	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	//Parameter3 :
-	pushString( buffer, size, lpszSubKey ); 	//Parameter4 : the path
-	pushLong( buffer, size, 0x01 ); 	//Parameter2 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter2 :
-	pushShort( buffer, size, 0x00 ); 	//Parameter2 :
+	pushLong( buffer, size, 0x20 ); 			/* Command */
+	pushLong( buffer, size, hKey ); 			/* Parameter1 : */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter2 : */
+	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	/* Parameter3 : */
+	pushString( buffer, size, lpszSubKey ); 		/* Parameter4 : the path */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter5 : */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter6 : */
+	pushShort( buffer, size, 0x00 );		 	/* Parameter7 : */
 
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -149,11 +155,11 @@ STDAPI_( LONG ) CeRegOpenKeyEx( HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, 
 	            hKey, lpszSubKey, ulOptions, samDesired, phkResult );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x1E ); 	//Command
-	pushLong( buffer, size, hKey ); 		//Parameter1 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter2 :
-	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	//Parameter3 :
-	pushString( buffer, size, lpszSubKey ); 	//Parameter4 : the path
+	pushLong( buffer, size, 0x1E ); 	/* Command */
+	pushLong( buffer, size, hKey ); 		/* Parameter1 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter2 : */
+	pushLong( buffer, size, 1 + wcslen( lpszSubKey ) ); 	/* Parameter3 : */
+	pushString( buffer, size, lpszSubKey ); 	/* Parameter4 : the path */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -184,8 +190,8 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 	            hKey );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x21 ); 	//Command
-	pushLong( buffer, size, hKey ); 		//Parameter1 :
+	pushLong( buffer, size, 0x21 ); 	/* Command */
+	pushLong( buffer, size, hKey ); 		/* Parameter1 : */
 
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -212,32 +218,32 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	            hKey, lpClass, lpcbClass, lpReserved, lpcSubKeys, lpcbMaxSubKeyLen, lpcbMaxClassLen, lpcValues, lpcbMaxValueNameLen, lpcbMaxValueLen, lpcbSecurityDescriptor, lpftLastWriteTime );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x25 ); 	//Command
-	pushLong( buffer, size, hKey ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter2 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
+	pushLong( buffer, size, 0x25 ); 	/* Command */
+	pushLong( buffer, size, hKey ); 	/* Parameter1 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter2 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter3 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter4 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter5 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter6 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter7 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter8 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter9 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter10 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter11 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter12 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter13 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter14 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter15 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter16 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter17 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter18 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter19 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter20 : */
 
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -271,33 +277,33 @@ STDAPI_( LONG ) CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, 
 	            hKey, dwIndex, lpszValueName, ( *lpcbValueName ), lpReserved, ( *lpType ), ( *lpData ), ( *lpcbData ) );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x23 ); 	//Command
-	pushLong( buffer, size, hKey ); 	//Parameter1 :
-	pushLong( buffer, size, dwIndex ); 	//Parameter2 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
+	pushLong( buffer, size, 0x23 ); 	/* Command */
+	pushLong( buffer, size, hKey ); 	/* Parameter1 : */
+	pushLong( buffer, size, dwIndex ); 	/* Parameter2 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter3 : */
 
-	pushLong( buffer, size, 0x0202 ); 	//Parameter :
+	pushLong( buffer, size, 0x0202 ); 	/* Parameter4 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter2 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter5 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter6 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter7 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter8 : */
 
-	pushLong( buffer, size, ( *lpcbValueName ) ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter2 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
+	pushLong( buffer, size, ( *lpcbValueName ) ); 	/* Parameter9 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter10 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter11 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter12 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x0400 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter13 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter14 : */
+	pushLong( buffer, size, 0x0400 ); 	/* Parameter15 : */
 
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
+	pushLong( buffer, size, 0x00 ); 	/* Parameter16 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter17 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter18 : */
 
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x0400 ); 	//Parameter :
+	pushLong( buffer, size, 0x01 ); 	/* Parameter19 : */
+	pushLong( buffer, size, 0x0400 ); 	/* Parameter20 : */
 
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -321,20 +327,20 @@ STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD
 	            hKey, dwIndex, lpName, lpcbName ? ( (void*)*lpcbName ) : lpcbName, lpReserved, lpClass, lpcbClass ? ( (void*)*lpcbClass ) : lpcbClass, lpftLastWriteTime );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x1F ); 	//Command
-	pushLong( buffer, size, hKey ); 	//Parameter1 :
-	pushLong( buffer, size, dwIndex ); 	//Parameter2 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x0202 ); //Parameter
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, 0x04 ); 	//Parameter :
-	pushLong( buffer, size, 0x01 ); 	//Parameter :
-	pushLong( buffer, size, lpcbName ? ( *lpcbName ) : 0 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
-	pushLong( buffer, size, 0x00 ); 	//Parameter :
+	pushLong( buffer, size, 0x1F ); 	/* Command */
+	pushLong( buffer, size, hKey ); 	/* Parameter1 : */
+	pushLong( buffer, size, dwIndex ); 	/* Parameter2 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter3 : */
+	pushLong( buffer, size, 0x0202 ); 	/* Parameter4 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter5 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter6 : */
+	pushLong( buffer, size, 0x04 ); 	/* Parameter7 : */
+	pushLong( buffer, size, 0x01 ); 	/* Parameter8 : */
+	pushLong( buffer, size, lpcbName ? ( *lpcbName ) : 0 ); 	/* Parameter9 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter10 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter11 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter12 : */
+	pushLong( buffer, size, 0x00 ); 	/* Parameter13 : */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -375,13 +381,14 @@ STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD
 	return errcode;
 }
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Tests
-//=================================================================================================================
-//=================================================================================================================
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Tests */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
-/*DWORD CeTestSec1()
+#if 0
+DWORD CeTestSec1()
 {
 	long size=BUFSIZE;
 	long lng;
@@ -389,14 +396,14 @@ STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD
 	long index;
  
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x27 );	//Command
-	pushLong( buffer, size, 0x80000002 );		//Parameter1 :
-	pushLong( buffer, size, 0x01 );	//Parameter2 :
-	pushLong( buffer, size, 0x20 );	//Parameter3 :
-	pushString( buffer, size, "Comm\\SecurityProviders\\SCHANNEL" );	//Parameter4 : the path
-	pushLong( buffer, size, 0x01 );	//Parameter2 :
-	pushLong( buffer, size, 0x01 );	//Parameter2 :
-	pushShort( buffer, size, 0x00 );	//Parameter2 :
+	pushLong( buffer, size, 0x27 );	/* Command */
+	pushLong( buffer, size, 0x80000002 );		/* Parameter1 : */
+	pushLong( buffer, size, 0x01 );	/* Parameter2 : */
+	pushLong( buffer, size, 0x20 );	/* Parameter3 : */
+	pushString( buffer, size, "Comm\\SecurityProviders\\SCHANNEL" );	/* Parameter4 : the path */
+	pushLong( buffer, size, 0x01 );	/* Parameter2 : */
+	pushLong( buffer, size, 0x01 );	/* Parameter2 : */
+	pushShort( buffer, size, 0x00 );	/* Parameter2 : */
  
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -404,9 +411,9 @@ STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD
 	DBG_printbuf( buffer );
 	index = 0;
 	return 2*lng;
-} */
+}
 
-/*DWORD CeTest0()
+DWORD CeTest0()
 {
 	long size=BUFSIZE;
 	long lng;
@@ -414,11 +421,11 @@ STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD
 	long index;
 	
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x1E );	//Command
-	pushLong( buffer, size, 0x80000000 );		//Parameter1 :
-	pushLong( buffer, size, 0x01 );	//Parameter2 :
-	pushLong( buffer, size, 0x27 );	//Parameter3 :
-	pushString( buffer, size, "{000214A0-0000-0000-C000-000000000046}" );	//Parameter3 : the path
+	pushLong( buffer, size, 0x1E );	/* Command */
+	pushLong( buffer, size, 0x80000000 );		/* Parameter1 : */
+	pushLong( buffer, size, 0x01 );	/* Parameter2 : */
+	pushLong( buffer, size, 0x27 );	/* Parameter3 : */
+	pushString( buffer, size, "{000214A0-0000-0000-C000-000000000046}" );	/* Parameter3 : the path */
  
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -426,13 +433,14 @@ STDAPI_( LONG ) CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD
 	DBG_printbuf( buffer );
 	index = 0;
 	return 2*lng;
-} */
+}
+#endif
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Files
-//=================================================================================================================
-//=================================================================================================================
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Files */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
 STDAPI_( BOOL ) CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray )
 {
@@ -444,11 +452,11 @@ STDAPI_( BOOL ) CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFound
 	CE_FIND_DATA *ptr;
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x09 ); 	//Command
-	pushLong( buffer, size, 0x01 ); 		//Parameter1 :
-	pushLong( buffer, size, 1 + wcslen( szPath ) ); 	//Parameter2 :
-	pushString( buffer, size, szPath ); 	//Parameter3 : the path
-	pushLong( buffer, size, dwFlags ); 	//Parameter4 : Flags ?
+	pushLong( buffer, size, 0x09 ); 			/* Command */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter1 : */
+	pushLong( buffer, size, 1 + wcslen( szPath ) ); 	/* Parameter2 : */
+	pushString( buffer, size, szPath ); 			/* Parameter3 : the path */
+	pushLong( buffer, size, dwFlags ); 			/* Parameter4 : Flags ? */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -474,66 +482,53 @@ STDAPI_( BOOL ) CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFound
 				DBG_printf( "i=%d : ptr=%08X\n", i, ptr );
 				if ( dwFlags & FAF_NAME )
 				{
-					//					stlen = popLong( buffer, &index );
 					stlen = getLong( sock, &size );
 					DBG_printf( "string size : %ld (0x%08lx)\n", stlen, stlen );
 				}
 				if ( dwFlags & FAF_ATTRIBUTES )
 				{
-					//					ptr->dwFileAttributes = popLong( buffer, &index );
 					ptr->dwFileAttributes = getLong( sock, &size );
 					DBG_printf( "ptr->dwFileAttributes : %ld (0x%08lx)\n", ptr->dwFileAttributes, ptr->dwFileAttributes );
 				}
 				if ( dwFlags & FAF_CREATION_TIME )
 				{
-					//					ptr->ftCreationTime.dwLowDateTime = popLong( buffer, &index );
 					ptr->ftCreationTime.dwLowDateTime = getLong( sock, &size );
 					DBG_printf( "ptr->ftCreationTime.dwLowDateTime : %ld (0x%08lx)\n", ptr->ftCreationTime.dwLowDateTime, ptr->ftCreationTime.dwLowDateTime );
-					//					ptr->ftCreationTime.dwHighDateTime = popLong( buffer, &index );
 					ptr->ftCreationTime.dwHighDateTime = getLong( sock, &size );
 					DBG_printf( "ptr->ftCreationTime.dwHighDateTime : %ld (0x%08lx)\n", ptr->ftCreationTime.dwHighDateTime, ptr->ftCreationTime.dwHighDateTime );
 				}
 				if ( dwFlags & FAF_LASTACCESS_TIME )
 				{
-					//					ptr->ftLastAccessTime.dwLowDateTime = popLong( buffer, &index );
 					ptr->ftLastAccessTime.dwLowDateTime = getLong( sock, &size );
 					DBG_printf( "ptr->ftLastAccessTime.dwLowDateTime : %ld (0x%08lx)\n", ptr->ftLastAccessTime.dwLowDateTime, ptr->ftLastAccessTime.dwLowDateTime );
-					//					ptr->ftLastAccessTime.dwHighDateTime = popLong( buffer, &index );
 					ptr->ftLastAccessTime.dwHighDateTime = getLong( sock, &size );
 					DBG_printf( "ptr->ftLastAccessTime.dwHighDateTime : %ld (0x%08lx)\n", ptr->ftLastAccessTime.dwHighDateTime, ptr->ftLastAccessTime.dwHighDateTime );
 				}
 				if ( dwFlags & FAF_LASTWRITE_TIME )
 				{
-					//					ptr->ftLastWriteTime.dwLowDateTime = popLong( buffer, &index );
 					ptr->ftLastWriteTime.dwLowDateTime = getLong( sock, &size );
 					DBG_printf( "ptr->ftLastWriteTime.dwLowDateTime : %ld (0x%08lx)\n", ptr->ftLastWriteTime.dwLowDateTime, ptr->ftLastWriteTime.dwLowDateTime );
-					//					ptr->ftLastWriteTime.dwHighDateTime = popLong( buffer, &index );
 					ptr->ftLastWriteTime.dwHighDateTime = getLong( sock, &size );
 					DBG_printf( "ptr->ftLastWriteTime.dwHighDateTime : %ld (0x%08lx)\n", ptr->ftLastWriteTime.dwHighDateTime, ptr->ftLastWriteTime.dwHighDateTime );
 				}
 				if ( dwFlags & FAF_SIZE_HIGH )
 				{
-					//					ptr->nFileSizeHigh = popLong( buffer, &index );
 					ptr->nFileSizeHigh = getLong( sock, &size );
 					DBG_printf( "ptr->nFileSizeHigh : %ld (0x%08lx)\n", ptr->nFileSizeHigh, ptr->nFileSizeHigh );
 				}
 				if ( dwFlags & FAF_SIZE_LOW )
 				{
-					//					ptr->nFileSizeLow = popLong( buffer, &index );
 					ptr->nFileSizeLow = getLong( sock, &size );
 					DBG_printf( "ptr->nFileSizeLow : %ld (0x%08lx)\n", ptr->nFileSizeLow, ptr->nFileSizeLow );
 				}
 				if ( dwFlags & FAF_OID )
 				{
-					//					ptr->dwOID = popLong( buffer, &index );
 					ptr->dwOID = getLong( sock, &size );
 					DBG_printf( "ptr->dwOID : %ld (0x%08lx)\n", ptr->dwOID, ptr->dwOID );
 				}
 				if ( dwFlags & FAF_NAME )
 				{
-					//					str = popString( buffer, 2*stlen, &index );
 					str = getString( sock, &size, stlen );
-					//strncpy( ptr->cFileName, str, MAX_PATH );
 					memcpy( ptr->cFileName, str, MAX_PATH );
 					DBG_printf( "ptr->cFileName : %s\n", ptr->cFileName );
 				}
@@ -549,16 +544,16 @@ STDAPI_( HANDLE ) CeFindFirstFile( LPCWSTR lpFileName, LPCE_FIND_DATA lpFileFind
 	long lng;
 	HANDLE result;
 	size_t stlen;
-	//CEDB_FIND_DATA *ptr;
+	/* CEDB_FIND_DATA *ptr; */
 
 	DBG_printf( "CeFindFirstFile( lpFileName = 0x%08X, lpFileFindData = 0x%08X )\n",
 	            lpFileName, lpFileFindData );
 
 	initBuf( buffer, size );
         DBG_printf(" line : %d\n", __LINE__ );
-	pushLong( buffer, size, 0x00 ); 	//Command
+	pushLong( buffer, size, 0x00 ); 		/* Command */
         DBG_printf(" line : %d\n", __LINE__ );
-	pushLong( buffer, size, 0x01 ); 	//Parameter1 :
+	pushLong( buffer, size, 0x01 ); 		/* Parameter1 : */
         DBG_printf(" line : %d\n", __LINE__ );
 	if ( lpFileName )
 	{
@@ -569,8 +564,8 @@ STDAPI_( HANDLE ) CeFindFirstFile( LPCWSTR lpFileName, LPCE_FIND_DATA lpFileFind
 		stlen = -1;
 	}
 	DBG_printf( "size : %d\n", stlen );
-	pushLong( buffer, size, 1 + stlen ); 	//Parameter2 : Flags ?
-	pushString( buffer, size, lpFileName ); 	//Parameter4 : the path
+	pushLong( buffer, size, 1 + stlen ); 		/* Parameter2 : Flags ? */
+	pushString( buffer, size, lpFileName ); 	/* Parameter3 : the path */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -579,7 +574,7 @@ STDAPI_( HANDLE ) CeFindFirstFile( LPCWSTR lpFileName, LPCE_FIND_DATA lpFileFind
 	lng = getLong( sock, &size );
 	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
 	_lasterror = getLong( sock, &size );
-	DBG_printf( "long 2 (code erreur?): %ld (0x%08lx)\n", _lasterror, _lasterror );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", _lasterror, _lasterror );
 	result = ( HANDLE ) getLong( sock, &size );
 	DBG_printf( "long 3 : (size=%d) HANDLE %ld (0x%08lx)\n", size, result, result );
 	lng = getLong( sock, &size );
@@ -611,14 +606,14 @@ STDAPI_( BOOL ) CeFindNextFile( HANDLE hFindFile,  /*LPWIN32_FIND_DATA ?*/LPCE_F
 	long size = BUFSIZE;
 	long lng;
 	int result;
-	//CEDB_FIND_DATA *ptr;
+	/* CEDB_FIND_DATA *ptr; */
 
 	DBG_printf( "CeFindNextFile( hFindFile = 0x%08X, lpFileFindData = 0x%08X )\n",
 	            hFindFile, lpFileFindData );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x01 ); 	//Command
-	pushLong( buffer, size, ( long ) hFindFile ); 	//Parameter1 :
+	pushLong( buffer, size, 0x01 ); 		/* Command */
+	pushLong( buffer, size, ( long ) hFindFile ); 	/* Parameter1 : */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -627,7 +622,7 @@ STDAPI_( BOOL ) CeFindNextFile( HANDLE hFindFile,  /*LPWIN32_FIND_DATA ?*/LPCE_F
 	lng = getLong( sock, &size );
 	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
 	_lasterror = getLong( sock, &size );
-	DBG_printf( "long 2 (code erreur?): %ld (0x%08lx)\n", _lasterror, _lasterror );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", _lasterror, _lasterror );
 	lng = getLong( sock, &size );
 	DBG_printf( "long 3 (size=%d): %ld (0x%08lx)\n", size, lng, lng );
 	lng = getLong( sock, &size );
@@ -662,8 +657,8 @@ STDAPI_( BOOL ) CeFindClose( HANDLE hFindFile )
 	DBG_printf( "CeFindClose()\n" );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x02 ); 	//Command
-	pushLong( buffer, size, ( long ) hFindFile ); 		//Parameter1 :
+	pushLong( buffer, size, 0x02 ); 		/* Command */
+	pushLong( buffer, size, ( long ) hFindFile );	/* Parameter1 : */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -695,16 +690,16 @@ STDAPI_( HANDLE ) CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD
 	            lpFileName, dwDesiredAccess, dwShareMode );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x05 ); 	//Command
-	pushLong( buffer, size, dwDesiredAccess ); 	//Parameter
-	pushLong( buffer, size, dwShareMode ); 	//Parameter
-	pushLong( buffer, size, dwCreationDisposition ); 	//Parameter
-	pushLong( buffer, size, dwFlagsAndAttributes ); 	//Parameter
-	pushLong( buffer, size, ( long ) hTemplateFile ); 	//Parameter
-	pushLong( buffer, size, 1 ); 	//Parameter
+	pushLong( buffer, size, 0x05 ); 			/* Command */
+	pushLong( buffer, size, dwDesiredAccess ); 		/* Parameter1 */
+	pushLong( buffer, size, dwShareMode ); 			/* Parameter2 */
+	pushLong( buffer, size, dwCreationDisposition ); 	/* Parameter3 */
+	pushLong( buffer, size, dwFlagsAndAttributes ); 	/* Parameter4 */
+	pushLong( buffer, size, ( long ) hTemplateFile ); 	/* Parameter5 */
+	pushLong( buffer, size, 1 ); 				/* Parameter6 */
 	stlen = wcslen( lpFileName );
-	pushLong( buffer, size, 1 + stlen ); 	//Parameter
-	pushString( buffer, size, lpFileName ); 	//Parameter
+	pushLong( buffer, size, 1 + stlen ); 			/* Parameter7 */
+	pushString( buffer, size, lpFileName ); 		/* Parameter8 */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -713,7 +708,7 @@ STDAPI_( HANDLE ) CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD
 	lng = getLong( sock, &size );
 	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
 	_lasterror = getLong( sock, &size );
-	DBG_printf( "long 2 (code erreur?): %ld (0x%08lx)\n", _lasterror, _lasterror );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", _lasterror, _lasterror );
 	result = ( HANDLE ) getLong( sock, &size );
 	DBG_printf( "long 3 (HANDLE): %ld (0x%08lx)\n", result, result );
 
@@ -730,17 +725,17 @@ STDAPI_( BOOL ) CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesT
 	long size = BUFSIZE;
 	long lng;
 	BOOL result;
-	//CEDB_FIND_DATA *ptr;
+	/* CEDB_FIND_DATA *ptr; */
 
 	DBG_printf( "CeReadFile( hFile = 0x%08X, nNumberOfBytesToRead = 0x%08X )\n",
 	            hFile, nNumberOfBytesToRead );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x06 ); 	//Command
-	pushLong( buffer, size, ( long ) hFile ); 	//Parameter
-	pushLong( buffer, size, 0x01 ); 	//Parameter
-	pushLong( buffer, size, nNumberOfBytesToRead ); 	//Parameter
-	pushLong( buffer, size, 0x00 ); 	//Parameter
+	pushLong( buffer, size, 0x06 ); 		/* Command */
+	pushLong( buffer, size, ( long ) hFile ); 	/* Parameter1 */
+	pushLong( buffer, size, 0x01 ); 		/* Parameter2 */
+	pushLong( buffer, size, nNumberOfBytesToRead ); /* Parameter3 */
+	pushLong( buffer, size, 0x00 ); 		/* Parameter4 */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -749,7 +744,7 @@ STDAPI_( BOOL ) CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesT
 	lng = getLong( sock, &size );
 	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
 	_lasterror = getLong( sock, &size );
-	DBG_printf( "long 2 (code erreur?): %ld (0x%08lx)\n", _lasterror, _lasterror );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", _lasterror, _lasterror );
 	result = ( BOOL ) getLong( sock, &size );
 	DBG_printf( "long 3 (BOOL): %ld (0x%08lx)\n", result, result );
 	lng = getLong( sock, &size );
@@ -773,12 +768,66 @@ STDAPI_( BOOL ) CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesT
 	return result;
 }
 
+STDAPI_( BOOL ) CeWriteFile( HANDLE hFile, LPVOID lpBuffer,
+			     DWORD nNumberOfBytesToWrite,
+			     LPDWORD lpNumberOfBytesWritten, 
+			     LPOVERLAPPED lpOverlapped )
+{
+	long size = BUFSIZE;
+	long lng;
+	BOOL result;
+	unsigned long buflen;
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Databases
-//=================================================================================================================
-//=================================================================================================================
+	
+	/* CEDB_FIND_DATA *ptr; */
+
+	DBG_printf( "CeWriteFile( hFile = 0x%08X, nNumberOfBytesToWrite = 0x%08X )\n",
+	            hFile, nNumberOfBytesToWrite );
+
+	initBuf( buffer, size );
+	pushLong( buffer, size, 0x07 ); 			/* Command */
+	pushLong( buffer, size, ( long ) hFile ); 		/* Parameter1 */
+	pushLong( buffer, size, 0x01 ); 			/* Parameter2 */
+	pushLong( buffer, size, nNumberOfBytesToWrite ); 	/* Parameter3 */
+	
+	buflen=_getbufferlen(buffer);
+	_setbufferlen( buffer, buflen + nNumberOfBytesToWrite + 4);
+	
+	(void) safe_write(sock, (void *) buffer, buflen + 4);
+
+	(void) safe_write(sock, lpBuffer, nNumberOfBytesToWrite);
+	lng=0;
+	(void) safe_write(sock, (void *) &lng, sizeof(lng)); /*  ??? continue ??? */
+	
+	size = getbufferlen( sock );
+
+	lng = getLong( sock, &size );
+	DBG_printf( "long 1 : %ld (0x%08lx)\n", lng, lng );
+	_lasterror = getLong( sock, &size );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", _lasterror, _lasterror );
+
+	result = ( BOOL ) getLong( sock, &size );
+	DBG_printf( "long 3 (BOOL): %ld (0x%08lx)\n", result, result );
+	lng = getLong( sock, &size );
+	DBG_printf( "long 4 (size): %ld (0x%08lx)\n", lng, lng );
+
+	if ( lpNumberOfBytesWritten )
+	{
+		*lpNumberOfBytesWritten = lng;
+	}
+	if ( size > 0 )
+	{
+		flushbuffer( sock );
+	}
+
+	return result;
+}
+
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Databases */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
 
 STDAPI_( BOOL ) CeFindAllDatabases( DWORD dwDbaseType, WORD wFlags, LPWORD cFindData, LPLPCEDB_FIND_DATA ppFindData )
@@ -795,15 +844,15 @@ STDAPI_( BOOL ) CeFindAllDatabases( DWORD dwDbaseType, WORD wFlags, LPWORD cFind
 	            dwDbaseType, wFlags, cFindData, ppFindData );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x2C ); 	//Command
-	pushLong( buffer, size, dwDbaseType ); 	//Parameter1 :
-	pushShort( buffer, size, wFlags ); 	//Parameter2 : Flags ?
+	pushLong( buffer, size, 0x2C ); 	/* Command */
+	pushLong( buffer, size, dwDbaseType ); 	/* Parameter1 : */
+	pushShort( buffer, size, wFlags ); 	/* Parameter2 : Flags ? */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
 	size = getbufferlen( sock );
 	lng = getLong( sock, &size );
-	DBG_printf( "long 1 (code erreur?): %ld (0x%08lx)\n", lng, lng );
+	DBG_printf( "long 1 (errorcode?): %ld (0x%08lx)\n", lng, lng );
 	wrd = getShort( sock, &size );
 	DBG_printf( "word 1 : %d (0x%08lx)\n", wrd, wrd );
 	if ( cFindData )
@@ -892,21 +941,21 @@ STDAPI_( HANDLE ) CeOpenDatabase( PCEOID poid, LPWSTR lpszName, CEPROPID propid,
 	            poid ? ( (void*)*poid ) : NULL, lpszName, propid, dwFlags, hwndNotify );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x0E ); 	//Command
-	pushLong( buffer, size, poid ? ( ( long ) ( *poid ) ) : ( ( long ) NULL ) ); 		//Parameter1 :
-	pushLong( buffer, size, propid ); 	//Parameter2 :
-	pushLong( buffer, size, dwFlags ); 	//Parameter3 :
+	pushLong( buffer, size, 0x0E ); 	/* Command */
+	pushLong( buffer, size, poid ? ( ( long ) ( *poid ) ) : ( ( long ) NULL ) ); 		/* Parameter1 : */
+	pushLong( buffer, size, propid ); 	/* Parameter2 : */
+	pushLong( buffer, size, dwFlags ); 	/* Parameter3 : */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
 	size = getbufferlen( sock );
 	lng = getLong( sock, &size );
-	DBG_printf( "long 1 (code erreur?): %ld (0x%08lx)\n", lng, lng );
+	DBG_printf( "long 1 (errorcode?): %ld (0x%08lx)\n", lng, lng );
 	lng = getLong( sock, &size );
-	DBG_printf( "long 2 (code erreur?): %ld (0x%08lx)\n", lng, lng );
+	DBG_printf( "long 2 (errorcode?): %ld (0x%08lx)\n", lng, lng );
 	_lasterror = lng;
 	result = ( HANDLE ) getLong( sock, &size );
-	DBG_printf( "long 3 (code erreur?): %ld (0x%08lx)\n", result, result );
+	DBG_printf( "long 3 (errorcode?): %ld (0x%08lx)\n", result, result );
 
 	return result;
 }
@@ -926,18 +975,18 @@ STDAPI_( CEOID ) CeReadRecordProps( HANDLE hDbase, DWORD dwFlags, LPWORD lpcProp
 	            hDbase, dwFlags, lpcPropID, rgPropID, lplpBuffer, lpcbBuffer );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x10 ); 	//Command
-	pushLong( buffer, size, ( long ) hDbase ); 	//Parameter1 :
-	pushLong( buffer, size, dwFlags ); 	//Parameter2 : Flags ?
-	pushLong( buffer, size, 0 ); 	//Parameter3
-	pushLong( buffer, size, 0 ); 	//Parameter4
-	pushShort( buffer, size, 0 ); 	//Parameter5
+	pushLong( buffer, size, 0x10 ); 		/* Command */
+	pushLong( buffer, size, ( long ) hDbase ); 	/* Parameter1 : */
+	pushLong( buffer, size, dwFlags ); 		/* Parameter2 : Flags ? */
+	pushLong( buffer, size, 0 ); 			/* Parameter3 */
+	pushLong( buffer, size, 0 ); 			/* Parameter4 */
+	pushShort( buffer, size, 0 ); 			/* Parameter5 */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
 	size = getbufferlen( sock );
 	lng = getLong( sock, &size );
-	DBG_printf( "long 1 (code erreur?): %ld (0x%08lx)\n", lng, lng );
+	DBG_printf( "long 1 (errorcode?): %ld (0x%08lx)\n", lng, lng );
 	_lasterror = getLong( sock, &size );
 	DBG_printf( "long 2: lasterror %ld (0x%08lx)\n", _lasterror, _lasterror );
 	result = getLong( sock, &size );
@@ -1012,7 +1061,7 @@ STDAPI_( CEOID ) CeReadRecordProps( HANDLE hDbase, DWORD dwFlags, LPWORD lpcProp
 				default:
 					break;
 			}
-			//	                DBG_printf( "propval: sz:%d %ld (0x%08lx) \n", sizeof(CEVALUNION), valunion, valunion );
+			/* 	                DBG_printf( "propval: sz:%d %ld (0x%08lx) \n", sizeof(CEVALUNION), valunion, valunion ); */
 		}
 
 		ptrbyte = ( LPBYTE ) & ( ptr[ wrd ] );
@@ -1023,15 +1072,21 @@ STDAPI_( CEOID ) CeReadRecordProps( HANDLE hDbase, DWORD dwFlags, LPWORD lpcProp
 	return result;
 }
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Processes
-//=================================================================================================================
-//=================================================================================================================
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Processes */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
-STDAPI_( BOOL ) CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes,
-                                 LPSECURITY_ATTRIBUTES lpThreadAttribute, BOOL bInheritHandles, DWORD dwCreationFlags,
-                                 LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, LPSTARTUPINFO lpStartupInfo,
+STDAPI_( BOOL ) CeCreateProcess( LPCWSTR lpApplicationName,
+				 LPCWSTR lpCommandLine, 
+				 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+				 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+				 BOOL bInheritHandles, 
+				 DWORD dwCreationFlags,
+                                 LPVOID lpEnvironment, 
+				 LPWSTR lpCurrentDirectory, 
+				 LPSTARTUPINFO lpStartupInfo,
                                  LPPROCESS_INFORMATION lpProcessInformation )
 {
 	long size = BUFSIZE;
@@ -1043,58 +1098,89 @@ STDAPI_( BOOL ) CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLin
 	            lpApplicationName, lpCommandLine );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x19 ); 	//Command
-	pushLong( buffer, size, 0x01 ); 	//Parameter1 :
-	stlen = wcslen( lpApplicationName );
-	pushLong( buffer, size, 1 + stlen ); 	//Parameter2
-	pushLong( buffer, size, 0x01 ); 	//Parameter1 :
-	pushString( buffer, size, lpApplicationName ); 	//Parameter5
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
+	pushLong( buffer, size, 0x19 ); 	/* Command */
+	if(lpApplicationName!=NULL)
+	{
+		pushLong( buffer, size, 0x01 );
+		stlen = wcslen( lpApplicationName );
+		pushLong( buffer, size, (stlen+1)*2 );
+		pushLong( buffer, size, 0x01 );
+		pushString( buffer, size, lpApplicationName );
+	}
+	else
+	{
+		pushLong( buffer, size, 0x00 );
+	}
+	if(lpCommandLine!=NULL)
+	{
+		pushLong( buffer, size, 0x01 );
+		stlen = wcslen( lpCommandLine );
+		pushLong( buffer, size, (stlen+1)*2 );
+		pushLong( buffer, size, 0x01 );
+		pushString( buffer, size, lpCommandLine );
+	}
+	else
+	{
+		pushLong( buffer, size, 0x00 );
+	}
+	
+	pushLong( buffer, size, 0x00 ); /* Parameter3 : lpProcessAttibutes ? */
+	pushLong( buffer, size, 0x00 ); /* Parameter4 : lpThreadAttributes ? */
+	pushLong( buffer, size, 0x00 ); /* Parameter5 : bInheritHandles ? */
+	pushLong( buffer, size, dwCreationFlags ); 
+	pushLong( buffer, size, 0x00 ); /* Parameter7 : lpEnvironment ? */
+	pushLong( buffer, size, 0x00 ); /* Parameter8 : lpCurrentDirectory ? */
+	pushLong( buffer, size, 0x00 ); /* Parameter9 : lpStartupInfo ? */
+	pushLong( buffer, size, 0x00 ); /* Parametera : lpProcessInformation ? */
 
-	pushLong( buffer, size, 0x01 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x01 ); 	//Parameter1 :
-	pushLong( buffer, size, 0x00 ); 	//Parameter1 :
 	DBG_printbuf( buffer );
+
 	sendbuffer( sock, buffer );
 
 	size = getbufferlen( sock );
 	lng = getLong( sock, &size );
-	DBG_printf( "long 1 (code erreur?): %ld (0x%08lx)\n", lng, lng );
+	DBG_printf( "long 1 (errorcode?): %ld (0x%08lx)\n", lng, lng );
 	_lasterror = getLong( sock, &size );
 	DBG_printf( "long 2: lasterror %ld (0x%08lx)\n", _lasterror, _lasterror );
 
 	result = getLong( sock, &size );
 	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
-	result = getLong( sock, &size );
-	DBG_printf( "long 3: %ld (0x%08lx)\n", result, result );
+	if(result)
+	{
+		lng = getLong( sock, &size );
+		DBG_printf( "long 4: %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long 5: %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long 6: %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long 7: %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long 8: %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long 9: %ld (0x%08lx)\n", lng, lng );
+		lng = getLong( sock, &size );
+		DBG_printf( "long a: %ld (0x%08lx)\n", lng, lng );
+	}
+	else
+	{
+		lng = getLong( sock, &size );
+		DBG_printf( "long 4: %ld (0x%08lx)\n", lng, lng );
+	}
+
+	if ( size > 0 )
+	{
+		flushbuffer( sock );
+	}
 
 	return result;
 }
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - General
-//=================================================================================================================
-//=================================================================================================================
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - General */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
 STDAPI_( BOOL ) CeCloseHandle( HANDLE hObject )
 {
@@ -1104,8 +1190,8 @@ STDAPI_( BOOL ) CeCloseHandle( HANDLE hObject )
 	DBG_printf( "CeCloseHandle()\n" );
 
 	initBuf( buffer, size );
-	pushLong( buffer, size, 0x08 ); 	//Command
-	pushLong( buffer, size, ( long ) hObject ); 		//Parameter1 :
+	pushLong( buffer, size, 0x08 ); 		/* Command */
+	pushLong( buffer, size, ( long ) hObject ); 	/* Parameter1 : */
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
 
@@ -1125,11 +1211,11 @@ STDAPI_( DWORD ) CeGetLastError( void )
 	return _lasterror;
 }
 
-//=================================================================================================================
-//=================================================================================================================
-// RAPI - Library
-//=================================================================================================================
-//=================================================================================================================
+/* ================================================================================================================= */
+/* ================================================================================================================= */
+/*  RAPI - Library */
+/* ================================================================================================================= */
+/* ================================================================================================================= */
 
 char * findhost( void )
 {
@@ -1175,7 +1261,6 @@ char * findhost( void )
 	return result;
 }
 
-#define E_SUCCESS ERROR_SUCCESS
 STDAPI_( HRESULT ) CeRapiInit()
 {
 	char * hostname;
@@ -1214,7 +1299,7 @@ STDAPI_( HRESULT ) CeRapiInit()
 		return CERAPI_E_ALREADYINITIALIZED;
 	}
 }
-//STDAPI CeRapiInitEx (RAPIINIT*);
+/* STDAPI CeRapiInitEx (RAPIINIT*); */
 
 STDAPI_( HRESULT ) CeRapiUninit()
 {
