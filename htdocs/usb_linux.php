@@ -42,12 +42,13 @@ a successful USB connection.</p>
 
 <blockquote>
 
-<p>If you are using the Mandrake 9.2 kernels, for
-example 2.4.22-18mdk or 2.4.22-21mdk, the <tt>ipaq</tt> kernel module needed by
-SynCE will not work. The problem is in the <tt>usbserial</tt> kernel module.
-Apply <a
+<p>If you are using the Mandrake 9.2 kernels, for example 2.4.22-18mdk or
+2.4.22-21mdk, the <tt>ipaq</tt> kernel module needed by SynCE will not work.
+The problem is in the <tt>usbserial</tt> kernel module.  Apply <a
 href="patches/usbserial.patch-mandrake-9.2">usbserial.patch-mandrake-9.2</a>
-(courtesy of Olivier Dugeon) to make the ipaq driver work.</p>
+(courtesy of Olivier Dugeon) to make the ipaq driver work. See <a
+href="usbpatch.php#compile">Compile the kernel module</a> for help with
+compiling the module.</p>
 
 </blockquote>
 
@@ -66,7 +67,8 @@ href="usbview/Hewlett-Packard_iPAQ_5550.txt">iPAQ 5550</a>.)</p>
 
 <p> To fix this, apply <a
 href="patches/ipaq-0.6-olivier.patch">ipaq-0.6-olivier.patch</a> (courtesy of
-Olivier Dugeon), compile, and insert it like this:</p>
+Olivier Dugeon), <a href="usbpatch.php#compile">compile the kernel module</a>,
+and insert it like this:</p>
 
 <pre>modprobe ipaq ttyUSB=1</pre>
 

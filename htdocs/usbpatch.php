@@ -154,17 +154,33 @@ to be able to use the driver.</p>
 </ol>
 
 <a name="compile"></a>
-<h2>Compile the kernel</h2>
+<h2>Compile the kernel module</h2>
 
-<li>Compile your kernel. If you haven't done this before, you can't wait
-forever! :-) If you don't want to overwrite all of your existing kernel, you
-can just replace the <code>ipaq.o</code> file, which is located in a directory
-like this if your kernel version is 2.4.18-18.8.0:
-<pre>/lib/modules/2.4.18-18.8.0/kernel/drivers/usb/serial/</pre> </li>
+<p>First try this:</p>
 
+<ol>
+
+<li>Apply the patches you need to the files in your kernel source tree.</li>
+
+<li>Create a temporary directory, for example <tt>ipaq</tt>.</li>
+
+<li>Download this <a href="patches/Makefile">Makefile</a> and put it in the
+<tt>ipaq</tt> directory.</li>
+
+<li>Run <tt>make</tt> in this directory to create the <tt>ipaq.o</tt>
+module.</li>
+
+<li>Run <tt>make install</tt> in this directory to install the
+<tt>ipaq.o</tt>.</li>
 
 </ol>
 
+<p>If the above fails, you have to compile all kernel modules.  If you haven't
+done this before, you can't wait forever! :-) If you don't want to overwrite
+all of your existing kernel, you can just replace the <code>ipaq.o</code> file,
+which is located in a directory like this if your kernel version is
+2.4.18-18.8.0: <pre>/lib/modules/2.4.18-18.8.0/kernel/drivers/usb/serial/</pre>
+</p>
 
 
 <p>Return to the <a href="usb.php">USB page</a>.</p>
