@@ -49,7 +49,8 @@ Implementation of RAPI calls
 The implementation of the actual RAPI calls are places in the following
 files in the src directory:
 
-rapi.h             Header file that declares all rapi calls.
+rapi.h             Header file that declares all RAPI calls
+rapi_types.h       Header file with data types used by rapi.h
 
 database.c         Database functions
 file_access.c      File access functions (create, read, write, etc)
@@ -75,8 +76,8 @@ Modules
 Some modules implement objects, as described below in "Object-oriented
 design". Other modules are just a collection of related functionality.
 
-All functions in a module begin with the module name and an underscore. An
-action called "bar" in module "rapi_foo" should be named rapi_foo_bar.
+All functions in a module begin with the module name and an underscore. A
+method called "bar" in module "rapi_foo" should be named rapi_foo_bar.
 
 The module rapi_foo has a header file called rapi_foo.h and
 an implementation file called rapi_foo.c.
@@ -85,11 +86,11 @@ an implementation file called rapi_foo.c.
 Object-oriented design
 ----------------------
 
-An object is a special type of module. For an object of type RapiFoo, there
+An object is a special type of module. For an object of type RapiFoo, the
 module name is rapi_foo.
 
-These functions are always present in an object module, as shown with the
-RapiFoo object:
+Functions to create and destroy the object are always present in an object
+module, as shown with the RapiFoo object:
 
   RapiFoo* rapi_foo_new();
   void rapi_foo_free(RapiFoo* xyz);
@@ -126,7 +127,7 @@ the socket used, and some data.
 rapi_endian
 -----------
 
-The files rapi_endian.h contains these macros for endian conversion:
+The file rapi_endian.h contains these macros for endian conversion:
 
 letoh16  Little endian to host, 16-bit
 letoh32  Little endian to host, 32-bit
@@ -134,6 +135,8 @@ htole16  Host to little endian, 16-bit
 htole32  Host to little endian, 32-bit
 
 If something breaks on big endian machines, these were forgotten somewhere.
+The file rapi_endian.c contains implementation of byte order swapping
+routines in case they are not found on a big endian system.
 
 
 rapi_filetime
