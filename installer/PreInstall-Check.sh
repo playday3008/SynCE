@@ -1,8 +1,8 @@
 #!/bin/sh
 #	Created:	Mit Jun 16 11:07:10 CEST 2004	by M. Biermaier	on linuxorange
-#	Version:	Mit Jun 16 12:33:08 CEST 2004	on linuxorange
+#	Version:	Mit Jun 16 13:54:02 CEST 2004	on linuxorange
 #	$Id$
-
+ 
 USAGE="usage: $0 [-r]\n
 -r ... Produce output in a shell-readable form"
 

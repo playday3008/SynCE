@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 #	Created:	Mit Jun 16 10:34:08 CEST 2004	by M. Biermaier	on linuxorange
-#	Version:	Mit Jun 16 12:27:58 CEST 2004	on linuxorange
+#	Version:	Mit Jun 16 13:55:00 CEST 2004	on linuxorange
 #	$Id$
-
+ 
 """
 Determine PyQt.
 
