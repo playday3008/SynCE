@@ -454,13 +454,16 @@ bool rrac_send_70_2(SynceSocket* socket, uint32_t subsubcommand)/*{{{*/
 
 bool rrac_send_70_3(SynceSocket* socket, uint32_t* ids, size_t count)/*{{{*/
 {
-	uint8_t* packet = NULL;
-	Command_70_3_Header* header;
 	bool success = false;
+	uint8_t* packet = NULL;
+	Command_70_3_Header* header = NULL;
+	uint32_t* packet_ids = NULL;
 	size_t size = sizeof(Command_70_3_Header) + count * sizeof(uint32_t);
+	unsigned i;
 
-	packet = (uint8_t*)malloc(size);
-	header = (Command_70_3_Header*)packet;
+	packet     = (uint8_t*)malloc(size);
+	header     = (Command_70_3_Header*)packet;
+	packet_ids = (uint32_t*)(packet + sizeof(Command_70_3_Header));
 	
 	header->command      = htole16(0x70);
 	header->size         = htole16(size - 4);
@@ -473,7 +476,8 @@ bool rrac_send_70_3(SynceSocket* socket, uint32_t* ids, size_t count)/*{{{*/
 	header->unknown2[3]  = 0;
 	header->count        = htole32(count);
 
-	memcpy(packet + sizeof(Command_70_3_Header), ids, count * sizeof(uint32_t));
+	for (i = 0; i < count; i++)
+		packet_ids[i] = htole32(ids[i]);
 
 	DUMP("packet 70:3", packet, size);
 	success = synce_socket_write(socket, packet, size);
