@@ -117,6 +117,9 @@ Forum</a>.</li>
 
 </ul>
 
+<p>If you apreciate the SynCE project and the help we give you, consider a <a
+href="http://sourceforge.net/donate/index.php?group_id=30550">donation</a>!</p>
+
 <p>If you do not get a reply within a week or two, it is OK to reply to your
 own message asking if it's really true that no one can help you!</p>
 

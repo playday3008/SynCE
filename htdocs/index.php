@@ -16,6 +16,10 @@ operating system.</p>
 <b>Do you need help with SynCE?</b> <a href="help.php">Click here!</a>
 </blockquote>
 
+<blockquote> <b>Do you like SynCE?</b> <a
+href="http://sourceforge.net/donate/index.php?group_id=30550">Donate!</a>
+</blockquote>
+
 <a name="news"></a>
 <h2>News</h2>
 
