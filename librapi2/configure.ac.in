@@ -52,6 +52,11 @@ AC_CONFIG_FILES(
 	[chmod +x script/synce-install-cab]
 )
 
+AC_CONFIG_FILES(
+	[script/synce-remove-program],
+	[chmod +x script/synce-remove-program]
+)
+
 AC_OUTPUT([Makefile
            src/Makefile
 					 src/config/Makefile

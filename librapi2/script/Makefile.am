@@ -1,6 +1,6 @@
 # $Id$
 
-bin_SCRIPTS = synce-install-cab
+bin_SCRIPTS = synce-install-cab synce-remove-program
 
 man_MANS = synce-install-cab.1
 
