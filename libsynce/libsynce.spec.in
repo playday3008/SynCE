@@ -38,6 +38,7 @@ make
 %makeinstall
 
 %files
+%defattr(-,root,root)
 %doc README LICENSE
 %{prefix}/include/synce.h
 %{prefix}/include/synce_log.h

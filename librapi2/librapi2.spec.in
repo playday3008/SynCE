@@ -40,6 +40,7 @@ make
 %makeinstall
 
 %files
+%defattr(-,root,root)
 %doc README LICENSE
 %{prefix}/bin/pcp
 %{prefix}/bin/pls
