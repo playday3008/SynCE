@@ -8,8 +8,7 @@
 
 <ul>
 
-<li class=SPACED>Get SynCE <a href="cvs.php">from CVS</a>, not from .tar.gz
-archives.</li>
+<li class=SPACED>Get SynCE 0.8 or later.</li>
 
 <li class=SPACED>To compile SynCE, you first need the <a
 href="http://developer.apple.com/tools/macosxtools.html">Mac OS X Developer

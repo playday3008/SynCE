@@ -23,17 +23,18 @@ pppd[6083]: Terminating on signal 15.
 pppd[6083]: Connect script failed
 pppd[6083]: Exit.</pre>
 
-<p><b>A:</b> This is a strange problem that has been occuring lately.
-Unfortunately it has not been resolved yet. Any information relating to this
-problem that may be helpful would be most welcome!</p>
-
-<p>You can try things like these and see if anything helps:</p>
+<p><b>A:</b> Please use this checklist to find a solution to your problem:</p>
 
 <ul>
 
-<li>Decrease the connection speed by editing
-/etc/ppp/peers/synce-device and changing 115200 to 19200</li>
+<li class=SPACED>Make sure that the serial port is enabled in BIOS</li>
 
+<li class=SPACED>Make sure you are using the correct serial port</li>
+
+<li class=SPACED>Decrease the connection speed by changing 115200 to 19200
+in /etc/ppp/peers/synce-device</li>
+
+<!--
 <li class=SPACED><p>Try this procedure:</p> 
 
   <ol><li><p>Replace synce-serial/src/synce-serial-chat.c with this file:</p>
@@ -47,15 +48,20 @@ problem that may be helpful would be most welcome!</p>
   <li>Check /var/log/messages for messages from synce-serial-chat</li>
   
   </ol></li>
-
+-->
 <li class=SPACED>Remove hotplug script for SynCE</li>
   
 <li class=SPACED>Make a soft reset of your PDA</li>
 <li class=SPACED>Disconnect other USB devices</li>
 <li class=SPACED>Reboot your PC</li>
-<li class=SPACED>Try your device with Microsoft ActiveSync</li>
+<li class=SPACED>Make sure your device works with Microsoft ActiveSync</li>
 
 </ul>
+
+<p>If you have tried everything above and it still doesn't work, send an email
+to the synce-users mailing list describing why none of the suggestions here
+helped and any other information that could be useful in localizing the
+problem.</p>
 
 
 <h2>Unable to initialize RAPI</h2>
