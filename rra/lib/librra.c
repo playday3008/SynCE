@@ -324,8 +324,15 @@ exit:
 	return success;
 }/*}}}*/
 
-void rra_free_object_ids(ObjectIdArray* object_id_array);
-
+void rra_free_object_ids(ObjectIdArray* object_id_array)/*{{{*/
+{
+	if (object_id_array)
+	{
+		if (object_id_array->ids)
+			free(object_id_array->ids);
+		free(object_id_array);
+	}
+}/*}}}*/
 
 
 typedef struct _Uint32Vector
