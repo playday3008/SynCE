@@ -14,7 +14,26 @@
 
 #define MINUTES_FROM_1601_TO_1970   194074560
 
-static uint8_t blob_0001[104] =
+#define MINUTES_PER_DAY   (60*24)
+#define SECONDS_PER_DAY   (60*MINUTES_PER_DAY)
+
+static const int DAYS_TO_MONTH[12] =
+{
+  0,                                  /* jan */
+  31,                                 /* feb */
+  31+28,                              /* mar */
+  31+28+31,                           /* apr */
+  31+28+31+30,                        /* may */
+  31+28+31+30+31,                     /* jun */
+  31+28+31+30+31+30,                  /* jul */
+  31+28+31+30+31+30+31,               /* aug */
+  31+28+31+30+31+30+31+31,            /* sep */
+  31+28+31+30+31+30+31+31+30,         /* oct */
+  31+28+31+30+31+30+31+31+30+31,      /* nov */
+  31+28+31+30+31+30+31+31+30+31+30,   /* dec */
+};
+
+static const uint8_t blob_0001[104] =
 {
   0xc4,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
   0xc4,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
@@ -32,7 +51,7 @@ static uint8_t blob_0001[104] =
 };
 
 /* Last 0x10 bytes are variable */
-static uint8_t blob_0067[52] = 
+static const uint8_t blob_0067[52] = 
 {
   0x04,0x00,0x00,0x00,0x82,0x00,0xe0,0x00,
   0x74,0xc5,0xb7,0x10,0x1a,0x82,0xe0,0x08,
@@ -283,7 +302,7 @@ static bool recurrence_set_date_time(
     goto exit;
   }
 
-  *date         = (mktime(&start) / (24*60*60)) * (24*60) + MINUTES_FROM_1601_TO_1970;
+  *date         = (mktime(&start) / SECONDS_PER_DAY) * MINUTES_PER_DAY + MINUTES_FROM_1601_TO_1970;
   *start_minute = start.tm_hour * 60 + start.tm_min;
   *end_minute   = end  .tm_hour * 60 + end  .tm_min;
 
@@ -323,8 +342,8 @@ static bool recurrence_parse_weekly(/*{{{*/
   /* always 0x0b for olRecursWeekly? */
   pattern->unknown1[4] = 0x0b;
 
-  /* variable */
-  pattern->unknown2 = 0x000021c0; /* 6*24*60 */
+  /* always 6 days? */
+  pattern->day = 6 * MINUTES_PER_DAY;
 
   recurrence_set_unknown3(pattern->details.weekly.unknown3);
 
@@ -391,8 +410,10 @@ static bool recurrence_parse_monthly(/*{{{*/
    /* always 0x0c for olRecursMonthNth? */
   pattern->unknown1[4] = 0x0c;
 
+#if 0
   /* variable */
-  pattern->unknown2 = 0x0002a300; /* 2*24*60*60 */
+  pattern->day = 0x0002a300; /* 2*24*60*60 */
+#endif
 
   recurrence_set_unknown3(pattern->details.month_nth.unknown3);
 
@@ -435,8 +456,15 @@ static bool recurrence_parse_yearly(/*{{{*/
   /* always 0x0d for olRecursMonthly? */
   pattern->unknown1[4] = 0x0d;
 
-  /* variable */
-  pattern->unknown2 = 0x0002a300; /* 2*24*60*60 */
+  /* I think this is the pattern... */
+  {
+    struct tm start;
+
+    if (!parser_datetime_to_struct(dtstart->values[0], &start))
+      goto exit;
+
+    pattern->day = DAYS_TO_MONTH[start.tm_mon] * MINUTES_PER_DAY;
+  }
 
   recurrence_set_unknown3(pattern->details.monthly.unknown3);
 

@@ -91,7 +91,7 @@ typedef struct
 {
   uint8_t   unknown1[6] P;        /* 0x00 */
   uint32_t  recurrence_type P;    /* 0x06 */
-  uint32_t  unknown2 P;           /* 0x0a */
+  uint32_t  day P;                /* 0x0a */
   union                           /* 0x0e */
   {
     RecurringWeekly   weekly P;
