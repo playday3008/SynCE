@@ -1,0 +1,65 @@
+
+pyrapi - A python wrapper class around the librapi2 library (http://synce.sourceforge.net/)
+
+
+Introduction
+============
+
+This is a first try at a python wrapper. It is not complete and should not be trusted. It only implements a subset 
+of the functions that librapi2 supports, in particular it does not support any writing functions except writing to 
+a file. Having said that it is possible to use the wrapper to produce useful programmes, check out the 
+calendar_sync.py programme in the examples directory for the beginings of a PocketPC to ical converter. I have
+used this to import my task list and appointments into korganiser.
+
+Build Instructions
+==================
+
+Get synce and librapi2 from (http://synce.sourceforge.net/) and follow the instructions for getting communication
+going between your PocketPC and desktop. You will also need Python 2.X (I built this with Python 2.2.1).
+
+Then cd into the 'src' directory. Workout the path name to the top of the librapi2 sources 
+(the file with  README.contributing in it) and plug that in where I have put <path_to_librapi> below.
+
+
+gcc -DNDEBUG -g -O3 -Wall -Wstrict-prototypes -fPIC -DMAJOR_VERSION=1 -DMINOR_VERSION=0 -I./support -I<path_to_librapi> -I<path_to_librapi>/src -I<path_to_librapi>/src/support -I/usr/include/python2.2 -c pyrapi.c -o pyrapi.o
+
+gcc -shared pyrapi.o -L<path_to_librapi>/src/.libs -lrapi -o pyrapi.so
+
+
+export LD_LIBRARY_PATH=<path_to_librapi>/src/.libs
+export PYTHON_PATH=`pwd`
+
+You should now be able to run python and 'import rapi'. 
+
+Running the examples
+====================
+
+ls.py -r ""                                  - will recursively list all the files on the PocketPC
+ls.py -r "\\my documents"                    - will list just the files in the documents folder
+get.py  "\\my documents\\test.txt"           - will fetch test.txt from the documents folder
+put.py  test.txt "\\my documents\\test.txt"  - will put it back again
+calendar_sync.py -a -t test.ical             - will fetch both the appointment and task db and write them to
+                                               an ical file. (fingers crossed :-))
+
+
+Ones to watch
+=============
+
+If Python locks up when you 'import rapi' check that the comms to the PocketPC is working. The init for the rapi
+module needs to talk to the PocketPC.
+
+
+License
+=======
+
+In keeping with the license of librapi2...
+
+MIT License, see the file LICENSE for details.
+
+Contacts
+========
+
+This python wrapper: Richard Taylor (r.taylor@bcs.org.uk) jabber: RichardTaylor@jabber.org
+librapi: check out the README in librapi!
+
+
