@@ -207,12 +207,48 @@ STDAPI_( LONG ) CeRegCloseKey( HKEY hKey )
 	return ERROR_SUCCESS;
 }
 
+static void push_dword_if_valid(long size, LPDWORD pValue)
+{
+	if (pValue)
+	{
+		pushLong( buffer, size, 0x01 );	/* Probably TRUE = here comes parameter info */
+		pushLong( buffer, size, 0x04 );	/* Probably parameter size in bytes */
+		pushLong( buffer, size, 0x00 );	/* Probably FALSE = no data follows */
+	}
+	else
+	{
+		pushLong( buffer, size, 0x00 );	/* Probably FALSE = no parameter info */
+	}
+}
+
+static void get_long_if_valid(long * pSize, LPDWORD pValue)
+{
+	long lng;
+
+	lng = getLong( sock, pSize );	
+
+	if (1 == lng)
+	{
+/*		if (1 != lng) DBG_printf("Expected 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);*/
+		lng = getLong( sock, pSize ); if (4 != lng) DBG_printf("Expected 4 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);
+		lng = getLong( sock, pSize ); if (1 != lng) DBG_printf("Expected 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);
+		
+		lng = getLong( sock, pSize ); 
+		
+		if (pValue)
+			*pValue = lng;
+	}
+	else if (0 != lng)
+	{
+		DBG_printf("Expected 0 or 1 but got %i=0x%x (%i bytes remaining)\n", lng, lng, *pSize);
+	}
+}
+
 STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime )
 {
 	long size = BUFSIZE;
 	long lng;
-	int i;
-	long cSubKeys;
+	int i=0;
 	LONG result = ERROR_SUCCESS;
 
 	DBG_printf( "CeRegQueryInfoKey( hKey = 0x%08X, lpClass = 0x%08X, lpcbClass = 0x%08X, lpReserved = 0x%08X, lpcSubKeys = 0x%08X, lpcbMaxSubKeyLen = 0x%08X, lpcbMaxClassLen = 0x%08X, lpcValues = 0x%08X, lpcbMaxValueNameLen = 0x%08X, lpcbMaxValueLen = 0x%08X, lpcbSecurityDescriptor = 0x%08X, lpftLastWriteTime = 0x%08X )\n",
@@ -220,31 +256,29 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 
 	initBuf( buffer, size );
 	pushLong( buffer, size, 0x25 ); 	/* Command */
-	pushLong( buffer, size, hKey ); 	/* Parameter1 : */
-	pushLong( buffer, size, 0x00 ); 	/* Parameter2 : */
-	pushLong( buffer, size, 0x00 ); 	/* Parameter3 : */
+	pushLong( buffer, size, hKey ); 	/* hKey */
+	pushLong( buffer, size, 0x00 ); 	/* lpClass */
 
-	pushLong( buffer, size, 0x00 ); 	/* Parameter4 : */
-	pushLong( buffer, size, 0x01 ); 	/* Parameter5 : */
-	pushLong( buffer, size, 0x04 ); 	/* Parameter6 : */
-
-	pushLong( buffer, size, 0x00 ); 	/* Parameter7 : */
-	pushLong( buffer, size, 0x01 ); 	/* Parameter8 : */
-	pushLong( buffer, size, 0x04 ); 	/* Parameter9 : */
-
-	pushLong( buffer, size, 0x00 ); 	/* Parameter10 : */
-	pushLong( buffer, size, 0x01 ); 	/* Parameter11 : */
-	pushLong( buffer, size, 0x04 ); 	/* Parameter12 : */
-
-	pushLong( buffer, size, 0x00 ); 	/* Parameter13 : */
-	pushLong( buffer, size, 0x01 ); 	/* Parameter14 : */
-	pushLong( buffer, size, 0x04 ); 	/* Parameter15 : */
-
-	pushLong( buffer, size, 0x00 ); 	/* Parameter16 : */
-	pushLong( buffer, size, 0x00 ); 	/* Parameter17 : */
-	pushLong( buffer, size, 0x00 ); 	/* Parameter18 : */
-	pushLong( buffer, size, 0x00 ); 	/* Parameter19 : */
-	pushLong( buffer, size, 0x00 ); 	/* Parameter20 : */
+	push_dword_if_valid(size, lpcbClass);
+	push_dword_if_valid(size, lpReserved);
+	push_dword_if_valid(size, lpcSubKeys);
+	push_dword_if_valid(size, lpcbMaxSubKeyLen);
+	push_dword_if_valid(size, lpcbMaxClassLen);
+	push_dword_if_valid(size, lpcValues);
+	push_dword_if_valid(size, lpcbMaxValueNameLen);
+	push_dword_if_valid(size, lpcbMaxValueLen);
+	push_dword_if_valid(size, lpcbSecurityDescriptor);
+	
+	if (lpftLastWriteTime)
+	{
+		pushLong( buffer, size, 0x01 );
+		pushLong( buffer, size, 0x08 );		/* lpftLastWriteTime */
+		pushLong( buffer, size, 0x00 ); 
+	}
+	else
+	{
+		pushLong( buffer, size, 0x00 ); 
+	}
 
 	DBG_printbuf( buffer );
 	sendbuffer( sock, buffer );
@@ -252,38 +286,42 @@ STDAPI_( LONG ) CeRegQueryInfoKey( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass,
 	size = getbufferlen( sock );
 
 	result = lng = getLong( sock, &size );
-	DBG_printf( "result %d : %ld (0x%08lx)\n", i, lng, lng );
+/*	DBG_printf( "result %d : %ld (0x%08lx)\n", i, lng, lng );*/
 	_lasterror = lng = getLong( sock, &size );
-	DBG_printf( "lasterror %d : %ld (0x%08lx)\n", i, lng, lng );
+/*	DBG_printf( "lasterror %d : %ld (0x%08lx)\n", i, lng, lng );*/
 	if (ERROR_SUCCESS == result)
 	{
-		for ( i = 2; i < 8; i++ )
+		lng = getLong( sock, &size ); if (0 != lng) DBG_printf("Expected zero but got %i (%i bytes remaining)\n", lng, size);
+
+		get_long_if_valid(&size, lpcbClass);
+		get_long_if_valid(&size, lpReserved);
+		get_long_if_valid(&size, lpcSubKeys);
+		get_long_if_valid(&size, lpcbMaxSubKeyLen);
+		get_long_if_valid(&size, lpcbMaxClassLen);
+		get_long_if_valid(&size, lpcValues);
+		get_long_if_valid(&size, lpcbMaxValueNameLen);
+		get_long_if_valid(&size, lpcbMaxValueLen);
+		get_long_if_valid(&size, lpcbSecurityDescriptor);
+
+		if (lpftLastWriteTime)
 		{
-			lng = getLong( sock, &size );
-			DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
+			lng = getLong( sock, &size ); if (1 != lng) DBG_printf("Expected 1 but got %i (%i bytes remaining)\n", lng, size);
+			lng = getLong( sock, &size ); if (8 != lng) DBG_printf("Expected 8 but got %i (%i bytes remaining)\n", lng, size);
+			lng = getLong( sock, &size ); if (1 != lng) DBG_printf("Expected 1 but got %i (%i bytes remaining)\n", lng, size);
+
+			lpftLastWriteTime->dwLowDateTime = getLong( sock, &size );
+			lpftLastWriteTime->dwHighDateTime = getLong( sock, &size );
 		}
-		cSubKeys = getLong( sock, &size );
-		DBG_printf( "cSubKeys : %ld (0x%08lx)\n", cSubKeys, cSubKeys );
-		if ( lpcSubKeys != NULL )
+		else
 		{
-			*( lpcSubKeys ) = cSubKeys;
+			lng = getLong( sock, &size ); if (0 != lng) DBG_printf("Expected zero but got %i (%i bytes remaining)\n", lng, size);
 		}
-		for ( i = 9; i < 20; i++ )
-		{
-			lng = getLong( sock, &size );
-			DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
-		}
-		
+	}
+
+	while (size > 0)
+	{
 		lng = getLong( sock, &size );
-		DBG_printf( "cValues: %ld (0x%08lx)\n", lng, lng);
-		if (lpcValues)
-			*lpcValues = lng;
-				
-		for ( i = 21; i < 25; i++ )
-		{
-			lng = getLong( sock, &size );
-			DBG_printf( "long %d : %ld (0x%08lx)\n", i, lng, lng );
-		}
+		DBG_printf( "unexpected long %d : %ld (0x%08lx)\n", i++, lng, lng );
 	}
 	return result;
 }
