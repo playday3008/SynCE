@@ -2,9 +2,7 @@
 #ifndef __rapi_win_h__
 #define __rapi_win_h__
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "rapi_config.h"
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -44,8 +42,28 @@ typedef const WCHAR*  LPCWSTR;
  * Misc types
  */
 
-/* This is usually a void*, but we must guarantee 32-bit! */
+/* A handle  is usually a void*, but we must guarantee 32-bit! */
 typedef u_int32_t  HANDLE;
+typedef u_int32_t  HRESULT;
+
+
+/*
+ * Some error codes (HRESULTs)
+ */
+
+#define E_ABORT         0x80004004
+#define E_ACCESSDENIED  0x80070005
+#define E_FAIL          0x80004005
+#define E_HANDLE        0x80070006
+#define E_INVALIDARG    0x80070057
+#define E_NOINTERFACE   0x80004002
+#define E_NOTIMPL       0x80004001
+#define E_OUTOFMEMORY   0x8007000E
+#define E_PENDING       0x8000000A
+#define E_POINTER       0x80004003
+#define E_UNEXPECTED    0x8000FFFF
+#define S_FALSE         0x00000001
+#define S_OK            0x00000000
 
 
 #endif

@@ -8,9 +8,9 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "rapi_config.h"
 #else
-#error No config.h available.
+#error HAVE_CONFIG_H not defined.
 #endif
 
 /* needed first */

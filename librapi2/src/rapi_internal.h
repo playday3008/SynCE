@@ -3,7 +3,9 @@
 #define __rapi_internal_h__
 
 #if HAVE_CONFIG_H
-#include "config.h"
+#include "rapi_config.h"
+#else
+#error HAVE_CONFIG_H is not defined
 #endif
 
 #if HAVE_SYS_TYPES_H
