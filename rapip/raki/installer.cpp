@@ -74,7 +74,7 @@ void Installer::deleteResult(KIO::Job *deleteJob)
     PDA *pda = (PDA *) pdaList->find(destUrls.first().host());
 
     if (pda != NULL) {
-        if (!pda->getNumberOfCopyJobs()) {
+        if (pda->getNumberOfCopyJobs() == 0) {
             runInstaller(destUrls.first());
         }
     }
@@ -105,7 +105,7 @@ void Installer::copyResult(KIO::Job *copyJob)
             deleteFiles(copiedFiles);
         } else {
             pda->unregisterCopyJob((KIO::CopyJob *) copyJob);
-            if (!pda->getNumberOfCopyJobs()) {
+            if (pda->getNumberOfCopyJobs() == 0) {
                 runInstaller(destUrl);
             }
         }
