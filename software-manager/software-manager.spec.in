@@ -14,7 +14,7 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 #Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
-Buildroot: %{_tmppath}/synce-root
+Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 Requires: gtk2 atk libgnomeui
 Requires: synce >= 0.9.0
@@ -28,6 +28,7 @@ synce-software-manager is part of the SynCE project:
 Graphical tool for installing and removing software on a Windows CE device.
 
 %prep
+rm -rf $RPM_BUILD_ROOT
 %setup
 
 %build
@@ -39,7 +40,10 @@ make
 
 %files
 %defattr(-,root,root)
-%{prefix}/bin/*
+%{_bindir}/*
+%{_datadir}/locale/ru/LC_MESSAGES/synce-software-manager.mo
+%{_datadir}/locale/sv/LC_MESSAGES/synce-software-manager.mo
+%{_datadir}/synce/synce_software_manager.glade
 #%{prefix}/share/pixmaps/synce/synce-color-small.png
 #%{prefix}/share/pixmaps/synce/synce-gray-small.png
 
