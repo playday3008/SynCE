@@ -9,6 +9,57 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
+#include "../rra_config.h"
+
+#if !HAVE_STRNDUP
+static char *strndup (const char *s, size_t n)/*{{{*/
+{
+	char *r;
+
+	if (!s)
+		return NULL;
+
+	if (strlen (s) < n)
+		n = strlen (s);
+
+	r = malloc (n + 1);
+	memcpy (r, s, n);
+	r[n] = '\0';
+	return r;
+}/*}}}*/
+#endif /* !HAVE_STRNDUP */
+
+#if !HAVE_STRCASESTR
+/* XXX: poorly tested version for libc without GNU extensions */
+static char *strcasestr(const char *haystack, const char *needle)/*{{{*/
+{
+	for(;;)
+	{
+		char *lower = strchr(haystack, tolower(needle[0]));
+		char *upper = strchr(haystack, toupper(needle[0]));
+
+		if (lower && (!upper || (lower < upper)))
+		{
+			if (0 == strncasecmp(lower, needle, strlen(needle)))
+				return lower;
+
+			haystack = lower + 1;
+		}
+		else if (upper)
+		{
+			if (0 == strncasecmp(upper, needle, strlen(needle)))
+				return upper;
+			
+			haystack = upper + 1;
+		}
+		else
+		{
+			return NULL;
+		}
+	}
+}/*}}}*/
+#endif
 
 static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
 
@@ -541,6 +592,8 @@ typedef enum _VcardState
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
+#define STR_IN_STR(haystack, needle)  (0 != strcasestr(haystack, needle))
+
 typedef struct _Parser
 {
 	uint32_t vcard_version;
@@ -649,20 +702,26 @@ static void add_string(Parser* parser, uint32_t id, const char* type, char* valu
 {
 	char* converted = NULL;
 	CEPROPVAL* field = &parser->fields[parser->field_index++];
+
+	assert(value);
 	
 	field->propid = (id << 16) | CEVT_LPWSTR;
 
-	if (strstr(type, "QUOTED-PRINTABLE"))
+	if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
 	{
 		value = converted = strdup_quoted_printable(value);
+		assert(value);
 	}
 
 	unescape_string(value);
+	assert(value);
 
-	if (parser->utf8 || strstr(type, "UTF-8"))
+	if (parser->utf8 || STR_IN_STR(type, "UTF-8"))
 		field->val.lpwstr = wstr_from_utf8(value);
 	else
 		field->val.lpwstr = wstr_from_ascii(value);
+
+	assert(field->val.lpwstr);
 
 	if (converted)
 		free(converted);
@@ -799,9 +858,9 @@ static bool parser_handle_field(/*{{{*/
 		char** address = strsplit(value, ';');
 		int where;
 
-		if (strstr(type, "WORK"))
+		if (STR_IN_STR(type, "WORK"))
 			where = WORK;
-		else if (strstr(type, "HOME"))
+		else if (STR_IN_STR(type, "HOME"))
 			where = HOME;
 		else
 		{
@@ -824,15 +883,15 @@ static bool parser_handle_field(/*{{{*/
 	else if (STR_EQUAL(name, "TEL"))/*{{{*/
 	{
 		/* TODO: make type uppercase */
-		if (strstr(type, "HOME"))
+		if (STR_IN_STR(type, "HOME"))
 		{
 			add_string(parser, ID_HOME_TEL, type, value);
 		}
-		else if (strstr(type, "WORK"))
+		else if (STR_IN_STR(type, "WORK"))
 		{
 			add_string(parser, ID_WORK_TEL, type, value);
 		}
-		else if (strstr(type, "CELL"))
+		else if (STR_IN_STR(type, "CELL"))
 		{
 			add_string(parser, ID_MOBILE_TEL, type, value);
 		}
@@ -846,7 +905,7 @@ static bool parser_handle_field(/*{{{*/
 	{
 		/* TODO: make type uppercase */
 		/* TODO: handle multiple e-mail adresses */
-		if (!strstr(type, "INTERNET"))
+		if (!STR_IN_STR(type, "INTERNET"))
 		{
 			synce_trace("Unexpected type '%s' for field '%s', assuming 'INTERNET'",
 					type, name);

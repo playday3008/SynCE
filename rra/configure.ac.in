@@ -23,6 +23,9 @@ dnl Checks for header files.
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
+AC_CHECK_FUNCS(strndup)
+AC_CHECK_FUNCS(strcasestr)
+
 AC_OUTPUT([Makefile
            src/Makefile
            lib/Makefile
