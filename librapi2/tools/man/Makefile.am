@@ -7,6 +7,7 @@ man_MANS = \
 	prmdir.1 \
 	prun.1 \
 	pstatus.1 \
+	rapiconfig.1 \
 	synce-list-programs.1
 
 EXTRA_DIST = $(man_MANS)
