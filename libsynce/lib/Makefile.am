@@ -22,3 +22,8 @@ libsynce_la_LIBADD  = @LTLIBICONV@ @LTLIBOBJS@
 include_HEADERS = \
 	synce.h synce_log.h synce_socket.h synce_types.h
 
+noinst_PROGRAMS = ftconv
+
+ftconv_SOURCES = ftconv.c
+ftconv_LDADD = libsynce.la
+
