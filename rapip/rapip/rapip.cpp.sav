@@ -1,0 +1,698 @@
+#include <qcstring.h>
+#include <qsocket.h>
+#include <qdatetime.h>
+#include <qbitarray.h>
+
+#include <stdlib.h>
+#include <math.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+#include <qfile.h>
+
+#include <kapplication.h>
+#include <kdebug.h>
+#include <kmessagebox.h>
+#include <kinstance.h>
+#include <kglobal.h>
+#include <kstandarddirs.h>
+#include <klocale.h>
+#include <kurl.h>
+#include <ksock.h>
+#include <kmimetype.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <syslog.h>
+
+#include "rapip.h"
+
+#define WIDE_BACKSLASH   htole16('\\')
+
+static bool show_hidden_files = false;
+static bool rapiInitialized;
+
+
+using namespace KIO;
+
+
+kio_rapipProtocol::kio_rapipProtocol(const QCString &pool_socket, const QCString &app_socket)
+    : SlaveBase("kio_rapi", pool_socket, app_socket)
+{
+    rapiInitialized = false;
+//    openlog("rapip", LOG_PID, LOG_USER);
+    kdDebug() << "kio_rapipProtocol::kio_rapipProtocol()" << endl;
+}
+
+
+kio_rapipProtocol::~kio_rapipProtocol()
+{
+    rapiInitialized = false;
+    kdDebug() << "kio_rapipProtocol::~kio_rapipProtocol()" << endl;
+}
+
+bool kio_rapipProtocol::rapiInit()
+{
+
+    HRESULT hr;
+    
+    hr = CeRapiInit();
+
+    if (FAILED(hr))
+    {
+        fprintf(stderr, "Unable to initialize RAPI: %s\n", 
+                synce::synce_strerror(hr));
+        return false;
+    }
+
+    rapiInitialized = true;
+
+    return true;
+}
+
+WCHAR* kio_rapipProtocol::adjust_remote_path(WCHAR* old_path, bool free_path)
+{
+    WCHAR wide_backslash[2];
+    WCHAR path[MAX_PATH];
+
+    wide_backslash[0] = WIDE_BACKSLASH;
+    wide_backslash[1] = '\0';
+
+    /* Nothing to adjust if we have an absolute path */
+    if (WIDE_BACKSLASH == old_path[0])
+        return old_path;
+
+    if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path))
+    {
+        return NULL;
+    }
+
+    synce::wstr_append(path, wide_backslash, sizeof(path));
+    synce::wstr_append(path, old_path, sizeof(path));
+
+    if (free_path)
+        synce::wstr_free_string(old_path);
+
+    synce_trace_wstr(path);
+    return synce::wstrdup(path);
+}
+
+
+bool kio_rapipProtocol::list_matching_files(WCHAR* wide_path)
+{
+    bool success = false;
+    BOOL result;
+    CE_FIND_DATA* find_data = NULL;
+    DWORD file_count = 0;
+    DWORD i;
+
+    synce_trace_wstr(wide_path);
+    wide_path = adjust_remote_path(wide_path, true);
+    synce_trace_wstr(wide_path);
+  
+    result = CeFindAllFiles(
+            wide_path,
+            (show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
+            FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
+            &file_count, &find_data);
+  
+    UDSEntry udsEntry;
+    
+    if (!result) {
+        goto exit;
+    }
+    
+    for (i = 0; i < file_count; i++) {
+        udsEntry.clear();
+        CE_FIND_DATA *entry = find_data + i;
+        UDSAtom atom;
+        atom.m_uds = KIO::UDS_NAME;
+        atom.m_str = synce::wstr_to_ascii(entry->cFileName);
+  
+        udsEntry.append( atom );
+        atom.m_uds = KIO::UDS_SIZE;
+        atom.m_long = entry->nFileSizeLow;
+        udsEntry.append(atom);
+        atom.m_uds = KIO::UDS_ACCESS;
+        atom.m_long = S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH |S_IXUSR | S_IXGRP | S_IXOTH;
+        //atom.m_long = S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+        udsEntry.append(atom);
+           
+        atom.m_uds = KIO::UDS_MODIFICATION_TIME;
+        atom.m_long = synce::filetime_to_unix_time(&entry->ftLastWriteTime);
+        udsEntry.append(atom);
+        
+        if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            atom.m_uds = KIO::UDS_FILE_TYPE;
+            atom.m_long = S_IFDIR; // it is always a directory
+            udsEntry.append(atom);
+            atom.m_uds = KIO::UDS_MIME_TYPE;
+            atom.m_str="inode/directory";
+        } else {
+            atom.m_uds = KIO::UDS_FILE_TYPE;
+            atom.m_long = S_IFREG; // is regular file
+            udsEntry.append(atom);
+            KURL u;
+            u.setPath(synce::wstr_to_ascii(entry->cFileName));
+            KMimeType::Ptr mt = KMimeType::findByURL(u);
+            atom.m_uds = KIO::UDS_MIME_TYPE;
+            atom.m_str=mt->name();
+        }
+       
+        udsEntry.append( atom );
+        listEntry(udsEntry, false);
+    }
+    
+    listEntry( udsEntry, true ); // ready print_entry
+
+    success = true;
+
+exit:
+    CeRapiFreeBuffer(find_data);
+
+    return success;
+}
+
+
+bool anyfile_remote_read(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
+{
+    return CeReadFile(file->handle.remote, buffer, bytes, bytesAccessed, NULL);
+}
+
+
+bool anyfile_remote_write(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
+{
+    return CeWriteFile(file->handle.remote, buffer, bytes, bytesAccessed, NULL);
+}
+
+
+void anyfile_remote_close(AnyFile* file)
+{
+    CeCloseHandle(file->handle.remote);
+}
+
+
+AnyFile* kio_rapipProtocol::anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
+{
+    WCHAR* wide_filename = synce::wstr_from_ascii(filename);
+    AnyFile* file = (AnyFile*)calloc(1, sizeof(AnyFile));
+
+    switch (access)
+    {
+        case READ:  
+            file->handle.remote = CeCreateFile(wide_filename, GENERIC_READ, 0, NULL, 
+                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+            break;
+
+        case WRITE: 
+            file->handle.remote = CeCreateFile(wide_filename, GENERIC_WRITE, 0, NULL,
+                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+            break;
+    }
+
+    if (INVALID_HANDLE_VALUE == file->handle.remote)
+    {
+        synce_error("Failed to open file '%s': %s", 
+                filename, synce::synce_strerror(CeGetLastError()));
+        free(file);
+        file = NULL;
+    } else {
+        file->close = anyfile_remote_close;
+        file->write = anyfile_remote_write;
+        file->read  = anyfile_remote_read;
+    }
+
+    if (wide_filename)
+        synce::wstr_free_string(wide_filename);
+        
+    return file;
+}
+
+#define ANYFILE_BUFFER_SIZE (64*1024)
+
+void kio_rapipProtocol::get(const KURL& url )
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, url.path());
+            return;
+        }
+    }
+
+    size_t bytes_read;
+
+    KMimeType::Ptr mt = KMimeType::findByURL(url);
+    
+    mimeType(mt->name());
+    
+    QString fName = QFile::encodeName(url.path());
+    
+    AnyFile *file = NULL;
+    
+    unsigned char *buffer = (unsigned char *) malloc(ANYFILE_BUFFER_SIZE);
+    
+    QByteArray array;
+    
+    KIO::filesize_t processed_size = 0;
+    
+    if ((file = anyfile_remote_open(fName.ascii(), READ)) == NULL) {
+        error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.path());
+        goto exit;
+    }
+       
+    for(;;)
+    {
+        if (!anyfile_remote_read(file, buffer, ANYFILE_BUFFER_SIZE, &bytes_read))
+        {
+            error(KIO::ERR_COULD_NOT_READ, url.path());
+            goto exit;
+        }
+
+        if (0 == bytes_read)
+        {
+            break;
+        }
+       
+        array.setRawData((char *) buffer, bytes_read);
+        data(array);
+        array.resetRawData((char *) buffer, bytes_read);
+                
+        processed_size += bytes_read;
+        processedSize(processed_size);
+    }       
+    
+    data(QByteArray());
+    
+    processedSize(processed_size);
+    
+    finished();
+
+exit:
+    anyfile_remote_close(file);
+}
+
+
+void kio_rapipProtocol::put(const KURL & url, int /* mode */, bool /* overwrite */, bool /* resume */)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, url.path());
+            return;
+        }
+    }
+
+    size_t bytes_written;
+
+    KMimeType::Ptr mt = KMimeType::findByURL(url);
+    
+    emit mimeType(mt->name());
+    
+    QString qPath = QFile::encodeName(url.path());
+    
+    qPath.replace('/', "\\");
+
+    AnyFile *file = NULL;
+    
+    int result;
+    
+    if ((file = anyfile_remote_open(qPath.ascii(), WRITE)) == NULL) {
+        error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.path());
+        goto exit;
+    }
+    
+    do {
+        QByteArray buffer;
+        dataReq();
+        result = readData(buffer);
+        
+        if (result > 0)
+        {
+            if (! anyfile_remote_write(file, (unsigned char *) buffer.data(), buffer.size(), &bytes_written))
+            {
+                error(KIO::ERR_COULD_NOT_WRITE, url.path());
+                goto exit;
+            }
+            
+        }
+    } while (result > 0);
+    
+     
+    finished();
+
+exit:
+    anyfile_remote_close(file);
+}
+
+
+void kio_rapipProtocol::listDir( const KURL& _url)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, _url.path());
+            return;
+        }
+    }
+       
+    KURL url(_url);
+    
+    QString qPath( QFile::encodeName(url.path()));
+    
+    WCHAR* wide_path = NULL;
+
+    if (qPath.isEmpty())
+    {
+        url.setPath("/");
+        redirection(url);
+        finished();
+        return;
+    }
+    
+    if (qPath.right(1) != "/") {
+        qPath = qPath.append('/');
+    }
+    
+    qPath.replace('/', "\\");
+    
+    char new_path[MAX_PATH];
+    
+    snprintf(new_path, sizeof(new_path), "%s*", qPath.ascii());
+    
+    wide_path = synce::wstr_from_ascii(new_path);
+  
+    if (list_matching_files(wide_path)) {
+        finished();
+    } else {
+        error(KIO::ERR_CANNOT_ENTER_DIRECTORY, url.path());
+    }
+
+    if (wide_path)
+        synce::wstr_free_string(wide_path);
+}
+
+
+void kio_rapipProtocol::mkdir(const KURL & url, int /* permissions */)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, url.path());
+            return;
+        }
+    }
+    
+    WCHAR* wide_path = NULL;
+
+    QString qPath( QFile::encodeName(url.path()));
+    
+    qPath.replace('/', "\\");
+    
+    wide_path = synce::wstr_from_ascii(qPath.ascii());
+    
+    if (!CeCreateDirectory(wide_path, NULL))
+    {
+        error(KIO::ERR_DIR_ALREADY_EXIST, url.path());
+        goto exit;
+    }
+    
+    finished();
+exit:
+
+    if (wide_path)
+        synce::wstr_free_string(wide_path);
+    
+    return;
+}
+
+
+void kio_rapipProtocol::del(const KURL & url, bool isFile)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, url.path());
+            return;
+        }
+    }
+    
+    WCHAR* wide_path = NULL;
+
+    QString qPath( QFile::encodeName(url.path()));
+    
+    qPath.replace('/', "\\");
+    
+    wide_path = synce::wstr_from_ascii(qPath.ascii());
+    
+    if (isFile) {
+        if (!CeDeleteFile(wide_path)) {
+            error(KIO::ERR_CANNOT_DELETE, url.path());
+            goto exit;
+        }   
+    } else {
+        if (!CeRemoveDirectory(wide_path)) {
+            error(KIO::ERR_CANNOT_DELETE, url.path());
+            goto exit;
+        }
+    }
+    
+    if (wide_path)
+        synce::wstr_free_string(wide_path);
+    
+    finished();
+
+exit:
+    return;
+}  
+
+void kio_rapipProtocol::stat( const KURL & url)
+{
+    kdDebug(7101)<<"LANProtocol::stat: "<<endl;
+    
+    UDSEntry udsEntry;
+    
+    UDSAtom atom;
+ 
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, url.path());
+            return;
+        }
+    }
+    
+    WCHAR* wide_path = NULL;
+
+    QString qPath( QFile::encodeName(url.path()));
+    
+    qPath.replace('/', "\\");
+    
+    wide_path = synce::wstr_from_ascii(qPath.ascii());
+    
+    DWORD attributes = CeGetFileAttributes(wide_path);
+    
+//    syslog(LOG_INFO, "path: %s .... %d attributes\n", qPath.ascii(), attributes);
+    
+    atom.m_uds = KIO::UDS_NAME;
+    atom.m_str = url.filename();
+    udsEntry.append( atom );
+    
+    atom.m_uds = KIO::UDS_SIZE;
+    atom.m_long = 1024;
+    udsEntry.append(atom);
+    
+    atom.m_uds = KIO::UDS_ACCESS;
+    atom.m_long = S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH |S_IXUSR | S_IXGRP | S_IXOTH;
+    udsEntry.append(atom);
+
+    if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+        atom.m_uds = KIO::UDS_FILE_TYPE;
+        atom.m_long = S_IFDIR; // it is always a directory
+        udsEntry.append(atom);
+        
+        atom.m_uds = KIO::UDS_MIME_TYPE;
+        atom.m_str="inode/directory";
+        
+        mimeType(atom.m_str);
+    } else /* if (attributes > 0) */ {
+        atom.m_uds = KIO::UDS_FILE_TYPE;
+        atom.m_long = S_IFREG; // is regular file
+        udsEntry.append(atom);
+        
+        KMimeType::Ptr mt = KMimeType::findByURL(url);
+        atom.m_uds = KIO::UDS_MIME_TYPE;
+        atom.m_str=mt->name();
+        
+        mimeType(atom.m_str);
+    } /*
+    else {
+        error(KIO::ERR_COULD_NOT_STAT, url.path());
+        goto exit;
+    }*/   
+
+    udsEntry.append( atom );
+    statEntry(udsEntry);
+
+    if (wide_path)
+        synce::wstr_free_string(wide_path);
+    
+    finished();
+    
+//exit:
+    return;
+};
+
+void kio_rapipProtocol::mimetype( const KURL& url)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, url.path());
+            return;
+        }
+    }
+ 
+    WCHAR* wide_path = NULL;
+
+    QString qPath( QFile::encodeName(url.path()));
+    
+    qPath.replace('/', "\\");
+    
+    wide_path = synce::wstr_from_ascii(qPath.ascii());
+    
+    DWORD attributes = CeGetFileAttributes(wide_path);
+
+    if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+        mimeType("inode/directory");
+    } else /*if (attributes > 0)*/ {
+        KMimeType::Ptr mt = KMimeType::findByURL(url);
+        mimeType(mt->name());
+    }/* else {
+        error(KIO::ERR_COULD_NOT_STAT, url.path());
+        goto exit;
+    }*/
+    
+    if (wide_path)
+        synce::wstr_free_string(wide_path);
+    
+    finished();
+    
+//exit:
+    return;
+}
+
+
+void kio_rapipProtocol::rename (const KURL & src, const KURL & dest, bool  overwrite)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+            error(KIO::ERR_COULD_NOT_CONNECT, src.path());
+            return;
+        }
+    }
+ 
+    WCHAR* src_path = NULL;
+
+    QString sPath( QFile::encodeName(src.path()));
+    
+    sPath.replace('/', "\\");
+    
+    src_path = synce::wstr_from_ascii(sPath.ascii());
+
+    WCHAR* dest_path = NULL;
+
+    QString dPath( QFile::encodeName(dest.path()));
+    
+    dPath.replace('/', "\\");
+    
+    dest_path = synce::wstr_from_ascii(dPath.ascii());
+
+    if (overwrite) {
+        if (!CeDeleteFile(dest_path)) {
+            error(KIO::ERR_CANNOT_DELETE, dest.path());
+            goto exit;
+        }
+    }
+    
+    if (!CeMoveFile(src_path, dest_path)) {
+        error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
+        goto exit;
+    }
+    
+    finished();
+
+exit:
+    if (dest_path)
+        synce::wstr_free_string(dest_path);
+    
+    if (src_path)
+        synce::wstr_free_string(src_path);   
+}
+
+
+void kio_rapipProtocol::copy (const KURL &  src, const KURL & dest, int /* permissions */, bool overwrite)
+{
+    if (! rapiInitialized) {
+        if (rapiInit() == false) {
+           error(KIO::ERR_COULD_NOT_CONNECT, src.path());
+           return;
+        }
+    }
+ 
+    WCHAR* src_path = NULL;
+
+    QString sPath( QFile::encodeName(src.path()));
+    
+    sPath.replace('/', "\\");
+    
+    src_path = synce::wstr_from_ascii(sPath.ascii());
+
+    WCHAR* dest_path = NULL;
+
+    QString dPath( QFile::encodeName(dest.path()));
+    
+    dPath.replace('/', "\\");
+    
+    dest_path = synce::wstr_from_ascii(dPath.ascii());
+
+    if (overwrite) {
+        if (!CeDeleteFile(dest_path)) {
+            error(KIO::ERR_CANNOT_DELETE, dest.path());
+            goto exit;
+        }
+    }
+    
+    if (!CeCopyFile(src_path, dest_path, true)) {
+        error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
+        goto exit;
+    }
+    
+    finished();
+
+exit:
+    if (dest_path)
+        synce::wstr_free_string(dest_path);
+    
+    if (src_path)
+        synce::wstr_free_string(src_path);
+}
+ 
+
+extern "C"
+{
+    int kdemain(int argc, char **argv)
+    {
+        KInstance instance( "kio_rapi" );
+
+        kdDebug(7101) << "*** Starting kio_rapi " << endl;
+
+        if (argc != 4) {
+            kdDebug(7101) << "Usage: kio_rapi  protocol domain-socket1 domain-socket2" << endl;
+            exit(-1);
+        }
+
+        kio_rapipProtocol slave(argv[2], argv[3]);
+        slave.dispatchLoop();
+
+        kdDebug(7101) << "*** kio_rapi Done" << endl;
+        return 0;
+    }
+}

@@ -1,0 +1,19 @@
+2003-01-27  Volker Christian <voc@soft.uni-linz.ac.at>
+	* Initial Release
+
+2003-02-10  Volker Christian <voc@soft.uni-linz.ac.at>
+	* Code-cleaning in the kio_slave - nevertheless it is still not perfect
+	* Initial Release of the Raki-Application which docs into the System
+	  Tray.
+	  Features are:
+	  	+ Displaying of the current connection-state
+	  	+ Fetching and displaying of
+			- System Information
+			- Power status
+		+ Managing of installed Software
+		+ Installing new software by drag&drop of cab-files onto the
+			System Tray Icon
+		+ Auto-start of dccm (configurable)
+		+ Password for PDA-connection (configurable)
+		+ Start PocketPC-Applications on the PDA remotely from your
+		  Desktop

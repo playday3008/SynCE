@@ -1,0 +1,23 @@
+In order to configure and build Rapip and Raki you need to do the following:
+
+	- Check that you have KDE-3.1 and Qt-3.1 installed
+        - cd to the rapip-0.3 directory
+        - type "make -f Makefile.cvs"
+        - type "./configure"
+        - type "make"
+        - type "make install" as root.
+	- type "cp raki/raki.sh ~/.synce/scripts" and
+	- type "chmod 755 ~/.synce/scripts/raki.sh" for every rapip/raki-user.
+
+First start:
+- Launch Raki from the "KMenu->Utilities"-Menu. You should find a new 
+  black&white icon in your System-Tray.
+- Right-klick on the icon lets you choose some actions to manipulate dccm and to
+  configure the Raki-Applet.
+- Make sure dccm is running eighter via Raki or by starting it on the console.
+- Initiate a connection by running "synce-serial-start".
+- The icon in your System Tray should now be colored.
+- By left-klick on the icon you can now interact with your PDA.
+
+Volker
+voc@users.sourceforge.net

@@ -1,0 +1,225 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2003-02-08 02:24+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: _translatorinfo.cpp:1
+msgid ""
+"_: NAME OF TRANSLATORS\n"
+"Your names"
+msgstr ""
+
+#: _translatorinfo.cpp:3
+msgid ""
+"_: EMAIL OF TRANSLATORS\n"
+"Your emails"
+msgstr ""
+
+#: management.cpp:538 rc.cpp:1
+msgid "PDA Info and Management"
+msgstr ""
+
+#: management.cpp:539 rc.cpp:3
+msgid "System"
+msgstr ""
+
+#: management.cpp:540 rc.cpp:4
+msgid "Major"
+msgstr ""
+
+#: management.cpp:541 rc.cpp:5
+msgid "Minor"
+msgstr ""
+
+#: management.cpp:542 rc.cpp:6
+msgid "Build"
+msgstr ""
+
+#: management.cpp:543 management.cpp:546 rc.cpp:7 rc.cpp:10
+msgid "Name"
+msgstr ""
+
+#: management.cpp:544 rc.cpp:8
+msgid "Platform"
+msgstr ""
+
+#: management.cpp:545 rc.cpp:9
+msgid "Id"
+msgstr ""
+
+#: management.cpp:547 rc.cpp:11
+msgid "Details"
+msgstr ""
+
+#: management.cpp:548 rc.cpp:12
+msgid "Processor"
+msgstr ""
+
+#: management.cpp:549 rc.cpp:13
+msgid "Architecture"
+msgstr ""
+
+#: management.cpp:550 rc.cpp:14
+msgid "Type"
+msgstr ""
+
+#: management.cpp:551 rc.cpp:15
+msgid "Page size"
+msgstr ""
+
+#: management.cpp:552 rc.cpp:16
+msgid "Storage"
+msgstr ""
+
+#: management.cpp:553 rc.cpp:17
+msgid "Size"
+msgstr ""
+
+#: management.cpp:554 rc.cpp:18
+msgid "Free"
+msgstr ""
+
+#: management.cpp:555 rc.cpp:2
+msgid "System Information"
+msgstr ""
+
+#: management.cpp:556 rc.cpp:20
+msgid "Installed Software"
+msgstr ""
+
+#: management.cpp:557 rc.cpp:21
+msgid "Uninstall"
+msgstr ""
+
+#: management.cpp:558 rc.cpp:22
+msgid "Refresh"
+msgstr ""
+
+#: management.cpp:560 rc.cpp:19
+msgid "Software Manager"
+msgstr ""
+
+#: management.cpp:561 rc.cpp:25
+msgid "AC Power Status"
+msgstr ""
+
+#: management.cpp:562 rc.cpp:26
+msgid "Online"
+msgstr ""
+
+#: management.cpp:563 rc.cpp:27
+msgid "Offline"
+msgstr ""
+
+#: management.cpp:564 rc.cpp:28
+msgid "Backup Power"
+msgstr ""
+
+#: management.cpp:565 rc.cpp:29
+msgid "Invalid"
+msgstr ""
+
+#: management.cpp:566 rc.cpp:30
+msgid "Main Battery"
+msgstr ""
+
+#: management.cpp:567 management.cpp:572 rc.cpp:31 rc.cpp:36
+msgid "Flag"
+msgstr ""
+
+#: management.cpp:568 management.cpp:573 rc.cpp:32 rc.cpp:37
+msgid "LifePercent"
+msgstr ""
+
+#: management.cpp:569 management.cpp:574 rc.cpp:33 rc.cpp:38
+msgid "LifeTime"
+msgstr ""
+
+#: management.cpp:570 management.cpp:575 rc.cpp:34 rc.cpp:39
+msgid "FullLifeTime"
+msgstr ""
+
+#: management.cpp:571 rc.cpp:35
+msgid "Backup Battery"
+msgstr ""
+
+#: management.cpp:576 rc.cpp:24
+msgid "Power status"
+msgstr ""
+
+#: management.cpp:578 rc.cpp:41
+msgid "F1"
+msgstr ""
+
+#: management.cpp:581 rc.cpp:44
+msgid "Status Information:"
+msgstr ""
+
+#: progressbar.cpp:122 rc.cpp:45
+msgid "InstallFile"
+msgstr ""
+
+#: progressbar.cpp:123 rc.cpp:46
+msgid "Installing:"
+msgstr ""
+
+#: progressbar.cpp:125 rc.cpp:48
+msgid "Install"
+msgstr ""
+
+#: raki.cpp:25 raki.cpp:277
+msgid "Raki Applet"
+msgstr ""
+
+#: raki.cpp:31
+msgid "&Execute..."
+msgstr ""
+
+#: raki.cpp:32
+msgid "&Info && Management..."
+msgstr ""
+
+#: raki.cpp:278
+msgid ""
+"An interface to SYNCE and RAPI.\n"
+"Drag & drop cab-files to install them on your PDA\n"
+"Start PDA-Applications remotely via your PC\n"
+msgstr ""
+
+#: raki.cpp:293
+msgid ""
+"<b>Raki Applet features</b>:<br><br>* Drop a cap file to install it on your "
+"PDA/sign it<br>* Remotely start a PDA-Application<br>"
+msgstr ""
+
+#: raki.cpp:301
+msgid "This is a preferences box"
+msgstr ""
+
+#: raki.moc.cpp:34 raki.moc.cpp:42
+msgid "MyLabel"
+msgstr ""
+
+#: raki.moc.cpp:125 raki.moc.cpp:133
+msgid "Raki"
+msgstr ""
+
+#: rc.cpp:50 runwindow.cpp:99
+msgid "Execute on PDA"
+msgstr ""
+
+#: rc.cpp:51 runwindow.cpp:100
+msgid "Execute"
+msgstr ""
