@@ -24,6 +24,9 @@
 
 <p>You can have dccm running all the time!</p>
 
+<p><i>Note users of old SynCE versions:</i> You have to disable the obsolete
+<i>asyncd</i> program before you can run dccm.</p>
+
 <li class=SPACED>Make sure you are running as the root user.</li>
 
 <li>Run synce-serial-start:<br>

@@ -23,6 +23,16 @@
 <li><a href="http://www.phm.lu/Products/PocketPC/">Pocket PC System Tools</a> by Philippe Majerus, including a great registry editor!</li>
 </ul>
 
+<h2>Other applications</h2>
+
+<ul>
+
+<li><a href="http://multisync.sourceforge.net/">MultiSync</a> is capable of
+synchronizing Evolution and IrMC Mobile Client calendars. A future project is
+to make a SynCE plugin for MultiSync.</li>
+
+</ul>
+
 <p>Return to <a href="index.php">main page</a>.</p>
 
 </div>
