@@ -69,7 +69,7 @@ static bool rrac_recv_any(SynceSocket* socket, CommandHeader* header, uint8_t** 
 	LETOH16( header->command    );
 	LETOH16( header->size       );
 
-	synce_trace("Received command %x", header->command);
+	synce_trace("Received command %08x", header->command);
 
 	DUMP("packet header", header, sizeof(CommandHeader));
 
@@ -94,7 +94,6 @@ exit:
 			*data = NULL;
 		}
 	}
-
 
 	return success;
 }/*}}}*/
@@ -142,7 +141,8 @@ bool rrac_expect(SynceSocket* socket, uint32_t command, uint8_t** data, size_t* 
 		}
 		else
 		{
-			synce_trace("Unexpected packet");
+			synce_trace("Unexpected packet: command=%08x, size=%08x", 
+					header.command, header.size);
 		}
 		break;
 	}
@@ -161,6 +161,8 @@ bool rrac_expect_reply(SynceSocket* socket, uint32_t reply_to, uint8_t** data, s
 	bool success = false;
 	Subheader_6c* subheader = NULL;
 
+	synce_trace("Expecting reply to command %08x", reply_to);
+	
 	*data = NULL;
 
 	if (!rrac_expect(socket, 0x6c, data, size))
@@ -360,7 +362,7 @@ bool rrac_recv_reply_6f_10(SynceSocket* socket)/*{{{*/
 	
 	if (!rrac_expect_reply(socket, 0x6f, &data, &size))
 	{
-		synce_error("Failed to receive unexpected reply packet");
+		synce_error("Failed to receive reply packet");
 		goto exit;
 	}
 
@@ -378,44 +380,30 @@ bool rrac_recv_reply_6f_c1(/*{{{*/
 		RawObjectType** object_type_array,
 		size_t* object_type_count)
 {
-	Command_6c_Reply_6f_c1_Header header;
 	bool success = false;
-	size_t size;
+	uint8_t* data = NULL;
+	size_t size = 0;
+	size_t array_size = 0;
 	unsigned i;
+	Command_6c_Reply_6f_c1_Header* header = NULL;
 	
-	if (!synce_socket_read(socket, &header, sizeof(header)))
+	if (!rrac_expect_reply(socket, 0x6f, &data, &size))
 	{
-		synce_error("Failed to read command header");
+		synce_error("Failed to receive reply packet");
 		goto exit;
 	}
 
-	DUMP("reply header", &header, sizeof(header));
+	header = (Command_6c_Reply_6f_c1_Header*)data;
+	LETOH32( header->type_count );
 
-	LETOH16( header.command    );
-	LETOH16( header.size       );
-	LETOH32( header.reply_to   );
-	LETOH32( header.type_count );
-	
-	if (header.command  != 0x6c ||
-			header.reply_to != 0x6f)
-	{
-		synce_error("Unexpected command");
-		goto exit;
-	}
+	array_size = header->type_count * sizeof(RawObjectType);
+	*object_type_array = rrac_alloc(array_size);
+	*object_type_count = header->type_count;
 
-	synce_trace("Object type count: %i", header.type_count);
+	memcpy(*object_type_array, data + sizeof(Command_6c_Reply_6f_c1_Header),
+		array_size);
 
-	size = header.type_count * sizeof(RawObjectType);
-	*object_type_array = rrac_alloc(size);
-	*object_type_count = header.type_count;
-
-	if (!synce_socket_read(socket, *object_type_array, size))
-	{
-		synce_error("Failed to read object type array");
-		goto exit;
-	}
-
-	for (i = 0; i < header.type_count; i++)
+	for (i = 0; i < *object_type_count; i++)
 	{
 		LETOH32( (*object_type_array)[i].id         );
 		LETOH32( (*object_type_array)[i].count      );
@@ -423,9 +411,12 @@ bool rrac_recv_reply_6f_c1(/*{{{*/
 	}
 
 	success = true;
-	
+
 exit:
-	return success;
+	if (data)
+		free(data);
+
+	return success;	
 }/*}}}*/
 
 bool rrac_send_70_2(SynceSocket* socket, uint32_t subsubcommand)/*{{{*/
@@ -494,31 +485,24 @@ bool rrac_send_70_3(SynceSocket* socket, uint32_t* ids, size_t count)/*{{{*/
 bool rrac_recv_reply_70(SynceSocket* socket)/*{{{*/
 {
 	bool success = false;
-	Command_6c_Reply_70 packet;
-
-	if (!synce_socket_read(socket, &packet, sizeof(packet)))
-	{
-		synce_error("Failed to read packet");
-		goto exit;
-	}
-
-	DUMP("reply packet", &packet, sizeof(packet));
-
-	LETOH16( packet.command    );
-	LETOH16( packet.size       );
-	LETOH32( packet.reply_to   );
+	uint8_t* data = NULL;
+	size_t size = 0;
 	
-	if (packet.command  != 0x6c ||
-			packet.size     != (sizeof(packet) - 4) ||
-			packet.reply_to != 0x70)
+	if (!rrac_expect_reply(socket, 0x70, &data, &size))
 	{
-		synce_error("Unexpected command");
+		synce_error("Failed to receive reply packet");
 		goto exit;
 	}
 
+	if (sizeof(Command_6c_Reply_70_Header) != size)
+		synce_warning("Unexpected packet size: %08x", size);
+	
 	success = true;
 
 exit:
+	if (data)
+		free(data);
+
 	return success;
 }/*}}}*/
 

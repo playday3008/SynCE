@@ -219,6 +219,7 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 
 	if (!rrac_recv_69_2(rra->cmd_channel))
 	{
+		synce_trace("rrac_recv_69_2 failed");
 		goto exit;
 	}
 					
@@ -236,12 +237,17 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 					&recv_ids,
 					&recv_id_count))
 		{
+			synce_trace("rrac_recv_69_not_2 failed");
 			goto exit;
 		}
 
 		if (recv_type_id != object_type_id)
 		{
-			goto exit;
+			synce_warning("recv_type_id = %08x but object_type_id = %08x",
+					recv_type_id, object_type_id );
+
+			/* try next message */
+			continue;
 		}
 
 		if (0x04000000 == recv_subcommand ||

@@ -111,20 +111,16 @@ typedef struct _Command_6c_Reply_6f_6
 
 typedef struct _Command_6c_Reply_6f_c1_Header
 {
-	uint16_t    command;
-	uint16_t    size;
-	uint32_t    reply_to;
+	Subheader_6c	reply_header;
 	uint32_t    unknown[7];
 	uint32_t		type_count;
 } Command_6c_Reply_6f_c1_Header;
 
-typedef struct _Command_6c_Reply_70
+typedef struct _Command_6c_Reply_70_Header
 {
-	uint16_t    command;
-	uint16_t    size;
-	uint32_t    reply_to;
+	Subheader_6c	reply_header;
 	uint32_t    unknown[3];
-} Command_6c_Reply_70;
+} Command_6c_Reply_70_Header;
 
 typedef struct _Command_70_2
 {
