@@ -8,17 +8,18 @@
 
 <p>SynCE is not available in the Debian distribution and can therefore not yet
 be installed with <tt>apt-get</tt>. These packages have been provided by <a
-href="mailto:thomas@i.rule-the.net">Thomas Butter</a> and are made for Debian
-<i>sid</i> ("unstable").</p>
+href="mailto:thomas@i.rule-the.net">Thomas Butter</a>.</p>
 
 <p><b>Note:</b> X.X-X is used as version number below. You will have to
 substitute this for the version you are installing.</p>
 
 <ol>
 
-<li class=SPACED>Visit the <a href="http://sourceforge.net/project/showfiles.php?group_id=30550"
+<li class=SPACED><p>Visit the <a href="http://sourceforge.net/project/showfiles.php?group_id=30550"
 target=_blank>project filelist</a> (will be opened in a separate window) and download
-the following Debian packages:<br/><br/>
+the following Debian packages:</p>
+
+<p><i>For testing (sarge) and unstable (sid)</i></p>
 
 <b>librapi2_X.X-X_i386.deb</b><br/>
 <b>librapi2-dev_X.X-X_i386.deb</b> (Needed if you want to compile some other module from source code.)<br/>
@@ -28,6 +29,9 @@ the following Debian packages:<br/><br/>
 <b>synce-dccm_X.X-X_i386.deb</b><br/>
 <b>synce-rra_X.X-X_i386.deb</b> (Only needed for the MultiSync plugin, which is not yet available as a Debian package.)<br/>
 <b>synce-serial_X.X-X_i386.deb</b><br/>
+
+<p><i>Only for unstable (sid)</i></p>
+
 <b>synce-trayicon_X.X-X_i386.deb</b> (Recommended for GNOME 2 users.)<br/>
 
 </li>

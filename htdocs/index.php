@@ -38,7 +38,7 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 
 <p><b>March 9, 2003</b> Thanks to <a href="mailto:thomas@i.rule-the.net">Thomas
 Butter</a>, there are now <a href="debian.php">Debian packages</a> of SynCE
-available for download.</p>
+available for download!</p>
 
 <p><b>March 7, 2003</b> Since late february there is a Perl language binding
 available for RAPI. This has been implemented by <a
