@@ -6,8 +6,10 @@ config.log
 config.status
 config.sub
 configure
+configure.ac
 depcomp
 install-sh
+libsynce.spec
 libtool
 ltmain.sh
 Makefile

@@ -1,11 +1,10 @@
 %define prefix   /usr
 %define name     synce-libsynce
-%define ver      0.4
 %define rel      1
 
 Summary: SynCE: Basic library used by applications in the SynCE project.
 Name: %{name}
-Version: %{ver}
+Version: YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT
 Release: %{rel}
 License: MIT
 Group: Development/Libraries

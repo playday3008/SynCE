@@ -1,11 +1,10 @@
 %define prefix   /usr
 %define name     synce-librapi2
-%define ver      0.4.1
 %define rel      1
 
 Summary: SynCE: Remote Application Programming Interface (RAPI) library.
 Name: %{name}
-Version: %{ver}
+Version: YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT
 Release: %{rel}
 License: MIT
 Group: Development/Libraries

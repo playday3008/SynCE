@@ -1,13 +1,12 @@
 %define prefix   /usr
-%define name     synce-trayicon
-%define ver      0.3
+%define name     synce-serial
 %define rel      1
 
-Summary: SynCE: Tray icon for GNOME 2.
+Summary: SynCE: Serial connection support.
 Name: %{name}
-Version: %{ver}
+Version: YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT
 Release: %{rel}
-License: MIT LGPL
+License: MIT
 Group: Applications/Communications
 Source: %{name}-%{version}.tar.gz
 URL: http://synce.sourceforge.net/
@@ -16,28 +15,29 @@ Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Buildroot: %{_tmppath}/synce-root
-Requires: synce-librapi2 gtk2 atk libgnomeui
+Requires: ppp synce-dccm
 
 %description
-synce-trayicon is part of the SynCE project:
+Synce-serial is part of the SynCE project:
 
   http://synce.sourceforge.net/
 
-This application shows when a device is connected.
+This module contains helper scripts for setting up a serial connection for use
+with SynCE.
 
 %prep
 %setup
 
 %build
-%configure --with-librapi2=$RPM_BUILD_ROOT%{prefix}
-#--with-libsynce=%{prefix}
+%configure
 make
 
 %install
 %makeinstall
 
 %files
-%{prefix}/bin/synce-trayicon
-%{prefix}/share/pixmaps/synce/synce-color.png
-%{prefix}/share/pixmaps/synce/synce-gray.png
+%doc README LICENSE
+%{prefix}/bin/synce-serial-*
+%{prefix}/share/synce/synce-serial-*
+%{_mandir}/man8/synce-serial-*
 

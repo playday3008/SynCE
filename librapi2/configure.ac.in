@@ -4,7 +4,7 @@ AC_INIT(src/rapi.c)
 dnl AC_CANONICAL_HOST
 dnl AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE(librapi, 0.1)
+AM_INIT_AUTOMAKE(librapi, YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT)
 AM_CONFIG_HEADER(rapi_config.h)
 
 dnl Checks for programs.

@@ -6,6 +6,8 @@ config.log
 config.status
 config.sub
 configure
+configure.ac
+dccm.spec
 dccm_config.h*
 depcomp
 install-sh

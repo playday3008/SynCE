@@ -6,6 +6,7 @@ config.log
 config.status
 config.sub
 configure
+configure.ac
 config.h*
 depcomp
 install-sh
@@ -15,6 +16,7 @@ Makefile
 Makefile.in
 missing
 mkinstalldirs
+serial.spec
 stamp-h
 stamp-h1
 stamp-h.in

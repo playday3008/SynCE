@@ -6,6 +6,7 @@ config.log
 config.status
 config.sub
 configure
+configure.ac
 config.h*
 depcomp
 install-sh
@@ -18,3 +19,4 @@ mkinstalldirs
 stamp-h
 stamp-h1
 stamp-h.in
+trayicon.spec
