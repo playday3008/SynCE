@@ -18,25 +18,17 @@ RapiBuffer* rapi_buffer_new()
 {
 	RapiBuffer* buffer = calloc(1, sizeof(RapiBuffer));
 	
-	if (buffer)
-	{
-		buffer->max_size = RAPI_BUFFER_INITIAL_SIZE;
-		buffer->data = calloc(buffer->max_size, 1);
-	
-		if (!buffer->data)
-		{
-			free(buffer);
-			return NULL;
-		}
-	}
-	
 	return buffer;
 }
 
 static void rapi_buffer_free_data(RapiBuffer* buffer)
 {
 	if (buffer && buffer->data)
+	{
 		free(buffer->data);
+		buffer->data = NULL;
+		buffer->max_size = 0;
+	}
 }
 
 void rapi_buffer_free(RapiBuffer* buffer)
@@ -55,18 +47,22 @@ bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
 	if (!buffer)
 		return false;
 	
-	new_data = malloc(size);
-	
-	if (!new_data)
-		return false;
-	
+	if (size)
+	{
+		new_data = malloc(size);
+		
+		if (!new_data)
+			return false;
+	}
+		
 	rapi_buffer_free_data(buffer);
 	buffer->data = new_data;
 	buffer->max_size = size;
-	
-	memcpy(new_data, data, size);
 
-	return false;
+	if (data)
+		memcpy(new_data, data, size);
+
+	return true;
 }
 
 unsigned rapi_buffer_get_size(RapiBuffer* buffer)
@@ -140,6 +136,35 @@ bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value)
 {
 	u_int32_t little_endian_value = htole32(value);
 	return rapi_buffer_write_data(buffer, &little_endian_value, sizeof(u_int32_t));
+}
+
+bool rapi_buffer_write_string(RapiBuffer* buffer, const uchar* unicode)
+{
+	size_t size;
+	
+	if (unicode)
+	  size = (rapi_unicode_string_length(unicode) + 1) * sizeof(uchar);
+	else
+		size = 0;
+	
+	return rapi_buffer_write_optional(buffer, unicode, size, true);
+}
+
+bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data)
+{
+	/* See http://sourceforge.net/mailarchive/message.php?msg_id=64440 */
+	if (data)
+	{
+		return 
+			rapi_buffer_write_uint32(buffer, 1) &&
+			rapi_buffer_write_uint32(buffer, size) &&
+			rapi_buffer_write_uint32(buffer, send_data) &&
+			(send_data ? rapi_buffer_write_data(buffer, data, size) : true);
+	}
+	else
+	{
+		return rapi_buffer_write_uint32(buffer, 0);
+	}
 }
 
 bool rapi_buffer_write_optional_in(RapiBuffer* buffer, void* data, size_t size)

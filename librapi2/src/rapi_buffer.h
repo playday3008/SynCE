@@ -3,6 +3,7 @@
 #define __rapi_buffer_h__
 
 #include "rapi_internal.h"
+#include "rapi_unicode.h"
 
 struct _RapiBuffer;
 typedef struct _RapiBuffer RapiBuffer;
@@ -46,6 +47,16 @@ bool rapi_buffer_write_uint16(RapiBuffer* buffer, u_int16_t value);
  * Append a DWORD parameter to buffer, with adjustment for endianness
  */
 bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value);
+
+/**
+ * Write a string with length
+ */
+bool rapi_buffer_write_string(RapiBuffer* buffer, const uchar* unicode);
+
+/**
+ * Write an optional parameter
+ */
+bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data);
 
 /**
  * Write an optional input parameter by reference
