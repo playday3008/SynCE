@@ -5,7 +5,9 @@ TODO for dccmd
 
 o Use tcpwrappers
 
-o Write PID file (~/.synce/dccmd.pid)
-	
 o Allow connect/disconnect scripts to run slow
+
+o Use SIGUSR1 and not SIGHUP
+
+o Send signal to PID only, not with "killall"
 
