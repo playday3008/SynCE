@@ -153,8 +153,10 @@ int rra_exceptions_count(RRA_Exceptions *self)/*{{{*/
 
 RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index)/*{{{*/
 {
-  /* TODO: implement */
-  return NULL;
+  if (index >= 0 && index < self->total_count)
+    return &self->items[index];
+  else
+    return NULL;
 }/*}}}*/
 
 static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/

@@ -114,8 +114,11 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
 /** Use this constant for your own calculations */
 #define RRA_MINUTES_FROM_1601_TO_1970      194074560
 
-/** Convert minutes to a time_t value, assuming it is in range */
+/** Convert minutes to a time_t value, assuming date is in range */
 time_t rra_minutes_to_unix_time(uint32_t minutes);
+
+/** Convert minutes to a struct tm, assuming date is in range */
+struct tm rra_minutes_to_struct(uint32_t minutes);
 
 /** Convert minutes from a time_t value */
 uint32_t rra_minutes_from_unix_time(time_t t);

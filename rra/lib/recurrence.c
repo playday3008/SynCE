@@ -36,7 +36,22 @@ static bool recurrence_generate_exceptions(
     Generator* g,
     RRA_Exceptions* exceptions)
 {
-  /* TODO: implement */
+  int i;
+
+  for (i = 0; i < rra_exceptions_count(exceptions); i++)
+  {
+    RRA_Exception* e = rra_exceptions_item(exceptions, i);
+
+    if (e)
+    {
+      struct tm date = rra_minutes_to_struct(e->date);
+      char buffer[64];
+
+      strftime(buffer, sizeof(buffer), "%Y%m%d", &date);
+      generator_add_with_type(g, "EXDATE", "DATE", buffer);
+    }
+  }
+  
   return true;
 }
 
