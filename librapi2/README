@@ -23,6 +23,10 @@ External requirements
 
 libiconv (which is usally already present on your system :-)
 
+Check, a unit test framework for C, version 8.3.1 later!
+
+  http://check.sourceforge.net/
+
 
 Design goals
 ------------
