@@ -11,9 +11,9 @@
 #include <sys/types.h>
 
 #define DCCM_PORT           	5679
-#define DCCM_PING_INTERVAL   	10         /* seconds */
+#define DCCM_PING_INTERVAL   	5         /* seconds */
 #define DCCM_PING            	0x12345678
-#define DCCM_MAX_PING_COUNT   5					/* max number of pings without reply */
+#define DCCM_MAX_PING_COUNT   3					/* max number of pings without reply */
 #define DCCM_MAX_PACKET_SIZE	512
 #define DCCM_MIN_PACKET_SIZE	0x24
 
@@ -85,15 +85,16 @@ static void write_help(char *name)
 			stderr, 
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d] [-f] [-h] [-p password]\n"
+			"\t%s [-d LEVEL] [-f] [-h] [-p PASSWORD]\n"
 			"\n"
-			"\t-d LEVEL  Set debug log level\n"
-			"\t              0 - No logging (default)\n"
-			"\t              1 - Errors only\n"
-			"\t              2 - Errors and warnings\n"
-			"\t              3 - Everything\n"
-			"\t-f        Do not run as daemon\n"
-			"\t-h        Show this help message\n",
+			"\t-d LEVEL     Set debug log level\n"
+			"\t                 0 - No logging (default)\n"
+			"\t                 1 - Errors only\n"
+			"\t                 2 - Errors and warnings\n"
+			"\t                 3 - Everything\n"
+			"\t-f           Do not run as daemon\n"
+			"\t-h           Show this help message\n"
+			"\t-p PASSWORD  Use this password when device connects\n",
 			name);
 }
 
@@ -206,9 +207,9 @@ static bool client_write_file(Client* client)
 	}
 
 	fprintf(file,
-			"# Modifications to this file will be lost next time a client connects to dccmd\n"
+			"# Modifications to this file will be lost next time a client connects to dccm\n"
 			"\n"
-			"[dccmd]\n"
+			"[dccm]\n"
 			"pid=%i\n"
 			"\n"
 			"[device]\n"
@@ -452,6 +453,27 @@ int main(int argc, char** argv)
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
+
+	if (password)
+	{
+		int i;
+
+		if (strlen(password) != 4)
+		{
+			fprintf(stderr,"%s: Invalid password length\n", argv[0]);
+			goto exit;
+		}
+	
+		/* Protect password */
+		for (i = 0; i < argc; i++)
+		{
+			if (strcmp(argv[i], password) == 0)
+			{
+				strcpy(argv[i], "XXXX");
+				break;
+			}
+		}
+	}
 
 	if (is_daemon)
 	{
