@@ -295,5 +295,7 @@ void unloadConfigSection (void *data)
 
 void unloadConfigFile (struct configFile *cfg)
 {
+	if (!cfg)
+		return;
 	hashFreeTable (cfg->sections, unloadConfigSection);
 }
