@@ -4,7 +4,7 @@
 #
 # $Id$
 $module=Rapi2;
-$version='0.01';
+$version='0.01.1';
 
 $|++;
 
@@ -18,25 +18,14 @@ print "Creating $module.pm ...\n";
 open F, "<$module.pm";
 while(<F>)
 {
-    last if /^1;/;
     # Put in the version.
     $file.="\$VERSION='$version';\n\n" if /BASE METHODS/;
     $file.=$_;
 }
 close F;
 
-# Write the documentation.
 open F, ">$module.pm";
 print F $file;
-print F<<EOF
-1;
-
-__END__
-
-# Sometimes a documentation will appear at this point.
-
-EOF
-;
 close F;
 
 # EOF
