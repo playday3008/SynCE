@@ -7,7 +7,7 @@ KDE Integration</h1>
 devices running Windows CE Version 2.0 or later as long as they
 are supported by the underlying <a
  href="http://synce.sourceforge.net/synce/">SynCE libraries</a>.</p>
-<br>
+
 <h2><a name="Contents" id="Contents"></a>Contents</h2>
 <ul>
   <li><a href="#Introduction">Introduction</a></li>
@@ -24,17 +24,20 @@ are supported by the underlying <a
   <li><a href="stories.php">Success Stories</a></li>
   <li><a href="faq.php">Frequently asked Questions</a></li>
   <li><a href="#Future">Future<br>
-    </a><a href="http://sourceforge.net/projects/synce/"><br>
-    </a></li>
+</ul>
+<h2><a name="Add-on" id="Add-on"></a>Add-on</h2>
+<ul>
+  <li><a href="pdamirror.php">PDA Mirror</a></li>
+</ul>
+<h2><a name="Links" id="Links"></a>Links</h2>
+<ul>
   <li><a href="http://sourceforge.net/projects/synce/">SourceForge
-Project Page</a><a href="http://localhost/%7Evoc/SynCE/kde/#Future"><br>
-    </a><a href="http://sourceforge.net/projects/synce/"><br>
-    </a></li>
+Project Page</a></li><br>
   <li><a href="http://apps.kde.com/fr/2/info/vid/9646?br=true">SynCE-KDE
 on apps.kde.com</a> </li>
   <li><a
  href="http://freshmeat.net/projects/synce-kde/?topic_id=20%2C957%2C1015">SynCE-KDE
-on freshmeat.net<br>
+on freshmeat.net
     </a></li>
 </ul>
 <br>
@@ -72,6 +75,8 @@ of PDAs to interested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</blockquote>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
+<b>November 21, 2003</b> PDAMirror is integrated into the SynCE-KDE
+suite<br><br>
 <b>October 9, 2003</b> There is some progress in letting SynCE-KDE (cvs) run on
 KDE-3.1.90 (cvs) the upcoming KDE-3.2 release.
 <ul>
