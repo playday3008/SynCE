@@ -489,10 +489,10 @@ bool rra_syncmgr_event_pending(RRA_SyncMgr* self)/*{{{*/
     return false;
 }/*}}}*/
 
-bool rra_syncmgr_event_wait(RRA_SyncMgr* self, int timeoutInSeconds)/*{{{*/
+bool rra_syncmgr_event_wait(RRA_SyncMgr* self, int timeoutInSeconds, bool* got_event)/*{{{*/
 {
   if (self && self->rrac)
-    return rrac_event_wait(self->rrac, timeoutInSeconds);
+    return rrac_event_wait(self->rrac, timeoutInSeconds, got_event);
   else
     return false;
 }/*}}}*/
@@ -892,6 +892,7 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
   uint32_t recv_flags;
   uint8_t* data = NULL;
   size_t max_data_size = 0;
+  uint32_t adjusted_flags;
 
   /* do absolutely nothing if object_id_count is zero! */
   if (!object_id_count)
@@ -918,7 +919,7 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
         max_data_size = data_size + SYNCMGRREADER_BUFFER_SIZE;
         data = realloc(data, max_data_size);
       }
-      
+
       bytes_read = reader(
           type_id, 
           i, 
@@ -929,7 +930,9 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
       if (bytes_read < 0)
       {
         synce_error("Reader callback failed");
-        goto exit;
+        /* trigger error handler below this loop */
+        data_size = 0;
+        break;
       }
 
       if (bytes_read == 0)
@@ -937,22 +940,34 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
 
       data_size += bytes_read;
     }
-    
+
+    if (data_size == 0)
+    {
+      synce_error("Empty object of type %08x with ID %08x, ignoring.",
+          type_id, object_id_array[i]);
+      object_id_array[i] = 0xffffffff;
+      continue;
+    }
+
+    if (object_id_array[i] == 0 && flags == RRA_SYNCMGR_UPDATE_OBJECT)
+      adjusted_flags = RRA_SYNCMGR_NEW_OBJECT;
+    else
+      adjusted_flags = flags;
+
     /* Write data to device */
     if (!rrac_send_data(
           self->rrac, 
           object_id_array[i], 
           type_id, 
-          flags, 
+          adjusted_flags, 
           data, 
           data_size))
     {
-      synce_error("Failed to send data");
-      goto exit;	
+      synce_error("Failed to send data for object of type %08x and ID %08x",
+          type_id, object_id_array[i]);
+      object_id_array[i] = 0xffffffff;
     }
   }
-
-  free(data);
 
 #if 0
   /* Write end-of-data marker */
@@ -966,6 +981,14 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
   /* Negotiate object IDs */
   for (i = 0; i < object_id_count; i++)
   {
+    if (object_id_array[i] == 0xffffffff)
+    {
+      /* Mark object as invalid */
+      if (recv_object_id_array)
+        recv_object_id_array[i] = 0xffffffff;
+      continue;
+    }
+    
     if (!rrac_recv_65(
           self->rrac, 
           &recv_type_id, 
@@ -1030,6 +1053,9 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
   success = true;
 
 exit:
+  if (data)
+    free(data);
+
   return success;
 }/*}}}*/
 

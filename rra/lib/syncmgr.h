@@ -94,7 +94,7 @@ int rra_syncmgr_get_event_descriptor(RRA_SyncMgr* self);
 bool rra_syncmgr_event_pending(RRA_SyncMgr* self);
 
 /** See if there is an event pending */
-bool rra_syncmgr_event_wait(RRA_SyncMgr* self, int timeoutInSeconds);
+bool rra_syncmgr_event_wait(RRA_SyncMgr* self, int timeoutInSeconds, bool* got_event);
 
 /** Handle a pending event */
 bool rra_syncmgr_handle_event(RRA_SyncMgr* self);

@@ -109,19 +109,22 @@ bool rrac_event_pending(RRAC* self)
   return false;
 }
 
-bool rrac_event_wait(RRAC* self, int timeoutInSeconds)
+bool rrac_event_wait(RRAC* self, int timeoutInSeconds, bool* gotEvent)
 {
-  if (self)
+  if (self && self->cmd_socket)
   {
     short events = EVENT_READ;
     /*synce_trace("Wating for event");*/
     if (synce_socket_wait(self->cmd_socket, timeoutInSeconds, &events))
-      return (events & EVENT_READ) != 0;
+    {
+      *gotEvent = (events & EVENT_READ) != 0;
+      return true;
+    }
     else
       synce_error("synce_socket_wait failed");
   }
   else
-    synce_error("RRAC pointer is NULL");
+    synce_error("RRAC pointer or command socket is NULL");
 
   return false;
 }
@@ -184,20 +187,40 @@ void rrac_disconnect(RRAC* rrac)/*{{{*/
 
 bool rrac_is_connected(RRAC* rrac)
 {
-  return rrac && rrac->data_socket;
+#if 0
+  return rrac && rrac->cmd_socket && rrac->data_socket;
+#else
+  bool result = false;
+  
+  if (rrac)
+  {
+    short events = EVENT_READ | EVENT_WRITE;
+    if (synce_socket_wait(rrac->cmd_socket, 0, &events))
+    {
+      if (!(events & EVENT_ERROR))
+        result = true;
+    }
+
+    if (!result)
+      rrac_disconnect(rrac);
+  }
+
+  return result;
+#endif
 }
 
 static bool rrac_recv_any(RRAC* rrac, CommandHeader* header, uint8_t** data)/*{{{*/
 {
 	bool success = false;
+  bool got_event = false;
 
 	*data = NULL;
 
-  if (!rrac_event_wait(rrac, RRAC_TIMEOUT))
+  if (!rrac_event_wait(rrac, RRAC_TIMEOUT, &got_event) || !got_event)
   {
- 		synce_error("No data received in %i seconds!", RRAC_TIMEOUT);
-		goto exit;
- }
+    synce_error("No data received in %i seconds!", RRAC_TIMEOUT);
+    goto exit;
+  }
 
 	if (!synce_socket_read(rrac->cmd_socket, header, sizeof(CommandHeader)))
 	{

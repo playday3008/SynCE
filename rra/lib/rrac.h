@@ -38,7 +38,7 @@ int rrac_get_event_descriptor(RRAC* self);
 bool rrac_event_pending(RRAC* self);
 
 /** Wait for an event */
-bool rrac_event_wait(RRAC* self, int timeoutInSeconds);
+bool rrac_event_wait(RRAC* self, int timeoutInSeconds, bool* gotEvent);
 
 
 #include <synce.h>
