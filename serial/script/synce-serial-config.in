@@ -84,7 +84,7 @@ case $1 in
 esac
 
 if [ -c $1 ]; then
-  DEVICE=$;
+  DEVICE=$1;
 else 
   if [ -c /dev/$1 ]; then
     DEVICE=/dev/$1
