@@ -1,7 +1,3 @@
 #!/bin/sh
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-
-"$bindir/synce-in-computer-folder" $1 &
+"@SYNCE_BINDIR@/synce-in-computer-folder" $1 &
 disown
