@@ -14,8 +14,10 @@
 #include <sys/types.h>
 #endif
 
+#ifndef __cplusplus
 #if HAVE_STDBOOL_H
 #include <stdbool.h>
+#endif
 #endif
 
 #endif
