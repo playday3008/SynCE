@@ -46,7 +46,7 @@ typedef bool (*NotificationFunc)(
     ObjectIdArray* object_id_array,
     void* cookie);
 
-typedef struct 
+typedef struct _TimeZoneInformation
 {
   int32_t Bias;                       /* 00 */
   WCHAR StandardName[32];             /* 04 */
@@ -239,7 +239,8 @@ bool rra_appointment_from_vevent(
     uint32_t* id,
     uint8_t** data,
     size_t* data_size,
-    uint32_t flags);
+    uint32_t flags,
+    TimeZoneInformation* tzi);
 #endif /* SWIG */
 
 #define RRA_TASK_ID_UNKNOWN  0
@@ -258,14 +259,16 @@ bool rra_task_to_vtodo(
     const uint8_t* data,
     size_t data_size,
     char** vtodo,
-    uint32_t flags);
+    uint32_t flags,
+    TimeZoneInformation* tzi);
 
 bool rra_task_from_vtodo(
     const char* vtodo,
     uint32_t* id,
     uint8_t** data,
     size_t* data_size,
-    uint32_t flags);
+    uint32_t flags,
+    TimeZoneInformation* tzi);
 #endif /* SWIG */
 
 
