@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "appointment_ids.h"
 #include "recurrence_internal.h"
+#include "internal.h"
 #include <synce_log.h>
 #include <stdlib.h>
 #include <string.h>
