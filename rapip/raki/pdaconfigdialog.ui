@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>419</width>
-            <height>426</height>
+            <height>428</height>
         </rect>
     </property>
     <property name="caption">
@@ -109,19 +109,54 @@
                         <cstring>objectTypeList</cstring>
                     </property>
                 </widget>
-                <widget class="QCheckBox">
+                <widget class="QLayoutWidget">
                     <property name="name">
-                        <cstring>syncAtConnectCheckbox</cstring>
+                        <cstring>layout5</cstring>
                     </property>
-                    <property name="text">
-                        <string>Syncronize at PDA-Connect</string>
-                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QCheckBox">
+                            <property name="name">
+                                <cstring>syncAtConnectCheckbox</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Syncronize at PDA-Connect</string>
+                            </property>
+                        </widget>
+                        <spacer>
+                            <property name="name">
+                                <cstring>spacer3</cstring>
+                            </property>
+                            <property name="orientation">
+                                <enum>Horizontal</enum>
+                            </property>
+                            <property name="sizeType">
+                                <enum>Expanding</enum>
+                            </property>
+                            <property name="sizeHint">
+                                <size>
+                                    <width>40</width>
+                                    <height>20</height>
+                                </size>
+                            </property>
+                        </spacer>
+                        <widget class="KPushButton">
+                            <property name="name">
+                                <cstring>kPushButton2</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Config</string>
+                            </property>
+                        </widget>
+                    </hbox>
                 </widget>
             </vbox>
         </widget>
         <widget class="QLayoutWidget">
             <property name="name">
-                <cstring>layout3</cstring>
+                <cstring>layout4</cstring>
             </property>
             <hbox>
                 <property name="name">
@@ -143,31 +178,6 @@
                 </widget>
                 <spacer>
                     <property name="name">
-                        <cstring>Horizontal Spacing2</cstring>
-                    </property>
-                    <property name="orientation">
-                        <enum>Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
-                    </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>20</width>
-                            <height>20</height>
-                        </size>
-                    </property>
-                </spacer>
-                <widget class="KPushButton">
-                    <property name="name">
-                        <cstring>kPushButton2</cstring>
-                    </property>
-                    <property name="text">
-                        <string>Config</string>
-                    </property>
-                </widget>
-                <spacer>
-                    <property name="name">
                         <cstring>spacer2</cstring>
                     </property>
                     <property name="orientation">
@@ -178,7 +188,7 @@
                     </property>
                     <property name="sizeHint">
                         <size>
-                            <width>20</width>
+                            <width>16</width>
                             <height>20</height>
                         </size>
                     </property>
