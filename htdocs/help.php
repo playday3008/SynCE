@@ -66,6 +66,14 @@ your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
 </ul></li>
 
+<li class=SPACED><p><b>For SynCE-KDE (RAKI or RAPIP) problems</b></p>
+
+<ul>
+<li>SynCE-KDE version</li>
+<li>KDE version</li>
+
+</ul></li>
+
 </ol>
 
 <p>Return to <a href="index.php">main page</a>.</p>
