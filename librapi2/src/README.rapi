@@ -20,11 +20,11 @@ List of RAPI command codes:
 [i] 0e CeOpenDatabase		
 [i] 0f CeDeleteDatabase	
 
-[ ] 10 CeReadRecordProps	
+[i] 10 CeReadRecordProps	
 [ ] 10 CeReadRecordPropsEx
-[ ] 11 CeWriteRecordProps	
+[i] 11 CeWriteRecordProps	
 [ ] 12 CeDeleteRecord		
-[ ] 13 CeSeekDatabase		
+[i] 13 CeSeekDatabase		
 [ ] 14 CeSetDatabaseInfo	
 [ ] 15 CeSetFilePointer	
 [ ] 16 CeSetEndOfFile		
@@ -47,12 +47,12 @@ List of RAPI command codes:
 [ ] 26 CeRegQueryValueEx	
 [ ] 27 CeRegSetValueEx		
 [ ] 28 GetSystemMemoryDivision
-[ ] 29 CeGetStoreInformation	
+[i] 29 CeGetStoreInformation	
 [ ] 2a CeGetSystemMetrics	
 [ ] 2b CeGetDesktopDeviceCaps	
 [i] 2c CeFindAllDatabases	
-[ ] 2d RegCopyFile
-[ ] 2e RegRestoreFile
+[ ] 2d RegCopyFile              [undocumented as RAPI function]
+[ ] 2e RegRestoreFile           [undocumented as RAPI function]
 [i] 2f CeGetSystemInfo		
 
 [ ] 30 CeSHCreateShortcut	
@@ -60,10 +60,10 @@ List of RAPI command codes:
 [ ] 32 GetPasswordActive
 [ ] 33 SetPasswordActive
 [i] 34 CeCheckPassword		
-[ ] 35 SetPassword
-[ ] 36 CeEventHasOccured
-[ ] 37 CeSyncTimeToPc
-[ ] 38 CeStartReplication
+[ ] 35 SetPassword              [undocumented as RAPI function]
+[ ] 36 CeEventHasOccured        [undocumented as RAPI function]
+[ ] 37 CeSyncTimeToPc           [undocumented]
+[i] 38 CeStartReplication       [undocumented]
 [ ] 39 CeGetFileTime		
 [ ] 3a CeSetFileTime		
 [i] 3b CeGetVersionEx		
@@ -74,7 +74,7 @@ List of RAPI command codes:
 
 [ ] 40 CeGlobalMemoryStatus	
 [ ] 41 CeGetSystemPowerStatusEx	
-[ ] 42 SetSystemMemoryDivision
+[ ] 42 SetSystemMemoryDivision  [undocumented as RAPI function]
 [ ] 43 CeGetTempPath		
 [i] 44 CeGetSpecialFolderPath	
 [ ] 45 CeRapiInvoke
@@ -95,5 +95,10 @@ List of RAPI command codes:
 [ ] 53 CeFlushDBVol		
 [ ] 54 CeEnumDBVolumes		
 [ ] 55 CeOidGetInfoEx		
-[ ] 56 CeProcessConfig
+[ ] 56 CeProcessConfig          [undocumented]
+
+
+CeEventHasOccured details:
+
+
 
