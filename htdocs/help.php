@@ -47,7 +47,10 @@ when you ask for help:</p>
 <ul>
 <li>Information from the <tt>usbview</tt> tool for the device (or the contents of <tt>/proc/bus/usb/devices</tt>)</li>
 <li>Relevant log extracts from kernel driver and pppd</li>
-<li>Your <tt>/etc/ppp/peers/synce-device</tt> file (created by synce-serial-config)</li>
+
+<li>The contents of your files <tt>/etc/ppp/peers/synce-device</tt> (created by
+synce-serial-config) and <tt>/etc/ppp/options</tt>.</li>
+
 <li>Kill dccm, and restart it like this: <tt>dccm -f -d 3</tt>. Now connect
 your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
