@@ -88,6 +88,7 @@ typedef struct _RRA_Exceptions RRA_Exceptions;
 
 int rra_exceptions_count(RRA_Exceptions *self);
 RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index);
+void rra_exceptions_make_reservation(RRA_Exceptions* self, size_t count);
 
 typedef struct _RRA_RecurrencePattern
 {

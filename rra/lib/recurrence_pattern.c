@@ -174,14 +174,20 @@ RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index)/*{{{*/
     return NULL;
 }/*}}}*/
 
+void rra_exceptions_make_reservation(RRA_Exceptions* self, size_t count)
+{
+  if (self->items)
+    free(self->items);
+  self->total_count = count;
+  self->items = (RRA_Exception*)calloc(self->total_count, sizeof(RRA_Exception));
+}
+
 static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
 {
   uint8_t* p = *buffer;
   int i;
 
-  self->total_count = READ_INT32(p);  p += 4;
-
-  self->items = (RRA_Exception*)calloc(self->total_count, sizeof(RRA_Exception));
+  rra_exceptions_make_reservation(self, READ_INT32(p)); p += 4;
 
   for (i = 0; i < self->total_count; i++)
   {
@@ -406,11 +412,16 @@ static bool rra_exceptions_write_summary(RRA_Exceptions* self, uint8_t** buffer)
   uint8_t* p = *buffer;
   int i;
 
+  /* Recalculate modified_count */
+  self->modified_count = 0;
+
   WRITE_INT32(p, self->total_count);  p += 4;
 
   for (i = 0; i < self->total_count; i++)
   {
     WRITE_UINT32(p, self->items[i].date); p += 4;
+    if (!self->items[i].deleted)
+      self->modified_count++;
   }
 
   WRITE_INT32(p, self->modified_count);  p += 4;
