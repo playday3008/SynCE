@@ -42,4 +42,4 @@ AM_CFLAGS =
 AM_CXXFLAGS = 
 AM_FFLAGS = 
 SUBDIRS = plugins interfaces
-include_HEADERS =  rra.h rapiwrapper.h syncthread.h
+include_HEADERS = rra.h rapiwrapper.h
