@@ -43,6 +43,9 @@ typedef struct _CEOSVERSIONINFO{
 BOOL CeGetVersionEx(
 		LPCEOSVERSIONINFO lpVersionInformation);
 
+DWORD CeStartReplication( void );
+
+
 /*
  * File access functions
  */
