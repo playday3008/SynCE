@@ -4,7 +4,7 @@
 
 %define prefix	/usr
 %define name	synce-kde
-%define rel	6
+%define rel	1
 
 Name: %{name}
 Version: 0.6
@@ -32,26 +32,20 @@ RAKI:  Is a Linux-Incarnation of Activsync. It claims to be better than
 
 %prep
 %setup
-CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./configure \
---target=i386
-
 %build
-%configure
-make
-
-%install
-rm -rf %{buildroot}
+export KDEDIR=/usr
+export CFLAGS="-pipe -march=i386 -mcpu=i686"
+export CXXFLAGS="-pipe -march=i386 -mcpu=i686"
+%configure --with-agsync=/home/voc/usr/src/agsync-0.2-pre
 %makeinstall
-
 %clean
 rm -rf %{buildroot}
-
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 %files
 %defattr(-, root, root)
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
 %{_bindir}/*
-%{_libdir}/*.so.*
-%{_datadir}/%{name}
-%{_mandir}/man8/*
+%{_libdir}/*
+%{_datadir}/*
+%{_includedir}/*
