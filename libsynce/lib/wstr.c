@@ -128,7 +128,7 @@ static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 		return NULL;
 	}
 
-	outbuf[length] = 0;
+	*outbuf_iterator = '\0';
 
 	return outbuf;
 }
