@@ -191,7 +191,7 @@ typedef struct
 #endif
 } TSetupFileEntry;
 
-typedef struct
+P typedef struct
 {
   uint32_t FirstDisk;
   uint32_t LastDisk;
@@ -200,14 +200,11 @@ typedef struct
   uint32_t CompressedSize;
   uint32_t Adler;
   uint32_t Date;
-#if 0
   uint32_t FileVersionMS;
   uint32_t FileVersionLS;
-Flags: set of (foVersionInfoValid, foVersionInfoNotValid, foBzipped);
-  P char stuff[8];
-#else
-#endif
-}  TSetupFileLocationEntry;
+} TSetupFileLocationEntry;
+
+#define SETUP_FILE_LOCATION_ENTRY_SIZE  0x29
 
 typedef struct
 {

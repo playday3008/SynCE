@@ -14,6 +14,9 @@
    Inno Setup - comes with source code :-)
 
    www.innosetup.com
+
+   Parts of this code is written to match the Delphi code exactly. That's why
+   the variable names look the way they do, for example.
  */
 
 #define VERBOSE 0
@@ -56,7 +59,6 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 #define DUMP(a,b,c)
 #endif
 
-
 int EntryStrings[] = { SetupTypeEntryStrings,
     SetupComponentEntryStrings, SetupTaskEntryStrings, SetupDirEntryStrings,
     SetupFileEntryStrings, SetupFileLocationEntryStrings, SetupIconEntryStrings,
@@ -67,7 +69,6 @@ static uint8_t SetupLdrOffsetTableID[] =
 {
   'r','D','l','P','t','S','0','2',0x87,0x65,0x56,0x78
 };
-
 
 
 #define OUTPUT_BUFFER_SIZE 0x8000
@@ -82,18 +83,24 @@ static uint8_t FILE_SIGNATURE[FILE_SIGNATURE_SIZE] =
 {0x7a, 0x6c, 0x62, 0x1a, 0x78, 0xda};
 #endif
 
-#if 0
 static bool orange_inno_decompress(/*{{{*/
-    const uint8_t* input_buffer, 
-    size_t input_max_size,
-    const char* output_filename,
-    size_t* input_used)
+    FILE* input_file,
+    TSetupFileLocationEntry* location,
+    const char* output_filename)
 {
   bool success = false;
   z_stream stream;
   int error;
-  Byte* output_buffer = malloc(OUTPUT_BUFFER_SIZE);
+  Byte* input_buffer  = (Byte*)malloc(location->CompressedSize);
+  Byte* output_buffer = (Byte*)malloc(OUTPUT_BUFFER_SIZE);
   FILE* output = fopen(output_filename, "w");
+  uLong adler = adler32(0L, Z_NULL, 0);
+
+  if (!input_buffer)
+  {
+    synce_error("Failed to allocate %i bytes", location->CompressedSize);
+    goto exit;
+  }
 
   if (!output_buffer)
   {
@@ -107,8 +114,17 @@ static bool orange_inno_decompress(/*{{{*/
     goto exit;
   }
 
-  stream.next_in  = (Byte*)input_buffer;
-  stream.avail_in = input_max_size;
+  fseek(input_file, location->StartOffset + 6, SEEK_SET);
+ 
+  if (location->CompressedSize != fread(input_buffer, 1, location->CompressedSize, input_file))
+  {
+    goto exit;
+  }
+
+  /* TODO: verify signature */
+
+  stream.next_in  = input_buffer;
+  stream.avail_in = location->CompressedSize;
   
   stream.zalloc = NULL;
   stream.zfree  = NULL;
@@ -137,6 +153,8 @@ static bool orange_inno_decompress(/*{{{*/
 
     bytes_to_write = OUTPUT_BUFFER_SIZE - stream.avail_out;
 
+    adler = adler32(adler, output_buffer, bytes_to_write);
+
     if (bytes_to_write != fwrite(output_buffer, 1, bytes_to_write, output))
     {
       synce_error("Failed to write %i bytes to output file '%s'", 
@@ -145,16 +163,14 @@ static bool orange_inno_decompress(/*{{{*/
     }
   }
 
-  *input_used = stream.total_in;
-
-  success = *input_used != 0;
+  success = (adler == location->Adler);
 
 exit:
   FCLOSE(output);
   FREE(output_buffer);
+  FREE(input_buffer);
   return success;
 }/*}}}*/
-#endif
 
 static void InitStream(z_stream* strm)/*{{{*/
 {
@@ -192,9 +208,11 @@ static bool InflateBlockReadBegin(FILE* F, TDeflateBlockReadData* Data)/*{{{*/
     synce_trace("Invalid block header CRC32");
     goto exit;
   }
-  
+
+#if VERBOSE  
   synce_trace("Block size: compressed = %08x, uncompressed = %08x",
       Hdr.CompressedSize, Hdr.UncompressedSize);
+#endif
 
   if (Hdr.CompressedSize != (uint32_t)-1)
   {
@@ -457,7 +475,7 @@ static void ReadEntries(/*{{{*/
   }
 }/*}}}*/
 
-static void FreeEntries(
+static void FreeEntries(/*{{{*/
     TEntryType EntryType, 
     size_t Count, 
     size_t Size,
@@ -477,7 +495,7 @@ static void FreeEntries(
 
     free(Buf);
   }
-}
+}/*}}}*/
 
 static bool orange_get_inno_offset_table(FILE* SetupFile, TSetupLdrOffsetTable* OffsetTable)/*{{{*/
 {
@@ -506,7 +524,9 @@ static bool orange_get_inno_offset_table(FILE* SetupFile, TSetupLdrOffsetTable* 
       (ExeHeader.OffsetTableOffset != ~ExeHeader.NotOffsetTableOffset) ||
       (ExeHeader.OffsetTableOffset + sizeof(OffsetTable) > SizeOfFile))
   {
+#if VERBOSE
     synce_trace("Not a valid Inno Setup file");
+#endif
     goto exit;
   }
 
@@ -546,7 +566,7 @@ static bool orange_get_inno_setup_data(/*{{{*/
     FILE* SetupFile, 
     TSetupHeader* SetupHeader,
     TSetupFileEntry** FileEntries,
-    TSetupFileLocationEntry** FileLocationEntries)
+    TSetupFileLocationEntry*** FileLocationEntries)
 {
   bool success = false;
   int version[3];
@@ -611,7 +631,9 @@ static bool orange_get_inno_setup_data(/*{{{*/
   assert(0 == SetupHeader->NumTaskEntries);
   assert(0 == SetupHeader->NumDirEntries);
 
-/*  synce_trace("Reading file entries");*/
+#if VERBOSE
+  synce_trace("Reading file entries");
+#endif
   *FileEntries = calloc(SetupHeader->NumFileEntries, sizeof(TSetupFileEntry));
   ReadEntries(&Data, seFile, SetupHeader->NumFileEntries, sizeof(TSetupFileEntry), *FileEntries);
 
@@ -639,13 +661,17 @@ static bool orange_get_inno_setup_data(/*{{{*/
     goto exit;
   }
 
+#if VERBOSE
   synce_trace("Reading file location entries");
-  *FileLocationEntries = calloc(SetupHeader->NumFileLocationEntries, sizeof(TSetupFileLocationEntry));
+#endif
+  *FileLocationEntries = calloc(SetupHeader->NumFileLocationEntries, sizeof(TSetupFileLocationEntry*));
 
   for (i = 0; i < SetupHeader->NumFileLocationEntries; i++)
   {
-    TSetupFileLocationEntry* entry = (*FileLocationEntries) + i;
-    InflateBlockRead(&Data, entry,  sizeof(TSetupFileLocationEntry));
+    TSetupFileLocationEntry* entry = malloc(SETUP_FILE_LOCATION_ENTRY_SIZE);
+    InflateBlockRead(&Data, entry, SETUP_FILE_LOCATION_ENTRY_SIZE);
+
+    DUMP("FileLocationEntry", entry, SETUP_FILE_LOCATION_ENTRY_SIZE);
 
     LETOH32(entry->FirstDisk);
     LETOH32(entry->LastDisk);
@@ -653,6 +679,8 @@ static bool orange_get_inno_setup_data(/*{{{*/
     LETOH32(entry->OriginalSize);
     LETOH32(entry->CompressedSize);
     LETOH32(entry->Adler);
+
+    (*FileLocationEntries)[i] = entry;
   }
 
   InflateBlockReadEnd(&Data);
@@ -664,25 +692,17 @@ exit:
   return success;
 }/*}}}*/
 
-bool orange_extract_inno(
+bool orange_extract_inno(/*{{{*/
     const char* input_filename, 
     const char* output_directory)
 {
   bool success = false;
   FILE* SetupFile = fopen(input_filename, "r");
   int i;
-#if 0
-  uint8_t* input_buffer = NULL;
-  size_t input_size;
-  uint8_t* p;
-  int count = 0;
-  char filename[256];
-#endif
- 
   TSetupLdrOffsetTable OffsetTable;
   TSetupHeader SetupHeader;
   TSetupFileEntry* FileEntries = NULL;
-  TSetupFileLocationEntry* FileLocationEntries = NULL;
+  TSetupFileLocationEntry** FileLocationEntries = NULL;
 
   if (!SetupFile)
   {
@@ -711,78 +731,61 @@ bool orange_extract_inno(
   for (i = 0; i < SetupHeader.NumFileEntries; i++)
   {
     int l = FileEntries[i].LocationEntry;
+#if VERBOSE
     synce_trace("%08x %08x %08x %s", 
-        FileLocationEntries[l].StartOffset,
-        FileLocationEntries[l].OriginalSize,
-        FileLocationEntries[l].CompressedSize,
+        FileLocationEntries[l]->StartOffset,
+        FileLocationEntries[l]->OriginalSize,
+        FileLocationEntries[l]->CompressedSize,
         FileEntries[i].DestName);
-  }
-
-#if 0
-  input_size = FSIZE(SetupFile) - DATA_OFFSET;
-
-  fseek(SetupFile, DATA_OFFSET, SEEK_SET);
-
-  input_buffer = (uint8_t*)malloc(input_size);
-  if (!input_buffer)
-    goto exit;
-
-  if (input_size != fread(input_buffer, 1, input_size, SetupFile))
-  {
-    goto exit;
-  }
-
-  p = input_buffer;
-
-  while (input_size)
-  {
-    size_t input_used = 0;
-    
-    synce_trace("Offset %08x + %08x, %08x bytes left",
-        DATA_OFFSET, p - input_buffer, input_size);
-
-    if (memcmp(p, FILE_SIGNATURE, FILE_SIGNATURE_SIZE) != 0)
-    {
-      synce_trace("Signature mismatch");
-      break;
-    }
-
-    synce_trace("Found file header");
-
-    snprintf(filename, sizeof(filename), "%s/%08x.bin",
-        output_directory, p - input_buffer);
-
-    p           += FILE_SIGNATURE_SIZE;
-    input_size  -= FILE_SIGNATURE_SIZE;
-
-    if (!orange_inno_decompress(p, input_size, filename, &input_used))
-    {
-      synce_trace("Decompression failed");
-      break;
-    }
-
-    synce_trace("Unknown: %08x", *(uint32_t*)(p + input_used));
-
-    /* CRC32? */
-    input_used += 4;
-
-    p           += input_used;
-    input_size  -= input_used;
-
-    count++;
-  }
-
-  success = (count > 0);
 #endif
-  
+
+    if (FileEntries[i].DestName[0])
+    {
+      char filename[256];
+      char* p;
+
+      /* Change backslash to forward slash */
+
+      for (p = FileEntries[i].DestName; *p != '\0'; p++)
+        if (*p == '\\')
+          *p = '/';
+
+      /* Create directory */
+      
+      snprintf(filename, sizeof(filename), "%s/%s", output_directory, FileEntries[i].DestName);
+      p = strrchr(filename, '/');
+      if (p)
+        *p = '\0';
+
+      if (!orange_make_sure_directory_exists(filename))
+        goto exit;
+
+      /* Create full path */
+      
+      snprintf(filename, sizeof(filename), "%s/%s", output_directory, FileEntries[i].DestName);
+
+      /* Extract */
+      
+      FileLocationEntries[l]->StartOffset += OffsetTable.Offset1;
+      orange_inno_decompress(SetupFile, FileLocationEntries[l], filename);
+    }
+  }
+
+  success = true;
+ 
 exit:
   FreeEntries(seFile, SetupHeader.NumFileEntries, sizeof(TSetupFileEntry), FileEntries);
-  FREE(FileLocationEntries);
-#if 0
-  FREE(input_buffer);
-#endif
+  if (FileLocationEntries)
+  {
+    for (i = 0; i < SetupHeader.NumFileLocationEntries; i++)
+    {
+      FREE(FileLocationEntries[i]);
+    }
+    free(FileLocationEntries);
+  }
+
   FCLOSE(SetupFile);
   return success;  
-}
+}/*}}}*/
 
 
