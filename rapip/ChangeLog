@@ -1,3 +1,178 @@
+2003-09-23 23:50  voc
+
+	* .cvsignore: Update
+
+2003-09-23 23:49  voc
+
+	* synce-kde-0.6.2-1.spec: New spec file
+
+2003-09-23 23:43  voc
+
+	* configure.in.in: New sub-version number
+
+2003-09-23 23:42  voc
+
+	* debian/rules: Use the installed agsync, which would be provided
+	soon.
+
+2003-09-23 23:39  voc
+
+	* debian/: dirs, files, synce-kde-dev.dirs, synce-kde-dev.files,
+	synce-kde.files: Updated debian configuration
+
+2003-09-23 23:35  voc
+
+	* configure.in.in: Updated configuration mechanism
+
+2003-09-19 23:44  voc
+
+	* .cvsignore, synce-kde.kdevelop, po/.cvsignore, raki/.cvsignore,
+	raki/plugins/agsync/.cvsignore,
+	raki/plugins/kdeaddressbooksync/.cvsignore: .cvsignore updated
+
+2003-09-19 23:38  voc
+
+	* po/fr.po: Initial french translation
+
+2003-09-19 23:09  voc
+
+	* po/raki.pot: Updated
+
+2003-09-19 23:08  voc
+
+	* synce-kde.kdevelop: [no log message]
+
+2003-09-19 23:06  voc
+
+	* synce-kde.kdevelop: All directories are relative now
+
+2003-09-19 23:05  voc
+
+	* configure.in.in: Changed the configuration mechanism a bit
+
+2003-09-19 21:51  voc
+
+	* raki/raki.cpp: Removed an unecessary #define
+
+2003-09-19 21:50  voc
+
+	* configure.in.in: Added a check to select between
+	KUniqueApplication and KApplication --disable-unique enables
+	KApplication ... debugging with gdb is possible --enable-unique or
+	nothing enables KUniqueApplication ... debugging with gdb is not
+	possible
+
+2003-09-19 21:48  voc
+
+	* vdccm/vdccm.c: Typo fixed
+
+2003-09-19 11:02  voc
+
+	* raki/syncthread.h: Make some thread-events blocking to make sure
+	the user interface is in sync with the work of the synchronization
+	thread.
+
+2003-09-19 03:23  voc
+
+	* raki/: pda.cpp, syncdialogimpl.cpp, syncdialogimpl.h,
+	synctasklistitem.cpp, syncthread.cpp: Fixed some odd bugs - thanks
+	to  "Laurent Vivier" <LaurentVivier@wanadoo.fr>!
+
+2003-09-19 01:59  voc
+
+	* vdccm/select_lib.c: Also, never forget the credit of a patch! The
+	act->maxfd patch is from "Laurent Vivier"
+	<LaurentVivier@wanadoo.fr>
+
+2003-09-19 01:56  voc
+
+	* vdccm/select_lib.c: Never assume that integers are initialized
+	with 0 automaticaly by the compiler!
+
+2003-09-18 00:38  voc
+
+	* raki/: pda.cpp, pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h,
+	syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
+	synctasklistitem.h, syncthread.cpp, interfaces/rakisyncplugin.cpp,
+	interfaces/rakisyncplugin.h,
+	plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Added timestamps
+	for partnership creation and synchronization per types and pda. 
+	Used this timestamps to extract first-synchronization information. 
+	Synchronizer are tolled about a first synchronization.
+
+2003-09-16 21:03  voc
+
+	* raki/installer.cpp: A little bit better semantics
+
+2003-09-16 21:00  voc
+
+	* raki/: installer.cpp, installer.h, pda.cpp, pda.h: Installation
+	logic made more robust.
+
+2003-09-16 19:53  voc
+
+	* raki/installer.cpp: The \Windows\AppMgr\Install directory is
+	checked for existence and created if necessary.
+
+2003-09-16 19:51  voc
+
+	* raki/pda.cpp: Initialization progressbar now is hidden during the
+	time an other dialog is showen
+
+2003-09-16 01:01  voc
+
+	* raki/: Makefile.am, initprogress.ui, pda.cpp, pda.h: Replaced the
+	pda-connection KProgressDialog with a self made progress window.
+
+2003-09-16 01:00  voc
+
+	* raki/raki.cpp: Added more i18n macros
+
+2003-09-16 01:00  voc
+
+	* raki/workerthreadinterface.cpp: Code cleaning
+
+2003-09-12 11:49  voc
+
+	* raki/pda.cpp: Code cleaning
+
+2003-09-12 11:44  voc
+
+	* debian/changelog: New version number
+
+2003-09-12 11:02  voc
+
+	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Forgot to
+	check in this update yesterday
+
+2003-09-12 00:02  voc
+
+	* raki/: pdaconfigdialogimpl.cpp, raki.cpp, raki.h, rra.cpp, rra.h:
+	Bug fix: RAKI has crashed if a pda disconnects during connection
+	initiation phases.
+
+2003-09-12 00:02  voc
+
+	* raki/: pda.cpp, pda.h: Bug fix: RAKI has crashed if a pda
+	disconnects during connection initiation phases.  Progressbar
+	behaviour changed.
+
+2003-09-11 23:59  voc
+
+	* debian/changelog: New version
+
+2003-09-09 19:16  voc
+
+	* synce-kde-0.6.1-1.spec: Version info bug fixed
+
+2003-09-09 01:59  voc
+
+	* ChangeLog: Update
+
+2003-09-09 01:58  voc
+
+	* synce-kde-0.6.1-1.spec: Version number update
+
 2003-09-09 00:06  voc
 
 	* vdccm/vdccm.c: Code clean
