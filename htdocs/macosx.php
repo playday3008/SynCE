@@ -15,6 +15,10 @@ Tools</a>.</li>
 <li class=SPACED>You need <b>GNU libiconv</b> and <b>libpoll</b> from <a
 href="http://fink.sf.net/">Fink</a>.</li>
 
+<li class=SPACED>Add "-no-cpp-precomp" to your CPPFLAGS before running configure:<br>
+<br>
+<tt>export CPPFLAGS="$CPPFLAGS -no-cpp-precomp"</tt></li>
+
 <li class=SPACED>If you get the "multiple definitions of symbol" error message
 when compiling librapi2 you should <a
 href="http://fink.sourceforge.net/doc/porting/libtool.php">patch the
