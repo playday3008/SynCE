@@ -194,7 +194,7 @@ static GnomeVFSResult synce_create
 	location = g_convert_to_backward_slashes(uri);
 	printf("location: %s\n", location);
 
-	wide_path = adjust_remote_path(wstr_from_ascii(location), TRUE);
+	wide_path = wstr_from_ascii(location);
 	tempstring = wstr_to_ascii(wide_path);
 	printf("wide_path: %s\n", tempstring);
 	free(tempstring);
