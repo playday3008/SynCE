@@ -453,7 +453,7 @@ bool recurrence_parse_rrule(
       goto exit;
     }
 
-    if !(parser_add_int16(p, ID_OCCURENCE, OCCURENCE_REPEATED))
+    if (!parser_add_int16(p, ID_OCCURENCE, OCCURENCE_REPEATED))
     {
       synce_error("Failed to sett occurence in output");
       goto exit;
