@@ -1,0 +1,41 @@
+
+<chapter id="developers_manual">
+  <title>Developer's Manual</title>
+
+  <para>
+  </para>
+
+  <sect1 id="using_the_rapi_libraries">
+    <title>Using the rapi libraries</title>
+
+    <para>
+    </para>
+
+  </sect1>
+
+  <sect1 id="scripting_with_python">
+    <title>Scripting with Python</title>
+
+    <para>
+    </para>
+
+      <sect2 id="low_level_interface">
+	<title>The Low Level Interface</title>
+	<para></para>
+      </sect2>
+      <sect2 id="working_with_databases">
+	<title>Working With Databases</title>
+	<para></para>
+      </sect2>
+      <sect2 id="working_with_files">
+	<title>Working With Files</title>
+	<para></para>
+      </sect2>
+      <sect2 id="working_with_the_registery">
+	<title>Working With The Registry</title>
+	<para></para>
+      </sect2>
+
+  </sect1>
+
+</chapter>

@@ -1,0 +1,85 @@
+
+<chapter id="user_manual">
+  <title>User's Manual</title>
+
+  <para>
+  </para>
+
+    <sect1 id="installation">
+      <title>Installation</title>
+      
+      <para>
+      </para>
+    </sect1>
+    
+    <sect1 id="configuration">
+      <title>Configuration</title>
+
+    <para>SynCE supports connecting your PocketPC device using Serial
+	Cable, Infrared and USB.
+    </para>
+
+      <sect2 id="serial_cable">
+	<title>Serial Cable</title>
+	<para>To connect your PocketPC device via a Serial Cable
+	  follow these steps:</para>
+	<orderedlist>
+	  <listitem>
+	  <para>Make sure you are running as the root user.</para>
+	  </listitem>
+	  <listitem>
+	    <para>Find out the device name for your serial
+	      port:</para>
+	    <table><title>Serial Port Names</title>
+	      <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+		<thead>
+		  <row>
+		    <entry>Operating system</entry>
+		    <entry>Serial ports (first, second, ...)</entry>
+		  </row>
+		</thead>
+		<tbody>
+		  <row>
+		    <entry>Linux</entry>
+		    <entry>ttyS0, ttyS1, ...</entry>
+		  </row>
+		</tbody>
+	      </tgroup>
+	    </table>
+	    <para>Please drop a mail to
+	      <email>synce-devel@lists.sourceforge.net</email> to add the serial
+	      ports on your favorite operating system to the above
+	      list!</para>
+	  </listitem>
+	  <listitem>
+	    <para>Run synce-serial-config with the serial port as parameter, for example ttyS0:</para>
+	    <para><command>synce-serial-config </command><parameter class='command'>ttyS0</parameter></para>
+	  </listitem>
+	  <listitem>
+	    <para>Time to start your connection!</para>
+	  </listitem>
+	</orderedlist>
+
+	<para>If you, out of curiosity, wants to know how this works
+	"under the hood" you can read Connecting Linux and Windows CE
+	via Serial and IrDA.</para>
+
+      </sect2>
+
+      <sect2 id="infrared">
+	<title>Infrared</title>
+	<para></para>
+      </sect2>
+
+      <sect2 id="usb_cable">
+	<title>USB Cable</title>
+	<para></para>
+      </sect2>
+
+      <sect2 id="bluetooth">
+	<title>Bluetooth</title>
+	<para></para>
+      </sect2>
+
+  </sect1>
+</chapter> <!-- User Manual -->

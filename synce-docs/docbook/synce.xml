@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+     "http://docbook.org/xml/4.2/docbookx.dtd" [
+<!ENTITY introduction SYSTEM "introduction.xml">
+<!ENTITY user_manual SYSTEM "user_manual.xml">
+<!ENTITY developer_manual SYSTEM "developer_manual.xml">
+]>
+
+<book>
+
+  <bookinfo>
+
+    <title>SynCE Manual</title>
+
+    <author>
+       <firstname>Richard</firstname>
+       <surname>Taylor</surname>
+       <affiliation>
+          <!-- Valid email...spamblock/scramble if so desired -->
+          <address><email>synce (at) rest.clara.co.uk</email></address>
+       </affiliation>
+     </author>
+
+     <!-- All dates specified in ISO "YYYY-MM-DD" format -->
+     <pubdate>2002-12-08</pubdate>
+
+     <!-- Most recent revision goes at the top; list in descending order -->
+     <revhistory>
+       <revision>
+          <revnumber>0.1</revnumber>
+          <date>2002-12-08</date>
+          <authorinitials>rjt</authorinitials>
+          <revremark>first draft release</revremark>
+       </revision>
+     </revhistory>
+
+     <!-- Provide a good abstract; a couple of sentences is sufficient -->
+     <abstract>
+        <para> 
+	This is the user and devloper manual for the SynCE
+	project. The purpose of the SynCE project is to provide a means of
+	communications with a Windows CE or Pocket PC device from a
+	computer running Linux, *BSD or other unices.
+        </para>
+     </abstract>
+
+  </bookinfo>
+
+
+<!-- Content follows...include introduction, license information, feedback -->
+
+&introduction;
+
+<!-- rest of document follows... --> 
+
+&user_manual;
+&developer_manual;
+
+</book>
+
