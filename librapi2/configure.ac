@@ -32,7 +32,7 @@ AC_C_BIGENDIAN()
 AC_C_CONST
 
 dnl Checks for library functions.
-LIBRAPI_AM_ICONV()
+AM_ICONV()
 
 AC_OUTPUT([Makefile
            src/Makefile
