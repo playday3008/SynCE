@@ -65,6 +65,9 @@
       <listitem> 
         <para>David Eriksson <email>twogood (at) users.sourceforge.net</email></para>
       </listitem>
+      <listitem> 
+        <para>Richard Taylor <email>r.taylor (at) bcs.org.uk</email></para>
+      </listitem>
     </itemizedlist>
   </sect1>
 
@@ -105,3 +108,11 @@
   </sect1>
   -->
 </chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-doctype:("synce.xml")
+sgml-parent-document:("synce.xml" "book" "chapter")
+End:
+-->

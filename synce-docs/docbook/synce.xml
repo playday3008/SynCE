@@ -14,11 +14,11 @@
     <title>SynCE Manual</title>
 
     <author>
-       <firstname>Richard</firstname>
-       <surname>Taylor</surname>
+       <firstname>SynCE</firstname>
+       <surname>Development Team</surname>
        <affiliation>
           <!-- Valid email...spamblock/scramble if so desired -->
-          <address><email>synce (at) rest.clara.co.uk</email></address>
+          <address><email>synce-devel (at) lists.sourceforge.net</email></address>
        </affiliation>
      </author>
 

@@ -11,7 +11,8 @@ XML_CATALOG  = catalog.xml
 ROOT_DOC     = synce.xml  # Main root node file
 XSL_PARAMS   = --stringparam formal.title.placement "table after" \
                --stringparam section.autolabel 1 \
-               --stringparam section.label.includes.component.label 1
+               --stringparam section.label.includes.component.label 1 \
+               --stringparam ulink.footnotes 1
 
 # Output locations
 ONE_FILE_OUT = synce.html # Output file name for one-in-one html
