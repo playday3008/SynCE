@@ -41,6 +41,9 @@
 #include <libgnomeui/gnome-about.h>
 #include "eggtrayicon.h"
 #include "config.h"
+#include "gtop_stuff.h"
+
+#define SYNCE_SOFTWARE_MANAGER "synce-software-manager"
 
 static bool in_background = true;
 static bool is_connected = false;
@@ -148,7 +151,7 @@ static void menu_explore (GtkWidget *button, EggTrayIcon *icon)
 static void menu_software (GtkWidget *button, EggTrayIcon *icon)
 {	
 	char *argv[1] = {
-		"synce-software-manager"
+		SYNCE_SOFTWARE_MANAGER
 	};
 	if (gnome_execute_async(NULL,1, argv) == -1) {
 		synce_error_dialog("Can't open the software manager\nmake sure you have synce-software-manager installed");
@@ -221,7 +224,12 @@ static void trayicon_menu(GdkEventButton *event)
 	entry = gtk_menu_item_new_with_label("Add/Remove Programs");
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_software), NULL);
 	gtk_menu_append(GTK_MENU(menu), entry);
-
+	if (g_find_program_in_path(SYNCE_SOFTWARE_MANAGER) != NULL) {
+		gtk_widget_set_sensitive(entry, TRUE);
+	} else {
+		gtk_widget_set_sensitive(entry, FALSE);
+	}
+	
 	if (is_connected)
 		snprintf(buffer, sizeof(buffer), "Disconnect from '%s'", device_name);
 	else
@@ -469,6 +477,23 @@ init_sm ()
             GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
 }
 
+void start_dccm ()
+{	
+	char *argv[1] = {
+		"dccm"
+	};
+
+	if (!dccm_is_running()) {
+		synce_trace("starting dccm");
+		if (gnome_execute_async(NULL,1, argv) == -1) {
+			synce_error_dialog("Can't start dccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again.");
+			synce_trace("Failed to start dccm");
+		}
+	} else {
+		synce_trace("dccm is already running!");
+	}
+}
+
 
 int
 main (gint argc, gchar **argv)
@@ -497,6 +522,8 @@ main (gint argc, gchar **argv)
 		synce_trace("Running in foreground");
 	}
 
+	start_dccm();
+	
 	tray_icon = egg_tray_icon_new ("SynCE");
 	box = gtk_event_box_new();
 	icon = gtk_image_new();
