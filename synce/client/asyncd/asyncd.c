@@ -38,6 +38,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "little_endian.h"
+
 #define ASYNCD_INPUT	0
 #define ASYNCD_OUTPUT	1
 #define PING 0x12345678
@@ -179,12 +181,12 @@ int checkpacket( unsigned char * buf, int size )
 	log_debug ("buffer : 0x%08X", buf);
         ptrlng = (long*)(buf+4);                /* Start of buffer; */
 	log_debug ("ptrlng : 0x%08X", ptrlng);
-        offset1 = (long)(* ptrlng );        /* Offset to the string len, or 0x24 */
+        offset1 = letoh32(* ptrlng );        /* Offset to the string len, or 0x24 */
 	log_debug ("offset1 : 0x%08X", offset1);
 
         ptrlng = (long*)(buf + offset1 );
 	log_debug ("ptrlng : 0x%08X", ptrlng);
-        strglen = (size_t)(* (ptrlng) );
+        strglen = (size_t)letoh32(* (ptrlng) );
 	log_debug ("strglen : 0x%08X", strglen);
         ptrlng = (long*)(buf + offset1 + 4 );
 
@@ -279,8 +281,7 @@ int main (int ac, char **av)
 			
 			error=read( ASYNCD_INPUT, buffer, 4);
 		
-			pktsz = 0;
-			pktsz = ( (long) * ( (long *) (buffer) ) );
+			pktsz = letoh32(*(long *)buffer);
 			if( pktsz == PING )
 			{
 				/* Is there a pending ping ? */
@@ -382,7 +383,7 @@ int main (int ac, char **av)
 			if( buffer_ok && !pending )
 			{
 			  ping:
-				*((long *) buffer) = PING;
+				*(long *)buffer = htole32(PING);
 				error = write( ASYNCD_OUTPUT, buffer, 4 );
 #ifdef DEBUG				
 				log_debug(" sending ping");
