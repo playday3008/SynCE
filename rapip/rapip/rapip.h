@@ -53,6 +53,7 @@ public:
 
 private:
     QString adjust_remote_path();
+    bool checkRequestURL(const KURL& url);
     bool list_matching_files(QString &path);
     bool ceOk;
     bool isConnected;
