@@ -30,14 +30,28 @@ int daemon(int nochdir, int noclose);
 
 typedef struct _Client
 {
-	bool connected;
 	SynceSocket* socket;
 	struct sockaddr_in address;
+
+  /* no lock, or unlocking successfull */
+	bool authenticated;
+
+  /* if we have received the initial zero package */
+	bool initialized;
+
+  /* for keep-alive */
 	int ping_count;
+
+  /* password stuff */
 	bool locked;
 	bool expect_password_reply;
 	int key;
+
+  /* set to disconnect client */
 	bool disconnect;
+
+  /* information package */
+  bool has_information;
   uint16_t os_version;
   uint16_t build_number;
   uint16_t processor_type;
@@ -287,36 +301,40 @@ static bool client_write_file(Client* client)
 		goto exit;
 	}
 
-	fprintf(file,
-			"# Modifications to this file will be lost next time a client connects to dccm\n"
-			"\n"
-			"[dccm]\n"
-			"pid=%i\n"
-			"\n"
-			"[device]\n"
-      "os_version=%i\n"
-      "build_number=%i\n"
-      "processor_type=%i\n"
-      "partner_id_1=%i\n"
-      "partner_id_2=%i\n"
-			"name=%s\n"
-			"class=%s\n"
-			"hardware=%s\n"
-			"ip=%s\n"
-			"port=%i\n"
+  fprintf(file,
+      "# Modifications to this file will be lost next time a client connects to dccm\n"
+      "\n"
+      "[dccm]\n"
+      "pid=%i\n"
+      "\n"
+      "[device]\n"
+      "ip=%s\n"
+      "port=%i\n"
       ,
-			getpid(),
-      client->os_version,
-      client->build_number,
-      client->processor_type,
-      client->partner_id_1,
-      client->partner_id_2,
-			client->name,
-			client->class,
-			client->hardware,
-			ip_str,
-			ntohs(client->address.sin_port));
-	
+      getpid(),
+      ip_str,
+      ntohs(client->address.sin_port));
+
+  if (client->has_information)
+    fprintf(file,
+        "os_version=%i\n"
+        "build_number=%i\n"
+        "processor_type=%i\n"
+        "partner_id_1=%i\n"
+        "partner_id_2=%i\n"
+        "name=%s\n"
+        "class=%s\n"
+        "hardware=%s\n"
+        ,
+        client->os_version,
+        client->build_number,
+        client->processor_type,
+        client->partner_id_1,
+        client->partner_id_2,
+        client->name,
+        client->class,
+        client->hardware);
+
 	if (client->locked)
 	{
 		fprintf(file,
@@ -363,7 +381,17 @@ static bool client_read(Client* client)
 
 	if (!synce_socket_read(client->socket, &header, sizeof(header)))
 	{
-		synce_error("failed to read header");
+    if (client->initialized && !client->has_information)
+    {
+      // Windows CE 1.0 has closed the socket
+      synce_trace("Assuming Windows CE 1.0 - is this correct?");
+      success = true;
+			client_write_file(client);
+      client->disconnect = true;
+    }
+    else
+		  synce_error("failed to read header");
+
 		goto exit;
 	}
 
@@ -376,6 +404,7 @@ static bool client_read(Client* client)
 		 * Empty - ignore
 		 */
 		synce_trace("empty package");
+    client->initialized = true;
 	}
 	else if (DCCM_PING == header)
 	{
@@ -412,6 +441,8 @@ static bool client_read(Client* client)
 			goto exit;
 		}
 
+    client->has_information = true;
+
 		dump("info package", buffer, header);
 
 		/* Offset 0000 is always 24 00 00 00 ? */
@@ -445,7 +476,14 @@ static bool client_read(Client* client)
 		}
 		else
 		{
-			client->connected = true;
+      const uint32_t ping = htole32(DCCM_PING);
+      if (!synce_socket_write(client->socket, &ping, sizeof(ping)))
+			{
+				synce_error("failed to send ping");
+				goto exit;	
+			}
+
+			client->authenticated = true;
 			client_write_file(client);
 			run_scripts("connect");
 		}
@@ -484,7 +522,7 @@ exit:
 static bool client_handler(Client* client)
 {
 	bool success = false;
-	SocketEvents events;
+	short events;
 	const uint32_t ping = htole32(DCCM_PING);
 
 	while (client->ping_count < DCCM_MAX_PING_COUNT && !client->disconnect)
@@ -517,7 +555,13 @@ static bool client_handler(Client* client)
 				if (!password_correct)
 					goto exit;
 
-				client->connected = true;
+        if (!synce_socket_write(client->socket, &ping, sizeof(ping)))
+        {
+          synce_error("failed to send ping");
+          goto exit;	
+        }
+
+				client->authenticated = true;
 				client_write_file(client);
 				run_scripts("connect");
 
@@ -734,7 +778,7 @@ int main(int argc, char** argv)
 		synce_socket_free(client.socket);
 		remove_connection_file();
 
-		if (client.connected)
+		if (client.authenticated)
 			run_scripts("disconnect");
 	}
 
