@@ -139,8 +139,26 @@ AC_CHECK_HEADERS(librra.h,,
 	]
 )
 
-agsync_cond=no
+AC_CHECK_LIB(pthread,pthread_getspecific,,
+    [
+        AC_MSG_ERROR([Can't find libpthread])
+        exit
+    ]
+)
 
+AC_CHECK_LIB(ical,icaltime_convert_to_zone,,
+	[
+		AC_MSG_ERROR(
+[
+Can't find appropriate libical library.
+Please install the latest libicall from
+http://sourceforge.net/projects/freeassociation/
+])
+exit
+	]
+)
+
+agsync_cond=no
 
 AC_ARG_WITH(libmal-funcs,
 	AC_HELP_STRING(

@@ -27,7 +27,7 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>remco/remco</activetarget>
+      <activetarget>remco/pdamirror</activetarget>
       <useconfiguration>debug</useconfiguration>
     </general>
     <makeenvvars>
@@ -46,6 +46,7 @@
         <raki/>
         <remco/>
         <pdamirror/>
+        <cemirror/>
       </runarguments>
     </run>
     <envvars/>
