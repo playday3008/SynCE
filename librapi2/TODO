@@ -22,3 +22,5 @@ o Improve synce-install-cab script:
   /Windows/AppMgr but once this change is made to the script it
   works fine to install stuff.
 
+o Make the RAPI commands timeout of the connection is lost to the device
+
