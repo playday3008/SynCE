@@ -22,14 +22,13 @@
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
     <secondaryLanguages>
-      <language>Bash</language>
       <language>C</language>
     </secondaryLanguages>
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>raki/raki</activetarget>
-      <useconfiguration>dist</useconfiguration>
+      <activetarget>remco/remco</activetarget>
+      <useconfiguration>debug</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
@@ -43,10 +42,15 @@
       <autocompile>true</autocompile>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
+      <runarguments>
+        <raki/>
+        <remco/>
+        <pdamirror/>
+      </runarguments>
     </run>
     <envvars/>
     <make>
-      <abortonerror>false</abortonerror>
+      <abortonerror>true</abortonerror>
       <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
       <makebin/>
@@ -57,7 +61,7 @@
     </make>
     <configurations>
       <debug>
-        <configargs>--enable-debug=yes --with-agsync=../../thirdparty/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <configargs>--enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
         <builddir>../build/debug/</builddir>
         <topsourcedir/>
         <ccompiler>GccOptions</ccompiler>
@@ -73,7 +77,7 @@
         <ldflags/>
       </debug>
       <default>
-        <configargs>--with-agsync=../../thirdparty/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <configargs>--with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
         <builddir>../build/default/</builddir>
         <topsourcedir/>
         <cppflags/>
@@ -89,7 +93,7 @@
         <f77flags/>
       </default>
       <dist>
-        <configargs>--with-agsync=../thirdparty/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <configargs>--with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
         <builddir>.</builddir>
         <topsourcedir/>
         <cppflags/>
@@ -105,7 +109,7 @@
         <f77flags/>
       </dist>
       <gdbdebug>
-        <configargs>--disable-unique --enable-debug=yes --with-agsync=../../thirdparty/agsync-0.2-pre --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <configargs>--disable-unique --enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
         <builddir>../build/gdbdebug/</builddir>
         <topsourcedir/>
         <cppflags/>
@@ -120,18 +124,39 @@
         <cxxflags/>
         <f77flags/>
       </gdbdebug>
+      <kde-3.2>
+        <configargs>--enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <builddir>../build/kde-3.2</builddir>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <ccompiler>GccOptions</ccompiler>
+        <cxxcompiler>GppOptions</cxxcompiler>
+        <f77compiler>G77Options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags/>
+        <cxxflags/>
+        <f77flags/>
+      </kde-3.2>
     </configurations>
+    <subclassing>
+      <subclass uifile="/raki/plugins/agsync/agsyncconfig.ui" sourcefile="/raki/plugins/agsync/agsyncconfigimpl.cpp" />
+      <subclass uifile="/raki/plugins/agsync/agsyncconfig.ui" sourcefile="/raki/plugins/agsync/agsyncconfigimpl.h" />
+    </subclassing>
   </kdevautoproject>
   <kdevfileview>
     <groups>
       <group pattern="*.cpp;*.cxx;*.h" name="Sources" />
       <group pattern="*.po;*.ts" name="Translations" />
       <group pattern="*" name="Others" />
+      <hidenonprojectfiles>false</hidenonprojectfiles>
     </groups>
     <tree>
       <hidenonprojectfiles>false</hidenonprojectfiles>
       <hidepatterns></hidepatterns>
-      <showvcsfields>false</showvcsfields>
+      <showvcsfields>true</showvcsfields>
     </tree>
   </kdevfileview>
   <kdevdoctreeview>
@@ -141,7 +166,7 @@
     </ignoretocs>
     <projectdoc>
       <userdocDir>doc/en/</userdocDir>
-      <apidocDir>html/</apidocDir>
+      <apidocDir>/home/voc/usr/software/synce-kde/build/debug/html/</apidocDir>
     </projectdoc>
     <ignoreqt_xml/>
     <ignoredoxygen/>
@@ -230,13 +255,13 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
   </kdevclassview>
   <kdevcvs>
     <cvsoptions>-f</cvsoptions>
-    <commitoptions></commitoptions>
+    <commitoptions/>
     <updateoptions>-dP</updateoptions>
-    <addoptions></addoptions>
+    <addoptions/>
     <removeoptions>-f</removeoptions>
     <diffoptions>-u3 -p</diffoptions>
-    <logoptions></logoptions>
-    <rshoptions></rshoptions>
+    <logoptions/>
+    <rshoptions/>
     <revertoptions>-C -d -P</revertoptions>
   </kdevcvs>
   <kdevfilecreate>
@@ -261,6 +286,17 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
       <automaticHeaderCompletion>true</automaticHeaderCompletion>
       <headerCompletionDelay>250</headerCompletionDelay>
     </codecompletion>
-    <references/>
+    <references>
+      <pcs>KDElibs</pcs>
+      <pcs>Qt</pcs>
+    </references>
   </kdevcppsupport>
+  <kdevfileviewpart>
+    <fileaddedcolor>#ffffff</fileaddedcolor>
+    <fileupdatecolor>#ffffff</fileupdatecolor>
+    <filemodifiedcolor>#ffffff</filemodifiedcolor>
+    <filestickycolor>#ffffff</filestickycolor>
+    <fileconflictcolor>#ffffff</fileconflictcolor>
+    <fileunknowncolor>#ffffff</fileunknowncolor>
+  </kdevfileviewpart>
 </kdevelop>

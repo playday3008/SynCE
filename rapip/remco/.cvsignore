@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+.debs
+.libs
+remco
+pdamirror
+*.moc
+*.moc.cpp
+pdascreen.cpp
+pdascreen.h
