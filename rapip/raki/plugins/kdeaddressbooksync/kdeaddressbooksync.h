@@ -45,7 +45,6 @@ class KdeAddressBookSync : public RakiSyncPlugin
 Q_OBJECT
 public:
     KdeAddressBookSync();
-
     virtual ~KdeAddressBookSync();
     
 private:
