@@ -104,7 +104,7 @@ PDA::PDA(Raki *raki, QString pdaName)
     menuCount++;
 
     pdaMirrorItem = associatedMenu->insertItem(SmallIcon("pda_blue"),
-            i18n("Run &pdamirror"), this, SLOT(startPdaMirror()));
+            i18n("Run &KCeMirror"), this, SLOT(startPdaMirror()));
     menuCount++;
 
     associatedMenu->insertItem(SmallIcon("run"), i18n("&Execute..."), this,
@@ -159,7 +159,7 @@ void PDA::pdaMirrorExited(KProcess* )
 void PDA::startPdaMirror()
 {
     pdaMirror.clearArguments();
-    pdaMirror.setExecutable("pdamirror");
+    pdaMirror.setExecutable("kcemirror");
     pdaMirror << pdaName;
 
     associatedMenu->setItemEnabled(pdaMirrorItem, false);
