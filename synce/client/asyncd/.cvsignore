@@ -1,3 +1,8 @@
+*.la
+*.lo
+*.moc.cpp
+.deps
+.libs
 Makefile
 Makefile.in
-*.moc.cpp
+asyncd

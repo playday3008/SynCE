@@ -1,3 +1,5 @@
+*.la
+*.lo
 .deps
 .gdb_history
 .libs
@@ -9,9 +11,9 @@ CeGetSpecialFolderPath
 CeOpenDatabase
 CeRapiInit
 CeRegEnumKeyEx
+CeRegEnumValue
 CeRegOpenKeyEx
+CeRegQueryInfoKey
 Makefile
 Makefile.in
-CeRegEnumValue
-CeRegQueryInfoKey
 pcp
