@@ -35,6 +35,10 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>December 16, 2002</b> We would like to welcome Fredrik Nilson as a
+developer in the SynCE project. He has authored a GNOME-VFS module for
+SynCE. We hope to include this module in the next SynCE release.</p>
+
 <p><b>November 30, 2002</b> Released SynCE version 0.5 which includes
 dccm 0.5, librapi2 0.5, libsynce 0.5, synce-serial 0.5 and trayicon 0.3. <a
 href="using.php">Download and use</a>.</p>
@@ -144,6 +148,9 @@ on PyRAPI, Python wrappers for RAPI.</p>
 <p><a href="mailto:vganesh@users.sourceforge.net">Ganesh Varadarajan</a> has
 developed serial-over-USB driver for SynCE, both userspace and kernel
 versions.</p>
+
+<p><a href="mailto:sassur@users.sourceforge.net">Fredrik Nilsson</a> is the
+author of the SynCE GNOME-VFS module.</p>
 
 </div>
 <?php include 'footer.php'; ?>
