@@ -13,7 +13,10 @@
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
-#define DEFAULT_REMINDER_SOUND_FILE  "Alarm1.wav"
+#define DEFAULT_REMINDER_MINUTES_BEFORE_START 0
+#define DEFAULT_REMINDER_SOUND_FILE   "Alarm1.wav"
+#define DEFAULT_REMINDER_ENABLED      0
+#define DEFAULT_REMINDER_OPTIONS      0
 
 static uint8_t invalid_filetime_buffer[] = 
 {0x00, 0x40, 0xdd, 0xa3, 0x57, 0x45, 0xb3, 0x0c};
@@ -212,7 +215,7 @@ static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
     return parser_add_time_from_line(p, ID_TASK_COMPLETED, line);
   }
   else
-    return false;
+    return false; /*parser_add_time(p, ID_TASK_COMPLETED, time(NULL));*/
 }
 
 static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
@@ -328,10 +331,30 @@ bool rra_task_from_vtodo(
     goto exit;
   }
     
-  /* Add some data that should always be included */
+  /* This must always be included */
   parser_add_string(parser, 
       ID_REMINDER_SOUND_FILE, 
       DEFAULT_REMINDER_SOUND_FILE);
+  
+#if 0
+  /* Default alarm stuff until we handle vAlarm */
+  parser_add_int32(parser, 
+      ID_REMINDER_MINUTES_BEFORE_START, 
+      DEFAULT_REMINDER_MINUTES_BEFORE_START);
+  parser_add_int16(parser, 
+      ID_REMINDER_ENABLED, 
+      DEFAULT_REMINDER_ENABLED);
+  parser_add_int32(parser, 
+      ID_REMINDER_OPTIONS, 
+      DEFAULT_REMINDER_OPTIONS);
+
+  /* Add these just for sure */
+  parser_add_int32(parser, ID_UNKNOWN_0002, 0);
+  parser_add_int16(parser, ID_UNKNOWN_0003, 0);
+  parser_add_int16(parser, ID_UNKNOWN_0005, 0);
+  parser_add_int32(parser, ID_IMPORTANCE, 0);
+  parser_add_int16(parser, ID_UNKNOWN_4126, 0);
+#endif
 
   parser_call_unused_properties(parser);
   

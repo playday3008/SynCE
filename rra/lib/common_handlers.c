@@ -5,6 +5,7 @@
 #include "generator.h"
 #include "appointment_ids.h"
 #include "task_ids.h"
+#include "strbuf.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <ctype.h>
@@ -40,15 +41,30 @@ bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
 
 bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 {
+  bool success = false;
   if (line)
   {
+    char *q;
+    StrBuf* note = strbuf_new(NULL);
     assert(line->values);
+
     /* TODO: convert from utf-8 */
-    /* TODO: convert LF to CRLF */
-    return parser_add_blob(p, ID_NOTES, line->values[0], strlen(line->values[0]));
+
+    /* convert LF to CRLF */
+    for (q = line->values[0]; *q != '\0'; q++)
+    {
+      if (*q == '\n')
+        strbuf_append_crlf(note);
+      else
+        strbuf_append_c(note, *q);
+    }
+
+    success = parser_add_blob(p, ID_NOTES, note->buffer, note->length);
+
+    strbuf_destroy(note, true);
   }
-  else
-    return false;
+
+  return success;
 }
 
 static const char pwi_signature[] = "{\\pwi";

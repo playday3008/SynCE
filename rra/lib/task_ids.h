@@ -2,7 +2,10 @@
 #ifndef __task_ids_h__
 #define __task_ids_h__
 
+#define ID_UNKNOWN_0002     0x0002
+#define ID_UNKNOWN_0003     0x0003
 #define ID_SENSITIVITY      0x0004
+#define ID_UNKNOWN_0005     0x0005
 
 #define SENSITIVITY_PUBLIC  0
 #define SENSITIVITY_PRIVATE 1
@@ -23,6 +26,7 @@
 
 /* This ID exists both as a FILETIME and an 16-bit integer! */
 #define ID_TASK_COMPLETED        0x410f
+#define ID_UNKNOWN_4126          0x4126
 
 #define ID_REMINDER_MINUTES_BEFORE_START  0x4501
 #define ID_REMINDER_ENABLED               0x4503

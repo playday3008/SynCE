@@ -29,7 +29,7 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
 
-	printf("%s (%d bytes):\n", desc, len);
+	fprintf(stderr, "%s (%d bytes):\n", desc, len);
 	for (i = 0; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
 			if (j + i >= len) {
@@ -797,6 +797,10 @@ bool rrac_recv_data(/*{{{*/
 
 	LETOH32(header.object_id);
 	LETOH32(header.type_id);
+	LETOH32(header.flags);
+
+	synce_trace("object_id=0x%x, type_id=0x%x, flags=0x%x", 
+      header.object_id, header.type_id, header.flags);
 
 	if (object_id)  *object_id  = header.object_id;
 	if (type_id)    *type_id    = header.type_id;
@@ -834,6 +838,14 @@ bool rrac_recv_data(/*{{{*/
 		aligned_size = (chunk_header.size + 3) & ~3;
 		*data = realloc(*data, total_size + aligned_size);
 
+    synce_trace("chunk_size = %04x, aligned_size = %04x, stuff = %04x",
+        chunk_header.size, aligned_size, chunk_header.stuff);
+
+    if ((unsigned)((chunk_header.stuff & 0xc) >> 2) == (aligned_size - chunk_header.size))
+      synce_trace("Flags and sizes match");
+    else
+      synce_warning("Flags and sizes do not match!");
+ 
 		if (!synce_socket_read(rrac->data_socket, *data + total_size, aligned_size))
 		{
 			synce_error("Failed to read data");
@@ -869,7 +881,8 @@ bool rrac_send_data(/*{{{*/
 	size_t offset = 0;
 	size_t bytes_left = size;
 
-	synce_trace("object_id=0x%x, type_id=0x%x, data size=0x%x", object_id, type_id, size);
+	synce_trace("object_id=0x%x, type_id=0x%x, flags=0x%x, data size=0x%x", 
+      object_id, type_id, flags, size);
 
 	header.object_id = htole32(object_id);
 	header.type_id   = htole32(type_id);
@@ -893,6 +906,7 @@ bool rrac_send_data(/*{{{*/
 	{
 		size_t chunk_size = MIN(bytes_left, CHUNK_MAX_SIZE);
 		size_t aligned_size = (chunk_size + 3) & ~3;
+    uint16_t stuff = 0xffa0;
 		
 		chunk_header.size = htole16(chunk_size);
 		bytes_left -= chunk_size;
@@ -900,8 +914,17 @@ bool rrac_send_data(/*{{{*/
 		if (bytes_left > 0)
 			chunk_header.stuff = htole16(offset);
 		else
-			chunk_header.stuff = htole16(0xffa0);
-	
+    {
+      /* And how obvious is this? */
+      if (aligned_size > chunk_size)
+        stuff |= (aligned_size - chunk_size) << 2;
+
+			chunk_header.stuff = htole16(stuff);
+    }
+
+    synce_trace("chunk_size = %04x, aligned_size = %04x, stuff = %04x",
+        chunk_size, aligned_size, chunk_header.stuff);
+        
 		DUMP("chunk header", &chunk_header, sizeof(chunk_header));
 
 		if (!synce_socket_write(rrac->data_socket, &chunk_header, sizeof(chunk_header)))
@@ -930,7 +953,7 @@ bool rrac_send_data(/*{{{*/
 
 		offset += chunk_size;
 	}
-	
+
 	success = true;
 
 exit:

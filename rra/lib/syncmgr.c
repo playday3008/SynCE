@@ -481,6 +481,11 @@ bool rra_syncmgr_handle_event(RRA_SyncMgr* self)/*{{{*/
 
     sync_command_destroy(command);
   }
+  else
+  {
+    synce_error("Failed to receive event, closing connection!");
+    rra_syncmgr_disconnect(self);
+  }
   
   return success;
 }/*}}}*/
@@ -518,6 +523,10 @@ bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, /*{{{*/
   uint8_t* data;
   size_t data_size;
   unsigned i;
+
+  /* do absolutely nothing if object_id_count is zero! */
+  if (!object_id_count)
+    return true;
 
   if (self->receiving_events)
     if (!rra_syncmgr_handle_all_pending_events(self))
@@ -674,6 +683,10 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
   uint8_t* data = NULL;
   size_t max_data_size = 0;
 
+  /* do absolutely nothing if object_id_count is zero! */
+  if (!object_id_count)
+    return true;
+
   if (self->receiving_events)
     if (!rra_syncmgr_handle_all_pending_events(self))
     {
@@ -731,12 +744,14 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
 
   free(data);
 
+#if 0
   /* Write end-of-data marker */
   if (!rrac_send_data(self->rrac, OBJECT_ID_STOP, type_id, 0, NULL, 0))
   {
     synce_error("Failed to send stop entry");
     goto exit;	
   }
+#endif
 
   /* Negotiate object IDs */
   for (i = 0; i < object_id_count; i++)
@@ -873,44 +888,44 @@ bool rra_syncmgr_delete_object(/*{{{*/
   uint32_t type_id, 
   uint32_t object_id)
 {
-bool success = false;
-uint32_t recv_type_id;
-uint32_t recv_object_id1;
-uint32_t recv_object_id2;
-uint32_t recv_flags;
-uint32_t index = 1;
+  bool success = false;
+  uint32_t recv_type_id;
+  uint32_t recv_object_id1;
+  uint32_t recv_object_id2;
+  uint32_t recv_flags;
+  uint32_t index = 1;
 
-if (!rrac_send_66(self->rrac, type_id, object_id, index))
-{
-  synce_error("Failed to senmd command 66");
-  goto exit;
-}
+  if (!rrac_send_66(self->rrac, type_id, object_id, index))
+  {
+    synce_error("Failed to senmd command 66");
+    goto exit;
+  }
 
-if (!rrac_recv_65(
-      self->rrac, 
-      &recv_type_id, 
-      &recv_object_id1,
-      &recv_object_id2,
-      &recv_flags))
-{
-  synce_error("Failed to receive command 65");
-  goto exit;
-}
+  if (!rrac_recv_65(
+        self->rrac, 
+        &recv_type_id, 
+        &recv_object_id1,
+        &recv_object_id2,
+        &recv_flags))
+  {
+    synce_error("Failed to receive command 65");
+    goto exit;
+  }
 
-if (recv_object_id1 != recv_object_id2)
-{
-  synce_error("Unexpected object ids");
-  goto exit;
-}
+  if (recv_object_id1 != recv_object_id2)
+  {
+    synce_error("Unexpected object ids");
+    goto exit;
+  }
 
-if (recv_flags != (index | 0x80000000))
-{
-  synce_warning("Unexpected flags: %08x", recv_flags);
-}
+  if (recv_flags != (index | 0x80000000))
+  {
+    synce_warning("Unexpected flags: %08x", recv_flags);
+  }
 
-success = true;
+  success = true;
 
 exit:
-return success;
+  return success;
 }/*}}}*/
 
