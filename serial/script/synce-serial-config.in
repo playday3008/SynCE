@@ -2,6 +2,8 @@
 #
 # $Id$
 #
+# vim: expandtab
+#
 # Script for configuring a PPP device for SynCE
 #
 
@@ -17,7 +19,7 @@ SYSTEM=`uname -s`
 
 help()
 {
-	echo "
+  echo "
 Syntax for ${THIS}:
 
   ${THIS} serial-device [local_ip_address:remote_ip_address]
@@ -26,32 +28,37 @@ Syntax for ${THIS}:
 
 case ${SYSTEM} in
 
-	Linux)
-		echo "
+  Linux)
+    echo "
   These are the port names on Linux:
 
     ttyS0  The first serial port
     ttyS1  The second serial port
     ..."
-		;;
+    ;;
 
-	FreeBSD)
-		echo "
-	These are the port names on FreeBSD:
+  FreeBSD)
+    echo "
+  These are the port names on FreeBSD:
 
     ttyd0  The first serial port
     ttyd1  The second serial port
-		..."
-		;;
+    ..."
+    ;;
 
-	*)
-		echo "
+  *)
+    echo "
 ${THIS} does not know the name of serial ports on ${SYSTEM} systems."
-		;;
+    ;;
 
 esac
 
-	echo "
+  echo "
+  You can also connect via an infrared connection (IrDA). This requires
+  that you already have irattach running.
+
+    ircomm0  The first IrDA communication port
+
   Please send corrections and updates to the above information to the
   SynCE development mailing list: synce-devel@lists.sourceforge.net
 
@@ -65,49 +72,49 @@ esac
 }
 
 if [ -z "$1" ]; then
-	help
-	exit 1
+  help
+  exit 1
 fi
 
 case $1 in
-	-h|--help)
-		help
-		exit 0
-		;;
+  -h|--help)
+    help
+    exit 0
+    ;;
 esac
 
 if [ -c $1 ]; then
-	DEVICE=$;
+  DEVICE=$;
 else 
-	if [ -c /dev/$1 ]; then
-		DEVICE=/dev/$1
-	else
-		echo "
+  if [ -c /dev/$1 ]; then
+    DEVICE=/dev/$1
+  else
+    echo "
 ERROR:
 
 ${THIS} was unable to find a character device named \"$1\"
 
 Run \"${THIS} --help\" to get help.
 " >&2
-		exit 1
-	fi
+    exit 1
+  fi
 fi
 
 if [ "$2" ]; then
-	if ! (echo $2 | grep -b '^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*$'); then
-		echo "
+  if ! (echo $2 | grep -b '^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*$'); then
+    echo "
 ERROR:
 
 The format of \"$2\" looks incorrect.
 
 Run \"${THIS} --help\" to get help.
 " >&2
-		exit 1
-	fi
+    exit 1
+  fi
 
-	IP_ADDRESSES=$2
+  IP_ADDRESSES=$2
 else
-	IP_ADDRESSES=${DEFAULT_IPS}
+  IP_ADDRESSES=${DEFAULT_IPS}
 fi
 
 LOCAL_IP=`echo $IP_ADDRESSES | sed 's/:.*$//'`
@@ -120,6 +127,7 @@ ${PEER_FILE}
 echo "# Modifications to this file will be lost next time you run ${THIS}
 ${DEVICE} 115200
 connect '${CHAT} -v -f ${CHAT_FILE}'
+nodefaultroute
 noauth
 local
 ${IP_ADDRESSES}
