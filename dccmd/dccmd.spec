@@ -15,6 +15,7 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Buildroot: %{_tmppath}/synce-root
 Requires: libsynce = 0.1
 
 %description
@@ -28,12 +29,12 @@ This daemon is required to be able to communicate with a handheld device.
 %setup
 
 %build
-./configure --prefix=%{prefix}
+%configure --with-libsynce=$RPM_BUILD_ROOT%{prefix}
 #--with-libsynce=%{prefix}
 make
 
 %install
-make install
+%makeinstall
 
 %files
 %{prefix}/bin/dccmd
