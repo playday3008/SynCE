@@ -1,96 +1,99 @@
 List of RAPI command codes:
 
-00 CeFindFirstFile		
-01 CeFindNextFile		
-02 CeFindClose		
-03 CeGetFileAttributes	
-04 CeSetFileAttributes	
-05 CeCreateFile		
-06 CeReadFile		
-07 CeWriteFile		
-08 CeCloseHandle		
-09 CeFindAllFiles		
-0a CeFindFirstDatabase	
-0b CeFindNextDatabase	
-0c CeOidGetInfo		
-0d CeCreateDatabase	
-0e CeOpenDatabase		
-0f CeDeleteDatabase	
+[i] = Implemented (maybe not tested)
 
-10 CeReadRecordProps	
-10 CeReadRecordPropsEx
-11 CeWriteRecordProps	
-12 CeDeleteRecord		
-13 CeSeekDatabase		
-14 CeSetDatabaseInfo	
-15 CeSetFilePointer	
-16 CeSetEndOfFile		
-17 CeCreateDirectory	
-18 CeRemoveDirectory	
-19 CeCreateProcess		
-1a CeMoveFile		
-1b CeCopyFile		
-1c CeDeleteFile		
-1d CeGetFileSize		
-1e CeRegOpenKeyEx		
-1f CeRegEnumKeyEx		
 
-20 CeRegCreateKeyEx	
-21 CeRegCloseKey		
-22 CeRegDeleteKey		
-23 CeRegEnumValue		
-24 CeRegDeleteValue	
-25 CeRegQueryInfoKey	
-26 CeRegQueryValueEx	
-27 CeRegSetValueEx		
-28 GetSystemMemoryDivision
-29 CeGetStoreInformation	
-2a CeGetSystemMetrics	
-2b CeGetDesktopDeviceCaps	
-2c CeFindAllDatabases	
-2d RegCopyFile
-2e RegRestoreFile
-2f CeGetSystemInfo		
+[i] 00 CeFindFirstFile		
+[i] 01 CeFindNextFile		
+[ ] 02 CeFindClose		
+[ ] 03 CeGetFileAttributes	
+[ ] 04 CeSetFileAttributes	
+[i] 05 CeCreateFile		
+[i] 06 CeReadFile		
+[i] 07 CeWriteFile		
+[i] 08 CeCloseHandle		
+[i] 09 CeFindAllFiles		
+[ ] 0a CeFindFirstDatabase	
+[ ] 0b CeFindNextDatabase	
+[ ] 0c CeOidGetInfo		
+[ ] 0d CeCreateDatabase	
+[ ] 0e CeOpenDatabase		
+[ ] 0f CeDeleteDatabase	
 
-30 CeSHCreateShortcut	
-31 CeSHGetShortcutTarget	
-32 GetPasswordActive
-33 SetPasswordActive
-34 CeCheckPassword		
-35 SetPassword
-36 CeEventHasOccured
-37 CeSyncTimeToPc
-38 CeStartReplication
-39 CeGetFileTime		
-3a CeSetFileTime		
-3b CeGetVersionEx		
-3c CeGetWindow		
-3d CeGetWindowLong		
-3e CeGetWindowText		
-3f CeGetClassName		
+[ ] 10 CeReadRecordProps	
+[ ] 10 CeReadRecordPropsEx
+[ ] 11 CeWriteRecordProps	
+[ ] 12 CeDeleteRecord		
+[ ] 13 CeSeekDatabase		
+[ ] 14 CeSetDatabaseInfo	
+[ ] 15 CeSetFilePointer	
+[ ] 16 CeSetEndOfFile		
+[i] 17 CeCreateDirectory	
+[i] 18 CeRemoveDirectory	
+[ ] 19 CeCreateProcess		
+[i] 1a CeMoveFile		
+[i] 1b CeCopyFile		
+[i] 1c CeDeleteFile		
+[ ] 1d CeGetFileSize		
+[ ] 1e CeRegOpenKeyEx		
+[ ] 1f CeRegEnumKeyEx		
 
-40 CeGlobalMemoryStatus	
-41 CeGetSystemPowerStatusEx	
-42 SetSystemMemoryDivision
-43 CeGetTempPath		
-44 CeGetSpecialFolderPath	
-45 CeRapiInvoke
-46 CeRestoreDatabase        [undocumented]
-47 CeBackupDatabase         [undocumented]
-48 CeBackupFile             [undocumented]
-49 CeKillAllApps            [undocumented]
-4a CeFindFirstDatabaseEx	
-4b CeFindNextDatabaseEx	
-4c CeCreateDatabaseEx	
-4d CeSetDatabaseInfoEx	
-4e CeOpenDatabaseEx	
-4f CeDeleteDatabaseEx	
+[ ] 20 CeRegCreateKeyEx	
+[ ] 21 CeRegCloseKey		
+[ ] 22 CeRegDeleteKey		
+[ ] 23 CeRegEnumValue		
+[ ] 24 CeRegDeleteValue	
+[ ] 25 CeRegQueryInfoKey	
+[ ] 26 CeRegQueryValueEx	
+[ ] 27 CeRegSetValueEx		
+[ ] 28 GetSystemMemoryDivision
+[ ] 29 CeGetStoreInformation	
+[ ] 2a CeGetSystemMetrics	
+[ ] 2b CeGetDesktopDeviceCaps	
+[ ] 2c CeFindAllDatabases	
+[ ] 2d RegCopyFile
+[ ] 2e RegRestoreFile
+[ ] 2f CeGetSystemInfo		
 
-50 [not used]
-51 CeMountDBVol		
-52 CeUnmountDBVol		
-53 CeFlushDBVol		
-54 CeEnumDBVolumes		
-55 CeOidGetInfoEx		
-56 CeProcessConfig
+[ ] 30 CeSHCreateShortcut	
+[ ] 31 CeSHGetShortcutTarget	
+[ ] 32 GetPasswordActive
+[ ] 33 SetPasswordActive
+[i] 34 CeCheckPassword		
+[ ] 35 SetPassword
+[ ] 36 CeEventHasOccured
+[ ] 37 CeSyncTimeToPc
+[ ] 38 CeStartReplication
+[ ] 39 CeGetFileTime		
+[ ] 3a CeSetFileTime		
+[i] 3b CeGetVersionEx		
+[ ] 3c CeGetWindow		
+[ ] 3d CeGetWindowLong		
+[ ] 3e CeGetWindowText		
+[ ] 3f CeGetClassName		
+
+[ ] 40 CeGlobalMemoryStatus	
+[ ] 41 CeGetSystemPowerStatusEx	
+[ ] 42 SetSystemMemoryDivision
+[ ] 43 CeGetTempPath		
+[i] 44 CeGetSpecialFolderPath	
+[ ] 45 CeRapiInvoke
+[ ] 46 CeRestoreDatabase        [undocumented]
+[ ] 47 CeBackupDatabase         [undocumented]
+[ ] 48 CeBackupFile             [undocumented]
+[ ] 49 CeKillAllApps            [undocumented]
+[ ] 4a CeFindFirstDatabaseEx	
+[ ] 4b CeFindNextDatabaseEx	
+[ ] 4c CeCreateDatabaseEx	
+[ ] 4d CeSetDatabaseInfoEx	
+[ ] 4e CeOpenDatabaseEx	
+[ ] 4f CeDeleteDatabaseEx	
+
+[ ] 50 [not used]
+[ ] 51 CeMountDBVol		
+[ ] 52 CeUnmountDBVol		
+[ ] 53 CeFlushDBVol		
+[ ] 54 CeEnumDBVolumes		
+[ ] 55 CeOidGetInfoEx		
+[ ] 56 CeProcessConfig
 
