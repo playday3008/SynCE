@@ -7,12 +7,8 @@
 #include <rapi.h>
 #include <synce_log.h>
 
-#include <libgnomevfs/gnome-vfs-handle.h>
-#include <libgnomevfs/gnome-vfs-mime.h>
-#include <libgnomevfs/gnome-vfs-mime-sniff-buffer.h>
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
 #include <libgnomevfs/gnome-vfs-module.h>
-#include <libgnomevfs/gnome-vfs-ops.h>
 
 typedef struct _DIR_HANDLE
 {
