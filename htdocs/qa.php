@@ -73,7 +73,7 @@ href="tools.php">tools</a> I get a message similar to this:</p>
 pstatus: Unable to initialize RAPI: Failure</pre>
 
 <p><b>A:</b> This means that the PDA has not connected to dccm or that you run
-the tools or dccm as different users. Please make sure that:</p>
+the tools and dccm as different users. Please make sure that:</p>
 
 <ul>
 <li>dccm is running</li>

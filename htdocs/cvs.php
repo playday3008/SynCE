@@ -23,7 +23,9 @@ separate window.) Then get these mandatory modules:</p>
 
 <ul>
 
-<li><b>rra</b> (for synchronization) - requires <a href="/tmp/libmimedir-0.2.tar.gz">libmimedir 0.2</a></li>
+<li><b>rra</b> (for synchronization) - requires <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550">libmimedir</a></li>
+
 <li><b>multisync_plugin</b> (for synchronization with MultiSync)</li>
 <li><b>trayicon</b> (to get a GNOME tray icon)</li>
 <li><b>gnomevfs</b> (to get a GNOME virtual file system)</li>

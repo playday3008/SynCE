@@ -8,12 +8,10 @@
 
 <h2>Overview</h2>
 
-<p>SynCE is capable of synchronizing address book data with for example <a
-href="http://www.ximian.com/products/evolution/">Ximian Evolution</a> using a
-plugin for <a href="http://multisync.sourceforge.net/">MultiSync</a>.</p>
-
-<p>The <a href="cvs.php">CVS version</a> of SynCE can also synchronize
-appointments and tasks.</p>
+<p>SynCE is capable of synchronizing calendar, task and address book data with
+for example <a href="http://www.ximian.com/products/evolution/">Ximian
+Evolution</a> using a plugin for <a
+href="http://multisync.sourceforge.net/">MultiSync</a>.</p>
 
 <p><b>Warning:</b> This is experimental software. Anything can happen. Use it
 at your own risk.</p>
@@ -28,7 +26,7 @@ at your own risk.</p>
 
 <tr><td>1.2.x or earlier</td><td>0.72</td><td>gnome-1</td><td>0.8.1</td><td>BRANCH_GNOME_1</td></tr>
 
-<tr><td>1.4.0 or later</td><td>0.80<sup>*</sup></td><td>HEAD</td><td>0.8.2<sup>*</sup></td><td>HEAD</td></tr>
+<tr><td>1.4.0 or later</td><td>0.80</td><td>HEAD</td><td>0.8.2<sup>*</sup></td><td>HEAD</td></tr>
 
 </table>
 

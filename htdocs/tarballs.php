@@ -74,11 +74,16 @@ make install
 cd ..</pre>
 </li>
 
+<li>Compile libmimedir:<br/>
+<pre>tar zxf synce-libmimedir-X.X.tar.gz
+cd libmimedir-X.X
+./configure
+make
+make install
+cd ..</pre>
+</li>
+
 <li>Compile rra:<br/>
-
-<p><b>Note:</b> The rra module in SynCE versions newer than 0.7 requires <a
-href="/tmp/libmimedir-0.2.tar.gz">libmimedir 0.2</a> installed.</p>
-
 <pre>tar zxf synce-rra-X.X.tar.gz
 cd synce-rra-X.X
 ./configure
