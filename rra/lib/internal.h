@@ -4,6 +4,8 @@
 
 #include "../rra_config.h"
 
+#include <stddef.h>
+
 #if !HAVE_STRNDUP
 char *rra_strndup (const char *s, size_t n);
 #define strndup rra_strndup
@@ -11,7 +13,7 @@ char *rra_strndup (const char *s, size_t n);
 
 #if !HAVE_STRCASESTR
 char *rra_strcasestr(const char *haystack, const char *needle);
-#define strndup rra_strndup
+#define strcasestr rra_strcasestr
 #endif
 
 #endif

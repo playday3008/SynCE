@@ -1,5 +1,7 @@
 /* $Id$ */
 #include "internal.h"
+#include <string.h>
+#include <ctype.h>
 
 /* XXX: poorly tested version for libc without GNU extensions */
 char *rra_strcasestr(const char *haystack, const char *needle)

@@ -19,6 +19,7 @@ librra_la_SOURCES = \
 	task.c
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
+librra_la_LIBADD   = @LTLIBOBJS@
 
 include_HEADERS = \
 	librra.h

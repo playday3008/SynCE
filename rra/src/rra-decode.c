@@ -9,7 +9,7 @@ static void
 dump(void* data, size_t len)
 {
 	uint8_t* buf = (uint8_t*)data;
-	size_t i, j;
+	unsigned i, j;
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
 
@@ -34,7 +34,7 @@ dump(void* data, size_t len)
 		hex[8*3] = '\0';
 		chr[8] = '\0';
 		if (hex[0] != ' ')
-			printf("%04x: %s %s\n", i, hex, chr);
+			printf("%04x: %s %s\n", (unsigned)i, hex, chr);
 	}
 }
 
@@ -42,7 +42,7 @@ static void
 db_dump(void* data, size_t len)
 {
 	uint8_t* buf = (uint8_t*)data;
-	size_t i, j;
+	unsigned i, j;
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
 

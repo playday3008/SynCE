@@ -1,5 +1,7 @@
 /* $Id$ */
 #include "internal.h"
+#include <stdlib.h>
+#include <string.h>
 
 char *rra_strndup (const char *s, size_t n)
 {

@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include "internal.h"
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
