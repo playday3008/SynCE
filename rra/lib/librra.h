@@ -132,6 +132,11 @@ bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
 #define RRA_CONTACT_VCARD_2_1      21
 #define RRA_CONTACT_VCARD_3_0      30
 
+/* flags for rra_contact_from_vcard() */
+
+#define RRA_CONTACT_ISO8859_1		0
+#define RRA_CONTACT_UTF8				1
+
 bool rra_contact_to_vcard(
 		uint32_t id, 
 		const uint8_t* data, 
@@ -144,7 +149,8 @@ bool rra_contact_from_vcard(
 		const char* vcard, 
 		uint32_t* id,
 		uint8_t** data, 
-		size_t* data_size);
+		size_t* data_size,
+		uint32_t flags);
 
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)

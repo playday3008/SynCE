@@ -487,6 +487,7 @@ typedef struct _Parser
 	int level;
 	CEPROPVAL* fields;
 	size_t field_index;
+	bool utf8;	/* default charset is utf8 */
 } Parser;
 
 #define NAME_FIELD_COUNT 5
@@ -584,9 +585,10 @@ static void unescape_string(char* value)/*{{{*/
 	*dest = '\0';
 }/*}}}*/
 
-static void set_string(CEPROPVAL* field, uint32_t id, const char* type, char* value)/*{{{*/
+static void add_string(Parser* parser, uint32_t id, const char* type, char* value)/*{{{*/
 {
 	char* converted = NULL;
+	CEPROPVAL* field = &parser->fields[parser->field_index++];
 	
 	field->propid = (id << 16) | CEVT_LPWSTR;
 
@@ -597,7 +599,7 @@ static void set_string(CEPROPVAL* field, uint32_t id, const char* type, char* va
 
 	unescape_string(value);
 
-	if (strstr(type, "UTF-8"))
+	if (parser->utf8 || strstr(type, "UTF-8"))
 		field->val.lpwstr = wstr_from_utf8(value);
 	else
 		field->val.lpwstr = wstr_from_ascii(value);
@@ -658,7 +660,6 @@ static bool parser_handle_field(/*{{{*/
 		char* value)
 {
 	bool success = false;
-	CEPROPVAL* field;
 
 	synce_trace("Found field '%s' with type '%s' and contents '%s'",
 			name, type, value);
@@ -713,8 +714,7 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
 	else if (STR_EQUAL(name, "FN"))/*{{{*/
 	{
-		field = &parser->fields[parser->field_index++];
-		set_string(field, ID_FULL_NAME, type, value);
+		add_string(parser, ID_FULL_NAME, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "N"))/*{{{*/
 	{
@@ -725,8 +725,7 @@ static bool parser_handle_field(/*{{{*/
 		{
 			if (name_ids[i] && *name[i])
 			{
-				field = &parser->fields[parser->field_index++];
-				set_string(field, name_ids[i], type, name[i]);
+				add_string(parser, name_ids[i], type, name[i]);
 			}
 			else
 				break;
@@ -756,8 +755,7 @@ static bool parser_handle_field(/*{{{*/
 		{
 			if (address_ids[i][where] && *address[i])
 			{
-				field = &parser->fields[parser->field_index++];
-				set_string(field, address_ids[i][where], type, address[i]);
+				add_string(parser, address_ids[i][where], type, address[i]);
 			}
 		}
 		
@@ -768,18 +766,15 @@ static bool parser_handle_field(/*{{{*/
 		/* TODO: make type uppercase */
 		if (strstr(type, "HOME"))
 		{
-			field = &parser->fields[parser->field_index++];
-			set_string(field, ID_HOME_TEL, type, value);
+			add_string(parser, ID_HOME_TEL, type, value);
 		}
 		else if (strstr(type, "WORK"))
 		{
-			field = &parser->fields[parser->field_index++];
-			set_string(field, ID_WORK_TEL, type, value);
+			add_string(parser, ID_WORK_TEL, type, value);
 		}
 		else if (strstr(type, "CELL"))
 		{
-			field = &parser->fields[parser->field_index++];
-			set_string(field, ID_MOBILE_TEL, type, value);
+			add_string(parser, ID_MOBILE_TEL, type, value);
 		}
 		else
 		{
@@ -797,34 +792,29 @@ static bool parser_handle_field(/*{{{*/
 					type, name);
 		}
 	
-		field = &parser->fields[parser->field_index++];
-		set_string(field, ID_EMAIL, type, value);
+		add_string(parser, ID_EMAIL, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "URL"))/*{{{*/
 	{
-		field = &parser->fields[parser->field_index++];
-		set_string(field, ID_WEB_PAGE, type, value);
+		add_string(parser, ID_WEB_PAGE, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "ORG"))/*{{{*/
 	{
 		char* separator = strchr(value, ';');
 		if (separator && separator[1])
 		{
-			field = &parser->fields[parser->field_index++];
-			set_string(field, ID_DEPARTMENT, type, separator + 1);
+			add_string(parser, ID_DEPARTMENT, type, separator + 1);
 			*separator = '\0';
 		}
 
 		if (value[0])
 		{
-			field = &parser->fields[parser->field_index++];
-			set_string(field, ID_COMPANY, type, value);
+			add_string(parser, ID_COMPANY, type, value);
 		}
 	}/*}}}*/
 	else if (STR_EQUAL(name, "TITLE"))/*{{{*/
 	{
-		field = &parser->fields[parser->field_index++];
-		set_string(field, ID_JOB_TITLE, type, value);
+		add_string(parser, ID_JOB_TITLE, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))/*{{{*/
 	{
@@ -878,7 +868,8 @@ static bool rra_contact_from_vcard2(/*{{{*/
 		const char* vcard, 
 		uint32_t* id,
 		CEPROPVAL* fields,
-		size_t* field_count)
+		size_t* field_count,
+		uint32_t flags)
 {
 	bool success = false;
 	Parser parser;
@@ -896,6 +887,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	parser.level          = 0;
 	parser.fields         = fields;
 	parser.field_index    = 0;
+	parser.utf8           = flags & RRA_CONTACT_UTF8;
 
 	while (*p && parser.field_index < max_field_count)
 	{
@@ -986,7 +978,8 @@ bool rra_contact_from_vcard(/*{{{*/
 		const char* vcard, 
 		uint32_t* id,
 		uint8_t** data, 
-		size_t* data_size)
+		size_t* data_size,
+		uint32_t flags)
 {
 	bool success = false;
 	CEPROPVAL fields[MAX_FIELD_COUNT];
@@ -996,7 +989,8 @@ bool rra_contact_from_vcard(/*{{{*/
 				vcard,
 				id,
 				fields,
-				&field_count))
+				&field_count,
+				flags))
 	{
 		synce_error("Failed to convert vCard to database entries");
 		goto exit;
