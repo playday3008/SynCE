@@ -8,6 +8,7 @@ lib_LTLIBRARIES = librra.la
 ## use these sources
 librra_la_SOURCES = \
 	dbstream.h dbstream.c \
+	contact.c \
 	librra.h   librra.c \
 	rrac.h     rrac.c \
 	strbuf.h   strbuf.c

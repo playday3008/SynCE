@@ -4,6 +4,8 @@
 .libs
 Makefile
 Makefile.in
+rra-contact-from-vcard
+rra-contact-to-vcard
 rra-db-vcal
 rra-db-vcard
 rra-decode

@@ -541,7 +541,7 @@ exit:
 	return success;
 }/*}}}*/
 
-bool rra_object_add(RRA* rra,  /*{{{*/
+bool rra_object_new(RRA* rra,  /*{{{*/
                     uint32_t type_id,
                     uint8_t* data,
                     size_t data_size,

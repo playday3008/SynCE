@@ -73,7 +73,7 @@ bool rra_object_put(RRA* rra,
                     size_t data_size,
 									  uint32_t* new_object_id);
 
-bool rra_object_add(RRA* rra,  
+bool rra_object_new(RRA* rra,  
                     uint32_t type_id,
                     uint8_t* data,
                     size_t data_size,
@@ -87,6 +87,7 @@ bool rra_object_update(RRA* rra,
 
 bool rra_object_delete(RRA* rra, uint32_t type_id, uint32_t object_id);
 
+/* manage partnerships */
 
 bool rra_partner_set_current(RRA* rra, uint32_t index);
 bool rra_partner_get_current(RRA* rra, uint32_t* index);
@@ -100,7 +101,35 @@ bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
 #define rra_partner_free_name(name)  rapi_reg_free_string(name)
 
 
+/*
+ * Convert contact data
+ */
 
+#define RRA_CONTACT_ID_UNKNOWN  0
+
+#define RRA_CONTACT_NEW     0
+#define RRA_CONTACT_UPDATE  1
+
+#define RRA_CONTACT_VCARD_UNKNOWN   0
+#define RRA_CONTACT_VCARD_2_1      21
+#define RRA_CONTACT_VCARD_3_0      30
+
+bool rra_contact_to_vcard(
+		uint32_t id, 
+		const uint8_t* data, 
+		size_t data_size,
+		uint32_t vcard_version,
+		char** vcard);
+
+bool rra_contact_from_vcard(
+		int command,
+		const char* vcard, 
+		uint32_t* id,
+		uint8_t** data, 
+		size_t* data_size);
+
+#define rra_contact_free_vcard(p) if (p) free(p)
+#define rra_contact_free_data(p)  if (p) free(p)
 
 #if 0
 bool rra_lock(RRA* rra);

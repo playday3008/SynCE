@@ -3,21 +3,21 @@
 #include <synce_log.h>
 #include <string.h>
 
-static uint16_t dbstream_read16(uint8_t** stream)
+static uint16_t dbstream_read16(const uint8_t** stream)
 {
 	uint16_t value = letoh16(*(uint16_t*)*stream);
 	*stream += sizeof(uint16_t);
 	return value;
 }
 
-static uint32_t dbstream_read32(uint8_t** stream)
+static uint32_t dbstream_read32(const uint8_t** stream)
 {
 	uint32_t value = letoh32(*(uint32_t*)*stream);
 	*stream += sizeof(uint32_t);
 	return value;
 }
 
-static WCHAR* dbstream_read_string(uint8_t** stream)
+static WCHAR* dbstream_read_string(const uint8_t** stream)
 {
 	WCHAR* str = (WCHAR*)*stream;
 	/*synce_trace_wstr(str);*/
@@ -32,7 +32,7 @@ static WCHAR* dbstream_read_string(uint8_t** stream)
  */
 
 bool dbstream_to_propvals(
-		uint8_t* stream,
+		const uint8_t* stream,
 		uint32_t count,
 		CEPROPVAL* propval)
 {
@@ -84,7 +84,7 @@ bool dbstream_to_propvals(
 
 			case CEVT_BLOB:
 				propval[i].val.blob.dwCount  = dbstream_read32(&stream);
-				propval[i].val.blob.lpb = stream;
+				propval[i].val.blob.lpb = (void*)stream;
 				stream += propval[i].val.blob.dwCount;
 				break;
 

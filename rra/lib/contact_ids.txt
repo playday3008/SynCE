@@ -1,0 +1,53 @@
+$Id$
+
+These are (probably) all fields possible for a contact.
+
+0017 blob
+3a05 string
+3a06 string
+3a08 string
+3a09 string
+3a11 string
+3a16 string
+3a17 string
+3a18 string
+3a19 string
+3a1c string
+3a1d string
+3a1e string
+3a24 string
+3a25 string
+3a2f string
+4001 filetime
+4002 string
+4003 filetime
+4004 string
+4005 string
+4006 string
+4007 string
+4008 string
+4009 string
+400a string
+4013 string
+4023 string
+4024 string
+4040 string
+4041 string
+4042 string
+4043 string
+4044 string
+4045 string 
+4046 string
+4047 string
+4048 string
+4049 string
+404a string
+404b string
+404c string
+404d string
+404e string
+4083 string
+4093 string
+40a3 string
+4317 string
+

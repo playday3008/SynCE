@@ -85,13 +85,13 @@ bool contact_to_vcard(
 				break;
 
 			case ID_WORK_TEL:
-				strbuf_append(vcard, "TEL;TYPE=work,voice,pref:");
+				strbuf_append(vcard, "TEL;TYPE=WORK,VOICE,PREF:");
 				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
 				strbuf_append_c(vcard, '\n');
 				break;
 
 			case ID_HOME_TEL:
-				strbuf_append(vcard, "TEL;TYPE=home,voice,pref:");
+				strbuf_append(vcard, "TEL;TYPE=HOME,VOICE,PREF:");
 				strbuf_append_wstr(vcard, pFields[i].val.lpwstr);
 				strbuf_append_c(vcard, '\n');
 				break;
