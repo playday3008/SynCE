@@ -7,7 +7,7 @@
 %define rel	1
 
 Name: %{name}
-Version: 0.6
+Version: 0.6.1
 Release: %{rel}
 Vendor: The SynCE Project
 Copyright: MIT
