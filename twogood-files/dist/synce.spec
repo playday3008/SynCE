@@ -60,7 +60,7 @@ for S in %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE3} %{SOURCE4} %{SOURCE5}; do
 done
 
 %install
-rm $RPM_BUILD_ROOT%{prefix}/include/libmimedir.h
+rm -f $RPM_BUILD_ROOT%{prefix}/include/libmimedir.h
 
 #
 # Try to prevent errors like this:

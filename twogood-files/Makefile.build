@@ -4,6 +4,8 @@ LIBMIMEDIR_TGZ=/home/david/src/synce/libmimedir-0.2.tar.gz
 all: install
 
 install:
+	mkdir -p $(PREFIX)/lib
+	mkdir -p $(PREFIX)/include
 	cd $(PREFIX) && tar zxf $(LIBMIMEDIR_TGZ) && cd `basename $(LIBMIMEDIR_TGZ) .tar.gz` && ./configure --prefix=$(PREFIX) && make install
 	cd serial   && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
 	cd libsynce && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
