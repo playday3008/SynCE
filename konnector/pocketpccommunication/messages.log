@@ -1,5 +1,0 @@
-gmake[2]: Entering directory `/develop/fips/FipsSoft/pocketpccommunication/src'
-xgettext: error while opening "/usr/local/kde/include/kde.pot" for reading: No such file or directory
-gmake[2]: *** [messages] Error 1
-gmake[2]: Leaving directory `/develop/fips/FipsSoft/pocketpccommunication/src'
-make exit code: 2
