@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 	result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
 	if (ERROR_SUCCESS != result)
 	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
+		fprintf(stderr, "%s: Unable to open registry key: %s\n", 
 				argv[0],
 				synce_strerror(result));
 		goto exit;
