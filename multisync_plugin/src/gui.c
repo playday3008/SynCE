@@ -15,9 +15,11 @@
 GtkWidget *syncewindow = NULL;
 Synce_Partner synce_partner_1;
 Synce_Partner synce_partner_2;
-GtkWidget *partner_menu;
-GtkWidget *get_all_button;
+GtkWidget *partner_menu = NULL;
+GtkWidget *partner_option_menu = NULL;
+GtkWidget *get_all_button = NULL;
 int new_partner_index = 0;
+int replace = 0;
 
 uint32_t current_partner;
 SynceConnection *connection = NULL;
@@ -39,7 +41,6 @@ GtkWidget* open_option_window(sync_pair *pair, connection_type type)
 {
     GladeXML *gladefile = NULL;
   
-  GtkWidget *partner_option_menu;
   GtkWidget *new_partner_button;
 
   GtkWidget *ok_button;
@@ -195,14 +196,6 @@ void synce_partner_menu_response_2(GtkMenuItem *menuitem, gpointer data)
   synce_partner_2.current = TRUE;
 }
 
-void synce_replace_old_partner(GtkButton *button, gpointer user_data)
-{
-}
-
-void synce_create_new_partner(GtkButton *button, gpointer user_data)
-{
-}
-
 gboolean synce_jump_to_page (GnomeDruidPage *druidpage,
                                  GtkWidget *widget,
                                  gpointer user_data) {
@@ -225,9 +218,8 @@ synce_tree_selection_changed (GtkTreeSelection *selection, gpointer user_data)
     {
         gtk_tree_model_get (model, &iter, 1, &author,0,&number, -1);
 
-        g_print ("You selcted %d: %s\n", number,author);
         new_partner_index = number;
-        
+       	replace = 1; 
 /* to be used to set next insensitive until something is 
  * selected, it doesn't work for some reason */
 #if 0
@@ -257,12 +249,11 @@ void synce_setup_replace_treeview(GtkWidget *replace_treeview, GtkWidget *druid)
                 0, 1,
                 1, synce_partner_1.name,
                 -1);
-#if 0 
+        gtk_list_store_append (store, &iter);  /* Acquire an iterator */
         gtk_list_store_set (store, &iter,
                 0, 2,
                 1, synce_partner_2.name,
                 -1);
-#endif
 
         gtk_tree_view_set_model (GTK_TREE_VIEW(replace_treeview), GTK_TREE_MODEL (store));
         g_object_unref (G_OBJECT (store));
@@ -324,6 +315,7 @@ void  synce_prepare_replace_page (GnomeDruidPage *druidpage,
 
 void synce_cancel_druid (GnomeDruid *druid,
         gpointer user_data) {
+	new_partner_index=0;
     gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(druid)));
 }
 
@@ -331,17 +323,9 @@ void synce_finish_partnership_druid (GnomeDruidPage *druidpage,
         GtkWidget *widget,
         gpointer user_data)
 {
-    GtkWidget *new_partner_entry = (GtkWidget *) user_data;
-    const gchar *name;
-    name = gtk_entry_get_text(GTK_ENTRY(new_partner_entry));
     if (new_partner_index == 0) {
         /* Error */
         synce_error_dialog ("You must select a partnership to replace!\nGo back and select one of the existing\npartnerships from the list, or click on\n the Cancel button if you want to keep\nyour current setup.");
-        return;
-    }
-    if (strlen(name) == 0) {
-        /* Error */
-        synce_error_dialog ("The name of the new partnership can't\nbe empty. Please go back and fill in a \nnice little name");
         return;
     }
    
@@ -350,9 +334,27 @@ void synce_finish_partnership_druid (GnomeDruidPage *druidpage,
    * is stored in new_parner_index (global). The name is stored 
    * in name.
    */
+	if (replace) {
+		rra_partner_replace(connection->rra,new_partner_index);
+	} else {
+		rra_partner_create(connection->rra,&new_partner_index);
+	}
+    rra_partner_set_current(connection->rra, new_partner_index);
 
     gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(druidpage)));
+}
 
+/* Since this function manipulates the menu, the druid must be destroyed
+ * before the option window. If the option window is destroyed before a 
+ * segfault may occur. We should add some mechanism to ensure this doesn't 
+ * happen. 
+ */
+void on_newpartnershipwindow_destroy (GtkObject *object, gpointer user_data) 
+{
+	if (new_partner_index != 0) {
+		gtk_option_menu_set_history(GTK_OPTION_MENU(partner_option_menu), 
+									new_partner_index-1);
+	}
 }
 
 void synce_new_partner_button(GtkButton *button, gpointer user_data)
@@ -360,12 +362,10 @@ void synce_new_partner_button(GtkButton *button, gpointer user_data)
     GladeXML *gladefile = NULL;
     GtkWidget *newpartnershipwindow;
     GtkWidget *replace_druidpage;
-    GtkWidget *name_druidpage;
     GtkWidget *start_druidpage;
     GtkWidget *finish_druidpage;
     GtkWidget *replace_treeview;
     GtkWidget *partnershipdruid;
-    GtkWidget *new_partner_entry;
     
         gladefile = glade_xml_new(SYNCE_MULTISYNC_GLADEFILE, "newpartnershipwindow", NULL); 
 
@@ -375,12 +375,10 @@ void synce_new_partner_button(GtkButton *button, gpointer user_data)
     replace_treeview = glade_xml_get_widget(gladefile,"replace_treeview");
     
     replace_druidpage = glade_xml_get_widget(gladefile,"replace_druidpage");
-    name_druidpage = glade_xml_get_widget(gladefile,"name_druidpage");
     start_druidpage = glade_xml_get_widget(gladefile,"start_druidpage");
     finish_druidpage = glade_xml_get_widget(gladefile,"finish_druidpage");
-    new_partner_entry = glade_xml_get_widget(gladefile,"new_partner_entry");
 
-    gtk_signal_connect(GTK_OBJECT(finish_druidpage), "finish", GTK_SIGNAL_FUNC(synce_finish_partnership_druid), new_partner_entry);
+    gtk_signal_connect(GTK_OBJECT(finish_druidpage), "finish", GTK_SIGNAL_FUNC(synce_finish_partnership_druid),NULL);
     
 /* to be used to set next insensitive until something is 
  * selected, it doesn't work for some reason */
@@ -393,8 +391,8 @@ void synce_new_partner_button(GtkButton *button, gpointer user_data)
         synce_setup_replace_treeview(replace_treeview, partnershipdruid);
         
     } else {
-        gtk_signal_connect(GTK_OBJECT(start_druidpage), "next", GTK_SIGNAL_FUNC(synce_jump_to_page), name_druidpage);
-        gtk_signal_connect(GTK_OBJECT(name_druidpage), "back", GTK_SIGNAL_FUNC(synce_jump_to_page), start_druidpage);
+        gtk_signal_connect(GTK_OBJECT(start_druidpage), "next", GTK_SIGNAL_FUNC(synce_jump_to_page), finish_druidpage);
+        gtk_signal_connect(GTK_OBJECT(finish_druidpage), "back", GTK_SIGNAL_FUNC(synce_jump_to_page), start_druidpage);
         if (synce_partner_1.exist) {
             /* If only partner 1 exists, create new partner 2 */
             new_partner_index = 2;
@@ -406,8 +404,8 @@ void synce_new_partner_button(GtkButton *button, gpointer user_data)
         }
     }
 
+	gtk_signal_connect(GTK_OBJECT(newpartnershipwindow), "destroy", GTK_SIGNAL_FUNC(on_newpartnershipwindow_destroy), NULL);
     gtk_widget_show_all(newpartnershipwindow);
-
 }
 
 void synce_ok_button(GtkButton *button, gpointer user_data)
