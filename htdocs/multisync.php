@@ -40,19 +40,57 @@ SynCE plugin.</li>
 
 </ol>
 
-<h2>Frequently Asked Questions</h2>
+<h2>Questions and Answers</h2>
 
 <p>
 
 <b>Q:</b> All contacts from Evolution were synchronized to the Pocket PC, but
 not all contacts from Pocket PC were synchronized to Evolution, why is
-that?
+that? </p>
 
-<br>
+<p>
 
 <b>A:</b> You are probably using the same partnership as you have used with
 ActiveSync before. See <i>Using both SynCE and ActiveSync</i> below for more
 information.
+
+</p>
+
+<hr size=1 width="50%">
+
+<p>
+
+<b>Q:</b> Synchronization from Pocket PC to Evolution fails with these
+messages:
+
+<pre>[rrac_recv_reply_6f_c1:402] Unexpected command
+[rra_get_object_types:118] Failed to receive reply
+[rra_get_object_ids:174] Failed to get object types
+[synce_get_changed_objects:44] Failed to get object ids</pre>
+
+or with this message:
+
+<pre>[synce_get_changed_objects:44] Failed to get object ids</pre>
+
+<b>A:</b> These are bugs that are not yet fixed. You may make it easier to fix
+them by telling how you got them :
+
+<ol>
+
+<li>Change the <tt>#define</tt> named <tt>DUMP_PACKETS</tt> from
+<tt>0</tt> to <tt>1</tt> in <tt>rra/lib/rrac.c</tt></li>
+
+<li>Recompiling and installing <tt>rra</tt></li>
+
+<li>Recompiling and installing <tt>multisync_plugin</tt></li>
+
+<li>Reproducing the problem</li>
+
+<li>Sending relevant parts of the output from MultiSync to the <a
+href="http://lists.sourceforge.net/mailman/listinfo/synce-devel">synce-devel</a>
+mailing list.</li>
+
+</ol>
 
 </p>
 
