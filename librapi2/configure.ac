@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/rapi_buffer.c)
 AM_INIT_AUTOMAKE(librapi, 0.1)
-AM_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER(rapi_config.h)
 	
 dnl Checks for programs.
 AC_PROG_AWK
@@ -36,4 +36,5 @@ LIBRAPI_AM_ICONV()
 
 AC_OUTPUT([Makefile
            src/Makefile
+					 src/config/Makefile
 					 tests/Makefile])

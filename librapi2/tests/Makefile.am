@@ -1,6 +1,7 @@
 ## useful flags
 CFLAGS = -ggdb -Wall -ansi -pedantic -I../src @CHECK_CFLAGS@
-LIBS = -L../src -lrapi @CHECK_LIBS@
+LIBS = @CHECK_LIBS@
+LDADD = ../src/librapi.la
 
 check_PROGRAMS = test-internals
 
