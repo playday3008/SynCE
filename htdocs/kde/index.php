@@ -72,7 +72,16 @@ of PDAs to interested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</blockquote>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
-<b>September 9, 2003 </b>SynCE-KDE 0.6.1 is released!<br>
+<b>October 9, 2003</b> There is some progress in letting SynCE-KDE (cvs) run on
+KDE-3.1.90 (cvs) the upcoming KDE-3.2 release.
+<ul>
+<li>RAPIP is running. There are of course some things left to be worked on.</li>
+<li>RAKI is also working but the KDE addressbook synchronizer is not due to massive
+changes in the KABC API. Nevertheless, the synchronizer would be compiled, but do
+not use it - RAKI would be blocked entireyl.</li>
+<li>VDCCM doesn't have any problems on KDE-3.1.90 (cvs) at all.</li>
+</ul>
+<b>September 9, 2003</b> SynCE-KDE 0.6.1 is released!<br>
 <ul>
   <li>This is a bug fix release. The annoying "33%" bug which has
 prevented RAKI to run on some Linux distributions is fixed.</li>
