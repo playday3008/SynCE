@@ -4,7 +4,7 @@ int main()
 {
 	VERIFY_HRESULT(CeRapiInit());
 
-	WCHAR* path = to_unicode("\\*.*");
+	WCHAR* path = to_unicode("\\My Documents\\*.*");
 
 	CE_FIND_DATA* find_data = NULL;
 	DWORD file_count = 0;
