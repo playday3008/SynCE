@@ -14,6 +14,9 @@ a Windows CE device from a computer running Linux, *BSD or other unices.</p>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>May 28, 2004</b> New page linking to all <a href="notes.php">Developer's
+notes</a></p>
+
 <p><b>May 4, 2004</b> Support for recurring appointments is coming along
 nicely, the PWI file format is getting decoded, a script called <a
 href="contrib/pcp-r">pcp-r</a> by Henrik Isacsson seems very useful, our new
@@ -212,75 +215,6 @@ if you want to help us!</p>
 */ ?>
 
 <hr size=1>
-
-<h2>Site contents</h2>
-
-<h3>General</h3>
-
-<ul>
-<li><a href="#news">News</a></li>
-<li><a href="#overview">Overview</a></li>
-<li class=SPACED><a href="links.php">Links</a></li>
-
-<li><a href="download.php">Download and install</a></li>
-<li><a href="setup.php">Setup</a></li>
-<li><a href="start.php">Connect</a></li>
-<li><a href="tools.php">Tools</a></li>
-<li><a href="disconnect.php">Disconnect</a></li>
-<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
-<li><a href="qa.php">Questions and Answers</a></li>
-<li class=SPACED><a href="help.php">Get help</a></li>
-
-<li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
-</ul>
-
-<h3>Integration with desktop environments</h3>
-
-<ul>
-
-<li><a href="gnome.php">GNOME</a></li>
-<li><a href="kde/">KDE</a></li>
-
-<li><a href="pyrapi/ce_dirview/">CE_DirView</a></li>
-
-</ul>
-
-<h3>Operating system-specific details</h3>
-
-<ul>
-
-<li><a href="freebsd.php">FreeBSD</a></li>
-<li><a href="linux.php">Linux</a></li>
-<li><a href="macosx.php">MacOS X</a></li>
-<li><a href="openbsd.php">OpenBSD</a></li>
-
-</ul>
-
-<h3>Extras</h3>
-
-<ul>
-
-<li><a href="orange.php">The Orange tool and library</a></li>
-<li><a href="unshield.php">The Unshield tool and library</a></li>
-<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
-
-</ul>
-
-<h3>Development information</h3>
-
-<ul>
-
-<li><a href="tasks.php">Help wanted!</a></li>
-<li><a href="architecture.php">Architecture</a></li>
-<li><a href="#developers">The SynCE developers</a></li>
-<li><a href="capture.php">How to capture packets for analyzing</a></li>
-<li><a href="#future">Future</a></li>
-
-
-</ul>
-
-
-<hr size=1>
 <p>
 
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
@@ -307,6 +241,77 @@ alt="Make a donation" title="Make a donation"></td>
 
 </p>
 <hr size=1>
+
+<h2>Site contents</h2>
+
+<table widht="100%"><tr><td width="50%" valign="top">
+
+<h3>General</h3>
+
+<ul>
+<li><a href="#news">News</a></li>
+<li><a href="#overview">Overview</a></li>
+<li class=SPACED><a href="links.php">Links</a></li>
+
+<li><a href="download.php">Download and install</a></li>
+<li><a href="setup.php">Setup</a></li>
+<li><a href="start.php">Connect</a></li>
+<li><a href="tools.php">Tools</a></li>
+<li><a href="disconnect.php">Disconnect</a></li>
+<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
+<li><a href="qa.php">Questions and Answers</a></li>
+<li class=SPACED><a href="help.php">Get help</a></li>
+
+<li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
+</ul>
+
+<h3>Extras</h3>
+
+<ul>
+<li><a href="orange.php">The Orange tool and library</a></li>
+<li><a href="unshield.php">The Unshield tool and library</a></li>
+<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
+</ul>
+
+</td><td width="50%" valign="top">
+
+<h3>Integration with desktop environments</h3>
+
+<ul>
+
+<li><a href="gnome.php">GNOME</a></li>
+<li><a href="kde/">KDE</a></li>
+
+<li><a href="pyrapi/ce_dirview/">CE_DirView</a></li>
+
+</ul>
+
+<h3>Operating system-specific details</h3>
+
+<ul>
+
+<li><a href="freebsd.php">FreeBSD</a></li>
+<li><a href="linux.php">Linux</a></li>
+<li><a href="macosx.php">MacOS X</a></li>
+<li><a href="openbsd.php">OpenBSD</a></li>
+
+</ul>
+
+<h3>Development information</h3>
+
+<ul>
+<li><a href="notes.php">Developer's notes</a></li>
+<li><a href="tasks.php">Help wanted!</a></li>
+<li><a href="architecture.php">Architecture</a></li>
+<li><a href="developers.php">The SynCE developers</a></li>
+<li><a href="capture.php">How to capture packets for analyzing</a></li>
+<li><a href="#future">Future</a></li>
+</ul>
+
+</td></tr></table>
+
+<hr size=1>
+
 
 <a name="overview"></a>
 <h2>Overview</h2>
@@ -363,48 +368,6 @@ synchronize Contacts.</td>
 <p>In the future, SynCE must be more user-friendly.</p>
 
 <p>Please read the <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap.txt?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">roadmap</a> for more details.</p>
-
-<a name="developers"></a><h2>The SynCE developers</h2>
-
-<p>Please note that if you have questions or comments about SynCE you should
-not mail the developers directly, but use a suitable <a
-href="http://sourceforge.net/mail/?group_id=30550">mailing list</a>.</p>
-
-<p><a href="mailto:llange@users.sourceforge.net">Ludovic Lange</a> started the
-SynCE project and did the hard work in figuring out many of the properitary
-interfaces.</p>
-
-<p><a href="mailto:twogood@users.sourceforge.net">David Eriksson</a> is the
-current project manager and most active developer. Also the author of these
-simple web pages.</p>
-
-<p><a href="mailto:hippy@users.sourceforge.net">Richard Taylor</a> is working
-on PyRAPI, Python wrappers for RAPI.</p>
-
-<p><a href="mailto:vganesh@users.sourceforge.net">Ganesh Varadarajan</a> has
-developed serial-over-USB driver for SynCE, both userspace and kernel
-versions.</p>
-
-<p><a href="mailto:sassur@users.sourceforge.net">Fredrik Nilsson</a> is the
-author of the SynCE GNOME-VFS module.</p>
-
-<p><a href="mailto:voc@users.sourceforge.net">Volker Christian</a> works with
-KDE 3.x integration in the <tt>rapip</tt> module.</p>
-
-<p><a href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> has created a
-Perl language mapping for RAPI.</p>
-
-<p><a href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a> is
-responsible for making Debian packages of SynCE releases.</p>
-
-<p><a href="mailto:jonmcd@users.sourceforge.net">Jonathan McDowell</a> will
-help out with Debian packages and other things.</p>
-
-<p><a href="mailto:snaggen@users.sourceforge.net">Mattias Eriksson</a> support
-the GNOME applications in SynCE.</p>
-
-<p><a href="mailto:mbier@users.sourceforge.net">Markus Biermaier</a> works with
-<a href="pyrapi/ce_dirview/">CE_DirView</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>
