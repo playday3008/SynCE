@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
     KApplication a;
 
-    CeScreen *ceScreen = new CeScreen(pdaName, &aboutData, new KAboutApplication(&aboutData));
+    CeScreen *ceScreen = new CeScreen(&aboutData, new KAboutApplication(&aboutData));
 
     if (!ceScreen->connectPda(pdaName, synce, forceInstall)) {
         kdDebug(2120) << "Could not contact PDA " << pdaName << endl;

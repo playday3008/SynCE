@@ -213,7 +213,7 @@ class CeScreen : public KMainWindow
 {
     Q_OBJECT
 public:
-    CeScreen(QString pdaName, KAboutData *aboutData, KAboutApplication *aboutApplication);
+    CeScreen(KAboutData *aboutData, KAboutApplication *aboutApplication);
     ~CeScreen();
     bool connectPda(QString pdaName, bool isSynCeDevice = true, bool forceInstall = false);
 
@@ -261,6 +261,8 @@ private:
     QString getDeviceIp(QString pdaAddress);
     int mapKey(int code);
     ImageViewer *imageViewer;
+    uint32_t width;
+    uint32_t height;
 
     static struct _keymap {
         int winVkCode;

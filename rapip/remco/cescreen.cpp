@@ -157,7 +157,7 @@ struct CeScreen::_keymap CeScreen::keymap[] =
     };
 
 
-CeScreen::CeScreen(QString pdaName, KAboutData *aboutData, KAboutApplication *aboutApplication)
+CeScreen::CeScreen(KAboutData *aboutData, KAboutApplication *aboutApplication)
         : KMainWindow(NULL, "PdaScreen")
 {
     imageViewer = new ImageViewer(this);
@@ -308,9 +308,9 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
     m = read(pdaSocket->socket(), &xN, sizeof(long));
     k = read(pdaSocket->socket(), &yN, sizeof(long));
     if (m > 0 && k > 0) {
-        uint32_t x = ntohl(xN);
-        uint32_t y = ntohl(yN);
-        emit pdaSize((int) x, (int) y);
+        width = ntohl(xN);
+        height = ntohl(yN);
+        emit pdaSize((int) width, (int) height);
     }
 
     return true;
@@ -543,8 +543,8 @@ void CeScreen::sendMouseEvent(long int button, long int cmd, long int x, long in
 
     *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(button);
     *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(cmd);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 2] = htonl((long) (65535 * x / 240));
-    *(uint32_t *) &buf[sizeof(uint32_t) * 3] = htonl((long) (65535 * y / 320));
+    *(uint32_t *) &buf[sizeof(uint32_t) * 2] = htonl((long) (65535 * x / width));
+    *(uint32_t *) &buf[sizeof(uint32_t) * 3] = htonl((long) (65535 * y / height));
 
     write(pdaSocket->socket(), buf, 4 * sizeof(uint32_t));
 }
