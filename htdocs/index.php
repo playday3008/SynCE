@@ -13,11 +13,13 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#news">News</a></li>
+<li><a href="#helpwanted">Help wanted!</a></li>
 <li><a href="#overview">Overview</a></li>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="using.php">Download and use SynCE</a></li>
 <li><a href="#future">Future</a></li>
-<li><a href="#developers">Developers</a></li>
+<li><a href="#developers">The SynCE developers</a></li>
+<li><a href="capture.php">How to capture packets for analyzing</a></li>
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
 <li><a href="links.php">Links</a></li>
 </ul>
@@ -33,6 +35,35 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <h2>News</h2>
 
 <p><b>Today</b>. Working on a new homepage!</p>
+
+<a name="helpwanted"></a>
+<h2>Help wanted!</h2>
+
+<p>We need some responsbile people who want to develop the following extensions
+on top of the SynCE project:</p>
+
+<ul>
+
+<li class=SPACED>GNOME 2 integration:<ul>
+
+<li>A <a
+href="http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html">GNOME-VFS
+module</a>.</li>
+
+<li>An applet or similar that shows when a device is connected.</li>
+
+</ul></li>
+
+<li>KDE 3 integration:<ul>
+
+<li>A KDE I/O slave for KDE 3. (There is already an I/O slave for KDE 2, you
+just need to make it work with KDE 3.)</li>
+
+<li>A system tray icon that shows when a device is connected.</li>
+
+</ul></li>
+
+</ul>
 
 <a name="overview"></a>
 <h2>Overview</h2>
@@ -74,7 +105,7 @@ use with SynCE.</td>
 
 <p>Please read the <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap.txt?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">roadmap</a> for more details.</p>
 
-<a name="developers"></a><h2>Developers</h2>
+<a name="developers"></a><h2>The SynCE developers</h2>
 
 <p><a href="mailto:llange@users.sourceforge.net">Ludovic Lange</a> started the
 SynCE project and did the hard work in figuring out the properitary

@@ -10,6 +10,8 @@
 
 <p>The desktop computer (client) connects to port 990 on the Windows CE device (server).</p>
 
+<p>There is some <a href="packet.php">old documentation</a> available.</p>
+
 <p>TODO: more documentation here. In the mean time, look at the <a
 href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/librapi2/src/">source
 code</a> - if you dare!</p>
