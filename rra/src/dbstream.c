@@ -19,7 +19,7 @@ static uint32_t dbstream_read32(uint8_t** stream)
 static WCHAR* dbstream_read_string(uint8_t** stream)
 {
 	WCHAR* str = (WCHAR*)*stream;
-	synce_trace_wstr(str);
+	/*synce_trace_wstr(str);*/
 	*stream += sizeof(WCHAR) * (wstrlen(str) + 1);
 	return str;
 }

@@ -37,6 +37,8 @@ bool contact_to_vcard(
 		/* TODO: validate data types */
 		switch (pFields[i].propid >> 16)
 		{
+			/* case ID_NOTE: */
+			
 			case ID_SUFFIX:
 				suffix = pFields[i].val.lpwstr;
 				break;

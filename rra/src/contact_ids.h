@@ -1,6 +1,7 @@
 #ifndef __contact_ids_h__
 #define __contact_ids_h__
 
+#define ID_NOTE         0x0017
 #define ID_SUFFIX       0x3a05
 #define ID_FIRST_NAME   0x3a06
 #define ID_WORK_TEL     0x3a08

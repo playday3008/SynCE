@@ -1,542 +1,70 @@
 // $Id$
-#include "rra.h"
+#include <iostream>
+#include <fstream>
+#include <cstdio>
+#include <cassert>
+#include <cstring>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <synce.h>
 #include <synce_log.h>
 #include <rapi.h>
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-#include <unistd.h>
+#include "rra.h"
 #include "dbstream.h"
 #include "contact.h"
 
+
+using namespace std;
+using namespace synce;
+
 #define RRAC_PORT 5678
-
-#if 0
-enum Command
-{
-UNKNOWN_COMMAND,
-COMMAND_67,
-COMMAND_6F_ANY,
-COMMAND_6F_6,
-COMMAND_6F_C1,
-COMMAND_70_2_1,
-COMMAND_70_2_2
-};
-
-enum Action
-{
-UNKNOWN_ACTION,
-MODIFY, 
-DELETE
-};
-
-Command last_sent;
-Action action;
-uint32_t current_type;
-uint32_t current_id;
-bool expect_data = false;
-
-#endif
 
 typedef struct
 {
-uint32_t offset_00;
-WCHAR name1[100];
-WCHAR name2[80];
-uint32_t type_id;
-uint32_t object_count;
-uint32_t total_size;
-FILETIME filetime;
+	uint32_t offset_00;
+	WCHAR name1[100];
+	WCHAR name2[80];
+	uint32_t type_id;
+	uint32_t object_count;
+	uint32_t total_size;
+	FILETIME filetime;
 } ObjectTypeRecord;
 
 /* Dump a block of data for debugging purposes */
-static void
+	static void
 dump(const char *desc, void* data, size_t len)
 {
-uint8_t* buf = (uint8_t*)data;
-size_t i, j;
-char hex[8 * 3 + 1];
-char chr[8 + 1];
+	uint8_t* buf = (uint8_t*)data;
+	size_t i, j;
+	char hex[8 * 3 + 1];
+	char chr[8 + 1];
 
-printf("%s (%d bytes):\n", desc, len);
-for (i = 0; i < len + 7; i += 8) {
+	printf("%s (%d bytes):\n", desc, len);
+	for (i = 0; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
-	if (j + i >= len) {
-		hex[3*j+0] = ' ';
-		hex[3*j+1] = ' ';
-		hex[3*j+2] = ' ';
-		chr[j] = ' ';
-	} else {
-		uint8_t c = buf[j + i];
-		const char *hexchr = "0123456789abcdef";
-		hex[3*j+0] = hexchr[(c >> 4) & 0xf];
-		hex[3*j+1] = hexchr[c & 0xf];
-		hex[3*j+2] = ' ';
-		if (c > ' ' && c <= '~')
-			chr[j] = c;
-		else
-			chr[j] = '.';
-	}
+			if (j + i >= len) {
+				hex[3*j+0] = ' ';
+				hex[3*j+1] = ' ';
+				hex[3*j+2] = ' ';
+				chr[j] = ' ';
+			} else {
+				uint8_t c = buf[j + i];
+				const char *hexchr = "0123456789abcdef";
+				hex[3*j+0] = hexchr[(c >> 4) & 0xf];
+				hex[3*j+1] = hexchr[c & 0xf];
+				hex[3*j+2] = ' ';
+				if (c > ' ' && c <= '~')
+					chr[j] = c;
+				else
+					chr[j] = '.';
+			}
 		hex[8*3] = '\0';
 		chr[8] = '\0';
 		printf("  %04x: %s %s\n", i, hex, chr);
-}
-}
-
-#if 0
-
-void send_command_67(
-	Socket* client, 
-	uint32_t type, 
-	uint32_t count, 
-	uint32_t* oids)
-{
-struct
-{
-	uint16_t command;
-	uint16_t size;
-	uint32_t unknown;
-	uint32_t type;
-	uint32_t count;
-} header;
-
-if (count)
-{
-	synce_trace("Sending package!");
-
-	header.command = 0x0067;
-	header.size    = sizeof(header) - 4 + count * sizeof(uint32_t);
-	header.unknown = 0;
-	header.type    = type;
-	header.count   = count;
-	dump("command 67 header", &header, sizeof(header));
-	client->Write(&header, sizeof(header));
-	client->Write(oids, count * sizeof(uint32_t));
-
-	expect_data = true;
-	last_sent = COMMAND_67;
-}
-}
-
-
-void send_command_6f(Socket* client, uint32_t subcommand)
-{
-struct
-{
-	uint16_t command;
-	uint16_t size;
-	uint32_t subcommand;
-} package;
-
-synce_trace("Subcommand: %08x", subcommand);
-
-package.command = 0x006f;
-package.size = sizeof(package) - 4;
-package.subcommand = subcommand;
-client->Write(&package, sizeof(package));
-last_sent = COMMAND_6F_ANY;
-}
-
-void send_command_6f_6(Socket* client)
-{
-send_command_6f(client, 6);
-last_sent = COMMAND_6F_6;
-}
-
-void send_command_6f_c1(Socket* client)
-{
-send_command_6f(client, 0xc1);
-last_sent = COMMAND_6F_C1;
-}
-
-void send_command_70_2_1(Socket* client)
-{
-struct
-{
-	uint16_t command;
-	uint16_t size;
-	uint32_t size2;
-	uint32_t unknown1;
-	uint32_t subcommand;
-	uint8_t empty1[0xc8];
-	uint32_t subsubcommand;
-	uint32_t unknown2;
-	uint8_t empty2[0x18];
-} package;
-
-package.command = 0x70;
-package.size = sizeof(package) - 4;
-package.size2 = package.size - 4;
-package.unknown1 = 0xf0000001;
-package.subcommand = 2;
-memset(package.empty1, 0, sizeof(package.empty1));
-package.subsubcommand = 1;
-package.unknown2 = 0x80000003;
-memset(package.empty2, 0, sizeof(package.empty2));
-
-dump("command 70,2,1", &package, sizeof(package));
-
-client->Write(&package, sizeof(package));
-last_sent = COMMAND_70_2_1;
-}
-
-void send_command_70_2_2(Socket* client)
-{
-struct
-{
-	uint16_t command;
-	uint16_t size;
-	uint32_t size2;
-	uint32_t unknown1;
-	uint32_t subcommand;
-	uint8_t empty1[0xc8];
-	uint32_t subsubcommand;
-	uint32_t unknown2;
-	uint8_t empty2[0x18];
-} package;
-
-package.command = 0x70;
-package.size = sizeof(package) - 4;
-package.size2 = package.size - 4;
-package.unknown1 = 0xf0000001;
-package.subcommand = 2;
-memset(package.empty1, 0, sizeof(package.empty1));
-package.subsubcommand = 2;
-package.unknown2 = 0;
-memset(package.empty2, 0, sizeof(package.empty2));
-
-dump("command 70,2,2", &package, sizeof(package));
-
-client->Write(&package, sizeof(package));
-last_sent = COMMAND_70_2_2;
-}
-
-void send_command_70_3(Socket* client, uint32_t count, uint32_t* oids)
-{
-struct
-{
-	uint16_t command;
-	uint16_t size;
-	uint32_t size2;
-	uint32_t stuff[6];
-	uint32_t count;
-} package;
-
-package.command = 0x70;
-package.size = sizeof(package) - 4 + count * sizeof(uint32_t);
-package.size2 = package.size - 4;
-package.stuff[0] = 0xf0000001;
-package.stuff[1] = 3;
-package.stuff[2] = 2;
-package.stuff[3] = 0;
-package.stuff[4] = 0;
-package.stuff[5] = 0;
-package.count = count;
-
-dump("Package", &package, sizeof(package));
-client->Write(&package, sizeof(package));
-if (count)
-	client->Write(oids, count * sizeof(uint32_t));
-}
-
-void handle_command_65(Socket* client)
-{
-uint16_t size = client->Read16();
-unsigned char* buffer = client->Read(size);
-dump("command 65", buffer, size);
-delete[] buffer;
-}
-
-void handle_command_69_subcommand_2(Socket* client, unsigned size)
-{
-struct package_type
-{
-	uint32_t stuff[3];
-	uint32_t partner_index;
-	uint32_t partner_id[2];
-} *package;
-
-synce_warning_unless(size == 0x18, "Unexpected size: %04x", size);
-
-package = (package_type*)client->Read(size);
-
-synce_warning_unless(0xffffffff == package->stuff[0], 
-		"Unexpected value for stuff[0]: %08x", package->stuff[0]);
-	synce_warning_unless(3 == package->stuff[1], 
-		"Unexpected value for stuff[1]: %08x", package->stuff[1]);
-	synce_warning_unless(0xc == package->stuff[2], 
-		"Unexpected value for stuff[2]: %08x", package->stuff[2]);
-
-synce_trace("Partner info: index = %i, ID 1 = %08x, ID 2 = %08x",
-		package->partner_index, package->partner_id[0], package->partner_id[1]);
-
-delete package;
-}
-
-void handle_command_69_subcommand_0_or_4_or_6(Socket* client, unsigned subcommand, unsigned size)
-{
-struct package_type
-{
-	uint32_t oid;
-	uint32_t some_count;
-	uint32_t size;
-} *package;
-
-uint8_t* buffer = client->Read(size);
-package = (package_type*)buffer;
-
-int total_count = package->size / 4;
-
-synce_trace("subcommand=%08x, oid=0x%x, modified=%i, deleted=%i, size=0x%x",
-		subcommand, package->oid, package->some_count, total_count -
-		package->some_count, package->size);
-
-uint32_t* ids = (uint32_t*)(buffer + sizeof(package_type));
-
-switch (subcommand)
-{
-	case 0:
-		synce_warning_unless(
-				package->size == 4, 
-				"Unexpected package size: %x",
-				package->size);
-
-		action = package->some_count ? MODIFY : DELETE;
-		current_type = package->oid;
-		current_id = ids[0];
-		send_command_70_2_1(client);
-		break;
-
-	case 0x06000000:
-		send_command_6f_6(client);
-		break;
-}
-
-//	send_command_67(client, package->oid, package->some_count, ids);
-
-
-delete[] buffer;
-
-#if 0
-unsigned char* buffer = client->Read(size);
-dump("command 69, subcommand 4 or 6", buffer, size);
-delete[] buffer;
-#endif
-}
-
-void handle_command_69_unknown_subcommand(Socket* client, unsigned size)
-{
-unsigned char* buffer = client->Read(size);
-dump("command 69, unknown subcommand", buffer, size);
-delete[] buffer;
-}
-
-void handle_command_69(Socket* client)
-{
-uint16_t size = client->Read16();
-synce_trace("Size: %04x", size);
-
-uint32_t subcommand = client->Read32();
-size -= 4;
-
-synce_trace("Subcommand: %08x", subcommand);
-
-switch (subcommand)
-{
-	case 0x02000000: handle_command_69_subcommand_2(client, size); break;
-	case 0x00000000: handle_command_69_subcommand_0_or_4_or_6(client, subcommand, size); break;
-	case 0x04000000: handle_command_69_subcommand_0_or_4_or_6(client, subcommand, size); break;
-	case 0x06000000: handle_command_69_subcommand_0_or_4_or_6(client, subcommand, size); break;
-	default:   			 handle_command_69_unknown_subcommand(client, size); break;
-}
-}
-
-void dump_objtypeinfo(ObjectTypeRecord* typeinfo)
-{
-char* name1 = wstr_to_ascii(typeinfo->name1);
-char* name2 = wstr_to_ascii(typeinfo->name2);
-
-synce_trace("Type: \"%s\", \"%s\", oid=0x%x, count=%i, size=%i", name1, name2,
-		typeinfo->oid, typeinfo->object_count, typeinfo->total_size);
-
-wstr_free_string(name1);
-wstr_free_string(name2);
-}
-
-void handle_command_6f_reply(Socket* client, unsigned size)
-{
-uint8_t* buffer = client->Read(size);
-
-dump("reply to command 6f", buffer, 0x20);
-
-switch (last_sent)
-{
-	case COMMAND_6F_6:
-		dump("reply to command 6f,6", buffer, size);
-		break;
-
-	case COMMAND_6F_C1:
-		{
-			uint32_t count = *(uint32_t*)(buffer + 0x1c);
-
-			ObjectTypeRecord* typeinfo = (ObjectTypeRecord*)(buffer + 0x20);
-
-			for (uint32_t i = 0; i < count; i++)
-				dump_objtypeinfo(typeinfo+i);
-
-			synce_warning_unless(0x20 == (size - (count * sizeof(ObjectTypeRecord))),
-					"Unexpected size of command");
-
-			uint32_t* oids = new uint32_t[count - 1];
-
-			int j = 0;
-			for (unsigned i = 0; i < count; i++)
-			{
-				if (typeinfo[i].oid != 0x2712)
-					oids[j++] = typeinfo[i].oid;
-			}
-
-			send_command_70_3(client, count - 1, oids);
-
-			delete[] oids;
-		}
-		break;
-}
-
-delete[] buffer;
-}
-
-void handle_command_70_reply(Socket* client, unsigned size)
-{
-unsigned char* buffer = client->Read(size);
-dump("reply to command 70", buffer, size);
-delete[] buffer;
-
-if (COMMAND_70_2_1 == last_sent)
-{
-	switch (action)
-	{
-		case MODIFY:
-			send_command_67(client, current_type, 1, &current_id);
-			break;
-		
-		case DELETE:
-			send_command_70_2_2(client);
-			send_command_6f_6(client);
-			break;
 	}
 }
-}
-
-void handle_unknown_reply(Socket* client, unsigned size)
-{
-unsigned char* buffer = client->Read(size);
-dump("reply to unknown command", buffer, size);
-delete[] buffer;
-}
-
-void handle_command_6c(Socket* client)
-{
-uint16_t size = client->Read16();
-synce_trace("Size: %04x", size);
-
-uint32_t reply_command = client->Read32();
-size -= 4;
-
-synce_trace("Reply to: %08x", reply_command);
-
-switch (reply_command)
-{
-	case 0x6f:  handle_command_6f_reply(client, size);  break;
-	case 0x70:  handle_command_70_reply(client, size);  break;
-	default:    handle_unknown_reply(client, size);     break;
-}
-}
-
-void handle_unknown_command(Socket* client)
-{
-uint16_t size = client->Read16();
-unsigned char* buffer = client->Read(size);
-dump("reply to unknown command", buffer, size);
-delete[] buffer;
-}
-
-void read_command(Socket* client)
-{
-uint16_t command = client->Read16();
-
-synce_trace("Command: %04x", command);
-
-switch (command)
-{
-	case 0x0065:  handle_command_65(client);       break;
-	case 0x0069:  handle_command_69(client);       break;
-	case 0x006c:  handle_command_6c(client);       break;
-	default:      handle_unknown_command(client);  break;
-}
-}
-
-void read_data(Socket* client)
-{
-struct package_header_type 
-{
-	uint32_t id;
-	uint32_t type;
-	uint32_t empty;
-} *package_header;
-
-package_header = (package_header_type*)client->Read(sizeof(package_header_type));
-
-synce_trace(
-		"id=%08x, type=%08x, empty=%08x",
-		package_header->id,
-		package_header->type,
-		package_header->empty);
-
-if (package_header->id == 0xffffffff)
-{
-	expect_data = false;
-}
-else
-{
-	uint16_t size = client->Read16();
-	uint8_t* buffer = client->Read(size);
-
-	dump("data buffer", buffer, size);
-
-	delete[] buffer;
-}
-
-delete package_header;
-}
-
-void handle_client(Socket* client)
-{
-synce_trace("********** Got client **********");
-
-send_command_6f_c1(client);
-
-for (;;)
-{
-	SocketEvents events = EVENT_READ;
-	client->Wait(-1, events);
-
-	if (events & EVENT_READ)
-	{
-		if (expect_data)
-		{
-			read_data(client);
-			}
-			else
-			{
-				read_command(client);
-			}
-		}
-	}
-}
-
-#endif
 
 class Command;
 class AggregatedCommand;
@@ -548,6 +76,7 @@ class Command_6f;
 class Command_70_2;
 class Command_70_3;
 class ObjectIdList;
+class Data;
 
 class ReplicationAgent
 {
@@ -567,6 +96,7 @@ class ReplicationAgent
 
 	private:
 		AnyCommand* ReadCommand();
+		Data* ReadData();
 
 		void DispatchCommand(AnyCommand* command);
 		
@@ -577,6 +107,13 @@ class ReplicationAgent
 		Socket* mpCmdChannel;
 		Socket* mpDataChannel;
 };
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Command implementations
+//
+//////////////////////////////////////////////////////////////////////
 
 
 /*
@@ -697,32 +234,55 @@ class Command_67 : public Command/*{{{*/
 {
 	public:
 		Command_67(uint32_t type, uint32_t oid)
-			: Command(0x67)
+			: Command(0x67), mData(NULL)
 		{
-			mData.empty = 0;
-			mData.type = type;
-			mData.unknown = 1; /* probably id count */
-			mData.oid = oid;
+			mData = new uint32_t[4];
+
+			mData[0] = 0;
+			mData[1] = htole32(type);
+			mData[2] = htole32(1);
+			mData[3] = htole32(oid);
+		}
+
+		Command_67(uint32_t type, uint32_t count, uint32_t* oids)
+			: Command(0x67), mData(NULL)
+		{
+			mData = new uint32_t[3 + count];
+
+			mData[0] = 0;
+			mData[1] = type;
+			mData[2] = count;
+
+			for (unsigned i = 0; i < count; i++)
+			{
+				mData[3 + i] = htole32(oids[i]);
+			}
+		}
+
+		virtual ~Command_67()
+		{
+			delete[] mData;
 		}
 			
-		virtual uint16_t  Size() { return sizeof(mData); };
-		virtual uint8_t*  Data() { return reinterpret_cast<uint8_t*>(&mData); };
+		virtual uint16_t  Size()
+		{ 
+			return (3 + Count()) * sizeof(uint32_t); 
+		}
+
+		virtual uint8_t*  Data() { return reinterpret_cast<uint8_t*>(mData); }
 
 		virtual void Dispatch(ReplicationAgent& ra)
 		{
 			ra.OnCommand(*this);
 		}
 
-	private:
-		struct Packet
+		uint32_t Count()
 		{
-			uint32_t empty;
-			uint32_t type;
-			uint32_t unknown;
-			uint32_t oid;
-		};
+			return letoh32(mData[2]);
+		}
 
-		Packet mData;
+	private:
+		uint32_t* mData;
 };/*}}}*/
 
 class Command_6f : public Command/*{{{*/
@@ -859,7 +419,20 @@ class ObjectIdList : public Command/*{{{*/
 			
 			mSubcommand     = letoh32(values[0]);
 			mType           = letoh32(values[1]);
-			mModifiedCount  = letoh32(values[2]);
+
+			if (0 == mSubcommand)
+			{
+				mModifiedCount  = letoh32(values[2]);
+				mDeletedCount   = letoh32(values[3]) / sizeof(uint32_t) - mModifiedCount;
+			}
+			else
+			{
+				if (letoh32(values[2]) != 0)
+						synce_warning("Counter not zero but %08x", letoh32(values[2]));
+				mModifiedCount = letoh32(values[3]) / sizeof(uint32_t);
+				mDeletedCount  = 0;
+			}
+				
 			mModified  = new uint32_t[mModifiedCount];
 
 			unsigned i = 4;
@@ -867,11 +440,13 @@ class ObjectIdList : public Command/*{{{*/
 			for (unsigned j = 0; j < mModifiedCount; j++, i++)
 				mModified[j] = letoh32(values[i]);
 
-			mDeletedCount   = letoh32(values[3]) / sizeof(uint32_t) - mModifiedCount;
-			mDeleted   = new uint32_t[mDeletedCount];
+			if (mDeletedCount)
+			{
+				mDeleted   = new uint32_t[mDeletedCount];
 
-			for (unsigned j = 0; j < mDeletedCount; j++, i++)
-				mDeleted[j] = letoh32(values[i]);
+				for (unsigned j = 0; j < mDeletedCount; j++, i++)
+					mDeleted[j] = letoh32(values[i]);
+			}
 		}
 
 		/*
@@ -953,6 +528,9 @@ class ObjectIdList : public Command/*{{{*/
 
 		uint32_t Modified(unsigned i)      { return mModified[i]; }
 		uint32_t Deleted(unsigned i)       { return mDeleted[i]; }
+
+		uint32_t* Modified()      { return mModified; }
+		uint32_t* Deleted()       { return mDeleted; }
 
 	public:
 		uint32_t mSubcommand;
@@ -1048,6 +626,51 @@ class ReplyToCommand_70 : public Reply /*{{{*/
 		}
 };/*}}}*/
 
+//////////////////////////////////////////////////////////////////////
+//
+// SyncData implementation
+//
+//////////////////////////////////////////////////////////////////////
+
+class SyncData
+{
+	public:
+		struct Header
+		{
+			uint32_t oid;
+			uint32_t type;
+			uint32_t unknown1;
+			uint16_t size;
+			uint16_t unknown2;
+		};
+
+		SyncData(Header& header, uint8_t* data)
+			: mHeader(header), mData(NULL)
+		{
+			mData = new uint8_t[header.size];
+			memcpy(mData, data, header.size);
+		}
+			
+		virtual ~SyncData()
+		{
+			delete mData;
+		}
+
+		uint16_t Size() { return mHeader.size; }
+		uint8_t* Data() { return mData; }
+
+	private:
+		Header mHeader;
+		uint8_t* mData;
+
+};
+
+//////////////////////////////////////////////////////////////////////
+//
+// ReplicationAgent implementation
+//
+//////////////////////////////////////////////////////////////////////
+
 void ReplicationAgent::Start()/*{{{*/
 {
 	struct sockaddr_in address;
@@ -1077,7 +700,7 @@ void ReplicationAgent::Start()/*{{{*/
 	{
 		uint32_t type_id = object_type_list->Item(i)->type_id;
 
-		if (type_id != 0x2712)
+		if (type_id != 0x2712 /*&& type_id != 0x2711*/)
 		{
 			type_ids[j++] = type_id;
 		}
@@ -1093,11 +716,11 @@ void ReplicationAgent::Start()/*{{{*/
 	// Ignore reply
 	delete new ReplyToCommand_70(ReadCommand());
 	
+#if 0
 	DispatchCommand(ReadCommand());
 	DispatchCommand(ReadCommand());
 	DispatchCommand(ReadCommand());
 	
-#if 1
 	{
 #if 0
 		{
@@ -1262,10 +885,52 @@ void ReplicationAgent::WriteCommand(Command& command)/*{{{*/
 
 	delete[] buffer;
 }/*}}}*/
-		
+
+#define DATA_ROOT  "/var/tmp/rra"
+
+static void save_data(
+		uint32_t type, 
+		uint32_t oid, 
+		uint8_t* data, 
+		uint16_t size)
+{
+	char path[256];
+
+	snprintf(path, sizeof(path), "%s", DATA_ROOT);
+	mkdir(path, 0700);
+
+	snprintf(path, sizeof(path), "%s/%08x", DATA_ROOT, type);
+	mkdir(path, 0700);
+
+	snprintf(path, sizeof(path), "%s/%08x/%08x", DATA_ROOT, type, oid);
+
+	synce_trace("Writing '%s'", path);
+	
+	ofstream of;
+
+	of.open(path, ofstream::out | ofstream::binary | ofstream::trunc);
+	if (of.fail())
+	{
+		synce_error("Failed to open file '%s' for writing", path);
+		return;
+	}
+	
+	of.write((char*)data, size);
+	of.close();
+}
+
+static void delete_data(uint32_t type, uint32_t oid)
+{
+	char path[256];
+	snprintf(path, sizeof(path), "%s/%08x/%08x", DATA_ROOT, type, oid);
+	synce_trace("Removing '%s'", path);
+	unlink(path);
+}
+
 void ReplicationAgent::OnCommand (ObjectIdList& objectIdList)
 {
-	if (objectIdList.Subcommand() == 0)
+	if (objectIdList.Subcommand() == 0 || 
+			objectIdList.Subcommand() == 0x04000000)
 	{
 #if 0
 		{
@@ -1276,56 +941,94 @@ void ReplicationAgent::OnCommand (ObjectIdList& objectIdList)
 		// Ignore reply
 		delete new ReplyToCommand_70(ReadCommand());
 #endif
+
+		if (objectIdList.DeletedCount())
+		{
+			for (unsigned i = 0; i < objectIdList.DeletedCount(); i++)
+			{
+				delete_data(objectIdList.Type(), objectIdList.Deleted(i));
+			}
+		}
 		
 		if (objectIdList.ModifiedCount())
 		{
-			Command_67 command(objectIdList.Type(), objectIdList.Modified(0));
+			Command_67 command(
+					objectIdList.Type(), 
+					objectIdList.ModifiedCount(), 
+					objectIdList.Modified());
+
 			//Command_67 command(objectIdList.Type(), 0x8000e07);
 			WriteCommand(command);
 
-			SocketEvents events = EVENT_READ;
-			mpDataChannel->Wait(-1, events);
-
-			if (!(events & EVENT_READ))
+			for (unsigned i = 0; i < objectIdList.ModifiedCount(); i++)
 			{
-				synce_error("Unexpected events: %04x", events);
-			}
-			
-			uint32_t available = mpDataChannel->Available();
-			uint8_t* data = mpDataChannel->Read(available);
+				SocketEvents events = EVENT_READ;
+				mpDataChannel->Wait(-1, events);
 
-			dump("Data", data, available);
-
-			uint32_t oid   = letoh32(*(uint32_t*)(data + 0x00));
-			uint32_t type  = letoh32(*(uint32_t*)(data + 0x04));
-			uint16_t size  = letoh16(*(uint16_t*)(data + 0xc));
-
-			if (0x2712 == type)
-			{
-				/* contacts */
-				uint32_t field_count = letoh32(*(uint32_t*)(data + 0x10));
-				CEPROPVAL* propvals = new CEPROPVAL[field_count];
-
-				if (dbstream_to_propvals(data + 0x18, field_count, propvals))
+				if (!(events & EVENT_READ))
 				{
-					char* vcard = NULL;
-					if (contact_to_vcard(oid, propvals, field_count, &vcard))
-					{
-						synce_trace("vCard: '%s'", vcard);
-						free(vcard);
-					}
+					synce_error("Unexpected events: %04x", events);
 				}
 
-				delete[] propvals;
+				SyncData::Header* header = 
+					(SyncData::Header*)mpDataChannel->Read(sizeof(SyncData::Header));
+			
+				dump("Data header", header, sizeof(SyncData::Header));
+				synce_trace("oid=%08x, type=%08x", header->oid, header->type);
+
+				uint16_t data_size = (header->size + 3) & ~3;
+				uint8_t* data = mpDataChannel->Read(data_size);
+			
+				dump("Data", data, data_size);
+				save_data(header->type, header->oid, data, header->size);
+				
+				if (0x2712 == header->type)
+				{
+					/* contacts */
+					uint32_t field_count = letoh32(*(uint32_t*)(data + 0));
+					CEPROPVAL* propvals = new CEPROPVAL[field_count];
+
+					if (dbstream_to_propvals(data + 8, field_count, propvals))
+					{
+						char* vcard = NULL;
+						if (contact_to_vcard(header->oid, propvals, field_count, &vcard))
+						{
+							synce_trace("vCard: '%s'", vcard);
+							free(vcard);
+						}
+					}
+
+					delete[] propvals;
+				}
+
+				{
+					Command_65 command(header->type, header->oid, header->oid);
+					WriteCommand(command);
+				}
+
+				delete[] (uint8_t*)header;
+				delete[] data;
 			}
 
-			delete[] data;
-			synce_trace("oid=%08x, type=%08x", oid, type);
+		}
 
+		if (/*objectIdList.Subcommand() == 0 &&*/ objectIdList.ModifiedCount())
+		{
+			SyncData::Header header;
+
+			header.oid = mpDataChannel->Read32();
+			if (0xffffffff != header.oid)
 			{
-				Command_65 command(type, oid, oid);
-				WriteCommand(command);
+				synce_warning("Unexpected oid: %08x", header.oid);
 			}
+			
+			header.type = mpDataChannel->Read32();
+			if (objectIdList.Type() != header.type)
+			{
+				synce_warning("Unexpected type: %08x", header.type);
+			}
+
+			header.unknown1 = mpDataChannel->Read32();
 		}
 		
 #if 0

@@ -70,7 +70,7 @@ class Socket
 			uint8_t* data = new uint8_t[size];
 			if (!synce_socket_read(mSocket, data, size))
 			{
-				delete[] data;
+				delete data;
 				throw ReadFailed();
 			}
 			return data;
