@@ -33,8 +33,8 @@ are supported by the underlying <a
 <ul>
   <li><a href="http://sourceforge.net/projects/synce/">SourceForge
 Project Page</a></li><br>
-  <li><a href="http://apps.kde.com/fr/2/info/vid/9646?br=true">SynCE-KDE
-on apps.kde.com</a> </li>
+  <li><a href="http://www.kde-apps.org/content/show.php?content=14162">SynCE-KDE
+on www.kde-apps.org</a> </li>
   <li><a
  href="http://freshmeat.net/projects/synce-kde/?topic_id=20%2C957%2C1015">SynCE-KDE
 on freshmeat.net
@@ -75,8 +75,31 @@ of PDAs to interested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</blockquote>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
+<b>July 08, 2004</b> It has been long time ago since the last entry here in this News
+section. There has not been that much progress in the last view month.
+Nevertheless, some points should be mentioned:
+<ul>
+<li>Lets welcome Christinan Fremgen, a new developer for the "big" SynCE-KDE team
+:-) He is mainly commited in the field of KDE - Windows CE synchronization and
+is actually bussy in designing and implementing KAddressBook, and KOrganizer
+synchronization by use of the KDE synchronization framefork kitchensync.<br>
+Unfortunately, the old synchronization mechanism for KAddressBook doesn't
+reliable work any longer. We have to be patient until we get the new
+synchronization plugins ready. We expect a pre-rease to be available in september
+2004.</li>
+<li>RAKI and also RAPIP has been ported to KDE verion 3.2.x.
+<li>AvantGo-Synchronization has been much improved. The whole configuration
+could now be done in RAKI itself.</li>
+<li>PDAMirror has been renamed to KCEMirror as this name integrates nicely into
+the KDE name-schema.</li>
+<li>SynCE-KDE and most of the SynCE libraries and tools are now part of debian
+unstable. A list of those packages could be find 
+<a
+href="http://qa.debian.org/developer.php?login=Volker+Christian">here</a>.</li>
+</ul>
 <b>November 21, 2003</b> PDAMirror is integrated into the SynCE-KDE
 suite<br><br>
+
 <b>October 9, 2003</b> There is some progress in letting SynCE-KDE (cvs) run on
 KDE-3.1.90 (cvs) the upcoming KDE-3.2 release.
 <ul>
@@ -239,76 +262,11 @@ SynCE libraries</a> version 0.8.</li>
 </ul>
 <br>
 <h2><a name="Download" id="Download"></a>Download</h2>
-You can download precompiled <tt>tar.gz</tt>, <tt>rpm</tt>, and
-<tt>deb</tt> packages from the <a
- href="http://sourceforge.net/projects/synce/">SourceForge Project
-Page</a>.<br>
 <br>
 <span style="font-weight: bold;"><a href="http://www.debian.org/">Debian</a>
 user</span><br>
-<blockquote>Just now, the SynCE-KDE <tt>deb</tt>
-packages are
-designed for debian unstable (sid).&nbsp; I will try to provide
-packages for
-stable and testing as soon as possible. Until than you have to compile
-SynCE-KDE yourself from source if you are a debian-stable or
-debian-testing user. <br>
-The packages are prepared to honor all
-dependencies including those coming from the SynCE libraries.
-Most of the SynCE libraries are already part of debian-unstable. So
-these packages are installed automatically if you try to install
-SynCE-KDE. Unfortunately,
-just now there is no official debian packages of synce-rra-0.8
-available.
-To
-still be able to install SynCE-KDE please compile and install
-synce-rra-0.8 before using SynCE-KDE.<br>
-Packages could be downloaded from the <a
- href="http://sourceforge.net/projects/synce/">SourceForge Project
-Page</a> or installed directly over the network from our debian
-repository at SourceForge.<br>
-  <ol>
-    <li>Add the following two lines to your <tt>/etc/apt/sources.list</tt>:<br>
-      <tt>&nbsp;&nbsp;&nbsp; deb http://synce.sourceforge.net/debian/
-unstable/$(ARCH)/<br>
-&nbsp;&nbsp;&nbsp; deb-src http://synce.sourceforge.net/debian/
-unstable/source/</tt><br>
-      <br>
-    </li>
-    <li>Update your package lists:<tt><br>
-&nbsp;&nbsp;&nbsp; # apt-get update</tt><br>
-      <br>
-    </li>
-    <li>Install SynCE-KDE:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-get install synce-kde</tt><br>
-      <br>
-    </li>
-    <li>Install the development packages. This is only needed it you
-intend to develop synchronizer for RAKI:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-get install synce-kde-dev<br>
-      <br>
-      </tt></li>
-  </ol>
-The source of SynCE-KDE is also available from the repository.<br>
-  <ol>
-    <li>Install the source package:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-get source synce-kde<br>
-      </tt></li>
-  </ol>
-  <br>
-</blockquote>
-<span style="font-weight: bold;"><a href="http://www.redhat.com/">RedHat</a>
-user</span><br>
-<blockquote>The <tt>rpm</tt> packages are designed for
-RedHat 9.<br>
-  <br>
-</blockquote>
-<span style="font-weight: bold;"><a href="http://www.slackware.com/">Slackware</a>
-user</span><br>
-<blockquote>The precompiled package synce-kde-0.6.1.tgz has
-been compiled on Slackware 9. <br>
-  <br>
-</blockquote>
+<blockquote>SynCE-KDE is now part of debian.</blockquote>
+
 <a href="http://sourceforge.net/cvs/?group_id=30550"><b>CVS</b></a><b>
 user</b><br>
 <blockquote>If you are interested in testing bleeding edge software you
@@ -334,7 +292,11 @@ and Installing</h2>
 <h3>Requisites</h3>
 <ul>
   <li>Install the base SynCE libraries as described <a
- href="http://synce.sourceforge.net/synce/using.php#download">here</a>.</li>
+ href="http://synce.sourceforge.net/synce/using.php#download">here</a>, with the
+ exception, that you have to compile librra yourself after applying the <a
+
+href="http://prdownloads.sourceforge.net/synce/librra-synce-kde-0.7.diff?download">librra-synce-kde-0.7.diff</a>
+patch (some distribution have already packaged librra with this patch applied).</li>
   <li>Make the SynCE libraries work by <a
  href="http://synce.sourceforge.net/synce/using.php#gettingconnected">getting
 connected</a> for the first time.<br>
@@ -353,7 +315,7 @@ required but of course allowed ;-)<br>
 </ul>
 <h3>SynCE-KDE compilation and installation</h3>
 <ol>
-  <li>Download SynCE-KDE (synce-kde-0.6.tar.gz)&nbsp; from the <a
+  <li>Download SynCE-KDE (synce-kde-0.x.y.tar.gz)&nbsp; from the <a
  href="http://sourceforge.net/projects/synce/">SourceForge
 Project Page</a> or check out the latest code from the <a
  href="http://sourceforge.net/cvs/?group_id=30550">CVS
@@ -373,7 +335,7 @@ and go to step 5.<br>
   <li>Unpack the downloaded synce-kde-0.6.tar.gz into your favorite
 source directory<br>
     <code>&nbsp;&nbsp;&nbsp; # tar -xzf
-synce-kde-0.6.1.tar.gz</code><br>
+synce-kde-0.x.y.tar.gz</code><br>
     <br>
   </li>
   <li>Configure your SynCE-KDE source tree by issuing the
