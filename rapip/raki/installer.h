@@ -43,19 +43,6 @@ class PDA;
 /**
 @author Volker Christian,,,
 */
- 
-class RunInstallerThread : public WorkerThreadInterface
-{
-public:
-    RunInstallerThread(QWidget *parent);
-    ~RunInstallerThread();
-    void work(QThread *th = NULL, void *data = NULL);
-    void setPdaName(QString pdaName);
-
-private:
-    QWidget *parent;
-    QString pdaName;
-};
 
 
 class Installer : public InstallDialog
@@ -66,6 +53,7 @@ public:
     Installer(QWidget *parent, QDict<PDA> *pdaList);
     virtual ~Installer();
     void show(QStringList installFiles);
+    static void install(QString pdaName, QStringList installFiles, bool blocking = false);
 
 protected slots:
     void runInstaller(KURL destUrl);
@@ -75,10 +63,13 @@ protected slots:
     void install();
     void procFiles(KIO::Job *job, const KURL&, const KURL&);
 
-private:   
-    RunInstallerThread *runInstallerThread;
-    QDict<PDA> *pdaList;
-    QStringList installFiles;
+private:
+    static void prepareInstall(QStringList installFiles);
+    static void installReal(Installer *installer, QString pdaName);
+    static QDict<PDA> *pdaList;
+    static QStringList installFiles;
+    static Installer *self;
+    static bool ready;
 };
 
 #endif

@@ -37,17 +37,21 @@
 #include <kde_dmalloc.h>
 #endif
 
+Installer* Installer::self = NULL;
+QStringList Installer::installFiles;
+QDict<PDA> *Installer::pdaList = NULL;
+bool Installer::ready = true;
+
 Installer::Installer(QWidget *parent, QDict<PDA> *pdaList)
         : InstallDialog(parent)
 {
     this->pdaList = pdaList;
-    runInstallerThread = new RunInstallerThread(parent);
+    self = this;
 }
 
 
 Installer::~Installer()
 {
-    delete runInstallerThread;
 }
 
 
@@ -56,10 +60,16 @@ void Installer::runInstaller(KURL destUrl)
     PDA *pda = (PDA *) pdaList->find(destUrl.host());
 
     if (pda != NULL) {
-        RakiWorkerThread::rakiWorkerThread->stop();
-        runInstallerThread->setPdaName(destUrl.host());
-        startWorkerThread(runInstallerThread, &RunInstallerThread::work, NULL);
+        synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
+
+        if (Ce::rapiInit(destUrl.host())) {
+            if (!Ce::createProcess(QString("wceload.exe").ucs2(), NULL,
+                           NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {}
+            Ce::rapiUninit();
+        }
     }
+    
+    ready = true;
 }
 
 
@@ -78,6 +88,8 @@ void Installer::deleteResult(KIO::Job *deleteJob)
             runInstaller(destUrls.first());
         }
     }
+    
+    ready = true;
 }
 
 
@@ -127,8 +139,21 @@ void Installer::procFiles(KIO::Job *job, const KURL& from, const KURL& to)
 }
 
 
-void Installer::install()
+void Installer::prepareInstall(QStringList installFiles)
 {
+    self->pdas->clear();
+    Installer::installFiles = installFiles;
+
+    QDictIterator<PDA> it(*pdaList);
+
+    for (; it.current(); ++it ) {
+        self->pdas->insertItem((*it)->getName());
+    }
+}
+
+
+void Installer::installReal(Installer *installer, QString pdaName)
+{ 
     KURL::List ul;
     QStringList::Iterator slit;
 
@@ -137,8 +162,6 @@ void Installer::install()
             ul.append(*slit);
         }
     }
-
-    QString pdaName = pdas->currentText();
 
     PDA *pda = (PDA *) pdaList->find(pdaName);
 
@@ -161,57 +184,39 @@ void Installer::install()
         if (mkdirSuccess) {
             KIO::CopyJob *copyJob = KIO::copy(ul, KURL("rapip://" + pdaName +
                     "/Windows/AppMgr/Install/"), true);
-            connect(copyJob, SIGNAL(result(KIO::Job *)), this,
+            connect(copyJob, SIGNAL(result(KIO::Job *)), installer,
                     SLOT(copyResult(KIO::Job *)));
             connect(copyJob, SIGNAL(copying(KIO::Job *, const KURL&,
-                    const KURL&)), this, SLOT(procFiles (KIO::Job *,
+                    const KURL&)), installer, SLOT(procFiles (KIO::Job *,
                     const KURL&, const KURL&)));
             pda->registerCopyJob(copyJob);
         }
     }
 
-    close();
+    self->close();
+} 
+
+
+void Installer::install(QString pdaName, QStringList installFiles, bool blocking)
+{
+    ready = false;
+    prepareInstall(installFiles);
+    installReal(self, pdaName);
+    while (!ready) {
+        kapp->processEvents();
+    }
+}
+
+
+void Installer::install()
+{
+    QString pdaName = pdas->currentText();
+    installReal(this, pdaName);
 }
 
 
 void Installer::show(QStringList installFiles)
 {
-    pdas->clear();
-    this->installFiles = installFiles;
-
-    QDictIterator<PDA> it(*pdaList);
-
-    for (; it.current(); ++it ) {
-        pdas->insertItem((*it)->getName());
-    }
-
+    prepareInstall(installFiles);
     InstallDialog::show();
-}
-
-
-RunInstallerThread::RunInstallerThread(QWidget *parent)
-{
-    this->parent = parent;
-}
-
-
-RunInstallerThread::~RunInstallerThread()
-{}
-
-
-void RunInstallerThread::setPdaName(QString pdaName)
-{
-    this->pdaName = pdaName;
-}
-
-
-void RunInstallerThread::work(QThread */*th*/, void */*data*/)
-{
-    synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
-
-    if (Ce::rapiInit(pdaName)) {
-        if (!Ce::createProcess(QString("wceload.exe").ucs2(), NULL,
-                           NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {}
-        Ce::rapiUninit();
-    }
 }
