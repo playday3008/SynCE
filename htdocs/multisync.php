@@ -58,9 +58,26 @@ information.
 
 <hr size=1 width="50%">
 
-<p>
+<p><b>Q:</b> Phone numbers and adresses are not synchronized properly from Pocket
+PC to Evolution.</p>
 
-<b>Q:</b> Synchronization from Pocket PC to Evolution fails with these
+<p><b>A:</b> This bug should be fixed in the <a
+href="http://sourceforge.net/cvs/?group_id=30550">CVS version</a> of the
+<tt>rra</tt> module and will be included in the next SynCE release.</p>
+
+<hr size=1 width="50%">
+
+<p><b>Q:</b> The MultiSync plugin doesn't work on Power PC, SPARC, or another big
+endian platform.</p>
+
+<p><b>A:</b> Multiple bugs related to endianness have been fixed in the <a
+href="http://sourceforge.net/cvs/?group_id=30550">CVS version</a> of the
+<tt>rra</tt> module. These fixes will be included in the next release of
+SynCE.</p>
+
+<hr size=1 width="50%">
+
+<p><b>Q:</b> Synchronization from Pocket PC to Evolution fails with these
 messages:
 
 <pre>[rrac_recv_reply_6f_c1:402] Unexpected command
@@ -68,12 +85,8 @@ messages:
 [rra_get_object_ids:174] Failed to get object types
 [synce_get_changed_objects:44] Failed to get object ids</pre>
 
-or with this message:
-
-<pre>[synce_get_changed_objects:44] Failed to get object ids</pre>
-
-<b>A:</b> These are bugs that are not yet fixed. You may make it easier to fix
-them by telling how you got them :
+<p><b>A:</b> This seems to be a bug that is not yet fixed. You may make it easier
+to fix them by telling how you got them:</p>
 
 <ol>
 
@@ -108,8 +121,9 @@ SynCE.</p>
 
 <ol> 
 
-<li class=SPACED>Get a <a href="http://www.phm.lu/Products/PocketPC/">registry editor
-for Pocket PC</a>. Tip: You can install a .cab file on your Pocket PC with the
+<li class=SPACED>Get a <a
+href="http://www.phm.lu/Products/PocketPC/RegEdit/">registry editor for Pocket
+PC</a>. Tip: You can install a .cab file on your Pocket PC with the
 <tt>synce-install-cab</tt> tool.</li>
 
 <li class=SPACED>Go to
