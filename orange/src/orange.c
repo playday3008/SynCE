@@ -2,6 +2,7 @@
 #define _BSD_SOURCE 1
 #define _POSIX_C_SOURCE 2
 #include <liborange.h>
+#include <libunshield.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,6 +69,7 @@ static bool handle_parameters(
 	}
 
 	synce_log_set_level(log_level);
+	unshield_set_log_level(log_level);
 
   if (optind < argc)
     *input_filename = argv[optind];
