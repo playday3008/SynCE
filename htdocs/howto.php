@@ -136,7 +136,8 @@ section below.</p>
 
 <blockquote>
 
-<p><b>Driver=ipaq</b> Your kernel driver recognized your device, good!</p>
+<p><b>Driver=ipaq</b> or <b>Driver=usbserial</b> Your kernel driver recognized
+your device, good!</p>
 
 <p><b>Driver=(none)</b> Your kernel driver did not recognize your device. You
 need to perform some special configuration:</p>
@@ -248,6 +249,16 @@ do this a little differently:</p>
 <blockquote><tt>synce-serial-config usb/tts/0</tt></blockquote>
 
 <p>Use usb/tts/1 as parameter instead if you have four USB endpoints instead of
+the usual two.</p>
+
+</li>
+
+<li><p>If the above failed with <i>synce-serial-config was unable to find a
+character device named "usb/tts/0"</i>, try this:</p>
+
+<blockquote><tt>synce-serial-config tts/USB0</tt></blockquote>
+
+<p>Use tts/USB1 as parameter instead if you have four USB endpoints instead of
 the usual two.</p>
 
 </li>
