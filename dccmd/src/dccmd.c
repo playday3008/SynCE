@@ -243,7 +243,7 @@ static bool read_client(Client* client)
 
 		synce_trace("this is a password challenge");
 
-		if (!synce_password_send("1234", key, client->socket))
+		if (!synce_password_send(client->socket, "1234", key))
 		{
 			synce_error("failed to send password");
 			goto exit;
