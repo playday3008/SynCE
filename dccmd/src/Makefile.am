@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall
+CFLAGS = -ggdb -Wall @APPLE_CFLAGS@
 
 bin_PROGRAMS = dccm
 
