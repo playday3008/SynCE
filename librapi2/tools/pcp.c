@@ -231,6 +231,11 @@ int main(int argc, char** argv)
 		}
 	}
 
+	if (0 == strcmp(source, dest))
+	{
+		fprintf(stderr, "You don't want to copy a file to itself.\n");
+		goto exit;
+	}
 
 	if (is_remote_file(source) && is_remote_file(dest))
 	{
@@ -252,8 +257,11 @@ int main(int argc, char** argv)
 
 		duration = time(NULL) - start;
 
-		printf("File copy of %i bytes took %li minutes and %li seconds, that's %li bytes/s.\n",
-				bytes_copied, duration / 60, duration % 60, bytes_copied / duration);
+		if (0 == duration)
+			printf("File copy took less than one second!\n");
+		else
+			printf("File copy of %i bytes took %li minutes and %li seconds, that's %li bytes/s.\n",
+					bytes_copied, duration / 60, duration % 60, bytes_copied / duration);
 
 	}
 
