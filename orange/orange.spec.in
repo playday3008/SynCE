@@ -15,7 +15,9 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Requires: dynamite
 Requires: synce
+Requires: unshield
 
 %description
 See http://synce.sourceforge.net/synce for more information.
@@ -24,7 +26,9 @@ See http://synce.sourceforge.net/synce for more information.
 Summary:  A library to squeeze out installable Micrsoft cabinet files
 Group:    Development/Libraries
 Requires: %{name} = %{version}
+BuildRequires: dynamite-devel
 BuildRequires: synce-devel
+BuildRequires: unshield-devel
 
 %description devel
 See http://synce.sourceforge.net/synce for more information.
