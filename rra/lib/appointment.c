@@ -20,6 +20,16 @@
 #define MINUTES_PER_DAY (24*60)
 #define SECONDS_PER_DAY (MINUTES_PER_DAY*60)
 
+#define BLOB0067_STR  "BLOB0067="
+
+static const uint8_t BLOB0067_HEADER[20] = { 
+  0x04, 0x00, 0x00, 0x00, 
+  0x82, 0x00, 0xe0, 0x00,
+  0x74, 0xc5, 0xb7, 0x10,
+  0x1a, 0x82, 0xe0, 0x08,
+  0x00, 0x00, 0x00, 0x00 
+};
+
 typedef struct _EventGeneratorData
 {
   CEPROPVAL* start;
@@ -109,6 +119,49 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
+bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  char* buffer = NULL;;
+  unsigned i;
+  bool is_text = true;
+
+  assert(CEVT_BLOB == (propval->propid & 0xffff));
+
+  for (i = 0; i < propval->val.blob.dwCount; i++)
+    if (!isprint(propval->val.blob.lpb[i]))
+    {
+      is_text = false;
+      break;
+    }
+
+  if (is_text)
+  {
+    /* This is if SynCE has saved a text UID to this BLOB */
+    buffer = malloc(propval->val.blob.dwCount + 1);
+    memcpy(buffer, propval->val.blob.lpb, propval->val.blob.dwCount);
+    buffer[propval->val.blob.dwCount] = '\0';
+  }
+  else
+  {
+    /* This is for the usual binary UID */
+    char* p = NULL;
+    buffer = (char*)malloc(propval->val.blob.dwCount * 2 + sizeof(BLOB0067_STR));
+
+    strcpy(buffer, BLOB0067_STR);
+    p = buffer + strlen(buffer);
+
+    for (i = 0; i < propval->val.blob.dwCount; i++)
+    {
+      sprintf(p, "%02x", propval->val.blob.lpb[i]);
+      p += 2;
+    }
+  }
+
+  generator_add_simple(g, "UID", buffer);
+  free(buffer);
+  return true;
+}
+
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
     const uint8_t* data,
@@ -150,6 +203,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
   generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);
   generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
+  generator_add_property(generator, ID_UNIQUE,      on_propval_unique);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -419,6 +473,37 @@ static bool on_mdir_line_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
   return true;
 }/*}}}*/
 
+static bool on_mdir_line_uid(Parser* parser, mdir_line* line, void* cookie)/*{{{*/
+{
+  if (line)
+    if (0 == strncmp(line->values[0], BLOB0067_STR, strlen(BLOB0067_STR)))
+    {
+      /* A binary UID from SynCE */
+      size_t size = (strlen(line->values[0]) - strlen(BLOB0067_STR)) / 2;
+      uint8_t* buffer = malloc(size);
+      unsigned i;
+      char* p;
+
+      p = line->values[0] + strlen(BLOB0067_STR);
+
+      for (i = 0; i < size; i++, p+=2)
+      {
+        char tmp[3] = {p[0], p[1], '\0'};
+        buffer[i] = (uint8_t)strtol(tmp, NULL, 16);
+      }
+
+      parser_add_blob(parser, ID_UNIQUE, buffer, size);
+      free(buffer);
+    }
+    else
+    {
+      /* A text UID */
+      parser_add_blob(parser, ID_UNIQUE, (uint8_t*)line->values[0], strlen(line->values[0]));
+    }
+  
+  return true;
+}/*}}}*/
+
 bool rra_appointment_from_vevent(/*{{{*/
     const char* vevent,
     uint32_t* id,
@@ -481,6 +566,8 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_property_new("Summary", on_mdir_line_summary));
   parser_component_add_parser_property(event, 
       parser_property_new("Transp", on_mdir_line_transp));
+  parser_component_add_parser_property(event, 
+      parser_property_new("UId", on_mdir_line_uid));
 
   calendar = parser_component_new("vCalendar");
   parser_component_add_parser_component(calendar, event);
@@ -516,7 +603,7 @@ bool rra_appointment_from_vevent(/*{{{*/
       synce_error("Failed add time from line");
       goto exit;
     }
-    
+
     if (event_parser_data.dtend)
     {
       time_t start = 0;
@@ -549,16 +636,19 @@ bool rra_appointment_from_vevent(/*{{{*/
     }
 
 #if ENABLE_RECURRENCE
-    if (event_parser_data.rrule && !recurrence_parse_rrule(
-          parser, 
-          event_parser_data.dtstart,
-          event_parser_data.dtend,
-          event_parser_data.rrule, 
-          event_parser_data.exdates))
-    {
-      synce_warning("Failed to parse recurrence rule");
+    if (event_parser_data.rrule)
+    { 
+      if (!recurrence_parse_rrule(
+            parser, 
+            event_parser_data.dtstart,
+            event_parser_data.dtend,
+            event_parser_data.rrule, 
+            event_parser_data.exdates))
+        synce_warning("Failed to parse recurrence rule");
     }
+    else
 #endif
+      parser_add_int16(parser, ID_OCCURENCE, OCCURENCE_ONCE);
   }
   else
     synce_warning("No DTSTART found");
