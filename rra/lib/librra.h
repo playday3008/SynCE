@@ -60,6 +60,14 @@ bool rra_get_object_types(RRA* rra,
                           ObjectType** pp_object_types,
                           size_t* object_type_count);
 
+
+/* convert a name to a type id */
+
+uint32_t rra_type_id_from_name(
+    RRA* rra,
+    const char* name);
+
+
 /* get changes */
 
 bool rra_get_changes(

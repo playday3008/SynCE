@@ -124,26 +124,23 @@ bool rra_get_object_types(RRA* rra, /*{{{*/
 			goto exit;
 		}
 
-		if (object_types)
-		{
-			rra->object_types = malloc(rra->object_type_count * sizeof(ObjectType));
+    rra->object_types = malloc(rra->object_type_count * sizeof(ObjectType));
 
-			for (i = 0; i < rra->object_type_count; i++)
-			{
-				char* ascii = NULL;
+    for (i = 0; i < rra->object_type_count; i++)
+    {
+      char* ascii = NULL;
 
-				rra->object_types[i].id          = raw_object_types[i].id;
-				rra->object_types[i].count       = raw_object_types[i].count;
-				rra->object_types[i].total_size  = raw_object_types[i].total_size;
-				rra->object_types[i].modified    = 
-					filetime_to_unix_time(&raw_object_types[i].filetime);
+      rra->object_types[i].id          = raw_object_types[i].id;
+      rra->object_types[i].count       = raw_object_types[i].count;
+      rra->object_types[i].total_size  = raw_object_types[i].total_size;
+      rra->object_types[i].modified    = 
+        filetime_to_unix_time(&raw_object_types[i].filetime);
 
-				ascii = wstr_to_ascii(raw_object_types[i].name1);
-				strcpy(rra->object_types[i].name, ascii);
-				wstr_free_string(ascii);
-			}
-		}
-	}
+      ascii = wstr_to_ascii(raw_object_types[i].name1);
+      strcpy(rra->object_types[i].name, ascii);
+      wstr_free_string(ascii);
+    }
+  }
 
 	if (object_types)	
 		*object_types       = rra->object_types;
@@ -155,6 +152,32 @@ bool rra_get_object_types(RRA* rra, /*{{{*/
 exit:
 	rrac_free(raw_object_types);
 	return success;
+}/*}}}*/
+
+uint32_t rra_type_id_from_name(/*{{{*/
+    RRA* rra,
+    const char* name)
+{
+  uint32_t result = 0;
+  size_t i;
+  
+  if (!rra_get_object_types(rra, NULL, NULL))
+  {
+    synce_error("rra_get_object_types failed");
+    goto exit;
+  }
+
+  for (i = 0; i < rra->object_type_count; i++)
+  {
+    if (0 == strcasecmp(name, rra->object_types[i].name))
+    {
+      result = rra->object_types[i].id;
+      break;
+    }
+  }
+
+exit:
+  return result;
 }/*}}}*/
 
 bool rra_get_changes(
