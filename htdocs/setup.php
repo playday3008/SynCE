@@ -33,6 +33,7 @@ above.</p>
 <li><a href="infrared.php">Infrared</a></li>
 <li><a href="usb.php">USB cable</a></li>
 <li><a href="bluetooth.php">Bluetooth</a></li>
+<li><a href="ethernet.php">Ethernet/WLAN</a></li>
 
 </ul>
 
