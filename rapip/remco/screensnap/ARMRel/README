@@ -1,0 +1,6 @@
+Rename screensnap.exe.rem to screensnap.exe and upload it onto the PDA
+in an arbitrary directory. Start this program on the PDA and connect
+with 
+	pdamirror --pdaaddress ip.address.ofthe.ipaq
+
+Have fun!
