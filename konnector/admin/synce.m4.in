@@ -1,0 +1,234 @@
+AC_DEFUN(SYNCE_CHECK_SYNCE,
+	[
+		if test x = x$synce_synce_checked; then 
+			synce_kde_save_cflags="$CPPFLAGS"
+			synce_kde_save_ldflags="$LDFLAGS"
+
+			AC_ARG_WITH(libsynce, 
+				AC_HELP_STRING(
+					[--with-libsynce=DIR],
+					[Search for libsynce in DIR/include and DIR/lib]
+				),
+				[
+					SYNCE_INCLUDES="-I${withval}/include"
+					SYNCE_LDFLAGS="-L${withval}/lib"
+				]
+			)
+
+			AC_ARG_WITH(libsynce-include,
+				AC_HELP_STRING(
+					[--with-libsynce-include=DIR],
+					[Search for libsynce header files in DIR]
+				),
+				[
+					SYNCE_INCLUDES="-I${withval}"
+				]
+			)
+
+			AC_ARG_WITH(libsynce-lib,
+				AC_HELP_STRING(
+					[--with-libsynce-lib=DIR],
+					[Search for libsynce library files in DIR]
+				),
+				[
+					SYNCE_LDFLAGS="-L${withval}"
+				]
+			)
+
+			LDFLAGS="$LDFLAGS $SYNCE_LDFLAGS"
+			AC_CHECK_LIB(synce, main,
+				[
+					SYNCE_LIB="-lsynce"
+				],
+				[
+					AC_MSG_ERROR([Can't find synce library])
+					exit
+				]
+			)
+
+			CPPFLAGS="$CPPFLAGS $SYNCE_INCLUDES"
+			AC_CHECK_HEADERS(synce.h,,
+				[
+					AC_MSG_ERROR([Can't find synce.h])
+					exit
+				]
+			)
+
+			AC_SUBST(SYNCE_INCLUDES)
+			AC_SUBST(SYNCE_LDFLAGS)
+			AC_SUBST(SYNCE_LIB)
+
+			CPPFLAGS="$synce_kde_save_cflags"
+			LDFLAGS="$synce_kde_save_ldflags"
+			unset synce_kde_save_cflags
+			unset synce_kde_save_ldflags
+			synce_synce_checked=yes
+		fi
+	]
+)
+
+AC_DEFUN(SYNCE_CHECK_RAPI,
+	[
+		if test x = x$synce_rapi_checked; then
+			SYNCE_CHECK_SYNCE
+
+			synce_kde_save_cflags="$CPPFLAGS"
+			synce_kde_save_ldflags="$LDFLAGS"
+
+			CPPFLAGS="$CPPFLAGS $SYNCE_INCLUDES"
+			LDFLAGS="$LDFLAGS $SYNCE_LDFLAGS"
+
+			AC_ARG_WITH(librapi2,
+				AC_HELP_STRING(
+					[--with-librapi2=DIR],
+					[Search for librapi2 in DIR/include and DIR/lib]
+				),
+				[
+					RAPI_INCLUDES="-I${withval}/include"
+					RAPI_LDFLAGS="-L${withval}/lib"
+				]
+			)
+
+			AC_ARG_WITH(librapi2-include,
+				AC_HELP_STRING(
+					[--with-librapi2-include=DIR],
+					[Search for librapi2 header files in DIR]
+				),
+				[
+					RAPI_INCLUDES="-I${withval}"
+				]
+			)
+
+			AC_ARG_WITH(librapi2-lib,
+				AC_HELP_STRING(
+					[--with-librapi2-lib=DIR],
+					[Search for librapi2 library files in DIR]
+				),
+				[
+					RAPI_LDFLAGS="-L${withval}"
+				]
+			)
+
+			LDFLAGS="$LDFLAGS $RAPI_LDFLAGS"
+			AC_CHECK_LIB(rapi,CeRapiInit,
+				[
+					RAPI_LIB="-lrapi"
+				],
+				[
+					AC_MSG_ERROR([Can't find RAPI library])
+					exit
+				],
+				[
+					$SYNCE_LIB
+				]
+			)
+
+			CPPFLAGS="$CPPFLAGS $RAPI_INCLUDES"
+			AC_CHECK_HEADERS(rapi.h,,
+				[
+					AC_MSG_ERROR([Can't find rapi.h])
+					exit
+				]
+			)
+
+			RAPI_R_INCLUDES="$RAPI_INCLUDES $SYNCE_INCLUDES"
+			RAPI_R_LDFLAGS="$RAPI_LDFLAGS $SYNCE_LDFLAGS"
+			RAPI_R_LIB="$RAPI_LIB $SYNCE_LIB"
+			AC_SUBST(RAPI_INCLUDES)
+			AC_SUBST(RAPI_LDFLAGS)
+			AC_SUBST(RAPI_LIB)
+			AC_SUBST(RAPI_R_INCLUDES)
+			AC_SUBST(RAPI_R_LDFLAGS)
+			AC_SUBST(RAPI_R_LIB)
+
+			CPPFLAGS="$synce_kde_save_cflags"
+			LDFLAGS="$synce_kde_save_ldflags"
+			unset synce_kde_save_cflags
+			unset synce_kde_save_ldflags
+			synce_rapi_checked=yes
+		fi
+	]
+)
+
+AC_DEFUN(SYNCE_CHECK_RRA,
+	[
+		if test x = x$synce_rra_checked; then
+			SYNCE_CHECK_RAPI
+
+			synce_kde_save_cflags="$CPPFLAGS"
+			synce_kde_save_ldflags="$LDFLAGS"
+
+			CPPFLAGS="$CPPFLAGS $RAPI_R_INCLUDES"
+			LDFLAGS="$LDFLAGS $RAPI_R_LDFLAGS"
+
+			AC_ARG_WITH(librra,
+				AC_HELP_STRING(
+					[--with-librra=DIR],
+					[Search for librra in DIR/include and DIR/lib]
+				),
+				[
+					RRA_INCLUDES="-I${withval}/include"
+					RRA_LDFLAGS="-L${withval}/lib"
+				]
+			)
+
+			AC_ARG_WITH(librra-include,
+				AC_HELP_STRING(
+					[--with-librra-include=DIR],
+					[Search for librra header files in DIR]
+				),
+				[
+					RRA_INCLUDES="-I${withval}"
+				]
+			)
+
+			AC_ARG_WITH(librra-lib,
+				AC_HELP_STRING(
+					[--with-librra-lib=DIR],
+					[Search for librra library files in DIR]
+				),
+				[
+					RRA_LDFLAGS="-L${withval}"
+				]
+			)
+
+			LDFLAGS="$LDFLAGS $RAA_LDFLAGS"
+			AC_CHECK_LIB(rra, rra_matchmaker_replace_partnership,
+				[
+					RRA_LIB="-lrra"
+				],
+				[
+					AC_MSG_ERROR([Can't find RRA library])
+					exit
+				],
+				[
+					$RAPI_R_LIB
+				]
+			)
+
+			CPPFLAGS="$CPPFLAGS $RRA_INCLUDES"
+			AC_CHECK_HEADERS(rra/syncmgr.h,,
+				[
+					AC_MSG_ERROR([Can't find rra/syncmgr.h])
+					exit
+				]
+			)
+
+			RRA_R_INCLUDES="$RRA_INCLUDES $RAPI_R_INCLUDES"
+			RRA_R_LDFLAGS="$RRA_LDFLAGS $RAPI_R_LDFLAGS"
+			RRA_R_LIB="$RRA_LIB $RAPI_R_LIB"
+			AC_SUBST(RRA_INCLUDES)
+			AC_SUBST(RRA_LDFLAGS)
+			AC_SUBST(RRA_LIB)
+			AC_SUBST(RRA_R_INCLUDES)
+			AC_SUBST(RRA_R_LDFLAGS)
+			AC_SUBST(RRA_R_LIB)
+
+			CPPFLAGS="$synce_kde_save_cflags"
+			LDFLAGS="$synce_kde_save_ldflags"
+			unset synce_kde_save_cflags
+			unset synce_kde_save_ldflags
+			synce_rra_checked=yes
+		fi
+	]
+)
