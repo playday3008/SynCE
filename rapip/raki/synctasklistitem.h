@@ -28,6 +28,7 @@
 #include <config.h>
 #endif
 
+#include <rra/syncmgr.h>
 #include <kpopupmenu.h>
 #include <ktrader.h>
 #include <klibloader.h>
@@ -55,7 +56,7 @@ class SyncTaskListItem : public QObject, public QCheckListItem
 Q_OBJECT
     
 public:
-    SyncTaskListItem(QString pdaName, ObjectType* objectType, QListView* listView,
+    SyncTaskListItem(QString pdaName, RRA_SyncMgrType* objectType, QListView* listView,
             uint32_t partnerId);
 
     virtual ~SyncTaskListItem();
@@ -64,9 +65,9 @@ public:
     void makePersistent();
     bool isOn();
     void setOn(bool state);
-    ObjectType* getObjectType();
+    RRA_SyncMgrType* getObjectType();
     QString getObjectTypeName();
-    void setObjectType(ObjectType *objectType);
+    void setObjectType(RRA_SyncMgrType *objectType);
     void setTotalSteps(int totalSteps);
     void setProgress(int progress);
     void advance(int offset);
@@ -94,7 +95,7 @@ protected:
     virtual void stateChange(bool state);
 
 private:
-    ObjectType *objectType;
+    RRA_SyncMgrType *objectType;
     bool isOnStore;
     KProgress *progress;
     QLabel *taskLabelWidget;

@@ -29,6 +29,7 @@
 #include "passworddialogimpl.h"
 #include "raki.h"
 #include "rra.h"
+#include "matchmaker.h"
 #include "rapiwrapper.h"
 #include "removepartnershipdialogimpl.h"
 #include "initprogress.h"
@@ -128,12 +129,15 @@ PDA::PDA(Raki *raki, QString pdaName)
 
 PDA::~PDA()
 {
+    kdDebug(2120) << "Deleting PDA" << endl;
+
     if (syncDialog->running()) {
         syncDialog->setDelayedDelete(true);
         syncDialog->setStopRequested(true);
     } else {
         delete syncDialog;
     }
+
     delete passwordDialog;
     delete runWindow;
     if (managerWindow->running()) {
@@ -188,7 +192,7 @@ void PDA::setStopRequested(bool isStopRequested)
 }
 
 
-bool PDA::getSynchronizationTypes(QPtrDict<ObjectType> *types)
+bool PDA::getSynchronizationTypes(QPtrDict<RRA_SyncMgrType> *types)
 {
     return rra->getTypes(types);
 }
@@ -365,7 +369,7 @@ QString PDA::getDeviceIp()
 
 void *PDA::removePartnershipDialog(void *data)
 {
-    struct Rra::Partner * partner = (struct Rra::Partner *) data;
+    struct MatchMaker::Partner * partner = (struct MatchMaker::Partner *) data;
     int removedPartners;
 
     initProgress->hide();
@@ -424,26 +428,26 @@ void *PDA::initializationStarted(void *)
 }
 
 
-bool PDA::removePartnership(int *removedPartnerships)
+bool PDA::removePartnership(MatchMaker *matchmaker, int *removedPartnerships)
 {
-    struct Rra::Partner partners[2];
+    struct MatchMaker::Partner partners[2];
     bool removePartnershipOk = true;
 
     advanceInitProgress(1);
-    if (rra->getPartner(1, &partners[0])) {
+    if (matchmaker->getPartner(1, &partners[0])) {
         advanceInitProgress(1);
-        if (rra->getPartner(2, &partners[1])) {
+        if (matchmaker->getPartner(2, &partners[1])) {
             int deletedItems = (int) postThreadEvent(
                     &PDA::removePartnershipDialog, partners, block);
             if (deletedItems > 0) {
                 if (deletedItems != 0) {
-                    struct Rra::Partner deletedPartner;
+                    struct MatchMaker::Partner deletedPartner;
                     if (deletedItems & 1) {
                         deletedPartner.name = "";
                         deletedPartner.id = 0;
                         deletedPartner.index = 1;
                         advanceInitProgress(1);
-                        if (!rra->setPartner(deletedPartner)) {
+                        if (!matchmaker->setPartner(deletedPartner)) {
                             removePartnershipOk = false;
                         }
                     }
@@ -452,7 +456,7 @@ bool PDA::removePartnership(int *removedPartnerships)
                         deletedPartner.id = 0;
                         deletedPartner.index = 2;
                         advanceInitProgress(1);
-                        if (!rra->setPartner(deletedPartner)) {
+                        if (!matchmaker->setPartner(deletedPartner)) {
                             removePartnershipOk = false;
                         }
                     }
@@ -470,18 +474,18 @@ bool PDA::removePartnership(int *removedPartnerships)
 }
 
 
-bool PDA::setPartnershipThread()
+bool PDA::setPartnershipThread(MatchMaker *matchmaker)
 {
     kdDebug(2120) << "in PDE::init" << endl;
     bool setPartnerOk = true;
     unsigned int index;
 
     advanceInitProgress(1);
-    if (!rra->partnerCreate(& index)) {
+    if (!matchmaker->partnerCreate(& index)) {
         int removedPartnerships = 0;
-        if (removePartnership(&removedPartnerships)) {
+        if (removePartnership(matchmaker, &removedPartnerships)) {
             if (removedPartnerships > 0) {
-                setPartnerOk = setPartnershipThread();
+                setPartnerOk = setPartnershipThread(matchmaker);
             } else {
                 postThreadEvent(&PDA::alreadyTwoPartnershipsDialog, NULL,
                         block);
@@ -489,7 +493,7 @@ bool PDA::setPartnershipThread()
                 partnerName = "";
                 partnerId = 0;
                 advanceInitProgress(7);
-                if (rra->setCurrentPartner(0)) {
+                if (matchmaker->setCurrentPartner(0)) {
                     setPartnerOk = false;
                 }
             }
@@ -497,9 +501,9 @@ bool PDA::setPartnershipThread()
             setPartnerOk = false;
         }
     } else {
-        struct Rra::Partner partner;
+        struct MatchMaker::Partner partner;
         advanceInitProgress(7);
-        if (rra->getPartner(index, &partner)) {
+        if (matchmaker->getPartner(index, &partner)) {
             partnerOk = true;
             partnerName = partner.name;
             partnerId = partner.id;
@@ -517,9 +521,10 @@ void PDA::setPartnership(QThread */*thread*/, void *)
 {
     bool setPartnerOk = false;
 
-    if (Ce::rapiInit(pdaName)) {
-        setPartnerOk = setPartnershipThread();
-        Ce::rapiUninit();
+    MatchMaker matchmaker(pdaName);
+
+    if (matchmaker.connect()) {
+        setPartnerOk = setPartnershipThread(&matchmaker);
     }
 
     if (setPartnerOk) {
@@ -567,15 +572,15 @@ void PDA::init()
 
 bool PDA::synchronizationTasks(void *)
 {
-    ObjectType *objectType;
+    RRA_SyncMgrType *objectType;
     QDateTime lastSynchronized;
     bool ret = true;
 
     if (!typesRead) {
         typesRead = true;
-        QPtrDict<ObjectType> types;
+        QPtrDict<RRA_SyncMgrType> types;
         if (getSynchronizationTypes(&types)) {
-            QPtrDictIterator<ObjectType> it(types);
+            QPtrDictIterator<RRA_SyncMgrType> it(types);
             for( ; it.current(); ++it ) {
                 objectType = it.current();
                 configDialog->addSyncTask(objectType, partnerId);

@@ -41,7 +41,7 @@ IcalSync::~IcalSync()
 
 void IcalSync::generatePdaDelta()
 {
-    uint32_t *v;
+    uint32_t v;
     ICAL::icalcomponent *comp;
 
     ICAL::icalcomponent *calendar = ICAL::icalcomponent_new(ICAL::ICAL_VCALENDAR_COMPONENT);
@@ -57,33 +57,37 @@ void IcalSync::generatePdaDelta()
 
         incTotalSteps(ids.changedIds.count() + ids.deletedIds.count());
 
-        for (v = ids.changedIds.first(); v && !stopRequested(); v = ids.changedIds.next()) {
-            comp = rra->getEvent(getObjectTypeId(), *v);
+        QValueList<uint32_t>::iterator it;
+        for (it = ids.changedIds.begin(); it != ids.changedIds.end()/* && running*/; ++it) {
+            v = *it;
+            comp = rra->getEvent(getObjectTypeId(), v);
             ICAL::icalcomponent_add_component(calendar, comp);
             kdDebug(2120) << "=============================================" << endl;
             kdDebug(2120) << icalcomponent_as_ical_string(comp) << endl;
             kdDebug(2120) << "---------------------------------------------" << endl;
-            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), *v) << endl;
+            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), v) << endl;
             kdDebug(2120) << "=============================================" << endl;
         }
 
-        for (v = ids.unchangedIds.first(); v && !stopRequested(); v = ids.unchangedIds.next()) {
-            comp = rra->getEvent(getObjectTypeId(), *v);
+        for (it = ids.unchangedIds.begin(); it != ids.unchangedIds.end()/* && running*/; ++it) {
+            v = *it;
+            comp = rra->getEvent(getObjectTypeId(), v);
             ICAL::icalcomponent_add_component(calendar, comp);
             kdDebug(2120) << "=============================================" << endl;
             kdDebug(2120) << icalcomponent_as_ical_string(comp) << endl;
             kdDebug(2120) << "---------------------------------------------" << endl;
-            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), *v) << endl;
+            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), v) << endl;
             kdDebug(2120) << "=============================================" << endl;
         }
 
-        for (v = ids.deletedIds.first(); v && !stopRequested(); v = ids.deletedIds.next()) {
-            comp = rra->getEvent(getObjectTypeId(), *v);
+        for (it = ids.deletedIds.begin(); it != ids.deletedIds.end()/* && running*/; ++it) {
+            v = *it;
+            comp = rra->getEvent(getObjectTypeId(), v);
             ICAL::icalcomponent_add_component(calendar, comp);
             kdDebug(2120) << "=============================================" << endl;
             kdDebug(2120) << icalcomponent_as_ical_string(comp) << endl;
             kdDebug(2120) << "---------------------------------------------" << endl;
-            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), *v) << endl;
+            kdDebug(2120) << rra->getVEvent(getObjectTypeId(), v) << endl;
             kdDebug(2120) << "=============================================" << endl;
         }
         rra->disconnect();

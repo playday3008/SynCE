@@ -26,6 +26,7 @@
 #include "rakiworkerthread.h"
 #include "pda.h"
 #include "installer.h"
+#include "rapiwrapper.h"
 
 #include <kglobal.h>
 #include <klocale.h>
@@ -141,14 +142,11 @@ Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
     setConnectionStatus(false);
 
     dccmConnection = NULL;
-    openDccmConnection();
 
     configDialog->checkRunningVersion();
 
     KTipDialog::showTip(KApplication::kApplication()->dirs()->findResource(
             "data", "raki/tips"));
-
-    startTimer(1000);
 }
 
 
@@ -280,10 +278,11 @@ void Raki::connectionRequest()
 }
 
 
-void Raki::dccmConnect()
+bool Raki::dccmConnect()
 {
     char *path = NULL;
     synce::synce_get_directory(&path);
+    bool ret = false;
 
     dccmConnection = new KSocket((QString(path) + QString("/csock")).ascii());
     synce::wstr_free_string(path);
@@ -297,21 +296,30 @@ void Raki::dccmConnect()
                 this, SLOT(connectionRequest()));
         connect(dccmConnection, SIGNAL(closeEvent(KSocket *)),
                 this, SLOT(closeDccmConnection()));
+        timerId = startTimer(1000);
+        ret = true;
     } else {
         delete dccmConnection;
         dccmConnection = NULL;
+        ret = false;
     }
+
+    return ret;
 }
 
 
-void Raki::openDccmConnection()
+bool Raki::openDccmConnection()
 {
+    bool ret = false;
+
     if (dccmConnection == NULL) {
-        dccmConnect();
+        ret = dccmConnect();
     } else if (dccmConnection->socket() < 0) {
         delete dccmConnection;
-        dccmConnect();
+        ret = dccmConnect();
     }
+
+    return ret;
 }
 
 
@@ -320,6 +328,7 @@ void Raki::closeDccmConnection()
     if (dccmConnection) {
         delete dccmConnection;
         dccmConnection = NULL;
+        killTimer(timerId);
     }
 }
 
@@ -393,9 +402,11 @@ void Raki::dccmExited(KProcess */*oldDccm*/)
     }
 
     if (dccmShouldRun) {
-        KMessageBox::error(this,
-                i18n("Could not start dccm or dccm has exited.\n"
-                "Maybe there is already a dccm running"));
+        if (!openDccmConnection()) {
+            KMessageBox::error(this,
+                    i18n("Could not start dccm or dccm has exited.\n"
+                    "Maybe there is already a dccm running"));
+        }
     }
 }
 
@@ -488,7 +499,6 @@ void Raki::setConnectionStatus(bool enable)
                   "</b><br>";
         }
         QToolTip::add(this, str);
-
     } else {
         connected = false;
         actualIcon = &disconnectedIcon;

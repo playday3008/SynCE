@@ -38,9 +38,9 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(QString pdaName, ObjectType *objectType,
+SyncTaskListItem::SyncTaskListItem(QString pdaName, RRA_SyncMgrType *objectType,
                                    QListView* listView, uint32_t partnerId)
-        : QCheckListItem(listView, objectType->name, QCheckListItem::CheckBox)
+        : QCheckListItem(listView, objectType->name2, QCheckListItem::CheckBox)
 {
     this->objectType = objectType;
     this->partnerId = partnerId;
@@ -124,7 +124,7 @@ bool SyncTaskListItem::isFirstSynchronization()
 }
 
 
-ObjectType* SyncTaskListItem::getObjectType()
+RRA_SyncMgrType* SyncTaskListItem::getObjectType()
 {
     return objectType;
 }
@@ -132,11 +132,11 @@ ObjectType* SyncTaskListItem::getObjectType()
 
 QString SyncTaskListItem::getObjectTypeName()
 {
-    return objectType->name;
+    return objectType->name2;
 }
 
 
-void SyncTaskListItem::setObjectType(ObjectType *objectType)
+void SyncTaskListItem::setObjectType(RRA_SyncMgrType *objectType)
 {
     this->objectType = objectType;
 }
@@ -345,19 +345,19 @@ int SyncTaskListItem::createSyncPlugin(bool state)
     switch(ret) {
     case ERROR_NOSYNCHRONIZER:
         KMessageBox::information(this->listView(), "<p>No Synchronizer found for <b>" +
-                QString(objectType->name) + "</b></p>", QString(objectType->name) + pdaName);
+                QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
     case ERROR_WRONGLIBRARYTYPE:
         KMessageBox::error(this->listView(), "<p>Wrong library type for <b>" +
-                QString(objectType->name) + "</b></p>", QString(objectType->name) + pdaName);
+                QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
     case ERROR_NOFACTORY:
         KMessageBox::error(this->listView(), "<p>Wrong library type for <b>" +
-                QString(objectType->name) + "</b></p>", QString(objectType->name) + pdaName);
+                QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;

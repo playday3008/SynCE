@@ -20,86 +20,78 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
+#ifndef MATCHMAKER_H
+#define MATCHMAKER_H
 
-#ifndef RRA_H
-#define RRA_H
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <rapi.h>
-extern "C" {
-#include <rra/syncmgr.h>
-}
-
-#include <qobject.h>
+#include <rra/matchmaker.h>
 #include <qstring.h>
-#include <qptrdict.h>
-#include <qvaluelist.h>
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#include <kde_dmalloc.h>
-#endif
-
-namespace KABC {
-    class Addressee;
-}
-
-namespace ICAL {
-    #include <ical.h>
-}
 
 /**
-@author Volker Christian,,,
+@author Volker Christian
 */
-
-class Rra : QObject
-{
-Q_OBJECT
+class MatchMaker{
 public:
-    struct ids {
-        QValueList<uint32_t> changedIds;
-        QValueList<uint32_t> unchangedIds;
-        QValueList<uint32_t> deletedIds;
-    };
-
     struct Partner {
         QString name;
         uint32_t id;
         int index;
     };
 
-    Rra(QString pdaName);
-    virtual ~Rra();
+    MatchMaker(QString pdaName);
 
-    bool getTypes(QPtrDict<RRA_SyncMgrType> *);
-    bool getIds(uint32_t type_id, struct Rra::ids *ids);
-    QString getVCard(uint32_t type_id, uint32_t object_id);
-    uint32_t putVCard(QString& vCard, uint32_t type_id, uint32_t object_id);
-    QString getVEvent(uint32_t type_id, uint32_t object_id);
-    uint32_t putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id);
-    void deleteObject(uint32_t type_id, uint32_t object_id);
-    KABC::Addressee getAddressee(uint32_t type_id, uint32_t object_id);
-    bool putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
-            uint32_t ceUid, uint32_t *newCeUid);
-    bool putEvent(const ICAL::icalcomponent *appointment, uint32_t type_id,
-        uint32_t ceUid, uint32_t *newCeUid);
-    ICAL::icalcomponent *getEvent(uint32_t type_id, uint32_t object_id);
-    bool resetAddressee(uint32_t type_id, uint32_t object_id);
+    ~MatchMaker();
 
-    bool ok();
     bool connect();
-    void disconnect();
+
+    bool disconnect();
+
+    /** Set the current partnership index (1 or 2) */
+    bool set_current_partner(uint32_t index);
+
+    /** Get the current partnership index (1 or 2) */
+    bool get_current_partner(uint32_t* index);
+
+    /** Set numeric ID for partnership 1 or 2 */
+    bool set_partner_id(uint32_t index, uint32_t id);
+
+    /** Get numeric ID for partnership 1 or 2 */
+    bool get_partner_id(uint32_t index, uint32_t* id);
+
+    /** Set computer name for partnership 1 or 2 */
+    bool set_partner_name(uint32_t index, const char* name);
+
+    /** Get computer name for partnership 1 or 2 */
+    bool get_partner_name(uint32_t index, char** name);
+
+    /** Generate a new partnership at index 1 or 2 */
+    bool replace_partnership(uint32_t index);
+
+    bool getPartner(uint32_t index, struct MatchMaker::Partner *partner);
+    bool getCurrentPartner(struct MatchMaker::Partner *partner);
+    bool partnerCreate(uint32_t *index);
+    bool partnerReplace(int index);
+    bool setPartner(struct MatchMaker::Partner& partner);
+    bool setCurrentPartner(uint32_t index);
+
+
+    /**
+    If we don't have a partnership with this device:
+        If there is an empty partnership slot:
+            Create a partnership in empty slot
+        Else
+            Fail
+
+    If we now have a partnership with this device:
+        Set current partnership to our partnership with the device
+    */
+
+    bool create_partnership(uint32_t* index);
 
 private:
-    HRESULT hr;
-    RRA_SyncMgr* rra;
+    RRA_Matchmaker *matchmaker;
     QString pdaName;
+    unsigned int useCount;
     bool rraOk;
-    struct ids _ids;
-    int useCount;
 };
 
 #endif

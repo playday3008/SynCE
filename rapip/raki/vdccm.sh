@@ -9,8 +9,8 @@ case "$1" in
 		;;
 
 	start|stop)
-		# do nothing
-		dcop raki Raki "dccmNotification(QString)" $1 2> /dev/null > /dev/null
+		raki=`dcop | grep raki`
+		dcop $raki Raki "dccmNotification(QString)" $1 2> /dev/null > /dev/null
 		;;
 
 	install)

@@ -7,4 +7,4 @@ Icon=
 Name=AvantGo Synchronizer
 ServiceTypes=Raki/Synchronizer
 X-KDE-Library=librakiagsync
-X-Raki-Synchronizer=Mobile Application Link
+X-Raki-Synchronizer=AvantGo Connect

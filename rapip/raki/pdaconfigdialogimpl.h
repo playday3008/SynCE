@@ -37,10 +37,11 @@
 #include <kpopupmenu.h>
 #include <qptrlist.h>
 #include <qdatetime.h>
+#include <rra/syncmgr.h>
 
 class SyncTaskListItem;
 class RemovePartnershipDialogImpl;
-typedef struct _ObjectType ObjectType;
+//typedef struct _ObjectType ObjectType;
 
 /**
 @author Volker Christian,,,
@@ -63,7 +64,7 @@ public:
     uint32_t getPartnerId();
     QPtrList<SyncTaskListItem>& syncronizationTasks();
     void setNewPartner(QString partnerName, uint32_t partnerId);
-    void addSyncTask(ObjectType *objectType, uint32_t partnerId);
+    void addSyncTask(RRA_SyncMgrType *objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
 
 public slots:

@@ -71,8 +71,8 @@ private:
     bool process(const QCString &fun, const QByteArray &data,
                  QCString &replyType, QByteArray &replyData);
     QString changeConnectionState(int state);
-    void dccmConnect();
-    void openDccmConnection();
+    bool dccmConnect();
+    bool openDccmConnection();
     void dccmNotification(QString signal);
     void startDccm();
     void stopDccm();
@@ -103,6 +103,7 @@ private:
     bool initialized;
     QStringList pendingPdaList;
     KProcess ipTablesProc;
+    int timerId;
     
     enum {
         CONFIGURE_ITEM = 1,

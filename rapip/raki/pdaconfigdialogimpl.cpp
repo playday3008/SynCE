@@ -25,7 +25,7 @@
 #include "synctasklistitem.h"
 #include "removepartnershipdialogimpl.h"
 
-#include <librra.h>
+//#include <librra.h>
 
 #include <qcheckbox.h>
 #include <klineedit.h>
@@ -115,7 +115,7 @@ void PdaConfigDialogImpl::writeConfig()
             syncTaskListItem = syncTaskItemList.next()) {
         ksConfig->setGroup("Synchronizer-" + QString::number(
                 syncTaskListItem->getObjectType()->id));
-        ksConfig->writeEntry("Name", syncTaskListItem->getObjectType()->name);
+        ksConfig->writeEntry("Name", syncTaskListItem->getObjectType()->name2);
         ksConfig->writeEntry("Active", syncTaskListItem->isOn());
         ksConfig->writeEntry("PreferedLibrary",
                 syncTaskListItem->getPreferedLibrary());
@@ -247,7 +247,7 @@ uint32_t PdaConfigDialogImpl::getPartnerId()
 }
 
 
-void PdaConfigDialogImpl::addSyncTask(ObjectType *objectType,
+void PdaConfigDialogImpl::addSyncTask(RRA_SyncMgrType *objectType,
         uint32_t partnerId)
 {
     SyncTaskListItem *item;

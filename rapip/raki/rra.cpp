@@ -25,6 +25,10 @@
 #include "rapiwrapper.h"
 #include "wince_ids.h"
 
+extern "C" {
+#include <rra/appointment.h>
+#include <rra/contact.h>
+}
 #include <kabc/addressee.h>
 #include <kdebug.h>
 
@@ -35,19 +39,13 @@
 #include <kde_dmalloc.h>
 #endif
 
-
 #define MAX_FIELD_COUNT 60
-
 
 Rra::Rra(QString pdaName)
 {
     rraOk = true;
     this->pdaName = pdaName;
-    rra = rra_new();
-    _ids.object_ids = NULL;
-    _ids.object_types = NULL;
-    _ids.deleted_ids = NULL;
-    objectTypes.setAutoDelete(true);
+    rra = rra_syncmgr_new();
     useCount = 0;
 }
 
@@ -55,7 +53,7 @@ Rra::Rra(QString pdaName)
 Rra::~Rra()
 {
     disconnect();
-    rra_free(rra);
+    rra_syncmgr_destroy(rra);
 }
 
 
@@ -66,14 +64,11 @@ bool Rra::connect()
     if (useCount == 0) {
         if (!Ce::rapiInit(pdaName)) {
             rraOk = false;
+        } else if (rra_syncmgr_connect(rra)) {
+            kdDebug(2120) << "RRA-Connect" << endl;
         } else {
-            rraOk = rra_connect(rra);
-            if (!rraOk) {
-                rra_disconnect(rra);
-                Ce::rapiUninit();
-            } else {
-                kdDebug(2120) << "RRA-Connect" << endl;
-            }
+            rraOk = false;
+            Ce::rapiUninit();
         }
     }
 
@@ -87,11 +82,14 @@ bool Rra::connect()
 
 void Rra::disconnect()
 {
-    useCount--;
+    if (useCount > 0) {
+        useCount--;
+    }
 
     if(useCount == 0) {
         kdDebug(2120) << "RRA-Disconnect" << endl;
-        rra_disconnect(rra);
+
+        rra_syncmgr_disconnect(rra);
         Ce::rapiUninit();
     }
 }
@@ -103,22 +101,21 @@ bool Rra::ok()
 }
 
 
-bool Rra::getTypes(QPtrDict<ObjectType> *objectTypes)
+bool Rra::getTypes(QPtrDict<RRA_SyncMgrType> *objectTypes)
 {
+    RRA_SyncMgrType *object_types = NULL;
     size_t object_type_count = 0;
-    ObjectType *objectType;
 
     rraOk = true;
 
     objectTypes->clear();
 
     if (connect()) {
-        _ids.object_types = NULL;
-        if (rra_get_object_types(rra, &_ids.object_types, &object_type_count)) {
+        object_type_count = rra_syncmgr_get_type_count(rra);
+        object_types = rra_syncmgr_get_types(rra);
+        if (object_types) {
             for (size_t i = 0; i < object_type_count; i++) {
-                objectType = new ObjectType();
-                *objectType = _ids.object_types[i];
-                objectTypes->insert((void *) objectType->id, objectType);
+                objectTypes->insert((void *) object_types[i].id, &object_types[i]);
             }
         } else {
             rraOk = false;
@@ -132,41 +129,58 @@ bool Rra::getTypes(QPtrDict<ObjectType> *objectTypes)
 }
 
 
+static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t count,
+        uint32_t *ids, void *cookie)
+{
+    QValueList<uint32_t> *eventIds;
+    Rra::ids *_ids = (Rra::ids *) cookie;
+
+    switch(event) {
+    case SYNCMGR_TYPE_EVENT_UNCHANGED:
+        eventIds = &_ids->unchangedIds;
+        kdDebug(2120) << "------------------------ unchanged ---------" << endl;
+        break;
+    case SYNCMGR_TYPE_EVENT_CHANGED:
+        eventIds = &_ids->changedIds;
+        kdDebug(2120) << "------------------------ changed ---------" << endl;
+        break;
+    case SYNCMGR_TYPE_EVENT_DELETED:
+        eventIds = &_ids->deletedIds;
+        kdDebug(2120) << "------------------------ deleted ---------" << endl;
+        break;
+    default:
+        eventIds = NULL;
+        break;
+    }
+
+    if (eventIds != NULL) {
+        for (uint32_t i = 0; i < count; i++) {
+            eventIds->append(ids[i]);
+        }
+    }
+
+    return true;
+}
+
+
 bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
 {
-    size_t deleted_count = 0;
-    unsigned id = 0;
-
     rraOk = true;
-
-    rra_free_object_ids(_ids.object_ids);
-    rra_free_deleted_object_ids(_ids.deleted_ids);
 
     _ids.changedIds.clear();
     _ids.unchangedIds.clear();
     _ids.deletedIds.clear();
 
     if (connect()) {
-        if (rra_get_object_ids(rra, type_id, &_ids.object_ids)) {
-            for (size_t i = 0; i < _ids.object_ids->unchanged; i++) {
-                _ids.unchangedIds.append(&_ids.object_ids->ids[id++]);
-            }
-            for (size_t i = 0; i < _ids.object_ids->changed; i++) {
-                _ids.changedIds.append(&_ids.object_ids->ids[id++]);
-            }
-            if (rra_get_deleted_object_ids(rra, type_id, _ids.object_ids,
-                                           &_ids.deleted_ids, &deleted_count)) {
-                kdDebug(2120) << "Deleted objects count: " << deleted_count <<
-                        endl;
-                for (id = 0; id < deleted_count; id++) {
-                    _ids.deletedIds.append(&_ids.deleted_ids[id]);
-                }
-            } else {
-                rraOk = false;
+        rra_syncmgr_subscribe(rra, type_id, callback, &_ids);
+        if (rra_syncmgr_start_events(rra)) {
+            while(rra_syncmgr_event_wait(rra, 3)) {
+                rra_syncmgr_handle_event(rra);
             }
         } else {
             rraOk = false;
         }
+        rra_syncmgr_unsubscribe(rra, type_id);
         disconnect();
     } else {
         rraOk = false;
@@ -175,116 +189,6 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
     *ids = _ids;
 
     return rraOk;
-}
-
-
-bool Rra::getPartner(uint32_t index, struct Rra::Partner *partner)
-{
-    char *name = NULL;
-
-    rraOk = true;
-
-    if (!rra_partner_get_id(rra, index, &partner->id)) {
-        partner->id = 0;
-        rraOk = false;
-    }
-
-    if (!rra_partner_get_name(rra, index, &name)) {
-        partner->name = "";
-        rraOk = false;
-    } else {
-        partner->name = name;
-    }
-    
-    partner->index = index;
-
-    return rraOk;
-}
-
-
-bool Rra::getCurrentPartner(struct Rra::Partner *partner)
-{
-    DWORD currentIndex;
-
-    rraOk = true;
-
-    if (rra_partner_get_current(rra, &currentIndex)) {
-        if (!getPartner(currentIndex, partner)) {
-            rraOk = false;
-        }
-    } else {
-        partner->id = 0;
-        partner->name = "";
-        partner->index = 0;
-        rraOk = false;
-    }
-
-    return rraOk;
-}
-
-
-bool Rra::partnerCreate(uint32_t *index)
-{
-    rraOk = true;
-
-    if (rra_partner_create(rra, index)) {
-        kdDebug(2120) <<
-                "Partnership creation succeeded. Using partnership index " <<
-                *index << endl;
-    } else {
-        kdDebug(2120) << "Partnership creation failed." << endl;
-        *index = 0;
-        rraOk = false;
-    }
-
-    return rraOk;
-}
-
-
-bool Rra::partnerReplace(int index)
-{
-    rraOk = true;
-
-    if (index == 1 || index == 2) {
-        if (rra_partner_replace(rra, index)) {
-            kdDebug(2120) << "Partnership replacement succeeded." << endl;
-        } else {
-            kdDebug(2120) << "Partnership replacement failed." << endl;
-            rraOk = false;
-        }
-    } else {
-        kdDebug(2120) <<
-                "Invalid or missing index of partnership to replace." <<
-                endl;
-        rraOk = false;
-    }
-
-    return rraOk;
-}
-
-
-bool Rra::setPartner(struct Rra::Partner& partner)
-{
-    if (!rra_partner_set_id(rra, partner.index, partner.id)) {
-        return false;
-    }
-
-    if (!rra_partner_set_name(rra, partner.index, partner.name.ascii())) {
-        return false;
-    }
-
-    return true;
-}
-
-
-bool Rra::setCurrentPartner(uint32_t index)
-{
-    if (!rra_partner_set_current(rra, index)) {
-        disconnect();
-        return false;
-    }
-
-    return true;
 }
 
 
@@ -298,7 +202,7 @@ QString Rra::getVCard(uint32_t type_id, uint32_t object_id)
     QString vCard = "";
 
     if (connect()) {
-        if (!rra_object_get(rra, type_id, object_id, &data,
+        if (!rra_syncmgr_get_single_object(rra, type_id, object_id, &data,
                             &data_size)) {
             rraOk = false;
         } else if (!rra_contact_to_vcard(object_id, data, data_size, &vcard,
@@ -338,7 +242,7 @@ uint32_t Rra::putVCard(QString& vCard, uint32_t type_id, uint32_t object_id)
                                     RRA_CONTACT_NEW) | RRA_CONTACT_ISO8859_1 |
                                     RRA_CONTACT_VERSION_3_0)) {
             rraOk = false;
-        } else if (!rra_object_put(rra, type_id, object_id,
+        } else if (!rra_syncmgr_put_single_object(rra, type_id, object_id,
                                    (object_id != 0) ? 0x40 : 2, buffer,
                                    buffer_size, &new_object_id)) {
             rraOk = false;
@@ -364,11 +268,11 @@ QString Rra::getVEvent(uint32_t type_id, uint32_t object_id)
     QString vEvent = "";
 
     if (connect()) {
-        if (!rra_object_get(rra, type_id, object_id, &data,
+        if (!rra_syncmgr_get_single_object(rra, type_id, object_id, &data,
                 &data_size)) {
             rraOk = false;
         } else if (!rra_appointment_to_vevent(object_id, data, data_size,
-                &vevent, 0, /*p_tzi*/ NULL)) {
+                &vevent, 0, NULL)) {
             rraOk = false;
         }
 
@@ -400,11 +304,10 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
 
     if (connect()) {
         const char *vevent = vEvent.ascii();
-
         if (!rra_appointment_from_vevent(vevent, NULL, &buffer,
                 &buffer_size, 0, NULL)) {
             rraOk = false;
-        } else if (!rra_object_put(rra, type_id, object_id,
+        } else if (!rra_syncmgr_put_single_object(rra, type_id, object_id,
                 (object_id != 0) ? 0x40 : 2, buffer,
                 buffer_size, &new_object_id)) {
             rraOk = false;
@@ -426,7 +329,7 @@ void Rra::deleteObject(uint32_t type_id, uint32_t object_id)
     rraOk = true;
 
     if (connect()) {
-        if (!rra_object_delete(rra, type_id, object_id)) {
+        if (!rra_syncmgr_delete_object(rra, type_id, object_id)) {
             rraOk = false;
         }
         disconnect();
@@ -574,8 +477,8 @@ KABC::Addressee Rra::getAddressee(uint32_t type_id, uint32_t object_id)
     rraOk = true;
 
     if (connect()) {
-        if (!rra_object_get(rra, type_id, object_id, &data,
-                            &data_size)) {
+        if (!rra_syncmgr_get_single_object(rra, type_id, object_id,
+                &data, &data_size)) {
             rraOk = false;
         } else {
             field_count = letoh32(*(uint32_t *)(data + 0));
@@ -607,6 +510,7 @@ KABC::Addressee Rra::getAddressee(uint32_t type_id, uint32_t object_id)
         }
         disconnect();
     }
+
     myAddress.addressee.setUid("RRA-ID-" + (QString("00000000") +
             QString::number(object_id, 16)).right(8));
     return myAddress.addressee;
@@ -629,7 +533,6 @@ bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
     myAddress.workAddress = addressee.address(KABC::Address::Work);
     myAddress.otherAddress = addressee.address(KABC::Address::Intl);
 
-
     if (connect()) {
         for (int j = 0; contact_ids[j].id; j++) {
             if (contact_ids[j].function != NULL) {
@@ -641,7 +544,7 @@ bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
             }
         }
         if (dbstream_from_propvals(propvals, i, &data, &data_size)) {
-            if (!rra_object_put(rra, type_id, ceUid,
+            if (!rra_syncmgr_put_single_object(rra, type_id, ceUid,
                                 (ceUid != 0) ? 0x40 : 2, data,
                                 data_size, newCeUid)) {
                 return false;
@@ -660,6 +563,19 @@ bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
 }
 
 
+bool Rra::resetAddressee(uint32_t type_id, uint32_t object_id)
+{
+    bool ret = false;
+
+    if (connect()) {
+        ret = rra_syncmgr_mark_object_unchanged(rra, type_id, object_id);
+        disconnect();
+    }
+
+    return ret;
+}
+
+
 ICAL::icalcomponent *Rra::getEvent(uint32_t type_id, uint32_t object_id)
 {
     ICAL::icalcomponent *event = NULL;
@@ -671,7 +587,7 @@ ICAL::icalcomponent *Rra::getEvent(uint32_t type_id, uint32_t object_id)
     rraOk = true;
 
     if (connect()) {
-        if (!rra_object_get(rra, type_id, object_id, &data,
+        if (!rra_syncmgr_get_single_object(rra, type_id, object_id, &data,
                             &data_size)) {
             rraOk = false;
         } else {

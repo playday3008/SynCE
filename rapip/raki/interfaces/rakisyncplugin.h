@@ -28,7 +28,7 @@
 #include <config.h>
 #endif
 
-#include <librra.h>
+#include <rra/syncmgr.h>
 
 #include <kconfig.h>
 
@@ -64,7 +64,7 @@ public:
     void setTotalSteps(int steps);
     void setProgress(int progress);
     void setTask(const char *task);
-    void init(ObjectType *objectType, QString pdaName, QWidget *parent,
+    void init(RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent,
             QString serviceName);
     virtual void createConfigureObject(KConfig *ksConfig);
     virtual void configure();
@@ -72,7 +72,7 @@ public:
 
 private:
     virtual bool sync() = 0;
-    ObjectType *objectType;
+    RRA_SyncMgrType *objectType;
     KConfig *ksConfig;
 
 protected:

@@ -30,8 +30,7 @@
 
 #include "workerthreadinterface.h"
 
-#include <librra.h>
-
+#include <rra/syncmgr.h>
 #include <qobject.h>
 #include <qptrdict.h>
 #include <qthread.h>
@@ -50,6 +49,7 @@ class SyncDialogImpl;
 class InitProgress;
 class Rra;
 class SyncTaskListItem;
+class MatchMaker;
 
 /**
 @author Volker Christian,,,
@@ -73,7 +73,7 @@ public:
     void unregisterCopyJob(KIO::CopyJob *copyJob);
     unsigned int getNumberOfCopyJobs();
     KURL::List getURLListByCopyJob(KIO::CopyJob *copyJob);
-    bool getSynchronizationTypes(QPtrDict<ObjectType> *);
+    bool getSynchronizationTypes(QPtrDict<RRA_SyncMgrType> *);
     void init();
     bool isPartner();
     bool running();
@@ -88,9 +88,9 @@ signals:
     void initialized(PDA *pda, int initialized);
     
 private:
-    bool setPartnershipThread();
+    bool setPartnershipThread(MatchMaker *matchmaker);
     void setPartnership(QThread *thread, void *data);
-    bool removePartnership(int *removedPartnerships);
+    bool removePartnership(MatchMaker *matchmaker, int *removedPartnerships);
     void *removePartnershipDialog(void *data);
     void *alreadyTwoPartnershipsDialog(void *data);
     void *progressDialogCancel(void *data);

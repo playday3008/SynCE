@@ -1,3 +1,254 @@
+2003-10-24 23:11  voc
+
+	* Doxyfile: [no log message]
+
+2003-10-24 23:08  voc
+
+	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h: Code
+	  cleaning
+
+2003-10-24 23:08  voc
+
+	* raki/plugins/agsync/: agsync.cpp, agsync.h, agsyncconfig.cpp,
+	  agsyncconfig.h, agsyncconfig.ui, agsyncconfigimpl.cpp,
+	  agsyncconfigimpl.h: AvantGo synchronizer now has a configuration
+	  menu
+
+2003-10-24 23:06  voc
+
+	* raki/: pda.cpp, pda.h, pdaconfigdialog.ui, pdaconfigdialog.ui.h,
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h,
+	  rakiworkerthread.cpp, runwindowimpl.cpp, syncdialogimpl.cpp,
+	  syncdialogimpl.h, synctasklistitem.cpp, synctasklistitem.h,
+	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h: Added
+	  infrastructure which provides synchronizer plugins with a
+	  mechanism to support individual configuration menus.
+
+2003-10-24 23:04  voc
+
+	* debian/changelog: New version
+
+2003-10-24 23:04  voc
+
+	* debian/control: Update to honor also the agsync package which is
+	  already in debain unstable
+
+2003-10-24 23:03  voc
+
+	* admin/am_edit: Automaticly remove *.pcs from the distribution
+
+2003-10-24 23:02  voc
+
+	* configure.in.in: Preperation for next minor update
+
+2003-10-13 02:12  voc
+
+	* raki/plugins/agsync/: Makefile.am, agsync.cpp, agsync.h,
+	  agsyncconfig.ui, agsyncconfigimpl.cpp, agsyncconfigimpl.h,
+	  agsyncconfig.ui.h: Configuration implemented
+
+2003-10-13 02:12  voc
+
+	* raki/interfaces/: rakisyncplugin.cpp, rakisyncplugin.h:
+	  configuration implemented
+
+2003-10-13 02:11  voc
+
+	* raki/pda.cpp: Function arguments updated
+
+2003-10-13 02:10  voc
+
+	* raki/: synctasklistitem.cpp, synctasklistitem.h: Configur dialog
+	  of the synchronizer is called
+
+2003-10-13 02:10  voc
+
+	* raki/: syncdialogimpl.cpp, syncdialogimpl.h: Funcion arguments
+	  updated
+
+2003-10-13 02:08  voc
+
+	* raki/: pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: PDA
+	  relevant configuration is now stored in a file individualy for
+	  every PDA.  Config button calls the configuration dialog of an
+	  SyncTaskListItem
+
+2003-10-13 02:05  voc
+
+	* raki/: pdaconfigdialog.ui, pdaconfigdialog.ui.h: Config button
+	  added
+
+2003-10-12 15:47  voc
+
+	* raki/: configdialogimpl.cpp, configdialogimpl.h, installer.cpp,
+	  managerimpl.cpp, managerimpl.h, passworddialogimpl.h, pda.cpp,
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h, raki.cpp, raki.h,
+	  rakiworkerthread.cpp, rakiworkerthread.h, rapiwrapper.h,
+	  removepartnershipdialogimpl.cpp, removepartnershipdialogimpl.h,
+	  rra.cpp, rra.h, runwindowimpl.cpp, runwindowimpl.h,
+	  synctasklistitem.cpp, synctasklistitem.h, syncthread.h,
+	  threadevent.cpp, threadevent.h, welcomedialogimpl.cpp,
+	  welcomedialogimpl.h, wince_ids.cpp, wince_ids.h,
+	  workerthreadinterface.cpp, workerthreadinterface.h: Max 80 chars
+	  per line ...
+
+2003-10-12 15:46  voc
+
+	* .cvsignore: Update
+
+2003-10-12 15:45  voc
+
+	* subdirs: This file doesn't belong into the repository. It is
+	  created by make -f Makefile.cvs
+
+2003-10-12 15:43  voc
+
+	* admin/acinclude.m4.in: Ignore the autom4te.cache directory
+
+2003-10-12 15:31  voc
+
+	* debian/control: Updated build dependences and description
+
+2003-10-12 02:38  voc
+
+	* raki/: Makefile.am, installer.cpp, pda.cpp, pda.h,
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h, raki.cpp, raki.h,
+	  rakiworkerthread.cpp, rakiworkerthread.h, syncdialogimpl.cpp,
+	  syncdialogimpl.h, synctasklistitem.cpp, synctasklistitem.h,
+	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Code
+	  rearrangement.
+
+2003-10-08 23:28  voc
+
+	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Make the
+	  kde addressbook synchronizer at least compile with KDE-3.1.90
+	  (cvs). Be aware, it didn't work just now1
+
+2003-10-05 22:30  voc
+
+	* raki/plugins/agsync/agsync.cpp: Fixed a the missing "<< endl"
+
+2003-10-05 22:28  voc
+
+	* raki/configdialogimpl.cpp: Fixed a problem with URLs to the
+	  source and destination scripts at initialization time.  Changed
+	  the KMessageBox to display also a detailed error
+
+2003-10-01 21:52  voc
+
+	* raki/: installer.h, pdaconfigdialogimpl.cpp,
+	  pdaconfigdialogimpl.h, raki.cpp, rakiworkerthread.cpp,
+	  rakiworkerthread.h, syncthread.cpp, syncthread.h,
+	  threadevent.cpp, threadevent.h: Include-file clean up
+
+2003-10-01 21:52  voc
+
+	* Doxyfile: Update
+
+2003-10-01 21:44  voc
+
+	* Doxyfile: Made the input path relative
+
+2003-10-01 00:48  voc
+
+	* doc/en/index.docbook: Starting book writing ...
+
+2003-09-28 22:16  voc
+
+	* raki/: runwindow.ui, runwindow.ui.h, runwindowimpl.cpp,
+	  runwindowimpl.h: Hack to restore the arrowcursor
+
+2003-09-28 19:23  voc
+
+	* debian/: synce-kde-dev.install, synce-kde.install, rules,
+	  synce-kde-dev.files, synce-kde.files: Moved from dh_movefiles to
+	  dh_install
+
+2003-09-28 00:22  voc
+
+	* synce-kde-0.6.2-1.SuSE.spec: Added initial SuSE spec file
+
+2003-09-28 00:21  voc
+
+	* admin/debianrules: Updated qt-include directory
+
+2003-09-28 00:03  voc
+
+	* debian/: changelog, control, rules, synce-kde-dev.dirs,
+	  synce-kde-dev.files, synce-kde.files, synce-kde.substvars:
+	  Updated debian configuration. Now using original KDE
+	  configuration as base
+
+2003-09-28 00:00  voc
+
+	* raki/pda.cpp: Changed macro name to avoid name-clash during
+	  debian-build
+
+2003-09-27 18:36  voc
+
+	* rapip/: rapip.cpp, rapip.h: Made the slave more robust to
+	  disconnects and reconnects of PDAs
+
+2003-09-27 02:19  voc
+
+	* rapip/rapip.cpp: Mouspointer bug fixed!
+
+2003-09-25 02:21  voc
+
+	* raki/: plugins/agsync/agsync.cpp,
+	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
+	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h:
+	  Support of the new stopping mechanism
+
+2003-09-25 02:20  voc
+
+	* raki/: workerthreadinterface.cpp, workerthreadinterface.h: Added
+	  new Gui-Thread synchronization methode via QWaitCondition Support
+	  of delayed destroying of subclasses of workerthreadinterface
+
+2003-09-25 02:18  voc
+
+	* raki/syncthread.h: Removed the blocking gui-event
+
+2003-09-25 02:16  voc
+
+	* raki/synctasklistitem.cpp: Gui-Thread synchronization is now done
+	  via QWaitCondition
+
+2003-09-25 02:15  voc
+
+	* raki/syncdialogimpl.cpp: Request a shut down of the thread on
+	  destroytime of the workertread object
+
+2003-09-25 02:13  voc
+
+	* raki/rra.cpp: Shut down of rra changed
+
+2003-09-25 02:13  voc
+
+	* raki/: rakiworkerthread.cpp, rakiworkerthread.h: Removed some not
+	  necessary methodes Added the possibility to request a delayed
+	  destroy of an workerthread.
+
+2003-09-25 02:11  voc
+
+	* raki/raki.cpp: At PDA disconnect a possible running thread is
+	  smoothly shuted down by requesting a stop of it.
+
+2003-09-25 02:10  voc
+
+	* raki/: pda.cpp, pda.h: At PDA disconnect a possible running
+	  thread is smoothly shuted down
+
+2003-09-25 02:09  voc
+
+	* raki/managerimpl.cpp: Introduced additional error checking of
+	  synce calls
+
+2003-09-23 23:55  voc
+
+	* ChangeLog: [no log message]
+
 2003-09-23 23:50  voc
 
 	* .cvsignore: Update
@@ -13,12 +264,12 @@
 2003-09-23 23:42  voc
 
 	* debian/rules: Use the installed agsync, which would be provided
-	soon.
+	  soon.
 
 2003-09-23 23:39  voc
 
 	* debian/: dirs, files, synce-kde-dev.dirs, synce-kde-dev.files,
-	synce-kde.files: Updated debian configuration
+	  synce-kde.files: Updated debian configuration
 
 2003-09-23 23:35  voc
 
@@ -27,8 +278,8 @@
 2003-09-19 23:44  voc
 
 	* .cvsignore, synce-kde.kdevelop, po/.cvsignore, raki/.cvsignore,
-	raki/plugins/agsync/.cvsignore,
-	raki/plugins/kdeaddressbooksync/.cvsignore: .cvsignore updated
+	  raki/plugins/agsync/.cvsignore,
+	  raki/plugins/kdeaddressbooksync/.cvsignore: .cvsignore updated
 
 2003-09-19 23:38  voc
 
@@ -57,10 +308,10 @@
 2003-09-19 21:50  voc
 
 	* configure.in.in: Added a check to select between
-	KUniqueApplication and KApplication --disable-unique enables
-	KApplication ... debugging with gdb is possible --enable-unique or
-	nothing enables KUniqueApplication ... debugging with gdb is not
-	possible
+	  KUniqueApplication and KApplication --disable-unique enables
+	  KApplication ... debugging with gdb is possible --enable-unique
+	  or nothing enables KUniqueApplication ... debugging with gdb is
+	  not possible
 
 2003-09-19 21:48  voc
 
@@ -69,36 +320,37 @@
 2003-09-19 11:02  voc
 
 	* raki/syncthread.h: Make some thread-events blocking to make sure
-	the user interface is in sync with the work of the synchronization
-	thread.
+	  the user interface is in sync with the work of the
+	  synchronization thread.
 
 2003-09-19 03:23  voc
 
 	* raki/: pda.cpp, syncdialogimpl.cpp, syncdialogimpl.h,
-	synctasklistitem.cpp, syncthread.cpp: Fixed some odd bugs - thanks
-	to  "Laurent Vivier" <LaurentVivier@wanadoo.fr>!
+	  synctasklistitem.cpp, syncthread.cpp: Fixed some odd bugs -
+	  thanks to  "Laurent Vivier" <LaurentVivier@wanadoo.fr>!
 
 2003-09-19 01:59  voc
 
 	* vdccm/select_lib.c: Also, never forget the credit of a patch! The
-	act->maxfd patch is from "Laurent Vivier"
-	<LaurentVivier@wanadoo.fr>
+	  act->maxfd patch is from "Laurent Vivier"
+	  <LaurentVivier@wanadoo.fr>
 
 2003-09-19 01:56  voc
 
 	* vdccm/select_lib.c: Never assume that integers are initialized
-	with 0 automaticaly by the compiler!
+	  with 0 automaticaly by the compiler!
 
 2003-09-18 00:38  voc
 
 	* raki/: pda.cpp, pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h,
-	syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
-	synctasklistitem.h, syncthread.cpp, interfaces/rakisyncplugin.cpp,
-	interfaces/rakisyncplugin.h,
-	plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Added timestamps
-	for partnership creation and synchronization per types and pda. 
-	Used this timestamps to extract first-synchronization information. 
-	Synchronizer are tolled about a first synchronization.
+	  syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
+	  synctasklistitem.h, syncthread.cpp,
+	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h,
+	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Added
+	  timestamps for partnership creation and synchronization per types
+	  and pda.  Used this timestamps to extract first-synchronization
+	  information.	Synchronizer are tolled about a first
+	  synchronization.
 
 2003-09-16 21:03  voc
 
@@ -107,22 +359,22 @@
 2003-09-16 21:00  voc
 
 	* raki/: installer.cpp, installer.h, pda.cpp, pda.h: Installation
-	logic made more robust.
+	  logic made more robust.
 
 2003-09-16 19:53  voc
 
 	* raki/installer.cpp: The \Windows\AppMgr\Install directory is
-	checked for existence and created if necessary.
+	  checked for existence and created if necessary.
 
 2003-09-16 19:51  voc
 
 	* raki/pda.cpp: Initialization progressbar now is hidden during the
-	time an other dialog is showen
+	  time an other dialog is showen
 
 2003-09-16 01:01  voc
 
 	* raki/: Makefile.am, initprogress.ui, pda.cpp, pda.h: Replaced the
-	pda-connection KProgressDialog with a self made progress window.
+	  pda-connection KProgressDialog with a self made progress window.
 
 2003-09-16 01:00  voc
 
@@ -143,19 +395,19 @@
 2003-09-12 11:02  voc
 
 	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Forgot to
-	check in this update yesterday
+	  check in this update yesterday
 
 2003-09-12 00:02  voc
 
 	* raki/: pdaconfigdialogimpl.cpp, raki.cpp, raki.h, rra.cpp, rra.h:
-	Bug fix: RAKI has crashed if a pda disconnects during connection
-	initiation phases.
+	  Bug fix: RAKI has crashed if a pda disconnects during connection
+	  initiation phases.
 
 2003-09-12 00:02  voc
 
 	* raki/: pda.cpp, pda.h: Bug fix: RAKI has crashed if a pda
-	disconnects during connection initiation phases.  Progressbar
-	behaviour changed.
+	  disconnects during connection initiation phases.  Progressbar
+	  behaviour changed.
 
 2003-09-11 23:59  voc
 
@@ -180,10 +432,10 @@
 2003-09-08 23:30  voc
 
 	* raki/: installer.cpp, removepartnershipdialogimpl.cpp,
-	syncthread.cpp, syncthread.h, threadevent.h, welcomedialogimpl.cpp,
-	welcomedialogimpl.h, wince_ids.cpp, workerthreadinterface.cpp,
-	interfaces/rakisyncplugin.cpp,
-	plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Code cleaning
+	  syncthread.cpp, syncthread.h, threadevent.h,
+	  welcomedialogimpl.cpp, welcomedialogimpl.h, wince_ids.cpp,
+	  workerthreadinterface.cpp, interfaces/rakisyncplugin.cpp,
+	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Code cleaning
 
 2003-09-08 23:28  voc
 
@@ -200,7 +452,7 @@
 2003-09-07 22:32  voc
 
 	* raki/: syncthread.cpp, syncthread.h: Major Bug fix: Raki didn't
-	produce a deadlock anymore.
+	  produce a deadlock anymore.
 
 2003-09-07 22:24  voc
 
@@ -209,12 +461,12 @@
 2003-09-07 22:23  voc
 
 	* raki/: Makefile.am, rakiworkerthread.cpp, rakiworkerthread.h,
-	syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
-	synctasklistitem.h, threadevent.cpp, threadevent.h,
-	workerthreadinterface.cpp, workerthreadinterface.h,
-	interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h,
-	plugins/agsync/agsync.cpp: Major Bug fix: Raki didn't produce a
-	deadlock anymore.
+	  syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
+	  synctasklistitem.h, threadevent.cpp, threadevent.h,
+	  workerthreadinterface.cpp, workerthreadinterface.h,
+	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h,
+	  plugins/agsync/agsync.cpp: Major Bug fix: Raki didn't produce a
+	  deadlock anymore.
 
 2003-09-07 13:29  voc
 
@@ -227,7 +479,7 @@
 2003-09-07 02:27  voc
 
 	* vdccm/vdccm.c: Socket descriptor is removed from fd_set also in
-	case of an error during connection initiation:
+	  case of an error during connection initiation:
 
 2003-09-05 01:18  voc
 
@@ -244,30 +496,30 @@
 2003-08-28 03:16  voc
 
 	* raki/: threadevent.cpp, workerthreadinterface.cpp: Changed
-	locking mechanism in QEvent handling.
+	  locking mechanism in QEvent handling.
 
 2003-08-28 03:14  voc
 
 	* raki/: rakiworkerthread.cpp, rakiworkerthread.h: Inserted a mutex
-	to avoid a race condition in thread creation.
+	  to avoid a race condition in thread creation.
 
 2003-08-28 03:12  voc
 
 	* raki/welcomedialog.ui: Changed font size to avioud wrong size of
-	the window
+	  the window
 
 2003-08-27 03:49  voc
 
 	* configure.in.bot, configure.in.in, configure.in.mid, subdirs,
-	synce-kde-0.6.1-1.spec, debian/changelog, debian/control,
-	debian/files, debian/rules: Version number update Configuration
-	script now needs the argument --prefix=... The KDEDIR variable is
-	not needed anymore.
+	  synce-kde-0.6.1-1.spec, debian/changelog, debian/control,
+	  debian/files, debian/rules: Version number update Configuration
+	  script now needs the argument --prefix=... The KDEDIR variable is
+	  not needed anymore.
 
 2003-08-27 03:48  voc
 
 	* raki/: rakiworkerthread.cpp, rakiworkerthread.h: Bug fix. Wrong
-	mutex handling fixed.
+	  mutex handling fixed.
 
 2003-08-27 03:30  voc
 
@@ -280,7 +532,7 @@
 2003-08-23 18:29  voc
 
 	* synce-kde-0.6-1.spec, synce-kde.spec: Name convention for *.spec
-	honored
+	  honored
 
 2003-08-23 18:28  voc
 
@@ -289,9 +541,9 @@
 2003-08-20 14:26  voc
 
 	* debian/: README.Debian, changelog, control, copyright, docs,
-	files, rules, synce-kde-dev.docs, synce-kde.docs,
-	synce-kde.manpages, synce-kde.postinst.debhelper,
-	synce-kde.postrm.debhelper: Updated debian package configuration
+	  files, rules, synce-kde-dev.docs, synce-kde.docs,
+	  synce-kde.manpages, synce-kde.postinst.debhelper,
+	  synce-kde.postrm.debhelper: Updated debian package configuration
 
 2003-08-20 14:24  voc
 
@@ -320,12 +572,12 @@
 2003-08-17 21:50  voc
 
 	* subdirs, synce-kde.kdevelop, synce-kde.spec, admin/cvs.sh: Last
-	polish on SynCE-KDE-0.6
+	  polish on SynCE-KDE-0.6
 
 2003-08-17 16:52  voc
 
 	* raki/: pda.cpp, pda.h, rra.cpp, rra.h: Using the partnership
-	functions provided by librra.
+	  functions provided by librra.
 
 2003-08-16 23:00  voc
 
@@ -334,9 +586,9 @@
 2003-08-16 18:02  voc
 
 	* debian/: README.Debian, changelog, compat, control, copyright,
-	dirs, docs, files, rules, synce-kde-dev.dirs, synce-kde-dev.files,
-	synce-kde.dirs, synce-kde.files, synce-kde.substvars: Debian
-	package-control files
+	  dirs, docs, files, rules, synce-kde-dev.dirs,
+	  synce-kde-dev.files, synce-kde.dirs, synce-kde.files,
+	  synce-kde.substvars: Debian package-control files
 
 2003-08-16 01:27  voc
 
@@ -345,8 +597,8 @@
 2003-08-15 13:34  voc
 
 	* .cvsignore, configure.in.bot, rapip.kdevelop, rapip.spec,
-	synce-kde.kdevelop, synce-kde.spec: Changed the project name from
-	rapip/raki to synce-kde
+	  synce-kde.kdevelop, synce-kde.spec: Changed the project name from
+	  rapip/raki to synce-kde
 
 2003-07-30 23:23  voc
 
@@ -359,140 +611,136 @@
 2003-07-30 21:00  voc
 
 	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp:
-	StdAddressBook is closed after synchronization is finished.
+	  StdAddressBook is closed after synchronization is finished.
 
 2003-07-27 20:54  voc
 
 	* Doxyfile, rapip.kdevelop, doc/en/index.docbook,
-	raki/managerimpl.cpp, raki/managerimpl.h, raki/pda.cpp, raki/pda.h,
-	raki/raki.cpp, raki/raki.h, raki/syncdialogimpl.cpp,
-	raki/synctasklistitem.cpp, raki/synctasklistitem.h,
-	raki/interfaces/rakisyncfactory.cpp,
-	raki/interfaces/rakisyncfactory.h,
-	raki/plugins/kdeaddressbooksync/Makefile.am,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp,
-	rapip/rapip.cpp: Initial update to run under pre KDE_3_2-cvs and
-	QT-3.2
+	  raki/managerimpl.cpp, raki/managerimpl.h, raki/pda.cpp,
+	  raki/pda.h, raki/raki.cpp, raki/raki.h, raki/syncdialogimpl.cpp,
+	  raki/synctasklistitem.cpp, raki/synctasklistitem.h,
+	  raki/interfaces/rakisyncfactory.cpp,
+	  raki/interfaces/rakisyncfactory.h,
+	  raki/plugins/kdeaddressbooksync/Makefile.am,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp,
+	  rapip/rapip.cpp: Initial update to run under pre KDE_3_2-cvs and
+	  QT-3.2
 
 2003-07-27 18:10  voc
 
 	* raki/managerimpl.cpp: PocketPC 2003 info added like in the
-	command line tools
+	  command line tools
 
 2003-07-22 18:28  voc
 
 	* vdccm/: list_lib.c, list_lib.h, vdccm.c: - Function names of
-	vdccm now are all prefixed with vdccm_ - if the current default
-	device is removed before all others, select a new default   device
-	and write a new active_connection file
+	  vdccm now are all prefixed with vdccm_ - if the current default
+	  device is removed before all others, select a new default
+	  device and write a new active_connection file
 
 2003-07-21 02:14  voc
 
 	* vdccm/vdccm.c: Fixed a buffer-overrun on passwords longer than
-	four character Fixed a typo in the Copyright info
+	  four character Fixed a typo in the Copyright info
 
 2003-07-21 02:14  voc
 
 	* vdccm/: list_lib.c, list_lib.h, network_lib.c, network_lib.h,
-	select_lib.c, select_lib.h, timer_lib.c, timer_lib.h: Fixed a typo
-	in the Copyright info
+	  select_lib.c, select_lib.h, timer_lib.c, timer_lib.h: Fixed a
+	  typo in the Copyright info
 
 2003-07-01 21:04  voc
 
 	* raki/: pda.cpp, pda.h, pdaconfigdialogimpl.cpp,
-	pdaconfigdialogimpl.h, raki.cpp, synctasklistitem.cpp,
-	synctasklistitem.h, interfaces/rakisyncplugin.cpp,
-	interfaces/rakisyncplugin.h,
-	plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Synchronizeing
-	is not prohibited if the pda connects as a guest.  Partnership-ID
-	is used as marker in the kdeaddressbook instead of the pda-name.
+	  pdaconfigdialogimpl.h, raki.cpp, synctasklistitem.cpp,
+	  synctasklistitem.h, interfaces/rakisyncplugin.cpp,
+	  interfaces/rakisyncplugin.h,
+	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Synchronizeing
+	  is not prohibited if the pda connects as a guest.  Partnership-ID
+	  is used as marker in the kdeaddressbook instead of the pda-name.
 
 2003-06-26 01:27  voc
 
 	* ChangeLog, .cvsignore, Doxyfile, LICENSE, acinclude.m4,
-	aclocal.m4, configure.in.bot, configure.in.in, configure.in.mid,
-	rapip.kdevelop, rapip.spec, subdirs, admin/Doxyfile.global,
-	admin/acinclude.m4.in, icons/Makefile.am, icons/hi16-anim.mng,
-	icons/hi16-app-raki.png, icons/hi16-app-raki_bw.png,
-	icons/hi22-anim.mng, icons/hi22-app-raki.png,
-	icons/hi22-app-raki_bw.png, icons/hi32-anim.mng,
-	icons/hi32-app-raki.png, icons/hi32-app-raki_bw.png,
-	icons/hi48-anim.mng, icons/hi48-app-raki.png,
-	icons/hi48-app-raki_bw.png, icons/hi64-anim.mng,
-	icons/hi64-app-raki.png, icons/hi64-app-raki_bw.png,
-	raki/Makefile.am, raki/cab_install.desktop, raki/configdialog.ui,
-	raki/configdialog.ui.h, raki/configdialogimpl.cpp,
-	raki/configdialogimpl.h, raki/dccm.sh, raki/dmalloc.cpp,
-	raki/errorevent.cpp, raki/errorevent.h, raki/hi16-app-raki.png,
-	raki/hi16-app-raki_bw.png, raki/hi22-app-raki.png,
-	raki/hi22-app-raki_bw.png, raki/hi32-app-raki.png,
-	raki/hi32-app-raki_bw.png, raki/hi48-app-raki.png,
-	raki/hi48-app-raki_bw.png, raki/hi64-app-raki.png,
-	raki/hi64-app-raki_bw.png, raki/installdialog.ui,
-	raki/installdialog.ui.h, raki/installer.cpp, raki/installer.h,
-	raki/management.ui, raki/managerimpl.cpp, raki/managerimpl.h,
-	raki/passworddialog.ui, raki/passworddialog.ui.h,
-	raki/passworddialogimpl.cpp, raki/passworddialogimpl.h,
-	raki/pda.cpp, raki/pda.h, raki/pdaconfigdialog.ui,
-	raki/pdaconfigdialog.ui.h, raki/pdaconfigdialogimpl.cpp,
-	raki/pdaconfigdialogimpl.h, raki/raki.cpp, raki/raki.h,
-	raki/raki.sh, raki/rakievent.cpp, raki/rakievent.h,
-	raki/rakiworkerthread.cpp, raki/rakiworkerthread.h,
-	raki/rapiwrapper.cpp, raki/rapiwrapper.h,
-	raki/removepartnershipdialog.ui,
-	raki/removepartnershipdialogimpl.cpp,
-	raki/removepartnershipdialogimpl.h, raki/return.h, raki/rra.cpp,
-	raki/rra.h, raki/runwindow.ui, raki/runwindow.ui.h,
-	raki/runwindowimpl.cpp, raki/runwindowimpl.h, raki/syncdialog.ui,
-	raki/syncdialogimpl.cpp, raki/syncdialogimpl.h, raki/syncevent.cpp,
-	raki/syncevent.h, raki/synctasklistitem.cpp,
-	raki/synctasklistitem.h, raki/threadevent.cpp, raki/threadevent.h,
-	raki/tips, raki/vdccm.sh, raki/welcomedialog.ui,
-	raki/welcomedialog.ui.h, raki/welcomedialogimpl.cpp,
-	raki/welcomedialogimpl.h, raki/wince_ids.cpp, raki/wince_ids.h,
-	raki/workerthreadinterface.cpp, raki/workerthreadinterface.h,
-	raki/x-raki.desktop, raki/interfaces/.cvsignore,
-	raki/interfaces/Makefile.am, raki/interfaces/rakisyncfactory.cpp,
-	raki/interfaces/rakisyncfactory.h,
-	raki/interfaces/rakisyncplugin.cpp,
-	raki/interfaces/rakisyncplugin.h, raki/plugins/.cvsignore,
-	raki/plugins/Makefile.am, raki/plugins/rakisynchronizer.desktop,
-	raki/plugins/agsync/.cvsignore, raki/plugins/agsync/Makefile.am,
-	raki/plugins/agsync/agsync.cpp, raki/plugins/agsync/agsync.h,
-	raki/plugins/agsync/agsyncfactory.cpp,
-	raki/plugins/agsync/agsyncfactory.h,
-	raki/plugins/agsync/rakiagsync.desktop,
-	raki/plugins/agsync/syncstream.cpp,
-	raki/plugins/agsync/syncstream.h,
-	raki/plugins/kdeaddressbooksync/.cvsignore,
-	raki/plugins/kdeaddressbooksync/Makefile.am,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp,
-	raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.h,
-	raki/plugins/kdeaddressbooksync/rakikdeaddressbooksync.desktop,
-	rapip/.cvsignore, rapip/rapip.cpp, rapip/rapip.h,
-	sounds/.cvsignore, sounds/Infbeg.wav, sounds/Infend.wav,
-	sounds/Makefile.am, templates/cpp, templates/h, vdccm/.cvsignore,
-	vdccm/Makefile.am, vdccm/client.c, vdccm/daemon.c,
-	vdccm/list_lib.c, vdccm/list_lib.h, vdccm/network_lib.c,
-	vdccm/network_lib.h, vdccm/select_lib.c, vdccm/select_lib.h,
-	vdccm/timer_lib.c, vdccm/timer_lib.h, vdccm/vdccm.c: Merged the
-	MULTIPLE_DEVICES branch back into HEAD.  From now on, the
-	MULTIPLE_DEVICES branch is not used anymord.  You probably will not
-	see any more CVS-messages because the diffs will be to pig to be
-	propagated to the CVS-mailing list.
+	  aclocal.m4, configure.in.bot, configure.in.in, configure.in.mid,
+	  rapip.kdevelop, rapip.spec, subdirs, admin/Doxyfile.global,
+	  admin/acinclude.m4.in, icons/Makefile.am, icons/hi16-anim.mng,
+	  icons/hi16-app-raki.png, icons/hi16-app-raki_bw.png,
+	  icons/hi22-anim.mng, icons/hi22-app-raki.png,
+	  icons/hi22-app-raki_bw.png, icons/hi32-anim.mng,
+	  icons/hi32-app-raki.png, icons/hi32-app-raki_bw.png,
+	  icons/hi48-anim.mng, icons/hi48-app-raki.png,
+	  icons/hi48-app-raki_bw.png, icons/hi64-anim.mng,
+	  icons/hi64-app-raki.png, icons/hi64-app-raki_bw.png,
+	  raki/Makefile.am, raki/cab_install.desktop, raki/configdialog.ui,
+	  raki/configdialog.ui.h, raki/configdialogimpl.cpp,
+	  raki/configdialogimpl.h, raki/dccm.sh, raki/dmalloc.cpp,
+	  raki/errorevent.cpp, raki/errorevent.h, raki/hi16-app-raki.png,
+	  raki/hi16-app-raki_bw.png, raki/hi22-app-raki.png,
+	  raki/hi22-app-raki_bw.png, raki/hi32-app-raki.png,
+	  raki/hi32-app-raki_bw.png, raki/hi48-app-raki.png,
+	  raki/hi48-app-raki_bw.png, raki/hi64-app-raki.png,
+	  raki/hi64-app-raki_bw.png, raki/installdialog.ui,
+	  raki/installdialog.ui.h, raki/installer.cpp, raki/installer.h,
+	  raki/management.ui, raki/managerimpl.cpp, raki/managerimpl.h,
+	  raki/passworddialog.ui, raki/passworddialog.ui.h,
+	  raki/passworddialogimpl.cpp, raki/passworddialogimpl.h,
+	  raki/pda.cpp, raki/pda.h, raki/pdaconfigdialog.ui,
+	  raki/pdaconfigdialog.ui.h, raki/pdaconfigdialogimpl.cpp,
+	  raki/pdaconfigdialogimpl.h, raki/raki.cpp, raki/raki.h,
+	  raki/raki.sh, raki/rakievent.cpp, raki/rakievent.h,
+	  raki/rakiworkerthread.cpp, raki/rakiworkerthread.h,
+	  raki/rapiwrapper.cpp, raki/rapiwrapper.h,
+	  raki/removepartnershipdialog.ui,
+	  raki/removepartnershipdialogimpl.cpp,
+	  raki/removepartnershipdialogimpl.h, raki/return.h, raki/rra.cpp,
+	  raki/rra.h, raki/runwindow.ui, raki/runwindow.ui.h,
+	  raki/runwindowimpl.cpp, raki/runwindowimpl.h, raki/syncdialog.ui,
+	  raki/syncdialogimpl.cpp, raki/syncdialogimpl.h,
+	  raki/syncevent.cpp, raki/syncevent.h, raki/synctasklistitem.cpp,
+	  raki/synctasklistitem.h, raki/threadevent.cpp,
+	  raki/threadevent.h, raki/tips, raki/vdccm.sh,
+	  raki/welcomedialog.ui, raki/welcomedialog.ui.h,
+	  raki/welcomedialogimpl.cpp, raki/welcomedialogimpl.h,
+	  raki/wince_ids.cpp, raki/wince_ids.h,
+	  raki/workerthreadinterface.cpp, raki/workerthreadinterface.h,
+	  raki/x-raki.desktop, raki/interfaces/.cvsignore,
+	  raki/interfaces/Makefile.am, raki/interfaces/rakisyncfactory.cpp,
+	  raki/interfaces/rakisyncfactory.h,
+	  raki/interfaces/rakisyncplugin.cpp,
+	  raki/interfaces/rakisyncplugin.h, raki/plugins/.cvsignore,
+	  raki/plugins/Makefile.am, raki/plugins/rakisynchronizer.desktop,
+	  raki/plugins/agsync/.cvsignore, raki/plugins/agsync/Makefile.am,
+	  raki/plugins/agsync/agsync.cpp, raki/plugins/agsync/agsync.h,
+	  raki/plugins/agsync/agsyncfactory.cpp,
+	  raki/plugins/agsync/agsyncfactory.h,
+	  raki/plugins/agsync/rakiagsync.desktop,
+	  raki/plugins/agsync/syncstream.cpp,
+	  raki/plugins/agsync/syncstream.h,
+	  raki/plugins/kdeaddressbooksync/.cvsignore,
+	  raki/plugins/kdeaddressbooksync/Makefile.am,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp,
+	  raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.h,
+	  raki/plugins/kdeaddressbooksync/rakikdeaddressbooksync.desktop,
+	  rapip/.cvsignore, rapip/rapip.cpp, rapip/rapip.h,
+	  sounds/.cvsignore, sounds/Infbeg.wav, sounds/Infend.wav,
+	  sounds/Makefile.am, templates/cpp, templates/h, vdccm/.cvsignore,
+	  vdccm/Makefile.am, vdccm/client.c, vdccm/daemon.c,
+	  vdccm/list_lib.c, vdccm/list_lib.h, vdccm/network_lib.c,
+	  vdccm/network_lib.h, vdccm/select_lib.c, vdccm/select_lib.h,
+	  vdccm/timer_lib.c, vdccm/timer_lib.h, vdccm/vdccm.c: Merged the
+	  MULTIPLE_DEVICES branch back into HEAD.  From now on, the
+	  MULTIPLE_DEVICES branch is not used anymord.	You probably will
+	  not see any more CVS-messages because the diffs will be to pig to
+	  be propagated to the CVS-mailing list.
 
 2003-06-24 22:07  voc
 
 	* raki/: Makefile.am, raki.cpp, tips: Added "Tip of the Day"
-
-2003-06-24 22:07  voc
-
-	* raki/tips: file tips was initially added on branch
-	MULTIPLE_DEVICES.
 
 2003-06-24 21:55  voc
 
@@ -500,33 +748,8 @@
 
 2003-06-24 21:52  voc
 
-	* icons/hi22-anim.mng: file hi22-anim.mng was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-06-24 21:52  voc
-
-	* icons/hi32-anim.mng: file hi32-anim.mng was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-06-24 21:52  voc
-
-	* icons/hi48-anim.mng: file hi48-anim.mng was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-06-24 21:52  voc
-
-	* icons/hi16-anim.mng: file hi16-anim.mng was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-06-24 21:52  voc
-
 	* icons/: hi16-anim.mng, hi22-anim.mng, hi22-app-raki_bwtest.png,
-	hi32-anim.mng, hi48-anim.mng, hi64-anim.mng: Added animated icons
-
-2003-06-24 21:52  voc
-
-	* icons/hi64-anim.mng: file hi64-anim.mng was initially added on
-	branch MULTIPLE_DEVICES.
+	  hi32-anim.mng, hi48-anim.mng, hi64-anim.mng: Added animated icons
 
 2003-06-23 02:10  voc
 
@@ -535,13 +758,13 @@
 2003-06-22 12:23  voc
 
 	* raki/raki.cpp: Fixed a long outstanding problem: The exit
-	problem. Now everything is cleaned up fine.
+	  problem. Now everything is cleaned up fine.
 
 2003-06-22 12:21  voc
 
 	* vdccm/: network_lib.c, network_lib.h, vdccm.c: If vdccm finds a
-	application on the dccm.pid pid, it checks by trying to connect to
-	it if its realy a vdccm.  Some additional signals cought
+	  application on the dccm.pid pid, it checks by trying to connect
+	  to it if its realy a vdccm.  Some additional signals cought
 
 2003-06-21 01:38  voc
 
@@ -558,24 +781,24 @@
 2003-06-19 12:02  voc
 
 	* vdccm/vdccm.c: New command line options -i ... use ip-address of
-	device as connection-filename in ~/.synce/ -u count ... set the
-	number of unaswered pings of a device to count (default 3) -s sec
-	... delay between pings (default 5 sec)
+	  device as connection-filename in ~/.synce/ -u count ... set the
+	  number of unaswered pings of a device to count (default 3) -s sec
+	  ... delay between pings (default 5 sec)
 
 2003-06-15 22:51  voc
 
 	* vdccm/vdccm.c: Updated vdccm to provide the same infos in the
-	active_connection file as the original dccm.
+	  active_connection file as the original dccm.
 
 2003-06-13 17:10  voc
 
 	* raki/: Makefile.am, installer.h, pda.cpp, pda.h,
-	pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h, raki.cpp,
-	rakiworkerthread.h, syncdialogimpl.cpp, syncdialogimpl.h,
-	syncevent.h, synctasklistitem.cpp, synctasklistitem.h,
-	threadevent.cpp, threadevent.h, workerthreadinterface.h,
-	interfaces/rakisyncplugin.h: Code polish: Mainly include-file
-	decartelization
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h, raki.cpp,
+	  rakiworkerthread.h, syncdialogimpl.cpp, syncdialogimpl.h,
+	  syncevent.h, synctasklistitem.cpp, synctasklistitem.h,
+	  threadevent.cpp, threadevent.h, workerthreadinterface.h,
+	  interfaces/rakisyncplugin.h: Code polish: Mainly include-file
+	  decartelization
 
 2003-06-12 03:07  voc
 
@@ -588,7 +811,7 @@
 2003-06-11 16:01  voc
 
 	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Made
-	completely independend from object-id macros.
+	  completely independend from object-id macros.
 
 2003-06-11 16:01  voc
 
@@ -597,7 +820,7 @@
 2003-06-11 16:00  voc
 
 	* raki/interfaces/: rakisyncfactory.h, rakisyncplugin.cpp,
-	rakisyncplugin.h: ObjectId is received now
+	  rakisyncplugin.h: ObjectId is received now
 
 2003-06-11 15:59  voc
 
@@ -606,7 +829,7 @@
 2003-06-11 15:59  voc
 
 	* raki/: workerthreadinterface.cpp, workerthreadinterface.h: Change
-	in the thread-api
+	  in the thread-api
 
 2003-06-11 15:58  voc
 
@@ -614,23 +837,13 @@
 
 2003-06-11 15:57  voc
 
-	* raki/threadevent.h: file threadevent.h was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-06-11 15:57  voc
-
 	* raki/: threadevent.cpp, threadevent.h: Added a
-	inter-thread-event-propagation mechanism.
-
-2003-06-11 15:57  voc
-
-	* raki/threadevent.cpp: file threadevent.cpp was initially added on
-	branch MULTIPLE_DEVICES.
+	  inter-thread-event-propagation mechanism.
 
 2003-06-11 15:56  voc
 
 	* raki/: synctasklistitem.cpp, synctasklistitem.h: ObjectId is now
-	also propagated to the syncronizer-plugin
+	  also propagated to the syncronizer-plugin
 
 2003-06-11 15:55  voc
 
@@ -639,12 +852,12 @@
 2003-06-11 15:54  voc
 
 	* raki/: syncdialogimpl.cpp, syncdialogimpl.h: Changes due to
-	RakiThread-API change
+	  RakiThread-API change
 
 2003-06-11 15:52  voc
 
 	* raki/: rra.cpp, rra.h: Made completely independend from object-id
-	macros.
+	  macros.
 
 2003-06-11 15:51  voc
 
@@ -653,37 +866,37 @@
 2003-06-11 15:51  voc
 
 	* raki/: rakiworkerthread.cpp, rakiworkerthread.h, rapiwrapper.cpp,
-	rapiwrapper.h: RakiThread-API changed.
+	  rapiwrapper.h: RakiThread-API changed.
 
 2003-06-11 15:50  voc
 
-	* raki/: raki.cpp, raki.h: Connection initiation has changed.. 
-	Cleanup.
+	* raki/: raki.cpp, raki.h: Connection initiation has changed..
+	  Cleanup.
 
 2003-06-11 15:48  voc
 
 	* raki/: pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Removed
-	the Progress-Dialog code. It is now located in the PDA-Class
+	  the Progress-Dialog code. It is now located in the PDA-Class
 
 2003-06-11 15:46  voc
 
 	* raki/: pda.cpp, pda.h: Connection-Progress code is now here!
-	Dialogs now are executed alwais in the GUI-thread context
+	  Dialogs now are executed alwais in the GUI-thread context
 
 2003-06-11 15:42  voc
 
 	* raki/: installer.cpp, installer.h, managerimpl.cpp,
-	managerimpl.h: Changes due to RakiThread-API change
+	  managerimpl.h: Changes due to RakiThread-API change
 
 2003-06-11 15:41  voc
 
 	* raki/: configdialogimpl.cpp, configdialogimpl.h,
-	passworddialogimpl.h: Cleanup
+	  passworddialogimpl.h: Cleanup
 
 2003-06-11 15:40  voc
 
 	* raki/: errorevent.cpp, errorevent.h, rakievent.cpp, rakievent.h:
-	Outdated files removed
+	  Outdated files removed
 
 2003-06-03 16:17  voc
 
@@ -696,65 +909,56 @@
 2003-06-03 01:45  voc
 
 	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Bug fixed
-	if a contact is changed on one pda and propagated to an other pda.
+	  if a contact is changed on one pda and propagated to an other
+	  pda.
 
 2003-06-03 01:43  voc
 
 	* raki/: pdaconfigdialogimpl.cpp, synctasklistitem.cpp,
-	synctasklistitem.h: SyncTaskListItem now knows the correct name of
-	the associated pda.
+	  synctasklistitem.h: SyncTaskListItem now knows the correct name
+	  of the associated pda.
 
 2003-06-03 01:42  voc
 
 	* raki/raki.cpp: If the "Connected Devices"-Menu is showen and an
-	additional devices connects, the menu is hidden during the
-	insertion of the new device. Same on disconnect.
+	  additional devices connects, the menu is hidden during the
+	  insertion of the new device. Same on disconnect.
 
 2003-06-02 14:38  voc
 
 	* raki/raki.cpp: Added a messagebox with a notification about
-	invalid stored passwords.
+	  invalid stored passwords.
 
 2003-06-02 14:11  voc
 
 	* raki/: pda.cpp, pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h:
-	Fixed a problem with password-setting and connection-progress
+	  Fixed a problem with password-setting and connection-progress
 
 2003-06-02 12:14  voc
 
 	* raki/pdaconfigdialogimpl.cpp: Fixed a painting problem of the
-	ConnectProgress
+	  ConnectProgress
 
 2003-06-02 02:10  voc
 
 	* raki/: pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Added a
-	ProgressDialog showing the progress of a pda-connection sequence.
-
-2003-06-01 19:12  voc
-
-	* configure.in.mid: file configure.in.mid was initially added on
-	branch MULTIPLE_DEVICES.
+	  ProgressDialog showing the progress of a pda-connection sequence.
 
 2003-06-01 19:12  voc
 
 	* configure.in.bot, configure.in.mid: Added messages about the
-	correct installation directory and a few checks
-
-2003-06-01 19:12  voc
-
-	* configure.in.bot: file configure.in.bot was initially added on
-	branch MULTIPLE_DEVICES.
+	  correct installation directory and a few checks
 
 2003-06-01 19:10  voc
 
 	* raki/plugins/agsync/Makefile.am, raki/plugins/agsync/agsync.h,
-	configure.in.in: Conditional compilation of the
-	librakiagsync-plugin works correct now!
+	  configure.in.in: Conditional compilation of the
+	  librakiagsync-plugin works correct now!
 
 2003-06-01 19:09  voc
 
 	* raki/: welcomedialog.ui, welcomedialog.ui.h: Added a notification
-	to the dialog
+	  to the dialog
 
 2003-06-01 19:09  voc
 
@@ -767,13 +971,13 @@
 2003-05-31 19:37  voc
 
 	* mlibsynce.patch: All neccessary patches are now integrated into
-	the official synce-cvs.
+	  the official synce-cvs.
 
 2003-05-31 19:35  voc
 
 	* vdccm/vdccm.c: Changed the call named synce_get_descriptor to
-	synce_socket_get_descriptor. This is now the official call in
-	synce.
+	  synce_socket_get_descriptor. This is now the official call in
+	  synce.
 
 2003-05-29 19:36  voc
 
@@ -786,7 +990,7 @@
 2003-05-29 19:35  voc
 
 	* raki/: pda.cpp, raki.cpp, raki.h: - Output of the selected dccm
-	is printed on the screen.  - Some cleanups.
+	  is printed on the screen.  - Some cleanups.
 
 2003-05-29 02:35  voc
 
@@ -795,12 +999,12 @@
 2003-05-29 01:22  voc
 
 	* raki/: pda.cpp, pda.h: Masqueraded routes now gets destroyed on
-	pda-disconnect correctly
+	  pda-disconnect correctly
 
 2003-05-29 01:21  voc
 
 	* raki/: raki.cpp, raki.h: Notification if dccm crashed, or could
-	not be started.
+	  not be started.
 
 2003-05-28 22:05  voc
 
@@ -809,13 +1013,14 @@
 2003-05-28 21:35  voc
 
 	* mlibsynce.patch: Removed patches which now are in the mainstream
-	libsynce.  One patch remaining.
+	  libsynce.  One patch remaining.
 
 2003-05-28 21:33  voc
 
 	* raki/: configdialog.ui, installdialog.ui, management.ui,
-	passworddialog.ui, pdaconfigdialog.ui, removepartnershipdialog.ui,
-	runwindow.ui, syncdialog.ui, welcomedialog.ui: Polish on dialogs
+	  passworddialog.ui, pdaconfigdialog.ui,
+	  removepartnershipdialog.ui, runwindow.ui, syncdialog.ui,
+	  welcomedialog.ui: Polish on dialogs
 
 2003-05-28 19:16  voc
 
@@ -828,12 +1033,12 @@
 2003-05-28 10:42  voc
 
 	* mlibsynce.patch: Ah ... the previous path-file was not perfect
-	... but now ...
+	  ... but now ...
 
 2003-05-28 10:13  voc
 
 	* mlibsynce.patch: Removed again the namespace-fix.  It is already
-	in the libsynce-cvs now.
+	  in the libsynce-cvs now.
 
 2003-05-28 02:23  voc
 
@@ -842,23 +1047,18 @@
 2003-05-27 10:59  voc
 
 	* raki/: Makefile.am, management.ui, raki.cpp,
-	removepartnershipdialog.ui, runwindow.ui: Removed the
-	resize-handler in all dialogs.
+	  removepartnershipdialog.ui, runwindow.ui: Removed the
+	  resize-handler in all dialogs.
 
 2003-05-27 10:59  voc
 
 	* raki/: welcomedialog.ui, welcomedialogimpl.cpp: Update of the
-	WelcomeDialog. It now also behaves like a splash-screen.
-
-2003-05-26 19:33  voc
-
-	* raki/cab_install.desktop: file cab_install.desktop was initially
-	added on branch MULTIPLE_DEVICES.
+	  WelcomeDialog. It now also behaves like a splash-screen.
 
 2003-05-26 19:33  voc
 
 	* raki/: Makefile.am, cab_install.desktop: Added
-	konqueror-contextmenu entry
+	  konqueror-contextmenu entry
 
 2003-05-26 16:12  voc
 
@@ -867,20 +1067,20 @@
 2003-05-26 16:08  voc
 
 	* rapip/rapip.cpp, raki/configdialogimpl.cpp,
-	raki/configdialogimpl.h, raki/installer.cpp, raki/installer.h,
-	raki/managerimpl.cpp, raki/passworddialogimpl.cpp, raki/pda.cpp,
-	raki/pdaconfigdialogimpl.cpp, raki/pdaconfigdialogimpl.h,
-	raki/raki.cpp, raki/raki.h, raki/rapiwrapper.h,
-	raki/removepartnershipdialogimpl.cpp,
-	raki/removepartnershipdialogimpl.h, raki/rra.cpp, raki/rra.h,
-	raki/runwindowimpl.cpp, raki/syncdialogimpl.cpp,
-	raki/syncdialogimpl.h, raki/syncevent.cpp,
-	raki/synctasklistitem.cpp, raki/synctasklistitem.h,
-	raki/welcomedialogimpl.cpp, raki/welcomedialogimpl.h,
-	raki/wince_ids.cpp, raki/wince_ids.h,
-	raki/interfaces/rakisyncplugin.cpp: Made it compile under/with:    
-	    slackware, gcc-3.2, kde-3.1, qt-3.1     slackware, gcc-2.95.4,
-	kde-3.1, qt-3.1  debian, gcc-2.95.4, kde-3.1, qt-3.1
+	  raki/configdialogimpl.h, raki/installer.cpp, raki/installer.h,
+	  raki/managerimpl.cpp, raki/passworddialogimpl.cpp, raki/pda.cpp,
+	  raki/pdaconfigdialogimpl.cpp, raki/pdaconfigdialogimpl.h,
+	  raki/raki.cpp, raki/raki.h, raki/rapiwrapper.h,
+	  raki/removepartnershipdialogimpl.cpp,
+	  raki/removepartnershipdialogimpl.h, raki/rra.cpp, raki/rra.h,
+	  raki/runwindowimpl.cpp, raki/syncdialogimpl.cpp,
+	  raki/syncdialogimpl.h, raki/syncevent.cpp,
+	  raki/synctasklistitem.cpp, raki/synctasklistitem.h,
+	  raki/welcomedialogimpl.cpp, raki/welcomedialogimpl.h,
+	  raki/wince_ids.cpp, raki/wince_ids.h,
+	  raki/interfaces/rakisyncplugin.cpp: Made it compile under/with:
+		slackware, gcc-3.2, kde-3.1, qt-3.1	slackware,
+	  gcc-2.95.4, kde-3.1, qt-3.1  debian, gcc-2.95.4, kde-3.1, qt-3.1
 
 2003-05-26 12:30  voc
 
@@ -888,18 +1088,13 @@
 
 2003-05-25 18:59  voc
 
-	* raki/x-raki.desktop: file x-raki.desktop was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-05-25 18:59  voc
-
 	* raki/: Makefile.am, cab_install_raki.desktop, x-raki.desktop: Add
-	Konqueror-contextmenu entry
+	  Konqueror-contextmenu entry
 
 2003-05-25 18:09  voc
 
 	* raki/interfaces/: rakisyncfactory.h, rakisyncplugin.cpp,
-	rakisyncplugin.h: Added #include <config.h>
+	  rakisyncplugin.h: Added #include <config.h>
 
 2003-05-24 23:25  voc
 
@@ -908,31 +1103,31 @@
 2003-05-24 23:23  voc
 
 	* raki/plugins/: agsync/agsync.cpp, agsync/agsync.h,
-	agsync/agsyncfactory.cpp, agsync/agsyncfactory.h,
-	kdeaddressbooksync/kdeaddressbooksync.cpp,
-	kdeaddressbooksync/kdeaddressbooksync.h,
-	kdeaddressbooksync/kdeaddressbooksyncfactory.h: Cleanup
+	  agsync/agsyncfactory.cpp, agsync/agsyncfactory.h,
+	  kdeaddressbooksync/kdeaddressbooksync.cpp,
+	  kdeaddressbooksync/kdeaddressbooksync.h,
+	  kdeaddressbooksync/kdeaddressbooksyncfactory.h: Cleanup
 
 2003-05-24 23:22  voc
 
 	* raki/: workerthreadinterface.cpp, workerthreadinterface.h:
-	Architecture cleanup
+	  Architecture cleanup
 
 2003-05-24 23:21  voc
 
 	* raki/: syncdialogimpl.cpp, syncdialogimpl.h,
-	synctasklistitem.cpp, synctasklistitem.h: Plugin-loading /
-	synchronizing moved to synctasklistitem
+	  synctasklistitem.cpp, synctasklistitem.h: Plugin-loading /
+	  synchronizing moved to synctasklistitem
 
 2003-05-24 23:19  voc
 
 	* raki/: rra.h, runwindowimpl.cpp, syncevent.h, wince_ids.cpp,
-	wince_ids.h: cleanup
+	  wince_ids.h: cleanup
 
 2003-05-24 23:18  voc
 
 	* raki/: rakiworkerthread.cpp, removepartnershipdialogimpl.h:
-	Architecture cleanup
+	  Architecture cleanup
 
 2003-05-24 23:18  voc
 
@@ -941,22 +1136,12 @@
 2003-05-24 23:17  voc
 
 	* raki/: raki.cpp, raki.h: Improved - startup raki - start/stop of
-	dccm - shutdown of raki
+	  dccm - shutdown of raki
 
 2003-05-24 23:10  voc
 
 	* raki/: managerimpl.cpp, managerimpl.h, pdaconfigdialogimpl.cpp,
-	pdaconfigdialogimpl.h: Architecture cleanup
-
-2003-05-24 23:08  voc
-
-	* raki/dccm.sh: file dccm.sh was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-24 23:08  voc
-
-	* raki/vdccm.sh: file vdccm.sh was initially added on branch
-	MULTIPLE_DEVICES.
+	  pdaconfigdialogimpl.h: Architecture cleanup
 
 2003-05-24 23:08  voc
 
@@ -968,31 +1153,11 @@
 
 2003-05-24 23:05  voc
 
-	* raki/welcomedialogimpl.cpp: file welcomedialogimpl.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-24 23:05  voc
-
 	* raki/: configdialogimpl.cpp, configdialogimpl.h,
-	welcomedialog.ui, welcomedialog.ui.h, welcomedialogimpl.cpp,
-	welcomedialogimpl.h: - WelcomeDialog added! - Selection between
-	dccm and vdccm in WelcomeDialog - Insatllation of the appopriate
-	dccm.sh script into the ~/.synce/scripts/ directory.
-
-2003-05-24 23:05  voc
-
-	* raki/welcomedialogimpl.h: file welcomedialogimpl.h was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-05-24 23:05  voc
-
-	* raki/welcomedialog.ui: file welcomedialog.ui was initially added
-	on branch MULTIPLE_DEVICES.
-
-2003-05-24 23:05  voc
-
-	* raki/welcomedialog.ui.h: file welcomedialog.ui.h was initially
-	added on branch MULTIPLE_DEVICES.
+	  welcomedialog.ui, welcomedialog.ui.h, welcomedialogimpl.cpp,
+	  welcomedialogimpl.h: - WelcomeDialog added! - Selection between
+	  dccm and vdccm in WelcomeDialog - Insatllation of the appopriate
+	  dccm.sh script into the ~/.synce/scripts/ directory.
 
 2003-05-24 22:59  voc
 
@@ -1001,19 +1166,19 @@
 2003-05-24 17:25  voc
 
 	* raki/plugins/agsync/agsyncfactory.cpp: AGSYNC-Check now done
-	correctly
+	  correctly
 
 2003-05-22 02:33  voc
 
 	* sounds/Makefile.in, raki/plugins/Makefile.in,
-	raki/plugins/agsync/Makefile.in,
-	raki/plugins/kdeaddressbooksync/Makefile.in,
-	raki/interfaces/Makefile.in: Removed not neccessary files
+	  raki/plugins/agsync/Makefile.in,
+	  raki/plugins/kdeaddressbooksync/Makefile.in,
+	  raki/interfaces/Makefile.in: Removed not neccessary files
 
 2003-05-22 02:30  voc
 
 	* .cvsignore, acinclude.m4, aclocal.m4, vdccm/Makefile.in: Removed
-	unneccessary files
+	  unneccessary files
 
 2003-05-21 00:55  voc
 
@@ -1033,98 +1198,27 @@
 
 2003-05-21 00:47  voc
 
-	* raki/interfaces/Makefile.am: file Makefile.am was initially added
-	on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:47  voc
-
-	* raki/interfaces/Makefile.in: file Makefile.in was initially added
-	on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:47  voc
-
-	* raki/interfaces/rakisyncplugin.cpp: file rakisyncplugin.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:47  voc
-
-	* raki/interfaces/rakisyncfactory.cpp: file rakisyncfactory.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:47  voc
-
-	* raki/interfaces/rakisyncfactory.h: file rakisyncfactory.h was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:47  voc
-
-	* raki/interfaces/rakisyncplugin.h: file rakisyncplugin.h was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:47  voc
-
 	* raki/interfaces/: Makefile.am, Makefile.in, rakisyncfactory.cpp,
-	rakisyncfactory.h, rakisyncplugin.cpp, rakisyncplugin.h: The
-	plugin-interface definition
+	  rakisyncfactory.h, rakisyncplugin.cpp, rakisyncplugin.h: The
+	  plugin-interface definition
 
 2003-05-21 00:43  voc
 
 	* rapip/: rapip.cpp, rapip.h: Now the number of entries of a
-	directory is reported to the kde-framework before the
-	directorycontent is propagated to the kde-framework.
-
-2003-05-21 00:41  voc
-
-	* raki/plugins/rakisynchronizer.desktop: file
-	rakisynchronizer.desktop was initially added on branch
-	MULTIPLE_DEVICES.
+	  directory is reported to the kde-framework before the
+	  directorycontent is propagated to the kde-framework.
 
 2003-05-21 00:41  voc
 
 	* raki/plugins/: Makefile.am, Makefile.in,
-	rakisynchronizer.desktop: Added the Makefile
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/agsync.cpp: file agsync.cpp was initially
-	added on branch MULTIPLE_DEVICES.
+	  rakisynchronizer.desktop: Added the Makefile
 
 2003-05-21 00:40  voc
 
 	* raki/plugins/agsync/: Makefile.am, Makefile.in, agsync.cpp,
-	agsync.h, agsyncfactory.cpp, agsyncfactory.h, rakiagsync.desktop,
-	syncstream.cpp, syncstream.h: Added the "AvantGo Synchronizer"
-	plugin
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/syncstream.cpp: file syncstream.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/rakiagsync.desktop: file rakiagsync.desktop
-	was initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/syncstream.h: file syncstream.h was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/agsyncfactory.cpp: file agsyncfactory.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/agsyncfactory.h: file agsyncfactory.h was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:40  voc
-
-	* raki/plugins/agsync/agsync.h: file agsync.h was initially added
-	on branch MULTIPLE_DEVICES.
+	  agsync.h, agsyncfactory.cpp, agsyncfactory.h, rakiagsync.desktop,
+	  syncstream.cpp, syncstream.h: Added the "AvantGo Synchronizer"
+	  plugin
 
 2003-05-21 00:39  voc
 
@@ -1132,53 +1226,11 @@
 
 2003-05-21 00:38  voc
 
-	* raki/plugins/: kdeaddressbooksync/Makefile.am,
-	agsync/Makefile.am, Makefile.am: file Makefile.am was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: file
-	kdeaddressbooksync.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/: kdeaddressbooksync/Makefile.in,
-	agsync/Makefile.in, Makefile.in: file Makefile.in was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-05-21 00:38  voc
-
 	* raki/plugins/kdeaddressbooksync/: Makefile.am, Makefile.in,
-	kdeaddressbooksync.cpp, kdeaddressbooksync.h,
-	kdeaddressbooksyncfactory.cpp, kdeaddressbooksyncfactory.h,
-	rakikdeaddressbooksync.desktop: Added the "KDE-Addressbook
-	Synchronizer" plugin
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp:
-	file kdeaddressbooksyncfactory.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/kdeaddressbooksync/rakikdeaddressbooksync.desktop:
-	file rakikdeaddressbooksync.desktop was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.h: file
-	kdeaddressbooksyncfactory.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h: file
-	kdeaddressbooksync.h was initially added on branch
-	MULTIPLE_DEVICES.
+	  kdeaddressbooksync.cpp, kdeaddressbooksync.h,
+	  kdeaddressbooksyncfactory.cpp, kdeaddressbooksyncfactory.h,
+	  rakikdeaddressbooksync.desktop: Added the "KDE-Addressbook
+	  Synchronizer" plugin
 
 2003-05-21 00:37  voc
 
@@ -1191,25 +1243,25 @@
 2003-05-21 00:36  voc
 
 	* raki/: pda.cpp, pda.h: Cleanup of the design. Device-IP
-	resolution moved into the pdaconfigdialog.
+	  resolution moved into the pdaconfigdialog.
 
 2003-05-21 00:34  voc
 
 	* raki/: pdaconfigdialog.ui, pdaconfigdialog.ui.h,
-	pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Right Button on
-	possible synchronization tasks shows a popup-menu with all knowen
-	plugins for the synchronization task.
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Right Button on
+	  possible synchronization tasks shows a popup-menu with all knowen
+	  plugins for the synchronization task.
 
 2003-05-21 00:31  voc
 
 	* raki/: raki.cpp, raki.h: Removed KAddressBook loading and saving.
-	This now happens in a plugin
+	  This now happens in a plugin
 
 2003-05-21 00:29  voc
 
 	* raki/: synctasklistitem.cpp, synctasklistitem.h: Added a QLabel
-	which is showen in the "Comment"-Column of the syncdialog. 
-	KDE-Service finding added Plugin loading added
+	  which is showen in the "Comment"-Column of the syncdialog.
+	  KDE-Service finding added Plugin loading added
 
 2003-05-21 00:27  voc
 
@@ -1218,34 +1270,24 @@
 2003-05-21 00:26  voc
 
 	* raki/: syncevent.cpp, syncevent.h: Eventpropagation between
-	"Synchronizer"-thread and kapplicaion-main-thread
-
-2003-05-21 00:26  voc
-
-	* raki/syncevent.h: file syncevent.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-21 00:26  voc
-
-	* raki/syncevent.cpp: file syncevent.cpp was initially added on
-	branch MULTIPLE_DEVICES.
+	  "Synchronizer"-thread and kapplicaion-main-thread
 
 2003-05-21 00:25  voc
 
 	* raki/: syncdialogimpl.cpp, syncdialogimpl.h: Removed every
-	concrete synchronization-code. This is now done in the
-	"Synchronizer"-Plugins
+	  concrete synchronization-code. This is now done in the
+	  "Synchronizer"-Plugins
 
 2003-05-21 00:21  voc
 
 	* raki/syncdialog.ui: Added a "Comment" column holding informations
-	about the progress of a synchronization-task
+	  about the progress of a synchronization-task
 
 2003-05-21 00:18  voc
 
 	* raki/: rra.cpp, rra.h: Temporarely removed methode getVCal(...)
-	Added local prototypes dbstream_to_propval and
-	dbstream_from_propval
+	  Added local prototypes dbstream_to_propval and
+	  dbstream_from_propval
 
 2003-05-21 00:15  voc
 
@@ -1254,38 +1296,30 @@
 2003-05-21 00:14  voc
 
 	* raki/rakiworkerthread.cpp: Added mouspointer-change globaly for
-	all threads
+	  all threads
 
 2003-05-21 00:13  voc
 
 	* raki/managerimpl.cpp: Cleanup of the design - moved the
-	declaration of a structure Removed changeing of the mouspointer
+	  declaration of a structure Removed changeing of the mouspointer
 
 2003-05-21 00:09  voc
 
 	* raki/: rakievent.cpp, rakievent.h, workerthreadinterface.h:
-	Cleanup of the design - moved the declaration of a structure
+	  Cleanup of the design - moved the declaration of a structure
 
 2003-05-21 00:01  voc
 
 	* raki/: agsync.cpp, agsync.h, appointment.cpp, appointment.h,
-	appointment_ids.h, dbstream.h, strbuf.cpp, strbuf.h: Removed old
-	stuff
+	  appointment_ids.h, dbstream.h, strbuf.cpp, strbuf.h: Removed old
+	  stuff
 
 2003-05-20 23:56  voc
 
 	* raki/plugins/.cvsignore, raki/plugins/agsync/.cvsignore,
-	raki/plugins/kdeaddressbooksync/.cvsignore, sounds/.cvsignore,
-	vdccm/.cvsignore, raki/interfaces/.cvsignore: Added .cvsignore
-	files
-
-2003-05-20 23:56  voc
-
-	* vdccm/.cvsignore, raki/plugins/.cvsignore,
-	raki/plugins/agsync/.cvsignore,
-	raki/plugins/kdeaddressbooksync/.cvsignore, sounds/.cvsignore,
-	raki/interfaces/.cvsignore: file .cvsignore was initially added on
-	branch MULTIPLE_DEVICES.
+	  raki/plugins/kdeaddressbooksync/.cvsignore, sounds/.cvsignore,
+	  vdccm/.cvsignore, raki/interfaces/.cvsignore: Added .cvsignore
+	  files
 
 2003-05-12 20:03  voc
 
@@ -1297,42 +1331,17 @@
 
 2003-05-12 16:35  voc
 
-	* raki/agsync.cpp: file agsync.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-12 16:35  voc
-
-	* raki/syncstream.cpp: file syncstream.cpp was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-05-12 16:35  voc
-
-	* raki/syncstream.h: file syncstream.h was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-05-12 16:35  voc
-
-	* raki/agsync.h: file agsync.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-12 16:35  voc
-
 	* raki/: Makefile.am, agsync.cpp, agsync.h, pda.cpp,
-	pdaconfigdialogimpl.cpp, rapiwrapper.h,
-	removepartnershipdialogimpl.cpp, rra.h, syncdialogimpl.cpp,
-	syncstream.cpp, syncstream.h, wince_ids.cpp: Added AvantGo-Sync
-	support. Using agsync-0.2 from Michael Jarrett.  Substituted all
-	cout by kdDebug.
+	  pdaconfigdialogimpl.cpp, rapiwrapper.h,
+	  removepartnershipdialogimpl.cpp, rra.h, syncdialogimpl.cpp,
+	  syncstream.cpp, syncstream.h, wince_ids.cpp: Added AvantGo-Sync
+	  support. Using agsync-0.2 from Michael Jarrett.  Substituted all
+	  cout by kdDebug.
 
 2003-05-12 16:32  voc
 
 	* configure.in.in: Added AvantGo-Sync support. Using agsync-0.2
-	from Michael Jarrett.
-
-2003-05-12 13:56  voc
-
-	* mrra.patch: file mrra.patch was initially added on branch
-	MULTIPLE_DEVICES.
+	  from Michael Jarrett.
 
 2003-05-12 13:56  voc
 
@@ -1345,50 +1354,28 @@
 2003-05-10 02:54  voc
 
 	* raki/: Makefile.am, configdialogimpl.cpp, configdialogimpl.h,
-	errorevent.cpp, errorevent.h, installer.cpp, installer.h,
-	managerimpl.cpp, managerimpl.h, passworddialogimpl.cpp,
-	passworddialogimpl.h, pda.cpp, pda.h, pdaconfigdialogimpl.cpp,
-	pdaconfigdialogimpl.h, raki.cpp, raki.h, rakievent.cpp,
-	rakievent.h, rakiworkerthread.cpp, rakiworkerthread.h,
-	rapiwrapper.cpp, rapiwrapper.h, removepartnershipdialog.ui,
-	removepartnershipdialogimpl.cpp, removepartnershipdialogimpl.h,
-	rra.cpp, rra.h, runwindowimpl.cpp, runwindowimpl.h,
-	syncdialogimpl.cpp, synctasklistitem.cpp,
-	workerthreadinterface.cpp, workerthreadinterface.h: Fixed a
-	spelling error in the license section.	Added partnership
-	functionality
-
-2003-05-10 02:54  voc
-
-	* raki/removepartnershipdialogimpl.cpp: file
-	removepartnershipdialogimpl.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-10 02:54  voc
-
-	* raki/removepartnershipdialogimpl.h: file
-	removepartnershipdialogimpl.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-05-10 02:54  voc
-
-	* raki/removepartnershipdialog.ui: file removepartnershipdialog.ui
-	was initially added on branch MULTIPLE_DEVICES.
+	  errorevent.cpp, errorevent.h, installer.cpp, installer.h,
+	  managerimpl.cpp, managerimpl.h, passworddialogimpl.cpp,
+	  passworddialogimpl.h, pda.cpp, pda.h, pdaconfigdialogimpl.cpp,
+	  pdaconfigdialogimpl.h, raki.cpp, raki.h, rakievent.cpp,
+	  rakievent.h, rakiworkerthread.cpp, rakiworkerthread.h,
+	  rapiwrapper.cpp, rapiwrapper.h, removepartnershipdialog.ui,
+	  removepartnershipdialogimpl.cpp, removepartnershipdialogimpl.h,
+	  rra.cpp, rra.h, runwindowimpl.cpp, runwindowimpl.h,
+	  syncdialogimpl.cpp, synctasklistitem.cpp,
+	  workerthreadinterface.cpp, workerthreadinterface.h: Fixed a
+	  spelling error in the license section.  Added partnership
+	  functionality
 
 2003-05-10 02:48  voc
 
 	* mlibrapi2.patch: Patch for librapi2: String-entries into the
-	registry
-
-2003-05-10 02:48  voc
-
-	* mlibrapi2.patch: file mlibrapi2.patch was initially added on
-	branch MULTIPLE_DEVICES.
+	  registry
 
 2003-05-10 02:46  voc
 
 	* rapip/: rapip.cpp, rapip.h: A few small bugs fixed.  the
-	stat-methode now also queries for the filesize.
+	  stat-methode now also queries for the filesize.
 
 2003-04-29 21:55  twogood
 
@@ -1401,23 +1388,23 @@
 2003-04-01 23:35  voc
 
 	* raki/rapiwrapper.h: Fixed namespace troubles ... thanks to Yuval
-	Turgeman <yuval@aduva.com>
+	  Turgeman <yuval@aduva.com>
 
 2003-04-01 22:54  voc
 
 	* raki/: rra.cpp, rra.h, syncdialogimpl.cpp, wince_ids.cpp,
-	wince_ids.h: Contact-Synchronization now is done directly without
-	using the vcard-indirection.
+	  wince_ids.h: Contact-Synchronization now is done directly without
+	  using the vcard-indirection.
 
 2003-03-27 02:11  voc
 
 	* mlibsynce.patch: Changed the diff format from "normal" to
-	"unified".Now also "-p1" of patch  works!
+	  "unified".Now also "-p1" of patch  works!
 
 2003-03-26 11:39  voc
 
 	* raki/managerimpl.cpp: Made software-fetching again compatible
-	with the last registry.c changes in librapip2
+	  with the last registry.c changes in librapip2
 
 2003-03-26 11:38  voc
 
@@ -1425,24 +1412,9 @@
 
 2003-03-25 18:11  voc
 
-	* raki/wince_ids.h: file wince_ids.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-25 18:11  voc
-
-	* raki/wince_ids.cpp: file wince_ids.cpp was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-25 18:11  voc
-
-	* raki/cab_install_raki.desktop: file cab_install_raki.desktop was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-25 18:11  voc
-
 	* raki/: Makefile.am, cab_install_raki.desktop, raki.cpp,
-	wince_ids.cpp, wince_ids.h: Start to implement the db-conversions
-	Added a konqueror context-menu entry
+	  wince_ids.cpp, wince_ids.h: Start to implement the db-conversions
+	  Added a konqueror context-menu entry
 
 2003-03-25 18:09  voc
 
@@ -1451,150 +1423,76 @@
 2003-03-24 00:41  voc
 
 	* mlibsynce.patch: Made the setting of the connection-filename more
-	robust.
-
-2003-03-22 22:18  voc
-
-	* raki/dmalloc.cpp: file dmalloc.cpp was initially added on branch
-	MULTIPLE_DEVICES.
+	  robust.
 
 2003-03-22 22:18  voc
 
 	* raki/: dmalloc.cpp, return.h: Added dmalloc-files to do
-	mem-checks
-
-2003-03-22 22:18  voc
-
-	* raki/return.h: file return.h was initially added on branch
-	MULTIPLE_DEVICES.
+	  mem-checks
 
 2003-03-22 00:59  voc
 
 	* acinclude.m4, aclocal.m4, configure.in.in, admin/acinclude.m4.in,
-	raki/Makefile.am, raki/configdialogimpl.cpp,
-	raki/configdialogimpl.h, raki/errorevent.cpp, raki/errorevent.h,
-	raki/installer.cpp, raki/installer.h, raki/managerimpl.cpp,
-	raki/managerimpl.h, raki/passworddialogimpl.cpp,
-	raki/passworddialogimpl.h, raki/pda.cpp, raki/pda.h,
-	raki/pdaconfigdialogimpl.cpp, raki/pdaconfigdialogimpl.h,
-	raki/raki.cpp, raki/raki.h, raki/rakievent.cpp, raki/rakievent.h,
-	raki/rakiworkerthread.cpp, raki/rakiworkerthread.h,
-	raki/rapiwrapper.h, raki/rra.cpp, raki/rra.h,
-	raki/runwindowimpl.cpp, raki/runwindowimpl.h,
-	raki/syncdialogimpl.cpp, raki/syncdialogimpl.h,
-	raki/synctasklistitem.cpp, raki/synctasklistitem.h,
-	raki/workerthreadinterface.cpp, raki/workerthreadinterface.h,
-	rapip/rapip.cpp, sounds/Makefile.in, templates/cpp, templates/h,
-	vdccm/Makefile.in: Breaking the compatibility to Qt-3.0!!! Fixing
-	many memory holes.
+	  raki/Makefile.am, raki/configdialogimpl.cpp,
+	  raki/configdialogimpl.h, raki/errorevent.cpp, raki/errorevent.h,
+	  raki/installer.cpp, raki/installer.h, raki/managerimpl.cpp,
+	  raki/managerimpl.h, raki/passworddialogimpl.cpp,
+	  raki/passworddialogimpl.h, raki/pda.cpp, raki/pda.h,
+	  raki/pdaconfigdialogimpl.cpp, raki/pdaconfigdialogimpl.h,
+	  raki/raki.cpp, raki/raki.h, raki/rakievent.cpp, raki/rakievent.h,
+	  raki/rakiworkerthread.cpp, raki/rakiworkerthread.h,
+	  raki/rapiwrapper.h, raki/rra.cpp, raki/rra.h,
+	  raki/runwindowimpl.cpp, raki/runwindowimpl.h,
+	  raki/syncdialogimpl.cpp, raki/syncdialogimpl.h,
+	  raki/synctasklistitem.cpp, raki/synctasklistitem.h,
+	  raki/workerthreadinterface.cpp, raki/workerthreadinterface.h,
+	  rapip/rapip.cpp, sounds/Makefile.in, templates/cpp, templates/h,
+	  vdccm/Makefile.in: Breaking the compatibility to Qt-3.0!!! Fixing
+	  many memory holes.
 
 2003-03-20 00:05  voc
 
 	* rapip/: rapip.cpp, rapip.h: Making rapip more efficient by using
-	unicode funcions provided in the class QString. No more calls to
-	wce_to/from_ascii are neccessary. WARNING: This has broken
-	compatibility with QT-3.0.  You need at least QT-3.1
+	  unicode funcions provided in the class QString. No more calls to
+	  wce_to/from_ascii are neccessary. WARNING: This has broken
+	  compatibility with QT-3.0.  You need at least QT-3.1
 
 2003-03-17 10:25  voc
 
 	* raki/: installer.cpp, passworddialogimpl.h, pda.cpp, pda.h,
-	pdaconfigdialogimpl.cpp, raki.cpp, rakiworkerthread.cpp, rra.cpp,
-	syncdialogimpl.cpp, workerthreadinterface.cpp,
-	workerthreadinterface.h: Fixed a segfault bug
-
-2003-03-14 01:12  voc
-
-	* raki/rra.cpp: file rra.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/strbuf.cpp: file strbuf.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/synctasklistitem.h: file synctasklistitem.h was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/synctasklistitem.cpp: file synctasklistitem.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/syncdialogimpl.cpp: file syncdialogimpl.cpp was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/rra.h: file rra.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/syncdialog.ui: file syncdialog.ui was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/syncdialogimpl.h: file syncdialogimpl.h was initially added
-	on branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/strbuf.h: file strbuf.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/dbstream.h: file dbstream.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/appointment_ids.h: file appointment_ids.h was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/appointment.cpp: file appointment.cpp was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-14 01:12  voc
-
-	* raki/appointment.h: file appointment.h was initially added on
-	branch MULTIPLE_DEVICES.
+	  pdaconfigdialogimpl.cpp, raki.cpp, rakiworkerthread.cpp, rra.cpp,
+	  syncdialogimpl.cpp, workerthreadinterface.cpp,
+	  workerthreadinterface.h: Fixed a segfault bug
 
 2003-03-14 01:12  voc
 
 	* raki/: Makefile.am, appointment.cpp, appointment.h,
-	appointment_ids.h, configdialog.ui, configdialogimpl.cpp,
-	dbstream.h, managerimpl.cpp, managerimpl.h, pda.cpp, pda.h,
-	pdaconfigdialog.ui, pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h,
-	raki.cpp, raki.h, rakievent.cpp, rakievent.h, rakiworkerthread.cpp,
-	rakiworkerthread.h, rra.cpp, rra.h, strbuf.cpp, strbuf.h,
-	syncdialog.ui, syncdialogimpl.cpp, syncdialogimpl.h,
-	synctasklistitem.cpp, synctasklistitem.h, workerthreadinterface.h:
-	Synchronization - framework added.  Working synchronization tasks:
-	contacts Prepared synchronization tasks: events
+	  appointment_ids.h, configdialog.ui, configdialogimpl.cpp,
+	  dbstream.h, managerimpl.cpp, managerimpl.h, pda.cpp, pda.h,
+	  pdaconfigdialog.ui, pdaconfigdialogimpl.cpp,
+	  pdaconfigdialogimpl.h, raki.cpp, raki.h, rakievent.cpp,
+	  rakievent.h, rakiworkerthread.cpp, rakiworkerthread.h, rra.cpp,
+	  rra.h, strbuf.cpp, strbuf.h, syncdialog.ui, syncdialogimpl.cpp,
+	  syncdialogimpl.h, synctasklistitem.cpp, synctasklistitem.h,
+	  workerthreadinterface.h: Synchronization - framework added.
+	  Working synchronization tasks: contacts Prepared synchronization
+	  tasks: events
 
 2003-03-10 13:09  voc
 
 	* vdccm/: list_lib.c, list_lib.h, network_lib.c, select_lib.c,
-	select_lib.h: fixed compile-bug: Removed header-dependency to
-	external library
+	  select_lib.h: fixed compile-bug: Removed header-dependency to
+	  external library
 
 2003-03-07 02:18  voc
 
 	* raki/pda.cpp: "Masqueraded routed tried to be removed twice" bug
-	fixed
+	  fixed
 
 2003-03-06 19:46  voc
 
 	* raki/configdialog.ui: Bug fix: Inputbox for dccm was not enabled.
-	Now it is!
+	  Now it is!
 
 2003-03-05 22:12  voc
 
@@ -1611,7 +1509,7 @@
 2003-03-05 21:52  voc
 
 	* raki/: pda.cpp, pda.h: Made removing of a masqueraded route
-	(hopefully) more stable
+	  (hopefully) more stable
 
 2003-03-05 21:50  voc
 
@@ -1624,27 +1522,17 @@
 2003-03-04 10:57  voc
 
 	* raki/pda.cpp: Changed the "caption" of the install, execute,
-	management and config windows to contain also the pdaname
-
-2003-03-03 23:44  voc
-
-	* mlibsynce.patch: file mlibsynce.patch was initially added on
-	branch MULTIPLE_DEVICES.
+	  management and config windows to contain also the pdaname
 
 2003-03-03 23:44  voc
 
 	* mlibsynce.patch: Added the patch to make synce multiple-devices
-	aware
+	  aware
 
 2003-03-03 23:37  voc
 
 	* LICENSE: Changed LICENSE globaly to the MIT-License to be conform
-	with the other synce-sources
-
-2003-03-03 23:37  voc
-
-	* LICENSE: file LICENSE was initially added on branch
-	MULTIPLE_DEVICES.
+	  with the other synce-sources
 
 2003-03-03 23:37  voc
 
@@ -1652,105 +1540,30 @@
 
 2003-03-03 23:36  voc
 
-	* vdccm/network_lib.c: file network_lib.c was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/vdccm.c: file vdccm.c was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/network_lib.h: file network_lib.h was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/timer_lib.c: file timer_lib.c was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/list_lib.h: file list_lib.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/daemon.c: file daemon.c was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/list_lib.c: file list_lib.c was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/select_lib.h: file select_lib.h was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/timer_lib.h: file timer_lib.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/select_lib.c: file select_lib.c was initially added on
-	branch MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
-	* vdccm/client.c: file client.c was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:36  voc
-
 	* vdccm/: Makefile.am, Makefile.in, client.c, daemon.c, list_lib.c,
-	list_lib.h, network_lib.c, network_lib.h, select_lib.c,
-	select_lib.h, timer_lib.c, timer_lib.h, vdccm.c: Added a
-	multiple-devices aware dccm
+	  list_lib.h, network_lib.c, network_lib.h, select_lib.c,
+	  select_lib.h, timer_lib.c, timer_lib.h, vdccm.c: Added a
+	  multiple-devices aware dccm
 
 2003-03-03 23:35  voc
 
 	* acinclude.m4, aclocal.m4, configure.in.in, rapip.kdevelop:
-	Updated configuration
+	  Updated configuration
 
 2003-03-03 23:35  voc
 
 	* Doxyfile: Changed the doxygen configuration to create also not
-	documented items
-
-2003-03-03 23:34  voc
-
-	* sounds/Makefile.in, vdccm/Makefile.in: file Makefile.in was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:34  voc
-
-	* sounds/Makefile.am, vdccm/Makefile.am: file Makefile.am was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:34  voc
-
-	* sounds/Infbeg.wav: file Infbeg.wav was initially added on branch
-	MULTIPLE_DEVICES.
+	  documented items
 
 2003-03-03 23:33  voc
 
 	* sounds/: Infend.wav, Infbeg.wav, Makefile.am, Makefile.in: Added
-	notification sounds
-
-2003-03-03 23:33  voc
-
-	* sounds/Infend.wav: file Infend.wav was initially added on branch
-	MULTIPLE_DEVICES.
+	  notification sounds
 
 2003-03-03 23:32  voc
 
 	* rapip/: rapip.cpp, rapip.h: Tuned performance by only calling
-	CEInit and CEUninit once a io-slave-session.
+	  CEInit and CEUninit once a io-slave-session.
 
 2003-03-03 23:29  voc
 
@@ -1759,18 +1572,18 @@
 2003-03-03 23:28  voc
 
 	* raki/: installer.cpp, installer.h, managerimpl.cpp,
-	managerimpl.h, raki.cpp, raki.h, raki.sh, rakievent.cpp,
-	rakievent.h, rakiworkerthread.cpp, rakiworkerthread.h,
-	rapiwrapper.cpp, rapiwrapper.h, runwindow.ui, runwindow.ui.h,
-	runwindowimpl.cpp, runwindowimpl.h, workerthreadinterface.cpp,
-	workerthreadinterface.h: Changes to be multiple-devices aware
+	  managerimpl.h, raki.cpp, raki.h, raki.sh, rakievent.cpp,
+	  rakievent.h, rakiworkerthread.cpp, rakiworkerthread.h,
+	  rapiwrapper.cpp, rapiwrapper.h, runwindow.ui, runwindow.ui.h,
+	  runwindowimpl.cpp, runwindowimpl.h, workerthreadinterface.cpp,
+	  workerthreadinterface.h: Changes to be multiple-devices aware
 
 2003-03-03 23:25  voc
 
 	* raki/: configdialog.ui, configdialog.ui.h, configdialogimpl.cpp,
-	configdialogimpl.h: Config-dialog updated to be consistent with the
-	"multiple-device" behaviour.  (Removed connect/disconnect and
-	masquerading-configuration)
+	  configdialogimpl.h: Config-dialog updated to be consistent with
+	  the "multiple-device" behaviour.  (Removed connect/disconnect and
+	  masquerading-configuration)
 
 2003-03-03 23:24  voc
 
@@ -1782,89 +1595,29 @@
 
 2003-03-03 23:23  voc
 
-	* raki/pda.cpp: file pda.cpp was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:23  voc
-
-	* raki/pda.h: file pda.h was initially added on branch
-	MULTIPLE_DEVICES.
-
-2003-03-03 23:23  voc
-
-	* raki/pdaconfigdialogimpl.cpp: file pdaconfigdialogimpl.cpp was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:23  voc
-
-	* raki/pdaconfigdialog.ui.h: file pdaconfigdialog.ui.h was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:23  voc
-
 	* raki/: pdaconfigdialog.ui, pdaconfigdialog.ui.h,
-	pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Added
-	pda-configdialog to configure a specific pda
-
-2003-03-03 23:23  voc
-
-	* raki/pdaconfigdialogimpl.h: file pdaconfigdialogimpl.h was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:23  voc
-
-	* raki/pdaconfigdialog.ui: file pdaconfigdialog.ui was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:22  voc
-
-	* raki/passworddialogimpl.cpp: file passworddialogimpl.cpp was
-	initially added on branch MULTIPLE_DEVICES.
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Added
+	  pda-configdialog to configure a specific pda
 
 2003-03-03 23:22  voc
 
 	* raki/: passworddialog.ui, passworddialog.ui.h,
-	passworddialogimpl.cpp, passworddialogimpl.h: Added password-dialog
-	to input a requested password for a pda
-
-2003-03-03 23:22  voc
-
-	* raki/passworddialogimpl.h: file passworddialogimpl.h was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:22  voc
-
-	* raki/passworddialog.ui: file passworddialog.ui was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:22  voc
-
-	* raki/passworddialog.ui.h: file passworddialog.ui.h was initially
-	added on branch MULTIPLE_DEVICES.
+	  passworddialogimpl.cpp, passworddialogimpl.h: Added
+	  password-dialog to input a requested password for a pda
 
 2003-03-03 23:21  voc
 
 	* raki/: installdialog.ui, installdialog.ui.h: Added
-	installation-dialog to select the pda which should be the
-	install-destination
-
-2003-03-03 23:21  voc
-
-	* raki/installdialog.ui.h: file installdialog.ui.h was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:21  voc
-
-	* raki/installdialog.ui: file installdialog.ui was initially added
-	on branch MULTIPLE_DEVICES.
+	  installation-dialog to select the pda which should be the
+	  install-destination
 
 2003-03-03 23:18  voc
 
 	* raki/: hi16-app-raki.png, hi16-app-raki_bw.png,
-	hi22-app-raki.png, hi22-app-raki_bw.png, hi32-app-raki.png,
-	hi32-app-raki_bw.png, hi48-app-raki.png, hi48-app-raki_bw.png,
-	hi64-app-raki.png, hi64-app-raki_bw.png: Moved all icons into the
-	icons-directory
+	  hi22-app-raki.png, hi22-app-raki_bw.png, hi32-app-raki.png,
+	  hi32-app-raki_bw.png, hi48-app-raki.png, hi48-app-raki_bw.png,
+	  hi64-app-raki.png, hi64-app-raki_bw.png: Moved all icons into the
+	  icons-directory
 
 2003-03-03 23:13  voc
 
@@ -1873,77 +1626,23 @@
 2003-03-03 23:12  voc
 
 	* admin/Doxyfile.global: Changed the doxygen configuration to
-	create also not documented items
-
-2003-03-03 23:11  voc
-
-	* icons/hi64-app-raki.png: file hi64-app-raki.png was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi64-app-raki_bw.png: file hi64-app-raki_bw.png was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi32-app-raki_bw.png: file hi32-app-raki_bw.png was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi22-app-raki_bw.png: file hi22-app-raki_bw.png was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi16-app-raki_bw.png: file hi16-app-raki_bw.png was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi48-app-raki_bw.png: file hi48-app-raki_bw.png was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi22-app-raki.png: file hi22-app-raki.png was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi32-app-raki.png: file hi32-app-raki.png was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi48-app-raki.png: file hi48-app-raki.png was initially
-	added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi22-app-raki_bwtest.png: file hi22-app-raki_bwtest.png was
-	initially added on branch MULTIPLE_DEVICES.
-
-2003-03-03 23:11  voc
-
-	* icons/hi16-app-raki.png: file hi16-app-raki.png was initially
-	added on branch MULTIPLE_DEVICES.
+	  create also not documented items
 
 2003-03-03 23:11  voc
 
 	* icons/: Makefile.am, hi16-app-raki.png, hi16-app-raki_bw.png,
-	hi22-app-raki.png, hi22-app-raki_bw.png, hi22-app-raki_bwtest.png,
-	hi32-app-raki.png, hi32-app-raki_bw.png, hi48-app-raki.png,
-	hi48-app-raki_bw.png, hi64-app-raki.png, hi64-app-raki_bw.png:
-	Moved all icons in the icons-directory
+	  hi22-app-raki.png, hi22-app-raki_bw.png,
+	  hi22-app-raki_bwtest.png, hi32-app-raki.png,
+	  hi32-app-raki_bw.png, hi48-app-raki.png, hi48-app-raki_bw.png,
+	  hi64-app-raki.png, hi64-app-raki_bw.png: Moved all icons in the
+	  icons-directory
 
 2003-02-23 23:08  voc
 
 	* ChangeLog, configure.in.in, raki/installer.cpp,
-	raki/managerimpl.cpp, raki/rapiwrapper.h, raki/runwindow.ui.h,
-	raki/workerthreadinterface.h, rapip/rapip.cpp: Update to compile
-	with synce-0.7
+	  raki/managerimpl.cpp, raki/rapiwrapper.h, raki/runwindow.ui.h,
+	  raki/workerthreadinterface.h, rapip/rapip.cpp: Update to compile
+	  with synce-0.7
 
 2003-02-21 00:51  voc
 
@@ -1952,27 +1651,28 @@
 2003-02-21 00:50  voc
 
 	* raki/management.ui: - Changed the layout of the Software-Manager
-	tab
+	  tab
 
 2003-02-21 00:49  voc
 
 	* raki/: runwindow.ui, runwindow.ui.h: - Rundialog looks a little
-	bit better.
+	  bit better.
 
 2003-02-21 00:47  voc
 
 	* raki/: raki.cpp, raki.h: - Fixed stalled masquerading rule in
-	iptables - Added QToolTip-Window showing connection-information
+	  iptables - Added QToolTip-Window showing connection-information
 
 2003-02-18 23:42  voc
 
 	* .cvsignore, doc/Makefile.am, doc/en/Makefile.am,
-	doc/en/index.docbook, raki/configdialog.ui, raki/configdialog.ui.h,
-	raki/configdialogimpl.cpp, raki/configdialogimpl.h,
-	raki/installer.cpp, raki/installer.h, raki/managerimpl.cpp,
-	raki/managerimpl.h, raki/progressbar.ui, raki/progressbar.ui.h,
-	raki/raki.cpp, raki/raki.h, raki/rakievent.cpp, raki/rakievent.h:
-	See the ChangeLog-File for more infos.
+	  doc/en/index.docbook, raki/configdialog.ui,
+	  raki/configdialog.ui.h, raki/configdialogimpl.cpp,
+	  raki/configdialogimpl.h, raki/installer.cpp, raki/installer.h,
+	  raki/managerimpl.cpp, raki/managerimpl.h, raki/progressbar.ui,
+	  raki/progressbar.ui.h, raki/raki.cpp, raki/raki.h,
+	  raki/rakievent.cpp, raki/rakievent.h: See the ChangeLog-File for
+	  more infos.
 
 2003-02-18 23:36  voc
 
@@ -1993,36 +1693,36 @@
 2003-02-17 11:26  voc
 
 	* .cvsignore, Makefile.in, config.h.in, configure, configure.files,
-	configure.in, rapip.kdevses, doc/.cvsignore, doc/Makefile.in,
-	doc/en/.cvsignore, doc/en/Makefile.in, icons/.cvsignore,
-	icons/Makefile.in, po/Makefile.in, raki/.cvsignore,
-	raki/Makefile.in, rapip/.cvsignore, rapip/Makefile.in: Removed
-	files not belonging into the CVS Added .cvsignore files
+	  configure.in, rapip.kdevses, doc/.cvsignore, doc/Makefile.in,
+	  doc/en/.cvsignore, doc/en/Makefile.in, icons/.cvsignore,
+	  icons/Makefile.in, po/Makefile.in, raki/.cvsignore,
+	  raki/Makefile.in, rapip/.cvsignore, rapip/Makefile.in: Removed
+	  files not belonging into the CVS Added .cvsignore files
 
 2003-02-16 23:11  voc
 
 	* ChangeLog, Makefile.in, acinclude.m4, aclocal.m4, conf11596.sh,
-	configure, configure.in, configure.in.in, rapip.kdevelop,
-	rapip.kdevses, admin/acinclude.m4.in, admin/configure.in.min,
-	doc/Makefile.in, doc/en/Makefile.in, icons/Makefile.in,
-	po/Makefile.in, raki/Makefile.am, raki/Makefile.in,
-	raki/configdialog.ui, raki/configdialog.ui.h,
-	raki/configdialogimpl.cpp, raki/configdialogimpl.h,
-	raki/installer.cpp, raki/installer.h, raki/management.ui,
-	raki/management.ui.h, raki/managerimpl.cpp, raki/managerimpl.h,
-	raki/raki.cpp, raki/raki.h, raki/rakievent.cpp, raki/rakievent.h,
-	raki/rakiworkerthread.cpp, raki/rakiworkerthread.h,
-	raki/rapiwrapper.h, raki/runwindow.ui, raki/runwindow.ui.h,
-	raki/runwindowimpl.cpp, raki/runwindowimpl.h,
-	raki/workerthreadinterface.cpp, raki/workerthreadinterface.h,
-	rapip/Makefile.in, rapip/rapip.cpp, rapip/rapip.h: See the
-	ChangeLog-File for more infos.
+	  configure, configure.in, configure.in.in, rapip.kdevelop,
+	  rapip.kdevses, admin/acinclude.m4.in, admin/configure.in.min,
+	  doc/Makefile.in, doc/en/Makefile.in, icons/Makefile.in,
+	  po/Makefile.in, raki/Makefile.am, raki/Makefile.in,
+	  raki/configdialog.ui, raki/configdialog.ui.h,
+	  raki/configdialogimpl.cpp, raki/configdialogimpl.h,
+	  raki/installer.cpp, raki/installer.h, raki/management.ui,
+	  raki/management.ui.h, raki/managerimpl.cpp, raki/managerimpl.h,
+	  raki/raki.cpp, raki/raki.h, raki/rakievent.cpp, raki/rakievent.h,
+	  raki/rakiworkerthread.cpp, raki/rakiworkerthread.h,
+	  raki/rapiwrapper.h, raki/runwindow.ui, raki/runwindow.ui.h,
+	  raki/runwindowimpl.cpp, raki/runwindowimpl.h,
+	  raki/workerthreadinterface.cpp, raki/workerthreadinterface.h,
+	  rapip/Makefile.in, rapip/rapip.cpp, rapip/rapip.h: See the
+	  ChangeLog-File for more infos.
 
 2003-02-13 10:42  voc
 
 	* Makefile.in, config.h.in, configure, configure.in,
-	configure.in.in, rapip.kdevses, rapip/Makefile.in: - Added a
-	extended check for librapi2 and libsynce
+	  configure.in.in, rapip.kdevses, rapip/Makefile.in: - Added a
+	  extended check for librapi2 and libsynce
 
 2003-02-13 10:23  voc
 
@@ -2031,91 +1731,93 @@
 2003-02-13 09:20  voc
 
 	* rapip/rapip.cpp: - More error-checkig done.  - More Code-cleaning
-	done.  - Directory-browsing now shows hidden files by default.
+	  done.  - Directory-browsing now shows hidden files by default.
 
 2003-02-11 22:11  voc
 
 	* rapip/rapip.cpp, rapip/rapip.lsm, templates/cpp, templates/h:
-	Initial revision
+	  Initial import.
 
 2003-02-11 22:11  voc
 
 	* rapip/rapip.cpp, rapip/rapip.lsm, templates/cpp, templates/h:
-	Initial import.
+	  Initial revision
 
 2003-02-11 22:08  voc
 
 	* NEWS, TODO, rapip.spec, README, aclocal.m4, configure,
-	Makefile.am, configure.in, rapip.kdevelop, subdirs, Makefile.cvs,
-	Makefile.in, config.h.in, configure.files, configure.in.in,
-	rapip.kdevses, AUTHORS, ChangeLog, INSTALL, acinclude.m4,
-	conf11596.sh, stamp-h.in, COPYING, Doxyfile, doc/Makefile.am,
-	po/Makefile.am, po/Makefile.in, po/raki.pot, doc/Makefile.in,
-	doc/en/Makefile.am, doc/en/Makefile.in, doc/en/index.docbook,
-	raki/hi22-app-raki.png, raki/hi32-app-raki_bw.png, raki/raki.sh,
-	raki/hi32-app-raki.png, raki/hi48-app-raki_bw.png,
-	raki/hi64-app-raki.png, raki/progressbar.ui, raki/rakievent.cpp,
-	raki/rakiworkerthread.cpp, raki/rapiwrapper.h, raki/runwindow.ui,
-	raki/runwindow.ui.h, raki/raki.cpp, raki/raki.lsm, raki/raki.pro,
-	raki/hi16-app-raki_bw.png, raki/management.ui, raki/Makefile.am,
-	raki/progressbar.ui.h, raki/Makefile.in, raki/configdialog.ui,
-	raki/hi22-app-raki_bw.png, raki/raki.h, raki/configdialog.ui.h,
-	raki/errorevent.cpp, raki/hi16-app-raki.png,
-	raki/hi48-app-raki.png, raki/hi64-app-raki_bw.png,
-	raki/raki.desktop, raki/rakievent.h, raki/rakiworkerthread.h,
-	raki/rapiwrapper.cpp, admin/compile, raki/errorevent.h,
-	raki/management.ui.h, admin/Doxyfile.global, admin/depcomp,
-	admin/Makefile.common, admin/ltmain.sh, admin/config.pl,
-	admin/configure.in.min, admin/config.guess, admin/acinclude.m4.in,
-	admin/install-sh, admin/config.sub, admin/missing,
-	admin/mkinstalldirs, admin/conf.change.pl, admin/cvs.sh,
-	admin/am_edit, admin/cvs-clean.pl, admin/debianrules,
-	admin/detect-autoconf.sh, admin/libtool.m4.in, admin/ylwrap,
-	admin/ChangeLog, admin/Doxyfile.am, admin/configure.in.bot.end,
-	icons/hi22-app-rapip_bw.png, icons/Makefile.am, icons/Makefile.in,
-	icons/hi16-app-rapip.png, icons/hi16-app-rapip_bw.png,
-	icons/hi22-app-rapip.png, icons/hi32-app-rapip.png,
-	icons/hi32-app-rapip_bw.png, icons/hi48-app-rapip.png,
-	icons/hi48-app-rapip_bw.png, icons/hi64-app-rapip.png,
-	icons/hi64-app-rapip_bw.png, rapip/Makefile.am, rapip/rapip.h,
-	rapip/Makefile.in, rapip/rapip.cpp.sav, rapip/rapip.desktop,
-	rapip/rapip.protocol: Initial revision
+	  Makefile.am, configure.in, rapip.kdevelop, subdirs, Makefile.cvs,
+	  Makefile.in, config.h.in, configure.files, configure.in.in,
+	  rapip.kdevses, AUTHORS, ChangeLog, INSTALL, acinclude.m4,
+	  conf11596.sh, stamp-h.in, COPYING, Doxyfile, doc/Makefile.am,
+	  po/Makefile.am, po/Makefile.in, po/raki.pot, doc/Makefile.in,
+	  doc/en/Makefile.am, doc/en/Makefile.in, doc/en/index.docbook,
+	  raki/hi22-app-raki.png, raki/hi32-app-raki_bw.png, raki/raki.sh,
+	  raki/hi32-app-raki.png, raki/hi48-app-raki_bw.png,
+	  raki/hi64-app-raki.png, raki/progressbar.ui, raki/rakievent.cpp,
+	  raki/rakiworkerthread.cpp, raki/rapiwrapper.h, raki/runwindow.ui,
+	  raki/runwindow.ui.h, raki/raki.cpp, raki/raki.lsm, raki/raki.pro,
+	  raki/hi16-app-raki_bw.png, raki/management.ui, raki/Makefile.am,
+	  raki/progressbar.ui.h, raki/Makefile.in, raki/configdialog.ui,
+	  raki/hi22-app-raki_bw.png, raki/raki.h, raki/configdialog.ui.h,
+	  raki/errorevent.cpp, raki/hi16-app-raki.png,
+	  raki/hi48-app-raki.png, raki/hi64-app-raki_bw.png,
+	  raki/raki.desktop, raki/rakievent.h, raki/rakiworkerthread.h,
+	  raki/rapiwrapper.cpp, admin/compile, raki/errorevent.h,
+	  raki/management.ui.h, admin/Doxyfile.global, admin/depcomp,
+	  admin/Makefile.common, admin/ltmain.sh, admin/config.pl,
+	  admin/configure.in.min, admin/config.guess,
+	  admin/acinclude.m4.in, admin/install-sh, admin/config.sub,
+	  admin/missing, admin/mkinstalldirs, admin/conf.change.pl,
+	  admin/cvs.sh, admin/am_edit, admin/cvs-clean.pl,
+	  admin/debianrules, admin/detect-autoconf.sh, admin/libtool.m4.in,
+	  admin/ylwrap, admin/ChangeLog, admin/Doxyfile.am,
+	  admin/configure.in.bot.end, icons/hi22-app-rapip_bw.png,
+	  icons/Makefile.am, icons/Makefile.in, icons/hi16-app-rapip.png,
+	  icons/hi16-app-rapip_bw.png, icons/hi22-app-rapip.png,
+	  icons/hi32-app-rapip.png, icons/hi32-app-rapip_bw.png,
+	  icons/hi48-app-rapip.png, icons/hi48-app-rapip_bw.png,
+	  icons/hi64-app-rapip.png, icons/hi64-app-rapip_bw.png,
+	  rapip/Makefile.am, rapip/rapip.h, rapip/Makefile.in,
+	  rapip/rapip.cpp.sav, rapip/rapip.desktop, rapip/rapip.protocol:
+	  Initial import.
 
 2003-02-11 22:08  voc
 
 	* NEWS, TODO, rapip.spec, README, aclocal.m4, configure,
-	Makefile.am, configure.in, rapip.kdevelop, subdirs, Makefile.cvs,
-	Makefile.in, config.h.in, configure.files, configure.in.in,
-	rapip.kdevses, AUTHORS, ChangeLog, INSTALL, acinclude.m4,
-	conf11596.sh, stamp-h.in, COPYING, Doxyfile, doc/Makefile.am,
-	po/Makefile.am, po/Makefile.in, po/raki.pot, doc/Makefile.in,
-	doc/en/Makefile.am, doc/en/Makefile.in, doc/en/index.docbook,
-	raki/hi22-app-raki.png, raki/hi32-app-raki_bw.png, raki/raki.sh,
-	raki/hi32-app-raki.png, raki/hi48-app-raki_bw.png,
-	raki/hi64-app-raki.png, raki/progressbar.ui, raki/rakievent.cpp,
-	raki/rakiworkerthread.cpp, raki/rapiwrapper.h, raki/runwindow.ui,
-	raki/runwindow.ui.h, raki/raki.cpp, raki/raki.lsm, raki/raki.pro,
-	raki/hi16-app-raki_bw.png, raki/management.ui, raki/Makefile.am,
-	raki/progressbar.ui.h, raki/Makefile.in, raki/configdialog.ui,
-	raki/hi22-app-raki_bw.png, raki/raki.h, raki/configdialog.ui.h,
-	raki/errorevent.cpp, raki/hi16-app-raki.png,
-	raki/hi48-app-raki.png, raki/hi64-app-raki_bw.png,
-	raki/raki.desktop, raki/rakievent.h, raki/rakiworkerthread.h,
-	raki/rapiwrapper.cpp, admin/compile, raki/errorevent.h,
-	raki/management.ui.h, admin/Doxyfile.global, admin/depcomp,
-	admin/Makefile.common, admin/ltmain.sh, admin/config.pl,
-	admin/configure.in.min, admin/config.guess, admin/acinclude.m4.in,
-	admin/install-sh, admin/config.sub, admin/missing,
-	admin/mkinstalldirs, admin/conf.change.pl, admin/cvs.sh,
-	admin/am_edit, admin/cvs-clean.pl, admin/debianrules,
-	admin/detect-autoconf.sh, admin/libtool.m4.in, admin/ylwrap,
-	admin/ChangeLog, admin/Doxyfile.am, admin/configure.in.bot.end,
-	icons/hi22-app-rapip_bw.png, icons/Makefile.am, icons/Makefile.in,
-	icons/hi16-app-rapip.png, icons/hi16-app-rapip_bw.png,
-	icons/hi22-app-rapip.png, icons/hi32-app-rapip.png,
-	icons/hi32-app-rapip_bw.png, icons/hi48-app-rapip.png,
-	icons/hi48-app-rapip_bw.png, icons/hi64-app-rapip.png,
-	icons/hi64-app-rapip_bw.png, rapip/Makefile.am, rapip/rapip.h,
-	rapip/Makefile.in, rapip/rapip.cpp.sav, rapip/rapip.desktop,
-	rapip/rapip.protocol: Initial import.
+	  Makefile.am, configure.in, rapip.kdevelop, subdirs, Makefile.cvs,
+	  Makefile.in, config.h.in, configure.files, configure.in.in,
+	  rapip.kdevses, AUTHORS, ChangeLog, INSTALL, acinclude.m4,
+	  conf11596.sh, stamp-h.in, COPYING, Doxyfile, doc/Makefile.am,
+	  po/Makefile.am, po/Makefile.in, po/raki.pot, doc/Makefile.in,
+	  doc/en/Makefile.am, doc/en/Makefile.in, doc/en/index.docbook,
+	  raki/hi22-app-raki.png, raki/hi32-app-raki_bw.png, raki/raki.sh,
+	  raki/hi32-app-raki.png, raki/hi48-app-raki_bw.png,
+	  raki/hi64-app-raki.png, raki/progressbar.ui, raki/rakievent.cpp,
+	  raki/rakiworkerthread.cpp, raki/rapiwrapper.h, raki/runwindow.ui,
+	  raki/runwindow.ui.h, raki/raki.cpp, raki/raki.lsm, raki/raki.pro,
+	  raki/hi16-app-raki_bw.png, raki/management.ui, raki/Makefile.am,
+	  raki/progressbar.ui.h, raki/Makefile.in, raki/configdialog.ui,
+	  raki/hi22-app-raki_bw.png, raki/raki.h, raki/configdialog.ui.h,
+	  raki/errorevent.cpp, raki/hi16-app-raki.png,
+	  raki/hi48-app-raki.png, raki/hi64-app-raki_bw.png,
+	  raki/raki.desktop, raki/rakievent.h, raki/rakiworkerthread.h,
+	  raki/rapiwrapper.cpp, admin/compile, raki/errorevent.h,
+	  raki/management.ui.h, admin/Doxyfile.global, admin/depcomp,
+	  admin/Makefile.common, admin/ltmain.sh, admin/config.pl,
+	  admin/configure.in.min, admin/config.guess,
+	  admin/acinclude.m4.in, admin/install-sh, admin/config.sub,
+	  admin/missing, admin/mkinstalldirs, admin/conf.change.pl,
+	  admin/cvs.sh, admin/am_edit, admin/cvs-clean.pl,
+	  admin/debianrules, admin/detect-autoconf.sh, admin/libtool.m4.in,
+	  admin/ylwrap, admin/ChangeLog, admin/Doxyfile.am,
+	  admin/configure.in.bot.end, icons/hi22-app-rapip_bw.png,
+	  icons/Makefile.am, icons/Makefile.in, icons/hi16-app-rapip.png,
+	  icons/hi16-app-rapip_bw.png, icons/hi22-app-rapip.png,
+	  icons/hi32-app-rapip.png, icons/hi32-app-rapip_bw.png,
+	  icons/hi48-app-rapip.png, icons/hi48-app-rapip_bw.png,
+	  icons/hi64-app-rapip.png, icons/hi64-app-rapip_bw.png,
+	  rapip/Makefile.am, rapip/rapip.h, rapip/Makefile.in,
+	  rapip/rapip.cpp.sav, rapip/rapip.desktop, rapip/rapip.protocol:
+	  Initial revision
 

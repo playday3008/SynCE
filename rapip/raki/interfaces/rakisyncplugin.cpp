@@ -56,7 +56,7 @@ bool RakiSyncPlugin::doSync(SyncThread *syncThread, Rra *rra,
 }
 
 
-void RakiSyncPlugin::init(ObjectType *objectType, QString pdaName, QWidget *parent, QString serviceName)
+void RakiSyncPlugin::init(RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent, QString serviceName)
 {
     this->objectType = objectType;
     this->pdaName = pdaName;
@@ -70,7 +70,7 @@ void RakiSyncPlugin::init(ObjectType *objectType, QString pdaName, QWidget *pare
 void RakiSyncPlugin::configure()
 {
     KMessageBox::information(parent, "<b>" + _serviceName +
-            "</b>: Nothing to configure.", QString(objectType->name) + " " + pdaName);
+            "</b>: Nothing to configure.", QString(objectType->name2) + " " + pdaName);
 }
 
 

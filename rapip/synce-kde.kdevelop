@@ -17,7 +17,6 @@
     <ignoreparts>
       <part>KDevClearCase</part>
       <part>KDevPerforce</part>
-      <part>KDevVisualBoyAdvance</part>
     </ignoreparts>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
@@ -27,8 +26,8 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>remco/pdamirror</activetarget>
-      <useconfiguration>debug</useconfiguration>
+      <activetarget>raki/raki</activetarget>
+      <useconfiguration>gdbdebug</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
@@ -115,9 +114,9 @@
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
-        <ccompiler>GccOptions</ccompiler>
-        <cxxcompiler>GppOptions</cxxcompiler>
-        <f77compiler>G77Options</f77compiler>
+        <ccompiler>kdevgccoptions</ccompiler>
+        <cxxcompiler>kdevgppoptions</cxxcompiler>
+        <f77compiler>kdevpgf77options</f77compiler>
         <ccompilerbinary/>
         <cxxcompilerbinary/>
         <f77compilerbinary/>
@@ -279,7 +278,7 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
       <includeGlobalFunctions>true</includeGlobalFunctions>
       <includeTypes>true</includeTypes>
       <includeEnums>true</includeEnums>
-      <includeTypedefs>false</includeTypedefs>
+      <includeTypedefs>true</includeTypedefs>
       <automaticCodeCompletion>true</automaticCodeCompletion>
       <automaticArgumentsHint>true</automaticArgumentsHint>
       <codeCompletionDelay>250</codeCompletionDelay>
