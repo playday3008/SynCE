@@ -22,6 +22,23 @@ STDAPI CeRapiUninit(void);
 BOOL CeCheckPassword( 
 		LPWSTR lpszPassword);
 
+
+/*
+ * Misc functions
+ */
+
+typedef struct _CEOSVERSIONINFO{ 
+	DWORD dwOSVersionInfoSize; 
+	DWORD dwMajorVersion; 
+	DWORD dwMinorVersion; 
+	DWORD dwBuildNumber; 
+	DWORD dwPlatformId; 
+	WCHAR szCSDVersion[128]; 
+} CEOSVERSIONINFO, *LPCEOSVERSIONINFO; 
+
+BOOL CeGetVersionEx(
+		LPCEOSVERSIONINFO lpVersionInformation);
+
 /*
  * File functions
  */
