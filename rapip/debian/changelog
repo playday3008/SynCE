@@ -1,3 +1,10 @@
+synce-kde (0.6-3) unstable; urgency=low
+
+  * Updated Documentation.
+  * Optimized the debian-package configuration.
+
+ -- Volker Christian <voc@users.sourceforge.net>  Fri, 15 Aug 2003 15:20:18 +0200
+
 synce-kde (0.6-2) unstable; urgency=low
 
   * Initial Release.

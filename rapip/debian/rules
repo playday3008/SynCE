@@ -83,8 +83,8 @@ binary-arch: build install
 	dh_movefiles
 	
 	dh_installchangelogs ChangeLog
-#	dh_installdocs
-	dh_installexamples
+	dh_installdocs
+#	dh_installexamples
 #	dh_install
 #	dh_installmenu
 	dh_installdebconf	
@@ -102,7 +102,7 @@ binary-arch: build install
 	dh_fixperms
 #	dh_perl
 #	dh_python
-#	dh_makeshlibs
+	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol

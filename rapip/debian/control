@@ -10,14 +10,15 @@ Package: synce-kde-dev
 Section: devel
 Architecture: any
 Depends: synce-kde (= ${Source-Version})
-Description: SynCE-KDE is part of the SynCE project:
+Description: The Package SynCE-KDE is an ActiveSync like application
  This package provides header files to compile synchronizer for SynCE-KDE.
 
 Package: synce-kde
 Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: SynCE-KDE is part of the SynCE project:
+Description: The package SynCE-KDE is an ActiveSync like application
+ The SynCE-KDE package is part of the SynCE project: 
  http://synce.sourceforge.net/
  This Package is a KDE-Integration of SynCE. It consists of a kio_slave
  (RAPIP), a KDE System-Tray Application (RAKI) and an enhanced direct cable
