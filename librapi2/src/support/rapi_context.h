@@ -15,12 +15,18 @@ typedef struct _RapiContext
 	uint32_t last_error;
   uint32_t rapi_error;
 	bool is_initialized;
+  char* path;
 } RapiContext;
 
 /**
  * Get current RapiContext
  */
 RapiContext* rapi_context_current();
+
+/**
+ * Set current RapiContext
+ */
+void rapi_context_set(RapiContext* context);
 
 /**
  * Create new context

@@ -29,6 +29,52 @@ extern "C"
 #endif
 
 /*
+ * SynCE support for switching between multiple devices
+ *
+ *
+ * Example code for two devices:
+ *
+ *   RapiConnection* a = rapi_connection_create("/home/david/.synce/a")
+ *   rapi_connection_select(a);
+ *   CeRapiInit()
+ *
+ *   RapiConnection* b = rapi_connection_create("/home/david/.synce/b");
+ *   rapi_connection_select(b);
+ *   CeRapiInit()
+ *
+ *   rapi_connection_select(a);
+ *   ...some RAPI calls to device A...
+ *
+ *   rapi_connection_select(b);
+ *   ...some RAPI calls to device B...
+ *
+ *   rapi_connection_select(a);
+ *   CeRapiUninit();
+ *   rapi_connection_destroy(a);
+ *   
+ *   rapi_connection_select(b);
+ *   CeRapiUninit();
+ *   rapi_connection_destroy(b);
+ */
+
+typedef struct _RapiConnection RapiConnection;
+
+/** 
+ * Create a connection - use this before you call CeRapiInit() 
+ *
+ * @path Parameter sent to synce_info_new() in libsynce/lib/info.c
+ */
+RapiConnection* rapi_connection_create(const char* path);
+
+/** Select what connection is used for RAPI calls */
+void rapi_connection_select(RapiConnection* connection);
+
+/** Destroy connection object - use this after CeRapiUninit() */
+void rapi_connection_destroy(RapiConnection* connection);
+
+ 
+
+/*
  * Main RAPI functions
  */
 

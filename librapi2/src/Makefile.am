@@ -7,6 +7,7 @@ lib_LTLIBRARIES = librapi.la
 
 ## use these sources
 librapi_la_SOURCES = \
+	connection.c                   \
 	database.c                     \
 	file_access.c                  \
 	file_management.c              \

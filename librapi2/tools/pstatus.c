@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 
+char* path = NULL;
+
 static void show_usage(const char* name)
 {
   fprintf(stderr,
@@ -18,7 +20,8 @@ static void show_usage(const char* name)
       "\t              1 - Errors only\n"
       "\t              2 - Errors and warnings\n"
       "\t              3 - Everything\n"
-      "\t-h        Show this help message\n",
+      "\t-h        Show this help message\n"
+      "\t-p PATH   Device path\n",    
       name);
 }
 
@@ -27,12 +30,16 @@ static bool handle_parameters(int argc, char** argv)
   int c;
   int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-  while ((c = getopt(argc, argv, "d:h")) != -1)
+  while ((c = getopt(argc, argv, "d:hp:")) != -1)
   {
     switch (c)
     {
       case 'd':
         log_level = atoi(optarg);
+        break;
+
+      case 'p':
+        path = optarg;
         break;
 
       case 'h':
@@ -193,6 +200,7 @@ void print_battery_status(const char* name, unsigned flag, unsigned lifePercent,
 int main(int argc, char** argv)
 {
   int result = 1;
+  RapiConnection* connection = NULL;
   HRESULT hr;
   CEOSVERSIONINFO version;
   SYSTEM_INFO system;
@@ -203,6 +211,8 @@ int main(int argc, char** argv)
   if (!handle_parameters(argc, argv))
     goto exit;
 
+  connection = rapi_connection_create(path);
+  rapi_connection_select(connection);
   hr = CeRapiInit();
 
   if (FAILED(hr))
@@ -352,5 +362,6 @@ int main(int argc, char** argv)
 
 exit:
   CeRapiUninit();
+  rapi_connection_destroy(connection);
   return result;
 }

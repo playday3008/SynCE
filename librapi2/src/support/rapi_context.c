@@ -31,15 +31,20 @@ RapiContext* rapi_context_current()/*{{{*/
 
 	if (!current_context)
 	{
-		current_context = rapi_context_new();
+		rapi_context_set(rapi_context_new());
 	}
 
 	return current_context;
 }/*}}}*/
 
+void rapi_context_set(RapiContext* context)
+{
+  current_context = context;
+}
+
 RapiContext* rapi_context_new()/*{{{*/
 {
-	RapiContext* context = calloc(sizeof(RapiContext), 1);
+	RapiContext* context = calloc(1, sizeof(RapiContext));
 
 	if (context)
 	{
@@ -61,9 +66,11 @@ void rapi_context_free(RapiContext* context)/*{{{*/
 {
 	if (context)
 	{
-    if (current_context == context)
-      current_context = NULL;
+    if (context == rapi_context_current())
+      rapi_context_set(NULL);
 
+    if (context->path)
+      free(context->path);
 		rapi_buffer_free(context->send_buffer);
 		rapi_buffer_free(context->recv_buffer);
 		synce_socket_free(context->socket);
@@ -82,7 +89,7 @@ HRESULT rapi_context_connect(RapiContext* context)
 		return CERAPI_E_ALREADYINITIALIZED;
 	}
   
-  info = synce_info_new(NULL);
+  info = synce_info_new(context->path);
   if (!info)
 	{
 		synce_error("Failed to get connection info");
