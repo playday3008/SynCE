@@ -7,44 +7,145 @@ KDE Integration</h1>
 devices running Windows CE Version 2.0 or later as long as they
 are supported by the underlying <a
  href="http://synce.sourceforge.net/synce/">SynCE libraries</a>.</p>
-
+<table border="0" cellpadding="2" cellspacing="2" width="100%">
+<tbody>
+<tr>
+<td valign="top" width="50%">
 <h2><a name="Contents" id="Contents"></a>Contents</h2>
 <ul>
-  <li><a href="#Introduction">Introduction</a></li>
-  <li><a href="#News">News</a></li>
-  <li><a href="#Features">Features</a></li>
-  <li><a href="#Usage">Usage</a><br>
-  </li>
-  <li><a href="#Requirements">Requirements</a></li>
-  <li><a href="#Download">Download</a><br>
-  </li>
-  <li><a href="#Installation">Compiling and Installing</a></li>
-  <li><a href="screenshots.php">Screenshots</a></li>
-  <li><a href="#Related_Work">Related Work</a></li>
-  <li><a href="stories.php">Success Stories</a></li>
-  <li><a href="faq.php">Frequently asked Questions</a></li>
-  <li><a href="#Future">Future<br>
+<li><a href="#Introduction">Introduction</a></li>
+<li><a href="#News">News</a></li>
+<li><a href="#Features">Features</a></li>
+<li><a href="#Usage">Usage</a><br>
+</li>
+<li><a href="#Requirements">Requirements</a></li>
+<li><a href="#Download">Download</a><br>
+</li>
+<li><a href="#Installation">Compiling and Installing</a></li>
+<li><a href="screenshots.php">Screenshots</a></li>
+<li><a href="#Related_Work">Related Work</a></li>
+<li><a href="stories.php">Success Stories</a></li>
+<li><a href="faq.php">Frequently asked Questions</a></li>
+<li><a href="#Future">Future</a></li>
 </ul>
+</td>
+<td valign="top" width="50%">
 <h2><a name="Add-on" id="Add-on"></a>Add-on</h2>
 <ul>
-  <li><a href="pdamirror.php">PDA Mirror</a></li>
+<li><a href="kcemirror.php">KCEMirror</a></li>
 </ul>
 <h2><a name="Links" id="Links"></a>Links</h2>
 <ul>
-  <li><a href="http://sourceforge.net/projects/synce/">SourceForge
-Project Page</a></li><br>
-  <li><a href="http://www.kde-apps.org/content/show.php?content=14162">SynCE-KDE
+<li><a href="http://sourceforge.net/projects/synce/">SourceForge
+Project Page</a></li>
+<br>
+<li><a
+href="http://www.kde-apps.org/content/show.php?content=14162">SynCE-KDE
 on www.kde-apps.org</a> </li>
-  <li><a
- href="http://freshmeat.net/projects/synce-kde/?topic_id=20%2C957%2C1015">SynCE-KDE
-on freshmeat.net
-    </a></li>
+<li><a
+href="http://freshmeat.net/projects/synce-kde/?topic_id=20%2C957%2C1015">SynCE-KDE
+on freshmeat.net </a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<br>
+<h2><a name="News" id="News"></a>News</h2>
+<b>July 08, 2004</b> It has been long time ago since the last entry
+here in this News
+section. There has not been that much progress in the last view month.
+Nevertheless, some points should be mentioned:
+<ul>
+<li>Lets welcome Christinan Fremgen, a new developer for the "big"
+SynCE-KDE team
+:-) He is mainly commited in the field of KDE - Windows CE
+synchronization and
+is actually bussy in designing and implementing KAddressBook, and
+KOrganizer
+synchronization by use of the KDE synchronization framefork kitchensync.<br>
+Unfortunately, the old synchronization mechanism for KAddressBook
+doesn't
+reliable work any longer. We have to be patient until we get the new
+synchronization plugins ready. We expect a pre-rease to be available in
+september
+2004.</li>
+<li>RAKI and also RAPIP has been ported to KDE verion 3.2.x. </li>
+<li>AvantGo-Synchronization has been much improved. The whole
+configuration
+could now be done in RAKI itself.</li>
+<li>PDAMirror has been renamed to KCEMirror as this name integrates
+nicely into
+the KDE name-schema.</li>
+<li>SynCE-KDE and most of the SynCE libraries and tools are now part
+of debian
+unstable. A list of those packages could be find <a
+href="http://qa.debian.org/developer.php?login=Volker+Christian">here</a>.</li>
+</ul>
+<b>November 21, 2003</b> PDAMirror is integrated into the SynCE-KDE
+suite<br>
+<br>
+<b>October 9, 2003</b> There is some progress in letting SynCE-KDE
+(cvs) run on
+KDE-3.1.90 (cvs) the upcoming KDE-3.2 release.
+<ul>
+<li>RAPIP is running. There are of course some things left to be
+worked on.</li>
+<li>RAKI is also working but the KDE addressbook synchronizer is not
+due to massive
+changes in the KABC API. Nevertheless, the synchronizer would be
+compiled, but do
+not use it - RAKI would be blocked entireyl.</li>
+<li>VDCCM doesn't have any problems on KDE-3.1.90 (cvs) at all.</li>
+</ul>
+<b>September 9, 2003</b> SynCE-KDE 0.6.1 is released!<br>
+<ul>
+<li>This is a bug fix release. The annoying "33%" bug which has
+prevented RAKI to run on some Linux distributions is fixed.</li>
+<li>Some unnecessary calls into librra has been removed. RAKI should
+be a little faster now.</li>
+<li>Debian packages could now be installed directly over the network.
+Have a look at the <a href="#Download">download</a> section for
+informations about that.<br>
+</li>
+</ul>
+<b>August 18, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
+<ul>
+<li>First of all the name of the project has changed. It is now
+called SynCE-KDE.</li>
+<li>Secondly - yes - the release number jumps directly from 0.4
+to 0.6. Release 0.5 was an internal release never published for
+public use.</li>
+<li>The MULTIPLE_DEVICES branch is entirely merged into HEAD of <a
+href="http://sourceforge.net/cvs/?group_id=30550">CVS</a>. This
+release is a snapshot of it. You can download <tt>tgz</tt>, <tt>rpm</tt>,
+and <tt>deb</tt> packages from the <a
+href="http://sourceforge.net/projects/synce/">SourceForge Project
+Page</a>. Have a look at the <a href="#Features">features</a>
+section for a list of all goodies.</li>
+<li>RAPIP is considered to be stable and full functional.
+Nevertheless, there are some additional features and improvements
+planed in the future.</li>
+<li>RAKI comes with a new plugin-architecture. Plugins, called
+synchronizer, are used to synchronize PDAs with your desktop
+system.</li>
+<li>An alternative DCCM called VDCCM is also included in the new
+release. You have to use this alternative DCCM if you intent to
+connect more than one PDA at the same time to your desktop.</li>
+<li>Version 0.6 should be seen as a "Vertical Slice" and a "Proof
+of Concept". Almost all planed features are implemented. Of course
+there are rough edges and odd bugs. Some code is also still
+missing. At the moment there are only two synchronization plugins
+(synchronizer) available. Help, especially in this area is badly
+needed. If you are interested in helping, please send mail to the <a
+href="http://sourceforge.net/mail/?group_id=30550">development
+mailing list.</a></li>
 </ul>
 <br>
 <h2><a name="Introduction" id="Introduction"></a>Introduction</h2>
 <p>One effort in integrating <a
- href="http://synce.sourceforge.net/synce">SynCE</a> into <a
- href="http://www.kde.org">KDE</a> is the SynCE-KDE project - formerly
+href="http://synce.sourceforge.net/synce">SynCE</a> into <a
+href="http://www.kde.org">KDE</a> is the SynCE-KDE project - formerly
 Rapip/Raki. SynCE-KDE essentially consists of the three
 subproject <b>RAPIP,</b> <b>RAKI,</b> and <b>VDCCM</b>. In
 general, they all support the same devices which are supported
@@ -67,93 +168,14 @@ PDA via the desktop.</blockquote>
 <p><b>VDCCM</b> <br>
 </p>
 <blockquote>is a generalization of the native <a
- href="http://synce.sourceforge.net/synce/architecture.php#dccm">SynCE-DCCM</a>
+href="http://synce.sourceforge.net/synce/architecture.php#dccm">SynCE-DCCM</a>
 but is fully compatible with it. In addition to all DCCM features
 it is capable of supporting more than one PDA connected at the same
 time. It is responsible for reporting all connects and disconnects
 of PDAs to interested clients via an unix-socket by use of a simple
-protocol. E.g. RAKI is one of such an interested client.</blockquote>
+protocol. E.g. RAKI is one of such an interested client.<br>
 <br>
-<h2><a name="News" id="News"></a>News</h2>
-<b>July 08, 2004</b> It has been long time ago since the last entry here in this News
-section. There has not been that much progress in the last view month.
-Nevertheless, some points should be mentioned:
-<ul>
-<li>Lets welcome Christinan Fremgen, a new developer for the "big" SynCE-KDE team
-:-) He is mainly commited in the field of KDE - Windows CE synchronization and
-is actually bussy in designing and implementing KAddressBook, and KOrganizer
-synchronization by use of the KDE synchronization framefork kitchensync.<br>
-Unfortunately, the old synchronization mechanism for KAddressBook doesn't
-reliable work any longer. We have to be patient until we get the new
-synchronization plugins ready. We expect a pre-rease to be available in september
-2004.</li>
-<li>RAKI and also RAPIP has been ported to KDE verion 3.2.x.
-<li>AvantGo-Synchronization has been much improved. The whole configuration
-could now be done in RAKI itself.</li>
-<li>PDAMirror has been renamed to KCEMirror as this name integrates nicely into
-the KDE name-schema.</li>
-<li>SynCE-KDE and most of the SynCE libraries and tools are now part of debian
-unstable. A list of those packages could be find 
-<a
-href="http://qa.debian.org/developer.php?login=Volker+Christian">here</a>.</li>
-</ul>
-<b>November 21, 2003</b> PDAMirror is integrated into the SynCE-KDE
-suite<br><br>
-
-<b>October 9, 2003</b> There is some progress in letting SynCE-KDE (cvs) run on
-KDE-3.1.90 (cvs) the upcoming KDE-3.2 release.
-<ul>
-<li>RAPIP is running. There are of course some things left to be worked on.</li>
-<li>RAKI is also working but the KDE addressbook synchronizer is not due to massive
-changes in the KABC API. Nevertheless, the synchronizer would be compiled, but do
-not use it - RAKI would be blocked entireyl.</li>
-<li>VDCCM doesn't have any problems on KDE-3.1.90 (cvs) at all.</li>
-</ul>
-<b>September 9, 2003</b> SynCE-KDE 0.6.1 is released!<br>
-<ul>
-  <li>This is a bug fix release. The annoying "33%" bug which has
-prevented RAKI to run on some Linux distributions is fixed.</li>
-  <li>Some unnecessary calls into librra has been removed. RAKI should
-be a little faster now.</li>
-  <li>Debian packages could now be installed directly over the network.
-Have a look at the <a href="#Download">download</a> section for
-informations about that.<br>
-  </li>
-</ul>
-<b>August 18, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
-<ul>
-  <li>First of all the name of the project has changed. It is now
-called SynCE-KDE.</li>
-  <li>Secondly - yes - the release number jumps directly from 0.4
-to 0.6. Release 0.5 was an internal release never published for
-public use.</li>
-  <li>The MULTIPLE_DEVICES branch is entirely merged into HEAD of <a
- href="http://sourceforge.net/cvs/?group_id=30550">CVS</a>. This
-release is a snapshot of it. You can download <tt>tgz</tt>, <tt>rpm</tt>,
-and <tt>deb</tt> packages from the <a
- href="http://sourceforge.net/projects/synce/">SourceForge Project
-Page</a>. Have a look at the <a href="#Features">features</a>
-section for a list of all goodies.</li>
-  <li>RAPIP is considered to be stable and full functional.
-Nevertheless, there are some additional features and improvements
-planed in the future.</li>
-  <li>RAKI comes with a new plugin-architecture. Plugins, called
-synchronizer, are used to synchronize PDAs with your desktop
-system.</li>
-  <li>An alternative DCCM called VDCCM is also included in the new
-release. You have to use this alternative DCCM if you intent to
-connect more than one PDA at the same time to your desktop.</li>
-  <li>Version 0.6 should be seen as a "Vertical Slice" and a "Proof
-of Concept". Almost all planed features are implemented. Of course
-there are rough edges and odd bugs. Some code is also still
-missing. At the moment there are only two synchronization plugins
-(synchronizer) available. Help, especially in this area is badly
-needed. If you are interested in helping, please send mail to the <a
- href="http://sourceforge.net/mail/?group_id=30550">development
-mailing list.</a></li>
-</ul>
-<h2><br>
-</h2>
+</blockquote>
 <h2><a name="Features" id="Features"></a>Features</h2>
 <b>RAPIP</b>
 <ul>
