@@ -2,7 +2,7 @@
 #include "rapi.h"
 #include "rapi_context.h"
 
-LONG CeRegCreateKeyEx( 
+LONG CeRegCreateKeyEx( /*{{{*/
 		HKEY hKey, 
 		LPCWSTR lpszSubKey, 
 		DWORD Reserved, 
@@ -43,9 +43,9 @@ LONG CeRegCreateKeyEx(
 	}
 
 	return return_value;
-}
+}/*}}}*/
 
-LONG CeRegOpenKeyEx(
+LONG CeRegOpenKeyEx(/*{{{*/
 		HKEY hKey, 
 		LPCWSTR lpszSubKey, 
 		DWORD ulOptions, 
@@ -73,9 +73,55 @@ LONG CeRegOpenKeyEx(
 	}
 
 	return return_value;
+}/*}}}*/
+
+LONG CeRegQueryValueEx( 
+		HKEY hKey, 
+		LPCWSTR lpValueName, 
+		LPDWORD lpReserved, 
+		LPDWORD lpType, 
+		LPBYTE lpData, 
+		LPDWORD lpcbData)
+{
+	RapiContext* context = rapi_context_current();
+	LONG return_value = -1;
+	
+	rapi_context_begin_command(context, 0x26);
+	rapi_buffer_write_uint32(context->send_buffer, hKey);
+	rapi_buffer_write_optional_string(context->send_buffer, lpValueName);
+	rapi_buffer_write_optional_uint32(context->send_buffer, lpReserved, false);
+	rapi_buffer_write_optional_uint32(context->send_buffer, lpType, false);
+	rapi_buffer_write_optional       (context->send_buffer, lpData, lpcbData ? *lpcbData : 0, false);
+	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbData, true);
+
+	if ( !rapi_context_call(context) )
+	{
+		synce_trace("rapi_context_call failed");
+		return return_value;
+	}
+
+	if (!rapi_buffer_read_uint32(context->recv_buffer, &context->last_error))
+	{
+		synce_trace("rapi_buffer_read_uint32 failed");
+		return return_value;
+	}
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+
+	if (ERROR_SUCCESS == return_value)
+	{
+		rapi_buffer_read_optional_uint32(context->recv_buffer, lpType);
+		rapi_buffer_read_optional       (context->recv_buffer, lpData, lpcbData ? *lpcbData * sizeof(WCHAR) : 0);
+		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbData);
+	}
+	else
+	{
+		synce_trace("CeRegQueryValueEx returning %i", return_value);
+	}
+
+	return return_value;
 }
 
-LONG CeRegCloseKey(
+LONG CeRegCloseKey(/*{{{*/
 		HKEY hKey)
 {
 	RapiContext* context = rapi_context_current();
@@ -91,9 +137,9 @@ LONG CeRegCloseKey(
 	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
 
 	return return_value;
-}
+}/*}}}*/
 
-LONG CeRegQueryInfoKey( 
+LONG CeRegQueryInfoKey( /*{{{*/
 		HKEY hKey, 
 		LPWSTR lpClass, 
 		LPDWORD lpcbClass, 
@@ -146,9 +192,9 @@ LONG CeRegQueryInfoKey(
 	}
 
 	return return_value;
-}
+}/*}}}*/
 
-LONG CeRegEnumValue( 
+LONG CeRegEnumValue( /*{{{*/
 		HKEY hKey, 
 		DWORD dwIndex, 
 		LPWSTR lpszValueName, 
@@ -188,9 +234,9 @@ LONG CeRegEnumValue(
 	}
 
 	return return_value;
-}
+}/*}}}*/
 
-LONG CeRegEnumKeyEx( 
+LONG CeRegEnumKeyEx( /*{{{*/
 		HKEY hKey, 
 		DWORD dwIndex, 
 		LPWSTR lpName, 
@@ -230,5 +276,5 @@ LONG CeRegEnumKeyEx(
 	}
 
 	return return_value;
-}
+}/*}}}*/
 
