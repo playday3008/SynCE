@@ -231,20 +231,22 @@ bool rra_appointment_to_vevent(/*{{{*/
 
       case APPOINTMENT_TYPE_NORMAL:
         type   = "DATE-TIME";
-        if (tzi)
+        /*if (tzi)*/
           format = "%Y%m%dT%H%M%SZ";
-        else
-          format = "%Y%m%dT%H%M%S";
+        /*else
+          format = "%Y%m%dT%H%M%S";*/
 
         /* minutes to seconds */
         end_time = start_time + 
           event_generator_data.duration->val.lVal * 60;
 
+#if 0
         if (tzi)
         {
           start_time = rra_timezone_convert_to_utc(tzi, start_time);
           end_time   = rra_timezone_convert_to_utc(tzi, end_time);
         }
+#endif
       
         break;
 
@@ -256,11 +258,13 @@ bool rra_appointment_to_vevent(/*{{{*/
 
     if (type && format)
     {
+      /* using localtime here to get correct output from strftime */
       strftime(buffer, sizeof(buffer), format, localtime(&start_time));
       generator_add_with_type(generator, "DTSTART", type, buffer);
       
       if (end_time)
       {
+        /* using localtime here to get correct output from strftime */
         strftime(buffer, sizeof(buffer), format, localtime(&end_time));
         generator_add_with_type(generator, "DTEND",   type, buffer);
       }
@@ -517,6 +521,7 @@ bool rra_appointment_from_vevent(/*{{{*/
   ParserComponent* calendar;
   ParserComponent* event;
   ParserComponent* alarm;
+  ParserComponent* daylight;
   int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
@@ -537,6 +542,8 @@ bool rra_appointment_from_vevent(/*{{{*/
       break;
   }
 
+  daylight = parser_component_new("Daylight");
+  
   alarm = parser_component_new("vAlarm");
 
   parser_component_add_parser_property(alarm, 
@@ -574,6 +581,7 @@ bool rra_appointment_from_vevent(/*{{{*/
 
   calendar = parser_component_new("vCalendar");
   parser_component_add_parser_component(calendar, event);
+  parser_component_add_parser_component(calendar, daylight);
 
   /* allow parsing to start with either vCalendar or vEvent */
   base = parser_component_new(NULL);
@@ -715,6 +723,7 @@ exit:
   parser_component_destroy(calendar);
   parser_component_destroy(event);
   parser_component_destroy(alarm);
+  parser_component_destroy(daylight);
   parser_destroy(parser);
 	return success;
 }/*}}}*/

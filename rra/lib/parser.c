@@ -376,6 +376,7 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
     bool is_utc = false;
     
     success = parser_datetime_to_unix_time(line->values[0], &some_time, &is_utc);
+#if 0
     if (success && is_utc)
     {
       if (self->tzi)
@@ -385,6 +386,12 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
       else
         synce_warning("No time zone information available");
     }
+#else
+    if (success && !is_utc)
+    {
+      synce_warning("Time is not in UTC and handling timezone information in vCalendar is missing!");
+    }
+#endif
     else if (!success)
     {
       synce_error("Failed to convert DATE or DATE-TIME to UNIX time: '%s'",
