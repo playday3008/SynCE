@@ -36,6 +36,10 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>March 9, 2003</b> Thanks to <a href="mailto:thomas@i.rule-the.net">Thomas
+Butter</a>, there are now <a href="debian.php">Debian packages</a> of SynCE
+available for download.</p>
+
 <p><b>March 7, 2003</b> Since late february there is a Perl language binding
 available for RAPI. This has been implemented by <a
 href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> and is available <a
@@ -139,9 +143,6 @@ href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.ne
 if you want to help us!</p>
 
 <ul>
-
-<li class=SPACED>Debian packages: Of course we want to get into the Debian
-distribution some day!</li>
 
 <li class=SPACED>vCalendar <-> Pocket PC Tasks/Calendar conversion code</li>
 
