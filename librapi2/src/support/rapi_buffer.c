@@ -483,22 +483,33 @@ bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWr
 
 bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket)
 {
-	uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
+  uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
+  size_t total_size = sizeof(size_le) + rapi_buffer_get_size(buffer);
+  bool success;
 
-	if ( !synce_socket_write(socket, &size_le, sizeof(size_le)) )
-		goto fail;
+  /* send everything as a single buffer */
 
-	if ( !synce_socket_write(socket, 
-				rapi_buffer_get_raw(buffer), 
-				rapi_buffer_get_size(buffer)) )
-		goto fail;
+  void* tmp = malloc(total_size);
+  if (!tmp)
+  {
+    rapi_buffer_error("Failed to allocate %i bytes", total_size);
+    return false;
+  }
 
-	return true;
+  memcpy(tmp, &size_le, sizeof(size_le));
+  memcpy(tmp + sizeof(size_le), rapi_buffer_get_raw(buffer), rapi_buffer_get_size(buffer));
 
-fail:
-	/* XXX: is it wise to close the connection here? */
-	synce_socket_close(socket);
-	return false;
+  success = synce_socket_write(socket, tmp, total_size);
+
+  free(tmp);
+
+  if (!success)
+  {
+    /* XXX: is it wise to close the connection here? */
+    synce_socket_close(socket);
+  }
+
+  return success;
 }
 
 bool rapi_buffer_recv(RapiBuffer* buffer, SynceSocket* socket)
