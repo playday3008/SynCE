@@ -46,6 +46,7 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="freebsd.php">FreeBSD</a></li>
 <li><a href="linux.php">Linux</a></li>
 <li><a href="macosx.php">MacOS X</a></li>
+<li><a href="openbsd.php">OpenBSD</a></li>
 
 </ul>
 
