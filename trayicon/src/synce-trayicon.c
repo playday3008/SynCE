@@ -202,9 +202,9 @@ static void set_icon()
 	char* filename = NULL;
 
 	if (is_connected)
-		filename = g_build_filename(DATADIR, "pixmaps", "synce", "synce-color.png", NULL);
+		filename = g_build_filename(DATADIR, "pixmaps", "synce", "synce-color-small.png", NULL);
 	else
-		filename = g_build_filename(DATADIR, "pixmaps", "synce", "synce-gray.png", NULL);
+		filename = g_build_filename(DATADIR, "pixmaps", "synce", "synce-gray-small.png", NULL);
 
 	unscaled = gdk_pixbuf_new_from_file(filename, NULL);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(icon), unscaled);
