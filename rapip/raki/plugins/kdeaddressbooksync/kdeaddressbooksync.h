@@ -49,17 +49,22 @@ public:
     
 private:
     bool sync();
-    KABC::AddressBook *generatePcDelta(KABC::AddressBook *pcStdBook,
-                                       KABC::AddressBook *pcRhoBook);         // Search with PCUid
-    KABC::AddressBook *generatePdaDelta();                                    // Download book
-    KABC::AddressBook *generateKappaBook(KABC::AddressBook *pcDeltaBook,
-                                         KABC::AddressBook *pdaDeltaBook);    // Search with CEUid
-    KABC::AddressBook *generatePdaItaBook(KABC::AddressBook *pcDeltaBook,
-                                          KABC::AddressBook *kappaBook);      // Search with PCUid
-    KABC::AddressBook *generatePcItaBook(KABC::AddressBook *pcDeltaBook,
-                                         KABC::AddressBook *kappaBook);       // Search with CEUid
+    bool preSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
+    bool postSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
+    void generatePcDelta();         // Search with PCUid
+    void generatePdaDelta();                                    // Download book
+    void generateKappaBook();    // Search with CEUid
+    void generatePdaItaBook();      // Search with PCUid
+    void generatePcItaBook();       // Search with CEUid
     bool compare(const KABC::Addressee &a, const KABC::Addressee &b);
     void printBook(QString label, KABC::AddressBook *book);
+
+    KABC::AddressBook *pcStdBook;
+    KABC::AddressBook *pcRhoBook;
+    KABC::Resource *rhoResource;    
+    KABC::AddressBook * pcDeltaBook;
+    KABC::AddressBook *pdaDeltaBook;
+    KABC::AddressBook * kappaBook;
 };
 
 #endif

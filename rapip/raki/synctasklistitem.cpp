@@ -401,6 +401,26 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
 }
 
 
+bool SyncTaskListItem::preSync(SyncThread *syncThread, Rra *rra)
+{
+    bool ret;
+    
+    ret = syncPlugin->preSync(syncThread, rra, firstSynchronization, partnerId);
+    
+    return ret;
+}
+
+
+bool SyncTaskListItem::postSync(SyncThread *syncThread, Rra *rra)
+{
+    bool ret;
+    
+    ret = syncPlugin->postSync(syncThread, rra, firstSynchronization, partnerId);
+    
+    return ret;
+}
+
+
 void SyncTaskListItem::configure()
 {
     if (syncPlugin != NULL) {

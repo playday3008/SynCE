@@ -26,7 +26,7 @@
 #include <qradiobutton.h>
 
 WelcomeDialogImpl::WelcomeDialogImpl(QWidget *parent, const char *name,
-        bool modal) : WelcomeDialog(parent, name, modal, Qt::WStyle_Splash)
+        bool modal) : WelcomeDialog(parent, name, modal, Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop|Qt::WX11BypassWM)
 {
 }
 

@@ -70,6 +70,8 @@ bool MatchMaker::disconnect()
         Ce::rapiUninit();
         matchmaker = NULL;
     }
+    
+    return true;
 }
 
 

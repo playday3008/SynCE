@@ -55,6 +55,8 @@ public:
 
     bool doSync(SyncThread *syncThread, Rra *rra,
             SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId);
+    virtual bool preSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
+    virtual bool postSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
     bool running();
     bool stopRequested();

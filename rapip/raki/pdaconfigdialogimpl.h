@@ -93,6 +93,7 @@ private:
     QDateTime partnershipCreated;
     bool syncAtConnect;
     bool newPda;
+    QString deviceIp;
 };
 
 #endif

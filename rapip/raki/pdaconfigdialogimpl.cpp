@@ -134,7 +134,7 @@ void PdaConfigDialogImpl::readConfig()
         ksConfig->setGroup("MainConfig");
         masqEnabled = ksConfig->readBoolEntry("Masquerade");
         password = ksConfig->readEntry("Password");
-        syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect");
+        syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect", false);
         partnerName = ksConfig->readEntry("PartnerName", "");
         partnerId = ksConfig->readUnsignedLongNumEntry("PartnerId", 0);
         partnershipCreated = ksConfig->readDateTimeEntry("PartnershipCreated",
@@ -146,6 +146,17 @@ void PdaConfigDialogImpl::readConfig()
         syncAtConnect = false;
         newPda = true;
     }
+
+    char *path = NULL;
+    synce::synce_get_directory(&path);
+    QString synceDir = QString(path);
+
+    if (path)
+        free(path);
+
+    KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
+    activeConnection.setGroup("device");
+    deviceIp = activeConnection.readEntry("ip");
 }
 
 
@@ -187,17 +198,6 @@ void PdaConfigDialogImpl::changedSlot()
 
 QString PdaConfigDialogImpl::getDeviceIp()
 {
-    char *path = NULL;
-    synce::synce_get_directory(&path);
-    QString synceDir = QString(path);
-
-    if (path)
-        free(path);
-
-    KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
-    activeConnection.setGroup("device");
-    QString deviceIp = activeConnection.readEntry("ip");
-
     return deviceIp;
 }
 

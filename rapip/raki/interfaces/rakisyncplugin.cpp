@@ -56,6 +56,20 @@ bool RakiSyncPlugin::doSync(SyncThread *syncThread, Rra *rra,
 }
 
 
+bool RakiSyncPlugin::preSync(SyncThread */*syncThread*/, Rra */*rra*/,
+        bool /*firstSynchronize*/, uint32_t /*partnerId*/)
+{
+    return true;
+}
+
+
+bool RakiSyncPlugin::postSync(SyncThread */*syncThread*/, Rra */*rra*/,
+        bool /*firstSynchronize*/, uint32_t /*partnerId*/)
+{
+    return true;
+}
+
+
 void RakiSyncPlugin::init(RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent, QString serviceName)
 {
     this->objectType = objectType;

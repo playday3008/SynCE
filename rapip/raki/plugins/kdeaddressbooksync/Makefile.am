@@ -7,5 +7,5 @@ librakikdeaddressbooksync_la_SOURCES = kdeaddressbooksyncfactory.cpp kdeaddressb
 METASOURCES = AUTO
 
 kde_services_DATA = rakikdeaddressbooksync.desktop
-librakikdeaddressbooksync_la_LIBADD = $(LIB_KABC)
+librakikdeaddressbooksync_la_LIBADD = $(LIB_KABC_FILE) $(LIB_KABC)
 noinst_HEADERS =  kdeaddressbooksync.h kdeaddressbooksyncfactory.h

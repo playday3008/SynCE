@@ -65,6 +65,8 @@ private:
     QString pdaName;
     QPtrList<SyncTaskListItem> syncItems;
     void *finishedSynchronization();
+    void *preSync(void *v_item);
+    void *postSync(void *v_item);
 };
 
 #endif

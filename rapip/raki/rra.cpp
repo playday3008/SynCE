@@ -138,7 +138,7 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
     switch(event) {
     case SYNCMGR_TYPE_EVENT_UNCHANGED:
         eventIds = &_ids->unchangedIds;
-        kdDebug(2120) << "------------------------ unchanged ---------" << endl;
+        kdDebug(2120) << "----------------------- unchanged --------" << endl;
         break;
     case SYNCMGR_TYPE_EVENT_CHANGED:
         eventIds = &_ids->changedIds;

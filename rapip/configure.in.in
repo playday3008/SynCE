@@ -4,6 +4,10 @@ AM_INIT_AUTOMAKE(synce-kde, 0.6.3)
 AC_C_BIGENDIAN
 AC_CHECK_KDEMAXPATHLEN
 
+TMP_LIBS=$LIBS
+AC_CHECK_LIB(kabc_file, main, AC_SUBST(LIB_KABC_FILE, -lkabc_file))
+LIBS=$TMP_LIBS
+
 AC_MSG_CHECKING(if unique application check should be disabled)
 AC_ARG_ENABLE(unique,
 	[  --disable-unique        disable unique application check],

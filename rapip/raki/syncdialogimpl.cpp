@@ -121,6 +121,24 @@ void *SyncDialogImpl::finishedSynchronization()
 }
 
 
+void *SyncDialogImpl::preSync(void *v_item)
+{
+    SyncTaskListItem *item = (SyncTaskListItem *) v_item;
+    item->preSync(this, rra);
+    
+    return NULL;
+}
+
+
+void *SyncDialogImpl::postSync(void *v_item)
+{
+    SyncTaskListItem *item = (SyncTaskListItem *) v_item;
+    item->postSync(this, rra);
+    
+    return NULL;
+}
+    
+
 void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
 {
     SyncTaskListItem *item;
@@ -131,7 +149,12 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
         if (running()) {
             if (item->isOn()) {
                 setActualSyncItem(item);
+                kdDebug(2120) << "before pre" << endl;
+                postThreadEvent(&SyncDialogImpl::preSync, (void *) item, block);
+                kdDebug(2120) << "before sync" << endl;
                 item->synchronize(this, rra);
+                kdDebug(2120) << "before post" << endl;
+                postThreadEvent(&SyncDialogImpl::postSync, (void *) item, block);
             }
         }
     }
