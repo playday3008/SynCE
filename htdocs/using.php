@@ -37,9 +37,8 @@ want to <a href="debian.php">download Debian packages</a>.</l>
 <li class=SPACED>I'll compile SynCE myself, so I want to <a
 href="tarballs.php">download .tar.gz archives</a>.</li>
 
-<li class=SPACED>I'm so cool that I want to <a
-href="http://sourceforge.net/cvs/?group_id=30550">get the files from
-CVS</a>.</li>
+<li class=SPACED>I'm so cool that I want to <a href="cvs.php">get the files
+from CVS</a>.</li>
 
 </ul>
 
