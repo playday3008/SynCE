@@ -59,8 +59,8 @@ typedef const WCHAR*  LPCWSTR;
 
 typedef struct _FILETIME
 {
-	DWORD dwLowDateTime;
-	DWORD dwHighDateTime;
+        DWORD dwLowDateTime;
+        DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
 /* A handle  is usually a void*, but we must guarantee 32-bit! */
@@ -95,20 +95,29 @@ typedef int32_t  HRESULT;
 #define FAILED(x) ((x)<0)
 
 /*
- * Error codes for registry functions
+ * System Errors
+ *
+ * Add more from this page if needed:
+ *
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/html/_sdk_error_values.asp
  */
 
-#define ERROR_SUCCESS			   0
-#define ERROR_FILE_NOT_FOUND		   2
-#define ERROR_PATH_NOT_FOUND	3
-#define ERROR_NOT_ENOUGH_MEMORY		   8
-#define ERROR_SEEK			  25
-#define ERROR_INVALID_PARAMETER		  87
-#define ERROR_INSUFFICIENT_BUFFER	 122
-#define ERROR_DIR_NOT_EMPTY     145
-#define ERROR_NO_DATA		 	 232
-#define ERROR_NO_MORE_ITEMS         	 259
-#define ERROR_KEY_DELETED		1018
+#define ERROR_SUCCESS                  0
+#define ERROR_FILE_NOT_FOUND           2
+#define ERROR_PATH_NOT_FOUND           3
+#define ERROR_ACCESS_DENIED            5
+#define ERROR_NOT_ENOUGH_MEMORY        8
+#define ERROR_SEEK                    25
+#define ERROR_NOT_SUPPORTED           50
+#define ERROR_FILE_EXISTS             80
+#define ERROR_INVALID_PARAMETER       87
+#define ERROR_INSUFFICIENT_BUFFER    122
+#define ERROR_INVALID_NAME           123
+#define ERROR_DIR_NOT_EMPTY          145
+#define ERROR_ALREADY_EXISTS         183
+#define ERROR_NO_DATA                232
+#define ERROR_NO_MORE_ITEMS          259
+#define ERROR_KEY_DELETED           1018
 
 /*
  * Other macros
