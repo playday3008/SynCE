@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define DELETE_FILES 1
+#define DELETE_FILES 0
 
 static char* orange_get_temporary_directory()
 {
@@ -110,10 +110,12 @@ bool orange_squeeze_file(/*{{{*/
   {
     if (STR_EQUAL(suffix, "apk"))
     {
+      synce_trace("Trying TomTom APK format.");
       success = orange_extract_apk(filename, output_directory);
     }
     else if (STR_EQUAL(suffix, "arh"))
     {
+      synce_trace("Trying TomTom ARH format.");
       success = orange_extract_arh(filename, output_directory);
     }
     else if (STR_EQUAL(suffix, "cab"))
@@ -123,6 +125,7 @@ bool orange_squeeze_file(/*{{{*/
 
       if (STR_EQUAL(basename, "data1.cab"))
       {
+        synce_trace("Trying InstallShield CAB format.");
         success = orange_extract_is_cab(filename, output_directory);
       }
       else if (STR_EQUAL(basename, "_sys1.cab") || STR_EQUAL(basename, "_user1.cab"))
@@ -134,7 +137,11 @@ bool orange_squeeze_file(/*{{{*/
         callback(filename, &cab_info, cookie);
       }
       else
+      {
         success = orange_extract_ms_cab(filename, output_directory);
+        if (success)
+          synce_trace("Found Microsoft CAB format.");
+      }
     }
     else if (STR_EQUAL(suffix, "exe"))
     {
@@ -147,38 +154,70 @@ bool orange_squeeze_file(/*{{{*/
           char output_filename[256];
           snprintf(output_filename, sizeof(output_filename), "%s/installer.exe", output_directory);
           success = orange_dllinflate(filename, output_filename);
+          if (success)
+            synce_trace("Found DllInflate EXE format.");
         }
       }
 
       if (!success)
+      {
         success = orange_extract_setup_factory(filename, output_directory);
+        if (success)
+          synce_trace("Found SetupFactory format.");
+      }
 
       if (!success)
+      {
         success = orange_extract_inno(filename, output_directory);
+        if (success)
+          synce_trace("Found InnoSetup format.");
+      }
 
       if (!success)
+      {
         success = orange_extract_vise(filename, output_directory);
+        if (success)
+          synce_trace("Found VISE Setup format.");
+      }
 
       if (!success)
+      {
         success = orange_extract_zip(filename, output_directory);
+        if (success)
+          synce_trace("Found ZIP format.");
+      }
 
       if (!success)
+      {
         success = orange_extract_rar(filename, output_directory);
+        if (success)
+          synce_trace("Found RAR format.");
+      }
     
       if (!success)
+      {
         success = orange_separate(filename, output_directory);
+      }
     
       /* must be after call to orange_separate */
       if (!success)
+      {
         success = orange_extract_ms_cab(filename, output_directory);
+        if (success)
+          synce_trace("Found Microsoft CAB format.");
+      }
     }
     else if (STR_EQUAL(suffix, "zip"))
     {
       success = orange_extract_zip(filename, output_directory);
+      if (success)
+        synce_trace("Found ZIP format.");
     }
     else if (STR_EQUAL(suffix, "rar"))
     {
       success = orange_extract_rar(filename, output_directory);
+      if (success)
+        synce_trace("Found RAR format.");
     }
 #if 0
     else
