@@ -11,7 +11,10 @@ included in your kernel configuration:</p>
 
 <blockquote><tt>USB Support -&gt;<br>
 USB Serial Converter support -&gt;<br>
-USB Compaq iPAQ / HP Jornada / Casio EM500 Driver</tt></blockquote>
+USB PocketPC PDA Driver</tt></blockquote>
+
+<p>(Earlier this was called the <tt>USB Compaq iPAQ / HP Jornada / Casio EM500
+Driver</tt>)</p>
 
 <p>Pre-compiled Linux kernels usually includes the <tt>ipaq</tt> Linux kernel
 driver that is required to use SynCE with USB.</p>
