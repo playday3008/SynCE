@@ -7,6 +7,8 @@
 
 typedef unsigned (*SHashFunc)    (const void* key);
 typedef int      (*SCompareFunc) (const void* a, const void* b);
+typedef void (*SHashTableCallback)(const void* key, const void* data, void* cookie);
+
 
 unsigned s_str_hash(const void *key);
 int s_str_equal(const void* a, const void* b);
@@ -19,10 +21,10 @@ int s_str_equal_no_case(const void* a, const void* b);
 ** if there was one.
 */
 
-typedef struct bucket {
+typedef struct _bucket {
     void *key;
     void *data;
-    struct bucket *next;
+    struct _bucket *next;
 } bucket;
 
 /*
@@ -34,7 +36,7 @@ typedef struct bucket {
 ** times as many nodes have been inserted as the table was created with.
 */
 
-typedef struct SHashTable {
+typedef struct _SHashTable {
     size_t size;
     bucket **table;
     SHashFunc hash;
@@ -54,14 +56,14 @@ SHashTable *s_hash_table_new(SHashFunc hash_func, SCompareFunc compare_func, siz
 ** associated data.
 */
 
-void *s_hash_table_insert(struct SHashTable *table, void *key,void *data);
+void *s_hash_table_insert(SHashTable *table, void *key,void *data);
 
 /*
 ** Returns a pointer to the data associated with a key.  If the key has
 ** not been inserted in the table, returns NULL.
 */
 
-void *s_hash_table_lookup(struct SHashTable *table, const void *key);
+void *s_hash_table_lookup(SHashTable *table, const void *key);
 
 /*
 ** Deletes an entry from the table.  Returns a pointer to the data that
@@ -69,7 +71,8 @@ void *s_hash_table_lookup(struct SHashTable *table, const void *key);
 ** properly.
 */
 
-void *s_hash_table_remove(struct SHashTable *table, const void *key);
+void *s_hash_table_remove(SHashTable *table, const void *key);
+
 
 /*
 ** Goes through a hash table and calls the function passed to it
@@ -78,7 +81,7 @@ void *s_hash_table_remove(struct SHashTable *table, const void *key);
 ** with it.
 */
 
-void s_hash_table_foreach(struct SHashTable *table,void (*func)(char *,void *));
+void s_hash_table_foreach(SHashTable *table, SHashTableCallback func, void* cookie);
 
 /*
 ** Frees a hash table.  For each node that was inserted in the table,

@@ -279,23 +279,23 @@ void s_hash_table_destroy(SHashTable *table, void (*func)(void *))
 ** node in the table, passing it the key and the associated data.
 */
 
-void s_hash_table_foreach( SHashTable *table, void (*func)(char *, void *))
+void s_hash_table_foreach(SHashTable *table, SHashTableCallback func, void* cookie)
 {
-      unsigned i;
-      bucket *temp;
+  unsigned i;
+  bucket *temp;
 
-      for (i=0;i<table->size; i++)
+  for (i=0;i<table->size; i++)
+  {
+    if ((table->table)[i] != NULL)
+    {
+      for (temp = (table->table)[i];
+          NULL != temp;
+          temp = temp -> next)
       {
-            if ((table->table)[i] != NULL)
-            {
-                  for (temp = (table->table)[i];
-                        NULL != temp;
-                        temp = temp -> next)
-                  {
-                        func(temp -> key, temp->data);
-                  }
-            }
+        func(temp -> key, temp->data, cookie);
       }
+    }
+  }
 }
 
 
