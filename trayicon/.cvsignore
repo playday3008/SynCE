@@ -20,3 +20,12 @@ stamp-h
 stamp-h1
 stamp-h.in
 trayicon.spec
+po/POTFILES
+po/Makefile.in
+po/Makefile
+data/Makefile.in
+data/Makefile
+intltool-update
+intltool-merge
+intltool-extract
+
