@@ -725,6 +725,8 @@ DWORD CeSetSystemMemoryDivision(
 struct _IRAPIStream;
 typedef struct _IRAPIStream IRAPIStream;
 
+#ifndef SWIG
+
 ULONG IRAPIStream_Release(IRAPIStream* stream);
 
 HRESULT IRAPIStream_Read(
@@ -760,6 +762,8 @@ HRESULT CeRapiInvokeA(
 		BYTE **ppOutput, 
 		IRAPIStream **ppIRAPIStream, 
 		DWORD dwReserved);
+
+#endif /* SWIG */
 
 #ifdef __cplusplus
 }
