@@ -138,7 +138,7 @@ namespace pocketPCCommunication
         }
 
         if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
-            ret = fakeAddresseeListFromDevice( mAddresseeList, ids.unchangedIds );
+            ret = retrieveAddresseeListFromDevice( mAddresseeList, ids.unchangedIds );
             if ( ret >= 0 ) {
                 count += 0;
             }

@@ -147,7 +147,7 @@ namespace pocketPCCommunication
         }
 
         if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
-            ret = fakeEventListFromDevice( mEventList, ids.unchangedIds );
+            ret = retrieveEventListFromDevice( mEventList, ids.unchangedIds );
             if ( ret >= 0 ) {
                 count += 0;
             }

@@ -138,7 +138,7 @@ namespace pocketPCCommunication
         }
 
         if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
-            ret = fakeTodoListFromDevice( mTodoList, ids.unchangedIds );
+            ret = retrieveTodoListFromDevice( mTodoList, ids.unchangedIds );
             if ( ret >= 0 ) {
                 count += 0;
             }
