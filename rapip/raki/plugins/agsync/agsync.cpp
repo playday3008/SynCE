@@ -44,6 +44,7 @@
 #include <AGLocationConfig.h>
 
 #include "rapiwrapper.h"
+#include "agsyncconfigimpl.h"
 
 #include "syncstream.h"
 
@@ -188,8 +189,22 @@ AGSync::AGSync()
 }
 
 
+void AGSync::createConfigureObject(KConfig *ksConfig)
+{
+    configDialog = new AGSyncConfigImpl(ksConfig, parent);
+}
+
+
+void AGSync::configure()
+{
+    configDialog->show();
+}
+
+
 AGSync::~AGSync()
-{}
+{
+//    delete configDialog;
+}
 
 
 void AGSync::setProxy(QString host, unsigned int port)

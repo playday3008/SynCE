@@ -20,60 +20,41 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
-#ifndef AGSYNC_H
-#define AGSYNC_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef AGSYNCCONFIGIMPL_H
+#define AGSYNCCONFIGIMPL_H
 
-#ifdef WITH_AGSYNC
+#include "agsyncconfig.h"
 
-#include <qstring.h>
-#include <AGReader.h>
-#include <AGWriter.h>
-#include <AGNet.h>
-#include <AGServerConfig.h>
-#include <AGLocationConfig.h>
+#include <kconfig.h>
 
-#include <rakisyncplugin.h>
-
-
-class Rra;
-class SyncTaskListItem;
-class AGSyncConfigImpl;
-
-
-/**
-@author Volker Christian,,,
-*/
-class AGSync : public RakiSyncPlugin 
+class AGSyncConfigImpl : public AGSyncConfig
 {
-Q_OBJECT
+    Q_OBJECT
+
 public:
-    AGSync();
-    ~AGSync();
-    void createConfigureObject(KConfig *ksConfig);
-    void configure();
-    
-    
+    AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent = 0,
+            const char* name = 0, bool modal = TRUE, WFlags fl = 0 );
+    ~AGSyncConfigImpl();
+    /*$PUBLIC_FUNCTIONS$*/
+    void show();
+
 private:
-    bool sync();
-    void setProxy(QString host, unsigned int port);
-    void setSocks(QString host, unsigned int port);
-    void setUser(QString user, QString password);
-    void doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx);
-    void doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx *ctx);
-    QString proxyHost;
-    QString socksHost;
-    unsigned int proxyPort;
-    unsigned int socksPort;
-    QString user;
-    QString password;
-    AGLocationConfig *locConfig;
-    AGSyncConfigImpl *configDialog;
+    KConfig *ksConfig;
+    void readConfig();
+
+public slots:
+    /*$PUBLIC_SLOTS$*/
+    virtual void contentChanged();
+
+protected:
+    /*$PROTECTED_FUNCTIONS$*/
+
+protected slots:
+    /*$PROTECTED_SLOTS$*/
+    virtual void reject();
+    virtual void accept();
 };
 
 #endif
 
-#endif
