@@ -161,6 +161,7 @@ int main(int argc, char** argv)
 	CEOSVERSIONINFO version;
 	SYSTEM_INFO system;
 	SYSTEM_POWER_STATUS_EX power;
+	STORE_INFORMATION store;
 	
 	if (!handle_parameters(argc, argv))
 		goto exit;
@@ -174,6 +175,10 @@ int main(int argc, char** argv)
 				synce_strerror(hr));
 		goto exit;
 	}
+
+	/*
+	 * Version
+	 */
 
 	memset(&version, 0, sizeof(version));
 	version.dwOSVersionInfoSize = sizeof(version);
@@ -211,6 +216,10 @@ int main(int argc, char** argv)
 				synce_strerror(CeGetLastError()));
 	}
 
+	/*
+	 * System
+	 */
+
 	memset(&system, 0, sizeof(system));
 
 	CeGetSystemInfo(&system);
@@ -233,6 +242,10 @@ int main(int argc, char** argv)
 				);
 	}
 
+	/*
+	 * Power
+	 */
+
 	memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
 	
 	if (CeGetSystemPowerStatusEx(&power, false))
@@ -252,10 +265,37 @@ int main(int argc, char** argv)
 				power.BackupBatteryLifePercent, power.BackupBatteryLifeTime,
 				power.BackupBatteryFullLifeTime);
 
+		printf("\n");
+
 	}
 	else
 	{
 		fprintf(stderr, "%s: Failed to get battery status: %s\n", 
+				argv[0],
+				synce_strerror(CeGetLastError()));
+	}
+
+	/*
+	 * Store
+	 */
+	memset(&store, 0, sizeof(store));
+
+	if (CeGetStoreInformation(&store))
+	{
+		printf(
+				"Store\n"
+				"=====\n"
+				"Store size: %i bytes (%i megabytes)\n"
+				"Free space: %i bytes (%i megabytes)\n"
+				"\n"
+				,
+				store.dwStoreSize, store.dwStoreSize / (1024*1024),
+				store.dwFreeSize,  store.dwFreeSize  / (1024*1024) 
+				);
+	}
+	else
+	{
+		fprintf(stderr, "%s: Failed to get store information: %s\n", 
 				argv[0],
 				synce_strerror(CeGetLastError()));
 	}

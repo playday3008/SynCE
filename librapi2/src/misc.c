@@ -58,6 +58,39 @@ DWORD CeGetLastError( void )
 	return context->last_error;
 }
 
+BOOL CeGetStoreInformation( /*{{{*/
+		LPSTORE_INFORMATION lpsi)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL result = false;
+	
+	rapi_context_begin_command(context, 0x29);
+	rapi_buffer_write_optional_out(context->send_buffer, lpsi, sizeof(STORE_INFORMATION));
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	synce_trace("last_error = %i", context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &result);
+	synce_trace("result = %i", result);
+	
+	if ( !rapi_buffer_read_optional(context->recv_buffer, lpsi, sizeof(STORE_INFORMATION)) )
+	{
+		synce_error("Failed to read lpsi");
+		goto exit;
+	}
+
+	if (lpsi)
+	{
+		lpsi->dwStoreSize = letoh32(lpsi->dwStoreSize);
+		lpsi->dwFreeSize = letoh32(lpsi->dwFreeSize);
+	}
+
+exit:
+	return result;
+}/*}}}*/
+
 void CeGetSystemInfo( /*{{{*/
 		LPSYSTEM_INFO lpSystemInfo)
 {

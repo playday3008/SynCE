@@ -567,6 +567,14 @@ BOOL CeCreateProcess(
 
 DWORD CeGetLastError( void );
 
+typedef struct STORE_INFORMATION {
+	DWORD dwStoreSize;
+	DWORD dwFreeSize;
+} STORE_INFORMATION, *LPSTORE_INFORMATION;
+
+BOOL CeGetStoreInformation( 
+		LPSTORE_INFORMATION lpsi);
+
 typedef struct _SYSTEM_INFO {
 /*	DWORD dwOemId;*/
 	WORD wProcessorArchitecture;
