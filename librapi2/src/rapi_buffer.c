@@ -255,6 +255,20 @@ bool rapi_buffer_write_optional_in(RapiBuffer* buffer, const void* data, size_t 
 	}
 }
 
+bool rapi_buffer_write_optional_no_size(RapiBuffer* buffer, const void* data, size_t size)
+{
+	if (data)
+	{
+		return
+			rapi_buffer_write_uint32(buffer, 1) &&
+			rapi_buffer_write_data(buffer, data, size);
+	}
+	else
+	{
+		return rapi_buffer_write_uint32(buffer, 0);
+	}
+}
+
 bool rapi_buffer_write_optional_out(RapiBuffer* buffer, void* data, size_t size)
 {
 	/* See http://sourceforge.net/mailarchive/message.php?msg_id=64440 */

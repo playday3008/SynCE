@@ -2,6 +2,7 @@
 #include "rapi.h"
 #include "rapi_context.h"
 #include "rapi_endian.h"
+#include "rapi_wstr.h"   /* for unicode length function */
 
 BOOL CeDeleteDatabase(/*{{{*/
 		CEOID oid)
@@ -320,6 +321,155 @@ CEOID CeReadRecordProps(/*{{{*/
 fail:
  	rapi_error("failed");
 	CeRapiFreeBuffer(buffer);
+	return 0;
+}/*}}}*/
+
+CEOID CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVAL* rgPropVal)/*{{{*/
+{
+	RapiContext* context = rapi_context_current();
+	CEOID return_value = 0;
+
+	uint32_t datalen, buflen;
+	uint32_t i;
+
+
+	/*
+	 *	Format of the CeWriteRecordProps packet - primitives are encoded in the CEPROPVAL structures, lpwstr and blob properties are
+	 *	attached to the end of the buffer and referenced by offset pointers
+	 *
+	 *		long hDBase | long oidRecord | long cPropID | long datalen (of following data) | n * CEPROPVAL | char[] data
+	 *
+	 *	Because CEPROPVAL is a union, the format is different for every type of prop:
+	 *
+	 *	long or short (iVal, uiVal, lVal, ulVal, boolVal): long propid | short wFlags | short wLenData (unused, set to 0) | short iVal or boolVal | short uiVal | long lVal or ulVal
+	 *
+	 *	FILETIME or double: long propid | short wFlags | short wLenData (unused) | DWORD FILETIME or double
+	 *
+	 *	lpwstr: long propid | short wFlags | short wLenData (unused) | long offset ( points to string data in data buffer, counted from beginning of CEPROPVALs)
+	 *
+	 *	blob: long propid | short wFlags | short wLenData (unused) | long blobsize | long offset (same as lpwstr)
+	 */
+
+	rapi_trace("begin");
+	rapi_context_begin_command(context, 0x11);
+
+	rapi_buffer_write_uint32(context->send_buffer, hDbase);    /* Parameter1 : */
+	rapi_buffer_write_uint32(context->send_buffer, oidRecord); /* Parameter2 : Flags ? */ 
+	rapi_buffer_write_uint16(context->send_buffer, cPropID);   /* Parameter3 */
+
+	/*
+	 * we have to go through the rgPropVals array three times:
+	 *		1. to determine the size of the whole buffer, including data
+	 *		2. to write out the CEPROPVAL array
+	 *		3. to write the data segment
+	 */
+
+	/* calculate the length of the whole buffer, including the data segment at the end */
+
+	buflen = cPropID * sizeof( CEPROPVAL ); /* length of all cepropvals */
+
+	for ( i = 0; i < cPropID; i++ )
+	{	
+		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		{
+			case CEVT_BLOB:
+				buflen += rgPropVal[i].val.blob.dwCount;
+				break;
+			case CEVT_LPWSTR:
+				buflen += 2* ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
+				break;
+			default:
+				break;
+		}
+	}
+
+	rapi_buffer_write_uint32(context->send_buffer, buflen);
+
+	/*
+		 second time: write n * CEPROPVAL. Can't do it in one block, as we have to adjust the buffer offsets
+	 */
+
+	datalen = cPropID * sizeof( CEPROPVAL ); /*  holds the offset to the end of the data buffer	*/
+
+	for ( i = 0; i < cPropID; i++ )
+	{
+		rapi_buffer_write_uint32(context->send_buffer,rgPropVal[i].propid );
+		rapi_buffer_write_uint16(context->send_buffer,rgPropVal[i].wLenData );
+		rapi_buffer_write_uint16(context->send_buffer,rgPropVal[i].wFlags );
+
+		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		{
+			case CEVT_BLOB:
+				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.blob.dwCount );
+				datalen += rgPropVal[i].val.blob.dwCount;
+				rapi_buffer_write_uint32(context->send_buffer, datalen );
+				break;
+			case CEVT_LPWSTR:
+				datalen += 2* ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1 );
+				rapi_buffer_write_uint32(context->send_buffer, datalen );
+				rapi_buffer_write_uint32(context->send_buffer, 0);
+				break;
+			case CEVT_I2:
+			case CEVT_UI2:
+			case CEVT_I4:
+			case CEVT_UI4:
+				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.iVal );
+				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.uiVal );
+				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.lVal );
+				break;
+			case CEVT_BOOL:
+				rapi_buffer_write_uint16(context->send_buffer, rgPropVal[i].val.boolVal  );
+				rapi_buffer_write_uint16(context->send_buffer, 0);
+				rapi_buffer_write_uint32(context->send_buffer, 0);
+				break;
+			case CEVT_FILETIME:
+				/* this assumes that the FILETIME is already in ole32 format! Is this a problem? */
+				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.filetime.dwLowDateTime );
+				rapi_buffer_write_uint32(context->send_buffer, rgPropVal[i].val.filetime.dwHighDateTime );
+				break;
+			case CEVT_R8:
+				rapi_buffer_write_optional(context->send_buffer, &(rgPropVal[i].val.dblVal), 4, 1 );
+				break;
+			default:
+				break;
+		}
+	}	
+
+	/* 3. write the data segment */
+
+	for ( i = 0; i < cPropID; i++ )
+	{	
+		switch ( ( rgPropVal[i].propid ) & 0xFFFF )
+		{
+			case CEVT_BLOB:
+				rapi_buffer_write_optional_no_size(context->send_buffer, 
+						rgPropVal[i].val.blob.lpb, rgPropVal[i].val.blob.dwCount );
+				break;
+			case CEVT_LPWSTR:
+				rapi_buffer_write_optional_no_size(context->send_buffer, 
+						rgPropVal[i].val.lpwstr, 2* ( rapi_wstr_strlen( rgPropVal[i].val.lpwstr ) + 1) );
+				break;
+			default:
+				break;
+		}
+	}	
+
+	if ( !rapi_context_call(context) )
+		goto fail;
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		goto fail;
+	rapi_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		goto fail;
+	rapi_trace("return_value=0x%08x", return_value);
+
+
+	return return_value;
+fail:
+	rapi_error("failed");
+	/*CeRapiFreeBuffer(buffer);*/
 	return 0;
 }/*}}}*/
 

@@ -89,6 +89,11 @@ bool rapi_buffer_write_optional_out(RapiBuffer* buffer, void* data, size_t size)
 bool rapi_buffer_write_optional_inout(RapiBuffer* buffer, void* data, size_t size);
 
 /**
+ * Write an optional parameter by reference with no size information
+ */
+bool rapi_buffer_write_optional_no_size(RapiBuffer* buffer, const void* data, size_t size);
+
+/**
  * Get raw data from buffer
  */
 bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size);
