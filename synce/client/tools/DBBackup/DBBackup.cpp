@@ -13,12 +13,17 @@
 #include <rapi.h>
 #include <unistd.h>
 
+/* Some hardcoded constants : */
+
+	/* Maximum size (in bytes) of a record from the database */
+#define BUFSIZE		1024*16
+
 void BackupProp( xmlNodePtr tree, CEOID oid, WORD cPropID, LPBYTE lpBuffer, DWORD cbBuffer )
 {
 	DWORD i;
 	DWORD j;
 	PCEPROPVAL pval = ( PCEPROPVAL ) lpBuffer;
-	char buffer[ 1024 ];
+	char buffer[ BUFSIZE ];
 	xmlNodePtr subtree1, subtree2;
 
 	subtree1 = xmlNewChild( tree, NULL, ( unsigned char * ) "RECORD", NULL );
@@ -121,7 +126,7 @@ void BackupOneDB( xmlNodePtr tree, CEDB_FIND_DATA findData )
 	DWORD index;
 	DWORD error;
 	xmlNodePtr subtree0, subtree1, subtree2, subtree3;
-	char buffer[ 1024 ];
+	char buffer[ BUFSIZE ];
 
 	index = 0;
 	error = 0;
@@ -219,7 +224,7 @@ void BackupOneDB( xmlNodePtr tree, CEDB_FIND_DATA findData )
 			}
 			index ++;
 		}
-		while ( ( oid != 0 ) && ( error != ERROR_NO_MORE_ITEMS ) && ( index < 70 ) );
+		while ( ( oid != 0 ) && ( error != ERROR_NO_MORE_ITEMS ) );
 	}
 
 	if ( hDb != INVALID_HANDLE_VALUE )
@@ -261,7 +266,7 @@ void BackupOneOrMoreDB( xmlNodePtr tree, DWORD type )
 int main( int argc, char *argv[] )
 {
 	xmlDocPtr doc;
-	char buffer[ 1024 ];
+	char buffer[ BUFSIZE ];
 	int dbtype = 0;
         int c=0;
 
