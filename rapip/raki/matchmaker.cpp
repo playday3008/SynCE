@@ -22,6 +22,7 @@
  ***************************************************************************/
 #include "matchmaker.h"
 #include "rapiwrapper.h"
+#include <klocale.h>
 #include <kdebug.h>
 
 MatchMaker::MatchMaker(QString pdaName)
@@ -45,7 +46,7 @@ bool MatchMaker::connect()
                 Ce::rapiUninit();
                 rraOk = false;
             } else {
-                kdDebug(2120) << "Matchmaker-Connect" << endl;
+                kdDebug(2120) << i18n("Matchmaker-Connect") << endl;
             }
         }
     }
@@ -65,7 +66,7 @@ bool MatchMaker::disconnect()
     }
 
     if(useCount == 0) {
-        kdDebug(2120) << "Matchmaker-Disconnect" << endl;
+        kdDebug(2120) << i18n("Matchmaker-Disconnect") << endl;
         rra_matchmaker_destroy(matchmaker);
         Ce::rapiUninit();
         matchmaker = NULL;
@@ -174,10 +175,9 @@ bool MatchMaker::partnerCreate(uint32_t *index)
 
     if (create_partnership(index)) {
         kdDebug(2120) <<
-                "Partnership creation succeeded. Using partnership index " <<
-                *index << endl;
+                i18n("Partnership creation succeeded. Using partnership index %1").arg(*index) << endl;
     } else {
-        kdDebug(2120) << "Partnership creation failed." << endl;
+        kdDebug(2120) << i18n("Partnership creation failed.") << endl;
         *index = 0;
         rraOk = false;
     }
@@ -192,14 +192,14 @@ bool MatchMaker::partnerReplace(int index)
 
     if (index == 1 || index == 2) {
         if (replace_partnership(index)) {
-            kdDebug(2120) << "Partnership replacement succeeded." << endl;
+            kdDebug(2120) << i18n("Partnership replacement succeeded.") << endl;
         } else {
-            kdDebug(2120) << "Partnership replacement failed." << endl;
+            kdDebug(2120) << i18n("Partnership replacement failed.") << endl;
             rraOk = false;
         }
     } else {
         kdDebug(2120) <<
-                "Invalid or missing index of partnership to replace." <<
+                i18n("Invalid or missing index of partnership to replace.") <<
                 endl;
         rraOk = false;
     }
@@ -234,5 +234,4 @@ bool MatchMaker::setCurrentPartner(uint32_t index)
 
 MatchMaker::~MatchMaker()
 {
-    disconnect();
 }

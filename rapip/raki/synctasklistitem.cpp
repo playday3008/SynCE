@@ -28,6 +28,7 @@
 #include "rra.h"
 
 #include <kprogress.h>
+#include <klocale.h>
 #include <kmessagebox.h>
 #include <kdebug.h>
 #include <qcursor.h>
@@ -186,7 +187,7 @@ QWidget *SyncTaskListItem::widget()
 QWidget *SyncTaskListItem::taskLabel()
 {
     taskLabelWidget = new QLabel(0, "TaskLabel");
-    taskLabelWidget->setText("Waiting...");
+    taskLabelWidget->setText(i18n("Waiting..."));
 
     return taskLabelWidget;
 }
@@ -231,7 +232,8 @@ void SyncTaskListItem::clickedMenu(int item)
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << "Select Name: " << service->name() + "; Library: " <<
+            kdDebug(2120) << i18n("Select Name:") << " " 
+            << service->name() + "; " << i18n("Library:") << " " <<
                     service->library() << endl;
             if (service->name() == itemMenu.text(item)) {
                 if (preferedOffer != service->name() ||
@@ -258,9 +260,9 @@ void SyncTaskListItem::openPopup()
     KTrader::OfferList::ConstIterator it;
 
     itemMenu.clear();
-    itemMenu.setCaption("Services for " + text());
+    itemMenu.setCaption(i18n("Services for") + " " + text());
 
-    itemMenu.insertTitle("Services for " + text());
+    itemMenu.insertTitle(i18n("Services for") + " " + text());
     itemMenu.setCheckable(true);
 
     itemMenu.setEnabled(true);
@@ -268,8 +270,9 @@ void SyncTaskListItem::openPopup()
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << "Open Name: " << service->name() + "; Library: " <<
-                    service->library() << endl;
+            kdDebug(2120) << i18n("Open Name:") << " " 
+              << service->name() << "; " << i18n("Library:") << " " 
+              << service->library() << endl;
             int item = itemMenu.insertItem(service->name());
             if (service->name() == preferedOfferTemp) {
                 itemMenu.setItemChecked(item, true);
@@ -322,11 +325,12 @@ int SyncTaskListItem::createSyncPlugin(bool state)
         }
 
         if (!library.isEmpty()) {
-            kdDebug(2120) << "Name: " << offer + "; Library: " << library << endl;
+            kdDebug(2120) << i18n("Name:") << " " << offer << "; "
+            << i18n("Library:") << " " << library << endl;
             KLibFactory *factory = KLibLoader::self()->factory(library.ascii());
             if (!factory) {
                 QString errorMessage = KLibLoader::self()->lastErrorMessage();
-                kdDebug(2120) << "There was an error: " << offer << errorMessage <<
+                kdDebug(2120) << i18n("There was an error:") << " " << offer << errorMessage <<
                     endl;
                 ret = ERROR_NOFACTORY;
             } else {
@@ -338,7 +342,7 @@ int SyncTaskListItem::createSyncPlugin(bool state)
                     syncPlugin->init(objectType, pdaName, this->listView(), offer);
                     syncFactory->callme(); // Fake call to link correct.
                 } else {
-                    kdDebug(2120) << "Library no Raki-Plugin" << endl;
+                    kdDebug(2120) << i18n("Library no Raki-Plugin") << endl;
                     ret = ERROR_WRONGLIBRARYTYPE;
                 }
             }
@@ -349,19 +353,19 @@ int SyncTaskListItem::createSyncPlugin(bool state)
 
     switch(ret) {
     case ERROR_NOSYNCHRONIZER:
-        KMessageBox::information(this->listView(), "<p>No Synchronizer found for <b>" +
+        KMessageBox::information(this->listView(), "<p>" + i18n("No Synchronizer found for") + " <b>" +
                 QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
     case ERROR_WRONGLIBRARYTYPE:
-        KMessageBox::error(this->listView(), "<p>Wrong library type for <b>" +
+        KMessageBox::error(this->listView(), "<p>" + i18n("Wrong library type for") +" <b>" +
                 QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
     case ERROR_NOFACTORY:
-        KMessageBox::error(this->listView(), "<p>Wrong library type for <b>" +
+        KMessageBox::error(this->listView(), "<p>" + i18n("Wrong library type for") + " <b>" +
                 QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
@@ -376,27 +380,31 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
 {
     bool ret = false;
 
-    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Started"));
-    postSyncThreadEvent(SyncThread::setTotalSteps, (void *) 1);
+    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup(i18n("Started").utf8()));
+    int *pSteps = new int;
+    *pSteps = 1;
+    postSyncThreadEvent(SyncThread::setTotalSteps, pSteps);
 
     if (syncPlugin != NULL) {
-        kdDebug(2120) << "Started syncing with " << syncPlugin->serviceName() << endl;
+        kdDebug(2120) << i18n("Started syncing with") << " " << syncPlugin->serviceName() << endl;
 
         ret = syncPlugin->doSync(syncThread, rra, this, firstSynchronization,
                 partnerId);
 
-        kdDebug(2120) << "Finished syncing with " << syncPlugin->serviceName() << endl;
-        postSyncThreadEvent(SyncThread::setProgress, totalSteps());
+        kdDebug(2120) << i18n("Finished syncing with") << " " << syncPlugin->serviceName() << endl;
+        int *pStep = new int;
+        *pStep = totalSteps();
+        postSyncThreadEvent(SyncThread::setProgress, pStep);
 
         if (ret) {
             lastSynchronized = QDateTime(QDate::currentDate(),
                     QTime::currentTime());
             firstSynchronization = false;
             postSyncThreadEvent(SyncThread::setTask,
-                    (void *) qstrdup("Finished"));
+                    (void *) qstrdup(i18n("Finished").utf8()));
         } else {
             postSyncThreadEvent(SyncThread::setTask, (void *)
-                    qstrdup("Error during synchronization"));
+                    qstrdup(i18n("Error during synchronization").utf8()));
         }
     }
 
@@ -406,21 +414,21 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
 }
 
 
-bool SyncTaskListItem::preSync(SyncThread *syncThread, Rra *rra)
+bool SyncTaskListItem::preSync(QWidget *parent, Rra *rra)
 {
     bool ret;
     
-    ret = syncPlugin->preSync(syncThread, rra, firstSynchronization, partnerId);
+    ret = syncPlugin->preSync(parent, rra, firstSynchronization, partnerId);
     
     return ret;
 }
 
 
-bool SyncTaskListItem::postSync(SyncThread *syncThread, Rra *rra)
+bool SyncTaskListItem::postSync(QWidget *parent, Rra *rra)
 {
     bool ret;
     
-    ret = syncPlugin->postSync(syncThread, rra, firstSynchronization, partnerId);
+    ret = syncPlugin->postSync(parent, rra, firstSynchronization, partnerId);
     
     return ret;
 }

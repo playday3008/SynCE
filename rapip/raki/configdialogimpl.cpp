@@ -35,6 +35,7 @@
 #include <kstandarddirs.h>
 #include <kmessagebox.h>
 #include <kurl.h>
+#include <klocale.h>
 #include <kdebug.h>
 
 #ifdef WITH_DMALLOC
@@ -76,9 +77,8 @@ void ConfigDialogImpl::copyResult(KIO::Job *job)
     KIO::FileCopyJob *fc = (KIO::FileCopyJob *) job;
     if (fc->error()) {
         KMessageBox::error(0,
-                "Could not copy a valid dccm.sh script.\nError was: " +
-                job->errorString() +
-                "\nPlease check your installation and start again!");
+                i18n("Could not copy a valid dccm.sh script.\n"
+                "Error was: %1\nPlease check your installation and start again!").arg(job->errorString()));
         emit configError();
     } else {
         KIO::SimpleJob *sj =  KIO::chmod(fc->destURL(), 0755);
@@ -96,7 +96,7 @@ void ConfigDialogImpl::checkRunningVersion()
 
     if (rakiVersion != VERSION) {
         WelcomeDialogImpl *welcomeDialog = new WelcomeDialogImpl(this,
-                "EelcomeDialog", true);
+                "WelcomeDialog", true);
         welcomeDialog->exec();
         if (welcomeDialog->result() == QDialog::Accepted) {
             if (welcomeDialog->getSelectedDccm() == WelcomeDialogImpl::VDCCM) {

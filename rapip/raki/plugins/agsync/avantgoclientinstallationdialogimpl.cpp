@@ -20,30 +20,29 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
-#include "icalsyncfactory.h"
-#include "icalsync.h"
+#include "avantgoclientinstallationdialogimpl.h"
+#include <qpushbutton.h>
+#include <kurlrequester.h>
 
-
-IcalSyncFactory::IcalSyncFactory(QObject *parent, const char *name)
-    : RakiSyncFactory(parent, name)
+AvantGoClientInstallationDialogImpl::AvantGoClientInstallationDialogImpl(QWidget *parent, const char *name)
+    :AvantGoClientInstallationDialog(parent, name)
 {
 }
 
-
-IcalSyncFactory::~IcalSyncFactory()
+void AvantGoClientInstallationDialogImpl::agceIntegratedClient_textChanged(const QString&)
 {
-}
-
-QObject *IcalSyncFactory::createObject (QObject *parent, const char *name,
-                const char *classname, const QStringList &args)
-{
-    return new IcalSync;
+    buttonInstall->setEnabled(true);
 }
 
 
-extern "C" {
-    void *init_librakiicalsync()
-    {
-        return new IcalSyncFactory();
-    }
-};
+#include "avantgoclientinstallationdialogimpl.moc"
+
+
+/*!
+    \fn AvantGoClientInstallationDialogImpl::agceClientPath()
+ */
+QString AvantGoClientInstallationDialogImpl::agceClientPath()
+{
+    /// @todo implement me
+    return agceIntegratedClient->url();
+}

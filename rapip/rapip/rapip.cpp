@@ -198,7 +198,7 @@ bool kio_rapipProtocol::list_matching_files(QString &path)
 
 void kio_rapipProtocol::get(const KURL& url)
 {
-    size_t bytes_read;
+    DWORD bytes_read;
     unsigned char buffer[ANYFILE_BUFFER_SIZE];
     QByteArray array;
     KIO::filesize_t processed_size = 0;
@@ -250,7 +250,7 @@ void kio_rapipProtocol::get(const KURL& url)
 void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, bool /* resume */)
 {
     int result;
-    size_t bytes_written;
+    DWORD bytes_written;
     QByteArray buffer;
     KMimeType::Ptr mt;
     QString qPath;

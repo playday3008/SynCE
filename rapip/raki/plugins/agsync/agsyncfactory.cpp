@@ -53,6 +53,6 @@ extern "C" {
     {
         return new AGSyncFactory();
     }
-};
+}
 
 #endif

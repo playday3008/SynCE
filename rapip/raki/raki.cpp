@@ -66,7 +66,7 @@ Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
     disconnectedIcon = Icon("raki_bw");
 
     rapiLeMenu = new KPopupMenu(0, "RakiMenu");
-    rapiLeMenu->setCaption("Connected Devices");
+    rapiLeMenu->setCaption(i18n("Connected Devices"));
     rapiLeMenu->clear();
 
     rapiLeMenu->insertTitle(SmallIcon("rapip"), i18n("Connected Devices"));
@@ -145,8 +145,7 @@ Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
 
     configDialog->checkRunningVersion();
 
-    KTipDialog::showTip(KApplication::kApplication()->dirs()->findResource(
-            "data", "raki/tips"));
+    KTipDialog::showTip(KApplication::kApplication()->dirs()->findResource("data", "raki/tips"));
 }
 
 
@@ -237,8 +236,7 @@ void Raki::initializePda()
         case 'R':
             pendingPdaList.remove(commandAndPda);
             if (pda) {
-                KMessageBox::error(this, i18n("Password for PDA \" %1 \" "
-                        "invalid. Password cleared!").arg(pda->getName()));
+                KMessageBox::error(this, i18n("Password for PDA \" %1 \" invalid!").arg(pda->getName()));
                 KAudioPlayer::play(configDialog->getPasswordRejectNotify());
                 pda->passwordInvalid();
                 pdaList.take(pdaName);
@@ -352,6 +350,12 @@ void Raki::pdaInitialized(PDA *pda, int initialized)
         }
         setConnectionStatus(true);
         pda->synchronize(false);
+    } else {
+        char buffer[100];
+        const char *pdaNamec = pda->getName();
+        
+        sprintf(buffer, "D%s", pdaNamec);
+        write(dccmConnection->socket(), buffer, strlen(buffer));
     }
 }
 
@@ -404,7 +408,7 @@ void Raki::dccmExited(KProcess */*oldDccm*/)
     if (dccmShouldRun) {
         if (!openDccmConnection()) {
             KMessageBox::error(this,
-                    i18n("Could not start dccm or dccm has exited.\n"
+                    i18n("Could not start dccm or dccm has exited.\n" 
                     "Maybe there is already a dccm running"));
         }
     }
@@ -432,8 +436,7 @@ void Raki::dccmStderr(KProcess *, char *buf, int len)
 void Raki::startDccm()
 {
     dccmProc.clearArguments();
-    dccmProc.setExecutable(configDialog->getDccmPath());
-    dccmProc << "-f" /* << "-d" << "3"*/;
+    dccmProc << configDialog->getDccmPath() << "-f" /* << "-d" << "3"*/;
 
     dccmShouldRun = true;
 
@@ -492,11 +495,10 @@ void Raki::setConnectionStatus(bool enable)
         actualIcon = &connectedIcon;
         QDictIterator<PDA> it(pdaList);
 
-        QString str = QString("<b><center><u>Devices</u></center></b>\n");
+        QString str = QString("<b><center><u>" + i18n("Devices") + "</u></center></b>\n");
 
         for (; it.current(); ++it ) {
-            str = str + "Name: <b>" + (*it)->getName() +
-                  "</b><br>";
+            str = str + i18n("Name:") + " <b>" + (*it)->getName() + "</b><br>";
         }
         QToolTip::add(this, str);
     } else {
@@ -593,13 +595,13 @@ void Raki::ipTablesExited(KProcess *ipTablesProc)
     if (ipTablesProc->normalExit()) {
         exitStatus = ipTablesProc->exitStatus();
         if (exitStatus != 0) {
-            KMessageBox::error(this, "Could not create masqueraded route",
+            KMessageBox::error(this, i18n("Could not create masqueraded route"),
                                "iptables", KMessageBox::Notify);
         } else {
-            kdDebug(2120) << "Masqueraded Route created" << endl;
+            kdDebug(2120) << i18n("Masqueraded route created") << endl;
         }
     } else {
-        KMessageBox::error(this, "iptables terminated due to a signal",
+        KMessageBox::error(this, i18n("iptables terminated due to a signal"),
                            "iptables", KMessageBox::Notify);
     }
     disconnect(ipTablesProc, SIGNAL(processExited (KProcess *)), this,
@@ -629,17 +631,15 @@ void Raki::stopMasquerading(PDA *pda)
 {
     if (pda->masqueradeStarted()) {
         ipTablesProc.clearArguments();
-        ipTablesProc.setExecutable("sudo");
 
-
-        ipTablesProc << "-u" << "root" << configDialog->getIpTables()
+        ipTablesProc << "sudo" << "-u" << "root" << configDialog->getIpTables()
         << "-t" << "nat" << "-D" << "POSTROUTING" << "-s"
         << pda->getDeviceIp() << "-d" << "0.0.0.0/0" << "-j" << "MASQUERADE";
 
         if (ipTablesProc.start(KProcess::NotifyOnExit, (KProcess::Communication)
                                (KProcess::Stdout | KProcess::Stderr))) {
         } else {
-            KMessageBox::error(this, "Could not start iptables", "iptables",
+            KMessageBox::error(this, i18n("Could not start iptables"), "iptables",
                                KMessageBox::Notify);
         }
     }
@@ -650,9 +650,8 @@ void Raki::startMasquerading(PDA *pda)
 {
     if (pda->isMasqueradeEnabled()) {
         ipTablesProc.clearArguments();
-        ipTablesProc.setExecutable("sudo");
 
-        ipTablesProc << "-u" << "root" << configDialog->getIpTables()
+        ipTablesProc << "sudo" << "-u" << "root" << configDialog->getIpTables()
         << "-t" << "nat" << "-A" << "POSTROUTING" << "-s"
         << pda->getDeviceIp() << "-d" << "0.0.0.0/0" << "-j" << "MASQUERADE";
 
@@ -660,7 +659,7 @@ void Raki::startMasquerading(PDA *pda)
                                (KProcess::Stdout | KProcess::Stderr))) {
             pda->setMasqueradeStarted();
         } else {
-            KMessageBox::error(this, "Could not start iptables", "iptables",
+            KMessageBox::error(this, i18n("Could not start iptables"), "iptables",
                                KMessageBox::Notify);
         }
     }
@@ -693,7 +692,7 @@ QString Raki::changeConnectionState(int state)
         if (newPda)
             pdaList.insert("active_connection", pda);
         KAudioPlayer::play(configDialog->getConnectNotify());
-        rapiLeMenu->insertItem(SmallIcon("pda_blue"), "Anonymous",
+        rapiLeMenu->insertItem(SmallIcon("pda_blue"), i18n("Anonymous"),
                                pda->getMenu());
         setConnectionStatus(true);
         break;
@@ -718,9 +717,9 @@ void Raki::dccmNotification(QString signal)
 
 static const char* const Raki_ftable[4][3] =
     {
-        { "void", "dccmNotification(QString)", "dccmNotification(QString)" },
-        { "void", "setConnectionStatus(int)", "setConnectionStatus(int)" },
-        { "void", "installCabFile(QString)", "installCabFile(QString)" },
+        {"void", "dccmNotification(QString)", "dccmNotification(QString)"},
+        {"void", "setConnectionStatus(int)", "setConnectionStatus(int)"},
+        {"void", "installCabFile(QString)", "installCabFile(QString)"},
         { 0, 0, 0 }
     };
 
@@ -783,10 +782,9 @@ void Raki::showAbout()
 }
 
 
-static const char *description = I18N_NOOP(
-    "Raki, a PocketPC-Management Tool");
+static const char *description = "Raki, a PocketPC-Management Tool";
 
-static const char *MITlicense = I18N_NOOP(
+static const char *MITlicense =
     "Copyright (c) 2003 Volker Christian\n"
     "\n"
     "Permission is hereby granted, free of charge, to\n"
@@ -811,7 +809,7 @@ static const char *MITlicense = I18N_NOOP(
     "ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN\n"
     "ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT\n"
     "OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\n"
-    "OTHER DEALINGS IN THE SOFTWARE.");
+    "OTHER DEALINGS IN THE SOFTWARE.";
 
 static KCmdLineOptions options[] =
     {
@@ -822,9 +820,11 @@ static KCmdLineOptions options[] =
 
 int main(int argc, char *argv[])
 {
+    KLocale::setMainCatalogue("synce-kde");
+    
     KAboutData aboutData("raki", I18N_NOOP("Raki"), VERSION, description,
             KAboutData::License_Custom,
-            "(c) 2003, Volker Christian (voc)", 0,
+            "(c) 2003, 2004, Volker Christian (voc)", 0,
             "http://synce.sourceforge.net/synce/kde/",
             "voc@users.sourceforge.net");
     aboutData.addAuthor("Volker Christian", 0, "voc@users.sourceforge.net");

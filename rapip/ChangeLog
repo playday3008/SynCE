@@ -1,11 +1,479 @@
+2004-08-28 21:50  voc
+
+	* Doxyfile: New Doxyfile
+
+2004-08-28 21:49  voc
+
+	* Makefile.am: Add orange.m4 to acinclude.m4
+
+2004-08-28 21:46  voc
+
+	* raki/plugins/agsync/: agsyncconfigimpl.cpp, agsyncconfigimpl.h:
+	  Then cancel button now really cancels
+
+2004-08-28 21:45  voc
+
+	* raki/plugins/agsync/clients/: .cvsignore, Makefile.am,
+	  smelter.rarm.CAB, smelter.rmips.CAB, smelter.rsh3.CAB: Remove the
+	  AvantGo client binaries ... i will ask sourceforge to remove them
+	  also from the filesystem.
+
+2004-08-28 21:43  voc
+
+	* raki/plugins/agsync/: agsync.cpp,
+	  avantgoclientinstallationdialog.ui,
+	  avantgoclientinstallationdialogimpl.cpp,
+	  avantgoclientinstallationdialogimpl.h: The AvantGo client isn't
+	  installed automatically anymore ... some code and a dialog added
+	  to support gui-based manual installation of the client.
+
+2004-08-28 21:42  voc
+
+	* raki/plugins/agsync/Makefile.am: Format change
+
+2004-08-28 21:41  voc
+
+	* raki/plugins/Makefile.am: KDE-Addressbook synchronizer removed
+	  ... will be replaced by Christians code
+
+2004-08-28 21:39  voc
+
+	* vdccm/vdccm.c: Disconnect mechanism added - vdccm is also changed
+	  accordingly
+
+2004-08-28 21:39  voc
+
+	* raki/workerthreadinterface.h: Syntax-logic change
+
+2004-08-28 21:37  voc
+
+	* raki/syncdialogimpl.cpp: Dialog now also accepts unseccessfull
+	  pre and post sync
+
+2004-08-28 21:36  voc
+
+	* raki/: rra.cpp, rra.h, wince_ids.cpp, wince_ids.h: Removed
+	  KAddress handling code ... goes into Christians plugin
+
+2004-08-28 21:35  voc
+
+	* raki/: rakiapi.cpp, rakiapi.h: Orange extraction mechanism added.
+
+2004-08-28 21:34  voc
+
+	* raki/raki.cpp: Disconnect mechanism added - vdccm is also changed
+	  accordingly
+
+2004-08-28 21:32  voc
+
+	* raki/pdaconfigdialogimpl.cpp: Ok button and Cancel button
+	  bahaviour changed. Now its more intuitive
+
+2004-08-28 21:32  voc
+
+	* raki/pdaconfigdialog.ui: Removed the "Apply" button
+
+2004-08-28 21:31  voc
+
+	* raki/: pda.cpp, pda.h: Totaly new partnership creation algorithm.
+	  Now it behave like expected
+
+2004-08-28 21:29  voc
+
+	* raki/matchmaker.cpp: disconnect() was called to often - fixed
+
+2004-08-28 21:28  voc
+
+	* raki/: Makefile.am, configure.in.in: Linking to liborange
+	  necessary to support extraction
+
+2004-08-28 21:27  voc
+
+	* raki/: dmalloc.cpp, return.h: Remove not necessary files
+
+2004-08-23 00:18  voc
+
+	* po/de.po: First version of the german translation is ready
+
+2004-08-23 00:17  voc
+
+	* po/fr.po: French translation update
+
+2004-08-23 00:16  voc
+
+	* raki/managerimpl.cpp, raki/matchmaker.cpp, po/synce-kde.pot: Fix
+	  i18n error (missing %1)
+
+2004-08-21 03:13  voc
+
+	* debian/rules: Compile fix
+
+2004-08-21 02:37  voc
+
+	* po/de.po, po/fr.po, po/raki.pot, po/synce-kde.pot,
+	  raki/interfaces/Makefile.am, raki/plugins/agsync/Makefile.am,
+	  raki/Makefile.am, raki/raki.cpp, rapip/Makefile.am: Preparation
+	  for translation
+
+2004-08-21 02:35  voc
+
+	* synce.m4.in: File-Layout update
+
+2004-08-21 02:33  voc
+
+	* admin/: Doxyfile.am, Doxyfile.global, Makefile.common,
+	  acinclude.m4.in, am_edit, conf.change.pl, config.guess,
+	  config.pl, config.sub, cvs-clean.pl, cvs.sh, debianrules,
+	  depcomp, detect-autoconf.sh, install-sh, libtool.m4.in,
+	  ltmain.sh: Update the admin files
+
+2004-08-21 02:32  voc
+
+	* admin/: bcheck.pl, dynamite.m4.in, nmcheck, oldinclude.m4.in,
+	  synce.m4.in, unshield.m4.in: File-Layout update
+
+2004-08-20 22:59  voc
+
+	* raki/rra.cpp: Make it compile with synce-libs version 0.9.0
+
+2004-08-17 22:12  voc
+
+	* raki/interfaces/rakisyncplugin.cpp: Preparation for translation
+
+2004-08-17 22:04  voc
+
+	* raki/plugins/agsync/: agsync.cpp, agsyncfactory.cpp: Preparation
+	  for translation
+
+2004-08-17 22:03  voc
+
+	* raki/: rakiworkerthread.cpp, rakiworkerthread.h, threadevent.cpp,
+	  threadevent.h, workerthreadinterface.cpp,
+	  workerthreadinterface.h: Fixed missused default arguments and
+	  some needless semicolons
+
+2004-08-17 21:57  voc
+
+	* raki/raki.cpp: Preparation for translation
+
+2004-08-17 21:54  voc
+
+	* Makefile.am: Link also against libdynamite and libunshield
+
+2004-08-13 00:13  voc
+
+	* raki/interfaces/: rakisyncplugin.cpp, rakisyncplugin.h: Changed
+	  the api of the pre and post sync mechanism
+
+2004-08-13 00:11  voc
+
+	* raki/plugins/agsync/: agsync.cpp, agsync.h, agsyncconfigimpl.cpp:
+	  Fix the "not visible" message box
+
+2004-08-13 00:09  voc
+
+	* raki/: configdialogimpl.cpp, configure.in.in, managerimpl.cpp,
+	  managerimpl.h, matchmaker.cpp, pda.cpp, pda.h,
+	  pdaconfigdialogimpl.cpp, raki.cpp,
+	  removepartnershipdialogimpl.cpp, rra.cpp, syncdialogimpl.cpp,
+	  synctasklistitem.cpp, synctasklistitem.h, wince_ids.cpp: Prepare
+	  SynCE-KDE for translation
+
+2004-07-27 20:58  voc
+
+	* raki/plugins/agsync/clients/: smelter.rarm.CAB,
+	  smelter.rmips.CAB, smelter.rsh3.CAB: Readd files
+
+2004-07-27 20:55  voc
+
+	* raki/plugins/agsync/clients/: smelter.rarm.CAB,
+	  smelter.rmips.CAB, smelter.rsh3.CAB: Remove binaries and readd it
+	  to change permissions
+
+2004-06-10 23:03  voc
+
+	* synce.m4.in, raki/Makefile.am, raki/plugins/agsync/Makefile.am,
+	  rapip/Makefile.am, vdccm/Makefile.am: Fixed some small compile
+	  problems
+
+2004-05-06 01:33  voc
+
+	* synce-kde.kdevelop, admin/libtool.m4.in, admin/ltmain.sh,
+	  debian/rules, raki/Makefile.am: Update to support also ARM
+
+2004-03-31 19:15  voc
+
+	* raki/: pda.cpp, pda.h, rra.cpp, rra.h, synctasklistitem.cpp,
+	  syncthread.cpp, threadevent.cpp, workerthreadinterface.cpp,
+	  interfaces/rakisyncplugin.cpp: 64Bit compile warnings fixed
+	  (again)!
+
+2004-03-31 19:13  voc
+
+	* configure.in.in: Version number update
+
+2004-03-31 19:13  voc
+
+	* admin/: config.guess, config.sub, ltmain.sh: Libtool update. It
+	  now supports the arm-architecture also.
+
+2004-03-24 18:59  voc
+
+	* raki/pdaconfigdialogimpl.cpp: Fixed a bug if the user
+	  "right-clicks" into the synchronizer-list
+
+2004-03-22 20:38  voc
+
+	* configure.in.in: New release number
+
+2004-03-22 20:35  voc
+
+	* rapip/rapip.cpp: Fixed a 64-Bit compiling problem
+
+2004-03-06 12:40  voc
+
+	* configure.in.in, synce.m4.in, raki/Makefile.am,
+	  raki/plugins/agsync/Makefile.am, rapip/Makefile.am,
+	  vdccm/Makefile.am: Fixing synce-include paths compile problem
+
+2004-02-12 22:14  voc
+
+	* raki/.cvsignore, raki/interfaces/.cvsignore,
+	  raki/plugins/agsync/.cvsignore, rapip/.cvsignore: Update of the
+	  .cvsignore files
+
+2004-02-12 22:08  voc
+
+	* synce-kde-0.7-1.SuSE.spec, synce-kde-0.7-1.spec: Added  spec
+	  files
+
+2004-02-12 21:57  voc
+
+	* Makefile.am, synce.m4.in, raki/Makefile.am, raki/configure.in.in,
+	  raki/installer.cpp, raki/pda.cpp, raki/pdaconfigdialogimpl.h,
+	  raki/raki.cpp, raki/rra.cpp, raki/rra.h, raki/welcomedialog.ui,
+	  raki/wince_ids.cpp, raki/wince_ids.h, raki/plugins/Makefile.am,
+	  rapip/Makefile.am, vdccm/Makefile.am, vdccm/configure.in.in,
+	  vdccm/vdccm.c: KDE-3.1.x -> KDE-3.2 migration changes
+
+2004-02-12 21:55  voc
+
+	* Makefile.am, configure.in.in, synce-kde.kdevelop, synce.m4.in,
+	  raki/Makefile.am, raki/configure.in.in,
+	  raki/pdaconfigdialogimpl.h, rapip/Makefile.am, vdccm/Makefile.am,
+	  vdccm/configure.in.in, vdccm/vdccm.c: Update
+
+2004-02-11 01:47  voc
+
+	* raki/: pda.h: Include bug fixed
+
+2004-02-10 21:30  voc
+
+	* configure.in.in, synce-kde.kdevelop, vdccm/vdccm.c: Prepareing
+	  version 0.7
+
+2004-02-10 02:18  voc
+
+	* raki/: pdaconfigdialog.ui, pdaconfigdialog.ui.h,
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h: Polish the Gui
+
+2004-02-09 22:47  voc
+
+	* raki/: rakiapi.cpp, rakiapi.h: Added a api-collection class
+
+2004-02-09 22:45  voc
+
+	* raki/: Makefile.am, pdaconfigdialog.ui, pdaconfigdialog.ui.h,
+	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h,
+	  synctasklistitem.cpp, interfaces/rakisyncplugin.cpp,
+	  plugins/agsync/agsyncconfig.ui: The configure-dialog is now more
+	  intuitiv
+
+2004-02-08 20:54  voc
+
+	* raki/interfaces/: rakisyncplugin.cpp, rakisyncplugin.h: Added an
+	  install wrapper
+
+2004-02-08 20:54  voc
+
+	* raki/interfaces/Makefile.am: Splitting the configure.in checks
+	  into subpackage relevant parts
+
+2004-02-08 20:53  voc
+
+	* rapip/Makefile.am, vdccm/Makefile.am, vdccm/configure.in.in:
+	  Moved the "Configure" Button to a more intuitive position.
+
+2004-02-08 20:52  voc
+
+	* raki/plugins/agsync/: Makefile.am, agsync.cpp, agsync.h,
+	  agsyncconfig.ui, agsyncconfigimpl.cpp, agsyncconfigimpl.h: [no
+	  log message]
+
+2004-02-08 20:51  voc
+
+	* raki/plugins/agsync/clients/: .cvsignore, Makefile.am: The
+	  AvantGo client now gets installed automatically on "first sync".
+
+2004-02-08 20:48  voc
+
+	* raki/: pda.cpp, pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h:
+	  Remove a old pda-configure file if a new pda-partnership was
+	  created with the same name as an old one.
+
+2004-02-08 20:46  voc
+
+	* raki/: installer.cpp, installer.h: Added a static install methode
+	  to easy install files on known pdas
+
+2004-02-08 02:53  voc
+
+	* raki/pdaconfigdialog.ui: Moved the "Configure" Button to a more
+	  intuitive position.
+
+2004-02-08 02:52  voc
+
+	* configure.in.in, raki/Makefile.am, raki/configure.in.in:
+	  Splitting the configure.in checks into subpackage relevant parts
+
+2004-02-08 02:50  voc
+
+	* raki/plugins/agsync/: Makefile.am, agsync.cpp, agsyncconfig.ui,
+	  agsyncconfig.ui.h, agsyncconfigimpl.cpp, agsyncconfigimpl.h,
+	  serverconfig.ui, serverconfig.ui.h, serverconfigimpl.cpp,
+	  serverconfigimpl.h: New feature: The avantgo server/account
+	  settings could now be managed directly on the desktop. New server
+	  and accounts could now be easily defined. Necessary for devices
+	  which didn't have the avantgo client installed.
+
+2004-02-08 02:44  voc
+
+	* raki/plugins/agsync/clients/: smelter.rarm.CAB,
+	  smelter.rmips.CAB, smelter.rsh3.CAB: Added the AvantGo clients.
+
+2004-02-08 02:40  voc
+
+	* raki/plugins/agsync/configure.in.in: Splitting of the
+	  configure.in.in checks into subpackage relevant parts
+
+2004-02-08 02:39  voc
+
+	* debian/rules: Removed the debug-symbol check
+
+2004-01-22 00:31  voc
+
+	* configure.in.in, raki/matchmaker.cpp,
+	  raki/pdaconfigdialogimpl.cpp, raki/pdaconfigdialogimpl.h,
+	  raki/rra.cpp, raki/syncdialogimpl.cpp, raki/syncdialogimpl.h,
+	  raki/synctasklistitem.cpp, raki/synctasklistitem.h,
+	  raki/welcomedialogimpl.cpp, raki/interfaces/rakisyncplugin.cpp,
+	  raki/interfaces/rakisyncplugin.h: Update to compile under
+	  pre-kde-3.2
+
+2004-01-22 00:30  voc
+
+	* vdccm/network_lib.c: Fixed  a mem-leak
+
+2004-01-18 21:25  voc
+
+	* raki/: matchmaker.cpp, matchmaker.h: Made raki compatible with
+	  the upcoming synce-0.9.
+
+2004-01-18 21:21  voc
+
+	* ChangeLog, configure.in.in, synce-kde.kdevelop, raki/Makefile.am,
+	  raki/pda.cpp, raki/pda.h, raki/pdaconfigdialogimpl.cpp,
+	  raki/pdaconfigdialogimpl.h, raki/raki.cpp, raki/raki.h,
+	  raki/rra.cpp, raki/rra.h, raki/synctasklistitem.cpp,
+	  raki/synctasklistitem.h, raki/vdccm.sh,
+	  raki/interfaces/rakisyncplugin.cpp,
+	  raki/interfaces/rakisyncplugin.h,
+	  raki/plugins/agsync/rakiagsync.desktop: Made raki compatible with
+	  the upcoming synce-0.9.
+
+2003-12-15 00:11  voc
+
+	* raki/pda.cpp: Changed the name of the call to pdamirror to
+	  kcemirror
+
+2003-12-10 02:12  voc
+
+	* configure.in.in, synce-kde.kdevelop: Added a check for a valid
+	  libical
+
+2003-12-08 21:28  voc
+
+	* raki/rra.cpp: [no log message]
+
+2003-12-08 21:26  voc
+
+	* raki/: rra.cpp, wince_ids.cpp, wince_ids.h: Backport to compile
+	  with an "old" libical
+
+2003-12-03 20:33  voc
+
+	* raki/rra.cpp: Be conform with the synce interface
+
+2003-11-25 02:06  voc
+
+	* raki/pda.cpp: Changed tht call to pdamirror acording to the new
+	  commandline
+
+2003-11-17 23:29  voc
+
+	* raki/: pda.cpp, pda.h: Added a menu item "Run pdamirror"
+
+2003-11-13 02:36  voc
+
+	* synce-kde.kdevelop: Added initial version of the pdamirror, a VNC
+	  like tool to control the PDA from the desktop pc with the mouse
+	  and with the keyboard.  It consists out of two parts	      1.
+	  screensnap, the server program for the pda (takes continually
+	  screenshots and sends them to the desktop and receives mouse and
+	  key-events from the desktop and synthetizes them on the PDA.
+	      2. The desktop control programm which shows the PDA screen
+	  and receives mouse and keyboard input and sends them to the PDA.
+
+	  A fast compression algorithm is used to compress the screenshots.
+	  ( XOR and RLE).  State: Working
+
+2003-11-13 02:25  voc
+
+	* raki/: rra.cpp, wince_ids.cpp, wince_ids.h,
+	  interfaces/Makefile.am: Added some ical-functionality
+
+2003-11-13 02:23  voc
+
+	* raki/Makefile.am: [no log message]
+
+2003-11-13 02:22  voc
+
+	* raki/plugins/agsync/Makefile.am: Not installed headers now
+	  correctly in noinst_HEADERS
+
+2003-10-26 23:18  voc
+
+	* raki/: rra.cpp, rra.h, wince_ids.cpp, wince_ids.h,
+	  plugins/Makefile.am: Start implementing eventsynchronization
+
+2003-10-26 23:16  voc
+
+	* raki/managerimpl.cpp: Fixed a bug where a "not installed"
+	  registry value prevents the softwaremanager from displaying all
+	  further installed software
+
+2003-10-26 23:14  voc
+
+	* raki/Makefile.am: Removed some unecessary libraries
+
+2003-10-24 23:17  voc
+
+	* raki/plugins/agsync/: agsyncconfig.cpp, agsyncconfig.h: This
+	  files are autogenerated
+
 2003-10-24 23:11  voc
 
 	* Doxyfile: [no log message]
-
-2003-10-24 23:08  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h: Code
-	  cleaning
 
 2003-10-24 23:08  voc
 
@@ -114,15 +582,8 @@
 	* raki/: Makefile.am, installer.cpp, pda.cpp, pda.h,
 	  pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h, raki.cpp, raki.h,
 	  rakiworkerthread.cpp, rakiworkerthread.h, syncdialogimpl.cpp,
-	  syncdialogimpl.h, synctasklistitem.cpp, synctasklistitem.h,
-	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Code
+	  syncdialogimpl.h, synctasklistitem.cpp, synctasklistitem.h: Code
 	  rearrangement.
-
-2003-10-08 23:28  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Make the
-	  kde addressbook synchronizer at least compile with KDE-3.1.90
-	  (cvs). Be aware, it didn't work just now1
 
 2003-10-05 22:30  voc
 
@@ -195,10 +656,9 @@
 
 2003-09-25 02:21  voc
 
-	* raki/: plugins/agsync/agsync.cpp,
-	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
-	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h:
-	  Support of the new stopping mechanism
+	* raki/: plugins/agsync/agsync.cpp, interfaces/rakisyncplugin.cpp,
+	  interfaces/rakisyncplugin.h: Support of the new stopping
+	  mechanism
 
 2003-09-25 02:20  voc
 
@@ -278,8 +738,7 @@
 2003-09-19 23:44  voc
 
 	* .cvsignore, synce-kde.kdevelop, po/.cvsignore, raki/.cvsignore,
-	  raki/plugins/agsync/.cvsignore,
-	  raki/plugins/kdeaddressbooksync/.cvsignore: .cvsignore updated
+	  raki/plugins/agsync/.cvsignore: .cvsignore updated
 
 2003-09-19 23:38  voc
 
@@ -345,8 +804,7 @@
 	* raki/: pda.cpp, pdaconfigdialogimpl.cpp, pdaconfigdialogimpl.h,
 	  syncdialogimpl.cpp, syncdialogimpl.h, synctasklistitem.cpp,
 	  synctasklistitem.h, syncthread.cpp,
-	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h,
-	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Added
+	  interfaces/rakisyncplugin.cpp, interfaces/rakisyncplugin.h: Added
 	  timestamps for partnership creation and synchronization per types
 	  and pda.  Used this timestamps to extract first-synchronization
 	  information.	Synchronizer are tolled about a first
@@ -392,11 +850,6 @@
 
 	* debian/changelog: New version number
 
-2003-09-12 11:02  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Forgot to
-	  check in this update yesterday
-
 2003-09-12 00:02  voc
 
 	* raki/: pdaconfigdialogimpl.cpp, raki.cpp, raki.h, rra.cpp, rra.h:
@@ -434,8 +887,8 @@
 	* raki/: installer.cpp, removepartnershipdialogimpl.cpp,
 	  syncthread.cpp, syncthread.h, threadevent.h,
 	  welcomedialogimpl.cpp, welcomedialogimpl.h, wince_ids.cpp,
-	  workerthreadinterface.cpp, interfaces/rakisyncplugin.cpp,
-	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Code cleaning
+	  workerthreadinterface.cpp, interfaces/rakisyncplugin.cpp: Code
+	  cleaning
 
 2003-09-08 23:28  voc
 
@@ -608,11 +1061,6 @@
 
 	* configure.in.in: Changed the project name
 
-2003-07-30 21:00  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp:
-	  StdAddressBook is closed after synchronization is finished.
-
 2003-07-27 20:54  voc
 
 	* Doxyfile, rapip.kdevelop, doc/en/index.docbook,
@@ -620,13 +1068,8 @@
 	  raki/pda.h, raki/raki.cpp, raki/raki.h, raki/syncdialogimpl.cpp,
 	  raki/synctasklistitem.cpp, raki/synctasklistitem.h,
 	  raki/interfaces/rakisyncfactory.cpp,
-	  raki/interfaces/rakisyncfactory.h,
-	  raki/plugins/kdeaddressbooksync/Makefile.am,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp,
-	  rapip/rapip.cpp: Initial update to run under pre KDE_3_2-cvs and
-	  QT-3.2
+	  raki/interfaces/rakisyncfactory.h, rapip/rapip.cpp: Initial
+	  update to run under pre KDE_3_2-cvs and QT-3.2
 
 2003-07-27 18:10  voc
 
@@ -656,10 +1099,9 @@
 	* raki/: pda.cpp, pda.h, pdaconfigdialogimpl.cpp,
 	  pdaconfigdialogimpl.h, raki.cpp, synctasklistitem.cpp,
 	  synctasklistitem.h, interfaces/rakisyncplugin.cpp,
-	  interfaces/rakisyncplugin.h,
-	  plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Synchronizeing
-	  is not prohibited if the pda connects as a guest.  Partnership-ID
-	  is used as marker in the kdeaddressbook instead of the pda-name.
+	  interfaces/rakisyncplugin.h: Synchronizeing is not prohibited if
+	  the pda connects as a guest.	Partnership-ID is used as marker in
+	  the kdeaddressbook instead of the pda-name.
 
 2003-06-26 01:27  voc
 
@@ -718,25 +1160,18 @@
 	  raki/plugins/agsync/agsyncfactory.h,
 	  raki/plugins/agsync/rakiagsync.desktop,
 	  raki/plugins/agsync/syncstream.cpp,
-	  raki/plugins/agsync/syncstream.h,
-	  raki/plugins/kdeaddressbooksync/.cvsignore,
-	  raki/plugins/kdeaddressbooksync/Makefile.am,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksync.h,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.cpp,
-	  raki/plugins/kdeaddressbooksync/kdeaddressbooksyncfactory.h,
-	  raki/plugins/kdeaddressbooksync/rakikdeaddressbooksync.desktop,
-	  rapip/.cvsignore, rapip/rapip.cpp, rapip/rapip.h,
-	  sounds/.cvsignore, sounds/Infbeg.wav, sounds/Infend.wav,
-	  sounds/Makefile.am, templates/cpp, templates/h, vdccm/.cvsignore,
-	  vdccm/Makefile.am, vdccm/client.c, vdccm/daemon.c,
-	  vdccm/list_lib.c, vdccm/list_lib.h, vdccm/network_lib.c,
-	  vdccm/network_lib.h, vdccm/select_lib.c, vdccm/select_lib.h,
-	  vdccm/timer_lib.c, vdccm/timer_lib.h, vdccm/vdccm.c: Merged the
-	  MULTIPLE_DEVICES branch back into HEAD.  From now on, the
-	  MULTIPLE_DEVICES branch is not used anymord.	You probably will
-	  not see any more CVS-messages because the diffs will be to pig to
-	  be propagated to the CVS-mailing list.
+	  raki/plugins/agsync/syncstream.h, rapip/.cvsignore,
+	  rapip/rapip.cpp, rapip/rapip.h, sounds/.cvsignore,
+	  sounds/Infbeg.wav, sounds/Infend.wav, sounds/Makefile.am,
+	  templates/cpp, templates/h, vdccm/.cvsignore, vdccm/Makefile.am,
+	  vdccm/client.c, vdccm/daemon.c, vdccm/list_lib.c,
+	  vdccm/list_lib.h, vdccm/network_lib.c, vdccm/network_lib.h,
+	  vdccm/select_lib.c, vdccm/select_lib.h, vdccm/timer_lib.c,
+	  vdccm/timer_lib.h, vdccm/vdccm.c: Merged the MULTIPLE_DEVICES
+	  branch back into HEAD.  From now on, the MULTIPLE_DEVICES branch
+	  is not used anymord.	You probably will not see any more
+	  CVS-messages because the diffs will be to pig to be propagated to
+	  the CVS-mailing list.
 
 2003-06-24 22:07  voc
 
@@ -807,11 +1242,6 @@
 2003-06-12 03:07  voc
 
 	* configure.in.in: Package name change to synce-rapip
-
-2003-06-11 16:01  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Made
-	  completely independend from object-id macros.
 
 2003-06-11 16:01  voc
 
@@ -905,12 +1335,6 @@
 2003-06-03 16:16  voc
 
 	* raki/raki.cpp: Changed a "Thanks note"
-
-2003-06-03 01:45  voc
-
-	* raki/plugins/kdeaddressbooksync/kdeaddressbooksync.cpp: Bug fixed
-	  if a contact is changed on one pda and propagated to an other
-	  pda.
 
 2003-06-03 01:43  voc
 
@@ -1102,11 +1526,8 @@
 
 2003-05-24 23:23  voc
 
-	* raki/plugins/: agsync/agsync.cpp, agsync/agsync.h,
-	  agsync/agsyncfactory.cpp, agsync/agsyncfactory.h,
-	  kdeaddressbooksync/kdeaddressbooksync.cpp,
-	  kdeaddressbooksync/kdeaddressbooksync.h,
-	  kdeaddressbooksync/kdeaddressbooksyncfactory.h: Cleanup
+	* raki/plugins/agsync/: agsync.cpp, agsync.h, agsyncfactory.cpp,
+	  agsyncfactory.h: Cleanup
 
 2003-05-24 23:22  voc
 
@@ -1171,9 +1592,8 @@
 2003-05-22 02:33  voc
 
 	* sounds/Makefile.in, raki/plugins/Makefile.in,
-	  raki/plugins/agsync/Makefile.in,
-	  raki/plugins/kdeaddressbooksync/Makefile.in,
-	  raki/interfaces/Makefile.in: Removed not neccessary files
+	  raki/plugins/agsync/Makefile.in, raki/interfaces/Makefile.in:
+	  Removed not neccessary files
 
 2003-05-22 02:30  voc
 
@@ -1223,14 +1643,6 @@
 2003-05-21 00:39  voc
 
 	* vdccm/Makefile.in: [no log message]
-
-2003-05-21 00:38  voc
-
-	* raki/plugins/kdeaddressbooksync/: Makefile.am, Makefile.in,
-	  kdeaddressbooksync.cpp, kdeaddressbooksync.h,
-	  kdeaddressbooksyncfactory.cpp, kdeaddressbooksyncfactory.h,
-	  rakikdeaddressbooksync.desktop: Added the "KDE-Addressbook
-	  Synchronizer" plugin
 
 2003-05-21 00:37  voc
 
@@ -1317,9 +1729,8 @@
 2003-05-20 23:56  voc
 
 	* raki/plugins/.cvsignore, raki/plugins/agsync/.cvsignore,
-	  raki/plugins/kdeaddressbooksync/.cvsignore, sounds/.cvsignore,
-	  vdccm/.cvsignore, raki/interfaces/.cvsignore: Added .cvsignore
-	  files
+	  sounds/.cvsignore, vdccm/.cvsignore, raki/interfaces/.cvsignore:
+	  Added .cvsignore files
 
 2003-05-12 20:03  voc
 

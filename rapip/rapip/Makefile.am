@@ -1,4 +1,4 @@
-INCLUDES = $(SYNCE_INCLUDES) $(RAPI_INCLUDES) $(all_includes)
+INCLUDES = $(RAPI_INCLUDES) $(all_includes)
 
 kde_module_LTLIBRARIES = kio_rapip.la
 
@@ -10,4 +10,4 @@ protocol_DATA = rapip.protocol
 protocoldir = $(kde_servicesdir)
 
 messages: rc.cpp
-	$(XGETTEXT) *.cpp -o $(podir)/kio_rapip.pot
+	$(XGETTEXT) -j *.cpp -o $(podir)/synce-kde.pot

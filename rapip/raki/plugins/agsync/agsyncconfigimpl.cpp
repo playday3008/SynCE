@@ -30,13 +30,13 @@
 #include <klineedit.h>
 #include <kdebug.h>
 #include <AGBase64.h>
-#include <kmessagebox.h>
 
 AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const char* name, bool modal, WFlags fl)
         : AGSyncConfig(parent, name, modal, fl)
 {
     this->ksConfig = ksConfig;
     userConfig = AGUserConfigNew();
+    AGUserConfigInit(userConfig);
     serverList->setColumnWidthMode(0, QListView::Manual);
     serverList->setColumnWidthMode(1, QListView::Manual);
     serverList->setFullWidth(true);
@@ -45,7 +45,7 @@ AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const cha
             SLOT(newServer(QString, int, QString, QString)));
     connect(serverConfigDialog, SIGNAL(modifiedServer(QString, int, QString, QString)), this, 
             SLOT(modifiedServer(QString, int, QString, QString)));
-    connect(serverConfigDialog, SIGNAL(cancelClicked()), this, SLOT(serverDialogCancel()));   
+    connect(serverConfigDialog, SIGNAL(cancelClicked()), this, SLOT(serverDialogCancel()));
     readConfig();
     readServerList();
 }
@@ -62,14 +62,20 @@ AGSyncConfigImpl::~AGSyncConfigImpl()
 
 void AGSyncConfigImpl::contentChanged()
 {
-    buttonOk->setEnabled(true);
+    buttonCancel->setEnabled(true);
 }
 
 
 void AGSyncConfigImpl::reject()
 {
-    QDialog::reject();
+    QDialog::reject();    
+    
+    AGUserConfigFree(userConfig);
+    userConfig = AGUserConfigNew();
+    AGUserConfigInit(userConfig);
+    
     readConfig();
+    readServerList();
 }
 
 
@@ -139,7 +145,6 @@ void AGSyncConfigImpl::newServer(QString hostName, int port, QString userName, Q
     serverConfig->resetCookie = true;
     serverConfig->notRemovable = false;
     updateServerList();
-    writeServerList();
     contentChanged();
 }
 
@@ -157,7 +162,6 @@ void AGSyncConfigImpl::modifiedServer(QString hostName, int port, QString userNa
             currentItem->serverConfig, (char *)passWord.ascii());
     currentItem->serverConfig->disabled = !currentItem->isOn();
     serverList->update();
-    writeServerList();
     contentChanged();
 }
 
@@ -203,7 +207,7 @@ void AGSyncConfigImpl::readConfig()
     useAuthentication->setChecked(ksConfig->readBoolEntry("UseAuthentication"));
     installClientCheckbox->setChecked(
             ksConfig->readBoolEntry("InstallAGClient", true));
-    buttonOk->setEnabled(false);
+    buttonCancel->setEnabled(false);
 }
 
 
@@ -263,12 +267,6 @@ void AGSyncConfigImpl::resetInstallClient()
 {
     installClientCheckbox->setChecked(false);
     accept();
-    KMessageBox::information(this, 
-        "The AvantGo Client has been installed on your device.\n" \
-        "Please finish the installation on the device but do not " \
-        "restart it until the first synchronization has finished!\n" \
-        "Press <OK> to start syncing your AvantGo channels",
-        "AvantGo Client installed");
 }
 
 
@@ -291,7 +289,6 @@ void AGSyncConfigImpl::setUserConfig(AGUserConfig *userConfig)
     AGUserConfigFree(agreedConfig);
     agreedConfig = AGUserConfigDup(userConfig);
     updateServerList();
-    writeServerList();
 }
 
 
@@ -349,7 +346,6 @@ bool AGSyncConfigImpl::getUseAuthentication()
 
 
 void AGSyncConfigImpl::show()
-{
-    readConfig();
+{   
     AGSyncConfig::show();
 }

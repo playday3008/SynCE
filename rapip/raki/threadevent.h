@@ -43,7 +43,7 @@ class ThreadEvent : public QCustomEvent
 {
 public:
     ThreadEvent(WorkerThreadInterface *wti,
-            void *(WorkerThreadInterface::*userEventMethode)(void *data = 0),
+            void *(WorkerThreadInterface::*userEventMethode)(void *data),
             void *data);
     void *(WorkerThreadInterface::*userEventMethode)(void *data = 0);
     WorkerThreadInterface *wti;

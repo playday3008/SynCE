@@ -30,7 +30,7 @@
 
 
 ThreadEvent::ThreadEvent(WorkerThreadInterface *wti,
-        void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL),
+        void *(WorkerThreadInterface::*userEventMethode)(void *data),
         void *data) : QCustomEvent(QEvent::User)
 {
     this->wti = wti;
@@ -66,7 +66,8 @@ void ThreadEventObject::wakeUpOnEvent()
 void ThreadEventObject::customEvent (QCustomEvent *qCustomEvent)
 {
     ThreadEvent *customEvent = (ThreadEvent *) qCustomEvent;
-    switch ((int) customEvent->data()) {
+    int *blocking = (int *) customEvent->data();
+    switch (*blocking) {
     case WorkerThreadInterface::noBlock:
         customEvent->wti->setEventReturnValue((
                 customEvent->wti->*customEvent->userEventMethode)(
@@ -86,4 +87,5 @@ void ThreadEventObject::customEvent (QCustomEvent *qCustomEvent)
         this->wakeUpOnEvent();
         break;
     }
+    delete blocking;
 }

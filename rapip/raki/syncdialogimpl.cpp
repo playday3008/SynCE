@@ -27,6 +27,7 @@
 #include "pdaconfigdialogimpl.h"
 
 #include <kdebug.h>
+#include <klocale.h>
 #include <qpushbutton.h>
 #include <qtable.h>
 #include <qptrdict.h>
@@ -121,19 +122,32 @@ void *SyncDialogImpl::finishedSynchronization()
 }
 
 
-void *SyncDialogImpl::preSync(void *v_item)
+struct SyncDialogImplDataExchange {
+    SyncTaskListItem *item;
+    bool success;
+};
+
+
+
+void *SyncDialogImpl::preSync(void *v_dataExchange)
 {
-    SyncTaskListItem *item = (SyncTaskListItem *) v_item;
-    item->preSync(this, rra);
+    SyncDialogImplDataExchange *dataExchange = (SyncDialogImplDataExchange *) v_dataExchange;
+    
+    if (!dataExchange->item->preSync(this, rra)) {
+        dataExchange->success = false;
+    }
     
     return NULL;
 }
 
 
-void *SyncDialogImpl::postSync(void *v_item)
+void *SyncDialogImpl::postSync(void *v_dataExchange)
 {
-    SyncTaskListItem *item = (SyncTaskListItem *) v_item;
-    item->postSync(this, rra);
+    SyncDialogImplDataExchange *dataExchange = (SyncDialogImplDataExchange *) v_dataExchange;
+    
+    if (!dataExchange->item->postSync(this, rra)) {
+        dataExchange->success = false;
+    }
     
     return NULL;
 }
@@ -141,20 +155,31 @@ void *SyncDialogImpl::postSync(void *v_item)
 
 void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
 {
-    SyncTaskListItem *item;
+    SyncDialogImplDataExchange dataExchange;
 
     buttonOk->setDisabled(true);
 
-    for (item = syncItems.first(); item; item = syncItems.next()) {
+    for (dataExchange.item = syncItems.first(); dataExchange.item; dataExchange.item = syncItems.next()) {
         if (running()) {
-            if (item->isOn()) {
-                setActualSyncItem(item);
-                kdDebug(2120) << "before pre" << endl;
-                postThreadEvent(&SyncDialogImpl::preSync, (void *) item, block);
-                kdDebug(2120) << "before sync" << endl;
-                item->synchronize(this, rra);
-                kdDebug(2120) << "before post" << endl;
-                postThreadEvent(&SyncDialogImpl::postSync, (void *) item, block);
+            if (dataExchange.item->isOn()) {
+                dataExchange.success = true;
+                setActualSyncItem(dataExchange.item);
+                postThreadEvent(&SyncDialogImpl::preSync, (void *) &dataExchange, block);
+                if (dataExchange.success) {
+                    dataExchange.item->synchronize(this, rra);
+                    postThreadEvent(&SyncDialogImpl::postSync, (void *) &dataExchange, block);
+                    if (!dataExchange.success) {
+                        dataExchange.item->setTaskLabel("Synchronization not possible");
+                        dataExchange.item->setProgress(dataExchange.item->totalSteps());
+                        dataExchange.item->setOn(false);
+                        dataExchange.item->makePersistent();
+                    }   
+                } else {
+                    dataExchange.item->setTaskLabel("Synchronization not possible");
+                    dataExchange.item->setProgress(dataExchange.item->totalSteps());
+                    dataExchange.item->setOn(false);
+                    dataExchange.item->makePersistent();
+                }
             }
         }
     }

@@ -55,8 +55,8 @@ public:
 
     bool doSync(SyncThread *syncThread, Rra *rra,
             SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId);
-    virtual bool preSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
-    virtual bool postSync(SyncThread *syncThread, Rra *rra, bool firstSynchronize, uint32_t partnerId);
+    virtual bool preSync(QWidget *parent, Rra *rra, bool firstSynchronize, uint32_t partnerId);
+    virtual bool postSync(QWidget *parent, Rra *rra, bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
     bool running();
     bool stopRequested();
@@ -72,6 +72,7 @@ public:
     virtual void configure();
     QString serviceName();
     void install(QString cabFileName);
+    QStringList extractWithOrange(QString selfInstaller, QString dest = "");
 
 private:
     virtual bool sync() = 0;

@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
 <class>PdaConfigDialog</class>
 <widget class="QDialog">
     <property name="name">
@@ -210,14 +210,6 @@
                         <bool>true</bool>
                     </property>
                 </widget>
-                <widget class="KPushButton">
-                    <property name="name">
-                        <cstring>buttonApply</cstring>
-                    </property>
-                    <property name="text">
-                        <string>Apply</string>
-                    </property>
-                </widget>
                 <widget class="QPushButton">
                     <property name="name">
                         <cstring>buttonCancel</cstring>
@@ -256,12 +248,6 @@
         <signal>textChanged(const QString&amp;)</signal>
         <receiver>PdaConfigDialog</receiver>
         <slot>changedSlot()</slot>
-    </connection>
-    <connection>
-        <sender>buttonApply</sender>
-        <signal>clicked()</signal>
-        <receiver>PdaConfigDialog</receiver>
-        <slot>applySlot()</slot>
     </connection>
     <connection>
         <sender>buttonCancel</sender>
@@ -307,7 +293,6 @@
     <tabstop>syncAtConnectCheckbox</tabstop>
     <tabstop>kPushButton2</tabstop>
     <tabstop>buttonOk</tabstop>
-    <tabstop>buttonApply</tabstop>
     <tabstop>buttonCancel</tabstop>
     <tabstop>buttonHelp</tabstop>
 </tabstops>
@@ -328,7 +313,6 @@
 <includehints>
     <includehint>klineedit.h</includehint>
     <includehint>klistview.h</includehint>
-    <includehint>kpushbutton.h</includehint>
     <includehint>kpushbutton.h</includehint>
 </includehints>
 </UI>

@@ -33,6 +33,8 @@
 #include <qapplication.h>
 #include <qstringlist.h>
 #include <kmessagebox.h>
+#include <klocale.h>
+#include <kdebug.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
 {
@@ -58,14 +60,14 @@ bool RakiSyncPlugin::doSync(SyncThread *syncThread, Rra *rra,
 }
 
 
-bool RakiSyncPlugin::preSync(SyncThread */*syncThread*/, Rra */*rra*/,
+bool RakiSyncPlugin::preSync(QWidget */*parent*/, Rra */*rra*/,
         bool /*firstSynchronize*/, uint32_t /*partnerId*/)
 {
     return true;
 }
 
 
-bool RakiSyncPlugin::postSync(SyncThread */*syncThread*/, Rra */*rra*/,
+bool RakiSyncPlugin::postSync(QWidget */*parent*/, Rra */*rra*/,
         bool /*firstSynchronize*/, uint32_t /*partnerId*/)
 {
     return true;
@@ -86,7 +88,7 @@ void RakiSyncPlugin::init(RRA_SyncMgrType *objectType, QString pdaName, QWidget 
 void RakiSyncPlugin::configure()
 {
     KMessageBox::information(parent, "<b>" + _serviceName +
-            "</b>: Nothing to configure.", QString(objectType->name2) + " " + pdaName);
+            "</b>: " + i18n("Nothing to configure."), QString(objectType->name2) + " " + pdaName);
 }
 
 
@@ -102,6 +104,12 @@ void RakiSyncPlugin::install(QString cabFileName)
     RakiApi::install(pdaName, sl, true);
 }
 
+
+QStringList RakiSyncPlugin::extractWithOrange(QString selfInstaller, QString dest)
+{
+    return RakiApi::extractWithOrange(selfInstaller, dest);
+}
+    
 
 QString RakiSyncPlugin::serviceName()
 {
@@ -129,13 +137,17 @@ bool RakiSyncPlugin::stopRequested()
 
 void RakiSyncPlugin::incTotalSteps(int inc)
 {
-    postSyncThreadEvent(SyncThread::incTotalSteps, (void *) inc);
+    int *pInc = new int;
+    *pInc = inc;
+    postSyncThreadEvent(SyncThread::incTotalSteps, pInc);
 }
 
 
 void RakiSyncPlugin::decTotalSteps(int dec)
 {
-    postSyncThreadEvent(SyncThread::decTotalSteps, (void *) dec);
+    int *pDec = new int;
+    *pDec = dec;
+    postSyncThreadEvent(SyncThread::decTotalSteps, pDec);
 }
 
 
@@ -147,13 +159,17 @@ void RakiSyncPlugin::advanceProgress()
 
 void RakiSyncPlugin::setTotalSteps(int steps)
 {
-    postSyncThreadEvent(SyncThread::setTotalSteps, (void *) steps);
+    int *pSteps = new int;
+    *pSteps = steps;
+    postSyncThreadEvent(SyncThread::setTotalSteps, pSteps);
 }
 
 
 void RakiSyncPlugin::setProgress(int progress)
 {
-    postSyncThreadEvent(SyncThread::setProgress, (void *) progress);
+    int *pProgress = new int;
+    *pProgress = progress;
+    postSyncThreadEvent(SyncThread::setProgress, pProgress);
 }
 
 

@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
+configure.in.in
 .deps
 .libs
 raki
@@ -25,3 +26,4 @@ syncdialog.cpp
 syncdialog.h
 welcomedialog.cpp
 welcomedialog.h
+*.all_cpp.cpp

@@ -6,4 +6,8 @@ Makefile.in
 *.moc.cpp
 *.lo
 *.la
-
+*.all_cpp.cpp
+agsyncconfig.cpp
+agsyncconfig.h
+serverconfig.cpp
+serverconfig.h

@@ -1,21 +1,20 @@
-# translation of fr.po to français
-# translation of raki.po to français
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER.
-# Arnaud Quette <arnaud.quette@free.fr>, 2003.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: fr\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-08-22 23:54+0200\n"
-"PO-Revision-Date: 2003-09-13 17:21+0200\n"
-"Last-Translator: Arnaud Quette <arnaud.quette@free.fr>\n"
-"Language-Team: français <fr@li.org>\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.0.2\n"
 
 #: rakisyncplugin.cpp:91
 msgid "Nothing to configure."
@@ -25,13 +24,13 @@ msgstr ""
 msgid ""
 "_: NAME OF TRANSLATORS\n"
 "Your names"
-msgstr "Arnaud Quette"
+msgstr ""
 
 #: _translatorinfo.cpp:3
 msgid ""
 "_: EMAIL OF TRANSLATORS\n"
 "Your emails"
-msgstr "arnaud.quette@free.fr"
+msgstr ""
 
 #: configdialogimpl.cpp:80
 msgid ""
@@ -45,9 +44,8 @@ msgid "Win CE version unknown"
 msgstr ""
 
 #: managerimpl.cpp:75
-#, fuzzy
 msgid "PDA-Processor unknown"
-msgstr "Processeur"
+msgstr ""
 
 #: managerimpl.cpp:105
 msgid "Battery state-high"
@@ -78,20 +76,17 @@ msgid "Ready"
 msgstr ""
 
 #: managerimpl.cpp:193
-#, fuzzy
 msgid "Processor architecture"
-msgstr "Architecture"
+msgstr ""
 
 #: managerimpl.cpp:219 managerimpl.cpp:222 managerimpl.cpp:225
 #: managerimpl.cpp:231 managerimpl.cpp:234 managerimpl.cpp:238
-#, fuzzy
 msgid "Battery"
-msgstr "Batterie principale"
+msgstr ""
 
 #: managerimpl.cpp:299
-#, fuzzy
 msgid "Uninstalling software ..."
-msgstr "Logiciels installés"
+msgstr ""
 
 #: managerimpl.cpp:321
 msgid "Retrieve system-info ..."
@@ -134,14 +129,12 @@ msgid "Invalid or missing index of partnership to replace."
 msgstr ""
 
 #: pda.cpp:65
-#, fuzzy
 msgid "Execute on %1"
-msgstr "Executer sur le PDA"
+msgstr ""
 
 #: pda.cpp:68
-#, fuzzy
 msgid "Info and Management for %1"
-msgstr "Info et Gestion de PDA"
+msgstr ""
 
 #: pda.cpp:74
 msgid "Password for %1"
@@ -161,7 +154,7 @@ msgstr ""
 
 #: pda.cpp:98
 msgid "&Info && Management..."
-msgstr "&Info && Gestion..."
+msgstr ""
 
 #: pda.cpp:104
 msgid "&Open %1"
@@ -173,7 +166,7 @@ msgstr ""
 
 #: pda.cpp:111
 msgid "&Execute..."
-msgstr "&Executer..."
+msgstr ""
 
 #: pda.cpp:118
 msgid "Configure %1"
@@ -256,7 +249,7 @@ msgstr ""
 
 #: raki.cpp:81
 msgid "Raki Applet"
-msgstr "Applet Raki"
+msgstr ""
 
 #: raki.cpp:88
 msgid "&Start DCCM"
@@ -285,9 +278,8 @@ msgid "Devices"
 msgstr ""
 
 #: raki.cpp:495 synctasklistitem.cpp:328
-#, fuzzy
 msgid "Name:"
-msgstr "Nom"
+msgstr ""
 
 #: raki.cpp:501
 msgid "No Device connected"
@@ -315,7 +307,7 @@ msgstr ""
 
 #: raki.cpp:819
 msgid "Raki"
-msgstr "Raki"
+msgstr ""
 
 #: raki.cpp:826
 msgid "is the Initiator of the SynCE-Project."
@@ -380,30 +372,27 @@ msgstr ""
 #: rc.cpp:13 rc.cpp:25 rc.cpp:72 rc.cpp:82 rc.cpp:97 rc.cpp:108 rc.cpp:121
 #: rc.cpp:27
 msgid "F1"
-msgstr "F1"
+msgstr ""
 
 #: rc.cpp:19
 msgid "InitPda"
 msgstr ""
 
 #: rc.cpp:20
-#, fuzzy
 msgid "pdaName"
-msgstr "Nom"
+msgstr ""
 
 #: rc.cpp:21 rc.cpp:22
-#, fuzzy
 msgid "Installation"
-msgstr "Installation de :"
+msgstr ""
 
 #: rc.cpp:23
 msgid "Destination:"
 msgstr ""
 
 #: rc.cpp:26
-#, fuzzy
 msgid "&Install"
-msgstr "Installer"
+msgstr ""
 
 #: rc.cpp:27
 msgid "Alt+I"
@@ -411,139 +400,139 @@ msgstr ""
 
 #: rc.cpp:30
 msgid "PDA Info and Management"
-msgstr "Info et Gestion de PDA"
+msgstr ""
 
 #: rc.cpp:31
 msgid "System Information"
-msgstr "Informations Système"
+msgstr ""
 
 #: rc.cpp:32
 msgid "System"
-msgstr "Système"
+msgstr ""
 
 #: rc.cpp:33
 msgid "Major"
-msgstr "Majeur"
+msgstr ""
 
 #: rc.cpp:34
 msgid "Minor"
-msgstr "Mineur"
+msgstr ""
 
 #: rc.cpp:35
 msgid "Build"
-msgstr "Build"
+msgstr ""
 
 #: rc.cpp:36 rc.cpp:39
 msgid "Name"
-msgstr "Nom"
+msgstr ""
 
 #: rc.cpp:37
 msgid "Platform"
-msgstr "Plate forme"
+msgstr ""
 
 #: rc.cpp:38
 msgid "Id"
-msgstr "Id"
+msgstr ""
 
 #: rc.cpp:40
 msgid "Details"
-msgstr "Détails"
+msgstr ""
 
 #: rc.cpp:41
 msgid "Processor"
-msgstr "Processeur"
+msgstr ""
 
 #: rc.cpp:42
 msgid "Architecture"
-msgstr "Architecture"
+msgstr ""
 
 #: rc.cpp:43
 msgid "Type"
-msgstr "Type"
+msgstr ""
 
 #: rc.cpp:44
 msgid "Page size"
-msgstr "Taille de la page"
+msgstr ""
 
 #: rc.cpp:45
 msgid "Storage"
-msgstr "Stockage"
+msgstr ""
 
 #: rc.cpp:46
 msgid "Size"
-msgstr "Taille"
+msgstr ""
 
 #: rc.cpp:47
 msgid "Free"
-msgstr "Libre"
+msgstr ""
 
 #: rc.cpp:48 rc.cpp:65 rc.cpp:70
 msgid "Refresh"
-msgstr "Rafraichir"
+msgstr ""
 
 #: rc.cpp:49
 msgid "Power status"
-msgstr "Statut courant"
+msgstr ""
 
 #: rc.cpp:50
 msgid "AC Power Status"
-msgstr "Statut courant AC"
+msgstr ""
 
 #: rc.cpp:51
 msgid "Online"
-msgstr "Secteur"
+msgstr ""
 
 #: rc.cpp:52
 msgid "Offline"
-msgstr "Batterie"
+msgstr ""
 
 #: rc.cpp:53
 msgid "Backup Power"
-msgstr "Energie de Sauvegarde"
+msgstr ""
 
 #: rc.cpp:54
 msgid "Invalid"
-msgstr "Invalide"
+msgstr ""
 
 #: rc.cpp:55
 msgid "Main Battery"
-msgstr "Batterie principale"
+msgstr ""
 
 #: rc.cpp:56 rc.cpp:61
 msgid "Flag"
-msgstr "Drapeau"
+msgstr ""
 
 #: rc.cpp:57 rc.cpp:62
 msgid "LifePercent"
-msgstr "Pourcentage"
+msgstr ""
 
 #: rc.cpp:58 rc.cpp:63
 msgid "LifeTime"
-msgstr "Autonomie"
+msgstr ""
 
 #: rc.cpp:59 rc.cpp:64
 msgid "FullLifeTime"
-msgstr "Autonomie totale"
+msgstr ""
 
 #: rc.cpp:60
 msgid "Backup Battery"
-msgstr "Batterie de Sauvegarde"
+msgstr ""
 
 #: rc.cpp:66
 msgid "Software Manager"
-msgstr "Gestionnaire de logiciels"
+msgstr ""
 
 #: rc.cpp:67
 msgid "Installed Software"
-msgstr "Logiciels installés"
+msgstr ""
 
 #: rc.cpp:68
 msgid "Uninstall"
-msgstr "Désinstaller"
+msgstr ""
 
 #: rc.cpp:75
 msgid "Status Information:"
-msgstr "Informations de statut"
+msgstr ""
 
 #: rc.cpp:76
 msgid "PasswordDialog"
@@ -613,7 +602,7 @@ msgstr ""
 
 #: rc.cpp:111
 msgid "Execute on PDA"
-msgstr "Executer sur le PDA"
+msgstr ""
 
 #: rc.cpp:112
 msgid "File to execute: (rapip:/)"
@@ -621,7 +610,7 @@ msgstr ""
 
 #: rc.cpp:113
 msgid "Execute"
-msgstr "Executer"
+msgstr ""
 
 #: rc.cpp:115
 msgid "MyDialog1"
@@ -640,9 +629,8 @@ msgid "Comment"
 msgstr ""
 
 #: rc.cpp:119
-#, fuzzy
 msgid "Progress"
-msgstr "Processeur"
+msgstr ""
 
 #: rc.cpp:126
 msgid "WelcomeDialog"
@@ -801,9 +789,8 @@ msgid "Valud (LOCAL):"
 msgstr ""
 
 #: wince_ids.cpp:61 wince_ids.cpp:62
-#, fuzzy
 msgid "Name1:"
-msgstr "Nom"
+msgstr ""
 
 #: wince_ids.cpp:63
 msgid "Timezone:"
@@ -956,29 +943,3 @@ msgstr ""
 #: rc.cpp:41
 msgid "Ok"
 msgstr ""
-
-#~ msgid "InstallFile"
-#~ msgstr "InstallerFichier"
-
-#~ msgid ""
-#~ "An interface to SYNCE and RAPI.\n"
-#~ "Drag & drop cab-files to install them on your PDA\n"
-#~ "Start PDA-Applications remotely via your PC\n"
-#~ msgstr ""
-#~ "Une interface pour SYNCE et RAPI.\n"
-#~ "Glisser & déposer les fichiers cab-pour les installer sur votre PDA\n"
-#~ "Démarrer vos Applications PDA-depuis PC\n"
-
-#~ msgid ""
-#~ "<b>Raki Applet features</b>:<br><br>* Drop a cap file to install it on "
-#~ "your PDA/sign it<br>* Remotely start a PDA-Application<br>"
-#~ msgstr ""
-#~ "<b>Fonctionnalités de l'Applet Raki </b>:<br><br>* Déposez un fichier cab "
-#~ "pour l'installer sur votrePDA/le signer<br>* Démarrer vos Applications "
-#~ "PDA-de manière déportée<br> "
-
-#~ msgid "This is a preferences box"
-#~ msgstr "Ceci est une boite de préférences"
-
-#~ msgid "MyLabel"
-#~ msgstr "MonLabel"

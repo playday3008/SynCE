@@ -1,8 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Type=Service
-Comment=Contact Synchronizer
-Name=KDE-Addressbook Synchronizer
-ServiceTypes=Raki/Synchronizer
-X-KDE-Library=librakikdeaddressbooksync
-X-Raki-Synchronizer=Contact

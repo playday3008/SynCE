@@ -29,6 +29,7 @@
 
 #include <kconfig.h>
 #include <klistview.h>
+#include <qvaluelist.h> 
 #include <AGServerConfig.h>
 #include <AGUserConfig.h>
 
@@ -85,6 +86,7 @@ private:
     void updateServerList();
     AGUserConfig *userConfig;
     AGUserConfig *agreedConfig;
+    
 
 public slots:
     /*$PUBLIC_SLOTS$*/

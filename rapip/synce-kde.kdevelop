@@ -17,6 +17,7 @@
     <ignoreparts>
       <part>KDevClearCase</part>
       <part>KDevPerforce</part>
+      <part>KDevsubversion</part>
     </ignoreparts>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
@@ -26,7 +27,7 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>raki/plugins/agsync/librakiagsync.la</activetarget>
+      <activetarget>raki/raki</activetarget>
       <useconfiguration>gdbdebug</useconfiguration>
     </general>
     <makeenvvars>
@@ -154,6 +155,7 @@
       <group pattern="*.po;*.ts" name="Translations" />
       <group pattern="*" name="Others" />
       <hidenonprojectfiles>false</hidenonprojectfiles>
+      <hidenonlocation>false</hidenonlocation>
     </groups>
     <tree>
       <hidenonprojectfiles>false</hidenonprojectfiles>
@@ -191,6 +193,7 @@
     <display>
       <staticmembers>false</staticmembers>
       <demanglenames>true</demanglenames>
+      <outputradix>10</outputradix>
     </display>
   </kdevdebugger>
   <dist>
@@ -292,6 +295,11 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
       <pcs>KDElibs</pcs>
       <pcs>Qt</pcs>
     </references>
+    <designerintegration>
+      <qtdesigner>
+        <implementation class="AvantGoClientInstallationDialogImpl" path="/home/voc/usr/software/synce-kde/synce-kde-0.7/raki/plugins/agsync/avantgoclientinstallationdialog.ui" implementationpath="/home/voc/usr/software/synce-kde/synce-kde-0.7/raki/plugins/agsync/avantgoclientinstallationdialogimpl.h" />
+      </qtdesigner>
+    </designerintegration>
   </kdevcppsupport>
   <kdevfileviewpart>
     <fileaddedcolor>#ffffff</fileaddedcolor>
@@ -308,4 +316,11 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
     <recursivewhencommitremove>true</recursivewhencommitremove>
     <revertoptions>-C</revertoptions>
   </kdevcvsservice>
+  <kdevdocumentation>
+    <projectdoc>
+      <docsystem>Doxygen Documentation Collection</docsystem>
+      <docurl>doc/api/html/index.html</docurl>
+      <usermanualurl/>
+    </projectdoc>
+  </kdevdocumentation>
 </kdevelop>

@@ -36,6 +36,7 @@ public:
     ~RakiApi();
     
     static void install(QString pdaName, QStringList installFiles, bool blocking = false);
+    static QStringList extractWithOrange(QString selfInstaller, QString dest);
 
 };
 

@@ -44,13 +44,15 @@ void SyncThread::setActualSyncItem(SyncTaskListItem *actualSyncItem)
 
 void SyncThread::incTotalSteps(void *inc)
 {
-    actualSyncItem->setTotalSteps(actualSyncItem->totalSteps() + (int) inc);
+    actualSyncItem->setTotalSteps(actualSyncItem->totalSteps() + *(int *) inc);
+    delete (int *) inc;
 }
 
 
 void SyncThread::decTotalSteps(void *dec)
 {
-    actualSyncItem->setTotalSteps(actualSyncItem->totalSteps() - (int) dec);
+    actualSyncItem->setTotalSteps(actualSyncItem->totalSteps() - *(int *) dec);
+    delete (int *) dec;
 }
 
 
@@ -62,13 +64,15 @@ void SyncThread::advanceProgress(void *)
 
 void SyncThread::setTotalSteps(void *steps)
 {
-    actualSyncItem->setTotalSteps((int) steps);
+    actualSyncItem->setTotalSteps(*(int *) steps);
+    delete (int *) steps;
 }
 
 
 void SyncThread::setProgress(void *progress)
 {
-    actualSyncItem->setProgress((int) progress);
+    actualSyncItem->setProgress(*(int *) progress);
+    delete (int *) progress;
 }
 
 

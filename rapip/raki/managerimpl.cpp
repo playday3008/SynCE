@@ -30,15 +30,17 @@
 #include <kled.h>
 #include <kpushbutton.h>
 #include <klistbox.h>
+#include <klocale.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #include <kde_dmalloc.h>
 #endif
 
-static const char* version_string(synce::CEOSVERSIONINFO* version)
+
+QString version_string(synce::CEOSVERSIONINFO* version)
 {
-    const char* result = "Unknown";
+    QString result = i18n("Win CE version unknown", "Unknown");
 
     if (version->dwMajorVersion == 4 &&
             version->dwMinorVersion == 20 &&
@@ -58,9 +60,9 @@ static const char* version_string(synce::CEOSVERSIONINFO* version)
 }
 
 
-static const char* processor(int n)
+QString processor(int n)
 {
-    const char* result;
+    QString result;
 
     switch (n) {
     case PROCESSOR_STRONGARM:
@@ -70,7 +72,7 @@ static const char* processor(int n)
         result = "SH3";
         break;
     default:
-        result = "Unknown";
+        result = i18n("PDA-Processor unknown", "Unknown");
         break;
     }
 
@@ -94,28 +96,28 @@ static const char* architectures[] =
     };
 
 
-static const char* get_battery_flag_string(unsigned flag)
+QString get_battery_flag_string(unsigned flag)
 {
-    const char* name;
+    QString name;
 
     switch (flag) {
     case BATTERY_FLAG_HIGH:
-        name = "High";
+        name = i18n("Battery state-high", "High");
         break;
     case BATTERY_FLAG_LOW:
-        name = "Low";
+        name = i18n("Battery state-low", "Low");
         break;
     case BATTERY_FLAG_CRITICAL:
-        name = "Critical";
+        name = i18n("Battery state-critical", "Critical");
         break;
     case BATTERY_FLAG_CHARGING:
-        name = "Charging";
+        name = i18n("Battery state-charging", "Charging");
         break;
     case BATTERY_FLAG_NO_BATTERY:
-        name = "NoBattery";
+        name = i18n("Battery state-nobattery", "NoBattery");
         break;
     default:
-        name = "Unknown";
+        name = i18n("Battery state-unknown", "Unknown");
         break;
     }
     return name;
@@ -125,7 +127,7 @@ static const char* get_battery_flag_string(unsigned flag)
 ManagerImpl::ManagerImpl(QString pdaName, QWidget *parent, const char* name,
         bool modal, WFlags fl) : Manager(parent, name, modal, fl)
 {
-    statusLine->setText("Ready");
+    statusLine->setText(i18n("Ready"));
     this->pdaName = pdaName;
 }
 
@@ -134,9 +136,9 @@ ManagerImpl::~ManagerImpl()
 {}
 
 
-void *ManagerImpl::beginEvent(void *data)
+void *ManagerImpl::beginEvent(void */*data*/)
 {
-    statusLine->setText(QString((char *) data));
+    statusLine->setText(msg);
     refreshButton->setEnabled(false);
     powerRefreshButton->setEnabled(false);
     sysInfoRefreshButton->setEnabled(false);
@@ -149,7 +151,7 @@ void *ManagerImpl::beginEvent(void *data)
 
 void *ManagerImpl::endEvent(void */*data*/)
 {
-    statusLine->setText("Ready");
+    statusLine->setText(i18n("Ready"));
     refreshButton->setEnabled(true);
     stopButton->setEnabled(false);
     powerRefreshButton->setEnabled(true);
@@ -188,7 +190,7 @@ void *ManagerImpl::systemInfoEvent(void *data)
             QString::number(sysinfo->system.wProcessorArchitecture) +
             " " + QString((sysinfo->system.wProcessorArchitecture <
             PROCESSOR_ARCHITECTURE_COUNT) ? architectures[
-            sysinfo->system.wProcessorArchitecture] : "Unknown"));
+            sysinfo->system.wProcessorArchitecture] : i18n("Processor architecture", "Unknown")));
     procType->setText(QString::number(sysinfo->system.dwProcessorType) +
             " " + QString(processor(sysinfo->system.dwProcessorType)));
     pageSize->setText("0x" + QString::number(
@@ -214,26 +216,26 @@ void *ManagerImpl::batInfoEvent(void *data)
     bat1Flag->setText(QString::number(sysinfo->power.BatteryFlag) + " (" +
             get_battery_flag_string(sysinfo->power.BatteryFlag) + ")");
     bat1LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN ==
-            sysinfo->power.BatteryLifePercent) ? QString("Unknown") :
+            sysinfo->power.BatteryLifePercent) ? i18n("Battery", "Unknown") :
             QString::number(sysinfo->power.BatteryLifePercent) + "%");
     bat1LifeTime->setText((BATTERY_LIFE_UNKNOWN ==
-            sysinfo->power.BatteryLifeTime) ? QString("Unknown") :
+            sysinfo->power.BatteryLifeTime) ? i18n("Battery", "Unknown") :
             QString::number(sysinfo->power.BatteryLifeTime));
     bat1FullLife->setText((BATTERY_LIFE_UNKNOWN ==
-            sysinfo->power.BatteryFullLifeTime) ? QString("Unknown") :
+            sysinfo->power.BatteryFullLifeTime) ? i18n("Battery", "Unknown") :
             QString::number(sysinfo->power.BatteryFullLifeTime));
     bat2Flag->setText(QString::number(sysinfo->power.BackupBatteryFlag) + " (" +
             get_battery_flag_string(sysinfo->power.BackupBatteryFlag) + ")");
     bat2LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN ==
             sysinfo->power.BackupBatteryLifePercent) ?
-            QString("Unknown") : QString::number(
+            i18n("Battery", "Unknown") : QString::number(
             sysinfo->power.BackupBatteryLifePercent) + "%");
     bat2LifeTime->setText((BATTERY_LIFE_UNKNOWN ==
-            sysinfo->power.BackupBatteryLifeTime) ? QString("Unknown") :
+            sysinfo->power.BackupBatteryLifeTime) ? i18n("Battery", "Unknown") :
             QString::number(sysinfo->power.BackupBatteryLifeTime));
     bat2FullLife->setText((BATTERY_LIFE_UNKNOWN ==
             sysinfo->power.BackupBatteryFullLifeTime) ?
-            QString("Unknown") : QString::number(
+            i18n("Battery", "Unknown") : QString::number(
             sysinfo->power.BackupBatteryFullLifeTime));
     switch (sysinfo->power.ACLineStatus) {
     case AC_LINE_OFFLINE:
@@ -294,8 +296,8 @@ void ManagerImpl::uninstallSoftware(QThread */*qt*/, void */*data*/)
     QListBoxItem *item = softwareList->item(softwareList->currentItem());
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent,
-                "Uninstalling software from the PDA ...", noBlock);
+        msg = i18n("Uninstalling software ...");
+        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         if(Ce::createProcess(QString("unload.exe").ucs2(),
                 QString(item->text()).ucs2(), NULL, NULL, false, 0, NULL,
@@ -316,8 +318,8 @@ void ManagerImpl::fetchSystemInfo(QThread */*qt*/, void */*data*/)
     struct sysinfo_s *sysinfo = new sysinfo_s;
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent,
-                "Retrieving system-info from the PDA ...", noBlock);
+        msg = i18n("Retrieve system-info ...");
+        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         Ce::getVersionEx(&sysinfo->version);
         Ce::getSystemInfo(&sysinfo->system);
@@ -337,8 +339,8 @@ void ManagerImpl::fetchBatteryStatus(QThread */*qt*/, void */*data*/)
     struct sysinfo_s *sysinfo = new sysinfo_s;
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent,
-                "Retrieving batery-info from the PDA ...", noBlock);
+        msg = i18n("Retrieve battery-info ...");
+        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         Ce::getSystemPowerStatusEx(&sysinfo->power, false);
         
@@ -360,8 +362,8 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
     DWORD i;
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent,
-                "Retrieving software-list from the PDA ...", noBlock);
+        msg = i18n("Retrieve software-list ...");
+        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE,
                 QString("Software\\Apps").ucs2(), 0, 0, &parent_key);

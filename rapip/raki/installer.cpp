@@ -168,10 +168,12 @@ void Installer::installReal(Installer *installer, QString pdaName)
     if (pda != NULL && !ul.empty()) {
         bool mkdirSuccess = true;
 
+
+#if KDE_VERSION < KDE_MAKE_VERSION(3,2,0) // KDE-3.1
         if (!KIO::NetAccess::exists("rapip://" + pdaName +
                 "/Windows/AppMgr/Install")) {
             if (!KIO::NetAccess::exists("rapip://" + pdaName +
-                    "/Windows/AppMgr")) {
+                    "/Windows/AppMgr")) {                
                 mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
                         "/Windows/AppMgr");
             }
@@ -180,6 +182,20 @@ void Installer::installReal(Installer *installer, QString pdaName)
                         "/Windows/AppMgr/Install");
             }
         }
+#else // KDE-3.2
+        if (!KIO::NetAccess::exists("rapip://" + pdaName +
+                "/Windows/AppMgr/Install", false, NULL)) {
+            if (!KIO::NetAccess::exists("rapip://" + pdaName +
+                    "/Windows/AppMgr", false, NULL)) {
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                        "/Windows/AppMgr", (QWidget *) NULL);
+            }
+            if (mkdirSuccess) {
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                        "/Windows/AppMgr/Install", (QWidget *) NULL);
+            }
+        }
+#endif
 
         if (mkdirSuccess) {
             KIO::CopyJob *copyJob = KIO::copy(ul, KURL("rapip://" + pdaName +
@@ -202,8 +218,10 @@ void Installer::install(QString pdaName, QStringList installFiles, bool blocking
     ready = false;
     prepareInstall(installFiles);
     installReal(self, pdaName);
-    while (!ready) {
-        kapp->processEvents();
+    if (blocking) {
+        while (!ready) {
+            kapp->processEvents();
+        }
     }
 }
 

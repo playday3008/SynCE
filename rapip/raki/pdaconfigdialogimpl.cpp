@@ -25,7 +25,6 @@
 #include "synctasklistitem.h"
 #include "removepartnershipdialogimpl.h"
 
-//#include <librra.h>
 
 #include <qcheckbox.h>
 #include <klineedit.h>
@@ -33,6 +32,7 @@
 #include <kapplication.h>
 #include <kmessagebox.h>
 #include <ksimpleconfig.h>
+#include <klocale.h>
 #include <kdebug.h>
 
 #include <unistd.h>
@@ -52,8 +52,7 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(QString pdaName, QWidget* parent,
     partnershipCreated.setTime_t(0);
     readConfig();
     updateFields();
-    buttonApply->setEnabled(false);
-    buttonOk->setEnabled(false);
+    buttonCancel->setEnabled(false);
     objectTypeList->setFullWidth(true);
     syncTaskItemList.setAutoDelete(true);
 }
@@ -73,13 +72,11 @@ void PdaConfigDialogImpl::updateFields()
     passwordEdit->setText(password);
     masqEnabledCheckbox->setChecked(masqEnabled);
     syncAtConnectCheckbox->setChecked(syncAtConnect);
-    for (item = syncTaskItemList.first();
-            item; item = syncTaskItemList.next()) {
+    for (item = syncTaskItemList.first(); item; item = syncTaskItemList.next()) {
         item->undo();
     }
 
-    buttonApply->setDisabled(true);
-    buttonOk->setDisabled(true);
+    buttonCancel->setDisabled(true);
 }
 
 
@@ -143,8 +140,11 @@ void PdaConfigDialogImpl::readConfig()
         newPda = false;
     } else {
         masqEnabled = false;
-        password = "";
+        password = QString::null;
         syncAtConnect = false;
+        partnerName = QString::null;
+        partnerId = 0;
+        partnershipCreated.setTime_t(0);
         newPda = true;
     }
 
@@ -168,8 +168,10 @@ void PdaConfigDialogImpl::clearConfig()
     for (QStringList::Iterator it = groups.begin(); it != groups.end(); ++it ) {
         ksConfig->deleteGroup(*it);
     }
+    syncTaskItemList.clear();
     
     ksConfig->sync();
+    readConfig();
 }
 
 
@@ -177,7 +179,7 @@ void PdaConfigDialogImpl::applySlot()
 {
     SyncTaskListItem *syncTaskListItem;
 
-    if (buttonApply->isEnabled()) {
+    if (buttonCancel->isEnabled()) {
         this->password = passwordEdit->text();
         masqEnabled = masqEnabledCheckbox->isChecked();
         syncAtConnect = syncAtConnectCheckbox->isChecked();
@@ -186,16 +188,14 @@ void PdaConfigDialogImpl::applySlot()
             syncTaskListItem->makePersistent();
         }
         writeConfig();
-        buttonApply->setDisabled(true);
-        buttonOk->setDisabled(true);
+        buttonCancel->setDisabled(true);
     }
 }
 
 
 void PdaConfigDialogImpl::masqChangedSlot()
 {
-    buttonApply->setEnabled(true);
-    buttonOk->setEnabled(true);
+    buttonCancel->setEnabled(true);
 }
 
 
@@ -207,8 +207,7 @@ void PdaConfigDialogImpl::disableApply()
 
 void PdaConfigDialogImpl::changedSlot()
 {
-    buttonApply->setEnabled(true);
-    buttonOk->setEnabled(true);
+    buttonCancel->setEnabled(true);
 }
 
 
@@ -221,7 +220,9 @@ QString PdaConfigDialogImpl::getDeviceIp()
 void PdaConfigDialogImpl::objectTypeList_rightButtonClicked(
         QListViewItem *item, const QPoint &, int )
 {
-    ((SyncTaskListItem *) item)->openPopup();
+    if (item != NULL) {
+        ((SyncTaskListItem *) item)->openPopup();
+    }
 }
 
 
@@ -254,7 +255,7 @@ void PdaConfigDialogImpl::setNewPartner(QString partnerName,
 {
     setPartner(partnerName, partnerId);
     partnershipCreated = QDateTime(QDate::currentDate(), QTime::currentTime());
-    kdDebug(2120) << "Partnership created: " << partnershipCreated.toString();
+    kdDebug(2120) << i18n("Partnership created:") << " " << partnershipCreated.toString() << endl;
 }
 
 

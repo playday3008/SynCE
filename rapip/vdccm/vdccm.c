@@ -399,6 +399,18 @@ static int vdccm_read_from_client(local_p local, void *manage_v)
             synce_trace("Got Password for %s from Raki but no device waiting", name);
         }
         break;
+    case 'D':
+        printf("Disconnecting %s\n", &buffer[1]);
+        name = &buffer[1];
+        list_iterator(manage->device_l, device) {
+            printf("Searching: %s ...\n", device->name);
+            if (strcmp(device->name, name) == 0) {
+                printf("Found\n");
+                vdccm_remove_device(device);
+                synce_socket_close(device->socket);
+            }
+        }
+        break;
     default:
         printf("Unknown response from Raki");
         break;
@@ -525,6 +537,7 @@ static void vdccm_free_device(device_p device)
 static void vdccm_remove_device(device_p device)
 {
     device_p last_device;
+    synce_trace("Start removing");
     if (list_delete_data(device->manage->device_l, device) == 0) {
         vdccm_remove_connection_files(device);
         vdccm_run_scripts(device, (char *) "disconnect");
@@ -848,7 +861,7 @@ static bool vdccm_handle_parameters(int argc, char** argv)
 }
 
 
-bool vdccm_check_vdccm_already_running(const char* filename, const char* socketpath)
+static bool vdccm_check_vdccm_already_running(const char* filename, const char* socketpath)
 {
     bool success = false;
     FILE* file = NULL;
@@ -886,7 +899,7 @@ exit:
 }
 
 
-bool vdccm_write_pid_file(const char* filename)
+static bool vdccm_write_pid_file(const char* filename)
 {
     bool success = false;
     char pid_str[16];
@@ -928,12 +941,12 @@ int main(int argc, char *argv[])
 
     if (!vdccm_handle_parameters(argc, argv))
         return -1;
-/*
+
     if (getuid() == 0) {
         synce_error("You should not run dccm as root.");
         return -1;
     }
-*/
+
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
         return -1;

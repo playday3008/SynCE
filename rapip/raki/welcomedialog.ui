@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
 <class>WelcomeDialog</class>
 <widget class="QDialog">
     <property name="name">
@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>410</width>
-            <height>332</height>
+            <height>334</height>
         </rect>
     </property>
     <property name="paletteBackgroundColor">
@@ -98,7 +98,6 @@
                                             </property>
                                             <property name="font">
                                                 <font>
-                                                    <family>Arial</family>
                                                     <pointsize>20</pointsize>
                                                     <bold>1</bold>
                                                 </font>
@@ -139,7 +138,7 @@
                                                 <cstring>textLabel2_2</cstring>
                                             </property>
                                             <property name="text">
-                                                <string>(c) 2003 by V. Christian</string>
+                                                <string>(c) 2003, 2004 by V. Christian</string>
                                             </property>
                                         </widget>
                                         <spacer>

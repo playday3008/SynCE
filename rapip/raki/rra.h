@@ -35,7 +35,7 @@ extern "C" {
 
 #include <qobject.h>
 #include <qstring.h>
-#include <qptrdict.h>
+#include <qmap.h>
 #include <qvaluelist.h>
 
 #ifdef WITH_DMALLOC
@@ -45,10 +45,6 @@ extern "C" {
 
 namespace KABC {
     class Addressee;
-}
-
-namespace ICAL {
-    #include <ical.h>
 }
 
 /**
@@ -74,20 +70,19 @@ public:
     Rra(QString pdaName);
     virtual ~Rra();
 
-    bool getTypes(QPtrDict<RRA_SyncMgrType> *);
+    bool getTypes(QMap<int, RRA_SyncMgrType *> *);
     bool getIds(uint32_t type_id, struct Rra::ids *ids);
     QString getVCard(uint32_t type_id, uint32_t object_id);
     uint32_t putVCard(QString& vCard, uint32_t type_id, uint32_t object_id);
     QString getVEvent(uint32_t type_id, uint32_t object_id);
     uint32_t putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id);
     void deleteObject(uint32_t type_id, uint32_t object_id);
+/*
     KABC::Addressee getAddressee(uint32_t type_id, uint32_t object_id);
     bool putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
             uint32_t ceUid, uint32_t *newCeUid);
-    bool putEvent(const ICAL::icalcomponent *appointment, uint32_t type_id,
-        uint32_t ceUid, uint32_t *newCeUid);
-    ICAL::icalcomponent *getEvent(uint32_t type_id, uint32_t object_id);
     bool resetAddressee(uint32_t type_id, uint32_t object_id);
+*/
 
     bool ok();
     bool connect();

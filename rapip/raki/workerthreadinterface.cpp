@@ -85,11 +85,13 @@ bool WorkerThreadInterface::delayedDelete()
 
 
 void *WorkerThreadInterface::postEvent(
-        void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL),
+        void *(WorkerThreadInterface::*userEventMethode)(void *data),
         void *data, int blocking)
 {
     ThreadEvent *threadEvent = new ThreadEvent(this, userEventMethode, data);
-    threadEvent->setData((void *) blocking);
+    int *pBlocking = new int;
+    *pBlocking = blocking;
+    threadEvent->setData(pBlocking);
     if (blocking == block && running()) {
 // Inhibit finishing of the event before we are not waiting for it to finish
         threadEventObject.eventMutexLock();

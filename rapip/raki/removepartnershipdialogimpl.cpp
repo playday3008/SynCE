@@ -24,6 +24,7 @@
 #include "removepartnershipdialogimpl.h"
 
 #include <klistview.h>
+#include <klocale.h>
 #include <kdebug.h>
 
 RemovePartnershipDialogImpl::RemovePartnershipDialogImpl( QWidget* parent,
@@ -59,7 +60,7 @@ void RemovePartnershipDialogImpl::setPartnerships(QString partner1,
 
 void RemovePartnershipDialogImpl::removePartnerships()
 {
-    kdDebug(2120) << "Removing partnerships" << endl;
+    kdDebug(2120) << i18n("Removing partnerships") << endl;
     
     QCheckListItem *first = partnershipList.first();
     QCheckListItem *second = partnershipList.next();

@@ -20,29 +20,18 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
-#ifndef KDEADDRESSBOOKSYNCFACTORY_H
-#define KDEADDRESSBOOKSYNCFACTORY_H
+#ifndef AVANTGOCLIENTINSTALLATIONDIALOGIMPL_H
+#define AVANTGOCLIENTINSTALLATIONDIALOGIMPL_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "avantgoclientinstallationdialog.h"
 
-#include <rakisyncfactory.h>
-
-/**
-@author Volker Christian,,,
-*/
-class KdeAddressBookSyncFactory : public RakiSyncFactory
-{
+class AvantGoClientInstallationDialogImpl: public AvantGoClientInstallationDialog {
 Q_OBJECT
 public:
-    KdeAddressBookSyncFactory(QObject *parent = 0, const char *name = 0);
-
-    ~KdeAddressBookSyncFactory();
-
-protected:
-    QObject *createObject (QObject *parent=0, const char *name=0, 
-                    const char *classname="QObject", const QStringList &args=QStringList());
+    AvantGoClientInstallationDialogImpl(QWidget *parent = 0, const char *name = 0);
+    QString agceClientPath();
+public slots:
+    virtual void agceIntegratedClient_textChanged(const QString&);
 };
 
 #endif

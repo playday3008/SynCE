@@ -1,1 +1,0 @@
-AC_CHECK_LIB(kabc_file, main, AC_SUBST(LIB_KABC_FILE, -lkabc_file))

@@ -82,8 +82,8 @@ public:
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
     bool synchronize(SyncThread *syncThread, Rra *rra);
-    bool preSync(SyncThread *syncThread, Rra *rra);
-    bool postSync(SyncThread *syncThread, Rra *rra);
+    bool preSync(QWidget *parent, Rra *rra);
+    bool postSync(QWidget *parent, Rra *rra);
     void setLastSynchronized(QDateTime lastSynchronized);
     void setFirstSynchronization(bool firstSynchronization);
     bool isFirstSynchronization();

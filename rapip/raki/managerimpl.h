@@ -72,6 +72,7 @@ private:
     void *batInfoEvent(void *data);
     void *uninstalledEvent(void *data);
     QString pdaName;
+    QString msg;
 };
 
 #endif

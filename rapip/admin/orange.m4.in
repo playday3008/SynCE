@@ -1,0 +1,41 @@
+dnl $Id$ vim: syntax=config
+dnl Check for liborange
+
+AC_DEFUN(AM_PATH_LIBORANGE, [
+
+  AC_ARG_WITH(liborange,
+    AC_HELP_STRING(
+      [--with-liborange[=DIR]],
+      [Search for liborange in DIR/include and DIR/lib]),
+      [
+				CPPFLAGS="$CPPFLAGS -I${withval}/include"
+				LDFLAGS="$LDFLAGS -L${withval}/lib"
+			]
+    )
+
+  AC_ARG_WITH(liborange-include,
+    AC_HELP_STRING(
+      [--with-liborange-include[=DIR]],
+      [Search for liborange header files in DIR]),
+      [
+				CPPFLAGS="$CPPFLAGS -I${withval}"
+			]
+    )
+
+  AC_ARG_WITH(liborange-lib,
+    AC_HELP_STRING(
+      [--with-liborange-lib[=DIR]],
+      [Search for liborange library files in DIR]),
+      [
+				LDFLAGS="$LDFLAGS -L${withval}"
+			]
+    )
+
+	AC_CHECK_LIB(orange,orange_squeeze_file,,[
+		AC_MSG_ERROR([Can't find orange library])
+		])
+	AC_CHECK_HEADERS(liborange.h,,[
+		AC_MSG_ERROR([Can't find liborange.h])
+		])
+
+])

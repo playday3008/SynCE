@@ -34,6 +34,7 @@ extern "C" {
 #include <rra/syncmgr.h>
 }
 #include <qobject.h>
+#include <qmap.h>
 #include <qptrdict.h>
 #include <qthread.h>
 #include <kpopupmenu.h>
@@ -75,7 +76,7 @@ public:
     void unregisterCopyJob(KIO::CopyJob *copyJob);
     unsigned int getNumberOfCopyJobs();
     KURL::List getURLListByCopyJob(KIO::CopyJob *copyJob);
-    bool getSynchronizationTypes(QPtrDict<RRA_SyncMgrType> *);
+    bool getSynchronizationTypes(QMap<int, RRA_SyncMgrType *> *);
     void init();
     bool isPartner();
     bool running();
@@ -90,16 +91,15 @@ signals:
     void initialized(PDA *pda, int initialized);
     
 private:
-    bool setPartnershipThread(MatchMaker *matchmaker);
     void setPartnership(QThread *thread, void *data);
     bool removePartnership(MatchMaker *matchmaker, int *removedPartnerships);
     void *removePartnershipDialog(void *data);
     void *alreadyTwoPartnershipsDialog(void *data);
+    void *removeLocalPartnershipDialog(void *data);
     void *progressDialogCancel(void *data);
     void *advanceProgressEvent(void *data);
     void *advanceTotalStepsEvent(void *data);
     void *rraConnectionError(void *data);
-    void *initializationStarted(void *data);
     bool synchronizationTasks(void *data);
 
     InitProgress *initProgress;

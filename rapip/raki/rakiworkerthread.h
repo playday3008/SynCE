@@ -52,8 +52,8 @@ protected:
 public:
     void run();
     void start(WorkerThreadInterface *wti,
-            void (WorkerThreadInterface::*userRun)(QThread *thread = NULL,
-            void *data = NULL), void *data = NULL);
+            void (WorkerThreadInterface::*userRun)(QThread *thread,
+            void *data), void *data = NULL);
     WorkerThreadInterface *getCurrentInterface();
     void stop();
     static bool running();
