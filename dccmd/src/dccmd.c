@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 
 #define DCCM_PORT           	5679
 #define DCCM_PING_INTERVAL   	10         /* seconds */
@@ -27,6 +28,9 @@ typedef struct _Client
 	bool locked;
 	bool expect_password_reply;
 	int key;
+	char* name;
+	char* class;
+	char* hardware;
 } Client;
 
 /* Dump a block of data for debugging purposes */
@@ -81,10 +85,15 @@ static void write_help(char *name)
 			stderr, 
 			"Syntax:\n"
 			"\n"
-			"\t%s [-f] [-h] [-p password]\n"
+			"\t%s [-d] [-f] [-h] [-p password]\n"
 			"\n"
-			"\t-f Do not run as daemon\n"
-			"\t-h Show this help message\n",
+			"\t-d LEVEL  Set debug log level\n"
+			"\t              0 - No logging (default)\n"
+			"\t              1 - Errors only\n"
+			"\t              2 - Errors and warnings\n"
+			"\t              3 - Everything\n"
+			"\t-f        Do not run as daemon\n"
+			"\t-h        Show this help message\n",
 			name);
 }
 
@@ -94,11 +103,16 @@ static void write_help(char *name)
 static bool handle_parameters(int argc, char** argv)
 {
 	int c;
+	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "fhp:")) != -1)
+	while ((c = getopt(argc, argv, "d:fhp:")) != -1)
 	{
 		switch (c)
 		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
 			/*
 			 * The -f parameter specifies that we want to run in the foreground
 			 */
@@ -118,6 +132,8 @@ static bool handle_parameters(int argc, char** argv)
 				return false;
 		}
 	}
+
+	synce_log_set_level(log_level);
 
 	return true;
 }
@@ -192,9 +208,19 @@ static bool client_write_file(Client* client)
 	fprintf(file,
 			"# Modifications to this file will be lost next time a client connects to dccmd\n"
 			"\n"
+			"[dccmd]\n"
+			"pid=%i\n"
+			"\n"
 			"[device]\n"
+			"name=%s\n"
+			"class=%s\n"
+			"hardware=%s\n"
 			"ip=%s\n"
 			"port=%i\n",
+			getpid(),
+			client->name,
+			client->class,
+			client->hardware,
 			ip_str,
 			ntohs(client->address.sin_port));
 	
@@ -272,9 +298,6 @@ static bool client_read(Client* client)
 		 * This is an information message
 		 */
 		uint32_t offset = 0;
-		char *name = NULL;
-		char *class = NULL;
-		char *hardware = NULL;
 
 		synce_trace("this is an information message");
 
@@ -300,17 +323,13 @@ static bool client_read(Client* client)
 
 		dump("info package", buffer, header);
 
-		name      = string_at(buffer, header, 0x18);
-		class     = string_at(buffer, header, 0x1c);
-		hardware  = string_at(buffer, header, 0x20);
+		client->name      = string_at(buffer, header, 0x18);
+		client->class     = string_at(buffer, header, 0x1c);
+		client->hardware  = string_at(buffer, header, 0x20);
 
-		synce_trace("name    : %s", name);
-		synce_trace("class   : %s", class);
-		synce_trace("hardware: %s", hardware);
-
-		wstr_free_string(name);
-		wstr_free_string(class);
-		wstr_free_string(hardware);
+		synce_trace("name    : %s", client->name);
+		synce_trace("class   : %s", client->class);
+		synce_trace("hardware: %s", client->hardware);
 
 		free(buffer);
 		buffer = NULL;
@@ -477,6 +496,10 @@ int main(int argc, char** argv)
 			synce_error("Failed to handle client connection");
 			/* Better luck on next client? :-) */
 		}
+
+		wstr_free_string(client.name);
+		wstr_free_string(client.class);
+		wstr_free_string(client.hardware);
 
 		synce_socket_free(client.socket);
 		remove_connection_file();

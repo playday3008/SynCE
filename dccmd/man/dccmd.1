@@ -1,18 +1,31 @@
 .\" $Id$
 .TH "DCCMD" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
 .SH NAME
-dccmd \- Handle communication with a Pocket PC device.
+dccmd \- Handle SynCE connection.
 
 .SH SYNOPSIS
-\fBdccmd\fR [-f] [-h] [-p \fIpassword\fR]
+\fBdccmd\fR [-d \fILEVEL\fR] [-f] [-h] [-p \fIpassword\fR]
 
 .SH "DESCRIPTION"
 .PP
-\fBdccmd\fR program handles the connection with your Pocket PC device.
+\fBdccmd\fR program handles the SynCE connection.
 .PP
-This daemon is run by the user.
+This daemon should be run by the same user as will run any tools that connect
+to the device.
 
 .SH "OPTIONS"
+.TP
+-d \fILEVEL\f
+Set debug log level:
+.IP
+0 - No logging (default)
+.IP
+1 - Errors only
+.IP
+2 - Errors and warnings
+.IP
+3 - Everything
+
 .TP
 -f
 Run in foreground. If this paramter is not specified, dccmd will fork into the background.
