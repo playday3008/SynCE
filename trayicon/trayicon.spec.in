@@ -43,4 +43,7 @@ make
 %{prefix}/bin/synce-trayicon
 %{prefix}/share/pixmaps/synce/synce-color-small.png
 %{prefix}/share/pixmaps/synce/synce-gray-small.png
+%{prefix}/share/locale/ru/LC_MESSAGES/synce-trayicon.mo
+%{prefix}/share/locale/sv/LC_MESSAGES/synce-trayicon.mo
+%{prefix}/share/synce/synce_trayicon_properties.glade
 
