@@ -15,7 +15,7 @@ Summary: KDE-Integration of SynCE. Kio-slave and Tray-Icon.
 Group: Applications/Productivity
 Packager: Volker Christian <voc@users.sourceforge.net>
 BuildRoot: %{_tmppath}/%{name}-root
-Source: %{name}-0.6.tar.gz
+Source: %{name}-0.6.1.tar.gz
 
 %description
 SynCE-KDE is part of the SynCE project:
