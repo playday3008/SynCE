@@ -99,5 +99,7 @@ time_t rra_minutes_to_unix_time(uint32_t minutes);
 /** Convert minutes from a time_t value */
 uint32_t rra_minutes_from_unix_time(time_t t);
 
-
+/** Convert minutes from a struct tm */
+uint32_t rra_minutes_from_struct(struct tm* t);
+  
 #endif
