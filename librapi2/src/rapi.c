@@ -36,6 +36,12 @@ STDAPI CeRapiUninit(void)/*{{{*/
 	}
 }/*}}}*/
 
+HRESULT CeRapiGetError(void)/*{{{*/
+{
+	RapiContext* context = rapi_context_current();
+	return context->rapi_error;
+}/*}}}*/
+
 BOOL CeCheckPassword( /*{{{*/
 		LPWSTR lpszPassword)
 {

@@ -548,6 +548,19 @@ bool rapi_buffer_recv(RapiBuffer* buffer, SynceSocket* socket)
 	uint32_t      size_le = 0;
 	size_t         size    = 0;
 	unsigned char* data    = NULL;
+  short         events = EVENT_READ;
+
+  if (!synce_socket_wait(socket, 10, &events))
+  {
+    rapi_buffer_error("Failed to wait for event");
+    goto fail;
+  }
+
+  if (events != EVENT_READ)
+  {
+    rapi_buffer_error("Nothing to read");
+    goto fail;
+  }
 	
 	if ( !synce_socket_read(socket, &size_le, sizeof(size_le)) )
 	{

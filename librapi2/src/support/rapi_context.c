@@ -161,17 +161,19 @@ bool rapi_context_begin_command(RapiContext* context, uint32_t command)/*{{{*/
 	
 bool rapi_context_call(RapiContext* context)/*{{{*/
 {
+  context->rapi_error = E_UNEXPECTED;
+  
 	if ( !rapi_buffer_send(context->send_buffer, context->socket) )
 	{
 		rapi_context_error("rapi_buffer_send failed");
-		/* TODO: set context->last_error */
+    context->rapi_error = E_FAIL;
 		return false;
 	}
 
 	if ( !rapi_buffer_recv(context->recv_buffer, context->socket) )
 	{
 		rapi_context_error("rapi_buffer_recv failed");
-		/* TODO: set context->last_error */
+    context->rapi_error = E_FAIL;
 		return false;
 	}
 
@@ -179,6 +181,7 @@ bool rapi_context_call(RapiContext* context)/*{{{*/
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_1) )
 	{
 		rapi_context_error("reading result_1 failed");
+    context->rapi_error = E_FAIL;
 		return false;
 	}
 
@@ -190,7 +193,8 @@ bool rapi_context_call(RapiContext* context)/*{{{*/
 		if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
 		{
 			rapi_context_error("reading result_2 failed");
-			return false;
+      context->rapi_error = E_FAIL;
+      return false;
 		}
 
 		rapi_context_error("result 2 = 0x%08x", context->result_2);
@@ -199,6 +203,7 @@ bool rapi_context_call(RapiContext* context)/*{{{*/
 				return false;*/
 	}
 
+  context->rapi_error = S_OK;
 	return true;
 }/*}}}*/
 

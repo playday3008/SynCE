@@ -43,6 +43,8 @@ HRESULT CeRapiInit(void);
 
 STDAPI CeRapiUninit(void);
 
+HRESULT CeRapiGetError(void);
+
 #endif /* SWIG */
 
 

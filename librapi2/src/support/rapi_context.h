@@ -13,6 +13,7 @@ typedef struct _RapiContext
 	uint32_t result_1;
 	uint32_t result_2;
 	uint32_t last_error;
+  uint32_t rapi_error;
 	bool is_initialized;
 } RapiContext;
 
