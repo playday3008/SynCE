@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -ansi -pedantic @CFLAGS@ -I..
+CFLAGS = -ggdb -Wall -Wno-long-long -ansi -pedantic @CFLAGS@ -I..
 
 ## create this library
 noinst_LTLIBRARIES = libsupport.la
