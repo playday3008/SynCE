@@ -5,6 +5,7 @@
 <!ENTITY introduction SYSTEM "introduction.xml">
 <!ENTITY user-manual SYSTEM "user_manual.xml">
 <!ENTITY developer-manual SYSTEM "developer_manual.xml">
+<!ENTITY faq SYSTEM "faq.xml">
 ]>
 
 <book>
@@ -58,6 +59,9 @@
 
 <!-- Developer manual -->
 &developer-manual;
+
+<!-- The FAQ -->
+&faq;
 
 </book>
 
