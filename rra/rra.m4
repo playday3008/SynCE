@@ -1,7 +1,7 @@
 dnl $Id$ vim: syntax=config
 dnl Check for rra
 
-AC_DEFUN(AM_PATH_RRA, [
+AC_DEFUN([AM_PATH_RRA], [
 
   AC_ARG_WITH(rra,
     AC_HELP_STRING(
