@@ -8,7 +8,14 @@
  * Initialization functions
  */
 
+#define CERAPI_E_ALREADYINITIALIZED  0x8004101
+
 HRESULT CeRapiInit(void);
+
+STDAPI CeRapiUninit(void);
+
+BOOL CeCheckPassword( 
+		LPWSTR lpszPassword);
 
 /*
  * File functions
