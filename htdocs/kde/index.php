@@ -215,18 +215,23 @@ Page</a>.<br>
 user</span><br>
 <blockquote>Just now, the SynCE-KDE <tt>deb</tt>
 packages are
-designed for debian unstable.&nbsp; I will try to provide packages for
+designed for debian unstable (sid).&nbsp; I will try to provide
+packages for
 stable and testing as soon as possible. Until than you have to compile
-SynCE-KDE from source. <br>
+SynCE-KDE yourself from source if you are a debian-stable or
+debian-testing user. <br>
 The packages are prepeared to honor all
-dependencies including those coming from the synce libraries.
-Unfortunatly,
-just now there are no official synce-0.8 debian packages aviable. To
-still be able to install SynCE-KDE please use the
-"--force-depends" switch of dpkg. Of course, the SynCE libraries have
-to be installed before.<br>
-As long as there are no official SynCE-0.8 packages the SynCE-KDE
-packages are only available from the <a
+dependencies including those coming from the SynCE libraries.
+Most of the SynCE libraries are already part of debian-unstable. So
+these packages are installed automatically if you try to install
+SynCE-KDE. Unfortunately,
+just now there is no official debian packages of synce-rra-0.8 aviable.
+To
+still be able to install SynCE-KDE please compile and install
+synce-rra-0.8 before using SynCE-KDE.<br>
+As long as there are not all parts of SynCE-0.8 part of
+debian-unstable&nbsp; the SynCE-KDE
+packages will only be available from the <a
  href="http://sourceforge.net/projects/synce/">SourceForge Project
 Page</a> and not from the <a
  href="http://synce.sourceforge.net/synce/debian.php">SynCE-Debian-Repository</a>.<br>
@@ -265,7 +270,7 @@ command<code></code><br>
   <code></code>after <a
  href="http://sourceforge.net/cvs/?group_id=30550">logging
 in</a>. Look at <a href="#Installation">Compiling and Installing</a>
-for a guid how to compile and install SynCE-KDE by yourself.<a href="#"><br>
+for a guide how to compile and install SynCE-KDE by yourself.<a href="#"><br>
   </a></blockquote>
 <br>
 <h2><a name="Installation"
