@@ -68,14 +68,12 @@ public:
       */
     bool putCalendarTodos (KCal::Calendar& p_calendar);
 
-    /** Delete entries on the device. Currently this is just a convenience function, because events without
-      * a specified time are stored on 01011970 and cannot be deleted within the calendar on the device.
-      */
-    void deleteCalendarEntries (const uint32_t& p_typeId, RecordType p_recType);
-
     void deleteCalendar ();
 
     bool getIdStatus (QMap<QString, RecordType>& p_statusMap);
+
+    bool getEventIdStatus (QMap<QString, RecordType>& p_statusMap);
+    bool getTodoIdStatus (QMap<QString, RecordType>& p_statusMap);
 
     void addEvents    (KCal::Event::List& p_events);
     void updateEvents (KCal::Event::List& p_evenst);
@@ -115,7 +113,7 @@ private:
     static uint32_t    s_typeIdEvent;   /**< This static member stores the typeId belonging to "Appointment" */
     static uint32_t    s_typeIdTodo;    /**< This static member stores the typeId belonging to "Task" */
 
-    QRegExp            m_incidenceRegexp;
+    QRegExp m_incidenceRegexp;
 
     QString sCurrentTimeZone;
 };

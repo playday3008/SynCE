@@ -225,21 +225,33 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
     return true;
 }
 
+static bool checkForAllIdsRead(RRA_SyncMgr *rra, Rra::ids *ids, uint32_t type_id)
+{
+    RRA_SyncMgrType* type = rra_syncmgr_type_from_id(rra, type_id);
+
+    return ids->changedIds.count() + ids->unchangedIds.count() + ids->deletedIds.count() == type->count;
+} 
+
 
 bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
 {
     rraOk = true;
 
+    struct ids _ids;
+    
     _ids.changedIds.clear();
     _ids.unchangedIds.clear();
     _ids.deletedIds.clear();
+    _ids.allIdsRead = false;
 
     bool gotEvent = false;
     if (connect()) {
         rra_syncmgr_subscribe(rra, type_id, callback, &_ids);
         if (rra_syncmgr_start_events(rra)) {
-            while(rra_syncmgr_event_wait(rra, 3, &gotEvent) && gotEvent) { // changed for new syncmgr.h
+            _ids.allIdsRead = checkForAllIdsRead(rra, &_ids, type_id);
+            while(rra_syncmgr_event_wait(rra, 3, &gotEvent) && gotEvent & !_ids.allIdsRead) { // changed for new syncmgr.h
                 rra_syncmgr_handle_event(rra);
+                _ids.allIdsRead = checkForAllIdsRead(rra, &_ids, type_id);
             }
         } else {
             rraOk = false;
@@ -247,6 +259,7 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
         kdDebug(2120) << "UNSUBSCRIBING TYPE: " << type_id << endl;
         rra_syncmgr_unsubscribe(rra, type_id);
         kdDebug(2120) << type_id << "UNSUBSCRIBED" << endl;
+        rra_syncmgr_stop_events(rra);
         disconnect();
     } else {
         rraOk = false;

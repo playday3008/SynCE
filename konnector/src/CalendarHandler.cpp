@@ -76,12 +76,8 @@ bool CalendarHandler::getCalendarEvents (KCal::Calendar& p_calendar, RecordType 
 {
     kdDebug(2120) << "[CalendarHandler]: getCalendarEvents" << endl;
 
-    //Rra rra(m_pdaName);
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
 
@@ -91,7 +87,6 @@ bool CalendarHandler::getCalendarEvents (KCal::Calendar& p_calendar, RecordType 
 
     if (!m_rra->getIds (s_typeIdEvent, &ids))
     {
-        m_rra->disconnect();
         return false;
     }
 
@@ -116,8 +111,6 @@ bool CalendarHandler::getCalendarEvents (KCal::Calendar& p_calendar, RecordType 
             break;
     }
 
-    m_rra->disconnect();
-
     // iterate over calendar and add X-POCKETPCCOMM-REMOTE_ID_*
 
     return true;
@@ -128,12 +121,8 @@ bool CalendarHandler::getCalendarTodos (KCal::Calendar& p_calendar, RecordType p
 {
     kdDebug(2120) << "[CalendarHandler]: getCalendarTodos" << endl;
 
-    //Rra rra(m_pdaName);
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
 
@@ -141,7 +130,6 @@ bool CalendarHandler::getCalendarTodos (KCal::Calendar& p_calendar, RecordType p
 
     if (!m_rra->getIds (s_typeIdTodo, &ids))
     {
-        m_rra->disconnect();
         return false;
     }
 
@@ -165,7 +153,6 @@ bool CalendarHandler::getCalendarTodos (KCal::Calendar& p_calendar, RecordType p
             getTodoEntry (p_calendar, ids, UNCHANGED);
             break;
     }
-    m_rra->disconnect();
 
     return true;
 }
@@ -311,14 +298,12 @@ bool CalendarHandler::putCalendarEvents (KCal::Calendar& p_calendar)
     uint32_t newObjectId;
     bool ok;
 
-    if (eList.begin() == eList.end())
+    if (eList.begin() == eList.end()) {
         return true;
-
-    m_rra->connect();
+    }
 
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
     /*
@@ -368,7 +353,7 @@ bool CalendarHandler::putCalendarEvents (KCal::Calendar& p_calendar)
         }
 
     }
-    m_rra->disconnect();
+
     return true;
 }
 
@@ -389,11 +374,8 @@ bool CalendarHandler::putCalendarTodos (KCal::Calendar& p_calendar)
     if (eList.begin() == eList.end())
         return true;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
     /*
@@ -448,25 +430,20 @@ bool CalendarHandler::putCalendarTodos (KCal::Calendar& p_calendar)
                 addIdPair("RRA-ID-" + QString::number(newObjectId, 16).rightJustify(8, '0'), curId);
         }
     }
-    m_rra->disconnect();
 
     return true;
 }
 
 void CalendarHandler::deleteCalendar ()
 {
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return;
     }
 
     struct pocketPCCommunication::Rra::ids eventIds;
     if (!m_rra->getIds (s_typeIdEvent, &eventIds))
     {
-        m_rra->disconnect();
         return;
     }
 
@@ -474,68 +451,18 @@ void CalendarHandler::deleteCalendar ()
     deleteEntries(eventIds, s_typeIdEvent, UNCHANGED);
     deleteEntries(eventIds, s_typeIdEvent, DELETED);
 
-    m_rra->finalDisconnect();
+    m_rra->disconnect();
     m_rra->connect();
-
 
     struct pocketPCCommunication::Rra::ids todoIds;
     if (!m_rra->getIds (s_typeIdTodo, &todoIds))
     {
-        m_rra->disconnect();
         return;
     }
 
     deleteEntries(todoIds, s_typeIdTodo, CHANGED);
     deleteEntries(todoIds, s_typeIdTodo, UNCHANGED);
     deleteEntries(todoIds, s_typeIdTodo, DELETED);
-
-    m_rra->disconnect();
-}
-
-
-void CalendarHandler::deleteCalendarEntries (const uint32_t& p_typeId, RecordType p_recType)
-{
-    //pocketPCCommunication::Rra rra(m_pdaName);
-    m_rra->connect();
-
-    if (!getTypeId())
-    {
-        m_rra->disconnect();
-        return;
-    }
-
-    struct pocketPCCommunication::Rra::ids ids;
-    if (!m_rra->getIds (p_typeId, &ids))
-    {
-        m_rra->disconnect();
-        return;
-    }
-
-    QValueList<uint32_t>::const_iterator it;
-    QValueList<uint32_t>::const_iterator end;
-
-    switch (p_recType)
-    {
-        case CHANGED:
-            it = ids.changedIds.begin();
-            end = ids.changedIds.end();
-            break;
-        case DELETED:
-            it = ids.deletedIds.begin();
-            end = ids.deletedIds.end();
-            break;
-        case UNCHANGED:
-            it = ids.unchangedIds.begin();
-            end = ids.unchangedIds.end();
-            break;
-        case ALL: // not reasonable to have ALL here! added to avoid warning of gcc
-            break;
-    }
-
-    for (; it != end; ++it)
-        m_rra->deleteObject (p_typeId, *it);
-
-    m_rra->disconnect();
 }
 
 
@@ -558,34 +485,34 @@ bool CalendarHandler::getTypeId ()
 
 bool CalendarHandler::getIdStatus (QMap<QString, RecordType>& p_statusMap)
 {
-    m_rra->connect();
+    if (getEventIdStatus(p_statusMap)) {
+        return getTodoIdStatus(p_statusMap);
+    }
+
+    return false;
+}
+
+
+bool CalendarHandler::getEventIdStatus (QMap<QString, RecordType>& p_statusMap)
+{
+    if (!getTypeId())
+    {
+        return false;
+    }
+
+    return  getIdStatusPro (p_statusMap, s_typeIdEvent);
+}
+
+bool CalendarHandler::getTodoIdStatus (QMap<QString, RecordType>& p_statusMap)
+{
 
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
-    //m_rra->finalDisconnect();
 
-    /*
-    if (!getIdStatusPro (p_statusMap, s_typeIdEvent))
-        return false;
-    return getIdStatusPro (p_statusMap, s_typeIdTodo);
-    */
-
-    bool ok;
-    ok = getIdStatusPro (p_statusMap, s_typeIdEvent);
-    if (ok)
-    {
-        m_rra->finalDisconnect();
-        m_rra->connect();
-        ok = getIdStatusPro(p_statusMap, s_typeIdTodo);
-    }
-    m_rra->disconnect();
-
-    return ok;
+    return getIdStatusPro(p_statusMap, s_typeIdTodo);
 }
-
 
 void CalendarHandler::deleteEventEntry (const uint32_t& p_objectId)
 {
@@ -614,11 +541,8 @@ void CalendarHandler::addEvents (KCal::Event::List& p_events)
     if (p_events.begin() == p_events.end())
         return;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return;
     }
 
@@ -649,8 +573,6 @@ void CalendarHandler::addEvents (KCal::Event::List& p_events)
             }
         }
     }
-
-    m_rra->disconnect();
 }
 
 
@@ -659,11 +581,8 @@ void CalendarHandler::addTodos (KCal::Todo::List& p_todos)
     if (p_todos.begin() == p_todos.end())
         return;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return;
     }
 
@@ -694,8 +613,6 @@ void CalendarHandler::addTodos (KCal::Todo::List& p_todos)
             }
         }
     }
-
-    m_rra->disconnect();
 }
 
 
@@ -704,11 +621,8 @@ void CalendarHandler::updateEvents (KCal::Event::List& p_events)
     if (p_events.begin() == p_events.end())
         return;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return;
     }
 
@@ -725,8 +639,6 @@ void CalendarHandler::updateEvents (KCal::Event::List& p_events)
             m_rra->putVEvent (vEvent, s_typeIdEvent, getOriginalId((*it)->uid()));
         }
     }
-
-    m_rra->disconnect();
 }
 
 
@@ -735,11 +647,8 @@ void CalendarHandler::updateTodos (KCal::Todo::List& p_todos)
     if (p_todos.begin() == p_todos.end())
         return;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return;
     }
 
@@ -756,8 +665,6 @@ void CalendarHandler::updateTodos (KCal::Todo::List& p_todos)
             m_rra->putVToDo (vEvent, s_typeIdTodo, getOriginalId((*it)->uid()));
         }
     }
-
-    m_rra->disconnect();
 }
 
 
@@ -766,11 +673,8 @@ void CalendarHandler::removeEvents (KCal::Event::List& p_events)
     if (p_events.begin() == p_events.end())
         return;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return;
     }
 
@@ -781,8 +685,6 @@ void CalendarHandler::removeEvents (KCal::Event::List& p_events)
         if (isARraId((*it)->uid()))
             deleteEventEntry (getOriginalId((*it)->uid()));
     }
-
-    m_rra->disconnect();
 }
 
 
@@ -791,11 +693,7 @@ void CalendarHandler::removeTodos (KCal::Todo::List& p_todos)
     if (p_todos.begin() == p_todos.end())
         return;
 
-    m_rra->connect();
-
-    if (!getTypeId())
-    {
-        m_rra->disconnect();
+    if (!getTypeId()) {
         return;
     }
 
@@ -806,8 +704,6 @@ void CalendarHandler::removeTodos (KCal::Todo::List& p_todos)
         if (isARraId((*it)->uid()))
             deleteTodoEntry(getOriginalId((*it)->uid()));
     }
-
-    m_rra->disconnect();
 }
 
 
@@ -816,13 +712,11 @@ bool CalendarHandler::getEvents (KCal::Event::List& p_events, const QStringList&
     if (p_ids.begin() == p_ids.end())
         return true;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
+
 
     QStringList::const_iterator it = p_ids.begin();
     QString vEvent;
@@ -860,11 +754,8 @@ bool CalendarHandler::getTodos (KCal::Todo::List& p_todos, const QStringList& p_
     if (p_ids.begin() == p_ids.end())
         return true;
 
-    m_rra->connect();
-
     if (!getTypeId())
     {
-        m_rra->disconnect();
         return false;
     }
 

@@ -59,13 +59,14 @@ namespace KABC {
 
 namespace pocketPCCommunication {
 
-    class Rra : /*public QObject,*/ public KShared
+class Rra : /*public QObject,*/ public KShared
 {
 public:
     struct ids {
         QValueList<uint32_t> changedIds;
         QValueList<uint32_t> unchangedIds;
         QValueList<uint32_t> deletedIds;
+        bool allIdsRead;
     };
 
     struct Partner {
@@ -113,7 +114,7 @@ private:
     RRA_Matchmaker* matchmaker;
     QString pdaName;
     bool rraOk;
-    struct ids _ids;
+//    struct ids _ids;
     int useCount;
     RRA_Timezone tzi;
 

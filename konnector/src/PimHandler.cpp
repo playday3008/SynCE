@@ -54,8 +54,10 @@ bool PimHandler::getIdStatusPro (QMap<QString,RecordType>& p_statusMap, const ui
         return false;
     }
     */
-    if (!m_rra->getIds (p_typeId, &ids))
+    if (!m_rra->getIds (p_typeId, &ids)) {
+        kdDebug(2120) << "------------------------pppppppppppppppp" << endl;
         return false;
+    }
 
     // now we have the necessary data...
     // iterate over the complete data structure and fill the map

@@ -27,11 +27,13 @@ lib_LTLIBRARIES = libsyncekonnector.la
 libsyncekonnector_la_LDFLAGS = $(KDE_PLUGIN) $(KDE_RPATH) $(RRA_LDFLAGS)\
 	$(RAPI_LDFLAGS) $(SYNCE_LDFLAGS) $(all_libraries)
 libsyncekonnector_la_SOURCES = AddressBookHandler.cpp CalendarHandler.cpp \
-	matchmaker.cpp PDAIdHelper.cpp PimHandler.cpp PocketPCKonnector.cpp \
-	PocketPCKonnectorConfig.cpp PocketPCWorker.cpp rapiwrapper.cpp rra.cpp
+		matchmaker.cpp PDAIdHelper.cpp PimHandler.cpp PocketPCKonnector.cpp \
+		PocketPCKonnectorConfig.cpp PocketPCWorker.cpp rapiwrapper.cpp rra.cpp eventhandler.cpp \
+	todohandler.cpp
 noinst_HEADERS = AddressBookHandler.h CalendarHandler.h matchmaker.h \
-	PDAIdHelper.h PimHandler.h PocketPCKonnector.h PocketPCKonnectorConfig.h \
-	PocketPCWorker.h rapiwrapper.h RecordType.h resourcenull.h rra.h
+		PDAIdHelper.h PimHandler.h PocketPCKonnector.h PocketPCKonnectorConfig.h \
+		PocketPCWorker.h rapiwrapper.h RecordType.h resourcenull.h rra.h eventhandler.h \
+	todohandler.h
 
 servicedir   = $(kde_servicesdir)/kresources/konnector
 service_DATA = syncekonnector.desktop
