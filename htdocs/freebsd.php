@@ -6,11 +6,27 @@
 
 <h1>SynCE - FreeBSD support</h1>
 
-<p><strike>Visit <a href="http://sam.stral.net/freebsd/synce.html">SynCE on FreeBSD</a>
-by Sam Lawrance.</strike></p>
+<h2>How to get</h2>
 
-<p>The above site has disappeared. This page will be updated when more
-information is available!</p>
+Most parts of SynCE are available ready to compile and install from
+the <a href="http://www.freebsd.org/ports/">FreeBSD ports tree</a>.
+Users wanting binary packages should install using <tt>pkg_add</tt>
+with the remote fetch (<tt>-r</tt>) flag. Comments and
+<i>FreeBSD-specific</i> support requests can be emailed to
+<a href="mailto:boris@brooknet.com.au">Sam Lawrance</a>. Please do not
+email this address with general support requests. For general support,
+look <a href="help.php">here</a>.<p> 
+
+<h2>How to connect</h2>
+
+To connect with a serial cable, use <tt>palm/synce-serial</tt> and
+follow the usual SynCE setup instructions.<br>
+USB support is also available. To connect with USB, install
+<tt>palm/uppc-kmod</tt> and run 'uppcsetup'. Further information and
+tips for troubleshooting are available in the <tt>uppc(4)</tt>
+manpage.
+
+<p>Return to <a href="index.php">main page</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>
