@@ -37,6 +37,7 @@ extern "C" {
 #include <rra/syncmgr.h>
 #include <rra/matchmaker.h>
 #include <rra/timezone.h>
+#include <rra/uint32vector.h>
 }
 
 #include <qobject.h>
@@ -66,6 +67,7 @@ public:
         QValueList<uint32_t> changedIds;
         QValueList<uint32_t> unchangedIds;
         QValueList<uint32_t> deletedIds;
+        RRA_Uint32Vector* uidVector;
         bool allIdsRead;
     };
 

@@ -66,7 +66,6 @@ Rra::Rra()
     rra = rra_syncmgr_new();
 
     matchmaker = 0;
-
     useCount = 0;
 }
 
@@ -236,6 +235,7 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
     if (eventIds != NULL) {
         for (uint32_t i = 0; i < count; i++) {
             eventIds->append(ids[i]);
+            rra_uint32vector_add(_ids->uidVector, ids[i]);
         }
     }
 
@@ -260,7 +260,9 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
     _ids.changedIds.clear();
     _ids.unchangedIds.clear();
     _ids.deletedIds.clear();
+    _ids.uidVector = rra_uint32vector_new();
     _ids.allIdsRead = false;
+    RRA_Uint32Vector* uidVector = rra_uint32vector_new();
 
     bool gotEvent = false;
     if (connect()) {
@@ -271,16 +273,21 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
                 rra_syncmgr_handle_event(rra);
                 _ids.allIdsRead = checkForAllIdsRead(rra, &_ids, type_id);
             }
+            rra_syncmgr_get_deleted_object_ids(rra, type_id, _ids.uidVector, uidVector);
+            for (size_t i = 0; i < uidVector->used; i++) {
+                _ids.deletedIds.append(uidVector->items[i]);
+            }
         } else {
             rraOk = false;
         }
-        kdDebug(2120) << "UNSUBSCRIBING TYPE: " << type_id << endl;
         rra_syncmgr_unsubscribe(rra, type_id);
-        kdDebug(2120) << type_id << "UNSUBSCRIBED" << endl;
         disconnect();
     } else {
         rraOk = false;
     }
+
+    rra_uint32vector_destroy(_ids.uidVector, true);
+    rra_uint32vector_destroy(uidVector, true);
 
     *ids = _ids;
 
@@ -377,7 +384,6 @@ QString Rra::getVEvent(uint32_t type_id, uint32_t object_id)
                 &vevent, 0, NULL)) {
             rraOk = false;
         }
-
         disconnect();
     }
 
@@ -405,7 +411,9 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
     rraOk = true;
 
     if (connect()) {
+        vEvent = vEvent.stripWhiteSpace();
         const char *vevent = vEvent.ascii();
+        kdDebug(2120) << vevent << endl;
         if (!rra_appointment_from_vevent(vevent, NULL, &buffer,
                 &buffer_size, ((object_id != 0) ? RRA_APPOINTMENT_UPDATE :
                 RRA_APPOINTMENT_NEW) | RRA_APPOINTMENT_ISO8859_1, NULL)) {

@@ -18,6 +18,7 @@
 #include <libkcal/calendarnull.h>
 #include <libkcal/calendarlocal.h>
 #include <qfile.h>
+#include <qregexp.h>
 
 namespace pocketPCCommunication
 {
@@ -73,7 +74,6 @@ namespace pocketPCCommunication
             KCal::Incidence *incidence = calFormat.fromString (vCal);
 
             QString kdeId;
-
             if ((kdeId = mUidHelper->kdeId("SynCEEvent", incidence->uid(), "---")) != "---") {
                 incidence->setUid(kdeId);
             } else {
@@ -102,9 +102,9 @@ namespace pocketPCCommunication
             if ((kdeId = mUidHelper->kdeId("SynCEEvent", konId, "---")) != "---") {
                 event->setUid(kdeId);
                 mUidHelper->removeId("SynCEEvent", event->uid());
+                mEventList.push_back( event );
             }
 
-            mEventList.push_back( event );
         }
 
         return count;
@@ -140,7 +140,7 @@ namespace pocketPCCommunication
         }
 
         if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
-            ret = retrieveEventListFromDevice( mEventList, ids.deletedIds );
+            ret = fakeEventListFromDevice( mEventList, ids.deletedIds );
             if ( ret >= 0 ) {
                 count += 0;
             }
@@ -263,6 +263,8 @@ namespace pocketPCCommunication
                 it != p_eventList.end(); ++it ) {
 
             QString iCal = calFormat.toString(*it);
+            iCal.stripWhiteSpace();
+            iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
 
             uint32_t newObjectId = m_rra->putVEvent( iCal, mTypeId, 0 );
 
@@ -287,6 +289,8 @@ namespace pocketPCCommunication
 
             if (kUid != "---") {
                 QString iCal = calFormat.toString(*it);
+                iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
+
                 m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
             }
         }

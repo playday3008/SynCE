@@ -93,9 +93,9 @@ namespace pocketPCCommunication
             if ((kdeId = mUidHelper->kdeId("SynCETodo", konId, "---")) != "---") {
                 todo->setUid(kdeId);
                 mUidHelper->removeId("SynCETodo", todo->uid());
+                mTodoList.push_back( todo );
             }
 
-            mTodoList.push_back( todo );
         }
 
         return count;
@@ -131,7 +131,7 @@ namespace pocketPCCommunication
         }
 
         if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
-            ret = retrieveTodoListFromDevice( mTodoList, ids.deletedIds );
+            ret = fakeTodoListFromDevice( mTodoList, ids.deletedIds );
             if ( ret >= 0 ) {
                 count += 0;
             }

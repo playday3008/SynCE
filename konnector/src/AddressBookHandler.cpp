@@ -94,9 +94,8 @@ namespace pocketPCCommunication
             if ((kdeId = mUidHelper->kdeId("SynCEAddressbook", konId, "---")) != "---") {
                 addr.setUid(kdeId);
                 mUidHelper->removeId("SynCEAddressbook", addr.uid());
+                mAddresseeList.push_back( addr );
             }
-
-            mAddresseeList.push_back( addr );
         }
 
         return count;
@@ -132,7 +131,7 @@ namespace pocketPCCommunication
         }
 
         if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
-            ret = retrieveAddresseeListFromDevice( mAddresseeList, ids.deletedIds );
+            ret = fakeAddresseeListFromDevice( mAddresseeList, ids.deletedIds );
             if ( ret >= 0 ) {
                 count += 0;
             }
