@@ -90,6 +90,11 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>August 14, 2003</a></b> We would like to welcome <a
+href="mailto:snaggen@users.sourceforge.net">Mattias Eriksson</a> to the SynCE
+project!  He was the one who ported the <tt>multisync_plugin</tt> module to
+GNOME 2 and he will continue to support it.</p>
+
 <p><b>August 11, 2003</b> Added some information about the new <a
 href="unshield.php">Unshield</a> tool that can be used to extract files from
 InstallShield installers.</p>
@@ -325,6 +330,9 @@ responsible for making Debian packages of SynCE releases.</p>
 
 <p><a href="mailto:jonmcd@users.sourceforge.net">Jonathan McDowell</a> will
 help out with Debian packages and other things.</p>
+
+<p><a href="mailto:snaggen@users.sourceforge.net">Mattias Eriksson</a> support
+the GNOME applications in SynCE.</p>
 
 </div>
 <?php include 'footer.php'; ?>
