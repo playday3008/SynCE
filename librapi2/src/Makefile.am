@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -ansi -pedantic @CFLAGS@ -Isupport
+CFLAGS = -ggdb -Wall -Wno-long-long -ansi -pedantic @CFLAGS@ -Isupport
 @SET_MAKE@
 
 ## create this library
