@@ -41,48 +41,71 @@ extern "C" {
 
 
 struct PdaScreenImpl::_keymap PdaScreenImpl::keymap[] = {
-        { VK_BACK, Qt::Key_Backspace, "BACK" },
-        { VK_TAB, Qt::Key_Tab, "Tab" },
+        { 0x08, Qt::Key_Backspace, "BACK" },
+        { 0x09, Qt::Key_Tab, "Tab" },
         { VK_CLEAR, Qt::Key_Clear, "Clear" },
-        { VK_RETURN, Qt::Key_Return, "Return" },
-        { VK_SHIFT, Qt::Key_Shift, "Shift" },
-        { VK_CONTROL, Qt::Key_Control, "Control" },
+        { 0x0d, Qt::Key_Return, "Return" },
+        { 0x10, Qt::Key_Shift, "Shift" },
+        { 0x11, Qt::Key_Control, "Control" },
         { VK_MENU, Qt::Key_Alt, "Alt" },
         { VK_PAUSE, Qt::Key_Pause, "Pause" },
-        { VK_CAPITAL, Qt::Key_CapsLock, "Capslock" },
+        { 0x14, Qt::Key_CapsLock, "Capslock" },
         { VK_ESCAPE, Qt::Key_Escape, "Escape" },
-        { VK_SPACE, Qt::Key_Space, "Space" },
+        { 0x20, Qt::Key_Space, "Space" },
         { VK_PRIOR, Qt::Key_Prior, "Prior" },
         { VK_NEXT, Qt::Key_Next, "Next" },
         { VK_END, Qt::Key_End, "End" },
         { VK_HOME, Qt::Key_Home, "Home" },
-        { VK_LEFT, Qt::Key_Left, "Left" },
-        { VK_UP, Qt::Key_Up, "Up" },
-        { VK_RIGHT, Qt::Key_Right, "Right" },
-        { VK_DOWN, Qt::Key_Down, "Down" },
+        { 0x25, Qt::Key_Left, "Left" },
+        { 0x26, Qt::Key_Up, "Up" },
+        { 0x27, Qt::Key_Right, "Right" },
+        { 0x28, Qt::Key_Down, "Down" },
         { VK_SELECT, UNDEF, "Select" },
         { VK_PRINT, UNDEF, "Print" },
         { VK_EXECUTE, UNDEF, "Execute" },
         { VK_SNAPSHOT, Qt::Key_Print, "Snapshot" },
         { VK_INSERT, Qt::Key_Insert, "Insert" },
-        { VK_DELETE, Qt::Key_Delete, "Delete" },
+        { 0x2e, Qt::Key_Delete, "Delete" },
         { VK_HELP, Qt::Key_Help, "Help" },
-        { VK_NUMPAD0, UNDEF, "NUM0" },
-        { VK_NUMPAD1, UNDEF, "NUM1" },
-        { VK_NUMPAD2, UNDEF, "NUM2" },
-        { VK_NUMPAD3, UNDEF, "NUM3" },
-        { VK_NUMPAD4, UNDEF, "NUM4" },
-        { VK_NUMPAD5, UNDEF, "NUM5" },
-        { VK_NUMPAD6, UNDEF, "NUM6" },
-        { VK_NUMPAD7, UNDEF, "NUM7" },
-        { VK_NUMPAD8, UNDEF, "NUM8" },
-        { VK_NUMPAD9, UNDEF, "NUM9" },
-        { VK_MULTIPLY, Qt::Key_multiply, "*" },
-        { VK_ADD, Qt::Key_Plus, "+" },
-        { VK_SEPARATOR, UNDEF, "Separator" },
-        { VK_SUBTRACT, Qt::Key_Minus, "-" },
-        { VK_DECIMAL, Qt::Key_Period, "." },
-        { VK_DIVIDE, Qt::Key_Slash, "/" },
+        { 0x31, 33, "!" },
+        { 0x32, 34, "\"" },
+        { 0x33, 0, "§" },
+        { 0x34, 36, "$" },
+        { 0x35, 37, "%" },
+        { 0x36, 38, "&" },
+        { 0x37, 47, "/" },
+        { 0x38, 40, "(" },
+        { 0x39, 41, ")" },
+        { 0x30, 61, "=" },
+        { 0xdb, 63, "?" },
+        { 0xdd, 96, "`" },
+        { 0x2e, 4103, "ENTF" },
+        { 0xbb, 42, "*" },
+        { 0xbc, 59, ";" },
+        { 0xbe, 58, ":" },
+        { 0xbd, 95, "_" },
+        { 0xbf, 39, "'" },
+        { 0xdc, 176, "°" },
+        { 0xbc, 44, "," },
+        { 0xbe, 46, "." },
+        { 0xbd, 45, "-" },
+        { 0xbf, 35, "#" },
+        { 0xdc, 94, "^" },
+        { 0x51, 64, "@" },
+        { 0xbb, 126, "~" },
+        { 0xb2, 178, "²" },
+        { 0xb3, 179, "³" },
+        { 0x37, 123, "{" },
+        { 0x38, 91, "[" },
+        { 0x39, 39, "]" },
+        { 0x30, 125, "}" },
+        { 0xe2, 60, "<" },
+        { 0xe2, 124, "|" },
+        { 0xe2, 62, ">" },
+        { 0xdb, 92, "\\" },
+        { 0xde, 228, "ä" },
+        { 0xc0, 246, "ö" },
+        { 0xba, 252, "ü" },
         { VK_NUMLOCK, Qt::Key_NumLock, "Numlock" },
         { VK_SCROLL, Qt::Key_ScrollLock, "ScrollLock" },
         { '0', Qt::Key_0, "0" },
@@ -122,26 +145,13 @@ struct PdaScreenImpl::_keymap PdaScreenImpl::keymap[] = {
         { 'Y', Qt::Key_Y, "Y" },
         { 'Z', Qt::Key_Z, "Z" },
         { -1, 0 }
-/*
-        { VK_NUMPAD0, Qt::Key_ },
-        { VK_NUMPAD1, Qt::Key_ },
-        { VK_NUMPAD2, Qt::Key_ },
-        { VK_NUMPAD3, Qt::Key_ },
-        { VK_NUMPAD4, Qt::Key_ },
-        { VK_NUMPAD5, Qt::Key_ },
-        { VK_NUMPAD6, Qt::Key_ },
-        { VK_NUMPAD7, Qt::Key_ },
-        { VK_NUMPAD8, Qt::Key_ },
-        { VK_NUMPAD9, Qt::Key_ },
-*/
-
 };
 
 
 PdaScreenImpl::PdaScreenImpl(QString pdaName, KAboutData *aboutData, KAboutApplication *aboutApplication)
         : PdaScreen(NULL, "PdaScreen")
 {
-    this->setCaption("PDA-Screen:" + pdaName);
+    this->setCaption("PDAMirror:" + pdaName);
 }
 
 PdaScreenImpl::~PdaScreenImpl()
@@ -170,7 +180,84 @@ QString PdaScreenImpl::getDeviceIp(QString pdaName)
 }
 
 
-bool PdaScreenImpl::connectPda(QString pdaAddress, QString pdaName)
+bool PdaScreenImpl::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall)
+{
+    synce::PROCESS_INFORMATION info = {0, 0, 0, 0};
+    QString deviceAddress = pdaName;
+
+    if (isSynCeDevice) {
+        deviceAddress = getDeviceIp(pdaName);
+        if (deviceAddress.isEmpty()) {
+            return false;
+        }
+
+        Ce::rapiInit(pdaName);
+        synce::SYSTEM_INFO system;
+        Ce::getSystemInfo(&system);
+
+        QString arch;
+
+        switch(system.wProcessorArchitecture) {
+        case 1: // Mips
+            arch = ".mips";
+            break;
+        case 4: // SHx
+            arch = ".shx";
+            break;
+        case 5: // Arm
+            arch = ".arm";
+            break;
+        }
+
+        QString binaryVersion = "screensnap.exe" + arch;
+
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/screensnap.exe") || forceInstall) {
+            kdDebug(2120) << "Uploading" << endl;
+            KStandardDirs *dirs = KApplication::kApplication()->dirs();
+            QString screensnap = dirs->findResource("data", "raki/scripts/" + binaryVersion);
+            KIO::NetAccess::upload(screensnap,
+                    "rapip://" + pdaName + "/Windows/screensnap.exe");
+        }
+        if (!Ce::createProcess(QString("\\Windows\\screensnap.exe").ucs2(), NULL,
+                           NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {}
+        Ce::rapiUninit();
+    }
+
+    pdaSocket = NULL;
+
+    int connectcount = 0;
+
+    do {
+        if (pdaSocket != NULL) {
+            delete pdaSocket;
+        }
+        pdaSocket = new KSocket(deviceAddress.ascii(), 1234);
+        if (pdaSocket->socket() == -1) {
+            usleep(20000);
+        }
+    } while (pdaSocket->socket() == -1 && connectcount++ < 10);
+
+    if (pdaSocket->socket() == -1) {
+        return false;
+    }
+
+    pdaSocket->enableRead(true);
+
+    oldData = NULL;
+
+    connect(pdaSocket, SIGNAL(readEvent(KSocket* )), this, SLOT(readSocketRLE(KSocket* )));
+//    connect(pdaSocket, SIGNAL(readEvent(KSocket* )), this, SLOT(readSocketRLE(KSocket* )));
+    connect(pdaSocket, SIGNAL(closeEvent(KSocket *)), this, SLOT(closeSocket(KSocket* )));
+    connect(imageViewer, SIGNAL(wheelRolled(int)), this, SLOT(wheelRolled(int)));
+    connect(imageViewer, SIGNAL(keyPressed(int, int)), this, SLOT(keyPressed(int, int)));
+    connect(imageViewer, SIGNAL(keyReleased(int, int)), this, SLOT(keyReleased(int, int)));
+
+    return true;
+}
+
+
+
+bool PdaScreenImpl::connectPda(QString pdaAddress, QString pdaName, bool forceInstall)
 {
     synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
     QString deviceAddress = pdaAddress;
@@ -201,7 +288,7 @@ bool PdaScreenImpl::connectPda(QString pdaAddress, QString pdaName)
 
         QString binaryVersion = "screensnap.exe" + arch;
 
-        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/screensnap.exe")) {
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/screensnap.exe") || forceInstall) {
             kdDebug(2120) << "Uploading" << endl;
             KStandardDirs *dirs = KApplication::kApplication()->dirs();
             QString screensnap = dirs->findResource("data", "raki/scripts/" + binaryVersion);
@@ -229,6 +316,7 @@ bool PdaScreenImpl::connectPda(QString pdaAddress, QString pdaName)
 
     oldData = NULL;
 
+//    connect(pdaSocket, SIGNAL(readEvent(KSocket* )), this, SLOT(readSocketRLE(KSocket* )));
     connect(pdaSocket, SIGNAL(readEvent(KSocket* )), this, SLOT(readSocketRLE(KSocket* )));
     connect(pdaSocket, SIGNAL(closeEvent(KSocket *)), this, SLOT(closeSocket(KSocket* )));
     connect(imageViewer, SIGNAL(wheelRolled(int)), this, SLOT(wheelRolled(int)));
@@ -264,6 +352,7 @@ size_t PdaScreenImpl::rle_decode(unsigned char *target, unsigned char *source, s
             act3 += 3;
             count += 3;
             if (samcount == 2) {
+                samcount = 0;
                 unsigned char samruncount = *act1;
                 while (samruncount) {
                     *tmp_target++ = val1 ^ *oldData++;
@@ -279,7 +368,6 @@ size_t PdaScreenImpl::rle_decode(unsigned char *target, unsigned char *source, s
                     val1 = *act1;
                     val2 = *act2;
                     val3 = *act3;
-                    samcount = 0;
                 }
             }
         } else {

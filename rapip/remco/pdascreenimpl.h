@@ -211,7 +211,8 @@ class PdaScreenImpl : public PdaScreen
 public:
     PdaScreenImpl(QString pdaName, KAboutData *aboutData, KAboutApplication *aboutApplication);
     ~PdaScreenImpl();
-    bool connectPda(QString pdaAddress, QString synceName = NULL);
+    bool connectPda(QString pdaAddress, QString synceName = NULL, bool forceInstall = false);
+    bool connectPda(QString pdaName, bool isSynCeDevice = true, bool forceInstall = false);
 
 public slots:
     virtual void fileNew();
