@@ -45,6 +45,75 @@ static bool in_background = true;
 static bool is_connected = false;
 static char* device_name = NULL;
 
+static EggTrayIcon* tray_icon = NULL;
+static GtkTooltips* tooltips = NULL;
+
+static const char* get_battery_flag_string(unsigned flag)
+{
+	const char* name;
+	
+	switch (flag)
+	{
+		case BATTERY_FLAG_HIGH:        name = "High";       break;
+		case BATTERY_FLAG_LOW:         name = "Low";        break;
+		case BATTERY_FLAG_CRITICAL:    name = "Critical";   break;
+		case BATTERY_FLAG_CHARGING:    name = "Charging";   break;
+		case BATTERY_FLAG_NO_BATTERY:  name = "NoBattery";  break;
+
+		default: name = "Unknown"; break;
+	}
+
+	return name;
+}
+
+static void set_status_tooltips()
+{
+	SYSTEM_POWER_STATUS_EX power;
+	STORE_INFORMATION store;
+	char* power_str = NULL;
+	char* store_str = NULL;
+	char* tooltip_str = NULL;
+	
+	memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
+	if (CeGetSystemPowerStatusEx(&power, false) &&
+			BATTERY_PERCENTAGE_UNKNOWN != power.BatteryLifePercent)
+	{
+		power_str = g_strdup_printf(
+				"%i%% (%s)", 
+				power.BatteryLifePercent, 
+				get_battery_flag_string(power.BatteryFlag));
+	}
+	else
+	{
+		power_str = g_strdup("Unknown");
+	}
+	 
+	memset(&store, 0, sizeof(store));
+	if (CeGetStoreInformation(&store) && store.dwStoreSize != 0)
+	{
+		store_str = g_strdup_printf(
+				"%i%% (%i megabytes)", 
+				100 * store.dwFreeSize / store.dwStoreSize,
+				store.dwFreeSize >> 20);
+	}
+	else
+	{
+		store_str = g_strdup("Unknown");
+	}
+
+	tooltip_str = g_strdup_printf(
+		"Battery life:\t%s\n"
+		"Free store:\t%s",
+		power_str,
+		store_str);
+
+	gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), tooltip_str, NULL);
+
+	g_free(power_str);
+	g_free(store_str);
+	g_free(tooltip_str);
+}
+
 static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 {
 	GtkWidget *about;
@@ -162,6 +231,7 @@ static void update()
 	{
 		is_connected = false;
 		set_icon();
+		gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), "Not connected", NULL);
 		return;
 	}
 
@@ -200,6 +270,7 @@ static void update()
 	wstr_free_string(device_name);
 	device_name = wstr_to_ascii(buffer);
 
+	set_status_tooltips();
 
 exit:
 	CeRapiUninit();
@@ -324,7 +395,6 @@ int
 main (gint argc, gchar **argv)
 {
 	int result = 1;
-  EggTrayIcon *tray_icon;
 	GtkWidget *box;
 
 	write_script();
@@ -354,6 +424,8 @@ main (gint argc, gchar **argv)
 
 	g_signal_connect(G_OBJECT(box), "button-press-event", G_CALLBACK(trayicon_clicked), NULL);
 
+	tooltips = gtk_tooltips_new();
+	
 	set_icon();
 	update();
 
