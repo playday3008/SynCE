@@ -36,7 +36,7 @@
 #elif HAVE_SYS_BYTESWAP_H
 #include <sys/byteswap.h>
 #else
-#define IMPLEMENT_BSWAP_XX
+#define IMPLEMENT_BSWAP_XX  1
 u_int16_t bswap_16(u_int16_t x);
 u_int32_t bswap_32(u_int32_t x);
 #endif
