@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/synce-trayicon.c)
 
-AM_INIT_AUTOMAKE(synce-trayicon, 0.1)
+AM_INIT_AUTOMAKE(synce-trayicon, 0.3)
 AM_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.

@@ -39,6 +39,7 @@
 #include <libgnomeui/gnome-dialog.h>
 #include <libgnomeui/gnome-about.h>
 #include "eggtrayicon.h"
+#include "config.h"
 
 static bool in_background = true;
 static bool is_connected = false;
@@ -54,7 +55,7 @@ static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 	
 	about = gnome_about_new (
 			"SynCE Tray Icon",
-			"0.1",
+			VERSION,
 			"Copyright (c) 2002, David Eriksson",
 			"Displays information about devices connected through SynCE",
 			authors,
