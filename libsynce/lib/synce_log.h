@@ -8,9 +8,11 @@
 
 #define SYNCE_LOG_LEVEL_ERROR     1
 #define SYNCE_LOG_LEVEL_WARNING   2
-#define SYNCE_LOG_LEVEL_TRACE     3
+#define SYNCE_LOG_LEVEL_INFO      3
+#define SYNCE_LOG_LEVEL_DEBUG     4
+#define SYNCE_LOG_LEVEL_TRACE     SYNCE_LOG_LEVEL_DEBUG
 
-#define SYNCE_LOG_LEVEL_HIGHEST   4
+#define SYNCE_LOG_LEVEL_HIGHEST   5
 
 #ifdef __cplusplus
 extern "C"
@@ -18,11 +20,18 @@ extern "C"
 #endif
 
 void synce_log_set_level(int level);
+void synce_log_use_syslog();
 
 void _synce_log(int level, const char* file, int line, const char* format, ...);
 
 #define synce_trace(format, args...) \
 	_synce_log(SYNCE_LOG_LEVEL_TRACE,__PRETTY_FUNCTION__, __LINE__, format, ##args)
+
+#define synce_debug(format, args...) \
+	_synce_log(SYNCE_LOG_LEVEL_DEBUG,__PRETTY_FUNCTION__, __LINE__, format, ##args)
+
+#define synce_info(format, args...) \
+	_synce_log(SYNCE_LOG_LEVEL_INFO,__PRETTY_FUNCTION__, __LINE__, format, ##args)
 
 #define synce_warning(format, args...) \
 	_synce_log(SYNCE_LOG_LEVEL_WARNING,__PRETTY_FUNCTION__, __LINE__, format, ##args)
