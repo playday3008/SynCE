@@ -12,9 +12,11 @@ $Id$ vim: expandtab
 
 (2) Modify bluez-pan-1.1-pre2/dund:
 
-      Patch dun.c
+      Patch dun.c: change "#if 1" to "#if 0"
       Patch sdp.c
 
 (4) Create /etc/ppp/peers/dun
 
+
+Why is port 990 not available when bluetooth is enabled? :-(
 
