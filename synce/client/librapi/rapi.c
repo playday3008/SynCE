@@ -1623,4 +1623,52 @@ STDAPI_(BOOL) CeRemoveDirectory(LPCWSTR lpPathName)
 	return result;
 }
 
+STDAPI_(BOOL) CeDeleteFile(LPCWSTR lpFileName)
+{
+	BOOL result = FALSE;
+	long size = BUFSIZE;
+	LONG lng;
+	
+	initBuf(buffer, size);
+	
+	pushLong(buffer, size, 0x1c); 	/* Command */
+	pushParameter(size, (void*)lpFileName, (wcslen(lpFileName) + 1) * sizeof(WCHAR), 1);
+	
+	/*DBG_printbuf( buffer );*/
+	sendbuffer( sock, buffer );
+	size = getbufferlen( sock );
+
+	/*
+	 * The return package looks like this
+	 *
+	 * Offset  Size  Value
+	 * 00      4     0
+	 * 04      4     error code if the value below is 0
+	 * 08      4     0/1
+	*/
+
+	lng = getLong(sock, &size); 
+	DBG_printf("long 1 : %ld (0x%08lx)\n", lng, lng);
+	_lasterror = getLong(sock, &size);
+	DBG_printf("long 2 : %ld (0x%08lx)\n", _lasterror, _lasterror);
+
+	if (0 == lng)
+	{
+		result = getLong(sock, &size);
+		DBG_printf("long 3 : %ld (0x%08lx)\n", result, result);
+	}
+	else
+	{
+		DBG_printf("Warning: expected 0 but got %i=0x%x\n", lng, lng);
+	}
+	
+	if ( size > 0 )
+	{
+		DBG_printf( "size : %d\n", size );
+		flushbuffer( sock );
+	}	
+	
+	return result;
+}
+
 
