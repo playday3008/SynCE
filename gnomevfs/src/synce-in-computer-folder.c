@@ -7,6 +7,7 @@
 #include <libgnomevfs/gnome-vfs-volume.h>
 #include <libgnomevfs/gnome-vfs-volume-monitor.h>
 #include <synce.h>
+#include <synce_log.h>
 #include "config.h"
 
 #define SCRIPT_NAME "synce-in-computer-folder.sh"
@@ -33,6 +34,8 @@ static GnomeVFSVolume *find_volume(GnomeVFSVolumeMonitor *monitor)
 
   for (l = volumes; l != NULL; l = l->next) {
     volume = l->data;
+
+    synce_debug("Volume: '%s'", gnome_vfs_volume_get_display_name(volume));
 
     if (strcmp(gnome_vfs_volume_get_display_name(volume), 
       DISPLAY_NAME) == 0 )
@@ -63,6 +66,10 @@ static void callback (gboolean succeeded,
 					  gpointer data)
 {
   /* Do nothing */
+  if (succeeded)
+    synce_trace("Succeeded");
+  else
+    synce_trace("Failed: '%s' '%s'\n", error, detailed_error);
 }
 
 
@@ -91,6 +98,8 @@ int main(int argc, const char **argv)
     show_usage(argv[0]);
     return 1;
   }
+
+  synce_log_use_syslog();
 
   if (command == COMMAND_INSTALL || command == COMMAND_UNINSTALL)
   {
@@ -156,13 +165,23 @@ int main(int argc, const char **argv)
 
     if (volume)
     {
+      synce_trace("Found volume");
+
       if (command == COMMAND_DISCONNECT)
+      {
+        synce_info("Disconnecting SynCE volume");
         gnome_vfs_volume_unmount(volume, callback, NULL);
+      }
     }
     else
     {
+      synce_trace("Did not find volume");
+
       if (command == COMMAND_CONNECT)
+      {
+        synce_info("Connecting SynCE volume");
         gnome_vfs_connect_to_server(URI, DISPLAY_NAME, ICON);
+      }
     }
 
     gnome_vfs_shutdown();
