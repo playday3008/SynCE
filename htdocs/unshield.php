@@ -53,9 +53,12 @@ href="http://opensource.org/licenses/mit-license.php">MIT</a>)</li>
 
 <h2>Download</h2>
 
-<p>See the <b>Tools</b> package in the <a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550">SynCE File
-List</a>.</p>
+<p><a href="http://packages.qa.debian.org/u/unshield.html">Debian
+packages</a>.</p>
+
+<p><a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=125523">Source
+code or RPM</a>.</p>
 
 <h2>InstallShield cabinet files vs. Microsoft cabinet files</h2>
 
