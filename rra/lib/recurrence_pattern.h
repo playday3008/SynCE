@@ -52,9 +52,30 @@ typedef struct _RRA_Exception
   uint32_t start_time;
   /** Use this end date and time instead. (Only used if deleted is false.) */
   uint32_t end_time;
-  /** Unknown value. (Only used if deleted is false.) */
-  uint16_t unknown;
+  /** Bitmask. (Only used if deleted is false.) */
+  uint16_t bitmask;
+  /** Subject if bitmask & RRA_EXCEPTION_SUBJECT */
+  WCHAR* subject;
+  /** Location if bitmask & RRA_EXCEPTION_LOCATION */
+  WCHAR* location;
+  /** Status if bitmask & RRA_EXCEPTION_STATUS */
+  uint32_t status;
+  /** Type if bitmask & RRA_EXCEPTION_TYPE */
+  uint32_t type;
+  /** Notes if bitmask & RRA_EXCEPTION_NOTES */
+  uint32_t notes_size;
+  uint8_t* notes_data;
 } RRA_Exception;
+
+/* string = 16-bit unknown, 16-bit length, wide string */
+#define RRA_EXCEPTION_SUBJECT   0x0001  /* string */
+#define RRA_EXCEPTION_LOCATION  0x0010  /* string */
+#define RRA_EXCEPTION_STATUS    0x0020  /* 32-bit integer */
+#define RRA_EXCEPTION_TYPE      0x0080  /* 32-bit integer */
+#define RRA_EXCEPTION_NOTES     0x0100  /* 32-bit size, data */
+
+#define RRA_EXCEPTION_KNOWN_BITS  \
+  (RRA_EXCEPTION_SUBJECT|RRA_EXCEPTION_LOCATION|RRA_EXCEPTION_STATUS|RRA_EXCEPTION_TYPE|RRA_EXCEPTION_NOTES)
 
 typedef struct _RRA_Exceptions RRA_Exceptions;
 

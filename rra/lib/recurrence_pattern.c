@@ -1,5 +1,7 @@
 /* $Id$ */
+#define _BSD_SOURCE 1
 #include "recurrence_pattern.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <synce_log.h>
 #include <ctype.h>
@@ -42,16 +44,22 @@ do { \
   char* _time_str = NULL; \
   uint32_t _minutes = date; \
   time_t _time = rra_minutes_to_unix_time(_minutes); \
-  if ((-1) == _time) \
+  if (date == RRA_DoesNotEndDate) \
   { \
-    _time_str = "(date out of range)"; \
+    synce_trace(format, "(does not end)"); \
+  } \
+  else if ((-1) == _time) \
+  { \
+    char buffer[256]; \
+    snprintf(buffer, sizeof(buffer),  "(date out of range: %08x)", date); \
+    synce_trace(format, buffer); \
   } \
   else \
   { \
     _time_str = asctime(gmtime(&_time)); \
     _time_str[strlen(_time_str)-1] = '\0'; \
+    synce_trace(format, _time_str); \
   } \
-  synce_trace(format, _time_str); \
 } \
 while (0)
 
@@ -179,6 +187,61 @@ static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)/
   return true;
 }/*}}}*/
 
+static bool rra_exception_read_integer(uint8_t** buffer, uint32_t* value)/*{{{*/
+{
+  uint8_t* p = *buffer;
+
+  if (!value)
+    return false;
+
+  *value = READ_UINT32(p); p += 4;
+
+  synce_trace("Value                            = %08x",  *value);
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+static bool rra_exception_read_notes(uint8_t** buffer, uint32_t* size, uint8_t** data)/*{{{*/
+{
+  uint8_t* p = *buffer;
+
+  if (!size || !data)
+    return false;
+
+  *size = READ_UINT32(p); p += 4;
+
+  synce_trace("Size                             = %08x",  *size);
+
+  *data = malloc(*size);
+  memcpy(*data, p, *size);
+  p += *size;
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+static bool rra_exception_read_string(uint8_t** buffer, WCHAR** wide_str)/*{{{*/
+{
+  uint8_t* p = *buffer;
+  int16_t unknown;
+  int16_t length;
+
+  unknown = READ_INT16(p); p += 2;
+  length  = READ_INT16(p); p += 2;
+
+  if (unknown != (length + 1))
+    synce_error("Unexpected unknown %04x for length %04x",
+        unknown, length);
+
+  *wide_str = (WCHAR*)calloc(length + 1, 2);
+  memcpy(*wide_str, p, length * 2); p += length * 2;
+  synce_trace_wstr(*wide_str);
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
 static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
 {
   uint8_t* p = *buffer;
@@ -199,12 +262,50 @@ static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/
     e.start_time      = READ_UINT32(p);   p += 4;
     e.end_time        = READ_UINT32(p);   p += 4;
     e.original_time   = READ_UINT32(p);   p += 4;
-    e.unknown         = READ_INT16(p);  p += 2;
+    e.bitmask         = READ_UINT16(p);   p += 2;
 
     TRACE_DATE ("Modified appointment start time  = %s",    e.start_time);
     TRACE_DATE ("Modified appointment end time    = %s",    e.end_time);
     TRACE_DATE ("Original appointment start time  = %s",    e.original_time);
-    synce_trace("Modified appointment unknown     = %04x",  e.unknown);
+    synce_trace("Modified appointment bitmask     = %04x",  e.bitmask);
+
+    /* Start with the lowest bit... */
+
+    if (e.bitmask & RRA_EXCEPTION_SUBJECT)
+    {
+      synce_trace("Subject changed in exception");
+      rra_exception_read_string(&p, &e.subject);
+    }
+    
+    if (e.bitmask & RRA_EXCEPTION_LOCATION)
+    {
+      synce_trace("Location changed in exception");
+      rra_exception_read_string(&p, &e.location);
+    }
+
+    if (e.bitmask & RRA_EXCEPTION_STATUS)
+    {
+      synce_trace("Status changed in exception");
+      rra_exception_read_integer(&p, &e.status);
+    }
+
+    if (e.bitmask & RRA_EXCEPTION_TYPE)
+    {
+      synce_trace("Type changed in exception");
+      rra_exception_read_integer(&p, &e.type);
+    }
+
+    if (e.bitmask & RRA_EXCEPTION_NOTES)
+    {
+      synce_trace("Notes changed in exception");
+      rra_exception_read_notes(&p, &e.notes_size, &e.notes_data);
+    }
+
+    if (e.bitmask & ~RRA_EXCEPTION_KNOWN_BITS)
+    {
+      synce_warning("Unknown bits in bitmask %04x - expect failure.",
+          e.bitmask);
+    }
 
     for (j = 0; j < self->total_count; j++)
     {
@@ -216,7 +317,6 @@ static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/
         break;
       }
     }
-
     if (j == self->total_count)
       synce_warning("Failed to store exception details in the right place");
   }
@@ -230,9 +330,40 @@ static size_t rra_exceptions_summary_size(RRA_Exceptions* self)/*{{{*/
   return 4 * (1 + self->total_count + 1 + self->modified_count);
 }/*}}}*/
 
+static size_t rra_exception_size(RRA_Exception* self)/*{{{*/
+{
+  size_t result = 14;
+
+  if (self->bitmask & RRA_EXCEPTION_SUBJECT)
+    result += 4 + wstrlen(self->subject) * 2;
+
+  if (self->bitmask & RRA_EXCEPTION_LOCATION)
+    result += 4 + wstrlen(self->location) * 2;
+
+  if (self->bitmask & RRA_EXCEPTION_STATUS)
+    result += 4;
+
+  if (self->bitmask & RRA_EXCEPTION_TYPE)
+    result += 4;
+
+  if (self->bitmask & RRA_EXCEPTION_NOTES)
+    result += 4 + self->notes_size;
+
+  return result;
+}/*}}}*/
+
 static size_t rra_exceptions_details_size(RRA_Exceptions* self)/*{{{*/
 {
-  return 2 + (self->modified_count * 14);
+  int i;
+  size_t result = 2;
+
+  for (i = 0; i < self->total_count; i++)
+  {
+    if (!self->items[i].deleted)
+      result += rra_exception_size(&self->items[i]);
+  }
+
+  return result;
 }/*}}}*/
 
 static bool rra_exceptions_write_summary(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
@@ -261,6 +392,83 @@ static bool rra_exceptions_write_summary(RRA_Exceptions* self, uint8_t** buffer)
   return true;
 }/*}}}*/
 
+static bool rra_exception_write_integer(uint8_t** buffer, uint32_t value)/*{{{*/
+{
+  uint8_t* p = *buffer;
+
+  WRITE_UINT32(p, value); p += 4;
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+static bool rra_exception_write_notes(uint8_t** buffer, uint32_t size, uint8_t* data)/*{{{*/
+{
+  uint8_t* p = *buffer;
+
+  WRITE_UINT32(p, size); p += 4;
+
+  memcpy(p, data, size); p += size;
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+static bool rra_exception_write_string(uint8_t** buffer, WCHAR* wide_str)/*{{{*/
+{
+  uint8_t* p = *buffer;
+  int16_t unknown;
+  int16_t length;
+
+  length = wstrlen(wide_str);
+  unknown = length + 1;
+
+  WRITE_INT16(p, unknown);  p += 2;
+  WRITE_INT16(p, length);   p += 2;
+
+  memcpy(p, wide_str, length * 2); p += length * 2;
+
+  *buffer = p;
+  return true;
+}/*}}}*/
+
+
+static bool rra_exception_write(RRA_Exception* self, uint8_t** buffer)
+{
+  uint8_t* p = *buffer;
+
+  WRITE_UINT32(p, self->start_time);     p += 4;
+  WRITE_UINT32(p, self->end_time);       p += 4;
+  WRITE_UINT32(p, self->original_time);  p += 4;
+  WRITE_UINT16(p, self->bitmask);        p += 2;
+
+  /* Start with the lowest bit... */
+
+  if (self->bitmask & RRA_EXCEPTION_SUBJECT)
+    rra_exception_write_string(&p, self->subject);
+
+  if (self->bitmask & RRA_EXCEPTION_LOCATION)
+    rra_exception_write_string(&p, self->location);
+
+  if (self->bitmask & RRA_EXCEPTION_STATUS)
+    rra_exception_write_integer(&p, self->status);
+
+  if (self->bitmask & RRA_EXCEPTION_TYPE)
+    rra_exception_write_integer(&p, self->type);
+
+  if (self->bitmask & RRA_EXCEPTION_NOTES)
+    rra_exception_write_notes(&p, self->notes_size, self->notes_data);
+
+  if (self->bitmask & ~RRA_EXCEPTION_KNOWN_BITS)
+  {
+    synce_warning("Unknown bits in bitmask %04x - expect failure.",
+        self->bitmask);
+  }
+
+  *buffer = p;
+  return true;
+}
+
 static bool rra_exceptions_write_details(RRA_Exceptions* self, uint8_t** buffer)/*{{{*/
 {
   uint8_t* p = *buffer;
@@ -271,12 +479,7 @@ static bool rra_exceptions_write_details(RRA_Exceptions* self, uint8_t** buffer)
   for (i = 0; i < self->total_count; i++)
   {
     if (!self->items[i].deleted)
-    {
-      WRITE_UINT32(p, self->items[i].start_time);     p += 4;
-      WRITE_UINT32(p, self->items[i].end_time);       p += 4;
-      WRITE_UINT32(p, self->items[i].original_time);  p += 4;
-      WRITE_UINT16(p, self->items[i].unknown);        p += 2;
-    }
+      rra_exception_write(&self->items[i], &p);
   }
 
   *buffer = p;
@@ -652,17 +855,20 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
 
   rra_exceptions_read_details(self->exceptions, &p);
 
-  synce_trace("Data that should be zero at offset %04x, size %04x of %04x", 
-      p - buffer, buffer + size - p, size);
-
+  if (p != (buffer + size))
   {
-    uint8_t* end = buffer + size;
+    synce_trace("Data that should be zero at offset %04x, size %04x of %04x", 
+        p - buffer, buffer + size - p, size);
 
-    for (; p != end; p++)
     {
-      if (*p != 0)
-        synce_warning("Byte att offset %04x is not zero but %02x (%c)", 
-            p - buffer, *p, isprint(*p) ? *p : '.' );
+      uint8_t* end = buffer + size;
+
+      for (; p != end; p++)
+      {
+        if (*p != 0)
+          synce_warning("Byte att offset %04x is not zero but %02x (%c)", 
+              p - buffer, *p, isprint(*p) ? *p : '.' );
+      }
     }
   }
 
