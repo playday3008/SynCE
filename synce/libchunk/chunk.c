@@ -17,8 +17,6 @@
 #include <netdb.h>
 #include <sys/time.h>
 
-#include <endian.h>
-#include <byteswap.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -49,11 +47,7 @@ void _DBG_printbuf( rapibuffer * buf )
 
 	/* szbuf = 4 + ( ( long ) * ( ( long * ) ( buf ) ) ); */
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-        buflen = buf->bufferlen;
-#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
-        buf = bswap_32( buf->bufferlen );
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+        buflen = letoh32(buf->bufferlen);
 
         buflen += 4;
 
@@ -247,7 +241,7 @@ void flushbuffer( int sock )
 		if ( result )
 		{
 			result = read( sock, &szbuf, 4 );
-			if(result>0) printf("!!! flushbuffer: %d !!!\n",result);
+			if(result>0) DBG_printf("!!! flushbuffer: %d !!!\n",result);
 		}
 	}
 	while ( result );
@@ -272,9 +266,7 @@ long getbufferlen( int sock )
 		result = read( sock, &buflen, 4 );
 		if ( result == 4 )
 		{
-#if __BYTE_ORDER != __LITTLE_ENDIAN
-                        buflen = bswap_32( buflen );
-#endif /* __BYTE_ORDER != __LITTLE_ENDIAN */
+                        buflen = letoh32( buflen );
 			if ( buflen < 0 )
 			{
 				buflen = 0;
@@ -287,7 +279,7 @@ long getbufferlen( int sock )
 	}
 	else
 	{
-		printf("timeout!!!\n");
+		DBG_printf("timeout!!!\n");
 	}
 	if ( buflen == 0 )
 	{
@@ -306,7 +298,7 @@ size_t getbufferchunk( int sock, long *counter, void * buffer, long nbbytes )
 	szbuf = 0;
 	result = 0;
 
-	printf("read counter=%ld nbbytes=%ld\n",*counter,nbbytes);
+	DBG_printf("read counter=%ld nbbytes=%ld\n",*counter,nbbytes);
 	if( ( counter && ( *counter >= nbbytes ) ) || (!counter) )
 	{
                 while( nbbytes > 0 )
@@ -351,11 +343,7 @@ long pushLong( rapibuffer * destbuf, long destbuflen, long param )
 
 	if ( buflen < destbuflen )
 	{
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-		* ( ( long * ) ( destbufchar + buflen ) ) = param;
-#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
-		* ( ( long * ) ( destbufchar + buflen ) ) = bswap_32( param );
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+		* ( ( long * ) ( destbufchar + buflen ) ) = htole32(param);
 		_setbufferlen(destbuf,buflen+sizeof(param));
 	}
 	return buflen + sizeof( param );
@@ -382,11 +370,7 @@ long pushShort( rapibuffer * destbuf, long destbuflen, short param )
 
 	if ( buflen < destbuflen )
 	{
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-		* ( ( short * ) ( destbufchar + buflen ) ) = param;
-#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
-		* ( ( short * ) ( destbufchar + buflen ) ) = bswap_16( param );
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+		* ( ( short * ) ( destbufchar + buflen ) ) = htole16(param);
 		_setbufferlen(destbuf,buflen+sizeof(param));
 	}
 	return buflen + sizeof( param );
@@ -424,11 +408,7 @@ long pushString( rapibuffer * destbuf, long destbuflen, LPCWSTR string )
         		* ( ( char * ) ( destbufchar + buflen + i) ) = param[ i ];
 		}
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-		destbuf->bufferlen = buflen + stlen * sizeof( WCHAR );
-#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
-		destbuf->bufferlen = bswap_32( buflen + stlen * sizeof( WCHAR ) );
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
+		destbuf->bufferlen = htole32(buflen + stlen * sizeof( WCHAR ));
 	}
 	return buflen + stlen * sizeof( WCHAR );
 }
@@ -461,10 +441,10 @@ WCHAR * getString( int sock, long *bufsize, long sz )
 	result = getbufferchunk( sock, bufsize, destbuf, ( 2 * sz ) );
 	for ( index = 0; index < sz; index ++ )
 	{
-		printf( "%c", ( destbuf[ index ] & 0xFF ) > 31 ? ( destbuf[ index ] & 0xFF ) : '.' );
+		DBG_printf( "%c", ( destbuf[ index ] & 0xFF ) > 31 ? ( destbuf[ index ] & 0xFF ) : '.' );
 		inbuf[ index ] = ( WCHAR ) destbuf[ index ];
 	}
-	printf( "\n" );
+	DBG_printf( "\n" );
 #else
 	DBG_printf( "getString : size = %ld, lg = %ld\n", *bufsize, sz );
 	result = getbufferchunk( sock, bufsize, inbuf, ( 2 * sz ) );
