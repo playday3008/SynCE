@@ -24,7 +24,9 @@
 #include "runwindowimpl.h"
 #include "rapiwrapper.h"
 
+#include <qcursor.h>
 #include <kurlrequester.h>
+#include <kapplication.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -49,6 +51,13 @@ void RunWindowImpl::openFileDialog(KURLRequester *requester)
     KFileDialog *fd = requester->fileDialog();
     fd->setFilter("*.exe|Executable (*.exe)");
     fd->setMode(KFile::File | KFile::ExistingOnly);
+    connect(fd, SIGNAL(cancelClicked()), this, SLOT(restoreCursor()));
+}
+
+
+void RunWindowImpl::restoreCursor()
+{
+    KApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
 }
 
 

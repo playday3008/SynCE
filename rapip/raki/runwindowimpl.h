@@ -46,6 +46,7 @@ public:
 private slots:
   void openFileDialog(KURLRequester *requester);
   void executeProgram();
+  void restoreCursor();
 };
 
 #endif

@@ -196,6 +196,7 @@
 <slots>
     <slot access="protected">openFileDialog( KURLRequester * )</slot>
     <slot access="protected">executeProgram()</slot>
+    <slot access="protected">restoreCursor()</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>

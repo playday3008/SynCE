@@ -20,3 +20,9 @@ void RunWindow::executeProgram()
 }
 
 
+
+
+void RunWindow::restoreCursor()
+{
+
+}
