@@ -4,7 +4,7 @@
 pls \- list directory contents
 
 .SH SYNOPSIS
-\fBpls\fR [-h] \fIDIRECTORY\fR
+\fBpls\fR [-a] [-h] [\fIDIRECTORY\fR]
 
 .SH "DESCRIPTION"
 .PP
@@ -45,11 +45,9 @@ Show all files including those marked as hidden.
 -h
 Display help message.
 
-.TP \fIDIRECTORY\fR The full path to the directory on the device connected through SynCE.
-
 .TP
 \fIDIRECTORY\fR
-The full path name to the directory.
+The full path name to the directory. If this parameter is omitted, the contents of the "My Documents folder" is listed.
 
 .SH "AUTHOR"
 .PP
