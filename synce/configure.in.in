@@ -1,4 +1,0 @@
-#MIN_CONFIG
-
-AM_INIT_AUTOMAKE(cexplorer,0.1)
-

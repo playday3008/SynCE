@@ -1,7 +1,0 @@
-
-This is an implementation and definition of some types and functions needed to compile the whole
-package.
-One day this could (should? - may be another dependancy is not good...) be replaced by Wine.
-
-
-See the file README in the main directory.

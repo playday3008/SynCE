@@ -1,9 +1,0 @@
-
-asyncd:		sample file for xinetd.d configuration
-cedevice:	sample file to place in /etc/ppp/peers
-cedevice.chat:	file to initiate a PPP link with device
-inetd.conf:	line to add at the end of /etc/inetd.conf
-services:	line to add at the end of /etc/services
-
-
-See the file README in the main directory.

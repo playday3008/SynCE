@@ -1,9 +1,0 @@
-
-This is a 'keepalive' daemon that allows an ActiveSync connection
-to stay alive, by ping-ponging with the device.
-
-It creates a file '/tmp/cedevice' with informations on the connected
-device.
-
-
-See the file README in the main directory.

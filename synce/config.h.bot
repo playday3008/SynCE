@@ -1,7 +1,0 @@
-
-/* Path to the information file :
-    written to by 'asyncd' daemon,
-    read by 'rapi' library ( when calling CeRapiInit() )
-    */
-#define INFOFILE "/tmp/cedevices"
-
