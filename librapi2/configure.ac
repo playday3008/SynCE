@@ -16,7 +16,7 @@ AC_PROG_LN_S
 AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
-AM_PATH_CHECK()
+AM_PATH_CHECK(,,AC_MSG_WARN([Check not available.]))
 
 dnl Check for dmalloc first
 AC_ARG_WITH(dmalloc,
