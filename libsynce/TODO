@@ -1,0 +1,7 @@
+$Id$
+
+TODO for libsynce
+=================
+
+o Change logging to use syslog and not stderr
+
