@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-librapi2
-%define ver      0.4
+%define ver      0.4.1
 %define rel      1
 
 Summary: SynCE: Remote Application Programming Interface (RAPI) library.
@@ -43,17 +43,23 @@ make
 %files
 %doc README LICENSE
 %{prefix}/bin/pcp
+%{prefix}/bin/pinfo
 %{prefix}/bin/pls
 %{prefix}/bin/pmkdir
 %{prefix}/bin/pmv
 %{prefix}/bin/prm
 %{prefix}/bin/prmdir
+%{prefix}/bin/prun
+%{prefix}/bin/synce-install-cab
 %{prefix}/include/rapi.h
 %{prefix}/lib/librapi.*
 %{_mandir}/man1/pcp.*
+%{_mandir}/man1/pinfo.*
 %{_mandir}/man1/pls.*
 %{_mandir}/man1/pmkdir.*
 %{_mandir}/man1/pmv.*
 %{_mandir}/man1/prm.*
 %{_mandir}/man1/prmdir.*
+%{_mandir}/man1/prun.*
+%{_mandir}/man1/synce-install-cab.*
 

@@ -11,3 +11,5 @@ o Make config use synce_log and not perror.
 
 o Make the file system tools use "My Documents" as current directory.
 
+o Add tool "pcat"
+

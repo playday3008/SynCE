@@ -59,6 +59,20 @@ static const char* architecture[] = {
 	"ALPHA64"
 };
 
+static const char* processor(int n)
+{
+	const char* result;
+	
+	switch (n)
+	{
+		case PROCESSOR_STRONGARM: result = "StrongARM"; break;
+
+		default: result = "Unknown"; break;
+	}
+
+	return result;
+}
+
 int main(int argc, char** argv)
 {
 	int result = 1;
@@ -93,9 +107,9 @@ int main(int argc, char** argv)
 		printf(
 				"Version\n"
 				"=======\n"
-				"Windows CE version:  %i.%i build %i\n"
-				"Platform:            %i %s\n"
-				"Details:             \"%s\"\n"
+				"Version:    %i.%i build %i\n"
+				"Platform:   %i %s\n"
+				"Details:    \"%s\"\n"
 				"\n"
 				,
 				version.dwMajorVersion,
@@ -117,20 +131,21 @@ int main(int argc, char** argv)
 
 	memset(&system, 0, sizeof(system));
 
-	printf("x=%x\n", sizeof(system));
-	
 	CeGetSystemInfo(&system);
 	{
 		printf(
 				"System\n"
 				"======\n"
 				"Processor architecture: %i (%s)\n"
-				"Processor type:         %i\n"
+				"Processor type:         %i (%s)\n"
+				"Page size:              0x%x\n"
 				,
 				system.wProcessorArchitecture,
 				(system.wProcessorArchitecture < PROCESSOR_ARCHITECTURE_COUNT) ?
 				architecture[system.wProcessorArchitecture] : "Unknown",
-				system.dwProcessorType
+				system.dwProcessorType,
+				processor(system.dwProcessorType),
+				system.dwAllocationGranularity
 				
 				);
 	}

@@ -3,6 +3,7 @@
 .libs
 Makefile
 Makefile.in
+oidinfo
 pget
 pput
 pcp
@@ -13,3 +14,4 @@ pmv
 prm
 prmdir
 prun
+synce-install-cab

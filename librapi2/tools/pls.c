@@ -141,6 +141,14 @@ static bool print_entry(CE_FIND_DATA* entry)
 	printf("  ");
 
 	/*
+	 * OID
+	 */
+
+	printf("%08x", entry->dwOID);
+	
+	printf("  ");
+
+	/*
 	 * Filename
 	 */
 
@@ -170,7 +178,7 @@ static bool list_matching_files(WCHAR* wide_path)
 	result = CeFindAllFiles(
 			wide_path,
 			(show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
-		 	FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW,
+		 	FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
       &file_count, &find_data);
 
 	if (!result)

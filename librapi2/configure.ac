@@ -47,10 +47,16 @@ dnl Checks for header files.
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
+AC_CONFIG_FILES(
+	[script/synce-install-cab],
+	[chmod +x script/synce-install-cab]
+)
+
 AC_OUTPUT([Makefile
            src/Makefile
 					 src/config/Makefile
 					 src/support/Makefile
+           script/Makefile
 					 tests/Makefile
 					 tests/rapi/Makefile
 					 tools/Makefile

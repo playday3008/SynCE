@@ -189,8 +189,9 @@ BOOL CeOidGetInfo(/*{{{*/
 			goto fail;
 	}
 
-/*	if ( !rapi_buffer_read_data(context->recv_buffer, lpVersionInformation, size) )
-		return false;*/
+	/* XXX: not portable to big-endian CPUs! */
+	if ( !rapi_buffer_read_data(context->recv_buffer, 4 + (char*)poidInfo, size) )
+		return false;
 
 	return result;
 
