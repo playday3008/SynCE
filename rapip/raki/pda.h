@@ -38,6 +38,7 @@
 #include <kpopupmenu.h>
 #include <kconfig.h>
 #include <kprogress.h>
+#include <kprocess.h>
 #include <kio/job.h>
 
 class RunWindowImpl;
@@ -118,7 +119,9 @@ private:
     bool partnerOk;
     Rra *rra;
     int syncItem;
+    int pdaMirrorItem;
     bool typesRead;
+    KProcess pdaMirror;
 
 private slots:
     void execute();
@@ -126,6 +129,8 @@ private slots:
     void openFs();
     void configurePda();
     void setPassword(QString password);
+    void startPdaMirror();
+    void pdaMirrorExited(KProcess* );
 
 public slots:
     void synchronize(bool forced = true);

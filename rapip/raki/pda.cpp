@@ -103,6 +103,10 @@ PDA::PDA(Raki *raki, QString pdaName)
             QString(pdaName) + "/", this, SLOT(openFs()));
     menuCount++;
 
+    pdaMirrorItem = associatedMenu->insertItem(SmallIcon("pda_blue"),
+            i18n("Run &pdamirror"), this, SLOT(startPdaMirror()));
+    menuCount++;
+
     associatedMenu->insertItem(SmallIcon("run"), i18n("&Execute..."), this,
             SLOT(execute()));
     menuCount++;
@@ -118,6 +122,7 @@ PDA::PDA(Raki *raki, QString pdaName)
     menuCount++;
 
     connect(syncDialog, SIGNAL(finished()), configDialog, SLOT(writeConfig()));
+    connect(&pdaMirror, SIGNAL(processExited(KProcess* )), this, SLOT(pdaMirrorExited(KProcess* )));
 }
 
 
@@ -142,6 +147,25 @@ PDA::~PDA()
     delete rra;
 
     slaveDict.setAutoDelete(true);
+}
+
+
+void PDA::pdaMirrorExited(KProcess* )
+{
+    associatedMenu->setItemEnabled(pdaMirrorItem, true);
+}
+
+
+void PDA::startPdaMirror()
+{
+    pdaMirror.clearArguments();
+    pdaMirror.setExecutable("pdamirror");
+    pdaMirror << "--syncename"  << pdaName;
+
+    associatedMenu->setItemEnabled(pdaMirrorItem, false);
+
+    pdaMirror.start(KProcess::NotifyOnExit, (KProcess::Communication)
+                   (KProcess::Stdout | KProcess::Stderr));
 }
 
 
