@@ -37,7 +37,7 @@
  **/
  
 #define postSyncThreadEvent(a, b) \
-    syncThread->postEvent((void *(WorkerThreadInterface::*)(void *data = NULL)) &a, (void *) b, WorkerThreadInterface::noBlock);
+    syncThread->postEvent((void *(WorkerThreadInterface::*)(void *data = NULL)) &a, (void *) b, WorkerThreadInterface::block);
 
 class SyncThread : public WorkerThreadInterface
 {
