@@ -59,9 +59,14 @@ START_TEST(test_buffer_uint16)/*{{{*/
 }
 END_TEST/*}}}*/
 
-static const WCHAR UNICODE_VALUE[] = 
+/*
+ * This is not an array of WCHARS, beacuse then it would not be little endian
+ * on all platforms
+ */
+
+static const char UNICODE_VALUE[] = 
 {
-  '2','G','o','o','D',' ','P','r','o','d','u','c','t','i','o','n','s',0
+  '2',0,'G',0,'o',0,'o',0,'D',0,' ',0,'P',0,'r',0,'o',0,'d',0,'u',0,'c',0,'t',0,'i',0,'o',0,'n',0,'s',0,0
 };
 
 static const char ASCII_VALUE[] = { "2GooD Productions" };
@@ -70,7 +75,7 @@ START_TEST(test_unicode_strlen)/*{{{*/
 {
 	size_t length;
 
-	length = rapi_wstr_string_length(UNICODE_VALUE);
+	length = rapi_wstr_string_length((WCHAR)UNICODE_VALUE);
 	
 	fail_unless( length == strlen(ASCII_VALUE), "rapi_wstr_string_length failed" );
 }
@@ -86,7 +91,7 @@ START_TEST(test_unicode_from_ascii)/*{{{*/
 
 	if (unicode)
 	{
-		fail_unless( memcmp(unicode, UNICODE_VALUE, sizeof(UNICODE_VALUE)) == 0, "rapi_wstr_from_ascii failed" );
+		fail_unless( memcmp(unicode, (WCHAR*)UNICODE_VALUE, sizeof(UNICODE_VALUE)) == 0, "rapi_wstr_from_ascii failed" );
 	}
 
 	rapi_wstr_free_string(unicode);

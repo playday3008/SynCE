@@ -11,7 +11,7 @@
 #endif
 
 #define rapi_wstr_WIDE   "UNICODELITTLE"
-#define rapi_wstr_ASCII  "ISO-8859-1"
+#define rapi_wstr_ASCII  "ISO_8859-1"
 
 #define INVALID_ICONV_HANDLE ((iconv_t)(-1))
 
