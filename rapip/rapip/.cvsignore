@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 .deps
 .libs
+.xvpics
 *.la
 *.lo
 *.la.closure

@@ -1,60 +1,85 @@
 /***************************************************************************
- *   Copyright (C) 2003 by Volker Christian,,,                             *
- *   voc@soft.uni-linz.ac.at                                               *
+ * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
  *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
+ * Permission is hereby granted, free of charge, to any person obtaining a *
+ * copy of this software and associated documentation files (the           *
+ * "Software"), to deal in the Software without restriction, including     *
+ * without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to      *
+ * permit persons to whom the Software is furnished to do so, subject to   *
+ * the following conditions:                                               *
+ *                                                                         *
+ * The above copyright notice and this permission notice shall be included *
+ * in all copies or substantial portions of the Software.                  *
+ *                                                                         *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
 #ifndef _INSTALLER_H_
 #define _INSTALLER_H_
 
-#include <unistd.h>
-#include <qwidget.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
+#include "installdialog.h"
+#include "workerthreadinterface.h"
+
+#include <qwidget.h>
+#include <qdict.h>
+#include <qthread.h>
 #include <kurl.h>
 #include <kio/job.h>
 
-#include "workerthreadinterface.h"
+#include <unistd.h>
+
+class PDA;
 
 /**
- * 
- * Volker Christian,,,
- **/
+@author Volker Christian,,,
+*/
+ 
 class RunInstallerThread : public WorkerThreadInterface
 {
 public:
     RunInstallerThread(QWidget *parent);
     ~RunInstallerThread();
-    void work(QThread *th);
+    void work(QThread *th = NULL, void *data = NULL);
+    void setPdaName(QString pdaName);
 
 private:
     QWidget *parent;
+    QString pdaName;
 };
 
 
-class Installer : public QObject
+class Installer : public InstallDialog
 {
     Q_OBJECT
 
 public:
-    Installer(QWidget *parent);
+    Installer(QWidget *parent, QDict<PDA> *pdaList);
     virtual ~Installer();
-    void installCabinetFile(KURL fileUrl);
+    void show(QStringList installFiles);
 
 protected slots:
-    void runInstaller();
+    void runInstaller(KURL destUrl);
     void copyResult(KIO::Job *fileCopyJob);
     void deleteResult(KIO::Job *deleteJob);
-    void deleteFile(KURL delFile);
+    void deleteFiles(KURL::List& delFile);
+    void install();
+    void procFiles(KIO::Job *job, const KURL&, const KURL&);
 
-private:
+private:   
     RunInstallerThread *runInstallerThread;
-    int installCounter;
-    int installed;
-    int currentInstalled;
+    QDict<PDA> *pdaList;
+    QStringList installFiles;
 };
 
 #endif

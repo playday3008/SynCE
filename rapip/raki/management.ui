@@ -16,7 +16,7 @@
         <string>PDA Info and Management</string>
     </property>
     <property name="sizeGripEnabled">
-        <bool>true</bool>
+        <bool>false</bool>
     </property>
     <vbox>
         <property name="name">
@@ -103,6 +103,9 @@
                                                 <height>32767</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -158,6 +161,9 @@
                                                 <height>32767</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -210,6 +216,9 @@
                                                 <height>32767</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -253,6 +262,9 @@
                                                 <width>250</width>
                                                 <height>0</height>
                                             </size>
+                                        </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
                                         </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
@@ -325,6 +337,9 @@
                                                 <height>32767</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -372,6 +387,9 @@
                                                 <height>0</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -409,6 +427,9 @@
                                     <widget class="QLineEdit">
                                         <property name="name">
                                             <cstring>details</cstring>
+                                        </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
                                         </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
@@ -473,6 +494,9 @@
                                                 <height>0</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -517,6 +541,9 @@
                                                 <height>0</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -560,6 +587,9 @@
                                                 <width>0</width>
                                                 <height>0</height>
                                             </size>
+                                        </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
                                         </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
@@ -624,6 +654,9 @@
                                                 <height>0</height>
                                             </size>
                                         </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
+                                        </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
                                         </property>
@@ -667,6 +700,9 @@
                                                 <width>0</width>
                                                 <height>0</height>
                                             </size>
+                                        </property>
+                                        <property name="focusPolicy">
+                                            <enum>NoFocus</enum>
                                         </property>
                                         <property name="acceptDrops">
                                             <bool>false</bool>
@@ -1074,6 +1110,9 @@
                                                 <property name="name">
                                                     <cstring>bat1Flag</cstring>
                                                 </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
+                                                </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
                                                 </property>
@@ -1103,6 +1142,9 @@
                                             <widget class="QLineEdit">
                                                 <property name="name">
                                                     <cstring>bat1LifePer</cstring>
+                                                </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
                                                 </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
@@ -1134,6 +1176,9 @@
                                                 <property name="name">
                                                     <cstring>bat1LifeTime</cstring>
                                                 </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
+                                                </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
                                                 </property>
@@ -1163,6 +1208,9 @@
                                             <widget class="QLineEdit">
                                                 <property name="name">
                                                     <cstring>bat1FullLife</cstring>
+                                                </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
                                                 </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
@@ -1246,6 +1294,9 @@
                                                 <property name="name">
                                                     <cstring>bat2Flag</cstring>
                                                 </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
+                                                </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
                                                 </property>
@@ -1275,6 +1326,9 @@
                                             <widget class="QLineEdit">
                                                 <property name="name">
                                                     <cstring>bat2LifePer</cstring>
+                                                </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
                                                 </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
@@ -1306,6 +1360,9 @@
                                                 <property name="name">
                                                     <cstring>bat2LifeTime</cstring>
                                                 </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
+                                                </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
                                                 </property>
@@ -1335,6 +1392,9 @@
                                             <widget class="QLineEdit">
                                                 <property name="name">
                                                     <cstring>bat2FullLife</cstring>
+                                                </property>
+                                                <property name="focusPolicy">
+                                                    <enum>NoFocus</enum>
                                                 </property>
                                                 <property name="dragEnabled">
                                                     <bool>false</bool>
@@ -1585,6 +1645,9 @@
                     <property name="name">
                         <cstring>statusLine</cstring>
                     </property>
+                    <property name="focusPolicy">
+                        <enum>NoFocus</enum>
+                    </property>
                     <property name="dragEnabled">
                         <bool>false</bool>
                     </property>
@@ -1647,9 +1710,14 @@
     </connection>
 </connections>
 <tabstops>
-    <tabstop>buttonCancel</tabstop>
     <tabstop>tabWidget</tabstop>
+    <tabstop>buttonCancel</tabstop>
     <tabstop>sysInfoRefreshButton</tabstop>
+    <tabstop>powerRefreshButton</tabstop>
+    <tabstop>softwareList</tabstop>
+    <tabstop>uninstallButton</tabstop>
+    <tabstop>stopButton</tabstop>
+    <tabstop>refreshButton</tabstop>
     <tabstop>buttonHelp</tabstop>
     <tabstop>major</tabstop>
     <tabstop>minor</tabstop>
@@ -1663,7 +1731,6 @@
     <tabstop>pageSize</tabstop>
     <tabstop>storageSize</tabstop>
     <tabstop>freeSpace</tabstop>
-    <tabstop>powerRefreshButton</tabstop>
     <tabstop>bat1Flag</tabstop>
     <tabstop>bat1LifePer</tabstop>
     <tabstop>bat1LifeTime</tabstop>
@@ -1672,10 +1739,6 @@
     <tabstop>bat2LifePer</tabstop>
     <tabstop>bat2LifeTime</tabstop>
     <tabstop>bat2FullLife</tabstop>
-    <tabstop>stopButton</tabstop>
-    <tabstop>refreshButton</tabstop>
-    <tabstop>uninstallButton</tabstop>
-    <tabstop>softwareList</tabstop>
     <tabstop>statusLine</tabstop>
 </tabstops>
 <includes>

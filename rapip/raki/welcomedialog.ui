@@ -1,0 +1,428 @@
+<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<class>WelcomeDialog</class>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>WelcomeDialog</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>410</width>
+            <height>324</height>
+        </rect>
+    </property>
+    <property name="paletteBackgroundColor">
+        <color>
+            <red>232</red>
+            <green>240</green>
+            <blue>238</blue>
+        </color>
+    </property>
+    <property name="caption">
+        <string>WelcomeDialog</string>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QFrame">
+            <property name="name">
+                <cstring>frame3</cstring>
+            </property>
+            <property name="frameShape">
+                <enum>Panel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>Plain</enum>
+            </property>
+            <property name="lineWidth">
+                <number>1</number>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout10</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>pixmapLabel1</cstring>
+                            </property>
+                            <property name="sizePolicy">
+                                <sizepolicy>
+                                    <hsizetype>0</hsizetype>
+                                    <vsizetype>0</vsizetype>
+                                    <horstretch>0</horstretch>
+                                    <verstretch>0</verstretch>
+                                </sizepolicy>
+                            </property>
+                            <property name="pixmap">
+                                <pixmap>image0</pixmap>
+                            </property>
+                            <property name="scaledContents">
+                                <bool>false</bool>
+                            </property>
+                        </widget>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout9</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLayoutWidget">
+                                    <property name="name">
+                                        <cstring>layout8</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QLabel">
+                                            <property name="name">
+                                                <cstring>textLabel1</cstring>
+                                            </property>
+                                            <property name="font">
+                                                <font>
+                                                    <family>Arial</family>
+                                                    <pointsize>28</pointsize>
+                                                    <bold>1</bold>
+                                                </font>
+                                            </property>
+                                            <property name="text">
+                                                <string>&lt;p align="center"&gt;Welcome to Raki&lt;/p&gt;</string>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget class="QLayoutWidget">
+                                    <property name="name">
+                                        <cstring>layout5</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <spacer>
+                                            <property name="name">
+                                                <cstring>spacer3</cstring>
+                                            </property>
+                                            <property name="orientation">
+                                                <enum>Horizontal</enum>
+                                            </property>
+                                            <property name="sizeType">
+                                                <enum>Expanding</enum>
+                                            </property>
+                                            <property name="sizeHint">
+                                                <size>
+                                                    <width>40</width>
+                                                    <height>20</height>
+                                                </size>
+                                            </property>
+                                        </spacer>
+                                        <widget class="QLabel">
+                                            <property name="name">
+                                                <cstring>textLabel2_2</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>(c) 2003 by V. Christian</string>
+                                            </property>
+                                        </widget>
+                                        <spacer>
+                                            <property name="name">
+                                                <cstring>spacer2</cstring>
+                                            </property>
+                                            <property name="orientation">
+                                                <enum>Horizontal</enum>
+                                            </property>
+                                            <property name="sizeType">
+                                                <enum>Expanding</enum>
+                                            </property>
+                                            <property name="sizeHint">
+                                                <size>
+                                                    <width>40</width>
+                                                    <height>20</height>
+                                                </size>
+                                            </property>
+                                        </spacer>
+                                    </hbox>
+                                </widget>
+                            </vbox>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout10</cstring>
+                    </property>
+                    <vbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel1_3</cstring>
+                            </property>
+                            <property name="text">
+                                <string>You have either started Raki for the first time, or you have just</string>
+                            </property>
+                        </widget>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel2</cstring>
+                            </property>
+                            <property name="text">
+                                <string>upgraded from a previous release. In case of upgrade, please</string>
+                            </property>
+                        </widget>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel3</cstring>
+                            </property>
+                            <property name="text">
+                                <string>remove your previous raki.sh script from the ~/.synce/scripts</string>
+                            </property>
+                        </widget>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel4</cstring>
+                            </property>
+                            <property name="text">
+                                <string>directory before you continue.</string>
+                            </property>
+                        </widget>
+                    </vbox>
+                </widget>
+                <widget class="Line">
+                    <property name="name">
+                        <cstring>line1_2</cstring>
+                    </property>
+                    <property name="frameShape">
+                        <enum>HLine</enum>
+                    </property>
+                    <property name="frameShadow">
+                        <enum>Sunken</enum>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout9</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout8</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>textLabel5</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>In order to work properly, Raki needs to know</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>textLabel6</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>the version of dccm you want to use. It is</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>textLabel7</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>recommended to use vdccm because it enables</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>textLabel8</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>the "multiple-devices" feature of Raki.</string>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                        <widget class="QButtonGroup">
+                            <property name="name">
+                                <cstring>buttonGroup1</cstring>
+                            </property>
+                            <property name="frameShape">
+                                <enum>Panel</enum>
+                            </property>
+                            <property name="lineWidth">
+                                <number>0</number>
+                            </property>
+                            <property name="title">
+                                <string></string>
+                            </property>
+                            <property name="alignment">
+                                <set>AlignVCenter</set>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QRadioButton">
+                                    <property name="name">
+                                        <cstring>vdccm</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>vdccm</string>
+                                    </property>
+                                </widget>
+                                <widget class="QRadioButton">
+                                    <property name="name">
+                                        <cstring>dccm</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>dccm</string>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                    </hbox>
+                </widget>
+            </vbox>
+        </widget>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout10</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLabel">
+                    <property name="name">
+                        <cstring>appearDialog</cstring>
+                    </property>
+                    <property name="enabled">
+                        <bool>false</bool>
+                    </property>
+                    <property name="text">
+                        <string>This dialog will not appear again!</string>
+                    </property>
+                </widget>
+                <spacer>
+                    <property name="name">
+                        <cstring>spacer4</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>16</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>buttonOk</cstring>
+                    </property>
+                    <property name="enabled">
+                        <bool>false</bool>
+                    </property>
+                    <property name="text">
+                        <string>&amp;OK</string>
+                    </property>
+                    <property name="accel">
+                        <string></string>
+                    </property>
+                    <property name="autoDefault">
+                        <bool>true</bool>
+                    </property>
+                    <property name="default">
+                        <bool>true</bool>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>buttonCancel</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Cancel</string>
+                    </property>
+                    <property name="accel">
+                        <string></string>
+                    </property>
+                    <property name="autoDefault">
+                        <bool>true</bool>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<images>
+    <image name="image0">
+        <data format="XPM.GZ" length="11022">789ca5995b73a33a1280dfe757a4466f535b7d0c060cb5b50fb92793cbe41ecf6ced831038373b7612e7e26ced7f5fa16ec918248c734693c25fc0d247abd5c2ce5f3fd6fa27476b3ffefaf632e5d33bb1266ef9f3da8fec75349afdfb3ffffaefb7ef51b026ff7b61bce67fffc7b7efa7d335b1763c7ecc0b00268175d43fc517c40132db311c2bfe491c7b787d402ce8fa2eb2d7f1d4f5fc8338f61375fe985820f35c73d7533c41f645c0d5f567c8dd4ea8e4f990388e90d78905b1400e3a917a3f1f69ee75557f2171dc4bd5f99458c478fe0f72d821be368cd73f132749a0f81e39f2b86276459c70a1b883dc0b45a8aebf234e44a6ce9f1267c489e60caf07e438ccd47cb123e22c8fd4f917c3ea3c1f20271ef13b713850d7b37dc303c55bc409f1367146bca93836f3ff441c23c32531cd3f60fc628ff2072686f1faf382bd797e1d10ebfcf944f63b74fd11b17e3f571c9bf7c7c81ee52fbb2316987ff08eeceb7cdd43ee6aff3172a0c7fb5db03ff70b90e588c80fc4c247be41f6036438460e3a34de06b140666a3df889ee1f0e8875ffbf907dba1ffe49ac7d9e35d37a12c4b4bee004598f07a7c821ad47f089433abf6318cfabf9ed7ada87df22ebf121420e13babe831c79c48fc4749ea9f87713cd70459c51bc7e22f7687ce6151c784110a87a002172ecd1f523e284785731d7f9c39f90bb3a9fde908318eb095c232719c5eb10997bc4aade84bec9e714d9e4d70572a039470e43ac4fb08eacfb6719b2e97f481c127bc8a94facf239e4b23ff44d8813e26d6473fd0331a7f16e8973aca7a0f22932fef0414cf3c93790031dbf47e450df5f841c85585fa18b6cfabf47161132a3fe04a7f377c4fafa4fe4cc27ee29e6c66f9358fb65c861483e4364e983fbc30b71820cafc8a6ff37c318af7ec1bdaeee9ff590c38c58dd7f2f35e3bf22471e9d4f917b09ee1fa0d65fdc35f5a18f1c25743f6abdc6a93ecf8bcd9725418fee07543d4e84a7e3ff80dc231f50f7cf85ae076c80cc43da5f26c49cf895382756f52c0d627d7f63649ea7b85fcd1467699eaafd07148bd0d41b1f39d1efe7c8698efb193b47161132a8f52032532f5e88757c2e9139c59373623dbf5364c1713fe46afeb2509f07b55fe532a1e8fd63e4d42766c411f5778f9cfbb85fb21171840c2a9e79aefb6327c829a7fe6e88733a8ffde7f2fdf8fca4ce0f8c0f5b47eeeaf93a4416e4036a7d0e06fa3c4c8975becd90f5f56c8f588fbf8b9cd1fd32402efe157c3a5dad016b6eabf6b79a038dc221050119e430801bb8853bb8870718c2081e610c93554dda3ad0e84ff00c2f3095e3967f5ea5c59bfcd1c7a174796f6fd2c681c6ff80991ccfd6eee0930ccac775d868e7b1dc41f5b3095b957b2fff9463b078dc869de516cd0e6afc5d39eff6fb9fc7a11a83f271087bcd1e4d0eca60bfe1fe5df9503ffe6cb2703bc8771dc8fc6b8e40533e2c1e0fe1c865e1729006a9ea7f590c9af3a17cbc8763bb85dd411afc6a158136f9503e9ed82c6c0ecaa0cdfdb7cf87f9f1b46e51779006672bc4a06d3ecc8fb519a93aa85ad8260f5e64b54e65d69ecb775cc0a5ccb863b882eb5679f1be68b1e8a056e3b2b5b0057df8eddcb1fe4007bca56b6461a5d61c9aebc1408ebf64d754cd87eeb27a61775035b12902fb2af2ed5a0061632cf6e61673079a07770c365b8faf5bd4108be17c3e161c7a0d31385bd9a068c70db1f0ab0eea1deebd31fd9281b670eda9148992c3873306abcf42b9ed3863b15173983962b05fea2f86a43e4af19f719632e1b008edb16059d9018a3dd21e83c17c2db0bc38488fba836e037663710898ab96aabdd4383c3b72c1d40376c770b47bf6e07428dad062e13beac4e38283fd5969ab6430325d562c6a43da32d85e3b87da018aa7756b2eb04733ce78a1cbc982c3137b662f6cda188b8ea34ec89ec821756403ed0becb5766393da284c7acca19a177f1c6b636c1c84636fc4f727f5d0da72535abc999783da59eb9ecade8d43668d8250ef8d6d06aae58db11095738fd6b531320ef67d42e6167b9019e87290996af9a5ce8b6a661ebbf60d7218d8e2c03e1a0d8a36aa5b9848cc2abfb7e7c3837660ebd6389cb349a341d1c6358767fda272e6d29a0f1b260ed655d1c2a068af15874dfdb276a9bd56ea386cb16d4bdba9f4ae5f3c557e3fae0e666d13b6cbf66a3f7bc661dfeaf0b33296ae94b53dc1523fea060716835d76681c8eac0ec7959138bd78a939e8bdc4d5647567bfac7138310ea75687cab393dc9df185e5a972613fb118c82b2eac71b8340e575687ebca38c2bcac4542efecb686cf1cac6f8dc36fe3f0c7ead0a98d33302fbdb616baa633df1a87be7138b33a6cb36e6594e712d862515fcd543f586035d86317c6a1eb70086ba34425389735f1866d365898dac17a56835d16a343f10cc3129b03afd7997966cea35d3e5baeeea5fd84339b01e7e5e7289eda23c185c522723b942c4a7b09cf1c33d15f70c81d0e836aa5a2bc18b81c809e37e6cf17ec80dfd86782dfce1d94c59dc3e2beeea07a167256664555b09c8dcbcf16fcc1910b7ef5f3051f3af2729b8fec16ed9a9c07bbc11e7fac7dc66132411c16d58ad9bec9eae83250abb6fa99970ba7c3172ddc06321732ebe76ed7bee15c215f9d05dc27ea0e2a12938648c8ecb4ad1147040e9c998833f164fb0e842c9e1b2d5eda454346e0a4d160daf87d54e37c60ed6461751f29dd7fc05fed35b164f0369f07fb77833ce7efcd16aa75d8353be31f383bf219e997ccbfbe636f5c3498f1cfa6ef06d1c2b98bbada92512b3f17cbbe23a558acafe4b08201df68f35df1172cfe9641d3df0ee46cb7c98bd671e0b3fa2c343bd05eba648db48f037fc33d723507da431aeb45db38f0e9e26a6cef401613fb3356db3870ce9f9a0cdafe6d918b863db5210e7c5cec4c7fef6f8b738be2f9c2f594e330f0397d9bb5acffd5fed62c6b686ac9d3da9ec8fa452d6c33fe2a0e6513f949e04c56ea2b992747f213fb961cf7909d70ce7ecb6a7dc1e2f6a37fc5a16ce26eabf6f7fd7ffffcf67f376d395f</data>
+    </image>
+</images>
+<connections>
+    <connection>
+        <sender>buttonOk</sender>
+        <signal>clicked()</signal>
+        <receiver>WelcomeDialog</receiver>
+        <slot>accept()</slot>
+    </connection>
+    <connection>
+        <sender>buttonCancel</sender>
+        <signal>clicked()</signal>
+        <receiver>WelcomeDialog</receiver>
+        <slot>reject()</slot>
+    </connection>
+    <connection>
+        <sender>vdccm</sender>
+        <signal>clicked()</signal>
+        <receiver>WelcomeDialog</receiver>
+        <slot>radioButton_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>dccm</sender>
+        <signal>clicked()</signal>
+        <receiver>WelcomeDialog</receiver>
+        <slot>radioButton_clicked()</slot>
+    </connection>
+</connections>
+<tabstops>
+    <tabstop>vdccm</tabstop>
+    <tabstop>dccm</tabstop>
+    <tabstop>buttonOk</tabstop>
+    <tabstop>buttonCancel</tabstop>
+</tabstops>
+<includes>
+    <include location="local" impldecl="in implementation">welcomedialog.ui.h</include>
+</includes>
+<slots>
+    <slot>radioButton_clicked()</slot>
+</slots>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

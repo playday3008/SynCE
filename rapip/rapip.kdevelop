@@ -12,29 +12,105 @@
       <keyword>KDE</keyword>
       <keyword>kioslave</keyword>
     </keywords>
-    <version/>
-    <description/>
+    <version></version>
+    <description></description>
     <ignoreparts/>
+    <projectdirectory>.</projectdirectory>
+    <absoluteprojectpath>false</absoluteprojectpath>
   </general>
   <kdevautoproject>
     <general>
       <activetarget>raki/raki</activetarget>
+      <useconfiguration>release</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
       <envvar value="1" name="WANT_AUTOMAKE_1_6" />
     </makeenvvars>
     <run>
-      <mainprogram/>
-      <programargs/>
+      <mainprogram>./raki/raki</mainprogram>
+      <programargs></programargs>
+      <terminal>false</terminal>
+      <envvars/>
+      <autocompile>true</autocompile>
     </run>
     <envvars/>
     <make>
       <abortonerror>false</abortonerror>
       <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
-      <makebin/>
+      <makebin></makebin>
+      <envvars>
+        <envvar value="1" name="WANT_AUTOCONF_2_5" />
+        <envvar value="1" name="WANT_AUTOMAKE_1_6" />
+      </envvars>
     </make>
+    <configurations>
+      <debug>
+        <configargs>--enable-debug=yes --with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
+        <builddir>/home/voc/usr/software/mrapip/build/debug</builddir>
+        <topsourcedir/>
+        <ccompiler>GccOptions</ccompiler>
+        <cxxcompiler>GppOptions</cxxcompiler>
+        <f77compiler>G77Options</f77compiler>
+        <ccompilerbinary>gcc</ccompilerbinary>
+        <cxxcompilerbinary>g++</cxxcompilerbinary>
+        <f77compilerbinary>g77</f77compilerbinary>
+        <cflags/>
+        <cxxflags/>
+        <f77flags/>
+        <cppflags>-DNOTUNIQUE</cppflags>
+        <ldflags/>
+      </debug>
+      <default>
+        <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
+        <builddir/>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <ccompiler>GccOptions</ccompiler>
+        <cxxcompiler>GppOptions</cxxcompiler>
+        <f77compiler>G77Options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags/>
+        <cxxflags/>
+        <f77flags/>
+      </default>
+      <release>
+        <configargs>--with-agsync=/home/voc/usr/src/synce/agsync-0.2-pre</configargs>
+        <builddir>/home/voc/usr/software/mrapip/build/release</builddir>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <ccompiler>GccOptions</ccompiler>
+        <cxxcompiler>GppOptions</cxxcompiler>
+        <f77compiler>G77Options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags/>
+        <cxxflags/>
+        <f77flags/>
+      </release>
+      <dist>
+        <configargs/>
+        <builddir>/home/voc/usr/software/mrapip</builddir>
+        <topsourcedir>/home/voc/usr/software/mrapip</topsourcedir>
+        <cppflags/>
+        <ldflags/>
+        <ccompiler>GccOptions</ccompiler>
+        <cxxcompiler>GppOptions</cxxcompiler>
+        <f77compiler>G77Options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags/>
+        <cxxflags/>
+        <f77flags/>
+      </dist>
+    </configurations>
   </kdevautoproject>
   <kdevfileview>
     <groups>
@@ -49,25 +125,23 @@
   </kdevfileview>
   <kdevdoctreeview>
     <ignoretocs>
-      <toc>gtk</toc>
-      <toc>gnustep</toc>
       <toc>python</toc>
-      <toc>php</toc>
       <toc>perl</toc>
     </ignoretocs>
     <projectdoc>
-      <userdocDir>/home/voc/usr/software/rapip/html/</userdocDir>
-      <apidocDir>/home/voc/usr/software/rapip/html/</apidocDir>
+      <userdocDir>/home/voc/usr/software/mrapip/doc/en/</userdocDir>
+      <apidocDir>/home/voc/usr/software/mrapip/html/</apidocDir>
     </projectdoc>
   </kdevdoctreeview>
   <kdevdebugger>
     <general>
       <dbgshell>libtool</dbgshell>
-      <programargs/>
-      <gdbpath/>
+      <programargs></programargs>
+      <gdbpath></gdbpath>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
+      <runappinappdirectory>true</runappinappdirectory>
     </general>
     <display>
       <staticmembers>false</staticmembers>
@@ -78,17 +152,29 @@
     <custom>false</custom>
     <bzip>false</bzip>
     <archname/>
-    <appname>rapip</appname>
-    <version>0.1</version>
-    <release/>
-    <vendor>Volker Christian</vendor>
-    <licence>GNU</licence>
-    <summary>kio_slave for PDA</summary>
-    <group/>
-    <packager>Volker Christian</packager>
-    <description>An kio_slave to communicate with a PDA via the synce-package. The protocol is called rapip:/
+    <appname>%{name}</appname>
+    <version>0.6</version>
+    <release>%{rel}</release>
+    <vendor>The SynCE Project</vendor>
+    <licence>MIT</licence>
+    <summary>Rapip-Suit: KDE-Integration of SynCE. Kio-slave and Tray-Icon.</summary>
+    <group>Applications/Productivity</group>
+    <packager>Volker Christian &lt;voc@users.sourceforge.net></packager>
+    <description>Rapip is part of the SynCE project:
+
+  http://synce.sourceforge.net/
+
+This Package is a KDE-Integration of SynCE. It consists of a kio_slave
+(rapip), a KDE System-Tray Application (raki) and an enhanced direct cable
+connection manager (vdccm).
+
+Rapip: Lets you transparently interact with your PockePC via konqueror.
+Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than 
+       Activesync in future.
+
 </description>
-    <changelog>Initial release</changelog>
+    <changelog>Initial release
+</changelog>
     <devpackage>false</devpackage>
     <docspackage>false</docspackage>
     <appicon>false</appicon>
@@ -112,9 +198,9 @@
       <preparsing/>
     </classstore>
     <filetemplates>
-      <choosefiles>false</choosefiles>
-      <interfaceURL/>
-      <implementationURL/>
+      <choosefiles>true</choosefiles>
+      <interfaceURL>/home/voc/usr/software/mrapip/templates/h</interfaceURL>
+      <implementationURL>/home/voc/usr/software/mrapip/templates/cpp</implementationURL>
       <interfacesuffix>.h</interfacesuffix>
       <implementationsuffix>.cpp</implementationsuffix>
       <lowercasefilenames>true</lowercasefilenames>
@@ -126,11 +212,22 @@
   </kdevclassview>
   <kdevcvs>
     <cvsoptions>-f</cvsoptions>
-    <commitoptions/>
+    <commitoptions></commitoptions>
     <updateoptions>-dP</updateoptions>
-    <addoptions/>
+    <addoptions></addoptions>
     <removeoptions>-f</removeoptions>
     <diffoptions>-u3 -p</diffoptions>
-    <logoptions/>
+    <logoptions></logoptions>
+    <rshoptions></rshoptions>
+    <revertoptions>-C -d -P</revertoptions>
   </kdevcvs>
+  <kdevfilecreate>
+    <filetypes/>
+    <useglobaltypes>
+      <type ext="ui" />
+      <type ext="cpp" />
+      <type ext="c" />
+      <type ext="h" />
+    </useglobaltypes>
+  </kdevfilecreate>
 </kdevelop>

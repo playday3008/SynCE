@@ -12,3 +12,10 @@ autom4te.cache
 libtool
 stamp-h1
 rapip.kdevses
+debug
+dmalloc
+html
+latex
+pics
+acinclude.m4
+aclocal.m4

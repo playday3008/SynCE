@@ -1,0 +1,17 @@
+if test ${kdewarning} == yes; then
+	echo ""
+	echo "WARNING: KDEDIR and kde_libs_prefix different ... check it"
+	echo "         KDEDIR = $KDEDIR"
+	echo "         kde_libs_prefix = $kde_libs_prefix"
+	echo ""
+fi
+echo ""
+echo "Remember to install rapip/raki in the default KDEDIR."
+echo "For this your KDEDIR environment variable has to be"
+echo "set according your KDE-Installation."
+echo "e.g. Slackware  export KDEDIR=/opt/kde"
+echo "     RedHat     export KDEDIR=/usr"
+echo "     Debinan    export KDEDIR=/usr"
+echo "If it is not set correctly rapip and raki won't work."
+echo "Please check again and rerun ./configuer if neccessary."
+echo ""

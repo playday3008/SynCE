@@ -1,85 +1,270 @@
-2003-02-23  Volker Christian <voc@soft.uni-linz.ac.at>
-	+ Update to compile with synce-07
+2003-06-26  Volker Christian <voc@soft.uni-linz.ac.at>
+
+        + Merged back the MULTIPLE_DEVICES branch into HEAD. The 
+
+           MULTIPLE_DEVICES branch is not used from now on.
+
+2003-03-05  Volker Christian <voc@soft.uni-linz.ac.at>
+
+        + CAUTION: The raki.sh - file in ~/.synce/scripts has changed. Install the
+
+          new one located in the raki-subdirectory of the rapip/raki package
+
+         
+
+        + To make the multiple-device feature work apply the supplied patch
+
+          "mlibsynce.patch" located in the root rapip directory to libsynce
+
+          version 0.7. The changes are described later in this changelog.
+
+          Compile and install libsynce as usual.
+
+          Dont be afraid of installing this patched version. libsynce stays totaly
+
+          compatible with the original one
+
+         
+
+        + Every part of the rapi/raki now is able to handle more pda
+
+          simultaneously. For this to work there is a new dccm calle
+
+          vdccm (v ... _v_oc). This new vdccm is completely compatible wit
+
+          the original dccm but in addition it could handle more than on
+
+          pdas at the same time. Also all other parts (raki and rapip) ar
+
+          completely backward compatible with the single-pda version. Certainly
+
+          it was neccessary to change the user interface of raki
+
+        
+
+        + Pda-passwords could now be controlled by raki, which presents a passwor
+
+          dialog if it doesn`t know the password for a specific pda. For this t
+
+          work dont use the "-p" switch of vdccm. If the user decides to let raki
+
+          remember the password of a pda, raki itself answers  a password request
+
+          without asking the user the next time this pda connects.
+
+          If the password is rejected by the pda the remembered password in raki is
+
+          deleted and the next time this pda connects raki doesn't answer the reques
+
+          itself anymore but the user is asked about the password again. This
+
+          passwords are stored independently for every pda
+
+       
+
+        + The rapip-io-slave now decides by means of the host field of the ur
+
+          rapip://<host>/<path>/ which pda should be contacted. This name has to b
+
+          a valid pda-name entered in the "settings->system->info->Device-ID" dialo
+
+          of the pda
+
+         
+
+        + Arbitrary numbers of cab-files could be installed to one or more pdas a
+
+          the same time. Simply drop the files you want to install onto the systra
+
+          icon - a dialog pops up where you could chose the installation destination
+
+       
+
+        + Masquerading could be configured on a per pda bases
+
+       
+
+        + Action-menus for every connected pda could be teared of
+
+       
+
+        Theory of operation
+
+       
+
+        + vdccm: Completely rewritten to use select() instead of poll(). For ever
+
+             connected pda vdccm creates a file with the name of the pda as the
+
+             filename which the same content as the usual "active_connection"-file.
+
+             In addition the "active_connection"-file is created for the last
+
+             connected pda. This garanties the existance of the usual
+
+             "active_connection" file and the backward compatibility
+
+             In addition vdccm creates a unix-socket "csock" in the ~voc/.synce
+
+             directory.
+
+             Via this socket raki gets information about connected pdas, password
+
+             requests and password rejects
+
+             Raki sends responses to password requests back to vdccm via this socket
+
+       
+
+        + patch to libsynce: Only three functions are added to libsynce
+
+            - one to set the actual connection-file to a different filename as th
+
+              usual "active_connection". So synce contacts a specific pda
+
+            - one to set the actual connection-file to the default "active_connection
+
+              value
+
+            - the last function returns the socket-descriptor of the synce-socket
+
+       
+
+        + vdccm-raki communication: This communication is very simple. The
+
+            communication is done with ordinary c-strings - i.e. it must be closed
+
+            by '\0'. Every commad must start with a capital letter followed by a
+
+            pda-name and optional components. A valid command would be e.g.
+
+            "CPocket_PC
+
+           
+
+            vdccm -> raki - command letters (C, D, P, R)
+
+                CPocket_PC ... A pda with name Pocket_PC has successful connecte
+
+                               to vdccm. This command is send after an optiona
+
+                           password request/reply handshake if the passwor
+
+                           was accepted by the pda
+
+                DPocket_PC ... A pda with name Pocket_PC has closed th connectio
+
+                           to vdccm (disconnect)
+
+                PPocket_PC ... The pda with name Pocket_PC requests a password
+
+                RPocket_PC ... The pda with name Pocket_PC has rejected a supplie
+
+                           password. This is send in place of CPocket_PC
+
+                          
+
+            raki -> vdccm - command letters (R)
+
+                RPocket_PC=password ... Password reply to a password request fo
+
+                           the pda with name Pocket_PC
+
+       
+
+        + The vdccm-raki communication method could also be used by other clients o
+
+            vdccm to get connection information and to respond to password requests
+
+            vdccm is stable to more than one password responses to one request. Th
+
+            first response takes precedence
+
+
+
+
+
+
 
 2003-02-18  Volker Christian <voc@soft.uni-linz.ac.at>
-	+ Overall changes:
-		+ Like always ... code polish.
-	+ Changes in rapip:
-		none
-	+ Changes in raki:
-		+ Added "Connect" and "Disconnect" menu entries to connect to and
-		  disconnect from a PDA.
-		+ "Masquerading"-Feature added. To enable this feature you have to
-		  do the following tasks:
-		  - grant permissions to the raki-user to execute /usr/sbin/iptables 
-		    as root via a sudo call. For this add a line similar to
-		  	    <raki-user>     ALL = (root) NOPASSWD: /usr/sbin/iptables
-		    to the /etc/suduers file of your machine. See soduers(5) for in
-		    depth details.
-		  - Setting up a nameservice for the PDA.
-		    Two possibilities (only do one of them):
-		    1. Setting up a forwarding nameserver on your machine.
-		       For this add a forwarders-section to the /etc/named.conf file       
-		       	     forwarders {
-                		uuu.vvv.xxx.yyy;
-        		     };
-		       with uuu.vvv.xxx.yyy be the ip-address of a valid nameserver.
-		    2. Change the ip-address on line
-		    	  ms-dns 192.168.xxx.yyy
-		       in the /etc/ppp/peers/synce-device file to point to a valid
-		       nameserver.
-		    After doing this steps you can download your daily newspaper with
-		    AvantGo, browse the www with IE ...
-		       
-		       
+    + Overall changes:
+        + Like always ... code polish.
+    + Changes in rapip:
+        none
+    + Changes in raki:
+        + Added "Connect" and "Disconnect" menu entries to connect to and
+          disconnect from a PDA.
+        + "Masquerading"-Feature added. To enable this feature you have to
+          do the following tasks:
+          - grant permissions to the raki-user to execute /usr/sbin/iptables 
+            as root via a sudo call. For this add a line similar to
+                  <raki-user>     ALL = (root) NOPASSWD: /usr/sbin/iptables
+            to the /etc/suduers file of your machine. See suduers(5) for in
+            depth details.
+          - Setting up a nameservice for the PDA.
+            Two possibilities (only do one of them):
+            1. Setting up a forwarding nameserver on your machine.
+               For this add a forwarders-section to the /etc/named.conf file       
+                        forwarders {
+                        uuu.vvv.xxx.yyy;
+                     };
+               with uuu.vvv.xxx.yyy be the ip-address of a valid nameserver.
+            2. Change the ip-address on line
+                  ms-dns 192.168.xxx.yyy
+               in the /etc/ppp/peers/synce-device file to point to a valid
+               nameserver.
+            After doing this steps you can download your daily newspaper with
+            AvantGo, browse the www with IE ...
+               
+               
 2003-02-16  Volker Christian <voc@soft.uni-linz.ac.at>
-	+ Overall changes:
-		+ Fixed some compile-problems. The following compiler / kde / qt
-		  versions are now supported:
-		  	gcc-2.95.x, gcc-3.2.x, kde-3.0, kde-3.1, qt-3.0, qt-3.1
-		  Checked combinations:
-		  	gcc-2.95.x + kde-3.0 + qt-3.0
-			gcc-2.95.x + kde-3.1 + qt-3.1
-			gcc-3.2.x  + kde-3.1 + qt-3.1
-	* Changes in rapip:
-		+ The code has been completely restructured.
-		+ Much more error-checking is now done. It should now react
-		  rasonable on (hopefully) every error.
-		+ The librapi-library now is CeRapiUninit()´ed after every
-		  transaction.
-	+ Changes in raki:
-		+ The proprietary method for copying the dragged file up into 
-		  the /Windows/AppMgr/Install-directory of the PDA has been 
-		  replaced by a FileCopyJob. So it integrates cleanly into KDE. 
-		  One can now drag a cab-file from a remote ftp-server and 
-		  drop it on the systray-icon and the file gets installed.
-		+ ProgressBar-Dialog has gone and has been replaced by the
-		  progress-window of the FileCopyJob.
-		+ More than one file could now be installed onto the PDA 
-		  simultaniously.
-		+ dccm now started by a KProcess.
-		+ Startup and restart of dccm should now be reliable.
-		+ The path to the dccm-executable could now be configured via
-		  the config-dialog.
-		+ New menu-item for opening the filesystem "rapip:/" directly.
-		
+    + Overall changes:
+        + Fixed some compile-problems. The following compiler / kde / qt
+          versions are now supported:
+              gcc-2.95.x, gcc-3.2.x, kde-3.0, kde-3.1, qt-3.0, qt-3.1
+          Checked combinations:
+              gcc-2.95.x + kde-3.0 + qt-3.0
+              gcc-2.95.x + kde-3.1 + qt-3.1
+              gcc-3.2.x  + kde-3.1 + qt-3.1
+    * Changes in rapip:
+        + The code has been completely restructured.
+        + Much more error-checking is now done. It should now react
+          rasonable on (hopefully) every error.
+        + The librapi-library now is CeRapiUninit()´ed after every
+          transaction.
+    + Changes in raki:
+        + The proprietary method for copying the dragged file up into 
+          the /Windows/AppMgr/Install-directory of the PDA has been 
+          replaced by a FileCopyJob. So it integrates cleanly into KDE. 
+          One can now drag a cab-file from a remote ftp-server and 
+          drop it on the systray-icon and the file gets installed.
+        + ProgressBar-Dialog has gone and has been replaced by the
+          progress-window of the FileCopyJob.
+        + More than one file could now be installed onto the PDA 
+          simultaniously.
+        + dccm now started by a KProcess.
+        + Startup and restart of dccm should now be reliable.
+        + The path to the dccm-executable could now be configured via
+          the config-dialog.
+        + New menu-item for opening the filesystem "rapip:/" directly.
+        
 
 2003-02-10  Volker Christian <voc@soft.uni-linz.ac.at>
-	* Code-cleaning in the kio_slave - nevertheless it is still not perfect
-	* Initial Release of the Raki-Application which docs into the System
-	  Tray.
-	  Features are:
-	  	+ Displaying of the current connection-state
-	  	+ Fetching and displaying of
-			- System Information
-			- Power status
-		+ Managing of installed Software
-		+ Installing new software by drag&drop of cab-files onto the
-			System Tray Icon
-		+ Auto-start of dccm (configurable)
-		+ Password for PDA-connection (configurable)
-		+ Start PocketPC-Applications on the PDA remotely from your
-		  Desktop
+    * Code-cleaning in the kio_slave - nevertheless it is still not perfect
+    * Initial Release of the Raki-Application which docs into the System
+      Tray.
+      Features are:
+          + Displaying of the current connection-state
+          + Fetching and displaying of
+            - System Information
+            - Power status
+        + Managing of installed Software
+        + Installing new software by drag&drop of cab-files onto the
+            System Tray Icon
+        + Auto-start of dccm (configurable)
+        + Password for PDA-connection (configurable)
+        + Start PocketPC-Applications on the PDA remotely from your
+          Desktop
 
 2003-01-27  Volker Christian <voc@soft.uni-linz.ac.at>
-	* Initial Release
+    * Initial Release

@@ -1,6 +1,6 @@
 #MIN_CONFIG
 
-AM_INIT_AUTOMAKE(rapip, 0.4.1)
+AM_INIT_AUTOMAKE(synce-rapip, 0.6)
 AC_C_BIGENDIAN
 AC_CHECK_KDEMAXPATHLEN
 
@@ -72,6 +72,34 @@ AC_ARG_WITH(librapi2-lib,
 	]
 )
 
+AC_ARG_WITH(librra,
+	AC_HELP_STRING(
+			[--with-librra[=DIR]],
+			[Search for librra in DIR/include and DIR/lib]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+	]
+)
+
+AC_ARG_WITH(librra-include,
+	AC_HELP_STRING(
+			[--with-librra-include[=DIR]],
+			[Search for librra header files in DIR]),
+	[
+		CPPFLAGS="$CPPFLAGS -I${withval}"
+	]
+)
+
+AC_ARG_WITH(librra-lib,
+	AC_HELP_STRING(
+			[--with-librra-lib[=DIR]],
+			[Search for librra library files in DIR]),
+	[
+		LDFLAGS="$LDFLAGS -L${withval}"
+	]
+)
+
 AC_CHECK_LIB(rapi,CeRapiInit,,
 	[
 		AC_MSG_ERROR([Can't find RAPI library])
@@ -83,3 +111,50 @@ AC_CHECK_HEADERS(rapi.h,,
 		AC_MSG_ERROR([Can't find rapi.h])
 	]
 )
+
+AC_CHECK_LIB(rra, rra_new,,
+	[
+		AC_MSG_ERROR([Can't find RRA library])
+	]
+)
+
+AC_CHECK_HEADERS(librra.h,,
+	[
+		AC_MSG_ERROR([Can't find librra.h])
+	]
+)
+
+
+AC_MSG_CHECKING([if AvantGo synchronization is wanted])
+AC_ARG_WITH(agsync, 
+	AC_HELP_STRING(
+			[--with-agsync=DIR],
+			[Use compiled >= agsync-0.2 to support AvantGo-sync.
+	]),
+	[
+		agsync_dir=${withval}
+		AC_MSG_RESULT(yes)
+	],
+	[
+		AC_MSG_RESULT(no)
+	]
+)
+
+agsync_cond=no
+
+if test x${agsync_dir} != x; then 
+	AC_CHECK_FILE(${agsync_dir}/mal-files/mal-funcs.a, [
+		CPPFLAGS="$CPPFLAGS -I${agsync_dir}/mal-files -I${agsync_dir}/mal-files/client"
+		AGSYNC_lib="${agsync_dir}/mal-files/mal-funcs.a"
+		AC_DEFINE(WITH_AGSYNC, 1, [Define if agsync is compiled and used])
+		agsync_cond=yes
+	])
+fi
+
+AM_CONDITIONAL(AGSYNC, test ${agsync_cond} == "yes")
+
+AC_SUBST(AGSYNC_lib)
+
+AM_WITH_DMALLOCTHCXX
+
+AC_DEFINE(QT_NO_ASCII_CAST, 1, [Define if you don't want QString casted to char *])

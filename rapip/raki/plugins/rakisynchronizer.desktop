@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=ServiceType
+X-KDE-ServiceType=Raki/Synchronizer
+X-KDE-Derived=
+
+[PropertyDef::X-Raki-Synchronizer]
+Type=QString
+

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+Exec=foobar
+Comment=Contact Synchronizer
+Icon=
+Name=KDE-Addressbook Synchronizer
+ServiceTypes=Raki/Synchronizer
+X-KDE-Library=librakikdeaddressbooksync
+X-Raki-Synchronizer=Contact

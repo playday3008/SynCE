@@ -1,24 +1,49 @@
 /***************************************************************************
- *   Copyright (C) 2003 by Volker Christian,,,                             *
- *   voc@soft.uni-linz.ac.at                                               *
+ * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
  *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
+ * Permission is hereby granted, free of charge, to any person obtaining a *
+ * copy of this software and associated documentation files (the           *
+ * "Software"), to deal in the Software without restriction, including     *
+ * without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to      *
+ * permit persons to whom the Software is furnished to do so, subject to   *
+ * the following conditions:                                               *
+ *                                                                         *
+ * The above copyright notice and this permission notice shall be included *
+ * in all copies or substantial portions of the Software.                  *
+ *                                                                         *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
+#include "configdialogimpl.h"
+#include "welcomedialogimpl.h"
+#include "raki.h"
+
+#include <synce.h>
 
 #include <qcheckbox.h>
 #include <klineedit.h>
 #include <kpushbutton.h>
+#include <kurlrequester.h>
+#include <kapplication.h>
+#include <kstandarddirs.h>
+#include <kmessagebox.h>
+#include <kurl.h>
+#include <kdebug.h>
 
-#include "configdialogimpl.h"
-#include "raki.h"
-
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#include <kde_dmalloc.h>
+#endif
 
 ConfigDialogImpl::ConfigDialogImpl(QWidget* parent, const char* name, bool modal, WFlags fl)
-  : ConfigDialog(parent, name, modal, fl)
+        : ConfigDialog(parent, name, modal, fl)
 {
     readConfig();
     updateFields();
@@ -28,28 +53,100 @@ ConfigDialogImpl::ConfigDialogImpl(QWidget* parent, const char* name, bool modal
 
 
 ConfigDialogImpl::~ConfigDialogImpl()
+{}
+
+
+void ConfigDialogImpl::chmodResult(KIO::Job *job)
 {
+    KIO::SimpleJob *sj = (KIO::SimpleJob *) job;
+
+    if (sj->error()) {
+        emit configError();
+    } else {
+        rakiVersion = VERSION;
+        updateFields();
+        writeConfig();
+        emit restartDccm();
+    }
+}
+
+
+void ConfigDialogImpl::copyResult(KIO::Job *job)
+{
+    KIO::FileCopyJob *fc = (KIO::FileCopyJob *) job;
+    if (fc->error()) {
+        KMessageBox::error(0, "Could not copy a valid dccm.sh script.\nPlease check your installation and start again!");
+        emit configError();
+    } else {
+        KIO::SimpleJob *sj =  KIO::chmod(fc->destURL(), 0755);
+        connect(sj, SIGNAL(result(KIO::Job *)), this,
+                SLOT(chmodResult(KIO::Job *)));
+    }
+}
+
+
+void ConfigDialogImpl::checkRunningVersion()
+{
+    QString dccm;
+
+    configurationValid = true;
+
+    if (rakiVersion != VERSION) {
+        WelcomeDialogImpl *welcomeDialog = new WelcomeDialogImpl(this, "EelcomeDialog", true);
+        welcomeDialog->exec();
+        if (welcomeDialog->result() == QDialog::Accepted) {
+            if (welcomeDialog->getSelectedDccm() == WelcomeDialogImpl::VDCCM) {
+                dccm = "vdccm";
+            } else if (welcomeDialog->getSelectedDccm() == WelcomeDialogImpl::DCCM) {
+                dccm = "dccm";
+            } else {
+                configurationValid = false;
+                emit configError();
+            }
+            if (configurationValid) {
+                dccmPath = dccm;
+                KStandardDirs *dirs = KApplication::kApplication()->dirs();
+                connectNotify = dirs->findResource("data", "raki/Infbeg.wav");
+                disconnectNotify = dirs->findResource("data", "raki/Infend.wav");
+                passwordRequestNotify = dirs->findResource("data", "raki/Infend.wav");
+                passwordRejectNotify = dirs->findResource("data", "raki/Infbeg.wav");
+                startDccm = true;
+                KURL srcDccm = KURL(QString("file:/" + dirs->findResource("data", "raki/scripts/" + dccm + ".sh")));
+                kdDebug(2120) << "Trying to copy " << QString("file:/" + dirs->findResource("data", "raki/scripts/" + dccm + ".sh"));
+                char *destDir;
+                synce::synce_get_script_directory(&destDir);
+                KURL destDccm = KURL(QString("file:/") + QString(destDir) + "/" + "dccm.sh");
+                KIO::FileCopyJob *fc = KIO::file_copy (srcDccm, destDccm, -1, true, false, false);
+                connect(fc, SIGNAL(result(KIO::Job *)), this,
+                        SLOT(copyResult(KIO::Job *)));
+                
+            }
+        } else {
+            emit configError();
+        }
+    } else {
+        emit restartDccm();
+    }
+}
+
+
+bool ConfigDialogImpl::configureValid()
+{
+    return configurationValid;
 }
 
 
 void ConfigDialogImpl::updateFields()
 {
     startDccmCheckbox->setChecked(startDccm);
-    passwordCheckbox->setChecked(usePassword);
-    passwordEdit->setText(password);
     dccmPathInput->setText(dccmPath);
-    synceStartInput->setText(synceStart);
-    synceStopInput->setText(synceStop);
-    masqEnabledCheckbox->setChecked(masqEnabled);
     ipTablesInput->setText(ipTables);
     buttonApply->setDisabled(true);
+    connectNotification->setURL(connectNotify);
+    disconnectNotification->setURL(disconnectNotify);
+    passwordRequestNotification->setURL(passwordRequestNotify);
+    passwordRejectNotification->setURL(passwordRejectNotify);
     dccmChanged = false;
-}
-
-
-bool ConfigDialogImpl::getUsePassword()
-{
-    return usePassword;
 }
 
 
@@ -59,27 +156,9 @@ bool ConfigDialogImpl::getStartDccm()
 }
 
 
-QString ConfigDialogImpl::getPassword()
-{
-    return password;
-}
-
-
 QString ConfigDialogImpl::getDccmPath()
 {
     return dccmPath;
-}
-
-
-QString ConfigDialogImpl::getSynceStart()
-{
-    return synceStart;
-}
-
-
-QString ConfigDialogImpl::getSynceStop()
-{
-    return synceStop;
 }
 
 
@@ -89,23 +168,43 @@ QString ConfigDialogImpl::getIpTables()
 }
 
 
-bool ConfigDialogImpl::getMasqueradeEnabled()
+QString ConfigDialogImpl::getConnectNotify()
 {
-    return masqEnabled;
+    return connectNotify;
+}
+
+
+QString ConfigDialogImpl::getDisconnectNotify()
+{
+    return disconnectNotify;
+}
+
+
+QString ConfigDialogImpl::getPasswordRequestNotify()
+{
+    return passwordRequestNotify;
+}
+
+
+QString ConfigDialogImpl::getPasswordRejectNotify()
+{
+    return passwordRejectNotify;
 }
 
 
 void ConfigDialogImpl::writeConfig()
 {
+    ksConfig->setGroup("RAKI");
+    ksConfig->writeEntry("Version", rakiVersion);
     ksConfig->setGroup("DCCM");
     ksConfig->writeEntry("StartDccm", startDccm);
-    ksConfig->writeEntry("UsePassword", usePassword);
-    ksConfig->writeEntry("Password", password);
     ksConfig->writeEntry("DccmPath", dccmPath);
-    ksConfig->writeEntry("SynCEStart", synceStart);
-    ksConfig->writeEntry("SynCEStop", synceStop);
-    ksConfig->writeEntry("Masquerade", masqEnabled);
     ksConfig->writeEntry("IpTables", ipTables);
+    ksConfig->writeEntry("Connect", connectNotify);
+    ksConfig->writeEntry("Disconnect", disconnectNotify);
+    ksConfig->writeEntry("PasswordRequest", passwordRequestNotify);
+    ksConfig->writeEntry("PasswordReject", passwordRejectNotify);
+
     ksConfig->sync();
 }
 
@@ -113,21 +212,19 @@ void ConfigDialogImpl::writeConfig()
 void ConfigDialogImpl::readConfig()
 {
     ksConfig=kapp->config();
+    ksConfig->setGroup("RAKI");
+    rakiVersion = ksConfig->readEntry("Version");
     ksConfig->setGroup("DCCM");
     startDccm = ksConfig->readBoolEntry("StartDccm");
-    usePassword = ksConfig->readBoolEntry("UsePassword");
-    masqEnabled = ksConfig->readBoolEntry("Masquerade");
-    password = ksConfig->readEntry("Password");
     dccmPath = ksConfig->readEntry("DccmPath");
     ipTables = ksConfig->readEntry("IpTables");
+    connectNotify = ksConfig->readEntry("Connect");
+    disconnectNotify = ksConfig->readEntry("Disconnect");
+    passwordRequestNotify = ksConfig->readEntry("PasswordRequest");
+    passwordRejectNotify = ksConfig->readEntry("PasswordReject");
+
     if (dccmPath.isEmpty()) {
-        dccmPath = "dccm";
-    }
-    if (synceStart.isEmpty()) {
-        synceStart = "synce-serial-start";
-    }
-    if (synceStop.isEmpty()) {
-        synceStop = "synce-serial-abort";
+        dccmPath = "vdccm";
     }
     if (ipTables.isEmpty()) {
         ipTables = "/usr/sbin/iptables";
@@ -138,18 +235,17 @@ void ConfigDialogImpl::readConfig()
 void ConfigDialogImpl::applySlot()
 {
     if (buttonApply->isEnabled()) {
-        this->password = passwordEdit->text();
         this->dccmPath = dccmPathInput->text();
         startDccm = startDccmCheckbox->isChecked();
-        usePassword = passwordCheckbox->isChecked();
-        synceStart = synceStartInput->text();
-        synceStop = synceStopInput->text();
-        masqEnabled = masqEnabledCheckbox->isChecked();
         ipTables = ipTablesInput->text();
+        connectNotify = connectNotification->url();
+        disconnectNotify = disconnectNotification->url();
+        passwordRequestNotify = passwordRequestNotification->url();
+        passwordRejectNotify = passwordRejectNotification->url();
         writeConfig();
         buttonApply->setDisabled(true);
         if (dccmChanged) {
-            ((Raki *) parent())->restartDccm();
+            emit restartDccm();
             dccmChanged = false;
         }
     }
@@ -164,12 +260,6 @@ void ConfigDialogImpl::changedSlot()
 
 
 void ConfigDialogImpl::pathChangedSlot()
-{
-    buttonApply->setEnabled(true);
-}
-
-
-void ConfigDialogImpl::masqChangedSlot()
 {
     buttonApply->setEnabled(true);
 }

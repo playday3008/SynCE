@@ -1,3 +1,26 @@
+/***************************************************************************
+ * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
+ *                                                                         *
+ * Permission is hereby granted, free of charge, to any person obtaining a *
+ * copy of this software and associated documentation files (the           *
+ * "Software"), to deal in the Software without restriction, including     *
+ * without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to      *
+ * permit persons to whom the Software is furnished to do so, subject to   *
+ * the following conditions:                                               *
+ *                                                                         *
+ * The above copyright notice and this permission notice shall be included *
+ * in all copies or substantial portions of the Software.                  *
+ *                                                                         *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
+ ***************************************************************************/
+
 #ifndef RAKI_H
 #define RAKI_H
 
@@ -6,25 +29,27 @@
 #endif
 
 #include <kpanelapplet.h>
-#include <qstring.h>
-#include <kconfig.h>
-#include <qpixmap.h>
 #include <kpopupmenu.h>
-#include <qpopupmenu.h>
-#include <dcopclient.h>
-#include <dcopobject.h>
-#include <kapplication.h>
 #include <kaboutapplication.h>
 #include <kaboutdata.h>
 #include <ksystemtray.h>
 #include <kprocess.h>
+#include <ksock.h>
+#include <qstring.h>
+#include <qpixmap.h>
+#include <qdict.h>
+#include <qpopupmenu.h>
+#include <dcopclient.h>
+#include <dcopobject.h>
 
-#include "runwindowimpl.h"
-#include "errorevent.h"
-#include "managerimpl.h"
-#include "configdialogimpl.h"
-#include "installer.h"
+class ConfigDialogImpl;
+class PDA;
+class Installer;
+class ErrorEvent;
 
+/**
+@author Volker Christian,,,
+*/
 
 class Raki : public KSystemTray, public DCOPObject
 {
@@ -33,60 +58,52 @@ class Raki : public KSystemTray, public DCOPObject
 public:
     Raki(KAboutData* aboutDta, KDialog* d, QWidget* parent=0, const char *name=0);
     ~Raki();
-    void restartDccm();
+    ConfigDialogImpl *configDialog;
+    bool isInitialized();
 
 private:
     void setConnectionStatus(bool enable);
     void mousePressEvent(QMouseEvent *);
     void dropEvent(QDropEvent* event);
-    void droppedFile(KURL url);
     void dragEnterEvent(QDragEnterEvent *event);
     void dragLeaveEvent(QDragLeaveEvent *event);
-    void customEvent (QCustomEvent *event);
-    void deleteFile(KURL delFile);
     bool process(const QCString &fun, const QByteArray &data,
                  QCString &replyType, QByteArray &replyData);
     QString changeConnectionState(int state);
+    void dccmConnect();
+    void openDccmConnection();
+    void dccmNotification(QString signal);
     void startDccm();
     void stopDccm();
     void tryStartDccm();
-    void startMasquerading(bool start);
+    QCStringList interfaces();
+    QCStringList functions();
+    void timerEvent(QTimerEvent *e);
 
     DCOPClient *dcopClient;
     KDialog *aboutDialog;
     KPopupMenu *rapiLeMenu;
     KPopupMenu *rapiReMenu;
-    RunWindowImpl *runWindow;
-    ManagerImpl *managerWindow;
-    ConfigDialogImpl *configDialog;
     Installer *installer;
     QPixmap connectedIcon;
     QPixmap disconnectedIcon;
     QPixmap *actualIcon;
     KProcess dccmProc;
-    KProcess connectProc;
-    KProcess disconnectProc;
     bool entered;
     bool connected;
     int startDccmId;
     int stopDccmId;
-    int connectId;
-    int disconnectId;
     bool dccmRestart;
-    bool masqueradeStarted;
-    QString deviceIp;
-    QString synceDir;
-
+    bool dccmShouldRun;
+    KSocket *dccmConnection;
+    QDict<PDA> pdaList;
+    bool initialized;
+    QStringList pendingPdaList;
+    
     enum {
-        OPEN_ITEM = 1,
-        SHUTDOWN_ITEM,
-        EXECUTE_ITEM,
-        INSTALL_ITEM,
-        CONFIGURE_ITEM,
+        CONFIGURE_ITEM = 1,
         STARTDCCM_ITEM,
-        STOPDCCM_ITEM,
-        CONNECT_ITEM,
-        DISCONNECT_ITEM
+        STOPDCCM_ITEM
     };
 
 private slots:
@@ -94,9 +111,17 @@ private slots:
     void clickedMenu(int item);
     void showAbout();
     void dccmExited(KProcess *oldDccm);
-    void connectExited(KProcess *oldProc);
-    void disconnectExited(KProcess *oldProc);
+    void dccmStdout(KProcess *, char *buf, int len);
+    void dccmStderr(KProcess *, char *buf, int len);
+//    void deviceNotification(KSocket *);
+    void connectionRequest(KSocket *dccmSocket);
+    void initializePda();
+    void closeDccmConnection(KSocket *);
+    void resolvedPassword(QString pdaName, QString password, KSocket *dccmSocket);
     void quit();
+    void shutDown();
+    void restartDccm();
+    void pdaInitialized(PDA *pda);
 };
 
 #endif

@@ -1,22 +1,44 @@
-#include <qfile.h>
+/***************************************************************************
+ * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
+ *                                                                         *
+ * Permission is hereby granted, free of charge, to any person obtaining a *
+ * copy of this software and associated documentation files (the           *
+ * "Software"), to deal in the Software without restriction, including     *
+ * without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to      *
+ * permit persons to whom the Software is furnished to do so, subject to   *
+ * the following conditions:                                               *
+ *                                                                         *
+ * The above copyright notice and this permission notice shall be included *
+ * in all copies or substantial portions of the Software.                  *
+ *                                                                         *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
+ ***************************************************************************/
 
+
+#include <qfile.h>
 #include <kinstance.h>
 #include <kmimetype.h>
-
+#include <synce.h>
 #include <stdlib.h>
-#include <syslog.h>
-
 #include "rapip.h"
 
 #define ANYFILE_BUFFER_SIZE (64*1024)
-#define WIDE_BACKSLASH   htole16('\\')
 
 static bool show_hidden_files = true;
 
 
 kio_rapipProtocol::kio_rapipProtocol(const QCString &pool_socket, const QCString &app_socket)
         : SlaveBase("kio_rapi", pool_socket, app_socket)
-{}
+{
+    isConnected = false;
+}
 
 
 kio_rapipProtocol::~kio_rapipProtocol()
@@ -25,54 +47,65 @@ kio_rapipProtocol::~kio_rapipProtocol()
 }
 
 
+void kio_rapipProtocol::setHost(const QString& _host, int /*_port*/,
+                                const QString& /*_user*/, const QString& /*_pass*/ )
+{
+    if (actualHost != _host) {
+        actualHost = _host;
+        closeConnection();
+    }
+}
+
+
 void kio_rapipProtocol::openConnection()
 {
     HRESULT hr;
+    
+    if (!actualHost.isEmpty())
+        synce::synce_set_connection_filename(actualHost.ascii());
+    else
+        synce::synce_set_default_connection_filename();
 
     ceOk = true;
 
     hr = synce::CeRapiInit();
+    
     if (FAILED(hr)) {
-        error(KIO::ERR_COULD_NOT_CONNECT, "PDA");
         ceOk = false;
-        connected = false;
+        isConnected = false;
+        error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
     } else {
-        connected = true;
+        isConnected = true;
+        connected();
     }
 }
 
 
 void kio_rapipProtocol::closeConnection()
 {
-    if (connected)
+    if (isConnected)
         synce::CeRapiUninit();
+    isConnected = false;
 }
 
 
-WCHAR* kio_rapipProtocol::adjust_remote_path()
+QString kio_rapipProtocol::adjust_remote_path()
 {
-    WCHAR wide_backslash[2];
     WCHAR path[MAX_PATH];
-    WCHAR *returnPath = NULL;
-
-    wide_backslash[0] = WIDE_BACKSLASH;
-    wide_backslash[1] = '\0';
+    QString returnPath;
 
     if (ceOk) {
-        if (!synce::CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path)) {
-            ceOk = false;
-            returnPath = NULL;
+        if (synce::CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path)) {
+            returnPath = QString::fromUcs2(path);
         } else {
-            synce::wstr_append(path, wide_backslash, sizeof(path));
-            synce_trace_wstr(path);
-            returnPath = synce::wstrdup(path);
+            ceOk = false;
         }
     }
     return returnPath;
 }
 
 
-bool kio_rapipProtocol::list_matching_files(WCHAR *wide_path)
+bool kio_rapipProtocol::list_matching_files(QString &path)
 {
     bool success = false;
     synce::CE_FIND_DATA *find_data = NULL;
@@ -83,22 +116,20 @@ bool kio_rapipProtocol::list_matching_files(WCHAR *wide_path)
     KMimeType::Ptr mt;
     KURL tmpUrl;
 
-
-
     if (ceOk) {
         ceOk = synce::CeFindAllFiles(
-                   wide_path,
+                   path.ucs2(),
                    (show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
                    FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
-                   &file_count, &find_data);
-
+                   &file_count, &find_data);      
+        totalSize(file_count);
         if (ceOk) {
             for (DWORD i = 0; i < file_count; i++) {
                 udsEntry.clear();
                 entry = find_data + i;
 
                 atom.m_uds = KIO::UDS_NAME;
-                atom.m_str = synce::wstr_to_ascii(entry->cFileName);
+                atom.m_str = QString::fromUcs2(entry->cFileName).ascii();
                 udsEntry.append( atom );
 
                 atom.m_uds = KIO::UDS_SIZE;
@@ -148,223 +179,179 @@ void kio_rapipProtocol::get(const KURL& url)
     unsigned char buffer[ANYFILE_BUFFER_SIZE];
     QByteArray array;
     KIO::filesize_t processed_size = 0;
-    WCHAR* wide_filename;
-    QCString fName;
+    QString qPath;
     KMimeType::Ptr mt;
 
+    ceOk = true;
 
-    openConnection();
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
         mt = KMimeType::findByURL(url);
         mimeType(mt->name());
-        fName = QFile::encodeName(url.path());
-        if ((wide_filename = synce::wstr_from_ascii(fName))) {
-            remote = synce::CeCreateFile(wide_filename, GENERIC_READ, 0, NULL,
-                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-            if (!(INVALID_HANDLE_VALUE == remote)) {
-                do {
-                    if (ceOk = synce::CeReadFile(remote, buffer, ANYFILE_BUFFER_SIZE,
-                                                 &bytes_read, NULL)) {
-                        if (0 == bytes_read) {
-                            break;
-                        }
+        qPath = url.path().replace("/", "\\");
+        HANDLE remote = synce::CeCreateFile(qPath.ucs2(), GENERIC_READ, 0, NULL,
+                                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+        if (!(INVALID_HANDLE_VALUE == remote)) {
+            do {
+                if ((ceOk = synce::CeReadFile(remote, buffer, ANYFILE_BUFFER_SIZE, &bytes_read, NULL))) {
+                    if (ceOk && bytes_read > 0) {
                         array.setRawData((char *) buffer, bytes_read);
                         data(array);
                         array.resetRawData((char *) buffer, bytes_read);
-
                         processed_size += bytes_read;
                         processedSize(processed_size);
                     }
-                } while (ceOk);
-
-                if (ceOk) {
-                    data(QByteArray());
-                    processedSize(processed_size);
-                    finished();
-                } else {
-                    error(KIO::ERR_COULD_NOT_READ, url.path());
                 }
-                synce::CeCloseHandle(remote);
+            } while (ceOk && bytes_read > 0);
+            if (ceOk) {
+                data(QByteArray());
+                processedSize(processed_size);
+                finished();
             } else {
-                error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.path());
+                error(KIO::ERR_COULD_NOT_READ, url.prettyURL());
+                closeConnection();
             }
-            synce::wstr_free_string(wide_filename);
+            synce::CeCloseHandle(remote);
         } else {
-            error(KIO::ERR_MALFORMED_URL, url.path());
+            error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.prettyURL());
+            closeConnection();
         }
     }
-    closeConnection();
 }
 
 
 void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, bool /* resume */)
 {
     int result;
-    WCHAR* wide_filename;
     size_t bytes_written;
     QByteArray buffer;
     KMimeType::Ptr mt;
-    QCString qPath;
+    QString qPath;
 
-    openConnection();
+    ceOk = true;
+
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        mt = KMimeType::findByURL(url);
-        emit mimeType(mt->name());
-        qPath = QFile::encodeName(url.path());
-        if ((wide_filename = synce::wstr_from_ascii(qPath))) {
-            if (wide_filename)
-                for (WCHAR* p = wide_filename; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            if (synce::CeGetFileAttributes(wide_filename) !=  0xFFFFFFFF) {
-                if (overwrite) {
-                    if (!(ceOk = synce::CeDeleteFile(wide_filename))) {
-                        error(KIO::ERR_CANNOT_DELETE, url.path());
-                    }
-                } else {
+        qPath = url.path().replace("/", "\\");
+        if (synce::CeGetFileAttributes(qPath.ucs2()) != 0xFFFFFFFF) {
+            if (overwrite) {
+                if (!(ceOk = synce::CeDeleteFile(qPath.ucs2()))) {
+                    error(KIO::ERR_CANNOT_DELETE, url.prettyURL());
+                    closeConnection();
                     ceOk = false;
                 }
-            }
-            if (ceOk) {
-                remote = synce::CeCreateFile(wide_filename, GENERIC_WRITE, 0, NULL,
-                                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-                if (!(INVALID_HANDLE_VALUE == remote)) {
-                    do {
-                        dataReq();
-                        result = readData(buffer);
-                        if (result > 0) {
-                            ceOk = synce::CeWriteFile(remote, (unsigned char *) buffer.data(), buffer.size(), &bytes_written, NULL);
-                        }
-                    } while (result > 0 && ceOk);
-
-                    if (ceOk) {
-                        finished();
-                    } else {
-                        error(KIO::ERR_COULD_NOT_WRITE, url.path());
-                    }
-                    synce::CeCloseHandle(remote);
-                } else {
-                    error(KIO::ERR_CANNOT_OPEN_FOR_WRITING, url.path());
-                }
             } else {
-                error(KIO::ERR_FILE_ALREADY_EXIST, url.path());
+                error(KIO::ERR_FILE_ALREADY_EXIST, url.prettyURL());
+                ceOk = false;
             }
-            synce::wstr_free_string(wide_filename);
-        } else {
-            error(KIO::ERR_MALFORMED_URL, url.path());
+        }
+        if (ceOk) {
+            HANDLE remote = synce::CeCreateFile(qPath.ucs2(), GENERIC_WRITE, 0, NULL,
+                                         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+            if (!(INVALID_HANDLE_VALUE == remote)) {
+                do {
+                    dataReq();
+                    result = readData(buffer);
+                    if (result > 0) {
+                        ceOk = synce::CeWriteFile(remote, (unsigned char *) buffer.data(), buffer.size(), &bytes_written, NULL);
+                    }
+                } while (result > 0 && ceOk);
+                if (ceOk) {
+                    finished();
+                } else {
+                    error(KIO::ERR_COULD_NOT_WRITE, url.prettyURL());
+                    closeConnection();
+                }
+                synce::CeCloseHandle(remote);
+            } else {
+                error(KIO::ERR_CANNOT_OPEN_FOR_WRITING, url.prettyURL());
+                closeConnection();
+            }
         }
     }
-    closeConnection();
 }
 
 
 void kio_rapipProtocol::listDir(const KURL& _url)
 {
     KURL url(_url);
-    QCString qPath;
-    WCHAR* wide_path;
-    char *myDocs;
+    QString qPath;
 
-    openConnection();
+    ceOk = true;
+
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        qPath = QFile::encodeName(url.path());
-        if (qPath.isEmpty()) {
-            wide_path = adjust_remote_path();
-            if (wide_path)
-                for (WCHAR *p = wide_path; *p; p++)
-                    if (*p == '\\')
-                        *p = '/';
-            myDocs = synce::wstr_to_ascii(wide_path);
-            url.setPath(myDocs);
-            synce::wstr_free_string(wide_path);
-            synce::wstr_free_string(myDocs);
+        if (url.path().isEmpty()) {
+            url.setPath(adjust_remote_path().replace("\\", "/"));
             redirection(url);
-        } else {
-            if (qPath.right(1) != "/") {
-                qPath = qPath.append("/");
-            }
-            qPath.append("*");
-            if ((wide_path = synce::wstr_from_ascii(qPath))) {
-                if (wide_path)
-                    for (WCHAR* p = wide_path; *p; p++)
-                        if (*p == '/')
-                            *p = '\\';
-                if (!list_matching_files(wide_path)) {
-                    error(KIO::ERR_CANNOT_ENTER_DIRECTORY, url.path());
-                }
-                synce::wstr_free_string(wide_path);
-            } else {
-                error(KIO::ERR_MALFORMED_URL, url.path());
-            }
             finished();
+        } else {
+            qPath = url.path();
+            if (qPath.right(1) != "/" ) {
+                qPath.append("/");
+            }
+            qPath.append("*").replace("/", "\\");
+            if (list_matching_files(qPath)) {
+                finished();
+            } else {
+                error(KIO::ERR_CANNOT_ENTER_DIRECTORY, url.prettyURL());
+                closeConnection();
+            }
         }
     }
-    closeConnection();
 }
 
 
 void kio_rapipProtocol::mkdir(const KURL& url, int /* permissions */)
 {
-    WCHAR *wide_path;
-    QCString qPath;
+    QString qPath;
 
+    ceOk = true;
 
-    openConnection();
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        qPath = QFile::encodeName(url.path());
-        if ((wide_path = synce::wstr_from_ascii(qPath))) {
-            if (wide_path)
-                for (WCHAR* p = wide_path; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            if (synce::CeCreateDirectory(wide_path, NULL)) {
-                finished();
-            } else {
-                error(KIO::ERR_DIR_ALREADY_EXIST, url.path());
-            }
-            synce::wstr_free_string(wide_path);
+        qPath = url.path().replace("/", "\\");
+        if (synce::CeCreateDirectory(qPath.ucs2(), NULL)) {
+            finished();
         } else {
-            error(KIO::ERR_MALFORMED_URL, url.path());
+            error(KIO::ERR_DIR_ALREADY_EXIST, url.prettyURL());
+            closeConnection();
         }
     }
-    closeConnection();
 }
 
 
 void kio_rapipProtocol::del(const KURL& url, bool isFile)
 {
-    WCHAR *wide_path;
-    QCString qPath;
+    QString qPath;
 
-    openConnection();
+    ceOk = true;
+
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        qPath =QFile::encodeName(url.path());
-        if ((wide_path = synce::wstr_from_ascii(qPath))) {
-            if (wide_path)
-                for (WCHAR* p = wide_path; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            if (isFile) {
-                ceOk = synce::CeDeleteFile(wide_path);
-            } else {
-                ceOk = synce::CeRemoveDirectory(wide_path);
-            }
-            if(ceOk) {
-                finished();
-            } else {
-                error(KIO::ERR_CANNOT_DELETE, url.path());
-            }
-            synce::wstr_free_string(wide_path);
+        qPath = url.path().replace("/", "\\");
+        if (isFile) {
+            ceOk = synce::CeDeleteFile(qPath.ucs2());
         } else {
-            error(KIO::ERR_MALFORMED_URL, url.path());
+            ceOk = synce::CeRemoveDirectory(qPath.ucs2());
+        }
+        if (ceOk) {
+            finished();
+        } else {
+            error(KIO::ERR_CANNOT_DELETE, url.prettyURL());
+            closeConnection();
         }
     }
-    closeConnection();
 }
 
 
@@ -372,218 +359,188 @@ void kio_rapipProtocol::stat(const KURL & url)
 {
     KIO::UDSEntry udsEntry;
     KIO::UDSAtom atom;
-    WCHAR* wide_path;
     DWORD attributes;
+    DWORD fileSize;
     KMimeType::Ptr mt;
-    QCString qPath;
+    QString qPath;
 
+    ceOk = true;
 
-    openConnection();
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        qPath = QFile::encodeName(url.path());
-        if ((wide_path = synce::wstr_from_ascii(qPath))) {
-            if (wide_path)
-                for (WCHAR* p = wide_path; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            if ((attributes = synce::CeGetFileAttributes(wide_path)) !=  0xFFFFFFFF) {
-                atom.m_uds = KIO::UDS_NAME;
-                atom.m_str = url.filename();
+        qPath = url.path().replace("/","\\");
+        if ((attributes = synce::CeGetFileAttributes(qPath.ucs2())) !=  0xFFFFFFFF) {
+            atom.m_uds = KIO::UDS_NAME;
+            atom.m_str = url.filename();
+            udsEntry.append(atom);
+
+
+            atom.m_uds = KIO::UDS_ACCESS;
+            atom.m_long = S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH |S_IXUSR | S_IXGRP | S_IXOTH;
+            udsEntry.append(atom);
+
+            if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+                atom.m_uds = KIO::UDS_FILE_TYPE;
+                atom.m_long = S_IFDIR;
                 udsEntry.append(atom);
 
                 atom.m_uds = KIO::UDS_SIZE;
-                atom.m_long = 1024;
+                atom.m_long = 0;
                 udsEntry.append(atom);
-
-                atom.m_uds = KIO::UDS_ACCESS;
-                atom.m_long = S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH |S_IXUSR | S_IXGRP | S_IXOTH;
-                udsEntry.append(atom);
-
-                if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
-                    atom.m_uds = KIO::UDS_FILE_TYPE;
-                    atom.m_long = S_IFDIR;
-                    udsEntry.append(atom);
-
-                    atom.m_uds = KIO::UDS_MIME_TYPE;
-                    atom.m_str="inode/directory";
-
-                    mimeType(atom.m_str);
+            
+                atom.m_uds = KIO::UDS_MIME_TYPE;
+                atom.m_str="inode/directory";
+                mimeType(atom.m_str);
+            } else {
+                HANDLE remote = synce::CeCreateFile(qPath.ucs2(), GENERIC_READ, 0, NULL,
+                                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+                atom.m_uds = KIO::UDS_SIZE;
+                if (!(INVALID_HANDLE_VALUE == remote)) {
+                    if ((fileSize = synce::CeGetFileSize(remote, NULL)) != 0xFFFFFFFF) {
+                        atom.m_long = fileSize;
+                    } else {
+                        atom.m_long = 0;
+                    }
+                    synce::CeCloseHandle(remote);
                 } else {
-                    atom.m_uds = KIO::UDS_FILE_TYPE;
-                    atom.m_long = S_IFREG;
-                    udsEntry.append(atom);
-
-                    mt = KMimeType::findByURL(url);
-                    atom.m_uds = KIO::UDS_MIME_TYPE;
-                    atom.m_str=mt->name();
-
-                    mimeType(atom.m_str);
+                    atom.m_long = 0;
                 }
                 udsEntry.append(atom);
-                statEntry(udsEntry);
+                
+                atom.m_uds = KIO::UDS_FILE_TYPE;
+                atom.m_long = S_IFREG;
+                udsEntry.append(atom);
 
-                finished();
-            } else {
-                error(KIO::ERR_DOES_NOT_EXIST, url.path());
+                mt = KMimeType::findByURL(url);
+                atom.m_uds = KIO::UDS_MIME_TYPE;
+                atom.m_str=mt->name();
+
+                mimeType(atom.m_str);
             }
-            synce::wstr_free_string(wide_path);
+            udsEntry.append(atom);
+            statEntry(udsEntry);
+
+            finished();
         } else {
-            error(KIO::ERR_MALFORMED_URL, url.path());
+            error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
+            closeConnection();
         }
     }
-    closeConnection();
 }
 
 
 void kio_rapipProtocol::mimetype( const KURL& url)
 {
-    QCString qPath;
-    WCHAR *wide_path;
+    QString qPath;
     DWORD attributes;
     KMimeType::Ptr mt;
 
+    ceOk = true;
 
-    openConnection();
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        qPath = QFile::encodeName(url.path());
-        if ((wide_path = synce::wstr_from_ascii(qPath))) {
-            if (wide_path)
-                for (WCHAR* p = wide_path; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            if ((attributes = synce::CeGetFileAttributes(wide_path)) !=  0xFFFFFFFF) {
-                if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
-                    mimeType("inode/directory");
+        qPath = url.path();
+        if ((attributes = synce::CeGetFileAttributes(qPath.ucs2())) !=  0xFFFFFFFF) {
+            if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+                mimeType("inode/directory");
+            } else {
+                mt = KMimeType::findByURL(url);
+                mimeType(mt->name());
+            }
+            finished();
+        } else {
+            error(KIO::ERR_DOES_NOT_EXIST, url.prettyURL());
+            closeConnection();
+        }
+    }
+}
+
+
+void kio_rapipProtocol::rename(const KURL& src, const KURL& dst, bool overwrite)
+{
+    QString sPath;
+    QString dPath;
+
+    ceOk = true;
+
+    if (!isConnected)
+        openConnection();
+
+    if (ceOk) {
+        sPath = src.path().replace("/", "\\");
+        dPath = dst.path().replace("/", "\\");
+        if (synce::CeGetFileAttributes(dPath.ucs2()) !=  0xFFFFFFFF) {
+            if (overwrite) {
+                if (!(ceOk = synce::CeDeleteFile(dPath.ucs2()))) {
+                    error(KIO::ERR_CANNOT_DELETE, dst.prettyURL());
+                    closeConnection();
+                    ceOk = false;
+                }
+            } else {
+                error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
+                ceOk = false;
+            }
+        }
+        if (ceOk) {
+            if (synce::CeGetFileAttributes(sPath.ucs2()) !=  0xFFFFFFFF) {
+                if (synce::CeMoveFile(sPath.ucs2(), dPath.ucs2())) {
+                    finished();
                 } else {
-                    mt = KMimeType::findByURL(url);
-                    mimeType(mt->name());
+                    error(KIO::ERR_CANNOT_RENAME, dst.prettyURL());
+                    closeConnection();
                 }
-                finished();
             } else {
-                error(KIO::ERR_DOES_NOT_EXIST, url.path());
+                error(KIO::ERR_DOES_NOT_EXIST, src.prettyURL());
+                closeConnection();
             }
-            synce::wstr_free_string(wide_path);
-        } else {
-            error(KIO::ERR_MALFORMED_URL, url.path());
         }
     }
-    closeConnection();
 }
 
 
-void kio_rapipProtocol::rename (const KURL& src, const KURL& dst, bool overwrite)
+void kio_rapipProtocol::copy(const KURL& src, const KURL& dst, int /* permissions */, bool overwrite)
 {
-    QCString sPath;
-    QCString dPath;
-    WCHAR *src_path;
-    WCHAR *dst_path;
+    QString sPath;
+    QString dPath;
 
+    ceOk = true;
 
-    openConnection();
+    if (!isConnected)
+        openConnection();
 
     if (ceOk) {
-        sPath = QFile::encodeName(src.path());
-        if ((src_path = synce::wstr_from_ascii(sPath))) {
-            if (src_path)
-                for (WCHAR* p = src_path; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            dPath = QFile::encodeName(dst.path());
-            if ((dst_path = synce::wstr_from_ascii(dPath))) {
-                if (dst_path)
-                    for (WCHAR* p = dst_path; *p; p++)
-                        if (*p == '/')
-                            *p = '\\';
-                if (synce::CeGetFileAttributes(dst_path) !=  0xFFFFFFFF) {
-                    if (overwrite) {
-                        if (!(ceOk = synce::CeDeleteFile(dst_path))) {
-                            error(KIO::ERR_CANNOT_DELETE, dst.path());
-                        }
-                    } else {
-                        error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
-                        ceOk = false;
-                    }
+        sPath = src.path().replace("/", "\\");
+        dPath = dst.path().replace("/", "\\");
+        if (synce::CeGetFileAttributes(dPath.ucs2()) !=  0xFFFFFFFF) {
+            if (overwrite) {
+                if (!(ceOk = synce::CeDeleteFile(dPath.ucs2()))) {
+                    error(KIO::ERR_CANNOT_DELETE, dst.prettyURL());
+                    closeConnection();
+                    ceOk = false;
                 }
-                if (ceOk) {
-                    if (synce::CeGetFileAttributes(src_path) !=  0xFFFFFFFF) {
-                        if (synce::CeMoveFile(src_path, dst_path)) {
-                            finished();
-                        } else {
-                            error(KIO::ERR_CANNOT_RENAME, dPath);
-                        }
-                    } else {
-                        error(KIO::ERR_DOES_NOT_EXIST, sPath);
-                    }
-                }
-                synce::wstr_free_string(dst_path);
             } else {
-                error(KIO::ERR_MALFORMED_URL, dst.path());
+                error(KIO::ERR_FILE_ALREADY_EXIST, dst.prettyURL());
+                ceOk = false;
             }
-            synce::wstr_free_string(src_path);
-        } else {
-            error(KIO::ERR_MALFORMED_URL, src.path());
+        }
+        if (ceOk) {
+            if (synce::CeGetFileAttributes(sPath.ucs2()) !=  0xFFFFFFFF) {
+                if (synce::CeCopyFile(sPath.ucs2(), dPath.ucs2(), true)) {
+                    finished();
+                } else {
+                    error(KIO::ERR_CANNOT_RENAME, dst.prettyURL());
+                    closeConnection();
+                }
+            } else {
+                error(KIO::ERR_DOES_NOT_EXIST, src.prettyURL());
+                closeConnection();
+            }
         }
     }
-    closeConnection();
-}
-
-
-void kio_rapipProtocol::copy (const KURL& src, const KURL& dst, int /* permissions */, bool overwrite)
-{
-    QCString sPath;
-    QCString dPath;
-    WCHAR *src_path;
-    WCHAR *dst_path;
-
-
-    openConnection();
-
-    if (ceOk) {
-        sPath = QFile::encodeName(src.path());
-        if ((src_path = synce::wstr_from_ascii(sPath))) {
-            if (src_path)
-                for (WCHAR* p = src_path; *p; p++)
-                    if (*p == '/')
-                        *p = '\\';
-            dPath = QFile::encodeName(dst.path());
-            if ((dst_path = synce::wstr_from_ascii(dPath))) {
-                if (dst_path)
-                    for (WCHAR* p = dst_path; *p; p++)
-                        if (*p == '/')
-                            *p = '\\';
-                if (synce::CeGetFileAttributes(dst_path) !=  0xFFFFFFFF) {
-                    if (overwrite) {
-                        if (!(ceOk = synce::CeDeleteFile(dst_path))) {
-                            error(KIO::ERR_CANNOT_DELETE, dst.path());
-                        }
-                    } else {
-                        error(KIO::ERR_FILE_ALREADY_EXIST, dPath);
-                        ceOk = false;
-                    }
-                }
-                if (ceOk) {
-                    if (synce::CeGetFileAttributes(src_path) !=  0xFFFFFFFF) {
-                        if (synce::CeCopyFile(src_path, dst_path, true)) {
-                            finished();
-                        } else {
-                            error(KIO::ERR_CANNOT_RENAME, dPath);
-                        }
-                    } else {
-                        error(KIO::ERR_DOES_NOT_EXIST, sPath);
-                    }
-                }
-                synce::wstr_free_string(dst_path);
-            } else {
-                error(KIO::ERR_MALFORMED_URL, dst.path());
-            }
-            synce::wstr_free_string(src_path);
-        } else {
-            error(KIO::ERR_MALFORMED_URL, src.path());
-        }
-    }
-    closeConnection();
 }
 
 
@@ -598,7 +555,6 @@ extern "C"
 
         kio_rapipProtocol slave(argv[2], argv[3]);
         slave.dispatchLoop();
-        openlog("Rapi", LOG_NOWAIT, LOG_USER);
 
         return 0;
     }

@@ -33,12 +33,6 @@ void ConfigDialog::pathChangedSlot()
 }
 
 
-void ConfigDialog::masqChangedSlot()
-{
-
-}
-
-
 void ConfigDialog::disableApply()
 {
 

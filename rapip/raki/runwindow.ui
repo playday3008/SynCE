@@ -126,23 +126,6 @@
                         <string>Execute</string>
                     </property>
                 </widget>
-                <spacer>
-                    <property name="name">
-                        <cstring>spacer6_2</cstring>
-                    </property>
-                    <property name="orientation">
-                        <enum>Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
-                    </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>70</width>
-                            <height>20</height>
-                        </size>
-                    </property>
-                </spacer>
                 <widget class="KPushButton">
                     <property name="name">
                         <cstring>cancel</cstring>
@@ -151,23 +134,6 @@
                         <string>Cancel</string>
                     </property>
                 </widget>
-                <spacer>
-                    <property name="name">
-                        <cstring>spacer6</cstring>
-                    </property>
-                    <property name="orientation">
-                        <enum>Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
-                    </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>60</width>
-                            <height>20</height>
-                        </size>
-                    </property>
-                </spacer>
             </hbox>
         </widget>
         <spacer>
@@ -216,9 +182,9 @@
     </connection>
 </connections>
 <tabstops>
-    <tabstop>cancel</tabstop>
     <tabstop>runUrlRequester</tabstop>
     <tabstop>execute</tabstop>
+    <tabstop>cancel</tabstop>
 </tabstops>
 <includes>
     <include location="global" impldecl="in declaration">kurl.h</include>
@@ -228,8 +194,8 @@
     <include location="local" impldecl="in implementation">runwindow.ui.h</include>
 </includes>
 <slots>
-    <slot access="protected" specifier="non virtual">openFileDialog( KURLRequester * requester )</slot>
-    <slot access="protected" specifier="non virtual">executeProgram()</slot>
+    <slot access="protected">openFileDialog( KURLRequester * )</slot>
+    <slot access="protected">executeProgram()</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>

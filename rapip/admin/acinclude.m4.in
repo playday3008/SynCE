@@ -1107,7 +1107,7 @@ AC_DEFUN(KDE_USE_QT,
 if test -z "$1"; then
   # Current default Qt version: 3.1
   kde_qtver=3
-  kde_qtsubver=0
+  kde_qtsubver=1
 else
   kde_qtsubver=`echo "$1" | sed -e 's#[0-9][0-9]*\.\([0-9][0-9]*\).*#\1#'`
   # following is the check if subversion isnt found in passed argument
@@ -1916,6 +1916,7 @@ if test $kde_qtver = 3; then
    AC_SUBST(LIB_KSPELL, "-lkspell")
    AC_SUBST(LIB_KPARTS, "-lkparts")
    AC_SUBST(LIB_KDEPRINT, "-lkdeprint")
+   AC_SUBST(LIB_KABC, "-lkabc")
 # these are for backward compatibility
    AC_SUBST(LIB_KSYCOCA, "-lkio")
    AC_SUBST(LIB_KFILE, "-lkio")
@@ -2712,7 +2713,7 @@ AC_DEFUN(AC_CHECK_COMPILERS,
       if test "$GCC" = "yes"; then
         case $host in
           *-*-linux-gnu)	
-            CFLAGS="-ansi -W -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings -D_XOPEN_SOURCE=500 -D_BSD_SOURCE $CFLAGS"
+            CFLAGS="-ansi -Wall -pedantic -D_XOPEN_SOURCE=500 -D_BSD_SOURCE $CFLAGS"
             CXXFLAGS="-ansi -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -Wcast-align -Wconversion $CXXFLAGS"
           ;;
         esac
@@ -5245,4 +5246,19 @@ fi
 AC_SUBST(SSL_INCLUDES)
 AC_SUBST(SSL_LDFLAGS)
 AC_SUBST(LIBSSL)
+])
+AC_DEFUN([AM_WITH_DMALLOCTHCXX],
+[AC_MSG_CHECKING([if malloc debugging is wanted])
+AC_ARG_WITH(dmalloc,
+[  --with-dmalloc          use dmalloc, as in
+                          http://www.dmalloc.com/dmalloc.tar.gz],
+[if test "$withval" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(WITH_DMALLOC,1,
+            [Define if using the dmalloc debugging malloc package])
+  LIBS="$LIBS -ldmallocthcxx"
+  LDFLAGS="$LDFLAGS -g"
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
 ])

@@ -8,43 +8,15 @@
 *****************************************************************************/
 
 
-void RunWindow::openFileDialog(KURLRequester *requester)
+void RunWindow::openFileDialog(KURLRequester */*requester*/)
 {
-    KURL url("rapip:/");
-    KFileDialog *fd = requester->fileDialog();
-    fd->setFilter("*.exe|Executable (*.exe)");
-    fd->setURL(url);
-//    requester->setURL("rapip:/");
-    fd->setMode(KFile::File | KFile::ExistingOnly);
+
 }
 
 
 void RunWindow::executeProgram()
 {
-    WCHAR* wide_program = NULL;
-    WCHAR* wide_parameters = NULL;
-    synce::PROCESS_INFORMATION info = {0, 0, 0, 0 };
 
-    KURL url(runUrlRequester->url());
-    
-    if (Ce::rapiInit()) {
-        if ((wide_program = Ce::wpath_from_upath(url.path()))) {    
-            if (!Ce::createProcess(wide_program, wide_parameters,
-                    NULL,
-                    NULL,
-                    false,
-                    0,
-                    NULL,
-                    NULL,
-                    NULL,
-                    &info)) {
-            }
-            close();
-        }
-    }
-
-    Ce::destroy_wpath(wide_program);
-    Ce::destroy_wpath(wide_parameters);
-    
-    Ce::rapiUninit();
 }
+
+
