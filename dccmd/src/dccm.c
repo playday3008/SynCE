@@ -69,6 +69,7 @@ typedef struct _Client
 static Client * current_client = NULL;
 static bool running = true;
 static bool is_daemon = true;
+static bool exit_on_disconnect = false;
 static bool allow_root = false;
 static char* password = NULL;
 
@@ -135,7 +136,7 @@ static void write_help(char *name)
 			stderr, 
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-f] [-h] [-p PASSWORD]\n"
+			"\t%s [-d LEVEL] [-f [-s]] [-h] [-p PASSWORD]\n"
 			"\n"
 			"\t-d LEVEL     Set debug log level\n"
 			"\t                 0 - No logging\n"
@@ -143,6 +144,7 @@ static void write_help(char *name)
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
 			"\t-f           Do not run as daemon\n"
+			"\t-s           Exit on device disconnect (only with -f)\n"
 			"\t-h           Show this help message\n"
 			"\t-p PASSWORD  Use this password when device connects\n"
       "\t-r           Allow dccm to run as root - USE AT YOUR OWN RISK!\n",
@@ -157,7 +159,7 @@ static bool handle_parameters(int argc, char** argv)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "d:fhp:r")) != -1)
+	while ((c = getopt(argc, argv, "d:fhp:rs")) != -1)
 	{
 		switch (c)
 		{
@@ -177,6 +179,10 @@ static bool handle_parameters(int argc, char** argv)
 					free(password);
 				password = strdup(optarg);
 				break;
+				
+			case 's':
+				exit_on_disconnect = true;
+				break;
 
       case 'r':
         allow_root = true;
@@ -187,6 +193,15 @@ static bool handle_parameters(int argc, char** argv)
 				write_help(argv[0]);
 				return false;
 		}
+	}
+
+	/* -s sanity check */
+	if (is_daemon && exit_on_disconnect)
+	{
+		fprintf (stderr,
+		         "The \'-s\' option only makes sense when running in foreground.\n\n");
+		write_help(argv[0]);
+		return false;
 	}
 
 	synce_log_set_level(log_level);
@@ -828,6 +843,10 @@ int main(int argc, char** argv)
       if (client.authenticated)
         run_scripts("disconnect");
     }
+    
+		if (exit_on_disconnect)
+			running = false;
+
 	}
 
 	run_scripts("stop");
