@@ -45,7 +45,9 @@ when you ask for help:</p>
 <li class=SPACED><p><b>For connection problems</b></p>
 
 <ul>
-<li>Information from the <tt>usbview</tt> tool for the device (or the contents of <tt>/proc/bus/usb/devices</tt>)</li>
+
+<li>Information from <tt>usbview</tt> or <tt>lsusb -v</tt> for the device</li>
+
 <li>Relevant log extracts from kernel driver and pppd</li>
 
 <li>The contents of your files <tt>/etc/ppp/peers/synce-device</tt> (created by
