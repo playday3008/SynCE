@@ -7,11 +7,11 @@ oidinfo
 pget
 pput
 pcp
-pinfo
 pls
 pmkdir
 pmv
 prm
 prmdir
 prun
+pstatus
 synce-install-cab
