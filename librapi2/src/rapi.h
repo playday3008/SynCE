@@ -439,7 +439,86 @@ LONG CeRegEnumKeyEx(
 BOOL CeCheckPassword( 
 		LPWSTR lpszPassword);
 
+typedef struct _PROCESS_INFORMATION { 
+	HANDLE hProcess; 
+	HANDLE hThread; 
+	DWORD dwProcessId; 
+	DWORD dwThreadId; 
+} PROCESS_INFORMATION;
+
+typedef PROCESS_INFORMATION* LPPROCESS_INFORMATION;
+
+BOOL CeCreateProcess(
+		LPCWSTR lpApplicationName, 
+		LPCWSTR lpCommandLine, 
+		void* lpProcessAttributes, 
+		void* lpThreadAttributes, 
+		BOOL bInheritHandles, 
+		DWORD dwCreationFlags, 
+		LPVOID lpEnvironment, 
+		LPWSTR lpCurrentDirectory, 
+		void* lpStartupInfo, 
+		LPPROCESS_INFORMATION lpProcessInformation);
+
 DWORD CeGetLastError( void );
+
+#define PROCESSOR_INTEL_386     386
+#define PROCESSOR_INTEL_486     486
+#define PROCESSOR_INTEL_PENTIUM 586
+#define PROCESSOR_INTEL_PENTIUMII 686
+#define PROCESSOR_MIPS_R4000    4000
+#define PROCESSOR_ALPHA_21064   21064
+#define PROCESSOR_PPC_403       403
+#define PROCESSOR_PPC_601       601
+#define PROCESSOR_PPC_603       603
+#define PROCESSOR_PPC_604       604
+#define PROCESSOR_PPC_620       620
+#define PROCESSOR_HITACHI_SH3   10003
+#define PROCESSOR_HITACHI_SH3E  10004
+#define PROCESSOR_HITACHI_SH4   10005
+#define PROCESSOR_MOTOROLA_821  821
+#define PROCESSOR_SHx_SH3       103
+#define PROCESSOR_SHx_SH4       104
+#define PROCESSOR_STRONGARM     2577
+#define PROCESSOR_ARM720        1824
+#define PROCESSOR_ARM820        2080
+#define PROCESSOR_ARM920        23360
+#define PROCESSOR_ARM_7TDMI     70001
+
+
+#define PROCESSOR_ARCHITECTURE_INTEL 0
+#define PROCESSOR_ARCHITECTURE_MIPS  1
+#define PROCESSOR_ARCHITECTURE_ALPHA 2
+#define PROCESSOR_ARCHITECTURE_PPC   3
+#define PROCESSOR_ARCHITECTURE_SHX   4
+#define PROCESSOR_ARCHITECTURE_ARM   5
+#define PROCESSOR_ARCHITECTURE_IA64  6
+#define PROCESSOR_ARCHITECTURE_ALPHA64 7
+#define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
+
+typedef struct _SYSTEM_INFO {
+/*	DWORD dwOemId;*/
+	WORD wProcessorArchitecture;
+	WORD wReserved;
+	DWORD dwPageSize;
+	LPVOID lpMinimumApplicationAddress;
+	LPVOID lpMaximumApplicationAddress;
+	DWORD dwActiveProcessorMask;
+	DWORD dwNumberOfProcessors;
+	DWORD dwProcessorType;
+	DWORD dwAllocationGranularity;
+	WORD wProcessorLevel;
+	WORD wProcessorRevision;
+} SYSTEM_INFO, *LPSYSTEM_INFO;
+
+void CeGetSystemInfo( 
+		LPSYSTEM_INFO lpSystemInfo);
+
+#define VER_PLATFORM_WIN32s             0
+#define VER_PLATFORM_WIN32_WINDOWS      1
+#define VER_PLATFORM_WIN32_NT           2
+#define VER_PLATFORM_WIN32_HH           3
+#define VER_PLATFORM_WIN32_CE           3
 
 typedef struct _CEOSVERSIONINFO{ 
 	DWORD dwOSVersionInfoSize; 

@@ -9,9 +9,10 @@ pput_SOURCES = pput.cpp
 pget_SOURCES = pget.cpp
 
 bin_SCRIPTS  = synce-install-cab
-bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun
+bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun pinfo
 
 pcp_SOURCES    = pcommon.c pcp.c
+pinfo_SOURCES  = pinfo.c
 pls_SOURCES    = pcommon.c pls.c
 pmkdir_SOURCES = pcommon.c pmkdir.c
 pmv_SOURCES    = pcommon.c pmv.c

@@ -30,7 +30,7 @@ List of RAPI command codes:
 [ ] 16 CeSetEndOfFile		
 [i] 17 CeCreateDirectory	
 [i] 18 CeRemoveDirectory	
-[ ] 19 CeCreateProcess		
+[i] 19 CeCreateProcess		
 [i] 1a CeMoveFile		
 [i] 1b CeCopyFile		
 [i] 1c CeDeleteFile		
@@ -53,7 +53,7 @@ List of RAPI command codes:
 [i] 2c CeFindAllDatabases	
 [ ] 2d RegCopyFile
 [ ] 2e RegRestoreFile
-[ ] 2f CeGetSystemInfo		
+[i] 2f CeGetSystemInfo		
 
 [ ] 30 CeSHCreateShortcut	
 [ ] 31 CeSHGetShortcutTarget	

@@ -2,11 +2,103 @@
 #include "rapi.h"
 #include "rapi_context.h"
 
+BOOL CeCreateProcess(
+		LPCWSTR lpApplicationName, 
+		LPCWSTR lpCommandLine, 
+		void* lpProcessAttributes, 
+		void* lpThreadAttributes, 
+		BOOL bInheritHandles, 
+		DWORD dwCreationFlags, 
+		LPVOID lpEnvironment, 
+		LPWSTR lpCurrentDirectory, 
+		void* lpStartupInfo, 
+		LPPROCESS_INFORMATION lpProcessInformation)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL result = false;
+
+	rapi_context_begin_command(context, 0x19);
+	rapi_buffer_write_optional_string(context->send_buffer, lpApplicationName);
+	rapi_buffer_write_optional_string(context->send_buffer, lpCommandLine);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_optional_out(context->send_buffer, lpProcessInformation, sizeof(PROCESS_INFORMATION));
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	synce_trace("last_error = %i", context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &result);
+	synce_trace("result = %i", result);
+
+	if ( !rapi_buffer_read_optional(context->recv_buffer, lpProcessInformation, sizeof(PROCESS_INFORMATION)) )
+		goto exit;
+
+	if (lpProcessInformation)
+	{
+		lpProcessInformation->hProcess     = letoh32(lpProcessInformation->hProcess);
+		lpProcessInformation->hThread      = letoh32(lpProcessInformation->hThread);
+		lpProcessInformation->dwProcessId  = letoh32(lpProcessInformation->dwProcessId);
+		lpProcessInformation->dwThreadId   = letoh32(lpProcessInformation->dwThreadId);
+	}
+
+exit:
+	return result;
+}
+
+
 DWORD CeGetLastError( void )
 {
 	RapiContext* context = rapi_context_current();
 	return context->last_error;
 }
+
+void CeGetSystemInfo( 
+		LPSYSTEM_INFO lpSystemInfo)
+{
+	RapiContext* context = rapi_context_current();
+	
+	rapi_context_begin_command(context, 0x2f);
+	rapi_buffer_write_optional_out(context->send_buffer, lpSystemInfo, sizeof(SYSTEM_INFO));
+
+	if ( !rapi_context_call(context) )
+		return;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	synce_trace("last_error = %i", context->last_error);
+/*	rapi_buffer_read_uint32(context->recv_buffer, &result);
+	synce_trace("result = %i", result);*/
+	
+	if ( !rapi_buffer_read_optional(context->recv_buffer, lpSystemInfo, sizeof(SYSTEM_INFO)) )
+	{
+		synce_error("Failed to read lpSystemInfo");
+		return;
+	}
+
+	if (lpSystemInfo)
+	{
+		lpSystemInfo->wProcessorArchitecture       = letoh16(lpSystemInfo->wProcessorArchitecture);
+		lpSystemInfo->wReserved                    = letoh16(lpSystemInfo->wReserved);
+		lpSystemInfo->dwPageSize                   = letoh32(lpSystemInfo->dwPageSize);
+		lpSystemInfo->lpMinimumApplicationAddress  = letoh32(lpSystemInfo->lpMinimumApplicationAddress);
+		lpSystemInfo->lpMaximumApplicationAddress  = letoh32(lpSystemInfo->lpMaximumApplicationAddress);
+		lpSystemInfo->dwActiveProcessorMask        = letoh32(lpSystemInfo->dwActiveProcessorMask);
+		lpSystemInfo->dwNumberOfProcessors	       = letoh32(lpSystemInfo->dwNumberOfProcessors);
+		lpSystemInfo->dwProcessorType              = letoh32(lpSystemInfo->dwProcessorType);
+		lpSystemInfo->dwAllocationGranularity      = letoh32(lpSystemInfo->dwAllocationGranularity);
+		lpSystemInfo->wProcessorLevel              = letoh16(lpSystemInfo->wProcessorLevel);
+		lpSystemInfo->wProcessorRevision           = letoh16(lpSystemInfo->wProcessorRevision);
+	}
+
+	return;
+}
+
 
 BOOL CeGetVersionEx(/*{{{*/
 		LPCEOSVERSIONINFO lpVersionInformation)
