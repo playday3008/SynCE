@@ -1,5 +1,5 @@
 #	Created:	Mon Mar 29 15:04:02 CEST 2004	by M. Biermaier	on macosbw
-#	Version:	Wed Apr 21 19:34:23 CEST 2004	on macosbw
+#	Version:	Mon May  3 13:59:40 CEST 2004	on macosbw
 #	$Id$
 
 Introduction:
@@ -24,7 +24,8 @@ CE_DirView.py
 	Perhaps this is an alternative for other people also, who don't
 	want or can use SynCE-KDE.
 
-	Imports:  "PreferencesDialog.py"
+	Imports:	PreferencesDialog.py
+				QuestionDialog.py
 
 
 pyrapi (package)
