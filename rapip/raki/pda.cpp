@@ -32,6 +32,7 @@
 #include "rra.h"
 #include "rapiwrapper.h"
 #include "removepartnershipdialogimpl.h"
+#include "initprogress.h"
 
 #include <qcheckbox.h>
 #include <kiconloader.h>
@@ -381,7 +382,6 @@ void *PDA::advanceTotalStepsEvent(void *data)
     int advance = (int) data;
 
     progressBar->setTotalSteps(progressBar->totalSteps() + advance);
-
     return NULL;
 }
 
@@ -420,9 +420,9 @@ bool PDA::isPartner()
 
 void *PDA::progressDialogCancel(void *init)
 {
-    progressDialog->hide();
+    initProgress->hide();
     emit initialized(this, (int ) init);
-    delete progressDialog;
+    delete initProgress;
     if (init)
         configDialog->writeConfig();
 
@@ -552,13 +552,13 @@ void PDA::init()
 {
     kdDebug(2120) << "in pda-init" << endl;
 
-    progressDialog = new KProgressDialog(raki, "Connecting",
-                                         "Connecting...", "Connecting " + pdaName + "...", true);
-    progressDialog->setAllowCancel(false);
-    progressDialog->setMinimumDuration(0);
+    initProgress = new InitProgress(raki, "InitProgress", true,WStyle_StaysOnTop |
+                WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM);
 
-    progressBar = progressDialog->progressBar();
+    progressBar = initProgress->progressBar;
     progressBar->setTotalSteps(8);
+    initProgress->pdaName->setText(pdaName);
+    initProgress->show();
 
     startWorkerThread(this, &PDA::setPartnership, NULL);
 }

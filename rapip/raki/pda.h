@@ -48,6 +48,7 @@ class PasswordDialogImpl;
 class Raki;
 class PdaConfigDialogImpl;
 class SyncDialogImpl;
+class InitProgress;
 class Rra;
 
 /**
@@ -94,7 +95,7 @@ private:
     void *rraConnectionError(void *data);
     void *initializationStarted(void *data);
     
-    KProgressDialog *progressDialog;
+    InitProgress *initProgress;
     KProgress *progressBar;
     QString pdaName;
     bool needPasswd;
