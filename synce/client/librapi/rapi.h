@@ -363,7 +363,29 @@ extern "C"
 	STDAPI_(int) CeGetClassName( HWND, LPWSTR, int );
 	STDAPI_(INT) CeGetDesktopDeviceCaps( INT );
 	STDAPI_(BOOL) CeGetStoreInformation( LPSTORE_INFORMATION );
+	*/
+
+	typedef struct _SYSTEM_INFO {
+			union {
+					DWORD dwOemId;
+					struct {
+							WORD wProcessorArchitecture;
+							WORD wReserved;
+					};
+			};
+			DWORD dwPageSize;
+			LPVOID lpMinimumApplicationAddress;
+			LPVOID lpMaximumApplicationAddress;
+			DWORD dwActiveProcessorMask;
+			DWORD dwNumberOfProcessors;
+			DWORD dwProcessorType;
+			DWORD dwAllocationGranularity;
+			WORD wProcessorLevel;
+			WORD wProcessorRevision;
+	} SYSTEM_INFO, *LPSYSTEM_INFO;
+
 	STDAPI_(VOID) CeGetSystemInfo( LPSYSTEM_INFO );
+	/*
 	STDAPI_(INT) CeGetSystemMetrics( INT );
 	STDAPI_(BOOL) CeGetSystemPowerStatusEx( PSYSTEM_POWER_STATUS_EX, BOOL );
 	*/

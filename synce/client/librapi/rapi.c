@@ -147,14 +147,17 @@ static void popParameter(long* size, void * parameterData, size_t parameterMaxSi
 				
 			if (overflow > 0)
 			{
-				/* read overflowed buffer */
-				void* tmp = malloc(overflow);
-				getbufferchunk(sock, size, tmp, overflow);
-				free(tmp);
-
 				if (parameterData)
 					DBG_printf("Overflow by %i bytes. Parameter size is %i bytes but max %i bytes was expected. (%i bytes remaining)\n",
 							overflow, parameterRealSize, parameterMaxSize , *size);
+
+				{
+					/* read overflowed buffer */
+					void* tmp = malloc(overflow);
+					getbufferchunk(sock, size, tmp, overflow);
+					free(tmp);
+				}
+
 			}
 		}
 		else if (0 != lng)
@@ -1812,4 +1815,55 @@ STDAPI_( BOOL ) CeMoveFile( LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName )
 	
 	return result;
 }
+
+void CeGetSystemInfo(LPSYSTEM_INFO lpSystemInfo)
+{
+	BOOL result = FALSE;
+	long size = BUFSIZE;
+	LONG lng;
+	
+	initBuf(buffer, size);
+	
+	pushLong(buffer, size, 0x2f); 	/* Command */
+	pushParameter(size, lpSystemInfo, sizeof(SYSTEM_INFO), 0);
+	
+	sendbuffer( sock, buffer );
+	size = getbufferlen( sock );
+
+	/*
+	 * The return package looks like this
+	 *
+	 * Offset  Size  Value
+	 * 00      4     0
+	 * 04      4     0
+	 * 08      4     1
+	 * 0c      4     n = real size of buffer
+	 * 10      n     first n bytes of struct
+	 */
+	
+	lng = getLong(sock, &size); 
+	_lasterror = getLong(sock, &size);
+
+	/*
+	 * Note: On my system, 36 bytes are returned but sizeof(SYSTEM_INFO) is only 32!
+	 *
+	 * "Overflow by 4 bytes. Parameter size is 36 bytes but max 32 bytes was expected."
+	 */
+	
+	if (0 == lng)
+	{
+		popParameter(&size, lpSystemInfo, sizeof(SYSTEM_INFO));
+	}
+	else
+	{
+		DBG_printf("Warning: expected 0 but got %i=0x%x\n", lng, lng);
+	}
+	
+	if ( size > 0 )
+	{
+		DBG_printf( "size : %d\n", size );
+		flushbuffer( sock );
+	}	
+}
+
 
