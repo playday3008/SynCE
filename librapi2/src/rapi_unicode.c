@@ -17,7 +17,7 @@ char* rapi_unicode_to_ascii(const uchar* inbuf)
 	size_t inbytesleft = length * 2, outbytesleft = length;
 	char* outbuf = malloc(outbytesleft+1);
   char* outbuf_iterator = outbuf;
-  char* inbuf_iterator = (char*)inbuf;
+  ICONV_CONST char* inbuf_iterator = (ICONV_CONST char*)inbuf;
 	size_t result;
 	iconv_t cd = INVALID_ICONV_HANDLE;
 
@@ -46,7 +46,7 @@ uchar* rapi_unicode_from_ascii(const char* inbuf)
 {
 	size_t length = strlen(inbuf);
 	size_t inbytesleft = length, outbytesleft = (length+1)* 2;
-	char * inbuf_iterator = (char*)inbuf;
+	ICONV_CONST char * inbuf_iterator = (ICONV_CONST char*)inbuf;
 	uchar* outbuf = malloc(outbytesleft+sizeof(uchar));
 	uchar* outbuf_iterator = outbuf;
 	size_t result;
