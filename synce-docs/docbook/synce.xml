@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-     "http://docbook.org/xml/4.2/docbookx.dtd" [
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+     "http://docbook.org/xml/4.1.2/docbookx.dtd" [
 <!ENTITY introduction SYSTEM "introduction.xml">
-<!ENTITY user_manual SYSTEM "user_manual.xml">
-<!ENTITY developer_manual SYSTEM "developer_manual.xml">
+<!ENTITY user-manual SYSTEM "user_manual.xml">
+<!ENTITY developer-manual SYSTEM "developer_manual.xml">
 ]>
 
 <book>
@@ -54,8 +54,8 @@
 
 <!-- rest of document follows... --> 
 
-&user_manual;
-&developer_manual;
+&user-manual;
+&developer-manual;
 
 </book>
 
