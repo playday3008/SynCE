@@ -1,15 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta name="generator"
- content="HTML Tidy for Linux/x86 (vers 1st June 2003), see www.w3.org">
-  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
-  <title>SynCE-KDE</title>
-  <link href="synce.css" rel="stylesheet" type="text/css">
-  <meta name="author" content="Volker Christian">
-</head>
-<body>
-<div class="PAGE">
+<?php include 'header.php'; ?>
+
 <p>Return to <a href="index.php">SynCE-KDE main page</a>.</p>
 <h1><a name="SynCE-KDE" class="mozTocH1" id="SynCE-KDE"></a>SynCE -
 KDE Success Stories</h1>
@@ -93,8 +83,5 @@ online average&nbsp; about 15 - 16 hours at a day.<br>
 <br>
 <br>
 <p>Return to <a href="index.php">SynCE-KDE main page</a>.</p>
-</div>
-<hr size="1">
-Last modified: Aug 17 2003
-</body>
-</html>
+
+<?php include 'footer.php'; ?>

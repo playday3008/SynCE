@@ -1,15 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta name="generator"
- content="HTML Tidy for Linux/x86 (vers 1st June 2003), see www.w3.org">
-  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
-  <title>SynCE-KDE</title>
-  <link href="synce.css" rel="stylesheet" type="text/css">
-  <meta name="author" content="Volker Christian">
-</head>
-<body>
-<div class="PAGE">
+<?php include 'header.php'; ?>
+
 <p>Return to <a href="../index.php">SynCE main page</a>.</p>
 <h1><a name="SynCE-KDE" class="mozTocH1" id="SynCE-KDE"></a>SynCE -
 KDE Integration</h1>
@@ -177,7 +167,7 @@ the PDA identifiers or the ip-addresses assigned to the PDAs.</li>
 </ul>
 <br>
 <h2><a name="Usage" id="Usage"></a>Usage</h2>
-<!--  <dl> --><b>RAPIP</b>
+<b>RAPIP</b>
 <dl>
   <dd>Open Konqueror and type <tt>rapip://&lt;name_of_an_active_connection_file&gt;/</tt>
 into
@@ -401,8 +391,5 @@ on FreeBSD</a> page.</li>
 <h2><a name="Future" id="Future"></a>Future</h2>
 Wait and see ;-)<br>
 <p>Return to <a href="../index.php">SynCE main page</a>.</p>
-</div>
-<hr size="1">
-Last modified: Sep 9 2003
-</body>
-</html>
+
+<?php include 'footer.php'; ?>

@@ -1,3 +1,5 @@
+<?php include 'header.php'; ?>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -151,8 +153,5 @@ vLoox is selected</div>
 </tbody>
 </table>
 <p>Return to <a href="index.php">SynCE-KDE main page</a>.</p>
-</div>
-<hr size="1" />
-Last modified: Jun 22 2003</div>
-</body>
-</html>
+
+<?php include 'footer.php'; ?>
