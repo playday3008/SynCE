@@ -72,7 +72,8 @@ void SyncDialogImpl::reject()
 }
 
 
-void SyncDialogImpl::show(QPtrList<SyncTaskListItem>& syncItems)
+void SyncDialogImpl::show(QPtrList<SyncTaskListItem>& syncItems,
+        KConfig *ksConfig)
 {
     SyncTaskListItem *item;
 
@@ -103,7 +104,7 @@ void SyncDialogImpl::show(QPtrList<SyncTaskListItem>& syncItems)
         }
     }
     SyncDialog::show();
-    startWorkerThread(this, &SyncDialogImpl::work, NULL);
+    startWorkerThread(this, &SyncDialogImpl::work, ksConfig);
 }
 
 
@@ -121,9 +122,10 @@ void *SyncDialogImpl::finishedSynchronization()
 }
 
 
-void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
+void SyncDialogImpl::work(QThread */*qt*/, void *data)
 {
     SyncTaskListItem *item;
+    KConfig *ksConfig = (KConfig *) data;
 
     buttonOk->setDisabled(true);
 
@@ -131,7 +133,7 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
         if (running()) {
             if (item->isOn()) {
                 setActualSyncItem(item);
-                item->synchronize(this, rra, pdaName);
+                item->synchronize(this, rra, pdaName, ksConfig);
             }
         }
     }
