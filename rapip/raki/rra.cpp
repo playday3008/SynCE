@@ -43,7 +43,7 @@ Rra::Rra(QString pdaName)
 {
     rraOk = true;
     this->pdaName = pdaName;
-    rra = NULL;
+    rra = rra_new();
     _ids.object_ids = NULL;
     _ids.object_types = NULL;
     _ids.deleted_ids = NULL;
@@ -54,10 +54,8 @@ Rra::Rra(QString pdaName)
 
 Rra::~Rra()
 {
-    if (useCount > 0) {
-        rra_free(rra);
-        Ce::rapiUninit();
-    }
+    rra_free(rra);
+    Ce::rapiUninit();
 }
 
 
@@ -68,14 +66,10 @@ bool Rra::connect()
     if (useCount == 0) {
         if (!Ce::rapiInit(pdaName)) {
             rraOk = false;
-        }
-
-        if(rraOk) {
-            rra = rra_new();
+        } else {
             rraOk = rra_connect(rra);
             if (!rraOk) {
-                rra_free(rra);
-                rra = NULL;
+                rra_disconnect(rra);
                 Ce::rapiUninit();
             } else {
                 kdDebug(2120) << "RRA-Connect" << endl;
@@ -97,7 +91,7 @@ void Rra::disconnect()
 
     if(useCount == 0) {
         kdDebug(2120) << "RRA-Disconnect" << endl;
-        rra_free(rra);
+        rra_disconnect(rra);
         Ce::rapiUninit();
     }
 }
@@ -162,6 +156,7 @@ struct Rra::ids& Rra::getIds(uint32_t type_id)
             }
             if (rra_get_deleted_object_ids(rra, type_id, _ids.object_ids,
                                            &_ids.deleted_ids, &deleted_count)) {
+                kdDebug(2120) << "Deleted objects count: " << deleted_count << endl;
                 for (id = 0; id < deleted_count; id++) {
                     _ids.deletedIds.append(&_ids.deleted_ids[id]);
                 }
@@ -172,8 +167,7 @@ struct Rra::ids& Rra::getIds(uint32_t type_id)
             rraOk = false;
         }
         disconnect();
-    } else
-    {
+    } else {
         rraOk = false;
     }
 
@@ -184,9 +178,7 @@ struct Rra::Partner Rra::getPartner(uint32_t index)
 {
     struct Rra::Partner partner;
     char *name = NULL;
-    
-    connect();
-    
+
     if (!rra_partner_get_id(rra, index, &partner.id)) {
         partner.id = 0;
     }
@@ -198,9 +190,7 @@ struct Rra::Partner Rra::getPartner(uint32_t index)
     }
     
     partner.index = index;
-    
-    disconnect();
-    
+
     return partner;
 }
 
@@ -209,9 +199,7 @@ struct Rra::Partner Rra::getCurrentPartner()
 {
     DWORD currentIndex;
     struct Rra::Partner partner;
-    
-    connect();
-    
+
     if (rra_partner_get_current(rra, &currentIndex)) {
         partner = getPartner(currentIndex);
     } else {
@@ -219,9 +207,7 @@ struct Rra::Partner Rra::getCurrentPartner()
         partner.name = "";
         partner.index = 0;
     }
-    
-    disconnect();
-    
+
     return partner;
 }
 
@@ -264,35 +250,25 @@ bool Rra::partnerReplace(int index)
 
 bool Rra::setPartner(struct Rra::Partner& partner)
 {
-    connect();
-    
     if (!rra_partner_set_id(rra, partner.index, partner.id)) {
-        disconnect();
         return false;
     }
-        
+
     if (!rra_partner_set_name(rra, partner.index, partner.name.ascii())) {
-        disconnect();
         return false;
     }
-    
-    disconnect();
-    
+
     return true;
 }
 
 
 bool Rra::setCurrentPartner(uint32_t index)
 {
-    connect();
-    
     if (!rra_partner_set_current(rra, index)) {
         disconnect();
         return false;
     }
-    
-    disconnect();
-    
+
     return true;
 }
 
@@ -414,7 +390,6 @@ uint32_t Rra::putVCard(QString& vCard, uint32_t type_id, uint32_t object_id)
 void Rra::deleteObject(uint32_t type_id, uint32_t object_id)
 {
     rraOk = true;
-
 
     if (connect()) {
         if (!rra_object_delete(rra, type_id, object_id)) {

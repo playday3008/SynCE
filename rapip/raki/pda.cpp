@@ -30,6 +30,7 @@
 #include "passworddialogimpl.h"
 #include "raki.h"
 #include "rra.h"
+#include "rapiwrapper.h"
 #include "removepartnershipdialogimpl.h"
 
 #include <qcheckbox.h>
@@ -499,13 +500,10 @@ void PDA::setPartnershipThread()
 
 void PDA::setPartnership(QThread *, void *)
 {
-
-    if (rra->connect()) {
+    if (Ce::rapiInit(pdaName)) {
         setPartnershipThread();
-    } else {
-        postThreadEvent(&PDA::rraConnectionError, NULL, block);
+        Ce::rapiUninit();
     }
-    rra->disconnect();
 
     configDialog->setPartner(partnerName, partnerId);
     postThreadEvent(&PDA::progressDialogCancel, NULL, noBlock);
