@@ -10,26 +10,26 @@
 #define PARSER_UTF8 1
 
 typedef struct _Parser Parser;
-typedef struct _PropertyType PropertyType;
-typedef struct _ComponentType ComponentType;
+typedef struct _ParserProperty ParserProperty;
+typedef struct _ParserComponent ParserComponent;
 
-typedef bool (*PropertyFunc)(Parser* p, mdir_line* line, void* cookie);
+typedef bool (*ParserPropertyFunc)(Parser* p, mdir_line* line, void* cookie);
 
-/* PropertyType functions */
-PropertyType* property_type_new(const char* name, PropertyFunc func);
-void property_type_destroy(PropertyType* ct);
+/* ParserProperty functions */
+ParserProperty* parser_property_new(const char* name, ParserPropertyFunc func);
+void parser_property_destroy(ParserProperty* ct);
 
-/* ComponentType functions */
-ComponentType* component_type_new(const char* name);
-void component_type_destroy(ComponentType* self);
-void component_type_add_component_type(ComponentType* self, ComponentType* ct);
-void component_type_add_property_type (ComponentType* self, PropertyType*  pt);
+/* ParserComponent functions */
+ParserComponent* parser_component_new(const char* name);
+void parser_component_destroy(ParserComponent* self);
+void parser_component_add_parser_component(ParserComponent* self, ParserComponent* ct);
+void parser_component_add_parser_property (ParserComponent* self, ParserProperty*  pt);
 
 /* helper functions */
 bool parser_duration_to_seconds  (const char* duration, int* seconds);
 bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time);
 
-Parser* parser_new(ComponentType* base_component_type, int flags, void* cookie);
+Parser* parser_new(ParserComponent* base_parser_component, int flags, void* cookie);
 void parser_destroy(Parser* self);
 bool parser_set_mimedir(Parser* self, const char* mimedir);
 bool parser_run(Parser* self);

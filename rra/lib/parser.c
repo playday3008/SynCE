@@ -13,9 +13,9 @@
 
 #define MAX_PROPVAL_COUNT         50
 
-/* for component_type_new() */
-#define COMPONENT_TYPE_HASH_SIZE   5
-#define PROPERTY_TYPE_HASH_SIZE    5
+/* for parser_component_new() */
+#define parser_component_HASH_SIZE   5
+#define parser_property_HASH_SIZE    5
 
 /* for parser_duration_to_seconds() */
 #define SECONDS_PER_MINUTE  (60)
@@ -23,22 +23,22 @@
 #define SECONDS_PER_DAY     (SECONDS_PER_HOUR   * 24)
 #define SECONDS_PER_WEEK    (SECONDS_PER_DAY    * 7)
 
-struct _PropertyType
+struct _ParserProperty
 {
   char* name;
-  PropertyFunc func;
+  ParserPropertyFunc func;
 };
 
-struct _ComponentType
+struct _ParserComponent
 {
   char* name;
-  SHashTable* component_types;
-  SHashTable* property_types;
+  SHashTable* parser_components;
+  SHashTable* parser_properties;
 };
 
 struct _Parser
 {
-  ComponentType* base_component_type;
+  ParserComponent* base_parser_component;
   int flags;
   void* cookie;
   mdir_line** mimedir;
@@ -274,9 +274,9 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
   return false;
 }/*}}}*/
 
-PropertyType* property_type_new(const char* name, PropertyFunc func)/*{{{*/
+ParserProperty* parser_property_new(const char* name, ParserPropertyFunc func)/*{{{*/
 {
-  PropertyType* self = (PropertyType*)calloc(1, sizeof(PropertyType));
+  ParserProperty* self = (ParserProperty*)calloc(1, sizeof(ParserProperty));
   
   if (self)
   {
@@ -287,7 +287,7 @@ PropertyType* property_type_new(const char* name, PropertyFunc func)/*{{{*/
   return self;
 }/*}}}*/
 
-void property_type_destroy(PropertyType* self)/*{{{*/
+void parser_property_destroy(ParserProperty* self)/*{{{*/
 {
   if (self)
   {
@@ -296,61 +296,61 @@ void property_type_destroy(PropertyType* self)/*{{{*/
   }
 }/*}}}*/
 
-ComponentType* component_type_new(const char* name)/*{{{*/
+ParserComponent* parser_component_new(const char* name)/*{{{*/
 {
-  ComponentType* self = (ComponentType*)calloc(1, sizeof(ComponentType));
+  ParserComponent* self = (ParserComponent*)calloc(1, sizeof(ParserComponent));
   
   if (self)
   {
     self->name = name ? strdup(name) : NULL;
     
-    self->component_types = s_hash_table_new(s_str_hash, s_str_equal_no_case,
-        COMPONENT_TYPE_HASH_SIZE);
-    self->property_types  = s_hash_table_new(s_str_hash, s_str_equal_no_case, 
-        PROPERTY_TYPE_HASH_SIZE);
+    self->parser_components = s_hash_table_new(s_str_hash, s_str_equal_no_case,
+        parser_component_HASH_SIZE);
+    self->parser_properties  = s_hash_table_new(s_str_hash, s_str_equal_no_case, 
+        parser_property_HASH_SIZE);
   }
 
   return self;
 }/*}}}*/
 
-void component_type_destroy(ComponentType* self)/*{{{*/
+void parser_component_destroy(ParserComponent* self)/*{{{*/
 {
   if (self)
   {
-    s_hash_table_destroy(self->component_types, (void (*)(void *))component_type_destroy);
-    s_hash_table_destroy(self->property_types,  (void (*)(void *))property_type_destroy);
+    s_hash_table_destroy(self->parser_components, (void (*)(void *))parser_component_destroy);
+    s_hash_table_destroy(self->parser_properties,  (void (*)(void *))parser_property_destroy);
     free(self->name);
     free(self);
   }
 }/*}}}*/
 
-void component_type_add_component_type(ComponentType* self, ComponentType* ct)/*{{{*/
+void parser_component_add_parser_component(ParserComponent* self, ParserComponent* ct)/*{{{*/
 {
-  s_hash_table_insert(self->component_types, ct->name, ct);
+  s_hash_table_insert(self->parser_components, ct->name, ct);
 }/*}}}*/
 
-void component_type_add_property_type (ComponentType* self, PropertyType* pt)/*{{{*/
+void parser_component_add_parser_property (ParserComponent* self, ParserProperty* pt)/*{{{*/
 {
-  s_hash_table_insert(self->property_types, pt->name, pt);
+  s_hash_table_insert(self->parser_properties, pt->name, pt);
 }/*}}}*/
 
-ComponentType* component_type_get_component_type(ComponentType* self, const char* name)/*{{{*/
+ParserComponent* parser_component_get_parser_component(ParserComponent* self, const char* name)/*{{{*/
 {
   if (self && name)
-    return (ComponentType*)s_hash_table_lookup(self->component_types, name);
+    return (ParserComponent*)s_hash_table_lookup(self->parser_components, name);
   else
     return NULL;
 }/*}}}*/
 
-PropertyType* component_type_get_property_type(ComponentType* self, const char* name)/*{{{*/
+ParserProperty* parser_component_get_parser_property(ParserComponent* self, const char* name)/*{{{*/
 {
   if (self && name)
-    return (PropertyType*)s_hash_table_lookup(self->property_types, name);
+    return (ParserProperty*)s_hash_table_lookup(self->parser_properties, name);
   else
     return NULL;
 }/*}}}*/
 
-static bool parser_handle_component(Parser* p, ComponentType* ct)/*{{{*/
+static bool parser_handle_component(Parser* p, ParserComponent* ct)/*{{{*/
 { 
   bool success = false;
   mdir_line* line = NULL;
@@ -360,8 +360,8 @@ static bool parser_handle_component(Parser* p, ComponentType* ct)/*{{{*/
     if (STR_EQUAL(line->name, "BEGIN"))
     {
       bool result;
-      ComponentType* other =
-        component_type_get_component_type(ct, line->values[0]);
+      ParserComponent* other =
+        parser_component_get_parser_component(ct, line->values[0]);
 
       if (other)
       {
@@ -371,9 +371,9 @@ static bool parser_handle_component(Parser* p, ComponentType* ct)/*{{{*/
       {
         /* create and use temporary component type */
         /*synce_trace("Handling unknown component '%s'", line->values[0]);*/
-        other = component_type_new(line->values[0]);
+        other = parser_component_new(line->values[0]);
         result = parser_handle_component(p, other);
-        component_type_destroy(other);
+        parser_component_destroy(other);
       }
 
       if (!result)
@@ -397,8 +397,8 @@ static bool parser_handle_component(Parser* p, ComponentType* ct)/*{{{*/
     }
     else
     {
-      PropertyType* pt = 
-        component_type_get_property_type(ct, line->name);
+      ParserProperty* pt = 
+        parser_component_get_parser_property(ct, line->name);
       
       if (pt)
       {
@@ -422,13 +422,13 @@ static bool parser_handle_component(Parser* p, ComponentType* ct)/*{{{*/
   return success;
 }/*}}}*/
 
-Parser* parser_new(ComponentType* base_component_type, int flags, void* cookie)/*{{{*/
+Parser* parser_new(ParserComponent* base_parser_component, int flags, void* cookie)/*{{{*/
 {
   Parser* self = (Parser*)calloc(1, sizeof(Parser));
 
   if (self)
   {
-    self->base_component_type = base_component_type;
+    self->base_parser_component = base_parser_component;
     self->flags = flags;
     self->cookie = cookie;
   }
@@ -474,7 +474,7 @@ bool parser_run(Parser* self)/*{{{*/
     goto exit;
   }
 
-  if (!parser_handle_component(self, self->base_component_type))
+  if (!parser_handle_component(self, self->base_parser_component))
   {
     synce_error("Failed to parse components");
     goto exit;

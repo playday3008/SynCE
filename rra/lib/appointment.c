@@ -2,7 +2,9 @@
 #define _GNU_SOURCE 1
 #include "librra.h"
 #include "appointment_ids.h"
+#include "generator.h"
 #include "parser.h"
+#include <rapi.h>
 #include <synce_log.h>
 #include <string.h>
 
@@ -10,31 +12,10 @@
 
 #define MINUTES_PER_DAY (24*60)
 
-#if 0
-#include "dbstream.h"
-#include <rapi.h>
-#include <libmimedir.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-
-#define MAX_FIELD_COUNT 50 /* just a guess */
-
-#define SECONDS_PER_MINUTE  (60)
-#define SECONDS_PER_HOUR    (SECONDS_PER_MINUTE * 60)
-#define SECONDS_PER_DAY     (SECONDS_PER_HOUR   * 24)
-#define SECONDS_PER_WEEK    (SECONDS_PER_DAY    * 7)
-
-struct _AppointmentToVevent/*{{{*/
+typedef struct _EventGeneratorData
 {
-  uint32_t id;
-	CEPROPVAL* fields;
-	uint32_t field_count;
-  char** vevent;
-  uint32_t flags;
-};/*}}}*/
-
-typedef struct _AppointmentToVevent AppointmentToVevent;
+  CEPROPVAL* dummy;
+} EventGeneratorData;
 
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
@@ -44,63 +25,26 @@ bool rra_appointment_to_vevent(/*{{{*/
     uint32_t flags)
 {
 	bool success = false;
-	uint32_t field_count = 0;
-	CEPROPVAL* fields = NULL;
+  Generator* generator = NULL;
+  EventGeneratorData event_generator_data;
+  memset(&event_generator_data, 0, sizeof(EventGeneratorData));
 
-	if (!data)
-	{
-		synce_error("Data is NULL");
-		goto exit;
-	}
+  generator = generator_new(0, &event_generator_data);
+  if (!generator)
+    goto exit;
 
-	if (data_size < 8)
-	{
-		synce_error("Invalid data size");
-		goto exit;
-	}
+  if (!generator_set_data(generator, data, data_size))
+    goto exit;
 
-	field_count = letoh32(*(uint32_t*)(data + 0));
-	synce_trace("Field count: %i", field_count);
+  if (!generator_run(generator))
+    goto exit;
 
-	if (0 == field_count)
-	{
-		synce_error("No fields!");
-		goto exit;
-	} 
-	
-	if (field_count > MAX_FIELD_COUNT)
-	{
-		synce_error("A contact does not have this many fields");
-		goto exit;
-	}
-
-	fields = (CEPROPVAL*)malloc(sizeof(CEPROPVAL) * field_count);
-
-	if (!dbstream_to_propvals(data + 8, field_count, fields))
-	{
-		fprintf(stderr, "Failed to convert database stream\n");
-		goto exit;
-	}
-
-	if (!rra_contact_to_vcard2(
-				id, 
-				fields, 
-				field_count, 
-				vcard,
-				flags))
-	{
-		fprintf(stderr, "Failed to create vCard\n");
-		goto exit;
-	}
-
-	success = true;
 
 exit:
-	dbstream_free_propvals(fields);
-	return success;
+  generator_destroy(generator);
+  return success;
 }/*}}}*/
 
-#endif
 
 
 /***********************************************************************
@@ -109,18 +53,18 @@ exit:
 
  ***********************************************************************/
 
-typedef struct _AppointmentData
+typedef struct _EventParserData
 {
   bool have_alarm;
   mdir_line* dtstart;
   mdir_line* dtend;
-} AppointmentData;
+} EventParserData;
 
 static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
-  AppointmentData* appointment_data = (AppointmentData*)cookie;
+  EventParserData* event_parser_data = (EventParserData*)cookie;
 
-  if (appointment_data->have_alarm)
+  if (event_parser_data->have_alarm)
     goto exit;
 
   char** data_type = mdir_get_param_values(line, "VALUE");
@@ -161,7 +105,7 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
   {
     parser_add_int32(p, ID_REMINDER_MINUTES_BEFORE_START, -duration / 60);
     parser_add_int16(p, ID_REMINDER_ENABLED, 1);
-    appointment_data->have_alarm = true;
+    event_parser_data->have_alarm = true;
   }
 
 exit:
@@ -183,15 +127,15 @@ static bool on_event_class(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 static bool on_event_dtend(Parser* p, mdir_line* line, void* cookie)
 {
-  AppointmentData* appointment_data = (AppointmentData*)cookie;
-  appointment_data->dtend = line;
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->dtend = line;
   return true;
 }
 
 static bool on_event_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
-  AppointmentData* appointment_data = (AppointmentData*)cookie;
-  appointment_data->dtstart = line;
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->dtstart = line;
   return true;
 }
 
@@ -225,42 +169,42 @@ bool rra_appointment_from_vevent(/*{{{*/
 {
 	bool success = false;
   Parser* parser = NULL;
-  ComponentType* base;
-  ComponentType* calendar;
-  ComponentType* event;
-  ComponentType* alarm;
+  ParserComponent* base;
+  ParserComponent* calendar;
+  ParserComponent* event;
+  ParserComponent* alarm;
   int parser_flags = PARSER_UTF8; /* XXX */
-  AppointmentData appointment_data;
-  memset(&appointment_data, 0, sizeof(AppointmentData));
+  EventParserData event_parser_data;
+  memset(&event_parser_data, 0, sizeof(EventParserData));
 
-  alarm = component_type_new("vAlarm");
+  alarm = parser_component_new("vAlarm");
 
-  component_type_add_property_type(alarm, 
-      property_type_new("trigger", on_alarm_trigger));
+  parser_component_add_parser_property(alarm, 
+      parser_property_new("trigger", on_alarm_trigger));
 
-  event = component_type_new("vEvent");
-  component_type_add_component_type(event, alarm);
+  event = parser_component_new("vEvent");
+  parser_component_add_parser_component(event, alarm);
 
-  component_type_add_property_type(event, 
-      property_type_new("class", on_event_class));
-  component_type_add_property_type(event, 
-      property_type_new("dtEnd", on_event_dtend));
-  component_type_add_property_type(event, 
-      property_type_new("dtStart", on_event_dtstart));
-  component_type_add_property_type(event, 
-      property_type_new("Location", on_event_location));
-  component_type_add_property_type(event, 
-      property_type_new("Summary", on_event_summary));
-  component_type_add_property_type(event, 
-      property_type_new("Transp", on_event_transp));
+  parser_component_add_parser_property(event, 
+      parser_property_new("class", on_event_class));
+  parser_component_add_parser_property(event, 
+      parser_property_new("dtEnd", on_event_dtend));
+  parser_component_add_parser_property(event, 
+      parser_property_new("dtStart", on_event_dtstart));
+  parser_component_add_parser_property(event, 
+      parser_property_new("Location", on_event_location));
+  parser_component_add_parser_property(event, 
+      parser_property_new("Summary", on_event_summary));
+  parser_component_add_parser_property(event, 
+      parser_property_new("Transp", on_event_transp));
 
-  calendar = component_type_new("vCalendar");
-  component_type_add_component_type(calendar, event);
+  calendar = parser_component_new("vCalendar");
+  parser_component_add_parser_component(calendar, event);
 
-  base = component_type_new(NULL);
-  component_type_add_component_type(base, calendar);
+  base = parser_component_new(NULL);
+  parser_component_add_parser_component(base, calendar);
 
-  parser = parser_new(base, parser_flags, &appointment_data);
+  parser = parser_new(base, parser_flags, &event_parser_data);
   if (!parser)
   {
     synce_error("Failed to create parser");
@@ -279,19 +223,19 @@ bool rra_appointment_from_vevent(/*{{{*/
     goto exit;
   }
 
-  if (appointment_data.dtstart)
+  if (event_parser_data.dtstart)
   {
-    parser_add_time_from_line(parser, ID_START, appointment_data.dtstart);
+    parser_add_time_from_line(parser, ID_START, event_parser_data.dtstart);
     
-    if (appointment_data.dtend)
+    if (event_parser_data.dtend)
     {
       time_t start = 0;
       time_t end = 0;
       int32_t minutes;
 
-      if (!parser_datetime_to_unix_time(appointment_data.dtstart->values[0], &start))
+      if (!parser_datetime_to_unix_time(event_parser_data.dtstart->values[0], &start))
         goto exit;
-      if (!parser_datetime_to_unix_time(appointment_data.dtend->values[0],   &end))
+      if (!parser_datetime_to_unix_time(event_parser_data.dtend->values[0],   &end))
         goto exit;
 
       minutes = (end - start) / 60;
@@ -319,7 +263,7 @@ bool rra_appointment_from_vevent(/*{{{*/
 
 exit:
   /* destroy top object */
-  component_type_destroy(calendar);
+  parser_component_destroy(calendar);
   parser_destroy(parser);
 	return success;
 }/*}}}*/

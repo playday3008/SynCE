@@ -7,7 +7,7 @@ noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-decode \
 	rra-partners \
 	rra-contact-to-vcard rra-contact-from-vcard \
-	rra-appointment-from-vevent
+	rra-appointment-from-vevent rra-appointment-to-vevent
 
 rra_get_types_SOURCES   = rra-get-types.c
 rra_get_ids_SOURCES     = rra-get-ids.c
@@ -21,7 +21,7 @@ rra_partners_SOURCES    = rra-partners.c
 rra_contact_to_vcard_SOURCES    = rra-contact-to-vcard.c
 rra_contact_from_vcard_SOURCES  = rra-contact-from-vcard.c
 
-#rra_appointment_to_vevent_SOURCES    = rra-appointment-to-vevent.c
+rra_appointment_to_vevent_SOURCES    = rra-appointment-to-vevent.c
 rra_appointment_from_vevent_SOURCES  = rra-appointment-from-vevent.c
 
 ##rra_lock_SOURCES = rra-lock.c
