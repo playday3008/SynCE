@@ -46,9 +46,12 @@ void ThreadEvent::customEvent (QCustomEvent *customEvent)
         QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
         wti->setEventReturnValue((wti->*userEventMethode)(data));
         QApplication::setOverrideCursor( QCursor(Qt::WaitCursor) );
+        // Wait for the thread to be in the waiting state
         RakiWorkerThread::eventMutexLock();
-        RakiWorkerThread::wakeUpOnEvent();
+        // Imediately release the mutex again
         RakiWorkerThread::eventMutexUnlock();
+        // Wake up the thread
+        RakiWorkerThread::wakeUpOnEvent();
         break;
     }
 }
