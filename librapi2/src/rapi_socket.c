@@ -3,6 +3,10 @@
 #include "rapi_endian.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #define RAPI_SOCKET_INVALID_FD -1
 
@@ -32,9 +36,31 @@ void rapi_socket_free(RapiSocket* socket)
 	}
 }
 
-bool rapi_socket_connect(RapiSocket* socket, const char* host, int port)
+bool rapi_socket_connect(RapiSocket* rapisock, const char* host, int port)
 {
-	/* TODO: implement */
+	struct sockaddr_in servaddr;
+	
+	rapi_socket_close(rapisock);
+
+	/* create socket */
+	if ( (rapisock->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		goto fail;
+
+	/* fill in address structure */
+	memset(&servaddr, 0, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_port = htons(port);
+	if ( inet_pton(AF_INET, host, &servaddr.sin_addr) <= 0 )
+		goto fail;
+	
+	/* connect */
+	if ( connect(rapisock->fd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0 )
+		goto fail;
+
+	return true;
+
+fail:
+	rapi_socket_close(rapisock);
 	return false;
 }
 
