@@ -58,7 +58,7 @@ AM_PATH_LIBRAPI2
   AC_ARG_ENABLE(recurrence,
     AC_HELP_STRING(
       [--enable-recurrence],
-      [Enables recurrence experimential recurrence support]),
+      [Enables experimential recurrence support]),
     AC_DEFINE(ENABLE_RECURRENCE, [1], [Define to 1 to enable recurrence support])
     )
 
@@ -77,6 +77,14 @@ AC_REPLACE_FUNCS(strcasestr)
 LIB@&t@OBJS=`echo "$LIB@&t@OBJS" | sed 's,\.[[^.]]* ,$U&,g;s,\.[[^.]]*$,$U&,'`
 LTLIBOBJS=`echo "$LIB@&t@OBJS" | sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
 AC_SUBST(LTLIBOBJS)
+
+AM_ICONV()
+if test "$am_cv_func_iconv" '!=' yes; then
+	AC_MSG_ERROR([iconv not found, try using --with-libiconv-prefix])
+fi
+AC_CHECK_HEADERS(iconv.h,,[
+		AC_MSG_WARN([iconv.h not found (INCICONV=$INCICONV)])
+		])
 
 AC_OUTPUT([Makefile
            src/Makefile
