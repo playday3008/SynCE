@@ -305,6 +305,8 @@ static bool client_write_file(Client* client)
 {
 	bool success = false;
 	char* filename = NULL;
+	char *mode_str;
+	mode_t file_mode;
 	FILE* file = NULL;
 	char ip_str[16];
 
@@ -374,7 +376,20 @@ static bool client_write_file(Client* client)
 			
 exit:
 	if (file)
+	{
 		fclose(file);
+		
+		if ((mode_str = getenv ("SYNCE_CONNECTION_FILE_MODE")))
+		{
+			if (strlen (mode_str))
+			{
+				if (sscanf (mode_str, "%o", &file_mode) == 1)
+				{
+					chmod (filename, file_mode);
+				}
+			}
+		}
+	}
 	if (filename)
 		free(filename);
 	return success;
@@ -650,6 +665,8 @@ bool write_pid_file(const char* filename)
 	bool success = false;
 	struct stat dummy;
 	char pid_str[16];
+	char *mode_str;
+	mode_t file_mode;
 	FILE* file = NULL;
 
 	if (0 == stat(filename, &dummy))
@@ -691,6 +708,17 @@ bool write_pid_file(const char* filename)
 	fputs(pid_str, file);
 	fclose(file);
 	file = NULL;
+	
+	if ((mode_str = getenv ("SYNCE_PID_FILE_MODE")))
+	{
+		if (strlen (mode_str))
+		{
+			if (sscanf (mode_str, "%o", &file_mode) == 1)
+			{
+				chmod (filename, file_mode);
+			}
+		}
+	}
 
 	success = true;
 
@@ -865,4 +893,3 @@ exit:
 
 	return result;
 }
-
