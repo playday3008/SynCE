@@ -2,11 +2,18 @@
  * This file will make sure that the functions/macros htole16 and htole32 
  * are available.
  */
+#ifndef __LITTLE_ENDIAN_H__
+#define __LITTLE_ENDIAN_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #else
 #error No config.h available.
+#endif
+
+/* needed first */
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
 #endif
 
 /* byte swapping */
@@ -21,11 +28,6 @@
 #include <endian.h>
 #elif HAVE_MACHINE_ENDIAN_H 
 #include <machine/endian.h>
-#endif
-
-/* also useful */
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 
 /* define host-to-little-endian and little-endian-to-host macros */
@@ -43,4 +45,5 @@
 #endif
 #endif
 
+#endif /* __LITTLE_ENDIAN_H__ */
 
