@@ -40,7 +40,13 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>June 1, 2003</b> Provide a how-to on making synce-serial-start run
+<p><b>June 8, 2003</b> The June issue of the swedish computer magazine <a
+href="http://datormagazin.se/">Datormagazin</a> has an article about SynCE on
+page 54! Cool! I would also like to welcome <a
+href="mailto:jonmcd@users.sourceforge.net">Jonathan McDowell</a> as a new SynCE
+developer. He is a Debian developer so this can only be good! :-)</p>
+
+<p><b>June 1, 2003</b> Provided a how-to on making synce-serial-start run
 automatically on connect with a <a href="hotplug.php">Linux hotplug
 script</a>.</p>
 
