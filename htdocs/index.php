@@ -2,27 +2,37 @@
 
 <div class="PAGE">
 
-<table borde="0"><tr><td rowspan="2">
+
+<table><tr><td width="50%">
 
 <h1>The SynCE Project</h1>
+
+</td><td width="50%">
+
+<A href="http://sourceforge.net"><IMG
+src="http://sourceforge.net/sflogo.php?group_id=30550&amp;type=5" width="210"
+height="62" border="0" alt="SourceForge Logo" align=right></A> 
+
+</td></tr><tr><td width="50%">
 
 <p>The purpose of the SynCE project is to provide a means of communication with
 a Windows CE device from a computer running Linux, FreeBSD or a similar
 operating system.</p>
 
-<blockquote>
-<b>Do you need help with SynCE?</b> <a href="help.php">Click here!</a>
-</blockquote>
+</td><td width="50%">
 
-<blockquote> <b>Do you like SynCE?</b> <a
-href="http://sourceforge.net/donate/index.php?group_id=30550">Donate!</a>
-</blockquote>
+<p><b>Do you need help with SynCE?</b>&nbsp;&nbsp;<a href="help.php">Click
+here!</a></p>
+
+<p><b>Do you like SynCE?</b>&nbsp;&nbsp;<a
+href="http://sourceforge.net/donate/index.php?group_id=30550">Donate!</a></p>
+
+<!--
+<table borde="0"><tr><td rowspan="2">
+
+<blockquote> <b>Using the latest version?</b><br/>SynCE&nbsp;0.9.0<br/>SynCE-KDE&nbsp;0.7.3</blockquote>
 
 </td><td>
-
-<A href="http://sourceforge.net"><IMG
-src="http://sourceforge.net/sflogo.php?group_id=30550&amp;type=5" width="210"
-height="62" border="0" alt="SourceForge Logo" align=right></A> 
 
 </td></tr>
 
@@ -48,6 +58,62 @@ alt="Make a donation" title="Make a donation">
 
 
 </td></tr></table>
+-->
+
+</td></tr><tr>
+<td colspan=2><hr size=1/></td>
+</tr><tr><td rowspan=2>
+
+
+<h2>Site contents</h2>
+
+<!-- <table widht="100%"><tr><td width="50%" valign="top"> -->
+
+<h3>General</h3>
+
+<ul>
+<li><a href="download.php">Download and install</a></li>
+<li><a href="setup.php">Setup</a></li>
+<li><a href="start.php">Connect</a></li>
+<li><a href="tools.php">Tools</a></li>
+<li><a href="disconnect.php">Disconnect</a></li>
+<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
+<li><a href="qa.php">Questions and Answers</a></li>
+<li><a href="links.php">Links</a></li>
+<li class=SPACED><a href="help.php">Get help</a></li>
+
+
+<li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
+</ul>
+
+<!-- </td><td width="50%" valign="top"> -->
+
+<h3>Integration with desktop environments</h3>
+
+<blockquote><a href="gnome.php">GNOME</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="kde/">KDE</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="pyrapi/ce_dirview/">CE_DirView</a></blockquote>
+
+
+<h3>Operating system-specific details</h3>
+
+<blockquote><a href="freebsd.php">FreeBSD</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="linux.php">Linux</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="macosx.php">MacOS X</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
+href="openbsd.php">OpenBSD</a></blockquote>
+
+<h3>Development information</h3>
+
+<ul>
+<li><a href="notes.php">Developer's notes</a></li>
+<li><a href="tasks.php">Help wanted!</a></li>
+<li><a href="architecture.php">Architecture</a></li>
+<li><a href="developers.php">The SynCE developers</a></li>
+<li><a href="capture.php">How to capture packets for analyzing</a></li>
+<!-- <li><a href="#future">Future</a></li> -->
+</ul>
+
+</td><td width="50%">
 
 <a name="news"></a>
 <h2>News</h2>
@@ -72,6 +138,9 @@ the <a href="capture.php">How to capture packets for analyzing</a> page. </p>
 
 <p><b>May 28, 2004</b> New page linking to all <a href="notes.php">Developer's
 notes</a></p>
+
+
+<?php /*
 
 <p><b>May 4, 2004</b> Support for recurring appointments is coming along
 nicely, the PWI file format is getting decoded, a script called <a
@@ -103,8 +172,6 @@ Developer's notes</a>.</p>
 
 <p><b>November 16, 2003</b> Created the IRC channel <tt>#synce</tt> on
 <tt>irc.freenode.net</tt>. You are all very welcome!</p>
-
-<?php /*
 
 <p><b>November 14, 2003</b> New <a
 href="http://sourceforge.net/mailarchive/forum.php?thread_id=3464828&forum_id=1226">SynCE
@@ -268,8 +335,6 @@ if you want to help us!</p>
 
 </ul>
 
-*/ ?>
-
 <hr size=1>
 <p>
 
@@ -296,32 +361,11 @@ alt="Make a donation" title="Make a donation"></td>
 </form>
 
 </p>
-<hr size=1>
+*/ ?>
 
-<h2>Site contents</h2>
+</td></tr><tr><td>
 
-<table widht="100%"><tr><td width="50%" valign="top">
-
-<h3>General</h3>
-
-<ul>
-<li><a href="#news">News</a></li>
-<li><a href="#overview">Overview</a></li>
-<li class=SPACED><a href="links.php">Links</a></li>
-
-<li><a href="download.php">Download and install</a></li>
-<li><a href="setup.php">Setup</a></li>
-<li><a href="start.php">Connect</a></li>
-<li><a href="tools.php">Tools</a></li>
-<li><a href="disconnect.php">Disconnect</a></li>
-<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
-<li><a href="qa.php">Questions and Answers</a></li>
-<li class=SPACED><a href="help.php">Get help</a></li>
-
-<li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
-</ul>
-
-<h3>Extras</h3>
+<h2>Extras</h2>
 
 <ul>
 <li><a href="orange.php">The Orange tool and library</a></li>
@@ -329,94 +373,10 @@ alt="Make a donation" title="Make a donation"></td>
 <li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
 </ul>
 
-</td><td width="50%" valign="top">
-
-<h3>Integration with desktop environments</h3>
-
-<ul>
-
-<li><a href="gnome.php">GNOME</a></li>
-<li><a href="kde/">KDE</a></li>
-
-<li><a href="pyrapi/ce_dirview/">CE_DirView</a></li>
-
-</ul>
-
-<h3>Operating system-specific details</h3>
-
-<ul>
-
-<li><a href="freebsd.php">FreeBSD</a></li>
-<li><a href="linux.php">Linux</a></li>
-<li><a href="macosx.php">MacOS X</a></li>
-<li><a href="openbsd.php">OpenBSD</a></li>
-
-</ul>
-
-<h3>Development information</h3>
-
-<ul>
-<li><a href="notes.php">Developer's notes</a></li>
-<li><a href="tasks.php">Help wanted!</a></li>
-<li><a href="architecture.php">Architecture</a></li>
-<li><a href="developers.php">The SynCE developers</a></li>
-<li><a href="capture.php">How to capture packets for analyzing</a></li>
-<li><a href="#future">Future</a></li>
-</ul>
-
 </td></tr></table>
 
+<?php /*
 <hr size=1>
-
-
-<a name="overview"></a>
-<h2>Overview</h2>
-
-<p>SynCE is composed by the following parts:</p>
-
-<table>
-
-<tr>
-<th>libsynce</th>
-<td>Common functions used by other parts of SynCE.</td>
-</tr>
-
-<tr>
-<th>librapi2</th>
-<td>A library that implements RAPI, the Remote Access Programming
-Interface, which allows remote control of a device connected through SynCE.
-Also included are simple command line tools that uses RAPI.</td>
-</tr>
-
-<tr>
-<th>dccm</th>
-<td>An application that maintains the connection with a device
-connected through SynCE.</td>
-</tr>
-
-<tr>
-<th>serial</th>
-<td>Tools for configuring, starting and aborting a serial connection for 
-use with SynCE.</td>
-</tr>
-
-<tr>
-<th>rra</th>
-<td>A library needed for synchronization functions.</td>
-</tr>
-
-<tr>
-<th>multisync_plugin</th>
-<td>A plugin for <a href="http://multisync.sourceforge.net">MultiSync</a> to
-synchronize Contacts.</td> 
-</tr>
-
-<tr>
-<th>trayicon</th>
-<td>A tray icon for GNOME 2 showing if a device is connected or not.</td>
-</tr>
-
-</table>
 
 <a name="future"></a>
 <h2>Plans for the future</h2>
@@ -424,6 +384,7 @@ synchronize Contacts.</td>
 <p>In the future, SynCE must be more user-friendly.</p>
 
 <p>Please read the <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/twogood-files/roadmap.txt?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">roadmap</a> for more details.</p>
+*/ ?>
 
 </div>
 <?php include 'footer.php'; ?>

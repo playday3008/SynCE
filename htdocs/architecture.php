@@ -11,6 +11,7 @@
 <h2>Contents</h2>
 
 <ul>
+<li><a href="#overview">Overview</a></li>
 <li><a href="#dccm">The DCCM application</a></li>
 <li><a href="#librapi2">The librapi2 library</a></li>
 <li><a href="#libsynce">The libsynce library</a></li>
@@ -19,6 +20,56 @@
 <li><a href="#ports">Registered IP ports used by SynCE</a></li>
 <li><a href="#questions">Questions?</a></li>
 </ul>
+
+<a name="overview"></a>
+<h2>Overview</h2>
+
+<p>SynCE is composed by the following parts:</p>
+
+<table>
+
+<tr>
+<th>libsynce</th>
+<td>Common functions used by other parts of SynCE.</td>
+</tr>
+
+<tr>
+<th>librapi2</th>
+<td>A library that implements RAPI, the Remote Access Programming
+Interface, which allows remote control of a device connected through SynCE.
+Also included are simple command line tools that uses RAPI.</td>
+</tr>
+
+<tr>
+<th>dccm</th>
+<td>An application that maintains the connection with a device
+connected through SynCE.</td>
+</tr>
+
+<tr>
+<th>serial</th>
+<td>Tools for configuring, starting and aborting a serial connection for 
+use with SynCE.</td>
+</tr>
+
+<tr>
+<th>rra</th>
+<td>A library needed for synchronization functions.</td>
+</tr>
+
+<tr>
+<th>multisync_plugin</th>
+<td>A plugin for <a href="http://multisync.sourceforge.net">MultiSync</a> to
+synchronize Contacts.</td> 
+</tr>
+
+<tr>
+<th>trayicon</th>
+<td>A tray icon for GNOME 2 showing if a device is connected or not.</td>
+</tr>
+
+</table>
+
 
 <a name="dccm"></a>
 <h2>The DCCM application</h2>
