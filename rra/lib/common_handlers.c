@@ -139,7 +139,7 @@ bool on_mdir_line_location(Parser* p, mdir_line* line, void* cookie)
   if (line)
     return parser_add_string_from_line(p, ID_LOCATION, line);
   else
-    return false;
+    return parser_add_string(p, ID_LOCATION, "");
 }
 
 bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
