@@ -3,12 +3,6 @@
 #define __synce_h__
 
 /* 
- * Get system configuration 
- */
-#include "synce_config.h"
-
-
-/* 
  * Include some files 
  */
 #include <stdint.h>

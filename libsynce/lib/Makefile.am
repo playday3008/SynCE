@@ -14,10 +14,8 @@ libsynce_la_SOURCES = \
 	wstr.c
 
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libsynce_la_LIBADD  = @LTLIBICONV@ config/libconfig.la
+libsynce_la_LIBADD  = @LTLIBICONV@
 
 include_HEADERS = \
-	synce.h synce_config.h synce_log.h synce_socket.h synce_types.h
-
-SUBDIRS = config .
+	synce.h synce_log.h synce_socket.h synce_types.h
 

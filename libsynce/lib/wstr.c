@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "synce.h"
 #include "synce_log.h"
+#include "synce_config.h"
 #include <stdlib.h>
 #include <string.h>
 
