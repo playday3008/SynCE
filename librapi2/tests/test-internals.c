@@ -4,6 +4,7 @@
 
 #include "rapi_buffer.h"
 #include "rapi_unicode.h"
+#include "config/config.h"
 
 #define VALUE_16BIT 0x1234
 #define VALUE_32BIT 0x6789abcd
@@ -105,12 +106,34 @@ START_TEST(test_unicode_to_ascii)/*{{{*/
 }
 END_TEST/*}}}*/
 
+START_TEST(test_config_general)
+{
+	struct configFile* config;
+	int number;
+	char* string;
+
+	config = readConfigFile("test.conf");
+	fail_unless( config != NULL, "readConfigFile failed" );
+
+	if (config)
+	{
+		number = getConfigInt(config, "mysection", "mynumber");
+		fail_unless(222 == number, "getConfigInt failed" );
+
+		string = getConfigString(config, "mysection", "mystring");
+		fail_unless(0 == strcmp(string, "2GooD Productions"), "getConfigString");
+	}
+
+	unloadConfigFile(config);
+}
+END_TEST
 
 Suite *internals_suite (void) 
 { 
 	Suite *s = suite_create ("librapi internals"); 
 	TCase *tc_buffer  = tcase_create ("rapi_buffer");
 	TCase *tc_unicode = tcase_create ("rapi_unicode");
+	TCase *tc_config = tcase_create ("config");
 
 	suite_add_tcase (s, tc_buffer);
 	tcase_add_test (tc_buffer, test_buffer_uint32); 
@@ -121,6 +144,9 @@ Suite *internals_suite (void)
 	tcase_add_test (tc_unicode, test_unicode_from_ascii);
 	tcase_add_test (tc_unicode, test_unicode_to_ascii);
 
+	suite_add_tcase (s, tc_config);
+	tcase_add_test (tc_config, test_config_general); 
+	
 	return s; 
 }
 
