@@ -5,4 +5,5 @@
 Makefile
 Makefile.in
 stamp-h1
+synce.h
 synce_config.h.in
