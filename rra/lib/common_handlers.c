@@ -39,6 +39,7 @@ bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 {
   assert(line->values);
   /* TODO: convert from utf-8 */
+  /* TODO: convert LF to CRLF */
   return parser_add_blob(p, ID_NOTES, line->values[0], strlen(line->values[0]));
 }
 
