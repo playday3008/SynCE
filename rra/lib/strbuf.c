@@ -75,3 +75,43 @@ StrBuf* strbuf_append_crlf (StrBuf *strbuf)
   strbuf->buffer[strbuf->length] = '\0';
   return strbuf;
 }
+
+#if 0
+StrBuf* strbuf_printf(StrBuf *strbuf, const char* format, ...)
+{
+  va_list ap;
+  
+  va_start(ap, format);
+  strbuf_vprintf(strbuf, format, ap);
+  va_end(ap);
+}
+
+StrBuf* strbuf_vprintf(StrBuf *strbuf, const char* format, va_list ap);
+{
+  size_t bytes_left = 0;
+  size_t increase = 64;
+  int bytes_used = 0;
+  
+  for (;;)
+  {
+    strbuf_enlarge(strbuf, strbuf->length + increase);
+    bytes_left = strbuf->buffer_size - strbuf->length;
+
+    bytes_used = vsnprintf(strbuf->buffer + strbuf->length,
+        bytes_left, format, ap);
+
+    if (bytes_used > -1 && bytes_used < size)
+      break;
+
+    /* see the printf man page */
+    if (bytes_used > -1)            /* glibc 2.1 */
+      increase = bytes_used + 1;
+    else                            /* glibc 2.0 */
+      increase *= 2;
+  };
+  
+  bytes->length += bytes_used;
+
+  return strbuf;
+}
+#endif

@@ -1,4 +1,5 @@
 /* $Id$ */
+#define _GNU_SOURCE 1
 #include "generator.h"
 #include "dbstream.h"
 #include "strbuf.h"
@@ -6,6 +7,8 @@
 #include <synce_log.h>
 #include <synce_hash.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 
 #define MAX_PROPVAL_COUNT         50
 
@@ -107,7 +110,7 @@ exit:
   return success;
 }/*}}}*/
 
-bool generator_add_property(Generator* self, uint16_t id, GeneratorPropertyFunc func)/*{{{*/
+void generator_add_property(Generator* self, uint16_t id, GeneratorPropertyFunc func)/*{{{*/
 {
   GeneratorProperty* gp = (GeneratorProperty*)calloc(1, sizeof(GeneratorProperty));
   if (gp)
@@ -115,10 +118,7 @@ bool generator_add_property(Generator* self, uint16_t id, GeneratorPropertyFunc 
     gp->id = id;
     gp->func = func;
     s_hash_table_insert(self->properties, &gp->id, gp);
-    return true;
   }
-  else
-    return false;
 }/*}}}*/
 
 bool generator_run(Generator* self)
@@ -139,7 +139,7 @@ bool generator_run(Generator* self)
     }
     else
     {
-      synce_trace("Unhandled property id: %d", id);
+      synce_trace("Unhandled property id: %04x", id);
     }
   }
 
@@ -149,9 +149,108 @@ exit:
   return success;
 }
 
-bool generator_get_result(Generator* self, char** result);
+bool generator_get_result(Generator* self, char** result)
+{
+  *result = strdup(self->buffer->buffer);
+  return NULL != *result;
+}
 
-bool generator_add_simple(Generator* self, const char* name, const char* value);
+/* 
+   ESCAPED-CHAR = "\\" / "\;" / "\," / "\n" / "\N")
+        ; \\ encodes \, \n or \N encodes newline
+        ; \; encodes ;, \, encodes ,
+*/
+static void generator_append_escaped(Generator* self, const char* str)/*{{{*/
+{
+	const char* p;
+
+  assert(self);
+  assert(self->buffer);
+	if (!str)
+		return;
+
+	for (p = str; *p; p++)
+	{
+		switch (*p)
+		{
+			case '\r': 				/* CR */
+				/* ignore */
+				break;		
+
+			case '\n':				/* LF */
+				strbuf_append_c(self->buffer, '\\');
+				strbuf_append_c(self->buffer, 'n');
+				break;
+	
+			case '\\':
+				strbuf_append_c(self->buffer, '\\');
+				strbuf_append_c(self->buffer, *p);
+				break;
+				
+#if 0
+			case ';':
+			case ',':
+				if (flags & RRA_CONTACT_VERSION_3_0)
+					strbuf_append_c(self->buffer, '\\');
+				/* fall through */
+#endif
+
+			default:
+				strbuf_append_c(self->buffer, *p);
+				break;
+		}
+	}
+}/*}}}*/
+
+void generator_append_escaped_wstr(Generator* self, const WCHAR* wstr)/*{{{*/
+{
+  assert(self);
+	if (wstr)
+	{
+		char* str = NULL;
+	 
+		if (self->flags & GENERATOR_UTF8)
+			str = wstr_to_utf8(wstr);
+		else
+			str = wstr_to_ascii(wstr);
+
+		generator_append_escaped(self, str);
+		wstr_free_string(str);
+	}
+}/*}}}*/
+
+
+bool generator_add_simple(Generator* self, const char* name, const char* value)
+{
+  strbuf_append(self->buffer, name);
+  strbuf_append_c(self->buffer, ':');
+  generator_append_escaped(self, value);
+  strbuf_append_crlf(self->buffer);
+  return true;
+}
+
 bool generator_add_with_type(Generator* self, const char* name, const char* type, const char* value);
+
+bool generator_add_simple_propval(Generator* self, const char* name, struct _CEPROPVAL* propval)
+{
+  bool success = false;
+  
+  switch (propval->propid & 0xffff)
+  {
+    case CEVT_LPWSTR:
+      strbuf_append(self->buffer, name);
+      strbuf_append_c(self->buffer, ':');
+      generator_append_escaped_wstr(self, propval->val.lpwstr);
+      strbuf_append_crlf(self->buffer);
+      success = true;
+      break;
+
+    default:
+      synce_error("Data type not handled");
+      break;
+  }
+  
+  return success;
+}
 
 

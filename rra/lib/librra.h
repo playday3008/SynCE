@@ -158,6 +158,10 @@ bool rra_contact_from_vcard(
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)
 
+#define RRA_VCALENDAR_VERSION_UNKNOWN   0x000
+#define RRA_VCALENDAR_VERSION_2_0       0x200 /* RFC 2445 */
+#define RRA_VCALENDAR_VERSION_MASK      0xf00
+
 bool rra_appointment_to_vevent(
     uint32_t id,
     const uint8_t* data,

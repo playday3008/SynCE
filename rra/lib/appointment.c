@@ -17,6 +17,18 @@ typedef struct _EventGeneratorData
   CEPROPVAL* dummy;
 } EventGeneratorData;
 
+static bool on_property_subject(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  generator_add_simple_propval(g, "SUMMARY", propval);
+  return true;
+}
+
+static bool on_property_location(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  generator_add_simple_propval(g, "LOCATION", propval);
+  return true;
+}
+
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
     const uint8_t* data,
@@ -33,12 +45,33 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator)
     goto exit;
 
+  generator_add_property(generator, ID_SUBJECT, on_property_subject);
+  generator_add_property(generator, ID_LOCATION, on_property_location);
+
   if (!generator_set_data(generator, data, data_size))
     goto exit;
+
+  generator_add_simple(generator, "BEGIN", "VCALENDAR");
+  
+  switch (flags & RRA_VCALENDAR_VERSION_MASK)
+  {
+    case RRA_VCALENDAR_VERSION_2_0:
+      generator_add_simple(generator, "VERSION", "2.0");
+      break;
+  }
+  
+  generator_add_simple(generator, "BEGIN", "VEVENT");
 
   if (!generator_run(generator))
     goto exit;
 
+  generator_add_simple(generator, "END", "VEVENT");
+  generator_add_simple(generator, "END", "VCALENDAR");
+  
+  if (!generator_get_result(generator, vevent))
+    goto exit;
+
+  success = true;
 
 exit:
   generator_destroy(generator);
