@@ -9,7 +9,9 @@
 #define RAPI_UNICODE_WIDE   "UCS-2LE"
 #define RAPI_UNICODE_ASCII  "iso8859-1"
 
-char* rapi_unicode_to_ascii(uchar* inbuf)
+#define INVALID_ICONV_HANDLE ((iconv_t)(-1))
+
+char* rapi_unicode_to_ascii(const uchar* inbuf)
 {
 	size_t length = rapi_unicode_string_length(inbuf);
 	size_t inbytesleft = length * 2, outbytesleft = length;
@@ -17,8 +19,15 @@ char* rapi_unicode_to_ascii(uchar* inbuf)
   char* outbuf_iterator = outbuf;
   char* inbuf_iterator = (char*)inbuf;
 	size_t result;
+	iconv_t cd = INVALID_ICONV_HANDLE;
 
-  iconv_t cd = iconv_open(RAPI_UNICODE_ASCII, RAPI_UNICODE_WIDE);
+	if (!inbuf)
+		return NULL;
+	
+  cd = iconv_open(RAPI_UNICODE_ASCII, RAPI_UNICODE_WIDE);
+	if (INVALID_ICONV_HANDLE == cd)
+		return false;
+
   result = iconv(cd, &inbuf_iterator, &inbytesleft, &outbuf_iterator, &outbytesleft);
   iconv_close(cd);
 
@@ -30,16 +39,23 @@ char* rapi_unicode_to_ascii(uchar* inbuf)
   return outbuf;
 }
 
-uchar* rapi_unicode_from_ascii(char* inbuf)
+uchar* rapi_unicode_from_ascii(const char* inbuf)
 {
 	size_t length = strlen(inbuf);
 	size_t inbytesleft = length, outbytesleft = (length+1)* 2;
-	char * inbuf_iterator = inbuf;
+	char * inbuf_iterator = (char*)inbuf;
 	uchar* outbuf = malloc(outbytesleft+sizeof(uchar));
 	uchar* outbuf_iterator = outbuf;
 	size_t result;
+	iconv_t cd = INVALID_ICONV_HANDLE;
+
+	if (!inbuf)
+		return NULL;
 	
-	iconv_t cd = iconv_open(RAPI_UNICODE_WIDE, RAPI_UNICODE_WIDE);
+	cd = iconv_open(RAPI_UNICODE_WIDE, RAPI_UNICODE_WIDE);
+	if (INVALID_ICONV_HANDLE == cd)
+		return false;
+
 	result = iconv(cd, &inbuf_iterator, &inbytesleft, (char**)&outbuf_iterator, &outbytesleft);
 	iconv_close(cd);
 
@@ -57,7 +73,7 @@ void rapi_unicode_free_string(void* str)
 		free(str);
 }
 
-size_t rapi_unicode_string_length(uchar* unicode)
+size_t rapi_unicode_string_length(const uchar* unicode)
 {
 	unsigned length = 0;
 
