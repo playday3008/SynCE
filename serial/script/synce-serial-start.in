@@ -32,7 +32,7 @@ fi
 # option from the /etc/ppp/options file.
 #
 
-if cat ${PPP_OPTIONS} | grep -v '[ 	]*#' | grep -q usepeerdns; then
+if cat ${PPP_OPTIONS} | grep -v '^[ 	]*#' | grep -q usepeerdns; then
 	echo "
 ${THIS} encountered a problem with your ${PPP_OPTIONS} file:
 
@@ -106,6 +106,8 @@ fi
 #
 # Finally start pppd
 #
+
+${INFO} "Executing '${COMMAND}'"
 
 if ${COMMAND}; then
 	echo "

@@ -8,6 +8,14 @@
 prefix=@prefix@
 datadir=@datadir@
 
+LOGGER="logger -t ${THIS}"
+FACILITY=user
+ERROR="${LOGGER} -p ${FACILITY}.err"
+WARNING="${LOGGER} -p ${FACILITY}.warning"
+NOTICE="${LOGGER} -p ${FACILITY}.notice"
+INFO="${LOGGER} -p ${FACILITY}.info"
+DEBUG="${LOGGER} -p ${FACILITY}.debug"
+
 PPP_OPTIONS=/etc/ppp/options
 PPP_PEERS=/etc/ppp/peers
 PPPD=/usr/sbin/pppd

@@ -17,6 +17,8 @@ ${THIS} was unable find a running SynCE connection. Will do nothing.
 	exit 0
 fi
 
+${INFO} "Killing process with PID ${PID}"
+
 if kill ${PID}; then
 	echo "
 ${THIS} has requested shutdown of the current connection.
