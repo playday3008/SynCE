@@ -61,6 +61,7 @@ AC_CHECK_HEADERS(sys/uio.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_CHECK_SIZEOF(void *)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(readv)

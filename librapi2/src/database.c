@@ -3,6 +3,9 @@
 #include "rapi_context.h"
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_CONFIG_H
+#include "rapi_config.h"
+#endif
 
 #define RAPI_DATABASE_DEBUG 1
 
@@ -282,6 +285,8 @@ HANDLE CeOpenDatabase(/*{{{*/
 exit:
 	return handle;
 }/*}}}*/
+
+#if SIZEOF_VOID_P == 4
 
 CEOID CeReadRecordProps(/*{{{*/
 		HANDLE hDbase, 
@@ -616,6 +621,8 @@ fail:
 	return_value = 0;
 	goto exit;
 }/*}}}*/
+
+#endif /* SIZEOF_VOID_P == 4 */
 
 CEOID CeSeekDatabase(/*{{{*/
 		HANDLE hDatabase, 
