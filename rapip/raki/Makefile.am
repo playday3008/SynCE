@@ -5,13 +5,13 @@
 bin_PROGRAMS = raki 
 
 # set the include path for X, qt and KDE
-INCLUDES = -I$(top_srcdir)/raki/interfaces $(SYNCE_INCLUDES) $(RAPI_INCLUDES) $(RRA_INCLUDES) $(all_includes)
+INCLUDES = -I$(top_srcdir)/raki/interfaces  $(RRA_INCLUDES) $(all_includes)
 
 # the library search path. 
-raki_LDFLAGS = $(KDE_RPATH) $(SYNCE_LDFLAGS) $(RAPI_LDFLAGS) $(RRA_LDFLAGS) $(all_libraries) -rdynamic --whole-archive
+raki_LDFLAGS = $(KDE_RPATH) $(RRA_LDFLAGS) $(all_libraries) -rdynamic --whole-archive
 
 # the libraries to link against.
-raki_LDADD = $(top_builddir)/raki/interfaces/libinterfaces.a $(LIB_KDEUI) $(LIB_KABC) $(RRA_LIB) $(RAPI_LIB) $(SYNCE_LIB) $(ICAL_LIB)
+raki_LDADD = $(top_builddir)/raki/interfaces/libinterfaces.a $(LIB_KDEUI) $(LIB_KABC) $(RRA_LIB) $(ICAL_LIB)
 
 # which sources should be compiled for raki
 raki_SOURCES = management.ui raki.cpp rakiworkerthread.cpp runwindow.ui configdialog.ui runwindowimpl.cpp managerimpl.cpp configdialogimpl.cpp workerthreadinterface.cpp installer.cpp pda.cpp installdialog.ui passworddialog.ui passworddialogimpl.cpp pdaconfigdialog.ui pdaconfigdialogimpl.cpp rra.cpp syncdialog.ui syncdialogimpl.cpp synctasklistitem.cpp dmalloc.cpp wince_ids.cpp removepartnershipdialog.ui removepartnershipdialogimpl.cpp welcomedialogimpl.cpp welcomedialog.ui threadevent.cpp syncthread.cpp initprogress.ui rapiwrapper.cpp matchmaker.cpp rakiapi.cpp

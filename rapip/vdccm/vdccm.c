@@ -928,12 +928,12 @@ int main(int argc, char *argv[])
 
     if (!vdccm_handle_parameters(argc, argv))
         return -1;
-
+/*
     if (getuid() == 0) {
         synce_error("You should not run dccm as root.");
         return -1;
     }
-
+*/
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
         return -1;

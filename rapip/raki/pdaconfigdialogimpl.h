@@ -78,8 +78,7 @@ public slots:
 private slots:
     void masqChangedSlot();
     void disableApply();
-    void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &,
-            int);
+    void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &, int);
     void kPushButton2_clicked();
     
 private:

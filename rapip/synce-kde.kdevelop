@@ -26,7 +26,7 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>raki/raki</activetarget>
+      <activetarget>raki/plugins/agsync/librakiagsync.la</activetarget>
       <useconfiguration>gdbdebug</useconfiguration>
     </general>
     <makeenvvars>
@@ -125,14 +125,14 @@
         <f77flags/>
       </gdbdebug>
       <kde-3.2>
-        <configargs>--enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
+        <configargs>--disable-unique --enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
         <builddir>../build/kde-3.2</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
-        <ccompiler>GccOptions</ccompiler>
-        <cxxcompiler>GppOptions</cxxcompiler>
-        <f77compiler>G77Options</f77compiler>
+        <ccompiler>kdevgccoptions</ccompiler>
+        <cxxcompiler>kdevgppoptions</cxxcompiler>
+        <f77compiler>kdevpgf77options</f77compiler>
         <ccompilerbinary/>
         <cxxcompilerbinary/>
         <f77compilerbinary/>
@@ -144,6 +144,8 @@
     <subclassing>
       <subclass uifile="/raki/plugins/agsync/agsyncconfig.ui" sourcefile="/raki/plugins/agsync/agsyncconfigimpl.cpp" />
       <subclass uifile="/raki/plugins/agsync/agsyncconfig.ui" sourcefile="/raki/plugins/agsync/agsyncconfigimpl.h" />
+      <subclass uifile="/raki/plugins/agsync/serverconfig.ui" sourcefile="/raki/plugins/agsync/serverconfigimpl.cpp" />
+      <subclass uifile="/raki/plugins/agsync/serverconfig.ui" sourcefile="/raki/plugins/agsync/serverconfigimpl.h" />
     </subclassing>
   </kdevautoproject>
   <kdevfileview>
@@ -299,4 +301,11 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
     <fileconflictcolor>#ffffff</fileconflictcolor>
     <fileunknowncolor>#ffffff</fileunknowncolor>
   </kdevfileviewpart>
+  <kdevcvsservice>
+    <recursivewhenupdate>true</recursivewhenupdate>
+    <prunedirswhenupdate>true</prunedirswhenupdate>
+    <createdirswhenupdate>true</createdirswhenupdate>
+    <recursivewhencommitremove>true</recursivewhencommitremove>
+    <revertoptions>-C</revertoptions>
+  </kdevcvsservice>
 </kdevelop>
