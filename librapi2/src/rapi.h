@@ -22,6 +22,8 @@
 #endif
 
 #ifdef __cplusplus
+namespace synce
+{
 extern "C"
 {
 #endif
@@ -706,6 +708,7 @@ DWORD CeStartReplication( void );
 
 
 #ifdef __cplusplus
+}
 }
 #endif
 
