@@ -40,7 +40,7 @@ the files!</a></li>
 
 <li><a href="serial.php">Serial cable</a></li>
 <li><a href="infrared.php">Infrared</a></li>
-<li>USB cable - not yet documented</li>
+<li><a href="usb.php">USB cable</a></li>
 <li>Bluetooth - not yet documented</li>
 
 </ul>
