@@ -85,11 +85,11 @@ After having downloaded a rapip-package execute commands in the following order:
 <ul>
 <li><b>Rapip:</b> Open konqueror and type <tt>rapip:/</tt> into the URL-Line. You should see the 
 root-directory of your PDA</li>
-<li><b>Raki:</b> Launch the application from the &quot;KMenu->Utilities&quot;-Menu. You will
+<li><b>Raki:</b> Launch the application from the &quot;KMenu-&gt;Utilities&quot;-Menu. You will
  get a new icon located in the system-tray. </li>
 </ul>
 <h2>Screenshots</h2>
-These are from the "MULTIPLE_DEVICES" CVS-Branche<br><br>
+These are from the "MULTIPLE_DEVICES" CVS Branch<br><br>
 <table>
   <tbody>
     <tr>

@@ -18,7 +18,7 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="using.php">Download and use SynCE</a></li>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
-<li><a href="kde/index.php">KDE-Integration</a></li>
+<li><a href="kde/index.php">KDE Integration</a></li>
 <li><a href="#future">Future</a></li>
 <li><a href="#developers">The SynCE developers</a></li>
 <li><a href="capture.php">How to capture packets for analyzing</a></li>
@@ -37,9 +37,15 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>March 9, 2003</b> Thanks to <a href="mailto:thomas@i.rule-the.net">Thomas
-Butter</a>, there are now <a href="debian.php">Debian packages</a> of SynCE
-available for download!</p>
+<p><b>March 23, 2003</b> The Debian packages are now available in an <a
+href="debian.php">apt repository</a>.</p>
+
+<p><b>March 22, 2003</b> Take a look at the <a href="kde/">KDE Integration</a>
+of SynCE, including screenshots!</p>
+
+<p><b>March 9, 2003</b> Thanks to <a
+href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a>, there are now <a
+href="debian.php">Debian packages</a> of SynCE available for download!</p>
 
 <p><b>March 7, 2003</b> Since late february there is a Perl language binding
 available for RAPI. This has been implemented by <a
@@ -242,6 +248,9 @@ KDE 3.x integration in the <tt>rapip</tt> module.</p>
 
 <p><a href="mailto:osar@users.sourceforge.net">Andreas Pohl</a> has created a
 Perl language mapping for RAPI.</p>
+
+<p><a href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a> is
+responsible for making Debian packages of SynCE releases.</p>
 
 </div>
 <?php include 'footer.php'; ?>

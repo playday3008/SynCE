@@ -6,40 +6,64 @@
 
 <h1>SynCE - installing Debian packages</h1>
 
-<p>SynCE is not available in the Debian distribution and can therefore not yet
-be installed with <tt>apt-get</tt>. These packages have been provided by <a
-href="mailto:thomas@i.rule-the.net">Thomas Butter</a>.</p>
-
-<p><b>Note:</b> X.X-X is used as version number below. You will have to
-substitute this for the version you are installing.</p>
+<p>SynCE is not yet available in the Debian distribution but we maintain an apt
+repository on this web site. These packages have been provided by <a
+href="mailto:tbutter@users.sourceforge.net">Thomas Butter</a>.</p>
 
 <ol>
 
-<li class=SPACED><p>Visit the <a href="http://sourceforge.net/project/showfiles.php?group_id=30550"
-target=_blank>project filelist</a> (will be opened in a separate window) and download
-the following Debian packages:</p>
+<li>Update your sources.list:
 
-<p><i>For testing (sarge) and unstable (sid)</i></p>
+<ul>
 
-<b>librapi2_X.X-X_i386.deb</b><br/>
-<b>librapi2-dev_X.X-X_i386.deb</b> (Needed if you want to compile some other module from source code.)<br/>
-<b>librapi2-tools_X.X-X_i386.deb</b><br/>
-<b>libsynce0_X.X-X_i386.deb</b><br/>
-<b>libsynce0-dev_X.X-X_i386.deb</b> (Needed if you want to compile some other module from source code.)<br/>
-<b>synce-dccm_X.X-X_i386.deb</b><br/>
-<b>synce-rra_X.X-X_i386.deb</b> (Only needed for the MultiSync plugin, which is not yet available as a Debian package.)<br/>
-<b>synce-serial_X.X-X_i386.deb</b><br/>
+<li><p><b>For Debian stable (woody)</b>
 
-<p><i>Only for unstable (sid)</i></p>
+<p>Add this line to your /etc/apt/sources.list</p>
 
-<b>synce-trayicon_X.X-X_i386.deb</b> (Recommended for GNOME 2 users.)<br/>
+<pre>
+deb     http://synce.sourceforge.net/debian/woody ./
+</pre>
+</li>
+
+<li><p><b>For Debian testing (sarge) and unstable (sid)</b></p>
+
+<p>Add this line to your /etc/apt/sources.list</p>
+
+<pre>
+deb     http://synce.sourceforge.net/debian/sid ./
+</pre>
+</li>
+</ul>
+
+<li><p>Update your package lists:</p>
+
+<pre>apt-get update</pre>
+</li>
+
+<li><p>Install SynCE:</p>
+
+<pre>apt-get install synce-dccm synce-serial librapi2-tools</pre>
+
+<p>(This should implicitly install the <tt>librapi2</tt> and <tt>libsynce0</tt>
+packages.)</p>
+</li>
+
+<li><p>Install development packages. This is only needed if you want to compile
+some SynCE module from source, or if you want to develop your own tools for
+SynCE.</p>
+
+<pre>apt-get install libsynce0-dev librapi2-dev</pre>
+
+<!-- <p>(This should implicitly install the <tt>libsynce0-dev</tt> package.)</p> -->
 
 </li>
 
-<li class=SPACED>Make sure you are running as the root user.</li>
+<li><p>Install the GNOME tray icon if you are running GNOME 2 on Debian testing
+or unstable:</p>
 
-<li>Install the packages:<br/>
-<pre>dpkg -i *.deb</pre></li>
+<pre>apt-get install synce-trayicon</pre>
+
+</li>
 
 <li class=SPACED>If you want to use a module not available as a Debian package,
 please <a href="tarballs.php">download and compile the source code</a>.</li>
