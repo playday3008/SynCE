@@ -45,6 +45,10 @@ namespace KABC {
     class Addressee;
 }
 
+namespace ICAL {
+    #include <ical.h>
+}
+
 /**
 @author Volker Christian,,,
 */
@@ -81,14 +85,20 @@ public:
     bool setCurrentPartner(uint32_t index);
     QString getVCard(uint32_t type_id, uint32_t object_id);
     uint32_t putVCard(QString& vCard, uint32_t type_id, uint32_t object_id);
-//    QString getVCal(uint32_t type_id, uint32_t object_id);
+    QString getVEvent(uint32_t type_id, uint32_t object_id);
+    uint32_t putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id);
     void deleteObject(uint32_t type_id, uint32_t object_id);
     KABC::Addressee getAddressee(uint32_t type_id, uint32_t object_id);
     bool putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
             uint32_t ceUid, uint32_t *newCeUid);
+
+    bool putEvent(const ICAL::icalcomponent *appointment, uint32_t type_id,
+        uint32_t ceUid, uint32_t *newCeUid);
+    ICAL::icalcomponent *getEvent(uint32_t type_id, uint32_t object_id);
+
     bool ok();
     bool connect();
-    void disconnect(); 
+    void disconnect();
 
 private:
     HRESULT hr;

@@ -64,7 +64,7 @@ static bool insertQString(synce::CEPROPVAL *propval, QString& string)
     return false;
 }
 
-/*
+
 static short extractShort(synce::CEPROPVAL *propval)
 {
     return propval->val.iVal;
@@ -75,7 +75,7 @@ static int extractInt(synce::CEPROPVAL *propval)
 {
     return propval->val.iVal;
 }
-*/
+
 
 /*
 static float extractFloat(synce::CEPROPVAL *propval)
@@ -715,3 +715,242 @@ bool setAdditionalCountry(MyAddress& myAddress, synce::CEPROPVAL *propval,
     
     return true;
 }
+
+
+ICAL::icalproperty *sensitivity(ICAL::icalcomponent *event,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I2 */
+/*
+    ICAL_CLASS_PUBLIC = 10007,
+    ICAL_CLASS_PRIVATE = 10008,
+*/
+    ICAL::icalproperty *prop;
+
+    prop = ICAL::icalproperty_new_class(
+        (extractShort(propval) == 0) ? ICAL::ICAL_CLASS_PUBLIC : ICAL::ICAL_CLASS_PRIVATE);
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *bussy_status(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I2 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *categories(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* ??? */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *notes(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_BLOB */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *subject(ICAL::icalcomponent *event,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_LPWSTR */
+    ICAL::icalproperty *prop = NULL;
+
+    prop = ICAL::icalproperty_new_summary(extractQString(propval).ascii());
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *category(ICAL::icalcomponent *event,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_LPWSTR */
+    ICAL::icalproperty *prop = NULL;
+
+    prop = ICAL::icalproperty_new_categories(extractQString(propval).ascii());
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *location(ICAL::icalcomponent *event,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_LPWSTR */
+    ICAL::icalproperty *prop = NULL;
+
+    prop = ICAL::icalproperty_new_location(extractQString(propval).ascii());
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *appointment_start(ICAL::icalcomponent *event,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_FILETIME */
+    ICAL::icalproperty *prop = NULL;
+    struct ICAL::icaltimetype icalTime;
+
+    QDateTime time = extractQDateTime(propval);
+
+    icalTime = ICAL::icaltime_from_timet(time.toTime_t(), 0 /*const int is_date*/);
+
+    prop = ICAL::icalproperty_new_dtstart(icalTime);
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *appointment_duration(ICAL::icalcomponent *event,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I4 */
+    ICAL::icalproperty *prop = NULL;
+    struct ICAL::icaldurationtype duration;
+
+    duration = ICAL::icaldurationtype_from_int(extractInt(propval) * 60);
+
+    prop = ICAL::icalproperty_new_duration(duration);
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *appointment_type(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I4 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *occurance(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I2 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *reminder_minutes_before_start(ICAL::icalcomponent *ical,
+        synce::CEPROPVAL *propval, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I4 */
+    ICAL::icalcomponent *alarm = ICAL::icalcomponent_new(ICAL::ICAL_VALARM_COMPONENT);
+    ICAL::icalcomponent_add_property(alarm, ICAL::icalproperty_new_action(ICAL::ICAL_ACTION_DISPLAY));
+    ICAL::icalcomponent_add_property(alarm, ICAL::icalproperty_new_description(""));
+    ICAL::icalcomponent_add_property(alarm, ICAL::icalproperty_new_trigger(
+            ICAL::icaltriggertype_from_int(-extractInt(propval) * 60)));
+
+    ICAL::icalcomponent_add_component(ical, alarm);
+
+    return NULL;
+}
+
+ICAL::icalproperty *reminder_enabled(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I2 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *reminder_sound_file(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_LPWSTR */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+ICAL::icalproperty *reminder_options(ICAL::icalcomponent *event,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+{
+/* CEVT_I4 */
+    ICAL::icalproperty *prop = NULL;
+
+    if (prop != NULL) {
+        ICAL::icalcomponent_add_property(event, prop);
+    } else {
+        kdDebug(2120) << __FUNCTION__ << endl;
+    }
+    return prop;
+}
+
+

@@ -31,6 +31,9 @@
 #include <rapi.h>
 
 #include <kabc/addressee.h>
+namespace ICAL {
+    #include <ical.h>
+}
 #include <qstring.h>
 
 /**
@@ -139,16 +142,40 @@ bool setAdditionalZipCode(MyAddress&, synce::CEPROPVAL *propval, QString *store,
 bool setAdditionalCountry(MyAddress&, synce::CEPROPVAL *propval, QString *store,
         bool read = false);
 
-
 struct _contact_ids {
     unsigned int id;
     int type;
-    bool (*function)(MyAddress&, synce::CEPROPVAL *propval,QString *store,
+    bool (*function)(MyAddress&, synce::CEPROPVAL *propval, QString *store,
             bool read);
 };
 
 typedef struct _contact_ids contact_ids_t;
 typedef contact_ids_t *contact_ids_p;
 
- 
+
+ICAL::icalproperty *sensitivity(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *bussy_status(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *categories(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *notes(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *subject(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *category(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *location(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *appointment_start(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *appointment_duration(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *appointment_type(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *occurance(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *reminder_minutes_before_start(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *reminder_enabled(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *reminder_sound_file(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+ICAL::icalproperty *reminder_options(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+
+struct _event_ids {
+    unsigned int id;
+    int type;
+    ICAL::icalproperty *(*function)(ICAL::icalcomponent *ical, synce::CEPROPVAL *propva, QString *store, bool read);
+};
+
+typedef struct _event_ids event_ids_t;
+typedef event_ids_t *event_ids_p;
+
 #endif

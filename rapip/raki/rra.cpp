@@ -177,6 +177,7 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
     return rraOk;
 }
 
+
 bool Rra::getPartner(uint32_t index, struct Rra::Partner *partner)
 {
     char *name = NULL;
@@ -323,56 +324,6 @@ QString Rra::getVCard(uint32_t type_id, uint32_t object_id)
 }
 
 
-/*
-QString Rra::getVCal(uint32_t type_id, uint32_t object_id)
-{
-    uint8_t* data = NULL;
-    size_t data_size = 0;
-    char *vcard = NULL;
-    uint32_t field_count = 0;
-    synce::CEPROPVAL* propvals = NULL;
-
-    rraOk = true;
-    QString vCard = "";
-
-    if (connect()) {
-        if (!rra_object_get(rra, type_id, object_id, &data,
-                            &data_size)) {
-            rraOk = false;
-        } else {
-            field_count = letoh32(*(uint32_t *)(data + 0));
-            propvals = (synce::CEPROPVAL *)malloc(
-                    sizeof(synce::CEPROPVAL) * field_count);
-            if (!dbstream_to_propvals(data + 8, field_count, propvals)) {
-                rraOk = false;
-            } else if (!appointment_to_vcal(APPOINTMENT_OID_UNKNOWN, propvals,
-                    field_count, &vcard)) {
-                rraOk = false;
-            }
-        }
-        disconnect();
-    }
-
-    if (rraOk) {
-        vCard = vcard;
-    }
-
-    if (data) {
-        free(data);
-    }
-
-    if (propvals) {
-        free(propvals);
-    }
-
-    if (vcard) {
-        free(vcard);
-    }
-
-    return vCard;
-}
-*/
-
 uint32_t Rra::putVCard(QString& vCard, uint32_t type_id, uint32_t object_id)
 {
     uint32_t new_object_id = 0;
@@ -384,7 +335,7 @@ uint32_t Rra::putVCard(QString& vCard, uint32_t type_id, uint32_t object_id)
         const char *vCardc = vCard.ascii();
         if (!rra_contact_from_vcard(vCardc, NULL, &buffer, &buffer_size,
                                     ((object_id != 0) ? RRA_CONTACT_UPDATE :
-                                     RRA_CONTACT_NEW) | RRA_CONTACT_ISO8859_1 |
+                                    RRA_CONTACT_NEW) | RRA_CONTACT_ISO8859_1 |
                                     RRA_CONTACT_VERSION_3_0)) {
             rraOk = false;
         } else if (!rra_object_put(rra, type_id, object_id,
@@ -396,6 +347,73 @@ uint32_t Rra::putVCard(QString& vCard, uint32_t type_id, uint32_t object_id)
         if (buffer) {
             free(buffer);
         }
+        disconnect();
+    }
+
+    return new_object_id;
+}
+
+
+QString Rra::getVEvent(uint32_t type_id, uint32_t object_id)
+{
+    uint8_t* data = NULL;
+    size_t data_size = 0;
+    char *vevent = NULL;
+
+    rraOk = true;
+    QString vEvent = "";
+
+    if (connect()) {
+        if (!rra_object_get(rra, type_id, object_id, &data,
+                &data_size)) {
+            rraOk = false;
+        } else if (!rra_appointment_to_vevent(object_id, data, data_size,
+                &vevent, 0, /*p_tzi*/ NULL)) {
+            rraOk = false;
+        }
+
+        disconnect();
+    }
+
+    if (rraOk) {
+        vEvent = vevent;
+    }
+
+    if (data) {
+        free(data);
+    }
+
+    if (vevent) {
+        free(vevent);
+    }
+
+    return vEvent;
+}
+
+
+uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
+{
+    uint32_t new_object_id = 0;
+    uint8_t *buffer = NULL;
+    size_t buffer_size = 0;
+    rraOk = true;
+
+    if (connect()) {
+        const char *vevent = vEvent.ascii();
+
+        if (!rra_appointment_from_vevent(vevent, NULL, &buffer,
+                &buffer_size, 0)) {
+            rraOk = false;
+        } else if (!rra_object_put(rra, type_id, object_id,
+                (object_id != 0) ? 0x40 : 2, buffer,
+                buffer_size, &new_object_id)) {
+            rraOk = false;
+        }
+
+        if (buffer) {
+            free(buffer);
+        }
+
         disconnect();
     }
 
@@ -467,6 +485,55 @@ contact_ids_t contact_ids[] = {
     {    0xfffe,  0x0013, NULL},
     {0, 0, NULL}
 };
+
+
+event_ids_t event_ids[] = {
+    { 0x0001, 0x0000, NULL }, /* something about repeated appointemnts */
+    { 0x0002, 0x0003, NULL }, /* Unknown */
+    { 0x0004, 0x0002, sensitivity }, /* sensitivity */
+#define SENSITIVITY_PUBLIC  0
+#define SENSITIVITY_PRIVATE 1
+
+    { 0x000f, 0x0002, NULL /* bussy_status */ }, /* bussy status */
+#define BUSY_STATUS_FREE           0
+#define BUSY_STATUS_TENTATIVE      1
+#define BUSY_STATUS_BUSY           2
+#define BUSY_STATUS_OUT_OF_OFFICE  3
+
+    { 0x0016, 0x0000, NULL /* categories */ }, /* Categories */
+    { 0x0017, 0x0041, NULL /* notes */ }, /* Notes */
+    { 0x0037, 0x001f, subject }, /* Subject */
+    { 0x0042, 0x001f, NULL }, /* Unknown */
+    { 0x0067, 0x0041, NULL }, /* Unknown */
+    { 0x4005, 0x001f, category }, /* Cetegory */
+    { 0x4015, 0x0003, NULL }, /* Unknown */
+    { 0x4171, 0x0003, NULL }, /* Unknown */
+    { 0x4208, 0x001f, location }, /* Location */
+    { 0x420d, 0x0040, appointment_start }, /* Appointment start */
+    { 0x4213, 0x0003, appointment_duration }, /* Appointment duration */
+    { 0x4215, 0x0003, NULL /* appointment_type */}, /* Appointment Type */
+#define APPOINTMENT_TYPE_ALL_DAY     1
+#define APPOINTMENT_TYPE_NORMAL      2
+
+    { 0x4223, 0x0002, NULL /* occurance */ }, /* Occurance */
+#define OCCURANCE_ONCE      0
+#define OCCURANCE_REPEATED  1
+
+    { 0x4501, 0x0003, reminder_minutes_before_start }, /* Reminder_minutes_before_start*/
+    { 0x4503, 0x0002, reminder_enabled }, /* Reminder_enabled */
+    { 0x4509, 0x001f, reminder_sound_file }, /* Reminder_sound_file */
+    { 0x450a, 0x0003, reminder_options }, /* Reminder options */
+#define REMINDER_LED 1
+#define REMINDER_VIBRATE 2
+#define REMINDER_DIALOG 4
+#define REMINDER_SOUND 8
+#define REMINDER_REPEAT 16
+
+    { 0xfffd, 0x0013, NULL }, /* Unknown */
+    { 0xfffe, 0x0013, NULL },
+    { 0, 0, NULL }
+};
+
 
 #ifdef __cplusplus
 extern "C"
@@ -587,5 +654,59 @@ bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
         disconnect();
     }
 
+    return true;
+}
+
+
+ICAL::icalcomponent *Rra::getEvent(uint32_t type_id, uint32_t object_id)
+{
+    ICAL::icalcomponent *event = NULL;
+    uint8_t* data = NULL;
+    size_t data_size = 0;
+    uint32_t field_count = 0;
+    synce::CEPROPVAL* propvals = NULL;
+
+    rraOk = true;
+
+    if (connect()) {
+        if (!rra_object_get(rra, type_id, object_id, &data,
+                            &data_size)) {
+            rraOk = false;
+        } else {
+            field_count = letoh32(*(uint32_t *)(data + 0));
+            propvals = (synce::CEPROPVAL *)malloc(sizeof(
+                    synce::CEPROPVAL) * field_count);
+            if (dbstream_to_propvals(data + 8, field_count, propvals)) {
+                event = ICAL::icalcomponent_new(ICAL::ICAL_VEVENT_COMPONENT);
+                for (unsigned int i = 0; i < field_count; i++) {
+                    for (int j = 0; event_ids[j].id; j++) {
+                        if (event_ids[j].id == (propvals[i].propid >> 16)) {
+                            if (event_ids[j].function != NULL) {
+                                ICAL::icalproperty *prop = event_ids[j].function(
+                                        event, &propvals[i], NULL, false);
+                            }
+                        }
+                    }
+                }
+            } else {
+                rraOk = false;
+            }
+            if (propvals) {
+                free(propvals);
+            }
+        }
+        if (data) {
+            free(data);
+        }
+        disconnect();
+    }
+
+    return event;
+}
+
+
+bool Rra::putEvent(const ICAL::icalcomponent *event, uint32_t type_id,
+        uint32_t ceUid, uint32_t *newCeUid)
+{
     return true;
 }
