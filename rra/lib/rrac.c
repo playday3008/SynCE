@@ -293,6 +293,8 @@ bool rrac_send_67(SynceSocket* socket, uint32_t type_id, uint32_t* ids, size_t c
 	Command_67_Header* header;
 	bool success = false;
 	size_t size = sizeof(Command_67_Header) + count * sizeof(uint32_t);
+	uint32_t *packet_ids;
+	int i;
 
 	packet = (uint8_t*)malloc(size);
 	header = (Command_67_Header*)packet;
@@ -303,7 +305,11 @@ bool rrac_send_67(SynceSocket* socket, uint32_t type_id, uint32_t* ids, size_t c
 	header->type_id      = htole32(type_id);
 	header->count        = htole32(count);
 
-	memcpy(packet + sizeof(Command_67_Header), ids, count * sizeof(uint32_t));
+	packet_ids = (uint32_t*)(packet + sizeof (Command_67_Header));
+	for (i = 0; i < count; i++)
+	{
+		packet_ids[i] = htole32 (ids[i]);
+	}
 
 	DUMP("packet 67", packet, size);
 	success = synce_socket_write(socket, packet, size);
