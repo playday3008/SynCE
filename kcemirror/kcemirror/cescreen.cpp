@@ -33,7 +33,6 @@
 #include <kmenubar.h>
 #include <kpopupmenu.h>
 #include <ktoolbar.h>
-#include <kapplication.h>
 #include <kiconloader.h>
 #include <kstatusbar.h>
 #include <khelpmenu.h>

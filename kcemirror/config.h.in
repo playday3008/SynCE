@@ -38,16 +38,6 @@
 #undef HAVE_LIBPTHREAD
 
 /* 
-   Define to 1 if you have the `rapi'
-   library (-lrapi). */
-#undef HAVE_LIBRAPI
-
-/* 
-   Define to 1 if you have the `synce'
-   library (-lsynce). */
-#undef HAVE_LIBSYNCE
-
-/* 
    Define if you have libz */
 #undef HAVE_LIBZ
 
@@ -146,10 +136,6 @@
 #undef KDEMAXPATHLEN
 
 /* 
-   Define if disable unique application check */
-#undef NOTUNIQUE
-
-/* 
    Name of package */
 #undef PACKAGE
 
@@ -210,11 +196,6 @@
 /* 
    Version number of package */
 #undef VERSION
-
-/* 
-   Define if using the dmalloc debugging malloc package
-   */
-#undef WITH_DMALLOC
 
 /* 
    Define to 1 if your processor stores words

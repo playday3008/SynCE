@@ -11,6 +11,6 @@ configure.in
 kcemirror.kdevelop.pcs
 kcemirror.kdevses
 libtool
-stamp-h1.in
+stamp-h.in
 stamp-h1
 subdirs
