@@ -129,7 +129,7 @@ devices are missing.</p>
 <tr><td>Fujitsu-Siemens</td><td>0bf8</td><td>Loox</td><td>1001</td></tr>
 
 <tr><td>HP</td><td>03f0</td><td>
-Jornada 540/548, iPAQ 5550<br>
+Jornada&nbsp;540/548,&nbsp;iPAQ&nbsp;2215/5550/etc<br>
 Jornada 568<br>
 Unknown
 </td><td>
@@ -189,7 +189,8 @@ insmod ipaq vendor=0x049f product=0x0032</pre>
 <a name="twosix"></a>
 <h2>2.5.x or 2.6.x kernel</h2>
 
-<p>You must use 2.6.0 or later in order for the <tt>ipaq</tt> to work!</p>
+<p>You must use 2.6.0 or later in order for the <tt>ipaq</tt> kernel driver to
+work!</p>
 
 <a name="success"></a>
 <h2>Successful USB connection</h2>
