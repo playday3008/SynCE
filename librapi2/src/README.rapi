@@ -5,20 +5,20 @@ List of RAPI command codes:
 
 [i] 00 CeFindFirstFile		
 [i] 01 CeFindNextFile		
-[ ] 02 CeFindClose		
-[ ] 03 CeGetFileAttributes	
-[ ] 04 CeSetFileAttributes	
+[i] 02 CeFindClose		
+[i] 03 CeGetFileAttributes	
+[i] 04 CeSetFileAttributes	
 [i] 05 CeCreateFile		
 [i] 06 CeReadFile		
 [i] 07 CeWriteFile		
 [i] 08 CeCloseHandle		
 [i] 09 CeFindAllFiles		
-[ ] 0a CeFindFirstDatabase	
-[ ] 0b CeFindNextDatabase	
-[ ] 0c CeOidGetInfo		
+[i] 0a CeFindFirstDatabase	
+[i] 0b CeFindNextDatabase	
+[i] 0c CeOidGetInfo		
 [ ] 0d CeCreateDatabase	
-[ ] 0e CeOpenDatabase		
-[ ] 0f CeDeleteDatabase	
+[i] 0e CeOpenDatabase		
+[i] 0f CeDeleteDatabase	
 
 [ ] 10 CeReadRecordProps	
 [ ] 10 CeReadRecordPropsEx
@@ -35,15 +35,15 @@ List of RAPI command codes:
 [i] 1b CeCopyFile		
 [i] 1c CeDeleteFile		
 [ ] 1d CeGetFileSize		
-[ ] 1e CeRegOpenKeyEx		
-[ ] 1f CeRegEnumKeyEx		
+[i] 1e CeRegOpenKeyEx		
+[i] 1f CeRegEnumKeyEx		
 
-[ ] 20 CeRegCreateKeyEx	
-[ ] 21 CeRegCloseKey		
+[i] 20 CeRegCreateKeyEx	
+[i] 21 CeRegCloseKey		
 [ ] 22 CeRegDeleteKey		
-[ ] 23 CeRegEnumValue		
+[i] 23 CeRegEnumValue		
 [ ] 24 CeRegDeleteValue	
-[ ] 25 CeRegQueryInfoKey	
+[i] 25 CeRegQueryInfoKey	
 [ ] 26 CeRegQueryValueEx	
 [ ] 27 CeRegSetValueEx		
 [ ] 28 GetSystemMemoryDivision

@@ -205,6 +205,24 @@ BOOL CeFindNextFile(
 	return return_value;
 }
 
+BOOL CeFindClose(
+		HANDLE hFindFile)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = false;
+	
+	rapi_context_begin_command(context, 0x02);
+	rapi_buffer_write_uint32(context->send_buffer, hFindFile);
+
+	if ( !rapi_context_call(context) )
+		return false;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+	
+	return return_value;
+}
+
 
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
@@ -329,3 +347,40 @@ BOOL CeRemoveDirectory(
 	return return_value;
 }
 
+DWORD CeGetFileAttributes(
+		LPCWSTR lpFileName)
+{
+	RapiContext* context = rapi_context_current();
+	DWORD return_value = 0;
+	
+	rapi_context_begin_command(context, 0x03);
+	rapi_buffer_write_optional_string(context->send_buffer, lpFileName);
+
+	if ( !rapi_context_call(context) )
+		return 0;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+	return return_value;
+}
+
+BOOL CeSetFileAttributes(
+		LPCWSTR lpFileName,
+		DWORD dwFileAttributes)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = 0;
+	
+	rapi_context_begin_command(context, 0x04);
+	rapi_buffer_write_optional_string(context->send_buffer, lpFileName);
+	rapi_buffer_write_uint32(context->send_buffer, dwFileAttributes);
+
+	if ( !rapi_context_call(context) )
+		return 0;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+	return return_value;
+}

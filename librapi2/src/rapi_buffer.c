@@ -8,6 +8,10 @@
 #include <string.h>
 #include <assert.h>
 
+#ifndef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+
 #define RAPI_BUFFER_DEBUG 1
 
 #if RAPI_BUFFER_DEBUG
@@ -212,6 +216,13 @@ bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode)
 	return rapi_buffer_write_optional(buffer, (void*)unicode, size, true);
 }
 
+bool rapi_buffer_write_optional_uint32(RapiBuffer* buffer, uint32_t* data, bool send_data)
+{
+	if (data && send_data)
+		*data = htole32(*data);
+	return rapi_buffer_write_optional(buffer, data, sizeof(uint32_t), send_data);
+}
+
 bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data)
 {
 	/* See http://sourceforge.net/mailarchive/message.php?msg_id=64440 */
@@ -229,6 +240,7 @@ bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, boo
 	}
 }
 
+#if 0
 bool rapi_buffer_write_optional_in(RapiBuffer* buffer, const void* data, size_t size)
 {
 	if (data)
@@ -276,6 +288,7 @@ bool rapi_buffer_write_optional_inout(RapiBuffer* buffer, void* data, size_t siz
 		return rapi_buffer_write_uint32(buffer, 0);
 	}
 }
+#endif
 
 bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size)
 {
@@ -354,6 +367,91 @@ bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
 	}
 	
 	return true;
+}
+
+bool rapi_buffer_read_optional(RapiBuffer* buffer, void* data, size_t max_size)
+{
+	/* See http://sourceforge.net/mailarchive/message.php?msg_id=64440 */
+	uint32_t have_parameter = 0;
+	
+	if (!rapi_buffer_read_uint32(buffer, &have_parameter))
+		return false;
+
+	if (1 == have_parameter)
+	{
+		uint32_t size = 0;
+		uint32_t have_value = 0;
+
+		if (!rapi_buffer_read_uint32(buffer, &size))
+			return false;
+
+		if (!rapi_buffer_read_uint32(buffer, &have_value))
+			return false;
+
+		if (1 == have_value)
+		{
+			int overflow = 0;
+
+			if (data)
+			{
+				if (!rapi_buffer_read_data(buffer, data, MIN(size, max_size)))
+					return false;
+				overflow = size - max_size;
+			}
+			else
+			{
+				overflow = size;
+			}
+
+			if (overflow > 0)
+			{
+				if (data)
+				{
+					rapi_buffer_warning("Overflow by %i bytes. Parameter size is %i bytes but only %i bytes was expected.",
+							overflow, size, max_size);
+				}
+
+				/* skip overflowed bytes */
+				buffer->read_index += overflow;
+			}
+		}
+		else if (0 != have_value)
+		{
+			rapi_buffer_warning("have_value is not a boolean: %i=0x%08x", have_value);
+		}
+		
+	}
+	else if (0 != have_parameter)
+	{
+		rapi_buffer_warning("have_parameter is not a boolean: %i=0x%08x", have_parameter);
+	}
+
+	return true;
+}
+
+bool rapi_buffer_read_optional_uint32(RapiBuffer* buffer, uint32_t* value)
+{
+	bool success =  rapi_buffer_read_optional(buffer, value, sizeof(uint32_t));
+
+	if (success && value)
+	{
+		*value = letoh32(*value);
+	}
+
+	return success;
+}
+
+bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWriteTime)
+{
+	bool success = rapi_buffer_read_optional(buffer, lpftLastWriteTime, sizeof(FILETIME));
+
+	if (success && lpftLastWriteTime)
+	{
+		lpftLastWriteTime->dwLowDateTime  = letoh32(lpftLastWriteTime->dwLowDateTime);
+		lpftLastWriteTime->dwHighDateTime = letoh32(lpftLastWriteTime->dwHighDateTime);
+	}
+
+	return success;
 }
 
 bool rapi_buffer_send(RapiBuffer* buffer, RapiSocket* socket)

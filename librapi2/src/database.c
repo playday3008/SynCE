@@ -3,6 +3,31 @@
 #include "rapi_context.h"
 #include "rapi_endian.h"
 
+BOOL CeDeleteDatabase(/*{{{*/
+		CEOID oid)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = false;
+	
+	rapi_trace("begin");
+	
+	rapi_context_begin_command(context, 0x0f);
+	rapi_buffer_write_uint32(context->send_buffer, oid);
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		goto exit;
+	rapi_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		goto exit;
+	
+exit:
+	return return_value;
+}/*}}}*/
+
 BOOL CeFindAllDatabases(/*{{{*/
 		DWORD dwDbaseType, 
 		WORD wFlags, 
@@ -115,7 +140,57 @@ fail:
 	return false;
 }/*}}}*/
 
-HANDLE CeOpenDatabase(
+HANDLE CeFindFirstDatabase(/*{{{*/
+		DWORD x)
+{
+	RapiContext* context = rapi_context_current();
+	HANDLE return_value = INVALID_HANDLE_VALUE;
+	
+	rapi_trace("begin");
+	
+	rapi_context_begin_command(context, 0x0a);
+	rapi_buffer_write_uint32(context->send_buffer, x);
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		goto exit;
+	rapi_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		goto exit;
+	
+exit:
+	return return_value;
+}/*}}}*/
+
+CEOID CeFindNextDatabase(/*{{{*/
+		HANDLE x)
+{
+	RapiContext* context = rapi_context_current();
+	CEOID return_value = 0;
+	
+	rapi_trace("begin");
+	
+	rapi_context_begin_command(context, 0x0b);
+	rapi_buffer_write_uint32(context->send_buffer, x);
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		goto exit;
+	rapi_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		goto exit;
+	
+exit:
+	return return_value;
+}/*}}}*/
+
+HANDLE CeOpenDatabase(/*{{{*/
 		PCEOID poid, 
 		LPWSTR lpszName, 
 		CEPROPID propid, 
@@ -144,7 +219,7 @@ HANDLE CeOpenDatabase(
 	
 exit:
 	return handle;
-}
+}/*}}}*/
 
 CEOID CeReadRecordProps(/*{{{*/
 		HANDLE hDbase, 

@@ -158,6 +158,12 @@ BOOL CeFindNextFile(
 		HANDLE hFindFile, 
 		LPCE_FIND_DATA lpFindFileData); 
 
+BOOL CeFindClose(
+		HANDLE hFindFile);
+
+DWORD CeGetFileAttributes(
+		LPCWSTR lpFileName);
+
 #define CSIDL_PROGRAMS           0x0002
 #define CSIDL_PERSONAL           0x0005
 #define CSIDL_FAVORITES_GRYPHON  0x0006
@@ -179,6 +185,10 @@ BOOL CeMoveFile(
 
 BOOL CeRemoveDirectory(
 		LPCWSTR lpPathName);
+
+BOOL CeSetFileAttributes(
+		LPCWSTR lpFileName,
+		DWORD dwFileAttributes);
 
 
 /*
@@ -291,11 +301,20 @@ typedef struct _CEDB_FIND_DATA {
 
 #define FAD_SORT_SPECS                  0x0100
 
+BOOL CeDeleteDatabase(
+		CEOID oid);
+
 BOOL CeFindAllDatabases(
 		DWORD dwDbaseType, 
 		WORD wFlags, 
 		LPWORD cFindData, 
 		LPLPCEDB_FIND_DATA ppFindData);
+
+HANDLE CeFindFirstDatabase(
+		DWORD x);
+
+CEOID CeFindNextDatabase(
+		HANDLE x);
 
 HANDLE CeOpenDatabase(
 		PCEOID poid, 
@@ -317,6 +336,66 @@ CEOID CeSeekDatabase(
 		DWORD dwSeekType, 
 		DWORD dwValue, 
 		LPDWORD lpdwIndex);
+
+/*
+ * Registry
+ */
+
+LONG CeRegCreateKeyEx( 
+		HKEY hKey, 
+		LPCWSTR lpszSubKey, 
+		DWORD Reserved, 
+		LPWSTR lpszClass, 
+		DWORD ulOptions, 
+		REGSAM samDesired, 
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes, 
+		PHKEY phkResult, 
+		LPDWORD lpdwDisposition);
+
+LONG CeRegOpenKeyEx(
+		HKEY hKey, 
+		LPCWSTR lpszSubKey, 
+		DWORD ulOptions, 
+		REGSAM samDesired, 
+		PHKEY phkResult);
+
+LONG CeRegCloseKey(
+		HKEY hKey);
+
+LONG CeRegQueryInfoKey( 
+		HKEY hKey, 
+		LPWSTR lpClass, 
+		LPDWORD lpcbClass, 
+		LPDWORD lpReserved, 
+		LPDWORD lpcSubKeys, 
+		LPDWORD lpcbMaxSubKeyLen, 
+		LPDWORD lpcbMaxClassLen, 
+		LPDWORD lpcValues, 
+		LPDWORD lpcbMaxValueNameLen, 
+		LPDWORD lpcbMaxValueLen, 
+		LPDWORD lpcbSecurityDescriptor, 
+		PFILETIME lpftLastWriteTime);
+
+LONG CeRegEnumValue( 
+		HKEY hKey, 
+		DWORD dwIndex, 
+		LPWSTR lpszValueName, 
+		LPDWORD lpcbValueName, 
+		LPDWORD lpReserved, 
+		LPDWORD lpType, 
+		LPBYTE lpData, 
+		LPDWORD lpcbData);
+
+LONG CeRegEnumKeyEx( 
+		HKEY hKey, 
+		DWORD dwIndex, 
+		LPWSTR lpName, 
+		LPDWORD lpcbName, 
+		LPDWORD lpReserved, 
+		LPWSTR lpClass, 
+		LPDWORD lpcbClass, 
+		PFILETIME lpftLastWriteTime);
+
 
 /*
  * Misc functions

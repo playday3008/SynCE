@@ -63,6 +63,11 @@ bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode);
  */
 bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode);
 
+/*
+ * Write an optional DWORD parameter, with adjustment for endianness
+ */
+bool rapi_buffer_write_optional_uint32(RapiBuffer* buffer, uint32_t* data, bool send_data);
+
 /**
  * Write an optional parameter
  */
@@ -102,6 +107,21 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value);
  * Get string with length in number of wide chars
  */
 bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size);
+
+/**
+ * Read an optional parameter
+ */
+bool rapi_buffer_read_optional(RapiBuffer* buffer, void* data, size_t max_size);
+
+/**
+ * Read an optional DWORD parameter
+ */
+bool rapi_buffer_read_optional_uint32(RapiBuffer* buffer, uint32_t* value);
+
+/**
+ * Read an optional FILETIME parameter
+ */
+bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWriteTime);
 
 /**
  * Send a buffer on the socket
