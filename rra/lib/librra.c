@@ -122,13 +122,15 @@ bool rra_get_object_types(RRA* rra, /*{{{*/
 
 			for (i = 0; i < rra->object_type_count; i++)
 			{
+				char* ascii = NULL;
+
 				rra->object_types[i].id          = raw_object_types[i].id;
 				rra->object_types[i].count       = raw_object_types[i].count;
 				rra->object_types[i].total_size  = raw_object_types[i].total_size;
 				rra->object_types[i].modified    = 
 					filetime_to_unix_time(&raw_object_types[i].filetime);
 
-				char* ascii = wstr_to_ascii(raw_object_types[i].name1);
+				ascii = wstr_to_ascii(raw_object_types[i].name1);
 				strcpy(rra->object_types[i].name, ascii);
 				wstr_free_string(ascii);
 			}
