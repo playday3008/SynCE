@@ -76,48 +76,9 @@ This section describes how to correct this problem.</p>
 
 <p>To support other devices the module need to be modified as described below.</p>
 
-<ol> <li>Find the vendor and product IDs for your device. This can for example
-be done with the <code>usbview</code> program which gives output similar to
-that listed below. The IDs are marked with red color:</p>
+<ol>
 
-<pre>serial
-Speed: 12Mb/s (full)
-USB Version:  1.01
-Device Class: ff(vend.)
-Device Subclass: ff
-Device Protocol: ff
-Maximum Default Endpoint Size: 16
-Number of Configurations: 1
-Vendor Id: <span class=RED>0bf8</span>
-Product Id: <span class=RED>1001</span>
-Revision Number:  0.00
-
-Config Number: 1
-        Number of Interfaces: 1
-        Attributes: c0
-        MaxPower Needed:   2mA
-
-        Interface Number: 0
-                Name: serial
-                Alternate Number: 0
-                Class: ff(vend.) 
-                Sub Class: ff
-                Protocol: ff
-                Number of Endpoints: 2
-
-                        Endpoint Address: 81
-                        Direction: in
-                        Attribute: 2
-                        Type: Bulk
-                        Max Packet Size: 64
-                        Interval: 0ms
-
-                        Endpoint Address: 02
-                        Direction: out
-                        Attribute: 2
-                        Type: Bulk
-                        Max Packet Size: 64
-                        Interval: 0ms</pre>
+<li class=SPACED>Find the <a href="usbids.php">vendor and product IDs</a> for your device.</li>
 
 <li>Find this part of <code>ipaq.h</code>:</li>
 

@@ -18,6 +18,7 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="using.php">Download and use SynCE</a></li>
 <li><a href="ip_forward.php">IP forwarding</a></li>
+<li><a href="hotplug.php">Linux hotplug script</a></li>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
 <li><a href="kde/index.php">KDE integration</a></li>
 <li><a href="macosx.php">Mac OS X support</a></li>
@@ -38,6 +39,10 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 
 <a name="news"></a>
 <h2>News</h2>
+
+<p><b>June 1, 2003</b> Provide a how-to on making synce-serial-start run
+automatically on connect with a <a href="hotplug.php">Linux hotplug
+script</a>.</p>
 
 <p><b>April 9, 2003</b> Added documentation on <a href="ip_forward.php">IP
 forwarding</a> some very small <a href="macosx.php">documentation for Mac OS X
