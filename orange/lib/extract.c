@@ -1,7 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
-#include <unshield.h>
+#include <libunshield.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -33,14 +33,17 @@ bool orange_extract_is_cab(/*{{{*/
     char filename[256];
     char* p;
 
-    snprintf(filename, sizeof(filename), "%s/%s", 
-        output_directory, unshield_file_name(unshield, i));
+    if (unshield_file_is_valid(unshield, i))
+    {
+      snprintf(filename, sizeof(filename), "%s/%s", 
+          output_directory, unshield_file_name(unshield, i));
 
-    for (p = filename; *p != '\0'; p++)
-      if (!isprint(*p))
-        *p = '_';
+      for (p = filename; *p != '\0'; p++)
+        if (!isprint(*p))
+          *p = '_';
 
-    unshield_file_save(unshield, i, filename);
+      unshield_file_save(unshield, i, filename);
+    }
   }
 
   success = true;
