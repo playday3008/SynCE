@@ -45,6 +45,8 @@ typedef struct _SynceConnection
   /** Updated by the event callback */
   GHashTable* objects[3];
 
+  bool enough_ids[3];
+
   /** Thread */
   pthread_t thread;
 

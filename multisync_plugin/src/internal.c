@@ -4,15 +4,9 @@
 #include <rra/appointment.h>
 #include <rra/contact.h>
 #include <rra/task.h>
+#include <rra/uint32vector.h>
 #include <rapi.h>
 #include <string.h>
-
-typedef struct
-{
-  int index;
-  uint32_t* ids;
-  int count;
-} IdArray;
 
 typedef struct 
 {
@@ -40,7 +34,7 @@ int synce_index_from_sync_object_type(sync_object_type objtype)/*{{{*/
   return index;
 }/*}}}*/
 
-void synce_free_object_data(SynceObject* object)
+void synce_free_object_data(SynceObject* object)/*{{{*/
 {
   if (!object)
     return;
@@ -61,6 +55,18 @@ void synce_free_object_data(SynceObject* object)
   }
 
   object->data = NULL;
+}/*}}}*/
+
+static void synce_test_for_enough_ids(SynceConnection* connection, int index)
+{
+  if (!connection->enough_ids[index])
+  {
+    RRA_SyncMgrType* type = rra_syncmgr_type_from_id(
+        connection->syncmgr, connection->type_ids[index]);
+
+    if (g_hash_table_size(connection->objects[index]) == type->count)
+      connection->enough_ids[index] = true;
+  }
 }
 
 static bool synce_callback (/*{{{*/
@@ -119,15 +125,17 @@ static bool synce_callback (/*{{{*/
 
     object->event = event;
     object->change_counter = ++connection->change_counter;
- }
+  }
 
+  synce_test_for_enough_ids(connection, index);
+  
   if (count && SYNCMGR_TYPE_EVENT_UNCHANGED != event)
   {
-   /* Notify MultiSync that something has changed */
+    /* Notify MultiSync that something has changed */
     sync_object_changed(connection->handle);
   }
-  
-	synce_trace("<-----");
+
+  synce_trace("<-----");
 
   return true;
 }/*}}}*/
@@ -141,18 +149,14 @@ bool synce_subscribe(SynceConnection* connection)/*{{{*/
   {
     if (connection->commondata.object_types & types_and_names[i].type)
     {
-      connection->type_ids[i] =  rra_syncmgr_type_from_name(
+      RRA_SyncMgrType* type = rra_syncmgr_type_from_name(
           connection->syncmgr, 
           types_and_names[i].name);
       
-      if (RRA_SYNCMGR_INVALID_TYPE_ID == connection->type_ids[i])
+      if (type)
       {
-        /* Synchronization of this type is not supported! */
-        synce_warning("Synchronization of '%s' events is not supported",
-            types_and_names[i].name);
-      }
-      else
-      {
+        connection->type_ids[i] = type->id;
+
         rra_syncmgr_subscribe(
             connection->syncmgr, 
             connection->type_ids[i], 
@@ -160,6 +164,12 @@ bool synce_subscribe(SynceConnection* connection)/*{{{*/
             connection);
 
         connection->objects[i] = g_hash_table_new(g_int_hash, g_int_equal);
+      }
+      else
+      {
+        /* Synchronization of this type is not supported! */
+        synce_warning("Synchronization of '%s' events is not supported",
+            types_and_names[i].name);
       }
     }
   }
@@ -238,7 +248,7 @@ bool synce_join_thread(SynceConnection* connection)/*{{{*/
   return true;
 }/*}}}*/
 
-bool synce_connect(SynceConnection* connection)
+bool synce_connect(SynceConnection* connection)/*{{{*/
 {
   bool success = false;
   HRESULT hr;
@@ -302,9 +312,9 @@ bool synce_connect(SynceConnection* connection)
 
 exit:
   return success;
-}
+}/*}}}*/
 
-void synce_disconnect(SynceConnection* connection)
+void synce_disconnect(SynceConnection* connection)/*{{{*/
 {
   if (!connection)
   {
@@ -323,7 +333,7 @@ void synce_disconnect(SynceConnection* connection)
   g_free(connection);
 
   CeRapiUninit();
-}
+}/*}}}*/
 
 static void synce_add_object_to_change_info(/*{{{*/
     SynceObject* object, 
@@ -431,51 +441,56 @@ exit:
   return true;
 }/*}}}*/
 
-static void synce_retrieve_object_data(
-    SynceConnection* connection, 
-    IdArray* id_array)
+static void synce_retrieve_object_data(/*{{{*/
+    SynceConnection* connection,
+    int index,
+    RRA_Uint32Vector* vector)
 {
   bool success;
 
   synce_trace("Retrieving %i objects of type %08x", 
-      id_array->count, connection->type_ids[id_array->index]);
+      vector->used, connection->type_ids[index]);
 
   success = rra_syncmgr_get_multiple_objects(
       connection->syncmgr,
-      connection->type_ids[id_array->index],
-      id_array->count,
-      id_array->ids,
+      connection->type_ids[index],
+      vector->used,
+      vector->items,
       synce_save_object_data,
       connection
       );
-}
+
+  if (!success)
+  {
+    synce_error("Failed to retrieve object data");
+  }
+}/*}}}*/
 
 /** Add object ID to array if we need to retreive its data */
-static void synce_add_to_id_array(
-    IdArray* id_array, 
+static void synce_add_existing_to_id_vector(/*{{{*/
+    RRA_Uint32Vector* vector,
     SynceObject* object)
 {
   if (object->event != SYNCMGR_TYPE_EVENT_DELETED && !object->data)
   {
-    synce_trace("Adding ID %08x of type %08x to ID array", 
-        object->object_id, object->type_id);
+    /*synce_trace("Adding ID %08x of type %08x to ID array", 
+        object->object_id, object->type_id);*/
 
-    id_array->ids[ id_array->count ] = object->object_id;
-    id_array->count++;
+    rra_uint32vector_add(vector, object->object_id);
   }
-}
+}/*}}}*/
 
-/** Proxy to synce_add_to_id_array */
-static void synce_add_changed_to_id_array_GHFunc(/*{{{*/
+/** Proxy to synce_add_existing_to_id_vector */
+static void synce_add_changed_to_id_vector_GHFunc(/*{{{*/
     gpointer key,
     gpointer value, 
     gpointer cookie)
 {
-  IdArray* id_array = (IdArray*)cookie;
+  RRA_Uint32Vector* vector = (RRA_Uint32Vector*)cookie;
   SynceObject* object = (SynceObject*)value;
 
   if (object->event != SYNCMGR_TYPE_EVENT_UNCHANGED)
-    synce_add_to_id_array(id_array, object);
+    synce_add_existing_to_id_vector(vector, object);
 }
 
 /** Proxy to for synce_add_object_to_change_info */
@@ -510,49 +525,112 @@ static void synce_add_changed_to_change_info_GHFunc(/*{{{*/
   synce_add_object_to_change_info(object, change_type, info);
 }/*}}}*/
 
+/** Proxy to synce_add_existing_to_id_vector for hash table entries */
+static void synce_add_existing_to_id_vector_GHFunc(/*{{{*/
+    gpointer key,
+    gpointer value,
+    gpointer cookie)
+{
+  RRA_Uint32Vector* vector = (RRA_Uint32Vector*)cookie;
+  SynceObject* object = (SynceObject*)value;
+
+  if (object->event != SYNCMGR_TYPE_EVENT_DELETED)
+    synce_add_existing_to_id_vector(vector, object);
+}/*}}}*/
+ 
+static void synce_add_deleted_items_to_change_info(
+    SynceConnection* connection,
+    int index,
+    change_info* info)
+{
+  RRA_Uint32Vector* current_ids = rra_uint32vector_new();
+  RRA_Uint32Vector* deleted_ids = rra_uint32vector_new();
+
+  synce_trace("----->");
+
+  synce_trace("Getting deleted object IDs");
+
+  /* So, we know all items on the device now. Put them in a neat array. */
+  g_hash_table_foreach(
+      connection->objects[index], 
+      synce_add_existing_to_id_vector_GHFunc, 
+      current_ids);
+
+  if (rra_syncmgr_get_deleted_object_ids(
+        connection->syncmgr,
+        connection->type_ids[index],
+        current_ids,
+        deleted_ids))
+  {
+    /* Add deleted object IDs to change_info */
+    unsigned i;
+
+    for (i = 0; i < deleted_ids->used; i++)
+    {
+      /* Create new object and add to hash table */
+      SynceObject* object = g_new0(SynceObject, 1);
+
+      synce_trace("Object with type %08x and ID %08x has been deleted",
+          connection->type_ids[index], deleted_ids->items[i]);
+
+      object->type_index  = index;
+      object->type_id     = connection->type_ids[index];
+      object->object_id   = deleted_ids->items[i];
+      object->event       = SYNCMGR_TYPE_EVENT_DELETED;
+      object->change_counter = ++connection->change_counter;
+
+      g_hash_table_insert(
+          connection->objects[index],
+          &object->object_id,
+          object);
+    }
+  }
+  else
+  {
+    synce_warning("Failed to find out which items had been deleted.");
+  }
+
+  rra_uint32vector_destroy(current_ids, true);
+  rra_uint32vector_destroy(deleted_ids, true);
+
+  synce_trace("<-----");
+}
+
 static bool synce_get_changes(/*{{{*/
     SynceConnection* connection,
     int index,
     change_info* info)
 {
-  IdArray id_array;
-  
+  RRA_Uint32Vector* changed_ids = rra_uint32vector_new();
+
   synce_trace("Get changes for type %08x", 
       connection->type_ids[index]);
 
-  memset(&id_array, 0, sizeof(IdArray));
-  id_array.index = index;
+  synce_test_for_enough_ids(connection, index);
 
-  /* Create arrays with room for all objects */
-  id_array.ids = g_new0(uint32_t, g_hash_table_size(connection->objects[index]));
+  if (connection->enough_ids[index])
+  {
+    synce_add_deleted_items_to_change_info(
+        connection, index, info);
+  }
 
   g_hash_table_foreach(
       connection->objects[index], 
-      synce_add_changed_to_id_array_GHFunc, 
-      &id_array);
+      synce_add_changed_to_id_vector_GHFunc, 
+      changed_ids);
 
-  synce_retrieve_object_data(connection, &id_array);
+  synce_retrieve_object_data(connection, index, changed_ids);
 
   g_hash_table_foreach(
       connection->objects[index], 
       synce_add_changed_to_change_info_GHFunc, 
       info);
 
+  rra_uint32vector_destroy(changed_ids, true);
   return true;
 }/*}}}*/
 
-/** Proxy to synce_add_to_id_array for hash table entries */
-static void synce_add_to_id_array_GHFunc(/*{{{*/
-    gpointer key,
-    gpointer value,
-    gpointer cookie)
-{
-  IdArray* id_array = (IdArray*)cookie;
-  SynceObject* object = (SynceObject*)value;
 
-  synce_add_to_id_array(id_array, object);
-}/*}}}*/
- 
 /** Proxy to synce_add_object_to_change_info for hash table entries */
 static void synce_add_any_to_change_info_GHFunc(/*{{{*/
     gpointer key,
@@ -571,29 +649,24 @@ static bool synce_get_everything(/*{{{*/
     int index,
     change_info* info)
 {
-  IdArray id_array;
+  RRA_Uint32Vector* existing_ids = rra_uint32vector_new();
 
   synce_trace("Get all data for type %08x", 
       connection->type_ids[index]);
 
-  memset(&id_array, 0, sizeof(IdArray));
-  id_array.index = index;
-
-  /* Create arrays with room for all objects */
-  id_array.ids = g_new0(uint32_t, g_hash_table_size(connection->objects[index]));
-
   g_hash_table_foreach(
       connection->objects[index], 
-      synce_add_to_id_array_GHFunc, 
-      &id_array);
+      synce_add_existing_to_id_vector_GHFunc, 
+      existing_ids);
 
-  synce_retrieve_object_data(connection, &id_array);
+  synce_retrieve_object_data(connection, index, existing_ids);
 
   g_hash_table_foreach(
       connection->objects[index], 
       synce_add_any_to_change_info_GHFunc, 
       info);
 
+  rra_uint32vector_destroy(existing_ids, true);
   return true;
 }/*}}}*/
 
@@ -641,33 +714,53 @@ bool synce_get_all_changes(/*{{{*/
   return result;
 }/*}}}*/
 
-static void synce_mark_as_unchanged_GHFunc(/*{{{*/
+static gboolean synce_mark_as_unchanged_GHRFunc(/*{{{*/
     gpointer key,
     gpointer value,
     gpointer cookie)
 {
+  gboolean remove_item = FALSE;
   SynceConnection* connection = (SynceConnection*)cookie;
   SynceObject* object = (SynceObject*)value;
 
-  if (object->event != SYNCMGR_TYPE_EVENT_UNCHANGED &&
-      object->change_counter <= connection->last_change_counter)
+  if (object->change_counter <= connection->last_change_counter)
   {
-    synce_trace("Marking object %08x of type %08x as unchanged",
-        object->object_id, object->type_id);
-
-    if (!rra_syncmgr_mark_object_unchanged(
-        connection->syncmgr,
-        object->type_id,
-        object->object_id))
+    switch (object->event)
     {
-      synce_warning("Failed to mark object %08x of type %08x as unchanged",
-          object->type_id,
-          object->object_id);
-    }
+      case SYNCMGR_TYPE_EVENT_CHANGED:
+        synce_trace("Marking object %08x of type %08x as unchanged",
+            object->object_id, object->type_id);
 
-    object->event = SYNCMGR_TYPE_EVENT_UNCHANGED;
+        if (!rra_syncmgr_mark_object_unchanged(
+              connection->syncmgr,
+              object->type_id,
+              object->object_id))
+        {
+          synce_warning("Failed to mark object %08x of type %08x as unchanged",
+              object->type_id,
+              object->object_id);
+        }
+
+        object->event = SYNCMGR_TYPE_EVENT_UNCHANGED;
+        remove_item = FALSE;
+        break;
+
+      case SYNCMGR_TYPE_EVENT_DELETED:
+        synce_trace("Forgetting all about object %08x of type %08x",
+            object->object_id, object->type_id);
+
+        g_free(object->data);
+        g_free(object);
+        remove_item = TRUE;
+        break;
+
+      default:
+        /* ignore */
+        break;
+    }
   }
-  
+
+  return remove_item;
 }/*}}}*/
  
 bool synce_mark_objects_as_unchanged(/*{{{*/
@@ -681,9 +774,9 @@ bool synce_mark_objects_as_unchanged(/*{{{*/
   {
     if (connection->commondata.object_types & types_and_names[i].type)
     {
-      g_hash_table_foreach(
+      g_hash_table_foreach_remove(
           connection->objects[i], 
-          synce_mark_as_unchanged_GHFunc, 
+          synce_mark_as_unchanged_GHRFunc, 
           connection);
     }
   }

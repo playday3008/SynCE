@@ -68,6 +68,8 @@ void sync_disconnect(SynceConnection* connection)
   synce_disconnect(connection);
 
   sync_set_requestdone(connection->handle);
+
+	synce_trace("<-----");
 }
 
 /* get_changes()
@@ -170,10 +172,10 @@ void syncobj_modify(
   
 	synce_trace("----->");
 
-  if (!synce_connect(connection))
+  if (!connection->syncmgr)
   {
     sync_set_requestfailederror(
-        "Failed to initialize the SynCE synchronization manager",
+        "The SynCE synchronization manager is not initialized. Please restart MultiSync.",
         connection->handle);
 		goto exit;
   }
@@ -288,8 +290,6 @@ void syncobj_modify(
         "Failed to put object",
         connection->handle);
 
-    /* This error was probably fatal, so close connection */
-    synce_disconnect(connection);
     goto exit;
   }
       
@@ -416,6 +416,14 @@ void syncobj_get_recurring(
 void sync_done(SynceConnection* connection, gboolean success) 
 {
 	synce_trace("----->");
+
+  if (!connection->syncmgr)
+  {
+    sync_set_requestfailederror(
+        "The SynCE synchronization manager is not initialized. Please restart MultiSync.",
+        connection->handle);
+		goto exit;
+  }
 
   if (success)
     synce_mark_objects_as_unchanged(connection);
