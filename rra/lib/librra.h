@@ -46,6 +46,29 @@ typedef bool (*NotificationFunc)(
     ObjectIdArray* object_id_array,
     void* cookie);
 
+typedef struct 
+{
+  int32_t Bias;                       /* 00 */
+  WCHAR Name[32];                     /* 04 */
+  uint16_t unknown0;                  /* 44 */
+  uint16_t StandardMonthOfYear;       /* 46 */
+  uint16_t unknown1;                  /* 48 */
+  uint16_t StandardInstance;          /* 4a */
+  uint16_t StandardStartHour;         /* 4c */
+  uint8_t unknown2[6];                /* 4e */
+  int32_t StandardBias;               /* 54 */
+  WCHAR Description[32];              /* 58 */
+  uint16_t unknown3;                  /* 98 */
+  uint16_t DaylightMonthOfYear;       /* 9a */
+  uint16_t unknown4;                  /* 9c */
+  uint16_t DaylightInstance;          /* 9e */
+  uint16_t DaylightStartHour;         /* a0 */
+  uint8_t unknown5[6];                /* a2 */
+  int32_t DaylightBias;               /* b0 */
+} TimeZoneInformation;
+
+TimeZoneInformation* rra_get_time_zone_information(RRA* rra);
+
 
 /* connection to RRA */
 
@@ -208,7 +231,8 @@ bool rra_appointment_to_vevent(
     const uint8_t* data,
     size_t data_size,
     char** vevent,
-    uint32_t flags);
+    uint32_t flags,
+    TimeZoneInformation* tzi);
 
 bool rra_appointment_from_vevent(
     const char* vevent,
@@ -244,29 +268,6 @@ bool rra_task_from_vtodo(
     uint32_t flags);
 #endif /* SWIG */
 
-
-typedef struct 
-{
-  int32_t Bias;                       /* 00 */
-  WCHAR Name[32];                     /* 04 */
-  uint16_t unknown0;                  /* 44 */
-  uint16_t StandardMonthOfYear;       /* 46 */
-  uint16_t unknown1;                  /* 48 */
-  uint16_t StandardInstance;          /* 4a */
-  uint16_t StandardStartHour;         /* 4c */
-  uint8_t unknown2[6];                /* 4e */
-  int32_t StandardBias;               /* 54 */
-  WCHAR Description[32];              /* 58 */
-  uint16_t unknown3;                  /* 98 */
-  uint16_t DaylightMonthOfYear;       /* 9a */
-  uint16_t unknown4;                  /* 9c */
-  uint16_t DaylightInstance;          /* 9e */
-  uint16_t DaylightStartHour;         /* a0 */
-  uint8_t unknown5[6];                /* a2 */
-  int32_t DaylightBias;               /* b0 */
-} TimeZoneInformation;
-
-TimeZoneInformation* rra_get_time_zone_information(RRA* rra);
 
 #ifdef __cplusplus
 }

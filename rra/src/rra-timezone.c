@@ -2,10 +2,12 @@
 #include "timezone.h"
 #include "generator.h"
 #include <rapi.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-const char* month_names[12] =
+const char* month_names[12] =/*{{{*/
 {
   "January",
   "Februrary",
@@ -19,17 +21,17 @@ const char* month_names[12] =
   "October",
   "November",
   "December"
-};
+};/*}}}*/
 
-static const char* month_string(unsigned month)
+static const char* month_string(unsigned month)/*{{{*/
 {
   if (month >= 1 && month <= 12)
     return month_names[month-1];
   else
     return "Unknown";
-}
+}/*}}}*/
 
-static const char* instance_string(unsigned instance)
+static const char* instance_string(unsigned instance)/*{{{*/
 {
   switch (instance)
   {
@@ -40,9 +42,9 @@ static const char* instance_string(unsigned instance)
     case 5: return "Last week of month";
     default: return "Unknown";
   }
-}
+}/*}}}*/
 
-void dump_vtimezone(TimeZoneInformation* tzi)
+void dump_vtimezone(TimeZoneInformation* tzi)/*{{{*/
 {
   Generator* generator = generator_new(0, NULL);
   
@@ -61,7 +63,7 @@ void dump_vtimezone(TimeZoneInformation* tzi)
     fprintf(stderr, "Failed to generate VTIMEZONE\n");
 
   generator_destroy(generator);
-}
+}/*}}}*/
 
 int main(int argc, char** argv)
 {
@@ -79,6 +81,23 @@ int main(int argc, char** argv)
   {
     fprintf(stderr, "%s: Failed to get time zone information\n", argv[0]);
     goto exit;
+  }
+
+  if (argc >= 2)
+  {
+    const char* filename = argv[1];
+    FILE* file = fopen(filename, "w");
+
+    if (file)
+    {
+      fwrite(&tzi, sizeof(TimeZoneInformation), 1, file);
+      fclose(file);
+    }
+    else
+    {
+      fprintf(stderr, "%s: Failed to open file %s: %s\n", 
+          argv[0], filename, strerror(errno));
+    }
   }
 
   ascii_name        = wstr_to_ascii(tzi.Name);

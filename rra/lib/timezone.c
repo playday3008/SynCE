@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define REGISTRY_KEY_NAME     "Time"
 #define REGISTRY_VALUE_NAME   "TimeZoneInformation"
@@ -103,12 +104,6 @@ void time_zone_get_id(TimeZoneInformation* tzi, char** id)/*{{{*/
   wstr_free_string(name);
 }/*}}}*/
 
-static void offset_string(char* buffer, size_t size, int default_bias, int extra_bias)/*{{{*/
-{
-  int bias = default_bias + extra_bias;
-  snprintf(buffer, size, "%+03i%02i", -bias / 60, abs(bias) % 60);
-}/*}}}*/
-
 static const unsigned days_of_month[12] =/*{{{*/
 {
   31,  /* jan */
@@ -164,6 +159,86 @@ static unsigned day_from_month_and_week(unsigned month, unsigned week)/*{{{*/
   }
 
   return result;
+}/*}}}*/
+
+static bool using_daylight_saving(TimeZoneInformation* tzi, struct tm* time_struct)
+{
+  int month = time_struct->tm_mon + 1;
+
+  if (tzi->StandardMonthOfYear > tzi->DaylightMonthOfYear)
+  {
+    if (month < tzi->DaylightMonthOfYear || month > tzi->StandardMonthOfYear)
+      return false;
+    else if (month > tzi->DaylightMonthOfYear && month < tzi->StandardMonthOfYear)
+      return true;
+    
+    if (month == tzi->StandardMonthOfYear)
+    {
+      unsigned day = day_from_month_and_week(tzi->StandardMonthOfYear, tzi->StandardInstance);
+      if (time_struct->tm_mday < day)
+        return !false;
+      else if (time_struct->tm_mday > day)
+        return !true;
+      else /* Standard start day */
+      {
+        if (time_struct->tm_hour >= tzi->StandardStartHour)
+          return !true;
+        else
+          return !false;
+      }
+    }
+    
+    if (month == tzi->DaylightMonthOfYear)
+    {
+      unsigned day = day_from_month_and_week(tzi->DaylightMonthOfYear, tzi->DaylightInstance);
+      if (time_struct->tm_mday < day)
+        return false;
+      else if (time_struct->tm_mday > day)
+        return true;
+      else /* daylight saving start day */
+      {
+        if (time_struct->tm_hour >= tzi->DaylightStartHour)
+          return true;
+        else
+          return false;
+      }
+    }
+
+    synce_error("Month is %i", month);
+    assert(0);  /* should not be reached */
+  }
+  else
+  {
+    synce_error("Cannot handle this time zone");
+  }
+    
+  return false;
+}
+
+time_t time_zone_convert_to_utc(TimeZoneInformation* tzi, time_t unix_time)
+{
+  time_t result = (time_t)0xffffffff;
+  struct tm time_struct;
+  
+  if (localtime_r(&unix_time, &time_struct))
+  {
+    time_struct.tm_min += tzi->Bias;
+
+    if (using_daylight_saving(tzi, &time_struct))
+      time_struct.tm_min += tzi->DaylightBias;
+    else
+      time_struct.tm_min += tzi->StandardBias;
+
+    result = mktime(&time_struct);
+  }
+
+  return result;
+}
+
+static void offset_string(char* buffer, size_t size, int default_bias, int extra_bias)/*{{{*/
+{
+  int bias = default_bias + extra_bias;
+  snprintf(buffer, size, "%+03i%02i", -bias / 60, abs(bias) % 60);
 }/*}}}*/
 
 static bool time_string(char* buffer, size_t size, /*{{{*/

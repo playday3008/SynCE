@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "common_handlers.h"
 #include "recurrence.h"
+#include "timezone.h"
 #include "../rra_config.h"
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
@@ -99,7 +100,8 @@ bool rra_appointment_to_vevent(/*{{{*/
     const uint8_t* data,
     size_t data_size,
     char** vevent,
-    uint32_t flags)
+    uint32_t flags,
+    TimeZoneInformation* tzi)
 {
 	bool success = false;
   Generator* generator = NULL;
@@ -188,11 +190,21 @@ bool rra_appointment_to_vevent(/*{{{*/
 
       case APPOINTMENT_TYPE_NORMAL:
         type   = "DATE-TIME";
-        format = "%Y%m%dT%H%M%S";
+        if (tzi)
+          format = "%Y%m%dT%H%M%SZ";
+        else
+          format = "%Y%m%dT%H%M%S";
 
         /* minutes to seconds */
         end_time = start_time + 
           event_generator_data.duration->val.lVal * 60;
+
+        if (tzi)
+        {
+          start_time = time_zone_convert_to_utc(tzi, start_time);
+          end_time   = time_zone_convert_to_utc(tzi, end_time);
+        }
+      
         break;
 
       default:
