@@ -28,7 +28,7 @@ SynceInfo* synce_info_new(const char* filename)
 	config = readConfigFile(connection_filename);
 	if (!config)
 	{
-		synce_error("unable to open file: %s", filename);
+		synce_error("unable to open file: %s", connection_filename);
 		goto exit;
 	}
 
