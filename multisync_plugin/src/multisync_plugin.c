@@ -27,19 +27,89 @@ uint32_t synce_object_type_to_id(sync_object_type object_type)/*{{{*/
 	return type_id;
 }/*}}}*/
 
+SynceConnection* synce_connection_new(sync_pair* handle, connection_type type)
+{
+	SynceConnection* sc = g_new0(SynceConnection, 1);
+
+	sc->handle = handle;
+	sc->type   = type;
+
+/*	sync_set_requestdone(sc->handle);*/
+	return sc;
+}
+
+void synce_connection_destroy(SynceConnection* sc)
+{
+  if (sc) 
+  {
+    rra_free(sc->rra);
+    g_free(sc);
+  }
+}
+
+static const char * STATE_FILE = "synce";
+
+static char * get_state_filename(SynceConnection* sc)
+{
+  return g_strdup_printf(
+      "%s/%s_%s", 
+      sc->handle->datapath, 
+      (sc->type == CONNECTION_TYPE_LOCAL ? "local" : "remote"), 
+      STATE_FILE);
+}
+
+void synce_connection_load_state(SynceConnection* sc)
+{
+  char *filename;
+  FILE *f;
+  char line[256];
+
+  filename = get_state_filename(sc);
+
+  if ((f = fopen(filename, "r"))) 
+  {
+    while (fgets(line, 256, f)) 
+    {
+      char prop[128], data[256];
+      if (sscanf(line, "%128s = %256[^\n]", prop, data) == 2)
+      {
+        if (!strcasecmp(prop, "get_all"))
+          sc->get_all = (0 == strcasecmp(data, "yes"));
+      }
+    }
+    
+    fclose(f);
+  }
+  
+  g_free(filename);
+}
+  
+void synce_connection_save_state(SynceConnection* sc)
+{
+  char *filename;
+  FILE *f;
+
+  filename = get_state_filename(sc);
+
+  if ((f = fopen(filename, "w"))) 
+  {
+    fprintf(f, "get_all = %s\n", sc->get_all ? "yes" : "no");
+    fclose(f);
+  }
+  
+  g_free(filename);
+}
+  
 /**
  * Create connection object
  */
 SynceConnection* sync_connect(sync_pair* handle, connection_type type) /*{{{*/
 {
-	SynceConnection* sc = g_new0(SynceConnection, 1);
-
-	synce_trace("here");
-
-	sc->handle = handle;
-	sc->type   = type;
-
-	sync_set_requestdone(sc->handle);
+	SynceConnection* sc = synce_connection_new(handle, type);
+	
+  synce_trace("here");
+	
+  sync_set_requestdone(sc->handle);
 	return sc;
 }/*}}}*/
 
@@ -125,8 +195,34 @@ void syncobj_modify(/*{{{*/
 
 	switch (object_type)
 	{
+		case SYNC_OBJECT_TYPE_CALENDAR: 
+			if (!rra_appointment_from_vevent(
+						object,
+						NULL,
+						&data,
+						&data_size,
+						(uid ? RRA_APPOINTMENT_UPDATE : RRA_APPOINTMENT_NEW) | RRA_APPOINTMENT_UTF8))
+			{
+				synce_error("Failed to create data");
+				goto exit;
+			}
+			break;
+
 		case SYNC_OBJECT_TYPE_PHONEBOOK: 
 			if (!rra_contact_from_vcard(
+						object,
+						NULL,
+						&data,
+						&data_size,
+						(uid ? RRA_CONTACT_UPDATE : RRA_CONTACT_NEW) | RRA_CONTACT_UTF8))
+			{
+				synce_error("Failed to create data");
+				goto exit;
+			}
+			break;
+
+		case SYNC_OBJECT_TYPE_TODO: 
+			if (!rra_task_from_vtodo(
 						object,
 						NULL,
 						&data,
@@ -259,7 +355,7 @@ gboolean always_connected()
 
 const char* short_name()
 {
-	return "spfms";
+	return "synce-plugin";
 }
 
 const char* long_name()
@@ -269,7 +365,7 @@ const char* long_name()
 
 int object_types()
 {
-	return SYNC_OBJECT_TYPE_PHONEBOOK;
+	return SYNC_OBJECT_TYPE_CALENDAR|SYNC_OBJECT_TYPE_PHONEBOOK|SYNC_OBJECT_TYPE_TODO;
 }
 
 void plugin_init()
@@ -282,3 +378,6 @@ const char* plugin_info()
 	return "This plugin allows synchronization with a device running Windows CE or Pocket PC.";
 }
 
+int plugin_API_version(void) {
+    return(2);
+}

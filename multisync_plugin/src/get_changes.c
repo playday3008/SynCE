@@ -46,7 +46,7 @@ static GList* synce_get_changed_objects(/*{{{*/
 	}
 
 	/* Select start ID */
-	if (everything)
+	if (everything || sc->get_all)
 		id = 0;
 	else
 		id = object_ids->unchanged;
@@ -70,6 +70,19 @@ static GList* synce_get_changed_objects(/*{{{*/
 
 		switch (object_type)
 		{
+			case SYNC_OBJECT_TYPE_CALENDAR: 
+				if (!rra_appointment_to_vevent(
+							object_ids->ids[id],
+							data,
+							data_size,
+							&object_string,
+							RRA_APPOINTMENT_UTF8))
+				{
+					fprintf(stderr, "Failed to create vCard\n");
+					goto exit;
+				}
+				break;
+
 			case SYNC_OBJECT_TYPE_PHONEBOOK: 
 				if (!rra_contact_to_vcard(
 							object_ids->ids[id],
@@ -77,6 +90,19 @@ static GList* synce_get_changed_objects(/*{{{*/
 							data_size,
 							&object_string,
 							RRA_CONTACT_VERSION_2_1 | RRA_CONTACT_UTF8))
+				{
+					fprintf(stderr, "Failed to create vCard\n");
+					goto exit;
+				}
+				break;
+
+			case SYNC_OBJECT_TYPE_TODO: 
+				if (!rra_task_to_vtodo(
+							object_ids->ids[id],
+							data,
+							data_size,
+							&object_string,
+							RRA_TASK_UTF8))
 				{
 					fprintf(stderr, "Failed to create vCard\n");
 					goto exit;
@@ -140,7 +166,9 @@ void synce_get_changes(SynceConnection* sc, int newdbs)/*{{{*/
 
 	change_info* result = g_new0(change_info, 1);
 	
-	synce_trace("here");
+	synce_trace("newdbs = %i", newdbs);
+
+  synce_connection_load_state(sc);
 
 	hr = CeRapiInit();
 	if (FAILED(hr))
@@ -159,27 +187,46 @@ void synce_get_changes(SynceConnection* sc, int newdbs)/*{{{*/
 	
 	result->newdbs  = newdbs;
 
-#if 0
 	result->changes = synce_get_changed_objects(
 			sc, 
 			SYNC_OBJECT_TYPE_CALENDAR,
 			result->changes, 
 			newdbs & SYNC_OBJECT_TYPE_CALENDAR);
-#endif
 
+  /* XXX: disconnect and connect again to make it work?! */
+	rra_free(sc->rra);
+	sc->rra = rra_new();
+
+	if (!rra_connect(sc->rra))
+	{
+		synce_error("Connection failed");
+		goto exit;
+	}
+	
 	result->changes = synce_get_changed_objects(
 			sc, 
 			SYNC_OBJECT_TYPE_PHONEBOOK,
 			result->changes, 
 			newdbs & SYNC_OBJECT_TYPE_PHONEBOOK);
 
-#if 0
-	result->changes = synce_get_changed_objects(
-			sc, 
-			SYNC_OBJECT_TYPE_TODO,
-			result->changes, 
-			newdbs & SYNC_OBJECT_TYPE_TODO);
-#endif
+  /* XXX: disconnect and connect again to make it work?! */
+  rra_free(sc->rra);
+  sc->rra = rra_new();
+
+  if (!rra_connect(sc->rra))
+  {
+    synce_error("Connection failed");
+    goto exit;
+  }
+
+  result->changes = synce_get_changed_objects(
+      sc, 
+      SYNC_OBJECT_TYPE_TODO,
+      result->changes, 
+      newdbs & SYNC_OBJECT_TYPE_TODO);
+  
+  sc->get_all = false;
+  synce_connection_save_state(sc);
 
 exit:
 	sync_set_requestdata(result, sc->handle);
