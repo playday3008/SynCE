@@ -32,9 +32,12 @@ char* rapi_unicode_to_ascii(const uchar* inbuf)
   iconv_close(cd);
 
   if ((size_t)-1 == result)
-    strcpy(outbuf, "(failed)");
-  else
-    outbuf[length] = 0;
+	{
+		rapi_unicode_free_string(outbuf);
+		return NULL;
+	}
+    
+	outbuf[length] = 0;
 
   return outbuf;
 }
@@ -60,10 +63,13 @@ uchar* rapi_unicode_from_ascii(const char* inbuf)
 	iconv_close(cd);
 
 	if ((size_t)-1 == result)
-		outbuf[0] = 0;
-	else
-		outbuf[length] = 0;
-	
+	{
+		rapi_unicode_free_string(outbuf);
+		return NULL;
+	}
+
+	outbuf[length] = 0;
+
 	return outbuf;
 }
 
