@@ -82,7 +82,8 @@ static bool on_propval_due(Generator* g, CEPROPVAL* propval, void* cookie)
   if (due_time > 0)
   {
     char date[16];
-    strftime(date, sizeof(date), "%Y%m%d", gmtime(&due_time));
+    /* using localtime here to get correct output from strftime */
+    strftime(date, sizeof(date), "%Y%m%d", localtime(&due_time));
     generator_add_with_type(g, "DUE", "DATE", date);
   }
   return true;
@@ -102,7 +103,8 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
   if (start_time > 0)
   {
     char date[16];
-    strftime(date, sizeof(date), "%Y%m%d", gmtime(&start_time));
+    /* using localtime here to get correct output from strftime */
+    strftime(date, sizeof(date), "%Y%m%d", localtime(&start_time));
     generator_add_with_type(g, "DTSTART", "DATE", date);
   }
   return true;
@@ -170,9 +172,9 @@ bool rra_task_to_vtodo(
     if (task_generator_data.completed_time > 0)
     {
       char date[32];
-      /* always UTC format */
+      /* using localtime here to get correct output from strftime */
       strftime(date, sizeof(date), "%Y%m%dT000000Z", 
-          gmtime(&task_generator_data.completed_time));
+          localtime(&task_generator_data.completed_time));
       generator_add_simple(generator, "COMPLETED", date);
     }
   }
