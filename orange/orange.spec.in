@@ -17,7 +17,7 @@ Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires: dynamite
 Requires: synce
-Requires: unshield
+Requires: unshield >= 0.2
 
 %description
 See http://synce.sourceforge.net/synce for more information.
