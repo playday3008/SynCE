@@ -1,8 +1,15 @@
+synce-kde (0.6.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Debian configuration changed to use the original KDE rules
+
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 27 Sep 2003 22:44:09 +0200
+
 synce-kde (0.6.1-1) unstable; urgency=low
 
   * New upstream release
 
- -- Volker Christian <voc@soft.uni-linz.ac.at>  Tue,  9 Sep 2003 22:03:44 +0200
+ -- Volker Christian <voc@users.sourceforge.net>  Tue,  9 Sep 2003 22:03:44 +0200
 
 synce-kde (0.6-4) unstable; urgency=low
 

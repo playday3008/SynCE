@@ -1,4 +1,2 @@
 usr/include/*
 usr/lib/*.so
-usr/lib/*.la
-usr/lib/kde3/*.la

@@ -2,14 +2,14 @@ Source: synce-kde
 Section: utils
 Priority: optional
 Maintainer: Volker Christian <voc@users.sourceforge.net>
-Build-Depends: debhelper (>> 4.0.0), librapi2-dev (>= 0.8)
+Build-Depends: debhelper (>> 4.0.0), librapi2-dev (>= 0.8), libsynce0-dev (>= 0.8), qt3-dev-tools (>= 3.1), libqt3-mt-dev (>= 3.1), libqt3-headers (>= 3.1), kdebase-dev (>= 3.1), kdelibs4-dev (>= 3.1), autoconf, automake1.6 | automake1.7
 Standards-Version: 3.5.8
 
 Package: synce-kde-dev
 Section: devel
 Architecture: any
 Depends: synce-kde (= ${Source-Version})
-Description: The Package SynCE-KDE is an ActiveSync like application
+Description: An ActiveSync like application
  This package provides header files to compile synchronizer for SynCE-KDE.
 
 Package: synce-kde
