@@ -22,17 +22,16 @@ int inet_pton(int af, const char *src, void *dst);
 #include "dmalloc.h"
 #endif
 
-#define RAPI_SOCKET_DEBUG 1
+#define RAPI_SOCKET_DEBUG 0
 
 #if RAPI_SOCKET_DEBUG
 #define synce_socket_trace(args...)    synce_trace(args)
 #define synce_socket_warning(args...)  synce_warning(args)
-#define synce_socket_error(args...)    synce_error(args)
 #else
 #define synce_socket_trace(args...)
 #define synce_socket_warning(args...)
-#define synce_socket_error(args...)
 #endif
+#define synce_socket_error(args...)    synce_error(args)
 
 #define RAPI_SOCKET_LISTEN_QUEUE  1024
 
