@@ -15,9 +15,34 @@
 
 #define TRACE_DATE(format, date) \
 do { \
-  time_t _unix_time = (date - MINUTES_FROM_1601_TO_1970) * 60; \
-  char* _time_str = asctime(gmtime(&_unix_time)); \
-  _time_str[strlen(_time_str)-1] = '\0'; \
+  char* _time_str = NULL; \
+  time_t _unix_time = date; \
+  if ((time_t)-1 == _unix_time) \
+  { \
+    _time_str = "(some time in year 2038 or later!)"; \
+  } \
+  else \
+  { \
+    _time_str = asctime(gmtime(&_unix_time)); \
+    _time_str[strlen(_time_str)-1] = '\0'; \
+  } \
+  synce_trace(format, _time_str); \
+} \
+while (0)
+
+#define TRACE_DATE_INT(format, date) \
+do { \
+  char* _time_str = NULL; \
+  if ((date - MINUTES_FROM_1601_TO_1970) < 0x4444444) \
+  { \
+    time_t _unix_time = (date - MINUTES_FROM_1601_TO_1970) * 60; \
+    _time_str = asctime(gmtime(&_unix_time)); \
+    _time_str[strlen(_time_str)-1] = '\0'; \
+  } \
+  else \
+  { \
+    _time_str = "(some time in year 2038 or later!)"; \
+  } \
   synce_trace(format, _time_str); \
 } \
 while (0)
@@ -34,10 +59,28 @@ struct _RRA_Exceptions
   int32_t modified_count;
 };
 
+int rra_exceptions_count(RRA_Exceptions *self)
+{
+  return self->total_count;
+}
+
+RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index)
+{
+  /* TODO: implement */
+  return NULL;
+}
+
+
 static time_t read_date(uint8_t* buffer)
 {
   int32_t minutes = READ_INT32(buffer);
-  return (minutes - MINUTES_FROM_1601_TO_1970) * 60;
+
+  /* Assuming time_t is 32-bit, we will run into problems with dates after 2038... */
+  
+  if ((minutes - MINUTES_FROM_1601_TO_1970) < 0x4444444) \
+    return (minutes - MINUTES_FROM_1601_TO_1970) * 60;
+  else
+    return (time_t)-1;
 }
 
 RRA_Exceptions* rra_exceptions_new()
@@ -64,7 +107,7 @@ static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)
 
   for (i = 0; i < self->total_count; i++)
   {
-    int32_t date = READ_INT32(p); p += 4;
+    time_t date = read_date(p); p += 4;
     TRACE_DATE("Exception date  = %s", date);
   }
 
@@ -72,7 +115,7 @@ static bool rra_exceptions_read_summary(RRA_Exceptions* self, uint8_t** buffer)
 
   for (i = 0; i < self->modified_count; i++)
   {
-    int32_t date = READ_INT32(p); p += 4;
+    time_t date = read_date(p); p += 4;
     TRACE_DATE("Modified date   = %s", date);
   }
   
@@ -93,16 +136,16 @@ bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)
 
   for (i = 0; i < self->modified_count; i++)
   {
-    int32_t date;
+    time_t date;
     int16_t unknown;
-    date = READ_INT32(p); p += 4;
-    TRACE_DATE("Modified appointment value A = %s (new start time)", date);
-    date = READ_INT32(p); p += 4;
-    TRACE_DATE("Modified appointment value B = %s (new end time)", date);
-    date = READ_INT32(p); p += 4;
-    TRACE_DATE("Modified appointment value C = %s (original start time)", date);
+    date = read_date(p); p += 4;
+    TRACE_DATE("Modified appointment start time  = %s", date);
+    date = read_date(p); p += 4;
+    TRACE_DATE("Modified appointment end time    = %s", date);
+    date = read_date(p); p += 4;
+    TRACE_DATE("Original appointment start time  = %s", date);
     unknown = READ_INT16(p); p += 2;
-    synce_trace("Modified appointment value D = %04x", unknown);
+    synce_trace("Modified appointment unknown     = %04x", unknown);
   }
 
   *buffer = p;
@@ -220,9 +263,11 @@ static bool rra_recurrence_pattern_read_monthnth(/*{{{*/
     size_t size)
 {
   uint8_t* p = *buffer;
+  uint32_t unknown_b;
 
-  synce_trace("Unknown         = %08x", READ_INT32(p));
-  p += 4;
+  unknown_b = READ_UINT32(p);  p += 4;
+  synce_trace("Days to month   = %08x = %u minutes = %f days", 
+      unknown_b, unknown_b, unknown_b / (60.0 * 24.0));
 
   self->interval          = READ_INT32(p);  p += 4;   /* 0x0e */
   
@@ -272,6 +317,7 @@ bool rra_recurrence_pattern_read_header(/*{{{*/
      b = 1011 = interval + days_of_week_mask
      c = 1100 = interval + days_of_week_mask + instance    (for olRecursMonthNth)
      d = 1101 = interval + day_of_month                    (for olRecursMonthly)
+     d = 1101 = interval + day_of_month                    (for olRecursMonthly)
      d = 1101 = interval + days_of_week_mask + instance    (for olRecursMonthNth)
 
      Maybe it is the number of 4-byte
@@ -287,9 +333,6 @@ bool rra_recurrence_pattern_read_header(/*{{{*/
         synce_warning("Expected 0x200b, got %04x", unknown_a[2]);
       break;
     case olRecursMonthly:
-      if (unknown_a[2] != 0x200d)
-        synce_warning("Expected 0x200d, got %04x", unknown_a[2]);
-      break;
     case olRecursMonthNth:
       if (unknown_a[2] != 0x200c && unknown_a[2] != 0x200d)
         synce_warning("Expected 0x200c or 0x200d, got %04x", unknown_a[2]);
@@ -358,22 +401,37 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   rra_exceptions_read_summary(self->exceptions, &p);
   
   self->pattern_start_date = read_date(p);  p += 4;
+  TRACE_DATE("Pattern start date   = %s", self->pattern_start_date);
+  self->pattern_end_date   = read_date(p);  p += 4;
+  TRACE_DATE("Pattern end date     = %s", self->pattern_end_date);
+
+#if 0
+  {
+    uint32_t end_date = READ_INT32(p); p += 4;
+
+    synce_trace("End date        = %08x", end_date);
+    if (end_date == 0x5ae980df)
+      synce_trace("                = (never)");
+    else
+      TRACE_DATE_INT("                = %s", end_date);
+  }
+#endif
 
   {
     int i;
-    uint32_t unknown[3];
+    uint32_t unknown[2];
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 2; i++)
     {
       unknown[i] = READ_INT32(p); p += 4;
       synce_trace("Unknown         = %08x", unknown[i]);
     }
 
-    if (unknown[1] != unknown[2])
-      synce_warning("%08x != %08x", unknown[1], unknown[2]);
+    if (unknown[0] != unknown[1])
+      synce_warning("%08x != %08x", unknown[0], unknown[1]);
     
     if (unknown[1] != 0x3005)
-      synce_warning("Expected 0x3005 but got %04x", unknown[1]);
+      synce_warning("Expected 0x3005 but got 0x%04x", unknown[1]);
   }
   
   self->start_minute = READ_INT32(p); p += 4;
@@ -386,7 +444,7 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   rra_exceptions_read_details(self->exceptions, &p);
 
   synce_trace("Data that should be zero at offset %04x, size %04x of %04x", 
-      p - buffer, p + size - buffer, size);
+      p - buffer, buffer + size - p, size);
 
   {
     uint8_t* end = buffer + size;

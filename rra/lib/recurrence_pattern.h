@@ -36,7 +36,18 @@ typedef enum
   RecurrenceEndMask = 3
 } RRA_RecurrenceFlags;
 
+typedef struct _RRA_Exception
+{
+  bool deleted;
+  time_t original_date;
+  time_t start_date;
+  time_t end_date;
+} RRA_Exception;
+
 typedef struct _RRA_Exceptions RRA_Exceptions;
+
+int rra_exceptions_count(RRA_Exceptions *self);
+RRA_Exception* rra_exceptions_item(RRA_Exceptions *self, int index);
 
 typedef struct _RRA_RecurrencePattern
 {
