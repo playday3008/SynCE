@@ -10,7 +10,8 @@ include_HEADERS = \
 	matchmaker.h \
 	syncmgr.h \
 	timezone.h \
-	task.h
+	task.h \
+	uint32vector.h
 
 ## create this library
 lib_LTLIBRARIES = librra.la
@@ -29,7 +30,8 @@ librra_la_SOURCES = \
 	strbuf.h           strbuf.c \
 	syncmgr.h          syncmgr.c \
 	task.h             task.c \
-	timezone.h         timezone.c
+	timezone.h         timezone.c \
+	uint32vector.h     uint32vector.c
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
 librra_la_LIBADD   = @LTLIBOBJS@

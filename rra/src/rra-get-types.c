@@ -40,7 +40,7 @@ int main()
 		goto exit;
 	}
 
-	printf("ID        COUNT     SIZE      MODIFIED                  NAME\n");
+	printf("ID        COUNT     SIZE      MODIFIED                  NAME 1                         NAME 2\n");
 	for (i = 0; i < object_type_count; i++)
 	{
 		char* modified = NULL;
@@ -51,12 +51,14 @@ int main()
 			modified[strlen(modified)-1] = '\0';
 		}
 			
-		printf("%08x  %8i  %8i  %s  %s\n",
+		printf("%08x  %8i  %8i  %s  %-30s %-30s\n",
 				object_types[i].id,
 				object_types[i].count,
 				object_types[i].total_size,
 				modified ? modified : "                        ",
-				object_types[i].name);
+				object_types[i].name1,
+				object_types[i].name2
+        );
 
 		if (modified)
 			free(modified);

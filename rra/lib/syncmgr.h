@@ -15,6 +15,8 @@
 #define RRA_SYNCMGR_TYPE_MS_TABLE     "MS Table"
 #define RRA_SYNCMGR_TYPE_TASK         "Task"
 
+struct _RRA_Uint32Vector;
+
 struct _RRA_SyncMgr;
 typedef struct _RRA_SyncMgr RRA_SyncMgr;
 
@@ -24,7 +26,8 @@ typedef struct
   uint32_t  count;        /* number of objects in folder */
   uint32_t  total_size;   /* total size in bytes */
   time_t    modified;     /* 0 or last time any object was modified */
-  char      name[100];
+  char      name1[100];
+  char      name2[80];
 } RRA_SyncMgrType;
 
 typedef enum 
@@ -57,9 +60,16 @@ void rra_syncmgr_disconnect(RRA_SyncMgr* self);
 
 uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self);
 RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self);
-uint32_t rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name);
+RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id);
+RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name);
 
-#define RRA_SYNCMGR_INVALID_TYPE_ID   ((uint32_t)0xffffffff)
+/*#define RRA_SYNCMGR_INVALID_TYPE_ID   ((uint32_t)0xffffffff)*/
+
+bool rra_syncmgr_get_deleted_object_ids(
+    RRA_SyncMgr* self,
+    uint32_t type_id,
+    struct _RRA_Uint32Vector* current_ids,
+    struct _RRA_Uint32Vector* deleted_ids);
 
 /** Select which object types we are interested in */
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, 

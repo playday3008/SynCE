@@ -15,6 +15,7 @@ int main(int argc, char** argv)
 	const char* type_id_str = NULL;
 	uint32_t type_id = 0;
 	uint32_t object_id = 0;
+	RRA_SyncMgrType* type = NULL;
 	
 	/* synce_log_set_level(0); */
 
@@ -40,8 +41,10 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-  type_id = rra_syncmgr_type_from_name(syncmgr, type_id_str);
-  if (RRA_SYNCMGR_INVALID_TYPE_ID == type_id)
+  type = rra_syncmgr_type_from_name(syncmgr, type_id_str);
+  if (type)
+    type_id = type->id;
+  else
     type_id = strtol(type_id_str, NULL, 16);
 
 	if (!rra_syncmgr_delete_object(syncmgr, type_id, object_id))

@@ -2,12 +2,16 @@
 #define _BSD_SOURCE 1
 #include "syncmgr.h"
 #include "rrac.h"
+#include "uint32vector.h"
 #include <synce_hash.h>
 #include <synce_log.h>
 #include <synce_socket.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h> /* for MIN(a,b) */
+
+static const char* RRA_DIRECTORY    = "rra";
 
 #define SEND_COMMAND_6F_6 1
 
@@ -133,7 +137,11 @@ static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)
       filetime_to_unix_time(&raw_object_types[i].filetime);
 
     ascii = wstr_to_ascii(raw_object_types[i].name1);
-    strcpy(self->types[i].name, ascii);
+    strcpy(self->types[i].name1, ascii);
+    wstr_free_string(ascii);
+
+    ascii = wstr_to_ascii(raw_object_types[i].name2);
+    strcpy(self->types[i].name2, ascii);
     wstr_free_string(ascii);
   }
 
@@ -207,9 +215,9 @@ RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)
     return NULL;
 }
 
-uint32_t rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
+RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id)/*{{{*/
 {
-  uint32_t result = RRA_SYNCMGR_INVALID_TYPE_ID;
+  RRA_SyncMgrType* result = NULL;
   unsigned i;
   
   if (!self || !self->types)
@@ -220,9 +228,9 @@ uint32_t rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
 
   for (i = 0; i < self->type_count; i++)
   {
-    if (0 == strcasecmp(name, self->types[i].name))
+    if (self->types[i].id == type_id)
     {
-      result = self->types[i].id;
+      result = &self->types[i];
       break;
     }
   }
@@ -230,6 +238,153 @@ uint32_t rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
 exit:
   return result;
 }/*}}}*/
+
+RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
+{
+  RRA_SyncMgrType* result = NULL;
+  unsigned i;
+  
+  if (!self || !self->types)
+  {
+    synce_error("Not connected.");
+    goto exit;
+  }
+
+  for (i = 0; i < self->type_count; i++)
+  {
+    if (0 == strcasecmp(name, self->types[i].name1) ||
+        0 == strcasecmp(name, self->types[i].name2) )
+    {
+      result = &self->types[i];
+      break;
+    }
+  }
+
+exit:
+  return result;
+}/*}}}*/
+
+bool rra_syncmgr_get_deleted_object_ids(
+    RRA_SyncMgr* self,
+    uint32_t type_id,
+    RRA_Uint32Vector* current_ids,
+    RRA_Uint32Vector* deleted_ids)
+{
+  bool success = false;
+  char* directory = NULL;	
+  char filename[256];
+  FILE* file = NULL;
+  unsigned current;
+  unsigned previous;
+  RRA_Uint32Vector* previous_ids = rra_uint32vector_new();
+
+  if (self->partners.current != 1 &&
+      self->partners.current != 2)
+  {
+    synce_error("No current partnership");
+    goto exit;
+  }
+
+  if (!synce_get_subdirectory(RRA_DIRECTORY, &directory))
+  {
+    synce_error("Failed to get rra directory path");
+    goto exit;
+  }
+
+  snprintf(filename, sizeof(filename), "%s/partner-%08x-type-%08x", directory,
+      self->partners.ids[self->partners.current - 1], type_id);
+
+  /*
+     Create list of previous IDs
+   */
+
+  file = fopen(filename, "r");
+  if (file)
+  {
+    char buffer[16];
+    while (fgets(buffer, sizeof(buffer), file))
+    {
+      rra_uint32vector_add(previous_ids, strtol(buffer, NULL, 16));
+    }
+
+    fclose(file);
+  }
+
+  /* Sort vectors */
+  rra_uint32vector_sort(previous_ids);
+  rra_uint32vector_sort(current_ids);
+
+  /*
+     Iterate both vectors and see what is missing from the previous
+   */
+
+  for (current = 0, previous = 0;
+      current < current_ids->used && previous < previous_ids->used; )
+  {
+    /* synce_trace("current id: %08x    previous id: %08x", 
+       current_ids->items[current], previous_ids->items[previous]); */
+
+    if (current_ids->items[current] > previous_ids->items[previous])
+    {
+      /* deleted item */
+      rra_uint32vector_add(deleted_ids, previous_ids->items[previous]);
+      /* synce_trace("deleted item: %08x", previous_ids->items[previous]); */
+      previous++;
+    }
+    else if (current_ids->items[current] < previous_ids->items[previous])
+    {
+      /* new item */
+      current++;
+    }
+    else
+    {
+      /* the IDs are equal */
+      current++;
+      previous++;
+    }
+  }
+
+  /*
+     Any IDs left at the end of the previous_ids vector are deleted
+   */
+
+  for (; previous < previous_ids->used; previous++)
+  {
+    rra_uint32vector_add(deleted_ids, previous_ids->items[previous]);
+    /* synce_trace("deleted item: %08x", previous_ids->items[previous]); */
+  }
+
+  /*
+     Save current ID list
+   */
+
+  file = fopen(filename, "w");
+  if (!file)
+  {
+    synce_error("Failed to open '%s' for writing.", filename);
+    goto exit;
+  }
+
+  if (file)
+  {
+    for (current = 0; current < current_ids->used; current++)
+    {
+      char buffer[16];
+      snprintf(buffer, sizeof(buffer), "%08x\n", current_ids->items[current]);
+      fwrite(buffer, strlen(buffer), 1, file);
+    }
+
+    fclose(file);
+  }
+
+
+  success = true;
+
+exit:
+  rra_uint32vector_destroy(previous_ids, true);
+  return success;
+}
+
 
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie)

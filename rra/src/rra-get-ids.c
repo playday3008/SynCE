@@ -74,10 +74,13 @@ int main(int argc, char** argv)
 
   for (i = 1; i < argc; i++)
   {
+    RRA_SyncMgrType* type = NULL;
     type_id_str = argv[i];
 
-    type_id = rra_syncmgr_type_from_name(syncmgr, type_id_str);
-    if (RRA_SYNCMGR_INVALID_TYPE_ID == type_id)
+    type = rra_syncmgr_type_from_name(syncmgr, type_id_str);
+    if (type)
+      type_id = type->id;
+    else
       type_id = strtol(type_id_str, NULL, 16);
 
     rra_syncmgr_subscribe(syncmgr, type_id, callback, NULL);

@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-bool running = true;
+static bool running = true;
 
 static void ctrl_c_handler(int unused)
 {
@@ -47,7 +47,7 @@ static bool callback (
 
   strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
 
-  printf("TIMESTAMP            TYPE      ID        EVENT     (%i items)\n", count);
+  printf("      TIMESTAMP            TYPE      ID        EVENT     (%i items)\n", count);
 
 	for (i = 0; i < count; i++)
 		printf("%s  %08x  %08x  %s\n", timestamp, type, ids[i], event_str);
@@ -96,10 +96,14 @@ int main(int argc, char** argv)
 
     for (i = 1; i < argc; i++)
     {
+      RRA_SyncMgrType* type = NULL;
+
       type_id_str = argv[i];
 
-      type_id = rra_syncmgr_type_from_name(syncmgr, type_id_str);
-      if (RRA_SYNCMGR_INVALID_TYPE_ID == type_id)
+      type = rra_syncmgr_type_from_name(syncmgr, type_id_str);
+      if (type)
+        type_id = type->id;
+      else
         type_id = strtol(type_id_str, NULL, 16);
 
       rra_syncmgr_subscribe(syncmgr, type_id, callback, NULL);
