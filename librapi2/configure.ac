@@ -10,6 +10,7 @@ AM_CONFIG_HEADER(rapi_config.h)
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_CC
@@ -72,4 +73,5 @@ AC_OUTPUT([Makefile
            src/Makefile
 					 src/config/Makefile
 					 src/support/Makefile
-					 tests/Makefile])
+					 tests/Makefile
+					 tests/rapi/Makefile])

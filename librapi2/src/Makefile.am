@@ -1,5 +1,5 @@
 ## useful flags
-CFLAGS = -ggdb -Wall -Wno-long-long -ansi -pedantic @CFLAGS@ -Isupport
+CFLAGS = -ggdb -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -Isupport
 @SET_MAKE@
 
 ## create this library
@@ -9,6 +9,7 @@ lib_LTLIBRARIES = librapi.la
 librapi_la_SOURCES = \
 	file.c                         \
 	init.c                         \
+	misc.c                         \
 	rapi_buffer.h   rapi_buffer.c  \
 	rapi_context.h  rapi_context.c \
 	rapi_internal.h                \
