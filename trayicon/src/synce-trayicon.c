@@ -37,13 +37,18 @@
 #include <sys/stat.h>
 #include <gtk/gtk.h>
 #include <gnome.h>
+#include <glade/glade.h>
 #include <libgnomeui/gnome-dialog.h>
 #include <libgnomeui/gnome-about.h>
+#include <gconf/gconf-client.h>
 #include "eggtrayicon.h"
 #include "config.h"
 #include "gtop_stuff.h"
+#include "properties.h"
 
 #define SYNCE_SOFTWARE_MANAGER "synce-software-manager"
+
+GConfClient *synce_conf_client = NULL;
 
 static bool in_background = true;
 static bool is_connected = false;
@@ -158,6 +163,11 @@ static void menu_software (GtkWidget *button, EggTrayIcon *icon)
 	}
 }
 
+static void menu_preferences (GtkWidget *button, EggTrayIcon *icon)
+{
+	GtkWidget *window = init_prefgui();
+}
+
 static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 {
 	GtkWidget *about;
@@ -219,17 +229,24 @@ static void trayicon_menu(GdkEventButton *event)
 
 	entry = gtk_menu_item_new_with_label("Explore with Filemanager");
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_explore), NULL);
+	gtk_widget_set_sensitive(entry, is_connected);
 	gtk_menu_append(GTK_MENU(menu), entry);
 	
 	entry = gtk_menu_item_new_with_label("Add/Remove Programs");
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_software), NULL);
+	gtk_widget_set_sensitive(entry, is_connected);
+
 	gtk_menu_append(GTK_MENU(menu), entry);
-	if (g_find_program_in_path(SYNCE_SOFTWARE_MANAGER) != NULL) {
+	if (g_find_program_in_path(SYNCE_SOFTWARE_MANAGER) != NULL && 
+			is_connected) {
 		gtk_widget_set_sensitive(entry, TRUE);
 	} else {
 		gtk_widget_set_sensitive(entry, FALSE);
 	}
 	
+	entry = gtk_separator_menu_item_new();
+	gtk_menu_append(GTK_MENU(menu), entry);
+		
 	if (is_connected)
 		snprintf(buffer, sizeof(buffer), "Disconnect from '%s'", device_name);
 	else
@@ -238,12 +255,22 @@ static void trayicon_menu(GdkEventButton *event)
 	entry = gtk_menu_item_new_with_label(buffer);
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), NULL);
 	gtk_menu_append(GTK_MENU(menu), entry);
+	
+	entry = gtk_separator_menu_item_new();
+	gtk_menu_append(GTK_MENU(menu), entry);
 
-	entry = gtk_menu_item_new_with_label("About");
+	entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_PREFERENCES,
+			             NULL);
+	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_preferences), NULL);
+	gtk_menu_append(GTK_MENU(menu), entry);
+	
+	entry = gtk_image_menu_item_new_from_stock (GNOME_STOCK_ABOUT,
+			             NULL);
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_about), NULL);
 	gtk_menu_append(GTK_MENU(menu), entry);
 
-	entry = gtk_menu_item_new_with_label("Exit");
+	entry = gtk_image_menu_item_new_from_stock (GNOME_STOCK_MENU_EXIT,
+			             NULL);
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_exit), NULL);
 	gtk_menu_append(GTK_MENU(menu), entry);
 
@@ -479,13 +506,22 @@ init_sm ()
 
 void start_dccm ()
 {	
-	char *argv[1] = {
-		"dccm"
+	char *argv[3] = {
+		"dccm","-p",""
 	};
+	char argc = 1;
+
+	if (gconf_client_get_bool (synce_conf_client,
+			                "/apps/synce/trayicon/enable_password", NULL)) {
+		
+		argv[2] = gconf_client_get_string (synce_conf_client,
+					"/apps/synce/trayicon/password", NULL);
+		argc = 3;
+	}
 
 	if (!dccm_is_running()) {
 		synce_trace("starting dccm");
-		if (gnome_execute_async(NULL,1, argv) == -1) {
+		if (gnome_execute_async(NULL,argc, argv) == -1) {
 			synce_error_dialog("Can't start dccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again.");
 			synce_trace("Failed to start dccm");
 		}
@@ -509,6 +545,8 @@ main (gint argc, gchar **argv)
             GNOME_PARAM_POPT_TABLE,options,
 			GNOME_PARAM_NONE);
 
+	glade_gnome_init ();
+
 	if (!handle_parameters(argc, argv))
 		goto exit;
 
@@ -522,8 +560,16 @@ main (gint argc, gchar **argv)
 		synce_trace("Running in foreground");
 	}
 
-	start_dccm();
+	/* Gconf */
+	synce_conf_client = gconf_client_get_default ();
+
+	gconf_client_add_dir (synce_conf_client,
+			"/apps/synce/trayicon",
+			GCONF_CLIENT_PRELOAD_ONELEVEL,
+			NULL);
+
 	
+	start_dccm();
 	tray_icon = egg_tray_icon_new ("SynCE");
 	box = gtk_event_box_new();
 	icon = gtk_image_new();
