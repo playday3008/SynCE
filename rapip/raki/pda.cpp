@@ -396,18 +396,26 @@ void *PDA::advanceTotalStepsEvent(void *data)
 void *PDA::removePartnershipDialog(void *data)
 {
     struct Rra::Partner * partner = (struct Rra::Partner *) data;
+    int removedPartners;
 
-    return (void *) RemovePartnershipDialogImpl::showDialog(QString(partner[0].name),
+    initProgress->hide();
+
+    removedPartners = RemovePartnershipDialogImpl::showDialog(QString(partner[0].name),
             QString(partner[1].name) , 0, "Remove Partnership", true, 0);
+
+    initProgress->show();
+
+    return (void *) removedPartners;
 }
 
 
 void *PDA::alreadyTwoPartnershipsDialog(void *)
 {
+    initProgress->hide();
     KMessageBox::error((QWidget *) parent(),
                        "There are already two partnerships configured on the device. Using guest",
                        "Error configuring partnership");
-
+    initProgress->show();
     return NULL;
 }
 
@@ -506,7 +514,7 @@ bool PDA::setPartnershipThread()
                 partnerName = "";
                 partnerId = 0;
                 advanceProgress(7);
-                if (!rra->setCurrentPartner(0)) {
+                if (rra->setCurrentPartner(0)) {
                     setPartnerOk = false;
                 }
             }
@@ -552,11 +560,11 @@ void PDA::init()
 {
     kdDebug(2120) << "in pda-init" << endl;
 
-    initProgress = new InitProgress(raki, "InitProgress", true,WStyle_StaysOnTop |
+    initProgress = new InitProgress(raki, "InitProgress", true,
                 WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM);
 
     progressBar = initProgress->progressBar;
-    progressBar->setTotalSteps(8);
+    progressBar->setTotalSteps(7);
     initProgress->pdaName->setText(pdaName);
     initProgress->show();
 
