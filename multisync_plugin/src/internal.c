@@ -1,4 +1,7 @@
-/* $Id$ */
+#ifdef HAVE_CONFIG_H
+#include "multisync_plugin_config.h"
+#endif
+
 #include "internal.h"
 #include <synce_log.h>
 #include <rra/appointment.h>

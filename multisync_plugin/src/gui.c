@@ -1,4 +1,6 @@
-#include <multisync_plugin_config.h>
+#ifdef HAVE_CONFIG_H
+#include "multisync_plugin_config.h"
+#endif
 #include <stdlib.h>
 #include <glib.h>
 #include <gmodule.h>
@@ -69,7 +71,7 @@ GtkWidget* open_option_window(sync_pair *pair, connection_type type)
     hr = CeRapiInit();
     if(FAILED(hr))
     {
-      synce_error_dialog("Failed to connect to PDA.");
+      synce_error_dialog(_("Failed to connect to PDA."));
       goto exit;
     }
 
@@ -77,7 +79,7 @@ GtkWidget* open_option_window(sync_pair *pair, connection_type type)
 
     if(!rra_partner_get_current(connection->rra, &current_partner))
     {
-      synce_error_dialog("Failed to get current partner index.");
+      synce_error_dialog(_("Failed to get current partner index."));
       goto exit;
     }
 
@@ -324,7 +326,7 @@ void synce_finish_partnership_druid (GnomeDruidPage *druidpage,
 {
     if (new_partner_index == 0) {
         /* Error */
-        synce_error_dialog ("You must select a partnership to replace!\nGo back and select one of the existing\npartnerships from the list, or click on\n the Cancel button if you want to keep\nyour current setup.");
+        synce_error_dialog (_("You must select a partnership to replace!\nGo back and select one of the existing\npartnerships from the list, or click on\n the Cancel button if you want to keep\nyour current setup."));
         return;
     }
    
@@ -420,7 +422,7 @@ void synce_ok_button(GtkButton *button, gpointer user_data)
   {
     if(!rra_partner_set_current(connection->rra, new_partner))
     {
-      synce_error_dialog("Failed to set current partner index.");
+      synce_error_dialog(_("Failed to set current partner index."));
     }			
   }
     

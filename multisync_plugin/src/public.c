@@ -1,4 +1,8 @@
 /** $Id$ */
+#ifdef HAVE_CONFIG_H
+#include "multisync_plugin_config.h"
+#endif
+
 #include "internal.h"
 #include <multisync.h>
 #include <synce_log.h>
@@ -6,6 +10,7 @@
 #include <rra/contact.h>
 #include <rra/task.h>
 #include <string.h>
+#include <gnome.h>
 
 /*
    This file contains the public functions used by MultiSync
@@ -43,7 +48,7 @@ SynceConnection* sync_connect(
   if (!synce_connect(connection))
   {
     sync_set_requestfailederror(
-        "Failed to initialize the SynCE synchronization manager",
+        _("Failed to initialize the SynCE synchronization manager"),
         connection->handle);
 		goto exit;
   }
@@ -106,7 +111,7 @@ void get_changes(SynceConnection* connection, sync_object_type newdbs)
   if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
   {
     sync_set_requestfailederror(
-        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
+        _("The SynCE synchronization manager is not connected. Please restart MultiSync."),
         connection->handle);
 		goto exit;
   }
@@ -114,7 +119,7 @@ void get_changes(SynceConnection* connection, sync_object_type newdbs)
   if (!synce_join_thread(connection))
   {
     sync_set_requestfailederror(
-        "Failed to wait for thread termination",
+        _("Failed to wait for thread termination"),
         connection->handle);
 		goto exit;
   }
@@ -127,7 +132,7 @@ void get_changes(SynceConnection* connection, sync_object_type newdbs)
   {
     sync_free_change_info(info);
     sync_set_requestfailederror(
-        "Failed to get changes",
+        _("Failed to get changes"),
         connection->handle);
   }
 
@@ -185,7 +190,7 @@ void syncobj_modify(
   if (!synce_join_thread(connection))
   {
     sync_set_requestfailederror(
-        "Failed to wait for thread termination",
+        _("Failed to wait for thread termination"),
         connection->handle);
 		goto exit;
   }
@@ -193,7 +198,7 @@ void syncobj_modify(
   if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
   {
     sync_set_requestfailederror(
-        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
+        _("The SynCE synchronization manager is not connected. Please restart MultiSync."),
         connection->handle);
 		goto exit;
   }
@@ -204,7 +209,7 @@ void syncobj_modify(
   {
     synce_error("Unexpected type: %i", objtype);
     sync_set_requestfailederror(
-        "Unexpected object type",
+        _("Unexpected object type"),
         connection->handle);
     goto exit;
   }
@@ -217,7 +222,7 @@ void syncobj_modify(
     {
       synce_error("Unexpected uid: '%s'", uid);
       sync_set_requestfailederror(
-          "Unexpected uid",
+          _("Unexpected uid"),
           connection->handle);
       goto exit;
     }
@@ -264,7 +269,7 @@ void syncobj_modify(
     default:
       synce_error("Unexpected index: %i", index);
       sync_set_requestfailederror(
-          "Unexpected object type",
+          _("Unexpected object type"),
           connection->handle);
       goto exit;
   }
@@ -274,7 +279,7 @@ void syncobj_modify(
     synce_error("Data conversion failed for type %08x and object %08x",
         connection->type_ids[index], object_id);
     sync_set_requestfailederror(
-        "Failed to convert object",
+        _("Failed to convert object"),
         connection->handle);
     goto exit;
   }
@@ -311,7 +316,7 @@ void syncobj_modify(
     synce_error("Failed to put object %08x with type %08x", 
         object_id, connection->type_ids[index]);
     sync_set_requestfailederror(
-        "Failed to put object",
+        _("Failed to put object"),
         connection->handle);
 
     goto exit;
@@ -388,7 +393,7 @@ void syncobj_delete(
   if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
   {
     sync_set_requestfailederror(
-        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
+        _("The SynCE synchronization manager is not connected. Please restart MultiSync."),
         connection->handle);
 		goto exit;
   }
@@ -406,7 +411,7 @@ void syncobj_delete(
   {
     synce_error("Unexpected type: %i", objtype);
     sync_set_requestfailederror(
-        "Unexpected object type",
+        _("Unexpected object type"),
         connection->handle);
     goto exit;
   }
@@ -417,7 +422,7 @@ void syncobj_delete(
   {
     synce_error("Unexpected uid: '%s'", uid);
     sync_set_requestfailederror(
-        "Unexpected uid",
+        _("Unexpected uid"),
         connection->handle);
     goto exit;
   }
@@ -430,7 +435,7 @@ void syncobj_delete(
         connection->type_ids[index],
         object_id);
     sync_set_requestfailederror(
-        "Failed to delete object",
+        _("Failed to delete object"),
         connection->handle);
     goto exit;
   }
@@ -475,7 +480,7 @@ void sync_done(SynceConnection* connection, gboolean success)
   if (!connection->syncmgr || !rra_syncmgr_is_connected(connection->syncmgr))
   {
     sync_set_requestfailederror(
-        "The SynCE synchronization manager is not connected. Please restart MultiSync.",
+        _("The SynCE synchronization manager is not connected. Please restart MultiSync."),
         connection->handle);
 		goto exit;
   }
@@ -488,7 +493,7 @@ void sync_done(SynceConnection* connection, gboolean success)
   if (!synce_create_thread(connection))
   {
     sync_set_requestfailederror(
-        "Failed to create event handling thread", 
+        _("Failed to create event handling thread"), 
         connection->handle);
     goto exit;
   }
@@ -506,12 +511,12 @@ gboolean always_connected()
 
 const char* short_name()
 {
-	return "synce-plugin";
+	return _("synce-plugin");
 }
 
 const char* long_name()
 {
-	return "SynCE Plugin";
+	return _("SynCE Plugin");
 }
 
 int object_types()
@@ -525,11 +530,17 @@ int object_types()
 void plugin_init()
 {
 	synce_trace("here");
+#ifdef ENABLE_NLS
+	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
+#endif
+
 }
 
 const char* plugin_info()
 {
-	return "This plugin allows synchronization with a device running Windows CE or Pocket PC.";
+	return _("This plugin allows synchronization with a device running Windows CE or Pocket PC.");
 }
 
 int plugin_API_version(void) {

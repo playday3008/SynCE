@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+POTFILES
+missing
+notexist
+multisync_plugin.pot
