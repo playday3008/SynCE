@@ -22,6 +22,9 @@ executed by the user that is running dccm.</p>
 <!-- <tr><th>synce-remove-program</th><td>remove a program</td></tr> -->
 </table>
 
+<p>Also download (and chmod a+x) the <a href="contrib/pcp-r">pcp-r</a> script
+to recursively copy a directory to your PDA.</p>
+
 <p>Return to <a href="index.php">main page</a>.</p>
 
 </div>
