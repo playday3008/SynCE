@@ -59,7 +59,7 @@
 									\
 	error = errno;							\
 	if (level <= msglevel) {					\
-		fprintf(stderr, __FUNCTION__ ":%d: " fmt "\n", __LINE__, ##__VA_ARGS__);    \
+		fprintf(stderr, __FUNCTION__ ":%d: " fmt "\n", __LINE__ , ##__VA_ARGS__);    \
 		if (level == MSG_ERR && error) {			\
 			fprintf(stderr, __FUNCTION__ ": %s\n",		\
 				strerror(error));			\
