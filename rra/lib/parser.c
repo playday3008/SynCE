@@ -296,43 +296,38 @@ bool parser_add_string_from_line(Parser* self, uint16_t id, mdir_line* line)/*{{
   return parser_add_string(self, id, line->values[0]);
 }/*}}}*/
 
-typedef enum 
+ParserTimeFormat parser_get_time_format(mdir_line* line)
 {
-  DATE_FORMAT_UNKNOWN,
-  DATE_FORMAT_DATE_AND_TIME,
-  DATE_FORMAT_ONLY_DATE
-} date_format_t;
-
-bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{{*/
-{
+  ParserTimeFormat format = PARSER_TIME_FORMAT_DATE_AND_TIME; /* default */
   char** types = mdir_get_param_values(line, "VALUE");
-  date_format_t format = DATE_FORMAT_DATE_AND_TIME;
-  time_t some_time;
-  bool success = false;
-
+  
   if (types && types[0])
   {
     if (STR_EQUAL(types[0], "DATE"))
     {
-      format = DATE_FORMAT_ONLY_DATE;
+      format = PARSER_TIME_FORMAT_ONLY_DATE;
     }
     else if (!STR_EQUAL(types[0], "DATE-TIME"))
     {
-      format = DATE_FORMAT_UNKNOWN;
+      synce_warning("Unknown data type: '%s'", types[0]);
+      format = PARSER_TIME_FORMAT_UNKNOWN;
     }
   }
 
-  switch (format)
+  return format;
+}
+
+bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{{*/
+{
+  bool success = false;
+  time_t some_time;
+
+  ParserTimeFormat format = parser_get_time_format(line);
+
+  if (format == PARSER_TIME_FORMAT_DATE_AND_TIME ||
+      format == PARSER_TIME_FORMAT_ONLY_DATE)
   {
-    case DATE_FORMAT_UNKNOWN:
-      synce_error("Unknown data type: '%s'", types[0]);
-      break;
-    case DATE_FORMAT_DATE_AND_TIME:
-      success = parser_datetime_to_unix_time(line->values[0], &some_time);
-      break;
-    case DATE_FORMAT_ONLY_DATE:
-      success = parser_datetime_to_unix_time(line->values[0], &some_time);
-      break;
+    success = parser_datetime_to_unix_time(line->values[0], &some_time);
   }
 
   return success && parser_add_time(self, id, some_time);

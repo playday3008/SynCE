@@ -45,5 +45,14 @@ bool parser_add_time  (Parser* self, uint16_t id, time_t value);
 bool parser_add_string_from_line(Parser* self, uint16_t id, mdir_line* line);
 bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line);
 
+typedef enum 
+{
+  PARSER_TIME_FORMAT_UNKNOWN,
+  PARSER_TIME_FORMAT_DATE_AND_TIME,
+  PARSER_TIME_FORMAT_ONLY_DATE
+} ParserTimeFormat;
+
+ParserTimeFormat parser_get_time_format(mdir_line* line);
+
 #endif 
 
