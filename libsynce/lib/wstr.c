@@ -69,7 +69,7 @@ static char* wstr_to_x(LPCWSTR inbuf, const char* code, size_t multiplier)
 		return NULL;
 	}
     
-	outbuf[length] = 0;
+	*outbuf_iterator = '\0';
 
   return outbuf;
 }
