@@ -337,32 +337,24 @@ bool rrac_send_6f(SynceSocket* socket, uint32_t subcommand)/*{{{*/
 bool rrac_recv_reply_6f_6(SynceSocket* socket)/*{{{*/
 {
 	bool success = false;
-	Command_6c_Reply_6f_6 packet;
-
-	if (!synce_socket_read(socket, &packet, sizeof(packet)))
-	{
-		synce_error("Failed to read command packet");
-		goto exit;
-	}
-
-	DUMP("reply packet", &packet, sizeof(packet));
-
-	LETOH16( packet.command    );
-	LETOH16( packet.size       );
-	LETOH32( packet.reply_to   );
-
-	if (packet.command  != 0x6c ||
-			packet.size     != (sizeof(packet) - 4) ||
-			packet.reply_to != 0x6f)
-	{
-		synce_error("Unexpected command or packet format");
-		goto exit;
-	}
-
-	success = true;
+	uint8_t* data = NULL;
+	size_t size = 0;
 	
+	if (!rrac_expect_reply(socket, 0x6f, &data, &size))
+	{
+		synce_error("Failed to receive reply packet");
+		goto exit;
+	}
+
+	/* care about data? */
+
+  success = true;
+
 exit:
-	return success;
+	if (data)
+		free(data);
+
+	return success;	
 }/*}}}*/
 
 bool rrac_recv_reply_6f_10(SynceSocket* socket)/*{{{*/
@@ -378,6 +370,8 @@ bool rrac_recv_reply_6f_10(SynceSocket* socket)/*{{{*/
 	}
 
 	/* care about data? */
+
+  success = true;
 
 exit:
 	if (data)

@@ -101,6 +101,7 @@ typedef struct _Subheader_6c
 	uint32_t    reply_to;
 } Subheader_6c;
 
+#if 0
 typedef struct _Command_6c_Reply_6f_6
 {
 	uint16_t    command;
@@ -108,6 +109,7 @@ typedef struct _Command_6c_Reply_6f_6
 	uint32_t    reply_to;
 	uint32_t    unknown[11];
 } Command_6c_Reply_6f_6;
+#endif
 
 typedef struct _Command_6c_Reply_6f_c1_Header
 {

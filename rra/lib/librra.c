@@ -749,6 +749,7 @@ bool rra_object_get(RRA* rra, /*{{{*/
 	/* Received end-of-data object */
 	if (!rrac_recv_data(rra->data_channel, NULL, NULL, NULL, NULL))
 	{
+		synce_error("rrac_recv_data failed");
 		goto exit;
 	}
 	
@@ -775,6 +776,7 @@ bool rra_object_get(RRA* rra, /*{{{*/
 #if SEND_COMMAND_6F_6
 	if (!rrac_send_6f(rra->cmd_channel, 6))
 	{
+		synce_error("rrac_send_6f failed");
 		goto exit;
 	}
 #endif
@@ -789,6 +791,7 @@ bool rra_object_get(RRA* rra, /*{{{*/
 #if SEND_COMMAND_6F_6
 	if (!rrac_recv_reply_6f_6(rra->cmd_channel))
 	{
+		synce_error("rrac_recv_reply_6f_6 failed");
 		goto exit;
 	}
 #endif
