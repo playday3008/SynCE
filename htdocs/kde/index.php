@@ -399,7 +399,7 @@ Lawrance</a> is
 working
 on porting SynCE and SynCE-KDE to <a href="http://www.freebsd.org/">FreeBSD</a>.
 You will find the port on
-his <a href="http://www.brooknet.com.au/%7Eboris/index.html">SynCE
+his <a href="http://sam.stral.net/freebsd/synce.html">SynCE
 on FreeBSD</a> page.</li>
 </ul>
 <br>
