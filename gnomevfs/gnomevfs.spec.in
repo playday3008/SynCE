@@ -1,6 +1,6 @@
-%define prefix /usr
-%define libdir %(pkg-config --variable=libdir gnome-vfs-2.0)
-%define sysconfdir /etc
+
+%define _libdir %(pkg-config --variable=libdir gnome-vfs-2.0)
+%define _sysconfdir /etc
 %define name synce-gnomevfs
 %define rel 1
 
@@ -14,10 +14,11 @@ Source: %{name}-%{version}.tar.gz
 URL: http://synce.sourceforge.net/
 Distribution: SynCE RPM packages
 Vendor: The SynCE Project
-Packager: Fredrik Nilson <sassur@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
-#Buildroot: %{_tmppath}/synce-root
-Requires: synce-librapi2 gnome-vfs2
+
+Requires:       gnome-vfs2
+Requires:       synce        >= 0.7
+BuildRequires:  synce-devel  >= 0.7
 
 %description
 Synce-GnomeVFS is part of the SynCE project:
@@ -25,25 +26,20 @@ Synce-GnomeVFS is part of the SynCE project:
   http://synce.sourceforge.net/
 
 %prep
+rm -rf $RPM_BUILD_ROOT
 %setup -q
 
 %build
-%configure --with-libsynce=%{prefix} --with-librapi2=%{prefix}
+%configure
 make %{_smp_mflags}
 
 %install
-rm -rf %{buildroot}
-make install \
-	libdir=%{buildroot}%{libdir} \
-	sysconfdir=%{buildroot}%{sysconfdir}
-
-%clean
-rm -rf %{buildroot}
+%makeinstall
 
 %files
 %defattr(-, root, root)
 %doc README LICENSE
-%{libdir}/gnome-vfs-2.0/modules/libsyncevfs.so
-%{libdir}/gnome-vfs-2.0/modules/libsyncevfs.la
-%{libdir}/gnome-vfs-2.0/modules/libsyncevfs.a
-%{sysconfdir}/gnome-vfs-2.0/modules/synce-module.conf
+%{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.so
+%{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.la
+%{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.a
+%{_sysconfdir}/gnome-vfs-2.0/modules/synce-module.conf
