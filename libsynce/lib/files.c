@@ -6,15 +6,18 @@
 #include "synce.h"
 #include "synce_log.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define DIRECTORY_NAME   			".synce"
-#define CONNECTION_FILENAME		"active_connection"
-#define SCRIPT_DIRECTORY      "scripts"
+#define DIRECTORY_NAME                ".synce"
+#define DEFAULT_CONNECTION_FILENAME   "active_connection"
+#define SCRIPT_DIRECTORY              "scripts"
+
+static char connection_filename[256] = {DEFAULT_CONNECTION_FILENAME};
 
 static bool make_sure_directory_exists(char* directory)
 {
@@ -65,6 +68,37 @@ bool synce_get_directory(char** path)
 }
 
 /**
+  Set the file name used for active connection info
+*/
+bool synce_set_connection_filename(const char* filename)
+{
+  bool success = false;
+  
+  /* disallow file names containing '..' */
+  if (filename && !strstr(filename, ".."))
+  {
+    /* Use snprintf to limit length and assure string is terminated with 0 */
+    int n = snprintf(connection_filename, sizeof(connection_filename), "%s", filename);
+
+    /* Return false if file name was too long or some other error occured */
+    success = (n >= 0 && n < sizeof(connection_filename));
+  }
+
+  if (!success)
+    synce_warning("Invalid filename: '%s'", filename);
+
+  return success;
+}
+
+/*
+   Restore the default filename used for active connection info
+ */
+bool synce_set_default_connection_filename()
+{
+  return synce_set_connection_filename(DEFAULT_CONNECTION_FILENAME);
+}
+
+/**
  * Get file name for active connection info
  */
 bool synce_get_connection_filename(char** filename)
@@ -81,7 +115,7 @@ bool synce_get_connection_filename(char** filename)
 	if (!synce_get_directory(&path))
 		goto exit;
 
-	snprintf(buffer, sizeof(buffer), "%s/" CONNECTION_FILENAME, path);
+	snprintf(buffer, sizeof(buffer), "%s/%s" , path, connection_filename);
 	*filename = strdup(buffer);
 
 	success = true;

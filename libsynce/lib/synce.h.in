@@ -130,6 +130,8 @@ uint32_t bswap_32(uint32_t x);
 bool synce_get_directory(char** path);
 bool synce_get_subdirectory(const char* name, char** directory);
 bool synce_get_connection_filename(char** filename);
+bool synce_set_connection_filename(const char* filename);
+bool synce_set_default_connection_filename();
 bool synce_get_script_directory(char** directory);
 
 /*
