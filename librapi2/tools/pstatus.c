@@ -51,14 +51,12 @@ static const char* version_string(CEOSVERSIONINFO* version)
 {
   const char* result = "Unknown";
 
-  if (version->dwMajorVersion == 4 &&
-      version->dwMinorVersion == 20)
+  if (version->dwMajorVersion == 4)
   {
-      switch (version->dwBuildNumber)
-      {
-        case 0: result = "Microsoft Windows Mobile 2003 for Pocket PC Phone Edition (?)"; break;
-        case 1081: result = "Ozone: Pocket PC 2003 (?)"; break;
-      }
+    if (version->dwMinorVersion == 20 && version->dwBuildNumber == 1081)
+      result = "Ozone: Pocket PC 2003 (?)";
+    else if (version->dwMinorVersion == 21 && version->dwBuildNumber == 1088)
+      result = "Microsoft Windows Mobile 2003 Pocket PC Phone Edition";
   } 
   else if (version->dwMajorVersion == 3 &&
       version->dwMinorVersion == 0)
