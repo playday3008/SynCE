@@ -3,6 +3,8 @@ SUBDIRS = libwine libchunk client server po doc
 
 EXTRA_DIST = cexplorer.kdevprj AUTHORS COPYING ChangeLog INSTALL README TODO cexplorer.lsm admin SynCE.kdevelop
 
+include_HEADERS = little_endian.h
+
 # not a GNU package. You can remove this line, if 
 # have all needed files, that a GNU package needs
 AUTOMAKE_OPTIONS = foreign 
