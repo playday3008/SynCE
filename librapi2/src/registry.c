@@ -110,7 +110,14 @@ LONG CeRegQueryValueEx( /*{{{*/
 	if (ERROR_SUCCESS == return_value)
 	{
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpType);
+		if (*lpType == REG_DWORD)
+		{
+			rapi_buffer_read_optional_uint32(context->recv_buffer, lpData);
+		}
+		else
+		{
 		rapi_buffer_read_optional       (context->recv_buffer, lpData, lpcbData ? *lpcbData * sizeof(WCHAR) : 0);
+		}
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbData);
 	}
 	else
@@ -293,7 +300,14 @@ LONG CeRegSetValueEx( /*{{{*/
 	rapi_buffer_write_uint32(context->send_buffer, hKey);
 	rapi_buffer_write_optional_string(context->send_buffer, lpValueName);
 	rapi_buffer_write_uint32(context->send_buffer, dwType);
+	if (dwType == REG_DWORD)
+	{
+		rapi_buffer_write_optional_uint32 (context->send_buffer, lpData, true);
+	}
+	else
+	{
 	rapi_buffer_write_optional(context->send_buffer, lpData, cbData, true);
+	}
 	rapi_buffer_write_uint32(context->send_buffer, cbData);
 
 	if ( !rapi_context_call(context) )
