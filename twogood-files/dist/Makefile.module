@@ -8,7 +8,7 @@
 # SRPM_DIR     - directory for SRPM packages
 # TARBALL_DIR  - directory for .tar.gz files
 
-TAG="V$(shell echo $(VERSION) | sed 's/\./_/g')"
+TAG="$(shell echo $(VERSION) | sed 's/\./_/g' | sed 's/^[^0-9]*[0-9]/V&/')"
 TMP=/var/tmp/$(MODULE)
 CVSROOT=-d :ext:twogood@cvs.synce.sourceforge.net:/cvsroot/synce
 DIRNAME=synce-$(MODULE)-$(VERSION)

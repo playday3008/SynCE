@@ -3,16 +3,16 @@
 
 Summary: SynCE: Core programs needed to use SynCE.
 Name: synce
-Version: 0.8
+Version: 0.8.3
 Release: %{rel}
 License: MIT
 Group: Applications/Communications
-Source0: synce-libsynce-0.8.tar.gz
-Source1: synce-librapi2-0.8.tar.gz
+Source0: synce-libsynce-0.8.1.tar.gz
+Source1: synce-librapi2-0.8.1.tar.gz
 Source2: synce-dccm-0.8.tar.gz
 Source3: synce-serial-0.8.tar.gz
-Source4: libmimedir-0.2.tar.gz
-Source5: synce-rra-0.8.tar.gz
+Source4: libmimedir-0.3.tar.gz
+Source5: synce-rra-0.8.3.tar.gz
 URL: http://synce.sourceforge.net/
 Distribution: SynCE RPM packages
 Vendor: The SynCE Project
