@@ -12,12 +12,7 @@ int main()
 
 	printf("First file: \"%s\"\n", from_unicode(find_data.cFileName));
 
-	// XXX: not implemented in librapi yet
-#ifdef WIN32
 	TEST_NOT_EQUAL(0, CeFindClose(handle));
-#else
-	printf("not yet implemented in librapi\n");
-#endif
 	
 	VERIFY_HRESULT(CeRapiUninit());
 	return TEST_SUCCEEDED;
