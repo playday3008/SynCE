@@ -51,6 +51,8 @@ void RakiWorkerThread::start(WorkerThreadInterface *wti, void (WorkerThreadInter
     this->userRun = userRun;
     this->wti = wti;
     this->wti->setRunning(true);
+    this->wti->setStopRequested(false);
+    this->wti->setDelayedDelete(false);
     this->data = data;
     QThread::start();
     threadMutex.unlock();
@@ -59,34 +61,20 @@ void RakiWorkerThread::start(WorkerThreadInterface *wti, void (WorkerThreadInter
 
 bool RakiWorkerThread::running()
 {
-    return rakiWorkerThread->isRunning();
-}
-
-
-bool RakiWorkerThread::isRunning()
-{
-    return QThread::running();
+    return rakiWorkerThread->QThread::running();
 }
 
 
 bool RakiWorkerThread::finished()
 {
-    return rakiWorkerThread->isFinished();
-}
-
-
-bool RakiWorkerThread::isFinished()
-{
-    return QThread::finished();
+    return rakiWorkerThread->QThread::finished();
 }
 
 
 void RakiWorkerThread::stop()
 {
     if (wti) {
-        wti->lock();
-        wti->setRunning(false);
-        wti->unlock();
+        wti->setStopRequested(true);
         this->wait();
     }
 }
@@ -104,9 +92,10 @@ void RakiWorkerThread::run()
     if (userRun) {
         (wti->*userRun)(this, data);
     }
-    wti->lock();
     wti->setRunning(false);
-    wti->unlock();
+    if (wti->delayedDelete()) {
+        delete wti;
+    }
     wti = NULL;
     QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
     waitCondition.wakeOne();
