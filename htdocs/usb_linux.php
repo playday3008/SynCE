@@ -51,10 +51,9 @@ a successful USB connection.</p>
 <p><b>Symptoms</b> The <tt>ipaq</tt> kernel driver recognizes the USB device, but it
 is not possible to get a PPP connection.</p>
 
-<p><b>Showing the bug</b> If the <tt>ipaq</tt> kernel driver is loaded with
-options <tt>debug=1</tt> and you have for example <tt>*.* /var/log/all.log</tt>
-in /etc/syslog.conf then that log file will show this when
-<tt>synce-serial-start</tt> is started:</p>
+<p><b>Showing the bug</b> Only if you really care! :-) if you follow the <a
+href="usb_linux_debug.php">debug instructions</a> you will get something like
+this in your log:</p>
 
 <pre>synce-serial-start: Executing '/usr/sbin/pppd call synce-device'
 pppd[6162]: pppd 2.4.2 started by root, uid 0
