@@ -90,6 +90,11 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>August 16, 2003</a></b> A GNOME 2 version of the MultiSync plugin was
+released today. It has version 0.8.2 and can be <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550">downloaded</a>
+in .tar.gz or RPM format.</p>
+
 <p><b>August 14, 2003</a></b> We would like to welcome <a
 href="mailto:snaggen@users.sourceforge.net">Mattias Eriksson</a> to the SynCE
 project!  He was the one who ported the <tt>multisync_plugin</tt> module to
