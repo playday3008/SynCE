@@ -127,22 +127,29 @@ static void recurrence_line_to_rrule(mdir_line* line, RecurrenceRule* rrule)/*{{
       continue;
     }
 
-    if (STR_EQUAL(name, "freq"))
+    if (STR_EQUAL(name, "byday"))
+    {
+      rrule->properties |= PROPERTY_BYDAY;
+      rrule->byday = strdup(value);
+    }
+    else if (STR_EQUAL(name, "count"))
+    {
+      rrule->properties |= PROPERTY_COUNT;
+      rrule->count = atoi(value);
+    }
+    else if (STR_EQUAL(name, "freq"))
     {
       rrule->properties |= PROPERTY_FREQ;
 
-      if (STR_EQUAL(value, "yearly"))
+      if (STR_EQUAL(value, "weekly"))
+        rrule->freq = FREQ_WEEKLY;
+      else if (STR_EQUAL(value, "yearly"))
         rrule->freq = FREQ_YEARLY;
       else
       {
         synce_warning("Frequency '%s' not yet supported", value);
         continue;
       }
-    }
-    else if (STR_EQUAL(name, "count"))
-    {
-      rrule->properties |= PROPERTY_COUNT;
-      rrule->count = atoi(value);
     }
     else if (STR_EQUAL(name, "interval"))
     {
@@ -159,43 +166,145 @@ static void recurrence_line_to_rrule(mdir_line* line, RecurrenceRule* rrule)/*{{
   strv_free(spec_vector);
 }/*}}}*/
 
+static bool recurrence_set_flags(/*{{{*/
+    RecurrenceRule* rrule,
+    uint32_t* flags,
+    uint32_t* occurrences)
+{
+  assert(flags);
+
+  *flags = DEFAULT_FLAGS;
+  
+  if (rrule->properties & PROPERTY_UNTIL)
+  {
+    *flags |= FLAG_ENDS_ON_DATE;
+    synce_error("UNTIL not yet supported");
+    return false;
+  }
+  else if (rrule->properties & PROPERTY_COUNT)
+  {
+    *flags |= FLAG_ENDS_AFTER_X_OCCURENCES;
+    if (occurrences)
+      *occurrences = rrule->count;
+  }
+  else
+  {
+    *flags |= FLAG_DOES_NOT_END;
+  }
+
+  return true;
+}/*}}}*/
+
+static bool recurrence_parse_weekly(/*{{{*/
+    RecurrenceRule* rrule, 
+    RecurrencePattern* pattern,
+    mdir_line* dtstart,
+    mdir_line* dtend)
+{
+  bool success = false;
+  struct tm start;
+  struct tm end;
+
+  if (!parser_datetime_to_struct(dtstart->values[0], &start))
+    goto exit;
+  
+  if (!parser_datetime_to_struct(dtend->values[0], &end))
+    goto exit;
+
+  pattern->recurrence_type          = olRecursWeekly;
+  pattern->details.weekly.interval  = rrule->interval;
+
+  if (!recurrence_set_flags(rrule, 
+      &pattern->details.weekly.flags,
+      &pattern->details.weekly.occurrences))
+    goto exit;
+
+  if (rrule->properties & PROPERTY_BYDAY)
+  {
+    char** days = strsplit(rrule->byday, ',');
+    char** pp;
+
+    for (pp = days; *pp; pp++)
+    {
+      /* TODO: make a table and loop */
+      if (STR_EQUAL(*pp, "mo"))
+        pattern->details.weekly.days_of_week_mask |= olMonday;
+      else if (STR_EQUAL(*pp, "tu"))
+        pattern->details.weekly.days_of_week_mask |= olThursday;
+      else if (STR_EQUAL(*pp, "we"))
+        pattern->details.weekly.days_of_week_mask |= olWednesday;
+      else if (STR_EQUAL(*pp, "th"))
+        pattern->details.weekly.days_of_week_mask |= olThursday;
+      else if (STR_EQUAL(*pp, "fr"))
+        pattern->details.weekly.days_of_week_mask |= olFriday;
+      else if (STR_EQUAL(*pp, "sa"))
+        pattern->details.weekly.days_of_week_mask |= olSaturday;
+      else if (STR_EQUAL(*pp, "su"))
+        pattern->details.weekly.days_of_week_mask |= olSunday;
+      else
+        synce_warning("Bad weekday: '%s'", *pp);
+    }
+
+    strv_free(days);
+  }
+  else
+  {
+    synce_error("BYDAY missing");
+    goto exit;
+  }
+
+  /* some more info */
+  pattern->start_minute = start.tm_hour * 60 + start.tm_min;
+  pattern->end_minute   = end.  tm_hour * 60 + end  .tm_min;
+    
+  /* always 0x0b for olRecursWeekly? */
+  pattern->unknown1[4] = 0x0b;
+
+  /* variable */
+  pattern->unknown2 = 0x000021c0; /* 6*24*60 */
+
+  success = true;
+
+exit:
+  return success;
+}/*}}}*/
+
 static bool recurrence_parse_yearly(/*{{{*/
     RecurrenceRule* rrule, 
     RecurrencePattern* pattern,
     mdir_line* dtstart)
 {
   /* use monthly recursion with interval 12 */
-  pattern->recurrence_type = olRecursMonthly;
+  pattern->recurrence_type              = olRecursMonthly;
   pattern->details.monthly.interval     = 12 * rrule->interval;
   pattern->details.monthly.day_of_month = 27; /* XXX: set correct */
-  pattern->details.monthly.flags = DEFAULT_FLAGS;
 
-  if (rrule->properties & PROPERTY_UNTIL)
-  {
-    pattern->details.monthly.flags |= FLAG_ENDS_ON_DATE;
-    synce_error("UNTIL not yet supported");
+  if (!recurrence_set_flags(rrule, 
+      &pattern->details.monthly.flags,
+      &pattern->details.monthly.occurrences))
     return false;
-  }
-  else if (rrule->properties & PROPERTY_COUNT)
-  {
-    pattern->details.monthly.flags |= FLAG_ENDS_AFTER_X_OCCURENCES;
-    pattern->details.monthly.occurrences = rrule->count;
-  }
-  else
-  {
-    pattern->details.monthly.flags |= FLAG_DOES_NOT_END;
-  }
+  
+  /* always 0x0d for olRecursMonthly? */
+  pattern->unknown1[4] = 0x0d;
+
+  /* variable */
+  pattern->unknown2 = 0x0002a300; /* 2*24*60*60 */
 
   return true;
 }/*}}}*/
 
-bool recurrence_parse_rrule(Parser* p, mdir_line* line, mdir_line* dtstart)
+bool recurrence_parse_rrule(
+    Parser* p, 
+    mdir_line* line, 
+    mdir_line* dtstart,
+    mdir_line* dtend)
 {
   bool success = false;
   RecurrenceRule rrule;
   RecurrencePattern pattern;
 
   /* verify the structures are packed correctly */
+  assert(sizeof(RecurringWeekly)   == 0x20);
   assert(sizeof(RecurringMonthly)  == 0x20);
   assert(sizeof(RecurrencePattern) == 0x68);
 
@@ -207,14 +316,11 @@ bool recurrence_parse_rrule(Parser* p, mdir_line* line, mdir_line* dtstart)
   pattern.unknown1[2] = 0x04;
   pattern.unknown1[3] = 0x30;
 
-  /* variable: 0x0b, 0x0d */
-  pattern.unknown1[4] = 0x0d;
+  /* variable: 0x0a-0x0d */
+  /* pattern.unknown1[4] = 0x0d; */
 
   /* always the same? */
   pattern.unknown1[5] = 0x20;
-
-  /* variable */
-  pattern.unknown2    = 0x0002a300; /* 2*24*60*60 */
 
   /* variable? */
   pattern.unknown3[0x00] = 0x20; 
@@ -239,6 +345,10 @@ bool recurrence_parse_rrule(Parser* p, mdir_line* line, mdir_line* dtstart)
 
   switch (rrule.freq)
   {
+    case FREQ_WEEKLY:
+      success = recurrence_parse_weekly(&rrule, &pattern, dtstart, dtend);
+      break;
+
     case FREQ_YEARLY:
       success = recurrence_parse_yearly(&rrule, &pattern, dtstart);
       break;
@@ -259,6 +369,8 @@ bool recurrence_parse_rrule(Parser* p, mdir_line* line, mdir_line* dtstart)
   if (success)
     success = parser_add_int16(p, ID_OCCURANCE, OCCURANCE_REPEATED);
 
+  if (rrule.byday)
+    free(rrule.byday);
   return success;
 }
 

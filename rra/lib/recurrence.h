@@ -7,7 +7,11 @@
 
 struct _Parser;
 
-bool recurrence_parse_rrule(struct _Parser* p, mdir_line* line, mdir_line* dtstart);
+bool recurrence_parse_rrule(
+    struct _Parser* p, 
+    mdir_line* line, 
+    mdir_line* dtstart,
+    mdir_line* dtend);
 
 #endif
 
