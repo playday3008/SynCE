@@ -64,7 +64,7 @@ of PDAs to interrested clients via an unix-socket by use of a simple
 protocol. E.g. RAKI is one of such an interested client.</p>
 <br>
 <h2><a name="News" id="News"></a>News</h2>
-<b>August 17, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
+<b>August 18, 2003</b> SynCE-KDE 0.6&nbsp; is released!<br>
 <ul>
   <li>First of all the name of the project has changed. It is now
 called SynCE-KDE.</li>
