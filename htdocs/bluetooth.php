@@ -96,6 +96,10 @@ connections!</li>
 href="http://www.grinta.net/howto/bluez-ipaq.html">Daniele Nicolodi's HOWTO</a>
 is helpful.</p>
 
+<p>It is also possible to connect over Bluetooth Personal Area Network (PAN) by
+following the instructions by Joe Ammond in the mail titled <a
+href="http://sourceforge.net/mailarchive/message.php?msg_id=6157699">Bluetooth
+serial vs. Bluetooth network ActiveSync</a>.</p>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
