@@ -7,6 +7,8 @@
 //
 // Contributed by Richard Taylor <synce@rest.clara.co.uk>
 //
+#undef __STRICT_ANSI__
+#define __USE_GNU
 #include <malloc.h>
 #include <libgen.h>
 #include <stdio.h>
