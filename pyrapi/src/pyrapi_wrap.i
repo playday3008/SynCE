@@ -9,6 +9,7 @@
 	Sort out proper exception handling.
 	Add the registry functions.
 
+   Version: $Header$ 
 */
 
 
@@ -103,8 +104,6 @@ typedef struct _FILETIME
 %typemap(in) LPCWSTR, LPWSTR {
   if (PyString_Check($input)) {
     $1 = wstr_from_ascii(PyString_AsString($input));
-    printf("String is : \"%s\"\n", wstr_to_ascii($1));
-
   } else {
     PyErr_SetString(PyExc_TypeError, "expected a string.");
     return NULL;
@@ -297,7 +296,7 @@ BOOL CeReadFile(
     PyErr_SetString(PyExc_TypeError, "expected a string.");
     return NULL;
   }
-  printf("CeWriteFile writing string (length %d): %s\n", $2, $1);
+  //printf("CeWriteFile writing string (length %d): %s\n", $2, $1);
 }
 
 %typemap(python,argout) (LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten){
@@ -330,7 +329,7 @@ DWORD CeGetLastError( void );
 BOOL CeCopyFile(
 		LPCWSTR lpExistingFileName, 
 		LPCWSTR lpNewFileName, 
-		BOOL bFailIfExists);
+		BOOL bFailIfExists = 0);
 
 BOOL CeCreateDirectory(
 		LPCWSTR lpPathName, 
@@ -385,6 +384,25 @@ BOOL CeFindClose(
 
 DWORD CeGetFileAttributes(
 		LPCWSTR lpFileName);
+
+%typemap(in,numinputs=0) (DWORD nBufferLength,
+                          LPWSTR lpBuffer) (WCHAR tmp[MAX_PATH]){
+   $1 = MAX_PATH;
+   $2 = tmp;
+}
+
+%typemap(python,argout) (DWORD nBufferLength,
+			 LPWSTR lpBuffer) {
+  char * ascii_str;
+  
+  if (!result) {
+    PyErr_SetString(PyRapiError, "Error getting special folder name.");
+    return NULL;
+  }
+
+  ascii_str = wstr_to_ascii($2);
+  $result = Py_BuildValue("s",ascii_str);
+}
 
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
@@ -456,9 +474,9 @@ typedef struct _CEPROPVAL {
     return ptr->propid & 0xFFFF;
   }
   void CEPROPVAL_type_set(CEPROPVAL *ptr, const unsigned int value) {
-    printf("Setting propid to: %d\n", value);
+    //printf("Setting propid to: %d\n", value);
     ptr->propid = (ptr->propid & 0xFFFF0000) | value;
-    printf("propid set to: %d\n", ptr->propid);
+    //printf("propid set to: %d\n", ptr->propid);
   }
   const unsigned int CEPROPVAL_propid_get(CEPROPVAL *ptr) {
     return (ptr->propid >> 16);
@@ -500,11 +518,41 @@ typedef struct _CEDB_FIND_DATA {
 	CEDBASEINFO DbInfo;
 } CEDB_FIND_DATA, *LPCEDB_FIND_DATA, **LPLPCEDB_FIND_DATA;
 
+
+%typemap(in) (WORD wNumSortOrder, 
+	      SORTORDERSPEC *rgSortSpecs) {
+  int i;
+  SORTORDERSPEC * tmp;
+
+  if (PyTuple_Check($input)) {
+    /* get size of tuple */
+    $1 =  PyTuple_Size($input);
+
+    if ( $1 == 0 ) {
+      $2 = NULL;
+    } else {
+      /* create array of SORTORDERSPEC elements */
+      $2 = (SORTORDERSPEC *) malloc($1*sizeof(SORTORDERSPEC));
+      
+      /* unpack argument tuple into array */
+      for ( i = 0; i < $1; i++) {
+	if ((SWIG_ConvertPtr(PyTuple_GetItem($input,i),(void **) &tmp, 
+			     SWIGTYPE_p_SORTORDERSPEC,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
+	  SWIG_fail;
+	memcpy(&($2[i]),tmp, sizeof(SORTORDERSPEC));
+      }
+    }
+  } else {
+    PyErr_SetString(PyExc_TypeError, "expected a tuple.");
+    return NULL;
+  }
+}
+
 CEOID CeCreateDatabase(
 		LPWSTR lpszName, 
-		DWORD dwDbaseType = 0, 
-		WORD wNumSortOrder = 0, 
-		SORTORDERSPEC *rgSortSpecs = NULL);
+		DWORD dwDbaseType, 
+		WORD wNumSortOrder, 
+		SORTORDERSPEC *rgSortSpecs);
 
 BOOL CeDeleteDatabase(
 		CEOID oid);
@@ -653,6 +701,120 @@ CEOID CeReadRecordProps(
 		LPBYTE *lplpBuffer, 
 		LPDWORD lpcbBuffer); 
 
+/*
+ * typemaps to support CeSeekDatabase
+ *
+ * CeSeekDatabase ( bdh, seek_type, value )
+ *    Returns (rec_oid, index) for success ( 0, index) for failure.
+ *    The type of the values parameter is dependant on the seek_type
+ *       CEDB_SEEK_CEOID            record_oid
+ *       CEDB_SEEK_VALUESMALLER     CEPROPVAL
+ *       CEDB_SEEK_VALUEFIRSTEQUAL  CEPROPVAL
+ *       CEDB_SEEK_VALUENEXTEQUAL   CEPROPVAL
+ *       CEDB_SEEK_VALUEGREATER     CEPROPVAL
+ *       CEDB_SEEK_BEGINNING        index forwards from start
+ *       CEDB_SEEK_CURRENT          index (positive for forward, neg for back)
+ *       CEDB_SEEK_END              index backwards from end (neg index)
+ */
+
+%typemap(in) (	DWORD dwSeekType, 
+		DWORD dwValue ) {
+
+  PyObject *seek_type_obj, *seek_value_obj;
+
+  if (!PyTuple_Check($input)) {
+    PyErr_SetString(PyRapiError, "second parameter to CeSeekDatabase must be a two element tuple.");
+    return NULL;
+  }
+
+  /* check size of tuple */
+  {
+    int num_args;
+    num_args =  PyTuple_Size($input);
+    if (num_args != 2) {
+      PyErr_SetString(PyRapiError, "second parameter to CeSeekDatabase must be a two element tuple.");
+      return NULL;
+    }
+  }
+	
+  /* Get the seek_type. */
+  seek_type_obj = PyTuple_GetItem($input,0);
+  if (!PyInt_Check(seek_type_obj)) {
+    PyErr_SetString(PyRapiError, "seek_type not a valid seek_type, must evaluate to an int.");
+    return NULL;
+  }    
+  $1 = (DWORD)PyInt_AsLong(seek_type_obj);
+
+  /* Get the seek_value */
+
+  seek_value_obj = PyTuple_GetItem($input,1);
+
+  switch ($1) {
+  case CEDB_SEEK_CEOID:
+    {
+      if (!PyInt_Check(seek_value_obj)) {
+	PyErr_SetString(PyRapiError, "seek_value must be a record_oid for seek_type == CEDB_SEEK_CEOID.");
+	return NULL;
+      }    
+      $2 = (DWORD)PyInt_AsLong(seek_value_obj);
+    }
+    break;
+  case CEDB_SEEK_VALUESMALLER:
+  case CEDB_SEEK_VALUEFIRSTEQUAL:
+  case CEDB_SEEK_VALUENEXTEQUAL:
+  case CEDB_SEEK_VALUEGREATER:
+    {
+      CEPROPVAL * prop_val;
+
+      if ((SWIG_ConvertPtr(seek_value_obj,(void **) &prop_val, 
+			   SWIGTYPE_p_CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) {
+	PyErr_SetString(PyRapiError, "seek_value must be a CEPROPVAL for seek_type == CEDB_SEEK_VALUEXXX.");
+	return NULL;
+      }
+      $2 = (DWORD)prop_val;
+    }
+    break;
+  case CEDB_SEEK_BEGINNING:      
+  case CEDB_SEEK_CURRENT:         
+  case CEDB_SEEK_END:
+    {
+      if (!PyInt_Check(seek_value_obj)) {
+	PyErr_SetString(PyRapiError, "seek_value must be a index for offset seek_type.");
+	return NULL;
+      }    
+      $2 = (DWORD)PyInt_AsLong(seek_value_obj);
+    }
+    break;
+  default:
+    PyErr_SetString(PyRapiError, "seek_type not a valid seek_type, must be one of CEDB_XXX constants.");
+    return NULL;
+  }
+}
+
+%typemap(in,numinputs=0) 
+     (LPDWORD lpdwIndex)
+   (DWORD temp){
+  $1 = &temp;
+}
+
+%typemap(python,argout) (LPDWORD lpdwIndex) {
+  PyObject *return_obj, *o2, *o3;
+
+  return_obj   = PyInt_FromLong(*$1);
+
+  if (!PyTuple_Check($result)) {
+    PyObject *o2 = $result;
+    $result = PyTuple_New(1);
+    PyTuple_SetItem($result,0,o2);
+  }
+  o3 = PyTuple_New(1);
+  PyTuple_SetItem(o3,0,return_obj);
+  o2 = $result;
+  $result = PySequence_Concat(o2,o3);
+  Py_DECREF(o2);
+  Py_DECREF(o3);
+}
+
 CEOID CeSeekDatabase(
 		HANDLE hDatabase, 
 		DWORD dwSeekType, 
@@ -677,7 +839,7 @@ CEOID CeSeekDatabase(
     /* get size of tuple */
     $1 =  PyTuple_Size($input);
 
-    printf("Got %d fields to write.", $1);
+    //printf("Got %d fields to write.", $1);
 
     /* create array of CEPROPVAL elements */
     $2 = (CEPROPVAL *) malloc($1*sizeof(CEPROPVAL));
@@ -688,13 +850,13 @@ CEOID CeSeekDatabase(
 			   SWIGTYPE_p_CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
 	SWIG_fail;
       memcpy(&($2[i]),tmp, sizeof(CEPROPVAL));
-      printf ("propid & 0xFFFF = %d\n", ($2[i].propid & 0xFFFF));
-      printf ("propid >> 16 = %d\n", ($2[i].propid >> 16));
+      //printf ("propid & 0xFFFF = %d\n", ($2[i].propid & 0xFFFF));
+      //printf ("propid >> 16 = %d\n", ($2[i].propid >> 16));
     }
-    for ( i = 0; i < $1; i++) {
-      printf ("real propid & 0xFFFF = %d\n", (($2[i].propid) & 0xFFFF));
-      printf ("real propid >> 16 = %d\n", (($2[i].propid) >> 16));
-    }
+    //for ( i = 0; i < $1; i++) {
+    //  printf ("real propid & 0xFFFF = %d\n", (($2[i].propid) & 0xFFFF));
+    //  printf ("real propid >> 16 = %d\n", (($2[i].propid) >> 16));
+    //  }
   } else {
     PyErr_SetString(PyExc_TypeError, "expected a tuple.");
     return NULL;

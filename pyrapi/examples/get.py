@@ -3,12 +3,12 @@
 import sys
 import string
 import os.path
-from pyrapi import rapi
+from pyrapi import file
 
 # Fetch the file from the PocketPC
-file = rapi.openCeFile(sys.argv[1],'r')
-buf = file.read()
-file.close()
+infile = file.openCeFile(sys.argv[1],'r')
+buf = infile.read()
+infile.close()
 
 # Make the file name local
 outfilename = sys.argv[1]

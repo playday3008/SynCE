@@ -1,6 +1,7 @@
 """
     Classes to provide access to PocketPC databases.
 
+    Version: $Header$ 
 """
 
 from __future__ import generators

@@ -114,7 +114,6 @@ class FileAccessFunctions(RapiFileTests):
 class FileManagementFunctions(RapiFileTests):
 
 
-
     def testCeCopyFile(self):
         """CeCopyFile should copy file."""
 
@@ -139,11 +138,13 @@ class FileManagementFunctions(RapiFileTests):
         
     def CeCreateDirectory(self):
         """CeCreateDirectory """
+        pass # done by SetUp
         
     def CeDeleteFile(self):
         """CeDeleteFile"""
+        pass # done by just about everything
         
-    def CeFindAllFiles(self):
+    def testCeFindAllFiles(self):
         """CeFindAllFiles"""
 
         import time
@@ -199,35 +200,110 @@ class FileManagementFunctions(RapiFileTests):
         """CeFindClose"""
         pass # done by testCeFindFirstFile
         
-    def estCeGetFileAttributes(self):
+    def testCeGetFileAttributes(self):
         """CeGetFileAttributes"""
 
         attr = pyrapi.CeGetFileAttributes(RapiFileTests._test_directory)
 
-        print "attr = ", attr, " attr & pyrapi.FILE_ATTRIBUTE_DIRECTORY = ", ( attr & pyrapi.FILE_ATTRIBUTE_DIRECTORY )
 
         self.failUnless(attr & pyrapi.FILE_ATTRIBUTE_DIRECTORY, "attribute should be a directory")
         
-    def CeGetSpecialFolderPath(self):
-        """CeGetSpecialFolderPath"""
-        
-    def CeMoveFile(self):
+    def testCeGetSpecialFolderPath(self):
+        """CeGetSpecialFolderPath should return all special folders"""
+
+        for i in  [pyrapi.CSIDL_PROGRAMS,
+                   pyrapi.CSIDL_PERSONAL,
+                   pyrapi.CSIDL_FAVORITES_GRYPHON,
+                   pyrapi.CSIDL_STARTUP,
+                   pyrapi.CSIDL_RECENT,
+                   pyrapi.CSIDL_STARTMENU,
+                   #pyrapi.CSIDL_DESKTOPDIRECTORY, # Currently broken
+                   pyrapi.CSIDL_FONTS,
+                   pyrapi.CSIDL_FAVORITES]:
+            
+            f = pyrapi.CeGetSpecialFolderPath(i)
+            self.failUnless(len(f) > 0, "folder %d should have a non zero length name" % (i,))
+
+    def testCeMoveFile(self):
         """CeMoveFile"""
+
+        import time
+        testline = time.ctime(time.time())
+
+        orig_file_name  = RapiFileTests._test_directory + "\\to_move"
+        moved_file_name = RapiFileTests._test_directory + "\\moved"
+
+        try: pyrapi.CeDeleteFile(moved_file_name) # clean up from any previous run
+        except: pass
+
+        f = pyrapi.CeCreateFile(orig_file_name, pyrapi.GENERIC_WRITE, 0, pyrapi.CREATE_ALWAYS)
+        pyrapi.CeWriteFile(f,testline)
+        pyrapi.CeCloseHandle(f)
+
+        pyrapi.CeMoveFile(orig_file_name, moved_file_name)
         
+        f = pyrapi.CeCreateFile(moved_file_name, pyrapi.GENERIC_READ)
+        res = pyrapi.CeReadFile(f,100)
+        pyrapi.CeCloseHandle(f)
+
+        self.assertEqual(testline,res)
+
+        pyrapi.CeDeleteFile(moved_file_name)
+
     def CeRemoveDirectory(self):
         """CeRemoveDirectory"""
+        pass # done by TearDown
         
-    def CeSetFileAttributes(self):
+    def testCeSetFileAttributes(self):
         """CeSetFileAttributes"""
-    
+
+        # Create a file to work with
+        
+        import time
+        testline = time.ctime(time.time())
+        filename = RapiFileTests._test_directory+"\\attr_test"
+
+        f = pyrapi.CeCreateFile(filename,
+                                pyrapi.GENERIC_WRITE, 0, pyrapi.CREATE_ALWAYS)
+        pyrapi.CeWriteFile(f,testline)
+        pyrapi.CeCloseHandle(f)
+
+        # Set its attr to normal and check that it worked
+
+        pyrapi.CeSetFileAttributes(filename, pyrapi.FILE_ATTRIBUTE_NORMAL)
+        attr = pyrapi.CeGetFileAttributes(filename)
+        self.failUnless(attr & pyrapi.FILE_ATTRIBUTE_NORMAL, "attr should have been set to FILE_ATTRIBUTE_NORMAL")
+
+        # check each of the other attributes
+
+        for new_attr in [pyrapi.FILE_ATTRIBUTE_ARCHIVE,
+                         pyrapi.FILE_ATTRIBUTE_HIDDEN,
+                         pyrapi.FILE_ATTRIBUTE_READONLY,
+                         pyrapi.FILE_ATTRIBUTE_SYSTEM,
+                         #pyrapi.FILE_ATTRIBUTE_TEMPORARY # Does not work
+                         ]:
+
+            pyrapi.CeSetFileAttributes(filename, new_attr)
+            attr = pyrapi.CeGetFileAttributes(filename)
+            self.failUnless(attr & new_attr, "attr should have been set to %0x" % (new_attr,))
+
+            # Set back to FILE_ATTRIBUTE_NORMAL before check next attr.
+            pyrapi.CeSetFileAttributes(filename, pyrapi.FILE_ATTRIBUTE_NORMAL)
+            attr = pyrapi.CeGetFileAttributes(filename)
+            self.failUnless(attr & pyrapi.FILE_ATTRIBUTE_NORMAL, "attr should have been set to FILE_ATTRIBUTE_NORMAL")            
+        # remove the test file
+        pyrapi.CeDeleteFile(filename)
+
 
 
 class RapiDatabaseTests(unittest.TestCase):
 
+    _test_db_name = "pyrapi_test_db"
+
     def setUp(self):
         #Clean up any previous test run.
         try:
-            new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == "pyrapi_test_db"]
+            new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == RapiDatabaseTests._test_db_name]
             pyrapi.CeDeleteDatabase(new_db[0].OidDb)
         except: pass
         
@@ -235,18 +311,30 @@ class RapiDatabaseTests(unittest.TestCase):
     def testCeCreateDatabase(self):
         """CeCreateDatabase"""
 
-        dboid = pyrapi.CeCreateDatabase("pyrapi_test_db")
+        dboid = pyrapi.CeCreateDatabase(RapiDatabaseTests._test_db_name, 0, ())
 
-        new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == "pyrapi_test_db"]
+        new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == RapiDatabaseTests._test_db_name]
 
         self.failIfEqual(len(new_db),0,"new db not in database list")
 
         pyrapi.CeDeleteDatabase(new_db[0].OidDb)
         
                                 
-    def CeDeleteDatabase(self):
+    def testCeDeleteDatabase(self):
         """CeDeleteDatabase"""
-        pass # same as testCeCreateDatabase
+
+        dboid = pyrapi.CeCreateDatabase(RapiDatabaseTests._test_db_name, 0, ())
+
+        new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == RapiDatabaseTests._test_db_name]
+
+        self.failIfEqual(len(new_db),0,"new db not in database list")
+
+        pyrapi.CeDeleteDatabase(new_db[0].OidDb)
+
+        new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == RapiDatabaseTests._test_db_name]
+
+        self.assertEqual(len(new_db),0,"db not removed from database list")
+
         
     def testCeFindAllDatabases(self):
         """CeFindAllDatabases"""
@@ -256,12 +344,41 @@ class RapiDatabaseTests(unittest.TestCase):
         self.failUnless(len(dblist) > 0,
                         'found on databases')
 
-    def CeFindFirstDatabase(self):
+    def testCeFindFirstDatabase(self):
         """CeFindFirstDatabase"""
-        
+
+        # Get list of all databases
+        full_db_list = [ db.OidDb for db in pyrapi.CeFindAllDatabases() ]
+
+        test_db_list = []
+        handle = pyrapi.CeFindFirstDatabase()
+        count = 0
+        while 1:
+            dboid = pyrapi.CeFindNextDatabase(handle)
+            if dboid == 0:
+                break
+
+            self.failUnless(len(full_db_list) > count,
+                            "CeFindNextDatabase should not find more than CeFindAllDatabases")    
+            test_db_list.append(dboid)
+            count = count + 1
+                        
+
+        self.assertEqual(len(full_db_list), count,
+                         "CeFindNextDatabase should find the same number of database as CeFindAllDatabases")
+
+        for test_db in test_db_list:
+            matches = len( [db for db in full_db_list if db == test_db] )
+            self.failIf(matches < 1, "CeFindNextDatabase should not find db that CeFindAllDatabases does not.")
+            self.failIf(matches > 1, "CeFindNextDatabase should only find each db once.")
+            
+
+                
+                
     def CeFindNextDatabase(self):
         """CeFindNextDatabase"""
-        
+        pass # done by testCeFindFirstDatabase
+    
     def testCeOpenDatabase(self):
         """CeOpenDatabase"""
 
@@ -288,8 +405,62 @@ class RapiDatabaseTests(unittest.TestCase):
 
         record = pyrapi.CeReadRecordProps(dbh)    
 
-    def CeSeekDatabase(self):
+    def testCeSeekDatabase(self):
         """CeSeekDatabase"""
+
+        # Clean up from any failed run
+        try:
+            new_db = [db for db in pyrapi.CeFindAllDatabases() if db.DbInfo.szDbaseName == RapiDatabaseTests._test_db_name]
+            pyrapi.CeDeleteDatabase(new_db[0].OidDb)
+        except: pass
+
+        # Create dummy database
+        #sort = pyrapi.SORTORDERSPEC()                  # Sortspec not implemented yet
+        #sort.propid = 1
+        #sort.dwFlags = pyrapi.CEDB_SORT_DESCENDING
+        #dboid = pyrapi.CeCreateDatabase(RapiDatabaseTests._test_db_name, 0, (sort,))
+        dboid = pyrapi.CeCreateDatabase(RapiDatabaseTests._test_db_name, 0, ())
+        dbh = pyrapi.CeOpenDatabase(dboid,"")
+
+        # Insert some records
+        # Write a new record to db
+        field = pyrapi.CEPROPVAL()
+        field.type     = pyrapi.CEVT_I2
+        field.propid   = 1
+        field.val.iVal = 100
+
+        first_oid  = pyrapi.CeWriteRecordProps(dbh,0,(field,))
+        field.val.iVal = 101
+        second_oid = pyrapi.CeWriteRecordProps(dbh,0,(field,))
+        field.val.iVal = 102
+        third_oid  = pyrapi.CeWriteRecordProps(dbh,0,(field,))
+        field.val.iVal = 103
+        last_oid   = pyrapi.CeWriteRecordProps(dbh,0,(field,))
+
+        # Seek to the records
+        (seek_oid, index) = pyrapi.CeSeekDatabase(dbh, (pyrapi.CEDB_SEEK_CEOID, first_oid))
+        self.assertEqual(seek_oid,first_oid, "CEDB_SEEK_CEOID should have found first_oid")
+
+        # It should be possible to check the order of the returns but sortspec has not been
+        # implemented now so we can only check that a valid record is returned
+        (seek_oid, index) = pyrapi.CeSeekDatabase(dbh, (pyrapi.CEDB_SEEK_BEGINNING, 0))
+        self.failIfEqual(seek_oid, 0, "CEDB_SEEK_BEGINNING 0 should have found first_oid")
+        (seek_oid, index) = pyrapi.CeSeekDatabase(dbh, (pyrapi.CEDB_SEEK_BEGINNING, 1))
+        self.failIfEqual(seek_oid, 0, "CEDB_SEEK_BEGINNING 1 should have found second")
+
+        (seek_oid, index) = pyrapi.CeSeekDatabase(dbh, (pyrapi.CEDB_SEEK_END, 0))
+        self.failIfEqual(seek_oid, 0, "CEDB_SEEK_END 0 should have found last")
+        (seek_oid, index) = pyrapi.CeSeekDatabase(dbh, (pyrapi.CEDB_SEEK_END, -1))
+        self.failIfEqual(seek_oid, 0, "CEDB_SEEK_END should have found third")
+
+        # Not yet supported
+        #(seek_oid, index) = pyrapi.CeSeekDatabase(dbh, (pyrapi.CEDB_SEEK_VALUEFIRSTEQUAL, field))
+        #self.failUnless(seek_oid == rec_oid, "should have found equal record")
+
+        # Delete dummy database
+        pyrapi.CeCloseHandle(dbh)
+        pyrapi.CeDeleteDatabase(dboid)
+
         
     def testCeWriteRecordPropsNoChanges(self):
         """CeWriteRecordProps"""
@@ -330,7 +501,7 @@ class RapiDatabaseTests(unittest.TestCase):
         """CeWriteRecordPropsWithChanges should be able to create new records and fields"""
 
         # Create new database for test
-        dboid = pyrapi.CeCreateDatabase("pyrapi_test_db")
+        dboid = pyrapi.CeCreateDatabase(RapiDatabaseTests._test_db_name, 0, ())
         dbh = pyrapi.CeOpenDatabase(dboid,"")
         
         # Write a new record to db
@@ -355,6 +526,7 @@ class RapiDatabaseTests(unittest.TestCase):
         # Delete db
         pyrapi.CeCloseHandle(dbh)
         pyrapi.CeDeleteDatabase(dboid)
+
         
 if __name__ == "__main__":
     unittest.main()   

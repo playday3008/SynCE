@@ -1,3 +1,4 @@
-include README*
+include README* bootstrap.sh
+include src/pyrapi_wrap.i
 exclude *~
 recursive-include examples *.py

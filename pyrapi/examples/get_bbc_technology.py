@@ -9,7 +9,7 @@
 
 """
 from pyrapi import pyrapi
-from pyrapi import rapi
+from pyrapi import file
 
 import urllib2, urlparse
 import re,sys
@@ -69,7 +69,7 @@ if sys.argv[1] == "connect":
     ##f.close()
 
 
-    f = rapi.openCeFile('\\My Documents\\bbc_tech.htm','w')
+    f = file.openCeFile('\\My Documents\\bbc_tech.htm','w')
     f.write("<html><head><title>BBC Tech News</title></head><body>\n")
     f.write(page)
     f.write("</body></html>\n")

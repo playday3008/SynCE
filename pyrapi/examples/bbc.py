@@ -6,7 +6,7 @@ THIS IS CURRENTLY VERY BROKEN  :-)
 
 """ 
 
-from pyrapi import rapi
+from pyrapi import file
 import urllib2
 import re
 
@@ -65,13 +65,13 @@ fetchAndFix("http://news.bbc.co.uk/low/english/pda/")
 
 ### Write it to the PDA
 ##outfilename = r'\my documents\bbc.htm'
-##outfile = rapi.openCeFile(outfilename,'w')
+##outfile = file.openCeFile(outfilename,'w')
 ##outfile.write(web_page.read())
 ##outfile.close()
 
 ### Makeup the favorites entry.
 
-##outfile = rapi.openCeFile(r'\windows\favorites\bbc.url','w')
+##outfile = file.openCeFile(r'\windows\favorites\bbc.url','w')
 ##outfile.write("""[InternetShortcut]
 ##URL=file://%s
 ##Offline=1""" % outfilename)

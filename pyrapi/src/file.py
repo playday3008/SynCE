@@ -1,4 +1,8 @@
-""" rapi.py - A python module to put a friendly face on the pyrapi.so wrapper. """
+"""
+      rapi.py - A python module to put a friendly face on the pyrapi file functions.
+
+      Version: $Header$ 
+"""
 
 import sys
 import string
