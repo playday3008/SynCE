@@ -24,8 +24,10 @@ librra_la_SOURCES = \
 	contact.h          contact.c \
 	generator.h        generator.c \
 	parser.h           parser.c \
-	recurrence.h       recurrence_internal.h recurrence.c \
+	recurrence.h       recurrence.c \
+	recurrence_pattern.h recurrence_pattern.c \
 	matchmaker.h       matchmaker.c \
+	mdir_line_vector.h mdir_line_vector.c \
 	rrac.h             rrac.c \
 	strbuf.h           strbuf.c \
 	syncmgr.h          syncmgr.c \
