@@ -30,7 +30,7 @@ typedef struct _Client
 } Client;
 
 /* Dump a block of data for debugging purposes */
-void
+static void
 dump(desc, data, len)
 	const char *desc;
 	void *data;
@@ -125,7 +125,7 @@ static bool handle_parameters(int argc, char** argv)
 /**
  * Begin listening on server port
  */
-SynceSocket* start_socket_server()
+static SynceSocket* start_socket_server()
 {
 	SynceSocket* server = NULL;
 
