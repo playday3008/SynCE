@@ -74,4 +74,6 @@ AC_OUTPUT([Makefile
 					 src/config/Makefile
 					 src/support/Makefile
 					 tests/Makefile
-					 tests/rapi/Makefile])
+					 tests/rapi/Makefile
+					 tools/Makefile])
+

@@ -6,6 +6,24 @@
 #include "rapi_wstr.h"
 #include "rapi_log.h"
 
+BOOL CeDeleteFile(
+		LPCWSTR lpFileName)
+{
+	RapiContext* context = rapi_context_current();
+	BOOL return_value = 0;
+	
+	rapi_context_begin_command(context, 0x1c);
+	rapi_buffer_write_optional_string(context->send_buffer, lpFileName);
+
+	if ( !rapi_context_call(context) )
+		return 0;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+	return return_value;
+}
+
 
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
@@ -22,9 +40,9 @@ DWORD CeGetSpecialFolderPath(
 	if ( !rapi_context_call(context) )
 		return 0;
 
-/*	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
 		return 0;
-	rapi_log("last_error = %i", context->last_error);*/
+	rapi_log("last_error = %i", context->last_error);
 
 	if ( !rapi_buffer_read_string(context->recv_buffer, lpBuffer, &string_length) )
 		return 0;
@@ -47,8 +65,8 @@ BOOL CeCopyFile(
 	BOOL return_value = 0;
 	
 	rapi_context_begin_command(context, 0x1b);
-	rapi_buffer_write_string(context->send_buffer, lpExistingFileName);
-	rapi_buffer_write_string(context->send_buffer, lpNewFileName);
+	rapi_buffer_write_optional_string(context->send_buffer, lpExistingFileName);
+	rapi_buffer_write_optional_string(context->send_buffer, lpNewFileName);
 	rapi_buffer_write_uint32(context->send_buffer, bFailIfExists);
 
 	if ( !rapi_context_call(context) )

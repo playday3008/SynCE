@@ -1,7 +1,18 @@
 /* $Id$ */
 #include "rapi_context.h"
-#include "rapi_log.h"
 #include <stdlib.h>
+
+#define RAPI_CONTEXT_DEBUG 0
+
+#if RAPI_CONTEXT_DEBUG
+#define rapi_context_trace(args...)    rapi_trace(args)
+#define rapi_context_warning(args...)  rapi_warning(args)
+#define rapi_context_error(args...)    rapi_error(args)
+#else
+#define rapi_context_trace(args...)
+#define rapi_context_warning(args...)
+#define rapi_context_error(args...)
+#endif
 
 static RapiContext* current_context;
 
@@ -50,6 +61,8 @@ void rapi_context_free(RapiContext* context)
 
 bool rapi_context_begin_command(RapiContext* context, u_int32_t command)
 {
+	rapi_context_trace("command=0x%02x", command);
+	
 	rapi_buffer_free_data(context->send_buffer);
 	
 	if ( !rapi_buffer_write_uint32(context->send_buffer, command) )
@@ -76,19 +89,19 @@ bool rapi_context_call(RapiContext* context)
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_1) )
 		return false;
 
-	rapi_log("result 1 = 0x%08x", context->result_1);
+	rapi_context_trace("result 1 = 0x%08x", context->result_1);
 
-/*	if (context->result_1 != 1)
-		return false;*/
-	
-	/* this is a HRESULT? */
-	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
-		return false;
-	
-	rapi_log("result 2 = 0x%08x", context->result_2);
+	if (1 == context->result_1)
+	{
+		/* this is a HRESULT */
+		if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
+			return false;
 
-/*	if (context->result_2 != 0)
-		return false;*/
+		rapi_context_trace("result 2 = 0x%08x", context->result_2);
+
+		/*	if (context->result_2 != 0)
+				return false;*/
+	}
 
 	return true;
 }

@@ -29,6 +29,11 @@ void rapi_wstr_free_string(void* str);
  */
 size_t rapi_wstr_string_length(LPCWSTR unicode);
 
+/**
+ * Append unicode strings, return success
+ */
+bool rapi_wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length);
+
 #ifdef __cplusplus
 }
 #endif

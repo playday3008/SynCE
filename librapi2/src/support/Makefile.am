@@ -10,3 +10,5 @@ libsupport_la_SOURCES = \
 	rapi_log.h rapi_log.c \
 	rapi_wstr.h rapi_wstr.c
 
+include_HEADERS = \
+	rapi_wstr.h 

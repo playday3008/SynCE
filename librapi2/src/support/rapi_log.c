@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 /* evil static data */
-static int current_log_level = RAPI_LOG_LEVEL_NONE;
+static int current_log_level = RAPI_LOG_LEVEL_HIGHEST;
 
 void _rapi_log(int level, const char* file, int line, const char* format, ...)
 {

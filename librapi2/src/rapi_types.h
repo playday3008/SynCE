@@ -35,6 +35,7 @@ typedef WCHAR*  LPWSTR;
  * Const pointer types
  */
 
+typedef const void*   LPCVOID;
 typedef const char*   LPCSTR;
 typedef const WCHAR*  LPCWSTR;
 
@@ -45,6 +46,8 @@ typedef const WCHAR*  LPCWSTR;
 
 /* A handle  is usually a void*, but we must guarantee 32-bit! */
 typedef u_int32_t  HANDLE;
+
+#define INVALID_HANDLE_VALUE ((HANDLE)-1)
 
 /* HRESULT must be a signed integer if the FAILED() macro should work */
 typedef int32_t  HRESULT;

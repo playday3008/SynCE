@@ -8,6 +8,18 @@
 #include <string.h>
 #include <assert.h>
 
+#define RAPI_BUFFER_DEBUG 0
+
+#if RAPI_BUFFER_DEBUG
+#define rapi_buffer_trace(args...)    rapi_trace(args)
+#define rapi_buffer_warning(args...)  rapi_warning(args)
+#define rapi_buffer_error(args...)    rapi_error(args)
+#else
+#define rapi_buffer_trace(args...)
+#define rapi_buffer_warning(args...)
+#define rapi_buffer_error(args...)
+#endif
+
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
 #endif
@@ -37,7 +49,7 @@ static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)
 	while (new_size < bytes_needed)
 		new_size <<= 1;
 	
-	rapi_log("trying to realloc %i bytes, buffet->data=%p", new_size, buffer->data);
+	rapi_buffer_trace("trying to realloc %i bytes, buffet->data=%p", new_size, buffer->data);
 	
 	new_data = realloc(buffer->data, new_size);
 	if (new_data)
@@ -48,7 +60,7 @@ static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)
 	}
 	else
 	{
-		rapi_log("realloc %i bytes failed", new_size);
+		rapi_buffer_error("realloc %i bytes failed", new_size);
 	}
 	
 	return success;
@@ -67,7 +79,7 @@ static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)
 		success = rapi_buffer_enlarge(buffer, bytes_needed);
 		if (!success)
 		{
-			rapi_log("failed to enlarge buffer, bytes_needed=%i\n", bytes_needed);
+			rapi_buffer_error("failed to enlarge buffer, bytes_needed=%i\n", bytes_needed);
 		}
 	}
 	else
@@ -108,7 +120,7 @@ bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
 {
 	if (!buffer)
 	{
-		rapi_log("buffer is NULL");
+		rapi_buffer_error("buffer is NULL");
 		return false;
 	}
 	
@@ -135,7 +147,7 @@ bool rapi_buffer_write_data(RapiBuffer* buffer, const void* data, size_t size)
 {
 	if (!rapi_buffer_assure_size(buffer, size))
 	{
-		rapi_log("rapi_buffer_assure_size failed, size=%i\n", size);
+		rapi_buffer_error("rapi_buffer_assure_size failed, size=%i\n", size);
 		return false;
 	}
 
@@ -159,6 +171,35 @@ bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value)
 
 bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode)
 {
+	/*
+	 * This function writes a sequence like this:
+	 *
+	 * Offset  Value
+	 *     00  0x00000001
+	 *     04  String length in number of unicode chars + 1
+	 *     08  String data 
+	 */
+	size_t length = rapi_wstr_string_length(unicode) + 1;
+	
+	rapi_buffer_trace("Writing string of length %i",length);
+	
+	return 
+		rapi_buffer_write_uint32(buffer, 1) &&
+		rapi_buffer_write_uint32(buffer, length) &&
+		rapi_buffer_write_data(buffer, (void*)unicode, length * sizeof(WCHAR));
+}
+
+bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode)
+{
+	/*
+	 * This function writes a sequence like this:
+	 *
+	 * Offset  Value
+	 *     00  0x00000001
+	 *     04  String length in number of bytes + 2
+	 *     08  boolean specifying if string data is sent or not
+	 *     0c  String data 
+	 */
 	size_t size;
 	
 	if (unicode)
@@ -186,7 +227,7 @@ bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, boo
 	}
 }
 
-bool rapi_buffer_write_optional_in(RapiBuffer* buffer, void* data, size_t size)
+bool rapi_buffer_write_optional_in(RapiBuffer* buffer, const void* data, size_t size)
 {
 	if (data)
 	{
@@ -238,19 +279,19 @@ bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size)
 {
 	if (!data)
 	{
-		rapi_log("data is NULL");
+		rapi_buffer_error("data is NULL");
 		return false;
 	}
 
 	if (!buffer)
 	{
-		rapi_log("buffer is NULL");
+		rapi_buffer_error("buffer is NULL");
 		return false;
 	}
 
 	if ( (buffer->read_index + size) > buffer->bytes_used )
 	{
-		rapi_log("unable to read %i bytes. read_index=%i, bytes_used=%i", size,
+		rapi_buffer_error("unable to read %i bytes. read_index=%i, bytes_used=%i", size,
 				buffer->read_index, buffer->bytes_used);
 
 		return false;
@@ -288,17 +329,17 @@ bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
 	
 	if (!buffer || !unicode || !size)
 	{
-		rapi_log("bad parameter");
+		rapi_buffer_error("bad parameter");
 		return false;
 	}
 
 	if ( !rapi_buffer_read_uint32(buffer, &exact_size) )
 		return false;
-	rapi_log("exact_size = %i = 0x%x", exact_size, exact_size);
+	rapi_buffer_trace("exact_size = %i = 0x%x", exact_size, exact_size);
 
 	if ( exact_size > *size )
 	{
-		rapi_log("buffer too small (have %i bytes, need %i bytes)", *size, exact_size);
+		rapi_buffer_error("buffer too small (have %i bytes, need %i bytes)", *size, exact_size);
 		return false;
 	}
 
@@ -306,7 +347,7 @@ bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
 
 	if ( !rapi_buffer_read_data(buffer, unicode, (exact_size+1) * sizeof(WCHAR)) )
 	{
-		rapi_log("failed to read buffer");
+		rapi_buffer_error("failed to read buffer");
 		return false;
 	}
 	

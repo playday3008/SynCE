@@ -58,6 +58,11 @@ bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value);
 bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode);
 
 /**
+ * Write an optional string with length
+ */
+bool rapi_buffer_write_optional_string(RapiBuffer* buffer, LPCWSTR unicode);
+
+/**
  * Write an optional parameter
  */
 bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, bool send_data);
@@ -65,7 +70,7 @@ bool rapi_buffer_write_optional(RapiBuffer* buffer, void* data, size_t size, boo
 /**
  * Write an optional input parameter by reference
  */
-bool rapi_buffer_write_optional_in(RapiBuffer* buffer, void* data, size_t size);
+bool rapi_buffer_write_optional_in(RapiBuffer* buffer, const void* data, size_t size);
 
 /**
  * Write an optional output parameter by reference
@@ -96,7 +101,6 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value);
  * Get string with length in number of wide chars
  */
 bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size);
-
 
 #endif
 

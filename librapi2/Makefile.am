@@ -6,5 +6,5 @@ AUTOMAKE_OPTIONS = foreign 1.4
 
 include_HEADERS = rapi_config.h
 
-SUBDIRS = src tests .
+SUBDIRS = src tests tools .
 
