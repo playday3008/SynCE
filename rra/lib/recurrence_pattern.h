@@ -69,13 +69,15 @@ typedef struct _RRA_Exception
 
 /* string = 16-bit unknown, 16-bit length, wide string */
 #define RRA_EXCEPTION_SUBJECT   0x0001  /* string */
+#define RRA_EXCEPTION_4         0x0004  /* 32-bit integer */
+#define RRA_EXCEPTION_8         0x0008  /* string */
 #define RRA_EXCEPTION_LOCATION  0x0010  /* string */
 #define RRA_EXCEPTION_STATUS    0x0020  /* 32-bit integer */
 #define RRA_EXCEPTION_TYPE      0x0080  /* 32-bit integer */
 #define RRA_EXCEPTION_NOTES     0x0100  /* 32-bit size, data */
 
 #define RRA_EXCEPTION_KNOWN_BITS  \
-  (RRA_EXCEPTION_SUBJECT|RRA_EXCEPTION_LOCATION|RRA_EXCEPTION_STATUS|RRA_EXCEPTION_TYPE|RRA_EXCEPTION_NOTES)
+  (RRA_EXCEPTION_SUBJECT|RRA_EXCEPTION_4|RRA_EXCEPTION_8|RRA_EXCEPTION_LOCATION|RRA_EXCEPTION_STATUS|RRA_EXCEPTION_TYPE|RRA_EXCEPTION_NOTES)
 
 typedef struct _RRA_Exceptions RRA_Exceptions;
 

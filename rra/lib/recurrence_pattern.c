@@ -278,6 +278,21 @@ static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/
       synce_trace("Subject changed in exception");
       rra_exception_read_string(&p, &e.subject);
     }
+
+    if (e.bitmask & RRA_EXCEPTION_4)
+    {
+      uint32_t unknown;
+      synce_trace("Unknown 4 changed in exception");
+      rra_exception_read_integer(&p, &unknown);
+    }
+
+    if (e.bitmask & RRA_EXCEPTION_8)
+    {
+      WCHAR* unknown;
+      synce_trace("Unknown 8 changed in exception");
+      rra_exception_read_string(&p, &unknown);
+      wstr_free_string(unknown);
+    }
     
     if (e.bitmask & RRA_EXCEPTION_LOCATION)
     {
@@ -338,6 +353,13 @@ static size_t rra_exception_size(RRA_Exception* self)/*{{{*/
 
   if (self->bitmask & RRA_EXCEPTION_SUBJECT)
     result += 4 + wstrlen(self->subject) * 2;
+
+  if (self->bitmask & RRA_EXCEPTION_4)
+    result += 4;
+
+  /* XXX: calculate correct size */
+  if (self->bitmask & RRA_EXCEPTION_8)
+    result += 4 /*+ wstrlen(self->subject) * 2*/;
 
   if (self->bitmask & RRA_EXCEPTION_LOCATION)
     result += 4 + wstrlen(self->location) * 2;
@@ -448,6 +470,14 @@ static bool rra_exception_write(RRA_Exception* self, uint8_t** buffer)
 
   if (self->bitmask & RRA_EXCEPTION_SUBJECT)
     rra_exception_write_string(&p, self->subject);
+
+  /* XXX: write correct value */
+  if (self->bitmask & RRA_EXCEPTION_4)
+    rra_exception_write_integer(&p, 0 /*self->*/);
+
+  /* XXX: write correct value */
+  if (self->bitmask & RRA_EXCEPTION_8)
+    rra_exception_write_string(&p, (WCHAR*)"\0\0");
 
   if (self->bitmask & RRA_EXCEPTION_LOCATION)
     rra_exception_write_string(&p, self->location);
