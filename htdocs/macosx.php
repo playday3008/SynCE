@@ -21,7 +21,7 @@ href="http://fink.sf.net/">Fink</a>.</li>
 scripts:</p>
 
 <pre>export CPPFLAGS="$CPPFLAGS -no-cpp-precomp -I/sw/include"
-export LDFLAGS="-L/sw/lib -lpoll</pre</li>
+export LDFLAGS="-L/sw/lib -lpoll"</pre</li>
 
 <li class=SPACED>If you get the "multiple definitions of symbol" error message
 when compiling librapi2 you should <a
