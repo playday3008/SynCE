@@ -160,6 +160,18 @@ void PdaConfigDialogImpl::readConfig()
 }
 
 
+void PdaConfigDialogImpl::clearConfig()
+{
+    QStringList groups = ksConfig->groupList();
+    
+    for (QStringList::Iterator it = groups.begin(); it != groups.end(); ++it ) {
+        ksConfig->deleteGroup(*it);
+    }
+    
+    ksConfig->sync();
+}
+
+
 void PdaConfigDialogImpl::applySlot()
 {
     SyncTaskListItem *syncTaskListItem;

@@ -66,6 +66,7 @@ public:
     void setNewPartner(QString partnerName, uint32_t partnerId);
     void addSyncTask(RRA_SyncMgrType *objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
+    void clearConfig();
 
 public slots:
     void writeConfig();

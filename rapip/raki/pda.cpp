@@ -529,6 +529,11 @@ void PDA::setPartnership(QThread */*thread*/, void *)
 
     if (setPartnerOk) {
         if (partnerId != configDialog->getPartnerId() && partnerId != 0) {
+            configDialog->clearConfig();
+            delete configDialog;
+            configDialog = new PdaConfigDialogImpl(pdaName, raki, "ConfigDialog", false);
+            configDialog->setCaption("Configuration for " + pdaName);
+            connect(syncDialog, SIGNAL(finished()), configDialog, SLOT(writeConfig()));
             configDialog->setNewPartner(partnerName, partnerId);
             kdDebug(2120) << "New Partnership" << endl;
         } else if (partnerId != 0) {
