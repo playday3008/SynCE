@@ -4,7 +4,7 @@
 prun \- run program
 
 .SH SYNOPSIS
-\fBprun\fR [-d \fILEVEL\fR] [-h] \fIPROGRAM\fR [\fIPARAMETERS\fR]
+\fBprun\fR [-d \fILEVEL\fR] [-h] \fIPROGRAM\fR [--] [\fIPARAMETERS\fR]
 
 .SH "DESCRIPTION"
 
@@ -33,8 +33,15 @@ Display help message.
 The program that will be started.
 
 .TP
+--
+Needed if \fIPARAMETERS\fR begin with a dash ('-').
+
+.TP
 \fIPARAMETERS\fR
-Command line parameters to the program. Note that if you need to pass more than one parameter to the program, you will need to enclose the parameters in quotes.
+
+Command line parameters to the program. Note that if you need to pass more than
+one parameter to the program, you will need to enclose the parameters in
+quotes.
 
 .SH "AUTHOR"
 .PP

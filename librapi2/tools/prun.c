@@ -12,7 +12,7 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-h] PROGRAM [PARAMETERS]\n"
+			"\t%s [-d LEVEL] [-h] PROGRAM [--] [PARAMETERS]\n"
 			"\n"
 			"\t-d LEVEL    Set debug log level\n"
 			"\t                0 - No logging (default)\n"
@@ -21,6 +21,7 @@ static void show_usage(const char* name)
 			"\t                3 - Everything\n"
 			"\t-h          Show this help message\n"
 			"\tPROGRAM     The program you want to run\n"
+      "\t--          Needed if PARAMETERS begin with a dash ('-')\n"
 			"\tPARAMETERS  Parameters to the program\n",
 			name);
 }
