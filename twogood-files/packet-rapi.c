@@ -198,6 +198,14 @@ add_string(proto_tree *tree, tvbuff_t *tvb, gint start_offset, const char *label
 }
 
 static int
+add_uint16(proto_tree *tree, tvbuff_t *tvb, gint start_offset, const char *label)
+{
+  guint16 value = tvb_get_letohs(tvb, start_offset);
+  proto_tree_add_text(tree, tvb, start_offset, 2, "%s: 0x%04x", label, value);
+  return 2;
+}
+
+static int
 add_uint32(proto_tree *tree, tvbuff_t *tvb, gint start_offset, const char *label)
 {
   guint32 value = tvb_get_letohl(tvb, start_offset);
@@ -399,6 +407,85 @@ dissect_RAPI(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
               packet_size -= bytes;
 
               bytes = add_uint32(RAPI_tree, tvb, offset, "dwFlags");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x0d: /* CeCreateDatabase *//*{{{*/
+            {
+              unsigned i;
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "dwDbaseType");
+              offset += bytes;
+              packet_size -= bytes;
+
+              guint16 sort_order_count = tvb_get_letohs(tvb, offset);
+              bytes = add_uint16(RAPI_tree, tvb, offset, "wNumSortOrder");
+              offset += bytes;
+              packet_size -= bytes;
+
+              for (i = 0; i < sort_order_count; i++) {
+                bytes = add_uint32(RAPI_tree, tvb, offset, "rgSortSpecs[].propid");
+                offset += bytes;
+                packet_size -= bytes;
+                bytes = add_uint32(RAPI_tree, tvb, offset, "rgSortSpecs[].dwFlags");
+                offset += bytes;
+                packet_size -= bytes;
+              }
+
+              bytes = add_string(RAPI_tree, tvb, offset, "lpszName");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x0f: /* CeDeleteDatabase *//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "oidDbase");
+              offset += bytes;
+              packet_size -= bytes;
+            }
+            break;/*}}}*/
+
+          case 0x14: /* CeSetDatabaseInfo *//*{{{*/
+            {
+              int bytes = add_uint32(RAPI_tree, tvb, offset, "oidDbase");
+              offset += bytes;
+              packet_size -= bytes;
+
+              guint32 flags = tvb_get_letohl(tvb, offset);
+              bytes = add_uint32(RAPI_tree, tvb, offset, "DbInfo.dwFlags");
+              offset += bytes;
+              packet_size -= bytes;
+
+              if (flags & 1 /*CEDB_VALIDNAME*/)
+                add_string(RAPI_tree, tvb, offset, "DbInfo.szDbaseName");
+              bytes = 64; /* CEDB_MAXDBASENAMELEN * 2 */
+              offset += bytes;
+              packet_size -= bytes;
+
+              if (flags & 2 /*CEDB_VALIDTYPE*/)
+                add_uint32(RAPI_tree, tvb, offset, "DbInfo.dwDbaseType");
+              bytes = 4;
+              offset += bytes;
+              packet_size -= bytes;
+
+              /* wNumRecords not used */
+              bytes = 2;
+              offset += bytes;
+              packet_size -= bytes;
+
+              if (flags & 4 /*CEDB_VALIDSORTSPEC*/)
+                add_uint16(RAPI_tree, tvb, offset, "DbInfo.wNumSortOrder");
+              bytes = 2;
+              offset += bytes;
+              packet_size -= bytes;
+
+              if (flags & 8 /*CEDB_VALIDMODTIME*/) {
+                add_uint32(RAPI_tree, tvb, offset, "DbInfo.ftLastModified.dwLowDateTime");
+                add_uint32(RAPI_tree, tvb, offset+4, "DbInfo.ftLastModified.dwHighDateTime");
+              }
+              bytes = 8;
               offset += bytes;
               packet_size -= bytes;
             }
