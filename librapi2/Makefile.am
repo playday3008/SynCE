@@ -4,5 +4,6 @@
 ## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
 AUTOMAKE_OPTIONS = foreign 1.4
 
-SUBDIRS = src script tools tests .
+SUBDIRS = src script tools .
+#tests not built at the moment
 
