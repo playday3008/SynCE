@@ -511,6 +511,11 @@ static bool client_read(Client* client)
 
 		synce_trace("this is a password challenge");
 
+    if (!password)
+    {
+      synce_error("A password is needed to connect to this device, but it was not supplied on the dccm command line.");
+    }
+
 		if (!synce_password_send(client->socket, password, client->key))
 		{
 			synce_error("failed to send password");
@@ -565,8 +570,11 @@ static bool client_handler(Client* client)
 					goto exit;	
 				}
 
-				if (!password_correct)
-					goto exit;
+        if (!password_correct)
+        {
+          synce_error("The password supplied on the dccm comand line was not correct!");
+          goto exit;
+        }
 
         if (!synce_socket_write(client->socket, &ping, sizeof(ping)))
         {
