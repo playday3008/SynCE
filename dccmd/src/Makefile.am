@@ -4,4 +4,5 @@ CFLAGS = -ggdb -Wall
 bin_PROGRAMS = dccm
 
 dccm_SOURCES = dccm.c
+dccm_LDADD = @LIBOBJS@
 

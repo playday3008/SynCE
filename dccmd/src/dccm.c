@@ -11,6 +11,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "dccm_config.h"
+#if !HAVE_DAEMON
+int daemon(int nochdir, int noclose);
+#endif
 
 #define DCCM_PORT           	5679
 #define DCCM_PING_INTERVAL   	5         /* seconds */
