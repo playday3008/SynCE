@@ -26,10 +26,10 @@ libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ -lm
 include_HEADERS = \
 	synce.h synce_hash.h synce_ini.h synce_log.h synce_socket.h synce_types.h
 
-noinst_PROGRAMS = ftconv
+##noinst_PROGRAMS = ftconv
 
-ftconv_SOURCES = ftconv.c
-ftconv_LDADD = libsynce.la
+##ftconv_SOURCES = ftconv.c
+##ftconv_LDADD = libsynce.la
 
 SUBDIRS = config .
 
