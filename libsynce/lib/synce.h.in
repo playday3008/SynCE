@@ -5,7 +5,7 @@
 /* 
  * Include some files 
  */
-#include <stdint.h>
+#include <@INT_HEADER@>
 
 #ifndef __cplusplus
 #include <stdbool.h>

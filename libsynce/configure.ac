@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(lib/synce.h)
+AC_INIT(lib/synce.h.in)
 
 dnl AC_CANONICAL_HOST
 dnl AC_CANONICAL_TARGET
@@ -40,14 +40,23 @@ AC_LIB_RPATH
 dnl Checks for header files.
 
 AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h)
-	
-AC_CHECK_HEADERS(stdint.h,,[
-		AC_MSG_ERROR([Don't know how to get uint16_t and uint32_t on your system])
-		])
+
+dnl Check where uint16_t and uint32_t may be found
+AC_SUBST(INT_HEADER)
+
+dnl Old compilers
+AC_CHECK_HEADERS(inttypes.h,[INT_HEADER=inttypes.h])
+
+dnl C99 compliant compilers
+AC_CHECK_HEADERS(stdint.h,[INT_HEADER=stdint.h])
+
+if test -z "$INT_HEADER"; then
+	AC_MSG_ERROR([Don't know how to get uint16_t and uint32_t on your system])
+fi
 
 AC_CHECK_HEADERS(stdbool.h,,[
-		AC_MSG_ERROR([Don't know how to get bool values on your system])
-		])
+  AC_MSG_ERROR([Don't know how to get bool values on your system])
+])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN()
@@ -66,6 +75,8 @@ AC_CHECK_HEADERS(iconv.h,,[
 
 AC_CHECK_LIB(socket,main)
 AC_CHECK_LIB(nsl,main)
+
+AC_CONFIG_FILES( [lib/synce.h] )
 
 AC_OUTPUT([Makefile
            lib/Makefile
