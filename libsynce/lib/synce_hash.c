@@ -245,6 +245,9 @@ void s_hash_table_destroy(SHashTable *table, void (*func)(void *))
 	* avoid the dodgy globals which prevent me from freeing nested hash
 	* tables.  - Wz 2002/02/10
 	*/
+
+  if (!table)
+    return;
 	
 	unsigned i;
 	bucket *temp;
