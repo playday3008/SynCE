@@ -117,9 +117,6 @@ namespace pocketPCCommunication
     {
         kdDebug( 2120 ) << "[TodoHandler]: got ids.. fetching information" << endl;
 
-        QValueList<uint32_t>::const_iterator begin;
-        QValueList<uint32_t>::const_iterator end;
-
         int count = 0;
         int ret = 0;
 

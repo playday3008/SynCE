@@ -1,5 +1,5 @@
 # set the include path for X, qt and KDE
-INCLUDES = $(all_includes) $(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES)\
+INCLUDES = $(all_includes) $(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES) \
 	$(KITCHENSYNC_INCLUDES)
 
 # these are the headers for your project
@@ -33,7 +33,9 @@ noinst_HEADERS = AddressBookHandler.h matchmaker.h PimHandler.h \
 	PocketPCKonnector.h PocketPCKonnectorConfig.h rapiwrapper.h RecordType.h rra.h \
 	eventhandler.h todohandler.h
 
-servicedir   = $(kde_servicesdir)/kresources/konnector
+servicedir = $(kde_servicesdir)/kresources/konnector
 service_DATA = syncekonnector.desktop
 libsyncekonnector_la_LIBADD = $(RRA_LIB) $(RAPI_LIB) $(SYNCE_LIB)\
 	$(LIB_KABC_FILE) $(LIB_KONNECTOR) $(LIB_KSYNC)
+AM_CFLAGS = -Werror -pedantic-errors -Wall
+AM_CXXFLAGS = -Werror -pedantic-errors -Wall

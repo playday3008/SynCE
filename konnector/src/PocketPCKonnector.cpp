@@ -63,26 +63,31 @@ namespace KSync
             m_pdaName = p_config->readEntry( "PDAName" );
             m_rra = new pocketPCCommunication::Rra( m_pdaName );
             m_rra->setLogLevel( 0 );
+            mBaseDir = storagePath();
+
+            mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
+
+            mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
+            mTodoHandler = new pocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
+            mEventHandler = new pocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
+
+            mAddressBookSyncee = new AddressBookSyncee();
+            mAddressBookSyncee->setTitle("SynCE");
+
+            mCalendarSyncee = new CalendarSyncee( &mCalendar );
+            mCalendarSyncee->setTitle("SynCE");
+
+            mSyncees.append(mCalendarSyncee);
+            mSyncees.append(mAddressBookSyncee);
         } else {
             m_rra = NULL;
+            mUidHelper = NULL;
+            mAddrHandler = NULL;
+            mTodoHandler = NULL;
+            mEventHandler = NULL;
+            mAddressBookSyncee = NULL;
+            mCalendarSyncee = NULL;
         }
-
-        mBaseDir = storagePath();
-
-        mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
-
-        mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
-        mTodoHandler = new pocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
-        mEventHandler = new pocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
-
-        mAddressBookSyncee = new AddressBookSyncee();
-        mAddressBookSyncee->setTitle("SynCE");
-
-        mCalendarSyncee = new CalendarSyncee( &mCalendar );
-        mCalendarSyncee->setTitle("SynCE");
-
-        mSyncees.append(mCalendarSyncee);
-        mSyncees.append(mAddressBookSyncee);
     }
 
 
@@ -90,12 +95,24 @@ namespace KSync
     {
         kdDebug( 2120 ) << "PocketPCKonnector::~PocketPCKonnector" << endl;
 
-        delete mAddressBookSyncee;
-        delete mCalendarSyncee;
-        delete mAddrHandler;
-        delete mTodoHandler;
-        delete mEventHandler;
-        delete mUidHelper;
+        if (mAddressBookSyncee) {
+            delete mAddressBookSyncee;
+        }
+        if (mCalendarSyncee) {
+            delete mCalendarSyncee;
+        }
+        if (mAddrHandler) {
+            delete mAddrHandler;
+        }
+        if (mTodoHandler) {
+            delete mTodoHandler;
+        }
+        if (mEventHandler) {
+            delete mEventHandler;
+        }
+        if (mUidHelper) {
+            delete mUidHelper;
+        }
 
         if (m_rra != NULL) {
             if ( m_rra.data() ) {
@@ -116,6 +133,12 @@ namespace KSync
     bool PocketPCKonnector::readSyncees()
     {
         // clear the internal structures;
+        if ( mSyncees.empty() ) {
+            kdDebug( 2120 ) << "PocketPCKonnector::readSyncees: m_syncees is empty" << endl;
+            emit synceeReadError( this );
+            return false;
+        }
+
         bool firstSync = false;
 
         clearDataStructures();
@@ -128,42 +151,41 @@ namespace KSync
             dir.mkdir ( dirName );
         }
 
-
-
-
-        if ( !mAddrHandler->connectDevice() ) {
-            emit synceeReadError(this);
-            return false;
+        if (mAddrHandler) {
+            if ( !mAddrHandler->connectDevice() ) {
+                emit synceeReadError(this);
+                return false;
+            }
+            if (!mAddrHandler->readSyncee(mAddressBookSyncee, firstSync)) {
+                emit synceeReadError(this);
+                return false;
+            }
+            mAddrHandler->disconnectDevice();
         }
-        if (!mAddrHandler->readSyncee(mAddressBookSyncee, firstSync)) {
-            emit synceeReadError(this);
-            return false;
+
+        if (mTodoHandler) {
+            if ( !mTodoHandler->connectDevice() ) {
+                emit synceeReadError(this);
+                return false;
+            }
+            if (!mTodoHandler->readSyncee(mCalendarSyncee, firstSync)) {
+                emit synceeReadError(this);
+                return false;
+            }
+            mTodoHandler->disconnectDevice();
         }
-        mAddrHandler->disconnectDevice();
 
-
-        if ( !mTodoHandler->connectDevice() ) {
-            emit synceeReadError(this);
-            return false;
+        if (mEventHandler) {
+            if ( !mEventHandler->connectDevice() ) {
+                emit synceeReadError(this);
+                return false;
+            }
+            if (!mEventHandler->readSyncee(mCalendarSyncee, firstSync)) {
+                emit synceeReadError(this);
+                return false;
+            }
+            mEventHandler->disconnectDevice();
         }
-        if (!mTodoHandler->readSyncee(mCalendarSyncee, firstSync)) {
-            emit synceeReadError(this);
-            return false;
-        }
-        mTodoHandler->disconnectDevice();
-
-
-        if ( !mEventHandler->connectDevice() ) {
-            emit synceeReadError(this);
-            return false;
-        }
-        if (!mEventHandler->readSyncee(mCalendarSyncee, firstSync)) {
-            emit synceeReadError(this);
-            return false;
-        }
-        mEventHandler->disconnectDevice();
-
-
 
         emit synceesRead ( this );
 
@@ -184,17 +206,23 @@ namespace KSync
 
         QString partnerId;
 
-        mAddrHandler->connectDevice();
-        mAddrHandler->writeSyncee(mAddressBookSyncee);
-        mAddrHandler->disconnectDevice();
+        if (mAddrHandler) {
+            mAddrHandler->connectDevice();
+            mAddrHandler->writeSyncee(mAddressBookSyncee);
+            mAddrHandler->disconnectDevice();
+        }
 
-        mTodoHandler->connectDevice();
-        mTodoHandler->writeSyncee(mCalendarSyncee);
-        mTodoHandler->disconnectDevice();
+        if (mTodoHandler) {
+            mTodoHandler->connectDevice();
+            mTodoHandler->writeSyncee(mCalendarSyncee);
+            mTodoHandler->disconnectDevice();
+        }
 
-        mEventHandler->connectDevice();
-        mEventHandler->writeSyncee(mCalendarSyncee);
-        mEventHandler->disconnectDevice();
+        if(mEventHandler) {
+            mEventHandler->connectDevice();
+            mEventHandler->writeSyncee(mCalendarSyncee);
+            mEventHandler->disconnectDevice();
+        }
 
         clearDataStructures();
 
@@ -206,7 +234,9 @@ namespace KSync
 
     bool PocketPCKonnector::connectDevice()
     {
-        m_rra->initRapi();
+        if (m_rra) {
+            m_rra->initRapi();
+        }
 
         return true;
     }
@@ -214,7 +244,9 @@ namespace KSync
 
     bool PocketPCKonnector::disconnectDevice()
     {
-        m_rra->uninitRapi();
+        if (m_rra) {
+            m_rra->uninitRapi();
+        }
 
         return true;
     }
@@ -222,13 +254,22 @@ namespace KSync
 
     KonnectorInfo PocketPCKonnector::info() const
     {
-        if ( !m_rra.data() ) {
-            return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
-                                   QIconSet(),  //iconSet(),
-                                   QString ( "WinCE 3.0 up" ),
-                                   /*                              "0", //metaId(),
-                                                                 "", //iconName(),*/
-                                   false );
+        if (m_rra) {
+            if ( !m_rra.data() ) {
+                return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
+                                    QIconSet(),  //iconSet(),
+                                    QString ( "WinCE 3.0 up" ),
+                                    /*                              "0", //metaId(),
+                                                                    "", //iconName(),*/
+                                    false );
+            } else {
+                return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
+                                    QIconSet(),  //iconSet(),
+                                    QString ( "WinCE 3.0 up" ),
+                                    /*                              "0", //metaId(),
+                                                                    "", //iconName(),*/
+                                    m_rra->isConnected() );
+            }
         } else {
             return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
                                    QIconSet(),  //iconSet(),
@@ -263,9 +304,14 @@ namespace KSync
 
     void PocketPCKonnector::clearDataStructures()
     {
+        if (mCalendarSyncee) {
+            mCalendarSyncee->reset();
+        }
 
-        mCalendarSyncee->reset();
-        mAddressBookSyncee->reset();
+        if (mAddressBookSyncee) {
+            mAddressBookSyncee->reset();
+        }
+
         mCalendar.deleteAllEvents();
         mCalendar.deleteAllTodos();
         mCalendar.deleteAllJournals();
