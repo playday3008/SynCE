@@ -262,7 +262,7 @@ static bool InflateBlockRead(TDeflateBlockReadData* Data, void* Buf, size_t Coun
       else
       {
         Len = Data->InBytesLeft;
-        if (Len > sizeof(Data->InBuffer))
+        if (Len > (int)sizeof(Data->InBuffer))
           Len = sizeof(Data->InBuffer);
 
         /* TODO: check file pos */
@@ -283,7 +283,7 @@ static bool InflateBlockRead(TDeflateBlockReadData* Data, void* Buf, size_t Coun
     }
 
     if ((Data->strm.avail_out != 0) &&
-        (Data->strm.next_out - &Data->OutBuffer[Data->OutBufferStart] < Left))
+        (Data->strm.next_out - &Data->OutBuffer[Data->OutBufferStart] < (int)Left))
     {
       if (Data->NoMoreData)
       {
@@ -459,7 +459,7 @@ static void ReadEntries(/*{{{*/
   void* P;
 
   P = Buf;
-  for (I = 0; I < Count; I++)
+  for (I = 0; I < (int)Count; I++)
   {
     SEInflateBlockRead(Data, P, Size, EntryStrings[EntryType]);
 
@@ -487,7 +487,7 @@ static void FreeEntries(/*{{{*/
     void* P;
 
     P = Buf;
-    for (I = 0; I < Count; I++)
+    for (I = 0; I < (int)Count; I++)
     {
       FreeStrings(P, EntryStrings[EntryType]);
       (uint8_t*)P += Size;
@@ -666,7 +666,7 @@ static bool orange_get_inno_setup_data(/*{{{*/
 #endif
   *FileLocationEntries = calloc(SetupHeader->NumFileLocationEntries, sizeof(TSetupFileLocationEntry*));
 
-  for (i = 0; i < SetupHeader->NumFileLocationEntries; i++)
+  for (i = 0; i < (int)SetupHeader->NumFileLocationEntries; i++)
   {
     TSetupFileLocationEntry* entry = malloc(SETUP_FILE_LOCATION_ENTRY_SIZE);
     InflateBlockRead(&Data, entry, SETUP_FILE_LOCATION_ENTRY_SIZE);
@@ -728,7 +728,7 @@ bool orange_extract_inno(/*{{{*/
     goto exit;
   }
 
-  for (i = 0; i < SetupHeader.NumFileEntries; i++)
+  for (i = 0; i < (int)SetupHeader.NumFileEntries; i++)
   {
     int l = FileEntries[i].LocationEntry;
 #if VERBOSE
@@ -777,7 +777,7 @@ exit:
   FreeEntries(seFile, SetupHeader.NumFileEntries, sizeof(TSetupFileEntry), FileEntries);
   if (FileLocationEntries)
   {
-    for (i = 0; i < SetupHeader.NumFileLocationEntries; i++)
+    for (i = 0; i < (int)SetupHeader.NumFileLocationEntries; i++)
     {
       FREE(FileLocationEntries[i]);
     }
