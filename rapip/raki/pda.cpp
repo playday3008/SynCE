@@ -22,7 +22,6 @@
  ***************************************************************************/
 
 #include "pda.h"
-#include "configdialogimpl.h"
 #include "pdaconfigdialogimpl.h"
 #include "syncdialogimpl.h"
 #include "runwindowimpl.h"
@@ -35,11 +34,11 @@
 #include "initprogress.h"
 
 #include <qcheckbox.h>
+#include <qdatetime.h>
 #include <kiconloader.h>
 #include <klocale.h>
 #include <krun.h>
 #include <kapplication.h>
-#include <kaudioplayer.h>
 #include <klineedit.h>
 #include <kmessagebox.h>
 #include <kdebug.h>
@@ -53,8 +52,9 @@ PDA::PDA(Raki *raki, QString pdaName)
         : QObject()
 {
     int menuCount = 0;
-    masqueradeEnabled = false;
+    _masqueradeStarted = false;
     partnerOk = false;
+    typesRead = false;
     this->raki = raki;
     this->pdaName = pdaName;
     this->rra = new Rra(pdaName);
@@ -71,11 +71,11 @@ PDA::PDA(Raki *raki, QString pdaName)
             SLOT(setPassword(QString)));
     passwordDialog->setCaption("Password for " + pdaName);
 
-    configDialog = new PdaConfigDialogImpl(this, pdaName, raki, "ConfigDialog",
+    configDialog = new PdaConfigDialogImpl(pdaName, raki, "ConfigDialog",
                                            false);
     configDialog->setCaption("Configuration for " + pdaName);
 
-    syncDialog = new SyncDialogImpl(configDialog, rra, pdaName, raki, "SynchronizeDialog", true);
+    syncDialog = new SyncDialogImpl(rra, pdaName, raki, "SynchronizeDialog", true);
     syncDialog->setCaption("Synchronize " + pdaName);
 
     associatedMenu = new KPopupMenu(raki, "PDA-Menu");
@@ -117,12 +117,8 @@ PDA::PDA(Raki *raki, QString pdaName)
     associatedMenu->insertTearOffHandle(-1, -1);
     menuCount++;
 
-    connect(&ipTablesProc, SIGNAL(processExited (KProcess *)), this,
-            SLOT(ipTablesExited(KProcess *)));
-    connect(&ipTablesProc, SIGNAL(receivedStdout(KProcess*, char *, int)),
-            this, SLOT(ipTablesStdout(KProcess *, char *, int)));
-    connect(&ipTablesProc, SIGNAL(receivedStderr(KProcess*, char *, int)),
-            this, SLOT(ipTablesStderr(KProcess *, char *, int)));
+    connect(this->syncDialog, SIGNAL(finished()), this->configDialog,
+            SLOT(writeConfig()));
 }
 
 
@@ -147,10 +143,6 @@ PDA::~PDA()
     delete rra;
 
     slaveDict.setAutoDelete(true);
-
-    if (masqueradeEnabled) {
-        startMasquerading(false);
-    }
 }
 
 
@@ -224,7 +216,7 @@ void PDA::openFs()
 void PDA::synchronize(bool forced)
 {
     if ((forced || configDialog->getSyncAtConnect()) && isPartner()) {
-        QPtrList<SyncTaskListItem>& syncItems = configDialog->syncronizationTasks();
+        QPtrList<SyncTaskListItem>& syncItems = configDialog->getSyncTaskItemList();
         syncDialog->show(syncItems);
     }
 }
@@ -236,15 +228,12 @@ void PDA::configurePda()
 }
 
 
-void PDA::requestPassword(KSocket *dccmSocket)
+void PDA::requestPassword()
 {
-    this->dccmSocket = dccmSocket;
-    KAudioPlayer::play(raki->configDialog->getPasswordRequestNotify());
-
     if (configDialog->getPassword().isEmpty()) {
         passwordDialog->exec();
     } else {
-        emit resolvedPassword(pdaName, configDialog->getPassword(), dccmSocket);
+        emit resolvedPassword(pdaName, configDialog->getPassword());
     }
 }
 
@@ -256,100 +245,21 @@ void PDA::setPassword(QString password)
         configDialog->applySlot();
         configDialog->writeConfig();
     }
-    emit resolvedPassword(pdaName, password, dccmSocket);
+    emit resolvedPassword(pdaName, password);
 }
 
 
 void PDA::passwordInvalid()
 {
-    KAudioPlayer::play(raki->configDialog->getPasswordRejectNotify());
     configDialog->passwordEdit->setText("");
     configDialog->applySlot();
     configDialog->writeConfig();
 }
 
 
-void PDA::ipTablesExited(KProcess *ipTablesProc)
+bool PDA::isMasqueradeEnabled()
 {
-    int exitStatus;
-
-    if (ipTablesProc->normalExit()) {
-        exitStatus = ipTablesProc->exitStatus();
-        if (exitStatus != 0) {
-            KMessageBox::error(raki, "Could not create masqueraded route",
-                               "iptables", KMessageBox::Notify);
-        } else {
-            kdDebug(2120) << "Masqueraded Route created for \"" << pdaName.ascii() << "\"" << endl;
-        }
-    } else {
-        KMessageBox::error(raki, "iptables terminated due to a signal",
-                           "iptables", KMessageBox::Notify);
-    }
-    disconnect(ipTablesProc, SIGNAL(processExited (KProcess *)), this,
-               SLOT(ipTablesExited(KProcess *)));
-}
-
-
-void PDA::ipTablesStdout(KProcess *, char *buf, int len)
-{
-    if (buf != NULL && len > 0) {
-        buf[len] = 0;
-        kdDebug(2120) << "stdout::iptables: " << buf << endl;
-    }
-}
-
-
-void PDA::ipTablesStderr(KProcess *, char *buf, int len)
-{
-    if (buf != NULL && len > 0) {
-        buf[len] = 0;
-        kdDebug(2120) << "stderr::iptables: " << buf << endl;
-    }
-}
-
-
-bool PDA::startMasquerading(bool start)
-{
-    bool enabled = false;
-
-    if ((!start && masqueradeEnabled) || start) {
-        ipTablesProc.clearArguments();
-        ipTablesProc.setExecutable("sudo");
-
-        ipTablesProc << "-u" << "root" << raki->configDialog->getIpTables()
-        << "-t" << "nat" << ((start) ? "-A" : "-D")
-        << "POSTROUTING" << "-s" << configDialog->getDeviceIp() << "-d"
-        << "0.0.0.0/0" << "-j" << "MASQUERADE";
-
-        if (ipTablesProc.start(KProcess::NotifyOnExit, (KProcess::Communication)
-                               (KProcess::Stdout | KProcess::Stderr))) {
-            enabled = start;
-        } else {
-            KMessageBox::error(raki, "Could not start iptables", "iptables",
-                               KMessageBox::Notify);
-        }
-    }
-
-    return enabled;
-}
-
-
-void PDA::setConnected()
-{
-    if (configDialog->getMasqueradeEnabled()) {
-        masqueradeEnabled = startMasquerading(true);
-    }
-    KAudioPlayer::play(raki->configDialog->getConnectNotify());
-}
-
-
-void PDA::setDisconnected()
-{
-    if (masqueradeEnabled) {
-        startMasquerading(false);
-        masqueradeEnabled = false;
-    }
-    KAudioPlayer::play(raki->configDialog->getDisconnectNotify());
+    return configDialog->getMasqueradeEnabled();
 }
 
 
@@ -412,6 +322,12 @@ void *PDA::advanceTotalStepsEvent(void *data)
 
     progressBar->setTotalSteps(progressBar->totalSteps() + advance);
     return NULL;
+}
+
+
+QString PDA::getDeviceIp()
+{
+    return configDialog->getDeviceIp();
 }
 
 
@@ -525,6 +441,7 @@ bool PDA::removePartnership(int *removedPartnerships)
     return removePartnershipOk;
 }
 
+
 bool PDA::setPartnershipThread()
 {
     kdDebug(2120) << "in PDE::init" << endl;
@@ -587,6 +504,11 @@ void PDA::setPartnership(QThread */*thread*/, void *)
             configDialog->setPartner("Guest", 0);
             kdDebug(2120) << "Guest Partnership" << endl;
         }
+
+        if (partnerOk) {
+            syncronizationTasks();
+        }
+
         postThreadEvent(&PDA::progressDialogCancel, 1, noBlock);
     } else {
         postThreadEvent(&PDA::progressDialogCancel, 0, noBlock);
@@ -609,4 +531,40 @@ void PDA::init()
     kapp->processEvents();
 
     startWorkerThread(this, &PDA::setPartnership, NULL);
+}
+
+
+bool PDA::syncronizationTasks()
+{
+    ObjectType *objectType;
+    QDateTime lastSynchronized;
+    bool ret = true;
+
+    if (!typesRead) {
+        typesRead = true;
+        QPtrDict<ObjectType> types;
+        if (getSynchronizationTypes(&types)) {
+            QPtrDictIterator<ObjectType> it(types);
+            for( ; it.current(); ++it ) {
+                objectType = it.current();
+                configDialog->addSyncTask(objectType, partnerId);
+            }
+        } else {
+            ret = false;
+        }
+    }
+
+    return ret;
+}
+
+
+void PDA::setMasqueradeStarted()
+{
+    _masqueradeStarted = true;
+}
+
+
+bool PDA::masqueradeStarted()
+{
+    return _masqueradeStarted;
 }

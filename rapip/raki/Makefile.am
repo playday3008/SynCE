@@ -30,7 +30,7 @@ kdemimedir = $(kde_mimedir)/application
 kdemime_DATA = x-raki.desktop
 
 rcdir = $(kde_datadir)/raki/scripts
-rc_DATA = vdccm.sh dccm.sh
+
 
 konqdir = $(kde_datadir)/konqueror/servicemenus
 konq_DATA= cab_install.desktop
@@ -43,3 +43,4 @@ AM_CXXFLAGS =
 AM_FFLAGS = 
 SUBDIRS = plugins interfaces
 include_HEADERS = rra.h rapiwrapper.h
+rc_SCRIPTS =  dccm.sh vdccm.sh

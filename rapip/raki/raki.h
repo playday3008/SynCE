@@ -79,6 +79,8 @@ private:
     QCStringList interfaces();
     QCStringList functions();
     void timerEvent(QTimerEvent *e);
+    void startMasquerading(PDA *pda);
+    void stopMasquerading(PDA *pda);
 
     DCOPClient *dcopClient;
     KDialog *aboutDialog;
@@ -99,6 +101,7 @@ private:
     QDict<PDA> pdaList;
     bool initialized;
     QStringList pendingPdaList;
+    KProcess ipTablesProc;
     
     enum {
         CONFIGURE_ITEM = 1,
@@ -113,15 +116,17 @@ private slots:
     void dccmExited(KProcess *oldDccm);
     void dccmStdout(KProcess *, char *buf, int len);
     void dccmStderr(KProcess *, char *buf, int len);
-//    void deviceNotification(KSocket *);
-    void connectionRequest(KSocket *dccmSocket);
+    void connectionRequest();
     void initializePda();
-    void closeDccmConnection(KSocket *);
-    void resolvedPassword(QString pdaName, QString password, KSocket *dccmSocket);
+    void closeDccmConnection();
+    void resolvedPassword(QString pdaName, QString password);
     void quit();
     void shutDown();
     void restartDccm();
     void pdaInitialized(PDA *pda, int);
+    void ipTablesExited(KProcess *);
+    void ipTablesStdout(KProcess *, char *, int);
+    void ipTablesStderr(KProcess *, char *, int);
 };
 
 #endif

@@ -24,7 +24,8 @@
 #include "pdaconfigdialogimpl.h"
 #include "synctasklistitem.h"
 #include "removepartnershipdialogimpl.h"
-#include "pda.h"
+
+#include <librra.h>
 
 #include <qcheckbox.h>
 #include <klineedit.h>
@@ -42,19 +43,16 @@
 #include <kde_dmalloc.h>
 #endif
 
-PdaConfigDialogImpl::PdaConfigDialogImpl(PDA *pda, QString pdaName, QWidget* parent,
-        const char* name, bool modal,
-        WFlags fl)
+PdaConfigDialogImpl::PdaConfigDialogImpl(QString pdaName, QWidget* parent,
+        const char* name, bool modal, WFlags fl)
         : PdaConfigDialog(parent, name, modal, fl)
 {
     this->pdaName = pdaName;
-    this->pda = pda;
     partnershipCreated.setTime_t(0);
     readConfig();
     updateFields();
     buttonApply->setEnabled(false);
     objectTypeList->setFullWidth(true);
-    typesRead = false;
     syncTaskItemList.setAutoDelete(true);
     syncAtConnectCheckbox->setEnabled(false);
 }
@@ -176,42 +174,6 @@ void PdaConfigDialogImpl::changedSlot()
 }
 
 
-QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::syncronizationTasks()
-{
-    ObjectType *objectType;
-    SyncTaskListItem *item;
-
-    ksConfig->setGroup(pdaName);
-
-    if (!typesRead) {
-        typesRead = true;
-
-        QPtrDict<ObjectType> types;
-
-        if (pda->getSynchronizationTypes(&types)) {
-            QPtrDictIterator<ObjectType> it(types);
-            for( ; it.current(); ++it ) {
-                objectType = it.current();
-                item = new SyncTaskListItem(objectType, objectTypeList, objectType->name, QCheckListItem::CheckBox, pdaName, partnerId);
-                item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
-                item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
-                item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
-                lastSynchronized = item->getLastSynchronized();
-                item->setLastSynchronized(ksConfig->readDateTimeEntry(QString::number(item->getObjectType()->id) + "-LastSynchronized", &lastSynchronized));
-                item->makePersistent();
-                item->setFirstSynchronization((this->partnershipCreated > item->getLastSynchronized()));
-                connect((const QObject *) item, SIGNAL(stateChanged(bool)),
-                        this, SLOT(changedSlot()));
-                objectTypeList->insertItem(item);
-                syncTaskItemList.append(item);
-            }
-        }
-    }
-
-    return syncTaskItemList;
-}
-
-
 QString PdaConfigDialogImpl::getDeviceIp()
 {
     char *path = NULL;
@@ -228,19 +190,10 @@ QString PdaConfigDialogImpl::getDeviceIp()
     return deviceIp;
 }
 
-void PdaConfigDialogImpl::show()
-{
-    if(pda->isPartner()) {
-        syncronizationTasks();
-        syncAtConnectCheckbox->setEnabled(true);
-    }
-    PdaConfigDialog::show();
-}
-
 
 void PdaConfigDialogImpl::objectTypeList_rightButtonClicked( QListViewItem *item, const QPoint &, int )
 {
-    ((SyncTaskListItem *) item)->openPopup(this);
+    ((SyncTaskListItem *) item)->openPopup();
 }
 
 
@@ -254,6 +207,10 @@ void PdaConfigDialogImpl::setPartner(QString partnerName, uint32_t partnerId)
 {
     this->partnerName = partnerName;
     this->partnerId = partnerId;
+
+    if (partnerId != 0) {
+        syncAtConnectCheckbox->setEnabled(true);
+    }
 }
 
 
@@ -274,4 +231,31 @@ QString PdaConfigDialogImpl::getPartnerName()
 uint32_t PdaConfigDialogImpl::getPartnerId()
 {
     return partnerId;
+}
+
+
+void PdaConfigDialogImpl::addSyncTask(ObjectType *objectType, uint32_t partnerId)
+{
+    SyncTaskListItem *item;
+    QDateTime lastSynchronized;
+
+    ksConfig->setGroup(pdaName);
+    item = new SyncTaskListItem(objectType, objectTypeList, partnerId);
+    item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
+    item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
+    item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
+    lastSynchronized = item->getLastSynchronized();
+    item->setLastSynchronized(ksConfig->readDateTimeEntry(QString::number(objectType->id) + "-LastSynchronized", &lastSynchronized));
+    item->setFirstSynchronization((partnershipCreated > item->getLastSynchronized()));
+    connect((const QObject *) item, SIGNAL(stateChanged(bool)), this, SLOT(changedSlot()));
+    connect((const QObject *) item, SIGNAL(serviceChanged()), this, SLOT(changedSlot()));
+    objectTypeList->insertItem(item);
+    syncTaskItemList.append(item);
+    item->makePersistent();
+}
+
+
+QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::getSyncTaskItemList()
+{
+    return syncTaskItemList;
 }

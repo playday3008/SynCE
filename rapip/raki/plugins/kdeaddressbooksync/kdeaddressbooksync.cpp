@@ -55,7 +55,9 @@ void KdeAddressBookSync::printBook(QString label, KABC::AddressBook *book)
     KABC::AddressBook::Iterator it;
 
     for (it = book->begin(); it != book->end(); it++) {
-        kdDebug(2120) << (*it).formattedName() << " " << (*it).uid() << " " << (*it).custom("Raki", "PdaUid-" + pdaName) << " >" << (*it).custom("Raki", "Task") + "<" << endl;
+        kdDebug(2120) << (*it).formattedName() << " " << (*it).uid() << " "
+                << (*it).custom("Raki", "PdaUid-" + QString::number(partnerId))
+                << " >" << (*it).custom("Raki", "Task") + "<" << endl;
     }
 
     kdDebug(2120) << "--------------" + label + "---------------" << endl;

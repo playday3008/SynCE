@@ -50,10 +50,10 @@ typedef struct _ObjectType ObjectType;
 
 class SyncTaskListItem : public QObject, public QCheckListItem
 {
-    Q_OBJECT
+Q_OBJECT
     
 public:
-    SyncTaskListItem(ObjectType* objectType, QListView* listView, const QString& name, Type tt, QString pdaName, uint32_t partnerId);
+    SyncTaskListItem(ObjectType* objectType, QListView* listView, uint32_t partnerId);
     void undo();
     void makePersistent();
     bool isOn();
@@ -69,16 +69,19 @@ public:
     QWidget *widget();
     QWidget *taskLabel();
     KTrader::OfferList getOffers();
-    void openPopup(PdaConfigDialogImpl *pdaConfig);
+    void openPopup();
     QString getPreferedOffer();
     QString getPreferedLibrary();  
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
-    bool synchronize(SyncThread *syncThread, Rra *rra);
+    bool synchronize(SyncThread *syncThread, Rra *rra, QString pdaName);
     void setLastSynchronized(QDateTime lastSynchronized);
     void setFirstSynchronization(bool firstSynchronization);
     bool isFirstSynchronization();
     QDateTime &getLastSynchronized();
+
+signals:
+    void serviceChanged();
 
 private slots:
     void clickedMenu(int item);
@@ -97,9 +100,7 @@ private:
     QString preferedLibrary;
     QString preferedOfferTemp;
     QString preferedLibraryTemp;
-    PdaConfigDialogImpl *pdaConfig;
     QDateTime lastSynchronized;
-    QString pdaName;
     uint32_t partnerId;
     bool firstSynchronization;
     

@@ -101,7 +101,7 @@ void Installer::copyResult(KIO::Job *copyJob)
         if (copyJob->error()) {
             copyJob->showErrorDialog((QWidget *) parent());
             pda->unregisterCopyJob((KIO::CopyJob *) copyJob);
-            sleep(1);
+            RakiWorkerThread::sleep(1);
             deleteFiles(copiedFiles);
         } else {
             pda->unregisterCopyJob((KIO::CopyJob *) copyJob);

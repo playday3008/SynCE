@@ -22,7 +22,6 @@
  ***************************************************************************/
 
 #include "synctasklistitem.h"
-#include "pdaconfigdialogimpl.h"
 #include "syncthread.h"
 #include "rakisyncfactory.h"
 #include "rakisyncplugin.h"
@@ -38,11 +37,10 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(ObjectType *objectType, QListView* listView, const QString& name, Type tt, QString pdaName, uint32_t partnerId)
-        : QCheckListItem(listView, name, tt)
+SyncTaskListItem::SyncTaskListItem(ObjectType *objectType, QListView* listView, uint32_t partnerId)
+        : QCheckListItem(listView, objectType->name, QCheckListItem::CheckBox)
 {
     this->objectType = objectType;
-    this->pdaName = pdaName;
     this->partnerId = partnerId;
     this->lastSynchronized.setTime_t(0);
 }
@@ -218,14 +216,13 @@ void SyncTaskListItem::clickedMenu(int item)
             }
         }
     }
-    
-    pdaConfig->changedSlot();
+
+    emit serviceChanged();
 }
 
 
-void SyncTaskListItem::openPopup(PdaConfigDialogImpl *pdaConfig)
+void SyncTaskListItem::openPopup()
 {
-    this->pdaConfig = pdaConfig;
     bool preferedFound = false;
     offers = getOffers();
     KTrader::OfferList::ConstIterator it;
@@ -271,7 +268,7 @@ void SyncTaskListItem::openPopup(PdaConfigDialogImpl *pdaConfig)
 }
 
 
-bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
+bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra, QString pdaName)
 {
     bool ret = false;
     KTrader::OfferList offers;

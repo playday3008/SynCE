@@ -36,13 +36,12 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncDialogImpl::SyncDialogImpl(PdaConfigDialogImpl *pdaConfigDialog, Rra *rra,
-        QString& pdaName, QWidget* parent, const char* name, bool modal, WFlags fl)
+SyncDialogImpl::SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent,
+        const char* name, bool modal, WFlags fl)
         : SyncDialog(parent, name, modal, fl)
 {
     this->pdaName = pdaName;
     this->rra = rra;
-    this->pdaConfigDialog = pdaConfigDialog;
     objectTypesTable->setLeftMargin(0);
     objectTypesTable->setShowGrid(false);
     objectTypesTable->setReadOnly(true);
@@ -110,13 +109,13 @@ void SyncDialogImpl::show(QPtrList<SyncTaskListItem>& syncItems)
 
 void *SyncDialogImpl::finishedSynchronization()
 {
-    pdaConfigDialog->writeConfig();
-
     buttonOk->setEnabled(true);
 
     if (this->stopRequested()) {
         SyncDialog::reject();
     }
+
+    emit finished();
 
     return NULL;
 }
@@ -132,7 +131,7 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
         if (running()) {
             if (item->isOn()) {
                 setActualSyncItem(item);
-                item->synchronize(this, rra);
+                item->synchronize(this, rra, pdaName);
             }
         }
     }

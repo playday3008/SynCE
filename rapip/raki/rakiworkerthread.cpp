@@ -101,3 +101,10 @@ void RakiWorkerThread::run()
     QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
     waitCondition.wakeOne();
 }
+
+
+void RakiWorkerThread::sleep(unsigned long sec)
+{
+    QThread::sleep(sec);
+}
+

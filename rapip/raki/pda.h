@@ -37,8 +37,6 @@
 #include <qthread.h>
 #include <kpopupmenu.h>
 #include <kconfig.h>
-#include <ksock.h>
-#include <kprocess.h>
 #include <kprogress.h>
 #include <kio/job.h>
 
@@ -50,6 +48,7 @@ class PdaConfigDialogImpl;
 class SyncDialogImpl;
 class InitProgress;
 class Rra;
+class SyncTaskListItem;
 
 /**
 @author Volker Christian,,,
@@ -66,10 +65,8 @@ public:
     int getMenuIndex();
     const char *getName();
     KPopupMenu *getMenu();
-    void requestPassword(KSocket *dccmSocket);
+    void requestPassword();
     void passwordInvalid();
-    void setConnected();
-    void setDisconnected();
     void registerCopyJob(KIO::CopyJob *copyJob);
     void addURLByCopyJob(KIO::CopyJob *copyJob, KURL& url);
     void unregisterCopyJob(KIO::CopyJob *copyJob);
@@ -80,13 +77,16 @@ public:
     bool isPartner();
     bool running();
     void setStopRequested(bool);
-    
+    bool isMasqueradeEnabled();
+    QString getDeviceIp();
+    void setMasqueradeStarted();
+    bool masqueradeStarted();
+
 signals:
-    void resolvedPassword(QString pdaName, QString passwd, KSocket *dccmSocket);
+    void resolvedPassword(QString pdaName, QString passwd);
     void initialized(PDA *pda, int initialized);
     
 private:
-    bool startMasquerading(bool start);
     bool setPartnershipThread();
     void setPartnership(QThread *thread, void *data);
     bool removePartnership(int *removedPartnerships);
@@ -97,7 +97,8 @@ private:
     void *advanceTotalStepsEvent(void *data);
     void *rraConnectionError(void *data);
     void *initializationStarted(void *data);
-    
+    bool syncronizationTasks();
+
     InitProgress *initProgress;
     KProgress *progressBar;
     QString pdaName;
@@ -109,26 +110,21 @@ private:
     PasswordDialogImpl *passwordDialog;
     PdaConfigDialogImpl *configDialog;
     SyncDialogImpl *syncDialog;
-    KConfig *ksConfig;
-    KSocket *dccmSocket;
-    bool masqueradeEnabled;
+    bool _masqueradeStarted;
     Raki *raki;
     QPtrDict<KURL::List> slaveDict;
-    KProcess ipTablesProc;
     QString partnerName;
     uint32_t partnerId;
     bool partnerOk;
     Rra *rra;
     int syncItem;
+    bool typesRead;
 
 private slots:
     void execute();
     void manage();
     void openFs();
     void configurePda();
-    void ipTablesExited(KProcess *);
-    void ipTablesStdout(KProcess *, char *, int);
-    void ipTablesStderr(KProcess *, char *, int);
     void setPassword(QString password);
 
 public slots:

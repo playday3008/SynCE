@@ -56,6 +56,7 @@ public:
     void stop();
     static bool running();
     static bool finished();
+    static void sleep(unsigned long sec);
       
 private:
     WorkerThreadInterface *wti;

@@ -38,10 +38,9 @@
 #include <qptrlist.h>
 #include <qdatetime.h>
 
-class PDA;
-class Rra;
 class SyncTaskListItem;
 class RemovePartnershipDialogImpl;
+typedef struct _ObjectType ObjectType;
 
 /**
 @author Volker Christian,,,
@@ -50,12 +49,11 @@ class RemovePartnershipDialogImpl;
 class PdaConfigDialogImpl : public PdaConfigDialog
 {
 public:
-    PdaConfigDialogImpl(PDA *pda, QString pdaName, QWidget* parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    PdaConfigDialogImpl(QString pdaName, QWidget* parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ~PdaConfigDialogImpl();
     QString getPassword();
     bool getMasqueradeEnabled();
     bool getSyncAtConnect();
-    void show();
     QString getDeviceIp();
     bool isNewPda();
     void setPartner(QString partnerName, uint32_t partnerId);
@@ -63,6 +61,8 @@ public:
     uint32_t getPartnerId();
     QPtrList<SyncTaskListItem>& syncronizationTasks();
     void setNewPartner(QString partnerName, uint32_t partnerId);
+    void addSyncTask(ObjectType *objectType, uint32_t partnerId);
+    QPtrList<SyncTaskListItem>& getSyncTaskItemList();
 
 public slots:
     void writeConfig();
@@ -78,20 +78,16 @@ private:
     void readConfig();
     void updateFields();
 
-    Rra *rra;
+    QPtrList<SyncTaskListItem> syncTaskItemList;
     KConfig *ksConfig;
     QString password;
     bool masqEnabled;
-    bool typesRead;
     QString pdaName;
-    QDateTime partnershipCreated;
     uint32_t partnerId;
     QString partnerName;
-    QPtrList<SyncTaskListItem> syncTaskItemList;
-    QDateTime lastSynchronized;
+    QDateTime partnershipCreated;
     bool syncAtConnect;
     bool newPda;
-    PDA *pda;
 };
 
 #endif

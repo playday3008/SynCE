@@ -31,6 +31,7 @@
 #include <klocale.h>
 #include <kaction.h>
 #include <kapplication.h>
+#include <kaudioplayer.h>
 #include <kuniqueapplication.h>
 #include <khelpmenu.h>
 #include <kcmdlineargs.h>
@@ -125,6 +126,14 @@ Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
     connect(configDialog, SIGNAL(restartDccm()), this, SLOT(restartDccm()));
     connect(configDialog, SIGNAL(configError()), this, SLOT(quit()));
 
+    connect(&ipTablesProc, SIGNAL(processExited (KProcess *)), this,
+            SLOT(ipTablesExited(KProcess *)));
+    connect(&ipTablesProc, SIGNAL(receivedStdout(KProcess*, char *, int)),
+            this, SLOT(ipTablesStdout(KProcess *, char *, int)));
+    connect(&ipTablesProc, SIGNAL(receivedStderr(KProcess*, char *, int)),
+            this, SLOT(ipTablesStderr(KProcess *, char *, int)));
+
+
     installer = new Installer(this, &pdaList);
 
     entered = false;
@@ -193,7 +202,8 @@ void Raki::initializePda()
                 if (!pda->running()) {
                     pendingPdaList.remove(commandAndPda);
                     bool showAgain = false;
-                    pda->setDisconnected();
+                    stopMasquerading(pda);
+                    KAudioPlayer::play(configDialog->getDisconnectNotify());
                     if (rapiLeMenu->isVisible()) {
                         rapiLeMenu->hide();
                         showAgain = true;
@@ -219,15 +229,16 @@ void Raki::initializePda()
                 pda = new PDA(this, pdaName);
                 pdaList.insert(pdaName, pda);
             }
-            connect(pda, SIGNAL(resolvedPassword(QString, QString, KSocket *)),
-                    this, SLOT(resolvedPassword(QString, QString, KSocket *)));
-            pda->requestPassword(dccmConnection);
+            connect(pda, SIGNAL(resolvedPassword(QString, QString)),
+                    this, SLOT(resolvedPassword(QString, QString)));
+            KAudioPlayer::play(configDialog->getPasswordRequestNotify());
+            pda->requestPassword();
             break;
         case 'R':
             pendingPdaList.remove(commandAndPda);
             if (pda) {
-                KMessageBox::error(0, i18n("Password for PDA \" %1 \" invalid. Password cleared!").arg(pda->getName()));
-                pda->passwordInvalid();
+                KMessageBox::error(this, i18n("Password for PDA \" %1 \" invalid. Password cleared!").arg(pda->getName()));
+                KAudioPlayer::play(configDialog->getPasswordRejectNotify());                pda->passwordInvalid();
                 pdaList.take(pdaName);
                 delete pda;
             }
@@ -244,11 +255,11 @@ void Raki::initializePda()
 }
 
 
-void Raki::connectionRequest(KSocket *dccmSocket)
+void Raki::connectionRequest()
 {
     char buffer[256];
 
-    int n = read(dccmSocket->socket(), buffer, 256);
+    int n = read(dccmConnection->socket(), buffer, 256);
 
     if (n > 0) {
         buffer[n] = '\0';
@@ -277,9 +288,9 @@ void Raki::dccmConnect()
     if (dccmConnection->socket() > 0) {
         dccmConnection->enableRead(true);
         connect(dccmConnection, SIGNAL(readEvent(KSocket *)),
-                this, SLOT(connectionRequest(KSocket *)));
+                this, SLOT(connectionRequest()));
         connect(dccmConnection, SIGNAL(closeEvent(KSocket *)),
-                this, SLOT(closeDccmConnection(KSocket *)));
+                this, SLOT(closeDccmConnection()));
     } else {
         delete dccmConnection;
         dccmConnection = NULL;
@@ -298,7 +309,7 @@ void Raki::openDccmConnection()
 }
 
 
-void Raki::closeDccmConnection(KSocket */*dccmSocket*/)
+void Raki::closeDccmConnection()
 {
     if (dccmConnection) {
         delete dccmConnection;
@@ -312,7 +323,8 @@ void Raki::pdaInitialized(PDA *pda, int initialized)
     bool showAgain = false;
 
     if (initialized) {
-        pda->setConnected();
+        KAudioPlayer::play(configDialog->getConnectNotify());
+        startMasquerading(pda);
         if (rapiLeMenu->isVisible()) {
             rapiLeMenu->hide();
             showAgain = true;
@@ -329,13 +341,13 @@ void Raki::pdaInitialized(PDA *pda, int initialized)
 }
 
 
-void Raki::resolvedPassword(QString pdaName, QString password, KSocket *dccmSocket)
+void Raki::resolvedPassword(QString pdaName, QString password)
 {
     char passBuffer[100];
     const char *pdaNamec = pdaName.ascii();
 
     sprintf(passBuffer, "R%s=%s", pdaNamec, password.ascii());
-    write(dccmSocket->socket(), passBuffer, strlen(passBuffer));
+    write(dccmConnection->socket(), passBuffer, strlen(passBuffer));
 }
 
 
@@ -375,7 +387,7 @@ void Raki::dccmExited(KProcess */*oldDccm*/)
     }
 
     if (dccmShouldRun) {
-        KMessageBox::error(0, i18n("Could not start dccm or dccm has exited.\n"
+        KMessageBox::error(this, i18n("Could not start dccm or dccm has exited.\n"
                            "Maybe there is already a dccm running"));
     }
 }
@@ -407,7 +419,7 @@ void Raki::startDccm()
 
     dccmShouldRun = true;
 
-    dccmProc.start(KProcess::NotifyOnExit,  (KProcess::Communication)
+    dccmProc.start(KProcess::NotifyOnExit, (KProcess::Communication)
                    (KProcess::Stdout | KProcess::Stderr));
 
     if (dccmProc.isRunning()) {
@@ -557,6 +569,87 @@ void Raki::clickedMenu(int item)
 }
 
 
+void Raki::ipTablesExited(KProcess *ipTablesProc)
+{
+    int exitStatus;
+
+    if (ipTablesProc->normalExit()) {
+        exitStatus = ipTablesProc->exitStatus();
+        if (exitStatus != 0) {
+            KMessageBox::error(this, "Could not create masqueraded route",
+                               "iptables", KMessageBox::Notify);
+        } else {
+            kdDebug(2120) << "Masqueraded Route created" << endl;
+        }
+    } else {
+        KMessageBox::error(this, "iptables terminated due to a signal",
+                           "iptables", KMessageBox::Notify);
+    }
+    disconnect(ipTablesProc, SIGNAL(processExited (KProcess *)), this,
+               SLOT(ipTablesExited(KProcess *)));
+}
+
+
+void Raki::ipTablesStdout(KProcess *, char *buf, int len)
+{
+    if (buf != NULL && len > 0) {
+        buf[len] = 0;
+        kdDebug(2120) << "stdout::iptables: " << buf << endl;
+    }
+}
+
+
+void Raki::ipTablesStderr(KProcess *, char *buf, int len)
+{
+    if (buf != NULL && len > 0) {
+        buf[len] = 0;
+        kdDebug(2120) << "stderr::iptables: " << buf << endl;
+    }
+}
+
+
+void Raki::stopMasquerading(PDA *pda)
+{
+    if (pda->masqueradeStarted()) {
+        ipTablesProc.clearArguments();
+        ipTablesProc.setExecutable("sudo");
+
+
+        ipTablesProc << "-u" << "root" << configDialog->getIpTables()
+        << "-t" << "nat" << "-D" << "POSTROUTING" << "-s"
+        << pda->getDeviceIp() << "-d" << "0.0.0.0/0" << "-j" << "MASQUERADE";
+
+        if (ipTablesProc.start(KProcess::NotifyOnExit, (KProcess::Communication)
+                               (KProcess::Stdout | KProcess::Stderr))) {
+        } else {
+            KMessageBox::error(this, "Could not start iptables", "iptables",
+                               KMessageBox::Notify);
+        }
+    }
+}
+
+
+void Raki::startMasquerading(PDA *pda)
+{
+    if (pda->isMasqueradeEnabled()) {
+        ipTablesProc.clearArguments();
+        ipTablesProc.setExecutable("sudo");
+
+        ipTablesProc << "-u" << "root" << configDialog->getIpTables()
+        << "-t" << "nat" << "-A" << "POSTROUTING" << "-s"
+        << pda->getDeviceIp() << "-d" << "0.0.0.0/0" << "-j" << "MASQUERADE";
+
+        if (ipTablesProc.start(KProcess::NotifyOnExit, (KProcess::Communication)
+                               (KProcess::Stdout | KProcess::Stderr))) {
+            pda->setMasqueradeStarted();
+        } else {
+            KMessageBox::error(this, "Could not start iptables", "iptables",
+                               KMessageBox::Notify);
+        }
+    }
+}
+
+
 QString Raki::changeConnectionState(int state)
 {
     PDA *pda;
@@ -571,7 +664,7 @@ QString Raki::changeConnectionState(int state)
     switch(state) {
     case 0:
         rapiLeMenu->removeItem(pda->getMenuIndex());
-        pda->setDisconnected();
+        KAudioPlayer::play(configDialog->getDisconnectNotify());
         pdaList.take("active_connection");
         delete pda;
         if (pdaList.count() == 0)
@@ -582,7 +675,7 @@ QString Raki::changeConnectionState(int state)
     case 1:
         if (newPda)
             pdaList.insert("active_connection", pda);
-        pda->setConnected();
+        KAudioPlayer::play(configDialog->getConnectNotify());
         rapiLeMenu->insertItem(SmallIcon("pda_blue"), "Anonymous",
                                pda->getMenu());
         setConnectionStatus(true);
