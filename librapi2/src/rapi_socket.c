@@ -134,7 +134,7 @@ static bool rapi_socket_read(RapiSocket* socket, void* data, unsigned size)
 
 bool rapi_socket_send(RapiSocket* socket, RapiBuffer* buffer)
 {
-	u_int32_t size_le = htole32(rapi_buffer_get_size(buffer));
+	uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
 
 	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
 		goto fail;
@@ -157,7 +157,7 @@ fail:
 
 bool rapi_socket_recv(RapiSocket* socket, RapiBuffer* buffer)
 {
-	u_int32_t      size_le = 0;
+	uint32_t      size_le = 0;
 	size_t         size    = 0;
 	unsigned char* data    = NULL;
 	

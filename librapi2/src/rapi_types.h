@@ -4,8 +4,8 @@
 
 #include "rapi_config.h"
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 
 #ifndef __cplusplus
@@ -22,9 +22,9 @@
  * Simple types
  */
 
-typedef u_int32_t  DWORD;
-typedef u_int32_t  BOOL;
-typedef u_int16_t  WCHAR;
+typedef uint32_t  DWORD;
+typedef uint32_t  BOOL;
+typedef uint16_t  WCHAR;
 typedef WCHAR      TCHAR;
 
 /*
@@ -57,7 +57,7 @@ typedef struct _FILETIME
 } FILETIME, *LPFILETIME;
 
 /* A handle  is usually a void*, but we must guarantee 32-bit! */
-typedef u_int32_t  HANDLE;
+typedef uint32_t  HANDLE;
 
 #define INVALID_HANDLE_VALUE ((HANDLE)-1)
 

@@ -15,7 +15,7 @@ BOOL CeGetVersionEx(
 {
 	RapiContext* context = rapi_context_current();
 	BOOL result = false;
-	u_int32_t size = 0;
+	uint32_t size = 0;
 	
 	rapi_context_begin_command(context, 0x3b);
 

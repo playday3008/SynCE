@@ -157,16 +157,16 @@ bool rapi_buffer_write_data(RapiBuffer* buffer, const void* data, size_t size)
 	return true;
 }
 
-bool rapi_buffer_write_uint16(RapiBuffer* buffer, u_int16_t value)
+bool rapi_buffer_write_uint16(RapiBuffer* buffer, uint16_t value)
 {
-	u_int16_t little_endian_value = htole16(value);
-	return rapi_buffer_write_data(buffer, &little_endian_value, sizeof(u_int16_t));
+	uint16_t little_endian_value = htole16(value);
+	return rapi_buffer_write_data(buffer, &little_endian_value, sizeof(uint16_t));
 }
 
-bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value)
+bool rapi_buffer_write_uint32(RapiBuffer* buffer, uint32_t value)
 {
-	u_int32_t little_endian_value = htole32(value);
-	return rapi_buffer_write_data(buffer, &little_endian_value, sizeof(u_int32_t));
+	uint32_t little_endian_value = htole32(value);
+	return rapi_buffer_write_data(buffer, &little_endian_value, sizeof(uint32_t));
 }
 
 bool rapi_buffer_write_string(RapiBuffer* buffer, LPCWSTR unicode)
@@ -303,9 +303,9 @@ bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size)
 	return true;
 }
 
-bool rapi_buffer_read_uint16(RapiBuffer* buffer, u_int16_t* value)
+bool rapi_buffer_read_uint16(RapiBuffer* buffer, uint16_t* value)
 {
-	if ( !rapi_buffer_read_data(buffer, value, sizeof(u_int16_t)) )
+	if ( !rapi_buffer_read_data(buffer, value, sizeof(uint16_t)) )
 		return false;
 
 	*value = letoh16(*value);
@@ -313,9 +313,9 @@ bool rapi_buffer_read_uint16(RapiBuffer* buffer, u_int16_t* value)
 	return true;
 }
 
-bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value)
+bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value)
 {
-	if ( !rapi_buffer_read_data(buffer, value, sizeof(u_int32_t)) )
+	if ( !rapi_buffer_read_data(buffer, value, sizeof(uint32_t)) )
 		return false;
 
 	*value = letoh32(*value);
@@ -325,7 +325,7 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value)
 
 bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
 {
-	u_int32_t exact_size = 0;
+	uint32_t exact_size = 0;
 	
 	if (!buffer || !unicode || !size)
 	{

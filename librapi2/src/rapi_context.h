@@ -10,9 +10,9 @@ typedef struct _RapiContext
 	RapiBuffer* send_buffer;
 	RapiBuffer* recv_buffer;
 	RapiSocket* socket;
-	u_int32_t result_1;
-	u_int32_t result_2;
-	u_int32_t last_error;
+	uint32_t result_1;
+	uint32_t result_2;
+	uint32_t last_error;
 	bool is_initialized;
 } RapiContext;
 
@@ -34,7 +34,7 @@ void rapi_context_free(RapiContext* context);
 /**
  * Begin a command
  */
-bool rapi_context_begin_command(RapiContext* context, u_int32_t command);
+bool rapi_context_begin_command(RapiContext* context, uint32_t command);
 
 /**
  * Send send_buffer and receive recv_buffer on socket

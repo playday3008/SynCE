@@ -45,12 +45,12 @@ bool rapi_buffer_write_data(RapiBuffer* buffer, const void* data, size_t size);
 /**
  * Append a WORD parameter to buffer, with adjustment for endianness
  */
-bool rapi_buffer_write_uint16(RapiBuffer* buffer, u_int16_t value);
+bool rapi_buffer_write_uint16(RapiBuffer* buffer, uint16_t value);
 
 /**
  * Append a DWORD parameter to buffer, with adjustment for endianness
  */
-bool rapi_buffer_write_uint32(RapiBuffer* buffer, u_int32_t value);
+bool rapi_buffer_write_uint32(RapiBuffer* buffer, uint32_t value);
 
 /**
  * Write a string with length
@@ -90,12 +90,12 @@ bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size);
 /**
  * Get a WORD parameter from buffer, with adjustment for endianness
  */
-bool rapi_buffer_read_uint16(RapiBuffer* buffer, u_int16_t* value);
+bool rapi_buffer_read_uint16(RapiBuffer* buffer, uint16_t* value);
 
 /**
  * Get a DWORD parameter from buffer, with adjustment for endianness
  */
-bool rapi_buffer_read_uint32(RapiBuffer* buffer, u_int32_t* value);
+bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value);
 
 /**
  * Get string with length in number of wide chars

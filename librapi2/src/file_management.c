@@ -52,7 +52,7 @@ BOOL CeFindAllFiles(
 		LPLPCE_FIND_DATA ppFindDataArray)
 {
 	RapiContext* context = rapi_context_current();
-	u_int32_t count = 0;
+	uint32_t count = 0;
 	
 	rapi_context_begin_command(context, 0x09);
 	rapi_buffer_write_string(context->send_buffer, szPath);
@@ -68,7 +68,7 @@ BOOL CeFindAllFiles(
 	if (count)
 	{
 		unsigned i;
-		u_int32_t name_size;
+		uint32_t name_size;
 		CE_FIND_DATA* array = calloc(count, sizeof(CE_FIND_DATA));
 			
 		if (!array)
@@ -214,7 +214,7 @@ DWORD CeGetSpecialFolderPath(
 	DWORD string_length = nBufferLength;
 	
 	rapi_context_begin_command(context, 0x44);
-	rapi_buffer_write_uint32(context->send_buffer, (u_int32_t)nFolder);
+	rapi_buffer_write_uint32(context->send_buffer, (uint32_t)nFolder);
 	rapi_buffer_write_uint32(context->send_buffer, nBufferLength);
 
 	if ( !rapi_context_call(context) )

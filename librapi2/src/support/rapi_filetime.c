@@ -1,7 +1,7 @@
 /* $Id$ */
 #include "rapi_filetime.h"
 
-typedef u_int32_t UINT;
+typedef uint32_t UINT;
 
 static void DOSFS_UnixTimeToFileTime( time_t unix_time, FILETIME *filetime,
                                DWORD remainder );

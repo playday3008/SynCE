@@ -59,7 +59,7 @@ void rapi_context_free(RapiContext* context)
 	}
 }
 
-bool rapi_context_begin_command(RapiContext* context, u_int32_t command)
+bool rapi_context_begin_command(RapiContext* context, uint32_t command)
 {
 	rapi_context_trace("command=0x%02x", command);
 	

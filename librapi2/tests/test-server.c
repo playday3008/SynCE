@@ -20,7 +20,7 @@ int main()
 	struct sockaddr_in cliaddr;
 	socklen_t clilen;
 	size_t size;
-	u_int32_t size_le;
+	uint32_t size_le;
 	char* buffer;
 	int i;
 	

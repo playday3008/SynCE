@@ -67,7 +67,7 @@ BOOL CeReadFile(
 {
 	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
-	u_int32_t bytes_read = 0;
+	uint32_t bytes_read = 0;
 
 	rapi_trace("begin");
 	
@@ -112,7 +112,7 @@ BOOL CeWriteFile(
 {
 	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
-	u_int32_t bytes_written = 0;
+	uint32_t bytes_written = 0;
 
 	rapi_trace("begin");
 	

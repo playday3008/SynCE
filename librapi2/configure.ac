@@ -43,8 +43,8 @@ dnl Checks for header files.
 
 AC_CHECK_HEADERS(byteswap.h sys/byteswap.h endian.h machine/endian.h)
 	
-AC_CHECK_HEADERS(sys/types.h,,[
-		AC_MSG_ERROR([Don't know how to get u_int16_t and u_int32_t on your system])
+AC_CHECK_HEADERS(inttypes.h,,[
+		AC_MSG_ERROR([Don't know how to get uint16_t and uint32_t on your system])
 		])
 
 AC_CHECK_HEADERS(stdbool.h,,[

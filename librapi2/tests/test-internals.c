@@ -18,7 +18,7 @@ START_TEST(test_buffer_uint32)/*{{{*/
 {
 	bool success;
 	RapiBuffer* buffer;
-	u_int32_t value;
+	uint32_t value;
 
 	buffer = rapi_buffer_new();
 	fail_unless(buffer != NULL, "rapi_buffer_new");
@@ -41,7 +41,7 @@ START_TEST(test_buffer_uint16)/*{{{*/
 {
 	bool success;
 	RapiBuffer* buffer;
-	u_int16_t value;
+	uint16_t value;
 
 	buffer = rapi_buffer_new();
 	fail_unless(buffer != NULL, "rapi_buffer_new");
