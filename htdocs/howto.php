@@ -35,7 +35,7 @@ e200</b>, <b>Qtek 8080</b>)</li>
 
 <li><b>Motorola MPx200</b></li>
 
-<li><b>Neonode N1</b></li>
+<!-- <li><b>Neonode N1</b></li> -->
 
 </ul>
 
