@@ -62,7 +62,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/screensnap.exe.arm" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel\screensnap.exe.arm" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
 
@@ -275,8 +275,8 @@ SOURCE=.\screensnap.cpp
 DEP_CPP_SCREE=\
 	".\encoder.h"\
 	".\eventprocessor.h"\
-	".\screensnap.h"\
 	".\serversocket.h"\
+	".\snap.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
@@ -284,8 +284,8 @@ DEP_CPP_SCREE=\
 DEP_CPP_SCREE=\
 	".\encoder.h"\
 	".\eventprocessor.h"\
-	".\screensnap.h"\
 	".\serversocket.h"\
+	".\snap.h"\
 	
 
 !ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
@@ -293,8 +293,8 @@ DEP_CPP_SCREE=\
 DEP_CPP_SCREE=\
 	".\encoder.h"\
 	".\eventprocessor.h"\
-	".\screensnap.h"\
 	".\serversocket.h"\
+	".\snap.h"\
 	
 
 !ENDIF 
@@ -333,7 +333,6 @@ SOURCE=.\snap.cpp
 
 DEP_CPP_SNAP_=\
 	".\encoder.h"\
-	".\huffman.h"\
 	".\huffmanencoder.h"\
 	".\rleencoder.h"\
 	".\snap.h"\
@@ -343,7 +342,6 @@ DEP_CPP_SNAP_=\
 
 DEP_CPP_SNAP_=\
 	".\encoder.h"\
-	".\huffman.h"\
 	".\huffmanencoder.h"\
 	".\rleencoder.h"\
 	".\snap.h"\
@@ -353,7 +351,6 @@ DEP_CPP_SNAP_=\
 
 DEP_CPP_SNAP_=\
 	".\encoder.h"\
-	".\huffman.h"\
 	".\huffmanencoder.h"\
 	".\rleencoder.h"\
 	".\snap.h"\

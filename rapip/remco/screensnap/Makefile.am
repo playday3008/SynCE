@@ -1,5 +1,6 @@
-EXTRA_DIST = screensnap.cpp snap.cpp snap.h huffman.cpp huffman.h screensnap.vcw screensnap.vcp
+SUBDIRS = ARMRel MIPSRel SH3Rel
 
-rcdir = $(kde_datadir)/raki/scripts
-
-rc_SCRIPTS = ARMRel/screensnap.exe.arm MIPSRel/screensnap.exe.mips SH3Rel/screensnap.exe.sh3
+EXTRA_DIST = encoder.cpp encoder.h eventprocessor.cpp eventprocessor.h \
+huffmanencoder.cpp huffmanencoder.h keysymdef.h rleencoder.cpp releencoder.h \
+screensnap.cpp serversocket.cpp serversocket.h snap.cpp snap.h \
+vnckeymap.cpp vnckeymap.h screensnap.cpp screensnap.vcp screensnap.vcw
