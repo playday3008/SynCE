@@ -40,6 +40,23 @@ SynCE plugin.</li>
 
 </ol>
 
+<h2>Frequently Asked Questions</h2>
+
+<p>
+
+<b>Q:</b> All contacts from Evolution were synchronized to the Pocket PC, but
+not all contacts from Pocket PC were synchronized to Evolution, why is
+that?
+
+<br>
+
+<b>A:</b> You are probably using the same partnership as you have used with
+ActiveSync before. See <i>Using both SynCE and ActiveSync</i> below for more
+information.
+
+</p>
+
+
 <h2>Using both SynCE and ActiveSync</h2>
 
 <p>A Pocket PC device can only have two simultaneous partnerships with desktop
