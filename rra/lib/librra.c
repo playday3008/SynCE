@@ -1211,7 +1211,12 @@ bool rra_partner_replace(RRA* rra, uint32_t index)
   SynceInfo* info = synce_info_new(NULL);
   char* filename = NULL;
 
-	if (index != 1 && index != 2)
+  if (!info)
+  {
+    goto exit;
+  }
+  
+  if (index != 1 && index != 2)
   {
     synce_error("Bad index: %i", index);
     goto exit;
