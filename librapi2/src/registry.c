@@ -112,7 +112,7 @@ LONG CeRegQueryValueEx( /*{{{*/
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpType);
 		if (*lpType == REG_DWORD)
 		{
-			rapi_buffer_read_optional_uint32(context->recv_buffer, lpData);
+			rapi_buffer_read_optional_uint32(context->recv_buffer, (uint32_t*)lpData);
 		}
 		else
 		{
@@ -302,7 +302,7 @@ LONG CeRegSetValueEx( /*{{{*/
 	rapi_buffer_write_uint32(context->send_buffer, dwType);
 	if (dwType == REG_DWORD)
 	{
-		rapi_buffer_write_optional_uint32 (context->send_buffer, lpData, true);
+		rapi_buffer_write_optional_uint32 (context->send_buffer, (uint32_t*)lpData, true);
 	}
 	else
 	{
