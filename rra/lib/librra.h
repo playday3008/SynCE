@@ -143,6 +143,10 @@ bool rra_partner_get_id(RRA* rra, uint32_t index, uint32_t* id);
 
 bool rra_partner_set_name(RRA* rra, uint32_t index, const char* name);
 bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
+
+bool rra_partner_replace(RRA* rra, uint32_t index);
+bool rra_partner_create(RRA* rra, uint32_t* index);
+
 #endif /* SWIG */
 
 #define rra_partner_free_name(name)  rapi_reg_free_string(name)

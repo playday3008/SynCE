@@ -2,10 +2,11 @@
 AM_CFLAGS = -g -Wall -Wno-long-long -Werror -ansi @CFLAGS@ -I../lib
 LDADD = ../lib/librra.la
 
+bin_PROGRAMS = rra-partners
+
 noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
 	rra-decode \
-	rra-partners \
 	rra-contact-to-vcard rra-contact-from-vcard \
 	rra-appointment-from-vevent rra-appointment-to-vevent \
 	rra-task-from-vtodo rra-task-to-vtodo
