@@ -54,8 +54,8 @@ Rra::Rra(QString pdaName)
 
 Rra::~Rra()
 {
+    disconnect();
     rra_free(rra);
-    Ce::rapiUninit();
 }
 
 
