@@ -3,7 +3,6 @@
 #define _GNU_SOURCE
 #include "rapi_context.h"
 #include <stdlib.h>
-#include "config/config.h"
 #include <synce_socket.h>
 #include <string.h>
 #include <sys/types.h>
@@ -72,66 +71,50 @@ void rapi_context_free(RapiContext* context)/*{{{*/
 HRESULT rapi_context_connect(RapiContext* context)
 {
 	HRESULT result = E_FAIL;
-	char* filename = NULL;
-	struct configFile* config = NULL;
-	char* ip_str = NULL;
-	char* password = NULL;
-	int key = 0;
-	pid_t dccm_pid = 0;
+  SynceInfo* info = NULL;
 
 	if (context->is_initialized)
 	{
 		/* Fail immediately */
 		return CERAPI_E_ALREADYINITIALIZED;
 	}
-
-	if (!synce_get_connection_filename(&filename))
+  
+  info = synce_info_new(NULL);
+  if (!info)
 	{
-		synce_error("failed to get connection filename");
+		synce_error("Failed to get connection info");
 		goto fail;
 	}
 
-	config = readConfigFile(filename);
-	if (!config)
+	if (!info->dccm_pid)
 	{
-		synce_error("unable to open file: %s", filename);
+		synce_error("DCCM PID entry not found for current connection");
 		goto fail;
 	}
 
-	dccm_pid = getConfigInt(config, "dccm", "pid");
-	if (!dccm_pid)
+	if (kill(info->dccm_pid, 0) < 0)
 	{
-		synce_error("pid entry not found in %s", filename);
+		synce_error("DCCM not running with pid %i", info->dccm_pid);
 		goto fail;
 	}
 
-	if (kill(dccm_pid, 0) < 0)
+	if (!info->ip)
 	{
-		synce_error("dccm not running with pid %i", dccm_pid);
+		synce_error("IP entry not found for current connection");
 		goto fail;
 	}
 
-	ip_str = getConfigString(config, "device", "ip");
-	if (!ip_str)
+	if ( !synce_socket_connect(context->socket, info->ip, RAPI_PORT) )
 	{
-		synce_error("ip entry not found in %s", filename);
+		synce_error("failed to connect to %s", info->ip);
 		goto fail;
 	}
 
-	if ( !synce_socket_connect(context->socket, ip_str, RAPI_PORT) )
-	{
-		synce_error("failed to connect to %s", ip_str);
-		goto fail;
-	}
-
-	password = getConfigString(config, "device", "password");
-	key = getConfigInt(config, "device", "key");
-	
-	if (password && strlen(password))
+	if (info->password && strlen(info->password))
 	{
 		bool password_correct = false;
 
-		if (!synce_password_send(context->socket, password, key))
+		if (!synce_password_send(context->socket, info->password, info->key))
 		{
 			synce_error("failed to send password");
 			goto fail;
@@ -154,9 +137,7 @@ HRESULT rapi_context_connect(RapiContext* context)
 	result = S_OK;
 
 fail:
-	if (filename)
-		free(filename);
-	unloadConfigFile(config);
+  synce_info_destroy(info);
 	return result;
 }
 
