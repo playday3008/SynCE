@@ -47,7 +47,7 @@ pppd[2695]: remote IP address 192.168.131.201</pre>
 </li>
 
 
-<li class=SPACED>Try the <a href="tools.php">tools</a>.</li>
+<li class=SPACED>Try the <a href="tools.php">tools</a> as your own user.</li>
 
 </ol>
 

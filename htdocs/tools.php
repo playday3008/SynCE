@@ -6,7 +6,8 @@
 
 <h1>SynCE - The tools</h1>
 
-<p>Try these tools that send commands to the remote device:</p>
+<p>Try these tools that send commands to the remote device. They must be
+executed by the user that is running dccm.</p>
 
 <table cellpadding=2>
 <tr><th>pcp</th><td>copy files</td></tr>
