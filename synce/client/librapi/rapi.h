@@ -59,11 +59,13 @@ extern "C"
 	    STREAM_TIMEOUT_READ
 	} RAPISTREAMFLAG;
 
+#if 0
 	struct IRAPIStreamVtbl
 	{
 		HRESULT ( * SetRapiStat ) ( IRAPIStream *, RAPISTREAMFLAG, DWORD );
 		HRESULT ( * GetRapiStat ) ( IRAPIStream *, RAPISTREAMFLAG, DWORD * );
 	};
+#endif
 
 	typedef HRESULT ( STDAPICALLTYPE RAPIEXT ) ( DWORD, BYTE, DWORD, BYTE, IRAPIStream * );
 
