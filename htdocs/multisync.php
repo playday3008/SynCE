@@ -24,11 +24,11 @@ at your own risk.</p>
 
 <table cellspacing=5 width="100%">
 
-<tr><th>Evolution<br>release</th><th>MultiSync<br>release</th><th>MultiSync<br>CVS branch</th><th>multisync_plugin<br>release</th><th>multisync_plugin<br>CVS branch</th></tr>
+<tr><th>Evolution<br>version</th><th>MultiSync<br>version</th><th>MultiSync<br>CVS branch</th><th>multisync_plugin<br>version</th><th>multisync_plugin<br>CVS branch</th></tr>
 
-<tr><td>1.2.x or earlier</td><td>0.72</td><td>gnome-1</td><td>SynCE 0.7</td><td>BRANCH_GNOME_1</tr>
+<tr><td>1.2.x or earlier</td><td>0.72</td><td>gnome-1</td><td>0.8.1</td><td>BRANCH_GNOME_1</td></tr>
 
-<tr><td>1.4.0 or later</td><td>0.80<sup>*</sup></td><td>HEAD</td><td>SynCE 0.8<sup>*</sup></td><td>HEAD</tr>
+<tr><td>1.4.0 or later</td><td>0.80<sup>*</sup></td><td>HEAD</td><td>0.8.2<sup>*</sup></td><td>HEAD</td></tr>
 
 </table>
 
