@@ -49,7 +49,8 @@ typedef struct _ObjectType ObjectType;
 class PdaConfigDialogImpl : public PdaConfigDialog
 {
 public:
-    PdaConfigDialogImpl(QString pdaName, QWidget* parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    PdaConfigDialogImpl(QString pdaName, QWidget* parent, const char* name = 0,
+            bool modal = FALSE, WFlags fl = 0);
     ~PdaConfigDialogImpl();
     QString getPassword();
     bool getMasqueradeEnabled();
@@ -72,7 +73,8 @@ public slots:
 private slots:
     void masqChangedSlot();
     void disableApply();
-    void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &, int);
+    void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &,
+            int);
     
 private:
     void readConfig();

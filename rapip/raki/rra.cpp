@@ -156,7 +156,8 @@ bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
             }
             if (rra_get_deleted_object_ids(rra, type_id, _ids.object_ids,
                                            &_ids.deleted_ids, &deleted_count)) {
-                kdDebug(2120) << "Deleted objects count: " << deleted_count << endl;
+                kdDebug(2120) << "Deleted objects count: " << deleted_count <<
+                        endl;
                 for (id = 0; id < deleted_count; id++) {
                     _ids.deletedIds.append(&_ids.deleted_ids[id]);
                 }
@@ -226,7 +227,9 @@ bool Rra::partnerCreate(uint32_t *index)
     rraOk = true;
 
     if (rra_partner_create(rra, index)) {
-        kdDebug(2120) << "Partnership creation succeeded. Using partnership index " << *index << endl;
+        kdDebug(2120) <<
+                "Partnership creation succeeded. Using partnership index " <<
+                *index << endl;
     } else {
         kdDebug(2120) << "Partnership creation failed." << endl;
         *index = 0;
@@ -249,7 +252,9 @@ bool Rra::partnerReplace(int index)
             rraOk = false;
         }
     } else {
-        kdDebug(2120) << "Invalid or missing index of partnership to replace." << endl;
+        kdDebug(2120) <<
+                "Invalid or missing index of partnership to replace." <<
+                endl;
         rraOk = false;
     }
 
@@ -336,10 +341,12 @@ QString Rra::getVCal(uint32_t type_id, uint32_t object_id)
             rraOk = false;
         } else {
             field_count = letoh32(*(uint32_t *)(data + 0));
-            propvals = (synce::CEPROPVAL *)malloc(sizeof(synce::CEPROPVAL) * field_count);
+            propvals = (synce::CEPROPVAL *)malloc(
+                    sizeof(synce::CEPROPVAL) * field_count);
             if (!dbstream_to_propvals(data + 8, field_count, propvals)) {
                 rraOk = false;
-            } else if (!appointment_to_vcal(APPOINTMENT_OID_UNKNOWN, propvals, field_count, &vcard)) {
+            } else if (!appointment_to_vcal(APPOINTMENT_OID_UNKNOWN, propvals,
+                    field_count, &vcard)) {
                 rraOk = false;
             }
         }
@@ -410,56 +417,56 @@ void Rra::deleteObject(uint32_t type_id, uint32_t object_id)
 
 
 contact_ids_t contact_ids[] = {
-                                {    0x4003,  0x0040, (char *) "FILETIME",  (char *) "Geburtstag", setBirthday},
-                                {    0x4002,  0x001f, (char *) "LPWSTR",    (char *) "Sekretariat", setSecretary},
-                                {    0x4004,  0x001f, (char *) "LPWSTR",    (char *) "TelefonSekretariat", setSecretaryPhone},
-                                {    0x3a1e,  0x001f, (char *) "LPWSTR",    (char *) "TelefonAuto", setCarPhone},
-                                {    0x4006,  0x001f, (char *) "LPWSTR",    (char *) "Kinder", setChildren},
-                                {    0x4083,  0x001f, (char *) "LPWSTR",    (char *) "Email", setEmail},
-                                {    0x4093,  0x001f, (char *) "LPWSTR",    (char *) "Email2", setEmail2},
-                                {    0x40a3,  0x001f, (char *) "LPWSTR",    (char *) "Email3", setEmail3},
-                                {    0x3a25,  0x001f, (char *) "LPWSTR",    (char *) "FaxPrivat", setPrivateFax},
-                                {    0x3a09,  0x001f, (char *) "LPWSTR",    (char *) "TelefonPrivat", setPrivatePhone},
-                                {    0x3a2f,  0x001f, (char *) "LPWSTR",    (char *) "Telefon2Privat", setPrivatePhone2},
-                                {    0x3a1c,  0x001f, (char *) "LPWSTR",    (char *) "TelefonMobil", setMobilPhone},
-                                {    0x4009,  0x001f, (char *) "LPWSTR",    (char *) "Pager", setPager},
-                                {    0x3a1d,  0x001f, (char *) "LPWSTR",    (char *) "TelefonFunk", setRadioPhone},
-                                {    0x400a,  0x001f, (char *) "LPWSTR",    (char *) "Partner", setPartner},
-                                {    0x4008,  0x001f, (char *) "LPWSTR",    (char *) "Webseite", setWebsite},
-                                {    0x3a24,  0x001f, (char *) "LPWSTR",    (char *) "FaxBuero", setOfficeFax},
-                                {    0x3a08,  0x001f, (char *) "LPWSTR",    (char *) "TelefonBuero", setOfficePhone},
-                                {    0x4007,  0x001f, (char *) "LPWSTR",    (char *) "Telefon2Buero", setOfficePhone2},
-                                {    0x4013,  0x001f, (char *) "LPWSTR",    (char *) "Nachname, Vorname", setFormatedName},
-                                {    0x3a16,  0x001f, (char *) "LPWSTR",    (char *) "Firma", setCompany},
-                                {    0x3a18,  0x001f, (char *) "LPWSTR",    (char *) "Abteilung", setDepartment},
-                                {    0x3a06,  0x001f, (char *) "LPWSTR",    (char *) "Vorname", setFirstName},
-                                {    0x3a11,  0x001f, (char *) "LPWSTR",    (char *) "Nachname", setLastName},
-                                {    0x4024,  0x001f, (char *) "LPWSTR",    (char *) "Vorname2", setFirstName2},
-                                {    0x4023,  0x001f, (char *) "LPWSTR",    (char *) "Anrede", setSalutation},
-                                {    0x3a19,  0x001f, (char *) "LPWSTR",    (char *) "Buero", setOffice},
-                                {    0x3a05,  0x001f, (char *) "LPWSTR",    (char *) "Titel", setTitle},
-                                {    0x3a17,  0x001f, (char *) "LPWSTR",    (char *) "Position", setPosition},
-                                {    0x4005,  0x001f, (char *) "LPWSTR",    (char *) "GeschÃ¤ftlich", setCategory},
-                                {    0x0017,  0x0041, (char *) "BLOB",      (char *) "Notizen", setNotes},
-                                {    0x4040,  0x001f, (char *) "LPWSTR",    (char *) "StrassePrivat", setHomeStreet},
-                                {    0x4041,  0x001f, (char *) "LPWSTR",    (char *) "OrtPrivat", setHomeCity},
-                                {    0x4042,  0x001f, (char *) "LPWSTR",    (char *) "RegionPrivat", setHomeRegion},
-                                {    0x4043,  0x001f, (char *) "LPWSTR",    (char *) "PlzPrivat", setHomeZipCode},
-                                {    0x4044,  0x001f, (char *) "LPWSTR",    (char *) "StaatPrivat", setHomeCountry},
-                                {    0x4045,  0x001f, (char *) "LPWSTR",    (char *) "StrasseBuero", setOfficeStreet},
-                                {    0x4046,  0x001f, (char *) "LPWSTR",    (char *) "OrtBuero", setOfficeCity},
-                                {    0x4047,  0x001f, (char *) "LPWSTR",    (char *) "RegionBuero", setOfficeRegion},
-                                {    0x4048,  0x001f, (char *) "LPWSTR",    (char *) "PlzBuero", setOfficeZipCode},
-                                {    0x4049,  0x001f, (char *) "LPWSTR",    (char *) "StaatBuero", setOfficeCountry},
-                                {    0x404a,  0x001f, (char *) "LPWSTR",    (char *) "StrasseWeitere", setAdditionalStreet},
-                                {    0x404b,  0x001f, (char *) "LPWSTR",    (char *) "OrtWeitere", setAdditionalCity},
-                                {    0x404c,  0x001f, (char *) "LPWSTR",    (char *) "RegionWeitere", setAdditionalRegion},
-                                {    0x404d,  0x001f, (char *) "LPWSTR",    (char *) "PlzWeitere", setAdditionalZipCode},
-                                {    0x404e,  0x001f, (char *) "LPWSTR",    (char *) "StaatWeitere", setAdditionalCountry},
-                                {    0xfffd,  0x0013, (char *) "UI4",       (char *) "NoName", NULL},
-                                {    0xfffe,  0x0013, (char *) "UI4",       (char *) "NoName", NULL},
-                                {0, 0, NULL, NULL, NULL}
-                            };
+    {    0x4003,  0x0040, setBirthday},
+    {    0x4002,  0x001f, setSecretary},
+    {    0x4004,  0x001f, setSecretaryPhone},
+    {    0x3a1e,  0x001f, setCarPhone},
+    {    0x4006,  0x001f, setChildren},
+    {    0x4083,  0x001f, setEmail},
+    {    0x4093,  0x001f, setEmail2},
+    {    0x40a3,  0x001f, setEmail3},
+    {    0x3a25,  0x001f, setPrivateFax},
+    {    0x3a09,  0x001f, setPrivatePhone},
+    {    0x3a2f,  0x001f, setPrivatePhone2},
+    {    0x3a1c,  0x001f, setMobilPhone},
+    {    0x4009,  0x001f, setPager},
+    {    0x3a1d,  0x001f, setRadioPhone},
+    {    0x400a,  0x001f, setPartner},
+    {    0x4008,  0x001f, setWebsite},
+    {    0x3a24,  0x001f, setOfficeFax},
+    {    0x3a08,  0x001f, setOfficePhone},
+    {    0x4007,  0x001f, setOfficePhone2},
+    {    0x4013,  0x001f, setFormatedName},
+    {    0x3a16,  0x001f, setCompany},
+    {    0x3a18,  0x001f, setDepartment},
+    {    0x3a06,  0x001f, setFirstName},
+    {    0x3a11,  0x001f, setLastName},
+    {    0x4024,  0x001f, setFirstName2},
+    {    0x4023,  0x001f, setSalutation},
+    {    0x3a19,  0x001f, setOffice},
+    {    0x3a05,  0x001f, setTitle},
+    {    0x3a17,  0x001f, setPosition},
+    {    0x4005,  0x001f, setCategory},
+    {    0x0017,  0x0041, setNotes},
+    {    0x4040,  0x001f, setHomeStreet},
+    {    0x4041,  0x001f, setHomeCity},
+    {    0x4042,  0x001f, setHomeRegion},
+    {    0x4043,  0x001f, setHomeZipCode},
+    {    0x4044,  0x001f, setHomeCountry},
+    {    0x4045,  0x001f, setOfficeStreet},
+    {    0x4046,  0x001f, setOfficeCity},
+    {    0x4047,  0x001f, setOfficeRegion},
+    {    0x4048,  0x001f, setOfficeZipCode},
+    {    0x4049,  0x001f, setOfficeCountry},
+    {    0x404a,  0x001f, setAdditionalStreet},
+    {    0x404b,  0x001f, setAdditionalCity},
+    {    0x404c,  0x001f, setAdditionalRegion},
+    {    0x404d,  0x001f, setAdditionalZipCode},
+    {    0x404e,  0x001f, setAdditionalCountry},
+    {    0xfffd,  0x0013, NULL},
+    {    0xfffe,  0x0013, NULL},
+    {0, 0, NULL}
+};
 
 #ifdef __cplusplus
 extern "C"
@@ -503,13 +510,15 @@ KABC::Addressee Rra::getAddressee(uint32_t type_id, uint32_t object_id)
             rraOk = false;
         } else {
             field_count = letoh32(*(uint32_t *)(data + 0));
-            propvals = (synce::CEPROPVAL *)malloc(sizeof(synce::CEPROPVAL) * field_count);
+            propvals = (synce::CEPROPVAL *)malloc(sizeof(
+                    synce::CEPROPVAL) * field_count);
             if (dbstream_to_propvals(data + 8, field_count, propvals)) {
                 for (unsigned int i = 0; i < field_count; i++) {
                     for (int j = 0; contact_ids[j].id; j++) {
                         if (contact_ids[j].id == (propvals[i].propid >> 16)) {
                             if (contact_ids[j].function != NULL) {
-                                contact_ids[j].function(myAddress, &propvals[i], NULL, false);
+                                contact_ids[j].function(myAddress, &propvals[i],
+                                        NULL, false);
                             }
                         }
                     }
@@ -529,12 +538,14 @@ KABC::Addressee Rra::getAddressee(uint32_t type_id, uint32_t object_id)
         }
         disconnect();
     }
-    myAddress.addressee.setUid("RRA-ID-" + (QString("00000000") + QString::number(object_id, 16)).right(8));
+    myAddress.addressee.setUid("RRA-ID-" + (QString("00000000") +
+            QString::number(object_id, 16)).right(8));
     return myAddress.addressee;
 }
 
 
-bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id, uint32_t ceUid, uint32_t *newCeUid)
+bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
+        uint32_t ceUid, uint32_t *newCeUid)
 {
     synce::CEPROPVAL propvals[MAX_FIELD_COUNT];
     QString stores[MAX_FIELD_COUNT];
@@ -544,7 +555,8 @@ bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id, uint3
 
     MyAddress myAddress;
     myAddress.addressee = addressee;
-    myAddress.homeAddress = addressee.address(KABC::Address::Home | KABC::Address::Pref);
+    myAddress.homeAddress = addressee.address(KABC::Address::Home |
+            KABC::Address::Pref);
     myAddress.workAddress = addressee.address(KABC::Address::Work);
     myAddress.otherAddress = addressee.address(KABC::Address::Intl);
 
@@ -552,7 +564,8 @@ bool Rra::putAddressee(const KABC::Addressee& addressee, uint32_t type_id, uint3
     if (connect()) {
         for (int j = 0; contact_ids[j].id; j++) {
             if (contact_ids[j].function != NULL) {
-                if (contact_ids[j].function(myAddress, &propvals[i], &stores[i], true)) {
+                if (contact_ids[j].function(myAddress, &propvals[i],
+                        &stores[i], true)) {
                     propvals[i].propid |= contact_ids[j].id << 16;
                     i++;
                 }

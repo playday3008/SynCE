@@ -41,15 +41,14 @@ class PasswordDialogImpl : public PasswordDialog
   Q_OBJECT
   
 public:
-  PasswordDialogImpl(QString pdaName, QWidget *parent, const char *name = NULL, bool modal = false);
+  PasswordDialogImpl(QString pdaName, QWidget *parent, const char *name = NULL,
+        bool modal = false);
   ~PasswordDialogImpl();
     void processPassword();
     void reject();
     
-    
 private:
     QString pdaName;
-//    PDA *pda;
 
 signals:
     void password(QString passwd);

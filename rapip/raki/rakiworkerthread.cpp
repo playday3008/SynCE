@@ -45,7 +45,9 @@ RakiWorkerThread::~RakiWorkerThread()
 {}
 
 
-void RakiWorkerThread::start(WorkerThreadInterface *wti, void (WorkerThreadInterface::*userRun)(QThread *thread, void *data = NULL), void *data)
+void RakiWorkerThread::start(WorkerThreadInterface *wti, void (
+        WorkerThreadInterface::*userRun)(QThread *thread, void *data = NULL),
+        void *data)
 {
     threadMutex.lock();
     this->wait();

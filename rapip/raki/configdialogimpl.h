@@ -43,7 +43,8 @@ class ConfigDialogImpl : public ConfigDialog
     Q_OBJECT
     
 public:
-    ConfigDialogImpl(QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    ConfigDialogImpl(QWidget* parent = 0, const char* name = 0,
+            bool modal = FALSE, WFlags fl = 0);
     ~ConfigDialogImpl();
     QString getDccmPath();
     QString getIpTables();

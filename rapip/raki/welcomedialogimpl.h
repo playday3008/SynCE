@@ -44,7 +44,8 @@ public:
         NONE
     };
     
-    WelcomeDialogImpl(QWidget *parent = 0, const char *name = 0, bool modal = false);
+    WelcomeDialogImpl(QWidget *parent = 0, const char *name = 0,
+            bool modal = false);
 
     ~WelcomeDialogImpl();
     

@@ -122,9 +122,8 @@ static const char* get_battery_flag_string(unsigned flag)
 }
 
 
-ManagerImpl::ManagerImpl(QString pdaName, QWidget *parent, const char* name, bool modal,
-                         WFlags fl)
-        : Manager(parent, name, modal, fl)
+ManagerImpl::ManagerImpl(QString pdaName, QWidget *parent, const char* name,
+        bool modal, WFlags fl) : Manager(parent, name, modal, fl)
 {
     statusLine->setText("Ready");
     this->pdaName = pdaName;
@@ -186,21 +185,20 @@ void *ManagerImpl::systemInfoEvent(void *data)
     platform->setText(platformString);
     details->setText(detailsString);
     architecture->setText(
-        QString::number(sysinfo->system.wProcessorArchitecture) +
-        " " + QString((sysinfo->system.wProcessorArchitecture <
-                       PROCESSOR_ARCHITECTURE_COUNT) ?
-                       architectures[sysinfo->system.wProcessorArchitecture] :
-                       "Unknown"));
+            QString::number(sysinfo->system.wProcessorArchitecture) +
+            " " + QString((sysinfo->system.wProcessorArchitecture <
+            PROCESSOR_ARCHITECTURE_COUNT) ? architectures[
+            sysinfo->system.wProcessorArchitecture] : "Unknown"));
     procType->setText(QString::number(sysinfo->system.dwProcessorType) +
-                      " " + QString(processor(sysinfo->system.dwProcessorType)));
-    pageSize->setText("0x" +
-                      QString::number(sysinfo->system.dwAllocationGranularity, 16));
+            " " + QString(processor(sysinfo->system.dwProcessorType)));
+    pageSize->setText("0x" + QString::number(
+            sysinfo->system.dwAllocationGranularity, 16));
     storageSize->setText(QString::number(sysinfo->store.dwStoreSize) +
-                         " B  (" + QString::number(sysinfo->store.dwStoreSize /
-                                                   (1024 * 1024)) + " MB)");
+            " B  (" + QString::number(sysinfo->store.dwStoreSize /
+            (1024 * 1024)) + " MB)");
     freeSpace->setText(QString::number(sysinfo->store.dwFreeSize) +
-                       " B  (" + QString::number(sysinfo->store.dwFreeSize /
-                                                 (1024 * 1024)) + " MB)");
+            " B  (" + QString::number(sysinfo->store.dwFreeSize /
+            (1024 * 1024)) + " MB)");
 
     delete sysinfo;
     
@@ -214,29 +212,29 @@ void *ManagerImpl::batInfoEvent(void *data)
     
     
     bat1Flag->setText(QString::number(sysinfo->power.BatteryFlag) + " (" +
-                      get_battery_flag_string(sysinfo->power.BatteryFlag) + ")");
+            get_battery_flag_string(sysinfo->power.BatteryFlag) + ")");
     bat1LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN ==
-                          sysinfo->power.BatteryLifePercent) ? QString("Unknown") :
-                          QString::number(sysinfo->power.BatteryLifePercent) + "%");
+            sysinfo->power.BatteryLifePercent) ? QString("Unknown") :
+            QString::number(sysinfo->power.BatteryLifePercent) + "%");
     bat1LifeTime->setText((BATTERY_LIFE_UNKNOWN ==
-                           sysinfo->power.BatteryLifeTime) ? QString("Unknown") :
-                           QString::number(sysinfo->power.BatteryLifeTime));
+            sysinfo->power.BatteryLifeTime) ? QString("Unknown") :
+            QString::number(sysinfo->power.BatteryLifeTime));
     bat1FullLife->setText((BATTERY_LIFE_UNKNOWN ==
-                           sysinfo->power.BatteryFullLifeTime) ? QString("Unknown") :
-                           QString::number(sysinfo->power.BatteryFullLifeTime));
+            sysinfo->power.BatteryFullLifeTime) ? QString("Unknown") :
+            QString::number(sysinfo->power.BatteryFullLifeTime));
     bat2Flag->setText(QString::number(sysinfo->power.BackupBatteryFlag) + " (" +
-                      get_battery_flag_string(sysinfo->power.BackupBatteryFlag) + ")");
+            get_battery_flag_string(sysinfo->power.BackupBatteryFlag) + ")");
     bat2LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN ==
-                          sysinfo->power.BackupBatteryLifePercent) ?
-                          QString("Unknown") :
-                          QString::number(sysinfo->power.BackupBatteryLifePercent) + "%");
+            sysinfo->power.BackupBatteryLifePercent) ?
+            QString("Unknown") : QString::number(
+            sysinfo->power.BackupBatteryLifePercent) + "%");
     bat2LifeTime->setText((BATTERY_LIFE_UNKNOWN ==
-                           sysinfo->power.BackupBatteryLifeTime) ? QString("Unknown") :
-                           QString::number(sysinfo->power.BackupBatteryLifeTime));
+            sysinfo->power.BackupBatteryLifeTime) ? QString("Unknown") :
+            QString::number(sysinfo->power.BackupBatteryLifeTime));
     bat2FullLife->setText((BATTERY_LIFE_UNKNOWN ==
-                           sysinfo->power.BackupBatteryFullLifeTime) ?
-                           QString("Unknown") :
-                           QString::number(sysinfo->power.BackupBatteryFullLifeTime));
+            sysinfo->power.BackupBatteryFullLifeTime) ?
+            QString("Unknown") : QString::number(
+            sysinfo->power.BackupBatteryFullLifeTime));
     switch (sysinfo->power.ACLineStatus) {
     case AC_LINE_OFFLINE:
         online->off();
@@ -296,11 +294,13 @@ void ManagerImpl::uninstallSoftware(QThread */*qt*/, void */*data*/)
     QListBoxItem *item = softwareList->item(softwareList->currentItem());
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent, "Uninstalling software from the PDA ...", noBlock);
+        postThreadEvent(&ManagerImpl::beginEvent,
+                "Uninstalling software from the PDA ...", noBlock);
 
-        if(Ce::createProcess(QString("unload.exe").ucs2(), QString(item->text()).ucs2(),
-                             NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
-            
+        if(Ce::createProcess(QString("unload.exe").ucs2(),
+                QString(item->text()).ucs2(), NULL, NULL, false, 0, NULL,
+                NULL, NULL, &info)) {
+
             postThreadEvent(&ManagerImpl::uninstalledEvent, item, noBlock);
         }
         Ce::rapiUninit();
@@ -316,7 +316,8 @@ void ManagerImpl::fetchSystemInfo(QThread */*qt*/, void */*data*/)
     struct sysinfo_s *sysinfo = new sysinfo_s;
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent, "Retrieving system-info from the PDA ...", noBlock);
+        postThreadEvent(&ManagerImpl::beginEvent,
+                "Retrieving system-info from the PDA ...", noBlock);
 
         Ce::getVersionEx(&sysinfo->version);
         Ce::getSystemInfo(&sysinfo->system);
@@ -336,7 +337,8 @@ void ManagerImpl::fetchBatteryStatus(QThread */*qt*/, void */*data*/)
     struct sysinfo_s *sysinfo = new sysinfo_s;
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent, "Retrieving batery-info from the PDA ...", noBlock);
+        postThreadEvent(&ManagerImpl::beginEvent,
+                "Retrieving batery-info from the PDA ...", noBlock);
 
         Ce::getSystemPowerStatusEx(&sysinfo->power, false);
         
@@ -358,10 +360,11 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
     DWORD i;
 
     if (Ce::rapiInit(pdaName)) {
-        postThreadEvent(&ManagerImpl::beginEvent, "Retrieving software-list from the PDA ...", noBlock);
+        postThreadEvent(&ManagerImpl::beginEvent,
+                "Retrieving software-list from the PDA ...", noBlock);
 
-        result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, QString("Software\\Apps").ucs2(), 0, 0,
-                                       &parent_key);
+        result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                QString("Software\\Apps").ucs2(), 0, 0, &parent_key);
         if (ERROR_SUCCESS == result) {
             for (i = 0; !stopRequested(); i++) {
                 WCHAR wide_name[MAX_PATH];
@@ -371,28 +374,30 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
                 DWORD value_size = sizeof(installed);
                 DWORD type;
 
-                result = synce::CeRegEnumKeyEx(parent_key, i, wide_name, &name_size,
-                                               NULL, NULL, NULL, NULL);
+                result = synce::CeRegEnumKeyEx(parent_key, i, wide_name,
+                        &name_size, NULL, NULL, NULL, NULL);
 
                 if (ERROR_SUCCESS != result) {
                     break;
                 }
 
                 result = synce::CeRegOpenKeyEx(parent_key, wide_name, 0, 0,
-                                               &program_key);
+                        &program_key);
 
                 if (ERROR_SUCCESS != result) {
                     continue;
                 }
 
-                result = synce::CeRegQueryValueEx(program_key, QString("Instl").ucs2(),
-                                                  NULL, &type, (LPBYTE)&installed, &value_size);
+                result = synce::CeRegQueryValueEx(program_key,
+                        QString("Instl").ucs2(), NULL, &type,
+                        (LPBYTE)&installed, &value_size);
 
                 synce::CeRegCloseKey(program_key);
 
                 if (ERROR_SUCCESS == result && installed) {
                     postThreadEvent(&ManagerImpl::insertInstalledItemEvent,
-                                    qstrdup(QString::fromUcs2(wide_name).ascii()), noBlock);
+                            qstrdup(QString::fromUcs2(wide_name).ascii()),
+                            noBlock);
                 } else if (ERROR_SUCCESS != result) {
                     break;
                 }

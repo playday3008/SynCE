@@ -138,7 +138,8 @@ public:
     {
         bool ret = false;
 
-        ret = synce::CeCopyFile(lpExistingFileName, lpNewFileName, bFailIfExists);
+        ret = synce::CeCopyFile(lpExistingFileName, lpNewFileName,
+                bFailIfExists);
 
         return ret;
     }
@@ -224,7 +225,8 @@ public:
     }
 
 
-    static bool getSystemPowerStatusEx(synce::SYSTEM_POWER_STATUS_EX *power, bool boolval)
+    static bool getSystemPowerStatusEx(synce::SYSTEM_POWER_STATUS_EX *power,
+            bool boolval)
     {
         memset(power, 0, sizeof(synce::SYSTEM_POWER_STATUS_EX));
         return synce::CeGetSystemPowerStatusEx(power, boolval);

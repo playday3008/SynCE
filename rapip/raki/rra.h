@@ -84,7 +84,8 @@ public:
 //    QString getVCal(uint32_t type_id, uint32_t object_id);
     void deleteObject(uint32_t type_id, uint32_t object_id);
     KABC::Addressee getAddressee(uint32_t type_id, uint32_t object_id);
-    bool putAddressee(const KABC::Addressee& addressee, uint32_t type_id, uint32_t ceUid, uint32_t *newCeUid);
+    bool putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
+            uint32_t ceUid, uint32_t *newCeUid);
     bool ok();
     bool connect();
     void disconnect(); 

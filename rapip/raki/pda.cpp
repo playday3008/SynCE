@@ -66,16 +66,17 @@ PDA::PDA(Raki *raki, QString pdaName)
     managerWindow->setCaption("Info and Management for " + pdaName);
 
     passwordDialog = new PasswordDialogImpl(pdaName, raki,
-                                            "PasswordWindow", true);
+            "PasswordWindow", true);
     connect(passwordDialog, SIGNAL(password(QString)), this,
             SLOT(setPassword(QString)));
     passwordDialog->setCaption("Password for " + pdaName);
 
     configDialog = new PdaConfigDialogImpl(pdaName, raki, "ConfigDialog",
-                                           false);
+            false);
     configDialog->setCaption("Configuration for " + pdaName);
 
-    syncDialog = new SyncDialogImpl(rra, pdaName, raki, "SynchronizeDialog", true);
+    syncDialog = new SyncDialogImpl(rra, pdaName, raki, "SynchronizeDialog",
+            true);
     syncDialog->setCaption("Synchronize " + pdaName);
 
     associatedMenu = new KPopupMenu(raki, "PDA-Menu");
@@ -86,32 +87,31 @@ PDA::PDA(Raki *raki, QString pdaName)
     associatedMenu->insertTitle(SmallIcon("rapip"), pdaName);
     menuCount++;
 
-    syncItem = associatedMenu->insertItem(SmallIcon("connect_established"), i18n("&Synchronize"),
-                                          this, SLOT(synchronize()));
+    syncItem = associatedMenu->insertItem(SmallIcon("connect_established"),
+            i18n("&Synchronize"), this, SLOT(synchronize()));
     associatedMenu->setItemEnabled(syncItem, false);
     menuCount++;
 
     associatedMenu->insertItem(SmallIcon("rotate_cw"),
-                               i18n("&Info && Management..."), this,
-                               SLOT(manage()));
+            i18n("&Info && Management..."), this, SLOT(manage()));
     menuCount++;
 
     associatedMenu->insertSeparator(menuCount);
     menuCount++;
 
     associatedMenu->insertItem(SmallIcon("folder"), i18n("&Open rapip://") +
-                               QString(pdaName) + "/", this, SLOT(openFs()));
+            QString(pdaName) + "/", this, SLOT(openFs()));
     menuCount++;
 
     associatedMenu->insertItem(SmallIcon("run"), i18n("&Execute..."), this,
-                               SLOT(execute()));
+            SLOT(execute()));
     menuCount++;
 
     associatedMenu->insertSeparator(menuCount);
     menuCount++;
 
     associatedMenu->insertItem(SmallIcon("configure"), i18n("Configure ") +
-                               QString(pdaName), this, SLOT(configurePda()));
+            QString(pdaName), this, SLOT(configurePda()));
     menuCount++;
 
     associatedMenu->insertTearOffHandle(-1, -1);
@@ -148,7 +148,8 @@ PDA::~PDA()
 
 bool PDA::running()
 {
-    return (WorkerThreadInterface::running() || managerWindow->running() || syncDialog->running());
+    return (WorkerThreadInterface::running() || managerWindow->running() ||
+            syncDialog->running());
 }
 
 
@@ -216,7 +217,8 @@ void PDA::openFs()
 void PDA::synchronize(bool forced)
 {
     if ((forced || configDialog->getSyncAtConnect()) && isPartner()) {
-        QPtrList<SyncTaskListItem>& syncItems = configDialog->getSyncTaskItemList();
+        QPtrList<SyncTaskListItem>& syncItems =
+                configDialog->getSyncTaskItemList();
         syncDialog->show(syncItems);
     }
 }
@@ -345,8 +347,9 @@ void *PDA::removePartnershipDialog(void *data)
 
     initProgress->hide();
 
-    removedPartners = RemovePartnershipDialogImpl::showDialog(QString(partner[0].name),
-            QString(partner[1].name) , 0, "Remove Partnership", true, 0);
+    removedPartners = RemovePartnershipDialogImpl::showDialog(
+            QString(partner[0].name), QString(partner[1].name) , 0,
+            "Remove Partnership", true, 0);
 
     initProgress->show();
 
@@ -358,8 +361,8 @@ void *PDA::alreadyTwoPartnershipsDialog(void *)
 {
     initProgress->hide();
     KMessageBox::error((QWidget *) parent(),
-                       "There are already two partnerships configured on the device. Using guest",
-                       "Error configuring partnership");
+                       "There are already two partnerships configured on the "
+                       "device. Using guest", "Error configuring partnership");
     initProgress->show();
     return NULL;
 }
@@ -406,7 +409,8 @@ bool PDA::removePartnership(int *removedPartnerships)
     if (rra->getPartner(1, &partners[0])) {
         advanceInitProgress(1);
         if (rra->getPartner(2, &partners[1])) {
-            int deletedItems = (int) postThreadEvent(&PDA::removePartnershipDialog, partners, block);
+            int deletedItems = (int) postThreadEvent(
+                    &PDA::removePartnershipDialog, partners, block);
             if (deletedItems > 0) {
                 if (deletedItems != 0) {
                     struct Rra::Partner deletedPartner;
@@ -455,7 +459,8 @@ bool PDA::setPartnershipThread()
             if (removedPartnerships > 0) {
                 setPartnerOk = setPartnershipThread();
             } else {
-                postThreadEvent(&PDA::alreadyTwoPartnershipsDialog, NULL, block);
+                postThreadEvent(&PDA::alreadyTwoPartnershipsDialog, NULL,
+                        block);
                 kdDebug(2120) << "Using Guest" << endl;
                 partnerName = "";
                 partnerId = 0;
@@ -521,7 +526,7 @@ void PDA::init()
     kdDebug(2120) << "in pda-init" << endl;
 
     initProgress = new InitProgress(raki, "InitProgress", true,
-                WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM);
+            WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM);
 
     progressBar = initProgress->progressBar;
     progressBar->setTotalSteps(7);

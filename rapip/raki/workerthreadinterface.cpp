@@ -84,7 +84,9 @@ bool WorkerThreadInterface::delayedDelete()
 }
 
 
-void *WorkerThreadInterface::postEvent(void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL), void *data, int blocking)
+void *WorkerThreadInterface::postEvent(
+        void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL),
+        void *data, int blocking)
 {
     ThreadEvent *threadEvent = new ThreadEvent(this, userEventMethode, data);
     threadEvent->setData((void *) blocking);
@@ -129,7 +131,8 @@ void *WorkerThreadInterface::synchronizeGui()
 {
     if (!isStopRequested) {
         syncMutex.lock();
-        postThreadEvent(&WorkerThreadInterface::guiSynchronizator, NULL, noBlock);
+        postThreadEvent(&WorkerThreadInterface::guiSynchronizator, NULL,
+                noBlock);
         syncWaitCondition.wait(&syncMutex);
         syncMutex.unlock();
     }

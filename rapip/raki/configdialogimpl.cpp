@@ -42,8 +42,8 @@
 #include <kde_dmalloc.h>
 #endif
 
-ConfigDialogImpl::ConfigDialogImpl(QWidget* parent, const char* name, bool modal, WFlags fl)
-        : ConfigDialog(parent, name, modal, fl)
+ConfigDialogImpl::ConfigDialogImpl(QWidget* parent, const char* name,
+        bool modal, WFlags fl) : ConfigDialog(parent, name, modal, fl)
 {
     readConfig();
     updateFields();
@@ -75,8 +75,10 @@ void ConfigDialogImpl::copyResult(KIO::Job *job)
 {
     KIO::FileCopyJob *fc = (KIO::FileCopyJob *) job;
     if (fc->error()) {
-        KMessageBox::error(0, "Could not copy a valid dccm.sh script.\nError was: " + 
-            job->errorString() + "\nPlease check your installation and start again!");
+        KMessageBox::error(0,
+                "Could not copy a valid dccm.sh script.\nError was: " +
+                job->errorString() +
+                "\nPlease check your installation and start again!");
         emit configError();
     } else {
         KIO::SimpleJob *sj =  KIO::chmod(fc->destURL(), 0755);
@@ -93,12 +95,14 @@ void ConfigDialogImpl::checkRunningVersion()
     configurationValid = true;
 
     if (rakiVersion != VERSION) {
-        WelcomeDialogImpl *welcomeDialog = new WelcomeDialogImpl(this, "EelcomeDialog", true);
+        WelcomeDialogImpl *welcomeDialog = new WelcomeDialogImpl(this,
+                "EelcomeDialog", true);
         welcomeDialog->exec();
         if (welcomeDialog->result() == QDialog::Accepted) {
             if (welcomeDialog->getSelectedDccm() == WelcomeDialogImpl::VDCCM) {
                 dccm = "vdccm";
-            } else if (welcomeDialog->getSelectedDccm() == WelcomeDialogImpl::DCCM) {
+            } else if (welcomeDialog->getSelectedDccm() ==
+                    WelcomeDialogImpl::DCCM) {
                 dccm = "dccm";
             } else {
                 configurationValid = false;
@@ -108,16 +112,23 @@ void ConfigDialogImpl::checkRunningVersion()
                 dccmPath = dccm;
                 KStandardDirs *dirs = KApplication::kApplication()->dirs();
                 connectNotify = dirs->findResource("data", "raki/Infbeg.wav");
-                disconnectNotify = dirs->findResource("data", "raki/Infend.wav");
-                passwordRequestNotify = dirs->findResource("data", "raki/Infend.wav");
-                passwordRejectNotify = dirs->findResource("data", "raki/Infbeg.wav");
+                disconnectNotify = dirs->findResource(
+                        "data", "raki/Infend.wav");
+                passwordRequestNotify = dirs->findResource(
+                        "data", "raki/Infend.wav");
+                passwordRejectNotify = dirs->findResource(
+                        "data", "raki/Infbeg.wav");
                 startDccm = true;
-                KURL srcDccm = KURL(QString("file:" + dirs->findResource("data", "raki/scripts/" + dccm + ".sh")));
+                KURL srcDccm = KURL(QString("file:" + dirs->findResource(
+                        "data", "raki/scripts/" + dccm + ".sh")));
                 char *destDir;
                 synce::synce_get_script_directory(&destDir);
-                KURL destDccm = KURL(QString("file:") + QString(destDir) + "/" + "dccm.sh");
-                kdDebug(2120) << "Copy from " << srcDccm.prettyURL() << " to " << destDccm.prettyURL() << endl;
-                KIO::FileCopyJob *fc = KIO::file_copy (srcDccm, destDccm, -1, true, false, false);
+                KURL destDccm = KURL(QString("file:") + QString(destDir) +
+                        "/" + "dccm.sh");
+                kdDebug(2120) << "Copy from " << srcDccm.prettyURL() <<
+                        " to " << destDccm.prettyURL() << endl;
+                KIO::FileCopyJob *fc = KIO::file_copy (srcDccm, destDccm, -1,
+                        true, false, false);
                 connect(fc, SIGNAL(result(KIO::Job *)), this,
                         SLOT(copyResult(KIO::Job *)));
                 

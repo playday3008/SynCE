@@ -40,7 +40,8 @@ class RunWindowImpl : public RunWindow
 {
 
 public:
-  RunWindowImpl(QString pdaName, QWidget *parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+  RunWindowImpl(QString pdaName, QWidget *parent, const char* name = 0,
+        bool modal = FALSE, WFlags fl = 0);
   ~RunWindowImpl();
 
 private slots:

@@ -26,7 +26,8 @@
 #include <klistview.h>
 #include <kdebug.h>
 
-RemovePartnershipDialogImpl::RemovePartnershipDialogImpl( QWidget* parent, const char* name, bool modal, WFlags fl )
+RemovePartnershipDialogImpl::RemovePartnershipDialogImpl( QWidget* parent,
+        const char* name, bool modal, WFlags fl )
  : RemovePartnershipDialog(parent, name, modal, fl )
 {   
     partnershipListView->setFullWidth(true);
@@ -39,12 +40,15 @@ RemovePartnershipDialogImpl::~RemovePartnershipDialogImpl()
 }
 
 
-void RemovePartnershipDialogImpl::setPartnerships(QString partner1, QString partner2)
+void RemovePartnershipDialogImpl::setPartnerships(QString partner1,
+        QString partner2)
 {
     partnershipList.clear();
     partnershipListView->clear();
-    QCheckListItem *partnerItem1 = new QCheckListItem(partnershipListView, partner1, QCheckListItem::CheckBox);
-    QCheckListItem *partnerItem2 = new QCheckListItem(partnershipListView, partner2, QCheckListItem::CheckBox);
+    QCheckListItem *partnerItem1 = new QCheckListItem(partnershipListView,
+            partner1, QCheckListItem::CheckBox);
+    QCheckListItem *partnerItem2 = new QCheckListItem(partnershipListView,
+            partner2, QCheckListItem::CheckBox);
 
     partnershipListView->insertItem(partnerItem1);
     partnershipList.append(partnerItem1);
@@ -71,9 +75,11 @@ void RemovePartnershipDialogImpl::removePartnerships()
     }
 }
 
-int RemovePartnershipDialogImpl::showDialog(QString partner1, QString partner2, QWidget* parent, const char* name, bool modal, WFlags fl)
+int RemovePartnershipDialogImpl::showDialog(QString partner1, QString partner2,
+        QWidget* parent, const char* name, bool modal, WFlags fl)
 {
-    RemovePartnershipDialogImpl *dialog = new RemovePartnershipDialogImpl(parent, name, modal, fl);
+    RemovePartnershipDialogImpl *dialog = new RemovePartnershipDialogImpl(
+            parent, name, modal, fl);
     dialog->setPartnerships(partner1, partner2);
     
     deletedItems = 0;

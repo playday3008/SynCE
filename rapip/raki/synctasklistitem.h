@@ -53,7 +53,8 @@ class SyncTaskListItem : public QObject, public QCheckListItem
 Q_OBJECT
     
 public:
-    SyncTaskListItem(ObjectType* objectType, QListView* listView, uint32_t partnerId);
+    SyncTaskListItem(ObjectType* objectType, QListView* listView,
+            uint32_t partnerId);
     void undo();
     void makePersistent();
     bool isOn();

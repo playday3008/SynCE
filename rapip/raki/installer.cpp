@@ -120,7 +120,8 @@ void Installer::procFiles(KIO::Job *job, const KURL& from, const KURL& to)
     PDA *pda = (PDA *) pdaList->find(pdaName);
 
     if (pda != NULL) {
-        dest = KURL("rapip://" + pdaName + "/Windows/AppMgr/Install/" + from.fileName());
+        dest = KURL("rapip://" + pdaName + "/Windows/AppMgr/Install/" +
+                from.fileName());
         pda->addURLByCopyJob((KIO::CopyJob *) job, dest);
     }
 }
@@ -144,22 +145,27 @@ void Installer::install()
     if (pda != NULL && !ul.empty()) {
         bool mkdirSuccess = true;
 
-        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/AppMgr/Install")) {
-            if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/AppMgr")) {
-                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName + "/Windows/AppMgr");
+        if (!KIO::NetAccess::exists("rapip://" + pdaName +
+                "/Windows/AppMgr/Install")) {
+            if (!KIO::NetAccess::exists("rapip://" + pdaName +
+                    "/Windows/AppMgr")) {
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                        "/Windows/AppMgr");
             }
             if (mkdirSuccess) {
-                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName + "/Windows/AppMgr/Install");
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                        "/Windows/AppMgr/Install");
             }
         }
 
         if (mkdirSuccess) {
             KIO::CopyJob *copyJob = KIO::copy(ul, KURL("rapip://" + pdaName +
-                                              "/Windows/AppMgr/Install/"), true);
+                    "/Windows/AppMgr/Install/"), true);
             connect(copyJob, SIGNAL(result(KIO::Job *)), this,
                     SLOT(copyResult(KIO::Job *)));
-            connect(copyJob, SIGNAL(copying(KIO::Job *, const KURL&, const KURL&)),
-                    this, SLOT(procFiles (KIO::Job *, const KURL&, const KURL&)));
+            connect(copyJob, SIGNAL(copying(KIO::Job *, const KURL&,
+                    const KURL&)), this, SLOT(procFiles (KIO::Job *,
+                    const KURL&, const KURL&)));
             pda->registerCopyJob(copyJob);
         }
     }

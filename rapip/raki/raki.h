@@ -56,7 +56,8 @@ class Raki : public KSystemTray, public DCOPObject
     Q_OBJECT
 
 public:
-    Raki(KAboutData* aboutDta, KDialog* d, QWidget* parent=0, const char *name=0);
+    Raki(KAboutData* aboutDta, KDialog* d, QWidget* parent=0,
+            const char *name=0);
     ~Raki();
     ConfigDialogImpl *configDialog;
     bool isInitialized();

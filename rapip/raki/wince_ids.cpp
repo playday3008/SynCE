@@ -88,7 +88,8 @@ static bool extractBool(synce::CEPROPVAL *propval)
 */
 
 
-bool setBirthday(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setBirthday(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setBirthday(extractQDateTime(propval));
@@ -100,24 +101,29 @@ bool setBirthday(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store
 }
 
 
-bool setSecretary(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setSecretary(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {
     return false;
 }
 
 
-bool setSecretaryPhone(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setSecretaryPhone(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {   
     return false;
 }
 
 
-bool setCarPhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setCarPhone(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Car));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Car));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Car).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Car).number();
         return insertQString(propval, *store);
     }
     
@@ -125,13 +131,15 @@ bool setCarPhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store
 }
 
 
-bool setChildren(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setChildren(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {
     return false;
 }
 
 
-bool setEmail(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setEmail(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store,
+        bool read)
 {  
     if (!read) {
         myAddress.addressee.insertEmail(extractQString(propval), true);
@@ -144,7 +152,8 @@ bool setEmail(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, b
 }
 
 
-bool setEmail2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setEmail2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store,
+        bool read)
 {
     
     if (!read) {
@@ -165,7 +174,8 @@ bool setEmail2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, 
 }
 
 
-bool setEmail3(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setEmail3(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store,
+        bool read)
 {
     bool inserted = false;
     
@@ -174,7 +184,8 @@ bool setEmail3(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, 
     } else {
         QStringList emails = myAddress.addressee.emails();
         if (emails.begin() != emails.end()) {
-            for (QStringList::Iterator it = emails.begin(); it != emails.end(); ++it ) {
+            for (QStringList::Iterator it = emails.begin();
+                    it != emails.end(); ++it ) {
                 if ((*it) != myAddress.addressee.preferredEmail()) {
                     *store = *it;
                     insertQString(propval, *store);
@@ -188,12 +199,16 @@ bool setEmail3(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, 
 }
 
 
-bool setPrivateFax(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
-{   
+bool setPrivateFax(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Home | KABC::PhoneNumber::Fax));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Home |
+                KABC::PhoneNumber::Fax));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Home | KABC::PhoneNumber::Fax).number();
+        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Home |
+                KABC::PhoneNumber::Fax).number();
         return insertQString(propval, *store);
     }
     
@@ -201,12 +216,15 @@ bool setPrivateFax(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setPrivatePhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setPrivatePhone(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Home));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Home));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Home).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Home).number();
         return insertQString(propval, *store);
     }
     
@@ -214,12 +232,15 @@ bool setPrivatePhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *s
 }
 
 
-bool setPrivatePhone2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setPrivatePhone2(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Voice));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Voice));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Voice).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Voice).number();
         return insertQString(propval, *store);
     }
     
@@ -227,12 +248,15 @@ bool setPrivatePhone2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *
 }
 
 
-bool setMobilPhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setMobilPhone(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Cell));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Cell));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Cell).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Cell).number();
         return insertQString(propval, *store);
     }
     
@@ -240,12 +264,15 @@ bool setMobilPhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setPager(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setPager(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Pager));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Pager));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Pager).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Pager).number();
         return insertQString(propval, *store);
     }
     
@@ -253,12 +280,15 @@ bool setPager(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, b
 }
 
 
-bool setRadioPhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setRadioPhone(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Pcs));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Pcs));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Pcs).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Pcs).number();
         return insertQString(propval, *store);
     }
     
@@ -266,13 +296,15 @@ bool setRadioPhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setPartner(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setPartner(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {
     return false;
 }
 
 
-bool setWebsite(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setWebsite(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setUrl(KURL(extractQString(propval)));
@@ -285,12 +317,16 @@ bool setWebsite(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store,
 }
 
 
-bool setOfficeFax(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficeFax(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Fax | KABC::PhoneNumber::Work));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Fax |
+                KABC::PhoneNumber::Work));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Fax | KABC::PhoneNumber::Work).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Fax | KABC::PhoneNumber::Work).number();
         return insertQString(propval, *store);    
     }
     
@@ -298,12 +334,15 @@ bool setOfficeFax(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *stor
 }
 
 
-bool setOfficePhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficePhone(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
-        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(extractQString(propval), KABC::PhoneNumber::Work));
+        myAddress.addressee.insertPhoneNumber(KABC::PhoneNumber(
+                extractQString(propval), KABC::PhoneNumber::Work));
     } else {
-        *store = myAddress.addressee.phoneNumber(KABC::PhoneNumber::Work).number();
+        *store = myAddress.addressee.phoneNumber(
+                KABC::PhoneNumber::Work).number();
         return insertQString(propval, *store);
     }
     
@@ -311,13 +350,15 @@ bool setOfficePhone(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *st
 }
 
 
-bool setOfficePhone2(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setOfficePhone2(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {   
     return false;
 }
 
 
-bool setFormatedName(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setFormatedName(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setFormattedName(extractQString(propval));
@@ -330,7 +371,8 @@ bool setFormatedName(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *s
 }
 
 
-bool setCompany(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setCompany(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setOrganization(extractQString(propval));
@@ -343,13 +385,15 @@ bool setCompany(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store,
 }
 
 
-bool setDepartment(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setDepartment(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {
     return false;
 }
 
 
-bool setFirstName(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setFirstName(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setGivenName(extractQString(propval));
@@ -362,8 +406,9 @@ bool setFirstName(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *stor
 }
 
 
-bool setLastName(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
-{   
+bool setLastName(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
+{
     if (!read) {
         myAddress.addressee.setFamilyName(extractQString(propval));
     } else {
@@ -375,7 +420,8 @@ bool setLastName(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store
 }
 
 
-bool setFirstName2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setFirstName2(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setAdditionalName(extractQString(propval));
@@ -388,7 +434,8 @@ bool setFirstName2(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setSalutation(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setSalutation(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setPrefix(extractQString(propval));
@@ -401,13 +448,15 @@ bool setSalutation(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setOffice(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setOffice(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {   
     return false;
 }
 
 
-bool setTitle(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setTitle(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.addressee.setTitle(extractQString(propval));
@@ -420,13 +469,15 @@ bool setTitle(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, b
 }
 
 
-bool setPosition(MyAddress& /*myAddress.addressee*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setPosition(MyAddress& /*myAddress.addressee*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {
     return false;
 }
 
 
-bool setCategory(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setCategory(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.addressee.insertCategory(extractQString(propval));
@@ -444,7 +495,8 @@ bool setCategory(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store
 }
 
 
-bool setNotes(MyAddress& /*myAddress*/, synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
+bool setNotes(MyAddress& /*myAddress*/,
+        synce::CEPROPVAL */*propval*/, QString */*store*/, bool /*read*/)
 {
 /*
     if (!read)
@@ -455,7 +507,8 @@ bool setNotes(MyAddress& /*myAddress*/, synce::CEPROPVAL */*propval*/, QString *
 }
 
 
-bool setHomeStreet(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setHomeStreet(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.homeAddress.setStreet(extractQString(propval));
@@ -468,7 +521,8 @@ bool setHomeStreet(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setHomeCity(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setHomeCity(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.homeAddress.setLocality(extractQString(propval));
@@ -481,7 +535,8 @@ bool setHomeCity(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store
 }
 
 
-bool setHomeRegion(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setHomeRegion(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.homeAddress.setRegion(extractQString(propval));
@@ -494,7 +549,8 @@ bool setHomeRegion(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setHomeZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setHomeZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.homeAddress.setPostalCode(extractQString(propval));
@@ -507,7 +563,8 @@ bool setHomeZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *st
 }
 
 
-bool setHomeCountry(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setHomeCountry(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.homeAddress.setCountry(extractQString(propval));
@@ -520,7 +577,8 @@ bool setHomeCountry(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *st
 }
 
 
-bool setOfficeStreet(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficeStreet(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.workAddress.setStreet(extractQString(propval));
@@ -533,7 +591,8 @@ bool setOfficeStreet(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *s
 }
 
 
-bool setOfficeCity(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficeCity(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.workAddress.setLocality(extractQString(propval));
@@ -546,7 +605,8 @@ bool setOfficeCity(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *sto
 }
 
 
-bool setOfficeRegion(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficeRegion(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.workAddress.setRegion(extractQString(propval));
@@ -559,7 +619,8 @@ bool setOfficeRegion(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *s
 }
 
 
-bool setOfficeZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficeZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.workAddress.setPostalCode(extractQString(propval));
@@ -572,7 +633,8 @@ bool setOfficeZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *
 }
 
 
-bool setOfficeCountry(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setOfficeCountry(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.workAddress.setCountry(extractQString(propval));
@@ -585,7 +647,8 @@ bool setOfficeCountry(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *
 }
 
 
-bool setAdditionalStreet(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setAdditionalStreet(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.otherAddress.setStreet(extractQString(propval));
@@ -598,7 +661,8 @@ bool setAdditionalStreet(MyAddress& myAddress, synce::CEPROPVAL *propval, QStrin
 }
 
 
-bool setAdditionalCity(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setAdditionalCity(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.otherAddress.setLocality(extractQString(propval));
@@ -611,7 +675,8 @@ bool setAdditionalCity(MyAddress& myAddress, synce::CEPROPVAL *propval, QString 
 }
 
 
-bool setAdditionalRegion(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setAdditionalRegion(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.otherAddress.setRegion(extractQString(propval));
@@ -624,7 +689,8 @@ bool setAdditionalRegion(MyAddress& myAddress, synce::CEPROPVAL *propval, QStrin
 }
 
 
-bool setAdditionalZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setAdditionalZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {   
     if (!read) {
         myAddress.otherAddress.setPostalCode(extractQString(propval));
@@ -637,7 +703,8 @@ bool setAdditionalZipCode(MyAddress& myAddress, synce::CEPROPVAL *propval, QStri
 }
 
 
-bool setAdditionalCountry(MyAddress& myAddress, synce::CEPROPVAL *propval, QString *store, bool read)
+bool setAdditionalCountry(MyAddress& myAddress, synce::CEPROPVAL *propval,
+        QString *store, bool read)
 {
     if (!read) {
         myAddress.otherAddress.setCountry(extractQString(propval));

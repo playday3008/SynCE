@@ -37,7 +37,8 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(ObjectType *objectType, QListView* listView, uint32_t partnerId)
+SyncTaskListItem::SyncTaskListItem(ObjectType *objectType,
+        QListView* listView, uint32_t partnerId)
         : QCheckListItem(listView, objectType->name, QCheckListItem::CheckBox)
 {
     this->objectType = objectType;
@@ -170,7 +171,8 @@ QWidget *SyncTaskListItem::taskLabel()
 
 KTrader::OfferList SyncTaskListItem::getOffers()
 {
-   return KTrader::self()->query("Raki/Synchronizer", "[X-Raki-Synchronizer] == '" + text() + "'");
+    return KTrader::self()->query("Raki/Synchronizer",
+            "[X-Raki-Synchronizer] == '" + text() + "'");
 } 
 
 QString SyncTaskListItem::getPreferedOffer()
@@ -206,7 +208,8 @@ void SyncTaskListItem::clickedMenu(int item)
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << "Name: " << service->name() + "; Library: " << service->library() << endl;
+            kdDebug(2120) << "Name: " << service->name() + "; Library: " <<
+                    service->library() << endl;
             if (service->name() == itemMenu.text(item)) {
                 preferedOfferTemp = service->name();
                 preferedLibraryTemp = service->library();
@@ -240,7 +243,8 @@ void SyncTaskListItem::openPopup()
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << "Name: " << service->name() + "; Library: " << service->library() << endl;
+            kdDebug(2120) << "Name: " << service->name() + "; Library: " <<
+                    service->library() << endl;
             int item = itemMenu.insertItem(service->name());
             if (service->name() == preferedOfferTemp) {
                 itemMenu.setItemChecked(item, true);
@@ -268,7 +272,8 @@ void SyncTaskListItem::openPopup()
 }
 
 
-bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra, QString pdaName)
+bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
+        QString pdaName)
 {
     bool ret = false;
     KTrader::OfferList offers;
@@ -295,21 +300,27 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra, QString pda
         KLibFactory *factory = KLibLoader::self()->factory(library.ascii());
         if (!factory) {
             QString errorMessage = KLibLoader::self()->lastErrorMessage();
-            kdDebug(2120) << "There was an error: " << offer << errorMessage << endl;
-            postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Synchronizer Load-Error"));
+            kdDebug(2120) << "There was an error: " << offer << errorMessage <<
+                    endl;
+            postSyncThreadEvent(SyncThread::setTask,
+                    (void *) qstrdup("Synchronizer Load-Error"));
         } else {
             if (factory->inherits("RakiSyncFactory")) {
-                RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*>(factory);
-                RakiSyncPlugin *syncPlugin = static_cast<RakiSyncPlugin*> (syncFactory->create());
-                ret = syncPlugin->doSync(syncThread, objectType, pdaName, partnerId, this, rra, firstSynchronization);
-                syncFactory->callme(); // Fake call to link libinterfaces correct.
+                RakiSyncFactory *syncFactory = static_cast<RakiSyncFactory*> (
+                        factory);
+                RakiSyncPlugin *syncPlugin = static_cast<RakiSyncPlugin*> (
+                        syncFactory->create());
+                ret = syncPlugin->doSync(syncThread, objectType, pdaName,
+                        partnerId, this, rra, firstSynchronization);
+                syncFactory->callme(); // Fake call to link correct.
                 delete syncPlugin;
             } else {
                 kdDebug(2120) << "Library no Raki-Plugin" << endl;
             }
         }
     } else {
-        postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("No Synchronizer found"));
+        postSyncThreadEvent(SyncThread::setTask,
+                (void *) qstrdup("No Synchronizer found"));
     }
 
     kdDebug(2120) << "Finished syncing with " << offer << endl;

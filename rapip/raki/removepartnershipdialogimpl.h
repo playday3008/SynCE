@@ -40,11 +40,13 @@ class QCheckListItem;
 class RemovePartnershipDialogImpl : public RemovePartnershipDialog
 {
 public:
-    static int showDialog(QString partner1, QString partner2, QWidget* parent, const char* name, bool modal, WFlags fl);
+    static int showDialog(QString partner1, QString partner2, QWidget* parent,
+            const char* name, bool modal, WFlags fl);
     
 
 protected:    
-    RemovePartnershipDialogImpl( QWidget* parent, const char* name, bool modal, WFlags fl );
+    RemovePartnershipDialogImpl( QWidget* parent, const char* name, bool modal,
+            WFlags fl );
     ~RemovePartnershipDialogImpl();
 
     void removePartnerships();    

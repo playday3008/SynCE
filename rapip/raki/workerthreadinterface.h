@@ -38,7 +38,8 @@
 */
 
 #define postThreadEvent(a, b, c) \
-    this->postEvent((void *(WorkerThreadInterface::*)(void *data = NULL)) a, (void *) b, c);
+    this->postEvent((void *(WorkerThreadInterface::*)(void *data = NULL)) a, \
+    (void *) b, c);
     
 class WorkerThreadInterface
 {
@@ -50,13 +51,14 @@ public:
     void setRunning(bool);
     bool stopRequested();
     void setStopRequested(bool isStopRequested);
-    void *postEvent(void *(WorkerThreadInterface::*userEventMethode)(void *data = 0), void *data = 0, int block = 0);
+    void *postEvent(void *(WorkerThreadInterface::*userEventMethode)
+            (void *data = 0), void *data = 0, int block = 0);
     void setEventReturnValue(void *value);
     void *eventReturnValue();
     void *synchronizeGui();
     void setDelayedDelete(bool delayedDelete);
     bool delayedDelete();
-    
+
     enum eventType {
         noBlock = 0,
         block

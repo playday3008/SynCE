@@ -33,8 +33,9 @@
 #include <kde_dmalloc.h>
 #endif
 
-RunWindowImpl::RunWindowImpl(QString pdaName, QWidget *parent, const char* name, bool modal, WFlags fl)
-  : RunWindow(parent, name, modal, fl)
+RunWindowImpl::RunWindowImpl(QString pdaName, QWidget *parent,
+        const char* name, bool modal, WFlags fl)
+        : RunWindow(parent, name, modal, fl)
 {
     cancel->setFocus();
     runUrlRequester->setURL("rapip://" + pdaName + "/");
@@ -69,7 +70,7 @@ void RunWindowImpl::executeProgram()
     
     if (Ce::rapiInit(url.host())) {
         if (!Ce::createProcess(url.path().replace("/", "\\").ucs2(), NULL,
-                               NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
+                NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
         }
         close();
     }

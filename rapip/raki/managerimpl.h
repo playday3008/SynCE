@@ -42,7 +42,8 @@ class PDA;
 class ManagerImpl : public Manager, public WorkerThreadInterface
 {    
 public:
-    ManagerImpl(QString pdaName, QWidget *parent, const char* name = 0, bool modal = FALSE, WFlags fl = 0);
+    ManagerImpl(QString pdaName, QWidget *parent, const char* name = 0,
+            bool modal = FALSE, WFlags fl = 0);
     ~ManagerImpl();
     void closeEvent(QCloseEvent *e);
     

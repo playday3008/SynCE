@@ -29,8 +29,9 @@
 #include <qcursor.h>
 
 
-ThreadEvent::ThreadEvent(WorkerThreadInterface *wti, void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL), void *data)
-        : QCustomEvent(QEvent::User)
+ThreadEvent::ThreadEvent(WorkerThreadInterface *wti,
+        void *(WorkerThreadInterface::*userEventMethode)(void *data = NULL),
+        void *data) : QCustomEvent(QEvent::User)
 {
     this->wti = wti;
     this->userEventMethode = userEventMethode;
@@ -67,11 +68,15 @@ void ThreadEventObject::customEvent (QCustomEvent *qCustomEvent)
     ThreadEvent *customEvent = (ThreadEvent *) qCustomEvent;
     switch ((int) customEvent->data()) {
     case WorkerThreadInterface::noBlock:
-        customEvent->wti->setEventReturnValue((customEvent->wti->*customEvent->userEventMethode)(customEvent->threadData));
+        customEvent->wti->setEventReturnValue((
+                customEvent->wti->*customEvent->userEventMethode)(
+                customEvent->threadData));
         break;
     case WorkerThreadInterface::block:
         QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
-        customEvent->wti->setEventReturnValue((customEvent->wti->*customEvent->userEventMethode)(customEvent->threadData));
+        customEvent->wti->setEventReturnValue((
+                customEvent->wti->*customEvent->userEventMethode)(
+                customEvent->threadData));
         QApplication::setOverrideCursor( QCursor(Qt::WaitCursor) );
 // Wait for the thread to be in the waiting state
         this->eventMutexLock();
