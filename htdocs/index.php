@@ -62,27 +62,33 @@ alt="Make a donation" title="Make a donation">
 
 </td></tr><tr>
 <td colspan=2><hr size=1/></td>
-</tr><tr><td rowspan=2>
+</tr><tr><td>
 
 
 <h2>Site contents</h2>
 
 <!-- <table widht="100%"><tr><td width="50%" valign="top"> -->
 
-<h3>General</h3>
+<h3>SynCE step by step</h3>
 
-<ul>
+<ol>
+
 <li><a href="download.php">Download and install</a></li>
 <li><a href="setup.php">Setup</a></li>
 <li><a href="start.php">Connect</a></li>
-<li><a href="tools.php">Tools</a></li>
+<li>Use the <a href="tools.php">tools</a></li>
 <li><a href="disconnect.php">Disconnect</a></li>
+
+</ol>
+
+<h3>General</h3>
+
+<ul>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
 <li><a href="qa.php">Questions and Answers</a></li>
+<li><a href="devel.php">Development information</a></li>
 <li><a href="links.php">Links</a></li>
-<li class=SPACED><a href="help.php">Get help</a></li>
-
-
+<li><a href="help.php">Get help</a></li>
 <li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
 </ul>
 
@@ -102,15 +108,12 @@ href="linux.php">Linux</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
 href="macosx.php">MacOS X</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a
 href="openbsd.php">OpenBSD</a></blockquote>
 
-<h3>Development information</h3>
+<h3>Extras</h3>
 
 <ul>
-<li><a href="notes.php">Developer's notes</a></li>
-<li><a href="tasks.php">Help wanted!</a></li>
-<li><a href="architecture.php">Architecture</a></li>
-<li><a href="developers.php">The SynCE developers</a></li>
-<li><a href="capture.php">How to capture packets for analyzing</a></li>
-<!-- <li><a href="#future">Future</a></li> -->
+<li><a href="orange.php">The Orange tool and library</a></li>
+<li><a href="unshield.php">The Unshield tool and library</a></li>
+<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
 </ul>
 
 </td><td width="50%">
@@ -362,16 +365,6 @@ alt="Make a donation" title="Make a donation"></td>
 
 </p>
 */ ?>
-
-</td></tr><tr><td>
-
-<h2>Extras</h2>
-
-<ul>
-<li><a href="orange.php">The Orange tool and library</a></li>
-<li><a href="unshield.php">The Unshield tool and library</a></li>
-<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
-</ul>
 
 </td></tr></table>
 
