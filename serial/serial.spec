@@ -1,6 +1,6 @@
 %define prefix   /usr
 %define name     synce-serial
-%define ver      0.1
+%define ver      0.2
 %define rel      1
 
 Summary: SynCE: Serial connection support.
@@ -37,9 +37,7 @@ make
 %makeinstall
 
 %files
-%{prefix}/bin/synce-serial-abort
-%{prefix}/bin/synce-serial-config
-%{prefix}/bin/synce-serial-start
-%{prefix}/share/synce/synce-serial-chat
-%{prefix}/share/synce/synce-serial-common
+%{prefix}/bin/synce-serial-*
+%{prefix}/share/synce/synce-serial-*
+%{_mandir}/man8/synce-serial-*
 
