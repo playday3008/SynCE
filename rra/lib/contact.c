@@ -177,6 +177,13 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	WCHAR* work_postal_code = NULL;
 	WCHAR* work_country = NULL;
 
+	/* other address parts */
+	WCHAR* other_street = NULL;
+	WCHAR* other_locality = NULL;
+	WCHAR* other_region = NULL;
+	WCHAR* other_postal_code = NULL;
+	WCHAR* other_country = NULL;
+
 	strbuf_append(vcard, "BEGIN:vCard\r\n");
 
 	strbuf_append(vcard, "VERSION:");
@@ -386,6 +393,26 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				work_country = pFields[i].val.lpwstr;
 				break;
 
+			case ID_OTHER_STREET:
+				other_street = pFields[i].val.lpwstr;
+				break;
+
+			case ID_OTHER_LOCALITY:
+				other_locality = pFields[i].val.lpwstr;
+				break;
+
+			case ID_OTHER_REGION:
+				other_region = pFields[i].val.lpwstr;
+				break;
+
+			case ID_OTHER_POSTAL_CODE:
+				other_postal_code = pFields[i].val.lpwstr;
+				break;
+
+			case ID_OTHER_COUNTRY:
+				other_country = pFields[i].val.lpwstr;
+				break;
+
 			case ID_EMAIL:
 				strbuf_append_type(vcard, "EMAIL", "INTERNET,PREF", flags);
 				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
@@ -395,6 +422,36 @@ static bool rra_contact_to_vcard2(/*{{{*/
 			case ID_EMAIL2:
 			case ID_EMAIL3:
 				strbuf_append_type(vcard, "EMAIL", "INTERNET", flags);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+				strbuf_append_crlf(vcard);
+				break;
+
+			case ID_SPOUSE:
+				strbuf_append(vcard, "X-EVOLUTION-SPOUSE:");
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+				strbuf_append_crlf(vcard);
+				break;
+
+			case ID_ASSISTANT:
+				strbuf_append(vcard, "X-EVOLUTION-ASSISTANT:");
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+				strbuf_append_crlf(vcard);
+				break;
+
+			case ID_ASSISTANT_TEL:
+				strbuf_append_tel_type(vcard, "X-EVOLUTION-ASSISTANT", flags);
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+				strbuf_append_crlf(vcard);
+				break;
+
+			case ID_OFFICE_LOC:
+				strbuf_append(vcard, "X-EVOLUTION-OFFICE:");
+				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+				strbuf_append_crlf(vcard);
+				break;
+
+			case ID_RADIO_TEL:
+				strbuf_append_tel_type(vcard, "X-EVOLUTION-RADIO", flags);
 				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 				strbuf_append_crlf(vcard);
 				break;
@@ -475,6 +532,25 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		strbuf_append_escaped_wstr (vcard, work_postal_code, flags);
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, work_country, flags);
+		strbuf_append_crlf      (vcard);
+	}
+
+	if (other_street || other_locality || other_postal_code || other_country)
+	{
+		strbuf_append_type(vcard, "ADR", "POSTAL", flags);
+		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, NULL, flags); /* extended address */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, other_street, flags);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, other_locality, flags);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, other_region, flags); /* region */
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, other_postal_code, flags);
+		strbuf_append_c            (vcard, ';');
+		strbuf_append_escaped_wstr (vcard, other_country, flags);
 		strbuf_append_crlf      (vcard);
 	}
 
@@ -596,18 +672,19 @@ static uint32_t name_ids[NAME_FIELD_COUNT] =
 
 #define HOME 0
 #define WORK 1
+#define OTHER 2
 
 #define ADDRESS_FIELD_COUNT 7
 
-static uint32_t address_ids[ADDRESS_FIELD_COUNT][2] = 
+static uint32_t address_ids[ADDRESS_FIELD_COUNT][3] = 
 {
 	{0, 0}, /* post office box */
 	{0, 0}, /* extended address */
-	{ID_HOME_STREET,      ID_WORK_STREET},      /* street */
-	{ID_HOME_LOCALITY,    ID_WORK_LOCALITY},    /* locality */
-	{ID_HOME_REGION,      ID_WORK_REGION},      /* region */
-	{ID_HOME_POSTAL_CODE, ID_WORK_POSTAL_CODE}, /* postal code */
-	{ID_HOME_COUNTRY,     ID_WORK_COUNTRY}      /* country */
+	{ID_HOME_STREET,      ID_WORK_STREET,        ID_OTHER_STREET},      /* street */
+	{ID_HOME_LOCALITY,    ID_WORK_LOCALITY,      ID_OTHER_LOCALITY},    /* locality */
+	{ID_HOME_REGION,      ID_WORK_REGION,        ID_OTHER_REGION},      /* region */
+	{ID_HOME_POSTAL_CODE, ID_WORK_POSTAL_CODE,   ID_OTHER_POSTAL_CODE}, /* postal code */
+	{ID_HOME_COUNTRY,     ID_WORK_COUNTRY,       ID_OTHER_COUNTRY}      /* country */
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -838,7 +915,9 @@ static bool parser_handle_field(/*{{{*/
 		char** address = strsplit(value, ';');
 		int where;
 
-		if (STR_IN_STR(type, "WORK"))
+		if (STR_IN_STR(type, "POSTAL"))
+		        where = OTHER;
+		else if (STR_IN_STR(type, "WORK"))
 			where = WORK;
 		else if (STR_IN_STR(type, "HOME"))
 			where = HOME;
@@ -876,6 +955,14 @@ static bool parser_handle_field(/*{{{*/
 		else if (STR_IN_STR(type, "CELL"))
 		{
 			add_string(parser, ID_MOBILE_TEL, type, value);
+		}
+		else if (STR_IN_STR(type, "X-EVOLUTION-ASSISTANT"))
+		{
+			add_string(parser, ID_ASSISTANT_TEL, type, value);
+		}
+		else if (STR_IN_STR(type, "X-EVOLUTION-RADIO"))
+		{
+			add_string(parser, ID_RADIO_TEL, type, value);
 		}
 		else
 		{
@@ -943,6 +1030,19 @@ static bool parser_handle_field(/*{{{*/
   {
     add_date(parser, ID_ANNIVERSARY, type, value);
   }
+  else if (STR_EQUAL(name, "X-EVOLUTION-SPOUSE"))
+  {
+    add_string(parser, ID_SPOUSE, type, value);
+  }
+  else if (STR_EQUAL(name, "X-EVOLUTION-ASSISTANT"))
+  {
+    add_string(parser, ID_ASSISTANT, type, value);
+  }
+  else if (STR_EQUAL(name, "X-EVOLUTION-OFFICE"))
+  {
+    add_string(parser, ID_OFFICE_LOC, type, value);
+  }
+
 #if 0
 	else if (STR_EQUAL(name, ""))
 	{
