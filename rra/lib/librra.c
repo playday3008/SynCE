@@ -1182,6 +1182,7 @@ bool rra_partner_replace(RRA* rra, uint32_t index)
   uint32_t id = 0;
   SynceInfo* info = synce_info_new(NULL);
   char* filename = NULL;
+  char* p;
 
   if (!info)
   {
@@ -1199,6 +1200,14 @@ bool rra_partner_replace(RRA* rra, uint32_t index)
     synce_error("Failed to get hostname");
     goto exit;
   }
+
+  /* only use the part of the hostname before the first '.' char */
+  for (p = hostname; *p != '\0'; p++)
+    if ('.' == *p) 
+    {
+      *p = '\0';
+      break;
+    }
 
   if (!rra_partner_get_id(rra, 3-index, &other_id))
     other_id = 0;
