@@ -120,6 +120,9 @@ lcp-echo-interval 2</pre>
 
 <pre>crtscts</pre>
 
+<p>You can also upgrade to SynCE 0.8 or later and re-run
+synce-serial-config.</p>
+
 <p>Thanks to Lamar Owen for the solution to this problem!</p>
 
 <h2>Using a USB hub</h2>
