@@ -79,8 +79,14 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
+
 	convert_to_backward_slashes(path);
-	wide_path = wstr_from_ascii(path);
+  
+  if (':' == path[0])
+	  wide_path = wstr_from_ascii(path + 1);
+  else
+	  wide_path = wstr_from_ascii(path);
+  
 	wide_path = adjust_remote_path(wide_path, true);
 
 	if (!CeDeleteFile(wide_path))
