@@ -6,7 +6,7 @@ INCLUDES=$(rapi_cflags) $(synce_cflags) $(VFS_CFLAGS)
 modulesconfdir=$(sysconfdir)/gnome-vfs-2.0/modules
 modulesconf_DATA=synce-module.conf
 
-modulesdir=$(GNOME_VFS_LIBDIR)/gnome-vfs-2.0/modules
+modulesdir=$(libdir)/gnome-vfs-2.0/modules
 
 modules_LTLIBRARIES=libsyncevfs.la
 

@@ -20,8 +20,7 @@ PKG_CHECK_MODULES(VFS, gnome-vfs-2.0 >= $GNOME_VFS_REQUIRED gnome-vfs-module-2.0
 AC_SUBST(VFS_CFLAGS)
 AC_SUBST(VFS_LIBS)
 
-GNOME_VFS_LIBDIR=`pkg-config --variable=libdir gnome-vfs-2.0`;
-AC_SUBST(GNOME_VFS_LIBDIR)
+libdir=`pkg-config --variable=libdir gnome-vfs-2.0`
 
 AM_PATH_LIBSYNCE
 AM_PATH_LIBRAPI2
