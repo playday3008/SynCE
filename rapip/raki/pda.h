@@ -97,7 +97,7 @@ private:
     void *advanceTotalStepsEvent(void *data);
     void *rraConnectionError(void *data);
     void *initializationStarted(void *data);
-    bool syncronizationTasks();
+    bool synchronizationTasks(void *data);
 
     InitProgress *initProgress;
     KProgress *progressBar;

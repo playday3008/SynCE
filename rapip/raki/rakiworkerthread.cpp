@@ -24,6 +24,7 @@
 #include "rakiworkerthread.h"
 #include "workerthreadinterface.h"
 
+#include <kdebug.h>
 #include <qapplication.h>
 #include <qcursor.h>
 

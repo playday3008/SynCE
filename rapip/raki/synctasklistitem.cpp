@@ -38,13 +38,26 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(ObjectType *objectType,
-        QListView* listView, uint32_t partnerId)
+SyncTaskListItem::SyncTaskListItem(QString pdaName, ObjectType *objectType,
+                                   QListView* listView, uint32_t partnerId)
         : QCheckListItem(listView, objectType->name, QCheckListItem::CheckBox)
 {
     this->objectType = objectType;
     this->partnerId = partnerId;
+    this->syncPlugin = NULL;
+    this->pdaName = pdaName;
     this->lastSynchronized.setTime_t(0);
+    this->isOnStore = false;
+
+    connect(&itemMenu, SIGNAL(activated(int)), this, SLOT(clickedMenu(int)));
+}
+
+
+SyncTaskListItem::~SyncTaskListItem()
+{
+    if (syncPlugin != NULL) {
+        delete syncPlugin;
+    }
 }
 
 
@@ -64,9 +77,14 @@ void SyncTaskListItem::undo()
 
 void SyncTaskListItem::makePersistent()
 {
-    isOnStore = QCheckListItem::isOn();
-    preferedOffer = preferedOfferTemp;
-    preferedLibrary = preferedLibraryTemp;
+    if (preferedOffer != preferedOfferTemp ||
+            preferedLibrary != preferedLibraryTemp ||
+            isOnStore != QCheckListItem::isOn()) {
+        isOnStore = QCheckListItem::isOn();
+        preferedOffer = preferedOfferTemp;
+        preferedLibrary = preferedLibraryTemp;
+        createSyncPlugin(isOnStore);
+    }
 }
 
 
@@ -173,8 +191,8 @@ QWidget *SyncTaskListItem::taskLabel()
 KTrader::OfferList SyncTaskListItem::getOffers()
 {
     return KTrader::self()->query("Raki/Synchronizer",
-            "[X-Raki-Synchronizer] == '" + text() + "'");
-} 
+                                  "[X-Raki-Synchronizer] == '" + text() + "'");
+}
 
 QString SyncTaskListItem::getPreferedOffer()
 {
@@ -209,12 +227,15 @@ void SyncTaskListItem::clickedMenu(int item)
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << "Name: " << service->name() + "; Library: " <<
+            kdDebug(2120) << "Select Name: " << service->name() + "; Library: " <<
                     service->library() << endl;
             if (service->name() == itemMenu.text(item)) {
-                preferedOfferTemp = service->name();
-                preferedLibraryTemp = service->library();
-                itemMenu.setItemChecked(item, true);
+                if (preferedOffer != service->name() ||
+                        preferedLibrary != service->library()) {
+                    preferedOfferTemp = service->name();
+                    preferedLibraryTemp = service->library();
+                    itemMenu.setItemChecked(item, true);
+                }
             } else {
                 itemMenu.setItemChecked(item, false);
             }
@@ -233,18 +254,16 @@ void SyncTaskListItem::openPopup()
 
     itemMenu.clear();
     itemMenu.setCaption("Services for " + text());
-    
+
     itemMenu.insertTitle("Services for " + text());
     itemMenu.setCheckable(true);
-
-    connect(&itemMenu, SIGNAL(activated(int)), this, SLOT(clickedMenu(int)));
 
     itemMenu.setEnabled(true);
 
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << "Name: " << service->name() + "; Library: " <<
+            kdDebug(2120) << "Open Name: " << service->name() + "; Library: " <<
                     service->library() << endl;
             int item = itemMenu.insertItem(service->name());
             if (service->name() == preferedOfferTemp) {
@@ -252,7 +271,7 @@ void SyncTaskListItem::openPopup()
                 preferedFound = true;
             }
         }
-        
+
         if (!preferedFound) {
             preferedOffer = "";
             preferedLibrary = "";
@@ -273,86 +292,95 @@ void SyncTaskListItem::openPopup()
 }
 
 
-int SyncTaskListItem::createSyncPlugin(QWidget *parent, QString pdaName,
-        KConfig *ksConfig, RakiSyncPlugin **syncPlugin)
+int SyncTaskListItem::createSyncPlugin(bool state)
 {
-    KTrader::OfferList offers;
     int ret = 0;
-    *syncPlugin = NULL;
 
-    QString library = getPreferedLibrary();
-    QString offer = getPreferedOffer();
+    if (syncPlugin != NULL) {
+        delete syncPlugin;
+        syncPlugin = NULL;
+    }
 
-    if (library.isEmpty()) {
-        offers = getOffers();
-        if (offers.begin() != offers.end()) {
-            KService::Ptr service = *offers.begin();
-            library = service->library();
-            offer = service->name();
+    if (/*isOn()*/ state) {
+        KTrader::OfferList offers;
+
+        QString library = getPreferedLibrary();
+        QString offer = getPreferedOffer();
+
+        if (library.isEmpty()) {
+            offers = getOffers();
+            if (offers.begin() != offers.end()) {
+                KService::Ptr service = *offers.begin();
+                library = service->library();
+                offer = service->name();
+            }
+        }
+
+        if (!library.isEmpty()) {
+            kdDebug(2120) << "Name: " << offer + "; Library: " << library << endl;
+            KLibFactory *factory = KLibLoader::self()->factory(library.ascii());
+            if (!factory) {
+                QString errorMessage = KLibLoader::self()->lastErrorMessage();
+                kdDebug(2120) << "There was an error: " << offer << errorMessage <<
+                    endl;
+                ret = ERROR_NOFACTORY;
+            } else {
+                if (factory->inherits("RakiSyncFactory")) {
+                    RakiSyncFactory *syncFactory =
+                        static_cast<RakiSyncFactory*> (factory);
+                    syncPlugin = static_cast<RakiSyncPlugin*>
+                                 (syncFactory->create());
+                    syncPlugin->init(objectType, pdaName, this->listView(), offer);
+                    syncFactory->callme(); // Fake call to link correct.
+                } else {
+                    kdDebug(2120) << "Library no Raki-Plugin" << endl;
+                    ret = ERROR_WRONGLIBRARYTYPE;
+                }
+            }
+        } else {
+            ret = ERROR_NOSYNCHRONIZER;
         }
     }
 
-    if (!library.isEmpty()) {
-        kdDebug(2120) << "Name: " << offer + "; Library: " << library << endl;
-        KLibFactory *factory = KLibLoader::self()->factory(library.ascii());
-        if (!factory) {
-            QString errorMessage = KLibLoader::self()->lastErrorMessage();
-            kdDebug(2120) << "There was an error: " << offer << errorMessage <<
-                    endl;
-            ret = ERROR_NOFACTORY;
-        } else {
-            if (factory->inherits("RakiSyncFactory")) {
-                RakiSyncFactory *syncFactory =
-                        static_cast<RakiSyncFactory*> (factory);
-                *syncPlugin = static_cast<RakiSyncPlugin*>
-                        (syncFactory->create());
-                (*syncPlugin)->init(parent, ksConfig, objectType, pdaName, partnerId);
-                syncFactory->callme(); // Fake call to link correct.
-            } else {
-                kdDebug(2120) << "Library no Raki-Plugin" << endl;
-                ret = ERROR_WRONGLIBRARYTYPE;
-            }
-        }
-    } else {
-        ret = ERROR_NOSYNCHRONIZER;
+    switch(ret) {
+    case ERROR_NOSYNCHRONIZER:
+        KMessageBox::information(this->listView(), "<p>No Synchronizer found for <b>" +
+                QString(objectType->name) + "</b></p>", QString(objectType->name) + pdaName);
+        this->setOn(false);
+        this->makePersistent();
+        break;
+    case ERROR_WRONGLIBRARYTYPE:
+        KMessageBox::error(this->listView(), "<p>Wrong library type for <b>" +
+                QString(objectType->name) + "</b></p>", QString(objectType->name) + pdaName);
+        this->setOn(false);
+        this->makePersistent();
+        break;
+    case ERROR_NOFACTORY:
+        KMessageBox::error(this->listView(), "<p>Wrong library type for <b>" +
+                QString(objectType->name) + "</b></p>", QString(objectType->name) + pdaName);
+        this->setOn(false);
+        this->makePersistent();
+        break;
     }
 
     return ret;
 }
 
 
-bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
-        QString pdaName, KConfig *ksConfig)
+bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
 {
     bool ret = false;
 
     postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup("Started"));
     postSyncThreadEvent(SyncThread::setTotalSteps, (void *) 1);
 
-    RakiSyncPlugin *syncPlugin = NULL;
+    if (syncPlugin != NULL) {
+        kdDebug(2120) << "Started syncing with " << syncPlugin->serviceName() << endl;
 
-    int createRet = createSyncPlugin(NULL, pdaName, ksConfig, &syncPlugin);
+        ret = syncPlugin->doSync(syncThread, rra, this, firstSynchronization,
+                partnerId);
 
-    switch(createRet) {
-    case ERROR_NOSYNCHRONIZER:
-        postSyncThreadEvent(SyncThread::setTask,
-                (void *) qstrdup("No Synchronizer found"));
-        break;
-    case ERROR_WRONGLIBRARYTYPE:
-        postSyncThreadEvent(SyncThread::setTask,
-                (void *) qstrdup("Library found but not a Synchronizer"));
-        break;
-    case ERROR_NOFACTORY:
-        postSyncThreadEvent(SyncThread::setTask,
-                (void *) qstrdup("No Factory found for Synchronizer"));
-        break;
-    }
-
-    if (createRet == 0) {
-        ret = syncPlugin->doSync(syncThread, rra, this, firstSynchronization);
-        delete syncPlugin;
-
-        kdDebug(2120) << "Finished syncing with " << endl;
+        kdDebug(2120) << "Finished syncing with " << syncPlugin->serviceName() << endl;
         postSyncThreadEvent(SyncThread::setProgress, totalSteps());
 
         if (ret) {
@@ -373,29 +401,9 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra,
 }
 
 
-void SyncTaskListItem::configure(QWidget *parent, QString pdaName,
-        KConfig *ksConfig)
+void SyncTaskListItem::configure()
 {
-    RakiSyncPlugin *syncPlugin = NULL;
-
-    int ret = createSyncPlugin(parent, pdaName, ksConfig, &syncPlugin);
-
-    switch(ret) {
-    case ERROR_NOSYNCHRONIZER:
-        KMessageBox::information(parent, "No Synchronizer found for " +
-                QString(objectType->name), QString(objectType->name) + pdaName);
-        break;
-    case ERROR_WRONGLIBRARYTYPE:
-        KMessageBox::error(parent, "Wrong library type for " +
-                QString(objectType->name), QString(objectType->name) + pdaName);
-        break;
-    case ERROR_NOFACTORY:
-        KMessageBox::error(parent, "Wrong library type for " +
-                QString(objectType->name), QString(objectType->name) + pdaName);
-        break;
-    }
-    if (ret == 0) {
+    if (syncPlugin != NULL) {
         syncPlugin->configure();
-        delete syncPlugin;
     }
 }

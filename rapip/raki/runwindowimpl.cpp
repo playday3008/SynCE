@@ -53,6 +53,7 @@ void RunWindowImpl::openFileDialog(KURLRequester *requester)
     fd->setFilter("*.exe|Executable (*.exe)");
     fd->setMode(KFile::File | KFile::ExistingOnly);
     connect(fd, SIGNAL(cancelClicked()), this, SLOT(restoreCursor()));
+    connect(fd, SIGNAL(okClicked()), this, SLOT(restoreCursor()));
 }
 
 

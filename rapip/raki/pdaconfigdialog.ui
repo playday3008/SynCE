@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>419</width>
-            <height>428</height>
+            <height>426</height>
         </rect>
     </property>
     <property name="caption">
@@ -226,6 +226,8 @@
         </widget>
     </vbox>
 </widget>
+<customwidgets>
+</customwidgets>
 <connections>
     <connection>
         <sender>buttonOk</sender>
@@ -302,6 +304,7 @@
     <slot>disableApply()</slot>
     <slot>objectTypeList_rightButtonClicked( QListViewItem *, const QPoint &amp;, int )</slot>
     <slot>kPushButton2_clicked()</slot>
+    <slot>objectTypeList_selectionChanged( QListViewItem * )</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>

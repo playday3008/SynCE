@@ -53,7 +53,7 @@ public:
     SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent,
             const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ~SyncDialogImpl();
-    void show(QPtrList<SyncTaskListItem>& syncItems, KConfig *ksConfig);
+    void show(QPtrList<SyncTaskListItem>& syncItems);
     void work(QThread *qt = NULL, void *data = NULL);
     void reject();
 

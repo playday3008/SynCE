@@ -43,3 +43,9 @@ void PdaConfigDialog::kPushButton2_clicked()
 {
 
 }
+
+
+void PdaConfigDialog::objectTypeList_selectionChanged( QListViewItem * )
+{
+
+}

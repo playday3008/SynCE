@@ -218,7 +218,7 @@ void PDA::synchronize(bool forced)
     if ((forced || configDialog->getSyncAtConnect()) && isPartner()) {
         QPtrList<SyncTaskListItem>& syncItems =
                 configDialog->getSyncTaskItemList();
-        syncDialog->show(syncItems, configDialog->getConfigFile());
+        syncDialog->show(syncItems);
     }
 }
 
@@ -378,8 +378,9 @@ void *PDA::progressDialogCancel(void *init)
     initProgress->hide();
     emit initialized(this, (int ) init);
     delete initProgress;
-    if (init)
+    if (init) {
         configDialog->writeConfig();
+    }
 
     return NULL;
 }
@@ -510,7 +511,7 @@ void PDA::setPartnership(QThread */*thread*/, void *)
         }
 
         if (partnerOk) {
-            syncronizationTasks();
+            postThreadEvent(&PDA::synchronizationTasks, 0, noBlock);
         }
 
         postThreadEvent(&PDA::progressDialogCancel, 1, noBlock);
@@ -535,10 +536,12 @@ void PDA::init()
     kapp->processEvents();
 
     startWorkerThread(this, &PDA::setPartnership, NULL);
+
+//    kdDebug(2120) << "Ende PDA::init()" << endl;
 }
 
 
-bool PDA::syncronizationTasks()
+bool PDA::synchronizationTasks(void *)
 {
     ObjectType *objectType;
     QDateTime lastSynchronized;
@@ -557,6 +560,8 @@ bool PDA::syncronizationTasks()
             ret = false;
         }
     }
+
+    kdDebug(2120) << "Ende PDA::syncronizationTasks()" << endl;
 
     return ret;
 }

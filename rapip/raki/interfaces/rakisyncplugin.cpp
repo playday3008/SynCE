@@ -33,40 +33,55 @@
 #include <kmessagebox.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
-{}
+{
+    parent = NULL;
+}
+
+
+RakiSyncPlugin::~RakiSyncPlugin()
+{
+    delete ksConfig;
+}
 
 
 bool RakiSyncPlugin::doSync(SyncThread *syncThread, Rra *rra,
-        SyncTaskListItem *progressItem, bool firstSynchronize)
+        SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId)
 {
     this->syncThread = syncThread;
     this->progressItem = progressItem;
     this->rra = rra;
     this->firstSynchronize = firstSynchronize;
+    this->partnerId = partnerId;
     return sync();
 }
 
 
-void RakiSyncPlugin::init(QWidget *parent, KConfig *ksConfig,
-        ObjectType *objectType, QString pdaName, uint32_t partnerId)
+void RakiSyncPlugin::init(ObjectType *objectType, QString pdaName, QWidget *parent, QString serviceName)
 {
     this->objectType = objectType;
-    this->partnerId = partnerId;
     this->pdaName = pdaName;
     this->parent = parent;
+    this->_serviceName = serviceName;
+    ksConfig = new KConfig("raki/" + pdaName + ".cfg", false, false, "data");
     createConfigureObject(ksConfig);
 }
 
 
 void RakiSyncPlugin::configure()
 {
-    KMessageBox::information(parent, QString(objectType->name) +
-            " has nothing to configure.", QString(objectType->name) + " " + pdaName);
+    KMessageBox::information(parent, "<b>" + _serviceName +
+            "</b>: Nothing to configure.", QString(objectType->name) + " " + pdaName);
 }
 
 
 void RakiSyncPlugin::createConfigureObject(KConfig */*ksConfig*/)
 {
+}
+
+
+QString RakiSyncPlugin::serviceName()
+{
+    return _serviceName;
 }
 
 

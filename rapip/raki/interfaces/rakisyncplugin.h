@@ -35,6 +35,7 @@
 #include <qobject.h>
 #include <qstring.h>
 #include <qevent.h>
+#include <qwidget.h>
 
 
 /**
@@ -50,9 +51,10 @@ class RakiSyncPlugin : public QObject
     Q_OBJECT
 public:
     RakiSyncPlugin();
+    virtual ~RakiSyncPlugin();
 
     bool doSync(SyncThread *syncThread, Rra *rra,
-            SyncTaskListItem *progressItem, bool firstSynchronize);
+            SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
     bool running();
     bool stopRequested();
@@ -62,14 +64,16 @@ public:
     void setTotalSteps(int steps);
     void setProgress(int progress);
     void setTask(const char *task);
-    void init(QWidget *parent, KConfig *ksConfig, ObjectType *objectType,
-            QString pdaName, uint32_t partnerId);
+    void init(ObjectType *objectType, QString pdaName, QWidget *parent,
+            QString serviceName);
     virtual void createConfigureObject(KConfig *ksConfig);
     virtual void configure();
+    QString serviceName();
 
 private:
     virtual bool sync() = 0;
     ObjectType *objectType;
+    KConfig *ksConfig;
 
 protected:
     QString pdaName;
@@ -79,6 +83,7 @@ protected:
     uint32_t partnerId;
     bool firstSynchronize;
     QWidget *parent;
+    QString _serviceName;
 };
 
 #endif

@@ -65,7 +65,6 @@ public:
     void setNewPartner(QString partnerName, uint32_t partnerId);
     void addSyncTask(ObjectType *objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
-    KConfig *getConfigFile();
 
 public slots:
     void writeConfig();

@@ -55,8 +55,11 @@ class SyncTaskListItem : public QObject, public QCheckListItem
 Q_OBJECT
     
 public:
-    SyncTaskListItem(ObjectType* objectType, QListView* listView,
+    SyncTaskListItem(QString pdaName, ObjectType* objectType, QListView* listView,
             uint32_t partnerId);
+
+    virtual ~SyncTaskListItem();
+
     void undo();
     void makePersistent();
     bool isOn();
@@ -77,16 +80,12 @@ public:
     QString getPreferedLibrary();  
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
-    bool synchronize(SyncThread *syncThread, Rra *rra, QString pdaName,
-            KConfig *ksConfig);
+    bool synchronize(SyncThread *syncThread, Rra *rra);
     void setLastSynchronized(QDateTime lastSynchronized);
     void setFirstSynchronization(bool firstSynchronization);
     bool isFirstSynchronization();
     QDateTime &getLastSynchronized();
-    void configure(QWidget *parent, QString pdaName, KConfig *ksConfig);
-
-signals:
-    void serviceChanged();
+    void configure();
 
 private slots:
     void clickedMenu(int item);
@@ -105,17 +104,19 @@ private:
     QString preferedLibrary;
     QString preferedOfferTemp;
     QString preferedLibraryTemp;
+    QString pdaName;
     QDateTime lastSynchronized;
     uint32_t partnerId;
     bool firstSynchronization;
-    int createSyncPlugin(QWidget *parent, QString pdaName,
-            KConfig *ksConfig, RakiSyncPlugin **rakiSyncPlugin);
+    int createSyncPlugin(bool state);
+    RakiSyncPlugin *syncPlugin;
     enum {
         ERROR_NOFACTORY = 1, ERROR_WRONGLIBRARYTYPE, ERROR_NOSYNCHRONIZER
     };
     
 signals:
     void stateChanged(bool state);
+    void serviceChanged();
 };
 
 #endif

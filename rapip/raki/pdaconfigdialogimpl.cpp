@@ -253,10 +253,9 @@ void PdaConfigDialogImpl::addSyncTask(ObjectType *objectType,
     SyncTaskListItem *item;
     QDateTime lastSynchronized;
 
-    item = new SyncTaskListItem(objectType, objectTypeList, partnerId);
+    item = new SyncTaskListItem(pdaName, objectType, objectTypeList, partnerId);
     ksConfig->setGroup("Synchronizer-" + QString::number(
             item->getObjectType()->id));
-    item->setOn(ksConfig->readBoolEntry("Active"));
     item->setPreferedLibrary(ksConfig->readEntry("PreferedLibrary"));
     item->setPreferedOffer(ksConfig->readEntry("PreferedOffer"));
     lastSynchronized = item->getLastSynchronized();
@@ -264,6 +263,7 @@ void PdaConfigDialogImpl::addSyncTask(ObjectType *objectType,
             &lastSynchronized));
     item->setFirstSynchronization((
             partnershipCreated > item->getLastSynchronized()));
+    item->setOn(ksConfig->readBoolEntry("Active"));
     connect((const QObject *) item, SIGNAL(stateChanged(bool)), this,
             SLOT(changedSlot()));
     connect((const QObject *) item, SIGNAL(serviceChanged()), this,
@@ -285,12 +285,6 @@ void PdaConfigDialogImpl::kPushButton2_clicked()
     SyncTaskListItem *item = (SyncTaskListItem *) objectTypeList->currentItem();
 
     if (item != NULL) {
-        item->configure(this, pdaName, ksConfig);
+        item->configure();
     }
-}
-
-
-KConfig *PdaConfigDialogImpl::getConfigFile()
-{
-    return ksConfig;
 }
