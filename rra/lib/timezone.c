@@ -261,7 +261,7 @@ time_t rra_timezone_convert_from_utc(RRA_Timezone* tzi, time_t unix_time)
   time_t result = RRA_TIMEZONE_INVALID_TIME;
   struct tm time_struct;
   
-  if (tzi && localtime_r(&unix_time, &time_struct))
+  if (tzi && gmtime_r(&unix_time, &time_struct))
   {
     time_struct.tm_min -= tzi->Bias;
 
@@ -281,7 +281,7 @@ time_t rra_timezone_convert_to_utc(RRA_Timezone* tzi, time_t unix_time)
   time_t result = RRA_TIMEZONE_INVALID_TIME;
   struct tm time_struct;
   
-  if (tzi && localtime_r(&unix_time, &time_struct))
+  if (tzi && gmtime_r(&unix_time, &time_struct))
   {
     time_struct.tm_min += tzi->Bias;
 
