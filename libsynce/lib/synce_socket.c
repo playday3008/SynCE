@@ -243,17 +243,13 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 
 	while(bytes_needed > 0)
 	{
-		int result = read(socket->fd, data, size);
+		int result = read(socket->fd, data, bytes_needed);
 	
 		/* synce_socket_trace("read returned %i, needed %i bytes", result, bytes_needed); */
 
-		if (result < 0)
+		if (result <= 0)
 		{
 			synce_socket_error("read failed, error: %i \"%s\"", errno, strerror(errno));
-			break;
-		}
-		else if (result == 0)
-		{
 			break;
 		}
 
