@@ -7,6 +7,7 @@
 #include <rra/appointment.h>
 #include <rra/contact.h>
 #include <rra/task.h>
+#include <rra/matchmaker.h>
 #include <rra/uint32vector.h>
 #include <rapi.h>
 #include <string.h>
@@ -195,11 +196,21 @@ static void* synce_event_handling_thread(void* cookie)/*{{{*/
 
   while (connection->thread_running)
   {
-    if (rra_syncmgr_event_wait(connection->syncmgr, 1))
+    bool got_event = false;
+
+    if (rra_syncmgr_event_wait(connection->syncmgr, 1, &got_event))
     {
-      /*pthread_mutex_lock(&connection->lock);*/
-      rra_syncmgr_handle_event(connection->syncmgr);
-      /*pthread_mutex_unlock(&connection->lock);*/
+      if (got_event)
+      {
+        /*pthread_mutex_lock(&connection->lock);*/
+        rra_syncmgr_handle_event(connection->syncmgr);
+        /*pthread_mutex_unlock(&connection->lock);*/
+      }
+    }
+    else
+    {
+      synce_error("Failed to wait for event, stopping event handling thread.");
+      connection->thread_running = false;
     }
   }
 
@@ -255,26 +266,97 @@ bool synce_connect(SynceConnection* connection)/*{{{*/
 {
   bool success = false;
   HRESULT hr;
-  
+  RRA_Matchmaker* matchmaker = NULL;
+  gchar* partner_filename = g_strdup_printf(
+      "%s/synce-partner", 
+      sync_get_datapath(connection->handle));
+
   if (!connection)
   {
     synce_error("Connection object is NULL");
     goto exit;
   }
- 
+
   /* Make it possible to call this multiple times without harm... :-) */
   if (connection->syncmgr)
     return true;
 
   /* 
      Initialize RAPI 
-   */
+     */
 
   hr = CeRapiInit();
   if (FAILED(hr))
   {
     synce_error("Failed to initialize RAPI");
-		goto exit;
+    goto exit;
+  }
+
+  {
+    FILE* file = fopen(partner_filename, "r");
+    uint32_t partnership_id = 0;
+    char id_buffer[10] = "";
+    uint32_t index = 0;
+    
+    matchmaker = rra_matchmaker_new();
+
+    if (file)
+    {
+     
+      fgets(id_buffer, sizeof(id_buffer), file);
+      partnership_id = strtol(id_buffer, NULL, 16);
+      fclose(file);
+
+      synce_trace("This synchronization pair is connected to partnership ID %08x",
+          partnership_id);
+
+      for (index = 1; index <= 2; index++)
+      {
+        uint32_t id;
+
+        if (rra_matchmaker_get_partner_id(matchmaker, index, &id) && id == partnership_id)
+          /* TODO: check hostname too */
+          break;
+      }
+
+      if (index == 3)
+      {
+        synce_error("No partnership on the device matches this synchronization pair.");
+        goto exit;
+      }
+      else
+      {
+        rra_matchmaker_set_current_partner(matchmaker, index);
+      }
+    }
+    else
+    {
+      if (!rra_matchmaker_create_partnership(matchmaker, &index))
+      {
+        synce_error("Failed to create or select a partnership. Use the synce-matchmaker tool!");
+        goto exit;
+      }
+
+      if (!rra_matchmaker_get_partner_id(matchmaker, index, &partnership_id))
+      {
+        synce_error("Failed to get partnership ID");
+        goto exit;
+      }
+
+      synce_trace("This synchronization pair will be connected to partnership ID %08x",
+          partnership_id);
+
+      file = fopen(partner_filename, "w");
+      if (!file)
+      {
+        synce_error("Failed to create file '%s'", partner_filename);
+        goto exit;
+      }
+
+      snprintf(id_buffer, sizeof(id_buffer), "%08x", partnership_id);
+      fwrite(id_buffer, strlen(id_buffer), 1, file);
+      fclose(file);
+    }
   }
 
   /*
@@ -314,6 +396,8 @@ bool synce_connect(SynceConnection* connection)/*{{{*/
   success = true;
 
 exit:
+  rra_matchmaker_destroy(matchmaker);
+  g_free(partner_filename);
   return success;
 }/*}}}*/
 
