@@ -22,70 +22,41 @@ a successful USB connection.</p>
 
 <ul>
 
-<li><a href="#none">Kernel prior to 2.4.18</a></li>
+<li><a href="#many">2.4.21 or later kernels, including 2.6 series</a></li>
 
 <li><a href="#early">2.4.18 to 2.4.20 kernel</a></li>
 
-<li><a href="#many">2.4.21 or newer 2.4.x kernel</a></li>
-
-<li><a href="#twosix">2.5.x or 2.6.x kernel</a></li>
+<li><a href="#none">Kernel prior to 2.4.18</a></li>
 
 </ul>
 
-<a name="none"></a>
-<h2>Kernel prior to 2.4.18</h2>
-
-<p>These kernels are not supported. Either upgrade or use the <a
-href="usb_linux_userspace.php">user-space USB driver</a>.</p>
-
-<a name="early"></a>
-<h2>2.4.18 to 2.4.20 kernels</h2>
-
-<p>(If you have a RedHat 2.4.20 kernel, see <a href="#many">2.4.21 or newer
-2.4.x kernel</a>.)</p>
-
-<p>If you going to use SynCE on an SMP (multi-processor) system with this
-kernel you must <a href="usbpatch.php">patch your kernel driver</a> or upgrade
-to <a href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
-
-<p>These kernel version only support these devices:</p>
-
-<table cellpadding=3>
-<tr><th>Vendor</th><th>Vendor ID</th><th>Product</th><th>Product ID</th></tr>
-<tr><td>Casio</td><td>07cf</td><td>EM500 and probably others</td><td>2002</td></tr>
-<tr><td>Compaq</td><td>049f</td><td>iPAQ (any model?)</td><td>0003</td></tr>
-</table>
-
-<p>If your device is in the list above, go ahead and <a
-href="usb_linux_setup.php">configure SynCE</a>, otherwise you need to <a
-href="usbpatch.php">patch your kernel driver</a> or upgrade to <a
-href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
-
 <a name="many"></a>
-<h2>2.4.21 or newer 2.4.x kernel</h2>
+<h2>2.4.21 or later kernels, including 2.6 series</h2>
+
+<p>Please note that no 2.5 kernels are supported!</p>
 
 <p>(This also includes RedHat's 2.4.20 kernels.)</p>
 
-<h3>Special information for Mandrake 9.2 users</h3>
+<h3>Special information for Mandrake 9.2 users with kernel 2.4</h3>
  
-<table><tr><td width="5%">&nbsp;</td><td width="90%">
 
-If you are using the Mandrake 9.2 kernels, for
+<blockquote>
+
+<p>If you are using the Mandrake 9.2 kernels, for
 example 2.4.22-18mdk or 2.4.22-21mdk, the <tt>ipaq</tt> kernel module needed by
 SynCE will not work. The problem is in the <tt>usbserial</tt> kernel module.
 Apply <a
 href="patches/usbserial.patch-mandrake-9.2">usbserial.patch-mandrake-9.2</a>
-(courtesy of Olivier Dugeon) to make the ipaq driver work.
+(courtesy of Olivier Dugeon) to make the ipaq driver work.</p>
 
-</td><td width="5%">&nbsp;</td></tr></table>
+</blockquote>
+
 
 <h3>Special information for HP iPAQ 5550 owners</h3>
 
-<table><tr><td width="5%">&nbsp;</td><td width="90%">
-
-The HP iPAQ 5550 and some other newer devices, probably including the HP iPAQ 4150, do not work 
+<blockquote><p>The HP iPAQ 5550 and some other newer devices, probably including the HP iPAQ 4150, do not work 
 with any currently existing  version of
-the <tt>ipaq</tt> module.
+the <tt>ipaq</tt> module.</p>
 
 <p>The problem is that these devices
 have more than one pair of USB endpoints. (Compare the output from the
@@ -106,9 +77,9 @@ this:</p>
 
 <p>Then configure SynCE to use ttyUSB1 instead of ttyUSB0.</p>
 
-</td><td width="5%">&nbsp;</td></tr></table>
+</blockquote>
 
-<h3>General</h3>
+<h3>Supported vendor and product IDs</h3>
 
 <p>This kernel supports many common and uncommon devices, but certain newer
 devices are missing.</p>
@@ -176,9 +147,13 @@ E740
 </table>
 
 <p>If your device is in the list above, go ahead and <a
-href="usb_linux_setup.php">configure SynCE</a>. If it is not, load the
-<tt>ipaq</tt> kernel module manual like this, but with the vendor and product
-ID for your device:</p>
+href="usb_linux_setup.php">configure SynCE</a>.</p>
+
+<h3>Enabling devices not directly supported by the driver</h3>
+
+<p>If your device is not in the list above, load the <tt>ipaq</tt> kernel
+module manual like this, but with the vendor and product ID for your
+device:</p>
 
 <pre>insmod usbserial
 insmod ipaq vendor=0x049f product=0x0032</pre>
@@ -191,11 +166,35 @@ connecting your device:</p>
 <p>If you can provide additional details above the devices listed above, please
 <a href="help.php">contact the SynCE developers</a>.</p>
 
-<a name="twosix"></a>
-<h2>2.5.x or 2.6.x kernel</h2>
+<a name="early"></a>
+<h2>2.4.18 to 2.4.20 kernels</h2>
 
-<p>You must use 2.6.0 or later in order for the <tt>ipaq</tt> kernel driver to
-work!</p>
+<p>(If you have a RedHat 2.4.20 kernel, see <a href="#many">2.4.21 or later
+kernels, including 2.6 series</a>.)</p>
+
+<p>If you going to use SynCE on an SMP (multi-processor) system with this
+kernel you must <a href="usbpatch.php">patch your kernel driver</a> or upgrade
+to <a href="#many">2.4.21 or a later kernel</a>.</p>
+
+<p>These kernel version only support these devices:</p>
+
+<table cellpadding=3>
+<tr><th>Vendor</th><th>Vendor ID</th><th>Product</th><th>Product ID</th></tr>
+<tr><td>Casio</td><td>07cf</td><td>EM500 and probably others</td><td>2002</td></tr>
+<tr><td>Compaq</td><td>049f</td><td>iPAQ (any model?)</td><td>0003</td></tr>
+</table>
+
+<p>If your device is in the list above, go ahead and <a
+href="usb_linux_setup.php">configure SynCE</a>, otherwise you need to <a
+href="usbpatch.php">patch your kernel driver</a> or upgrade to <a
+href="#many">2.4.21 or newer 2.4.x kernel</a>.</p>
+
+<a name="none"></a>
+<h2>Kernel prior to 2.4.18</h2>
+
+<p>These kernels are not supported. Either upgrade or use the <a
+href="usb_linux_userspace.php">user-space USB driver</a>.</p>
+
 
 <a name="success"></a>
 <h2>Successful USB connection</h2>

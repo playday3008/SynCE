@@ -54,6 +54,8 @@ synce-serial-config) and <tt>/etc/ppp/options</tt>.</li>
 <li>Kill dccm, and restart it like this: <tt>dccm -f -d 3</tt>. Now connect
 your PDA, run synce-serial-start, and provide the output from dccm.</li>
 
+<li>Is your device password-protected or not?</li>
+
 </ul></li>
 
 <li class=SPACED><p><b>For MultiSync synchronization problems</b></p>
