@@ -201,6 +201,10 @@ BOOL CeFindClose(
 DWORD CeGetFileAttributes(
 		LPCWSTR lpFileName);
 
+DWORD CeGetFileSize( 
+		HANDLE hFile, 
+		LPDWORD lpFileSizeHigh); 
+
 DWORD CeGetSpecialFolderPath( 
 		int nFolder, 
 		DWORD nBufferLength, 

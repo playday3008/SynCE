@@ -21,6 +21,9 @@ int main()
 	VERIFY_NOT_EQUAL(INVALID_HANDLE_VALUE, handle = CeCreateFile(filename1,
 				GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0));
 	
+	// Get file size
+	VERIFY_EQUAL(0, CeGetFileSize(handle, NULL));
+	
 	VERIFY_NOT_FALSE(CeCloseHandle(handle));
 
 	// Delete second file if it exists (ignore return value)
@@ -31,7 +34,6 @@ int main()
 	
 	// Delete second file, should succeed
 	TEST_NOT_FALSE(CeDeleteFile(filename2));
-
 
 	
 	VERIFY_HRESULT(CeRapiUninit());

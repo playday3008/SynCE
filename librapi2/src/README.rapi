@@ -34,7 +34,7 @@ List of RAPI command codes:
 [i] 1a CeMoveFile		
 [i] 1b CeCopyFile		
 [i] 1c CeDeleteFile		
-[ ] 1d CeGetFileSize		
+[i] 1d CeGetFileSize		
 [i] 1e CeRegOpenKeyEx		
 [i] 1f CeRegEnumKeyEx		
 
