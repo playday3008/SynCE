@@ -38,9 +38,12 @@ make
 
 %install
 %makeinstall
+rm $RPM_BUILD_ROOT/%{_libdir}/libsynce_plugin.a
+rm $RPM_BUILD_ROOT/%{_libdir}/libsynce_plugin.la
 
 %files
 %defattr(-,root,root)
 %doc LICENSE
-%{_prefix}/lib/multisync/*.so*
+%{_libdir}/multisync/*.so*
+%{_datadir}/synce/synce_multisync_plugin.glade
 
