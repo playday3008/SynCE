@@ -131,14 +131,14 @@ bool rapi_socket_recv(RapiSocket* socket, RapiBuffer* buffer)
 	if (!data)
 		goto fail;
 
+	if ( !rapi_socket_read(socket, data, size) )
+		goto fail;
+
 	if ( !rapi_buffer_reset(buffer, data, size) )
 	{
 		free(data);
 		goto fail;
 	}
-
-	if ( !rapi_socket_read(socket, data, size) )
-		goto fail;
 
 	return true;
 	

@@ -83,24 +83,13 @@ void rapi_buffer_free(RapiBuffer* buffer)
 
 bool rapi_buffer_reset(RapiBuffer* buffer, unsigned char* data, size_t size)
 {
-	unsigned char* new_data = NULL;
-	
 	if (!buffer)
 		return false;
 	
-	if (!rapi_buffer_assure_size(buffer, size))
-		return false;
+	rapi_buffer_free_data(buffer);
 	
-	if (data)
-	{
-		memcpy(new_data, data, size);
-		buffer->bytes_used = size;
-	}
-	else
-	{
-		buffer->bytes_used = 0;
-	}
-
+	buffer->data = data;
+	buffer->max_size = buffer->bytes_used = size;
 	buffer->read_index = 0;
 
 	return true;
