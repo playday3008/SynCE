@@ -26,8 +26,8 @@ the end:</p> <blockquote><tt>syslog: syslogd startup
 succeeded</tt></blockquote></li>
 
 <li><p>Unload the <tt>usbserial</tt> and <tt>ipaq</tt> kernel modules with
-these commands:</p><blockquote><tt>rmmod usbserial<br>rmmod
-ipaq</tt></blockquote></li>
+these commands:</p><blockquote><tt>rmmod ipaq<br>rmmod
+usbserial</tt></blockquote></li>
 
 <li><p>Load the kernel modules with debug enabled using these
 commands:</p><blockquote><tt>modprobe usbserial debug=1<br>modprobe ipaq
