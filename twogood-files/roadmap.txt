@@ -35,10 +35,9 @@ C.      Responsiblity is denoted in square brackets.
 
         See the mailing list for info about this tool.
 
-1.5.    NEW: Connection notification interface
+1.5.    Connection notification interface                   [twogood]
 
-        This will allow an application to run or get a callback when a device
-        connects to the daemon currently known as asyncd.
+        This allows an application to run when a device connects to dccm.
         
         Details about this in connection_notification.txt
 
@@ -47,6 +46,10 @@ C.      Responsiblity is denoted in square brackets.
 1.6.1.  RedHat 8.0 packages                                 [twogood]
 
 1.6.2   Making .deb packages
+
+1.6.3   Gentoo packages
+
+        http://bugs.gentoo.org/show_bug.cgi?id=11184
 
        
 
@@ -57,9 +60,10 @@ C.      Responsiblity is denoted in square brackets.
 
 2.1.    Maybe some library for common user interface functionality
 
-2.2.    Command line tools
+2.2.    Command line tools                                  [twogood]
 
 2.2.1.  Tool(s) to copy files to and from a Pocket PC device.
+
 
 2.3.    KDE 3 integration
 
@@ -70,17 +74,26 @@ C.      Responsiblity is denoted in square brackets.
 
 2.3.2.  KDE system tray icon that shows connected devices
 
+
 2.4.    GNOME 2 integration
 
-        Whatever corresponds to the KDE 3 applications listed in 2.2.
-        (Please tell me what these are called!)
+2.4.1   Tray icon                                           [twogood]
 
-2.4.1   GNOME-VFS module
+2.4.2   GNOME-VFS module
 
         See Tamas Decsi's mail to synce-devel and this link:
 
         http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html
 
+
+2.5     File system driver
+
+        See http://lufs.sourceforge.net/ - there is an old SynCE file system
+        that needs to be updated:
+        
+        http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/lufs/lufs/lufsd/cefs/
+
+        
 2.x.    Tools for your favorite desktop environment here.
 
 
@@ -177,6 +190,8 @@ C.      Responsiblity is denoted in square brackets.
 5.2     PyRAPI
 
         Richard Taylor's Python wrappers for librapi2.
+
+5.3     Allowing more than one connected device.
 
         
  

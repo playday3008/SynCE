@@ -1,10 +1,11 @@
 # $Id$
 
-LIBSYNCE_VERSION = 0.5
-LIBRAPI2_VERSION = 0.5
-DCCM_VERSION     = 0.5
-SERIAL_VERSION   = 0.5
-TRAYICON_VERSION = 0.3
+LIBRAPI2_VERSION = 0.6
+LIBSYNCE_VERSION = 0.6
+DCCM_VERSION     = 0.6
+SERIAL_VERSION   = 0.6
+TRAYICON_VERSION = 0.4
+GNOMEVFS_VERSION = 0.1
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
 
@@ -30,6 +31,7 @@ cvsclean:
 	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      cvsclean
 	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    cvsclean
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  cvsclean
+	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  cvsclean
 
 checkout:
 	$(MAKE) -f Makefile.module MODULE=libsynce  VERSION=$(LIBSYNCE_VERSION)  checkout
@@ -37,6 +39,7 @@ checkout:
 	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      checkout
 	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    checkout
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  checkout
+	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  checkout
 
 tarballs:
 	-mkdir $(TARBALL_DIR)
@@ -46,6 +49,7 @@ tarballs:
 	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      tarball
 	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    tarball
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  tarball
+	$(MAKE) -f Makefile.module MODULE=gnomevfs  VERSION=$(GNOMEVFS_VERSION)  tarball
 
 rpms:
 	-rm -rf /var/tmp/synce-root
@@ -57,6 +61,8 @@ rpms:
 	$(MAKE) -f Makefile.module MODULE=librapi2  VERSION=$(LIBRAPI2_VERSION)  rpm
 	$(MAKE) -f Makefile.module MODULE=dccm      VERSION=$(DCCM_VERSION)      rpm
 	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    rpm
+
+trayicon_rpm:
 	$(MAKE) -f Makefile.module MODULE=trayicon  VERSION=$(TRAYICON_VERSION)  rpm
 
 apt:
@@ -70,6 +76,9 @@ upload:
 install:
 	cd apt/$(REDHAT_VERSION)/RPMS.synce/ && rpm -Uvh synce-serial* synce-libsynce* synce-librapi2* synce-dccm*
 
+trayicon_install:
+	cd apt/$(REDHAT_VERSION)/RPMS.synce/ && rpm -Uvh synce-trayicon*
+
 uninstall:
-	rpm -e synce-serial synce-libsynce synce-librapi2 synce-dccm synce-trayicon
+	-rpm -e synce-serial synce-libsynce synce-librapi2 synce-dccm synce-trayicon
 
