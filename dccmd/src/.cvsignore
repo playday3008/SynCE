@@ -1,0 +1,7 @@
+.deps
+.gdb_history
+.libs
+dccmd
+Makefile
+Makefile.in
+
