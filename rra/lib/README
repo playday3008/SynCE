@@ -1,0 +1,22 @@
+$Id$
+
+Information about the librra architecture
+=========================================
+
+Conversion between vCard/vCalendar and Windows CE database records is performed
+by appointment.c, contact.c and task.c.
+
+The code in appointment.c and task.c uses libmimedir to parse vCalendar data,
+contact.c has its own parsing of vCards (because they have a slightly different
+format...)
+
+The parser.[hc] files contain helper functions to interpret vCalendar data
+after it has been parsed by libmimedir, and generator.[hc] contain helper
+functions to generate vCalendar data.
+
+The dbstream.[hc] files contain helper functions to convert a database record
+between stream format and an array of CEPROPVAL structures.
+
+The timezone.[hc] files contain helper functions to get the timezone settings
+from the PDA and handle timezone data in vCalendar files.
+
