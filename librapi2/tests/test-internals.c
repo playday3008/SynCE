@@ -54,14 +54,24 @@ START_TEST(test_buffer_uint16)/*{{{*/
 }
 END_TEST/*}}}*/
 
-static const char UNICODE_VALUE[] = 
+static const uchar UNICODE_VALUE[] = 
 {
-  '2',0,'G',0,'o',0,'o',0,'D',0,' ',0,'P',0,'r',0,'o',0,'d',0,'u',0,'c',0,'t',0,'i',0,'o',0,'n',0,'s',0,0,0
+  '2','G','o','o','D',' ','P','r','o','d','u','c','t','i','o','n','s',0
 };
 
 static const char ASCII_VALUE[] = { "2GooD Productions" };
 
-START_TEST(test_unicode_from_ascii)
+START_TEST(test_unicode_strlen)/*{{{*/
+{
+	size_t length;
+
+	length = rapi_unicode_string_length(UNICODE_VALUE);
+	
+	fail_unless( length == strlen(ASCII_VALUE), "rapi_unicode_string_length failed" );
+}
+END_TEST/*}}}*/
+
+START_TEST(test_unicode_from_ascii)/*{{{*/
 {
 	void* unicode;
 
@@ -76,9 +86,9 @@ START_TEST(test_unicode_from_ascii)
 
 	rapi_unicode_free_string(unicode);
 }
-END_TEST
+END_TEST/*}}}*/
 
-START_TEST(test_unicode_to_ascii)
+START_TEST(test_unicode_to_ascii)/*{{{*/
 {
 	char* ascii;
 
@@ -93,7 +103,7 @@ START_TEST(test_unicode_to_ascii)
 
 	rapi_unicode_free_string(ascii);
 }
-END_TEST
+END_TEST/*}}}*/
 
 
 Suite *internals_suite (void) 
@@ -107,6 +117,7 @@ Suite *internals_suite (void)
 	tcase_add_test (tc_buffer, test_buffer_uint16); 
 
 	suite_add_tcase (s, tc_unicode);
+	tcase_add_test (tc_unicode, test_unicode_strlen);
 	tcase_add_test (tc_unicode, test_unicode_from_ascii);
 	tcase_add_test (tc_unicode, test_unicode_to_ascii);
 
