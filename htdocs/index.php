@@ -11,103 +11,15 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <p>The purpose of the SynCE project is to provide a means of communication with
 a Windows CE device from a computer running Linux, *BSD or other unices.</p>
 
-
-<h2>Site contents</h2>
-
-<h3>General</h3>
-
-<ul>
-<li><a href="#news">News</a></li>
-<li><a href="#overview">Overview</a></li>
-<li class=SPACED><a href="links.php">Links</a></li>
-
-<li><a href="download.php">Download and install</a></li>
-<li><a href="setup.php">Setup</a></li>
-<li><a href="start.php">Connect</a></li>
-<li><a href="disconnect.php">Disconnect</a></li>
-<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
-<li><a href="qa.php">Questions and Answers</a></li>
-<li class=SPACED><a href="help.php">Get help</a></li>
-
-<li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
-</ul>
-
-<h3>Integration with desktop environments</h3>
-
-<ul>
-
-<li><a href="gnome.php">GNOME</a></li>
-<li><a href="kde/">KDE</a></li>
-
-<li><a href="pyrapi/ce_dirview/">CE_DirView</a></li>
-
-</ul>
-
-<h3>Operating system-specific details</h3>
-
-<ul>
-
-<li><a href="freebsd.php">FreeBSD</a></li>
-<li><a href="linux.php">Linux</a></li>
-<li><a href="macosx.php">MacOS X</a></li>
-<li><a href="openbsd.php">OpenBSD</a></li>
-
-</ul>
-
-<h3>Extras</h3>
-
-<ul>
-
-<li><a href="orange.php">The Orange tool and library</a></li>
-<li><a href="unshield.php">The Unshield tool and library</a></li>
-<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
-
-</ul>
-
-<h3>Development information</h3>
-
-<ul>
-
-<li><a href="tasks.php">Help wanted!</a></li>
-<li><a href="architecture.php">Architecture</a></li>
-<li><a href="#developers">The SynCE developers</a></li>
-<li><a href="capture.php">How to capture packets for analyzing</a></li>
-<li><a href="#future">Future</a></li>
-
-
-</ul>
-
-
-<hr size=1>
-<p>
-
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-<input type="hidden" name="cmd" value="_xclick">
-<input type="hidden" name="business" value="twogood@users.sourceforge.net">
-<input type="hidden" name="item_name" value="The SynCE Project">
-<input type="hidden" name="no_shipping" value="1">
-<input type="hidden" name="return" value="http://synce.sourceforge.net/synce/thanks.php">
-<input type="hidden" name="cancel_return" value="http://synce.sourceforge.net/synce/">
-<input type="hidden" name="cn" value="Comments">
-<input type="hidden" name="currency_code" value="USD">
-<input type="hidden" name="tax" value="0">
-
-<table cellpadding=5 width="100%"><tr>
-
-<td class=MIDDLE><input type="image"
-src="https://www.paypal.com/images/x-click-but21.gif" border="0" name="submit"
-alt="Make a donation" title="Make a donation"></td>
-
-<td class=MIDDLE>You can now support the SynCE project by donating!</td>
-
-</tr></table>
-</form>
-
-</p>
-<hr size=1>
-
 <a name="news"></a>
 <h2>News</h2>
+
+<p><b>May 4, 2004</b> Support for recurring appointments is coming along
+nicely, the PWI file format is getting decoded, a script called <a
+href="contrib/pcp-r">pcp-r</a> by Henrik Isacsson seems very useful, our new
+project member Markus Biermaier has written a tool called <a
+href="pyrapi/ce_dirview/">CE_DirView</a> that uses the Python bindings, Volker
+Christian is back after his knee injury and the sun shines!</p>
 
 <p><b>January 3, 2004</b> Happy New Year from the SynCE team!</p>
 
@@ -132,6 +44,8 @@ Developer's notes</a>.</p>
 
 <p><b>November 16, 2003</b> Created the IRC channel <tt>#synce</tt> on
 <tt>irc.freenode.net</tt>. You are all very welcome!</p>
+
+<?php /*
 
 <p><b>November 14, 2003</b> New <a
 href="http://sourceforge.net/mailarchive/forum.php?thread_id=3464828&forum_id=1226">SynCE
@@ -161,8 +75,6 @@ InstallShield installers.</p>
 possiblity to synchronize calendar and tasks, in addition to the previous
 address book synchronization support. However, recurring events are not yet
 supported. <a href="download.php">Download</a>.</p>
-
-<?php /*
 
 <p><b>June 13, 2003</b> Some documentation improvements, most notably a <a
 href="qa.php">Questions and Answers</a> page.</p>
@@ -299,6 +211,103 @@ if you want to help us!</p>
 
 */ ?>
 
+<hr size=1>
+
+<h2>Site contents</h2>
+
+<h3>General</h3>
+
+<ul>
+<li><a href="#news">News</a></li>
+<li><a href="#overview">Overview</a></li>
+<li class=SPACED><a href="links.php">Links</a></li>
+
+<li><a href="download.php">Download and install</a></li>
+<li><a href="setup.php">Setup</a></li>
+<li><a href="start.php">Connect</a></li>
+<li><a href="tools.php">Tools</a></li>
+<li><a href="disconnect.php">Disconnect</a></li>
+<li><a href="multisync.php">Using MultiSync for synchronization</a></li>
+<li><a href="qa.php">Questions and Answers</a></li>
+<li class=SPACED><a href="help.php">Get help</a></li>
+
+<li><a href="http://sourceforge.net/projects/synce/">SourceForge Project Page</a></li>
+</ul>
+
+<h3>Integration with desktop environments</h3>
+
+<ul>
+
+<li><a href="gnome.php">GNOME</a></li>
+<li><a href="kde/">KDE</a></li>
+
+<li><a href="pyrapi/ce_dirview/">CE_DirView</a></li>
+
+</ul>
+
+<h3>Operating system-specific details</h3>
+
+<ul>
+
+<li><a href="freebsd.php">FreeBSD</a></li>
+<li><a href="linux.php">Linux</a></li>
+<li><a href="macosx.php">MacOS X</a></li>
+<li><a href="openbsd.php">OpenBSD</a></li>
+
+</ul>
+
+<h3>Extras</h3>
+
+<ul>
+
+<li><a href="orange.php">The Orange tool and library</a></li>
+<li><a href="unshield.php">The Unshield tool and library</a></li>
+<li class=SPACED><a href="dynamite.php">The Dynamite tool and library</a></li>
+
+</ul>
+
+<h3>Development information</h3>
+
+<ul>
+
+<li><a href="tasks.php">Help wanted!</a></li>
+<li><a href="architecture.php">Architecture</a></li>
+<li><a href="#developers">The SynCE developers</a></li>
+<li><a href="capture.php">How to capture packets for analyzing</a></li>
+<li><a href="#future">Future</a></li>
+
+
+</ul>
+
+
+<hr size=1>
+<p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_xclick">
+<input type="hidden" name="business" value="twogood@users.sourceforge.net">
+<input type="hidden" name="item_name" value="The SynCE Project">
+<input type="hidden" name="no_shipping" value="1">
+<input type="hidden" name="return" value="http://synce.sourceforge.net/synce/thanks.php">
+<input type="hidden" name="cancel_return" value="http://synce.sourceforge.net/synce/">
+<input type="hidden" name="cn" value="Comments">
+<input type="hidden" name="currency_code" value="USD">
+<input type="hidden" name="tax" value="0">
+
+<table cellpadding=5 width="100%"><tr>
+
+<td class=MIDDLE><input type="image"
+src="https://www.paypal.com/images/x-click-but21.gif" border="0" name="submit"
+alt="Make a donation" title="Make a donation"></td>
+
+<td class=MIDDLE>You can now support the SynCE project by donating!</td>
+
+</tr></table>
+</form>
+
+</p>
+<hr size=1>
+
 <a name="overview"></a>
 <h2>Overview</h2>
 
@@ -393,6 +402,9 @@ help out with Debian packages and other things.</p>
 
 <p><a href="mailto:snaggen@users.sourceforge.net">Mattias Eriksson</a> support
 the GNOME applications in SynCE.</p>
+
+<p><a href="mailto:mbier@users.sourceforge.net">Markus Biermaier</a> works with
+<a href="http://localhost/synce/pyrapi/ce_dirview/">CE_DirView</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>
