@@ -52,6 +52,9 @@ when you have connected it.</p>
 
 </li>
 
+<li>If you want to browse the web with Pocket Internet Explorer, see <a
+href="http://www.tekguru.co.uk/EM500/usbtonet.htm">these instructions</a>.</li>
+
 </ol>
 
 <p>Return to <a href="index.php">main page</a>.</p>
