@@ -834,14 +834,16 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
 	else if (STR_EQUAL(name, "TEL"))/*{{{*/
 	{
+    bool fax = STR_IN_STR(type, "FAX");
+
 		/* TODO: make type uppercase */
 		if (STR_IN_STR(type, "HOME"))
 		{
-			add_string(parser, ID_HOME_TEL, type, value);
+			add_string(parser, fax ? ID_HOME_FAX : ID_HOME_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "WORK"))
 		{
-			add_string(parser, ID_WORK_TEL, type, value);
+			add_string(parser, fax ? ID_WORK_FAX : ID_WORK_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "CELL"))
 		{
