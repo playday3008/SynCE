@@ -180,7 +180,7 @@ void on_install_add_button_clicked(GtkButton *button, gpointer user_data)
     gchar *filepath;
 
     filepath = g_strdup(gtk_entry_get_text(GTK_ENTRY(file_entry)));
-    if (!g_str_has_suffix(filepath,".cab")) {
+    if (!g_str_has_suffix(filepath,".cab") && !g_str_has_suffix(filepath,".CAB")) {
         g_free(filepath);
         synce_error_dialog("The file is not a valid cab-file, judging by the suffix.");
         return;
@@ -254,7 +254,7 @@ void on_remove_button_clicked(GtkButton *button, gpointer user_data)
             synce_error_dialog(tmpstr);
             g_free(tmpstr);
         } else {
-            tmpstr = g_strdup_printf("The program \"%s\"\nwas successfully removed!",program);
+            tmpstr = g_strdup_printf("The program \"%s\"\nwas successfully removed!\nYou must manually refresh the program list\nto see any changes.",program);
             synce_info_dialog(tmpstr);
             g_free(tmpstr);
 
@@ -272,21 +272,18 @@ void on_refresh_button_clicked(GtkButton *button, gpointer user_data)
 {
     GtkWidget *programs_treeview = (GtkWidget *) user_data;
     
-    fprintf(stderr,"Setup tree starting...\n");
     setup_programs_treeview_store(programs_treeview);
-    fprintf(stderr,"Setup tree done!\n");
 }
     
 void on_mainwindow_destroy(GtkWidget *widget, gpointer user_data){
     gtk_main_quit();
 }
 
-void on_mainwindow_show(GtkWidget *widget, gpointer user_data){
-    GtkWidget *programs_treeview = (GtkWidget *) user_data;
-    
-    fprintf(stderr,"Setup tree starting...\n");
-  //  setup_programs_treeview_store(programs_treeview);
-    fprintf(stderr,"Setup tree done!\n");
+static gboolean idle_populate_treeview(gpointer user_data) {
+	GtkWidget *programs_treeview = (GtkWidget *) user_data;
+	setup_programs_treeview_store(programs_treeview);
+
+	return FALSE;
 }
 
 int main (int argc, char **argv)
@@ -334,15 +331,11 @@ int main (int argc, char **argv)
     gtk_signal_connect (GTK_OBJECT(mainwindow),"destroy",
             GTK_SIGNAL_FUNC(on_mainwindow_destroy),NULL);
     
-    gtk_signal_connect_after(GTK_OBJECT(programs_treeview),"realize",
-            GTK_SIGNAL_FUNC(on_mainwindow_show),programs_treeview);
-
-    /* Remove here and enable in the on show function to avoid 
-     * startup delay 
-     */
     setup_programs_treeview(programs_treeview);
    
     gtk_widget_show_all(mainwindow);
+	gtk_idle_add(idle_populate_treeview,programs_treeview);
+	
 	
     gtk_main ();
     return(0);

@@ -38,7 +38,7 @@ AC_PROG_MAKE_SET
 dnl Check for SynCE libs
 AM_PATH_LIBSYNCE
 AM_PATH_LIBRAPI2
-AM_PATH_RRA
+dnl AM_PATH_RRA
 
 dnl Prevent "NONE" used as prefix!
 if test "x$prefix" = xNONE; then

@@ -95,9 +95,8 @@ GList* setup_rapi_and_create_list(GList *list, GtkWidget *progressbar)
 
         if (smartphone)
         {
-            char* name = wstr_to_ascii(wide_name);
+            char* name = wstr_to_utf8(wide_name);
             list = g_list_append(list,g_strdup(name));
-            g_print("Adding: %s\n",name);
             wstr_free_string(name);
         }
         else
@@ -111,9 +110,8 @@ GList* setup_rapi_and_create_list(GList *list, GtkWidget *progressbar)
 
             if (ERROR_SUCCESS == result && installed)
             {
-                char* name = wstr_to_ascii(wide_name);
+                char* name = wstr_to_utf8(wide_name);
                 list = g_list_append(list,g_strdup(name));
-                g_print("Adding: %s\n",name);
                 wstr_free_string(name);
             }
             CeRegCloseKey(program_key);
@@ -150,7 +148,7 @@ int rapi_mkdir(char *dir) {
     }
 
     convert_to_backward_slashes(path);
-    wide_path = wstr_from_ascii(path);
+    wide_path = wstr_from_utf8(path);
     wide_path = adjust_remote_path(wide_path, true);
     
     if (!CeCreateDirectory(wide_path, NULL))
@@ -395,9 +393,9 @@ int rapi_run(char *program, char *parameters)
 	}
 
 	convert_to_backward_slashes(tmpprogram);
-	wide_program = wstr_from_ascii(tmpprogram);
+	wide_program = wstr_from_utf8(tmpprogram);
 	if (parameters)
-		wide_parameters = wstr_from_ascii(parameters);
+		wide_parameters = wstr_from_utf8(parameters);
 
 	memset(&info, 0, sizeof(info));
 	
