@@ -226,7 +226,7 @@ void Raki::initializePda()
         case 'R':
             pendingPdaList.remove(commandAndPda);
             if (pda) {
-                KMessageBox::error(0, QString("Password for PDA \"") + pda->getName() + QString("\" invalid. Password cleared!"));
+                KMessageBox::error(0, i18n("Password for PDA \" %1 \" invalid. Password cleared!").arg(pda->getName()));
                 pda->passwordInvalid();
                 pdaList.take(pdaName);
                 delete pda;
@@ -375,8 +375,8 @@ void Raki::dccmExited(KProcess */*oldDccm*/)
     }
 
     if (dccmShouldRun) {
-        KMessageBox::error(0, "Could not start dccm or dccm has exited.\n"
-                           "Maybe there is already a dccm running");
+        KMessageBox::error(0, i18n("Could not start dccm or dccm has exited.\n"
+                           "Maybe there is already a dccm running"));
     }
 }
 
@@ -473,7 +473,7 @@ void Raki::setConnectionStatus(bool enable)
     } else {
         connected = false;
         actualIcon = &disconnectedIcon;
-        QToolTip::add(this, "No Device connected");
+        QToolTip::add(this, i18n("No Device connected"));
     }
     setPixmap(*actualIcon);
 }
@@ -736,7 +736,7 @@ int main(int argc, char *argv[])
     KApplication a;
 #else
     if (!KUniqueApplication::start()) {
-        fprintf(stderr, "Raki is already running!\n");
+        qFatal("Raki is already running!");
     } else {
         KUniqueApplication a;
 #endif
