@@ -33,8 +33,8 @@ are supported by the underlying <a
   <li><a href="#Related_Work">Related Work</a></li>
   <li><a href="stories.php">Success Stories</a></li>
   <li><a href="#Future">Future<br>
-    <a href="http://sourceforge.net/projects/synce/"><br>
-    </a></a></li>
+    </a><a href="http://sourceforge.net/projects/synce/"><br>
+    </a></li>
   <li><a href="http://sourceforge.net/projects/synce/">SourceForge
 Project Page</a><br>
   </li>
@@ -278,7 +278,7 @@ intend to develop synchronizer for RAKI:<br>
 The source of SynCE-KDE is also available from the repository.<br>
   <ol>
     <li>Install the source package:<br>
-      <tt>&nbsp;&nbsp;&nbsp; # apt-src install synce-kde</tt><br>
+      <tt>&nbsp;&nbsp;&nbsp; # apt-src install synce-kde=0.6.1-1</tt><br>
       <br>
     </li>
     <li>Build the binary packages:<br>
