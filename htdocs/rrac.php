@@ -6,30 +6,90 @@
 
 <h1>SynCE - Remote Replication Agent Connection</h1>
 
+<p>As the contents of this document have been deduced by examining network
+traffic and writing test programs, there are probably lots of errors.</p>
+
 <p>Numeric values in the transferred data are stored in little-endian
 format.</p>
 
 <p>All values are given in hexadecimal form unless noted otherwise.</p>
 
-<h2>Packet map</h2>
+<h1>Contents</h1>
+
+<ul>
+
+<li><a href="#connection">Connection</a></li>
+<li><a href="#packetmap">Command packet map</a></li>
+<li><a href="#commandheader">Command packet header</a></li>
+<li><a href="#packet65">Command packet 65</a></li>
+<li><a href="#packet66">Command packet 66</a></li>
+<li><a href="#packet67">Command packet 67</a></li>
+<li><a href="#packet69">Command packet 69</a></li>
+<li><a href="#packet6c">Command packet 6c</a></li>
+<li><a href="#packet6e">Command packet 6e</a></li>
+<li><a href="#packet6f">Command packet 6f</a></li>
+<li><a href="#packet70">Command packet 70</a></li>
+<li><a href="#dataheader">Data header</a></li>
+<li><a href="#datachunk">Data chunk</a></li>
+
+</ul>
+
+
+<hr size=1 />
+<a name="connection"></a>
+<h2>Connection</h2>
+
+<p>The desktop computer begin to listen on port 5678 for incoming connections.
+It then makes the undocumented CeStartReplication RAPI function call to tell
+the remote device to connect. The remote devices makes two connections to port
+5678. The first connection is a command channel and the second connection is a
+data channel.</p>
+
+<p>The first command sent is usually <a href="#packet6f">command 6f,
+subcommand c1</a> from desktop to handheld. This requests a list of object types
+that can be synchronized.</p>
+
+<p>The handheld device can at any time send a <a href="#packet69">command 69,
+subcommand 0</a>, to inform that an object has been added, changed or deleted.</p>
+
+<p>To add or modify objects on a handheld, the desktop simply writes the object
+data to the data channel. The handheld responds with one <a
+href="#packet65">command 65</a> for each object, specifying the id of the
+object on the handheld. The desktop responds with a <a href="#packet65">command
+65</a> to agree on the id.</p>
+
+<hr size=1 />
+<a name="packetmap"></a>
+<h2>Command packet map</h2>
 
 <table cellspacing=5>
 <tr><th>Packet type</th><th>Sent from desktop?</th><th>Sent from handheld?</th><th>In reply to</th><th>Replied with</th></tr>
 
-<tr><td><a href="#packet65">65</a></td><td>Y</td><td>Y</td><td><a href="#packet65">65</a><br><a href="#packet8x">83, 84, ...</a></td></tr>
+<tr><td><a href="#packet65">65</a></td><td>Y</td><td>Y</td><td><a href="#packet65">65</a></td></tr>
 <tr><td><a href="#packet66">66</a></td><td>Y</td><td>N</td><td></tr>
 <tr><td><a href="#packet67">67</a></td><td>Y</td><td>Y</td><td></tr>
 <tr><td><a href="#packet69">69</a></td><td>N</td><td>Y</td><td></tr>
 <tr><td><a href="#packet6c">6c</a></td><td>N</td><td>Y</td><td><a href="#packet6f">6f</a><br><a href="#packet70">70</a></td></tr>
+<tr><td><a href="#packet6e">6e</a></td><td>N</td><td>Y</td><td></tr>
 <tr><td><a href="#packet6f">6f</a></td><td>Y</td><td>N</td><td>&nbsp;</td><td><a href="#packet6c">6c</a></td></tr>
 <tr><td><a href="#packet70">70</a></td><td>Y</td><td>N</td><td>&nbsp;</td><td><a href="#packet6c">6c</a></td></tr>
-<tr><td><a href="#packet8x">83, 84, ...</a></td><td>Y</td><td>N</td><td>&nbsp;</td><td><a href="#packet65">65</a></td></tr>
 
 </table>
 
 <hr size=1 />
+<a name="commandheader"></a>
+<h2>Command packet header</h2>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>2</td><td></td><td>Packet type</td></tr>
+<tr><td>0002</td><td>2</td><td></td><td>Size of remaining packet</td></tr>
+</table>
+
+
+<hr size=1 />
 <a name="packet65"></a>
-<h2>Packet type 65</h2>
+<h2>Command packet 65</h2>
 
 <p>Negotiate unique identifiers for objects.</p>
 
@@ -40,29 +100,63 @@ format.</p>
 <tr><td>0004</td><td>4</td><td></td><td>Type of object</td></tr>
 <tr><td>0008</td><td>4</td><td></td><td>Identifier on the other device</td></tr>
 <tr><td>000c</td><td>4</td><td></td><td>New identifier suggested</td></tr>
-<tr><td>000c</td><td>4</td><td>00 00 00 00 or<br>02 00 00 00</td><td>Unknown</td></tr>
+<tr><td>000c</td><td>4</td><td></td><td>Flags</td></tr>
+</table>
+
+<p>To agree on an object identifier, this packet is sent with both object
+identifiers equal to the identifier suggested by the other device in the
+previous packet 65.</p>
+
+<h3>Flags</h3>
+
+<table cellspacing=5>
+<tr><td>00000000</td><td>Sent from desktop when we have received an object and want to mark it as unchanged</td></tr>
+<tr><td>00000002</td><td>Sent from handheld when we have sent an object</td></tr>
+<tr><td>08000000</td><td>Sent from desktop when we have sent an object and want to mark it as unchanged</td></tr>
 </table>
 
 <hr size=1 />
+<a name="packet66"></a>
+<h2>Command packet 66</h2>
+
+<p>Delete object on handheld.</p>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>2</td><td>66 00</td><td>Packet type</td></tr>
+<tr><td>0002</td><td>2</td><td>10 00</td><td>Size of remaining packet</td></tr>
+<tr><td>0004</td><td>4</td><td>00 00 00 00</td><td>Unknown</td></tr>
+<tr><td>0008</td><td>4</td><td></td><td>Type id</td></tr>
+<tr><td>000c</td><td>4</td><td></td><td>Object id</td></tr>
+<tr><td>0010</td><td>4</td><td>00 00 00 00</td><td>Unknown</td></tr>
+</table>
+
+
+<hr size=1 />
 <a name="packet67"></a>
-<h2>Packet type 67</h2>
+<h2>Command packet 67</h2>
+
+<p>Request object data. The requested data will be sent on the data channel,
+see <a href="#dataheader">Data header</a>.</p>
 
 <table cellspacing=5>
 <tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
 <tr><td>0000</td><td>2</td><td>67 00</td><td>Packet type</td></tr>
-<tr><td>0002</td><td>2</td><td>10 00</td><td>Size of remaining packet</td></tr>
+<tr><td>0002</td><td>2</td><td></td><td>Size of remaining packet</td></tr>
 <tr><td>0004</td><td>4</td><td>00 00 00 00</td><td>Unknown</td></tr>
 <tr><td>0004</td><td>4</td><td></td><td>Object type</td></tr>
-<tr><td>0004</td><td>4</td><td>01 00 00 00</td><td>Object id count?</td></tr>
-<tr><td>0004</td><td>4</td><td></td><td>Object id</td></tr>
+<tr><td>0004</td><td>4</td><td><i>count</i></td><td>Object id count</td></tr>
+<tr><td>0004</td><td><i>count</i> * 4</td><td></td><td>Object id array</td></tr>
 </table>
+
+<h3>Example</h3>
 
 <pre>0000  67 00 10 00 00 00 00 00 12 27 00 00 01 00 00 00   g........'......
 0010  9d 0e 00 05                                       ....</pre>
 
 <hr size=1 />
 <a name="packet69"></a>
-<h2>Packet type 69</h2>
+<h2>Command packet 69</h2>
 
 <h3>Common packet format</h3>
 
@@ -119,7 +213,7 @@ identifiers</td></tr>
 
 <hr size=1 />
 <a name="packet6c"></a>
-<h2>Packet type 6c</h2>
+<h2>Command packet 6c</h2>
 
 <p>Reply package.</p>
 
@@ -191,8 +285,24 @@ identifiers</td></tr>
 
 
 <hr size=1 />
+<a name="packet6e"></a>
+<h2>Command packet 6e</h2>
+
+<p>Error package.</p>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>2</td><td>6e 00</td><td>Packet type</td></tr>
+<tr><td>0002</td><td>2</td><td>10 00</td><td>Size of remaining packet</td></tr>
+<tr><td>0004</td><td>4</td><td></td><td>Type id</td></tr>
+<tr><td>0008</td><td>4</td><td></td><td>Object id</td></tr>
+<tr><td>000c</td><td>4</td><td></td><td>HRESULT</td></tr>
+<tr><td>0010</td><td>4</td><td></td><td>Unknown</td></tr>
+</table>
+
+<hr size=1 />
 <a name="packet6f"></a>
-<h2>Packet type 6f</h2>
+<h2>Command packet 6f</h2>
 
 <h3>Packet format</h3>
 
@@ -214,7 +324,7 @@ identifiers</td></tr>
 
 <hr size=1 />
 <a name="packet70"></a>
-<h2>Packet type 70</h2>
+<h2>Command packet 70</h2>
 
 <p>More documentation to come.</p>
 
@@ -297,21 +407,44 @@ identifiers</td></tr>
 0030  16 27 00 00 10 27 00 00 17 27 00 00 15 27 00 00   .'...'...'...'..
 0040  18 27 00 00                                       .'..</pre>
 
-<hr size=1 />
-<a name="packet8x"></a>
-<h2>Packet type 83, 84, ...</h2>
 
-<p>These are kind of special as their size is not known in advance.</p>
+<hr size=1 />
+<a name="dataheader"></a>
+<h2>Data header</h2>
 
 <table cellspacing=5>
 <tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
-<tr><td>0000</td><td>4</td><td>83 00<br>84 00<br>...</td><td>Packet type</td></tr>
-<tr><td>0002</td><td>2</td><td>00 20</td><td>Unknown</td></tr>
-<tr><td>0004</td><td>Unknown</td><td></td><td>Object data etc.</td></tr>
+<tr><td>0000</td><td>4</td><td></td><td>Object id</td></tr>
+<tr><td>0004</td><td>4</td><td></td><td>Type id</td></tr>
+<tr><td>0008</td><td>4</td><td></td><td>Flags</td></tr>
 </table>
 
-<p>More documentation to come.</p>
+<p>If the object id is 0xffffffff, this is the end of an object sequence.
+Otherwise it is followed by a <a href="#datachunkheader">data chunk header</a>.</p>
 
+<h3>Flags</h3>
+
+<table cellspacing=5>
+<tr><td>00000000</td><td>Used with end of an object sequence</td></tr>
+<tr><td>00000002</td><td>Used to create a new object.</td></tr>
+<tr><td>00000040</td><td>Used to update an existing object</td></tr>
+</table>
+
+
+<hr size=1 />
+<a name="datachunk"></a>
+<h2>Data chunk</h2>
+
+<table cellspacing=5>
+<tr><th>Offset</th><th>Size</th><th>Contents</th><th>Description</th></tr>
+<tr><td>0000</td><td>2</td><td><i>size</i></td><td>Chunk size</td></tr>
+<tr><td>0002</td><td>2</td><td></td><td>Special value</td></tr>
+<tr><td>0004</td><td><i>size</i></td><td></td><td>Chunk data</td></tr>
+</table>
+
+<p>If the special value is similar to 0xffa0, 0xffa4 or 0xffa8 this is the last
+chunk. Otherwise the special value is the data offset of next chunk, which
+follows after this chunk's data.</p>
 
 <p><br>Return to <a href="index.php">main page</a>.</p>
 
