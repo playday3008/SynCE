@@ -103,8 +103,8 @@ static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* 
 
 static bool on_propval_recurrence_pattern(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
 #if ENABLE_RECURRENCE
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
   data->recurrence_pattern = propval;
 #else
   synce_warning("Recurrence support not enabled");
@@ -453,8 +453,8 @@ static bool on_mdir_line_exdate(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 static bool on_mdir_line_rrule(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
-  EventParserData* event_parser_data = (EventParserData*)cookie;
 #if ENABLE_RECURRENCE
+  EventParserData* event_parser_data = (EventParserData*)cookie;
   event_parser_data->rrule = line;
 #else
   synce_warning("Recurrence support not enabled");
