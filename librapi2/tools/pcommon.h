@@ -5,6 +5,7 @@
 
 void convert_to_backward_slashes(char* path);
 bool is_remote_file(const char* filename);
+WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path);
 
 struct _AnyFile;
 typedef struct _AnyFile AnyFile;

@@ -1,6 +1,7 @@
 /* $Id$ */
 #include "pcommon.h"
 #include "rapi.h"
+#include <synce_log.h>
 #include <stdio.h>
 
 void convert_to_backward_slashes(char* path)
@@ -22,9 +23,9 @@ bool is_remote_file(const char* filename)
 	return filename && ':' == filename[0];
 }
 
-const WCHAR wide_backslash[] = {'\\', 0};
+static const WCHAR wide_backslash[] = {'\\', '\0'};
 
-WCHAR* adjust_remote_path(WCHAR* old_path)
+WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path)
 {
 	/* Nothing to adjust if we have an absolute path */
 	if ('\\' == old_path[0])
@@ -40,6 +41,10 @@ WCHAR* adjust_remote_path(WCHAR* old_path)
 	wstr_append(path, wide_backslash, sizeof(path));
 	wstr_append(path, old_path, sizeof(path));
 
+	if (free_path)
+		wstr_free_string(old_path);
+
+	synce_trace_wstr(path);
 	return wstrdup(path);
 }
 
@@ -118,6 +123,8 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 	
 	if (INVALID_HANDLE_VALUE == file->handle.remote)
 	{
+		synce_error("Failed to open file '%s': %s", 
+				filename, synce_strerror(CeGetLastError()));
 		free(file);
 		file = NULL;
 	}

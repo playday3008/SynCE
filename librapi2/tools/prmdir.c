@@ -11,7 +11,7 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d] [-h] FILE\n"
+			"\t%s [-d LEVEL] [-h] FILE\n"
 			"\n"
 			"\t-d LEVEL  Set debug log level\n"
 			"\t              0 - No logging (default)\n"

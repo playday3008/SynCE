@@ -1,19 +1,19 @@
 /* $Id$ */
 #include "pcommon.h"
 #include <rapi.h>
+#include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <synce_log.h>
 
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-h] SOURCE DESTINATION\n"
+			"\t%s [-d LEVEL] [-h] SOURCE DESTINATION\n"
 			"\n"
-			"\t-d LEVEL     Set debug level\n"
+			"\t-d LEVEL     Set debug log level\n"
 			"\t                 0 - No logging (default)\n"
 			"\t                 1 - Errors only\n"
 			"\t                 2 - Errors and warnings\n"

@@ -11,7 +11,7 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d] [-h] SOURCE DESTINATION\n"
+			"\t%s [-d LEVEL] [-h] SOURCE DESTINATION\n"
 			"\n"
 			"\t-d LEVEL     Set debug log level\n"
 			"\t                 0 - No logging (default)\n"
@@ -29,7 +29,7 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "h")) != -1)
+	while ((c = getopt(argc, argv, "d:h")) != -1)
 	{
 		switch (c)
 		{

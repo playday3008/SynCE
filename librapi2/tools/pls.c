@@ -1,23 +1,29 @@
 /* $Id$ */
+#include "pcommon.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
+static bool numeric_file_attributes = false;
+static bool show_hidden_files = false;
+
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-h] [DIRECTORY]\n"
+			"\t%s [-a] [-d LEVEL] [-h] [-n] [DIRECTORY]\n"
 			"\n"
+			"\t-a        Show all files including those marked as hidden\n"
 			"\t-d LEVEL  Set debug log level\n"
 			"\t              0 - No logging (default)\n"
 			"\t              1 - Errors only\n"
 			"\t              2 - Errors and warnings\n"
 			"\t              3 - Everything\n"
 			"\t-h         Show this help message\n"
+			"\t-n         Show numeric value for file attributes\n"
 			"\tDIRECTORY  The remote directory where you want to list files\n",
 			name);
 }
@@ -27,12 +33,20 @@ static bool handle_parameters(int argc, char** argv, char** path)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "d:h")) != -1)
+	while ((c = getopt(argc, argv, "ad:hn")) != -1)
 	{
 		switch (c)
 		{
+			case 'a':
+				show_hidden_files = true;
+				break;
+				
 			case 'd':
 				log_level = atoi(optarg);
+				break;
+
+			case 'n':
+				numeric_file_attributes = true;
 				break;
 			
 			case 'h':
@@ -44,54 +58,61 @@ static bool handle_parameters(int argc, char** argv, char** path)
 
 	synce_log_set_level(log_level);
 
-	if (optind == argc)
-		return false;
-
 	/* TODO: handle more than one path */
-	*path = strdup(argv[optind++]);
+	if (optind < argc)
+		*path = strdup(argv[optind++]);
 
 	return true;
 }
 
-static void convert_to_backward_slashes(char* path)
+static void print_attribute(CE_FIND_DATA* entry, DWORD attribute, int c)
 {
-	while (*path)
-	{
-		if ('/' == *path)
-			*path = '\\';
-
-		path++;
-	}
+	if (entry->dwFileAttributes & attribute)
+		putchar(c);
+	else
+		putchar('-');
 }
 
 static bool print_entry(CE_FIND_DATA* entry)
 {
 	time_t seconds;
-	char time_string[20];
-	struct tm* time_struct;
+	char time_string[30] = {0};
+	struct tm* time_struct = NULL;
 	char* filename = NULL;
 	
 	/*
 	 * Print file attributes
 	 */
-	switch (entry->dwFileAttributes)
-	{
-		case FILE_ATTRIBUTE_ARCHIVE:
-			printf("Archive  ");
-			break;
+	if (numeric_file_attributes)
+		printf("%08x  ", entry->dwFileAttributes);
+	else
+		switch (entry->dwFileAttributes)
+		{
+			case FILE_ATTRIBUTE_ARCHIVE:
+				printf("Archive   ");
+				break;
 
-		case FILE_ATTRIBUTE_NORMAL:
-			printf("Normal   ");
-			break;
+			case FILE_ATTRIBUTE_NORMAL:
+				printf("Normal    ");
+				break;
 
-		case FILE_ATTRIBUTE_DIRECTORY:
-			printf("Directory");
-			break;
+			case FILE_ATTRIBUTE_DIRECTORY:
+				printf("Directory ");
+				break;
 
-		default:
-			printf("%08x ", entry->dwFileAttributes);
-			break;
-	}
+			default:
+				print_attribute(entry, FILE_ATTRIBUTE_ARCHIVE,       'A');
+				print_attribute(entry, FILE_ATTRIBUTE_COMPRESSED,    'C');
+				print_attribute(entry, FILE_ATTRIBUTE_DIRECTORY,     'D');
+				print_attribute(entry, FILE_ATTRIBUTE_HIDDEN,        'H');
+				print_attribute(entry, FILE_ATTRIBUTE_INROM,         'I');
+				print_attribute(entry, FILE_ATTRIBUTE_ROMMODULE,     'M');
+				print_attribute(entry, FILE_ATTRIBUTE_NORMAL,        'N');
+				print_attribute(entry, FILE_ATTRIBUTE_READONLY,      'R');
+				print_attribute(entry, FILE_ATTRIBUTE_SYSTEM,        'S');
+				print_attribute(entry, FILE_ATTRIBUTE_TEMPORARY,     'T');
+				break;
+		}
 
 	printf("  ");
 
@@ -134,20 +155,22 @@ static bool print_entry(CE_FIND_DATA* entry)
 	return true;
 }
 
-static bool list_matching_files(char* path)
+static bool list_matching_files(WCHAR* wide_path)
 {
 	bool success = false;
 	BOOL result;
 	CE_FIND_DATA* find_data = NULL;
 	DWORD file_count = 0;
-	WCHAR* wide_path = NULL;
 	int i;
 
-	wide_path = wstr_from_ascii(path);
+	synce_trace_wstr(wide_path);
+	wide_path = adjust_remote_path(wide_path, true);
+	synce_trace_wstr(wide_path);
 
 	result = CeFindAllFiles(
 			wide_path,
-			FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW,
+			(show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
+		 	FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW,
       &file_count, &find_data);
 
 	if (!result)
@@ -161,15 +184,28 @@ static bool list_matching_files(char* path)
 exit:
 	CeRapiFreeBuffer(find_data);
 
-	if (wide_path)
-		wstr_free_string(wide_path);
 	return success;
+}
+
+static const WCHAR wildcards[] = {'*', '.', '*', '\0'};
+static       WCHAR empty[]     = {'\0'};
+
+bool list_directory(WCHAR* directory)
+{
+	WCHAR path[MAX_PATH];
+
+	synce_trace_wstr(directory);
+	wstrcpy(path, directory);
+	synce_trace_wstr(path);
+	wstr_append(path, wildcards, sizeof(path));
+	return list_matching_files(path);
 }
 
 int main(int argc, char** argv)
 {
 	int result = 1;
 	char* path = NULL;
+	WCHAR* wide_path = NULL;
 	HRESULT hr;
 	
 	if (!handle_parameters(argc, argv, &path))
@@ -185,20 +221,34 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-	convert_to_backward_slashes(path);
+	if (path)
+		convert_to_backward_slashes(path);
 
-	if (path[strlen(path)-1] == '\\')
+	if (!path)
+	{
+		wide_path = adjust_remote_path(empty, false);
+		list_directory(wide_path);
+	}
+	else if (path[strlen(path)-1] == '\\')
 	{
 		/* This is a directory, append "*.*" to show its contents */
 		char new_path[MAX_PATH];
 		snprintf(new_path, sizeof(new_path), "%s*.*", path);
-		if (!list_matching_files(new_path))
+		wide_path = wstr_from_ascii(new_path);
+
+		if (!list_matching_files(wide_path))
 			goto exit;
 	}
 	else
 	{
-		if (!list_matching_files(path))
+
+		wide_path = wstr_from_ascii(path);
+		wide_path = adjust_remote_path(wide_path, true);
+
+		if (!list_matching_files(wide_path))
 			goto exit;
+
+
 	}
 
 	result = 0;
@@ -206,6 +256,8 @@ int main(int argc, char** argv)
 exit:
 	if (path)
 		free(path);
+
+	wstr_free_string(wide_path);
 
 	CeRapiUninit();
 	return result;
