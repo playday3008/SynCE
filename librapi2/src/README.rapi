@@ -23,9 +23,9 @@ List of RAPI command codes:
 [i] 10 CeReadRecordProps	
 [ ] 10 CeReadRecordPropsEx
 [i] 11 CeWriteRecordProps	
-[ ] 12 CeDeleteRecord		
+[i] 12 CeDeleteRecord		
 [i] 13 CeSeekDatabase		
-[ ] 14 CeSetDatabaseInfo	
+[i] 14 CeSetDatabaseInfo	
 [ ] 15 CeSetFilePointer	
 [ ] 16 CeSetEndOfFile		
 [i] 17 CeCreateDirectory	
@@ -81,7 +81,7 @@ List of RAPI command codes:
 [ ] 46 CeRestoreDatabase        [undocumented]
 [ ] 47 CeBackupDatabase         [undocumented]
 [ ] 48 CeBackupFile             [undocumented]
-[ ] 49 CeKillAllApps            [undocumented]
+[i] 49 CeKillAllApps            [undocumented]
 [ ] 4a CeFindFirstDatabaseEx	
 [ ] 4b CeFindNextDatabaseEx	
 [ ] 4c CeCreateDatabaseEx	

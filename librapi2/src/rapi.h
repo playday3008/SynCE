@@ -389,7 +389,15 @@ CEOID CeWriteRecordProps(
 		HANDLE hDbase, 
 		CEOID oidRecord, 
 		WORD cPropID, 
-		CEPROPVAL *rgPropVal );
+		CEPROPVAL *rgPropVal);
+
+BOOL CeDeleteRecord(
+    HANDLE hDatabase, 
+    CEOID oidRecord);
+
+BOOL CeSetDatabaseInfo( 
+    CEOID oidDbase,
+    CEDBASEINFO* pNewInfo);
 
 #endif /* SWIG */
 
@@ -716,6 +724,11 @@ HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply);
 
 HRESULT CeStartReplication( void );
 
+#define SYSMEM_CHANGED        0
+#define SYSMEM_MUSTREBOOT     1
+#define SYSMEM_REBOOTPENDING  2
+#define SYSMEM_FAILED         3
+
 BOOL CeGetSystemMemoryDivision(
     LPDWORD lpdwStoragePages, 
     LPDWORD lpdwRamPages, 
@@ -727,6 +740,7 @@ DWORD CeSetSystemMemoryDivision(
 BOOL CeRegCopyFile(LPCWSTR filename);
 BOOL CeRegRestoreFile(LPCWSTR filename);
 
+BOOL CeKillAllApps();
 
 #endif /* SWIG */
 
