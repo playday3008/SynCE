@@ -50,7 +50,7 @@
 
 
 CeScreen::CeScreen(KAboutApplication *aboutApplication)
-        : KMainWindow(NULL, "PdaScreen")
+        : KMainWindow(NULL, "KCeScreen")
 {
     pdaSocket = NULL;
     pause = false;
@@ -195,12 +195,23 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
 
         QString binaryVersion = "screensnap.exe" + arch;
 
-        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/screensnap.exe") || forceInstall) {
+#if KDE_VERSION < KDE_MAKE_VERSION(3,2,0)
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/screensnap.exe") 
+                || forceInstall) {
+#else
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Windows/screensnap.exe", false, NULL) 
+                || forceInstall) {
+#endif
             kdDebug(2120) << "Uploading" << endl;
             KStandardDirs *dirs = KApplication::kApplication()->dirs();
             QString screensnap = dirs->findResource("data", "kcemirror/exe/" + binaryVersion);
+#if KDE_VERSION < KDE_MAKE_VERSION(3,2,0)
             KIO::NetAccess::upload(screensnap,
                                    "rapip://" + pdaName + "/Windows/screensnap.exe");
+#else
+            KIO::NetAccess::upload(screensnap,
+                                   "rapip://" + pdaName + "/Windows/screensnap.exe", NULL);
+#endif
         }
         if (!Ce::createProcess(QString("\\Windows\\screensnap.exe").ucs2(), NULL,
                                NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
@@ -265,7 +276,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
     } else {
         return false;
     }
-
+    
     return true;
 }
 
