@@ -25,11 +25,12 @@
 #include "agsyncconfigimpl.h"
 
 #include <qradiobutton.h>
+#include <qcheckbox.h>
 #include <qpushbutton.h>
 #include <klineedit.h>
 
 AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const char* name, bool modal, WFlags fl)
-        : AGSyncConfig(parent,name, modal, fl)
+        : AGSyncConfig(parent, name, modal, fl)
 {
     this->ksConfig = ksConfig;
     readConfig();
@@ -40,7 +41,6 @@ AGSyncConfigImpl::~AGSyncConfigImpl()
 {}
 
 
-/*$SPECIALIZATION$*/
 void AGSyncConfigImpl::contentChanged()
 {
     buttonOk->setEnabled(true);
@@ -50,6 +50,7 @@ void AGSyncConfigImpl::contentChanged()
 void AGSyncConfigImpl::reject()
 {
     QDialog::reject();
+    readConfig();
 }
 
 
@@ -65,6 +66,7 @@ void AGSyncConfigImpl::accept()
     ksConfig->writeEntry("SocksProxyPort", socksProxyPort->text());
     ksConfig->writeEntry("SocksProxyActive", socksProxy->isChecked());
     ksConfig->writeEntry("HttpProxyActive", httpProxy->isChecked());
+    ksConfig->writeEntry("UseAuthentication", useAuthentication->isChecked());
     ksConfig->sync();
 }
 
@@ -80,11 +82,69 @@ void AGSyncConfigImpl::readConfig()
     socksProxyPort->setText(ksConfig->readEntry("SocksProxyPort"));
     socksProxy->setChecked(ksConfig->readBoolEntry("SocksProxyActive"));
     httpProxy->setChecked(ksConfig->readBoolEntry("HttpProxyActive"));
+    if (!socksProxy->isChecked() && !httpProxy->isChecked()) {
+        noProxy->setChecked(true);
+    }
+    useAuthentication->setChecked(ksConfig->readBoolEntry("UseAuthentication"));
+    buttonOk->setEnabled(false);
+}
+
+
+QString AGSyncConfigImpl::getHttpProxyHost()
+{
+    return httpProxyHost->text();
+}
+
+
+unsigned int AGSyncConfigImpl::getHttpProxyPort()
+{
+    return QString(httpProxyPort->text()).toUInt();
+}
+
+
+QString AGSyncConfigImpl::getHttpUsername()
+{
+    return userName->text();
+}
+
+
+QString AGSyncConfigImpl::getHttpPassword()
+{
+    return passWord->text();
+}
+
+
+QString AGSyncConfigImpl::getSocksProxyHost()
+{
+    return socksProxyHost->text();
+}
+
+
+unsigned int AGSyncConfigImpl::getSocksProxyPort()
+{
+    return QString(socksProxyPort->text()).toUInt();
+}
+
+
+bool AGSyncConfigImpl::getHttpProxy()
+{
+    return httpProxy->isChecked();
+}
+
+
+bool AGSyncConfigImpl::getSocksProxy()
+{
+    return socksProxy->isChecked();
+}
+
+bool AGSyncConfigImpl::getUseAuthentication()
+{
+    return useAuthentication->isChecked();
 }
 
 
 void AGSyncConfigImpl::show()
 {
-    buttonOk->setEnabled(false);
+    readConfig();
     AGSyncConfig::show();
 }

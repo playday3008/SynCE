@@ -56,20 +56,12 @@ public:
     void createConfigureObject(KConfig *ksConfig);
     void configure();
     
-    
+
 private:
     bool sync();
-    void setProxy(QString host, unsigned int port);
-    void setSocks(QString host, unsigned int port);
-    void setUser(QString user, QString password);
     void doSync(AGReader *r, AGWriter *w, AGNetCtx *ctx);
+    void configAGSync();
     void doServerSync(AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx *ctx);
-    QString proxyHost;
-    QString socksHost;
-    unsigned int proxyPort;
-    unsigned int socksPort;
-    QString user;
-    QString password;
     AGLocationConfig *locConfig;
     AGSyncConfigImpl *configDialog;
 };

@@ -8,12 +8,12 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>442</width>
-            <height>292</height>
+            <width>455</width>
+            <height>315</height>
         </rect>
     </property>
     <property name="caption">
-        <string>AgSync Config</string>
+        <string>AvantGo Synchronizer</string>
     </property>
     <property name="sizeGripEnabled">
         <bool>false</bool>
@@ -49,71 +49,6 @@
                                 <property name="name">
                                     <cstring>unnamed</cstring>
                                 </property>
-                                <widget class="QLayoutWidget">
-                                    <property name="name">
-                                        <cstring>layout7</cstring>
-                                    </property>
-                                    <hbox>
-                                        <property name="name">
-                                            <cstring>unnamed</cstring>
-                                        </property>
-                                        <widget class="QLayoutWidget">
-                                            <property name="name">
-                                                <cstring>layout1</cstring>
-                                            </property>
-                                            <vbox>
-                                                <property name="name">
-                                                    <cstring>unnamed</cstring>
-                                                </property>
-                                                <widget class="QLabel">
-                                                    <property name="name">
-                                                        <cstring>_________________q</cstring>
-                                                    </property>
-                                                    <property name="text">
-                                                        <string>Username:</string>
-                                                    </property>
-                                                </widget>
-                                                <widget class="QLabel">
-                                                    <property name="name">
-                                                        <cstring>textLabel2</cstring>
-                                                    </property>
-                                                    <property name="text">
-                                                        <string>Password:</string>
-                                                    </property>
-                                                </widget>
-                                            </vbox>
-                                        </widget>
-                                        <widget class="QLayoutWidget">
-                                            <property name="name">
-                                                <cstring>layout2</cstring>
-                                            </property>
-                                            <vbox>
-                                                <property name="name">
-                                                    <cstring>unnamed</cstring>
-                                                </property>
-                                                <widget class="KLineEdit">
-                                                    <property name="name">
-                                                        <cstring>userName</cstring>
-                                                    </property>
-                                                    <property name="minimumSize">
-                                                        <size>
-                                                            <width>200</width>
-                                                            <height>0</height>
-                                                        </size>
-                                                    </property>
-                                                </widget>
-                                                <widget class="KLineEdit">
-                                                    <property name="name">
-                                                        <cstring>passWord</cstring>
-                                                    </property>
-                                                    <property name="echoMode">
-                                                        <enum>Password</enum>
-                                                    </property>
-                                                </widget>
-                                            </vbox>
-                                        </widget>
-                                    </hbox>
-                                </widget>
                                 <widget class="QLayoutWidget">
                                     <property name="name">
                                         <cstring>layout8</cstring>
@@ -164,6 +99,85 @@
                                                 <widget class="KLineEdit">
                                                     <property name="name">
                                                         <cstring>httpProxyPort</cstring>
+                                                    </property>
+                                                </widget>
+                                            </vbox>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>useAuthentication</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Use Authentication</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLayoutWidget">
+                                    <property name="name">
+                                        <cstring>layout7</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QLayoutWidget">
+                                            <property name="name">
+                                                <cstring>layout1</cstring>
+                                            </property>
+                                            <vbox>
+                                                <property name="name">
+                                                    <cstring>unnamed</cstring>
+                                                </property>
+                                                <widget class="QLabel">
+                                                    <property name="name">
+                                                        <cstring>_________________q</cstring>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>Username:</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QLabel">
+                                                    <property name="name">
+                                                        <cstring>textLabel2</cstring>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>Password:</string>
+                                                    </property>
+                                                </widget>
+                                            </vbox>
+                                        </widget>
+                                        <widget class="QLayoutWidget">
+                                            <property name="name">
+                                                <cstring>layout2</cstring>
+                                            </property>
+                                            <vbox>
+                                                <property name="name">
+                                                    <cstring>unnamed</cstring>
+                                                </property>
+                                                <widget class="KLineEdit">
+                                                    <property name="name">
+                                                        <cstring>userName</cstring>
+                                                    </property>
+                                                    <property name="enabled">
+                                                        <bool>false</bool>
+                                                    </property>
+                                                    <property name="minimumSize">
+                                                        <size>
+                                                            <width>200</width>
+                                                            <height>0</height>
+                                                        </size>
+                                                    </property>
+                                                </widget>
+                                                <widget class="KLineEdit">
+                                                    <property name="name">
+                                                        <cstring>passWord</cstring>
+                                                    </property>
+                                                    <property name="enabled">
+                                                        <bool>false</bool>
+                                                    </property>
+                                                    <property name="echoMode">
+                                                        <enum>Password</enum>
                                                     </property>
                                                 </widget>
                                             </vbox>
@@ -386,6 +400,8 @@
         </widget>
     </vbox>
 </widget>
+<customwidgets>
+</customwidgets>
 <connections>
     <connection>
         <sender>socksProxy</sender>
@@ -470,6 +486,24 @@
         <signal>stateChanged(int)</signal>
         <receiver>AGSyncConfig</receiver>
         <slot>noProxy_stateChanged(int)</slot>
+    </connection>
+    <connection>
+        <sender>useAuthentication</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>userName</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>useAuthentication</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>passWord</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>useAuthentication</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>AGSyncConfig</receiver>
+        <slot>contentChanged()</slot>
     </connection>
 </connections>
 <includes>

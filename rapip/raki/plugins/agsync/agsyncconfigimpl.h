@@ -36,8 +36,16 @@ public:
     AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent = 0,
             const char* name = 0, bool modal = TRUE, WFlags fl = 0 );
     ~AGSyncConfigImpl();
-    /*$PUBLIC_FUNCTIONS$*/
     void show();
+    QString getHttpProxyHost();
+    unsigned int getHttpProxyPort();
+    QString getHttpUsername();
+    QString getHttpPassword();
+    QString getSocksProxyHost();
+    unsigned int getSocksProxyPort();
+    bool getHttpProxy();
+    bool getSocksProxy();
+    bool getUseAuthentication();
 
 private:
     KConfig *ksConfig;

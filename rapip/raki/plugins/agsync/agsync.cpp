@@ -48,6 +48,8 @@
 
 #include "syncstream.h"
 
+#include <qcstring.h>
+
 
 static RakiSyncPlugin *plugin;
 
@@ -184,8 +186,13 @@ int32 pPerformCommand(void *pStoreVoid, int32 *err, AGReader *r)
 
 AGSync::AGSync()
 {
-    locConfig = NULL;
     plugin = this;
+}
+
+
+AGSync::~AGSync()
+{
+    delete configDialog;
 }
 
 
@@ -198,33 +205,6 @@ void AGSync::createConfigureObject(KConfig *ksConfig)
 void AGSync::configure()
 {
     configDialog->show();
-}
-
-
-AGSync::~AGSync()
-{
-//    delete configDialog;
-}
-
-
-void AGSync::setProxy(QString host, unsigned int port)
-{
-    proxyHost = host;
-    proxyPort = port;
-}
-
-
-void AGSync::setSocks(QString host, unsigned int port)
-{
-    socksHost = host;
-    socksPort = port;
-}
-
-
-void AGSync::setUser(QString user, QString password)
-{
-    this->user = user;
-    this->password = password;
 }
 
 
@@ -355,6 +335,30 @@ confEnd:
 }
 
 
+void AGSync::configAGSync()
+{
+    if (configDialog->getHttpProxy()) {
+        kdDebug(2120) << "Using HttpProxy" << endl;
+        locConfig = AGLocationConfigNew();
+        locConfig->HTTPName = qstrdup(configDialog->getHttpProxyHost().ascii());
+        locConfig->HTTPPort = configDialog->getHttpProxyPort();
+        locConfig->HTTPUseProxy = 1;
+        if (configDialog->getUseAuthentication()) {
+            kdDebug(2120) << "Using HttpProxy Authentification" << endl;
+            locConfig->HTTPUsername = qstrdup(configDialog->getHttpUsername().ascii());
+            locConfig->HTTPPassword = qstrdup(configDialog->getHttpPassword().ascii());
+            locConfig->HTTPUseAuthentication = 1;
+        }
+    } else if (configDialog->getSocksProxy()) {
+        kdDebug(2120) << "Using SocksProxy" << endl;
+        locConfig = AGLocationConfigNew();
+        locConfig->SOCKSName = qstrdup(configDialog->getSocksProxyHost().ascii());
+        locConfig->SOCKSPort = configDialog->getSocksProxyPort();
+        locConfig->SOCKSUseProxy = 1;
+    }
+}
+
+
 bool AGSync::sync()
 {
     synce::IRAPIStream *s;
@@ -363,7 +367,11 @@ bool AGSync::sync()
     AGWriter *w;
     AGNetCtx ctx;
     HRESULT hr;
-    
+
+    locConfig = NULL;
+
+    configAGSync();
+
     Ce::rapiInit(pdaName);
 
     hr = Ce::rapiInvokeA(
@@ -381,17 +389,18 @@ bool AGSync::sync()
         return false;
     }
 
-    r= AGReaderNew((void *)s, readFunc);
+    r = AGReaderNew((void *)s, readFunc);
 
-    w= AGWriterNew((void *)s, writeFunc);
+    w = AGWriterNew((void *)s, writeFunc);
 
-    pStore.r= r; pStore.w = w;
+    pStore.r = r;
+    pStore.w = w;
 
     AGNetInit(&ctx);
 
     doSync(r, w, &ctx);
 
-    result= asEndSession(r, w);
+    result = asEndSession(r, w);
 
     AGNetClose(&ctx);
     AGWriterFree(w);
