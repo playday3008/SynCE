@@ -201,10 +201,10 @@ bool parser_datetime_to_struct(const char* datetime, struct tm* time_struct, boo
   {
     if ('Z' != suffix)
       synce_warning("Unknown date-time suffix: '%c'", suffix);
-
-    if (is_utc)
-      *is_utc = ('Z' == suffix);
   }
+
+  if (is_utc)
+    *is_utc = ('Z' == suffix);
 
   time_struct->tm_year -= 1900;
   time_struct->tm_mon--;
