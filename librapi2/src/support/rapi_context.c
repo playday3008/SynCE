@@ -61,6 +61,9 @@ void rapi_context_free(RapiContext* context)/*{{{*/
 {
 	if (context)
 	{
+    if (current_context == context)
+      current_context = NULL;
+
 		rapi_buffer_free(context->send_buffer);
 		rapi_buffer_free(context->recv_buffer);
 		synce_socket_free(context->socket);
@@ -117,18 +120,21 @@ HRESULT rapi_context_connect(RapiContext* context)
 		if (!synce_password_send(context->socket, info->password, info->key))
 		{
 			synce_error("failed to send password");
+      result = E_ACCESSDENIED;
 			goto fail;
 		}
 
 		if (!synce_password_recv_reply(context->socket, 1, &password_correct))
 		{
 			synce_error("failed to get password reply");
+      result = E_ACCESSDENIED;
 			goto fail;
 		}
 
 		if (!password_correct)
 		{
 			synce_error("invalid password");
+      result = E_ACCESSDENIED;
 			goto fail;
 		}
 	}

@@ -27,8 +27,7 @@ STDAPI CeRapiUninit(void)/*{{{*/
 	
 	if (context->is_initialized)
 	{
-		synce_socket_close(context->socket);
-		context->is_initialized = false;
+    rapi_context_free(context);
 		return S_OK;
 	}
 	else
