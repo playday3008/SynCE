@@ -7,8 +7,9 @@
 #include <string.h>
 #include <zlib.h>
 
-#define VERBOSE 0
-#define DEBUG_ZLIB 0
+#define VERBOSE 1
+#define ZLIB_DEBUG 0
+#define ZLIB_HACK 0
 
 /*
    Installer VISE - http://www.mindvision.com
@@ -21,10 +22,13 @@ typedef struct
   uint8_t* buffer;
 } FileEntry;
 
-#ifdef DEBUG_ZLIB
+#ifdef ZLIB_DEBUG
 extern int z_verbose;
 #endif
 
+#if ZLIB_HACK
+extern int z_visehack;
+#endif
 
 #define OUTPUT_BUFFER_SIZE 0x8000
 
@@ -34,6 +38,9 @@ static bool orange_decompress_to_file(uint8_t* input_buffer, size_t input_size, 
   Byte* output_buffer = malloc(OUTPUT_BUFFER_SIZE);
   bool decompress = true;
   uint8_t* fixed_buffer = NULL;
+#if 0
+  unsigned last_fix_offset = (unsigned)-1;
+#endif
 
   if (!output_buffer)
   {
@@ -75,7 +82,9 @@ static bool orange_decompress_to_file(uint8_t* input_buffer, size_t input_size, 
       stream.next_out   = output_buffer;
       stream.avail_out  = OUTPUT_BUFFER_SIZE;
 
-      error = inflate(&stream, Z_NO_FLUSH);
+      synce_trace("Offset = %08x", input_size - stream.avail_in);
+
+      error = inflate(&stream, Z_SYNC_FLUSH/*Z_NO_FLUSH*/);
 
       bytes_to_write = OUTPUT_BUFFER_SIZE - stream.avail_out;
 
@@ -88,41 +97,127 @@ static bool orange_decompress_to_file(uint8_t* input_buffer, size_t input_size, 
 
       if (error < Z_OK)
       {
+        unsigned offset;
+        offset = input_size - stream.avail_in;
+        synce_error("inflate failed with error %i '%s' offset=%08x, total_out=%08x", 
+            error, stream.msg, offset, stream.total_out);
+
+#if 0
+        bool remove_byte = false;
+        int index = 0;
+
+        synce_trace("offset=%08x: %02x %02x %02x %02x (%02x %02x) (%02x %02x) [%02x] %02x %02x %02x %02x",
+            offset,
+            input_buffer[offset-8],
+            input_buffer[offset-7],
+            input_buffer[offset-6],
+            input_buffer[offset-5],
+            input_buffer[offset-4],
+            input_buffer[offset-3],
+            input_buffer[offset-2],
+            input_buffer[offset-1],
+            input_buffer[offset-0],
+            input_buffer[offset+1],
+            input_buffer[offset+2],
+            input_buffer[offset+3],
+            input_buffer[offset+4]
+            );
 
         /*
            Sometimes the decompression fails because of "incorrect stored block
            lengths". It seems like there is a zero byte to much!
          */
-           
-        unsigned offset;
-        offset = input_size - stream.avail_in;
 
-        synce_trace("offset=%08x: %02x %02x %02x %02x %02x",
-            offset-4,
-            input_buffer[offset-4],
-            input_buffer[offset-3],
-            input_buffer[offset-2],
-            input_buffer[offset-1],
-            input_buffer[offset-0]);
-
-        if (0 == input_buffer[offset-4] &&
-            input_buffer[offset-1] == (~input_buffer[offset-3] & 0xff) &&
-            input_buffer[offset-2] == (~input_buffer[offset-0] & 0xff))
+        if (strcmp(stream.msg, "invalid stored block lengths") == 0)
         {
-          synce_warning("Fixing incorrect stored block length and trying again...");
-          
+          if (0 == input_buffer[offset-4] &&
+              input_buffer[offset-1] == (~input_buffer[offset-3] & 0xff) &&
+              input_buffer[offset-2] == (~input_buffer[offset-0] & 0xff))
+          {
+            remove_byte = true;
+            index = -4;
+            
+#if 0
+            synce_warning("Removing zero byte and trying again...");
+
+            input_size--;
+            memmove(input_buffer + offset - 4, input_buffer + offset - 3, input_size - offset + 3);
+
+            last_fix_offset = offset;
+            decompress = true;
+            goto exit;
+#endif
+          }
+          else if (last_fix_offset != offset)
+          {
+#if 0
+            uint8_t* old_fixed_buffer = fixed_buffer;
+            /* oh, a spare byte, thanks! */
+            synce_warning("Inserting stored block of size 1...");
+
+            input_size += 5;
+            fixed_buffer = malloc(input_size);
+
+            memcpy(fixed_buffer, input_buffer, offset-5);
+            memcpy(fixed_buffer + offset + 1, input_buffer + offset - 4, input_size - offset);
+
+            fixed_buffer[offset-5] = 0;   /* type for stored block */
+            fixed_buffer[offset-4] = 1;   /* low size byte */
+            fixed_buffer[offset-3] = 0;   /* high size byte */
+            fixed_buffer[offset-2] = ~fixed_buffer[offset-4] & 0xff;
+            fixed_buffer[offset-1] = ~fixed_buffer[offset-3] & 0xff;
+            fixed_buffer[offset  ] = input_buffer[offset-5];    /* byte value */
+
+            FREE(old_fixed_buffer);
+            input_buffer = fixed_buffer;
+
+            synce_trace("offset=%08x: %02x %02x (%02x %02x) (%02x %02x) [%02x] %02x %02x %02x %02x",
+                offset,
+                input_buffer[offset-6],
+                input_buffer[offset-5],
+                input_buffer[offset-4],
+                input_buffer[offset-3],
+                input_buffer[offset-2],
+                input_buffer[offset-1],
+                input_buffer[offset-0],
+                input_buffer[offset+1],
+                input_buffer[offset+2],
+                input_buffer[offset+3],
+                input_buffer[offset+4]
+                );
+#else
+            remove_byte = true;
+            index = -5;
+#endif
+          }
+        }
+        else if (strcmp(stream.msg, "invalid block type") == 0)
+        {
+          remove_byte = true;
+          index = -1;
+        }
+        else if (strcmp(stream.msg, "oversubscribed dynamic bit lengths tree") == 0)
+        {
+          remove_byte = true;
+          index = -7;
+        }
+
+        if (remove_byte)
+        {
+          synce_warning("Removing byte %02x and trying again...", input_buffer[offset+index]);
+
           input_size--;
-          memmove(input_buffer + offset - 4, input_buffer + offset - 3, input_size - offset + 3);
+          memmove(input_buffer + offset + index, input_buffer + offset + index + 1, input_size - offset - index - 1);
+
+          last_fix_offset = offset;
 
           decompress = true;
           goto exit;
         }
+#endif
 
-        synce_error("inflate failed with error %i '%s' avail_in=%08x, total_out=%08x", 
-            error, stream.msg, stream.avail_in, stream.total_out);
-         goto exit;
+        goto exit;
       }
-
     }
   
     if (expected_output_size == (size_t)-1)
@@ -131,6 +226,7 @@ static bool orange_decompress_to_file(uint8_t* input_buffer, size_t input_size, 
       success = stream.total_out == expected_output_size;
 
 exit:
+    inflateEnd(&stream);
     FCLOSE(output);
   }
 
@@ -503,15 +599,21 @@ static bool orange_read_vise_data2(/*{{{*/
                 snprintf(output_filename, sizeof(output_filename), "%s/%s",
                     output_directory, directory);
                 orange_make_sure_directory_exists(output_filename);
-                
-                /* decompress file */
-                snprintf(output_filename, sizeof(output_filename), "%s/%s/%s",
-                    output_directory, directory, filename);
 
                 if (compressed_size & 1)
                   synce_trace("File size not even!");
 
                 orange_correct_compressed_vise_buffer(buffer, compressed_size);
+
+                /* save compressed data for debugging */
+                snprintf(output_filename, sizeof(output_filename), "%s/%s.compressed",
+                    directory, filename);
+                orange_write(buffer, compressed_size, output_directory, output_filename);
+                
+                /* decompress file */
+                snprintf(output_filename, sizeof(output_filename), "%s/%s/%s",
+                    output_directory, directory, filename);
+
                 if (orange_decompress_to_file(buffer, compressed_size, original_size, output_filename))
                   file_count++;
               }
@@ -628,19 +730,33 @@ static bool orange_read_vise_data2(/*{{{*/
       case 0x24:
         {/*{{{*/
           int j;
-          int string_count = 4;
-          int unknown;
+          int string_count = -1;
+          int values[6];
 
           fseek(input_file, 0x65, SEEK_CUR);
 
-          unknown = 
-            orange_read_byte(input_file) |
-            orange_read_byte(input_file) << 8;
+          for (j = 0; j < 6; j++)
+            values[j] = orange_read_byte(input_file);
 
-          switch (unknown)
+          switch (values[0])
           {
             case 1+2:
-              string_count = 5;
+              switch (values[4])
+              {
+                case 0:
+                  string_count = 5;
+                  break;
+                case 1:
+                  string_count = 1;
+                  break;
+                default:
+                  synce_trace("values[4] = %02x", values[4]);
+                  abort();
+              }
+              break;
+
+            case 2+4:
+              string_count = 3;
               break;
 
             case 1+8:
@@ -651,12 +767,15 @@ static bool orange_read_vise_data2(/*{{{*/
               string_count = 1;
               break;
 
+            case 16:
+              /* this is not correct */
+              string_count = 1;
+              break;
+
             default:
-              synce_trace("Unknown = %02x", unknown);
+              synce_trace("values[0] = %02x", values[0]);
               abort();
           }
-
-          fseek(input_file, 4, SEEK_CUR);
 
           for (j = 0; j < string_count; j++)
           {
@@ -667,6 +786,10 @@ static bool orange_read_vise_data2(/*{{{*/
             FREE(str);
           }
         }/*}}}*/
+        break;
+
+      case 0x25:
+        fseek(input_file, 0x67, SEEK_CUR);
         break;
 
       default:
@@ -688,8 +811,11 @@ bool orange_extract_vise(
   FILE* input_file = fopen(input_filename, "r");
   unsigned base_offset;
 
-#if DEBUG_ZLIB
+#if ZLIB_DEBUG
   z_verbose = 1;
+#endif
+#if ZLIB_HACK
+  z_visehack = 1;
 #endif
 
   if (!input_file)
@@ -755,6 +881,9 @@ bool orange_extract_vise(
 #endif
 
 exit:
+#if ZLIB_HACK
+  z_visehack = 0;
+#endif
   FCLOSE(input_file);
   return success;
 }
