@@ -73,7 +73,7 @@ void	initdebug(char *service)
 
 void	closedebug(void)
 {
-//    fclose (fp_console);
+/*    fclose (fp_console);*/
 }
 
 void log_err (char *s)

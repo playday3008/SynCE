@@ -10,5 +10,5 @@ INCLUDES = $(all_includes)
 # the library search path.
 asyncd_LDFLAGS = $(all_libraries) 
                                                                                 
-AM_CFLAGS = -DDEBUG -DUSE_SYSLOG
+AM_CFLAGS = -DDEBUG -DUSE_SYSLOG #-Wall
 SUBDIRS = 

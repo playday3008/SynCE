@@ -36,6 +36,7 @@
 #include <arpa/inet.h>
 #include <iconv.h>
 #include <errno.h>
+#include <string.h>
 
 #define ASYNCD_INPUT	0
 #define ASYNCD_OUTPUT	1
@@ -120,6 +121,7 @@ int removeinfo( void )
                 result = unlink( INFOFILE );
                 log_debug("unlink...result = %d", result);
         }
+	return result;
 }
 
 int saveinfo( char * devicetype, char * platformtype, char * devicename )
@@ -156,6 +158,7 @@ int saveinfo( char * devicetype, char * platformtype, char * devicename )
         fprintf( infofile, "\tdevice-name \"%s\";\n", devicename );
         fprintf( infofile, "}\n\n" );
         fclose( infofile );
+	return result;
 }
 
 int checkpacket( unsigned char * buf, int size )
@@ -165,9 +168,6 @@ int checkpacket( unsigned char * buf, int size )
         size_t strglen;
         size_t nameslen;
         long * ptrlng;
-        char * ptrchar;
-        short * ptrshort;
-        short string[2*1024];
         char * in;
         char names[1024];
         char * out;
@@ -318,7 +318,7 @@ int main (int ac, char **av)
 						buffer_ok = checkpacket( buffer, pktsz );
 						if(locked)
 						{
-							//unsigned char lockbuffer[]={0xa, 0x0, 0xce, 0xfd, 0xc8, 0xfd, 0xc9, 0xfd, 0xcf, 0xfd, 0xfd, 0xfd};
+							/*unsigned char lockbuffer[]={0xa, 0x0, 0xce, 0xfd, 0xc8, 0xfd, 0xc9, 0xfd, 0xcf, 0xfd, 0xfd, 0xfd};*/
 							unsigned char lockbuffer[15];
 							char *passphrase = "1234";
 							unsigned int lockbuffersize = 13;
