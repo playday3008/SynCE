@@ -1,6 +1,6 @@
 %define prefix   /usr
-%define name     dccmd
-%define ver      0.1
+%define name     synce-dccmd
+%define ver      0.2
 %define rel      1
 
 Summary: SynCE: Communication daemon.
@@ -16,7 +16,7 @@ Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Buildroot: %{_tmppath}/synce-root
-Requires: libsynce = 0.1
+Requires: synce-libsynce
 
 %description
 Dccmd is part of the SynCE project:
@@ -37,5 +37,7 @@ make
 %makeinstall
 
 %files
+%doc README LICENSE
 %{prefix}/bin/dccmd
+%{_mandir}/man1/dccmd.*
 

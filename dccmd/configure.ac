@@ -28,5 +28,6 @@ dnl Checks for library functions.
 AC_REPLACE_FUNCS(inet_pton)
 
 AC_OUTPUT([Makefile
-           src/Makefile])
+           src/Makefile
+					 man/Makefile])
 

@@ -5,3 +5,5 @@ TODO for dccmd
 
 o Use tcpwrappers
 
+o Hide password in process list (modify argv[0])
+

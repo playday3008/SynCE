@@ -1,0 +1,32 @@
+.\" $Id$
+.TH "DCCMD" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
+.SH NAME
+dccmd \- Handle communication with a Pocket PC device.
+
+.SH SYNOPSIS
+\fBdccmd\fR [-f] [-h] [-p \fIpassword\fR]
+
+.SH "DESCRIPTION"
+.PP
+\fBdccmd\fR program handles the connection with your Pocket PC device.
+.PP
+This daemon is run by the user.
+
+.SH "OPTIONS"
+.TP
+-f
+Run in foreground. If this paramter is not specified, dccmd will fork into the background.
+
+.TP
+-h
+Display help message.
+
+.TP
+-p \fIpassword\fR
+Use the specified password when connecting to a password-protected device.
+
+.SH "AUTHOR"
+.PP
+This manual page was written by David Eriksson <twogood@users.sourceforge.net>.
+.SH "SEE ALSO"
+synce(1)
