@@ -341,7 +341,8 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
   {
     success = parser_datetime_to_unix_time(line->values[0], &some_time);
     if (!success)
-      synce_error("Failed to convert DATE or DATE-TIME to UNIX time");
+      synce_error("Failed to convert DATE or DATE-TIME to UNIX time: '%s'",
+          line->values[0]);
   }
 
   return success && parser_add_time(self, id, some_time);
