@@ -25,13 +25,16 @@ CeCreateDirectory_SOURCES = test.h CeCreateDirectory.cpp
 CeGetVersionEx_SOURCES = test.h CeGetVersionEx.cpp
 CeMoveFile_SOURCES = test.h CeMoveFile.cpp
 CeCreateProcess_SOURCES = test.h CeCreateProcess.cpp
+#CeEnumDBVolumes_SOURCES = test.h CeEnumDBVolumes.cpp
+CeGetSystemInfo_SOURCES = test.h CeGetSystemInfo.cpp
 
 ## all tests
 noinst_PROGRAMS = pcp DumpAppointmentSecret \
 	CeRapiInit CeGetSpecialFolderPath CeRegOpenKeyEx \
 	CeFindFirstFile CeCreateFile CeFindAllFiles CeFindAllDatabases \
 	CeOpenDatabase CeRegEnumKeyEx CeRegEnumValue CeRegQueryInfoKey \
-	CeCreateDirectory CeGetVersionEx CeMoveFile CeCreateProcess
+	CeCreateDirectory CeGetVersionEx CeMoveFile CeCreateProcess \
+	CeGetSystemInfo
 	
 
 ## run "make test" to run the tests
