@@ -4,6 +4,7 @@
 .libs
 Makefile
 Makefile.in
+ftconv
 stamp-h1
 synce.h
 synce_config.h
