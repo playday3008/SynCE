@@ -1,0 +1,17 @@
+.deps
+.gdb_history
+.libs
+CeCreateFile
+CeFindAllDatabases
+CeFindAllFiles
+CeFindFirstFile
+CeGetSpecialFolderPath
+CeOpenDatabase
+CeRapiInit
+CeRegEnumKeyEx
+CeRegOpenKeyEx
+Makefile
+Makefile.in
+CeRegEnumValue
+CeRegQueryInfoKey
+pcp
