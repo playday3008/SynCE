@@ -523,19 +523,22 @@ int main(int argc, char** argv)
 	if (password)
 	{
 		int i;
+		char *p;
 
-		if (strlen(password) != 4)
-		{
-			fprintf(stderr,"%s: Invalid password length\n", argv[0]);
-			goto exit;
-		}
-	
 		/* Protect password */
 		for (i = 0; i < argc; i++)
 		{
 			if (strcmp(argv[i], password) == 0)
 			{
-				strcpy(argv[i], "XXXX");
+				p = argv[i];
+				if (*p)
+				{
+					*p = 'X';
+					p++;
+					
+					for (; *p; p++)
+						*p = '\0';
+				}
 				break;
 			}
 		}
