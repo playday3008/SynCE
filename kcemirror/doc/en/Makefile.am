@@ -1,2 +1,2 @@
-KDE_DOCS = raki
+KDE_DOCS = kcemirror
 KDE_LANG = en
