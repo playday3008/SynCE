@@ -210,6 +210,8 @@ void Raki::initializePda()
                         setConnectionStatus(false);
                     else
                         setConnectionStatus(true);
+                } else {
+                    pda->setStopRequested(true);
                 }
             }
             break;
