@@ -47,6 +47,7 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(QString pdaName, QWidget* parent,
         const char* name, bool modal, WFlags fl)
         : PdaConfigDialog(parent, name, modal, fl)
 {
+    ksConfig = new KConfig("raki/" + pdaName + ".cfg", false, false, "data");
     this->pdaName = pdaName;
     partnershipCreated.setTime_t(0);
     readConfig();
@@ -61,6 +62,7 @@ PdaConfigDialogImpl::PdaConfigDialogImpl(QString pdaName, QWidget* parent,
 PdaConfigDialogImpl::~PdaConfigDialogImpl()
 {
     writeConfig();
+    delete ksConfig;
 }
 
 
@@ -102,41 +104,34 @@ void PdaConfigDialogImpl::writeConfig()
 {
     SyncTaskListItem *syncTaskListItem;
 
-    QString allTypeIds;
-    ksConfig->setGroup(pdaName);
+    ksConfig->setGroup("MainConfig");
     ksConfig->writeEntry("Password", password);
     ksConfig->writeEntry("Masquerade", masqEnabled);
     ksConfig->writeEntry("SyncAtConnect", syncAtConnect);
-    for (syncTaskListItem = syncTaskItemList.first(); syncTaskListItem;
-            syncTaskListItem = syncTaskItemList.next()) {
-        allTypeIds = allTypeIds + QString::number(
-                syncTaskListItem->getObjectType()->id) + ";";
-        ksConfig->writeEntry(QString::number(
-                syncTaskListItem->getObjectType()->id),
-                syncTaskListItem->isOn());
-        ksConfig->writeEntry(QString::number(
-                syncTaskListItem->getObjectType()->id) + "-PreferedLibrary",
-                syncTaskListItem->getPreferedLibrary());
-        ksConfig->writeEntry(QString::number(
-                syncTaskListItem->getObjectType()->id) + "-PreferedOffer",
-                syncTaskListItem->getPreferedOffer());
-        ksConfig->writeEntry(QString::number(
-                syncTaskListItem->getObjectType()->id) + "-LastSynchronized",
-                syncTaskListItem->getLastSynchronized());
-    }
-    ksConfig->writeEntry("SyncObjectIDs", allTypeIds);
     ksConfig->writeEntry("PartnerName", partnerName);
     ksConfig->writeEntry("PartnerId", partnerId);
     ksConfig->writeEntry("PartnershipCreated", partnershipCreated);
+    for (syncTaskListItem = syncTaskItemList.first(); syncTaskListItem;
+            syncTaskListItem = syncTaskItemList.next()) {
+        ksConfig->setGroup("Synchronizer-" + QString::number(
+                syncTaskListItem->getObjectType()->id));
+        ksConfig->writeEntry("Name", syncTaskListItem->getObjectType()->name);
+        ksConfig->writeEntry("Active", syncTaskListItem->isOn());
+        ksConfig->writeEntry("PreferedLibrary",
+                syncTaskListItem->getPreferedLibrary());
+        ksConfig->writeEntry("PreferedOffer",
+                syncTaskListItem->getPreferedOffer());
+        ksConfig->writeEntry("LastSynchronized",
+                syncTaskListItem->getLastSynchronized());
+    }
     ksConfig->sync();
 }
 
 
 void PdaConfigDialogImpl::readConfig()
 {
-    ksConfig=kapp->config();
-    if (ksConfig->hasGroup(pdaName)) {
-        ksConfig->setGroup(pdaName);
+    if (ksConfig->hasGroup("MainConfig")) {
+        ksConfig->setGroup("MainConfig");
         masqEnabled = ksConfig->readBoolEntry("Masquerade");
         password = ksConfig->readEntry("Password");
         syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect");
@@ -146,6 +141,9 @@ void PdaConfigDialogImpl::readConfig()
                 &partnershipCreated);
         newPda = false;
     } else {
+        masqEnabled = false;
+        password = "";
+        syncAtConnect = false;
         newPda = true;
     }
 }
@@ -255,16 +253,15 @@ void PdaConfigDialogImpl::addSyncTask(ObjectType *objectType,
     SyncTaskListItem *item;
     QDateTime lastSynchronized;
 
-    ksConfig->setGroup(pdaName);
     item = new SyncTaskListItem(objectType, objectTypeList, partnerId);
-    item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
-    item->setPreferedLibrary(ksConfig->readEntry(QString::number(
-            objectType->id) + "-PreferedLibrary"));
-    item->setPreferedOffer(ksConfig->readEntry(QString::number(
-            objectType->id) + "-PreferedOffer"));
+    ksConfig->setGroup("Synchronizer-" + QString::number(
+            item->getObjectType()->id));
+    item->setOn(ksConfig->readBoolEntry("Active"));
+    item->setPreferedLibrary(ksConfig->readEntry("PreferedLibrary"));
+    item->setPreferedOffer(ksConfig->readEntry("PreferedOffer"));
     lastSynchronized = item->getLastSynchronized();
-    item->setLastSynchronized(ksConfig->readDateTimeEntry(QString::number(
-            objectType->id) + "-LastSynchronized", &lastSynchronized));
+    item->setLastSynchronized(ksConfig->readDateTimeEntry("LastSynchronized",
+            &lastSynchronized));
     item->setFirstSynchronization((
             partnershipCreated > item->getLastSynchronized()));
     connect((const QObject *) item, SIGNAL(stateChanged(bool)), this,
@@ -280,4 +277,20 @@ void PdaConfigDialogImpl::addSyncTask(ObjectType *objectType,
 QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::getSyncTaskItemList()
 {
     return syncTaskItemList;
+}
+
+
+void PdaConfigDialogImpl::kPushButton2_clicked()
+{
+    SyncTaskListItem *item = (SyncTaskListItem *) objectTypeList->currentItem();
+
+    if (item != NULL) {
+        item->configure(this, pdaName, ksConfig);
+    }
+}
+
+
+KConfig *PdaConfigDialogImpl::getConfigFile()
+{
+    return ksConfig;
 }

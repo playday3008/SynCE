@@ -48,6 +48,7 @@ typedef struct _ObjectType ObjectType;
 
 class PdaConfigDialogImpl : public PdaConfigDialog
 {
+Q_OBJECT
 public:
     PdaConfigDialogImpl(QString pdaName, QWidget* parent, const char* name = 0,
             bool modal = FALSE, WFlags fl = 0);
@@ -64,17 +65,19 @@ public:
     void setNewPartner(QString partnerName, uint32_t partnerId);
     void addSyncTask(ObjectType *objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
+    KConfig *getConfigFile();
 
 public slots:
     void writeConfig();
     void applySlot();
     void changedSlot();
-    
+
 private slots:
     void masqChangedSlot();
     void disableApply();
     void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &,
             int);
+    void kPushButton2_clicked();
     
 private:
     void readConfig();
