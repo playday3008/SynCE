@@ -1,0 +1,61 @@
+# $Id$
+# vim: syntax=make
+
+# parameters:
+# MODULE       - module name
+# VERSION      - module version (CVS tag is created from version)
+# RPM_DIR      - directory for RPM packages
+# SRPM_DIR     - directory for SRPM packages
+# TARBALL_DIR  - directory for .tar.gz files
+
+TAG="V$(shell echo $(VERSION) | sed 's/\./_/g')"
+TMP=/var/tmp/$(MODULE)
+CVSROOT=-d :pserver:anonymous@cvs.synce.sourceforge.net:/cvsroot/synce
+DIRNAME=synce-$(MODULE)-$(VERSION)
+TARBALL=$(TARBALL_DIR)/$(DIRNAME).tar.gz
+EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
+	--exclude '.*.swp' --exclude '*.tar.gz'
+RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')
+SPECFILE=$(TMP)/$(DIRNAME)/$(MODULE).spec
+ACFILE=$(TMP)/$(DIRNAME)/configure.ac
+PREFIX=/var/tmp/synce
+
+all: rpm
+
+clean:
+	-rm -rf $(TMP)
+
+mkdir: clean
+	mkdir -p $(TMP)
+
+checkout: mkdir
+	cd $(TMP) && rm -rf $(DIRNAME)
+	cd $(TMP) && cvs -Q $(CVSROOT) co -r $(TAG) -d $(DIRNAME) $(MODULE)
+	cd $(TMP) && test $(VERSION) = `cat $(DIRNAME)/VERSION`
+
+cvsclean:
+	cd $(TMP)/$(DIRNAME) && ./cvsclean
+
+# need to do checkout some time before bootstrap
+bootstrap: cvsclean
+	cd $(TMP)/$(DIRNAME) && ./bootstrap
+
+tarball: $(TARBALL)
+
+$(TARBALL): bootstrap
+	cd $(TMP) && GZIP="-9" tar cfhz $(TARBALL) $(DIRNAME) $(EXCLUDE)
+	
+#install: bootstrap
+#	cd $(TMP)/$(DIRNAME) && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) --with-librapi2=$(PREFIX) && make install
+
+rpm: $(TARBALL)
+	-rm $(RPM_DIR)/$(DIRNAME)*
+	-rm $(SRPM_DIR)/$(DIRNAME)*
+	-rm $(RPMROOT)/SRPMS/$(DIRNAME)*
+	-rm $(RPMROOT)/RPMS/i386/$(DIRNAME)*
+	-rm $(RPMROOT)/RPMS/noarch/$(DIRNAME)*
+	cp $(TARBALL) $(RPMROOT)/SOURCES/
+	rpmbuild -ta $(TARBALL)
+	cp $(RPMROOT)/RPMS/noarch/$(DIRNAME)*.rpm $(RPM_DIR)/ || cp $(RPMROOT)/RPMS/i386/$(DIRNAME)*.rpm $(RPM_DIR)/
+	cp $(RPMROOT)/SRPMS/$(DIRNAME)*.rpm $(SRPM_DIR)/
+
