@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdint.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 using namespace std;
 
@@ -14,6 +14,7 @@ using namespace std;
 
 #define PARAGRAPH_ENTRY_SIZE  0x8
 
+#if 0
 static void dump(const char *desc, void* data, size_t len)/*{{{*/
 {
   uint8_t* buf = (uint8_t*)data;
@@ -45,6 +46,7 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
     fprintf(stderr, "  %04x: %s %s\n", i, hex, chr);
   }
 }/*}}}*/
+#endif
 
 static unsigned read16(istream& input)
 {
@@ -181,10 +183,21 @@ void drawing(istream& input)
 
   cerr << "Drawing: 0x" << hex << drawing_size << 
     " bytes at offset 0x" << hex << input.tellg() << endl;
-  
+
+#if 0
   // Skip drawing
   input.seekg(drawing_size, ios_base::cur);
-}
+#else
+  char filename[32];
+  snprintf(filename, sizeof(filename), "drawing-%04x.bin", (unsigned)input.tellg());
+  ofstream output(filename, ofstream::binary);
+
+  char* drawing = new char[drawing_size];
+
+  input.read(drawing, drawing_size);
+  output.write(drawing, drawing_size);
+#endif
+ }
 
 void align(istream& input, streampos start_offset)
 {
@@ -197,7 +210,7 @@ void align(istream& input, streampos start_offset)
 
 int main(int argc, char**argv)
 {
-  ifstream input(argv[1], ofstream::binary);
+  ifstream input(argv[1], ifstream::binary);
 
   //
   // Header
