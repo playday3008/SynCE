@@ -45,4 +45,17 @@ uint32_t PimHandler::getOriginalId(const QString& p_id)
 
     return id.remove("RRA-ID-").toUInt(&ok, 16);
 }
+
+
+uint32_t PimHandler::getTypeId()
+{
+    init();
+    return mTypeId;
+}
+
+
+void PimHandler::setIds(struct Rra::ids ids)
+{
+    this->ids = ids;
+}
 }

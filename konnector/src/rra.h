@@ -68,7 +68,6 @@ public:
         QValueList<uint32_t> unchangedIds;
         QValueList<uint32_t> deletedIds;
         RRA_Uint32Vector* uidVector;
-        bool allIdsRead;
     };
 
     struct Partner {
@@ -87,7 +86,8 @@ public:
     bool markIdUnchanged(uint32_t type_id, uint32_t object_id);
     bool getTypes(QMap<int, RRA_SyncMgrType *> *);
     uint32_t getTypeForName (const QString& p_typeName);
-    bool getIds(uint32_t type_id, struct Rra::ids *ids);
+    bool getIds();
+    void getIdsForType(uint32_t type_id, struct Rra::ids *ids);
     QString getVCard(uint32_t type_id, uint32_t object_id);
     uint32_t putVCard(QString& vCard, uint32_t type_id, uint32_t object_id);
     QString getVEvent(uint32_t type_id, uint32_t object_id);
@@ -97,6 +97,8 @@ public:
     void deleteObject(uint32_t type_id, uint32_t object_id);
     bool isConnected () const;
     QString getPdaName () const;
+    void subscribeForType(uint32_t typeId);
+    void unsubscribeTypes();
 
     bool ok();
     bool connect();
@@ -108,7 +110,9 @@ public:
 
 
 private:
+    bool checkForAllIdsRead();
     HRESULT hr;
+    QMap<uint32_t, struct Rra::ids *> idMap;
     RRA_SyncMgr* rra;
     QString pdaName;
     bool rraOk;

@@ -72,8 +72,6 @@ namespace pocketPCCommunication
 
             QString vCal = vCalBegin + m_rra->getVEvent( mTypeId, *it ) + vCalEnd;
 
-            m_rra->markIdUnchanged( mTypeId, *it );
-
             KCal::Incidence *incidence = calFormat.fromString (vCal);
 
             QString kdeId;
@@ -125,10 +123,7 @@ namespace pocketPCCommunication
 
     bool EventHandler::getIds()
     {
-        if ( !m_rra->getIds( mTypeId, &ids ) ) {
-            kdDebug( 2120 ) << "EventHandler::getIds: could not get the ids." << endl;
-            return false;
-        }
+        m_rra->getIdsForType( mTypeId, &ids );
 
         return true;
     }
@@ -180,17 +175,7 @@ namespace pocketPCCommunication
 
     bool EventHandler::readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync)
     {
-        if (!initialized) {
-            if (!init()) {
-                kdDebug(2120) << "Could not initialize EventHandler" << endl;
-                return false;
-            }
-        }
-
-        if (!getIds()) {
-            kdDebug(2120) << "Could not retriev Event-IDs" << endl;
-            return false;
-        }
+        getIds();
 
         KCal::Event::List modifiedList;
         if (firstSync) {
@@ -263,6 +248,7 @@ namespace pocketPCCommunication
             kdDebug(2120) << "Adding Event on Device: " << (*it)->uid() << endl;
 
             uint32_t newObjectId = m_rra->putVEvent( iCal, mTypeId, 0 );
+            m_rra->markIdUnchanged( mTypeId, newObjectId );
 
             mUidHelper->addId("SynCEEvent",
                 "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
@@ -295,6 +281,7 @@ namespace pocketPCCommunication
                 iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
 
                 m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
+                m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
             }
 
             KApplication::kApplication()->processEvents();
@@ -325,13 +312,6 @@ namespace pocketPCCommunication
 
     bool EventHandler::writeSyncee(KSync::CalendarSyncee *mCalendarSyncee)
     {
-        if (!initialized) {
-            if (!init()) {
-                kdDebug(2120) << "Could not initialize EventHandler" << endl;
-                return false;
-            }
-        }
-
         if ( mCalendarSyncee->isValid() ) {
             KCal::Event::List eventAdded;
             KCal::Event::List eventRemoved;

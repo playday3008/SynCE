@@ -24,6 +24,7 @@
 #include <qlabel.h>
 #include <qlineedit.h>
 #include <qlayout.h>
+#include <qcheckbox.h>
 
 namespace pocketPCHelper {
 
@@ -45,6 +46,23 @@ private:
     QLabel*        m_label;
     QLineEdit*     m_textPdaName;
     QGridLayout*   m_layout;
+    QGridLayout*   m_layout1;
+    QGridLayout*   m_layoutMain;
+
+    QLabel*        m_Synctarget;
+    QLabel*        m_ActiveLabel;
+    QLabel*        m_FirstSyncLabel;
+
+    QLabel*        m_ContactsLabel;
+    QLabel*        m_EventsLabel;
+    QLabel*        m_TodosLabel;
+    QCheckBox*     m_ContactsEnabled;
+    QCheckBox*     m_ContactsFirstSync;
+    QCheckBox*     m_EventsEnabled;
+    QCheckBox*     m_EventsFirstSync;
+    QCheckBox*     m_TodosEnabled;
+    QCheckBox*     m_TodosFirstSync;
+
 };
 
 }

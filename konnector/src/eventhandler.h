@@ -46,24 +46,10 @@ public:
     void updateEvents (KCal::Event::List& p_eventList);
     void removeEvents (KCal::Event::List& p_eventList);
 
-    /** Connect the device.
-     * @see KSync::Konnector::connectDevice()
-     * @return true if device can be connected. false otherwise
-     */
     virtual bool connectDevice();
-
-    /** Disconnect the device.
-     * @see KSync::Konnector::disconnectDevice()
-     * @return true if device can be disconnect. false otherwise
-     */
     virtual bool disconnectDevice();
 
 private:
-    uint32_t    mTypeId;   /**< This static member stores the typeId belonging to "Contact" */
-
-    bool initialized;
-
-    struct Rra::ids ids;
     KSync::KonnectorUIDHelper *mUidHelper;
     QString mBaseDir;
     QString sCurrentTimeZone;

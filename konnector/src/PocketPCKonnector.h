@@ -113,6 +113,19 @@ public:
      */
     const QString getPdaName () const;
 
+    bool getContactsEnabled();
+    bool getContactsFirstSync();
+    bool getEventsEnabled();
+    bool getEventsFirstSync();
+    bool getTodosEnabled();
+    bool getTodosFirstSync();
+
+    void setContactsState(bool enabled, bool firstSync);
+    void setEventsState(bool enabled, bool firstSync);
+    void setTodosState(bool enabled, bool firstSync);
+
+    void init();
+
 private:
 
     KCal::CalendarLocal mCalendar;
@@ -128,7 +141,16 @@ private:
 
     QString    mBaseDir;
 
-    bool firstSync;
+    bool contactsEnabled;
+    bool contactsFirstSync;
+
+    bool eventsEnabled;
+    bool eventsFirstSync;
+
+    bool todosEnabled;
+    bool todosFirstSync;
+
+    bool initialized;
 
     /** Just clear the internal data structures like m_addressBook.
      */
@@ -138,6 +160,8 @@ private:
     KSharedPtr<pocketPCCommunication::Rra>    m_rra;
 
     KSync::KonnectorUIDHelper *mUidHelper;
+
+    const KConfig *mConfig;
 };
 
 }

@@ -67,11 +67,6 @@ public:
     virtual bool disconnectDevice();
 
 private:
-    uint32_t    mTypeId;   /**< This static member stores the typeId belonging to "Contact" */
-
-    bool initialized;
-
-    struct Rra::ids ids;
     KSync::KonnectorUIDHelper *mUidHelper;
     QString mBaseDir;
 };

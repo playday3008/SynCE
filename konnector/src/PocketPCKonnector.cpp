@@ -58,24 +58,42 @@ extern "C"
 namespace KSync
 {
     PocketPCKonnector::PocketPCKonnector( const KConfig* p_config )
-            : KSync::Konnector( p_config ), firstSync(false)
+            : KSync::Konnector( p_config )
     {
+        contactsEnabled = true;
+        contactsFirstSync = true;
+        todosEnabled = true;
+        todosFirstSync = true;
+        eventsEnabled = true;
+        eventsFirstSync = true;
+        initialized = false;
+
         if ( p_config ) {
             m_pdaName = p_config->readEntry( "PDAName" );
+            contactsEnabled = p_config->readBoolEntry("ContactsEnabled", true);
+            contactsFirstSync = p_config->readBoolEntry("ContactsFirstSync", true);
+            todosEnabled = p_config->readBoolEntry("TodosEnabled", true);
+            todosFirstSync = p_config->readBoolEntry("TodosFirstSync", true);
+            eventsEnabled = p_config->readBoolEntry("EventsEnabled", true);
+            eventsFirstSync = p_config->readBoolEntry("EventsFirstSync", true);
+            init();
+        }
+    }
+
+
+    void PocketPCKonnector::init()
+    {
+        if (!initialized) {
             m_rra = new pocketPCCommunication::Rra( m_pdaName );
             m_rra->setLogLevel( 0 );
             mBaseDir = storagePath();
 
             QDir dir;
-            QString dirName = mBaseDir + m_pdaName; // check that dir does not exist!!!!!!!
+            QString dirName = mBaseDir + m_pdaName;
             if ( !dir.exists( dirName ) ) {
-                kdDebug(2120) << "Its the first sync ..." << endl;
-                // do something about firstSync!
-                firstSync = true;
                 dir.mkdir ( dirName );
-            } else {
-                firstSync = false;
             }
+
             mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
 
             mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
@@ -90,15 +108,9 @@ namespace KSync
 
             mSyncees.append(mCalendarSyncee);
             mSyncees.append(mAddressBookSyncee);
-        } else {
-            m_rra = NULL;
-            mUidHelper = NULL;
-            mAddrHandler = NULL;
-            mTodoHandler = NULL;
-            mEventHandler = NULL;
-            mAddressBookSyncee = NULL;
-            mCalendarSyncee = NULL;
         }
+
+        initialized = true;
     }
 
 
@@ -129,6 +141,7 @@ namespace KSync
             if ( m_rra.data() ) {
                 kdDebug( 2120 ) << "PocketPCKonnector::~PocketPCKonnector: before m_rra->finalDisconnect()" << endl;
                 m_rra->finalDisconnect();
+                delete m_rra;
             }
             kdDebug( 2120 ) << "PocketPCKonnector::~PocketPCKonnector: m_rra.count(): " << m_rra.count() << endl;
         }
@@ -144,48 +157,53 @@ namespace KSync
     bool PocketPCKonnector::readSyncees()
     {
         if ( mSyncees.empty() ) {
-            kdDebug( 2120 ) << "PocketPCKonnector::readSyncees: m_syncees is empty" << endl;
+            kdDebug( 2120 ) << "syncekonnector not configured - please configure and sync again" << endl;
             emit synceeReadError( this );
             return false;
         }
 
         clearDataStructures();
 
-        if (mAddrHandler) {
-            if ( !mAddrHandler->connectDevice() ) {
-                emit synceeReadError(this);
-                return false;
-            }
-            if (!mAddrHandler->readSyncee(mAddressBookSyncee, firstSync)) {
-                emit synceeReadError(this);
-                return false;
-            }
-            mAddrHandler->disconnectDevice();
+        m_rra->connect();
+
+        if (mAddrHandler && contactsEnabled) {
+            m_rra->subscribeForType(mAddrHandler->getTypeId());
         }
 
-        if (mTodoHandler) {
-            if ( !mTodoHandler->connectDevice() ) {
-                emit synceeReadError(this);
-                return false;
-            }
-            if (!mTodoHandler->readSyncee(mCalendarSyncee, firstSync)) {
-                emit synceeReadError(this);
-                return false;
-            }
-            mTodoHandler->disconnectDevice();
+        if (mTodoHandler && todosEnabled) {
+            m_rra->subscribeForType(mTodoHandler->getTypeId());
         }
 
-        if (mEventHandler) {
-            if ( !mEventHandler->connectDevice() ) {
-                emit synceeReadError(this);
-                return false;
-            }
-            if (!mEventHandler->readSyncee(mCalendarSyncee, firstSync)) {
-                emit synceeReadError(this);
-                return false;
-            }
-            mEventHandler->disconnectDevice();
+        if (mEventHandler && eventsEnabled) {
+            m_rra->subscribeForType(mEventHandler->getTypeId());
         }
+
+        if (!m_rra->getIds()) {
+            emit synceeReadError(this);
+        }
+
+        if (mAddrHandler && contactsEnabled) {
+            if (!mAddrHandler->readSyncee(mAddressBookSyncee, contactsFirstSync)) {
+                emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        if (mTodoHandler && todosEnabled) {
+            if (!mTodoHandler->readSyncee(mCalendarSyncee, todosFirstSync)) {
+                emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        if (mEventHandler && eventsEnabled) {
+            if (!mEventHandler->readSyncee(mCalendarSyncee, eventsFirstSync)) {
+                emit synceeReadError(this);
+                return false;
+            }
+        }
+
+        m_rra->unsubscribeTypes();
 
         emit synceesRead ( this );
 
@@ -206,27 +224,24 @@ namespace KSync
 
         QString partnerId;
 
-        if (mAddrHandler) {
-            mAddrHandler->connectDevice();
+        if (mAddrHandler && contactsEnabled) {
             mAddrHandler->writeSyncee(mAddressBookSyncee);
-            mAddrHandler->disconnectDevice();
+            contactsFirstSync = false;
         }
 
-        if (mTodoHandler) {
-            mTodoHandler->connectDevice();
+        if (mTodoHandler && todosEnabled) {
             mTodoHandler->writeSyncee(mCalendarSyncee);
-            mTodoHandler->disconnectDevice();
+            todosFirstSync = false;
         }
 
-        if(mEventHandler) {
-            mEventHandler->connectDevice();
+        if(mEventHandler && eventsEnabled) {
             mEventHandler->writeSyncee(mCalendarSyncee);
-            mEventHandler->disconnectDevice();
+            eventsFirstSync = false;
         }
+
+        m_rra->disconnect();
 
         clearDataStructures();
-
-        firstSync = false;
 
         emit synceesWritten ( this );
 
@@ -286,21 +301,85 @@ namespace KSync
 
     void PocketPCKonnector::writeConfig( KConfig* p_config )
     {
-        Konnector::writeConfig ( p_config );
-
         p_config->writeEntry ( "PDAName", m_pdaName );
+        p_config->writeEntry ("ContactsEnabled", contactsEnabled);
+        p_config->writeEntry ("EventsEnabled", eventsEnabled);
+        p_config->writeEntry ("TodosEnabled", todosEnabled);
+        p_config->writeEntry ("ContactsFirstSync", contactsFirstSync);
+        p_config->writeEntry ("EventsFirstSync", eventsFirstSync);
+        p_config->writeEntry ("TodosFirstSync", todosFirstSync);
+
+        Konnector::writeConfig ( p_config );
     }
 
 
     void PocketPCKonnector::setPdaName ( const QString& p_pdaName )
     {
         m_pdaName = p_pdaName;
+        init();
     }
 
 
     const QString PocketPCKonnector::getPdaName () const
     {
         return m_pdaName;
+    }
+
+
+    bool PocketPCKonnector::getContactsEnabled()
+    {
+        return contactsEnabled;
+    }
+
+
+    bool PocketPCKonnector::getContactsFirstSync()
+    {
+        return contactsFirstSync;
+    }
+
+
+    bool PocketPCKonnector::getEventsEnabled()
+    {
+        return eventsEnabled;
+    }
+
+
+    bool PocketPCKonnector::getEventsFirstSync()
+    {
+        return eventsFirstSync;
+    }
+
+
+    bool PocketPCKonnector::getTodosEnabled()
+    {
+        return todosEnabled;
+    }
+
+
+    bool PocketPCKonnector::getTodosFirstSync()
+    {
+        return todosFirstSync;
+    }
+
+
+    void PocketPCKonnector::setContactsState(bool enabled, bool firstSync)
+    {
+        contactsEnabled = enabled;
+        contactsFirstSync = firstSync;
+    }
+
+
+    void PocketPCKonnector::setEventsState(bool enabled, bool firstSync)
+    {
+        eventsEnabled = enabled;
+        eventsFirstSync = firstSync;
+    }
+
+
+    void PocketPCKonnector::setTodosState(bool enabled, bool firstSync)
+    {
+        todosEnabled = enabled;
+        todosFirstSync = firstSync;
     }
 
 

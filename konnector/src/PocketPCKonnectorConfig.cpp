@@ -28,16 +28,81 @@ namespace pocketPCHelper {
 PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *name)
  : KRES::ConfigWidget(parent, name)
 {
-    m_layout = new QGridLayout (this, 4, 5);
+
+    QGridLayout*   m_layout;
+    QGridLayout*   m_layout1;
+    QGridLayout*   m_layoutMain;
+
+
+
+    m_layoutMain = new QGridLayout (this, 2, 1);
+    m_layoutMain->setSpacing (KDialog::spacingHint());
+
+    m_layout = new QGridLayout (m_layoutMain, 1, 2);
     m_layout->setSpacing (KDialog::spacingHint());
+
+    m_layout1 = new QGridLayout (m_layoutMain, 4, 3);
+    m_layout->setSpacing (KDialog::spacingHint());
+
+    m_layoutMain->addLayout( m_layout, 0, 0);
+    m_layoutMain->addLayout(m_layout1, 1, 0);
+
 
     m_label = new QLabel (this, "PDA Name");
     m_label->setText ("PDA Name");
 
     m_textPdaName = new QLineEdit(this, "pda name");
 
-    m_layout->addWidget (m_label, 0, 0);
-    m_layout->addWidget (m_textPdaName, 0, 1);
+
+    m_Synctarget = new QLabel(this,  "SyncTarget");
+    m_Synctarget->setText("Target");
+
+    m_ActiveLabel = new QLabel(this, "Active");
+    m_ActiveLabel->setText("Active");
+
+    m_FirstSyncLabel = new QLabel(this, "FirstSync");
+    m_FirstSyncLabel->setText("Fresh Sync");
+
+
+
+    m_ContactsLabel = new QLabel(this, "ContactsLabel");
+    m_ContactsLabel->setText("Contacts");
+    m_ContactsEnabled = new QCheckBox(this, "ContactsEnabled");
+    m_ContactsFirstSync = new QCheckBox(this, "ContactsFirstSync");
+
+    m_EventsLabel = new QLabel(this, "EventsLabel");
+    m_EventsLabel->setText("Events");
+    m_EventsEnabled = new QCheckBox(this, "EventsEnabled");
+    m_EventsFirstSync = new QCheckBox(this, "EventsFirstSync");
+
+    m_TodosLabel = new QLabel(this, "TodosLabel");
+    m_TodosLabel->setText("Todos");
+    m_TodosEnabled = new QCheckBox(this, "TodosEnabled");
+    m_TodosFirstSync = new QCheckBox(this, "TodosFirstSync");
+
+    m_layout1->addWidget (m_label, 0, 0);
+    m_layout1->addWidget (m_textPdaName, 0, 1);
+
+    m_layout1->addWidget (m_Synctarget, 1, 0);
+    m_layout1->addWidget (m_ActiveLabel, 1, 1);
+    m_layout1->addWidget (m_FirstSyncLabel, 1, 2);
+
+    m_layout1->addWidget (m_ContactsLabel, 2, 0);
+    m_layout1->addWidget (m_ContactsEnabled, 2, 1);
+    m_layout1->addWidget (m_ContactsFirstSync, 2, 2);
+
+    m_layout1->addWidget (m_EventsLabel, 3, 0);
+    m_layout1->addWidget (m_EventsEnabled, 3, 1);
+    m_layout1->addWidget (m_EventsFirstSync, 3, 2);
+
+    m_layout1->addWidget (m_TodosLabel, 4, 0);
+    m_layout1->addWidget (m_TodosEnabled, 4, 1);
+    m_layout1->addWidget (m_TodosFirstSync, 4, 2);
+
+    m_ContactsEnabled->setDisabled(true);
+    m_EventsEnabled->setDisabled(true);
+    m_TodosEnabled->setDisabled(true);
+
 }
 
 
@@ -58,6 +123,15 @@ void PocketPCKonnectorConfig::loadSettings (KRES::Resource* p_res)
     }
 
     m_textPdaName->setText (k->getPdaName());
+
+    m_ContactsEnabled->setChecked(k->getContactsEnabled());
+    m_TodosEnabled->setChecked(k->getTodosEnabled());
+    m_EventsEnabled->setChecked(k->getEventsEnabled());
+
+    m_ContactsFirstSync->setChecked(k->getContactsFirstSync());
+    m_TodosFirstSync->setChecked(k->getTodosFirstSync());
+    m_EventsFirstSync->setChecked(k->getEventsFirstSync());
+
 }
 
 
@@ -74,6 +148,9 @@ void PocketPCKonnectorConfig::saveSettings (KRES::Resource* p_res)
     }
 
     k->setPdaName(m_textPdaName->text());
+    k->setContactsState(m_ContactsEnabled->isChecked(), m_ContactsFirstSync->isChecked());
+    k->setEventsState(m_EventsEnabled->isChecked(), m_EventsFirstSync->isChecked());
+    k->setTodosState(m_TodosEnabled->isChecked(), m_TodosFirstSync->isChecked());
 }
 
 

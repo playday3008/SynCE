@@ -62,8 +62,6 @@ namespace pocketPCCommunication
 
             QString vCal = vCalBegin + m_rra->getVToDo( mTypeId, *it ) + vCalEnd;
 
-            m_rra->markIdUnchanged( mTypeId, *it );
-
             KCal::Incidence *incidence = calFormat.fromString (vCal);
 
             QString kdeId;
@@ -115,10 +113,7 @@ namespace pocketPCCommunication
 
     bool TodoHandler::getIds()
     {
-        if ( !m_rra->getIds( mTypeId, &ids ) ) {
-            kdDebug( 2120 ) << "TodoHandler::getIds: could not get the ids." << endl;
-            return false;
-        }
+        m_rra->getIdsForType( mTypeId, &ids );
 
         return true;
     }
@@ -170,19 +165,7 @@ namespace pocketPCCommunication
 
     bool TodoHandler::readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync)
     {
-        if (!initialized) {
-            if (!init()) {
-                kdDebug(2120) << "Could not initialize TodoHandler" << endl;
-//              emit synceeReadError(this);
-                return false;
-            }
-        }
-
-        if (!getIds()) {
-            kdDebug(2120) << "Could not retriev Todo-IDs" << endl;
-//            emit synceeReadError(this);
-            return false;
-        }
+        getIds();
 
         KCal::Todo::List modifiedList;
         if (firstSync) {
@@ -253,6 +236,7 @@ namespace pocketPCCommunication
             kdDebug(2120) << "Adding Todo on Device: " << (*it)->uid() << endl;
 
             uint32_t newObjectId = m_rra->putVToDo( iCal, mTypeId, 0 );
+            m_rra->markIdUnchanged( mTypeId, newObjectId );
 
             mUidHelper->addId("SynCETodo",
                 "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
@@ -283,6 +267,7 @@ namespace pocketPCCommunication
                     (*it)->uid() << " DeviceId: " << kUid << endl;
                 QString iCal = calFormat.toString(*it);
                 m_rra->putVToDo( iCal, mTypeId, getOriginalId( kUid ) );
+                m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
             }
 
             KApplication::kApplication()->processEvents();
@@ -313,14 +298,6 @@ namespace pocketPCCommunication
 
     bool TodoHandler::writeSyncee(KSync::CalendarSyncee *mCalendarSyncee)
     {
-        if (!initialized) {
-            if (!init()) {
-                kdDebug(2120) << "Could not initialize TodoHandler" << endl;
-//              emit synceeReadError(this);
-                return false;
-            }
-        }
-
         if ( mCalendarSyncee->isValid() ) {
             KCal::Todo::List todoAdded;
             KCal::Todo::List todoRemoved;

@@ -75,6 +75,7 @@ Rra::~Rra()
 
 bool Rra::initRapi()
 {
+    kdDebug(2120) << "Init Rapi" << endl;
     return Ce::rapiInit(pdaName);
 }
 
@@ -177,7 +178,7 @@ uint32_t Rra::getTypeForName (const QString& p_typeName)
 }
 
 
-static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t count,
+static bool callback(RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count,
         uint32_t *ids, void *cookie)
 {
     QValueList<uint32_t> *eventIds;
@@ -186,15 +187,15 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
     switch(event) {
     case SYNCMGR_TYPE_EVENT_UNCHANGED:
         eventIds = &_ids->unchangedIds;
-        kdDebug(2120) << count << " IDs unchanged" << endl;
+        kdDebug(2120) << count << " IDs unchanged of type " << type << endl;
         break;
     case SYNCMGR_TYPE_EVENT_CHANGED:
         eventIds = &_ids->changedIds;
-        kdDebug(2120) << count << " IDs changed" << endl;
+        kdDebug(2120) << count << " IDs changed of type" << type << endl;
         break;
     case SYNCMGR_TYPE_EVENT_DELETED:
         eventIds = &_ids->deletedIds;
-        kdDebug(2120) << count << " IDs deleted" << endl;
+        kdDebug(2120) << count << " IDs deleted of type" << type << endl;
         break;
     default:
         eventIds = NULL;
@@ -212,53 +213,87 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t /*type*/, uint32_t cou
 }
 
 
-static bool checkForAllIdsRead(RRA_SyncMgr *rra, Rra::ids *ids, uint32_t type_id)
+bool Rra::checkForAllIdsRead()
 {
-    RRA_SyncMgrType* type = rra_syncmgr_type_from_id(rra, type_id);
+    size_t totalIds = 0;
+    size_t readIds = 0;
 
-    return ids->changedIds.count() + ids->unchangedIds.count() + ids->deletedIds.count() == type->count;
+    for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
+        totalIds += rra_syncmgr_type_from_id(rra, it.key())->count;
+        readIds += it.data()->unchangedIds.count() + it.data()->changedIds.count() + it.data()->deletedIds.count();
+    }
+    return readIds == totalIds;
 }
 
 
-bool Rra::getIds(uint32_t type_id, struct Rra::ids *ids)
+void Rra::subscribeForType(uint32_t typeId)
+{
+    kdDebug(2120) << "Subscribing for type " << typeId << endl;
+
+    Rra::ids *ids = new Rra::ids;
+    ids->changedIds.clear();
+    ids->unchangedIds.clear();
+    ids->deletedIds.clear();
+    idMap.insert(typeId, ids);
+    rra_syncmgr_subscribe(rra, typeId, callback, ids);
+}
+
+
+void Rra::unsubscribeTypes()
+{
+    for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
+        delete it.data();
+    }
+
+    idMap.clear();
+}
+
+
+ void Rra::getIdsForType( uint32_t mTypeId, Rra::ids *ids )
+{
+    Rra::ids *_ids = idMap.find(mTypeId).data();
+
+    if (_ids) {
+        *ids = *(_ids);
+    }
+}
+
+
+bool Rra::getIds()
 {
     rraOk = true;
 
-    struct ids _ids;
+    bool allIdsRead = false;
 
-    _ids.changedIds.clear();
-    _ids.unchangedIds.clear();
-    _ids.deletedIds.clear();
-    _ids.uidVector = rra_uint32vector_new();
-    _ids.allIdsRead = false;
-    RRA_Uint32Vector* uidVector = rra_uint32vector_new();
 
     bool gotEvent = false;
-    if (connect()) {
-        rra_syncmgr_subscribe(rra, type_id, callback, &_ids);
-        if (rra_syncmgr_start_events(rra)) {
-            _ids.allIdsRead = checkForAllIdsRead(rra, &_ids, type_id);
-            while(rra_syncmgr_event_wait(rra, 3, &gotEvent) && gotEvent & !_ids.allIdsRead) { // changed for new syncmgr.h
-                rra_syncmgr_handle_event(rra);
-                _ids.allIdsRead = checkForAllIdsRead(rra, &_ids, type_id);
-            }
-            rra_syncmgr_get_deleted_object_ids(rra, type_id, _ids.uidVector, uidVector);
-            for (size_t i = 0; i < uidVector->used; i++) {
-                _ids.deletedIds.append(uidVector->items[i]);
-            }
-        } else {
-            rraOk = false;
+
+    if (rra_syncmgr_start_events(rra)) {
+
+        allIdsRead = checkForAllIdsRead();
+
+        for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
+            it.data()->uidVector = rra_uint32vector_new();
         }
-        rra_syncmgr_unsubscribe(rra, type_id);
-        disconnect();
+
+        while(rra_syncmgr_event_wait(rra, 3, &gotEvent) && gotEvent & !allIdsRead) {
+            rra_syncmgr_handle_event(rra);
+            allIdsRead = checkForAllIdsRead();
+        }
+
+        for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
+            RRA_Uint32Vector* uidVector = rra_uint32vector_new();
+            rra_syncmgr_get_deleted_object_ids(rra, it.key(), it.data()->uidVector, uidVector);
+            for (size_t i = 0; i < uidVector->used; i++) {
+                it.data()->deletedIds.append(uidVector->items[i]);
+            }
+            rra_uint32vector_destroy(uidVector, true);
+            rra_uint32vector_destroy(it.data()->uidVector, true);
+        }
+
     } else {
         rraOk = false;
     }
-
-    rra_uint32vector_destroy(_ids.uidVector, true);
-    rra_uint32vector_destroy(uidVector, true);
-
-    *ids = _ids;
 
     return rraOk;
 }

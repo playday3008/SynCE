@@ -62,8 +62,6 @@ namespace pocketPCCommunication
 
             QString vCard = m_rra->getVCard( mTypeId, *it );
 
-            m_rra->markIdUnchanged( mTypeId, *it );
-
             KABC::Addressee addr = vCardConv.parseVCard ( vCard );
             addr.setFormattedName(addr.formattedName().replace("\\,", ","));
 
@@ -116,10 +114,7 @@ namespace pocketPCCommunication
 
     bool AddressBookHandler::getIds()
     {
-        if ( !m_rra->getIds( mTypeId, &ids ) ) {
-            kdDebug( 2120 ) << "AddressBookHandler::getIds: could not get the ids." << endl;
-            return false;
-        }
+        m_rra->getIdsForType( mTypeId, &ids );
 
         return true;
     }
@@ -171,21 +166,9 @@ namespace pocketPCCommunication
 
     bool AddressBookHandler::readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync)
     {
-        if (!initialized) {
-            if (!init()) {
-                kdDebug(2120) << "Could not initialize AddressBookHandler" << endl;
-//              emit synceeReadError(this);
-                return false;
-            }
-        }
-
-        if (!getIds()) {
-            kdDebug(2120) << "Could not retriev Contact-IDs" << endl;
-//            emit synceeReadError(this);
-            return false;
-        }
-
         mAddressBookSyncee->reset();
+
+        getIds();
 
         KABC::Addressee::List modifiedList;
         if (firstSync) {
@@ -240,6 +223,7 @@ namespace pocketPCCommunication
             vCard = vCardConv.createVCard ( ( *it ) );
 
             uint32_t newObjectId = m_rra->putVCard( vCard, mTypeId, 0 );
+            m_rra->markIdUnchanged( mTypeId, newObjectId );
 
             mUidHelper->addId("SynCEAddressbook",
                 "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
@@ -270,6 +254,7 @@ namespace pocketPCCommunication
                     (*it).uid() << " DeviceId: " << kUid << endl;
                 vCard = vCardConv.createVCard ( ( *it ) );
                 m_rra->putVCard ( vCard, mTypeId, getOriginalId( kUid ) );
+                m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
             }
 
             KApplication::kApplication()->processEvents();
@@ -301,14 +286,6 @@ namespace pocketPCCommunication
 
     bool AddressBookHandler::writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee)
     {
-        if (!initialized) {
-            if (!init()) {
-                kdDebug(2120) << "Could not initialize AddressBookHandler" << endl;
-//              emit synceeReadError(this);
-                return false;
-            }
-        }
-
         if ( mAddressBookSyncee->isValid() ) {
             KABC::Addressee::List addrAdded;
             KABC::Addressee::List addrRemoved;
