@@ -17,8 +17,8 @@ the following .tar.gz files:<br/>
 
 	<ul>
 
-    <li class=SPACED><p><b>synce-X.X.tar.gz</b> for SynCE 0.8 or later includes the following
-    .tar.gz. archives. For earlier versions of SynCE each has to be downloaded
+    <li class=SPACED><p><b>synce-X.X.tar.gz</b> for SynCE 0.8 or later includes
+    the following .tar.gz. archives. They can also be downloaded
     separately.</p>
     
     <ul>
