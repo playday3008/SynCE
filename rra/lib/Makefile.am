@@ -11,6 +11,7 @@ librra_la_SOURCES = \
 	dbstream.h dbstream.c \
 	contact.c \
 	librra.h   librra.c \
+	parser.h   parser.c \
 	rrac.h     rrac.c \
 	strbuf.h   strbuf.c
 
