@@ -33,11 +33,11 @@
 #include <qmutex.h>
 #include <qwaitcondition.h>
 
+class WorkerThreadInterface;
+
 /**
 @author Volker Christian,,,
 */
-
-class WorkerThreadInterface;
 
 class ThreadEvent : public QCustomEvent
 {

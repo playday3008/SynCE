@@ -28,11 +28,11 @@
 #include <config.h>
 #endif
 
-#include "workerthreadinterface.h"
-
 #include <qthread.h>
 #include <qmutex.h>
 #include <qwaitcondition.h>
+
+class WorkerThreadInterface;
 
 /**
 @author Volker Christian,,,

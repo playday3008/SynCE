@@ -27,7 +27,6 @@
 #include "pda.h"
 
 #include <qcheckbox.h>
-#include <qdatetime.h>
 #include <klineedit.h>
 #include <kpushbutton.h>
 #include <kapplication.h>
@@ -197,7 +196,7 @@ QPtrList<SyncTaskListItem>& PdaConfigDialogImpl::syncronizationTasks()
                 item->setOn(ksConfig->readBoolEntry(QString::number(objectType->id)));
                 item->setPreferedLibrary(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedLibrary"));
                 item->setPreferedOffer(ksConfig->readEntry(QString::number(objectType->id) + "-PreferedOffer"));
-                QDateTime lastSynchronized = item->getLastSynchronized();
+                lastSynchronized = item->getLastSynchronized();
                 item->setLastSynchronized(ksConfig->readDateTimeEntry(QString::number(item->getObjectType()->id) + "-LastSynchronized", &lastSynchronized));
                 item->makePersistent();
                 item->setFirstSynchronization((this->partnershipCreated > item->getLastSynchronized()));

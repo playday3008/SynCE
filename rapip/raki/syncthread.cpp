@@ -22,7 +22,7 @@
  ***************************************************************************/
 
 #include "syncthread.h"
-#include "workerthreadinterface.h"
+#include "synctasklistitem.h"
 
 
 SyncThread::SyncThread()

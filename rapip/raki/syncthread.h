@@ -29,7 +29,8 @@
 #endif
 
 #include "workerthreadinterface.h"
-#include "synctasklistitem.h"
+
+class SyncTaskListItem;
 
 /**
  * 

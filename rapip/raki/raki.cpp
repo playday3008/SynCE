@@ -46,8 +46,6 @@
 #include <qtooltip.h>
 #include <qstringlist.h>
 
-#include <unistd.h>
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #include <kde_dmalloc.h>

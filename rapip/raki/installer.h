@@ -37,7 +37,6 @@
 #include <kurl.h>
 #include <kio/job.h>
 
-#include <unistd.h>
 
 class PDA;
 

@@ -88,6 +88,7 @@ private:
     uint32_t partnerId;
     QString partnerName;
     QPtrList<SyncTaskListItem> syncTaskItemList;
+    QDateTime lastSynchronized;
     bool syncAtConnect;
     bool newPda;
     PDA *pda;

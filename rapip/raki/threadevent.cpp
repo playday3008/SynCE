@@ -23,6 +23,7 @@
 
 #include "threadevent.h"
 #include "rakiworkerthread.h"
+#include "workerthreadinterface.h"
 
 #include <qapplication.h>
 #include <qcursor.h>
