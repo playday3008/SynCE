@@ -447,3 +447,23 @@ bool rapi_reg_set_dword(/*{{{*/
 	return ERROR_SUCCESS == result;
 }/*}}}*/
 
+bool rapi_reg_set_string(/*{{{*/
+		HKEY key, const char* name, const char *value)
+{
+	WCHAR* name_wide = wstr_from_ascii(name);
+	WCHAR* value_wide = wstr_from_ascii(value);
+	DWORD size = wstrlen(value_wide);
+	
+	LONG result = CeRegSetValueEx(
+		key,
+		name_wide,
+		0,
+		REG_SZ,
+		(BYTE*)value_wide,
+		(size * 2) + 2);
+	
+	wstr_free_string(name_wide);
+	wstr_free_string(value_wide);
+	
+	return ERROR_SUCCESS == result;
+}/*}}}*/

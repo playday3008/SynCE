@@ -512,6 +512,10 @@ bool rapi_reg_set_dword(
 		const char* name, 
 		DWORD value);
 
+bool rapi_reg_set_string(
+		HKEY key,
+		const char* name,
+		const char *value);
 
 #endif /* SWIG */
 
