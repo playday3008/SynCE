@@ -1,8 +1,8 @@
 ####### kdevelop will overwrite this part!!! (begin)##########
 
-SUBDIRS = synce po 
+SUBDIRS = synce3 po 
 
-EXTRA_DIST = synce.kdevprj 
+EXTRA_DIST = synce3.kdevprj admin 
 
 ####### kdevelop will overwrite this part!!! (end)############
 # not a GNU package. You can remove this line, if 
@@ -23,8 +23,6 @@ MAINTAINERCLEANFILES = subdirs configure.in acinclude.m4 configure.files
 package-messages:
 	$(MAKE) -f admin/Makefile.common package-messages
 	$(MAKE) -C po merge
-
-EXTRA_DIST = admin 
 
 dist-hook:
 	cd $(top_distdir) && perl admin/am_edit -padmin

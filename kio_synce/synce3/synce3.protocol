@@ -1,5 +1,5 @@
 [Protocol]
-exec=kio_synce
+exec=kio_synce3
 protocol=synce
 input=none
 output=filesystem
@@ -10,3 +10,6 @@ source=true
 makedir=true
 deleting=true
 moving=true
+defaultMimetype=text/plain
+Icon=remote
+Description=A KDE3 I/O-slave for SynCE

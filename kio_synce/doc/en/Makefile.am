@@ -4,6 +4,6 @@
 ####### kdevelop will overwrite this part!!! (end)############
 
 KDE_LANG = en
-KDE_DOCS = synce
+KDE_DOCS = synce3
 
 

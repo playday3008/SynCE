@@ -1,21 +1,30 @@
 /*
-   kio_synce - an ioslave for KDE2
-   Copyright (C) 2001  David Eriksson
+	vim: expandtab tw=75
 
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public
-   License as published by the Free Software Foundation; either
-   version 2 of the License, or (at your option) any later version.
+	kio_synce - an ioslave for KDE3
 
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
+	Copyright (c) 2001-2003 David Eriksson <twogood@users.sourceforge.net>
 
-   You should have received a copy of the GNU Library General Public
-   License along with this library; if not, write to the Free
-   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-   */
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to permit
+  persons to whom the Software is furnished to do so, subject to the
+  following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+  NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+  USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -41,7 +50,7 @@
 #include <kurl.h>
 #include <ksock.h>
 
-#include "synce.h"
+#include "synce3.h"
 
 // kdDebug() and friends allow filtering of messages by 'area'
 // The file $KDEDIR/share/config/kdebug.area connects the name to the number
@@ -99,7 +108,7 @@ bool kio_synceProtocol::init()
 {
   if (!mIsInitialized)
   {
-    RAPI::HRESULT result = RAPI::CeRapiInit();
+    synce::HRESULT result = synce::CeRapiInit();
 
     mIsInitialized = (0 == result);
     if (!mIsInitialized)
@@ -118,7 +127,7 @@ void kio_synceProtocol::uninit()
 {
   if (mIsInitialized)
   {
-    RAPI::CeRapiUninit();
+    synce::CeRapiUninit();
     mIsInitialized = false;
   }
 }
@@ -144,7 +153,7 @@ class RapiString
 {
   private:
     mutable QString* mpQtString;
-    mutable RAPI::WCHAR* mpWcharString;
+    mutable synce::WCHAR* mpWcharString;
 
   public:
     RapiString(const QString& str)
@@ -152,11 +161,11 @@ class RapiString
       {
       }
 
-    RapiString(const RAPI::WCHAR* str)
+    RapiString(const synce::WCHAR* str)
       : mpQtString(NULL), mpWcharString(NULL)
       {
-        mpWcharString = new RAPI::WCHAR[RAPI::wcslen(str)+1];
-        RAPI::wcscpy(mpWcharString, str);
+        mpWcharString = new synce::WCHAR[synce::wcslen(str)+1];
+        synce::wcscpy(mpWcharString, str);
       }
 
     virtual ~RapiString()
@@ -169,11 +178,11 @@ class RapiString
     }
 
 
-    operator const RAPI::WCHAR*() const
+    operator const synce::WCHAR*() const
     {
       if (!mpWcharString)
       {
-        mpWcharString = new RAPI::WCHAR[mpQtString->length()+1];
+        mpWcharString = new synce::WCHAR[mpQtString->length()+1];
         unsigned i;
         for (i = 0; i < mpQtString->length(); i++)
           mpWcharString[i] = mpQtString->at(i).unicode();
@@ -188,7 +197,7 @@ class RapiString
       if (!mpQtString)
       {
         mpQtString = new QString();
-        mpQtString->setUnicodeCodes(mpWcharString, RAPI::wcslen(mpWcharString));
+        mpQtString->setUnicodeCodes(mpWcharString, synce::wcslen(mpWcharString));
       }
 
       return *mpQtString;
@@ -198,7 +207,7 @@ class RapiString
 //
 // This converts from a CE_FIND_DATA structure to a UDSEntry
 //
-void kio_synceProtocol::createUDSEntry( const RAPI::CE_FIND_DATA* source, UDSEntry & destination )
+void kio_synceProtocol::createUDSEntry( const synce::CE_FIND_DATA* source, UDSEntry & destination )
 {
   //  kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::createUDSEntry]" << endl;
 
@@ -234,15 +243,15 @@ void kio_synceProtocol::createUDSEntry( const RAPI::CE_FIND_DATA* source, UDSEnt
   destination.append( atom );
 
   atom.m_uds = UDS_MODIFICATION_TIME;
-  atom.m_long = DOSFS_FileTimeToUnixTime(&source->ftLastWriteTime, NULL);
+  atom.m_long = filetime_to_unix_time(&source->ftLastWriteTime);
   destination.append( atom );
 
   atom.m_uds = UDS_ACCESS_TIME;
-  atom.m_long = DOSFS_FileTimeToUnixTime(&source->ftLastAccessTime, NULL);
+  atom.m_long = filetime_to_unix_time(&source->ftLastAccessTime);
   destination.append( atom );
 
   atom.m_uds = UDS_CREATION_TIME;
-  atom.m_long = DOSFS_FileTimeToUnixTime(&source->ftCreationTime, NULL);
+  atom.m_long = filetime_to_unix_time(&source->ftCreationTime);
   destination.append( atom );
 
 
@@ -264,7 +273,7 @@ void kio_synceProtocol::get(const KURL& url )
     return;
 
   // Open file for reading, fail if it does not exist
-  RAPI::HANDLE handle = RAPI::CeCreateFile(
+  synce::HANDLE handle = synce::CeCreateFile(
       rapi_path, 
       GENERIC_READ, 
       FILE_SHARE_READ, 
@@ -273,9 +282,9 @@ void kio_synceProtocol::get(const KURL& url )
       FILE_ATTRIBUTE_NORMAL, 
       0);
 
-  if ((RAPI::HANDLE)-1 == handle)
+  if ((synce::HANDLE)-1 == handle)
   {
-    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeCreateFile failed with error code " << RAPI::CeGetLastError() << endl;
+    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeCreateFile failed with error code " << synce::CeGetLastError() << endl;
     error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.prettyURL());
     return;
   }
@@ -292,7 +301,7 @@ void kio_synceProtocol::get(const KURL& url )
   {
     buffer.resize(BUFFER_SIZE);
 
-    RAPI::BOOL success = RAPI::CeReadFile(
+    synce::BOOL success = synce::CeReadFile(
         handle, 
         buffer.data(), 
         BUFFER_SIZE, 
@@ -301,7 +310,7 @@ void kio_synceProtocol::get(const KURL& url )
 
     if (!success)
     {
-      kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeReadFile failed with error code " << RAPI::CeGetLastError() << endl;
+      kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeReadFile failed with error code " << synce::CeGetLastError() << endl;
       error(KIO::ERR_COULD_NOT_READ, url.path());
       return;
     }
@@ -314,7 +323,7 @@ void kio_synceProtocol::get(const KURL& url )
   }
   while(part_read);
 
-  RAPI::CeCloseHandle(handle);
+  synce::CeCloseHandle(handle);
 
   finished();
 }
@@ -370,14 +379,14 @@ void kio_synceProtocol::stat(const KURL & url)
 
   RapiString rapi_path(path);
 
-  RAPI::CE_FIND_DATA find_data;
+  synce::CE_FIND_DATA find_data;
   memset(&find_data, 0, sizeof(find_data));
 
-  RAPI::HANDLE handle = RAPI::CeFindFirstFile(rapi_path, &find_data);
+  synce::HANDLE handle = synce::CeFindFirstFile(rapi_path, &find_data);
 
-  if ((RAPI::HANDLE)-1 == handle)
+  if ((synce::HANDLE)-1 == handle)
   {
-    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeFindFirstFile failed with error code " << RAPI::CeGetLastError() << endl;
+    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeFindFirstFile failed with error code " << synce::CeGetLastError() << endl;
     error(KIO::ERR_DOES_NOT_EXIST, url.path());
     return;
   }
@@ -421,10 +430,10 @@ void kio_synceProtocol::listDir( const KURL & url )
 
   RapiString rapi_pattern(pattern);
 
-  RAPI::CE_FIND_DATA* find_data = NULL;
-  RAPI::DWORD file_count = 0;
+  synce::CE_FIND_DATA* find_data = NULL;
+  synce::DWORD file_count = 0;
 
-  RAPI::CeFindAllFiles(rapi_pattern, 
+  synce::CeFindAllFiles(rapi_pattern, 
       FAF_ATTRIBUTES|FAF_CREATION_TIME|FAF_LASTACCESS_TIME|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW,
       &file_count, &find_data);
 
@@ -437,7 +446,7 @@ void kio_synceProtocol::listDir( const KURL & url )
 
   listEntry( entry, true ); // ready
 
-  RAPI::CeRapiFreeBuffer(find_data);
+  synce::CeRapiFreeBuffer(find_data);
 
 
   finished();
@@ -457,9 +466,9 @@ void kio_synceProtocol::del(const KURL &url, bool isfile)
 
   if (isfile)
   {
-    if (0 == RAPI::CeDeleteFile(rapi_path))
+    if (0 == synce::CeDeleteFile(rapi_path))
     {
-      kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::del] CeDeleteFile failed with error code " << RAPI::CeGetLastError() << endl;
+      kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::del] CeDeleteFile failed with error code " << synce::CeGetLastError() << endl;
       error(KIO::ERR_CANNOT_DELETE, url.prettyURL());
       return;
     }
@@ -467,9 +476,9 @@ void kio_synceProtocol::del(const KURL &url, bool isfile)
   else
   {
     // Let's not hope we have to to recursive remove here
-    if (0 == RAPI::CeRemoveDirectory(rapi_path))
+    if (0 == synce::CeRemoveDirectory(rapi_path))
     {
-      kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::del] CeRemoveDirectory failed with error code " << RAPI::CeGetLastError() << endl;
+      kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::del] CeRemoveDirectory failed with error code " << synce::CeGetLastError() << endl;
       error(KIO::ERR_CANNOT_DELETE, url.prettyURL());
       return;
     }
@@ -497,7 +506,7 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
 
   RapiString rapi_path(slashToBackslash(url.path()));
 
-  RAPI::HANDLE handle = RAPI::CeCreateFile(
+  synce::HANDLE handle = synce::CeCreateFile(
       rapi_path,
       GENERIC_WRITE,
       0,
@@ -506,9 +515,9 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
       FILE_ATTRIBUTE_NORMAL,
       0);
 
-  if ((RAPI::HANDLE)-1 == handle)
+  if ((synce::HANDLE)-1 == handle)
   {
-    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::put] CeCreateFile failed with error code " << RAPI::CeGetLastError() << endl;
+    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::put] CeCreateFile failed with error code " << synce::CeGetLastError() << endl;
     error(KIO::ERR_CANNOT_OPEN_FOR_WRITING, url.prettyURL());
     return;
   }
@@ -527,7 +536,7 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
     //kdDebug(1739)<<"kio_synceProtocol::put(): after readData(), read "<<result<<" bytes"<<endl;
     if (part_read > 0)
     {
-      RAPI::BOOL success = RAPI::CeWriteFile(
+      synce::BOOL success = synce::CeWriteFile(
           handle, 
           buffer.data(), 
           buffer.size(), 
@@ -536,9 +545,9 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
 
       if (!success || part_written != (unsigned)part_read)
       {
-        RAPI::CeCloseHandle(handle);
+        synce::CeCloseHandle(handle);
 
-        kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeWriteFile failed with error code " << RAPI::CeGetLastError() << endl;
+        kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeWriteFile failed with error code " << synce::CeGetLastError() << endl;
         error(KIO::ERR_COULD_NOT_WRITE, url.prettyURL());
         return;
       }
@@ -546,7 +555,7 @@ void kio_synceProtocol::put(const KURL& url, int /*permissions*/, bool overwrite
   }
   while (part_read > 0);
 
-  RAPI::CeCloseHandle(handle);
+  synce::CeCloseHandle(handle);
 
   finished();
 }
@@ -564,9 +573,9 @@ void kio_synceProtocol::mkdir(const KURL&url, int /*permissions*/)
 
   RapiString rapi_path(slashToBackslash(url.path()));
 
-  if (0 == RAPI::CeCreateDirectory(rapi_path, NULL))
+  if (0 == synce::CeCreateDirectory(rapi_path, NULL))
   {
-    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeCreateDirectory failed with error code " << RAPI::CeGetLastError() << endl;
+    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::stat] CeCreateDirectory failed with error code " << synce::CeGetLastError() << endl;
     error(KIO::ERR_COULD_NOT_MKDIR, url.prettyURL());
     return;
   }
@@ -588,12 +597,12 @@ void kio_synceProtocol::rename(const KURL& src, const KURL& dest, bool overwrite
   if (overwrite)
   {
     // TODO: Check return status and error code, fail if not File Not Found
-    RAPI::CeDeleteFile(rapi_dest);
+    synce::CeDeleteFile(rapi_dest);
   }
 
-  if (0 == RAPI::CeMoveFile(rapi_src, rapi_dest))
+  if (0 == synce::CeMoveFile(rapi_src, rapi_dest))
   {
-    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::rename] CeMoveFile failed with error code " << RAPI::CeGetLastError() << endl;
+    kdDebug(KIO_SYNCE_KDDEBUG_AREA) << "[kio_synceProtocol::rename] CeMoveFile failed with error code " << synce::CeGetLastError() << endl;
     error(KIO::ERR_CANNOT_RENAME, src.prettyURL());
     return;
   }
