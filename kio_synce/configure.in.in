@@ -1,0 +1,4 @@
+#MIN_CONFIG
+
+AM_INIT_AUTOMAKE(synce, 0.1)
+

@@ -1,0 +1,11 @@
+[Protocol]
+exec=kio_synce
+protocol=synce
+input=none
+output=filesystem
+listing=Name,Size
+reading=true
+source=true
+makedir=true
+deleting=true
+moving=true
