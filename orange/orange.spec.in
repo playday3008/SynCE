@@ -15,9 +15,19 @@ Distribution: SynCE RPM packages
 Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Requires: synce
 
 %description
+See http://synce.sourceforge.net/synce for more information.
 
+%package devel
+Summary:  A library to squeeze out installable Micrsoft cabinet files
+Group:    Development/Libraries
+Requires: %{name} = %{version}
+BuildRequires: synce-devel
+
+%description devel
+See http://synce.sourceforge.net/synce for more information.
 
 %prep
 %setup
@@ -37,7 +47,7 @@ make
 
 %files devel
 %defattr(-,root,root)
-%{_includedir}/orange.h
+%{_includedir}/liborange.h
 %{_libdir}/liborange.so
 %{_libdir}/liborange.a
 %{_libdir}/liborange.la
