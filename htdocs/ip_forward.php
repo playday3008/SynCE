@@ -47,8 +47,8 @@ set the correct DNS server.</li>
 <pre>iptables -t nat -A POSTROUTING -s 192.168.131.201 -j MASQUERADE</pre>
 
 <p>The IP address 192.168.131.201 is used as an example. The correct IP adress
-can be found in your <tt>~/.synce/active_connection</tt> file when you have
-connected.</p>
+for your device can be found in your <tt>~/.synce/active_connection</tt> file
+when you have connected it.</p>
 
 </li>
 

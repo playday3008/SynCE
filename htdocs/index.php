@@ -17,6 +17,7 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 <li><a href="#overview">Overview</a></li>
 <li><a href="architecture.php">Architecture</a></li>
 <li><a href="using.php">Download and use SynCE</a></li>
+<li><a href="qa.php">Questions and Answers</a></li>
 <li><a href="ip_forward.php">IP forwarding</a></li>
 <li><a href="hotplug.php">Linux hotplug script</a></li>
 <li><a href="multisync.php">Using MultiSync for synchronization</a></li>
@@ -39,6 +40,9 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 
 <a name="news"></a>
 <h2>News</h2>
+
+<p><b>June 13, 2003</b> Some documentation improvements, mot notably a <a
+href="qa.php">Questions and Answers</a> page.</p>
 
 <p><b>June 8, 2003</b> The June issue of the swedish computer magazine <a
 href="http://datormagazin.se/">Datormagazin</a> has an article about SynCE on
@@ -110,6 +114,8 @@ project to improve the KDE integration. KDE 3.x users, please have look at the
 <tt>rapip</tt> module in <a
 href="http://sourceforge.net/cvs/?group_id=30550">CVS</a>!</p>
 
+<!--
+
 <p><b>January 30, 2003</b> The absence of news does fortunately not mean that
 nothing is happening with the project. We have recevied several KDE I/O-slaves
 for KDE 3 and hope to release one of them as soon as possible. By the way,
@@ -126,8 +132,6 @@ list!</p>
 <p><b>December 16, 2002</b> We would like to welcome Fredrik Nilson as a
 developer in the SynCE project. He has authored a GNOME-VFS module for
 SynCE. We hope to include this module in the next SynCE release.</p>
-
-<!--
 
 <p><b>November 30, 2002</b> Released SynCE version 0.5 which includes
 dccm 0.5, librapi2 0.5, libsynce 0.5, synce-serial 0.5 and trayicon 0.3. <a
@@ -168,19 +172,7 @@ if you want to help us!</p>
 
 <ul>
 
-<li class=SPACED>vCalendar <-> Pocket PC Tasks/Calendar conversion code</li>
-
 <li class=SPACED>Integration with KDE's KitchenSync framework.</li>
-
-<!--
-<li class=SPACED>GNOME 2 integration: A <a
-href="http://developer.gnome.org/doc/API/gnome-vfs/writing-modules.html">GNOME-VFS
-module</a>.</li>
-
-<li>KDE 3 integration: A KDE I/O slave for KDE 3. (There is already an <a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/kio_synce/">I/O
-slave for KDE 2</a>, you just need to make it work with KDE 3.)</li>
--->
 
 </ul>
 

@@ -20,7 +20,15 @@ called <tt>hotplug</tt>.)</li>
 
 <li><p>Create the directory <tt>/var/run/usb</tt> if it doesn't already exist.</p></li>
 
-<li><p>Add a line like this to your <tt>/etc/hotplug/usb.usermap</tt> file:</p>
+<li>
+
+<p>If you are using a Linux Hotplug release prior to the August 8, 2002 release,
+add a line like below to your <tt>/etc/hotplug/usb.usermap</tt> file. (This
+applies to for example RedHat 9 and earlier.)</p>
+
+<p>If you are using Linux Hotplug released August 8, 2002 or later, create the
+file <tt>/etc/hotplug/synce.usermap</tt> with the contents below. (Thanks to
+Andrew Radke and Mark "Delirium" for this info.)</p>
 
 <pre>synce   0x0003  0x<span class="RED">VVVV</span>  0x<span class="RED">PPPP</span>  0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00</pre>
 

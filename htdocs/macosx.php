@@ -17,14 +17,18 @@ Tools</a>.</li>
 <li class=SPACED>You need <b>GNU libiconv</b> and <b>libpoll</b> from <a
 href="http://fink.sf.net/">Fink</a>.</li>
 
-<li class=SPACED>Add "-no-cpp-precomp" to your CPPFLAGS before running configure:<br>
-<br>
-<tt>export CPPFLAGS="$CPPFLAGS -no-cpp-precomp"</tt></li>
+<li><p>Set your CPPFLAGS and LDFLAGS before running any configure
+scripts:</p>
+
+<pre>export CPPFLAGS="$CPPFLAGS -no-cpp-precomp -I/sw/include"
+export LDFLAGS="-L/sw/lib -lpoll</pre</li>
 
 <li class=SPACED>If you get the "multiple definitions of symbol" error message
 when compiling librapi2 you should <a
 href="http://fink.sourceforge.net/doc/porting/libtool.php">patch the
-"convenience library bug"</a> in libtool.</li>
+"convenience library bug"</a> in libtool. An alternative solution that
+<i>may</i> work is to add the <tt>--disable-shared</tt> parameter when running
+<tt>./configure</tt> in this module.</li>
 
 <li class=SPACED>Use the <a
 href="http://www.loolix.com/hacks/LoolixUSBPocketPC/">LoolixUSBPocketPC</a>
