@@ -28,8 +28,10 @@
 #include "rakisyncplugin.h"
 #include "syncthread.h"
 #include "synctasklistitem.h"
+#include "installer.h"
 
 #include <qapplication.h>
+#include <qstringlist.h>
 #include <kmessagebox.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
@@ -90,6 +92,14 @@ void RakiSyncPlugin::configure()
 
 void RakiSyncPlugin::createConfigureObject(KConfig */*ksConfig*/)
 {
+}
+
+
+void RakiSyncPlugin::install(QString cabFileName)
+{
+    QStringList sl;
+    sl.append(cabFileName);
+    Installer::install(pdaName, sl, true);
 }
 
 

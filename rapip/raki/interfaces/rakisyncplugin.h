@@ -71,6 +71,7 @@ public:
     virtual void createConfigureObject(KConfig *ksConfig);
     virtual void configure();
     QString serviceName();
+    void install(QString cabFileName);
 
 private:
     virtual bool sync() = 0;
