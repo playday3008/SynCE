@@ -32,10 +32,12 @@
  *
  * Values retrieved from the CeFindAllDatabases test
  */
-#define DBTYPE_CONTACTS 0x18;
-#define DBTYPE_CATEGORIES	0x1b
-#define DBTYPE_TASKS 0x1a
-#define DBTYPE_APPOINTMENTS 0x19
+#define DBTYPE_MAILFOLDERS                 0x0000  /* "\PMAILDB2" */
+#define DBTYPE_MESSAGES                    0x0123  /* "\PMAILDB" */
+#define DBTYPE_CONTACTS                    0x0018  /* "Contacts Database" */
+#define DBTYPE_TASKS                       0x001a  /* "Tasks Database" */
+#define DBTYPE_CATEGORIES	                 0x001b  /* "\Categories Database" */
+#define DBTYPE_APPOINTMENTS                0x0019  /* "Appointments Database" */
 
 
 /*
@@ -43,9 +45,29 @@
  *
  * Notes:
  * - This is the high word of the property id
- * - Unofficial property names are prefixed with 'X'
  * - ID:s are sorted first by category, then by value
  */
+
+/*
+ * Mail folders
+ */
+#define PROPID_FolderId                    0x0000
+
+/*
+ * Messages
+ * 
+ * - My own names for the properties
+ */
+#define PROPID_Size1                       0x0003
+#define PROPID_Date                        0x0004
+#define PROPID_Subject                     0x0007
+#define PROPID_Header                      0x0008  /* BLOB with 0x0000-separated unicode strings */
+#define PROPID_FolderOid                   0x0009
+#define PROPID_Body                        0x000a  /* BLOB with data (not unicode) */
+#define PROPID_Attachment                  0x000d  /* Both string and BLOB */
+#define PROPID_MessageFolderId             0x000e  /* See PROPID_FolderId */
+#define PROPID_Size2                       0x0011
+
 
 /*
  * Categories
@@ -62,8 +84,9 @@
 /*
  * Appointments
  *
- * Offical property names from:
- *   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_iappointment_propertylist.asp
+ * - Unofficial property names are prefixed with 'X'
+ * - Offical property names from:
+ *     http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_iappointment_propertylist.asp
  */
 #define PROPID_Sensitivity                 0x0004
 #define PROPID_BusyStatus                  0x000f	// 0=Free,1=Tentative,2=Busy,3=OutOfOffice
