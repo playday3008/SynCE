@@ -1,6 +1,6 @@
 <?php include 'header.php'; ?>
 
-<p>Return to <a href="../../index.php">SynCE-KDE main page</a>.</p>
+<p>Return to <a href="../../index.php">SynCE main page</a>.</p>
 <h1>SynCE - CE_DirView<br>
 </h1>
 
