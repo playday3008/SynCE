@@ -8,6 +8,24 @@ int handle_property(PCEPROPVAL value)
 	unsigned id = value->propid >> 16;
 	switch (id)
 	{
+		// Mailbox list
+		case 0x0000: printf("FolderNumber"); break;
+		case 0x0001: printf("FolderName"); break;	// also used by Messages
+		case 0x0005: printf("MessageOid"); break;
+		case 0x0006: printf("ParentFolderNumber"); break;	// set to 65535 for top folder
+		// case 0x0008: printf("xxx"); break;	// also used by Messages
+
+		// Messages
+		// case 0x0001: printf("xx"); break; // also used by Mailbox list
+		case 0x0003: printf("Size1"); break;
+		case 0x0004: printf("Date"); break;  // XXX: id 0x0004 is also used by Appointments
+		case 0x0007: printf("Subject"); break;
+		case 0x0008: printf("Header"); break;	// also used by Mailbox list
+		case 0x0009: printf("FolderOid"); break;
+		case 0x000a: printf("Body"); break;
+		case 0x000d: printf("Attachment"); break;
+		case 0x0011: printf("Size2"); break;
+		
 		// Categories
 		case 0x4001: printf("Name"); break;
 		case 0x4002: printf("Id"); break;	// the bit indexed by Id is set in CategoryBits
@@ -52,7 +70,7 @@ int handle_property(PCEPROPVAL value)
 			// for the number: 0=NotCompleted,1=Completed
 
 		// Appointments
-		case 0x0004: printf("Sensitivity"); break;	// 0=Normal,1=Private
+		//case 0x0004: printf("Sensitivity"); break;	// 0=Normal,1=Private  XXX: id 0x0004 is also used by Mail
 		case 0x000f: printf("BusyStatus"); break;	// 0=Free,1=Tentative,2=Busy,3=OutOfOffice
 		case 0x0016: printf("Categories"); break;
 		case 0x0017: printf("_Notes"); break;
