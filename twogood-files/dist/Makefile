@@ -17,7 +17,7 @@ DCCMD_VERSION    = 0.1
 
 export PWD USER TOPDIR TARBALLS APTDIR RPMS SRPMS
 
-.PHONY: tarballs rpms
+.PHONY: tarballs rpms apt
 
 all: tarballs rpms
 
@@ -36,6 +36,7 @@ rpms:
 
 apt:
 	genbasedir --flat --bloat --bz2only $(APTDIR) synce
-	cd $(APTDIR) && scp -r * shell.sourceforge.net:/home/users/t/tw/twogood/synce/htdocs/apt/redhat/en/i386/8.0/
+	cd $(APTDIR)/.. && scp -r $(REDHAT_VERSION) \
+		shell.sourceforge.net:/home/users/t/tw/twogood/synce/htdocs/apt/redhat/en/i386/
 
 
