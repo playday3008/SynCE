@@ -311,6 +311,27 @@ void *list_get_first(list_p list)
 }
 
 
+void *list_get_last(list_p list)
+{
+    list_data_p act;
+
+    if (list == NULL)
+        return NULL;
+
+    if (list->count == 0)
+        return NULL;
+
+    act = list_get_element_last(list);
+
+    if (act == NULL)
+        return NULL;
+
+    list->act = act;
+
+    return act->data;
+}
+
+
 void *list_get_next(list_p list)
 {
     if (list == NULL)

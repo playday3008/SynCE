@@ -73,6 +73,7 @@ int list_insert_tail(list_p list, void *data);
 int list_insert_at(list_p list, int at, void *data);
 int list_delete_data(list_p list, void *data);
 void *list_get_first(list_p list);
+void *list_get_last(list_p list);
 void *list_get_next(list_p list);
 int list_is_member(list_p list, void *data);
 int list_get_count(list_p list);

@@ -63,18 +63,18 @@ static int ping_delay = DCCM_PING_INTERVAL;
 static char *password = NULL;
 
 
-struct manage_s
+struct management_s
 {
-    SynceSocket *server;
+    SynceSocket *device_server;
     select_p sel;
-    local_p control;
+    local_p client_server;
     list_p device_l;
     list_p client_l;
-    list_p pending_l;
+    list_p passwordpending_device_l;
 };
 
-typedef struct manage_s manage_t;
-typedef manage_t *manage_p;
+typedef struct management_s management_t;
+typedef management_t *manage_p;
 
 
 struct device_s
@@ -104,48 +104,48 @@ typedef struct device_s device_t;
 typedef device_t *device_p;
 
 
-static manage_t main_manage;
+static management_t management;
 static int running = 1;
 
 
-static void device_remove(device_p);
+static void vdccm_remove_device(device_p);
 
 
-static void disconnect_current_devices()
+static void vdccm_disconnect_active_devices()
 {
     device_p device;
 
-    list_iterator(main_manage.device_l, device) {
-        device_remove(device);
+    list_iterator(management.device_l, device) {
+        vdccm_remove_device(device);
     }
 }
 
 
-static void disconnect_current_clients()
+static void vdccm_disconnect_active_clients()
 {
     local_p client;
 
-    list_iterator(main_manage.client_l, client) {
+    list_iterator(management.client_l, client) {
         local_write(client, (char*) "S", 1);
         local_close_socket(client);
     }
 }
 
 
-static void handle_sighup(int n)
+static void vdccm_handle_sighup(int n)
 {
-    disconnect_current_devices();
+    vdccm_disconnect_active_devices();
 }
 
 
-static void handle_sigterm(int n)
+static void vdccm_handle_terminating_signals(int n)
 {
     char *path;
     char pid_file[MAX_PATH];
 
     running = false;
-    disconnect_current_devices();
-    disconnect_current_clients();
+    vdccm_disconnect_active_devices();
+    vdccm_disconnect_active_clients();
 
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
@@ -159,7 +159,7 @@ static void handle_sigterm(int n)
 /*
  * Action is "connect" or "disconnect"
  */
-static void run_scripts(device_p device, char* action)
+static void vdccm_run_scripts(device_p device, char* action)
 {
     char* directory = NULL;
     DIR* dir = NULL;
@@ -208,7 +208,7 @@ exit:
 }
 
 
-static bool client_write_file(char *filename, device_p device)
+static bool vdccm_write_connection_file(char *filename, device_p device)
 {
     bool success = false;
     FILE* file = NULL;
@@ -268,11 +268,10 @@ exit:
 }
 
 
-static bool client_write_files(device_p device)
+static bool vdccm_write_device_specific_connection_file(device_p device)
 {
     char *path = NULL;
     char filename[MAX_PATH];
-    char *old_filename;
 
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
@@ -285,23 +284,47 @@ static bool client_write_files(device_p device)
         snprintf(filename, sizeof(filename), "%s/%s", path, device->ip_str);
     }
 
-    client_write_file(filename, device);
+    return vdccm_write_connection_file(filename, device);
+}
+
+
+static bool vdccm_write_active_connection_file(device_p device)
+{
+    bool ret = false;
+    char *old_filename;
 
     if (!synce_get_connection_filename(&old_filename)) {
         synce_error("Unable to get connection filename");
     } else {
         if (old_filename) {
-            client_write_file(old_filename, device);
+            ret = vdccm_write_connection_file(old_filename, device);
             free(old_filename);
         } else {
             synce_error("Default connection filename not valid");
         }
     }
+
+    return ret;
+}
+
+
+static bool vdccm_write_connection_files(device_p device)
+{
+    if (!vdccm_write_device_specific_connection_file(device)) {
+        synce_error("Could not write device-specific connection file");
+        return false;
+    }
+
+    if (!vdccm_write_active_connection_file(device)) {
+        synce_error("Could not write active_connection file");
+        return false;
+    }
+
     return true;
 }
 
 
-static void client_send_connection_info(device_p device, char *command)
+static void vdccm_send_connection_info_to_clients(device_p device, char *command)
 {
     local_p local;
     char string[256];
@@ -322,7 +345,7 @@ static void client_send_connection_info(device_p device, char *command)
 }
 
 
-static void client_send_startup(local_p local, manage_p manage)
+static void vdccm_notify_new_connected_client(local_p local, manage_p manage)
 {
     device_p device;
     unsigned char count;
@@ -330,12 +353,12 @@ static void client_send_startup(local_p local, manage_p manage)
     count = list_get_count(manage->device_l);
 
     list_iterator(manage->device_l, device) {
-        client_send_connection_info(device, (char *) "C");
+        vdccm_send_connection_info_to_clients(device, (char *) "C");
     }
 }
 
 
-static int client_read(local_p local, void *manage_v)
+static int vdccm_read_from_client(local_p local, void *manage_v)
 {
     manage_p manage = (manage_p) manage_v;
     char buffer[256];
@@ -361,16 +384,15 @@ static int client_read(local_p local, void *manage_v)
         passwd = &buffer[1];
         name = strsep(&passwd, "=");
 
-        list_iterator(manage->pending_l, device) {
+        list_iterator(manage->passwordpending_device_l, device) {
             if (strcmp(device->name, name) == 0) {
                 send = 1;
                 synce_trace("Sending Password to: %s", device->name);
                 snprintf(device->password, MAX_PASSWORD_LENGTH, "%s", passwd);
-                /*                 strncpy(device->password, passwd, 4); */
                 if (!synce_password_send(device->socket, device->password, device->key)) {
                     synce_error("failed to send password to %s", device->name);
                 }
-                list_delete_data(manage->pending_l, device);
+                list_delete_data(manage->passwordpending_device_l, device);
             }
         }
         if (!send) {
@@ -386,13 +408,13 @@ static int client_read(local_p local, void *manage_v)
 }
 
 
-static int client_accept(local_p control, void *manage_v)
+static int vdccm_accept_new_client(local_p control, void *manage_v)
 {
     manage_p manage = (manage_p) manage_v;
-    local_p local = local_accept_socket(control);
-    list_insert_tail(manage->client_l, local);
-    local_select_addto_rlist(manage->sel, local, client_read, manage);
-    client_send_startup(local, manage);
+    local_p new_client = local_accept_socket(control);
+    list_insert_tail(manage->client_l, new_client);
+    local_select_addto_rlist(manage->sel, new_client, vdccm_read_from_client, manage);
+    vdccm_notify_new_connected_client(new_client, manage);
 
     return 0;
 }
@@ -444,7 +466,7 @@ static char* string_at(char* buffer, size_t size, size_t offset)
 }
 
 
-static void remove_connection_file(device_p device)
+static void vdccm_remove_connection_files(device_p device)
 {
     char *old_filename = NULL;
     char *path = NULL;
@@ -492,38 +514,68 @@ static void free_device(device_p device)
 }
 
 
-static void device_remove(device_p device)
+static void vdccm_remove_device(device_p device)
 {
+    device_p last_device;
     select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
     synce_socket_free(device->socket);
     if (list_delete_data(device->manage->device_l, device) == 0) {
-        remove_connection_file(device);
-        run_scripts(device, (char *) "disconnect");
-        client_send_connection_info(device, (char *) "D");
+        vdccm_remove_connection_files(device);
+        vdccm_run_scripts(device, (char *) "disconnect");
+        vdccm_send_connection_info_to_clients(device, (char *) "D");
+        if (device->is_main_device == true) {
+            last_device = list_get_last(device->manage->device_l);
+            if (last_device != NULL) {
+                if (!vdccm_write_active_connection_file(last_device)) {
+                    synce_error("Could not write active_connection file");
+                } else {
+                    last_device->is_main_device = true;
+                }
+            }
+        }
     }
     synce_trace("Removed %s", device->name);
     free_device(device);
 }
 
 
-static void device_add(device_p device)
+static bool vdccm_add_device(device_p device)
 {
     device_p tmp_device;
+    device_p tmp_main_device = NULL;
+    bool skipped = false;
 
-    list_iterator(device->manage->device_l, tmp_device)
-        tmp_device->is_main_device = false;
+    list_iterator(device->manage->device_l, tmp_device) {
+        if (tmp_device->is_main_device) {
+            tmp_device->is_main_device = false;
+            tmp_main_device = tmp_device;
+        }
+        if (strcmp(tmp_device->name, device->name) == 0) {
+            synce_trace("Device with name %s already exists. New device skipped");
+            skipped = true;
+            break;
+        }
+    }
 
-    device->expect_password_reply = false;
-    list_insert_tail(device->manage->device_l, device);
-    client_write_files(device);
-    device->is_main_device = true;
-    run_scripts(device, (char *) "connect");
-    client_send_connection_info(device, (char *) "C");
-    synce_trace("Connected %s", device->name);
+    if (!skipped) {
+        device->expect_password_reply = false;
+        list_insert_tail(device->manage->device_l, device);
+        vdccm_write_connection_files(device);
+        device->is_main_device = true;
+        vdccm_run_scripts(device, (char *) "connect");
+        vdccm_send_connection_info_to_clients(device, (char *) "C");
+        synce_trace("Connected %s", device->name);
+    } else {
+        if (tmp_main_device != NULL) {
+            tmp_main_device->is_main_device = true;
+        }
+    }
+
+    return !skipped;
 }
 
 
-static bool device_read_lowlevel(device_p device)
+static bool vdccm_read_from_device_real(device_p device)
 {
     bool success = false;
     char* buffer = NULL;
@@ -604,18 +656,21 @@ static bool device_read_lowlevel(device_p device)
                     goto exit;
                 }
             } else {
-                client_send_connection_info(device, (char *) "P");
+                vdccm_send_connection_info_to_clients(device, (char *) "P");
             }
             device->expect_password_reply = true;
         } else {
-            device_add(device);
+            if (!vdccm_add_device(device)) {
+                synce_socket_free(device->socket);
+                free_device(device);
+            }
         }
     } else {
         synce_trace("This is a password challenge");
         device->key = header & 0xff;
         device->locked = true;
         if (!password)
-            list_insert_tail(device->manage->pending_l, device);
+            list_insert_tail(device->manage->passwordpending_device_l, device);
     }
 
     success = true;
@@ -628,7 +683,7 @@ exit:
 }
 
 
-static int device_read(void *device_v)
+static int vdccm_read_from_device(void *device_v)
 {
     device_p device = (device_p) device_v;
 
@@ -641,19 +696,22 @@ static int device_read(void *device_v)
             free_device(device);
         } else {
             if (device->password_correct) {
-                device_add(device);
+                if (!vdccm_add_device(device)) {
+                    synce_socket_free(device->socket);
+                    free_device(device);
+                }
             } else {
                 synce_trace("Password not accepted");
                 select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
                 synce_socket_free(device->socket);
-                client_send_connection_info(device, (char *) "R");
+                vdccm_send_connection_info_to_clients(device, (char *) "R");
                 free_device(device);
             }
         }
     } else {
-        if (!device_read_lowlevel(device)) {
+        if (!vdccm_read_from_device_real(device)) {
             synce_error("Failed to read from device");
-            device_remove(device);
+            vdccm_remove_device(device);
         }
     }
 
@@ -661,7 +719,7 @@ static int device_read(void *device_v)
 }
 
 
-static int device_accept(void *manage_v)
+static int vdccm_accept_new_device(void *manage_v)
 {
     manage_p manage = (manage_p) manage_v;
     device_p device;
@@ -679,7 +737,7 @@ static int device_accept(void *manage_v)
     device->class = NULL;
     device->hardware = NULL;
 
-    device->socket = synce_socket_accept(manage->server, &device->address);
+    device->socket = synce_socket_accept(manage->device_server, &device->address);
 
     if (!device->socket) {
         synce_error("Error clients TCP/IP-connection not accept()ed");
@@ -691,7 +749,7 @@ static int device_accept(void *manage_v)
             free_device(device);
         } else {
             select_addto_rlist(manage->sel, synce_socket_get_descriptor(device->socket),
-                           device_read, device);
+                           vdccm_read_from_device, device);
         }
     }
 
@@ -699,7 +757,7 @@ static int device_accept(void *manage_v)
 }
 
 
-static int devices_send_ping( void *manage_v)
+static int vdccm_send_ping_to_devices( void *manage_v)
 {
     manage_p manage = (manage_p) manage_v;
     device_p device;
@@ -708,10 +766,10 @@ static int devices_send_ping( void *manage_v)
     list_iterator(manage->device_l, device) {
         if (!synce_socket_write(device->socket, &ping, sizeof(ping))) {
             synce_error("failed to send ping");
-            device_remove(device);
+            vdccm_remove_device(device);
         } else {
             if (++device->ping_count == missing_ping_count) {
-                device_remove(device);
+                vdccm_remove_device(device);
             }
         }
     }
@@ -719,7 +777,7 @@ static int devices_send_ping( void *manage_v)
 }
 
 
-static void write_help(char *name)
+static void vdccm_write_help(char *name)
 {
     fprintf(
         stderr,
@@ -743,7 +801,7 @@ static void write_help(char *name)
 }
 
 
-static bool handle_parameters(int argc, char** argv)
+static bool vdccm_handle_parameters(int argc, char** argv)
 {
     int c;
     int log_level = SYNCE_LOG_LEVEL_ERROR;
@@ -778,7 +836,7 @@ static bool handle_parameters(int argc, char** argv)
 
         case 'h':
         default:
-            write_help(argv[0]);
+            vdccm_write_help(argv[0]);
             return false;
         }
     }
@@ -789,7 +847,7 @@ static bool handle_parameters(int argc, char** argv)
 }
 
 
-bool check_running(const char* filename, const char* socketpath)
+bool vdccm_check_vdccm_already_running(const char* filename, const char* socketpath)
 {
     bool success = false;
     FILE* file = NULL;
@@ -827,7 +885,7 @@ exit:
 }
 
 
-bool write_pid_file(const char* filename)
+bool vdccm_write_pid_file(const char* filename)
 {
     bool success = false;
     char pid_str[16];
@@ -867,7 +925,7 @@ int main(int argc, char *argv[])
 
     umask(0077);
 
-    if (!handle_parameters(argc, argv))
+    if (!vdccm_handle_parameters(argc, argv))
         return -1;
 
     if (getuid() == 0) {
@@ -905,7 +963,7 @@ int main(int argc, char *argv[])
     snprintf(control_socket_path, sizeof(control_socket_path), "%s/%s", path, "csock");
     free(path);
 
-    if (!check_running(pid_file, control_socket_path)) {
+    if (!vdccm_check_vdccm_already_running(pid_file, control_socket_path)) {
         return -1;
     }
 
@@ -913,31 +971,31 @@ int main(int argc, char *argv[])
     ping_interval.tv_usec = 0;
 
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGHUP, handle_sighup);
-    signal(SIGTERM, handle_sigterm);
-    signal(SIGINT, handle_sigterm);
-    signal(SIGABRT, handle_sigterm);
-    signal(SIGSEGV, handle_sigterm);
-    signal(SIGQUIT, handle_sigterm);
+    signal(SIGHUP, vdccm_handle_sighup);
+    signal(SIGTERM, vdccm_handle_terminating_signals);
+    signal(SIGINT, vdccm_handle_terminating_signals);
+    signal(SIGABRT, vdccm_handle_terminating_signals);
+    signal(SIGSEGV, vdccm_handle_terminating_signals);
+    signal(SIGQUIT, vdccm_handle_terminating_signals);
 
-    main_manage.server = NULL;
-    main_manage.control = NULL;
+    management.device_server = NULL;
+    management.client_server = NULL;
 
-    if (!(main_manage.sel = select_create())) {
+    if (!(management.sel = select_create())) {
         synce_error("COuld not create select-object");
         return -1;
     }
 
-    if (!(main_manage.device_l = list_create())) {
+    if (!(management.device_l = list_create())) {
         synce_error("Could not create list");
         return -1;
     }
 
-    if (!(main_manage.client_l = list_create())) {
+    if (!(management.client_l = list_create())) {
         synce_error("Could not create list");
     }
 
-    if (!(main_manage.pending_l = list_create())) {
+    if (!(management.passwordpending_device_l = list_create())) {
         synce_error("Could not create list");
         return -1;
     }
@@ -948,35 +1006,36 @@ int main(int argc, char *argv[])
     }
 
     if (voc_timer_add_continous_node(timer, ping_interval,
-                                     devices_send_ping, &main_manage) == NULL) {
+                                     vdccm_send_ping_to_devices,
+                                     &management) == NULL) {
         synce_error("Could not set continous trigger");
         return -1;
     }
 
-    if (!(main_manage.server = synce_socket_new())) {
+    if (!(management.device_server = synce_socket_new())) {
         synce_error("Could not create pda-server-socket");
         return -1;
     }
 
-    if (!(synce_socket_listen(main_manage.server, NULL, DCCM_PORT))) {
+    if (!(synce_socket_listen(management.device_server, NULL, DCCM_PORT))) {
         synce_error("Could not set pda-server-socket to listen mode");
         return -1;
     }
 
 
-    if (!(main_manage.control = local_listen_socket(control_socket_path, 2))) {
+    if (!(management.client_server = local_listen_socket(control_socket_path, 2))) {
         synce_error("Could not create client-server-socket");
         return -1;
     }
 
-    if (local_select_addto_rlist(main_manage.sel, main_manage.control, client_accept,
-                                 &main_manage) < 0) {
+    if (local_select_addto_rlist(management.sel, management.client_server,
+                                 vdccm_accept_new_client, &management) < 0) {
         synce_error("Could not add local socket");
         return -1;
     }
 
-    if (select_addto_rlist(main_manage.sel, synce_socket_get_descriptor(main_manage.server),
-                           device_accept, &main_manage) < 0) {
+    if (select_addto_rlist(management.sel, synce_socket_get_descriptor(management.device_server),
+                           vdccm_accept_new_device, &management) < 0) {
         synce_error("Could not add PDA-server-socket");
         return -1;
     }
@@ -988,19 +1047,19 @@ int main(int argc, char *argv[])
         synce_trace("Running in foreground");
     }
 
-    if (!write_pid_file(pid_file)) {
+    if (!vdccm_write_pid_file(pid_file)) {
         return -1;
     }
 
-    run_scripts(NULL, (char *) "start");
+    vdccm_run_scripts(NULL, (char *) "start");
 
     while(running) {
         timeout = voc_timer_process_timer(timer);
-        select_set_timeval(main_manage.sel, timeout);
-        select_select(main_manage.sel);
+        select_set_timeval(management.sel, timeout);
+        select_select(management.sel);
     }
 
-    run_scripts(NULL, (char *) "stop");
+    vdccm_run_scripts(NULL, (char *) "stop");
 
     return 0;
 }
