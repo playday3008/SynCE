@@ -47,7 +47,9 @@ static const char* PARTERSHIP_SECTION  = "partnership";
 
 RRA* rra_new()/*{{{*/
 {
-	return (RRA*)calloc(1, sizeof(RRA));
+	RRA* rra = (RRA*)calloc(1, sizeof(RRA));
+  rra->rrac = rrac_new();
+  return rra;
 }/*}}}*/
 
 void rra_free(RRA* rra)/*{{{*/
@@ -65,13 +67,20 @@ void rra_free(RRA* rra)/*{{{*/
     if (rra->time_zone_id)
       free(rra->time_zone_id);
 
+    rrac_free(rra->rrac);
 		free(rra);
 	}
 }/*}}}*/
 
 bool rra_connect(RRA* rra)/*{{{*/
 {
-	return rrac_connect(rra->rrac);
+  if (rra && rra->rrac)
+    return rrac_connect(rra->rrac);
+  else 
+  {
+    synce_error("Bad RRA object");
+    return false;
+  }
 }/*}}}*/
 
 void rra_disconnect(RRA* rra)/*{{{*/

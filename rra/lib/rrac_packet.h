@@ -81,6 +81,8 @@ typedef struct _Command_69_2
 	uint32_t    partner_ids[2];
 } Command_69_2;
 
+#define COMMAND_69_2_SIZE (7*sizeof(uint32_t))
+
 typedef struct _Packet_6e
 {
 	uint32_t    type_id;

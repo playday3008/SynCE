@@ -1,25 +1,56 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
-#include "librra.h"
+#include "syncmgr.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+static bool callback (
+    SyncMgrTypeEvent event, uint32_t type, uint32_t count, uint32_t* ids, void* cookie)
+{
+  const char* event_str;
+  unsigned i;
+
+  synce_trace("event=%i, type=%08x, count=%08x",
+      event, type, count);
+  
+  switch (event)
+  {
+    case SYNCMGR_TYPE_EVENT_UNCHANGED:
+      event_str = "Unchanged";
+      break;
+    case SYNCMGR_TYPE_EVENT_CHANGED:
+      event_str = "Changed";
+      break;
+    case SYNCMGR_TYPE_EVENT_DELETED:
+      event_str = "Deleted";
+      break;
+    default:
+      event_str = "Unknown";
+      break;
+  }
+
+	for (i = 0; i < count; i++)
+		printf("%08x   %08x  %s\n", type, ids[i], event_str);
+
+  return true;
+}
 
 int main(int argc, char** argv)
 {
 	int result = 1;
 	HRESULT hr;
-	RRA* rra = NULL;
+	SyncMgr* syncmgr = NULL;
   const char* type_id_str = NULL;
 	uint32_t type_id = 0;
-	ObjectIdArray* object_ids = NULL;
-	unsigned i, id = 0;
-	uint32_t* deleted_ids = NULL;
-	size_t deleted_count = 0;
+  int i;
+	/*uint32_t* deleted_ids = NULL;
+	size_t deleted_count = 0;*/
 	
-	synce_log_set_level(0);
+/*	synce_log_set_level(0);*/
 
 	if (argc < 2)
 	{
@@ -33,48 +64,39 @@ int main(int argc, char** argv)
 	if (FAILED(hr))
 		goto exit;
 
-	rra = rra_new();
+	syncmgr = syncmgr_new();
 
-	if (!rra_connect(rra))
+	if (!syncmgr_connect(syncmgr))
 	{
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
 	}
 
-  type_id = rra_type_id_from_name(rra, type_id_str);
-  if (!type_id)
-    type_id = strtol(type_id_str, NULL, 16);
+  for (i = 1; i < argc; i++)
+  {
+    type_id_str = argv[i];
 
-	if (!rra_get_object_ids(rra, type_id, &object_ids))
-	{
-		fprintf(stderr, "Failed to get object ids\n");
+    type_id = syncmgr_type_from_name(syncmgr, type_id_str);
+    if (type_id == 0xffffffff)
+      type_id = strtol(type_id_str, NULL, 16);
+
+    syncmgr_subscribe(syncmgr, type_id, callback, NULL);
+  }
+    
+  if (!syncmgr_start_events(syncmgr))
+  {
+ 		fprintf(stderr, "Failed to start events\n");
 		goto exit;
-	}
+  }
 
-	for (i = 0; i < object_ids->unchanged; i++)
-		printf("%08x  Unchanged\n", object_ids->ids[id++]);
-
-	for (i = 0; i < object_ids->changed; i++)
-		printf("%08x  Changed\n", object_ids->ids[id++]);
-
-	if (!rra_get_deleted_object_ids(
-				rra, 
-				type_id, 
-				object_ids, 
-				&deleted_ids, 
-				&deleted_count))
-	{
-		fprintf(stderr, "Failed to get deleted object ids\n");
-		goto exit;
-	}
-
-	for (id = 0; id < deleted_count; id++)
-		printf("%08x  Deleted\n", deleted_ids[id]);
+  /* Process all events triggered by syncmgr_start_events */
+  while (syncmgr_event_wait(syncmgr, 3))
+  {
+    syncmgr_handle_event(syncmgr);
+  }
 
 exit:
-	rra_free_object_ids(object_ids);
-	rra_free_deleted_object_ids(deleted_ids);
-	rra_free(rra);
+	syncmgr_destroy(syncmgr);
 	
 	CeRapiUninit();
 	return result;

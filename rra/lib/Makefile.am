@@ -17,6 +17,7 @@ librra_la_SOURCES = \
 	recurrence.h recurrence_internal.h recurrence.c \
 	rrac.h     rrac.c \
 	strbuf.h   strbuf.c \
+	syncmgr.h  syncmgr.c \
 	task.c \
 	timezone.h timezone.c
 

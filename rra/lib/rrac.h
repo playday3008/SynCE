@@ -29,6 +29,16 @@ bool rrac_connect(RRAC* rrac);
 
 void rrac_disconnect(RRAC* rrac);
 
+/** Get file descriptor for use with select() or poll() */
+int rrac_get_event_descriptor(RRAC* self);
+
+/** See if there is an event pending */
+bool rrac_event_pending(RRAC* self);
+
+/** Wait for an event */
+bool rrac_event_wait(RRAC* self, int timeoutInSeconds);
+
+
 #include <synce.h>
 
 typedef struct
@@ -107,6 +117,51 @@ bool rrac_send_data(
 #define rrac_alloc(n) malloc(n)
 #define rrac_free(p) if (p) free(p)
 
+struct _SyncCommand;
+typedef struct _SyncCommand SyncCommand;
+
+#define SYNC_COMMAND_ERROR    0x006e
+#define SYNC_COMMAND_NOTIFY   0x0069
+
+#define SYNC_COMMAND_NOTIFY_PARTNERS    0x02000000
+#define SYNC_COMMAND_NOTIFY_IDS_4       0x04000000
+#define SYNC_COMMAND_NOTIFY_IDS_6       0x06000000
+#define SYNC_COMMAND_NOTIFY_INVALID     0xffffffff
+
+/* Destroy SyncCommand object */
+void sync_command_destroy(SyncCommand* self);
+
+/* Get command code from SyncCommand object */
+uint16_t sync_command_code(SyncCommand* self);
+
+/* Get notify code from SyncCommand object if command code is SYNC_COMMAND_NOTIFY */
+uint32_t sync_command_notify_code(SyncCommand* self);
+
+typedef struct
+{
+	uint32_t  current;
+	uint32_t  ids[2];
+} SyncPartners;
+
+/** Get SyncParners structure if notify code is SYNC_COMMAND_NOTIFY_PARTNERS */
+bool sync_command_notify_partners(SyncCommand* self, SyncPartners* partners);
+
+typedef struct
+{
+  uint32_t  type;
+  uint32_t  total;
+  uint32_t  unchanged;
+  uint32_t  changed;
+} SyncNotifyHeader;
+
+/** Get total and changed ID count if notify code is SYNC_COMMAND_NOTIFY_IDS_[46] */
+bool sync_command_notify_header(SyncCommand* self, SyncNotifyHeader* header);
+
+/** Get IDs if notify code is SYNC_COMMAND_NOTIFY_IDS_[46] */
+bool sync_command_notify_ids(SyncCommand* self, uint32_t* ids);
+
+
+SyncCommand* rrac_recv_command(RRAC* self);
 
 #endif
 

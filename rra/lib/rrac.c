@@ -14,7 +14,10 @@
 #define HTOLE16(x)  x = htole16(x)
 #define HTOLE32(x)  x = htole32(x)
 
-#define DUMP_PACKETS 1
+#define LE16(p)    letoh16(*(uint16_t*)p)
+#define LE32(p)    letoh32(*(uint32_t*)p)
+
+#define DUMP_PACKETS 0
 
 #if DUMP_PACKETS
 #define DUMP(desc,data,len) dump(desc, data, len)
@@ -79,6 +82,48 @@ void rrac_destroy(RRAC* rrac)/*{{{*/
     free(rrac);
   }
 }/*}}}*/
+
+int rrac_get_event_descriptor(RRAC* self)
+{
+  if (self && self->cmd_socket)
+    return synce_socket_get_descriptor(self->cmd_socket);
+  else
+    return SYNCE_SOCKET_INVALID_DESCRIPTOR;
+}
+
+bool rrac_event_pending(RRAC* self)
+{
+  if (self)
+  {
+    short events = EVENT_READ;
+    synce_trace("Testing for event");
+    if (synce_socket_wait(self->cmd_socket, 0, &events))
+      return (events & EVENT_READ) != 0;
+    else
+      synce_error("synce_socket_wait failed");
+  }
+  else
+    synce_error("RRAC pointer is NULL");
+
+  return false;
+}
+
+bool rrac_event_wait(RRAC* self, int timeoutInSeconds)
+{
+  if (self)
+  {
+    short events = EVENT_READ;
+    synce_trace("Wating for event");
+    if (synce_socket_wait(self->cmd_socket, timeoutInSeconds, &events))
+      return (events & EVENT_READ) != 0;
+    else
+      synce_error("synce_socket_wait failed");
+  }
+  else
+    synce_error("RRAC pointer is NULL");
+
+  return false;
+}
 
 bool rrac_set_command_69_callback(/*{{{*/
     RRAC* rrac,
@@ -883,6 +928,208 @@ bool rrac_send_data(/*{{{*/
 
 exit:
 	return success;
+}/*}}}*/
+
+struct _SyncCommand
+{
+	uint16_t  code;
+	uint16_t  size;
+  uint8_t*  data;
+};
+
+static void* rrac_memdup(void* p, size_t n)/*{{{*/
+{
+  void* result = NULL;
+  
+  if (p)
+  {
+    result = rrac_alloc(n);
+    if (result)
+      memcpy(result, p, n);
+  }
+
+  return result;
+}/*}}}*/
+
+static SyncCommand* sync_command_new(uint16_t code, uint16_t size, uint8_t* data)/*{{{*/
+{
+  SyncCommand* self = (SyncCommand*)calloc(1, sizeof(SyncCommand));
+
+  if (self)
+  {
+    self->code  = code;
+    self->size  = size;
+    self->data  = (uint8_t*)rrac_memdup(data, size);
+  }
+
+  return self;
+}/*}}}*/
+
+void sync_command_destroy(SyncCommand* self)/*{{{*/
+{
+  if (self)
+  {
+    rrac_free(self->data);
+    free(self);
+  }
+}/*}}}*/
+
+uint16_t sync_command_code(SyncCommand* self)/*{{{*/
+{
+  if (self)
+    return self->code;
+  else
+    return 0;
+}/*}}}*/
+
+uint32_t sync_command_notify_code(SyncCommand* self)/*{{{*/
+{
+  if (self && 
+      self->code == SYNC_COMMAND_NOTIFY && 
+      self->size >= sizeof(uint32_t) &&
+      self->data)
+    return LE32(self->data);
+  else
+  {
+    synce_error("Invalid SyncCommand object");
+    return SYNC_COMMAND_NOTIFY_INVALID;
+  }
+}/*}}}*/
+
+bool sync_command_notify_partners(SyncCommand* self, SyncPartners* partners)
+{
+  bool success = false;
+  
+  if (sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_PARTNERS &&
+      partners)
+  {
+    uint8_t* p = self->data;
+
+    if (self->size < COMMAND_69_2_SIZE)
+    {
+      synce_error("Invalid command size: %08x", self->size);
+      goto exit;
+    }
+    else if (self->size != COMMAND_69_2_SIZE)
+    {
+      synce_warning("Unexpected command size: %08x", self->size);
+    }
+
+    /* skip subcommand and unknown data */
+    p += 16;
+
+    partners->current = LE32(p);  p += 4;
+    partners->ids[0]  = LE32(p);  p += 4;
+    partners->ids[1]  = LE32(p);  p += 4;
+
+    success = true;
+  }
+  else
+    synce_error("Invalid parameters");
+
+exit:
+  return success;
+}
+
+bool sync_command_notify_header(SyncCommand* self, SyncNotifyHeader* header)
+{
+  bool success = false;
+  
+  if ((sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_4 ||
+        sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_6) &&
+      header)
+  {
+    uint8_t* p = self->data;
+
+    if (self->size < 16)
+    {
+      synce_error("Invalid command size: %08x", self->size);
+      goto exit;
+    }
+
+    /* skip subcommand */
+    p += 4;
+
+    header->type    = LE32(p);      p += 4;
+    header->changed = LE32(p);      p += 4;
+    header->total   = LE32(p) / 4;  p += 4;
+
+    synce_trace("type = %08x, changed = %08x, total = %08x",
+        header->type,
+        header->changed,
+        header->total);
+
+    header->unchanged = header->total - header->changed;
+
+    success = true;
+  }
+  else
+    synce_error("Invalid parameters");
+
+exit:
+  return success;
+}
+
+bool sync_command_notify_ids(SyncCommand* self, uint32_t* ids)
+{
+  bool success = false;
+  
+  if ((sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_4 ||
+        sync_command_notify_code(self) == SYNC_COMMAND_NOTIFY_IDS_6) &&
+      ids)
+  {
+    uint8_t* p = self->data;
+    uint32_t total;
+    unsigned i;
+
+    if (self->size < 16)
+    {
+      synce_error("Invalid command size: %08x", self->size);
+      goto exit;
+    }
+
+    /* skip subcommand, type, changed */
+    p += 12;
+
+    total = LE32(p);  p += sizeof(uint32_t);
+
+    synce_trace("total = %08x", total);
+
+    if (self->size < (16 + total))
+    {
+      synce_error("Invalid command size: %08x", self->size);
+      goto exit;
+    }
+
+    total >>= 2;
+
+    for (i = 0; i < total; i++)
+    {
+      ids[i] = LE32(p);   p += sizeof(uint32_t);
+    }
+
+    success = true;
+  }
+  else
+    synce_error("Invalid parameters");
+
+exit:
+  return success;
+}
+
+SyncCommand* rrac_recv_command(RRAC* self)/*{{{*/
+{
+  SyncCommand* result = NULL;
+  CommandHeader header;
+  uint8_t* data = NULL;
+
+  if (rrac_recv_any(self, &header, &data))
+  {
+    result = sync_command_new(header.command, header.size, data);
+    rrac_free(data);
+  }
+  
+  return result;
 }/*}}}*/
 
 

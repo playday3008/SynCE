@@ -1,6 +1,6 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
-#include "librra.h"
+#include "syncmgr.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
@@ -11,8 +11,8 @@ int main()
 {
 	int result = 1;
 	HRESULT hr;
-	RRA* rra = NULL;
-	ObjectType* object_types = NULL;
+  SyncMgr* syncmgr = NULL;
+	SyncMgrType* object_types = NULL;
 	size_t object_type_count = 0;
 	unsigned i;
 
@@ -22,15 +22,19 @@ int main()
 	if (FAILED(hr))
 		goto exit;
 
-	rra = rra_new();
+	syncmgr = syncmgr_new();
 
-	if (!rra_connect(rra))
+	if (!syncmgr_connect(syncmgr))
 	{
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
 	}
 
-	if (!rra_get_object_types(rra, &object_types, &object_type_count))
+  object_type_count = syncmgr_get_type_count(syncmgr);
+
+  object_types = syncmgr_get_types(syncmgr);
+
+	if (!object_types)
 	{
 		fprintf(stderr, "Failed to get object types\n");
 		goto exit;
@@ -59,7 +63,7 @@ int main()
 	}
 	
 exit:
-	rra_free(rra);
+	syncmgr_destroy(syncmgr);
 	
 	CeRapiUninit();
 	return result;
