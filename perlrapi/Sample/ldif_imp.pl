@@ -44,7 +44,7 @@ while($href=$rapi->fetch)
   foreach my $key (keys %{$href})
   {
     my $attr;
-    my $value=$href->{$key};
+    my $value=${$href->{$key}}[0];
     $value=~s/ö/oe/;
     $value=~s/Ö/OE/;
     $value=~s/ä/ae/;
@@ -97,7 +97,7 @@ while($href=$rapi->fetch)
     elsif(CE_ADD_CITY == $key) { $desc.="CE_ADD_CITY: $value\n" }
     elsif(CE_ADD_REGION == $key) { $desc.="CE_ADD_REGION: $value\n" }
     elsif(CE_ADD_ZIP == $key) { $desc.="CE_ADD_ZIP: $value\n" }
-    elsif(CE_ADD_COUNTRY == $key) { $attr="break" }
+    elsif(CE_ADD_COUNTRY == $key) { $desc.="CE_ADD_COUNTRY: $value\n" }
     elsif(CE_EMAIL == $key) { $attr="mail"; $mail=$value }
     elsif(CE_EMAIL2 == $key) { $attr="mozillaSecondEmail" }
     elsif(CE_EMAIL3 == $key) { $desc.="CE_EMAIL3: $value\n" }
