@@ -108,7 +108,9 @@ static bool get_compressed_data(const char* input_filename, uint8_t** input_buff
   fread(name, 1, sizeof(name), input);
   if (0 != strcmp(name, ".rsrc"))
   {
+#if 0
     synce_error("Unexpected input file format");
+#endif
     goto exit;
   }
  
@@ -184,7 +186,9 @@ bool orange_dllinflate(/*{{{*/
 
   if (!get_compressed_data(input_filename, &input_buffer, &input_size))
   {
+#if 0
     synce_error("Failed to get compressed data");
+#endif
     goto exit;
   }
 

@@ -459,7 +459,9 @@ bool orange_extract_setup_factory(
   version = orange_get_setup_factory_version(input_file);
   if (!version)
   {
+#if 0
     synce_error("Unable to detect Setup Factory version");
+#endif
     goto exit;
   }
 
