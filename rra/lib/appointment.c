@@ -76,47 +76,6 @@ static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cooki
   return true;
 }/*}}}*/
 
-static bool on_propval_category(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  if (propval->val.lpwstr[0])
-  {
-    int i;
-    char* str = NULL;
-    StrBuf* strbuf = strbuf_new(NULL);
-    char** strv = NULL;
-
-    if (generator_utf8(g))
-      str = wstr_to_utf8(propval->val.lpwstr);
-    else
-      str = wstr_to_ascii(propval->val.lpwstr);
-
-    strv = strsplit(str, ',');
-
-    for (i = 0; strv[i]; i++)
-    {
-      char* p = strv[i];
-
-      while (*p == ' ')
-        p++;
-     
-      if (i > 0)
-      {
-        /*strbuf_append_c(strbuf, '\\');*/
-        strbuf_append_c(strbuf, ',');
-      }
-      
-      strbuf_append(strbuf, p);
-    }
-
-    generator_add_simple(g, "CATEGORIES", strbuf->buffer);
-    strbuf_destroy(strbuf, true);
-    strv_free(strv);
-    wstr_free_string(str);
-  }
-  
-  return true;
-}
-
 static bool on_propval_duration(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
@@ -203,7 +162,7 @@ bool rra_appointment_to_vevent(/*{{{*/
     goto exit;
 
   generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status);
-  generator_add_property(generator, ID_CATEGORIES,  on_propval_category);
+  generator_add_property(generator, ID_CATEGORIES,  on_propval_categories);
   generator_add_property(generator, ID_DURATION,    on_propval_duration);
   generator_add_property(generator, ID_APPOINTMENT_TYPE, on_propval_type);
   generator_add_property(generator, ID_LOCATION,    on_propval_location);
@@ -488,11 +447,6 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 exit:
   return true;
-}/*}}}*/
-
-static bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)/*{{{*/
-{
-  return parser_add_string_from_line(p, ID_CATEGORIES, line);
 }/*}}}*/
 
 static bool on_mdir_line_dtend(Parser* p, mdir_line* line, void* cookie)/*{{{*/

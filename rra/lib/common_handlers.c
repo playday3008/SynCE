@@ -129,6 +129,25 @@ static char* convert_from_utf8(const char* source)
   return result;
 }
 
+/*
+   Categories
+ */
+
+bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)
+{
+  if (line)
+  {
+    return parser_add_string_from_line(p, ID_TASK_CATEGORIES, line);
+  }
+  else
+    return false;
+}
+
+bool on_propval_categories(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  return generator_add_simple_propval(g, "CATEGORIES", propval);
+}
+
 
 /*
    Location

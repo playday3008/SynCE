@@ -31,11 +31,6 @@ typedef struct
   time_t completed_time;
 } TaskGeneratorData;
 
-static bool on_propval_categories(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  return generator_add_simple_propval(g, "CATEGORIES", propval);
-}
-
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   bool success = false;
@@ -197,16 +192,6 @@ exit:
 /*
    Any on_mdir_line_* functions not here are found in common_handlers.c
 */
-
-static bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)
-{
-  if (line)
-  {
-    return parser_add_string_from_line(p, ID_TASK_CATEGORIES, line);
-  }
-  else
-    return false;
-}
 
 static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
 {
