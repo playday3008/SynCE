@@ -17,7 +17,7 @@ librapi_la_SOURCES = \
 librapi_la_LDFLAGS = -no-undefined -version-info 0:0:0
 librapi_la_LIBADD  = config/libconfig.la support/libsupport.la
 
-include_HEADERS = rapi.h rapi_win.h
+include_HEADERS = rapi.h rapi_types.h
 
 SUBDIRS = config support .
 

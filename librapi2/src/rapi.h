@@ -2,7 +2,7 @@
 #ifndef __rapi_h__
 #define __rapi_h__
 
-#include "rapi_win.h"
+#include "rapi_types.h"
 
 /*
  * Initialization functions

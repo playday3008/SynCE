@@ -1,6 +1,6 @@
 /* $Id$ */
-#ifndef __rapi_win_h__
-#define __rapi_win_h__
+#ifndef __rapi_types_h__
+#define __rapi_types_h__
 
 #include "rapi_config.h"
 
