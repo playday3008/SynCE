@@ -28,3 +28,11 @@ dist-hook:
 
 AM_CFLAGS = -Wall
 INCLUDES = 
+
+cvsclean:
+	@for i in `find . -name .cvsignore`; do \
+		(cd `dirname $$i` 2>/dev/null && rm -rf `cat .cvsignore` *.o *.a || true); \
+	done
+	@rm -f $(SUBDIRS) 2>/dev/null || true
+
+
