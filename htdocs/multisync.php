@@ -58,6 +58,15 @@ pair.</li>
 
 <h2>Questions and Answers</h2>
 
+<p><b>Q:</b> Synchronization fails with the message <tt>Connection reset by
+peer</tt> and the connection between the PDA and the PC is lost!</p>
+
+<p><b>A:</b> This is a known problem and it is under investigation. If you have
+any information that may be of use for solving this problem, please send write
+to one of the mailing lists!</p>
+
+<hr size=1 width="50%">
+
 <p><b>Q:</b> Tasks that were completed on my PDA were copied to evolution as
 uncompleted. Why?</p>
 
@@ -192,6 +201,21 @@ be used by SynCE and the other by ActiveSync. When you want to synchronize with
 SynCE and you last synchronized with ActiveSync, you have to change what
 parntership you use. This is described below.</p>
 
+<p>For SynCE 0.8 or later:</p>
+
+<p>Use the <tt>synce-partnership</tt> tool like this:</p>
+
+<p><tt>synce-partnership create</tt></p>
+
+<p>If you get the message "Partnership creation succeeded" everything is ok.</p>
+
+<p>If you get the message "Partnership creation failed" you need to replace an
+existing partnership on your device. To do this you first run
+<tt>synce-partnership status</tt> to list the current partnerships on your
+device. Decide which partnership (1 or 2) you want to replace. Second you run
+<tt>synce-partnership replace X</tt>, where X is the partnership number.</p>
+
+
 <p>For SynCE 0.7:</p>
 
 <ol> 
@@ -208,21 +232,6 @@ PC</a>. Tip: You can install a .cab file on your Pocket PC with the
 1.</li>
 
 </ol>
-
-<p>For newer SynCE releases or the <a href="cvs.php">CVS version</a> of SynCE:</p>
-
-<p>Use the <tt>synce-partnership</tt> tool like this:</p>
-
-<p><tt>synce-partnership create</tt></p>
-
-<p>If you get the message "Partnership creation succeeded" everything is ok.</p>
-
-<p>If you get the message "Partnership creation failed" you need to replace an
-existing partnership on your device. To do this you first run
-<tt>synce-partnership status</tt> to list the current partnerships on your
-device. Decide which partnership (1 or 2) you want to replace. Second you run
-<tt>synce-partnership replace X</tt>, where X is the partnership number.</p>
-
 
 <p><br>Return to <a href="index.php">main page</a>.</p>
 

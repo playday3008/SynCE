@@ -6,8 +6,8 @@
 
 <h1>SynCE - Questions and Answers for common issues</h1>
 
-<p>For issues with MultiSync or the rra module, please visit the <a
-href="multisync.php">Using MultiSync</a> page.</p>
+<p>For issues with synchronization (MultiSync or the rra module), please visit
+the <a href="multisync.php">Using MultiSync</a> page.</p>
 
 <p>For issues regarding Mac OS X, please visit the <a
 href="macosx.php">Mac OS X hints</a> page.</p>
