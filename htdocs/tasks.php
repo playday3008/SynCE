@@ -53,7 +53,7 @@ should:</p>
 <ol>
 <li>Be written in C or C++</li>
 <li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -Werror -ansi -pedantic</tt></li>
-<li>Be licensed with a MIT license</li>
+<li>Be licensed with an MIT license</li>
 <li>Be able to perform these functions on InstallShield archive files:<ol>
 
 <li>List files</li>
@@ -126,7 +126,7 @@ OpenOffice.</p>
 <ol>
 <li>Be written in C or C++</li>
 <li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -Werror -ansi -pedantic</tt></li>
-<li>Be licensed with a MIT license</li>
+<li>Be licensed with an MIT license</li>
 <li>Be able to convert a PWI file to a plain text file</li>
 </ol>
 
@@ -193,7 +193,7 @@ between Appointment/Task entries and iCalendar files.</p>
 <ol>
 <li>Be written in C</li>
 <li>Compile with gcc 3.2 on Linux/BSD using flags <tt>-Wall -Werror -ansi</tt></li>
-<li>Be licensed with a MIT license</li>
+<li>Be licensed with an MIT license</li>
 <li>Support both <a href="http://www.imc.org/pdi/pdiproddev.html">vCalendar
 1.0</a> and <a href="http://ftp.rfc-editor.org/in-notes/rfc2445.txt">RFC
 2445 (iCalendar)</a>.</li>
@@ -234,7 +234,8 @@ SUMMARY
 TRANSP
 </tt></p>
 
-<p>These functions should also convert the following vAlarm attributes:</p>
+<p>These functions should also convert at least the following vAlarm
+attributes:</p>
 
 <p><tt>
 ACTION
