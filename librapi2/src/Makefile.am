@@ -14,8 +14,6 @@ librapi_la_SOURCES = \
 	rapi.c                         \
 	registry.c                     \
 	window.c                       \
-	rapi_buffer.h   rapi_buffer.c  \
-	rapi_context.h  rapi_context.c \
 	rapi_internal.h                \
 	rapi_socket.h   rapi_socket.c
 

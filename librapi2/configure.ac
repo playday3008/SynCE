@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(src/rapi_buffer.c)
+AC_INIT(src/rapi.c)
 
 dnl AC_CANONICAL_HOST
 dnl AC_CANONICAL_TARGET
