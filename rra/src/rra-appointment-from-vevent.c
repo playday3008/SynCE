@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 			NULL,
 			&buffer,
 			&buffer_size,
-			0))
+			0,
+      NULL))
 	{
 		fprintf(stderr, "Failed to create data\n");
 		goto exit;

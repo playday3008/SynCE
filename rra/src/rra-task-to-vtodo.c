@@ -37,7 +37,8 @@ int main(int argc, char** argv)
 			buffer,
 			file_size,
 			&vtodo,
-			0))
+			0,
+      NULL))
 	{
 		fprintf(stderr, "Failed to create vEvent\n");
 		goto exit;
