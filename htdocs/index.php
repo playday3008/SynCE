@@ -12,8 +12,21 @@ height="62" border="0" alt="SourceForge Logo" align=right></A>
 a Windows CE device from a computer running Linux, FreeBSD or a similar
 operating system.</p>
 
+<blockquote>
+<b>Do you need help with SynCE?</b> <a href="help.php">Click here!</a>
+</blockquote>
+
 <a name="news"></a>
 <h2>News</h2>
+
+<p><b>August 18, 2004</b> SynCE 0.9.0 released! Please be aware that SynCE is
+still under development, so there may still have issues, especially with
+synchronization. <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=22569&release_id=261540">Direct
+link to the files</a>.  The SynCE plugin for MultiSync will be released later
+this week! Also, if you have problems getting a PPP connection with USB
+connection on Linux, take a look at the <a href="usb_linux.php#werestuffed">The
+"we're stuffed" bug</a>.</p>
 
 <p><b>July 7, 2004</b> Added a <a href="contrib/ipaq">start/stop script</a>
 contributed by Tony Stout. Added info about my packet decoders for Ethereal to
