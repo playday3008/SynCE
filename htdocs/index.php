@@ -90,7 +90,7 @@ with a Windows CE or Pocket PC device from a computer running Linux,
 <p><b>July 30, 2003</b> SynCE 0.8 is released! SynCE now includes the
 possiblity to synchronize calendar and tasks, in addition to the previous
 address book synchronization support. However, recurring events are not yet
-supported. <a href="http://localhost/synce/using.php">Download</a>.</p>
+supported. <a href="using.php">Download</a>.</p>
 
 <p><b>June 13, 2003</b> Some documentation improvements, most notably a <a
 href="qa.php">Questions and Answers</a> page.</p>
