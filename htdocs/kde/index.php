@@ -36,8 +36,15 @@ are supported by the underlying <a
     </a><a href="http://sourceforge.net/projects/synce/"><br>
     </a></li>
   <li><a href="http://sourceforge.net/projects/synce/">SourceForge
-Project Page</a><br>
-  </li>
+Project Page</a><a href="http://localhost/%7Evoc/SynCE/kde/#Future"><br>
+    </a><a href="http://sourceforge.net/projects/synce/"><br>
+    </a></li>
+  <li><a href="http://apps.kde.com/fr/2/info/vid/9646?br=true">SynCE-KDE
+on apps.kde.com</a> </li>
+  <li><a
+ href="http://freshmeat.net/projects/synce-kde/?topic_id=20%2C957%2C1015">SynCE-KDE
+on freshmeat.net<br>
+    </a></li>
 </ul>
 <br>
 <h2><a name="Introduction" id="Introduction"></a>Introduction</h2>
