@@ -7,6 +7,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  ***************************************************************************/
+#include <stdlib.h>
 #include "windows.h"
 #include "rapi.h"
 #include <stddef.h>
