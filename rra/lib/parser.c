@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "dbstream.h"
 #include "timezone.h"
+#include "environment.h"
 #include <synce_log.h>
 #include <synce_hash.h>
 #include <rapi.h>
@@ -11,6 +12,8 @@
 #include <ctype.h>
 #include <synce_log.h>
 #include <assert.h>
+
+#define VERBOSE 0
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
@@ -215,15 +218,30 @@ bool parser_datetime_to_struct(const char* datetime, struct tm* time_struct, boo
 
 bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time, bool* is_utc)/*{{{*/
 {
+  void* handle = NULL;
   struct tm time_struct;
+  bool local_is_utc;
 
-  if (!parser_datetime_to_struct(datetime, &time_struct, is_utc))
+  if (!parser_datetime_to_struct(datetime, &time_struct, &local_is_utc))
   {
     synce_error("Failed to parse DATE or DATE-TIME to struct tm");
     return false;
   }
   
+  if (local_is_utc)
+    handle = environment_push_timezone("UTC");
+#if VERBOSE
+  else
+    synce_debug("Using system timezone configuration for appointment.");
+#endif
+  
   *unix_time = mktime(&time_struct);
+  
+  if (local_is_utc)
+    environment_pop_timezone(handle);
+
+  if (is_utc)
+    *is_utc = local_is_utc;
 
   return -1 != *unix_time;
 }/*}}}*/
@@ -376,23 +394,7 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
     bool is_utc = false;
     
     success = parser_datetime_to_unix_time(line->values[0], &some_time, &is_utc);
-#if 0
-    if (success && is_utc)
-    {
-      if (self->tzi)
-      {
-        some_time = rra_timezone_convert_from_utc(self->tzi, some_time);
-      }
-      else
-        synce_warning("No time zone information available");
-    }
-#else
-    if (success && !is_utc)
-    {
-      synce_warning("Time is not in UTC and handling timezone information in vCalendar is missing!");
-    }
-#endif
-    else if (!success)
+    if (!success)
     {
       synce_error("Failed to convert DATE or DATE-TIME to UNIX time: '%s'",
           line->values[0]);

@@ -1,6 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "recurrence_pattern.h"
+#include "environment.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <synce_log.h>
@@ -38,17 +39,22 @@ struct _RRA_Exceptions
 #define WRITE_UINT16(p,v)   (*(uint16_t*)(p) = (v))
 #define WRITE_UINT32(p,v)   (*(uint32_t*)(p) = (v))
 
+size_t my_strftime(char *s, size_t max, const char  *fmt,  const
+    struct tm *tm) {
+  return strftime(s, max, fmt, tm);
+}
 
 #define TRACE_DATE(format, date) \
 do { \
-  char* _time_str = NULL; \
+  /*char* _time_str = NULL;*/ \
   uint32_t _minutes = date; \
-  time_t _time = rra_minutes_to_unix_time(_minutes); \
+  /*time_t _time = rra_minutes_to_unix_time(_minutes);*/ \
+  struct tm _tm = rra_minutes_to_struct(_minutes); \
   if (date == RRA_DoesNotEndDate) \
   { \
     synce_trace(format, "(does not end)"); \
   } \
-  else if ((-1) == _time) \
+  else if (_tm.tm_mday == 0 /* (-1) == _time */) \
   { \
     char buffer[256]; \
     snprintf(buffer, sizeof(buffer),  "(date out of range: %08x)", date); \
@@ -56,8 +62,10 @@ do { \
   } \
   else \
   { \
-    _time_str = asctime(gmtime(&_time)); \
-    _time_str[strlen(_time_str)-1] = '\0'; \
+    char _time_str[256]; \
+    /*_time_str = asctime(gmtime(&_time)); \
+    _time_str[strlen(_time_str)-1] = '\0';*/ \
+    my_strftime(_time_str, sizeof(_time_str), "%c", &_tm); \
     synce_trace(format, _time_str); \
   } \
 } \
@@ -110,6 +118,7 @@ uint32_t rra_minutes_from_unix_time(time_t t)
 struct tm rra_minutes_to_struct(uint32_t minutes)
 {
   struct tm result;
+#if 1
   time_t unix_time = rra_minutes_to_unix_time(minutes);
 
   if ((time_t)-1 == unix_time)
@@ -117,6 +126,11 @@ struct tm rra_minutes_to_struct(uint32_t minutes)
   else
     /* XXX: localtime or gmtime? i always forget which one do what i want */
     gmtime_r(&unix_time, &result);
+#else
+  /* strftime() does not handle this as we like! */
+  memset(&result, 0, sizeof(struct tm));
+  result.tm_min = minutes;
+#endif
 
   return result;
 }
@@ -126,18 +140,10 @@ uint32_t rra_minutes_from_struct(struct tm* t)
   /* fool around with the TZ environment variable in order to get mktime do
    * what it is supposed to do */
   uint32_t result = 0;
-  char* old_tz = getenv("TZ");
-  if (old_tz)
-    old_tz = strdup(old_tz);
-  setenv("TZ", "UTC", true);
+  void* handle = environment_push_timezone("UTC");
   result = rra_minutes_from_unix_time(mktime(t));
-  if (old_tz)
-  {
-    setenv("TZ", old_tz, true);
-    free(old_tz);
-  }
-  else
-    unsetenv("TZ");
+  environment_pop_timezone(handle);
+
   return result;
 }
 
@@ -253,7 +259,7 @@ static bool rra_exception_read_string(uint8_t** buffer, WCHAR** wide_str)/*{{{*/
   unknown = READ_INT16(p); p += 2;
   length  = READ_INT16(p); p += 2;
 
-  if (unknown != (length + 1))
+  if (unknown != (length + 1) && !(length == 0 && unknown == 0))
     synce_error("Unexpected unknown %04x for length %04x",
         unknown, length);
 
@@ -467,7 +473,10 @@ static bool rra_exception_write_string(uint8_t** buffer, WCHAR* wide_str)/*{{{*/
   int16_t length;
 
   length = wstrlen(wide_str);
-  unknown = length + 1;
+  if (length == 0)
+    unknown = 0;
+  else
+    unknown = length + 1;
 
   WRITE_INT16(p, unknown);  p += 2;
   WRITE_INT16(p, length);   p += 2;

@@ -22,6 +22,7 @@ librra_la_SOURCES = \
 	dbstream.h         dbstream.c \
 	common_handlers.h  common_handlers.c \
 	contact.h          contact.c \
+	environment.h      environment.c \
 	generator.h        generator.c \
 	parser.h           parser.c \
 	recurrence.h       recurrence.c \
