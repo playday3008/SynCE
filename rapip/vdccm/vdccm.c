@@ -514,11 +514,17 @@ static void free_device(device_p device)
 }
 
 
+static void vdccm_free_device(device_p device)
+{
+    synce_trace("Freeing %s", device->name);
+    select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
+    synce_socket_free(device->socket);
+    free_device(device);
+}
+
 static void vdccm_remove_device(device_p device)
 {
     device_p last_device;
-    select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
-    synce_socket_free(device->socket);
     if (list_delete_data(device->manage->device_l, device) == 0) {
         vdccm_remove_connection_files(device);
         vdccm_run_scripts(device, (char *) "disconnect");
@@ -535,7 +541,7 @@ static void vdccm_remove_device(device_p device)
         }
     }
     synce_trace("Removed %s", device->name);
-    free_device(device);
+    vdccm_free_device(device);
 }
 
 
@@ -661,8 +667,7 @@ static bool vdccm_read_from_device_real(device_p device)
             device->expect_password_reply = true;
         } else {
             if (!vdccm_add_device(device)) {
-                synce_socket_free(device->socket);
-                free_device(device);
+                vdccm_free_device(device);
             }
         }
     } else {
@@ -691,21 +696,17 @@ static int vdccm_read_from_device(void *device_v)
         if (!synce_password_recv_reply(device->socket, 2,
                                        &device->password_correct)) {
             synce_error("Failed to read password reply");
-            select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
-            synce_socket_free(device->socket);
-            free_device(device);
+            vdccm_free_device(device);
         } else {
             if (device->password_correct) {
                 if (!vdccm_add_device(device)) {
-                    synce_socket_free(device->socket);
-                    free_device(device);
+                    synce_trace("Could not register new device");
+                    vdccm_free_device(device);
                 }
             } else {
                 synce_trace("Password not accepted");
-                select_delfrom_rlist(device->manage->sel, synce_socket_get_descriptor(device->socket));
-                synce_socket_free(device->socket);
                 vdccm_send_connection_info_to_clients(device, (char *) "R");
-                free_device(device);
+                vdccm_free_device(device);
             }
         }
     } else {
