@@ -54,7 +54,7 @@ SHashTable *s_hash_table_new(size_t size)
 ** sufficient for most purposes.
 */
 
-static unsigned s_str_hash(char *string)
+static unsigned s_str_hash(const char *string)
 {
       unsigned ret_val = 0;
       int i;
@@ -75,7 +75,7 @@ static unsigned s_str_hash(char *string)
 ** NULL if the key wasn't in the table previously.
 */
 
-void *s_hash_table_insert(char *key, void *data, SHashTable *table)
+void *s_hash_table_insert(SHashTable *table, const char *key, void *data)
 {
       unsigned val = s_str_hash(key) % table->size;
       bucket *ptr;
@@ -138,7 +138,7 @@ void *s_hash_table_insert(char *key, void *data, SHashTable *table)
 ** the key is not in the table.
 */
 
-void *hashLookup(char *key, SHashTable *table)
+void *s_hash_table_lookup(SHashTable *table, const char *key)
 {
       unsigned val = s_str_hash(key) % table->size;
       bucket *ptr;
@@ -159,7 +159,7 @@ void *hashLookup(char *key, SHashTable *table)
 ** data, or NULL if not present.
 */
 
-void *s_hash_table_remove(char *key, SHashTable *table)
+void *s_hash_table_remove(SHashTable *table, const char *key)
 {
       unsigned val = s_str_hash(key) % table->size;
       void *data;
@@ -246,7 +246,7 @@ void s_hash_table_destroy(SHashTable *table, void (*func)(void *))
 		{
 			while ( (temp = (table->table)[i]) )
 			{
-				data = s_hash_table_remove(temp->key, table);
+				data = s_hash_table_remove(table, temp->key);
 				assert(data);
 				if (func)
 					func(data);

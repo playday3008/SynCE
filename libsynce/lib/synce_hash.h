@@ -45,14 +45,14 @@ SHashTable *s_hash_table_new(size_t size);
 ** associated data.
 */
 
-void *s_hash_table_insert(char *key,void *data,struct SHashTable *table);
+void *s_hash_table_insert(struct SHashTable *table, const char *key,void *data);
 
 /*
 ** Returns a pointer to the data associated with a key.  If the key has
 ** not been inserted in the table, returns NULL.
 */
 
-void *s_hash_table_lookup(char *key, struct SHashTable *table);
+void *s_hash_table_lookup(struct SHashTable *table, const char *key);
 
 /*
 ** Deletes an entry from the table.  Returns a pointer to the data that
@@ -60,7 +60,7 @@ void *s_hash_table_lookup(char *key, struct SHashTable *table);
 ** properly.
 */
 
-void *s_hash_table_remove(char *key,struct SHashTable *table);
+void *s_hash_table_remove(struct SHashTable *table, const char *key);
 
 /*
 ** Goes through a hash table and calls the function passed to it
