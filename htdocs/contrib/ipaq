@@ -1,0 +1,36 @@
+#!/bin/sh
+
+if [ $1 ] && [ $1 = "battery" -o $1 = "disk" ]; then
+  pstatus > /tmp/istat
+  batts=`grep LifePercent /tmp/istat`
+  space=`grep space /tmp/istat`
+  acstat=`grep ACL /tmp/istat`
+fi
+
+case "$1" in
+start)
+	dccm
+	echo "Enter the root password now."
+	su - root -c synce-serial-start
+	;;
+stop)
+	killall -HUP dccm
+	;;
+battery)
+	echo $acstat
+	echo $batts | {
+	  read x intbatt x extbatt;
+	  echo "Internal Battery: $intbatt";
+	  echo "External Battery: $extbatt";
+	}
+	;;
+disk)
+	echo $space
+	;;
+programs)
+	synce-list-programs
+	;;
+*)
+	echo "Usage: ipaq  { start | stop | battery | disk | programs }"
+	;;
+esac

@@ -14,6 +14,10 @@ a Windows CE device from a computer running Linux, *BSD or other unices.</p>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>July 7, 2004</b> Added a <a href="contrib/ipaq">start/stop script</a>
+contributed by Tony Stout. Added info about my packet decoders for Ethereal to
+the <a href="capture.php">How to capture packets for analyzing</a> page. </p>
+
 <p><b>May 28, 2004</b> New page linking to all <a href="notes.php">Developer's
 notes</a></p>
 
