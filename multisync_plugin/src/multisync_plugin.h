@@ -21,6 +21,6 @@ void synce_connection_load_state(SynceConnection* sc);
 void synce_connection_save_state(SynceConnection* sc);
 
 void synce_get_changes(SynceConnection* sc, int newdbs);
-uint32_t synce_object_type_to_id(sync_object_type object_type);
+uint32_t synce_object_type_to_id(RRA* rra, sync_object_type object_type);
 
 #endif

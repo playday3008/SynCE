@@ -32,10 +32,10 @@ static GList* synce_get_changed_objects(/*{{{*/
 		goto exit;
 	}
 
-	type_id = synce_object_type_to_id(object_type);
+	type_id = synce_object_type_to_id(sc->rra, object_type);
 	if (!type_id)
 	{
-			synce_error("Unknown object type");
+			synce_error("Unknown object type: %i", object_type);
 			goto exit;
 	}
 	

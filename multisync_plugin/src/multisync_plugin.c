@@ -5,20 +5,20 @@
 #include <string.h>
 #include "multisync_plugin.h"
 
-uint32_t synce_object_type_to_id(sync_object_type object_type)/*{{{*/
+uint32_t synce_object_type_to_id(RRA* rra, sync_object_type object_type)/*{{{*/
 {
 	uint32_t type_id = 0;
 	
 	switch (object_type)
 	{
 		case SYNC_OBJECT_TYPE_CALENDAR:  
-			type_id = RRA_OBJECT_TYPE_APPOINTMENT; 
+			type_id = rra_type_id_from_name(rra, RRA_TYPE_NAME_APPOINTMENT); 
 			break;
 		case SYNC_OBJECT_TYPE_PHONEBOOK: 
-			type_id = RRA_OBJECT_TYPE_CONTACT; 
+			type_id = rra_type_id_from_name(rra, RRA_TYPE_NAME_CONTACT); 
 			break;
 		case SYNC_OBJECT_TYPE_TODO: 		 
-			type_id = RRA_OBJECT_TYPE_TASK; 
+			type_id = rra_type_id_from_name(rra, RRA_TYPE_NAME_TASK); 
 			break;
 		default:
 			break;
@@ -166,13 +166,6 @@ void syncobj_modify(/*{{{*/
 
 	synce_trace("uid='%s', type=%i", uid, object_type);
 
-	type_id = synce_object_type_to_id(object_type);
-	if (!type_id)
-	{
-			synce_error("Unknown object type");
-			goto exit;
-	}
-	
 	if (uid)
 		object_id = strtol(uid, NULL, 16);
 	else
@@ -193,10 +186,17 @@ void syncobj_modify(/*{{{*/
 		goto exit;
 	}
 
-	switch (object_type)
-	{
-		case SYNC_OBJECT_TYPE_CALENDAR: 
-			if (!rra_appointment_from_vevent(
+  type_id = synce_object_type_to_id(rra, object_type);
+  if (!type_id)
+  {
+    synce_error("unknown object type: %i", object_type);
+    goto exit;
+  }
+
+  switch (object_type)
+  {
+    case SYNC_OBJECT_TYPE_CALENDAR: 
+      if (!rra_appointment_from_vevent(
 						object,
 						NULL,
 						&data,
@@ -300,13 +300,6 @@ void syncobj_delete(/*{{{*/
 
 	synce_trace("uid='%s', type=%i", uid, object_type);
 
-	type_id = synce_object_type_to_id(object_type);
-	if (!type_id)
-	{
-			synce_error("Unknown object type");
-			goto exit;
-	}
-	
 	if (uid)
 		object_id = strtol(uid, NULL, 16);
 	else
@@ -327,6 +320,13 @@ void syncobj_delete(/*{{{*/
 		goto exit;
 	}
 
+	type_id = synce_object_type_to_id(rra, object_type);
+	if (!type_id)
+	{
+			synce_error("Unknown object type: %i", object_type);
+			goto exit;
+	}
+	
 	if (!rra_object_delete(
 				rra,
 				type_id,
