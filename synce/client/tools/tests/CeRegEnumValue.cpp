@@ -6,7 +6,7 @@ int main()
 
 	HKEY hkey;
 
-	WCHAR * subkey = to_unicode("Start");
+	WCHAR * subkey = to_unicode("David");
 	VERIFY_EQUAL(ERROR_SUCCESS, CeRegOpenKeyEx(HKEY_CURRENT_USER, subkey, 0, 0, &hkey));
 
 	DWORD index = 0;
@@ -20,7 +20,6 @@ int main()
 		DWORD data_size = MAX_PATH;
 		DWORD type;
 
-		// XXX: wrong return value
 		result = CeRegEnumValue(hkey, index, valuename, 
 				&valuename_size, NULL, &type, data, &data_size);
 
@@ -28,10 +27,13 @@ int main()
 		{
 			break;
 		}
-		
-		printf("Value %li: type=%lu, name=\"%s\"\n", index, type, from_unicode(valuename));
-		
-		index++;
+		else
+		{
+			printf("Value %li: name=\"%s\", name_size=%i, type=0x%lx, data_size=%lu\n", 
+					index, from_unicode(valuename), valuename_size, type, data_size);
+			
+			index++;
+		}
 	}
 	
 	if (ERROR_NO_MORE_ITEMS != result)
