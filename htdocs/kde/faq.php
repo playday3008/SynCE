@@ -122,8 +122,8 @@ DCCM. RAKI will copy the right <tt>dccm.sh</tt> script for you.</li>
 a connection to my PDA RAKI brings up the initialization progress bar
 but blocks at a progress of 33%. I only have the possibility to kill
 it.</h3>
-<blockquote><b>A31:</b> This is a bug in SynCE-KDE-0.6.1 and before. It
-is fixed since SynCE-KDE-0.6.2.<br>
+<blockquote><b>A31:</b> This is a bug in SynCE-KDE-0.6 and before. It
+is fixed since SynCE-KDE-0.6.1.<br>
 </blockquote>
 <br>
 <p>Return to <a href="index.php">SynCE-KDE main page</a>.</p>
