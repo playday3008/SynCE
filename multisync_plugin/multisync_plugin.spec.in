@@ -36,4 +36,5 @@ make
 %files
 %defattr(-,root,root)
 %doc LICENSE
-%{prefix}/bin
+%{prefix}/lib
+%{prefix}/share
