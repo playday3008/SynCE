@@ -5,3 +5,6 @@ Makefile.in
 *.moc
 *.moc.cpp
 *.all_cpp.cpp
+*.lo
+*.la
+*.o
