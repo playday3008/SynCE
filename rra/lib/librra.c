@@ -62,13 +62,18 @@ void rra_free(RRA* rra)/*{{{*/
 
 bool rra_connect(RRA* rra)/*{{{*/
 {
+  HRESULT hr;
 	rra->server = synce_socket_new();
 
 	if (!synce_socket_listen(rra->server, NULL, RRAC_PORT))
 		goto fail;
 
-	/* TODO: error handling! */
-	CeStartReplication();
+	hr = CeStartReplication();
+  if (FAILED(hr))
+  {
+    synce_error("CeStartReplication failed: %s", synce_strerror(hr));
+    goto fail;
+  }
 
 	rra->cmd_channel   = synce_socket_accept(rra->server, NULL);
 	rra->data_channel  = synce_socket_accept(rra->server, NULL);
@@ -151,6 +156,140 @@ exit:
 	rrac_free(raw_object_types);
 	return success;
 }/*}}}*/
+
+bool rra_get_changes(
+    RRA* rra, 
+    uint32_t* object_type_ids, 
+    size_t object_type_count, 
+    NotificationFunc func,
+    void* cookie)
+{
+  bool success = false;
+	unsigned i, ignored_count;
+	uint32_t* ignored_ids = NULL;
+  ObjectType* object_types = NULL;
+	size_t total_object_type_count = 0;
+  ObjectIdArray object_id_array;
+  uint32_t recv_subcommand = 0;
+
+	if (!rra_get_object_types(rra, &object_types, &total_object_type_count))
+	{
+		synce_error("Failed to get object types");
+		goto exit;
+	}
+
+	/*
+	 * Ignore object types
+	 */
+
+	ignored_ids = malloc(object_type_count * sizeof(uint32_t));
+
+  /* O(2) loop but with so few entries I don't care */
+	for (i = 0, ignored_count = 0; i < total_object_type_count; i++)
+	{
+    unsigned j;
+
+    for (j = 0; j < object_type_count; j++)
+    {
+      if (object_types[i].id == object_type_ids[j])
+        break;
+    }
+
+    if (j == object_type_count)
+    {
+      ignored_ids[ignored_count++] = object_types[i].id;
+    }
+  }
+
+	rrac_send_70_3(rra->cmd_channel, ignored_ids, ignored_count);
+
+	if (!rrac_recv_reply_70(rra->cmd_channel))
+	{
+		goto exit;
+	}
+  
+	/*
+	 * Receive this first
+	 */
+
+	if (!rrac_recv_69_2(rra->cmd_channel))
+	{
+		synce_trace("rrac_recv_69_2 failed");
+		goto exit;
+	}
+
+	/*
+	 * Receive object ids
+	 */
+
+	while (recv_subcommand != 0x06000000)
+	{
+    uint32_t recv_type_id;
+    uint32_t recv_some_count;
+    uint32_t* recv_ids;
+    uint32_t recv_id_count;
+
+		if (!rrac_recv_69_not_2(
+					rra->cmd_channel, 
+					&recv_subcommand,
+					&recv_type_id,
+					&recv_some_count,
+					&recv_ids,
+					&recv_id_count))
+		{
+			synce_trace("rrac_recv_69_not_2 failed");
+			goto exit;
+		}
+
+		if (0x04000000 == recv_subcommand ||
+				0x06000000 == recv_subcommand)
+		{
+			unsigned j = 0;
+
+			synce_trace("subcommand %08x, changed count=%i, total count=%i",
+					recv_subcommand, recv_some_count, recv_id_count);
+
+			if (recv_id_count)
+			{
+				synce_trace("unchanged ids:");
+				for (i = 0; i < (recv_id_count-recv_some_count); i++, j++)
+				{
+					synce_trace("id[%i] = %08x", j, recv_ids[j]);
+				}
+
+				synce_trace("changed ids:");
+				for (i = 0; i < recv_some_count; i++, j++)
+				{
+					synce_trace("id[%i] = %08x", j, recv_ids[j]);
+				}
+
+        object_id_array.ids       = recv_ids;
+				object_id_array.unchanged = recv_id_count - recv_some_count;
+				object_id_array.changed   = recv_some_count;
+        func(recv_type_id, &object_id_array, cookie);
+			}
+		}
+		else
+		{
+			synce_trace("unexpected subcommand %08x, some_count=%i, id_count=%i",
+					recv_subcommand, recv_some_count, recv_id_count);
+
+			for (i = 0; i < recv_id_count; i++)
+			{
+				synce_trace("id[%i] = %08x", i, recv_ids[i]);
+			}
+		}
+
+    rrac_free(recv_ids);
+  }
+
+  success = true;
+  
+exit:
+	if (ignored_ids)
+		free(ignored_ids);
+  return success;
+}
 
 bool rra_get_object_ids(RRA* rra,/*{{{*/
                         uint32_t object_type_id,

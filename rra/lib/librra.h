@@ -37,6 +37,11 @@ typedef struct _ObjectIdArray
   uint32_t   changed;     /* number of changed ids */
 } ObjectIdArray;
 
+typedef bool (*NotificationFunc)(
+    uint32_t type_id,
+    ObjectIdArray* object_id_array,
+    void* cookie);
+
 
 /* connection to RRA */
 
@@ -54,6 +59,15 @@ void rra_disconnect(RRA* rra);
 bool rra_get_object_types(RRA* rra, 
                           ObjectType** pp_object_types,
                           size_t* object_type_count);
+
+/* get changes */
+
+bool rra_get_changes(
+    RRA* rra, 
+    uint32_t* object_type_ids, 
+    size_t object_type_count, 
+    NotificationFunc func,
+    void* cookie);
 
 /* get object ids */
 
