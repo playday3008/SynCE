@@ -32,9 +32,9 @@ class Decoder{
 public:
     Decoder();
     Decoder(Decoder *chain);
-    virtual size_t decode(unsigned char *rawData, size_t rawSize, unsigned char *encData, size_t encSize);
+    virtual bool decode(unsigned char *rawData, size_t rawSize, unsigned char *encData, size_t encSize);
     bool readData(int s, size_t encSize);
-    size_t chainDecode(unsigned char *rawData, size_t chainEncSize);
+    bool chainDecode(unsigned char *rawData, size_t chainEncSize);
     size_t chainRead(int s);
     virtual void cleanUp();
     virtual ~Decoder();

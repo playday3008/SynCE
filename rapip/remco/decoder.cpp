@@ -44,41 +44,34 @@ Decoder::Decoder(Decoder *chain)
 }
 
 
-size_t Decoder::decode(unsigned char *rawData, size_t /*rawSize*/, unsigned char *encData, size_t encSize)
+bool Decoder::decode(unsigned char *rawData, size_t /*rawSize*/, unsigned char *encData, size_t encSize)
 {
     memcpy(rawData, encData, encSize);
-    return encSize;
+    return true;
 }
 
 
-size_t Decoder::chainDecode(unsigned char *rawData, size_t chainEncSize)
+bool Decoder::chainDecode(unsigned char *rawData, size_t rawSize)
 {
-    unsigned char *chainRawData;
-    size_t chainRawSize;
-    size_t rawSize;
+    bool ret = true;
 
     if (chain != NULL) {
-        chainRawData = new unsigned char[encSize];
-        chainRawSize = chain->chainDecode(chainRawData, encSize);
-    } else {
-        chainRawData = encData;
-        chainRawSize = encSize;
+        encData = new unsigned char[encSize];
+        ret = chain->chainDecode(encData, encSize);
     }
 
-    rawSize = decode(rawData, chainEncSize, chainRawData, chainRawSize);
-
-    if (rawSize == chainEncSize)
-    {
+    if (ret) {
+        ret = decode(rawData, rawSize, encData, encSize);
     }
 
     this->rawData = rawData;
-    delete[] chainRawData;
+    delete[] encData;
 
     if (chain != NULL) {
         chain->chainCleanUp();
     }
 
-    return rawSize;
+    return ret;
 }
 
 

@@ -43,6 +43,7 @@ extern "C"
 #include <kiconloader.h>
 #include <kstatusbar.h>
 #include <khelpmenu.h>
+#include <kmessagebox.h>
 
 #include "rapiwrapper.h"
 #include "rledecoder.h"
@@ -88,6 +89,7 @@ CeScreen::CeScreen(KAboutApplication *aboutApplication)
 
     connect(tb, SIGNAL(placeChanged(QDockWindow::Place )), this, SLOT(resizeWindow()));
     connect(tb, SIGNAL(modechange()), this, SLOT(resizeWindow()));
+    connect(tb, SIGNAL(modechange(BarPosition )), this, SLOT(resizeWindow()));
 
     statusBar()->insertItem(i18n("Connecting..."), 1);
 
@@ -261,6 +263,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
     p = read(pdaSocket->socket(), &packageType, sizeof(unsigned char));
     m = read(pdaSocket->socket(), &xN, sizeof(long));
     k = read(pdaSocket->socket(), &yN, sizeof(long));
+
     if (m > 0 && k > 0) {
         width = ntohl(xN);
         height = ntohl(yN);
@@ -273,86 +276,27 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
 }
 
 
-size_t CeScreen::rle_decode(unsigned char *target, unsigned char *source, size_t size, unsigned char *oldData)
-{
-    unsigned char *act1 = source;
-    unsigned char *act2 = source + 1;
-    unsigned char *act3 = source + 2;
-
-    unsigned char val1 = *act1;
-    unsigned char val2 = *act2;
-    unsigned char val3 = *act3;
-
-    unsigned char *tmp_target = target;
-
-    size_t count = 0;
-    size_t samcount = 0;
-    do {
-        if ((val1 == *act1) && (val2 == *act2) && (val3 == *act3)) {
-            samcount++;
-            *tmp_target++ = val1 ^ *oldData++;
-            *tmp_target++ = val2 ^ *oldData++;
-            *tmp_target++ = val3 ^ *oldData++;
-            act1 += 3;
-            act2 += 3;
-            act3 += 3;
-            count += 3;
-            if (samcount == 2) {
-                samcount = 0;
-                unsigned char samruncount = *act1;
-                while (samruncount) {
-                    *tmp_target++ = val1 ^ *oldData++;
-                    *tmp_target++ = val2 ^ *oldData++;
-                    *tmp_target++ = val3 ^ *oldData++;
-                    samruncount--;
-                }
-                act1 += 1;
-                act2 += 1;
-                act3 += 1;
-                count += 1;
-                if (count < size) {
-                    val1 = *act1;
-                    val2 = *act2;
-                    val3 = *act3;
-                }
-            }
-        } else {
-            samcount = 0;
-            *tmp_target++ = (val1 = *act1) ^ *oldData++;
-            *tmp_target++ = (val2 = *act2) ^ *oldData++;
-            *tmp_target++ = (val3 = *act3) ^ *oldData++;
-            act1 += 3;
-            act2 += 3;
-            act3 += 3;
-            count += 3;
-        }
-    } while (count < size);
-
-    return tmp_target - target;
-}
-
-
 bool CeScreen::readEncodedImage(KSocket *socket)
 {
     uint32_t headerSizeN;
     uint32_t headerSize;
     uint32_t bmpSizeN;
     uint32_t bmpSize;
-    int m;
     int n;
+    bool ret = false;
 
     n = read(socket->socket(), &bmpSizeN, sizeof(long));
 
-    if (n > 0) {
+    if (n == sizeof(long)) {
         bmpSize = ntohl(bmpSizeN);
     } else {
-        kdDebug(2120) << "Error readeing bmpSize" << endl;
+        KMessageBox::error(this, "Connection to PDA broken", "Error");
         return false;
     }
 
-    m = read (socket->socket(), &headerSizeN, sizeof(long));
+    n = read (socket->socket(), &headerSizeN, sizeof(long));
 
-    if (m > 0) {
+    if (n == sizeof(long)) {
         headerSize = ntohl(headerSizeN);
         uint32_t readSize = 0;
         unsigned char *bmpData = new unsigned char[bmpSize];
@@ -360,67 +304,65 @@ bool CeScreen::readEncodedImage(KSocket *socket)
         do {
             int n = read(socket->socket(), bmpData + readSize, headerSize - readSize);
             readSize += n;
-            if (n < 0) {
-                kdDebug(2120) << "Error reading bitmap header" << endl;
-                delete socket;
-                return false;
-            }
-
-            if (n == 0) {
-                kdDebug(2120) << "End of connection" << endl;
-                delete socket;
+            if (n <= 0) {
+                KMessageBox::error(this, "Conection to PDA broken", "Error");
                 return false;
             }
         } while (readSize < headerSize);
 
         uint32_t rawSize = decoderChain->chainRead(socket->socket());
         if (rawSize > 0) {
-            decoderChain->chainDecode(bmpData + headerSize, rawSize);
-        } else {
-            kdDebug(2120) << "Error reading" << endl;
-        }
+            if ((ret = decoderChain->chainDecode(bmpData + headerSize, rawSize))) {
+                if (oldData != NULL) {
+                    for (uint32_t i = headerSize; i < bmpSize; i++) {
+                        bmpData[i] ^= oldData[i];
+                    }
+                }
 
-        if (oldData != NULL) {
-            for (uint32_t i = headerSize; i < bmpSize; i++) {
-                bmpData[i] ^= oldData[i];
+                if (oldData != NULL) {
+                    delete[] oldData;
+                }
+
+                oldData = bmpData;
+                imageViewer->loadImage(oldData, bmpSize);
+
+                if (!pause) {
+                    imageViewer->drawImage();
+                }
             }
+        } else {
+            KMessageBox::error(this, "Conection to PDA broken", "Error");
+            return false;
         }
-
-        if (oldData != NULL) {
-            delete[] oldData;
-        }
-
-        oldData = bmpData;
-
-        imageViewer->loadImage(oldData, bmpSize);
-
-        if (!pause) {
-            imageViewer->drawImage();
-        }
-
     } else {
-        kdDebug(2120) << "Error reading bmpHeaderSize" << endl;
+        KMessageBox::error(this, "Conection to PDA broken", "Error");
         return false;
     }
 
-    return true;
+    return ret;
 }
 
 
-void CeScreen::readSizeMessage(KSocket *socket)
+bool CeScreen::readSizeMessage(KSocket *socket)
 {
     uint32_t xN;
     uint32_t yN;
     int m;
     int k;
+    bool ret = true;
 
     m = read(socket->socket(), &xN, sizeof(long));
     k = read(socket->socket(), &yN, sizeof(long));
-    if (m > 0 && k > 0) {
+    if (m == sizeof(long) && k == sizeof(long)) {
         uint32_t x = ntohl(xN);
         uint32_t y = ntohl(yN);
         emit pdaSize((int) x, (int) y);
+    } else {
+        KMessageBox::error(this, "Conection to PDA broken", "Error");
+        ret = false;
     }
+
+    return ret;
 }
 
 
@@ -428,19 +370,23 @@ void CeScreen::readSocket(KSocket *socket)
 {
     unsigned char packageType;
 
-    if (socket != NULL) {
-        int p = read(socket->socket(), &packageType, sizeof(unsigned char));
-        if (p == 0) {
-            delete socket;
-            socket = NULL;
-            return;
-        }
+    int p = read(socket->socket(), &packageType, sizeof(unsigned char));
+    if (p != sizeof(unsigned char)) {
+        emit pdaError();
+        delete socket;
+    } else {
         switch(packageType) {
         case XOR_IMAGE:
-            this->readEncodedImage(socket);
+            if (!readEncodedImage(socket)) {
+                emit pdaError();
+                delete socket;
+            }
             break;
         case SIZE_MESSAGE:
-            this->readSizeMessage(socket);
+            if (!readSizeMessage(socket)) {
+                emit pdaError();
+                delete socket;
+            }
             break;
         case KEY_IMAGE:
             break;
@@ -461,27 +407,31 @@ void CeScreen::closeSocket(KSocket *socket)
 void CeScreen::sendMouseEvent(unsigned long int button, unsigned long int cmd,
                               unsigned long int x, unsigned long int y)
 {
-    unsigned char buf[4 * sizeof(uint32_t)];
+    if (!pause) {
+        unsigned char buf[4 * sizeof(uint32_t)];
 
-    *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(cmd);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(button);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 2] = htonl((long) (65535 * x / width));
-    *(uint32_t *) &buf[sizeof(uint32_t) * 3] = htonl((long) (65535 * y / height));
+        *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(cmd);
+        *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(button);
+        *(uint32_t *) &buf[sizeof(uint32_t) * 2] = htonl((long) (65535 * x / width));
+        *(uint32_t *) &buf[sizeof(uint32_t) * 3] = htonl((long) (65535 * y / height));
 
-    write(pdaSocket->socket(), buf, 4 * sizeof(uint32_t));
+        write(pdaSocket->socket(), buf, 4 * sizeof(uint32_t));
+    }
 }
 
 
 void CeScreen::sendKeyEvent(unsigned long int code, unsigned long int cmd)
 {
-    unsigned char buf[4 * sizeof(uint32_t)];
+    if (!pause) {
+        unsigned char buf[4 * sizeof(uint32_t)];
 
-    *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(cmd);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(code);
-    *(uint32_t *) &buf[sizeof(uint32_t) * 2] = 0;
-    *(uint32_t *) &buf[sizeof(uint32_t) * 3] = 0;
+        *(uint32_t *) &buf[sizeof(uint32_t) * 0] = htonl(cmd);
+        *(uint32_t *) &buf[sizeof(uint32_t) * 1] = htonl(code);
+        *(uint32_t *) &buf[sizeof(uint32_t) * 2] = 0;
+        *(uint32_t *) &buf[sizeof(uint32_t) * 3] = 0;
 
-    write(pdaSocket->socket(), buf, 4 * sizeof(uint32_t));
+        write(pdaSocket->socket(), buf, 4 * sizeof(uint32_t));
+    }
 }
 
 

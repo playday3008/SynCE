@@ -37,7 +37,7 @@ RleDecoder::~RleDecoder()
 }
 
 
-size_t RleDecoder::decode(unsigned char *target, size_t /*rawSize*/, unsigned char *source, size_t size)
+bool RleDecoder::decode(unsigned char *target, size_t rawSize, unsigned char *source, size_t size)
 {
     unsigned char *act1 = source;
     unsigned char *act2 = source + 1;
@@ -92,6 +92,6 @@ size_t RleDecoder::decode(unsigned char *target, size_t /*rawSize*/, unsigned ch
         }
     } while (count < size);
 
-    return tmp_target - target;
+    return (tmp_target - target) == rawSize;
 
 }

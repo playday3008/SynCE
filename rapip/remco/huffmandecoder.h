@@ -37,7 +37,7 @@ public:
 
     ~HuffmanDecoder();
 
-    virtual size_t decode(unsigned char* rawData, size_t rawSize, unsigned char* encData, size_t encSize);
+    bool decode(unsigned char* rawData, size_t rawSize, unsigned char* encData, size_t encSize);
 
 };
 

@@ -80,17 +80,17 @@ signals:
     void printContent();
     void saveContent();
     void pdaSize(int, int );
+    void pdaError();
 
 private:
     KSocket *pdaSocket;
     unsigned char *oldData;
 
-    size_t rle_decode(unsigned char *target, unsigned char *source, size_t size, unsigned char *oldData);
     void sendMouseEvent(unsigned long int button, unsigned long int cmd,
             unsigned long int x, unsigned long int y);
     void sendKeyEvent(unsigned long int code, unsigned long int cmd);
     bool readEncodedImage(KSocket *socket);
-    void readSizeMessage(KSocket *socket);
+    bool readSizeMessage(KSocket *socket);
     QString getDeviceIp(QString pdaAddress);
     unsigned long toKeySym(int ascii, int code);
     ImageViewer *imageViewer;

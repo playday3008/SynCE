@@ -328,7 +328,7 @@ read_code_table_from_memory(const unsigned char* bufin,
 #define CACHE_SIZE 1024
 
 
-static int huffman_decode_memory(const unsigned char *bufin,
+static bool huffman_decode_memory(const unsigned char *bufin,
                           unsigned int bufinlen,
                           unsigned char **pbufout,
                           unsigned int *pbufoutlen)
@@ -341,12 +341,12 @@ static int huffman_decode_memory(const unsigned char *bufin,
 
     /* Ensure the arguments are valid. */
     if(!pbufout || !pbufoutlen)
-        return 1;
+        return false;
 
     /* Read the Huffman code table. */
     root = read_code_table_from_memory(bufin, bufinlen, &i, &data_count);
     if(!root)
-        return 1;
+        return false;
 
     buf = (unsigned char*)malloc(data_count);
 
@@ -370,7 +370,7 @@ static int huffman_decode_memory(const unsigned char *bufin,
     free_huffman_tree(root);
     *pbufout = buf;
     *pbufoutlen = bufcur;
-    return 0;
+    return true;
 }
 
 
@@ -389,20 +389,24 @@ HuffmanDecoder::~HuffmanDecoder()
 }
 
 
-size_t HuffmanDecoder::decode(unsigned char *rawData, size_t rawSize, unsigned char *encData, size_t encSize)
+bool HuffmanDecoder::decode(unsigned char *rawData, size_t rawSize, unsigned char *encData, size_t encSize)
 {
     size_t bufOutLen;
     unsigned char *bufOut;
-    huffman_decode_memory(encData, encSize, &bufOut, &bufOutLen);
+    bool ret = true;
 
-    if (bufOutLen != rawSize) {
+    ret = huffman_decode_memory(encData, encSize, &bufOut, &bufOutLen);
+
+    if (ret) {
+        if (bufOutLen == rawSize) {
+            memcpy(rawData, bufOut, rawSize);
+        } else {
+            ret = false;
+        }
     }
-
-
-    memcpy(rawData, bufOut, rawSize);
 
     free(bufOut);
 
-    return bufOutLen;
+    return ret;
 }
 
