@@ -170,8 +170,7 @@ href="usb_linux_setup.php">configure SynCE</a>.</p>
 module manual like this, but with the vendor and product ID for your
 device:</p>
 
-<blockquote><pre>insmod usbserial
-insmod ipaq vendor=0x049f product=0x0032</pre></blockquote>
+<blockquote><pre>modprobe ipaq vendor=0x049f product=0x0032</pre></blockquote>
 
 <p>Or add a line similar to this to your <tt>/etc/modules.conf</tt> file before
 connecting your device:</p>
