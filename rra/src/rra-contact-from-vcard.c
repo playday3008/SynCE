@@ -37,12 +37,11 @@ int main(int argc, char** argv)
 	file = NULL;
 
 	if (!rra_contact_from_vcard(
-			RRA_CONTACT_NEW,
 			vcard,
 			NULL,
 			&buffer,
 			&buffer_size,
-			RRA_CONTACT_ISO8859_1))
+			RRA_CONTACT_NEW | RRA_CONTACT_ISO8859_1))
 	{
 		fprintf(stderr, "Failed to create data\n");
 		goto exit;

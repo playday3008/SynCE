@@ -125,27 +125,30 @@ bool rra_partner_get_name(RRA* rra, uint32_t index, char** name);
 
 #define RRA_CONTACT_ID_UNKNOWN  0
 
-#define RRA_CONTACT_NEW     0
-#define RRA_CONTACT_UPDATE  1
+/* flags for rra_contact_(from|to)_vcard() */
 
-#define RRA_CONTACT_VCARD_UNKNOWN   0
-#define RRA_CONTACT_VCARD_2_1      21
-#define RRA_CONTACT_VCARD_3_0      30
+#define RRA_CONTACT_NEW     				0x1
+#define RRA_CONTACT_UPDATE  				0x2
+#define RRA_CONTACT_COMMAND_MASK		0xf
 
-/* flags for rra_contact_from_vcard() */
+#define RRA_CONTACT_ISO8859_1				0x10
+#define RRA_CONTACT_UTF8						0x20
+#define RRA_CONTACT_CHARSET_MASK		0xf0
 
-#define RRA_CONTACT_ISO8859_1		0
-#define RRA_CONTACT_UTF8				1
+#define RRA_CONTACT_VERSION_UNKNOWN   0x000
+#define RRA_CONTACT_VERSION_2_1   		0x100
+#define RRA_CONTACT_VERSION_3_0   		0x200
+#define RRA_CONTACT_VERSION_MASK			0xf00
+
 
 bool rra_contact_to_vcard(
 		uint32_t id, 
 		const uint8_t* data, 
 		size_t data_size,
-		uint32_t vcard_version,
-		char** vcard);
+		char** vcard,
+		uint32_t flags);
 
 bool rra_contact_from_vcard(
-		int command,
 		const char* vcard, 
 		uint32_t* id,
 		uint8_t** data, 

@@ -36,8 +36,8 @@ int main(int argc, char** argv)
 			RRA_CONTACT_ID_UNKNOWN,
 			buffer,
 			file_size,
-			RRA_CONTACT_VCARD_3_0,
-			&vcard))
+			&vcard,
+			RRA_CONTACT_VERSION_3_0))
 	{
 		fprintf(stderr, "Failed to create vCard\n");
 		goto exit;

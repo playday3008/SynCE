@@ -194,6 +194,17 @@ bool decode_database_stream(uint8_t* buffer)
 			case CEVT_BLOB:  
 				printf("0x%x (%i) bytes:", propvals[i].val.blob.dwCount, propvals[i].val.blob.dwCount);
 				db_dump(propvals[i].val.blob.lpb, propvals[i].val.blob.dwCount);
+
+				/* special debug code for appointments */
+				if (0x4015 == (propvals[i].propid >> 16))
+				{
+					printf("\n                     X-RecurrenceType: %02x", 
+							propvals[i].val.blob.lpb[0x06]);
+					printf("\n                     X-Inteval:        %02x", 
+							propvals[i].val.blob.lpb[0x0e]);
+					printf("\n                     X-DaysOfWeek:     %02x", 
+							propvals[i].val.blob.lpb[0x16]);
+				}
 				
 				break;
 
@@ -254,7 +265,7 @@ int main(int argc, char** argv)
 				break;
 
 			default:
-				fprintf(stderr, "Unexpected file header: %08x",
+				fprintf(stderr, "Unexpected file header: %08x\n",
 						*(uint32_t*)(buffer + 0));
 				break;
 		}

@@ -67,6 +67,8 @@ int main(int argc, char** argv)
 		printf("%08x  Deleted\n", deleted_ids[id]);
 
 exit:
+	rra_free_object_ids(object_ids);
+	rra_free_deleted_object_ids(deleted_ids);
 	rra_free(rra);
 	
 	CeRapiUninit();
