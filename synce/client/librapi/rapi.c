@@ -1483,8 +1483,9 @@ STDAPI_( HRESULT ) CeRapiFreeBuffer( LPVOID Buffer )
 
 STDAPI_(BOOL) CeGetVersionEx(LPCEOSVERSIONINFO lpVersion)
 {
-	long result = ERROR_SUCCESS;
+	BOOL result = FALSE;
 	long size = BUFSIZE;
+	LONG lng;
 	
 	initBuf(buffer, size);
 	
@@ -1505,25 +1506,121 @@ STDAPI_(BOOL) CeGetVersionEx(LPCEOSVERSIONINFO lpVersion)
 	 * 10      n     first n bytes of struct
 	 */
 	
-	result = getLong(sock, &size); 
+	lng = getLong(sock, &size); 
 	_lasterror = getLong(sock, &size);
 
-	if (0 == result)
+	if (0 == lng)
 	{
-		long lng = getLong(sock, &size);
-		if (1 == lng)
+		result = getLong(sock, &size);
+		if (1 == result)
 		{
 		 	long real_length = getLong(sock, &size);
 			getbufferchunk(sock, &size, lpVersion, real_length);
 		}
 	}
+	else
+	{
+		DBG_printf("Warning: expected 0 but got %i=0x%x\n", lng, lng);
+	}
 	
 	if ( size > 0 )
 	{
 		DBG_printf( "size : %d\n", size );
-/*		flushbuffer( sock );*/
+		flushbuffer( sock );
 	}	
 	
-	return TRUE;
+	return result;
 }
+
+STDAPI_(BOOL) CeCreateDirectory(LPCWSTR lpDirName, LPSECURITY_ATTRIBUTES lpSecAttr)
+{
+	BOOL result = FALSE;
+	long size = BUFSIZE;
+	LONG lng;
+	
+	initBuf(buffer, size);
+	
+	pushLong(buffer, size, 0x17); 	/* Command */
+	pushParameter(size, (void*)lpDirName, (wcslen(lpDirName) + 1) * sizeof(WCHAR), 1);
+	pushLong(buffer, size, 0); 	/* lpSecAttr not used */
+	
+	/*DBG_printbuf( buffer );*/
+	sendbuffer( sock, buffer );
+	size = getbufferlen( sock );
+
+	/*
+	 * The return package looks like this
+	 *
+	 * Offset  Size  Value
+	 * 00      4     0
+	 * 04      4     error code if the value below is 0
+	 * 08      4     0/1
+	*/
+
+	lng = getLong(sock, &size); 
+	_lasterror = getLong(sock, &size);
+
+	if (0 == lng)
+	{
+		result = getLong(sock, &size);
+	}
+	else
+	{
+		DBG_printf("Warning: expected 0 but got %i=0x%x\n", lng, lng);
+	}
+	
+	if ( size > 0 )
+	{
+		DBG_printf( "size : %d\n", size );
+		flushbuffer( sock );
+	}	
+	
+	return result;
+}
+
+STDAPI_(BOOL) CeRemoveDirectory(LPCWSTR lpPathName)
+{
+	BOOL result = FALSE;
+	long size = BUFSIZE;
+	LONG lng;
+	
+	initBuf(buffer, size);
+	
+	pushLong(buffer, size, 0x18); 	/* Command */
+	pushParameter(size, (void*)lpPathName, (wcslen(lpPathName) + 1) * sizeof(WCHAR), 1);
+	
+	/*DBG_printbuf( buffer );*/
+	sendbuffer( sock, buffer );
+	size = getbufferlen( sock );
+
+	/*
+	 * The return package looks like this
+	 *
+	 * Offset  Size  Value
+	 * 00      4     0
+	 * 04      4     error code if the value below is 0
+	 * 08      4     0/1
+	*/
+
+	lng = getLong(sock, &size); 
+	_lasterror = getLong(sock, &size);
+
+	if (0 == lng)
+	{
+		result = getLong(sock, &size);
+	}
+	else
+	{
+		DBG_printf("Warning: expected 0 but got %i=0x%x\n", lng, lng);
+	}
+	
+	if ( size > 0 )
+	{
+		DBG_printf( "size : %d\n", size );
+		flushbuffer( sock );
+	}	
+	
+	return result;
+}
+
 
