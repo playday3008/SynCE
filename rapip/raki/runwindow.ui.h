@@ -14,6 +14,7 @@ void RunWindow::openFileDialog(KURLRequester *requester)
     KFileDialog *fd = requester->fileDialog();
     fd->setFilter("*.exe|Executable (*.exe)");
     fd->setURL(url);
+//    requester->setURL("rapip:/");
     fd->setMode(KFile::File | KFile::ExistingOnly);
 }
 
