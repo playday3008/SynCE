@@ -117,8 +117,7 @@ PDA::PDA(Raki *raki, QString pdaName)
     associatedMenu->insertTearOffHandle(-1, -1);
     menuCount++;
 
-    connect(this->syncDialog, SIGNAL(finished()), this->configDialog,
-            SLOT(writeConfig()));
+    connect(syncDialog, SIGNAL(finished()), configDialog, SLOT(writeConfig()));
 }
 
 
@@ -219,7 +218,7 @@ void PDA::synchronize(bool forced)
     if ((forced || configDialog->getSyncAtConnect()) && isPartner()) {
         QPtrList<SyncTaskListItem>& syncItems =
                 configDialog->getSyncTaskItemList();
-        syncDialog->show(syncItems);
+        syncDialog->show(syncItems, configDialog->getConfigFile());
     }
 }
 
