@@ -39,6 +39,7 @@ typedef struct _EventGeneratorData
   CEPROPVAL* reminder_enabled;
 #if ENABLE_RECURRENCE
   CEPROPVAL* recurrence_pattern;
+  CEPROPVAL* unique;
 #endif
 } EventGeneratorData;
 
@@ -119,48 +120,14 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
+#if ENABLE_RECURRENCE
 bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  char* buffer = NULL;;
-  unsigned i;
-  bool is_text = true;
-
-  assert(CEVT_BLOB == (propval->propid & 0xffff));
-
-  for (i = 0; i < propval->val.blob.dwCount; i++)
-    if (!isprint(propval->val.blob.lpb[i]))
-    {
-      is_text = false;
-      break;
-    }
-
-  if (is_text)
-  {
-    /* This is if SynCE has saved a text UID to this BLOB */
-    buffer = malloc(propval->val.blob.dwCount + 1);
-    memcpy(buffer, propval->val.blob.lpb, propval->val.blob.dwCount);
-    buffer[propval->val.blob.dwCount] = '\0';
-  }
-  else
-  {
-    /* This is for the usual binary UID */
-    char* p = NULL;
-    buffer = (char*)malloc(propval->val.blob.dwCount * 2 + sizeof(BLOB0067_STR));
-
-    strcpy(buffer, BLOB0067_STR);
-    p = buffer + strlen(buffer);
-
-    for (i = 0; i < propval->val.blob.dwCount; i++)
-    {
-      sprintf(p, "%02x", propval->val.blob.lpb[i]);
-      p += 2;
-    }
-  }
-
-  generator_add_simple(g, "UID", buffer);
-  free(buffer);
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->unique = propval;
   return true;
 }
+#endif
 
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
@@ -203,7 +170,9 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
   generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);
   generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
+#if ENABLE_RECURRENCE
   generator_add_property(generator, ID_UNIQUE,      on_propval_unique);
+#endif
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -330,9 +299,57 @@ bool rra_appointment_to_vevent(/*{{{*/
   }
 
 #if ENABLE_RECURRENCE
-  if (event_generator_data.recurrence_pattern &&
-      !recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern))
-    synce_warning("Failed to generate RRULE from recurrence pattern.");
+  if (event_generator_data.recurrence_pattern)
+  {
+    if (!recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern))
+      synce_warning("Failed to generate RRULE from recurrence pattern.");
+
+    if (event_generator_data.unique)
+    {
+      char* buffer = NULL;
+      unsigned i;
+      bool is_text = true;
+
+      assert(CEVT_BLOB == (event_generator_data.unique->propid & 0xffff));
+
+      for (i = 0; i < event_generator_data.unique->val.blob.dwCount; i++)
+        if (!isprint(event_generator_data.unique->val.blob.lpb[i]))
+        {
+          is_text = false;
+          break;
+        }
+
+      if (is_text)
+      {
+        /* This is if SynCE has saved a text UID to this BLOB */
+        buffer = malloc(event_generator_data.unique->val.blob.dwCount + 1);
+        memcpy(
+            buffer, 
+            event_generator_data.unique->val.blob.lpb, 
+            event_generator_data.unique->val.blob.dwCount);
+        buffer[event_generator_data.unique->val.blob.dwCount] = '\0';
+      }
+      else
+      {
+        /* This is for the usual binary UID */
+        char* p = NULL;
+        buffer = (char*)malloc(
+            event_generator_data.unique->val.blob.dwCount * 2 + sizeof(BLOB0067_STR));
+
+        strcpy(buffer, BLOB0067_STR);
+        p = buffer + strlen(buffer);
+
+        for (i = 0; i < event_generator_data.unique->val.blob.dwCount; i++)
+        {
+          sprintf(p, "%02x", event_generator_data.unique->val.blob.lpb[i]);
+          p += 2;
+        }
+      }
+
+      generator_add_simple(generator, "UID", buffer);
+      free(buffer);
+    }
+  }
 #endif
 
    generator_add_simple(generator, "END", "VEVENT");
@@ -367,6 +384,7 @@ typedef struct _EventParserData
 #if ENABLE_RECURRENCE
   RRA_MdirLineVector* exdates;
   mdir_line* rrule;
+  mdir_line* uid;
 #endif
 } EventParserData;
 
@@ -473,36 +491,14 @@ static bool on_mdir_line_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
   return true;
 }/*}}}*/
 
+#if ENABLE_RECURRENCE
 static bool on_mdir_line_uid(Parser* parser, mdir_line* line, void* cookie)/*{{{*/
 {
-  if (line)
-    if (0 == strncmp(line->values[0], BLOB0067_STR, strlen(BLOB0067_STR)))
-    {
-      /* A binary UID from SynCE */
-      size_t size = (strlen(line->values[0]) - strlen(BLOB0067_STR)) / 2;
-      uint8_t* buffer = malloc(size);
-      unsigned i;
-      char* p;
-
-      p = line->values[0] + strlen(BLOB0067_STR);
-
-      for (i = 0; i < size; i++, p+=2)
-      {
-        char tmp[3] = {p[0], p[1], '\0'};
-        buffer[i] = (uint8_t)strtol(tmp, NULL, 16);
-      }
-
-      parser_add_blob(parser, ID_UNIQUE, buffer, size);
-      free(buffer);
-    }
-    else
-    {
-      /* A text UID */
-      parser_add_blob(parser, ID_UNIQUE, (uint8_t*)line->values[0], strlen(line->values[0]));
-    }
-  
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->uid = line;
   return true;
-}/*}}}*/
+}
+#endif
 
 bool rra_appointment_from_vevent(/*{{{*/
     const char* vevent,
@@ -566,8 +562,10 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_property_new("Summary", on_mdir_line_summary));
   parser_component_add_parser_property(event, 
       parser_property_new("Transp", on_mdir_line_transp));
+#if ENABLE_RECURRENCE
   parser_component_add_parser_property(event, 
       parser_property_new("UId", on_mdir_line_uid));
+#endif
 
   calendar = parser_component_new("vCalendar");
   parser_component_add_parser_component(calendar, event);
@@ -645,6 +643,36 @@ bool rra_appointment_from_vevent(/*{{{*/
             event_parser_data.rrule, 
             event_parser_data.exdates))
         synce_warning("Failed to parse recurrence rule");
+
+      if (event_parser_data.uid)
+        if (0 == strncmp(event_parser_data.uid->values[0], BLOB0067_STR, strlen(BLOB0067_STR)))
+        {
+          /* A binary UID from SynCE */
+          size_t size = (strlen(event_parser_data.uid->values[0]) - strlen(BLOB0067_STR)) / 2;
+          uint8_t* buffer = malloc(size);
+          unsigned i;
+          char* p;
+
+          p = event_parser_data.uid->values[0] + strlen(BLOB0067_STR);
+
+          for (i = 0; i < size; i++, p+=2)
+          {
+            char tmp[3] = {p[0], p[1], '\0'};
+            buffer[i] = (uint8_t)strtol(tmp, NULL, 16);
+          }
+
+          parser_add_blob(parser, ID_UNIQUE, buffer, size);
+          free(buffer);
+        }
+        else
+        {
+          /* A text UID */
+          parser_add_blob(
+              parser, 
+              ID_UNIQUE, 
+              (uint8_t*)event_parser_data.uid->values[0], 
+              strlen(event_parser_data.uid->values[0]));
+        }
     }
     else
 #endif
