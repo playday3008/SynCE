@@ -1,13 +1,14 @@
 /* $Id$ */
 #include "rapi.h"
 #include "rapi_context.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #if HAVE_CONFIG_H
 #include "rapi_config.h"
 #endif
 
-#define RAPI_DATABASE_DEBUG 1
+#define RAPI_DATABASE_DEBUG 0
 
 #if RAPI_DATABASE_DEBUG
 #define rapi_database_trace(args...)    synce_trace(args)
@@ -442,6 +443,7 @@ static bool PreparePropValForWriting(unsigned* data_offset, CEPROPVAL* propval)/
 			break;
 
 		case CEVT_LPWSTR:
+      if (propval->val.lpwstr)
 			{
 				size_t size = sizeof(WCHAR) * (wstr_strlen(propval->val.lpwstr) + 1);
 				rapi_database_trace_wstr(propval->val.lpwstr);
@@ -449,6 +451,11 @@ static bool PreparePropValForWriting(unsigned* data_offset, CEPROPVAL* propval)/
 				rapi_database_trace("String offset: %p", propval->val.lpwstr);
 				*data_offset += size;
 			}
+      else
+      {
+				rapi_database_error("String property value is NULL");
+        success = false;
+      }
 			break;
 
 		case CEVT_UI2:
@@ -677,4 +684,59 @@ CEOID CeSeekDatabase(/*{{{*/
 fail:
 	return 0;
 }/*}}}*/
+
+BOOL CeDeleteRecord(/*{{{*/
+    HANDLE hDatabase, 
+    CEOID oidRecord)
+{
+  RapiContext* context = rapi_context_current();
+  BOOL return_value = false;
+
+  rapi_database_trace("begin");
+
+  rapi_context_begin_command(context, 0x12);
+	rapi_buffer_write_uint32(context->send_buffer, hDatabase);
+  rapi_buffer_write_uint32(context->send_buffer, oidRecord);
+
+  if ( !rapi_context_call(context) )
+    goto exit;
+
+  if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+    goto exit;
+  rapi_database_trace("context->last_error=0x%08x", context->last_error);
+
+  if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+    goto exit;
+
+exit:
+  return return_value;
+}/*}}}*/
+
+BOOL CeSetDatabaseInfo( 
+    CEOID oidDbase,
+    CEDBASEINFO* pNewInfo)
+{
+	RapiContext* context = rapi_context_current();
+  BOOL return_value = false;
+	
+	rapi_database_trace("begin");
+	
+	rapi_context_begin_command(context, 0x14);
+	rapi_buffer_write_uint32(context->send_buffer, oidDbase);
+  assert(sizeof(CEDBASEINFO) == 0x78);
+	rapi_buffer_write_data(context->send_buffer, pNewInfo, sizeof(CEDBASEINFO));
+
+	if ( !rapi_context_call(context) )
+		goto exit;
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
+		goto exit;
+	rapi_database_trace("context->last_error=0x%08x", context->last_error);
+
+	if ( !rapi_buffer_read_uint32(context->recv_buffer, &return_value) )
+		goto exit;
+	
+exit:
+	return return_value;
+}
 
