@@ -1,4 +1,6 @@
 /* $Id$ */
+#undef __STRICT_ANSI__
+#define _GNU_SOURCE
 #include "rapi_internal.h"
 #include "rapi.h"
 #include "rapi_buffer.h"
@@ -6,6 +8,8 @@
 #include "config/config.h"
 #include <synce_socket.h>
 #include <string.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #define RAPI_PORT  990
 
@@ -56,6 +60,7 @@ HRESULT CeRapiInit(void)/*{{{*/
 	char* ip_str = NULL;
 	char* password = NULL;
 	int key = 0;
+	pid_t dccm_pid = 0;
 
 	if (context->is_initialized)
 	{
@@ -74,6 +79,21 @@ HRESULT CeRapiInit(void)/*{{{*/
 	if (!config)
 	{
 		synce_error("unable to open file: %s", filename);
+		result = E_FAIL;
+		goto fail;
+	}
+
+	dccm_pid = getConfigInt(config, "dccm", "pid");
+	if (!dccm_pid)
+	{
+		synce_error("pid entry not found in %s", filename);
+		result = E_FAIL;
+		goto fail;
+	}
+
+	if (kill(dccm_pid, 0) < 0)
+	{
+		synce_error("dccm not running with pid %i", dccm_pid);
 		result = E_FAIL;
 		goto fail;
 	}
