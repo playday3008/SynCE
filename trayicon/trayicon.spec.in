@@ -15,7 +15,10 @@ Vendor: The SynCE Project
 Packager: David Eriksson <twogood@users.sourceforge.net>
 #Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Buildroot: %{_tmppath}/synce-root
-Requires: synce-librapi2 gtk2 atk libgnomeui
+
+Requires: gtk2 atk libgnomeui
+Requires: synce >= 0.7
+BuildRequires: synce-devel >= 0.7
 
 %description
 synce-trayicon is part of the SynCE project:
