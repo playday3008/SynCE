@@ -45,7 +45,7 @@ make
 
 %files
 %defattr(-,root,root)
-%doc README LICENSE
+%doc LICENSE
 %{_bindir}/orange
 %{_libdir}/liborange.so.*
 
