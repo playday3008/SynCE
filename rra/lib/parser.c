@@ -282,18 +282,30 @@ bool parser_add_int32 (Parser* self, uint16_t id, int32_t value)/*{{{*/
 
 bool parser_add_string(Parser* self, uint16_t id, const char* str)/*{{{*/
 {
- CEPROPVAL* propval = parser_get_next_propval(self);
-  if (!propval)
-    return false;
-
-  propval->propid = (id << 16) | CEVT_LPWSTR;
+  WCHAR* wstr = NULL;
 
   if (self->flags & PARSER_UTF8)
-    propval->val.lpwstr = wstr_from_utf8(str);
+    wstr = wstr_from_utf8(str);
   else
-    propval->val.lpwstr = wstr_from_ascii(str);
+    wstr = wstr_from_ascii(str);
 
-  return true;
+  if (wstr)
+  {
+   CEPROPVAL* propval = parser_get_next_propval(self);
+    if (!propval)
+      return false;
+
+    propval->propid = (id << 16) | CEVT_LPWSTR;
+    propval->val.lpwstr = wstr;
+
+    return true;
+  }
+  else
+  {
+    synce_error("Failed to convert string '%s' to wide string. UTF8 = %s",
+        str, (self->flags & PARSER_UTF8) ? "true" : "false");
+    return false;
+  }
 }/*}}}*/
 
 bool parser_add_time  (Parser* self, uint16_t id, time_t value)/*{{{*/

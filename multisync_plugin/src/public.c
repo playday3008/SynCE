@@ -262,7 +262,10 @@ void syncobj_modify(
       break;
 
     default:
-      synce_error("Unhandled index: %i", index);
+      synce_error("Unexpected index: %i", index);
+      sync_set_requestfailederror(
+          "Unexpected object type",
+          connection->handle);
       goto exit;
   }
 
@@ -270,6 +273,9 @@ void syncobj_modify(
   {
     synce_error("Data conversion failed for type %08x and object %08x",
         connection->type_ids[index], object_id);
+    sync_set_requestfailederror(
+        "Failed to convert object",
+        connection->handle);
     goto exit;
   }
 

@@ -113,9 +113,14 @@ static void dbstream_write32(uint8_t** stream, uint32_t value)
 
 static void dbstream_write_string(uint8_t** stream, WCHAR* str)
 {
-	size_t size = sizeof(WCHAR) * (wstrlen(str) + 1);
-	memcpy(*stream, str, size);
-	*stream += size;
+  if (stream && *stream && str)
+  {
+  	size_t size = sizeof(WCHAR) * (wstrlen(str) + 1);
+	  memcpy(*stream, str, size);
+  	*stream += size;
+  }
+  else
+    synce_error("One or more parameters are NULL!");
 }
 
 
@@ -225,7 +230,10 @@ bool dbstream_from_propvals(/*{{{*/
 				printf("0x%08x/%u",  propval[i].val.boolVal, propval[i].val.boolVal); break;
 #endif
 			case CEVT_LPWSTR:
-				dbstream_write_string(&stream, propval[i].val.lpwstr);
+        if (propval[i].val.lpwstr)
+  				dbstream_write_string(&stream, propval[i].val.lpwstr);
+        else
+          synce_warning("String for propid %08x is NULL!", propval[i].propid);
 				break;
 
 			case CEVT_FILETIME:
