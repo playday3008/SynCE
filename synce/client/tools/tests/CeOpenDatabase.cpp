@@ -98,11 +98,13 @@ int handle_property(PCEPROPVAL value)
 				}
 				else
 				{
+#ifndef WIN32
 					time_t unixtime = DOSFS_FileTimeToUnixTime(&(value->val.filetime), NULL);
 					struct tm *tm = localtime(&unixtime);
 					char buffer[MAX_PATH];
 					strftime(buffer, MAX_PATH, "%c", tm);
 					printf("%08x %08x=%s",value->val.filetime.dwHighDateTime,value->val.filetime.dwLowDateTime, buffer);
+#endif
 				}
 			}
 			break;

@@ -1,10 +1,16 @@
 // $Id$
-#include <stdio.h>
-#include <iconv.h>
 #include <rapi.h>
+#include <stdio.h>
+
+#ifdef WIN32
+#include <windows.h>
+#include <shlobj.h>
+#else
+#include <iconv.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
+#endif
 
 //
 // Return values from main()
@@ -59,6 +65,10 @@ char* from_unicode(const WCHAR* inbuf)
 	size_t length = wcslen(inbuf);
 	size_t inbytesleft = length * 2, outbytesleft = length;
 	char* outbuf = new char[outbytesleft+1];
+
+#ifdef WIN32
+	wcstombs( outbuf, inbuf, 1+inbytesleft );
+#else
 	char* outbuf_iterator = outbuf;
 	char* inbuf_iterator = (char*)inbuf;
 	
@@ -71,6 +81,8 @@ char* from_unicode(const WCHAR* inbuf)
 	else
 		outbuf[length] = 0;
 	
+#endif
+
 	return outbuf;
 }
 
@@ -80,6 +92,11 @@ WCHAR* to_unicode(const char* inbuf)
 	size_t inbytesleft = length, outbytesleft = (length+1)* 2;
 	char * inbuf_iterator = const_cast<char*>(inbuf);
 	WCHAR* outbuf = new WCHAR[inbytesleft+1];
+
+#ifdef WIN32
+	mbstowcs( outbuf, inbuf, 1+inbytesleft );
+#else
+
 	WCHAR* outbuf_iterator = outbuf;
 	
 	iconv_t cd = iconv_open("UCS-2", "UTF-8");
@@ -91,9 +108,12 @@ WCHAR* to_unicode(const char* inbuf)
 	else
 		outbuf[length] = 0;
 	
+#endif
+
 	return outbuf;
 }
 
+#ifndef WIN32
 // This does not work with Linux kernel 2.2 and earlier
 bool is_valid_ptr(void * ptr)
 {
@@ -112,4 +132,4 @@ bool is_valid_ptr(void * ptr)
 
 	return true;
 }
-
+#endif
