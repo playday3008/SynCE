@@ -237,7 +237,7 @@ void *s_hash_table_remove(SHashTable *table, const void *key)
 ** it. Pass "NULL" if you don't need to free anything.
 */
 
-void s_hash_table_destroy(SHashTable *table, void (*func)(void *))
+void s_hash_table_destroy(SHashTable *table, SHashTableDataDestroy func)
 {
 	/* Changed
 	* enumerate( table, hashFreeNode);

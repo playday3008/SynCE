@@ -28,6 +28,8 @@ void synce_socket_free(SynceSocket* socket);
 */
 int synce_socket_get_descriptor(SynceSocket* socket);
 
+#define SYNCE_SOCKET_INVALID_DESCRIPTOR  (-1)
+
 /**
  * Connect to remote service
  */
@@ -76,7 +78,7 @@ typedef enum _SocketEvents SocketEvents;
 /**
  * Wait for an event on a socket
  */
-bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* events);
+bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, short* events);
 
 /**
  * Get the number of bytes available on a socket

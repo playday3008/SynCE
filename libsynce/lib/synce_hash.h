@@ -8,6 +8,7 @@
 typedef unsigned (*SHashFunc)    (const void* key);
 typedef int      (*SCompareFunc) (const void* a, const void* b);
 typedef void (*SHashTableCallback)(const void* key, const void* data, void* cookie);
+typedef void (*SHashTableDataDestroy)(void* data);
 
 
 unsigned s_str_hash(const void *key);
@@ -95,6 +96,6 @@ void s_hash_table_foreach(SHashTable *table, SHashTableCallback func, void* cook
 ** any function with the data. )
 */
 
-void s_hash_table_destroy(SHashTable *table, void (*func)(void *));
+void s_hash_table_destroy(SHashTable *table, SHashTableDataDestroy func);
 
 #endif /* HASH__H */

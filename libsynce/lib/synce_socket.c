@@ -34,7 +34,6 @@ int inet_pton(int af, const char *src, void *dst);
 #define synce_socket_error(args...)
 #endif
 
-#define RAPI_SOCKET_INVALID_FD -1
 #define RAPI_SOCKET_LISTEN_QUEUE  1024
 
 struct _SynceSocket
@@ -48,7 +47,7 @@ SynceSocket* synce_socket_new(/* TODO: some parameters here */)
 	
 	if (socket)
 	{
-		socket->fd = RAPI_SOCKET_INVALID_FD;
+		socket->fd = SYNCE_SOCKET_INVALID_DESCRIPTOR;
 	}
 	
 	return socket;
@@ -72,7 +71,7 @@ static bool synce_socket_create(SynceSocket* syncesock)
 {
 	bool success = false;
 	
-	if (syncesock->fd != RAPI_SOCKET_INVALID_FD)
+	if (syncesock->fd != SYNCE_SOCKET_INVALID_DESCRIPTOR)
 	{
 		synce_socket_error("already have a socket file descriptor");
 		goto fail;
@@ -216,10 +215,10 @@ bool synce_socket_close(SynceSocket* socket)
 		return false;
 	}
 	
-	if (socket->fd != RAPI_SOCKET_INVALID_FD)
+	if (socket->fd != SYNCE_SOCKET_INVALID_DESCRIPTOR)
 	{
 		close(socket->fd);
-		socket->fd = RAPI_SOCKET_INVALID_FD;
+		socket->fd = SYNCE_SOCKET_INVALID_DESCRIPTOR;
 		return true;
 	}
 	return false;
@@ -227,7 +226,7 @@ bool synce_socket_close(SynceSocket* socket)
 
 bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size)
 {
-	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	if ( SYNCE_SOCKET_INVALID_DESCRIPTOR == socket->fd )
 	{
 		synce_socket_error("Invalid file descriptor");
 		return false;
@@ -240,7 +239,7 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 {
 	int bytes_needed = size;
 	
-	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	if ( SYNCE_SOCKET_INVALID_DESCRIPTOR == socket->fd )
 	{
 		synce_socket_error("Invalid file descriptor");
 		return false;
@@ -299,7 +298,7 @@ static SocketEvents from_poll_events(short poll_events)
 	return events;
 }
 
-bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* events)
+bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, short* events)
 {
 	/**
 	 * This can easily be replaced by select() if needed on some platform
@@ -308,7 +307,7 @@ bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* 
 	int result;
 	struct pollfd pfd;
 	
-	if ( RAPI_SOCKET_INVALID_FD == socket->fd )
+	if ( SYNCE_SOCKET_INVALID_DESCRIPTOR == socket->fd )
 	{
 		synce_socket_error("Invalid file descriptor");
 		return false;
@@ -323,6 +322,8 @@ bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, SocketEvents* 
 	pfd.fd = socket->fd;
 	pfd.events = to_poll_events(*events);
 	pfd.revents = 0;
+
+  *events = 0;
 	
 	while (pfd.revents != 0)
 	{
