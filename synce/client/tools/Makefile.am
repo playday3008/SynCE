@@ -1,3 +1,3 @@
-SUBDIRS = DBBackup
+SUBDIRS = DBBackup dblist
 
 INCLUDES = -I$(top_srcdir)/librapi -I$(top_srcdir)/libwine
