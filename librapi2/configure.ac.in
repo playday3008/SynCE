@@ -14,6 +14,10 @@ case $target in
 		APPLE_CFLAGS="-no-cpp-precomp"
 		;;
 
+	*)
+		APPLE_CFLAGS=""
+		;;
+
 esac
 
 dnl Checks for programs.
