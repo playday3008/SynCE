@@ -64,10 +64,14 @@ AC_CHECK_FILES(${MULTISYNC_INCLUDE}/syncengine.h,,[
 	AC_MSG_ERROR([Can't find Multisync header syncengine.h])
 	])
 
-
+dnl Prevent "NONE" used as prefix!
+if test "x$prefix" = xNONE; then
+  prefix=$ac_default_prefix
+fi
 GLADEFILE="${datadir}/synce/synce_multisync_plugin.glade"
 eval SYNCE_MULTISYNC_GLADEFILE="$GLADEFILE"
 AC_DEFINE_UNQUOTED(SYNCE_MULTISYNC_GLADEFILE, "$SYNCE_MULTISYNC_GLADEFILE",[The glade file used by the plugin])
+
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.
