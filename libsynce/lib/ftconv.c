@@ -20,9 +20,10 @@ void convert_to_unix_time(DWORD low, DWORD high)
 {
 	FILETIME filetime = {low, high};
 	time_t unix_time = filetime_to_unix_time(&filetime);
-	printf("Dec: %i\nHex: %08x\n", 
+	printf("Dec:  %u\nHex:  %08x\nTime: %s\n", 
 			(unsigned)unix_time, 
-			(unsigned)unix_time);
+			(unsigned)unix_time,
+			ctime(&unix_time));
 }
 
 int main(int argc, char** argv)
