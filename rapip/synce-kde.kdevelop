@@ -130,8 +130,8 @@
     </groups>
     <tree>
       <hidenonprojectfiles>false</hidenonprojectfiles>
-      <hidepatterns/>
-      <showvcsfields>true</showvcsfields>
+      <hidepatterns></hidepatterns>
+      <showvcsfields>false</showvcsfields>
     </tree>
   </kdevfileview>
   <kdevdoctreeview>
@@ -230,13 +230,13 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
   </kdevclassview>
   <kdevcvs>
     <cvsoptions>-f</cvsoptions>
-    <commitoptions/>
+    <commitoptions></commitoptions>
     <updateoptions>-dP</updateoptions>
-    <addoptions/>
+    <addoptions></addoptions>
     <removeoptions>-f</removeoptions>
     <diffoptions>-u3 -p</diffoptions>
-    <logoptions/>
-    <rshoptions/>
+    <logoptions></logoptions>
+    <rshoptions></rshoptions>
     <revertoptions>-C -d -P</revertoptions>
   </kdevcvs>
   <kdevfilecreate>
