@@ -53,7 +53,6 @@
 PDA::PDA(Raki *raki, QString pdaName)
         : QObject()
 {
-//    deletePending = false;
     int menuCount = 0;
     currentInstalled = 0;
     installed = 0;
@@ -133,13 +132,6 @@ PDA::PDA(Raki *raki, QString pdaName)
 
 PDA::~PDA()
 {
-    /*    if (this->thread != NULL) {
-            this->thread->terminate();
-            kdDebug(2120) << "THread sotp" << endl;
-            this->thread->wait();
-            kdDebug(2120) << "THread sotp" << endl;
-        }
-    */
     delete syncDialog;
     delete passwordDialog;
     delete runWindow;
@@ -432,7 +424,7 @@ void *PDA::progressDialogCancel(void *init)
     emit initialized(this, (int ) init);
     delete progressDialog;
     if (init)
-    configDialog->writeConfig();
+        configDialog->writeConfig();
 
     return NULL;
 }
