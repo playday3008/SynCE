@@ -98,7 +98,7 @@ struct configFile *readConfigFile (char *filename)
 	int fileHandle, bytesRead;
 		
 	if (stat (filename, &filestats) != 0) {
-		perror ("ReadConfigFile: stat");
+/*		perror ("ReadConfigFile: stat");*/
 		return NULL;
 	}
 	if (filestats.st_size > MAXIMUM_SANE_FILESIZE) 
@@ -109,12 +109,12 @@ struct configFile *readConfigFile (char *filename)
 	cfg->sections = hashConstructTable (31); /* Some prime, just for laughs */
 	
 	if ( (fileHandle=open (filename, O_RDONLY)) == -1) {
-		perror ("ReadConfigFile: open");
+/*		perror ("ReadConfigFile: open");*/
 		return NULL;
 	}
 	if ( (bytesRead=read (fileHandle, cfg->bbdg, filestats.st_size))
 			!= filestats.st_size) {
-		perror ("ReadConfigFile: read");
+/*		perror ("ReadConfigFile: read");*/
 		return NULL;
 	}
 	close (fileHandle);

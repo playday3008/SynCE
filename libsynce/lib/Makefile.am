@@ -15,6 +15,7 @@ libsynce_la_SOURCES = \
 	password.c \
 	synce.h \
 	synce_hash.h synce_hash.c \
+	synce_ini.h synce_ini.c \
 	synce_log.h synce_log.c \
 	synce_socket.h synce_socket.c \
 	wstr.c
@@ -23,7 +24,7 @@ libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ -lm
 
 include_HEADERS = \
-	synce.h synce_hash.h synce_log.h synce_socket.h synce_types.h
+	synce.h synce_hash.h synce_ini.h synce_log.h synce_socket.h synce_types.h
 
 noinst_PROGRAMS = ftconv
 
