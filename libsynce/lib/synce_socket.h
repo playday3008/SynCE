@@ -24,6 +24,11 @@ SynceSocket* synce_socket_new(/* TODO: some parameters here */);
 void synce_socket_free(SynceSocket* socket);
 
 /**
+  Get file descriptor so we can select() on many sockets including this
+*/
+int synce_socket_get_descriptor(SynceSocket* socket);
+
+/**
  * Connect to remote service
  */
 bool synce_socket_connect(SynceSocket* socket, const char* host, int port);

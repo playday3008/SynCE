@@ -63,6 +63,11 @@ void synce_socket_free(SynceSocket* socket)
 	}
 }
 
+int synce_socket_get_descriptor(SynceSocket* socket)
+{
+  return socket->fd;
+}
+
 static bool synce_socket_create(SynceSocket* syncesock)
 {
 	bool success = false;
