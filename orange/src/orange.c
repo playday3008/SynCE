@@ -147,7 +147,7 @@ static bool callback(
     
   snprintf(output_filename, sizeof(output_filename), "%s/%s", output_directory, basename);
 
-  printf("  squeezing out: %s\n", output_filename);
+  printf("squeezing out: %s\n", output_filename);
 
   if (!copy_file(filename, output_filename))
   {

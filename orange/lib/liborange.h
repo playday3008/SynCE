@@ -65,6 +65,17 @@ bool orange_dllinflate(
     const char* output_filename);
 
 /**
+  Takes a Setup Factory installer and extract its contents
+
+  Source in suf.c
+ */
+
+bool orange_extract_setup_factory(
+    const char* input_filename, 
+    const char* output_directory);
+    
+
+/**
   Separate installable Microsoft Cabinet Files from a file
  */
 

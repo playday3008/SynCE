@@ -104,7 +104,7 @@ bool orange_squeeze_file(/*{{{*/
   if (suffix)
     suffix++;
   
-  synce_trace(filename);
+  synce_trace("%s", filename);
   
   if (suffix)
   {
@@ -141,6 +141,9 @@ bool orange_squeeze_file(/*{{{*/
           success = orange_dllinflate(filename, output_filename);
         }
       }
+
+      if (!success)
+        success = orange_extract_setup_factory(filename, output_directory);
 
       if (!success)
         success = orange_extract_zip(filename, output_directory);

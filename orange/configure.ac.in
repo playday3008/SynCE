@@ -29,9 +29,10 @@ dnl AM_PATH_CHECK()
 dnl Checks for libraries.
 AC_LIB_RPATH
 
-dnl Check for libsynce
+dnl Check for library dependencies
 AM_PATH_LIBSYNCE
 AM_PATH_LIBRAPI2
+AM_PATH_LIBDYNAMITE
 AM_PATH_LIBUNSHIELD
 
 dnl Checks for typedefs, structures, and compiler characteristics.

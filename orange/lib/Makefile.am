@@ -11,6 +11,7 @@ liborange_la_SOURCES = \
 	helper.c \
 	separate.c \
 	squeeze.c \
+	suf.c \
 	synce-appmgr.h \
 	synce-appmgr-internal.h
 
