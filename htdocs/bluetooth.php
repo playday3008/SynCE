@@ -38,7 +38,8 @@ for more.
 <li><p>Create a special PPP peer file called <tt>/etc/ppp/peers/dun</tt></p>
 
 <pre>nodefaultroute
-noauthlocal
+noauth
+local
 192.168.131.102:192.168.131.201
 ms-dns 192.168.131.102
 linkname synce-device</pre></li>
