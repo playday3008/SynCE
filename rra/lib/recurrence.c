@@ -316,9 +316,13 @@ static void recurrence_set_days_of_week_mask(
 
     strv_free(days);
   }
-  else
+
+  if (pattern->days_of_week_mask == 0)
   {
-    synce_warning("byday is '%s', that's not good", rrule->byday);
+    /* get day from start date */
+    struct tm start_date = rra_minutes_to_struct(pattern->pattern_start_date);
+    synce_warning("BYDAY is missing or empty, assumimg BYDAY=%s", masks_and_names[start_date.tm_wday].name);
+    pattern->days_of_week_mask = masks_and_names[start_date.tm_wday].mask;
   }
 }
 
