@@ -3,13 +3,15 @@ PREFIX=/var/tmp/synce
 all: install
 
 install:
+	cd serial   && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
 	cd libsynce && ./bootstrap && ./configure --prefix=$(PREFIX) && make install
 	cd librapi2 && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
-	cd dccmd && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
+	cd dccmd    && ./bootstrap && ./configure --prefix=$(PREFIX) --with-libsynce=$(PREFIX) && make install
 
 clean:
+	cd serial   && ./cvsclean
 	cd libsynce && ./cvsclean
 	cd librapi2 && ./cvsclean
-	cd dccmd && ./cvsclean
+	cd dccmd    && ./cvsclean
 	
 

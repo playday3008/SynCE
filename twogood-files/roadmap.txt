@@ -152,15 +152,27 @@ B.      All libraries should be written i ANSI C.
 5.      Add-ons
 ===============
 
-5.1.    Configuration and connection tool
+5.1.    Connection tools
+
+5.1.1.  Visual connection tool
+
+        Help with selecting and configuring a connection. It should probably
+        be divided into two parts: a library and a default user interface.
+        Other user interfaces may then be added quite easily.
 
         This is important to attract users and limit support requests.
 
-        Help with configuring PPP, USB etc. It should probably be divided into
-        two parts: a library and a default user interface. Other user
-        interfaces may then be added quite easily.
-
         This app will need root access.
+
+5.1.1.  Serial connection
+
+        See the module "serial" in the SynCE CVS repository.
+
+5.1.2.  USB connection
+
+        See the module "wince-usb" in the SynCE CVS repository.
+
+5.1.3.  Bluetooth connection
 
 5.2     PyRAPI
 

@@ -3,7 +3,8 @@
 RPMROOT=/home/david/redhat
 
 DIR=$(TOPDIR)/$(NAME)
-DIRNAME=$(NAME)-$(VERSION)
+VERSION=$(shell cat $(DIR)/$(NAME).spec | grep '%define ver' | sed 's/%define ver[ 	]*//')
+DIRNAME=synce-$(NAME)-$(VERSION)
 TARBALL=$(TARBALLS)/$(DIRNAME).tar.gz
 EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
 	--exclude '.*.swp' --exclude '*.tar.gz'
@@ -11,6 +12,7 @@ EXCLUDE=--exclude CVS --exclude .cvsignore --exclude autom4te-2.53.cache \
 all: tarball
 
 tarball:
+	@echo "VERSION=$(VERSION)"
 	cd $(DIR) && ./cvsclean
 	cd $(DIR) && ./bootstrap
 	-rm $(TOPDIR)/$(DIRNAME)
@@ -22,6 +24,6 @@ rpm:
 	-rm $(RPMROOT)/RPMS/$(NAME)*
 	cp $(TARBALL) $(RPMROOT)/SOURCES/
 	rpmbuild -ba $(DIR)/$(NAME).spec
-	cp $(RPMROOT)/RPMS/i386/$(NAME)*.rpm $(RPMS)/
-	cp $(RPMROOT)/SRPMS/$(NAME)*.rpm $(SRPMS)/
+	cp $(RPMROOT)/RPMS/i386/$(DIRNAME)*.rpm $(RPMS)/
+	cp $(RPMROOT)/SRPMS/$(DIRNAME)*.rpm $(SRPMS)/
 

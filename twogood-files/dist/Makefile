@@ -11,10 +11,6 @@ APTDIR   = $(PWD)/apt/$(REDHAT_VERSION)
 RPMS     = $(APTDIR)/RPMS.synce
 SRPMS    = $(APTDIR)/SRPMS.synce
 
-LIBSYNCE_VERSION = 0.1
-LIBRAPI2_VERSION = 0.1
-DCCMD_VERSION    = 0.1
-
 export PWD USER TOPDIR TARBALLS APTDIR RPMS SRPMS
 
 .PHONY: tarballs rpms apt
@@ -23,16 +19,21 @@ all: tarballs rpms
 
 tarballs:
 	-mkdir $(TARBALLS)
-	$(MAKE) -f Makefile.release NAME=libsynce VERSION=$(LIBSYNCE_VERSION) tarball
-	$(MAKE) -f Makefile.release NAME=librapi2 VERSION=$(LIBRAPI2_VERSION) tarball
-	$(MAKE) -f Makefile.release NAME=dccmd    VERSION=$(DCCMD_VERSION)    tarball
+	$(MAKE) -f Makefile.release NAME=serial   tarball
+	$(MAKE) -f Makefile.release NAME=libsynce tarball
+	$(MAKE) -f Makefile.release NAME=librapi2 tarball
+	$(MAKE) -f Makefile.release NAME=dccmd    tarball
 
 rpms:
+	-rm -rf /var/tmp/synce-root
 	mkdir -p $(RPMS)
+	-rm $(RPMS)/*
 	mkdir -p $(SRPMS)
-	$(MAKE) -f Makefile.release NAME=libsynce VERSION=$(LIBSYNCE_VERSION) rpm
-	$(MAKE) -f Makefile.release NAME=librapi2 VERSION=$(LIBRAPI2_VERSION) rpm
-	$(MAKE) -f Makefile.release NAME=dccmd    VERSION=$(DCCMD_VERSION)    rpm
+	-rm $(SRPMS)/*
+	$(MAKE) -f Makefile.release NAME=serial   rpm
+	$(MAKE) -f Makefile.release NAME=libsynce rpm
+	$(MAKE) -f Makefile.release NAME=librapi2 rpm
+	$(MAKE) -f Makefile.release NAME=dccmd    rpm
 
 apt:
 	genbasedir --flat --bloat --bz2only $(APTDIR) synce
