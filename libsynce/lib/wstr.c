@@ -54,7 +54,7 @@ char* wstr_to_ascii(LPCWSTR inbuf)
 	if (INVALID_ICONV_HANDLE == cd)
 	{
 		wstr_error("iconv_open failed");
-		return false;
+		return NULL;
 	}
 
   result = iconv(cd, &inbuf_iterator, &inbytesleft, &outbuf_iterator, &outbytesleft);
@@ -96,7 +96,7 @@ LPWSTR wstr_from_ascii(const char* inbuf)
 	if (INVALID_ICONV_HANDLE == cd)
 	{
 		wstr_error("iconv_open failed");
-		return false;
+		return NULL;
 	}
 
 	result = iconv(cd, &inbuf_iterator, &inbytesleft, (char**)&outbuf_iterator, &outbytesleft);
