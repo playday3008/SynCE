@@ -18,6 +18,7 @@
 #define LE32(p)    letoh32(*(uint32_t*)p)
 
 #define DUMP_PACKETS 0
+#define VERBOSE 0
 
 #if DUMP_PACKETS
 #define DUMP(desc,data,len) dump(desc, data, len)
@@ -554,7 +555,7 @@ exit:
 bool rrac_recv_reply_6f_c1(/*{{{*/
 		RRAC* rrac,
 		RawObjectType** object_type_array,
-		size_t* object_type_count)
+		uint32_t* object_type_count)
 {
 	bool success = false;
 	uint8_t* data = NULL;
@@ -948,8 +949,10 @@ bool rrac_send_data(/*{{{*/
 			chunk_header.stuff = htole16(stuff);
     }
 
+#if VERBOSE
     synce_trace("chunk_size = %04x, aligned_size = %04x, stuff = %04x",
         chunk_size, aligned_size, chunk_header.stuff);
+#endif
         
 		DUMP("chunk header", &chunk_header, sizeof(chunk_header));
 
@@ -969,7 +972,9 @@ bool rrac_send_data(/*{{{*/
 		if (aligned_size > chunk_size)
 		{
 			char pad[3] = {0,0,0};
+#if VERBOSE
 			synce_trace("Writing %i bytes padding", aligned_size - chunk_size);
+#endif
 			if (!synce_socket_write(rrac->data_socket, pad, aligned_size - chunk_size))
 			{
 				synce_error("Failed to write padding");

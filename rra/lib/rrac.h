@@ -83,7 +83,7 @@ bool rrac_recv_reply_6f_10(RRAC* rrac);
 bool rrac_recv_reply_6f_c1(
 		RRAC* rrac,
 		RawObjectType** object_type_array,
-		size_t* object_type_count);
+		uint32_t* object_type_count);
 
 bool rrac_send_70_2(RRAC* rrac, uint32_t subsubcommand);
 
