@@ -12,6 +12,24 @@ the <a href="multisync.php">Using MultiSync</a> page.</p>
 <p>For issues regarding Mac OS X, please visit the <a
 href="macosx.php">Mac OS X hints</a> page.</p>
 
+<h2>Unable to initialize RAPI</h2>
+
+<p><b>Q:</b> I setup everything and connected my PDA but when I try the <a
+href="tools.php">tools</a> I get a message similar to this:</p>
+
+<pre>ReadConfigFile: stat: No such file or directory
+pstatus: Unable to initialize RAPI: Failure</pre>
+
+<p><b>A:</b> This means that the PDA has not connected to dccm or that you run
+the tools and dccm as different users. Please make sure that:</p>
+
+<ul>
+<li>dccm is running</li>
+<li>that the PPP connection is successful (look in your system logs)</li>
+<li>no firewall configuration prevents the PDA from connecting to dccm</li>
+<li>you run dccm and the tools as the same user</li>
+</ul>
+
 <h2>PPP error: "Couldn't set tty to PPP discipline"</h2>
 
 <p><b>Q:</b> I setup everything and connected my PDA but when I run
@@ -68,24 +86,6 @@ to the synce-users mailing list describing why none of the suggestions here
 helped and any other information that could be useful in localizing the
 problem.</p>
 
-
-<h2>Unable to initialize RAPI</h2>
-
-<p><b>Q:</b> I setup everything and connected my PDA but when I try the <a
-href="tools.php">tools</a> I get a message similar to this:</p>
-
-<pre>ReadConfigFile: stat: No such file or directory
-pstatus: Unable to initialize RAPI: Failure</pre>
-
-<p><b>A:</b> This means that the PDA has not connected to dccm or that you run
-the tools and dccm as different users. Please make sure that:</p>
-
-<ul>
-<li>dccm is running</li>
-<li>that the PPP connection is successful (look in your system logs)</li>
-<li>no firewall configuration prevents the PDA from connecting to dccm</li>
-<li>you run dccm and the tools as the same user</li>
-</ul>
 
 <h2>PPP error: "No response to 2 echo-requests"</h2>
 
