@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <gtk/gtk.h>
+#include <gnome.h>
 #include <libgnomeui/gnome-dialog.h>
 #include <libgnomeui/gnome-about.h>
 #include "eggtrayicon.h"
@@ -47,6 +48,12 @@ static char* device_name = NULL;
 
 static EggTrayIcon* tray_icon = NULL;
 static GtkTooltips* tooltips = NULL;
+
+static const struct poptOption options[] = {
+	{NULL, 'd', POPT_ARG_INT, NULL, 0, N_("debug"), NULL},
+	{NULL, 'f', POPT_ARG_NONE, NULL, 0, N_("debug"), NULL},
+	{NULL, '\0', 0, NULL, 0} /* end the list */
+};
 
 static const char* get_battery_flag_string(unsigned flag)
 {
@@ -65,6 +72,20 @@ static const char* get_battery_flag_string(unsigned flag)
 
 	return name;
 }
+
+static void synce_error_dialog(const char *message)
+{
+  GtkWidget *error_dialog;
+
+  error_dialog = gnome_message_box_new (
+      message,
+      GNOME_MESSAGE_BOX_ERROR,
+          GTK_STOCK_OK, 
+      NULL);
+
+  gnome_dialog_run (GNOME_DIALOG (error_dialog));
+}
+
 
 static void set_status_tooltips()
 {
@@ -114,6 +135,26 @@ static void set_status_tooltips()
 	g_free(tooltip_str);
 }
 
+static void menu_explore (GtkWidget *button, EggTrayIcon *icon)
+{	
+	char *argv[2] = {
+		"nautilus","synce:"
+	};
+	if (gnome_execute_async(NULL,2, argv) == -1) {
+		synce_error_dialog("Can't explore the PDA with the filemanager,\nmake sure you have nautilus and the synce gnome-vfs module installed");
+	}
+}
+
+static void menu_software (GtkWidget *button, EggTrayIcon *icon)
+{	
+	char *argv[1] = {
+		"synce-software-manager"
+	};
+	if (gnome_execute_async(NULL,1, argv) == -1) {
+		synce_error_dialog("Can't open the software manager\nmake sure you have synce-software-manager installed");
+	}
+}
+
 static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 {
 	GtkWidget *about;
@@ -140,8 +181,24 @@ static void menu_disconnect(GtkWidget *button, EggTrayIcon *icon)
 	system("killall -HUP dccm");
 }
 
+static void
+unreg_sm ()
+{
+    GnomeClient *master;
+    GnomeClientFlags flags;
+                                                                                
+    master = gnome_master_client ();
+    flags = gnome_client_get_flags (master);
+    if (flags & GNOME_CLIENT_IS_CONNECTED) {
+        gnome_client_set_restart_style (master,
+                GNOME_RESTART_NEVER);
+        gnome_client_flush (master);
+    }
+}
+
 static void menu_exit(GtkWidget *button, EggTrayIcon *icon)
 {
+	unreg_sm();
 	gtk_main_quit();
 }
 	
@@ -156,6 +213,14 @@ static void trayicon_menu(GdkEventButton *event)
 	}
 
 	menu = gtk_menu_new();
+
+	entry = gtk_menu_item_new_with_label("Explore with Filemanager");
+	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_explore), NULL);
+	gtk_menu_append(GTK_MENU(menu), entry);
+	
+	entry = gtk_menu_item_new_with_label("Add/Remove Programs");
+	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_software), NULL);
+	gtk_menu_append(GTK_MENU(menu), entry);
 
 	if (is_connected)
 		snprintf(buffer, sizeof(buffer), "Disconnect from '%s'", device_name);
@@ -363,7 +428,7 @@ static bool handle_parameters(int argc, char** argv)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "d:fh")) != -1)
+	while ((c = getopt(argc, argv, "d:f")) != -1)
 	{
 		switch (c)
 		{
@@ -377,11 +442,6 @@ static bool handle_parameters(int argc, char** argv)
 			case 'f':
 				in_background = false;
 				break;
-
-			case 'h':
-			default:
-				show_usage(argv[0]);
-				return false;
 		}
 	}
 
@@ -391,15 +451,39 @@ static bool handle_parameters(int argc, char** argv)
 }
 
 
+static void
+init_sm ()
+{
+    GnomeClient *master;
+    GnomeClientFlags flags;
+                                                                                
+    master = gnome_master_client ();
+    flags = gnome_client_get_flags (master);
+    if (flags & GNOME_CLIENT_IS_CONNECTED) {
+        gnome_client_set_restart_style (master,
+                GNOME_RESTART_IMMEDIATELY);
+        gnome_client_flush (master);
+    }
+                                                                                
+    g_signal_connect (GTK_OBJECT (master), "die",
+            GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
+}
+
+
 int
 main (gint argc, gchar **argv)
 {
 	int result = 1;
 	GtkWidget *box;
 
+	/*
 	write_script();
-
-  gtk_init (&argc, &argv);
+*/
+	gnome_program_init ("synce-trayicon", VERSION,
+			LIBGNOMEUI_MODULE,
+			argc, argv,
+            GNOME_PARAM_POPT_TABLE,options,
+			GNOME_PARAM_NONE);
 
 	if (!handle_parameters(argc, argv))
 		goto exit;
@@ -422,6 +506,7 @@ main (gint argc, gchar **argv)
 	gtk_container_add(GTK_CONTAINER(tray_icon), box);
 	gtk_widget_show_all(GTK_WIDGET(tray_icon));
 
+	init_sm();
 	g_signal_connect(G_OBJECT(box), "button-press-event", G_CALLBACK(trayicon_clicked), NULL);
 
 	tooltips = gtk_tooltips_new();
