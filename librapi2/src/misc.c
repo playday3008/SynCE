@@ -10,7 +10,7 @@ DWORD CeGetLastError( void )
 	return context->last_error;
 }
 
-BOOL CeGetVersionEx(
+BOOL CeGetVersionEx(/*{{{*/
 		LPCEOSVERSIONINFO lpVersionInformation)
 {
 	RapiContext* context = rapi_context_current();
@@ -33,7 +33,7 @@ BOOL CeGetVersionEx(
 		return false;
 
 	return result;
-}
+}/*}}}*/
 
 BOOL CeOidGetInfo(/*{{{*/
 		CEOID oid, 
@@ -90,7 +90,8 @@ BOOL CeOidGetInfo(/*{{{*/
 			break;
 
 		default:
-			rapi_error("unknown object type = %i", poidInfo->wObjType);
+			rapi_error("unknown object type = %i, buffer size = %i", 
+					poidInfo->wObjType, rapi_buffer_get_size(context->recv_buffer));
 			goto fail;
 	}
 
@@ -110,7 +111,7 @@ fail:
  * 
  * http://sourceforge.net/mailarchive/forum.php?thread_id=844008&forum_id=1226
  */
-DWORD CeStartReplication( void )
+DWORD CeStartReplication( void )/*{{{*/
 {
 	RapiContext* context = rapi_context_current();
 	DWORD result = false;
@@ -124,5 +125,5 @@ DWORD CeStartReplication( void )
 	rapi_log("result = %i", result);
 
 	return result;
-}
+}/*}}}*/
 
