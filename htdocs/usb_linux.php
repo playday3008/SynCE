@@ -65,7 +65,7 @@ kernel: drivers/usb/serial/ipaq.c: ipaq_chars_in_buffer - queuelen 0
 kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
 kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 6, data = 43 4c 49 45 4e 54
 kernel: drivers/usb/serial/ipaq.c: ipaq_write - port 0
-kernel: drivers/usb/serial/ipaq.c: ipaq_write_bulk - we're stuffed
+<span class="RED">kernel: drivers/usb/serial/ipaq.c: ipaq_write_bulk - we're stuffed</span>
 kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
 kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - length = 6, data = 43 4c 49 45 4e 54
 kernel: drivers/usb/serial/ipaq.c: ipaq_read_bulk_callback - port 0
