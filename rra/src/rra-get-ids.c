@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 	ObjectIdArray* object_ids = NULL;
 	unsigned i, id = 0;
 	
-	/* synce_log_set_level(0);*/
+	synce_log_set_level(0);
 
 	if (argc < 2)
 	{
@@ -47,11 +47,8 @@ int main(int argc, char** argv)
 	for (i = 0; i < object_ids->unchanged; i++)
 		printf("%08x  Unchanged\n", object_ids->ids[id++]);
 
-	for (i = 0; i < object_ids->unchanged; i++)
+	for (i = 0; i < object_ids->changed; i++)
 		printf("%08x  Changed\n", object_ids->ids[id++]);
-
-	for (i = 0; i < object_ids->unchanged; i++)
-		printf("%08x  Deleted\n", object_ids->ids[id++]);
 
 exit:
 	rra_free(rra);

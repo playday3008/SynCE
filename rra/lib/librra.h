@@ -23,10 +23,9 @@ typedef struct _ObjectType
 
 typedef struct _ObjectIdArray
 {
-  uint32_t*  ids;         /* unchanged, changed and deleted ids */
+  uint32_t*  ids;         /* changed ids first, then unchanged ids */
   uint32_t   unchanged;   /* number of unchanged ids */
-  uint32_t   changed;     /* number of new or changed ids */
-  uint32_t   deleted;     /* number of deleted ids */
+  uint32_t   changed;     /* number of changed ids */
 } ObjectIdArray;
 
 

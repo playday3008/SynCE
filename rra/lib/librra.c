@@ -134,7 +134,9 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	uint32_t recv_some_count;
 	uint32_t* recv_ids;
 	uint32_t recv_id_count;
-														
+
+	*object_id_array = NULL;
+
 	if (!rra_get_object_types(rra, &object_types, &object_type_count))
 	{
 		synce_error("Failed to get object types");
@@ -208,26 +210,39 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 			goto exit;
 		}
 
-		if (0x04000000 == recv_subcommand)
+		if (0x04000000 == recv_subcommand ||
+				0x06000000 == recv_subcommand)
 		{
 			unsigned j = 0;
 
 			synce_trace("subcommand %08x, changed count=%i, total count=%i",
 					recv_subcommand, recv_some_count, recv_id_count);
 
-			synce_trace("unchanged ids:");
-			for (i = 0; i < (recv_id_count-recv_some_count); i++, j++)
+			if (recv_id_count)
 			{
-				synce_trace("id[%i] = %08x", j, recv_ids[j]);
-			}
-			
-			synce_trace("changed ids:");
-			for (i = 0; i < recv_some_count; i++, j++)
-			{
-				synce_trace("id[%i] = %08x", j, recv_ids[j]);
-#if 0
-				rrac_send_65(rra->cmd_channel, object_type_id, recv_ids[j], recv_ids[j]);
-#endif
+				synce_trace("unchanged ids:");
+				for (i = 0; i < (recv_id_count-recv_some_count); i++, j++)
+				{
+					synce_trace("id[%i] = %08x", j, recv_ids[j]);
+				}
+
+				synce_trace("changed ids:");
+				for (i = 0; i < recv_some_count; i++, j++)
+				{
+					synce_trace("id[%i] = %08x", j, recv_ids[j]);
+				}
+
+				if (*object_id_array)
+				{
+					synce_warning("Already have an array of ids!");
+				}
+				else
+				{
+					*object_id_array               = calloc(1, sizeof(ObjectIdArray));
+					(**object_id_array).ids        = recv_ids;
+					(**object_id_array).unchanged  = recv_id_count - recv_some_count;
+					(**object_id_array).changed    = recv_some_count;
+				}
 			}
 		}
 		else
@@ -262,11 +277,17 @@ bool rra_get_object_ids(RRA* rra,/*{{{*/
 	}
 #endif
 	
-	/* success = true; */
+	success = true;
 
 exit:
 	if (ignored_ids)
 		free(ignored_ids);
+
+	if (!success && *object_id_array)
+	{
+		free(*object_id_array);
+		*object_id_array = NULL;
+	}
 
 	return success;
 }/*}}}*/

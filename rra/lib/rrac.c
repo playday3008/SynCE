@@ -12,13 +12,10 @@
 #define HTOLE32(x)  x = htole32(x)
 
 
-#define DUMP_PACKETS 1
+#define DUMP_PACKETS 0
 
 #if DUMP_PACKETS
 #define DUMP(desc,data,len) dump(desc, data, len)
-#else
-#define DUMP(desc,data,len)
-#endif
 
 static void dump(const char *desc, void* data, size_t len)/*{{{*/
 {
@@ -51,6 +48,11 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 		fprintf(stderr, "  %04x: %s %s\n", i, hex, chr);
 	}
 }/*}}}*/
+
+#else
+#define DUMP(desc,data,len)
+#endif
+
 
 static bool rrac_recv_any(SynceSocket* socket, CommandHeader* header, uint8_t** data)/*{{{*/
 {

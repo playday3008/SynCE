@@ -26,5 +26,6 @@ AC_C_CONST
 AC_OUTPUT([Makefile
            src/Makefile
            lib/Makefile
+					 kde/Makefile
 					 man/Makefile])
 
