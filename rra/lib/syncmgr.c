@@ -535,7 +535,7 @@ bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, /*{{{*/
     }
 
     /* Write to calling application */
-    if (!writer(recv_object_id, data, data_size, cookie))
+    if (!writer(recv_type_id, recv_object_id, data, data_size, cookie))
     {
       synce_error("Writer callback failed");
       goto exit;
@@ -560,12 +560,12 @@ exit:
 typedef struct
 {
 	uint32_t object_id;
-  void *data;
+  uint8_t* data;
   size_t data_size;
 } ObjectData;
 
 static bool rra_syncmgr_get_single_object_writer(/*{{{*/
-    uint32_t object_id, const void* data, size_t data_size, void* cookie)
+    uint32_t type_id, uint32_t object_id, const uint8_t* data, size_t data_size, void* cookie)
 {
   ObjectData* object = (ObjectData*)cookie;
 
@@ -658,7 +658,12 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
         data = realloc(data, max_data_size);
       }
       
-      bytes_read = reader(object_id_array[i], data + data_size, SYNCMGRREADER_BUFFER_SIZE, cookie);
+      bytes_read = reader(
+          type_id, 
+          object_id_array[i], 
+          data + data_size, 
+          SYNCMGRREADER_BUFFER_SIZE, 
+          cookie);
 
       if (bytes_read < 0)
       {
@@ -744,8 +749,8 @@ exit:
   return success;
 }/*}}}*/
 
-static ssize_t rra_syncmgr_put_single_object_reader(
-    uint32_t object_id, void* data, size_t data_size, void* cookie)
+static ssize_t rra_syncmgr_put_single_object_reader(/*{{{*/
+    uint32_t type_id, uint32_t object_id, uint8_t* data, size_t data_size, void* cookie)
 {
   ObjectData* object = (ObjectData*)cookie;
 
@@ -766,9 +771,9 @@ static ssize_t rra_syncmgr_put_single_object_reader(
     synce_error("Unexpected object ID");
     return -1;
   }
-}
+}/*}}}*/
 
-bool rra_syncmgr_put_single_object(
+bool rra_syncmgr_put_single_object(/*{{{*/
     RRA_SyncMgr* self,  
     uint32_t type_id,
     uint32_t object_id,
@@ -802,51 +807,51 @@ bool rra_syncmgr_put_single_object(
 
 exit:
   return success;
+}/*}}}*/
+
+bool rra_syncmgr_delete_object(/*{{{*/
+  RRA_SyncMgr* self, 
+  uint32_t type_id, 
+  uint32_t object_id)
+{
+bool success = false;
+uint32_t recv_type_id;
+uint32_t recv_object_id1;
+uint32_t recv_object_id2;
+uint32_t recv_flags;
+uint32_t index = 1;
+
+if (!rrac_send_66(self->rrac, type_id, object_id, index))
+{
+  synce_error("Failed to senmd command 66");
+  goto exit;
 }
 
-bool rra_syncmgr_delete_object(
-    RRA_SyncMgr* self, 
-    uint32_t type_id, 
-    uint32_t object_id)
+if (!rrac_recv_65(
+      self->rrac, 
+      &recv_type_id, 
+      &recv_object_id1,
+      &recv_object_id2,
+      &recv_flags))
 {
-  bool success = false;
-  uint32_t recv_type_id;
-  uint32_t recv_object_id1;
-  uint32_t recv_object_id2;
-  uint32_t recv_flags;
-  uint32_t index = 1;
+  synce_error("Failed to receive command 65");
+  goto exit;
+}
 
-  if (!rrac_send_66(self->rrac, type_id, object_id, index))
-  {
-    synce_error("Failed to senmd command 66");
-    goto exit;
-  }
+if (recv_object_id1 != recv_object_id2)
+{
+  synce_error("Unexpected object ids");
+  goto exit;
+}
 
-  if (!rrac_recv_65(
-        self->rrac, 
-        &recv_type_id, 
-        &recv_object_id1,
-        &recv_object_id2,
-        &recv_flags))
-  {
-    synce_error("Failed to receive command 65");
-    goto exit;
-  }
+if (recv_flags != (index | 0x80000000))
+{
+  synce_warning("Unexpected flags: %08x", recv_flags);
+}
 
-  if (recv_object_id1 != recv_object_id2)
-  {
-    synce_error("Unexpected object ids");
-    goto exit;
-  }
-
-  if (recv_flags != (index | 0x80000000))
-  {
-    synce_warning("Unexpected flags: %08x", recv_flags);
-  }
-
-  success = true;
+success = true;
 
 exit:
-  return success;
-}
+return success;
+}/*}}}*/
 

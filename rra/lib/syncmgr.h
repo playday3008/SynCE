@@ -96,7 +96,7 @@ bool rra_syncmgr_handle_all_pending_events(RRA_SyncMgr* self);
   No rra_syncmgr_* functions should be called from this callback! 
  */
 typedef ssize_t (*RRA_SyncMgrReader)
-  (uint32_t object_id, void* data, size_t data_size, void* cookie);
+  (uint32_t type_id, uint32_t object_id, uint8_t* data, size_t data_size, void* cookie);
 
 /** 
   Should work like the write(2) system call, but must take care of all data
@@ -104,7 +104,7 @@ typedef ssize_t (*RRA_SyncMgrReader)
   No rra_syncmgr_* functions should be called from this callback! 
  */
 typedef bool (*RRA_SyncMgrWriter)
-  (uint32_t object_id, const void* data, size_t data_size, void* cookie);
+  (uint32_t type_id, uint32_t object_id, const uint8_t* data, size_t data_size, void* cookie);
 
 /** Get multiple objects. The 'writer' callback is called exactly once for each object. */
 bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, 

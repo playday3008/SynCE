@@ -9,6 +9,7 @@ include_HEADERS = \
 	contact.h \
 	matchmaker.h \
 	syncmgr.h \
+	timezone.h \
 	task.h
 
 ## create this library
