@@ -11,7 +11,7 @@ configure
 configure.ac
 depcomp
 install-sh
-installer.spec
+*.spec
 libtool
 ltmain.sh
 Makefile
