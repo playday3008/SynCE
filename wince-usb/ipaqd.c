@@ -1,7 +1,7 @@
 /*
  *   ipaqd.c	A Linux userspace driver for the Compaq iPAQ running Win CE 3.0
  *  
- *   version: 0.1.0
+ *   version: 0.2.0
  *
  *   Copyright (C) 2001	Ganesh Varadarajan <vganesh@users.sourceforge.net>
  *
@@ -35,8 +35,6 @@
 #include <usb.h>
 #include "usbi.h"
 
-#define IPAQ_VENDOR_ID		0x49f
-#define IPAQ_PRODUCT_ID		0x3
 #define IPAQ_ENDPOINT_IN	0x82
 #define IPAQ_ENDPOINT_OUT	0x1
 
@@ -67,6 +65,17 @@
 		}							\
 	}								\
 }
+
+struct {
+	unsigned int	vendor_id;
+	unsigned int	product_id;
+	char		*name;
+} devlist[] = {
+	{ 0x0000, 0x0000, "User-specified device" },
+	{ 0x049f, 0x0003, "Compaq iPAQ" },
+	{ 0x003f, 0x1016, "HP Jornada 548" },
+	{ 0x003f, 0x1116, "HP Jornada 568" },
+};
 
 pid_t forkpty(int *, char *, struct termios *, struct winsize *);
 
@@ -123,7 +132,7 @@ main(int argc, char **argv)
 	int	on = 1;
 	int	c;
 
-	while ((c = getopt(argc, argv, "d:s:")) != -1) {
+	while ((c = getopt(argc, argv, "d:s:v:p:")) != -1) {
 		switch (c) {
 			case 's':
 				opt_delay = atoi(optarg);
@@ -131,9 +140,18 @@ main(int argc, char **argv)
 			case 'd':
 				msglevel = atoi(optarg);
 				break;
+			case 'v':
+				devlist[0].vendor_id =
+					strtol(optarg, NULL, 0);
+				break;
+			case 'p':
+				devlist[0].product_id =
+					strtol(optarg, NULL, 0);
+				break;
 			default:
 				msg(MSG_ERR, "Usage: %s [-s delay] "
-				    "[-d debuglevel]\n", argv[0]);
+				    "[-d debuglevel] [-v vendor_id] "
+				    "[-p product_id]\n", argv[0]);
 				exit(1);
 				break;
 		}
@@ -144,12 +162,21 @@ main(int argc, char **argv)
 	usb_find_busses();
 	usb_find_devices();
 
-	ipaqdev = bus_scan(IPAQ_VENDOR_ID, IPAQ_PRODUCT_ID);
+	for (c = 0; c < sizeof(devlist) / sizeof(devlist[0]); c++) {
+		if (devlist[c].product_id == 0 && devlist[c].vendor_id == 0) {
+			continue;
+		}
+		ipaqdev = bus_scan(devlist[c].vendor_id, devlist[c].product_id);
+		if (ipaqdev) {
+			break;
+		}
+	}
 
 	if (ipaqdev == NULL) {
 		msg(MSG_ERR, "ERROR:Couldn't locate device\n");
 		exit(1);
 	}
+	msg(MSG_INFO, "Found %s\n", devlist[c].name);
 
 	/*
 	 * the config has already been set to 1 by the kernel, so
