@@ -75,15 +75,15 @@ bool rapi_context_call(RapiContext* context)
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_1) )
 		return false;
 
-	if (context->result_1 != 1)
-		return false;
+/*	if (context->result_1 != 1)
+		return false;*/
 	
 	/* this is a HRESULT? */
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->result_2) )
 		return false;
 
-	if (context->result_2 != 0)
-		return false;
+/*	if (context->result_2 != 0)
+		return false;*/
 
 	return true;
 }

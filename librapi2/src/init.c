@@ -13,7 +13,6 @@ HRESULT CeRapiInit(void)
 	HRESULT result = E_UNEXPECTED;
 	struct configFile* config = NULL;
 	char* hostname = NULL;
-	char* password = NULL;
 
 	if (context->is_initialized)
 	{
