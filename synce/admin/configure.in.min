@@ -32,6 +32,34 @@ KDE_CHECK_COMPILER_FLAG(fshort-wchar,
 [ SHORT_WCHAR_FLAGS="-U__WCHAR_TYPE__ -D__WCHAR_TYPE__=short\ unsigned\ int" ] )
 AC_SUBST(SHORT_WCHAR_FLAGS)
 
+dnl Test for libiconv on OpenBSD
+AC_MSG_CHECKING([for path to iconv library])
+AC_ARG_WITH(iconv,
+[  --with-iconv=DIR        Use separate library for iconv functions.
+                          DIR is the prefix to where iconv is installed],
+[
+  if test "$withval" != "no"; then
+  	if test "$withval" != "yes"; then
+			AC_MSG_RESULT([$withval])
+			LDFLAGS="$LDFLAGS -L$withval/lib"
+		else
+			AC_MSG_RESULT([(use default)])
+   	fi
+	else
+		AC_MSG_RESULT([(use default)])
+	fi
+])
+AC_CHECK_LIB(iconv, iconv, [
+	LIBICONV="-liconv"
+],[
+	LIBICONV=""
+])
+AC_SUBST(LIBICONV)
+
+dnl This will define WORDS_BIGENDIAN if we run on a big endian machine
+AC_C_BIGENDIAN()
+
+	
 dnl for NLS support. Call them in this order!
 dnl WITH_NLS is for the po files
 dnl AM_KDE_WITH_NLS
