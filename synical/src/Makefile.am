@@ -5,5 +5,5 @@ AUTOMAKE_OPTIONS = foreign 1.4
 bin_PROGRAMS = db2ical
 
 ## db2ical sources
-db2ical_SOURCES = db2ical.cpp
+db2ical_SOURCES = cedatabase.h rapistring.h db2ical.cpp
 

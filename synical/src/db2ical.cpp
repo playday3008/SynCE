@@ -44,6 +44,7 @@ extern "C"
 #include "rapi.h"
 }
 #include "cedatabase.h"
+#include "rapistring.h"
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -51,65 +52,6 @@ extern "C"
 #define ASSERT(value) if (!(value)) return FAILURE;
 
 #define TIMEZONE_OFFSET (2*60*60)		// seconds 
-
-class RapiString
-{
-	private:
-		mutable char* mAscii;
-		mutable WCHAR* mUcs2;
-	
-	public:
-		RapiString(const char* ascii)
-			: mAscii(NULL), mUcs2(NULL)
-		{
-			mAscii = new char[strlen(ascii)+1];
-			strcpy(mAscii, ascii);
-		}
-
-		RapiString(const WCHAR* ucs2)
-			: mAscii(NULL), mUcs2(NULL)
-		{
-			mUcs2 = new WCHAR[wcslen(ucs2)+1];
-			wcscpy(mUcs2, ucs2);
-		}
-
-		~RapiString()
-		{
-			if (mAscii) delete mAscii;
-			if (mUcs2) delete mUcs2;
-		}
-
-		operator const WCHAR*() const
-		{
-			if (!mUcs2)
-			{
-				mUcs2 = new WCHAR[strlen(mAscii)+1];
-				// TODO: make nicer conversion
-				for (int i = 0; i <= strlen(mAscii); i++)
-				{
-					mUcs2[i] = mAscii[i];
-				}
-			}
-
-			return mUcs2;
-		}
-
-		operator const char*() const
-		{
-			if (!mAscii)
-			{
-				mAscii = new char[wcslen(mUcs2)+1];
-				// TODO: make nicer conversion
-				for (int i = 0; i <= wcslen(mUcs2); i++)
-				{
-					mAscii[i] = (char)mUcs2[i];
-				}
-			}
-
-			return mAscii;
-		}
-
-};
 
 struct RawAppointment
 {
