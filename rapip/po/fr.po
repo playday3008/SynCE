@@ -1,0 +1,232 @@
+# translation of fr.po to français
+# translation of raki.po to français
+# This file is distributed under the same license as the PACKAGE package.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER.
+# Arnaud Quette <arnaud.quette@free.fr>, 2003.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: fr\n"
+"POT-Creation-Date: 2003-02-08 02:24+0100\n"
+"PO-Revision-Date: 2003-09-13 17:21+0200\n"
+"Last-Translator: Arnaud Quette <arnaud.quette@free.fr>\n"
+"Language-Team: français <fr@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.0.2\n"
+
+#: _translatorinfo.cpp:1
+msgid ""
+"_: NAME OF TRANSLATORS\n"
+"Your names"
+msgstr "Arnaud Quette"
+
+#: _translatorinfo.cpp:3
+msgid ""
+"_: EMAIL OF TRANSLATORS\n"
+"Your emails"
+msgstr "arnaud.quette@free.fr"
+
+#: management.cpp:538 rc.cpp:1
+msgid "PDA Info and Management"
+msgstr "Info et Gestion de PDA"
+
+#: management.cpp:539 rc.cpp:3
+msgid "System"
+msgstr "Système"
+
+#: management.cpp:540 rc.cpp:4
+msgid "Major"
+msgstr "Majeur"
+
+#: management.cpp:541 rc.cpp:5
+msgid "Minor"
+msgstr "Mineur"
+
+#: management.cpp:542 rc.cpp:6
+msgid "Build"
+msgstr "Build"
+
+#: management.cpp:543 management.cpp:546 rc.cpp:7 rc.cpp:10
+msgid "Name"
+msgstr "Nom"
+
+#: management.cpp:544 rc.cpp:8
+msgid "Platform"
+msgstr "Plate forme"
+
+#: management.cpp:545 rc.cpp:9
+msgid "Id"
+msgstr "Id"
+
+#: management.cpp:547 rc.cpp:11
+msgid "Details"
+msgstr "Détails"
+
+#: management.cpp:548 rc.cpp:12
+msgid "Processor"
+msgstr "Processeur"
+
+#: management.cpp:549 rc.cpp:13
+msgid "Architecture"
+msgstr "Architecture"
+
+#: management.cpp:550 rc.cpp:14
+msgid "Type"
+msgstr "Type"
+
+#: management.cpp:551 rc.cpp:15
+msgid "Page size"
+msgstr "Taille de la page"
+
+#: management.cpp:552 rc.cpp:16
+msgid "Storage"
+msgstr "Stockage"
+
+#: management.cpp:553 rc.cpp:17
+msgid "Size"
+msgstr "Taille"
+
+#: management.cpp:554 rc.cpp:18
+msgid "Free"
+msgstr "Libre"
+
+#: management.cpp:555 rc.cpp:2
+msgid "System Information"
+msgstr "Informations Système"
+
+#: management.cpp:556 rc.cpp:20
+msgid "Installed Software"
+msgstr "Logiciels installés"
+
+#: management.cpp:557 rc.cpp:21
+msgid "Uninstall"
+msgstr "Désinstaller"
+
+#: management.cpp:558 rc.cpp:22
+msgid "Refresh"
+msgstr "Rafraichir"
+
+#: management.cpp:560 rc.cpp:19
+msgid "Software Manager"
+msgstr "Gestionnaire de logiciels"
+
+#: management.cpp:561 rc.cpp:25
+msgid "AC Power Status"
+msgstr "Statut courant AC"
+
+#: management.cpp:562 rc.cpp:26
+msgid "Online"
+msgstr "Secteur"
+
+#: management.cpp:563 rc.cpp:27
+msgid "Offline"
+msgstr "Batterie"
+
+#: management.cpp:564 rc.cpp:28
+msgid "Backup Power"
+msgstr "Energie de Sauvegarde"
+
+#: management.cpp:565 rc.cpp:29
+msgid "Invalid"
+msgstr "Invalide"
+
+#: management.cpp:566 rc.cpp:30
+msgid "Main Battery"
+msgstr "Batterie principale"
+
+#: management.cpp:567 management.cpp:572 rc.cpp:31 rc.cpp:36
+msgid "Flag"
+msgstr "Drapeau"
+
+#: management.cpp:568 management.cpp:573 rc.cpp:32 rc.cpp:37
+msgid "LifePercent"
+msgstr "Pourcentage"
+
+#: management.cpp:569 management.cpp:574 rc.cpp:33 rc.cpp:38
+msgid "LifeTime"
+msgstr "Autonomie"
+
+#: management.cpp:570 management.cpp:575 rc.cpp:34 rc.cpp:39
+msgid "FullLifeTime"
+msgstr "Autonomie totale"
+
+#: management.cpp:571 rc.cpp:35
+msgid "Backup Battery"
+msgstr "Batterie de Sauvegarde"
+
+#: management.cpp:576 rc.cpp:24
+msgid "Power status"
+msgstr "Statut courant"
+
+#: management.cpp:578 rc.cpp:41
+msgid "F1"
+msgstr "F1"
+
+#: management.cpp:581 rc.cpp:44
+msgid "Status Information:"
+msgstr "Informations de statut"
+
+#: progressbar.cpp:122 rc.cpp:45
+msgid "InstallFile"
+msgstr "InstallerFichier"
+
+#: progressbar.cpp:123 rc.cpp:46
+msgid "Installing:"
+msgstr "Installation de :"
+
+#: progressbar.cpp:125 rc.cpp:48
+msgid "Install"
+msgstr "Installer"
+
+#: raki.cpp:25 raki.cpp:277
+msgid "Raki Applet"
+msgstr "Applet Raki"
+
+#: raki.cpp:31
+msgid "&Execute..."
+msgstr "&Executer..."
+
+#: raki.cpp:32
+msgid "&Info && Management..."
+msgstr "&Info && Gestion..."
+
+#: raki.cpp:278
+msgid ""
+"An interface to SYNCE and RAPI.\n"
+"Drag & drop cab-files to install them on your PDA\n"
+"Start PDA-Applications remotely via your PC\n"
+msgstr ""
+"Une interface pour SYNCE et RAPI.\n"
+"Glisser & déposer les fichiers cab-pour les installer sur votre PDA\n"
+"Démarrer vos Applications PDA-depuis PC\n"
+
+#: raki.cpp:293
+msgid ""
+"<b>Raki Applet features</b>:<br><br>* Drop a cap file to install it on your "
+"PDA/sign it<br>* Remotely start a PDA-Application<br>"
+msgstr ""
+"<b>Fonctionnalités de l'Applet Raki </b>:<br><br>* Déposez un fichier cab pour l'installer sur votre"
+"PDA/le signer<br>* Démarrer vos Applications PDA-de manière déportée<br> "
+
+#: raki.cpp:301
+msgid "This is a preferences box"
+msgstr "Ceci est une boite de préférences"
+
+#: raki.moc.cpp:34 raki.moc.cpp:42
+msgid "MyLabel"
+msgstr "MonLabel"
+
+#: raki.moc.cpp:125 raki.moc.cpp:133
+msgid "Raki"
+msgstr "Raki"
+
+#: rc.cpp:50 runwindow.cpp:99
+msgid "Execute on PDA"
+msgstr "Executer sur le PDA"
+
+#: rc.cpp:51 runwindow.cpp:100
+msgid "Execute"
+msgstr "Executer"
+
