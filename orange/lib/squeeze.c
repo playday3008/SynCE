@@ -15,9 +15,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#if HAVE_LIBMAGIC && HAVE_MAGIC_H
+#include <magic.h>
+#define DO_MAGIC 1
+#endif
+
 #define DELETE_FILES 0
 
-static char* orange_get_temporary_directory()
+static char* orange_get_temporary_directory()/*{{{*/
 {
   char buffer[256];
   const char* tmpdir = getenv("TMPDIR");
@@ -31,7 +36,7 @@ static char* orange_get_temporary_directory()
     return strdup(buffer);
   else
     return NULL;
-}
+}/*}}}*/
 
 static bool orange_is_dot_directory(const char* dirname)/*{{{*/
 {
@@ -79,36 +84,28 @@ exit:
   return success;
 }/*}}}*/
 
-bool orange_squeeze_file(/*{{{*/
+static bool squeeze_by_suffix(
     const char* filename,
     orange_filename_callback callback,
-    void* cookie)
+    void* cookie,
+    const char* output_directory)
 {
   bool success = false;
   const char* suffix = NULL;
   const char* basename = NULL;
-  char* output_directory = NULL;
-
-  if (!filename)
-  {
-    synce_error("Filename is NULL");
-    goto exit;
-  }
-
-  output_directory = orange_get_temporary_directory();
 
   basename = strrchr(filename, '/');
   if (basename)
     basename++;
   else
     basename = filename;
-  
+
   suffix = strrchr(filename, '.');
   if (suffix)
     suffix++;
-  
+
   synce_trace("%s", filename);
-  
+
   if (suffix)
   {
     if (STR_EQUAL(suffix, "apk"))
@@ -200,12 +197,12 @@ bool orange_squeeze_file(/*{{{*/
         if (success)
           synce_trace("Found RAR format.");
       }
-    
+
       if (!success)
       {
         success = orange_separate(filename, output_directory);
       }
-    
+
       /* must be after call to orange_separate */
       if (!success)
       {
@@ -244,12 +241,36 @@ bool orange_squeeze_file(/*{{{*/
     synce_trace("Ignoring file without suffix: '%s'", basename);
 #endif
 
+  return success;
+}
+
+bool orange_squeeze_file(/*{{{*/
+    const char* filename,
+    orange_filename_callback callback,
+    void* cookie)
+{
+  bool success = false;
+  char* output_directory = NULL;
+
+  if (!filename)
+  {
+    synce_error("Filename is NULL");
+    goto exit;
+  }
+
+  output_directory = orange_get_temporary_directory();
+
+  success = squeeze_by_suffix(filename, callback, cookie, output_directory);
+
   if (success)
     success = orange_squeeze_directory(output_directory, callback, cookie);
     
 exit:
 #if DELETE_FILES
   orange_rmdir(output_directory);
+#else
+  /* only remove empty directories, let this fail for non-empty directories */
+  rmdir(output_directory);
 #endif
   FREE(output_directory);
   return success;

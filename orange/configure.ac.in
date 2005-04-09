@@ -103,6 +103,10 @@ if test $my_enable_msi -eq 1; then
 fi
 AC_SUBST([MSI_LIBADD])
 
+dnl Look for libmagic
+AC_CHECK_LIB(magic,magic_open)
+AC_CHECK_HEADERS(magic.h)
+
 
 # http://www.gnu.org/manual/autoconf-2.53/html_node/AC_LIBOBJ-vs.-LIBOBJS.html
 # This is necessary so that .o files in LIBOBJS are also built via
