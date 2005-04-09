@@ -137,6 +137,14 @@ bool orange_extract_ms_cab(
     const char* output_directory);
 
 /**
+  Extract an MSI file to a directory
+ */
+
+bool orange_extract_msi(
+    const char* input_filename,
+    const char* output_directory);
+
+/**
   Extract a (self-extracting) RAR file to a directory
  */
 

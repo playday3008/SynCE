@@ -1,5 +1,8 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
 #include "liborange_internal.h"
 #include <synce_log.h>
 #include <dirent.h>
@@ -118,7 +121,7 @@ bool orange_squeeze_file(/*{{{*/
       synce_trace("Trying TomTom ARH format.");
       success = orange_extract_arh(filename, output_directory);
     }
-    else if (STR_EQUAL(suffix, "cab"))
+    else if (STR_EQUAL(suffix, "cab") || STR_EQUAL(suffix, "any"))
     {
       /* Hopefully a Microsoft Cabinet File or an InstallShield Cabinet File */
       CabInfo cab_info;
@@ -211,6 +214,14 @@ bool orange_squeeze_file(/*{{{*/
           synce_trace("Found Microsoft CAB format.");
       }
     }
+#if ENABLE_MSI
+    else if (STR_EQUAL(suffix, "msi"))
+    {
+      success = orange_extract_msi(filename, output_directory);
+      if (success)
+        synce_trace("Found MSI format.");
+    }
+#endif
     else if (STR_EQUAL(suffix, "zip"))
     {
       success = orange_extract_zip(filename, output_directory);

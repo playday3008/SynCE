@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -g -ansi -Wall -Wsign-compare -Wno-long-long -Werror @CFLAGS@ @APPLE_CFLAGS@ -I..
+AM_CFLAGS = -g -ansi -Wall -Wsign-compare -Wno-long-long -Werror @CFLAGS@ @APPLE_CFLAGS@ -I.. @LIBOLE2_CFLAGS@
 
 ## create this library
 lib_LTLIBRARIES = liborange.la
@@ -16,9 +16,9 @@ liborange_la_SOURCES = \
 	synce-appmgr-internal.h \
 	tomtom.c
 
-EXTRA_liborange_la_SOURCES = inno.c vise.c
-liborange_la_LIBADD = @INNO_LIBADD@ @VISE_LIBADD@
-liborange_la_DEPENDENCIES = @INNO_LIBADD@ @VISE_LIBADD@
+EXTRA_liborange_la_SOURCES = inno.c vise.c msi.c
+liborange_la_LIBADD = @INNO_LIBADD@ @VISE_LIBADD@ @MSI_LIBADD@ @LIBOLE2_LIBS@
+liborange_la_DEPENDENCIES = @INNO_LIBADD@ @VISE_LIBADD@ @MSI_LIBADD@
 
 liborange_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
