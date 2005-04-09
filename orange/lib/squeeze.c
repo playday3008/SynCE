@@ -84,7 +84,61 @@ exit:
   return success;
 }/*}}}*/
 
-static bool squeeze_by_suffix(
+#if DO_MAGIC
+static bool squeeze_by_magic(/*{{{*/
+    const char* filename,
+    orange_filename_callback callback,
+    void* cookie,
+    const char* output_directory)
+{
+  bool success = false;
+  magic_t magic = NULL;
+  const char* description = NULL;
+
+  magic = magic_open(MAGIC_NONE);
+  if (!magic)
+    goto exit;
+
+  magic_load(magic, NULL); 
+
+  description = magic_file(magic, filename);
+  
+  if (!description)
+    goto exit;
+
+  synce_trace("%s: %s", filename, description);
+
+  if (strstr(description, "Microsoft Cabinet file"))
+  {
+    CabInfo cab_info;
+    if (orange_get_installable_cab_info(filename, &cab_info))
+    {
+      callback(filename, &cab_info, cookie);
+    }
+    else
+    {
+      success = orange_extract_ms_cab(filename, output_directory);
+      if (success)
+        synce_trace("Found Microsoft CAB format.");
+    }
+  }
+#if ENABLE_MSI
+  else if (strstr(description, "Microsoft Office Document"))
+  {
+    success = orange_extract_msi(filename, output_directory);
+    if (success)
+      synce_trace("Found MSI format.");
+  }
+#endif
+
+exit:
+  if (magic)
+    magic_close(magic);
+  return success;
+}/*}}}*/
+#endif
+
+static bool squeeze_by_suffix(/*{{{*/
     const char* filename,
     orange_filename_callback callback,
     void* cookie,
@@ -118,7 +172,7 @@ static bool squeeze_by_suffix(
       synce_trace("Trying TomTom ARH format.");
       success = orange_extract_arh(filename, output_directory);
     }
-    else if (STR_EQUAL(suffix, "cab") || STR_EQUAL(suffix, "any"))
+    else if (STR_EQUAL(suffix, "cab"))
     {
       /* Hopefully a Microsoft Cabinet File or an InstallShield Cabinet File */
       CabInfo cab_info;
@@ -242,7 +296,7 @@ static bool squeeze_by_suffix(
 #endif
 
   return success;
-}
+}/*}}}*/
 
 bool orange_squeeze_file(/*{{{*/
     const char* filename,
@@ -260,7 +314,12 @@ bool orange_squeeze_file(/*{{{*/
 
   output_directory = orange_get_temporary_directory();
 
-  success = squeeze_by_suffix(filename, callback, cookie, output_directory);
+#if DO_MAGIC
+  success = squeeze_by_magic(filename, callback, cookie, output_directory);
+#endif
+
+  if (!success)
+    success = squeeze_by_suffix(filename, callback, cookie, output_directory);
 
   if (success)
     success = orange_squeeze_directory(output_directory, callback, cookie);

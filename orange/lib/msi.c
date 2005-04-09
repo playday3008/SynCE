@@ -30,7 +30,7 @@ static void write_file(
 
   /* Open output file */
 
-  snprintf(output_filename, sizeof(output_filename), "%s/%s.%04x.any", output_directory, basename, index);
+  snprintf(output_filename, sizeof(output_filename), "%s/%s.%04x", output_directory, basename, index);
 
   output = fopen(output_filename, "w");
   if (!output)
