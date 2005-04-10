@@ -83,6 +83,14 @@ bool orange_extract_inno(
     const char* output_directory);
 
 /**
+  Source in installshield_sfx.c
+*/
+
+bool orange_extract_installshield_sfx(
+    const char* input_filename, 
+    const char* output_directory);
+
+/**
   Source in vise.c
 */
 
@@ -161,4 +169,3 @@ bool orange_extract_zip(
     const char* output_directory);
 
 #endif
-

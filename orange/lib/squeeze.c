@@ -215,6 +215,13 @@ static bool squeeze_by_suffix(/*{{{*/
 
       if (!success)
       {
+        success = orange_extract_installshield_sfx(filename, output_directory);
+        if (success)
+          synce_trace("Found InstallShield self-extracting executable.");
+      }
+
+      if (!success)
+      {
         success = orange_extract_setup_factory(filename, output_directory);
         if (success)
           synce_trace("Found SetupFactory format.");

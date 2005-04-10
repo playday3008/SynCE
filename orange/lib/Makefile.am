@@ -9,6 +9,7 @@ liborange_la_SOURCES = \
 	dllinflate.c \
 	extract.c \
 	helper.c \
+	installshield_sfx.c \
 	separate.c \
 	squeeze.c \
 	suf.c \
