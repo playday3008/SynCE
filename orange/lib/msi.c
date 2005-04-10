@@ -38,8 +38,6 @@ static void write_file(
 
   /* Dump stream */
 
-  bytes_left = stream->size;
-
   for (bytes_left = stream->size; bytes_left; bytes_left -= bytes_written)
   {
     bytes_to_write = MIN(32, bytes_left);
