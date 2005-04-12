@@ -258,7 +258,9 @@ number of USB endpoints:</p>
 <blockquote>
 <p><b>Two or three USB endpoints</b> Nothing to do here, good!</p>
 
-<p><b>Four USB endpoints</b> You need some special action here:</p>
+<p><b>Four USB endpoints</b> You need some special action here. Either follow <a
+href="http://home.arcor.de/langeland/synce/">Stefan Langeland's
+instructions</a> or these:</p>
 
 <blockquote>
 
@@ -350,7 +352,8 @@ character device named...</i>, ask for <a href="help.php">help</a>!</p>
 
 <p>As your own user (not root), try this command:</p>
 
-<blockquote><tt>pstatus</tt></blockquote>
+<blockquote><tt>pstatus</tt> (not on Debian)<br>
+<tt>synce-pstatus</tt> (on Debian)</blockquote>
 
 <p>If you get the message below, the connection <b>failed</b>, and you should
 make sure that you followed all the steps in this HOWTO properly.</p>
