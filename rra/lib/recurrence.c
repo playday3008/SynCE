@@ -366,7 +366,7 @@ static bool recurrence_set_dates(
   tmp_struct.tm_hour = 0;
   pattern->pattern_start_date = rra_minutes_from_struct(&tmp_struct);
 
-  pattern->start_minute = start_struct.tm_hour * 60 + start_struct.tm_sec;
+  pattern->start_minute = start_struct.tm_hour * 60 + start_struct.tm_min;
 
   switch (format)
   {
