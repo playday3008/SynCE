@@ -69,7 +69,7 @@ alt="Make a donation" title="Make a donation">
 
 <!-- <table widht="100%"><tr><td width="50%" valign="top"> -->
 
-<h3>SynCE installation and setup</h3>
+<h3>Installation and setup</h3>
 
 <ul>
 <li><a href="howto.php">HOWTO</a></li>
