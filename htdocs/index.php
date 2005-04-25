@@ -134,7 +134,8 @@ href="/tmp/rra_syncmgr_purge_deleted_object_ids.diff">this patch</a> and adding
 href="http://synce.sourceforge.net/tmp/rra_syncmgr_register_added_object_ids.txt">this
 function</a> to <tt>lib/syncmgr.c</tt>.</li>
 
-<li>Use SynCE &#8596; Local only.</li>
+<li>Use SynCE as one plugin and Local as the other. Others than Local aren't
+supported at the moment.</li>
 
 <li>Raki is broken, stop it before syncing (but let vdccm running)</li>
 
