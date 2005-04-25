@@ -9,6 +9,8 @@
 <p>Try these tools that send commands to the remote device. They must be
 executed by the user that is running dccm.</p>
 
+<p><i>Note for Debian users:</i> Prepend <tt>synce-</tt> to the tool names!</p>
+
 <table cellpadding=2>
 <tr><th>pcp</th><td>copy files</td></tr>
 <tr><th>pls</th><td>list directory contents</td></tr>
