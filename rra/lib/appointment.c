@@ -217,10 +217,12 @@ bool rra_appointment_to_vevent(/*{{{*/
     time_t end_time = 0;
     const char* type = NULL;
     const char* format = NULL;
-    
+    struct tm* (*xtime)(const time_t *timep) = NULL;
+
     switch (event_generator_data.type->val.lVal)
     {
       case APPOINTMENT_TYPE_ALL_DAY:
+        xtime  = gmtime;
         type   = "DATE";
         format = "%Y%m%d";
 
@@ -232,6 +234,7 @@ bool rra_appointment_to_vevent(/*{{{*/
 
 
       case APPOINTMENT_TYPE_NORMAL:
+        xtime  = localtime;
         type   = "DATE-TIME";
         if (!tzi)
           format = "%Y%m%dT%H%M%SZ";
@@ -258,12 +261,12 @@ bool rra_appointment_to_vevent(/*{{{*/
 
     if (type && format)
     {
-      strftime(buffer, sizeof(buffer), format, gmtime(&start_time));
+      strftime(buffer, sizeof(buffer), format, xtime(&start_time));
       generator_add_with_type(generator, "DTSTART", type, buffer);
       
       if (end_time)
       {
-        strftime(buffer, sizeof(buffer), format, gmtime(&end_time));
+        strftime(buffer, sizeof(buffer), format, xtime(&end_time));
         generator_add_with_type(generator, "DTEND",   type, buffer);
       }
     }
