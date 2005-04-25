@@ -8,9 +8,13 @@
 
 <p><b>Please note that this HOWTO is not yet finished!</b></p>
 
-<p>The purpose of this HOWTO is to connect a single Windows CE device with USB
-support to a PC running Linux distribution with a 2.6.x kernel, as this is
-assumed to be the most common setup for SynCE users.</p>
+<p>The purpose of this HOWTO is to connect a <b>single Windows CE device</b>
+with <b>USB support</b> to a <b>PC running a Linux distribution</b> with a
+<b>2.6.x kernel</b>, as this is assumed to be the most common setup for SynCE
+users.</p>
+
+<p>If this does not apply to your system, go to the <a href="nohowto.php">No
+HOWTO</a> page.</p>
 
 <p>You must also be running a Linux kernel build that supports loadable
 modules. (If you don't know what this means, you probably don't have to worry
@@ -121,7 +125,8 @@ successful USB connection.</p>
 
 <blockquote>
 
-<p><b>2.4.x</b> Your kernel is not supported by this HOWTO, sorry.</p>
+<p><b>2.4.x</b> Your kernel is not supported by this HOWTO, sorry. Use the <a
+href="nohowto.php">No HOWTO</a> page.</p>
 
 <p><b>2.5.x kernel</b> Your kernel is not supported at all by SynCE. We suggest
 that you upgrade to a 2.6.x kernel!</p>
@@ -334,7 +339,8 @@ character device named...</i>, ask for <a href="help.php">help</a>!</p>
 <ol>
 
 <li><p>As your own user (not root), start dccm:</p>
-<blockquote><tt>dccm</tt></blockquote>
+<blockquote><tt>dccm</tt> (if your device is not password-protected)<br/>
+<tt>dccm -p <i>password</i></tt> (if your device is password-protected)</blockquote>
 <p>This must be done after each time you have rebooted your computer.</p>
 </li>
 
@@ -385,12 +391,16 @@ connections while the USB cable is connected.</li>
 
 </ol>
 
+<h2>8. Donation</h2>
+
+<p>To show how grateful you are for SynCE, you can <a
+href="http://sourceforge.net/donate/index.php?group_id=30550">donate</a>!</p>
 
 <!-- <h2>8. Installing and using a hotplug script</h2>
 
 <p>TODO</p> -->
 
-<p>Return to <a href="index.php">main page</a>.</p>
+<p><br/>Return to <a href="index.php">main page</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>

@@ -69,17 +69,11 @@ alt="Make a donation" title="Make a donation">
 
 <!-- <table widht="100%"><tr><td width="50%" valign="top"> -->
 
-<h3>SynCE step by step</h3>
+<h3>SynCE installation and setup</h3>
 
-<ol>
-
-<li><a href="download.php">Download and install</a></li>
-<li><a href="setup.php">Configure</a></li>
-<li><a href="start.php">Connect</a></li>
-<li>Use the <a href="tools.php">tools</a></li>
-<li><a href="disconnect.php">Disconnect</a></li>
-
-</ol>
+<ul>
+<li><a href="howto.php">HOWTO</a></li>
+</ul>
 
 <h3>General</h3>
 
@@ -119,6 +113,33 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>April 25, 2004</b> No news is good news!</p>
+
+<p>First of all, there is a new page about <a href="opensync.php">SynCE and
+OpenSync</a> that may be of interest to some people.</p>
+
+<p>Since the last update, Volker
+Christian has made very good progress with the KDE support in SynCE. The bottom
+line is that you should use KDE 3.4 and the <i>syncekonnector</i> package.
+The <i>pocketpccommunication</i> module is <b>deprecated</b>!</p>
+
+<p>Some tips I've heard from SynCE-KDE users:</p>
+
+<ul>
+
+<li>In case <i>synceconnector</i> does not compile properly, update the
+<b>rra</b> module by applying <a
+href="/tmp/rra_syncmgr_purge_deleted_object_ids.diff">this patch</a> and adding
+<a
+href="http://synce.sourceforge.net/tmp/rra_syncmgr_register_added_object_ids.txt">this
+function</a> to <tt>lib/syncmgr.c</tt>.</li>
+
+<li>Use SynCE &#8596; Local only.</li>
+
+<li>Raki is broken, stop it before syncing (but let vdccm running)</li>
+
+</ul>
+
 <p><b>October 27, 2004</b> If you want to get SynCE working on your Linux
 system, feel free to try the initial version of the <a
 href="howto.php">HOWTO</a>!</p>
@@ -131,6 +152,8 @@ give it a try!</p>
 href="http://adrian.dimulescu.free.fr/article.php3?id_article=10">PocketWord
 convertor</a>. It can convert .pwi/.psw documents into OpenOffice sxw, HTML,
 and plain text.</p>
+
+<?php /*
 
 <p><b>August 30, 2004</b> During the past weekend, desktop environment add-ons
 <a
@@ -154,8 +177,6 @@ link to the files</a>.  The SynCE plugin for MultiSync will be released later
 this week! Also, if you have problems getting a PPP connection with USB
 connection on Linux, take a look at the <a href="usb_linux.php#werestuffed">The
 "we're stuffed" bug</a>.</p>
-
-<?php /*
 
 <p><b>July 7, 2004</b> Added a <a href="contrib/ipaq">start/stop script</a>
 contributed by Tony Stout. Added info about my packet decoders for Ethereal to
