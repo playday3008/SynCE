@@ -338,6 +338,10 @@ character device named...</i>, ask for <a href="help.php">help</a>!</p>
 
 </blockquote>
 
+<p>This does not have to be done again on your system unless your device
+appears on a different tty for some reason.</p>
+
+
 <h2>5. Starting the connection</h2>
 
 <p>For the time being, this part is very brief!</p>
