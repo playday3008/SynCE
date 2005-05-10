@@ -205,8 +205,14 @@ need to perform some special configuration:</p>
 
 <li><p>If your Linux kernel is 2.6.10 or later, please send a mail to <a
 href="mailto:synce-devel@lists.sourceforge.net">
-synce-devel@lists.sourceforge.net</a> and tell us about your device and its
-vendor/product IDs.</p></li>
+synce-devel@lists.sourceforge.net</a> and tell us:</p>
+
+<ol>
+<li>your kernel version</li>
+<li>brand and model of your device</li>
+<li>vendor/product USB IDs for your device</li>
+</ol>
+</li>
 
 <li><p>If you have the directory <tt>/etc/modutils</tt>, create the file
 <tt>/etc/modutils/synce</tt> with a text editor. If not, use a text editor to
