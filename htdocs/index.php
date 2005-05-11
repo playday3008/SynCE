@@ -113,7 +113,10 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>April 25, 2004</b> No news is good news!</p>
+<p><b>May 11, 2005</b> The previous news entry had a small cut and paste error
+in the date, but it's is corrected now!</p>
+
+<p><b>April 25, 2005</b> No news is good news!</p>
 
 <p>First of all, there is a new page about <a href="opensync.php">SynCE and
 OpenSync</a> that may be of interest to some people.</p>
