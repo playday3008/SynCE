@@ -126,13 +126,10 @@ static void strbuf_append_tel_type(StrBuf* strbuf, const char* value, uint32_t f
 static void strbuf_append_date(StrBuf* strbuf, const char* name, FILETIME* filetime)
 {
   char buffer[12];
-  time_t unix_time;
-  struct tm* date;
+  TIME_FIELDS time_fields;
 
-  unix_time = filetime_to_unix_time(filetime);
-  date = localtime(&unix_time);
-
-  snprintf(buffer, sizeof(buffer), "%04i-%02i-%02i", 1900 + date->tm_year, 1 + date->tm_mon, date->tm_mday);
+  time_fields_from_filetime(filetime, &time_fields);
+  snprintf(buffer, sizeof(buffer), "%04i-%02i-%02i", time_fields.Year, time_fields.Month, time_fields.Day);
 
   strbuf_append(strbuf, name);
   strbuf_append_c(strbuf, ':');
@@ -755,15 +752,15 @@ static void unescape_string(char* value)/*{{{*/
 	*dest = '\0';
 }/*}}}*/
 
-static bool date_to_struct(const char* datetime, struct tm* time_struct)/*{{{*/
+static bool date_to_struct(const char* datetime, TIME_FIELDS* time_fields)/*{{{*/
 {
   int count;
-  memset(time_struct, 0, sizeof(struct tm));
+  memset(time_fields, 0, sizeof(*time_fields));
 
-  count = sscanf(datetime, "%4d-%2d-%2d", 
-      &time_struct->tm_year,
-      &time_struct->tm_mon,
-      &time_struct->tm_mday);
+  count = sscanf(datetime, "%4hd-%2hd-%2hd", 
+      &time_fields->Year,
+      &time_fields->Month,
+      &time_fields->Day);
 
   if (count != 3)
   {
@@ -771,30 +768,20 @@ static bool date_to_struct(const char* datetime, struct tm* time_struct)/*{{{*/
     return false;
   }
 
-   
-  time_struct->tm_year -= 1900;
-  time_struct->tm_mon--;
-  time_struct->tm_hour = 12;
-  time_struct->tm_isdst = -1;
-
   return true;
 }/*}}}*/
 
 static void add_date(Parser* parser, uint32_t id, const char* type, char* value)
 {
-  struct tm date_struct;
+  TIME_FIELDS time_fields;
 
   assert(value);
 
-  if (date_to_struct(value, &date_struct))
+  if (date_to_struct(value, &time_fields))
   {
     CEPROPVAL* propval = &parser->fields[parser->field_index++];
-    time_t unix_time;
-
-    unix_time = mktime(&date_struct);
-
     propval->propid = (id << 16) | CEVT_FILETIME;
-    filetime_from_unix_time(unix_time, &propval->val.filetime);
+    time_fields_to_filetime(&time_fields, &propval->val.filetime);
   }
 }
 
