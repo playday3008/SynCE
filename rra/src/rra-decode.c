@@ -198,10 +198,22 @@ bool decode_database_stream(uint8_t* buffer, unsigned id)
 
 			case CEVT_FILETIME:
 				{
+#if 0
 					time_t unix_time = filetime_to_unix_time(&propvals[i].val.filetime);
 					char* time_str = asctime(gmtime(&unix_time));
 					time_str[strlen(time_str)-1] = '\0'; /* remove trailing newline */
 					printf("%s  (%lu)", time_str, unix_time);
+#else
+          TIME_FIELDS time_fields;
+          time_fields_from_filetime(&propvals[i].val.filetime, &time_fields);
+          printf("%04i-%02i-%02i %02i:%02i:%02i",
+              time_fields.Year,
+              time_fields.Month,
+              time_fields.Day,
+              time_fields.Hour,
+              time_fields.Minute,
+              time_fields.Second);
+#endif
           db_dump(&propvals[i].val.filetime, sizeof(FILETIME));
         }
 				break;
