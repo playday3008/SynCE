@@ -2,48 +2,9 @@
 
 <div class="PAGE">
 
-<p>Return to <a href="index.php">main page</a>.</p>
+<p>Return to <a href="multisync_guide.php">MultiSync guide</a>.</p>
 
-<h1>SynCE - Using MultiSync for synchronization</h1>
-
-<h2>Overview</h2>
-
-<p>SynCE is capable of synchronizing calendar, task and address book data with
-for example <a href="http://www.ximian.com/products/evolution/">Ximian
-Evolution</a> using a plugin for <a
-href="http://multisync.sourceforge.net/">MultiSync</a>.</p>
-
-<p><b>Warning:</b> This is experimental software. Anything can happen. Use it
-at your own risk.</p>
-
-<h2>Getting started</h2>
-
-<p>These instructions will hopefully get you started:</p>
-
-<ol>
-
-<li class=SPACED>Get the latest 0.8x version of <a
-href="http://multisync.sourceforge.net/">MultiSync</a> up and running. Verify
-that MultiSync works with your version of Evolution by creating and testing a
-synchronization pair with the Evolution and Backup plugins.</li>
-
-<li class=SPACED><a href="download.php">Download</a> and <a
-href="setup.php">setup</a> SynCE including the <tt>rra</tt> and
-<tt>multisync_plugin</tt> modules.</li>
-
-<li class=SPACED>If you have previously used ActiveSync to synchronize your
-Pocket PC handheld, follow the instructions at <i>Using both the MultiSync
-plugin and ActiveSync</i> below to change the current partnership.</li>
-
-<li class=SPACED>Create a MultiSync synchronization pair with Evolution and the
-SynCE plugin. You should only have the SynCE plugin in <i>one</i> connection
-pair.</li>
-
-<li class=SPACED>Synchronize!</li>
-
-</ol>
-
-<h2>Questions and Answers</h2>
+<h1>SynCE - MultiSync Questions and Answers</h1>
 
 <p><b>Q:</b> What's the difference between <a
 href="http://www.multisync.org/">MultiSync with 'C'</a> and <a
@@ -123,7 +84,7 @@ or a 2 in PCur dependent on the matched partnership.</p>
 <p>Now Windows CE could manage the synchronization process in that way, that
 both partners and also the PDA have consistent states.</p>
 
-<p><br/>Return to <a href="index.php">main page</a>.</p>
+<p><br/>Return to <a href="multisync_guide.php">MultiSync guide</a>.</p>
 
 </div>
 <?php include 'footer.php'; ?>

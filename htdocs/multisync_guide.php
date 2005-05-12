@@ -13,6 +13,11 @@ at your own risk.</p>
 
 <ol>
 
+<li class=SPACED>Get the latest 0.8x version of <a
+href="http://multisync.sourceforge.net/">MultiSync</a> up and running. Verify
+that MultiSync works with your version of Evolution by creating and testing a
+synchronization pair with the Evolution and Backup plugins.</li>
+
 <li><p>Use the <tt>synce-matchmaker</tt> tool to create a partnership between
 SynCE and your Windows CE device. If you don't have this tool you must install
 the <b>synce-rra</b> module. <a
@@ -42,7 +47,7 @@ like this:</p>
 Evolution - IrMC</blockquote>
 
 
-<p>Se also the <a href="multisync.php">old page about SynCE and MultiSync</a>.</p>
+<p>Se also the <a href="multisync.php">MultiSync Questions and Answers</a> page.</p>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 
