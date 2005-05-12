@@ -19,6 +19,7 @@ libsynce_la_SOURCES = \
 	synce_log.h synce_log.c \
 	synce_socket.h synce_socket.c \
 	synce_vector_template.h \
+	time_fields.c \
 	wstr.c
 
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
