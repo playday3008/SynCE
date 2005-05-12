@@ -11,7 +11,12 @@
  * Simple types
  */
 
+typedef void      VOID;
+
 typedef uint8_t   BYTE;
+typedef BYTE      BOOLEAN;
+
+typedef int16_t   CSHORT;
 
 typedef uint16_t  WORD;
 typedef uint16_t  USHORT;
@@ -27,6 +32,9 @@ typedef uint32_t  UINT;
 typedef uint32_t  ULONG;
 typedef uint32_t  HWND;
 typedef uint32_t  BOOL;
+
+typedef int64_t LONGLONG;
+
 
 /* XXX: sizeof(double) must be 8 */
 typedef double    DATE;
@@ -57,10 +65,30 @@ typedef const WCHAR*  LPCWSTR;
  * Misc types
  */
 
+typedef struct _TIME_FIELDS
+{   
+  CSHORT Year;
+  CSHORT Month;
+  CSHORT Day;
+  CSHORT Hour;
+  CSHORT Minute;
+  CSHORT Second;
+  CSHORT Milliseconds;
+  CSHORT Weekday;
+} TIME_FIELDS, *PTIME_FIELDS;
+
+typedef union _LARGE_INTEGER {
+  struct {
+    DWORD LowPart;
+    LONG HighPart;
+  } u;
+  LONGLONG QuadPart;
+} LARGE_INTEGER, *PLARGE_INTEGER;
+
 typedef struct _FILETIME
 {
-        DWORD dwLowDateTime;
-        DWORD dwHighDateTime;
+  DWORD dwLowDateTime;
+  DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
 /* A handle  is usually a void*, but we must guarantee 32-bit! */

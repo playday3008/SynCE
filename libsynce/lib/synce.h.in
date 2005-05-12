@@ -36,11 +36,14 @@ namespace synce
 #endif
 
 /*
- * FILETIME and DATE conversion
+ * TIME_FIELDS, FILETIME and DATE conversion
  */
 
+void time_fields_from_filetime(const FILETIME* filetime, TIME_FIELDS* timeFields);
+bool time_fields_to_filetime(const TIME_FIELDS* timeFields, FILETIME* filetime);
+
 void filetime_from_unix_time(time_t unix_time, FILETIME *filetime);
-time_t filetime_to_unix_time(const FILETIME *filetime);
+time_t filetime_to_unix_time(const FILETIME *filetime); /* deprecated! use time_fields_from_filetime() */
 
 #define DATE_TIMEVALUEONLY   1
 #define DATE_DATEVALUEONLY   2

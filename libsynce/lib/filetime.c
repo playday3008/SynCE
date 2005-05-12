@@ -1,5 +1,6 @@
 /* $Id$ */
 #include "synce.h"
+#include "synce_log.h"
 
 static void DOSFS_UnixTimeToFileTime( time_t unix_time, FILETIME *filetime,
                                DWORD remainder );
@@ -19,6 +20,8 @@ void filetime_from_unix_time(time_t unix_time, FILETIME *filetime)
 
 time_t filetime_to_unix_time(const FILETIME *filetime)
 {
+  synce_trace("This function is deprecated. Use time_fields_from_filetime() instead.");
+  
 	if (0 == filetime->dwLowDateTime && 0 == filetime->dwHighDateTime)
 		return 0;
 	else
