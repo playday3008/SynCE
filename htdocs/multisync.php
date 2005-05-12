@@ -45,6 +45,16 @@ pair.</li>
 
 <h2>Questions and Answers</h2>
 
+<p><b>Q:</b> What's the difference between <a
+href="http://www.multisync.org/">MultiSync with 'C'</a> and <a
+href="http://docs.kde.org/en/HEAD/kdepim/multisynk/">MultiSynk with 'K'</a>?</p>
+
+<p><b>A:</b> A lot. This page is about MultiSync with 'C', a program often used
+for synchronzing phones and handhelds with Novell Evolution. MultiSynk with 'K'
+is a frontend for KDE's synchronization framework "kitchensync".</p>
+
+<hr size=1 width="50%">
+
 <p><b>Q:</b> Can I use SynCE with <a href="http://www.opensync.org/">OpenSync</a>?</p>
 
 <p><b>A:</b> No. See <a href="opensync.php">SynCE and OpenSync</a>.</p>
