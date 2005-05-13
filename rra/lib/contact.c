@@ -886,12 +886,10 @@ static bool parser_handle_field(/*{{{*/
 
 		for (i = 0; i < NAME_FIELD_COUNT && name[i]; i++)
 		{
-			if (name_ids[i] && *name[i])
+			if (*name[i])
 			{
 				add_string(parser, name_ids[i], type, name[i]);
 			}
-			else
-				break;
 		}
 
 		strv_free(name);
