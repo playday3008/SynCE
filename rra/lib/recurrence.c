@@ -157,7 +157,7 @@ static bool recurrence_generate_daily_rrule(
 
   recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
-  return generator_add_simple(g, "RRULE", buffer);
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
 static bool recurrence_generate_weekly_rrule(
@@ -171,7 +171,7 @@ static bool recurrence_generate_weekly_rrule(
   recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
   recurrence_append_byday         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
-  return generator_add_simple(g, "RRULE", buffer);
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
 static bool recurrence_generate_monthly_rrule(
@@ -184,7 +184,7 @@ static bool recurrence_generate_monthly_rrule(
 
   recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
-  return generator_add_simple(g, "RRULE", buffer);
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
 static bool recurrence_generate_monthnth_rrule(
@@ -199,7 +199,7 @@ static bool recurrence_generate_monthnth_rrule(
   recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
   recurrence_append_byday         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
-  return generator_add_simple(g, "RRULE", buffer);
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
 bool recurrence_generate_rrule(

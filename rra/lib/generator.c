@@ -246,6 +246,21 @@ bool generator_add_simple(Generator* self, const char* name, const char* value)/
   return true;
 }/*}}}*/
 
+bool generator_add_simple_unescaped(Generator* self, const char* name, const char* value)/*{{{*/
+{
+  if (STATE_IDLE != self->state)
+  {
+    synce_error("Missing call to generator_end_line()");
+    return false;
+  }
+
+  strbuf_append(self->buffer, name);
+  strbuf_append_c(self->buffer, ':');
+  strbuf_append(self->buffer, value);
+  strbuf_append_crlf(self->buffer);
+  return true;
+}/*}}}*/
+
 bool generator_add_with_type(Generator* self, const char* name, /*{{{*/
     const char* type, const char* value)
 {

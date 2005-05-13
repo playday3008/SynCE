@@ -31,6 +31,7 @@ bool generator_run(Generator* self);
 bool generator_get_result(Generator* self, char** result);
 
 bool generator_add_simple(Generator* self, const char* name, const char* value);
+bool generator_add_simple_unescaped(Generator* self, const char* name, const char* value);
 bool generator_add_with_type(Generator* self, const char* name, const char* type, const char* value);
 
 bool generator_add_simple_propval(Generator* self, const char* name, struct _CEPROPVAL* propval);
