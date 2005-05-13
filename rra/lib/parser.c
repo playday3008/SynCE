@@ -179,6 +179,7 @@ bool parser_duration_to_seconds(const char* duration, int* result)/*{{{*/
 
 }/*}}}*/
 
+/* XXX: maybe use TIME_FIELDS as struct instead? */
 bool parser_datetime_to_struct(const char* datetime, struct tm* time_struct, bool* is_utc)/*{{{*/
 {
   int count;
