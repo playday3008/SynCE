@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -I..
+AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -I.. @DBUS_CFLAGS@
 
 ## create this library
 lib_LTLIBRARIES = libsynce.la
@@ -23,7 +23,7 @@ libsynce_la_SOURCES = \
 	wstr.c
 
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ -lm
+libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ -lm @DBUS_LIBS@
 
 include_HEADERS = \
 	synce.h synce_hash.h synce_ini.h synce_log.h synce_socket.h synce_types.h \
