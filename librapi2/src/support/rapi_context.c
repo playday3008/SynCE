@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <errno.h>
 
 #define CERAPI_E_ALREADYINITIALIZED  0x8004101
 
@@ -105,8 +106,11 @@ HRESULT rapi_context_connect(RapiContext* context)
 
 	if (kill(info->dccm_pid, 0) < 0)
 	{
-		synce_error("DCCM not running with pid %i", info->dccm_pid);
-		goto fail;
+		if (errno != EPERM) 
+		{ 
+			synce_error("DCCM not running with pid %i", info->dccm_pid);
+			goto fail;
+		}
 	}
 
 	if (!info->ip)
