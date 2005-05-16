@@ -17,7 +17,7 @@
 #define DEFAULT_CONNECTION_FILENAME   "active_connection"
 #define SCRIPT_DIRECTORY              "scripts"
 
-static char connection_filename[256] = {DEFAULT_CONNECTION_FILENAME};
+static char connection_filename[MAX_PATH] = {DEFAULT_CONNECTION_FILENAME};
 
 static bool make_sure_directory_exists(char* directory)
 {
@@ -44,7 +44,17 @@ static bool make_sure_directory_exists(char* directory)
  */
 bool synce_get_directory(char** path)
 {
-	char buffer[256];
+	char buffer[MAX_PATH];
+    char *p;
+
+	/* if there is a preference for config dir set
+	   as an environment variable, use it */
+	if ((p = getenv ("SYNCE_CONF_DIR")) != NULL) {
+		if (make_sure_directory_exists (p)) {
+			*path = strdup (p);
+			return true;
+		}
+	}
 	
 	/* XXX: not very thread-safe? */
 	struct passwd* user = getpwuid(getuid());
@@ -105,7 +115,7 @@ bool synce_get_connection_filename(char** filename)
 {
 	bool success = false;
 	char* path = NULL;
-	char buffer[256];
+	char buffer[MAX_PATH];
 
 	if (!filename)
 		goto exit;
@@ -130,7 +140,7 @@ bool synce_get_subdirectory(const char* name, char** directory)
 {
 	bool success = false;
 	char* path = NULL;
-	char buffer[256];
+	char buffer[MAX_PATH];
 
 	if (!name || !directory)
 		goto exit;
