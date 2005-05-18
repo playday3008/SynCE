@@ -16,6 +16,13 @@ users.</p>
 <p>If this does not apply to your system, go to the <a href="nohowto.php">No
 HOWTO</a> page.</p>
 
+<p>In case you are not on a 32-bit x86 system but for example using a 64-bit
+system (such as AMD64) or a big-endian system (such as PowerPC), there might be
+some additional quirks. You are very welcome to write to the <a
+href="mailto:synce-users@lists.sourceforge.net">
+synce-users@lists.sourceforge.net</a> list about your experiences with SynCE on
+such systems!</p>
+
 <p>You must also be running a Linux kernel build that supports loadable
 modules. (If you don't know what this means, you probably don't have to worry
 about this!)</p>
@@ -366,6 +373,9 @@ appears on a different tty for some reason.</p>
 
 <h2>6. Testing the connection</h2>
 
+<p>Applications and tools (except for synce-serial-*) that use SynCE must be
+executed by the same user as is running dccm (not root).</p>
+
 <p>As your own user (not root), try this command:</p>
 
 <blockquote><tt>pstatus</tt> (not on Debian)<br>
@@ -377,15 +387,23 @@ make sure that you followed all the steps in this HOWTO properly.</p>
 <blockquote><tt>pstatus: Unable to initialize RAPI: An unspecified failure has
 occurred</tt></blockquote>
 
+<p>If you successfully got information about your device, congratulations for
+enduring all the quirks involved in setting up SynCE! :-)</p>
+
+<p>Now is a good time to play with the other <a href="tools.php">command line
+tools</a> included with SynCE.</p>
+
 <h2>7. Disconnection</h2>
 
-<p>Before you unplug your PDA from your PC, you should close the network
-connection between Windows CE and SynCE. There are a couple of ways to do this.</p>
+<p>In order to properly disconnect your device, you should first close the
+network connection between Windows CE and SynCE. There are a couple of ways to
+do this.</p>
 
 <p>Just unplugging the USB cable is <b>not</b> proper disconnection when using
 SynCE. (This will hopefully be fixed in the kernel driver some day.)</p>
 
-<p>The suggested disconnection methods are, in order of preference:</p>
+<p>Before you unplug the cable you should do one of these actions, in order of
+preference:</p>
 
 <ol>
 
