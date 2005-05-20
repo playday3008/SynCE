@@ -222,7 +222,7 @@ bool rra_appointment_to_vevent(/*{{{*/
     switch (event_generator_data.type->val.lVal)
     {
       case APPOINTMENT_TYPE_ALL_DAY:
-        xtime  = gmtime;
+        xtime  = localtime;
         type   = "DATE";
         format = "%Y%m%d";
 
@@ -234,7 +234,7 @@ bool rra_appointment_to_vevent(/*{{{*/
 
 
       case APPOINTMENT_TYPE_NORMAL:
-        xtime  = localtime;
+        xtime  = gmtime;
         type   = "DATE-TIME";
         if (!tzi)
           format = "%Y%m%dT%H%M%SZ";
