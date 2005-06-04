@@ -385,7 +385,7 @@ executed by the same user as is running dccm (not root).</p>
 enduring all the quirks involved in setting up SynCE! :-)</p>
 
 <p>Now is a good time to play with the other <a href="tools.php">command line
-tools</a> included with SynCE.</p>
+tools</a> included with SynCE. However, don't forget steps 7 and 8 below!</p>
 
 <p>If you get the message below, the connection <b>failed</b>, and you should
 make sure that you followed all the steps in this HOWTO properly.</p>
