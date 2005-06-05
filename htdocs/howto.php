@@ -184,10 +184,10 @@ your device:</p>
 
 <blockquote><pre>23a24,31
 &gt; T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#= 10 Spd=12  MxCh= 0
-&gt; D:  Ver= 1.00 Cls=ff(vend.) Sub=ff Prot=ff MxPS= 8 #Cfgs=  1
+&gt; D:  Ver= 1.00 Cls=ff(vend.) Sub=ff Prot=ff MxPS= 8 <span class=RED>#Cfgs=  1</span>
 &gt; P:  Vendor=<span class=RED>049f</span> ProdID=<span class=RED>0003</span> Rev= 0.00
 &gt; C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
-&gt; I:  If#= 0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff <span class=RED>Driver=ipaq</span>
+&gt; I:  If#= 0 Alt= 0 <span class=RED>#EPs= 2</span> Cls=ff(vend.) Sub=ff Prot=ff <span class=RED>Driver=ipaq</span>
 <span class=RED>&gt; E:  Ad=01(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
 &gt; E:  Ad=82(I) Atr=02(Bulk) MxPS=  16 Ivl=0ms</span>
 &gt;</pre></blockquote>
@@ -195,9 +195,32 @@ your device:</p>
 <p>Important parts of the output have been marked with <span CLASS=RED>red
 color</span>, and may be referenced in the instructions below.</p>
 
+<h3>The number of USB configurations</h3>
+
+<p>First look at the value of <b>#Cfgs=</b>. If it's <b>1</b>, skip to <i>The
+Driver entry</i> below! If it's <b>2</b> or more, read on here.</p>
+
+<ul>
+
+<li class="SPACED">If your device is <b>not</b> an HP rx3417  please send a mail to <a
+href="mailto:synce-devel@lists.sourceforge.net">
+synce-devel@lists.sourceforge.net</a> and tell us:</p>
+
+<ol>
+<li>brand and model of your device</li>
+<li>the output from <tt>diff /tmp/before /tmp/after</tt></li>
+</ol>
+</li>
+
+<li class="SPACED">Feel free to keep following this HOWTO, but be warned that your device
+might not work anyway. Support for devices with multiple USB configurations are
+currently being investigated by the SynCE developers.</li>
+
+</ul>
+
 <h3>The Driver entry</h3>
 
-<p>First you look at the <b>Driver</b> entry. Read more in the apropriate
+<p>Second you look at the <b>Driver</b> entry. Read more in the apropriate
 section below.</p>
 
 <blockquote>
@@ -210,9 +233,9 @@ need to perform some special configuration:</p>
 
 <ol>
 
-<li><p>If your Linux kernel is 2.6.10 or later, please send a mail to <a
+<li><p>Only if your Linux kernel is 2.6.10 or later: please send a mail to <a
 href="mailto:synce-devel@lists.sourceforge.net">
-synce-devel@lists.sourceforge.net</a> and tell us:</p>
+synce-devel@lists.sourceforge.net</a> and tell us...</p>
 
 <ol>
 <li>your kernel version</li>
@@ -270,8 +293,8 @@ error message, ask for <a href="help.php">help</a>!</p></li>
 
 <h3>The number of USB endpoints</h3> 
 
-<p>Next you count the number of lines beginning with <b>E:</b>, meaning the
-number of USB endpoints:</p>
+<p>Next you look at the <b>#EPs=</b> entry or count the number of lines
+beginning with <b>E:</b>, meaning the number of USB endpoints:</p>
 
 <blockquote>
 <p><b>Two or three USB endpoints</b> Nothing to do here, good!</p>
