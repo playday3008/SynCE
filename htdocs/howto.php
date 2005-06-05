@@ -198,25 +198,16 @@ color</span>, and may be referenced in the instructions below.</p>
 <h3>The number of USB configurations</h3>
 
 <p>First look at the value of <b>#Cfgs=</b>. If it's <b>1</b>, skip to <i>The
-Driver entry</i> below! If it's <b>2</b> or more, read on here.</p>
-
-<ul>
-
-<li class="SPACED">If your device is <b>not</b> an HP rx3417  please send a mail to <a
+Driver entry</i> below! If it's <b>2</b> or more, please send a mail to <a
 href="mailto:synce-devel@lists.sourceforge.net">
 synce-devel@lists.sourceforge.net</a> and tell us:</p>
 
 <ol>
 <li>brand and model of your device</li>
 <li>the output from <tt>diff /tmp/before /tmp/after</tt></li>
+<li>if it worked properly with this HOWTO</li>
 </ol>
-</li>
 
-<li class="SPACED">Feel free to keep following this HOWTO, but be warned that your device
-might not work anyway. Support for devices with multiple USB configurations are
-currently being investigated by the SynCE developers.</li>
-
-</ul>
 
 <h3>The Driver entry</h3>
 
