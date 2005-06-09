@@ -6,6 +6,10 @@
 
 <h1>SynCE - Linux hotplug script for USB connections</h1>
 
+<p>Ed Catmur suggests some <a
+href="http://sourceforge.net/tracker/?func=detail&atid=399601&aid=1204938&group_id=30550">improvements
+to the hotplug script below</a>.</p>
+
 <p>If you have the <b>devfs</b> daemon (for example on Gentoo), you can follow
 Stanislaw Pusep's <a
 href="https://sourceforge.net/forum/message.php?msg_id=2813010">tips for using
