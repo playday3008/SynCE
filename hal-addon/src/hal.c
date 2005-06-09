@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2005 Andrei Yurkevich <urruru@ru.ru>
  * Copyright (c) 2002 David Eriksson <twogood@users.sourceforge.net>
  *
@@ -11,7 +11,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 #include <stdlib.h>
 #include <string.h>
 #include <libhal.h>
@@ -38,37 +38,37 @@ static void
 hal_init                   (void)
 {
     SHC_INFO ("Initializing HAL library");
-	
+
 	dbus_error_init (&err);
 	if ((ctx = libhal_ctx_init_direct (&err)) == NULL) {
 		SHC_ERROR ("Unable to initialize HAL library");
 		exit (1);
 	}
-	
+
     hal_initialized = TRUE;
 	return;
 }
 
 void
 hal_add_capability         (gchar     *udi,
-                            gchar     *capability)
+			    gchar     *capability)
 {
 	if (!hal_initialized)
 		hal_init ();
-		
+
 	if (!libhal_device_query_capability (ctx, udi, capability, &err))
 		libhal_device_property_strlist_append (ctx, udi, "info.capabilities", capability, &err);
 }
 
 void
 hal_set_property           (gchar     *udi,
-                            guint     type,
-                            gchar     *property,
-							gpointer  value)
+			    guint     type,
+			    gchar     *property,
+			    gpointer  value)
 {
 	if (!hal_initialized)
 		hal_init ();
-	  
+
 	if (type == PROPERTY_TYPE_STRING) {
 		SHC_INFO ("Setting %s=%s", property, (gchar *) value);
 		libhal_device_set_property_string (ctx, udi, property, (gchar *) value, &err);

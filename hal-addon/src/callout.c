@@ -39,6 +39,7 @@
 
 #define PPPD_TIMEOUT	10
 #define INFO_TIMEOUT    30  /* interval between device info updates */
+#define UDEV_RETRIES 	10
 
 #include <config.h>
 #include "misc.h"
@@ -64,8 +65,8 @@ static int    dccm_running = 0;
 static void
 drop_privileges ()
 {
-	struct passwd *pw = NULL;
-	struct group *gr = NULL;
+    struct passwd *pw = NULL;
+    struct group *gr = NULL;
 
 	/* determine user id */
 	pw = getpwnam (SYNCE_USER);
@@ -209,7 +210,7 @@ sigchld_handler (int        signal,
         dccm_running = 0;
     }
     else
-        SHC_WARN ("Caught SIGCHLD from unknown process %d", info->si_pid);
+	SHC_INFO ("Caught SIGCHLD from unknown process %d", info->si_pid);
 }
 
 static void
@@ -231,63 +232,67 @@ int
 main (int   argc,
 	  char  *argv[])
 {
-  char buf[256] = { '\0', };
-  char *serial_device = NULL;
-  char *udi = getenv ("UDI");
-  
+  char	buf[256] = { '\0', };
+  char	*serial_device = NULL;
+  char	*udi = getenv ("UDI");
+
   setenv ("SYNCE_CONF_DIR", SYNCE_CONNECTION_DIR, 0);
-	
+
 #ifndef ENABLE_VERBOSE
   if ((getenv ("HALD_VERBOSE")) != NULL)
 #endif
-	  hal_verbose = 1;	
-	
-	if (geteuid() != 0) {
-		char *p = rindex (argv[0], '/') + 1;
-		SHC_ERROR ("%s should be installed setuid root or run with root privileges!",
-		           p ? (*p ? p : argv[0]) : argv[0]);
-		exit (1);
-	}
-	
-	/* first, read environment for device file */
-	if ((serial_device = getenv ("SYNCE_SERIAL_DEVICE")) != NULL) {
-		SHC_INFO ("using serial device %s (from $SYNCE_SERIAL_DEVICE)", serial_device);
-		goto got_device;
-	}
-	
-	if (udi == NULL) {
-		SHC_ERROR ("UDI is NULL, quiting");
-		return 1;
-	}
-	
-	/* next, ask HAL device list */
-	if ((serial_device = hal_check_device (udi)) != NULL) {
-		SHC_INFO ("using serial device %s (from HAL)", serial_device);
-		goto got_device;
-	}
-	
-	/* last, ask udev */
-	SHC_WARN ("serial device not set in HAL, using udevinfo");
-	char *sysfs_path = hal_get_sysfs_path (udi);
-	
-	if (sysfs_path == NULL) {
-		SHC_ERROR ("could not get sysfs path for device %s", udi);
-		return 1;
-	}
-	
-	sleep (1);
-	
-	if ((serial_device = udevinfo_get_node (sysfs_path)) != NULL)
-		goto got_device;
-	
-	SHC_ERROR ("could not get device node for %s", sysfs_path);
-	return 1;
-	
+      hal_verbose = 1;
+
+  if (geteuid() != 0) {
+      char *p = rindex (argv[0], '/') + 1;
+      SHC_ERROR ("%s should be installed setuid root or run with root privileges!",
+		 p ? (*p ? p : argv[0]) : argv[0]);
+      exit (1);
+  }
+
+  if (udi == NULL) {
+      SHC_ERROR ("UDI is NULL, quiting");
+      return 1;
+  }
+
+  /* read serial device name from HAL.
+     This will most probably fail unless the device has been
+     added at coldplug */
+  if ((serial_device = hal_check_device (udi)) != NULL) {
+      SHC_INFO ("using serial device %s (from HAL)", serial_device);
+      goto got_device;
+  }
+
+  /* since we got no serial device name from HAL, try some
+     udevinfo voodoo */
+  SHC_WARN ("serial device not set in HAL, using udevinfo");
+  char *sysfs_path = hal_get_sysfs_path (udi);
+
+  if (sysfs_path == NULL) {
+      SHC_ERROR ("could not get sysfs path for device %s", udi);
+      return 1;
+  }
+
+  /* we might need to wait for udev to create device node
+     for the serial port */
+  int retcount = 0;
+
+  while (retcount++ < UDEV_RETRIES) {
+      if ((serial_device = udevinfo_get_node (sysfs_path)) != NULL)
+	  goto got_device;
+
+      SHC_WARN ("could not get device node for %s", sysfs_path);
+      sleep (1);
+  }
+
+  SHC_ERROR ("giving up after %d retries", UDEV_RETRIES);
+  return 1;
+
 got_device:
-    
-	/* install SIGTERM and SIGHUP handlers */
-	signal(SIGHUP, sighup_handler);
-	signal(SIGTERM, sigterm_handler);	
+
+  /* install SIGTERM and SIGHUP handlers */
+  signal(SIGHUP, sighup_handler);
+  signal(SIGTERM, sigterm_handler);	
 
     setuid (0);
     setgid (0);

@@ -27,16 +27,16 @@
 #include <glib.h>
 
 typedef struct {
-	gboolean  present;			/* battery.present */
-	gboolean  rechargeable;	    /* battery.is_rechargeable */
+	gboolean  present;		/* battery.present */
+	gboolean  rechargeable;		/* battery.is_rechargeable */
 	gboolean  is_charging;		/* battery.rechargeble.is_charging */
 	gboolean  is_discharging;	/* battery.rechargeble.is_discharging */
-	gint      level;    		/* battery.charge_level.current (%%) */
+	gint      level;		/* battery.charge_level.current (%%) */
 	gint      remaining_time;	/* battery.remaining_time (sec) */
 } BatteryStatus;
 
-gchar *			 get_device_os_version     ();
-gchar *			 get_device_platform       ();
+gchar *		 get_device_os_version ();
+gchar *		 get_device_arch ();
 BatteryStatus *	 get_device_battery_status ();
 
 #endif

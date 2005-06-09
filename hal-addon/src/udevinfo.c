@@ -32,16 +32,13 @@ udevinfo_run_query (gchar **argv)
 	gint retval;
 	gchar *stdout, *stderr;
 	GError *err = NULL;
-	
+
 	if (g_spawn_sync (NULL, argv, NULL, 0, NULL, NULL, &stdout, &stderr, &retval, &err)) {
 		if (retval != 0)
 			return (NULL);
 		else {
-			SHC_INFO ("retval: %d, stdout: %s, stderr: %s", retval, stdout, stderr);
-			
 			if (stderr)
 				g_free (stderr);
-			
 			if (stdout) {
 				gchar *p = stdout;
 				do {
@@ -65,22 +62,17 @@ udevinfo_run_query (gchar **argv)
 gchar *
 udevinfo_get_node (gchar *sysfs_path)
 {
-	gchar *argv_name[] = { UDEVINFO, "-q", "name", "-p", sysfs_path, NULL };
-	gchar *argv_root[] = { UDEVINFO, "-r", NULL };
-	
-	gchar *root = udevinfo_run_query(argv_root);
-	SHC_INFO ("udev root: %s", root);
-	
-	gchar *name = udevinfo_run_query (argv_name);
-	SHC_INFO ("udev name: %s", name);
-	
-	if (root == NULL || name == NULL) {
-		SHC_ERROR ("could not get device node for %s", sysfs_path);
-		return NULL;
-	}
-	else {
-		gchar *node = g_strdup_printf ("%s/%s", root, name);
-		SHC_INFO ("device node for %s is %s", sysfs_path, node);
-		return (node);
-	}
+    gchar *argv_name[] = { UDEVINFO, "-q", "name", "-p", sysfs_path, NULL };
+    gchar *argv_root[] = { UDEVINFO, "-r", NULL };
+
+    gchar *root = udevinfo_run_query(argv_root);
+    gchar *name = udevinfo_run_query (argv_name);
+
+    if (root == NULL || name == NULL)
+	return NULL;
+    else {
+	gchar *node = g_strdup_printf ("%s/%s", root, name);
+	SHC_INFO ("device node for %s is %s", sysfs_path, node);
+	return (node);
+    }
 }
