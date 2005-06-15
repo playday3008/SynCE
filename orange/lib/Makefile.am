@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -g -ansi -Wall -Wsign-compare -Wno-long-long -Werror @CFLAGS@ @APPLE_CFLAGS@ -I.. @LIBOLE2_CFLAGS@
+AM_CFLAGS = -g -ansi -Wall -Wsign-compare -Wno-long-long @CFLAGS@ @APPLE_CFLAGS@ -I.. @LIBOLE2_CFLAGS@
 
 ## create this library
 lib_LTLIBRARIES = liborange.la
