@@ -621,6 +621,7 @@ static bool orange_get_inno_setup_data(/*{{{*/
   TDeflateBlockReadData Data;
   TSetupLangOptions LangOptions;
   TSetupRunEntry* RunEntries = NULL;
+  void* IconEntries = NULL;
   char TestID[SETUP_ID_SIZE];
   int i;
   
@@ -684,13 +685,21 @@ static bool orange_get_inno_setup_data(/*{{{*/
   assert(0 == SetupHeader->NumDirEntries);
 
 #if VERBOSE
-  synce_trace("Reading file entries");
+  synce_trace("Reading %i file entries", SetupHeader->NumFileEntries);
 #endif
   *FileEntries = calloc(SetupHeader->NumFileEntries, sizeof(TSetupFileEntry));
   ReadEntries(&Data, seFile, SetupHeader->NumFileEntries, sizeof(TSetupFileEntry), *FileEntries);
 
+#define SIZEOF_TSetupIconEntry  60
+#if VERBOSE
+  synce_trace("Reading %i icon entries", SetupHeader->NumIconEntries);
+#endif
+  IconEntries = calloc(SetupHeader->NumIconEntries, SIZEOF_TSetupIconEntry);
+  ReadEntries(&Data, seIcon, SetupHeader->NumIconEntries, SIZEOF_TSetupIconEntry, IconEntries);
+  free(IconEntries);
+  IconEntries = NULL;
+
   /* can't handle these yet */
-  assert(0 == SetupHeader->NumIconEntries);
   assert(0 == SetupHeader->NumIniEntries);
   assert(0 == SetupHeader->NumRegistryEntries);
   assert(0 == SetupHeader->NumInstallDeleteEntries);
