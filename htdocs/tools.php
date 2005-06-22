@@ -24,8 +24,22 @@ executed by the user that is running dccm.</p>
 <!-- <tr><th>synce-remove-program</th><td>remove a program</td></tr> -->
 </table>
 
-<p>Also download (and chmod a+x) the <a href="contrib/pcp-r">pcp-r</a> script
-to recursively copy a directory to your PDA.</p>
+<h2>Contributed tools</h2>
+
+<p>Download and <tt>chmod a+x</tt></p>
+
+<p><b>2005-06-15</b> Michel Acuna has contributed the <a
+href="contrib/pdabk">pdabk</a> bash script to backup files from a Windows CE
+device. View the script source for documentation.</p>
+
+<p><b>2004-09-02</b> Adrian Dimulescu has written a  <a
+href="http://adrian.dimulescu.free.fr/article.php3?id_article=10">PocketWord
+converter</a>. It can convert .pwi/.psw documents into OpenOffice sxw, HTML,
+and plain text.</p>
+
+<p><b>2004-05-04</b> Henrik Isacsson has contributed the <a
+href="contrib/pcp-r">pcp-r</a> script to recursively copy a directory to or
+from a Windows CE device. Run the script without parameters to get help.</p>
 
 <p>Return to <a href="index.php">main page</a>.</p>
 

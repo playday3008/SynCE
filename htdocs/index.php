@@ -78,6 +78,7 @@ alt="Make a donation" title="Make a donation">
 <h3>General</h3>
 
 <ul>
+<li><a href="tools.php">Tools</a></li>
 <li><a href="multisync_guide.php">Using the SynCE plugin for MultiSync</a></li>
 <li><a href="qa.php">Questions and Answers</a></li>
 <li><a href="devel.php">Development information</a></li>
@@ -113,6 +114,11 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>June 22, 2005</b> New contribution to the <a href="tools.php">tools</a>
+page. Michel Acuna wrote: <i>I wrote this script to backup PDA files. Basically
+it dumps the selected directories to the PC but that was all I needed.  You may
+find it useful.</i></p>
+
 <p><b>May 11, 2005</b> The previous news entry had a small cut and paste error
 in the date, but it's is corrected now!</p>
 
@@ -144,6 +150,8 @@ supported at the moment.</li>
 
 </ul>
 
+<?php /*
+
 <p><b>October 27, 2004</b> If you want to get SynCE working on your Linux
 system, feel free to try the initial version of the <a
 href="howto.php">HOWTO</a>!</p>
@@ -156,8 +164,6 @@ give it a try!</p>
 href="http://adrian.dimulescu.free.fr/article.php3?id_article=10">PocketWord
 convertor</a>. It can convert .pwi/.psw documents into OpenOffice sxw, HTML,
 and plain text.</p>
-
-<?php /*
 
 <p><b>August 30, 2004</b> During the past weekend, desktop environment add-ons
 <a

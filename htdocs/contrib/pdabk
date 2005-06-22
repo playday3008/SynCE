@@ -1,0 +1,98 @@
+#!/usr/bin/bash
+# ==============================================================================
+# - This script performs a backup of the PDA files to the local PC.
+# - To backup the PIM files, perform first a manual backup of the PIM to
+#   the built-in storage using the Windows CE utility.
+# - You can call it from hotplug to perform an automatic backup each time you
+#   connect the PDA (call it with -h as an external parameter).
+#
+# by Michel Acuna [ quickcoder at users dot sourceforge dot net ] June 2005
+# ==============================================================================
+# Set up your parameters first :
+# 
+# Target : PC directory (a folder with today's date will be created there)
+BACKUP_TARGET=/home/michel/local/axim.bak
+# Source : PDA directories (specify as many as you want in the array)
+BACKUP_SOURCE[1]="/Windows/Start Menu"
+BACKUP_SOURCE[2]="/My Documents"
+BACKUP_SOURCE[3]="/Built-in Storage"
+# ==============================================================================
+# recursive function
+# $1 = PDA directory + /
+# $2 = PC directory + /
+function copy-all {
+  pls -a "$1" | while read i; do
+    # i=last part + / if dir
+#    i=`echo "$i" | sed "s/.*EST  //"`
+    if [ "$HOTPLUG" == "true" ] ; then
+      i="`echo "$i" | cut -b51-`"
+    else
+      i="`echo "$i" | cut -b55-`"
+    fi
+
+    if [ `echo "$i" | grep -cE "/$"` = 1 ] ; then
+      # directory
+      echo "making directory : $2$i"
+      mkdir "$2$i"
+      copy-all "$1$i" "$2$i"
+    else
+      # file
+      echo "copying file : $1$i"
+      pcp ":$1$i" "$2$i"
+    fi
+  done
+}
+# ==============================================================================
+# validations
+if [ `pls / 2>&1 | grep -c "Unable to initialize RAPI"` = 1 ] ; then
+  echo "error : PDA can't be contacted"
+  exit
+fi
+
+if [ -d $BACKUP_TARGET ] ; then
+  true
+else
+  echo "error : \"$BACKUP_TARGET\" doesn't exist"
+  exit
+fi
+
+i=1
+ilimit=${#BACKUP_SOURCE[@]}
+while (( i <= ilimit )) ; do
+  if [ "`pls "${BACKUP_SOURCE[$i]}"`" == "" ] ; then
+    echo "error : \":${BACKUP_SOURCE[$i]}\" doesn't exist"
+    exit
+  fi
+  let "i+=1"
+done
+# ==============================================================================
+# begin main block
+# check hot param
+HOTPLUG="false"
+if [ "$1" == "-h" ] ; then 
+  HOTPLUG="true"
+fi
+# create backup dir
+BACKUP_TARGET=$BACKUP_TARGET/`date +%F`
+if [ -d $BACKUP_TARGET ] ; then
+  rm -r $BACKUP_TARGET
+fi
+mkdir $BACKUP_TARGET
+# main loop
+i=1
+ilimit=${#BACKUP_SOURCE[@]}
+while (( i <= ilimit )) ; do
+  # create dir tree code
+  newdir="$BACKUP_TARGET"
+  changed=`echo ${BACKUP_SOURCE[$i]} | sed "s/ /*/"`
+  changed=`echo $changed | sed "s/\// /g"`
+  for j in $changed ; do
+    jchanged=`echo $j | sed "s/*/ /"`
+    newdir=$newdir/$jchanged
+    echo "making directory : $newdir/"
+    mkdir "$newdir"
+  done 
+  # copy call
+  copy-all "${BACKUP_SOURCE[$i]}/" "$BACKUP_TARGET${BACKUP_SOURCE[$i]}/"
+  let "i+=1"
+done
