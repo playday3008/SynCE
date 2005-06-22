@@ -120,6 +120,18 @@ successful USB connection.</p>
 
 <p>Everything in this section should be performed as the root user.</p>
 
+<h3>If you compile the kernel yourself...</h3>
+
+<p>Pre-compiled Linux kernels usually includes the <tt>ipaq</tt> Linux kernel
+driver that is required to use SynCE with USB.</p>
+
+<p>If you compile the Linux kernel yourself, make sure that this driver is
+included in your kernel configuration:</p>
+
+<blockquote><tt>USB Support -&gt;<br>
+USB Serial Converter support -&gt;<br>
+USB PocketPC PDA Driver</tt></blockquote>
+
 <h3>Kernel version</h3>
 
 <p><i>Note: The recommended Linux kernel version for SynCE is 2.6.10 or later!</i></p>
@@ -231,7 +243,7 @@ synce-devel@lists.sourceforge.net</a> and tell us...</p>
 <ol>
 <li>your kernel version</li>
 <li>brand and model of your device</li>
-<li>vendor/product USB IDs for your device</li>
+<li>vendor/product USB IDs for your device (see Vendor= and ProdID=)</li>
 </ol>
 </li>
 
