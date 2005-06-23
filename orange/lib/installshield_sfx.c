@@ -4,7 +4,11 @@
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/param.h>
+#include <ctype.h>
+
+#define VERBOSE 0
 
 #define SIGNATURE       "InstallShield"
 #define SIGNATURE_SIZE  13
@@ -61,7 +65,9 @@ bool orange_extract_installshield_sfx(
   bytes = fread(signature, 1, SIGNATURE_SIZE, input_file);
   if (bytes != SIGNATURE_SIZE)
   {
+#if VERBOSE
     synce_trace("fread failed");
+#endif
     goto exit;
   }
 
@@ -69,7 +75,9 @@ bool orange_extract_installshield_sfx(
 
   if (strcmp(signature, SIGNATURE) != 0)
   {
+#if VERBOSE
     synce_trace("signature comparison failed");
+#endif
     goto exit;
   }
 
@@ -132,7 +140,7 @@ bool orange_extract_installshield_sfx(
       if (bytes != bytes_to_transfer)
       {
         synce_error("Failed to read from file");
-        break;
+        goto exit;
       }
 
       if (flags & FLAG_OBFUSCATED)
@@ -161,3 +169,208 @@ exit:
     fclose(input_file);
   return success;
 }
+
+typedef enum
+{
+  STRING,
+  INTEGER 
+} DataType;
+
+typedef int (*ValidatorFunc)(int c);
+
+static char* read_asciiz(FILE* input_file, ValidatorFunc validator)
+{
+  bool success = false;
+  unsigned max_size = 16;
+  char* result = (char*)malloc(max_size);
+  char c;
+  unsigned size = 0;
+
+  for (;;)
+  {
+    if (sizeof(c) != fread(&c, 1, sizeof(c), input_file))
+    {
+#if VERBOSE
+      synce_trace("End of file, size = %i", size);
+#endif
+      goto exit;
+    }
+
+    result[size] = c;
+    
+    if (c == '\0')
+      break;
+
+    if (!validator(c))
+    {
+#if VERBOSE
+      synce_trace("invalid char: 0x%02x", (int)(unsigned char)c);
+#endif
+      goto exit;
+    }
+
+    size++;
+
+    if (size > max_size)
+    {
+      max_size *= 2;
+      result = (char*)realloc(result, max_size);
+    }
+  }
+
+  success = true;
+  
+exit:
+  if (success)
+    return result;
+  free(result);
+  return NULL;
+}
+
+enum
+{
+  STRING_FILENAME,
+  STRING_PATH,
+  STRING_UNKNOWN,
+  STRING_COUNT
+};
+
+enum
+{
+  INTEGER_SIZE,
+  INTEGER_COUNT
+};
+
+static bool copy(
+    FILE* input_file, 
+    size_t size, 
+    const char* output_directory, 
+    const char* filename)
+{
+  bool success = false;
+  char output_filename[0x200];
+  FILE* output_file = NULL;
+  unsigned bytes;
+  size_t bytes_to_transfer = 0;
+  size_t bytes_left = 0;
+  uint8_t buffer[BUFFER_SIZE];
+
+  snprintf(output_filename, sizeof(output_filename), "%s/%s", output_directory, filename);
+  output_file = fopen(output_filename, "w");
+  if (!output_file)
+    goto exit;
+
+  for (bytes_left = size; bytes_left; bytes_left -= bytes_to_transfer)
+  {
+    size_t bytes_written = 0;
+    bytes_to_transfer = MIN(BUFFER_SIZE, bytes_left);
+
+    bytes = fread(buffer, 1, bytes_to_transfer, input_file);
+    if (bytes != bytes_to_transfer)
+    {
+      synce_error("Failed to read from file");
+      goto exit;
+    }
+
+    bytes_written = fwrite(buffer, 1, bytes_to_transfer, output_file);
+    if (bytes_written != bytes_to_transfer)
+    {
+      synce_error("Failed to write to file");
+      goto exit;
+    }
+  }
+
+  success = true;
+
+exit:
+  if (output_file)
+    fclose(output_file);
+  return success;
+}
+
+bool orange_extract_installshield_sfx2(
+    const char* input_filename,
+    const char* output_directory)
+{
+  bool success = false;
+  size_t offset;
+  FILE* input_file = NULL;
+  int error;
+  long file_size = 0;
+
+  synce_trace("here");
+
+  /* hard-coded offset for now... should really be calculated from PE header */
+  offset = 0x1b600;
+
+  input_file = fopen(input_filename, "r");
+
+  error = fseek(input_file, offset, SEEK_SET);
+  if (error)
+  {
+#if VERBOSE
+    synce_trace("fseek failed");
+#endif
+    goto exit;
+  }
+
+  file_size = orange_fsize(input_file);
+
+  while (ftell(input_file) < file_size)
+  {
+    int i;
+
+    char* strings[STRING_COUNT];
+    unsigned integers[INTEGER_COUNT];
+
+    for (i = 0; i < STRING_COUNT; i++)
+    {
+      strings[i] = read_asciiz(input_file, isprint);
+      if (!strings[i])
+        goto exit;
+#if VERBOSE
+      synce_trace("strings[%i] = '%s'", i, strings[i]);
+#endif
+    }
+
+    for (i = 0; i < INTEGER_COUNT; i++)
+    {
+      char* str = read_asciiz(input_file, isdigit);
+      if (!str)
+        goto exit;
+
+#if VERBOSE
+      synce_trace("integers[%i] = '%s'", i, str);
+#endif
+      integers[i] = atoi(str);
+      free(str);
+    }
+    
+    if (integers[INTEGER_SIZE] == 0)
+    {
+      synce_trace("size is 0");
+      goto exit; 
+    }
+
+    synce_trace("Extracting %s (%i bytes)", 
+        strings[STRING_FILENAME], 
+        integers[INTEGER_SIZE]);
+
+    /* error = fseek(input_file, integers[INTEGER_SIZE], SEEK_CUR); */
+    if (!copy(input_file, integers[INTEGER_SIZE], output_directory, strings[STRING_FILENAME]))
+    {
+      synce_trace("failed to write file: %s", strings[STRING_FILENAME]);
+      goto exit; 
+    }
+
+    for (i = 0; i < STRING_COUNT; i++)
+      free(strings[i]);
+  }
+
+  success = true;
+
+exit:
+  return success;
+}
+
+

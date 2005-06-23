@@ -90,6 +90,10 @@ bool orange_extract_installshield_sfx(
     const char* input_filename, 
     const char* output_directory);
 
+bool orange_extract_installshield_sfx2(
+    const char* input_filename, 
+    const char* output_directory);
+
 /**
   Source in vise.c
 */
