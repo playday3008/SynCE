@@ -4,37 +4,34 @@
 # - To backup the PIM files, perform first a manual backup of the PIM to
 #   the built-in storage using the Windows CE utility.
 # - You can call it from hotplug to perform an automatic backup each time you
-#   connect the PDA (call it with -h as an external parameter).
+#   connect the PDA.
 #
-# by Michel Acuna [ quickcoder at users dot sourceforge dot net ] June 2005
+# by Michel Acuna (quickcoder at users dot sourceforge dot net) - June 2005
 # ==============================================================================
 # Set up your parameters first :
-# 
-# Target : PC directory (a folder with today's date will be created there)
-BACKUP_TARGET=/home/michel/local/axim.bak
-# Source : PDA directories (specify as many as you want in the array)
-BACKUP_SOURCE[1]="/Windows/Start Menu"
-BACKUP_SOURCE[2]="/My Documents"
-BACKUP_SOURCE[3]="/Built-in Storage"
+#
+# umask of created files, if you don't know what this is then don't change it
+UMASK=077
+# Target : PC dir - a folder with today's date will be created there for the 
+#          first backup of the day and a folder named current with the last one
+BACKUP_TARGET="/home/michel/local/axim/"
+# Source : PDA directories - specify as many as you want in the array
+BACKUP_SOURCE[1]="/Built-in Storage/"
+BACKUP_SOURCE[2]="/My Documents/"
 # ==============================================================================
 # recursive function
-# $1 = PDA directory + /
-# $2 = PC directory + /
-function copy-all {
+# $1 = PDA directory 
+# $2 = PC directory 
+function copy-contents {
   pls -a "$1" | while read i; do
     # i=last part + / if dir
-#    i=`echo "$i" | sed "s/.*EST  //"`
-    if [ "$HOTPLUG" == "true" ] ; then
-      i="`echo "$i" | cut -b51-`"
-    else
-      i="`echo "$i" | cut -b55-`"
-    fi
+    i=`echo "$i" | cut -b$POSSTRING-`
 
     if [ `echo "$i" | grep -cE "/$"` = 1 ] ; then
       # directory
       echo "making directory : $2$i"
       mkdir "$2$i"
-      copy-all "$1$i" "$2$i"
+      copy-contents "$1$i" "$2$i"
     else
       # file
       echo "copying file : $1$i"
@@ -43,56 +40,52 @@ function copy-all {
   done
 }
 # ==============================================================================
-# validations
+# pda connection validation
 if [ `pls / 2>&1 | grep -c "Unable to initialize RAPI"` = 1 ] ; then
-  echo "error : PDA can't be contacted"
+  echo "ERROR : PDA can't be contacted"
   exit
 fi
-
-if [ -d $BACKUP_TARGET ] ; then
+# local directory validation
+if [ -d "$BACKUP_TARGET" ] ; then
   true
 else
-  echo "error : \"$BACKUP_TARGET\" doesn't exist"
+  echo "ERROR : \"$BACKUP_TARGET\" doesn't exist"
   exit
 fi
-
-i=1
-ilimit=${#BACKUP_SOURCE[@]}
-while (( i <= ilimit )) ; do
-  if [ "`pls "${BACKUP_SOURCE[$i]}"`" == "" ] ; then
-    echo "error : \":${BACKUP_SOURCE[$i]}\" doesn't exist"
-    exit
-  fi
-  let "i+=1"
-done
+# pda dirs don't require validation, if they don't exist then nothing is listed
 # ==============================================================================
 # begin main block
-# check hot param
-HOTPLUG="false"
-if [ "$1" == "-h" ] ; then 
-  HOTPLUG="true"
-fi
-# create backup dir
-BACKUP_TARGET=$BACKUP_TARGET/`date +%F`
-if [ -d $BACKUP_TARGET ] ; then
-  rm -r $BACKUP_TARGET
-fi
-mkdir $BACKUP_TARGET
+umask $UMASK
+# calculate position of files in column
+longstring=`pls /Windows | sed "s/ /*/g"`
+POSSTRING=`expr length "$longstring"`
+POSSTRING=$[$POSSTRING-7]
+# create current dir
+rm -r "${BACKUP_TARGET}current/" 2>/dev/null
+mkdir "${BACKUP_TARGET}current/"
 # main loop
 i=1
 ilimit=${#BACKUP_SOURCE[@]}
 while (( i <= ilimit )) ; do
   # create dir tree code
-  newdir="$BACKUP_TARGET"
-  changed=`echo ${BACKUP_SOURCE[$i]} | sed "s/ /*/"`
-  changed=`echo $changed | sed "s/\// /g"`
+  newdir="${BACKUP_TARGET}current/"
+  changed=`echo "${BACKUP_SOURCE[$i]}" | sed "s/ /*/g"`
+  changed=`echo "$changed" | sed "s/\// /g"`
   for j in $changed ; do
-    jchanged=`echo $j | sed "s/*/ /"`
-    newdir=$newdir/$jchanged
-    echo "making directory : $newdir/"
+    jchanged=`echo "$j" | sed "s/*/ /g"`
+    newdir="$newdir$jchanged/"
+    echo "making directory : $newdir"
     mkdir "$newdir"
   done 
   # copy call
-  copy-all "${BACKUP_SOURCE[$i]}/" "$BACKUP_TARGET${BACKUP_SOURCE[$i]}/"
+  copy-contents "${BACKUP_SOURCE[$i]}" "${BACKUP_TARGET}current${BACKUP_SOURCE[$i]}"
   let "i+=1"
 done
+# create date dir
+BACKUP_TARGET_2="${BACKUP_TARGET}`date +%F`/"
+if [ -d "$BACKUP_TARGET_2" ] ; then
+  echo "directory $BACKUP_TARGET_2 already exists, it won't be touched"
+else
+  echo "copying ${BACKUP_TARGET}current/ to $BACKUP_TARGET_2"
+  cp -r "${BACKUP_TARGET}current/" "$BACKUP_TARGET_2"
+fi
