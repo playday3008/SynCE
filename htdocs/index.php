@@ -133,8 +133,12 @@ page. Michel Acuna wrote: <i>I wrote this script to backup PDA files. Basically
 it dumps the selected directories to the PC but that was all I needed.  You may
 find it useful.</i></p>
 
-<p><b>2005-05-11</b> The previous news entry had a small cut and paste error
-in the date, but it's is corrected now!</p>
+<p><b>2005-06-05</b> Want to earn $500? <a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=7440936&forum_id=15200">Help
+this SynCE user!</a></p>
+
+<!-- <p><b>2005-05-11</b> The previous news entry had a small cut and paste error
+in the date, but it's is corrected now!</p> -->
 
 <p><b>2005-04-25</b> No news is good news!</p>
 
