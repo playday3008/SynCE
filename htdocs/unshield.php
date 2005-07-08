@@ -56,9 +56,11 @@ href="http://opensource.org/licenses/mit-license.php">MIT</a>)</li>
 <p><a href="http://packages.qa.debian.org/u/unshield.html">Debian
 packages</a>.</p>
 
-<p><a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=125523">Source
-code or RPM</a>.</p>
+<p>See the <a
+href="https://sourceforge.net/project/showfiles.php?group_id=30550&package_id=125523">Unshield
+package</a> for the latest release, or the <tt>unshield</tt> module in <a
+href="http://sourceforge.net/cvs/?group_id=30550">CVS</a> for the bleeding edge
+source code!</p>
 
 <h2>InstallShield cabinet files vs. Microsoft cabinet files</h2>
 
