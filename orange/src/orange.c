@@ -21,7 +21,7 @@ static void show_usage(const char* name)
   fprintf(stderr,
       "Syntax:\n"
       "\n"
-      "\t%s [-d DIRECTORY] [-D LEVEL] [-h] [-l] FILENAME\n"
+      "\t%s [-d DIRECTORY] [-D LEVEL] [-h] FILENAME\n"
       "\n"
       "\t-d DIRECTORY  Extract files to DIRECTORY\n"
       "\t-D LEVEL      Set debug log level\n"
