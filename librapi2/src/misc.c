@@ -298,7 +298,7 @@ HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
   if ( !rapi_context_call(context) )
     return false;
 
-  if (!rapi_buffer_read_uint32(context->recv_buffer, &result))
+  if (!rapi_buffer_read_uint32(context->recv_buffer, (uint32_t*)&result))
     goto exit;
   synce_trace("result = 0x%08x", result);
 
