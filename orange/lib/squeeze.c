@@ -20,7 +20,7 @@
 #define DO_MAGIC 1
 #endif
 
-#define DELETE_FILES 0
+#define DELETE_FILES 1
 
 static char* orange_get_temporary_directory()/*{{{*/
 {
