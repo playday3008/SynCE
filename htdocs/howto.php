@@ -30,7 +30,7 @@ about this!)</p>
 <h2>1. Special note for owners of Microsoft Smartphone devices</h2>
 
 <p>These devices <b>are not guaranteed to work</b> with any released Linux
-kernel!</p>
+kernel! Read on for the solution!</p>
 
 <p>This note is known or probable to apply to the following devices, but may
 also apply to others:</p>
@@ -43,8 +43,8 @@ SPV/SPV e100</b>, <b>Qtek 7070</b>)</li>
 <li>HTC Voyager (also known as <b>i-Mate Smartphone 2</b>, <b>Orange SPV
 e200</b>, <b>Qtek 8080</b>)</li>
 
-<li>HTC Typhoon (also known as <b>Orange c500</b>, <b>Qtek 8010</b>) --
-Dave Jenkins reports that it works with an unpatched 2.6.11-1.1369_FC4 kernel.</li>
+<li>HTC Typhoon (also known as <b>Orange c500</b>, <b>Qtek 8010</b>) -- Dave
+Jenkins reports that it works with an unpatched 2.6.11-1.1369_FC4 kernel.</li>
 
 <li><b>Motorola MPx200</b></li>
 
