@@ -72,6 +72,11 @@ bool rra_syncmgr_get_deleted_object_ids(
     struct _RRA_Uint32Vector* current_ids,
     struct _RRA_Uint32Vector* deleted_ids);
 
+bool rra_syncmgr_purge_deleted_object_ids(
+    RRA_SyncMgr* self,
+    uint32_t type_id,
+    struct _RRA_Uint32Vector* develte_ids);
+
 /** Select which object types we are interested in */
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, 
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie);

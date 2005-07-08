@@ -397,6 +397,114 @@ exit:
   return success;
 }/*}}}*/
 
+bool rra_syncmgr_purge_deleted_object_ids(/*{{{*/
+    RRA_SyncMgr* self,
+    uint32_t type_id,
+    struct _RRA_Uint32Vector* deleted_ids)
+{
+  bool success = false;
+  char* directory = NULL;
+  char filename[256];
+  FILE* file = NULL;
+  unsigned deleted;
+  unsigned previous;
+  unsigned current;
+  RRA_Uint32Vector* previous_ids = rra_uint32vector_new();
+  RRA_Uint32Vector* new_current_ids = rra_uint32vector_new();
+
+  if (self->partners.current != 1 &&
+    self->partners.current != 2)
+  {
+    synce_error("No current partnership");
+    goto exit;
+  }
+
+  if (!synce_get_subdirectory(RRA_DIRECTORY, &directory))
+  {
+    synce_error("Failed to get rra directory path");
+    goto exit;
+  }
+  snprintf(filename, sizeof(filename), "%s/partner-%08x-type-%08x", directory,
+  self->partners.ids[self->partners.current - 1], type_id);
+
+  /*
+     Create list of previous IDs
+   */
+
+  file = fopen(filename, "r");
+  if (file)
+  {
+    char buffer[16];
+    while (fgets(buffer, sizeof(buffer), file))
+    {
+      rra_uint32vector_add(previous_ids, strtol(buffer, NULL, 16));
+    }
+    fclose(file);
+  }
+
+  /* Sort vectors */
+  rra_uint32vector_sort(previous_ids);
+  rra_uint32vector_sort(deleted_ids);
+
+  for (previous = 0, deleted = 0;
+      previous < previous_ids->used && deleted < deleted_ids->used; ) {
+    if (deleted_ids->items[deleted] > previous_ids->items[previous]) {
+      /* previous item not deleted, so append to new_current_ids */
+      rra_uint32vector_add(new_current_ids, previous_ids->items[previous]);
+      previous++;
+    } else if (deleted_ids->items[deleted] == previous_ids->items[previous]) {
+      /* previous item deleted, don't append, but proceed with the next items */
+      deleted++;
+      previous++;
+    } else {
+      /* should not happen - deleted item not found in current_ids */
+      deleted++;
+    }
+  }
+
+  /*
+      Any IDs left at the end of the previous_ids vector are new_current_ids
+   */
+
+  for (; previous < previous_ids->used; previous++)
+  {
+    rra_uint32vector_add(new_current_ids, previous_ids->items[previous]);
+  }
+
+  /*
+      Save current ID list
+   */
+
+  file = fopen(filename, "w");
+  if (!file)
+  {
+    synce_error("Failed to open '%s' for writing.", filename);
+    goto exit;
+  }
+
+  if (file)
+  {
+    for (current = 0; current < new_current_ids->used; current++)
+    {
+      char buffer[16];
+      snprintf(buffer, sizeof(buffer), "%08x\n", new_current_ids->items[current]);
+      fwrite(buffer, strlen(buffer), 1, file);
+    }
+
+    fclose(file);
+  }
+
+
+  success = true;
+
+exit:
+  if (directory)
+    free(directory);
+  rra_uint32vector_destroy(previous_ids, true);
+  rra_uint32vector_destroy(new_current_ids, true);
+  return success;
+}/*}}}*/
+
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie)
 {
