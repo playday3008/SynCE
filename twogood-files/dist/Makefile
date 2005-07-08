@@ -12,13 +12,13 @@
 # 4. Uninstall the "synce" and "synce-devel" RPMs
 #
 
-SYNCE_VERSION    = 0.9.0
+SYNCE_VERSION    = 0.9.1
 
-LIBRAPI2_VERSION = 0.9.0
-LIBSYNCE_VERSION = 0.9.0
-DCCM_VERSION     = 0.9.0
-SERIAL_VERSION   = 0.9.0
-RRA_VERSION      = 0.9.0
+LIBRAPI2_VERSION = 0.9.1
+LIBSYNCE_VERSION = 0.9.1
+DCCM_VERSION     = 0.9.1
+SERIAL_VERSION   = 0.9.1
+RRA_VERSION      = 0.9.1
 TRAYICON_VERSION = 0.9.0
 MULTISYNC_PLUGIN_VERSION = 0.9.0
 GNOMEVFS_VERSION = 0.9.0
@@ -61,7 +61,7 @@ all:
 #	$(MAKE) -f Makefile.module MODULE=serial    VERSION=$(SERIAL_VERSION)    checkout
 #	$(MAKE) -f Makefile.module MODULE=rra       VERSION=$(RRA_VERSION)       checkout
 
-LIBMIMEDIR_TGZ = $(PWD)/../../libmimedir-0.3.tar.gz
+LIBMIMEDIR_TGZ = $(PWD)/../../libmimedir-0.4.tar.gz
 
 #libmimedir:
 #	cd /var/tmp && \
