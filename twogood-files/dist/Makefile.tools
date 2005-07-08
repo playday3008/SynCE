@@ -1,6 +1,6 @@
-UNSHIELD_VERSION = 0.4
+UNSHIELD_VERSION = 0.5
 DYNAMITE_VERSION = 0.1
-ORANGE_VERSION   = 0.2
+ORANGE_VERSION   = 0.3
 
 REDHAT_VERSION   = $(shell cat /etc/redhat-release | sed 's/.*\([0-9]\.[0-9]\).*/\1/')
 RPMROOT=$(shell rpmbuild --showrc | grep ": _topdir	" | sed 's/^.*	//' | sed 's/%{_usrsrc}/\/usr\/src/')
@@ -20,12 +20,12 @@ prepare:
 	@mkdir -p $(TARBALL_DIR) $(RPM_DIR) $(SRPM_DIR)
 
 unshield: prepare
-	$(MAKE) -f Makefile.module MODULE=unshield VERSION=$(UNSHIELD_VERSION) checkout tarball rpm
+	$(MAKE) -f Makefile.module MODULE=unshield VERSION=$(UNSHIELD_VERSION) checkout tarball #rpm
 
 dynamite: prepare
-	$(MAKE) -f Makefile.module MODULE=dynamite VERSION=$(DYNAMITE_VERSION) checkout tarball rpm
+	$(MAKE) -f Makefile.module MODULE=dynamite VERSION=$(DYNAMITE_VERSION) checkout tarball #rpm
 
 orange: prepare
-	$(MAKE) -f Makefile.module MODULE=orange VERSION=$(ORANGE_VERSION) checkout tarball rpm
+	$(MAKE) -f Makefile.module MODULE=orange VERSION=$(ORANGE_VERSION) checkout tarball #rpm
 
 
