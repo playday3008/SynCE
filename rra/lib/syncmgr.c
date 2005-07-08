@@ -505,6 +505,91 @@ exit:
   return success;
 }/*}}}*/
 
+bool rra_syncmgr_register_added_object_ids(/*{{{*/
+    RRA_SyncMgr* self,
+    uint32_t type_id,
+    struct _RRA_Uint32Vector* added_ids)
+{
+  bool success = false;
+  char* directory = NULL;
+  char filename[256];
+  FILE* file = NULL;
+  unsigned previous;
+  unsigned added;
+  RRA_Uint32Vector* previous_ids = rra_uint32vector_new();
+
+  if (self->partners.current != 1 &&
+    self->partners.current != 2)
+  {
+    synce_error("No current partnership");
+    goto exit;
+  }
+
+  if (!synce_get_subdirectory(RRA_DIRECTORY, &directory))
+  {
+    synce_error("Failed to get rra directory path");
+    goto exit;
+  }
+  snprintf(filename, sizeof(filename), "%s/partner-%08x-type-%08x", directory,
+  self->partners.ids[self->partners.current - 1], type_id);
+
+  /*
+     Create list of previous IDs
+   */
+
+  file = fopen(filename, "r");
+  if (file)
+  {
+    char buffer[16];
+    while (fgets(buffer, sizeof(buffer), file))
+    {
+      rra_uint32vector_add(previous_ids, strtol(buffer, NULL, 16));
+    }
+    fclose(file);
+  }
+
+  for (added = 0; added < added_ids->used; added++)
+  {
+    rra_uint32vector_add(previous_ids, added_ids->items[added]);
+  }
+
+  /* Sort vector */
+  rra_uint32vector_sort(previous_ids);
+
+  /*
+      Save current ID list
+   */
+
+  file = fopen(filename, "w");
+  if (!file)
+  {
+    synce_error("Failed to open '%s' for writing.", filename);
+    goto exit;
+  }
+
+  if (file)
+  {
+    for (previous = 0; previous < previous_ids->used; previous++)
+    {
+      char buffer[16];
+      snprintf(buffer, sizeof(buffer), "%08x\n", 
+previous_ids->items[previous]);
+      fwrite(buffer, strlen(buffer), 1, file);
+    }
+
+    fclose(file);
+  }
+
+
+  success = true;
+
+exit:
+  if (directory)
+    free(directory);
+  rra_uint32vector_destroy(previous_ids, true);
+  return success;
+}/*}}}*/
+
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie)
 {
