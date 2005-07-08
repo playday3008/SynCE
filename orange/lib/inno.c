@@ -19,7 +19,7 @@
    the variable names look the way they do, for example.
  */
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 #if VERBOSE
 static void dump(const char *desc, void* data, size_t len)/*{{{*/
