@@ -30,7 +30,7 @@ static void show_usage(const char* name)
       "\t                2 - Errors and warnings\n"
       "\t                3 - Everything\n"
       "\t-h            Show this help message\n"
-      "\tFILENAME      The file to list or extract contents of\n"
+      "\tFILENAME      The file to extract contents of\n"
       ,
       name);
 
