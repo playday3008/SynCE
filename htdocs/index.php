@@ -114,15 +114,29 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
-<p><b>June 22, 2005</b> New contribution to the <a href="tools.php">tools</a>
+<p><b>2005-07-08</b> SynCE 0.9.1 is released! Everyone is encouraged to
+upgrade!  <a
+href="http://sourceforge.net/project/shownotes.php?release_id=310079">Release
+notes</a> &middot; <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=22569&release_id=310079">Download</a>.
+
+<p><b>2005-07-08</b> New versions of Unshield and Orange!  <a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=7689508&forum_id=15221">Announcement</a>
+&middot; <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=125523&release_id=340607">Unshield
+download</a> &middot; <a
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=157355&release_id=340608">Orange
+download</a></p>
+
+<p><b>2005-06-22</b> New contribution to the <a href="tools.php">tools</a>
 page. Michel Acuna wrote: <i>I wrote this script to backup PDA files. Basically
 it dumps the selected directories to the PC but that was all I needed.  You may
 find it useful.</i></p>
 
-<p><b>May 11, 2005</b> The previous news entry had a small cut and paste error
+<p><b>2005-05-11</b> The previous news entry had a small cut and paste error
 in the date, but it's is corrected now!</p>
 
-<p><b>April 25, 2005</b> No news is good news!</p>
+<p><b>2005-04-25</b> No news is good news!</p>
 
 <p>First of all, there is a new page about <a href="opensync.php">SynCE and
 OpenSync</a> that may be of interest to some people.</p>
