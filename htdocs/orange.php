@@ -15,7 +15,7 @@ install. That is a very simple procedure.</p>
 
 <p>Unfortunately, many applications for Pocket PC are distributed as
 self-extracting installers for Microsoft Windows, and not as individual
-installablre Microsoft Cabinet Files. That is very impractical for users of
+installable Microsoft Cabinet Files. That is very impractical for users of
 other operating systems, such as Linux or FreeBSD.</p>
 
 <p><b>Orange</b> is a tool and library for squeezing out juicy installable
