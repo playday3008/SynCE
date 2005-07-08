@@ -1,4 +1,50 @@
 TODO for Orange:
 
-- Use libgsf instead of libole2
+o Use libgsf instead of libole2
+
+o Convert to pluggable architecture, and make Windows CE .CAB extraction one of
+the plugins. Maybe something like this:
+
+  liborange - plugin framework
+  liborange-plugins - default plugins:
+    - apk: TomTom .apk file
+    - arh: TomTom .arh file
+    - dllinflate
+    - suf: SetupFactory, if libdynamite was found by the configure script
+    - inno: InnoSetup, if ./configure --enable-inno
+    - iscab: InstallShield .CAB file, if libunshield was found by the configure script
+    - issfx1: InstallShield SFX, type 1
+    - issfx2: InstallShield SFX, type 2
+    - mscab:  Microsoft Cabinet File
+    - mscabsplit:  Microsoft Cabinet File
+    - olestream: For example .MSI files
+    - vise: Installer VISE, if ./configure --enable-vise
+  liborange-mscabce - plugin for saving Windows CE .CAB files:
+    - mscabce: Installable Microsoft Cabinet File for Windows CE
+
+
+  Plugin API:
+
+  enum HandlingStatus
+  {
+    NO,
+    MAYBE,
+    YES,
+  };
+
+  typedef HandlingStatus (*CanHandle)(filename, magic);
+  typedef bool (*Handle)(filename);
+  
+  struct Plugin 
+  {
+    /** 
+      Plugins with lower ordinals are called first. For example the check 
+      for installable .CAB files should be done before running cabextract! 
+      Normally in range 1-100. Default value 50.
+     */
+    int ordinal;
+
+    CanHandle can_handle;
+    Handle handle;
+  };
 
