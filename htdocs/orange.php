@@ -19,23 +19,21 @@ installable Microsoft Cabinet Files. That is very impractical for users of
 other operating systems, such as Linux or FreeBSD.</p>
 
 <p><b>Orange</b> is a tool and library for squeezing out juicy installable
-Microsoft Cabinet Files from self-extracting installers for Microsoft Windows.
-It currently supports the following kinds of installers:</p>
+Microsoft Cabinet Files from self-extracting installers for Microsoft Windows
+and some other installer file formats.  It currently supports the following
+kinds of installers:</p>
 
 <ul>
 
+<li>Self-extracting installers (<b>EXE</b>):<ul>
+
+
+
 <li>Early support for installers created by <a
-href="http://www.mindvision.com">Installer VISE</a>. (Orange 0.3 or later)</li>
+href="http://www.mindvision.com">Installer VISE</a>.</li>
 
 <li>Support for some installers created by <a href="http://innosetup.com">Inno
-Setup</a>. (Orange 0.2 or later)</li>
-
-<li>Early support for the installer used by <a
-href="http://www.tomtom.com">TomTom</a> products. (Orange 0.2 or later)</li>
-
-<li><a href="http://installshield.com">InstallShield</a> versions 5 and 6,
-using <a href="unshield.php">Unshield</a> for extracting InstallShield Cabinet
-files.</li>
+Setup</a>.</li>
 
 <li><a href="http://www.indigorose.com">Setup Factory</a> versions 5 and 6
 using <a href="dynamite.php">Dynamite</a> for data decompression.</li>
@@ -45,26 +43,38 @@ example <a
 href="http://www.macromedia.com/software/flashplayer/pocketpc/2002.html">Macromedia
 Flash Player 6 for Pocket PC 2002</a>.</li>
 
-<li>Microsoft Cabinets (also self-extracting) when you have <a
-href="http://www.kyz.uklinux.net/cabextract.php">Cabextract</a> installed.</li>
+<li><a href="http://installshield.com">InstallShield</a> self-extracting
+installers. (Orange 0.4 or later)</li>
 
-<li>Zip archives (also self-extracting) when you have <a
+</ul></li>
+
+<li>Other formats:<ul>
+
+<li><b>APK, ARH</b> Early support for the installer used by <a
+href="http://www.tomtom.com">TomTom</a> products.</li>
+
+<li><b>CAB</b> <a href="http://installshield.com">InstallShield</a> Cabinet files, using
+<a href="unshield.php">Unshield</a>.</li>
+
+<li><b>CAB</b> Microsoft Cabinet files (also self-extracting) when you have Stuart Caie's
+excellent <a href="http://www.kyz.uklinux.net/cabextract.php">Cabextract</a>
+tool installed.</li>
+
+<li><b>MSI</b> Microsoft Installer files, if libole2 is available. (Orange 0.4
+or later)</lI>
+
+<li><b>RAR</b> archives (also self-extracting) when you have Unrar installed.</li>
+
+<li><b>ZIP</b> archives (also self-extracting) when you have <a
 href="http://www.info-zip.org/UnZip.html">UnZip</a> installed.</li>
 
-</ul>
-
-<p>Future support is planned for.</p>
-
-<ul>
-
-<li>RAR archives (also self-extracting) when you have Unrar installed.</li>
-
+</ul></li>
 </ul>
 
 <p>When Orange has extracted an installable Microsoft Cabinet File, you can use
 <tt>synce-install-cab</tt> to install the program on your PDA.</p>
 
-<p>If you find an installer that Orange failes to handle and you have both
+<p>If you find an installer that Orange fails to handle and you have both
 Cabextract and UnZip installed, write to <a
 href="mailto:synce-devel@lists.sourceforge.net">synce-devel@lists.sourceforge.net</a>
 and provide a link to where it can be downloaded.</p>
