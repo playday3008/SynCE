@@ -288,6 +288,24 @@ exit:
   return success;
 }
 
+#define MASK (0x200-1)
+
+
+static unsigned seek_and_read32(FILE* input_file, size_t offset)
+{
+  fseek(input_file, offset, SEEK_SET);
+  return orange_read32(input_file);
+}
+
+static size_t pe_size(FILE* input_file)
+{
+  unsigned pe_offset   = seek_and_read32(input_file, 0x3c);
+  unsigned rsrc_offset = seek_and_read32(input_file, pe_offset + 0x184);
+  unsigned rsrc_size   = seek_and_read32(input_file, pe_offset + 0x178);
+
+  return (rsrc_offset + rsrc_size + MASK) & ~MASK;
+}
+
 bool orange_extract_installshield_sfx2(
     const char* input_filename,
     const char* output_directory)
@@ -300,10 +318,13 @@ bool orange_extract_installshield_sfx2(
 
   synce_trace("here");
 
-  /* hard-coded offset for now... should really be calculated from PE header */
-  offset = 0x1b600;
-
   input_file = fopen(input_filename, "r");
+
+  offset = pe_size(input_file);
+
+#if VERBOSE
+  synce_trace("offset = %08x", offset);
+#endif
 
   error = fseek(input_file, offset, SEEK_SET);
   if (error)
