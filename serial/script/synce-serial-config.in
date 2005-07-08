@@ -10,8 +10,7 @@
 THIS=`basename $0`
 
 # include common stuff
-prefix=@prefix@
-. @datadir@/synce/synce-serial-common
+. @SHARED_SYNCE@/synce-serial-common
 
 exit_if_not_root
 
@@ -132,10 +131,9 @@ if [ -z "$DNS_SERVER" ]; then
   DNS_SERVER=`echo $IP_ADDRESSES | sed 's/:.*$//'`
 fi
 
-exec_prefix=@exec_prefix@
 echo "# Modifications to this file will be lost next time you run ${THIS}
 ${DEVICE} 115200
-connect '@bindir@/synce-serial-chat'
+connect '@BINDIR@/synce-serial-chat'
 nodefaultroute
 noauth
 local

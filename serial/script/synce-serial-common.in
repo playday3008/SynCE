@@ -5,9 +5,6 @@
 # Common functions and declarations for the synce-serial scripts
 #
 
-prefix=@prefix@
-datadir=@datadir@
-
 LOGGER="logger -t ${THIS}"
 FACILITY=user
 ERROR="${LOGGER} -p ${FACILITY}.err"
@@ -24,9 +21,6 @@ PEER=synce-device
 PEER_FILE=${PPP_PEERS}/${PEER}
 
 COMMAND="${PPPD} call ${PEER}"
-
-CHAT=/usr/sbin/chat
-CHAT_FILE=${datadir}/synce/synce-serial-chat
 
 # see the "linkname" option in the man page for pppd
 PID_FILE=/var/run/ppp-synce-device.pid

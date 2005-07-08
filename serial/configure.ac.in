@@ -15,7 +15,10 @@ AC_PROG_MAKE_SET
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-           
+
+AS_AC_EXPAND(SHARED_SYNCE, "$datadir/synce")
+AS_AC_EXPAND(BINDIR, "$bindir")
+
 AC_CONFIG_FILES(
 	[script/synce-serial-config],
 	[chmod +x script/synce-serial-config]

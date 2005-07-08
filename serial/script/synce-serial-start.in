@@ -8,8 +8,7 @@
 THIS=`basename $0`
 
 # include common stuff
-prefix=@prefix@
-. @datadir@/synce/synce-serial-common
+. @SHARED_SYNCE@/synce-serial-common
 
 exit_if_not_root
 
@@ -76,6 +75,23 @@ Please add this module to your Linux kernel before running this script again.
 fi
 
 #
+# Check for file in /dev
+# 
+DEVICE=`awk '/^\/dev\// { print $1 }' ${PEER_FILE}`
+if [ "$DEVICE" ]; then
+  if [ !  -c "$DEVICE" ]; then
+    echo "
+Error!
+
+${THIS} could not find the serial port $DEVICE.
+Is your Windows CE device really connected?
+" >&2
+    exit 1
+  fi
+fi
+
+
+#
 # Check for suspected firewall
 #
 
@@ -96,14 +112,26 @@ if [ -x $MD5 ]; then
 				echo "
 Warning!
 
-You have firewall rules that may prevent SynCE from working properly!"
+You have firewall rules that may prevent SynCE from working properly!
+" >&2
 			fi
 		fi		
 	fi
 
-	# TODO: check for ipchains
-	# TODO: check for 
+fi
 
+#
+# See if dccm is running
+#
+
+PGREP=`which pgrep`
+if [ "$PGREP" ]; then
+  $PGREP dccm >/dev/null || echo "
+Warning!
+
+${THIS} cannot find the dccm process.
+Without dccm your PPP connection will soon terminate!
+" >&2
 fi
 
 #
