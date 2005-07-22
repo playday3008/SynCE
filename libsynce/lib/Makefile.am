@@ -1,5 +1,5 @@
 ## useful flags
-AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -Werror -ansi @CFLAGS@ @APPLE_CFLAGS@ -I.. @DBUS_CFLAGS@
+AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -ansi @CFLAGS@ @APPLE_CFLAGS@ -I.. @DBUS_CFLAGS@
 
 ## create this library
 lib_LTLIBRARIES = libsynce.la
