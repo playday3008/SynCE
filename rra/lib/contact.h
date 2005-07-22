@@ -41,6 +41,14 @@ bool rra_contact_from_vcard(
 		uint32_t flags);
 #endif /* SWIG */
 
+struct FieldStrings
+{
+	char* name;
+	char* type;
+	char* value;
+	bool pref;
+};
+
 #define rra_contact_free_vcard(p) if (p) free(p)
 #define rra_contact_free_data(p)  if (p) free(p)
 

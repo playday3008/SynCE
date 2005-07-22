@@ -59,5 +59,9 @@
 #define ID_EMAIL2       0x4093
 #define ID_EMAIL3       0x40a3
 
+#define MAX_TEL_WORK 2
+#define MAX_TEL_HOME 2
+#define MAX_EMAIL 3
+
 #endif
 

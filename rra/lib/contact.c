@@ -67,6 +67,52 @@ static void strbuf_append_escaped(StrBuf* result, char* source, uint32_t flags)/
 	}
 }/*}}}*/
 
+/* 
+   More or less the same as strbuf_append_escaped(), but specialized for comma separated lists
+*/
+static void strbuf_append_comma_separated(StrBuf* result, char* source, uint32_t flags)/*{{{*/
+{
+	char* p;
+
+	if (!source)
+		return;
+
+	for (p = source; *p; p++)
+	{
+		switch (*p)
+		{
+			case '\r': 				/* CR */
+				/* ignore */
+				break;		
+
+			case '\n':				/* LF */
+				strbuf_append_c(result, '\\');
+				strbuf_append_c(result, 'n');
+				break;
+	
+			case '\\':
+				strbuf_append_c(result, '\\');
+				strbuf_append_c(result, *p);
+				break;
+
+			case ',':
+				strbuf_append_c(result, ',');
+				while (*(p+1)==' ') /* skip blanks after comma */
+				  p++;
+				break;
+
+			case ';':
+				if (flags & RRA_CONTACT_VERSION_3_0)
+					strbuf_append_c(result, '\\');
+				/* fall through */
+
+			default:
+				strbuf_append_c(result, *p);
+				break;
+		}
+	}
+}/*}}}*/
+
 void strbuf_append_escaped_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{{*/
 {
 	if (wstr)
@@ -79,6 +125,22 @@ void strbuf_append_escaped_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{
 			str = wstr_to_ascii(wstr);
 
 		strbuf_append_escaped(strbuf, str, flags);
+		wstr_free_string(str);
+	}
+}/*}}}*/
+
+void strbuf_append_comma_separated_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{{*/
+{
+	if (wstr)
+	{
+		char* str = NULL;
+	 
+		if (flags & RRA_CONTACT_UTF8)
+			str = wstr_to_utf8(wstr);
+		else
+			str = wstr_to_ascii(wstr);
+
+		strbuf_append_comma_separated(strbuf, str, flags);
 		wstr_free_string(str);
 	}
 }/*}}}*/
@@ -313,7 +375,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 			case ID_CATEGORY:
 				strbuf_append(vcard, "CATEGORIES:");
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+				strbuf_append_comma_separated_wstr(vcard, pFields[i].val.lpwstr, flags);
 				strbuf_append_crlf(vcard);
 				break;
 
@@ -818,8 +880,10 @@ static bool parser_handle_field(/*{{{*/
 		Parser* parser,
 		char* name, 
 		char* type, 
-		char* value)
+		char* value,
+		int nth)
 {
+
 	bool success = false;
 
 #if VERBOSE
@@ -848,7 +912,7 @@ static bool parser_handle_field(/*{{{*/
 		}
 	}/*}}}*/
 
-	if (parser->level != 1)
+	if (parser->level != 1 && nth==0)
 	{
 		synce_error("Not within BEGIN:VCARD / END:VCARD");
 		goto exit;
@@ -931,11 +995,17 @@ static bool parser_handle_field(/*{{{*/
 		/* TODO: make type uppercase */
 		if (STR_IN_STR(type, "HOME"))
 		{
+			if (nth==1)
 			add_string(parser, fax ? ID_HOME_FAX : ID_HOME_TEL, type, value);
+			else
+				add_string(parser, ID_HOME2_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "WORK"))
 		{
+			if (nth==1)
 			add_string(parser, fax ? ID_WORK_FAX : ID_WORK_TEL, type, value);
+			else
+				add_string(parser, ID_WORK2_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "CELL"))
 		{
@@ -965,7 +1035,18 @@ static bool parser_handle_field(/*{{{*/
 					type, name);
 		}
 	
+		switch (nth)
+		{
+			case 1:
 		add_string(parser, ID_EMAIL, type, value);
+				break;
+			case 2:
+				add_string(parser, ID_EMAIL2, type, value);
+				break;
+			case 3:
+				add_string(parser, ID_EMAIL3, type, value);
+				break;
+		}
 	}/*}}}*/
 	else if (STR_EQUAL(name, "URL"))/*{{{*/
 	{
@@ -1064,6 +1145,89 @@ exit:
 }/*}}}*/
 
 /*
+ * all tel_work, tel_home and email must be considered before
+ * deciding which will get a slot, as there may be too many
+ */
+void enqueue_field(/*{{{*/
+		struct FieldStrings *fs,
+		int *count,
+		int max,
+		struct FieldStrings *data)
+{
+	int slot=-1;
+	int i;
+
+	/* if there are free slots, there is no problem */
+	if ((*count)<max)
+		slot=(*count);
+	else if (data->pref) 
+		/* so there is no free slot, but a(nother) preferred one is coming
+		   kick out a non-preferred one, if possible
+		*/
+		for (i=0; i<max; i++)
+			if (!fs[i].pref) {
+				slot=i;
+				break;
+			}
+	if (slot>=0) {
+		fs[slot].name  = data->name;
+		fs[slot].type  = data->type;
+		fs[slot].value = data->value;
+		fs[slot].pref  = data->pref;
+		(*count)++;
+	}
+}/*}}}*/
+
+/*
+ * process the queued fields.
+ */
+void process_queue(/*{{{*/
+	Parser *parser,
+	struct FieldStrings *fs,
+	int count)
+{
+	int i;
+	int j=1;
+	char *loc;
+	
+	/* Get the first preferred and make it the preferred one on the device */
+	for (i=0; i<count; i++) {
+		if (fs[i].pref || count==(i+1)) {
+			parser_handle_field(
+				parser,
+				fs[i].name,
+				fs[i].type,
+				fs[i].value,
+				1);
+			/* mark this as already processed */
+			fs[i].name=NULL;
+			break;
+		}
+	}
+	
+	/* Process all remaining */
+	for (i=0; i<count; i++) {
+		if (fs[i].name!=NULL) {
+
+			/* The remaining can't be preferred. Correct me, if I'm wrong! */
+			loc = strstr(fs[i].type, "TYPE=PREF;");
+			if (!loc)
+				loc = strstr(fs[i].type, ";TYPE=PREF");
+			if (loc)
+				memmove(loc, loc+10 ,strlen(fs[i].type)-(loc-fs[i].type-10));
+
+			parser_handle_field(
+				parser,
+				fs[i].name,
+				fs[i].type,
+				fs[i].value,
+				j+1);
+			j++;
+		}
+	}
+}/*}}}*/
+
+/*
  * Simple vCard parser
  */
 static bool rra_contact_from_vcard2(/*{{{*/
@@ -1084,6 +1248,14 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	const char* type_end = NULL;
 	const char* value = NULL;
 	const char* value_end = NULL;
+
+	struct FieldStrings *tel_work  = malloc( MAX_TEL_WORK * sizeof( struct FieldStrings ) ); 
+	struct FieldStrings *tel_home  = malloc( MAX_TEL_HOME * sizeof( struct FieldStrings ) ); 
+	struct FieldStrings *email     = malloc( MAX_EMAIL * sizeof( struct FieldStrings ) ); 
+	struct FieldStrings *tmp_field = malloc( 1 * sizeof( struct FieldStrings ) ); 
+	int count_tel_work = 0;
+	int count_tel_home = 0;
+	int count_email    = 0;
 
 	parser.vcard_version  = RRA_CONTACT_VERSION_UNKNOWN;
 	parser.level          = 0;
@@ -1150,12 +1322,33 @@ static bool rra_contact_from_vcard2(/*{{{*/
 				{
 					value_end = p;
 
+					/* We have to queue tel and email fields, as there may be more than one,
+					   and we have to find out, which one is the preferred.
+					   Unfortunately there may be none, or many preferred fields :(
+					*/
+
+					tmp_field->name  = strndup(name, name_end - name);
+					tmp_field->type  = type ? strndup(type, type_end - type) : strdup("");
+					tmp_field->value = strndup(value, value_end - value);
+					tmp_field->pref  = STR_IN_STR(tmp_field->type, "PREF");
+
+					if (STR_IN_STR(tmp_field->name, "TEL") && STR_IN_STR(tmp_field->type, "WORK")) {
+						enqueue_field(tel_work, &count_tel_work, MAX_TEL_WORK, tmp_field);
+					}
+					else if (STR_IN_STR(tmp_field->name, "TEL") && STR_IN_STR(tmp_field->type, "HOME")) {
+						enqueue_field(tel_home, &count_tel_home, MAX_TEL_HOME, tmp_field);
+					}
+					else if (STR_IN_STR(tmp_field->name, "EMAIL")) {
+						enqueue_field(email, &count_email, MAX_EMAIL, tmp_field);
+					}
+					else {
 					parser_handle_field(
 							&parser,
-							strndup(name, name_end - name),
-							type ? strndup(type, type_end - type) : strdup(""),
-							strndup(value, value_end - value));
-
+								tmp_field->name,
+								tmp_field->type,
+								tmp_field->value,
+								0);
+					}
 					state = VCARD_STATE_NEWLINE;
 				}
 				p++;
@@ -1166,6 +1359,10 @@ static bool rra_contact_from_vcard2(/*{{{*/
 				goto exit;
 		}
 	}
+
+	process_queue(&parser, tel_work, count_tel_work);
+	process_queue(&parser, tel_home, count_tel_home);
+	process_queue(&parser, email, count_email);
 
 	*field_count = parser.field_index;
 
