@@ -66,15 +66,15 @@ typedef const WCHAR*  LPCWSTR;
  */
 
 typedef struct _TIME_FIELDS
-{   
-  CSHORT Year;
-  CSHORT Month;
-  CSHORT Day;
-  CSHORT Hour;
-  CSHORT Minute;
-  CSHORT Second;
-  CSHORT Milliseconds;
-  CSHORT Weekday;
+{
+  CSHORT Year;          /* Specifies a value from 1601 on. */
+  CSHORT Month;         /* Specifies a value from 1 to 12. */
+  CSHORT Day;           /* Specifies a value from 1 to 31. */
+  CSHORT Hour;          /* Specifies a value from 0 to 23. */
+  CSHORT Minute;        /* Specifies a value from 0 to 59. */
+  CSHORT Second;        /* Specifies a value from 0 to 59. */
+  CSHORT Milliseconds;  /* Specifies a value from 0 to 999. */
+  CSHORT Weekday;       /* Specifies a value from 0 to 6 (Sunday to Saturday). */
 } TIME_FIELDS, *PTIME_FIELDS;
 
 typedef union _LARGE_INTEGER {
