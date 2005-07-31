@@ -44,37 +44,38 @@ static bool make_sure_directory_exists(char* directory)
  */
 bool synce_get_directory(char** path)
 {
-	char buffer[MAX_PATH];
-    char *p;
+  char buffer[MAX_PATH];
+  char *p;
+  struct passwd* user = NULL;
 
-	/* if there is a preference for config dir set
-	   as an environment variable, use it */
-	if ((p = getenv ("SYNCE_CONF_DIR")) != NULL) {
-		if (make_sure_directory_exists (p)) {
-			*path = strdup (p);
-			return true;
-		}
-	}
-	
-	/* XXX: not very thread-safe? */
-	struct passwd* user = getpwuid(getuid());
+  if (!path)
+    return false;
 
-	if (!path)
-		return false;
-	
-	*path = NULL;
+  /* if there is a preference for config dir set
+     as an environment variable, use it */
+  if ((p = getenv ("SYNCE_CONF_DIR")) != NULL) {
+    if (make_sure_directory_exists (p)) {
+      *path = strdup (p);
+      return true;
+    }
+  }
 
-	if (!user)
-		return false;
-	
-	snprintf(buffer, sizeof(buffer), "%s/" DIRECTORY_NAME, user->pw_dir);
+  /* XXX: not very thread-safe? */
+  user = getpwuid(getuid());
 
-	if (!make_sure_directory_exists(buffer))
-		return false;
-	
-	*path = strdup(buffer);
-	
-	return true;
+  *path = NULL;
+
+  if (!user)
+    return false;
+
+  snprintf(buffer, sizeof(buffer), "%s/" DIRECTORY_NAME, user->pw_dir);
+
+  if (!make_sure_directory_exists(buffer))
+    return false;
+
+  *path = strdup(buffer);
+
+  return true;
 }
 
 /**
