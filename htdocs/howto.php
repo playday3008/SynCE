@@ -86,7 +86,7 @@ future!</i></p>
 
 <p>For the time being, this part is very brief!</p>
 
-<p>If you are running an RPM-basen Linux distributions such as the ones in this
+<p>If you are running an RPM-based Linux distributions such as the ones in this
 list, <a href="http://synce.sourceforge.net/synce/rpms.php">install the latest
 RPM version</a> of SynCE:</p>
 
@@ -254,6 +254,7 @@ synce-devel@lists.sourceforge.net</a> and tell us...</p>
 open the first of these files found on your system:</p>
 
 <ul>
+<li><tt>/etc/modprobe.conf.local</tt></li>
 <li><tt>/etc/modprobe.conf</tt></li>
 <li><tt>/etc/modules.conf</tt></li>
 </ul>
