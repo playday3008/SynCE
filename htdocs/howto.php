@@ -249,24 +249,12 @@ synce-devel@lists.sourceforge.net</a> and tell us...</p>
 </ol>
 </li>
 
-<li><p>If you have the directory <tt>/etc/modutils</tt>, create the file
-<tt>/etc/modutils/synce</tt> with a text editor. If not, use a text editor to
-open the first of these files found on your system:</p>
+<li><p>Follow the instructions in Appendix A to add options like this, but
+replace the red digits with the corresponding ones from the output from the
+command you ran earlier:</p>
 
-<ul>
-<li><tt>/etc/modprobe.conf.local</tt></li>
-<li><tt>/etc/modprobe.conf</tt></li>
-<li><tt>/etc/modules.conf</tt></li>
-</ul>
-
-<p>Add a line like this, but replace the red digits with the corresponding ones
-from the output from the command you ran earlier:</p>
-
-<blockquote><tt>options ipaq vendor=0x<span class=RED>049f</span> product=0x<span
+<blockquote><tt>vendor=0x<span class=RED>049f</span> product=0x<span
 class=RED>0003</span></tt></blockquote>
-
-<p>If you used <tt>/etc/modutils/synce</tt>, run the <tt>update-modules</tt>
-command.</li>
 
 <li><p>If you have the file <tt>/etc/rc.local</tt>, open it with a text editor and
 add this line in order to have things working directly next time you restart
@@ -318,10 +306,10 @@ extract, replace the file <tt>free_len_zero.patch</tt> with <a
 href="patches/mitac_mio168.patch">mitac_mio168.patch</a>, and follow the
 instructions in the README file.</p>
 
-<p>Second, use a text editor to open the file <tt>/etc/modprobe.conf</tt> if
-you have it, otherwise open <tt>/etc/modules.conf</tt>. Add a line like this:</p>
+<p>Second, follow the instructions in Appendix A to add the following option to
+the kernel module:</p>
 
-<blockquote><tt>options ipaq ttyUSB=1</tt></blockquote>
+<blockquote><tt>ttyUSB=1</tt></blockquote>
 
 <p>Now unload the kernel module and load it again:</p>
 
@@ -459,6 +447,46 @@ href="http://sourceforge.net/donate/index.php?group_id=30550">donate</a>!</p>
 <!-- <h2>8. Installing and using a hotplug script</h2>
 
 <p>TODO</p> -->
+
+<h2>Appendix A. Adding kernel module options</h2>
+
+<p>This is a special appendix because the actions here varies between distros.</p>
+
+<p>First select the first alternative to exist on your Linux distribution:</p>
+
+<ol>
+
+<li>The directory <tt>/etc/modprobe.d</tt></li>
+<li>The directory <tt>/etc/modutils</tt></li>
+
+<li>The file <tt>/etc/modprobe.conf.local</tt></li>
+<li>The file <tt>/etc/modprobe.conf</tt></li>
+<li>The file <tt>/etc/modules.conf</tt></li>
+
+</ol>
+
+<p>If one of the directories exists on your Linux distribution, use a text
+editor to create the file <tt>synce</tt> in that directory. If you didn't have
+any of the directories, open the file you have with a text editor.</p>
+
+<p>Add a line like this, but replace <tt><i>options</i></tt> with the actual
+options you need to add to the kernel module:</p>
+
+<blockquote><tt>options ipaq <i>options</i></tt></blockquote>
+
+<p>If you created or edited the <tt>/etc/modutils/synce</tt> file, run the
+<tt>update-modules</tt> command.</li>
+
+<h3>Examples</h3>
+
+<p>If you have a device with vendor ID 0x1114 and product id 0x0006 that is not
+recognized by the kernel driver:</p>
+
+<blockquote><tt>options ipaq vendor=0x1114 product=0x0006</tt></blockquote>
+
+<p>If you have a device with four USB endpoints:</p>
+
+<blockquote><tt>options ipaq ttyUSB=1</tt></blockquote>
 
 <p><br/>Return to <a href="index.php">main page</a>.</p>
 
