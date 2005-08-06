@@ -75,7 +75,7 @@ static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name,
 	bool success = false;
 	size_t bytes_read;
 	size_t bytes_written;
-	char* buffer = NULL;
+	unsigned char* buffer = NULL;
 	AnyFile* source = NULL;
 	AnyFile* dest   = NULL;
 
