@@ -416,7 +416,7 @@ exit:
 static bool client_read(Client* client)
 {
 	bool success = false;
-	char* buffer = NULL;
+	unsigned char* buffer = NULL;
 	uint32_t header;
 
 	if (!synce_socket_read(client->socket, &header, sizeof(header)))
