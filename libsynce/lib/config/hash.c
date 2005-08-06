@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <ctype.h>
 
 #include "hash.h"
 
@@ -242,7 +243,7 @@ void hashFreeTable(hash_table *table, void (*func)(void *))
 	{
 		if ((table->table)[i] != NULL)
 		{
-			while (temp = (table->table)[i])
+			while ( (temp = (table->table)[i]) )
 			{
 				data = hashDel(temp->key, table);
 				assert(data);

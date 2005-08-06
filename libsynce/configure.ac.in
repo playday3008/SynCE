@@ -95,7 +95,10 @@ dnl For nl_langinfo
 AC_CHECK_HEADERS(langinfo.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
+saved_CFLAGS="$CFLAGS"
+CFLAGS=""
 AC_C_CONST
+CFLAGS="$saved_CFLAGS"
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(nl_langinfo)

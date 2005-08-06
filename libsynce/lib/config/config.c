@@ -81,6 +81,7 @@ really lazy and also moderately efficient.
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "config.h"
 
@@ -140,7 +141,7 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 	char *currentSectionString="DEFAULT";
 	char *currentStringStart=NULL;
 	char *currentKey=NULL;
-	unsigned int currentElement=0, filePos=0, state=_cfgKEYSTART;
+	unsigned int filePos=0, state=_cfgKEYSTART;
 	hash_table *tempHash;
 	
 	/* Create the default section. */
@@ -152,7 +153,7 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 			case _cfgKEYSTART:
 				if (cfg->bbdg[filePos]=='[') {
 					filePos++;
-					currentStringStart=&(cfg->bbdg[filePos]);
+					currentStringStart = (char*) &(cfg->bbdg[filePos]);
 					state=_cfgSECTIONEND;
 					break;
 				}
@@ -161,8 +162,8 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 					state=_cfgCOMMENTEND;
 					break;
 				}
-				if ( !isspace (cfg->bbdg[filePos]) ) {
-					currentStringStart=&(cfg->bbdg[filePos]);
+				if ( !isspace ((char) cfg->bbdg[filePos]) ) {
+					currentStringStart = (char*) &(cfg->bbdg[filePos]);
 					state=_cfgKEYEND;
 				} else {
 					filePos ++;
@@ -206,7 +207,7 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 				break;
 			case _cfgVALSTART:
 				if (!myisblank(cfg->bbdg[filePos])) {
-					currentStringStart=&(cfg->bbdg[filePos]);
+					currentStringStart = (char*) &(cfg->bbdg[filePos]);
 					state=_cfgVALEND;
 				} else {
 					filePos ++;
@@ -242,7 +243,6 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 char *getConfigString (struct configFile *cfg, char *section, char *key)
 {
 	struct hash_table *hashSection;
-	char *value;
 	hashSection=hashLookup (section, cfg->sections);
 	if (!hashSection) return NULL;
 	return hashLookup (key, hashSection);
@@ -268,7 +268,7 @@ int getConfigDouble (struct configFile *cfg, char *section, char *key)
 
 void _cfgdbgPrintConfigDatum (char *key, void *data)
 {
-	printf ("\t\t%s:%s\n", key, (void *)data);
+	printf ("\t\t%s:%s\n", key, (const char*)data);
 }
 
 void _cfgdbgPrintConfigSection (char *key, void *section)
