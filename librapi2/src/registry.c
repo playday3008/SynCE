@@ -29,11 +29,11 @@ LONG CeRegCreateKeyEx( /*{{{*/
 		return false;
 	
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+	rapi_buffer_read_int32(context->recv_buffer, &return_value);
 
 	if (ERROR_SUCCESS == return_value)
 	{
-		rapi_buffer_read_uint32(context->recv_buffer, &result);
+		rapi_buffer_read_int32(context->recv_buffer, &result);
 		rapi_buffer_read_uint32(context->recv_buffer, &disposition);
 
 		if (phkResult)
@@ -65,12 +65,12 @@ LONG CeRegOpenKeyEx(/*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+	rapi_buffer_read_int32(context->recv_buffer, &return_value); 
 
 	if (ERROR_SUCCESS == return_value)
 	{
 		if (phkResult)
-			rapi_buffer_read_uint32(context->recv_buffer, phkResult);
+			rapi_buffer_read_int32(context->recv_buffer, phkResult);
 	}
 
 	return return_value;
@@ -106,7 +106,7 @@ LONG CeRegQueryValueEx( /*{{{*/
 		synce_trace("rapi_buffer_read_uint32 failed");
 		return return_value;
 	}
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+	rapi_buffer_read_int32(context->recv_buffer, &return_value); 
 
 	if (ERROR_SUCCESS == return_value)
 	{
@@ -146,7 +146,7 @@ LONG CeRegCloseKey(/*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+	rapi_buffer_read_int32(context->recv_buffer, &return_value); 
 
 	return return_value;
 }/*}}}*/
@@ -186,7 +186,7 @@ LONG CeRegQueryInfoKey( /*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+	rapi_buffer_read_int32(context->recv_buffer, &return_value); 
 
 	if (ERROR_SUCCESS == return_value)
 	{
@@ -233,7 +233,7 @@ LONG CeRegEnumValue( /*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+	rapi_buffer_read_int32(context->recv_buffer, &return_value); 
 
 	if (ERROR_SUCCESS == return_value)
 	{
@@ -275,7 +275,7 @@ LONG CeRegEnumKeyEx( /*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
-	rapi_buffer_read_uint32(context->recv_buffer, &return_value); 
+	rapi_buffer_read_int32(context->recv_buffer, &return_value); 
 
 	if (ERROR_SUCCESS == return_value)
 	{
@@ -322,7 +322,7 @@ LONG CeRegSetValueEx( /*{{{*/
 	
 	if (!rapi_buffer_read_uint32(context->recv_buffer, &context->last_error))
 		return false;
-	if (!rapi_buffer_read_uint32(context->recv_buffer, &return_value))
+	if (!rapi_buffer_read_int32(context->recv_buffer, &return_value))
 		return false;
 
 	return return_value;

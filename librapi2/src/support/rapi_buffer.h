@@ -104,6 +104,11 @@ bool rapi_buffer_read_data(RapiBuffer* buffer, void* data, size_t size);
 bool rapi_buffer_read_uint16(RapiBuffer* buffer, uint16_t* value);
 
 /**
+ * Get a LONG parameter from buffer, with adjustment for endianness
+ */
+bool rapi_buffer_read_int32(RapiBuffer* buffer, int32_t* value);
+
+/**
  * Get a DWORD parameter from buffer, with adjustment for endianness
  */
 bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value);

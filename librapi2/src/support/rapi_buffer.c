@@ -360,6 +360,16 @@ bool rapi_buffer_read_uint16(RapiBuffer* buffer, uint16_t* value)
 	return true;
 }
 
+bool rapi_buffer_read_int32(RapiBuffer* buffer, int32_t* value)
+{
+	if ( !rapi_buffer_read_data(buffer, value, sizeof(int32_t)) )
+		return false;
+
+	*value = letoh32(*value);
+
+	return true;
+}
+
 bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value)
 {
 	if ( !rapi_buffer_read_data(buffer, value, sizeof(uint32_t)) )
