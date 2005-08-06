@@ -136,7 +136,7 @@ static bool print_entry(CE_FIND_DATA* entry)
 
 	seconds = filetime_to_unix_time(&entry->ftLastWriteTime);
 	time_struct = localtime(&seconds);
-	strftime(time_string, sizeof(time_string), "%c", time_struct);
+	strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", time_struct);
 	printf("%s", time_string);
 	
 	printf("  ");
