@@ -35,7 +35,10 @@ AM_PATH_LIBSYNCE
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.
+saved_CFLAGS="$CFLAGS"
+CFLAGS=""
 AC_C_CONST
+CFLAGS="$saved_CFLAGS"
 
 AC_REPLACE_FUNCS(daemon)
 
