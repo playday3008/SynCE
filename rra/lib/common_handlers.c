@@ -203,7 +203,11 @@ bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
         strbuf_append_c(note, *q);
     }
 
-    success = parser_add_blob(p, ID_NOTES, note->buffer, note->length);
+    success = parser_add_blob(
+        p, 
+        ID_NOTES, 
+        (const uint8_t*)note->buffer, 
+        note->length);
 
     if (parser_utf8(p))
       free(source);
