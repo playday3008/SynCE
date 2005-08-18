@@ -124,15 +124,21 @@ successful USB connection.</p>
 
 <h3>If you compile the kernel yourself...</h3>
 
-<p>Pre-compiled Linux kernels usually includes the <tt>ipaq</tt> Linux kernel
-driver that is required to use SynCE with USB.</p>
+<p>Pre-compiled Linux kernels usually includes the <tt>ipaq</tt> and
+<tt>ppp_async</tt> Linux kernel drivers that are required to use SynCE.</p>
 
-<p>If you compile the Linux kernel yourself, make sure that this driver is
-included in your kernel configuration:</p>
+<p>If you compile the Linux kernel yourself, make sure that these drivers are
+included in your kernel configuration as loadable modules:</p>
 
-<blockquote><tt>USB Support -&gt;<br>
-USB Serial Converter support -&gt;<br>
+<blockquote><tt>Device Drivers  ---&gt;<br>
+USB Support ---&gt;<br>
+USB Serial Converter support ---&gt;<br>
 USB PocketPC PDA Driver</tt></blockquote>
+
+<blockquote><tt>Device Drivers  ---&gt;<br>
+Networking support  ---&gt;<br>
+PPP (point-to-point protocol) support<br>
+&nbsp;&nbsp;PPP support for async serial ports</tt></blockquote>
 
 <h3>Kernel version</h3>
 
