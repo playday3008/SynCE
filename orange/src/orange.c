@@ -1,6 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #define _POSIX_C_SOURCE 2
+#include "config.h"
 #include <liborange.h>
 #include <libunshield.h>
 #include <synce_log.h>
@@ -9,6 +10,10 @@
 #include <string.h>
 #include <sys/param.h>
 #include <unistd.h>
+
+#if WITH_LIBGSF
+#include <gsf/gsf-utils.h>
+#endif
 
 #define FREE(ptr)       { if (ptr) { free(ptr); ptr = NULL; } }
 #define FCLOSE(file)    if (file) { fclose(file); file = NULL; }
@@ -172,7 +177,11 @@ int main(int argc, char** argv)
   const char* input_filename = NULL;
   char working_directory[256];
 
-  output_directory = getcwd(working_directory, sizeof(working_directory));
+#if WITH_LIBGSF
+  gsf_init();
+#endif
+
+   output_directory = getcwd(working_directory, sizeof(working_directory));
 
   if (!handle_parameters(argc, argv, &input_filename))
     goto exit;
@@ -191,6 +200,7 @@ int main(int argc, char** argv)
     goto exit;
   }
 
+
   if (!orange_squeeze_file(input_filename, callback, NULL))
     goto exit;
 
@@ -199,6 +209,9 @@ int main(int argc, char** argv)
   result = 0;
   
 exit:
-  return result;
+#if WITH_LIBGSF
+  gsf_shutdown();
+#endif
+   return result;
 }
 
