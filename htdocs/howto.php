@@ -402,7 +402,7 @@ executed by the same user as is running dccm (not root).</p>
 <p>As your own user (not root), try this command:</p>
 
 <blockquote><tt>pstatus</tt> (not on Debian)<br>
-<tt>synce-pstatus</tt> (on Debian)</blockquote>
+<tt>synce-pstatus</tt> (on Debian, in the librapi2-tools package)</blockquote>
 
 <p>If you successfully got information about your device, congratulations for
 enduring all the quirks involved in setting up SynCE! :-)</p>
