@@ -347,7 +347,7 @@ HRESULT CeStartReplication( void )/*{{{*/
 		return false;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &result);
-	synce_trace("result = 0x%08x", result);
+	/* synce_trace("result = 0x%08x", result); */
 
 	return result;
 }/*}}}*/
