@@ -20,7 +20,7 @@ AC_C_CONST
 CFLAGS="$saved_CFLAGS"
 
 AS_AC_EXPAND(SHARED_SYNCE, "$datadir/synce")
-AS_AC_EXPAND(BINDIR, "$bindir")
+AS_AC_EXPAND(SYNCE_SERIAL_CHAT, "$libexecdir/synce-serial-chat")
 
 AC_CONFIG_FILES(
 	[script/synce-serial-config],

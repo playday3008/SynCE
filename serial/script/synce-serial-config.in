@@ -133,7 +133,7 @@ fi
 
 echo "# Modifications to this file will be lost next time you run ${THIS}
 ${DEVICE} 115200
-connect '@BINDIR@/synce-serial-chat'
+connect '@SYNCE_SERIAL_CHAT@'
 nodefaultroute
 noauth
 local
