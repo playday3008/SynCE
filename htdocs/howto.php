@@ -52,6 +52,9 @@ Jenkins reports that it works with an unpatched 2.6.11-1.1369_FC4 kernel.</li>
 
 </ul>
 
+<p>Without a fix for this problem, <tt>synce-serial-start</tt> just hangs,
+because pppd will not be able to setup a PPP connection.</p>
+
 <p>If you follow the <a href="usb_linux_debug.php">USB debug</a> instructions
 for any of the device you will see something very similar to this in the debug
 log, here with the most important line marked with red color:</p>
@@ -218,7 +221,8 @@ color</span>, and may be referenced in the instructions below.</p>
 <h3>The number of USB configurations</h3>
 
 <p>First look at the value of <b>#Cfgs=</b>. If it's <b>1</b>, skip to <i>The
-Driver entry</i> below! If it's <b>2</b> or more, please send a mail to <a
+Driver entry</i> below! If it's <b>2</b> or more, continue this HOWTO but after
+you have finished it please send a mail to <a
 href="mailto:synce-devel@lists.sourceforge.net">
 synce-devel@lists.sourceforge.net</a> and tell us:</p>
 
@@ -372,7 +376,51 @@ character device named...</i>, ask for <a href="help.php">help</a>!</p>
 appears on a different tty for some reason.</p>
 
 
-<h2>5. Starting the connection</h2>
+<h2>5. Configuring the firewall</h2>
+
+<p><b>New section of the HOWTO!</b></p>
+
+<p>SynCE requires the following TCP ports to be open in the firewall between your PC and the PDA:</p>
+
+<blockquote>
+<p><b>From PDA to PC</b></p>
+
+<ul>
+<li>5678</li>
+<li>5679</li>
+</ul>
+
+<p><b>From PC to PDA</b></p>
+
+<ul>
+<li>990</li>
+</ul>
+</blockquote>
+
+<p>Refer to the documenation of your Linux distribution for details on how to
+allow traffic on these ports between your PC and PDA. Some details that might
+be of interest when configuring the firewall:</p>
+
+<p>When the synce-serial scripts are used, the PDA is connected via PPP. The
+default local IP address of the PPP connection is  192.168.131.102 and the
+default remote IP address is 192.168.131.201. These IP addresses can be changed
+by passing different parameters to the <tt>synce-serial-config</tt> tool. Run
+<tt>synce-serial-config</tt> without parameters or read its man page to know
+more.</P>
+
+<p>If the <tt>synce-serial-start</tt> script (see the next section, "Starting
+the connection") detects any firewall rules whatsoever you will see this
+message:</p>
+
+<blockquote><pre>Warning!
+
+You have firewall rules that may prevent SynCE from working properly!</pre></blockquote>
+
+<p>This is just a warning and can be ignored if you know that your firewall
+will not block the ports needed by SynCE.</p>
+
+
+<h2>6. Starting the connection</h2>
 
 <p>For the time being, this part is very brief!</p>
 
@@ -392,9 +440,14 @@ appears on a different tty for some reason.</p>
 
 </li>
 
+<li>If <tt>synce-serial-start</tt> just hangs with the message
+"synce-serial-start is now waiting for your device to connect" and you have a
+Smartphone, did you really follow the instructions in section 1 of this
+HOWTO?</li>
+
 </ol>
 
-<h2>6. Testing the connection</h2>
+<h2>7. Testing the connection</h2>
 
 <p>Applications and tools (except for synce-serial-*) that use SynCE must be
 executed by the same user as is running dccm (not root).</p>
@@ -419,7 +472,7 @@ occurred</tt></blockquote>
 <p>If you truly did follow the HOWTO, you may want to <a href="help.php">get
 help</a>.</p>
 
-<h2>7. Disconnection</h2>
+<h2>8. Disconnection</h2>
 
 <p>In order to properly disconnect your device, you should first close the
 network connection between Windows CE and SynCE. There are a couple of ways to
@@ -445,7 +498,7 @@ connections while the USB cable is connected.</li>
 
 </ol>
 
-<h2>8. Donation</h2>
+<h2>9. Donation</h2>
 
 <p>To show how grateful you are for SynCE, you can <a
 href="http://sourceforge.net/donate/index.php?group_id=30550">donate</a>!</p>
