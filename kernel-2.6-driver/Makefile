@@ -4,6 +4,7 @@ ifeq ($(KERNELRELEASE),)
 # Modify the line below if needed
 #
 LINUX_SOURCE_PATH := /usr/src/linux-$(shell uname -r)
+LINUX_SOURCE_PATH := /usr/src/linux-source-2.6.10
 #
 # You should not need to modify anything else
 #
@@ -36,6 +37,7 @@ ipaq.c: $(PATCHED)
  
 $(PATCHED): ipaq.c-$(VERSION)
 	cp -p $^ ipaq.c
+	patch -N -p0 < ipaq-select-endpoints.diff
 	patch -N -p0 < ipaq-version.diff
 	patch -N -p4 < ipaq-psion-teklogix.diff
 	patch -N -p4 < ipaq-smartphones.diff

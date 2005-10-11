@@ -4,7 +4,7 @@
   * Version Information
   */
  
--#define DRIVER_VERSION "v0.5"
+-#define DRIVER_VERSION "v0.6"
 +#define DRIVER_VERSION "v2.6.13.3.SynCE.1"
  #define DRIVER_AUTHOR "Ganesh Varadarajan <ganesh@veritas.com>"
  #define DRIVER_DESC "USB PocketPC PDA driver"
