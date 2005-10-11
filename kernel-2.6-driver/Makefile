@@ -16,13 +16,13 @@ PWD := $(shell pwd)
 PATCHED := .patched
 FILES := usb-serial.h ipaq.h ipaq.c
 
-default: $(USB_SERIAL_SOURCE_DIR) $(FILES) $(PATCHED)
+default: $(LINUX_SOURCE_PATH) $(USB_SERIAL_SOURCE_DIR) $(FILES) $(PATCHED)
 	$(MAKE) -C $(KERNEL_BUILD_DIR) SUBDIRS=$(PWD) modules
 
 all: default
 
-$(USB_SERIAL_SOURCE_DIR):
-	@echo "Can't find directory $(USB_SERIAL_SOURCE_DIR)"
+$(LINUX_SOURCE_PATH) $(USB_SERIAL_SOURCE_DIR):
+	@echo "Can't find directory $@"
 	@echo "Edit $(PWD)/Makefile and provide the correct path to the Linux source tree."
 	@false
 
