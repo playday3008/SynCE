@@ -76,9 +76,10 @@ kernel: usbserial.c: serial_ioctl - port 0, cmd 0x5401
 kernel: usbserial.c: serial_open
 kernel: usbserial.c: serial_close - port 0</pre></blockquote>
 
-<p>If you have a device with the error above, you need a <a
-href="http://sourceforge.net/mailarchive/forum.php?thread_id=6339886&forum_id=1226">workaround</a>
-in order for your device to work with SynCE!</p>
+<p>If you have a device with the error above, download <a
+href="http://synce.sourceforge.net/tmp/kernel-2.6-driver.tar.gz">kernel-2.6-driver.tar.gz</a>,
+extract and follow the instructions in the README file in order for your device
+to work with SynCE!</p>
 
 <p><i>Note: The support for Microsoft Smartphone will be simplied in the
 future!</i></p>
@@ -309,12 +310,10 @@ instructions</a> or these:</p>
 
 <blockquote>
 
-<p>First, even if you already did this in the <a href="#distro">Linux
-distribution</a> section, download <a
+<p>First of all and unless you already did this previously, download <a
 href="http://synce.sourceforge.net/tmp/kernel-2.6-driver.tar.gz">kernel-2.6-driver.tar.gz</a>,
-extract, replace the file <tt>free_len_zero.patch</tt> with <a
-href="patches/mitac_mio168.patch">mitac_mio168.patch</a>, and follow the
-instructions in the README file.</p>
+extract and follow the instructions in the README file to upgrade your kernel
+driver.</p>
 
 <p>Second, follow the instructions in Appendix A to add the following option to
 the kernel module:</p>
