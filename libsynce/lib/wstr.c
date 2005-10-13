@@ -5,6 +5,7 @@
 #include "synce_config.h"
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #if HAVE_LOCALE_H
 #include <locale.h>
@@ -35,7 +36,7 @@
 #endif
 
 
-#define wstr_WIDE   "UNICODELITTLE"
+#define wstr_WIDE   "ucs-2le"
 #define wstr_ASCII  "ISO_8859-1"
 #define wstr_UTF8   "UTF-8"
 
@@ -79,7 +80,7 @@ static char* wstr_to_x(LPCWSTR inbuf, const char* code, size_t multiplier)
   cd = iconv_open(code, wstr_WIDE);
 	if (INVALID_ICONV_HANDLE == cd)
 	{
-		wstr_error("iconv_open failed");
+		wstr_error("iconv_open(%s, %s) failed: %s", code, wstr_WIDE, strerror(errno));
 		return NULL;
 	}
 
@@ -147,7 +148,7 @@ static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 	cd = iconv_open(wstr_WIDE, code);
 	if (INVALID_ICONV_HANDLE == cd)
 	{
-		wstr_error("iconv_open failed");
+		wstr_error("iconv_open(%s, %s) failed: %s", code, wstr_WIDE, strerror(errno));
 		return NULL;
 	}
 
