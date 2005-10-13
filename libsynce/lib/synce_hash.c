@@ -59,7 +59,7 @@ unsigned s_str_hash(const void* key)
 {
       unsigned ret_val = 0;
       int i;
-      const char *string = (const char*)key;
+      const unsigned char *string = (const unsigned char*)key;
 
       while (*string)
       {
