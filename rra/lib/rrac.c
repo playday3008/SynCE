@@ -11,8 +11,6 @@
 
 #define LETOH16(x)  x = letoh16(x)
 #define LETOH32(x)  x = letoh32(x)
-#define HTOLE16(x)  x = htole16(x)
-#define HTOLE32(x)  x = htole32(x)
 
 #define LE16(p)    letoh16(*(uint16_t*)p)
 #define LE32(p)    letoh32(*(uint32_t*)p)

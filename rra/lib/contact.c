@@ -746,7 +746,7 @@ static uint32_t address_ids[ADDRESS_FIELD_COUNT][3] =
 	{ID_HOME_COUNTRY,     ID_WORK_COUNTRY,       ID_OTHER_COUNTRY}      /* country */
 };
 
-static char* strdup_quoted_printable(const char* source)/*{{{*/
+static char* strdup_quoted_printable(const unsigned char* source)/*{{{*/
 {
 	char* result = malloc(strlen(source) + 1);
 	char* dest = result;

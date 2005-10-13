@@ -126,7 +126,7 @@ exit:
 void rra_timezone_create_id(RRA_Timezone* tzi, char** id)/*{{{*/
 {
   char* name = wstr_to_ascii(tzi->StandardName);
-  char* p;
+  unsigned char* p;
   char buffer[128];
 
   if (!id)
