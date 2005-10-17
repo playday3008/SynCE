@@ -1,6 +1,7 @@
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
 #include "liborange.h"
+#include "pe.h"
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,7 +39,7 @@ bool orange_extract_installshield_sfx(
     const char* output_directory)
 {
   bool success = false;
-  size_t offset;
+  uint32_t offset;
   FILE* input_file = NULL;
   int error;
   char signature[SIGNATURE_SIZE+1];
@@ -241,6 +242,7 @@ enum
   INTEGER_COUNT
 };
 
+#if 0
 static bool copy(
     FILE* input_file, 
     size_t size, 
@@ -287,24 +289,7 @@ exit:
     fclose(output_file);
   return success;
 }
-
-#define MASK (0x200-1)
-
-
-static unsigned seek_and_read32(FILE* input_file, size_t offset)
-{
-  fseek(input_file, offset, SEEK_SET);
-  return orange_read32(input_file);
-}
-
-static size_t pe_size(FILE* input_file)
-{
-  unsigned pe_offset   = seek_and_read32(input_file, 0x3c);
-  unsigned rsrc_offset = seek_and_read32(input_file, pe_offset + 0x184);
-  unsigned rsrc_size   = seek_and_read32(input_file, pe_offset + 0x178);
-
-  return (rsrc_offset + rsrc_size + MASK) & ~MASK;
-}
+#endif
 
 bool orange_extract_installshield_sfx2(
     const char* input_filename,
@@ -320,7 +305,11 @@ bool orange_extract_installshield_sfx2(
 
   input_file = fopen(input_filename, "r");
 
-  offset = pe_size(input_file);
+  if (!pe_size(input_file, &offset))
+  {
+    synce_trace("pe_size failed");
+    goto exit;
+  }
 
 #if VERBOSE
   synce_trace("offset = %08x", offset);
@@ -378,7 +367,7 @@ bool orange_extract_installshield_sfx2(
         integers[INTEGER_SIZE]);
 
     /* error = fseek(input_file, integers[INTEGER_SIZE], SEEK_CUR); */
-    if (!copy(input_file, integers[INTEGER_SIZE], output_directory, strings[STRING_FILENAME]))
+    if (!orange_copy(input_file, integers[INTEGER_SIZE], output_directory, strings[STRING_FILENAME]))
     {
       synce_trace("failed to write file: %s", strings[STRING_FILENAME]);
       goto exit; 

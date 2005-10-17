@@ -78,14 +78,14 @@ typedef struct _IMAGE_SECTION_HEADER {
 
 #define SIZEOF_IMAGE_SECTION_HEADER 40
 
-static uint16_t pe_read16(FILE *input)
+uint16_t pe_read16(FILE *input)
 {
   return 
     orange_read_byte(input) |
     (orange_read_byte(input) << 8);
 }
 
-static uint32_t pe_read32(FILE *input)
+uint32_t pe_read32(FILE *input)
 {
   return 
     orange_read_byte(input) |
@@ -94,7 +94,7 @@ static uint32_t pe_read32(FILE *input)
     (orange_read_byte(input) << 24);
 }
 
-bool pe_nt_headers_offset(FILE *input, uint32_t* result)
+static bool pe_nt_headers_offset(FILE *input, uint32_t* result)
 {
   uint16_t e_lfanew;
     
@@ -172,7 +172,7 @@ static void read_optional_header(FILE* input, IMAGE_OPTIONAL_HEADER* optionalHea
   }
 }
 
-void read_section_header(FILE* input, IMAGE_SECTION_HEADER* sectionHeader)
+static void read_section_header(FILE* input, IMAGE_SECTION_HEADER* sectionHeader)
 {
   fread(sectionHeader->Name, 1, IMAGE_SIZEOF_SHORT_NAME, input);
   sectionHeader->Misc.VirtualSize = pe_read32(input);
@@ -186,7 +186,7 @@ void read_section_header(FILE* input, IMAGE_SECTION_HEADER* sectionHeader)
   sectionHeader->Characteristics = pe_read32(input);
 }
 
-void read_section_headers(FILE* input, IMAGE_SECTION_HEADER* sectionHeaders, unsigned count)
+static void read_section_headers(FILE* input, IMAGE_SECTION_HEADER* sectionHeaders, unsigned count)
 {
   unsigned i;
   for (i = 0; i < count; i++)
@@ -228,8 +228,9 @@ static bool pe_read_headers(
 }
 
     
-bool pe_find_section(FILE* input, const char *name, uint32_t *offset)
+bool pe_find_section(FILE* input, const char *name, uint32_t *fileOffset, uint32_t *virtualOffset)
 {
+  bool success = false;
   unsigned i;
   IMAGE_FILE_HEADER file_header;
   IMAGE_OPTIONAL_HEADER* optional_header;
@@ -242,18 +243,23 @@ bool pe_find_section(FILE* input, const char *name, uint32_t *offset)
   {
     if (strncmp(section_headers[i].Name, name, IMAGE_SIZEOF_SHORT_NAME) == 0)
     {
-      *offset = section_headers[i].PointerToRawData;
-      return true;
+      *fileOffset    = section_headers[i].PointerToRawData;
+      *virtualOffset = section_headers[i].VirtualAddress;
+      success = true;
+      goto exit;
     }
   }
-  
-  return false;
+ 
+exit: 
+  free(optional_header);
+  free(section_headers);
+  return success;
 }
 
 
-bool pe_rsrc_offset(FILE *input, uint32_t* result)
+bool pe_rsrc_offset(FILE *input, uint32_t* fileOffset, uint32_t* virtualOffset)
 {
-  return pe_find_section(input, ".rsrc", result);
+  return pe_find_section(input, ".rsrc", fileOffset, virtualOffset);
 }
 
 bool pe_size(FILE *input, uint32_t* result)
@@ -275,13 +281,10 @@ bool pe_size(FILE *input, uint32_t* result)
         section_headers[i].PointerToRawData +
         section_headers[i].SizeOfRawData;
     }
-    /*synce_trace("Name = %s", section_headers[i].Name);
-    synce_trace("VirtualAddress = %08x", section_headers[i].VirtualAddress);
-    synce_trace("VirtualSize = %08x", section_headers[i].Misc.VirtualSize);
-    synce_trace("SizeOfRawData = %08x", section_headers[i].SizeOfRawData);
-    synce_trace("PointerToRawData = %08x", section_headers[i].PointerToRawData);
-    synce_trace("max_offset = %08x", max_offset);*/
   }
+
+  free(optional_header);
+  free(section_headers);
 
   *result = max_offset;
 

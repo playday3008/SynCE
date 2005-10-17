@@ -20,7 +20,7 @@
 #define DO_MAGIC 1
 #endif
 
-#define DELETE_FILES 1
+#define DELETE_FILES 0
 
 static char* orange_get_temporary_directory()/*{{{*/
 {
@@ -84,6 +84,100 @@ exit:
   return success;
 }/*}}}*/
 
+static bool squeeze_exe(
+    const char* filename,
+    const char* output_directory)
+{
+  bool success = false;
+  
+  /* Maybe a self-extracting executable, try some different options */
+
+  if (!success)
+  {
+    if (orange_make_sure_directory_exists(output_directory))
+    {
+      char output_filename[256];
+      snprintf(output_filename, sizeof(output_filename), "%s/installer.exe", output_directory);
+      success = orange_dllinflate(filename, output_filename);
+      if (success)
+        synce_trace("Found DllInflate EXE format.");
+    }
+  }
+
+  if (!success)
+  {
+    success = orange_extract_installshield_sfx(filename, output_directory);
+    if (success)
+      synce_trace("Found InstallShield self-extracting executable.");
+  }
+
+  if (!success)
+  {
+    success = orange_extract_installshield_sfx2(filename, output_directory);
+    if (success)
+      synce_trace("Found InstallShield self-extracting executable (type 2).");
+  }
+
+  if (!success)
+  {
+    success = orange_extract_setup_factory(filename, output_directory);
+    if (success)
+      synce_trace("Found SetupFactory format.");
+  }
+
+#if ENABLE_INNO
+  if (!success)
+  {
+    success = orange_extract_inno(filename, output_directory);
+    if (success)
+      synce_trace("Found InnoSetup format.");
+  }
+#endif
+
+#if ENABLE_VISE
+  if (!success)
+  {
+    success = orange_extract_vise(filename, output_directory);
+    if (success)
+      synce_trace("Found VISE Setup format.");
+  }
+#endif
+
+  if (!success)
+  {
+    success = orange_extract_zip(filename, output_directory);
+    if (success)
+      synce_trace("Found ZIP format.");
+  }
+
+  if (!success)
+  {
+    success = orange_extract_rar(filename, output_directory);
+    if (success)
+      synce_trace("Found RAR format.");
+  }
+
+  if (!success)
+  {
+    /* try to extract ms cab files from file */
+    success = orange_separate(filename, output_directory);
+  }
+
+  /* must be after call to orange_separate */
+  if (!success)
+  {
+    success = orange_extract_ms_cab(filename, output_directory);
+    if (success)
+      synce_trace("Found Microsoft CAB format.");
+  }
+
+  /* Always extract resources */
+  if (orange_extract_rsrc(filename, output_directory))
+    success = true;
+
+  return success;
+}
+
 #if DO_MAGIC
 static bool squeeze_by_magic(/*{{{*/
     const char* filename,
@@ -130,6 +224,10 @@ static bool squeeze_by_magic(/*{{{*/
       synce_trace("Found MSI format.");
   }
 #endif
+  else if (strstr(description, "MS-DOS executable (EXE), OS/2 or MS Windows"))
+  {
+    success = squeeze_exe(filename, output_directory);
+  }
 
 exit:
   if (magic)
@@ -158,7 +256,7 @@ static bool squeeze_by_suffix(/*{{{*/
   if (suffix)
     suffix++;
 
-  synce_trace("%s", filename);
+  /*synce_trace("%s", filename);*/
 
   if (suffix)
   {
@@ -197,88 +295,12 @@ static bool squeeze_by_suffix(/*{{{*/
           synce_trace("Found Microsoft CAB format.");
       }
     }
+#if !DO_MAGIC  /* any interesting .exe files should already have been caught by magic */
     else if (STR_EQUAL(suffix, "exe"))
     {
-      /* Maybe a self-extracting executable, try some different options */
-
-      if (!success)
-      {
-        if (orange_make_sure_directory_exists(output_directory))
-        {
-          char output_filename[256];
-          snprintf(output_filename, sizeof(output_filename), "%s/installer.exe", output_directory);
-          success = orange_dllinflate(filename, output_filename);
-          if (success)
-            synce_trace("Found DllInflate EXE format.");
-        }
-      }
-
-      if (!success)
-      {
-        success = orange_extract_installshield_sfx(filename, output_directory);
-        if (success)
-          synce_trace("Found InstallShield self-extracting executable.");
-      }
-
-      if (!success)
-      {
-        success = orange_extract_installshield_sfx2(filename, output_directory);
-        if (success)
-          synce_trace("Found InstallShield self-extracting executable (type 2).");
-      }
-
-      if (!success)
-      {
-        success = orange_extract_setup_factory(filename, output_directory);
-        if (success)
-          synce_trace("Found SetupFactory format.");
-      }
-
-#if ENABLE_INNO
-      if (!success)
-      {
-        success = orange_extract_inno(filename, output_directory);
-        if (success)
-          synce_trace("Found InnoSetup format.");
-      }
-#endif
-
-#if ENABLE_VISE
-      if (!success)
-      {
-        success = orange_extract_vise(filename, output_directory);
-        if (success)
-          synce_trace("Found VISE Setup format.");
-      }
-#endif
-
-      if (!success)
-      {
-        success = orange_extract_zip(filename, output_directory);
-        if (success)
-          synce_trace("Found ZIP format.");
-      }
-
-      if (!success)
-      {
-        success = orange_extract_rar(filename, output_directory);
-        if (success)
-          synce_trace("Found RAR format.");
-      }
-
-      if (!success)
-      {
-        success = orange_separate(filename, output_directory);
-      }
-
-      /* must be after call to orange_separate */
-      if (!success)
-      {
-        success = orange_extract_ms_cab(filename, output_directory);
-        if (success)
-          synce_trace("Found Microsoft CAB format.");
-      }
+      success = squeeze_exe(filename, output_directory);
     }
+#endif
 #if ENABLE_MSI
     else if (STR_EQUAL(suffix, "msi"))
     {

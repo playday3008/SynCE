@@ -12,6 +12,7 @@ liborange_la_SOURCES = \
 	helper.c \
 	installshield_sfx.c \
 	pe.h pe.c \
+	rsrc.c \
 	separate.c \
 	squeeze.c \
 	suf.c \

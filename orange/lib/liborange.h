@@ -56,6 +56,13 @@ bool orange_squeeze_directory(
     void* cookie);
 
 /**
+ * Extract resource data from PE file
+ */
+bool orange_extract_rsrc(
+    const char* input_filename, 
+    const char* output_directory);
+
+/**
   Takes an self-extracting program that uses a function called DllInflate in a
   DLL called inflate.dll to extract the actual installation program.
  */
