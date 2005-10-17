@@ -59,8 +59,9 @@ static char* read_resource_directory_string(
   unsigned i;
   char* result = malloc(length+1);
 
+#if VERBOSE
   synce_trace("String length: %i", length);
-  
+#endif
   for (i = 0; i < length; ++i)
   {
     result[i] = pe_read16(input);
@@ -112,7 +113,7 @@ static void extract_resource_data(
 
   snprintf(name, sizeof(name), "%s-%08x", prefix, data_entry.CodePage);
 #if VERBOSE
-  synce_trace("Orange name: %s", name);
+  synce_trace("Resource: %s", name);
 #endif
 
   fseek(

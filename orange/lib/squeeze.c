@@ -18,6 +18,7 @@
 #if HAVE_LIBMAGIC && HAVE_MAGIC_H
 #include <magic.h>
 #define DO_MAGIC 1
+#define VERBOSE_MAGIC 0
 #endif
 
 #define DELETE_FILES 0
@@ -200,8 +201,9 @@ static bool squeeze_by_magic(/*{{{*/
   if (!description)
     goto exit;
 
+#if VERBOSE_MAGIC
   synce_trace("%s: %s", filename, description);
-
+#endif
   if (strstr(description, "Microsoft Cabinet file"))
   {
     CabInfo cab_info;

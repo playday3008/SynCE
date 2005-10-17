@@ -49,8 +49,9 @@ bool orange_extract_installshield_sfx(
   unsigned size;
   unsigned i;
 
+#if VERBOSE
   synce_trace("here");
-
+#endif
   /* hard-coded offset for now... should really be calculated from PE header */
   offset = 0x37000;
 
@@ -301,7 +302,9 @@ bool orange_extract_installshield_sfx2(
   int error;
   long file_size = 0;
 
+#if VERBOSE
   synce_trace("here");
+#endif
 
   input_file = fopen(input_filename, "r");
 
