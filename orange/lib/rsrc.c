@@ -241,7 +241,7 @@ bool orange_extract_rsrc(
       "rsrc",
       output_directory);
 
-  /* success = true; */
+  success = true;
 
 exit:
   FCLOSE(input)
