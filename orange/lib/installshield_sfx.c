@@ -315,6 +315,14 @@ bool orange_extract_installshield_sfx2(
   synce_trace("offset = %08x", offset);
 #endif
 
+  file_size = orange_fsize(input_file);
+
+  if ((unsigned)file_size == offset)
+  {
+    /* nothing piggybacked */
+    goto exit;
+  }
+
   error = fseek(input_file, offset, SEEK_SET);
   if (error)
   {
@@ -323,8 +331,6 @@ bool orange_extract_installshield_sfx2(
 #endif
     goto exit;
   }
-
-  file_size = orange_fsize(input_file);
 
   while (ftell(input_file) < file_size)
   {
