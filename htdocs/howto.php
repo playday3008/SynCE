@@ -219,6 +219,30 @@ your device:</p>
 <p>Important parts of the output have been marked with <span CLASS=RED>red
 color</span>, and may be referenced in the instructions below.</p>
 
+<h3>Special note for Windows Mobile 2005 users</h3>
+
+<p><i>Your device may not work over USB!</i></p>
+
+<p>Does your USB device presents itself like this? Especially compare the parts
+marked with red color.</p>
+
+<pre>T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#=  9 Spd=12  MxCh= 0
+D:  Ver= 2.00 Cls=<span class=RED>ef(unk. )</span> Sub=<span class=RED>01</span> Prot=<span class=RED>01</span> MxPS=16 #Cfgs=  1
+P:  Vendor=0bb4 ProdID=0b01 Rev= 0.00
+S:  Manufacturer=MSFT
+S:  Product=PocketPC USB Sync
+C:* #Ifs= 2 Cfg#= 1 Atr=c0 MxPwr=500mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=ef(unk. ) Sub=01 Prot=01 Driver=(none)
+E:  Ad=81(I) Atr=03(Int.) MxPS=   8 Ivl=1ms
+I:  If#= 1 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00 Driver=(none)
+E:  Ad=82(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+E:  Ad=03(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms</pre>
+
+<p>If your device is similar it will most likely crash your kernel when you run
+''synce-serial-start''. This issue is being investigated. See bug report <a
+href="https://sourceforge.net/tracker/index.php?func=detail&aid=1332550&group_id=30550&atid=399601">1332550</a>.
+You are very welcome to amend your experiences to the bug report!</p>
+
 <h3>The number of USB configurations</h3>
 
 <p>First look at the value of <b>#Cfgs=</b>. If it's <b>1</b>, skip to <i>The
