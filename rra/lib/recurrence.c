@@ -455,7 +455,12 @@ bool recurrence_parse_rrule(
   }
 
   if (STR_EQUAL(rrule.freq, "DAILY"))
+  {
     pattern->recurrence_type = olRecursDaily;
+    /* Convert to Daily with 24*60 times the interval (days->minutes) */
+    synce_trace("Converting Interval to minutes");
+    rrule.interval *= MINUTES_PER_DAY;
+  }
   else if (STR_EQUAL(rrule.freq, "WEEKLY"))
   {
     pattern->recurrence_type = olRecursWeekly;
@@ -518,7 +523,49 @@ bool recurrence_parse_rrule(
     pattern->flags |= RecurrenceEndsAfterXOccurrences;
 
     /* XXX calculate pattern->pattern_end_date */
+    /* CE requires an explicit end date */
+    /* XXX Could be problematic with leap years */
+    switch (pattern->recurrence_type)
+    {
+      case olRecursDaily:
+        synce_trace("Calculating Pattern end date for daily recursion");
+        pattern->pattern_end_date = pattern->pattern_start_date + (rrule.count-1) * rrule.interval;
+        break;
+      case olRecursWeekly:
+        /* XXX Only works for interval=1 at the moment */
+        synce_trace("Calculating Pattern end date for weekly recursion");
+        uint32_t count_in_mask=0;
+        int i;
+        for (i=0; i<7; i++)
+	  if (pattern->days_of_week_mask &  (1 << i)) count_in_mask++;
+
+        uint32_t days_to_add=((rrule.count-1)/count_in_mask)*7;
+        uint32_t rest=(rrule.count-1)%count_in_mask;
+	
+        struct tm start_date = rra_minutes_to_struct(pattern->pattern_start_date);
+        /* rotate the bitmask */
+        uint32_t biased_mask = (pattern->days_of_week_mask | ((pattern->days_of_week_mask & ((1<<start_date.tm_wday)-1)) << 7))>>(start_date.tm_wday+1);
+        while (rest)
+	{
+	  rest--;
+          while (biased_mask%2==0)
+	  {
+            if (biased_mask==0) {synce_error("Calculation of Pattern end date failed"); goto failed;}
+	    days_to_add++;
+	    biased_mask>>=1;
+	  }
+          days_to_add++;
+          biased_mask>>=1;
+	}
+	
+	pattern->pattern_end_date = pattern->pattern_start_date + days_to_add*24*60;
+
+        break;
+      default:
+      failed:
+        synce_trace("FIXME: Have to calculate Pattern end date");
     pattern->pattern_end_date = RRA_DoesNotEndDate;
+  }
   }
   else if (rrule.until)
   {
