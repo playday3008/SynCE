@@ -1019,6 +1019,14 @@ static bool parser_handle_field(/*{{{*/
 		{
 			add_string(parser, ID_RADIO_TEL, type, value);
 		}
+		else if (STR_IN_STR(type, "CAR"))
+		{
+			add_string(parser, ID_CAR_TEL, type, value);
+		}
+		else if (STR_IN_STR(type, "PAGER"))
+		{
+			add_string(parser, ID_PAGER, type, value);
+		}
 		else
 		{
 			synce_trace("Type '%s' for field '%s' not recognized.",
