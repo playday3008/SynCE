@@ -71,6 +71,8 @@ echo "PIN:1234"</pre></li>
 for the PC, check the "ActiveSync partner" checkbox. (If this checkbox is
 disabled you forgot to modify <tt>/etc/bluetooth/hcid.conf</tt>.)</li>
 
+<li><p>Make sure you have started dccm as your normal user (not root).</p></li>
+
 <li>You should now be able to use the "Start ActiveSync" menu entry found when
 you tap the Bluetooth Manager icon on the Today screen.</p></li>
 
