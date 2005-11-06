@@ -79,8 +79,6 @@ void rapi_connection_select(RapiConnection* connection);
 /** Destroy connection object - use this after CeRapiUninit() */
 void rapi_connection_destroy(RapiConnection* connection);
 
- 
-
 /*
  * Main RAPI functions
  */
@@ -97,6 +95,10 @@ HRESULT CeRapiInit(void);
 STDAPI CeRapiUninit(void);
 
 HRESULT CeRapiGetError(void);
+
+/** Not part of the real RAPI.
+ * Use it instead of Win32's GetLastError() */
+DWORD CeRapiGetLastError();
 
 #endif /* SWIG */
 

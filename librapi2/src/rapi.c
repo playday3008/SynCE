@@ -42,6 +42,12 @@ HRESULT CeRapiGetError(void)/*{{{*/
 	return context->rapi_error;
 }/*}}}*/
 
+DWORD CeRapiGetLastError()
+{
+	RapiContext* context = rapi_context_current();
+	return context->last_error;
+}
+
 BOOL CeCheckPassword( /*{{{*/
 		LPWSTR lpszPassword)
 {
