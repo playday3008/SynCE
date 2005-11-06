@@ -16,17 +16,6 @@ DECLARE_INTERFACE_ (IRAPIStream,  IStream)
   STDMETHOD(GetRapiStat)( THIS_ RAPISTREAMFLAG Flag, DWORD *pdwValue) PURE;
 };
 
-#define NEED_ISTREAM_MACROS
-
-#ifdef NEED_ISTREAM_MACROS
-#define IStream_AddRef(This) (This)->lpVtbl->AddRef(This)
-#define IStream_Clone(This,ppstm) (This)->lpVtbl->Clone(This,ppstm)
-#define IStream_Read(This,pv,cb,pcbRead) (This)->lpVtbl->Read(This,pv,cb,pcbRead)
-#define IStream_Release(This) (This)->lpVtbl->Release(This)
-#define IStream_Seek(This,dlibMove,dwOrigin,plibNewPosition) (This)->lpVtbl->Seek(This,dlibMove,dwOrigin,plibNewPosition)
-#define IStream_Stat(This,pstatstg,grfStatFlag)	(This)->lpVtbl->Stat(This,pstatstg,grfStatFlag)
-#endif
-
 EXTERN_C __declspec(dllexport) HRESULT TestLastError(
     DWORD cbInput,
     BYTE* pInput, 
