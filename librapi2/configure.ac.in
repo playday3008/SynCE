@@ -21,7 +21,11 @@ case $target in
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
+saved_CFLAGS="$CFLAGS"
+CFLAGS=""
 AC_C_CONST
+CFLAGS="$saved_CFLAGS"
+
 AC_CHECK_SIZEOF(void *)
 
 dnl Checks for programs.
@@ -83,6 +87,7 @@ AC_OUTPUT([Makefile
 					 src/support/Makefile
            script/Makefile
 					 tests/Makefile
+           tests/CeRapiInvoke/Makefile
 					 tests/rapi/Makefile
 					 tools/Makefile
 					 tools/man/Makefile])

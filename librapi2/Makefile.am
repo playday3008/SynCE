@@ -4,8 +4,7 @@
 ## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
 AUTOMAKE_OPTIONS = foreign 1.4
 
-SUBDIRS = src script tools .
-#tests not built at the moment
+SUBDIRS = src script tools tests .
 
 m4datadir = $(datadir)/aclocal
 m4data_DATA = librapi2.m4
