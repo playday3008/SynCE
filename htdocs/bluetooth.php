@@ -32,9 +32,9 @@ done</pre></blockquote>
 <li><p>Modify the device class in <tt>/etc/bluetooth/hcid.conf</tt>. Suitable
 values:</p>
 <ul>
-<li>0x104 - Workstation</li>
-<li>0x108 - Server</li>
-<li>0x10c - Laptop</li>
+<li>0xbe0104 - Workstation</li>
+<li>0xbe0108 - Server</li>
+<li>0xbe010c - Laptop</li>
 </ul>
 
 <p>See <a
