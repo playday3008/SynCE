@@ -6,6 +6,9 @@
 
 <h1>SynCE - USB connection - Linux</h1>
 
+<p><b>This page is deprecated. Use the <a href="howto.php">HOWTO</a>
+instead!</b></p>
+
 <p>If you compile the Linux kernel yourself, make sure that this driver is
 included in your kernel configuration:</p>
 

@@ -6,6 +6,9 @@
 
 <h1>Vendor/product IDs supported by the ipaq Linux kernel driver</h1>
 
+<p><b>This page is deprecated. Use the <a href="howto.php">HOWTO</a>
+instead!</b></p>
+
 <p>The following devices are supported by most kernel versions.</p>
 
 <table cellpadding=3>
