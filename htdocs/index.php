@@ -114,6 +114,14 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>2005-11-24</b> <i>Important</i> Windows Mobile 5 devices do not work with
+SynCE! This is currently being investigated but no SynCE developer has access
+such a device, so don't expect them to be supported very soon.</p>
+<p>For those with
+older Windows CE versions it may be worth to know that the RRA module has
+received some nice patches since 0.9.1 so maybe a 0.9.2 release should be
+made.</p>
+
 <p><b>2005-07-08</b> SynCE 0.9.1 is released! Everyone is encouraged to
 upgrade!  <a
 href="http://sourceforge.net/project/shownotes.php?release_id=310079">Release
@@ -139,6 +147,8 @@ this SynCE user!</a></p>
 
 <!-- <p><b>2005-05-11</b> The previous news entry had a small cut and paste error
 in the date, but it's is corrected now!</p> -->
+
+<?php /*
 
 <p><b>2005-04-25</b> No news is good news!</p>
 
@@ -167,8 +177,6 @@ supported at the moment.</li>
 <li>Raki is broken, stop it before syncing (but let vdccm running)</li>
 
 </ul>
-
-<?php /*
 
 <p><b>October 27, 2004</b> If you want to get SynCE working on your Linux
 system, feel free to try the initial version of the <a
