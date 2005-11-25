@@ -187,6 +187,8 @@ static bool orange_separate_callback(/*{{{*/
     goto exit;
   }
 
+  synce_trace("Saving %s", cabfile);
+
   success = true;
 
 exit:
@@ -294,5 +296,4 @@ exit:
   FREE(input_buffer);
   return success;
 }/*}}}*/
-
 
