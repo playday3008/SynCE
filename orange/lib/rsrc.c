@@ -9,6 +9,8 @@
 
 #include "pe.h"
 
+#define VERBOSE 0
+
 typedef int8_t CHAR;
 
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
