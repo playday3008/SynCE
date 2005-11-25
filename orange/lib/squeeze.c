@@ -388,6 +388,8 @@ bool orange_squeeze_directory(/*{{{*/
     goto exit;
   }
 
+  synce_trace("Directory: %s", dirname);
+
   while (NULL != (entry = readdir(dir)))
   {
     char filename[256];
