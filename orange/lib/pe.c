@@ -243,8 +243,10 @@ bool pe_find_section(FILE* input, const char *name, uint32_t *fileOffset, uint32
   {
     if (strncmp(section_headers[i].Name, name, IMAGE_SIZEOF_SHORT_NAME) == 0)
     {
-      *fileOffset    = section_headers[i].PointerToRawData;
-      *virtualOffset = section_headers[i].VirtualAddress;
+      if (fileOffset)
+        *fileOffset    = section_headers[i].PointerToRawData;
+      if (virtualOffset)
+        *virtualOffset = section_headers[i].VirtualAddress;
       success = true;
       goto exit;
     }
