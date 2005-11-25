@@ -1,10 +1,13 @@
 /* $Id$ */
 #include "liborange_internal.h"
+
 #include <synce_log.h>
 #include <zlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "pe.h"
 
 #define OUTPUT_BUFFER_SIZE 0x8000
 
@@ -82,14 +85,13 @@ exit:
 static bool get_compressed_data(const char* input_filename, uint8_t** input_buffer, size_t* input_size)/*{{{*/
 {
   bool success = false;
-  char name[8];
   uint32_t resources_virtual_address;
   uint32_t resources_raw_address;
-  uint32_t resources_raw_size;
   uint32_t data_virtual_address;
   uint32_t data_raw_address;
   uint32_t data_size;
   FILE* input = fopen(input_filename, "r");
+  int error;
 
   if (!input)
   {
@@ -101,35 +103,26 @@ static bool get_compressed_data(const char* input_filename, uint8_t** input_buff
   *input_size   = 0;
 
   /*
-     Read PE header to find resource section
+     Find resource section
    */
 
-  fseek(input, SECTION_HEADER_OFFSET, SEEK_SET);
-  fread(name, 1, sizeof(name), input);
-  if (0 != strcmp(name, ".rsrc"))
+  if (!pe_rsrc_offset(input, &resources_raw_address, &resources_virtual_address))
   {
-#if 0
-    synce_error("Unexpected input file format");
-#endif
+    synce_debug("pe_rsrc_offset failed");
     goto exit;
   }
- 
-  fseek(input, 4, SEEK_CUR);
-
-  fread(&resources_virtual_address, 1, sizeof(resources_virtual_address), input);
-  fread(&resources_raw_size,        1, sizeof(resources_raw_size),        input);
-  fread(&resources_raw_address,     1, sizeof(resources_raw_address),     input);
-
-  LETOH32(resources_virtual_address);
-  LETOH32(resources_raw_size);
-  LETOH32(resources_raw_address);
 
   /*
      Find resource entry to find resource data
    */
 
   /* this move could be more elegant :-) */
-  fseek(input, resources_raw_address + 0x138, SEEK_SET);
+  error = fseek(input, resources_raw_address + 0x138, SEEK_SET);
+  if (error)
+  {
+    /*synce_debug("fseek to %08x failed", resources_raw_address + 0x138);*/
+    goto exit;
+  }
 
   fread(&data_virtual_address, 1, sizeof(data_virtual_address), input);
   fread(&data_size,            1, sizeof(data_size),            input);
@@ -143,9 +136,7 @@ static bool get_compressed_data(const char* input_filename, uint8_t** input_buff
   
   data_raw_address = data_virtual_address - resources_virtual_address + resources_raw_address;
 
-  synce_trace("Getting 0x%08x (%i) bytes from offset 0x%08x (%i)",
-      data_size, data_size, data_raw_address, data_raw_address);
-  
+ 
   fseek(input, data_raw_address, SEEK_SET);
 
   *input_size   = data_size;
@@ -153,11 +144,15 @@ static bool get_compressed_data(const char* input_filename, uint8_t** input_buff
 
   if (!*input_buffer)
   {
-    synce_error("Failed to allocate %li bytes", *input_size);
+    /* this probably means that this is not a DllInflate file */
+    /*synce_error("Failed to allocate %li bytes", *input_size);*/
     goto exit;
   }
 
-  /* read data */
+  synce_trace("Getting 0x%08x (%i) bytes from offset 0x%08x (%i)",
+      data_size, data_size, data_raw_address, data_raw_address);
+
+   /* read data */
   if (*input_size != fread(*input_buffer, 1, *input_size, input))
   {
     synce_error("Failed to read %li bytes", *input_size);
