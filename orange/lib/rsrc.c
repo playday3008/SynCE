@@ -83,7 +83,7 @@ static void read_resource_data_entry(
   dataEntry->Reserved = pe_read32(input);
 }
 
-static void extract_resource_data(
+static bool extract_resource_data(
     FILE* input, 
     unsigned rsrcVirtualOffset,
     unsigned rsrcOffset, 
@@ -124,8 +124,12 @@ static void extract_resource_data(
       SEEK_SET);
   if (!orange_copy(input, data_entry.Size, output_directory, name))
   {
-    synce_error("Failed to copy %08x bytes to %s/%s", output_directory, name);
+    synce_error("Failed to copy %08x bytes to %s/%s", 
+        data_entry.Size, output_directory, name);
+    return false;
   }
+
+  return true;
 }
 
 static void extract_resource_directory(
@@ -199,13 +203,14 @@ static void extract_resource_directory(
     }
     else
     {
-      extract_resource_data(
+      if (!extract_resource_data(
           input,
           rsrcVirtualOffset,
           rsrcOffset,
           entries[i].OffsetToData,
           name,
-          output_directory);
+          output_directory))
+        break;
     }
   }
 
@@ -221,9 +226,22 @@ bool orange_extract_rsrc(
   FILE *input = fopen(input_filename, "r");
   uint32_t file_offset;
   uint32_t virtual_offset;
+  uint32_t piggy_back_offset;
  
   if (!input)
     goto exit;
+
+  if (!pe_size(input, &piggy_back_offset))
+    goto exit;
+
+  fseek(input, 0, SEEK_END);
+  if (piggy_back_offset != (unsigned)ftell(input))
+  {
+    synce_debug("There are %08x bytes piggy-backed at offset %08x in %s.",
+        ftell(input) - piggy_back_offset, 
+        piggy_back_offset,
+        input_filename);
+  }
 
   if (!pe_rsrc_offset(input, &file_offset, &virtual_offset))
     goto exit;
