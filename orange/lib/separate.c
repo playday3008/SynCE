@@ -147,7 +147,9 @@ bool orange_get_new_installable_cab_info(/*{{{*/
   bool success = false;
   FILE *file = NULL;
   char command[1024];
-  
+  char tmp[1024];
+  size_t bytes_read;
+
   snprintf(command, sizeof(command), "cabextract -q -p -F_setup.xml '%s'", 
       input_filename);
 
@@ -159,13 +161,18 @@ bool orange_get_new_installable_cab_info(/*{{{*/
     goto exit;
   }
 
-  if (feof(file))
+  bytes_read = fread(tmp, 1, sizeof(tmp)-1, file);
+  tmp[bytes_read] = '\0';
+
+  synce_trace("%i bytes read: %s", bytes_read, tmp);
+
+  if (bytes_read == 0)
   {
-    synce_debug("End of file");
+    synce_debug("No _setup.xml in .cab file");
     goto exit;
   }
 
-  synce_debug("Got _setup.xml");
+  synce_debug("Found _setup.xml in .cab file");
 
   /* TODO: get these */
   cab_info->processor = 0;
