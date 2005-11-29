@@ -160,6 +160,13 @@ static bool squeeze_exe(
 
   if (!success)
   {
+    success = orange_is_nullsoft_installer(filename);
+    if (success)
+      synce_error("Found the unsupported Nullsoft Scriptable Installer format.");
+  }
+
+  if (!success)
+  {
     /* try to extract ms cab files from file */
     success = orange_separate(filename, output_directory);
   }

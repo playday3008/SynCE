@@ -184,4 +184,9 @@ bool orange_extract_zip(
     const char* input_filename,
     const char* output_directory);
 
+/**
+  Is this a Nullsoft Installer?
+  */
+bool orange_is_nullsoft_installer(const char* input_filename);
+
 #endif
