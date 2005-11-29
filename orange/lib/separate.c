@@ -140,6 +140,45 @@ exit:
   return success;
 }/*}}}*/
 
+bool orange_get_new_installable_cab_info(/*{{{*/
+    const char* input_filename,
+    CabInfo* cab_info)
+{
+  bool success = false;
+  FILE *file = NULL;
+  char command[1024];
+  
+  snprintf(command, sizeof(command), "cabextract -q -p -F_setup.xml '%s'", 
+      input_filename);
+
+  /* extract _setup.xml file to stdout */
+  file = popen(command, "r");
+  if (!file)
+  {
+    synce_debug("Failed to open pipe for reading: %s", command);
+    goto exit;
+  }
+
+  if (feof(file))
+  {
+    synce_debug("End of file");
+    goto exit;
+  }
+
+  synce_debug("Got _setup.xml");
+
+  /* TODO: get these */
+  cab_info->processor = 0;
+  cab_info->size = 0;
+
+  success = true;
+
+exit:
+  if (file)
+    pclose(file);
+  return success;
+}/*}}}*/
+
 typedef struct 
 {
   const char* output_directory;

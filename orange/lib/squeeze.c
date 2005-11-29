@@ -211,6 +211,10 @@ static bool squeeze_by_magic(/*{{{*/
     {
       callback(filename, &cab_info, cookie);
     }
+    else if (orange_get_new_installable_cab_info(filename, &cab_info))
+    {
+      callback(filename, &cab_info, cookie);
+    }
     else
     {
       success = orange_extract_ms_cab(filename, output_directory);
@@ -287,6 +291,10 @@ static bool squeeze_by_suffix(/*{{{*/
         /* ignore these InstallShield cabs */
       }
       else if (orange_get_installable_cab_info(filename, &cab_info))
+      {
+        callback(filename, &cab_info, cookie);
+      }
+      else if (orange_get_new_installable_cab_info(filename, &cab_info))
       {
         callback(filename, &cab_info, cookie);
       }

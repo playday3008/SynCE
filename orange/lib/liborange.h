@@ -18,6 +18,11 @@ bool orange_get_installable_cab_info(
     const char* input_filename,
     CabInfo* cab_info);
 
+bool orange_get_new_installable_cab_info(
+    const char* input_filename,
+    CabInfo* cab_info);
+
+
 /**
   Generic callback with a filename
  */
