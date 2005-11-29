@@ -52,15 +52,23 @@ bool orange_extract_installshield_sfx(
 #if VERBOSE
   synce_trace("here");
 #endif
-  /* hard-coded offset for now... should really be calculated from PE header */
-  offset = 0x37000;
 
   input_file = fopen(input_filename, "r");
+
+  if (!pe_size(input_file, &offset))
+  {
+#if VERBOSE
+    synce_trace("pe_size failed");
+#endif
+    goto exit;
+  }
 
   error = fseek(input_file, offset, SEEK_SET);
   if (error)
   {
+#if VERBOSE
     synce_trace("fseek failed");
+#endif
     goto exit;
   }
 
