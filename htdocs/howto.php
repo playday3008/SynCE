@@ -208,7 +208,7 @@ your device:</p>
 
 <blockquote><pre>23a24,31
 &gt; T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#= 10 Spd=12  MxCh= 0
-&gt; D:  Ver= 1.00 Cls=ff(vend.) Sub=ff Prot=ff MxPS= 8 <span class=RED>#Cfgs=  1</span>
+&gt; D:  Ver= 1.00 Cls=<span class=RED>ff(vend.)</span> Sub=<span class=RED>ff</span> Prot=<span class=RED>ff</span> MxPS= 8 <span class=RED>#Cfgs=  1</span>
 &gt; P:  Vendor=<span class=RED>049f</span> ProdID=<span class=RED>0003</span> Rev= 0.00
 &gt; C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
 &gt; I:  If#= 0 Alt= 0 <span class=RED>#EPs= 2</span> Cls=ff(vend.) Sub=ff Prot=ff <span class=RED>Driver=ipaq</span>
@@ -219,11 +219,9 @@ your device:</p>
 <p>Important parts of the output have been marked with <span CLASS=RED>red
 color</span>, and may be referenced in the instructions below.</p>
 
-<h3>Special note for Windows Mobile 2005 users</h3>
+<h3>Class, subclass and protocol</h3>
 
-<p><i>Your device may not work over USB!</i></p>
-
-<p>Does your USB device presents itself like this? Especially compare the parts
+<p>Does your USB device presents itself like this? Compare the parts
 marked with red color.</p>
 
 <pre>T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#=  9 Spd=12  MxCh= 0
@@ -238,8 +236,9 @@ I:  If#= 1 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00 Driver=(none)
 E:  Ad=82(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
 E:  Ad=03(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms</pre>
 
-<p>If your device is similar it will most likely crash your kernel when you run
-''synce-serial-start''. This issue is being investigated. See bug report <a
+<p>If your device matches the above it <b>does not work with SynCE or the
+<tt>ipaq</tt> kernel driver</b> and will most likely crash your kernel when you
+run ''synce-serial-start''. See bug report <a
 href="https://sourceforge.net/tracker/index.php?func=detail&aid=1332550&group_id=30550&atid=399601">1332550</a>.
 You are very welcome to amend your experiences to the bug report!</p>
 
