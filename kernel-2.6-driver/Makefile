@@ -41,6 +41,7 @@ $(PATCHED): ipaq.c-$(VERSION)
 	patch -N -p0 < ipaq-version.diff
 	patch -N -p4 < ipaq-psion-teklogix.diff
 	patch -N -p4 < ipaq-smartphones.diff
+	patch -N -p0 < ipaq-compal.diff
 	touch $(PATCHED)
 
 
