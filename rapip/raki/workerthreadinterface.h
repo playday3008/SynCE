@@ -38,7 +38,7 @@
 */
 
 #define postThreadEvent(a, b, c) \
-    this->postEvent((void *(WorkerThreadInterface::*)(void *data = NULL)) a, \
+    this->postEvent((void *(WorkerThreadInterface::*)(void *data)) a, \
     (void *) b, c)
     
 class WorkerThreadInterface

@@ -45,7 +45,7 @@ public:
     ThreadEvent(WorkerThreadInterface *wti,
             void *(WorkerThreadInterface::*userEventMethode)(void *data),
             void *data);
-    void *(WorkerThreadInterface::*userEventMethode)(void *data = 0);
+    void *(WorkerThreadInterface::*userEventMethode)(void *data);
     WorkerThreadInterface *wti;
     void *threadData;
 };

@@ -37,5 +37,5 @@ servicedir = $(kde_servicesdir)/kresources/konnector
 service_DATA = syncekonnector.desktop
 libsyncekonnector_la_LIBADD = $(RRA_LIB) $(RAPI_LIB) $(SYNCE_LIB)\
 	$(LIB_KABC_FILE) $(LIB_KONNECTOR) $(LIB_KSYNC)
-AM_CFLAGS = -Werror -pedantic-errors -Wall
-AM_CXXFLAGS = -Werror -pedantic-errors -Wall
+AM_CFLAGS = -pedantic-errors -Wall
+AM_CXXFLAGS = -pedantic-errors -Wall

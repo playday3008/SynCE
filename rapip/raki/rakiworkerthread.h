@@ -40,8 +40,8 @@ class WorkerThreadInterface;
 
 #define startWorkerThread(a, b, c) \
     RakiWorkerThread::rakiWorkerThread->start(a, \
-            (void (WorkerThreadInterface::*)(QThread *thread = NULL, \
-            void *data = NULL)) b, (void *) c)
+            (void (WorkerThreadInterface::*)(QThread *thread, \
+            void *data)) b, (void *) c)
             
 class RakiWorkerThread : public QThread
 {
@@ -62,8 +62,8 @@ public:
       
 private:
     WorkerThreadInterface *wti;
-    void (WorkerThreadInterface::*userRun)(QThread *thread = NULL,
-            void *data = NULL);
+    void (WorkerThreadInterface::*userRun)(QThread *thread,
+            void *data);
     void *data;
     QWaitCondition waitCondition;
     QMutex threadMutex;

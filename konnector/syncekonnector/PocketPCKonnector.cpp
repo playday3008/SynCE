@@ -31,6 +31,7 @@
 #include <kitchensync/calendarsyncee.h>
 #include <kitchensync/konnectorinfo.h>
 
+#include <libkdepim/kpimprefs.h>
 
 class PocketPCKonnectorFactory : public KRES::PluginFactoryBase
 {
@@ -58,7 +59,8 @@ extern "C"
 namespace KSync
 {
     PocketPCKonnector::PocketPCKonnector( const KConfig* p_config )
-            : KSync::Konnector( p_config )
+            : KSync::Konnector( p_config ),
+						mCalendar( KPimPrefs::timezone() )
     {
         contactsEnabled = true;
         contactsFirstSync = true;
@@ -295,6 +297,15 @@ namespace KSync
                                    m_rra->isConnected() );
         }
 
+    }
+
+
+    QStringList PocketPCKonnector::supportedFilterTypes() const
+    {
+      QStringList types;
+      types << "addressbook" << "calendar";
+
+      return types;
     }
 
 

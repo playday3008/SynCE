@@ -99,6 +99,7 @@ public:
      * @return just some information
      */
     virtual KonnectorInfo info() const;
+    virtual QStringList supportedFilterTypes() const;
     /** Store the configuration for a specific instance.
      * @see KSync::Konnector::writeConfig()
      */

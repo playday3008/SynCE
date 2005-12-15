@@ -3339,7 +3339,7 @@ __argz_count __argz_stringify __argz_next])
    AC_CACHE_VAL(kde_cv_func_stpcpy,
    [
    kde_safe_cxxflags=$CXXFLAGS
-   CXXFLAGS="-Werror"
+   CXXFLAGS=""
    AC_LANG_SAVE
    AC_LANG_CPLUSPLUS
    AC_TRY_COMPILE([
