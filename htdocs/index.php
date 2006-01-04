@@ -62,6 +62,36 @@ alt="Make a donation" title="Make a donation">
 
 </td></tr><tr>
 <td colspan=2><hr size=1/></td>
+
+<tr>
+<td colspan=2>
+<p><b>Attention KDE users!</b></p>
+
+<ul>
+<li>Use syncekonnector with KDE 3.4 (not
+pocketpccommunication, it's deprecated!)</li>
+
+<li>Use Syncekonnector &lt;-&gt; Localkonnector only as plugins in multisynk</li>
+
+<li>Raki is broken, stop it before syncing (but let vdccm/uu running)</li>
+
+</ul>
+</td></tr><tr>
+<td colspan=2><hr size=1/></td>
+
+<tr>
+<td colspan=2>
+<p><b>Attention Windows Mobile 2005 device owners!</b></p>
+
+<p>These devices do not work with SynCE. If you are interested in getting these
+devices supported by SynCE, please join the <a
+href="https://lists.sourceforge.net/lists/listinfo/synce-windowsmobile5">SynCE-WindowsMobile5</a>
+mailing list</a>. Se also bug report <a
+href="https://sourceforge.net/tracker/index.php?func=detail&aid=1332550&group_id=30550&atid=399601">1332550</a>.</p>
+
+</td></tr><tr>
+<td colspan=2><hr size=1/></td>
+
 </tr><tr><td>
 
 
