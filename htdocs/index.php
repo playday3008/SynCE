@@ -114,6 +114,11 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<p><b>2006-01-04</b> If you are interested in Windows Mobile 5 support in
+SynCE, please join the <a
+href="https://lists.sourceforge.net/lists/listinfo/synce-windowsmobile5">SynCE-WindowsMobile5</a>
+mailing list</a>.</p>
+
 <p><b>2005-11-24</b> <i>Important</i> Windows Mobile 5 devices do not work with
 SynCE! This is currently being investigated but no SynCE developer has access
 such a device, so don't expect them to be supported very soon.</p>
