@@ -38,10 +38,10 @@ PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *na
     m_layoutMain = new QGridLayout (this, 2, 1);
     m_layoutMain->setSpacing (KDialog::spacingHint());
 
-    m_layout = new QGridLayout (m_layoutMain, 1, 2);
+    m_layout = new QGridLayout (1, 2);
     m_layout->setSpacing (KDialog::spacingHint());
 
-    m_layout1 = new QGridLayout (m_layoutMain, 4, 3);
+    m_layout1 = new QGridLayout (4, 3);
     m_layout->setSpacing (KDialog::spacingHint());
 
     m_layoutMain->addLayout( m_layout, 0, 0);
