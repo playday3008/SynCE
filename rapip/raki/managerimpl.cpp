@@ -129,11 +129,14 @@ ManagerImpl::ManagerImpl(QString pdaName, QWidget *parent, const char* name,
 {
     statusLine->setText(i18n("Ready"));
     this->pdaName = pdaName;
+    mtd = new ManagerImplThreadData(this);
 }
 
 
 ManagerImpl::~ManagerImpl()
-{}
+{
+    delete mtd;
+}
 
 
 void *ManagerImpl::beginEvent(void */*data*/)
@@ -144,7 +147,7 @@ void *ManagerImpl::beginEvent(void */*data*/)
     sysInfoRefreshButton->setEnabled(false);
     uninstallButton->setEnabled(false);
     stopButton->setEnabled(true);
-    
+
     return NULL;
 }
 
@@ -156,7 +159,7 @@ void *ManagerImpl::endEvent(void */*data*/)
     stopButton->setEnabled(false);
     powerRefreshButton->setEnabled(true);
     sysInfoRefreshButton->setEnabled(true);
-    
+
     return NULL;
 }
 
@@ -165,7 +168,7 @@ void *ManagerImpl::insertInstalledItemEvent(void *data)
 {
     softwareList->insertItem(QString((char *) data));
     delete[] (char *) data;
-    
+
     return NULL;
 }
 
@@ -203,7 +206,7 @@ void *ManagerImpl::systemInfoEvent(void *data)
             (1024 * 1024)) + " MB)");
 
     delete sysinfo;
-    
+
     return NULL;
 }
 
@@ -211,8 +214,8 @@ void *ManagerImpl::systemInfoEvent(void *data)
 void *ManagerImpl::batInfoEvent(void *data)
 {
     struct sysinfo_s *sysinfo = (struct sysinfo_s *) data;
-    
-    
+
+
     bat1Flag->setText(QString::number(sysinfo->power.BatteryFlag) + " (" +
             get_battery_flag_string(sysinfo->power.BatteryFlag) + ")");
     bat1LifePer->setText((BATTERY_PERCENTAGE_UNKNOWN ==
@@ -265,9 +268,9 @@ void *ManagerImpl::batInfoEvent(void *data)
     default:
         break;
     }
-    
+
     delete sysinfo;
-    
+
     return NULL;
 }
 
@@ -275,9 +278,9 @@ void *ManagerImpl::batInfoEvent(void *data)
 void *ManagerImpl::uninstalledEvent(void *data)
 {
     QListBoxItem *item = (QListBoxItem *) data;
-    
+
     softwareList->removeItem(softwareList->index(item));
-    
+
     return NULL;
 }
 
@@ -297,17 +300,17 @@ void ManagerImpl::uninstallSoftware(QThread */*qt*/, void */*data*/)
 
     if (Ce::rapiInit(pdaName)) {
         msg = i18n("Uninstalling software ...");
-        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
+        postManagerImplEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         if(Ce::createProcess(QString("unload.exe").ucs2(),
                 QString(item->text()).ucs2(), NULL, NULL, false, 0, NULL,
                 NULL, NULL, &info)) {
 
-            postThreadEvent(&ManagerImpl::uninstalledEvent, item, noBlock);
+                    postManagerImplEvent(&ManagerImpl::uninstalledEvent, item, noBlock);
         }
         Ce::rapiUninit();
 
-        postThreadEvent(&ManagerImpl::endEvent, NULL, noBlock);
+        postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
     }
 
 }
@@ -319,17 +322,17 @@ void ManagerImpl::fetchSystemInfo(QThread */*qt*/, void */*data*/)
 
     if (Ce::rapiInit(pdaName)) {
         msg = i18n("Retrieve system-info ...");
-        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
+        postManagerImplEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         Ce::getVersionEx(&sysinfo->version);
         Ce::getSystemInfo(&sysinfo->system);
         Ce::getStoreInformation(&sysinfo->store);
 
-        postThreadEvent(&ManagerImpl::systemInfoEvent, sysinfo, noBlock);
-        
+        postManagerImplEvent(&ManagerImpl::systemInfoEvent, sysinfo, noBlock);
+
         Ce::rapiUninit();
 
-        postThreadEvent(&ManagerImpl::endEvent, NULL, noBlock);
+        postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
     }
 }
 
@@ -340,15 +343,15 @@ void ManagerImpl::fetchBatteryStatus(QThread */*qt*/, void */*data*/)
 
     if (Ce::rapiInit(pdaName)) {
         msg = i18n("Retrieve battery-info ...");
-        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
+        postManagerImplEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         Ce::getSystemPowerStatusEx(&sysinfo->power, false);
-        
-        postThreadEvent(&ManagerImpl::batInfoEvent, sysinfo, noBlock);
-        
+
+        postManagerImplEvent(&ManagerImpl::batInfoEvent, sysinfo, noBlock);
+
         Ce::rapiUninit();
 
-        postThreadEvent(&ManagerImpl::endEvent, NULL, noBlock);
+        postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
     }
 
 
@@ -363,7 +366,7 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
 
     if (Ce::rapiInit(pdaName)) {
         msg = i18n("Retrieve software-list ...");
-        postThreadEvent(&ManagerImpl::beginEvent, 0, noBlock);
+        postManagerImplEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
         result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE,
                 QString("Software\\Apps").ucs2(), 0, 0, &parent_key);
@@ -397,7 +400,7 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
                 synce::CeRegCloseKey(program_key);
 
                 if (ERROR_SUCCESS == result && installed) {
-                    postThreadEvent(&ManagerImpl::insertInstalledItemEvent,
+                    postManagerImplEvent(&ManagerImpl::insertInstalledItemEvent,
                             qstrdup(QString::fromUcs2(wide_name).ascii()),
                             noBlock);
                 }
@@ -406,7 +409,7 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
         }
         Ce::rapiUninit();
 
-        postThreadEvent(&ManagerImpl::endEvent, NULL, noBlock);
+        postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
     }
 }
 

@@ -49,14 +49,15 @@ class SyncThread;
 class Rra;
 class RakiSyncPlugin;
 class KConfig;
+class KListView;
 typedef struct _ObjectType ObjectType;
 
 class SyncTaskListItem : public QObject, public QCheckListItem
 {
 Q_OBJECT
-    
+
 public:
-    SyncTaskListItem(QString pdaName, RRA_SyncMgrType* objectType, QListView* listView,
+    SyncTaskListItem(Rra *rra, QString pdaName, RRA_SyncMgrType* objectType, KListView* listView,
             uint32_t partnerId);
 
     virtual ~SyncTaskListItem();
@@ -78,12 +79,12 @@ public:
     KTrader::OfferList getOffers();
     void openPopup();
     QString getPreferedOffer();
-    QString getPreferedLibrary();  
+    QString getPreferedLibrary();
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
-    bool synchronize(SyncThread *syncThread, Rra *rra);
-    bool preSync(QWidget *parent, Rra *rra);
-    bool postSync(QWidget *parent, Rra *rra);
+    bool synchronize(SyncThread *syncThread);
+    bool preSync(QWidget *parent);
+    bool postSync(QWidget *parent);
     void setLastSynchronized(QDateTime lastSynchronized);
     void setFirstSynchronization(bool firstSynchronization);
     bool isFirstSynchronization();
@@ -92,7 +93,7 @@ public:
 
 private slots:
     void clickedMenu(int item);
-    
+
 protected:
     virtual void stateChange(bool state);
 
@@ -113,10 +114,11 @@ private:
     bool firstSynchronization;
     int createSyncPlugin(bool state);
     RakiSyncPlugin *syncPlugin;
+    Rra *rra;
     enum {
         ERROR_NOFACTORY = 1, ERROR_WRONGLIBRARYTYPE, ERROR_NOSYNCHRONIZER
     };
-    
+
 signals:
     void stateChanged(bool state);
     void serviceChanged();

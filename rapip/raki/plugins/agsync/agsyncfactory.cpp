@@ -20,7 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
- 
+
 #include "agsyncfactory.h"
 
 #ifdef WITH_AGSYNC
@@ -41,7 +41,7 @@ AGSyncFactory::~AGSyncFactory()
 }
 
 
-QObject *AGSyncFactory::createObject (QObject */*parent*/, const char */*name*/, 
+QObject *AGSyncFactory::createObject (QObject */*parent*/, const char */*name*/,
                     const char */*classname*/, const QStringList &/*args*/)
 {
     return new AGSync;
@@ -49,7 +49,7 @@ QObject *AGSyncFactory::createObject (QObject */*parent*/, const char */*name*/,
 
 
 extern "C" {
-    void *init_librakiagsync()
+    void *init_rakiagsync()
     {
         return new AGSyncFactory();
     }

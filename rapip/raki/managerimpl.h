@@ -34,19 +34,73 @@
 #include <rapi.h>
 
 class PDA;
+class ManagerImpl;
 
 /**
 @author Volker Christian,,,
 */
+#define postManagerImplEvent(a, b, c) { \
+    ManagerImplCustomEvent *ce = new ManagerImplCustomEvent(a, b); \
+    postEvent(ce, mtd, c); \
+}
+
+
+class ManagerImplCustomEvent : public QCustomEvent
+{
+    public:
+        ManagerImplCustomEvent(void *(ManagerImpl::*userEventMethod)(void *data),
+                       void *data) : QCustomEvent(QEvent::User), userEventMethod(userEventMethod), eventData(data) {};
+    private:
+        void *(ManagerImpl::*userEventMethod)(void *data);
+        void *eventData;
+        friend class ManagerImplThreadData;
+};
+
+
+#include <qcursor.h>
+#include <qapplication.h>
+#include <kdebug.h>
+
+class ManagerImplThreadData : public ThreadEventObject
+{
+    Q_OBJECT
+    public:
+        ManagerImplThreadData(ManagerImpl *managerImpl) : managerImpl(managerImpl) {};
+    private:
+
+        ManagerImpl *managerImpl;
+        void customEvent (QCustomEvent *customEvent) {
+            ManagerImplCustomEvent *managerImplEvent = dynamic_cast<ManagerImplCustomEvent *>(customEvent);
+            int *blocking = (int *) customEvent->data();
+            void *(ManagerImpl::*userEventMethod)(void *data) = managerImplEvent->userEventMethod;
+
+            switch (*blocking) {
+                case WorkerThreadInterface::noBlock:
+
+                    (managerImpl->*userEventMethod)(managerImplEvent->eventData);
+                    break;
+                case WorkerThreadInterface::block:
+                    QApplication::setOverrideCursor( QCursor( Qt::ArrowCursor ) );
+                    (managerImpl->*userEventMethod)(managerImplEvent->eventData);
+                    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
+                    this->eventMutexLock();
+                    this->eventMutexUnlock();
+                    this->wakeUpOnEvent();
+                    break;
+            }
+            delete blocking;
+        };
+};
 
 class ManagerImpl : public Manager, public WorkerThreadInterface
-{    
+{
+    Q_OBJECT
 public:
     ManagerImpl(QString pdaName, QWidget *parent, const char* name = 0,
             bool modal = FALSE, WFlags fl = 0);
     ~ManagerImpl();
     void closeEvent(QCloseEvent *e);
-    
+
 private slots:
     void uninstallSoftwareSlot();
     void refreshSystemInfoSlot();
@@ -60,7 +114,7 @@ private:
         synce::STORE_INFORMATION store;
         synce::SYSTEM_POWER_STATUS_EX power;
     };
-  
+
     void uninstallSoftware(QThread *qt = NULL, void *data = NULL);
     void fetchSystemInfo(QThread *qt = NULL, void *data = NULL);
     void fetchBatteryStatus(QThread *qt = NULL, void *data = NULL);
@@ -73,6 +127,7 @@ private:
     void *uninstalledEvent(void *data);
     QString pdaName;
     QString msg;
+    ManagerImplThreadData *mtd;
 };
 
 #endif

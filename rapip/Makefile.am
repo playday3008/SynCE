@@ -18,5 +18,5 @@ package-messages:
 EXTRA_DIST = admin COPYING configure.in.in
 
 dist-hook:
-	cd $(top_distdir) && perl admin/am_edit -padmin
-	cd $(top_distdir) && $(MAKE) -f admin/Makefile.common subdirs
+	cd $(top_srcdir) && perl admin/am_edit -padmin
+	cd $(top_srcdir) && $(MAKE) -f admin/Makefile.common subdirs

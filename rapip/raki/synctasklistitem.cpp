@@ -31,6 +31,7 @@
 #include <klocale.h>
 #include <kmessagebox.h>
 #include <kdebug.h>
+#include <klistview.h>
 #include <qcursor.h>
 #include <qpoint.h>
 
@@ -39,10 +40,11 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(QString pdaName, RRA_SyncMgrType *objectType,
-                                   QListView* listView, uint32_t partnerId)
+SyncTaskListItem::SyncTaskListItem(Rra *rra, QString pdaName, RRA_SyncMgrType *objectType,
+                                   KListView* listView, uint32_t partnerId)
         : QCheckListItem(listView, objectType->name2, QCheckListItem::CheckBox)
 {
+    this->rra = rra,
     this->objectType = objectType;
     this->partnerId = partnerId;
     this->syncPlugin = NULL;
@@ -232,7 +234,7 @@ void SyncTaskListItem::clickedMenu(int item)
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << i18n("Select Name:") << " " 
+            kdDebug(2120) << i18n("Select Name:") << " "
             << service->name() + "; " << i18n("Library:") << " " <<
                     service->library() << endl;
             if (service->name() == itemMenu.text(item)) {
@@ -247,7 +249,7 @@ void SyncTaskListItem::clickedMenu(int item)
             }
         }
     }
-    
+
     createSyncPlugin(QCheckListItem::isOn());
     emit serviceChanged();
 }
@@ -270,8 +272,8 @@ void SyncTaskListItem::openPopup()
     if (offers.begin() != offers.end()) {
         for (it = offers.begin(); it != offers.end(); ++it) {
             KService::Ptr service = *it;
-            kdDebug(2120) << i18n("Open Name:") << " " 
-              << service->name() << "; " << i18n("Library:") << " " 
+            kdDebug(2120) << i18n("Open Name:") << " "
+              << service->name() << "; " << i18n("Library:") << " "
               << service->library() << endl;
             int item = itemMenu.insertItem(service->name());
             if (service->name() == preferedOfferTemp) {
@@ -305,11 +307,12 @@ int SyncTaskListItem::createSyncPlugin(bool state)
     int ret = 0;
 
     if (syncPlugin != NULL) {
+        syncPlugin->unInit();
         delete syncPlugin;
         syncPlugin = NULL;
     }
 
-    if (/*isOn()*/ state) {
+    if (state) {
         KTrader::OfferList offers;
 
         QString library = getPreferedLibrary();
@@ -339,7 +342,7 @@ int SyncTaskListItem::createSyncPlugin(bool state)
                         static_cast<RakiSyncFactory*> (factory);
                     syncPlugin = static_cast<RakiSyncPlugin*>
                                  (syncFactory->create());
-                    syncPlugin->init(objectType, pdaName, this->listView(), offer);
+                    syncPlugin->init(rra, objectType, pdaName, this->listView(), offer);
                     syncFactory->callme(); // Fake call to link correct.
                 } else {
                     kdDebug(2120) << i18n("Library no Raki-Plugin") << endl;
@@ -376,60 +379,62 @@ int SyncTaskListItem::createSyncPlugin(bool state)
 }
 
 
-bool SyncTaskListItem::synchronize(SyncThread *syncThread, Rra *rra)
+bool SyncTaskListItem::synchronize(SyncThread *syncThread)
 {
     bool ret = false;
 
-    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup(i18n("Started").utf8()));
+    postSyncThreadEvent(&SyncThread::setTask, (void *) qstrdup(i18n("Started").utf8()));
     int *pSteps = new int;
     *pSteps = 1;
-    postSyncThreadEvent(SyncThread::setTotalSteps, pSteps);
+    postSyncThreadEvent(&SyncThread::setTotalSteps, pSteps);
 
     if (syncPlugin != NULL) {
         kdDebug(2120) << i18n("Started syncing with") << " " << syncPlugin->serviceName() << endl;
 
-        ret = syncPlugin->doSync(syncThread, rra, this, firstSynchronization,
-                partnerId);
+        ret = syncPlugin->doSync(syncThread, this, firstSynchronization, partnerId);
 
         kdDebug(2120) << i18n("Finished syncing with") << " " << syncPlugin->serviceName() << endl;
         int *pStep = new int;
         *pStep = totalSteps();
-        postSyncThreadEvent(SyncThread::setProgress, pStep);
+        postSyncThreadEvent(&SyncThread::setProgress, pStep);
 
         if (ret) {
             lastSynchronized = QDateTime(QDate::currentDate(),
                     QTime::currentTime());
             firstSynchronization = false;
-            postSyncThreadEvent(SyncThread::setTask,
+            postSyncThreadEventBlock(&SyncThread::setTask,
                     (void *) qstrdup(i18n("Finished").utf8()));
         } else {
-            postSyncThreadEvent(SyncThread::setTask, (void *)
+            postSyncThreadEventBlock(&SyncThread::setTask, (void *)
                     qstrdup(i18n("Error during synchronization").utf8()));
         }
     }
 
-    syncThread->synchronizeGui();
+    return ret;
+}
+
+
+bool SyncTaskListItem::preSync(QWidget *parent)
+{
+    bool ret;
+
+    ret = syncPlugin->preSync(parent, firstSynchronization, partnerId);
+
+    setTotalSteps(1);
 
     return ret;
 }
 
 
-bool SyncTaskListItem::preSync(QWidget *parent, Rra *rra)
+bool SyncTaskListItem::postSync(QWidget *parent)
 {
     bool ret;
-    
-    ret = syncPlugin->preSync(parent, rra, firstSynchronization, partnerId);
-    
-    return ret;
-}
 
+    ret = syncPlugin->postSync(parent, firstSynchronization, partnerId);
 
-bool SyncTaskListItem::postSync(QWidget *parent, Rra *rra)
-{
-    bool ret;
-    
-    ret = syncPlugin->postSync(parent, rra, firstSynchronization, partnerId);
-    
+    int totSteps = totalSteps();
+    setProgress(totSteps);
+
     return ret;
 }
 

@@ -35,6 +35,7 @@
 #include <kmessagebox.h>
 #include <klocale.h>
 #include <kdebug.h>
+#include <kapplication.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
 {
@@ -48,40 +49,48 @@ RakiSyncPlugin::~RakiSyncPlugin()
 }
 
 
-bool RakiSyncPlugin::doSync(SyncThread *syncThread, Rra *rra,
+bool RakiSyncPlugin::doSync(SyncThread *syncThread,
         SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId)
 {
     this->syncThread = syncThread;
     this->progressItem = progressItem;
-    this->rra = rra;
     this->firstSynchronize = firstSynchronize;
     this->partnerId = partnerId;
     return sync();
 }
 
 
-bool RakiSyncPlugin::preSync(QWidget */*parent*/, Rra */*rra*/,
+bool RakiSyncPlugin::preSync(QWidget *parent,
         bool /*firstSynchronize*/, uint32_t /*partnerId*/)
 {
+    this->syncThread = dynamic_cast<SyncThread *>(parent);
+    KApplication::kApplication()->processEvents();
     return true;
 }
 
 
-bool RakiSyncPlugin::postSync(QWidget */*parent*/, Rra */*rra*/,
+bool RakiSyncPlugin::postSync(QWidget *parent,
         bool /*firstSynchronize*/, uint32_t /*partnerId*/)
 {
+    this->syncThread = dynamic_cast<SyncThread *>(parent);
     return true;
 }
 
 
-void RakiSyncPlugin::init(RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent, QString serviceName)
+void RakiSyncPlugin::init(Rra *rra, RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent, QString serviceName)
 {
     this->objectType = objectType;
+    this->rra = rra;
     this->pdaName = pdaName;
     this->parent = parent;
     this->_serviceName = serviceName;
     ksConfig = new KConfig("raki/" + pdaName + ".cfg", false, false, "data");
     createConfigureObject(ksConfig);
+}
+
+
+void RakiSyncPlugin::unInit()
+{
 }
 
 
@@ -109,7 +118,7 @@ QStringList RakiSyncPlugin::extractWithOrange(QString selfInstaller, QString des
 {
     return RakiApi::extractWithOrange(selfInstaller, dest);
 }
-    
+
 
 QString RakiSyncPlugin::serviceName()
 {
@@ -135,45 +144,75 @@ bool RakiSyncPlugin::stopRequested()
 }
 
 
-void RakiSyncPlugin::incTotalSteps(int inc)
+void RakiSyncPlugin::incTotalSteps(int inc, bool directCall)
 {
     int *pInc = new int;
     *pInc = inc;
-    postSyncThreadEvent(SyncThread::incTotalSteps, pInc);
+    if (directCall) {
+        syncThread->incTotalSteps(pInc);
+        KApplication::kApplication()->processEvents();
+    } else {
+        postSyncThreadEvent(&SyncThread::incTotalSteps, pInc);
+    }
 }
 
 
-void RakiSyncPlugin::decTotalSteps(int dec)
+void RakiSyncPlugin::decTotalSteps(int dec, bool directCall)
 {
     int *pDec = new int;
     *pDec = dec;
-    postSyncThreadEvent(SyncThread::decTotalSteps, pDec);
+    if (directCall) {
+        syncThread->decTotalSteps(pDec);
+        KApplication::kApplication()->processEvents();
+    } else {
+        postSyncThreadEvent(&SyncThread::decTotalSteps, pDec);
+    }
 }
 
 
-void RakiSyncPlugin::advanceProgress()
+void RakiSyncPlugin::advanceProgress(bool directCall)
 {
-    postSyncThreadEvent(SyncThread::advanceProgress, (void *) 0);
+    if (directCall) {
+        syncThread->advanceProgress((void *) 0);
+        KApplication::kApplication()->processEvents();
+    } else {
+        postSyncThreadEvent(&SyncThread::advanceProgress, (void *) 0);
+    }
 }
 
 
-void RakiSyncPlugin::setTotalSteps(int steps)
+void RakiSyncPlugin::setTotalSteps(int steps, bool directCall)
 {
     int *pSteps = new int;
     *pSteps = steps;
-    postSyncThreadEvent(SyncThread::setTotalSteps, pSteps);
+    if (directCall) {
+        syncThread->setTotalSteps(pSteps);
+        KApplication::kApplication()->processEvents();
+    } else {
+        postSyncThreadEvent(&SyncThread::setTotalSteps, pSteps);
+    }
 }
 
 
-void RakiSyncPlugin::setProgress(int progress)
+void RakiSyncPlugin::setProgress(int progress, bool directCall)
 {
     int *pProgress = new int;
     *pProgress = progress;
-    postSyncThreadEvent(SyncThread::setProgress, pProgress);
+    if (directCall) {
+        syncThread->setProgress(pProgress);
+        KApplication::kApplication()->processEvents();
+    } else {
+        postSyncThreadEvent(&SyncThread::setProgress, pProgress);
+    }
 }
 
 
-void RakiSyncPlugin::setTask(const char *task)
+void RakiSyncPlugin::setTask(const char *task, bool directCall)
 {
-    postSyncThreadEvent(SyncThread::setTask, (void *) qstrdup(task));
+    if (directCall) {
+        syncThread->setTask((void *) qstrdup(task));
+        KApplication::kApplication()->processEvents();
+    } else {
+        postSyncThreadEvent(&SyncThread::setTask, (void *) qstrdup(task));
+    }
 }

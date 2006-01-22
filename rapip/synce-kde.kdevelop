@@ -12,23 +12,20 @@
       <keyword>KDE</keyword>
       <keyword>kioslave</keyword>
     </keywords>
-    <version/>
-    <description/>
-    <ignoreparts>
-      <part>KDevClearCase</part>
-      <part>KDevPerforce</part>
-      <part>KDevsubversion</part>
-    </ignoreparts>
+    <version></version>
+    <description></description>
+    <ignoreparts/>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
     <secondaryLanguages>
       <language>C</language>
     </secondaryLanguages>
+    <versioncontrol/>
   </general>
   <kdevautoproject>
     <general>
       <activetarget>raki/raki</activetarget>
-      <useconfiguration>gdbdebug</useconfiguration>
+      <useconfiguration>default</useconfiguration>
     </general>
     <makeenvvars>
       <envvar value="1" name="WANT_AUTOCONF_2_5" />
@@ -40,7 +37,7 @@
       <terminal>false</terminal>
       <envvars/>
       <autocompile>true</autocompile>
-      <directoryradio>executable</directoryradio>
+      <directoryradio>build</directoryradio>
       <customdirectory>/</customdirectory>
       <runarguments>
         <raki/>
@@ -79,19 +76,20 @@
       </debug>
       <default>
         <configargs>--with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
-        <builddir>../build/default/</builddir>
-        <topsourcedir/>
-        <cppflags/>
-        <ldflags/>
-        <ccompiler>GccOptions</ccompiler>
-        <cxxcompiler>GppOptions</cxxcompiler>
-        <f77compiler>G77Options</f77compiler>
-        <ccompilerbinary/>
-        <cxxcompilerbinary/>
-        <f77compilerbinary/>
-        <cflags/>
-        <cxxflags/>
-        <f77flags/>
+        <builddir></builddir>
+        <topsourcedir></topsourcedir>
+        <cppflags></cppflags>
+        <ldflags></ldflags>
+        <ccompiler>kdevgccoptions</ccompiler>
+        <cxxcompiler>kdevgppoptions</cxxcompiler>
+        <f77compiler>kdevpgf77options</f77compiler>
+        <ccompilerbinary></ccompilerbinary>
+        <cxxcompilerbinary></cxxcompilerbinary>
+        <f77compilerbinary></f77compilerbinary>
+        <cflags></cflags>
+        <cxxflags></cxxflags>
+        <f77flags></f77flags>
+        <envvars/>
       </default>
       <dist>
         <configargs>--with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
@@ -108,10 +106,11 @@
         <cflags/>
         <cxxflags/>
         <f77flags/>
+        <envvars/>
       </dist>
       <gdbdebug>
         <configargs>--disable-unique --enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
-        <builddir>../build/gdbdebug/</builddir>
+        <builddir>build/gdbdebug/</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -124,6 +123,7 @@
         <cflags/>
         <cxxflags/>
         <f77flags/>
+        <envvars/>
       </gdbdebug>
       <kde-3.2>
         <configargs>--disable-unique --enable-debug=yes --with-qt-includes=/usr/include/qt3 --prefix=/usr</configargs>
@@ -180,15 +180,15 @@
   <kdevdebugger>
     <general>
       <dbgshell>libtool</dbgshell>
-      <programargs/>
-      <gdbpath/>
+      <programargs></programargs>
+      <gdbpath></gdbpath>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <runappinappdirectory>true</runappinappdirectory>
-      <configGdbScript/>
-      <runShellScript/>
-      <runGdbScript/>
+      <configGdbScript></configGdbScript>
+      <runShellScript></runShellScript>
+      <runGdbScript></runGdbScript>
     </general>
     <display>
       <staticmembers>false</staticmembers>
@@ -300,6 +300,19 @@ Raki:  Is a Linux-Incarnation of Activsync. It claims to be better than
         <implementation class="AvantGoClientInstallationDialogImpl" path="/home/voc/usr/software/synce-kde/synce-kde-0.7/raki/plugins/agsync/avantgoclientinstallationdialog.ui" implementationpath="/home/voc/usr/software/synce-kde/synce-kde-0.7/raki/plugins/agsync/avantgoclientinstallationdialogimpl.h" />
       </qtdesigner>
     </designerintegration>
+    <qt>
+      <used>true</used>
+      <version>3</version>
+      <root></root>
+    </qt>
+    <creategettersetter>
+      <prefixGet></prefixGet>
+      <prefixSet>set</prefixSet>
+      <prefixVariable>m_,_</prefixVariable>
+      <parameterName>theValue</parameterName>
+      <inlineGet>true</inlineGet>
+      <inlineSet>true</inlineSet>
+    </creategettersetter>
   </kdevcppsupport>
   <kdevfileviewpart>
     <fileaddedcolor>#ffffff</fileaddedcolor>

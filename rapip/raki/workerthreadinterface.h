@@ -37,10 +37,7 @@
 @author Volker Christian,,,
 */
 
-#define postThreadEvent(a, b, c) \
-    this->postEvent((void *(WorkerThreadInterface::*)(void *data)) a, \
-    (void *) b, c)
-    
+
 class WorkerThreadInterface
 {
 public:
@@ -51,11 +48,9 @@ public:
     void setRunning(bool);
     bool stopRequested();
     void setStopRequested(bool isStopRequested);
-    void *postEvent(void *(WorkerThreadInterface::*userEventMethode)
-            (void *data), void *data = 0, int block = 0);
+    void *postEvent(QCustomEvent *event, ThreadEventObject *eventObject, int blocking);
     void setEventReturnValue(void *value);
     void *eventReturnValue();
-    void *synchronizeGui();
     void setDelayedDelete(bool delayedDelete);
     bool delayedDelete();
 
@@ -65,13 +60,11 @@ public:
     };
 
 private:
-    void *guiSynchronizator(void *data = 0);
     ThreadEventObject threadEventObject;
     bool isRunning;
     bool isStopRequested;
     bool isDelayedDelete;
     void *eventReturn;
-    QMutex syncMutex;
     QWaitCondition syncWaitCondition;
 };
 

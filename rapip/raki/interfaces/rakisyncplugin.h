@@ -20,7 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
- 
+
 #ifndef SYNCPLUGIN_H
 #define SYNCPLUGIN_H
 
@@ -53,21 +53,22 @@ public:
     RakiSyncPlugin();
     virtual ~RakiSyncPlugin();
 
-    bool doSync(SyncThread *syncThread, Rra *rra,
+    bool doSync(SyncThread *syncThread,
             SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId);
-    virtual bool preSync(QWidget *parent, Rra *rra, bool firstSynchronize, uint32_t partnerId);
-    virtual bool postSync(QWidget *parent, Rra *rra, bool firstSynchronize, uint32_t partnerId);
+    virtual bool preSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
+    virtual bool postSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
     bool running();
     bool stopRequested();
-    void incTotalSteps(int inc);
-    void decTotalSteps(int dec);
-    void advanceProgress();
-    void setTotalSteps(int steps);
-    void setProgress(int progress);
-    void setTask(const char *task);
-    void init(RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent,
+    void incTotalSteps(int inc, bool directCall = false);
+    void decTotalSteps(int dec, bool directCall = false);
+    void advanceProgress(bool directCall = false);
+    void setTotalSteps(int steps, bool directCall = false);
+    void setProgress(int progress, bool directCall = false);
+    void setTask(const char *task, bool directCall = false);
+    virtual void init(Rra *rra, RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent,
             QString serviceName);
+    virtual void unInit();
     virtual void createConfigureObject(KConfig *ksConfig);
     virtual void configure();
     QString serviceName();
@@ -77,9 +78,9 @@ public:
 private:
     virtual bool sync() = 0;
     RRA_SyncMgrType *objectType;
-    KConfig *ksConfig;
 
 protected:
+    KConfig *ksConfig;
     QString pdaName;
     SyncTaskListItem *progressItem;
     Rra *rra;

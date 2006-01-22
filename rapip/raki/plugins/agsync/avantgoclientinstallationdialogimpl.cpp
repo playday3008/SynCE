@@ -43,6 +43,5 @@ void AvantGoClientInstallationDialogImpl::agceIntegratedClient_textChanged(const
  */
 QString AvantGoClientInstallationDialogImpl::agceClientPath()
 {
-    /// @todo implement me
     return agceIntegratedClient->url();
 }

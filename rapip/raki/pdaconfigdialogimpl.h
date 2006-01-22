@@ -41,11 +41,12 @@
 
 class SyncTaskListItem;
 class RemovePartnershipDialogImpl;
+class Rra;
 //typedef struct _ObjectType ObjectType;
 
 /**
 @author Volker Christian,,,
-*/ 
+*/
 
 class PdaConfigDialogImpl : public PdaConfigDialog
 {
@@ -64,9 +65,10 @@ public:
     uint32_t getPartnerId();
     QPtrList<SyncTaskListItem>& syncronizationTasks();
     void setNewPartner(QString partnerName, uint32_t partnerId);
-    void addSyncTask(RRA_SyncMgrType *objectType, uint32_t partnerId);
+    void addSyncTask(Rra *rra, RRA_SyncMgrType *objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
     void clearConfig();
+    bool readConnectionFile();
     virtual void show();
 
 public slots:
@@ -80,7 +82,7 @@ private slots:
     void disableApply();
     void objectTypeList_rightButtonClicked(QListViewItem *, const QPoint &, int);
     void kPushButton2_clicked();
-    
+
 private:
     void readConfig();
     void updateFields();

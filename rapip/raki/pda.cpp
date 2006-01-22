@@ -11,7 +11,7 @@
 *                                                                         *
 * The above copyright notice and this permission notice shall be included *
 * in all copies or substantial portions of the Software.                  *
-*                                                                         *
+// // *                                                                         *
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
 * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
 * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
@@ -50,6 +50,14 @@
 #include <kde_dmalloc.h>
 #endif
 
+
+struct exchangeData_s
+{
+    struct MatchMaker::Partner partners[ 2 ];
+    bool deleteOnDevice;
+};
+
+
 PDA::PDA( Raki *raki, QString pdaName )
         : QObject()
 {
@@ -60,6 +68,7 @@ PDA::PDA( Raki *raki, QString pdaName )
     this->raki = raki;
     this->pdaName = pdaName;
     this->rra = new Rra( pdaName );
+    this->ptd = new PDAThreadData(this);
 
     runWindow = new RunWindowImpl( pdaName, raki, "RunWindow", false );
     runWindow->setCaption( i18n( "Execute on %1" ).arg( pdaName ) );
@@ -148,6 +157,7 @@ PDA::~PDA()
     delete configDialog;
     delete associatedMenu;
     delete rra;
+    delete ptd;
 
     slaveDict.setAutoDelete( true );
 }
@@ -375,18 +385,17 @@ QString PDA::getDeviceIp()
 
 void *PDA::removePartnershipDialog( void *data )
 {
-    struct MatchMaker::Partner * partner = ( struct MatchMaker::Partner * ) data;
-    int removedPartners;
+    struct exchangeData_s * exchangeData = ( struct exchangeData_s * ) data;
 
     initProgress->hide();
 
-    removedPartners = RemovePartnershipDialogImpl::showDialog(
-                          QString( partner[ 0 ].name ), QString( partner[ 1 ].name ) , 0,
-                          "Remove Partnership", true, 0 );
+    exchangeData->deleteOnDevice = RemovePartnershipDialogImpl::showDialog(
+                                       QString( exchangeData->partners[ 0 ].name ), QString( exchangeData->partners[ 1 ].name ) , 0,
+                                       "Remove Partnership", true, 0 );
 
     initProgress->show();
 
-    return ( void * ) removedPartners;
+    return NULL;
 }
 
 
@@ -401,17 +410,21 @@ void *PDA::alreadyTwoPartnershipsDialog( void * )
 }
 
 
-void *PDA::removeLocalPartnershipDialog( void * /*data*/ )
+void *PDA::removeLocalPartnershipDialog( void *removeOnDesktop_v )
 {
+    bool * removeOnDesktop = ( bool * ) removeOnDesktop_v;
+
     int answer = KMessageBox::questionYesNo( ( QWidget * ) parent(),
                  i18n( "A Partnership with name %1 already exists "
                        "on the desktop side. Should this partnership be replaced?" ).arg( pdaName ) );
 
     if ( answer == KMessageBox::No ) {
-        return ( void * ) 0;
+        *removeOnDesktop = false;
+    } else {
+        *removeOnDesktop = true;
     }
 
-    return ( void * ) 1;
+    return NULL;
 }
 
 
@@ -421,12 +434,13 @@ bool PDA::isPartner()
 }
 
 
-void *PDA::progressDialogCancel( void *init )
+void *PDA::progressDialogCancel( void *status_p )
 {
+    int * status = ( int * ) status_p;
     initProgress->hide();
-    emit initialized( this, ( int ) init );
+    emit initialized( this, *status );
     delete initProgress;
-    if ( init ) {
+    if ( *status ) {
         configDialog->writeConfig();
     }
 
@@ -442,53 +456,7 @@ void *PDA::rraConnectionError( void * )
 }
 
 
-bool PDA::removePartnership( MatchMaker *matchmaker, int *removedPartnerships )
-{
-    struct MatchMaker::Partner partners[ 2 ];
-    bool removePartnershipOk = true;
-
-    advanceInitProgress( 1 );
-    if ( matchmaker->getPartner( 1, &partners[ 0 ] ) ) {
-        advanceInitProgress( 1 );
-        if ( matchmaker->getPartner( 2, &partners[ 1 ] ) ) {
-            int deletedItems = ( int ) postThreadEvent(
-                                   &PDA::removePartnershipDialog, partners, block );
-            if ( deletedItems > 0 ) {
-                if ( deletedItems != 0 ) {
-                    struct MatchMaker::Partner deletedPartner;
-                    if ( deletedItems & 1 ) {
-                        deletedPartner.name = "";
-                        deletedPartner.id = 0;
-                        deletedPartner.index = 1;
-                        advanceInitProgress( 1 );
-                        if ( !matchmaker->setPartner( deletedPartner ) ) {
-                            removePartnershipOk = false;
-                        }
-                    }
-                    if ( ( deletedItems & 2 ) && removePartnershipOk ) {
-                        deletedPartner.name = "";
-                        deletedPartner.id = 0;
-                        deletedPartner.index = 2;
-                        advanceInitProgress( 1 );
-                        if ( !matchmaker->setPartner( deletedPartner ) ) {
-                            removePartnershipOk = false;
-                        }
-                    }
-                }
-                *removedPartnerships = deletedItems;
-            }
-        } else {
-            removePartnershipOk = false;
-        }
-    } else {
-        removePartnershipOk = false;
-    }
-
-    return removePartnershipOk;
-}
-
-
-void PDA::setPartnership( QThread */*thread*/, void * )
+void PDA::setPartnership( QThread * /*thread*/, void * )
 {
     struct MatchMaker::Partner partners[ 2 ];
     struct MatchMaker::Partner partner;
@@ -501,19 +469,19 @@ void PDA::setPartnership( QThread */*thread*/, void * )
     bool useGuest = false;
     int deleteOnDevice = 0;
 
-    kdDebug(2120) << i18n("Connecting to the device ...") << endl;
+    kdDebug( 2120 ) << i18n( "Connecting to the device ..." ) << endl;
     if ( matchmaker.connect() ) {
-// 1    
+        // 1
         advanceInitProgress( 1 );
-        
-        kdDebug(2120) << i18n("success") << endl;
+
+        kdDebug( 2120 ) << i18n( "success" ) << endl;
         kdDebug( 2120 ) << i18n( "Reading from device ...." ) << endl;
         for ( int i = 0; ( i < 2 ) && ( matchingPartnerId == 0 ); i++ ) {
             kdDebug( 2120 ) << i18n( "    get partnership with index %1 ..." ).arg( i + 1 ) << endl;
             if ( matchmaker.getPartner( i + 1, &partners[ i ] ) ) {
                 kdDebug( 2120 ) << i18n( "    success" ) << endl;
-                if ( partners[ i ].name == configDialog->getPartnerName() && 
-                            partners[ i ].id == configDialog->getPartnerId() ) {
+                if ( partners[ i ].name == configDialog->getPartnerName() &&
+                        partners[ i ].id == configDialog->getPartnerId() ) {
                     kdDebug( 2120 ) << i18n( "        matching!" ) << endl;
                     matchingPartnerId = i + 1;
                     partner = partners[ i ];
@@ -521,9 +489,9 @@ void PDA::setPartnership( QThread */*thread*/, void * )
             } else {
                 kdDebug( 2120 ) << i18n( "    failed" ) << endl;
             }
-// 3            
+            // 3
             advanceInitProgress( 1 );
-        
+
         }
         kdDebug( 2120 ) << i18n( "finished" ) << endl;
 
@@ -536,9 +504,9 @@ void PDA::setPartnership( QThread */*thread*/, void * )
                 error = true;
                 kdDebug( 2120 ) << i18n( "        failed!" );
             }
-// 4            
+            // 4
             advanceInitProgress( 1 );
-            
+
         } else {
             if ( configDialog->getPartnerId() != 0 ) {
                 kdDebug( 2120 ) <<
@@ -548,9 +516,9 @@ void PDA::setPartnership( QThread */*thread*/, void * )
 
             if ( onDesktopKnown ) {
                 kdDebug( 2120 ) << i18n( "    We should ask user if partnership on the desktop should be deleted" ) << endl;
-                removeOnDesktop = ( ( ( int ) postThreadEvent( &PDA::removeLocalPartnershipDialog, NULL, block ) ) > 0 );
+                postThreadEvent( &PDA::removeLocalPartnershipDialog, &removeOnDesktop, block );
             }
-// 5
+            // 5
             advanceInitProgress( 1 );
 
             if ( ( onDesktopKnown && removeOnDesktop ) || !onDesktopKnown ) {
@@ -565,11 +533,19 @@ void PDA::setPartnership( QThread */*thread*/, void * )
                 if ( twoOnDevice ) {
                     //                deleteOnDevice = ?-> two on device - what to do?
                     kdDebug( 2120 ) << i18n( "    We should ask user if partnership on the device should be deleted" ) << endl;
-                    deleteOnDevice = ( int ) postThreadEvent( &PDA::removePartnershipDialog, partners, block );
+
+                    struct exchangeData_s exchangeData;
+
+                    exchangeData.partners[ 0 ] = partners[ 0 ];
+                    exchangeData.partners[ 1 ] = partners[ 1 ];
+
+                    postThreadEvent( &PDA::removePartnershipDialog, &exchangeData, block );
+
+                    deleteOnDevice = exchangeData.deleteOnDevice;
                 }
-// 6
+                // 6
                 advanceInitProgress( 1 );
-                
+
                 if ( ( twoOnDevice && ( deleteOnDevice > 0 ) ) || !twoOnDevice ) {
 
                     kdDebug( 2120 ) << i18n( "* Device is ready or will be ready for partnership" ) << endl;
@@ -588,9 +564,9 @@ void PDA::setPartnership( QThread */*thread*/, void * )
                                 error = true;
                             }
                         }
-// 7
+                        // 7
                         advanceInitProgress( 1 );
-                        
+
                         if ( ( deleteOnDevice & 2 ) && !error ) {
                             kdDebug( 2120 ) << i18n( "    Deleting partnership 2 on the device" ) << endl;
                             deletePartner.index = 2;
@@ -598,7 +574,7 @@ void PDA::setPartnership( QThread */*thread*/, void * )
                                 error = true;
                             }
                         }
-// 8
+                        // 8
                         advanceInitProgress( 1 );
                     }
 
@@ -611,15 +587,15 @@ void PDA::setPartnership( QThread */*thread*/, void * )
                         configDialog->setCaption( i18n( "Configuration of %1" ).arg( pdaName ) );
                         connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
                     }
-// 9
+                    // 9
                     advanceInitProgress( 1 );
 
                     kdDebug( 2120 ) << i18n( "Now we are ready to create the partnership ... " ) << endl;
 
                     if ( matchmaker.partnerCreate( &matchingPartnerId ) && !error ) {
-// 10a
+                        // 10a
                         advanceInitProgress( 1 );
-                        
+
                         kdDebug( 2120 ) << i18n( "    success on the device ... now we set it on the desktop side" ) << endl;
                         if ( matchmaker.getPartner( matchingPartnerId, &partner ) ) {
                             kdDebug( 2120 ) << i18n( "        success" ) << endl;
@@ -628,12 +604,12 @@ void PDA::setPartnership( QThread */*thread*/, void * )
                             kdDebug( 2120 ) << i18n( "        failed" ) << endl;
                             error = true;
                         }
-// 11
-                        advanceInitProgress( 1 ); 
+                        // 11
+                        advanceInitProgress( 1 );
                     } else {
                         kdDebug( 2120 ) << i18n( "    failed on the device" ) << endl;
                         error = true;
-// 10b
+                        // 10b
                         advanceInitProgress( 1 );
                     }
                 } else {
@@ -646,18 +622,20 @@ void PDA::setPartnership( QThread */*thread*/, void * )
             }
         }
         matchmaker.disconnect();
-// 12
+        // 12
         advanceInitProgress( 11 );
-                        
+
     } else {
-        kdDebug(2120) << i18n("failed") << endl;
+        kdDebug( 2120 ) << i18n( "failed" ) << endl;
         error = true;
     }
 
-    if (error) {
-        postThreadEvent( &PDA::progressDialogCancel, 0, noBlock );
+    if ( error ) {
+        int *status = new int();
+        *status = 0;
+        postThreadEvent( &PDA::progressDialogCancel, status, noBlock );
     } else {
-        if (useGuest) {
+        if ( useGuest ) {
             kdDebug( 2120 ) << "Using Guest" << endl;
             delete configDialog;
             configDialog = new PdaConfigDialogImpl( "Guest", raki, "ConfigDialog", false );
@@ -667,99 +645,25 @@ void PDA::setPartnership( QThread */*thread*/, void * )
             partnerName = "Guest";
             partnerId = 0;
         } else {
-            postThreadEvent( &PDA::synchronizationTasks, 0, noBlock );
+            postThreadEvent(&PDA::synchronizationTasks, 0, noBlock);
             associatedMenu->setItemEnabled( syncItem, true );
             partnerOk = true;
             partnerName = partner.name;
             partnerId = partner.id;
         }
-        postThreadEvent( &PDA::progressDialogCancel, 1, noBlock );
+        int *status = new int();
+        *status = 1;
+        postThreadEvent( &PDA::progressDialogCancel, status, noBlock );
     }
 }
 
-/*
-void PDA::setPartnership( QThread * thread, void * )
-{
-    bool setPartnerOk = false;
-
-    MatchMaker matchmaker( pdaName );
-
-    if ( matchmaker.connect() ) {
-        setPartnerOk = setPartnershipThread( &matchmaker );
-    }
-
-    // Proposal for a correct connection-initiation
-    // ConfigDialog has been created already in the constructor
-    // so both, if existing, the local partnerId and both remote partnerIds are known
-    //
-    // 1) If localPartnerId is equal zero do a createNewPartnership() - end!
-    //
-    // 2) If localPartnerId matches one of the remotePartnerIds set the index of the matching
-    //    remote partnerId as the current partnership on the device and switch call
-    //    configDialog->>setPartner() - end!
-    //
-    // 3) Ask user to delete local partnership? If so,
-    //    clearPartnership() and than createNewPartnership()
-    //
-    //    createNewPartnership():
-    // 1) If both remoteIds are not equal zero ask for removal one or both remotePartnerships
-    //    1a) If removed create a new Partnership
-    //    1b) If no remote Partnership was removed dont create a new Partnership
-
-    if ( setPartnerOk ) {
-        if ( partnerId != 0 ) {
-            if ( partnerId != configDialog->getPartnerId() ) {
-                if ( configDialog->getPartnerId() != 0 ) {
-                    // partner with name already known ... remove it from desktop?
-                    // if removed create new configuration for device with getPartnerId() == 0
-                    kdDebug( 2120 ) << i18n( "Partnership already known but id not valid" ) << endl;
-                    kdDebug( 2120 ) << i18n( "Should ask user if partnership should be deleted" ) << endl;
-                    int answer = ( int ) postThreadEvent( &PDA::removeLocalPartnershipDialog, NULL, block );
-                    if ( answer == 1 ) {
-                        configDialog->clearConfig();
-                        delete configDialog;
-                        configDialog = new PdaConfigDialogImpl( pdaName, raki, "ConfigDialog", false );
-                        configDialog->setCaption( i18n( "Configuration of %1" ).arg( pdaName ) );
-                        connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
-                    }
-                }
-                if ( configDialog->getPartnerId() == 0 ) {
-                    // new partner
-                    // create partnership
-                    kdDebug( 2120 ) << i18n( "New Partnership created" ) << endl;
-                    configDialog->setNewPartner( partnerName, partnerId );
-                } else {
-                    partnerId = 0;
-                    configDialog->setPartner( i18n( "Guest" ), 0 );
-                }
-            } else {
-                // partnership already known
-                kdDebug( 2120 ) << i18n( "Partnership known" ) << endl;
-                configDialog->setPartner( partnerName, partnerId );
-            }
-        } else {
-            kdDebug( 2120 ) << i18n( "Using guest partnership" ) << endl;
-            configDialog->setPartner( i18n( "Guest" ), 0 );
-            // guest partnership
-        }
-
-        if ( partnerOk ) {
-            // synchronizationTasks
-            postThreadEvent( &PDA::synchronizationTasks, 0, noBlock );
-        }
-
-        // progressDialogCancel, 1
-        postThreadEvent( &PDA::progressDialogCancel, 1, noBlock );
-    } else {
-        postThreadEvent( &PDA::progressDialogCancel, 0, noBlock );
-        // progressDialogCancel, 0
-    }
-}
-*/
 
 void PDA::init()
 {
     kdDebug( 2120 ) << i18n( "PDA-init" ) << endl;
+
+    configDialog->readConnectionFile();
+    kdDebug( 2120 ) << "IP: " << configDialog->getDeviceIp() << endl;
 
     initProgress = new InitProgress( raki, "InitProgress", true,
                                      WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM );
@@ -773,11 +677,11 @@ void PDA::init()
 
     startWorkerThread( this, &PDA::setPartnership, NULL );
 
-    kdDebug(2120) << "Ende PDA::init()" << endl;
+    kdDebug( 2120 ) << "Ende PDA::init()" << endl;
 }
 
 
-bool PDA::synchronizationTasks( void * )
+void * PDA::synchronizationTasks( void * )
 {
     RRA_SyncMgrType * objectType;
     QDateTime lastSynchronized;
@@ -790,7 +694,7 @@ bool PDA::synchronizationTasks( void * )
             QMapIterator<int, RRA_SyncMgrType *> it;
             for ( it = types.begin() ; it != types.end(); ++it ) {
                 objectType = *it;
-                configDialog->addSyncTask( objectType, partnerId );
+                configDialog->addSyncTask(rra, objectType, partnerId );
             }
         } else {
             ret = false;
@@ -799,7 +703,7 @@ bool PDA::synchronizationTasks( void * )
 
     kdDebug( 2120 ) << i18n( "End PDA::syncronizationTasks()" ) << endl;
 
-    return ret;
+    return NULL;
 }
 
 

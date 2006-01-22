@@ -147,29 +147,35 @@ void PdaConfigDialogImpl::readConfig()
         partnershipCreated.setTime_t(0);
         newPda = true;
     }
+}
 
+
+bool PdaConfigDialogImpl::readConnectionFile()
+{
     char *path = NULL;
     synce::synce_get_directory(&path);
     QString synceDir = QString(path);
 
-    if (path)
-        free(path);
-
     KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
     activeConnection.setGroup("device");
     deviceIp = activeConnection.readEntry("ip");
+
+    if (path)
+        free(path);
+
+    return true;
 }
 
 
 void PdaConfigDialogImpl::clearConfig()
 {
     QStringList groups = ksConfig->groupList();
-    
+
     for (QStringList::Iterator it = groups.begin(); it != groups.end(); ++it ) {
         ksConfig->deleteGroup(*it);
     }
     syncTaskItemList.clear();
-    
+
     ksConfig->sync();
     readConfig();
 }
@@ -271,13 +277,13 @@ uint32_t PdaConfigDialogImpl::getPartnerId()
 }
 
 
-void PdaConfigDialogImpl::addSyncTask(RRA_SyncMgrType *objectType,
+void PdaConfigDialogImpl::addSyncTask(Rra *rra, RRA_SyncMgrType *objectType,
         uint32_t partnerId)
 {
     SyncTaskListItem *item;
     QDateTime lastSynchronized;
 
-    item = new SyncTaskListItem(pdaName, objectType, objectTypeList, partnerId);
+    item = new SyncTaskListItem(rra, pdaName, objectType, objectTypeList, partnerId);
     ksConfig->setGroup("Synchronizer-" + QString::number(
             item->getObjectType()->id));
     item->setPreferedLibrary(ksConfig->readEntry("PreferedLibrary"));

@@ -29,8 +29,13 @@
 #endif
 
 #include <rapi.h>
+#include <ksharedptr.h>
+
 extern "C" {
 #include <rra/syncmgr.h>
+#include <rra/matchmaker.h>
+#include <rra/timezone.h>
+#include <rra/uint32vector.h>
 }
 
 #include <qobject.h>
@@ -51,14 +56,14 @@ namespace KABC {
 @author Volker Christian,,,
 */
 
-class Rra : QObject
+class Rra
 {
-Q_OBJECT
 public:
     struct ids {
         QValueList<uint32_t> changedIds;
         QValueList<uint32_t> unchangedIds;
         QValueList<uint32_t> deletedIds;
+        RRA_Uint32Vector* uidVector;
     };
 
     struct Partner {
@@ -68,33 +73,45 @@ public:
     };
 
     Rra(QString pdaName);
+    Rra();
     virtual ~Rra();
 
+    bool markIdUnchanged(uint32_t type_id, uint32_t object_id);
     bool getTypes(QMap<int, RRA_SyncMgrType *> *);
-    bool getIds(uint32_t type_id, struct Rra::ids *ids);
+    uint32_t getTypeForName (const QString& p_typeName);
+    bool getIds();
+    void getIdsForType(uint32_t type_id, struct Rra::ids *ids);
     QString getVCard(uint32_t type_id, uint32_t object_id);
     uint32_t putVCard(QString& vCard, uint32_t type_id, uint32_t object_id);
     QString getVEvent(uint32_t type_id, uint32_t object_id);
     uint32_t putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id);
+    QString getVToDo(uint32_t type_id, uint32_t object_id);
+    uint32_t putVToDo(QString& vToDo, uint32_t type_id, uint32_t object_id);
     void deleteObject(uint32_t type_id, uint32_t object_id);
-/*
-    KABC::Addressee getAddressee(uint32_t type_id, uint32_t object_id);
-    bool putAddressee(const KABC::Addressee& addressee, uint32_t type_id,
-            uint32_t ceUid, uint32_t *newCeUid);
-    bool resetAddressee(uint32_t type_id, uint32_t object_id);
-*/
+    bool isConnected () const;
+    QString getPdaName () const;
+    void subscribeForType(uint32_t typeId);
+    void unsubscribeTypes();
+    bool removeDeletedObjects(uint32_t mTypeId, RRA_Uint32Vector* deleted_ids);
+    bool registerAddedObjects(uint32_t mTypeId, RRA_Uint32Vector* added_ids);
 
     bool ok();
     bool connect();
     void disconnect();
 
+    void setLogLevel(int p_level);
+    bool getTimezone(RRA_Timezone *tzi);
+
+
 private:
+    bool checkForAllIdsRead();
     HRESULT hr;
+    QMap<uint32_t, struct Rra::ids *> idMap;
     RRA_SyncMgr* rra;
     QString pdaName;
     bool rraOk;
-    struct ids _ids;
     int useCount;
+    RRA_Timezone tzi;
 };
 
 #endif

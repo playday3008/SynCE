@@ -134,6 +134,8 @@ static void vdccm_disconnect_active_clients()
 
 static void vdccm_handle_sighup(int n)
 {
+    synce_trace("Received signal number %d\n", n);
+    
     vdccm_disconnect_active_devices();
 }
 
@@ -143,6 +145,8 @@ static void vdccm_handle_terminating_signals(int n)
     char *path;
     char pid_file[MAX_PATH];
 
+    synce_trace("Received signal number %d\n", n);
+    
     running = false;
     vdccm_disconnect_active_devices();
     vdccm_disconnect_active_clients();
@@ -345,7 +349,7 @@ static void vdccm_send_connection_info_to_clients(device_p device, char *command
 }
 
 
-static void vdccm_notify_new_connected_client(local_p local, manage_p manage)
+static void vdccm_notify_new_connected_client(manage_p manage)
 {
     device_p device;
     unsigned char count;
@@ -366,7 +370,7 @@ static int vdccm_read_from_client(local_p local, void *manage_v)
     char *passwd;
     device_p device;
     int n;
-    int send = 0;
+    int password_send = 0;
 
     if ((n = local_read(local, buffer, 256)) <= 0) {
         local_select_delfrom_rlist(local);
@@ -386,7 +390,7 @@ static int vdccm_read_from_client(local_p local, void *manage_v)
 
         list_iterator(manage->passwordpending_device_l, device) {
             if (strcmp(device->name, name) == 0) {
-                send = 1;
+                password_send = 1;
                 synce_trace("Sending Password to: %s", device->name);
                 snprintf(device->password, MAX_PASSWORD_LENGTH, "%s", passwd);
                 if (!synce_password_send(device->socket, device->password, device->key)) {
@@ -395,7 +399,7 @@ static int vdccm_read_from_client(local_p local, void *manage_v)
                 list_delete_data(manage->passwordpending_device_l, device);
             }
         }
-        if (!send) {
+        if (!password_send) {
             synce_trace("Got Password for %s from Raki but no device waiting", name);
         }
         break;
@@ -426,7 +430,7 @@ static int vdccm_accept_new_client(local_p control, void *manage_v)
     local_p new_client = local_accept_socket(control);
     list_insert_tail(manage->client_l, new_client);
     local_select_addto_rlist(manage->sel, new_client, vdccm_read_from_client, manage);
-    vdccm_notify_new_connected_client(new_client, manage);
+    vdccm_notify_new_connected_client(manage);
 
     return 0;
 }
@@ -599,7 +603,7 @@ static bool vdccm_read_from_device_real(device_p device)
     bool success = false;
     char* buffer = NULL;
     uint32_t header;
-    int i;
+    unsigned int i;
 
     if (!synce_socket_read(device->socket, &header, sizeof(header))) {
         synce_error("Failed to read header");

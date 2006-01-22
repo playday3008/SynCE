@@ -11,3 +11,5 @@ agsyncconfig.cpp
 agsyncconfig.h
 serverconfig.cpp
 serverconfig.h
+avantgoclientinstallationdialog.cpp
+avantgoclientinstallationdialog.h

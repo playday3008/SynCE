@@ -6,5 +6,5 @@ Comment=AvantGo Synchronizer
 Icon=
 Name=AvantGo Synchronizer
 ServiceTypes=Raki/Synchronizer
-X-KDE-Library=librakiagsync
+X-KDE-Library=rakiagsync
 X-Raki-Synchronizer=AvantGo Connect

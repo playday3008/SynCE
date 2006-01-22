@@ -31,31 +31,87 @@
 #include "workerthreadinterface.h"
 
 class SyncTaskListItem;
+class SyncThread;
 
 /**
- * 
+ *
  * Volker Christian,,,
  **/
- 
-#define postSyncThreadEvent(a, b) \
-    syncThread->postEvent((void *(WorkerThreadInterface::*) \
-    (void *data)) &a, (void *) b, WorkerThreadInterface::noBlock);
+
+#define postSyncThreadEvent(a, b) {\
+    SyncThreadCustomEvent *ce = new SyncThreadCustomEvent(a, b); \
+    syncThread->postEvent(ce, syncThread->sttd, WorkerThreadInterface::noBlock); \
+}
+
+#define postSyncThreadEventBlock(a, b) {\
+    SyncThreadCustomEvent *ce = new SyncThreadCustomEvent(a, b); \
+    syncThread->postEvent(ce, syncThread->sttd, WorkerThreadInterface::block); \
+}
+
+class SyncThreadCustomEvent : public QCustomEvent
+{
+    public:
+        SyncThreadCustomEvent(void *(SyncThread::*userEventMethod)(void *data),
+                       void *data) : QCustomEvent(QEvent::User), userEventMethod(userEventMethod), eventData(data) {};
+    private:
+        void *(SyncThread::*userEventMethod)(void *data);
+        void *eventData;
+        friend class SyncThreadThreadData;
+};
+
+
+#include <qcursor.h>
+#include <qapplication.h>
+#include <kdebug.h>
+
+class SyncThreadThreadData : public ThreadEventObject
+{
+    Q_OBJECT
+    public:
+        SyncThreadThreadData(SyncThread *syncThread) : syncThread(syncThread) {};
+    private:
+
+        SyncThread *syncThread;
+        void customEvent (QCustomEvent *customEvent) {
+            SyncThreadCustomEvent *syncThreadCustomEvent = dynamic_cast<SyncThreadCustomEvent *>(customEvent);
+            int *blocking = (int *) customEvent->data();
+            void *(SyncThread::*userEventMethod)(void *data) = syncThreadCustomEvent->userEventMethod;
+
+            switch (*blocking) {
+                case WorkerThreadInterface::noBlock:
+
+                    (syncThread->*userEventMethod)(syncThreadCustomEvent->eventData);
+                    break;
+                case WorkerThreadInterface::block:
+                    QApplication::setOverrideCursor( QCursor( Qt::ArrowCursor ) );
+                    (syncThread->*userEventMethod)(syncThreadCustomEvent->eventData);
+                    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
+                    this->eventMutexLock();
+                    this->eventMutexUnlock();
+                    this->wakeUpOnEvent();
+                    break;
+            }
+            delete blocking;
+        };
+};
 
 class SyncThread : public WorkerThreadInterface
 {
 public:
     SyncThread();
     ~SyncThread();
-    void incTotalSteps(void *inc);
-    void decTotalSteps(void *dec);
-    void advanceProgress(void *);
-    void setTotalSteps(void *steps);
-    void setProgress(void *progress);
-    void setTask(void *task);
+    void *incTotalSteps(void *inc);
+    void *decTotalSteps(void *dec);
+    void *advanceProgress(void *);
+    void *setTotalSteps(void *steps);
+    void *setProgress(void *progress);
+    void *setTask(void *task);
     void setActualSyncItem(SyncTaskListItem *actualSyncItem);
+    SyncThreadThreadData *sttd;
 
 private:
     SyncTaskListItem *actualSyncItem;
 };
+
 
 #endif

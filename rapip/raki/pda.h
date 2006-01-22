@@ -57,11 +57,64 @@ class MatchMaker;
 /**
 @author Volker Christian,,,
 */
- 
+#include <qcursor.h>
+#include <qapplication.h>
+#include <kdebug.h>
+
+#define postThreadEvent(a, b, c) { \
+    PDACustomEvent *ce = new PDACustomEvent(a, b); \
+    postEvent(ce, ptd, c); \
+}
+
+class PDA;
+
+class PDACustomEvent : public QCustomEvent
+{
+    public:
+        PDACustomEvent(void *(PDA::*userEventMethod)(void *data),
+                       void *data) : QCustomEvent(QEvent::User), userEventMethod(userEventMethod), eventData(data) {};
+    private:
+        void *(PDA::*userEventMethod)(void *data);
+        void *eventData;
+        friend class PDAThreadData;
+};
+
+class PDAThreadData : public ThreadEventObject
+{
+Q_OBJECT
+    public:
+        PDAThreadData(PDA *pda) : pda(pda) {};
+    private:
+
+        PDA *pda;
+        void customEvent (QCustomEvent *customEvent) {
+            PDACustomEvent *pdaCustomEvent = dynamic_cast<PDACustomEvent *>(customEvent);
+            int *blocking = (int *) customEvent->data();
+            void *(PDA::*userEventMethod)(void *data) = pdaCustomEvent->userEventMethod;
+
+            switch (*blocking) {
+                case WorkerThreadInterface::noBlock:
+
+                    (pda->*userEventMethod)(pdaCustomEvent->eventData);
+                    break;
+                case WorkerThreadInterface::block:
+                    QApplication::setOverrideCursor( QCursor( Qt::ArrowCursor ) );
+                    (pda->*userEventMethod)(pdaCustomEvent->eventData);
+                    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
+                    this->eventMutexLock();
+                    this->eventMutexUnlock();
+                    this->wakeUpOnEvent();
+                    break;
+            }
+            delete blocking;
+        };
+};
+
+
 class PDA : public QObject, public WorkerThreadInterface
 {
      Q_OBJECT
-     
+
 public:
     PDA(Raki *raki, QString pdaName);
     ~PDA();
@@ -89,10 +142,9 @@ public:
 signals:
     void resolvedPassword(QString pdaName, QString passwd);
     void initialized(PDA *pda, int initialized);
-    
+
 private:
     void setPartnership(QThread *thread, void *data);
-    bool removePartnership(MatchMaker *matchmaker, int *removedPartnerships);
     void *removePartnershipDialog(void *data);
     void *alreadyTwoPartnershipsDialog(void *data);
     void *removeLocalPartnershipDialog(void *data);
@@ -100,7 +152,7 @@ private:
     void *advanceProgressEvent(void *data);
     void *advanceTotalStepsEvent(void *data);
     void *rraConnectionError(void *data);
-    bool synchronizationTasks(void *data);
+    void *synchronizationTasks(void *data);
 
     InitProgress *initProgress;
     KProgress *progressBar;
@@ -124,6 +176,7 @@ private:
     int pdaMirrorItem;
     bool typesRead;
     KProcess pdaMirror;
+    PDAThreadData *ptd;
 
 private slots:
     void execute();

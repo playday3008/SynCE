@@ -20,7 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
- 
+
 #ifndef THREADEVENT_H
 #define THREADEVENT_H
 
@@ -38,6 +38,7 @@ class WorkerThreadInterface;
 /**
 @author Volker Christian,,,
 */
+
 
 class ThreadEvent : public QCustomEvent
 {
@@ -60,7 +61,6 @@ public:
     void waitOnEvent();
     void wakeUpOnEvent();
 private:
-    void customEvent (QCustomEvent *customEvent);
     QMutex eventMutex;
     QWaitCondition eventCondition;
 };

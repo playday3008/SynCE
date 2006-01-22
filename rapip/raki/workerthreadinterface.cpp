@@ -84,24 +84,21 @@ bool WorkerThreadInterface::delayedDelete()
 }
 
 
-void *WorkerThreadInterface::postEvent(
-        void *(WorkerThreadInterface::*userEventMethode)(void *data),
-        void *data, int blocking)
+void *WorkerThreadInterface::postEvent(QCustomEvent *event, ThreadEventObject *eventObject, int blocking)
 {
-    ThreadEvent *threadEvent = new ThreadEvent(this, userEventMethode, data);
     int *pBlocking = new int;
+
     *pBlocking = blocking;
-    threadEvent->setData(pBlocking);
+
+    event->setData(pBlocking);
+
     if (blocking == block && running()) {
-// Inhibit finishing of the event before we are not waiting for it to finish
-        threadEventObject.eventMutexLock();
+        eventObject->eventMutexLock();
     }
-    QApplication::postEvent(&threadEventObject, threadEvent);
+    QApplication::postEvent(eventObject, event);
     if (blocking == block && running()) {
-// Allow the event to finish and wait for an wake up event from it
-        threadEventObject.waitOnEvent();
-// Unlock the event mutex correctly
-        threadEventObject.eventMutexUnlock();
+        eventObject->waitOnEvent();
+        eventObject->eventMutexUnlock();
     }
 
     return eventReturnValue();
@@ -117,27 +114,4 @@ void WorkerThreadInterface::setEventReturnValue(void *value)
 void *WorkerThreadInterface::eventReturnValue()
 {
     return eventReturn;
-}
-
-
-void *WorkerThreadInterface::guiSynchronizator(void */*data*/)
-{
-    syncMutex.lock();
-    syncMutex.unlock();
-    syncWaitCondition.wakeAll();
-    return NULL;
-}
-
-
-void *WorkerThreadInterface::synchronizeGui()
-{
-    if (!isStopRequested) {
-        syncMutex.lock();
-        postThreadEvent(&WorkerThreadInterface::guiSynchronizator, NULL,
-                noBlock);
-        syncWaitCondition.wait(&syncMutex);
-        syncMutex.unlock();
-    }
-    
-    return NULL;
 }

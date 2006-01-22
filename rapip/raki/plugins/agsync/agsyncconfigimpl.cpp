@@ -41,9 +41,9 @@ AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const cha
     serverList->setColumnWidthMode(1, QListView::Manual);
     serverList->setFullWidth(true);
     serverConfigDialog = new ServerConfigImpl(this, "ServerConfig", true);
-    connect(serverConfigDialog, SIGNAL(newServer(QString, int, QString, QString)), this, 
+    connect(serverConfigDialog, SIGNAL(newServer(QString, int, QString, QString)), this,
             SLOT(newServer(QString, int, QString, QString)));
-    connect(serverConfigDialog, SIGNAL(modifiedServer(QString, int, QString, QString)), this, 
+    connect(serverConfigDialog, SIGNAL(modifiedServer(QString, int, QString, QString)), this,
             SLOT(modifiedServer(QString, int, QString, QString)));
     connect(serverConfigDialog, SIGNAL(cancelClicked()), this, SLOT(serverDialogCancel()));
     readConfig();
@@ -54,9 +54,9 @@ AGSyncConfigImpl::AGSyncConfigImpl(KConfig *ksConfig, QWidget* parent, const cha
 AGSyncConfigImpl::~AGSyncConfigImpl()
 {
     delete serverConfigDialog;
-    
+
     AGUserConfigFree(userConfig);
-    AGUserConfigFree(agreedConfig);  
+    AGUserConfigFree(agreedConfig);
 }
 
 
@@ -68,12 +68,12 @@ void AGSyncConfigImpl::contentChanged()
 
 void AGSyncConfigImpl::reject()
 {
-    QDialog::reject();    
-    
+    QDialog::reject();
+
     AGUserConfigFree(userConfig);
     userConfig = AGUserConfigNew();
     AGUserConfigInit(userConfig);
-    
+
     readConfig();
     readServerList();
 }
@@ -99,7 +99,7 @@ void AGSyncConfigImpl::modifyServerButton_clicked()
 
 
 void AGSyncConfigImpl::deleteServer(ServerCheckListItem *cli)
-{    
+{
     if (cli != NULL) {
         serverList->takeItem(cli);
         AGUserConfigRemoveServer(userConfig, cli->serverConfig->uid);
@@ -107,7 +107,7 @@ void AGSyncConfigImpl::deleteServer(ServerCheckListItem *cli)
         contentChanged();
     }
 }
-    
+
 
 void AGSyncConfigImpl::deleteServerButton_clicked()
 {
@@ -122,7 +122,7 @@ void AGSyncConfigImpl::updateServerList()
 
     for(int i = 0; i < cnt; i++) {
         AGServerConfig *serverConfig = AGUserConfigGetServerByIndex(userConfig, i);
-        ServerCheckListItem *cli = 
+        ServerCheckListItem *cli =
                 new ServerCheckListItem(serverList, serverConfig->serverName);
         cli->setText(1, QString::number(serverConfig->serverPort));
         cli->serverConfig = serverConfig;
@@ -242,9 +242,9 @@ void AGSyncConfigImpl::readServerList()
         ksConfig->setGroup("AGSyncServer-" + QString::number(i));
         AGServerConfig *serverConfig = AGServerConfigNew();
         AGServerConfigInit(serverConfig);
-        serverConfig->serverName = qstrdup(ksConfig->readEntry("ServerName").ascii());
+        serverConfig->serverName = qstrdup(ksConfig->readEntry("ServerName").ascii()); // don't use qstrdup here
         serverConfig->serverPort = ksConfig->readEntry("ServerPort").toUShort();
-        serverConfig->userName = qstrdup(ksConfig->readEntry("UserName").ascii());
+        serverConfig->userName = qstrdup(ksConfig->readEntry("UserName").ascii()); // don't use qstrdup here
         AGServerConfigChangePassword(serverConfig, (char *) "");
         serverConfig->uid = ksConfig->readEntry("ServerUID").toInt();
         serverConfig->disabled = ksConfig->readBoolEntry("Disabled");
@@ -346,6 +346,6 @@ bool AGSyncConfigImpl::getUseAuthentication()
 
 
 void AGSyncConfigImpl::show()
-{   
+{
     AGSyncConfig::show();
 }

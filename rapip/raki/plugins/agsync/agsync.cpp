@@ -299,8 +299,7 @@ void AGSync::doServerSync( AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx
 }
 
 
-bool AGSync::preSync( QWidget *parent, Rra * /*rra*/,
-                      bool /*firstSynchronize*/, uint32_t /*partnerId*/ )
+bool AGSync::preSync( QWidget *parent, bool /*firstSynchronize*/, uint32_t /*partnerId*/ )
 {
     bool ret = true;
     

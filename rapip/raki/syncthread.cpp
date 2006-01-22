@@ -28,11 +28,13 @@
 SyncThread::SyncThread()
   : WorkerThreadInterface()
 {
+    sttd = new SyncThreadThreadData(this);
 }
 
 
 SyncThread::~SyncThread()
 {
+    delete sttd;
 }
 
 
@@ -42,42 +44,48 @@ void SyncThread::setActualSyncItem(SyncTaskListItem *actualSyncItem)
 }
 
 
-void SyncThread::incTotalSteps(void *inc)
+void *SyncThread::incTotalSteps(void *inc)
 {
     actualSyncItem->setTotalSteps(actualSyncItem->totalSteps() + *(int *) inc);
     delete (int *) inc;
+    return NULL;
 }
 
 
-void SyncThread::decTotalSteps(void *dec)
+void *SyncThread::decTotalSteps(void *dec)
 {
     actualSyncItem->setTotalSteps(actualSyncItem->totalSteps() - *(int *) dec);
     delete (int *) dec;
+    return NULL;
 }
 
 
-void SyncThread::advanceProgress(void *)
+void *SyncThread::advanceProgress(void *)
 {
     actualSyncItem->advance(1);
+    return NULL;
 }
 
 
-void SyncThread::setTotalSteps(void *steps)
+void *SyncThread::setTotalSteps(void *steps)
 {
     actualSyncItem->setTotalSteps(*(int *) steps);
     delete (int *) steps;
+    return NULL;
 }
 
 
-void SyncThread::setProgress(void *progress)
+void *SyncThread::setProgress(void *progress)
 {
     actualSyncItem->setProgress(*(int *) progress);
     delete (int *) progress;
+    return NULL;
 }
 
 
-void SyncThread::setTask(void *task)
+void *SyncThread::setTask(void *task)
 {
     actualSyncItem->setTaskLabel((char *) task);
     delete [] (char *) task;
+    return NULL;
 }

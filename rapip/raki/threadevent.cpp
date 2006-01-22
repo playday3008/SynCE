@@ -61,31 +61,3 @@ void ThreadEventObject::wakeUpOnEvent()
 {
     eventCondition.wakeAll();
 }
-
-
-void ThreadEventObject::customEvent (QCustomEvent *qCustomEvent)
-{
-    ThreadEvent *customEvent = (ThreadEvent *) qCustomEvent;
-    int *blocking = (int *) customEvent->data();
-    switch (*blocking) {
-    case WorkerThreadInterface::noBlock:
-        customEvent->wti->setEventReturnValue((
-                customEvent->wti->*customEvent->userEventMethode)(
-                customEvent->threadData));
-        break;
-    case WorkerThreadInterface::block:
-        QApplication::setOverrideCursor( QCursor(Qt::ArrowCursor) );
-        customEvent->wti->setEventReturnValue((
-                customEvent->wti->*customEvent->userEventMethode)(
-                customEvent->threadData));
-        QApplication::setOverrideCursor( QCursor(Qt::WaitCursor) );
-// Wait for the thread to be in the waiting state
-        this->eventMutexLock();
-// Imediately release the mutex again
-        this->eventMutexUnlock();
-// Wake up the thread
-        this->wakeUpOnEvent();
-        break;
-    }
-    delete blocking;
-}
