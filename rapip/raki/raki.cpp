@@ -34,7 +34,6 @@
 #include <kapplication.h>
 #include <kaudioplayer.h>
 #include <kuniqueapplication.h>
-#include <khelpmenu.h>
 #include <kcmdlineargs.h>
 #include <kmessagebox.h>
 #include <kiconloader.h>
@@ -102,7 +101,7 @@ Raki::Raki(KAboutData *, KDialog* d, QWidget* parent, const char *name)
     rapiReMenu->insertSeparator(reCount);
     reCount++;
 
-    KHelpMenu *help = new KHelpMenu( this, 0, false );
+    help = new KHelpMenu( this, 0, false );
     connect (help, SIGNAL (showAboutApplication()), this, SLOT (showAbout()));
     rapiReMenu->insertItem(i18n("&Help"), help->menu());
     reCount++;
@@ -159,8 +158,15 @@ Raki::~Raki()
     stopDccm();
     dccmProc.detach();
 
-    if (dccmConnection)
+    if (dccmConnection) {
         delete dccmConnection;
+    }
+
+    delete rapiLeMenu;
+    delete rapiReMenu;
+    delete installer;
+    delete help;
+    delete configDialog;
 }
 
 
@@ -342,9 +348,9 @@ void Raki::pdaInitialized(PDA *pda, int initialized)
             rapiLeMenu->hide();
             showAgain = true;
         }
-        rapiLeMenu->insertItem(SmallIcon("pda_blue"),
+        pda->setMenuIndex(rapiLeMenu->insertItem(SmallIcon("pda_blue"),
                                QString(((pda->isPartner()) ? "" : "* ")) +
-                               pda->getName(), pda->getMenu());
+                                       pda->getName(), pda->getMenu()));
         if (showAgain) {
             rapiLeMenu->show();
         }
@@ -353,7 +359,7 @@ void Raki::pdaInitialized(PDA *pda, int initialized)
     } else {
         char buffer[100];
         const char *pdaNamec = pda->getName();
-        
+
         sprintf(buffer, "D%s", pdaNamec);
         write(dccmConnection->socket(), buffer, strlen(buffer));
     }
@@ -408,7 +414,7 @@ void Raki::dccmExited(KProcess */*oldDccm*/)
     if (dccmShouldRun) {
         if (!openDccmConnection()) {
             KMessageBox::error(this,
-                    i18n("Could not start dccm or dccm has exited.\n" 
+                    i18n("Could not start dccm or dccm has exited.\n"
                     "Maybe there is already a dccm running"));
         }
     }
@@ -821,7 +827,7 @@ static KCmdLineOptions options[] =
 int main(int argc, char *argv[])
 {
     KLocale::setMainCatalogue("synce-kde");
-    
+
     KAboutData aboutData("raki", I18N_NOOP("Raki"), VERSION, description,
             KAboutData::License_Custom,
             "(c) 2003, 2004, Volker Christian (voc)", 0,

@@ -277,7 +277,7 @@ uint32_t PdaConfigDialogImpl::getPartnerId()
 }
 
 
-void PdaConfigDialogImpl::addSyncTask(Rra *rra, RRA_SyncMgrType *objectType,
+void PdaConfigDialogImpl::addSyncTask(Rra *rra, uint32_t objectType,
         uint32_t partnerId)
 {
     SyncTaskListItem *item;

@@ -53,8 +53,7 @@ public:
     RakiSyncPlugin();
     virtual ~RakiSyncPlugin();
 
-    bool doSync(SyncThread *syncThread,
-            SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId);
+    bool doSync(SyncThread *syncThread, bool firstSynchronize, uint32_t partnerId);
     virtual bool preSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
     virtual bool postSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
@@ -66,7 +65,7 @@ public:
     void setTotalSteps(int steps, bool directCall = false);
     void setProgress(int progress, bool directCall = false);
     void setTask(const char *task, bool directCall = false);
-    virtual void init(Rra *rra, RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent,
+    virtual void init(Rra *rra, SyncTaskListItem *progressItem, QString pdaName, QWidget *parent,
             QString serviceName);
     virtual void unInit();
     virtual void createConfigureObject(KConfig *ksConfig);
@@ -77,7 +76,6 @@ public:
 
 private:
     virtual bool sync() = 0;
-    RRA_SyncMgrType *objectType;
 
 protected:
     KConfig *ksConfig;

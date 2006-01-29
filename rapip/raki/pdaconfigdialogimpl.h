@@ -65,7 +65,7 @@ public:
     uint32_t getPartnerId();
     QPtrList<SyncTaskListItem>& syncronizationTasks();
     void setNewPartner(QString partnerName, uint32_t partnerId);
-    void addSyncTask(Rra *rra, RRA_SyncMgrType *objectType, uint32_t partnerId);
+    void addSyncTask(Rra *rra, uint32_t objectType, uint32_t partnerId);
     QPtrList<SyncTaskListItem>& getSyncTaskItemList();
     void clearConfig();
     bool readConnectionFile();

@@ -49,11 +49,9 @@ RakiSyncPlugin::~RakiSyncPlugin()
 }
 
 
-bool RakiSyncPlugin::doSync(SyncThread *syncThread,
-        SyncTaskListItem *progressItem, bool firstSynchronize, uint32_t partnerId)
+bool RakiSyncPlugin::doSync(SyncThread *syncThread, bool firstSynchronize, uint32_t partnerId)
 {
     this->syncThread = syncThread;
-    this->progressItem = progressItem;
     this->firstSynchronize = firstSynchronize;
     this->partnerId = partnerId;
     return sync();
@@ -77,10 +75,11 @@ bool RakiSyncPlugin::postSync(QWidget *parent,
 }
 
 
-void RakiSyncPlugin::init(Rra *rra, RRA_SyncMgrType *objectType, QString pdaName, QWidget *parent, QString serviceName)
+void RakiSyncPlugin::init(Rra *rra,
+        SyncTaskListItem *progressItem, QString pdaName, QWidget *parent, QString serviceName)
 {
-    this->objectType = objectType;
     this->rra = rra;
+    this->progressItem = progressItem;
     this->pdaName = pdaName;
     this->parent = parent;
     this->_serviceName = serviceName;
@@ -97,7 +96,7 @@ void RakiSyncPlugin::unInit()
 void RakiSyncPlugin::configure()
 {
     KMessageBox::information(parent, "<b>" + _serviceName +
-            "</b>: " + i18n("Nothing to configure."), QString(objectType->name2) + " " + pdaName);
+            "</b>: " + i18n("Nothing to configure."), QString(progressItem->getObjectType()->name2) + " " + pdaName);
 }
 
 
@@ -128,7 +127,7 @@ QString RakiSyncPlugin::serviceName()
 
 uint32_t RakiSyncPlugin::getObjectTypeId()
 {
-    return objectType->id;
+    return progressItem->getObjectType()->id;
 }
 
 

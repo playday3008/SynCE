@@ -201,7 +201,7 @@ void PDA::setStopRequested( bool isStopRequested )
 }
 
 
-bool PDA::getSynchronizationTypes( QMap<int, RRA_SyncMgrType *> *types )
+bool PDA::getSynchronizationTypes( QValueList<uint32_t> *types )
 {
     return rra->getTypes( types );
 }
@@ -443,6 +443,7 @@ void *PDA::progressDialogCancel( void *status_p )
     if ( *status ) {
         configDialog->writeConfig();
     }
+    delete status;
 
     return NULL;
 }
@@ -459,9 +460,8 @@ void *PDA::rraConnectionError( void * )
 void PDA::setPartnership( QThread * /*thread*/, void * )
 {
     struct MatchMaker::Partner partners[ 2 ];
-    struct MatchMaker::Partner partner;
     MatchMaker matchmaker( pdaName );
-    uint32_t matchingPartnerId = 0;
+    uint32_t devicePartnerIndex = 0;
     bool onDesktopKnown = false;
     bool removeOnDesktop = false;
     bool twoOnDevice = false;
@@ -476,15 +476,16 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
 
         kdDebug( 2120 ) << i18n( "success" ) << endl;
         kdDebug( 2120 ) << i18n( "Reading from device ...." ) << endl;
-        for ( int i = 0; ( i < 2 ) && ( matchingPartnerId == 0 ); i++ ) {
+        for ( int i = 0; ( i < 2 ) && ( devicePartnerIndex == 0 ); i++ ) {
             kdDebug( 2120 ) << i18n( "    get partnership with index %1 ..." ).arg( i + 1 ) << endl;
             if ( matchmaker.getPartner( i + 1, &partners[ i ] ) ) {
                 kdDebug( 2120 ) << i18n( "    success" ) << endl;
                 if ( partners[ i ].name == configDialog->getPartnerName() &&
                         partners[ i ].id == configDialog->getPartnerId() ) {
                     kdDebug( 2120 ) << i18n( "        matching!" ) << endl;
-                    matchingPartnerId = i + 1;
-                    partner = partners[ i ];
+                    devicePartnerIndex = i + 1;
+                    partnerId = partners[i].id;
+//                   partner = partners[ i ];
                 }
             } else {
                 kdDebug( 2120 ) << i18n( "    failed" ) << endl;
@@ -495,10 +496,10 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
         }
         kdDebug( 2120 ) << i18n( "finished" ) << endl;
 
-        if ( matchingPartnerId > 0 ) {
+        if ( devicePartnerIndex > 0 ) {
             kdDebug( 2120 ) << i18n( "Matching partnership found ..." ) << endl;
             kdDebug( 2120 ) << i18n( "    Trying to make it valid on the Device ... " ) << endl;
-            if ( matchmaker.setCurrentPartner( matchingPartnerId ) ) {
+            if ( matchmaker.setCurrentPartner( devicePartnerIndex ) ) {
                 kdDebug( 2120 ) << i18n( "        success!" ) << endl;
             } else {
                 error = true;
@@ -592,14 +593,16 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
 
                     kdDebug( 2120 ) << i18n( "Now we are ready to create the partnership ... " ) << endl;
 
-                    if ( matchmaker.partnerCreate( &matchingPartnerId ) && !error ) {
+                    if ( matchmaker.partnerCreate( &devicePartnerIndex ) && !error ) {
                         // 10a
                         advanceInitProgress( 1 );
 
                         kdDebug( 2120 ) << i18n( "    success on the device ... now we set it on the desktop side" ) << endl;
-                        if ( matchmaker.getPartner( matchingPartnerId, &partner ) ) {
+
+                        struct MatchMaker::Partner partner;
+                        if ( matchmaker.getPartner( devicePartnerIndex, &partner ) ) {
                             kdDebug( 2120 ) << i18n( "        success" ) << endl;
-                            configDialog->setPartner( partner.name, partner.id );
+                            configDialog->setNewPartner( partner.name, partner.id );
                         } else {
                             kdDebug( 2120 ) << i18n( "        failed" ) << endl;
                             error = true;
@@ -642,14 +645,11 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
             configDialog->setCaption( i18n( "Configuration of %1" ).arg( "Guest" ) );
             connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
             partnerOk = false;
-            partnerName = "Guest";
             partnerId = 0;
         } else {
             postThreadEvent(&PDA::synchronizationTasks, 0, noBlock);
             associatedMenu->setItemEnabled( syncItem, true );
             partnerOk = true;
-            partnerName = partner.name;
-            partnerId = partner.id;
         }
         int *status = new int();
         *status = 1;
@@ -683,18 +683,18 @@ void PDA::init()
 
 void * PDA::synchronizationTasks( void * )
 {
-    RRA_SyncMgrType * objectType;
+    uint32_t objectType;
     QDateTime lastSynchronized;
     bool ret = true;
 
     if ( !typesRead ) {
         typesRead = true;
-        QMap<int, RRA_SyncMgrType *> types;
+        QValueList<uint32_t> types;
         if ( getSynchronizationTypes( &types ) ) {
-            QMapIterator<int, RRA_SyncMgrType *> it;
+            QValueListIterator<uint32_t> it;
             for ( it = types.begin() ; it != types.end(); ++it ) {
                 objectType = *it;
-                configDialog->addSyncTask(rra, objectType, partnerId );
+                configDialog->addSyncTask(rra, objectType, partnerId);
             }
         } else {
             ret = false;

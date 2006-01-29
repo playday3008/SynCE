@@ -57,7 +57,7 @@ class SyncTaskListItem : public QObject, public QCheckListItem
 Q_OBJECT
 
 public:
-    SyncTaskListItem(Rra *rra, QString pdaName, RRA_SyncMgrType* objectType, KListView* listView,
+    SyncTaskListItem(Rra *rra, QString pdaName, uint32_t objectType, KListView* listView,
             uint32_t partnerId);
 
     virtual ~SyncTaskListItem();
@@ -68,7 +68,6 @@ public:
     void setOn(bool state);
     RRA_SyncMgrType* getObjectType();
     QString getObjectTypeName();
-    void setObjectType(RRA_SyncMgrType *objectType);
     void setTotalSteps(int totalSteps);
     void setProgress(int progress);
     void advance(int offset);
@@ -98,7 +97,7 @@ protected:
     virtual void stateChange(bool state);
 
 private:
-    RRA_SyncMgrType *objectType;
+    uint32_t objectType;
     bool isOnStore;
     KProgress *progress;
     QLabel *taskLabelWidget;

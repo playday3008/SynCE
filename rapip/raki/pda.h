@@ -129,7 +129,7 @@ public:
     void unregisterCopyJob(KIO::CopyJob *copyJob);
     unsigned int getNumberOfCopyJobs();
     KURL::List getURLListByCopyJob(KIO::CopyJob *copyJob);
-    bool getSynchronizationTypes(QMap<int, RRA_SyncMgrType *> *);
+    bool getSynchronizationTypes(QValueList<uint32_t> *);
     void init();
     bool isPartner();
     bool running();
@@ -168,7 +168,6 @@ private:
     bool _masqueradeStarted;
     Raki *raki;
     QPtrDict<KURL::List> slaveDict;
-    QString partnerName;
     uint32_t partnerId;
     bool partnerOk;
     Rra *rra;

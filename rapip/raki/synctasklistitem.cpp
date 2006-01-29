@@ -40,9 +40,9 @@
 #include <kde_dmalloc.h>
 #endif
 
-SyncTaskListItem::SyncTaskListItem(Rra *rra, QString pdaName, RRA_SyncMgrType *objectType,
+SyncTaskListItem::SyncTaskListItem(Rra *rra, QString pdaName, uint32_t objectType,
                                    KListView* listView, uint32_t partnerId)
-        : QCheckListItem(listView, objectType->name2, QCheckListItem::CheckBox)
+        : QCheckListItem(listView, rra->getTypeForId(objectType)->name2, QCheckListItem::CheckBox)
 {
     this->rra = rra,
     this->objectType = objectType;
@@ -133,19 +133,13 @@ bool SyncTaskListItem::isFirstSynchronization()
 
 RRA_SyncMgrType* SyncTaskListItem::getObjectType()
 {
-    return objectType;
+    return rra->getTypeForId(objectType);
 }
 
 
 QString SyncTaskListItem::getObjectTypeName()
 {
-    return objectType->name2;
-}
-
-
-void SyncTaskListItem::setObjectType(RRA_SyncMgrType *objectType)
-{
-    this->objectType = objectType;
+    return rra->getTypeForId(objectType)->name2;
 }
 
 
@@ -342,7 +336,7 @@ int SyncTaskListItem::createSyncPlugin(bool state)
                         static_cast<RakiSyncFactory*> (factory);
                     syncPlugin = static_cast<RakiSyncPlugin*>
                                  (syncFactory->create());
-                    syncPlugin->init(rra, objectType, pdaName, this->listView(), offer);
+                    syncPlugin->init(rra, this, pdaName, this->listView(), offer);
                     syncFactory->callme(); // Fake call to link correct.
                 } else {
                     kdDebug(2120) << i18n("Library no Raki-Plugin") << endl;
@@ -357,19 +351,19 @@ int SyncTaskListItem::createSyncPlugin(bool state)
     switch(ret) {
     case ERROR_NOSYNCHRONIZER:
         KMessageBox::information(this->listView(), "<p>" + i18n("No Synchronizer found for") + " <b>" +
-                QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
+                QString(rra->getTypeForId(objectType)->name2) + "</b></p>", QString(rra->getTypeForId(objectType)->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
     case ERROR_WRONGLIBRARYTYPE:
         KMessageBox::error(this->listView(), "<p>" + i18n("Wrong library type for") +" <b>" +
-                QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
+                QString(rra->getTypeForId(objectType)->name2) + "</b></p>", QString(rra->getTypeForId(objectType)->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
     case ERROR_NOFACTORY:
         KMessageBox::error(this->listView(), "<p>" + i18n("Wrong library type for") + " <b>" +
-                QString(objectType->name2) + "</b></p>", QString(objectType->name2) + pdaName);
+                QString(rra->getTypeForId(objectType)->name2) + "</b></p>", QString(rra->getTypeForId(objectType)->name2) + pdaName);
         this->setOn(false);
         this->makePersistent();
         break;
@@ -391,7 +385,7 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread)
     if (syncPlugin != NULL) {
         kdDebug(2120) << i18n("Started syncing with") << " " << syncPlugin->serviceName() << endl;
 
-        ret = syncPlugin->doSync(syncThread, this, firstSynchronization, partnerId);
+        ret = syncPlugin->doSync(syncThread, firstSynchronization, partnerId);
 
         kdDebug(2120) << i18n("Finished syncing with") << " " << syncPlugin->serviceName() << endl;
         int *pStep = new int;

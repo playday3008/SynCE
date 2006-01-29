@@ -71,7 +71,7 @@ bool MatchMaker::disconnect()
         Ce::rapiUninit();
         matchmaker = NULL;
     }
-    
+
     return true;
 }
 
@@ -108,6 +108,7 @@ bool MatchMaker::set_partner_name(uint32_t index, const char* name)
 
 bool MatchMaker::get_partner_name(uint32_t index, char** name)
 {
+    // TODO delete the string name is not done
     return rra_matchmaker_get_partner_name(matchmaker, index, name);
 }
 
@@ -140,8 +141,9 @@ bool MatchMaker::getPartner(uint32_t index, struct MatchMaker::Partner *partner)
         rraOk = false;
     } else {
         partner->name = name;
+        free(name);
     }
-    
+
     partner->index = index;
 
     return rraOk;

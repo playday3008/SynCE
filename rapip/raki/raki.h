@@ -30,6 +30,7 @@
 
 #include <kpanelapplet.h>
 #include <kpopupmenu.h>
+#include <khelpmenu.h>
 #include <kaboutapplication.h>
 #include <kaboutdata.h>
 #include <ksystemtray.h>
@@ -87,6 +88,7 @@ private:
     KDialog *aboutDialog;
     KPopupMenu *rapiLeMenu;
     KPopupMenu *rapiReMenu;
+    KHelpMenu *help;
     Installer *installer;
     QPixmap connectedIcon;
     QPixmap disconnectedIcon;
@@ -104,7 +106,7 @@ private:
     QStringList pendingPdaList;
     KProcess ipTablesProc;
     int timerId;
-    
+
     enum {
         CONFIGURE_ITEM = 1,
         STARTDCCM_ITEM,

@@ -77,8 +77,9 @@ public:
     virtual ~Rra();
 
     bool markIdUnchanged(uint32_t type_id, uint32_t object_id);
-    bool getTypes(QMap<int, RRA_SyncMgrType *> *);
+    bool getTypes(QValueList<uint32_t> *);
     uint32_t getTypeForName (const QString& p_typeName);
+    RRA_SyncMgrType* getTypeForId(const uint32_t type_id);
     bool getIds();
     void getIdsForType(uint32_t type_id, struct Rra::ids *ids);
     QString getVCard(uint32_t type_id, uint32_t object_id);
@@ -91,7 +92,7 @@ public:
     bool isConnected () const;
     QString getPdaName () const;
     void subscribeForType(uint32_t typeId);
-    void unsubscribeTypes();
+    void unsubscribeType(uint32_t typeId);
     bool removeDeletedObjects(uint32_t mTypeId, RRA_Uint32Vector* deleted_ids);
     bool registerAddedObjects(uint32_t mTypeId, RRA_Uint32Vector* added_ids);
 

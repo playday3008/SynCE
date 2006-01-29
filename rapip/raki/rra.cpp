@@ -104,7 +104,7 @@ bool Rra::ok()
 }
 
 
-bool Rra::getTypes(QMap<int, RRA_SyncMgrType *> *objectTypes)
+bool Rra::getTypes(QValueList<uint32_t> *objectTypes)
 {
     RRA_SyncMgrType *object_types = NULL;
     size_t object_type_count = 0;
@@ -118,7 +118,7 @@ bool Rra::getTypes(QMap<int, RRA_SyncMgrType *> *objectTypes)
         object_types = rra_syncmgr_get_types(rra);
         if (object_types) {
             for (size_t i = 0; i < object_type_count; i++) {
-                objectTypes->insert(object_types[i].id, &object_types[i]);
+                objectTypes->append(object_types[i].id);
             }
         } else {
             rraOk = false;
@@ -140,6 +140,15 @@ uint32_t Rra::getTypeForName (const QString& p_typeName)
         return id->id;
     else
         return 0;
+}
+
+
+RRA_SyncMgrType* Rra::getTypeForId(const uint32_t type_id)
+{
+    RRA_SyncMgrType* id;
+    id = rra_syncmgr_type_from_id (rra, type_id);
+
+    return id;
 }
 
 
@@ -204,22 +213,30 @@ void Rra::subscribeForType(uint32_t typeId)
 }
 
 
-void Rra::unsubscribeTypes()
+void Rra::unsubscribeType(uint32_t typeId)
 {
-    for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
-        delete it.data();
+    QMap<uint32_t, Rra::ids *>::iterator it = idMap.find(typeId);
+
+    if (it != idMap.end()) {
+        delete(it.data());
     }
 
-    idMap.clear();
+    idMap.remove(typeId);
+
+    rra_syncmgr_unsubscribe(rra, typeId);
 }
 
 
- void Rra::getIdsForType( uint32_t mTypeId, Rra::ids *ids )
+void Rra::getIdsForType( uint32_t mTypeId, Rra::ids *ids )
 {
-    Rra::ids *_ids = idMap.find(mTypeId).data();
+    QMap<uint32_t, Rra::ids *>::iterator it = idMap.find(mTypeId);
 
-    if (_ids) {
-        *ids = *(_ids);
+    if (it != idMap.end()) {
+        Rra::ids *_ids = it.data();
+
+        if (_ids) {
+            *ids = *(_ids);
+        }
     }
 }
 
@@ -242,18 +259,23 @@ bool Rra::getIds()
             it.data()->uidVector = rra_uint32vector_new();
         }
 
-        kdDebug(2120) << "Waiting for ids to come in" << endl;
-        while(rra_syncmgr_event_wait(rra, 3, &gotEvent) && gotEvent & !allIdsRead) {
+        if (!allIdsRead ) {
+            kdDebug(2120) << "Waiting for ids to come in" << endl;
+            while(rra_syncmgr_event_wait(rra, 3, &gotEvent) && gotEvent && !allIdsRead) {
+                rra_syncmgr_handle_event(rra);
+                allIdsRead = checkForAllIdsRead();
+            }
+        } else {
             rra_syncmgr_handle_event(rra);
-            allIdsRead = checkForAllIdsRead();
         }
 
         kdDebug(2120) << "Creating deleted ids" << endl;
         for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
             RRA_Uint32Vector* uidVector = rra_uint32vector_new();
+
+
             rra_syncmgr_get_deleted_object_ids(rra, it.key(), it.data()->uidVector, uidVector);
             for (size_t i = 0; i < uidVector->used; i++) {
-                kdDebug(2120) << " Adding id... " << uidVector->items[i] << endl;
                 it.data()->deletedIds.append(uidVector->items[i]);
             }
 
@@ -528,3 +550,4 @@ bool Rra::getTimezone(RRA_Timezone *tzi)
 {
     return rra_timezone_get(tzi);
 }
+
