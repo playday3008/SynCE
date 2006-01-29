@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+Exec=foobar
+Comment=Contact Synchronizer
+Icon=
+Name=Contact Synchronizer
+ServiceTypes=Raki/Synchronizer
+X-KDE-Library=librakikpimsync
+X-Raki-Synchronizer=Contact

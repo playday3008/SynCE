@@ -22,13 +22,15 @@
 
 #include <ksharedptr.h>
 
-#include <kitchensync/konnector.h>
+#include "syncekonnectorbase.h"
 #include <kitchensync/synceelist.h>
 #include <kitchensync/idhelper.h>
 #include <libkcal/calendarlocal.h>
 
 #include "rra.h"
 #include "RecordType.h"
+#include "eventsyncee.h"
+#include "todosyncee.h"
 
 namespace KCal
 {
@@ -56,7 +58,7 @@ class KonnectorUIDHelper;
  * are sent to the device. And of course, removed entries will be deleted.
  *  @author Christian Fremgen
 */
-class PocketPCKonnector : public KSync::Konnector
+class PocketPCKonnector : public KSync::SynCEKonnectorBase
 {
 public:
     /** Just the overloaded standard constructor. */
@@ -99,7 +101,6 @@ public:
      * @return just some information
      */
     virtual KonnectorInfo info() const;
-    virtual QStringList supportedFilterTypes() const;
     /** Store the configuration for a specific instance.
      * @see KSync::Konnector::writeConfig()
      */
@@ -114,6 +115,12 @@ public:
      */
     const QString getPdaName () const;
 
+    virtual void subscribeTo( int type );
+
+    virtual void unsubscribeFrom( int type );
+
+    virtual void actualSyncType(int type);
+
     bool getContactsEnabled();
     bool getContactsFirstSync();
     bool getEventsEnabled();
@@ -125,14 +132,23 @@ public:
     void setEventsState(bool enabled, bool firstSync);
     void setTodosState(bool enabled, bool firstSync);
 
+    QStringList supportedFilterTypes() const {
+        QStringList types;
+        types << "addressbook" << "calendar";
+
+        return types;
+    };
+
     void init();
 
 private:
 
-    KCal::CalendarLocal mCalendar;
+    KCal::CalendarLocal mEventCalendar;
+    KCal::CalendarLocal mTodoCalendar;
 
     KSync::AddressBookSyncee *mAddressBookSyncee;
-    KSync::CalendarSyncee *mCalendarSyncee;
+    KSync::EventSyncee *mEventSyncee;
+    KSync::TodoSyncee *mTodoSyncee;
 
     pocketPCCommunication::AddressBookHandler *mAddrHandler;
     pocketPCCommunication::TodoHandler *mTodoHandler;
@@ -158,11 +174,21 @@ private:
     void clearDataStructures ();
 
     QString    m_pdaName;
-    KSharedPtr<pocketPCCommunication::Rra>    m_rra;
+    Rra*   m_rra;
 
     KSync::KonnectorUIDHelper *mUidHelper;
 
     const KConfig *mConfig;
+
+    KPIM::ProgressItem *mProgressItem;
+
+    int subscribtions;
+
+    int _actualSyncType;
+
+    bool idsRead;
+
+    int subscribtionCount;
 };
 
 }

@@ -23,10 +23,10 @@
 #include <kdebug.h>
 #include <kdialog.h>
 
-namespace pocketPCHelper {
+namespace KSync {
 
 PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *name)
- : KRES::ConfigWidget(parent, name)
+ : SynCEKonnectorConfigBase(parent, name)
 {
 
     QGridLayout*   m_layout;
@@ -38,10 +38,10 @@ PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *na
     m_layoutMain = new QGridLayout (this, 2, 1);
     m_layoutMain->setSpacing (KDialog::spacingHint());
 
-    m_layout = new QGridLayout (1, 2);
+    m_layout = new QGridLayout (/*m_layoutMain*/ 0, 1, 2);
     m_layout->setSpacing (KDialog::spacingHint());
 
-    m_layout1 = new QGridLayout (4, 3);
+    m_layout1 = new QGridLayout (/*m_layoutMain*/ 0, 4, 3);
     m_layout->setSpacing (KDialog::spacingHint());
 
     m_layoutMain->addLayout( m_layout, 0, 0);
@@ -153,6 +153,10 @@ void PocketPCKonnectorConfig::saveSettings (KRES::Resource* p_res)
     k->setTodosState(m_TodosEnabled->isChecked(), m_TodosFirstSync->isChecked());
 }
 
+void PocketPCKonnectorConfig::enableRaki()
+{
+    m_textPdaName->setDisabled(true);
+}
 
 }
 #include "PocketPCKonnectorConfig.moc"

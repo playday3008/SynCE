@@ -20,18 +20,18 @@
 #ifndef POCKETPCHELPERPOCKETPCKONNECTORCONFIG_H
 #define POCKETPCHELPERPOCKETPCKONNECTORCONFIG_H
 
-#include <kresources/configwidget.h>
+#include <syncekonnectorconfigbase.h>
 #include <qlabel.h>
 #include <qlineedit.h>
 #include <qlayout.h>
 #include <qcheckbox.h>
 
-namespace pocketPCHelper {
+namespace KSync {
 
 /**
 @author Christian Fremgen
 */
-class PocketPCKonnectorConfig : public KRES::ConfigWidget
+class PocketPCKonnectorConfig : public SynCEKonnectorConfigBase
 {
 Q_OBJECT
 public:
@@ -41,6 +41,8 @@ public:
 
     void loadSettings (KRES::Resource* p_res);
     void saveSettings (KRES::Resource* p_res);
+
+    void enableRaki();
 
 private:
     QLabel*        m_label;

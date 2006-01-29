@@ -24,6 +24,14 @@
 #include <ksharedptr.h>
 #include "RecordType.h"
 
+namespace KPIM {
+    class ProgressItem;
+}
+
+namespace KSync {
+    class KonnectorUIDHelper;
+}
+
 namespace pocketPCCommunication {
 
 /**
@@ -41,13 +49,15 @@ public:
 
     /** in case we already have a Rra-Connection we can use this constuctor
       */
-    PimHandler (KSharedPtr<Rra> p_rra);
+    PimHandler (Rra *p_rra, KSync::KonnectorUIDHelper *mUidHelper );
 
     virtual ~PimHandler();
 
     uint32_t getTypeId();
 
     void setIds(struct Rra::ids ids);
+
+    void setProgressItem(KPIM::ProgressItem *progressItem);
 
     virtual bool init() = 0;
 
@@ -57,13 +67,29 @@ protected:
     bool initialized;
     struct Rra::ids ids;
 
+    void setMaximumSteps(unsigned int maxSteps);
+
+    void setActualSteps(unsigned int actSteps);
+
+    void incrementSteps();
+
+    void setStatus(QString status);
+
+    void resetSteps();
+
     virtual void deleteSingleEntry (const uint32_t& p_typeId, const uint32_t& p_objectId);
 
     uint32_t getOriginalId (const QString& p_id);
 
     QString         m_pdaName;   /**< The name of the device we want to use. */
 
-    KSharedPtr<Rra> m_rra;       /**< Connection handler. Shared to have one instance in many objects. */
+    Rra* m_rra;       /**< Connection handler. Shared to have one instance in many objects. */
+
+    KPIM::ProgressItem *mProgressItem;
+
+    unsigned int maxSteps;
+
+    unsigned int actSteps;
 };
 
 }

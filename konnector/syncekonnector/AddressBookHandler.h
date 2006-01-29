@@ -25,6 +25,11 @@
 #include <kitchensync/idhelper.h>
 
 
+
+namespace KPIM {
+    class ProgressItem;
+}
+
 namespace pocketPCCommunication {
 
 /**
@@ -35,7 +40,7 @@ This class handles an AddressBook which can be read from and written to a Window
 class AddressBookHandler : public PimHandler
 {
 public:
-    AddressBookHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper);
+    AddressBookHandler (Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
 
     bool init();
 

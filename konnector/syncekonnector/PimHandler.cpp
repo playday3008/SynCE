@@ -20,13 +20,17 @@
 #include "PimHandler.h"
 #include <kdebug.h>
 
+#include <libkdepim/progressmanager.h>
+
 namespace pocketPCCommunication {
 
-PimHandler::PimHandler (KSharedPtr<Rra> p_rra)
-    : m_pdaName("")
+PimHandler::PimHandler (Rra *p_rra, KSync::KonnectorUIDHelper */*mUidHelper*/ )
+    : m_pdaName(""), mProgressItem(NULL)
 {
     m_pdaName = p_rra->getPdaName();
     m_rra = p_rra;
+    actSteps = 0;
+    maxSteps = 0;
 }
 
 PimHandler::~PimHandler()
@@ -57,5 +61,44 @@ uint32_t PimHandler::getTypeId()
 void PimHandler::setIds(struct Rra::ids ids)
 {
     this->ids = ids;
+}
+
+
+void PimHandler::setMaximumSteps(unsigned int maxSteps)
+{
+    this->maxSteps = maxSteps;
+}
+
+void PimHandler::setActualSteps(unsigned int actSteps)
+{
+    this->actSteps = actSteps;
+    if (maxSteps > 0 && mProgressItem) {
+        mProgressItem->setProgress((unsigned int) ((actSteps * 100) / maxSteps));
+    }
+}
+
+void PimHandler::incrementSteps()
+{
+    actSteps++;
+    if (maxSteps > 0 && mProgressItem) {
+        mProgressItem->setProgress((unsigned int) ((actSteps * 100) / maxSteps));
+    }
+}
+
+void PimHandler::setProgressItem(KPIM::ProgressItem *progressItem)
+{
+    mProgressItem = progressItem;
+}
+
+void PimHandler::setStatus(QString status)
+{
+    if (mProgressItem) {
+        mProgressItem->setStatus(status);
+    }
+}
+
+void PimHandler::resetSteps()
+{
+    actSteps = 0;
 }
 }

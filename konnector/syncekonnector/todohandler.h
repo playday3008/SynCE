@@ -15,8 +15,14 @@
 
 #include "PimHandler.h"
 #include "RecordType.h"
-#include <kitchensync/calendarsyncee.h>
+#include "todosyncee.h"
 #include <kitchensync/idhelper.h>
+#include <libkdepim/progressmanager.h>
+
+
+namespace KPIM {
+    class ProgressItem;
+}
 
 namespace pocketPCCommunication {
 
@@ -26,7 +32,7 @@ namespace pocketPCCommunication {
 class TodoHandler : public PimHandler
 {
 public:
-    TodoHandler (KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper);
+    TodoHandler (Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
 
     bool init();
 
@@ -36,11 +42,11 @@ public:
     int fakeTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList);
     bool getIds();
     int getTodoListFromDevice(KCal::Todo::List &mTodoList, int mRecType);
-    bool readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync);
+    bool readSyncee(KSync::TodoSyncee *mCalendarSyncee, bool firstSync);
     void getTodos (KCal::Todo::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
     void getTodosAsFakedTodos(KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList );
-    bool writeSyncee(KSync::CalendarSyncee *mCalendarSyncee);
-    void insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Todo::List &list, int state);
+    bool writeSyncee(KSync::TodoSyncee *mCalendarSyncee);
+    void insertIntoCalendarSyncee(KSync::TodoSyncee *mCalendarSyncee, KCal::Todo::List &list, int state);
 
     void addTodos    (KCal::Todo::List& p_todoList);
     void updateTodos (KCal::Todo::List& p_todoList);

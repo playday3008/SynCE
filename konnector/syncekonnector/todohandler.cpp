@@ -21,8 +21,8 @@
 
 namespace pocketPCCommunication
 {
-    TodoHandler::TodoHandler( KSharedPtr<Rra> p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
-            : PimHandler( p_rra )
+    TodoHandler::TodoHandler(Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
+            : PimHandler( p_rra, mUidHelper )
     {
         initialized = false;
         mTypeId = 0;
@@ -40,9 +40,7 @@ namespace pocketPCCommunication
 
 
     TodoHandler::~TodoHandler()
-    {
-        mUidHelper->save();
-    }
+    {}
 
 
     int TodoHandler::retrieveTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList)
@@ -62,6 +60,7 @@ namespace pocketPCCommunication
 
             QString vCal = vCalBegin + m_rra->getVToDo( mTypeId, *it ) + vCalEnd;
 
+            // TOTO delete incidence created fromString somewhere
             KCal::Incidence *incidence = calFormat.fromString (vCal);
 
             QString kdeId;
@@ -153,17 +152,17 @@ namespace pocketPCCommunication
     }
 
 
-    void TodoHandler::insertIntoCalendarSyncee(KSync::CalendarSyncee *mCalendarSyncee, KCal::Todo::List &list, int state)
+    void TodoHandler::insertIntoCalendarSyncee(KSync::TodoSyncee *mCalendarSyncee, KCal::Todo::List &list, int state)
     {
         for(KCal::Todo::List::Iterator it = list.begin(); it != list.end(); ++it) {
-            KSync::CalendarSyncEntry entry(*it, mCalendarSyncee);
+            KSync::TodoSyncEntry entry(*it, mCalendarSyncee);
             entry.setState(state);
             mCalendarSyncee->addEntry(entry.clone());
         }
     }
 
 
-    bool TodoHandler::readSyncee(KSync::CalendarSyncee *mCalendarSyncee, bool firstSync)
+    bool TodoHandler::readSyncee(KSync::TodoSyncee *mCalendarSyncee, bool firstSync)
     {
         getIds();
 
@@ -195,7 +194,7 @@ namespace pocketPCCommunication
     void TodoHandler::getTodos (KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
     {
         for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
-            KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
+            KSync::TodoSyncEntry *cse = dynamic_cast<KSync::TodoSyncEntry*>( *it );
             KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
             if (todo) {
                 p_todos.push_back ( todo );
@@ -207,7 +206,7 @@ namespace pocketPCCommunication
     void TodoHandler::getTodosAsFakedTodos(KCal::Todo::List& p_todos, KSync::SyncEntry::PtrList p_ptrList )
     {
         for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
-            KSync::CalendarSyncEntry *cse = dynamic_cast<KSync::CalendarSyncEntry*>( *it );
+            KSync::TodoSyncEntry *cse = dynamic_cast<KSync::TodoSyncEntry*>( *it );
             KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
             if (todo) {
                 if (mUidHelper->konnectorId("SynCETodo", todo->uid(), "---") != "---") {
@@ -222,8 +221,10 @@ namespace pocketPCCommunication
     {
         RRA_Uint32Vector* added_ids = rra_uint32vector_new();
 
-        if ( p_todoList.begin() == p_todoList.end() )
+        if ( p_todoList.begin() == p_todoList.end() ) {
+            rra_uint32vector_destroy(added_ids, true);
             return ;
+        }
 
         KCal::ICalFormat calFormat;
 
@@ -307,7 +308,7 @@ namespace pocketPCCommunication
     }
 
 
-    bool TodoHandler::writeSyncee(KSync::CalendarSyncee *mCalendarSyncee)
+    bool TodoHandler::writeSyncee(KSync::TodoSyncee *mCalendarSyncee)
     {
         if ( mCalendarSyncee->isValid() ) {
             KCal::Todo::List todoAdded;
