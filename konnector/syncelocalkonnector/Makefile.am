@@ -1,7 +1,6 @@
 # set the include path for X, qt and KDE
-INCLUDES = -I$(top_srcdir)/libksynce -I/home/voc/usr/src/kde/kdepim-3.5.0 \
-	$(all_includes) $(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES) \
-	$(KITCHENSYNC_INCLUDES)
+INCLUDES = -I$(top_srcdir)/libksynce -I$(top_srcdir)/includes $(all_includes) \
+	$(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES) $(KITCHENSYNC_INCLUDES)
 
 # these are the headers for your project
 
