@@ -24,7 +24,7 @@
       <useconfiguration>debug</useconfiguration>
     </general>
     <run>
-      <mainprogram>/usr/local/kde3.4/bin/multisynk</mainprogram>
+      <mainprogram>/usr/bin/raki</mainprogram>
       <directoryradio>custom</directoryradio>
       <customdirectory>/</customdirectory>
       <programargs/>

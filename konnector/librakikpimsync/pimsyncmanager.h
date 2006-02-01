@@ -52,7 +52,7 @@ Q_OBJECT
 public:
     ~PimSyncManager();
 
-    static PimSyncManager* self(QWidget *parent, QString pdaName);
+    static PimSyncManager* self(QString pdaName);
 
     bool loadKonnectors( KConfig* ksConfig);
 
@@ -63,14 +63,14 @@ public:
     void setActualSyncType(int type);
 
     void startSync();
-    void configure(KConfig* ksConfig);
+    void configure(QWidget *parent, KConfig* ksConfig);
 
 protected slots:
     void syncDone();
 
 
 private:
-    PimSyncManager(QWidget *parent, QString pdaName);
+    PimSyncManager(QString pdaName);
     static QMap<QString, PimSyncManager *> pimSyncMap;
     bool konnectorsLoaded;
 
@@ -82,6 +82,5 @@ private:
     class Private;
     Private *d;
 
-    QWidget *parent;
 };
 #endif

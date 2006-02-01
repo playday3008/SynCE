@@ -26,7 +26,7 @@
 #include <libkcal/calendar.h>
 #include <calendarsyncee.h>
 
-#include "syncee.h"
+#include <syncee.h>
 
 namespace KSync {
 class CalendarMerger;

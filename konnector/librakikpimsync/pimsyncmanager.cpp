@@ -22,7 +22,7 @@
 
 QMap<QString, PimSyncManager *> PimSyncManager::pimSyncMap;
 
-PimSyncManager::PimSyncManager(QWidget *parent, QString pdaName ) : konnectorsLoaded( false ), pair(NULL), pdaName( pdaName ), parent(parent)
+PimSyncManager::PimSyncManager(QString pdaName ) : konnectorsLoaded( false ), pair(NULL), pdaName( pdaName )
 {}
 
 
@@ -41,10 +41,10 @@ PimSyncManager::~PimSyncManager()
 }
 
 
-PimSyncManager *PimSyncManager::self(QWidget *parent, QString pdaName )
+PimSyncManager *PimSyncManager::self(QString pdaName )
 {
     if ( !pimSyncMap[ pdaName ] ) {
-        pimSyncMap[ pdaName ] = new PimSyncManager(parent, pdaName );
+        pimSyncMap[ pdaName ] = new PimSyncManager(pdaName );
     }
 
     return pimSyncMap[ pdaName ];
@@ -82,6 +82,7 @@ void PimSyncManager::subscribeTo( int type )
                 k->setPdaName(pdaName);
             }
         }
+        pair->save();
     }
 }
 
@@ -97,6 +98,7 @@ void PimSyncManager::unsubscribeFrom( int type )
                 k->unsubscribeFrom( type );
             }
         }
+        pair->save();
     }
 }
 
@@ -160,7 +162,7 @@ void PimSyncManager::syncDone()
 /*!
     \fn PimSyncManager::configure(KConfig* ksConfig)
  */
-void PimSyncManager::configure(KConfig* ksConfig)
+void PimSyncManager::configure(QWidget *parent, KConfig* ksConfig)
 {
     PairEditorDialog pairEditorDialog(parent, "PairEditorDialog", pdaName);
 

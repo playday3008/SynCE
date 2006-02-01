@@ -17,10 +17,13 @@ SynCEKonnectorBase::SynCEKonnectorBase(const KConfig* p_config)
 {
 }
 
-
 SynCEKonnectorBase::~SynCEKonnectorBase()
 {
 }
 
-}
+void SynCEKonnectorBase::subscribeTo( int /*type*/ ) {}
 
+void SynCEKonnectorBase::unsubscribeFrom( int /*type*/ ) {}
+
+void SynCEKonnectorBase::setPdaName(const QString &/*pdaName*/) {}
+}

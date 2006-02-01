@@ -29,14 +29,14 @@ RakiKPimSync::~RakiKPimSync()
 {
     refcount--;
     if (!refcount) {
-        delete PimSyncManager::self(parent, pdaName );
+        delete PimSyncManager::self(pdaName );
     }
 }
 
 
 bool RakiKPimSync::postSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId )
 {
-    RakiSyncPlugin::preSync( parent, firstSynchronize, partnerId );
+    RakiSyncPlugin::postSync( parent, firstSynchronize, partnerId );
 
     KPIM::ProgressManager *pm = KPIM::ProgressManager::instance();
     disconnect ( pm, SIGNAL( progressItemAdded( KPIM::ProgressItem* ) ),
@@ -62,8 +62,8 @@ bool RakiKPimSync::preSync( QWidget* parent, bool firstSynchronize, uint32_t par
               this, SLOT( progressItemProgress( KPIM::ProgressItem*, unsigned int ) ) );
 
     setTotalSteps(100, true);
-    PimSyncManager::self(parent, pdaName )->setActualSyncType(type);
-    PimSyncManager::self(parent, pdaName ) ->startSync();
+    PimSyncManager::self(pdaName)->setActualSyncType(type);
+    PimSyncManager::self(pdaName)->startSync();
 
     return true;
 }
@@ -77,9 +77,6 @@ bool RakiKPimSync::sync()
 
 void RakiKPimSync::subscribeTo()
 {
-    kdDebug(2120) << "Trying to connect" << endl;
-    rra->connect();
-    kdDebug(2120) << "End trying to connect" << endl;
     kdDebug(2120) << "RRA_SYNCMGR_TYPE_CONTACT: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_CONTACT) << endl;
     kdDebug(2120) << "RRA_SYNCMGR_TYPE_APPOINTMENT: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_APPOINTMENT) << endl;
     kdDebug(2120) << "RRA_SYNCMGR_TYPE_TASK: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_TASK) << endl;
@@ -95,8 +92,7 @@ void RakiKPimSync::subscribeTo()
         kdDebug(2120) << "Todos ... " << endl;
         type = TODOS;
     }
-    rra->disconnect();
-    PimSyncManager::self(parent, pdaName)->subscribeTo(type);
+    PimSyncManager::self(pdaName)->subscribeTo(type);
 }
 
 
@@ -117,23 +113,20 @@ void RakiKPimSync::unsubscribeFrom()
         type = TODOS;
     }
 
-    PimSyncManager::self(parent, pdaName)->unsubscribeFrom(type);
+    PimSyncManager::self(pdaName)->unsubscribeFrom(type);
 }
 
 
 void RakiKPimSync::configure()
 {
-    PimSyncManager::self(parent, pdaName)->configure(ksConfig);
-    /* Are those two calls really necessary??? */
-    getObjectTypeId();
-    subscribeTo();
+    PimSyncManager::self(pdaName)->configure(parent, ksConfig);
 }
 
 
 void RakiKPimSync::createConfigureObject( KConfig* ksConfig )
 {
     kdDebug( 2120 ) << "... loading connectors" << endl;
-    PimSyncManager::self(parent, pdaName ) ->loadKonnectors( ksConfig);
+    PimSyncManager::self(pdaName ) ->loadKonnectors( ksConfig);
     RakiSyncPlugin::createConfigureObject( ksConfig );
 }
 

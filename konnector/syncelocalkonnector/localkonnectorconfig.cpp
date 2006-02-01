@@ -38,8 +38,8 @@
 
 using namespace KSync;
 
-LocalKonnectorConfig::LocalKonnectorConfig( QWidget *parent )
-  : KRES::ConfigWidget( parent, 0 )
+LocalKonnectorConfig::LocalKonnectorConfig( QWidget *parent, const char *name )
+    : SynCEKonnectorConfigBase( parent, name )
 {
   QBoxLayout *topLayout = new QVBoxLayout( this );
 
@@ -140,5 +140,7 @@ void LocalKonnectorConfig::selectCalendarResource()
     }
   }
 }
+
+void LocalKonnectorConfig::enableRaki() {}
 
 #include "localkonnectorconfig.moc"

@@ -71,12 +71,12 @@ PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *na
     m_ContactsFirstSync = new QCheckBox(this, "ContactsFirstSync");
 
     m_EventsLabel = new QLabel(this, "EventsLabel");
-    m_EventsLabel->setText("Events");
+    m_EventsLabel->setText("Appointments");
     m_EventsEnabled = new QCheckBox(this, "EventsEnabled");
     m_EventsFirstSync = new QCheckBox(this, "EventsFirstSync");
 
     m_TodosLabel = new QLabel(this, "TodosLabel");
-    m_TodosLabel->setText("Todos");
+    m_TodosLabel->setText("Tasks");
     m_TodosEnabled = new QCheckBox(this, "TodosEnabled");
     m_TodosFirstSync = new QCheckBox(this, "TodosFirstSync");
 
@@ -98,11 +98,6 @@ PocketPCKonnectorConfig::PocketPCKonnectorConfig(QWidget *parent, const char *na
     m_layout1->addWidget (m_TodosLabel, 4, 0);
     m_layout1->addWidget (m_TodosEnabled, 4, 1);
     m_layout1->addWidget (m_TodosFirstSync, 4, 2);
-
-    m_ContactsEnabled->setDisabled(true);
-    m_EventsEnabled->setDisabled(true);
-    m_TodosEnabled->setDisabled(true);
-
 }
 
 
@@ -156,6 +151,9 @@ void PocketPCKonnectorConfig::saveSettings (KRES::Resource* p_res)
 void PocketPCKonnectorConfig::enableRaki()
 {
     m_textPdaName->setDisabled(true);
+    m_ContactsEnabled->setDisabled(true);
+    m_EventsEnabled->setDisabled(true);
+    m_TodosEnabled->setDisabled(true);
 }
 
 }

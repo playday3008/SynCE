@@ -84,10 +84,11 @@ void PairEditorWidget::setPair( KonnectorPair *pair )
         konnector[ 0 ] = *it;
         it++;
     } else {
-        konnector[ 0 ] = manager->createResource( "SynCE" );
+        konnector[ 0 ] = manager->createResource( "SynCEDevice" );
         KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( konnector[0] );
         if (k) {
             k->setPdaName(pdaName);
+            k->initDefaultFilters();
         }
         manager->add( konnector[ 0 ] );
     }
@@ -95,10 +96,11 @@ void PairEditorWidget::setPair( KonnectorPair *pair )
     if ( it != manager->end() ) {
         konnector[ 1 ] = *it;
     } else {
-        konnector[ 1 ] = manager->createResource( "syncelocal" );
+        konnector[ 1 ] = manager->createResource( "SynCELocal" );
         KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( konnector[1] );
         if (k) {
             k->setPdaName(pdaName);
+            k->initDefaultFilters();
         }
         manager->add( konnector[ 1 ] );
     }

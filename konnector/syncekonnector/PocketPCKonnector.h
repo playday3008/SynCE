@@ -178,8 +178,6 @@ private:
 
     KSync::KonnectorUIDHelper *mUidHelper;
 
-    const KConfig *mConfig;
-
     KPIM::ProgressItem *mProgressItem;
 
     int subscribtions;

@@ -20,8 +20,8 @@
     Boston, MA 02111-1307, USA.
 */
 
-#include "eventsyncee.h"
-#include "calendarmerger.h"
+#include <eventsyncee.h>
+#include <calendarmerger.h>
 
 #include <libkcal/filestorage.h>
 #include <libkcal/calformat.h>

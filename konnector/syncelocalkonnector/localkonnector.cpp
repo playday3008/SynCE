@@ -45,13 +45,29 @@ using namespace KSync;
 typedef SyncHistory<KSync::TodoSyncee, KSync::TodoSyncEntry > TodoSyncHistory;
 typedef SyncHistory<KSync::EventSyncee, KSync::EventSyncEntry > EventSyncHistory;
 
+
+class LocalKonnectorFactory : public KRES::PluginFactoryBase
+{
+    public:
+        KRES::Resource* resource ( const KConfig* p_config )
+        {
+            return new KSync::LocalKonnector( p_config );
+        }
+
+        KRES::ConfigWidget* configWidget ( QWidget* p_parent )
+        {
+            return new KSync::LocalKonnectorConfig( p_parent, "LocalKonnectorConfig" );
+        }
+};
+
+
 extern "C"
 {
-    void *init_libsyncelocalkonnector() {
-        KGlobal::locale() ->insertCatalogue( "konnector_local" );
-        return new KRES::PluginFactory<LocalKonnector, LocalKonnectorConfig>();
+    void* init_libsyncelocalkonnector() {
+        return new LocalKonnectorFactory();
     }
 }
+
 
 namespace KSync
 {
@@ -272,25 +288,6 @@ namespace KSync
         emit synceesWritten( this );
 
         return true;
-    }
-
-
-    void LocalKonnector::subscribeTo( int type )
-    {
-        kdDebug( 2120 ) << "Subscribing for Type: " << type << endl;
-        subscribtions |= type;
-    }
-
-    void LocalKonnector::unsubscribeFrom( int type )
-    {
-        kdDebug( 2120 ) << "UnSubscribing for Type: " << type << endl;
-        subscribtions &= ~type;
-    }
-
-
-    void LocalKonnector::setPdaName( const QString& pdaName )
-    {
-        this->pdaName = pdaName;
     }
 
     void LocalKonnector::actualSyncType(int type)

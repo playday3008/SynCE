@@ -22,21 +22,24 @@
 #define KSYNC_LOCALKONNECTORCONFIG_H
 
 #include <kurlrequester.h>
+#include <syncekonnectorconfigbase.h>
 #include <kresources/configwidget.h>
 
 #include <qwidget.h>
 
 namespace KSync {
 
-class LocalKonnectorConfig : public KRES::ConfigWidget
+class LocalKonnectorConfig : public SynCEKonnectorConfigBase
 {
     Q_OBJECT
   public:
-    LocalKonnectorConfig( QWidget *parent );
+      LocalKonnectorConfig( QWidget *parent, const char *name  );
     ~LocalKonnectorConfig();
 
     void loadSettings( KRES::Resource *resource );
     void saveSettings( KRES::Resource *resource );
+
+    void enableRaki();
 
   protected slots:
     void selectAddressBookResource();

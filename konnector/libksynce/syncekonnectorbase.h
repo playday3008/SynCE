@@ -33,11 +33,11 @@ public:
 
     virtual void actualSyncType(int type ) = 0;
 
-    virtual void subscribeTo( int type ) = 0;
+    virtual void subscribeTo( int type);
 
-    virtual void unsubscribeFrom( int type ) = 0;
+    virtual void unsubscribeFrom( int type);
 
-    virtual void setPdaName(const QString &pdaName) = 0;
+    virtual void setPdaName(const QString &pdaName);
 };
 }
 #endif

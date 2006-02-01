@@ -70,13 +70,6 @@ class LocalKonnector : public KSync::SynCEKonnectorBase
     void setBookmarkFile( const QString &f ) { mBookmarkFile = f; }
     QString bookmarkFile() const { return mBookmarkFile; }
 
-
-    virtual void subscribeTo( int type );
-
-    virtual void unsubscribeFrom( int type );
-
-    virtual void setPdaName(const QString& pdaName);
-
     virtual void actualSyncType(int type);
 
     QStringList supportedFilterTypes() const {
@@ -116,8 +109,8 @@ class LocalKonnector : public KSync::SynCEKonnectorBase
 
     SynceeList mSyncees;
 
-    int subscribtions;
-    QString pdaName;
+//    int subscribtions;
+//    QString pdaName;
     int _actualSyncType;
 
 //    KPIM::ProgressItem *mProgressItem;

@@ -172,17 +172,17 @@ namespace KSync
         mProgressItem->setStatus("Start loading data from Windows CE");
 
         if (!idsRead) {
-            if (mAddrHandler && contactsEnabled && (subscribtions & CONTACTS)) {
+            if (mAddrHandler && contactsEnabled /*&& (subscribtions & CONTACTS)*/) {
                 m_rra->subscribeForType(mAddrHandler->getTypeId());
                 subscribtionCount++;
             }
 
-            if (mTodoHandler && todosEnabled && (subscribtions & TODOS)) {
+            if (mTodoHandler && todosEnabled /*&& (subscribtions & TODOS)*/) {
                 m_rra->subscribeForType(mTodoHandler->getTypeId());
                 subscribtionCount++;
             }
 
-            if (mEventHandler && eventsEnabled && (subscribtions & EVENTS)) {
+            if (mEventHandler && eventsEnabled /*&& (subscribtions & EVENTS)*/) {
                 m_rra->subscribeForType(mEventHandler->getTypeId());
                 subscribtionCount++;
             }
@@ -322,7 +322,7 @@ namespace KSync
     }
 
 
-    void PocketPCKonnector::writeConfig( KConfig* p_config )
+    void PocketPCKonnector::writeConfig(KConfig* p_config )
     {
         p_config->writeEntry ( "PDAName", m_pdaName );
         p_config->writeEntry ("ContactsEnabled", contactsEnabled);
@@ -429,17 +429,26 @@ namespace KSync
         mEventCalendar.deleteAllJournals();
     }
 
-
     void PocketPCKonnector::subscribeTo( int type )
     {
-        kdDebug(2120) << "Subscribing for Type: " << type << endl;
-        subscribtions |= type;
+        if (type & CONTACTS) {
+            contactsEnabled = true;
+        } else if (type & EVENTS) {
+            eventsEnabled = true;
+        } else if (type & TODOS) {
+            todosEnabled = true;
+        }
     }
 
-    void PocketPCKonnector::unsubscribeFrom( int type)
+    void PocketPCKonnector::unsubscribeFrom( int type )
     {
-        kdDebug(2120) << "UnSubscribing for Type: " << type << endl;
-        subscribtions &= ~type;
+        if (type & CONTACTS) {
+            contactsEnabled = false;
+        } else if (type & EVENTS) {
+            eventsEnabled = false;
+        } else if (type & TODOS) {
+            todosEnabled = false;
+        }
     }
 
     void PocketPCKonnector::actualSyncType(int type)
