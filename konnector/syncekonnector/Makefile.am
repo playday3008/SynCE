@@ -27,12 +27,11 @@ lib_LTLIBRARIES = libsyncekonnector.la
 libsyncekonnector_la_LDFLAGS = -avoid-version -module --whole_archive \
 	$(KDE_RPATH) $(RRA_LDFLAGS) $(RAPI_LDFLAGS) $(SYNCE_LDFLAGS) $(all_libraries)
 	
-libsyncekonnector_la_SOURCES = AddressBookHandler.cpp matchmaker.cpp \
-	PimHandler.cpp PocketPCKonnector.cpp PocketPCKonnectorConfig.cpp eventhandler.cpp \
-	todohandler.cpp
+libsyncekonnector_la_SOURCES = AddressBookHandler.cpp PimHandler.cpp \
+	PocketPCKonnector.cpp PocketPCKonnectorConfig.cpp eventhandler.cpp todohandler.cpp
 	
-noinst_HEADERS = AddressBookHandler.h matchmaker.h PimHandler.h \
-	PocketPCKonnector.h PocketPCKonnectorConfig.h RecordType.h eventhandler.h todohandler.h
+noinst_HEADERS = AddressBookHandler.h PimHandler.h PocketPCKonnector.h \
+	PocketPCKonnectorConfig.h RecordType.h eventhandler.h todohandler.h
 
 servicedir = $(kde_servicesdir)/kresources/konnector
 service_DATA = syncekonnector.desktop
