@@ -1,27 +1,27 @@
 /*
- This file is part of KitchenSync.
+This file is part of KitchenSync.
 
- Copyright (c) 2003 Cornelius Schumacher <schumacher@kde.org>
+Copyright (c) 2003 Cornelius Schumacher <schumacher@kde.org>
 
- This library is free software; you can redistribute it and/or
- modify it under the terms of the GNU Library General Public
- License as published by the Free Software Foundation; either
- version 2 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Library General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
 
- This library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- Library General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
 
- You should have received a copy of the GNU Library General Public License
- along with this library; see the file COPYING.LIB.  If not, write to
- the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- Boston, MA 02111-1307, USA.
+You should have received a copy of the GNU Library General Public License
+along with this library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.
 */
 
-#include "localkonnector.h"
+#include "syncelocalkonnector.h"
 
-#include "localkonnectorconfig.h"
+#include "syncelocalkonnectorconfig.h"
 
 #include <calendarsyncee.h>
 #include <addressbooksyncee.h>
@@ -51,12 +51,12 @@ class LocalKonnectorFactory : public KRES::PluginFactoryBase
     public:
         KRES::Resource* resource ( const KConfig* p_config )
         {
-            return new KSync::LocalKonnector( p_config );
+            return new KSync::SynCELocalKonnector( p_config );
         }
 
         KRES::ConfigWidget* configWidget ( QWidget* p_parent )
         {
-            return new KSync::LocalKonnectorConfig( p_parent, "LocalKonnectorConfig" );
+            return new KSync::SynCELocalKonnectorConfig( p_parent, "LocalKonnectorConfig" );
         }
 };
 
@@ -72,9 +72,9 @@ extern "C"
 namespace KSync
 {
 
-    LocalKonnector::LocalKonnector( const KConfig *config )
+    SynCELocalKonnector::SynCELocalKonnector( const KConfig *config )
             : SynCEKonnectorBase( config ), mConfigWidget( 0 ),
-            mCalendar(KPimPrefs::timezone()), mTodoCalendar(KPimPrefs::timezone()), mEventCalendar(KPimPrefs::timezone())
+            mCalendar( KPimPrefs::timezone() ), mTodoCalendar( KPimPrefs::timezone() ), mEventCalendar( KPimPrefs::timezone() )
     {
         if ( config ) {
             mCalendarFile = config->readPathEntry( "CalendarFile" );
@@ -105,10 +105,10 @@ namespace KSync
         mAddressBook.addResource( mAddressBookResourceFile );
     }
 
-    LocalKonnector::~LocalKonnector()
+    SynCELocalKonnector::~SynCELocalKonnector()
     {}
 
-    void LocalKonnector::writeConfig( KConfig *config )
+    void SynCELocalKonnector::writeConfig( KConfig *config )
     {
         Konnector::writeConfig( config );
 
@@ -117,7 +117,7 @@ namespace KSync
         config->writeEntry( "BookmarkFile", mAddressBookFile );
     }
 
-    bool LocalKonnector::readSyncees()
+    bool SynCELocalKonnector::readSyncees()
     {
         kdDebug() << "LocalKonnector::readSyncee()" << endl;
 
@@ -211,26 +211,26 @@ namespace KSync
         return true;
     }
 
-    bool LocalKonnector::connectDevice()
+    bool SynCELocalKonnector::connectDevice()
     {
         return true;
     }
 
-    bool LocalKonnector::disconnectDevice()
+    bool SynCELocalKonnector::disconnectDevice()
     {
         return true;
     }
 
-    KSync::KonnectorInfo LocalKonnector::info() const
+    KSync::KonnectorInfo SynCELocalKonnector::info() const
     {
         return KonnectorInfo( i18n( "Dummy Konnector" ),
                               QIconSet(),
-                              "agenda",    // icon name
+                              "agenda",     // icon name
                               false );
     }
 
 
-    bool LocalKonnector::writeSyncees()
+    bool SynCELocalKonnector::writeSyncees()
     {
         if ( !mCalendarFile.isEmpty() ) {
 
@@ -262,7 +262,8 @@ namespace KSync
                 }
             }
 
-            if ( !mCalendar.save( mCalendarFile ) ) return false;
+            if ( !mCalendar.save( mCalendarFile ) )
+                return false;
         }
 
         if ( !mAddressBookFile.isEmpty() ) {
@@ -277,7 +278,8 @@ namespace KSync
                     emit synceeWriteError( this );
                     return false;
                 }
-                if ( !mAddressBook.save( ticket ) ) return false;
+                if ( !mAddressBook.save( ticket ) )
+                    return false;
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.save();
             }
@@ -290,10 +292,10 @@ namespace KSync
         return true;
     }
 
-    void LocalKonnector::actualSyncType(int type)
+    void SynCELocalKonnector::actualSyncType( int type )
     {
-        kdDebug(2120) << "Actual Sync Type: " << type << endl;
+        kdDebug( 2120 ) << "Actual Sync Type: " << type << endl;
         _actualSyncType = type;
     }
 }
-#include "localkonnector.moc"
+#include "syncelocalkonnector.moc"

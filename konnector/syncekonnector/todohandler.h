@@ -13,8 +13,8 @@
 #define POCKETPCCOMMUNICATIONTODOHANDLER_H
 
 
-#include "PimHandler.h"
-#include "RecordType.h"
+#include "pimhandler.h"
+#include "recordtype.h"
 #include "todosyncee.h"
 #include <kitchensync/idhelper.h>
 #include <libkdepim/progressmanager.h>
@@ -24,7 +24,7 @@ namespace KPIM {
     class ProgressItem;
 }
 
-namespace pocketPCCommunication {
+namespace PocketPCCommunication {
 
 /**
 @author Christian Fremgen cfremgen@users.sourceforge.net, Volker Christian voc@users.sourceforge.net

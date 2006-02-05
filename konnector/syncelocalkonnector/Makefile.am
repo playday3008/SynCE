@@ -22,9 +22,12 @@ AM_CFLAGS = -pedantic-errors -Wall
 AM_CXXFLAGS = -pedantic-errors -Wall
 lib_LTLIBRARIES = libsyncelocalkonnector.la
 libsyncelocalkonnector_la_LDFLAGS = -avoid-version -module $(all_libraries)
-libsyncelocalkonnector_la_SOURCES = localkonnector.cpp localkonnectorconfig.cpp
+
 servicedir = $(kde_servicesdir)/kresources/konnector
 service_DATA = syncelocalkonnector.desktop
 
 libsyncelocalkonnector_la_LIBADD = $(top_builddir)/libksynce/libksynce.la \
 	$(LIB_KSYNC) $(LIB_KONNECTOR) $(LIB_KABC_FILE)
+libsyncelocalkonnector_la_SOURCES = syncelocalkonnectorconfig.cpp\
+	syncelocalkonnector.cpp
+noinst_HEADERS = syncelocalkonnector.h syncelocalkonnectorconfig.h

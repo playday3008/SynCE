@@ -18,12 +18,12 @@
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
 
-#include "PocketPCKonnector.h"
-#include "PocketPCKonnectorConfig.h"
+#include "syncedevicekonnector.h"
+#include "syncedevicekonnectorconfig.h"
 
 #include "todohandler.h"
 #include "eventhandler.h"
-#include "AddressBookHandler.h"
+#include "addressbookhandler.h"
 #include <libkdepim/progressmanager.h>
 
 #include <libkdepim/kpimprefs.h>
@@ -41,12 +41,12 @@ class PocketPCKonnectorFactory : public KRES::PluginFactoryBase
 public:
     KRES::Resource* resource ( const KConfig* p_config )
     {
-        return new KSync::PocketPCKonnector( p_config );
+        return new KSync::SynCEDeviceKonnector( p_config );
     }
 
     KRES::ConfigWidget* configWidget ( QWidget* p_parent )
     {
-        return new KSync::PocketPCKonnectorConfig( p_parent, "PocketPCKonnectorConfig" );
+        return new KSync::SynCEDeviceKonnectorConfig( p_parent, "PocketPCKonnectorConfig" );
     }
 };
 
@@ -61,7 +61,7 @@ extern "C"
 
 namespace KSync
 {
-    PocketPCKonnector::PocketPCKonnector( const KConfig* p_config )
+    SynCEDeviceKonnector::SynCEDeviceKonnector( const KConfig* p_config )
             : KSync::SynCEKonnectorBase( p_config ), mEventCalendar(KPimPrefs::timezone()), mTodoCalendar(KPimPrefs::timezone()), m_rra(0), subscribtions(0)
     {
         contactsEnabled = true;
@@ -86,7 +86,7 @@ namespace KSync
         }
     }
 
-    void PocketPCKonnector::init()
+    void SynCEDeviceKonnector::init()
     {
         if (!initialized) {
             mBaseDir = storagePath();
@@ -116,16 +116,16 @@ namespace KSync
             m_rra = new Rra( m_pdaName );
             m_rra->setLogLevel( 0 );
             mUidHelper = new KSync::KonnectorUIDHelper(mBaseDir + "/" + m_pdaName);
-            mAddrHandler = new pocketPCCommunication::AddressBookHandler( m_rra, mBaseDir, mUidHelper);
-            mTodoHandler = new pocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
-            mEventHandler = new pocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
+            mAddrHandler = new PocketPCCommunication::AddressbookHandler( m_rra, mBaseDir, mUidHelper);
+            mTodoHandler = new PocketPCCommunication::TodoHandler(m_rra, mBaseDir, mUidHelper);
+            mEventHandler = new PocketPCCommunication::EventHandler(m_rra, mBaseDir, mUidHelper);
         }
 
         initialized = true;
     }
 
 
-    PocketPCKonnector::~PocketPCKonnector()
+    SynCEDeviceKonnector::~SynCEDeviceKonnector()
     {
         kdDebug( 2120 ) << "PocketPCKonnector::~PocketPCKonnector" << endl;
 
@@ -153,13 +153,13 @@ namespace KSync
     }
 
 
-    SynceeList PocketPCKonnector::syncees()
+    SynceeList SynCEDeviceKonnector::syncees()
     {
         kdDebug( 2120 ) << "PocketPCKonnector::syncees() returning syncees" << endl;
         return mSyncees;
     }
 
-    bool PocketPCKonnector::readSyncees()
+    bool SynCEDeviceKonnector::readSyncees()
     {
         if ( mSyncees.empty() ) {
             kdDebug( 2120 ) << "syncekonnector not configured - please configure and sync again" << endl;
@@ -225,7 +225,7 @@ namespace KSync
     }
 
 
-    bool PocketPCKonnector::writeSyncees()
+    bool SynCEDeviceKonnector::writeSyncees()
     {
         kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees..." << endl;
 
@@ -271,7 +271,7 @@ namespace KSync
     }
 
 
-    bool PocketPCKonnector::connectDevice()
+    bool SynCEDeviceKonnector::connectDevice()
     {
         mProgressItem = progressItem( i18n( "Start loading data from Windows CE..." ) );
         mProgressItem->setStatus("Connecting to " + m_pdaName);
@@ -287,7 +287,7 @@ namespace KSync
     }
 
 
-    bool PocketPCKonnector::disconnectDevice()
+    bool SynCEDeviceKonnector::disconnectDevice()
     {
         if (mUidHelper) {
             mUidHelper->save();
@@ -301,7 +301,7 @@ namespace KSync
     }
 
 
-    KonnectorInfo PocketPCKonnector::info() const
+    KonnectorInfo SynCEDeviceKonnector::info() const
     {
         if (m_rra) {
             return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
@@ -322,7 +322,7 @@ namespace KSync
     }
 
 
-    void PocketPCKonnector::writeConfig(KConfig* p_config )
+    void SynCEDeviceKonnector::writeConfig(KConfig* p_config )
     {
         p_config->writeEntry ( "PDAName", m_pdaName );
         p_config->writeEntry ("ContactsEnabled", contactsEnabled);
@@ -336,77 +336,77 @@ namespace KSync
     }
 
 
-    void PocketPCKonnector::setPdaName ( const QString& p_pdaName )
+    void SynCEDeviceKonnector::setPdaName ( const QString& p_pdaName )
     {
         m_pdaName = p_pdaName;
         init();
     }
 
 
-    const QString PocketPCKonnector::getPdaName () const
+    const QString SynCEDeviceKonnector::getPdaName () const
     {
         return m_pdaName;
     }
 
 
-    bool PocketPCKonnector::getContactsEnabled()
+    bool SynCEDeviceKonnector::getContactsEnabled()
     {
         return contactsEnabled;
     }
 
 
-    bool PocketPCKonnector::getContactsFirstSync()
+    bool SynCEDeviceKonnector::getContactsFirstSync()
     {
         return contactsFirstSync;
     }
 
 
-    bool PocketPCKonnector::getEventsEnabled()
+    bool SynCEDeviceKonnector::getEventsEnabled()
     {
         return eventsEnabled;
     }
 
 
-    bool PocketPCKonnector::getEventsFirstSync()
+    bool SynCEDeviceKonnector::getEventsFirstSync()
     {
         return eventsFirstSync;
     }
 
 
-    bool PocketPCKonnector::getTodosEnabled()
+    bool SynCEDeviceKonnector::getTodosEnabled()
     {
         return todosEnabled;
     }
 
 
-    bool PocketPCKonnector::getTodosFirstSync()
+    bool SynCEDeviceKonnector::getTodosFirstSync()
     {
         return todosFirstSync;
     }
 
 
-    void PocketPCKonnector::setContactsState(bool enabled, bool firstSync)
+    void SynCEDeviceKonnector::setContactsState(bool enabled, bool firstSync)
     {
         contactsEnabled = enabled;
         contactsFirstSync = firstSync;
     }
 
 
-    void PocketPCKonnector::setEventsState(bool enabled, bool firstSync)
+    void SynCEDeviceKonnector::setEventsState(bool enabled, bool firstSync)
     {
         eventsEnabled = enabled;
         eventsFirstSync = firstSync;
     }
 
 
-    void PocketPCKonnector::setTodosState(bool enabled, bool firstSync)
+    void SynCEDeviceKonnector::setTodosState(bool enabled, bool firstSync)
     {
         todosEnabled = enabled;
         todosFirstSync = firstSync;
     }
 
 
-    void PocketPCKonnector::clearDataStructures()
+    void SynCEDeviceKonnector::clearDataStructures()
     {
         if (mEventSyncee) {
             mEventSyncee->reset();
@@ -429,7 +429,7 @@ namespace KSync
         mEventCalendar.deleteAllJournals();
     }
 
-    void PocketPCKonnector::subscribeTo( int type )
+    void SynCEDeviceKonnector::subscribeTo( int type )
     {
         if (type & CONTACTS) {
             contactsEnabled = true;
@@ -440,7 +440,7 @@ namespace KSync
         }
     }
 
-    void PocketPCKonnector::unsubscribeFrom( int type )
+    void SynCEDeviceKonnector::unsubscribeFrom( int type )
     {
         if (type & CONTACTS) {
             contactsEnabled = false;
@@ -451,7 +451,7 @@ namespace KSync
         }
     }
 
-    void PocketPCKonnector::actualSyncType(int type)
+    void SynCEDeviceKonnector::actualSyncType(int type)
     {
         kdDebug(2120) << "Actual Sync Type: " << type << endl;
         _actualSyncType = type;

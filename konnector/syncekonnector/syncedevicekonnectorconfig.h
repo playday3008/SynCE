@@ -17,14 +17,56 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef POCKETPCHELPERPOCKETPCKONNECTORCONFIG_H
+#define POCKETPCHELPERPOCKETPCKONNECTORCONFIG_H
 
-#ifndef POCKETPCCOMMUNICATIONRECORDTYPE_H
-#define POCKETPCCOMMUNICATIONRECORDTYPE_H
+#include <syncekonnectorconfigbase.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qlayout.h>
+#include <qcheckbox.h>
 
-namespace pocketPCCommunication {
+namespace KSync {
 
-    enum RecordType {ALL = 0x07, CHANGED = 0x01, UNCHANGED = 0x02, DELETED = 0x04};
+/**
+@author Christian Fremgen
+*/
+class SynCEDeviceKonnectorConfig : public SynCEKonnectorConfigBase
+{
+Q_OBJECT
+public:
+    SynCEDeviceKonnectorConfig(QWidget *parent = 0, const char *name = 0);
+
+    ~SynCEDeviceKonnectorConfig();
+
+    void loadSettings (KRES::Resource* p_res);
+    void saveSettings (KRES::Resource* p_res);
+
+    void enableRaki();
+
+private:
+    QLabel*        m_label;
+    QLineEdit*     m_textPdaName;
+    QGridLayout*   m_layout;
+    QGridLayout*   m_layout1;
+    QGridLayout*   m_layoutMain;
+
+    QLabel*        m_Synctarget;
+    QLabel*        m_ActiveLabel;
+    QLabel*        m_FirstSyncLabel;
+
+    QLabel*        m_ContactsLabel;
+    QLabel*        m_EventsLabel;
+    QLabel*        m_TodosLabel;
+    QCheckBox*     m_ContactsEnabled;
+    QCheckBox*     m_ContactsFirstSync;
+    QCheckBox*     m_EventsEnabled;
+    QCheckBox*     m_EventsFirstSync;
+    QCheckBox*     m_TodosEnabled;
+    QCheckBox*     m_TodosFirstSync;
+
+};
+
 }
-
 
 #endif

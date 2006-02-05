@@ -21,8 +21,6 @@
 #define POCKETPCCOMMUNICATIONPIMHANDLER_H
 
 #include "rra.h"
-#include <ksharedptr.h>
-#include "RecordType.h"
 
 namespace KPIM {
     class ProgressItem;
@@ -32,7 +30,7 @@ namespace KSync {
     class KonnectorUIDHelper;
 }
 
-namespace pocketPCCommunication {
+namespace PocketPCCommunication {
 
 /**
 This is the base class for pim data handlers like @ref AddressBookHandler or @ref CalendarHandler.

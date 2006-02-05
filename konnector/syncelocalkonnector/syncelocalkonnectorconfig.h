@@ -29,12 +29,12 @@
 
 namespace KSync {
 
-class LocalKonnectorConfig : public SynCEKonnectorConfigBase
+class SynCELocalKonnectorConfig : public SynCEKonnectorConfigBase
 {
     Q_OBJECT
   public:
-      LocalKonnectorConfig( QWidget *parent, const char *name  );
-    ~LocalKonnectorConfig();
+      SynCELocalKonnectorConfig( QWidget *parent, const char *name  );
+      ~SynCELocalKonnectorConfig();
 
     void loadSettings( KRES::Resource *resource );
     void saveSettings( KRES::Resource *resource );

@@ -28,7 +28,6 @@
 #include <libkcal/calendarlocal.h>
 
 #include "rra.h"
-#include "RecordType.h"
 #include "eventsyncee.h"
 #include "todosyncee.h"
 
@@ -37,8 +36,8 @@ namespace KCal
     class Event;
 }
 
-namespace pocketPCCommunication {
-    class AddressBookHandler;
+namespace PocketPCCommunication {
+    class AddressbookHandler;
     class TodoHandler;
     class EventHandler;
 }
@@ -58,14 +57,14 @@ class KonnectorUIDHelper;
  * are sent to the device. And of course, removed entries will be deleted.
  *  @author Christian Fremgen
 */
-class PocketPCKonnector : public KSync::SynCEKonnectorBase
+class SynCEDeviceKonnector : public KSync::SynCEKonnectorBase
 {
 public:
     /** Just the overloaded standard constructor. */
-    PocketPCKonnector(const KConfig* p_config);
+    SynCEDeviceKonnector(const KConfig* p_config);
 
     /** The destructor. Tries to disconnect nicely! */
-    ~PocketPCKonnector();
+    ~SynCEDeviceKonnector();
 
     /** Get the stored syncees.
      * @see KSync::Konnector::syncees()
@@ -150,9 +149,9 @@ private:
     KSync::EventSyncee *mEventSyncee;
     KSync::TodoSyncee *mTodoSyncee;
 
-    pocketPCCommunication::AddressBookHandler *mAddrHandler;
-    pocketPCCommunication::TodoHandler *mTodoHandler;
-    pocketPCCommunication::EventHandler *mEventHandler;
+    PocketPCCommunication::AddressbookHandler *mAddrHandler;
+    PocketPCCommunication::TodoHandler *mTodoHandler;
+    PocketPCCommunication::EventHandler *mEventHandler;
 
     SynceeList mSyncees;
 

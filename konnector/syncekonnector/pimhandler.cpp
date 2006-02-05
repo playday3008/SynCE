@@ -17,12 +17,12 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include "PimHandler.h"
+#include "pimhandler.h"
 #include <kdebug.h>
 
 #include <libkdepim/progressmanager.h>
 
-namespace pocketPCCommunication {
+namespace PocketPCCommunication {
 
 PimHandler::PimHandler (Rra *p_rra, KSync::KonnectorUIDHelper */*mUidHelper*/ )
     : m_pdaName(""), mProgressItem(NULL)

@@ -16,6 +16,7 @@
 @SET_MAKE@
 
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -40,7 +41,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = syncelocalkonnector
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
@@ -62,14 +64,14 @@ am__DEPENDENCIES_1 =
 libsyncelocalkonnector_la_DEPENDENCIES =  \
 	$(top_builddir)/libksynce/libksynce.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-am_libsyncelocalkonnector_la_OBJECTS = localkonnector.lo \
-	localkonnectorconfig.lo
+am_libsyncelocalkonnector_la_OBJECTS = syncelocalkonnectorconfig.lo \
+	syncelocalkonnector.lo
 #>- libsyncelocalkonnector_la_OBJECTS =  \
 #>- 	$(am_libsyncelocalkonnector_la_OBJECTS)
 #>+ 5
 libsyncelocalkonnector_la_final_OBJECTS = libsyncelocalkonnector_la.all_cpp.lo 
-libsyncelocalkonnector_la_nofinal_OBJECTS = localkonnector.lo \
-	localkonnectorconfig.lo
+libsyncelocalkonnector_la_nofinal_OBJECTS = syncelocalkonnectorconfig.lo \
+	syncelocalkonnector.lo
 @KDE_USE_FINAL_FALSE@libsyncelocalkonnector_la_OBJECTS = $(libsyncelocalkonnector_la_nofinal_OBJECTS)
 @KDE_USE_FINAL_TRUE@libsyncelocalkonnector_la_OBJECTS = $(libsyncelocalkonnector_la_final_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -97,6 +99,7 @@ SOURCES = $(libsyncelocalkonnector_la_SOURCES)
 DIST_SOURCES = $(libsyncelocalkonnector_la_SOURCES)
 serviceDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(service_DATA)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 #>- DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -378,12 +381,15 @@ AM_CFLAGS = -pedantic-errors -Wall
 AM_CXXFLAGS = -pedantic-errors -Wall
 lib_LTLIBRARIES = libsyncelocalkonnector.la
 libsyncelocalkonnector_la_LDFLAGS = -avoid-version -module $(all_libraries)
-libsyncelocalkonnector_la_SOURCES = localkonnector.cpp localkonnectorconfig.cpp
 servicedir = $(kde_servicesdir)/kresources/konnector
 service_DATA = syncelocalkonnector.desktop
 libsyncelocalkonnector_la_LIBADD = $(top_builddir)/libksynce/libksynce.la \
 	$(LIB_KSYNC) $(LIB_KONNECTOR) $(LIB_KABC_FILE)
 
+libsyncelocalkonnector_la_SOURCES = syncelocalkonnectorconfig.cpp\
+	syncelocalkonnector.cpp
+
+noinst_HEADERS = syncelocalkonnector.h syncelocalkonnectorconfig.h
 #>- all: all-am
 #>+ 1
 all: docs-am  all-am
@@ -468,8 +474,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/localkonnector.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/localkonnectorconfig.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syncelocalkonnector.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syncelocalkonnectorconfig.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -596,7 +602,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(DATA)
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(servicedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
@@ -707,25 +713,25 @@ messages: rc.cpp
 .NOEXPORT:
 
 #>+ 3
-localkonnector.moc: $(srcdir)/localkonnector.h
-	$(MOC) $(srcdir)/localkonnector.h -o localkonnector.moc
+syncelocalkonnector.moc: $(srcdir)/syncelocalkonnector.h
+	$(MOC) $(srcdir)/syncelocalkonnector.h -o syncelocalkonnector.moc
 
 #>+ 2
-mocs: localkonnector.moc
+mocs: syncelocalkonnector.moc
 
 #>+ 3
-localkonnectorconfig.moc: $(srcdir)/localkonnectorconfig.h
-	$(MOC) $(srcdir)/localkonnectorconfig.h -o localkonnectorconfig.moc
+syncelocalkonnectorconfig.moc: $(srcdir)/syncelocalkonnectorconfig.h
+	$(MOC) $(srcdir)/syncelocalkonnectorconfig.h -o syncelocalkonnectorconfig.moc
 
 #>+ 2
-mocs: localkonnectorconfig.moc
+mocs: syncelocalkonnectorconfig.moc
 
 #>+ 3
 clean-metasources:
-	-rm -f  localkonnector.moc localkonnectorconfig.moc
+	-rm -f  syncelocalkonnector.moc syncelocalkonnectorconfig.moc
 
 #>+ 2
-KDE_DIST=localkonnector.desktop Makefile.in syncelocalkonnector.desktop localkonnector.h localkonnectorconfig.h Makefile.am 
+KDE_DIST=Makefile.in syncelocalkonnector.desktop Makefile.am 
 
 #>+ 2
 docs-am:
@@ -769,11 +775,11 @@ bcheck-am:
 
 
 #>+ 11
-libsyncelocalkonnector_la.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/localkonnector.cpp $(srcdir)/localkonnectorconfig.cpp  localkonnector.moc localkonnectorconfig.moc
+libsyncelocalkonnector_la.all_cpp.cpp: $(srcdir)/Makefile.in $(srcdir)/syncelocalkonnectorconfig.cpp $(srcdir)/syncelocalkonnector.cpp  syncelocalkonnector.moc syncelocalkonnectorconfig.moc
 	@echo 'creating libsyncelocalkonnector_la.all_cpp.cpp ...'; \
 	rm -f libsyncelocalkonnector_la.all_cpp.files libsyncelocalkonnector_la.all_cpp.final; \
 	echo "#define KDE_USE_FINAL 1" >> libsyncelocalkonnector_la.all_cpp.final; \
-	for file in localkonnector.cpp localkonnectorconfig.cpp ; do \
+	for file in syncelocalkonnectorconfig.cpp syncelocalkonnector.cpp ; do \
 	  echo "#include \"$$file\"" >> libsyncelocalkonnector_la.all_cpp.files; \
 	  test ! -f $(srcdir)/$$file || egrep '^#pragma +implementation' $(srcdir)/$$file >> libsyncelocalkonnector_la.all_cpp.final; \
 	done; \
@@ -806,8 +812,8 @@ kde-rpo-clean:
 
 #>+ 7
 nmcheck: 
-localkonnector.lo: localkonnector.moc 
+syncelocalkonnectorconfig.lo: syncelocalkonnectorconfig.moc 
 nmcheck-am: nmcheck
-localkonnector.o: localkonnector.moc 
-localkonnectorconfig.lo: localkonnectorconfig.moc 
-localkonnectorconfig.o: localkonnectorconfig.moc 
+syncelocalkonnectorconfig.o: syncelocalkonnectorconfig.moc 
+syncelocalkonnector.lo: syncelocalkonnector.moc 
+syncelocalkonnector.o: syncelocalkonnector.moc 

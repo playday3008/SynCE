@@ -21,7 +21,7 @@
 #include <qfile.h>
 #include <qregexp.h>
 
-namespace pocketPCCommunication
+namespace PocketPCCommunication
 {
     EventHandler::EventHandler( Rra* p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
             : PimHandler( p_rra, mUidHelper )
@@ -179,16 +179,16 @@ namespace pocketPCCommunication
 
         KCal::Event::List modifiedList;
         if (firstSync) {
-            if (getEventListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
+            if (getEventListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED) < 0) {
                 return false;
             }
         } else {
-            if (getEventListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
+            if (getEventListFromDevice(modifiedList, PocketPCCommunication::CHANGED) < 0) {
                 return false;
             }
 
             KCal::Event::List removedList;
-            if (getEventListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
+            if (getEventListFromDevice(removedList, PocketPCCommunication::DELETED) < 0) {
                 return false;
             }
             insertIntoCalendarSyncee(mCalendarSyncee, removedList, KSync::SyncEntry::Removed);

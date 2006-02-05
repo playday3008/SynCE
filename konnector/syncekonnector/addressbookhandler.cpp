@@ -17,15 +17,15 @@
 *   Free Software Foundation, Inc.,                                       *
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
-#include "AddressBookHandler.h"
+#include "addressbookhandler.h"
 #include <kdebug.h>
 #include <kapplication.h>
 #include <kabc/vcardconverter.h>
 
 
-namespace pocketPCCommunication
+namespace PocketPCCommunication
 {
-    AddressBookHandler::AddressBookHandler( Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
+    AddressbookHandler::AddressbookHandler( Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
             : PimHandler( p_rra, mUidHelper )
     {
         initialized = false;
@@ -35,7 +35,7 @@ namespace pocketPCCommunication
     }
 
 
-    bool AddressBookHandler::init()
+    bool AddressbookHandler::init()
     {
         mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_CONTACT );
 
@@ -43,11 +43,11 @@ namespace pocketPCCommunication
     }
 
 
-    AddressBookHandler::~AddressBookHandler()
+    AddressbookHandler::~AddressbookHandler()
     {}
 
 
-    int AddressBookHandler::retrieveAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
+    int AddressbookHandler::retrieveAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
     {
         int count = 0;
         KABC::VCardConverter vCardConv;
@@ -84,7 +84,7 @@ namespace pocketPCCommunication
     }
 
 
-    int AddressBookHandler::fakeAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
+    int AddressbookHandler::fakeAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
     {
         int count = 0;
 
@@ -108,7 +108,7 @@ namespace pocketPCCommunication
     }
 
 
-    bool AddressBookHandler::getIds()
+    bool AddressbookHandler::getIds()
     {
         m_rra->getIdsForType( mTypeId, &ids );
 
@@ -116,7 +116,7 @@ namespace pocketPCCommunication
     }
 
 
-    int AddressBookHandler::getAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, int mRecType )
+    int AddressbookHandler::getAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, int mRecType )
     {
         int count = 0;
         int ret = 0;
@@ -156,7 +156,7 @@ namespace pocketPCCommunication
     }
 
 
-    void AddressBookHandler::insertIntoAddressBookSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, KABC::Addressee::List &list, int state)
+    void AddressbookHandler::insertIntoAddressBookSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, KABC::Addressee::List &list, int state)
     {
         for(KABC::Addressee::List::Iterator it = list.begin(); it != list.end(); ++it) {
             KSync::AddressBookSyncEntry entry(*it, mAddressBookSyncee);
@@ -166,7 +166,7 @@ namespace pocketPCCommunication
     }
 
 
-    bool AddressBookHandler::readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync)
+    bool AddressbookHandler::readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync)
     {
         mAddressBookSyncee->reset();
 
@@ -175,17 +175,17 @@ namespace pocketPCCommunication
         KABC::Addressee::List modifiedList;
         if (firstSync) {
             this->setMaximumSteps((ids.changedIds.size() + ids.unchangedIds.size()));
-            if (getAddresseeListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
+            if (getAddresseeListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED) < 0) {
                 return false;
             }
         } else {
             this->setMaximumSteps(ids.changedIds.size());
-            if (getAddresseeListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
+            if (getAddresseeListFromDevice(modifiedList, PocketPCCommunication::CHANGED) < 0) {
                 return false;
             }
 
             KABC::Addressee::List removedList;
-            if (getAddresseeListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
+            if (getAddresseeListFromDevice(removedList, PocketPCCommunication::DELETED) < 0) {
                 return false;
             }
             insertIntoAddressBookSyncee(mAddressBookSyncee, removedList, KSync::SyncEntry::Removed);
@@ -199,7 +199,7 @@ namespace pocketPCCommunication
     }
 
 
-    void AddressBookHandler::getAddressees ( KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList )
+    void AddressbookHandler::getAddressees ( KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList )
     {
         KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin();
         for ( ; it != p_ptrList.end(); ++it ) {
@@ -208,7 +208,7 @@ namespace pocketPCCommunication
     }
 
 
-    void AddressBookHandler::addAddressees( KABC::Addressee::List& p_addresseeList )
+    void AddressbookHandler::addAddressees( KABC::Addressee::List& p_addresseeList )
     {
         if ( p_addresseeList.begin() == p_addresseeList.end() )
             return ;
@@ -247,7 +247,7 @@ namespace pocketPCCommunication
     }
 
 
-    void AddressBookHandler::updateAddressees( KABC::Addressee::List& p_addresseeList )
+    void AddressbookHandler::updateAddressees( KABC::Addressee::List& p_addresseeList )
     {
         if ( p_addresseeList.begin() == p_addresseeList.end() )
             return ;
@@ -276,7 +276,7 @@ namespace pocketPCCommunication
     }
 
 
-    void AddressBookHandler::removeAddressees ( KABC::Addressee::List& p_addresseeList )
+    void AddressbookHandler::removeAddressees ( KABC::Addressee::List& p_addresseeList )
     {
         if ( p_addresseeList.begin() == p_addresseeList.end() )
             return ;
@@ -308,7 +308,7 @@ namespace pocketPCCommunication
     }
 
 
-    bool AddressBookHandler::writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee)
+    bool AddressbookHandler::writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee)
     {
         if ( mAddressBookSyncee->isValid() ) {
             KABC::Addressee::List addrAdded;

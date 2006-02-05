@@ -19,7 +19,7 @@
 #include <libkcal/calendarlocal.h>
 #include <qfile.h>
 
-namespace pocketPCCommunication
+namespace PocketPCCommunication
 {
     TodoHandler::TodoHandler(Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper)
             : PimHandler( p_rra, mUidHelper )
@@ -168,16 +168,16 @@ namespace pocketPCCommunication
 
         KCal::Todo::List modifiedList;
         if (firstSync) {
-            if (getTodoListFromDevice(modifiedList, pocketPCCommunication::UNCHANGED | pocketPCCommunication::CHANGED) < 0) {
+            if (getTodoListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED) < 0) {
                 return false;
             }
         } else {
-            if (getTodoListFromDevice(modifiedList, pocketPCCommunication::CHANGED) < 0) {
+            if (getTodoListFromDevice(modifiedList, PocketPCCommunication::CHANGED) < 0) {
                 return false;
             }
 
             KCal::Todo::List removedList;
-            if (getTodoListFromDevice(removedList, pocketPCCommunication::DELETED) < 0) {
+            if (getTodoListFromDevice(removedList, PocketPCCommunication::DELETED) < 0) {
                 return false;
             }
             insertIntoCalendarSyncee(mCalendarSyncee, removedList, KSync::SyncEntry::Removed);

@@ -20,7 +20,8 @@
 #ifndef POCKETPCCOMMUNICATIONADDRESSBOOKHANDLER_H
 #define POCKETPCCOMMUNICATIONADDRESSBOOKHANDLER_H
 
-#include "PimHandler.h"
+#include "pimhandler.h"
+#include "recordtype.h"
 #include <kitchensync/addressbooksyncee.h>
 #include <kitchensync/idhelper.h>
 
@@ -30,21 +31,21 @@ namespace KPIM {
     class ProgressItem;
 }
 
-namespace pocketPCCommunication {
+namespace PocketPCCommunication {
 
 /**
 This class handles an AddressBook which can be read from and written to a Windows CE device.
 
 @author Christian Fremgen cfremgen@users.sourceforge.net, Volker Christian voc@users.sourceforge.net
 */
-class AddressBookHandler : public PimHandler
+class AddressbookHandler : public PimHandler
 {
 public:
-    AddressBookHandler (Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
+    AddressbookHandler (Rra *p_rra, QString mBaseDir, KSync::KonnectorUIDHelper *mUidHelper );
 
     bool init();
 
-    virtual ~AddressBookHandler();
+    virtual ~AddressbookHandler();
 
     int retrieveAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
     int fakeAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
