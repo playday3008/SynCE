@@ -54,7 +54,7 @@
 struct exchangeData_s
 {
     struct MatchMaker::Partner partners[ 2 ];
-    bool deleteOnDevice;
+    int deleteOnDevice;
 };
 
 
@@ -485,7 +485,6 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
                     kdDebug( 2120 ) << i18n( "        matching!" ) << endl;
                     devicePartnerIndex = i + 1;
                     partnerId = partners[i].id;
-//                   partner = partners[ i ];
                 }
             } else {
                 kdDebug( 2120 ) << i18n( "    failed" ) << endl;
