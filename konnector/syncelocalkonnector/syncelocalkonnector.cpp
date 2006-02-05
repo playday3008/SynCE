@@ -100,9 +100,6 @@ namespace KSync
         mSyncees.append( mTodoSyncee );
         mSyncees.append( mAddressBookSyncee );
         mSyncees.append( new BookmarkSyncee( &mBookmarkManager ) );
-
-        mAddressBookResourceFile = new KABC::ResourceFile( mAddressBookFile );
-        mAddressBook.addResource( mAddressBookResourceFile );
     }
 
     SynCELocalKonnector::~SynCELocalKonnector()
@@ -178,7 +175,9 @@ namespace KSync
             kdDebug() << "LocalKonnector::readSyncee(): addressbook: "
             << mAddressBookFile << endl;
 
-            mAddressBookResourceFile->setFileName( mAddressBookFile );
+            mAddressBookResourceFile = new KABC::ResourceFile( mAddressBookFile );
+            mAddressBook.addResource( mAddressBookResourceFile );
+
             if ( !mAddressBook.load() ) {
                 emit synceeReadError( this );
                 kdDebug() << "Read failed." << endl;
@@ -278,8 +277,13 @@ namespace KSync
                     emit synceeWriteError( this );
                     return false;
                 }
-                if ( !mAddressBook.save( ticket ) )
+                if ( !mAddressBook.save( ticket ) ) {
+                    mAddressBook.removeResource(mAddressBookResourceFile);
                     return false;
+                }
+
+                mAddressBook.removeResource(mAddressBookResourceFile);
+
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.save();
             }

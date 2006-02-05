@@ -109,10 +109,16 @@ bool PimSyncManager::loadKonnectors( KConfig* ksConfig)
     if ( !konnectorsLoaded ) {
         ksConfig->setGroup("Pim Synchronizer");
         QString pairUid = ksConfig->readEntry( "PairUid", "---" );
+        pair = new KonnectorPair();
         if ( pairUid != "---" ) {
-            pair = new KonnectorPair();
             pair->setUid( pairUid );
             pair->load();
+            kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
+        } else {
+            PairEditorDialog pairEditorDialog(0, "PairEditorDialog", pdaName);
+            pairEditorDialog.setPair(pair);
+            pair->load();
+            kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
         }
         mEngine = new KSync::SynCEEngine();
 
@@ -176,6 +182,7 @@ void PimSyncManager::configure(QWidget *parent, KConfig* ksConfig)
 
     pairEditorDialog.setPair( tmpPair );
 
+    kdDebug(2120) << "PairEditorDialog exec" << endl;
     if (pairEditorDialog.exec()) {
         ksConfig->setGroup("Pim Synchronizer");
         tmpPair = pairEditorDialog.pair();
@@ -183,7 +190,9 @@ void PimSyncManager::configure(QWidget *parent, KConfig* ksConfig)
         ksConfig->sync();
         pair = tmpPair;
         pair->save();
+        kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
     } else if (!pair) {
+        kdDebug(2120) << "Delete tmpPair" << endl;
         delete tmpPair;
         tmpPair = NULL;
     }
