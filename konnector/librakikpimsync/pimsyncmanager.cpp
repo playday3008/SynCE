@@ -78,8 +78,9 @@ void PimSyncManager::subscribeTo( int type )
             KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
             if ( k ) {
                 kdDebug( 2120 ) << "Yes, konnector from type SynCEKonnectorBase ... subscribe and write pdaName " << pdaName << endl;
-                k->subscribeTo( type );
                 k->setPdaName(pdaName);
+                k->setPairUid(pair->uid());
+                k->subscribeTo( type );
             }
         }
         pair->save();
@@ -101,7 +102,6 @@ void PimSyncManager::unsubscribeFrom( int type )
         pair->save();
     }
 }
-
 
 
 bool PimSyncManager::loadKonnectors( KConfig* ksConfig)
@@ -165,9 +165,6 @@ void PimSyncManager::syncDone()
 }
 
 
-/*!
-    \fn PimSyncManager::configure(KConfig* ksConfig)
- */
 void PimSyncManager::configure(QWidget *parent, KConfig* ksConfig)
 {
     PairEditorDialog pairEditorDialog(parent, "PairEditorDialog", pdaName);

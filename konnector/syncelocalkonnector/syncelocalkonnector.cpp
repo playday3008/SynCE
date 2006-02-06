@@ -82,11 +82,6 @@ namespace KSync
             mBookmarkFile = config->readPathEntry( "BookmarkFile" );
         }
 
-        mMd5sumEvent = generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
-        mMd5sumTodo = generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
-        mMd5sumAbk = generateMD5Sum( mAddressBookFile ) + "_localkonnector_abk.log";
-        mMd5sumBkm = generateMD5Sum( mBookmarkFile ) + "_localkonnector_bkm.log";
-
         mAddressBookSyncee = new AddressBookSyncee( &mAddressBook );
         mAddressBookSyncee->setTitle( i18n( "Local" ) );
 
@@ -99,7 +94,6 @@ namespace KSync
         mSyncees.append( mEventSyncee );
         mSyncees.append( mTodoSyncee );
         mSyncees.append( mAddressBookSyncee );
-        mSyncees.append( new BookmarkSyncee( &mBookmarkManager ) );
     }
 
     SynCELocalKonnector::~SynCELocalKonnector()
@@ -117,6 +111,10 @@ namespace KSync
     bool SynCELocalKonnector::readSyncees()
     {
         kdDebug() << "LocalKonnector::readSyncee()" << endl;
+
+        mMd5sumEvent = pairUid + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
+        mMd5sumTodo = pairUid + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
+        mMd5sumAbk = pairUid + "_" + generateMD5Sum( mAddressBookFile ) + "_syncelocalkonnector_abk.log";
 
         mTodoCalendar.deleteAllEvents();
         mTodoCalendar.deleteAllTodos();
@@ -301,5 +299,15 @@ namespace KSync
         kdDebug( 2120 ) << "Actual Sync Type: " << type << endl;
         _actualSyncType = type;
     }
+
+    void SynCELocalKonnector::setPdaName(const QString& pdaName)
+    {
+        this->pdaName = pdaName;
+    }
+
+    void SynCELocalKonnector::setPairUid(const QString &pairUid) {
+        this->pairUid = pairUid;
+    }
 }
 #include "syncelocalkonnector.moc"
+

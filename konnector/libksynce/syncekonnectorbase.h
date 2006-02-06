@@ -37,7 +37,9 @@ public:
 
     virtual void unsubscribeFrom( int type);
 
-    virtual void setPdaName(const QString &pdaName);
+    virtual void setPdaName(const QString &pdaName) = 0;
+
+    virtual void setPairUid(const QString &uid) = 0;
 };
 }
 #endif

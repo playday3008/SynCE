@@ -25,5 +25,6 @@ void SynCEKonnectorBase::subscribeTo( int /*type*/ ) {}
 
 void SynCEKonnectorBase::unsubscribeFrom( int /*type*/ ) {}
 
-void SynCEKonnectorBase::setPdaName(const QString &/*pdaName*/) {}
+//void SynCEKonnectorBase::setPairUid(const QString &/*uid*/) {}
 }
+
