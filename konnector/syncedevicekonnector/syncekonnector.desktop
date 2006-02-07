@@ -2,7 +2,7 @@
 Encoding=UTF-8
 Type=Service
 ServiceTypes=KitchenSync/Konnector,KResources/Plugin
-X-KDE-Library=libsyncekonnector
+X-KDE-Library=libsyncedevicekonnector
 
 Name=SynCE Konnector
 Name[cs]=SynCE konektor
