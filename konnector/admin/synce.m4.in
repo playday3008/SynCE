@@ -1,4 +1,4 @@
-AC_DEFUN(SYNCE_CHECK_SYNCE,
+AC_DEFUN([SYNCE_CHECK_SYNCE],
 	[
 		if test x = x$synce_synce_checked; then 
 			synce_kde_save_cflags="$CPPFLAGS"
@@ -67,7 +67,7 @@ AC_DEFUN(SYNCE_CHECK_SYNCE,
 	]
 )
 
-AC_DEFUN(SYNCE_CHECK_RAPI,
+AC_DEFUN([SYNCE_CHECK_RAPI],
 	[
 		if test x = x$synce_rapi_checked; then
 			SYNCE_CHECK_SYNCE
@@ -150,7 +150,7 @@ AC_DEFUN(SYNCE_CHECK_RAPI,
 	]
 )
 
-AC_DEFUN(SYNCE_CHECK_RRA,
+AC_DEFUN([SYNCE_CHECK_RRA],
 	[
 		if test x = x$synce_rra_checked; then
 			SYNCE_CHECK_RAPI
