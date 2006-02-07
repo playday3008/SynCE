@@ -1,0 +1,84 @@
+AC_DEFUN([SYNCE_CHECK_ORANGE],
+	[
+		if test x = x$orange_checked; then
+			SYNCE_CHECK_RAPI
+			SYNCE_CHECK_UNSHIELD
+			SYNCE_CHECK_DYNAMITE
+
+			synce_kde_save_cflags="$CPPFLAGS"
+			synce_kde_save_ldflags="$LDFLAGS"
+
+			CPPFLAGS="$CPPFLAGS $RAPI_R_INCLUDES"
+			LDFLAGS="$LDFLAGS $RAPI_R_LDFLAGS"
+			
+			AC_ARG_WITH(liborange, 
+				AC_HELP_STRING(
+					[--with-liborange=DIR],
+					[Search for liborange in DIR/include and DIR/lib]
+				),
+				[
+					ORANGE_INCLUDES="-I${withval}/include"
+					ORANGE_LDFLAGS="-L${withval}/lib"
+				]
+			)
+
+			AC_ARG_WITH(liborange-include,
+				AC_HELP_STRING(
+					[--with-liborange-include=DIR],
+					[Search for liborange header files in DIR]
+				),
+				[
+					ORANGE_INCLUDES="-I${withval}"
+				]
+			)
+
+			AC_ARG_WITH(liborange-lib,
+				AC_HELP_STRING(
+					[--with-liborange-lib=DIR],
+					[Search for liborange library files in DIR]
+				),
+				[
+					ORANGE_LDFLAGS="-L${withval}"
+				]
+			)
+
+			LDFLAGS="$LDFLAGS $SYNCE_LDFLAGS"
+			AC_CHECK_LIB(orange, orange_squeeze_file,
+				[
+					ORANGE_LIB="-lorange"
+				],
+				[
+					AC_MSG_ERROR([Can't find liborange library])
+					exit
+				],
+				[
+					$RAPI_R_LIB $UNSHIELD_LIB $DYNAMITE_LIB
+				]
+			)
+
+			CPPFLAGS="$CPPFLAGS $ORANGE_INCLUDES"
+			AC_CHECK_HEADERS(liborange.h,,
+				[
+					AC_MSG_ERROR([Can't find liborange.h])
+					exit
+				]
+			)
+
+			ORANGE_R_INCLUDES="$ORANGE_INCLUDES $RAPI_R_INCLUDES $UNSHIELD_INCLUDES $DYNAMITE_INCLUDES"
+			ORANGE_R_LDFLAGS="$ORANGE_LDFLAGS $RAPI_R_LDFLAGS $UNSHIELD_LDFLAGS $DYNAMITE_LDFLAGS"
+			ORANGE_R_LIB="$ORANGE_LIB $RAPI_R_LIB $UNSHIELD_LIB $DYNAMITE_LIB"
+			AC_SUBST(ORANGE_INCLUDES)
+			AC_SUBST(ORANGE_LDFLAGS)
+			AC_SUBST(ORANGE_LIB)
+			AC_SUBST(ORANGE_R_INCLUDES)
+			AC_SUBST(ORANGE_R_LDFLAGS)
+			AC_SUBST(ORANGE_R_LIB)
+
+			CPPFLAGS="$synce_kde_save_cflags"
+			LDFLAGS="$synce_kde_save_ldflags"
+			unset synce_kde_save_cflags
+			unset synce_kde_save_ldflags
+			orange_checked=yes
+		fi
+	]
+)
