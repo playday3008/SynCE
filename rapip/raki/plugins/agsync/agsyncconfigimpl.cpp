@@ -174,6 +174,12 @@ void AGSyncConfigImpl::serverDialogCancel()
 void AGSyncConfigImpl::accept()
 {
     QDialog::accept();
+    writeConfig();
+}
+
+
+void AGSyncConfigImpl::writeConfig()
+{
     ksConfig->setGroup("AGSync Synchronizer");
     ksConfig->writeEntry("HttpProxyUserName", userName->text());
     ksConfig->writeEntry("HttpProxyPassword", passWord->text());
@@ -289,6 +295,7 @@ void AGSyncConfigImpl::setUserConfig(AGUserConfig *userConfig)
     AGUserConfigFree(agreedConfig);
     agreedConfig = AGUserConfigDup(userConfig);
     updateServerList();
+    writeConfig();
 }
 
 

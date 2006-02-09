@@ -302,7 +302,7 @@ void AGSync::doServerSync( AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx
 bool AGSync::preSync( QWidget *parent, bool /*firstSynchronize*/, uint32_t /*partnerId*/ )
 {
     bool ret = true;
-    
+
     if ( configDialog->installClient() ) {
         AvantGoClientInstallationDialogImpl agcid;
 
@@ -340,11 +340,11 @@ bool AGSync::preSync( QWidget *parent, bool /*firstSynchronize*/, uint32_t /*par
                 if ( !agClients.empty() ) {
                     install( agClients.first() );
                     configDialog->resetInstallClient();
-                    
+
                     for ( QStringList::Iterator it = extractedFiles.begin(); it != extractedFiles.end(); ++it ) {
                         KIO::NetAccess::del(*it, NULL);
                     }
-                    
+
                     KMessageBox::information( parent,
                                               i18n( "The AvantGo Client has been installed on your device.\n" \
                                                     "Please finish the installation on the device but do not " \
@@ -361,7 +361,7 @@ bool AGSync::preSync( QWidget *parent, bool /*firstSynchronize*/, uint32_t /*par
             ret = false;
         }
     }
-    
+
     return ret;
 }
 

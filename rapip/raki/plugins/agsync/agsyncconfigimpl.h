@@ -29,7 +29,7 @@
 
 #include <kconfig.h>
 #include <klistview.h>
-#include <qvaluelist.h> 
+#include <qvaluelist.h>
 #include <AGServerConfig.h>
 #include <AGUserConfig.h>
 
@@ -41,7 +41,7 @@ public:
     ServerCheckListItem(QListView *parent, const QString & text) :
         QCheckListItem(parent, text, QCheckListItem::CheckBox) {}
     AGServerConfig *serverConfig;
-    
+
 protected:
     virtual void stateChange(bool state) {
         serverConfig->disabled = !QCheckListItem::isOn();
@@ -80,13 +80,14 @@ private:
     ServerConfigImpl *serverConfigDialog;
     ServerCheckListItem *currentItem;
     void readConfig();
+    void writeConfig();
     void writeServerList();
     void deleteServer(ServerCheckListItem *cli);
     void readServerList();
     void updateServerList();
     AGUserConfig *userConfig;
     AGUserConfig *agreedConfig;
-    
+
 
 public slots:
     /*$PUBLIC_SLOTS$*/
@@ -94,7 +95,7 @@ public slots:
     virtual void newServer(QString hostName, int port, QString userName, QString passWord);
     virtual void modifiedServer(QString hostName, int port, QString userName, QString passWord);
     virtual void serverDialogCancel();
-    
+
 
 protected:
     /*$PROTECTED_FUNCTIONS$*/

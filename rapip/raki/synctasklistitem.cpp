@@ -59,6 +59,7 @@ SyncTaskListItem::SyncTaskListItem(Rra *rra, QString pdaName, uint32_t objectTyp
 SyncTaskListItem::~SyncTaskListItem()
 {
     if (syncPlugin != NULL) {
+        syncPlugin->unInit();
         delete syncPlugin;
     }
 }
