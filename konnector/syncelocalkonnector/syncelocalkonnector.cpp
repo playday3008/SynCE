@@ -100,7 +100,12 @@ namespace KSync
     }
 
     SynCELocalKonnector::~SynCELocalKonnector()
-    {}
+    {
+        kdDebug( 2120 ) << "SynCELocalKonnector::~SynCELocalKonnector" << endl;
+        delete mAddressBookSyncee;
+        delete mTodoSyncee;
+        delete mEventSyncee;
+    }
 
     void SynCELocalKonnector::writeConfig( KConfig *config )
     {
@@ -126,6 +131,8 @@ namespace KSync
         mEventCalendar.deleteAllEvents();
         mEventCalendar.deleteAllTodos();
         mEventCalendar.deleteAllJournals();
+
+        mAddressBook.clear();
 
         if ( !mCalendarFile.isEmpty() ) {
             kdDebug() << "LocalKonnector::readSyncee(): calendar: " << mCalendarFile
@@ -195,7 +202,7 @@ namespace KSync
                 KABC::AddressBook::Iterator it;
                 for ( it = mAddressBook.begin(); it != mAddressBook.end(); ++it ) {
                     KSync::AddressBookSyncEntry entry( *it, mAddressBookSyncee );
-                    mAddressBookSyncee->addEntry( entry.clone() );
+                    mAddressBookSyncee->addEntry( entry.clone());
                 }
 
                 /* let us apply Sync Information */
@@ -274,19 +281,36 @@ namespace KSync
                 ticket = mAddressBook.requestSaveTicket();
                 if ( !ticket ) {
                     kdWarning() << "LocalKonnector::writeSyncees(). Couldn't get ticket for "
-                    << "addressbook." << endl;
+                            << "addressbook." << endl;
+                    KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
+                    while(entry) {
+                        delete entry;
+                        entry = mAddressBookSyncee->nextEntry();
+                    }
+                    mAddressBook.removeResource(mAddressBookResourceFile);
                     emit synceeWriteError( this );
                     return false;
                 }
                 if ( !mAddressBook.save( ticket ) ) {
+                    KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
+                    while(entry) {
+                        delete entry;
+                        entry = mAddressBookSyncee->nextEntry();
+                    }
                     mAddressBook.removeResource(mAddressBookResourceFile);
                     return false;
                 }
 
-                mAddressBook.removeResource(mAddressBookResourceFile);
-
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.save();
+
+                KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
+                while(entry) {
+                    delete entry;
+                    entry = mAddressBookSyncee->nextEntry();
+                }
+                mAddressBookSyncee->reset();
+                mAddressBook.removeResource(mAddressBookResourceFile);
             }
         }
 

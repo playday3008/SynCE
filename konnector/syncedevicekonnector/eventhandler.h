@@ -45,7 +45,7 @@ namespace PocketPCCommunication {
 class EventHandler : public PimHandler
 {
 public:
-    EventHandler (Rra* p_rra, KSync::KonnectorUIDHelper *mUidHelper);
+    EventHandler (Rra* p_rra);
 
     bool init();
 
@@ -66,7 +66,6 @@ public:
     void removeEvents (KCal::Event::List& p_eventList);
 
 private:
-    KSync::KonnectorUIDHelper *mUidHelper;
     QString sCurrentTimeZone;
 };
 

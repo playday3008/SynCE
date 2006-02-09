@@ -34,12 +34,10 @@
 
 namespace PocketPCCommunication
 {
-    TodoHandler::TodoHandler(Rra *p_rra, KSync::KonnectorUIDHelper *mUidHelper)
-            : PimHandler( p_rra, mUidHelper )
+    TodoHandler::TodoHandler(Rra *p_rra) : PimHandler( p_rra)
     {
         initialized = false;
         mTypeId = 0;
-        this->mUidHelper = mUidHelper;
     }
 
 

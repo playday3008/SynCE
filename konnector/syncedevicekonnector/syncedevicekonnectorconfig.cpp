@@ -38,26 +38,22 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
     QGridLayout*   m_layout1;
     QGridLayout*   m_layoutMain;
 
-
-
     m_layoutMain = new QGridLayout (this, 2, 1);
     m_layoutMain->setSpacing (KDialog::spacingHint());
 
-    m_layout = new QGridLayout (/*m_layoutMain*/ 0, 1, 2);
+    m_layout = new QGridLayout (0, 1, 2);
     m_layout->setSpacing (KDialog::spacingHint());
 
-    m_layout1 = new QGridLayout (/*m_layoutMain*/ 0, 4, 3);
+    m_layout1 = new QGridLayout (0, 4, 3);
     m_layout->setSpacing (KDialog::spacingHint());
 
-    m_layoutMain->addLayout( m_layout, 0, 0);
+    m_layoutMain->addLayout(m_layout, 0, 0);
     m_layoutMain->addLayout(m_layout1, 1, 0);
-
 
     m_label = new QLabel (this, "PDA Name");
     m_label->setText ("PDA Name");
 
     m_textPdaName = new QLineEdit(this, "pda name");
-
 
     m_Synctarget = new QLabel(this,  "SyncTarget");
     m_Synctarget->setText("Target");
@@ -67,8 +63,6 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
 
     m_FirstSyncLabel = new QLabel(this, "FirstSync");
     m_FirstSyncLabel->setText("Fresh Sync");
-
-
 
     m_ContactsLabel = new QLabel(this, "ContactsLabel");
     m_ContactsLabel->setText("Contacts");

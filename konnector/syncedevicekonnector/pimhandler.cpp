@@ -29,7 +29,7 @@
 
 namespace PocketPCCommunication {
 
-PimHandler::PimHandler (Rra *p_rra, KSync::KonnectorUIDHelper */*mUidHelper*/ )
+PimHandler::PimHandler (Rra *p_rra)
     : m_pdaName(""), mProgressItem(NULL)
 {
     m_pdaName = p_rra->getPdaName();
@@ -105,5 +105,10 @@ void PimHandler::setStatus(QString status)
 void PimHandler::resetSteps()
 {
     actSteps = 0;
+}
+
+void PimHandler::setUidHelper(KSync::KonnectorUIDHelper *mUidHelper)
+{
+    this->mUidHelper = mUidHelper;
 }
 }

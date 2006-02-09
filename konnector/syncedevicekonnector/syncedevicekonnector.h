@@ -31,6 +31,7 @@
 #include <kitchensync/synceelist.h>
 #include <kitchensync/idhelper.h>
 #include <libkcal/calendarlocal.h>
+#include <kabc/addressbook.h>
 
 #include "rra.h"
 #include "eventsyncee.h"
@@ -39,6 +40,10 @@
 namespace KCal
 {
     class Event;
+}
+namespace KABC
+{
+    class ResourceFile;
 }
 
 namespace PocketPCCommunication {
@@ -151,6 +156,7 @@ private:
 
     KCal::CalendarLocal mEventCalendar;
     KCal::CalendarLocal mTodoCalendar;
+    KABC::AddressBook mAddressBook;
 
     KSync::AddressBookSyncee *mAddressBookSyncee;
     KSync::EventSyncee *mEventSyncee;
@@ -159,6 +165,8 @@ private:
     PocketPCCommunication::AddressbookHandler *mAddrHandler;
     PocketPCCommunication::TodoHandler *mTodoHandler;
     PocketPCCommunication::EventHandler *mEventHandler;
+
+    KABC::ResourceFile *mAddressBookResourceFile;
 
     SynceeList mSyncees;
 

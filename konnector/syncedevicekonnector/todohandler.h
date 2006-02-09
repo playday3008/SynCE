@@ -45,7 +45,7 @@ namespace PocketPCCommunication {
 class TodoHandler : public PimHandler
 {
 public:
-    TodoHandler (Rra *p_rra, KSync::KonnectorUIDHelper *mUidHelper );
+    TodoHandler (Rra *p_rra);
 
     bool init();
 
@@ -64,9 +64,6 @@ public:
     void addTodos    (KCal::Todo::List& p_todoList);
     void updateTodos (KCal::Todo::List& p_todoList);
     void removeTodos (KCal::Todo::List& p_todoList);
-
-private:
-    KSync::KonnectorUIDHelper *mUidHelper;
 };
 
 }

@@ -46,7 +46,7 @@ This class handles an AddressBook which can be read from and written to a Window
 class AddressbookHandler : public PimHandler
 {
 public:
-    AddressbookHandler (Rra *p_rra, KSync::KonnectorUIDHelper *mUidHelper );
+    AddressbookHandler (Rra *p_rra);
 
     bool init();
 
@@ -64,9 +64,6 @@ public:
     void addAddressees    (KABC::Addressee::List& p_addresseeList);
     void updateAddressees (KABC::Addressee::List& p_addresseeList);
     void removeAddressees (KABC::Addressee::List& p_addresseeList);
-
-private:
-    KSync::KonnectorUIDHelper *mUidHelper;
 };
 
 }

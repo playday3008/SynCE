@@ -36,12 +36,10 @@
 
 namespace PocketPCCommunication
 {
-    EventHandler::EventHandler( Rra* p_rra, KSync::KonnectorUIDHelper *mUidHelper)
-            : PimHandler( p_rra, mUidHelper )
+    EventHandler::EventHandler( Rra* p_rra) : PimHandler( p_rra)
     {
         initialized = false;
         mTypeId = 0;
-        this->mUidHelper = mUidHelper;
 
         QFile f("/etc/timezone");
         if(f.open(IO_ReadOnly)) {

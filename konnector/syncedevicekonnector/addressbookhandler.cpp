@@ -30,12 +30,10 @@
 
 namespace PocketPCCommunication
 {
-    AddressbookHandler::AddressbookHandler( Rra *p_rra, KSync::KonnectorUIDHelper *mUidHelper)
-            : PimHandler( p_rra, mUidHelper )
+    AddressbookHandler::AddressbookHandler(Rra *p_rra) : PimHandler( p_rra)
     {
         initialized = false;
         mTypeId = 0;
-        this->mUidHelper = mUidHelper;
     }
 
 

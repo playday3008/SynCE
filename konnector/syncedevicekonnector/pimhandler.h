@@ -45,14 +45,10 @@ It stores the common members and provides the interface to an abstract method.
 class PimHandler
 {
 public:
-    /** Just a simple constructor to initialize the members.
-      * @param p_pdaName as the name says :)
-      */
-//    PimHandler(const QString& p_pdaName);
 
     /** in case we already have a Rra-Connection we can use this constuctor
       */
-    PimHandler (Rra *p_rra, KSync::KonnectorUIDHelper *mUidHelper );
+    PimHandler (Rra *p_rra);
 
     virtual ~PimHandler();
 
@@ -61,6 +57,7 @@ public:
     void setIds(struct Rra::ids ids);
 
     void setProgressItem(KPIM::ProgressItem *progressItem);
+    void setUidHelper(KSync::KonnectorUIDHelper *mUidHelper);
 
     virtual bool init() = 0;
 
@@ -93,6 +90,8 @@ protected:
     unsigned int maxSteps;
 
     unsigned int actSteps;
+
+    KSync::KonnectorUIDHelper *mUidHelper;
 };
 
 }
