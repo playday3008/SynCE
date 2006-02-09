@@ -49,7 +49,7 @@ public:
                        QString serviceName );
     virtual void unInit();
     virtual void configure();
-    virtual void subscribeTo();
+    virtual void subscribeTo(Rra* rra);
     virtual void unsubscribeFrom();
     virtual void createConfigureObject( KConfig* ksConfig );
     virtual bool sync();

@@ -30,7 +30,7 @@
 
 namespace PocketPCCommunication
 {
-    AddressbookHandler::AddressbookHandler(Rra *p_rra) : PimHandler( p_rra)
+    AddressbookHandler::AddressbookHandler() : PimHandler()
     {
         initialized = false;
         mTypeId = 0;

@@ -69,7 +69,7 @@ public:
 
     bool loadKonnectors( KConfig* ksConfig);
 
-    void subscribeTo( int type );
+    void subscribeTo(Rra* rra, int type );
 
     void unsubscribeFrom( int type );
 

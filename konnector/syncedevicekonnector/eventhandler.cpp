@@ -36,7 +36,7 @@
 
 namespace PocketPCCommunication
 {
-    EventHandler::EventHandler( Rra* p_rra) : PimHandler( p_rra)
+    EventHandler::EventHandler() : PimHandler()
     {
         initialized = false;
         mTypeId = 0;

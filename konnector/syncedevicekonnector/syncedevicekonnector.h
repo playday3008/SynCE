@@ -31,7 +31,6 @@
 #include <kitchensync/synceelist.h>
 #include <kitchensync/idhelper.h>
 #include <libkcal/calendarlocal.h>
-#include <kabc/addressbook.h>
 
 #include "rra.h"
 #include "eventsyncee.h"
@@ -40,10 +39,6 @@
 namespace KCal
 {
     class Event;
-}
-namespace KABC
-{
-    class ResourceFile;
 }
 
 namespace PocketPCCommunication {
@@ -115,22 +110,12 @@ public:
      */
     virtual void writeConfig (KConfig* p_config);
 
-    /** Set the name of the pda with which we want to sync.
-     * @param p_pdaName name of the device. @see synce documentation. active-connection-file. vdccm!!
-     */
-    void setPdaName (const QString& p_pdaName);
-    /** Get the currently used PDA-name.
-     * @return pda name
-     */
-    const QString getPdaName () const;
-
-    void subscribeTo( int type );
+    void subscribeTo(Rra* rra, int type );
+    void init(const QString& p_pdaName, const QString &pairUid);
 
     void unsubscribeFrom( int type );
 
     void actualSyncType(int type);
-
-    void setPairUid(const QString &pairUid);
 
     bool getContactsEnabled();
     bool getContactsFirstSync();
@@ -150,13 +135,10 @@ public:
         return types;
     };
 
-    void init();
-
 private:
 
     KCal::CalendarLocal mEventCalendar;
     KCal::CalendarLocal mTodoCalendar;
-    KABC::AddressBook mAddressBook;
 
     KSync::AddressBookSyncee *mAddressBookSyncee;
     KSync::EventSyncee *mEventSyncee;
@@ -166,13 +148,7 @@ private:
     PocketPCCommunication::TodoHandler *mTodoHandler;
     PocketPCCommunication::EventHandler *mEventHandler;
 
-    KABC::ResourceFile *mAddressBookResourceFile;
-
     SynceeList mSyncees;
-
-    QString    mBaseDir;
-
-    QString pairUid;
 
     bool contactsEnabled;
     bool contactsFirstSync;
@@ -189,7 +165,6 @@ private:
      */
     void clearDataStructures ();
 
-    QString    m_pdaName;
     Rra*   m_rra;
 
     KSync::KonnectorUIDHelper *mUidHelper;

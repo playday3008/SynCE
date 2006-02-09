@@ -34,7 +34,7 @@ SynCEKonnectorBase::~SynCEKonnectorBase()
 {
 }
 
-void SynCEKonnectorBase::subscribeTo( int /*type*/ ) {}
+void SynCEKonnectorBase::subscribeTo(Rra* /*rra*/, int /*type*/ ) {}
 
 void SynCEKonnectorBase::unsubscribeFrom( int /*type*/ ) {}
 

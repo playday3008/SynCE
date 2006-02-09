@@ -88,7 +88,7 @@ bool RakiKPimSync::sync()
 }
 
 
-void RakiKPimSync::subscribeTo()
+void RakiKPimSync::subscribeTo(Rra* rra)
 {
     kdDebug(2120) << "RRA_SYNCMGR_TYPE_CONTACT: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_CONTACT) << endl;
     kdDebug(2120) << "RRA_SYNCMGR_TYPE_APPOINTMENT: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_APPOINTMENT) << endl;
@@ -105,7 +105,7 @@ void RakiKPimSync::subscribeTo()
         kdDebug(2120) << "Todos ... " << endl;
         type = TODOS;
     }
-    PimSyncManager::self(pdaName)->subscribeTo(type);
+    PimSyncManager::self(pdaName)->subscribeTo(rra, type);
 }
 
 
@@ -139,8 +139,10 @@ void RakiKPimSync::configure()
 void RakiKPimSync::createConfigureObject( KConfig* ksConfig )
 {
     kdDebug( 2120 ) << "... loading connectors" << endl;
-    PimSyncManager::self(pdaName ) ->loadKonnectors( ksConfig);
+    PimSyncManager::self(pdaName )->loadKonnectors(ksConfig);
+    kdDebug( 2120 ) << "... loading connectors" << endl;
     RakiSyncPlugin::createConfigureObject( ksConfig );
+    kdDebug( 2120 ) << "... loading connectors" << endl;
 }
 
 
@@ -149,7 +151,7 @@ void RakiKPimSync::init(Rra* rra,  SyncTaskListItem *item, QString pdaName, QWid
 {
     kdDebug( 2120 ) << "... init" << endl;
     RakiSyncPlugin::init(rra, item, pdaName, parent, serviceName );
-    subscribeTo();
+    subscribeTo(rra);
 }
 
 

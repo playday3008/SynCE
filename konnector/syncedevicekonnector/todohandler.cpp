@@ -34,7 +34,7 @@
 
 namespace PocketPCCommunication
 {
-    TodoHandler::TodoHandler(Rra *p_rra) : PimHandler( p_rra)
+    TodoHandler::TodoHandler() : PimHandler()
     {
         initialized = false;
         mTypeId = 0;

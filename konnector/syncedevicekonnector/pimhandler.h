@@ -48,7 +48,7 @@ public:
 
     /** in case we already have a Rra-Connection we can use this constuctor
       */
-    PimHandler (Rra *p_rra);
+    PimHandler ();
 
     virtual ~PimHandler();
 
@@ -58,6 +58,7 @@ public:
 
     void setProgressItem(KPIM::ProgressItem *progressItem);
     void setUidHelper(KSync::KonnectorUIDHelper *mUidHelper);
+    void setRra(Rra* rra);
 
     virtual bool init() = 0;
 
@@ -92,6 +93,7 @@ protected:
     unsigned int actSteps;
 
     KSync::KonnectorUIDHelper *mUidHelper;
+    Rra* rra;
 };
 
 }

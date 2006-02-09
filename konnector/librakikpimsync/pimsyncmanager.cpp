@@ -81,7 +81,7 @@ void PimSyncManager::setActualSyncType(int type)
 }
 
 
-void PimSyncManager::subscribeTo( int type )
+void PimSyncManager::subscribeTo(Rra* rra, int type )
 {
     if (pair) {
         KonnectorManager * pmanager = pair->manager();
@@ -91,9 +91,7 @@ void PimSyncManager::subscribeTo( int type )
             KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
             if ( k ) {
                 kdDebug( 2120 ) << "Yes, konnector from type SynCEKonnectorBase ... subscribe and write pdaName " << pdaName << endl;
-                k->setPdaName(pdaName);
-                k->setPairUid(pair->uid());
-                k->subscribeTo( type );
+                k->subscribeTo(rra, type);
             }
         }
         pair->save();
@@ -124,14 +122,29 @@ bool PimSyncManager::loadKonnectors( KConfig* ksConfig)
         QString pairUid = ksConfig->readEntry( "PairUid", "---" );
         pair = new KonnectorPair();
         if ( pairUid != "---" ) {
+            kdDebug(2120) << "1" << endl;
             pair->setUid( pairUid );
+            kdDebug(2120) << "2" << endl;
+            kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
             pair->load();
             kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
         } else {
+            kdDebug(2120) << "1" << endl;
             PairEditorDialog pairEditorDialog(0, "PairEditorDialog", pdaName);
+            kdDebug(2120) << "2" << endl;
             pairEditorDialog.setPair(pair);
+            kdDebug(2120) << "3" << endl;
             pair->load();
+            kdDebug(2120) << "4" << endl;
             kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
+        }
+        KonnectorManager * pmanager = pair->manager();
+        KonnectorManager::Iterator kit;
+        for ( kit = pmanager->begin(); kit != pmanager->end(); ++kit ) {
+            KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
+            if ( k ) {
+                k->init(pdaName, pair->uid());
+            }
         }
         mEngine = new KSync::SynCEEngine();
 
@@ -199,6 +212,14 @@ void PimSyncManager::configure(QWidget *parent, KConfig* ksConfig)
         ksConfig->writeEntry( "PairUid", tmpPair->uid());
         ksConfig->sync();
         pair = tmpPair;
+        KonnectorManager * pmanager = pair->manager();
+        KonnectorManager::Iterator kit;
+        for ( kit = pmanager->begin(); kit != pmanager->end(); ++kit ) {
+            KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
+            if ( k ) {
+                k->init(pdaName, pair->uid());
+            }
+        }
         pair->save();
         kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
     } else if (!pair) {

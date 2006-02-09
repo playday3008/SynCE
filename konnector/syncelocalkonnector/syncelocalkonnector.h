@@ -110,6 +110,8 @@ namespace KSync
             void setPairUid( const QString &pairUid );
 
         private:
+            void clearDataStructures();
+
             LocalKonnectorConfig *mConfigWidget;
             QString mCalendarFile;
             QString mAddressBookFile;
@@ -119,9 +121,10 @@ namespace KSync
             QString mMd5sumTodo;
             QString mMd5sumAbk;
 
+            /*
             QString pdaName;
             QString pairUid;
-
+            */
             KCal::CalendarLocal mCalendar;
             KCal::CalendarLocal mTodoCalendar;
             KCal::CalendarLocal mEventCalendar;

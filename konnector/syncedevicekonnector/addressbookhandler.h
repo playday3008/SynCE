@@ -46,7 +46,7 @@ This class handles an AddressBook which can be read from and written to a Window
 class AddressbookHandler : public PimHandler
 {
 public:
-    AddressbookHandler (Rra *p_rra);
+    AddressbookHandler ();
 
     bool init();
 

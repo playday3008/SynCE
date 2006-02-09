@@ -120,9 +120,9 @@ namespace KSync
     {
         kdDebug() << "LocalKonnector::readSyncee()" << endl;
 
-        mMd5sumEvent = pairUid + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
-        mMd5sumTodo = pairUid + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
-        mMd5sumAbk = pairUid + "_" + generateMD5Sum( mAddressBookFile ) + "_syncelocalkonnector_abk.log";
+        mMd5sumEvent = getPairUid() + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
+        mMd5sumTodo = getPairUid() + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
+        mMd5sumAbk = getPairUid() + "_" + generateMD5Sum( mAddressBookFile ) + "_syncelocalkonnector_abk.log";
 
         mTodoCalendar.deleteAllEvents();
         mTodoCalendar.deleteAllTodos();
@@ -239,6 +239,8 @@ namespace KSync
 
     bool SynCELocalKonnector::writeSyncees()
     {
+        bool ret = false;
+
         if ( !mCalendarFile.isEmpty() ) {
 
             if ( _actualSyncType & TODOS ) {
@@ -270,7 +272,7 @@ namespace KSync
             }
 
             if ( !mCalendar.save( mCalendarFile ) )
-                return false;
+                goto error;
         }
 
         if ( !mAddressBookFile.isEmpty() ) {
@@ -282,58 +284,76 @@ namespace KSync
                 if ( !ticket ) {
                     kdWarning() << "LocalKonnector::writeSyncees(). Couldn't get ticket for "
                             << "addressbook." << endl;
-                    KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
-                    while(entry) {
-                        delete entry;
-                        entry = mAddressBookSyncee->nextEntry();
-                    }
-                    mAddressBook.removeResource(mAddressBookResourceFile);
                     emit synceeWriteError( this );
-                    return false;
+                    goto error;
                 }
                 if ( !mAddressBook.save( ticket ) ) {
-                    KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
-                    while(entry) {
-                        delete entry;
-                        entry = mAddressBookSyncee->nextEntry();
-                    }
-                    mAddressBook.removeResource(mAddressBookResourceFile);
-                    return false;
+                    goto error;
                 }
 
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.save();
-
-                KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
-                while(entry) {
-                    delete entry;
-                    entry = mAddressBookSyncee->nextEntry();
-                }
-                mAddressBookSyncee->reset();
-                mAddressBook.removeResource(mAddressBookResourceFile);
             }
         }
 
-        // TODO: Write Bookmarks
 
         emit synceesWritten( this );
 
-        return true;
+        ret = true;
+error:
+        clearDataStructures();
+        return ret;
     }
+
+
+    void SynCELocalKonnector::clearDataStructures()
+    {
+        if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
+            KSync::EventSyncEntry *entry = mEventSyncee->firstEntry();
+            while ( entry ) {
+                delete entry;
+                entry = mEventSyncee->nextEntry();
+            }
+            mEventSyncee->reset();
+        }
+
+        if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
+            KSync::TodoSyncEntry *entry = mTodoSyncee->firstEntry();
+            while ( entry ) {
+                delete entry;
+                entry = mTodoSyncee->nextEntry();
+            }
+            mTodoSyncee->reset();
+        }
+
+        if ( mAddressBookSyncee && ( _actualSyncType & CONTACTS )) {
+            KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
+            while ( entry ) {
+                delete entry;
+                entry = mAddressBookSyncee->nextEntry();
+            }
+            mAddressBookSyncee->reset();
+            mAddressBook.removeResource(mAddressBookResourceFile);
+        }
+
+        mTodoCalendar.deleteAllEvents();
+        mTodoCalendar.deleteAllTodos();
+        mTodoCalendar.deleteAllJournals();
+
+        mEventCalendar.deleteAllEvents();
+        mEventCalendar.deleteAllTodos();
+        mEventCalendar.deleteAllJournals();
+
+        mCalendar.deleteAllEvents();
+        mCalendar.deleteAllTodos();
+        mCalendar.deleteAllJournals();
+    }
+
 
     void SynCELocalKonnector::actualSyncType( int type )
     {
         kdDebug( 2120 ) << "Actual Sync Type: " << type << endl;
         _actualSyncType = type;
-    }
-
-    void SynCELocalKonnector::setPdaName(const QString& pdaName)
-    {
-        this->pdaName = pdaName;
-    }
-
-    void SynCELocalKonnector::setPairUid(const QString &pairUid) {
-        this->pairUid = pairUid;
     }
 }
 #include "syncelocalkonnector.moc"

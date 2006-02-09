@@ -45,7 +45,7 @@ namespace PocketPCCommunication {
 class TodoHandler : public PimHandler
 {
 public:
-    TodoHandler (Rra *p_rra);
+    TodoHandler ();
 
     bool init();
 

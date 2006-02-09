@@ -45,7 +45,7 @@ namespace PocketPCCommunication {
 class EventHandler : public PimHandler
 {
 public:
-    EventHandler (Rra* p_rra);
+    EventHandler ();
 
     bool init();
 
