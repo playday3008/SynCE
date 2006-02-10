@@ -168,7 +168,6 @@ void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
                 setActualSyncItem(dataExchange.item);
                 postSyncDialogImplEvent(&SyncDialogImpl::preSync, (void *) &dataExchange, block);
                 if (dataExchange.success) {
-//                    postSyncDialogImplEvent(&SyncDialogImpl::synSync, (void *) &dataExchange, block);
                     dataExchange.item->synchronize(this);
                     postSyncDialogImplEvent(&SyncDialogImpl::postSync, (void *) &dataExchange, block);
                     if (!dataExchange.success) {

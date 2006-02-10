@@ -219,6 +219,5 @@ void RakiSyncPlugin::setTask(const char *task, bool directCall)
 
 int RakiSyncPlugin::syncContext()
 {
-    kdDebug(2120) << " +++++++++++++++++++++++++++++++++ " << endl;
     return ASYNCHRONOUS;
 }
