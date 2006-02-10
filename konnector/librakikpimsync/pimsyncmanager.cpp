@@ -70,10 +70,8 @@ void PimSyncManager::setActualSyncType(int type)
         KonnectorManager * pmanager = pair->manager();
         KonnectorManager::Iterator kit;
         for ( kit = pmanager->begin(); kit != pmanager->end(); ++kit ) {
-            kdDebug( 2120 ) << "Trying to subscribe konnector" << endl;
             KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
             if ( k ) {
-                kdDebug( 2120 ) << "Yes, konnector from type SynCEKonnectorBase ... set actual synctype" << pdaName << endl;
                 k->actualSyncType( type );
             }
         }
@@ -87,10 +85,8 @@ void PimSyncManager::subscribeTo(Rra* rra, int type )
         KonnectorManager * pmanager = pair->manager();
         KonnectorManager::Iterator kit;
         for ( kit = pmanager->begin(); kit != pmanager->end(); ++kit ) {
-            kdDebug( 2120 ) << "Trying to subscribe konnector" << endl;
             KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
             if ( k ) {
-                kdDebug( 2120 ) << "Yes, konnector from type SynCEKonnectorBase ... subscribe and write pdaName " << pdaName << endl;
                 k->subscribeTo(rra, type);
             }
         }
@@ -122,21 +118,12 @@ bool PimSyncManager::loadKonnectors( KConfig* ksConfig)
         QString pairUid = ksConfig->readEntry( "PairUid", "---" );
         pair = new KonnectorPair();
         if ( pairUid != "---" ) {
-            kdDebug(2120) << "1" << endl;
             pair->setUid( pairUid );
-            kdDebug(2120) << "2" << endl;
-            kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
             pair->load();
-            kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
         } else {
-            kdDebug(2120) << "1" << endl;
             PairEditorDialog pairEditorDialog(0, "PairEditorDialog", pdaName);
-            kdDebug(2120) << "2" << endl;
             pairEditorDialog.setPair(pair);
-            kdDebug(2120) << "3" << endl;
             pair->load();
-            kdDebug(2120) << "4" << endl;
-            kdDebug(2120) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << endl;
         }
         KonnectorManager * pmanager = pair->manager();
         KonnectorManager::Iterator kit;
@@ -157,7 +144,6 @@ bool PimSyncManager::loadKonnectors( KConfig* ksConfig)
 
 void PimSyncManager::startSync()
 {
-    kdDebug( 2120 ) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << " - Engine: " << ( void * ) mEngine << endl;
     connect( pair->manager(), SIGNAL( synceesRead( KSync::Konnector* ) ),
              mEngine, SLOT( slotSynceesRead( KSync::Konnector* ) ) );
     connect( pair->manager(), SIGNAL( synceeReadError( KSync::Konnector* ) ),
@@ -175,7 +161,6 @@ void PimSyncManager::startSync()
 
 void PimSyncManager::syncDone()
 {
-    kdDebug( 2120 ) << "Debug: Pair-Manager: " << ( void * ) pair->manager() << " - Engine: " << ( void * ) mEngine << endl;
     disconnect( pair->manager(), SIGNAL( synceesRead( KSync::Konnector* ) ),
                 mEngine, SLOT( slotSynceesRead( KSync::Konnector* ) ) );
     disconnect( pair->manager(), SIGNAL( synceeReadError( KSync::Konnector* ) ),

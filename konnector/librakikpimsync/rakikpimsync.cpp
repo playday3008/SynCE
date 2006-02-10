@@ -74,19 +74,21 @@ bool RakiKPimSync::preSync( QWidget* parent, bool firstSynchronize, uint32_t par
     connect ( pm, SIGNAL( progressItemProgress( KPIM::ProgressItem*, unsigned int ) ),
               this, SLOT( progressItemProgress( KPIM::ProgressItem*, unsigned int ) ) );
 
-    setTotalSteps(100, true);
-    PimSyncManager::self(pdaName)->setActualSyncType(type);
-    PimSyncManager::self(pdaName)->startSync();
-
     return true;
 }
 
 bool RakiKPimSync::sync()
 {
-    // We don't sync in a thread - we do a synchronous sync.
+    setTotalSteps(100, true);
+    PimSyncManager::self(pdaName)->setActualSyncType(type);
+    PimSyncManager::self(pdaName)->startSync();
     return true;
 }
 
+int RakiKPimSync::syncContext()
+{
+    return RakiSyncPlugin::SYNCHRONOUS;
+}
 
 void RakiKPimSync::subscribeTo(Rra* rra)
 {
@@ -138,11 +140,8 @@ void RakiKPimSync::configure()
 
 void RakiKPimSync::createConfigureObject( KConfig* ksConfig )
 {
-    kdDebug( 2120 ) << "... loading connectors" << endl;
     PimSyncManager::self(pdaName )->loadKonnectors(ksConfig);
-    kdDebug( 2120 ) << "... loading connectors" << endl;
     RakiSyncPlugin::createConfigureObject( ksConfig );
-    kdDebug( 2120 ) << "... loading connectors" << endl;
 }
 
 

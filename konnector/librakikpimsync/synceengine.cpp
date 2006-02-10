@@ -97,10 +97,6 @@ void SynCEEngine::setResolveStrategy( int strategy )
 
 void SynCEEngine::go( KonnectorPair *pair )
 {
-    kdDebug() << "Engine::gooooooooooo():" << endl;
-
-    logMessage( i18n("Sync Action triggered") );
-
     setResolveStrategy( pair->resolveStrategy() );
 
     mOpenedKonnectors.clear();
@@ -121,7 +117,6 @@ void SynCEEngine::go( KonnectorPair *pair )
 
     Konnector *k;
     for( k = mKonnectors.first(); k; k = mKonnectors.next() ) {
-        logMessage( i18n("Connecting '%1'").arg( k->resourceName() ) );
         if ( !k->connectDevice() ) {
             logError( i18n("Cannot connect device '%1'.").arg( k->resourceName() ) );
         } else {
@@ -131,7 +126,6 @@ void SynCEEngine::go( KonnectorPair *pair )
     }
 
     for ( k = mOpenedKonnectors.first(); k; k = mOpenedKonnectors.next() ) {
-        logMessage( i18n("Request Syncees") );
         if ( !k->readSyncees() ) {
             logError( i18n("Cannot read data from '%1'.").arg( k->resourceName() ) );
         }
@@ -141,9 +135,6 @@ void SynCEEngine::go( KonnectorPair *pair )
 
 void SynCEEngine::slotSynceesRead( Konnector *k )
 {
-    logError( "in my do sync" );
-    logMessage( i18n("Syncees read from '%1'").arg( k->resourceName() ) );
-
     mProcessedKonnectors.append( k );
 
     SynceeList syncees = k->syncees();
@@ -158,17 +149,6 @@ void SynCEEngine::slotSynceesRead( Konnector *k )
 
 void SynCEEngine::tryExecuteActions()
 {
-    kdDebug() << "Engine::tryExecuteActions()" << endl;
-
-
-    kdDebug() << "  konnectorCount: " << mKonnectorCount << endl;
-    kdDebug() << "  processedKonnectorsCount: " << mProcessedKonnectors.count()
-            << endl;
-
-    Konnector *k;
-    for( k = mProcessedKonnectors.first(); k; k = mProcessedKonnectors.next() )
-        logMessage( i18n("Processed '%1'").arg( k->resourceName() ) );
-
     if ( mKonnectorCount == mProcessedKonnectors.count() ) {
         executeActions();
     }
@@ -176,8 +156,6 @@ void SynCEEngine::tryExecuteActions()
 
 void SynCEEngine::executeActions()
 {
-    logMessage( i18n("Execute Actions") );
-
     Konnector *konnector;
     for ( konnector = mOpenedKonnectors.first(); konnector;
           konnector = mOpenedKonnectors.next() )
@@ -197,10 +175,8 @@ void SynCEEngine::executeActions()
 }
 
 
-void SynCEEngine::slotSynceeReadError( Konnector *k )
+void SynCEEngine::slotSynceeReadError( Konnector */*k*/ )
 {
-    logError( i18n("Error reading Syncees from '%1'").arg( k->resourceName() ) );
-
     --mKonnectorCount;
 
     tryExecuteActions();
@@ -208,8 +184,6 @@ void SynCEEngine::slotSynceeReadError( Konnector *k )
 
 void SynCEEngine::slotSynceesWritten( Konnector *k )
 {
-    logMessage( i18n("Syncees written to '%1'").arg( k->resourceName() ) );
-
     mProcessedKonnectors.append( k );
 
     disconnectDevice( k );
@@ -219,8 +193,6 @@ void SynCEEngine::slotSynceesWritten( Konnector *k )
 
 void SynCEEngine::slotSynceeWriteError( Konnector *k )
 {
-    logError( i18n("Error writing Syncees to '%1'").arg( k->resourceName() ) );
-
     --mKonnectorCount;
 
     disconnectDevice( k );
@@ -243,7 +215,6 @@ void SynCEEngine::tryFinish()
 
 void SynCEEngine::finish()
 {
-    logMessage( i18n("Synchronization finished.") );
     emit doneSync();
 }
 
@@ -272,7 +243,6 @@ void SynCEEngine::doSync()
   mTodoSyncer.clear();
   mAddressBookSyncer.clear();
 
-  logError( "in my do sync" );
   Konnector *k;
   for( k = mKonnectors.first(); k; k = mKonnectors.next() ) {
     SynceeList syncees = k->syncees();
@@ -297,7 +267,7 @@ void SynCEEngine::doSync()
       mAddressBookSyncer.addSyncee( addressBookSyncee );
   }
 
-  mCalendarSyncer.sync();
+//  mCalendarSyncer.sync();
   mAddressBookSyncer.sync();
   mTodoSyncer.sync();
   mEventSyncer.sync();

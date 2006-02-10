@@ -53,6 +53,7 @@ public:
     virtual void unsubscribeFrom();
     virtual void createConfigureObject( KConfig* ksConfig );
     virtual bool sync();
+    virtual int syncContext();
 
 private slots:
     void progressItemAdded( KPIM::ProgressItem* );
