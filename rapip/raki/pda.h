@@ -176,6 +176,7 @@ private:
     bool typesRead;
     KProcess pdaMirror;
     PDAThreadData *ptd;
+    bool alreadySynced;
 
 private slots:
     void execute();

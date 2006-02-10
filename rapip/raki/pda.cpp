@@ -65,10 +65,12 @@ PDA::PDA( Raki *raki, QString pdaName )
     _masqueradeStarted = false;
     partnerOk = false;
     typesRead = false;
+    alreadySynced = false;
     this->raki = raki;
     this->pdaName = pdaName;
     this->rra = new Rra( pdaName );
     this->rra->setLogLevel(0);
+    this->rra->connect();
     this->ptd = new PDAThreadData(this);
 
     runWindow = new RunWindowImpl( pdaName, raki, "RunWindow", false );
@@ -157,6 +159,7 @@ PDA::~PDA()
     }
     delete configDialog;
     delete associatedMenu;
+    this->rra->disconnect();
     delete rra;
     delete ptd;
 
@@ -253,10 +256,13 @@ void PDA::openFs()
 
 void PDA::synchronize( bool forced )
 {
-    if ( ( forced || configDialog->getSyncAtConnect() ) && isPartner() ) {
+    if (!alreadySynced && ( forced || configDialog->getSyncAtConnect() ) && isPartner() ) {
         QPtrList<SyncTaskListItem>& syncItems =
             configDialog->getSyncTaskItemList();
         syncDialog->show( syncItems );
+        alreadySynced = true;
+    } else if (alreadySynced) {
+        KMessageBox::sorry((QWidget * ) parent(), QString(i18n("The device has already been synced. This could not be done twice. Please disconnect and reconnect your device and start syncing again.")));
     }
 }
 
