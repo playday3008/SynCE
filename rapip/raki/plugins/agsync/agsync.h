@@ -47,7 +47,7 @@ class AGSyncConfigImpl;
 /**
 @author Volker Christian,,,
 */
-class AGSync : public RakiSyncPlugin 
+class AGSync : public RakiSyncPlugin
 {
 Q_OBJECT
 public:
@@ -56,6 +56,7 @@ public:
     void createConfigureObject(KConfig *ksConfig);
     void configure();
     bool preSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
+    int syncContext();
 
 private:
     bool sync();

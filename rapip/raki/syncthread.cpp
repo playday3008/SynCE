@@ -89,3 +89,9 @@ void *SyncThread::setTask(void *task)
     delete [] (char *) task;
     return NULL;
 }
+
+
+void *SyncThread::syncReal(void *v_ret) {
+    actualSyncItem->syncReal(v_ret);
+    return NULL;
+}

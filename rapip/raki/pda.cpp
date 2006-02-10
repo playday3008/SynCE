@@ -68,6 +68,7 @@ PDA::PDA( Raki *raki, QString pdaName )
     this->raki = raki;
     this->pdaName = pdaName;
     this->rra = new Rra( pdaName );
+    this->rra->setLogLevel(0);
     this->ptd = new PDAThreadData(this);
 
     runWindow = new RunWindowImpl( pdaName, raki, "RunWindow", false );

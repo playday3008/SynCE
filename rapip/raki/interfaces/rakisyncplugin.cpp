@@ -215,3 +215,10 @@ void RakiSyncPlugin::setTask(const char *task, bool directCall)
         postSyncThreadEvent(&SyncThread::setTask, (void *) qstrdup(task));
     }
 }
+
+
+int RakiSyncPlugin::syncContext()
+{
+    kdDebug(2120) << " +++++++++++++++++++++++++++++++++ " << endl;
+    return ASYNCHRONOUS;
+}

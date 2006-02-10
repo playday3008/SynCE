@@ -374,9 +374,17 @@ int SyncTaskListItem::createSyncPlugin(bool state)
 }
 
 
+void SyncTaskListItem::syncReal(void *data) {
+    bool *ret = (bool *) data;
+
+    *ret = syncPlugin->doSync(syncThread, firstSynchronization, partnerId);
+}
+
+
 bool SyncTaskListItem::synchronize(SyncThread *syncThread)
 {
     bool ret = false;
+    this->syncThread = syncThread;
 
     postSyncThreadEvent(&SyncThread::setTask, (void *) qstrdup(i18n("Started").utf8()));
     int *pSteps = new int;
@@ -384,12 +392,22 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread)
     postSyncThreadEvent(&SyncThread::setTotalSteps, pSteps);
 
     if (syncPlugin != NULL) {
-        kdDebug(2120) << i18n("Started syncing with") << " " << syncPlugin->serviceName() << endl;
 
-        ret = syncPlugin->doSync(syncThread, firstSynchronization, partnerId);
+        if (syncPlugin->syncContext() == RakiSyncPlugin::ASYNCHRONOUS) {
+            kdDebug(2120) << "----------------------------------------------" << endl;
+            kdDebug(2120) << i18n("*** Started asynchronous syncing with") << " " << syncPlugin->serviceName() << endl;
+            syncReal(&ret);
+            kdDebug(2120) << i18n("*** Finished asynchronous syncing with") << " " << syncPlugin->serviceName() << endl;
+            kdDebug(2120) << "----------------------------------------------" << endl;
+        } else {
+            kdDebug(2120) << "----------------------------------------------" << endl;
+            kdDebug(2120) << i18n("*** Started synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
+            postSyncThreadEventBlock(&SyncThread::syncReal, &ret);
+            kdDebug(2120) << i18n("*** Finished synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
+            kdDebug(2120) << "----------------------------------------------" << endl;
+        }
 
-        kdDebug(2120) << i18n("Finished syncing with") << " " << syncPlugin->serviceName() << endl;
-        int *pStep = new int;
+       int *pStep = new int;
         *pStep = totalSteps();
         postSyncThreadEvent(&SyncThread::setProgress, pStep);
 
@@ -414,7 +432,6 @@ bool SyncTaskListItem::preSync(QWidget *parent)
     bool ret;
 
     ret = syncPlugin->preSync(parent, firstSynchronization, partnerId);
-
     setTotalSteps(1);
 
     return ret;

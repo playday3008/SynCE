@@ -49,6 +49,11 @@ class Rra;
 class RakiSyncPlugin : public QObject
 {
     Q_OBJECT
+    public:
+        enum SyncContext {
+            ASYNCHRONOUS = 1,
+            SYNCHRONOUS = 2
+        };
 public:
     RakiSyncPlugin();
     virtual ~RakiSyncPlugin();
@@ -73,6 +78,7 @@ public:
     QString serviceName();
     void install(QString cabFileName);
     QStringList extractWithOrange(QString selfInstaller, QString dest = "");
+    virtual int syncContext();
 
 private:
     virtual bool sync() = 0;

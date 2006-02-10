@@ -106,6 +106,7 @@ public:
     void *setTotalSteps(void *steps);
     void *setProgress(void *progress);
     void *setTask(void *task);
+    void *syncReal(void *v_ret);
     void setActualSyncItem(SyncTaskListItem *actualSyncItem);
     SyncThreadThreadData *sttd;
 

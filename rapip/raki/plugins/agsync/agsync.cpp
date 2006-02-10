@@ -491,4 +491,9 @@ bool AGSync::sync()
 
     return true;
 }
+
+
+int AGSync::syncContext() {
+    return RakiSyncPlugin::ASYNCHRONOUS;
+}
 #endif

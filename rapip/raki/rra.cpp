@@ -161,15 +161,15 @@ static bool callback(RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count,
     switch(event) {
     case SYNCMGR_TYPE_EVENT_UNCHANGED:
         eventIds = &_ids->unchangedIds;
-        kdDebug(2120) << count << " IDs unchanged of type " << type << endl;
+        kdDebug(2120) << "    " << count << " IDs unchanged of type " << type << endl;
         break;
     case SYNCMGR_TYPE_EVENT_CHANGED:
         eventIds = &_ids->changedIds;
-        kdDebug(2120) << count << " IDs changed of type" << type << endl;
+        kdDebug(2120) << "    " << count << " IDs changed of type" << type << endl;
         break;
     case SYNCMGR_TYPE_EVENT_DELETED:
         eventIds = &_ids->deletedIds;
-        kdDebug(2120) << count << " IDs deleted of type" << type << endl;
+        kdDebug(2120) << "    " << count << " IDs deleted of type" << type << endl;
         break;
     default:
         eventIds = NULL;
@@ -202,8 +202,6 @@ bool Rra::checkForAllIdsRead()
 
 void Rra::subscribeForType(uint32_t typeId)
 {
-    kdDebug(2120) << "Subscribing for type " << typeId << endl;
-
     Rra::ids *ids = new Rra::ids;
     ids->changedIds.clear();
     ids->unchangedIds.clear();
@@ -254,7 +252,6 @@ bool Rra::getIds()
 
         allIdsRead = checkForAllIdsRead();
 
-        kdDebug(2120) << "Creating uint32vector" << endl;
         for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
             it.data()->uidVector = rra_uint32vector_new();
         }
@@ -269,7 +266,6 @@ bool Rra::getIds()
             rra_syncmgr_handle_event(rra);
         }
 
-        kdDebug(2120) << "Creating deleted ids" << endl;
         for (QMap<uint32_t, Rra::ids *>::iterator it = idMap.begin(); it != idMap.end(); ++it) {
             RRA_Uint32Vector* uidVector = rra_uint32vector_new();
 
@@ -279,7 +275,7 @@ bool Rra::getIds()
                 it.data()->deletedIds.append(uidVector->items[i]);
             }
 
-            kdDebug(2120) << it.data()->deletedIds.size() << " IDs deleted of type" << it.key() << endl;
+            kdDebug(2120) << "    " << it.data()->deletedIds.size() << " IDs deleted of type" << it.key() << endl;
 
             rra_uint32vector_destroy(uidVector, true);
             rra_uint32vector_destroy(it.data()->uidVector, true);
@@ -423,7 +419,6 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
     if (connect()) {
         vEvent = vEvent.stripWhiteSpace();
         const char *vevent = vEvent.ascii();
-        kdDebug(2120) << vevent << endl;
         if (!rra_appointment_from_vevent(vevent, NULL, &buffer,
                 &buffer_size, ((object_id != 0) ? RRA_APPOINTMENT_UPDATE :
                 RRA_APPOINTMENT_NEW) | RRA_APPOINTMENT_ISO8859_1, NULL)) {
