@@ -84,7 +84,6 @@ namespace KSync
         mEventHandler = NULL;
 
         if ( p_config ) {
-            setPdaName( p_config->readEntry( "PDAName" ) );
             contactsEnabled = p_config->readBoolEntry( "ContactsEnabled", true );
             contactsFirstSync = p_config->readBoolEntry( "ContactsFirstSync", true );
             todosEnabled = p_config->readBoolEntry( "TodosEnabled", true );
@@ -112,6 +111,7 @@ namespace KSync
 
     SynCEDeviceKonnector::~SynCEDeviceKonnector()
     {
+        kdDebug( 2120 ) << "SynCEDeviceKonnector::~SynCEDeviceKonnector" << endl;
         delete mAddressBookSyncee;
         delete mTodoSyncee;
         delete mEventSyncee;
@@ -283,14 +283,7 @@ error:
     bool SynCEDeviceKonnector::connectDevice()
     {
         mProgressItem = progressItem( i18n( "Start loading data from Windows CE..." ) );
-        mProgressItem->setStatus( "Connecting to " + getPdaName() );
-
-        if ( !getPdaName().isEmpty() ) {
-            m_rra->connect();
-        } else {
-            kdDebug( 2120 ) << "You have didn't configure SynCEDeviceKonnector well - please repeat the configuration and start again" << endl;
-            return false;
-        }
+        m_rra->connect();
 
         return true;
     }
@@ -333,7 +326,6 @@ error:
 
     void SynCEDeviceKonnector::writeConfig( KConfig* p_config )
     {
-        p_config->writeEntry ( "PDAName", getPdaName() );
         p_config->writeEntry ( "ContactsEnabled", contactsEnabled );
         p_config->writeEntry ( "EventsEnabled", eventsEnabled );
         p_config->writeEntry ( "TodosEnabled", todosEnabled );
@@ -420,10 +412,10 @@ error:
     }
 
 
-    void SynCEDeviceKonnector::init( const QString& p_pdaName, const QString &pairUid )
+    void SynCEDeviceKonnector::init(const QString &pairUid )
     {
         if ( !initialized ) {
-            SynCEKonnectorBase::init( p_pdaName, pairUid );
+            SynCEKonnectorBase::init(pairUid );
             initialized = true;
 
             mAddrHandler = new PocketPCCommunication::AddressbookHandler();
@@ -433,7 +425,7 @@ error:
             QString mBaseDir = storagePath();
 
             QDir dir;
-            QString dirName = mBaseDir + getPdaName() + "_" + getPairUid();
+            QString dirName = mBaseDir + getPairUid();
 
             if ( !dir.exists( dirName ) ) {
                 dir.mkdir ( dirName );
@@ -443,7 +435,7 @@ error:
                 mUidHelper->save();
                 delete mUidHelper;
             }
-            mUidHelper = new KSync::KonnectorUIDHelper( mBaseDir + "/" + getPdaName() + "_" + getPairUid() );
+            mUidHelper = new KSync::KonnectorUIDHelper( mBaseDir + getPairUid() );
 
             mAddrHandler->setUidHelper( mUidHelper );
             mTodoHandler->setUidHelper( mUidHelper );
