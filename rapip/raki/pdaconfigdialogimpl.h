@@ -70,6 +70,7 @@ public:
     void clearConfig();
     bool readConnectionFile();
     virtual void show();
+    int getOsVersion();
 
 public slots:
     void writeConfig();
@@ -98,6 +99,7 @@ private:
     bool syncAtConnect;
     bool newPda;
     QString deviceIp;
+    int osVersion;
 };
 
 #endif

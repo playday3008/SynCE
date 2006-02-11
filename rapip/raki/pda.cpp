@@ -11,7 +11,7 @@
 *                                                                         *
 * The above copyright notice and this permission notice shall be included *
 * in all copies or substantial portions of the Software.                  *
-// // *                                                                         *
+*                                                                         *
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
 * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
 * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
@@ -70,7 +70,6 @@ PDA::PDA( Raki *raki, QString pdaName )
     this->pdaName = pdaName;
     this->rra = new Rra( pdaName );
     this->rra->setLogLevel(0);
-    this->rra->connect();
     this->ptd = new PDAThreadData(this);
 
     runWindow = new RunWindowImpl( pdaName, raki, "RunWindow", false );
@@ -151,15 +150,17 @@ PDA::~PDA()
 
     delete passwordDialog;
     delete runWindow;
-    if ( managerWindow->running() ) {
+    if (managerWindow->running() ) {
         managerWindow->setDelayedDelete( true );
         managerWindow->WorkerThreadInterface::setStopRequested( true );
     } else {
         delete managerWindow;
     }
+    if (configDialog->getOsVersion() > 3) {
+        this->rra->disconnect();
+    }
     delete configDialog;
     delete associatedMenu;
-    this->rra->disconnect();
     delete rra;
     delete ptd;
 
@@ -260,7 +261,9 @@ void PDA::synchronize( bool forced )
         QPtrList<SyncTaskListItem>& syncItems =
             configDialog->getSyncTaskItemList();
         syncDialog->show( syncItems );
-        alreadySynced = true;
+        if (configDialog->getOsVersion() > 3) {
+            alreadySynced = true;
+        }
     } else if (alreadySynced) {
         KMessageBox::sorry((QWidget * ) parent(), QString(i18n("The device has already been synced. This could not be done twice. Please disconnect and reconnect your device and start syncing again.")));
     }
@@ -670,6 +673,11 @@ void PDA::init()
 
     configDialog->readConnectionFile();
     kdDebug( 2120 ) << "IP: " << configDialog->getDeviceIp() << endl;
+    kdDebug(2120) << "OsVersion: " << configDialog->getOsVersion() << endl;
+
+    if (configDialog->getOsVersion() > 3) {
+        this->rra->connect();
+    }
 
     initProgress = new InitProgress( raki, "InitProgress", true,
                                      WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM );

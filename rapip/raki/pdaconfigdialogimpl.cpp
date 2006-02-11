@@ -159,6 +159,8 @@ bool PdaConfigDialogImpl::readConnectionFile()
     KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
     activeConnection.setGroup("device");
     deviceIp = activeConnection.readEntry("ip");
+    osVersion = activeConnection.readUnsignedLongNumEntry("os_version");
+    kdDebug(2120) << "OsVersion: " << osVersion << endl;
 
     if (path)
         free(path);
@@ -220,6 +222,12 @@ void PdaConfigDialogImpl::changedSlot()
 QString PdaConfigDialogImpl::getDeviceIp()
 {
     return deviceIp;
+}
+
+
+int PdaConfigDialogImpl::getOsVersion()
+{
+    return osVersion;
 }
 
 

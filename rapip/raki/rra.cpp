@@ -87,13 +87,12 @@ void Rra::disconnect()
 {
     if (useCount > 0) {
         useCount--;
-    }
+        if(useCount == 0) {
+            kdDebug(2120) << i18n("RRA-Disconnect") << endl;
 
-    if(useCount == 0) {
-        kdDebug(2120) << i18n("RRA-Disconnect") << endl;
-
-        rra_syncmgr_disconnect(rra);
-        Ce::rapiUninit();
+            rra_syncmgr_disconnect(rra);
+            Ce::rapiUninit();
+        }
     }
 }
 
