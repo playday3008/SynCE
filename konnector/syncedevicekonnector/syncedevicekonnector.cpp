@@ -112,8 +112,6 @@ namespace KSync
 
     SynCEDeviceKonnector::~SynCEDeviceKonnector()
     {
-        kdDebug( 2120 ) << "SynCEDeviceKonnector::~SynCEDeviceKonnector" << endl;
-
         delete mAddressBookSyncee;
         delete mTodoSyncee;
         delete mEventSyncee;
@@ -130,24 +128,20 @@ namespace KSync
         if ( mUidHelper ) {
             delete mUidHelper;
         }
-        /*
-        if (m_rra) {
-            delete m_rra;
-        }
-        */
     }
 
 
     SynceeList SynCEDeviceKonnector::syncees()
     {
-        kdDebug( 2120 ) << "PocketPCKonnector::syncees() returning syncees" << endl;
         return mSyncees;
     }
 
+
     bool SynCEDeviceKonnector::readSyncees()
     {
+        kdDebug( 2120 ) << "SynCEDeviceKonnector::readSyncees()..." << endl;
         if ( mSyncees.empty() ) {
-            kdDebug( 2120 ) << "syncekonnector not configured - please configure and sync again" << endl;
+            kdDebug( 2120 ) << "SynCEDeviceKonnector not configured - please configure and sync again" << endl;
             emit synceeReadError( this );
             return false;
         }
@@ -214,11 +208,11 @@ namespace KSync
     {
         bool ret = false;
 
-        kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees..." << endl;
+        kdDebug( 2120 ) << "SynCEDeviceKonnector::writeSyncees()..." << endl;
 
         // write m_syncees to the device
         if ( mSyncees.empty() ) {
-            kdDebug( 2120 ) << "PocketPCKonnector::writeSyncees: m_syncees is empty" << endl;
+            kdDebug( 2120 ) << "SynCEDeviceKonnector::writeSyncees: m_syncees is empty" << endl;
             emit synceeWriteError( this );
             goto error;
         }
@@ -294,7 +288,7 @@ error:
         if ( !getPdaName().isEmpty() ) {
             m_rra->connect();
         } else {
-            kdDebug( 2120 ) << "You have didn't configure syncekonnector well - please repeat the configuration and start again" << endl;
+            kdDebug( 2120 ) << "You have didn't configure SynCEDeviceKonnector well - please repeat the configuration and start again" << endl;
             return false;
         }
 
@@ -422,7 +416,6 @@ error:
 
     void SynCEDeviceKonnector::actualSyncType( int type )
     {
-        kdDebug( 2120 ) << "Actual Sync Type: " << type << endl;
         _actualSyncType = type;
     }
 
@@ -473,7 +466,5 @@ error:
         mAddrHandler->setRra( rra );
         mTodoHandler->setRra( rra );
         mEventHandler->setRra( rra );
-
-        initialized = true;
     }
 }

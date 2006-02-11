@@ -99,6 +99,7 @@ namespace KSync
         mSyncees.append( mAddressBookSyncee );
     }
 
+
     SynCELocalKonnector::~SynCELocalKonnector()
     {
         kdDebug( 2120 ) << "SynCELocalKonnector::~SynCELocalKonnector" << endl;
@@ -106,6 +107,7 @@ namespace KSync
         delete mTodoSyncee;
         delete mEventSyncee;
     }
+
 
     void SynCELocalKonnector::writeConfig( KConfig *config )
     {
@@ -116,9 +118,10 @@ namespace KSync
         config->writeEntry( "BookmarkFile", mAddressBookFile );
     }
 
+
     bool SynCELocalKonnector::readSyncees()
     {
-        kdDebug() << "LocalKonnector::readSyncee()" << endl;
+        kdDebug(2120) << "SynCELocalKonnector::readSyncee()..." << endl;
 
         mMd5sumEvent = getPairUid() + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
         mMd5sumTodo = getPairUid() + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
@@ -135,67 +138,51 @@ namespace KSync
         mAddressBook.clear();
 
         if ( !mCalendarFile.isEmpty() ) {
-            kdDebug() << "LocalKonnector::readSyncee(): calendar: " << mCalendarFile
-            << endl;
             mCalendar.close();
             if ( mCalendar.load( mCalendarFile ) ) {
-                kdDebug() << "Read succeeded." << endl;
-
                 if ( _actualSyncType & TODOS ) {
-                    kdDebug() << "****************Syncing todos" << endl;
                     KCal::Todo::List todoList = mCalendar.todos();
                     mTodoSyncee->reset();
                     mTodoSyncee->setIdentifier( "Todo" + mCalendarFile );
-                    kdDebug() << "IDENTIFIER: " << mTodoSyncee->identifier() << endl;
                     KCal::Todo::List::iterator todoIt;
                     for ( todoIt = todoList.begin(); todoIt != todoList.end(); ++todoIt ) {
                         mCalendar.deleteTodo( *todoIt );
-                        kdDebug( 2120 ) << "------- Todo: " << ( *todoIt ) ->dtStartTimeStr() << endl;
-                        mTodoCalendar.addTodo( ( *todoIt ) ->clone() );
+                        mTodoCalendar.addTodo( *todoIt );
                     }
                     TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                     c1Helper.load();
                 }
 
                 if ( _actualSyncType & EVENTS ) {
-                    kdDebug() << "****************Syncing events" << endl;
                     KCal::Event::List eventList = mCalendar.events();
                     mEventSyncee->reset();
                     mEventSyncee->setIdentifier( "Event" + mCalendarFile );
-                    kdDebug() << "IDENTIFIER: " << mEventSyncee->identifier() << endl;
                     KCal::Event::List::iterator eventIt;
                     for ( eventIt = eventList.begin(); eventIt != eventList.end(); ++eventIt ) {
                         mCalendar.deleteEvent( *eventIt );
-                        kdDebug( 2120 ) << "------- Event: " << ( *eventIt ) ->dtStartTimeStr() << endl;
-                        mEventCalendar.addEvent( ( *eventIt ) ->clone() );
+                        mEventCalendar.addEvent(*eventIt);
                     }
                     EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                     c2Helper.load();
                 }
             } else {
                 emit synceeReadError( this );
-                kdDebug() << "Read failed." << endl;
+                kdDebug(2120) << "Read failed." << endl;
                 return false;
             }
         }
 
         if ( !mAddressBookFile.isEmpty() ) {
-            kdDebug() << "LocalKonnector::readSyncee(): addressbook: "
-            << mAddressBookFile << endl;
-
-            mAddressBookResourceFile = new KABC::ResourceFile( mAddressBookFile );
-            mAddressBook.addResource( mAddressBookResourceFile );
-
-            if ( !mAddressBook.load() ) {
-                emit synceeReadError( this );
-                kdDebug() << "Read failed." << endl;
-                return false;
-            }
-
-            kdDebug() << "Read succeeded." << endl;
-
             if ( _actualSyncType & CONTACTS ) {
-                kdDebug() << "****************Syncing contacts" << endl;
+                mAddressBookResourceFile = new KABC::ResourceFile( mAddressBookFile );
+                mAddressBook.addResource( mAddressBookResourceFile );
+
+                if ( !mAddressBook.load() ) {
+                    emit synceeReadError( this );
+                    kdDebug(2120) << "Read failed." << endl;
+                    return false;
+                }
+
                 mAddressBookSyncee->reset();
                 mAddressBookSyncee->setIdentifier( mAddressBook.identifier() );
 
@@ -205,28 +192,28 @@ namespace KSync
                     mAddressBookSyncee->addEntry( entry.clone());
                 }
 
-                /* let us apply Sync Information */
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.load();
             }
         }
-
-        // TODO: Read Bookmarks
 
         emit synceesRead( this );
 
         return true;
     }
 
+
     bool SynCELocalKonnector::connectDevice()
     {
         return true;
     }
 
+
     bool SynCELocalKonnector::disconnectDevice()
     {
         return true;
     }
+
 
     KSync::KonnectorInfo SynCELocalKonnector::info() const
     {
@@ -240,11 +227,11 @@ namespace KSync
     bool SynCELocalKonnector::writeSyncees()
     {
         bool ret = false;
+        kdDebug( 2120 ) << "SynCELocalKonnector::writeSyncees()..." << endl;
 
         if ( !mCalendarFile.isEmpty() ) {
 
             if ( _actualSyncType & TODOS ) {
-                kdDebug() << "****************Syncing todos" << endl;
                 purgeRemovedEntries( mTodoSyncee );
                 TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                 c1Helper.save();
@@ -252,13 +239,11 @@ namespace KSync
                 KCal::Todo::List::iterator todoIt;
                 for ( todoIt = todoList.begin(); todoIt != todoList.end(); ++todoIt ) {
                     mTodoCalendar.deleteTodo( *todoIt );
-                    kdDebug( 2120 ) << "------- Todo: " << ( *todoIt ) ->dtStartTimeStr() << endl;
-                    mCalendar.addTodo( ( *todoIt ) ->clone() );
+                    mCalendar.addTodo(*todoIt);
                 }
             }
 
             if ( _actualSyncType & EVENTS ) {
-                kdDebug() << "****************Syncing events" << endl;
                 purgeRemovedEntries( mEventSyncee );
                 EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                 c2Helper.save();
@@ -266,8 +251,7 @@ namespace KSync
                 KCal::Event::List::iterator eventIt;
                 for ( eventIt = eventList.begin(); eventIt != eventList.end(); ++eventIt ) {
                     mEventCalendar.deleteEvent( *eventIt );
-                    kdDebug( 2120 ) << "------- Event: " << ( *eventIt ) ->dtStartTimeStr() << endl;
-                    mCalendar.addEvent( ( *eventIt ) ->clone() );
+                    mCalendar.addEvent(*eventIt);
                 }
             }
 
@@ -277,12 +261,11 @@ namespace KSync
 
         if ( !mAddressBookFile.isEmpty() ) {
             if ( _actualSyncType & CONTACTS ) {
-                kdDebug() << "****************Syncing contacts" << endl;
                 purgeRemovedEntries( mAddressBookSyncee );
                 KABC::Ticket *ticket;
                 ticket = mAddressBook.requestSaveTicket();
                 if ( !ticket ) {
-                    kdWarning() << "LocalKonnector::writeSyncees(). Couldn't get ticket for "
+                    kdWarning(2120) << "LocalKonnector::writeSyncees(). Couldn't get ticket for "
                             << "addressbook." << endl;
                     emit synceeWriteError( this );
                     goto error;
@@ -309,21 +292,23 @@ error:
     void SynCELocalKonnector::clearDataStructures()
     {
         if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
-            KSync::EventSyncEntry *entry = mEventSyncee->firstEntry();
-            while ( entry ) {
-                delete entry;
-                entry = mEventSyncee->nextEntry();
-            }
             mEventSyncee->reset();
+            mEventCalendar.deleteAllEvents();
+            mEventCalendar.deleteAllTodos();
+            mEventCalendar.deleteAllJournals();
+            mCalendar.deleteAllEvents();
+            mCalendar.deleteAllTodos();
+            mCalendar.deleteAllJournals();
         }
 
         if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
-            KSync::TodoSyncEntry *entry = mTodoSyncee->firstEntry();
-            while ( entry ) {
-                delete entry;
-                entry = mTodoSyncee->nextEntry();
-            }
             mTodoSyncee->reset();
+            mTodoCalendar.deleteAllEvents();
+            mTodoCalendar.deleteAllTodos();
+            mTodoCalendar.deleteAllJournals();
+            mCalendar.deleteAllEvents();
+            mCalendar.deleteAllTodos();
+            mCalendar.deleteAllJournals();
         }
 
         if ( mAddressBookSyncee && ( _actualSyncType & CONTACTS )) {
@@ -335,24 +320,11 @@ error:
             mAddressBookSyncee->reset();
             mAddressBook.removeResource(mAddressBookResourceFile);
         }
-
-        mTodoCalendar.deleteAllEvents();
-        mTodoCalendar.deleteAllTodos();
-        mTodoCalendar.deleteAllJournals();
-
-        mEventCalendar.deleteAllEvents();
-        mEventCalendar.deleteAllTodos();
-        mEventCalendar.deleteAllJournals();
-
-        mCalendar.deleteAllEvents();
-        mCalendar.deleteAllTodos();
-        mCalendar.deleteAllJournals();
     }
 
 
     void SynCELocalKonnector::actualSyncType( int type )
     {
-        kdDebug( 2120 ) << "Actual Sync Type: " << type << endl;
         _actualSyncType = type;
     }
 }
