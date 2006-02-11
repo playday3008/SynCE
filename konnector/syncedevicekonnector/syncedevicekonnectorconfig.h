@@ -50,8 +50,6 @@ public:
     void enableRaki();
 
 private:
-    QLabel*        m_label;
-    QLineEdit*     m_textPdaName;
     QGridLayout*   m_layout;
     QGridLayout*   m_layout1;
     QGridLayout*   m_layoutMain;

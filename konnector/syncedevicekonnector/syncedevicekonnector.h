@@ -111,7 +111,7 @@ public:
     virtual void writeConfig (KConfig* p_config);
 
     void subscribeTo(Rra* rra, int type );
-    void init(const QString& p_pdaName, const QString &pairUid);
+    void init(const QString &pairUid);
 
     void unsubscribeFrom( int type );
 

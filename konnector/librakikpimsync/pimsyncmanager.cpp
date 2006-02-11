@@ -130,7 +130,7 @@ bool PimSyncManager::loadKonnectors( KConfig* ksConfig)
         for ( kit = pmanager->begin(); kit != pmanager->end(); ++kit ) {
             KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
             if ( k ) {
-                k->init(pdaName, pair->uid());
+                k->init(pair->uid());
             }
         }
         mEngine = new KSync::SynCEEngine();
@@ -202,7 +202,7 @@ void PimSyncManager::configure(QWidget *parent, KConfig* ksConfig)
         for ( kit = pmanager->begin(); kit != pmanager->end(); ++kit ) {
             KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( *kit );
             if ( k ) {
-                k->init(pdaName, pair->uid());
+                k->init(pair->uid());
             }
         }
         pair->save();

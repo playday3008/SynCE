@@ -92,19 +92,14 @@ int RakiKPimSync::syncContext()
 
 void RakiKPimSync::subscribeTo(Rra* rra)
 {
-    kdDebug(2120) << "RRA_SYNCMGR_TYPE_CONTACT: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_CONTACT) << endl;
-    kdDebug(2120) << "RRA_SYNCMGR_TYPE_APPOINTMENT: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_APPOINTMENT) << endl;
-    kdDebug(2120) << "RRA_SYNCMGR_TYPE_TASK: " << rra->getTypeForName(RRA_SYNCMGR_TYPE_TASK) << endl;
-
-    kdDebug(2120) << "Effective type: " << getObjectTypeId() << endl;
     if (rra->getTypeForName(RRA_SYNCMGR_TYPE_CONTACT) == getObjectTypeId()) {
-        kdDebug(2120) << "Contacts ... " << endl;
+        kdDebug(2120) << "Subscribing Contacts ... " << endl;
         type = CONTACTS;
     } else if (rra->getTypeForName(RRA_SYNCMGR_TYPE_APPOINTMENT) == getObjectTypeId()) {
-        kdDebug(2120) << "Events ... " << endl;
+        kdDebug(2120) << "Subscribing Events ... " << endl;
         type = EVENTS;
     } else if (rra->getTypeForName(RRA_SYNCMGR_TYPE_TASK) == getObjectTypeId()) {
-        kdDebug(2120) << "Todos ... " << endl;
+        kdDebug(2120) << "Subscribing Todos ... " << endl;
         type = TODOS;
     }
     PimSyncManager::self(pdaName)->subscribeTo(rra, type);
@@ -118,13 +113,13 @@ void RakiKPimSync::unsubscribeFrom()
     int type = 0;
 
     if (rra->getTypeForName(RRA_SYNCMGR_TYPE_CONTACT) == getObjectTypeId()) {
-        kdDebug(2120) << "Contacts ... " << endl;
+        kdDebug(2120) << "Unsunscribing Contacts ... " << endl;
         type = CONTACTS;
     } else if (rra->getTypeForName(RRA_SYNCMGR_TYPE_APPOINTMENT) == getObjectTypeId()) {
-        kdDebug(2120) << "Events ... " << endl;
+        kdDebug(2120) << "Unsunscribing Events ... " << endl;
         type = EVENTS;
     } else if (rra->getTypeForName(RRA_SYNCMGR_TYPE_TASK) == getObjectTypeId()) {
-        kdDebug(2120) << "Todos ... " << endl;
+        kdDebug(2120) << "Unsunscribing Todos ... " << endl;
         type = TODOS;
     }
 

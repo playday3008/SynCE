@@ -44,16 +44,11 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
     m_layout = new QGridLayout (0, 1, 2);
     m_layout->setSpacing (KDialog::spacingHint());
 
-    m_layout1 = new QGridLayout (0, 4, 3);
+    m_layout1 = new QGridLayout (0, 3, 3);
     m_layout->setSpacing (KDialog::spacingHint());
 
     m_layoutMain->addLayout(m_layout, 0, 0);
     m_layoutMain->addLayout(m_layout1, 1, 0);
-
-    m_label = new QLabel (this, "PDA Name");
-    m_label->setText ("PDA Name");
-
-    m_textPdaName = new QLineEdit(this, "pda name");
 
     m_Synctarget = new QLabel(this,  "SyncTarget");
     m_Synctarget->setText("Target");
@@ -79,24 +74,21 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
     m_TodosEnabled = new QCheckBox(this, "TodosEnabled");
     m_TodosFirstSync = new QCheckBox(this, "TodosFirstSync");
 
-    m_layout1->addWidget (m_label, 0, 0);
-    m_layout1->addWidget (m_textPdaName, 0, 1);
+    m_layout1->addWidget (m_Synctarget, 0, 0);
+    m_layout1->addWidget (m_ActiveLabel, 0, 1);
+    m_layout1->addWidget (m_FirstSyncLabel, 0, 2);
 
-    m_layout1->addWidget (m_Synctarget, 1, 0);
-    m_layout1->addWidget (m_ActiveLabel, 1, 1);
-    m_layout1->addWidget (m_FirstSyncLabel, 1, 2);
+    m_layout1->addWidget (m_ContactsLabel, 1, 0);
+    m_layout1->addWidget (m_ContactsEnabled, 1, 1);
+    m_layout1->addWidget (m_ContactsFirstSync, 1, 2);
 
-    m_layout1->addWidget (m_ContactsLabel, 2, 0);
-    m_layout1->addWidget (m_ContactsEnabled, 2, 1);
-    m_layout1->addWidget (m_ContactsFirstSync, 2, 2);
+    m_layout1->addWidget (m_EventsLabel, 2, 0);
+    m_layout1->addWidget (m_EventsEnabled, 2, 1);
+    m_layout1->addWidget (m_EventsFirstSync, 2, 2);
 
-    m_layout1->addWidget (m_EventsLabel, 3, 0);
-    m_layout1->addWidget (m_EventsEnabled, 3, 1);
-    m_layout1->addWidget (m_EventsFirstSync, 3, 2);
-
-    m_layout1->addWidget (m_TodosLabel, 4, 0);
-    m_layout1->addWidget (m_TodosEnabled, 4, 1);
-    m_layout1->addWidget (m_TodosFirstSync, 4, 2);
+    m_layout1->addWidget (m_TodosLabel, 3, 0);
+    m_layout1->addWidget (m_TodosEnabled, 3, 1);
+    m_layout1->addWidget (m_TodosFirstSync, 3, 2);
 }
 
 
@@ -115,8 +107,6 @@ void SynCEDeviceKonnectorConfig::loadSettings (KRES::Resource* p_res)
         kdError() << "PocketPCKonnectorConfig::loadSettings(): Wrong Konnector type." << endl;
         return;
     }
-
-    m_textPdaName->setText (k->getPdaName());
 
     m_ContactsEnabled->setChecked(k->getContactsEnabled());
     m_TodosEnabled->setChecked(k->getTodosEnabled());
@@ -141,7 +131,6 @@ void SynCEDeviceKonnectorConfig::saveSettings (KRES::Resource* p_res)
         return;
     }
 
-    k->setPdaName(m_textPdaName->text());
     k->setContactsState(m_ContactsEnabled->isChecked(), m_ContactsFirstSync->isChecked());
     k->setEventsState(m_EventsEnabled->isChecked(), m_EventsFirstSync->isChecked());
     k->setTodosState(m_TodosEnabled->isChecked(), m_TodosFirstSync->isChecked());
@@ -149,7 +138,6 @@ void SynCEDeviceKonnectorConfig::saveSettings (KRES::Resource* p_res)
 
 void SynCEDeviceKonnectorConfig::enableRaki()
 {
-    m_textPdaName->setDisabled(true);
     m_ContactsEnabled->setDisabled(true);
     m_EventsEnabled->setDisabled(true);
     m_TodosEnabled->setDisabled(true);

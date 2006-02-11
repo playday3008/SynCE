@@ -49,22 +49,9 @@ namespace KSync
 
             virtual void subscribeTo( Rra* rra, int type );
 
-            virtual void init( const QString& pdaName, const QString &pairUid ) {
-                setPdaName(pdaName);
-                this->pairUid = pairUid;
-            };
+            virtual void init( const QString &pairUid );
 
-            void setPdaName(const QString &pdaName) {
-                this->pdaName = pdaName;
-            }
-
-            QString getPdaName() {
-                return pdaName;
-            };
-
-            QString getPairUid() {
-                return pairUid;
-            };
+            QString getPairUid();
 
             virtual void unsubscribeFrom( int type );
 
