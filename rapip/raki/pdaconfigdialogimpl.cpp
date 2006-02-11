@@ -160,7 +160,6 @@ bool PdaConfigDialogImpl::readConnectionFile()
     activeConnection.setGroup("device");
     deviceIp = activeConnection.readEntry("ip");
     osVersion = activeConnection.readUnsignedLongNumEntry("os_version");
-    kdDebug(2120) << "OsVersion: " << osVersion << endl;
 
     if (path)
         free(path);
