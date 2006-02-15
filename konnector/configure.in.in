@@ -6,6 +6,9 @@ AC_CHECK_KDEMAXPATHLEN
 
 SYNCE_CHECK_RRA
 
+synce_kde_save_ldflags="$LDFLAGS"
+LDFLAGS=-L$kde_libraries
+
 AC_CHECK_LIB(kabc_file, main,
     [
         LIB_KABC_FILE="-lkabc_file"
@@ -48,6 +51,8 @@ AC_CHECK_LIB(multisynk, main,
     ]
 )
 AC_SUBST(LIB_MULTISYNK)
+
+LDFLAGS="$synce_kde_save_ldflags"
 
 AC_CHECK_FILE($kde_includes/kitchensync/filter.h,
     [
