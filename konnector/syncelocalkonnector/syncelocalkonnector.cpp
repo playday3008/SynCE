@@ -123,9 +123,9 @@ namespace KSync
     {
         kdDebug(2120) << "SynCELocalKonnector::readSyncee()..." << endl;
 
-        mMd5sumEvent = getPairUid() + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
-        mMd5sumTodo = getPairUid() + "_" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
-        mMd5sumAbk = getPairUid() + "_" + generateMD5Sum( mAddressBookFile ) + "_syncelocalkonnector_abk.log";
+        mMd5sumEvent = getPairUid() + "/" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_evt.log";
+        mMd5sumTodo = getPairUid() + "/" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
+        mMd5sumAbk = getPairUid() + "/" + generateMD5Sum( mAddressBookFile ) + "_syncelocalkonnector_abk.log";
 
         mTodoCalendar.deleteAllEvents();
         mTodoCalendar.deleteAllTodos();
@@ -255,8 +255,10 @@ namespace KSync
                 }
             }
 
-            if ( !mCalendar.save( mCalendarFile ) )
+            if ( !mCalendar.save( mCalendarFile ) ) {
+                emit synceeWriteError( this );
                 goto error;
+            }
         }
 
         if ( !mAddressBookFile.isEmpty() ) {
@@ -271,6 +273,7 @@ namespace KSync
                     goto error;
                 }
                 if ( !mAddressBook.save( ticket ) ) {
+                    emit synceeWriteError( this );
                     goto error;
                 }
 
