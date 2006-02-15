@@ -75,7 +75,6 @@ namespace KSync
         eventsEnabled = false;
         eventsFirstSync = true;
         initialized = false;
-        idsRead = false;
         m_rra = NULL;
 
         mUidHelper = NULL;
@@ -150,7 +149,9 @@ namespace KSync
 
         mProgressItem->setStatus( "Start loading data from Windows CE" );
 
-        if ( !idsRead ) {
+        if ( subscribtionCount == 0 ) {
+            bool error = false;
+
             if ( mAddrHandler && contactsEnabled ) {
                 m_rra->subscribeForType( mAddrHandler->getTypeId() );
                 subscribtionCount++;
@@ -168,8 +169,23 @@ namespace KSync
 
             if ( !m_rra->getIds() ) {
                 emit synceeReadError( this );
+                error = true;
             }
-            idsRead = true;
+
+            if ( mAddrHandler && contactsEnabled ) {
+                m_rra->unsubscribeType( mAddrHandler->getTypeId() );
+            }
+
+            if ( mTodoHandler && todosEnabled ) {
+                m_rra->unsubscribeType( mTodoHandler->getTypeId() );
+            }
+
+            if ( mEventHandler && eventsEnabled ) {
+                m_rra->unsubscribeType( mEventHandler->getTypeId() );
+            }
+            if (error) {
+                return false;
+            }
         }
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
@@ -219,71 +235,67 @@ namespace KSync
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
             mAddrHandler->writeSyncee( mAddressBookSyncee );
-            m_rra->unsubscribeType( mAddrHandler->getTypeId() );
             contactsFirstSync = false;
             subscribtionCount--;
         }
 
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
             mTodoHandler->writeSyncee( mTodoSyncee );
-            m_rra->unsubscribeType( mTodoHandler->getTypeId() );
             todosFirstSync = false;
             subscribtionCount--;
         }
 
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
             mEventHandler->writeSyncee( mEventSyncee );
-            m_rra->unsubscribeType( mEventHandler->getTypeId() );
             eventsFirstSync = false;
             subscribtionCount--;
-        }
-
-        if ( subscribtionCount == 0 ) {
-            idsRead = false;
         }
 
         emit synceesWritten ( this );
 
         ret = true;
-error:
+    error:
         clearDataStructures();
+
         return ret;
     }
 
 
     void SynCEDeviceKonnector::clearDataStructures()
     {
-        if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
+        if ( mEventSyncee && ( _actualSyncType & EVENTS ) ) {
             mEventSyncee->reset();
+            mEventCalendar.deleteAllEvents();
+            mEventCalendar.deleteAllTodos();
+            mEventCalendar.deleteAllJournals();
         }
 
-        if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
+        if ( mTodoSyncee && ( _actualSyncType & TODOS ) ) {
             mTodoSyncee->reset();
+            mTodoCalendar.deleteAllEvents();
+            mTodoCalendar.deleteAllTodos();
+            mTodoCalendar.deleteAllJournals();
         }
 
-        if ( mAddressBookSyncee && ( _actualSyncType & CONTACTS )) {
-            KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
+        if ( mAddressBookSyncee && ( _actualSyncType & CONTACTS ) ) {
+            KSync::AddressBookSyncEntry * entry = mAddressBookSyncee->firstEntry();
             while ( entry ) {
                 delete entry;
                 entry = mAddressBookSyncee->nextEntry();
             }
             mAddressBookSyncee->reset();
         }
-
-        mTodoCalendar.deleteAllEvents();
-        mTodoCalendar.deleteAllTodos();
-        mTodoCalendar.deleteAllJournals();
-
-        mEventCalendar.deleteAllEvents();
-        mEventCalendar.deleteAllTodos();
-        mEventCalendar.deleteAllJournals();
     }
 
 
     bool SynCEDeviceKonnector::connectDevice()
     {
         mProgressItem = progressItem( i18n( "Start loading data from Windows CE..." ) );
-        m_rra->connect();
+        mProgressItem->setStatus( i18n( "Start loading data from Windows CE..." ) );
+
+        if (subscribtionCount == 0) {
+            m_rra->connect();
+        }
 
         return true;
     }
@@ -291,13 +303,16 @@ error:
 
     bool SynCEDeviceKonnector::disconnectDevice()
     {
+        kdDebug(2120) << " Disconnecting" << endl;
         if ( mUidHelper ) {
             mUidHelper->save();
         }
-        m_rra->disconnect();
+
+        if (subscribtionCount == 0) {
+            m_rra->disconnect();
+        }
 
         mProgressItem->setComplete();
-        mProgressItem = 0;
 
         return true;
     }
@@ -307,14 +322,14 @@ error:
     {
         if ( m_rra ) {
             return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
-                                   QIconSet(),    //iconSet(),
+                                   QIconSet(),     //iconSet(),
                                    QString ( "WinCE 3.0 up" ),
                                    /*                              "0", //metaId(),
                                                                    "", //iconName(),*/
                                    false );
         } else {
             return KonnectorInfo ( QString ( "PocketPC (WinCE) Konnector" ),
-                                   QIconSet(),    //iconSet(),
+                                   QIconSet(),     //iconSet(),
                                    QString ( "WinCE 3.0 up" ),
                                    /*                              "0", //metaId(),
                                                                  "", //iconName(),*/
@@ -412,10 +427,10 @@ error:
     }
 
 
-    void SynCEDeviceKonnector::init(const QString &pairUid )
+    void SynCEDeviceKonnector::init( const QString &pairUid )
     {
         if ( !initialized ) {
-            SynCEKonnectorBase::init(pairUid );
+            SynCEKonnectorBase::init( pairUid );
             initialized = true;
 
             mAddrHandler = new PocketPCCommunication::AddressbookHandler();

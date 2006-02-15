@@ -175,8 +175,6 @@ private:
 
     int _actualSyncType;
 
-    bool idsRead;
-
     int subscribtionCount;
 };
 
