@@ -51,8 +51,8 @@ public:
 
     virtual ~TodoHandler();
 
-    int retrieveTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList);
-    int fakeTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList);
+    bool retrieveTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList);
+    void fakeTodoListFromDevice(KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList);
     bool getIds();
     int getTodoListFromDevice(KCal::Todo::List &mTodoList, int mRecType);
     bool readSyncee(KSync::TodoSyncee *mCalendarSyncee, bool firstSync);
@@ -61,9 +61,9 @@ public:
     bool writeSyncee(KSync::TodoSyncee *mCalendarSyncee);
     void insertIntoCalendarSyncee(KSync::TodoSyncee *mCalendarSyncee, KCal::Todo::List &list, int state);
 
-    void addTodos    (KCal::Todo::List& p_todoList);
-    void updateTodos (KCal::Todo::List& p_todoList);
-    void removeTodos (KCal::Todo::List& p_todoList);
+    bool addTodos    (KCal::Todo::List& p_todoList);
+    bool updateTodos (KCal::Todo::List& p_todoList);
+    bool removeTodos (KCal::Todo::List& p_todoList);
 };
 
 }

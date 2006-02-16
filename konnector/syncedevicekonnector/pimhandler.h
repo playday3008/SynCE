@@ -25,7 +25,7 @@
 #ifndef POCKETPCCOMMUNICATIONPIMHANDLER_H
 #define POCKETPCCOMMUNICATIONPIMHANDLER_H
 
-#include "rra.h"
+#include <rra.h>
 
 namespace KPIM {
     class ProgressItem;
@@ -78,7 +78,7 @@ protected:
 
     void resetSteps();
 
-    virtual void deleteSingleEntry (const uint32_t& p_typeId, const uint32_t& p_objectId);
+    virtual bool deleteSingleEntry (const uint32_t& p_typeId, const uint32_t& p_objectId);
 
     uint32_t getOriginalId (const QString& p_id);
 

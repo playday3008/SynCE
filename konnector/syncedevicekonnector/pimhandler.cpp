@@ -40,9 +40,9 @@ PimHandler::~PimHandler()
 {
 }
 
-void PimHandler::deleteSingleEntry (const uint32_t& p_typeId, const uint32_t& p_objectId)
+bool PimHandler::deleteSingleEntry (const uint32_t& p_typeId, const uint32_t& p_objectId)
 {
-    m_rra->deleteObject (p_typeId, p_objectId);
+    return m_rra->deleteObject (p_typeId, p_objectId);
 }
 
 uint32_t PimHandler::getOriginalId(const QString& p_id)

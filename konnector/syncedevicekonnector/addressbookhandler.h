@@ -52,18 +52,18 @@ public:
 
     virtual ~AddressbookHandler();
 
-    int retrieveAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
-    int fakeAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
-    bool getIds();
-    int getAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, int mRecType);
+    bool retrieveAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
+    void fakeAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList);
+    void getIds();
+    bool getAddresseeListFromDevice(KABC::Addressee::List &mAddresseeList, int mRecType);
     bool readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync);
     void getAddressees ( KABC::Addressee::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
     bool writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee);
     void insertIntoAddressBookSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, KABC::Addressee::List &list, int state);
 
-    void addAddressees    (KABC::Addressee::List& p_addresseeList);
-    void updateAddressees (KABC::Addressee::List& p_addresseeList);
-    void removeAddressees (KABC::Addressee::List& p_addresseeList);
+    bool addAddressees    (KABC::Addressee::List& p_addresseeList);
+    bool updateAddressees (KABC::Addressee::List& p_addresseeList);
+    bool removeAddressees (KABC::Addressee::List& p_addresseeList);
 };
 
 }

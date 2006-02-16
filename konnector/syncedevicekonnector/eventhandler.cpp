@@ -1,26 +1,26 @@
 /***************************************************************************
- * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
- *                    Christian Fremgen <cfremgen@users.sourceforge.net>   *
- *                                                                         *
- * Permission is hereby granted, free of charge, to any person obtaining a *
- * copy of this software and associated documentation files (the           *
- * "Software"), to deal in the Software without restriction, including     *
- * without limitation the rights to use, copy, modify, merge, publish,     *
- * distribute, sublicense, and/or sell copies of the Software, and to      *
- * permit persons to whom the Software is furnished to do so, subject to   *
- * the following conditions:                                               *
- *                                                                         *
- * The above copyright notice and this permission notice shall be included *
- * in all copies or substantial portions of the Software.                  *
- *                                                                         *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
- ***************************************************************************/
+* Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
+*                    Christian Fremgen <cfremgen@users.sourceforge.net>   *
+*                                                                         *
+* Permission is hereby granted, free of charge, to any person obtaining a *
+* copy of this software and associated documentation files (the           *
+* "Software"), to deal in the Software without restriction, including     *
+* without limitation the rights to use, copy, modify, merge, publish,     *
+* distribute, sublicense, and/or sell copies of the Software, and to      *
+* permit persons to whom the Software is furnished to do so, subject to   *
+* the following conditions:                                               *
+*                                                                         *
+* The above copyright notice and this permission notice shall be included *
+* in all copies or substantial portions of the Software.                  *
+*                                                                         *
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
+***************************************************************************/
 
 #include "eventhandler.h"
 
@@ -41,9 +41,9 @@ namespace PocketPCCommunication
         initialized = false;
         mTypeId = 0;
 
-        QFile f("/etc/timezone");
-        if(f.open(IO_ReadOnly)) {
-            QTextStream ts(&f);
+        QFile f( "/etc/timezone" );
+        if ( f.open( IO_ReadOnly ) ) {
+            QTextStream ts( &f );
             ts >> sCurrentTimeZone;
         }
         f.close();
@@ -62,177 +62,171 @@ namespace PocketPCCommunication
     {}
 
 
-    int EventHandler::retrieveEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList)
+    bool EventHandler::retrieveEventListFromDevice( KCal::Event::List &mEventList, QValueList<uint32_t> &idList )
     {
-        int count = 0;
-
         KCal::ICalFormat calFormat;
-        calFormat.setTimeZone(sCurrentTimeZone, false);
+        calFormat.setTimeZone( sCurrentTimeZone, false );
+        bool ret = false;
 
         QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
         QString vCalEnd = "END:VCALENDAR\n";
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
-            count++;
+            incrementSteps();
 
-            kdDebug(2120) << "Retrieving Event from device: " << "RRA-ID-" +
-                    QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
+            kdDebug( 2120 ) << "Retrieving Event from device: " << "RRA-ID-" +
+            QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
 
-            QString vCal = vCalBegin + m_rra->getVEvent( mTypeId, *it ) + vCalEnd;
+            QString vEvent = m_rra->getVEvent( mTypeId, *it );
+            if ( vEvent.isEmpty() ) {
+                goto error;
+            }
+            QString vCal = vCalBegin + vEvent + vCalEnd;
 
             // TODO delete the incidence created by fromString
-            KCal::Incidence *incidence = calFormat.fromString (vCal);
+            KCal::Incidence *incidence = calFormat.fromString ( vCal );
 
             QString kdeId;
-            if ((kdeId = mUidHelper->kdeId("SynCEEvent", incidence->uid(), "---")) != "---") {
-                incidence->setUid(kdeId);
+            if ( ( kdeId = mUidHelper->kdeId( "SynCEEvent", incidence->uid(), "---" ) ) != "---" ) {
+                incidence->setUid( kdeId );
             } else {
-                mUidHelper->addId("SynCEEvent", incidence->uid(), incidence->uid());
+                mUidHelper->addId( "SynCEEvent", incidence->uid(), incidence->uid() );
             }
 
-            kdDebug(2120) << "    ID-Pair: KDEID: " << incidence->uid() << " DeviceID: " <<
-                "RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
+            kdDebug( 2120 ) << "    ID-Pair: KDEID: " << incidence->uid() << " DeviceID: " <<
+            "RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
 
-            mEventList.push_back( dynamic_cast<KCal::Event*> (incidence) );
+            mEventList.push_back( dynamic_cast<KCal::Event*> ( incidence ) );
 
-            KApplication::kApplication()->processEvents();
+            KApplication::kApplication() ->processEvents();
         }
 
-        return count;
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
-    int EventHandler::fakeEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList)
+    void EventHandler::fakeEventListFromDevice( KCal::Event::List &mEventList, QValueList<uint32_t> &idList )
     {
-        int count = 0;
-
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
-            count++;
-
             KCal::Event *event = new KCal::Event();
 
             QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
             QString kdeId;
 
-            if ((kdeId = mUidHelper->kdeId("SynCEEvent", konId, "---")) != "---") {
+            if ( ( kdeId = mUidHelper->kdeId( "SynCEEvent", konId, "---" ) ) != "---" ) {
 
-                kdDebug(2120) << "Faking Event for device: " << konId << endl;
+                kdDebug( 2120 ) << "Faking Event for device: " << konId << endl;
 
-                event->setUid(kdeId);
-                mUidHelper->removeId("SynCEEvent", event->uid());
-                kdDebug(2120) << "    ID-Pair: KDEID: " << event->uid() << " DeviceID: " << konId << endl;
+                event->setUid( kdeId );
+                mUidHelper->removeId( "SynCEEvent", event->uid() );
+                kdDebug( 2120 ) << "    ID-Pair: KDEID: " << event->uid() << " DeviceID: " << konId << endl;
                 mEventList.push_back( event );
             }
 
         }
-
-        return count;
     }
 
 
-    bool EventHandler::getIds()
+    void EventHandler::getIds()
     {
         m_rra->getIdsForType( mTypeId, &ids );
-
-        return true;
     }
 
 
-    int EventHandler::getEventListFromDevice(KCal::Event::List &mEventList, int mRecType)
+    bool EventHandler::getEventListFromDevice( KCal::Event::List &mEventList, int mRecType )
     {
-        int count = 0;
-        int ret = 0;
+        bool ret = true;
 
-        if ( ( mRecType & CHANGED ) && ( ret >= 0 ) ) {
+        if ( ( mRecType & CHANGED ) ) {
+            setStatus( "Reading changed Events" );
             ret = retrieveEventListFromDevice( mEventList, ids.changedIds );
-            if ( ret >= 0 ) {
-                count += 0;
-            }
         }
 
-        if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
-            ret = fakeEventListFromDevice( mEventList, ids.deletedIds );
-            if ( ret >= 0 ) {
-                count += 0;
-            }
+        if ( ( mRecType & DELETED ) && ret ) {
+            setStatus( "Creating dummys for deleted Events" );
+            fakeEventListFromDevice( mEventList, ids.deletedIds );
         }
 
-        if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
+        if ( ( mRecType & UNCHANGED ) && ret ) {
+            setStatus( "Reading unchanged Events" );
             ret = retrieveEventListFromDevice( mEventList, ids.unchangedIds );
-            if ( ret >= 0 ) {
-                count += 0;
-            }
         }
 
-        if ( ret < 0 ) {
-            return -count - 1;
-        }
-
-        return count;
+        return ret;
     }
 
 
-    void EventHandler::insertIntoCalendarSyncee(KSync::EventSyncee *mCalendarSyncee, KCal::Event::List &list, int state)
+    void EventHandler::insertIntoCalendarSyncee( KSync::EventSyncee *mCalendarSyncee, KCal::Event::List &list, int state )
     {
-        for(KCal::Event::List::Iterator it = list.begin(); it != list.end(); ++it) {
-            KSync::EventSyncEntry entry(*it, mCalendarSyncee);
-            entry.setState(state);
+        for ( KCal::Event::List::Iterator it = list.begin(); it != list.end(); ++it ) {
+            KSync::EventSyncEntry entry( *it, mCalendarSyncee );
+            entry.setState( state );
             // TODO delete the cloned entries somewhere
-            mCalendarSyncee->addEntry(entry.clone());
+            mCalendarSyncee->addEntry( entry.clone() );
         }
     }
 
 
-    bool EventHandler::readSyncee(KSync::EventSyncee *mCalendarSyncee, bool firstSync)
+    bool EventHandler::readSyncee( KSync::EventSyncee *mCalendarSyncee, bool firstSync )
     {
+        bool ret = false;
+
         getIds();
 
         KCal::Event::List modifiedList;
-        if (firstSync) {
-            if (getEventListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED) < 0) {
-                return false;
+        if ( firstSync ) {
+            this->setMaximumSteps((ids.changedIds.size() + ids.unchangedIds.size()));
+            if ( !getEventListFromDevice( modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED ) ) {
+                goto error;
             }
         } else {
-            if (getEventListFromDevice(modifiedList, PocketPCCommunication::CHANGED) < 0) {
-                return false;
+            this->setMaximumSteps(ids.changedIds.size());
+            if ( !getEventListFromDevice( modifiedList, PocketPCCommunication::CHANGED ) ) {
+                goto error;
             }
 
             KCal::Event::List removedList;
-            if (getEventListFromDevice(removedList, PocketPCCommunication::DELETED) < 0) {
-                return false;
+            if ( !getEventListFromDevice( removedList, PocketPCCommunication::DELETED ) ) {
+                goto error;
             }
-            insertIntoCalendarSyncee(mCalendarSyncee, removedList, KSync::SyncEntry::Removed);
+            insertIntoCalendarSyncee( mCalendarSyncee, removedList, KSync::SyncEntry::Removed );
         }
-        insertIntoCalendarSyncee(mCalendarSyncee, modifiedList, KSync::SyncEntry::Modified);
+        insertIntoCalendarSyncee( mCalendarSyncee, modifiedList, KSync::SyncEntry::Modified );
 
-        mCalendarSyncee->setTitle("SynCEEvent");
-        mCalendarSyncee->setIdentifier(m_pdaName + "-Event");
+        mCalendarSyncee->setTitle( "SynCEEvent" );
+        mCalendarSyncee->setIdentifier( m_pdaName + "-Event" );
 
-        return true;
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
-    void EventHandler::getEvents (KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
+    void EventHandler::getEvents ( KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
     {
-        for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
+        for ( KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
             KSync::EventSyncEntry *cse = dynamic_cast<KSync::EventSyncEntry*>( *it );
-            KCal::Event *event = dynamic_cast<KCal::Event*> (cse->incidence() );
-            if (event) {
+            KCal::Event *event = dynamic_cast<KCal::Event*> ( cse->incidence() );
+            if ( event ) {
                 p_events.push_back ( event );
             }
         }
     }
 
 
-    void EventHandler::getTodosAsFakedEvents(KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
+    void EventHandler::getTodosAsFakedEvents( KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList )
     {
-        for (KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
+        for ( KSync::SyncEntry::PtrList::Iterator it = p_ptrList.begin(); it != p_ptrList.end(); ++it ) {
             KSync::EventSyncEntry *cse = dynamic_cast<KSync::EventSyncEntry*>( *it );
-            KCal::Todo *todo = dynamic_cast<KCal::Todo*> (cse->incidence() );
-            if (todo) {
-                if (mUidHelper->konnectorId("SynCEEvent", todo->uid(), "---") != "---") {
-                    KCal::Event *event = new KCal::Event(); // This event is never deleted yet ... memory whole ... FIXME
-                    event->setUid(todo->uid());
+            KCal::Todo *todo = dynamic_cast<KCal::Todo*> ( cse->incidence() );
+            if ( todo ) {
+                if ( mUidHelper->konnectorId( "SynCEEvent", todo->uid(), "---" ) != "---" ) {
+                    KCal::Event * event = new KCal::Event(); // This event is never deleted yet ... memory whole ... FIXME
+                    event->setUid( todo->uid() );
                     p_events.push_back ( event );
                 }
             }
@@ -240,109 +234,152 @@ namespace PocketPCCommunication
     }
 
 
-    void EventHandler::addEvents(KCal::Event::List& p_eventList)
+    bool EventHandler::addEvents( KCal::Event::List& p_eventList )
     {
+        bool ret;
+        KCal::ICalFormat calFormat;
+        calFormat.setTimeZone( sCurrentTimeZone, false );
+
         RRA_Uint32Vector* added_ids = rra_uint32vector_new();
 
         if ( p_eventList.begin() == p_eventList.end() ) {
-            rra_uint32vector_destroy(added_ids, true);
-            return ;
+            rra_uint32vector_destroy( added_ids, true );
+            goto success;
         }
 
-        KCal::ICalFormat calFormat;
-        calFormat.setTimeZone(sCurrentTimeZone, false);
-
-        for (KCal::Event::List::Iterator it = p_eventList.begin();
+        for ( KCal::Event::List::Iterator it = p_eventList.begin();
                 it != p_eventList.end(); ++it ) {
+            incrementSteps();
 
-            QString iCal = calFormat.toString(*it);
+            QString iCal = calFormat.toString( *it );
             iCal.stripWhiteSpace();
-            iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
+            iCal.replace( QRegExp( "END:VALARM\n" ), "END:VALARM" );
 
-            kdDebug(2120) << "Adding Event on Device: " << (*it)->uid() << endl;
+            kdDebug( 2120 ) << "Adding Event on Device: " << ( *it ) ->uid() << endl;
 
             uint32_t newObjectId = m_rra->putVEvent( iCal, mTypeId, 0 );
+            if ( newObjectId == 0 ) {
+                goto error;
+            }
+
             m_rra->markIdUnchanged( mTypeId, newObjectId );
 
-            mUidHelper->addId("SynCEEvent",
-                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
-                (*it)->uid());
+            mUidHelper->addId( "SynCEEvent",
+                               "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ),
+                               ( *it ) ->uid() );
 
-            kdDebug(2120) << "    ID-Pair: KDEID: " << (*it)->uid() << " DeviceID: " <<
-                "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ) << endl;
+            kdDebug( 2120 ) << "    ID-Pair: KDEID: " << ( *it ) ->uid() << " DeviceID: " <<
+            "RRA-ID-" + QString::number ( newObjectId, 16 ).rightJustify( 8, '0' ) << endl;
 
-            rra_uint32vector_add(added_ids, newObjectId);
+            rra_uint32vector_add( added_ids, newObjectId );
 
-            KApplication::kApplication()->processEvents();
+            KApplication::kApplication() ->processEvents();
         }
-        m_rra->registerAddedObjects(mTypeId, added_ids);
+        m_rra->registerAddedObjects( mTypeId, added_ids );
 
-        rra_uint32vector_destroy(added_ids, true);
+        rra_uint32vector_destroy( added_ids, true );
+
+    success:
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
-    void EventHandler::updateEvents (KCal::Event::List& p_eventList)
+    bool EventHandler::updateEvents ( KCal::Event::List& p_eventList )
     {
-        if ( p_eventList.begin() == p_eventList.end() )
-            return ;
-
+        bool ret = false;
         KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
-        calFormat.setTimeZone(sCurrentTimeZone, false);
+        calFormat.setTimeZone( sCurrentTimeZone, false );
 
-        for (KCal::Event::List::Iterator it = p_eventList.begin();
+        if ( p_eventList.begin() == p_eventList.end() ) {
+            goto success;
+        }
+
+        for ( KCal::Event::List::Iterator it = p_eventList.begin();
                 it != p_eventList.end(); ++it ) {
-            QString kUid = mUidHelper->konnectorId("SynCEEvent", (*it)->uid(), "---");
+            incrementSteps();
+            QString kUid = mUidHelper->konnectorId( "SynCEEvent", ( *it ) ->uid(), "---" );
 
-            if (kUid != "---") {
-                kdDebug(2120) << "Updating Event on Device: " << "ID-Pair: KDEID: " <<
-                    (*it)->uid() << " DeviceId: " << kUid << endl;
-                QString iCal = calFormat.toString(*it);
-                iCal.replace(QRegExp("END:VALARM\n"), "END:VALARM");
+            if ( kUid != "---" ) {
+                kdDebug( 2120 ) << "Updating Event on Device: " << "ID-Pair: KDEID: " <<
+                ( *it ) ->uid() << " DeviceId: " << kUid << endl;
+                QString iCal = calFormat.toString( *it );
+                iCal.replace( QRegExp( "END:VALARM\n" ), "END:VALARM" );
 
-                m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
+                uint32_t retId = m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
+                if ( retId == 0 ) {
+                    goto error;
+                }
+
                 m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
             }
 
-            KApplication::kApplication()->processEvents();
+            KApplication::kApplication() ->processEvents();
         }
+
+    success:
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
-    void EventHandler::removeEvents (KCal::Event::List& p_eventList)
+    bool EventHandler::removeEvents ( KCal::Event::List& p_eventList )
     {
-        RRA_Uint32Vector* deleted_ids = rra_uint32vector_new();
+        bool ret = false;
+        RRA_Uint32Vector * deleted_ids = rra_uint32vector_new();
 
-        if ( p_eventList.begin() == p_eventList.end() )
-            return ;
+        if ( p_eventList.begin() == p_eventList.end() ) {
+            goto success;
+        }
 
-        for (KCal::Event::List::Iterator it = p_eventList.begin();
+        for ( KCal::Event::List::Iterator it = p_eventList.begin();
                 it != p_eventList.end(); ++it ) {
-            QString kUid = mUidHelper->konnectorId("SynCEEvent", (*it)->uid(), "---");
+            incrementSteps();
+            QString kUid = mUidHelper->konnectorId( "SynCEEvent", ( *it ) ->uid(), "---" );
 
-            if (kUid != "---") {
-                kdDebug(2120) << "Removing Event on Device: " << "ID-Pair: KDEID: " <<
-                    (*it)->uid() << " DeviceId: " << kUid << endl;
-                deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
-                mUidHelper->removeId("SynCEEvent", kUid);
-                rra_uint32vector_add(deleted_ids, getOriginalId( kUid ));
+            if ( kUid != "---" ) {
+                kdDebug( 2120 ) << "Removing Event on Device: " << "ID-Pair: KDEID: " <<
+                ( *it ) ->uid() << " DeviceId: " << kUid << endl;
+/*
+                if (!m_rra->deleteObject (mTypeId, getOriginalId( kUid ))) {
+                    goto error;
+                }
+*/
+                m_rra->deleteObject (mTypeId, getOriginalId( kUid ));
+                mUidHelper->removeId( "SynCEEvent", kUid );
+                rra_uint32vector_add( deleted_ids, getOriginalId( kUid ) );
             }
 
-            KApplication::kApplication()->processEvents();
+            KApplication::kApplication() ->processEvents();
         }
 
-        m_rra->removeDeletedObjects(mTypeId, deleted_ids);
+        m_rra->removeDeletedObjects( mTypeId, deleted_ids );
 
-        rra_uint32vector_destroy(deleted_ids, true);
+        rra_uint32vector_destroy( deleted_ids, true );
+
+    success:
+        ret = true;
+
+//    error:
+        return ret;
     }
 
 
-    bool EventHandler::writeSyncee(KSync::EventSyncee *mCalendarSyncee)
+    bool EventHandler::writeSyncee( KSync::EventSyncee *mCalendarSyncee )
     {
+        bool ret = true;
+
         if ( mCalendarSyncee->isValid() ) {
             KCal::Event::List eventAdded;
             KCal::Event::List eventRemoved;
             KCal::Event::List eventModified;
 
+            setMaximumSteps(mCalendarSyncee->added().count() + mCalendarSyncee->removed().count() + mCalendarSyncee->modified().count());
+            resetSteps();
             getEvents( eventAdded, mCalendarSyncee->added() );
             getEvents( eventRemoved, mCalendarSyncee->removed() );
             // This is a bad hack - but ksync provides deleted calendar-entries only as todos
@@ -350,11 +387,16 @@ namespace PocketPCCommunication
             getTodosAsFakedEvents( eventRemoved, mCalendarSyncee->removed() );
             getEvents( eventModified, mCalendarSyncee->modified() );
 
-            addEvents( eventAdded );
-            removeEvents( eventRemoved );
-            updateEvents( eventModified );
+            setStatus( "Writing added Events" );
+            if (ret = addEvents( eventAdded )) {
+                setStatus( "Erasing deleted Events" );
+                if (ret = removeEvents( eventRemoved )) {
+                    setStatus( "Writing changed Events" );
+                    updateEvents( eventModified );
+                }
+            }
         }
 
-        return true;
+        return ret;
     }
 }

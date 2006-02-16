@@ -176,6 +176,8 @@ private:
     int _actualSyncType;
 
     int subscribtionCount;
+
+    bool error;
 };
 
 }

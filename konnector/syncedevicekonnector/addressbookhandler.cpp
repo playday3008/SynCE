@@ -49,19 +49,21 @@ namespace PocketPCCommunication
     {}
 
 
-    int AddressbookHandler::retrieveAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
+    bool AddressbookHandler::retrieveAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
     {
-        int count = 0;
         KABC::VCardConverter vCardConv;
+        bool ret = false;
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             incrementSteps();
-            count++;
 
             kdDebug(2120) << "Retrieving Contact from device: " << "RRA-ID-" +
                     QString::number ( *it, 16 ).rightJustify( 8, '0' ) << endl;
 
             QString vCard = m_rra->getVCard( mTypeId, *it );
+            if (vCard.isEmpty()) {
+                goto error;
+            }
 
             KABC::Addressee addr = vCardConv.parseVCard ( vCard );
             addr.setFormattedName(addr.formattedName().replace("\\,", ","));
@@ -82,17 +84,16 @@ namespace PocketPCCommunication
             KApplication::kApplication()->processEvents();
         }
 
-        return count;
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
-    int AddressbookHandler::fakeAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
+    void AddressbookHandler::fakeAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
     {
-        int count = 0;
-
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
-            count++;
-
             KABC::Addressee addr;
 
             QString konId = "RRA-ID-" + QString::number( *it, 16 ).rightJustify( 8, '0' );
@@ -105,56 +106,35 @@ namespace PocketPCCommunication
             }
             kdDebug(2120) << "Contact: " << konId << "  --  " << kdeId << endl;
         }
-
-        return count;
     }
 
 
-    bool AddressbookHandler::getIds()
+    void AddressbookHandler::getIds()
     {
         m_rra->getIdsForType( mTypeId, &ids );
-
-        return true;
     }
 
 
-    int AddressbookHandler::getAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, int mRecType )
+    bool AddressbookHandler::getAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, int mRecType )
     {
-        int count = 0;
-        int ret = 0;
+        bool ret = true;
 
-        if ( ( mRecType & CHANGED ) && ( ret >= 0 ) ) {
+        if ( ( mRecType & CHANGED ) ) {
             setStatus("Reading changed Contacts");
-            kdDebug(2120) << "Retrieving changed Contacts" << endl;
             ret = retrieveAddresseeListFromDevice( mAddresseeList, ids.changedIds );
-            if ( ret >= 0 ) {
-                count += 0;
-            }
         }
 
-        if ( ( mRecType & DELETED ) && ( ret >= 0 ) ) {
+        if ( ( mRecType & DELETED ) && ret) {
             setStatus("Creating dummys for deleted Contacts");
-            kdDebug(2120) << "Faking deleted Contacts" << endl;
-            ret = fakeAddresseeListFromDevice( mAddresseeList, ids.deletedIds );
-            if ( ret >= 0 ) {
-                count += 0;
-            }
+            fakeAddresseeListFromDevice( mAddresseeList, ids.deletedIds );
         }
 
-        if ( ( mRecType & UNCHANGED ) && ( ret >= 0 ) ) {
+        if ( ( mRecType & UNCHANGED ) && ret ) {
             setStatus("Reading unchanged Contacts");
-            kdDebug(2120) << "Retrieving unchanged Contacts" << endl;
             ret = retrieveAddresseeListFromDevice( mAddresseeList, ids.unchangedIds );
-            if ( ret >= 0 ) {
-                count += 0;
-            }
         }
 
-        if ( ret < 0 ) {
-            return -count - 1;
-        }
-
-        return count;
+        return ret;
     }
 
 
@@ -170,25 +150,25 @@ namespace PocketPCCommunication
 
     bool AddressbookHandler::readSyncee(KSync::AddressBookSyncee *mAddressBookSyncee, bool firstSync)
     {
-        mAddressBookSyncee->reset();
+        bool ret = false;
 
         getIds();
 
         KABC::Addressee::List modifiedList;
         if (firstSync) {
             this->setMaximumSteps((ids.changedIds.size() + ids.unchangedIds.size()));
-            if (getAddresseeListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED) < 0) {
-                return false;
+            if (!getAddresseeListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED)) {
+                goto error;
             }
         } else {
             this->setMaximumSteps(ids.changedIds.size());
-            if (getAddresseeListFromDevice(modifiedList, PocketPCCommunication::CHANGED) < 0) {
-                return false;
+            if (!getAddresseeListFromDevice(modifiedList, PocketPCCommunication::CHANGED)) {
+                goto error;
             }
 
             KABC::Addressee::List removedList;
-            if (getAddresseeListFromDevice(removedList, PocketPCCommunication::DELETED) < 0) {
-                return false;
+            if (!getAddresseeListFromDevice(removedList, PocketPCCommunication::DELETED)) {
+                goto error;
             }
             insertIntoAddressBookSyncee(mAddressBookSyncee, removedList, KSync::SyncEntry::Removed);
         }
@@ -197,7 +177,10 @@ namespace PocketPCCommunication
         mAddressBookSyncee->setTitle("SynCEAddressbook");
         mAddressBookSyncee->setIdentifier(m_pdaName + "-Addressbook");
 
-        return true;
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
@@ -210,16 +193,17 @@ namespace PocketPCCommunication
     }
 
 
-    void AddressbookHandler::addAddressees( KABC::Addressee::List& p_addresseeList )
+    bool AddressbookHandler::addAddressees( KABC::Addressee::List& p_addresseeList )
     {
-        if ( p_addresseeList.begin() == p_addresseeList.end() )
-            return ;
-
-        setStatus("Writing new Contacts");
-
+        bool ret = false;
         KABC::VCardConverter vCardConv;
         QString vCard;
+
         RRA_Uint32Vector* added_ids = rra_uint32vector_new();
+
+        if ( p_addresseeList.begin() == p_addresseeList.end() ) {
+            goto success;
+        }
 
         for (KABC::Addressee::List::Iterator it = p_addresseeList.begin();
                 it != p_addresseeList.end(); ++it ) {
@@ -230,6 +214,10 @@ namespace PocketPCCommunication
             vCard = vCardConv.createVCard ( ( *it ) );
 
             uint32_t newObjectId = m_rra->putVCard( vCard, mTypeId, 0 );
+            if (newObjectId == 0) {
+                goto error;
+            }
+
             m_rra->markIdUnchanged( mTypeId, newObjectId );
 
             mUidHelper->addId("SynCEAddressbook",
@@ -246,19 +234,27 @@ namespace PocketPCCommunication
         m_rra->registerAddedObjects(mTypeId, added_ids);
 
         rra_uint32vector_destroy(added_ids, true);
+
+    success:
+        ret = true;
+
+    error:
+        return ret;
     }
 
 
-    void AddressbookHandler::updateAddressees( KABC::Addressee::List& p_addresseeList )
+    bool AddressbookHandler::updateAddressees( KABC::Addressee::List& p_addresseeList )
     {
-        if ( p_addresseeList.begin() == p_addresseeList.end() )
-            return ;
-
-        setStatus("Writing changed Contacts");
-
+        bool ret = false;
         KABC::Addressee::List::Iterator it = p_addresseeList.begin();
         KABC::VCardConverter vCardConv;
         QString vCard;
+
+        if ( p_addresseeList.begin() == p_addresseeList.end() ) {
+            goto success;
+        }
+
+        setStatus("Writing changed Contacts");
 
         for ( ; it != p_addresseeList.end(); ++it ) {
             incrementSteps();
@@ -269,24 +265,36 @@ namespace PocketPCCommunication
                 kdDebug(2120) << "Updating Contact on Device: " << "ID-Pair: KDEID: " <<
                     (*it).uid() << " DeviceId: " << kUid << endl;
                 vCard = vCardConv.createVCard ( ( *it ) );
-                m_rra->putVCard ( vCard, mTypeId, getOriginalId( kUid ) );
+                uint32_t retId = m_rra->putVCard ( vCard, mTypeId, getOriginalId( kUid ) );
+                if (retId == 0) {
+                    goto error;
+                }
+
                 m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
             }
 
             KApplication::kApplication()->processEvents();
         }
+
+success:
+        ret = true;
+
+error:
+        return ret;
     }
 
 
-    void AddressbookHandler::removeAddressees ( KABC::Addressee::List& p_addresseeList )
+    bool AddressbookHandler::removeAddressees ( KABC::Addressee::List& p_addresseeList )
     {
-        if ( p_addresseeList.begin() == p_addresseeList.end() )
-            return ;
-
-        setStatus("Erasing deleted Contacts");
-
+        bool ret = false;
         RRA_Uint32Vector* deleted_ids = rra_uint32vector_new();
         KABC::Addressee::List::Iterator it = p_addresseeList.begin();
+
+        if ( p_addresseeList.begin() == p_addresseeList.end() ) {
+            goto success;
+        }
+
+        setStatus("Erasing deleted Contacts");
 
         for ( ; it != p_addresseeList.end(); ++it ) {
             incrementSteps();
@@ -296,7 +304,12 @@ namespace PocketPCCommunication
             if (kUid != "---") {
                 kdDebug(2120) << "Removing Contact on Device: " << "ID-Pair: KDEID: " <<
                     (*it).uid() << " DeviceId: " << kUid << endl;
-                deleteSingleEntry ( mTypeId, getOriginalId( kUid ) );
+/*
+                if (!m_rra->deleteObject (mTypeId, getOriginalId( kUid ))) {
+                    goto error;
+                }
+*/
+                m_rra->deleteObject (mTypeId, getOriginalId( kUid ));
                 mUidHelper->removeId("SynCEAddressbook", kUid);
                 rra_uint32vector_add(deleted_ids, getOriginalId( kUid ));
             }
@@ -307,11 +320,19 @@ namespace PocketPCCommunication
         m_rra->removeDeletedObjects(mTypeId, deleted_ids);
 
         rra_uint32vector_destroy(deleted_ids, true);
+
+    success:
+        ret = true;
+
+//    error:
+        return ret;
     }
 
 
     bool AddressbookHandler::writeSyncee(KSync::AddressBookSyncee *mAddressBookSyncee)
     {
+        bool ret = true;
+
         if ( mAddressBookSyncee->isValid() ) {
             KABC::Addressee::List addrAdded;
             KABC::Addressee::List addrRemoved;
@@ -323,11 +344,16 @@ namespace PocketPCCommunication
             getAddressees( addrRemoved, mAddressBookSyncee->removed() );
             getAddressees( addrModified, mAddressBookSyncee->modified() );
 
-            addAddressees( addrAdded );
-            removeAddressees( addrRemoved );
-            updateAddressees( addrModified );
+            setStatus( "Writing added Contacts" );
+            if (ret = addAddressees( addrAdded )) {
+                setStatus( "Erasing deleted Contacts" );
+                if (ret = removeAddressees( addrRemoved )) {
+                    setStatus( "Writing changed Contacts" );
+                    ret = updateAddressees( addrModified );
+                }
+            }
         }
 
-        return true;
+        return ret;
     }
 }

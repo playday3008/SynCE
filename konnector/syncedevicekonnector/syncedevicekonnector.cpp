@@ -38,7 +38,7 @@
 #include <kitchensync/calendarsyncee.h>
 #include <kitchensync/konnectorinfo.h>
 #include <klocale.h>
-
+#include <kmessagebox.h>
 
 class SynCEDeviceKonnectorFactory : public KRES::PluginFactoryBase
 {
@@ -75,6 +75,7 @@ namespace KSync
         eventsEnabled = false;
         eventsFirstSync = true;
         initialized = false;
+        error = false;
         m_rra = NULL;
 
         mUidHelper = NULL;
@@ -142,7 +143,8 @@ namespace KSync
         if ( mSyncees.empty() ) {
             kdDebug( 2120 ) << "SynCEDeviceKonnector not configured - please configure and sync again" << endl;
             emit synceeReadError( this );
-            return false;
+            error = true;
+            goto error;
         }
 
         clearDataStructures();
@@ -150,8 +152,6 @@ namespace KSync
         mProgressItem->setStatus( "Start loading data from Windows CE" );
 
         if ( subscribtionCount == 0 ) {
-            bool error = false;
-
             if ( mAddrHandler && contactsEnabled ) {
                 m_rra->subscribeForType( mAddrHandler->getTypeId() );
                 subscribtionCount++;
@@ -168,39 +168,36 @@ namespace KSync
             }
 
             if ( !m_rra->getIds() ) {
-                emit synceeReadError( this );
                 error = true;
             }
+        }
 
-            if ( mAddrHandler && contactsEnabled ) {
-                m_rra->unsubscribeType( mAddrHandler->getTypeId() );
-            }
-
-            if ( mTodoHandler && todosEnabled ) {
-                m_rra->unsubscribeType( mTodoHandler->getTypeId() );
-            }
-
-            if ( mEventHandler && eventsEnabled ) {
-                m_rra->unsubscribeType( mEventHandler->getTypeId() );
-            }
-            if (error) {
-                return false;
-            }
+        if (error) {
+            emit synceeReadError(this);
+            goto error;
         }
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
             mAddrHandler->setProgressItem( mProgressItem );
-            if ( !mAddrHandler->readSyncee( mAddressBookSyncee, contactsFirstSync ) ) {
+            if ( error = !mAddrHandler->readSyncee( mAddressBookSyncee, contactsFirstSync ) ) {
                 emit synceeReadError( this );
-                return false;
+                KMessageBox::error(0,
+                                    QString("Error reading from ") +
+                                    m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
+                                    " synchronizer", "Read Error");
+                goto error;
             }
         }
 
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
             mTodoHandler->setProgressItem( mProgressItem );
-            if ( !mTodoHandler->readSyncee( mTodoSyncee, todosFirstSync ) ) {
+            if (error = !mTodoHandler->readSyncee( mTodoSyncee, todosFirstSync ) ) {
                 emit synceeReadError( this );
-                return false;
+                KMessageBox::error(0,
+                                    QString("Error reading from ") +
+                                    m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
+                                    " synchronizer", "Read Error");
+                goto error;
             }
         }
 
@@ -208,25 +205,27 @@ namespace KSync
 
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
             mEventHandler->setProgressItem( mProgressItem );
-            if ( !mEventHandler->readSyncee( mEventSyncee, eventsFirstSync ) ) {
+            if (error = !mEventHandler->readSyncee( mEventSyncee, eventsFirstSync ) ) {
                 emit synceeReadError( this );
-                return false;
+                KMessageBox::error(0,
+                                    QString("Error reading from ") +
+                                    m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
+                                    " synchronizer", "Read Error");
+                goto error;
             }
         }
 
         emit synceesRead ( this );
 
-        return true;
+    error:
+        return !error;
     }
 
 
     bool SynCEDeviceKonnector::writeSyncees()
     {
-        bool ret = false;
-
         kdDebug( 2120 ) << "SynCEDeviceKonnector::writeSyncees()..." << endl;
 
-        // write m_syncees to the device
         if ( mSyncees.empty() ) {
             kdDebug( 2120 ) << "SynCEDeviceKonnector::writeSyncees: m_syncees is empty" << endl;
             emit synceeWriteError( this );
@@ -234,30 +233,59 @@ namespace KSync
         }
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
-            mAddrHandler->writeSyncee( mAddressBookSyncee );
+            if (error = !mAddrHandler->writeSyncee( mAddressBookSyncee )) {
+                emit synceeWriteError(this);
+            }
             contactsFirstSync = false;
+            m_rra->unsubscribeType( mAddrHandler->getTypeId() );
             subscribtionCount--;
+            if (error) {
+                KMessageBox::error(0,
+                                   QString("Error writing to ") +
+                                   m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
+                                   " synchronizer", "Write Error");
+                goto error;
+            }
         }
 
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
-            mTodoHandler->writeSyncee( mTodoSyncee );
+            if (error = !mTodoHandler->writeSyncee( mTodoSyncee )) {
+                emit synceeWriteError(this);
+            }
             todosFirstSync = false;
+            m_rra->unsubscribeType( mTodoHandler->getTypeId() );
             subscribtionCount--;
+            if (error) {
+                KMessageBox::error(0,
+                                   QString("Error writing to ") +
+                                   m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
+                                   " synchronizer", "Write Error");
+                goto error;
+            }
         }
 
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
-            mEventHandler->writeSyncee( mEventSyncee );
+            if (error = !mEventHandler->writeSyncee( mEventSyncee )) {
+                emit synceeWriteError(this);
+            }
             eventsFirstSync = false;
+            m_rra->unsubscribeType( mEventHandler->getTypeId() );
             subscribtionCount--;
+            if (error) {
+                KMessageBox::error(0,
+                                   QString("Error writing to ") +
+                                   m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
+                                   " synchronizer", "Write Error");
+                goto error;
+            }
         }
 
         emit synceesWritten ( this );
 
-        ret = true;
     error:
         clearDataStructures();
 
-        return ret;
+        return !error;
     }
 
 
@@ -294,6 +322,7 @@ namespace KSync
         mProgressItem->setStatus( i18n( "Start loading data from Windows CE..." ) );
 
         if (subscribtionCount == 0) {
+            error = false;
             m_rra->connect();
         }
 
@@ -303,7 +332,6 @@ namespace KSync
 
     bool SynCEDeviceKonnector::disconnectDevice()
     {
-        kdDebug(2120) << " Disconnecting" << endl;
         if ( mUidHelper ) {
             mUidHelper->save();
         }

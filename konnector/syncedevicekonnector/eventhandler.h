@@ -51,19 +51,19 @@ public:
 
     virtual ~EventHandler();
 
-    int retrieveEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList);
-    int fakeEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList);
-    bool getIds();
-    int getEventListFromDevice(KCal::Event::List &mEventList, int mRecType);
+    bool retrieveEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList);
+    void fakeEventListFromDevice(KCal::Event::List &mEventList, QValueList<uint32_t> &idList);
+    void getIds();
+    bool getEventListFromDevice(KCal::Event::List &mEventList, int mRecType);
     bool readSyncee(KSync::EventSyncee *mCalendarSyncee, bool firstSync);
     void getEvents (KCal::Event::List& p_addressees, KSync::SyncEntry::PtrList p_ptrList );
     void getTodosAsFakedEvents(KCal::Event::List& p_events, KSync::SyncEntry::PtrList p_ptrList );
     bool writeSyncee(KSync::EventSyncee *mCalendarSyncee);
     void insertIntoCalendarSyncee(KSync::EventSyncee *mCalendarSyncee, KCal::Event::List &list, int state);
 
-    void addEvents    (KCal::Event::List& p_eventList);
-    void updateEvents (KCal::Event::List& p_eventList);
-    void removeEvents (KCal::Event::List& p_eventList);
+    bool addEvents    (KCal::Event::List& p_eventList);
+    bool updateEvents (KCal::Event::List& p_eventList);
+    bool removeEvents (KCal::Event::List& p_eventList);
 
 private:
     QString sCurrentTimeZone;
