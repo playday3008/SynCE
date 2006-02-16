@@ -168,7 +168,6 @@ void SynCEEngine::executeActions()
     for( konnector = mOpenedKonnectors.first(); konnector;
          konnector = mOpenedKonnectors.next() ) {
              konnector->applyFilters( KSync::Konnector::FilterAfterSync );
-
              if ( !konnector->writeSyncees() )
                  logError( i18n("Cannot write data back to '%1'.").arg( konnector->resourceName() ) );
          }
