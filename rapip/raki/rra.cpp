@@ -368,6 +368,10 @@ uint32_t Rra::putVCard(QString& vCard, uint32_t type_id, uint32_t object_id)
         disconnect();
     }
 
+    if (!rraOk) {
+        new_object_id = 0;
+    }
+
     return new_object_id;
 }
 
@@ -433,6 +437,10 @@ uint32_t Rra::putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id)
         }
 
         disconnect();
+    }
+
+    if (!rraOk) {
+        new_object_id = 0;
     }
 
     return new_object_id;
@@ -502,11 +510,15 @@ uint32_t Rra::putVToDo(QString& vToDo, uint32_t type_id, uint32_t object_id)
         disconnect();
     }
 
+    if (!rraOk) {
+        new_object_id = 0;
+    }
+
     return new_object_id;
 }
 
 
-void Rra::deleteObject(uint32_t type_id, uint32_t object_id)
+bool Rra::deleteObject(uint32_t type_id, uint32_t object_id)
 {
     rraOk = true;
 
@@ -516,6 +528,8 @@ void Rra::deleteObject(uint32_t type_id, uint32_t object_id)
         }
         disconnect();
     }
+
+    return rraOk;
 }
 
 

@@ -88,7 +88,7 @@ public:
     uint32_t putVEvent(QString& vEvent, uint32_t type_id, uint32_t object_id);
     QString getVToDo(uint32_t type_id, uint32_t object_id);
     uint32_t putVToDo(QString& vToDo, uint32_t type_id, uint32_t object_id);
-    void deleteObject(uint32_t type_id, uint32_t object_id);
+    bool deleteObject(uint32_t type_id, uint32_t object_id);
     bool isConnected () const;
     QString getPdaName () const;
     void subscribeForType(uint32_t typeId);
