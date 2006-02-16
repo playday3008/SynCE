@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
 <class>RemovePartnershipDialog</class>
 <widget class="QDialog">
     <property name="name">
@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>439</width>
-            <height>188</height>
+            <height>258</height>
         </rect>
     </property>
     <property name="caption">
@@ -25,6 +25,14 @@
         <widget class="QLabel">
             <property name="name">
                 <cstring>textLabel1</cstring>
+            </property>
+            <property name="sizePolicy">
+                <sizepolicy>
+                    <hsizetype>5</hsizetype>
+                    <vsizetype>3</vsizetype>
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                </sizepolicy>
             </property>
             <property name="text">
                 <string>There are already two partnerships configured on the device.&lt;br&gt;You have to delete at least one before you can set up a new partnership.</string>
@@ -84,7 +92,7 @@
                                 <cstring>kPushButton2</cstring>
                             </property>
                             <property name="text">
-                                <string>Remove marked Partnerships</string>
+                                <string>Remove m&amp;arked Partnerships</string>
                             </property>
                         </widget>
                         <spacer>
