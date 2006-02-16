@@ -830,7 +830,7 @@ int main(int argc, char *argv[])
 
     KAboutData aboutData("raki", I18N_NOOP("Raki"), VERSION, description,
             KAboutData::License_Custom,
-            "(c) 2003, 2004, Volker Christian (voc)", 0,
+            "(c) 2003 - 2006, Volker Christian (voc)", 0,
             "http://synce.sourceforge.net/synce/kde/",
             "voc@users.sourceforge.net");
     aboutData.addAuthor("Volker Christian", 0, "voc@users.sourceforge.net");
