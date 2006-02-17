@@ -29,7 +29,7 @@
 #include <qpair.h>
 #include <qvaluelist.h>
 #include <kresources/configwidget.h>
-#include <kitchensync/libkonnector2/konnector.h>
+#include <konnector.h>
 
 class KLineEdit;
 
