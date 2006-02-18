@@ -173,6 +173,7 @@ namespace KSync
         }
 
         if (error) {
+            subscribtionCount--;
             emit synceeReadError(this);
             goto error;
         }
@@ -180,11 +181,12 @@ namespace KSync
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
             mAddrHandler->setProgressItem( mProgressItem );
             if ( error = !mAddrHandler->readSyncee( mAddressBookSyncee, contactsFirstSync ) ) {
-                emit synceeReadError( this );
                 KMessageBox::error(0,
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
                                     " synchronizer", "Read Error");
+                subscribtionCount--;
+                emit synceeReadError( this );
                 goto error;
             }
         }
@@ -192,11 +194,12 @@ namespace KSync
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
             mTodoHandler->setProgressItem( mProgressItem );
             if (error = !mTodoHandler->readSyncee( mTodoSyncee, todosFirstSync ) ) {
-                emit synceeReadError( this );
                 KMessageBox::error(0,
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
                                     " synchronizer", "Read Error");
+                subscribtionCount--;
+                emit synceeReadError( this );
                 goto error;
             }
         }
@@ -206,11 +209,12 @@ namespace KSync
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
             mEventHandler->setProgressItem( mProgressItem );
             if (error = !mEventHandler->readSyncee( mEventSyncee, eventsFirstSync ) ) {
-                emit synceeReadError( this );
                 KMessageBox::error(0,
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
                                     " synchronizer", "Read Error");
+                subscribtionCount--;
+                emit synceeReadError( this );
                 goto error;
             }
         }
@@ -233,9 +237,7 @@ namespace KSync
         }
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
-            if (error = !mAddrHandler->writeSyncee( mAddressBookSyncee )) {
-                emit synceeWriteError(this);
-            }
+            error = !mAddrHandler->writeSyncee( mAddressBookSyncee );
             contactsFirstSync = false;
             m_rra->unsubscribeType( mAddrHandler->getTypeId() );
             subscribtionCount--;
@@ -244,14 +246,13 @@ namespace KSync
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
                                    " synchronizer", "Write Error");
+                emit synceeWriteError(this);
                 goto error;
             }
         }
 
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
-            if (error = !mTodoHandler->writeSyncee( mTodoSyncee )) {
-                emit synceeWriteError(this);
-            }
+            error = !mTodoHandler->writeSyncee( mTodoSyncee );
             todosFirstSync = false;
             m_rra->unsubscribeType( mTodoHandler->getTypeId() );
             subscribtionCount--;
@@ -260,14 +261,13 @@ namespace KSync
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
                                    " synchronizer", "Write Error");
+                emit synceeWriteError(this);
                 goto error;
             }
         }
 
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
-            if (error = !mEventHandler->writeSyncee( mEventSyncee )) {
-                emit synceeWriteError(this);
-            }
+            error = !mEventHandler->writeSyncee( mEventSyncee );
             eventsFirstSync = false;
             m_rra->unsubscribeType( mEventHandler->getTypeId() );
             subscribtionCount--;
@@ -276,6 +276,7 @@ namespace KSync
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
                                    " synchronizer", "Write Error");
+                emit synceeWriteError(this);
                 goto error;
             }
         }
