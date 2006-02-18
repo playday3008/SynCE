@@ -231,14 +231,14 @@ namespace PocketPCCommunication
 
             KApplication::kApplication()->processEvents();
         }
-        m_rra->registerAddedObjects(mTypeId, added_ids);
-
-        rra_uint32vector_destroy(added_ids, true);
 
     success:
         ret = true;
 
     error:
+        m_rra->registerAddedObjects(mTypeId, added_ids);
+        rra_uint32vector_destroy(added_ids, true);
+
         return ret;
     }
 
@@ -286,6 +286,7 @@ error:
 
     bool AddressbookHandler::removeAddressees ( KABC::Addressee::List& p_addresseeList )
     {
+//        int errorCount = 0;
         bool ret = false;
         RRA_Uint32Vector* deleted_ids = rra_uint32vector_new();
         KABC::Addressee::List::Iterator it = p_addresseeList.begin();
@@ -304,12 +305,13 @@ error:
             if (kUid != "---") {
                 kdDebug(2120) << "Removing Contact on Device: " << "ID-Pair: KDEID: " <<
                     (*it).uid() << " DeviceId: " << kUid << endl;
-/*
+
                 if (!m_rra->deleteObject (mTypeId, getOriginalId( kUid ))) {
-                    goto error;
+//                    if (errorCount++ == -1) {
+//                        goto error;
+//                    }
                 }
-*/
-                m_rra->deleteObject (mTypeId, getOriginalId( kUid ));
+
                 mUidHelper->removeId("SynCEAddressbook", kUid);
                 rra_uint32vector_add(deleted_ids, getOriginalId( kUid ));
             }
@@ -317,14 +319,12 @@ error:
             KApplication::kApplication()->processEvents();
         }
 
-        m_rra->removeDeletedObjects(mTypeId, deleted_ids);
-
-        rra_uint32vector_destroy(deleted_ids, true);
-
     success:
         ret = true;
 
 //    error:
+        m_rra->removeDeletedObjects(mTypeId, deleted_ids);
+        rra_uint32vector_destroy(deleted_ids, true);
         return ret;
     }
 

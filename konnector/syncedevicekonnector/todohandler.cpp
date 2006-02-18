@@ -231,7 +231,6 @@ namespace PocketPCCommunication
         KCal::ICalFormat calFormat;
 
         if ( p_todoList.begin() == p_todoList.end() ) {
-            rra_uint32vector_destroy( added_ids, true );
             goto success;
         }
 
@@ -261,13 +260,14 @@ namespace PocketPCCommunication
 
             KApplication::kApplication() ->processEvents();
         }
-        m_rra->registerAddedObjects( mTypeId, added_ids );
 
-        rra_uint32vector_destroy( added_ids, true );
     success:
         ret = true;
 
     error:
+        m_rra->registerAddedObjects( mTypeId, added_ids );
+        rra_uint32vector_destroy( added_ids, true );
+
         return ret;
     }
 
@@ -311,6 +311,7 @@ error:
 
     bool TodoHandler::removeTodos ( KCal::Todo::List& p_todoList )
     {
+//        int errorCount = 0;
         bool ret = false;
         RRA_Uint32Vector * deleted_ids = rra_uint32vector_new();
 
@@ -326,12 +327,13 @@ error:
             if ( kUid != "---" ) {
                 kdDebug( 2120 ) << "Removing Event on Device: " << "ID-Pair: KDEID: " <<
                 ( *it ) ->uid() << " DeviceId: " << kUid << endl;
-/*
+
                 if (!m_rra->deleteObject (mTypeId, getOriginalId( kUid ))) {
-                goto error;
-            }
-*/
-                m_rra->deleteObject (mTypeId, getOriginalId( kUid ));
+//                    if (errorCount++ == -1) {
+//                        goto error;
+//                    }
+                }
+
                 mUidHelper->removeId( "SynCETodo", kUid );
                 rra_uint32vector_add( deleted_ids, getOriginalId( kUid ) );
             }
@@ -339,14 +341,13 @@ error:
             KApplication::kApplication() ->processEvents();
         }
 
-        m_rra->removeDeletedObjects( mTypeId, deleted_ids );
-
-        rra_uint32vector_destroy( deleted_ids, true );
-
     success:
         ret = true;
 
 //    error:
+        m_rra->removeDeletedObjects( mTypeId, deleted_ids );
+        rra_uint32vector_destroy( deleted_ids, true );
+
         return ret;
     }
 

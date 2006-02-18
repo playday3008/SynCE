@@ -7,7 +7,7 @@ AC_CHECK_KDEMAXPATHLEN
 SYNCE_CHECK_RRA
 
 synce_kde_save_ldflags="$LDFLAGS"
-LDFLAGS=-L$kde_libraries
+LDFLAGS=$KDE_LDFLAGS
 
 AC_CHECK_LIB(kabc_file, main,
     [
