@@ -204,8 +204,6 @@ namespace KSync
             }
         }
 
-        mProgressItem->setProgress( 60 );
-
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
             mEventHandler->setProgressItem( mProgressItem );
             if (error = !mEventHandler->readSyncee( mEventSyncee, eventsFirstSync ) ) {
@@ -222,6 +220,7 @@ namespace KSync
         emit synceesRead ( this );
 
     error:
+        mProgressItem->setProgress( 50 );
         return !error;
     }
 
