@@ -132,7 +132,8 @@ PDA::PDA( Raki *raki, QString pdaName )
     associatedMenu->insertTearOffHandle( -1, -1 );
     menuCount++;
 
-    connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
+//    connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
+    connect( syncDialog, SIGNAL( finished() ), this, SLOT(syncFinished()));
     connect( &pdaMirror, SIGNAL( processExited( KProcess* ) ), this, SLOT( pdaMirrorExited( KProcess* ) ) );
 }
 
@@ -730,4 +731,14 @@ void PDA::setMasqueradeStarted()
 bool PDA::masqueradeStarted()
 {
     return _masqueradeStarted;
+}
+
+
+void PDA::syncFinished()
+{
+    configDialog->writeConfig();
+
+    if (configDialog->getCloseWhenCompleted()) {
+        syncDialog->reject(true);
+    }
 }

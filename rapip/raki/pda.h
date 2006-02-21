@@ -189,6 +189,7 @@ private slots:
 
 public slots:
     void synchronize(bool forced = true);
+    void syncFinished();
 };
 
 #endif

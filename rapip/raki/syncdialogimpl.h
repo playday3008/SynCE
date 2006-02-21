@@ -108,7 +108,7 @@ public:
     ~SyncDialogImpl();
     void show(QPtrList<SyncTaskListItem>& syncItems);
     void work(QThread *qt = NULL, void *data = NULL);
-    void reject();
+    void reject(bool forced = false);
 
 signals:
     void finished();

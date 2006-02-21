@@ -65,9 +65,9 @@ SyncDialogImpl::~SyncDialogImpl()
 }
 
 
-void SyncDialogImpl::reject()
+void SyncDialogImpl::reject(bool forced)
 {
-    if (this->running()) {
+    if (this->running() && !forced) {
         this->setStopRequested(true);
     } else {
         SyncDialog::reject();

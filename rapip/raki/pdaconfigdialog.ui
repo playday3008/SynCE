@@ -8,8 +8,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>419</width>
-            <height>434</height>
+            <width>441</width>
+            <height>495</height>
         </rect>
     </property>
     <property name="caption">
@@ -111,19 +111,37 @@
                 </widget>
                 <widget class="QLayoutWidget">
                     <property name="name">
-                        <cstring>layout5</cstring>
+                        <cstring>layout6</cstring>
                     </property>
                     <hbox>
                         <property name="name">
                             <cstring>unnamed</cstring>
                         </property>
-                        <widget class="QCheckBox">
+                        <widget class="QLayoutWidget">
                             <property name="name">
-                                <cstring>syncAtConnectCheckbox</cstring>
+                                <cstring>layout4</cstring>
                             </property>
-                            <property name="text">
-                                <string>Syncronize at PDA-Connect</string>
-                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>syncAtConnectCheckbox</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Syncronize at PDA-Connect</string>
+                                    </property>
+                                </widget>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>closeWhenCompletedCheckbox</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Close when completed</string>
+                                    </property>
+                                </widget>
+                            </vbox>
                         </widget>
                         <spacer>
                             <property name="name">
@@ -137,18 +155,62 @@
                             </property>
                             <property name="sizeHint">
                                 <size>
-                                    <width>40</width>
+                                    <width>71</width>
                                     <height>20</height>
                                 </size>
                             </property>
                         </spacer>
-                        <widget class="KPushButton">
+                        <widget class="QLayoutWidget">
                             <property name="name">
-                                <cstring>kPushButton2</cstring>
+                                <cstring>layout5</cstring>
                             </property>
-                            <property name="text">
-                                <string>Config</string>
-                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <spacer>
+                                    <property name="name">
+                                        <cstring>spacer3_2</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Fixed</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>20</width>
+                                            <height>0</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                                <widget class="KPushButton">
+                                    <property name="name">
+                                        <cstring>kPushButton2</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Config</string>
+                                    </property>
+                                </widget>
+                                <spacer>
+                                    <property name="name">
+                                        <cstring>spacer3_2_2</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Fixed</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>20</width>
+                                            <height>0</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </vbox>
                         </widget>
                     </hbox>
                 </widget>
@@ -228,8 +290,6 @@
         </widget>
     </vbox>
 </widget>
-<customwidgets>
-</customwidgets>
 <connections>
     <connection>
         <sender>buttonOk</sender>
@@ -284,6 +344,12 @@
         <signal>selectionChanged()</signal>
         <receiver>PdaConfigDialog</receiver>
         <slot>setConfigButton()</slot>
+    </connection>
+    <connection>
+        <sender>closeWhenCompletedCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>PdaConfigDialog</receiver>
+        <slot>changedSlot()</slot>
     </connection>
 </connections>
 <tabstops>

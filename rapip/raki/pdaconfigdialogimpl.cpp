@@ -72,6 +72,7 @@ void PdaConfigDialogImpl::updateFields()
     passwordEdit->setText(password);
     masqEnabledCheckbox->setChecked(masqEnabled);
     syncAtConnectCheckbox->setChecked(syncAtConnect);
+    closeWhenCompletedCheckbox->setChecked(closeWhenCompleted);
     for (item = syncTaskItemList.first(); item; item = syncTaskItemList.next()) {
         item->undo();
     }
@@ -106,6 +107,7 @@ void PdaConfigDialogImpl::writeConfig()
     ksConfig->writeEntry("Password", password);
     ksConfig->writeEntry("Masquerade", masqEnabled);
     ksConfig->writeEntry("SyncAtConnect", syncAtConnect);
+    ksConfig->writeEntry("CloseWhenCompleted", closeWhenCompleted);
     ksConfig->writeEntry("PartnerName", partnerName);
     ksConfig->writeEntry("PartnerId", partnerId);
     ksConfig->writeEntry("PartnershipCreated", partnershipCreated);
@@ -133,6 +135,7 @@ void PdaConfigDialogImpl::readConfig()
         masqEnabled = ksConfig->readBoolEntry("Masquerade");
         password = ksConfig->readEntry("Password");
         syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect");
+        closeWhenCompleted = ksConfig->readBoolEntry("CloseWhenCompleted");
         partnerName = ksConfig->readEntry("PartnerName");
         partnerId = ksConfig->readUnsignedLongNumEntry("PartnerId", 0);
         partnershipCreated = ksConfig->readDateTimeEntry("PartnershipCreated",
@@ -190,6 +193,7 @@ void PdaConfigDialogImpl::applySlot()
         this->password = passwordEdit->text();
         masqEnabled = masqEnabledCheckbox->isChecked();
         syncAtConnect = syncAtConnectCheckbox->isChecked();
+        closeWhenCompleted = closeWhenCompletedCheckbox->isChecked();
         for (syncTaskListItem = syncTaskItemList.first(); syncTaskListItem;
                 syncTaskListItem = syncTaskItemList.next()) {
             syncTaskListItem->makePersistent();
@@ -333,4 +337,10 @@ void PdaConfigDialogImpl::show()
 {
     setConfigButton();
     PdaConfigDialog::show();
+}
+
+
+bool PdaConfigDialogImpl::getCloseWhenCompleted()
+{
+    return closeWhenCompleted;
 }
