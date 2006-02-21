@@ -268,6 +268,8 @@ static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
   int i;
   char** strv = strsplit(str, ';');
 
+  rrule->interval = 1;
+
   for (i = 0; strv[i]; i++)
   {
     char** pair = strsplit(strv[i], '=');
