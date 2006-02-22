@@ -1,17 +1,24 @@
 ifeq ($(KERNELRELEASE),)
 
 #
-# Modify the line below if needed
+# Customization here:
 #
-LINUX_SOURCE_PATH := /usr/src/linux-$(shell uname -r)
-LINUX_SOURCE_PATH := /usr/src/linux-source-2.6.10
+
+# Change this line if your linux source code is somewhere else
+LINUX_SOURCE_PATH := /usr/src/linux-source-$(shell uname -r)
+
+# Use this VERSION line if your kernel is < 2.6.15
+VERSION = 2.6.13.3
+
+# Use this VERSION line if your kernel is >= 2.6.15
+#VERSION = 2.6.15
+
 #
 # You should not need to modify anything else
 #
 
 KERNEL_BUILD_DIR := /lib/modules/$(shell uname -r)/build
 USB_SERIAL_SOURCE_DIR := $(LINUX_SOURCE_PATH)/drivers/usb/serial
-VERSION = 2.6.13.3
 PWD := $(shell pwd)
 
 PATCHED := .patched
@@ -39,7 +46,7 @@ $(PATCHED): ipaq.c-$(VERSION)
 	cp -p $^ ipaq.c
 	patch -N -p0 < ipaq-select-endpoints.diff
 	patch -N -p0 < ipaq-version.diff
-	patch -N -p4 < ipaq-psion-teklogix.diff
+	-patch -N -p4 < ipaq-psion-teklogix.diff
 	patch -N -p4 < ipaq-smartphones.diff
 	patch -N -p0 < ipaq-compal.diff
 	touch $(PATCHED)
