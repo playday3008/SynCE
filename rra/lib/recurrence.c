@@ -431,7 +431,8 @@ bool recurrence_parse_rrule(
     mdir_line* mdir_dtstart,
     mdir_line* mdir_dtend,
     mdir_line* mdir_rrule, 
-    RRA_MdirLineVector* exdates)
+    RRA_MdirLineVector* exdates,
+    RRA_Timezone* tzi)
 {
   bool success = false;
   RRule rrule;
@@ -572,10 +573,21 @@ bool recurrence_parse_rrule(
   else if (rrule.until)
   {
     struct tm until;
+    time_t until_;
+    bool is_utc;
 
-    if (!parser_datetime_to_struct(rrule.until, &until, NULL))
+    if (!parser_datetime_to_struct(rrule.until, &until, &is_utc))
       goto exit;
 
+    if (is_utc) {
+      until_ = mktime(&until);
+      until_ = rra_timezone_convert_to_utc(tzi, until_);
+      localtime_r(&until_, &until);
+      if (tzi == NULL) synce_error("INVALID TIMEZONE (NULL)!");
+#if VERBOSE
+      synce_trace("pattern_end: %s -> %s", rrule.until, asctime(&until));
+#endif
+    }
     pattern->flags |= RecurrenceEndsOnDate;
     pattern->pattern_end_date = rra_minutes_from_struct(&until);
 

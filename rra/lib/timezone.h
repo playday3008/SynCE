@@ -1,4 +1,6 @@
 /* $Id$ */
+#ifndef __timezone_h__
+#define __timezone_h__
 
 #include <synce.h>
 
@@ -43,3 +45,4 @@ struct _Generator;
 /** Write this timezone as a vTimezone object */
 bool rra_timezone_generate_vtimezone(struct _Generator* generator, RRA_Timezone* tzi);
 
+#endif

@@ -663,7 +663,8 @@ bool rra_appointment_from_vevent(/*{{{*/
             event_parser_data.dtstart,
             event_parser_data.dtend,
             event_parser_data.rrule, 
-            event_parser_data.exdates))
+            event_parser_data.exdates,
+            tzi))
         synce_warning("Failed to parse recurrence rule");
 
       if (event_parser_data.uid)

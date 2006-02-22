@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <libmimedir.h>
 #include "mdir_line_vector.h"
+#include "timezone.h"
 
 struct _CEPROPVAL;
 struct _Generator;
@@ -19,7 +20,8 @@ bool recurrence_parse_rrule(
     mdir_line* dtstart,
     mdir_line* dtend,
     mdir_line* rrule, 
-    RRA_MdirLineVector* exdates);
+    RRA_MdirLineVector* exdates,
+    RRA_Timezone* tzi);
 
 #endif
 
