@@ -199,6 +199,8 @@ void Raki::initializePda()
                 }
                 connect(pda, SIGNAL(initialized(PDA *, int)), this,
                         SLOT(pdaInitialized(PDA*, int)));
+                connect(pda, SIGNAL(disconnectPda(QString)), this,
+                        SLOT(disconnectPda( QString)));
                 pda->init();
             }
             break;
@@ -373,6 +375,16 @@ void Raki::resolvedPassword(QString pdaName, QString password)
 
     sprintf(passBuffer, "R%s=%s", pdaNamec, password.ascii());
     write(dccmConnection->socket(), passBuffer, strlen(passBuffer));
+}
+
+
+void Raki::disconnectPda(QString pdaName)
+{
+    char buffer[100];
+    const char *pdaNamec = pdaName.ascii();
+
+    sprintf(buffer, "D%s", pdaNamec);
+    write(dccmConnection->socket(), buffer, strlen(buffer));
 }
 
 
@@ -752,8 +764,11 @@ bool Raki::process(const QCString &fun, const QByteArray &data,
         replyType = Raki_ftable[2][0];
         QStringList list;
         list << arg0;
-        if (!pdaList.isEmpty())
+        if (!pdaList.isEmpty()) {
             installer->show(list);
+        } else {
+            KMessageBox::informationList(this, "Could not install cab-file as there is no device connected at the moment.", list, "Install");
+        }
     } else {
         return DCOPObject::process( fun, data, replyType, replyData );
     }

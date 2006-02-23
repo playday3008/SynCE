@@ -142,6 +142,7 @@ public:
 signals:
     void resolvedPassword(QString pdaName, QString passwd);
     void initialized(PDA *pda, int initialized);
+    void disconnectPda(QString pdaName);
 
 private:
     void setPartnership(QThread *thread, void *data);
@@ -186,6 +187,7 @@ private slots:
     void setPassword(QString password);
     void startPdaMirror();
     void pdaMirrorExited(KProcess* );
+    void disconnectPda();
 
 public slots:
     void synchronize(bool forced = true);

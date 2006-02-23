@@ -106,7 +106,7 @@ PDA::PDA( Raki *raki, QString pdaName )
     menuCount++;
 
     associatedMenu->insertItem( SmallIcon( "rotate_cw" ),
-                                i18n( "&Info && Management..." ), this, SLOT( manage() ) );
+                                i18n( "&Info && Management" ), this, SLOT( manage() ) );
     menuCount++;
 
     associatedMenu->insertSeparator( menuCount );
@@ -125,7 +125,12 @@ PDA::PDA( Raki *raki, QString pdaName )
 
     associatedMenu->insertSeparator( menuCount );
     menuCount++;
+    associatedMenu->insertItem( SmallIcon( "cancel" ), i18n( "&Disconnect" ), this,
+                                SLOT( disconnectPda() ) );
+    menuCount++;
 
+    associatedMenu->insertSeparator( menuCount );
+    menuCount++;
     associatedMenu->insertItem( SmallIcon( "configure" ), i18n( "Configure %1" ).arg( QString( pdaName ) ), this, SLOT( configurePda() ) );
     menuCount++;
 
@@ -284,6 +289,12 @@ void PDA::requestPassword()
     } else {
         emit resolvedPassword( pdaName, configDialog->getPassword() );
     }
+}
+
+
+void PDA::disconnectPda()
+{
+    emit disconnectPda(pdaName);
 }
 
 

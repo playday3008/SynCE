@@ -124,6 +124,7 @@ private slots:
     void initializePda();
     void closeDccmConnection();
     void resolvedPassword(QString pdaName, QString password);
+    void disconnectPda(QString pdaName);
     void quit();
     void shutDown();
     void restartDccm();
