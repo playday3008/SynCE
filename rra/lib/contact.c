@@ -559,12 +559,28 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 	if (home_street || home_locality || home_postal_code || home_country)
 	{
+    char *street = NULL;
+    char *extended = NULL;
+
+    if (home_street)
+    {
+      if (flags & RRA_CONTACT_UTF8)
+        street = wstr_to_utf8(home_street);
+      else
+        street = wstr_to_ascii(home_street);
+
+      extended = strstr(street, "\n");
+
+      if (extended)
+        extended++[-1] = '\0';
+    }
+
 		strbuf_append_type(vcard, "ADR", "HOME", flags);
 		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
-		strbuf_append_escaped_wstr (vcard, NULL, flags); /* extended address */
+    strbuf_append_escaped      (vcard, extended, flags); /* extended address */
 		strbuf_append_c            (vcard, ';');
-		strbuf_append_escaped_wstr (vcard, home_street, flags);
+    strbuf_append_escaped      (vcard, street, flags);
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, home_locality, flags);
 		strbuf_append_c            (vcard, ';');
@@ -574,16 +590,35 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, home_country, flags);
 		strbuf_append_crlf      (vcard);
+
+    if (street)
+      wstr_free_string(street);
 	}
 
 	if (work_street || work_locality || work_postal_code || work_country)
 	{
+    char *street = NULL;
+    char *extended = NULL;
+
+    if (work_street)
+    {
+      if (flags & RRA_CONTACT_UTF8)
+        street = wstr_to_utf8(work_street);
+      else
+        street = wstr_to_ascii(work_street);
+
+      extended = strstr(street, "\n");
+
+      if (extended)
+        extended++[-1] = '\0';
+    }
+
 		strbuf_append_type(vcard, "ADR", "WORK", flags);
 		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
-		strbuf_append_escaped_wstr (vcard, NULL, flags); /* extended address */
+    strbuf_append_escaped      (vcard, extended, flags); /* extended address */
 		strbuf_append_c            (vcard, ';');
-		strbuf_append_escaped_wstr (vcard, work_street, flags);
+    strbuf_append_escaped      (vcard, street, flags);
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, work_locality, flags);
 		strbuf_append_c            (vcard, ';');
@@ -593,16 +628,35 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, work_country, flags);
 		strbuf_append_crlf      (vcard);
+
+    if (street)
+      wstr_free_string(street);
 	}
 
 	if (other_street || other_locality || other_postal_code || other_country)
 	{
+    char *street = NULL;
+    char *extended = NULL;
+
+    if (other_street)
+    {
+      if (flags & RRA_CONTACT_UTF8)
+        street = wstr_to_utf8(other_street);
+      else
+        street = wstr_to_ascii(other_street);
+
+      extended = strstr(street, "\n");
+
+      if (extended)
+        extended++[-1] = '\0';
+    }
+
 		strbuf_append_type(vcard, "ADR", "POSTAL", flags);
 		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
-		strbuf_append_escaped_wstr (vcard, NULL, flags); /* extended address */
+    strbuf_append_escaped      (vcard, extended, flags); /* extended address */
 		strbuf_append_c            (vcard, ';');
-		strbuf_append_escaped_wstr (vcard, other_street, flags);
+    strbuf_append_escaped      (vcard, street, flags);
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, other_locality, flags);
 		strbuf_append_c            (vcard, ';');
@@ -612,6 +666,9 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, other_country, flags);
 		strbuf_append_crlf      (vcard);
+
+    if (street)
+      wstr_free_string(street);
 	}
 
 
@@ -1102,7 +1159,15 @@ static bool parser_handle_field(/*{{{*/
 		{
       if (address_index[i][where] && *address[i])
 			{
-        add_string(parser, address_index[i][where], type, address[i]);
+        if (i == 2 && *address[1])
+        {
+          char buf[strlen(address[1]) + strlen(address[2]) + 3];
+
+          snprintf(buf, sizeof(buf), "%s\\n%s", address[2], address[1]);
+
+          add_string(parser, address_index[i][where], type, buf);
+        } else
+          add_string(parser, address_index[i][where], type, address[i]);
 			}
 		}
 		
