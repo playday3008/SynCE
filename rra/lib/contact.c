@@ -953,8 +953,11 @@ static void add_date(Parser* parser, uint32_t index, const char* type, char* val
   if (date_to_struct(value, &time_fields))
   {
     CEPROPVAL* propval = &parser->fields[index];
-    propval->propid = (field_id[index] << 16) | CEVT_FILETIME;
-    time_fields_to_filetime(&time_fields, &propval->val.filetime);
+    if (propval->propid & CEVT_FLAG_EMPTY)
+    {
+      propval->propid = (field_id[index] << 16) | CEVT_FILETIME;
+      time_fields_to_filetime(&time_fields, &propval->val.filetime);
+    }
   }
 }
 
@@ -965,26 +968,29 @@ static void add_string(Parser* parser, uint32_t index, const char* type, char* v
 
   assert(value);
 	
-  field->propid = (field_id[index] << 16) | CEVT_LPWSTR;
-
-  if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
+  if (field->propid & CEVT_FLAG_EMPTY)
   {
-    value = converted = strdup_quoted_printable(value);
+    field->propid = (field_id[index] << 16) | CEVT_LPWSTR;
+
+    if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
+    {
+      value = converted = strdup_quoted_printable(value);
+      assert(value);
+    }
+  
+    unescape_string(value);
     assert(value);
+  
+    if (parser->utf8 || STR_IN_STR(type, "UTF-8"))
+      field->val.lpwstr = wstr_from_utf8(value);
+    else
+      field->val.lpwstr = wstr_from_ascii(value);
+  
+    assert(field->val.lpwstr);
+  
+    if (converted)
+      free(converted);
   }
-
-  unescape_string(value);
-  assert(value);
-
-  if (parser->utf8 || STR_IN_STR(type, "UTF-8"))
-    field->val.lpwstr = wstr_from_utf8(value);
-  else
-    field->val.lpwstr = wstr_from_ascii(value);
-
-  assert(field->val.lpwstr);
-
-  if (converted)
-    free(converted);
 }/*}}}*/
 
 static bool parser_handle_field(/*{{{*/
