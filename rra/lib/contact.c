@@ -610,7 +610,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
       extended = strstr(street, "\n");
 
       if (extended)
-        extended++[-1] = '\0';
+        *extended++ = '\0';
     }
 
 		strbuf_append_type(vcard, "ADR", "WORK", flags);
