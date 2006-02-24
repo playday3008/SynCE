@@ -221,6 +221,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	/* organization parts */
 	WCHAR* company = NULL;
 	WCHAR* department = NULL;
+  WCHAR* office = NULL;
 
 	/* home address parts */
 	WCHAR* home_street = NULL;
@@ -504,9 +505,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_OFFICE_LOC:
-				strbuf_append(vcard, "X-EVOLUTION-OFFICE:");
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        office = pFields[i].val.lpwstr;
 				break;
 
 			case ID_RADIO_TEL:
@@ -541,12 +540,14 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	 * followed by one or more levels of organizational unit names.
 	 */
 	 
-	if (company || department)
+  if (company || department || office)
 	{
 		strbuf_append(vcard, "ORG:");
 		strbuf_append_escaped_wstr (vcard, company, flags);
 		strbuf_append_c            (vcard, ';');
 		strbuf_append_escaped_wstr (vcard, department, flags);
+    strbuf_append_c            (vcard, ';');
+    strbuf_append_escaped_wstr (vcard, office, flags);
 		strbuf_append_crlf      (vcard);
 	}
 
@@ -1203,6 +1204,12 @@ static bool parser_handle_field(/*{{{*/
 		if (separator)
 		{
 			if (separator[1]) {
+        char* separator2 = strchr(separator + 1, ';');
+        if (separator2)
+        {
+          add_string(parser, INDEX_OFFICE_LOC, type, separator2 + 1);
+          *separator2 = '\0';
+        }
         add_string(parser, INDEX_DEPARTMENT, type, separator + 1);
 			}
 			*separator = '\0';
@@ -1250,10 +1257,6 @@ static bool parser_handle_field(/*{{{*/
   else if (STR_EQUAL(name, "X-EVOLUTION-ASSISTANT"))
   {
     add_string(parser, INDEX_ASSISTANT, type, value);
-  }
-  else if (STR_EQUAL(name, "X-EVOLUTION-OFFICE"))
-  {
-    add_string(parser, INDEX_OFFICE_LOC, type, value);
   }
 
 #if 0
