@@ -718,15 +718,71 @@ typedef struct _Parser
 	bool utf8;	/* default charset is utf8 */
 } Parser;
 
+typedef enum _field_index
+{
+/*
+  INDEX_NOTE,
+*/
+  INDEX_SUFFIX,
+  INDEX_FIRST_NAME,
+  INDEX_WORK_TEL,
+  INDEX_HOME_TEL,
+  INDEX_LAST_NAME,
+  INDEX_COMPANY,
+  INDEX_JOB_TITLE,
+  INDEX_DEPARTMENT,
+  INDEX_OFFICE_LOC,
+  INDEX_MOBILE_TEL,
+  INDEX_RADIO_TEL,
+  INDEX_CAR_TEL,
+  INDEX_WORK_FAX,
+  INDEX_HOME_FAX,
+  INDEX_HOME2_TEL,
+  INDEX_BIRTHDAY,
+  INDEX_ANNIVERSARY,
+  INDEX_CATEGORY,
+  INDEX_ASSISTANT,
+  INDEX_ASSISTANT_TEL,
+/*
+  INDEX_CHILDREN,
+*/
+  INDEX_WORK2_TEL,
+  INDEX_WEB_PAGE,
+  INDEX_PAGER,
+  INDEX_SPOUSE,
+  INDEX_FULL_NAME,
+  INDEX_TITLE,
+  INDEX_MIDDLE_NAME,
+  INDEX_HOME_STREET,
+  INDEX_HOME_LOCALITY,
+  INDEX_HOME_REGION,
+  INDEX_HOME_POSTAL_CODE,
+  INDEX_HOME_COUNTRY,
+  INDEX_WORK_STREET,
+  INDEX_WORK_LOCALITY,
+  INDEX_WORK_REGION,
+  INDEX_WORK_POSTAL_CODE,
+  INDEX_WORK_COUNTRY,
+  INDEX_OTHER_STREET,
+  INDEX_OTHER_LOCALITY,
+  INDEX_OTHER_REGION,
+  INDEX_OTHER_POSTAL_CODE,
+  INDEX_OTHER_COUNTRY,
+  INDEX_EMAIL,
+  INDEX_EMAIL2,
+  INDEX_EMAIL3,
+  ID_COUNT
+} field_index;
+
 #define NAME_FIELD_COUNT 5
 
-static uint32_t name_ids[NAME_FIELD_COUNT] =
+static uint32_t name_index[NAME_FIELD_COUNT] =
 {
-	ID_LAST_NAME,
-	ID_FIRST_NAME,
-	ID_MIDDLE_NAME,
-	ID_TITLE,
-	ID_SUFFIX
+  INDEX_LAST_NAME,
+  INDEX_FIRST_NAME,
+  INDEX_MIDDLE_NAME,
+  INDEX_TITLE,
+  INDEX_SUFFIX
 };
 
 #define HOME 0
@@ -735,15 +791,70 @@ static uint32_t name_ids[NAME_FIELD_COUNT] =
 
 #define ADDRESS_FIELD_COUNT 7
 
-static uint32_t address_ids[ADDRESS_FIELD_COUNT][3] = 
+static uint32_t address_index[ADDRESS_FIELD_COUNT][3] = 
 {
-	{0, 0}, /* post office box */
-	{0, 0}, /* extended address */
-	{ID_HOME_STREET,      ID_WORK_STREET,        ID_OTHER_STREET},      /* street */
-	{ID_HOME_LOCALITY,    ID_WORK_LOCALITY,      ID_OTHER_LOCALITY},    /* locality */
-	{ID_HOME_REGION,      ID_WORK_REGION,        ID_OTHER_REGION},      /* region */
-	{ID_HOME_POSTAL_CODE, ID_WORK_POSTAL_CODE,   ID_OTHER_POSTAL_CODE}, /* postal code */
-	{ID_HOME_COUNTRY,     ID_WORK_COUNTRY,       ID_OTHER_COUNTRY}      /* country */
+  {0, 0}, /* post office box */
+  {0, 0}, /* extended address */
+  {INDEX_HOME_STREET,       INDEX_WORK_STREET,       INDEX_OTHER_STREET},      /* street */
+  {INDEX_HOME_LOCALITY,     INDEX_WORK_LOCALITY,     INDEX_OTHER_LOCALITY},    /* locality */
+  {INDEX_HOME_REGION,       INDEX_WORK_REGION,       INDEX_OTHER_REGION},      /* region */
+  {INDEX_HOME_POSTAL_CODE,  INDEX_WORK_POSTAL_CODE,  INDEX_OTHER_POSTAL_CODE}, /* postal code */
+  {INDEX_HOME_COUNTRY,      INDEX_WORK_COUNTRY,      INDEX_OTHER_COUNTRY}      /* country */
+};
+
+static const uint32_t field_id[ID_COUNT] =
+{
+/*
+  ID_NOTE,
+*/
+  ID_SUFFIX,
+  ID_FIRST_NAME,
+  ID_WORK_TEL,
+  ID_HOME_TEL,
+  ID_LAST_NAME,
+  ID_COMPANY,
+  ID_JOB_TITLE,
+  ID_DEPARTMENT,
+  ID_OFFICE_LOC,
+  ID_MOBILE_TEL,
+  ID_RADIO_TEL,
+  ID_CAR_TEL,
+  ID_WORK_FAX,
+  ID_HOME_FAX,
+  ID_HOME2_TEL,
+  ID_BIRTHDAY,
+  ID_ANNIVERSARY,
+  ID_CATEGORY,
+  ID_ASSISTANT,
+  ID_ASSISTANT_TEL,
+/*
+  ID_CHILDREN,
+*/
+  ID_WORK2_TEL,
+  ID_WEB_PAGE,
+  ID_PAGER,
+  ID_SPOUSE,
+  ID_FULL_NAME,
+  ID_TITLE,
+  ID_MIDDLE_NAME,
+  ID_HOME_STREET,
+  ID_HOME_LOCALITY,
+  ID_HOME_REGION,
+  ID_HOME_POSTAL_CODE,
+  ID_HOME_COUNTRY,
+  ID_WORK_STREET,
+  ID_WORK_LOCALITY,
+  ID_WORK_REGION,
+  ID_WORK_POSTAL_CODE,
+  ID_WORK_COUNTRY,
+  ID_OTHER_STREET,
+  ID_OTHER_LOCALITY,
+  ID_OTHER_REGION,
+  ID_OTHER_POSTAL_CODE,
+  ID_OTHER_COUNTRY,
+  ID_EMAIL,
+  ID_EMAIL2,
+  ID_EMAIL3
 };
 
 static char* strdup_quoted_printable(const unsigned char* source)/*{{{*/
@@ -833,7 +944,7 @@ static bool date_to_struct(const char* datetime, TIME_FIELDS* time_fields)/*{{{*
   return true;
 }/*}}}*/
 
-static void add_date(Parser* parser, uint32_t id, const char* type, char* value)
+static void add_date(Parser* parser, uint32_t index, const char* type, char* value)
 {
   TIME_FIELDS time_fields;
 
@@ -841,39 +952,39 @@ static void add_date(Parser* parser, uint32_t id, const char* type, char* value)
 
   if (date_to_struct(value, &time_fields))
   {
-    CEPROPVAL* propval = &parser->fields[parser->field_index++];
-    propval->propid = (id << 16) | CEVT_FILETIME;
+    CEPROPVAL* propval = &parser->fields[index];
+    propval->propid = (field_id[index] << 16) | CEVT_FILETIME;
     time_fields_to_filetime(&time_fields, &propval->val.filetime);
   }
 }
 
-static void add_string(Parser* parser, uint32_t id, const char* type, char* value)/*{{{*/
+static void add_string(Parser* parser, uint32_t index, const char* type, char* value)/*{{{*/
 {
-	char* converted = NULL;
-	CEPROPVAL* field = &parser->fields[parser->field_index++];
+  char* converted = NULL;
+  CEPROPVAL* field = &parser->fields[index];
 
-	assert(value);
+  assert(value);
 	
-	field->propid = (id << 16) | CEVT_LPWSTR;
+  field->propid = (field_id[index] << 16) | CEVT_LPWSTR;
 
-	if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
-	{
-		value = converted = strdup_quoted_printable(value);
-		assert(value);
-	}
+  if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
+  {
+    value = converted = strdup_quoted_printable(value);
+    assert(value);
+  }
 
-	unescape_string(value);
-	assert(value);
+  unescape_string(value);
+  assert(value);
 
-	if (parser->utf8 || STR_IN_STR(type, "UTF-8"))
-		field->val.lpwstr = wstr_from_utf8(value);
-	else
-		field->val.lpwstr = wstr_from_ascii(value);
+  if (parser->utf8 || STR_IN_STR(type, "UTF-8"))
+    field->val.lpwstr = wstr_from_utf8(value);
+  else
+    field->val.lpwstr = wstr_from_ascii(value);
 
-	assert(field->val.lpwstr);
+  assert(field->val.lpwstr);
 
-	if (converted)
-		free(converted);
+  if (converted)
+    free(converted);
 }/*}}}*/
 
 static bool parser_handle_field(/*{{{*/
@@ -941,7 +1052,7 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
 	else if (STR_EQUAL(name, "FN"))/*{{{*/
 	{
-		add_string(parser, ID_FULL_NAME, type, value);
+    add_string(parser, INDEX_FULL_NAME, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "N"))/*{{{*/
 	{
@@ -952,7 +1063,7 @@ static bool parser_handle_field(/*{{{*/
 		{
 			if (*name[i])
 			{
-				add_string(parser, name_ids[i], type, name[i]);
+        add_string(parser, name_index[i], type, name[i]);
 			}
 		}
 
@@ -980,9 +1091,9 @@ static bool parser_handle_field(/*{{{*/
 		
 		for (i = 0; i < ADDRESS_FIELD_COUNT && address[i]; i++)
 		{
-			if (address_ids[i][where] && *address[i])
+      if (address_index[i][where] && *address[i])
 			{
-				add_string(parser, address_ids[i][where], type, address[i]);
+        add_string(parser, address_index[i][where], type, address[i]);
 			}
 		}
 		
@@ -996,36 +1107,36 @@ static bool parser_handle_field(/*{{{*/
 		if (STR_IN_STR(type, "HOME"))
 		{
 			if (nth==1)
-			add_string(parser, fax ? ID_HOME_FAX : ID_HOME_TEL, type, value);
+        add_string(parser, fax ? INDEX_HOME_FAX : INDEX_HOME_TEL, type, value);
 			else
-				add_string(parser, ID_HOME2_TEL, type, value);
+        add_string(parser, INDEX_HOME2_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "WORK"))
 		{
 			if (nth==1)
-			add_string(parser, fax ? ID_WORK_FAX : ID_WORK_TEL, type, value);
+        add_string(parser, fax ? INDEX_WORK_FAX : INDEX_WORK_TEL, type, value);
 			else
-				add_string(parser, ID_WORK2_TEL, type, value);
+        add_string(parser, INDEX_WORK2_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "CELL"))
 		{
-			add_string(parser, ID_MOBILE_TEL, type, value);
+      add_string(parser, INDEX_MOBILE_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "X-EVOLUTION-ASSISTANT"))
 		{
-			add_string(parser, ID_ASSISTANT_TEL, type, value);
+      add_string(parser, INDEX_ASSISTANT_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "X-EVOLUTION-RADIO"))
 		{
-			add_string(parser, ID_RADIO_TEL, type, value);
+      add_string(parser, INDEX_RADIO_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "CAR"))
 		{
-			add_string(parser, ID_CAR_TEL, type, value);
+      add_string(parser, INDEX_CAR_TEL, type, value);
 		}
 		else if (STR_IN_STR(type, "PAGER"))
 		{
-			add_string(parser, ID_PAGER, type, value);
+      add_string(parser, INDEX_PAGER, type, value);
 		}
 		else
 		{
@@ -1046,19 +1157,19 @@ static bool parser_handle_field(/*{{{*/
 		switch (nth)
 		{
 			case 1:
-		add_string(parser, ID_EMAIL, type, value);
+        add_string(parser, INDEX_EMAIL, type, value);
 				break;
 			case 2:
-				add_string(parser, ID_EMAIL2, type, value);
+        add_string(parser, INDEX_EMAIL2, type, value);
 				break;
 			case 3:
-				add_string(parser, ID_EMAIL3, type, value);
+        add_string(parser, INDEX_EMAIL3, type, value);
 				break;
 		}
 	}/*}}}*/
 	else if (STR_EQUAL(name, "URL"))/*{{{*/
 	{
-		add_string(parser, ID_WEB_PAGE, type, value);
+    add_string(parser, INDEX_WEB_PAGE, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "ORG"))/*{{{*/
 	{
@@ -1066,19 +1177,19 @@ static bool parser_handle_field(/*{{{*/
 		if (separator)
 		{
 			if (separator[1]) {
-				add_string(parser, ID_DEPARTMENT, type, separator + 1);
+        add_string(parser, INDEX_DEPARTMENT, type, separator + 1);
 			}
 			*separator = '\0';
 		}
 
 		if (value[0])
 		{
-			add_string(parser, ID_COMPANY, type, value);
+      add_string(parser, INDEX_COMPANY, type, value);
 		}
 	}/*}}}*/
 	else if (STR_EQUAL(name, "TITLE"))/*{{{*/
 	{
-		add_string(parser, ID_JOB_TITLE, type, value);
+    add_string(parser, INDEX_JOB_TITLE, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))/*{{{*/
 	{
@@ -1096,27 +1207,27 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
   else if (STR_EQUAL(name, "CATEGORIES"))
   {
-    add_string(parser, ID_CATEGORY, type, value);
+    add_string(parser, INDEX_CATEGORY, type, value);
   }
   else if (STR_EQUAL(name, "BDAY"))
   {
-    add_date(parser, ID_BIRTHDAY, type, value);
+    add_date(parser, INDEX_BIRTHDAY, type, value);
   }
   else if (STR_EQUAL(name, "X-EVOLUTION-ANNIVERSARY"))
   {
-    add_date(parser, ID_ANNIVERSARY, type, value);
+    add_date(parser, INDEX_ANNIVERSARY, type, value);
   }
   else if (STR_EQUAL(name, "X-EVOLUTION-SPOUSE"))
   {
-    add_string(parser, ID_SPOUSE, type, value);
+    add_string(parser, INDEX_SPOUSE, type, value);
   }
   else if (STR_EQUAL(name, "X-EVOLUTION-ASSISTANT"))
   {
-    add_string(parser, ID_ASSISTANT, type, value);
+    add_string(parser, INDEX_ASSISTANT, type, value);
   }
   else if (STR_EQUAL(name, "X-EVOLUTION-OFFICE"))
   {
-    add_string(parser, ID_OFFICE_LOC, type, value);
+    add_string(parser, INDEX_OFFICE_LOC, type, value);
   }
 
 #if 0
@@ -1250,6 +1361,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	size_t max_field_count = *field_count;
 	const char* p = vcard;
 	int state = VCARD_STATE_NEWLINE;
+  int count;
 	const char* name = NULL;
 	const char* name_end = NULL;
 	const char* type = NULL;
@@ -1270,6 +1382,24 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	parser.fields         = fields;
 	parser.field_index    = 0;
 	parser.utf8           = flags & RRA_CONTACT_UTF8;
+
+  for (count=0; count < ID_COUNT; count++)
+  {
+    CEPROPVAL* field = &parser.fields[parser.field_index++];
+
+    switch(count)
+    {
+    case INDEX_BIRTHDAY:
+    case INDEX_ANNIVERSARY:
+      field->propid = (field_id[count] << 16) |
+          CEVT_FLAG_EMPTY | CEVT_FILETIME;
+      break;
+    default:
+      field->propid = (field_id[count] << 16) |
+          CEVT_FLAG_EMPTY | CEVT_LPWSTR;
+      break;
+    }
+  }
 
 	while (*p && parser.field_index < max_field_count)
 	{
