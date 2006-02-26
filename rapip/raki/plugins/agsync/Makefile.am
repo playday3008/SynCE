@@ -8,8 +8,8 @@ endif
 rakiagsync_la_LDFLAGS = -avoid-version -module $(all_libraries) $(KDE_RPATH) $(KDE_MT_LDFLAGS) \
 	--whole_archive -rdynamic
 rakiagsync_la_SOURCES = agsync.cpp agsyncfactory.cpp syncstream.cpp \
-		agsyncconfig.ui agsyncconfigimpl.cpp serverconfig.ui serverconfigimpl.cpp \
-		avantgoclientinstallationdialog.ui avantgoclientinstallationdialogimpl.cpp
+			agsyncconfig.ui agsyncconfigimpl.cpp serverconfig.ui serverconfigimpl.cpp \
+			avantgoclientinstallationdialog.ui avantgoclientinstallationdialogimpl.cpp getpassword.ui
 
 # the libraries to link against.
 rakiagsync_la_LIBADD = $(AGSYNC_lib)

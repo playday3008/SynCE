@@ -140,6 +140,7 @@ void AGSyncConfigImpl::newServer(QString hostName, int port, QString userName, Q
     serverConfig->serverName = qstrdup(hostName.ascii());
     serverConfig->serverPort = port;
     serverConfig->userName = qstrdup(userName.ascii());
+    serverConfig->hashPassword = AG_HASH_PASSWORD_UNKNOWN;
     AGServerConfigChangePassword(serverConfig, (char *) passWord.ascii());
     AGUserConfigAddServer(userConfig, serverConfig, false);
     serverConfig->resetCookie = true;
@@ -158,6 +159,7 @@ void AGSyncConfigImpl::modifiedServer(QString hostName, int port, QString userNa
     currentItem->serverConfig->serverName = qstrdup(hostName.ascii());
     currentItem->serverConfig->serverPort = QString::number(port).toUShort();
     currentItem->serverConfig->userName = qstrdup(userName.ascii());
+    currentItem->serverConfig->hashPassword = AG_HASH_PASSWORD_UNKNOWN;
     AGServerConfigChangePassword(
             currentItem->serverConfig, (char *)passWord.ascii());
     currentItem->serverConfig->disabled = !currentItem->isOn();
@@ -232,6 +234,7 @@ void AGSyncConfigImpl::writeServerList()
         ksConfig->writeEntry("ServerUID", scli->serverConfig->uid);
         ksConfig->writeEntry("ResetCookie", scli->serverConfig->resetCookie);
         ksConfig->writeEntry("NotRemovable", scli->serverConfig->notRemovable);
+        ksConfig->writeEntry("HashPassword", scli->serverConfig->hashPassword);
         ++it;
     }
     ksConfig->setGroup("AGSyncServer");
@@ -251,7 +254,7 @@ void AGSyncConfigImpl::readServerList()
         serverConfig->serverName = qstrdup(ksConfig->readEntry("ServerName").ascii()); // don't use qstrdup here
         serverConfig->serverPort = ksConfig->readEntry("ServerPort").toUShort();
         serverConfig->userName = qstrdup(ksConfig->readEntry("UserName").ascii()); // don't use qstrdup here
-        AGServerConfigChangePassword(serverConfig, (char *) "");
+        serverConfig->hashPassword = ksConfig->readNumEntry("HashPassword");
         serverConfig->uid = ksConfig->readEntry("ServerUID").toInt();
         serverConfig->disabled = ksConfig->readBoolEntry("Disabled");
         serverConfig->resetCookie = ksConfig->readBoolEntry("ResetCookie");

@@ -52,8 +52,11 @@
 #include "agsyncconfigimpl.h"
 #include "avantgoclientinstallationdialogimpl.h"
 #include "syncstream.h"
+#include "getpassword.h"
 #include <qcstring.h>
 #include <qstringlist.h>
+#include <qlineedit.h>
+#include <qlabel.h>
 
 static RakiSyncPlugin *plugin;
 
@@ -79,15 +82,15 @@ static int32 writeFunc( void *s, void *data, int32 len )
 
 int32 taskPrinter( void * /*blah*/, int * /*errBlah*/, char *str, AGBool /*thing*/ )
 {
-    plugin->setTask( str );
+    plugin->setTask( str , true);
     return 1; // AGCLIENT_CONTINUE
 }
 
 
 int32 itemPrinter( void * /*blah*/, int * /*errBlah*/, int items, int total, char * /*name*/ )
 {
-    plugin->setTotalSteps( total );
-    plugin->setProgress( items );
+    plugin->setTotalSteps( total, true );
+    plugin->setProgress( items , true);
 
     return 1; // AGClIENT_CONTINUE
 }
@@ -366,6 +369,30 @@ bool AGSync::preSync( QWidget *parent, bool /*firstSynchronize*/, uint32_t /*par
 }
 
 
+static void checkAccounts(AGUserConfig *resultConfig)
+{
+    int cnt = AGUserConfigCount(resultConfig);
+
+    int i;
+    for (i = 0; i < cnt; i++) {
+        AGServerConfig *sc = AGUserConfigGetServerByIndex(resultConfig, i);
+        if (sc->userName == NULL ||
+            (sc->password == NULL || *sc->password == '\0') &&
+            (sc->cleartextPassword == NULL || *sc->cleartextPassword == '\0')) {
+            GetPasswordDialog gpd;
+            gpd.serverName->setText(sc->serverName);
+            if (gpd.exec() == QDialog::Accepted) {
+                sc->userName = qstrdup(gpd.userName->text().ascii());
+                sc->hashPassword = AG_HASH_PASSWORD_UNKNOWN;
+                AGServerConfigChangePassword(sc, (char *) gpd.passWord->text().ascii());
+            } else {
+                sc->disabled = true;
+            }
+        }
+    }
+}
+
+
 void AGSync::doSync( AGReader *r, AGWriter *w, AGNetCtx *ctx )
 {
     AGUserConfig * deviceConfig = NULL;
@@ -380,12 +407,17 @@ void AGSync::doSync( AGReader *r, AGWriter *w, AGNetCtx *ctx )
         kdDebug( 2120 ) << i18n( "Failed to receive user configuration from device." ) << endl;
         goto confEnd;
     }
+
     desktopConfig = configDialog->getUserConfig();
     agreedConfig = configDialog->getAgreedConfig();
 
     resultConfig = AGUserConfigSynchronize( agreedConfig, deviceConfig, desktopConfig, false );
 
-    asPutUserConfig( r, w, resultConfig );
+    checkAccounts(resultConfig);
+
+    if (0 != asPutUserConfig( r, w, resultConfig )) {
+        kdDebug( 2120 ) << i18n( "Failed to store user configuration to device." ) << endl;
+    }
 
     cnt = AGUserConfigCount( resultConfig );
 
@@ -396,10 +428,10 @@ void AGSync::doSync( AGReader *r, AGWriter *w, AGNetCtx *ctx )
     }
 
     /* TODO: Write updated config */
+    configDialog->setUserConfig( resultConfig );
     if ( 0 != asPutUserConfig( r, w, resultConfig ) ) {
         kdDebug( 2120 ) << i18n( "Failed to store user configuration to device." ) << endl;
     }
-    configDialog->setUserConfig( resultConfig );
 
     AGUserConfigFree( resultConfig );
 
@@ -470,7 +502,7 @@ bool AGSync::sync()
     pStore.w = w;
 
     AGNetInit( &ctx );
-
+    KApplication::kApplication()->processEvents();
     doSync( r, w, &ctx );
 
     result = asEndSession( r, w );
@@ -494,6 +526,6 @@ bool AGSync::sync()
 
 
 int AGSync::syncContext() {
-    return RakiSyncPlugin::ASYNCHRONOUS;
+    return RakiSyncPlugin::SYNCHRONOUS;
 }
 #endif
