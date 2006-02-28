@@ -35,20 +35,9 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
 {
 
     QGridLayout*   m_layout;
-    QGridLayout*   m_layout1;
-    QGridLayout*   m_layoutMain;
 
-    m_layoutMain = new QGridLayout (this, 2, 1);
-    m_layoutMain->setSpacing (KDialog::spacingHint());
-
-    m_layout = new QGridLayout (0, 1, 2);
+    m_layout = new QGridLayout (this, 3, 2);
     m_layout->setSpacing (KDialog::spacingHint());
-
-    m_layout1 = new QGridLayout (0, 3, 3);
-    m_layout->setSpacing (KDialog::spacingHint());
-
-    m_layoutMain->addLayout(m_layout, 0, 0);
-    m_layoutMain->addLayout(m_layout1, 1, 0);
 
     m_Synctarget = new QLabel(this,  "SyncTarget");
     m_Synctarget->setText("Target");
@@ -56,39 +45,29 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
     m_ActiveLabel = new QLabel(this, "Active");
     m_ActiveLabel->setText("Active");
 
-    m_FirstSyncLabel = new QLabel(this, "FirstSync");
-    m_FirstSyncLabel->setText("Fresh Sync");
-
     m_ContactsLabel = new QLabel(this, "ContactsLabel");
     m_ContactsLabel->setText("Contacts");
     m_ContactsEnabled = new QCheckBox(this, "ContactsEnabled");
-    m_ContactsFirstSync = new QCheckBox(this, "ContactsFirstSync");
 
     m_EventsLabel = new QLabel(this, "EventsLabel");
     m_EventsLabel->setText("Appointments");
     m_EventsEnabled = new QCheckBox(this, "EventsEnabled");
-    m_EventsFirstSync = new QCheckBox(this, "EventsFirstSync");
 
     m_TodosLabel = new QLabel(this, "TodosLabel");
     m_TodosLabel->setText("Tasks");
     m_TodosEnabled = new QCheckBox(this, "TodosEnabled");
-    m_TodosFirstSync = new QCheckBox(this, "TodosFirstSync");
 
-    m_layout1->addWidget (m_Synctarget, 0, 0);
-    m_layout1->addWidget (m_ActiveLabel, 0, 1);
-    m_layout1->addWidget (m_FirstSyncLabel, 0, 2);
+    m_layout->addWidget (m_Synctarget, 0, 0);
+    m_layout->addWidget (m_ActiveLabel, 0, 1);
 
-    m_layout1->addWidget (m_ContactsLabel, 1, 0);
-    m_layout1->addWidget (m_ContactsEnabled, 1, 1);
-    m_layout1->addWidget (m_ContactsFirstSync, 1, 2);
+    m_layout->addWidget (m_ContactsLabel, 1, 0);
+    m_layout->addWidget (m_ContactsEnabled, 1, 1);
 
-    m_layout1->addWidget (m_EventsLabel, 2, 0);
-    m_layout1->addWidget (m_EventsEnabled, 2, 1);
-    m_layout1->addWidget (m_EventsFirstSync, 2, 2);
+    m_layout->addWidget (m_EventsLabel, 2, 0);
+    m_layout->addWidget (m_EventsEnabled, 2, 1);
 
-    m_layout1->addWidget (m_TodosLabel, 3, 0);
-    m_layout1->addWidget (m_TodosEnabled, 3, 1);
-    m_layout1->addWidget (m_TodosFirstSync, 3, 2);
+    m_layout->addWidget (m_TodosLabel, 3, 0);
+    m_layout->addWidget (m_TodosEnabled, 3, 1);
 }
 
 
@@ -111,11 +90,6 @@ void SynCEDeviceKonnectorConfig::loadSettings (KRES::Resource* p_res)
     m_ContactsEnabled->setChecked(k->getContactsEnabled());
     m_TodosEnabled->setChecked(k->getTodosEnabled());
     m_EventsEnabled->setChecked(k->getEventsEnabled());
-
-    m_ContactsFirstSync->setChecked(k->getContactsFirstSync());
-    m_TodosFirstSync->setChecked(k->getTodosFirstSync());
-    m_EventsFirstSync->setChecked(k->getEventsFirstSync());
-
 }
 
 
@@ -131,9 +105,9 @@ void SynCEDeviceKonnectorConfig::saveSettings (KRES::Resource* p_res)
         return;
     }
 
-    k->setContactsState(m_ContactsEnabled->isChecked(), m_ContactsFirstSync->isChecked());
-    k->setEventsState(m_EventsEnabled->isChecked(), m_EventsFirstSync->isChecked());
-    k->setTodosState(m_TodosEnabled->isChecked(), m_TodosFirstSync->isChecked());
+    k->setContactsState(m_ContactsEnabled->isChecked());
+    k->setEventsState(m_EventsEnabled->isChecked());
+    k->setTodosState(m_TodosEnabled->isChecked());
 }
 
 void SynCEDeviceKonnectorConfig::enableRaki()

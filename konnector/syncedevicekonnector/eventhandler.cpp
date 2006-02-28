@@ -38,7 +38,6 @@ namespace PocketPCCommunication
 {
     EventHandler::EventHandler() : PimHandler()
     {
-        initialized = false;
         mTypeId = 0;
 
         QFile f( "/etc/timezone" );
@@ -54,7 +53,7 @@ namespace PocketPCCommunication
     {
         mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_APPOINTMENT );
 
-        return initialized = mTypeId != 0;
+        return mTypeId != 0;
     }
 
 
@@ -180,16 +179,19 @@ namespace PocketPCCommunication
         if ( firstSync ) {
             this->setMaximumSteps((ids.changedIds.size() + ids.unchangedIds.size()));
             if ( !getEventListFromDevice( modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED ) ) {
+                setError("Can not retrieve unchanged Events from the Device");
                 goto error;
             }
         } else {
             this->setMaximumSteps(ids.changedIds.size());
             if ( !getEventListFromDevice( modifiedList, PocketPCCommunication::CHANGED ) ) {
+                setError("Can not retrieve changed Events from the Device");
                 goto error;
             }
 
             KCal::Event::List removedList;
             if ( !getEventListFromDevice( removedList, PocketPCCommunication::DELETED ) ) {
+                setError("Can not retrieve deleted Events from the Device");
                 goto error;
             }
             insertIntoCalendarSyncee( mCalendarSyncee, removedList, KSync::SyncEntry::Removed );
@@ -393,8 +395,14 @@ namespace PocketPCCommunication
                 setStatus( "Erasing deleted Events" );
                 if (ret = removeEvents( eventRemoved )) {
                     setStatus( "Writing changed Events" );
-                    updateEvents( eventModified );
+                    if (! (ret = updateEvents( eventModified ))) {
+                        setError("Can not write back updated Events to the Device");
+                    }
+                } else {
+                    setError("Can not erase deleted Events on the Device");
                 }
+            } else {
+                setError("Can not added Events on the Device");
             }
         }
 

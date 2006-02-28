@@ -124,9 +124,9 @@ public:
     bool getTodosEnabled();
     bool getTodosFirstSync();
 
-    void setContactsState(bool enabled, bool firstSync);
-    void setEventsState(bool enabled, bool firstSync);
-    void setTodosState(bool enabled, bool firstSync);
+    void setContactsState(bool enabled);
+    void setEventsState(bool enabled);
+    void setTodosState(bool enabled);
 
     QStringList supportedFilterTypes() const {
         QStringList types;
@@ -168,8 +168,6 @@ private:
     Rra*   m_rra;
 
     KSync::KonnectorUIDHelper *mUidHelper;
-
-    KPIM::ProgressItem *mProgressItem;
 
     int subscribtions;
 

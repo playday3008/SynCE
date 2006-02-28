@@ -36,7 +36,6 @@ namespace PocketPCCommunication
 {
     TodoHandler::TodoHandler() : PimHandler()
     {
-        initialized = false;
         mTypeId = 0;
     }
 
@@ -45,7 +44,7 @@ namespace PocketPCCommunication
     {
         mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_TASK );
 
-        return initialized = mTypeId != 0;
+        return mTypeId != 0;
     }
 
 
@@ -172,16 +171,19 @@ namespace PocketPCCommunication
         if ( firstSync ) {
             this->setMaximumSteps((ids.changedIds.size() + ids.unchangedIds.size()));
             if ( !getTodoListFromDevice( modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED ) ) {
+                setError("Can not retrieve unchanged Todos from the Device");
                 goto error;
             }
         } else {
             this->setMaximumSteps(ids.changedIds.size());
             if ( !getTodoListFromDevice( modifiedList, PocketPCCommunication::CHANGED ) ) {
+                setError("Can not retrieve changed Todos from the Device");
                 goto error;
             }
 
             KCal::Todo::List removedList;
             if ( !getTodoListFromDevice( removedList, PocketPCCommunication::DELETED ) ) {
+                setError("Can not retrieve deleted Events from the Device");
                 goto error;
             }
             insertIntoCalendarSyncee( mCalendarSyncee, removedList, KSync::SyncEntry::Removed );
@@ -374,8 +376,14 @@ error:
                 setStatus( "Erasing deleted Todos" );
                 if (ret = removeTodos( todoRemoved )) {
                     setStatus( "Writing changed Todos" );
-                    ret = updateTodos( todoModified );
+                    if (!(ret = updateTodos( todoModified ))) {
+                        setError("Can not write back updated Todos to the Device");
+                    }
+                } else {
+                    setError("Can not erase deleted Todos on the Device");
                 }
+            } else {
+                setError("Can not added Todos on the Device");
             }
         }
 

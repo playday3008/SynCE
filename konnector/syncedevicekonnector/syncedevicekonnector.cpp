@@ -106,6 +106,8 @@ namespace KSync
         mSyncees.append( mAddressBookSyncee );
 
         subscribtionCount = 0;
+
+        PocketPCCommunication::PimHandler::setProgressItem(progressItem( i18n( "Start loading data from Windows CE..." )));
     }
 
 
@@ -128,6 +130,7 @@ namespace KSync
         if ( mUidHelper ) {
             delete mUidHelper;
         }
+        PocketPCCommunication::PimHandler::progressItemSetCompleted();
     }
 
 
@@ -148,8 +151,6 @@ namespace KSync
         }
 
         clearDataStructures();
-
-        mProgressItem->setStatus( "Start loading data from Windows CE" );
 
         if ( subscribtionCount == 0 ) {
             if ( mAddrHandler && contactsEnabled ) {
@@ -179,12 +180,11 @@ namespace KSync
         }
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
-            mAddrHandler->setProgressItem( mProgressItem );
             if ( error = !mAddrHandler->readSyncee( mAddressBookSyncee, contactsFirstSync ) ) {
-                KMessageBox::error(0,
+                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
-                                    " synchronizer", "Read Error");
+                                    " synchronizer");
                 subscribtionCount--;
                 emit synceeReadError( this );
                 goto error;
@@ -192,12 +192,11 @@ namespace KSync
         }
 
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
-            mTodoHandler->setProgressItem( mProgressItem );
             if (error = !mTodoHandler->readSyncee( mTodoSyncee, todosFirstSync ) ) {
-                KMessageBox::error(0,
+                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
-                                    " synchronizer", "Read Error");
+                                    " synchronizer");
                 subscribtionCount--;
                 emit synceeReadError( this );
                 goto error;
@@ -205,12 +204,11 @@ namespace KSync
         }
 
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
-            mEventHandler->setProgressItem( mProgressItem );
             if (error = !mEventHandler->readSyncee( mEventSyncee, eventsFirstSync ) ) {
-                KMessageBox::error(0,
+                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
-                                    " synchronizer", "Read Error");
+                                    " synchronizer");
                 subscribtionCount--;
                 emit synceeReadError( this );
                 goto error;
@@ -220,7 +218,6 @@ namespace KSync
         emit synceesRead ( this );
 
     error:
-        mProgressItem->setProgress( 50 );
         return !error;
     }
 
@@ -241,10 +238,10 @@ namespace KSync
             m_rra->unsubscribeType( mAddrHandler->getTypeId() );
             subscribtionCount--;
             if (error) {
-                KMessageBox::error(0,
+                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
-                                   " synchronizer", "Write Error");
+                                   " synchronizer");
                 emit synceeWriteError(this);
                 goto error;
             }
@@ -256,10 +253,10 @@ namespace KSync
             m_rra->unsubscribeType( mTodoHandler->getTypeId() );
             subscribtionCount--;
             if (error) {
-                KMessageBox::error(0,
+                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
-                                   " synchronizer", "Write Error");
+                                   " synchronizer");
                 emit synceeWriteError(this);
                 goto error;
             }
@@ -271,10 +268,10 @@ namespace KSync
             m_rra->unsubscribeType( mEventHandler->getTypeId() );
             subscribtionCount--;
             if (error) {
-                KMessageBox::error(0,
+                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
-                                   " synchronizer", "Write Error");
+                                           " synchronizer");
                 emit synceeWriteError(this);
                 goto error;
             }
@@ -318,9 +315,7 @@ namespace KSync
 
     bool SynCEDeviceKonnector::connectDevice()
     {
-        mProgressItem = progressItem( i18n( "Start loading data from Windows CE..." ) );
-        mProgressItem->setStatus( i18n( "Start loading data from Windows CE..." ) );
-
+        PocketPCCommunication::PimHandler::resetError();
         if (subscribtionCount == 0) {
             error = false;
             m_rra->connect();
@@ -340,7 +335,7 @@ namespace KSync
             m_rra->disconnect();
         }
 
-        mProgressItem->setComplete();
+        PocketPCCommunication::PimHandler::resetError();
 
         return true;
     }
@@ -416,24 +411,21 @@ namespace KSync
     }
 
 
-    void SynCEDeviceKonnector::setContactsState( bool enabled, bool firstSync )
+    void SynCEDeviceKonnector::setContactsState( bool enabled)
     {
         contactsEnabled = enabled;
-        contactsFirstSync = firstSync;
     }
 
 
-    void SynCEDeviceKonnector::setEventsState( bool enabled, bool firstSync )
+    void SynCEDeviceKonnector::setEventsState( bool enabled)
     {
         eventsEnabled = enabled;
-        eventsFirstSync = firstSync;
     }
 
 
-    void SynCEDeviceKonnector::setTodosState( bool enabled, bool firstSync )
+    void SynCEDeviceKonnector::setTodosState( bool enabled)
     {
         todosEnabled = enabled;
-        todosFirstSync = firstSync;
     }
 
 

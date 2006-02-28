@@ -32,7 +32,6 @@ namespace PocketPCCommunication
 {
     AddressbookHandler::AddressbookHandler() : PimHandler()
     {
-        initialized = false;
         mTypeId = 0;
     }
 
@@ -41,7 +40,7 @@ namespace PocketPCCommunication
     {
         mTypeId = m_rra->getTypeForName( RRA_SYNCMGR_TYPE_CONTACT );
 
-        return initialized = mTypeId != 0;
+        return mTypeId != 0;
     }
 
 
@@ -158,16 +157,19 @@ namespace PocketPCCommunication
         if (firstSync) {
             this->setMaximumSteps((ids.changedIds.size() + ids.unchangedIds.size()));
             if (!getAddresseeListFromDevice(modifiedList, PocketPCCommunication::UNCHANGED | PocketPCCommunication::CHANGED)) {
+                setError("Can not retrieve unchanged Contacts from the Device");
                 goto error;
             }
         } else {
             this->setMaximumSteps(ids.changedIds.size());
             if (!getAddresseeListFromDevice(modifiedList, PocketPCCommunication::CHANGED)) {
+                setError("Can not retrieve changed Contacts from the Device");
                 goto error;
             }
 
             KABC::Addressee::List removedList;
             if (!getAddresseeListFromDevice(removedList, PocketPCCommunication::DELETED)) {
+                setError("Can not retrieve deleted Contacts from the Device");
                 goto error;
             }
             insertIntoAddressBookSyncee(mAddressBookSyncee, removedList, KSync::SyncEntry::Removed);
@@ -349,8 +351,14 @@ error:
                 setStatus( "Erasing deleted Contacts" );
                 if (ret = removeAddressees( addrRemoved )) {
                     setStatus( "Writing changed Contacts" );
-                    ret = updateAddressees( addrModified );
+                    if (!(ret = updateAddressees( addrModified ))) {
+                        setError("Can not write back updated Contacts to the Device");
+                    }
+                } else {
+                    setError("Can not erase deleted Contacts on the Device");
                 }
+            } else {
+                setError("Can not added Contacts on the Device");
             }
         }
 
