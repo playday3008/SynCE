@@ -33,7 +33,7 @@ using namespace std;
 class Utils{
 public:
 
-    static bool alreadyRunning();
+    static bool alreadyRunning(bool noCheck = false);
     static bool writePidFile();
     static void removePidFile();
     static void setupSignals();

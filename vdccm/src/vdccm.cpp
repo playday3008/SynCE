@@ -29,6 +29,7 @@
 #include <synce.h>
 #include <synce_log.h>
 #include <iostream>
+#include <wait.h>
 
 using namespace synce;
 
@@ -39,10 +40,6 @@ int main(int argc, char *argv[])
     }
 
     if (Utils::alreadyRunning()) {
-        exit(1);
-    }
-
-    if (!Utils::writePidFile()) {
         exit(1);
     }
 
@@ -115,6 +112,9 @@ int main(int argc, char *argv[])
 
     if (CmdLineArgs::isDaemon()) {
         daemon(0, 0);
+        if (!Utils::writePidFile()) {
+            exit(1);
+        }
     }
 
     Utils::runScripts("start");

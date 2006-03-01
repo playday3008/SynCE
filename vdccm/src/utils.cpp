@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <synce.h>
 #include <synce_log.h>
@@ -53,33 +54,56 @@ Utils::~Utils()
 }
 
 
-bool Utils::alreadyRunning()
+bool Utils::alreadyRunning(bool noCheck)
 {
     char *path;
     bool ret = false;
-    string pid_file;
-    pid_t pid;
-    struct stat dummy;
 
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
         ret = false;;
     } else {
-        pid_file = string(path) + "/" + DCCM_PID_FILE;
+        struct stat dummy;
+        string pid_file = string(path) + "/" + DCCM_PID_FILE;
         if (0 == stat(pid_file.c_str(), &dummy)) {
             ifstream pidFile(pid_file.c_str());
 
             if (pidFile.good()) {
+                string pid;
                 pidFile >> pid;
-                synce_error("It seems like dccm is already running with PID %i. If this is wrong, please remove the file %s and run dccm again.",
-                                    pid, pid_file.c_str());
-                ret = true;
+                string dccmCmdLineFilePath = string("/proc/") + pid + "/cmdline";
+                if (0 == stat(dccmCmdLineFilePath.c_str(), &dummy)) {
+                    string cmdLine;
+                    ifstream dccmCmdLineFile(dccmCmdLineFilePath.c_str());
+                    if (dccmCmdLineFile.good()) {
+                        dccmCmdLineFile >> cmdLine;
+                        if (!strstr(cmdLine.c_str(), "dccm")) {
+                            removePidFile();
+                        } else {
+                            synce_error("A (v)dccm is already running with PID %s.",
+                                        pid.c_str());
+                            ret = true;
+                        }
+                    } else {
+                        synce_error("Could not read proc-entry %s. Dccm not started", dccmCmdLineFilePath.c_str());
+                        ret = true;
+                    }
+                    dccmCmdLineFile.close();
+                } else {
+                    removePidFile();
+                }
             } else {
-                synce_error("Could not read %s: %s", pid_file.c_str(), strerror(errno));
+                synce_error("Could not read %s: %s. Dccm not started", pid_file.c_str(), strerror(errno));
+                ret = true;
             }
-
             pidFile.close();
+        } else {
+            if (!writePidFile()) {
+                synce_error("Could not write ~/.synce/dccm.pid file. Check permission");
+                ret = true;
+            }
         }
+
         free(path);
     }
 
