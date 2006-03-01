@@ -395,7 +395,7 @@ static void checkAccounts(AGUserConfig *resultConfig)
 
 void AGSync::doSync( AGReader *r, AGWriter *w, AGNetCtx *ctx )
 {
-    AGUserConfig * deviceConfig = NULL;
+    AGUserConfig *deviceConfig = NULL;
     AGUserConfig *desktopConfig = NULL;
     AGUserConfig *resultConfig = NULL;
     AGUserConfig *agreedConfig = NULL;

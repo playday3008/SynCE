@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>492</width>
-            <height>371</height>
+            <height>505</height>
         </rect>
     </property>
     <property name="caption">
@@ -38,12 +38,13 @@
                         <cstring>kActiveLabel1</cstring>
                     </property>
                     <property name="text">
-                        <string>No AvantGo Client is installed on the device but one is needed to use AvantGo.&lt;br&gt;To install the AvantGo Client proceed as described below.&lt;p&gt;
-1. Register at &lt;a href="https://my.avantgo.com/home/"&gt;https://my.avantgo.com/home/&lt;/a&gt;.&lt;p&gt;
-2. Login at &lt;a href="https://my.avantgo.com/register/choose_device.html"&gt;https://my.avantgo.com/register/choose_device.html&lt;/a&gt;.&lt;p&gt;
-3. Choose the AvanGo-Client version for the "Pocket PC" device.&lt;p&gt;
-4. Download the "AGCEIntegratedClientSetup.exe"&lt;p&gt;
-5. Select the downloaded "AGCEIntegratedClientSetup.exe" client</string>
+                        <string>No AvantGo Client is installed on the device but one is needed to use AvantGo.&lt;br&gt;To install the AvantGo Client proceed as described below.&lt;br&gt;Please note, that the AvantGo-syncronizer only supports the old AvantGo-Client protocol.&lt;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Direct your web-browser to  &lt;a href="http://avantgo.custhelp.com/cgi-bin/avantgo.cfg/php/enduser/std_adp.php?p_faqid=348"&gt;this&lt;/a&gt; location.&lt;/li&gt;
+&lt;li&gt;Locate the item "How do I revert back to the old AvantGo software on my Pocket PC?" to be found in the "Related Answers" section at the bottom on the page.&lt;/li&gt;
+&lt;li&gt;Download the "Unsopported AG CEIntegrated ClientSetup.exe" from the "How do I revert back to the old AvantGo software on my Pocket PC?"-page.&lt;/li&gt;
+&lt;li&gt;Select the downloaded "Unsopported AG CEIntegrated ClientSetup.exe" client.&lt;/li&gt;
+&lt;/ol&gt;</string>
                     </property>
                 </widget>
                 <widget class="QGroupBox">
@@ -51,7 +52,7 @@
                         <cstring>groupBox1</cstring>
                     </property>
                     <property name="title">
-                        <string>AGCEIntegratedClientSetup.exe</string>
+                        <string>"Unsopported AG CEIntegrated ClientSetup.exe</string>
                     </property>
                     <hbox>
                         <property name="name">
@@ -136,10 +137,10 @@
                         <bool>false</bool>
                     </property>
                     <property name="text">
-                        <string>&amp;Install</string>
+                        <string>I&amp;nstall</string>
                     </property>
                     <property name="accel">
-                        <string>Alt+I</string>
+                        <string>Alt+N</string>
                     </property>
                     <property name="autoDefault">
                         <bool>true</bool>
@@ -166,8 +167,6 @@
         </widget>
     </vbox>
 </widget>
-<customwidgets>
-</customwidgets>
 <connections>
     <connection>
         <sender>buttonInstall</sender>
