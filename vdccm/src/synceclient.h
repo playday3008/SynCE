@@ -40,7 +40,7 @@ protected:
 
 public:
     void disconnect();
-    bool deviceConnected(string &name);;
+    bool deviceConnected(string &name);
     bool deviceDisconnected(string &name);
     bool deviceRequestsPassword(string &name);
     bool writeToClient(char command, string &name);
