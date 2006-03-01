@@ -28,6 +28,8 @@
 
 using namespace std;
 
+class LocalServerSocket;
+
 /**
 @author Volker Christian
 */
