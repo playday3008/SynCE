@@ -42,6 +42,7 @@
 
 #include <kconfig.h>
 #include <kgenericfactory.h>
+#include <kmessagebox.h>
 
 using namespace KSync;
 
@@ -137,10 +138,10 @@ namespace KSync
 
         mAddressBook.clear();
 
-        if ( !mCalendarFile.isEmpty() ) {
-            mCalendar.close();
-            if ( mCalendar.load( mCalendarFile ) ) {
-                if ( _actualSyncType & TODOS ) {
+        if ( _actualSyncType & TODOS ) {
+            if ( !mCalendarFile.isEmpty() ) {
+                mCalendar.close();
+                if ( mCalendar.load( mCalendarFile ) ) {
                     KCal::Todo::List todoList = mCalendar.todos();
                     mTodoSyncee->reset();
                     mTodoSyncee->setIdentifier( "Todo" + mCalendarFile );
@@ -152,8 +153,19 @@ namespace KSync
                     TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                     c1Helper.load();
                 }
+            } else {
+                KMessageBox::error(0, "You didn't configure the Task-Synchronizer. Please do so and synchronize again.",
+                                   QString("Error reading from local calendar"));
+                emit synceeReadError( this );
+                kdDebug(2120) << "Read failed." << endl;
+                return false;
+            }
+        }
 
-                if ( _actualSyncType & EVENTS ) {
+        if ( _actualSyncType & EVENTS ) {
+            if ( !mCalendarFile.isEmpty() ) {
+                mCalendar.close();
+                if ( mCalendar.load( mCalendarFile ) ) {
                     KCal::Event::List eventList = mCalendar.events();
                     mEventSyncee->reset();
                     mEventSyncee->setIdentifier( "Event" + mCalendarFile );
@@ -166,14 +178,16 @@ namespace KSync
                     c2Helper.load();
                 }
             } else {
+                KMessageBox::error(0, "You didn't configure the Appointment-Synchronizer. Please do so and synchronize again.",
+                                   QString("Error reading from local calendar"));
                 emit synceeReadError( this );
                 kdDebug(2120) << "Read failed." << endl;
                 return false;
             }
         }
 
-        if ( !mAddressBookFile.isEmpty() ) {
-            if ( _actualSyncType & CONTACTS ) {
+        if ( _actualSyncType & CONTACTS ) {
+            if ( !mAddressBookFile.isEmpty() ) {
                 mAddressBookResourceFile = new KABC::ResourceFile( mAddressBookFile );
                 mAddressBook.addResource( mAddressBookResourceFile );
 
@@ -194,6 +208,12 @@ namespace KSync
 
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.load();
+            } else {
+                KMessageBox::error(0, "You didn't configure the Contact-Synchronizer. Please do so and synchronize again.",
+                                   QString("Error reading from local addressbook"));
+                emit synceeReadError( this );
+                kdDebug(2120) << "Read failed." << endl;
+                return false;
             }
         }
 
@@ -229,9 +249,8 @@ namespace KSync
         bool ret = false;
         kdDebug( 2120 ) << "SynCELocalKonnector::writeSyncees()..." << endl;
 
-        if ( !mCalendarFile.isEmpty() ) {
-
-            if ( _actualSyncType & TODOS ) {
+        if ( _actualSyncType & TODOS ) {
+            if ( !mCalendarFile.isEmpty() ) {
                 purgeRemovedEntries( mTodoSyncee );
                 TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                 c1Helper.save();
@@ -241,9 +260,22 @@ namespace KSync
                     mTodoCalendar.deleteTodo( *todoIt );
                     mCalendar.addTodo(*todoIt);
                 }
+                if ( !mCalendar.save( mCalendarFile ) ) {
+                    KMessageBox::error(0, "Error writing to calendar " + mCalendarFile + ". Please check permissions.",
+                                       QString("Error writing to local calendar"));
+                    emit synceeWriteError( this );
+                    goto error;
+                }
+            } else {
+                KMessageBox::error(0, "You didn't configure the Task-Synchronizer. Please do so and synchronize again.",
+                                   QString("Error writing to local calendar"));
+                emit synceeWriteError( this );
+                goto error;
             }
+        }
 
-            if ( _actualSyncType & EVENTS ) {
+        if ( _actualSyncType & EVENTS ) {
+            if ( !mCalendarFile.isEmpty() ) {
                 purgeRemovedEntries( mEventSyncee );
                 EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                 c2Helper.save();
@@ -253,32 +285,45 @@ namespace KSync
                     mEventCalendar.deleteEvent( *eventIt );
                     mCalendar.addEvent(*eventIt);
                 }
-            }
-
-            if ( !mCalendar.save( mCalendarFile ) ) {
+                if ( !mCalendar.save( mCalendarFile ) ) {
+                    KMessageBox::error(0, "Error writing to calendar " + mCalendarFile + ". Please check permissions.",
+                                       QString("Error writing to local calendar"));
+                    emit synceeWriteError( this );
+                    goto error;
+                }
+            } else {
+                KMessageBox::error(0, "You didn't configure the Appointment-Synchronizer. Please do so and synchronize again.",
+                                   QString("Error writing to local calendar"));
                 emit synceeWriteError( this );
                 goto error;
             }
         }
 
-        if ( !mAddressBookFile.isEmpty() ) {
-            if ( _actualSyncType & CONTACTS ) {
+        if ( _actualSyncType & CONTACTS ) {
+            if ( !mAddressBookFile.isEmpty() ) {
                 purgeRemovedEntries( mAddressBookSyncee );
                 KABC::Ticket *ticket;
                 ticket = mAddressBook.requestSaveTicket();
                 if ( !ticket ) {
-                    kdWarning(2120) << "LocalKonnector::writeSyncees(). Couldn't get ticket for "
-                            << "addressbook." << endl;
+                    KMessageBox::error(0, "Error during ticket-request to save " + mAddressBookFile + ".",
+                                       QString("Error writing to local addressbook"));
                     emit synceeWriteError( this );
                     goto error;
                 }
                 if ( !mAddressBook.save( ticket ) ) {
+                    KMessageBox::error(0, "Error writing to addressbook " + mAddressBookFile + ". Please check permissions.",
+                                       QString("Error writing to local addressbook"));
                     emit synceeWriteError( this );
                     goto error;
                 }
 
                 AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
                 aHelper.save();
+            } else {
+                KMessageBox::error(0, "You didn't configure the Contact-Synchronizer. Please do so and synchronize again.",
+                                   QString("Error writing to local addressbook"));
+                emit synceeWriteError( this );
+                goto error;
             }
         }
 
@@ -294,34 +339,38 @@ error:
 
     void SynCELocalKonnector::clearDataStructures()
     {
-        if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
-            mEventSyncee->reset();
-            mEventCalendar.deleteAllEvents();
-            mEventCalendar.deleteAllTodos();
-            mEventCalendar.deleteAllJournals();
-            mCalendar.deleteAllEvents();
-            mCalendar.deleteAllTodos();
-            mCalendar.deleteAllJournals();
-        }
-
-        if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
-            mTodoSyncee->reset();
-            mTodoCalendar.deleteAllEvents();
-            mTodoCalendar.deleteAllTodos();
-            mTodoCalendar.deleteAllJournals();
-            mCalendar.deleteAllEvents();
-            mCalendar.deleteAllTodos();
-            mCalendar.deleteAllJournals();
-        }
-
-        if ( mAddressBookSyncee && ( _actualSyncType & CONTACTS )) {
-            KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
-            while ( entry ) {
-                delete entry;
-                entry = mAddressBookSyncee->nextEntry();
+        if ( !mCalendarFile.isEmpty() ) {
+            if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
+                mEventSyncee->reset();
+                mEventCalendar.deleteAllEvents();
+                mEventCalendar.deleteAllTodos();
+                mEventCalendar.deleteAllJournals();
+                mCalendar.deleteAllEvents();
+                mCalendar.deleteAllTodos();
+                mCalendar.deleteAllJournals();
             }
-            mAddressBookSyncee->reset();
-            mAddressBook.removeResource(mAddressBookResourceFile);
+
+            if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
+                mTodoSyncee->reset();
+                mTodoCalendar.deleteAllEvents();
+                mTodoCalendar.deleteAllTodos();
+                mTodoCalendar.deleteAllJournals();
+                mCalendar.deleteAllEvents();
+                mCalendar.deleteAllTodos();
+                mCalendar.deleteAllJournals();
+            }
+        }
+
+        if ( !mAddressBookFile.isEmpty() ) {
+            if ( mAddressBookSyncee && ( _actualSyncType & CONTACTS )) {
+                KSync::AddressBookSyncEntry *entry = mAddressBookSyncee->firstEntry();
+                while ( entry ) {
+                    delete entry;
+                    entry = mAddressBookSyncee->nextEntry();
+                }
+                mAddressBookSyncee->reset();
+                mAddressBook.removeResource(mAddressBookResourceFile);
+            }
         }
     }
 
