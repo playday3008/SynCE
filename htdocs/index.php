@@ -76,7 +76,7 @@ pocketpccommunication, it's deprecated!)</li>
 <li>Raki is broken, stop it before syncing (but let vdccm/uu running)</li>
 
 <li>Read more in the <a
-href="http://sourceforge.net/mailarchive/forum.php?thread_id=9562091&forum_id=15200">syncekonnector
+href="http://www.serotizm.com/howtos/syncekonnector-0.2.html">syncekonnector
 HOWTO</a></li>
 
 </ul>
