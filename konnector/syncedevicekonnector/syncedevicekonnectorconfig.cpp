@@ -36,14 +36,8 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
 
     QGridLayout*   m_layout;
 
-    m_layout = new QGridLayout (this, 3, 2);
+    m_layout = new QGridLayout (this, 2, 2);
     m_layout->setSpacing (KDialog::spacingHint());
-
-    m_Synctarget = new QLabel(this,  "SyncTarget");
-    m_Synctarget->setText("Target");
-
-    m_ActiveLabel = new QLabel(this, "Active");
-    m_ActiveLabel->setText("Active");
 
     m_ContactsLabel = new QLabel(this, "ContactsLabel");
     m_ContactsLabel->setText("Contacts");
@@ -57,17 +51,14 @@ SynCEDeviceKonnectorConfig::SynCEDeviceKonnectorConfig(QWidget *parent, const ch
     m_TodosLabel->setText("Tasks");
     m_TodosEnabled = new QCheckBox(this, "TodosEnabled");
 
-    m_layout->addWidget (m_Synctarget, 0, 0);
-    m_layout->addWidget (m_ActiveLabel, 0, 1);
+    m_layout->addWidget (m_ContactsEnabled, 0, 0);
+    m_layout->addWidget (m_ContactsLabel, 0, 1);
 
-    m_layout->addWidget (m_ContactsLabel, 1, 0);
-    m_layout->addWidget (m_ContactsEnabled, 1, 1);
+    m_layout->addWidget (m_EventsEnabled, 1, 0);
+    m_layout->addWidget (m_EventsLabel, 1, 1);
 
-    m_layout->addWidget (m_EventsLabel, 2, 0);
-    m_layout->addWidget (m_EventsEnabled, 2, 1);
-
-    m_layout->addWidget (m_TodosLabel, 3, 0);
-    m_layout->addWidget (m_TodosEnabled, 3, 1);
+    m_layout->addWidget (m_TodosEnabled, 2, 0);
+    m_layout->addWidget (m_TodosLabel, 2, 1);
 }
 
 
@@ -77,13 +68,13 @@ SynCEDeviceKonnectorConfig::~SynCEDeviceKonnectorConfig()
 
 void SynCEDeviceKonnectorConfig::loadSettings (KRES::Resource* p_res)
 {
-    kdDebug(2120) << "PocketPCConnectorConfig::loadSettings" << endl;
+    kdDebug(2120) << "SynCEDeviceKonnectorConfig::loadSettings" << endl;
 
     KSync::SynCEDeviceKonnector* k = dynamic_cast<KSync::SynCEDeviceKonnector*>(p_res);
 
     if (!k)
     {
-        kdError() << "PocketPCKonnectorConfig::loadSettings(): Wrong Konnector type." << endl;
+        kdError() << "SynCEDeviceKonnectorConfig::loadSettings(): Wrong Konnector type." << endl;
         return;
     }
 
@@ -95,13 +86,13 @@ void SynCEDeviceKonnectorConfig::loadSettings (KRES::Resource* p_res)
 
 void SynCEDeviceKonnectorConfig::saveSettings (KRES::Resource* p_res)
 {
-    kdDebug(2120) << "PocketPCConnectorConfig::saveSettings" << endl;
+    kdDebug(2120) << "SynCEDeviceKonnectorConfig::saveSettings" << endl;
 
     KSync::SynCEDeviceKonnector* k = dynamic_cast<KSync::SynCEDeviceKonnector*>(p_res);
 
     if (!k)
     {
-        kdError() << "PocketPCKonnectorConfig::saveSettings(): Wrong Konnector type." << endl;
+        kdError() << "SynCEDeviceKonnectorConfig::saveSettings(): Wrong Konnector type." << endl;
         return;
     }
 

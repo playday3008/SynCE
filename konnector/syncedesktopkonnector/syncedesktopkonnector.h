@@ -26,6 +26,7 @@
 #define KSYNC_LOCALKONNECTOR_H
 
 #include <libkcal/calendarlocal.h>
+#include <libkcal/calendarresources.h>
 #include <kabc/addressbook.h>
 #include <kbookmarkmanager.h>
 
@@ -44,15 +45,14 @@ namespace KABC
 
 namespace KSync
 {
+    class SynCEDesktopKonnectorConfig;
 
-    class LocalKonnectorConfig;
-
-    class SynCELocalKonnector : public KSync::SynCEKonnectorBase
+    class SynCEDesktopKonnector : public KSync::SynCEKonnectorBase
     {
             Q_OBJECT
         public:
-            SynCELocalKonnector( const KConfig *config );
-            ~SynCELocalKonnector();
+            SynCEDesktopKonnector( const KConfig *config );
+            ~SynCEDesktopKonnector();
 
             void writeConfig( KConfig * );
 
@@ -70,32 +70,6 @@ namespace KSync
             /** the state and some informations */
             KSync::KonnectorInfo info() const;
 
-            void setCalendarFile( const QString &f )
-            {
-                mCalendarFile = f;
-            }
-            QString calendarFile() const
-            {
-                return mCalendarFile;
-            }
-
-            void setAddressBookFile( const QString &f )
-            {
-                mAddressBookFile = f;
-            }
-            QString addressBookFile() const
-            {
-                return mAddressBookFile;
-            }
-
-            void setBookmarkFile( const QString &f )
-            {
-                mBookmarkFile = f;
-            }
-            QString bookmarkFile() const
-            {
-                return mBookmarkFile;
-            }
 
             virtual void actualSyncType( int type );
 
@@ -106,24 +80,31 @@ namespace KSync
 
                 return types;
             };
-            void setPdaName( const QString& pdaName );
-            void setPairUid( const QString &pairUid );
+
+            void setCurrentContactResource( const QString &identifier );
+            void setCurrentCalendarResource( const QString &identifier );
+
+            QString currentCalendarResource() const
+            {
+                return mCalendarResourceIdentifier;
+            }
+
+            QString currentContactResource() const
+            {
+                return mContactResourceIdentifier;
+            }
 
         private:
             void clearDataStructures();
 
-            LocalKonnectorConfig *mConfigWidget;
-            QString mCalendarFile;
-            QString mAddressBookFile;
-            QString mBookmarkFile;
+            SynCEDesktopKonnectorConfig *mConfigWidget;
 
             QString mMd5sumEvent;
             QString mMd5sumTodo;
             QString mMd5sumAbk;
 
-            KCal::CalendarLocal mCalendar;
+            KCal::CalendarResources mCalendar;
             KABC::AddressBook mAddressBook;
-            KABC::ResourceFile *mAddressBookResourceFile;
 
             KSync::AddressBookSyncee *mAddressBookSyncee;
             KSync::EventSyncee *mEventSyncee;
@@ -132,8 +113,22 @@ namespace KSync
             SynceeList mSyncees;
 
             int _actualSyncType;
-    };
 
+            QString mCalendarResourceIdentifier;
+            QString mContactResourceIdentifier;
+
+            KCal::ResourceCalendar *mCalendarResource;
+            KABC::Resource *mContactResource;
+
+            KCal::ResourceCalendar* createCalendarResource( const QString &identifier );
+            KABC::Resource* createContactResource( const QString &identifier );
+
+            bool loaded;
+
+        protected slots:
+            void loadingFinished();
+            void savingFinished();
+    };
 }
 
 #endif

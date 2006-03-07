@@ -114,15 +114,11 @@ public:
     void init(const QString &pairUid);
 
     void unsubscribeFrom( int type );
-
     void actualSyncType(int type);
 
     bool getContactsEnabled();
-    bool getContactsFirstSync();
     bool getEventsEnabled();
-    bool getEventsFirstSync();
     bool getTodosEnabled();
-    bool getTodosFirstSync();
 
     void setContactsState(bool enabled);
     void setEventsState(bool enabled);

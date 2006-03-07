@@ -77,8 +77,7 @@ namespace KSync
 {
 
     SynCELocalKonnector::SynCELocalKonnector( const KConfig *config )
-            : SynCEKonnectorBase( config ), mConfigWidget( 0 ),
-            mCalendar( KPimPrefs::timezone() ), mTodoCalendar( KPimPrefs::timezone() ), mEventCalendar( KPimPrefs::timezone() )
+            : SynCEKonnectorBase( config ), mConfigWidget( 0 ), mCalendar( KPimPrefs::timezone() )
     {
         if ( config ) {
             mCalendarFile = config->readPathEntry( "CalendarFile" );
@@ -89,10 +88,10 @@ namespace KSync
         mAddressBookSyncee = new AddressBookSyncee( &mAddressBook );
         mAddressBookSyncee->setTitle( i18n( "Local" ) );
 
-        mTodoSyncee = new TodoSyncee( &mTodoCalendar );
+        mTodoSyncee = new TodoSyncee( &mCalendar );
         mTodoSyncee->setTitle( i18n( "Local" ) );
 
-        mEventSyncee = new EventSyncee( &mEventCalendar );
+        mEventSyncee = new EventSyncee( &mCalendar );
         mEventSyncee->setTitle( i18n( "Local" ) );
 
         mSyncees.append( mEventSyncee );
@@ -128,28 +127,12 @@ namespace KSync
         mMd5sumTodo = getPairUid() + "/" + generateMD5Sum( mCalendarFile ) + "_syncelocalkonnector_tod.log";
         mMd5sumAbk = getPairUid() + "/" + generateMD5Sum( mAddressBookFile ) + "_syncelocalkonnector_abk.log";
 
-        mTodoCalendar.deleteAllEvents();
-        mTodoCalendar.deleteAllTodos();
-        mTodoCalendar.deleteAllJournals();
-
-        mEventCalendar.deleteAllEvents();
-        mEventCalendar.deleteAllTodos();
-        mEventCalendar.deleteAllJournals();
-
         mAddressBook.clear();
 
         if ( _actualSyncType & TODOS ) {
             if ( !mCalendarFile.isEmpty() ) {
                 mCalendar.close();
                 if ( mCalendar.load( mCalendarFile ) ) {
-                    KCal::Todo::List todoList = mCalendar.todos();
-                    mTodoSyncee->reset();
-                    mTodoSyncee->setIdentifier( "Todo" + mCalendarFile );
-                    KCal::Todo::List::iterator todoIt;
-                    for ( todoIt = todoList.begin(); todoIt != todoList.end(); ++todoIt ) {
-                        mCalendar.deleteTodo( *todoIt );
-                        mTodoCalendar.addTodo( *todoIt );
-                    }
                     TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                     c1Helper.load();
                 }
@@ -166,14 +149,6 @@ namespace KSync
             if ( !mCalendarFile.isEmpty() ) {
                 mCalendar.close();
                 if ( mCalendar.load( mCalendarFile ) ) {
-                    KCal::Event::List eventList = mCalendar.events();
-                    mEventSyncee->reset();
-                    mEventSyncee->setIdentifier( "Event" + mCalendarFile );
-                    KCal::Event::List::iterator eventIt;
-                    for ( eventIt = eventList.begin(); eventIt != eventList.end(); ++eventIt ) {
-                        mCalendar.deleteEvent( *eventIt );
-                        mEventCalendar.addEvent(*eventIt);
-                    }
                     EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                     c2Helper.load();
                 }
@@ -254,12 +229,14 @@ namespace KSync
                 purgeRemovedEntries( mTodoSyncee );
                 TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                 c1Helper.save();
+        /*
                 KCal::Todo::List todoList = mTodoCalendar.todos();
                 KCal::Todo::List::iterator todoIt;
                 for ( todoIt = todoList.begin(); todoIt != todoList.end(); ++todoIt ) {
                     mTodoCalendar.deleteTodo( *todoIt );
                     mCalendar.addTodo(*todoIt);
                 }
+        */
                 if ( !mCalendar.save( mCalendarFile ) ) {
                     KMessageBox::error(0, "Error writing to calendar " + mCalendarFile + ". Please check permissions.",
                                        QString("Error writing to local calendar"));
@@ -279,12 +256,14 @@ namespace KSync
                 purgeRemovedEntries( mEventSyncee );
                 EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                 c2Helper.save();
+                /*
                 KCal::Event::List eventList = mEventCalendar.events();
                 KCal::Event::List::iterator eventIt;
                 for ( eventIt = eventList.begin(); eventIt != eventList.end(); ++eventIt ) {
                     mEventCalendar.deleteEvent( *eventIt );
                     mCalendar.addEvent(*eventIt);
                 }
+                */
                 if ( !mCalendar.save( mCalendarFile ) ) {
                     KMessageBox::error(0, "Error writing to calendar " + mCalendarFile + ". Please check permissions.",
                                        QString("Error writing to local calendar"));
@@ -342,9 +321,11 @@ error:
         if ( !mCalendarFile.isEmpty() ) {
             if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
                 mEventSyncee->reset();
+        /*
                 mEventCalendar.deleteAllEvents();
                 mEventCalendar.deleteAllTodos();
                 mEventCalendar.deleteAllJournals();
+        */
                 mCalendar.deleteAllEvents();
                 mCalendar.deleteAllTodos();
                 mCalendar.deleteAllJournals();
@@ -352,9 +333,11 @@ error:
 
             if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
                 mTodoSyncee->reset();
+        /*
                 mTodoCalendar.deleteAllEvents();
                 mTodoCalendar.deleteAllTodos();
                 mTodoCalendar.deleteAllJournals();
+        */
                 mCalendar.deleteAllEvents();
                 mCalendar.deleteAllTodos();
                 mCalendar.deleteAllJournals();

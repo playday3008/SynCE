@@ -22,40 +22,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
-#ifndef POCKETPCHELPERPOCKETPCKONNECTORCONFIG_H
-#define POCKETPCHELPERPOCKETPCKONNECTORCONFIG_H
+#ifndef KSYNC_LOCALKONNECTORCONFIG_H
+#define KSYNC_LOCALKONNECTORCONFIG_H
 
+#include <kurlrequester.h>
 #include <syncekonnectorconfigbase.h>
-#include <qlabel.h>
-#include <qlineedit.h>
-#include <qlayout.h>
-#include <qcheckbox.h>
+#include <kresources/configwidget.h>
+
+#include <qwidget.h>
+#include <qcombobox.h>
 
 namespace KSync {
 
-/**
-@author Christian Fremgen
-*/
-class SynCEDeviceKonnectorConfig : public SynCEKonnectorConfigBase
+class SynCEDesktopKonnectorConfig : public SynCEKonnectorConfigBase
 {
-Q_OBJECT
-public:
-    SynCEDeviceKonnectorConfig(QWidget *parent = 0, const char *name = 0);
+    Q_OBJECT
+  public:
+      SynCEDesktopKonnectorConfig( QWidget *parent, const char *name  );
+      ~SynCEDesktopKonnectorConfig();
 
-    ~SynCEDeviceKonnectorConfig();
-
-    void loadSettings (KRES::Resource* p_res);
-    void saveSettings (KRES::Resource* p_res);
+    void loadSettings( KRES::Resource *resource );
+    void saveSettings( KRES::Resource *resource );
 
     void enableRaki();
 
-private:
-    QLabel*        m_ContactsLabel;
-    QLabel*        m_EventsLabel;
-    QLabel*        m_TodosLabel;
-    QCheckBox*     m_ContactsEnabled;
-    QCheckBox*     m_EventsEnabled;
-    QCheckBox*     m_TodosEnabled;
+    private:
+        QComboBox *mCalendarResourceBox;
+        QValueList<QString> mCalendarResourceIdentifiers;
+        QComboBox *mContactResourceBox;
+        QValueList<QString> mContactResourceIdentifiers;
 };
 
 }

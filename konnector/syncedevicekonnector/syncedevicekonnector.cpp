@@ -111,6 +111,38 @@ namespace KSync
     }
 
 
+    void SynCEDeviceKonnector::init( const QString &pairUid )
+    {
+        if ( !initialized ) {
+            SynCEKonnectorBase::init( pairUid );
+            initialized = true;
+
+            mAddrHandler = new PocketPCCommunication::AddressbookHandler();
+            mTodoHandler = new PocketPCCommunication::TodoHandler();
+            mEventHandler = new PocketPCCommunication::EventHandler();
+
+            QString mBaseDir = storagePath();
+
+            QDir dir;
+            QString dirName = mBaseDir + getPairUid();
+
+            if ( !dir.exists( dirName ) ) {
+                dir.mkdir ( dirName );
+            }
+
+            if ( mUidHelper != NULL ) {
+                mUidHelper->save();
+                delete mUidHelper;
+            }
+            mUidHelper = new KSync::KonnectorUIDHelper( mBaseDir + getPairUid() );
+
+            mAddrHandler->setUidHelper( mUidHelper );
+            mTodoHandler->setUidHelper( mUidHelper );
+            mEventHandler->setUidHelper( mUidHelper );
+        }
+    }
+
+
     SynCEDeviceKonnector::~SynCEDeviceKonnector()
     {
         kdDebug( 2120 ) << "SynCEDeviceKonnector::~SynCEDeviceKonnector" << endl;
@@ -381,33 +413,15 @@ namespace KSync
     }
 
 
-    bool SynCEDeviceKonnector::getContactsFirstSync()
-    {
-        return contactsFirstSync;
-    }
-
-
     bool SynCEDeviceKonnector::getEventsEnabled()
     {
         return eventsEnabled;
     }
 
 
-    bool SynCEDeviceKonnector::getEventsFirstSync()
-    {
-        return eventsFirstSync;
-    }
-
-
     bool SynCEDeviceKonnector::getTodosEnabled()
     {
         return todosEnabled;
-    }
-
-
-    bool SynCEDeviceKonnector::getTodosFirstSync()
-    {
-        return todosFirstSync;
     }
 
 
@@ -429,53 +443,9 @@ namespace KSync
     }
 
 
-    void SynCEDeviceKonnector::unsubscribeFrom( int type )
-    {
-        if ( type & CONTACTS ) {
-            contactsEnabled = false;
-        } else if ( type & EVENTS ) {
-            eventsEnabled = false;
-        } else if ( type & TODOS ) {
-            todosEnabled = false;
-        }
-    }
-
-
     void SynCEDeviceKonnector::actualSyncType( int type )
     {
         _actualSyncType = type;
-    }
-
-
-    void SynCEDeviceKonnector::init( const QString &pairUid )
-    {
-        if ( !initialized ) {
-            SynCEKonnectorBase::init( pairUid );
-            initialized = true;
-
-            mAddrHandler = new PocketPCCommunication::AddressbookHandler();
-            mTodoHandler = new PocketPCCommunication::TodoHandler();
-            mEventHandler = new PocketPCCommunication::EventHandler();
-
-            QString mBaseDir = storagePath();
-
-            QDir dir;
-            QString dirName = mBaseDir + getPairUid();
-
-            if ( !dir.exists( dirName ) ) {
-                dir.mkdir ( dirName );
-            }
-
-            if ( mUidHelper != NULL ) {
-                mUidHelper->save();
-                delete mUidHelper;
-            }
-            mUidHelper = new KSync::KonnectorUIDHelper( mBaseDir + getPairUid() );
-
-            mAddrHandler->setUidHelper( mUidHelper );
-            mTodoHandler->setUidHelper( mUidHelper );
-            mEventHandler->setUidHelper( mUidHelper );
-        }
     }
 
 
@@ -493,5 +463,17 @@ namespace KSync
         mAddrHandler->setRra( rra );
         mTodoHandler->setRra( rra );
         mEventHandler->setRra( rra );
+    }
+
+
+    void SynCEDeviceKonnector::unsubscribeFrom( int type )
+    {
+        if ( type & CONTACTS ) {
+            contactsEnabled = false;
+        } else if ( type & EVENTS ) {
+            eventsEnabled = false;
+        } else if ( type & TODOS ) {
+            todosEnabled = false;
+        }
     }
 }
