@@ -589,7 +589,7 @@ bool recurrence_parse_rrule(
 #endif
     }
     pattern->flags |= RecurrenceEndsOnDate;
-    pattern->pattern_end_date = rra_minutes_from_struct(&until);
+    pattern->pattern_end_date = (rra_minutes_from_struct(&until)/MINUTES_PER_DAY)*MINUTES_PER_DAY;
 
     /* XXX calculate pattern->occurrences */
   }
