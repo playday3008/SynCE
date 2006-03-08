@@ -47,6 +47,8 @@
 #include <qtooltip.h>
 #include <qstringlist.h>
 
+#include <synce_log.h>
+
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #include <kde_dmalloc.h>
@@ -719,6 +721,12 @@ QString Raki::changeConnectionState(int state)
 }
 
 
+void Raki::changeLogLevel( int level ) {
+    kdDebug(2120) << "Log level: " << level << endl;
+    synce_log_set_level(level);
+}
+
+
 void Raki::dccmNotification(QString signal)
 {
     if (signal == "start") {
@@ -733,11 +741,12 @@ void Raki::dccmNotification(QString signal)
 }
 
 
-static const char* const Raki_ftable[4][3] =
+static const char* const Raki_ftable[5][3] =
     {
         {"void", "dccmNotification(QString)", "dccmNotification(QString)"},
         {"void", "setConnectionStatus(int)", "setConnectionStatus(int)"},
         {"void", "installCabFile(QString)", "installCabFile(QString)"},
+        {"void", "setLogLevel(int)", "setLogLevel(int)"},
         { 0, 0, 0 }
     };
 
@@ -769,6 +778,12 @@ bool Raki::process(const QCString &fun, const QByteArray &data,
         } else {
             KMessageBox::informationList(this, "Could not install cab-file as there is no device connected at the moment.", list, "Install");
         }
+    } else if (fun == Raki_ftable[3][1] ) {
+        int arg0;
+        QDataStream arg( data, IO_ReadOnly );
+        arg >> arg0;
+        replyType = Raki_ftable[3][0];
+        changeLogLevel(arg0);
     } else {
         return DCOPObject::process( fun, data, replyType, replyData );
     }
@@ -834,8 +849,9 @@ static const char *MITlicense =
 
 static KCmdLineOptions options[] =
     {
-        { 0, 0, 0 }
-        // INSERT YOUR COMMANDLINE OPTIONS HERE
+        { "d <level>", I18N_NOOP("Debug level: 0, ... 6, default = 0"), "0"},
+        { "log_level <level>", I18N_NOOP("Debug level: 0, ... 6, default = 0"), "0"},
+        KCmdLineLastOption // End of options.
     };
 
 
@@ -874,6 +890,16 @@ int main(int argc, char *argv[])
     } else {
         KUniqueApplication a;
 #endif
+
+    KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
+
+    QString sLogLevel = args->getOption("d");
+    if (sLogLevel == "0") {
+        sLogLevel = args->getOption("log_level");
+    }
+
+    int iLogLevel = sLogLevel.toInt();
+    Raki::changeLogLevel(iLogLevel);
 
     Raki *raki = new Raki(&aboutData, new KAboutApplication(&aboutData));
 

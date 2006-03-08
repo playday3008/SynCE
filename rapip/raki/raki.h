@@ -62,6 +62,7 @@ public:
     ~Raki();
     ConfigDialogImpl *configDialog;
     bool isInitialized();
+    static void changeLogLevel( int level );
 
 private:
     void setConnectionStatus(bool enable);

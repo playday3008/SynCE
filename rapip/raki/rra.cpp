@@ -29,7 +29,6 @@ extern "C" {
 #include <rra/task.h>
 #include <rra/contact.h>
 }
-#include <synce_log.h>
 
 #include <kabc/addressee.h>
 #include <klocale.h>
@@ -542,12 +541,6 @@ QString Rra::getPdaName() const
 bool Rra::isConnected() const
 {
     return (useCount>0);
-}
-
-
-void Rra::setLogLevel (int p_level)
-{
-    synce_log_set_level(p_level);
 }
 
 

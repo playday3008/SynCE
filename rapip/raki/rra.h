@@ -100,7 +100,6 @@ public:
     bool connect();
     void disconnect();
 
-    void setLogLevel(int p_level);
     bool getTimezone(RRA_Timezone *tzi);
 
 
