@@ -33,14 +33,29 @@
 #include "todosyncee.h"
 #include "eventsyncee.h"
 
-//#include <konnector.h>
 #include "syncekonnectorbase.h"
 #include <qiconset.h>
 #include <qptrlist.h>
 
 namespace KABC
 {
-    class ResourceFile;
+    class AddressBookWrapper : public AddressBook
+    {
+        public:
+        void readConfig()
+        {
+            resourceManager()->readConfig();
+        }
+
+        KRES::Manager<Resource> *resourceManager()
+        {
+            return AddressBook::resourceManager();
+        }
+
+        void setStandardResource(Resource *resource) {
+            AddressBook::setStandardResource(resource);
+        }
+    };
 }
 
 namespace KSync
@@ -104,7 +119,7 @@ namespace KSync
             QString mMd5sumAbk;
 
             KCal::CalendarResources mCalendar;
-            KABC::AddressBook mAddressBook;
+            KABC::AddressBookWrapper mAddressBook;
 
             KSync::AddressBookSyncee *mAddressBookSyncee;
             KSync::EventSyncee *mEventSyncee;
