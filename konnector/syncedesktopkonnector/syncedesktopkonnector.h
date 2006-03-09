@@ -109,6 +109,19 @@ namespace KSync
                 return mContactResourceIdentifier;
             }
 
+
+            KCal::CalendarResources* getCalendar()
+            {
+                return &mCalendar;
+            }
+
+
+            KABC::AddressBookWrapper* getAddressBook()
+            {
+                return &mAddressBook;
+            }
+
+
         private:
             void clearDataStructures();
 

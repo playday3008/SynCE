@@ -386,7 +386,7 @@ error:
 
     void SynCEDesktopKonnector::clearDataStructures()
     {
-        if ( !mCalendar.resourceManager()->isEmpty() ) {
+        if ( mCalendarResource ) {
             if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
                 mEventSyncee->reset();
                 mCalendarResource->close();
@@ -415,9 +415,9 @@ error:
     {
         if (mContactResourceIdentifier != identifier) {
             KRES::Manager<KABC::Resource> *contactManager = mAddressBook.resourceManager();
-            KRES::Manager<KABC::Resource>::ActiveIterator kabcIt;
+            KRES::Manager<KABC::Resource>::Iterator kabcIt;
 
-            for (kabcIt = contactManager->activeBegin(); kabcIt != contactManager->activeEnd(); ++kabcIt) {
+            for (kabcIt = contactManager->begin(); kabcIt != contactManager->end(); ++kabcIt) {
                 if ((*kabcIt)->identifier() == identifier) {
                     mContactResource = *kabcIt;
                     mContactResourceIdentifier = identifier;
@@ -425,6 +425,7 @@ error:
                     kdDebug(2120) << "Std: Id: " << mContactResource->identifier() << "   Name: " << mContactResource->resourceName() << endl;
                     contactManager->setStandardResource(*kabcIt);
                     mContactResource->setAddressBook(&mAddressBook);
+                    mContactResource->setActive(true);
                 }
             }
         }
@@ -435,13 +436,14 @@ error:
     {
         if (mCalendarResourceIdentifier != identifier) {
             KRES::Manager<KCal::ResourceCalendar> *calendarManager = mCalendar.resourceManager();
-            KRES::Manager<KCal::ResourceCalendar>::ActiveIterator kcalIt;
-            for ( kcalIt = calendarManager->activeBegin(); kcalIt != calendarManager->activeEnd(); ++kcalIt ) {
+            KRES::Manager<KCal::ResourceCalendar>::Iterator kcalIt;
+            for ( kcalIt = calendarManager->begin(); kcalIt != calendarManager->end(); ++kcalIt ) {
                 if ((*kcalIt)->identifier() == identifier) {
                     mCalendarResource = *kcalIt;
                     mCalendarResourceIdentifier = identifier;
                     kdDebug(2120) << "Found standard resource for mCalendar" << endl;
                     kdDebug(2120) << "Std: Id: " << mCalendarResource->identifier() << "   Name: " << mCalendarResource->resourceName() << endl;
+                    mCalendarResource->setActive(true);
                     disconnect( calendarManager->standardResource(), SIGNAL( resourceLoaded( ResourceCalendar* ) ),
                                 this, SLOT( loadingFinished() ) );
                     disconnect( calendarManager->standardResource(), SIGNAL( resourceSaved( ResourceCalendar* ) ),
