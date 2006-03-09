@@ -284,7 +284,7 @@ namespace KSync
         kdDebug( 2120 ) << "SynCEDesktopKonnector::writeSyncees()..." << endl;
 
         if ( _actualSyncType & TODOS ) {
-            if ( !mCalendar.resourceManager()->isEmpty() ) {
+            if ( mCalendarResource ) {
                 purgeRemovedEntries( mTodoSyncee );
                 TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                 c1Helper.save();
@@ -311,7 +311,7 @@ namespace KSync
         }
 
         if ( _actualSyncType & EVENTS ) {
-            if ( !mCalendar.resourceManager()->isEmpty() ) {
+            if ( mCalendarResource ) {
                 purgeRemovedEntries( mEventSyncee );
                 EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                 c2Helper.save();
@@ -461,54 +461,6 @@ error:
         _actualSyncType = type;
     }
 
-
-    KCal::ResourceCalendar* SynCEDesktopKonnector::createCalendarResource( const QString &identifier )
-    {
-        KConfig config( "kresources/calendar/stdrc" );
-
-        config.setGroup( "General" );
-        QStringList activeKeys = config.readListEntry( "ResourceKeys" );
-        if ( !activeKeys.contains( identifier ) )
-            return 0;
-
-        KRES::Factory *factory = KRES::Factory::self( "calendar" );
-        config.setGroup( "Resource_" + identifier );
-
-        QString type = config.readEntry( "ResourceType" );
-        QString name = config.readEntry( "ResourceName" );
-        KCal::ResourceCalendar *resource = dynamic_cast<KCal::ResourceCalendar*>( factory->resource( type, &config ) );
-        if ( !resource ) {
-            kdError() << "Failed to create resource with id " << identifier << endl;
-            return 0;
-        } else {
-            kdDebug() << "Created resource with id " << identifier << endl;
-        }
-
-        return resource;
-    }
-
-    KABC::Resource* SynCEDesktopKonnector::createContactResource( const QString &identifier )
-    {
-        KConfig config( "kresources/contact/stdrc" );
-
-        config.setGroup( "General" );
-        QStringList activeKeys = config.readListEntry( "ResourceKeys" );
-        if ( !activeKeys.contains( identifier ) )
-            return 0;
-
-        KRES::Factory *factory = KRES::Factory::self( "contact" );
-        config.setGroup( "Resource_" + identifier );
-
-        QString type = config.readEntry( "ResourceType" );
-        QString name = config.readEntry( "ResourceName" );
-        KABC::Resource *resource = dynamic_cast<KABC::Resource*>( factory->resource( type, &config ) );
-        if ( !resource ) {
-            kdError() << "Failed to create resource with id " << identifier << endl;
-            return 0;
-        }
-
-        return resource;
-    }
 
 }
 #include "syncedesktopkonnector.moc"

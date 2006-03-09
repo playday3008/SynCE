@@ -51,7 +51,7 @@ namespace PocketPCCommunication
     bool AddressbookHandler::retrieveAddresseeListFromDevice( KABC::Addressee::List &mAddresseeList, QValueList<uint32_t> &idList )
     {
         KABC::VCardConverter vCardConv;
-        bool ret = false;
+        bool ret = true;
 
         for ( QValueList<uint32_t>::const_iterator it = idList.begin(); it != idList.end(); ++it ) {
             incrementSteps();
@@ -61,7 +61,8 @@ namespace PocketPCCommunication
 
             QString vCard = m_rra->getVCard( mTypeId, *it );
             if (vCard.isEmpty()) {
-                goto error;
+                addErrorEntry("RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ));
+                ret = false;
             }
 
             KABC::Addressee addr = vCardConv.parseVCard ( vCard );
@@ -83,9 +84,6 @@ namespace PocketPCCommunication
             KApplication::kApplication()->processEvents();
         }
 
-        ret = true;
-
-    error:
         return ret;
     }
 
@@ -197,14 +195,14 @@ namespace PocketPCCommunication
 
     bool AddressbookHandler::addAddressees( KABC::Addressee::List& p_addresseeList )
     {
-        bool ret = false;
+        bool ret = true;
         KABC::VCardConverter vCardConv;
         QString vCard;
 
         RRA_Uint32Vector* added_ids = rra_uint32vector_new();
 
         if ( p_addresseeList.begin() == p_addresseeList.end() ) {
-            goto success;
+            goto finish;
         }
 
         for (KABC::Addressee::List::Iterator it = p_addresseeList.begin();
@@ -217,7 +215,8 @@ namespace PocketPCCommunication
 
             uint32_t newObjectId = m_rra->putVCard( vCard, mTypeId, 0 );
             if (newObjectId == 0) {
-                goto error;
+                addErrorEntry((*it).realName());
+                ret = false;
             }
 
             m_rra->markIdUnchanged( mTypeId, newObjectId );
@@ -234,10 +233,8 @@ namespace PocketPCCommunication
             KApplication::kApplication()->processEvents();
         }
 
-    success:
-        ret = true;
 
-    error:
+    finish:
         m_rra->registerAddedObjects(mTypeId, added_ids);
         rra_uint32vector_destroy(added_ids, true);
 
@@ -247,13 +244,13 @@ namespace PocketPCCommunication
 
     bool AddressbookHandler::updateAddressees( KABC::Addressee::List& p_addresseeList )
     {
-        bool ret = false;
+        bool ret = true;
         KABC::Addressee::List::Iterator it = p_addresseeList.begin();
         KABC::VCardConverter vCardConv;
         QString vCard;
 
         if ( p_addresseeList.begin() == p_addresseeList.end() ) {
-            goto success;
+            goto finish;
         }
 
         setStatus("Writing changed Contacts");
@@ -269,7 +266,8 @@ namespace PocketPCCommunication
                 vCard = vCardConv.createVCard ( ( *it ) );
                 uint32_t retId = m_rra->putVCard ( vCard, mTypeId, getOriginalId( kUid ) );
                 if (retId == 0) {
-                    goto error;
+                    addErrorEntry((*it).realName());
+                    ret = false;
                 }
 
                 m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
@@ -278,10 +276,7 @@ namespace PocketPCCommunication
             KApplication::kApplication()->processEvents();
         }
 
-success:
-        ret = true;
-
-error:
+finish:
         return ret;
     }
 

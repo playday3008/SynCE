@@ -32,6 +32,7 @@ namespace PocketPCCommunication {
 
 KPIM::ProgressItem *PimHandler::mProgressItem = NULL;
 QString PimHandler::errorString = "";
+QStringList PimHandler::errorEntries = QStringList();
 
 PimHandler::PimHandler ()
     : m_pdaName("")
@@ -135,13 +136,24 @@ void PimHandler::setError(QString errorString)
     PimHandler::errorString = errorString;
 }
 
+void PimHandler::addErrorEntry(QString errorEntry)
+{
+    errorEntries += errorEntry;
+}
 
 QString PimHandler::getError() {
     return errorString;
 }
 
 
+QStringList PimHandler::getErrorEntries()
+{
+    return errorEntries;
+}
+
+
 void PimHandler::resetError() {
     errorString = "";
+    errorEntries.clear();
 }
 }

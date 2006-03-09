@@ -65,7 +65,7 @@ namespace PocketPCCommunication
     {
         KCal::ICalFormat calFormat;
         calFormat.setTimeZone( sCurrentTimeZone, false );
-        bool ret = false;
+        bool ret = true;
 
         QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
         QString vCalEnd = "END:VCALENDAR\n";
@@ -78,7 +78,8 @@ namespace PocketPCCommunication
 
             QString vEvent = m_rra->getVEvent( mTypeId, *it );
             if ( vEvent.isEmpty() ) {
-                goto error;
+                addErrorEntry("RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ));
+                ret = false;
             }
             QString vCal = vCalBegin + vEvent + vCalEnd;
 
@@ -100,9 +101,6 @@ namespace PocketPCCommunication
             KApplication::kApplication() ->processEvents();
         }
 
-        ret = true;
-
-    error:
         return ret;
     }
 
@@ -238,14 +236,14 @@ namespace PocketPCCommunication
 
     bool EventHandler::addEvents( KCal::Event::List& p_eventList )
     {
-        bool ret;
+        bool ret = true;
         KCal::ICalFormat calFormat;
         calFormat.setTimeZone( sCurrentTimeZone, false );
 
         RRA_Uint32Vector* added_ids = rra_uint32vector_new();
 
         if ( p_eventList.begin() == p_eventList.end() ) {
-            goto success;
+            goto finish;
         }
 
         for ( KCal::Event::List::Iterator it = p_eventList.begin();
@@ -260,7 +258,8 @@ namespace PocketPCCommunication
 
             uint32_t newObjectId = m_rra->putVEvent( iCal, mTypeId, 0 );
             if ( newObjectId == 0 ) {
-                goto error;
+                addErrorEntry((*it)->summary());
+                ret = false;
             }
 
             m_rra->markIdUnchanged( mTypeId, newObjectId );
@@ -277,10 +276,7 @@ namespace PocketPCCommunication
             KApplication::kApplication() ->processEvents();
         }
 
-    success:
-        ret = true;
-
-    error:
+    finish:
         m_rra->registerAddedObjects( mTypeId, added_ids );
         rra_uint32vector_destroy( added_ids, true );
 
@@ -290,12 +286,12 @@ namespace PocketPCCommunication
 
     bool EventHandler::updateEvents ( KCal::Event::List& p_eventList )
     {
-        bool ret = false;
+        bool ret = true;
         KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
         calFormat.setTimeZone( sCurrentTimeZone, false );
 
         if ( p_eventList.begin() == p_eventList.end() ) {
-            goto success;
+            goto finish;
         }
 
         for ( KCal::Event::List::Iterator it = p_eventList.begin();
@@ -311,7 +307,8 @@ namespace PocketPCCommunication
 
                 uint32_t retId = m_rra->putVEvent( iCal, mTypeId, getOriginalId( kUid ) );
                 if ( retId == 0 ) {
-                    goto error;
+                    addErrorEntry((*it)->summary());
+                    ret = false;
                 }
 
                 m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
@@ -320,10 +317,7 @@ namespace PocketPCCommunication
             KApplication::kApplication() ->processEvents();
         }
 
-    success:
-        ret = true;
-
-    error:
+    finish:
         return ret;
     }
 

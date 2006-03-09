@@ -135,9 +135,6 @@ namespace KSync
             KCal::ResourceCalendar *mCalendarResource;
             KABC::Resource *mContactResource;
 
-            KCal::ResourceCalendar* createCalendarResource( const QString &identifier );
-            KABC::Resource* createContactResource( const QString &identifier );
-
             bool loaded;
 
         protected slots:

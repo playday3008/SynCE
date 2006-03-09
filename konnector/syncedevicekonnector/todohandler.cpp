@@ -55,7 +55,7 @@ namespace PocketPCCommunication
     bool TodoHandler::retrieveTodoListFromDevice( KCal::Todo::List &mTodoList, QValueList<uint32_t> &idList )
     {
         KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
-        bool ret = false;
+        bool ret = true;
 
         QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
         QString vCalEnd = "END:VCALENDAR\n";
@@ -68,7 +68,8 @@ namespace PocketPCCommunication
 
             QString vTodo = m_rra->getVToDo( mTypeId, *it );
             if ( vTodo.isEmpty() ) {
-                goto error;
+                addErrorEntry("RRA-ID-" + QString::number ( *it, 16 ).rightJustify( 8, '0' ));
+                ret = false;
             }
 
             QString vCal = vCalBegin + vTodo + vCalEnd;
@@ -92,9 +93,6 @@ namespace PocketPCCommunication
             KApplication::kApplication() ->processEvents();
         }
 
-        ret = true;
-
-    error:
         return ret;
     }
 
@@ -228,12 +226,12 @@ namespace PocketPCCommunication
 
     bool TodoHandler::addTodos( KCal::Todo::List& p_todoList )
     {
-        bool ret = false;
+        bool ret = true;
         RRA_Uint32Vector * added_ids = rra_uint32vector_new();
         KCal::ICalFormat calFormat;
 
         if ( p_todoList.begin() == p_todoList.end() ) {
-            goto success;
+            goto finish;
         }
 
         for ( KCal::Todo::List::Iterator it = p_todoList.begin();
@@ -246,7 +244,8 @@ namespace PocketPCCommunication
 
             uint32_t newObjectId = m_rra->putVToDo( iCal, mTypeId, 0 );
             if ( newObjectId == 0 ) {
-                goto error;
+                addErrorEntry((*it)->summary());
+                ret = false;
             }
 
             m_rra->markIdUnchanged( mTypeId, newObjectId );
@@ -263,10 +262,7 @@ namespace PocketPCCommunication
             KApplication::kApplication() ->processEvents();
         }
 
-    success:
-        ret = true;
-
-    error:
+    finish:
         m_rra->registerAddedObjects( mTypeId, added_ids );
         rra_uint32vector_destroy( added_ids, true );
 
@@ -276,11 +272,11 @@ namespace PocketPCCommunication
 
     bool TodoHandler::updateTodos ( KCal::Todo::List& p_todoList )
     {
-        bool ret = false;
+        bool ret = true;
         KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
 
         if ( p_todoList.begin() == p_todoList.end() ) {
-            goto success;
+            goto finish;
         }
 
         for ( KCal::Todo::List::Iterator it = p_todoList.begin();
@@ -294,7 +290,8 @@ namespace PocketPCCommunication
                 QString iCal = calFormat.toString( *it );
                 uint32_t retId = m_rra->putVToDo( iCal, mTypeId, getOriginalId( kUid ) );
                 if (retId == 0) {
-                    goto error;
+                    addErrorEntry((*it)->summary());
+                    ret = false;
                 }
 
                 m_rra->markIdUnchanged( mTypeId, getOriginalId( kUid ) );
@@ -303,10 +300,7 @@ namespace PocketPCCommunication
             KApplication::kApplication() ->processEvents();
         }
 
-success:
-        ret = true;
-
-error:
+finish:
         return ret;
     }
 

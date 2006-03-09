@@ -213,7 +213,8 @@ namespace KSync
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
             if ( error = !mAddrHandler->readSyncee( mAddressBookSyncee, contactsFirstSync ) ) {
-                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
+                KMessageBox::errorList(0, PocketPCCommunication::PimHandler::getError(),
+                                       PocketPCCommunication::PimHandler::getErrorEntries(),
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
                                     " synchronizer");
@@ -225,7 +226,8 @@ namespace KSync
 
         if ( mTodoHandler && todosEnabled && ( _actualSyncType & TODOS ) ) {
             if (error = !mTodoHandler->readSyncee( mTodoSyncee, todosFirstSync ) ) {
-                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
+                KMessageBox::errorList(0, PocketPCCommunication::PimHandler::getError(),
+                                   PocketPCCommunication::PimHandler::getErrorEntries(),
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
                                     " synchronizer");
@@ -237,7 +239,8 @@ namespace KSync
 
         if ( mEventHandler && eventsEnabled && ( _actualSyncType & EVENTS ) ) {
             if (error = !mEventHandler->readSyncee( mEventSyncee, eventsFirstSync ) ) {
-                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
+                KMessageBox::errorList(0, PocketPCCommunication::PimHandler::getError(),
+                                   PocketPCCommunication::PimHandler::getErrorEntries(),
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
                                     " synchronizer");
@@ -270,7 +273,8 @@ namespace KSync
             m_rra->unsubscribeType( mAddrHandler->getTypeId() );
             subscribtionCount--;
             if (error) {
-                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
+                KMessageBox::errorList(0, PocketPCCommunication::PimHandler::getError(),
+                                   PocketPCCommunication::PimHandler::getErrorEntries(),
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
                                    " synchronizer");
@@ -285,7 +289,8 @@ namespace KSync
             m_rra->unsubscribeType( mTodoHandler->getTypeId() );
             subscribtionCount--;
             if (error) {
-                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
+                KMessageBox::errorList(0, PocketPCCommunication::PimHandler::getError(),
+                                   PocketPCCommunication::PimHandler::getErrorEntries(),
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
                                    " synchronizer");
@@ -300,7 +305,8 @@ namespace KSync
             m_rra->unsubscribeType( mEventHandler->getTypeId() );
             subscribtionCount--;
             if (error) {
-                KMessageBox::error(0, PocketPCCommunication::PimHandler::getError(),
+                KMessageBox::errorList(0, PocketPCCommunication::PimHandler::getError(),
+                                       PocketPCCommunication::PimHandler::getErrorEntries(),
                                    QString("Error writing to ") +
                                    m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
                                            " synchronizer");

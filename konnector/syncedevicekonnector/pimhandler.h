@@ -26,6 +26,7 @@
 #define POCKETPCCOMMUNICATIONPIMHANDLER_H
 
 #include <rra.h>
+#include <qstringlist.h>
 
 namespace KPIM
 {
@@ -54,6 +55,8 @@ namespace PocketPCCommunication
             static void setProgressItem( KPIM::ProgressItem *progressItem );
             static void progressItemSetCompleted();
             static void setError( QString error );
+            static void addErrorEntry(QString errorEntry);
+            static QStringList getErrorEntries();
             static QString getError();
             static void resetError();
             void setUidHelper( KSync::KonnectorUIDHelper *mUidHelper );
@@ -73,6 +76,7 @@ namespace PocketPCCommunication
             Rra* m_rra;
             static KPIM::ProgressItem *mProgressItem;
             static QString errorString;
+            static QStringList errorEntries;
             unsigned int maxSteps;
             unsigned int actSteps;
             KSync::KonnectorUIDHelper *mUidHelper;
