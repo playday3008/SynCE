@@ -29,7 +29,7 @@
 using namespace synce;
 
 DccmServer::DccmServer(DeviceManager *deviceManager, u_int16_t port, string interfaceName)
- : TCPServerSocket(port, interfaceName)
+    : TCPServerSocket(port, interfaceName)
 {
     this->deviceManager = deviceManager;
 }

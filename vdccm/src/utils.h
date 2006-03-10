@@ -40,6 +40,8 @@ public:
     static bool isRunning();
     static bool disconnectDevices();
     static void runScripts(string action, string deviceName = "");
+    static bool dropRootPrivileg();
+    static bool checkStartingUser();
 
 private:
     Utils();

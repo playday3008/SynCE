@@ -182,7 +182,6 @@ void Utils::setupSignals()
 }
 
 
-
 bool Utils::isRunning()
 {
     return _isRunning;
@@ -240,4 +239,33 @@ exit:
 
     if (dir)
         closedir(dir);
+}
+
+
+bool Utils::dropRootPrivileg()
+{
+    bool ret = true;
+
+    uid_t uid = getuid();
+    if (seteuid(uid) == -1) {
+        ret = false;
+    }
+
+    return ret;
+}
+
+
+bool Utils::checkStartingUser()
+{
+    bool ret = true;
+
+    uid_t uid = getuid();
+    uid_t euid = geteuid();
+
+    // we should be started suid-root but not directly by root
+    if (uid == 0 || euid != 0) {
+        ret = false;
+    }
+
+    return ret;
 }

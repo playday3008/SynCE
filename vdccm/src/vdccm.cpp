@@ -22,6 +22,7 @@
  ***************************************************************************/
 #include "localserver.h"
 #include "dccmserver.h"
+#include "rapiserver.h"
 #include "devicemanager.h"
 #include "multiplexer.h"
 #include "cmdlineargs.h"
@@ -35,6 +36,11 @@ using namespace synce;
 
 int main(int argc, char *argv[])
 {
+    if (!Utils::checkStartingUser()) {
+        synce_error("Could not start - either because vdccm is not installed suid or you start directly as root");
+        exit(0);
+    }
+
     if (!CmdLineArgs::parseArgs(argc, argv)) {
         exit(0);
     }
@@ -45,7 +51,23 @@ int main(int argc, char *argv[])
 
     Utils::setupSignals();
 
+    RapiServer rapiServer(990);
+
+    if (!rapiServer.listen()) {
+        synce_error("Could not switch to listening mode - rapi");
+        exit(1);
+    }
+
+    Utils::dropRootPrivileg();
+
     Multiplexer* mux = Multiplexer::self();
+
+    if (!mux->getReadManager()->add(&rapiServer)) {
+        synce_error("Could not add rapiServer to manager - rapi");
+        rapiServer.shutdown();
+        delete mux;
+        exit(1);
+    }
 
     DeviceManager deviceManager;
 
