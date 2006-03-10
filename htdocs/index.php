@@ -68,16 +68,11 @@ alt="Make a donation" title="Make a donation">
 <p><b>Attention KDE users!</b></p>
 
 <ul>
-<li>Use syncekonnector with KDE 3.4 (not
-pocketpccommunication, it's deprecated!)</li>
+<li>Use syncekonnector with KDE 3.5</li>
 
-<li>Use Syncekonnector &lt;-&gt; Localkonnector only as plugins in multisynk</li>
+<li>Do not use multisynk with the current syncekonnector - it will crash.</li>
 
-<li>Raki is broken, stop it before syncing (but let vdccm/uu running)</li>
-
-<li>Read more in the <a
-href="http://www.serotizm.com/howtos/syncekonnector-0.2.html">syncekonnector
-HOWTO</a></li>
+<li>Use Raki and its synchronization ability instead!</li>
 
 </ul>
 </td></tr><tr>
