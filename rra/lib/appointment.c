@@ -43,6 +43,7 @@ typedef struct _EventGeneratorData
   CEPROPVAL* reminder_enabled;
 #if ENABLE_RECURRENCE
   CEPROPVAL* recurrence_pattern;
+  CEPROPVAL* recurrence_timezone;
   CEPROPVAL* unique;
 #endif
 } EventGeneratorData;
@@ -117,6 +118,17 @@ static bool on_propval_recurrence_pattern(Generator* g, CEPROPVAL* propval, void
   return true;
 }
 
+static bool on_propval_recurrence_timezone(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+#if ENABLE_RECURRENCE
+  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  data->recurrence_timezone = propval;
+#else
+  synce_warning("Recurrence support not enabled");
+#endif
+  return true;
+}
+
 static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   EventGeneratorData* data = (EventGeneratorData*)cookie;
@@ -147,6 +159,14 @@ bool rra_appointment_to_vevent(/*{{{*/
   EventGeneratorData event_generator_data;
   memset(&event_generator_data, 0, sizeof(EventGeneratorData));
 
+  synce_log_set_level(SYNCE_LOG_LEVEL_HIGHEST);
+
+  if (!tzi) {
+    synce_trace("No Timezone");
+  } else {
+    synce_trace("Got a Timezone");
+  }
+
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
   {
     case RRA_APPOINTMENT_UTF8:
@@ -174,6 +194,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
   generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);
+  generator_add_property(generator, ID_RECURRENCE_TIMEZONE, on_propval_recurrence_timezone);
   generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
 #if ENABLE_RECURRENCE
   generator_add_property(generator, ID_UNIQUE,      on_propval_unique);
@@ -312,7 +333,7 @@ bool rra_appointment_to_vevent(/*{{{*/
     if (!recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern))
       synce_warning("Failed to generate RRULE from recurrence pattern.");
 
-    if (event_generator_data.unique)
+    if (event_generator_data.unique && id == RRA_APPOINTMENT_ID_UNKNOWN)
     {
       char* buffer = NULL;
       unsigned i;
@@ -533,6 +554,10 @@ bool rra_appointment_from_vevent(/*{{{*/
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
   
+  synce_log_set_level(SYNCE_LOG_LEVEL_HIGHEST);
+
+  synce_warning("rra_appointment_from_vevent");
+  
 #if ENABLE_RECURRENCE
   event_parser_data.exdates = rra_mdir_line_vector_new();
 #endif
@@ -663,8 +688,7 @@ bool rra_appointment_from_vevent(/*{{{*/
             event_parser_data.dtstart,
             event_parser_data.dtend,
             event_parser_data.rrule, 
-            event_parser_data.exdates,
-            tzi))
+            event_parser_data.exdates))
         synce_warning("Failed to parse recurrence rule");
 
       if (event_parser_data.uid)

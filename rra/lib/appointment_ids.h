@@ -2,7 +2,7 @@
 #ifndef __appointment_ids_h__
 #define __appointment_ids_h__
 
-#define ID_UNKNOWN_0001    0x0001 /* something about repeated appointemnts */
+#define ID_RECURRENCE_TIMEZONE 0x0001 /* something about repeated appointemnts */
 #define ID_UNKNOWN_0002    0x0002
 #define ID_SENSITIVITY     0x0004
 

@@ -20,8 +20,7 @@ bool recurrence_parse_rrule(
     mdir_line* dtstart,
     mdir_line* dtend,
     mdir_line* rrule, 
-    RRA_MdirLineVector* exdates,
-    RRA_Timezone* tzi);
+    RRA_MdirLineVector* exdates);
 
 #endif
 

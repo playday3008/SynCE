@@ -55,7 +55,7 @@ static bool writer
           save = true;
           /* fall through */
 
-        case ID_UNKNOWN_0001:
+        case ID_RECURRENCE_TIMEZONE:
         case ID_UNIQUE:
         case ID_APPOINTMENT_START:
         case ID_DURATION:

@@ -606,8 +606,8 @@ static bool rra_recurrence_pattern_read_weekly(/*{{{*/
   uint32_t unknown_b;
 
   unknown_b = READ_UINT32(p);  p += 4;
-  synce_trace("Unknown         = %08x (maybe something that is %f days?)", 
-      unknown_b, unknown_b / (60.0 * 24.0));
+  synce_trace("Unknown         = %08x (maybe something that is %f days or %f weeks?)", 
+      unknown_b, 1 + unknown_b / (60.0 * 24.0), (1 + unknown_b / (60.0 * 24.0)) / 7);
 
   self->interval          = READ_INT32(p);  p += 4;   /* 0x0e */
   synce_trace("Interval        = %08x", self->interval);
@@ -815,6 +815,7 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   bool success;
   uint8_t* p = buffer;
   uint8_t* p_saved = NULL;
+  
   RRA_RecurrencePattern* self = rra_recurrence_pattern_new();
   if (!self)
     return NULL;
@@ -864,10 +865,10 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   rra_exceptions_read_summary(self->exceptions, &p);
   
   self->pattern_start_date = READ_UINT32(p);  p += 4;
-  TRACE_DATE("Pattern start date   = %s", self->pattern_start_date);
+  TRACE_DATE("Pattern start date (localtime) = %s", self->pattern_start_date);
   self->pattern_end_date   = READ_UINT32(p);  p += 4;
   /*synce_trace("Pattern end date     = %08x", self->pattern_end_date);*/
-  TRACE_DATE("Pattern end date     = %s", self->pattern_end_date);
+  TRACE_DATE("Pattern end   date (localtime) = %s", self->pattern_end_date);
 
   if ((self->flags & RecurrenceEndMask) == RecurrenceDoesNotEnd && 
       self->pattern_end_date != RRA_DoesNotEndDate) 
@@ -909,9 +910,49 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   
   self->start_minute = READ_INT32(p); p += 4;
   self->end_minute   = READ_INT32(p); p += 4;
-  synce_trace("Start time      = %02i days, %02i hours, %02i min", 
+  
+  synce_trace("Start time         (localtime) = %02i days, %02i hours, %02i min", 
       self->start_minute / (60*24), (self->start_minute / 60) % 24, self->start_minute % 60);
-  synce_trace("End time        = %02i days, %02i hours, %02i min", 
+  synce_trace("End time           (localtime) = %02i days, %02i hours, %02i min", 
+      self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
+
+  /* ce stores recurring events as localtime with a timezone as blob.
+     we ignore the blob and get the timezone from the device */
+  {
+    RRA_Timezone tzi;
+    uint32_t minutes;
+    uint32_t utc_pattern_start_date;
+    uint32_t utc_pattern_end_date;
+    uint32_t utc_start_minute;
+    uint32_t utc_end_minute;
+
+    CeRapiInit();
+
+    rra_timezone_get(&tzi);
+    
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->start_minute)));
+    utc_pattern_start_date = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+    utc_start_minute       = minutes % MINUTES_PER_DAY;
+
+    /* pattern_start_date with end_minutes */
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->end_minute)));
+    utc_end_minute         = minutes % MINUTES_PER_DAY;
+
+    /* pattern_start_date with end_minutes */
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(&tzi, rra_minutes_to_unix_time(self->pattern_end_date + self->end_minute)));
+    utc_pattern_end_date   = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+
+    self->pattern_start_date = utc_pattern_start_date;
+    self->pattern_end_date   = utc_pattern_end_date;
+    self->start_minute       = utc_start_minute;
+    self->end_minute         = utc_end_minute;
+  }
+
+   TRACE_DATE("Pattern start date (utc)       = %s", self->pattern_start_date);
+   TRACE_DATE("Pattern end   date (utc)       = %s", self->pattern_end_date);
+  synce_trace("Start time         (utc)       = %02i days, %02i hours, %02i min", 
+      self->start_minute / (60*24), (self->start_minute / 60) % 24, self->start_minute % 60);
+  synce_trace("End time           (utc)       = %02i days, %02i hours, %02i min", 
       self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
 
   rra_exceptions_read_details(self->exceptions, &p);
@@ -983,6 +1024,11 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
   bool success = false;
   uint8_t* p = NULL;
 
+  uint32_t localtime_pattern_start_date = self->pattern_start_date;
+  uint32_t localtime_pattern_end_date   = self->pattern_end_date;
+  uint32_t localtime_start_minute       = self->start_minute;
+  uint32_t localtime_end_minute         = self->end_minute;
+
   if (!self || !buffer || !size) 
   {
     synce_error("One or more invalid function parameters");
@@ -994,6 +1040,43 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
 
   WRITE_UINT16(p, UNKNOWN_3004); p += 2;
   WRITE_UINT16(p, UNKNOWN_3004); p += 2;
+
+   TRACE_DATE("Pattern start date (utc)       = %s", localtime_pattern_start_date);
+   TRACE_DATE("Pattern end   date (utc)       = %s", localtime_pattern_end_date);
+  synce_trace("Start time         (utc)       = %02i days, %02i hours, %02i min", 
+      self->start_minute / (60*24), (self->start_minute / 60) % 24, self->start_minute % 60);
+  synce_trace("End time           (utc)       = %02i days, %02i hours, %02i min", 
+      self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
+
+  /* ce stores recurring events as localtime with a timezone as blob.
+     we ignore the blob and get the timezone from the device */
+  {
+    RRA_Timezone tzi;
+    uint32_t minutes;
+
+    CeRapiInit();
+
+    rra_timezone_get(&tzi);
+    
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->start_minute)));
+    localtime_pattern_start_date = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+    localtime_start_minute       = minutes % MINUTES_PER_DAY;
+
+    /* pattern_start_date with end_minutes */
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->end_minute)));
+    localtime_end_minute         = minutes % MINUTES_PER_DAY;
+
+    /* pattern_start_date with end_minutes */
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(self->pattern_end_date + self->end_minute)));
+    localtime_pattern_end_date   = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+  }
+
+   TRACE_DATE("Pattern start date (localtime) = %s", localtime_pattern_start_date);
+   TRACE_DATE("Pattern end   date (localtime) = %s", localtime_pattern_end_date);
+  synce_trace("Start time         (localtime) = %02i days, %02i hours, %02i min", 
+      localtime_start_minute / (60*24), (localtime_start_minute / 60) % 24, localtime_start_minute % 60);
+  synce_trace("End time           (localtime) = %02i days, %02i hours, %02i min", 
+      localtime_end_minute   / (60*24), (localtime_end_minute   / 60) % 24, localtime_end_minute   % 60);
 
   switch (self->recurrence_type)
   {
@@ -1053,7 +1136,7 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
         WRITE_UINT32(p, 0);
       else
         WRITE_UINT32(p, rra_recurrence_pattern_get_minutes_to_month(
-              self->pattern_start_date, self->interval)); 
+              localtime_pattern_start_date, self->interval)); 
       p += 4;
       WRITE_UINT32(p, self->interval);      p += 4;
       WRITE_UINT32(p, 0);                   p += 4;
@@ -1067,7 +1150,7 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
         WRITE_UINT32(p, 0);
       else
         WRITE_UINT32(p, rra_recurrence_pattern_get_minutes_to_month(
-              self->pattern_start_date, self->interval)); 
+              localtime_pattern_start_date, self->interval)); 
       p += 4;
       WRITE_UINT32(p, self->interval);            p += 4;
       WRITE_UINT32(p, 0);                         p += 4;
@@ -1086,14 +1169,14 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
 
   rra_exceptions_write_summary(self->exceptions, &p);
 
-  WRITE_UINT32(p, self->pattern_start_date); p += 4;
-  WRITE_UINT32(p, self->pattern_end_date); p += 4;
+  WRITE_UINT32(p, localtime_pattern_start_date); p += 4;
+  WRITE_UINT32(p, localtime_pattern_end_date); p += 4;
 
   WRITE_UINT32(p, UNKNOWN_3005); p += 4;
   WRITE_UINT32(p, UNKNOWN_3005); p += 4;
 
-  WRITE_UINT32(p, self->start_minute);  p += 4;
-  WRITE_UINT32(p, self->end_minute);    p += 4;
+  WRITE_UINT32(p, localtime_start_minute);  p += 4;
+  WRITE_UINT32(p, localtime_end_minute);    p += 4;
 
   rra_exceptions_write_details(self->exceptions, &p);
 

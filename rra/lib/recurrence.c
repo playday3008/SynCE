@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
@@ -66,8 +66,9 @@ static void recurrence_append_until_or_count(
   {
     case RecurrenceEndsOnDate:
       {
-        struct tm date = rra_minutes_to_struct(pattern->pattern_end_date);
-        strftime(buffer, size, ";UNTIL=%Y%m%d", &date);
+        struct tm date = rra_minutes_to_struct(pattern->pattern_end_date + pattern->start_minute);
+        strftime(buffer, size, ";UNTIL=%Y%m%dT%H%M%SZ", &date);
+        synce_trace("UNTIL: %s", buffer);
       }
       break;
 
@@ -279,8 +280,8 @@ static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
       continue;
     }
 
-    /*synce_trace("RRULE part: key=%s, value=%s", 
-        pair[0], pair[1]);*/
+    synce_trace("RRULE part: key=%s, value=%s", 
+        pair[0], pair[1]);
 
     if (STR_EQUAL(pair[0], "BYDAY"))
       replace_string_with_copy(&rrule->byday, pair[1]);
@@ -359,6 +360,7 @@ static bool recurrence_set_dates(
     goto exit;
 
 #if VERBOSE
+  synce_trace("start is %s", asctime(&start_struct));
   synce_trace("start is utc: %i, end is utc: %i", start_is_utc, end_is_utc);
 #endif
 
@@ -385,6 +387,9 @@ static bool recurrence_set_dates(
   }
   
   pattern->end_minute = pattern->start_minute + minutes;
+
+  synce_trace("pattern->start_minute/60: %u", pattern->start_minute / 60);
+  synce_trace("pattern->end_minute  /60: %u", pattern->end_minute   / 60);
 
   success = true;
 
@@ -418,6 +423,7 @@ static bool recurrence_set_exceptions(RRA_RecurrencePattern* pattern, RRA_MdirLi
     /* Date and time */
     exdate.tm_min = pattern->start_minute;
     exception->original_time = rra_minutes_from_struct(&exdate);
+    synce_trace("exception->original_time: %s", asctime(&exdate));
   }
 
   success = true;
@@ -431,8 +437,7 @@ bool recurrence_parse_rrule(
     mdir_line* mdir_dtstart,
     mdir_line* mdir_dtend,
     mdir_line* mdir_rrule, 
-    RRA_MdirLineVector* exdates,
-    RRA_Timezone* tzi)
+    RRA_MdirLineVector* exdates)
 {
   bool success = false;
   RRule rrule;
@@ -561,7 +566,7 @@ bool recurrence_parse_rrule(
           biased_mask>>=1;
 	}
 	
-	pattern->pattern_end_date = pattern->pattern_start_date + days_to_add*24*60;
+	pattern->pattern_end_date = pattern->pattern_start_date + days_to_add * MINUTES_PER_DAY;
 
         break;
       default:
@@ -573,24 +578,31 @@ bool recurrence_parse_rrule(
   else if (rrule.until)
   {
     struct tm until;
-    time_t until_;
     bool is_utc;
+    RRA_Timezone tzi;
+
+    CeRapiInit();
+    rra_timezone_get(&tzi);
 
     if (!parser_datetime_to_struct(rrule.until, &until, &is_utc))
       goto exit;
 
-    if (is_utc) {
-      until_ = mktime(&until);
-      until_ = rra_timezone_convert_to_utc(tzi, until_);
-      localtime_r(&until_, &until);
-      if (tzi == NULL) synce_error("INVALID TIMEZONE (NULL)!");
-#if VERBOSE
-      synce_trace("pattern_end: %s -> %s", rrule.until, asctime(&until));
-#endif
-    }
     pattern->flags |= RecurrenceEndsOnDate;
-    pattern->pattern_end_date = (rra_minutes_from_struct(&until)/MINUTES_PER_DAY)*MINUTES_PER_DAY;
 
+
+/*
+    if (is_utc) {
+      struct tm tmp;
+      pattern->pattern_end_date = (rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(rra_minutes_from_struct(&until))))/MINUTES_PER_DAY)*MINUTES_PER_DAY;
+      tmp = rra_minutes_to_struct(pattern->pattern_end_date);
+      synce_trace("rrule.until was date_time: %s -> %s", rrule.until, asctime(&tmp));
+    } else {
+*/
+      pattern->pattern_end_date = (rra_minutes_from_struct(&until)/MINUTES_PER_DAY)*MINUTES_PER_DAY;
+/*
+      synce_trace("rrule.until was only date: %s", rrule.until);
+    }
+*/
     /* XXX calculate pattern->occurrences */
   }
   else

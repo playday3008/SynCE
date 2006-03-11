@@ -3,6 +3,7 @@
 #define __rra_recurrence_pattern_h__
 
 #include <synce.h>
+#include <timezone.h>
 
 /* compatible with OlRecurrenceType in pimstore.h */
 typedef enum
