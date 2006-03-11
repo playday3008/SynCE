@@ -159,14 +159,6 @@ bool rra_appointment_to_vevent(/*{{{*/
   EventGeneratorData event_generator_data;
   memset(&event_generator_data, 0, sizeof(EventGeneratorData));
 
-  synce_log_set_level(SYNCE_LOG_LEVEL_HIGHEST);
-
-  if (!tzi) {
-    synce_trace("No Timezone");
-  } else {
-    synce_trace("Got a Timezone");
-  }
-
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
   {
     case RRA_APPOINTMENT_UTF8:
@@ -553,10 +545,6 @@ bool rra_appointment_from_vevent(/*{{{*/
   int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
-  
-  synce_log_set_level(SYNCE_LOG_LEVEL_HIGHEST);
-
-  synce_warning("rra_appointment_from_vevent");
   
 #if ENABLE_RECURRENCE
   event_parser_data.exdates = rra_mdir_line_vector_new();

@@ -588,21 +588,7 @@ bool recurrence_parse_rrule(
       goto exit;
 
     pattern->flags |= RecurrenceEndsOnDate;
-
-
-/*
-    if (is_utc) {
-      struct tm tmp;
-      pattern->pattern_end_date = (rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(rra_minutes_from_struct(&until))))/MINUTES_PER_DAY)*MINUTES_PER_DAY;
-      tmp = rra_minutes_to_struct(pattern->pattern_end_date);
-      synce_trace("rrule.until was date_time: %s -> %s", rrule.until, asctime(&tmp));
-    } else {
-*/
-      pattern->pattern_end_date = (rra_minutes_from_struct(&until)/MINUTES_PER_DAY)*MINUTES_PER_DAY;
-/*
-      synce_trace("rrule.until was only date: %s", rrule.until);
-    }
-*/
+    pattern->pattern_end_date = (rra_minutes_from_struct(&until)/MINUTES_PER_DAY)*MINUTES_PER_DAY;
     /* XXX calculate pattern->occurrences */
   }
   else
