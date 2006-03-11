@@ -407,7 +407,7 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread)
             kdDebug(2120) << "----------------------------------------------" << endl;
         }
 
-       int *pStep = new int;
+        int *pStep = new int;
         *pStep = totalSteps();
         postSyncThreadEvent(&SyncThread::setProgress, pStep);
 
