@@ -35,12 +35,14 @@
 
 QMap<QString, PimSyncManager *> PimSyncManager::pimSyncMap;
 
-PimSyncManager::PimSyncManager(QString pdaName ) : konnectorsLoaded( false ), pair(NULL), pdaName( pdaName )
+PimSyncManager::PimSyncManager(QString pdaName ) : konnectorsLoaded( false ), pair(NULL), pdaName( pdaName ), refCount(0)
 {}
 
 
 PimSyncManager::~PimSyncManager()
 {
+    kdDebug(2120) << "PimSyncManager::~PimSyncManager()" << endl;
+
     if ( konnectorsLoaded ) {
         delete mEngine;
         mEngine = 0;
@@ -92,6 +94,8 @@ void PimSyncManager::subscribeTo(Rra* rra, int type )
         }
         pair->save();
     }
+
+    refCount++;
 }
 
 
@@ -107,6 +111,12 @@ void PimSyncManager::unsubscribeFrom( int type )
             }
         }
         pair->save();
+    }
+
+    refCount--;
+
+    if (refCount == 0) {
+        delete this;
     }
 }
 

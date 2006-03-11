@@ -229,14 +229,12 @@ namespace KSync
     {
         kdDebug(2120) << "Loading finished" << endl;
         if ( _actualSyncType & TODOS ) {
-            kdDebug(2120) << "mCalendar loaded" << endl;
             mTodoSyncee->setIdentifier( "Todo" + mCalendarResourceIdentifier );
             TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
             c1Helper.load();
         }
 
         if ( _actualSyncType & EVENTS ) {
-            kdDebug(2120) << "mCalendar loaded" << endl;
             mEventSyncee->setIdentifier( "Event" + mCalendarResourceIdentifier );
             EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
             c2Helper.load();

@@ -61,7 +61,6 @@ private slots:
     void progressItemProgress( KPIM::ProgressItem*, unsigned int );
 
 private:
-    static int refcount;
     int type;
 };
 

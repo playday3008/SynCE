@@ -30,20 +30,16 @@
 #include "syncekonnectorbase.h"
 
 
-int RakiKPimSync::refcount = 0;
+//int RakiKPimSync::refcount = 0;
 
 RakiKPimSync::RakiKPimSync() : RakiSyncPlugin()
 {
-    refcount++;
 }
 
 
 RakiKPimSync::~RakiKPimSync()
 {
-    refcount--;
-    if (!refcount) {
-        delete PimSyncManager::self(pdaName );
-    }
+    kdDebug(2120) << "RakiKPimSync::~RakiKPimSync()" << endl;
 }
 
 

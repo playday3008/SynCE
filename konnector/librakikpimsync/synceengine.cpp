@@ -236,7 +236,6 @@ template<class T>
 }
 
 
-#include <kdebug.h>
 void SynCEEngine::doSync()
 {
   mCalendarSyncer.clear();

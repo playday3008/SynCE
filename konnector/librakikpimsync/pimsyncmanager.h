@@ -91,6 +91,7 @@ private:
     KonnectorPair *pair;
     KSync::SynCEEngine *mEngine;
     QString pdaName;
+    int refCount;
 
     class Private;
     Private *d;

@@ -229,14 +229,6 @@ namespace KSync
                 purgeRemovedEntries( mTodoSyncee );
                 TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
                 c1Helper.save();
-        /*
-                KCal::Todo::List todoList = mTodoCalendar.todos();
-                KCal::Todo::List::iterator todoIt;
-                for ( todoIt = todoList.begin(); todoIt != todoList.end(); ++todoIt ) {
-                    mTodoCalendar.deleteTodo( *todoIt );
-                    mCalendar.addTodo(*todoIt);
-                }
-        */
                 if ( !mCalendar.save( mCalendarFile ) ) {
                     KMessageBox::error(0, "Error writing to calendar " + mCalendarFile + ". Please check permissions.",
                                        QString("Error writing to local calendar"));
@@ -256,14 +248,6 @@ namespace KSync
                 purgeRemovedEntries( mEventSyncee );
                 EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
                 c2Helper.save();
-                /*
-                KCal::Event::List eventList = mEventCalendar.events();
-                KCal::Event::List::iterator eventIt;
-                for ( eventIt = eventList.begin(); eventIt != eventList.end(); ++eventIt ) {
-                    mEventCalendar.deleteEvent( *eventIt );
-                    mCalendar.addEvent(*eventIt);
-                }
-                */
                 if ( !mCalendar.save( mCalendarFile ) ) {
                     KMessageBox::error(0, "Error writing to calendar " + mCalendarFile + ". Please check permissions.",
                                        QString("Error writing to local calendar"));
@@ -321,11 +305,6 @@ error:
         if ( !mCalendarFile.isEmpty() ) {
             if ( mEventSyncee && ( _actualSyncType & EVENTS )) {
                 mEventSyncee->reset();
-        /*
-                mEventCalendar.deleteAllEvents();
-                mEventCalendar.deleteAllTodos();
-                mEventCalendar.deleteAllJournals();
-        */
                 mCalendar.deleteAllEvents();
                 mCalendar.deleteAllTodos();
                 mCalendar.deleteAllJournals();
@@ -333,11 +312,6 @@ error:
 
             if ( mTodoSyncee && ( _actualSyncType & TODOS )) {
                 mTodoSyncee->reset();
-        /*
-                mTodoCalendar.deleteAllEvents();
-                mTodoCalendar.deleteAllTodos();
-                mTodoCalendar.deleteAllJournals();
-        */
                 mCalendar.deleteAllEvents();
                 mCalendar.deleteAllTodos();
                 mCalendar.deleteAllJournals();
