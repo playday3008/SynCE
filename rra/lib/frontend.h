@@ -1,5 +1,5 @@
-#ifndef __timezone_h__
-#define __timezone_h__
+#ifndef __frontend_h__
+#define __frontend_h__
 
 #include <synce.h>
 
