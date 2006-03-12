@@ -28,6 +28,7 @@ extern "C" {
 #include <rra/appointment.h>
 #include <rra/task.h>
 #include <rra/contact.h>
+#include <rra/frontend.h>
 }
 
 #include <kabc/addressee.h>
@@ -541,6 +542,12 @@ QString Rra::getPdaName() const
 bool Rra::isConnected() const
 {
     return (useCount>0);
+}
+
+
+void Rra::setFrontEnd(int frontEnd) const
+{
+    rra_frontend_set(frontEnd);
 }
 
 

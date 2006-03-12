@@ -100,6 +100,7 @@ public:
     bool connect();
     void disconnect();
 
+    void setFrontEnd(int frontEnd) const;
     bool getTimezone(RRA_Timezone *tzi);
 
 
