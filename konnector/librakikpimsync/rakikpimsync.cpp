@@ -28,6 +28,7 @@
 #include "paireditordialog.h"
 #include <kitchensync/multisynk/konnectorpair.h>
 #include "syncekonnectorbase.h"
+#include <rra/frontend.h>
 
 
 //int RakiKPimSync::refcount = 0;
@@ -140,6 +141,7 @@ void RakiKPimSync::init(Rra* rra,  SyncTaskListItem *item, QString pdaName, QWid
                          QString serviceName )
 {
     kdDebug( 2120 ) << "... init" << endl;
+    rra->setFrontEnd(ID_FRONTEND_KDEPIM);
     RakiSyncPlugin::init(rra, item, pdaName, parent, serviceName );
     subscribeTo(rra);
 }
