@@ -91,6 +91,9 @@ void PairEditorWidget::setPair( KonnectorPair *pair )
         KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( konnector[0] );
         if (k) {
             k->initDefaultFilters();
+        } else {
+            kdDebug(2120) << "Could not load SynCEDevice - konnector" << endl;
+            exit(0);
         }
         manager->add( konnector[ 0 ] );
     }
@@ -103,6 +106,9 @@ void PairEditorWidget::setPair( KonnectorPair *pair )
         KSync::SynCEKonnectorBase *k = dynamic_cast<KSync::SynCEKonnectorBase *>( konnector[1] );
         if (k) {
             k->initDefaultFilters();
+        } else {
+            kdDebug(2120) << "Could not load SynCEDesktop - konnector" << endl;
+            exit(0);
         }
         manager->add( konnector[ 1 ] );
     }
