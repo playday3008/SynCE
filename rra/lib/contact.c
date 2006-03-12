@@ -845,6 +845,7 @@ typedef enum _VcardState
 	VCARD_STATE_NAME,
 	VCARD_STATE_TYPE,
 	VCARD_STATE_VALUE,
+  VCARD_STATE_MULTILINE,
 } VcardState;
 
 #define myisblank(c)    ((c) == ' '  || (c) == '\t')
@@ -1580,6 +1581,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	Parser parser;
 	size_t max_field_count = *field_count;
 	const char* p = vcard;
+  const char* vcard_end = vcard + strlen(vcard);
 	int state = VCARD_STATE_NEWLINE;
   int count;
 	const char* name = NULL;
@@ -1588,6 +1590,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	const char* type_end = NULL;
 	const char* value = NULL;
 	const char* value_end = NULL;
+  char*       value_ml = NULL;
 
   struct FieldStrings *queue_field  = malloc( MAX_ENQUEUE_FIELD * sizeof( struct FieldStrings ) ); 
 	struct FieldStrings *tmp_field = malloc( 1 * sizeof( struct FieldStrings ) ); 
@@ -1629,7 +1632,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 			case VCARD_STATE_NEWLINE:/*{{{*/
 				if (myisblank(*p))
 				{
-					synce_error("Can't handle multiline values");
+          synce_error("Failed to handle multiline values");
 					goto exit;
 				}
 
@@ -1645,6 +1648,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 					type_end  = NULL;
 					value     = NULL;
 					value_end = NULL;
+          value_ml  = NULL;
 
 					state = VCARD_STATE_NAME;
 				}
@@ -1681,6 +1685,21 @@ static bool rra_contact_from_vcard2(/*{{{*/
 				{
 					value_end = p;
 
+          if ((p+2) < vcard_end && myisblank(*(p+2)))
+          {
+            value_ml = malloc(strlen(vcard) - (value - vcard));
+            value_ml[0] = '\0';
+        
+            strncat(value_ml, value, value_end - value);
+        
+            p = p + 3;
+            value = p;
+        
+            state = VCARD_STATE_MULTILINE;
+        
+            break;
+          }
+
 					tmp_field->name  = strndup(name, name_end - name);
 					tmp_field->type  = type ? strndup(type, type_end - type) : strdup("");
 					tmp_field->value = strndup(value, value_end - value);
@@ -1689,9 +1708,34 @@ static bool rra_contact_from_vcard2(/*{{{*/
           enqueue_field(queue_field, &count_field, tmp_field);
 
 					state = VCARD_STATE_NEWLINE;
+
+          if (value_ml)
+            free(value_ml);
 				}
 				p++;
 				break;/*}}}*/
+
+      case VCARD_STATE_MULTILINE:/*{{{*/
+        if (myisnewline(*p))
+        {
+          value_end = p;
+            
+          strncat(value_ml, value, value_end - value);
+            
+          if ((p+2) < vcard_end && myisblank(*(p+2)))
+          {
+            p = p + 3;
+            value = p;
+          }
+          else
+          {
+            value = value_ml;
+            state = VCARD_STATE_VALUE;
+          }
+        }
+        else
+          p++;
+        break;/*}}}*/
 
 			default:
 				synce_error("Unknown state: %i", state);
