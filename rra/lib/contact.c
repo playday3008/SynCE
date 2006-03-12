@@ -2,6 +2,8 @@
 #define _GNU_SOURCE 1
 #include "contact.h"
 #include "contact_ids.h"
+#include "synce_ids.h"
+#include "frontend.h"
 #include "strbuf.h"
 #include "dbstream.h"
 #include "strv.h"
@@ -513,7 +515,92 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 				strbuf_append_crlf(vcard);
 				break;
+/* FOOBAR */
+			case ID_IMADDRESS:
+				switch(rra_frontend_get())
+				{
+					case ID_FRONTEND_KDEPIM:
+						synce_warning("ID_IMADDRESS");
+						strbuf_append(vcard, "X-KADDRESSBOOK-X-IMAddress:");
+						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+						strbuf_append_crlf(vcard);
+						break;
+					default:
+						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+						break;
+				}
+				break;
 
+			case ID_MESSAGING_ICQ:
+				switch(rra_frontend_get())
+				{
+					case ID_FRONTEND_KDEPIM:
+						synce_warning("ID_MESSAGING_ICQ");
+						strbuf_append(vcard, "X-messaging/icq-All:");
+						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+						strbuf_append_crlf(vcard);
+					default:
+						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+						break;
+				}
+				break;
+
+			case ID_MESSAGING_XMPP:
+				switch(rra_frontend_get())
+				{
+					case ID_FRONTEND_KDEPIM:
+						synce_warning("ID_MESSAGING_XMPP");
+						strbuf_append(vcard, "X-messaging/xmpp-All:");
+						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+						strbuf_append_crlf(vcard);
+					default:
+						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+						break;
+				}
+				break;
+
+			case ID_MESSAGING_MSN:
+				switch(rra_frontend_get())
+				{
+					case ID_FRONTEND_KDEPIM:
+						synce_warning("ID_MESSAGING_MSN");
+						strbuf_append(vcard, "X-messaging/msn-All:");
+						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+						strbuf_append_crlf(vcard);
+					default:
+						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+						break;
+				}
+				break;
+
+			case ID_MESSAGING_GADU:
+				switch(rra_frontend_get())
+				{
+					case ID_FRONTEND_KDEPIM:
+						synce_warning("ID_MESSAGING_GADU");
+						strbuf_append(vcard, "X-messaging/gadu-All:");
+						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+						strbuf_append_crlf(vcard);
+					default:
+						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+						break;
+				}
+				break;
+
+			case ID_NICKNAME:
+				switch(rra_frontend_get())
+				{
+					case ID_FRONTEND_KDEPIM:
+						synce_warning("ID_NICKNAME");
+						strbuf_append(vcard, "NICKNAME:");
+						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+						strbuf_append_crlf(vcard);
+					default:
+						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+						break;
+				}
+				break;
+/* FOOBAR */
 			default:
 				synce_warning("Did not handle field with ID %04x", pFields[i].propid >> 16);
 				break;
@@ -832,6 +919,12 @@ typedef enum _field_index
   INDEX_EMAIL,
   INDEX_EMAIL2,
   INDEX_EMAIL3,
+  INDEX_IMADDRESS,
+  INDEX_MESSAGING_ICQ,
+  INDEX_MESSAGING_XMPP,
+  INDEX_MESSAGING_MSN,
+  INDEX_MESSAGING_GADU,
+  INDEX_NICKNAME,
   ID_COUNT
 } field_index;
 
@@ -915,7 +1008,13 @@ static const uint32_t field_id[ID_COUNT] =
   ID_OTHER_COUNTRY,
   ID_EMAIL,
   ID_EMAIL2,
-  ID_EMAIL3
+  ID_EMAIL3,
+  ID_IMADDRESS,
+  ID_MESSAGING_ICQ,
+  ID_MESSAGING_XMPP,
+  ID_MESSAGING_MSN,
+  ID_MESSAGING_GADU,
+  ID_NICKNAME
 };
 
 static char* strdup_quoted_printable(const unsigned char* source)/*{{{*/
@@ -1323,6 +1422,32 @@ static bool parser_handle_field(/*{{{*/
   {
     add_string(parser, INDEX_ASSISTANT, type, value);
   }
+/* FOOBAR */
+  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-KADDRESSBOOK-X-IMAddress"))
+  {
+    add_string(parser, INDEX_IMADDRESS, type, value);
+  }
+  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-messaging/icq-All"))
+  {
+    add_string(parser, INDEX_MESSAGING_ICQ, type, value);
+  }
+  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-messaging/xmpp-All"))
+  {
+    add_string(parser, INDEX_MESSAGING_XMPP, type, value);
+  }
+  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-messaging/msn-All"))
+  {
+    add_string(parser, INDEX_MESSAGING_MSN, type, value);
+  }
+  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-messaging/gadu-All"))
+  {
+    add_string(parser, INDEX_MESSAGING_GADU, type, value);
+  }
+  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "NICKNAME"))
+  {
+    add_string(parser, INDEX_NICKNAME, type, value);
+  }
+/* FOOBAR */
 
 #if 0
 	else if (STR_EQUAL(name, ""))

@@ -10,6 +10,7 @@ include_HEADERS = \
 	matchmaker.h \
 	syncmgr.h \
 	timezone.h \
+	frontend.h \
 	task.h \
 	uint32vector.h
 
@@ -35,6 +36,7 @@ librra_la_SOURCES = \
 	syncmgr.h          syncmgr.c \
 	task.h             task.c \
 	timezone.h         timezone.c \
+	frontend.h         frontend.c \
 	uint32vector.h     uint32vector.c
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
