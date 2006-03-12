@@ -59,6 +59,7 @@ public:
     bool getMasqueradeEnabled();
     bool getSyncAtConnect();
     bool getCloseWhenCompleted();
+    bool getDisconnectWhenCompleted();
     QString getDeviceIp();
     bool isNewPda();
     void setPartner(QString partnerName, uint32_t partnerId);
@@ -99,6 +100,7 @@ private:
     QDateTime partnershipCreated;
     bool syncAtConnect;
     bool closeWhenCompleted;
+    bool disconnectWhenCompleted;
     bool newPda;
     QString deviceIp;
     int osVersion;

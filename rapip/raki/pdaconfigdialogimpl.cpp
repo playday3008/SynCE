@@ -73,6 +73,7 @@ void PdaConfigDialogImpl::updateFields()
     masqEnabledCheckbox->setChecked(masqEnabled);
     syncAtConnectCheckbox->setChecked(syncAtConnect);
     closeWhenCompletedCheckbox->setChecked(closeWhenCompleted);
+    disconnectWhenCompletedCheckbox->setChecked(disconnectWhenCompleted);
     for (item = syncTaskItemList.first(); item; item = syncTaskItemList.next()) {
         item->undo();
     }
@@ -108,6 +109,7 @@ void PdaConfigDialogImpl::writeConfig()
     ksConfig->writeEntry("Masquerade", masqEnabled);
     ksConfig->writeEntry("SyncAtConnect", syncAtConnect);
     ksConfig->writeEntry("CloseWhenCompleted", closeWhenCompleted);
+    ksConfig->writeEntry("DisconnectWhenCompleted", disconnectWhenCompleted);
     ksConfig->writeEntry("PartnerName", partnerName);
     ksConfig->writeEntry("PartnerId", partnerId);
     ksConfig->writeEntry("PartnershipCreated", partnershipCreated);
@@ -136,6 +138,7 @@ void PdaConfigDialogImpl::readConfig()
         password = ksConfig->readEntry("Password");
         syncAtConnect = ksConfig->readBoolEntry("SyncAtConnect");
         closeWhenCompleted = ksConfig->readBoolEntry("CloseWhenCompleted");
+        disconnectWhenCompleted = ksConfig->readBoolEntry("DisconnectWhenCompleted");
         partnerName = ksConfig->readEntry("PartnerName");
         partnerId = ksConfig->readUnsignedLongNumEntry("PartnerId", 0);
         partnershipCreated = ksConfig->readDateTimeEntry("PartnershipCreated",
@@ -194,6 +197,7 @@ void PdaConfigDialogImpl::applySlot()
         masqEnabled = masqEnabledCheckbox->isChecked();
         syncAtConnect = syncAtConnectCheckbox->isChecked();
         closeWhenCompleted = closeWhenCompletedCheckbox->isChecked();
+        disconnectWhenCompleted = disconnectWhenCompletedCheckbox->isChecked();
         for (syncTaskListItem = syncTaskItemList.first(); syncTaskListItem;
                 syncTaskListItem = syncTaskItemList.next()) {
             syncTaskListItem->makePersistent();
@@ -343,4 +347,10 @@ void PdaConfigDialogImpl::show()
 bool PdaConfigDialogImpl::getCloseWhenCompleted()
 {
     return closeWhenCompleted;
+}
+
+
+bool PdaConfigDialogImpl::getDisconnectWhenCompleted()
+{
+    return disconnectWhenCompleted;
 }

@@ -751,4 +751,8 @@ void PDA::syncFinished()
     if (configDialog->getCloseWhenCompleted()) {
         syncDialog->reject(true);
     }
+
+    if (configDialog->getDisconnectWhenCompleted()) {
+        this->disconnectPda();
+    }
 }
