@@ -43,6 +43,8 @@ static void strbuf_append_escaped(StrBuf* result, char* source, uint32_t flags)/
 		switch (*p)
 		{
 			case '\r': 				/* CR */
+      case 19: 		  		/* XOFF */
+      case 31: 		  		/* Unit separator */
 				/* ignore */
 				break;		
 
@@ -286,18 +288,16 @@ static bool rra_contact_to_vcard2(/*{{{*/
         strbuf_append_date(vcard, "BDAY", &pFields[i].val.filetime);
         break;
       
-#if 0
 			case ID_NOTE:
 				{
 					unsigned j;
-					for (j = 0; j < pFields[i].val.blob.dwCount && pFields[i].val.blob.lpb[i]; j++)
+          for (j = 0; j < pFields[i].val.blob.dwCount && pFields[i].val.blob.lpb[j]; j++)
 						;
 
 					if (j == pFields[i].val.blob.dwCount)
 					{
 						strbuf_append(vcard, "NOTE:");
-						/* XXX: need to handle newlines! */
-						strbuf_append(vcard, (const char*)pFields[i].val.blob.lpb);
+            strbuf_append_escaped(vcard, pFields[i].val.blob.lpb, flags);
 						strbuf_append_crlf(vcard);
 					}
 					else
@@ -306,7 +306,6 @@ static bool rra_contact_to_vcard2(/*{{{*/
 					}
 				}
 				break;
-#endif
 
 			case ID_SUFFIX:
 				suffix = pFields[i].val.lpwstr;
@@ -877,9 +876,7 @@ typedef struct _Parser
 
 typedef enum _field_index
 {
-/*
   INDEX_NOTE,
-*/
   INDEX_SUFFIX,
   INDEX_FIRST_NAME,
   INDEX_WORK_TEL,
@@ -967,9 +964,7 @@ static uint32_t address_index[ADDRESS_FIELD_COUNT][3] =
 
 static const uint32_t field_id[ID_COUNT] =
 {
-/*
   ID_NOTE,
-*/
   ID_SUFFIX,
   ID_FIRST_NAME,
   ID_WORK_TEL,
@@ -1156,6 +1151,36 @@ static void add_string(Parser* parser, uint32_t index, const char* type, char* v
       field->val.lpwstr = wstr_from_ascii(value);
   
     assert(field->val.lpwstr);
+  
+    if (converted)
+      free(converted);
+  }
+}/*}}}*/
+
+static void add_blob(Parser* parser, uint32_t index, const char* type, char* data)/*{{{*/
+{
+  char* converted = NULL;
+  CEPROPVAL* field = &parser->fields[index];
+
+  assert(data);
+
+  if (field->propid & CEVT_FLAG_EMPTY)
+  {
+    field->propid = (field_id[index] << 16) | CEVT_BLOB;
+
+    if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
+    {
+      data = converted = strdup_quoted_printable(data);
+      assert(data);
+    }
+  
+    unescape_string(data);
+    assert(data);
+ 
+    field->val.blob.dwCount = strlen(data);
+    field->val.blob.lpb = malloc(field->val.blob.dwCount);
+    assert(field->val.blob.lpb);
+    memcpy(field->val.blob.lpb, data, field->val.blob.dwCount);
   
     if (converted)
       free(converted);
@@ -1431,6 +1456,10 @@ static bool parser_handle_field(/*{{{*/
   {
     add_string(parser, INDEX_ASSISTANT, type, value);
   }
+  else if (STR_EQUAL(name, "NOTE"))
+  {
+    add_blob(parser, INDEX_NOTE, type, value);
+  }
 /* FOOBAR */
   else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-KADDRESSBOOK-X-IMAddress"))
   {
@@ -1625,6 +1654,10 @@ static bool rra_contact_from_vcard2(/*{{{*/
     case INDEX_ANNIVERSARY:
       field->propid = (field_id[count] << 16) |
           CEVT_FLAG_EMPTY | CEVT_FILETIME;
+      break;
+    case INDEX_NOTE:
+      field->propid = (field_id[count] << 16) |
+          CEVT_FLAG_EMPTY | CEVT_BLOB;
       break;
     default:
       field->propid = (field_id[count] << 16) |
