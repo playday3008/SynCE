@@ -738,7 +738,15 @@ static bool rra_contact_to_vcard2(/*{{{*/
         extended++[-1] = '\0';
     }
 
-		strbuf_append_type(vcard, "ADR", "POSTAL", flags);
+    switch(rra_frontend_get())
+    {
+      case ID_FRONTEND_EVOLUTION:
+        strbuf_append_type(vcard, "ADR", "OTHER", flags);
+        break;
+      default:
+        strbuf_append_type(vcard, "ADR", "POSTAL", flags);
+        break;
+    }
 		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
     strbuf_append_escaped      (vcard, extended, flags); /* extended address */
@@ -1241,7 +1249,7 @@ static bool parser_handle_field(/*{{{*/
 		char** address = strsplit(value, ';');
 		int where;
 
-		if (STR_IN_STR(type, "POSTAL"))
+    if (STR_IN_STR(type, "POSTAL") || STR_IN_STR(type, "OTHER"))
 		        where = OTHER;
 		else if (STR_IN_STR(type, "WORK"))
 			where = WORK;
