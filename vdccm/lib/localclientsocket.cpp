@@ -73,6 +73,6 @@ bool LocalClientSocket::connect()
         return false;
     }
 
-    return this->setSocket(fd, raddr, path);
+    return this->setSocket(fd, raddr);
 }
 

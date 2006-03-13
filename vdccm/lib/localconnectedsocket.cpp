@@ -36,7 +36,6 @@ LocalConnectedSocket::LocalConnectedSocket(const LocalConnectedSocket &localConn
  : LocalSocket(localConnectedSocket, releaseFromManager)
 {
     memcpy(&this->remoteAddress, &localConnectedSocket.remoteAddress, sizeof(remoteAddress));
-    this->path = localConnectedSocket.path;
     this->connected = localConnectedSocket.connected;
 }
 
@@ -68,13 +67,12 @@ bool LocalConnectedSocket::isConnected() const
 /*!
     \fn LocalConnectedSocket::setSocket(const int descriptor, const struct sockaddr_un remoteAddress, const string path)
  */
- bool LocalConnectedSocket::setSocket(const int descriptor, const struct sockaddr_un remoteAddress, const string path)
+ bool LocalConnectedSocket::setSocket(const int descriptor, const struct sockaddr_un remoteAddress)
 {
     socklen_t namelen = sizeof(struct sockaddr_un);
 
     setDescriptor(descriptor);
     memcpy(&this->remoteAddress, &remoteAddress, sizeof(remoteAddress));
-    this->path = path;
 
     if (getsockname(descriptor, (struct sockaddr *) &localAddress, &namelen) < 0) {
         return false;

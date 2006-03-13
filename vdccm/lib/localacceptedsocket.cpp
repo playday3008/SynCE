@@ -77,7 +77,7 @@ LocalAcceptedSocket LocalAcceptedSocket::generate(int fd, LocalServerSocket* loc
         return localAcceptedSocket;
     }
 
-    localAcceptedSocket.setSocket(fd, addr, localServerSocket->getLocalPath());
+    localAcceptedSocket.setSocket(fd, addr);
     localAcceptedSocket.setConnected(true);
     localAcceptedSocket.setServerSocket(localServerSocket);
 

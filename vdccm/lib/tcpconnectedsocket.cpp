@@ -37,7 +37,6 @@ TCPConnectedSocket::TCPConnectedSocket(const TCPConnectedSocket &tcpConnectedSoc
  : TCPSocket(tcpConnectedSocket, releaseFromManager)
 {
     memcpy(&this->remoteAddress, &tcpConnectedSocket.remoteAddress, sizeof(remoteAddress));
-    this->remoteHostent = tcpConnectedSocket.remoteHostent;
     this->connected = tcpConnectedSocket.connected;
 }
 
@@ -46,7 +45,6 @@ TCPConnectedSocket::TCPConnectedSocket()
  : TCPSocket()
 {
     this->connected = false;
-    this->remoteHostent = NULL;
 }
 
 
@@ -77,13 +75,12 @@ bool TCPConnectedSocket::isConnected() const
 /*!
     \fn TCPConnectedSocket::setSocket(int descriptor, struct sockaddr_in remoteAddress, const struct hostent * remoteHostent)
  */
- bool TCPConnectedSocket::setSocket(int descriptor, struct sockaddr_in remoteAddress, const struct hostent * remoteHostent)
+ bool TCPConnectedSocket::setSocket(int descriptor, struct sockaddr_in remoteAddress)
 {
     socklen_t namelen = sizeof(struct sockaddr_in);
 
     setDescriptor(descriptor);
     memcpy(&this->remoteAddress, &remoteAddress, sizeof(remoteAddress));
-    this->remoteHostent = remoteHostent;
     if (getsockname(descriptor, (struct sockaddr *) &localAddress, &namelen) < 0) {
         return false;
     }
@@ -148,10 +145,7 @@ bool TCPConnectedSocket::_generate(int fd)
         return false;
     }
 
-    struct hostent *hostent = gethostbyaddr((char *) &addr.sin_addr.s_addr,
-        sizeof(addr.sin_addr.s_addr), AF_INET);
-
-    setSocket(fd, addr, hostent);
+    setSocket(fd, addr);
     setConnected(true);
 
     return true;

@@ -39,19 +39,17 @@ public:
     LocalConnectedSocket& operator=(const LocalConnectedSocket &localConnectedSocket)
     {
         memcpy(&this->remoteAddress, &localConnectedSocket.remoteAddress, sizeof(remoteAddress));
-        this->path = localConnectedSocket.path;
         this->connected = localConnectedSocket.connected;
 
         return *this;
     }
 
 protected:
-    bool setSocket(const int descriptor, const struct sockaddr_un remoteAddress, const std::string path);
+    bool setSocket(const int descriptor, const struct sockaddr_un remoteAddress);
     void setConnected(const bool connected);
 
 private:
     bool connected;
-    std::string path;
     struct sockaddr_un remoteAddress;
 
 friend class LocalServerSocket;

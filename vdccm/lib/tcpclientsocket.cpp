@@ -90,7 +90,7 @@ bool TCPClientSocket::connect()
         return false;
     }
 
-    return this->setSocket(fd, raddr, rhostent);
+    return this->setSocket(fd, raddr);
 }
 
 

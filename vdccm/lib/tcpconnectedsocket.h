@@ -40,7 +40,6 @@ public:
     TCPConnectedSocket& operator=(const TCPConnectedSocket &tcpConnectedSocket)
     {
         memcpy(&this->remoteAddress, &tcpConnectedSocket.remoteAddress, sizeof(remoteAddress));
-        this->remoteHostent = tcpConnectedSocket.remoteHostent;
         this->connected = tcpConnectedSocket.connected;
 
         return *this;
@@ -52,16 +51,13 @@ public:
 
 protected:
     TCPConnectedSocket();
-    bool setSocket(int descriptor, struct sockaddr_in remoteAddress, const struct hostent * remoteHostent);
+    bool setSocket(int descriptor, struct sockaddr_in remoteAddress);
     void setConnected(bool connected);
     bool _generate(int fd);
 
 private:
     bool connected;
-    const struct hostent *remoteHostent;
     struct sockaddr_in remoteAddress;
-
-//friend class TCPServerSocket;
 };
 
 #endif
