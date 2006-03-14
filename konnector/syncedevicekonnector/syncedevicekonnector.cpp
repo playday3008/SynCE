@@ -200,15 +200,13 @@ namespace KSync
                 subscribtionCount++;
             }
 
-            if ( !m_rra->getIds() ) {
-                error = true;
+            if ( error = !m_rra->getIds() ) {
+                KMessageBox::error(0, QString("Failur during ID-request from device"),
+                                   QString("Error reading from") + m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
+                                   " synchronizer");
+                emit synceeReadError(this);
+                goto error;
             }
-        }
-
-        if (error) {
-            subscribtionCount--;
-            emit synceeReadError(this);
-            goto error;
         }
 
         if ( mAddrHandler && contactsEnabled && ( _actualSyncType & CONTACTS ) ) {
@@ -218,7 +216,6 @@ namespace KSync
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mAddrHandler->getTypeId())->name2 +
                                     " synchronizer");
-                subscribtionCount--;
                 emit synceeReadError( this );
                 goto error;
             }
@@ -231,7 +228,6 @@ namespace KSync
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mTodoHandler->getTypeId())->name2 +
                                     " synchronizer");
-                subscribtionCount--;
                 emit synceeReadError( this );
                 goto error;
             }
@@ -244,7 +240,6 @@ namespace KSync
                                     QString("Error reading from ") +
                                     m_rra->getTypeForId(mEventHandler->getTypeId())->name2 +
                                     " synchronizer");
-                subscribtionCount--;
                 emit synceeReadError( this );
                 goto error;
             }
@@ -354,8 +349,8 @@ namespace KSync
     bool SynCEDeviceKonnector::connectDevice()
     {
         PocketPCCommunication::PimHandler::resetError();
+        error = false;
         if (subscribtionCount == 0) {
-            error = false;
             m_rra->connect();
         }
 
