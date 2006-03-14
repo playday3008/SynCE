@@ -291,14 +291,23 @@ static bool rra_contact_to_vcard2(/*{{{*/
 			case ID_NOTE:
 				{
 					unsigned j;
+					char *lpb_terminated;
+
           for (j = 0; j < pFields[i].val.blob.dwCount && pFields[i].val.blob.lpb[j]; j++)
 						;
 
 					if (j == pFields[i].val.blob.dwCount)
 					{
+						lpb_terminated=malloc(pFields[i].val.blob.dwCount+1);
+						assert(lpb_terminated);
+						memcpy(lpb_terminated, pFields[i].val.blob.lpb, pFields[i].val.blob.dwCount);
+						lpb_terminated[pFields[i].val.blob.dwCount]='\0';
+
 						strbuf_append(vcard, "NOTE:");
-            strbuf_append_escaped(vcard, pFields[i].val.blob.lpb, flags);
+            strbuf_append_escaped(vcard, lpb_terminated, flags);
 						strbuf_append_crlf(vcard);
+
+						free(lpb_terminated);
 					}
 					else
 					{
