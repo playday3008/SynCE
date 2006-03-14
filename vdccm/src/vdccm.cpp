@@ -27,7 +27,6 @@
 #include "multiplexer.h"
 #include "cmdlineargs.h"
 #include "utils.h"
-#include <synce.h>
 #include <synce_log.h>
 #include <iostream>
 #include <wait.h>
@@ -51,6 +50,8 @@ int main(int argc, char *argv[])
 
     Utils::setupSignals();
 
+    Multiplexer* mux = Multiplexer::self();
+
     RapiServer rapiServer(990);
 
     if (!rapiServer.listen()) {
@@ -58,16 +59,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    Utils::dropRootPrivileg();
-
-    Multiplexer* mux = Multiplexer::self();
-
     if (!mux->getReadManager()->add(&rapiServer)) {
         synce_error("Could not add rapiServer to manager - rapi");
         rapiServer.shutdown();
         delete mux;
         exit(1);
     }
+
+    Utils::dropRootPrivileg();
 
     DeviceManager deviceManager;
 
