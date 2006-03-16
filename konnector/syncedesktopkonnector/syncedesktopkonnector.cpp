@@ -284,8 +284,6 @@ namespace KSync
         if ( _actualSyncType & TODOS ) {
             if ( mCalendarResource ) {
                 purgeRemovedEntries( mTodoSyncee );
-                TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
-                c1Helper.save();
                 KCal::CalendarResources::Ticket *ticket = mCalendar.requestSaveTicket( mCalendarResource );
                 if ( !ticket ) {
                     KMessageBox::error(0, "Error during ticket-request to save Calendar.",
@@ -300,6 +298,8 @@ namespace KSync
                     emit synceeWriteError( this );
                     goto error;
                 }
+                TodoSyncHistory c1Helper( mTodoSyncee, storagePath() + mMd5sumTodo );
+                c1Helper.save();
             } else {
                 KMessageBox::error(0, "You didn't configure the Task-Synchronizer. Please do so and synchronize again.",
                                    QString("Error writing to local calendar"));
@@ -311,8 +311,6 @@ namespace KSync
         if ( _actualSyncType & EVENTS ) {
             if ( mCalendarResource ) {
                 purgeRemovedEntries( mEventSyncee );
-                EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
-                c2Helper.save();
                 KCal::CalendarResources::Ticket *ticket = mCalendar.requestSaveTicket( mCalendarResource );
                 if ( !ticket ) {
                     KMessageBox::error(0, "Error during ticket-request to save Calendar.",
@@ -327,6 +325,8 @@ namespace KSync
                     emit synceeWriteError( this );
                     goto error;
                 }
+                EventSyncHistory c2Helper( mEventSyncee, storagePath() + mMd5sumEvent );
+                c2Helper.save();
             } else {
                 KMessageBox::error(0, "You didn't configure the Appointment-Synchronizer. Please do so and synchronize again.",
                                    QString("Error writing to local calendar"));
@@ -338,8 +338,6 @@ namespace KSync
         if ( _actualSyncType & CONTACTS ) {
             if ( mContactResource ) {
                 purgeRemovedEntries( mAddressBookSyncee );
-                AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
-                aHelper.save();
                 KABC::Ticket *ticket = mAddressBook.requestSaveTicket(mContactResource);
                 if ( !ticket ) {
                     KMessageBox::error(0, "Error during ticket-request to save Addressbook.",
@@ -356,6 +354,8 @@ namespace KSync
                     mContactResource->close();
                     goto error;
                 }
+                AddressBookSyncHistory aHelper( mAddressBookSyncee, storagePath() + "/" + mMd5sumAbk );
+                aHelper.save();
                 mContactResource->close();
             } else {
                 KMessageBox::error(0, "You didn't configure the Contact-Synchronizer. Please do so and synchronize again.",
