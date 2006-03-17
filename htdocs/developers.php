@@ -49,6 +49,8 @@ the GNOME applications in SynCE.</p>
 <p><a href="mailto:mbier@users.sourceforge.net">Markus Biermaier</a> works with
 Python applications such as <a href="pyrapi/ce_dirview/">CE_DirView</a>.</p>
 
+<p><a href="mailto:lilalinux@users.sourceforge.net">Nabil Sayegh</a> is mainly debugging and aiding in the rra part.</p>
+
 <p>Return to <a href="index.php">main page</a>.</p>
 
 </div>
