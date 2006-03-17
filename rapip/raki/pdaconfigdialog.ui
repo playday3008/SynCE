@@ -22,9 +22,6 @@
         <property name="name">
             <cstring>unnamed</cstring>
         </property>
-        <property name="resizeMode">
-            <enum>Fixed</enum>
-        </property>
         <widget class="QGroupBox">
             <property name="name">
                 <cstring>groupBox1</cstring>
@@ -80,10 +77,10 @@
                         <cstring>masqEnabledCheckbox</cstring>
                     </property>
                     <property name="text">
-                        <string>Enable Mas&amp;querading:</string>
+                        <string>E&amp;nable Masquerading:</string>
                     </property>
                     <property name="accel">
-                        <string>Alt+Q</string>
+                        <string>Alt+N</string>
                     </property>
                 </widget>
             </vbox>
@@ -290,10 +287,10 @@
                         <cstring>buttonCancel</cstring>
                     </property>
                     <property name="text">
-                        <string>&amp;Cancel</string>
+                        <string>C&amp;ancel</string>
                     </property>
                     <property name="accel">
-                        <string></string>
+                        <string>Alt+A</string>
                     </property>
                     <property name="autoDefault">
                         <bool>true</bool>
