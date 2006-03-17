@@ -15,8 +15,9 @@ Lange</a> did the hard work in figuring out many of the properitary
 interfaces.</p>
 
 <p>Project manager <a href="mailto:twogood@users.sourceforge.net">David
-Eriksson</a> is the most active developer. Also the author of these simple web
-pages and does a little of everything.</p>
+Eriksson</a> has developed most of the SynCE core. Also the author of these
+simple web pages and does a little of everything. Personal web site: <a
+href="http://www.2good.nu/">2GooD :: Divide and Conquer</a>.</p>
 
 <p><a href="mailto:hippy@users.sourceforge.net">Richard Taylor</a> is working
 on PyRAPI, Python wrappers for RAPI.</p>
