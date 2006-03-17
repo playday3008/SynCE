@@ -31,6 +31,7 @@
 #include <libkcal/todo.h>
 #include <libkcal/calendarnull.h>
 #include <libkcal/calendarlocal.h>
+#include <libkdepim/kpimprefs.h>
 #include <qfile.h>
 #include <qregexp.h>
 
@@ -39,13 +40,6 @@ namespace PocketPCCommunication
     EventHandler::EventHandler() : PimHandler()
     {
         mTypeId = 0;
-
-        QFile f( "/etc/timezone" );
-        if ( f.open( IO_ReadOnly ) ) {
-            QTextStream ts( &f );
-            ts >> sCurrentTimeZone;
-        }
-        f.close();
     }
 
 
@@ -64,7 +58,7 @@ namespace PocketPCCommunication
     bool EventHandler::retrieveEventListFromDevice( KCal::Event::List &mEventList, QValueList<uint32_t> &idList )
     {
         KCal::ICalFormat calFormat;
-        calFormat.setTimeZone( sCurrentTimeZone, false );
+        calFormat.setTimeZone( KPimPrefs::timezone(), false );
         bool ret = true;
 
         QString vCalBegin = "BEGIN:VCALENDAR\nPRODID:-//K Desktop Environment//NONSGML KOrganizer 3.2.1//EN\nVERSION:2.0\n";
@@ -238,7 +232,7 @@ namespace PocketPCCommunication
     {
         bool ret = true;
         KCal::ICalFormat calFormat;
-        calFormat.setTimeZone( sCurrentTimeZone, false );
+        calFormat.setTimeZone( KPimPrefs::timezone(), false );
 
         RRA_Uint32Vector* added_ids = rra_uint32vector_new();
 
@@ -288,7 +282,7 @@ namespace PocketPCCommunication
     {
         bool ret = true;
         KCal::ICalFormat calFormat; // NEEDED FOR TODOS!!!
-        calFormat.setTimeZone( sCurrentTimeZone, false );
+        calFormat.setTimeZone( KPimPrefs::timezone(), false );
 
         if ( p_eventList.begin() == p_eventList.end() ) {
             goto finish;

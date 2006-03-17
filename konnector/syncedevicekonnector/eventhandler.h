@@ -64,9 +64,6 @@ public:
     bool addEvents    (KCal::Event::List& p_eventList);
     bool updateEvents (KCal::Event::List& p_eventList);
     bool removeEvents (KCal::Event::List& p_eventList);
-
-private:
-    QString sCurrentTimeZone;
 };
 
 }
