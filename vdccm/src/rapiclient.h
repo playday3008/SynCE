@@ -22,11 +22,14 @@ class RapiClient : public TCPAcceptedSocket
 public:
     RapiClient(const TCPAcceptedSocket & tcpAcceptedSocket);
 
-    ~RapiClient();
+    virtual ~RapiClient();
 
     void disconnect();
 
-    void event();
+protected:
+    virtual void event();
+    
+    int readAll(char * buffer);    
 };
 
 #endif

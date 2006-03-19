@@ -15,6 +15,9 @@
 #include <tcpserversocket.h>
 #include <string.h>
 
+class RapiHandshakeClient;
+class RapiProvisioningClient;
+
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
 */
@@ -29,6 +32,13 @@ public:
     ~RapiServer();
 
     void event();
+
+private:
+
+    RapiHandshakeClient * _rapiHandshakeClient;
+
+    RapiProvisioningClient * _rapiProvisioningClient;
+    
 };
 
 #endif

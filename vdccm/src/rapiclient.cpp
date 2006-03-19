@@ -41,14 +41,22 @@ void RapiClient::disconnect()
 
 void RapiClient::event()
 {
-    char buffer[ 256 ];
-    int n;
+  // no implementation
+  //
+}
 
-    std::cout << "990-client-event()" << endl;
-    if ( ( n = read( getDescriptor(), buffer, 256 ) ) > 0 ) {
-        buffer[ n ] = '\0';
-        std::cout << buffer << endl;
-    } else {
-        disconnect();
-    }
+
+int RapiClient::readAll(char * buffer)
+{
+  int totalBytes = 0;
+  int nBytes = 0;
+  char* bufptr = buffer;
+  do
+  {
+    nBytes = read(getDescriptor(), bufptr, 768 );
+    bufptr += nBytes;
+    totalBytes += nBytes;
+  } while( nBytes == 768 );
+                         
+  return totalBytes;
 }
