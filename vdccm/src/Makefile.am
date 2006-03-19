@@ -8,6 +8,6 @@ noinst_HEADERS = windowscedevice.h devicemanager.h synceclient.h dccmserver.h \
 vdccm_SOURCES = windowscedevice.cpp devicemanager.cpp synceclient.cpp \
 		dccmserver.cpp localserver.cpp connectionfilemanager.cpp cmdlineargs.cpp utils.cpp \
 		vdccm.cpp rapiserver.cpp rapiclient.cpp \
-    rapihandshakeclient.cpp rapiprovisioningclient.cpp \
+    rapihandshakeclient.cpp rapiprovisioningclient.cpp
 AM_CFLAGS = -pedantic-errors -Wall
 AM_CXXFLAGS = -pedantic-errors -Wall
