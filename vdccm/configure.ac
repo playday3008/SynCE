@@ -4,7 +4,7 @@
 AC_PREREQ(2.59)
 AC_INIT(libdescriptor, 0.1, voc@users.sourceforge.net)
 AC_CONFIG_SRCDIR([config.h.in])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(vdccm, 0.1)
 
 # Checks for programs.
