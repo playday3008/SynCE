@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
+    Utils::dropRootPrivileg();
+
     if (!CmdLineArgs::parseArgs(argc, argv)) {
         exit(0);
     }
@@ -52,6 +54,11 @@ int main(int argc, char *argv[])
 
     Multiplexer* mux = Multiplexer::self();
 
+    if (!Utils::acquireRootPrivileg()) {
+        synce_error("Could not get root privileges");
+        exit(1);
+    }
+
     RapiServer rapiServer(990);
 
     if (!rapiServer.listen()) {
@@ -59,14 +66,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    Utils::dropRootPrivileg();
+
     if (!mux->getReadManager()->add(&rapiServer)) {
         synce_error("Could not add rapiServer to manager - rapi");
         rapiServer.shutdown();
         delete mux;
         exit(1);
     }
-
-    Utils::dropRootPrivileg();
 
     DeviceManager deviceManager;
 
@@ -113,6 +120,7 @@ int main(int argc, char *argv[])
     LocalServer localServer(controlSocketPath.c_str(), &deviceManager);
 
     if (!localServer.listen()) {
+        synce_error("Could not listen on local server socket");
         dccmServer.shutdown();
         deviceManager.shutdown();
         delete mux;

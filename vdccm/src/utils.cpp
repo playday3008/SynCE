@@ -255,6 +255,18 @@ bool Utils::dropRootPrivileg()
 }
 
 
+bool Utils::acquireRootPrivileg()
+{
+    bool ret = true;
+
+    if (seteuid(0) == -1) {
+        ret = false;
+    }
+
+    return ret;
+}
+
+
 bool Utils::checkStartingUser()
 {
     bool ret = true;

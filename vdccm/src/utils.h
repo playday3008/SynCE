@@ -42,6 +42,7 @@ public:
     static void runScripts(string action, string deviceName = "");
     static bool dropRootPrivileg();
     static bool checkStartingUser();
+    static bool acquireRootPrivileg();
 
 private:
     Utils();
