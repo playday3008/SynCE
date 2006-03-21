@@ -86,7 +86,7 @@ namespace KSync {
 
   private:
     void doSync();
-    template<class T> T  *SynCEEngine::templateSyncee(SynceeList *synceeList) const;
+    template<class T> T  *templateSyncee(SynceeList *synceeList) const;
 
     Konnector::List mOpenedKonnectors;
     Konnector::List mProcessedKonnectors;
