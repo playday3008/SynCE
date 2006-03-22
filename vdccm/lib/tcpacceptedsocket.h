@@ -34,27 +34,16 @@ class TCPServerSocket;
 class TCPAcceptedSocket : public TCPConnectedSocket
 {
 public:
-    TCPAcceptedSocket(const TCPAcceptedSocket &tcpAcceptedSocket, bool releaseFromManager = false);
-    static TCPAcceptedSocket generate(int fd, TCPServerSocket *tcpServerSocket = NULL);
+    TCPAcceptedSocket(int fd, TCPServerSocket *tcpServerSocket);
     ~TCPAcceptedSocket();
-//    const TCPServerSocket *getServerSocket() const;
-    TCPAcceptedSocket& operator=(const TCPAcceptedSocket &tcpConnectedSocket)
-    {
-        this->tcpServerSocket = tcpConnectedSocket.tcpServerSocket;
-
-        return *this;
-    }
-    void setServerSocket(TCPServerSocket *tcpServerSocket);
     const TCPServerSocket* getTCPServerSocket() const;
 
 protected:
-    TCPAcceptedSocket(uint16_t port, std::string interfaceName);
-    TCPAcceptedSocket();
-private:
-//    void setServerSocket(const TCPServerSocket * tcpServerSocket);
-    const TCPServerSocket *tcpServerSocket;
+    void setServerSocket(TCPServerSocket *tcpServerSocket);
 
-friend class TCPServerSocket;
+private:
+    TCPAcceptedSocket() {};
+    const TCPServerSocket *tcpServerSocket;
 };
 
 #endif

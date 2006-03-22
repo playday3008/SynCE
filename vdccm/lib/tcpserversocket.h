@@ -27,18 +27,22 @@
 #include <string>
 
 class TCPAcceptedSocket;
+class TCPAcceptedSocketFactory;
 /**
 @author Volker Christian
 */
 class TCPServerSocket : public TCPSocket
 {
 public:
-    TCPServerSocket(uint16_t port, std::string interfaceName = "");
-    TCPServerSocket(const TCPServerSocket &tcpServerSocket, bool releaseFromManager = false);
+    TCPServerSocket(TCPAcceptedSocketFactory *tcpAcceptedSocketFactory, uint16_t port, std::string interfaceName = "");
     ~TCPServerSocket();
 
-    virtual TCPAcceptedSocket accept();
+    virtual TCPAcceptedSocket* accept();
     virtual bool listen(int backlog = 5);
+    virtual void event();
+
+protected:
+    TCPAcceptedSocketFactory *tcpAcceptedSocketFactory;
 };
 
 #endif

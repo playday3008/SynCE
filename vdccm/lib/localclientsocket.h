@@ -32,16 +32,11 @@ class LocalClientSocket : public LocalConnectedSocket
 {
 public:
     LocalClientSocket(std::string path);
-    LocalClientSocket(const LocalClientSocket &localClientSocket,  bool releaseFromManager = false);
     ~LocalClientSocket();
     bool connect();
-    LocalClientSocket & operator=(const LocalClientSocket &localClientSocket) {
-        this->path = path;
-
-        return *this;
-    }
 
 private:
+    LocalClientSocket();
     std::string path;
 };
 

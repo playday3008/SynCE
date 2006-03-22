@@ -29,10 +29,9 @@
 
 using namespace synce;
 
-LocalServer::LocalServer(string path, DeviceManager *deviceManager)
- : LocalServerSocket(path)
+LocalServer::LocalServer(LocalAcceptedSocketFactory *localAcceptedSocketFactory, string path)
+    : LocalServerSocket(localAcceptedSocketFactory, path)
 {
-    this->deviceManager = deviceManager;
 }
 
 
@@ -41,17 +40,10 @@ LocalServer::~LocalServer()
 }
 
 
-
-
-/*!
-    \fn LocalServer::event()
- */
 void LocalServer::event()
 {
-    LocalAcceptedSocket lcs = accept();
-    if (lcs.isConnected()) {
-        new SynCEClient(lcs, deviceManager);
-    } else {
+    SynCEClient *scec = dynamic_cast<SynCEClient *> (accept());
+    if (scec == NULL) {
         synce_warning(strerror(errno));
     }
 }

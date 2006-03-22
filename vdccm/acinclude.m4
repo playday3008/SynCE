@@ -1,10 +1,10 @@
-AC_DEFUN(SYNCE_CHECK_SYNCE,
+AC_DEFUN([SYNCE_CHECK_SYNCE],
 	[
-		if test x = x$synce_synce_checked; then 
+		if test x = x$synce_synce_checked; then
 			synce_kde_save_cflags="$CPPFLAGS"
 			synce_kde_save_ldflags="$LDFLAGS"
 
-			AC_ARG_WITH(libsynce, 
+			AC_ARG_WITH(libsynce,
 				AC_HELP_STRING(
 					[--with-libsynce=DIR],
 					[Search for libsynce in DIR/include and DIR/lib]

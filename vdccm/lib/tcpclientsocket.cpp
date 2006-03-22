@@ -33,13 +33,6 @@ TCPClientSocket::TCPClientSocket(uint16_t remotePort, string remoteInterfaceName
 }
 
 
-TCPClientSocket::TCPClientSocket(const TCPClientSocket &tcpClientSocket, bool releaseFromManager)
- : TCPConnectedSocket(tcpClientSocket, releaseFromManager)
-{
-    this->remotePort = tcpClientSocket.remotePort;
-    this->remoteInterfaceName = tcpClientSocket.remoteInterfaceName;
-}
-
 TCPClientSocket::TCPClientSocket()
  : TCPConnectedSocket()
 {
@@ -47,22 +40,10 @@ TCPClientSocket::TCPClientSocket()
     this->remoteInterfaceName = "";
 }
 
-/*!
-    \fn TCPClientSocket::generate(int fd)
- */
-TCPClientSocket TCPClientSocket::generate(int fd)
-{
-    TCPClientSocket tcpClientSocket;
-    tcpClientSocket._generate(fd);
-
-    return tcpClientSocket;
-}
-
 
 TCPClientSocket::~TCPClientSocket()
 {
 }
-
 
 
 /*!

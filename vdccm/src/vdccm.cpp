@@ -23,6 +23,10 @@
 #include "localserver.h"
 #include "dccmserver.h"
 #include "rapiserver.h"
+#include "windowscedevicefactory.h"
+#include "synceclientfactory.h"
+#include "rapihandshakeclientfactory.h"
+#include "rapiprovisioningclientfactory.h"
 #include "devicemanager.h"
 #include "multiplexer.h"
 #include "cmdlineargs.h"
@@ -54,53 +58,53 @@ int main(int argc, char *argv[])
 
     Multiplexer* mux = Multiplexer::self();
 
-    if (!Utils::acquireRootPrivileg()) {
-        synce_error("Could not get root privileges");
-        exit(1);
-    }
+    Utils::acquireRootPrivileg();
 
-    RapiServer rapiServer(990);
+    RapiServer rapiServer(new RapiHandshakeClientFactory(), new RapiProvisioningClientFactory(), 990);
 
     if (!rapiServer.listen()) {
-        synce_error("Could not switch to listening mode - rapi");
+        synce_error("Could not switch RapiServer to listening mode - rapi");
         exit(1);
     }
 
     Utils::dropRootPrivileg();
 
     if (!mux->getReadManager()->add(&rapiServer)) {
-        synce_error("Could not add rapiServer to manager - rapi");
+        synce_error("Could not add RapiServer to manager - rapi");
         rapiServer.shutdown();
         delete mux;
         exit(1);
     }
 
-    DeviceManager deviceManager;
+    DeviceManager *deviceManager = DeviceManager::self();
 
-    if (!mux->getTimerNodeManager()->add(&deviceManager)) {
+    if (!mux->getTimerNodeManager()->add(deviceManager)) {
         synce_error("Could not add deviceManager to manager");
-        deviceManager.shutdown();
+        deviceManager->shutdown();
+        delete deviceManager;
         delete mux;
         exit(1);
     }
 
-    DccmServer dccmServer(&deviceManager);
+    DccmServer dccmServer(new WindowsCEDeviceFactory());
 
     if(!dccmServer.listen()) {
-        synce_error("Could not switch to listening mode");
-        deviceManager.shutdown();
+        synce_error("Could not switch DccmServer to listening mode");
+        deviceManager->shutdown();
+        delete deviceManager;
         delete mux;
         exit(1);
     }
 
     if (!dccmServer.setNonBlocking()) {
-        synce_warning("Could not switch local server socket to nonblocking io - it would remain blocking");
+        synce_warning("Could not switch DccmServer to nonblocking io - it would remain blocking");
     }
 
     if (!mux->getReadManager()->add(&dccmServer)) {
-        synce_error("Could not add dccmServer to manager");
+        synce_error("Could not add DccmServer to manager");
         dccmServer.shutdown();
-        deviceManager.shutdown();
+        deviceManager->shutdown();
+        delete deviceManager;
         delete mux;
         exit(1);
     }
@@ -109,7 +113,8 @@ int main(int argc, char *argv[])
 
     if (!synce_get_directory(&path)) {
         dccmServer.shutdown();
-        deviceManager.shutdown();
+        deviceManager->shutdown();
+        delete deviceManager;
         delete mux;
         exit(1);
     }
@@ -117,24 +122,26 @@ int main(int argc, char *argv[])
     string controlSocketPath = string(path) + "/" + "csock";
     free(path);
 
-    LocalServer localServer(controlSocketPath.c_str(), &deviceManager);
+    LocalServerSocket localServer(new SynCEClientFactory(), controlSocketPath.c_str());
 
     if (!localServer.listen()) {
-        synce_error("Could not listen on local server socket");
+        synce_warning("Could not switch LocalServerSocket to listening mode");
         dccmServer.shutdown();
-        deviceManager.shutdown();
+        deviceManager->shutdown();
+        delete deviceManager;
         delete mux;
         exit(1);
     }
 
     if (!localServer.setNonBlocking()) {
-        synce_warning("Could not switch local server socket to nonblocking io - it would remain blocking");
+        synce_warning("Could not switch LocalServerSocket socket to nonblocking io - it would remain blocking");
     }
 
     if (!mux->getReadManager()->add(&localServer)) {
-        synce_error("Could not add localServer to manager");
+        synce_error("Could not add LocalServerSocket to manager");
         dccmServer.shutdown();
-        deviceManager.shutdown();
+        deviceManager->shutdown();
+        delete deviceManager;
         delete mux;
         exit(1);
     }
@@ -151,7 +158,7 @@ int main(int argc, char *argv[])
     while (Utils::isRunning()) {
         mux->multiplex();
         if (Utils::disconnectDevices()) {
-            deviceManager.shutdownDevices();
+            deviceManager->shutdownDevices();
         }
     }
 
@@ -159,12 +166,13 @@ int main(int argc, char *argv[])
 
     mux->getReadManager()->remove(&dccmServer);
     mux->getReadManager()->remove(&localServer);
-    mux->getTimerNodeManager()->remove(&deviceManager);
+    mux->getTimerNodeManager()->remove(deviceManager);
 
     dccmServer.shutdown();
     localServer.shutdown();
-    deviceManager.shutdown();
+    deviceManager->shutdown();
 
+    delete deviceManager;
     delete mux;
 
     Utils::removePidFile();

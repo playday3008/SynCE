@@ -33,13 +33,10 @@ class DeviceManager;
 class LocalServer : public LocalServerSocket
 {
 public:
-    LocalServer(std::string path, DeviceManager *deviceManager);
+    LocalServer(LocalAcceptedSocketFactory *localAcceptedSocketFactory, std::string path);
 
     ~LocalServer();
     void event();
-
-private:
-    DeviceManager *deviceManager;
 };
 
 #endif

@@ -128,7 +128,7 @@ public:
     bool setNonBlocking();
 
 protected:
-    virtual void event();
+    virtual void event() = 0;
     void setDescriptor(int descriptor);
 
 private:

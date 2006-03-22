@@ -34,21 +34,11 @@ class TCPSocket : public Descriptor
 {
 public:
     TCPSocket(uint16_t port, std::string interfaceName = "");
-    TCPSocket(const TCPSocket &tcpSocket, bool releaseFromManager = false);
     ~TCPSocket();
     virtual bool shutdown();
     uint16_t getConfiguredLocalPort() const;
     std::string getConfiguredLocalInterfaceName() const;
     struct sockaddr_in getLocalSinAddr() const;
-    TCPSocket& operator=(TCPSocket &tcpSocket)
-    {
-        this->port = tcpSocket.port;
-        this->interfaceName = tcpSocket.interfaceName;
-        memcpy(&this->localAddress, &tcpSocket.localAddress, sizeof(localAddress));
-        this->localHostent = tcpSocket.localHostent;
-
-        return *this;
-    }
     std::string getLocalAddress() const;
     uint16_t getLocalPort() const;
     std::string getLocalInterfaceName() const;

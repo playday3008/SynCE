@@ -24,16 +24,10 @@
 #include "localserversocket.h"
 #include <sys/socket.h>
 
-LocalAcceptedSocket::LocalAcceptedSocket(string path)
- : LocalConnectedSocket(path)
+LocalAcceptedSocket::LocalAcceptedSocket(int fd, LocalServerSocket *localServerSocket)
 {
-}
-
-
-LocalAcceptedSocket::LocalAcceptedSocket(const LocalAcceptedSocket &localAcceptedSocket, bool releaseFromManager)
- : LocalConnectedSocket(localAcceptedSocket, releaseFromManager)
-{
-    this->localServerSocket = localAcceptedSocket.localServerSocket;
+    setSocket(fd);
+    setServerSocket(localServerSocket);
 }
 
 
@@ -54,32 +48,3 @@ const LocalServerSocket *LocalAcceptedSocket::getServerSocket() const
     return localServerSocket;
 }
 
-
-
-/*!
-    \fn LocalAcceptedSocket::generate(int fd, LocalServerSocket* localServerSocket)
- */
-LocalAcceptedSocket LocalAcceptedSocket::generate(int fd, LocalServerSocket* localServerSocket)
-{
-    LocalAcceptedSocket localAcceptedSocket(localServerSocket->getLocalPath());
-    struct sockaddr_un addr;
-    socklen_t len = sizeof(struct sockaddr);
-
-    if (fd < 0) {
-        return localAcceptedSocket;
-    }
-
-    if (getpeername(fd, (struct sockaddr *) &addr, &len) < 0) {
-        return localAcceptedSocket;
-    }
-
-    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &LocalSocket::TRUE, sizeof(LocalSocket::TRUE)) < 0) {
-        return localAcceptedSocket;
-    }
-
-    localAcceptedSocket.setSocket(fd, addr);
-    localAcceptedSocket.setConnected(true);
-    localAcceptedSocket.setServerSocket(localServerSocket);
-
-    return localAcceptedSocket;
-}

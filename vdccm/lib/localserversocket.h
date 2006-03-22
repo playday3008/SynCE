@@ -27,6 +27,7 @@
 #include <string>
 
 class LocalAcceptedSocket;
+class LocalAcceptedSocketFactory;
 
 /**
 @author Volker Christian
@@ -34,11 +35,14 @@ class LocalAcceptedSocket;
 class LocalServerSocket : public LocalSocket
 {
 public:
-    LocalServerSocket(std::string path);
-    LocalServerSocket(const LocalServerSocket &localServerSocket, bool releaseFromManager = false);
+    LocalServerSocket(LocalAcceptedSocketFactory *localAcceptedSocketFactory, std::string path);
     ~LocalServerSocket();
-    virtual LocalAcceptedSocket accept();
+    virtual LocalAcceptedSocket* accept();
     virtual bool listen(int backlog = 5);
+    virtual void event();
+
+private:
+    LocalAcceptedSocketFactory *localAcceptedSocketFactory;
 };
 
 #endif

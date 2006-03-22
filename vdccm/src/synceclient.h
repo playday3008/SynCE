@@ -32,7 +32,7 @@
 class SynCEClient : public LocalAcceptedSocket
 {
 public:
-    SynCEClient(const LocalAcceptedSocket &localAcceptedSocket, DeviceManager *deviceManager);
+    SynCEClient(int fd, LocalServerSocket *localServerSocket);
 
 protected:
     ~SynCEClient();
@@ -48,9 +48,6 @@ public:
 
 protected:
     virtual void event();
-
-private:
-    DeviceManager *deviceManager;
 };
 
 #endif

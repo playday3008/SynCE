@@ -27,22 +27,23 @@
 #include "cmdlineargs.h"
 #include <synce_log.h>
 
-#include "devicemanager.h"
+#include <devicemanager.h>
 
 
-WindowsCEDevice::WindowsCEDevice( const TCPAcceptedSocket & tcpAcceptedSocket, DeviceManager * deviceManager, SynceSocket *synceSocket)
- : TCPAcceptedSocket( tcpAcceptedSocket )
+WindowsCEDevice::WindowsCEDevice(int fd, TCPServerSocket *tcpServerSocket)
+ : TCPAcceptedSocket( fd, tcpServerSocket )
 {
-    Multiplexer::self()->getReadManager()->add( this );
     deviceConnected = false;
     passwordExpected = false;
     passwordPending = false;
     locked = false;
-    this->deviceManager = deviceManager;
-    this->socket = synceSocket;
     pingCount = 0;
 }
 
+void WindowsCEDevice::init(SynceSocket *synceSocket) {
+    this->socket = synceSocket;
+    Multiplexer::self()->getReadManager()->add( this );
+}
 
 WindowsCEDevice::~WindowsCEDevice()
 {
@@ -64,11 +65,11 @@ void WindowsCEDevice::disconnect()
     getDescriptorManager()->remove(this);
 
     if (deviceConnected) {
-        deviceManager->removeConnectedDevice(this);
+        DeviceManager::self()->removeConnectedDevice(this);
     }
 
     if (passwordPending) {
-        deviceManager->removePasswordPendingDevice(this);
+        DeviceManager::self()->removePasswordPendingDevice(this);
     }
 
     shutdown();
@@ -115,7 +116,7 @@ bool WindowsCEDevice::handleInfoMessage(uint32_t header)
             buffer = NULL;
 
             if (!locked) {
-                deviceManager->addConnectedDevice(this);
+                DeviceManager::self()->addConnectedDevice(this);
                 deviceConnected = true;
             }
         } else {
@@ -151,7 +152,7 @@ bool WindowsCEDevice::handlePasswordRequest(uint32_t header)
                 }
             } else {
                 passwordPending = true;
-                if (!deviceManager->addPasswordPendingDevice(this)) {
+                if (!DeviceManager::self()->addPasswordPendingDevice(this)) {
                     ret = false;
                 }
             }
@@ -254,15 +255,15 @@ bool WindowsCEDevice::sendPassword(string password)
             if (handlePasswordReply()) {
                 sleep(1); //delay the connection report to the SynCE-Client
                           // - it seams WinCE needs some time to saddle down
-                deviceManager->addConnectedDevice(this);
+                DeviceManager::self()->addConnectedDevice(this);
                 deviceConnected = true;
             } else {
-                deviceManager->passwordRejected(this);
+                DeviceManager::self()->passwordRejected(this);
                 synce_error("Password rejected");
                 ret = false;
             }
             if (passwordPending) {
-                deviceManager->removePasswordPendingDevice(this);
+                DeviceManager::self()->removePasswordPendingDevice(this);
                 passwordPending = false;
             }
         } else {

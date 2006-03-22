@@ -20,16 +20,13 @@
 class RapiClient : public TCPAcceptedSocket
 {
 public:
-    RapiClient(const TCPAcceptedSocket & tcpAcceptedSocket);
+    RapiClient(int fd, TCPServerSocket *tcpServerSocket);
 
-    virtual ~RapiClient();
+    ~RapiClient();
 
     void disconnect();
 
-protected:
-    virtual void event();
-    
-    int readAll(char * buffer);    
+    int readAll(char * buffer);
 };
 
 #endif

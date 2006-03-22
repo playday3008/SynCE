@@ -35,19 +35,12 @@ class LocalSocket : public Descriptor
 public:
 public:
     LocalSocket(std::string path);
-    LocalSocket(const LocalSocket &localSocket, bool releaseFromManager = false);
     ~LocalSocket();
     virtual bool shutdown();
     std::string getLocalPath() const;
-    LocalSocket& operator=(const LocalSocket &localSocket)
-    {
-        this->path = localSocket.path;
-        memcpy(&this->localAddress, &localSocket.localAddress, sizeof(localAddress));
-
-        return *this;
-    }
 
 protected:
+    LocalSocket();
     virtual bool socket();
     virtual bool bind();
 

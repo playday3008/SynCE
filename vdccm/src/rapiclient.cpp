@@ -13,11 +13,13 @@
 #include "rapiclient.h"
 #include <multiplexer.h>
 
+#include <iostream>
 
-RapiClient::RapiClient(const TCPAcceptedSocket & tcpAcceptedSocket)
-    : TCPAcceptedSocket(tcpAcceptedSocket)
+RapiClient::RapiClient(int fd, TCPServerSocket *tcpServerSocket)
+    : TCPAcceptedSocket(fd, tcpServerSocket)
 {
     Multiplexer::self()->getReadManager()->add(this);
+    std::cout << "hier bin ich" << std::endl;
 }
 
 
@@ -39,24 +41,20 @@ void RapiClient::disconnect()
 }
 
 
-void RapiClient::event()
-{
-  // no implementation
-  //
-}
-
-
 int RapiClient::readAll(char * buffer)
 {
-  int totalBytes = 0;
-  int nBytes = 0;
-  char* bufptr = buffer;
-  do
-  {
-    nBytes = read(getDescriptor(), bufptr, 768 );
-    bufptr += nBytes;
-    totalBytes += nBytes;
-  } while( nBytes == 768 );
-                         
-  return totalBytes;
+    int totalBytes = 0;
+    int nBytes = 0;
+    char* bufptr = buffer;
+    do
+    {
+        nBytes = read(getDescriptor(), bufptr, 768 );
+        if (nBytes == 0) {
+            return 0;
+        }
+        bufptr += nBytes;
+        totalBytes += nBytes;
+    } while( nBytes == 768 );
+
+    return totalBytes;
 }

@@ -91,11 +91,6 @@ bool Descriptor::close()
 }
 
 
-void Descriptor::event()
-{
-}
-
-
 bool Descriptor::dataPending(int sec, int usec)
 {
     return DescriptorManager::dataPending(this, sec, usec);

@@ -39,10 +39,11 @@ LocalClientSocket::LocalClientSocket(string path)
     this->path = path;
 }
 
-LocalClientSocket::LocalClientSocket(const LocalClientSocket &localClientSocket,  bool releaseFromManager)
- : LocalConnectedSocket(localClientSocket, releaseFromManager)
+
+LocalClientSocket::LocalClientSocket()
+ : LocalConnectedSocket()
 {
-    this->path = path;
+    this->path = "";
 }
 
 

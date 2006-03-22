@@ -35,7 +35,7 @@
 class DccmServer : public TCPServerSocket
 {
 public:
-    DccmServer(DeviceManager *deviceManager, u_int16_t port = DCCM_PORT, string interfaceName = "");
+    DccmServer(TCPAcceptedSocketFactory *tasf, u_int16_t port = DCCM_PORT, string interfaceName = "");
 
     ~DccmServer();
 
@@ -47,7 +47,7 @@ protected:
     virtual void event();
 
     SynceSocket* socket;
-    DeviceManager *deviceManager;
+//    DeviceManager *deviceManager;
 };
 
 #endif

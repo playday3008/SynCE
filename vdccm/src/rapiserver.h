@@ -15,30 +15,34 @@
 #include <tcpserversocket.h>
 #include <string.h>
 
-class RapiHandshakeClient;
-class RapiProvisioningClient;
-
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
 */
+
+class RapiHandshakeClientFactory;
+class RapiProvisioningClientFactory;
+
+class RapiHandshakeClient;
+class RapiProvisioningClient;
+
 
 using namespace std;
 
 class RapiServer : public TCPServerSocket
 {
 public:
-    RapiServer(u_int16_t port = 990, string interfaceName = "");
+    RapiServer(RapiHandshakeClientFactory *rhcf, RapiProvisioningClientFactory *rpcf, u_int16_t port = 990, string interfaceName = "");
 
     ~RapiServer();
 
     void event();
 
 private:
+    RapiHandshakeClientFactory *rapiHandshakeClientFactory;
+    RapiProvisioningClientFactory *rapiProvisioningClientFactory;
 
     RapiHandshakeClient * _rapiHandshakeClient;
-
     RapiProvisioningClient * _rapiProvisioningClient;
-    
 };
 
 #endif

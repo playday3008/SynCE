@@ -46,7 +46,8 @@ class DeviceManager;
 
 class WindowsCEDevice : public TCPAcceptedSocket {
 public:
-    WindowsCEDevice(const TCPAcceptedSocket & tcpAcceptedSocket, DeviceManager * deviceManager, SynceSocket *synceSocket);
+    WindowsCEDevice(int fd, TCPServerSocket *tcpServerSocket);
+    void init(SynceSocket *synceSocket);
 
 protected:
     ~WindowsCEDevice();
@@ -106,9 +107,7 @@ protected:
     bool locked;
 
 private:
-    DeviceManager *deviceManager;
     string password;
 };
-
 
 #endif

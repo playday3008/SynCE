@@ -39,8 +39,8 @@ class SynCEClient;
 */
 class DeviceManager : public ContinousNode {
 public:
-    DeviceManager();
 
+    static DeviceManager *self();
     ~DeviceManager();
 
     void addConnectedDevice(WindowsCEDevice * windowsCEDevice);
@@ -61,9 +61,11 @@ protected:
     virtual void shot();
 
 private:
+    DeviceManager();
     list<WindowsCEDevice *> connectedDevices;
     list<WindowsCEDevice *> passwordPendingDevices;
     list<SynCEClient *> connectedClients;
+    static DeviceManager *deviceManager;
 
 protected:
 

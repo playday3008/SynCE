@@ -22,19 +22,15 @@
  ***************************************************************************/
 #include "localserversocket.h"
 #include "localacceptedsocket.h"
+#include "localacceptedsocketfactory.h"
 #include <sys/socket.h>
 
-LocalServerSocket::LocalServerSocket(string path)
- : LocalSocket(path)
+LocalServerSocket::LocalServerSocket(LocalAcceptedSocketFactory *localAcceptedSocketFactory, string path)
+    : LocalSocket(path), localAcceptedSocketFactory(localAcceptedSocketFactory)
 {
     unlink(path.c_str());
 }
 
-
-LocalServerSocket::LocalServerSocket(const LocalServerSocket &localServerSocket, bool releaseFromManager)
- : LocalSocket(localServerSocket, releaseFromManager)
-{
-}
 
 LocalServerSocket::~LocalServerSocket()
 {
@@ -62,11 +58,25 @@ bool LocalServerSocket::listen(int backlog)
 /*!
     \fn TCPServerSocket::accept()
  */
-LocalAcceptedSocket LocalServerSocket::accept()
+LocalAcceptedSocket* LocalServerSocket::accept()
 {
     int fd;
 
     fd = ::accept(getDescriptor(), NULL, NULL);
 
-    return LocalAcceptedSocket::generate(fd, this);
+    LocalAcceptedSocket *las = NULL;
+
+    if (fd > 0) {
+        las = localAcceptedSocketFactory->socket(fd, this);
+    }
+
+    return las;
+}
+
+
+void LocalServerSocket::event()
+{
+    if (!accept()) {
+        // some error handling
+    }
 }

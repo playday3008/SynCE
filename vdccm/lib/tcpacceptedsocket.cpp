@@ -22,69 +22,25 @@
  ***************************************************************************/
 #include "tcpacceptedsocket.h"
 #include "tcpserversocket.h"
-#include <netdb.h>
 
 using namespace std;
 
-TCPAcceptedSocket::TCPAcceptedSocket(uint16_t port, string interfaceName)
- : TCPConnectedSocket(port, interfaceName)
+TCPAcceptedSocket::TCPAcceptedSocket(int fd, TCPServerSocket *tcpServerSocket)
 {
-    this->tcpServerSocket = NULL;
+    setSocket(fd);
+    setServerSocket(tcpServerSocket);
 }
-
-
-TCPAcceptedSocket::TCPAcceptedSocket(const TCPAcceptedSocket &tcpAcceptedSocket, bool releaseFromManager)
- : TCPConnectedSocket(tcpAcceptedSocket, releaseFromManager)
-{
-    this->tcpServerSocket = tcpAcceptedSocket.tcpServerSocket;
-}
-
-TCPAcceptedSocket::TCPAcceptedSocket()
- : TCPConnectedSocket()
-{
-    this->tcpServerSocket = NULL;
-}
-
-
-/*!
-    \fn TCPAcceptedSocket::generate(int fd, TCPServerSocket *tcpServerSocket)
- */
-TCPAcceptedSocket TCPAcceptedSocket::generate(int fd, TCPServerSocket *tcpServerSocket)
-{
-    TCPAcceptedSocket tcpAcceptedSocket;
-
-    if (tcpServerSocket != NULL) {
-        TCPAcceptedSocket tcpas = TCPAcceptedSocket(tcpServerSocket->getConfiguredLocalPort(), tcpServerSocket->getConfiguredLocalInterfaceName());
-        tcpAcceptedSocket = tcpas;
-    } else {
-        tcpAcceptedSocket = TCPAcceptedSocket();
-    }
-
-    tcpAcceptedSocket._generate(fd);
-
-    tcpAcceptedSocket.setServerSocket(tcpServerSocket);
-
-    return tcpAcceptedSocket;
-}
-
 
 TCPAcceptedSocket::~TCPAcceptedSocket()
 {
 }
 
-
-/*!
-    \fn TCPAcceptedSocket::setServerSocket(TCPServerSocket *tcpServerSocket)
- */
 void TCPAcceptedSocket::setServerSocket(TCPServerSocket *tcpServerSocket)
 {
     this->tcpServerSocket = tcpServerSocket;
 }
 
 
-/*!
-    \fn TCPAcceptedSocket::getTCPServerSocket() const
- */
 const TCPServerSocket* TCPAcceptedSocket::getTCPServerSocket() const
 {
     return tcpServerSocket;

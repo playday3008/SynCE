@@ -33,14 +33,6 @@ TCPConnectedSocket::TCPConnectedSocket(uint16_t port, string interfaceName)
 }
 
 
-TCPConnectedSocket::TCPConnectedSocket(const TCPConnectedSocket &tcpConnectedSocket, bool releaseFromManager)
- : TCPSocket(tcpConnectedSocket, releaseFromManager)
-{
-    memcpy(&this->remoteAddress, &tcpConnectedSocket.remoteAddress, sizeof(remoteAddress));
-    this->connected = tcpConnectedSocket.connected;
-}
-
-
 TCPConnectedSocket::TCPConnectedSocket()
  : TCPSocket()
 {
@@ -128,7 +120,7 @@ uint16_t TCPConnectedSocket::getRemotePort() const
 /*!
     \fn TCPConnectedSocket::_generate(int fd)
  */
-bool TCPConnectedSocket::_generate(int fd)
+bool TCPConnectedSocket::setSocket(int fd)
 {
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
@@ -149,17 +141,4 @@ bool TCPConnectedSocket::_generate(int fd)
     setConnected(true);
 
     return true;
-}
-
-
-/*!
-    \fn TCPConnectedSocket::generate(int fd)
- */
-TCPConnectedSocket TCPConnectedSocket::generate(int fd)
-{
-    TCPConnectedSocket tcpConnectedSocket;
-
-    tcpConnectedSocket._generate(fd);
-
-    return tcpConnectedSocket;
 }

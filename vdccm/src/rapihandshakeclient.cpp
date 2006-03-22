@@ -16,8 +16,8 @@
 #include <iostream>
 using namespace std;
 
-RapiHandshakeClient::RapiHandshakeClient(const TCPAcceptedSocket & tcpAcceptedSocket)
-    : RapiClient(tcpAcceptedSocket),
+RapiHandshakeClient::RapiHandshakeClient(int fd, TCPServerSocket *tcpServerSocket)
+    : RapiClient(fd, tcpServerSocket),
       ContinousNode( 30, 0 )
 {
   _state = NoDataReceived;
@@ -41,7 +41,11 @@ void RapiHandshakeClient::event()
   //
   char buffer[ 8192 ];
   memset( buffer, 0, sizeof(buffer) );
-  readAll( buffer );
+
+  if (readAll( buffer ) == 0) {
+      disconnect();
+      return;
+  }
 
   if( _state == NoDataReceived )
   {
@@ -55,7 +59,7 @@ void RapiHandshakeClient::event()
   {
     // data not relevant, should be { 04, 00 ,00 ,00 }
     // nothing to reply, more data (info message) follows
-    _state = Ping2Received; 
+    _state = Ping2Received;
   }
   else if( _state == Ping2Received )
   {
@@ -63,7 +67,7 @@ void RapiHandshakeClient::event()
     // write 3 responses, response 1 is { 05, 00, 00, 00 }
     char response[4] = { 05, 00, 00, 00 };
     write( getDescriptor(), response, 4 );
-   
+
     // response 2 is { 04, 00, 00, 00 }
     response[0] = 04;
     write( getDescriptor(), response, 4 );

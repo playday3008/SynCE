@@ -22,21 +22,14 @@
  ***************************************************************************/
 #include "tcpserversocket.h"
 #include "tcpacceptedsocket.h"
-#include <arpa/inet.h>
-#include <netdb.h>
+#include "tcpacceptedsocketfactory.h"
 
 using namespace std;
 
-TCPServerSocket::TCPServerSocket(uint16_t port, string interfaceName)
- : TCPSocket(port, interfaceName)
+TCPServerSocket::TCPServerSocket(TCPAcceptedSocketFactory *tcpAcceptedSocketFactory, uint16_t port, string interfaceName)
+    : TCPSocket(port, interfaceName), tcpAcceptedSocketFactory(tcpAcceptedSocketFactory)
 {
 }
-
-
-TCPServerSocket::TCPServerSocket(const TCPServerSocket &tcpServerSocket, bool releaseFromManager)
- : TCPSocket(tcpServerSocket, releaseFromManager)
- {
- }
 
 
 TCPServerSocket::~TCPServerSocket()
@@ -44,11 +37,6 @@ TCPServerSocket::~TCPServerSocket()
 }
 
 
-
-
-/*!
-    \fn TCPServerSocket::listen(const int backlog)
- */
 bool TCPServerSocket::listen(int backlog)
 {
     if (!socket()) {
@@ -70,11 +58,25 @@ bool TCPServerSocket::listen(int backlog)
 /*!
     \fn TCPServerSocket::accept()
  */
-TCPAcceptedSocket TCPServerSocket::accept()
+TCPAcceptedSocket* TCPServerSocket::accept()
 {
     int fd;
 
     fd = ::accept(getDescriptor(), NULL, NULL);
 
-    return TCPAcceptedSocket::generate(fd, this);
+    TCPAcceptedSocket *tas = NULL;
+
+    if (fd >= 0) {
+        tas = tcpAcceptedSocketFactory->socket(fd, this);
+    }
+
+    return tas;
+}
+
+
+void TCPServerSocket::event()
+{
+    if (!accept()) {
+        // some error handling
+    }
 }

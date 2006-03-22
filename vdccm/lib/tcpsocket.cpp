@@ -38,14 +38,6 @@ TCPSocket::TCPSocket(uint16_t port, string interfaceName)
     this->interfaceName = interfaceName;
 }
 
-TCPSocket::TCPSocket(const TCPSocket &tcpSocket, bool releaseFromManager)
- : Descriptor(tcpSocket, releaseFromManager)
-{
-    this->port = tcpSocket.port;
-    this->interfaceName = tcpSocket.interfaceName;
-    memcpy(&this->localAddress, &tcpSocket.localAddress, sizeof(localAddress));
-    this->localHostent = tcpSocket.localHostent;
-}
 
 TCPSocket::TCPSocket()
  : Descriptor()

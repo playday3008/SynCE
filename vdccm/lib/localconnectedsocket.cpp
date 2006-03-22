@@ -32,18 +32,16 @@ LocalConnectedSocket::LocalConnectedSocket(string path)
 }
 
 
-LocalConnectedSocket::LocalConnectedSocket(const LocalConnectedSocket &localConnectedSocket, bool releaseFromManager)
- : LocalSocket(localConnectedSocket, releaseFromManager)
+LocalConnectedSocket::LocalConnectedSocket()
+ : LocalSocket()
 {
-    memcpy(&this->remoteAddress, &localConnectedSocket.remoteAddress, sizeof(remoteAddress));
-    this->connected = localConnectedSocket.connected;
+    this->connected = false;
 }
 
 
 LocalConnectedSocket::~LocalConnectedSocket()
 {
 }
-
 
 
 /*!
@@ -61,6 +59,12 @@ void LocalConnectedSocket::setConnected(const bool connected)
 bool LocalConnectedSocket::isConnected() const
 {
     return connected;
+}
+
+
+struct sockaddr_un LocalConnectedSocket::getRemoteSunAddr() const
+{
+    return remoteAddress;
 }
 
 
@@ -82,4 +86,28 @@ bool LocalConnectedSocket::isConnected() const
 }
 
 
+/*!
+    \fn LocalAcceptedSocket::generate(int fd, LocalServerSocket* localServerSocket)
+ */
+bool LocalConnectedSocket::setSocket(int fd)
+{
+    struct sockaddr_un addr;
+    socklen_t len = sizeof(struct sockaddr);
 
+    if (fd < 0) {
+        return false;
+    }
+
+    if (getpeername(fd, (struct sockaddr *) &addr, &len) < 0) {
+        return false;
+    }
+
+    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &LocalSocket::TRUE, sizeof(LocalSocket::TRUE)) < 0) {
+        return false;
+    }
+
+    this->setSocket(fd, addr);
+    this->setConnected(true);
+
+    return true;
+}

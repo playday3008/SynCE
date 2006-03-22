@@ -27,12 +27,10 @@
 #include <string.h>
 #include <synce_log.h>
 
-SynCEClient::SynCEClient( const LocalAcceptedSocket &localAcceptedSocket, DeviceManager *deviceManager )
- : LocalAcceptedSocket( localAcceptedSocket )
-{
-    this->deviceManager = deviceManager;
+SynCEClient::SynCEClient(int fd, LocalServerSocket *localServerSocket)
+: LocalAcceptedSocket(fd, localServerSocket) {
     Multiplexer::self()->getReadManager()->add(this);
-    deviceManager->addClient(this);
+    DeviceManager::self()->addClient(this);
 }
 
 
@@ -42,7 +40,7 @@ SynCEClient::~SynCEClient()
 
 void SynCEClient::disconnect()
 {
-    deviceManager->removeClient( this );
+    DeviceManager::self()->removeClient( this );
 
     Multiplexer::self()->getReadManager()->remove(this);
 
@@ -69,7 +67,7 @@ void SynCEClient::event()
         case 'R': {
                 char * password = &buffer[ 1 ];
                 char *name = strsep( &password, "=" );
-                WindowsCEDevice *windowsCEDevice = deviceManager->getPasswordPendingDevice( name );
+                WindowsCEDevice *windowsCEDevice = DeviceManager::self()->getPasswordPendingDevice( name );
                 if ( windowsCEDevice != NULL ) {
                     synce_trace( "Sending Password to: %s", name );
                     if ( !windowsCEDevice->sendPassword( password ) ) {
@@ -83,12 +81,12 @@ void SynCEClient::event()
             break;
         case 'A':{
                 char *deviceName = &buffer[1];
-                deviceManager->setAsDefaultDevice(deviceName);
+                DeviceManager::self()->setAsDefaultDevice(deviceName);
             }
         case 'D': {
                 synce_trace( "Disconnecting %s", &buffer[ 1 ] );
                 char *name = &buffer[ 1 ];
-                WindowsCEDevice *windowsCEDevice = deviceManager->getConnectedDevice( name );
+                WindowsCEDevice *windowsCEDevice = DeviceManager::self()->getConnectedDevice( name );
                 if ( windowsCEDevice != NULL ) {
                     windowsCEDevice->disconnect();
                 } else {

@@ -25,13 +25,13 @@
 #include <synce_log.h>
 #include <errno.h>
 #include <string.h>
+#include <tcpacceptedsocketfactory.h>
 
 using namespace synce;
 
-DccmServer::DccmServer(DeviceManager *deviceManager, u_int16_t port, string interfaceName)
-    : TCPServerSocket(port, interfaceName)
+DccmServer::DccmServer(TCPAcceptedSocketFactory *tasf, u_int16_t port, string interfaceName)
+    : TCPServerSocket(tasf, port, interfaceName)
 {
-    this->deviceManager = deviceManager;
 }
 
 
@@ -68,8 +68,13 @@ void DccmServer::event()
     SynceSocket *clientSocket = synce_socket_accept(socket, NULL);
 
     if (clientSocket != NULL) {
-        TCPAcceptedSocket tas = TCPAcceptedSocket::generate(synce_socket_get_descriptor(clientSocket), this);
-        new WindowsCEDevice(tas, deviceManager, clientSocket);
+        WindowsCEDevice *wced = dynamic_cast<WindowsCEDevice *>(tcpAcceptedSocketFactory->socket(
+                synce_socket_get_descriptor(clientSocket) , this));
+        if (wced != NULL) {
+            wced->init(clientSocket);
+        } else {
+            synce_warning("Device not accepted: %s", strerror(errno));
+        }
     } else {
         synce_warning("Device not accepted: %s", strerror(errno));
     }

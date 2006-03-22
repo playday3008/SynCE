@@ -34,30 +34,23 @@ class TCPConnectedSocket : public TCPSocket
 {
 public:
     TCPConnectedSocket(uint16_t port, std::string interfaceName);
-    TCPConnectedSocket(const TCPConnectedSocket &tcpConnectedSocket, bool releaseFromManager = false);
     ~TCPConnectedSocket();
     bool isConnected() const;
-    TCPConnectedSocket& operator=(const TCPConnectedSocket &tcpConnectedSocket)
-    {
-        memcpy(&this->remoteAddress, &tcpConnectedSocket.remoteAddress, sizeof(remoteAddress));
-        this->connected = tcpConnectedSocket.connected;
-
-        return *this;
-    }
     struct sockaddr_in getRemoteSinAddr() const;
     std::string getRemoteAddress() const;
     uint16_t getRemotePort() const;
-    static TCPConnectedSocket generate(int fd);
 
 protected:
     TCPConnectedSocket();
-    bool setSocket(int descriptor, struct sockaddr_in remoteAddress);
     void setConnected(bool connected);
-    bool _generate(int fd);
+    bool setSocket(int fd);
 
 private:
+    bool setSocket(int descriptor, struct sockaddr_in remoteAddress);
     bool connected;
     struct sockaddr_in remoteAddress;
+
+friend class TCPClientSocket;
 };
 
 #endif

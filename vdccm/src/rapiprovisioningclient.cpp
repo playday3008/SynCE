@@ -20,8 +20,8 @@ using namespace synce;
 
 #include <iostream>
 
-RapiProvisioningClient::RapiProvisioningClient(const TCPAcceptedSocket & tcpAcceptedSocket)
-    : RapiClient(tcpAcceptedSocket)
+RapiProvisioningClient::RapiProvisioningClient(int fd, TCPServerSocket *tcpServerSocket)
+    : RapiClient(fd, tcpServerSocket)
 {
   _state = NoDataReceived;
 }
@@ -37,6 +37,11 @@ void RapiProvisioningClient::event( void )
   char buffer[ 8192 ];
   memset( buffer, 0, sizeof(buffer) );
   int nBytes = readAll( buffer );
+
+  if (nBytes == 0) {
+      disconnect();
+      return;
+  }
 
   std::cout << "nbytes=" << nBytes << std::endl;
 
@@ -61,7 +66,7 @@ void RapiProvisioningClient::event( void )
     unsigned char packet[688];
     makePacket( proxyEntries2Prefix, proxyEntries2String, packet );
     write( getDescriptor(), packet, sizeof(packet) );
-    
+
     _state = State3;
   }
   else if( _state == State3 )
@@ -69,7 +74,7 @@ void RapiProvisioningClient::event( void )
     unsigned char packet[472];
     makePacket( netEntriesPrefix, netEntriesString, packet );
     write( getDescriptor(), packet, sizeof(packet) );
-    
+
     _state = State4;
   }
   else if( _state == State4 )
@@ -77,7 +82,7 @@ void RapiProvisioningClient::event( void )
     unsigned char packet[478];
     makePacket( syncQueryPrefix, syncQueryString, packet );
     write( getDescriptor(), packet, sizeof(packet) );
-    
+
     _state = State5;
   }
   else if( _state == State5 )
@@ -85,7 +90,7 @@ void RapiProvisioningClient::event( void )
     unsigned char packet[478];
     makePacket( syncSourcesQueryPrefix, syncSourcesQueryString, packet );
     write( getDescriptor(), packet, sizeof(packet) );
-    
+
     _state = State6;
   }
   else if( _state == State6 )
@@ -100,7 +105,7 @@ void RapiProvisioningClient::event( void )
     const int sizeofUnicode =  2 * (strlen( string ) + 1);
     memcpy( packet + 18, unicode, sizeofUnicode );
 
-    // append even more..?    
+    // append even more..?
     memcpy( packet + 18 + sizeofUnicode, "\02\00\00\00\00\00", 6 );
     write( getDescriptor(), packet, sizeof(packet) );
 
@@ -108,12 +113,12 @@ void RapiProvisioningClient::event( void )
   }
   else if( _state == State7 )
   {
-    const unsigned char packet[] = { 0x18, 0x00, 0x00, 0x00,  
-                                     0x31, 0x00, 0x00, 0x00,  
-                                     0xc0, 0x42, 0x0b, 0x04,  
-                                     0x06, 0x00, 0x00, 0x00,  
-                                     0x50, 0x00, 0x31, 0x00,  
-                                     0x00, 0x00, 0x02, 0x00,  
+    const unsigned char packet[] = { 0x18, 0x00, 0x00, 0x00,
+                                     0x31, 0x00, 0x00, 0x00,
+                                     0xc0, 0x42, 0x0b, 0x04,
+                                     0x06, 0x00, 0x00, 0x00,
+                                     0x50, 0x00, 0x31, 0x00,
+                                     0x00, 0x00, 0x02, 0x00,
                                      0x00, 0x00, 0x00, 0x00 };
 
     write( getDescriptor(), packet, sizeof(packet) );
@@ -122,22 +127,22 @@ void RapiProvisioningClient::event( void )
   }
   else if( _state == State8 )
   {
-    const char packet[] = { 0x1c, 0x00, 0x00, 0x00,  
-                            0x37, 0x00, 0x00, 0x00,  
-                            0x20, 0x43, 0x0b, 0x04,  
-                            0x0c, 0x00, 0x00, 0x00,  
-                            0x50, 0x00, 0x4e, 0x00,  
-                            0x61, 0x00, 0x6d, 0x00,  
-                            0x65, 0x00, 0x00, 0x00,  
+    const char packet[] = { 0x1c, 0x00, 0x00, 0x00,
+                            0x37, 0x00, 0x00, 0x00,
+                            0x20, 0x43, 0x0b, 0x04,
+                            0x0c, 0x00, 0x00, 0x00,
+                            0x50, 0x00, 0x4e, 0x00,
+                            0x61, 0x00, 0x6d, 0x00,
+                            0x65, 0x00, 0x00, 0x00,
                             0x08, 0x02, 0x00, 0x00 };
 
     write( getDescriptor(), packet, sizeof(packet) );
-    
+
     _state = State9;
   }
 }
 
-int RapiProvisioningClient::makePacket( const unsigned char* prefix,
+void RapiProvisioningClient::makePacket( const unsigned char* prefix,
                                         const char* string,
                                         unsigned char * packet )
 {

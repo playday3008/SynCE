@@ -33,22 +33,13 @@ class TCPClientSocket : public TCPConnectedSocket
 {
 public:
     TCPClientSocket(uint16_t remotePort, std::string remoteInterfaceName, uint16_t localPort = 0, std::string localInterfaceName = "");
-    TCPClientSocket(const TCPClientSocket &tcpClientSocket, bool releaseFromManager = false);
     ~TCPClientSocket();
     bool connect();
-    static TCPClientSocket generate(int fd);
-    TCPClientSocket &operator=(const TCPClientSocket &tcpClientSocket) {
-        this->remotePort = tcpClientSocket.remotePort;
-        this->remoteInterfaceName = tcpClientSocket.interfaceName;
-
-        return *this;
-    }
     std::string getConfiguredRemoteInterfaceName();
     uint16_t getConfiguredRemotePort();
 
-protected:
-    TCPClientSocket();
 private:
+    TCPClientSocket();
     uint16_t remotePort;
     std::string remoteInterfaceName;
 };

@@ -33,26 +33,21 @@ class LocalConnectedSocket : public LocalSocket
 public:
 public:
     LocalConnectedSocket(std::string path);
-    LocalConnectedSocket(const LocalConnectedSocket &localConnectedSocket, bool releaseFromManager = false);
     ~LocalConnectedSocket();
     bool isConnected() const;
-    LocalConnectedSocket& operator=(const LocalConnectedSocket &localConnectedSocket)
-    {
-        memcpy(&this->remoteAddress, &localConnectedSocket.remoteAddress, sizeof(remoteAddress));
-        this->connected = localConnectedSocket.connected;
-
-        return *this;
-    }
+    struct sockaddr_un getRemoteSunAddr() const;
 
 protected:
-    bool setSocket(const int descriptor, const struct sockaddr_un remoteAddress);
+    LocalConnectedSocket();
     void setConnected(const bool connected);
+    bool setSocket(int fd);
 
 private:
+    bool setSocket(const int descriptor, const struct sockaddr_un remoteAddress);
     bool connected;
     struct sockaddr_un remoteAddress;
 
-friend class LocalServerSocket;
+friend class LocalClientSocket;
 };
 
 #endif

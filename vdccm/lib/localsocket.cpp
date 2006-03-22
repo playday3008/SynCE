@@ -43,11 +43,10 @@ LocalSocket::LocalSocket(string path)
 }
 
 
-LocalSocket::LocalSocket(const LocalSocket &localSocket, bool releaseFromManager)
- : Descriptor(localSocket, releaseFromManager)
+LocalSocket::LocalSocket()
+ : Descriptor()
 {
-    this->path = localSocket.path;
-    memcpy(&this->localAddress, &localSocket.localAddress, sizeof(localAddress));
+    this->path = "";
 }
 
 

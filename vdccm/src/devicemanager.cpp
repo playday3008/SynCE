@@ -30,6 +30,9 @@
 #include <synce_log.h>
 
 
+
+DeviceManager *DeviceManager::deviceManager = NULL;
+
 DeviceManager::DeviceManager()
  : ContinousNode(CmdLineArgs::getPingDelay(), 0)
 {
@@ -38,6 +41,16 @@ DeviceManager::DeviceManager()
 
 DeviceManager::~DeviceManager()
 {
+}
+
+
+DeviceManager *DeviceManager::self()
+{
+    if (deviceManager == NULL) {
+        deviceManager = new DeviceManager();
+    }
+
+    return deviceManager;
 }
 
 

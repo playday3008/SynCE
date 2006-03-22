@@ -21,17 +21,17 @@
 class RapiHandshakeClient : public RapiClient, public ContinousNode
 {
 public:
-    RapiHandshakeClient(const TCPAcceptedSocket & tcpAcceptedSocket);
+    RapiHandshakeClient(int fd, TCPServerSocket *tcpServerSocket);
 
     virtual ~RapiHandshakeClient();
-    
+
     void keepAlive();
-    
+
 protected:
 
-    virtual void event();    
+    virtual void event();
     virtual void shot();
-    
+
 private:
 
     enum State {
@@ -41,7 +41,7 @@ private:
       InfoMessageReceived,
       KeepingAlive
     };
-     
+
     State _state;
 };
 

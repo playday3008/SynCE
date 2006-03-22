@@ -20,19 +20,19 @@
 class RapiProvisioningClient : public RapiClient
 {
 public:
-    RapiProvisioningClient(const TCPAcceptedSocket & tcpAcceptedSocket);
+    RapiProvisioningClient(int fd, TCPServerSocket *tcpServerSocket);
 
     ~RapiProvisioningClient();
-    
+
 protected:
-  
+
       virtual void event();
-      
+
 private:
 
     // make a packet of bytes from the rapimessages namespace, return size of packet
-    int makePacket( const unsigned char* prefix, const char* string, unsigned char* buffer );
-  
+    void makePacket( const unsigned char* prefix, const char* string, unsigned char* buffer );
+
     enum State {
       NoDataReceived = 0,
       Ping1Received,

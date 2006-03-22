@@ -36,23 +36,16 @@ class LocalServerSocket;
 class LocalAcceptedSocket : public LocalConnectedSocket
 {
 public:
-    LocalAcceptedSocket(string path);
-    LocalAcceptedSocket(const LocalAcceptedSocket &tcpAcceptedSocket, bool releaseFromManager = false);
-    static LocalAcceptedSocket generate(int fd, LocalServerSocket *localServerSocket);
+    LocalAcceptedSocket(int fd, LocalServerSocket *localServerSocket);
     ~LocalAcceptedSocket();
     const LocalServerSocket *getServerSocket() const;
-    LocalAcceptedSocket& operator=(const LocalAcceptedSocket &localConnectedSocket)
-    {
-        this->localServerSocket = localConnectedSocket.localServerSocket;
 
-        return *this;
-    }
+protected:
+    void setServerSocket(const LocalServerSocket * localServerSocket);
 
 private:
-    void setServerSocket(const LocalServerSocket * localServerSocket);
+    LocalAcceptedSocket() {};
     const LocalServerSocket *localServerSocket;
-
-friend class LocalServerSocket;
 };
 
 #endif
