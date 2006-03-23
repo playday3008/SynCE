@@ -44,5 +44,6 @@ AC_CHECK_FUNCS([gethostbyaddr gethostbyname gettimeofday select socket strerror]
 
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
-                 src/Makefile])
+                 src/Makefile
+                 testtools/Makefile])
 AC_OUTPUT

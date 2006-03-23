@@ -1,4 +1,4 @@
-SUBDIRS = lib src
+SUBDIRS = lib src testtools
 AM_CFLAGS = -O2 -Werror -pedantic-errors -Wall
 AM_CXXFLAGS = -O2 -Werror -pedantic-errors -Wall
 AM_FFLAGS = -O2 -Werror -pedantic-errors -Wall
