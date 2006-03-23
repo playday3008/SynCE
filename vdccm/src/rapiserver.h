@@ -14,6 +14,7 @@
 
 #include <tcpserversocket.h>
 #include <string.h>
+#include <map>
 
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
@@ -22,9 +23,7 @@
 class RapiHandshakeClientFactory;
 class RapiProvisioningClientFactory;
 
-class RapiHandshakeClient;
-class RapiProvisioningClient;
-
+class RapiConnection;
 
 using namespace std;
 
@@ -36,13 +35,13 @@ public:
     ~RapiServer();
 
     void event();
+    void disconnect(string deviceIpAddress);
 
 private:
     RapiHandshakeClientFactory *rapiHandshakeClientFactory;
     RapiProvisioningClientFactory *rapiProvisioningClientFactory;
 
-    RapiHandshakeClient * _rapiHandshakeClient;
-    RapiProvisioningClient * _rapiProvisioningClient;
+    map<string, RapiConnection*> rapiConnection;
 };
 
 #endif

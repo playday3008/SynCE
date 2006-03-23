@@ -43,6 +43,7 @@ void RapiHandshakeClient::event()
   memset( buffer, 0, sizeof(buffer) );
 
   if (readAll( buffer ) == 0) {
+      Multiplexer::self()->getTimerNodeManager()->remove(this);
       disconnect();
       return;
   }

@@ -17,6 +17,8 @@
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
 */
+class RapiConnection;
+
 class RapiClient : public TCPAcceptedSocket
 {
 public:
@@ -27,6 +29,10 @@ public:
     void disconnect();
 
     int readAll(char * buffer);
+
+    void setRapiConnection(RapiConnection *rapiConnection);
+    private:
+        RapiConnection *rapiConnection;
 };
 
 #endif

@@ -14,6 +14,7 @@
 #include <multiplexer.h>
 
 #include <iostream>
+#include "rapiconnection.h"
 
 RapiClient::RapiClient(int fd, TCPServerSocket *tcpServerSocket)
     : TCPAcceptedSocket(fd, tcpServerSocket)
@@ -37,7 +38,15 @@ void RapiClient::disconnect()
 
     shutdown();
 
+    rapiConnection->disconnect(this);
+
     delete this;
+}
+
+
+void RapiClient::setRapiConnection(RapiConnection *rapiConnection)
+{
+    this->rapiConnection = rapiConnection;
 }
 
 

@@ -10,6 +10,7 @@
 //
 //
 #include "rapiserver.h"
+#include "rapiconnection.h"
 #include "rapiclient.h"
 #include "rapihandshakeclientfactory.h"
 #include "rapiprovisioningclientfactory.h"
@@ -24,8 +25,6 @@ RapiServer::RapiServer(RapiHandshakeClientFactory *rhcf, RapiProvisioningClientF
 {
     rapiHandshakeClientFactory = rhcf;
     rapiProvisioningClientFactory = rpcf;
-    _rapiHandshakeClient = NULL;
-    _rapiProvisioningClient = NULL;
 }
 
 
@@ -34,7 +33,17 @@ RapiServer::~RapiServer()
 }
 
 
+void RapiServer::disconnect(string deviceIpAddress)
+{
+    map<string, RapiConnection*>::iterator it = rapiConnection.find(deviceIpAddress);
+    RapiConnection *rc = (*it).second;
+    rapiConnection.erase(it);
+    delete rc;
+}
+
+
 #include <iostream>
+#include <arpa/inet.h>
 void RapiServer::event()
 {
     std::cout << "990-server-event()" << endl;
@@ -44,16 +53,33 @@ void RapiServer::event()
     fd = ::accept(getDescriptor(), NULL, NULL);
     std::cout << "Descriptor: " << fd << std::endl;
 
-    if (fd >= 0) {
-        if (!_rapiHandshakeClient) {
-            _rapiHandshakeClient =
-                    dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this));
-        } else if( !_rapiProvisioningClient ) {
-            _rapiProvisioningClient =
-                    dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this));
-            _rapiHandshakeClient->keepAlive();
-        }
-    } else {
+    struct sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+
+    if (fd < 0) {
         synce_warning(strerror(errno));
+        return;
+    }
+
+    if (getpeername(fd, (struct sockaddr *) &addr, &len) < 0) {
+        synce_warning(strerror(errno));
+        return;
+    }
+
+    char ip_str[16];
+    if (!inet_ntop(AF_INET, &addr.sin_addr, ip_str, sizeof(ip_str))) {
+        ip_str[0] = '\0';
+    }
+
+    if (rapiConnection[ip_str] == NULL) {
+        std::cout << "RapiHandshakeClient" << std::endl;
+        // Rapi Handshake Client
+        rapiConnection[ip_str] = new RapiConnection(this, ip_str);
+        rapiConnection[ip_str]->setHandshakeClient(dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
+    } else {
+        std::cout << "RapiProvisioningClient" << std::endl;
+        // Rapi Provisioning Client
+        rapiConnection[ip_str]->setProvisioningClient(dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
+        rapiConnection[ip_str]->keepAlive();
     }
 }
