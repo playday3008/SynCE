@@ -49,8 +49,8 @@ protected:
     virtual bool bind();
 
 protected:
-    static int TRUE;
-    static int FALSE;
+    static int FTRUE;
+    static int FFALSE;
     static unsigned long int INADDRANY;
 
 protected:

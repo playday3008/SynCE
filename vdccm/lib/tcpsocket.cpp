@@ -27,8 +27,8 @@
 
 using namespace std;
 
-int TCPSocket::TRUE = 1;
-int TCPSocket::FALSE = 0;
+int TCPSocket::FTRUE = 1;
+int TCPSocket::FFALSE = 0;
 unsigned long int TCPSocket::INADDRANY = INADDR_ANY;
 
 TCPSocket::TCPSocket(uint16_t port, string interfaceName)
@@ -61,7 +61,7 @@ bool TCPSocket::socket()
         return false;
     }
 
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &TCPSocket::TRUE, sizeof(int)) < 0) {
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &TCPSocket::FTRUE, sizeof(int)) < 0) {
         return false;
     }
 

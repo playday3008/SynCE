@@ -25,8 +25,6 @@
 
 #include <list>
 
-using namespace std;
-
 class Descriptor;
 class Multiplexer;
 
@@ -61,8 +59,8 @@ private:
 private:
     fd_set staticFdSet;
     fd_set workingFdSet;
-    list<Descriptor *> descriptors;
-    list<Descriptor *>::iterator it;
+    std::list<Descriptor *> descriptors;
+    std::list<Descriptor *>::iterator it;
     bool listDirty;
     bool dontIncrement;
 

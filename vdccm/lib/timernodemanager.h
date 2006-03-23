@@ -25,8 +25,6 @@
 
 #include <list>
 
-using namespace std;
-
 class TimerNode;
 class Multiplexer;
 
@@ -56,8 +54,8 @@ private:
     static bool compare(const TimerNode * tn1, const TimerNode * tn2);
 
 private:
-    list<TimerNode *> timerNodes;
-    list<TimerNode *>::iterator it;
+    std::list<TimerNode *> timerNodes;
+    std::list<TimerNode *>::iterator it;
     bool listDirty;
     bool dontIncrement;
 

@@ -33,8 +33,8 @@
 
 using namespace std;
 
-int LocalSocket::TRUE = 1;
-int LocalSocket::FALSE = 0;
+int LocalSocket::FTRUE = 1;
+int LocalSocket::FFALSE = 0;
 
 LocalSocket::LocalSocket(string path)
  : Descriptor()
@@ -63,7 +63,7 @@ bool LocalSocket::socket()
         return false;
     }
 
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &LocalSocket::TRUE, sizeof(int)) < 0) {
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &LocalSocket::FTRUE, sizeof(int)) < 0) {
         return false;
     }
 

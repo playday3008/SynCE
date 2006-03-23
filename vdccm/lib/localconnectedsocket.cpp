@@ -102,7 +102,7 @@ bool LocalConnectedSocket::setSocket(int fd)
         return false;
     }
 
-    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &LocalSocket::TRUE, sizeof(LocalSocket::TRUE)) < 0) {
+    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &LocalSocket::FTRUE, sizeof(LocalSocket::FTRUE)) < 0) {
         return false;
     }
 

@@ -25,6 +25,8 @@
 #include "localacceptedsocketfactory.h"
 #include <sys/socket.h>
 
+using namespace std;
+
 LocalServerSocket::LocalServerSocket(LocalAcceptedSocketFactory *localAcceptedSocketFactory, string path)
     : LocalSocket(path), localAcceptedSocketFactory(localAcceptedSocketFactory)
 {

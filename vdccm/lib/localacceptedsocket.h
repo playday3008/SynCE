@@ -26,7 +26,6 @@
 #include <localconnectedsocket.h>
 #include <string>
 
-using namespace std;
 
 class LocalServerSocket;
 
@@ -38,14 +37,14 @@ class LocalAcceptedSocket : public LocalConnectedSocket
 public:
     LocalAcceptedSocket(int fd, LocalServerSocket *localServerSocket);
     ~LocalAcceptedSocket();
-    const LocalServerSocket *getServerSocket() const;
+    LocalServerSocket *getServerSocket() const;
 
 protected:
-    void setServerSocket(const LocalServerSocket * localServerSocket);
+    void setServerSocket(LocalServerSocket * localServerSocket);
 
 private:
     LocalAcceptedSocket() {};
-    const LocalServerSocket *localServerSocket;
+    LocalServerSocket *localServerSocket;
 };
 
 #endif

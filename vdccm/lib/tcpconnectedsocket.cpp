@@ -133,7 +133,7 @@ bool TCPConnectedSocket::setSocket(int fd)
         return false;
     }
 
-    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &TCPSocket::TRUE, sizeof(TCPSocket::TRUE)) < 0) {
+    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &TCPSocket::FTRUE, sizeof(TCPSocket::FTRUE)) < 0) {
         return false;
     }
 

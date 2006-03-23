@@ -45,8 +45,8 @@ protected:
     virtual bool bind();
 
 protected:
-    static int TRUE;
-    static int FALSE;
+    static int FTRUE;
+    static int FFALSE;
 
 protected:
     std::string path;

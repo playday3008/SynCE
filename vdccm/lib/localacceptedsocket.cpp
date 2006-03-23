@@ -24,6 +24,8 @@
 #include "localserversocket.h"
 #include <sys/socket.h>
 
+using namespace std;
+
 LocalAcceptedSocket::LocalAcceptedSocket(int fd, LocalServerSocket *localServerSocket)
 {
     setSocket(fd);
@@ -37,13 +39,13 @@ LocalAcceptedSocket::~LocalAcceptedSocket()
 
 
 
-void LocalAcceptedSocket::setServerSocket(const LocalServerSocket * localServerSocket)
+void LocalAcceptedSocket::setServerSocket(LocalServerSocket * localServerSocket)
 {
     this->localServerSocket = localServerSocket;
 }
 
 
-const LocalServerSocket *LocalAcceptedSocket::getServerSocket() const
+LocalServerSocket *LocalAcceptedSocket::getServerSocket() const
 {
     return localServerSocket;
 }
