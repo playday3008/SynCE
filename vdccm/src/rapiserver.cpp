@@ -16,9 +16,15 @@
 #include "rapiprovisioningclientfactory.h"
 #include "rapihandshakeclient.h"
 #include "rapiprovisioningclient.h"
+#include "rapiproxyfactory.h"
 #include <synce_log.h>
+#include <synce.h>
 #include <tcpacceptedsocket.h>
 #include <errno.h>
+
+#include <arpa/inet.h>
+
+using namespace std;
 
 RapiServer::RapiServer(RapiHandshakeClientFactory *rhcf, RapiProvisioningClientFactory *rpcf, u_int16_t port, string interfaceName)
     : TCPServerSocket(NULL, port, interfaceName)
@@ -43,7 +49,6 @@ void RapiServer::disconnect(string deviceIpAddress)
 
 
 #include <iostream>
-#include <arpa/inet.h>
 void RapiServer::event()
 {
     std::cout << "990-server-event()" << endl;
@@ -51,7 +56,6 @@ void RapiServer::event()
     int fd;
 
     fd = ::accept(getDescriptor(), NULL, NULL);
-    std::cout << "Descriptor: " << fd << std::endl;
 
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
@@ -66,20 +70,33 @@ void RapiServer::event()
         return;
     }
 
-    char ip_str[16];
-    if (!inet_ntop(AF_INET, &addr.sin_addr, ip_str, sizeof(ip_str))) {
-        ip_str[0] = '\0';
+    char remoteIpAddress[16];
+    if (!inet_ntop(AF_INET, &addr.sin_addr, remoteIpAddress, sizeof(remoteIpAddress))) {
+        remoteIpAddress[0] = '\0';
     }
 
-    if (rapiConnection[ip_str] == NULL) {
-        std::cout << "RapiHandshakeClient" << std::endl;
+    if (rapiConnection[remoteIpAddress] == NULL) {
+        char *path;
+
+        if (!synce::synce_get_directory(&path)) {
+            return;
+        }
+        string socketPath = string(path) + "/" + remoteIpAddress;
+        free(path);
+        std::cout << "RapiHandshakeClient for device " << remoteIpAddress << std::endl;
         // Rapi Handshake Client
-        rapiConnection[ip_str] = new RapiConnection(this, ip_str);
-        rapiConnection[ip_str]->setHandshakeClient(dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
+        rapiConnection[remoteIpAddress] = new RapiConnection(new RapiProxyFactory(), socketPath, this, remoteIpAddress);
+        rapiConnection[remoteIpAddress]->setHandshakeClient(dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
     } else {
-        std::cout << "RapiProvisioningClient" << std::endl;
-        // Rapi Provisioning Client
-        rapiConnection[ip_str]->setProvisioningClient(dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
-        rapiConnection[ip_str]->keepAlive();
+        if (rapiConnection[remoteIpAddress]->getRapiProvisioningClient() == NULL) {
+            std::cout << "RapiProvisioningClient for device " << remoteIpAddress << std::endl;
+            // Rapi Provisioning Client
+            rapiConnection[remoteIpAddress]->setProvisioningClient(dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
+            rapiConnection[remoteIpAddress]->keepAlive();
+        } else {
+            // We only accept two connections to port 990 from one particular ip-address
+            ::shutdown(fd, 2);
+            ::close(fd);
+        }
     }
 }

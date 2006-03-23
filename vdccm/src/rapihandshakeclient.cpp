@@ -26,6 +26,7 @@ RapiHandshakeClient::RapiHandshakeClient(int fd, TCPServerSocket *tcpServerSocke
 
 RapiHandshakeClient::~RapiHandshakeClient()
 {
+    Multiplexer::self()->getTimerNodeManager()->remove(this);
 }
 
 void RapiHandshakeClient::keepAlive()
@@ -43,7 +44,6 @@ void RapiHandshakeClient::event()
   memset( buffer, 0, sizeof(buffer) );
 
   if (readAll( buffer ) == 0) {
-      Multiplexer::self()->getTimerNodeManager()->remove(this);
       disconnect();
       return;
   }

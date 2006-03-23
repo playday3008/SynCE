@@ -21,14 +21,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 #include "windowscedevice.h"
+#include "cmdlineargs.h"
 #include <descriptormanager.h>
 #include <tcpserversocket.h>
 #include <multiplexer.h>
-#include "cmdlineargs.h"
 #include <synce_log.h>
 
 #include <devicemanager.h>
 
+using namespace std;
 
 WindowsCEDevice::WindowsCEDevice(int fd, TCPServerSocket *tcpServerSocket)
  : TCPAcceptedSocket( fd, tcpServerSocket )
@@ -296,7 +297,7 @@ char* WindowsCEDevice::string_at(const char *buffer, size_t size, size_t offset)
     size_t string_offset = letoh32(*(uint32_t*)(buffer + offset));
 
     if (string_offset < size) {
-        return wstr_to_ascii((WCHAR*)(buffer + string_offset));
+        return synce::wstr_to_ascii((WCHAR*)(buffer + string_offset));
     } else {
         synce_error("String offset too large: 0x%08x", string_offset);
         return NULL;

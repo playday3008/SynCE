@@ -25,23 +25,21 @@ class RapiProvisioningClientFactory;
 
 class RapiConnection;
 
-using namespace std;
-
 class RapiServer : public TCPServerSocket
 {
 public:
-    RapiServer(RapiHandshakeClientFactory *rhcf, RapiProvisioningClientFactory *rpcf, u_int16_t port = 990, string interfaceName = "");
+    RapiServer(RapiHandshakeClientFactory *rhcf, RapiProvisioningClientFactory *rpcf, u_int16_t port = 990, std::string interfaceName = "");
 
     ~RapiServer();
 
     void event();
-    void disconnect(string deviceIpAddress);
+    void disconnect(std::string deviceIpAddress);
 
 private:
     RapiHandshakeClientFactory *rapiHandshakeClientFactory;
     RapiProvisioningClientFactory *rapiProvisioningClientFactory;
 
-    map<string, RapiConnection*> rapiConnection;
+    std::map<std::string, RapiConnection*> rapiConnection;
 };
 
 #endif

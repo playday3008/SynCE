@@ -25,7 +25,6 @@
 
 #include <string>
 
-using namespace std;
 
 /**
 @author Volker Christian
@@ -39,7 +38,7 @@ public:
     static void setupSignals();
     static bool isRunning();
     static bool disconnectDevices();
-    static void runScripts(string action, string deviceName = "");
+    static void runScripts(std::string action, std::string deviceName = "");
     static bool dropRootPrivileg();
     static bool acquireRootPrivileg();
     static bool checkStartingUser();

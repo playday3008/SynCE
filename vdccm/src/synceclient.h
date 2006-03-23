@@ -36,15 +36,15 @@ public:
 
 protected:
     ~SynCEClient();
-    void newDevidddceConnected(string name);
+    void newDevidddceConnected(std::string name);
 
 public:
     void disconnect();
-    bool deviceConnected(string &name);
-    bool deviceDisconnected(string &name);
-    bool deviceRequestsPassword(string &name);
-    bool writeToClient(char command, string &name);
-    bool passwordRejected(string &name);
+    bool deviceConnected(std::string &name);
+    bool deviceDisconnected(std::string &name);
+    bool deviceRequestsPassword(std::string &name);
+    bool writeToClient(char command, std::string &name);
+    bool passwordRejected(std::string &name);
 
 protected:
     virtual void event();

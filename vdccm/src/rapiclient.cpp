@@ -20,7 +20,6 @@ RapiClient::RapiClient(int fd, TCPServerSocket *tcpServerSocket)
     : TCPAcceptedSocket(fd, tcpServerSocket)
 {
     Multiplexer::self()->getReadManager()->add(this);
-    std::cout << "hier bin ich" << std::endl;
 }
 
 
@@ -30,6 +29,9 @@ RapiClient::~RapiClient()
 
 
 #include <iostream>
+
+using namespace std;
+
 void RapiClient::disconnect()
 {
     cout << "990-client-disconnect()" << endl;

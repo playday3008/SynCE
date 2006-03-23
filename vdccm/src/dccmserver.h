@@ -25,6 +25,7 @@
 
 #include <tcpserversocket.h>
 #include <synce_socket.h>
+#include <string>
 #include "devicemanager.h"
 
 #define DCCM_PORT               5679
@@ -35,7 +36,7 @@
 class DccmServer : public TCPServerSocket
 {
 public:
-    DccmServer(TCPAcceptedSocketFactory *tasf, u_int16_t port = DCCM_PORT, string interfaceName = "");
+    DccmServer(TCPAcceptedSocketFactory *tasf, u_int16_t port = DCCM_PORT, std::string interfaceName = "");
 
     ~DccmServer();
 
@@ -47,7 +48,6 @@ protected:
     virtual void event();
 
     SynceSocket* socket;
-//    DeviceManager *deviceManager;
 };
 
 #endif

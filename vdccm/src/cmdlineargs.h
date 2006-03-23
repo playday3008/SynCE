@@ -25,8 +25,6 @@
 
 #include <string>
 
-using namespace std;
-
 /**
 @author Volker Christian
 */
@@ -37,7 +35,7 @@ public:
     static bool isDaemon();
     static bool useIp();
     static int getMissingPingCount();
-    static string getPassword();
+    static std::string getPassword();
     static int getPingDelay();
 
 private:
@@ -47,7 +45,7 @@ private:
 
     static int logLevel;
     static bool _isDaemon;
-    static string password;
+    static std::string password;
     static bool _useIp;
     static int missingPingCount;
     static int pingDelay;

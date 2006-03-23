@@ -28,6 +28,7 @@
 #include <synce_log.h>
 
 using namespace synce;
+using namespace std;
 
 LocalServer::LocalServer(LocalAcceptedSocketFactory *localAcceptedSocketFactory, string path)
     : LocalServerSocket(localAcceptedSocketFactory, path)

@@ -27,6 +27,8 @@
 #include <string.h>
 #include <synce_log.h>
 
+using namespace std;
+
 SynCEClient::SynCEClient(int fd, LocalServerSocket *localServerSocket)
 : LocalAcceptedSocket(fd, localServerSocket) {
     Multiplexer::self()->getReadManager()->add(this);

@@ -29,8 +29,6 @@
 #include <continousnode.h>
 #include "connectionfilemanager.h"
 
-using namespace std;
-
 class WindowsCEDevice;
 class SynCEClient;
 
@@ -50,21 +48,21 @@ public:
     void passwordRejected(WindowsCEDevice * windowsCEDevice);
     void addClient(SynCEClient * synCEClient);
     void removeClient(SynCEClient * synCEClient);
-    WindowsCEDevice *getConnectedDevice(string name);
-    WindowsCEDevice *getPasswordPendingDevice(string name);
+    WindowsCEDevice *getConnectedDevice(std::string name);
+    WindowsCEDevice *getPasswordPendingDevice(std::string name);
     void shutdownDevices();
     void shutdownClients();
     void shutdown();
-    void setAsDefaultDevice(string name);
+    void setAsDefaultDevice(std::string name);
 
 protected:
     virtual void shot();
 
 private:
     DeviceManager();
-    list<WindowsCEDevice *> connectedDevices;
-    list<WindowsCEDevice *> passwordPendingDevices;
-    list<SynCEClient *> connectedClients;
+    std::list<WindowsCEDevice *> connectedDevices;
+    std::list<WindowsCEDevice *> passwordPendingDevices;
+    std::list<SynCEClient *> connectedClients;
     static DeviceManager *deviceManager;
 
 protected:

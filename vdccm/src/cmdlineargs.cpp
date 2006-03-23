@@ -30,6 +30,7 @@
 #define DCCM_PING_INTERVAL      5       /* seconds */
 #define DCCM_MAX_PING_COUNT     3       /* max number of pings without reply */
 
+using namespace std;
 
 int CmdLineArgs::logLevel = SYNCE_LOG_LEVEL_ERROR;
 bool CmdLineArgs::_isDaemon = true;

@@ -29,9 +29,6 @@
 #include <synce_socket.h>
 #include <functional>
 
-using namespace std;
-using namespace synce;
-
 class DeviceManager;
 
 /**
@@ -54,16 +51,16 @@ protected:
 
 public:
     void ping();
-    bool sendPassword(string password);
+    bool sendPassword(std::string password);
     void disconnect();
     bool operator==(const WindowsCEDevice &device) const { return this->deviceName == device.deviceName; }
     bool isLocked() const;
     int getKey() const;
-    string getDeviceAddress() const;
-    string getDeviceClass() const;
-    string getDeviceName() const;
-    string getHardware() const;
-    string getPassword() const;
+    std::string getDeviceAddress() const;
+    std::string getDeviceClass() const;
+    std::string getDeviceName() const;
+    std::string getHardware() const;
+    std::string getPassword() const;
     uint16_t getBuildNumber() const;
     uint16_t getOsVersion() const;
     uint16_t getProcessorType() const;
@@ -74,7 +71,7 @@ public:
     bool handlePasswordRequest(uint32_t header);
     bool handleEvent();
 
-    class EqualsTo : public unary_function<WindowsCEDevice *, bool> {
+    class EqualsTo : public std::unary_function<WindowsCEDevice *, bool> {
     public:
         EqualsTo(const WindowsCEDevice *device) : device(device) {}
         bool operator()(const WindowsCEDevice *device) {
@@ -94,9 +91,9 @@ protected:
     int pingCount;
     bool passwordExpected;
     int key;
-    string deviceName;
-    string deviceClass;
-    string hardware;
+    std::string deviceName;
+    std::string deviceClass;
+    std::string hardware;
     uint16_t osVersion;
     uint16_t buildNumber;
     uint16_t processorType;
@@ -107,7 +104,7 @@ protected:
     bool locked;
 
 private:
-    string password;
+    std::string password;
 };
 
 #endif

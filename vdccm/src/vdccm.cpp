@@ -20,7 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
-#include "localserver.h"
+
 #include "dccmserver.h"
 #include "rapiserver.h"
 #include "windowscedevicefactory.h"
@@ -31,11 +31,13 @@
 #include "multiplexer.h"
 #include "cmdlineargs.h"
 #include "utils.h"
+#include <localserversocket.h>
 #include <synce_log.h>
 #include <iostream>
 #include <wait.h>
 
 using namespace synce;
+using namespace std;
 
 int main(int argc, char *argv[])
 {
@@ -43,7 +45,7 @@ int main(int argc, char *argv[])
         synce_error("Could not start - either because vdccm is not installed suid or you start directly as root");
         exit(0);
     }
-    
+
     Utils::dropRootPrivileg();
 
     if (!CmdLineArgs::parseArgs(argc, argv)) {

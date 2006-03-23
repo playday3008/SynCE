@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <synce_log.h>
 
-
+using namespace std;
 
 DeviceManager *DeviceManager::deviceManager = NULL;
 

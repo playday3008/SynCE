@@ -27,6 +27,7 @@
 #include <string.h>
 #include <tcpacceptedsocketfactory.h>
 
+using namespace std;
 using namespace synce;
 
 DccmServer::DccmServer(TCPAcceptedSocketFactory *tasf, u_int16_t port, string interfaceName)

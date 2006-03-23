@@ -16,21 +16,30 @@
 */
 
 #include <string>
+#include <list>
+#include <localserversocket.h>
 
 class RapiHandshakeClient;
 class RapiProvisioningClient;
 class RapiServer;
 class RapiClient;
+class RapiProxy;
+class RapiProxyFactory;
 
-class RapiConnection
+class RapiConnection : public LocalServerSocket
 {
 public:
-    RapiConnection( RapiServer *rapiServer, std::string deviceIpAddress );
+    RapiConnection(RapiProxyFactory *proxyFactory, std::string path, RapiServer *rapiServer, std::string deviceIpAddress );
 
     ~RapiConnection();
     void setHandshakeClient( RapiHandshakeClient *handshakeClient );
     void setProvisioningClient( RapiProvisioningClient *provisioningClient );
     void keepAlive();
+    void messageToDevice(RapiProxy *rapiProxy);
+    void registerProxy(RapiProxy *rapiProxy);
+    RapiProvisioningClient *getRapiProvisioningClient();
+    RapiHandshakeClient *getRapiHandshakeClient();
+
 protected:
     void disconnectFromServer();
     void disconnect( RapiClient * );
@@ -40,6 +49,7 @@ private:
     RapiProvisioningClient * _rapiProvisioningClient;
     std::string deviceIpAddress;
     RapiServer *rapiServer;
+    std::list<RapiProxy *> rapiProxies;
 
 friend class RapiClient;
 };
