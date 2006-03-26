@@ -13,8 +13,6 @@
 #include "multiplexer.h"
 #include "rapihandshakeclient.h"
 
-#include <iostream>
-using namespace std;
 
 RapiHandshakeClient::RapiHandshakeClient(int fd, TCPServerSocket *tcpServerSocket)
     : RapiClient(fd, tcpServerSocket),

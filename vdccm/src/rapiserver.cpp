@@ -11,7 +11,6 @@
 //
 #include "rapiserver.h"
 #include "rapiconnection.h"
-#include "rapiclient.h"
 #include "rapihandshakeclientfactory.h"
 #include "rapiprovisioningclientfactory.h"
 #include "rapihandshakeclient.h"
@@ -19,7 +18,6 @@
 #include "rapiproxyfactory.h"
 #include <synce_log.h>
 #include <synce.h>
-#include <tcpacceptedsocket.h>
 #include <errno.h>
 
 #include <arpa/inet.h>

@@ -104,9 +104,15 @@ RapiProvisioningClient *RapiConnection::getRapiProvisioningClient()
 void RapiConnection::keepAlive()
 {
     _rapiHandshakeClient->keepAlive();
+}
+
+
+void RapiConnection::provisioningClientReachedState9()
+{
     listen();
     Multiplexer::self()->getReadManager()->add(this);
 }
+
 
 #include <iostream>
 void RapiConnection::messageToDevice(RapiProxy *rapiProxy)
@@ -128,9 +134,15 @@ void RapiConnection::messageToDevice(RapiProxy *rapiProxy)
     */
 
 
+    if (!_rapiProvisioningClient->forwardBytes(rapiProxy)) {
+        rapiProxies.remove(rapiProxy);
+        delete rapiProxy;
+    }
+
 
 
     /*   test implementation -- simply read from socket and echo back */
+    /*
     char buf[256];
 
     if (read(rapiProxy->getDescriptor(), buf, 256) == 0) {
@@ -141,5 +153,6 @@ void RapiConnection::messageToDevice(RapiProxy *rapiProxy)
         std::cout << "Proxy: " << buf << std::endl;
         write(rapiProxy->getDescriptor(), buf, strlen(buf));
     }
+    */
     /*   end test implementation */
 }

@@ -10,8 +10,10 @@
 //
 //
 
+#include "rapiconnection.h"
 #include "rapiprovisioningclient.h"
 #include "rapimessages.h"
+#include "rapiproxy.h"
 
 #include <synce.h>
 
@@ -19,6 +21,7 @@ using namespace RapiMessages;
 using namespace synce;
 
 #include <iostream>
+#include <iomanip>
 
 RapiProvisioningClient::RapiProvisioningClient(int fd, TCPServerSocket *tcpServerSocket)
     : RapiClient(fd, tcpServerSocket)
@@ -139,8 +142,11 @@ void RapiProvisioningClient::event( void )
     write( getDescriptor(), packet, sizeof(packet) );
 
     _state = State9;
+
+    getRapiConnection()->provisioningClientReachedState9();
   }
 }
+
 
 void RapiProvisioningClient::makePacket( const unsigned char* prefix,
                                         const char* string,
@@ -154,4 +160,78 @@ void RapiProvisioningClient::makePacket( const unsigned char* prefix,
   memcpy( packet, prefix, sizeofPrefix );
   memcpy( packet + sizeofPrefix, unicode, sizeofUnicode );
   memcpy( packet + sizeofPrefix + sizeofUnicode, ping, sizeof(ping) );
+}
+
+void RapiProvisioningClient::printPackage(unsigned char *buf)
+{
+    uint32_t length = *(uint32_t *) buf;
+    char lineBuf[8];
+
+    std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << 0 << "  " << std::flush;
+    for (unsigned int i = 0; i < length + 4; i++) {
+        std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') <<  (int) buf[i] << " " << std::flush;
+        lineBuf[i % 8] = buf[i];
+        if ((i + 1) % 8 == 0) {
+            std::cout << " " << std::flush;
+            for (int n = 0; n < 8; n++) {
+                char out = (isprint(lineBuf[n]) ? lineBuf[n] : '.');
+                std::cout << out << std::flush;
+            }
+            std::cout << std::endl;
+            if ((i + 1) < length + 4) {
+                std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << i + 1 << "  " << std::flush;
+            }
+        } else if (i + 1 == length + 4) {
+            std::cout << std::endl;
+        }
+    }
+}
+
+
+#include <iostream>
+bool RapiProvisioningClient::forwardBytes(RapiProxy *rapiProxy)
+{
+    uint32_t length;
+
+    if (read(rapiProxy->getDescriptor(), &length, 4) <= 0) {
+        return false;
+    }
+
+    unsigned char *buf = new unsigned char[length + 4];
+
+    memcpy(buf, (char *) &length, 4);
+    if (rapiProxy->readNumBytes(buf + 4, length) < length) {
+        return false;
+    }
+
+
+    std::cout << "Application --> Device" << std::endl;
+    std::cout << "======================" << std::endl;
+    printPackage(buf);
+
+    write(getDescriptor(), buf, length + 4);
+
+    delete[] buf;
+
+    if (read(getDescriptor(), &length, 4) <= 0) {
+        return true;
+    }
+
+    buf = new unsigned char[length + 4];
+
+    memcpy(buf, (unsigned char *) &length, 4);
+    if (readNumBytes(buf + 4, length) < length) {
+        return true;
+    }
+
+    std::cout << std::endl << "Device --> Application" << std::endl;
+    std::cout << "======================" << std::endl;
+    printPackage(buf);
+    std::cout << "---------------------------------------------------------" << std::endl;
+
+    write(rapiProxy->getDescriptor(), buf, length + 4);
+
+    delete[] buf;
+
+    return true;
 }

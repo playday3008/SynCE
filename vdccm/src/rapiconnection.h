@@ -39,6 +39,7 @@ public:
     void registerProxy(RapiProxy *rapiProxy);
     RapiProvisioningClient *getRapiProvisioningClient();
     RapiHandshakeClient *getRapiHandshakeClient();
+    void provisioningClientReachedState9();
 
 protected:
     void disconnectFromServer();

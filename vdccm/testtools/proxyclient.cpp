@@ -12,12 +12,19 @@
 
 #include <proxyclientsocket.h>
 #include <multiplexer.h>
+#include <iostream>
+
+using namespace std;
 
 int main(int argc, char* argv[])
 {
     ProxyClientSocket *pcs = new ProxyClientSocket(argv[1]);
 
-    pcs->connect();
+    if (!pcs->connect()) {
+        cout << "Could not connect to vdccm - socket not aviable" << endl;
+        exit(0);
+    }
+
     Multiplexer::self()->getReadManager()->add(pcs);
     Multiplexer::self()->getTimerNodeManager()->add(pcs);
 

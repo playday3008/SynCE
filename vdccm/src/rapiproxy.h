@@ -27,6 +27,8 @@ public:
     ~RapiProxy();
 
     void event();
+
+    size_t readNumBytes(unsigned char *buffer, size_t number);
 };
 
 #endif

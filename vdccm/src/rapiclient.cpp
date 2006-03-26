@@ -52,6 +52,12 @@ void RapiClient::setRapiConnection(RapiConnection *rapiConnection)
 }
 
 
+RapiConnection *RapiClient::getRapiConnection()
+{
+    return rapiConnection;
+}
+
+
 int RapiClient::readAll(char * buffer)
 {
     int totalBytes = 0;
@@ -66,6 +72,25 @@ int RapiClient::readAll(char * buffer)
         bufptr += nBytes;
         totalBytes += nBytes;
     } while( nBytes == 768 );
+
+    return totalBytes;
+}
+
+
+size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
+{
+    size_t totalBytes = 0;
+    size_t nBytes = 0;
+    unsigned char *bufptr = buffer;
+
+    do {
+        nBytes = read(getDescriptor(), bufptr, 768);
+        if (nBytes == 0) {
+            return 0;
+        }
+        bufptr += nBytes;
+        totalBytes +=nBytes;
+    } while (totalBytes < numBytes);
 
     return totalBytes;
 }

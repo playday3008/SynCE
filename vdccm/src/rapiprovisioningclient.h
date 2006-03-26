@@ -17,12 +17,17 @@
 /**
 	@author Richard van den Toorn <vdtoorn@users.sourceforge.net>
 */
+
+class RapiProxy;
+
 class RapiProvisioningClient : public RapiClient
 {
 public:
     RapiProvisioningClient(int fd, TCPServerSocket *tcpServerSocket);
 
     ~RapiProvisioningClient();
+
+    bool forwardBytes(RapiProxy *rapiProxy);
 
 protected:
 
@@ -32,6 +37,7 @@ private:
 
     // make a packet of bytes from the rapimessages namespace, return size of packet
     void makePacket( const unsigned char* prefix, const char* string, unsigned char* buffer );
+    void printPackage(unsigned char *buf);
 
     enum State {
       NoDataReceived = 0,

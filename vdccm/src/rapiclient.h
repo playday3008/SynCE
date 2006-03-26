@@ -29,8 +29,10 @@ public:
     void disconnect();
 
     int readAll(char * buffer);
+    size_t readNumBytes(unsigned char *buffer, size_t number);
 
     void setRapiConnection(RapiConnection *rapiConnection);
+    RapiConnection *getRapiConnection();
     private:
         RapiConnection *rapiConnection;
 };
