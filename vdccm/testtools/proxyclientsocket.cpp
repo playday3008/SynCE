@@ -111,7 +111,7 @@ bool ProxyClientSocket::readPackage(unsigned char **ergBuf)
 
     if (read(getDescriptor(), &length, 4) <= 0) {
         shutdown();
-        return false;
+        exit(0);
     }
 
     unsigned char *buf;
@@ -121,7 +121,7 @@ bool ProxyClientSocket::readPackage(unsigned char **ergBuf)
     if (readNumBytes(buf + 4, length) < length) {
         delete[] buf;
         shutdown();
-        return false;
+        exit(0);
     }
     /*
     if (read(getDescriptor(), buf + 4, length) <= 0) {
