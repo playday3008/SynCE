@@ -37,6 +37,7 @@ public:
     static int getMissingPingCount();
     static std::string getPassword();
     static int getPingDelay();
+    static bool getSyncClock();
 
 private:
     CmdLineArgs();
@@ -49,6 +50,7 @@ private:
     static bool _useIp;
     static int missingPingCount;
     static int pingDelay;
+    static bool syncClock;
 };
 
 #endif

@@ -34,6 +34,11 @@ RapiServer::RapiServer(RapiHandshakeClientFactory *rhcf, RapiProvisioningClientF
 
 RapiServer::~RapiServer()
 {
+    map<string, RapiConnection*>::iterator it;
+    for (it = rapiConnection.begin(); it != rapiConnection.end(); ++it) {
+        RapiConnection *rc = (*it).second;
+        delete rc;
+    }
 }
 
 

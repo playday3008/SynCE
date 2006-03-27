@@ -43,6 +43,7 @@ private:
     };
 
     State _state;
+    int pendingPingRequests;
 };
 
 #endif

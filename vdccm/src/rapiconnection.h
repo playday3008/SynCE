@@ -40,6 +40,7 @@ public:
     RapiProvisioningClient *getRapiProvisioningClient();
     RapiHandshakeClient *getRapiHandshakeClient();
     void provisioningClientReachedState9();
+    bool rapiProxyAlive(RapiProxy* rapiProxy);
 
 protected:
     void disconnectFromServer();

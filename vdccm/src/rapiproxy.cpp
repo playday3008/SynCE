@@ -22,6 +22,7 @@ RapiProxy::RapiProxy(int fd, LocalServerSocket* serverSocket)
 }
 
 
+#include <iostream>
 RapiProxy::~RapiProxy()
 {
     Multiplexer::self()->getReadManager()->remove(this);

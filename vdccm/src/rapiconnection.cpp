@@ -33,7 +33,12 @@ RapiConnection::~RapiConnection()
         it = rapiProxies.erase(it);
         delete rp;
     }
-
+    if (_rapiProvisioningClient) {
+        delete  _rapiProvisioningClient;
+    }
+    if (_rapiHandshakeClient) {
+        delete _rapiHandshakeClient;
+    }
     Multiplexer::self()->getReadManager()->remove(this);
 
     shutdown();
@@ -114,45 +119,16 @@ void RapiConnection::provisioningClientReachedState9()
 }
 
 
-#include <iostream>
+bool RapiConnection::rapiProxyAlive(RapiProxy* rapiProxy)
+{
+    return find(rapiProxies.begin(), rapiProxies.end(), rapiProxy) != rapiProxies.end();
+}
+
+
 void RapiConnection::messageToDevice(RapiProxy *rapiProxy)
 {
-    // send message to device by forwarding the particular RapiProxy to the ...
-    // RapiHandshakeClient or RapiProvisioningClient ... don't know which of them are
-    // responsible for rapi-commands
-    // return value of this communication should indicate a successfull/not successfull command
-    // decide to disconnect the device/RapiProxy ...
-
-    /*
-    int ret = 0;
-    if ( (ret = forwardRapiCommand(rapiProxy)) == RapiProxyClosedConnection) {
-        rapiProxies.remove(rapiProxy);
-        delete rapiProxy;
-    } else if (ret == DeviceClosedConnection) {
-        ... do nothing because device is disconnected automatically ...
-    }
-    */
-
-
     if (!_rapiProvisioningClient->forwardBytes(rapiProxy)) {
         rapiProxies.remove(rapiProxy);
         delete rapiProxy;
     }
-
-
-
-    /*   test implementation -- simply read from socket and echo back */
-    /*
-    char buf[256];
-
-    if (read(rapiProxy->getDescriptor(), buf, 256) == 0) {
-        rapiProxies.remove(rapiProxy);
-        delete rapiProxy;
-        std::cout << "Deleted ProxyClient" << endl;
-    } else {
-        std::cout << "Proxy: " << buf << std::endl;
-        write(rapiProxy->getDescriptor(), buf, strlen(buf));
-    }
-    */
-    /*   end test implementation */
 }

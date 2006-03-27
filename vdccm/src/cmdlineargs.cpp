@@ -38,6 +38,7 @@ string CmdLineArgs::password = "";
 bool CmdLineArgs::_useIp = false;
 int CmdLineArgs::missingPingCount = DCCM_MAX_PING_COUNT;
 int CmdLineArgs::pingDelay = DCCM_PING_INTERVAL ;
+bool CmdLineArgs::syncClock = false;
 
 CmdLineArgs::CmdLineArgs()
 {
@@ -52,6 +53,7 @@ void CmdLineArgs::usage(const char *name)
 {
     cout << "Syntax:" << endl << endl
          << "\t" << name << " [-d level] [-f] [-h] [-p password] [-i] [-u count] [-s sec]" << endl << endl
+         << "\t-t           Synchronize clock of WM5 devices with host-time" << endl
          << "\t-d level     Set debug log level" << endl
          << "\t           0 - No logging" << endl
          << "\t           1 - Errors only (default)" << endl
@@ -72,7 +74,7 @@ bool CmdLineArgs::parseArgs(int argc, char *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, "d:fhp:iu:s:")) != -1) {
+    while ((c = getopt(argc, argv, "d:fhtp:iu:s:")) != -1) {
         switch (c) {
         case 'd':
             logLevel = atoi(optarg);
@@ -96,6 +98,10 @@ bool CmdLineArgs::parseArgs(int argc, char *argv[])
 
         case 's':
             pingDelay = atoi(optarg);
+            break;
+
+        case 't':
+            syncClock = true;
             break;
 
         case 'h':
@@ -173,4 +179,10 @@ string CmdLineArgs::getPassword()
 int CmdLineArgs::getPingDelay()
 {
     return pingDelay;
+}
+
+
+bool CmdLineArgs::getSyncClock()
+{
+    return syncClock;
 }

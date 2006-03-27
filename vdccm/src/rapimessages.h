@@ -3,24 +3,16 @@
 
 namespace RapiMessages
 {
-
-  const unsigned char unknownPacket1[24] = { 0x14, 0x00, 0x00, 0x00,
-                                             0x01, 0x00, 0x00, 0x00,
-                                             0x80, 0xed, 0x50, 0x8a,
-                                             0xb5, 0x3e, 0xc6, 0x01,
-                                             0x00, 0x00, 0x00, 0x00,
-                                             0x10, 0x27, 0x00, 0x00 };
-                                    
   const unsigned char proxyEntriesPrefix[12] = { 0x12, 0x01, 0x00, 0x00,
                                                  0x0e, 0x00, 0x00, 0x00,
                                                  0x06, 0x01, 0x00, 0x00 };
-                                           
+
   const char* proxyEntriesString =
     "<wap-provisioningdoc>"
        "<characteristic-query recursive=\"false\" type=\"CM_ProxyEntries\" >"
        "</characteristic-query>"
     "</wap-provisioningdoc>";
-    
+
   const unsigned char proxyEntries2Prefix[12] = { 0xac, 0x02, 0x00, 0x00,
                                                   0x0e, 0x00, 0x00, 0x00,
                                                   0xa0, 0x02, 0x00, 0x00 };
@@ -34,23 +26,23 @@ namespace RapiMessages
         "</characteristic-query>"
       "</characteristic>"
     "</wap-provisioningdoc>";
-    
+
   const unsigned char netEntriesPrefix[12] = { 0xd4, 0x01, 0x00, 0x00,
                                                0x0e, 0x00, 0x00, 0x00,
                                                0xc8, 0x01, 0x00, 0x00  };
 
-  const char* netEntriesString =       
+  const char* netEntriesString =
     "<wap-provisioningdoc>"
       "<characteristic type=\"CM_NetEntries\" >"
         "<characteristic type=\"CurrentDTPTNetwork\" >"
           "<parm name=\"DestId\" value=\"{18AD9FBD-F716-ACB6-FD8A-1965DB95B814}\" />"
-        "</characteristic>"  
-      "</characteristic>"              
+        "</characteristic>"
+      "</characteristic>"
     "</wap-provisioningdoc>";
-    
 
-  const unsigned char syncQueryPrefix[12] = { 0xda, 0x01, 0x00, 0x00,  
-                                              0x0e, 0x00, 0x00, 0x00,  
+
+  const unsigned char syncQueryPrefix[12] = { 0xda, 0x01, 0x00, 0x00,
+                                              0x0e, 0x00, 0x00, 0x00,
                                               0xce, 0x01, 0x00, 0x00 };
 
   const char* syncQueryString =
@@ -63,8 +55,8 @@ namespace RapiMessages
       "</characteristic>"
     "</wap-provisioningdoc>";
 
-  const unsigned char syncSourcesQueryPrefix[12] = { 0xda, 0x01, 0x00, 0x00,  
-                                                     0x0e, 0x00, 0x00, 0x00,  
+  const unsigned char syncSourcesQueryPrefix[12] = { 0xda, 0x01, 0x00, 0x00,
+                                                     0x0e, 0x00, 0x00, 0x00,
                                                      0xce, 0x01, 0x00, 0x00 };
 
   const char* syncSourcesQueryString =
@@ -77,5 +69,5 @@ namespace RapiMessages
       "</characteristic>"
     "</wap-provisioningdoc>";
 
-}                                    
+}
 #endif

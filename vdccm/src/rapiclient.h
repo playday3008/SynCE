@@ -33,6 +33,7 @@ public:
 
     void setRapiConnection(RapiConnection *rapiConnection);
     RapiConnection *getRapiConnection();
+    void printPackage( unsigned char *buf );
     private:
         RapiConnection *rapiConnection;
 };
