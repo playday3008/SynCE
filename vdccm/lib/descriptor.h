@@ -120,12 +120,14 @@ public:
      * @return True, if data are pending false otherwise.
      */
     bool dataPending(int sec, int usec);
+    bool writeable(int sec, int usec);
 
     /**
      * @brief Set the descriptor to non blocking mode.
      * @return True on success, falso on error.
      */
     bool setNonBlocking();
+    bool setBlocking();
 
 protected:
     virtual void event() = 0;

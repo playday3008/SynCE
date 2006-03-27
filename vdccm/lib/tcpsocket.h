@@ -23,14 +23,14 @@
 #ifndef TCPSOCKET_H
 #define TCPSOCKET_H
 
-#include <descriptor.h>
+#include <netsocket.h>
 #include <string>
 #include <netinet/in.h>
 
 /**
 @author Volker Christian
 */
-class TCPSocket : public Descriptor
+class TCPSocket : public NetSocket
 {
 public:
     TCPSocket(uint16_t port, std::string interfaceName = "");

@@ -32,7 +32,7 @@ int TCPSocket::FFALSE = 0;
 unsigned long int TCPSocket::INADDRANY = INADDR_ANY;
 
 TCPSocket::TCPSocket(uint16_t port, string interfaceName)
- : Descriptor()
+ : NetSocket()
 {
     this->port = port;
     this->interfaceName = interfaceName;
@@ -40,7 +40,7 @@ TCPSocket::TCPSocket(uint16_t port, string interfaceName)
 
 
 TCPSocket::TCPSocket()
- : Descriptor()
+ : NetSocket()
 {
     this->port = 0;
     this->interfaceName = "";

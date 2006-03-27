@@ -23,14 +23,14 @@
 #ifndef LOCALSOCKET_H
 #define LOCALSOCKET_H
 
-#include <descriptor.h>
+#include <netsocket.h>
 #include <string>
 #include <sys/un.h>
 
 /**
 @author Volker Christian
 */
-class LocalSocket : public Descriptor
+class LocalSocket : public NetSocket
 {
 public:
 public:

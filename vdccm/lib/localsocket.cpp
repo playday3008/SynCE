@@ -37,14 +37,14 @@ int LocalSocket::FTRUE = 1;
 int LocalSocket::FFALSE = 0;
 
 LocalSocket::LocalSocket(string path)
- : Descriptor()
+ : NetSocket()
 {
     this->path = path;
 }
 
 
 LocalSocket::LocalSocket()
- : Descriptor()
+ : NetSocket()
 {
     this->path = "";
 }

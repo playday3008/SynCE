@@ -41,9 +41,9 @@ ContinousNode::~ContinousNode()
 
 void ContinousNode::trigger()
 {
-    shot();
     calcNextTrigger();
     timerNodeManager->setDirty();
+    shot();
 }
 
 

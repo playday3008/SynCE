@@ -176,3 +176,27 @@ bool DescriptorManager::dataPending(const Descriptor *descriptor, int sec, int u
 
     return ret;
 }
+
+
+/*!
+    \fn DescriptorManager::dataPending(const Descriptor *descriptor, int sec, int usec)
+ */
+bool DescriptorManager::writeable(const Descriptor *descriptor, int sec, int usec)
+{
+    bool ret = false;
+    fd_set fdSet;
+    FD_ZERO(&fdSet);
+
+    FD_SET(descriptor->getDescriptor(), &fdSet);
+
+    struct timeval tv;
+
+    tv.tv_sec = sec;
+    tv.tv_usec = usec;
+
+    if (select(descriptor->getDescriptor() + 1, NULL, &fdSet, NULL, &tv) > 0) {
+        ret = true;
+    }
+
+    return ret;
+}

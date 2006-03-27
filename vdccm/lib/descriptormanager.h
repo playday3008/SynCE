@@ -40,6 +40,7 @@ public:
     bool remove(Descriptor * descriptor);
     void init();
     static bool dataPending(const Descriptor *descriptor, int sec, int usec);
+    static bool writeable(const Descriptor *descriptor, int sec, int usec);
 
 protected:
     DescriptorManager &operator=(const DescriptorManager &descriptorManager)

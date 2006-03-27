@@ -97,8 +97,21 @@ bool Descriptor::dataPending(int sec, int usec)
 }
 
 
+bool Descriptor::writeable(int sec, int usec)
+{
+    return DescriptorManager::writeable( this, sec, usec);
+}
+
+
 bool Descriptor::setNonBlocking()
 {
     int flags = fcntl (descriptor, F_GETFL);
     return fcntl (descriptor, F_SETFL, flags | O_NONBLOCK) >= 0;
+}
+
+
+bool Descriptor::setBlocking()
+{
+    int flags = fcntl (descriptor, F_GETFL);
+    return fcntl (descriptor, F_SETFL, flags & ~O_NONBLOCK) >= 0;
 }
