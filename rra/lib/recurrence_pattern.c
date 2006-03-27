@@ -926,7 +926,8 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
     uint32_t utc_start_minute;
     uint32_t utc_end_minute;
 
-    CeRapiInit();
+    /* XXX: shouldn't call this here! RAPI should already be initialized */
+    /* CeRapiInit(); */
 
     rra_timezone_get(&tzi);
     
@@ -1054,7 +1055,8 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
     RRA_Timezone tzi;
     uint32_t minutes;
 
-    CeRapiInit();
+    /* XXX: shouldn't call this here! RAPI should already be initialized */
+    /* CeRapiInit(); */
 
     rra_timezone_get(&tzi);
     

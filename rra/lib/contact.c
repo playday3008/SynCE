@@ -1030,7 +1030,7 @@ static const uint32_t field_id[ID_COUNT] =
   ID_NICKNAME
 };
 
-static char* strdup_quoted_printable(const unsigned char* source)/*{{{*/
+static char* strdup_quoted_printable(const char* source)/*{{{*/
 {
 	char* result = malloc(strlen(source) + 1);
 	char* dest = result;

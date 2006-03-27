@@ -55,10 +55,10 @@ struct _Parser
 	size_t propval_count;
 };
 
-bool parser_duration_to_seconds(const unsigned char* duration, int* result)/*{{{*/
+bool parser_duration_to_seconds(const char* duration, int* result)/*{{{*/
 {
   enum { dur_sign, dur_p, dur_any, dur_time, dur_end } state = dur_sign;
-  const unsigned char *p;
+  const char *p;
   struct tm time_struct;
   int sign = 1;
   int value = 0;
