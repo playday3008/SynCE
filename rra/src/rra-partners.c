@@ -14,6 +14,7 @@ typedef enum
   COMMAND_STATUS,
   COMMAND_CREATE,
   COMMAND_REPLACE,
+  COMMAND_CLEAR,
 } COMMAND;
 
 
@@ -37,6 +38,8 @@ int main(int argc, char** argv)
     command = COMMAND_CREATE;
   else if (0 == strcasecmp(command_string, "replace"))
     command = COMMAND_REPLACE;
+  else if (0 == strcasecmp(command_string, "clear"))
+    command = COMMAND_CLEAR;
 
   if (command == COMMAND_HELP)
   {
@@ -45,11 +48,12 @@ int main(int argc, char** argv)
         "connected device.\n"
         "\n"
         "Syntax:\n"
-        "\t%s [status|create|replace INDEX]\n"
+        "\t%s [status|create|replace INDEX|clear INDEX]\n"
         "\n"
         "\tstatus   Show partnership status for device\n"
         "\tcreate   Create partnership with device\n"
         "\treplace  Replace partnership on device\n"
+        "\tclear    Clear a partnership on device\n"
         "\tINDEX    The partnership index (1 or 2)\n",
         argv[0]
         );
@@ -131,7 +135,27 @@ int main(int argc, char** argv)
         goto exit;
       }
       break;
+  case COMMAND_CLEAR:
+      if (argc >= 3)
+        index = atol(argv[2]);
 
+      if (index == 1 || index == 2)
+      {
+        if (rra_matchmaker_clear_partnership(matchmaker, index))
+        {
+          printf("Partnership cleaning succeeded.\n");
+        }
+        else
+        {
+          fprintf(stderr, "Partnership cleaning failed.\n");
+        }
+      }
+      else
+      {
+        fprintf(stderr, "Invalid or missing index of partnership to clear.\n");
+        goto exit;
+      }
+    break;
     default:
       goto exit;
   }

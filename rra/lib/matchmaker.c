@@ -298,6 +298,46 @@ exit:
   return success;
 }
 
+bool rra_matchmaker_clear_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
+{
+  bool success = false;
+  uint32_t id = 0;
+  char* filename = NULL;
+
+  if (index != 1 && index != 2)
+  {
+    synce_error("Bad index: %i", index);
+    goto exit;
+  }
+
+  if (!rra_matchmaker_get_partner_id(matchmaker, index, &id))
+    id = 0;
+
+  success = 
+    rra_matchmaker_set_partner_id(matchmaker, index, 0) &&
+    rra_matchmaker_set_partner_name(matchmaker, index, "");
+
+  if (success)
+  {
+    if (!(filename = rra_matchmaker_get_filename(id)))
+    {
+      synce_error("Failed to get filename for partner id %08x", id);
+      goto exit;
+    }
+    
+    if (remove(filename))
+    {
+      synce_error("Failed to erase file: %s", filename);
+      goto exit;
+    }
+  }
+
+exit:
+  if (filename)
+    free(filename);
+  return success;
+}
+
 bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* index)
 {
   bool success = false;

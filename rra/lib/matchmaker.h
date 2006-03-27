@@ -42,6 +42,9 @@ bool rra_matchmaker_get_partner_name(RRA_Matchmaker* matchmaker, uint32_t index,
 /** Generate a new partnership at index 1 or 2 */
 bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t index);
 
+/** Remove a partnership at index 1 or 2 */
+bool rra_matchmaker_clear_partnership(RRA_Matchmaker* matchmaker, uint32_t index);
+
 /** 
   If we don't have a partnership with this device:
     If there is an empty partnership slot:
