@@ -42,30 +42,41 @@ void RapiHandshakeClient::keepAlive()
 
 void RapiHandshakeClient::event()
 {
-    // buffer for read/write requests
-    //
-    char buffer[ 8192 ];
-    memset( buffer, 0, sizeof( buffer ) );
-
-    if ( readAll( buffer ) == 0 ) {
-        disconnect();
-        return ;
-    }
-
-//    printPackage((unsigned char *) buffer);
-
     if ( _state == NoDataReceived ) {
         // data not relevant, should be { 00, 00, 00, 00 }, just reply
+        unsigned char buffer[ 4 ];
+        if (readNumBytes(buffer, 4) != 4) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiHandshakeClient", (unsigned char *) buffer);
+
+        // write response, should { 03, 00, 00, 00 }
         char response[ 4 ] = { 03, 00, 00, 00 };
         write( getDescriptor(), response, 4 );
 
         _state = Ping1Received;
     } else if ( _state == Ping1Received ) {
         // data not relevant, should be { 04, 00 ,00 ,00 }
+        unsigned char buffer[ 4 ];
+        if (readNumBytes(buffer, 4) != 4) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiHandshakeClient", (unsigned char *) buffer, 4);
+
         // nothing to reply, more data (info message) follows
         _state = Ping2Received;
     } else if ( _state == Ping2Received ) {
         // buffer contains info message
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiHandshakeClient", (unsigned char *) buf);
+
+        delete[] buf;
         // write 3 responses, response 1 is { 05, 00, 00, 00 }
         char response[ 4 ] = { 05, 00, 00, 00 };
         write( getDescriptor(), response, 4 );
@@ -80,7 +91,14 @@ void RapiHandshakeClient::event()
 
         _state = InfoMessageReceived;
     } else if ( _state == KeepingAlive ) {
-        printf( "alive: %02x %02x %02x %02x\n", buffer[ 0 ], buffer[ 1 ], buffer[ 2 ], buffer[ 3 ] );
+        unsigned char buffer[ 4 ];
+        if (readNumBytes(buffer, 4) != 4) {
+            disconnect();
+            return;
+        }
+
+
+        printPackage("RapiHandshakeClient-alive", buffer, 4);
         pendingPingRequests--;
     }
 }

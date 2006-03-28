@@ -84,7 +84,7 @@ size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
     unsigned char *bufptr = buffer;
 
     do {
-        nBytes = read(getDescriptor(), bufptr, 768);
+        nBytes = read(getDescriptor(), bufptr, numBytes);
         if (nBytes <= 0) {
             return 0;
         } else {
@@ -97,13 +97,35 @@ size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
 }
 
 
-void RapiClient::printPackage( unsigned char *buf )
+bool RapiClient::readOnePackage(unsigned char **buffer, unsigned int adjustPackageSize)
+{
+    uint32_t length;
+
+    if ( read( getDescriptor(), &length, 4 ) <= 0 ) {
+        return false;
+    }
+    cout << "Packagelength: " << hex << setw(6) << setfill('0') << (length = length - adjustPackageSize) << endl;
+
+    *buffer = new unsigned char[ length + 4 ];
+
+    memcpy( *buffer, ( char * ) & length, 4 );
+    if (readNumBytes( *buffer + 4, length ) < length ) {
+        return false;
+    }
+
+    return true;
+}
+
+
+
+void RapiClient::printPackage( string origin, unsigned char *buf, unsigned int maxLength )
 {
     uint32_t length = *( uint32_t * ) buf;
     char lineBuf[ 8 ];
 
+    std::cout << "Packageorigin: " << origin << std::endl;
     std::cout << "0x" << std::hex << std::setw( 4 ) << std::setfill( '0' ) << 0 << "  " << std::flush;
-    for ( unsigned int i = 0; i < length + 4; i++ ) {
+    for ( unsigned int i = 0; i < length + 4 && i < maxLength; i++ ) {
         std::cout << "0x" << std::hex << std::setw( 2 ) << std::setfill( '0' ) << ( int ) buf[ i ] << " " << std::flush;
         lineBuf[ i % 8 ] = buf[ i ];
         if ( ( i + 1 ) % 8 == 0 ) {
@@ -116,7 +138,7 @@ void RapiClient::printPackage( unsigned char *buf )
             if ( ( i + 1 ) < length + 4 ) {
                 std::cout << "0x" << std::hex << std::setw( 4 ) << std::setfill( '0' ) << i + 1 << "  " << std::flush;
             }
-        } else if ( i + 1 == length + 4 ) {
+        } else if ( i + 1 == length + 4 || (i + 1) == maxLength) {
             std::cout << std::endl;
         }
     }

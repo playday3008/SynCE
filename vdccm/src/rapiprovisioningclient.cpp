@@ -37,22 +37,30 @@ void RapiProvisioningClient::event( void )
 {
     // buffer for read/write requests
     //
+/*
     char buffer[ 8192 ];
+//    unsigned char *buffer;
 
     if ( _state != State10 ) {
         memset( buffer, 0, sizeof( buffer ) );
-        int nBytes = readAll( buffer );
-
-        if ( nBytes == 0 ) {
+        int nBytes = readAll(buffer);
+        if (nBytes == 0) {
             disconnect();
             return ;
         }
-        std::cout << "nbytes=" << nBytes << std::endl;
-//        printPackage((unsigned char *) buffer);
+        printPackage("RapiProvisioningClient", (unsigned char *) buffer);
     }
-
+*/
 
     if ( _state == NoDataReceived ) {
+        std::cout << "State0" << std::endl;
+        // 4Byte static conteng 0x01, 0x00, 0x00, 0x00
+        unsigned char buffer[ 4 ];
+        if (readNumBytes(buffer, 4) != 4) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buffer, 4);
         // data not relevant, should be { 01, 00, 00, 00 },
         unsigned char timePackage[ 24 ] = { 0x14, 0x00, 0x00, 0x00,
                                             0x00, 0x00, 0x00, 0x00,
@@ -91,36 +99,89 @@ void RapiProvisioningClient::event( void )
 
         _state = Ping1Received;
     } else if ( _state == Ping1Received ) {
+        std::cout << "State1" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
         unsigned char packet[ 278 ];
         makePacket( proxyEntriesPrefix, proxyEntriesString, packet );
         write( getDescriptor(), packet, sizeof( packet ) );
 
         _state = State2;
     } else if ( _state == State2 ) {
+        std::cout << "State2" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
         unsigned char packet[ 688 ];
         makePacket( proxyEntries2Prefix, proxyEntries2String, packet );
         write( getDescriptor(), packet, sizeof( packet ) );
 
         _state = State3;
     } else if ( _state == State3 ) {
+        std::cout << "State3" << std::endl;
+        // 0x03b6
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
         unsigned char packet[ 472 ];
         makePacket( netEntriesPrefix, netEntriesString, packet );
         write( getDescriptor(), packet, sizeof( packet ) );
 
         _state = State4;
     } else if ( _state == State4 ) {
+        std::cout << "State4" << std::endl;
+        // 0x03b6
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
+        delete[] buf;
+
         unsigned char packet[ 478 ];
         makePacket( syncQueryPrefix, syncQueryString, packet );
         write( getDescriptor(), packet, sizeof( packet ) );
 
         _state = State5;
     } else if ( _state == State5 ) {
+        std::cout << "State5" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
         unsigned char packet[ 478 ];
         makePacket( syncSourcesQueryPrefix, syncSourcesQueryString, packet );
         write( getDescriptor(), packet, sizeof( packet ) );
 
         _state = State6;
     } else if ( _state == State6 ) {
+        std::cout << "State6" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
+        delete[] buf;
+
         unsigned char packet[ 118 ] = { 0x72, 0x00, 0x00, 0x00,
                                         0x31, 0x00, 0x00, 0x00,
                                         0x02, 0x00, 0x00, 0x80,
@@ -137,6 +198,14 @@ void RapiProvisioningClient::event( void )
 
         _state = State7;
     } else if ( _state == State7 ) {
+        std::cout << "State7" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
         const unsigned char packet[] = {
                                            0x18, 0x00, 0x00, 0x00,
                                            0x31, 0x00, 0x00, 0x00,
@@ -151,6 +220,15 @@ void RapiProvisioningClient::event( void )
 
         _state = State8;
     } else if ( _state == State8 ) {
+        std::cout << "State8" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
+        delete[] buf;
         const char packet[] = {
                                   0x1c, 0x00, 0x00, 0x00,
                                   0x37, 0x00, 0x00, 0x00,
@@ -166,6 +244,14 @@ void RapiProvisioningClient::event( void )
 
         _state = State9;
     } else if ( _state == State9 ) {
+        std::cout << "State9" << std::endl;
+        unsigned char *buf;
+        if (!readOnePackage(&buf)) {
+            disconnect();
+            return;
+        }
+        printPackage("RapiProvisioningClient", (unsigned char *) buf);
+
         _state = State10;
         getRapiConnection() ->provisioningClientReachedState9();
         std::cout << "Connection established" << std::endl;
@@ -191,7 +277,7 @@ void RapiProvisioningClient::event( void )
         if ( getRapiConnection() ->rapiProxyAlive( rapiProxy ) ) {
             std::cout << std::endl << "Device --> Application" << std::endl;
             std::cout << "======================" << std::endl;
-            printPackage( buf );
+            printPackage("RapiProxy",  buf );
             std::cout << "---------------------------------------------------------" << std::endl;
 
             write( rapiProxy->getDescriptor(), buf, length + 4 );
@@ -242,7 +328,7 @@ bool RapiProvisioningClient::forwardBytes( RapiProxy *rapiProxy )
 
     std::cout << "Application --> Device" << std::endl;
     std::cout << "======================" << std::endl;
-    printPackage( buf );
+    printPackage("RapiProxy", buf );
 
     write( getDescriptor(), buf, length + 4 );
 
