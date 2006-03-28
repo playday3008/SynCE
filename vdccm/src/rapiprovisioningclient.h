@@ -55,6 +55,7 @@ private:
 
     State _state;
     std::list<RapiProxy *> rapiProxies;
+    unsigned int mtuWH;
 };
 
 #endif

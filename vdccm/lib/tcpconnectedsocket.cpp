@@ -24,6 +24,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+// Ugly hack - the header <linux/in.h> could not be included
+// due to conflicts with other systemheader
+// So define the IP_MTU macro here ... very bad ...
+#define IP_MTU  14
+
 using namespace std;
 
 TCPConnectedSocket::TCPConnectedSocket(uint16_t port, string interfaceName)
@@ -141,4 +146,16 @@ bool TCPConnectedSocket::setSocket(int fd)
     setConnected(true);
 
     return true;
+}
+
+
+int TCPConnectedSocket::getMTU()
+{
+    int s;
+    socklen_t r = sizeof(int);
+    if (getsockopt(getDescriptor(), SOL_IP, IP_MTU, &s, &r) < 0) {
+        s = -1;
+    }
+
+    return s;
 }

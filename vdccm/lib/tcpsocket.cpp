@@ -21,9 +21,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 #include "tcpsocket.h"
-#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+
 
 using namespace std;
 

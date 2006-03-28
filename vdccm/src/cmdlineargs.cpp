@@ -186,3 +186,9 @@ bool CmdLineArgs::getSyncClock()
 {
     return syncClock;
 }
+
+
+int CmdLineArgs::getLogLevel()
+{
+    return logLevel;
+}

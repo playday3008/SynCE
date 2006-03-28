@@ -29,13 +29,14 @@ public:
 
     void disconnect();
 
-    int readAll(char * buffer);
-    size_t readNumBytes(unsigned char *buffer, size_t number);
-
     void setRapiConnection(RapiConnection *rapiConnection);
     RapiConnection *getRapiConnection();
+
+    size_t readNumBytes(unsigned char *buffer, size_t number);
+
+    bool readOnePackage(unsigned char **buffer);
+
     void printPackage(std::string origin, unsigned char *buf, unsigned int maxLength=UINT_MAX );
-    bool readOnePackage(unsigned char **buffer, unsigned int adjustPackageSize = 0);
 
     private:
         RapiConnection *rapiConnection;

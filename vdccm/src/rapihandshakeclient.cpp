@@ -103,6 +103,12 @@ void RapiHandshakeClient::event()
     }
 }
 
+/*
+#include <sys/socket.h>
+#include <netinet/in.h>
+#define IP_MTU  14
+#include <iostream>
+*/
 void RapiHandshakeClient::shot()
 {
     char response[ 4 ] = { 01, 00, 00, 00 };

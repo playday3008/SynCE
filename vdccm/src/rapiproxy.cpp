@@ -22,7 +22,6 @@ RapiProxy::RapiProxy(int fd, LocalServerSocket* serverSocket)
 }
 
 
-#include <iostream>
 RapiProxy::~RapiProxy()
 {
     Multiplexer::self()->getReadManager()->remove(this);
@@ -43,7 +42,7 @@ size_t RapiProxy::readNumBytes(unsigned char *buffer, size_t numBytes)
     unsigned char *bufptr = buffer;
 
     do {
-        nBytes = read(getDescriptor(), bufptr, 768);
+        nBytes = read(getDescriptor(), bufptr, numBytes - totalBytes);
         if (nBytes == 0) {
             return 0;
         }

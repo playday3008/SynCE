@@ -38,6 +38,7 @@ public:
     static std::string getPassword();
     static int getPingDelay();
     static bool getSyncClock();
+    static int getLogLevel();
 
 private:
     CmdLineArgs();

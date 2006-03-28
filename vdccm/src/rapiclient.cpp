@@ -58,25 +58,6 @@ RapiConnection *RapiClient::getRapiConnection()
 }
 
 
-int RapiClient::readAll(char * buffer)
-{
-    int totalBytes = 0;
-    int nBytes = 0;
-    char* bufptr = buffer;
-    do
-    {
-        nBytes = read(getDescriptor(), bufptr, 768 );
-        if (nBytes == 0) {
-            return 0;
-        }
-        bufptr += nBytes;
-        totalBytes += nBytes;
-    } while( nBytes == 768 );
-
-    return totalBytes;
-}
-
-
 size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
 {
     size_t totalBytes = 0;
@@ -84,7 +65,7 @@ size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
     unsigned char *bufptr = buffer;
 
     do {
-        nBytes = read(getDescriptor(), bufptr, numBytes);
+        nBytes = read(getDescriptor(), bufptr, numBytes - totalBytes);
         if (nBytes <= 0) {
             return 0;
         } else {
@@ -97,14 +78,14 @@ size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
 }
 
 
-bool RapiClient::readOnePackage(unsigned char **buffer, unsigned int adjustPackageSize)
+bool RapiClient::readOnePackage(unsigned char **buffer)
 {
     uint32_t length;
 
     if ( read( getDescriptor(), &length, 4 ) <= 0 ) {
         return false;
     }
-    cout << "Packagelength: " << hex << setw(6) << setfill('0') << (length = length - adjustPackageSize) << endl;
+    cout << "Packagelength: " << hex << setw(6) << setfill('0') << length << endl;
 
     *buffer = new unsigned char[ length + 4 ];
 

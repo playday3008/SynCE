@@ -39,6 +39,7 @@ public:
     struct sockaddr_in getRemoteSinAddr() const;
     std::string getRemoteAddress() const;
     uint16_t getRemotePort() const;
+    int getMTU();
 
 protected:
     TCPConnectedSocket();

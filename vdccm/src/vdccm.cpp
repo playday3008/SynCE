@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         synce_error("Could not start - either because vdccm is not installed suid or you start directly as root");
         exit(0);
     }
-    */
+*/
     Utils::dropRootPrivileg();
 
     if (!CmdLineArgs::parseArgs(argc, argv)) {
