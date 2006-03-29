@@ -115,3 +115,24 @@ bool Descriptor::setBlocking()
     int flags = fcntl (descriptor, F_GETFL);
     return fcntl (descriptor, F_SETFL, flags & ~O_NONBLOCK) >= 0;
 }
+
+
+ssize_t Descriptor::readNumBytes(unsigned char *buffer, size_t numBytes)
+{
+    size_t totalBytes = 0;
+    ssize_t nBytes = 0;
+    unsigned char *bufptr = buffer;
+
+    do {
+        nBytes = read(getDescriptor(), bufptr, numBytes - totalBytes);
+        if (nBytes <= 0) {
+            return nBytes;
+        } else {
+            bufptr += nBytes;
+            totalBytes +=nBytes;
+        }
+    } while (totalBytes < numBytes);
+
+    return totalBytes;
+}
+

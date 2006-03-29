@@ -58,29 +58,10 @@ RapiConnection *RapiClient::getRapiConnection()
 }
 
 
-size_t RapiClient::readNumBytes(unsigned char *buffer, size_t numBytes)
-{
-    size_t totalBytes = 0;
-    int nBytes = 0;
-    unsigned char *bufptr = buffer;
-
-    do {
-        nBytes = read(getDescriptor(), bufptr, numBytes - totalBytes);
-        if (nBytes <= 0) {
-            return 0;
-        } else {
-            bufptr += nBytes;
-            totalBytes +=nBytes;
-        }
-    } while (totalBytes < numBytes);
-
-    return totalBytes;
-}
-
-
 bool RapiClient::readOnePackage(unsigned char **buffer)
 {
     uint32_t length;
+    size_t readLength;
 
     if ( read( getDescriptor(), &length, 4 ) <= 0 ) {
         return false;
@@ -88,9 +69,10 @@ bool RapiClient::readOnePackage(unsigned char **buffer)
     cout << "Packagelength: " << hex << setw(6) << setfill('0') << length << endl;
 
     *buffer = new unsigned char[ length + 4 ];
+    readLength = length;
 
     memcpy( *buffer, ( char * ) & length, 4 );
-    if (readNumBytes( *buffer + 4, length ) < length ) {
+    if (readNumBytes( *buffer + 4, readLength ) < (ssize_t) readLength ) {
         return false;
     }
 
@@ -105,7 +87,7 @@ void RapiClient::printPackage( string origin, unsigned char *buf, unsigned int m
     char lineBuf[ 8 ];
 
     std::cout << "Packageorigin: " << origin << std::endl;
-    std::cout << "0x" << std::hex << std::setw( 4 ) << std::setfill( '0' ) << 0 << "  " << std::flush;
+    std::cout << "0x" << std::hex << std::setw( 8 ) << std::setfill( '0' ) << 0 << "  " << std::flush;
     for ( unsigned int i = 0; i < length + 4 && i < maxLength; i++ ) {
         std::cout << "0x" << std::hex << std::setw( 2 ) << std::setfill( '0' ) << ( int ) buf[ i ] << " " << std::flush;
         lineBuf[ i % 8 ] = buf[ i ];
@@ -117,9 +99,17 @@ void RapiClient::printPackage( string origin, unsigned char *buf, unsigned int m
             }
             std::cout << std::endl;
             if ( ( i + 1 ) < length + 4 ) {
-                std::cout << "0x" << std::hex << std::setw( 4 ) << std::setfill( '0' ) << i + 1 << "  " << std::flush;
+                std::cout << "0x" << std::hex << std::setw( 8 ) << std::setfill( '0' ) << i + 1 << "  " << std::flush;
             }
         } else if ( i + 1 == length + 4 || (i + 1) == maxLength) {
+            int count = (i + 1) % 8;
+            for (int n = 1; n < (8 - count) * 5 + 2; n++) {
+                std::cout << " " << std::flush;
+            }
+            for (int n = 0; n < count; n++) {
+                char out = ( isprint( lineBuf[ n ] ) ? lineBuf[ n ] : '.' );
+                std::cout << out << std::flush;
+            }
             std::cout << std::endl;
         }
     }

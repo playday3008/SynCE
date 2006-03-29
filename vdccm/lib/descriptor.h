@@ -23,6 +23,8 @@
 #ifndef DESCRIPTOR_H
 #define DESCRIPTOR_H
 
+#include <unistd.h>
+
 class DescriptorManager;
 
 
@@ -128,6 +130,8 @@ public:
      */
     bool setNonBlocking();
     bool setBlocking();
+
+    ssize_t readNumBytes(unsigned char *buffer, size_t number);
 
 protected:
     virtual void event() = 0;

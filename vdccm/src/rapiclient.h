@@ -32,8 +32,6 @@ public:
     void setRapiConnection(RapiConnection *rapiConnection);
     RapiConnection *getRapiConnection();
 
-    size_t readNumBytes(unsigned char *buffer, size_t number);
-
     bool readOnePackage(unsigned char **buffer);
 
     void printPackage(std::string origin, unsigned char *buf, unsigned int maxLength=UINT_MAX );

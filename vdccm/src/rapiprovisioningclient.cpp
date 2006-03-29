@@ -261,9 +261,10 @@ void RapiProvisioningClient::event( void )
                 write( rapiProxy->getDescriptor(), ( char * ) & length, 4 );
             }
             while ( remBytes > 0 ) {
-                unsigned int numRead = ( remBytes < mtuWH ) ? remBytes : mtuWH;
-                if ( readNumBytes( buf, numRead ) < numRead ) {
+                size_t numRead = ( remBytes < mtuWH ) ? remBytes : mtuWH;
+                if ( readNumBytes( buf, numRead ) < (ssize_t) numRead ) {
                     delete[] buf;
+                    ssize_t readNumBytes(unsigned char *buffer, size_t number);
                     disconnect();
                     return ;
                 }
@@ -274,12 +275,13 @@ void RapiProvisioningClient::event( void )
             }
             delete[] buf;
         } else {
+            size_t readLength = length;
 
             unsigned char *buf = new unsigned char[ length + 4 ];
 
             memcpy( buf, ( unsigned char * ) & length, 4 );
 
-            if ( readNumBytes( buf + 4, length ) < length ) {
+            if ( readNumBytes( buf + 4, readLength ) < (ssize_t) readLength ) {
                 delete[] buf;
                 disconnect();
                 return ;
@@ -289,7 +291,7 @@ void RapiProvisioningClient::event( void )
                 std::cout << std::endl << "Device --> Application" << std::endl;
                 std::cout << "======================" << std::endl;
                 printPackage( "RapiProxy", buf );
-                std::cout << "---------------------------------------------------------" << std::endl;
+                std::cout << "-------------------------------------------------------------" << std::endl;
 
                 write( rapiProxy->getDescriptor(), buf, length + 4 );
             }
@@ -335,8 +337,8 @@ bool RapiProvisioningClient::forwardBytes( RapiProxy *rapiProxy )
 
         write( getDescriptor(), ( char * ) & length, 4 );
         while ( remBytes > 0 ) {
-            unsigned int numRead = ( remBytes < mtuWH ) ? remBytes : mtuWH;
-            if ( rapiProxy->readNumBytes( buf, numRead ) < numRead ) {
+            size_t numRead = ( remBytes < mtuWH ) ? remBytes : mtuWH;
+            if ( rapiProxy->readNumBytes( buf, numRead ) < (ssize_t) numRead ) {
                 rapiProxies.remove( rapiProxy );
                 delete[] buf;
                 return false;
@@ -353,9 +355,10 @@ bool RapiProvisioningClient::forwardBytes( RapiProxy *rapiProxy )
     } else {
 
         unsigned char *buf = new unsigned char[ length + 4 ];
+        size_t readLength = length;
 
         memcpy( buf, ( char * ) & length, 4 );
-        if ( rapiProxy->readNumBytes( buf + 4, length ) < length ) {
+        if ( rapiProxy->readNumBytes( buf + 4, readLength ) < (ssize_t) readLength ) {
             rapiProxies.remove( rapiProxy );
             delete[] buf;
             return false;

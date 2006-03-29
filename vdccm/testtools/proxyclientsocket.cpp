@@ -49,22 +49,30 @@ void ProxyClientSocket::printPackage(unsigned char *buf)
     uint32_t length = *(uint32_t *) buf;
     char lineBuf[8];
 
-    cout << "0x" << hex << setw(4) << setfill('0') << 0 << "  " << flush;
+    cout << "0x" << hex << setw(8) << setfill('0') << 0 << "  " << flush;
     for (int i = 0; i < length + 4; i++) {
         cout << "0x" << hex << setw(2) << setfill('0') <<  (int) buf[i] << " " << flush;
         lineBuf[i % 8] = buf[i];
         if ((i + 1) % 8 == 0) {
-            cout << "  " << flush;
+            cout << " " << flush;
             for (int n = 0; n < 8; n++) {
                 char out = (isprint(lineBuf[n]) ? lineBuf[n] : '.');
                 cout << out << flush;
             }
             cout << endl;
             if ((i + 1) < length + 4) {
-                cout << "0x" << hex << setw(4) << setfill('0') << i + 1 << "  " << flush;
+                cout << "0x" << hex << setw(8) << setfill('0') << i + 1 << "  " << flush;
             }
         } else if (i + 1 == length + 4) {
-            cout << endl;
+            int count = (i + 1) % 8;
+            for (int n = 1; n < (8 - count) * 5 + 2; n++) {
+                std::cout << " " << std::flush;
+            }
+            for (int n = 0; n < count; n++) {
+                char out = ( isprint( lineBuf[ n ] ) ? lineBuf[ n ] : '.' );
+                std::cout << out << std::flush;
+            }
+            std::cout << std::endl;
         }
     }
 }
