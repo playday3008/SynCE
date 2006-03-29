@@ -10,14 +10,13 @@
 //
 //
 #include "rapiproxy.h"
-#include "rapiconnection.h"
-#include <localserversocket.h>
+#include "rapiproxyconnection.h"
 #include <multiplexer.h>
+
 
 RapiProxy::RapiProxy(int fd, LocalServerSocket* serverSocket)
  : LocalAcceptedSocket(fd, serverSocket)
 {
-    (dynamic_cast<RapiConnection *>(getServerSocket()))->registerProxy(this);
     Multiplexer::self()->getReadManager()->add(this);
 }
 
@@ -29,7 +28,13 @@ RapiProxy::~RapiProxy()
 }
 
 
+void RapiProxy::setRapiProxyConnection(RapiProxyConnection *rapiProxyConnection)
+{
+    this->rapiProxyConnection = rapiProxyConnection;
+}
+
+
 void RapiProxy::event()
 {
-    (dynamic_cast<RapiConnection *>(getServerSocket()))->messageToDevice(this);
+    rapiProxyConnection->messageToDevice();
 }

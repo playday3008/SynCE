@@ -27,4 +27,3 @@ LocalAcceptedSocket* RapiProxyFactory::socket(int fd, LocalServerSocket* serverS
 {
     return new RapiProxy(fd, serverSocket);
 }
-

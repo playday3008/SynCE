@@ -13,24 +13,34 @@
 #include "multiplexer.h"
 #include "rapihandshakeclient.h"
 #include "cmdlineargs.h"
-
+#include "rapiconnection.h"
+#include <iostream>
 
 RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSocket )
-        : RapiClient( fd, tcpServerSocket ),
-        ContinousNode( CmdLineArgs::getPingDelay(), 0 )
+        : RapiClient( fd, tcpServerSocket ), ContinousNode( CmdLineArgs::getPingDelay(), 0 )
 {
     _state = NoDataReceived;
     pendingPingRequests = 0;
     setBlocking();
     setReadTimeout( 5, 0 );
+    connectionCount = 0;
 }
 
 
 RapiHandshakeClient::~RapiHandshakeClient()
 {
-    Multiplexer::self() ->getTimerNodeManager() ->remove
-    ( this );
+    Multiplexer::self()->getReadManager()->remove(this);
+    Multiplexer::self() ->getTimerNodeManager() ->remove(this);
+    shutdown();
 }
+
+
+void RapiHandshakeClient::setRapiConnection(RapiConnection *rapiConnection)
+{
+    std::cout << "Handshakeclient-setRapiConnection() " << (void *) rapiConnection << std::endl;
+    this->rapiConnection = rapiConnection;
+}
+
 
 void RapiHandshakeClient::keepAlive()
 {
@@ -46,7 +56,7 @@ void RapiHandshakeClient::event()
         // data not relevant, should be { 00, 00, 00, 00 }, just reply
         unsigned char buffer[ 4 ];
         if (readNumBytes(buffer, 4) != 4) {
-            disconnect();
+            rapiConnection->handshakeClientDisconnected();
             return;
         }
         printPackage("RapiHandshakeClient", (unsigned char *) buffer);
@@ -60,7 +70,7 @@ void RapiHandshakeClient::event()
         // data not relevant, should be { 04, 00 ,00 ,00 }
         unsigned char buffer[ 4 ];
         if (readNumBytes(buffer, 4) != 4) {
-            disconnect();
+            rapiConnection->handshakeClientDisconnected();
             return;
         }
         printPackage("RapiHandshakeClient", (unsigned char *) buffer, 4);
@@ -71,46 +81,44 @@ void RapiHandshakeClient::event()
         // buffer contains info message
         unsigned char *buf;
         if (!readOnePackage(&buf)) {
-            disconnect();
+            rapiConnection->handshakeClientDisconnected();
             return;
         }
         printPackage("RapiHandshakeClient", (unsigned char *) buf);
 
         delete[] buf;
-
-        // write 3 responses, response 1 is { 05, 00, 00, 00 }
-        char response[ 4 ] = { 05, 00, 00, 00 };
-        write( getDescriptor(), response, 4 );
-
-        // response 2 is { 04, 00, 00, 00 }
-        response[ 0 ] = 04;
-        write( getDescriptor(), response, 4 );
-
-        // response 3 is { 01, 00, 00, 00 }
-        response[ 0 ] = 01;
-        write( getDescriptor(), response, 4 );
-
+        rapiConnection->handshakeClientInitialized();
         _state = InfoMessageReceived;
         keepAlive();
     } else if ( _state == KeepingAlive ) {
         unsigned char buffer[ 4 ];
         if (readNumBytes(buffer, 4) != 4) {
-            disconnect();
+            rapiConnection->handshakeClientDisconnected();
             return;
         }
 
-
-        printPackage("RapiHandshakeClient-alive", buffer, 4);
+        printPackage("RapiHandshakeClient", buffer, 4);
         pendingPingRequests--;
     }
 }
 
-/*
-#include <sys/socket.h>
-#include <netinet/in.h>
-#define IP_MTU  14
-#include <iostream>
-*/
+
+void RapiHandshakeClient::initiateProvisioningConnection()
+{
+    connectionCount++;
+    // write 3 responses, response 1 is { 05, 00, 00, 00 }
+    char response[ 4 ] = { 05, 00, 00, 00 };
+    write( getDescriptor(), response, 4 );
+
+        // response 2 is { 04, 00, 00, 00 }
+    response[ 0 ] = 04;
+    write( getDescriptor(), response, 4 );
+
+        // response 3 is connectionCount
+    write( getDescriptor(), &connectionCount, 4 );
+}
+
+
 void RapiHandshakeClient::shot()
 {
     char response[ 4 ] = { 01, 00, 00, 00 };
@@ -118,11 +126,11 @@ void RapiHandshakeClient::shot()
     if ( writeable( 0, 0 ) ) {
         write( getDescriptor(), response, 4 );
         if ( pendingPingRequests >= CmdLineArgs::getMissingPingCount() ) {
-            disconnect();
+            rapiConnection->handshakeClientDisconnected();
         } else {
             pendingPingRequests++;
         }
     } else {
-        disconnect();
+        rapiConnection->handshakeClientDisconnected();
     }
 }

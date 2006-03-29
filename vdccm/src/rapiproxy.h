@@ -18,6 +18,7 @@
 	@author Volker Christian <voc@users.sourceforge.net>
 */
 class LocalServerSocket;
+class RapiProxyConnection;
 
 class RapiProxy : public LocalAcceptedSocket
 {
@@ -27,6 +28,11 @@ public:
     ~RapiProxy();
 
     void event();
+
+    void setRapiProxyConnection(RapiProxyConnection *rapiProxyConnection);
+
+    private:
+        RapiProxyConnection *rapiProxyConnection;
 };
 
 #endif

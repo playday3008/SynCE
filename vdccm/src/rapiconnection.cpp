@@ -15,12 +15,13 @@
 #include "rapiprovisioningclient.h"
 #include "rapiproxyfactory.h"
 #include "rapiproxy.h"
+#include "rapiproxyconnection.h"
 
 #include <multiplexer.h>
 
 using namespace std;
 
-RapiConnection::RapiConnection(RapiProxyFactory *proxyFactory, string path, RapiServer *rapiServer, string deviceIpAddress) : LocalServerSocket(proxyFactory, path), _rapiHandshakeClient(NULL), _rapiProvisioningClient(NULL), deviceIpAddress(deviceIpAddress), rapiServer(rapiServer)
+RapiConnection::RapiConnection(RapiProxyFactory *proxyFactory, string path, RapiServer *rapiServer, string deviceIpAddress) : LocalServerSocket(proxyFactory, path), _rapiHandshakeClient(NULL), deviceIpAddress(deviceIpAddress), rapiServer(rapiServer)
 {
 }
 
@@ -30,15 +31,22 @@ RapiConnection::~RapiConnection()
     list<RapiProxy *>::iterator it = rapiProxies.begin();
     while(it != rapiProxies.end()) {
         RapiProxy *rp = *it;
+        rp->shutdown();
         it = rapiProxies.erase(it);
         delete rp;
     }
-    if (_rapiProvisioningClient) {
-        delete  _rapiProvisioningClient;
+
+    list<RapiProxyConnection*>::iterator rit = rapiProxyConnections.begin();
+    while(rit != rapiProxyConnections.end()) {
+        RapiProxyConnection *rpc = *rit;
+        rit = rapiProxyConnections.erase(rit);
+        delete rpc;
     }
+
     if (_rapiHandshakeClient) {
         delete _rapiHandshakeClient;
     }
+
     Multiplexer::self()->getReadManager()->remove(this);
 
     shutdown();
@@ -47,36 +55,7 @@ RapiConnection::~RapiConnection()
 
 void RapiConnection::disconnectFromServer()
 {
-    if (!_rapiHandshakeClient && !_rapiProvisioningClient) {
-        rapiServer->disconnect(deviceIpAddress);
-    }
-
-    if (_rapiProvisioningClient) {
-        _rapiProvisioningClient->disconnect();
-    }
-    if (_rapiHandshakeClient) {
-        _rapiHandshakeClient->disconnect();
-    }
-}
-
-
-void RapiConnection::disconnect(RapiClient *rapiClient)
-{
-    if (dynamic_cast<RapiHandshakeClient*>(rapiClient)) {
-        _rapiHandshakeClient = NULL;
-    } else if (dynamic_cast<RapiProvisioningClient*>(rapiClient)) {
-        _rapiProvisioningClient = NULL;
-    } else {
-        return;
-    }
-
-    disconnectFromServer();
-}
-
-
-void RapiConnection::registerProxy(RapiProxy *rapiProxy)
-{
-    rapiProxies.push_back(rapiProxy);
+    rapiServer->disconnect(deviceIpAddress);
 }
 
 
@@ -87,48 +66,48 @@ void RapiConnection::setHandshakeClient(RapiHandshakeClient *handshakeClient)
 }
 
 
-RapiHandshakeClient *RapiConnection::getRapiHandshakeClient()
+void RapiConnection::addProvisioningClient(RapiProvisioningClient *provisioningClient)
 {
-    return _rapiHandshakeClient;
+    if (rapiProxies.begin() != rapiProxies.end()) {
+        RapiProxy *rapiProxy = *rapiProxies.begin();
+        rapiProxies.remove(rapiProxy);
+        RapiProxyConnection *rapiProxyConnection = new RapiProxyConnection(this, rapiProxy, provisioningClient);
+        rapiProxyConnections.push_back(rapiProxyConnection);
+    } else {
+        provisioningClient->shutdown();
+        delete provisioningClient;
+    }
 }
 
 
-void RapiConnection::setProvisioningClient(RapiProvisioningClient *provisioningClient)
+void RapiConnection::proxyConnectionClosed(RapiProxyConnection *rapiProxyConnection)
 {
-    _rapiProvisioningClient = provisioningClient;
-    provisioningClient->setRapiConnection(this);
+    list<RapiProxyConnection*>::iterator it = find(rapiProxyConnections.begin(), rapiProxyConnections.end(), rapiProxyConnection);
+
+    if (it != rapiProxyConnections.end()) {
+        rapiProxyConnections.erase(it);
+        delete *it;
+    }
 }
 
 
-RapiProvisioningClient *RapiConnection::getRapiProvisioningClient()
-{
-    return _rapiProvisioningClient;
-}
-
-
-void RapiConnection::keepAlive()
-{
-    _rapiHandshakeClient->keepAlive();
-}
-
-
-void RapiConnection::provisioningClientReachedState9()
+void RapiConnection::handshakeClientInitialized()
 {
     listen();
     Multiplexer::self()->getReadManager()->add(this);
 }
 
 
-bool RapiConnection::rapiProxyAlive(RapiProxy* rapiProxy)
+
+void RapiConnection::handshakeClientDisconnected()
 {
-    return find(rapiProxies.begin(), rapiProxies.end(), rapiProxy) != rapiProxies.end();
+    disconnectFromServer();
 }
 
 
-void RapiConnection::messageToDevice(RapiProxy *rapiProxy)
+void RapiConnection::event()
 {
-    if (!_rapiProvisioningClient->forwardBytes(rapiProxy)) {
-        rapiProxies.remove(rapiProxy);
-        delete rapiProxy;
-    }
+    RapiProxy *rapiProxy = dynamic_cast<RapiProxy *>(accept());
+    rapiProxies.push_back(rapiProxy);
+    _rapiHandshakeClient->initiateProvisioningConnection();
 }

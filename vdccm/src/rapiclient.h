@@ -13,7 +13,6 @@
 #define RAPICLIENT_H
 
 #include <tcpacceptedsocket.h>
-#include <string>
 
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
@@ -27,17 +26,9 @@ public:
 
     ~RapiClient();
 
-    void disconnect();
-
-    void setRapiConnection(RapiConnection *rapiConnection);
-    RapiConnection *getRapiConnection();
-
     bool readOnePackage(unsigned char **buffer);
 
     void printPackage(std::string origin, unsigned char *buf, unsigned int maxLength=UINT_MAX );
-
-    private:
-        RapiConnection *rapiConnection;
 };
 
 #endif

@@ -13,13 +13,12 @@
 #define RAPIPROVISIONINGCLIENT_H
 
 #include "rapiclient.h"
-#include <list>
 
 /**
 	@author Richard van den Toorn <vdtoorn@users.sourceforge.net>
 */
 
-class RapiProxy;
+class RapiProxyConnection;
 
 class RapiProvisioningClient : public RapiClient
 {
@@ -28,33 +27,15 @@ public:
 
     ~RapiProvisioningClient();
 
-    bool forwardBytes(RapiProxy *rapiProxy);
+    void setRapiProxyConnection(RapiProxyConnection *rapiProxyConnection);
 
 protected:
 
       virtual void event();
 
 private:
-
-    // make a packet of bytes from the rapimessages namespace, return size of packet
-    void makePacket( const unsigned char* prefix, const char* string, unsigned char* buffer );
-
-    enum State {
-      NoDataReceived = 0,
-      Ping1Received,
-      State2,
-      State3,
-      State4,
-      State5,
-      State6,
-      State7,
-      State8,
-      State9,
-      State10
-    };
-
-    State _state;
-    std::list<RapiProxy *> rapiProxies;
+    bool initialized;
+    RapiProxyConnection *rapiProxyConnection;
     unsigned int mtuWH;
 };
 

@@ -18,6 +18,9 @@
 /**
 	@author Richard van den Toorn <vdtoorn@users.sourceforge.net>
 */
+
+class RapiConnection;
+
 class RapiHandshakeClient : public RapiClient, public ContinousNode
 {
 public:
@@ -26,6 +29,9 @@ public:
     virtual ~RapiHandshakeClient();
 
     void keepAlive();
+    void initiateProvisioningConnection();
+    void setRapiConnection(RapiConnection *rapiConnection);
+
 
 protected:
 
@@ -44,6 +50,8 @@ private:
 
     State _state;
     int pendingPingRequests;
+    RapiConnection *rapiConnection;
+    uint32_t connectionCount;
 };
 
 #endif

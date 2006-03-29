@@ -25,6 +25,7 @@ class RapiServer;
 class RapiClient;
 class RapiProxy;
 class RapiProxyFactory;
+class RapiProxyConnection;
 
 class RapiConnection : public LocalServerSocket
 {
@@ -33,27 +34,21 @@ public:
 
     ~RapiConnection();
     void setHandshakeClient( RapiHandshakeClient *handshakeClient );
-    void setProvisioningClient( RapiProvisioningClient *provisioningClient );
-    void keepAlive();
-    void messageToDevice(RapiProxy *rapiProxy);
-    void registerProxy(RapiProxy *rapiProxy);
-    RapiProvisioningClient *getRapiProvisioningClient();
-    RapiHandshakeClient *getRapiHandshakeClient();
-    void provisioningClientReachedState9();
-    bool rapiProxyAlive(RapiProxy* rapiProxy);
-
-protected:
-    void disconnectFromServer();
-    void disconnect( RapiClient * );
+    void addProvisioningClient( RapiProvisioningClient *provisioningClient );
+    void handshakeClientInitialized();
+    void proxyConnectionClosed(RapiProxyConnection *rapiProxyConnection);
+    void handshakeClientDisconnected();
+    virtual void event();
 
 private:
+    void disconnectFromServer();
     RapiHandshakeClient * _rapiHandshakeClient;
-    RapiProvisioningClient * _rapiProvisioningClient;
     std::string deviceIpAddress;
     RapiServer *rapiServer;
     std::list<RapiProxy *> rapiProxies;
+    std::list<RapiProxyConnection *> rapiProxyConnections;
 
-friend class RapiClient;
+friend class RapiHandshakeClient;
 };
 
 #endif

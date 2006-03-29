@@ -19,6 +19,7 @@
 #include <synce_log.h>
 #include <synce.h>
 #include <errno.h>
+#include <iostream>
 
 #include <arpa/inet.h>
 
@@ -51,11 +52,8 @@ void RapiServer::disconnect(string deviceIpAddress)
 }
 
 
-#include <iostream>
 void RapiServer::event()
 {
-    std::cout << "990-server-event()" << endl;
-
     int fd;
 
     fd = ::accept(getDescriptor(), NULL, NULL);
@@ -91,14 +89,9 @@ void RapiServer::event()
         rapiConnection[remoteIpAddress] = new RapiConnection(new RapiProxyFactory(), socketPath, this, remoteIpAddress);
         rapiConnection[remoteIpAddress]->setHandshakeClient(dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
     } else {
-        if (rapiConnection[remoteIpAddress]->getRapiProvisioningClient() == NULL) {
-            std::cout << "RapiProvisioningClient for device " << remoteIpAddress << std::endl;
+        std::cout << "RapiProvisioningClient for device " << remoteIpAddress << std::endl;
             // Rapi Provisioning Client
-            rapiConnection[remoteIpAddress]->setProvisioningClient(dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
-        } else {
-            // We only accept two connections to port 990 from one particular ip-address
-            ::shutdown(fd, 2);
-            ::close(fd);
-        }
+        rapiConnection[remoteIpAddress]->addProvisioningClient(
+                dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
     }
 }

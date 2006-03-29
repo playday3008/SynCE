@@ -16,7 +16,6 @@
 #include <iostream>
 #include <iomanip>
 #include <errno.h>
-#include "rapiconnection.h"
 
 using namespace std;
 
@@ -29,32 +28,6 @@ RapiClient::RapiClient(int fd, TCPServerSocket *tcpServerSocket)
 
 RapiClient::~RapiClient()
 {
-}
-
-
-void RapiClient::disconnect()
-{
-    cout << "990-client-disconnect()" << endl;
-
-    Multiplexer::self()->getReadManager()->remove(this);
-
-    shutdown();
-
-    rapiConnection->disconnect(this);
-
-    delete this;
-}
-
-
-void RapiClient::setRapiConnection(RapiConnection *rapiConnection)
-{
-    this->rapiConnection = rapiConnection;
-}
-
-
-RapiConnection *RapiClient::getRapiConnection()
-{
-    return rapiConnection;
 }
 
 
