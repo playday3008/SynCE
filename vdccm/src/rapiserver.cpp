@@ -95,7 +95,6 @@ void RapiServer::event()
             std::cout << "RapiProvisioningClient for device " << remoteIpAddress << std::endl;
             // Rapi Provisioning Client
             rapiConnection[remoteIpAddress]->setProvisioningClient(dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
-            rapiConnection[remoteIpAddress]->keepAlive();
         } else {
             // We only accept two connections to port 990 from one particular ip-address
             ::shutdown(fd, 2);

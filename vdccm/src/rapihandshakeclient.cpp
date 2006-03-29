@@ -77,6 +77,7 @@ void RapiHandshakeClient::event()
         printPackage("RapiHandshakeClient", (unsigned char *) buf);
 
         delete[] buf;
+
         // write 3 responses, response 1 is { 05, 00, 00, 00 }
         char response[ 4 ] = { 05, 00, 00, 00 };
         write( getDescriptor(), response, 4 );
@@ -90,6 +91,7 @@ void RapiHandshakeClient::event()
         write( getDescriptor(), response, 4 );
 
         _state = InfoMessageReceived;
+        keepAlive();
     } else if ( _state == KeepingAlive ) {
         unsigned char buffer[ 4 ];
         if (readNumBytes(buffer, 4) != 4) {
