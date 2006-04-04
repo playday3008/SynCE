@@ -39,19 +39,22 @@ protected:
     virtual void shot();
 
 private:
-
-    enum State {
-      NoDataReceived = 0,
-      Ping1Received,
-      Ping2Received,
-      InfoMessageReceived,
-      KeepingAlive
-    };
-
-    State _state;
     int pendingPingRequests;
     RapiConnection *rapiConnection;
     uint32_t connectionCount;
+
+    char *deviceName;
+    unsigned char deviceGuid[0x10];
+    uint32_t osVersionMajor;
+    uint32_t osVersionMinor;
+    uint32_t deviceVersion;
+    uint32_t deviceProcessorType;
+    uint32_t unknown1;
+    uint32_t someOtherId;
+    char plattformName[0x100];
+    char modelName[0x100];
+    uint32_t deviceId;
+
 };
 
 #endif

@@ -39,6 +39,7 @@ bool CmdLineArgs::_useIp = false;
 int CmdLineArgs::missingPingCount = DCCM_MAX_PING_COUNT;
 int CmdLineArgs::pingDelay = DCCM_PING_INTERVAL ;
 bool CmdLineArgs::syncClock = false;
+bool CmdLineArgs::bypassRootCheck = false;
 
 CmdLineArgs::CmdLineArgs()
 {
@@ -66,7 +67,8 @@ void CmdLineArgs::usage(const char *name)
          << "\t-p password  Use this password when device connects" << endl
          << "\t-i           Use ip-address of device for identification" << endl
          << "\t-u count     Allowed numbers of unanswered pings (default 3)" << endl
-         << "\t-s sec       Delay between pings in seconds (default 5)" << endl;
+         << "\t-s sec       Delay between pings in seconds (default 5)" << endl
+         << "\t-r           Bypass \"do not start as root\"-check" << endl;
 }
 
 
@@ -74,7 +76,7 @@ bool CmdLineArgs::parseArgs(int argc, char *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, "d:fhtp:iu:s:")) != -1) {
+    while ((c = getopt(argc, argv, "d:fhtrp:iu:s:")) != -1) {
         switch (c) {
         case 'd':
             logLevel = atoi(optarg);
@@ -102,6 +104,10 @@ bool CmdLineArgs::parseArgs(int argc, char *argv[])
 
         case 't':
             syncClock = true;
+            break;
+
+        case 'r':
+            bypassRootCheck = true;
             break;
 
         case 'h':
@@ -191,4 +197,10 @@ bool CmdLineArgs::getSyncClock()
 int CmdLineArgs::getLogLevel()
 {
     return logLevel;
+}
+
+
+bool CmdLineArgs::getBypassRootCheck()
+{
+    return bypassRootCheck;
 }

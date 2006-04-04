@@ -267,7 +267,7 @@ bool Utils::acquireRootPrivileg()
 }
 
 
-bool Utils::checkStartingUser()
+bool Utils::checkStartingUser(bool bypassRootCheck)
 {
     bool ret = true;
 
@@ -275,7 +275,7 @@ bool Utils::checkStartingUser()
     uid_t euid = geteuid();
 
     // we should be started suid-root but not directly by root
-    if (uid == 0 || euid != 0) {
+    if ((uid == 0 && !bypassRootCheck) || euid != 0) {
         ret = false;
     }
 

@@ -36,7 +36,6 @@ protected:
 private:
     bool initialized;
     RapiProxyConnection *rapiProxyConnection;
-    unsigned int mtuWH;
 };
 
 #endif

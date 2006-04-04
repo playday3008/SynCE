@@ -206,10 +206,61 @@ void ProxyClientSocket::ceFindAllFiles(char *path)
 }
 
 
+void ProxyClientSocket::ceWhichCallSetsTheTimeOnTheDevice(int setClock)
+{
+        // data not relevant, should be { 01, 00, 00, 00 },
+    unsigned char timePackage[ 24 ] = { 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x80, 0xed, 0x50, 0x8a,
+    0xb5, 0x3e, 0xc6, 0x01,
+    0x00, 0x00, 0x00, 0x00,
+    0x10, 0x27, 0x00, 0x00 };
+
+    uint32_t *setTime = ( uint32_t * ) ( timePackage + 0x04 );
+    uint32_t *lowDateTime = ( uint32_t * ) ( timePackage + 0x08 );
+    uint32_t *highDateTime = ( uint32_t * ) ( timePackage + 0x0c );
+
+    time_t t = time( NULL );
+    struct tm *tim = gmtime( &t );
+
+    TIME_FIELDS tf;
+    tf.Year = 1900 + tim->tm_year;
+    tf.Month = 1 + tim->tm_mon;
+    tf.Day = tim->tm_mday;
+    tf.Hour = tim->tm_hour;
+    tf.Minute = tim->tm_min;
+    tf.Second = tim->tm_sec;
+    tf.Milliseconds = 0;
+    tf.Weekday = 0;
+
+    FILETIME ft;
+    if ( !synce::time_fields_to_filetime( &tf, &ft ) ) {
+        printf( "Wired error\n" );
+        exit( 0 );
+    }
+
+    *setTime = ( setClock ) ? ( uint32_t ) 0x00000001 : ( uint32_t ) 0x00000000;
+    *lowDateTime = ( uint32_t ) ft.dwLowDateTime;
+    *highDateTime = ( uint32_t ) ft.dwHighDateTime;
+
+    if (writePackage(timePackage)) {
+        unsigned char *buf;
+        if (readPackage(&buf)) {
+            // Work with data in buffer buf
+            // The buffer is allocate in readPackage - but we have to delete it here!
+            delete[] buf;
+        }
+    }
+
+}
+
+
 void ProxyClientSocket::shot()
 {
     ceGetSpecialFolderPath(0x05);
 //    ceFindAllFiles("\\Temp\\*");
+    ceWhichCallSetsTheTimeOnTheDevice(0);
     ceFindAllFiles("\\Windows\\*");
+
 }
 

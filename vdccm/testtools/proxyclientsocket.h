@@ -34,6 +34,7 @@ private:
 //    void interpretBuffer(unsigned char* buf);
     void ceGetSpecialFolderPath(uint32_t folderType);
     void ceFindAllFiles(char *path);
+    void ceWhichCallSetsTheTimeOnTheDevice(int setClock);
 
     void printPackage(unsigned char *buf);
     bool writePackage(unsigned char *buf);

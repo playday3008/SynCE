@@ -42,7 +42,7 @@ public:
 
 private:
     void disconnectFromServer();
-    RapiHandshakeClient * _rapiHandshakeClient;
+    RapiHandshakeClient * rapiHandshakeClient;
     std::string deviceIpAddress;
     RapiServer *rapiServer;
     std::list<RapiProxy *> rapiProxies;

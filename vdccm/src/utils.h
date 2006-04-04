@@ -41,7 +41,7 @@ public:
     static void runScripts(std::string action, std::string deviceName = "");
     static bool dropRootPrivileg();
     static bool acquireRootPrivileg();
-    static bool checkStartingUser();
+    static bool checkStartingUser(bool bypassRootCheck);
 
 private:
     Utils();

@@ -19,7 +19,6 @@ RapiProvisioningClient::RapiProvisioningClient( int fd, TCPServerSocket *tcpServ
 {
     setBlocking();
     setReadTimeout( 5, 0 );
-    mtuWH = getMTU() - 40;
 }
 
 
@@ -31,7 +30,6 @@ RapiProvisioningClient::~RapiProvisioningClient()
 void RapiProvisioningClient::event( void )
 {
     if ( !initialized ) {
-        std::cout << "Initializing" << std::endl;
         // 4Byte static conteng 0x01, 0x00, 0x00, 0x00
         unsigned char buffer[ 4 ];
         if ( readNumBytes( buffer, 4 ) != 4 ) {

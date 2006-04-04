@@ -17,14 +17,11 @@
 RapiProxy::RapiProxy(int fd, LocalServerSocket* serverSocket)
  : LocalAcceptedSocket(fd, serverSocket)
 {
-    Multiplexer::self()->getReadManager()->add(this);
 }
 
 
 RapiProxy::~RapiProxy()
 {
-    Multiplexer::self()->getReadManager()->remove(this);
-    shutdown();
 }
 
 

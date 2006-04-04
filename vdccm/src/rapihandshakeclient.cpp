@@ -15,11 +15,12 @@
 #include "cmdlineargs.h"
 #include "rapiconnection.h"
 #include <iostream>
+#include <synce.h>
+#include <synce_log.h>
 
 RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSocket )
         : RapiClient( fd, tcpServerSocket ), ContinousNode( CmdLineArgs::getPingDelay(), 0 )
 {
-    _state = NoDataReceived;
     pendingPingRequests = 0;
     setBlocking();
     setReadTimeout( 5, 0 );
@@ -30,74 +31,115 @@ RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSock
 RapiHandshakeClient::~RapiHandshakeClient()
 {
     Multiplexer::self()->getReadManager()->remove(this);
-    Multiplexer::self() ->getTimerNodeManager() ->remove(this);
+    Multiplexer::self()->getTimerNodeManager()->remove(this);
     shutdown();
 }
 
 
 void RapiHandshakeClient::setRapiConnection(RapiConnection *rapiConnection)
 {
-    std::cout << "Handshakeclient-setRapiConnection() " << (void *) rapiConnection << std::endl;
     this->rapiConnection = rapiConnection;
 }
 
 
 void RapiHandshakeClient::keepAlive()
 {
-    Multiplexer::self() ->getTimerNodeManager() ->add
-    ( this );
-
-    _state = KeepingAlive;
+    Multiplexer::self() ->getTimerNodeManager() ->add( this );
 }
 
 void RapiHandshakeClient::event()
 {
-    if ( _state == NoDataReceived ) {
-        // data not relevant, should be { 00, 00, 00, 00 }, just reply
-        unsigned char buffer[ 4 ];
-        if (readNumBytes(buffer, 4) != 4) {
+    uint32_t leSignature;
+    if (readNumBytes((unsigned char *) &leSignature, 4) != 4) {
+        rapiConnection->handshakeClientDisconnected();
+        return;
+    }
+
+    printPackage("RapiHandshakeClient", (unsigned char *) &leSignature, 4);
+
+    uint32_t signature = letoh32(leSignature);
+
+    if ( signature == 0x00 ) {
+        // This is the initial package
+        // write response, should { 03, 00, 00, 00 }
+        char response[ 4 ] = { 03, 00, 00, 00 };
+        write( getDescriptor(), response, 4 );
+    } else if ( signature == 0x04) {
+        // The next package is the info message
+        unsigned char *buffer;
+        if (!readOnePackage(&buffer)) {
             rapiConnection->handshakeClientDisconnected();
             return;
         }
         printPackage("RapiHandshakeClient", (unsigned char *) buffer);
 
-        // write response, should { 03, 00, 00, 00 }
-        char response[ 4 ] = { 03, 00, 00, 00 };
-        write( getDescriptor(), response, 4 );
-
-        _state = Ping1Received;
-    } else if ( _state == Ping1Received ) {
-        // data not relevant, should be { 04, 00 ,00 ,00 }
-        unsigned char buffer[ 4 ];
-        if (readNumBytes(buffer, 4) != 4) {
-            rapiConnection->handshakeClientDisconnected();
-            return;
+        int deviceGuidOffset = 0x04;
+        int deviceGuidLength = 0x10;
+        memcpy(deviceGuid, buffer + deviceGuidOffset, deviceGuidLength);
+        if (CmdLineArgs::getLogLevel() >= 3) {
+            for (int i = 0; i < deviceGuidLength; i++) {
+                fprintf(stderr, "-%0X", deviceGuid[i]);
+            }
+            printf("-\n");
         }
-        printPackage("RapiHandshakeClient", (unsigned char *) buffer, 4);
 
-        // nothing to reply, more data (info message) follows
-        _state = Ping2Received;
-    } else if ( _state == Ping2Received ) {
-        // buffer contains info message
-        unsigned char *buf;
-        if (!readOnePackage(&buf)) {
-            rapiConnection->handshakeClientDisconnected();
-            return;
-        }
-        printPackage("RapiHandshakeClient", (unsigned char *) buf);
+        int osVersionMajorOffset = deviceGuidOffset + deviceGuidLength;
+        osVersionMajor = letoh32(*(uint32_t *)(buffer + osVersionMajorOffset));
+        int osVersionMinorOffset = osVersionMajorOffset + sizeof(uint32_t);
+        osVersionMinor = letoh32(*(uint32_t *)(buffer + osVersionMinorOffset));
+        synce_info("OSVersion: %d.%d", osVersionMajor, osVersionMinor);
 
-        delete[] buf;
+        int deviceNameLengthOffset = osVersionMinorOffset + sizeof(uint32_t);
+        uint32_t deviceNameLength = letoh32(*(uint32_t *) (buffer + deviceNameLengthOffset));
+
+        int deviceNameOffset = deviceNameLengthOffset + sizeof(uint32_t);
+        deviceName = synce::wstr_to_ascii((WCHAR *)(buffer + deviceNameOffset));
+        synce_info("DeviceName: %s", deviceName);
+
+        int deviceVersionOffset = deviceNameOffset + (deviceNameLength + 1) * sizeof(WCHAR);
+        deviceVersion = letoh32(*(uint32_t *) (buffer + deviceVersionOffset));
+        synce_info("DeviceVersion: %p", deviceVersion);
+
+        int deviceProcessorOffset = deviceVersionOffset + sizeof(uint32_t);
+        deviceProcessorType = letoh32(*(int32_t *) (buffer + deviceProcessorOffset));
+        synce_info("DeviceProzessorType: %p", deviceProcessorType);
+
+        int unknown1Offset = deviceProcessorOffset + sizeof(uint32_t);
+        unknown1 = letoh32(*(int32_t *) (buffer + unknown1Offset));
+        synce_info("Unknown1: %p", unknown1);
+
+        int someOtherIdOffset = unknown1Offset + sizeof(uint32_t);
+        someOtherId = letoh32(*(int32_t *) (buffer + someOtherIdOffset));
+        synce_info("SomeOtherId: %p", someOtherId);
+
+        int deviceIdOffset = someOtherIdOffset + sizeof(uint32_t);
+        deviceId = letoh32(*(int32_t *) (buffer + deviceIdOffset));
+        synce_info("DeviceId: %p", deviceId);
+
+        int plattformNameLengthOffset = deviceIdOffset + sizeof(uint32_t);
+        int plattformNameLength = letoh32(*(int32_t *) (buffer + plattformNameLengthOffset));
+
+        int plattformNameOffset = plattformNameLengthOffset + sizeof(uint32_t);
+        memcpy(plattformName, buffer + plattformNameOffset, plattformNameLength);
+        synce_info("PlattformName: %s", plattformName);
+
+        int modelNameLengthOffset = plattformNameOffset + plattformNameLength;
+        int modelNameLength = letoh32(*(int32_t *) (buffer + modelNameLengthOffset));
+
+        int modelNameOffset = modelNameLengthOffset + sizeof(uint32_t);
+        memcpy(modelName, buffer + modelNameOffset, modelNameLength);
+        synce_info("ModelName: %s", modelName);
+
+        /*
+        int unknown2Offset = modelNameOffset + modelNameLength;
+        int unknonw2Length = 0x48;
+        */
+
+        delete[] buffer;
         rapiConnection->handshakeClientInitialized();
-        _state = InfoMessageReceived;
         keepAlive();
-    } else if ( _state == KeepingAlive ) {
-        unsigned char buffer[ 4 ];
-        if (readNumBytes(buffer, 4) != 4) {
-            rapiConnection->handshakeClientDisconnected();
-            return;
-        }
-
-        printPackage("RapiHandshakeClient", buffer, 4);
+    } else if ( signature == 0x02 ) {
+        // This is a ping-reply
         pendingPingRequests--;
     }
 }
@@ -106,16 +148,18 @@ void RapiHandshakeClient::event()
 void RapiHandshakeClient::initiateProvisioningConnection()
 {
     connectionCount++;
-    // write 3 responses, response 1 is { 05, 00, 00, 00 }
-    char response[ 4 ] = { 05, 00, 00, 00 };
-    write( getDescriptor(), response, 4 );
 
-        // response 2 is { 04, 00, 00, 00 }
-    response[ 0 ] = 04;
-    write( getDescriptor(), response, 4 );
+    unsigned char package[12] = {
+        0x05, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00
+        // The last four bytes are filled with the connectionCounter
+    };
 
-        // response 3 is connectionCount
-    write( getDescriptor(), &connectionCount, 4 );
+    uint32_t *cc = (uint32_t *) (package + 8);
+
+    *cc = htole32(connectionCount);
+
+    write(getDescriptor(), package, 12);
 }
 
 

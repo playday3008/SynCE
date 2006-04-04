@@ -21,7 +21,7 @@
 
 using namespace std;
 
-RapiConnection::RapiConnection(RapiProxyFactory *proxyFactory, string path, RapiServer *rapiServer, string deviceIpAddress) : LocalServerSocket(proxyFactory, path), _rapiHandshakeClient(NULL), deviceIpAddress(deviceIpAddress), rapiServer(rapiServer)
+RapiConnection::RapiConnection(RapiProxyFactory *proxyFactory, string path, RapiServer *rapiServer, string deviceIpAddress) : LocalServerSocket(proxyFactory, path), rapiHandshakeClient(NULL), deviceIpAddress(deviceIpAddress), rapiServer(rapiServer)
 {
 }
 
@@ -43,8 +43,8 @@ RapiConnection::~RapiConnection()
         delete rpc;
     }
 
-    if (_rapiHandshakeClient) {
-        delete _rapiHandshakeClient;
+    if (rapiHandshakeClient) {
+        delete rapiHandshakeClient;
     }
 
     Multiplexer::self()->getReadManager()->remove(this);
@@ -61,7 +61,7 @@ void RapiConnection::disconnectFromServer()
 
 void RapiConnection::setHandshakeClient(RapiHandshakeClient *handshakeClient)
 {
-    _rapiHandshakeClient = handshakeClient;
+    rapiHandshakeClient = handshakeClient;
     handshakeClient->setRapiConnection(this);
 }
 
@@ -76,6 +76,7 @@ void RapiConnection::addProvisioningClient(RapiProvisioningClient *provisioningC
     } else {
         provisioningClient->shutdown();
         delete provisioningClient;
+        disconnectFromServer();
     }
 }
 
@@ -85,8 +86,9 @@ void RapiConnection::proxyConnectionClosed(RapiProxyConnection *rapiProxyConnect
     list<RapiProxyConnection*>::iterator it = find(rapiProxyConnections.begin(), rapiProxyConnections.end(), rapiProxyConnection);
 
     if (it != rapiProxyConnections.end()) {
+        RapiProxyConnection *rpc = *it;
         rapiProxyConnections.erase(it);
-        delete *it;
+        delete rpc;
     }
 }
 
@@ -109,5 +111,5 @@ void RapiConnection::event()
 {
     RapiProxy *rapiProxy = dynamic_cast<RapiProxy *>(accept());
     rapiProxies.push_back(rapiProxy);
-    _rapiHandshakeClient->initiateProvisioningConnection();
+    rapiHandshakeClient->initiateProvisioningConnection();
 }

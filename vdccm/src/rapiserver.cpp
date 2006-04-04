@@ -19,7 +19,6 @@
 #include <synce_log.h>
 #include <synce.h>
 #include <errno.h>
-#include <iostream>
 
 #include <arpa/inet.h>
 
@@ -79,18 +78,18 @@ void RapiServer::event()
     if (rapiConnection[remoteIpAddress] == NULL) {
         char *path;
 
-        if (!synce::synce_get_directory(&path)) {
+        if (!synce::synce_get_subdirectory("rapi2", &path)) {
             return;
         }
         string socketPath = string(path) + "/" + remoteIpAddress;
         free(path);
-        std::cout << "RapiHandshakeClient for device " << remoteIpAddress << std::endl;
+        synce_info("RapiHandshakeClient for device with ip %s", remoteIpAddress);
         // Rapi Handshake Client
         rapiConnection[remoteIpAddress] = new RapiConnection(new RapiProxyFactory(), socketPath, this, remoteIpAddress);
         rapiConnection[remoteIpAddress]->setHandshakeClient(dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
     } else {
-        std::cout << "RapiProvisioningClient for device " << remoteIpAddress << std::endl;
-            // Rapi Provisioning Client
+        synce_info("RapiProvisioningClient for device with ip %s", remoteIpAddress);
+        // Rapi Provisioning Client
         rapiConnection[remoteIpAddress]->addProvisioningClient(
                 dynamic_cast<RapiProvisioningClient *>(rapiProvisioningClientFactory->socket(fd, this)));
     }

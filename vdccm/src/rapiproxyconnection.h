@@ -18,6 +18,7 @@
 class RapiConnection;
 class RapiProxy;
 class RapiProvisioningClient;
+class Descriptor;
 
 class RapiProxyConnection{
 public:
@@ -27,6 +28,8 @@ public:
 
     void messageToDevice();
     void messageToApplication();
+    void forwardMessage(Descriptor *from, Descriptor *to);
+
     void provisioningClientInitialized();
     void provisioningClientNotInitialized();
 
@@ -35,8 +38,7 @@ public:
         RapiProxy *rapiProxy;
         RapiProvisioningClient *rapiProvisioningClient;
         unsigned int mtuWH;
-        unsigned char *dirDeviceBuf;
-        unsigned char *dirApplicationBuf;
+        unsigned char *forwardBuffer;
 };
 
 #endif

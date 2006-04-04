@@ -39,6 +39,7 @@ public:
     static int getPingDelay();
     static bool getSyncClock();
     static int getLogLevel();
+    static bool getBypassRootCheck();
 
 private:
     CmdLineArgs();
@@ -52,6 +53,7 @@ private:
     static int missingPingCount;
     static int pingDelay;
     static bool syncClock;
+    static bool bypassRootCheck;
 };
 
 #endif
