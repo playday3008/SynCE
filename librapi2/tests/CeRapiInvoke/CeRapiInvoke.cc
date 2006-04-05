@@ -123,7 +123,7 @@ static bool test_ping_buffer()
       &output_size, &output_buffer,
       NULL,
       0);
-  if (FAILED(hr))
+  if (hr != S_OK)
     return false;
 
   bool success = 
@@ -149,9 +149,11 @@ static bool test_ping_stream()
       0, NULL,
       &stream,
       0);
-  if (FAILED(hr))
+  if (hr != S_OK)
     return false;
 
+  cerr << "a" << endl;
+  
   ULONG count;
 
   BYTE input_buffer[PING_BUFFER_SIZE];
@@ -161,6 +163,7 @@ static bool test_ping_stream()
     cerr << "IRAPIStream_Write failed" << endl;
     goto exit;
   }
+  cerr << "b" << endl;
 
   DWORD output_size;
   BYTE output_buffer[PING_BUFFER_SIZE];
@@ -170,6 +173,7 @@ static bool test_ping_stream()
     cerr << "IRAPIStream_Read failed" << endl;
     goto exit;
   }
+  cerr << "c" << endl;
 
   success = 
     memcmp(input_buffer, output_buffer, PING_BUFFER_SIZE) == 0;
@@ -262,7 +266,7 @@ int main()
   }
 
 exit:
-#if 0
+#if 1
   if (!CeDeleteFile(remote_dll))
   {
     cerr << "CeDeleteFile failed." << endl;

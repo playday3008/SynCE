@@ -199,7 +199,10 @@ static HRESULT CeRapiInvokeBuffers(
       dwReserved,
       FALSE);
   if (FAILED(hr))
+  {
+    synce_error("CeRapiInvokeCommon failed");
     goto exit;
+  }
 
   if ( !rapi_buffer_send(context->send_buffer, context->socket) )
   {
@@ -246,12 +249,12 @@ static HRESULT CeRapiInvokeBuffers(
       break;
 
     /* result */
-    if (!rapi_buffer_read_uint32(context->recv_buffer, &return_value))
+    if (!rapi_buffer_read_uint32(context->recv_buffer, (uint32_t*)&return_value))
     {
       synce_error("Failed to read return value");
       break;
     }
-    /*synce_trace("return value: 0x%08x", return_value);*/
+    synce_trace("return value: 0x%08x", return_value);
     bytes_left -= 4;
 
     if (!bytes_left)
