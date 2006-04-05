@@ -7,12 +7,14 @@
 #include <string.h>
 #include <unistd.h>
 
+char* devpath = NULL;
+
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-h] PROGRAM [--] [PARAMETERS]\n"
+			"\t%s [-d LEVEL] [-p DEVPATH] [-h] PROGRAM [--] [PARAMETERS]\n"
 			"\n"
 			"\t-d LEVEL    Set debug log level\n"
 			"\t                0 - No logging (default)\n"
@@ -20,6 +22,7 @@ static void show_usage(const char* name)
 			"\t                2 - Errors and warnings\n"
 			"\t                3 - Everything\n"
 			"\t-h          Show this help message\n"
+                        "\t-p DEVPATH  Device path\n"
 			"\tPROGRAM     The program you want to run\n"
       "\t--          Needed if PARAMETERS begin with a dash ('-')\n"
 			"\tPARAMETERS  Parameters to the program\n",
@@ -31,7 +34,7 @@ static bool handle_parameters(int argc, char** argv, char** program, char** para
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "d:h")) != -1)
+	while ((c = getopt(argc, argv, "d:p:h")) != -1)
 	{
 		switch (c)
 		{
@@ -39,6 +42,10 @@ static bool handle_parameters(int argc, char** argv, char** program, char** para
 				log_level = atoi(optarg);
 				break;
 			
+                        case 'p':
+                                devpath = optarg;
+                                break;
+
 			case 'h':
 			default:
 				show_usage(argv[0]);
@@ -66,6 +73,7 @@ static bool handle_parameters(int argc, char** argv, char** program, char** para
 int main(int argc, char** argv)
 {
 	int result = 1;
+        RapiConnection* connection = NULL;
 	char* program = NULL;
 	char* parameters = NULL;
 	HRESULT hr;
@@ -76,6 +84,14 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &program, &parameters))
 		goto exit;
 
+        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        {
+          fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
+                  argv[0],
+                  devpath?devpath:"(Default)");
+          goto exit;
+        }
+        rapi_connection_select(connection);
 	hr = CeRapiInit();
 
 	if (FAILED(hr))

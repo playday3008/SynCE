@@ -4,7 +4,7 @@
 prmdir \- remove an empty directory
 
 .SH SYNOPSIS
-\fBprmdir\fR [-h] \fIDIRECTORY\fR
+\fBprmdir\fR [-h] [-d \fILEVEL\fR] [-p \fIDEVPATH\fR] \fIDIRECTORY\fR
 
 .SH "DESCRIPTION"
 
@@ -15,7 +15,23 @@ prmdir \- remove an empty directory
 Forward slashes ('/') on the command line are converted to backward slashes ('\\').
 
 .SH "OPTIONS"
+
 .TP
+-d \fILEVEL\fR
+Set debug log level:
+.IP
+0 - No logging (default)
+.IP
+1 - Errors only
+.IP
+2 - Errors and warnings
+.IP
+3 - Everything
+
+.TP
+-p \fIDEVPATH\fR
+Use the device at the given path, instead of the default.
+
 .TP
 -h
 Display help message.

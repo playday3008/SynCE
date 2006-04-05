@@ -6,20 +6,23 @@
 #include <string.h>
 #include <unistd.h>
 
+char* devpath = NULL;
+
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-h] OID\n"
+			"\t%s [-d LEVEL] [-p DEVPATH] [-h] OID\n"
 			"\n"
-			"\t-d LEVEL  Set debug log level\n"
-			"\t              0 - No logging (default)\n"
-			"\t              1 - Errors only\n"
-			"\t              2 - Errors and warnings\n"
-			"\t              3 - Everything\n"
-			"\t-h        Show this help message\n"
-			"\tOID       The object identifier we want to know more about\n",
+			"\t-d LEVEL     Set debug log level\n"
+			"\t                 0 - No logging (default)\n"
+			"\t                 1 - Errors only\n"
+			"\t                 2 - Errors and warnings\n"
+			"\t                 3 - Everything\n"
+                        "\t-p DEVPATH   Device path\n"
+			"\t-h           Show this help message\n"
+			"\tOID          The object identifier we want to know more about\n",
 			name);
 }
 
@@ -36,6 +39,10 @@ static bool handle_parameters(int argc, char** argv, CEOID* oid)
 				log_level = atoi(optarg);
 				break;
 			
+                        case 'p':
+                                devpath = optarg;
+                                break;
+
 			case 'h':
 			default:
 				show_usage(argv[0]);
@@ -63,10 +70,19 @@ int main(int argc, char** argv)
 	HRESULT hr;
 	CEOID oid = 0;
 	CEOIDINFO info;
+        RapiConnection* connection = NULL;
 	
 	if (!handle_parameters(argc, argv, &oid))
 		goto exit;
 
+        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        {
+          fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
+                  argv[0],
+                  devpath?devpath:"(Default)");
+          goto exit;
+        }
+        rapi_connection_select(connection);
 	hr = CeRapiInit();
 
 	if (FAILED(hr))

@@ -8,18 +8,21 @@
 #include <string.h>
 #include <unistd.h>
 
+char* devpath = NULL;
+
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-h] [-p] [-m] FILENAME"
+			"\t%s [-d LEVEL] [-P DEVPATH ] [-h] [-p] [-m] FILENAME"
 			"\n"
 			"\t-d LEVEL     Set debug log level\n"
 			"\t                 0 - No logging (default)\n"
 			"\t                 1 - Errors only\n"
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
+			"\t-P DEVPATH   Device path\n"
 			"\t-h           Show this help message\n"
 			"\t-p           Process the document\n"
 			"\t-m           Return metadata\n"
@@ -34,13 +37,17 @@ static bool handle_parameters(int argc, char** argv, DWORD* flags, const char** 
 
   *flags = 0;
 
-	while ((c = getopt(argc, argv, "d:hmp")) != -1)
+	while ((c = getopt(argc, argv, "d:hmp:")) != -1)
 	{
 		switch (c)
 		{
 			case 'd':
 				log_level = atoi(optarg);
 				break;
+			
+                        case 'P':
+                                devpath = optarg;
+                                break;
 			
 			case 'h':
 			default:
@@ -97,6 +104,7 @@ int main(int argc, char** argv)
   long bytes_left;
   LPWSTR config = NULL;
   LPWSTR reply = NULL;
+  RapiConnection* connection = NULL;
 
   /*
      Initialization
@@ -164,6 +172,14 @@ int main(int argc, char** argv)
      Do the bossanova
    */
 
+        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        {
+          fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
+                  argv[0],
+                  devpath?devpath:"(Default)");
+          goto exit;
+        }
+        rapi_connection_select(connection);
 	hr = CeRapiInit();
 
 	if (FAILED(hr))

@@ -4,7 +4,7 @@
 pcp \- copy files
 
 .SH SYNOPSIS
-\fBpcp\fR [-d \fILEVEL\fR] [-h] [:]\fISOURCE\fR [[:]\fIDESTINATION\fR]
+\fBpcp\fR [-d \fILEVEL\fR] [-p \fIDEVPATH\fR] [-h] [:]\fISOURCE\fR [[:]\fIDESTINATION\fR]
 
 .SH "DESCRIPTION"
 
@@ -31,6 +31,10 @@ Set debug log level:
 2 - Errors and warnings
 .IP
 3 - Everything
+
+.TP
+-p \fIDEVPATH\fR
+Use the device at the given path, instead of the default.
 
 .TP
 -h

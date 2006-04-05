@@ -15,7 +15,8 @@ struct _RapiConnection
 RapiConnection* rapi_connection_from_path(const char* path)
 {
   SynceInfo* info = synce_info_new(path);
-
+  if (info == NULL)
+    return NULL;
   RapiConnection* result = rapi_connection_from_info(info);
   if (result)
     result->owned_info = info;

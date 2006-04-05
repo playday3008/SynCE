@@ -6,19 +6,22 @@
 #include <string.h>
 #include <unistd.h>
 
+char* devpath = NULL;
+
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-h]\n"
+			"\t%s [-d LEVEL] [-p DEVPATH] [-h]\n"
 			"\n"
-			"\t-d LEVEL  Set debug log level\n"
-			"\t              0 - No logging (default)\n"
-			"\t              1 - Errors only\n"
-			"\t              2 - Errors and warnings\n"
-			"\t              3 - Everything\n"
-			"\t-h        Show this help message\n",
+			"\t-d LEVEL     Set debug log level\n"
+			"\t                 0 - No logging (default)\n"
+			"\t                 1 - Errors only\n"
+			"\t                 2 - Errors and warnings\n"
+			"\t                 3 - Everything\n"
+                        "\t-p DEVPATH   Device path\n"
+			"\t-h           Show this help message\n",
 			name);
 }
 
@@ -27,13 +30,17 @@ static bool handle_parameters(int argc, char** argv)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "d:h")) != -1)
+	while ((c = getopt(argc, argv, "d:p:h")) != -1)
 	{
 		switch (c)
 		{
 			case 'd':
 				log_level = atoi(optarg);
 				break;
+			
+                        case 'p':
+                                devpath = optarg;
+                                break;
 			
 			case 'h':
 			default:
@@ -50,6 +57,7 @@ static bool handle_parameters(int argc, char** argv)
 int main(int argc, char** argv)
 {
 	int return_value = 1;
+        RapiConnection* connection = NULL;
 	HRESULT hr;
 	LONG result;
 	HKEY parent_key;
@@ -61,6 +69,14 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv))
 		goto exit;
 
+        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        {
+          fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
+                  argv[0],
+                  devpath?devpath:"(Default)");
+          goto exit;
+        }
+        rapi_connection_select(connection);
 	hr = CeRapiInit();
 
 	if (FAILED(hr))

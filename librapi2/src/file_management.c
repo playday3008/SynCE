@@ -415,3 +415,27 @@ BOOL CeSetFileAttributes(
 exit:
 	return return_value;
 }
+
+BOOL CeSHCreateShortcut(
+  LPCWSTR lpszShortcut,
+  LPCWSTR lpszTarget)
+{
+  RapiContext* context = rapi_context_current();
+  BOOL return_value = 0;
+  
+  synce_trace("Creating shortcut");
+  
+  rapi_context_begin_command(context, 0x30);
+  rapi_buffer_write_optional_string(context->send_buffer, lpszShortcut);
+  rapi_buffer_write_optional_string(context->send_buffer, lpszTarget);
+
+  if ( !rapi_context_call(context) )
+    goto exit;
+  
+  rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+  rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+ exit:
+  return return_value;
+}
+

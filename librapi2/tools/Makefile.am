@@ -6,7 +6,7 @@ noinst_PROGRAMS = oidinfo
 
 oidinfo_SOURCES = oidinfo.c
 
-bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun pstatus rapiconfig \
+bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun pstatus rapiconfig pkillall pshortcut psettime \
 	synce-list-programs synce-registry
 
 pcp_SOURCES    = pcommon.c pcp.c
@@ -17,6 +17,9 @@ prm_SOURCES    = pcommon.c prm.c
 prmdir_SOURCES = pcommon.c prmdir.c
 prun_SOURCES   = pcommon.c prun.c
 pstatus_SOURCES= pstatus.c
+pkillall_SOURCES=pkillall.c
+pshortcut_SOURCES=pcommon.c pshortcut.c
+psettime_SOURCES=psettime.c
 
 rapiconfig_SOURCES = rapiconfig.c
 

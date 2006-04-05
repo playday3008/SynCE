@@ -7,6 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 
+char* devpath = NULL;
+
 static bool numeric_file_attributes = false;
 static bool show_hidden_files = false;
 
@@ -15,7 +17,7 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-a] [-d LEVEL] [-h] [-n] [DIRECTORY]\n"
+			"\t%s [-a] [-d LEVEL] [-p DEVPATH] [-h] [-n] [DIRECTORY]\n"
 			"\n"
 			"\t-a        Show all files including those marked as hidden\n"
 			"\t-d LEVEL  Set debug log level\n"
@@ -24,6 +26,7 @@ static void show_usage(const char* name)
 			"\t              2 - Errors and warnings\n"
 			"\t              3 - Everything\n"
 			"\t-h         Show this help message\n"
+                        "\t-p DEVPATH Device path\n"
 			"\t-n         Show numeric value for file attributes\n"
 			"\tDIRECTORY  The remote directory where you want to list files\n",
 			name);
@@ -34,15 +37,19 @@ static bool handle_parameters(int argc, char** argv, char** path)
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
 
-	while ((c = getopt(argc, argv, "ad:hn")) != -1)
+	while ((c = getopt(argc, argv, "ad:p:hn")) != -1)
 	{
 		switch (c)
 		{
 			case 'a':
 				show_hidden_files = true;
 				break;
-				
-			case 'd':
+					
+                        case 'p':
+                                devpath = optarg;
+                                break;
+			
+              		case 'd':
 				log_level = atoi(optarg);
 				break;
 
@@ -220,6 +227,7 @@ bool list_directory(WCHAR* directory)
 int main(int argc, char** argv)
 {
 	int result = 1;
+        RapiConnection* connection = NULL;
 	char* path = NULL;
 	WCHAR* wide_path = NULL;
 	HRESULT hr;
@@ -227,6 +235,14 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &path))
 		goto exit;
 
+        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        {
+          fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
+                  argv[0],
+                  devpath?devpath:"(Default)");
+          goto exit;
+        }
+        rapi_connection_select(connection);
 	hr = CeRapiInit();
 
 	if (FAILED(hr))

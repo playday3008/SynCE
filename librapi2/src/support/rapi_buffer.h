@@ -134,6 +134,12 @@ bool rapi_buffer_read_optional_uint32(RapiBuffer* buffer, uint32_t* value);
 bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWriteTime);
 
 /**
+ * Write a FILETIME parameter
+ */
+
+bool rapi_buffer_write_filetime(RapiBuffer *buffer, FILETIME ftime);
+
+/**
  * Send a buffer on the socket
  */
 bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket);

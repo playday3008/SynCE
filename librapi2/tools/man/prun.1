@@ -4,7 +4,7 @@
 prun \- run program
 
 .SH SYNOPSIS
-\fBprun\fR [-d \fILEVEL\fR] [-h] \fIPROGRAM\fR [--] [\fIPARAMETERS\fR]
+\fBprun\fR [-d \fILEVEL\fR] [-p \fIDEVPATH\fR] [-h] \fIPROGRAM\fR [--] [\fIPARAMETERS\fR]
 
 .SH "DESCRIPTION"
 
@@ -23,6 +23,10 @@ Set debug log level:
 2 - Errors and warnings
 .IP
 3 - Everything
+
+.TP
+-p \fIDEVPATH\fR
+Use the device at the given path, instead of the default.
 
 .TP
 -h

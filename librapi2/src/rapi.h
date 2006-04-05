@@ -280,6 +280,12 @@ BOOL CeSetFileAttributes(
 		LPCWSTR lpFileName,
 		DWORD dwFileAttributes);
 
+BOOL CeSHCreateShortcut(
+  LPCWSTR lpszShortcut,
+  LPCWSTR lpszTarget);
+
+BOOL CeSyncTimeToPc();
+  
 #endif /* SWIG */
 
 
@@ -474,6 +480,9 @@ BOOL CeSetDatabaseInfo(
 #define REG_DWORD_BIG_ENDIAN        5
 #define REG_LINK                    6
 #define REG_MULTI_SZ                7
+
+#define REG_CREATED_NEW_KEY         1
+#define REG_OPENED_EXISTING_KEY     2
 
 #ifndef SWIG
 

@@ -4,7 +4,29 @@
 synce-list-programs \- shows a list of all installed programs
 
 .SH SYNOPSIS
-\fBsynce-list-programs\fR
+\fBsynce-list-programs\fR [-d \fILEVEL\fR] [-p \fIDEVPATH\fR] [-h]
+
+.SH OPTIONS
+
+.TP
+-d \fILEVEL\fR
+Set debug log level:
+.IP
+0 - No logging (default)
+.IP
+1 - Errors only
+.IP
+2 - Errors and warnings
+.IP
+3 - Everything
+
+.TP
+-p \fIDEVPATH\fR
+Use the device at the given path, instead of the default.
+
+.TP
+-h
+Display help message.
 
 .SH "DESCRIPTION"
 
@@ -15,4 +37,5 @@ synce-list-programs \- shows a list of all installed programs
 .PP
 David Eriksson <twogood@users.sourceforge.net>.
 .SH "SEE ALSO"
-synce(1)
+synce(1) synce-install-cab(1) synce-remove-program(1)
+

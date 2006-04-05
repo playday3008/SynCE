@@ -2,6 +2,8 @@
 #include "rapi.h"
 #include "rapi_context.h"
 #include <stdlib.h>
+#include <stdint.h>
+#include <time.h>
 
 BOOL CeCreateProcess(/*{{{*/
 		LPCWSTR lpApplicationName, 
@@ -480,4 +482,30 @@ exit:
   return result;
 }
 
+BOOL CeSyncTimeToPc()
+{
+  RapiContext* context = rapi_context_current();
+  BOOL result = FALSE;
+  FILETIME ftime_now;
 
+  filetime_from_unix_time(time(NULL), &ftime_now);
+  
+  rapi_context_begin_command(context, 0x37);
+
+  rapi_buffer_write_filetime(context->send_buffer, ftime_now);
+
+  /* Not sure what these are.  Clock resolution?  */
+  rapi_buffer_write_uint32(context->send_buffer, 0);
+  rapi_buffer_write_uint32(context->send_buffer, 10000);
+
+  if ( !rapi_context_call(context) )
+    goto exit;
+
+  rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+  result = TRUE;
+
+exit:
+  return result;
+
+  
+}

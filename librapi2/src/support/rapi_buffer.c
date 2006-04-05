@@ -496,6 +496,12 @@ bool rapi_buffer_read_optional_filetime(RapiBuffer* buffer, FILETIME* lpftLastWr
 	return success;
 }
 
+bool rapi_buffer_write_filetime(RapiBuffer *buffer, FILETIME ftime)
+{
+  return rapi_buffer_write_uint32(buffer, ftime.dwLowDateTime)
+      && rapi_buffer_write_uint32(buffer, ftime.dwHighDateTime);
+}
+
 bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket)
 {
   bool success = false;

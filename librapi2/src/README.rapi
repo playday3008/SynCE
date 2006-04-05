@@ -44,8 +44,8 @@ List of RAPI command codes:
 [i] 23 CeRegEnumValue		
 [ ] 24 CeRegDeleteValue	
 [i] 25 CeRegQueryInfoKey	
-[ ] 26 CeRegQueryValueEx	
-[ ] 27 CeRegSetValueEx		
+[i] 26 CeRegQueryValueEx	
+[i] 27 CeRegSetValueEx		
 [i] 28 GetSystemMemoryDivision  [undocumented as RAPI function]
 [i] 29 CeGetStoreInformation	
 [ ] 2a CeGetSystemMetrics	
@@ -55,14 +55,14 @@ List of RAPI command codes:
 [i] 2e RegRestoreFile           [undocumented as RAPI function]
 [i] 2f CeGetSystemInfo		
 
-[ ] 30 CeSHCreateShortcut	
+[i] 30 CeSHCreateShortcut	
 [ ] 31 CeSHGetShortcutTarget	
 [ ] 32 GetPasswordActive
 [ ] 33 SetPasswordActive
 [i] 34 CeCheckPassword		
 [ ] 35 SetPassword              [undocumented as RAPI function]
 [ ] 36 CeEventHasOccured        [undocumented as RAPI function]
-[ ] 37 CeSyncTimeToPc           [undocumented]
+[i] 37 CeSyncTimeToPc           [undocumented]
 [i] 38 CeStartReplication       [undocumented]
 [ ] 39 CeGetFileTime		
 [ ] 3a CeSetFileTime		

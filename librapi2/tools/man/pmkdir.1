@@ -4,7 +4,7 @@
 pmkdir \- make directory
 
 .SH SYNOPSIS
-\fBpmkdir\fR [-h] \fIDIRECTORY\fR
+\fBpmkdir\fR [-d \fILEVEL\fR] [-p \fIDEVPATH\fR] [-h] \fIDIRECTORY\fR
 
 .SH "DESCRIPTION"
 
@@ -16,6 +16,21 @@ Forward slashes ('/') on the command line are converted to backward slashes ('\\
 
 .SH "OPTIONS"
 .TP
+-d \fILEVEL\fR
+Set debug log level:
+.IP
+0 - No logging (default)
+.IP
+1 - Errors only
+.IP
+2 - Errors and warnings
+.IP
+3 - Everything
+
+.TP
+-p \fIDEVPATH\fR
+Use the device at the given path, instead of the default.
+
 .TP
 -h
 Display help message.

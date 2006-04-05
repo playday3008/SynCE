@@ -4,7 +4,7 @@
 pls \- list directory contents
 
 .SH SYNOPSIS
-\fBpls\fR [-a] [-h] [\fIDIRECTORY\fR]
+\fBpls\fR [-a] [-d \fILEVEL\fR] [-p \fIDEVPATH\fR] [-h] [\fIDIRECTORY\fR]
 
 .SH "DESCRIPTION"
 .PP
@@ -37,6 +37,23 @@ S  System
 T  Temporary
 
 .SH "OPTIONS"
+
+.TP
+-d \fILEVEL\fR
+Set debug log level:
+.IP
+0 - No logging (default)
+.IP
+1 - Errors only
+.IP
+2 - Errors and warnings
+.IP
+3 - Everything
+
+.TP
+-p \fIDEVPATH\fR
+Use the device at the given path, instead of the default.
+
 .TP
 -a
 Show all files including those marked as hidden.
