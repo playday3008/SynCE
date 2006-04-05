@@ -45,9 +45,7 @@ RapiServer::~RapiServer()
 void RapiServer::disconnect(string deviceIpAddress)
 {
     map<string, RapiConnection*>::iterator it = rapiConnection.find(deviceIpAddress);
-    RapiConnection *rc = (*it).second;
     rapiConnection.erase(it);
-    delete rc;
 }
 
 

@@ -29,7 +29,7 @@
 #include <continousnode.h>
 #include "connectionfilemanager.h"
 
-class WindowsCEDevice;
+class WindowsCEDeviceBase;
 class SynCEClient;
 
 /**
@@ -41,15 +41,15 @@ public:
     static DeviceManager *self();
     ~DeviceManager();
 
-    void addConnectedDevice(WindowsCEDevice * windowsCEDevice);
-    void removeConnectedDevice(WindowsCEDevice * windowsCEDevice);
-    bool addPasswordPendingDevice(WindowsCEDevice * windowsCEDevice);
-    void removePasswordPendingDevice(WindowsCEDevice * windowsCEDevice);
-    void passwordRejected(WindowsCEDevice * windowsCEDevice);
+    void addConnectedDevice(WindowsCEDeviceBase * windowsCEDevice);
+    void removeConnectedDevice(WindowsCEDeviceBase * windowsCEDevice);
+    bool addPasswordPendingDevice(WindowsCEDeviceBase * windowsCEDevice);
+    void removePasswordPendingDevice(WindowsCEDeviceBase * windowsCEDevice);
+    void passwordRejected(WindowsCEDeviceBase * windowsCEDevice);
     void addClient(SynCEClient * synCEClient);
     void removeClient(SynCEClient * synCEClient);
-    WindowsCEDevice *getConnectedDevice(std::string name);
-    WindowsCEDevice *getPasswordPendingDevice(std::string name);
+    WindowsCEDeviceBase *getConnectedDevice(std::string name);
+    WindowsCEDeviceBase *getPasswordPendingDevice(std::string name);
     void shutdownDevices();
     void shutdownClients();
     void shutdown();
@@ -60,8 +60,8 @@ protected:
 
 private:
     DeviceManager();
-    std::list<WindowsCEDevice *> connectedDevices;
-    std::list<WindowsCEDevice *> passwordPendingDevices;
+    std::list<WindowsCEDeviceBase *> connectedDevices;
+    std::list<WindowsCEDeviceBase *> passwordPendingDevices;
     std::list<SynCEClient *> connectedClients;
     static DeviceManager *deviceManager;
 

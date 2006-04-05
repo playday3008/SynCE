@@ -28,6 +28,7 @@
 #include <synce.h>
 #include <synce_socket.h>
 #include <functional>
+#include "windowscedevicebase.h"
 
 class DeviceManager;
 
@@ -41,7 +42,7 @@ class DeviceManager;
 #define DCCM_MAX_PACKET_SIZE  512
 #define DCCM_MIN_PACKET_SIZE  0x24
 
-class WindowsCEDevice : public TCPAcceptedSocket {
+class WindowsCEDevice : public TCPAcceptedSocket, WindowsCEDeviceBase {
 public:
     WindowsCEDevice(int fd, TCPServerSocket *tcpServerSocket);
     void init(SynceSocket *synceSocket);
@@ -53,7 +54,6 @@ public:
     void ping();
     bool sendPassword(std::string password);
     void disconnect();
-    bool operator==(const WindowsCEDevice &device) const { return this->deviceName == device.deviceName; }
     bool isLocked() const;
     int getKey() const;
     std::string getDeviceAddress() const;
@@ -61,24 +61,15 @@ public:
     std::string getDeviceName() const;
     std::string getHardware() const;
     std::string getPassword() const;
-    uint16_t getBuildNumber() const;
-    uint16_t getOsVersion() const;
-    uint16_t getProcessorType() const;
+    uint32_t getBuildNumber() const;
+    uint32_t getOsVersion() const;
+    uint32_t getProcessorType() const;
     uint32_t getPartnerId1() const;
     uint32_t getPartnerId2() const;
-    uint16_t getPort() const;
+    uint32_t getPort() const;
     bool handleInfoMessage(uint32_t header);
     bool handlePasswordRequest(uint32_t header);
     bool handleEvent();
-
-    class EqualsTo : public std::unary_function<WindowsCEDevice *, bool> {
-    public:
-        EqualsTo(const WindowsCEDevice *device) : device(device) {}
-        bool operator()(const WindowsCEDevice *device) {
-            return (*this->device == *device);
-        }
-        const WindowsCEDevice *device;
-    };
 
 protected:
     void event();

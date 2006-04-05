@@ -12,7 +12,6 @@
 #ifndef RAPIHANDSHAKECLIENT_H
 #define RAPIHANDSHAKECLIENT_H
 
-#include "continousnode.h"
 #include "rapiclient.h"
 
 /**
@@ -21,14 +20,13 @@
 
 class RapiConnection;
 
-class RapiHandshakeClient : public RapiClient, public ContinousNode
+class RapiHandshakeClient : public RapiClient
 {
 public:
     RapiHandshakeClient(int fd, TCPServerSocket *tcpServerSocket);
 
     virtual ~RapiHandshakeClient();
 
-    void keepAlive();
     void initiateProvisioningConnection();
     void setRapiConnection(RapiConnection *rapiConnection);
 
@@ -43,7 +41,8 @@ private:
     RapiConnection *rapiConnection;
     uint32_t connectionCount;
 
-    char *deviceName;
+    /*
+    std::string deviceName;
     unsigned char deviceGuid[0x10];
     uint32_t osVersionMajor;
     uint32_t osVersionMinor;
@@ -51,10 +50,12 @@ private:
     uint32_t deviceProcessorType;
     uint32_t unknown1;
     uint32_t someOtherId;
-    char plattformName[0x100];
-    char modelName[0x100];
+    std::string plattformName;
+    std::string modelName;
     uint32_t deviceId;
+    */
 
+    friend class RapiConnection;
 };
 
 #endif

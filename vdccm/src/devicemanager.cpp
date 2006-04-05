@@ -23,7 +23,7 @@
 
 #include "synceclient.h"
 #include "devicemanager.h"
-#include "windowscedevice.h"
+#include "windowscedevicebase.h"
 #include "utils.h"
 #include "cmdlineargs.h"
 #include <algorithm>
@@ -54,15 +54,15 @@ DeviceManager *DeviceManager::self()
 }
 
 
-void DeviceManager::addConnectedDevice(WindowsCEDevice * windowsCEDevice)
+void DeviceManager::addConnectedDevice(WindowsCEDeviceBase * windowsCEDevice)
 {
     list<SynCEClient *>::iterator it;
 
     string deviceName = (!CmdLineArgs::useIp()) ? windowsCEDevice->getDeviceName() : windowsCEDevice->getDeviceAddress();
 
-    if (find_if(connectedDevices.begin(), connectedDevices.end(), WindowsCEDevice::EqualsTo(windowsCEDevice)) == connectedDevices.end()) {
+    if (find_if(connectedDevices.begin(), connectedDevices.end(), WindowsCEDeviceBase::EqualsTo(windowsCEDevice)) == connectedDevices.end()) {
         connectedDevices.push_back(windowsCEDevice);
-        connectionFileManager.writeConnectionFile(deviceName, windowsCEDevice);
+        connectionFileManager.writeConnectionFile(windowsCEDevice);
         for (it = connectedClients.begin(); it != connectedClients.end(); ++it) {
             if (!(*it)->deviceConnected(deviceName)) {
                 break;
@@ -77,18 +77,18 @@ void DeviceManager::addConnectedDevice(WindowsCEDevice * windowsCEDevice)
 }
 
 
-void DeviceManager::removeConnectedDevice(WindowsCEDevice * windowsCEDevice)
+void DeviceManager::removeConnectedDevice(WindowsCEDeviceBase * windowsCEDevice)
 {
     list<SynCEClient *>::iterator it;
 
-    if (find_if(connectedDevices.begin(), connectedDevices.end(), WindowsCEDevice::EqualsTo(windowsCEDevice)) != connectedDevices.end()) {
+    if (find_if(connectedDevices.begin(), connectedDevices.end(), WindowsCEDeviceBase::EqualsTo(windowsCEDevice)) != connectedDevices.end()) {
         string deviceName = (!CmdLineArgs::useIp()) ? windowsCEDevice->getDeviceName() : windowsCEDevice->getDeviceAddress();
         for (it = connectedClients.begin(); it != connectedClients.end(); ++it) {
             if (!(*it)->deviceDisconnected(deviceName)) {
                 break;
             }
         }
-        connectionFileManager.removeConnectionFile(deviceName, windowsCEDevice);
+        connectionFileManager.removeConnectionFile(windowsCEDevice);
         connectedDevices.remove(windowsCEDevice);
         Utils::runScripts("disconnect", deviceName);
         synce_info("Device disconnected: %s", deviceName.c_str());
@@ -96,7 +96,7 @@ void DeviceManager::removeConnectedDevice(WindowsCEDevice * windowsCEDevice)
 }
 
 
-bool DeviceManager::addPasswordPendingDevice(WindowsCEDevice * windowsCEDevice)
+bool DeviceManager::addPasswordPendingDevice(WindowsCEDeviceBase * windowsCEDevice)
 {
     list<SynCEClient *>::iterator it;
 
@@ -104,7 +104,7 @@ bool DeviceManager::addPasswordPendingDevice(WindowsCEDevice * windowsCEDevice)
         return false;
     }
 
-    if (find_if(passwordPendingDevices.begin(), passwordPendingDevices.end(), WindowsCEDevice::EqualsTo(windowsCEDevice)) == passwordPendingDevices.end()) {
+    if (find_if(passwordPendingDevices.begin(), passwordPendingDevices.end(), WindowsCEDeviceBase::EqualsTo(windowsCEDevice)) == passwordPendingDevices.end()) {
         string deviceName = (!CmdLineArgs::useIp()) ? windowsCEDevice->getDeviceName() : windowsCEDevice->getDeviceAddress();
         for (it = connectedClients.begin(); it != connectedClients.end(); ++it) {
             if (!(*it)->deviceRequestsPassword(deviceName)) {
@@ -122,16 +122,16 @@ bool DeviceManager::addPasswordPendingDevice(WindowsCEDevice * windowsCEDevice)
 }
 
 
-void DeviceManager::removePasswordPendingDevice(WindowsCEDevice * windowsCEDevice)
+void DeviceManager::removePasswordPendingDevice(WindowsCEDeviceBase * windowsCEDevice)
 {
-    if (find_if(passwordPendingDevices.begin(), passwordPendingDevices.end(), WindowsCEDevice::EqualsTo(windowsCEDevice)) != passwordPendingDevices.end()) {
+    if (find_if(passwordPendingDevices.begin(), passwordPendingDevices.end(), WindowsCEDeviceBase::EqualsTo(windowsCEDevice)) != passwordPendingDevices.end()) {
         passwordPendingDevices.remove(windowsCEDevice);
         synce_info("Device no longer pending for password: %s", windowsCEDevice->getDeviceName().c_str());
     }
 }
 
 
-void DeviceManager::passwordRejected(WindowsCEDevice * windowsCEDevice)
+void DeviceManager::passwordRejected(WindowsCEDeviceBase * windowsCEDevice)
 {
     list<SynCEClient *>::iterator it;
 
@@ -149,7 +149,7 @@ void DeviceManager::addClient(SynCEClient * synCEClient)
 {
     connectedClients.push_back(synCEClient);
 
-    list<WindowsCEDevice *>::iterator it;
+    list<WindowsCEDeviceBase *>::iterator it;
     for (it = connectedDevices.begin(); it != connectedDevices.end(); ++it) {
         string deviceName = (!CmdLineArgs::useIp()) ? (*it)->getDeviceName() : (*it)->getDeviceAddress();
         if (!synCEClient->deviceConnected(deviceName)) {
@@ -167,9 +167,9 @@ void DeviceManager::removeClient(SynCEClient * synCEClient)
 }
 
 
-WindowsCEDevice *DeviceManager::getConnectedDevice(string name)
+WindowsCEDeviceBase *DeviceManager::getConnectedDevice(string name)
 {
-    list<WindowsCEDevice *>::iterator it;
+    list<WindowsCEDeviceBase *>::iterator it;
     for (it = connectedDevices.begin(); it != connectedDevices.end(); ++it) {
         string deviceName = (!CmdLineArgs::useIp()) ? (*it)->getDeviceName() : (*it)->getDeviceAddress();
         if (deviceName == name) {
@@ -181,9 +181,9 @@ WindowsCEDevice *DeviceManager::getConnectedDevice(string name)
 }
 
 
-WindowsCEDevice *DeviceManager::getPasswordPendingDevice(string name)
+WindowsCEDeviceBase *DeviceManager::getPasswordPendingDevice(string name)
 {
-    list<WindowsCEDevice *>::iterator it;
+    list<WindowsCEDeviceBase *>::iterator it;
 
     for (it = passwordPendingDevices.begin(); it != passwordPendingDevices.end(); ++it) {
         string deviceName = (!CmdLineArgs::useIp()) ? (*it)->getDeviceName() : (*it)->getDeviceAddress();
@@ -198,10 +198,10 @@ WindowsCEDevice *DeviceManager::getPasswordPendingDevice(string name)
 
 void DeviceManager::shot()
 {
-    list<WindowsCEDevice *>::iterator it = connectedDevices.begin();
+    list<WindowsCEDeviceBase *>::iterator it = connectedDevices.begin();
 
     while(it != connectedDevices.end()) {
-        WindowsCEDevice *wced = *it;
+        WindowsCEDeviceBase *wced = *it;
         ++it;
         wced->ping();
     }
@@ -213,10 +213,10 @@ void DeviceManager::shot()
  */
 void DeviceManager::shutdownDevices()
 {
-    list<WindowsCEDevice *>::iterator it = connectedDevices.begin();
+    list<WindowsCEDeviceBase *>::iterator it = connectedDevices.begin();
 
     while(it != connectedDevices.end()) {
-        WindowsCEDevice *windowsCEDevice = *it;
+        WindowsCEDeviceBase *windowsCEDevice = *it;
         ++it;
         windowsCEDevice->disconnect();
     }
@@ -246,7 +246,7 @@ void DeviceManager::shutdown()
  */
 void DeviceManager::setAsDefaultDevice(string name)
 {
-    for (list<WindowsCEDevice *>::iterator it = connectedDevices.begin(); it != connectedDevices.end(); ++it) {
+    for (list<WindowsCEDeviceBase *>::iterator it = connectedDevices.begin(); it != connectedDevices.end(); ++it) {
         string deviceName = (!CmdLineArgs::useIp()) ? (*it)->getDeviceName() : (*it)->getDeviceAddress();
         if (deviceName == name) {
             connectionFileManager.writeDefaultConnectionFile(*it);

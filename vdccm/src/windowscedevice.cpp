@@ -372,7 +372,7 @@ string WindowsCEDevice::getPassword() const
 /*!
     \fn WindowsCEDevice::getBuildNumber() const
  */
-uint16_t WindowsCEDevice::getBuildNumber() const
+uint32_t WindowsCEDevice::getBuildNumber() const
 {
     return buildNumber;
 }
@@ -381,7 +381,7 @@ uint16_t WindowsCEDevice::getBuildNumber() const
 /*!
     \fn WindowsCEDevice::getOsVersion() const
  */
-uint16_t WindowsCEDevice::getOsVersion() const
+uint32_t WindowsCEDevice::getOsVersion() const
 {
     return osVersion;
 }
@@ -390,7 +390,7 @@ uint16_t WindowsCEDevice::getOsVersion() const
 /*!
     \fn WindowsCEDevice::getProcessorType() const
  */
-uint16_t WindowsCEDevice::getProcessorType() const
+uint32_t WindowsCEDevice::getProcessorType() const
 {
     return processorType;
 }
@@ -417,7 +417,7 @@ uint32_t WindowsCEDevice::getPartnerId2() const
 /*!
     \fn WindowsCEDevice::getPort() const
  */
-uint16_t WindowsCEDevice::getPort() const
+uint32_t WindowsCEDevice::getPort() const
 {
     return getRemotePort();
 }

@@ -14,12 +14,12 @@
 #include "rapihandshakeclient.h"
 #include "cmdlineargs.h"
 #include "rapiconnection.h"
-#include <iostream>
 #include <synce.h>
 #include <synce_log.h>
+#include <iostream>
 
 RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSocket )
-        : RapiClient( fd, tcpServerSocket ), ContinousNode( CmdLineArgs::getPingDelay(), 0 )
+    : RapiClient( fd, tcpServerSocket )
 {
     pendingPingRequests = 0;
     setBlocking();
@@ -31,7 +31,6 @@ RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSock
 RapiHandshakeClient::~RapiHandshakeClient()
 {
     Multiplexer::self()->getReadManager()->remove(this);
-    Multiplexer::self()->getTimerNodeManager()->remove(this);
     shutdown();
 }
 
@@ -41,11 +40,6 @@ void RapiHandshakeClient::setRapiConnection(RapiConnection *rapiConnection)
     this->rapiConnection = rapiConnection;
 }
 
-
-void RapiHandshakeClient::keepAlive()
-{
-    Multiplexer::self() ->getTimerNodeManager() ->add( this );
-}
 
 void RapiHandshakeClient::event()
 {
@@ -72,7 +66,7 @@ void RapiHandshakeClient::event()
             return;
         }
         printPackage("RapiHandshakeClient", (unsigned char *) buffer);
-
+        /*
         int deviceGuidOffset = 0x04;
         int deviceGuidLength = 0x10;
         memcpy(deviceGuid, buffer + deviceGuidOffset, deviceGuidLength);
@@ -94,7 +88,7 @@ void RapiHandshakeClient::event()
 
         int deviceNameOffset = deviceNameLengthOffset + sizeof(uint32_t);
         deviceName = synce::wstr_to_ascii((WCHAR *)(buffer + deviceNameOffset));
-        synce_info("DeviceName: %s", deviceName);
+        synce_info("DeviceName: %s", deviceName.c_str());
 
         int deviceVersionOffset = deviceNameOffset + (deviceNameLength + 1) * sizeof(WCHAR);
         deviceVersion = letoh32(*(uint32_t *) (buffer + deviceVersionOffset));
@@ -120,24 +114,22 @@ void RapiHandshakeClient::event()
         int plattformNameLength = letoh32(*(int32_t *) (buffer + plattformNameLengthOffset));
 
         int plattformNameOffset = plattformNameLengthOffset + sizeof(uint32_t);
-        memcpy(plattformName, buffer + plattformNameOffset, plattformNameLength);
-        synce_info("PlattformName: %s", plattformName);
+        plattformName = string((char *) (buffer + plattformNameOffset));
+        synce_info("PlattformName: %s", plattformName.c_str());
 
         int modelNameLengthOffset = plattformNameOffset + plattformNameLength;
-        int modelNameLength = letoh32(*(int32_t *) (buffer + modelNameLengthOffset));
 
         int modelNameOffset = modelNameLengthOffset + sizeof(uint32_t);
-        memcpy(modelName, buffer + modelNameOffset, modelNameLength);
-        synce_info("ModelName: %s", modelName);
+        modelName = string((char *) (buffer + modelNameOffset));
+        synce_info("ModelName: %s", modelName.c_str());
 
-        /*
+
         int unknown2Offset = modelNameOffset + modelNameLength;
         int unknonw2Length = 0x48;
         */
 
+        rapiConnection->handshakeClientInitialized(buffer);
         delete[] buffer;
-        rapiConnection->handshakeClientInitialized();
-        keepAlive();
     } else if ( signature == 0x02 ) {
         // This is a ping-reply
         pendingPingRequests--;

@@ -69,7 +69,7 @@ void SynCEClient::event()
         case 'R': {
                 char * password = &buffer[ 1 ];
                 char *name = strsep( &password, "=" );
-                WindowsCEDevice *windowsCEDevice = DeviceManager::self()->getPasswordPendingDevice( name );
+                WindowsCEDevice *windowsCEDevice = dynamic_cast<WindowsCEDevice *>(DeviceManager::self()->getPasswordPendingDevice( name ));
                 if ( windowsCEDevice != NULL ) {
                     synce_trace( "Sending Password to: %s", name );
                     if ( !windowsCEDevice->sendPassword( password ) ) {
@@ -88,7 +88,7 @@ void SynCEClient::event()
         case 'D': {
                 synce_trace( "Disconnecting %s", &buffer[ 1 ] );
                 char *name = &buffer[ 1 ];
-                WindowsCEDevice *windowsCEDevice = DeviceManager::self()->getConnectedDevice( name );
+                WindowsCEDevice *windowsCEDevice = dynamic_cast<WindowsCEDevice *>(DeviceManager::self()->getConnectedDevice(name));
                 if ( windowsCEDevice != NULL ) {
                     windowsCEDevice->disconnect();
                 } else {

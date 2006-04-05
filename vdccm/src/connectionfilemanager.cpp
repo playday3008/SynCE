@@ -21,11 +21,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 #include "connectionfilemanager.h"
-#include "windowscedevice.h"
+#include "windowscedevicebase.h"
 #include <fstream>
 #include <sys/types.h>
 #include <unistd.h>
 #include <synce_log.h>
+#include "cmdlineargs.h"
 
 using namespace synce;
 using namespace std;
@@ -45,16 +46,18 @@ ConnectionFileManager::~ConnectionFileManager()
 /*!
     \fn ConnectionFileManager::writeConnectionFile(const WindowsCEDevice *windowsCEDevice)
  */
-bool ConnectionFileManager::writeConnectionFile(string fileName, const WindowsCEDevice *windowsCEDevice)
+bool ConnectionFileManager::writeConnectionFile(const WindowsCEDeviceBase *windowsCEDevice)
 {
     char *path = NULL;
+
+    string deviceName = (!CmdLineArgs::useIp()) ? windowsCEDevice->getDeviceName() : windowsCEDevice->getDeviceAddress();
 
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
         return false;
     }
 
-    string fullPathName = string(path) + "/" + fileName;
+    string fullPathName = string(path) + "/" + deviceName;
 
     free(path);
 
@@ -86,7 +89,7 @@ string ConnectionFileManager::getDefaultConnectionFileName()
 /*!
     \fn ConnectionFileManager::writeDefaultConnectionFile(const WindowsCEDevice *windowsCEDevice)
  */
-bool ConnectionFileManager::writeDefaultConnectionFile(const WindowsCEDevice *windowsCEDevice, bool isNewDevice)
+bool ConnectionFileManager::writeDefaultConnectionFile(const WindowsCEDeviceBase *windowsCEDevice, bool isNewDevice)
 {
     bool ret = false;
 
@@ -107,7 +110,7 @@ bool ConnectionFileManager::writeDefaultConnectionFile(const WindowsCEDevice *wi
 /*!
     \fn ConnectionFileManager::_writeConnectionFile(string fileName, const WindowsCEDevice *windowsCEDevice)
  */
-bool ConnectionFileManager::_writeConnectionFile(string fileName, const WindowsCEDevice *windowsCEDevice)
+bool ConnectionFileManager::_writeConnectionFile(string fileName, const WindowsCEDeviceBase *windowsCEDevice)
 {
     synce_trace("Writing client-file: %s", fileName.c_str());
 
@@ -145,16 +148,18 @@ bool ConnectionFileManager::_writeConnectionFile(string fileName, const WindowsC
 /*!
     \fn ConnectionFileManager::removeConnectionFile(string fileName)
  */
-bool ConnectionFileManager::removeConnectionFile(string fileName, const WindowsCEDevice *windowsCEDevice)
+bool ConnectionFileManager::removeConnectionFile(const WindowsCEDeviceBase *windowsCEDevice)
 {
     char *path = NULL;
+
+    string deviceName = (!CmdLineArgs::useIp()) ? windowsCEDevice->getDeviceName() : windowsCEDevice->getDeviceAddress();
 
     if (!synce_get_directory(&path)) {
         synce_error("Faild to get configuration directory name.");
         return false;
     }
 
-    string fullPathName = string(path) + "/" + fileName;
+    string fullPathName = string(path) + "/" + deviceName;
 
     free(path);
 
@@ -169,7 +174,7 @@ bool ConnectionFileManager::removeConnectionFile(string fileName, const WindowsC
 /*!
     \fn ConnectionFileManager::removeDefaultConnectionFile(const WindowsCEDevice *windowsCEDevice)
  */
-bool ConnectionFileManager::removeDefaultConnectionFile(const WindowsCEDevice *windowsCEDevice)
+bool ConnectionFileManager::removeDefaultConnectionFile(const WindowsCEDeviceBase *windowsCEDevice)
 {
     bool ret1 = true;
 
@@ -185,7 +190,7 @@ bool ConnectionFileManager::removeDefaultConnectionFile(const WindowsCEDevice *w
     bool erased;
     do {
         erased = false;
-        list<const WindowsCEDevice *>::iterator it = find(defaultDevices.begin(), defaultDevices.end(), windowsCEDevice);
+        list<const WindowsCEDeviceBase *>::iterator it = find(defaultDevices.begin(), defaultDevices.end(), windowsCEDevice);
 
         if (it != defaultDevices.end()) {
             defaultDevices.erase(it);

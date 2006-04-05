@@ -26,7 +26,7 @@
 #include <string>
 #include <list>
 
-class WindowsCEDevice;
+class WindowsCEDeviceBase;
 
 /**
 @author Volker Christian
@@ -36,14 +36,14 @@ public:
     ConnectionFileManager();
 
     ~ConnectionFileManager();
-    bool writeConnectionFile(std::string fileName, const WindowsCEDevice *windowsCEDevice);
-    bool writeDefaultConnectionFile(const WindowsCEDevice *windowsCEDevice, bool isNewDevice = true);
-    bool _writeConnectionFile(std::string fileName, const WindowsCEDevice *windowsCEDevice);
-    bool removeConnectionFile(std::string fileName, const WindowsCEDevice *windowsCEDevice);
-    bool removeDefaultConnectionFile(const WindowsCEDevice *windowsCEDevice);
+    bool writeConnectionFile(const WindowsCEDeviceBase *windowsCEDevice);
+    bool writeDefaultConnectionFile(const WindowsCEDeviceBase *windowsCEDevice, bool isNewDevice = true);
+    bool _writeConnectionFile(std::string fileName, const WindowsCEDeviceBase *windowsCEDevice);
+    bool removeConnectionFile(const WindowsCEDeviceBase *windowsCEDevice);
+    bool removeDefaultConnectionFile(const WindowsCEDeviceBase *windowsCEDevice);
 
 protected:
-    std::list<const WindowsCEDevice*> defaultDevices;
+    std::list<const WindowsCEDeviceBase*> defaultDevices;
     std::string getDefaultConnectionFileName();
 };
 
