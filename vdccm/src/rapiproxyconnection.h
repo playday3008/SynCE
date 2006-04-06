@@ -18,7 +18,7 @@
 class RapiConnection;
 class RapiProxy;
 class RapiProvisioningClient;
-class Descriptor;
+class NetSocket;
 
 class RapiProxyConnection{
 public:
@@ -28,7 +28,8 @@ public:
 
     void messageToDevice();
     void messageToApplication();
-    void forwardMessage(Descriptor *from, Descriptor *to);
+    void forwardMessage(NetSocket *from, NetSocket *to);
+    void writeEnabled(NetSocket *where);
 
     void provisioningClientInitialized();
     void provisioningClientNotInitialized();

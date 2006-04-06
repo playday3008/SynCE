@@ -34,14 +34,19 @@ class DescriptorManager;
  * This class represents an network descriptor and provides methods to manipulate the
  * behaviour of the socket. A descriptor represented by this class could be managed by
  * a DescriptorManager. It this managing DescriptorManager is one of the three
- * DescriptorManagers of the Multiplexer, the working method event() is automatically
- * called if an event has occured on the descriptor.
+ * DescriptorManagers of the Multiplexer, the working method event(enum eventType et)
+ * is automatically called if an event has occured on the descriptor.
  *
  * @author Volker Christian
  */
 
 class Descriptor{
 public:
+    enum eventType {
+        READ = 0,
+        WRITE,
+        EXCEPTION
+    };
     /**
      * @brief Default constructor.
      *
@@ -67,12 +72,6 @@ public:
      * The destructor.
      */
     virtual ~Descriptor();
-
-    /**
-     * @brief Returns the associated DescriptorManager.
-     * @return The associated DescriptorManager or NULL if none is assigned.
-     */
-    DescriptorManager *getDescriptorManager() const;
 
     /**
      * @brief Lesser-operator on the descriptor base.
@@ -122,24 +121,16 @@ public:
      * @return True, if data are pending false otherwise.
      */
     bool dataPending(int sec, int usec);
-    bool writeable(int sec, int usec);
-
-    /**
-     * @brief Set the descriptor to non blocking mode.
-     * @return True on success, falso on error.
-     */
-    bool setNonBlocking();
-    bool setBlocking();
+    bool writable(int sec, int usec);
 
     ssize_t readNumBytes(unsigned char *buffer, size_t number);
 
 protected:
-    virtual void event() = 0;
+    virtual void event(enum eventType et) = 0;
     void setDescriptor(int descriptor);
 
 private:
     static bool sortcrit(const Descriptor *d1, const Descriptor *d2);
-    bool setDescriptorManager(DescriptorManager *descriptorManager);
 
 private:
     DescriptorManager *descriptorManager;

@@ -15,7 +15,7 @@
 #include "rapiprovisioningclient.h"
 #include "cmdlineargs.h"
 #include <multiplexer.h>
-#include <synce.h>
+#include <synce_log.h>
 
 #include <iostream>
 
@@ -38,6 +38,8 @@ RapiProxyConnection::~RapiProxyConnection()
 {
     Multiplexer::self()->getReadManager()->remove(rapiProvisioningClient);
     Multiplexer::self()->getReadManager()->remove(rapiProxy);
+    Multiplexer::self()->getWriteManager()->remove(rapiProvisioningClient);
+    Multiplexer::self()->getWriteManager()->remove(rapiProxy);
     rapiProvisioningClient->shutdown();
     rapiProxy->shutdown();
 
@@ -59,16 +61,27 @@ void RapiProxyConnection::provisioningClientNotInitialized()
 }
 
 
-void RapiProxyConnection::forwardMessage(Descriptor *from, Descriptor *to)
+void RapiProxyConnection::forwardMessage(NetSocket *from, NetSocket *to)
 {
     if ( CmdLineArgs::getLogLevel() <= 3 ) {
         ssize_t r;
 
-        if ((r = read(from->getDescriptor(), forwardBuffer, mtuWH)) <= 0) {
-            rapiConnection->proxyConnectionClosed(this);
-            return ;
+        if (to->writable( 0, 0)) {
+            if ((r = read(from->getDescriptor(), forwardBuffer, mtuWH)) <= 0) {
+                rapiConnection->proxyConnectionClosed(this);
+                return ;
+            } else {
+                write(to->getDescriptor(), forwardBuffer, r);
+            }
         } else {
-            write(to->getDescriptor(), forwardBuffer, r);
+            Multiplexer::self()->getWriteManager()->add(to);
+            if (dynamic_cast<RapiProvisioningClient *>(to)) {
+                synce_info("RapiProvisioningClient not writeable");
+                Multiplexer::self()->getReadManager()->remove(rapiProxy);
+            } else {
+                synce_info("RapiProxy not writeable");
+                Multiplexer::self()->getReadManager()->remove(rapiProvisioningClient);
+            }
         }
     } else {
         uint32_t leLength;
@@ -108,4 +121,17 @@ void RapiProxyConnection::messageToDevice()
 void RapiProxyConnection::messageToApplication()
 {
     forwardMessage(rapiProvisioningClient, rapiProxy);
+}
+
+
+void RapiProxyConnection::writeEnabled(NetSocket *where)
+{
+    if (dynamic_cast<RapiProvisioningClient *>(where)) {
+        synce_info("Write again enabled on RapiProxy");
+        Multiplexer::self()->getReadManager()->add(rapiProxy);
+    } else {
+        synce_info("Write again enabled on RapiProvisioningClient");
+        Multiplexer::self()->getReadManager()->add(rapiProvisioningClient);
+    }
+    Multiplexer::self()->getWriteManager()->remove(where);
 }

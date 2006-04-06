@@ -23,7 +23,6 @@
 #include "descriptor.h"
 #include "descriptormanager.h"
 #include <unistd.h>
-#include <fcntl.h>
 
 
 Descriptor::Descriptor()
@@ -61,24 +60,6 @@ void Descriptor::setDescriptor(int descriptor)
 }
 
 
-bool Descriptor::setDescriptorManager(DescriptorManager *descriptorManager)
-{
-    if (this->descriptorManager == NULL) {
-        this->descriptorManager = descriptorManager;
-    } else {
-        return false;
-    }
-
-    return true;
-}
-
-
-DescriptorManager *Descriptor::getDescriptorManager() const
-{
-    return descriptorManager;
-}
-
-
 bool Descriptor::sortcrit(const Descriptor *d1, const Descriptor *d2)
 {
     return d1->getDescriptor() < d2->getDescriptor();
@@ -97,23 +78,9 @@ bool Descriptor::dataPending(int sec, int usec)
 }
 
 
-bool Descriptor::writeable(int sec, int usec)
+bool Descriptor::writable(int sec, int usec)
 {
-    return DescriptorManager::writeable( this, sec, usec);
-}
-
-
-bool Descriptor::setNonBlocking()
-{
-    int flags = fcntl (descriptor, F_GETFL);
-    return fcntl (descriptor, F_SETFL, flags | O_NONBLOCK) >= 0;
-}
-
-
-bool Descriptor::setBlocking()
-{
-    int flags = fcntl (descriptor, F_GETFL);
-    return fcntl (descriptor, F_SETFL, flags & ~O_NONBLOCK) >= 0;
+    return DescriptorManager::writable( this, sec, usec);
 }
 
 

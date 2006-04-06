@@ -33,7 +33,7 @@ public:
 
 protected:
 
-    virtual void event();
+    virtual void event(Descriptor::eventType et);
     virtual void shot();
 
 private:

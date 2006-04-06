@@ -13,10 +13,16 @@
 #include "rapiproxyconnection.h"
 #include <multiplexer.h>
 
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 RapiProxy::RapiProxy(int fd, LocalServerSocket* serverSocket)
  : LocalAcceptedSocket(fd, serverSocket)
 {
+    int value1;
+    value1 = 1024;
+    setsockopt(getDescriptor(), SOL_SOCKET, SO_SNDBUF, (char *) &value1, sizeof(int));
 }
 
 
@@ -31,7 +37,16 @@ void RapiProxy::setRapiProxyConnection(RapiProxyConnection *rapiProxyConnection)
 }
 
 
-void RapiProxy::event()
+void RapiProxy::event(Descriptor::eventType et)
 {
-    rapiProxyConnection->messageToDevice();
+    switch(et) {
+    case Descriptor::READ:
+        rapiProxyConnection->messageToDevice();
+        break;
+    case Descriptor::WRITE:
+        rapiProxyConnection->writeEnabled(this);
+        break;
+    case Descriptor::EXCEPTION:
+        break;
+    }
 }

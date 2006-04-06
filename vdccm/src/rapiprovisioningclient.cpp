@@ -15,7 +15,7 @@
 #include <iostream>
 
 RapiProvisioningClient::RapiProvisioningClient( int fd, TCPServerSocket *tcpServerSocket )
-    : RapiClient( fd, tcpServerSocket ), initialized(false)
+        : RapiClient( fd, tcpServerSocket ), initialized( false )
 {
     setBlocking();
     setReadTimeout( 5, 0 );
@@ -23,30 +23,38 @@ RapiProvisioningClient::RapiProvisioningClient( int fd, TCPServerSocket *tcpServ
 
 
 RapiProvisioningClient::~RapiProvisioningClient()
-{
-}
+{}
 
 
-void RapiProvisioningClient::event( void )
+void RapiProvisioningClient::event( Descriptor::eventType et )
 {
-    if ( !initialized ) {
-        // 4Byte static conteng 0x01, 0x00, 0x00, 0x00
-        unsigned char buffer[ 4 ];
-        if ( readNumBytes( buffer, 4 ) != 4 ) {
-            rapiProxyConnection->provisioningClientNotInitialized();
-            return ;
+    switch ( et ) {
+    case Descriptor::READ:
+        if ( !initialized ) {
+            // 4Byte static conteng 0x01, 0x00, 0x00, 0x00
+            unsigned char buffer[ 4 ];
+            if ( readNumBytes( buffer, 4 ) != 4 ) {
+                rapiProxyConnection->provisioningClientNotInitialized();
+                return ;
+            }
+            printPackage( "RapiProvisioningClient", ( unsigned char * ) buffer, 4 );
+            rapiProxyConnection->provisioningClientInitialized();
+
+            initialized = true;
+        } else {
+            rapiProxyConnection->messageToApplication();
         }
-        printPackage( "RapiProvisioningClient", ( unsigned char * ) buffer, 4 );
-        rapiProxyConnection->provisioningClientInitialized();
-
-        initialized = true;
-    } else {
-        rapiProxyConnection->messageToApplication();
+        break;
+    case Descriptor::WRITE:
+        std::cout << "Write again enabled" << std::endl;
+        rapiProxyConnection->writeEnabled(this);
+        break;
+    case Descriptor::EXCEPTION:
+        break;
     }
 }
 
 
-void RapiProvisioningClient::setRapiProxyConnection( RapiProxyConnection *rapiProxyConnection)
-{
+void RapiProvisioningClient::setRapiProxyConnection( RapiProxyConnection * rapiProxyConnection ) {
     this->rapiProxyConnection = rapiProxyConnection;
 }

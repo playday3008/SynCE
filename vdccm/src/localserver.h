@@ -36,7 +36,7 @@ public:
     LocalServer(LocalAcceptedSocketFactory *localAcceptedSocketFactory, std::string path);
 
     ~LocalServer();
-    void event();
+    void event(Descriptor::eventType et);
 };
 
 #endif

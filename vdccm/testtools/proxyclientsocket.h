@@ -26,7 +26,7 @@ public:
 
     ~ProxyClientSocket();
 
-    void event();
+    void event(Descriptor::eventType et);
 
     void shot();
 

@@ -53,9 +53,9 @@ void SynCEClient::disconnect()
 
 
 /*!
-    \fn SynCEClient::event()
+    \fn SynCEClient::event(Descriptor::eventType et)
  */
-void SynCEClient::event()
+void SynCEClient::event(Descriptor::eventType /*et*/)
 {
     char buffer[ 256 ];
     int n;

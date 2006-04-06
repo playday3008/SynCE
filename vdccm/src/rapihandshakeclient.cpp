@@ -18,6 +18,7 @@
 #include <synce_log.h>
 #include <iostream>
 
+
 RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSocket )
     : RapiClient( fd, tcpServerSocket )
 {
@@ -41,7 +42,7 @@ void RapiHandshakeClient::setRapiConnection(RapiConnection *rapiConnection)
 }
 
 
-void RapiHandshakeClient::event()
+void RapiHandshakeClient::event(Descriptor::eventType /*et*/)
 {
     uint32_t leSignature;
     if (readNumBytes((unsigned char *) &leSignature, 4) != 4) {
@@ -66,67 +67,6 @@ void RapiHandshakeClient::event()
             return;
         }
         printPackage("RapiHandshakeClient", (unsigned char *) buffer);
-        /*
-        int deviceGuidOffset = 0x04;
-        int deviceGuidLength = 0x10;
-        memcpy(deviceGuid, buffer + deviceGuidOffset, deviceGuidLength);
-        if (CmdLineArgs::getLogLevel() >= 3) {
-            for (int i = 0; i < deviceGuidLength; i++) {
-                fprintf(stderr, "-%0X", deviceGuid[i]);
-            }
-            printf("-\n");
-        }
-
-        int osVersionMajorOffset = deviceGuidOffset + deviceGuidLength;
-        osVersionMajor = letoh32(*(uint32_t *)(buffer + osVersionMajorOffset));
-        int osVersionMinorOffset = osVersionMajorOffset + sizeof(uint32_t);
-        osVersionMinor = letoh32(*(uint32_t *)(buffer + osVersionMinorOffset));
-        synce_info("OSVersion: %d.%d", osVersionMajor, osVersionMinor);
-
-        int deviceNameLengthOffset = osVersionMinorOffset + sizeof(uint32_t);
-        uint32_t deviceNameLength = letoh32(*(uint32_t *) (buffer + deviceNameLengthOffset));
-
-        int deviceNameOffset = deviceNameLengthOffset + sizeof(uint32_t);
-        deviceName = synce::wstr_to_ascii((WCHAR *)(buffer + deviceNameOffset));
-        synce_info("DeviceName: %s", deviceName.c_str());
-
-        int deviceVersionOffset = deviceNameOffset + (deviceNameLength + 1) * sizeof(WCHAR);
-        deviceVersion = letoh32(*(uint32_t *) (buffer + deviceVersionOffset));
-        synce_info("DeviceVersion: %p", deviceVersion);
-
-        int deviceProcessorOffset = deviceVersionOffset + sizeof(uint32_t);
-        deviceProcessorType = letoh32(*(int32_t *) (buffer + deviceProcessorOffset));
-        synce_info("DeviceProzessorType: %p", deviceProcessorType);
-
-        int unknown1Offset = deviceProcessorOffset + sizeof(uint32_t);
-        unknown1 = letoh32(*(int32_t *) (buffer + unknown1Offset));
-        synce_info("Unknown1: %p", unknown1);
-
-        int someOtherIdOffset = unknown1Offset + sizeof(uint32_t);
-        someOtherId = letoh32(*(int32_t *) (buffer + someOtherIdOffset));
-        synce_info("SomeOtherId: %p", someOtherId);
-
-        int deviceIdOffset = someOtherIdOffset + sizeof(uint32_t);
-        deviceId = letoh32(*(int32_t *) (buffer + deviceIdOffset));
-        synce_info("DeviceId: %p", deviceId);
-
-        int plattformNameLengthOffset = deviceIdOffset + sizeof(uint32_t);
-        int plattformNameLength = letoh32(*(int32_t *) (buffer + plattformNameLengthOffset));
-
-        int plattformNameOffset = plattformNameLengthOffset + sizeof(uint32_t);
-        plattformName = string((char *) (buffer + plattformNameOffset));
-        synce_info("PlattformName: %s", plattformName.c_str());
-
-        int modelNameLengthOffset = plattformNameOffset + plattformNameLength;
-
-        int modelNameOffset = modelNameLengthOffset + sizeof(uint32_t);
-        modelName = string((char *) (buffer + modelNameOffset));
-        synce_info("ModelName: %s", modelName.c_str());
-
-
-        int unknown2Offset = modelNameOffset + modelNameLength;
-        int unknonw2Length = 0x48;
-        */
 
         rapiConnection->handshakeClientInitialized(buffer);
         delete[] buffer;
@@ -159,7 +99,7 @@ void RapiHandshakeClient::shot()
 {
     char response[ 4 ] = { 01, 00, 00, 00 };
 
-    if ( writeable( 0, 0 ) ) {
+    if ( !writeWouldBlock(4) ) {
         write( getDescriptor(), response, 4 );
         if ( pendingPingRequests >= CmdLineArgs::getMissingPingCount() ) {
             rapiConnection->handshakeClientDisconnected();

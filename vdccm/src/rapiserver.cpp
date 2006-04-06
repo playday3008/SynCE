@@ -49,7 +49,7 @@ void RapiServer::disconnect(string deviceIpAddress)
 }
 
 
-void RapiServer::event()
+void RapiServer::event(Descriptor::eventType /*et*/)
 {
     int fd;
 

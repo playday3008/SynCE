@@ -76,7 +76,7 @@ LocalAcceptedSocket* LocalServerSocket::accept()
 }
 
 
-void LocalServerSocket::event()
+void LocalServerSocket::event(Descriptor::eventType /*et*/)
 {
     if (!accept()) {
         // some error handling

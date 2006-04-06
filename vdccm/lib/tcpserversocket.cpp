@@ -74,7 +74,7 @@ TCPAcceptedSocket* TCPServerSocket::accept()
 }
 
 
-void TCPServerSocket::event()
+void TCPServerSocket::event(Descriptor::eventType /*et*/)
 {
     if (!accept()) {
         // some error handling

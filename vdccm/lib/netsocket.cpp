@@ -10,8 +10,11 @@
 //
 //
 #include "netsocket.h"
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <fcntl.h>
+
 
 NetSocket::NetSocket()
  : Descriptor()
@@ -57,3 +60,30 @@ bool NetSocket::setWriteTimeout(int sec, int usec)
     return ret;
 }
 
+
+bool NetSocket::setNonBlocking()
+{
+    int flags = fcntl (getDescriptor(), F_GETFL);
+    return fcntl (getDescriptor(), F_SETFL, flags | O_NONBLOCK) >= 0;
+}
+
+
+bool NetSocket::setBlocking()
+{
+    int flags = fcntl (getDescriptor(), F_GETFL);
+    return fcntl (getDescriptor(), F_SETFL, flags & ~O_NONBLOCK) >= 0;
+}
+
+
+bool NetSocket::writeWouldBlock(size_t count)
+{
+    unsigned int sendBufferLength = 0;
+    unsigned int bytesInSendBuffer = 0;
+    int len = sizeof(int);
+
+    getsockopt(getDescriptor(), SOL_SOCKET, SO_SNDBUF, (char *) &sendBufferLength, (socklen_t *) &len);
+
+    ioctl(getDescriptor(), TIOCOUTQ, &bytesInSendBuffer);
+
+    return sendBufferLength < bytesInSendBuffer + count;
+}

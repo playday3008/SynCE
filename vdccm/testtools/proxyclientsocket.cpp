@@ -27,7 +27,7 @@ ProxyClientSocket::~ProxyClientSocket()
 }
 
 
-void ProxyClientSocket::event()
+void ProxyClientSocket::event(Descriptor::eventType /*et*/)
 {
     char buf[256];
 
@@ -102,6 +102,12 @@ size_t ProxyClientSocket::readNumBytes(unsigned char *buffer, size_t numBytes)
 
     do {
         nBytes = read(getDescriptor(), bufptr, numBytes - totalBytes);
+        /*
+        int bytesToRead = (numBytes - totalBytes) < 1024 ? numBytes - totalBytes : 1024;
+        nBytes = read(getDescriptor(), bufptr, bytesToRead);
+        cout << "Numbytes: " << nBytes << ",  TotalBytes: " << numBytes << ", NumRead: " << totalBytes << endl;
+        sleep(1);
+                                                    */
         if (nBytes == 0) {
             return 0;
         }

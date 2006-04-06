@@ -39,7 +39,7 @@ public:
     void handshakeClientInitialized(unsigned char *buffer);
     void proxyConnectionClosed(RapiProxyConnection *rapiProxyConnection);
     void handshakeClientDisconnected();
-    virtual void event();
+    virtual void event(Descriptor::eventType et);
 
     void disconnect();
     void ping();

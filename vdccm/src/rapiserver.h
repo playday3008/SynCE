@@ -32,7 +32,7 @@ public:
 
     ~RapiServer();
 
-    void event();
+    void event(Descriptor::eventType et);
     void disconnect(std::string deviceIpAddress);
 
 private:

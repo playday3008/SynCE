@@ -24,8 +24,9 @@
 #define DESCRIPTORMANAGER_H
 
 #include <list>
+#include "descriptor.h"
 
-class Descriptor;
+//class Descriptor;
 class Multiplexer;
 
 /**
@@ -40,7 +41,7 @@ public:
     bool remove(Descriptor * descriptor);
     void init();
     static bool dataPending(const Descriptor *descriptor, int sec, int usec);
-    static bool writeable(const Descriptor *descriptor, int sec, int usec);
+    static bool writable(const Descriptor *descriptor, int sec, int usec);
 
 protected:
     DescriptorManager &operator=(const DescriptorManager &descriptorManager)
@@ -55,7 +56,7 @@ protected:
 private:
     fd_set* fdSet();
     Descriptor* getHighestDescriptor();
-    int process(fd_set *);
+    int process(enum Descriptor::eventType et, fd_set *);
 
 private:
     fd_set staticFdSet;

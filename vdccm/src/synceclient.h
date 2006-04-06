@@ -47,7 +47,7 @@ public:
     bool passwordRejected(std::string &name);
 
 protected:
-    virtual void event();
+    virtual void event(Descriptor::eventType et);
 };
 
 #endif

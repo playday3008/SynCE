@@ -169,7 +169,7 @@ void RapiConnection::handshakeClientDisconnected()
 }
 
 
-void RapiConnection::event()
+void RapiConnection::event(Descriptor::eventType /*et*/)
 {
     RapiProxy *rapiProxy = dynamic_cast<RapiProxy *>(accept());
     rapiProxies.push_back(rapiProxy);

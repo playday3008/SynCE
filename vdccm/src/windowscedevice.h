@@ -72,7 +72,7 @@ public:
     bool handleEvent();
 
 protected:
-    void event();
+    void event(Descriptor::eventType et);
     virtual bool shutdown();
     static char* string_at(const char *buffer, size_t size, size_t offset);
     bool handlePasswordReply();

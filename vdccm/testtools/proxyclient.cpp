@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
         exit(0);
     }
 
-    Multiplexer::self()->getReadManager()->add(pcs);
+//    Multiplexer::self()->getReadManager()->add(pcs);
     Multiplexer::self()->getTimerNodeManager()->add(pcs);
 
     while(true) {

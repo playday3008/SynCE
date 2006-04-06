@@ -27,7 +27,7 @@ public:
 
     ~RapiProxy();
 
-    void event();
+    void event(Descriptor::eventType et);
 
     void setRapiProxyConnection(RapiProxyConnection *rapiProxyConnection);
 

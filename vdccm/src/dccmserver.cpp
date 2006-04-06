@@ -64,7 +64,7 @@ bool DccmServer::shutdown()
 }
 
 
-void DccmServer::event()
+void DccmServer::event(Descriptor::eventType /*et*/)
 {
     SynceSocket *clientSocket = synce_socket_accept(socket, NULL);
 

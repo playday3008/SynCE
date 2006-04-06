@@ -93,28 +93,28 @@ DescriptorManager* Multiplexer::getWriteManager() const
     \retval 0 on select error, if negativ, the absolut values is the number of not processed descriptors, if positiv number of processed descriptors - all ok!
  */
 int Multiplexer::multiplex()
-{   
+{
     tv = timerNodeManager->process();
-    
+
     Descriptor* rhDescriptor = readManager->getHighestDescriptor();
     Descriptor* whDescriptor = writeManager->getHighestDescriptor();
     Descriptor* ehDescriptor = exceptionManager->getHighestDescriptor();
 
     fd_set *rfdSet = NULL;
     int rhfd = 0;
-    
+
     fd_set *wfdSet = NULL;
     int whfd = 0;
-    
+
     fd_set *efdSet = NULL;
     int ehfd = 0;
-    
-    
+
+
     if (rhDescriptor != NULL) {
         rhfd = rhDescriptor->getDescriptor();
         rfdSet = readManager->fdSet();
     }
-    
+
     if (whDescriptor != NULL) {
         whfd = whDescriptor->getDescriptor();
         wfdSet = writeManager->fdSet();
@@ -126,7 +126,7 @@ int Multiplexer::multiplex()
     }
 
     int maxDesc = 0;
-    
+
     if (rhfd > whfd) {
         if (ehfd > rhfd) {
             maxDesc = ehfd;
@@ -140,37 +140,37 @@ int Multiplexer::multiplex()
             maxDesc = whfd;
         }
     }
-    
+
     int numFds = select(maxDesc + 1, rfdSet, wfdSet, efdSet, &tv);
 
     int numberProcessed = 0;
-    
+
     if (numFds > 0) {
         if (numFds != numberProcessed) {
-            numberProcessed += readManager->process(rfdSet);
-        }
-    
-        if (numFds != numberProcessed) {
-            numberProcessed += writeManager->process(wfdSet);
+            numberProcessed += readManager->process(Descriptor::READ, rfdSet);
         }
 
         if (numFds != numberProcessed) {
-            numberProcessed += exceptionManager->process(efdSet);
+            numberProcessed += writeManager->process(Descriptor::WRITE, wfdSet);
+        }
+
+        if (numFds != numberProcessed) {
+            numberProcessed += exceptionManager->process(Descriptor::EXCEPTION, efdSet);
         }
     }
-    
+
     int ret = 0;
-    
+
     if (numFds < 0) {
         ret = 0;
     }
-    
+
     if (numberProcessed == numFds) {
         ret = numberProcessed;
     } else {
         ret = numberProcessed - numFds;
     }
-    
+
     return ret;
 }
 
@@ -181,10 +181,10 @@ int Multiplexer::multiplex()
 Multiplexer* Multiplexer::self()
 {
     Multiplexer *mux = multiplexer;
-    
+
     if (multiplexer == NULL) {
         mux = new Multiplexer();
     }
-    
+
     return mux;
 }

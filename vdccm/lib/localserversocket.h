@@ -39,7 +39,7 @@ public:
     ~LocalServerSocket();
     virtual LocalAcceptedSocket* accept();
     virtual bool listen(int backlog = 5);
-    virtual void event();
+    virtual void event(Descriptor::eventType et);
 
 private:
     LocalAcceptedSocketFactory *localAcceptedSocketFactory;

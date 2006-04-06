@@ -63,7 +63,8 @@ bool WindowsCEDevice::shutdown()
 void WindowsCEDevice::disconnect()
 {
     synce_trace("Disconnect");
-    getDescriptorManager()->remove(this);
+
+    Multiplexer::self()->getReadManager()->remove(this);
 
     if (deviceConnected) {
         DeviceManager::self()->removeConnectedDevice(this);
@@ -206,7 +207,7 @@ bool WindowsCEDevice::handleEvent()
 }
 
 
-void WindowsCEDevice::event()
+void WindowsCEDevice::event(Descriptor::eventType /*et*/)
 {
     if (!handleEvent()) {
         disconnect();

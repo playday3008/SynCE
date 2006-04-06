@@ -51,13 +51,9 @@ bool DescriptorManager::add(Descriptor * descriptor)
 
     if (descriptor->getDescriptor() != 0) {
         if (find(descriptors.begin(), descriptors.end(), descriptor) == descriptors.end()) {
-            if (!descriptor->setDescriptorManager(this)) {
-                ret = false;
-            } else {
-                descriptors.push_back(descriptor);
-                FD_SET(descriptor->getDescriptor(), &staticFdSet);
-                listDirty = true;
-            }
+        descriptors.push_back(descriptor);
+            FD_SET(descriptor->getDescriptor(), &staticFdSet);
+            listDirty = true;
         } else {
             ret = false;
         }
@@ -87,7 +83,6 @@ bool DescriptorManager::remove(Descriptor * descriptor)
         } else {
             descriptors.erase(rit);
         }
-        descriptor->setDescriptorManager(NULL);
         FD_CLR(descriptor->getDescriptor(), &staticFdSet);
         listDirty = true;
     } else {
@@ -131,7 +126,7 @@ Descriptor* DescriptorManager::getHighestDescriptor()
 /*!
     \fn DescriptorManager::process(fd_set *fdSet)
  */
-int DescriptorManager::process(fd_set *fdSet)
+int DescriptorManager::process(enum Descriptor::eventType et, fd_set *fdSet)
 {
     int numberProcessed = 0;
 
@@ -140,7 +135,7 @@ int DescriptorManager::process(fd_set *fdSet)
 
     while(it != descriptors.end()) {
         if (FD_ISSET((*it)->getDescriptor(), fdSet)) {
-            (*it)->event();
+            (*it)->event(et);
             numberProcessed++;
         }
         if (!dontIncrement) {
@@ -181,7 +176,7 @@ bool DescriptorManager::dataPending(const Descriptor *descriptor, int sec, int u
 /*!
     \fn DescriptorManager::dataPending(const Descriptor *descriptor, int sec, int usec)
  */
-bool DescriptorManager::writeable(const Descriptor *descriptor, int sec, int usec)
+bool DescriptorManager::writable(const Descriptor *descriptor, int sec, int usec)
 {
     bool ret = false;
     fd_set fdSet;

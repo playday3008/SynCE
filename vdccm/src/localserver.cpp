@@ -41,7 +41,7 @@ LocalServer::~LocalServer()
 }
 
 
-void LocalServer::event()
+void LocalServer::event(Descriptor::eventType /*et*/)
 {
     SynCEClient *scec = dynamic_cast<SynCEClient *> (accept());
     if (scec == NULL) {
