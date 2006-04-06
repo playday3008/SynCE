@@ -19,10 +19,13 @@ using namespace std;
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
 */
+
 class WindowsCEDeviceBase{
 public:
 
-    bool operator==(const WindowsCEDeviceBase &device) const { return this->getDeviceName() == device.getDeviceName(); }
+    bool operator==(const WindowsCEDeviceBase &device) const {
+        return this->getDeviceName() == device.getDeviceName();
+    }
 
     class EqualsTo : public std::unary_function<WindowsCEDeviceBase *, bool> {
         public:
@@ -111,6 +114,11 @@ public:
 
 
     virtual void ping() = 0;
+
+    virtual bool sendPassword(string password)
+    {
+        return true;
+    }
 };
 
 #endif

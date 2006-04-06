@@ -166,7 +166,8 @@ void DeviceManager::removeClient(SynCEClient * synCEClient)
     synce_info("SynCE-Client disconnected");
 }
 
-
+#include <iostream>
+using namespace std;
 WindowsCEDeviceBase *DeviceManager::getConnectedDevice(string name)
 {
     list<WindowsCEDeviceBase *>::iterator it;

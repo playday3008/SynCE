@@ -172,10 +172,14 @@ int main(int argc, char *argv[])
 
     mux->getReadManager()->remove(&dccmServer);
     mux->getReadManager()->remove(&localServer);
+    mux->getReadManager()->remove(&rapiServer);
+
     mux->getTimerNodeManager()->remove(deviceManager);
 
     dccmServer.shutdown();
     localServer.shutdown();
+    rapiServer.shutdown();
+
     deviceManager->shutdown();
 
     delete deviceManager;
