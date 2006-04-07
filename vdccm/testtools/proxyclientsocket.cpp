@@ -263,10 +263,10 @@ void ProxyClientSocket::ceWhichCallSetsTheTimeOnTheDevice(int setClock)
 
 void ProxyClientSocket::shot()
 {
-    ceGetSpecialFolderPath(0x05);
+//    ceGetSpecialFolderPath(0x05);
 //    ceFindAllFiles("\\Temp\\*");
-    ceWhichCallSetsTheTimeOnTheDevice(0);
-    ceFindAllFiles("\\Windows\\*");
+//    ceWhichCallSetsTheTimeOnTheDevice(0);
+    ceFindAllFiles("\\My Documents\\*.*");
 
 }
 

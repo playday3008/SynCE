@@ -10,13 +10,11 @@
 //
 //
 
-#include "multiplexer.h"
 #include "rapihandshakeclient.h"
+#include "multiplexer.h"
 #include "cmdlineargs.h"
 #include "rapiconnection.h"
-#include <synce.h>
 #include <synce_log.h>
-#include <iostream>
 
 
 RapiHandshakeClient::RapiHandshakeClient( int fd, TCPServerSocket *tcpServerSocket )
@@ -99,14 +97,10 @@ void RapiHandshakeClient::shot()
 {
     char response[ 4 ] = { 01, 00, 00, 00 };
 
-    if ( !writeWouldBlock(4) ) {
-        write( getDescriptor(), response, 4 );
-        if ( pendingPingRequests >= CmdLineArgs::getMissingPingCount() ) {
-            rapiConnection->handshakeClientDisconnected();
-        } else {
-            pendingPingRequests++;
-        }
-    } else {
+    write( getDescriptor(), response, 4 );
+    if ( pendingPingRequests >= CmdLineArgs::getMissingPingCount() ) {
         rapiConnection->handshakeClientDisconnected();
+    } else {
+        pendingPingRequests++;
     }
 }

@@ -73,17 +73,3 @@ bool NetSocket::setBlocking()
     int flags = fcntl (getDescriptor(), F_GETFL);
     return fcntl (getDescriptor(), F_SETFL, flags & ~O_NONBLOCK) >= 0;
 }
-
-
-bool NetSocket::writeWouldBlock(size_t count)
-{
-    unsigned int sendBufferLength = 0;
-    unsigned int bytesInSendBuffer = 0;
-    int len = sizeof(int);
-
-    getsockopt(getDescriptor(), SOL_SOCKET, SO_SNDBUF, (char *) &sendBufferLength, (socklen_t *) &len);
-
-    ioctl(getDescriptor(), TIOCOUTQ, &bytesInSendBuffer);
-
-    return sendBufferLength < bytesInSendBuffer + count;
-}

@@ -26,7 +26,6 @@ public:
 
     bool setReadTimeout(int sec, int usec);
     bool setWriteTimeout(int sec, int usec);
-    bool writeWouldBlock(size_t count);
     bool setNonBlocking();
     bool setBlocking();
 };

@@ -23,9 +23,9 @@
 #ifndef LOCALSOCKET_H
 #define LOCALSOCKET_H
 
-#include <netsocket.h>
 #include <string>
 #include <sys/un.h>
+#include "netsocket.h"
 
 /**
 @author Volker Christian

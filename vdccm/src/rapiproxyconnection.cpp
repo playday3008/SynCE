@@ -127,10 +127,10 @@ void RapiProxyConnection::messageToApplication()
 void RapiProxyConnection::writeEnabled(NetSocket *where)
 {
     if (dynamic_cast<RapiProvisioningClient *>(where)) {
-        synce_info("Write again enabled on RapiProxy");
+        synce_info("Write again enabled on RapiProvisioningClient");
         Multiplexer::self()->getReadManager()->add(rapiProxy);
     } else {
-        synce_info("Write again enabled on RapiProvisioningClient");
+        synce_info("Write again enabled on RapiProxyClient");
         Multiplexer::self()->getReadManager()->add(rapiProvisioningClient);
     }
     Multiplexer::self()->getWriteManager()->remove(where);

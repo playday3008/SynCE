@@ -23,9 +23,9 @@
 #ifndef TCPSOCKET_H
 #define TCPSOCKET_H
 
-#include <netsocket.h>
 #include <string>
 #include <netinet/in.h>
+#include "netsocket.h"
 
 /**
 @author Volker Christian
