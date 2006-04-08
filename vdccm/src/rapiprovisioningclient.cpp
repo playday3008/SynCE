@@ -46,7 +46,6 @@ void RapiProvisioningClient::event( Descriptor::eventType et )
         }
         break;
     case Descriptor::WRITE:
-        std::cout << "Write again enabled" << std::endl;
         rapiProxyConnection->writeEnabled(this);
         break;
     case Descriptor::EXCEPTION:
