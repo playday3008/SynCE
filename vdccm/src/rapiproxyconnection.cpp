@@ -101,8 +101,13 @@ void RapiProxyConnection::forwardMessage(NetSocket *from, NetSocket *to)
             return;
         }
 
-        std::cout << "Application --> Device" << std::endl;
-        std::cout << "======================" << std::endl;
+        if (dynamic_cast<RapiProxy *>(from)) {
+            std::cout << "Application --> Device" << std::endl;
+            std::cout << "======================" << std::endl;
+        } else {
+            std::cout << "Device --> Application" << std::endl;
+            std::cout << "======================" << std::endl;
+        }
         rapiProvisioningClient->printPackage( "RapiProxy", buf );
 
         write( to->getDescriptor(), buf, length + 4 );
