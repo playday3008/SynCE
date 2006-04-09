@@ -78,6 +78,7 @@ void kio_rapipProtocol::openConnection()
         isConnected = true;
         connected();
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -101,6 +102,7 @@ QString kio_rapipProtocol::adjust_remote_path()
             ceOk = false;
         }
     }
+
     return returnPath;
 }
 
@@ -121,7 +123,6 @@ bool kio_rapipProtocol::checkRequestURL(const KURL& url)
         finished();
         return false;
     }
-
     return true;
 }
 
@@ -192,6 +193,7 @@ bool kio_rapipProtocol::list_matching_files(QString &path)
         }
         synce::CeRapiFreeBuffer(find_data);
     }
+
     return success;
 }
 
@@ -244,6 +246,7 @@ void kio_rapipProtocol::get(const KURL& url)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -300,6 +303,7 @@ void kio_rapipProtocol::put(const KURL& url, int /* mode */, bool overwrite, boo
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -328,6 +332,7 @@ void kio_rapipProtocol::listDir(const KURL& _url)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -351,6 +356,7 @@ void kio_rapipProtocol::mkdir(const KURL& url, int /* permissions */)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -379,6 +385,7 @@ void kio_rapipProtocol::del(const KURL& url, bool isFile)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -481,6 +488,7 @@ void kio_rapipProtocol::stat(const KURL & url)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -512,6 +520,7 @@ void kio_rapipProtocol::mimetype( const KURL& url)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -556,6 +565,7 @@ void kio_rapipProtocol::rename(const KURL& src, const KURL& dst, bool overwrite)
             }
         }
     }
+    setTimeoutSpecialCommand(60);
 }
 
 
@@ -600,6 +610,19 @@ void kio_rapipProtocol::copy(const KURL& src, const KURL& dst, int /* permission
             }
         }
     }
+    setTimeoutSpecialCommand(60);
+}
+
+
+void kio_rapipProtocol::slave_status() {
+    slaveStatus(actualHost, isConnected);
+}
+
+
+void kio_rapipProtocol::special(const QByteArray & /* data*/)
+{
+    closeConnection();
+    error(KIO::ERR_CONNECTION_BROKEN, actualHost);
 }
 
 
