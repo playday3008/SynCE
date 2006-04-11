@@ -606,6 +606,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				switch(rra_frontend_get())
 				{
 					case ID_FRONTEND_KDEPIM:
+          case ID_FRONTEND_EVOLUTION:
 						synce_warning("ID_NICKNAME");
 						strbuf_append(vcard, "NICKNAME:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
@@ -1505,7 +1506,7 @@ static bool parser_handle_field(/*{{{*/
   {
     add_string(parser, INDEX_MESSAGING_GADU, type, value);
   }
-  else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "NICKNAME"))
+  else if ((rra_frontend_get()==ID_FRONTEND_KDEPIM || rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "NICKNAME"))
   {
     add_string(parser, INDEX_NICKNAME, type, value);
   }
