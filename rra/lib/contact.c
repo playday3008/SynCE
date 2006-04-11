@@ -27,7 +27,7 @@ static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
  * the theoretical field count maximum is about 50,
  * and we add 10 to be safe
  */
-#define MAX_FIELD_COUNT  60
+#define MAX_FIELD_COUNT  80
 
 /* 
    ESCAPED-CHAR = "\\" / "\;" / "\," / "\n" / "\N")
@@ -255,6 +255,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	WCHAR* home_region = NULL;
 	WCHAR* home_postal_code = NULL;
 	WCHAR* home_country = NULL;
+  WCHAR* home_post_office = NULL;
 	
 	/* work address parts */
 	WCHAR* work_street = NULL;
@@ -262,6 +263,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	WCHAR* work_region = NULL;
 	WCHAR* work_postal_code = NULL;
 	WCHAR* work_country = NULL;
+  WCHAR* work_post_office = NULL;
 
 	/* other address parts */
 	WCHAR* other_street = NULL;
@@ -269,6 +271,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	WCHAR* other_region = NULL;
 	WCHAR* other_postal_code = NULL;
 	WCHAR* other_country = NULL;
+  WCHAR* other_post_office = NULL;
 
   /* email */
   WCHAR* email = NULL;
@@ -486,6 +489,10 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				home_country = pFields[i].val.lpwstr;
 				break;
 
+      case ID_HOME_POST_OFFICE:
+        home_post_office = pFields[i].val.lpwstr;
+        break;
+
 			case ID_WORK_STREET:
 				work_street = pFields[i].val.lpwstr;
 				break;
@@ -506,6 +513,10 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				work_country = pFields[i].val.lpwstr;
 				break;
 
+      case ID_WORK_POST_OFFICE:
+        work_post_office = pFields[i].val.lpwstr;
+        break;
+
 			case ID_OTHER_STREET:
 				other_street = pFields[i].val.lpwstr;
 				break;
@@ -525,6 +536,10 @@ static bool rra_contact_to_vcard2(/*{{{*/
 			case ID_OTHER_COUNTRY:
 				other_country = pFields[i].val.lpwstr;
 				break;
+
+      case ID_OTHER_POST_OFFICE:
+        other_post_office = pFields[i].val.lpwstr;
+        break;
 
 			case ID_EMAIL:
         email = pFields[i].val.lpwstr;
@@ -733,7 +748,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	 * the region (e.g., state or province); the postal code; the country name.
 	 */
 
-	if (home_street || home_locality || home_postal_code || home_country)
+  if (home_street || home_locality || home_postal_code || home_country || home_post_office)
 	{
     char *street = NULL;
     char *extended = NULL;
@@ -752,7 +767,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
     }
 
 		strbuf_append_type(vcard, "ADR", "HOME", flags);
-		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
+    strbuf_append_escaped_wstr (vcard, home_post_office, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
     strbuf_append_escaped      (vcard, extended, flags); /* extended address */
 		strbuf_append_c            (vcard, ';');
@@ -771,7 +786,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
       wstr_free_string(street);
 	}
 
-	if (work_street || work_locality || work_postal_code || work_country)
+  if (work_street || work_locality || work_postal_code || work_country || work_post_office)
 	{
     char *street = NULL;
     char *extended = NULL;
@@ -790,7 +805,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
     }
 
 		strbuf_append_type(vcard, "ADR", "WORK", flags);
-		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
+    strbuf_append_escaped_wstr (vcard, work_post_office, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
     strbuf_append_escaped      (vcard, extended, flags); /* extended address */
 		strbuf_append_c            (vcard, ';');
@@ -809,7 +824,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
       wstr_free_string(street);
 	}
 
-	if (other_street || other_locality || other_postal_code || other_country)
+  if (other_street || other_locality || other_postal_code || other_country || other_post_office)
 	{
     char *street = NULL;
     char *extended = NULL;
@@ -836,7 +851,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
         strbuf_append_type(vcard, "ADR", "POSTAL", flags);
         break;
     }
-		strbuf_append_escaped_wstr (vcard, NULL, flags); /* post office box */
+    strbuf_append_escaped_wstr (vcard, other_post_office, flags); /* post office box */
 		strbuf_append_c            (vcard, ';');
     strbuf_append_escaped      (vcard, extended, flags); /* extended address */
 		strbuf_append_c            (vcard, ';');
@@ -1040,6 +1055,9 @@ typedef enum _field_index
   INDEX_EMAIL2_EVOLUTION_META,
   INDEX_EMAIL3_EVOLUTION_META,
   INDEX_EMAIL4_EVOLUTION_META,
+  INDEX_HOME_POST_OFFICE,
+  INDEX_WORK_POST_OFFICE,
+  INDEX_OTHER_POST_OFFICE,
   ID_COUNT
 } field_index;
 
@@ -1062,7 +1080,7 @@ static uint32_t name_index[NAME_FIELD_COUNT] =
 
 static uint32_t address_index[ADDRESS_FIELD_COUNT][3] = 
 {
-  {0, 0}, /* post office box */
+  {INDEX_HOME_POST_OFFICE,  INDEX_WORK_POST_OFFICE,  INDEX_OTHER_POST_OFFICE}, /* post office box */
   {0, 0}, /* extended address */
   {INDEX_HOME_STREET,       INDEX_WORK_STREET,       INDEX_OTHER_STREET},      /* street */
   {INDEX_HOME_LOCALITY,     INDEX_WORK_LOCALITY,     INDEX_OTHER_LOCALITY},    /* locality */
@@ -1132,6 +1150,9 @@ static const uint32_t field_id[ID_COUNT] =
   ID_EMAIL2_EVOLUTION_META,
   ID_EMAIL3_EVOLUTION_META,
   ID_EMAIL4_EVOLUTION_META,
+  ID_HOME_POST_OFFICE,
+  ID_WORK_POST_OFFICE,
+  ID_OTHER_POST_OFFICE,
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
