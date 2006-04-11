@@ -60,7 +60,7 @@ static char* convert_string(const char* inbuf, const char* tocode, const char* f
   return outbuf;
 }
 
-static char* convert_to_utf8(const char* inbuf)
+char* convert_to_utf8(const char* inbuf)
 {
   char* utf8 = convert_string(inbuf, CHARSET_UTF8, CHARSET_ISO88591);
 
@@ -101,7 +101,7 @@ static char* convert_to_utf8(const char* inbuf)
     return NULL;
 }
 
-static char* convert_from_utf8(const char* source)
+char* convert_from_utf8(const char* source)
 {
   char* result = NULL;
   const unsigned char* q;

@@ -16,6 +16,9 @@
 #include <assert.h>
 #include "internal.h"
 
+extern char* convert_to_utf8(const char* inbuf);
+extern char* convert_from_utf8(const char* source);
+
 #define VERBOSE 0
 
 static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
@@ -333,6 +336,17 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						lpb_terminated[pFields[i].val.blob.dwCount]='\0';
 
 						strbuf_append(vcard, "NOTE:");
+
+            if (flags & RRA_CONTACT_UTF8)
+            {
+              char *lpb_converted = convert_to_utf8(lpb_terminated);
+              free (lpb_terminated);
+              lpb_terminated = lpb_converted;
+            }
+
+            if (lpb_terminated[strlen(lpb_terminated) - 1] == 0x3)
+              lpb_terminated[strlen(lpb_terminated) - 1] = 0x0;
+
             strbuf_append_escaped(vcard, lpb_terminated, flags);
 						strbuf_append_crlf(vcard);
 
@@ -1240,7 +1254,7 @@ static void add_string(Parser* parser, uint32_t index, const char* type, char* v
       value = converted = strdup_quoted_printable(value);
       assert(value);
     }
-  
+
     unescape_string(value);
     assert(value);
   
@@ -1256,9 +1270,8 @@ static void add_string(Parser* parser, uint32_t index, const char* type, char* v
   }
 }/*}}}*/
 
-static void add_blob(Parser* parser, uint32_t index, const char* type, char* data)/*{{{*/
+static void add_blob(Parser* parser, uint32_t index, const char* type, char* data, size_t data_size)/*{{{*/
 {
-  char* converted = NULL;
   CEPROPVAL* field = &parser->fields[index];
 
   assert(data);
@@ -1267,22 +1280,10 @@ static void add_blob(Parser* parser, uint32_t index, const char* type, char* dat
   {
     field->propid = (field_id[index] << 16) | CEVT_BLOB;
 
-    if (STR_IN_STR(type, "QUOTED-PRINTABLE"))
-    {
-      data = converted = strdup_quoted_printable(data);
-      assert(data);
-    }
-  
-    unescape_string(data);
-    assert(data);
- 
-    field->val.blob.dwCount = strlen(data);
-    field->val.blob.lpb = malloc(field->val.blob.dwCount);
+    field->val.blob.dwCount = data_size;
+    field->val.blob.lpb = malloc(data_size);
     assert(field->val.blob.lpb);
-    memcpy(field->val.blob.lpb, data, field->val.blob.dwCount);
-  
-    if (converted)
-      free(converted);
+    memcpy(field->val.blob.lpb, data, data_size);
   }
 }/*}}}*/
 
@@ -1566,9 +1567,33 @@ static bool parser_handle_field(/*{{{*/
   {
     add_string(parser, INDEX_ASSISTANT, type, value);
   }
-  else if (STR_EQUAL(name, "NOTE"))
+  else if (STR_EQUAL(name, "NOTE") && strlen(value) > 0)
   {
-    add_blob(parser, INDEX_NOTE, type, value);
+    size_t value_length;
+
+    if (parser->utf8)
+    {
+      char *value_utf8 = convert_from_utf8(value);
+      free(value);
+      value = value_utf8;
+    }
+
+    unescape_string(value);
+
+    value_length = strlen(value);
+
+    if (value_length % 2)
+    {
+      char *value_old = value;
+
+      value = malloc(value_length + 2);
+      memcpy(value, value_old, value_length);
+      value[value_length++] = 0x3;
+      value[value_length] = 0x0;
+      free(value_old);
+    }
+
+    add_blob(parser, INDEX_NOTE, type, value, value_length);
   }
   else if (STR_EQUAL(name, "X-SYNCE-CHILDREN"))
   {
