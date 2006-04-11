@@ -203,6 +203,25 @@ static void strbuf_append_date(StrBuf* strbuf, const char* name, FILETIME* filet
   strbuf_append_crlf(strbuf);
 }
 
+void rra_contact_to_vcard2_email(StrBuf* vcard, WCHAR* email, WCHAR* meta, bool pref, uint32_t flags)
+{
+  if (email)
+  {
+    if (meta)
+    {
+      strbuf_append(vcard, "EMAIL;");
+      strbuf_append_wstr(vcard, meta);
+      strbuf_append_c(vcard, ':');
+    } else
+      if (pref)
+        strbuf_append_type(vcard, "EMAIL", "INTERNET,PREF", flags);
+      else
+        strbuf_append_type(vcard, "EMAIL", "INTERNET", flags);
+    strbuf_append_escaped_wstr(vcard, email,flags);
+    strbuf_append_crlf(vcard);
+  }
+};
+
 static bool rra_contact_to_vcard2(/*{{{*/
 		uint32_t id, 
 		CEPROPVAL* pFields, 
@@ -247,6 +266,16 @@ static bool rra_contact_to_vcard2(/*{{{*/
 	WCHAR* other_region = NULL;
 	WCHAR* other_postal_code = NULL;
 	WCHAR* other_country = NULL;
+
+  /* email */
+  WCHAR* email = NULL;
+  WCHAR* email2 = NULL;
+  WCHAR* email3 = NULL;
+  WCHAR* email4 = NULL;
+  WCHAR* email_evolution_meta = NULL;
+  WCHAR* email2_evolution_meta = NULL;
+  WCHAR* email3_evolution_meta = NULL;
+  WCHAR* email4_evolution_meta = NULL;
 
 	strbuf_append(vcard, "BEGIN:vCard\r\n");
 
@@ -484,18 +513,36 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_EMAIL:
-				strbuf_append_type(vcard, "EMAIL", "INTERNET,PREF", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        email = pFields[i].val.lpwstr;
 				break;
 
 			case ID_EMAIL2:
+        email2 = pFields[i].val.lpwstr;
+        break;
+
 			case ID_EMAIL3:
+        email3 = pFields[i].val.lpwstr;
+        break;
+
       case ID_EMAIL4:
-				strbuf_append_type(vcard, "EMAIL", "INTERNET", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        email4 = pFields[i].val.lpwstr;
 				break;
+
+      case ID_EMAIL_EVOLUTION_META:
+        email_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_EMAIL2_EVOLUTION_META:
+        email2_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_EMAIL3_EVOLUTION_META:
+        email3_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_EMAIL4_EVOLUTION_META:
+        email4_evolution_meta = pFields[i].val.lpwstr;
+        break;
 
 			case ID_SPOUSE:
 				strbuf_append(vcard, "X-EVOLUTION-SPOUSE:");
@@ -794,6 +841,21 @@ static bool rra_contact_to_vcard2(/*{{{*/
       wstr_free_string(street);
 	}
 
+  switch(rra_frontend_get())
+  {
+    case ID_FRONTEND_EVOLUTION:
+      rra_contact_to_vcard2_email(vcard, email, email_evolution_meta, true, flags);
+      rra_contact_to_vcard2_email(vcard, email2, email2_evolution_meta, false, flags);
+      rra_contact_to_vcard2_email(vcard, email3, email3_evolution_meta, false, flags);
+      rra_contact_to_vcard2_email(vcard, email4, email4_evolution_meta, false, flags);
+      break;
+    default:
+      rra_contact_to_vcard2_email(vcard, email, NULL, true, flags);
+      rra_contact_to_vcard2_email(vcard, email2, NULL, false, flags);
+      rra_contact_to_vcard2_email(vcard, email3, NULL,  false, flags);
+      rra_contact_to_vcard2_email(vcard, email4, NULL,  false, flags);
+      break;
+  }
 
 	if (!have_fn)
 	{
@@ -960,6 +1022,10 @@ typedef enum _field_index
   INDEX_NICKNAME,
   INDEX_JOB_TITLE,
   INDEX_EMAIL4,
+  INDEX_EMAIL_EVOLUTION_META,
+  INDEX_EMAIL2_EVOLUTION_META,
+  INDEX_EMAIL3_EVOLUTION_META,
+  INDEX_EMAIL4_EVOLUTION_META,
   ID_COUNT
 } field_index;
 
@@ -1047,7 +1113,11 @@ static const uint32_t field_id[ID_COUNT] =
   ID_MESSAGING_GADU,
   ID_NICKNAME,
   ID_JOB_TITLE,
-  ID_EMAIL4
+  ID_EMAIL4,
+  ID_EMAIL_EVOLUTION_META,
+  ID_EMAIL2_EVOLUTION_META,
+  ID_EMAIL3_EVOLUTION_META,
+  ID_EMAIL4_EVOLUTION_META,
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1412,15 +1482,23 @@ static bool parser_handle_field(/*{{{*/
     {
     case 0:
       add_string(parser, INDEX_EMAIL, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_EMAIL_EVOLUTION_META, type, type);
       break;
     case 1:
       add_string(parser, INDEX_EMAIL2, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_EMAIL2_EVOLUTION_META, type, type);
       break;
     case 2:
       add_string(parser, INDEX_EMAIL3, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_EMAIL3_EVOLUTION_META, type, type);
       break;
     case 3:
       add_string(parser, INDEX_EMAIL4, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_EMAIL4_EVOLUTION_META, type, type);
       break;
     }
 	}/*}}}*/
