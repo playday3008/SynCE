@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+Exec=foobar
+Comment=Task Synchronizer
+Icon=
+Name=Task Synchronizer
+ServiceTypes=Raki/Synchronizer
+X-KDE-Library=librakikpimsync
+X-Raki-Synchronizer=Task

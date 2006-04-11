@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+Exec=foobar
+Comment=Appointment Synchronizer
+Icon=
+Name=Appointment Synchronizer
+ServiceTypes=Raki/Synchronizer
+X-KDE-Library=librakikpimsync
+X-Raki-Synchronizer=Appointment

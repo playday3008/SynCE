@@ -1,0 +1,29 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+ServiceTypes=KitchenSync/Konnector,KResources/Plugin
+X-KDE-Library=libsyncedevicekonnector
+
+Name=SynCE-Device Konnector
+Name[cs]=SynCE-Device konektor
+Name[cy]=Kysylltydd SynCE-Device
+Name[de]=SynCE-Device-Konnector
+Name[es]=Konnector para SynCE-Device
+Name[fi]=SynCE-Device-Konnector
+Name[hi]=क्यूटोपिया कनेक्टर
+Name[hu]=SynCE-Device-konnektor
+Name[nso]=Mokgomaganyi wa SynCE-Device
+Name[pl]=Łącznik SynCE-Device
+Name[pt]=Konnector para o SynCE-Device
+Name[ro]=Konnector SynCE-Device
+Name[ru]=Коннектор к SynCE-Device
+Name[sl]=Konektor SynCE-Device
+Name[ta]=Qடோப்பியா இணைப்பான்
+Name[xx]=xxSynCE-Device Konnectorxx
+Group= PDA
+Vendor = Holger 'zecke' Freyther
+Id=SynCE1.5
+
+X-KDE-ResourceFamily=konnector
+X-KDEE-ResourceType=pocketpc
+X-KDE-ResourceType=SynCEDevice

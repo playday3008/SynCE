@@ -1,0 +1,67 @@
+/***************************************************************************
+ * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
+ *                    Christian Fremgen <cfremgen@users.sourceforge.net>   *
+ *                                                                         *
+ * Permission is hereby granted, free of charge, to any person obtaining a *
+ * copy of this software and associated documentation files (the           *
+ * "Software"), to deal in the Software without restriction, including     *
+ * without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to      *
+ * permit persons to whom the Software is furnished to do so, subject to   *
+ * the following conditions:                                               *
+ *                                                                         *
+ * The above copyright notice and this permission notice shall be included *
+ * in all copies or substantial portions of the Software.                  *
+ *                                                                         *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
+ ***************************************************************************/
+
+#ifndef RAKIKPIMSYNC_H
+#define RAKIKPIMSYNC_H
+
+#include <rakisyncplugin.h>
+#include <libkdepim/progressmanager.h>
+#include "pimsyncmanager.h"
+
+class SyncTaskListItem;
+/**
+@author Christian Fremgen; Volker Christian
+*/
+
+
+class RakiKPimSync : public RakiSyncPlugin
+{
+    Q_OBJECT
+public:
+    RakiKPimSync();
+
+    ~RakiKPimSync();
+
+    virtual bool postSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId );
+    virtual bool preSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId );
+    virtual void init(Rra* rra, SyncTaskListItem *item, QString pdaName, QWidget *parent,
+                       QString serviceName );
+    virtual void unInit();
+    virtual void configure();
+    virtual void subscribeTo(Rra* rra);
+    virtual void unsubscribeFrom();
+    virtual void createConfigureObject( KConfig* ksConfig );
+    virtual bool sync();
+    virtual int syncContext();
+
+private slots:
+    void progressItemAdded( KPIM::ProgressItem* );
+    void progressItemStatus( KPIM::ProgressItem*, const QString& );
+    void progressItemProgress( KPIM::ProgressItem*, unsigned int );
+
+private:
+    int type;
+};
+
+#endif
