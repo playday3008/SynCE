@@ -225,6 +225,8 @@ void rra_contact_to_vcard2_email(StrBuf* vcard, WCHAR* email, WCHAR* meta, bool 
   }
 };
 
+#define set_count(count,value) if (count == 0) count=value;
+
 static bool rra_contact_to_vcard2(/*{{{*/
 		uint32_t id, 
 		CEPROPVAL* pFields, 
@@ -232,7 +234,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		char** ppVcard,
 		uint32_t flags)
 {
-	unsigned i;
+  unsigned i, messaging_count, messaging_meta;
 	StrBuf* vcard = strbuf_new(NULL);
 	bool have_fn = false; /* the FN property must be present! */
 	bool success = false;
@@ -283,6 +285,12 @@ static bool rra_contact_to_vcard2(/*{{{*/
   WCHAR* email3_evolution_meta = NULL;
   WCHAR* email4_evolution_meta = NULL;
 
+  /* evolution messaging */
+  WCHAR* evolution_messaging[4][2] = {{NULL, NULL},
+                                      {NULL, NULL},
+                                      {NULL, NULL},
+                                      {NULL, NULL}};
+
 	strbuf_append(vcard, "BEGIN:vCard\r\n");
 
 	strbuf_append(vcard, "VERSION:");
@@ -312,6 +320,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 	for (i = 0; i < count; i++)
 	{
+    messaging_count = messaging_meta = 0;
 		/* TODO: validate data types */
 		switch (pFields[i].propid >> 16)
 		{
@@ -789,6 +798,34 @@ static bool rra_contact_to_vcard2(/*{{{*/
         }
         break;
 
+      case ID_X_EVOLUTION_MESSAGING1_META:
+        set_count(messaging_count, 1);
+      case ID_X_EVOLUTION_MESSAGING2_META:
+        set_count(messaging_count, 2);
+      case ID_X_EVOLUTION_MESSAGING3_META:
+        set_count(messaging_count, 3);
+      case ID_X_EVOLUTION_MESSAGING4_META:
+        set_count(messaging_count, 4);
+        messaging_meta = 1;
+      case ID_X_EVOLUTION_MESSAGING1:
+        set_count(messaging_count, 1);
+      case ID_X_EVOLUTION_MESSAGING2:
+        set_count(messaging_count, 2);
+      case ID_X_EVOLUTION_MESSAGING3:
+        set_count(messaging_count, 3);
+      case ID_X_EVOLUTION_MESSAGING4:
+        set_count(messaging_count, 4);
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            evolution_messaging[messaging_count -1][messaging_meta] = pFields[i].val.lpwstr;
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
 /* FOOBAR */
 			default:
 				synce_warning("Did not handle field with ID %04x", pFields[i].propid >> 16);
@@ -971,6 +1008,17 @@ static bool rra_contact_to_vcard2(/*{{{*/
       break;
   }
 
+  for (messaging_count=0; messaging_count < 4; messaging_count++)
+  {
+    if (evolution_messaging[messaging_count][0] && evolution_messaging[messaging_count][1])
+    {
+      strbuf_append_wstr(vcard, evolution_messaging[messaging_count][1]);
+      strbuf_append_c(vcard, ':');
+      strbuf_append_escaped_wstr(vcard, evolution_messaging[messaging_count][0],flags);
+      strbuf_append_crlf(vcard);
+    }
+  }
+
 	if (!have_fn)
 	{
 		/* TODO: make up a value for this property! */
@@ -1077,6 +1125,7 @@ typedef struct _Parser
   int count_email;
   int count_tel_work;
   int count_tel_home;
+  int count_evolution_messaging;
 } Parser;
 
 typedef enum _field_index
@@ -1149,6 +1198,14 @@ typedef enum _field_index
   INDEX_X_EVOLUTION_FBURL,
   INDEX_X_EVOLUTION_VIDEOURL,
   INDEX_X_EVOLUTION_MANAGER,
+  INDEX_X_EVOLUTION_MESSAGING1,
+  INDEX_X_EVOLUTION_MESSAGING2,
+  INDEX_X_EVOLUTION_MESSAGING3,
+  INDEX_X_EVOLUTION_MESSAGING4,
+  INDEX_X_EVOLUTION_MESSAGING1_META,
+  INDEX_X_EVOLUTION_MESSAGING2_META,
+  INDEX_X_EVOLUTION_MESSAGING3_META,
+  INDEX_X_EVOLUTION_MESSAGING4_META,
   ID_COUNT
 } field_index;
 
@@ -1178,6 +1235,16 @@ static uint32_t address_index[ADDRESS_FIELD_COUNT][3] =
   {INDEX_HOME_REGION,       INDEX_WORK_REGION,       INDEX_OTHER_REGION},      /* region */
   {INDEX_HOME_POSTAL_CODE,  INDEX_WORK_POSTAL_CODE,  INDEX_OTHER_POSTAL_CODE}, /* postal code */
   {INDEX_HOME_COUNTRY,      INDEX_WORK_COUNTRY,      INDEX_OTHER_COUNTRY}      /* country */
+};
+
+#define MESSAGING_FIELD_COUNT 4
+
+static uint32_t messaging_index[MESSAGING_FIELD_COUNT][2] =
+{
+  {INDEX_X_EVOLUTION_MESSAGING1,  INDEX_X_EVOLUTION_MESSAGING1_META},
+  {INDEX_X_EVOLUTION_MESSAGING2,  INDEX_X_EVOLUTION_MESSAGING2_META},
+  {INDEX_X_EVOLUTION_MESSAGING3,  INDEX_X_EVOLUTION_MESSAGING3_META},
+  {INDEX_X_EVOLUTION_MESSAGING4,  INDEX_X_EVOLUTION_MESSAGING4_META},
 };
 
 static const uint32_t field_id[ID_COUNT] =
@@ -1250,6 +1317,14 @@ static const uint32_t field_id[ID_COUNT] =
   ID_X_EVOLUTION_FBURL,
   ID_X_EVOLUTION_VIDEOURL,
   ID_X_EVOLUTION_MANAGER,
+  ID_X_EVOLUTION_MESSAGING1,
+  ID_X_EVOLUTION_MESSAGING2,
+  ID_X_EVOLUTION_MESSAGING3,
+  ID_X_EVOLUTION_MESSAGING4,
+  ID_X_EVOLUTION_MESSAGING1_META,
+  ID_X_EVOLUTION_MESSAGING2_META,
+  ID_X_EVOLUTION_MESSAGING3_META,
+  ID_X_EVOLUTION_MESSAGING4_META,
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1769,6 +1844,24 @@ static bool parser_handle_field(/*{{{*/
   else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "X-EVOLUTION-MANAGER"))
   {
     add_string(parser, INDEX_X_EVOLUTION_MANAGER, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && ( \
+    STR_EQUAL(name, "X-AIM") || \
+    STR_EQUAL(name, "X-GROUPWISE") || \
+    STR_EQUAL(name, "X-ICQ") || \
+    STR_EQUAL(name, "X-JABBER") || \
+    STR_EQUAL(name, "X-MSN") || \
+    STR_EQUAL(name, "X-YAHOO")))
+  {
+    char meta[strlen(name) + strlen(type) + 2];
+
+    snprintf(meta, sizeof(meta), "%s;%s", name, type);
+
+    if (parser->count_evolution_messaging < MESSAGING_FIELD_COUNT)
+    {
+      add_string(parser, messaging_index[parser->count_evolution_messaging][0], type, value);
+      add_string(parser, messaging_index[parser->count_evolution_messaging++][1], type, meta);
+    }
   }/*}}}*/
 /* FOOBAR */
 
@@ -1928,6 +2021,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
   parser.count_email = 0;
   parser.count_tel_work = 0;
   parser.count_tel_home = 0;
+  parser.count_evolution_messaging = 0;
 
   for (count=0; count < ID_COUNT; count++)
   {
