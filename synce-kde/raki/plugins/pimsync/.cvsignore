@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+.deps
+.libs
+*.moc
+*.moc.cpp
+*.lo
+*.la
+*.all_cpp.cpp
+pimsyncconfig.cpp
+pimsyncconfig.h

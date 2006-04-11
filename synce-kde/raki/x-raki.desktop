@@ -1,0 +1,12 @@
+[Desktop Entry]
+Comment=
+Hidden=false
+Icon=raki
+MimeType=application/x-raki
+Patterns=*.cab;*.CAB
+Type=MimeType
+
+[Desktop Action InstallCabFile]
+Exec=dcop raki Raki "installCabFile(QString)" %U
+Name=Install CAB-File...
+Icon=raki

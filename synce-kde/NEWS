@@ -1,0 +1,24 @@
+   SynCE-KDE 0.6
+   =============
+   
+    * First of all the name of the project has changed. It is now called 
+      SynCE-KDE.
+    * Secondly - yes - the release number jumps directly from 0.4 to 0.6. 
+      Release 0.5 was an internal release never published for public use.
+    * The MULTIPLE_DEVICES branch is entirely merged into HEAD of CVS. This 
+      release is a snapshot of it. You can download tgz, rpm, and deb packages 
+      from the SourceForge Project Page. Have a look at the features section 
+      for a list of all goodies.
+    * RAPIP is considered to be stable and full functional. Nevertheless, there 
+      are some additional features and improvements planed in the future.
+    * RAKI comes with a new plugin-architekture. Plugins, called synchronizer, 
+      are used to synchronize PDAs with your desktop system.
+    * An alternative DCCM called VDCCM is also included in the new release. You 
+      have to use this alternative DCCM if you intent to connect more than one PDA 
+      at the same time to your desktop.
+    * Version 0.6 should be seen as a "Vertical Slice" and a "Proof of Concept". 
+      Almost all planed features are implemented. Of course there are rough edges 
+      and odd bugs. Some code is also still missing. At the moment there are only 
+      two synchronization plugins (synchronizer) available. Help, especially in 
+      this area is badly needed. If you are interested in helping, please send 
+      mail to the development mailing list.

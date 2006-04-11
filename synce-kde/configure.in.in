@@ -1,0 +1,7 @@
+#MIN_CONFIG
+
+AM_INIT_AUTOMAKE(synce-kde, 0.9)
+AC_C_BIGENDIAN
+AC_CHECK_KDEMAXPATHLEN
+
+AC_DEFINE(QT_NO_ASCII_CAST, 1, [Define if you don't want QString casted to char *])

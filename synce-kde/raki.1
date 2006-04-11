@@ -1,0 +1,130 @@
+.\" This -*- nroff -*- file has been generated from
+.\" DocBook SGML with docbook-to-man on Debian GNU/Linux.
+...\"
+...\"	transcript compatibility for postscript use.
+...\"
+...\"	synopsis:  .P! <file.ps>
+...\"
+.de P!
+\\&.
+.fl			\" force out current output buffer
+\\!%PB
+\\!/showpage{}def
+...\" the following is from Ken Flowers -- it prevents dictionary overflows
+\\!/tempdict 200 dict def tempdict begin
+.fl			\" prolog
+.sy cat \\$1\" bring in postscript file
+...\" the following line matches the tempdict above
+\\!end % tempdict %
+\\!PE
+\\!.
+.sp \\$2u	\" move below the image
+..
+.de pF
+.ie     \\*(f1 .ds f1 \\n(.f
+.el .ie \\*(f2 .ds f2 \\n(.f
+.el .ie \\*(f3 .ds f3 \\n(.f
+.el .ie \\*(f4 .ds f4 \\n(.f
+.el .tm ? font overflow
+.ft \\$1
+..
+.de fP
+.ie     !\\*(f4 \{\
+.	ft \\*(f4
+.	ds f4\"
+'	br \}
+.el .ie !\\*(f3 \{\
+.	ft \\*(f3
+.	ds f3\"
+'	br \}
+.el .ie !\\*(f2 \{\
+.	ft \\*(f2
+.	ds f2\"
+'	br \}
+.el .ie !\\*(f1 \{\
+.	ft \\*(f1
+.	ds f1\"
+'	br \}
+.el .tm ? font underflow
+..
+.ds f1\"
+.ds f2\"
+.ds f3\"
+.ds f4\"
+'\" t 
+.ta 8n 16n 24n 32n 40n 48n 56n 64n 72n  
+.TH "raki - SYNCE-KDE" "1" 
+.SH "NAME" 
+raki \(em a PC / Windows CE connection service application like ActiveSync 
+.SH "SYNOPSIS" 
+.PP 
+\fBraki\fP 
+.SH "DESCRIPTION" 
+.PP 
+This manual page documents briefly the 
+\fBraki\fP program. 
+.PP 
+\fBraki\fP is a synonym for  
+"Remote-Access-KIcker-applet". As the name suggests it has first  
+been an applet for kicker, the KDE panel but as time goes by the  
+application-type changed. Today RAKI is an application docking into  
+the KDE system-tray. It is responsible for all additional tasks  
+which are desired for interacting with the PDA via the desktop. 
+.SH "OPTIONS" 
+.PP 
+This program doesn't have any command line arguments. 
+.SH "FEATURES" 
+.PP 
+* support for multiple connected PDAs; 
+ 
+* a plugin-based synchronization architecture, including at present a  
+synchronizer for PDA contacts and the standard KDE address book and  
+AvantGo synchronization; 
+ 
+* copying files / directories via drag'n'drop to / from the PDA,  
+including mimetype support; 
+ 
+* Internet connectivity for PDAs via NAT; 
+ 
+* sounds for event notifications (connections, password requests and  
+disconnections); 
+ 
+* simple CAB file installation on PDAs; 
+ 
+* PDA software management; 
+ 
+* program launching on the PDA; 
+ 
+* PDA system information and power status display; 
+ 
+* auto-response to PDA password requests; 
+ 
+* configuration of passwords, NAT routes and synchronization settings  
+per device; 
+ 
+* support for PDA partnerships. 
+ 
+.SH "USAGE" 
+.PP 
+Launch the application from the "K\-Menu\->Utilities"\-Menu or, 
+if you don't have a "K\-Menu\->Utilities\->Raki" entry, start RAKI from  
+the command line by issuing "raki". You will get a new icon located  
+in the system-tray. 
+.PP 
+Right click on that icon shows a popup menu containing infrastructure  
+related items. 
+.PP 
+If there are connected devices left click will open a popup menu  
+containing individual device menu items for every connected PDA. Drag  
+and drop of CAB-files onto the RAKI system-tray icon installs them on  
+a device. A dialog box lets you choose the destination PDA. Choosing  
+"Synchronize" from an individual device menu starts synchronizing that  
+PDA and your desktop. 
+ 
+.SH "SEE ALSO" 
+.PP 
+synce (1), vdccm (1), dccm (1). 
+.SH "AUTHOR" 
+.PP 
+This manual page was written by Volker Christian voc@users.sourceforge.net. 
+...\" created by instant / docbook-to-man, Wed 20 Aug 2003, 12:02 

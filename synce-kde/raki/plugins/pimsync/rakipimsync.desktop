@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+Exec=foobar
+Comment=PIM Synchronizer
+Icon=
+Name=PIM Synchronizer
+ServiceTypes=Raki/Synchronizer
+X-KDE-Library=librakipimsync
+X-Raki-Synchronizer=Task
