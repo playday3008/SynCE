@@ -9,7 +9,7 @@
 #define ID_HOME_TEL     0x3a09
 #define ID_LAST_NAME    0x3a11
 #define ID_COMPANY      0x3a16
-#define ID_JOB_TITLE    0x3a17
+#define ID_JOB_ROLE     0x3a17
 #define ID_DEPARTMENT   0x3a18
 #define ID_OFFICE_LOC   0x3a19
 #define ID_MOBILE_TEL   0x3a1c

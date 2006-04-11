@@ -344,8 +344,8 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				company = pFields[i].val.lpwstr;
 				break;
 
-			case ID_JOB_TITLE:
-				strbuf_append(vcard, "TITLE:");
+      case ID_JOB_ROLE:
+        strbuf_append(vcard, "ROLE:");
 				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 				strbuf_append_crlf(vcard);
 				break;
@@ -608,6 +608,12 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						break;
 				}
 				break;
+
+      case ID_JOB_TITLE:
+        strbuf_append(vcard, "TITLE:");
+        strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+        strbuf_append_crlf(vcard);
+        break;
 /* FOOBAR */
 			default:
 				synce_warning("Did not handle field with ID %04x", pFields[i].propid >> 16);
@@ -892,7 +898,7 @@ typedef enum _field_index
   INDEX_HOME_TEL,
   INDEX_LAST_NAME,
   INDEX_COMPANY,
-  INDEX_JOB_TITLE,
+  INDEX_JOB_ROLE,
   INDEX_DEPARTMENT,
   INDEX_OFFICE_LOC,
   INDEX_MOBILE_TEL,
@@ -940,6 +946,7 @@ typedef enum _field_index
   INDEX_MESSAGING_MSN,
   INDEX_MESSAGING_GADU,
   INDEX_NICKNAME,
+  INDEX_JOB_TITLE,
   ID_COUNT
 } field_index;
 
@@ -980,7 +987,7 @@ static const uint32_t field_id[ID_COUNT] =
   ID_HOME_TEL,
   ID_LAST_NAME,
   ID_COMPANY,
-  ID_JOB_TITLE,
+  ID_JOB_ROLE,
   ID_DEPARTMENT,
   ID_OFFICE_LOC,
   ID_MOBILE_TEL,
@@ -1027,7 +1034,8 @@ static const uint32_t field_id[ID_COUNT] =
   ID_MESSAGING_XMPP,
   ID_MESSAGING_MSN,
   ID_MESSAGING_GADU,
-  ID_NICKNAME
+  ID_NICKNAME,
+  ID_JOB_TITLE
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1427,9 +1435,9 @@ static bool parser_handle_field(/*{{{*/
       add_string(parser, INDEX_COMPANY, type, value);
 		}
 	}/*}}}*/
-	else if (STR_EQUAL(name, "TITLE"))/*{{{*/
+  else if (STR_EQUAL(name, "ROLE"))/*{{{*/
 	{
-    add_string(parser, INDEX_JOB_TITLE, type, value);
+    add_string(parser, INDEX_JOB_ROLE, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))/*{{{*/
 	{
@@ -1494,6 +1502,10 @@ static bool parser_handle_field(/*{{{*/
   {
     add_string(parser, INDEX_NICKNAME, type, value);
   }
+  else if (STR_EQUAL(name, "TITLE"))/*{{{*/
+  {
+    add_string(parser, INDEX_JOB_TITLE, type, value);
+  }/*}}}*/
 /* FOOBAR */
 
 #if 0
