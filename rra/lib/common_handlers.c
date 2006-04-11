@@ -76,16 +76,13 @@ char* convert_to_utf8(const char* inbuf)
     for (q = (unsigned char*)utf8; *q != '\0'; q++)
     {
       /* Special treatment of the euro symbol */
-      if (*q == 0x80)
+      if (q[0] == 0xc2 && q[1] == 0x80)
       {
-        synce_warning("Euro symbol found, using workaround.");
-#if 0
         strbuf_append_c(euro_fix, 0xe2);
         strbuf_append_c(euro_fix, 0x82);
         strbuf_append_c(euro_fix, 0xac);
-#else
-        strbuf_append(euro_fix, "[EURO]");
-#endif
+
+        q++;
       }
       else
         strbuf_append_c(euro_fix, *q);
@@ -115,8 +112,9 @@ char* convert_from_utf8(const char* source)
     /* Special treatment of the euro symbol */
     if (q[0] == 0xe2 && q[1] == 0x82 && q[2] == 0xac)
     {
-      synce_warning("Euro symbol found, using workaround.");
-      strbuf_append(euro_fix, "[EURO]");
+      strbuf_append_c(euro_fix, 0xc2);
+      strbuf_append_c(euro_fix, 0x80);
+
       q += 2;
     }
     else
