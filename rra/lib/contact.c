@@ -523,6 +523,13 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 				strbuf_append_crlf(vcard);
 				break;
+
+      case ID_CHILDREN:
+        strbuf_append(vcard, "X-SYNCE-CHILDREN:");
+        strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+        strbuf_append_crlf(vcard);
+        break;
+
 /* FOOBAR */
 			case ID_IMADDRESS:
 				switch(rra_frontend_get())
@@ -912,9 +919,7 @@ typedef enum _field_index
   INDEX_CATEGORY,
   INDEX_ASSISTANT,
   INDEX_ASSISTANT_TEL,
-/*
   INDEX_CHILDREN,
-*/
   INDEX_WORK2_TEL,
   INDEX_WEB_PAGE,
   INDEX_PAGER,
@@ -1001,9 +1006,7 @@ static const uint32_t field_id[ID_COUNT] =
   ID_CATEGORY,
   ID_ASSISTANT,
   ID_ASSISTANT_TEL,
-/*
   ID_CHILDREN,
-*/
   ID_WORK2_TEL,
   ID_WEB_PAGE,
   ID_PAGER,
@@ -1476,6 +1479,10 @@ static bool parser_handle_field(/*{{{*/
   else if (STR_EQUAL(name, "NOTE"))
   {
     add_blob(parser, INDEX_NOTE, type, value);
+  }
+  else if (STR_EQUAL(name, "X-SYNCE-CHILDREN"))
+  {
+    add_string(parser, INDEX_CHILDREN, type, value);
   }
 /* FOOBAR */
   else if (rra_frontend_get()==ID_FRONTEND_KDEPIM && STR_EQUAL(name, "X-KADDRESSBOOK-X-IMAddress"))
