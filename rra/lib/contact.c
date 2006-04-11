@@ -491,6 +491,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 			case ID_EMAIL2:
 			case ID_EMAIL3:
+      case ID_EMAIL4:
 				strbuf_append_type(vcard, "EMAIL", "INTERNET", flags);
 				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 				strbuf_append_crlf(vcard);
@@ -953,6 +954,7 @@ typedef enum _field_index
   INDEX_MESSAGING_GADU,
   INDEX_NICKNAME,
   INDEX_JOB_TITLE,
+  INDEX_EMAIL4,
   ID_COUNT
 } field_index;
 
@@ -1039,7 +1041,8 @@ static const uint32_t field_id[ID_COUNT] =
   ID_MESSAGING_MSN,
   ID_MESSAGING_GADU,
   ID_NICKNAME,
-  ID_JOB_TITLE
+  ID_JOB_TITLE,
+  ID_EMAIL4
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1410,6 +1413,9 @@ static bool parser_handle_field(/*{{{*/
       break;
     case 2:
       add_string(parser, INDEX_EMAIL3, type, value);
+      break;
+    case 3:
+      add_string(parser, INDEX_EMAIL4, type, value);
       break;
     }
 	}/*}}}*/
