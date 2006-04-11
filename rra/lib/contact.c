@@ -555,6 +555,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						strbuf_append(vcard, "X-messaging/icq-All:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 						strbuf_append_crlf(vcard);
+            break;
 					default:
 						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
 						break;
@@ -569,6 +570,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						strbuf_append(vcard, "X-messaging/xmpp-All:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 						strbuf_append_crlf(vcard);
+            break;
 					default:
 						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
 						break;
@@ -583,6 +585,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						strbuf_append(vcard, "X-messaging/msn-All:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 						strbuf_append_crlf(vcard);
+            break;
 					default:
 						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
 						break;
@@ -597,6 +600,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						strbuf_append(vcard, "X-messaging/gadu-All:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 						strbuf_append_crlf(vcard);
+            break;
 					default:
 						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
 						break;
@@ -612,6 +616,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 						strbuf_append(vcard, "NICKNAME:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 						strbuf_append_crlf(vcard);
+            break;
 					default:
 						synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
 						break;
