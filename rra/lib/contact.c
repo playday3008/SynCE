@@ -704,6 +704,91 @@ static bool rra_contact_to_vcard2(/*{{{*/
         strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
         strbuf_append_crlf(vcard);
         break;
+
+      case ID_X_MOZILLA_HTML:
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            strbuf_append(vcard, "X-MOZILLA-HTML:");
+            strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+            strbuf_append_crlf(vcard);
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
+      case ID_X_EVOLUTION_BLOG_URL:
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            strbuf_append(vcard, "X-EVOLUTION-BLOG-URL:");
+            strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+            strbuf_append_crlf(vcard);
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
+      case ID_X_EVOLUTION_CALURI:
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            strbuf_append(vcard, "CALURI:");
+            strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+            strbuf_append_crlf(vcard);
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
+      case ID_X_EVOLUTION_FBURL:
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            strbuf_append(vcard, "FBURL:");
+            strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+            strbuf_append_crlf(vcard);
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
+      case ID_X_EVOLUTION_VIDEOURL:
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            strbuf_append(vcard, "X-EVOLUTION-VIDEO-URL:");
+            strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+            strbuf_append_crlf(vcard);
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
+      case ID_X_EVOLUTION_MANAGER:
+        switch(rra_frontend_get())
+        {
+          case ID_FRONTEND_EVOLUTION:
+            strbuf_append(vcard, "X-EVOLUTION-MANAGER:");
+            strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+            strbuf_append_crlf(vcard);
+            break;
+          default:
+            synce_warning("Field with ID %04x not supported by frontend %u", pFields[i].propid >> 16, rra_frontend_get());
+            break;
+        }
+        break;
+
 /* FOOBAR */
 			default:
 				synce_warning("Did not handle field with ID %04x", pFields[i].propid >> 16);
@@ -1058,6 +1143,12 @@ typedef enum _field_index
   INDEX_HOME_POST_OFFICE,
   INDEX_WORK_POST_OFFICE,
   INDEX_OTHER_POST_OFFICE,
+  INDEX_X_MOZILLA_HTML,
+  INDEX_X_EVOLUTION_BLOG_URL,
+  INDEX_X_EVOLUTION_CALURI,
+  INDEX_X_EVOLUTION_FBURL,
+  INDEX_X_EVOLUTION_VIDEOURL,
+  INDEX_X_EVOLUTION_MANAGER,
   ID_COUNT
 } field_index;
 
@@ -1153,6 +1244,12 @@ static const uint32_t field_id[ID_COUNT] =
   ID_HOME_POST_OFFICE,
   ID_WORK_POST_OFFICE,
   ID_OTHER_POST_OFFICE,
+  ID_X_MOZILLA_HTML,
+  ID_X_EVOLUTION_BLOG_URL,
+  ID_X_EVOLUTION_CALURI,
+  ID_X_EVOLUTION_FBURL,
+  ID_X_EVOLUTION_VIDEOURL,
+  ID_X_EVOLUTION_MANAGER,
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1648,6 +1745,30 @@ static bool parser_handle_field(/*{{{*/
   else if (STR_EQUAL(name, "TITLE"))/*{{{*/
   {
     add_string(parser, INDEX_JOB_TITLE, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "X-MOZILLA-HTML"))
+  {
+    add_string(parser, INDEX_X_MOZILLA_HTML, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "X-EVOLUTION-BLOG-URL"))
+  {
+    add_string(parser, INDEX_X_EVOLUTION_BLOG_URL, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "CALURI"))
+  {
+    add_string(parser, INDEX_X_EVOLUTION_CALURI, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "FBURL"))
+  {
+    add_string(parser, INDEX_X_EVOLUTION_FBURL, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "X-EVOLUTION-VIDEO-URL"))
+  {
+    add_string(parser, INDEX_X_EVOLUTION_VIDEOURL, type, value);
+  }
+  else if ((rra_frontend_get()==ID_FRONTEND_EVOLUTION) && STR_EQUAL(name, "X-EVOLUTION-MANAGER"))
+  {
+    add_string(parser, INDEX_X_EVOLUTION_MANAGER, type, value);
   }/*}}}*/
 /* FOOBAR */
 
