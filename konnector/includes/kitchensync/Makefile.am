@@ -1,4 +1,0 @@
-INCLUDES = 
-METASOURCES = AUTO
-
-SUBDIRS = multisynk
