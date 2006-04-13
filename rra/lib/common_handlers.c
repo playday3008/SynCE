@@ -201,6 +201,12 @@ bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
         strbuf_append_c(note, *q);
     }
 
+    /* Note have to be pair */
+    if (note->length % 2)
+    {
+      strbuf_append_c(note, 0x3);
+    }
+
     success = parser_add_blob(
         p, 
         ID_NOTES, 
@@ -252,6 +258,9 @@ bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
         }
         tmp = utf8;
       }
+
+      if (tmp[strlen(tmp) - 1] == 0x3)
+        tmp[strlen(tmp) - 1] = 0x0;
       
       generator_add_simple(g, "DESCRIPTION", tmp);
       free(tmp);
