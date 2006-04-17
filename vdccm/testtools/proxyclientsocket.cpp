@@ -50,7 +50,7 @@ void ProxyClientSocket::printPackage(unsigned char *buf)
     char lineBuf[8];
 
     cout << "0x" << hex << setw(8) << setfill('0') << 0 << "  " << flush;
-    for (int i = 0; i < length + 4; i++) {
+    for (unsigned int i = 0; i < length + 4; i++) {
         cout << "0x" << hex << setw(2) << setfill('0') <<  (int) buf[i] << " " << flush;
         lineBuf[i % 8] = buf[i];
         if ((i + 1) % 8 == 0) {
@@ -85,7 +85,7 @@ bool ProxyClientSocket::writePackage(unsigned char *buf)
     cout << endl << "Write package to device" << endl;
     cout << "=======================" << endl;
     printPackage(buf);
-    if (write(getDescriptor(), buf, length + 4) != length + 4) {
+    if ((uint32_t) write(getDescriptor(), buf, length + 4) != length + 4) {
         return false;
     }
 
@@ -195,7 +195,7 @@ void ProxyClientSocket::ceFindAllFiles(char *path)
     *sequence = 0x1a;
     *strLength = pathLength;
     *flags = 0x000180a9;
-    for (int i = 0; i < pathLength; i++) {
+    for (unsigned int i = 0; i < pathLength; i++) {
         *(actString + i) = *(((unsigned char *) lPath) + i);
     }
 
