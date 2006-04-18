@@ -12,6 +12,7 @@
 #ifndef WINDOWSCEDEVICEBASE_H
 #define WINDOWSCEDEVICEBASE_H
 
+#include <synce.h>
 #include <string>
 
 using namespace std;
