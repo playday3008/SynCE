@@ -21,5 +21,5 @@ AM_CFLAGS = -pedantic-errors -Wall
 AM_CXXFLAGS = -pedantic-errors -Wall
 
 install-exec-hook:
-	chown root $(bindir)/vdccm
-	chmod u+s $(bindir)/vdccm
+	chown root $(DESTDIR)$(bindir)/vdccm
+	chmod u+s $(DESTDIR)$(bindir)/vdccm
