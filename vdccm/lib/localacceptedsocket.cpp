@@ -26,7 +26,7 @@
 
 using namespace std;
 
-LocalAcceptedSocket::LocalAcceptedSocket(int fd, LocalServerSocket *localServerSocket)
+LocalAcceptedSocket::LocalAcceptedSocket(int fd, const LocalServerSocket *localServerSocket)
 {
     setSocket(fd);
     setServerSocket(localServerSocket);
@@ -39,13 +39,13 @@ LocalAcceptedSocket::~LocalAcceptedSocket()
 
 
 
-void LocalAcceptedSocket::setServerSocket(LocalServerSocket * localServerSocket)
+void LocalAcceptedSocket::setServerSocket(const LocalServerSocket * localServerSocket)
 {
     this->localServerSocket = localServerSocket;
 }
 
 
-LocalServerSocket *LocalAcceptedSocket::getServerSocket() const
+const LocalServerSocket *LocalAcceptedSocket::getServerSocket() const
 {
     return localServerSocket;
 }

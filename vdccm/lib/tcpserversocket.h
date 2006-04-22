@@ -34,7 +34,7 @@ class TCPAcceptedSocketFactory;
 class TCPServerSocket : public TCPSocket
 {
 public:
-    TCPServerSocket(TCPAcceptedSocketFactory *tcpAcceptedSocketFactory, uint16_t port, std::string interfaceName = "");
+    TCPServerSocket(const TCPAcceptedSocketFactory *tcpAcceptedSocketFactory, uint16_t port, std::string interfaceName = "");
     ~TCPServerSocket();
 
     virtual TCPAcceptedSocket* accept();
@@ -42,7 +42,7 @@ public:
     virtual void event(Descriptor::eventType et);
 
 protected:
-    TCPAcceptedSocketFactory *tcpAcceptedSocketFactory;
+    const TCPAcceptedSocketFactory *tcpAcceptedSocketFactory;
 };
 
 #endif

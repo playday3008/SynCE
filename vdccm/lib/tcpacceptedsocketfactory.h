@@ -23,7 +23,7 @@ class TCPServerSocket;
 class TCPAcceptedSocketFactory {
 public:
     virtual ~TCPAcceptedSocketFactory() {};
-    virtual TCPAcceptedSocket *socket(int fd, TCPServerSocket *serverSocket)= 0;
+    virtual TCPAcceptedSocket *socket(int fd, TCPServerSocket *serverSocket) const = 0;
 };
 
 #endif

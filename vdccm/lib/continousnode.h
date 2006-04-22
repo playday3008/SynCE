@@ -36,7 +36,7 @@ public:
 
 protected:
     virtual void shot() = 0;
-    
+
 private:
     void calcNextTrigger();
     virtual void trigger();

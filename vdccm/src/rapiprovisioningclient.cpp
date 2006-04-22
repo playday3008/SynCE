@@ -12,7 +12,6 @@
 
 #include "rapiprovisioningclient.h"
 #include "rapiproxyconnection.h"
-#include <iostream>
 
 RapiProvisioningClient::RapiProvisioningClient( int fd, TCPServerSocket *tcpServerSocket )
         : RapiClient( fd, tcpServerSocket ), initialized( false )

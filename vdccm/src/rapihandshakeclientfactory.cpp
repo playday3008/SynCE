@@ -23,7 +23,7 @@ RapiHandshakeClientFactory::~RapiHandshakeClientFactory()
 }
 
 
-TCPAcceptedSocket* RapiHandshakeClientFactory::socket(int fd, TCPServerSocket* serverSocket)
+TCPAcceptedSocket* RapiHandshakeClientFactory::socket(int fd, TCPServerSocket* serverSocket) const
 {
     return new RapiHandshakeClient(fd, serverSocket);
 }

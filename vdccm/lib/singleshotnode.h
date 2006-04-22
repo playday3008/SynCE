@@ -35,8 +35,8 @@ public:
     virtual ~SingleShotNode();
 
 protected:
-    virtual void shot() = 0;
-    
+    virtual void shot() const = 0;
+
 private:
     virtual void trigger();
 };

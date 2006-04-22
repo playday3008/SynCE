@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TCPAcceptedSocket::TCPAcceptedSocket(int fd, TCPServerSocket *tcpServerSocket)
+TCPAcceptedSocket::TCPAcceptedSocket(int fd, const TCPServerSocket *tcpServerSocket)
 {
     setSocket(fd);
     setServerSocket(tcpServerSocket);
@@ -35,7 +35,7 @@ TCPAcceptedSocket::~TCPAcceptedSocket()
 {
 }
 
-void TCPAcceptedSocket::setServerSocket(TCPServerSocket *tcpServerSocket)
+void TCPAcceptedSocket::setServerSocket(const TCPServerSocket *tcpServerSocket)
 {
     this->tcpServerSocket = tcpServerSocket;
 }

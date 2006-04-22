@@ -23,7 +23,7 @@ WindowsCEDeviceFactory::~WindowsCEDeviceFactory()
 }
 
 
-TCPAcceptedSocket* WindowsCEDeviceFactory::socket(int fd, TCPServerSocket *serverSocket)
+TCPAcceptedSocket* WindowsCEDeviceFactory::socket(int fd, TCPServerSocket *serverSocket) const
 {
     return new WindowsCEDevice(fd, serverSocket);
 }

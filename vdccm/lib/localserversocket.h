@@ -35,14 +35,14 @@ class LocalAcceptedSocketFactory;
 class LocalServerSocket : public LocalSocket
 {
 public:
-    LocalServerSocket(LocalAcceptedSocketFactory *localAcceptedSocketFactory, std::string path);
+    LocalServerSocket(const LocalAcceptedSocketFactory *localAcceptedSocketFactory, std::string path);
     ~LocalServerSocket();
     virtual LocalAcceptedSocket* accept();
     virtual bool listen(int backlog = 5);
     virtual void event(Descriptor::eventType et);
 
 private:
-    LocalAcceptedSocketFactory *localAcceptedSocketFactory;
+    const LocalAcceptedSocketFactory *localAcceptedSocketFactory;
 };
 
 #endif

@@ -34,12 +34,12 @@ class TCPServerSocket;
 class TCPAcceptedSocket : public TCPConnectedSocket
 {
 public:
-    TCPAcceptedSocket(int fd, TCPServerSocket *tcpServerSocket);
+    TCPAcceptedSocket(int fd, const TCPServerSocket *tcpServerSocket);
     ~TCPAcceptedSocket();
     const TCPServerSocket* getTCPServerSocket() const;
 
 protected:
-    void setServerSocket(TCPServerSocket *tcpServerSocket);
+    void setServerSocket(const TCPServerSocket *tcpServerSocket);
 
 private:
     TCPAcceptedSocket() {};

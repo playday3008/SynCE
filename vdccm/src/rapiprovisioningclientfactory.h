@@ -1,7 +1,7 @@
 //
 // C++ Interface: rapiprovisioningclientfactory
 //
-// Description: 
+// Description:
 //
 //
 // Author: Volker Christian <voc@users.sourceforge.net>, (C) 2006
@@ -24,7 +24,7 @@ public:
 
     ~RapiProvisioningClientFactory();
 
-    virtual TCPAcceptedSocket* socket(int fd, TCPServerSocket* serverSocket);
+    virtual TCPAcceptedSocket* socket(int fd, TCPServerSocket* serverSocket) const;
 
 };
 

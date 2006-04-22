@@ -23,7 +23,7 @@ SynCEClientFactory::~SynCEClientFactory()
 }
 
 
-LocalAcceptedSocket* SynCEClientFactory::socket(int fd, LocalServerSocket* localServerSocket)
+LocalAcceptedSocket* SynCEClientFactory::socket(int fd, LocalServerSocket* localServerSocket) const
 {
     return new SynCEClient(fd, localServerSocket);
 }

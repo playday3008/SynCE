@@ -27,7 +27,7 @@
 
 using namespace std;
 
-LocalServerSocket::LocalServerSocket(LocalAcceptedSocketFactory *localAcceptedSocketFactory, string path)
+LocalServerSocket::LocalServerSocket(const LocalAcceptedSocketFactory *localAcceptedSocketFactory, string path)
     : LocalSocket(path), localAcceptedSocketFactory(localAcceptedSocketFactory)
 {
     unlink(path.c_str());

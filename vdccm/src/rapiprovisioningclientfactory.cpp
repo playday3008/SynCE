@@ -23,7 +23,7 @@ RapiProvisioningClientFactory::~RapiProvisioningClientFactory()
 }
 
 
-TCPAcceptedSocket* RapiProvisioningClientFactory::socket(int fd, TCPServerSocket* serverSocket)
+TCPAcceptedSocket* RapiProvisioningClientFactory::socket(int fd, TCPServerSocket* serverSocket) const
 {
     return new RapiProvisioningClient(fd, serverSocket);
 }

@@ -1,7 +1,7 @@
 //
 // C++ Interface: synceclientfactory
 //
-// Description: 
+// Description:
 //
 //
 // Author: Volker Christian <voc@users.sourceforge.net>, (C) 2006
@@ -24,7 +24,7 @@ public:
 
     ~SynCEClientFactory();
 
-    virtual LocalAcceptedSocket* socket(int fd, LocalServerSocket* localServerSocket);
+    virtual LocalAcceptedSocket* socket(int fd, LocalServerSocket* localServerSocket) const;
 
 };
 

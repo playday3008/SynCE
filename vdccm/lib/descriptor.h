@@ -83,7 +83,7 @@ public:
      * @return true, if the left hand side is smaller than the right hand size. False
      * otherwise.
      */
-    bool operator<(Descriptor &descriptor) {
+    bool operator<(const Descriptor &descriptor) const {
         if (this->descriptor < descriptor.getDescriptor()) {
             return true;
         }
@@ -120,10 +120,10 @@ public:
      * @param usec Microseconds to wait for data
      * @return True, if data are pending false otherwise.
      */
-    bool dataPending(int sec, int usec);
+    bool dataPending(int sec, int usec) const;
     bool writable(int sec, int usec);
 
-    ssize_t readNumBytes(unsigned char *buffer, size_t number);
+    ssize_t readNumBytes(unsigned char *buffer, size_t number) const;
 
 protected:
     virtual void event(enum eventType et) = 0;

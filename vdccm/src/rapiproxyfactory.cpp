@@ -23,7 +23,7 @@ RapiProxyFactory::~RapiProxyFactory()
 }
 
 
-LocalAcceptedSocket* RapiProxyFactory::socket(int fd, LocalServerSocket* serverSocket)
+LocalAcceptedSocket* RapiProxyFactory::socket(int fd, LocalServerSocket* serverSocket) const
 {
     return new RapiProxy(fd, serverSocket);
 }

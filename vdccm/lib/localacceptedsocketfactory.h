@@ -22,7 +22,7 @@ class LocalAcceptedSocketFactory{
 public:
     virtual ~LocalAcceptedSocketFactory() {};
 
-    virtual LocalAcceptedSocket *socket(int fd, LocalServerSocket *localServerSocket) = 0;
+    virtual LocalAcceptedSocket *socket(int fd, LocalServerSocket *localServerSocket) const = 0;
 
 };
 

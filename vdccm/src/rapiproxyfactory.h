@@ -24,7 +24,7 @@ public:
 
     ~RapiProxyFactory();
 
-    virtual LocalAcceptedSocket* socket(int fd, LocalServerSocket* serverSocket);
+    virtual LocalAcceptedSocket* socket(int fd, LocalServerSocket* serverSocket) const;
 
 };
 

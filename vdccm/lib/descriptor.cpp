@@ -54,7 +54,7 @@ int Descriptor::getDescriptor() const
 }
 
 
-void Descriptor::setDescriptor(int descriptor)
+void Descriptor::setDescriptor(const int descriptor)
 {
     this->descriptor = descriptor;
 }
@@ -72,7 +72,7 @@ bool Descriptor::close()
 }
 
 
-bool Descriptor::dataPending(int sec, int usec)
+bool Descriptor::dataPending(int sec, int usec) const
 {
     return DescriptorManager::dataPending(this, sec, usec);
 }
@@ -84,7 +84,7 @@ bool Descriptor::writable(int sec, int usec)
 }
 
 
-ssize_t Descriptor::readNumBytes(unsigned char *buffer, size_t numBytes)
+ssize_t Descriptor::readNumBytes(unsigned char *buffer, size_t numBytes) const
 {
     size_t totalBytes = 0;
     ssize_t nBytes = 0;

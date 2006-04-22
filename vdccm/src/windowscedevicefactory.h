@@ -24,7 +24,7 @@ public:
 
     ~WindowsCEDeviceFactory();
 
-    virtual TCPAcceptedSocket* socket(int fd, TCPServerSocket *serverSocket);
+    virtual TCPAcceptedSocket* socket(int fd, TCPServerSocket *serverSocket) const;
 };
 
 #endif

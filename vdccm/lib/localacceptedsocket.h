@@ -35,16 +35,16 @@ class LocalServerSocket;
 class LocalAcceptedSocket : public LocalConnectedSocket
 {
 public:
-    LocalAcceptedSocket(int fd, LocalServerSocket *localServerSocket);
+    LocalAcceptedSocket(int fd, const LocalServerSocket *localServerSocket);
     ~LocalAcceptedSocket();
-    LocalServerSocket *getServerSocket() const;
+    const LocalServerSocket *getServerSocket() const;
 
 protected:
-    void setServerSocket(LocalServerSocket * localServerSocket);
+    void setServerSocket(const LocalServerSocket * localServerSocket);
 
 private:
     LocalAcceptedSocket() {};
-    LocalServerSocket *localServerSocket;
+    const LocalServerSocket *localServerSocket;
 };
 
 #endif

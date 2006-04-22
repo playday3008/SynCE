@@ -26,7 +26,7 @@
 
 using namespace std;
 
-TCPServerSocket::TCPServerSocket(TCPAcceptedSocketFactory *tcpAcceptedSocketFactory, uint16_t port, string interfaceName)
+TCPServerSocket::TCPServerSocket(const TCPAcceptedSocketFactory *tcpAcceptedSocketFactory, uint16_t port, string interfaceName)
     : TCPSocket(port, interfaceName), tcpAcceptedSocketFactory(tcpAcceptedSocketFactory)
 {
 }
