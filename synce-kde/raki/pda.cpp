@@ -671,7 +671,7 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
             associatedMenu->setItemEnabled( syncItem, true );
             partnerOk = true;
         }
-        int *status = new int();
+        int *status = new int;
         *status = 1;
         postThreadEvent( &PDA::progressDialogCancel, status, noBlock );
     }
@@ -686,21 +686,32 @@ void PDA::init()
     kdDebug( 2120 ) << "IP: " << configDialog->getDeviceIp() << endl;
     kdDebug(2120) << "OsVersion: " << configDialog->getOsVersion() << endl;
 
-    if (configDialog->getOsVersion() > 3) {
+    if (configDialog->getOsVersion() > 3 && configDialog->getOsVersion() < 5) {
         this->rra->connect();
-    }
 
-    initProgress = new InitProgress( raki, "InitProgress", true,
+        initProgress = new InitProgress( raki, "InitProgress", true,
                                      WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM );
 
-    progressBar = initProgress->progressBar;
-    progressBar->setTotalSteps( 11 ); /* 7 */
-    initProgress->pdaName->setText( pdaName );
-    initProgress->show();
+        progressBar = initProgress->progressBar;
+        progressBar->setTotalSteps( 11 ); /* 7 */
+        initProgress->pdaName->setText( pdaName );
+        initProgress->show();
 
-    kapp->processEvents();
+        kapp->processEvents();
 
-    startWorkerThread( this, &PDA::setPartnership, NULL );
+        startWorkerThread( this, &PDA::setPartnership, NULL );
+    } else {
+        kdDebug( 2120 ) << "Using Guest" << endl;
+        delete configDialog;
+        configDialog = new PdaConfigDialogImpl( "Guest", raki, "ConfigDialog", false );
+        configDialog->setCaption( i18n( "Configuration of %1" ).arg( "Guest" ) );
+        connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
+        partnerOk = false;
+        partnerId = 0;
+        int * status = new int;
+        *status = 1;
+        emit initialized( this, *status );
+    }
 
     kdDebug( 2120 ) << "Ende PDA::init()" << endl;
 }
