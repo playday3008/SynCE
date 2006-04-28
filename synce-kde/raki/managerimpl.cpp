@@ -42,7 +42,9 @@ QString version_string(synce::CEOSVERSIONINFO* version)
 {
     QString result = i18n("Win CE version unknown", "Unknown");
 
-    if (version->dwMajorVersion == 4 &&
+    if (version->dwMajorVersion == 5) {
+        result = "Magneto: Windows Mobile 5";
+    } else if (version->dwMajorVersion == 4 &&
             version->dwMinorVersion == 20 &&
             version->dwBuildNumber == 1081) {
         result = "Ozone: Pocket PC 2003";

@@ -161,8 +161,10 @@ PDA::~PDA()
     } else {
         delete managerWindow;
     }
-    if (configDialog->getOsVersion() > 3) {
-        this->rra->disconnect();
+    if (configDialog->getOsVersion() < 5) {
+        if (configDialog->getOsVersion() > 3) {
+            this->rra->disconnect();
+        }
     }
     delete configDialog;
     delete associatedMenu;
@@ -686,8 +688,10 @@ void PDA::init()
     kdDebug( 2120 ) << "IP: " << configDialog->getDeviceIp() << endl;
     kdDebug(2120) << "OsVersion: " << configDialog->getOsVersion() << endl;
 
-    if (configDialog->getOsVersion() > 3 && configDialog->getOsVersion() < 5) {
-        this->rra->connect();
+    if (configDialog->getOsVersion() < 5) {
+        if (configDialog->getOsVersion() > 3) {
+            this->rra->connect();
+        }
 
         initProgress = new InitProgress( raki, "InitProgress", true,
                                      WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM );
