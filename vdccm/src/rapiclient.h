@@ -26,9 +26,12 @@ public:
 
     ~RapiClient();
 
+    void printPackage(std::string origin, unsigned char *buf, unsigned int maxLength=UINT_MAX );
+
+protected:
     bool readOnePackage(unsigned char **buffer);
 
-    void printPackage(std::string origin, unsigned char *buf, unsigned int maxLength=UINT_MAX );
+    bool readOnePackage(uint32_t length, unsigned char **buffer);
 };
 
 #endif

@@ -35,17 +35,9 @@ RapiClient::~RapiClient()
 {}
 
 
-bool RapiClient::readOnePackage( unsigned char **buffer )
+bool RapiClient::readOnePackage(uint32_t length, unsigned char **buffer)
 {
-    uint32_t leLength;
-    uint32_t length;
     size_t readLength;
-
-    if ( read( getDescriptor(), &leLength, 4 ) <= 0 ) {
-        return false;
-    }
-    length = letoh32( leLength );
-
     *buffer = new unsigned char[ length + 4 ];
     readLength = length;
 
@@ -55,6 +47,20 @@ bool RapiClient::readOnePackage( unsigned char **buffer )
     }
 
     return true;
+}
+
+
+bool RapiClient::readOnePackage( unsigned char **buffer )
+{
+    uint32_t leLength;
+    uint32_t length;
+
+    if ( read( getDescriptor(), &leLength, 4 ) <= 0 ) {
+        return false;
+    }
+    length = letoh32( leLength );
+
+    return readOnePackage(length, buffer);
 }
 
 

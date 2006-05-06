@@ -14,6 +14,7 @@
 #include "multiplexer.h"
 #include "cmdlineargs.h"
 #include "rapiconnection.h"
+#include <udpsocket.h>
 #include <synce_log.h>
 
 
@@ -52,6 +53,42 @@ void RapiHandshakeClient::event(Descriptor::eventType /*et*/)
 
     uint32_t signature = letoh32(leSignature);
 
+    switch(signature) {
+        case 0x00: {
+                // This is the initial package
+                // write response, should { 03, 00, 00, 00 }
+                char response[ 4 ] = { 03, 00, 00, 00 };
+                write( getDescriptor(), response, 4 );
+            }
+            break;
+        case 0x04: {
+                // This is a ping-reply
+                synce_error("Send 0x7f to device %s", this->getRemoteAddress().c_str());
+                unsigned char buffer = 0x7f;
+                UDPSocket::sendTo( 5679, this->getRemoteAddress(), &buffer, 1);
+            }
+            break;
+        case 0x7f:
+            synce_error("Got 0x7f back");
+            break;
+        case 0x02:
+            // This is a ping-reply
+            pendingPingRequests--;
+            break;
+        default:
+            // The next package is the info message
+            unsigned char *buffer;
+            if (!readOnePackage(signature, &buffer)) {
+                rapiConnection->handshakeClientDisconnected();
+                return;
+            }
+            printPackage("RapiHandshakeClient", (unsigned char *) buffer);
+
+            rapiConnection->handshakeClientInitialized(buffer);
+            delete[] buffer;
+            break;
+    }
+    /*
     if ( signature == 0x00 ) {
         // This is the initial package
         // write response, should { 03, 00, 00, 00 }
@@ -72,6 +109,7 @@ void RapiHandshakeClient::event(Descriptor::eventType /*et*/)
         // This is a ping-reply
         pendingPingRequests--;
     }
+    */
 }
 
 
