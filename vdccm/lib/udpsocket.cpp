@@ -47,5 +47,3 @@ bool UDPSocket::sendTo(uint16_t remotePort, string remoteInterface, unsigned cha
 
     return true;
 }
-
-
