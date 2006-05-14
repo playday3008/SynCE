@@ -130,11 +130,11 @@ void RapiConnection::handshakeClientInitialized(unsigned char *buffer)
     unknown1 = letoh32(*(int32_t *) (buffer + unknown1Offset));
     synce_info("Unknown1: %p", unknown1);
 
-    int someOtherIdOffset = unknown1Offset + sizeof(uint32_t);
-    someOtherId = letoh32(*(int32_t *) (buffer + someOtherIdOffset));
-    synce_info("SomeOtherId: %p", someOtherId);
+    int currentPartnerIdOffset = unknown1Offset + sizeof(uint32_t);
+    currentPartnerId = letoh32(*(int32_t *) (buffer + currentPartnerIdOffset));
+    synce_info("CurrentPartnerId: %p", currentPartnerId);
 
-    int deviceIdOffset = someOtherIdOffset + sizeof(uint32_t);
+    int deviceIdOffset = currentPartnerIdOffset + sizeof(uint32_t);
     deviceId = letoh32(*(int32_t *) (buffer + deviceIdOffset));
     synce_info("DeviceId: %p", deviceId);
 

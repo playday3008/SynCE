@@ -74,7 +74,7 @@ private:
     uint32_t deviceVersion;
     uint32_t deviceProcessorType;
     uint32_t unknown1;
-    uint32_t someOtherId;
+    uint32_t currentPartnerId;
     std::string plattformName;
     std::string modelName;
     uint32_t deviceId;
