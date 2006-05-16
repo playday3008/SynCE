@@ -82,15 +82,15 @@ static int32 writeFunc( void *s, void *data, int32 len )
 
 int32 taskPrinter( void * /*blah*/, int * /*errBlah*/, char *str, AGBool /*thing*/ )
 {
-    plugin->setTask( str , true);
+    plugin->setTask( str);
     return 1; // AGCLIENT_CONTINUE
 }
 
 
 int32 itemPrinter( void * /*blah*/, int * /*errBlah*/, int items, int total, char * /*name*/ )
 {
-    plugin->setTotalSteps( total, true );
-    plugin->setProgress( items , true);
+    plugin->setTotalSteps( total );
+    plugin->setProgress( items);
 
     return 1; // AGClIENT_CONTINUE
 }
@@ -302,7 +302,7 @@ void AGSync::doServerSync( AGReader *r, AGWriter *w, AGServerConfig *s, AGNetCtx
 }
 
 
-bool AGSync::preSync( QWidget *parent, bool /*firstSynchronize*/, uint32_t /*partnerId*/ )
+bool AGSync::preSync(bool /*firstSynchronize*/, uint32_t /*partnerId*/ )
 {
     bool ret = true;
 

@@ -178,6 +178,7 @@ private:
     KProcess pdaMirror;
     PDAThreadData *ptd;
     bool alreadySynced;
+    bool delayedDelete;
 
 private slots:
     void execute();

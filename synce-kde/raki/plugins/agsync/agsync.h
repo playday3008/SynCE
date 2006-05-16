@@ -55,7 +55,7 @@ public:
     ~AGSync();
     void createConfigureObject(KConfig *ksConfig);
     void configure();
-    bool preSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
+    bool preSync(bool firstSynchronize, uint32_t partnerId);
     int syncContext();
 
 private:

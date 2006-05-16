@@ -139,6 +139,8 @@ PDA::PDA( Raki *raki, QString pdaName )
 //    connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
     connect( syncDialog, SIGNAL( finished() ), this, SLOT(syncFinished()));
     connect( &pdaMirror, SIGNAL( processExited( KProcess* ) ), this, SLOT( pdaMirrorExited( KProcess* ) ) );
+
+    delayedDelete = false;
 }
 
 
@@ -146,21 +148,11 @@ PDA::~PDA()
 {
     kdDebug( 2120 ) << i18n( "Deleting PDA" ) << endl;
 
-    if ( syncDialog->running() ) {
-        syncDialog->setDelayedDelete( true );
-        syncDialog->setStopRequested( true );
-    } else {
-        delete syncDialog;
-    }
+    delete syncDialog;
 
     delete passwordDialog;
     delete runWindow;
-    if (managerWindow->running() ) {
-        managerWindow->setDelayedDelete( true );
-        managerWindow->WorkerThreadInterface::setStopRequested( true );
-    } else {
-        delete managerWindow;
-    }
+    delete managerWindow;
     if (configDialog->getOsVersion() < 5) {
         if (configDialog->getOsVersion() > 3) {
             this->rra->disconnect();
@@ -197,18 +189,22 @@ void PDA::startPdaMirror()
 bool PDA::running()
 {
     return ( WorkerThreadInterface::running() || managerWindow->running() ||
-             syncDialog->running() );
+             syncDialog->isRunning() );
 }
 
 
 void PDA::setStopRequested( bool isStopRequested )
 {
+    delayedDelete = true;
+
     if ( managerWindow->running() ) {
         managerWindow->setStopRequested( isStopRequested );
-    } else if ( syncDialog->running() ) {
-        syncDialog->setStopRequested( isStopRequested );
+        managerWindow->setDelayedDelete( true);
+    } else if ( syncDialog->isRunning() ) {
+        syncDialog->reject( );
     } else if ( WorkerThreadInterface::running() ) {
         WorkerThreadInterface::setStopRequested( isStopRequested );
+        WorkerThreadInterface::setDelayedDelete( true);
     }
 }
 

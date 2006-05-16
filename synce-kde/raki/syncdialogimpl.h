@@ -29,7 +29,6 @@
 #endif
 
 #include "syncdialog.h"
-#include "syncthread.h"
 
 #include <kconfig.h>
 #include <qptrlist.h>
@@ -46,59 +45,7 @@ class SyncDialogImpl;
 @author Volker Christian,,,
 */
 
-#define postSyncDialogImplEvent(a, b, c) { \
-    SyncDialogImplCustomEvent *ce = new SyncDialogImplCustomEvent(a, b); \
-    postEvent(ce, sdtd, c); \
-}
-
-class SyncDialogImplCustomEvent : public QCustomEvent
-{
-    public:
-        SyncDialogImplCustomEvent(void *(SyncDialogImpl::*userEventMethod)(void *data),
-                       void *data) : QCustomEvent(QEvent::User), userEventMethod(userEventMethod), eventData(data) {};
-    private:
-        void *(SyncDialogImpl::*userEventMethod)(void *data);
-        void *eventData;
-        friend class SyncDialogImplThreadData;
-};
-
-
-#include <qcursor.h>
-#include <qapplication.h>
-#include <kdebug.h>
-
-class SyncDialogImplThreadData : public ThreadEventObject
-{
-    Q_OBJECT
-    public:
-        SyncDialogImplThreadData(SyncDialogImpl *pda) : pda(pda) {};
-    private:
-
-        SyncDialogImpl *pda;
-        void customEvent (QCustomEvent *customEvent) {
-            SyncDialogImplCustomEvent *pdaCustomEvent = dynamic_cast<SyncDialogImplCustomEvent *>(customEvent);
-            int *blocking = (int *) customEvent->data();
-            void *(SyncDialogImpl::*userEventMethod)(void *data) = pdaCustomEvent->userEventMethod;
-
-            switch (*blocking) {
-                case WorkerThreadInterface::noBlock:
-
-                    (pda->*userEventMethod)(pdaCustomEvent->eventData);
-                    break;
-                case WorkerThreadInterface::block:
-                    QApplication::setOverrideCursor( QCursor( Qt::ArrowCursor ) );
-                    (pda->*userEventMethod)(pdaCustomEvent->eventData);
-                    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
-                    this->eventMutexLock();
-                    this->eventMutexUnlock();
-                    this->wakeUpOnEvent();
-                    break;
-            }
-            delete blocking;
-        };
-};
-
-class SyncDialogImpl : public SyncDialog, public SyncThread
+class SyncDialogImpl : public SyncDialog
 {
 Q_OBJECT
 
@@ -109,6 +56,8 @@ public:
     void show(QPtrList<SyncTaskListItem>& syncItems);
     void work(QThread *qt = NULL, void *data = NULL);
     void reject(bool forced = false);
+    bool isRunning();
+    bool stopRequested();
 
 signals:
     void finished();
@@ -120,7 +69,8 @@ private:
     void *finishedSynchronization(void *);
     void *preSync(void *v_item);
     void *postSync(void *v_item);
-    SyncDialogImplThreadData *sdtd;
+    bool running;
+    bool end;
 };
 
 #endif

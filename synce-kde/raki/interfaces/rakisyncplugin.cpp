@@ -26,7 +26,6 @@
 #endif
 
 #include "rakisyncplugin.h"
-#include "syncthread.h"
 #include "synctasklistitem.h"
 #include "rakiapi.h"
 
@@ -36,10 +35,12 @@
 #include <klocale.h>
 #include <kdebug.h>
 #include <kapplication.h>
+#include <syncdialogimpl.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
 {
     parent = NULL;
+    syncDialogImpl = NULL;
 }
 
 
@@ -49,28 +50,24 @@ RakiSyncPlugin::~RakiSyncPlugin()
 }
 
 
-bool RakiSyncPlugin::doSync(SyncThread *syncThread, bool firstSynchronize, uint32_t partnerId)
+bool RakiSyncPlugin::doSync(SyncDialogImpl *syncDialogImpl, bool firstSynchronize, uint32_t partnerId)
 {
-    this->syncThread = syncThread;
     this->firstSynchronize = firstSynchronize;
     this->partnerId = partnerId;
+    this->syncDialogImpl = syncDialogImpl;
     return sync();
 }
 
 
-bool RakiSyncPlugin::preSync(QWidget *parent,
-        bool /*firstSynchronize*/, uint32_t /*partnerId*/)
+bool RakiSyncPlugin::preSync(bool /*firstSynchronize*/, uint32_t /*partnerId*/)
 {
-    this->syncThread = dynamic_cast<SyncThread *>(parent);
     KApplication::kApplication()->processEvents();
     return true;
 }
 
 
-bool RakiSyncPlugin::postSync(QWidget *parent,
-        bool /*firstSynchronize*/, uint32_t /*partnerId*/)
+bool RakiSyncPlugin::postSync(bool /*firstSynchronize*/, uint32_t /*partnerId*/)
 {
-    this->syncThread = dynamic_cast<SyncThread *>(parent);
     return true;
 }
 
@@ -133,87 +130,49 @@ uint32_t RakiSyncPlugin::getObjectTypeId()
 
 bool RakiSyncPlugin::running()
 {
-    return syncThread->running();
+    return syncDialogImpl->isRunning();
 }
 
 
 bool RakiSyncPlugin::stopRequested()
 {
-    return syncThread->stopRequested();
+    return syncDialogImpl->stopRequested();
 }
 
 
-void RakiSyncPlugin::incTotalSteps(int inc, bool directCall)
+void RakiSyncPlugin::incTotalSteps(int inc)
 {
-    int *pInc = new int;
-    *pInc = inc;
-    if (directCall) {
-        syncThread->incTotalSteps(pInc);
-        KApplication::kApplication()->processEvents();
-    } else {
-        postSyncThreadEvent(&SyncThread::incTotalSteps, pInc);
-    }
+    progressItem->setTotalSteps(progressItem->totalSteps() + inc);
 }
 
 
-void RakiSyncPlugin::decTotalSteps(int dec, bool directCall)
+void RakiSyncPlugin::decTotalSteps(int dec)
 {
-    int *pDec = new int;
-    *pDec = dec;
-    if (directCall) {
-        syncThread->decTotalSteps(pDec);
-        KApplication::kApplication()->processEvents();
-    } else {
-        postSyncThreadEvent(&SyncThread::decTotalSteps, pDec);
-    }
+    progressItem->setTotalSteps(progressItem->totalSteps() - dec);
 }
 
 
-void RakiSyncPlugin::advanceProgress(bool directCall)
+void RakiSyncPlugin::advanceProgress()
 {
-    if (directCall) {
-        syncThread->advanceProgress((void *) 0);
-        KApplication::kApplication()->processEvents();
-    } else {
-        postSyncThreadEvent(&SyncThread::advanceProgress, (void *) 0);
-    }
+    progressItem->advance(1);
 }
 
 
-void RakiSyncPlugin::setTotalSteps(int steps, bool directCall)
+void RakiSyncPlugin::setTotalSteps(int steps)
 {
-    int *pSteps = new int;
-    *pSteps = steps;
-    if (directCall) {
-        syncThread->setTotalSteps(pSteps);
-        KApplication::kApplication()->processEvents();
-    } else {
-        postSyncThreadEvent(&SyncThread::setTotalSteps, pSteps);
-    }
+    progressItem->setTotalSteps(steps);
 }
 
 
-void RakiSyncPlugin::setProgress(int progress, bool directCall)
+void RakiSyncPlugin::setProgress(int progress)
 {
-    int *pProgress = new int;
-    *pProgress = progress;
-    if (directCall) {
-        syncThread->setProgress(pProgress);
-        KApplication::kApplication()->processEvents();
-    } else {
-        postSyncThreadEvent(&SyncThread::setProgress, pProgress);
-    }
+    progressItem->setProgress(progress);
 }
 
 
-void RakiSyncPlugin::setTask(const char *task, bool directCall)
+void RakiSyncPlugin::setTask(const char *task)
 {
-    if (directCall) {
-        syncThread->setTask((void *) qstrdup(task));
-        KApplication::kApplication()->processEvents();
-    } else {
-        postSyncThreadEvent(&SyncThread::setTask, (void *) qstrdup(task));
-    }
+    progressItem->setTaskLabel(task);
 }
 
 

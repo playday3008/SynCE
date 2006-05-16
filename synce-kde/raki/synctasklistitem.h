@@ -45,11 +45,11 @@
 
 class KProgress;
 class PdaConfigDialogImpl;
-class SyncThread;
 class Rra;
 class RakiSyncPlugin;
 class KConfig;
 class KListView;
+class SyncDialogImpl;
 typedef struct _ObjectType ObjectType;
 
 class SyncTaskListItem : public QObject, public QCheckListItem
@@ -81,16 +81,14 @@ public:
     QString getPreferedLibrary();
     void setPreferedOffer(QString preferedOffer);
     void setPreferedLibrary(QString preferedLibrary);
-    bool synchronize(SyncThread *syncThread);
-    bool synSync(SyncThread *syncThread);
-    bool preSync(QWidget *parent);
-    bool postSync(QWidget *parent);
+    bool synchronize(SyncDialogImpl *syncDialog);
+    bool preSync();
+    bool postSync();
     void setLastSynchronized(QDateTime lastSynchronized);
     void setFirstSynchronization(bool firstSynchronization);
     bool isFirstSynchronization();
     QDateTime &getLastSynchronized();
     void configure();
-    void syncReal(void *data);
 
 private slots:
     void clickedMenu(int item);
@@ -115,7 +113,7 @@ private:
     bool firstSynchronization;
     int createSyncPlugin(bool state);
     RakiSyncPlugin *syncPlugin;
-    SyncThread *syncThread;
+
     Rra *rra;
     enum {
         ERROR_NOFACTORY = 1, ERROR_WRONGLIBRARYTYPE, ERROR_NOSYNCHRONIZER

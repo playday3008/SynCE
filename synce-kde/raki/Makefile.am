@@ -21,8 +21,8 @@ raki_SOURCES = management.ui raki.cpp rakiworkerthread.cpp runwindow.ui \
 	workerthreadinterface.cpp installer.cpp pda.cpp installdialog.ui passworddialog.ui \
 	passworddialogimpl.cpp pdaconfigdialog.ui pdaconfigdialogimpl.cpp rra.cpp syncdialog.ui \
 	syncdialogimpl.cpp synctasklistitem.cpp removepartnershipdialog.ui \
-	removepartnershipdialogimpl.cpp welcomedialogimpl.cpp welcomedialog.ui threadevent.cpp syncthread.cpp \
-	initprogress.ui rapiwrapper.cpp matchmaker.cpp rakiapi.cpp
+	removepartnershipdialogimpl.cpp welcomedialogimpl.cpp welcomedialog.ui threadevent.cpp initprogress.ui \
+	rapiwrapper.cpp matchmaker.cpp rakiapi.cpp
 
 # let automoc handle all of the meta source files (moc)
 METASOURCES = AUTO
@@ -55,5 +55,5 @@ rc_SCRIPTS =  dccm.sh vdccm.sh
 noinst_HEADERS = configdialog.ui.h configdialogimpl.h installer.h \
 	management.ui.h managerimpl.h passworddialogimpl.h pda.h pdaconfigdialog.ui.h \
 	pdaconfigdialogimpl.h raki.h rakiworkerthread.h rapiwrapper.h removepartnershipdialogimpl.h \
-	runwindow.ui.h runwindowimpl.h syncdialogimpl.h synctasklistitem.h syncthread.h \
-	threadevent.h welcomedialogimpl.h workerthreadinterface.h matchmaker.h
+	runwindow.ui.h runwindowimpl.h syncdialogimpl.h synctasklistitem.h threadevent.h \
+	welcomedialogimpl.h workerthreadinterface.h matchmaker.h

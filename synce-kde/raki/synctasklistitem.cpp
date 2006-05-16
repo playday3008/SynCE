@@ -22,7 +22,6 @@
  ***************************************************************************/
 
 #include "synctasklistitem.h"
-#include "syncthread.h"
 #include "rakisyncfactory.h"
 #include "rakisyncplugin.h"
 #include "rra.h"
@@ -374,52 +373,30 @@ int SyncTaskListItem::createSyncPlugin(bool state)
 }
 
 
-void SyncTaskListItem::syncReal(void *data) {
-    bool *ret = (bool *) data;
-
-    *ret = syncPlugin->doSync(syncThread, firstSynchronization, partnerId);
-}
-
-
-bool SyncTaskListItem::synchronize(SyncThread *syncThread)
+bool SyncTaskListItem::synchronize(SyncDialogImpl *syncDialog)
 {
     bool ret = false;
-    this->syncThread = syncThread;
 
-    postSyncThreadEvent(&SyncThread::setTask, (void *) qstrdup(i18n("Started").utf8()));
-    int *pSteps = new int;
-    *pSteps = 1;
-    postSyncThreadEvent(&SyncThread::setTotalSteps, pSteps);
+    setTaskLabel(i18n("Started").utf8());
+    setTotalSteps( 1);
 
     if (syncPlugin != NULL) {
+        kdDebug(2120) << "----------------------------------------------" << endl;
+        kdDebug(2120) << i18n("*** Started synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
 
-        if (syncPlugin->syncContext() == RakiSyncPlugin::ASYNCHRONOUS) {
-            kdDebug(2120) << "----------------------------------------------" << endl;
-            kdDebug(2120) << i18n("*** Started asynchronous syncing with") << " " << syncPlugin->serviceName() << endl;
-            syncReal(&ret);
-            kdDebug(2120) << i18n("*** Finished asynchronous syncing with") << " " << syncPlugin->serviceName() << endl;
-            kdDebug(2120) << "----------------------------------------------" << endl;
-        } else {
-            kdDebug(2120) << "----------------------------------------------" << endl;
-            kdDebug(2120) << i18n("*** Started synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
-            postSyncThreadEventBlock(&SyncThread::syncReal, &ret);
-            kdDebug(2120) << i18n("*** Finished synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
-            kdDebug(2120) << "----------------------------------------------" << endl;
-        }
+        ret = syncPlugin->doSync(syncDialog, firstSynchronization, partnerId);
+        kdDebug(2120) << i18n("*** Finished synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
+        kdDebug(2120) << "----------------------------------------------" << endl;
 
-        int *pStep = new int;
-        *pStep = totalSteps();
-        postSyncThreadEvent(&SyncThread::setProgress, pStep);
+        setProgress( totalSteps());
 
         if (ret) {
             lastSynchronized = QDateTime(QDate::currentDate(),
                     QTime::currentTime());
             firstSynchronization = false;
-            postSyncThreadEventBlock(&SyncThread::setTask,
-                    (void *) qstrdup(i18n("Finished").utf8()));
+            setTaskLabel(i18n("Finished").utf8());
         } else {
-            postSyncThreadEventBlock(&SyncThread::setTask, (void *)
-                    qstrdup(i18n("Error during synchronization").utf8()));
+            setTaskLabel(i18n("Error during synchronization").utf8());
         }
     }
 
@@ -427,22 +404,22 @@ bool SyncTaskListItem::synchronize(SyncThread *syncThread)
 }
 
 
-bool SyncTaskListItem::preSync(QWidget *parent)
+bool SyncTaskListItem::preSync()
 {
     bool ret;
 
-    ret = syncPlugin->preSync(parent, firstSynchronization, partnerId);
+    ret = syncPlugin->preSync(firstSynchronization, partnerId);
     setTotalSteps(1);
 
     return ret;
 }
 
 
-bool SyncTaskListItem::postSync(QWidget *parent)
+bool SyncTaskListItem::postSync()
 {
     bool ret;
 
-    ret = syncPlugin->postSync(parent, firstSynchronization, partnerId);
+    ret = syncPlugin->postSync(firstSynchronization, partnerId);
 
     int totSteps = totalSteps();
     setProgress(totSteps);

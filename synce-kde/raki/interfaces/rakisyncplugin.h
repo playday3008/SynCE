@@ -42,8 +42,8 @@
 @author Volker Christian,,,
 */
 
-class SyncThread;
 class SyncTaskListItem;
+class SyncDialogImpl;
 class Rra;
 
 class RakiSyncPlugin : public QObject
@@ -58,18 +58,18 @@ public:
     RakiSyncPlugin();
     virtual ~RakiSyncPlugin();
 
-    bool doSync(SyncThread *syncThread, bool firstSynchronize, uint32_t partnerId);
-    virtual bool preSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
-    virtual bool postSync(QWidget *parent, bool firstSynchronize, uint32_t partnerId);
+    bool doSync(SyncDialogImpl *syncDialogImpl, bool firstSynchronize, uint32_t partnerId);
+    virtual bool preSync(bool firstSynchronize, uint32_t partnerId);
+    virtual bool postSync(bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
     bool running();
     bool stopRequested();
-    void incTotalSteps(int inc, bool directCall = false);
-    void decTotalSteps(int dec, bool directCall = false);
-    void advanceProgress(bool directCall = false);
-    void setTotalSteps(int steps, bool directCall = false);
-    void setProgress(int progress, bool directCall = false);
-    void setTask(const char *task, bool directCall = false);
+    void incTotalSteps(int inc);
+    void decTotalSteps(int dec);
+    void advanceProgress();
+    void setTotalSteps(int steps);
+    void setProgress(int progress);
+    void setTask(const char *task);
     virtual void init(Rra *rra, SyncTaskListItem *progressItem, QString pdaName, QWidget *parent,
             QString serviceName);
     virtual void unInit();
@@ -88,11 +88,11 @@ protected:
     QString pdaName;
     SyncTaskListItem *progressItem;
     Rra *rra;
-    SyncThread *syncThread;
     uint32_t partnerId;
     bool firstSynchronize;
     QWidget *parent;
     QString _serviceName;
+    SyncDialogImpl *syncDialogImpl;
 };
 
 #endif

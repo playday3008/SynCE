@@ -43,7 +43,6 @@ SyncDialogImpl::SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent,
 {
     this->pdaName = pdaName;
     this->rra = rra;
-    sdtd = new SyncDialogImplThreadData(this);
     objectTypesTable->setLeftMargin(0);
     objectTypesTable->setShowGrid(false);
     objectTypesTable->setReadOnly(true);
@@ -53,25 +52,31 @@ SyncDialogImpl::SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent,
     QHeader *header = objectTypesTable->horizontalHeader();
     header->setResizeEnabled(false);
     header->adjustHeaderSize();
+    end = true;
 }
 
 
 SyncDialogImpl::~SyncDialogImpl()
 {
-    if (this->running()) {
-        this->setStopRequested(true);
+    if (this->isRunning()) {
+//        this->setStopRequested(true);
     }
-    delete sdtd;
 }
 
 
-void SyncDialogImpl::reject(bool forced)
+void SyncDialogImpl::reject(bool /* forced */)
 {
-    if (this->running() && !forced) {
-        this->setStopRequested(true);
+    if (isRunning()) {
+        running = false;
     } else {
         SyncDialog::reject();
     }
+}
+
+
+bool SyncDialogImpl::stopRequested()
+{
+    return !running;
 }
 
 
@@ -106,7 +111,7 @@ void SyncDialogImpl::show(QPtrList<SyncTaskListItem>& syncItems)
         }
     }
     SyncDialog::show();
-    startWorkerThread(this, &SyncDialogImpl::work, NULL);
+    work(NULL, NULL);
 }
 
 
@@ -114,13 +119,22 @@ void *SyncDialogImpl::finishedSynchronization(void */*nothing */)
 {
     buttonOk->setEnabled(true);
 
-    if (this->stopRequested()) {
+    if (!isRunning()) {
         SyncDialog::reject();
     }
+
+    running = false;
+    end = true;
 
     emit finished();
 
     return NULL;
+}
+
+
+bool SyncDialogImpl::isRunning()
+{
+    return !end;
 }
 
 
@@ -135,7 +149,7 @@ void *SyncDialogImpl::preSync(void *v_dataExchange)
 {
     SyncDialogImplDataExchange *dataExchange = (SyncDialogImplDataExchange *) v_dataExchange;
 
-    if (!dataExchange->item->preSync(this)) {
+    if (!dataExchange->item->preSync()) {
         dataExchange->success = false;
     }
 
@@ -147,7 +161,7 @@ void *SyncDialogImpl::postSync(void *v_dataExchange)
 {
     SyncDialogImplDataExchange *dataExchange = (SyncDialogImplDataExchange *) v_dataExchange;
 
-    if (!dataExchange->item->postSync(this)) {
+    if (!dataExchange->item->postSync()) {
         dataExchange->success = false;
     }
 
@@ -157,34 +171,30 @@ void *SyncDialogImpl::postSync(void *v_dataExchange)
 
 void SyncDialogImpl::work(QThread */*qt*/, void */*data*/)
 {
-    SyncDialogImplDataExchange dataExchange;
+    SyncTaskListItem *item;
 
-    buttonOk->setDisabled(true);
-
-    for (dataExchange.item = syncItems.first(); dataExchange.item; dataExchange.item = syncItems.next()) {
-        if (running()) {
-            if (dataExchange.item->isOn()) {
-                dataExchange.success = true;
-                setActualSyncItem(dataExchange.item);
-                postSyncDialogImplEvent(&SyncDialogImpl::preSync, (void *) &dataExchange, block);
-                if (dataExchange.success) {
-                    dataExchange.item->synchronize(this);
-                    postSyncDialogImplEvent(&SyncDialogImpl::postSync, (void *) &dataExchange, block);
-                    if (!dataExchange.success) {
-                        dataExchange.item->setTaskLabel("Synchronization not possible");
-                        dataExchange.item->setProgress(dataExchange.item->totalSteps());
-                        dataExchange.item->setOn(false);
-                        dataExchange.item->makePersistent();
+    running = true;
+    end = false;
+    for (item = syncItems.first(); item; item = syncItems.next()) {
+        if (running) {
+            if (item->isOn()) {
+                if (item->preSync()) {
+                    item->synchronize(this);
+                    if (!item->postSync()) {
+                        item->setTaskLabel("Synchronization not possible");
+                        item->setProgress(item->totalSteps());
+                        item->setOn(false);
+                        item->makePersistent();
                     }
                 } else {
-                    dataExchange.item->setTaskLabel("Synchronization not possible");
-                    dataExchange.item->setProgress(dataExchange.item->totalSteps());
-                    dataExchange.item->setOn(false);
-                    dataExchange.item->makePersistent();
+                    item->setTaskLabel("Synchronization not possible");
+                    item->setProgress(item->totalSteps());
+                    item->setOn(false);
+                    item->makePersistent();
                 }
             }
         }
     }
 
-    postSyncDialogImplEvent(&SyncDialogImpl::finishedSynchronization, NULL, block);
+    finishedSynchronization(NULL);
 }
