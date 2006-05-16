@@ -43,8 +43,8 @@ public:
 
     ~RakiKPimSync();
 
-    virtual bool postSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId );
-    virtual bool preSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId );
+    virtual bool postSync( bool firstSynchronize, uint32_t partnerId );
+    virtual bool preSync(bool firstSynchronize, uint32_t partnerId );
     virtual void init(Rra* rra, SyncTaskListItem *item, QString pdaName, QWidget *parent,
                        QString serviceName );
     virtual void unInit();

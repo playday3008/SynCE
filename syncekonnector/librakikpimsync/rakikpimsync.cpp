@@ -44,9 +44,9 @@ RakiKPimSync::~RakiKPimSync()
 }
 
 
-bool RakiKPimSync::postSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId )
+bool RakiKPimSync::postSync(bool firstSynchronize, uint32_t partnerId )
 {
-    RakiSyncPlugin::postSync( parent, firstSynchronize, partnerId );
+    RakiSyncPlugin::postSync(firstSynchronize, partnerId );
 
     KPIM::ProgressManager *pm = KPIM::ProgressManager::instance();
     disconnect ( pm, SIGNAL( progressItemAdded( KPIM::ProgressItem* ) ),
@@ -59,9 +59,9 @@ bool RakiKPimSync::postSync( QWidget* parent, bool firstSynchronize, uint32_t pa
     return true;
 }
 
-bool RakiKPimSync::preSync( QWidget* parent, bool firstSynchronize, uint32_t partnerId )
+bool RakiKPimSync::preSync( bool firstSynchronize, uint32_t partnerId )
 {
-    RakiSyncPlugin::preSync( parent, firstSynchronize, partnerId );
+    RakiSyncPlugin::preSync( firstSynchronize, partnerId );
 
     KPIM::ProgressManager *pm = KPIM::ProgressManager::instance();
     connect ( pm, SIGNAL( progressItemAdded( KPIM::ProgressItem* ) ),
@@ -76,7 +76,7 @@ bool RakiKPimSync::preSync( QWidget* parent, bool firstSynchronize, uint32_t par
 
 bool RakiKPimSync::sync()
 {
-    setTotalSteps(100, true);
+    setTotalSteps(100);
     PimSyncManager::self(pdaName)->setActualSyncType(type);
     PimSyncManager::self(pdaName)->startSync();
     return true;
@@ -156,19 +156,19 @@ void RakiKPimSync::unInit()
 
 void RakiKPimSync::progressItemAdded( KPIM::ProgressItem *item )
 {
-    setTask(item->status().ascii(), true);
+    setTask(item->status().ascii());
 }
 
 
 void RakiKPimSync::progressItemStatus( KPIM::ProgressItem*, const QString &statusMsg )
 {
-    setTask(statusMsg.ascii(), true);
+    setTask(statusMsg.ascii());
 }
 
 
 void RakiKPimSync::progressItemProgress( KPIM::ProgressItem*, unsigned int progress )
 {
-    setProgress(progress, true);
+    setProgress(progress);
 }
 
 

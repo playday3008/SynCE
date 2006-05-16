@@ -348,6 +348,7 @@ namespace KSync
 
     bool SynCEDeviceKonnector::connectDevice()
     {
+        kdDebug( 2120 ) << "SynCEDeviceKonnector::connectDevice()" << endl;
         PocketPCCommunication::PimHandler::resetError();
         error = false;
         if (subscribtionCount == 0) {
@@ -360,6 +361,7 @@ namespace KSync
 
     bool SynCEDeviceKonnector::disconnectDevice()
     {
+        kdDebug( 2120 ) << "SynCEDeviceKonnector::disconnectDevice()" << endl;
         if ( mUidHelper ) {
             mUidHelper->save();
         }
