@@ -43,7 +43,6 @@
 */
 
 class SyncTaskListItem;
-class SyncDialogImpl;
 class Rra;
 
 class RakiSyncPlugin : public QObject
@@ -58,7 +57,7 @@ public:
     RakiSyncPlugin();
     virtual ~RakiSyncPlugin();
 
-    bool doSync(SyncDialogImpl *syncDialogImpl, bool firstSynchronize, uint32_t partnerId);
+    bool doSync(bool firstSynchronize, uint32_t partnerId);
     virtual bool preSync(bool firstSynchronize, uint32_t partnerId);
     virtual bool postSync(bool firstSynchronize, uint32_t partnerId);
     uint32_t getObjectTypeId();
@@ -92,7 +91,6 @@ protected:
     bool firstSynchronize;
     QWidget *parent;
     QString _serviceName;
-    SyncDialogImpl *syncDialogImpl;
 };
 
 #endif

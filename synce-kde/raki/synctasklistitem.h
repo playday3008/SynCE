@@ -89,6 +89,8 @@ public:
     bool isFirstSynchronization();
     QDateTime &getLastSynchronized();
     void configure();
+    bool isRunning();
+    bool stopRequested();
 
 private slots:
     void clickedMenu(int item);
@@ -122,6 +124,7 @@ private:
 signals:
     void stateChanged(bool state);
     void serviceChanged();
+    SyncDialogImpl *syncDialog;
 };
 
 #endif

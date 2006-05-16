@@ -35,12 +35,10 @@
 #include <klocale.h>
 #include <kdebug.h>
 #include <kapplication.h>
-#include <syncdialogimpl.h>
 
 RakiSyncPlugin::RakiSyncPlugin()
 {
     parent = NULL;
-    syncDialogImpl = NULL;
 }
 
 
@@ -50,11 +48,10 @@ RakiSyncPlugin::~RakiSyncPlugin()
 }
 
 
-bool RakiSyncPlugin::doSync(SyncDialogImpl *syncDialogImpl, bool firstSynchronize, uint32_t partnerId)
+bool RakiSyncPlugin::doSync(bool firstSynchronize, uint32_t partnerId)
 {
     this->firstSynchronize = firstSynchronize;
     this->partnerId = partnerId;
-    this->syncDialogImpl = syncDialogImpl;
     return sync();
 }
 
@@ -130,13 +127,13 @@ uint32_t RakiSyncPlugin::getObjectTypeId()
 
 bool RakiSyncPlugin::running()
 {
-    return syncDialogImpl->isRunning();
+    return progressItem->isRunning();
 }
 
 
 bool RakiSyncPlugin::stopRequested()
 {
-    return syncDialogImpl->stopRequested();
+    return progressItem->stopRequested();
 }
 
 

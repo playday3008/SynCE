@@ -25,6 +25,7 @@
 #include "rakisyncfactory.h"
 #include "rakisyncplugin.h"
 #include "rra.h"
+#include "syncdialogimpl.h"
 
 #include <kprogress.h>
 #include <klocale.h>
@@ -379,12 +380,13 @@ bool SyncTaskListItem::synchronize(SyncDialogImpl *syncDialog)
 
     setTaskLabel(i18n("Started").utf8());
     setTotalSteps( 1);
+    this->syncDialog = syncDialog;
 
     if (syncPlugin != NULL) {
         kdDebug(2120) << "----------------------------------------------" << endl;
         kdDebug(2120) << i18n("*** Started synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
 
-        ret = syncPlugin->doSync(syncDialog, firstSynchronization, partnerId);
+        ret = syncPlugin->doSync(firstSynchronization, partnerId);
         kdDebug(2120) << i18n("*** Finished synchronous syncing with") << " " << syncPlugin->serviceName() << endl;
         kdDebug(2120) << "----------------------------------------------" << endl;
 
@@ -433,4 +435,15 @@ void SyncTaskListItem::configure()
     if (syncPlugin != NULL) {
         syncPlugin->configure();
     }
+}
+
+bool SyncTaskListItem::isRunning()
+{
+    return syncDialog->isRunning();
+}
+
+
+bool SyncTaskListItem::stopRequested()
+{
+    return syncDialog->stopRequested();
 }
