@@ -59,19 +59,28 @@ linkname synce-device</pre></li>
 echo "PIN:1234"</pre></li>
 
 
-<li><p>Start <tt>dund</tt>:</p>
+<li><p>Start <tt>dund</tt> so that it advertises an Activesync service :</p>
 
-<pre>dund --listen --msdun call dun</pre></li>
+<p>If you have a device that is running Windows CE 2 or 3 then the following should work :</p>
 
-<li><p>Advertise the Serial Profile too:</p>
+<ol type="A">
+  <li><pre>dund --listen --msdun call dun</pre></li>
+  <li><pre>sdptool add SP</pre></li>
+</ol>
 
-<pre>sdptool add SP</pre></li>
+<p>If you have a device that is running Windows Mobile then the following will work</p>
+
+<ol type="A">
+  <li><pre>dund --listen --activesync --msdun call dun</pre></li>
+</ol>
+
+<p><b>NOTE : </b> the <tt>--activesync</tt> flag is only available in bluez with version > 2.25</p>
 
 <li><p>In the Bluetooth Manager on the PDA, go to the "Device Information" page
 for the PC, check the "ActiveSync partner" checkbox. (If this checkbox is
-disabled you forgot to modify <tt>/etc/bluetooth/hcid.conf</tt>.)</li>
+disabled you forgot to modify <tt>/etc/bluetooth/hcid.conf</tt> or you need to use the other dund command above.)</li>
 
-<li><p>Make sure you have started dccm as your normal user (not root).</p></li>
+<li><p>Make sure you have started vdccm as your normal user (not root).</p></li>
 
 <li>You should now be able to use the "Start ActiveSync" menu entry found when
 you tap the Bluetooth Manager icon on the Today screen.</p></li>
