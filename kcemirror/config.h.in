@@ -37,9 +37,6 @@
    */
 #undef HAVE_PTHREAD_LINUXTHREADS_PTHREAD_H
 
-/* Define to 1 if you have the <rapi.h> header file. */
-#undef HAVE_RAPI_H
-
 /* Define if you have res_init */
 #undef HAVE_RES_INIT
 
@@ -60,9 +57,6 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
-
-/* Define to 1 if you have the <synce.h> header file. */
-#undef HAVE_SYNCE_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H

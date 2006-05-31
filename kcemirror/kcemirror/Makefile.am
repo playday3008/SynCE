@@ -1,4 +1,7 @@
-INCLUDES = $(all_includes) $(RAPI_INCLUDE)
+AM_CXXFLAGS = @LIBRAPI2_CFLAGS@
+AM_LDFLAGS = @LIBRAPI2_LIBS@
+
+INCLUDES = $(all_includes)
 METASOURCES = AUTO
 bin_PROGRAMS = kcemirror
 
