@@ -7,16 +7,13 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE(dccm, YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT)
 AM_CONFIG_HEADER(dccm_config.h)
 
-AC_SUBST(APPLE_CFLAGS)
+CFLAGS="-Wall $CFLAGS"
+
 case $target in
 
 	powerpc-apple-*)
 		dnl Prevent "Undefined Macro argument list" error.
-		APPLE_CFLAGS="-no-cpp-precomp"
-		;;
-
-	*)
-		APPLE_CFLAGS=""
+		CFLAGS="-no-cpp-precomp $CFLAGS"
 		;;
 
 esac
@@ -30,7 +27,7 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl Check for libsynce
-AM_PATH_LIBSYNCE
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
 
 dnl Checks for header files.
 

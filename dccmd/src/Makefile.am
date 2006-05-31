@@ -1,5 +1,5 @@
-## useful flags
-AM_CFLAGS = -g -Wall @APPLE_CFLAGS@
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@
 
 bin_PROGRAMS = dccm
 
