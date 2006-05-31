@@ -2,12 +2,12 @@
 
 # this is the program that gets installed.  it's name is used for all
 # of the other Makefile.am variables
-bin_PROGRAMS = raki 
+bin_PROGRAMS = raki
 
 # set the include path for X, qt and KDE
-INCLUDES = -I$(top_srcdir)/raki/interfaces $(ORANGE_INCLUDES) $(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES) $(UNSHIELD_INCLUDES) $(DYNAMITE_INCLUDES) $(all_includes)
+INCLUDES = -I$(top_srcdir)/raki/interfaces $(all_includes)
 
-# the library search path. 
+# the library search path.
 raki_LDFLAGS = $(KDE_RPATH) $(ORANGE_LDFLAGS) $(RRA_LDFLAGS) $(RAPI_LDFLAGS) \
 	$(SYNCE_LDFLAGS) $(UNSHIELD_LDFLAGS) $(DYNAMITE_LDFLAGS) $(all_libraries) \
 	-Wl,--export-dynamic --whole-archive -Wno-non-virtual-dtor
@@ -46,8 +46,9 @@ konq_DATA= cab_install.desktop
 tipsdir = $(kde_datadir)/raki
 tips_DATA = tips
 
-AM_CFLAGS = 
-AM_CXXFLAGS = 
+AM_CFLAGS =  
+AM_CXXFLAGS = @LIBRRA_CFLAGS@ @LIBORANGE_CFLAGS@
+AM_LDFLAGS = @LIBRRA_LIBS@ @LIBORANGE_LIBS@
 AM_FFLAGS = 
 SUBDIRS = plugins interfaces
 include_HEADERS = rra.h rapiwrapper.h rakiapi.h
