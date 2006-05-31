@@ -1,7 +1,4 @@
-## useful flags
-AM_CFLAGS = -g -Wall -Werror @GTK2_CFLAGS@ -I@MULTISYNC_INCLUDE@
-##LDADD = @GTK2_LIBS@ @LDFLAGS@
-
+AM_CFLAGS = @LIBSYNCE_CFLAGS@ @LIBRAPI2_CFLAGS@ @LIBRRA_CFLAGS@ @GTK2_CFLAGS@ -I@MULTISYNC_INCLUDE@
 
 ## install with other Multisync plugins
 libdir = @libdir@/multisync
