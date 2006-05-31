@@ -3,12 +3,12 @@ AM_INIT_AUTOMAKE(synce-hal, 0.1)
 AM_CONFIG_HEADER(config.h)
 
 AC_ISC_POSIX
-CFLAGS=""
-AC_SUBST(CFLAGS)
 AC_PROG_CC
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 AM_PROG_LIBTOOL
+
+CFLAGS="-Wall $CFLAGS"
 
 packagesrcdir=`cd $srcdir && pwd`
 
@@ -29,19 +29,14 @@ dnl
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.2.0])
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.31])
 PKG_CHECK_MODULES(HAL, [hal >= 0.5.0])
-AC_SUBST(HAL_LIBS)
-AC_SUBST(HAL_CFLAGS)
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
-
 
 
 dnl
-dnl   Check for libsynce
+dnl   Check for libsynce and librapi2
 dnl
 
-AM_PATH_LIBSYNCE
-AM_PATH_LIBRAPI2
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
 
 
 dnl
