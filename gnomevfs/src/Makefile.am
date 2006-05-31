@@ -1,7 +1,7 @@
-AM_CFLAGS = -g -Wall -Werror
 module_flags = -export_dynamic -avoid-version -module -no-undefined
 
-INCLUDES=$(rapi_cflags) $(synce_cflags) $(VFS_CFLAGS)
+AM_CFLAGS = @LIBSYNCE_CFLAGS@ @LIBRAPI2_CFLAGS@ @VFS_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@
 
 modulesconfdir=$(sysconfdir)/gnome-vfs-2.0/modules
 modulesconf_DATA=synce-module.conf
