@@ -1,6 +1,7 @@
-## useful flags
-AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -ansi @CFLAGS@ -I..
-## @APPLE_CFLAGS@
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@
+
+INCLUDES = -I..
 
 includedir = @includedir@/rra
 
@@ -42,5 +43,3 @@ librra_la_SOURCES = \
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
 librra_la_LIBADD   = @LTLIBOBJS@
-
-

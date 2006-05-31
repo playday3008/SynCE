@@ -1,5 +1,7 @@
-## useful flags
-AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -ansi @CFLAGS@ -I../lib
+AM_CFLAGS = @LIBSYNCE_CFLAGS@ @LIBRAPI2_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@
+
+INCLUDES = -I../lib
 LDADD = -L../lib ../lib/librra.la
 
 bin_PROGRAMS = synce-matchmaker
@@ -38,4 +40,3 @@ rra_task_from_vtodo_SOURCES  = rra-task-from-vtodo.c
 rra_timezone_SOURCES = rra-timezone.c
 
 ##rra_lock_SOURCES = rra-lock.c
-

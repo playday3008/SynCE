@@ -15,9 +15,11 @@ AC_PROG_LN_S
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
+dnl Check for libsynce
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+
 dnl Check for librapi2
-AM_PATH_LIBSYNCE
-AM_PATH_LIBRAPI2
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
 
   AC_ARG_WITH(libmimedir,
     AC_HELP_STRING(
@@ -92,7 +94,8 @@ AC_CHECK_HEADERS(iconv.h,,[
 		AC_MSG_WARN([iconv.h not found (INCICONV=$INCICONV)])
 		])
 
-AC_OUTPUT([Makefile
+AC_OUTPUT([librra.pc
+           Makefile
            src/Makefile
            lib/Makefile
 					 man/Makefile])

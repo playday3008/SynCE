@@ -4,10 +4,15 @@
 ## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
 AUTOMAKE_OPTIONS = foreign 1.4
 
+pcfiles = librra.pc
+
+all_local: $(pcfiles)
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(pcfiles)
+
+EXTRA_DIST = librra.pc.in
+
+CLEANFILES = $(pcfiles)
+
 SUBDIRS = lib src man .
-
-m4datadir = $(datadir)/aclocal
-m4data_DATA = rra.m4
-
-EXTRA_DIST = $(m4data_DATA)
-
