@@ -1,3 +1,5 @@
+AM_CFLAGS = @LIBRAPI2_CFLAGS@
+AM_LDFLAGS = @LIBRAPI2_LIBS@
 
 bin_PROGRAMS = synce-trayicon
 
