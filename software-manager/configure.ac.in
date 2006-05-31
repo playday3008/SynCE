@@ -10,19 +10,14 @@ AM_CONFIG_HEADER(config.h)
 dnl GNOME_INIT
 pkg_modules="gtk+-2.0 glib-2.0 libgnomeui-2.0 libglade-2.0"
 PKG_CHECK_MODULES(GTK2, [$pkg_modules])
-AC_SUBST(GTK2_CFLAGS)
-AC_SUBST(GTK2_LIBS)
 
-AC_SUBST(APPLE_CFLAGS)
+CFLAGS="-Wall $CFLAGS"
+
 case $target in
 
 	powerpc-apple-*)
 		dnl Prevent "Undefined Macro argument list" error.
-		APPLE_CFLAGS="-no-cpp-precomp"
-		;;
-
-	*)
-		APPLE_CFLAGS=""
+		CFLAGS="-no-cpp-precomp $CFLAGS"
 		;;
 
 esac
@@ -35,9 +30,7 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl Check for SynCE libs
-dnl AM_PATH_LIBSYNCE
-AM_PATH_LIBRAPI2
-dnl AM_PATH_RRA
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
 
 dnl Prevent "NONE" used as prefix!
 if test "x$prefix" = xNONE; then

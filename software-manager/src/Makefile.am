@@ -1,11 +1,7 @@
-INCLUDES =						\
-	$(GTK2_CFLAGS)				\
-	$(APPLE_CFLAGS) 	
+AM_CFLAGS = @LIBRAPI2_CFLAGS@ @GTK2_CFLAGS@
+AM_LDFLAGS = @LIBRAPI2_LIBS@ @GTK2_LIBS@
 
 bin_PROGRAMS = synce-software-manager
 
 synce_software_manager_SOURCES =	\
 	main.c rapi_stuff.c pcommon.c
-
-synce_software_manager_LDFLAGS =	\
-	$(GTK2_LIBS)
