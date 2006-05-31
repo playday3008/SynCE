@@ -1,7 +1,8 @@
-## useful flags
-SRC = ../../src
-CXXFLAGS = -g -Wall -I$(SRC) -I$(SRC)/support
-LDADD = $(SRC)/librapi.la
+AM_CXXFLAGS = @LIBSYNCE_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@
+
+INCLUDES = -I$(top_srcdir)/src -I$(top_srcdir)/src/support
+LDADD = ../../src/librapi.la
 
 noinst_PROGRAMS = \
 	CeCreateDatabase \

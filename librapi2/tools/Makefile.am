@@ -1,5 +1,7 @@
-## useful flags
-AM_CFLAGS   = -g -Wall -Wsign-compare -Wno-long-long @APPLE_CFLAGS@ -I../src -I../src/support
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@
+
+INCLUDES = -I$(top_srcdir)/src -I$(top_srcdir)/src/support
 LDADD = ../src/librapi.la
 
 noinst_PROGRAMS = oidinfo
@@ -27,4 +29,3 @@ synce_list_programs_SOURCES = synce-list-programs.c
 synce_registry_SOURCES = synce-registry.c pcommon.c
 
 SUBDIRS = man
-

@@ -4,9 +4,15 @@
 ## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
 AUTOMAKE_OPTIONS = foreign 1.4
 
-SUBDIRS = src script tools tests .
+pcfiles = librapi2.pc
 
-m4datadir = $(datadir)/aclocal
-m4data_DATA = librapi2.m4
+all_local: $(pcfiles)
 
-EXTRA_DIST = $(m4data_DATA)
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(pcfiles)
+
+EXTRA_DIST = librapi2.pc.in
+
+CLEANFILES = $(pcfiles)
+
+SUBDIRS = src script tools tests

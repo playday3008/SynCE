@@ -6,16 +6,16 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE(librapi, YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT)
 AM_CONFIG_HEADER(rapi_config.h)
 
-AC_SUBST(APPLE_CFLAGS)
+CFLAGS="-Wall -Wsign-compare -Wno-long-long $CFLAGS"
+
 case $target in
 
 	powerpc-apple-*)
 		dnl Prevent "Undefined Macro argument list" error.
-		APPLE_CFLAGS="-no-cpp-precomp"
+		CFLAGS="-no-cpp-precomp $CFLAGS"
 		;;
 
 	*)
-		APPLE_CFLAGS=""
 		;;
 
 esac
@@ -61,7 +61,7 @@ dnl Checks for libraries.
 AC_LIB_RPATH
 
 dnl Check for libsynce
-AM_PATH_LIBSYNCE
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
 
 dnl Checks for header files.
 dnl For readv/writev
@@ -81,7 +81,8 @@ AC_CONFIG_FILES(
 	[chmod +x script/synce-remove-program]
 )
 
-AC_OUTPUT([Makefile
+AC_OUTPUT([librapi2.pc
+           Makefile
            src/Makefile
 					 src/config/Makefile
 					 src/support/Makefile

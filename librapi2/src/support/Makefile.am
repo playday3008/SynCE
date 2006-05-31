@@ -1,5 +1,6 @@
-## useful flags
-AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -ansi @CFLAGS@ @APPLE_CFLAGS@ -I..
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
+
+INCLUDES = -I..
 
 ## create this library
 noinst_LTLIBRARIES = libsupport.la

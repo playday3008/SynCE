@@ -1,5 +1,4 @@
-## useful flags
-##CFLAGS = -g -Wall -ansi -pedantic @CFLAGS@ 
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
 
 ## create this library
 noinst_LTLIBRARIES = libconfig.la
@@ -8,4 +7,3 @@ noinst_LTLIBRARIES = libconfig.la
 libconfig_la_SOURCES = \
 	config.h config.c \
 	hash.h hash.c
-

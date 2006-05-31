@@ -1,6 +1,8 @@
-## useful flags
-AM_CFLAGS = -g -Wall -Wsign-compare -Wno-long-long -ansi @CFLAGS@ @APPLE_CFLAGS@ -Isupport
 @SET_MAKE@
+
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
+
+INCLUDES = -Isupport
 
 ## create this library
 lib_LTLIBRARIES = librapi.la
@@ -23,5 +25,4 @@ librapi_la_LIBADD  = support/libsupport.la
 
 include_HEADERS = rapi.h
 
-SUBDIRS = support .
-
+SUBDIRS = support
