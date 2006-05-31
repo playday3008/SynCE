@@ -19,6 +19,8 @@ CFLAGS=""
 AC_C_CONST
 CFLAGS="$saved_CFLAGS"
 
+CFLAGS="-Wall $CFLAGS"
+
 AS_AC_EXPAND(SHARED_SYNCE, "$datadir/synce")
 AS_AC_EXPAND(SYNCE_SERIAL_CHAT, "$libexecdir/synce-serial-chat")
 
