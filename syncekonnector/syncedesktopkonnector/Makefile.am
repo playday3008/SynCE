@@ -1,6 +1,9 @@
+AM_CXXFLAGS = @LIBRRA_CFLAGS@
+AM_LDFLAGS = @LIBRRA_LIBS@
+
 # set the include path for X, qt and KDE
-INCLUDES = -I$(top_srcdir)/libksynce -I$(top_srcdir)/includes $(all_includes) \
-	$(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES) $(KITCHENSYNC_INCLUDES)
+INCLUDES = -I$(top_srcdir)/libksynce -I$(top_srcdir)/includes \
+	   $(KITCHENSYNC_INCLUDES) $(all_includes)
 
 # these are the headers for your project
 
@@ -18,8 +21,6 @@ messages: rc.cpp
 # the application source, library search path, and link libraries
 
 METASOURCES = AUTO
-AM_CFLAGS = -pedantic-errors -Wall
-AM_CXXFLAGS = -pedantic-errors -Wall
 lib_LTLIBRARIES = libsyncedesktopkonnector.la
 libsyncedesktopkonnector_la_LDFLAGS = -avoid-version -module $(all_libraries)
 

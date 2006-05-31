@@ -1,5 +1,8 @@
-INCLUDES = -I$(top_srcdir)/libksynce -I$(top_srcdir)/includes $(all_includes) \
-	$(RRA_INCLUDES) $(RAPI_INCLUDES) $(SYNCE_INCLUDES) $(KITCHENSYNC_INCLUDES)
+AM_CXXFLAGS = @LIBRRA_CFLAGS@
+AM_LDFLAGS = @LIBRRA_LIBS@
+
+INCLUDES = -I$(top_srcdir)/libksynce -I$(top_srcdir)/includes \
+	   $(KITCHENSYNC_INCLUDES) $(all_includes)
 
 METASOURCES = AUTO
 lib_LTLIBRARIES = libksynce.la

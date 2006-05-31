@@ -4,7 +4,10 @@ AM_INIT_AUTOMAKE(syncekonnector, 0.3)
 AC_C_BIGENDIAN
 AC_CHECK_KDEMAXPATHLEN
 
-SYNCE_CHECK_RRA
+CFLAGS="-Wall $CFLAGS"
+
+dnl Check for librra
+PKG_CHECK_MODULES(LIBRRA, librra >= 0.9.1)
 
 synce_kde_save_ldflags="$LDFLAGS"
 LDFLAGS=$KDE_LDFLAGS
