@@ -1,6 +1,5 @@
-## useful flags
-AM_CFLAGS = -g -ansi -Wall -Wsign-compare -Wno-long-long @CFLAGS@ @APPLE_CFLAGS@ -I.. \
-	    @LIBOLE2_CFLAGS@ @LIBGSF_CFLAGS@
+AM_CFLAGS = @LIBSYNCE_CFLAGS@ @LIBDYNAMITE_CFLAGS@ @LIBUNSHIELD_CFLAGS@ @LIBGSF_CFLAGS@
+INCLUDES = -I..
 
 ## create this library
 lib_LTLIBRARIES = liborange.la
@@ -28,4 +27,3 @@ liborange_la_DEPENDENCIES = @INNO_LIBADD@ @VISE_LIBADD@ @MSI_LIBADD@
 liborange_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 include_HEADERS = liborange.h
-

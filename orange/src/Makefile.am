@@ -1,6 +1,7 @@
-## useful flags
-AM_CFLAGS   = -g -ansi -Wall -Wsign-compare -Wno-long-long @APPLE_CFLAGS@ -I../lib \
-	      @LIBGSF_CFLAGS@
+AM_CFLAGS = @LIBSYNCE_CFLAGS@ @LIBDYNAMITE_CFLAGS@ @LIBUNSHIELD_CFLAGS@ @LIBGSF_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@ @LIBDYNAMITE_LIBS@ @LIBUNSHIELD_LIBS@
+
+INCLUDES = -I../lib
 LDADD = ../lib/liborange.la
 
 bin_PROGRAMS = orange

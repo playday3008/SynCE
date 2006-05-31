@@ -7,12 +7,13 @@ AM_INIT_AUTOMAKE
 
 AM_CONFIG_HEADER(config.h)
 
-AC_SUBST(APPLE_CFLAGS)
+CFLAGS="-Wall -Wsign-compare -Wno-long-long $CFLAGS"
+
 case $target in
 
 	powerpc-apple-*)
 		dnl Prevent "Undefined Macro argument list" error.
-		APPLE_CFLAGS="-no-cpp-precomp"
+		CFLAGS="-no-cpp-precomp $CFLAGS"
 		;;
 
 esac
@@ -29,11 +30,14 @@ dnl AM_PATH_CHECK()
 dnl Checks for libraries.
 AC_LIB_RPATH
 
-dnl Check for library dependencies
-AM_PATH_LIBSYNCE
-dnl AM_PATH_LIBRAPI2
-AM_PATH_LIBDYNAMITE
-AM_PATH_LIBUNSHIELD
+dnl Check for libsynce
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+
+dnl Check for libdynamite
+PKG_CHECK_MODULES(LIBDYNAMITE, libdynamite >= 0.1)
+
+dnl Check for libunshield
+PKG_CHECK_MODULES(LIBUNSHIELD, libunshield >= 0.5)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -139,7 +143,7 @@ AC_CHECK_LIB(z,inflate,,[
     AC_MSG_ERROR(["Could not find zlib, please install it!"])
     ])
 
-AC_OUTPUT([Makefile
+AC_OUTPUT([liborange.pc
+           Makefile
            lib/Makefile
            src/Makefile])
-
