@@ -18,8 +18,11 @@ AC_PROG_MAKE_SET
 AC_DISABLE_STATIC
 AM_PROG_LIBTOOL
 
-# Checks for libraries.
-SYNCE_CHECK_SYNCE
+CFLAGS="-Wall $CFLAGS"
+CXXFLAGS="-Wall $CXXFLAGS"
+
+dnl Check for libsynce
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
 
 # Checks for header files.
 AC_HEADER_DIRENT

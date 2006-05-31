@@ -1,5 +1,3 @@
-
-
 # set the include path found by configure
 INCLUDES = $(all_includes)
 
@@ -11,8 +9,6 @@ libdescriptor_la_SOURCES = continousnode.cpp descriptor.cpp \
 			localsocket.cpp localserversocket.cpp localconnectedsocket.cpp localclientsocket.cpp \
 			tcpacceptedsocket.cpp localacceptedsocket.cpp netsocket.cpp udpsocket.cpp
 
-AM_CFLAGS = -pedantic-errors -Wall
-AM_CXXFLAGS = -pedantic-errors -Wall
 noinst_HEADERS = continousnode.h descriptor.h \
 			descriptormanager.h	localacceptedsocket.h localclientsocket.h localconnectedsocket.h	localserversocket.h \
 			localsocket.h multiplexer.h singleshotnode.h	tcpacceptedsocket.h tcpclientsocket.h \
