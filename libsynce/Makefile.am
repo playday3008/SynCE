@@ -4,10 +4,15 @@
 ## don't complain about missing AUTHORS, NEWS, ChangeLog, etc
 AUTOMAKE_OPTIONS = foreign 1.4
 
-m4datadir = $(datadir)/aclocal
-m4data_DATA = libsynce.m4
+pcfiles = libsynce.pc
 
-EXTRA_DIST = $(m4data_DATA)
+all_local: $(pcfiles)
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(pcfiles)
+
+EXTRA_DIST = libsynce.pc.in
+
+CLEANFILES = $(pcfiles)
 
 SUBDIRS = lib man .
-

@@ -1,6 +1,3 @@
-## useful flags
-##CFLAGS = -g -Wall -ansi -pedantic @CFLAGS@ 
-
 ## create this library
 noinst_LTLIBRARIES = libconfig.la
 

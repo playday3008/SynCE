@@ -2,6 +2,7 @@
 #include "synce_socket.h"
 #include "synce_log.h"
 #include <stdlib.h>
+#include <stddef.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/types.h>
