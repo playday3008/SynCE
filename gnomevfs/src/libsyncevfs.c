@@ -267,10 +267,6 @@ static GnomeVFSResult synce_open/*{{{*/
 
   wide_path = wstr_from_utf8(location);
 
-  if (mode & GNOME_VFS_OPEN_RANDOM) {
-      return GNOME_VFS_ERROR_INVALID_OPEN_MODE;
-  }
-
   vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
 
   D("CeCreateFile()\n");
