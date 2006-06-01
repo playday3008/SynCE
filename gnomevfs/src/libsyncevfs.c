@@ -524,6 +524,103 @@ static GnomeVFSResult synce_write/*{{{*/
   return result;
 }/*}}}*/
 
+static GnomeVFSResult
+synce_seek (GnomeVFSMethod *method,
+            GnomeVFSMethodHandle *method_handle,
+            GnomeVFSSeekPosition whence,
+            GnomeVFSFileOffset offset,
+            GnomeVFSContext *context)
+{
+  GnomeVFSResult result;
+  DWORD retval, move_method;
+  HANDLE handle;
+
+  D("------------------ synce_seek() -------------------\n");
+
+  if ((result = initialize_rapi ()) != GNOME_VFS_OK)
+    return result;
+
+  handle = (HANDLE) method_handle;
+
+  switch (whence) {
+    case GNOME_VFS_SEEK_START:
+      move_method = FILE_BEGIN;
+      break;
+    case GNOME_VFS_SEEK_CURRENT:
+      move_method = FILE_CURRENT;
+      break;
+    case GNOME_VFS_SEEK_END:
+      move_method = FILE_END;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  D("CeSetFilePointer()\n");
+
+  MUTEX_LOCK (mutex);
+
+  retval = CeSetFilePointer (handle,
+                             offset,
+                             NULL,
+                             move_method);
+
+  if (retval == 0xFFFFFFFF)
+    {
+      D("synce_seek: Failed\n");
+      result = gnome_vfs_result_from_rapi ();
+    }
+  else
+    {
+      result = GNOME_VFS_OK;
+    }
+
+  MUTEX_UNLOCK (mutex);
+
+  return result;
+}
+
+static GnomeVFSResult
+synce_tell (GnomeVFSMethod *method,
+            GnomeVFSMethodHandle *method_handle,
+            GnomeVFSFileSize *offset_return)
+{
+  GnomeVFSResult result;
+  DWORD retval;
+  HANDLE handle;
+
+  D("------------------ synce_tell() -------------------\n");
+
+  if ((result = initialize_rapi ()) != GNOME_VFS_OK)
+    return result;
+
+  handle = (HANDLE) method_handle;
+
+  D("CeSetFilePointer()\n");
+
+  MUTEX_LOCK (mutex);
+
+  retval = CeSetFilePointer (handle,
+                             0,
+                             NULL,
+                             FILE_CURRENT);
+
+  if (retval == 0xFFFFFFFF)
+    {
+      D("synce_seek: Failed\n");
+      result = gnome_vfs_result_from_rapi ();
+    }
+  else
+    {
+      result = GNOME_VFS_OK;
+      *offset_return = retval;
+    }
+
+  MUTEX_UNLOCK (mutex);
+
+  return result;
+}
+
 static GnomeVFSResult synce_open_dir/*{{{*/
 (
  GnomeVFSMethod *method,
@@ -539,7 +636,7 @@ static GnomeVFSResult synce_open_dir/*{{{*/
   DIR_HANDLE *dh;
   CE_FIND_DATA *data = NULL;
   int optionflags;
-  int itemcount;
+  unsigned int itemcount;
   WCHAR *tempwstr;
   int index;
 
@@ -1420,8 +1517,8 @@ static GnomeVFSMethod method =
   synce_close,
   synce_read,
   synce_write,
-  NULL,	/* seek */
-  NULL,	/* tell */
+  synce_seek,
+  synce_tell,
   NULL,	/* truncate */
   synce_open_dir,
   synce_close_dir,
