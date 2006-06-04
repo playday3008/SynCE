@@ -77,13 +77,14 @@ int main(int argc, char** argv)
   switch (command)
   {
     case COMMAND_STATUS:
-      if (!rra_matchmaker_get_current_partner(matchmaker, &current_partner))
+      if (rra_matchmaker_get_current_partner(matchmaker, &current_partner))
       {
-        fprintf(stderr, "Failed to get current partner index");
-        goto exit;
+        printf("Current partner index: %i\n", current_partner);
       }
-
-      printf("Current partner index: %i\n", current_partner);
+      else
+      {
+        printf("Current partner index: none\n");
+      }
 
       for (i = 1; i <= 2; i++)
       {
@@ -101,6 +102,7 @@ int main(int argc, char** argv)
           rra_matchmaker_free_partner_name(name);
         }
       }
+      break;
 
     case COMMAND_CREATE:
       if (rra_matchmaker_create_partnership(matchmaker, &index))
