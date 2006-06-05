@@ -201,7 +201,13 @@ bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
         strbuf_append_c(note, *q);
     }
 
-    /* Note have to be pair */
+    /* Windows CE require that NOTE is pair
+     * if not we add a "End of text" character (0x3)
+     * at end of NOTE before send it to pda.
+     * We remove that character when we receive it
+     * from pda.
+     */
+
     if (note->length % 2)
     {
       strbuf_append_c(note, 0x3);
@@ -258,6 +264,13 @@ bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
         }
         tmp = utf8;
       }
+
+      /* Windows CE require that NOTE is pair
+       * if not we add a "End of text" character (0x3)
+       * at end of NOTE before send it to pda.
+       * We remove that character when we receive it
+       * from pda.
+       */
 
       if (tmp[strlen(tmp) - 1] == 0x3)
         tmp[strlen(tmp) - 1] = 0x0;

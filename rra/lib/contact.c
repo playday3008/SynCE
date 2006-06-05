@@ -46,8 +46,6 @@ static void strbuf_append_escaped(StrBuf* result, char* source, uint32_t flags)/
 		switch (*p)
 		{
 			case '\r': 				/* CR */
-      case 19: 		  		/* XOFF */
-      case 31: 		  		/* Unit separator */
 				/* ignore */
 				break;		
 
@@ -355,6 +353,13 @@ static bool rra_contact_to_vcard2(/*{{{*/
               free (lpb_terminated);
               lpb_terminated = lpb_converted;
             }
+
+            /* Windows CE require that NOTE is pair
+             * if not we add a "End of text" character (0x3)
+             * at end of NOTE before send it to pda.
+             * We remove that character when we receive it
+             * from pda.
+             */
 
             if (lpb_terminated[strlen(lpb_terminated) - 1] == 0x3)
               lpb_terminated[strlen(lpb_terminated) - 1] = 0x0;
@@ -1772,6 +1777,13 @@ static bool parser_handle_field(/*{{{*/
     }
 
     unescape_string(value);
+
+    /* Windows CE require that NOTE is pair
+     * if not we add a "End of text" character (0x3)
+     * at end of NOTE before send it to pda.
+     * We remove that character when we receive it
+     * from pda.
+     */
 
     value_length = strlen(value);
 
