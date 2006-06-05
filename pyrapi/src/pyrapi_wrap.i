@@ -192,7 +192,7 @@ WCHARGETSET(CE_FIND_DATA,cFileName)
   entry = *$2;
   for (i = 0; i < *$1; i++) {
     if (PyTuple_SetItem(return_tuple, i,  
-			SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p_CE_FIND_DATA, 0))) {
+			SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p__CE_FIND_DATA, 0))) {
       PyErr_SetString(PyExc_TypeError, "failed to build return tuple.");
       return NULL;
     }
@@ -347,7 +347,7 @@ BOOL CeDeleteFile(
 %typemap(python,argout) (LPCWSTR lpFileName, LPCE_FIND_DATA lpFindFileData) {
   PyObject *find_data, *o2, *o3;
   
-  find_data = SWIG_NewPointerObj($2, SWIGTYPE_LPCE_FIND_DATA, 1);
+  find_data = SWIG_NewPointerObj($2, SWIGTYPE_p__CE_FIND_DATA, 1);
 
   if ((!result) || ($result == Py_None)) {
     $result = find_data;
@@ -378,7 +378,7 @@ HANDLE CeFindFirstFile(
 %typemap(python,argout) (HANDLE hFindFile, LPCE_FIND_DATA lpFindFileData) {
   PyObject *find_data;
   
-  $result = SWIG_NewPointerObj($2, SWIGTYPE_LPCE_FIND_DATA, 1);
+  $result = SWIG_NewPointerObj($2, SWIGTYPE_p__CE_FIND_DATA, 1);
 }
 
 BOOL CeFindNextFile( 
@@ -543,7 +543,7 @@ typedef struct _CEDB_FIND_DATA {
       /* unpack argument tuple into array */
       for ( i = 0; i < $1; i++) {
 	if ((SWIG_ConvertPtr(PyTuple_GetItem($input,i),(void **) &tmp, 
-			     SWIGTYPE_p_SORTORDERSPEC,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
+			     SWIGTYPE_p__SORTORDERSPEC,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
 	  SWIG_fail;
 	memcpy(&($2[i]),tmp, sizeof(SORTORDERSPEC));
       }
@@ -573,7 +573,7 @@ BOOL CeDeleteDatabase(
   entry = *$2;
   for (i = 0; i < *arg3; i++) {
     if (PyTuple_SetItem(return_tuple, i,  
-			SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p_CEDB_FIND_DATA, 0))) {
+			SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p__CEDB_FIND_DATA, 0))) {
       PyErr_SetString(PyExc_TypeError, "failed to build return tuple.");
       return NULL;
     }
@@ -672,7 +672,7 @@ HANDLE CeOpenDatabase(
     entry = ( PCEPROPVAL )*$1;
     for (i = 0; i < *arg3; i++) {
       if (PyTuple_SetItem(return_tuple, i,  
-			  SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p_CEPROPVAL, 0))) {
+			  SWIG_NewPointerObj((void *)entry++, SWIGTYPE_p__CEPROPVAL, 0))) {
 	PyErr_SetString(PyExc_TypeError, "failed to build return tuple.");
 	return NULL;
       }
@@ -773,7 +773,7 @@ CEOID CeReadRecordProps(
       CEPROPVAL * prop_val;
 
       if ((SWIG_ConvertPtr(seek_value_obj,(void **) &prop_val, 
-			   SWIGTYPE_p_CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) {
+			   SWIGTYPE_p__CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) {
 	PyErr_SetString(PyRapiError, "seek_value must be a CEPROPVAL for seek_type == CEDB_SEEK_VALUEXXX.");
 	return NULL;
       }
@@ -853,7 +853,7 @@ CEOID CeSeekDatabase(
     /* unpack argument tuple into array */
     for ( i = 0; i < $1; i++) {
       if ((SWIG_ConvertPtr(PyTuple_GetItem($input,i),(void **) &tmp, 
-			   SWIGTYPE_p_CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
+			   SWIGTYPE_p__CEPROPVAL,SWIG_POINTER_EXCEPTION | 0 )) == -1) 
 	SWIG_fail;
       memcpy(&($2[i]),tmp, sizeof(CEPROPVAL));
       //printf ("propid & 0xFFFF = %d\n", ($2[i].propid & 0xFFFF));
