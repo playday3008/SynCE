@@ -91,7 +91,18 @@ static bool on_propval_due(Generator* g, CEPROPVAL* propval, void* cookie)
 
 static bool on_propval_importance(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  /* TODO: set PRIORITY */
+  switch(propval->val.iVal)
+  {
+  case IMPORANCE_HIGH:
+    generator_add_simple(g, "PRIORITY", "3");
+    break;
+  case IMPORANCE_NORMAL:
+    generator_add_simple(g, "PRIORITY", "5");
+    break;
+  case IMPORANCE_LOW:
+    generator_add_simple(g, "PRIORITY", "7");
+    break;
+  }
   return true;
 }
 
@@ -231,6 +242,30 @@ static bool on_mdir_line_status(Parser* p, mdir_line* line, void* cookie)
     return parser_add_int16(p, ID_TASK_COMPLETED, 0);
 }
 
+static bool on_mdir_line_importance(Parser* p, mdir_line* line, void* cookie)
+{
+  if (line)
+  {
+    if (STR_EQUAL(line->values[0], "1") ||
+        STR_EQUAL(line->values[0], "2") ||
+        STR_EQUAL(line->values[0], "3") ||
+        STR_EQUAL(line->values[0], "4"))
+      return parser_add_int32(p, ID_IMPORTANCE, IMPORANCE_HIGH);
+    else if (STR_EQUAL(line->values[0], "0") ||
+             STR_EQUAL(line->values[0], "5"))
+      return parser_add_int32(p, ID_IMPORTANCE, IMPORANCE_NORMAL);
+    else if (STR_EQUAL(line->values[0], "6") ||
+             STR_EQUAL(line->values[0], "7") ||
+             STR_EQUAL(line->values[0], "8") ||
+             STR_EQUAL(line->values[0], "9"))
+      return parser_add_int32(p, ID_IMPORTANCE, IMPORANCE_LOW);
+    else
+      synce_warning("Unknown value for importance: '%s'", line->values[0]);
+      return false;
+  }
+  else
+    return parser_add_int32(p, index, IMPORANCE_NORMAL);
+}
 
 bool rra_task_from_vtodo(
     const char* vtodo,
@@ -288,6 +323,8 @@ bool rra_task_from_vtodo(
       parser_property_new("Status", on_mdir_line_status));
   parser_component_add_parser_property(todo, 
       parser_property_new("Summary", on_mdir_line_summary));
+  parser_component_add_parser_property(todo, 
+      parser_property_new("Priority", on_mdir_line_importance));
 /*  parser_component_add_parser_property(todo, 
       parser_property_new("Transp", on_mdir_line_transp));*/
 
