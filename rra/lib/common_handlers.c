@@ -331,8 +331,10 @@ bool on_mdir_line_summary(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
     return parser_add_string_from_line(p, ID_SUBJECT, line);
-  else
-    return false;
+  else {
+    /* Task require a subject */
+    return parser_add_string(p, ID_SUBJECT, "<No subject>");
+  }
 }
 
 bool on_propval_subject(Generator* g, CEPROPVAL* propval, void* cookie)

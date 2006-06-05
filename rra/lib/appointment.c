@@ -411,7 +411,8 @@ typedef struct _EventParserData
 
 static bool on_timezone_tzid(Parser* p, mdir_line* line, void* cookie)
 {
-  synce_trace("TZID = '%s'", line->values[0]);
+  if (line)
+    synce_trace("TZID = '%s'", line->values[0]);
   return true;
 }
 
@@ -423,7 +424,7 @@ static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
   char** related   = mdir_get_param_values(line, "RELATED");
   int duration = 0;
 
-  if (event_parser_data->has_alarm)
+  if (event_parser_data->has_alarm || !line)
     goto exit;
 
   /* data type must be DURATION */
@@ -628,6 +629,8 @@ bool rra_appointment_from_vevent(/*{{{*/
     synce_error("Failed to convert input data");
     goto exit;
   }
+
+  parser_call_unused_properties(parser);
 
   if (event_parser_data.dtstart)
   {
