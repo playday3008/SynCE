@@ -1,4 +1,6 @@
 include "types.pxi"
+import sys
+
 
 cdef extern from "stdlib.h":
     void *malloc(size_t size)
@@ -17,10 +19,13 @@ cdef extern from "rapi.h":
     void rapi_connection_select(void *connection)
     HRESULT CeRapiInit()
     HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
-    LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
     LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition)
+    LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
     LONG CeRegCloseKey(HKEY hKey)
+    LONG CeRegDeleteKey(HKEY hKey, LPCWSTR lpszSubKey)
+    LONG CeRegDeleteValue(HKEY hKey, LPCWSTR lpszValueName)
     LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+    LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData)
 
 
 #
@@ -65,6 +70,7 @@ class RegKey:
     def __init__(self, handle, disposition=REG_OPENED_EXISTING_KEY):
         self.handle = handle
         self.disposition = disposition
+        self._host_le = (sys.byteorder == "little")
 
     def open_sub_key(self, sub_key):
         cdef LPWSTR sub_key_w
@@ -111,6 +117,24 @@ class RegKey:
 
         return RegKey(result, disposition)
 
+    def _dword_swap(self, dw):
+        return (dw & 0x000000FF) << 24 | \
+               (dw & 0x0000FF00) << 8  | \
+               (dw & 0x00FF0000) >> 8  | \
+               (dw & 0xFF000000) >> 24
+
+    def _dword_le_to_host(self, dw):
+        if self._host_le:
+            return dw
+        else:
+            return self._dword_swap(dw)
+
+    def _dword_le_from_host(self, dw):
+        if self._host_le:
+            return dw
+        else:
+            return self._dword_swap(dw)
+
     def query_value(self, value_name):
         cdef LPWSTR name_w
         cdef DWORD type
@@ -118,31 +142,115 @@ class RegKey:
         cdef DWORD data_size
         cdef LPDWORD dw_ptr
 
+        name_w = NULL
+        data = NULL
+
+        try:
+            if value_name != None:
+                name_w = wstr_from_utf8(value_name)
+            else:
+                name_w = NULL
+
+            data = <LPBYTE> malloc(4096)
+            data_size = 4096
+
+            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+                                       &type, data, &data_size)
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+            if type == REG_DWORD:
+                dw_ptr = <LPDWORD> data
+                value = self._dword_le_to_host(dw_ptr[0])
+            elif type == REG_SZ:
+                value = wstr_to_utf8(<LPCWSTR> data)
+            else:
+                # FIXME
+                return <char *> data
+
+            return value
+        finally:
+            if name_w != NULL:
+                wstr_free_string(name_w)
+
+            if data != NULL:
+                free(data)
+
+    def set_value(self, value_name, value_data, value_type=None):
+        cdef LPWSTR name_w
+        cdef LPBYTE data
+        cdef DWORD data_size
+
+        name_w = NULL
+        data = NULL
+
+        try:
+            if value_type == None:
+                if isinstance(value_data, basestring):
+                    value_type = REG_SZ
+                else:
+                    value_type = REG_DWORD
+
+            if value_name != None:
+                name_w = wstr_from_utf8(value_name)
+            else:
+                name_w = NULL
+
+            if value_type == REG_SZ:
+                data = <LPBYTE> wstr_from_utf8(value_data)
+                data_size = (len(value_data) + 1) * 2
+            elif value_type == REG_DWORD:
+                data = <LPBYTE> malloc(4)
+                (<LPDWORD> data)[0] = self._dword_le_from_host(value_data)
+                data_size = 4
+            else:
+                raise RAPIError("support for type %d not yet implemented" % value_type)
+
+            retval = CeRegSetValueEx(self.handle, name_w, 0, value_type, data, data_size)
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+            return retval
+        finally:
+            if name_w != NULL:
+                wstr_free_string(name_w)
+            if data != NULL:
+                if type == REG_SZ:
+                    wstr_free_string(data)
+                else:
+                    free(data)
+
+    def delete_sub_key(self, sub_key):
+        cdef LPWSTR key_w
+
+        key_w = wstr_from_utf8(sub_key)
+        retval = CeRegDeleteKey(self.handle, key_w)
+        wstr_free_string(key_w)
+
+        if retval != ERROR_SUCCESS:
+            raise RAPIError(retval)
+
+        return retval
+
+    def delete_value(self, value_name=None):
+        cdef LPWSTR name_w
+
         if value_name != None:
             name_w = wstr_from_utf8(value_name)
         else:
             name_w = NULL
 
-        data = <LPBYTE> malloc(4096)
-        data_size = 4096
+        retval = CeRegDeleteValue(self.handle, name_w)
 
-        retval = CeRegQueryValueEx(self.handle, name_w, NULL,
-                                   &type, data, &data_size)
+        if name_w != NULL:
+            wstr_free_string(name_w)
 
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
-        if type == REG_DWORD:
-            dw_ptr = <LPDWORD> data
-            value = dw_ptr[0]
-        elif type == REG_SZ:
-            value = wstr_to_utf8(<LPCWSTR> data)
-        else:
-            # FIXME
-            return <char *> data
-
-        free(data)
-        return value
+        return retval
 
     def close(self):
         retval = CeRegCloseKey(self.handle)

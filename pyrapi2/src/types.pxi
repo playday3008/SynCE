@@ -6,7 +6,8 @@ cdef extern from "stdint.h":
     ctypedef short int          int16_t
     ctypedef unsigned short int uint16_t
     ctypedef int                int32_t
-    ctypedef unsigned int       uint32_t
+    # FIXME: this isn't portable
+    ctypedef unsigned long      uint32_t
     ctypedef long int           int64_t
 
 cdef extern from "synce.h":
