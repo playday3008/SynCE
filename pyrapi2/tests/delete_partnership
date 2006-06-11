@@ -15,7 +15,7 @@ if not slot in (1, 2):
 
 s = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
 
-partnership = get_partnerships(s)[slot -1]
+partnership = get_partnerships(s)[slot-1]
 if partnership == None:
     print "Partnership does not exist"
     sys.exit(1)
