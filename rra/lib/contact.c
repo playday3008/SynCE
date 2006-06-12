@@ -702,7 +702,6 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				{
 					case ID_FRONTEND_KDEPIM:
           case ID_FRONTEND_EVOLUTION:
-						synce_warning("ID_NICKNAME");
 						strbuf_append(vcard, "NICKNAME:");
 						strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
 						strbuf_append_crlf(vcard);
