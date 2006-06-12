@@ -13,9 +13,9 @@
 #define ID_NOTES            0x0017
 #define ID_IMPORTANCE       0x0026
 
-#define IMPORANCE_HIGH      1
-#define IMPORANCE_NORMAL    2
-#define IMPORANCE_LOW       3
+#define IMPORTANCE_HIGH     1
+#define IMPORTANCE_NORMAL   2
+#define IMPORTANCE_LOW      3
 
 #define ID_SUBJECT          0x0037
 

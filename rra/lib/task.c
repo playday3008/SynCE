@@ -93,13 +93,13 @@ static bool on_propval_importance(Generator* g, CEPROPVAL* propval, void* cookie
 {
   switch(propval->val.iVal)
   {
-  case IMPORANCE_HIGH:
+  case IMPORTANCE_HIGH:
     generator_add_simple(g, "PRIORITY", "3");
     break;
-  case IMPORANCE_NORMAL:
+  case IMPORTANCE_NORMAL:
     generator_add_simple(g, "PRIORITY", "5");
     break;
-  case IMPORANCE_LOW:
+  case IMPORTANCE_LOW:
     generator_add_simple(g, "PRIORITY", "7");
     break;
   }
@@ -250,21 +250,21 @@ static bool on_mdir_line_importance(Parser* p, mdir_line* line, void* cookie)
         STR_EQUAL(line->values[0], "2") ||
         STR_EQUAL(line->values[0], "3") ||
         STR_EQUAL(line->values[0], "4"))
-      return parser_add_int32(p, ID_IMPORTANCE, IMPORANCE_HIGH);
+      return parser_add_int32(p, ID_IMPORTANCE, IMPORTANCE_HIGH);
     else if (STR_EQUAL(line->values[0], "0") ||
              STR_EQUAL(line->values[0], "5"))
-      return parser_add_int32(p, ID_IMPORTANCE, IMPORANCE_NORMAL);
+      return parser_add_int32(p, ID_IMPORTANCE, IMPORTANCE_NORMAL);
     else if (STR_EQUAL(line->values[0], "6") ||
              STR_EQUAL(line->values[0], "7") ||
              STR_EQUAL(line->values[0], "8") ||
              STR_EQUAL(line->values[0], "9"))
-      return parser_add_int32(p, ID_IMPORTANCE, IMPORANCE_LOW);
+      return parser_add_int32(p, ID_IMPORTANCE, IMPORTANCE_LOW);
     else
       synce_warning("Unknown value for importance: '%s'", line->values[0]);
       return false;
   }
   else
-    return parser_add_int32(p, index, IMPORANCE_NORMAL);
+    return parser_add_int32(p, ID_IMPORTANCE, IMPORTANCE_NORMAL);
 }
 
 bool rra_task_from_vtodo(
