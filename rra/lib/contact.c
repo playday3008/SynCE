@@ -24,10 +24,11 @@ extern char* convert_from_utf8(const char* source);
 static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
 
 /* 
- * the theoretical field count maximum is about 50,
+ * the theoretical field count maximum is about 50
+ * plus about 50 additional fields,
  * and we add 10 to be safe
  */
-#define MAX_FIELD_COUNT  80
+#define MAX_FIELD_COUNT 110
 
 /* 
    ESCAPED-CHAR = "\\" / "\;" / "\," / "\n" / "\N")
@@ -621,6 +622,19 @@ static bool rra_contact_to_vcard2(/*{{{*/
         strbuf_append_crlf(vcard);
         break;
 
+      case ID_OTHER_TEL1:
+      case ID_OTHER_TEL2:
+      case ID_OTHER_TEL3:
+      case ID_OTHER_TEL4:
+      case ID_OTHER_TEL5:
+      case ID_OTHER_TEL6:
+      case ID_OTHER_TEL7:
+      case ID_OTHER_TEL8:
+        strbuf_append_tel_type(vcard, "VOICE", flags);
+        strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
+        strbuf_append_crlf(vcard);
+        break;
+
 /* FOOBAR */
 			case ID_IMADDRESS:
 				switch(rra_frontend_get())
@@ -1129,6 +1143,7 @@ typedef struct _Parser
   int count_email;
   int count_tel_work;
   int count_tel_home;
+  int count_tel_other;
   int count_evolution_messaging;
 } Parser;
 
@@ -1210,6 +1225,14 @@ typedef enum _field_index
   INDEX_X_EVOLUTION_MESSAGING2_META,
   INDEX_X_EVOLUTION_MESSAGING3_META,
   INDEX_X_EVOLUTION_MESSAGING4_META,
+  INDEX_OTHER_TEL1,
+  INDEX_OTHER_TEL2,
+  INDEX_OTHER_TEL3,
+  INDEX_OTHER_TEL4,
+  INDEX_OTHER_TEL5,
+  INDEX_OTHER_TEL6,
+  INDEX_OTHER_TEL7,
+  INDEX_OTHER_TEL8,
   ID_COUNT
 } field_index;
 
@@ -1249,6 +1272,20 @@ static uint32_t messaging_index[MESSAGING_FIELD_COUNT][2] =
   {INDEX_X_EVOLUTION_MESSAGING2,  INDEX_X_EVOLUTION_MESSAGING2_META},
   {INDEX_X_EVOLUTION_MESSAGING3,  INDEX_X_EVOLUTION_MESSAGING3_META},
   {INDEX_X_EVOLUTION_MESSAGING4,  INDEX_X_EVOLUTION_MESSAGING4_META},
+};
+
+#define OTHER_TEL_COUNT 8
+
+static uint32_t other_tel_index[OTHER_TEL_COUNT] =
+{
+  INDEX_OTHER_TEL1,
+  INDEX_OTHER_TEL2,
+  INDEX_OTHER_TEL3,
+  INDEX_OTHER_TEL4,
+  INDEX_OTHER_TEL5,
+  INDEX_OTHER_TEL6,
+  INDEX_OTHER_TEL7,
+  INDEX_OTHER_TEL8,
 };
 
 static const uint32_t field_id[ID_COUNT] =
@@ -1329,6 +1366,14 @@ static const uint32_t field_id[ID_COUNT] =
   ID_X_EVOLUTION_MESSAGING2_META,
   ID_X_EVOLUTION_MESSAGING3_META,
   ID_X_EVOLUTION_MESSAGING4_META,
+  ID_OTHER_TEL1,
+  ID_OTHER_TEL2,
+  ID_OTHER_TEL3,
+  ID_OTHER_TEL4,
+  ID_OTHER_TEL5,
+  ID_OTHER_TEL6,
+  ID_OTHER_TEL7,
+  ID_OTHER_TEL8,
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1484,6 +1529,8 @@ static void add_blob(Parser* parser, uint32_t index, const char* type, char* dat
   }
 }/*}}}*/
 
+#define is_empty(parser, index) parser->fields[index].propid & CEVT_FLAG_EMPTY
+
 static bool parser_handle_field(/*{{{*/
 		Parser* parser,
 		char* name, 
@@ -1608,62 +1655,65 @@ static bool parser_handle_field(/*{{{*/
     bool fax = STR_IN_STR(type, "FAX");
 
 		/* TODO: make type uppercase */
-		if (STR_IN_STR(type, "HOME"))
-		{
-      if (fax) {
-        add_string(parser, INDEX_HOME_FAX, type, value);
-      } else {
-        switch (parser->count_tel_home++)
-        {
-        case 0:
-          add_string(parser, INDEX_HOME_TEL, type, value);
-          break;
-        case 1:
-          add_string(parser, INDEX_HOME2_TEL, type, value);
-          break;
-        }
+    if (STR_IN_STR(type, "HOME") && !fax && parser->count_tel_home < MAX_TEL_HOME)
+    {
+      switch (parser->count_tel_home++)
+      {
+      case 0:
+        add_string(parser, INDEX_HOME_TEL, type, value);
+        break;
+      case 1:
+        add_string(parser, INDEX_HOME2_TEL, type, value);
+        break;
       }
-		}
-		else if (STR_IN_STR(type, "WORK"))
-		{
-      if (fax) {
-        add_string(parser, INDEX_WORK_FAX, type, value);
-      } else {
-        switch (parser->count_tel_work++)
-        {
-        case 0:
-          add_string(parser, INDEX_WORK_TEL, type, value);
-          break;
-        case 1:
-          add_string(parser, INDEX_WORK2_TEL, type, value);
-          break;
-        }
+    }
+    else if (STR_IN_STR(type, "HOME") && fax && is_empty(parser, INDEX_HOME_FAX))
+    {
+      add_string(parser, INDEX_HOME_FAX, type, value);
+    }
+    else if (STR_IN_STR(type, "WORK") && !fax && parser->count_tel_work < MAX_TEL_WORK)
+    {
+      switch (parser->count_tel_work++)
+      {
+      case 0:
+        add_string(parser, INDEX_WORK_TEL, type, value);
+        break;
+      case 1:
+        add_string(parser, INDEX_WORK2_TEL, type, value);
+        break;
       }
-		}
-		else if (STR_IN_STR(type, "CELL"))
+    }
+    else if (STR_IN_STR(type, "WORK") && fax && is_empty(parser, INDEX_WORK_FAX))
+    {
+      add_string(parser, INDEX_WORK_FAX, type, value);
+    }
+    else if (STR_IN_STR(type, "CELL") && is_empty(parser, INDEX_MOBILE_TEL))
 		{
       add_string(parser, INDEX_MOBILE_TEL, type, value);
 		}
-		else if (STR_IN_STR(type, "X-EVOLUTION-ASSISTANT"))
+    else if (STR_IN_STR(type, "X-EVOLUTION-ASSISTANT") && is_empty(parser, INDEX_ASSISTANT_TEL))
 		{
       add_string(parser, INDEX_ASSISTANT_TEL, type, value);
 		}
-		else if (STR_IN_STR(type, "X-EVOLUTION-RADIO"))
+    else if (STR_IN_STR(type, "X-EVOLUTION-RADIO") && is_empty(parser, INDEX_RADIO_TEL))
 		{
       add_string(parser, INDEX_RADIO_TEL, type, value);
 		}
-		else if (STR_IN_STR(type, "CAR"))
+    else if (STR_IN_STR(type, "CAR") && is_empty(parser, INDEX_CAR_TEL))
 		{
       add_string(parser, INDEX_CAR_TEL, type, value);
 		}
-		else if (STR_IN_STR(type, "PAGER"))
+    else if (STR_IN_STR(type, "PAGER") && is_empty(parser, INDEX_PAGER))
 		{
       add_string(parser, INDEX_PAGER, type, value);
 		}
-		else
+    else
 		{
-			synce_trace("Type '%s' for field '%s' not recognized.",
-					type, name);
+      if (parser->count_tel_other < OTHER_TEL_COUNT)
+        add_string(parser, other_tel_index[parser->count_tel_other++], type, value);
+      else
+        synce_trace("Type '%s' for field '%s' not recognized.",
+            type, name);
 		}
 	}/*}}}*/
 	else if (STR_EQUAL(name, "EMAIL"))/*{{{*/
@@ -2032,6 +2082,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
   parser.count_email = 0;
   parser.count_tel_work = 0;
   parser.count_tel_home = 0;
+  parser.count_tel_other = 0;
   parser.count_evolution_messaging = 0;
 
   for (count=0; count < ID_COUNT; count++)
