@@ -28,41 +28,23 @@ static uint8_t invalid_filetime_buffer[] =
 typedef struct
 {
   bool completed;
-  time_t completed_time;
+  FILETIME completed_time;
 } TaskGeneratorData;
 
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   bool success = false;
   TaskGeneratorData* data = (TaskGeneratorData*)cookie;
-  
+
   switch (propval->propid & 0xffff)
   {
     case CEVT_FILETIME:
-        data->completed_time = filetime_to_unix_time(&propval->val.filetime);;
-#if 0
-
-        if (completed_time > 0)
-        {
-          char date[32];
-          /* always UTC format */
-          strftime(date, sizeof(date), "%Y%m%dT000000Z", gmtime(&completed_time));
-          generator_add_simple(g, "COMPLETED", date);
-        }
-      }
-#endif
+      data->completed_time = propval->val.filetime;
       success = true;
       break;
 
     case CEVT_I2:
       data->completed = propval->val.iVal;
-#if 0
-      if ()
-      {
-        generator_add_simple(g, "PERCENT-COMPLETE", "100");
-        generator_add_simple(g, "STATUS",           "COMPLETED");
-      }
-#endif
       success = true;
       break;
 
@@ -76,16 +58,12 @@ static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
 
 static bool on_propval_due(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  time_t due_time = 
-    filetime_to_unix_time(&propval->val.filetime);
+  char date[9];
 
-  if (due_time > 0)
-  {
-    char date[16];
-    /* using localtime here to get correct output from strftime */
-    strftime(date, sizeof(date), "%Y%m%d", localtime(&due_time));
-    generator_add_with_type(g, "DUE", "DATE", date);
-  }
+  parser_filetime_to_datetime(&propval->val.filetime , date, sizeof(date));
+
+  generator_add_with_type(g, "DUE", "DATE", date);
+
   return true;
 }
 
@@ -108,16 +86,12 @@ static bool on_propval_importance(Generator* g, CEPROPVAL* propval, void* cookie
 
 static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  time_t start_time = 
-    filetime_to_unix_time(&propval->val.filetime);
+  char date[9];
 
-  if (start_time > 0)
-  {
-    char date[16];
-    /* using localtime here to get correct output from strftime */
-    strftime(date, sizeof(date), "%Y%m%d", localtime(&start_time));
-    generator_add_with_type(g, "DTSTART", "DATE", date);
-  }
+  parser_filetime_to_datetime(&propval->val.filetime , date, sizeof(date));
+
+  generator_add_with_type(g, "DTSTART", "DATE", date);
+
   return true;
 }
 
@@ -177,17 +151,14 @@ bool rra_task_to_vtodo(
 
   if (task_generator_data.completed)
   {
+    char date[9];
+
     generator_add_simple(generator, "PERCENT-COMPLETE", "100");
     generator_add_simple(generator, "STATUS",           "COMPLETED");
 
-    if (task_generator_data.completed_time > 0)
-    {
-      char date[32];
-      /* using localtime here to get correct output from strftime */
-      strftime(date, sizeof(date), "%Y%m%dT000000Z", 
-          localtime(&task_generator_data.completed_time));
-      generator_add_simple(generator, "COMPLETED", date);
-    }
+    parser_filetime_to_datetime(&task_generator_data.completed_time , date, sizeof(date));    
+
+    generator_add_simple(generator, "COMPLETED", date);
   }
 
   generator_add_simple(generator, "END", "VTODO");

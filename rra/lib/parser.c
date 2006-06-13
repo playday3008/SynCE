@@ -247,6 +247,29 @@ bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time, bool*
   return -1 != *unix_time;
 }/*}}}*/
 
+void parser_filetime_to_datetime(const FILETIME* filetime, char* datetime, unsigned size)/*{{{*/
+{
+  TIME_FIELDS time_fields;
+
+  time_fields_from_filetime(filetime, &time_fields);
+
+  snprintf(datetime, size, "%04i%02i%02iT%02i%02i%02iZ",
+           time_fields.Year, time_fields.Month, time_fields.Day,
+           time_fields.Hour, time_fields.Minute, time_fields.Second);
+
+  return;
+}/*}}}*/
+
+bool parser_filetime_to_unix_time(const FILETIME* filetime, time_t* unix_time)/*{{{*/
+{
+  char datetime[17];
+  bool local_is_utc;
+
+  parser_filetime_to_datetime(filetime , datetime, sizeof(datetime));
+
+  return parser_datetime_to_unix_time(datetime, unix_time, &local_is_utc);
+}/*}}}*/
+
 static CEPROPVAL* parser_get_next_propval(Parser* self)/*{{{*/
 {
   if (MAX_PROPVAL_COUNT == self->propval_count)

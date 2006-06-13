@@ -30,6 +30,8 @@ void parser_component_add_parser_property (ParserComponent* self, ParserProperty
 bool parser_duration_to_seconds  (const char* duration, int* seconds);
 bool parser_datetime_to_struct   (const char* datetime, struct tm* tm, bool* is_utc);
 bool parser_datetime_to_unix_time(const char* datetime, time_t* unix_time, bool* is_utc);
+void parser_filetime_to_datetime(const FILETIME* filetime, char* date,  unsigned size);
+bool parser_filetime_to_unix_time(const FILETIME* filetime, time_t* unix_time);
 
 Parser* parser_new(
     ParserComponent* base_parser_component, 

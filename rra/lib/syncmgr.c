@@ -3,6 +3,7 @@
 #include "syncmgr.h"
 #include "rrac.h"
 #include "uint32vector.h"
+#include <parser.h>
 #include <synce_hash.h>
 #include <synce_log.h>
 #include <synce_socket.h>
@@ -138,8 +139,9 @@ static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)/*{{{*/
     self->types[i].id          = raw_object_types[i].id;
     self->types[i].count       = raw_object_types[i].count;
     self->types[i].total_size  = raw_object_types[i].total_size;
-    self->types[i].modified    = 
-      filetime_to_unix_time(&raw_object_types[i].filetime);
+
+    if (!parser_filetime_to_unix_time(&raw_object_types[i].filetime, &self->types[i].modified))
+      self->types[i].modified = 0;
 
     ascii = wstr_to_ascii(raw_object_types[i].name1);
     strcpy(self->types[i].name1, ascii);

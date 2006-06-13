@@ -225,12 +225,14 @@ bool rra_appointment_to_vevent(/*{{{*/
       event_generator_data.type)
   {
     char buffer[32];
-    time_t start_time = 
-      filetime_to_unix_time(&event_generator_data.start->val.filetime);
+    time_t start_time = 0;
     time_t end_time = 0;
     const char* type = NULL;
     const char* format = NULL;
     struct tm* (*xtime)(const time_t *timep) = NULL;
+
+    if (!parser_filetime_to_unix_time(&event_generator_data.start->val.filetime, &start_time))
+      goto exit;
 
     switch (event_generator_data.type->val.lVal)
     {
