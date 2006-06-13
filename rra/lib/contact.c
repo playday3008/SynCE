@@ -25,10 +25,10 @@ static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
 
 /* 
  * the theoretical field count maximum is about 50
- * plus about 50 additional fields,
+ * plus about 60 additional fields,
  * and we add 10 to be safe
  */
-#define MAX_FIELD_COUNT 110
+#define MAX_FIELD_COUNT 120
 
 /* 
    ESCAPED-CHAR = "\\" / "\;" / "\," / "\n" / "\N")
@@ -224,6 +224,22 @@ void rra_contact_to_vcard2_email(StrBuf* vcard, WCHAR* email, WCHAR* meta, bool 
   }
 };
 
+void rra_contact_to_vcard2_tel(StrBuf* vcard, WCHAR* tel, const char* type, WCHAR* meta, uint32_t flags)
+{
+  if (tel)
+  {
+    if (meta)
+    {
+      strbuf_append(vcard, "TEL;");
+      strbuf_append_wstr(vcard, meta);
+      strbuf_append_c(vcard, ':');
+    } else
+      strbuf_append_tel_type(vcard, type, flags);
+    strbuf_append_escaped_wstr(vcard, tel,flags);
+    strbuf_append_crlf(vcard);
+  }
+};
+
 #define set_count(count,value) if (count == 0) count=value;
 
 static bool rra_contact_to_vcard2(/*{{{*/
@@ -289,6 +305,37 @@ static bool rra_contact_to_vcard2(/*{{{*/
                                       {NULL, NULL},
                                       {NULL, NULL},
                                       {NULL, NULL}};
+
+  /* telephone */
+  WCHAR* tel_work = NULL;
+  WCHAR* tel_home = NULL;
+  WCHAR* tel_mobile = NULL;
+  WCHAR* tel_radio = NULL;
+  WCHAR* tel_car = NULL;
+  WCHAR* fax_work = NULL;
+  WCHAR* fax_home = NULL;
+  WCHAR* tel_home2 = NULL;
+  WCHAR* tel_assistant = NULL;
+  WCHAR* tel_work2 = NULL;
+  WCHAR* pager = NULL;
+
+  WCHAR* tel_others[8] = { NULL, NULL, NULL, NULL,
+                           NULL, NULL, NULL, NULL };
+
+  WCHAR* tel_work_evolution_meta = NULL;
+  WCHAR* tel_home_evolution_meta = NULL;
+  WCHAR* tel_mobile_evolution_meta = NULL;
+  WCHAR* tel_radio_evolution_meta = NULL;
+  WCHAR* tel_car_evolution_meta = NULL;
+  WCHAR* fax_work_evolution_meta = NULL;
+  WCHAR* fax_home_evolution_meta = NULL;
+  WCHAR* tel_home2_evolution_meta = NULL;
+  WCHAR* tel_assistant_evolution_meta = NULL;
+  WCHAR* tel_work2_evolution_meta = NULL;
+  WCHAR* pager_evolution_meta = NULL;
+
+  WCHAR* tel_others_evolution_meta[8] = { NULL, NULL, NULL, NULL,
+                                          NULL, NULL, NULL, NULL };
 
 	strbuf_append(vcard, "BEGIN:vCard\r\n");
 
@@ -386,15 +433,11 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_WORK_TEL:
-				strbuf_append_tel_type(vcard, "WORK,VOICE,PREF", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_work = pFields[i].val.lpwstr;
 				break;
 
 			case ID_HOME_TEL:
-				strbuf_append_tel_type(vcard, "HOME,VOICE,PREF", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_home = pFields[i].val.lpwstr;
 				break;
 
 			case ID_LAST_NAME:
@@ -416,33 +459,23 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_MOBILE_TEL:
-				strbuf_append_tel_type(vcard, "CELL", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_mobile = pFields[i].val.lpwstr;
 				break;
 
 			case ID_CAR_TEL:
-				strbuf_append_tel_type(vcard, "CAR", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_car = pFields[i].val.lpwstr;
 				break;
 
 			case ID_WORK_FAX:
-				strbuf_append_tel_type(vcard, "WORK,FAX", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        fax_work = pFields[i].val.lpwstr;
 				break;
 
 			case ID_HOME_FAX:
-				strbuf_append_tel_type(vcard, "HOME,FAX", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        fax_home = pFields[i].val.lpwstr;
 				break;
 
 			case ID_HOME2_TEL:
-				strbuf_append_tel_type(vcard, "HOME,VOICE", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_home2 = pFields[i].val.lpwstr;
 				break;
 
 			case ID_CATEGORY:
@@ -452,9 +485,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_WORK2_TEL:
-				strbuf_append_tel_type(vcard, "WORK,VOICE", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_work2 = pFields[i].val.lpwstr;
 				break;
 
 			case ID_WEB_PAGE:
@@ -464,9 +495,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_PAGER:
-				strbuf_append_tel_type(vcard, "PAGER", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        pager = pFields[i].val.lpwstr;
 				break;
 
 			case ID_FULL_NAME:
@@ -601,9 +630,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_ASSISTANT_TEL:
-				strbuf_append_tel_type(vcard, "X-EVOLUTION-ASSISTANT", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_assistant = pFields[i].val.lpwstr;
 				break;
 
 			case ID_OFFICE_LOC:
@@ -611,9 +638,7 @@ static bool rra_contact_to_vcard2(/*{{{*/
 				break;
 
 			case ID_RADIO_TEL:
-				strbuf_append_tel_type(vcard, "X-EVOLUTION-RADIO", flags);
-				strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-				strbuf_append_crlf(vcard);
+        tel_radio = pFields[i].val.lpwstr;
 				break;
 
       case ID_CHILDREN:
@@ -623,16 +648,111 @@ static bool rra_contact_to_vcard2(/*{{{*/
         break;
 
       case ID_OTHER_TEL1:
+        tel_others[0] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL2:
+        tel_others[1] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL3:
+        tel_others[2] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL4:
+        tel_others[3] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL5:
+        tel_others[4] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL6:
+        tel_others[5] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL7:
+        tel_others[6] = pFields[i].val.lpwstr;
+        break;
+
       case ID_OTHER_TEL8:
-        strbuf_append_tel_type(vcard, "VOICE", flags);
-        strbuf_append_escaped_wstr(vcard, pFields[i].val.lpwstr, flags);
-        strbuf_append_crlf(vcard);
+        tel_others[7] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_WORK_TEL_EVOLUTION_META:
+        tel_work_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_HOME_TEL_EVOLUTION_META:
+        tel_home_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_MOBILE_TEL_EVOLUTION_META:
+        tel_mobile_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_RADIO_TEL_EVOLUTION_META:
+        tel_radio_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_CAR_TEL_EVOLUTION_META:
+        tel_car_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_WORK_FAX_EVOLUTION_META:
+        fax_work_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_HOME_FAX_EVOLUTION_META:
+        fax_home_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_HOME2_TEL_EVOLUTION_META:
+        tel_home2_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_ASSISTANT_TEL_EVOLUTION_META:
+        tel_assistant_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_WORK2_TEL_EVOLUTION_META:
+        tel_work2_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_PAGER_EVOLUTION_META:
+        pager_evolution_meta = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL1_EVOLUTION_META:
+        tel_others_evolution_meta[0] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL2_EVOLUTION_META:
+        tel_others_evolution_meta[1] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL3_EVOLUTION_META:
+        tel_others_evolution_meta[2] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL4_EVOLUTION_META:
+        tel_others_evolution_meta[3] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL5_EVOLUTION_META:
+        tel_others_evolution_meta[4] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL6_EVOLUTION_META:
+        tel_others_evolution_meta[5] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL7_EVOLUTION_META:
+        tel_others_evolution_meta[6] = pFields[i].val.lpwstr;
+        break;
+
+      case ID_OTHER_TEL8_EVOLUTION_META:
+        tel_others_evolution_meta[7] = pFields[i].val.lpwstr;
         break;
 
 /* FOOBAR */
@@ -1017,12 +1137,42 @@ static bool rra_contact_to_vcard2(/*{{{*/
       rra_contact_to_vcard2_email(vcard, email2, email2_evolution_meta, false, flags);
       rra_contact_to_vcard2_email(vcard, email3, email3_evolution_meta, false, flags);
       rra_contact_to_vcard2_email(vcard, email4, email4_evolution_meta, false, flags);
+
+      rra_contact_to_vcard2_tel(vcard, tel_work, "WORK,VOICE,PREF", tel_work_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_home, "HOME,VOICE,PREF", tel_home_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_mobile, "CELL", tel_mobile_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_radio, "X-EVOLUTION-RADIO", tel_radio_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_car, "CAR", tel_car_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, fax_work, "WORK,FAX", fax_work_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, fax_home, "HOME,FAX", fax_home_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_home2, "HOME,VOICE", tel_home2_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_assistant, "X-EVOLUTION-ASSISTANT", tel_assistant_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_work2, "WORK,VOICE", tel_work2_evolution_meta, flags);
+      rra_contact_to_vcard2_tel(vcard, pager, "PAGER", pager_evolution_meta, flags);
+
+      for (i = 0; i < 8; i++)
+        rra_contact_to_vcard2_tel(vcard, tel_others[i], "VOICE", tel_others_evolution_meta[i], flags);
       break;
     default:
       rra_contact_to_vcard2_email(vcard, email, NULL, true, flags);
       rra_contact_to_vcard2_email(vcard, email2, NULL, false, flags);
       rra_contact_to_vcard2_email(vcard, email3, NULL,  false, flags);
       rra_contact_to_vcard2_email(vcard, email4, NULL,  false, flags);
+
+      rra_contact_to_vcard2_tel(vcard, tel_work, "WORK,VOICE,PREF", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_home, "HOME,VOICE,PREF", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_mobile, "CELL", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_radio, "X-EVOLUTION-RADIO", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_car, "CAR", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, fax_work, "WORK,FAX", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, fax_home, "HOME,FAX", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_home2, "HOME,VOICE", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_assistant, "X-EVOLUTION-ASSISTANT", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, tel_work2, "WORK,VOICE", NULL, flags);
+      rra_contact_to_vcard2_tel(vcard, pager, "PAGER", NULL, flags);
+
+      for (i = 0; i < 8; i++)
+        rra_contact_to_vcard2_tel(vcard, tel_others[i], "VOICE", NULL, flags);
       break;
   }
 
@@ -1233,6 +1383,25 @@ typedef enum _field_index
   INDEX_OTHER_TEL6,
   INDEX_OTHER_TEL7,
   INDEX_OTHER_TEL8,
+  INDEX_WORK_TEL_EVOLUTION_META,
+  INDEX_HOME_TEL_EVOLUTION_META,
+  INDEX_MOBILE_TEL_EVOLUTION_META,
+  INDEX_RADIO_TEL_EVOLUTION_META,
+  INDEX_CAR_TEL_EVOLUTION_META,
+  INDEX_WORK_FAX_EVOLUTION_META,
+  INDEX_HOME_FAX_EVOLUTION_META,
+  INDEX_HOME2_TEL_EVOLUTION_META,
+  INDEX_ASSISTANT_TEL_EVOLUTION_META,
+  INDEX_WORK2_TEL_EVOLUTION_META,
+  INDEX_PAGER_EVOLUTION_META,
+  INDEX_OTHER_TEL1_EVOLUTION_META,
+  INDEX_OTHER_TEL2_EVOLUTION_META,
+  INDEX_OTHER_TEL3_EVOLUTION_META,
+  INDEX_OTHER_TEL4_EVOLUTION_META,
+  INDEX_OTHER_TEL5_EVOLUTION_META,
+  INDEX_OTHER_TEL6_EVOLUTION_META,
+  INDEX_OTHER_TEL7_EVOLUTION_META,
+  INDEX_OTHER_TEL8_EVOLUTION_META,
   ID_COUNT
 } field_index;
 
@@ -1286,6 +1455,18 @@ static uint32_t other_tel_index[OTHER_TEL_COUNT] =
   INDEX_OTHER_TEL6,
   INDEX_OTHER_TEL7,
   INDEX_OTHER_TEL8,
+};
+
+static uint32_t other_tel_evolution_meta_index[OTHER_TEL_COUNT] =
+{
+  INDEX_OTHER_TEL1_EVOLUTION_META,
+  INDEX_OTHER_TEL2_EVOLUTION_META,
+  INDEX_OTHER_TEL3_EVOLUTION_META,
+  INDEX_OTHER_TEL4_EVOLUTION_META,
+  INDEX_OTHER_TEL5_EVOLUTION_META,
+  INDEX_OTHER_TEL6_EVOLUTION_META,
+  INDEX_OTHER_TEL7_EVOLUTION_META,
+  INDEX_OTHER_TEL8_EVOLUTION_META,
 };
 
 static const uint32_t field_id[ID_COUNT] =
@@ -1374,6 +1555,25 @@ static const uint32_t field_id[ID_COUNT] =
   ID_OTHER_TEL6,
   ID_OTHER_TEL7,
   ID_OTHER_TEL8,
+  ID_WORK_TEL_EVOLUTION_META,
+  ID_HOME_TEL_EVOLUTION_META,
+  ID_MOBILE_TEL_EVOLUTION_META,
+  ID_RADIO_TEL_EVOLUTION_META,
+  ID_CAR_TEL_EVOLUTION_META,
+  ID_WORK_FAX_EVOLUTION_META,
+  ID_HOME_FAX_EVOLUTION_META,
+  ID_HOME2_TEL_EVOLUTION_META,
+  ID_ASSISTANT_TEL_EVOLUTION_META,
+  ID_WORK2_TEL_EVOLUTION_META,
+  ID_PAGER_EVOLUTION_META,
+  ID_OTHER_TEL1_EVOLUTION_META,
+  ID_OTHER_TEL2_EVOLUTION_META,
+  ID_OTHER_TEL3_EVOLUTION_META,
+  ID_OTHER_TEL4_EVOLUTION_META,
+  ID_OTHER_TEL5_EVOLUTION_META,
+  ID_OTHER_TEL6_EVOLUTION_META,
+  ID_OTHER_TEL7_EVOLUTION_META,
+  ID_OTHER_TEL8_EVOLUTION_META,
 };
 
 static char* strdup_quoted_printable(const char* source)/*{{{*/
@@ -1661,15 +1861,21 @@ static bool parser_handle_field(/*{{{*/
       {
       case 0:
         add_string(parser, INDEX_HOME_TEL, type, value);
+        if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+          add_string(parser, INDEX_HOME_TEL_EVOLUTION_META, type, type);
         break;
       case 1:
         add_string(parser, INDEX_HOME2_TEL, type, value);
+        if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+          add_string(parser, INDEX_HOME2_TEL_EVOLUTION_META, type, type);
         break;
       }
     }
     else if (STR_IN_STR(type, "HOME") && fax && is_empty(parser, INDEX_HOME_FAX))
     {
       add_string(parser, INDEX_HOME_FAX, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_HOME_FAX_EVOLUTION_META, type, type);
     }
     else if (STR_IN_STR(type, "WORK") && !fax && parser->count_tel_work < MAX_TEL_WORK)
     {
@@ -1677,40 +1883,60 @@ static bool parser_handle_field(/*{{{*/
       {
       case 0:
         add_string(parser, INDEX_WORK_TEL, type, value);
+        if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+          add_string(parser, INDEX_WORK_TEL_EVOLUTION_META, type, type);
         break;
       case 1:
         add_string(parser, INDEX_WORK2_TEL, type, value);
+        if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+          add_string(parser, INDEX_WORK2_TEL_EVOLUTION_META, type, type);
         break;
       }
     }
     else if (STR_IN_STR(type, "WORK") && fax && is_empty(parser, INDEX_WORK_FAX))
     {
       add_string(parser, INDEX_WORK_FAX, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_WORK_FAX_EVOLUTION_META, type, type);
     }
     else if (STR_IN_STR(type, "CELL") && is_empty(parser, INDEX_MOBILE_TEL))
 		{
       add_string(parser, INDEX_MOBILE_TEL, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_MOBILE_TEL_EVOLUTION_META, type, type);
 		}
     else if (STR_IN_STR(type, "X-EVOLUTION-ASSISTANT") && is_empty(parser, INDEX_ASSISTANT_TEL))
 		{
       add_string(parser, INDEX_ASSISTANT_TEL, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_ASSISTANT_TEL_EVOLUTION_META, type, type);
 		}
     else if (STR_IN_STR(type, "X-EVOLUTION-RADIO") && is_empty(parser, INDEX_RADIO_TEL))
 		{
       add_string(parser, INDEX_RADIO_TEL, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_RADIO_TEL_EVOLUTION_META, type, type);
 		}
     else if (STR_IN_STR(type, "CAR") && is_empty(parser, INDEX_CAR_TEL))
 		{
       add_string(parser, INDEX_CAR_TEL, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_CAR_TEL_EVOLUTION_META, type, type);
 		}
     else if (STR_IN_STR(type, "PAGER") && is_empty(parser, INDEX_PAGER))
 		{
       add_string(parser, INDEX_PAGER, type, value);
+      if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+        add_string(parser, INDEX_PAGER_EVOLUTION_META, type, type);
 		}
     else
 		{
       if (parser->count_tel_other < OTHER_TEL_COUNT)
+      {
+        if (rra_frontend_get() == ID_FRONTEND_EVOLUTION)
+          add_string(parser, other_tel_evolution_meta_index[parser->count_tel_other], type, type);
         add_string(parser, other_tel_index[parser->count_tel_other++], type, value);
+      }
       else
         synce_trace("Type '%s' for field '%s' not recognized.",
             type, name);
