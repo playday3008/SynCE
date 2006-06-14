@@ -143,6 +143,21 @@ bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)
 
 bool on_propval_categories(Generator* g, CEPROPVAL* propval, void* cookie)
 {
+  int i, j;
+
+  /*
+   * Remove the space character after the comma separator
+   */
+  for (i = 0, j = 0; propval->val.lpwstr[i]; i++)
+    if (i && propval->val.lpwstr[i] == 0x20 &&
+        propval->val.lpwstr[i - 1] == 0x2c)
+      j++;
+    else
+      if (j)
+        propval->val.lpwstr[i - j] = propval->val.lpwstr[i];
+  for (; j > 0; j--)
+    propval->val.lpwstr[i - j] = 0;
+
   return generator_add_simple_propval(g, "CATEGORIES", propval);
 }
 
