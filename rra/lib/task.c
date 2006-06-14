@@ -21,6 +21,8 @@
 static uint8_t invalid_filetime_buffer[] = 
 {0x00, 0x40, 0xdd, 0xa3, 0x57, 0x45, 0xb3, 0x0c};
 
+#define is_valid(filetime) memcmp(&invalid_filetime_buffer, filetime, sizeof(invalid_filetime_buffer))
+
 /*
    Any on_propval_* functions not here are found in common_handlers.c
 */
@@ -60,9 +62,12 @@ static bool on_propval_due(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   char date[9];
 
-  parser_filetime_to_datetime(&propval->val.filetime , date, sizeof(date));
+  if (is_valid(&propval->val.filetime))
+  {
+    parser_filetime_to_datetime(&propval->val.filetime , date, sizeof(date));
 
-  generator_add_with_type(g, "DUE", "DATE", date);
+    generator_add_with_type(g, "DUE", "DATE", date);
+  }
 
   return true;
 }
@@ -88,9 +93,12 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   char date[9];
 
-  parser_filetime_to_datetime(&propval->val.filetime , date, sizeof(date));
+  if (is_valid(&propval->val.filetime))
+  {
+    parser_filetime_to_datetime(&propval->val.filetime , date, sizeof(date));
 
-  generator_add_with_type(g, "DTSTART", "DATE", date);
+    generator_add_with_type(g, "DTSTART", "DATE", date);
+  }
 
   return true;
 }
@@ -156,9 +164,12 @@ bool rra_task_to_vtodo(
     generator_add_simple(generator, "PERCENT-COMPLETE", "100");
     generator_add_simple(generator, "STATUS",           "COMPLETED");
 
-    parser_filetime_to_datetime(&task_generator_data.completed_time , date, sizeof(date));    
+    if (is_valid(&task_generator_data.completed_time))
+    {
+      parser_filetime_to_datetime(&task_generator_data.completed_time, date, sizeof(date));    
 
-    generator_add_simple(generator, "COMPLETED", date);
+      generator_add_simple(generator, "COMPLETED", date);
+    }
   }
 
   generator_add_simple(generator, "END", "VTODO");
@@ -180,17 +191,16 @@ exit:
 static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
-  {
-    return parser_add_time_from_line(p, ID_TASK_COMPLETED, line);
-  }
+    return parser_add_localdate_from_line(p, ID_TASK_COMPLETED, line);
   else
-    return false; /*parser_add_time(p, ID_TASK_COMPLETED, time(NULL));*/
+    return parser_add_filetime(p, ID_TASK_COMPLETED,
+        (FILETIME*)invalid_filetime_buffer);
 }
 
 static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
-    return parser_add_time_from_line(p, ID_TASK_DUE, line);
+    return parser_add_localdate_from_line(p, ID_TASK_DUE, line);
   else
     return parser_add_filetime(p, ID_TASK_DUE, 
         (FILETIME*)invalid_filetime_buffer);
@@ -199,7 +209,7 @@ static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
 static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
-    return parser_add_time_from_line(p, ID_TASK_START, line);
+    return parser_add_localdate_from_line(p, ID_TASK_START, line);
   else
     return parser_add_filetime(p, ID_TASK_START, 
         (FILETIME*)invalid_filetime_buffer);

@@ -55,6 +55,7 @@ bool parser_add_filetime(Parser* self, uint16_t id, FILETIME* filetime);
 
 bool parser_add_string_from_line(Parser* self, uint16_t id, mdir_line* line);
 bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line);
+bool parser_add_localdate_from_line(Parser* self, uint16_t index, mdir_line* line);
 
 typedef enum 
 {

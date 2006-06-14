@@ -428,6 +428,37 @@ bool parser_add_time_from_line  (Parser* self, uint16_t id, mdir_line* line)/*{{
   return success && parser_add_time(self, id, some_time);
 }/*}}}*/
 
+bool parser_add_localdate_from_line(Parser* self, uint16_t index, mdir_line* line)/*{{{*/
+{
+  char *utc_date = malloc(17);
+  bool local_is_utc = false;
+  time_t unix_time = 0;
+
+  switch (strlen(line->values[0]))
+  {
+  case 8:
+    snprintf(utc_date, 17, "%sT000000Z", line->values[0]);
+    break;
+  case 15:
+    snprintf(utc_date, 17, "%sZ", line->values[0]);
+    break;
+  case 16:
+    parser_datetime_to_unix_time(line->values[0], &unix_time, &local_is_utc);
+    strftime(utc_date, 17, "%Y%m%dT000000Z", localtime(&unix_time));
+    break;
+  default:
+    free(utc_date);
+  }
+
+  if (utc_date)
+  {
+    free(line->values[0]);
+    line->values[0] = utc_date;
+  }
+
+  return parser_add_time_from_line(self, index, line);
+}/*}}}*/
+
 ParserProperty* parser_property_new(const char* name, ParserPropertyFunc func)/*{{{*/
 {
   ParserProperty* self = (ParserProperty*)calloc(1, sizeof(ParserProperty));
