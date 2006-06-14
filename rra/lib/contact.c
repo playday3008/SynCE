@@ -1795,7 +1795,8 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
 	else if (STR_EQUAL(name, "FN"))/*{{{*/
 	{
-    add_string(parser, INDEX_FULL_NAME, type, value);
+    if (is_empty(parser, INDEX_FULL_NAME))
+      add_string(parser, INDEX_FULL_NAME, type, value);
 	}/*}}}*/
 	else if (STR_EQUAL(name, "N"))/*{{{*/
 	{
@@ -2008,6 +2009,8 @@ static bool parser_handle_field(/*{{{*/
 	}/*}}}*/
 	else if (STR_EQUAL(name, "X-EVOLUTION-FILE-AS"))/*{{{*/
 	{
+    if (is_empty(parser, INDEX_FULL_NAME))
+      add_string(parser, INDEX_FULL_NAME, type, value);
 #if VERBOSE
 		synce_trace("So, your contact has been in Evolution?");
 #endif
@@ -2412,6 +2415,10 @@ static bool rra_contact_from_vcard2(/*{{{*/
 					tmp_field->type  = type ? strndup(type, type_end - type) : strdup("");
 					tmp_field->value = strndup(value, value_end - value);
 					tmp_field->pref  = STR_IN_STR(tmp_field->type, "PREF");
+
+          if (rra_frontend_get() == ID_FRONTEND_EVOLUTION &&
+              STR_IN_STR(tmp_field->name, "X-EVOLUTION-FILE-AS"))
+            tmp_field->pref = true;
 
           enqueue_field(queue_field, &count_field, tmp_field);
 
