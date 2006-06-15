@@ -13,11 +13,6 @@
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
-#define DEFAULT_REMINDER_MINUTES_BEFORE_START 0
-#define DEFAULT_REMINDER_SOUND_FILE   "Alarm1.wav"
-#define DEFAULT_REMINDER_ENABLED      0
-#define DEFAULT_REMINDER_OPTIONS      0
-
 static uint8_t invalid_filetime_buffer[] = 
 {0x00, 0x40, 0xdd, 0xa3, 0x57, 0x45, 0xb3, 0x0c};
 
@@ -31,6 +26,8 @@ typedef struct
 {
   bool completed;
   FILETIME completed_time;
+  CEPROPVAL* reminder_enabled;
+  CEPROPVAL* reminder_minutes;
 } TaskGeneratorData;
 
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
@@ -103,6 +100,20 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
+static bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  TaskGeneratorData* data = (TaskGeneratorData*)cookie;
+  data->reminder_enabled = propval;
+  return true;
+}
+
+static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  TaskGeneratorData* data = (TaskGeneratorData*)cookie;
+  data->reminder_minutes = propval;
+  return true;
+}
+
 bool rra_task_to_vtodo(
     uint32_t id,
     const uint8_t* data,
@@ -141,6 +152,8 @@ bool rra_task_to_vtodo(
   generator_add_property(generator, ID_TASK_COMPLETED,  on_propval_completed);
   generator_add_property(generator, ID_TASK_START,      on_propval_start);
   generator_add_property(generator, ID_SUBJECT,         on_propval_subject);
+  generator_add_property(generator, ID_REMINDER_ENABLED,              on_propval_reminder_enabled);
+  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_END, on_propval_reminder_minutes);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -172,6 +185,11 @@ bool rra_task_to_vtodo(
     }
   }
 
+  to_icalendar_trigger(generator,
+                       task_generator_data.reminder_enabled,
+                       task_generator_data.reminder_minutes,
+                       REMINDER_RELATED_END);
+
   generator_add_simple(generator, "END", "VTODO");
 
   if (!generator_get_result(generator, vtodo))
@@ -187,6 +205,18 @@ exit:
 /*
    Any on_mdir_line_* functions not here are found in common_handlers.c
 */
+
+typedef struct _EventParserData
+{
+  mdir_line* trigger;
+} EventParserData;
+
+static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->trigger = line;
+  return true;
+}
 
 static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
 {
@@ -261,10 +291,10 @@ bool rra_task_from_vtodo(
   ParserComponent* base;
   ParserComponent* calendar;
   ParserComponent* todo;
-/*  ParserComponent* alarm;*/
+  ParserComponent* alarm;
   int parser_flags = 0;
-  /*EventParserData event_parser_data;
-  memset(&event_parser_data, 0, sizeof(EventParserData));*/
+  EventParserData event_parser_data;
+  memset(&event_parser_data, 0, sizeof(EventParserData));
 
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
@@ -278,13 +308,13 @@ bool rra_task_from_vtodo(
       break;
   }
 
-/*  alarm = parser_component_new("vAlarm");
+  alarm = parser_component_new("vAlarm");
 
   parser_component_add_parser_property(alarm, 
-      parser_property_new("trigger", on_alarm_trigger));*/
+      parser_property_new("trigger", on_alarm_trigger));
 
   todo = parser_component_new("vTodo");
-/*  parser_component_add_parser_component(todo, alarm);*/
+  parser_component_add_parser_component(todo, alarm);
 
   parser_component_add_parser_property(todo, 
       parser_property_new("Categories", on_mdir_line_categories));
@@ -317,7 +347,7 @@ bool rra_task_from_vtodo(
   parser_component_add_parser_component(base, calendar);
   parser_component_add_parser_component(base, todo);
 
-  parser = parser_new(base, parser_flags, tzi, NULL /*&event_parser_data*/);
+  parser = parser_new(base, parser_flags, tzi, &event_parser_data);
   if (!parser)
   {
     synce_error("Failed to create parser");
@@ -335,29 +365,14 @@ bool rra_task_from_vtodo(
     synce_error("Failed to convert input data");
     goto exit;
   }
-    
-  /* This must always be included */
-  parser_add_string(parser, 
-      ID_REMINDER_SOUND_FILE, 
-      DEFAULT_REMINDER_SOUND_FILE);
-  
-#if 0
-  /* Default alarm stuff until we handle vAlarm */
-  parser_add_int32(parser, 
-      ID_REMINDER_MINUTES_BEFORE_START, 
-      DEFAULT_REMINDER_MINUTES_BEFORE_START);
-  parser_add_int16(parser, 
-      ID_REMINDER_ENABLED, 
-      DEFAULT_REMINDER_ENABLED);
-  parser_add_int32(parser, 
-      ID_REMINDER_OPTIONS, 
-      DEFAULT_REMINDER_OPTIONS);
+   
+  to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_END);
 
+#if 0
   /* Add these just for sure */
   parser_add_int32(parser, ID_UNKNOWN_0002, 0);
   parser_add_int16(parser, ID_UNKNOWN_0003, 0);
   parser_add_int16(parser, ID_UNKNOWN_0005, 0);
-  parser_add_int32(parser, ID_IMPORTANCE, 0);
   parser_add_int16(parser, ID_UNKNOWN_4126, 0);
 #endif
 

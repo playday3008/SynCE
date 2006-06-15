@@ -26,6 +26,8 @@
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
+#define MINUTES_PER_DAY (24*60)
+
 static char* convert_string(const char* inbuf, const char* tocode, const char* fromcode)
 {
   size_t length = strlen(inbuf);
@@ -358,4 +360,102 @@ bool on_propval_subject(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
+/*
+    VAlarm
+*/
+void to_propval_trigger(Parser* parser, mdir_line* line, uint8_t related_support)
+{
+  int enable = 0;
+  int duration = 0;
 
+  char** data_type = mdir_get_param_values(line, "VALUE");
+  char** related   = mdir_get_param_values(line, "RELATED");
+
+  if (!line)
+    goto exit;
+
+  /* data type must be DURATION */
+  if (data_type && data_type[0])
+  {
+    if (STR_EQUAL(data_type[0], "DATE-TIME"))
+    {
+      synce_warning("Absolute date/time for alarm is not supported");
+      goto exit;
+    }
+    if (!STR_EQUAL(data_type[0], "DURATION"))
+    {
+      synce_warning("Unknown TRIGGER data type: '%s'", data_type[0]);
+    goto exit;
+    }
+  }
+
+  /* check related is supported */
+  if ((related && related[0]) &&
+      ((STR_EQUAL(related[0], "START") &&
+       (related_support != REMINDER_RELATED_START)) ||
+       (STR_EQUAL(related[0], "END") &&
+       (related_support != REMINDER_RELATED_END))))
+  {
+    synce_warning("Alarms related are not supported");
+    goto exit;
+  }
+
+  if (parser_duration_to_seconds(line->values[0], &duration) && duration <= 0)
+  {
+    enable = 1;
+    duration = -duration / 60;
+  }
+  else
+    duration = 0;
+
+exit:
+
+  parser_add_int16 (parser, ID_REMINDER_ENABLED, enable);
+  parser_add_int32 (parser, ID_REMINDER_MINUTES_BEFORE_START, duration);
+  parser_add_int32 (parser, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
+  parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
+}
+
+void to_icalendar_trigger(Generator* generator, CEPROPVAL* reminder_enabled, CEPROPVAL* reminder_minutes, uint8_t related)
+{
+  if (reminder_enabled && reminder_minutes && reminder_enabled->val.iVal)
+  {
+    char buffer[32];
+
+    generator_add_simple(generator, "BEGIN", "VALARM");
+
+    /* XXX: maybe this should correspond to ID_REMINDER_OPTIONS? */
+    generator_add_simple(generator, "ACTION", "DISPLAY");
+
+    if (!(reminder_minutes->val.lVal % MINUTES_PER_DAY))
+      snprintf(buffer, sizeof(buffer), "-P%liD", 
+      reminder_minutes->val.lVal / MINUTES_PER_DAY);
+    else if (!(reminder_minutes->val.lVal % 60))
+      snprintf(buffer, sizeof(buffer), "-PT%liH", 
+      reminder_minutes->val.lVal / 60);
+    else
+      snprintf(buffer, sizeof(buffer), "-PT%liM", 
+      reminder_minutes->val.lVal);
+
+    generator_begin_line         (generator, "TRIGGER");
+
+    generator_begin_parameter    (generator, "VALUE");
+    generator_add_parameter_value(generator, "DURATION");
+    generator_end_parameter      (generator);
+
+    generator_begin_parameter    (generator, "RELATED");
+    switch (related) 
+    {
+    case REMINDER_RELATED_END:
+      generator_add_parameter_value(generator, "END");
+      break;
+    default:
+      generator_add_parameter_value(generator, "START");
+    }
+    generator_end_parameter      (generator);
+
+    generator_add_value          (generator, buffer);
+    generator_end_line           (generator);
+    generator_add_simple(generator, "END", "VALARM");
+  }
+};

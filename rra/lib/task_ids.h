@@ -28,7 +28,7 @@
 #define ID_TASK_COMPLETED        0x410f
 #define ID_UNKNOWN_4126          0x4126
 
-#define ID_REMINDER_MINUTES_BEFORE_START  0x4501
+#define ID_REMINDER_MINUTES_BEFORE_END    0x4501
 #define ID_REMINDER_ENABLED               0x4503
 #define ID_REMINDER_SOUND_FILE            0x4509
 #define ID_REMINDER_OPTIONS               0x450a

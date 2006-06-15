@@ -289,43 +289,10 @@ bool rra_appointment_to_vevent(/*{{{*/
   else
     synce_warning("Missing start, duration or duration unit");
 
-
-  if (event_generator_data.reminder_enabled &&
-      event_generator_data.reminder_minutes &&
-      event_generator_data.reminder_enabled->val.iVal)
-  {
-    char buffer[32];
-
-    generator_add_simple(generator, "BEGIN", "VALARM");
-
-    /* XXX: maybe this should correspond to ID_REMINDER_OPTIONS? */
-    generator_add_simple(generator, "ACTION", "DISPLAY");
-
-    if (!(event_generator_data.reminder_minutes->val.lVal % MINUTES_PER_DAY))
-      snprintf(buffer, sizeof(buffer), "-P%liD", 
-          event_generator_data.reminder_minutes->val.lVal / MINUTES_PER_DAY);
-    else if (!(event_generator_data.reminder_minutes->val.lVal % 60))
-      snprintf(buffer, sizeof(buffer), "-PT%liH", 
-          event_generator_data.reminder_minutes->val.lVal / 60);
-    else
-      snprintf(buffer, sizeof(buffer), "-PT%liM", 
-          event_generator_data.reminder_minutes->val.lVal);
-
-    generator_begin_line         (generator, "TRIGGER");
-    
-    generator_begin_parameter    (generator, "VALUE");
-    generator_add_parameter_value(generator, "DURATION");
-    generator_end_parameter      (generator);
-    
-    generator_begin_parameter    (generator, "RELATED");
-    generator_add_parameter_value(generator, "START");
-    generator_end_parameter      (generator);
-
-    generator_add_value          (generator, buffer);
-    generator_end_line           (generator);
-    
-    generator_add_simple(generator, "END", "VALARM");
-  }
+  to_icalendar_trigger(generator,
+                       event_generator_data.reminder_enabled,
+                       event_generator_data.reminder_minutes,
+                       REMINDER_RELATED_START);
 
 #if ENABLE_RECURRENCE
   if (event_generator_data.recurrence_pattern)
@@ -407,9 +374,9 @@ exit:
 
 typedef struct _EventParserData
 {
-  bool has_alarm;
   mdir_line* dtstart;
   mdir_line* dtend;
+  mdir_line* trigger;
 #if ENABLE_RECURRENCE
   RRA_MdirLineVector* exdates;
   mdir_line* rrule;
@@ -427,58 +394,7 @@ static bool on_timezone_tzid(Parser* p, mdir_line* line, void* cookie)
 static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
-
-  char** data_type = mdir_get_param_values(line, "VALUE");
-  char** related   = mdir_get_param_values(line, "RELATED");
-  int duration = 0;
-
-  if (event_parser_data->has_alarm || !line)
-    goto exit;
-
-  /* data type must be DURATION */
-  if (data_type && data_type[0])
-  {
-    if (STR_EQUAL(data_type[0], "DATE-TIME"))
-    {
-      synce_warning("Absolute date/time for alarm is not supported");
-      goto exit;
-    }
-    if (!STR_EQUAL(data_type[0], "DURATION"))
-    {
-      synce_warning("Unknown TRIGGER data type: '%s'", data_type[0]);
-      goto exit;
-    }
-  }
-
-  /* related must be START */
-  if (related && related[0])
-  {
-    if (STR_EQUAL(related[0], "END"))
-    {
-      synce_warning("Alarms related to event end are not supported");
-      goto exit;
-    }
-    if (!STR_EQUAL(related[0], "START"))
-    {
-      synce_warning("Unknown TRIGGER data type: '%s'", related[0]);
-      goto exit;
-    }
-  }
-
-  if (parser_duration_to_seconds(line->values[0], &duration) && duration <= 0)
-  {
-    /* XXX: use ACTION for this instead of defaults? */
-    parser_add_int32(p, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
-
-    /* set alarm */
-    parser_add_int32(p, ID_REMINDER_MINUTES_BEFORE_START, -duration / 60);
-    parser_add_int16(p, ID_REMINDER_ENABLED, 1);
-    parser_add_string(p, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
-
-    event_parser_data->has_alarm = true;
-  }
-
-exit:
+  event_parser_data->trigger = line;
   return true;
 }/*}}}*/
 
@@ -732,15 +648,8 @@ bool rra_appointment_from_vevent(/*{{{*/
     goto exit;
   }
 
-  if (!event_parser_data.has_alarm)
-  {
-    /* default stuff */
-    parser_add_int16 (parser, ID_REMINDER_ENABLED, 0);
-    parser_add_int32 (parser, ID_REMINDER_MINUTES_BEFORE_START, 15);
-    parser_add_int32 (parser, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
-    parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
-  }
-  
+  to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_START);
+
   /* The calendar application on my HP 620LX just hangs without this! */
   parser_add_int32(parser, ID_UNKNOWN_0002, 0);
 
