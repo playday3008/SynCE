@@ -301,9 +301,15 @@ bool rra_appointment_to_vevent(/*{{{*/
     /* XXX: maybe this should correspond to ID_REMINDER_OPTIONS? */
     generator_add_simple(generator, "ACTION", "DISPLAY");
 
-    /* XXX: what if minutes > 59 */
-    snprintf(buffer, sizeof(buffer), "-PT%liM", 
-        event_generator_data.reminder_minutes->val.lVal);
+    if (!(event_generator_data.reminder_minutes->val.lVal % MINUTES_PER_DAY))
+      snprintf(buffer, sizeof(buffer), "-P%liD", 
+          event_generator_data.reminder_minutes->val.lVal / MINUTES_PER_DAY);
+    else if (!(event_generator_data.reminder_minutes->val.lVal % 60))
+      snprintf(buffer, sizeof(buffer), "-PT%liH", 
+          event_generator_data.reminder_minutes->val.lVal / 60);
+    else
+      snprintf(buffer, sizeof(buffer), "-PT%liM", 
+          event_generator_data.reminder_minutes->val.lVal);
 
     generator_begin_line         (generator, "TRIGGER");
     
