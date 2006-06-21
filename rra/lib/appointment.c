@@ -434,7 +434,7 @@ static bool on_mdir_line_rrule(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 static bool on_mdir_line_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
-  if (STR_EQUAL(line->values[0], "OPAQUE"))
+  if (!line || STR_EQUAL(line->values[0], "OPAQUE"))
     parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_BUSY);
   else if (STR_EQUAL(line->values[0], "TRANSPARENT"))
     parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_FREE);
