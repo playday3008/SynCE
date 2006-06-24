@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import dbus
+
+if len(sys.argv) != 2:
+    print "Invalid argument count"
+    sys.exit(1)
+
+bus = dbus.SessionBus()
+proxy_obj = bus.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
+engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
+
+print "Deleting partnership...",
+sys.stdout.flush()
+engine.DeletePartnership(eval(sys.argv[1]))
+print "done"

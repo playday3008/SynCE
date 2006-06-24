@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>
@@ -30,13 +29,17 @@ from interfaces import *
 from errors import *
 import socket
 
+BUS_NAME = "org.synce.SyncEngine"
+OBJECT_PATH = "/org/synce/SyncEngine"
+
 class SyncEngine(dbus.service.Object):
     """
-    A D-Bus service which provides an interface for synchronizing the various
-    types of items supported by Windows CE.
+    A D-Bus service which provides an interface for synchronizing
+    with Windows CE-based devices.
     """
 
-    def __init__(self):
+    def __init__(self, bus_name, object_path):
+        dbus.service.Object.__init__(self, bus_name, object_path)
         self.session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
         self._get_partnerships()
 
@@ -96,6 +99,22 @@ class SyncEngine(dbus.service.Object):
         for entry in sync_entries:
             print "deleting dangling sync source:", entry
             config_query_remove(self.session, "Sync.Sources", entry[0])
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
+    def GetItemTypes(self):
+        """
+        Get a list of synchronizable item types.
+
+        Returns:
+        a dictionary mapping item identifiers to names.
+        """
+
+        types = {}
+        for id, val in SYNC_ITEMS.items():
+            name, readonly = val
+            types[id] = name
+
+        return types
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a(ussau)')
     def GetPartnerships(self):
@@ -158,7 +177,7 @@ class SyncEngine(dbus.service.Object):
         #
         # Create the synchronization config data source
         #
-        source = Characteristic(guid)
+        source = Characteristic(pship.guid)
         source["Name"] = pship.name
         source["Server"] = pship.hostname
         source["StoreType"] = "2"
@@ -193,12 +212,12 @@ class SyncEngine(dbus.service.Object):
             provider["Name"] = item_str
             providers.add_child(provider)
 
-        config_query_set(session, "Sync.Sources", source)
+        config_query_set(self.session, "Sync.Sources", source)
 
         #
         # Update the registry
         #
-        hklm = session.HKEY_LOCAL_MACHINE
+        hklm = self.session.HKEY_LOCAL_MACHINE
 
         partners_key = hklm.create_sub_key(
                 r"Software\Microsoft\Windows CE Services\Partners")
@@ -218,6 +237,10 @@ class SyncEngine(dbus.service.Object):
         self.partnerships[pship.id] = pship
         self.slots[pship.slot] = pship
 
+        self._get_partnerships()
+
+        return pship.id
+
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
     def DeletePartnership(self, id):
         """
@@ -233,7 +256,8 @@ class SyncEngine(dbus.service.Object):
         if not id in self.partnerships:
             raise InvalidArgument("invalid id %d" % id)
 
-        config_query_remove(session, "Sync.Sources", self.partnerships[id].guid)
+        config_query_remove(self.session, "Sync.Sources", self.partnerships[id].guid)
+        self._get_partnerships()
 
 
 class Partnership:
@@ -262,8 +286,8 @@ class Partnership:
 
 if __name__ == "__main__":
     session_bus = dbus.SessionBus()
-    bus_name = dbus.service.BusName("org.synce.SyncEngine", bus=session_bus)
-    obj = SyncEngine()
+    bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
+    obj = SyncEngine(bus_name, OBJECT_PATH)
 
     mainloop = gobject.MainLoop()
     mainloop.run()
