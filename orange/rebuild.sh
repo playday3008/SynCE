@@ -1,12 +1,12 @@
 #!/bin/sh
 set -x
 export CFLAGS="-Wall -Werror -ggdb3"
+for f in synce unshield dynamite; do
+  export PKG_CONFIG_PATH="/var/tmp/$f/lib/pkgconfig:$PKG_CONFIG_PATH"
+done
 ./bootstrap &&
 ./configure \
-  --prefix=/var/tmp/synce \
-  --with-libsynce=/var/tmp/synce \
-  --with-libdynamite=/var/tmp/synce \
-  --with-libunshield=/var/tmp/synce \
+  --prefix=/var/tmp/orange \
   --with-libgsf \
   --enable-msi &&
 make install

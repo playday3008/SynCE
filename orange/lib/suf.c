@@ -208,7 +208,7 @@ static char* orange_read_string1(uint8_t**p)/*{{{*/
   char* result;
   size_t length = **p;
   (*p)++;
-  result = orange_strndup(*p, length);
+  result = orange_strndup((const char*)*p, length);
   *p += length;
   return result;
 }/*}}}*/
@@ -217,7 +217,7 @@ static char* orange_read_string2(uint8_t**p)/*{{{*/
 {
   char* result;
   size_t length = orange_read_uint16(p);
-  result = orange_strndup(*p, length);
+  result = orange_strndup((const char*)*p, length);
   *p += length;
   return result;
 }/*}}}*/

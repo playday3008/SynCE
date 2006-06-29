@@ -258,7 +258,7 @@ bool orange_extract_arh(/*{{{*/
     }
 
     synce_trace("Writing '%s'", entries[i].filename);
-    orange_write(buffer, entries[i].size, output_directory, entries[i].filename);
+    orange_write((const uint8_t*)buffer, entries[i].size, output_directory, entries[i].filename);
   }
 
   success = true;

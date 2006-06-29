@@ -241,7 +241,7 @@ bool pe_find_section(FILE* input, const char *name, uint32_t *fileOffset, uint32
   
   for (i = 0; i < file_header.NumberOfSections; i++)
   {
-    if (strncmp(section_headers[i].Name, name, IMAGE_SIZEOF_SHORT_NAME) == 0)
+    if (strncmp((const char*)section_headers[i].Name, name, IMAGE_SIZEOF_SHORT_NAME) == 0)
     {
       if (fileOffset)
         *fileOffset    = section_headers[i].PointerToRawData;
