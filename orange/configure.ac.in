@@ -40,7 +40,10 @@ dnl Check for libunshield
 PKG_CHECK_MODULES(LIBUNSHIELD, libunshield >= 0.5)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
+SAVED_CFLAGS="$CFLAGS"
+CFLAGS=""
 AC_C_CONST
+CFLAGS="$SAVED_CFLAGS"
 
 dnl Conditional compile of Inno Setup support (because it's not very good)
 my_enable_inno=0
