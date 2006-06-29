@@ -62,6 +62,10 @@ void RapiHandshakeClient::event( Descriptor::eventType /*et*/ )
             write( getDescriptor(), response, 4 );
         }
         break;
+    case 0x02:
+        // This is a ping-reply
+        pendingPingRequests--;
+        break;
     case 0x04: {
             // This is the info-package
             synce_info("Got 0x04 0x00 0x00 0x00 from device ... now, the info-package arrives");
@@ -86,37 +90,11 @@ void RapiHandshakeClient::event( Descriptor::eventType /*et*/ )
             write( getDescriptor(), response, 16 );
         }
         break;
-    case 0x02:
-        // This is a ping-reply
-        pendingPingRequests--;
-        break;
     default:
         // The next package is the info message
         synce_info("Got unknown response from device during initial handshake");
         break;
     }
-    /*
-    if ( signature == 0x00 ) {
-        // This is the initial package
-        // write response, should { 03, 00, 00, 00 }
-        char response[ 4 ] = { 03, 00, 00, 00 };
-        write( getDescriptor(), response, 4 );
-    } else if ( signature == 0x04) {
-        // The next package is the info message
-        unsigned char *buffer;
-        if (!readOnePackage(&buffer)) {
-            rapiConnection->handshakeClientDisconnected();
-            return;
-        }
-        printPackage("RapiHandshakeClient", (unsigned char *) buffer);
-
-        rapiConnection->handshakeClientInitialized(buffer);
-        delete[] buffer;
-    } else if ( signature == 0x02 ) {
-        // This is a ping-reply
-        pendingPingRequests--;
-    }
-    */
 }
 
 

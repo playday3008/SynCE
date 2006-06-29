@@ -44,7 +44,6 @@ TCPSocket::TCPSocket()
 {
     this->port = 0;
     this->interfaceName = "";
-    this->localHostent = NULL;
 }
 
 
@@ -73,6 +72,7 @@ bool TCPSocket::socket()
 
 bool TCPSocket::bind()
 {
+    struct hostent *localHostent;
     localAddress.sin_family = AF_INET;
     localAddress.sin_port = htons(port);
 

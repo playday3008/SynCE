@@ -49,7 +49,7 @@ bool DescriptorManager::add(Descriptor * descriptor)
 {
     bool ret = true;
 
-    if (descriptor->getDescriptor() != 0) {
+    if (descriptor->getDescriptor() >= 0) {
         if (find(descriptors.begin(), descriptors.end(), descriptor) == descriptors.end()) {
         descriptors.push_back(descriptor);
             FD_SET(descriptor->getDescriptor(), &staticFdSet);

@@ -65,6 +65,11 @@ public:
  */
     virtual string getDeviceName() const = 0;
 
+/*!
+    \fn WindowsCEDevice::getRealName() const
+ */
+    virtual string getRealName() const = 0;
+
 
 /*!
     \fn WindowsCEDevice::getHardware() const

@@ -81,9 +81,6 @@ bool TCPConnectedSocket::isConnected() const
     if (getsockname(descriptor, (struct sockaddr *) &localAddress, &namelen) < 0) {
         return false;
     }
-    if ((localHostent = gethostbyaddr((char *) &localAddress,  sizeof(localAddress), AF_INET)) == NULL) {
-        return false;
-    }
 
     return true;
 }

@@ -47,6 +47,7 @@ public:
     std::string getDeviceAddress() const;
     std::string getDeviceClass() const;
     std::string getDeviceName() const;
+    std::string getRealName() const;
     std::string getHardware() const;
     std::string getPassword() const;
     uint32_t getBuildNumber() const;

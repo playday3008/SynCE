@@ -59,6 +59,7 @@ public:
     std::string getDeviceAddress() const;
     std::string getDeviceClass() const;
     std::string getDeviceName() const;
+    std::string getRealName() const;
     std::string getHardware() const;
     std::string getPassword() const;
     uint32_t getBuildNumber() const;
@@ -85,6 +86,7 @@ protected:
     std::string deviceName;
     std::string deviceClass;
     std::string hardware;
+    std::string realName;
     uint16_t osVersion;
     uint16_t buildNumber;
     uint16_t processorType;

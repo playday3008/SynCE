@@ -196,6 +196,12 @@ std::string RapiConnection::getDeviceName() const
 }
 
 
+std::string RapiConnection::getRealName() const
+{
+    return getDeviceName();
+}
+
+
 std::string RapiConnection::getHardware() const
 {
     return modelName;

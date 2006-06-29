@@ -127,6 +127,7 @@ bool ConnectionFileManager::_writeConnectionFile(string fileName, const WindowsC
         connectionFile << "partner_id_1=" << windowsCEDevice->getPartnerId1() << endl;
         connectionFile << "partner_id_2=" << windowsCEDevice->getPartnerId2() << endl;
         connectionFile << "name=" << windowsCEDevice->getDeviceName() << endl;
+        connectionFile << "real_name=" << windowsCEDevice->getRealName() << endl;
         connectionFile << "class=" << windowsCEDevice->getDeviceClass() << endl;
         connectionFile << "hardware=" << windowsCEDevice->getHardware() << endl;
         connectionFile << "ip=" << windowsCEDevice->getDeviceAddress() << endl;

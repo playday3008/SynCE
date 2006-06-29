@@ -83,8 +83,10 @@ void RapiServer::event(Descriptor::eventType /*et*/)
         free(path);
         synce_info("RapiHandshakeClient for device with ip %s", remoteIpAddress);
         // Rapi Handshake Client
-        rapiConnection[remoteIpAddress] = new RapiConnection(new RapiProxyFactory(), socketPath, this, remoteIpAddress);
-        rapiConnection[remoteIpAddress]->setHandshakeClient(dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
+        rapiConnection[remoteIpAddress] =
+                new RapiConnection(new RapiProxyFactory(), socketPath, this, remoteIpAddress);
+        rapiConnection[remoteIpAddress]->setHandshakeClient(
+                dynamic_cast<RapiHandshakeClient *>(rapiHandshakeClientFactory->socket(fd, this)));
     } else {
         synce_info("RapiProvisioningClient for device with ip %s", remoteIpAddress);
         // Rapi Provisioning Client

@@ -32,7 +32,8 @@ Descriptor::Descriptor()
 }
 
 
-Descriptor::Descriptor(const Descriptor &descriptor, bool releaseFromManager)
+Descriptor::Descriptor(const Descriptor &descriptor,
+                       bool releaseFromManager)
 {
     this->descriptor = descriptor.descriptor;
     if (!releaseFromManager) {

@@ -67,21 +67,15 @@ void RapiProxyConnection::forwardMessage(NetSocket *from, NetSocket *to)
         ssize_t r;
 
         if (to->writable( 0, 0)) {
-            if ((r = read(from->getDescriptor(), forwardBuffer, mtuWH)) <= 0) {
+            if ((r = read(from->getDescriptor(), forwardBuffer, mtuWH)) > 0) {
+                write(to->getDescriptor(), forwardBuffer, r);
+            } else {
                 rapiConnection->proxyConnectionClosed(this);
                 return ;
-            } else {
-                write(to->getDescriptor(), forwardBuffer, r);
             }
         } else {
             Multiplexer::self()->getWriteManager()->add(to);
-            if (dynamic_cast<RapiProvisioningClient *>(to)) {
-                synce_info("RapiProvisioningClient not writeable");
-                Multiplexer::self()->getReadManager()->remove(rapiProxy);
-            } else {
-                synce_info("RapiProxy not writeable");
-                Multiplexer::self()->getReadManager()->remove(rapiProvisioningClient);
-            }
+            Multiplexer::self()->getReadManager()->remove(from);
         }
     } else {
         uint32_t leLength;

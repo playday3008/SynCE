@@ -99,6 +99,7 @@ bool WindowsCEDevice::handleInfoMessage(uint32_t header)
             partnerId2 = letoh32( *( uint32_t* ) ( buffer + 0x14 ) );
             char *tmp = ( char * ) string_at( buffer, header, 0x18 );
             deviceName = tmp;
+            realName = tmp;
             free(tmp);
 
             string::iterator it;
@@ -349,6 +350,15 @@ string WindowsCEDevice::getDeviceClass() const
 string WindowsCEDevice::getDeviceName() const
 {
     return deviceName;
+}
+
+
+/*!
+    \fn WindowsCEDevice::getRealName() const
+ */
+string WindowsCEDevice::getRealName() const
+{
+    return realName;
 }
 
 

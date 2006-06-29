@@ -56,7 +56,6 @@ protected:
 protected:
     std::string interfaceName;
     uint16_t port;
-    struct hostent *localHostent;
     struct sockaddr_in localAddress;
 };
 
