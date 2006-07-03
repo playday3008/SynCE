@@ -26,6 +26,10 @@ cdef extern from "rapi.h":
     LONG CeRegDeleteValue(HKEY hKey, LPCWSTR lpszValueName)
     LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
     LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData)
+    BOOL CeStartReplication()
+    HRESULT CeSyncStart(LPCWSTR params)
+    HRESULT CeSyncResume()
+    HRESULT CeSyncPause()
 
 
 #
@@ -43,6 +47,9 @@ SYNCE_LOG_LEVEL_HIGHEST = 5
 SYNCE_LOG_LEVEL_DEFAULT = 2
 
 ERROR_SUCCESS           = 0
+
+FALSE                   = 0
+TRUE                    = 1
 
 REG_NONE                = 0
 REG_SZ                  = 1
@@ -289,3 +296,26 @@ class RAPISession:
 
         return reply
 
+    def start_replication(self):
+        retval = CeStartReplication()
+        if retval != TRUE:
+            raise RAPIError(retval)
+
+    def sync_start(self, params):
+        cdef LPWSTR params_w
+
+        params_w = wstr_from_utf8(params)
+        retval = CeSyncStart(params_w)
+        wstr_free_string(params_w)
+        if retval != 0:
+            raise RAPIError(retval)
+
+    def sync_resume(self):
+        retval = CeSyncResume()
+        if retval != 0:
+            raise RAPIError(retval)
+
+    def sync_pause(self):
+        retval = CeSyncPause()
+        if retval != 0:
+            raise RAPIError(retval)
