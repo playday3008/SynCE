@@ -122,14 +122,17 @@ def _config_query(session, query_type, path, leaf=None, recursive=False, ctic=No
     doc_node = doc.createElement("wap-provisioningdoc")
     doc.appendChild(doc_node)
 
-    tokens = path.split(".")
-
     parent = doc_node
-    for token in tokens:
-        node = doc.createElement("characteristic")
-        node.setAttribute("type", token)
-        parent.appendChild(node)
-        parent = node
+    if path is not None:
+        tokens = path.split(".")
+
+        for token in tokens:
+            node = doc.createElement("characteristic")
+            node.setAttribute("type", token)
+            parent.appendChild(node)
+            parent = node
+    else:
+        tokens = []
 
     if query_type == QUERY_TYPE_GET:
         node = doc.createElement("characteristic-query")

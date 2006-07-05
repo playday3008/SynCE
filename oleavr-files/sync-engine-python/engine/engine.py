@@ -29,6 +29,15 @@ from interfaces import *
 from errors import *
 import socket
 
+from twisted.internet import glib2reactor
+glib2reactor.install()
+from twisted.internet import reactor, defer
+from twisted.internet.protocol import Protocol, Factory
+from twisted.web2 import server, http, resource, channel, stream
+import os
+
+from xml.dom import minidom
+
 BUS_NAME = "org.synce.SyncEngine"
 OBJECT_PATH = "/org/synce/SyncEngine"
 
@@ -40,6 +49,7 @@ class SyncEngine(dbus.service.Object):
 
     def __init__(self, bus_name, object_path):
         dbus.service.Object.__init__(self, bus_name, object_path)
+
         self.session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
         self._get_partnerships()
 
@@ -82,7 +92,7 @@ class SyncEngine(dbus.service.Object):
 
                 pship = Partnership(pos, id, guid, hostname, description)
                 self.partnerships[id] = pship
-                self.slots[pos] = pship
+                self.slots[pos-1] = pship
 
                 engine = sub_ctic.children["Engines"].children[GUID_WM5_ENGINE]
                 for provider in engine.children["Providers"].children.values():
@@ -99,6 +109,9 @@ class SyncEngine(dbus.service.Object):
         for entry in sync_entries:
             print "deleting dangling sync source:", entry
             config_query_remove(self.session, "Sync.Sources", entry[0])
+
+        for pship in self.slots:
+            print pship
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):
@@ -259,6 +272,64 @@ class SyncEngine(dbus.service.Object):
         config_query_remove(self.session, "Sync.Sources", self.partnerships[id].guid)
         self._get_partnerships()
 
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='')
+    def TestSync(self):
+        partner = self.slots[0]
+
+        print
+        print "Testing synchronization with partner", partner
+
+        entries = config_query_get(self.session, None, "CM_ProxyEntries").children.values()
+        transport = None
+        for entry in entries:
+            if entry.type.startswith("HTTP-"):
+                transport = entry
+                break
+
+        if transport is None:
+            raise ProtocolError("HTTP transport not found")
+
+        transport = config_query_get(self.session, "CM_ProxyEntries", transport.type)
+        print "Using the following transport:"
+        print transport
+
+        dtpt = Characteristic("CurrentDTPTNetwork")
+        dtpt["DestId"] = transport["SrcId"]
+        config_query_set(self.session, "CM_NetEntries", dtpt)
+        print "CurrentDTPTNetwork set"
+
+        print "Starting synchronization"
+        doc = minidom.Document()
+        doc_node = doc.createElement("sync")
+        doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
+        doc_node.setAttribute("type", "Interactive")
+        doc.appendChild(doc_node)
+
+        node = doc.createElement("partner")
+        node.setAttribute("id", partner.guid)
+        doc_node.appendChild(node)
+
+        print "Calling sync_start() with params:"
+        print doc_node.toprettyxml()
+
+        self.session.sync_start(doc_node.toxml())
+        print "Succeeded"
+
+        # set the current partnership on the device
+        print "Setting PCur...",
+        partners = self.session.HKEY_LOCAL_MACHINE.create_sub_key(
+                r"Software\Microsoft\Windows CE Services\Partners")
+        partners.set_value("PCur", 1, REG_DWORD)
+        print "success"
+
+        print "Calling start_replication...",
+        self.session.start_replication()
+        print "success"
+
+        print "Calling sync_resume...",
+        self.session.sync_resume()
+        print "success"
+
 
 class Partnership:
     def __init__(self, slot, id, guid, hostname, name):
@@ -284,10 +355,148 @@ class Partnership:
             (self.slot, self.id, self.guid, self.hostname, self.name, str)
 
 
+class BaseProtocol(Protocol):
+    def connectionMade(self):
+        print "%s.connectionMade: client connected" % \
+            (self.__class__.__name__)
+
+    def connectionLost(self, reason):
+        print "%s.connectionLost: connection lost because: %s" % \
+            (self.__class__.__name__, reason)
+
+    def dataReceived(self, data):
+        print "%s.dataReceived: got %d bytes of data" % \
+            (self.__class__.__name__, len(data))
+
+
+class RRAC(BaseProtocol):
+    pass
+
+
+class Status(BaseProtocol):
+    pass
+
+
+class ASResource(resource.PostableResource):
+    def locateChild(self, request, segments):
+        #print "locateChild"
+        #print "requests:", request
+        #print "segments:", segments
+
+        found = True
+
+        if len(segments) < 1:
+            found = False
+        else:
+            if segments[0] != "Microsoft-Server-ActiveSync":
+                found = False
+
+        print "found \"%s\": %s" % (request, found)
+
+        print
+
+        if found:
+            return (self, ())
+        else:
+            return (None, ())
+
+    def render(self, request):
+        print "render: %s" % request.path
+        print
+        return self.create_response(404)
+
+    def create_response(self, code):
+        resp = http.Response(code)
+        headers = resp.headers
+
+        headers.addRawHeader("Pragma", "no-cache")
+        # FIXME: "Date" is probably missing ...
+        headers.addRawHeader("Server", "ActiveSync/4.1")
+        headers.addRawHeader("MS-Server-ActiveSync", "4.1.4841.0")
+
+        return resp
+
+    def http_OPTIONS(self, request):
+        if request.path != "/Microsoft-Server-ActiveSync":
+            print "http_OPTIONS: Returning 404 for path %s" % request.path
+            return http.Response(404)
+
+        resp = self.create_response(200)
+        headers = resp.headers
+        headers.addRawHeader("Allow", "OPTIONS, POST")
+        headers.addRawHeader("Public", "OPTIONS, POST")
+        headers.addRawHeader("MS-ASProtocolVersions", "2.5")
+        headers.addRawHeader("MS-ASProtocolCommands",
+                "Sync,SendMail,SmartForward,SmartReply,GetAttachment,FolderSync,FolderCreate,FolderUpdate,MoveItems,GetItemEstimate,MeetingResponse")
+
+        return resp
+
+    def http_POST(self, request):
+        if request.path == "/Microsoft-Server-ActiveSync":
+            return self.parse_sync_request(request)
+        elif request.path == "/Microsoft-Server-ActiveSync/SyncStat.dll":
+            return self.parse_status_request(request)
+        else:
+            return self.create_response(404)
+
+    def parse_sync_request(self, request):
+        args = request.args
+
+        print "parse_sync_request"
+        print "  path=\"%s\"" % request.path
+        print "  args=\"%s\"" % args
+        print
+
+        req_def = defer.Deferred()
+
+        d = request.stream.read()
+
+        cmd = args["Cmd"][0]
+        print "parse_sync_request: Cmd=\"%s\"" % cmd
+        if cmd == "Sync":
+            d.addCallback(self.parse_sync_body)
+        elif cmd == "FolderSync":
+            d.addCallback(self.parse_foldersync_body)
+        else:
+            print "Unknown"
+            req_def.callback(self.create_response(404))
+
+        d.chainDeferred(req_def)
+
+        return req_def
+
+    def parse_sync_body(self, body):
+        print "parse_sync_body: body=\"%s\"" % body
+        return self.create_response(404)
+
+    def parse_foldersync_body(self, body):
+        print "parse_foldersync_body: body=\"%s\"" % body
+        return self.create_response(404)
+
+    def parse_status_request(self, request):
+        print "parse_status_request: \"%s\"" % request.stream.read()
+        return self.create_response(200)
+
+
 if __name__ == "__main__":
+    factory = Factory()
+    factory.protocol = Status
+    reactor.listenTCP(999, factory)
+
+    factory = Factory()
+    factory.protocol = RRAC
+    reactor.listenTCP(5678, factory)
+
+    site = server.Site(ASResource())
+    factory = channel.HTTPFactory(site)
+    reactor.listenTCP(26675, factory)
+
+    # hack hack hack
+    os.setgid(1000)
+    os.setuid(1000)
+
     session_bus = dbus.SessionBus()
     bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
     obj = SyncEngine(bus_name, OBJECT_PATH)
 
-    mainloop = gobject.MainLoop()
-    mainloop.run()
+    reactor.run()

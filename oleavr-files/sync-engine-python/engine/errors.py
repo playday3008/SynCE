@@ -40,3 +40,9 @@ class NoFreeSlots(dbus.DBusException):
     """
     _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".NoFreeSlots"
 
+class ProtocolError(dbus.DBusException):
+    """
+    An unexpected protocol error occured. This usually means that there's
+    a bug in the implementation.
+    """
+    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".ProtocolError"
