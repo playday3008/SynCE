@@ -109,10 +109,12 @@ void wbxml_tree_clb_xml_start_element(void *ctx, const XML_Char *localName, cons
     }
 
     /* Search for XML Tag Name in Table */
-    if ((tag_entry = wbxml_tables_get_tag_from_xml(tree_ctx->tree->lang, (const WB_UTINY *) localName)) != NULL)
+    if ((tag_entry = wbxml_tables_get_tag_from_xml(tree_ctx->tree->lang, (const WB_UTINY *) localName, tree_ctx->cur_code_page)) != NULL) {
+        tree_ctx->cur_code_page = tag_entry->wbxmlCodePage;
         tag = wbxml_tag_create_token(tag_entry);
-    else
+    } else {
         tag = wbxml_tag_create_literal((WB_UTINY *) localName);
+    }
 
     if (tag == NULL) {
         tree_ctx->error = WBXML_ERROR_NOT_ENOUGH_MEMORY;

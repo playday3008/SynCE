@@ -135,6 +135,7 @@ WBXML_DECLARE(WBXMLError) wbxml_tree_from_xml(WB_UTINY *xml, WBXMLTree **tree)
     wbxml_tree_clb_ctx.skip_start = 0;
     wbxml_tree_clb_ctx.xml_parser = xml_parser;
     wbxml_tree_clb_ctx.input_buff = xml;    
+    wbxml_tree_clb_ctx.cur_code_page = 0;
 
     if ((wbxml_tree_clb_ctx.tree = wbxml_tree_create()) == NULL) {
         XML_ParserFree(xml_parser);

@@ -166,6 +166,9 @@ WBXML_DECLARE(WBXMLError) wbxml_conv_xml2wbxml(WB_UTINY *xml, WB_UTINY **wbxml, 
 
             /* Use String Table */
             wbxml_encoder_set_use_strtbl(wbxml_encoder, TRUE);
+
+            /* Don't produce an anonymous document by default */
+            wbxml_encoder_set_produce_anonymous(wbxml_encoder, FALSE);
         }
         else {
             /* WBXML Version */
@@ -182,6 +185,10 @@ WBXML_DECLARE(WBXMLError) wbxml_conv_xml2wbxml(WB_UTINY *xml, WB_UTINY **wbxml, 
 
             /* String Table */
             wbxml_encoder_set_use_strtbl(wbxml_encoder, params->use_strtbl);
+
+            /* Produce an anonymous document? */
+            wbxml_encoder_set_produce_anonymous(wbxml_encoder,
+                params->produce_anonymous);
         }
 
         /* Encode WBXML */

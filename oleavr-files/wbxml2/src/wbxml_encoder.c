@@ -116,6 +116,7 @@ struct WBXMLEncoder_s {
     WB_BOOL use_strtbl;                     /**< Do we use String Table when generating WBXML output ? (default: YES) */
 #endif /* WBXML_ENCODER_USE_STRTBL */
     WB_BOOL xml_encode_header;              /**< Do we generate XML Header ? */
+    WB_BOOL produce_anonymous;              /**< Do we produce anonymous documents? (default: NO) */
     WBXMLVersion wbxml_version;             /**< WBXML Version to use (when generating WBXML output) */
 };
 
@@ -353,6 +354,7 @@ WBXML_DECLARE(WBXMLEncoder *) wbxml_encoder_create_real(void)
     encoder->cdata = NULL;
 
     encoder->xml_encode_header = TRUE;
+    encoder->produce_anonymous = FALSE;
     
     /* Default Version: WBXML 1.3 */
     encoder->wbxml_version = WBXML_VERSION_13;
@@ -407,6 +409,15 @@ WBXML_DECLARE(void) wbxml_encoder_set_use_strtbl(WBXMLEncoder *encoder, WB_BOOL 
 
     encoder->use_strtbl = use_strtbl;
 #endif /* WBXML_ENCODER_USE_STRTBL */
+}
+
+
+WBXML_DECLARE(void) wbxml_encoder_set_produce_anonymous(WBXMLEncoder *encoder, WB_BOOL set_anonymous)
+{
+    if (encoder == NULL)
+        return;
+
+    encoder->produce_anonymous = set_anonymous;
 }
 
 
@@ -989,7 +1000,7 @@ static WBXMLError wbxml_build_result(WBXMLEncoder *encoder, WB_UTINY **wbxml, WB
 
     /* Encode Public ID */
     /* If WBXML Public Id is '0x01' (unknown), add the XML Public ID in the String Table */
-    if (public_id == WBXML_PUBLIC_ID_UNKNOWN) 
+    if (public_id == WBXML_PUBLIC_ID_UNKNOWN && !encoder->produce_anonymous)
     {
         if (encoder->tree->lang->publicID->xmlPublicID != NULL) 
         {
@@ -1135,7 +1146,7 @@ static WBXMLError wbxml_encode_tag(WBXMLEncoder *encoder, WBXMLTreeNode *node)
     }
     else {
         /* Search tag in Tags Table */
-        if ((tag = wbxml_tables_get_tag_from_xml(encoder->tree->lang, wbxml_tag_get_xml_name(node->name))) != NULL) 
+        if ((tag = wbxml_tables_get_tag_from_xml(encoder->tree->lang, wbxml_tag_get_xml_name(node->name), encoder->tagCodePage)) != NULL) 
         {
             token = tag->wbxmlToken;
             page = tag->wbxmlCodePage;

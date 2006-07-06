@@ -57,6 +57,7 @@ typedef struct WBXMLConvXML2WBXMLParams_s {
     WBXMLVersion wbxml_version; /**< WBXML Version */
     WB_BOOL keep_ignorable_ws;  /**< Keep Ignorable Whitespaces (Default: FALSE) */
     WB_BOOL use_strtbl;         /**< Generate String Table (Default: TRUE) */
+    WB_BOOL produce_anonymous;  /**< Produce an anonymous document (Default: FALSE) */
 } WBXMLConvXML2WBXMLParams;
 
 

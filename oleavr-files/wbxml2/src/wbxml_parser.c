@@ -987,9 +987,15 @@ static WBXMLError parse_switch_page(WBXMLParser *parser, WBXMLTokenType code_spa
     parser->pos++;
 
     /* Change Code Page in correct Code Space */
-    if (code_space == WBXML_TAG_TOKEN)
-        return parse_uint8(parser, &parser->tagCodePage);
-    else
+    if (code_space == WBXML_TAG_TOKEN) {
+        WBXMLError retval;
+
+        retval = parse_uint8(parser, &parser->tagCodePage);
+        if (retval == WBXML_OK)
+          WBXML_DEBUG((WBXML_PARSER, "(%d) --> new code page = %02x", parser->pos - 1, parser->tagCodePage));
+
+        return retval;
+    } else
         if (code_space == WBXML_ATTR_TOKEN)
             return parse_uint8(parser, &parser->attrCodePage);
         else
@@ -1226,21 +1232,28 @@ static WBXMLError parse_content(WBXMLParser *parser, WB_UTINY **content, WB_LONG
     *static_content = FALSE;
 
     /* extension */
-    if (is_extension(parser))
+    if (is_extension(parser)) {
+        WBXML_DEBUG((WBXML_PARSER, "(%d) --> is_extension", parser->pos));
         return parse_extension(parser, WBXML_TAG_TOKEN, content, len);
+    }
 
     /* entity */
-    if (is_token(parser, WBXML_ENTITY))
+    if (is_token(parser, WBXML_ENTITY)) {
+        WBXML_DEBUG((WBXML_PARSER, "(%d) --> is_token(WBXML_ENTITY)", parser->pos));
         return parse_entity(parser, content, len);
+    }
 
     *static_content = TRUE;
 
     /* string */
-    if (is_string(parser))
+    if (is_string(parser)) {
+        WBXML_DEBUG((WBXML_PARSER, "(%d) --> is_string", parser->pos));
         return parse_string(parser, content, len);
+    }
 
     /* opaque */
     if (is_token(parser, WBXML_OPAQUE)) {
+        WBXML_DEBUG((WBXML_PARSER, "(%d) --> is_token(WBXML_OPAQUE)", parser->pos));
         if ((ret = parse_opaque(parser, content, len)) != WBXML_OK)
             return ret;
 
@@ -1248,10 +1261,13 @@ static WBXMLError parse_content(WBXMLParser *parser, WB_UTINY **content, WB_LONG
     }
 
     /* pi */
-    if (is_token(parser, WBXML_PI))
+    if (is_token(parser, WBXML_PI)) {
+        WBXML_DEBUG((WBXML_PARSER, "(%d) --> is_token(WBXML_PI)", parser->pos));
         return parse_pi(parser);
+    }
 
     /** @note We have recurrency here ! */
+    WBXML_DEBUG((WBXML_PARSER, "(%d) --> parse_element (recurrency)", parser->pos));
     return parse_element(parser);
 }
 

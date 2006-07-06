@@ -114,6 +114,7 @@ typedef struct WBXMLTreeClbCtx_s {
     WB_ULONG skip_lvl;          /**< Used to skip a whole XML node (used for SyncML) */
     WB_LONG skip_start;         /**< Starting Skipping position in XML Document (used for SyncML) */
     WB_UTINY *input_buff;       /**< Pointer to Input Buffer */
+    WB_UTINY cur_code_page;     /**< Last seen code page */
 #if defined( HAVE_EXPAT )
     XML_Parser xml_parser;      /**< Pointer to Expat XML Parser */
 #endif /* HAVE_EXPAT */    

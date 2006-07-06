@@ -239,7 +239,8 @@ WBXML_DECLARE(WB_ULONG) wbxml_tables_get_wbxml_publicid(const WBXMLLangEntry *ma
  * @return The Tag Entry of this XML Name in Language Table, or NULL if not found
  */
 WBXML_DECLARE(const WBXMLTagEntry *) wbxml_tables_get_tag_from_xml(const WBXMLLangEntry *lang_table,
-                                                                   const WB_UTINY *xml_name);
+                                                                   const WB_UTINY *xml_name,
+                                                                   const WB_UTINY cur_code_page);
 
 /**
  * @brief Search for an Attribute Entry in Language Table, given the XML Name and Value of the Attribute
