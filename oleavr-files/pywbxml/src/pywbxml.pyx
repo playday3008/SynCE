@@ -27,10 +27,11 @@ def wbxml2xml(wbxml):
     cdef char *xml
     cdef WBXMLConvWBXML2XMLParams params
 
-    params.gen_type = WBXML_ENCODER_XML_GEN_COMPACT
+    #params.gen_type = WBXML_ENCODER_XML_GEN_COMPACT
+    params.gen_type = WBXML_ENCODER_XML_GEN_CANONICAL
     params.lang = WBXML_LANG_AIRSYNC
     params.indent = 0
-    params.keep_ignorable_ws = 0
+    params.keep_ignorable_ws = 1
 
     retval = wbxml_conv_wbxml2xml(wbxml, len(wbxml), &xml, &params)
     if retval != 0:
@@ -44,8 +45,9 @@ def xml2wbxml(xml):
     cdef WBXMLConvXML2WBXMLParams params
 
     params.wbxml_version = WBXML_VERSION_13
-    params.keep_ignorable_ws = 0
-    params.use_strtbl = 0
+    params.keep_ignorable_ws = 1
+    params.use_strtbl = 1
+    params.produce_anonymous = 1
 
     retval = wbxml_conv_xml2wbxml(xml, &bytes, &len, &params)
     if retval != 0:

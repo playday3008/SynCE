@@ -2,8 +2,6 @@
 
 import pywbxml
 
-expected = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
-
 def hexdump(raw):
     buf = ""
     line = ""
@@ -12,7 +10,7 @@ def hexdump(raw):
     done = False
     while not done:
         end = start + 16
-        max = len(raw) - 1
+        max = len(raw)
         if end > max:
             end = max
             done = True
@@ -50,6 +48,10 @@ xml = r"""
 
 wbxml = pywbxml.xml2wbxml(xml)
 
+print "Produced:"
 print hexdump(wbxml)
+
+expected = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
+print "Expected:"
 print hexdump(expected)
 

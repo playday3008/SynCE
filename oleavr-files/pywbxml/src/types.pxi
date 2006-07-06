@@ -62,4 +62,5 @@ cdef extern from "wbxml_conv.h":
         WBXMLVersion wbxml_version
         WB_BOOL keep_ignorable_ws
         WB_BOOL use_strtbl
+        WB_BOOL produce_anonymous
 

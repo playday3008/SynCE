@@ -1,10 +1,26 @@
 #!/usr/bin/env python
 
 import pywbxml
+import sys
 
-s = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
-print "WBXML length: %d" % len(s)
-xml = pywbxml.wbxml2xml(s)
-print "XML length: %d" % len(xml)
-print
-print "XML: \"%s\"" % xml
+ms_output = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
+our_output = "\x03\x01\x6a\x00\x00\x07\x56\x00\x00\x4b\x03\x30\x00\x01\x01"
+
+def decode_and_print(wbxml):
+    print "Raw length: %d" % len(wbxml)
+    print "Decoded: \"%s\"" % pywbxml.wbxml2xml(wbxml)
+
+if len(sys.argv) > 1:
+    args = sys.argv[1:]
+else:
+    args = None
+
+if args is None or "activesync" in args:
+    print "ActiveSync's raw WBXML:"
+    decode_and_print(ms_output)
+    print
+
+if args is None or "libwbxml2" in args:
+    print "libwbxml2's raw WBXML:"
+    decode_and_print(our_output)
+
