@@ -1,0 +1,2049 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!DOCTYPE book
+  PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "../../dtd/docbookx.dtd"
+  [
+    <!ENTITY version "0.7.1">  
+    <!ENTITY expat "<ulink url='http://expat.sourceforge.net/'>Expat</ulink>">
+    <!ENTITY wapforum "<ulink url='http://www.wapforum.org/'>WAP Forum</ulink>">
+    <!ENTITY oma "<ulink url='http://www.openmobilealliance.org/'>OMA</ulink>">
+    <!ENTITY syncml "<ulink url='http://www.openmobilealliance.org/syncml/'>SyncML</ulink>">
+    <!ENTITY wv "<ulink url='http://www.openmobilealliance.org/wirelessvillage/'>Wireless-Village</ulink>">
+    <!ENTITY sf "<ulink url='http://sourceforge.net/projects/wbxmllib/'>SourceForge</ulink>">
+    <!ENTITY tested "<emphasis>(Tested)</emphasis>">
+    <!ENTITY untested "<emphasis>(Untested)</emphasis>">
+  ]
+>
+
+<!--
+<!DOCTYPE book
+  PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+  [
+    <!ENTITY version "0.7.0">    
+    <!ENTITY expat "<ulink url='http://expat.sourceforge.net/'>Expat</ulink>">
+    <!ENTITY wapforum "<ulink url='http://www.wapforum.org/'>WAP Forum</ulink>">
+    <!ENTITY oma "<ulink url='http://www.openmobilealliance.org/'>OMA</ulink>">
+    <!ENTITY syncml "<ulink url='http://www.openmobilealliance.org/syncml/'>SyncML</ulink>">
+    <!ENTITY wv "<ulink url='http://www.openmobilealliance.org/wirelessvillage/'>Wireless-Village</ulink>">
+    <!ENTITY sf "<ulink url='http://sourceforge.net/projects/wbxmllib/'>SourceForge</ulink>">
+    <!ENTITY tested "<emphasis>(Tested)</emphasis>">
+    <!ENTITY untested "<emphasis>(Untested)</emphasis>">
+  ]
+>
+-->
+
+<book id="libwbxml2" lang="en">
+
+<bookinfo>
+    <title>WBXML Library</title>
+    <subtitle>C library for handling WBXML content</subtitle>
+    
+    <authorgroup>
+        <author>
+            <firstname>Aymerick</firstname>
+            <surname>Jéhanne</surname>
+            <authorinitials>AJH</authorinitials>
+        </author>
+    </authorgroup>
+    
+    <abstract>
+        <para>
+            <application>WBXML Library</application> is a C library for handling WBXML content.
+        </para>
+    </abstract>    
+    
+    <date>2003/03/18</date> 
+    
+    <pubdate>2003</pubdate>
+    <copyright>
+        <year>2003</year>
+        <holder>Aymerick Jéhanne</holder>
+    </copyright>
+    
+    <keywordset>
+        <keyword>Cache Operation</keyword>
+        <keyword>OMA</keyword>
+        <keyword>Provisioning</keyword>
+        <keyword>Service Indication</keyword>
+        <keyword>Service Loading</keyword>
+        <keyword>SyncML</keyword>
+        <keyword>WAP</keyword>
+        <keyword>wbxml</keyword>
+        <keyword>Wireless-Village</keyword>
+        <keyword>WML</keyword>
+        <keyword>WTA</keyword>
+    </keywordset>
+    
+  <revhistory>
+    <revision>
+      <revnumber>Beta 0.7.0</revnumber>
+      <revremark>First Draft for the WBXML Library 0.7.0</revremark>
+      <date>2003-03-20</date>
+    </revision>
+    <revision>
+      <revnumber>Beta 0.7.1</revnumber>
+      <revremark>First Draft for the WBXML Library 0.7.1 (not packaged - still leaks explanation of WBXMLTree, WBXMLTag and WBXMLAttribute interfaces)</revremark>
+      <date>2003-03-21</date>
+    </revision>
+  </revhistory>    
+</bookinfo>
+
+<!-- Overview -->
+<chapter id="overview">
+    <title>Overview</title>
+
+    <!-- Components -->
+    <sect1>
+        <title>Components</title>
+        <para>
+            The WBXML Library consists of 2 libraries:
+            <variablelist>
+                <varlistentry>
+                    <term>libwbxml2</term>
+                    <listitem>
+                        <para>
+                            The main library, which contains the WBXML Parser and
+                            the WBXML Encoder. This is a standalone library.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>libwbxml2_conv</term>
+                    <listitem>
+                        <para>
+                            A wrapper arround libwbxml2 to convert from XML to WBXML and
+                            from WBXML to XML. This is linked with libwbxml2 and &expat;.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </para>
+        <para>            
+            Two tools are also provided:
+            <variablelist>
+                <varlistentry>
+                    <term>xml2wbxml</term>
+                    <listitem>
+                        <para>
+                            Converts a XML document to a WBXML document.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>wbxml2xml</term>
+                    <listitem>
+                        <para>
+                            Converts a WBXML document to a XML document.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>          
+        </para>
+    </sect1>
+    
+    <!-- Supported Languages -->
+    <sect1>
+        <title>Supported Languages</title>
+        <para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        &wapforum; Specifications
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    <ulink url="http://www.wapforum.org/what/technical_1_0.htm">WAP 1.0</ulink>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                WBXML 1.0 - WBXML-30-Apr-98.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                WML 1.0 - WML-30-Apr-98.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                WTA 1.0 - wta-30-apr-98.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <ulink url="http://www.wapforum.org/what/technical_1_1.htm">WAP 1.1</ulink>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                WBXML 1.1 - SPEC-WBXML-19990616.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                WML 1.1 - SPEC-WML-19990616.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                CHANNEL 1.1 - SPEC-WTA-19990716.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                    
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <ulink url="http://www.wapforum.org/what/technical_1_2.htm">WAP 1.2</ulink>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                WBXML 1.2 - SPEC-WBXML-19991104.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                WML 1.2 - SPEC-WML-19991104.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                SI 1.0 - WAP-167-ServiceInd-20010731-a.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                SL 1.0 - WAP-168-ServiceLoad-20010731-a.pdf &tested;
+                                            </para>
+                                        </listitem>                                        
+                                    </itemizedlist>                                      
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <ulink url="http://www.wapforum.org/what/technical_1_2_1.htm">WAP 1.2.1</ulink>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                WBXML 1.3 - WAP-192-WBXML-20010725-a.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                WML 1.3 - WAP-191-WML-20000219-a.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                CO 1.0 - WAP-175-CacheOp-20010731-a.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                     
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <ulink url="http://www.wapforum.org/what/technical.htm">WAP 2.0</ulink>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                Prov 1.0 - WAP-183-PROVCONT-20010724-a.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                WTA WML 1.2 - WAP-266-WTA-20010908-a.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>
+                                                CHANNEL 1.2 - WAP-266-WTA-20010908-a.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                     
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        &oma; Specifications
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    EMail Notification 1.0
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                EMN 1.0 - OMA-ERELD-EMN-V1_0-20021031-C.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                              
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    Rights Expression Language Version 1.0
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                DRMREL 1.0 - OMA-Download-DRMREL-v1_0-20020913-a.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                      
+                                </para>
+                            </listitem>                            
+                        </itemizedlist>                        
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        &oma; Specifications
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    EMail Notification 1.0
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                EMN 1.0 - OMA-ERELD-EMN-V1_0-20021031-C.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                              
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    Rights Expression Language Version 1.0
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                DRMREL 1.0 - OMA-Download-DRMREL-v1_0-20020913-a.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                      
+                                </para>
+                            </listitem>                            
+                        </itemizedlist>                        
+                    </para>
+                </listitem>                
+                <listitem>
+                    <para>
+                        Nokia / Ericsson
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    OTA Settings
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                OTA_settings_general_7_0.pdf &tested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                      
+                                </para>
+                            </listitem>
+                        </itemizedlist>                         
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                       &wv; Spécifications
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    WV CSP 1.1
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>
+                                                WSP 1.1 - WV_CSP_WBXML_v1.1.pdf &untested;
+                                            </para>
+                                        </listitem>
+                                    </itemizedlist>                                      
+                                </para>
+                            </listitem>
+                        </itemizedlist>                         
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </sect1>
+    
+    <!-- Project -->
+    <sect1>
+        <title>Project</title>
+        <para>
+            The WBXML Library project is hosted on &sf;
+        </para>
+        
+        <para>
+            The latests package can be downloaded: <ulink url="http://sourceforge.net/project/showfiles.php?group_id=55834&amp;release_id=126876">here</ulink>
+        </para>
+        
+        <para>
+            CVS Access: :ext:anonymous@cvs.wbxmllib.sourceforge.net:/cvsroot/wbxmllib            
+        </para>
+        
+        <para>
+            <ulink url="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/wbxmllib">Browe the sources Online</ulink>
+        </para>              
+    </sect1>
+    
+    <!-- Code Documentation -->
+    <sect1>
+        <title>Code Documentation</title>
+
+        <para>
+            The Code Documentation, generated by <ulink url="http://www.doxygen.org/">doxygen</ulink> is <ulink url="http://wbxmllib.sourceforge.net/html/index.html">HERE</ulink> !
+        </para>              
+    </sect1>    
+</chapter>
+
+<!-- Building and Installing -->
+<chapter id="install">
+    <title>Building and Installing</title>
+
+    <!-- Linux -->
+    <sect1>
+        <title>Linux</title>
+        
+        <para>
+            You must have the &expat; library installed.
+        </para>
+
+        <procedure>
+            <title>Linux Install</title>
+            <para>This is what you must do to install the WBXML Library on Linux</para>
+            <step performance="required">
+                <para>
+                    <prompt>$</prompt> <command>./bootstrap</command>
+                </para>
+            </step>
+            <step performance="required">
+                <para>
+                    <prompt>$</prompt> <command>make all</command>
+                </para>
+            </step>
+            <step performance="required">
+                <para>
+                    <prompt>$</prompt> <command>make install</command>
+                </para>
+            </step>
+            <step performance="required">
+                <para>
+                    <prompt>$</prompt> <command>make clean</command>
+                </para>
+            </step>                        
+        </procedure>
+        <warning>
+            <para>
+                You may have to chmod 'bootstrap' file to 755, if not already done.
+            </para>
+        </warning>
+        <para>
+            To make the library verbose, use the '-DWBXML_LIB_VERBOSE' CFLAG in src/Makefile.am
+        </para>
+    </sect1>
+    
+    <!-- Windows -->
+    <sect1>
+        <title>Windows</title>
+        
+        <para>
+            The &expat; binary is provided in "/win32/expat".
+        </para>        
+
+        <para>
+            Just open the 'win32/libwbxml.dsw' VC++ workspace, and build:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        libwbxml2.dll - The main library
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        libwbxml2_conv.dll - The WBXML &lt;=&gt; XML convertion library
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        xml2wbxml.exe - The XML to WBXML convertion tool
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        xml2wbxml.exe - The WBXML to XML convertion tool
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            To make the library verbose, define the 'WBXML_LIB_VERBOSE' Macro in 'src/wbxml_log.h'
+        </para>        
+    </sect1>    
+</chapter>
+
+<!-- Using WBXML Library -->
+<chapter id="using">
+    <title>Using WBXML Library</title>
+
+    <para>
+        There are three ways of using the WBXML Library:
+        <itemizedlist>
+            <listitem>
+                File convertion Tools : The xml2wbxml and wbxml2xml programs.
+            </listitem>
+            <listitem>
+                Buffer convertion Library : The libwbxml2_conv library.
+            </listitem>
+            <listitem>
+                Low level WBXML Parser and Encoder : The libwbxml2 library.
+            </listitem>            
+        </itemizedlist>
+    </para>
+    
+    <!-- File convertion Tools -->
+    <sect1>
+        <title>File convertion Tools (xml2wbxml, wbxml2xml)</title>
+        
+        <para>
+            This are the high level components of the WBXML Library. This tools need the libwbxml2_conv, libwbxml2 and &expat; libraries.
+        </para>
+        
+        <para>
+            There are two Convertion Tools:
+            <itemizedlist>
+                <listitem>
+                    xml2wbxml tool - Convert an XML File to a WBXML File.
+                </listitem>
+                <listitem>
+                    wbxml2xml tool - Convert a WBXML File to an XML File.
+                </listitem>
+            </itemizedlist>
+        </para>
+    </sect1>
+    
+    <!-- Buffer convertion Library -->
+    <sect1>
+        <title>Buffer convertion Library (libwbxml2_conv)</title>
+        
+        <para>
+            This is the library version of the Convertion Tools. Use this library if you need to convert 
+            XML and WBXML buffers inside your own Program. This library needs to link with the libwbxml2 and &expat; libraries.
+        </para>
+        
+        <para>
+            There are two Convertion Functions:
+            <itemizedlist>
+                <listitem>
+                    xml2wbxml function - Convert an XML Buffer to a WBXML Buffer.
+                </listitem>
+                <listitem>
+                    wbxml2xml function - Convert a WBXML Buffer to an XML Buffer.
+                </listitem>
+            </itemizedlist>
+        </para>
+    </sect1>
+    
+    <!-- Low level WBXML Parser and Encoder -->
+    <sect1>
+        <title>Low level WBXML Parser and Encoder (libwbxml2)</title>
+        
+        <para>
+            This is the low-level WBXML Library component. It uses an intermediary WBXMLTree structure to represent a WBXML Document,
+            and it contains a WBXML Parser and a WBXML Encoder. Use this library if you have to deal with an in-memory representation
+            of the WBXML Document, or if you want to parse a WBXML Document into your own internal structures. This is a standalone library.
+        </para>
+        
+        <para>
+            The main modules of the libwbxml2 library:
+            <variablelist>
+                <varlistentry>
+                    <term>wbxml_buffers</term>
+                    <listitem>
+                        <para>
+                            This contains functions to manipulate generic Buffers (WBXMLBuffer). This buffers are used in the 'wbxml_elt' module
+                            to store Literal Tags and Literal Attribute Names.
+                        </para>
+                    </listitem>
+                </varlistentry>             
+                <varlistentry>
+                    <term>wbxml_tables</term>
+                    <listitem>
+                        <para>
+                            This module contains all the WBXML Tables. It defines too the structures:
+                            <itemizedlist>
+                                <listitem>
+                                    WBXMLTagEntry - A WBXML Tag Entry in WBXML Language Table
+                                </listitem>
+                                <listitem>
+                                    WBXMLAttrEntry - A WBXML Attribute Entry in WBXML Language Table
+                                </listitem>                                
+                                <listitem>
+                                    WBXMLLangEntry - A full WBXML Language Table
+                                </listitem>                                                                
+                            </itemizedlist>
+                        </para>
+                    </listitem>
+                </varlistentry>            
+                <varlistentry>
+                    <term>wbxml_elt</term>
+                    <listitem>
+                        <para>
+                            This module defines the WBXML Elements used in the WBXML Tree structure:
+                            <itemizedlist>
+                                <listitem>
+                                    WBXMLTag - A WBXML Tag
+                                </listitem>
+                                <listitem>
+                                    WBXMLAttributeName - A WBXML Attribute Name
+                                </listitem>
+                                <listitem>
+                                    WBXMLAttribute - A WBXML Attribute
+                                </listitem>                                                                
+                            </itemizedlist>
+                        </para>
+                        <para>
+                            <programlisting>
+        typedef struct WBXMLTag_s {
+            WBXMLValueType type;                    /* Tag Type (Token or Literal) */
+            union {
+                const WBXMLTagEntry   *token;       /* Token Tag (MUST be const structure, ie from wbxml_tables.c) */
+                WBXMLBuffer           *literal;     /* Literal Tag (MUST be dynamically allocated WBXMLBuffer) */
+            } u;
+        } WBXMLTag;
+                            </programlisting>
+                            The WBXMLTag type can be either:
+                            <itemizedlist>
+                                <listitem>
+                                    WBXML_VALUE_TOKEN - In this case, the Tag Name is a token, a pointer to a WBXMLTagEntry structure.
+                                </listitem>
+                                <listitem>
+                                    WBXML_VALUE_LITERAL - In this case, the Tag Name is a literal, a pointer to a WBXMLBuffer structure.
+                                </listitem>
+                            </itemizedlist>
+                        </para>
+                        <para>
+                            <programlisting>
+        typedef struct WBXMLAttributeName_s {
+            WBXMLValueType  type;               /* Attribute Name Type (Token or Literal) */
+            union {
+                const WBXMLAttrEntry *token;    /* Token Attribute Name (MUST be const structure, ie from wbxml_tables.c) */
+                WBXMLBuffer          *literal;  /* Literal Attribute Name (MUST be dynamically allocated WBXMLBuffer) */
+            } u;
+        } WBXMLAttributeName;
+                            </programlisting>                        
+                            The WBXMLAttributeName type can be either:
+                            <itemizedlist>
+                                <listitem>
+                                    WBXML_VALUE_TOKEN - In this case, the Attribute Name is a token, a pointer to a WBXMLAttrEntry structure.
+                                </listitem>
+                                <listitem>
+                                    WBXML_VALUE_LITERAL - In this case, the Tag Name is a literal, a pointer to a WBXMLBuffer structure.
+                                </listitem>
+                            </itemizedlist>
+                        </para>
+                        <para>
+                            <programlisting>
+        typedef struct WBXMLAttribute_s {
+            WBXMLAttributeName  *name;  /* Attribute Name */
+            WBXMLBuffer *value;         /* Full Attribute Value */
+        } WBXMLAttribute;
+                            </programlisting>                         
+                            The WBXMLAttribute contains:
+                            <itemizedlist>
+                                <listitem>
+                                    An Attribute Name : A WBXMLAttributeName structure.
+                                </listitem>
+                                <listitem>
+                                    An Attribute Value : A WBXMLBuffer structure.
+                                </listitem>
+                            </itemizedlist>
+                        </para>
+                        <warning>
+                            <para>
+                                <literallayout>
+    The 'value' part of an WBXMLAttribute contain the FULL attribute value.
+    For example, with the attribute: url="http://127.0.0.1/"
+    if the 'name' part is this:
+        - name->u.token->wbxmlCodePage: 0x00
+        - name->u.token->wbxmlToken : 0x4b
+        - name->u.token->xmlName : "url"
+        - name->u.token->xmlValue: "http://"
+
+    then, 'value' is still: "http://127.0.0.1/"
+
+    Of course (in this example) it should be better to have the wbxmlToken 0x4a ("url" / NULL). So you mustn't take into
+    account the 'xmlValue' field for 'name' to get the Attribute Value of this Attribute.
+                                </literallayout>
+                            </para>
+                        </warning>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>wbxml_tree</term>
+                    <listitem>
+                        <para>
+                            This module define a WBXML Tree. This is the main in-memory representation of a WBXML Document, used by
+                            the WBXML Parser and the WBXML Encoder.
+                        </para>
+                        
+                        <para>
+                            A WBXML Tree is composed of WBXML Nodes which can be: an Element Node, a Text Node or a PI Node.
+                            <programlisting>
+        typedef enum WBXMLTreeNodeType_e
+        {
+            WBXML_TREE_ELEMENT_NODE = 0, /* Element Node */
+            WBXML_TREE_TEXT_NODE,        /* Text Node */
+            WBXML_TREE_PI_NODE,          /* PI Node */
+        } WBXMLTreeNodeType;
+                            </programlisting>
+                        </para>
+                            
+                        <para>
+                            A WBXMLTreeAttribute is a structure that permits to chain several WBXMLAttribute structures into a List.
+                            <programlisting>
+        typedef struct WBXMLTreeAttribute_s
+        {
+            WBXMLAttribute  *attr;              /* Attribute */
+            struct WBXMLTreeAttribute_s  *next; /* Next attribute */
+        } WBXMLTreeAttribute;
+                            </programlisting>
+                        </para>
+                            
+                        <para>
+                             A WBXML Tree is composed of WBXML Nodes.
+                            <programlisting>
+        typedef struct WBXMLTreeNode_s
+        {
+            WBXMLTreeNodeType   type;       /* Node Type */
+            WBXMLTag            *name;      /* Node Name (if type is 'WBXML_TREE_ELEMENT_NODE') */
+            WBXMLTreeAttribute  *attrs;     /* Node Attributes (if type is 'WBXML_TREE_ELEMENT_NODE') */
+            WBXMLBuffer         *content;   /* Node Content (if  type is 'WBXML_TREE_TEXT_NODE')  */
+                
+            struct WBXMLTreeNode_s  *parent;    /* Parent Node */
+            struct WBXMLTreeNode_s  *children;  /* Children Node */
+            struct WBXMLTreeNode_s  *next;      /* Next sibling Node */
+            struct WBXMLTreeNode_s  *prev;      /* Previous sibling Node */
+        } WBXMLTreeNode;
+                            </programlisting>
+                        </para>
+                            
+                        <para>
+                            Finally, a WBXML Tree defines a WBXM Language and a root WBXML Node.
+                            <programlisting>
+        typedef struct WBXMLTree_s
+        {    
+            const WBXMLLangEntry  *lang; /* Language Table */
+            WBXMLTreeNode   *root;       /* Root Element */
+        } WBXMLTree;
+                            </programlisting>                             
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>wbxml_encoder</term>
+                    <listitem>
+                        <para>
+                            The WBXML Encoder is used to encode a WBXML Tree into:
+                            <itemizedlist>
+                                <listitem>
+                                    A WBXML Document : wbxml_encoder_encode_to_wbxml()
+                                </listitem>
+                                <listitem>
+                                    An XML Document : wbxml_encoder_encode_to_xml()
+                                </listitem>
+                            </itemizedlist>
+                            Cf. the Reference Chapter for more informations about this functions.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>wbxml_parser</term>
+                    <listitem>
+                        <para>
+                            The WBXML Parser can be used in two ways:
+                            <itemizedlist>
+                                <listitem>
+                                    Parse a WBXML Document into a WBXML Tree : wbxml_parser_parse_to_tree()
+                                </listitem>
+                                <listitem>
+                                    Parse a WBXML Document into your own internal structures, by implementing your own Parser Callbacks : wbxml_parser_parse()
+                                </listitem>
+                            </itemizedlist>  
+                            Cf. the Reference Chapter for more informations about this functions.                          
+                        </para>
+                    </listitem>
+                </varlistentry>                                                                
+            </variablelist>                
+        </para>
+    </sect1>
+</chapter>
+
+<!-- Reference -->
+<chapter id="reference">
+    <title>Reference</title>
+
+    <!-- libwbxml2 -->
+    <sect1>
+        <title>libwbxml2</title>
+             
+        <!-- WBXML Encoder -->
+        <sect2>
+            <title>WBXML Encoder</title>
+        
+            <!-- Encoder Creation -->    
+            <sect3>
+                <title>Encoder Creation</title>
+                <para>
+                    This two functions permit to create and destroy WBXML Encoder instances.
+                </para>
+            
+                <sect4>
+                    <title>wbxml_encoder_create</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>WBXMLEncoder *<function>wbxml_encoder_create</function></funcdef>
+                            <paramdef>void</paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Create a WBXML Encoder instance. Returns NULL if not enough memory.
+                    </para>
+                </sect4>
+                
+                <sect4>
+                    <title>wbxml_encoder_destroy</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_destroy</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Destroy a WBXML Encoder instance. This function doesn't destroy the WBXMLTree associated with that WBXML Encoder.
+                    </para>                
+                </sect4>
+                
+                <sect4>
+                    <title>Example</title>
+                    <para>
+                        <example>
+                            <title>WBXML Encoder Creation/Destruction</title>
+                            <programlisting>
+        #include &lt;wbxml.h&gt;
+        ...
+        
+        WBXMLEncoder *wbxml_encoder = NULL;
+        
+        /* Create Encoder */
+        if ((wbxml_encoder = wbxml_encoder_create()) == NULL)
+            return 0;
+        
+        ...
+        &lt;&lt; Your Code Here &gt;&gt;
+        ...
+        
+        /* Destroy Encoder */
+        wbxml_encoder_destroy(wbxml_encoder);
+                            </programlisting>
+                        </example>
+                    </para>                    
+                </sect4>
+            </sect3>
+            
+            <!-- Encoder Initialization when generating WBXML or XML --> 
+            <sect3>
+                <title>Encoder Initialization when generating WBXML or XML</title>
+                <para>
+                    This functions that initialize the WBXML Encoder are usefull when generating WBXML and XML.
+                </para>                
+
+                <sect4>
+                    <title>wbxml_encoder_set_ignore_empty_text</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_set_ignore_empty_text</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WB_BOOL <parameter>set_ignore</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Set the WBXML Encoder to ignore empty texts (ie: ignorable Whitespaces) when generating output <emphasis>[Default: TRUE]</emphasis>.
+                    </para>
+                </sect4>
+                
+                <sect4>
+                    <title>wbxml_encoder_set_remove_text_blanks</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_set_remove_text_blanks</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WB_BOOL <parameter>set_remove</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Set the WBXML Encoder to remove leading and trailing blanks in texts (ie: ignorable Whitespaces) when generating output <emphasis>[Default: TRUE]</emphasis>.
+                    </para>
+                </sect4>
+            </sect3>
+            
+            <!-- Encoder Initialization when generating WBXML --> 
+            <sect3>
+                <title>Encoder Initialization when generating WBXML</title>
+                <para>
+                    This functions that initialize the WBXML Encoder are only usefull when generating WBXML.
+                </para>
+            
+                <sect4>
+                    <title>wbxml_encoder_set_use_strtbl</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_set_use_strtbl</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WB_BOOL <parameter>use_strtbl</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Set if we use String Table when Encoding into WBXML <emphasis>[Default: TRUE]</emphasis>.
+                    </para>
+                </sect4>
+            </sect3>
+            
+            <!-- Encoder Initialization when generating XML --> 
+            <sect3>
+                <title>Encoder Initialization when generating XML</title>
+                <para>
+                    This functions that initialize the WBXML Encoder are only usefull when generating XML.
+                </para>
+
+                <sect4>
+                    <title>wbxml_encoder_set_xml_gen_type</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_set_xml_gen_type</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WBXMLEncoderXMLGenType <parameter>gen_type</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Set the WBXML Encoder XML Generation Type, when generating XML <emphasis>[Default: WBXML_ENCODER_XML_GEN_COMPACT]</emphasis>.
+                    </para>
+                    <para>
+                        Generation Mode:
+                        <itemizedlist>
+                            <listitem>
+                                WBXML_ENCODER_XML_GEN_COMPACT - Compact XML generation
+                            </listitem>
+                            <listitem>
+                                WBXML_ENCODER_XML_GEN_INDENT - Indented XML generation
+                            </listitem>
+                            <listitem>
+                                WBXML_ENCODER_XML_GEN_CANONICAL - Canonical XML generation
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </sect4>
+                
+                <sect4>
+                    <title>wbxml_encoder_set_indent</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_set_indent</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WB_UTINY <parameter>indent</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Set the WBXML Encoder indent, when generating XML in WBXML_ENCODER_XML_GEN_INDENT mode <emphasis>[Default: 0]</emphasis>.
+                    </para>
+                </sect4>                
+            </sect3>
+            
+            <!-- Encoding Functions --> 
+            <sect3>
+                <title>Encoding Functions</title>
+                <para>
+                    This are the main functions to encode a WBXMLTree.
+                </para>
+            
+                <sect4>
+                    <title>wbxml_encoder_set_tree</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>void <function>wbxml_encoder_set_tree</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WBXMLTree *<parameter>tree</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Set the WBXML Tree to encode. You MUST call this function before calling following wbxml_encoder_encode_to_wbxml() or wbxml_encoder_encode_to_xml() function.
+                    </para>
+                </sect4>
+                
+                <sect4>
+                    <title>wbxml_encoder_encode_to_wbxml</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>WBXMLError <function>wbxml_encoder_encode_to_wbxml</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WB_UTINY **<parameter>wbxml</parameter></paramdef>
+                            <paramdef>WB_ULONG *<parameter>wbxml_len</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Encode a WBXML Tree to WBXML. wbxml_encoder_set_tree() MUST be used before calling this function.
+                    </para>
+                </sect4>
+                
+                <sect4>
+                    <title>wbxml_encoder_encode_to_xml</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>WBXMLError <function>wbxml_encoder_encode_to_xml</function></funcdef>
+                            <paramdef>WBXMLEncoder *<parameter>encoder</parameter></paramdef>
+                            <paramdef>WB_UTINY **<parameter>xml</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        Encode a WBXML Tree to XML. wbxml_encoder_set_tree() MUST be used before calling this function.
+                    </para>
+                </sect4>
+            </sect3>
+            
+            <!-- Example --> 
+            <sect3>
+                <title>Example</title>
+                
+                <example>
+                    <title>WBXML Encoder Use</title>
+                    <programlisting>
+        #include &lt;wbxml.h&gt;
+        ...
+                            
+        WBXMLEncoder *wbxml_encoder = NULL;
+        WBXMLTree *tree = NULL;
+        WB_UTINY *wbxml = NULL;
+        WB_ULONG wbxml_len = 0;
+        
+        ...
+        &lt;&lt; tree created and filled &gt;&gt;
+        ...
+        
+        /* Create WBXML Encoder */
+        if ((wbxml_encoder = wbxml_encoder_create()) == NULL) {
+            wbxml_tree_destroy(tree);
+            return WBXML_ERROR_NOT_ENOUGH_MEMORY;
+        }
+        
+        /* Set the WBXML Tree to encode */
+        wbxml_encoder_set_tree(wbxml_encoder, tree);
+                      
+        /* Ignores "Empty Text" Nodes */
+        wbxml_encoder_set_ignore_empty_text(wbxml_encoder, TRUE);
+    
+        /* Remove leading and trailing whitespaces in "Text Nodes" */
+        wbxml_encoder_set_remove_text_blanks(wbxml_encoder, TRUE);
+    
+        /* Use String Table */
+        wbxml_encoder_set_use_strtbl(wbxml_encoder, TRUE);
+    
+        /* Encode to WBXML */
+        ret = wbxml_encoder_encode_to_wbxml(wbxml_encoder, &amp;wbxml, &amp;wbxml_len);
+    
+        /* Clean-up */
+        wbxml_tree_destroy(tree);
+        wbxml_encoder_destroy(wbxml_encoder);
+        
+        if (ret != WBXML_OK) {
+            printf("Encoding failed: %s\n", wbxml_errors_string(ret));
+        }
+        else {
+            printf("Encoding succeded\n");
+            
+            ...
+            &lt;&lt; Do what you have to do with this WBXML Buffer &gt;&gt;
+            ...
+            
+            wbxml_free(wbxml);
+        }
+                    </programlisting>
+                </example>
+            </sect3>            
+        </sect2>
+        
+        <!-- WBXML Parser -->
+        <sect2>
+            <title>WBXML Parser</title>
+
+            <para>
+                There are two ways of using the WBXML Parser
+                <itemizedlist>
+                    <listitem>
+                        Parse a WBXML Document into a WBXML Tree : wbxml_parser_parse_to_tree()
+                    </listitem>
+                    <listitem>
+                        Parse a WBXML Document into your own internal structures, by implementing your own Parser Callbacks : wbxml_parser_parse()
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <!-- Parse to WBXML Tree -->
+            <sect3>
+                <title>Parse to WBXML Tree</title>
+                <para>
+                    This is the easier method. You just have one function to call, and the WBXML Document is converted
+                    to an in-memory representation: the WBXML Tree.
+                </para>
+                
+                <sect4>
+                    <title>wbxml_parser_parse_to_tree</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>WBXMLError <function>wbxml_parser_parse_to_tree</function></funcdef>
+                            <paramdef>WB_UTINY *<parameter>wbxml</parameter></paramdef>
+                            <paramdef>WB_ULONG <parameter>wbxml_len</parameter></paramdef>
+                            <paramdef>WBXMLTree  **<parameter>tree</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                       Parse a WBXML Document and creates the associated WBXML Tree. Returns WBXML_OK if no error, an error code otherwise.
+                    </para>
+                </sect4>                
+            </sect3>
+            
+            <!-- Parse with User Defined Callbacks -->
+            <sect3>
+                <title>Parse with User Defined Callbacks</title>
+                
+                <!-- Parser Creation -->    
+                <sect4>
+                    <title>Parser Creation</title>
+                    <para>
+                        This two functions permit to create and destroy WBXML Parser instances.
+                    </para>
+                    
+                    <sect5>
+                        <title>wbxml_parser_create</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>WBXMLParser *<function>wbxml_parser_create</function></funcdef>
+                                <paramdef>void</paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Create a WBXML Parser instance. Returns NULL if not enough memory.
+                        </para>
+                    </sect5>
+                    
+                    <sect5>
+                        <title>wbxml_parser_destroy</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>void <function>wbxml_parser_destroy</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Destroy a WBXML Parser instance. The User Data is not destroyed by this function.
+                        </para>                
+                    </sect5>
+                    
+                    <sect5>
+                        <title>Example</title>
+                        <para>
+                            <example>
+                                <title>WBXML Parser Creation/Destruction</title>
+                                <programlisting>
+        #include &lt;wbxml.h&gt;
+        ...
+        
+        WBXMLParser *wbxml_parser = NULL;
+        
+        /* Create Parser */
+        if ((wbxml_parser = wbxml_parser_create()) == NULL)
+            return 0;
+        
+        ...
+        &lt;&lt; Your Code Here &gt;&gt;
+        ...
+        
+        /* Destroy Parser */
+        wbxml_parser_destroy(wbxml_parser);
+                                </programlisting>
+                            </example>
+                        </para>
+                    </sect5>
+                </sect4>
+                
+                <!-- Parser Initialisation -->    
+                <sect4>
+                    <title>Parser Initialisation</title>
+                    <para>
+                        This functions are used to initialise the Parser.
+                    </para>
+                    
+                    <sect5>
+                        <title>wbxml_parser_set_user_data</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>void <function>wbxml_parser_set_user_data</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                                <paramdef>void *<parameter>user_data</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Set a pointer to User Data. This User Data is passed back to the user in User Defined Callbacks
+                            while parsing the WBXML document.
+                        </para>                
+                    </sect5>
+                    
+                    <sect5>
+                        <title>wbxml_parser_set_content_handler</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>void <function>wbxml_parser_set_content_handler</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                                <paramdef>WBXMLContentHandler *<parameter>content_handler</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Set the User Defined Callbacks to use while parsing the WBXML document.
+                        </para>
+                    </sect5>
+                        
+                    <sect5>
+                        <title>Parser Content Handler</title>
+                        <para>
+                            A WBXMLContentHandler is a structure that defines all the Callback Functions.
+                            <programlisting>
+        typedef struct WBXMLContentHandler_s {
+            WBXMLStartDocumentHandler start_document_clb;       /* Start Document Handler */
+            WBXMLEndDocumentHandler end_document_clb;           /* End Document handler */
+            WBXMLStartElementHandler start_element_clb;         /* Start Element handler */
+            WBXMLEndElementHandler end_element_clb;             /* End Element handler */
+            WBXMLCharactersHandler characters_clb;              /* Characters handler */
+            WBXMLProcessingInstructionHandler pi_clb;           /* Processing Instruction Handler */
+        } WBXMLContentHandler;
+                            </programlisting>
+                        </para>
+                        
+                        <itemizedlist>
+                            <!-- WBXMLStartDocumentHandler -->
+                            <listitem>                                
+                                <para>
+                                    <funcsynopsis>
+                                        <funcprototype>
+                                            <funcdef>void <function>WBXMLStartDocumentHandler</function></funcdef>
+                                            <paramdef>void *<parameter>ctx</parameter></paramdef>
+                                            <paramdef>WB_LONG<parameter>charset</parameter></paramdef>
+                                            <paramdef>const WBXMLLangEntry *<parameter>lang</parameter></paramdef>
+                                        </funcprototype>
+                                    </funcsynopsis>
+                                    
+                                    <para>
+                                        This Callback function is called when starting to parse the WBXML document.
+                                        <itemizedlist>
+                                            <listitem>
+                                                ctx: The User Data
+                                            </listitem>                                        
+                                            <listitem>
+                                                charset: IANA Charset MIBenum of the WBXML document
+                                            </listitem>
+                                            <listitem>
+                                                lang: WBXML Language Table (defined in wbxml_tables.[h|c])
+                                            </listitem>
+                                        </itemizedlist>
+                                    </para>
+                                </para>
+                            </listitem>
+                            
+                            <!-- WBXMLEndDocumentHandler -->
+                            <listitem>
+                                <para>
+                                    <funcsynopsis>
+                                        <funcprototype>
+                                            <funcdef>void <function>WBXMLEndDocumentHandler</function></funcdef>
+                                            <paramdef>void *<parameter>ctx</parameter></paramdef>
+                                        </funcprototype>
+                                    </funcsynopsis>
+                                    
+                                    <para>
+                                        This Callback function is called when finished to parse the WBXML document. The 
+                                        parameter is the User Data.
+                                    </para>
+                                </para>
+                            </listitem>
+                            
+                            <!-- WBXMLStartElementHandler -->
+                            <listitem>
+                                <para>
+                                    <funcsynopsis>
+                                        <funcprototype>
+                                            <funcdef>void <function>WBXMLStartElementHandler</function></funcdef>
+                                            <paramdef>void *<parameter>ctx</parameter></paramdef>
+                                            <paramdef>WBXMLTag *<parameter>localName</parameter></paramdef>
+                                            <paramdef>WBXMLAttribute **<parameter>atts</parameter></paramdef>
+                                            <paramdef>WB_BOOL<parameter>empty</parameter></paramdef>
+                                        </funcprototype>
+                                    </funcsynopsis>
+                                    
+                                    <para>
+                                        This Callback function is called when parsing a WBXML start Element.
+                                        <itemizedlist>
+                                            <listitem>
+                                                ctx: The User Data
+                                            </listitem>                                        
+                                            <listitem>
+                                                localName: The WBXML Tag
+                                            </listitem>
+                                            <listitem>
+                                                atts: The WBXML Attribute list
+                                            </listitem>
+                                            <listitem>
+                                                empty: TRUE if this is an empty Element, FALSE otherwise
+                                            </listitem>                                                                                        
+                                        </itemizedlist>
+                                    </para>
+                                </para>
+                            </listitem>
+                            
+                            <!-- WBXMLEndElementHandler -->
+                            <listitem>
+                                <para>
+                                    <funcsynopsis>
+                                        <funcprototype>
+                                            <funcdef>void <function>WBXMLEndElementHandler</function></funcdef>
+                                            <paramdef>void *<parameter>ctx</parameter></paramdef>
+                                            <paramdef>WBXMLTag *<parameter>localName</parameter></paramdef>
+                                            <paramdef>WB_BOOL<parameter>empty</parameter></paramdef>
+                                        </funcprototype>
+                                    </funcsynopsis>
+                                    
+                                    <para>
+                                        This Callback function is called when parsing a WBXML end Element.
+                                        <itemizedlist>
+                                            <listitem>
+                                                ctx: The User Data
+                                            </listitem>                                        
+                                            <listitem>
+                                                localName: The WBXML Tag
+                                            </listitem>
+                                            <listitem>
+                                                empty: TRUE if this is an empty Element, FALSE otherwise
+                                            </listitem>                                                                                        
+                                        </itemizedlist>
+                                    </para>
+                                </para>
+                            </listitem>
+                            
+                            <!-- WBXMLCharactersHandler -->
+                            <listitem>
+                                <para>
+                                    <funcsynopsis>
+                                        <funcprototype>
+                                            <funcdef>void <function>WBXMLCharactersHandler</function></funcdef>
+                                            <paramdef>void *<parameter>ctx</parameter></paramdef>
+                                            <paramdef>WB_UTINY *<parameter>ch</parameter></paramdef>
+                                            <paramdef>WB_ULONG<parameter>start</parameter></paramdef>
+                                            <paramdef>WB_ULONG<parameter>length</parameter></paramdef>
+                                        </funcprototype>
+                                    </funcsynopsis>
+                                    
+                                    <para>
+                                        This Callback function is called when parsing a Content Data.
+                                        <itemizedlist>
+                                            <listitem>
+                                                ctx: The User Data
+                                            </listitem>                                        
+                                            <listitem>
+                                                ch: Buffer of character data
+                                            </listitem>
+                                            <listitem>
+                                                start: Starting index in Buffer
+                                            </listitem>
+                                            <listitem>
+                                                length: Length of data
+                                            </listitem>
+                                        </itemizedlist>
+                                    </para>
+                                </para>
+                            </listitem>
+                            
+                            <!-- WBXMLProcessingInstructionHandler -->
+                            <listitem>
+                                <para>
+                                    <funcsynopsis>
+                                        <funcprototype>
+                                            <funcdef>void <function>WBXMLProcessingInstructionHandler</function></funcdef>
+                                            <paramdef>void *<parameter>ctx</parameter></paramdef>
+                                            <paramdef>const WB_UTINY *<parameter>target</parameter></paramdef>
+                                            <paramdef>WB_UTINY *<parameter>data</parameter></paramdef>
+                                        </funcprototype>
+                                    </funcsynopsis>
+                                    
+                                    <para>
+                                        This Callback function is called when parsing a Processing Instruction.
+                                        <itemizedlist>
+                                            <listitem>
+                                                ctx: The User Data
+                                            </listitem>                                        
+                                            <listitem>
+                                                target: The processing instruction target
+                                            </listitem>
+                                            <listitem>
+                                                data: The processing instruction data
+                                            </listitem>
+                                        </itemizedlist>
+                                    </para>
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </sect5>
+                    
+                    <sect5>
+                        <title>wbxml_parser_set_main_table</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>void <function>wbxml_parser_set_main_table</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                                <paramdef>const WBXMLLangEntry *<parameter>main_table</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Set the main WBXML Languages Table. You should not call this function unless you
+                            know what you are doing (the main table of wbxml_tables.c is already set when
+                            creating the WBXML Parser).
+                        </para>
+                    </sect5>
+                    
+                    <sect5>
+                        <title>wbxml_parser_set_wbxml_public_id</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>WB_BOOL <function>wbxml_parser_set_wbxml_public_id</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                                <paramdef>WB_LONG <parameter>public_id</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Force to parse the Document with a given WBXML Public ID. Must be called BEFORE parsing of document.
+                        </para>
+                    </sect5>
+                </sect4>
+                 
+                <!-- Parser Informations -->    
+                <sect4>
+                    <title>Parser Informations</title>
+                    <para>
+                        This functions are used to retrieve informations while or after Parsing.
+                    </para>
+                                        
+                    <sect5>
+                        <title>wbxml_parser_get_wbxml_public_id</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>WB_ULONG <function>wbxml_parser_get_wbxml_public_id</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Get the WBXML Public ID of current parsing WBXML document.
+                        </para>
+                    </sect5>                    
+                    
+                    <sect5>
+                        <title>wbxml_parser_get_xml_public_id</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>const WB_UTINY *<function>wbxml_parser_get_xml_public_id</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Get the XML Public ID of current parsing WBXML document.
+                        </para>
+                    </sect5>
+                    
+                    <sect5>
+                        <title>wbxml_parser_get_wbxml_version</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>WB_UTINY <function>wbxml_parser_get_wbxml_version</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Get the WBXML Version of current parsing WBXML document.
+                        </para>
+                    </sect5>
+                    
+                    <sect5>
+                        <title>wbxml_parser_get_current_byte_index</title>
+                        <funcsynopsis>
+                            <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                            <funcprototype>
+                                <funcdef>WB_LONG <function>wbxml_parser_get_current_byte_index</function></funcdef>
+                                <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                            </funcprototype>
+                        </funcsynopsis>
+                        
+                        <para>
+                            Get current parsing position in WBXML document.
+                        </para>
+                    </sect5>
+                </sect4>
+                
+                <!-- Parsing Function -->    
+                <sect4>
+                    <title>Parsing function</title>
+                    <funcsynopsis>
+                        <funcsynopsisinfo>#include &lt;wbxml.h&gt;</funcsynopsisinfo>
+                        <funcprototype>
+                            <funcdef>WBXMLError <function>wbxml_parser_parse</function></funcdef>
+                            <paramdef>WBXMLParser *<parameter>parser</parameter></paramdef>
+                            <paramdef>WB_UTINY *<parameter>wbxml</parameter></paramdef>
+                            <paramdef>WB_ULONG <parameter>wbxml_len</parameter></paramdef>
+                        </funcprototype>
+                    </funcsynopsis>
+                    
+                    <para>
+                        This function actually launch the Parsing of the WBXML Document.
+                        <itemizedlist>
+                            <listitem>
+                                parser: The Parser to use
+                            </listitem>
+                            <listitem>
+                                wbxml: The WBXML Document to parser
+                            </listitem>
+                            <listitem>
+                                wbxml_len: The WBXML Document length
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </sect4>
+                
+                <!-- Example -->    
+                <sect4>
+                    <title>Example</title>
+                    <example>
+                        <title>WBXML Parser use</title>
+                        <programlisting>
+        #include &lt;string.h&gt;
+        #include &lt;wbxml.h&gt;
+        
+        #define INPUT_BUFFER_SIZE 1000
+        
+        
+        /** Start Document Callback */
+        void parse_clb_start_document(void *ctx, WB_LONG charset, const WBXMLLangEntry *lang)
+        {
+            printf("Parsing Document:\n"
+                   "\tRoot Element: %s\n"
+                   "\tPublic ID: %s\n"
+                   "\tDTD: %s\n",
+                   lang-&gt;publicID-&gt;xmlRootElt,
+                   lang-&gt;publicID-&gt;xmlPublicID,
+                   lang-&gt;publicID-&gt;xmlDTD);
+        }
+        
+        /** End Document Callback */
+        void parse_clb_end_document(void *ctx)
+        {
+            printf("End of Document\n");
+        }
+        
+        /** Start Element Callback */
+        void parse_clb_start_element(void *ctx, WBXMLTag *element, WBXMLAttribute **atts, WB_BOOL empty)
+        {    
+            WB_ULONG *indent = (WB_ULONG *) ctx;
+            
+            WB_ULONG i = 0, j = 0;
+            
+            /* Indent start Element */
+            for (i=0; i&lt;*indent; i++)
+                printf(" ");
+        
+            /* Write start Element */
+            printf("&lt;%s", wbxml_tag_get_xml_name(element));
+            
+            /* Write Attributes */
+            if (atts != NULL) {
+                while (atts[j] != NULL)
+                {
+                    /* Write Attribute Name */
+                    printf(" %s=\"%s\"", wbxml_attribute_get_xml_name(atts[j]), wbxml_attribute_get_xml_value(atts[j]));  
+                    j++;
+                }        
+            }
+            
+            /* End of start Element */
+            if (empty) {
+                printf("/&gt;\n");
+            }
+            else {
+                printf("&gt;\n");
+                (*indent)++;
+            }
+        }
+        
+        /** End Element Callback */
+        void parse_clb_end_element(void *ctx, WBXMLTag *element, WB_BOOL empty)
+        {
+            WB_ULONG *indent = (WB_ULONG *) ctx;
+            WB_ULONG i = 0;
+        
+            if (!empty) {
+                (*indent)--;
+        
+                /* Indent End Element */
+                for (i=0; i&lt;*indent; i++)
+                    printf(" ");
+                    
+                /* Write end tag */
+                printf("&lt;/%s&gt;\n", wbxml_tag_get_xml_name(element));        
+            }
+        }
+        
+        /** Characters Callback */
+        void parse_clb_characters(void *ctx, WB_UTINY *ch, WB_ULONG start, WB_ULONG length)
+        {
+            WB_ULONG *indent = (WB_ULONG *) ctx;
+            WB_ULONG i = 0;
+            
+            /* Indent Characters */
+            for (i=0; i&lt;*indent; i++)
+                printf(" ");
+        
+            /* Write Content */
+            for(i=start; i&lt;length; i++)
+                printf("%c", ch[i]);
+        
+            printf("\n");
+        }
+        
+        /** Main Function */
+        WB_LONG main(WB_LONG argc, WB_TINY **argv) 
+        {
+            FILE *input_file = NULL;
+            WB_ULONG count = 0, total = 0, wbxml_len = 0;
+            WB_UTINY input_buffer[INPUT_BUFFER_SIZE + 1];
+        
+            WBXMLParser *wbxml_parser = NULL;
+            WB_UTINY *wbxml = NULL;
+            WB_ULONG indent = 0, error_index = 0;
+            WBXMLError ret = WBXML_OK;
+            WBXMLContentHandler parse_handler = 
+                {
+                    parse_clb_start_document,
+                    parse_clb_end_document,
+                    parse_clb_start_element,
+                    parse_clb_end_element,
+                    parse_clb_characters,
+                    NULL
+                };
+                
+            if (argc != 2) {
+                printf("Missing argument: WBXML Filename");
+                return 0;
+            }
+        
+            /**********************************
+             *  Read the WBXML Document
+             */
+        
+            /* Open WBXML document */
+            if ((input_file = fopen(argv[1], "rb")) == NULL) {
+                printf("Failed to open %s\n", argv[1]);
+                return 0;
+            }
+        
+            /* Read WBXML document */
+            while(!feof(input_file))    {
+                count = fread(input_buffer, sizeof(WB_UTINY), INPUT_BUFFER_SIZE, input_file);
+                if (ferror(input_file))      {
+                    printf("Error while reading from file %s\n", argv[1]);
+                    fclose(input_file);
+                    if (wbxml != NULL)
+                        wbxml_free(wbxml);
+                    return 0;
+                }
+        
+                total += count;
+                if ((wbxml = wbxml_realloc(wbxml, total)) == NULL) {
+                    printf("Not enought memory\n");
+                    fclose(input_file);
+                    if (wbxml != NULL)
+                        wbxml_free(wbxml);
+                    return 0;
+                }
+        
+                memcpy(wbxml + wbxml_len, input_buffer, count);
+                wbxml_len += count;
+            }
+        
+            fclose(input_file);
+            
+            /* Create WBXML Parser */
+            if ((wbxml_parser = wbxml_parser_create()) == NULL) {
+                wbxml_free(wbxml);
+                return 0;
+            }
+            
+            /* Initialize WBXML Parser */
+            wbxml_parser_set_user_data(wbxml_parser, &amp;indent);
+            wbxml_parser_set_content_handler(wbxml_parser, &amp;parse_handler);
+            
+            /* Parse WBXML document */
+            if ((ret = wbxml_parser_parse(wbxml_parser, wbxml, wbxml_len)) != WBXML_OK)
+            {
+                error_index = wbxml_parser_get_current_byte_index(wbxml_parser);
+                printf("Parsing failed at %u - Token %x - %s", error_index, wbxml[error_index], wbxml_errors_string(ret));
+            }
+            else {
+                printf("Parsing OK !");          
+            }
+            
+            /* Destroy WBXML Parser */
+            wbxml_parser_destroy(wbxml_parser);
+        
+            /* Free wbxml buffer */
+            wbxml_free(wbxml);
+        
+            return 0;
+        }
+                        </programlisting>
+                    </example>
+                </sect4>
+            </sect3>
+        </sect2>
+        
+        <!-- WBXML Tree -->
+        <sect2>
+            <title>WBXML Tree</title>
+
+            <para>
+                TODO !!!
+            </para>
+        </sect2>        
+    </sect1>
+    
+    <!-- libwbxml2_conv -->
+    <sect1>
+        <title>libwbxml2_conv</title>
+        <para>
+            This functions permit to convert directly XML to WBXML, and WBXML to XML.
+        </para>
+        
+        <!-- XML to WBXML convertion -->
+        <sect2>
+            <title>XML to WBXML Convertion</title>
+
+            <sect3>
+                <title>Prototype</title>            
+                <funcsynopsis>
+                    <funcsynopsisinfo>#include &lt;wbxml_conv.h&gt;</funcsynopsisinfo>
+                    <funcprototype>
+                        <funcdef>WBXMLError <function>xml2wbxml</function></funcdef>
+                        <paramdef>WB_UTINY *<parameter>xml</parameter></paramdef>
+                        <paramdef>WB_UTINY **<parameter>wbxml</parameter></paramdef>
+                        <paramdef>WB_ULONG *<parameter>wbxml_len</parameter></paramdef>
+                        <paramdef>XML2WBXMLParameters *<parameter>params</parameter></paramdef>
+                    </funcprototype>
+                </funcsynopsis>
+            </sect3>
+            
+            <sect3>
+                <title>XML2WBXMLParameters Structure</title>              
+                <para>
+                    XML2WBXMLParameters Structure:
+                    <programlisting>
+        typedef struct XML2WBXMLParameters_s {
+            WB_BOOL keep_ignorable_ws;  /* Keep Ignorable Whitespaces (Default: FALSE) */
+            WB_BOOL use_strtbl;         /* Generate String Table (Default: TRUE) */
+        } XML2WBXMLParameters;
+                    </programlisting>
+                </para>
+            </sect3>
+            
+            <sect3>
+                <title>Example</title>            
+                <example>
+                    <title>XML to WBXML Convertion</title>
+                    <programlisting>
+        #include &lt;wbxml_conv.h&gt;
+        
+        ...
+        
+        WB_UTINY *wbxml = NULL, *xml = NULL;
+        WB_LONG wbxml_len = 0;
+        WBXMLError ret = WBXML_OK;
+        XML2WBXMLParameters params;
+        
+        ...
+        &lt;&lt; Fill the 'xml' buffer with the XML Document to convert &gt;&gt;
+        ...
+        
+        /* Converter parameters */
+        params.use_strtbl = TRUE;
+        params.keep_ignorable_ws = FALSE;                    
+        
+        /* Convert XML document */
+        ret = xml2wbxml(xml, &amp;wbxml, &amp;wbxml_len, &amp;params);
+        if (ret != WBXML_OK) {
+            printf("xml2wbxml failed: %s\n", wbxml_errors_string(ret));
+        }
+        else {
+            printf("xml2wbxml succeded\n");
+            
+            ...
+            &lt;&lt; Do what you have to do with this WBXML Buffer &gt;&gt;
+            ...
+            
+            /* Clean-up */
+            wbxml_free(wbxml);
+        }
+        
+        ...
+                    </programlisting>
+                </example>
+            </sect3>
+        </sect2>
+        
+        <!-- WBXML to XML convertion -->
+        <sect2>
+            <title>WBXML to XML Convertion</title>
+            
+            <sect3>
+                <title>Prototype</title>
+                <funcsynopsis>
+                    <funcsynopsisinfo>#include &lt;wbxml_conv.h&gt;</funcsynopsisinfo>
+                    <funcprototype>
+                        <funcdef>WBXMLError <function>wbxml2xml</function></funcdef>
+                        <paramdef>WB_UTINY *<parameter>wbxml</parameter></paramdef>
+                        <paramdef>WB_ULONG <parameter>wbxml_len</parameter></paramdef>
+                        <paramdef>WB_UTINY **<parameter>xml</parameter></paramdef>                    
+                        <paramdef>WBXML2XMLParameters *<parameter>params</parameter></paramdef>
+                    </funcprototype>
+                </funcsynopsis>
+            </sect3>
+            
+            <sect3>
+                <title>WBXML2XMLParameters Structure</title>            
+                <para>
+                    <programlisting>
+        typedef struct WBXML2XMLParameters_s {
+            WBXMLEncoderXMLGenType gen_type;    /* WBXML_ENCODER_XML_GEN_COMPACT | WBXML_ENCODER_XML_GEN_INDENT | WBXML_ENCODER_XML_GEN_CANONICAL (Default: WBXML_ENCODER_XML_GEN_INDENT) */
+            WB_UTINY indent;                    /* Indentation Delta, when using WBXML_ENCODER_XML_GEN_INDENT Generation Type (Default: 0) */
+            WB_BOOL keep_ignorable_ws;          /* Keep Ignorable Whitespaces (Default: FALSE) */
+        } WBXML2XMLParameters;
+                    </programlisting>
+                </para>
+            </sect3>
+            
+            <sect3>
+                <title>Example</title>
+                <example>
+                    <title>WBXML to XML Convertion</title>
+                    <programlisting>
+        #include &lt;wbxml_conv.h&gt;
+        
+        ...
+                            
+        WB_UTINY *wbxml = NULL, *xml = NULL;
+        WB_LONG wbxml_size = 0;
+        WBXMLError ret = WBXML_OK;
+        WBXML2XMLParameters params;
+        
+        ...
+        &lt;&lt; Fill the 'wbxml' buffer with the WBXML Document to convert, and the wbxml_size with its size &gt;&gt;
+        ...
+        
+        /* Converter parameters */
+        params.gen_type = WBXML_ENCODER_XML_GEN_INDENT;
+        params.indent = 1;
+        params.keep_ignorable_ws = FALSE;
+
+        /* Convert WBXML document */
+        ret = wbxml2xml(wbxml, wbxml_size, &amp;xml, &amp;params);
+        if (ret != WBXML_OK) {
+            printf("wbxml2xml failed: %s\n", wbxml_errors_string(ret));
+        }
+        else {
+            printf("wbxml2xml succeded: \n%s\n", xml);
+    
+            ...
+            &lt;&lt; Do what you have to do with this XML Buffer &gt;&gt;
+            ...
+                            
+            /* Clean-up */
+            wbxml_free(xml);
+        }
+        
+        ...
+                    </programlisting>
+                </example>
+            </sect3>
+        </sect2>
+    </sect1>
+    
+    <!-- Tools -->
+    <sect1>
+        <title>Tools</title>
+        <para>
+            This tools are used to encode an XML file to a WBXML file, and a WBXML file to an XML file.
+        </para>
+             
+        <!-- xml2wbxml -->
+        <sect2>
+            <title>xml2wbxml</title>
+            
+            <para>
+                Convert an XML file to WBXML.
+            </para>
+            
+            <cmdsynopsis>
+               <!-- Usage: 
+                        xml2wbxml -o output.wbxml input.xml
+                        
+                    Options:
+                        -o output.wbxml : output file
+                        -k : keep ignorable whitespaces (Default: ignore)
+                        -n : do NOT generate String Table (Default: generate)
+               -->
+               <command>xml2wbxml</command>
+               <arg>-o <replaceable>output.wbxml</replaceable></arg>
+               <arg>-k</arg>
+               <arg>-n</arg>
+               <arg choice="req"><replaceable>input.xml</replaceable></arg>
+            </cmdsynopsis>
+            
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            -k : keep ignorable whitespaces (Default: ignore)
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            -n : do NOT generate String Table (Default: generate)
+                        </para>
+                    </listitem>                    
+                </itemizedlist>
+            </para>
+        </sect2>
+        
+        <!-- wbxml2xml -->
+        <sect2>
+            <title>wbxml2xml</title>
+            
+            <para>
+                Convert a WBXML file to XML.
+            </para>
+            
+            <cmdsynopsis>
+               <!-- Usage: 
+                        wbxml2xml -i -o output.xml input.wbxml
+                    Options:
+                        -o output.xml : output file
+                        -m mode (Generation mode - Default: 1) with:
+                            0: Compact Generation
+                            1: Indent Generation
+                            2: Canonical Generation
+                        -i indent (Indent delta when using mode '1' - Default: 1)
+                        -k (Keep Ignorable Whitespaces - Default: FALSE
+               -->
+               <command>wbxml2xml</command>
+               <arg>-o <replaceable>output.xml</replaceable></arg>
+               <arg>-m <replaceable>mode</replaceable></arg>
+               <arg>-i <replaceable>indent</replaceable></arg>
+               <arg>-k</arg>
+               <arg choice="req"><replaceable>input.wbxml</replaceable></arg>
+            </cmdsynopsis>
+            
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            -m mode (Generation mode - Default: 1) with:
+                            <itemizedlist>
+                                <listitem>
+                                    <para>                            
+                                        0: Compact Generation
+                                    </para>
+                                </listitem>
+                                <listitem>
+                                    <para>                            
+                                        1: Indent Generation
+                                    </para>
+                                </listitem> 
+                                <listitem>
+                                    <para>                            
+                                        2: Canonical Generation
+                                    </para>
+                                </listitem>                                                                 
+                            </itemizedlist>
+                        </para>                       
+                    </listitem>                 
+                    <listitem>
+                        <para>
+                            -i indent (Indent delta when using mode '1' - Default: 1)
+                        </para>
+                    </listitem>                 
+                    <listitem>
+                        <para>
+                            -k : keep ignorable whitespaces (Default: ignore)
+                        </para>
+                    </listitem>                   
+                </itemizedlist>
+            </para>            
+        </sect2>
+    </sect1>    
+</chapter>
+
+</book>
