@@ -29,9 +29,13 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)
 
 install-data-local:
+	-rm -rf $(DESTDIR)$(wbxmldocdir)/manual
 	$(mkinstalldirs) $(DESTDIR)$(wbxmldocdir)/manual
 	cp -Rp doc/* $(DESTDIR)$(wbxmldocdir)/manual
-	-rm -r `find $(DESTDIR)$(wbxmldocdir)/manual -name "CVS"`
+	find $(DESTDIR)$(wbxmldocdir)/manual -type d -exec chmod 755 {} \;
+	find $(DESTDIR)$(wbxmldocdir)/manual -type f -exec chmod 644 {} \;
+	-rm -r `find $(DESTDIR)$(wbxmldocdir)/manual -name "CVS" -type d`
+	-rm -r `find $(DESTDIR)$(wbxmldocdir)/manual -name ".svn" -type d`
 
 dist-bz2: distdir
 	sed -e "s/tar.gz/tar.bz2/g" $(distdir)/wbxml2.spec > $(distdir)/wbxml2.spec.aux
