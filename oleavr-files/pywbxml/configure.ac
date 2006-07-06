@@ -43,4 +43,5 @@ AM_CHECK_PYTHON_HEADERS(AC_MSG_NOTICE([found]), AC_MSG_ERROR([not found]))
 AC_OUTPUT([
 Makefile
 src/Makefile
+tests/Makefile
 ])

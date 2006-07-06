@@ -1,1 +1,1 @@
-EXTRA_DIST = list_partnerships.py
+EXTRA_DIST = to_wbxml to_xml
