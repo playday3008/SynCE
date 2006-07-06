@@ -4,9 +4,52 @@ import pywbxml
 
 expected = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
 
+def hexdump(raw):
+    buf = ""
+    line = ""
+
+    start = 0
+    done = False
+    while not done:
+        end = start + 16
+        max = len(raw) - 1
+        if end > max:
+            end = max
+            done = True
+
+        chunk = raw[start:end]
+        for i in xrange(len(chunk)):
+            if i > 0:
+                spacing = " "
+            else:
+                spacing = ""
+            buf += "%s%02x" % (spacing, ord(chunk[i]))
+
+        if done:
+            for i in xrange(16 - (end % 16)):
+                buf += "   "
+
+        buf += "  "
+
+        for c in chunk:
+            val = ord(c)
+            if val >= 33 and val <= 126:
+                buf += c
+            else:
+                buf += "."
+
+        buf += "\n"
+
+        start += 16
+
+    return buf
+
 xml = r"""
 <!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/"><FolderSync><SyncKey>0</SyncKey></FolderSync>
 """
-print pywbxml.xml2wbxml(xml)
-print expected
+
+wbxml = pywbxml.xml2wbxml(xml)
+
+print hexdump(wbxml)
+print hexdump(expected)
 
