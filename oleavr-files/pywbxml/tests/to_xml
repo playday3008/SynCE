@@ -1,26 +1,16 @@
 #!/usr/bin/env python
 
 import pywbxml
-import sys
+from util import *
+from xml.dom import minidom
 
-ms_output = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
-our_output = "\x03\x01\x6a\x00\x00\x07\x56\x00\x00\x4b\x03\x30\x00\x01\x01"
+as_output = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
 
-def decode_and_print(wbxml):
-    print "Raw length: %d" % len(wbxml)
-    print "Decoded: \"%s\"" % pywbxml.wbxml2xml(wbxml)
+print "Raw (%d bytes):" % len(as_output)
+print hexdump(as_output)
 
-if len(sys.argv) > 1:
-    args = sys.argv[1:]
-else:
-    args = None
-
-if args is None or "activesync" in args:
-    print "ActiveSync's raw WBXML:"
-    decode_and_print(ms_output)
-    print
-
-if args is None or "libwbxml2" in args:
-    print "libwbxml2's raw WBXML:"
-    decode_and_print(our_output)
+print "Decoded and pretty-printed:"
+decoded = pywbxml.wbxml2xml(as_output)
+doc = minidom.parseString(decoded)
+print doc.toprettyxml()
 
