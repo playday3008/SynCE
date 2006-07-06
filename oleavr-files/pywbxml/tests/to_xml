@@ -3,5 +3,8 @@
 import pywbxml
 
 s = "\x03\x01\x6a\x00\x00\x07\x56\x52\x03\x30\x00\x01\x01"
-print pywbxml.wbxml2xml(s)
-
+print "WBXML length: %d" % len(s)
+xml = pywbxml.wbxml2xml(s)
+print "XML length: %d" % len(xml)
+print
+print "XML: \"%s\"" % xml
