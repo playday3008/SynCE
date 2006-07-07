@@ -1,0 +1,2 @@
+obj-m  := usbnet.o cdc_ether.o rndis_host.o
+
