@@ -37,6 +37,7 @@ from twisted.web2 import server, http, resource, channel, stream
 import os
 
 from xml.dom import minidom
+import pywbxml
 
 BUS_NAME = "org.synce.SyncEngine"
 OBJECT_PATH = "/org/synce/SyncEngine"
@@ -466,15 +467,251 @@ class ASResource(resource.PostableResource):
         return req_def
 
     def parse_sync_body(self, body):
-        print "parse_sync_body: body=\"%s\"" % body
+        print "parse_sync_body:"
+
+        xml_raw = pywbxml.wbxml2xml(body)
+        doc = minidom.parseString(xml_raw)
+        print doc.toprettyxml()
+
         return self.create_response(404)
 
     def parse_foldersync_body(self, body):
-        print "parse_foldersync_body: body=\"%s\"" % body
+        print "parse_foldersync_body:"
+
+        xml_raw = pywbxml.wbxml2xml(body)
+        doc = minidom.parseString(xml_raw)
+        print doc.toprettyxml()
+
+        folder_node = node_find_child(doc, "FolderSync")
+        key_node = node_find_child(folder_node, "SyncKey")
+        key = node_get_value(key_node)
+        if key != "0":
+            raise ValueError("SyncKey specified is not 0")
+
+        doc = minidom.Document()
+        folder_node = doc.createElement("FolderSync")
+        doc.appendChild(folder_node)
+
+        node_append_child(folder_node, "Status", "1")
+        node_append_child(folder_node, "SyncKey",
+                "{00000000-0000-0000-0000-000000000000}1")
+
+        changes_node = node_append_child(folder_node, "Changes")
+
+        folders = (
+            ("{E1D7A28F-2806-4B0D-8145-C8A3AEB16C7D}", 0, "Deleted Items", 4),
+            ("{2C02FAE0-5776-4CB1-8BE4-BF324A3B9118}", 0, "Inbox", 2),
+            ("{512856CA-3DC8-41EC-B550-51AA5BDC5C63}", 0, "Outbox", 6),
+            ("{FD0A63A4-B027-4C56-AA00-BB34D74362F7}", 0, "Sent Items", 5),
+            ("{09C98557-355B-4937-B208-91EAA659162E}", 0, "Calendar", 8),
+            ("{07EAD926-D6A8-4B51-912F-42A3E0305E3A}", 0, "Contacts", 9),
+            ("{5801C5D3-93E5-45EC-90FB-31AEBC6A56DB}", 0, "Journal", 11),
+            ("{D957E4C0-B098-46E3-9490-033EB8FF3542}", 0, "Notes", 10),
+            ("{61CF8DB7-774F-4C3F-BD12-F2C2CD810FFC}", 0, "Tasks", 7),
+            ("{4FA50CB4-A991-4283-AC30-BDB66686116B}", 0, "Drafts", 3),
+            ("{A1B4AE44-F61C-4735-8411-137AE2207BE1}", 0, "Junk E-mail", 12),
+        )
+
+        print folders
+
+        node_append_child(changes_node, "Count", len(folders))
+
+        for folder in folders:
+            server_id, parent_id, display_name, type = folder
+
+            add_node = node_append_child(changes_node, "Add")
+
+            node_append_child(add_node, "ServerId", server_id)
+            node_append_child(add_node, "ParentId", parent_id)
+            node_append_child(add_node, "DisplayName", display_name)
+            node_append_child(add_node, "Type", type)
+
+        print "Going to send:"
+        print doc.toprettyxml()
+
+        """
+        <FolderSync>
+            <Status>
+                1
+            <Status/>
+            <SyncKey>
+                {00000000-0000-0000-0000-000000000000}1
+            <SyncKey/>
+            <Changes>
+                <Count>
+                    11
+                <Count/>
+                <Add>
+                    <ServerId>
+                        {E1D7A28F-2806-4B0D-8145-C8A3AEB16C7D}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Deleted Items
+                    <DisplayName/>
+                    <Type>
+                        4
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {2C02FAE0-5776-4CB1-8BE4-BF324A3B9118}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Inbox
+                    <DisplayName/>
+                    <Type>
+                        2
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {512856CA-3DC8-41EC-B550-51AA5BDC5C63}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Outbox
+                    <DisplayName/>
+                    <Type>
+                        6
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {FD0A63A4-B027-4C56-AA00-BB34D74362F7}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Sent Items
+                    <DisplayName/>
+                    <Type>
+                        5
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {09C98557-355B-4937-B208-91EAA659162E}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Calendar
+                    <DisplayName/>
+                    <Type>
+                        8
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {07EAD926-D6A8-4B51-912F-42A3E0305E3A}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Contacts
+                    <DisplayName/>
+                    <Type>
+                        9
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {5801C5D3-93E5-45EC-90FB-31AEBC6A56DB}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Journal
+                    <DisplayName/>
+                    <Type>
+                        11
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {D957E4C0-B098-46E3-9490-033EB8FF3542}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Notes
+                    <DisplayName/>
+                    <Type>
+                        10
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {61CF8DB7-774F-4C3F-BD12-F2C2CD810FFC}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Tasks
+                    <DisplayName/>
+                    <Type>
+                        7
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {4FA50CB4-A991-4283-AC30-BDB66686116B}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Drafts
+                    <DisplayName/>
+                    <Type>
+                        3
+                    <Type/>
+                <Add/>
+                <Add>
+                    <ServerId>
+                        {A1B4AE44-F61C-4735-8411-137AE2207BE1}
+                    <ServerId/>
+                    <ParentId>
+                        0
+                    <ParentId/>
+                    <DisplayName>
+                        Junk E-mail
+                    <DisplayName/>
+                    <Type>
+                        12
+                    <Type/>
+                <Add/>
+            <Changes/>
+        <FolderSync/>
+        """
+
         return self.create_response(404)
 
     def parse_status_request(self, request):
-        print "parse_status_request: \"%s\"" % request.stream.read()
+        d = request.stream.read()
+        d.addCallback(self.parse_status_request_body)
+
+    def parse_status_request_body(self, body):
+        print "parse_status_request_body:"
+
+        print body
+        #doc = minidom.parseString(body)
+        #print doc.toprettyxml()
+
         return self.create_response(200)
 
 

@@ -187,3 +187,63 @@ def generate_guid():
 
     return guid
 
+def hexdump(raw):
+    buf = ""
+    line = ""
+
+    start = 0
+    done = False
+    while not done:
+        end = start + 16
+        max = len(raw)
+        if end > max:
+            end = max
+            done = True
+
+        chunk = raw[start:end]
+        for i in xrange(len(chunk)):
+            if i > 0:
+                spacing = " "
+            else:
+                spacing = ""
+            buf += "%s%02x" % (spacing, ord(chunk[i]))
+
+        if done:
+            for i in xrange(16 - (end % 16)):
+                buf += "   "
+
+        buf += "  "
+
+        for c in chunk:
+            val = ord(c)
+            if val >= 33 and val <= 126:
+                buf += c
+            else:
+                buf += "."
+
+        buf += "\n"
+
+        start += 16
+
+    return buf
+
+def node_find_child(node, name):
+    for n in node.childNodes:
+        if n.nodeType == n.ELEMENT_NODE and n.localName == name:
+            return n
+    raise ValueError("child not found")
+
+def node_get_value(node):
+    for n in node.childNodes:
+        if n.nodeType == n.TEXT_NODE:
+            return n.nodeValue.strip()
+    raise ValueError("node has no value")
+
+def node_append_child(parent, name, value=None):
+    doc = parent.ownerDocument
+    node = doc.createElement(name)
+    if value is not None:
+        value_node = doc.createTextNode(str(value))
+        node.appendChild(value_node)
+    parent.appendChild(node)
+    return node
