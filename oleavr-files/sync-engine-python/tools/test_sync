@@ -19,7 +19,7 @@ if len(sys.argv) == 2:
         engine.CreatePartnership("Linux desktop", (SYNC_ITEM_CONTACTS,))
         sys.exit(0)
     else:
-        print "Unknown command %s" % sys.argv[0]
+        print "Unknown command %s" % sys.argv[1]
         sys.exit(1)
 
 engine.TestSync()

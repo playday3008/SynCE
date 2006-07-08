@@ -36,11 +36,16 @@ from twisted.internet.protocol import Protocol, Factory
 from twisted.web2 import server, http, resource, channel, stream
 import os
 
+from cStringIO import StringIO
 from xml.dom import minidom
 import pywbxml
 
 BUS_NAME = "org.synce.SyncEngine"
 OBJECT_PATH = "/org/synce/SyncEngine"
+
+AIRSYNC_DOC_NAME = "AirSync"
+AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
+AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
 
 class SyncEngine(dbus.service.Object):
     """
@@ -379,11 +384,25 @@ class Status(BaseProtocol):
 
 
 class ASResource(resource.PostableResource):
-    def locateChild(self, request, segments):
-        #print "locateChild"
-        #print "requests:", request
-        #print "segments:", segments
+    def __init__(self):
+        resource.PostableResource.__init__(self)
+        self.dom = minidom.getDOMImplementation()
 
+        self.folders = {
+            "{E1D7A28F-2806-4B0D-8145-C8A3AEB16C7D}" : (0, "Deleted Items", 4),
+            "{2C02FAE0-5776-4CB1-8BE4-BF324A3B9118}" : (0, "Inbox", 2),
+            "{512856CA-3DC8-41EC-B550-51AA5BDC5C63}" : (0, "Outbox", 6),
+            "{FD0A63A4-B027-4C56-AA00-BB34D74362F7}" : (0, "Sent Items", 5),
+            "{09C98557-355B-4937-B208-91EAA659162E}" : (0, "Calendar", 8),
+            "{07EAD926-D6A8-4B51-912F-42A3E0305E3A}" : (0, "Contacts", 9),
+            "{5801C5D3-93E5-45EC-90FB-31AEBC6A56DB}" : (0, "Journal", 11),
+            "{D957E4C0-B098-46E3-9490-033EB8FF3542}" : (0, "Notes", 10),
+            "{61CF8DB7-774F-4C3F-BD12-F2C2CD810FFC}" : (0, "Tasks", 7),
+            "{4FA50CB4-A991-4283-AC30-BDB66686116B}" : (0, "Drafts", 3),
+            "{A1B4AE44-F61C-4735-8411-137AE2207BE1}" : (0, "Junk E-mail", 12),
+        }
+
+    def locateChild(self, request, segments):
         found = True
 
         if len(segments) < 1:
@@ -391,10 +410,6 @@ class ASResource(resource.PostableResource):
         else:
             if segments[0] != "Microsoft-Server-ActiveSync":
                 found = False
-
-        print "found \"%s\": %s" % (request, found)
-
-        print
 
         if found:
             return (self, ())
@@ -410,12 +425,35 @@ class ASResource(resource.PostableResource):
         resp = http.Response(code)
         headers = resp.headers
 
+        headers.addRawHeader("Connection", "keep-alive")
         headers.addRawHeader("Pragma", "no-cache")
-        # FIXME: "Date" is probably missing ...
         headers.addRawHeader("Server", "ActiveSync/4.1")
         headers.addRawHeader("MS-Server-ActiveSync", "4.1.4841.0")
 
         return resp
+
+    def create_wbxml_response(self, xml):
+        resp = self.create_response(200)
+
+        wbxml = pywbxml.xml2wbxml(xml)
+
+        print "Sending:"
+        print hexdump(wbxml)
+
+        print "Which is the following decoded:"
+        print pywbxml.wbxml2xml(wbxml)
+
+        headers = resp.headers
+        headers.addRawHeader("ContentType", "application/vnd.ms-sync.wbxml")
+
+        resp.stream = stream.MemoryStream(wbxml)
+
+        return resp
+
+    def create_wbxml_doc(self, root_node_name):
+        doc_type = self.dom.createDocumentType(
+                AIRSYNC_DOC_NAME, AIRSYNC_PUBLIC_ID, AIRSYNC_SYSTEM_ID)
+        return self.dom.createDocument(None, root_node_name, doc_type)
 
     def http_OPTIONS(self, request):
         if request.path != "/Microsoft-Server-ActiveSync":
@@ -433,54 +471,80 @@ class ASResource(resource.PostableResource):
         return resp
 
     def http_POST(self, request):
-        if request.path == "/Microsoft-Server-ActiveSync":
-            return self.parse_sync_request(request)
-        elif request.path == "/Microsoft-Server-ActiveSync/SyncStat.dll":
-            return self.parse_status_request(request)
-        else:
-            return self.create_response(404)
+        buf = StringIO()
 
-    def parse_sync_request(self, request):
-        args = request.args
-
-        print "parse_sync_request"
-        print "  path=\"%s\"" % request.path
-        print "  args=\"%s\"" % args
-        print
-
-        req_def = defer.Deferred()
+        reply_deferred = defer.Deferred()
 
         d = request.stream.read()
+        d.addCallback(self._read_chunk, request, buf, reply_deferred)
 
-        cmd = args["Cmd"][0]
-        print "parse_sync_request: Cmd=\"%s\"" % cmd
-        if cmd == "Sync":
-            d.addCallback(self.parse_sync_body)
-        elif cmd == "FolderSync":
-            d.addCallback(self.parse_foldersync_body)
+        return reply_deferred
+
+    def _read_chunk(self, chunk, request, buf, reply_deferred):
+        if chunk is not None:
+            buf.write(chunk)
+
+            d = request.stream.read()
+            d.addCallback(self._read_chunk, request, buf, reply_deferred)
         else:
-            print "Unknown"
-            req_def.callback(self.create_response(404))
+            body = buf.getvalue()
 
-        d.chainDeferred(req_def)
+            if request.path == "/Microsoft-Server-ActiveSync":
+                cmd = request.args["Cmd"][0]
 
-        return req_def
+                print "Cmd=\"%s\"" % cmd
 
-    def parse_sync_body(self, body):
-        print "parse_sync_body:"
+                if cmd == "Sync":
+                    response = self.handle_sync(request, body)
+                elif cmd == "FolderSync":
+                    response = self.handle_foldersync(request, body)
+                elif cmd == "GetItemEstimate":
+                    response = self.handle_get_item_estimate(request, body)
+                else:
+                    response = self.create_response(500)
+            elif request.path == "/Microsoft-Server-ActiveSync/SyncStat.dll":
+                response = self.handle_status(request, body)
+            else:
+                response = self.create_response(500)
+
+            reply_deferred.callback(response)
+
+    def handle_sync(self, request, body):
+        print "Parsing Sync request"
 
         xml_raw = pywbxml.wbxml2xml(body)
         doc = minidom.parseString(xml_raw)
         print doc.toprettyxml()
 
-        return self.create_response(404)
+        sync_node = node_find_child(doc, "Sync")
+        colls_node = node_find_child(sync_node, "Collections")
+        for n in colls_node.childNodes:
+            if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
+                cls_node = node_find_child(n, "Class")
+                key_node = node_find_child(n, "SyncKey")
+                id_node = node_find_child(n, "CollectionId")
 
-    def parse_foldersync_body(self, body):
-        print "parse_foldersync_body:"
+                cls = node_get_value(cls_node)
+                key = node_get_value(key_node)
+                id = node_get_value(id_node)
+
+                print "Got collection %s" % cls
+                data = self.folders[id]
+                print "%s => %s" % (id, data)
+
+                node_set_value(key_node, "%s1" % id)
+
+                node_append_child(n, "Status", 1)
+
+        print "Responding to Sync"
+
+        return self.create_wbxml_response(doc.toxml())
+
+    def handle_foldersync(self, request, body):
+        print "Parsing FolderSync request"
 
         xml_raw = pywbxml.wbxml2xml(body)
         doc = minidom.parseString(xml_raw)
-        print doc.toprettyxml()
 
         folder_node = node_find_child(doc, "FolderSync")
         key_node = node_find_child(folder_node, "SyncKey")
@@ -488,36 +552,20 @@ class ASResource(resource.PostableResource):
         if key != "0":
             raise ValueError("SyncKey specified is not 0")
 
-        doc = minidom.Document()
-        folder_node = doc.createElement("FolderSync")
+        doc = self.create_wbxml_doc("FolderSync")
+        folder_node = doc.documentElement
         doc.appendChild(folder_node)
 
-        node_append_child(folder_node, "Status", "1")
+        node_append_child(folder_node, "Status", 1)
         node_append_child(folder_node, "SyncKey",
                 "{00000000-0000-0000-0000-000000000000}1")
 
         changes_node = node_append_child(folder_node, "Changes")
 
-        folders = (
-            ("{E1D7A28F-2806-4B0D-8145-C8A3AEB16C7D}", 0, "Deleted Items", 4),
-            ("{2C02FAE0-5776-4CB1-8BE4-BF324A3B9118}", 0, "Inbox", 2),
-            ("{512856CA-3DC8-41EC-B550-51AA5BDC5C63}", 0, "Outbox", 6),
-            ("{FD0A63A4-B027-4C56-AA00-BB34D74362F7}", 0, "Sent Items", 5),
-            ("{09C98557-355B-4937-B208-91EAA659162E}", 0, "Calendar", 8),
-            ("{07EAD926-D6A8-4B51-912F-42A3E0305E3A}", 0, "Contacts", 9),
-            ("{5801C5D3-93E5-45EC-90FB-31AEBC6A56DB}", 0, "Journal", 11),
-            ("{D957E4C0-B098-46E3-9490-033EB8FF3542}", 0, "Notes", 10),
-            ("{61CF8DB7-774F-4C3F-BD12-F2C2CD810FFC}", 0, "Tasks", 7),
-            ("{4FA50CB4-A991-4283-AC30-BDB66686116B}", 0, "Drafts", 3),
-            ("{A1B4AE44-F61C-4735-8411-137AE2207BE1}", 0, "Junk E-mail", 12),
-        )
-
-        print folders
-
         node_append_child(changes_node, "Count", len(folders))
 
-        for folder in folders:
-            server_id, parent_id, display_name, type = folder
+        for server_id, data in self.folders.items():
+            parent_id, display_name, type = data
 
             add_node = node_append_child(changes_node, "Add")
 
@@ -526,192 +574,42 @@ class ASResource(resource.PostableResource):
             node_append_child(add_node, "DisplayName", display_name)
             node_append_child(add_node, "Type", type)
 
-        print "Going to send:"
+        print "Responding to FolderSync"
+
+        return self.create_wbxml_response(doc.toxml())
+
+    def handle_get_item_estimate(self, request, body):
+        print "Parsing GetItemEstimate request"
+
+        xml_raw = pywbxml.wbxml2xml(body)
+        doc = minidom.parseString(xml_raw)
         print doc.toprettyxml()
 
-        """
-        <FolderSync>
-            <Status>
-                1
-            <Status/>
-            <SyncKey>
-                {00000000-0000-0000-0000-000000000000}1
-            <SyncKey/>
-            <Changes>
-                <Count>
-                    11
-                <Count/>
-                <Add>
-                    <ServerId>
-                        {E1D7A28F-2806-4B0D-8145-C8A3AEB16C7D}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Deleted Items
-                    <DisplayName/>
-                    <Type>
-                        4
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {2C02FAE0-5776-4CB1-8BE4-BF324A3B9118}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Inbox
-                    <DisplayName/>
-                    <Type>
-                        2
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {512856CA-3DC8-41EC-B550-51AA5BDC5C63}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Outbox
-                    <DisplayName/>
-                    <Type>
-                        6
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {FD0A63A4-B027-4C56-AA00-BB34D74362F7}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Sent Items
-                    <DisplayName/>
-                    <Type>
-                        5
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {09C98557-355B-4937-B208-91EAA659162E}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Calendar
-                    <DisplayName/>
-                    <Type>
-                        8
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {07EAD926-D6A8-4B51-912F-42A3E0305E3A}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Contacts
-                    <DisplayName/>
-                    <Type>
-                        9
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {5801C5D3-93E5-45EC-90FB-31AEBC6A56DB}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Journal
-                    <DisplayName/>
-                    <Type>
-                        11
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {D957E4C0-B098-46E3-9490-033EB8FF3542}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Notes
-                    <DisplayName/>
-                    <Type>
-                        10
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {61CF8DB7-774F-4C3F-BD12-F2C2CD810FFC}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Tasks
-                    <DisplayName/>
-                    <Type>
-                        7
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {4FA50CB4-A991-4283-AC30-BDB66686116B}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Drafts
-                    <DisplayName/>
-                    <Type>
-                        3
-                    <Type/>
-                <Add/>
-                <Add>
-                    <ServerId>
-                        {A1B4AE44-F61C-4735-8411-137AE2207BE1}
-                    <ServerId/>
-                    <ParentId>
-                        0
-                    <ParentId/>
-                    <DisplayName>
-                        Junk E-mail
-                    <DisplayName/>
-                    <Type>
-                        12
-                    <Type/>
-                <Add/>
-            <Changes/>
-        <FolderSync/>
-        """
+        reply_doc = self.create_wbxml_doc("GetItemEstimate")
+        resp_node = node_append_child(reply_doc.documentElement, "Response")
+        node_append_child(resp_node, "Status", 1)
 
-        return self.create_response(404)
+        node = node_find_child(doc, "GetItemEstimate")
+        colls_node = node_find_child(node, "Collections")
+        for n in colls_node.childNodes:
+            if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
+                cls = node_get_value(node_find_child(n, "Class"))
+                id = node_get_value(node_find_child(n, "CollectionId"))
+                filter = node_get_value(node_find_child(n, "FilterType"))
+                key = node_get_value(node_find_child(n, "SyncKey"))
 
-    def parse_status_request(self, request):
-        d = request.stream.read()
-        d.addCallback(self.parse_status_request_body)
+                coll_node = node_append_child(resp_node, "Collection")
+                node_append_child(coll_node, "Class", cls)
+                node_append_child(coll_node, "CollectionId", id)
+                node_append_child(coll_node, "Estimate", 0)
 
-    def parse_status_request_body(self, body):
-        print "parse_status_request_body:"
+        print "Responding to GetItemEstimate"
 
+        return self.create_wbxml_response(reply_doc.toxml())
+
+    def handle_status(self, request, body):
+        print "Status update:"
         print body
-        #doc = minidom.parseString(body)
-        #print doc.toprettyxml()
-
         return self.create_response(200)
 
 

@@ -239,6 +239,13 @@ def node_get_value(node):
             return n.nodeValue.strip()
     raise ValueError("node has no value")
 
+def node_set_value(node, value):
+    for n in node.childNodes:
+        if n.nodeType == n.TEXT_NODE:
+            n.replaceWholeText(value)
+            return
+    raise ValueError("node has no value")
+
 def node_append_child(parent, name, value=None):
     doc = parent.ownerDocument
     node = doc.createElement(name)
