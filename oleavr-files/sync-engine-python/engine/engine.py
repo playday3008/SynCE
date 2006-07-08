@@ -315,8 +315,8 @@ class SyncEngine(dbus.service.Object):
         node.setAttribute("id", partner.guid)
         doc_node.appendChild(node)
 
-        print "Calling sync_start() with params:"
-        print doc_node.toprettyxml()
+        print "Calling sync_start()"
+        #print doc_node.toprettyxml()
 
         self.session.sync_start(doc_node.toxml())
         print "Succeeded"
@@ -584,6 +584,7 @@ class ASResource(resource.PostableResource):
             contact[node.localName] = node_get_value(node)
 
         print "Added contact: \"%s\"" % contact["FileAs"]
+        print contact
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"
