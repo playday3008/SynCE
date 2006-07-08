@@ -237,7 +237,8 @@ def node_get_value(node):
     for n in node.childNodes:
         if n.nodeType == n.TEXT_NODE:
             return n.nodeValue.strip()
-    raise ValueError("node has no value")
+    return None
+    #raise ValueError("node has no value")
 
 def node_set_value(node, value):
     for n in node.childNodes:
