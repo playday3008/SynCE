@@ -46,7 +46,7 @@ def xml2wbxml(xml):
 
     params.wbxml_version = WBXML_VERSION_13
     params.keep_ignorable_ws = 1
-    params.use_strtbl = 1
+    params.use_strtbl = 0
     params.produce_anonymous = 1
 
     retval = wbxml_conv_xml2wbxml(xml, &bytes, &len, &params)
