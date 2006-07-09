@@ -388,19 +388,25 @@ class ASResource(resource.PostableResource):
         resource.PostableResource.__init__(self)
         self.dom = minidom.getDOMImplementation()
 
-        self.folders = {
-            "{E1D7A28F-2806-4B0D-8145-C8A3AEB16C7D}" : (0, "Deleted Items", 4),
-            "{2C02FAE0-5776-4CB1-8BE4-BF324A3B9118}" : (0, "Inbox", 2),
-            "{512856CA-3DC8-41EC-B550-51AA5BDC5C63}" : (0, "Outbox", 6),
-            "{FD0A63A4-B027-4C56-AA00-BB34D74362F7}" : (0, "Sent Items", 5),
-            "{09C98557-355B-4937-B208-91EAA659162E}" : (0, "Calendar", 8),
-            "{07EAD926-D6A8-4B51-912F-42A3E0305E3A}" : (0, "Contacts", 9),
-            "{5801C5D3-93E5-45EC-90FB-31AEBC6A56DB}" : (0, "Journal", 11),
-            "{D957E4C0-B098-46E3-9490-033EB8FF3542}" : (0, "Notes", 10),
-            "{61CF8DB7-774F-4C3F-BD12-F2C2CD810FFC}" : (0, "Tasks", 7),
-            "{4FA50CB4-A991-4283-AC30-BDB66686116B}" : (0, "Drafts", 3),
-            "{A1B4AE44-F61C-4735-8411-137AE2207BE1}" : (0, "Junk E-mail", 12),
-        }
+        items = (
+            (0, "Deleted Items", 4),
+            (0, "Inbox", 2),
+            (0, "Outbox", 6),
+            (0, "Sent Items", 5),
+            (0, "Calendar", 8),
+            (0, "Contacts", 9),
+            (0, "Journal", 11),
+            (0, "Notes", 10),
+            (0, "Tasks", 7),
+            (0, "Drafts", 3),
+            (0, "Junk E-mail", 12),
+        )
+
+        # FIXME: this belong to the partnership
+        self.folders = {}
+        for item in items:
+            id = generate_guid()
+            self.folders[id] = item
 
     def locateChild(self, request, segments):
         found = True
@@ -425,8 +431,6 @@ class ASResource(resource.PostableResource):
         resp = http.Response(code)
         headers = resp.headers
 
-        #headers.addRawHeader("Connection", "keep-alive")
-        #headers.addRawHeader("Pragma", "no-cache")
         headers.addRawHeader("Server", "ActiveSync/4.1")
         headers.addRawHeader("MS-Server-ActiveSync", "4.1.4841.0")
 
@@ -436,12 +440,6 @@ class ASResource(resource.PostableResource):
         resp = self.create_response(200)
 
         wbxml = pywbxml.xml2wbxml(xml)
-
-        #print "Sending:"
-        #print hexdump(wbxml)
-
-        #print "Which is the following decoded:"
-        #print pywbxml.wbxml2xml(wbxml)
 
         headers = resp.headers
         headers.addRawHeader("ContentType", "application/vnd.ms-sync.wbxml")
@@ -512,71 +510,78 @@ class ASResource(resource.PostableResource):
     def handle_sync(self, request, body):
         print "Parsing Sync request"
 
-        # implicit state, for now
-        syncing = True
-
         xml_raw = pywbxml.wbxml2xml(body)
-        doc = minidom.parseString(xml_raw)
-        #print doc.toprettyxml()
+        req_doc = minidom.parseString(xml_raw)
+        req_sync_node = node_find_child(req_doc, "Sync")
+        req_colls_node = node_find_child(req_sync_node, "Collections")
 
-        sync_node = node_find_child(doc, "Sync")
-        colls_node = node_find_child(sync_node, "Collections")
-        for n in colls_node.childNodes:
+        doc = self.create_wbxml_doc("Sync")
+        colls_node = node_append_child(doc.documentElement, "Collections")
+
+        for n in req_colls_node.childNodes:
             if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
-                cls_node = node_find_child(n, "Class")
-                key_node = node_find_child(n, "SyncKey")
-                id_node = node_find_child(n, "CollectionId")
+                cls = node_get_value(node_find_child(n, "Class"))
+                key = node_get_value(node_find_child(n, "SyncKey"))
+                id = node_get_value(node_find_child(n, "CollectionId"))
 
-                cls = node_get_value(cls_node)
-                key = node_get_value(key_node)
-                id = node_get_value(id_node)
+                coll_node = node_append_child(colls_node, "Collection")
+                node_append_child(coll_node, "Class", cls)
+                key = "%s%d" % (id, int(key.split("}")[-1]) + 1)
+                node_append_child(coll_node, "SyncKey", key)
+                node_append_child(coll_node, "CollectionId", id)
+                node_append_child(coll_node, "Status", 1)
 
-                if key == "0":
-                    syncing = False
+                responses_node = None
 
-                    print "Got collection %s" % cls
-                    data = self.folders[id]
-                    print "%s => %s" % (id, data)
+                for sub_node in n.childNodes:
+                    if sub_node.nodeType != sub_node.ELEMENT_NODE:
+                        continue
 
-                    node_set_value(key_node, "%s1" % id)
+                    if sub_node.localName == "Commands":
+                        if responses_node is None:
+                            responses_node = node_append_child(coll_node, "Responses")
 
-                    node_append_child(n, "Status", 1)
-                else:
-                    for sub_node in n.childNodes:
-                        if sub_node.nodeType != sub_node.ELEMENT_NODE:
-                            continue
+                        for req_cmd_node in sub_node.childNodes:
+                            if req_cmd_node.nodeType != req_cmd_node.ELEMENT_NODE:
+                                continue
 
-                        if sub_node.localName == "Commands":
-                            for cmd_node in sub_node.childNodes:
-                                if cmd_node.nodeType != cmd_node.ELEMENT_NODE:
-                                    continue
+                            name = "handle_sync_%s_cmd_%s" % \
+                                    (cls.lower(), req_cmd_node.localName.lower())
+                            if hasattr(self, name):
+                                cmd_node = node_append_child(responses_node,
+                                        req_cmd_node.localName)
 
-                                name = "handle_sync_%s_cmd_%s" % \
-                                        (cls.lower(), cmd_node.localName.lower())
-                                if hasattr(self, name):
-                                    getattr(self, name)(cmd_node)
+                                cid = node_get_value(
+                                        node_find_child(req_cmd_node, "ClientId"))
+                                node_append_child(cmd_node, "ClientId", cid)
+
+                                req_app_data = node_find_child(req_cmd_node,
+                                        "ApplicationData")
+
+                                success = getattr(self, name)(cid, req_app_data, cmd_node)
+                                if success:
+                                    status = 1
                                 else:
-                                    print "Unhandled command \"%s\" (looking for %s)" % \
-                                        (cmd_node.localName, name)
-                        else:
-                            print "Ignoring collection subnode \"%s\"" % \
-                                sub_node.localName
-                    pass
+                                    status = 0
+                                node_append_child(cmd_node, "Status", status)
+                            else:
+                                print "Unhandled command \"%s\" (looking for %s)" % \
+                                    (req_cmd_node.localName, name)
+                    elif sub_node.localName in ("Class", "SyncKey", "CollectionId"):
+                        pass
+                    else:
+                        print "Ignoring collection subnode \"%s\"" % \
+                            sub_node.localName
 
-        print "Responding to Sync"
+        print "Responding to Sync with:"
+        print doc.toprettyxml()
+        return self.create_wbxml_response(doc.toxml())
 
-        if syncing:
-            return self.create_response(200)
-        else:
-            return self.create_wbxml_response(doc.toxml())
-
-    def handle_sync_contacts_cmd_add(self, cmd_node):
+    def handle_sync_contacts_cmd_add(self, cid, app_node, response_node):
         contact = {}
 
-        contact["ClientId"] = node_get_value(
-                node_find_child(cmd_node, "ClientId"))
+        contact["ServerId"] = generate_guid()
 
-        app_node = node_find_child(cmd_node, "ApplicationData")
         for node in app_node.childNodes:
             if node.nodeType != node.ELEMENT_NODE:
                 continue
@@ -585,6 +590,10 @@ class ASResource(resource.PostableResource):
 
         print "Added contact: \"%s\"" % contact["FileAs"]
         print contact
+
+        node_append_child(response_node, "ServerId", contact["ServerId"])
+
+        return True
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"
@@ -600,7 +609,6 @@ class ASResource(resource.PostableResource):
 
         doc = self.create_wbxml_doc("FolderSync")
         folder_node = doc.documentElement
-        doc.appendChild(folder_node)
 
         node_append_child(folder_node, "Status", 1)
         node_append_child(folder_node, "SyncKey",
