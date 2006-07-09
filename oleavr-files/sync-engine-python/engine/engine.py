@@ -322,6 +322,10 @@ class SyncEngine(dbus.service.Object):
         print "Succeeded"
 
         # set the current partnership on the device
+        #
+        # this is probably only needed for legacy items,
+        # i.e. non-PIM ones using RRAC...
+        #
         print "Setting PCur...",
         partners = self.session.HKEY_LOCAL_MACHINE.create_sub_key(
                 r"Software\Microsoft\Windows CE Services\Partners")
@@ -389,16 +393,16 @@ class ASResource(resource.PostableResource):
         self.dom = minidom.getDOMImplementation()
 
         items = (
-            (0, "Deleted Items", 4),
             (0, "Inbox", 2),
-            (0, "Outbox", 6),
+            (0, "Drafts", 3),
+            (0, "Deleted Items", 4),
             (0, "Sent Items", 5),
+            (0, "Outbox", 6),
+            (0, "Tasks", 7),
             (0, "Calendar", 8),
             (0, "Contacts", 9),
-            (0, "Journal", 11),
             (0, "Notes", 10),
-            (0, "Tasks", 7),
-            (0, "Drafts", 3),
+            (0, "Journal", 11),
             (0, "Junk E-mail", 12),
         )
 
@@ -573,8 +577,7 @@ class ASResource(resource.PostableResource):
                         print "Ignoring collection subnode \"%s\"" % \
                             sub_node.localName
 
-        print "Responding to Sync with:"
-        print doc.toprettyxml()
+        print "Responding to Sync"
         return self.create_wbxml_response(doc.toxml())
 
     def handle_sync_contacts_cmd_add(self, cid, app_node, response_node):
@@ -667,21 +670,21 @@ class ASResource(resource.PostableResource):
 
 
 if __name__ == "__main__":
-    factory = Factory()
-    factory.protocol = Status
-    reactor.listenTCP(999, factory)
+    #factory = Factory()
+    #factory.protocol = Status
+    #reactor.listenTCP(999, factory)
 
-    factory = Factory()
-    factory.protocol = RRAC
-    reactor.listenTCP(5678, factory)
+    #factory = Factory()
+    #factory.protocol = RRAC
+    #reactor.listenTCP(5678, factory)
 
     site = server.Site(ASResource())
     factory = channel.HTTPFactory(site)
     reactor.listenTCP(26675, factory)
 
     # hack hack hack
-    os.setgid(1000)
-    os.setuid(1000)
+    #os.setgid(1000)
+    #os.setuid(1000)
 
     session_bus = dbus.SessionBus()
     bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
