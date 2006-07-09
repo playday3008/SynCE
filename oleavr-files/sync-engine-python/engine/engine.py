@@ -402,7 +402,7 @@ class ASResource(resource.PostableResource):
             (0, "Junk E-mail", 12),
         )
 
-        # FIXME: this belong to the partnership
+        # FIXME: this belongs to the partnership
         self.folders = {}
         for item in items:
             id = generate_guid()
