@@ -33,6 +33,12 @@ class InvalidArgument(dbus.DBusException):
     """
     _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".InvalidArgument"
 
+class NotAvailable(dbus.DBusException):
+    """
+    The requested operation is not available.
+    """
+    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".NotAvailable"
+
 class NoFreeSlots(dbus.DBusException):
     """
     No free slots on the device. Delete an existing partnership and
