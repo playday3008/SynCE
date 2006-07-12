@@ -364,6 +364,8 @@ class SyncEngine(dbus.service.Object):
 
         self.Synchronized()
 
+        self.session.sync_pause()
+
     @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(sa{ss})")
     def ContactsAdded(self, contacts):
         print "Emitting ContactsAdded with %d contacts" % len(contacts)
