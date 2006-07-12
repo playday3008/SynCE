@@ -31,18 +31,23 @@ AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
 
 class ASResource(gobject.GObject, resource.PostableResource):
     __gsignals__ = {
+            "sync-begin": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                           ()),
+            "sync-end": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                         ()),
             "contact-added": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
                               (gobject.TYPE_STRING, object)),
-            "end-of-changeset": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                                 ()),
     }
 
-    def __init__(self, partnership):
+    def __init__(self):
         self.__gobject_init__()
         resource.PostableResource.__init__(self)
 
-        self.pship = partnership
+        self.pship = None
         self.dom = minidom.getDOMImplementation()
+
+    def set_partnership(self, pship):
+        self.pship = pship
 
     def locateChild(self, request, segments):
         found = True
@@ -59,9 +64,7 @@ class ASResource(gobject.GObject, resource.PostableResource):
             return (None, ())
 
     def render(self, request):
-        print "render: %s" % request.path
-        print
-        return self.create_response(404)
+        return self.create_response(500)
 
     def create_response(self, code):
         resp = http.Response(code)
@@ -203,8 +206,6 @@ class ASResource(gobject.GObject, resource.PostableResource):
                             else:
                                 print "Unhandled command \"%s\" (looking for %s)" % \
                                     (req_cmd_node.localName, name)
-
-                        self.emit("end-of-changeset")
                     elif sub_node.localName in ("Class", "SyncKey", "CollectionId"):
                         pass
                     else:
@@ -304,6 +305,23 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
     def handle_status(self, request, body):
         print "Status update:"
-        print body
+        body = body.rstrip("\0")
+        try:
+            doc = minidom.parseString(body)
+            print doc.documentElement.toprettyxml()
+
+            for n in doc.documentElement.childNodes:
+                if n.nodeType != n.ELEMENT_NODE:
+                    continue
+
+                if n.localName == "SyncEnd":
+                    datatype = n.getAttribute("Datatype")
+                    partner = n.getAttribute("Partner")
+                    if datatype == "" and partner == "":
+                        self.emit("sync-end")
+        except Exception, e:
+            print "Failed to parse status XML: %s" % e
+            print body
+
         return self.create_response(200)
 

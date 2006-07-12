@@ -26,11 +26,12 @@ import dbus.glib
 from twisted.internet import glib2reactor
 glib2reactor.install()
 from twisted.internet import reactor
-from twisted.internet.protocol import Protocol, Factory
+from twisted.internet.protocol import Factory
 from twisted.web2 import server, channel
 
 from pyrapi2 import *
 from partnership import *
+import rrac
 from airsync import *
 from util import *
 from interfaces import *
@@ -55,7 +56,14 @@ class SyncEngine(dbus.service.Object):
 
         self.session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
         self.cur_partnership = None
+
+        res = ASResource()
+        res.connect("contact-added", self._contact_added_cb)
+        res.connect("sync-end", self._sync_end_cb)
+        self.asr = res
+
         self._get_partnerships()
+        self._init_transports()
 
     def _get_partnerships(self):
         self.partnerships = {}
@@ -97,6 +105,7 @@ class SyncEngine(dbus.service.Object):
                 pship = Partnership(pos, id, guid, hostname, description)
                 if pship.is_our():
                     self.cur_partnership = pship
+                    self._partnership_changed()
 
                 self.partnerships[id] = pship
                 self.slots[pos-1] = pship
@@ -119,6 +128,37 @@ class SyncEngine(dbus.service.Object):
 
         for pship in self.slots:
             print pship
+
+    def _init_transports(self):
+        entries = config_query_get(self.session, None, "CM_ProxyEntries").children.values()
+        transport = None
+        for entry in entries:
+            if entry.type.startswith("HTTP-"):
+                transport = entry
+                break
+
+        if transport is None:
+            raise ProtocolError("HTTP transport not found")
+
+        transport = config_query_get(self.session, "CM_ProxyEntries", transport.type)
+
+        dtpt = Characteristic("CurrentDTPTNetwork")
+        dtpt["DestId"] = transport["SrcId"]
+        config_query_set(self.session, "CM_NetEntries", dtpt)
+        print "CurrentDTPTNetwork set"
+
+        site = server.Site(self.asr)
+        factory = channel.HTTPFactory(site)
+        reactor.listenTCP(26675, factory)
+
+    def _partnership_changed(self):
+        pship = self.cur_partnership
+
+        partners = self.session.HKEY_LOCAL_MACHINE.create_sub_key(
+                r"Software\Microsoft\Windows CE Services\Partners")
+        partners.set_value("PCur", 1, REG_DWORD)
+
+        self.asr.set_partnership(pship)
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):
@@ -257,6 +297,7 @@ class SyncEngine(dbus.service.Object):
 
         pship.create_sync_state()
         self.cur_partnership = pship
+        self._partnership_changed()
 
         return pship.id
 
@@ -294,34 +335,8 @@ class SyncEngine(dbus.service.Object):
 
         print "Starting synchronization"
 
-        entries = config_query_get(self.session, None, "CM_ProxyEntries").children.values()
-        transport = None
-        for entry in entries:
-            if entry.type.startswith("HTTP-"):
-                transport = entry
-                break
-
-        if transport is None:
-            raise ProtocolError("HTTP transport not found")
-
-        transport = config_query_get(self.session, "CM_ProxyEntries", transport.type)
-
-        dtpt = Characteristic("CurrentDTPTNetwork")
-        dtpt["DestId"] = transport["SrcId"]
-        config_query_set(self.session, "CM_NetEntries", dtpt)
-        print "CurrentDTPTNetwork set"
-
         self._contacts_added = []
 
-        res = ASResource(pship)
-        res.connect("contact-added", self._contact_added_cb)
-        res.connect("end-of-changeset", self._end_of_changeset_cb)
-
-        site = server.Site(res)
-        factory = channel.HTTPFactory(site)
-        reactor.listenTCP(26675, factory)
-
-        print "Starting synchronization"
         doc = minidom.Document()
         doc_node = doc.createElement("sync")
         doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
@@ -332,37 +347,16 @@ class SyncEngine(dbus.service.Object):
         node.setAttribute("id", pship.guid)
         doc_node.appendChild(node)
 
-        print "Calling sync_start()"
-        #print doc_node.toprettyxml()
-
         self.session.sync_start(doc_node.toxml())
-        print "Succeeded"
-
-        # set the current partnership on the device
-        #
-        # this is probably only needed for legacy items,
-        # i.e. non-PIM ones using RRAC...
-        #
-        print "Setting PCur...",
-        partners = self.session.HKEY_LOCAL_MACHINE.create_sub_key(
-                r"Software\Microsoft\Windows CE Services\Partners")
-        partners.set_value("PCur", 1, REG_DWORD)
-        print "success"
-
-        #print "Calling start_replication...",
-        #self.session.start_replication()
-        #print "success"
-
-        print "Calling sync_resume...",
+        self.session.start_replication()
         self.session.sync_resume()
-        print "success"
 
     def _contact_added_cb(self, res, sid, contact):
         print "queuing remote contact add with sid %s [%s]" % (sid, contact["FileAs"])
         self._contacts_added.append((sid, contact))
 
-    def _end_of_changeset_cb(self, res):
-        print "end of changeset, pushing %d contact adds" % len(self._contacts_added)
+    def _sync_end_cb(self, res):
+        print "sync ended, pushing %d contact adds" % len(self._contacts_added)
 
         if self._contacts_added:
             self.ContactsAdded(self._contacts_added)
@@ -380,6 +374,18 @@ class SyncEngine(dbus.service.Object):
 
 
 if __name__ == "__main__":
+    factory = Factory()
+    factory.protocol = rrac.Status
+    reactor.listenTCP(999, factory)
+
+    factory = Factory()
+    factory.protocol = rrac.RRAC
+    reactor.listenTCP(5678, factory)
+
+    # hack hack hack
+    os.setgid(1000)
+    os.setuid(1000)
+
     session_bus = dbus.SessionBus()
     bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
     obj = SyncEngine(bus_name, OBJECT_PATH)
