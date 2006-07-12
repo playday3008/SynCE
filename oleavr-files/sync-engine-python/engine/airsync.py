@@ -17,14 +17,31 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
+import gobject
+from twisted.internet import defer
+from twisted.web2 import http, resource, stream
 from util import *
-from twisted.web2 import resource
+from cStringIO import StringIO
 from xml.dom import minidom
+import pywbxml
 
-class ASResource(resource.PostableResource):
-    def __init__(self):
+AIRSYNC_DOC_NAME = "AirSync"
+AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
+AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
+
+class ASResource(gobject.GObject, resource.PostableResource):
+    __gsignals__ = {
+            "contact-added": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                              (gobject.TYPE_STRING, object)),
+            "end-of-changeset": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                                 ()),
+    }
+
+    def __init__(self, partnership):
+        self.__gobject_init__()
         resource.PostableResource.__init__(self)
 
+        self.pship = partnership
         self.dom = minidom.getDOMImplementation()
 
     def locateChild(self, request, segments):
@@ -186,6 +203,8 @@ class ASResource(resource.PostableResource):
                             else:
                                 print "Unhandled command \"%s\" (looking for %s)" % \
                                     (req_cmd_node.localName, name)
+
+                        self.emit("end-of-changeset")
                     elif sub_node.localName in ("Class", "SyncKey", "CollectionId"):
                         pass
                     else:
@@ -204,14 +223,15 @@ class ASResource(resource.PostableResource):
             if node.nodeType != node.ELEMENT_NODE:
                 continue
 
-            contact[node.localName] = node_get_value(node)
+            val = node_get_value(node)
+            if val is None:
+                continue
 
-        print "Added contact: \"%s\"" % contact["FileAs"]
-        print contact
+            contact[node.localName] = val
 
         node_append_child(response_node, "ServerId", sid)
 
-        self.emit("contact-added", cid, sid, contact)
+        self.emit("contact-added", sid, contact)
 
         return True
 
@@ -236,9 +256,11 @@ class ASResource(resource.PostableResource):
 
         changes_node = node_append_child(folder_node, "Changes")
 
-        node_append_child(changes_node, "Count", len(self.folders))
+        state = self.pship.state
 
-        for server_id, data in self.folders.items():
+        node_append_child(changes_node, "Count", len(state.folders))
+
+        for server_id, data in state.folders.items():
             parent_id, display_name, type = data
 
             add_node = node_append_child(changes_node, "Add")

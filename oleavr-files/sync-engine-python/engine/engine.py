@@ -22,32 +22,27 @@ import gobject
 import dbus
 import dbus.service
 import dbus.glib
+
+from twisted.internet import glib2reactor
+glib2reactor.install()
+from twisted.internet import reactor
+from twisted.internet.protocol import Protocol, Factory
+from twisted.web2 import server, channel
+
 from pyrapi2 import *
 from partnership import *
 from airsync import *
 from util import *
-from constants import *
 from interfaces import *
 from errors import *
 import socket
 
-from twisted.internet import glib2reactor
-glib2reactor.install()
-from twisted.internet import reactor, defer
-from twisted.internet.protocol import Protocol, Factory
-from twisted.web2 import server, http, channel, stream
 import os
 
-from cStringIO import StringIO
 from xml.dom import minidom
-import pywbxml
 
 BUS_NAME = "org.synce.SyncEngine"
 OBJECT_PATH = "/org/synce/SyncEngine"
-
-AIRSYNC_DOC_NAME = "AirSync"
-AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
-AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
 
 class SyncEngine(dbus.service.Object):
     """
@@ -59,13 +54,8 @@ class SyncEngine(dbus.service.Object):
         dbus.service.Object.__init__(self, bus_name, object_path)
 
         self.session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
-        self.our_partnership = None
+        self.cur_partnership = None
         self._get_partnerships()
-
-        res = ASResource()
-        site = server.Site(res)
-        factory = channel.HTTPFactory(site)
-        reactor.listenTCP(26675, factory)
 
     def _get_partnerships(self):
         self.partnerships = {}
@@ -105,6 +95,9 @@ class SyncEngine(dbus.service.Object):
                 del reg_entries[hostname]
 
                 pship = Partnership(pos, id, guid, hostname, description)
+                if pship.is_our():
+                    self.cur_partnership = pship
+
                 self.partnerships[id] = pship
                 self.slots[pos-1] = pship
 
@@ -260,10 +253,10 @@ class SyncEngine(dbus.service.Object):
         # Store it
         #
         self.partnerships[pship.id] = pship
-        self.slots[pship.slot] = pship
+        self.slots[pship.slot-1] = pship
 
         pship.create_sync_state()
-        self.our_partnership = pship
+        self.cur_partnership = pship
 
         return pship.id
 
@@ -286,17 +279,17 @@ class SyncEngine(dbus.service.Object):
 
         config_query_remove(self.session, "Sync.Sources", pship.guid)
 
-        if pship == self.our_partnership:
-            self.our_partnership = None
+        if pship.is_our():
             pship.delete_sync_state()
+            self.cur_partnership = None
 
         del self.partnerships[id]
-        self.slots[pship.slot] = None
+        self.slots[pship.slot-1] = None
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='')
     def StartSync(self):
-        partner = self.our_partnership
-        if partner is None:
+        pship = self.cur_partnership
+        if pship is None:
             raise NotAvailable("No partnership found")
 
         print "Starting synchronization"
@@ -318,6 +311,16 @@ class SyncEngine(dbus.service.Object):
         config_query_set(self.session, "CM_NetEntries", dtpt)
         print "CurrentDTPTNetwork set"
 
+        self._contacts_added = []
+
+        res = ASResource(pship)
+        res.connect("contact-added", self._contact_added_cb)
+        res.connect("end-of-changeset", self._end_of_changeset_cb)
+
+        site = server.Site(res)
+        factory = channel.HTTPFactory(site)
+        reactor.listenTCP(26675, factory)
+
         print "Starting synchronization"
         doc = minidom.Document()
         doc_node = doc.createElement("sync")
@@ -326,7 +329,7 @@ class SyncEngine(dbus.service.Object):
         doc.appendChild(doc_node)
 
         node = doc.createElement("partner")
-        node.setAttribute("id", partner.guid)
+        node.setAttribute("id", pship.guid)
         doc_node.appendChild(node)
 
         print "Calling sync_start()"
@@ -353,6 +356,27 @@ class SyncEngine(dbus.service.Object):
         print "Calling sync_resume...",
         self.session.sync_resume()
         print "success"
+
+    def _contact_added_cb(self, res, sid, contact):
+        print "queuing remote contact add with sid %s [%s]" % (sid, contact["FileAs"])
+        self._contacts_added.append((sid, contact))
+
+    def _end_of_changeset_cb(self, res):
+        print "end of changeset, pushing %d contact adds" % len(self._contacts_added)
+
+        if self._contacts_added:
+            self.ContactsAdded(self._contacts_added)
+            self._contacts_added = []
+
+        self.Synchronized()
+
+    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(sa{ss})")
+    def ContactsAdded(self, contacts):
+        print "Emitting ContactsAdded with %d contacts" % len(contacts)
+
+    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="")
+    def Synchronized(self):
+        print "Emitting Synchronized"
 
 
 if __name__ == "__main__":

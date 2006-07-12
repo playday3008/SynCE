@@ -17,8 +17,11 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
+from constants import *
 from util import *
+
 import cPickle as pickle
+import os
 import os.path
 
 class Partnership:
@@ -30,13 +33,15 @@ class Partnership:
         self.name = name
 
         self.sync_items = []
-        self.sync_state = None
+        self.state = None
 
         # FIXME: make these static
         self.config_dir = os.path.join(os.path.expanduser("~"),
                                        ".synce")
         self.sync_state_path = os.path.join(self.config_dir,
                                             "sync_state")
+
+        self.load_sync_state()
 
     def __str__(self):
         str = ""
@@ -52,16 +57,19 @@ class Partnership:
             (self.slot, self.id, self.guid, self.hostname, self.name, str)
 
     def is_our(self):
-        return (self.sync_state != None)
+        return (self.state != None)
 
     def create_sync_state(self):
-        self.sync_state = SyncState()
+        self.state = SyncState()
         self.save_sync_state()
 
     def delete_sync_state(self):
-        path = self._get_state_path()
+        path = self.sync_state_path
         print "Removing %s" % path
-        os.path.remove(path)
+        try:
+            os.remove(path)
+        except:
+            pass
 
     def load_sync_state(self):
         f = None
@@ -73,29 +81,31 @@ class Partnership:
         id = None
         try:
             id = pickle.load(f)
-        except:
+        except Exception, e:
+            print "Failed to load sync_state [1]: %s" % e
             return
 
         if id != self.id:
             return
 
         try:
-            self.sync_state = pickle.load(f)
-        except:
-            print "Failed to load sync state"
+            self.state = pickle.load(f)
+        except Exception, e:
+            print "Failed to load sync state [2]: %s" % e
 
     def save_sync_state(self):
         try:
-            os.path.makedirs(self.config_dir)
-        except:
-            print "Failed to create configdir path \"%s\"" % self.config_dir
-            return
+            os.makedirs(self.config_dir)
+        except OSError, e:
+            if e.errno != 17:
+                print "Failed to create directory %s: %s" % (self.config_dir, e)
+                return
 
         f = None
         try:
             f = open(self.sync_state_path, "w")
             pickle.dump(self.id, f)
-            pickle.dump(self.sync_state, f)
+            pickle.dump(self.state, f)
         except Exception, e:
             print "Failed to save sync state:", e
 
