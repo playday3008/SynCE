@@ -3,6 +3,7 @@
 
 import gobject
 import dbus
+import dbus.glib
 import sys
 
 bus = dbus.SessionBus()
