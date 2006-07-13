@@ -37,8 +37,13 @@ class ASResource(gobject.GObject, resource.PostableResource):
                            ()),
             "sync-end": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
                          ()),
+
             "contact-added": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                              (gobject.TYPE_STRING, object)),
+                              (object, object)),
+            "contact-modified": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                                 (object, object)),
+            "contact-deleted": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                                (object,)),
     }
 
     def __init__(self):
@@ -153,17 +158,18 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
         xml_raw = pywbxml.wbxml2xml(body)
         req_doc = minidom.parseString(xml_raw)
-        req_sync_node = node_find_child(req_doc, "Sync")
-        req_colls_node = node_find_child(req_sync_node, "Collections")
+        print "Which is:", req_doc.toprettyxml()
+        req_sync_node = node_get_child(req_doc, "Sync")
+        req_colls_node = node_get_child(req_sync_node, "Collections")
 
         doc = self.create_wbxml_doc("Sync")
         colls_node = node_append_child(doc.documentElement, "Collections")
 
         for n in req_colls_node.childNodes:
             if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
-                cls = node_get_value(node_find_child(n, "Class"))
-                key = node_get_value(node_find_child(n, "SyncKey"))
-                id = node_get_value(node_find_child(n, "CollectionId"))
+                cls = node_get_value(node_get_child(n, "Class"))
+                key = node_get_value(node_get_child(n, "SyncKey"))
+                id = node_get_value(node_get_child(n, "CollectionId"))
 
                 coll_node = node_append_child(colls_node, "Collection")
                 node_append_child(coll_node, "Class", cls)
@@ -172,16 +178,13 @@ class ASResource(gobject.GObject, resource.PostableResource):
                 node_append_child(coll_node, "CollectionId", id)
                 node_append_child(coll_node, "Status", 1)
 
-                responses_node = None
+                responses_node = doc.createElement("Responses")
 
                 for sub_node in n.childNodes:
                     if sub_node.nodeType != sub_node.ELEMENT_NODE:
                         continue
 
                     if sub_node.localName == "Commands":
-                        if responses_node is None:
-                            responses_node = node_append_child(coll_node, "Responses")
-
                         for req_cmd_node in sub_node.childNodes:
                             if req_cmd_node.nodeType != req_cmd_node.ELEMENT_NODE:
                                 continue
@@ -189,39 +192,26 @@ class ASResource(gobject.GObject, resource.PostableResource):
                             name = "handle_sync_%s_cmd_%s" % \
                                     (cls.lower(), req_cmd_node.localName.lower())
                             if hasattr(self, name):
-                                cmd_node = node_append_child(responses_node,
-                                        req_cmd_node.localName)
-
-                                cid = node_get_value(
-                                        node_find_child(req_cmd_node, "ClientId"))
-                                node_append_child(cmd_node, "ClientId", cid)
-
-                                req_app_data = node_find_child(req_cmd_node,
-                                        "ApplicationData")
-
-                                success = getattr(self, name)(cid, req_app_data, cmd_node)
-                                if success:
-                                    status = 1
-                                else:
-                                    status = 0
-                                node_append_child(cmd_node, "Status", status)
+                                getattr(self, name)(req_cmd_node, responses_node)
                             else:
                                 print "Unhandled command \"%s\" (looking for %s)" % \
                                     (req_cmd_node.localName, name)
+                                print "Command node:", req_cmd_node.toprettyxml()
                     elif sub_node.localName in ("Class", "SyncKey", "CollectionId"):
                         pass
                     else:
                         print "Ignoring collection subnode \"%s\"" % \
                             sub_node.localName
 
+                if len(responses_node.childNodes) > 0:
+                    coll_node.appendChild(responses_node)
+
         print "Responding to Sync"
+        print "With:", doc.toprettyxml()
         return self.create_wbxml_response(doc.toxml())
 
-    def handle_sync_contacts_cmd_add(self, cid, app_node, response_node):
+    def _contacts_node_to_vcard(self, sid, app_node):
         contact = {}
-
-        sid = generate_guid()
-
         for node in app_node.childNodes:
             if node.nodeType != node.ELEMENT_NODE:
                 continue
@@ -232,13 +222,34 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
             contact[node.localName] = val
 
+        return contact_to_vcard(sid, contact)
+
+    def handle_sync_contacts_cmd_add(self, request_node, responses_node):
+        response_node = node_append_child(responses_node, request_node.localName)
+
+        cid = node_get_child(request_node, "ClientId")
+        node_append_child(response_node, "ClientId", cid)
+
+        sid = generate_guid()
         node_append_child(response_node, "ServerId", sid)
 
-        vcard = contact_to_vcard(sid, contact)
+        node_append_child(response_node, "Status", 1)
 
+        app_node = node_get_child(request_node, "ApplicationData")
+        vcard = self._contacts_node_to_vcard(sid, app_node)
         self.emit("contact-added", sid, vcard)
 
-        return True
+    def handle_sync_contacts_cmd_change(self, request_node, responses_node):
+        sid = node_get_child(request_node, "ServerId")
+
+        app_node = node_get_child(request_node, "ApplicationData")
+        vcard = self._contacts_node_to_vcard(sid, app_node)
+        self.emit("contact-modified", sid, vcard)
+
+    def handle_sync_contacts_cmd_delete(self, request_node, responses_node):
+        sid = node_get_child(request_node, "ServerId")
+
+        self.emit("contact-deleted", sid)
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"
@@ -246,8 +257,8 @@ class ASResource(gobject.GObject, resource.PostableResource):
         xml_raw = pywbxml.wbxml2xml(body)
         doc = minidom.parseString(xml_raw)
 
-        folder_node = node_find_child(doc, "FolderSync")
-        key_node = node_find_child(folder_node, "SyncKey")
+        folder_node = node_get_child(doc, "FolderSync")
+        key_node = node_get_child(folder_node, "SyncKey")
         key = node_get_value(key_node)
         if key != "0":
             raise ValueError("SyncKey specified is not 0")
@@ -289,14 +300,14 @@ class ASResource(gobject.GObject, resource.PostableResource):
         resp_node = node_append_child(reply_doc.documentElement, "Response")
         node_append_child(resp_node, "Status", 1)
 
-        node = node_find_child(doc, "GetItemEstimate")
-        colls_node = node_find_child(node, "Collections")
+        node = node_get_child(doc, "GetItemEstimate")
+        colls_node = node_get_child(node, "Collections")
         for n in colls_node.childNodes:
             if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
-                cls = node_get_value(node_find_child(n, "Class"))
-                id = node_get_value(node_find_child(n, "CollectionId"))
-                filter = node_get_value(node_find_child(n, "FilterType"))
-                key = node_get_value(node_find_child(n, "SyncKey"))
+                cls = node_get_value(node_get_child(n, "Class"))
+                id = node_get_value(node_get_child(n, "CollectionId"))
+                filter = node_get_value(node_get_child(n, "FilterType"))
+                key = node_get_value(node_get_child(n, "SyncKey"))
 
                 coll_node = node_append_child(resp_node, "Collection")
                 node_append_child(coll_node, "Class", cls)

@@ -58,8 +58,10 @@ class SyncEngine(dbus.service.Object):
         self.cur_partnership = None
 
         res = ASResource()
-        res.connect("contact-added", self._contact_added_cb)
         res.connect("sync-end", self._sync_end_cb)
+        res.connect("contact-added", self._contact_added_cb)
+        res.connect("contact-modified", self._contact_modified_cb)
+        res.connect("contact-deleted", self._contact_deleted_cb)
         self.asr = res
 
         self._get_partnerships()
@@ -336,6 +338,8 @@ class SyncEngine(dbus.service.Object):
         print "Starting synchronization"
 
         self._contacts_added = []
+        self._contacts_modified = []
+        self._contacts_deleted = []
 
         doc = minidom.Document()
         doc_node = doc.createElement("sync")
@@ -351,24 +355,51 @@ class SyncEngine(dbus.service.Object):
         self.session.start_replication()
         self.session.sync_resume()
 
-    def _contact_added_cb(self, res, sid, vcard):
-        print "queuing remote contact add with sid %s" % sid
-        self._contacts_added.append((sid, vcard))
-
     def _sync_end_cb(self, res):
-        print "sync ended, pushing %d contact adds" % len(self._contacts_added)
+        print "Sync ended"
+        print "Contacts: %d adds, %d modifications, %d deletions" % \
+            (len(self._contacts_added), len(self._contacts_modified),
+             len(self._contacts_deleted))
 
         if self._contacts_added:
             self.ContactsAdded(self._contacts_added)
             self._contacts_added = []
 
+        if self._contacts_modified:
+            self.ContactsModified(self._contacts_modified)
+            self._contacts_modified = []
+
+        if self._contacts_deleted:
+            self.ContactsDeleted(self._contacts_deleted)
+            self._contacts_deleted = []
+
         self.Synchronized()
 
         self.session.sync_pause()
 
+    def _contact_added_cb(self, res, sid, vcard):
+        print "queuing remote contact add with sid %s" % sid
+        self._contacts_added.append((sid, vcard))
+
+    def _contact_modified_cb(self, res, sid, vcard):
+        print "queuing remote contact modify with sid %s" % sid
+        self._contacts_modified.append((sid, vcard))
+
+    def _contact_deleted_cb(self, res, sid):
+        print "queuing remote contact delete with sid %s" % sid
+        self._contacts_deleted.append(sid)
+
     @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(ss)")
     def ContactsAdded(self, contacts):
         print "Emitting ContactsAdded with %d contacts" % len(contacts)
+
+    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(ss)")
+    def ContactsModified(self, contacts):
+        print "Emitting ContactsModified with %d contacts" % len(contacts)
+
+    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="as")
+    def ContactsDeleted(self, contacts):
+        print "Emitting ContactsDeleted with %d contacts" % len(contacts)
 
     @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="")
     def Synchronized(self):

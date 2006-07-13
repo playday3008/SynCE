@@ -231,7 +231,13 @@ def node_find_child(node, name):
     for n in node.childNodes:
         if n.nodeType == n.ELEMENT_NODE and n.localName == name:
             return n
-    raise ValueError("child not found")
+    return None
+
+def node_get_child(node, name):
+    child = node_find_child(node, name)
+    if child is None:
+        raise ValueError("child not found")
+    return child
 
 def node_get_value(node):
     for n in node.childNodes:

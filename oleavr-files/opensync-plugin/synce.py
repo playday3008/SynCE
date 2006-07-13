@@ -49,7 +49,12 @@ class SyncClass:
             bus = dbus.SessionBus()
             proxy_obj = bus.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
-            self.engine.connect_to_signal("ContactsAdded", lambda *args: gobject.idle_add(self._contacts_added_cb, *args))
+            self.engine.connect_to_signal("ContactsAdded",
+                    lambda *args: gobject.idle_add(self._contacts_added_cb, *args))
+            self.engine.connect_to_signal("ContactsModified",
+                    lambda *args: gobject.idle_add(self._contacts_modified_cb, *args))
+            self.engine.connect_to_signal("ContactsDeleted",
+                    lambda *args: gobject.idle_add(self._contacts_deleted_cb, *args))
             self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._synchronized_cb))
 
             ctx.report_success()
@@ -57,10 +62,10 @@ class SyncClass:
             print "SynCE::connect: failed: %s" % e
             ctx.report_error()
 
-    def _contacts_added_cb(self, adds):
-        print "SynCE: Contacts added called with %d contacts" % len(adds)
+    def _contacts_added_cb(self, items):
+        print "SynCE: ContactsAdded received with %d items" % len(items)
 
-        for sid, vcard in adds:
+        for sid, vcard in items:
             change = OSyncChange()
             change.uid = sid.encode("utf-8")
             change.objtype = "contact"
@@ -72,6 +77,32 @@ class SyncClass:
             self.hack.append(bytes)
             change.set_data(bytes, len(bytes) + 1, TRUE)
             change.changetype = CHANGE_ADDED
+            change.report(self.ctx)
+
+    def _contacts_modified_cb(self, items):
+        print "SynCE: ContactsModified received with %d items" % len(items)
+
+        for sid, vcard in items:
+            change = OSyncChange()
+            change.uid = sid.encode("utf-8")
+            change.objtype = "contact"
+            change.format = "vcard30"
+            bytes = vcard.encode("utf-8")
+            # hack, see comment above
+            self.hack.append(bytes)
+            change.set_data(bytes, len(bytes) + 1, TRUE)
+            change.changetype = CHANGE_MODIFIED
+            change.report(self.ctx)
+
+    def _contacts_deleted_cb(self, items):
+        print "SynCE: ContactsDeleted received with %d items" % len(items)
+
+        for sid in items:
+            change = OSyncChange()
+            change.uid = sid.encode("utf-8")
+            change.objtype = "contact"
+            change.format = "vcard30"
+            change.changetype = CHANGE_DELETED
             change.report(self.ctx)
 
     def _synchronized_cb(self):
