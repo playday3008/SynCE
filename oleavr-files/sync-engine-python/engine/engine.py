@@ -351,9 +351,9 @@ class SyncEngine(dbus.service.Object):
         self.session.start_replication()
         self.session.sync_resume()
 
-    def _contact_added_cb(self, res, sid, contact):
-        print "queuing remote contact add with sid %s [%s]" % (sid, contact["FileAs"])
-        self._contacts_added.append((sid, contact))
+    def _contact_added_cb(self, res, sid, vcard):
+        print "queuing remote contact add with sid %s" % sid
+        self._contacts_added.append((sid, vcard))
 
     def _sync_end_cb(self, res):
         print "sync ended, pushing %d contact adds" % len(self._contacts_added)
@@ -366,7 +366,7 @@ class SyncEngine(dbus.service.Object):
 
         self.session.sync_pause()
 
-    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(sa{ss})")
+    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(ss)")
     def ContactsAdded(self, contacts):
         print "Emitting ContactsAdded with %d contacts" % len(contacts)
 

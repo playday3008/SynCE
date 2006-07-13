@@ -255,3 +255,19 @@ def node_append_child(parent, name, value=None):
         node.appendChild(value_node)
     parent.appendChild(node)
     return node
+
+def escape_str(s):
+    ret = u""
+    for c in s:
+        if c == u"\r":
+            continue
+        elif c == u"\n":
+            ret += u"\\n"
+            continue
+        elif c == u"\\":
+            ret += u"\\\\"
+            continue
+        elif c in (u";", u","):
+            ret += u"\\"
+        ret += c
+    return ret

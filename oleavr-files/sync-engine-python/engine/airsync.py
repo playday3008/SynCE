@@ -25,6 +25,8 @@ from cStringIO import StringIO
 from xml.dom import minidom
 import pywbxml
 
+from contacts import contact_to_vcard
+
 AIRSYNC_DOC_NAME = "AirSync"
 AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
 AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
@@ -232,7 +234,9 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
         node_append_child(response_node, "ServerId", sid)
 
-        self.emit("contact-added", sid, contact)
+        vcard = contact_to_vcard(sid, contact)
+
+        self.emit("contact-added", sid, vcard)
 
         return True
 
