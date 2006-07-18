@@ -26,12 +26,11 @@ import dbus.glib
 from twisted.internet import glib2reactor
 glib2reactor.install()
 from twisted.internet import reactor
-from twisted.internet.protocol import Factory
 from twisted.web2 import server, channel
 
 from pyrapi2 import *
 from partnership import *
-import rrac
+from rrac import RRACServer
 from airsync import *
 from util import *
 from interfaces import *
@@ -51,8 +50,11 @@ class SyncEngine(dbus.service.Object):
     with Windows CE-based devices.
     """
 
-    def __init__(self, bus_name, object_path):
+    def __init__(self, bus_name, object_path, rrac):
         dbus.service.Object.__init__(self, bus_name, object_path)
+
+        self.rrac = rrac
+        rrac.connect("ready", self._rrac_ready_cb)
 
         self.session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
         self.cur_partnership = None
@@ -161,6 +163,14 @@ class SyncEngine(dbus.service.Object):
         partners.set_value("PCur", 1, REG_DWORD)
 
         self.asr.set_partnership(pship)
+
+    def _rrac_ready_cb(self, rrac):
+        print "_rrac_ready_cb"
+        d = rrac.get_object_types()
+        d.addCallback(self._get_object_types_cb)
+
+    def _get_object_types_cb(self, object_types):
+        print "_get_object_types_cb:", object_types
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):
@@ -341,18 +351,23 @@ class SyncEngine(dbus.service.Object):
         self._contacts_modified = []
         self._contacts_deleted = []
 
-        doc = minidom.Document()
-        doc_node = doc.createElement("sync")
-        doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
-        doc_node.setAttribute("type", "Interactive")
-        doc.appendChild(doc_node)
+        #if not pship.state.started:
+        if True:
+            doc = minidom.Document()
+            doc_node = doc.createElement("sync")
+            doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
+            doc_node.setAttribute("type", "Interactive")
+            doc.appendChild(doc_node)
 
-        node = doc.createElement("partner")
-        node.setAttribute("id", pship.guid)
-        doc_node.appendChild(node)
+            node = doc.createElement("partner")
+            node.setAttribute("id", pship.guid)
+            doc_node.appendChild(node)
 
-        self.session.sync_start(doc_node.toxml())
-        self.session.start_replication()
+            self.session.sync_start(doc_node.toxml())
+            self.session.start_replication()
+
+            pship.state.started = True
+
         self.session.sync_resume()
 
     def _sync_end_cb(self, res):
@@ -407,13 +422,7 @@ class SyncEngine(dbus.service.Object):
 
 
 if __name__ == "__main__":
-    factory = Factory()
-    factory.protocol = rrac.Status
-    reactor.listenTCP(999, factory)
-
-    factory = Factory()
-    factory.protocol = rrac.RRAC
-    reactor.listenTCP(5678, factory)
+    rrac = RRACServer()
 
     # hack hack hack
     os.setgid(1000)
@@ -421,6 +430,6 @@ if __name__ == "__main__":
 
     session_bus = dbus.SessionBus()
     bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
-    obj = SyncEngine(bus_name, OBJECT_PATH)
+    obj = SyncEngine(bus_name, OBJECT_PATH, rrac)
 
     reactor.run()

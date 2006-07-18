@@ -277,3 +277,6 @@ def escape_str(s):
             ret += u"\\"
         ret += c
     return ret
+
+def decode_wstr(s):
+    return s.decode("utf_16_le").rstrip("\0")

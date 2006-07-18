@@ -61,6 +61,7 @@ class Partnership:
 
     def create_sync_state(self):
         self.state = SyncState()
+        self.state.started = False
         self.save_sync_state()
 
     def delete_sync_state(self):
@@ -90,6 +91,7 @@ class Partnership:
 
         try:
             self.state = pickle.load(f)
+            self.state.started = False
         except Exception, e:
             print "Failed to load sync state [2]: %s" % e
 
