@@ -166,7 +166,9 @@ def _config_query(session, query_type, path, leaf=None, recursive=False, ctic=No
         return None
 
 def generate_id():
-    w1 = random.randint(0x0, 0xFFFF)
+    # work around a bug in the D-Bus python bindings
+    #w1 = random.randint(0x0, 0xFFFF)
+    w1 = random.randint(0x0, 0x0FFF)
     w2 = random.randint(0x0, 0xFFFF)
     return (w1 << 16) | w2
 
