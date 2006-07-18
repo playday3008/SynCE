@@ -24,8 +24,36 @@ from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, Factory
 from errors import *
 
+
 RRAC_PORT = 5678
 STATUS_PORT = 999
+
+COMMAND_TYPE_GET_METADATA = 0x6F
+COMMAND_TYPE_SET_METADATA = 0x70
+
+GET_OBJECT_TYPES_MASK = 0x000007c1
+GET_VOLUMES_MASK      = 0x00000010
+GET_UNK_1AND2_MASK    = 0x00000006
+
+OID_BORING_SSPIDS = 2
+
+SUB_PROTO_UNKNOWN = 0
+SUB_PROTO_CONTROL = 1
+SUB_PROTO_DATA    = 2
+SUB_PROTO_STATUS  = 3
+
+RRAC_COMMANDS = {
+    0x65: "Ack",
+    0x66: "DeleteObject",
+    0x67: "GetObject",
+    0x69: "Notify",
+    #0x69: "ChangeLog",
+    0x6c: "Response",
+    0x6e: "Nack",
+    0x6f: "GetMetaData",
+    0x70: "SetMetaData",
+}
+
 
 class BaseProtocol(Protocol):
     def connectionMade(self):
@@ -42,8 +70,6 @@ class BaseProtocol(Protocol):
         print hexdump(data)
         print
 
-
-COMMAND_TYPE_GET_METADATA = 0x6F
 
 class Command:
     def __init__(self, type, arg, response_expected, payload=None):
@@ -63,7 +89,7 @@ class Command:
         return hexdump(self.data)
 
     def handle_response(self, response):
-        raise NotImplementedError("handle_response not implemented")
+        return None
 
 
 class GetMetaDataCmd(Command):
@@ -77,11 +103,6 @@ class GetMetaDataCmd(Command):
         magic_value, success, has_body = struct.unpack("<III", response[0:12])
         buf = response[12:]
 
-        print "Parsing response to GetMetaData:"
-        print "  MagicValue: %#010x" % magic_value
-        print "  Success: %d" % success
-        print "  HasBody: %d" % has_body
-
         if magic_value != self.MAGIC_VALUE:
             raise ProtocolError("Magic value is %#010x, expected %#010x." % \
                 (magic_value, self.MAGIC_VALUE))
@@ -89,65 +110,101 @@ class GetMetaDataCmd(Command):
         if success != 1:
             raise ProtocolError("Success isn't TRUE.")
 
-        result = None
+        result = {}
 
         if has_body != 0:
-            result = []
+            # ObjectTypes
+            buf, records = self._fetch_next(buf, 0, 384, True)
+            parsed = []
+            for rec in records:
+                flags = struct.unpack("<I", rec[0:4])
+                name1 = decode_wstr(rec[4:204])
+                name2 = decode_wstr(rec[204:284])
+                name3 = decode_wstr(rec[284:364])
+                ssp_id, count, total_size, file_time = \
+                    struct.unpack("<IIIQ", rec[364:384])
 
-            print "Parsing GetMetaData body:"
-            print hexdump(buf)
+                parsed.append((ssp_id, name1, count, total_size, file_time))
 
-            if (self.mask & 1) != 0:
-                response_to_bit = struct.unpack("<I", buf[0:4])[0]
-                if response_to_bit != 1:
-                    print "Response to bit is %d, expected 1. Ignoring response." % \
-                        response_to_bit
-                    return
+            if parsed:
+                result["ObjectTypes"] = parsed
 
-                num_obj_types = struct.unpack("<I", buf[4:8])[0]
-                print "Number of object types: %d" % num_obj_types
+            # UnknownDataType1
+            buf, records = self._fetch_next(buf, 1, 20, True)
+            i = 0
+            for rec in records:
+                print "UnknownDataType1 record #%d:" % i
+                print hexdump(rec)
+                print
+                i += 1
 
-                buf = buf[8:]
-                for i in xrange(0, num_obj_types):
-                    flags = struct.unpack("<I", buf[0:4])
-                    name1 = decode_wstr(buf[4:204])
-                    name2 = decode_wstr(buf[204:284])
-                    name3 = decode_wstr(buf[284:364])
-                    ssp_id, count, total_size, file_time = \
-                        struct.unpack("<IIIQ", buf[364:384])
+            # UnknownDataType2
+            buf, records = self._fetch_next(buf, 2, 8, False)
+            i = 0
+            for rec in records:
+                print "UnknownDataType2 record #%d:" % i
+                print hexdump(rec)
+                print
+                i += 1
 
-                    print "Flags: %#010x" % flags
-                    print "Name1: %s" % name1
-                    print "Name2: %s" % name2
-                    print "Name3: %s" % name3
-                    print "SSPId: %#010x" % ssp_id
-                    print "Count: %d" % count
-                    print "TotalSize: %d" % total_size
-                    print "FileTime: %d" % file_time
+            # Volumes
+            buf, records = self._fetch_next(buf, 4, 8, True)
+            i = 0
+            for rec in records:
+                print "Volume record #%d:" % i
+                print hexdump(rec)
+                print
+                i += 1
 
-                    result.append((ssp_id, name1, count, total_size, file_time))
+            if len(buf) > 0:
+                print "Unhandled trailing data:"
+                print hexdump(buf)
 
-                    buf = buf[384:]
+            # UnknownDataType4
+            #buf, records = self._fetch_next(buf, 4, 8, False)
+            #i = 0
+            #for rec in records:
+            #    print "Volume record #%d:" % i
+            #    print hexdump(rec)
+            #    print
+            #    i += 1
 
         return result
 
+    def _fetch_next(self, buf, bit, record_size, variable):
+        records = []
+        off = 0
+        mask = pow(2, bit)
 
-SUB_PROTO_UNKNOWN = 0
-SUB_PROTO_CONTROL = 1
-SUB_PROTO_DATA    = 2
-SUB_PROTO_STATUS  = 3
+        if (self.mask & mask) != 0:
+            response_to_bit = struct.unpack("<I", buf[off:off+4])[0]
+            if response_to_bit != mask:
+                raise ProtocolError("Response to bit is %d, expected %d" \
+                        % (response_to_bit, mask))
 
-RRAC_COMMANDS = {
-    0x65: "Ack",
-    0x66: "DeleteObject",
-    0x67: "GetObject",
-    0x69: "Notify",
-    #0x69: "ChangeLog",
-    0x6c: "Response",
-    0x6e: "Nack",
-    0x6f: "GetMetaData",
-    0x70: "SetMetaData",
-}
+            off += 4
+
+            if variable:
+                num_records = struct.unpack("<I", buf[off:off+4])[0]
+                off += 4
+            else:
+                num_records = 1
+
+            for i in xrange(0, num_records):
+                records.append(buf[off:off+record_size])
+                off += record_size
+
+        return (buf[off:], records)
+
+
+class SetMetaDataCmd(Command):
+    MAGIC_VALUE = 0xf0000001
+
+    def __init__(self, set_oid, data):
+        body = struct.pack("<II", self.MAGIC_VALUE, set_oid)
+        body += data
+        Command.__init__(self, COMMAND_TYPE_SET_METADATA, len(body), True, body)
+
 
 class RRAC(gobject.GObject, BaseProtocol):
     __gsignals__ = {
@@ -229,7 +286,10 @@ class RRAC(gobject.GObject, BaseProtocol):
         deferred = self.pending_responses[reply_to]
         del self.pending_responses[reply_to]
 
-        deferred.callback(buf[20:])
+        if result == 0:
+            deferred.callback(buf[20:])
+        else:
+            deferred.errback(Exception("command failed with result %#010x" % result))
 
     def send_command(self, cmd):
         deferred = defer.Deferred()
@@ -325,8 +385,22 @@ class RRACServer(gobject.GObject, Factory):
                     chan.set_sub_protocol(SUB_PROTO_DATA)
 
     def get_object_types(self):
-        cmd = GetMetaDataCmd(0x7c1)
+        cmd = GetMetaDataCmd(GET_OBJECT_TYPES_MASK)
+        return self._send_command(cmd)
 
+    def set_boring_ssp_ids(self, ids):
+        data = struct.pack("<IIIII", 0, 0, 0, 0, len(ids))
+        for id in ids:
+            data += struct.pack("<I", id)
+        cmd = SetMetaDataCmd(OID_BORING_SSPIDS, data)
+        return self._send_command(cmd)
+
+    def get_volumes(self):
+        cmd = GetMetaDataCmd(GET_VOLUMES_MASK)
+        return self._send_command(cmd)
+
+    def get_unknown_1_and_2(self):
+        cmd = GetMetaDataCmd(GET_UNK_1AND2_MASK)
         return self._send_command(cmd)
 
     def _send_command(self, cmd):

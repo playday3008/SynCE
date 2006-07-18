@@ -114,10 +114,22 @@ class SyncEngine(dbus.service.Object):
                 self.partnerships[id] = pship
                 self.slots[pos-1] = pship
 
-                engine = sub_ctic.children["Engines"].children[GUID_WM5_ENGINE]
+                engine = sub_ctic.children["Engines"].children[GUID_WM5_ACTIVESYNC_ENGINE]
                 for provider in engine.children["Providers"].children.values():
                     if int(provider["Enabled"]) != 0:
-                        pship.sync_items.append(SYNC_ITEM_ID_FROM_GUID[provider.type])
+                        id = None
+
+                        if provider.type in SYNC_ITEM_ID_FROM_GUID:
+                            id = SYNC_ITEM_ID_FROM_GUID[provider.type]
+                        else:
+                            if provider["Name"] == "Media":
+                                id = SYNC_ITEM_MEDIA
+
+                        if id == None:
+                            raise ValueError("Unknown GUID \"%s\" for provider with name \"%s\"" \
+                                    % (provider.type, provider["Name"]))
+
+                        pship.sync_items.append(id)
             else:
                 sync_entries.append((guid, hostname, description))
 
@@ -169,8 +181,26 @@ class SyncEngine(dbus.service.Object):
         d = rrac.get_object_types()
         d.addCallback(self._get_object_types_cb)
 
-    def _get_object_types_cb(self, object_types):
-        print "_get_object_types_cb:", object_types
+    def _get_object_types_cb(self, result):
+        print "_get_object_types_cb:", result
+        ids = [ot[0] for ot in result["ObjectTypes"]]
+        d = rrac.set_boring_ssp_ids(ids)
+        d.addCallback(self._set_boring_ssp_ids_cb)
+
+    def _set_boring_ssp_ids_cb(self, result):
+        print "_set_boring_ssp_ids_cb"
+        d = rrac.get_volumes()
+        d.addCallback(self._get_volumes_cb)
+
+    def _get_volumes_cb(self, result):
+        print "_get_volumes_cb:", result
+        d = rrac.get_unknown_1_and_2()
+        d.addCallback(self._get_unknown_1_and_2_cb)
+
+    def _get_unknown_1_and_2_cb(self, result):
+        print "_get_unknown_1_and_2_cb:", result
+
+        self.session.sync_resume()
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):
@@ -250,12 +280,18 @@ class SyncEngine(dbus.service.Object):
         source = Characteristic(pship.guid)
         source["Name"] = pship.name
         source["Server"] = pship.hostname
+
+        #
+        # StoreType
+        #  2 = ActiveSync desktop
+        #  3 = Exchange server
+        #
         source["StoreType"] = "2"
 
         engines = Characteristic("Engines")
         source.add_child(engines)
 
-        engine = Characteristic(GUID_WM5_ENGINE)
+        engine = Characteristic(GUID_WM5_ACTIVESYNC_ENGINE)
         engines.add_child(engine)
 
         settings = Characteristic("Settings")
@@ -367,8 +403,6 @@ class SyncEngine(dbus.service.Object):
             self.session.start_replication()
 
             pship.state.started = True
-
-        self.session.sync_resume()
 
     def _sync_end_cb(self, res):
         print "Sync ended"
