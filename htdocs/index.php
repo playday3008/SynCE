@@ -11,7 +11,7 @@
 
 <a href="http://sourceforge.net"><img
 src="http://sourceforge.net/sflogo.php?group_id=30550&amp;type=5" width="210"
-height="62" border="0" alt="SourceForge Logo" align=right></a> 
+height="62" border="0" alt="SourceForge Logo" align="right"/></a> 
 
 </td></tr><tr><td width="50%">
 
