@@ -280,5 +280,8 @@ def escape_str(s):
         ret += c
     return ret
 
+def encode_wstr(s):
+    return s.encode("utf_16_le") + "\x00\x00"
+
 def decode_wstr(s):
     return s.decode("utf_16_le").rstrip("\0")

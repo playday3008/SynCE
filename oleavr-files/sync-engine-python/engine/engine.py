@@ -184,23 +184,43 @@ class SyncEngine(dbus.service.Object):
     def _get_object_types_cb(self, result):
         print "_get_object_types_cb:", result
         ids = [ot[0] for ot in result["ObjectTypes"]]
-        d = rrac.set_boring_ssp_ids(ids)
+        d = self.rrac.set_boring_ssp_ids(ids)
         d.addCallback(self._set_boring_ssp_ids_cb)
 
     def _set_boring_ssp_ids_cb(self, result):
         print "_set_boring_ssp_ids_cb"
-        d = rrac.get_volumes()
+        d = self.rrac.get_volumes()
         d.addCallback(self._get_volumes_cb)
 
     def _get_volumes_cb(self, result):
         print "_get_volumes_cb:", result
-        d = rrac.get_unknown_1_and_2()
+        d = self.rrac.get_unknown_1_and_2()
         d.addCallback(self._get_unknown_1_and_2_cb)
 
     def _get_unknown_1_and_2_cb(self, result):
         print "_get_unknown_1_and_2_cb:", result
 
         self.session.sync_resume()
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='s', out_signature='')
+    def SetStatusMessage(self, message):
+        self.rrac.set_status_message(message)
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
+    def SetStatus5a(self, arg):
+        self.rrac.set_status_5a(arg)
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
+    def SetStatus5b(self, arg):
+        self.rrac.set_status_5b(arg)
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='uuu', out_signature='')
+    def SetStatus5c(self, arg, x, y):
+        self.rrac.set_status_5c(arg, x, y)
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
+    def SetStatus5d(self, arg):
+        self.rrac.set_status_5d(arg)
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):

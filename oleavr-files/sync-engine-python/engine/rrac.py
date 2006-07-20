@@ -19,7 +19,7 @@
 
 import gobject
 import struct
-from util import hexdump, decode_wstr
+from util import hexdump, encode_wstr, decode_wstr
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, Factory
 from errors import *
@@ -35,7 +35,7 @@ GET_OBJECT_TYPES_MASK = 0x000007c1
 GET_VOLUMES_MASK      = 0x00000010
 GET_UNK_1AND2_MASK    = 0x00000006
 
-OID_BORING_SSPIDS = 2
+OID_BORING_SSPIDS = 3
 
 SUB_PROTO_UNKNOWN = 0
 SUB_PROTO_CONTROL = 1
@@ -243,6 +243,11 @@ class RRAC(gobject.GObject, BaseProtocol):
     def dataReceived(self, data):
         BaseProtocol.dataReceived(self, data)
         self._activity()
+
+        if self.sub_proto != SUB_PROTO_CONTROL:
+            print "Ignoring incoming data because sub_proto=%d" % self.sub_proto
+            return
+
         self.recv_cache += data
 
         buf = self.recv_cache
@@ -353,6 +358,7 @@ class RRACServer(gobject.GObject, Factory):
         print "_client_connected_cb"
         host = client.transport.getHost()
         if host.port != RRAC_PORT:
+            self.status_chan = client
             return
 
         self.rrac_channels.append(client)
@@ -402,6 +408,37 @@ class RRACServer(gobject.GObject, Factory):
     def get_unknown_1_and_2(self):
         cmd = GetMetaDataCmd(GET_UNK_1AND2_MASK)
         return self._send_command(cmd)
+
+    def set_status_message(self, message):
+        message_w = encode_wstr(message)
+
+        self._send_status_notification(0x01, len(message_w), message_w)
+
+    def set_status_5a(self, arg):
+        self._send_status_notification(0x5a, arg)
+
+    def set_status_5b(self, arg):
+        self._send_status_notification(0x5b, arg)
+
+    def set_status_5c(self, arg, x, y):
+        payload = struct.pack("<HH", x, y)
+        self._send_status_notification(0x5c, arg, payload)
+
+    def set_status_5d(self, arg):
+        self._send_status_notification(0x5d, arg)
+
+    def _send_status_notification(self, type, arg, payload=None):
+        if self.status_chan == None:
+            raise Exception("status client not connected")
+
+        data = struct.pack("<HH", arg, type)
+        if payload != None:
+            data += payload
+
+        print "Sending status message:"
+        print hexdump(data)
+
+        self.status_chan.send_data(data)
 
     def _send_command(self, cmd):
         if not self.ready:

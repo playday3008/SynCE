@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import dbus
+import dbus.glib
+import sys
+
+bus = dbus.SessionBus()
+proxy_obj = bus.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
+engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
+
+arg = int(sys.argv[1])
+engine.SetStatus5d(arg)
