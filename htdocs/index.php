@@ -9,9 +9,9 @@
 
 </td><td width="50%">
 
-<A href="http://sourceforge.net"><IMG
+<a href="http://sourceforge.net"><img
 src="http://sourceforge.net/sflogo.php?group_id=30550&amp;type=5" width="210"
-height="62" border="0" alt="SourceForge Logo" align=right></A> 
+height="62" border="0" alt="SourceForge Logo" align=right></a> 
 
 </td></tr><tr><td width="50%">
 
@@ -61,10 +61,19 @@ alt="Make a donation" title="Make a donation">
 -->
 
 </td></tr><tr>
-<td colspan=2><hr size=1/></td>
+<td colspan="2"><hr size="1"/></td>
 
-<tr>
-<td colspan=2>
+</tr><tr>
+<td colspan="2">
+<p><b>SynCE wiki available!</b></p>
+
+<p><a href="http://www.synce.org/">http://www.synce.org/</a></p>
+
+</td></tr><tr>
+<td colspan="2"><hr size="1"/></td>
+
+</tr><tr>
+<td colspan="2">
 <p><b>Attention KDE users!</b></p>
 
 <ul>
@@ -76,20 +85,20 @@ alt="Make a donation" title="Make a donation">
 
 </ul>
 </td></tr><tr>
-<td colspan=2><hr size=1/></td>
+<td colspan="2"><hr size="1"/></td>
 
-<tr>
-<td colspan=2>
+</tr><tr>
+<td colspan="2">
 <p><b>Attention Windows Mobile 2005 device owners!</b></p>
 
 <p>These devices do not work with SynCE. If you are interested in getting these
 devices supported by SynCE, please join the <a
 href="https://lists.sourceforge.net/lists/listinfo/synce-windowsmobile5">SynCE-WindowsMobile5</a>
 mailing list</a>. Se also bug report <a
-href="https://sourceforge.net/tracker/index.php?func=detail&aid=1332550&group_id=30550&atid=399601">1332550</a>.</p>
+href="https://sourceforge.net/tracker/index.php?func=detail&amp;aid=1332550&amp;group_id=30550&amp;atid=399601">1332550</a>.</p>
 
 </td></tr><tr>
-<td colspan=2><hr size=1/></td>
+<td colspan="2"><hr size="1"/></td>
 
 </tr><tr><td>
 
@@ -160,14 +169,14 @@ made.</p>
 upgrade!  <a
 href="http://sourceforge.net/project/shownotes.php?release_id=310079">Release
 notes</a> &middot; <a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=22569&release_id=310079">Download</a>.
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&amp;package_id=22569&amp;release_id=310079">Download</a>.
 
 <p><b>2005-07-08</b> New versions of Unshield and Orange!  <a
-href="http://sourceforge.net/mailarchive/forum.php?thread_id=7689508&forum_id=15221">Announcement</a>
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=7689508&amp;forum_id=15221">Announcement</a>
 &middot; <a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=125523&release_id=340607">Unshield
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&amp;package_id=125523&amp;release_id=340607">Unshield
 download</a> &middot; <a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550&package_id=157355&release_id=340608">Orange
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&amp;package_id=157355&amp;release_id=340608">Orange
 download</a></p>
 
 <p><b>2005-06-22</b> New contribution to the <a href="tools.php">tools</a>
@@ -176,7 +185,7 @@ it dumps the selected directories to the PC but that was all I needed.  You may
 find it useful.</i></p>
 
 <p><b>2005-06-05</b> Want to earn $500? <a
-href="http://sourceforge.net/mailarchive/forum.php?thread_id=7440936&forum_id=15200">Help
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=7440936&amp;forum_id=15200">Help
 this SynCE user!</a></p>
 
 <!-- <p><b>2005-05-11</b> The previous news entry had a small cut and paste error
@@ -449,7 +458,7 @@ if you want to help us!</p>
 
 </ul>
 
-<hr size=1>
+<hr size="1">
 <p>
 
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
@@ -480,7 +489,7 @@ alt="Make a donation" title="Make a donation"></td>
 </td></tr></table>
 
 <?php /*
-<hr size=1>
+<hr size="1">
 
 <a name="future"></a>
 <h2>Plans for the future</h2>
