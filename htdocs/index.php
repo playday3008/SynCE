@@ -94,7 +94,7 @@ alt="Make a donation" title="Make a donation">
 <p>These devices do not work with SynCE. If you are interested in getting these
 devices supported by SynCE, please join the <a
 href="https://lists.sourceforge.net/lists/listinfo/synce-windowsmobile5">SynCE-WindowsMobile5</a>
-mailing list</a>. Se also bug report <a
+mailing list. Se also bug report <a
 href="https://sourceforge.net/tracker/index.php?func=detail&amp;aid=1332550&amp;group_id=30550&amp;atid=399601">1332550</a>.</p>
 
 </td></tr><tr>
@@ -155,7 +155,7 @@ href="dynamite.php">Dynamite</a></blockquote>
 <p><b>2006-01-04</b> If you are interested in Windows Mobile 5 support in
 SynCE, please join the <a
 href="https://lists.sourceforge.net/lists/listinfo/synce-windowsmobile5">SynCE-WindowsMobile5</a>
-mailing list</a>.</p>
+mailing list.</p>
 
 <p><b>2005-11-24</b> <i>Important</i> Windows Mobile 5 devices do not work with
 SynCE! This is currently being investigated but no SynCE developer has access
@@ -169,7 +169,7 @@ made.</p>
 upgrade!  <a
 href="http://sourceforge.net/project/shownotes.php?release_id=310079">Release
 notes</a> &middot; <a
-href="http://sourceforge.net/project/showfiles.php?group_id=30550&amp;package_id=22569&amp;release_id=310079">Download</a>.
+href="http://sourceforge.net/project/showfiles.php?group_id=30550&amp;package_id=22569&amp;release_id=310079">Download</a>.</p>
 
 <p><b>2005-07-08</b> New versions of Unshield and Orange!  <a
 href="http://sourceforge.net/mailarchive/forum.php?thread_id=7689508&amp;forum_id=15221">Announcement</a>
