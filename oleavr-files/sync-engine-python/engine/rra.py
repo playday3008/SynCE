@@ -25,7 +25,7 @@ from twisted.internet.protocol import Protocol, Factory
 from errors import *
 
 
-RRAC_PORT = 5678
+RRA_PORT = 5678
 STATUS_PORT = 999
 
 COMMAND_TYPE_GET_METADATA = 0x6F
@@ -42,7 +42,7 @@ SUB_PROTO_CONTROL = 1
 SUB_PROTO_DATA    = 2
 SUB_PROTO_STATUS  = 3
 
-RRAC_COMMANDS = {
+RRA_COMMANDS = {
     0x65: "Ack",
     0x66: "DeleteObject",
     0x67: "GetObject",
@@ -206,7 +206,7 @@ class SetMetaDataCmd(Command):
         Command.__init__(self, COMMAND_TYPE_SET_METADATA, len(body), True, body)
 
 
-class RRAC(gobject.GObject, BaseProtocol):
+class RRA(gobject.GObject, BaseProtocol):
     __gsignals__ = {
             "connected": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
                           ()),
@@ -262,11 +262,11 @@ class RRAC(gobject.GObject, BaseProtocol):
         self.recv_cache = buf[full_length:]
         buf = buf[:full_length]
 
-        if not type in RRAC_COMMANDS:
+        if not type in RRA_COMMANDS:
             print "Received unknown command: %#04x" % type
             return
 
-        cmd_name = RRAC_COMMANDS[type]
+        cmd_name = RRA_COMMANDS[type]
         print "Received command: %s" % cmd_name
         name = "_handle_%s_command" % cmd_name.lower()
         if hasattr(self, name):
@@ -320,7 +320,7 @@ class RRAC(gobject.GObject, BaseProtocol):
         self.transport.write(data)
 
 
-class RRACServer(gobject.GObject, Factory):
+class RRAServer(gobject.GObject, Factory):
     __gsignals__ = {
             "ready": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
                       ()),
@@ -329,7 +329,7 @@ class RRACServer(gobject.GObject, Factory):
     def __init__(self):
         self.__gobject_init__()
 
-        self.protocol = RRAC
+        self.protocol = RRA
 
         self.ready = False
 
@@ -339,10 +339,10 @@ class RRACServer(gobject.GObject, Factory):
         self.status_chan = None
 
         reactor.listenTCP(STATUS_PORT, self)
-        reactor.listenTCP(RRAC_PORT, self)
+        reactor.listenTCP(RRA_PORT, self)
 
     def buildProtocol(self, addr):
-        p = RRAC()
+        p = RRA()
 
         if addr.port == STATUS_PORT:
             p.set_sub_protocol(SUB_PROTO_STATUS)
@@ -357,7 +357,7 @@ class RRACServer(gobject.GObject, Factory):
     def _client_connected_cb(self, client):
         print "_client_connected_cb"
         host = client.transport.getHost()
-        if host.port != RRAC_PORT:
+        if host.port != RRA_PORT:
             self.status_chan = client
             return
 
@@ -377,7 +377,7 @@ class RRACServer(gobject.GObject, Factory):
         print "_client_data_exchanged_cb"
 
         host = client.transport.getHost()
-        if host.port != RRAC_PORT:
+        if host.port != RRA_PORT:
             return
 
         if self.control_chan == None:

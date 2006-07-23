@@ -30,7 +30,7 @@ from twisted.web2 import server, channel
 
 from pyrapi2 import *
 from partnership import *
-from rrac import RRACServer
+from rra import RRAServer
 from airsync import *
 from util import *
 from interfaces import *
@@ -476,7 +476,7 @@ class SyncEngine(dbus.service.Object):
 
 
 if __name__ == "__main__":
-    rrac = RRACServer()
+    rrac = RRAServer()
 
     # hack hack hack
     os.setgid(1000)

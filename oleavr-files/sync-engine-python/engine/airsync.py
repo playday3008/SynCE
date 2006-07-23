@@ -92,6 +92,9 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
         resp.stream = stream.MemoryStream(wbxml)
 
+        print "Generated WBXML:"
+        print hexdump(wbxml)
+
         return resp
 
     def create_wbxml_doc(self, root_node_name):

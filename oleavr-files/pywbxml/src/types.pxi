@@ -38,6 +38,9 @@ cdef extern from "wbxml.h":
         WBXML_LANG_SYNCML_SYNCML11
         WBXML_LANG_SYNCML_DEVINF11
         WBXML_LANG_SYNCML_METINF11
+        WBXML_LANG_SYNCML_SYNCML12
+        WBXML_LANG_SYNCML_DEVINF12
+        WBXML_LANG_SYNCML_METINF12
         WBXML_LANG_WV_CSP11
         WBXML_LANG_WV_CSP12
         WBXML_LANG_AIRSYNC
@@ -45,20 +48,19 @@ cdef extern from "wbxml.h":
 cdef extern from "wbxml_errors.h":
     ctypedef unsigned int       WBXMLError
 
-cdef extern from "wbxml_encoder.h":
-    ctypedef enum WBXMLEncoderXMLGenType:
-        WBXML_ENCODER_XML_GEN_COMPACT = 0
-        WBXML_ENCODER_XML_GEN_INDENT
-        WBXML_ENCODER_XML_GEN_CANONICAL
+cdef extern from "wbxml.h":
+    ctypedef enum WBXMLGenXMLType:
+        WBXML_GEN_XML_COMPACT = 0
+        WBXML_GEN_XML_INDENT
+        WBXML_GEN_XML_CANONICAL
 
-cdef extern from "wbxml_conv.h":
-    ctypedef struct WBXMLConvWBXML2XMLParams:
-        WBXMLEncoderXMLGenType gen_type
+    ctypedef struct WBXMLGenXMLParams:
+        WBXMLGenXMLType gen_type
         WBXMLLanguage lang
         WB_UTINY indent
         WB_BOOL keep_ignorable_ws
 
-    ctypedef struct WBXMLConvXML2WBXMLParams:
+    ctypedef struct WBXMLGenWBXMLParams:
         WBXMLVersion wbxml_version
         WB_BOOL keep_ignorable_ws
         WB_BOOL use_strtbl
