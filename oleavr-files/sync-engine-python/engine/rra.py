@@ -235,9 +235,11 @@ class RRA(BaseProtocol):
         print "  Result: %d" % result
         print "  ResponseDataSize: %d" % data_size
         print "  HasResponseData: %d" % has_data
+        print
 
         if not reply_to in self.pending_responses:
             print "Ignoring reply to command %#04x to which no response is currently expected" % reply_to
+            print
             return
 
         deferred = self.pending_responses[reply_to]

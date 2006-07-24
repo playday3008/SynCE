@@ -49,12 +49,6 @@ class SyncClass:
             bus = dbus.SessionBus()
             proxy_obj = bus.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
-            self.engine.connect_to_signal("ContactsAdded",
-                    lambda *args: gobject.idle_add(self._contacts_added_cb, *args))
-            self.engine.connect_to_signal("ContactsModified",
-                    lambda *args: gobject.idle_add(self._contacts_modified_cb, *args))
-            self.engine.connect_to_signal("ContactsDeleted",
-                    lambda *args: gobject.idle_add(self._contacts_deleted_cb, *args))
             self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._synchronized_cb))
 
             ctx.report_success()
@@ -106,10 +100,14 @@ class SyncClass:
             change.report(self.ctx)
 
     def _synchronized_cb(self):
-        # FIXME: this shouldn't be emitted multiple times...
         if self.ctx != None:
             ctx = self.ctx
             self.ctx = None
+
+            changeset = self.engine.GetRemoteChanges()
+            for sid, change in changeset.items():
+                print "sid:", sid
+                print "change:", change
 
             print "SynCE: Reporting success"
             ctx.report_success()
@@ -163,4 +161,4 @@ def get_info(info):
     info.version = 2
 
     info.accept_objtype("contact")
-    info.accept_objformat("contact", "vcard30")
+    info.accept_objformat("contact", "xml-contact")

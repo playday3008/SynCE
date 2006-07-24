@@ -24,15 +24,14 @@ if len(sys.argv) == 2:
         print "Unknown command %s" % sys.argv[1]
         sys.exit(1)
 
-def contacts_added_cb(adds):
-    print "contacts_added_cb: got %d items" % len(adds)
-
 def synchronized_cb():
     print "synchronized_cb"
 
+    print "%d changes" % len(engine.GetRemoteChanges())
+
 engine.StartSync()
-engine.connect_to_signal("ContactsAdded", contacts_added_cb)
 engine.connect_to_signal("Synchronized", synchronized_cb)
+print "%d changes" % len(engine.GetRemoteChanges())
 
 mainloop = gobject.MainLoop()
 mainloop.run()

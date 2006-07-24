@@ -92,6 +92,14 @@ class Partnership:
             self.state = pickle.load(f)
         except Exception, e:
             print "Failed to load sync state [2]: %s" % e
+            return
+
+        print "Loaded state:"
+        print "  Remote changesets:"
+        i = 0
+        for changeset in self.state.remote_changes:
+            print "    [#%d] %d changes" % (i, len(changeset))
+            i += 1
 
     def save_sync_state(self):
         try:
@@ -130,4 +138,29 @@ class SyncState:
         for item in items:
             id = generate_guid()
             self.folders[id] = item
+
+        self.local_changes = [ {}, ]
+        self.remote_changes = [ {}, ]
+
+    def add_local_change(self, sid, change_type, item_type, data=None):
+        self.local_changes[-1][sid] = (change_type, item_type, data)
+
+    def add_remote_change(self, sid, change_type, item_type, data=None):
+        self.remote_changes[-1][sid] = (change_type, item_type, data)
+
+    def shift_changesets(self):
+        if len(self.local_changes[-1]) > 0:
+            self.local_changes.append({})
+        if len(self.remote_changes[-1]) > 0:
+            self.remote_changes.append({})
+
+    def get_remote_changes(self):
+        changeset = self.remote_changes[0]
+        return changeset
+
+    def ack_remote_change(self, sid):
+        changeset = self.remote_changes[0]
+        del changeset[sid]
+        if len(changeset) == 0:
+            del self.remote_changes[0]
 

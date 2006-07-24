@@ -20,12 +20,11 @@
 import gobject
 from twisted.internet import defer
 from twisted.web2 import http, resource, stream
+from constants import *
 from util import *
 from cStringIO import StringIO
 from xml.dom import minidom
 import pywbxml
-
-from contacts import contact_to_vcard
 
 AIRSYNC_DOC_NAME = "AirSync"
 AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
@@ -38,12 +37,12 @@ class ASResource(gobject.GObject, resource.PostableResource):
             "sync-end": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
                          ()),
 
-            "contact-added": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                              (object, object)),
-            "contact-modified": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                                 (object, object)),
-            "contact-deleted": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                                (object,)),
+            "object-added": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                             (object, object, object)),
+            "object-modified": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                                (object, object, object)),
+            "object-deleted": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
+                               (object, object,)),
     }
 
     def __init__(self):
@@ -91,9 +90,6 @@ class ASResource(gobject.GObject, resource.PostableResource):
         headers.addRawHeader("ContentType", "application/vnd.ms-sync.wbxml")
 
         resp.stream = stream.MemoryStream(wbxml)
-
-        print "Generated WBXML:"
-        print hexdump(wbxml)
 
         return resp
 
@@ -161,7 +157,7 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
         xml_raw = pywbxml.wbxml2xml(body)
         req_doc = minidom.parseString(xml_raw)
-        print "Which is:", req_doc.toprettyxml()
+        #print "Which is:", req_doc.toprettyxml()
         req_sync_node = node_get_child(req_doc, "Sync")
         req_colls_node = node_get_child(req_sync_node, "Collections")
 
@@ -210,22 +206,8 @@ class ASResource(gobject.GObject, resource.PostableResource):
                     coll_node.appendChild(responses_node)
 
         print "Responding to Sync"
-        print "With:", doc.toprettyxml()
+        #print "With:", doc.toprettyxml()
         return self.create_wbxml_response(doc.toxml())
-
-    def _contacts_node_to_vcard(self, sid, app_node):
-        contact = {}
-        for node in app_node.childNodes:
-            if node.nodeType != node.ELEMENT_NODE:
-                continue
-
-            val = node_get_value(node)
-            if val is None:
-                continue
-
-            contact[node.localName] = val
-
-        return contact_to_vcard(sid, contact)
 
     def handle_sync_contacts_cmd_add(self, request_node, responses_node):
         response_node = node_append_child(responses_node, request_node.localName)
@@ -239,20 +221,18 @@ class ASResource(gobject.GObject, resource.PostableResource):
         node_append_child(response_node, "Status", 1)
 
         app_node = node_get_child(request_node, "ApplicationData")
-        vcard = self._contacts_node_to_vcard(sid, app_node)
-        self.emit("contact-added", sid, vcard)
+        self.emit("object-added", sid, SYNC_ITEM_CONTACTS, app_node.toxml())
 
     def handle_sync_contacts_cmd_change(self, request_node, responses_node):
         sid = node_get_child(request_node, "ServerId")
 
         app_node = node_get_child(request_node, "ApplicationData")
-        vcard = self._contacts_node_to_vcard(sid, app_node)
-        self.emit("contact-modified", sid, vcard)
+        self.emit("object-modified", sid, SYNC_ITEM_CONTACTS, app_node.toxml())
 
     def handle_sync_contacts_cmd_delete(self, request_node, responses_node):
         sid = node_get_child(request_node, "ServerId")
 
-        self.emit("contact-deleted", sid)
+        self.emit("object-deleted", sid, SYNC_ITEM_CONTACTS)
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"
@@ -322,21 +302,25 @@ class ASResource(gobject.GObject, resource.PostableResource):
         return self.create_wbxml_response(reply_doc.toxml())
 
     def handle_status(self, request, body):
-        print "Status update:"
+        print "Status update"
         body = body.rstrip("\0")
         try:
             doc = minidom.parseString(body)
-            print doc.documentElement.toprettyxml()
+            #print doc.documentElement.toprettyxml()
 
             for n in doc.documentElement.childNodes:
                 if n.nodeType != n.ELEMENT_NODE:
                     continue
 
-                if n.localName == "SyncEnd":
+                if n.localName in ("SyncBegin", "SyncEnd"):
                     datatype = n.getAttribute("Datatype")
                     partner = n.getAttribute("Partner")
+
                     if datatype == "" and partner == "":
-                        self.emit("sync-end")
+                        if n.localName == "SyncBegin":
+                            self.emit("sync-begin")
+                        else:
+                            self.emit("sync-end")
         except Exception, e:
             print "Failed to parse status XML: %s" % e
             print body

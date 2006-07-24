@@ -60,14 +60,18 @@ class SyncEngine(dbus.service.Object):
         self.cur_partnership = None
 
         res = ASResource()
+        res.connect("sync-begin", self._airsync_sync_begin_cb)
         res.connect("sync-end", self._airsync_sync_end_cb)
-        res.connect("contact-added", self._airsync_contact_added_cb)
-        res.connect("contact-modified", self._airsync_contact_modified_cb)
-        res.connect("contact-deleted", self._airsync_contact_deleted_cb)
+        res.connect("object-added", self._airsync_object_added_cb)
+        res.connect("object-modified", self._airsync_object_modified_cb)
+        res.connect("object-deleted", self._airsync_object_deleted_cb)
         self.asr = res
 
         self._get_partnerships()
         self._init_transports()
+
+        self._rra_started = False
+        self._syncing = False
 
     def _get_partnerships(self):
         self.partnerships = {}
@@ -358,11 +362,11 @@ class SyncEngine(dbus.service.Object):
         if pship is None:
             raise NotAvailable("No partnership found")
 
-        print "Starting synchronization"
+        if self._syncing:
+            print "StartSync: Doing nothing because we're already syncing"
+            return
 
-        self._contacts_added = []
-        self._contacts_modified = []
-        self._contacts_deleted = []
+        print "StartSync: Starting synchronization"
 
         doc = minidom.Document()
         doc_node = doc.createElement("sync")
@@ -375,7 +379,21 @@ class SyncEngine(dbus.service.Object):
         doc_node.appendChild(node)
 
         self.session.sync_start(doc_node.toxml())
-        self.session.start_replication()
+        self._syncing = True
+
+        if not self._rra_started:
+            self.session.start_replication()
+            self._rra_started = True
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{sv}')
+    def GetRemoteChanges(self):
+        return self.cur_partnership.state.get_remote_changes()
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='as', out_signature='')
+    def AcknowledgeRemoteChanges(self, sids):
+        for sid in sids:
+            self.cur_partnership.state.ack_remote_change(sid)
+        self.cur_partnership.save_sync_state()
 
     def _rra_ready_cb(self, rra):
         print "_rra_ready_cb"
@@ -403,18 +421,24 @@ class SyncEngine(dbus.service.Object):
 
         self.session.sync_resume()
 
+    def _airsync_sync_begin_cb(self, res):
+        print "_airsync_sync_begin_cb"
+        self._syncing = True
+
     def _airsync_sync_end_cb(self, res):
+        print "_airsync_sync_end_cb"
+
         print "calling CeSyncPause()"
         self.session.sync_pause()
-
-        print "calling set_unknown_02(1, 4)"
-        d = self.rra.set_unknown_02(1, 4)
-        d.addCallback(self._set_unknown_02_1_4_cb)
 
         print "calling StartOfSync, SetProgressRange and SetProgressValue"
         self.rss.set_start_of_sync()
         self.rss.set_progress_range(1, 1000)
         self.rss.set_progress_value(1)
+
+        print "calling set_unknown_02(1, 4)"
+        d = self.rra.set_unknown_02(1, 4)
+        d.addCallback(self._set_unknown_02_1_4_cb)
 
     def _set_unknown_02_1_4_cb(self, result):
         print "_set_unknown_02_1_4_cb"
@@ -434,54 +458,29 @@ class SyncEngine(dbus.service.Object):
         print "calling SetStatus(\"$UPTODATE$\")"
         self.rss.set_status("$UPTODATE$")
 
+        self.cur_partnership.state.shift_changesets()
+        self.cur_partnership.save_sync_state()
+        self.Synchronized()
+
+        self._syncing = False
+
         print "calling CeSyncResume()"
         self.session.sync_resume()
 
-    def _placeholder(self):
-        print "Sync ended"
-        print "Contacts: %d adds, %d modifications, %d deletions" % \
-            (len(self._contacts_added), len(self._contacts_modified),
-             len(self._contacts_deleted))
+    def _airsync_object_added_cb(self, res, sid, item_type, data):
+        print "Queuing AirSync remote object add: sid=%s item_type=%d" % (sid, item_type)
+        self.cur_partnership.state.add_remote_change(sid, CHANGE_ADDED,
+                                                     item_type, data)
 
-        if self._contacts_added:
-            self.ContactsAdded(self._contacts_added)
-            self._contacts_added = []
+    def _airsync_object_modified_cb(self, res, sid, item_type, data):
+        print "Queuing AirSync remote object modify: sid=%s item_type=%d" % (sid, item_type)
+        self.cur_partnership.state.add_remote_change(sid, CHANGE_MODIFIED,
+                                                     item_type, data)
 
-        if self._contacts_modified:
-            self.ContactsModified(self._contacts_modified)
-            self._contacts_modified = []
-
-        if self._contacts_deleted:
-            self.ContactsDeleted(self._contacts_deleted)
-            self._contacts_deleted = []
-
-        self.Synchronized()
-
-        self.session.sync_pause()
-
-    def _airsync_contact_added_cb(self, res, sid, vcard):
-        print "queuing remote contact add with sid %s" % sid
-        self._contacts_added.append((sid, vcard))
-
-    def _airsync_contact_modified_cb(self, res, sid, vcard):
-        print "queuing remote contact modify with sid %s" % sid
-        self._contacts_modified.append((sid, vcard))
-
-    def _airsync_contact_deleted_cb(self, res, sid):
-        print "queuing remote contact delete with sid %s" % sid
-        self._contacts_deleted.append(sid)
-
-    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(ss)")
-    def ContactsAdded(self, contacts):
-        print "Emitting ContactsAdded with %d contacts" % len(contacts)
-
-    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="a(ss)")
-    def ContactsModified(self, contacts):
-        print "Emitting ContactsModified with %d contacts" % len(contacts)
-
-    @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="as")
-    def ContactsDeleted(self, contacts):
-        print "Emitting ContactsDeleted with %d contacts" % len(contacts)
+    def _airsync_object_deleted_cb(self, res, sid, item_type):
+        print "Queuing AirSync remote object delete: sid=%s item_type=%d" % (sid, item_type)
+        self.cur_partnership.state.add_remote_change(sid, CHANGE_DELETED,
+                                                     item_type)
 
     @dbus.service.signal(SYNC_ENGINE_INTERFACE, signature="")
     def Synchronized(self):

@@ -19,6 +19,10 @@
 
 from util import escape_str
 
+#
+# FIXME: remove this code eventually
+#
+
 def contact_to_vcard(sid, contact):
     """
     Fields supported so far:

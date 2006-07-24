@@ -26,6 +26,10 @@ SYNC_ITEM_MEDIA     = 5
 SYNC_ITEM_NOTES     = 6
 SYNC_ITEM_TASKS     = 7
 
+CHANGE_ADDED        = 0
+CHANGE_MODIFIED     = 1
+CHANGE_DELETED      = 2
+
 SYNC_ITEMS = {
     SYNC_ITEM_CALENDAR  : ("Calendar", False),
     SYNC_ITEM_CONTACTS  : ("Contacts", False),
