@@ -196,6 +196,8 @@ def hexdump(raw):
     start = 0
     done = False
     while not done:
+        buf += "%04x: " % start
+
         end = start + 16
         max = len(raw)
         if end > max:
@@ -285,3 +287,4 @@ def encode_wstr(s):
 
 def decode_wstr(s):
     return s.decode("utf_16_le").rstrip("\0")
+

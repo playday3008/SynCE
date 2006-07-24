@@ -30,6 +30,7 @@ from twisted.web2 import server, channel
 
 from pyrapi2 import *
 from partnership import *
+from remsync import RemSyncServer
 from rra import RRAServer
 from airsync import *
 from util import *
@@ -50,20 +51,19 @@ class SyncEngine(dbus.service.Object):
     with Windows CE-based devices.
     """
 
-    def __init__(self, bus_name, object_path, rrac):
+    def __init__(self, bus_name, object_path, rss):
         dbus.service.Object.__init__(self, bus_name, object_path)
 
-        self.rrac = rrac
-        rrac.connect("ready", self._rrac_ready_cb)
+        self.rss = rss
 
         self.session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
         self.cur_partnership = None
 
         res = ASResource()
-        res.connect("sync-end", self._sync_end_cb)
-        res.connect("contact-added", self._contact_added_cb)
-        res.connect("contact-modified", self._contact_modified_cb)
-        res.connect("contact-deleted", self._contact_deleted_cb)
+        res.connect("sync-end", self._airsync_sync_end_cb)
+        res.connect("contact-added", self._airsync_contact_added_cb)
+        res.connect("contact-modified", self._airsync_contact_modified_cb)
+        res.connect("contact-deleted", self._airsync_contact_deleted_cb)
         self.asr = res
 
         self._get_partnerships()
@@ -167,6 +167,9 @@ class SyncEngine(dbus.service.Object):
         factory = channel.HTTPFactory(site)
         reactor.listenTCP(26675, factory)
 
+        self.rra = RRAServer()
+        self.rra.connect("ready", self._rra_ready_cb)
+
     def _partnership_changed(self):
         pship = self.cur_partnership
 
@@ -175,52 +178,6 @@ class SyncEngine(dbus.service.Object):
         partners.set_value("PCur", 1, REG_DWORD)
 
         self.asr.set_partnership(pship)
-
-    def _rrac_ready_cb(self, rrac):
-        print "_rrac_ready_cb"
-        d = rrac.get_object_types()
-        d.addCallback(self._get_object_types_cb)
-
-    def _get_object_types_cb(self, result):
-        print "_get_object_types_cb:", result
-        ids = [ot[0] for ot in result["ObjectTypes"]]
-        d = self.rrac.set_boring_ssp_ids(ids)
-        d.addCallback(self._set_boring_ssp_ids_cb)
-
-    def _set_boring_ssp_ids_cb(self, result):
-        print "_set_boring_ssp_ids_cb"
-        d = self.rrac.get_volumes()
-        d.addCallback(self._get_volumes_cb)
-
-    def _get_volumes_cb(self, result):
-        print "_get_volumes_cb:", result
-        d = self.rrac.get_unknown_1_and_2()
-        d.addCallback(self._get_unknown_1_and_2_cb)
-
-    def _get_unknown_1_and_2_cb(self, result):
-        print "_get_unknown_1_and_2_cb:", result
-
-        self.session.sync_resume()
-
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='s', out_signature='')
-    def SetStatusMessage(self, message):
-        self.rrac.set_status_message(message)
-
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
-    def SetStatus5a(self, arg):
-        self.rrac.set_status_5a(arg)
-
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
-    def SetStatus5b(self, arg):
-        self.rrac.set_status_5b(arg)
-
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='uuu', out_signature='')
-    def SetStatus5c(self, arg, x, y):
-        self.rrac.set_status_5c(arg, x, y)
-
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
-    def SetStatus5d(self, arg):
-        self.rrac.set_status_5d(arg)
 
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):
@@ -407,24 +364,80 @@ class SyncEngine(dbus.service.Object):
         self._contacts_modified = []
         self._contacts_deleted = []
 
-        #if not pship.state.started:
-        if True:
-            doc = minidom.Document()
-            doc_node = doc.createElement("sync")
-            doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
-            doc_node.setAttribute("type", "Interactive")
-            doc.appendChild(doc_node)
+        doc = minidom.Document()
+        doc_node = doc.createElement("sync")
+        doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
+        doc_node.setAttribute("type", "Interactive")
+        doc.appendChild(doc_node)
 
-            node = doc.createElement("partner")
-            node.setAttribute("id", pship.guid)
-            doc_node.appendChild(node)
+        node = doc.createElement("partner")
+        node.setAttribute("id", pship.guid)
+        doc_node.appendChild(node)
 
-            self.session.sync_start(doc_node.toxml())
-            self.session.start_replication()
+        self.session.sync_start(doc_node.toxml())
+        self.session.start_replication()
 
-            pship.state.started = True
+    def _rra_ready_cb(self, rra):
+        print "_rra_ready_cb"
+        d = rra.get_object_types()
+        d.addCallback(self._get_object_types_cb)
 
-    def _sync_end_cb(self, res):
+    def _get_object_types_cb(self, result):
+        print "_get_object_types_cb:", result
+        ids = [ot[0] for ot in result["ObjectTypes"]]
+        d = self.rra.set_boring_ssp_ids(ids)
+        d.addCallback(self._set_boring_ssp_ids_cb)
+
+    def _set_boring_ssp_ids_cb(self, result):
+        print "_set_boring_ssp_ids_cb"
+        d = self.rra.get_volumes()
+        d.addCallback(self._get_volumes_cb)
+
+    def _get_volumes_cb(self, result):
+        print "_get_volumes_cb:", result
+        d = self.rra.get_unknown_1_and_2()
+        d.addCallback(self._get_unknown_1_and_2_cb)
+
+    def _get_unknown_1_and_2_cb(self, result):
+        print "_get_unknown_1_and_2_cb:", result
+
+        self.session.sync_resume()
+
+    def _airsync_sync_end_cb(self, res):
+        print "calling CeSyncPause()"
+        self.session.sync_pause()
+
+        print "calling set_unknown_02(1, 4)"
+        d = self.rra.set_unknown_02(1, 4)
+        d.addCallback(self._set_unknown_02_1_4_cb)
+
+        print "calling StartOfSync, SetProgressRange and SetProgressValue"
+        self.rss.set_start_of_sync()
+        self.rss.set_progress_range(1, 1000)
+        self.rss.set_progress_value(1)
+
+    def _set_unknown_02_1_4_cb(self, result):
+        print "_set_unknown_02_1_4_cb"
+        print "calling EndOfSync"
+        self.rss.set_end_of_sync()
+
+        print "calling set_unknown_02(2, 0)"
+        self.rra.set_unknown_02(2, 0)
+
+        print "calling get_unknown_1_and_2()"
+        d = self.rra.get_unknown_1_and_2()
+        d.addCallback(self._get_unknown_1_and_2_rra_cb)
+
+    def _get_unknown_1_and_2_rra_cb(self, result):
+        print "_get_unknown_1_and_2_rra_cb:", result
+
+        print "calling SetStatus(\"$UPTODATE$\")"
+        self.rss.set_status("$UPTODATE$")
+
+        print "calling CeSyncResume()"
+        self.session.sync_resume()
+
+    def _placeholder(self):
         print "Sync ended"
         print "Contacts: %d adds, %d modifications, %d deletions" % \
             (len(self._contacts_added), len(self._contacts_modified),
@@ -446,15 +459,15 @@ class SyncEngine(dbus.service.Object):
 
         self.session.sync_pause()
 
-    def _contact_added_cb(self, res, sid, vcard):
+    def _airsync_contact_added_cb(self, res, sid, vcard):
         print "queuing remote contact add with sid %s" % sid
         self._contacts_added.append((sid, vcard))
 
-    def _contact_modified_cb(self, res, sid, vcard):
+    def _airsync_contact_modified_cb(self, res, sid, vcard):
         print "queuing remote contact modify with sid %s" % sid
         self._contacts_modified.append((sid, vcard))
 
-    def _contact_deleted_cb(self, res, sid):
+    def _airsync_contact_deleted_cb(self, res, sid):
         print "queuing remote contact delete with sid %s" % sid
         self._contacts_deleted.append(sid)
 
@@ -476,7 +489,7 @@ class SyncEngine(dbus.service.Object):
 
 
 if __name__ == "__main__":
-    rrac = RRAServer()
+    rss = RemSyncServer()
 
     # hack hack hack
     os.setgid(1000)
@@ -484,6 +497,6 @@ if __name__ == "__main__":
 
     session_bus = dbus.SessionBus()
     bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
-    obj = SyncEngine(bus_name, OBJECT_PATH, rrac)
+    obj = SyncEngine(bus_name, OBJECT_PATH, rss)
 
     reactor.run()

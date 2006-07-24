@@ -19,14 +19,13 @@
 
 import gobject
 import struct
-from util import hexdump, encode_wstr, decode_wstr
+from protocol import BaseProtocol
+from util import hexdump, decode_wstr
 from twisted.internet import reactor, defer
-from twisted.internet.protocol import Protocol, Factory
+from twisted.internet.protocol import Factory
 from errors import *
 
-
 RRA_PORT = 5678
-STATUS_PORT = 999
 
 COMMAND_TYPE_GET_METADATA = 0x6F
 COMMAND_TYPE_SET_METADATA = 0x70
@@ -35,12 +34,12 @@ GET_OBJECT_TYPES_MASK = 0x000007c1
 GET_VOLUMES_MASK      = 0x00000010
 GET_UNK_1AND2_MASK    = 0x00000006
 
+OID_UNKNOWN_02    = 2
 OID_BORING_SSPIDS = 3
 
 SUB_PROTO_UNKNOWN = 0
 SUB_PROTO_CONTROL = 1
 SUB_PROTO_DATA    = 2
-SUB_PROTO_STATUS  = 3
 
 RRA_COMMANDS = {
     0x65: "Ack",
@@ -53,23 +52,6 @@ RRA_COMMANDS = {
     0x6f: "GetMetaData",
     0x70: "SetMetaData",
 }
-
-
-class BaseProtocol(Protocol):
-    def connectionMade(self):
-        print "%s.connectionMade: client connected on %s" % \
-            (self.__class__.__name__, self.transport)
-
-    def connectionLost(self, reason):
-        print "%s.connectionLost: connection lost because: %s" % \
-            (self.__class__.__name__, reason)
-
-    def dataReceived(self, data):
-        print "%s.dataReceived: got %d bytes of data" % \
-            (self.__class__.__name__, len(data))
-        print hexdump(data)
-        print
-
 
 class Command:
     def __init__(self, type, arg, response_expected, payload=None):
@@ -206,74 +188,44 @@ class SetMetaDataCmd(Command):
         Command.__init__(self, COMMAND_TYPE_SET_METADATA, len(body), True, body)
 
 
-class RRA(gobject.GObject, BaseProtocol):
-    __gsignals__ = {
-            "connected": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                          ()),
-            "disconnected": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                             ()),
-            "data-exchanged": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                               ()),
-    }
-
+class RRA(BaseProtocol):
     def __init__(self):
         self.__gobject_init__()
-        self.activity = False
         self.sub_proto = SUB_PROTO_UNKNOWN
 
     def set_sub_protocol(self, sub_proto):
-        print "%s: sub_proto set to %s" % (self, sub_proto)
         self.sub_proto = sub_proto
-
-    def _activity(self):
-        if not self.activity:
-            self.activity = True
-            self.emit("data-exchanged")
 
     def connectionMade(self):
         BaseProtocol.connectionMade(self)
-        self.emit("connected")
-        self.recv_cache = ""
         self.pending_responses = {}
 
-    def connectionLost(self, reason):
-        BaseProtocol.connectionLost(self, reason)
-        self.emit("disconnected")
-
-    def dataReceived(self, data):
-        BaseProtocol.dataReceived(self, data)
-        self._activity()
-
+    def handleIncoming(self, data):
         if self.sub_proto != SUB_PROTO_CONTROL:
             print "Ignoring incoming data because sub_proto=%d" % self.sub_proto
-            return
+            return len(data)
 
-        self.recv_cache += data
+        if len(data) < 4:
+            return 0
 
-        buf = self.recv_cache
-        if len(buf) < 4:
-            return
-
-        type, length = struct.unpack("<HH", buf[0:4])
+        type, length = struct.unpack("<HH", data[0:4])
         full_length = 4 + length
-        if len(buf) < full_length:
-            return
+        if len(data) < full_length:
+            return 0
 
-        self.recv_cache = buf[full_length:]
-        buf = buf[:full_length]
-
-        if not type in RRA_COMMANDS:
-            print "Received unknown command: %#04x" % type
-            return
-
-        cmd_name = RRA_COMMANDS[type]
-        print "Received command: %s" % cmd_name
-        name = "_handle_%s_command" % cmd_name.lower()
-        if hasattr(self, name):
-            handler = getattr(self, name)
-            handler(buf)
+        if type in RRA_COMMANDS:
+            cmd_name = RRA_COMMANDS[type]
+            print "Received command: %s" % cmd_name
+            name = "_handle_%s_command" % cmd_name.lower()
+            if hasattr(self, name):
+                handler = getattr(self, name)
+                handler(data)
+            else:
+                print "Unhandled command: %s (looking for %s)" % (cmd_name, name)
         else:
-            print "Unhandled command: %s (looking for %s)" % (cmd_name, name)
+            print "Received unknown command: %#04x" % type
+
+        return full_length
 
     def _handle_response_command(self, buf):
         reply_to, result, data_size, has_data = struct.unpack("<IIII", buf[4:20])
@@ -315,10 +267,6 @@ class RRA(gobject.GObject, BaseProtocol):
 
         return deferred
 
-    def send_data(self, data):
-        self._activity()
-        self.transport.write(data)
-
 
 class RRAServer(gobject.GObject, Factory):
     __gsignals__ = {
@@ -330,65 +278,38 @@ class RRAServer(gobject.GObject, Factory):
         self.__gobject_init__()
 
         self.protocol = RRA
+        self.clients = []
 
-        self.ready = False
-
-        self.rrac_channels = []
-        self.control_chan = None
-        self.data_chan = None
-        self.status_chan = None
-
-        reactor.listenTCP(STATUS_PORT, self)
         reactor.listenTCP(RRA_PORT, self)
 
     def buildProtocol(self, addr):
         p = RRA()
 
-        if addr.port == STATUS_PORT:
-            p.set_sub_protocol(SUB_PROTO_STATUS)
-
         p.connect("connected", self._client_connected_cb)
         p.connect("disconnected", self._client_disconnected_cb)
-        p.connect("data-exchanged", self._client_data_exchanged_cb)
         p.factory = self
 
         return p
 
     def _client_connected_cb(self, client):
         print "_client_connected_cb"
-        host = client.transport.getHost()
-        if host.port != RRA_PORT:
-            self.status_chan = client
+
+        if len(self.clients) == 2:
+            print "A third client connected -- shouldn't happen"
             return
 
-        self.rrac_channels.append(client)
+        self.clients.append(client)
 
-        if len(self.rrac_channels) == 2:
-            self.ready = True
+        count = len(self.clients)
+        if count == 1:
+            client.set_sub_protocol(SUB_PROTO_CONTROL)
+        elif count == 2:
+            client.set_sub_protocol(SUB_PROTO_DATA)
             self.emit("ready")
 
     def _client_disconnected_cb(self, client):
         print "_client_disconnected_cb"
-        if client in self.rrac_channels:
-            self.rrac_channels.remove(client)
-        self.ready = False
-
-    def _client_data_exchanged_cb(self, client):
-        print "_client_data_exchanged_cb"
-
-        host = client.transport.getHost()
-        if host.port != RRA_PORT:
-            return
-
-        if self.control_chan == None:
-            self.control_chan = client
-            client.set_sub_protocol(SUB_PROTO_CONTROL)
-
-        if self.data_chan == None:
-            for chan in self.rrac_channels:
-                if chan != self.control_chan:
-                    self.data_chan = client
-                    chan.set_sub_protocol(SUB_PROTO_DATA)
+        self.clients.remove(client)
 
     def get_object_types(self):
         cmd = GetMetaDataCmd(GET_OBJECT_TYPES_MASK)
@@ -409,53 +330,34 @@ class RRAServer(gobject.GObject, Factory):
         cmd = GetMetaDataCmd(GET_UNK_1AND2_MASK)
         return self._send_command(cmd)
 
-    def set_status_message(self, message):
-        message_w = encode_wstr(message)
+    def set_unknown_02(self, x, y):
+        data = ""
 
-        self._send_status_notification(0x01, len(message_w), message_w)
+        # 50 unknown DWORDs (or 200 bytes), all zero
+        for i in xrange(50):
+            data += struct.pack("<I", 0)
 
-    def set_status_5a(self, arg):
-        self._send_status_notification(0x5a, arg)
+        # Then two DWORDs with the values x and y, respectively
+        data += struct.pack("<I", x)
+        data += struct.pack("<I", y)
 
-    def set_status_5b(self, arg):
-        self._send_status_notification(0x5b, arg)
+        # And 4 records of 6 bytes each, all zero
+        for i in xrange(4):
+            data += struct.pack("<I", 0)
+            data += struct.pack("<H", 0)
 
-    def set_status_5c(self, arg, x, y):
-        payload = struct.pack("<HH", x, y)
-        self._send_status_notification(0x5c, arg, payload)
+        cmd = SetMetaDataCmd(OID_UNKNOWN_02, data)
+        return self._send_command(cmd)
 
-    def set_status_5d(self, arg):
-        self._send_status_notification(0x5d, arg)
-
-    def _send_status_notification(self, type, arg, payload=None):
-        if self.status_chan == None:
-            raise Exception("status client not connected")
-
-        data = struct.pack("<HH", arg, type)
-        if payload != None:
-            data += payload
-
-        print "Sending status message:"
-        print hexdump(data)
-
-        self.status_chan.send_data(data)
+    def is_ready(self):
+        return len(self.clients) == 2
 
     def _send_command(self, cmd):
-        if not self.ready:
+        if not self.is_ready():
             raise Exception("not ready")
-
-        if self.control_chan == None:
-            self.control_chan = self.rrac_channels[0]
-            self.control_chan.set_sub_protocol(SUB_PROTO_CONTROL)
-
-        if self.data_chan == None:
-            for chan in self.rrac_channels:
-                if chan != self.control_chan:
-                    self.data_chan = chan
-                    chan.set_sub_protocol(SUB_PROTO_DATA)
 
         print "Sending command:"
         print cmd
 
-        return self.control_chan.send_command(cmd)
+        return self.clients[0].send_command(cmd)
 
