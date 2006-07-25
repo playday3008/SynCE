@@ -274,7 +274,13 @@ class SyncClass:
             #time.sleep(10)
             #print "done"
 
+            sids = []
             changeset = self.engine.GetRemoteChanges()
+            if changeset:
+                print "SynCE: %d remote changes" % len(changeset)
+            else:
+                print "SynCE: No remote changes"
+
             for sid, change in changeset.items():
                 chg_type, item_type, data = change
 
@@ -302,10 +308,16 @@ class SyncClass:
                         #  hold a reference to it)
                         self.hack.append(bytes)
                         change.set_data(bytes, TRUE)
-
-                    change.report(ctx)
                 else:
                     raise Exception("Unhandled item_type %d" % item_type)
+
+                change.report(ctx)
+
+                sids.append(sid)
+
+            if sids:
+                print "SynCE: Acknowledging remote changes"
+                self.engine.AcknowledgeRemoteChanges(sids)
 
             print "SynCE: Reporting success"
             ctx.report_success()
