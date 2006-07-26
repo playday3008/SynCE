@@ -72,8 +72,6 @@ def node_append_child(parent, name, value=None, always_create=True):
 #
 
 def date_from_airsync(remove_dashes, as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     value = value.split("T")[0]
     if remove_dashes:
         value = value.replace("-", "")
@@ -83,8 +81,6 @@ def date_from_airsync(remove_dashes, as_name, value, as_node, os_contact_node):
 
 
 def addr_from_airsync(type, field, as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     nodes = xpath.Evaluate("Address[Type='%s']" % type, os_contact_node)
     if nodes:
         addr_node = nodes[0]
@@ -96,32 +92,24 @@ def addr_from_airsync(type, field, as_name, value, as_node, os_contact_node):
 
 
 def im_addr_from_airsync(as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     im_node = node_append_child(os_contact_node, "IM-MSN")
     node_append_child(im_node, "Content", value)
     node_append_child(im_node, "Type", "HOME")
 
 
 def email_from_airsync(as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     email_node = node_append_child(os_contact_node, "EMail")
     node_append_child(email_node, "Content", value)
     node_append_child(email_node, "Type", "HOME")
 
 
 def name_from_airsync(field, as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     name_node = node_append_child(os_contact_node, "Name", always_create=False)
 
     node_append_child(name_node, field, value)
 
 
 def phone_from_airsync(type1, type2, as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     phone_node = node_append_child(os_contact_node, "Telephone")
     node_append_child(phone_node, "Content", value)
     node_append_child(phone_node, "Type", type1)
@@ -131,8 +119,6 @@ def phone_from_airsync(type1, type2, as_name, value, as_node, os_contact_node):
 
 
 def organization_from_airsync(field, as_name, value, as_node, os_contact_node):
-    if value == None: return
-
     org_node = node_append_child(os_contact_node, "Organization", always_create=False)
 
     node_append_child(org_node, field, value)
@@ -219,10 +205,10 @@ def airsync_contact_to_opensync(as_data):
             entry = CONTACT_AIRSYNC_TO_OPENSYNC[name]
 
             value = node_get_value(n)
+            if value == None and len(xpath.Evaluate("*", n)) == 0:
+                continue
 
             if isinstance(entry, basestring):
-                if value == None: continue
-
                 field_node = node_append_child(contact_node, entry)
                 node_append_child(field_node, "Content", value)
             else:
