@@ -142,10 +142,10 @@ class SyncState:
         self.local_changes = [ {}, ]
         self.remote_changes = [ {}, ]
 
-    def add_local_change(self, sid, change_type, item_type, data=None):
+    def add_local_change(self, sid, change_type, item_type, data=""):
         self.local_changes[-1][sid] = (change_type, item_type, data)
 
-    def add_remote_change(self, sid, change_type, item_type, data=None):
+    def add_remote_change(self, sid, change_type, item_type, data=""):
         self.remote_changes[-1][sid] = (change_type, item_type, data)
 
     def shift_changesets(self):

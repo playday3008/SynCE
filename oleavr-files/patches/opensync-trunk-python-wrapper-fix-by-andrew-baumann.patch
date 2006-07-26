@@ -1,0 +1,67 @@
+Index: wrapper/opensync.i
+===================================================================
+--- wrapper/opensync.i	(revision 1115)
++++ wrapper/opensync.i	(working copy)
+@@ -45,41 +45,49 @@
+ 		osync_trace(TRACE_INTERNAL, "Deleting change %p", self);
+ 	}
+ 	
+-	void data_set(char *data, int datasize, osync_bool has_data) {
++	void _data_set(char *data, int datasize, osync_bool has_data) {
+ 		/* take a copy of the data, so python does not try to reclaim it
+ 		 * this memory should be freed by opensync after the change is written
+-		 * FIXME: if the change is not handed over to opensync, this will leak
+ 		 */
+ 		char *copy = memcpy(malloc(datasize), data, datasize);
+ 		osync_change_set_data(self, copy, datasize, has_data);
+ 	}
+ 	
+-	void *data_get() {
++	void *_data_get() {
+ 		return osync_change_get_data(self);
+ 	}
+ 	
+-	int datasize_get() {
++	int _datasize_get() {
+ 		return osync_change_get_datasize(self);
+ 	}
+ 	
+ 	%pythoncode %{
+ 	def get_data(self):
+-		data = cdata(self.data_get(), self.datasize_get())
+-		# FIXME: despite passing the size around, sometimes the data
+-		# seems also to be null-terminated; remove this.
+-		if data[-1] == '\0':
+-			data = data[:-1]
+-		return data
++		if not hasattr(self, "_data"):
++			self._data = cdata(self._data_get(), self._datasize_get())
++			# FIXME: despite passing the size around, sometimes the data
++			# seems also to be null-terminated; remove this.
++			if self._data[-1] == '\0':
++				self._data = self._data[:-1]
++		return self._data
+ 	def set_data(self, data, has_data=True):
+-		return self.data_set(data, len(data), has_data)
++		self._data = data
++		self._has_data = has_data
+ 	data = property(get_data,set_data)
+ 	%}
+ 	
+-	void report(OSyncContext *ctx)
++	void _report(OSyncContext *ctx)
+ 	{
+ 		osync_context_report_change(ctx, self);
+ 	}
+ 	
++	%pythoncode %{
++	def report(self, ctx):
++		if hasattr(self, "_data"):
++			self._data_set(self._data, len(self._data), self._has_data)
++		self._report(ctx)
++	%}
++	
+ 	void uid_set(const char *uid) {
+ 		osync_change_set_uid(self, uid);
+ 	}
+

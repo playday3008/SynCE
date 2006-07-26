@@ -261,7 +261,7 @@ def node_append_child(parent, name, value=None):
     doc = parent.ownerDocument
     node = doc.createElement(name)
     if value is not None:
-        value_node = doc.createTextNode(str(value))
+        value_node = doc.createTextNode(unicode(value))
         node.appendChild(value_node)
     parent.appendChild(node)
     return node

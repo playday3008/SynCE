@@ -212,7 +212,7 @@ class ASResource(gobject.GObject, resource.PostableResource):
     def handle_sync_contacts_cmd_add(self, request_node, responses_node):
         response_node = node_append_child(responses_node, request_node.localName)
 
-        cid = node_get_child(request_node, "ClientId")
+        cid = node_get_value(node_get_child(request_node, "ClientId"))
         node_append_child(response_node, "ClientId", cid)
 
         sid = generate_guid()
@@ -224,13 +224,13 @@ class ASResource(gobject.GObject, resource.PostableResource):
         self.emit("object-added", sid, SYNC_ITEM_CONTACTS, app_node.toxml())
 
     def handle_sync_contacts_cmd_change(self, request_node, responses_node):
-        sid = node_get_child(request_node, "ServerId")
+        sid = node_get_value(node_get_child(request_node, "ServerId"))
 
         app_node = node_get_child(request_node, "ApplicationData")
         self.emit("object-modified", sid, SYNC_ITEM_CONTACTS, app_node.toxml())
 
     def handle_sync_contacts_cmd_delete(self, request_node, responses_node):
-        sid = node_get_child(request_node, "ServerId")
+        sid = node_get_value(node_get_child(request_node, "ServerId"))
 
         self.emit("object-deleted", sid, SYNC_ITEM_CONTACTS)
 
