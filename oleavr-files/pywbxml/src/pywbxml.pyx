@@ -53,6 +53,9 @@ def xml2wbxml(xml):
     params.use_strtbl = 0
     params.produce_anonymous = 1
 
+    if isinstance(xml, unicode):
+        xml = xml.encode("utf-8")
+
     if PyString_AsStringAndSize(xml, &xml_raw, &xml_raw_len) == -1:
         raise TypeError("invalid string")
 
