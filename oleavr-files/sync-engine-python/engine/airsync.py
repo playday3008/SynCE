@@ -242,28 +242,28 @@ class ASResource(gobject.GObject, resource.PostableResource):
         node_append_child(response_node, "ClientId", cid)
 
         luid = generate_guid()
-        node_append_child(response_node, "ServerId", luid)
-
-        node_append_child(response_node, "Status", 1)
-
-        app_node = node_get_child(request_node, "ApplicationData")
-        debug_put_object(app_node)
-        xml = contact_from_airsync(app_node).toxml()
-
         state = self.pship.state
         item = state.items[SYNC_ITEM_CONTACTS]
         guid = state.register_luid(luid)
+
+        node_append_child(response_node, "ServerId", luid)
+        node_append_child(response_node, "Status", 1)
+
+        app_node = node_get_child(request_node, "ApplicationData")
+        xml = contact_from_airsync(guid, app_node).toxml()
+
         item.add_remote_change(guid, CHANGE_ADDED, xml)
 
     def handle_sync_contacts_cmd_change(self, request_node, responses_node):
         luid = node_get_value(node_get_child(request_node, "ServerId"))
 
-        app_node = node_get_child(request_node, "ApplicationData")
-        xml = contact_from_airsync(app_node).toxml()
-
         state = self.pship.state
         item = state.items[SYNC_ITEM_CONTACTS]
         guid = state.get_guid_from_luid(luid)
+
+        app_node = node_get_child(request_node, "ApplicationData")
+        xml = contact_from_airsync(guid, app_node).toxml()
+
         item.add_remote_change(guid, CHANGE_MODIFIED, xml)
 
     def handle_sync_contacts_cmd_delete(self, request_node, responses_node):

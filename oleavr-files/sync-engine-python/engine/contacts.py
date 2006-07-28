@@ -74,10 +74,13 @@ AIRSYNC_TO_OPENSYNC_MAPPINGS = \
 
 AIRSYNC_UNMAPPED_ENTRIES = [ "Children", "Rtf", "CustomerId", "GovernmentId", "AccountName" ]
 
-def contact_from_airsync(app_node):
+def contact_from_airsync(guid, app_node):
     dom = minidom.getDOMImplementation()
     doc = dom.createDocument(None, "contact", None)
     contact_node = doc.documentElement
+
+    uid_node = node_append_child(contact_node, "UID")
+    node_append_child(uid_node, "Content", guid)
 
     for src_spec, dst_spec in AIRSYNC_TO_OPENSYNC_MAPPINGS:
         if isinstance(src_spec, basestring):

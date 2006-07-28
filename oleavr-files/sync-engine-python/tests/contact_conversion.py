@@ -14,7 +14,7 @@ as_doc = minidom.parseString(open("contact_airsync.xml", "r").read())
 print "Number of AirSync nodes:", len(xpath.Evaluate("/ApplicationData/*", as_doc))
 
 print "Converting to OpenSync format...",
-os_doc = contact_from_airsync(as_doc.documentElement)
+os_doc = contact_from_airsync("pas-id-1234567800000000", as_doc.documentElement)
 print "done"
 
 #print os_doc.toprettyxml(encoding="utf-8")
