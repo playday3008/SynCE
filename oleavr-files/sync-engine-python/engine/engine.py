@@ -62,9 +62,6 @@ class SyncEngine(dbus.service.Object):
         res = ASResource()
         res.connect("sync-begin", self._airsync_sync_begin_cb)
         res.connect("sync-end", self._airsync_sync_end_cb)
-        res.connect("object-added", self._airsync_object_added_cb)
-        res.connect("object-modified", self._airsync_object_modified_cb)
-        res.connect("object-deleted", self._airsync_object_deleted_cb)
         self.asr = res
 
         self._get_partnerships()
@@ -324,7 +321,7 @@ class SyncEngine(dbus.service.Object):
         self.partnerships[pship.id] = pship
         self.slots[pship.slot-1] = pship
 
-        pship.create_sync_state()
+        pship.create_sync_state(sync_items)
         self.cur_partnership = pship
         self._partnership_changed()
 
@@ -385,14 +382,39 @@ class SyncEngine(dbus.service.Object):
             self.session.start_replication()
             self._rra_started = True
 
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='a{sv}')
-    def GetRemoteChanges(self):
-        return self.cur_partnership.state.get_remote_changes()
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='a{ua(sus)}', out_signature='')
+    def AddLocalChanges(self, changesets):
+        items = self.cur_partnership.state.items
 
-    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='as', out_signature='')
-    def AcknowledgeRemoteChanges(self, sids):
-        for sid in sids:
-            self.cur_partnership.state.ack_remote_change(sid)
+        for item_type, changes in changesets.items():
+            item = items[item_type]
+
+            for change in changes:
+                guid, chg_type, data = change
+                item.add_local_change(guid, chg_type, data)
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='au', out_signature='a{ua(sus)}')
+    def GetRemoteChanges(self, item_types):
+        items = self.cur_partnership.state.items
+
+        changes = {}
+        for type in item_types:
+            changes[type] = []
+            for guid, change in items[type].get_remote_changes().items():
+                chg_type, chg_data = change
+                changes[type].append((guid, chg_type, chg_data))
+
+        return changes
+
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='a{uas}', out_signature='')
+    def AcknowledgeRemoteChanges(self, changes):
+        items = self.cur_partnership.state.items
+
+        for item_type, guids in changes.items():
+            item = items[item_type]
+            for guid in guids:
+                item.ack_remote_change(guid)
+
         self.cur_partnership.save_sync_state()
 
     def _rra_ready_cb(self, rra):
@@ -458,7 +480,7 @@ class SyncEngine(dbus.service.Object):
         print "calling SetStatus(\"$UPTODATE$\")"
         self.rss.set_status("$UPTODATE$")
 
-        self.cur_partnership.state.shift_changesets()
+        self.cur_partnership.state.synchronized()
         self.cur_partnership.save_sync_state()
         self.Synchronized()
 
@@ -467,17 +489,12 @@ class SyncEngine(dbus.service.Object):
         print "calling CeSyncResume()"
         self.session.sync_resume()
 
-    def _airsync_object_added_cb(self, res, sid, item_type, data):
-        print "Queuing AirSync remote object add: sid=%s item_type=%d" % (sid, item_type)
-        self.cur_partnership.state.add_remote_change(sid, CHANGE_ADDED,
-                                                     item_type, data)
-
-    def _airsync_object_modified_cb(self, res, sid, item_type, data):
+    def _airsync_remote_object_modified_cb(self, res, sid, item_type, data):
         print "Queuing AirSync remote object modify: sid=%s item_type=%d" % (sid, item_type)
         self.cur_partnership.state.add_remote_change(sid, CHANGE_MODIFIED,
                                                      item_type, data)
 
-    def _airsync_object_deleted_cb(self, res, sid, item_type):
+    def _airsync_remote_object_deleted_cb(self, res, sid, item_type):
         print "Queuing AirSync remote object delete: sid=%s item_type=%d" % (sid, item_type)
         self.cur_partnership.state.add_remote_change(sid, CHANGE_DELETED,
                                                      item_type)

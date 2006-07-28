@@ -20,6 +20,7 @@
 import os
 import random
 from xml.dom import minidom
+from xml import xpath
 
 QUERY_TYPE_GET    = 0
 QUERY_TYPE_SET    = 1
@@ -180,14 +181,18 @@ def generate_guid():
     for i in range(8):
         d4.append(random.randint(0, 0xFF))
 
-    guid = "{%08X-%04X-%04X-" % (d1, d2, d3)
+    guid = u"{%08X-%04X-%04X-" % (d1, d2, d3)
     for i in xrange(len(d4)):
-        guid += "%02X" % d4[i]
+        guid += u"%02X" % d4[i]
         if i == 1:
-            guid += "-"
-    guid += "}"
+            guid += u"-"
+    guid += u"}"
 
     return guid
+
+def generate_opensync_guid():
+    return "pas-id-%08X%08X" % (random.randint(0, 0xFFFFFFFF),
+                                random.randint(0, 0xFFFFFFFF))
 
 def hexdump(raw):
     buf = ""
@@ -248,7 +253,6 @@ def node_get_value(node):
         if n.nodeType == n.TEXT_NODE:
             return n.nodeValue.strip()
     return None
-    #raise ValueError("node has no value")
 
 def node_set_value(node, value):
     for n in node.childNodes:
@@ -257,7 +261,12 @@ def node_set_value(node, value):
             return
     raise ValueError("node has no value")
 
-def node_append_child(parent, name, value=None):
+def node_append_child(parent, name, value=None, always_create=True):
+    if not always_create:
+        nodes = xpath.Evaluate(name, parent)
+        if nodes:
+            return nodes[0]
+
     doc = parent.ownerDocument
     node = doc.createElement(name)
     if value is not None:
@@ -287,4 +296,27 @@ def encode_wstr(s):
 
 def decode_wstr(s):
     return s.decode("utf_16_le").rstrip("\0")
+
+
+#
+# temporary
+#
+import cPickle as pickle
+
+def debug_get_objects():
+    objects = []
+
+    try:
+        f = open("/tmp/se_debug", "rb")
+        while True:
+            obj = pickle.load(f)
+            objects.append(obj)
+    except:
+        pass
+
+    return objects
+
+def debug_put_object(obj):
+    f = open("/tmp/se_debug", "ab")
+    pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 

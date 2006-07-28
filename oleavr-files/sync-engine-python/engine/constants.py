@@ -26,9 +26,9 @@ SYNC_ITEM_MEDIA     = 5
 SYNC_ITEM_NOTES     = 6
 SYNC_ITEM_TASKS     = 7
 
-CHANGE_ADDED        = 0
-CHANGE_MODIFIED     = 1
-CHANGE_DELETED      = 2
+CHANGE_ADDED        = 1
+CHANGE_MODIFIED     = 4
+CHANGE_DELETED      = 3
 
 SYNC_ITEMS = {
     SYNC_ITEM_CALENDAR  : ("Calendar", False),
@@ -39,6 +39,13 @@ SYNC_ITEMS = {
     SYNC_ITEM_MEDIA     : ("Media", True),
     SYNC_ITEM_NOTES     : ("Notes", True),
     SYNC_ITEM_TASKS     : ("Tasks", False),
+}
+
+SYNC_ITEM_CLASS_TO_ID = {
+    "Calendar" : SYNC_ITEM_CALENDAR,
+    "Contacts" : SYNC_ITEM_CONTACTS,
+    "E-mail"   : SYNC_ITEM_EMAIL,
+    "Tasks"    : SYNC_ITEM_TASKS,
 }
 
 GUID_WM5_ACTIVESYNC_ENGINE = "{176F4FFD-F20C-4BD4-BDD7-01D0726C567B}"

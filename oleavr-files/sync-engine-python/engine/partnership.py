@@ -59,8 +59,8 @@ class Partnership:
     def is_our(self):
         return (self.state != None)
 
-    def create_sync_state(self):
-        self.state = SyncState()
+    def create_sync_state(self, sync_items):
+        self.state = SyncState(sync_items)
         self.save_sync_state()
 
     def delete_sync_state(self):
@@ -74,7 +74,7 @@ class Partnership:
     def load_sync_state(self):
         f = None
         try:
-            f = open(self.sync_state_path, "r")
+            f = open(self.sync_state_path, "rb")
         except:
             return
 
@@ -95,11 +95,12 @@ class Partnership:
             return
 
         print "Loaded state:"
-        print "  Remote changesets:"
-        i = 0
-        for changeset in self.state.remote_changes:
-            print "    [#%d] %d changes" % (i, len(changeset))
-            i += 1
+        print self.state.items
+        #print "  Remote changesets:"
+        #i = 0
+        #for changeset in self.state.remote_changes:
+        #    print "    [#%d] %d changes" % (i, len(changeset))
+        #    i += 1
 
     def save_sync_state(self):
         try:
@@ -111,15 +112,15 @@ class Partnership:
 
         f = None
         try:
-            f = open(self.sync_state_path, "w")
-            pickle.dump(self.id, f)
-            pickle.dump(self.state, f)
+            f = open(self.sync_state_path, "wb")
+            pickle.dump(self.id, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.state, f, pickle.HIGHEST_PROTOCOL)
         except Exception, e:
             print "Failed to save sync state:", e
 
 
 class SyncState:
-    def __init__(self):
+    def __init__(self, sync_items):
         items = (
             (0, "Inbox", 2),
             (0, "Drafts", 3),
@@ -139,28 +140,84 @@ class SyncState:
             id = generate_guid()
             self.folders[id] = item
 
-        self.local_changes = [ {}, ]
+        self.items = {}
+        for item in sync_items:
+            self.items[item] = SyncItem(item)
+
+        self.luid_to_guid = {}
+        self.guid_to_luid = {}
+
+    def register_luid(self, luid):
+        guid = generate_opensync_guid()
+        self._create_uid_mapping(luid, guid)
+        return guid
+
+    def register_guid(self, guid, luid_gen_func):
+        luid = luid_gen_func()
+        self._create_uid_mapping(luid, guid)
+        return luid
+
+    def _create_uid_mapping(self, luid, guid):
+        if self.luid_to_guid.has_key(luid):
+            raise ValueError("luid already registered")
+        if self.guid_to_luid.has_key(guid):
+            raise ValueError("guid already registered")
+
+        self.luid_to_guid[luid] = guid
+        self.guid_to_luid[guid] = luid
+
+        print "create_uid_mapping: registered %s <-> %s" % (guid, luid)
+
+    def get_luid_from_guid(self, guid):
+        return self.guid_to_luid[guid]
+
+    def get_guid_from_luid(self, luid):
+        return self.luid_to_guid[luid]
+
+    def synchronized(self):
+        for item in self.items.values():
+            item.synchronized()
+
+
+class SyncItem:
+    def __init__(self, type):
+        self.type = type
+        self.local_changes = {}
         self.remote_changes = [ {}, ]
 
-    def add_local_change(self, sid, change_type, item_type, data=""):
-        self.local_changes[-1][sid] = (change_type, item_type, data)
+    def add_local_change(self, guid, change_type, data=""):
+        self.local_changes[guid] = (change_type, data)
 
-    def add_remote_change(self, sid, change_type, item_type, data=""):
-        self.remote_changes[-1][sid] = (change_type, item_type, data)
+    def add_remote_change(self, guid, change_type, data=""):
+        self.remote_changes[-1][guid] = (change_type, data)
 
-    def shift_changesets(self):
-        if len(self.local_changes[-1]) > 0:
-            self.local_changes.append({})
+    def synchronized(self):
         if len(self.remote_changes[-1]) > 0:
             self.remote_changes.append({})
 
-    def get_remote_changes(self):
-        changeset = self.remote_changes[0]
-        return changeset
+    def get_change_counts(self):
+        return (len(self.local_changes), len(self.remote_changes[0]))
 
-    def ack_remote_change(self, sid):
+    def grab_local_changes(self, max):
+        changeset = self.local_changes
+        if len(changeset) <= max:
+            self.local_changes = {}
+            return changeset
+        else:
+            # FIXME: optimize this
+            changeset = {}
+            items = changeset.items()[:max]
+            for key, value in items:
+                del self.local_changes[key]
+                changeset[key] = value
+            return changeset
+
+    def get_remote_changes(self):
+        return self.remote_changes[0]
+
+    def ack_remote_change(self, guid):
         changeset = self.remote_changes[0]
-        del changeset[sid]
+        del changeset[guid]
         if len(changeset) == 0:
             del self.remote_changes[0]
 

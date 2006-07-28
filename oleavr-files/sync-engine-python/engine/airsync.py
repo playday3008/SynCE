@@ -24,11 +24,19 @@ from constants import *
 from util import *
 from cStringIO import StringIO
 from xml.dom import minidom
+from xml import xpath
 import pywbxml
+from contacts import contact_from_airsync, contact_to_airsync
 
 AIRSYNC_DOC_NAME = "AirSync"
 AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
 AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
+
+CHANGE_TYPE_TO_NODE_NAME = {
+    CHANGE_ADDED:       "Add",
+    CHANGE_MODIFIED:    "Change",
+    CHANGE_DELETED:     "Delete",
+}
 
 class ASResource(gobject.GObject, resource.PostableResource):
     __gsignals__ = {
@@ -36,13 +44,6 @@ class ASResource(gobject.GObject, resource.PostableResource):
                            ()),
             "sync-end": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
                          ()),
-
-            "object-added": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                             (object, object, object)),
-            "object-modified": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                                (object, object, object)),
-            "object-deleted": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
-                               (object, object,)),
     }
 
     def __init__(self):
@@ -157,56 +158,81 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
         xml_raw = pywbxml.wbxml2xml(body)
         req_doc = minidom.parseString(xml_raw)
-        #print "Which is:", req_doc.toprettyxml()
-        req_sync_node = node_get_child(req_doc, "Sync")
-        req_colls_node = node_get_child(req_sync_node, "Collections")
+        print "Which is:"
+        print req_doc.toprettyxml()
+        print
 
         doc = self.create_wbxml_doc("Sync")
         colls_node = node_append_child(doc.documentElement, "Collections")
 
-        for n in req_colls_node.childNodes:
-            if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
-                cls = node_get_value(node_get_child(n, "Class"))
-                key = node_get_value(node_get_child(n, "SyncKey"))
-                id = node_get_value(node_get_child(n, "CollectionId"))
+        state = self.pship.state
 
-                coll_node = node_append_child(colls_node, "Collection")
-                node_append_child(coll_node, "Class", cls)
-                key = "%s%d" % (id, int(key.split("}")[-1]) + 1)
-                node_append_child(coll_node, "SyncKey", key)
-                node_append_child(coll_node, "CollectionId", id)
-                node_append_child(coll_node, "Status", 1)
+        for n in xpath.Evaluate("/Sync/Collections/Collection", req_doc):
+            cls = node_get_value(node_get_child(n, "Class"))
+            key = node_get_value(node_get_child(n, "SyncKey"))
+            id = node_get_value(node_get_child(n, "CollectionId"))
 
-                responses_node = doc.createElement("Responses")
+            first_request = (key == "0")
 
-                for sub_node in n.childNodes:
-                    if sub_node.nodeType != sub_node.ELEMENT_NODE:
-                        continue
+            coll_node = node_append_child(colls_node, "Collection")
+            node_append_child(coll_node, "Class", cls)
+            key = "%s%d" % (id, int(key.split("}")[-1]) + 1)
+            node_append_child(coll_node, "SyncKey", key)
+            node_append_child(coll_node, "CollectionId", id)
+            node_append_child(coll_node, "Status", 1)
 
-                    if sub_node.localName == "Commands":
-                        for req_cmd_node in sub_node.childNodes:
-                            if req_cmd_node.nodeType != req_cmd_node.ELEMENT_NODE:
-                                continue
+            item = state.items[SYNC_ITEM_CLASS_TO_ID[cls]]
+            if not first_request and item.get_change_counts()[0] > 0:
+                window_size = int(node_get_value(node_get_child(n, "WindowSize")))
+                changes = item.grab_local_changes(window_size)
 
-                            name = "handle_sync_%s_cmd_%s" % \
-                                    (cls.lower(), req_cmd_node.localName.lower())
-                            if hasattr(self, name):
-                                getattr(self, name)(req_cmd_node, responses_node)
-                            else:
-                                print "Unhandled command \"%s\" (looking for %s)" % \
-                                    (req_cmd_node.localName, name)
-                                print "Command node:", req_cmd_node.toprettyxml()
-                    elif sub_node.localName in ("Class", "SyncKey", "CollectionId"):
-                        pass
+                if item.get_change_counts()[0] > 0:
+                    node_append_child(coll_node, "MoreAvailable")
+
+                commands_node = node_append_child(coll_node, "Commands")
+
+                for guid, change in changes.items():
+                    change_type, data = change
+
+                    if change_type == CHANGE_ADDED:
+                        luid = state.register_guid(guid, generate_guid)
                     else:
-                        print "Ignoring collection subnode \"%s\"" % \
-                            sub_node.localName
+                        luid = state.get_luid_from_guid(guid)
 
-                if len(responses_node.childNodes) > 0:
-                    coll_node.appendChild(responses_node)
+                    change_node = node_append_child(commands_node,
+                            CHANGE_TYPE_TO_NODE_NAME[change_type])
+                    node_append_child(change_node, "ServerId", luid)
+
+                    if change_type != CHANGE_DELETED:
+                        os_doc = minidom.parseString(data)
+                        as_doc = None
+                        if item.type == SYNC_ITEM_CONTACTS:
+                            as_doc = contact_to_airsync(os_doc)
+                        else:
+                            raise Exception("don't know how to convert data of item_type %d" % \
+                                    item.type)
+
+                        change_node.appendChild(as_doc.documentElement)
+
+            responses_node = doc.createElement("Responses")
+
+            for req_cmd_node in xpath.Evaluate("Commands/*", n):
+                    name = "handle_sync_%s_cmd_%s" % \
+                            (cls.lower(), req_cmd_node.localName.lower())
+                    if hasattr(self, name):
+                        getattr(self, name)(req_cmd_node, responses_node)
+                    else:
+                        print "Unhandled command \"%s\" (looking for %s)" % \
+                            (req_cmd_node.localName, name)
+                        print "Command node:", req_cmd_node.toprettyxml()
+
+            if responses_node.childNodes:
+                coll_node.appendChild(responses_node)
 
         print "Responding to Sync"
-        #print "With:", doc.toprettyxml()
+        print "With:"
+        print doc.toprettyxml()
+        print
         return self.create_wbxml_response(doc.toxml())
 
     def handle_sync_contacts_cmd_add(self, request_node, responses_node):
@@ -215,24 +241,38 @@ class ASResource(gobject.GObject, resource.PostableResource):
         cid = node_get_value(node_get_child(request_node, "ClientId"))
         node_append_child(response_node, "ClientId", cid)
 
-        sid = generate_guid()
-        node_append_child(response_node, "ServerId", sid)
+        luid = generate_guid()
+        node_append_child(response_node, "ServerId", luid)
 
         node_append_child(response_node, "Status", 1)
 
         app_node = node_get_child(request_node, "ApplicationData")
-        self.emit("object-added", sid, SYNC_ITEM_CONTACTS, app_node.toxml())
+        debug_put_object(app_node)
+        xml = contact_from_airsync(app_node).toxml()
+
+        state = self.pship.state
+        item = state.items[SYNC_ITEM_CONTACTS]
+        guid = state.register_luid(luid)
+        item.add_remote_change(guid, CHANGE_ADDED, xml)
 
     def handle_sync_contacts_cmd_change(self, request_node, responses_node):
-        sid = node_get_value(node_get_child(request_node, "ServerId"))
+        luid = node_get_value(node_get_child(request_node, "ServerId"))
 
         app_node = node_get_child(request_node, "ApplicationData")
-        self.emit("object-modified", sid, SYNC_ITEM_CONTACTS, app_node.toxml())
+        xml = contact_from_airsync(app_node).toxml()
+
+        state = self.pship.state
+        item = state.items[SYNC_ITEM_CONTACTS]
+        guid = state.get_guid_from_luid(luid)
+        item.add_remote_change(guid, CHANGE_MODIFIED, xml)
 
     def handle_sync_contacts_cmd_delete(self, request_node, responses_node):
-        sid = node_get_value(node_get_child(request_node, "ServerId"))
+        luid = node_get_value(node_get_child(request_node, "ServerId"))
 
-        self.emit("object-deleted", sid, SYNC_ITEM_CONTACTS)
+        state = self.pship.state
+        item = state.items[SYNC_ITEM_CONTACTS]
+        guid = state.get_guid_from_luid(luid)
+        item.add_remote_change(guid, CHANGE_DELETED)
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"
@@ -279,25 +319,33 @@ class ASResource(gobject.GObject, resource.PostableResource):
         xml_raw = pywbxml.wbxml2xml(body)
         doc = minidom.parseString(xml_raw)
 
+        print "Which is:"
+        print doc.toprettyxml()
+        print
+
         reply_doc = self.create_wbxml_doc("GetItemEstimate")
         resp_node = node_append_child(reply_doc.documentElement, "Response")
         node_append_child(resp_node, "Status", 1)
 
-        node = node_get_child(doc, "GetItemEstimate")
-        colls_node = node_get_child(node, "Collections")
-        for n in colls_node.childNodes:
-            if n.nodeType == n.ELEMENT_NODE and n.localName == "Collection":
-                cls = node_get_value(node_get_child(n, "Class"))
-                id = node_get_value(node_get_child(n, "CollectionId"))
-                filter = node_get_value(node_get_child(n, "FilterType"))
-                key = node_get_value(node_get_child(n, "SyncKey"))
+        state = self.pship.state
 
-                coll_node = node_append_child(resp_node, "Collection")
-                node_append_child(coll_node, "Class", cls)
-                node_append_child(coll_node, "CollectionId", id)
-                node_append_child(coll_node, "Estimate", 0)
+        for n in xpath.Evaluate("/GetItemEstimate/Collections/Collection", doc):
+            cls = node_get_value(node_get_child(n, "Class"))
+            id = node_get_value(node_get_child(n, "CollectionId"))
+            filter = node_get_value(node_get_child(n, "FilterType"))
+            key = node_get_value(node_get_child(n, "SyncKey"))
+
+            coll_node = node_append_child(resp_node, "Collection")
+            node_append_child(coll_node, "Class", cls)
+            node_append_child(coll_node, "CollectionId", id)
+
+            item = state.items[SYNC_ITEM_CLASS_TO_ID[cls]]
+            node_append_child(coll_node, "Estimate", item.get_change_counts()[0])
 
         print "Responding to GetItemEstimate"
+        print "With:"
+        print reply_doc.toprettyxml()
+        print
 
         return self.create_wbxml_response(reply_doc.toxml())
 
