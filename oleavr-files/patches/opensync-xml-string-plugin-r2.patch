@@ -1,0 +1,119 @@
+Index: formats/vformats-xml/xml-string.c
+===================================================================
+--- formats/vformats-xml/xml-string.c	(revision 0)
++++ formats/vformats-xml/xml-string.c	(revision 0)
+@@ -0,0 +1,90 @@
++/*
++ * xml-string - A plugin for converting between xml-* and xml-*-string
++ * Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
++ */
++
++#include "opensync-xml.h"
++
++static void destroy_string(char *data, size_t size)
++{
++	free(data);
++}
++
++static osync_bool copy_string(const char *input, int inpsize, char **output, int *outpsize)
++{
++	*output = strdup(input);
++	*outpsize = inpsize;
++	return TRUE;
++}
++
++static osync_bool conv_string_to_doc(void *user_data, char *input, int inpsize, char **output, int *outpsize, osync_bool *free_input, OSyncError **error)
++{
++	if (!osxml_demarshall(input, inpsize, output, outpsize, error))
++		return FALSE;
++
++	*free_input = TRUE;
++	return TRUE;
++}
++
++static osync_bool conv_doc_to_string(void *user_data, char *input, int inpsize, char **output, int *outpsize, osync_bool *free_input, OSyncError **error)
++{
++	if (!osxml_marshall(input, inpsize, output, outpsize, error))
++		return FALSE;
++
++	*free_input = TRUE;
++	return TRUE;
++}
++
++void get_info(OSyncEnv *env)
++{
++	// Contact
++	osync_env_register_objtype(env, "contact");
++	osync_env_register_objformat(env, "contact", "xml-contact-string");
++	osync_env_format_set_destroy_func(env, "xml-contact-string", destroy_string);
++	osync_env_format_set_copy_func(env, "xml-contact-string", copy_string);
++
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-contact-string", "xml-contact", conv_string_to_doc);
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-contact", "xml-contact-string", conv_doc_to_string);
++
++	// Event
++	osync_env_register_objtype(env, "event");
++	osync_env_register_objformat(env, "event", "xml-event-string");
++	osync_env_format_set_destroy_func(env, "xml-event-string", destroy_string);
++	osync_env_format_set_copy_func(env, "xml-event-string", copy_string);
++
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-event-string", "xml-event", conv_string_to_doc);
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-event", "xml-event-string", conv_doc_to_string);
++
++	// Todo
++	osync_env_register_objtype(env, "todo");
++	osync_env_register_objformat(env, "todo", "xml-todo-string");
++	osync_env_format_set_destroy_func(env, "xml-todo-string", destroy_string);
++	osync_env_format_set_copy_func(env, "xml-todo-string", copy_string);
++
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-todo-string", "xml-todo", conv_string_to_doc);
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-todo", "xml-todo-string", conv_doc_to_string);
++
++	// Note
++	osync_env_register_objtype(env, "note");
++	osync_env_register_objformat(env, "note", "xml-note-string");
++	osync_env_format_set_destroy_func(env, "xml-note-string", destroy_string);
++	osync_env_format_set_copy_func(env, "xml-note-string", copy_string);
++
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-note-string", "xml-note", conv_string_to_doc);
++	osync_env_register_converter(env, CONVERTER_CONV, "xml-note", "xml-note-string", conv_doc_to_string);
++}
++
+Index: formats/vformats-xml/Makefile.am
+===================================================================
+--- formats/vformats-xml/Makefile.am	(revision 1118)
++++ formats/vformats-xml/Makefile.am	(working copy)
+@@ -16,7 +16,7 @@
+ 
+ INCLUDES = -I$(top_srcdir) @PACKAGE_CFLAGS@
+ 
+-formats_LTLIBRARIES = xml-vcard.la xml-vcal.la xml-evolution.la xml-vnote.la xml-kde.la
++formats_LTLIBRARIES = xml-vcard.la xml-vcal.la xml-evolution.la xml-vnote.la xml-kde.la xml-string.la
+ 
+ lib_LTLIBRARIES =  libopensync-xml.la
+ 
+@@ -40,6 +40,10 @@
+ xml_kde_la_LDFLAGS = -avoid-version -export-dynamic -module @GCOV_LDFLAGS@
+ xml_kde_la_LIBADD = @PACKAGE_LIBS@ @LIBS@ libopensync-xml.la
+ 
++xml_string_la_SOURCES = xml-string.c
++xml_string_la_LDFLAGS = -avoid-version -export-dynamic -module @GCOV_LDFLAGS@
++xml_string_la_LIBADD = @PACKAGE_LIBS@ @LIBS@ libopensync-xml.la
++
+ libopensync_xml_la_SOURCES = xml-support.c
+ libopensync_xml_la_LDFLAGS = @GCOV_LDFLAGS@
+ libopensync_xml_la_LIBADD = @PACKAGE_LIBS@ @LIBS@
