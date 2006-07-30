@@ -25,6 +25,7 @@
 """
 
 import parser
+from engine.util import *
 
 ADDR_FIELDS = ("City", "Country", "PostalCode", "Region", "Street")
 HOME_PHONE_FIELDS = (("Type", "HOME"), ("Type", "VOICE"))
@@ -34,7 +35,7 @@ IM_FIELDS = ("IM-MSN", (("Type", "HOME"), "Content"))
 
 FROM_AIRSYNC_SPEC = \
 (
- ("FileAs", "FormattedName"),
+ ("FileAs", "FileAs"),
  (("FirstName", "LastName", "MiddleName", "Suffix", "Title"),
   ("Name", ("FirstName", "LastName", "Additional", "Suffix", "Prefix"))),
  ("NickName", "Nickname"),
@@ -73,7 +74,7 @@ FROM_AIRSYNC_SPEC = \
 FROM_AIRSYNC_UNMAPPED = [ "Children", "Rtf", "CustomerId", "GovernmentId", "AccountName" ]
 
 TO_AIRSYNC_SPEC = (
- ("FormattedName", ("FileAs",)),
+ ("FileAs", ("FileAs",)),
  ("Name", ({"FirstName" : "FirstName",
             "LastName" : "LastName",
             "Additional" : "MiddleName",
@@ -122,8 +123,26 @@ TO_AIRSYNC_SPEC = (
 )
 
 def from_airsync(guid, app_node):
-    return parser.from_airsync(guid, app_node, "contact", FROM_AIRSYNC_SPEC,
-                               FROM_AIRSYNC_UNMAPPED)
+    title = node_find_child(app_node, "Title")
+    first = node_find_child(app_node, "FirstName")
+    middle = node_find_child(app_node, "MiddleName")
+    last = node_find_child(app_node, "LastName")
+    suffix = node_find_child(app_node, "Suffix")
+
+    fn = ""
+    for node in (title, first, middle, last, suffix):
+        if node == None:
+            continue
+        if fn:
+            fn += " "
+        fn += node_get_value(node)
+
+    doc = parser.from_airsync(guid, app_node, "contact", FROM_AIRSYNC_SPEC,
+                              FROM_AIRSYNC_UNMAPPED)
+
+    node_append_child(doc.documentElement, "FormattedName", fn)
+
+    return doc
 
 def to_airsync(os_doc):
     return parser.to_airsync(os_doc, "contact", TO_AIRSYNC_SPEC)

@@ -72,6 +72,8 @@ class SyncClass:
             self.engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
             self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._synchronized_cb))
 
+            self.synced_item_types = self.engine.GetSynchronizedItemTypes()
+
             ctx.report_success()
         except Exception, e:
             print "SynCE::connect: failed: %s" % e
@@ -87,7 +89,8 @@ class SyncClass:
             #print "done"
 
             print "SynCE: Calling GetRemoteChanges"
-            changesets = self.engine.GetRemoteChanges(SUPPORTED_ITEM_TYPES.keys())
+            print self.synced_item_types
+            changesets = self.engine.GetRemoteChanges(self.synced_item_types)
             print "SynCE: Got %d changesets" % len(changesets)
             for item_type, changes in changesets.items():
                 if changes:
@@ -108,6 +111,7 @@ class SyncClass:
                         change.objtype, change.format = SUPPORTED_ITEM_TYPES[item_type]
 
                         if chg_type != CHANGE_DELETED:
+                            #print "Data: '%s'" % data
                             bytes = data.encode("utf-8")
                             # this is just a temporary hack around a bug in the opensync bindings
                             # (OSyncChange.set_data() should either copy the string or
@@ -149,6 +153,7 @@ class SyncClass:
             data = ""
             if chg.changetype != CHANGE_DELETED:
                 data = chg.data.decode("utf-8")
+                #print "Data: '%s'" % data
 
             self.engine.AddLocalChanges(
                     {

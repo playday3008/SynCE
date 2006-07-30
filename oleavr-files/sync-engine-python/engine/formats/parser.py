@@ -29,8 +29,8 @@ def from_airsync(guid, app_node, root_name, conv_spec, ignore_spec):
     # FIXME: do this properly
     src_doc = minidom.parseString(app_node.toxml(encoding="utf-8"))
 
-    uid_node = node_append_child(root_node, "UID")
-    node_append_child(uid_node, "Content", guid)
+    #uid_node = node_append_child(root_node, "UID")
+    #node_append_child(uid_node, "Content", guid)
 
     for src_spec, dst_spec in conv_spec:
         if isinstance(src_spec, basestring):
@@ -38,9 +38,11 @@ def from_airsync(guid, app_node, root_name, conv_spec, ignore_spec):
             if matches:
                 node = matches[0]
 
-                if dst_spec != None:
-                    value = node_get_value(node)
+                value = node_get_value(node)
+                if value == None and len(xpath.Evaluate("*", node)) == 0:
+                    continue
 
+                if dst_spec != None:
                     if callable(dst_spec):
                         value = dst_spec(doc, src_doc, node, value)
                         if isinstance(value, basestring):

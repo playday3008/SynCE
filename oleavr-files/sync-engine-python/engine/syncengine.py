@@ -312,6 +312,14 @@ class SyncEngine(dbus.service.Object):
 
         return pship.id
 
+    @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='', out_signature='au')
+    def GetSynchronizedItemTypes(self):
+        pship = self.cur_partnership
+        if pship is None:
+            raise NotAvailable("No partnership found")
+
+        return pship.state.items.keys()
+
     @dbus.service.method(SYNC_ENGINE_INTERFACE, in_signature='u', out_signature='')
     def DeletePartnership(self, id):
         """

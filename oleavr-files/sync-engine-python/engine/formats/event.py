@@ -287,10 +287,11 @@ FROM_AIRSYNC_SPEC = \
  ("Subject", "Event/Summary"),
  ("Location", "Event/Location"),
  ("Categories", ("Event", None)),
- ("UID", "Event/Uid"), # not entirely sure about this one
  ("Attendees", ("Event", attendees_from_airsync)),
  ("Reminder", ("Event", alarm_from_airsync)),
 )
+
+#("UID", "Event/Uid"), # not entirely sure about this one
 
 TO_AIRSYNC_SPEC = \
 (
@@ -303,10 +304,11 @@ TO_AIRSYNC_SPEC = \
  ("Event/Summary", ("Subject",)),
  ("Event/Location", ("Location",)),
  ("Event/Categories", None),
- ("Event/Uid", ("UID",)),
  ("Event/Alarm", (alarm_to_airsync,)),
  ("Event/Attendee", attendee_to_airsync,),
 )
+
+#("Event/Uid", ("UID",)),
 
 def from_airsync(guid, app_node):
     doc = parser.from_airsync(guid, app_node, "vcal", FROM_AIRSYNC_SPEC, None)
