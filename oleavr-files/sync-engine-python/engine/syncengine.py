@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>

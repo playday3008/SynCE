@@ -59,6 +59,28 @@ def attendees_from_airsync(doc, src_doc, src_node, value):
 
     return nodes
 
+def attendee_to_airsync(doc, src_doc, src_node, value):
+    app_node = xpath.Evaluate("/ApplicationData", doc)[0]
+
+    nodes = xpath.Evaluate("Attendees", app_node)
+    if nodes:
+        parent = nodes[0]
+    else:
+        parent = node_append_child(app_node, "Attendees")
+
+    name = None
+    node = node_find_child(src_node, "CommonName")
+    if node != None:
+        name = node_get_value(node)
+    email = node_get_value(node_get_child(src_node, "Content"))[7:]
+
+    node = node_append_child(parent, "Attendee")
+    if name != None:
+        node_append_child(node, "Name", name)
+    node_append_child(node, "Email", email)
+
+    return ()
+
 MINUTES_PER_HOUR = 60
 MINUTES_PER_DAY = MINUTES_PER_HOUR * 24
 
@@ -85,6 +107,24 @@ def alarm_from_airsync(doc, src_doc, src_node, value):
     nodes = xpath.Evaluate("/ApplicationData/Subject", src_doc)
     if nodes:
         node_append_child(node, "AlarmDescription", node_get_value(nodes[0]))
+
+    return ( node, )
+
+def alarm_to_airsync(doc, src_doc, src_node, value):
+    value = node_get_value(xpath.Evaluate("AlarmTrigger/Content", src_node)[0])
+    value = value.lstrip("-PT")
+    count = int(value[:-1])
+    specifier = value[-1:].upper()
+
+    if specifier == "M":
+        minutes = count
+    elif specifier == "H":
+        minutes = count * MINUTES_PER_HOUR
+    elif specifier == "D":
+        minutes = count * MINUTES_PER_DAY
+
+    node = doc.createElement("Reminder")
+    node.appendChild(doc.createTextNode(unicode(minutes)))
 
     return ( node, )
 
@@ -155,10 +195,7 @@ def timezone_from_airsync(doc, src_doc, src_node, value):
     node_append_child(tz_node, "TimezoneID", "/synce.sourceforge.net/SynCE/%s" % name)
 
     std_offset = format_tz_offset_string(bias, std_bias)
-    print "std_offset: def=%d, extra=%d => %s" % (bias, std_bias, std_offset)
-
     dst_offset = format_tz_offset_string(bias, daylight_bias)
-    print "dst_offset: def=%d, extra=%d => %s" % (bias, daylight_bias, dst_offset)
 
     print
 
@@ -195,7 +232,12 @@ def timezone_to_airsync(doc, src_doc, src_node, value):
     return ( tz_node, )
 
 date_from_airsync = lambda d, sd, sn, v: v.rstrip("Z")
-date_to_airsync = lambda d, sd, sn, v: v + "Z"
+
+def date_to_airsync(doc, src_doc, src_node, value):
+    if len(value) == 8:
+        value += "T220000"
+    value += "Z"
+    return value
 
 def startend_from_airsync(doc, src_doc, src_node, value):
     nodes = []
@@ -216,6 +258,25 @@ def startend_from_airsync(doc, src_doc, src_node, value):
 
     return nodes
 
+def datestarted_to_airsync(doc, src_doc, src_node, value):
+    value = node_get_value(node_get_child(src_node, "Content"))
+    if len(value) == 8:
+        value += "T220000"
+
+        allday = True
+    else:
+        allday = False
+
+    value += "Z"
+
+    allday_node = doc.createElement("AllDayEvent")
+    allday_node.appendChild(doc.createTextNode(str(int(allday))))
+
+    start_node = doc.createElement("StartTime")
+    start_node.appendChild(doc.createTextNode(value))
+
+    return (allday_node, start_node)
+
 FROM_AIRSYNC_SPEC = \
 (
  ("Timezone", timezone_from_airsync),
@@ -233,8 +294,18 @@ FROM_AIRSYNC_SPEC = \
 
 TO_AIRSYNC_SPEC = \
 (
+ ("Method", (lambda *args: (),)),
+ ("UID", (lambda *args: (),)),
  ("Timezone", (timezone_to_airsync,)),
  ("Event/LastModified", ({ "Content" : date_to_airsync },)),
+ ("Event/DateStarted", (datestarted_to_airsync,)),
+ ("Event/DateEnd", ({ "Content" : date_to_airsync },)),
+ ("Event/Summary", ("Subject",)),
+ ("Event/Location", ("Location",)),
+ ("Event/Categories", None),
+ ("Event/Uid", ("UID",)),
+ ("Event/Alarm", (alarm_to_airsync,)),
+ ("Event/Attendee", attendee_to_airsync,),
 )
 
 def from_airsync(guid, app_node):

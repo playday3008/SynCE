@@ -38,6 +38,12 @@ CHANGE_TYPE_TO_NODE_NAME = {
     CHANGE_DELETED:     "Delete",
 }
 
+CHANGE_TYPE_FROM_NODE_NAME = {
+    "Add" : CHANGE_ADDED,
+    "Change" : CHANGE_MODIFIED,
+    "Delete" : CHANGE_DELETED,
+}
+
 class ASResource(gobject.GObject, resource.PostableResource):
     __gsignals__ = {
             "sync-begin": (gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE,
@@ -191,6 +197,8 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
                 commands_node = node_append_child(coll_node, "Commands")
 
+                print "%d changes" % len(changes)
+
                 for guid, change in changes.items():
                     change_type, data = change
 
@@ -206,9 +214,11 @@ class ASResource(gobject.GObject, resource.PostableResource):
                     if change_type != CHANGE_DELETED:
                         os_doc = minidom.parseString(data)
                         as_doc = None
+
                         if item.type == SYNC_ITEM_CONTACTS:
-                            as_doc = conversion.to_airsync(os_doc, "contact",
-                                    contacts.TO_AIRSYNC_SPEC)
+                            as_doc = formats.contact.to_airsync(os_doc)
+                        elif item.type == SYNC_ITEM_CALENDAR:
+                            as_doc = formats.event.to_airsync(os_doc)
                         else:
                             raise Exception("don't know how to convert data of item_type %d" % \
                                     item.type)
@@ -218,14 +228,40 @@ class ASResource(gobject.GObject, resource.PostableResource):
             responses_node = doc.createElement("Responses")
 
             for req_cmd_node in xpath.Evaluate("Commands/*", n):
-                    name = "handle_sync_%s_cmd_%s" % \
-                            (cls.lower(), req_cmd_node.localName.lower())
-                    if hasattr(self, name):
-                        getattr(self, name)(req_cmd_node, responses_node)
+                cmd_name = req_cmd_node.localName
+                chg_type = CHANGE_TYPE_FROM_NODE_NAME[cmd_name]
+
+                if chg_type == CHANGE_ADDED:
+                    response_node = node_append_child(responses_node, cmd_name)
+
+                    cid = node_get_value(node_get_child(req_cmd_node, "ClientId"))
+                    node_append_child(response_node, "ClientId", cid)
+
+                    luid = generate_guid()
+                    guid = state.register_luid(luid)
+
+                    node_append_child(response_node, "ServerId", luid)
+                    node_append_child(response_node, "Status", 1)
+                else:
+                    luid = node_get_value(node_get_child(req_cmd_node, "ServerId"))
+                    guid = state.get_guid_from_luid(luid)
+
+                xml = u""
+                if chg_type in (CHANGE_ADDED, CHANGE_MODIFIED):
+                    app_node = node_get_child(req_cmd_node, "ApplicationData")
+
+                    #debug_put_object(guid)
+                    #debug_put_object(app_node.toxml())
+
+                    if item.type == SYNC_ITEM_CONTACTS:
+                        xml = formats.contact.from_airsync(guid, app_node).toxml()
+                    elif item.type == SYNC_ITEM_CALENDAR:
+                        xml = formats.event.from_airsync(guid, app_node).toxml()
                     else:
-                        print "Unhandled command \"%s\" (looking for %s)" % \
-                            (req_cmd_node.localName, name)
-                        print "Command node:", req_cmd_node.toprettyxml()
+                        raise Exception("don't know how to convert data of item_type %d" % \
+                                item.type)
+
+                item.add_remote_change(guid, chg_type, xml)
 
             if responses_node.childNodes:
                 coll_node.appendChild(responses_node)
@@ -235,67 +271,6 @@ class ASResource(gobject.GObject, resource.PostableResource):
         print doc.toprettyxml()
         print
         return self.create_wbxml_response(doc.toxml())
-
-    def handle_sync_contacts_cmd_add(self, request_node, responses_node):
-        response_node = node_append_child(responses_node, request_node.localName)
-
-        cid = node_get_value(node_get_child(request_node, "ClientId"))
-        node_append_child(response_node, "ClientId", cid)
-
-        luid = generate_guid()
-        state = self.pship.state
-        item = state.items[SYNC_ITEM_CONTACTS]
-        guid = state.register_luid(luid)
-
-        node_append_child(response_node, "ServerId", luid)
-        node_append_child(response_node, "Status", 1)
-
-        app_node = node_get_child(request_node, "ApplicationData")
-        xml = conversion.from_airsync(guid, app_node, "contact",
-                contacts.FROM_AIRSYNC_SPEC, contacts.FROM_AIRSYNC_UNMAPPED).toxml()
-
-        item.add_remote_change(guid, CHANGE_ADDED, xml)
-
-    def handle_sync_contacts_cmd_change(self, request_node, responses_node):
-        luid = node_get_value(node_get_child(request_node, "ServerId"))
-
-        state = self.pship.state
-        item = state.items[SYNC_ITEM_CONTACTS]
-        guid = state.get_guid_from_luid(luid)
-
-        app_node = node_get_child(request_node, "ApplicationData")
-        xml = conversion.from_airsync(guid, app_node, "contact",
-                contacts.FROM_AIRSYNC_SPEC, contacts.FROM_AIRSYNC_UNMAPPED).toxml()
-
-        item.add_remote_change(guid, CHANGE_MODIFIED, xml)
-
-    def handle_sync_contacts_cmd_delete(self, request_node, responses_node):
-        luid = node_get_value(node_get_child(request_node, "ServerId"))
-
-        state = self.pship.state
-        item = state.items[SYNC_ITEM_CONTACTS]
-        guid = state.get_guid_from_luid(luid)
-        item.add_remote_change(guid, CHANGE_DELETED)
-
-    def handle_sync_calendar_cmd_add(self, request_node, responses_node):
-        response_node = node_append_child(responses_node, request_node.localName)
-
-        cid = node_get_value(node_get_child(request_node, "ClientId"))
-        node_append_child(response_node, "ClientId", cid)
-
-        luid = generate_guid()
-        state = self.pship.state
-        item = state.items[SYNC_ITEM_CALENDAR]
-        guid = state.register_luid(luid)
-
-        node_append_child(response_node, "ServerId", luid)
-        node_append_child(response_node, "Status", 1)
-
-        app_node = node_get_child(request_node, "ApplicationData")
-        debug_put_object(app_node)
-        #xml = contact_from_airsync(guid, app_node).toxml()
-
-        #item.add_remote_change(guid, CHANGE_ADDED, xml)
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"

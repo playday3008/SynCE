@@ -205,8 +205,8 @@ class SyncItem:
             return changeset
         else:
             # FIXME: optimize this
-            changeset = {}
             items = changeset.items()[:max]
+            changeset = {}
             for key, value in items:
                 del self.local_changes[key]
                 changeset[key] = value

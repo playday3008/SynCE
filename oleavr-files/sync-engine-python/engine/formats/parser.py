@@ -119,7 +119,9 @@ def to_airsync(os_doc, root_name, conv_spec):
         i = 0
 
         for node in xpath.Evaluate(expr, root_node):
-            if mappings != None:
+            if callable(mappings):
+                mappings(doc, src_doc, node, None)
+            elif mappings != None:
                 mapping = mappings[i]
 
                 if not callable(mapping):
@@ -143,10 +145,11 @@ def to_airsync(os_doc, root_name, conv_spec):
             node.parentNode.removeChild(node)
 
             i += 1
-            if mappings == None or i >= len(mappings):
-                break
+            if not callable(mappings):
+                if mappings == None or i >= len(mappings):
+                    break
 
-    nodes = xpath.Evaluate("*", root_node)
+    nodes = xpath.Evaluate("*/*", root_node)
     if nodes:
         print "to_airsync: Unparsed XML:"
         print root_node.toprettyxml()

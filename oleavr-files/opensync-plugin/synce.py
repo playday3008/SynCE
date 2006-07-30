@@ -35,6 +35,16 @@ SYNC_ITEM_MEDIA     = 5
 SYNC_ITEM_NOTES     = 6
 SYNC_ITEM_TASKS     = 7
 
+SUPPORTED_ITEM_TYPES = {
+    SYNC_ITEM_CONTACTS : ("contact", "xml-contact-string"),
+    SYNC_ITEM_CALENDAR : ("event",   "xml-event-string"),
+}
+
+OBJ_TYPE_TO_ITEM_TYPE = {
+    "contact" : SYNC_ITEM_CONTACTS,
+    "event" : SYNC_ITEM_CALENDAR,
+}
+
 class SyncClass:
     def __init__(self, member):
         self.__member = member
@@ -76,14 +86,16 @@ class SyncClass:
             #time.sleep(10)
             #print "done"
 
-            changesets = self.engine.GetRemoteChanges((SYNC_ITEM_CONTACTS,))
+            print "SynCE: Calling GetRemoteChanges"
+            changesets = self.engine.GetRemoteChanges(SUPPORTED_ITEM_TYPES.keys())
+            print "SynCE: Got %d changesets" % len(changesets)
             for item_type, changes in changesets.items():
-                guids = []
-
                 if changes:
                     print "Processing changes for item_type %d" % item_type
                 else:
                     print "No changes for item_type %d" % item_type
+
+                acks = { item_type : [] }
 
                 for change in changes:
                     guid, chg_type, data = change
@@ -92,9 +104,8 @@ class SyncClass:
                     change.uid = guid.encode("utf-8")
                     change.changetype = chg_type
 
-                    if item_type == SYNC_ITEM_CONTACTS:
-                        change.objtype = "contact"
-                        change.format = "xml-contact-string"
+                    if item_type in SUPPORTED_ITEM_TYPES:
+                        change.objtype, change.format = SUPPORTED_ITEM_TYPES[item_type]
 
                         if chg_type != CHANGE_DELETED:
                             bytes = data.encode("utf-8")
@@ -108,11 +119,10 @@ class SyncClass:
 
                     change.report(ctx)
 
-                    guids.append(guid)
+                    acks[item_type].append(guid)
 
-                if guids:
-                    print "SynCE: Acknowledging remote changes"
-                    acks = { item_type : guids }
+                if len(acks[item_type]) > 0:
+                    print "SynCE: Acknowledging remote changes for item_type %d" % item_type
                     self.engine.AcknowledgeRemoteChanges(acks)
 
             print "SynCE: Reporting success"
@@ -124,8 +134,7 @@ class SyncClass:
             print "SynCE: slow-sync requested"
 
         self.ctx = ctx
-        ctx.report_success()
-        #gobject.idle_add(self._do_get_changeinfo_idle_cb)
+        gobject.idle_add(self._do_get_changeinfo_idle_cb)
 
     def _do_get_changeinfo_idle_cb(self):
         print "SynCE: Calling StartSync"
@@ -134,25 +143,21 @@ class SyncClass:
     def commit_change(self, ctx, chg):
         print "SynCE: Calling AddLocalChanges() with changetype=%d" % chg.changetype
 
-        if chg.changetype != CHANGE_DELETED:
-            print "Format: '%s'" % chg.format
-            print "Data: '%s'" % chg.data
+        if chg.objtype in OBJ_TYPE_TO_ITEM_TYPE:
+            item_type = OBJ_TYPE_TO_ITEM_TYPE[chg.objtype]
 
-        if chg.format != "xml-contact-string":
-            raise Exception("SynCE: %s not yet handled" % chg.format)
+            data = ""
+            if chg.changetype != CHANGE_DELETED:
+                data = chg.data.decode("utf-8")
 
-        data = ""
-        if chg.changetype != CHANGE_DELETED:
-            data = chg.data.decode("utf-8")
-
-            print "SynCE: Data='%s'" % data
-
-        self.engine.AddLocalChanges(
-                {
-                    SYNC_ITEM_CONTACTS : ((chg.uid.decode("utf-8"),
-                                           chg.changetype,
-                                           data),),
-                })
+            self.engine.AddLocalChanges(
+                    {
+                        item_type : ((chg.uid.decode("utf-8"),
+                                      chg.changetype,
+                                      data),),
+                    })
+        else:
+            raise Exception("SynCE: object type %s not yet handled" % chg.objtype)
 
         ctx.report_success()
 
