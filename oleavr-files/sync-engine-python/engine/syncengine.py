@@ -18,32 +18,18 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-import gobject
-import dbus
 import dbus.service
-import dbus.glib
-
-from twisted.internet import glib2reactor
-glib2reactor.install()
-from twisted.internet import reactor
-from twisted.web2 import server, channel
-
 from pyrapi2 import *
 from partnership import *
-from remsync import RemSyncServer
 from rra import RRAServer
 from airsync import *
 from util import *
 from interfaces import *
 from errors import *
 import socket
-
-import os
-
+from twisted.internet import reactor
+from twisted.web2 import server, channel
 from xml.dom import minidom
-
-BUS_NAME = "org.synce.SyncEngine"
-OBJECT_PATH = "/org/synce/SyncEngine"
 
 class SyncEngine(dbus.service.Object):
     """
@@ -503,16 +489,3 @@ class SyncEngine(dbus.service.Object):
     def Synchronized(self):
         print "Emitting Synchronized"
 
-
-if __name__ == "__main__":
-    rss = RemSyncServer()
-
-    # hack hack hack
-    os.setgid(1000)
-    os.setuid(1000)
-
-    session_bus = dbus.SessionBus()
-    bus_name = dbus.service.BusName(BUS_NAME, bus=session_bus)
-    obj = SyncEngine(bus_name, OBJECT_PATH, rss)
-
-    reactor.run()

@@ -26,7 +26,7 @@ from cStringIO import StringIO
 from xml.dom import minidom
 from xml import xpath
 import pywbxml
-from contacts import contact_from_airsync, contact_to_airsync
+import formats
 
 AIRSYNC_DOC_NAME = "AirSync"
 AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
@@ -207,7 +207,8 @@ class ASResource(gobject.GObject, resource.PostableResource):
                         os_doc = minidom.parseString(data)
                         as_doc = None
                         if item.type == SYNC_ITEM_CONTACTS:
-                            as_doc = contact_to_airsync(os_doc)
+                            as_doc = conversion.to_airsync(os_doc, "contact",
+                                    contacts.TO_AIRSYNC_SPEC)
                         else:
                             raise Exception("don't know how to convert data of item_type %d" % \
                                     item.type)
@@ -250,7 +251,8 @@ class ASResource(gobject.GObject, resource.PostableResource):
         node_append_child(response_node, "Status", 1)
 
         app_node = node_get_child(request_node, "ApplicationData")
-        xml = contact_from_airsync(guid, app_node).toxml()
+        xml = conversion.from_airsync(guid, app_node, "contact",
+                contacts.FROM_AIRSYNC_SPEC, contacts.FROM_AIRSYNC_UNMAPPED).toxml()
 
         item.add_remote_change(guid, CHANGE_ADDED, xml)
 
@@ -262,7 +264,8 @@ class ASResource(gobject.GObject, resource.PostableResource):
         guid = state.get_guid_from_luid(luid)
 
         app_node = node_get_child(request_node, "ApplicationData")
-        xml = contact_from_airsync(guid, app_node).toxml()
+        xml = conversion.from_airsync(guid, app_node, "contact",
+                contacts.FROM_AIRSYNC_SPEC, contacts.FROM_AIRSYNC_UNMAPPED).toxml()
 
         item.add_remote_change(guid, CHANGE_MODIFIED, xml)
 
@@ -273,6 +276,26 @@ class ASResource(gobject.GObject, resource.PostableResource):
         item = state.items[SYNC_ITEM_CONTACTS]
         guid = state.get_guid_from_luid(luid)
         item.add_remote_change(guid, CHANGE_DELETED)
+
+    def handle_sync_calendar_cmd_add(self, request_node, responses_node):
+        response_node = node_append_child(responses_node, request_node.localName)
+
+        cid = node_get_value(node_get_child(request_node, "ClientId"))
+        node_append_child(response_node, "ClientId", cid)
+
+        luid = generate_guid()
+        state = self.pship.state
+        item = state.items[SYNC_ITEM_CALENDAR]
+        guid = state.register_luid(luid)
+
+        node_append_child(response_node, "ServerId", luid)
+        node_append_child(response_node, "Status", 1)
+
+        app_node = node_get_child(request_node, "ApplicationData")
+        debug_put_object(app_node)
+        #xml = contact_from_airsync(guid, app_node).toxml()
+
+        #item.add_remote_change(guid, CHANGE_ADDED, xml)
 
     def handle_foldersync(self, request, body):
         print "Parsing FolderSync request"
@@ -324,12 +347,12 @@ class ASResource(gobject.GObject, resource.PostableResource):
         print
 
         reply_doc = self.create_wbxml_doc("GetItemEstimate")
-        resp_node = node_append_child(reply_doc.documentElement, "Response")
-        node_append_child(resp_node, "Status", 1)
-
         state = self.pship.state
 
         for n in xpath.Evaluate("/GetItemEstimate/Collections/Collection", doc):
+            resp_node = node_append_child(reply_doc.documentElement, "Response")
+            node_append_child(resp_node, "Status", 1)
+
             cls = node_get_value(node_get_child(n, "Class"))
             id = node_get_value(node_get_child(n, "CollectionId"))
             filter = node_get_value(node_get_child(n, "FilterType"))
@@ -354,7 +377,7 @@ class ASResource(gobject.GObject, resource.PostableResource):
         body = body.rstrip("\0")
         try:
             doc = minidom.parseString(body)
-            #print doc.documentElement.toprettyxml()
+            print doc.toprettyxml()
 
             for n in doc.documentElement.childNodes:
                 if n.nodeType != n.ELEMENT_NODE:

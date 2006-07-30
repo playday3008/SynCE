@@ -17,14 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-"""
-Provider of D-Bus services aiming to replace librra.
-"""
-
-version = (0, 1, 0)
-
-from constants import *
-from errors import *
-from interfaces import *
-from syncengine import *
+import parser
+import contact
+import event
 

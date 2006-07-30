@@ -124,7 +124,8 @@ class SyncClass:
             print "SynCE: slow-sync requested"
 
         self.ctx = ctx
-        gobject.idle_add(self._do_get_changeinfo_idle_cb)
+        ctx.report_success()
+        #gobject.idle_add(self._do_get_changeinfo_idle_cb)
 
     def _do_get_changeinfo_idle_cb(self):
         print "SynCE: Calling StartSync"
@@ -132,6 +133,10 @@ class SyncClass:
 
     def commit_change(self, ctx, chg):
         print "SynCE: Calling AddLocalChanges() with changetype=%d" % chg.changetype
+
+        if chg.changetype != CHANGE_DELETED:
+            print "Format: '%s'" % chg.format
+            print "Data: '%s'" % chg.data
 
         if chg.format != "xml-contact-string":
             raise Exception("SynCE: %s not yet handled" % chg.format)
@@ -182,3 +187,6 @@ def get_info(info):
 
     info.accept_objtype("contact")
     info.accept_objformat("contact", "xml-contact-string")
+
+    info.accept_objtype("event")
+    info.accept_objformat("event", "xml-event-string")

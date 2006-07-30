@@ -21,6 +21,7 @@ import os
 import random
 from xml.dom import minidom
 from xml import xpath
+import cPickle as pickle
 
 QUERY_TYPE_GET    = 0
 QUERY_TYPE_SET    = 1
@@ -254,6 +255,12 @@ def node_get_value(node):
             return n.nodeValue.strip()
     return None
 
+def node_get_value_of_child(node, name):
+    child = node_find_child(node, name)
+    if child == None:
+        return None
+    return node_get_value(child)
+
 def node_set_value(node, value):
     for n in node.childNodes:
         if n.nodeType == n.TEXT_NODE:
@@ -262,17 +269,24 @@ def node_set_value(node, value):
     raise ValueError("node has no value")
 
 def node_append_child(parent, name, value=None, always_create=True):
-    if not always_create:
-        nodes = xpath.Evaluate(name, parent)
-        if nodes:
-            return nodes[0]
-
     doc = parent.ownerDocument
-    node = doc.createElement(name)
-    if value is not None:
-        value_node = doc.createTextNode(unicode(value))
-        node.appendChild(value_node)
-    parent.appendChild(node)
+    node = None
+
+    for token in name.split("/"):
+        if not always_create:
+            nodes = xpath.Evaluate(token, parent)
+            if nodes:
+                parent = nodes[0]
+                node = parent
+                continue
+
+        node = doc.createElement(token)
+        if value is not None:
+            value_node = doc.createTextNode(unicode(value))
+            node.appendChild(value_node)
+        parent.appendChild(node)
+        parent = node
+
     return node
 
 def escape_str(s):
@@ -296,12 +310,6 @@ def encode_wstr(s):
 
 def decode_wstr(s):
     return s.decode("utf_16_le").rstrip("\0")
-
-
-#
-# temporary
-#
-import cPickle as pickle
 
 def debug_get_objects():
     objects = []
