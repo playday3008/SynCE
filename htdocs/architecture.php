@@ -122,10 +122,7 @@ to one of those in the <i>~synce/scripts/</i> directory.</p>
 Programming Interface. The RAPI function calls are <a
 href="http://msdn.microsoft.com/library/en-us/wcesdkr/html/_wcesdk_CeRapiInit.asp">documented
 by Microsoft</a> but not the transport protocol. The '2' in "librapi2" is there
-because this is the second implementation. The original implementation is found
-<a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/synce/client/librapi/">in
-the <i>synce</i> CVS module</a>.</p>
+because this is the second implementation.</p>
 
 <p>Librapi2 reads <i>~/synce/active_connection</i> file (see <a
 href="#dccm">DCCM</a>) to get the device IP address and then connects to port
@@ -137,10 +134,8 @@ functions for converting to and from this string type is provided in <a
 href="#libsynce">libsynce</a>. Librapi2 will handle conversions between big
 endian and little endian internally whenever possible.</p>
 
-<p>Librapi2 comes with a <a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/librapi2/tools/">number
-of file management tools</a> that provide useful example code in how to use the
-RAPI calls.</p>
+<p>Librapi2 comes with a number of file management tools that provide useful
+example code in how to use the RAPI calls.</p>
 
 <p>There is a special page documenting the <a href="rapi.php">RAPI protocol</a>.</p>
 

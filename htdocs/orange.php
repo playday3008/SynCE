@@ -82,9 +82,8 @@ and provide a link to where it can be downloaded.</p>
 
 <p>See the <a
 href="https://sourceforge.net/project/showfiles.php?group_id=30550&package_id=157355">Orange
-package</a> for the latest release, or the <tt>orange</tt> module in <a
-href="http://sourceforge.net/cvs/?group_id=30550">CVS</a> for the bleeding edge
-source code!</p>
+package</a> for the latest release, or the <tt>orange</tt> module in Subversion
+for the bleeding edge source code!</p>
 
 <br>
 

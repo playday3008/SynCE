@@ -32,7 +32,7 @@ uncompleted. Why?</p>
 <p><b>Q:</b> When I synchronize to Evolution, the appointment times in my
 calendar are displayed in GMT instead of my timezone.</p>
 
-<p><b>A:</b> Please try the <tt>rra</tt> module from <a href="cvs.php">CVS</a>.</p>
+<p><b>A:</b> Please try the <tt>rra</tt> module from <a href="svn.php">Subversion</a>.</p>
 
 <hr size=1 width="50%">
 

@@ -8,8 +8,7 @@
 
 <h2>About</h2>
 
-<p>Extract from the <a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/unshield/README?rev=HEAD&content-type=text/vnd.viewcvs-markup">README</a>:</p>
+<p>Extract from the README:</p>
 
 <p>An installer created by the InstallShield software stores the
 files it will install inside of InstallShield Cabinet Files. It
@@ -58,9 +57,8 @@ packages</a>.</p>
 
 <p>See the <a
 href="https://sourceforge.net/project/showfiles.php?group_id=30550&package_id=125523">Unshield
-package</a> for the latest release, or the <tt>unshield</tt> module in <a
-href="http://sourceforge.net/cvs/?group_id=30550">CVS</a> for the bleeding edge
-source code!</p>
+package</a> for the latest release, or the <tt>unshield</tt> module in
+Subversion for the bleeding edge source code!</p>
 
 <h2>InstallShield cabinet files vs. Microsoft cabinet files</h2>
 

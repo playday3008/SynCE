@@ -29,7 +29,7 @@ OpenOffice.</p>
 </ol>
 
 <p>This is now implemented! See <a
-href="http://cvs.sourceforge.net/viewcvs.py/synce/twogood-files/pwi/">A working
+href="http://svn.sourceforge.net/viewvc/synce/trunk/twogood-files/pwi/">A working
 PWI decoder</a>.</p></li>
 
 <li><p>Separate the tool in (1) into a tool and a library with a suitable API.

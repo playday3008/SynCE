@@ -549,9 +549,8 @@ follows after this chunk's data.</p>
 
 <p>The <i>data stream</i> is all chunk data concatenated.</p>
 
-<p>There is an example program called <a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/rra/src/rra-decode.c?rev=HEAD&content-type=text/vnd.viewcvs-markup">rra-decode</a>
-that reads a data stream from a file and decodes it as described here.</p>
+<p>There is an example program called rra-decode that reads a data stream from
+a file and decodes it as described here.</p>
 
 <p>There are three known data formats:</p>
 
@@ -602,12 +601,7 @@ used to remove a property value.</p>
 
 <p>Code to convert between a database record stream and an array of <a
 href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_cepropval.asp">CEPROVAL</a>
-structures is available in the the RRA library (<a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/rra/lib/dbstream.c?rev=HEAD&content-type=text/vnd.viewcvs-markup">dbstream.c</a> to be exact)
-which exports <a
-href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/synce/rra/lib/dbstream.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">these
-functions</a>.</p>
-
+structures is available in the the RRA library (dbstream.h and dbstream.c to be exact).</p>
 
 <p><br>Return to <a href="index.php">main page</a>.</p>
 

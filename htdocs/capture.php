@@ -43,23 +43,19 @@ Windows.</p>
 <p>When you are finished, just use <i>killall datapipe</i> to shut down the
 pipes.</p>
 
-<p>To make it easier to see what happens over RAPI, I have created Ethereal
+<p>To make it easier to see what happens over RAPI, I have created Wireshark
 packet decoders for the protocols used by SynCE. Put the files in the top
-Ethereal source directory and add their names to epan/Makefile.common.</p>
+Wireshark source directory and add their names to epan/Makefile.common. Then
+can be found in the <a
+href="http://svn.sourceforge.net/viewvc/synce/trunk/twogood-files/">twogood-files</a> directory.</p>
 
 <ul>
 
-<li><a
-href="http://cvs.sourceforge.net/viewcvs.py/*checkout*/synce/twogood-files/packet-dccm.c?rev=HEAD">DCCM
-packet decoder</a>.</li>
+<li>packet-dccm.c: DCCM packet decoder</a>.</li>
 
-<li><a
-href="http://cvs.sourceforge.net/viewcvs.py/*checkout*/synce/twogood-files/packet-rapi.c?rev=HEAD">RAPI
-packet decoder</a>.</li>
+<li>packet-rapi.c: RAPI packet decoder</a>.</li>
 
-<li><a
-href="http://cvs.sourceforge.net/viewcvs.py/*checkout*/synce/twogood-files/packet-rrac.c?rev=HEAD">RRAC
-packet decoder</a>.</li>
+<li>packet-rrac.c: RRAC packet decoder</a>.</li>
 
 </ul>
 
