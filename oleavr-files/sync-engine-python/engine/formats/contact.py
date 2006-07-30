@@ -140,7 +140,8 @@ def from_airsync(guid, app_node):
     doc = parser.from_airsync(guid, app_node, "contact", FROM_AIRSYNC_SPEC,
                               FROM_AIRSYNC_UNMAPPED)
 
-    node_append_child(doc.documentElement, "FormattedName", fn)
+    node = node_append_child(doc.documentElement, "FormattedName")
+    node_append_child(node, "Content", fn)
 
     return doc
 
