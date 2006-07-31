@@ -112,7 +112,9 @@ class SyncClass:
 
                         if chg_type != CHANGE_DELETED:
                             #print "Data: '%s'" % data
-                            bytes = data.encode("utf-8")
+                            bytes = '<?xml version="1.0" encoding="utf-8"?>\n'
+                            bytes += data.encode("utf-8")
+
                             # this is just a temporary hack around a bug in the opensync bindings
                             # (OSyncChange.set_data() should either copy the string or
                             #  hold a reference to it)

@@ -28,6 +28,8 @@ from xml import xpath
 import pywbxml
 import formats
 
+DEBUG = False
+
 AIRSYNC_DOC_NAME = "AirSync"
 AIRSYNC_PUBLIC_ID = "-//AIRSYNC//DTD AirSync//EN"
 AIRSYNC_SYSTEM_ID = "http://www.microsoft.com/"
@@ -164,9 +166,10 @@ class ASResource(gobject.GObject, resource.PostableResource):
 
         xml_raw = pywbxml.wbxml2xml(body)
         req_doc = minidom.parseString(xml_raw)
-        print "Which is:"
-        print req_doc.toprettyxml()
-        print
+        if DEBUG:
+            print "Which is:"
+            print req_doc.toprettyxml()
+            print
 
         doc = self.create_wbxml_doc("Sync")
         colls_node = node_append_child(doc.documentElement, "Collections")
@@ -254,12 +257,14 @@ class ASResource(gobject.GObject, resource.PostableResource):
                     #debug_put_object(app_node.toxml())
 
                     if item.type == SYNC_ITEM_CONTACTS:
-                        xml = formats.contact.from_airsync(guid, app_node).toxml()
+                        os_doc = formats.contact.from_airsync(guid, app_node)
                     elif item.type == SYNC_ITEM_CALENDAR:
-                        xml = formats.event.from_airsync(guid, app_node).toxml()
+                        os_doc = formats.event.from_airsync(guid, app_node)
                     else:
                         raise Exception("don't know how to convert data of item_type %d" % \
                                 item.type)
+
+                    xml = os_doc.documentElement.toxml()
 
                 item.add_remote_change(guid, chg_type, xml)
 
@@ -267,9 +272,10 @@ class ASResource(gobject.GObject, resource.PostableResource):
                 coll_node.appendChild(responses_node)
 
         print "Responding to Sync"
-        print "With:"
-        print doc.toprettyxml()
-        print
+        if DEBUG:
+            print "With:"
+            print doc.toprettyxml()
+            print
         return self.create_wbxml_response(doc.toxml())
 
     def handle_foldersync(self, request, body):
@@ -317,9 +323,10 @@ class ASResource(gobject.GObject, resource.PostableResource):
         xml_raw = pywbxml.wbxml2xml(body)
         doc = minidom.parseString(xml_raw)
 
-        print "Which is:"
-        print doc.toprettyxml()
-        print
+        if DEBUG:
+            print "Which is:"
+            print doc.toprettyxml()
+            print
 
         reply_doc = self.create_wbxml_doc("GetItemEstimate")
         state = self.pship.state
@@ -341,9 +348,10 @@ class ASResource(gobject.GObject, resource.PostableResource):
             node_append_child(coll_node, "Estimate", item.get_change_counts()[0])
 
         print "Responding to GetItemEstimate"
-        print "With:"
-        print reply_doc.toprettyxml()
-        print
+        if DEBUG:
+            print "With:"
+            print reply_doc.toprettyxml()
+            print
 
         return self.create_wbxml_response(reply_doc.toxml())
 
@@ -352,7 +360,9 @@ class ASResource(gobject.GObject, resource.PostableResource):
         body = body.rstrip("\0")
         try:
             doc = minidom.parseString(body)
-            print doc.toprettyxml()
+
+            if DEBUG:
+                print doc.toprettyxml()
 
             for n in doc.documentElement.childNodes:
                 if n.nodeType != n.ELEMENT_NODE:
