@@ -572,7 +572,7 @@ bool rapi_buffer_recv(RapiBuffer* buffer, SynceSocket* socket)
     goto fail;
   }
 
-  if (events != EVENT_READ)
+  if ((events&EVENT_READ) != EVENT_READ)
   {
     rapi_buffer_error("Nothing to read. Events = %i", events);
     goto fail;
