@@ -154,7 +154,7 @@ typedef int32_t  HRESULT;
  * Other macros
  */
 
-#define MAX_PATH  256
+#define MAX_PATH  260
 
 #ifndef FALSE
 #define FALSE false
