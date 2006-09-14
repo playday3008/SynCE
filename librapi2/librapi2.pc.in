@@ -7,5 +7,5 @@ Name: librapi2
 Description: Make RAPI calls to a WinCE device
 Version: @VERSION@
 Requires: libsynce
-Libs: -L${libdir} -lrapi2
+Libs: -L${libdir} -lrapi
 Cflags: -I${includedir}

@@ -2,6 +2,7 @@
 set -x
 export CFLAGS=-Werror
 export CXXFLAGS=-Werror
+export PKG_CONFIG_PATH="/var/tmp/synce/lib/pkgconfig:$PKG_CONFIG_PATH"
 ./bootstrap &&
-./configure --with-libsynce=/var/tmp/synce --prefix=/var/tmp/synce &&
+./configure --prefix=/var/tmp/synce &&
 make install
