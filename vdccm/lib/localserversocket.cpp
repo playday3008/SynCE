@@ -35,9 +35,17 @@ LocalServerSocket::LocalServerSocket(const LocalAcceptedSocketFactory *localAcce
 
 
 LocalServerSocket::~LocalServerSocket()
+{}
+
+
+bool LocalServerSocket::shutdown()
 {
+    bool ret = LocalSocket::shutdown();
     unlink(path.c_str());
+
+    return ret;
 }
+
 
 bool LocalServerSocket::listen(int backlog)
 {

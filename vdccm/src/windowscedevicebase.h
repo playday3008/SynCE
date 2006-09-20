@@ -121,6 +121,8 @@ public:
 
     virtual void ping() = 0;
 
+    virtual string getTransport() const = 0;
+
     virtual bool sendPassword(string password)
     {
         return true;

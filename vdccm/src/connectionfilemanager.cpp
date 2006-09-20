@@ -131,7 +131,9 @@ bool ConnectionFileManager::_writeConnectionFile(string fileName, const WindowsC
         connectionFile << "class=" << windowsCEDevice->getDeviceClass() << endl;
         connectionFile << "hardware=" << windowsCEDevice->getHardware() << endl;
         connectionFile << "ip=" << windowsCEDevice->getDeviceAddress() << endl;
-        connectionFile << "port=" << windowsCEDevice->getPort() << endl;
+        connectionFile << "port=" << windowsCEDevice->getPort() << endl << endl;
+        connectionFile << "[connection]" << endl;
+        connectionFile << "transport=" << windowsCEDevice->getTransport() << endl;
         if (windowsCEDevice->isLocked()) {
             connectionFile << "password=" << windowsCEDevice->getPassword() << endl;
             connectionFile << "key=" << windowsCEDevice->getKey() << endl;

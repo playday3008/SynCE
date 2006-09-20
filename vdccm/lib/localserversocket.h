@@ -40,6 +40,7 @@ public:
     virtual LocalAcceptedSocket* accept();
     virtual bool listen(int backlog = 5);
     virtual void event(Descriptor::eventType et);
+    virtual bool shutdown();
 
 private:
     const LocalAcceptedSocketFactory *localAcceptedSocketFactory;

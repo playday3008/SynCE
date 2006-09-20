@@ -168,8 +168,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    Utils::runScripts("stop");
-
     mux->getReadManager()->remove(&dccmServer);
     mux->getReadManager()->remove(&localServer);
     mux->getReadManager()->remove(&rapiServer);
@@ -186,6 +184,8 @@ int main(int argc, char *argv[])
     delete mux;
 
     Utils::removePidFile();
+
+    Utils::runScripts("stop");
 
     return 0;
 }

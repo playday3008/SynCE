@@ -62,6 +62,9 @@ public:
     std::string getRealName() const;
     std::string getHardware() const;
     std::string getPassword() const;
+    std::string getTransport() const {
+        return "ppp";
+    };
     uint32_t getBuildNumber() const;
     uint32_t getOsVersion() const;
     uint32_t getProcessorType() const;
