@@ -1,0 +1,105 @@
+.\" This -*- nroff -*- file has been generated from
+.\" DocBook SGML with docbook-to-man on Debian GNU/Linux.
+...\"
+...\"	transcript compatibility for postscript use.
+...\"
+...\"	synopsis:  .P! <file.ps>
+...\"
+.de P!
+\\&.
+.fl			\" force out current output buffer
+\\!%PB
+\\!/showpage{}def
+...\" the following is from Ken Flowers -- it prevents dictionary overflows
+\\!/tempdict 200 dict def tempdict begin
+.fl			\" prolog
+.sy cat \\$1\" bring in postscript file
+...\" the following line matches the tempdict above
+\\!end % tempdict %
+\\!PE
+\\!.
+.sp \\$2u	\" move below the image
+..
+.de pF
+.ie     \\*(f1 .ds f1 \\n(.f
+.el .ie \\*(f2 .ds f2 \\n(.f
+.el .ie \\*(f3 .ds f3 \\n(.f
+.el .ie \\*(f4 .ds f4 \\n(.f
+.el .tm ? font overflow
+.ft \\$1
+..
+.de fP
+.ie     !\\*(f4 \{\
+.	ft \\*(f4
+.	ds f4\"
+'	br \}
+.el .ie !\\*(f3 \{\
+.	ft \\*(f3
+.	ds f3\"
+'	br \}
+.el .ie !\\*(f2 \{\
+.	ft \\*(f2
+.	ds f2\"
+'	br \}
+.el .ie !\\*(f1 \{\
+.	ft \\*(f1
+.	ds f1\"
+'	br \}
+.el .tm ? font underflow
+..
+.ds f1\"
+.ds f2\"
+.ds f3\"
+.ds f4\"
+'\" t 
+.ta 8n 16n 24n 32n 40n 48n 56n 64n 72n  
+.TH "vdccm - SYNCE-KDE" "1" 
+.SH "NAME" 
+vdccm \(em and a daemon which listens for PDA connections 
+.SH "SYNOPSIS" 
+.PP 
+\fBvdccm\fP [\fB-d \fIlevel\fP\fP]  [\fB-f\fP]  [\fB-h\fP]  [\fB-p \fIpassword\fP\fP]  [\fB-i \fIthis\fP\fP]  [\fB-u \fIcount\fP\fP]  [\fB-s \fIsec\fP\fP]  
+.SH "DESCRIPTION" 
+.PP 
+This manual page documents briefly the 
+\fBvdccm\fP command. 
+.PP 
+\fBvdccm\fP is a generalization of the native  
+SynCE-DCCM but is fully compatible with it. In addition to all DCCM  
+features it is capable of supporting more than one PDA connected at  
+the same time. It is responsible for reporting all connects and  
+disconnects of PDAs to interested clients via an unix-socket by use  
+of a simple protocol. E.g. RAKI is one of such an interested client. 
+ 
+.SH "OPTIONS" 
+.PP 
+These programs follow the usual GNU command line syntax.   
+A summary of options is included below. 
+.IP "\fB-d LEVEL\fP" 10 
+Set debug log level: 
+0 - No logging, 
+1 - Errors only (default), 
+2 - Errors and warnings, 
+3 - Everything. 
+ 
+.IP "\fB-f\fP" 10 
+Do not run as daemon. 
+.IP "\fB-h\fP" 10 
+Show this help message. 
+.IP "\fB-p password\fP" 10 
+Use this password when device connects. 
+.IP "\fB-i\fP" 10 
+Use ip-address of device for identification. 
+.IP "\fB-u\fP" 10 
+Allowed numbers of unanswered pings (default 3). 
+.IP "\fB-s\fP" 10 
+Delay between pings in seconds (default 5).
+.IP "\fB-r\fP" 10
+Bypass 'do not start as root' check.
+.SH "SEE ALSO" 
+.PP 
+synce (1), raki (1), dccm (1). 
+.SH "AUTHOR" 
+.PP 
+This manual page was written by Volker Christian voc@users.sourceforge.net. 
+...\" created by instant / docbook-to-man, Wed 20 Aug 2003, 12:02 
