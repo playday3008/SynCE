@@ -2,7 +2,7 @@
 INCLUDES = $(all_includes)
 
 # the library search path.
-lib_LTLIBRARIES = libdescriptor.la
+noinst_LTLIBRARIES = libdescriptor.la
 libdescriptor_la_SOURCES = continousnode.cpp descriptor.cpp \
 			descriptormanager.cpp multiplexer.cpp singleshotnode.cpp timernode.cpp timernodemanager.cpp \
 			tcpsocket.cpp tcpserversocket.cpp tcpconnectedsocket.cpp tcpclientsocket.cpp \
