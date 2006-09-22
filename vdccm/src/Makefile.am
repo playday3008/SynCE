@@ -1,12 +1,8 @@
-AM_CXXFLAGS = @LIBSYNCE_CFLAGS@
-AM_LDFLAGS = @LIBSYNCE_LIBS@
-
-INCLUDES = -I$(top_srcdir)/lib
-
+INCLUDES = -I$(top_srcdir)/lib @LIBSYNCE_CFLAGS@
 METASOURCES = AUTO
 bin_PROGRAMS = vdccm
-
 vdccm_LDADD = $(top_builddir)/lib/libdescriptor.la
+vdccm_LDFLAGS = @LIBSYNCE_LIBS@
 
 noinst_HEADERS = windowscedevice.h devicemanager.h synceclient.h dccmserver.h \
 					localserver.h connectionfilemanager.h cmdlineargs.h utils.h rapiserver.h rapiclient.h \
@@ -21,6 +17,13 @@ vdccm_SOURCES = windowscedevice.cpp devicemanager.cpp synceclient.cpp \
 	rapihandshakeclientfactory.cpp rapiprovisioningclientfactory.cpp rapiconnection.cpp rapiproxy.cpp \
 	rapiproxyfactory.cpp rapiproxyconnection.cpp
 
+AM_CFLAGS = -pedantic-errors -Wall
+AM_CXXFLAGS = -pedantic-errors -Wall
+
 install-exec-hook:
 	chown root $(DESTDIR)$(bindir)/vdccm
 	chmod u+s $(DESTDIR)$(bindir)/vdccm
+
+man_MANS = vdccm.1
+
+EXTRA_DIST = $(man_MANS)
