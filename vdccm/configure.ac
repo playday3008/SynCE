@@ -18,11 +18,8 @@ AC_PROG_MAKE_SET
 AC_DISABLE_STATIC
 AM_PROG_LIBTOOL
 
-CFLAGS="-Wall $CFLAGS"
-CXXFLAGS="-Wall $CXXFLAGS"
-
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.3)
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -48,5 +45,5 @@ AC_CHECK_FUNCS([gethostbyaddr gethostbyname gettimeofday select socket strerror]
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  src/Makefile
-                 testtools/Makefile])
+                 tools/Makefile])
 AC_OUTPUT
