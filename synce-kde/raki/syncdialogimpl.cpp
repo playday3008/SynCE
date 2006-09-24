@@ -31,6 +31,7 @@
 #include <qpushbutton.h>
 #include <qtable.h>
 #include <qptrdict.h>
+#include <kapplication.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -39,7 +40,7 @@
 
 SyncDialogImpl::SyncDialogImpl(Rra *rra, QString& pdaName, QWidget* parent,
         const char* name, bool modal, WFlags fl)
-        : SyncDialog(parent, name, modal, fl)
+        : SyncDialog(parent, name, true, fl)
 {
     this->pdaName = pdaName;
     this->rra = rra;
@@ -135,37 +136,6 @@ void *SyncDialogImpl::finishedSynchronization(void */*nothing */)
 bool SyncDialogImpl::isRunning()
 {
     return !end;
-}
-
-
-struct SyncDialogImplDataExchange {
-    SyncTaskListItem *item;
-    bool success;
-};
-
-
-
-void *SyncDialogImpl::preSync(void *v_dataExchange)
-{
-    SyncDialogImplDataExchange *dataExchange = (SyncDialogImplDataExchange *) v_dataExchange;
-
-    if (!dataExchange->item->preSync()) {
-        dataExchange->success = false;
-    }
-
-    return NULL;
-}
-
-
-void *SyncDialogImpl::postSync(void *v_dataExchange)
-{
-    SyncDialogImplDataExchange *dataExchange = (SyncDialogImplDataExchange *) v_dataExchange;
-
-    if (!dataExchange->item->postSync()) {
-        dataExchange->success = false;
-    }
-
-    return NULL;
 }
 
 

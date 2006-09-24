@@ -34,6 +34,7 @@
 #include <klistview.h>
 #include <qcursor.h>
 #include <qpoint.h>
+#include <kapplication.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -380,6 +381,7 @@ bool SyncTaskListItem::synchronize(SyncDialogImpl *syncDialog)
 
     setTaskLabel(i18n("Started").utf8());
     setTotalSteps( 1);
+    KApplication::kApplication()->processEvents();
     this->syncDialog = syncDialog;
 
     if (syncPlugin != NULL) {
@@ -397,6 +399,7 @@ bool SyncTaskListItem::synchronize(SyncDialogImpl *syncDialog)
                     QTime::currentTime());
             firstSynchronization = false;
             setTaskLabel(i18n("Finished").utf8());
+            KApplication::kApplication()->processEvents();
         } else {
             setTaskLabel(i18n("Error during synchronization").utf8());
         }
