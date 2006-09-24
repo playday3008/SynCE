@@ -393,12 +393,14 @@ QString PDA::getDeviceIp()
     int *pA = new int; \
     *pA = a; \
     postThreadEvent(&PDA::advanceProgressEvent, pA, noBlock); \
+    kapp->wakeUpGuiThread(); \
 }
 
 #define advanceInitTotalSteps(a) { \
     int *pA = new int; \
     *pA = a; \
     postThreadEvent(&PDA::advanceTotalStepsEvent, pA, noBlock); \
+    kapp->wakeUpGuiThread(); \
 }
 
 
@@ -664,14 +666,14 @@ void PDA::setPartnership( QThread * /*thread*/, void * )
             connect( syncDialog, SIGNAL( finished() ), configDialog, SLOT( writeConfig() ) );
             partnerOk = false;
             partnerId = 0;
+            int *status = new int;
+            *status = 1;
+            postThreadEvent( &PDA::progressDialogCancel, status, noBlock );
         } else {
             postThreadEvent(&PDA::synchronizationTasks, 0, noBlock);
             associatedMenu->setItemEnabled( syncItem, true );
             partnerOk = true;
         }
-        int *status = new int;
-        *status = 1;
-        postThreadEvent( &PDA::progressDialogCancel, status, noBlock );
     }
 }
 
@@ -690,7 +692,7 @@ void PDA::init()
         }
 
         initProgress = new InitProgress( raki, "InitProgress", true,
-                                     WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM );
+                                         WStyle_Customize | WStyle_NoBorder | WStyle_Tool/ | WX11BypassWM );
 
         progressBar = initProgress->progressBar;
         progressBar->setTotalSteps( 11 ); /* 7 */
@@ -700,6 +702,9 @@ void PDA::init()
         kapp->processEvents();
 
         startWorkerThread( this, &PDA::setPartnership, NULL );
+
+        kapp->processEvents();
+
     } else {
         kdDebug( 2120 ) << "Using Guest" << endl;
         delete configDialog;
@@ -723,12 +728,15 @@ void * PDA::synchronizationTasks( void * )
     QDateTime lastSynchronized;
     bool ret = true;
 
+    kapp->processEvents();
+
     if ( !typesRead ) {
         typesRead = true;
         QValueList<uint32_t> types;
         if ( getSynchronizationTypes( &types ) ) {
             QValueListIterator<uint32_t> it;
             for ( it = types.begin() ; it != types.end(); ++it ) {
+                kapp->processEvents();
                 objectType = *it;
                 configDialog->addSyncTask(rra, objectType, partnerId);
             }
@@ -738,6 +746,10 @@ void * PDA::synchronizationTasks( void * )
     }
 
     kdDebug( 2120 ) << i18n( "End PDA::syncronizationTasks()" ) << endl;
+
+    int *status = new int;
+    *status = 1;
+    progressDialogCancel(status);
 
     return NULL;
 }
