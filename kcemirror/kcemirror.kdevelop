@@ -15,6 +15,7 @@
     <description/>
     <ignoreparts/>
     <secondaryLanguages/>
+    <versioncontrol/>
   </general>
   <kdevfileview>
     <groups>
@@ -24,6 +25,7 @@
       <group pattern="*.po;*.ts" name="Translations" />
       <group pattern="*" name="Others" />
       <hidenonprojectfiles>false</hidenonprojectfiles>
+      <hidenonlocation>false</hidenonlocation>
     </groups>
     <tree>
       <hidepatterns>*.o,*.lo,CVS</hidepatterns>
@@ -63,6 +65,7 @@
     <display>
       <staticmembers>false</staticmembers>
       <demanglenames>true</demanglenames>
+      <outputradix>10</outputradix>
     </display>
   </kdevdebugger>
   <kdevfilecreate>
@@ -115,7 +118,7 @@
       </default>
       <debug>
         <configargs>--with-qt-includes=/usr/include/qt3 --enable-debug --prefix=/usr</configargs>
-        <builddir>../build/debug</builddir>
+        <builddir>debug</builddir>
         <topsourcedir/>
         <cppflags/>
         <ldflags/>
@@ -128,6 +131,7 @@
         <cflags/>
         <cxxflags/>
         <f77flags/>
+        <envvars/>
       </debug>
     </configurations>
   </kdevautoproject>
@@ -154,6 +158,19 @@
       <pcs>KDElibs</pcs>
       <pcs>Qt</pcs>
     </references>
+    <qt>
+      <used>false</used>
+      <version>3</version>
+      <root/>
+    </qt>
+    <creategettersetter>
+      <prefixGet/>
+      <prefixSet>set</prefixSet>
+      <prefixVariable>m_,_</prefixVariable>
+      <parameterName>theValue</parameterName>
+      <inlineGet>true</inlineGet>
+      <inlineSet>true</inlineSet>
+    </creategettersetter>
   </kdevcppsupport>
   <kdevcvsservice>
     <recursivewhenupdate>true</recursivewhenupdate>
@@ -162,4 +179,11 @@
     <recursivewhencommitremove>true</recursivewhencommitremove>
     <revertoptions>-C</revertoptions>
   </kdevcvsservice>
+  <kdevdocumentation>
+    <projectdoc>
+      <docsystem/>
+      <docurl/>
+      <usermanualurl/>
+    </projectdoc>
+  </kdevdocumentation>
 </kdevelop>
