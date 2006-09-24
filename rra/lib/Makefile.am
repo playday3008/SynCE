@@ -39,7 +39,10 @@ librra_la_SOURCES = \
 	timezone.h         timezone.c \
 	frontend.h         frontend.c \
 	uint32vector.h     uint32vector.c \
-	synce_ids.h
+	synce_ids.h        appointment_ids.h \
+	task_ids.h         internal.h \
+	contact_ids.h      rrac_packet.h \
+	matchmaker.h
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
 librra_la_LIBADD   = @LTLIBOBJS@
