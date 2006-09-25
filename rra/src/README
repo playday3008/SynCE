@@ -5,16 +5,17 @@ Generic:
 o Use synce-matchmaker to create a partnership
 o Use rra-get-types to list the names of the data types on the device
 
-Retrieving from device:
+Retrieving objects from the device:
 
 o Use rra-get-ids to get the ids and their status (unchanged, changed, deleted)
 o Use rra-get-data to get data from the device
 o Use rra-decode to dump the data from the device
 o Use rra-*-to-* to convert PIM data to text formats
 
-Sending to device:
+Modifying objects on device:
 
 o Use rra-*-from-* to convert PIM text formats to device data
 o Use rra-put-data to send data to the device
+o Use rra-delete to delete objects on the device
 
 \David
