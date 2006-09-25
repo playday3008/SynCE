@@ -9,11 +9,12 @@ Retrieving from device:
 
 o Use rra-get-ids to get the ids and their status (unchanged, changed, deleted)
 o Use rra-get-data to get data from the device
-o For contacts, use rra-contact-to-vcard to convert device data to vCard
+o Use rra-decode to dump the data from the device
+o Use rra-*-to-* to convert PIM data to text formats
 
 Sending to device:
 
-o For contacts, use rra-contact-from-vcard to convert vCard to device data
+o Use rra-*-from-* to convert PIM text formats to device data
 o Use rra-put-data to send data to the device
 
 \David
