@@ -152,6 +152,13 @@ href="dynamite.php">Dynamite</a></blockquote>
 <a name="news"></a>
 <h2>News</h2>
 
+<b><v>2006-10-04</b> A complete new implementation of SynCE-KDE is under
+development. Some gaols of this new implementation are: Support synchronization
+of WM5 devices, Compatibility with the upcoming KDE version 4.
+Many thanks to <A href="http://www.cyberhouse.at/typo3-cms">Cyberhouse.at - webdesign with
+TYPO3</A> who provides help in dialog design of this new SynCE-KDE version. The
+developement takes place in the synce-kde/SYNCE_KDE2 tree in svn.
+
 <p><b>2006-01-04</b> If you are interested in Windows Mobile 5 support in
 SynCE, please join the <a
 href="https://lists.sourceforge.net/lists/listinfo/synce-windowsmobile5">SynCE-WindowsMobile5</a>
