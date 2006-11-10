@@ -32,7 +32,13 @@
 #include <linux/workqueue.h>
 #include <linux/mii.h>
 #include <linux/usb.h>
-#include <linux/usb_cdc.h>
+
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
+ #include <linux/usb/cdc.h>
+#else
+ #include <linux/usb_cdc.h>
+#endif
 
 #include "ndis.h"
 #include "usbnet.h"
