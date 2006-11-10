@@ -75,7 +75,7 @@ static bool remote_copy(const char* ascii_source, const char* ascii_dest)
 	return CeCopyFileA(ascii_source, ascii_dest, false);
 }
 
-#define ANYFILE_BUFFER_SIZE (16*1024)
+#define ANYFILE_BUFFER_SIZE (4*1024)
 
 static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name, size_t* bytes_copied)
 {
