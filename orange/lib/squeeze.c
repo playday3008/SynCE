@@ -237,7 +237,8 @@ static bool squeeze_by_magic(/*{{{*/
       synce_trace("Found MSI format.");
   }
 #endif
-  else if (strstr(description, "MS-DOS executable (EXE), OS/2 or MS Windows"))
+  else if (strstr(description, "MS-DOS executable (EXE), OS/2 or MS Windows") ||
+      strstr(description, "MS-DOS executable PE"))
   {
     success = squeeze_exe(filename, output_directory);
   }
