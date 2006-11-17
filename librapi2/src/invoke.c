@@ -1,8 +1,12 @@
 /* $Id$ */
-#include "rapi.h"
-#include "rapi_context.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <assert.h>
 #include <stdlib.h>
+
+#include "rapi.h"
+#include "rapi_context.h"
 
 struct _IRAPIStream
 {
