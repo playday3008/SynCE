@@ -194,8 +194,8 @@ struct configFile *_cfgParseConfigFile (struct configFile *cfg)
 					currentKey=currentStringStart;
 					state=_cfgCOLON;
 				} else {
-					//Do this in search routine instead (with strcasecmp)
-					//cfg->bbdg[filePos] = tolower(cfg->bbdg[filePos]);
+					/* Do this in search routine instead (with strcasecmp)
+					   cfg->bbdg[filePos] = tolower(cfg->bbdg[filePos]); */
 					filePos++;
 				}
 				break;
