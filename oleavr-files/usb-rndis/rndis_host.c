@@ -297,7 +297,7 @@ static void rndis_status(struct usbnet *dev, struct urb *urb)
 		}
 	} else {
 		dev_dbg(&info->control->dev,
-			"unexpected actual_length %d", urb->actual_length);
+			"unexpected actual_length %d\n", urb->actual_length);
 	}
 }
 
