@@ -6,11 +6,6 @@
 
 <h1>SynCE - Links</h1>
 
-<h2>Applications using SynCE</h2>
-<ul>
-<li><a href="http://www.jardino.nildram.co.uk/">Windows CE to KDE address book tool</a></li>
-</ul>
-
 <h2>Microsoft documentation</h2>
 
 <ul>
