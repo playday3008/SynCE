@@ -24,12 +24,27 @@
 
 #define RNDIS_MSG_INIT                           2
 #define RNDIS_MSG_QUERY                          4
+#define RNDIS_MSG_SET                            5
 
 #define RNDIS_STATUS_SUCCESS                     0
 
 #define RNDIS_TIMEOUT_MS                      5000
 
 #define OID_802_3_CURRENT_ADDRESS       0x01010102
+#define OID_GEN_CURRENT_PACKET_FILTER   0x0001010E
+
+#define NDIS_PACKET_TYPE_DIRECTED       0x00000001
+#define NDIS_PACKET_TYPE_MULTICAST      0x00000002
+#define NDIS_PACKET_TYPE_ALL_MULTICAST  0x00000004
+#define NDIS_PACKET_TYPE_BROADCAST      0x00000008
+#define NDIS_PACKET_TYPE_SOURCE_ROUTING 0x00000010
+#define NDIS_PACKET_TYPE_PROMISCUOUS    0x00000020
+#define NDIS_PACKET_TYPE_SMT            0x00000040
+#define NDIS_PACKET_TYPE_ALL_LOCAL      0x00000080
+#define NDIS_PACKET_TYPE_GROUP          0x00000100
+#define NDIS_PACKET_TYPE_ALL_FUNCTIONAL 0x00000200
+#define NDIS_PACKET_TYPE_FUNCTIONAL     0x00000400
+#define NDIS_PACKET_TYPE_MAC_FRAME      0x00000800
 
 #define RESPONSE_BUFFER_SIZE                  1025
 
@@ -96,6 +111,23 @@ struct rndis_query_c {
     guint32 status;
     guint32 len;
     guint32 offset;
+} __attribute__ ((packed));
+
+struct rndis_set {
+    guint32 msg_type;
+    guint32 msg_len;
+    guint32 request_id;
+    guint32 oid;
+    guint32 len;
+    guint32 offset;
+    guint32 handle;
+} __attribute__ ((packed));
+
+struct rndis_set_c {
+    guint32 msg_type;
+    guint32 msg_len;
+    guint32 request_id;
+    guint32 status;
 } __attribute__ ((packed));
 
 void
@@ -209,6 +241,8 @@ rndis_init (usb_dev_handle *h,
   resp->af_list_size = GUINT32_FROM_LE (resp->af_list_size);
 
   *response = resp;
+
+  return TRUE;
 }
 
 gboolean
@@ -250,13 +284,41 @@ rndis_query (usb_dev_handle *h,
   return TRUE;
 }
 
+gboolean
+rndis_set (usb_dev_handle *h,
+           guint32 oid,
+           guchar *value,
+           guint value_len)
+{
+  struct rndis_set req;
+  struct rndis_set_c *resp;
+
+  req.msg_type = RNDIS_MSG_SET;
+  req.msg_len = sizeof (req) + value_len;
+
+  req.oid = GUINT32_TO_LE (oid);
+  req.len = GUINT32_TO_LE (value_len);
+  req.offset = GUINT32_TO_LE (sizeof (req) - sizeof (struct rndis_message));
+  req.handle = GUINT32_TO_LE (0);
+
+  if (!rndis_command (h, (struct rndis_request *) &req,
+                      (struct rndis_response **) &resp))
+    return FALSE;
+
+  return TRUE;
+}
+
 void
 handle_device (struct usb_device *dev)
 {
   usb_dev_handle *h;
   struct rndis_init_c *resp;
+  guint max_transfer_size;
   guchar *mac_addr;
   guint mac_addr_len;
+  guint32 pf;
+  guchar *buf;
+  gint len;
 
   h = usb_open (dev);
   if (h == NULL)
@@ -310,6 +372,8 @@ handle_device (struct usb_device *dev)
           resp->af_list_offset,
           resp->af_list_size);
 
+  max_transfer_size = resp->max_transfer_size;
+
   puts ("doing rndis_query for OID_802_3_CURRENT_ADDRESS");
   mac_addr_len = 6;
   if (!rndis_query (h, OID_802_3_CURRENT_ADDRESS, &mac_addr, &mac_addr_len))
@@ -318,6 +382,22 @@ handle_device (struct usb_device *dev)
   printf ("rndis_query succeeded, got MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4],
           mac_addr[5]);
+
+  puts ("setting packet filter");
+  pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_DIRECTED
+                      | NDIS_PACKET_TYPE_MULTICAST
+                      | NDIS_PACKET_TYPE_BROADCAST);
+  rndis_set (h, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf, sizeof (pf));
+
+  puts ("packet filter set");
+
+  buf = g_new (guchar, max_transfer_size);
+
+  puts ("doing bulk read");
+  len = usb_bulk_read (h, 0x82, (gchar *) buf, max_transfer_size, 60 * 1000);
+  printf ("usb_bulk_read returned %d\n", len);
+
+  g_free (buf);
 
   goto OUT;
 
@@ -331,7 +411,12 @@ OUT:
 gint
 main(gint argc, gchar *argv[])
 {
+  GMainContext *ctx;
+  GMainLoop *loop;
   struct usb_bus *busses, *bus;
+
+  ctx = g_main_context_new ();
+  loop = g_main_loop_new (ctx, TRUE);
 
   usb_init ();
   usb_find_busses ();
@@ -354,6 +439,8 @@ main(gint argc, gchar *argv[])
             }
         }
     }
+
+  g_main_loop_run (loop);
 
   return 0;
 }
