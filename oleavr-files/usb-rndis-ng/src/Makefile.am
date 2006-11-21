@@ -1,0 +1,6 @@
+AM_CFLAGS = @GLIB_CFLAGS@ @LIBUSB_CFLAGS@
+AM_LDFLAGS = @GLIB_LIBS@ @LIBUSB_LIBS@
+
+bin_PROGRAMS = usb-rndis
+
+usb_rndis_SOURCES = main.c
