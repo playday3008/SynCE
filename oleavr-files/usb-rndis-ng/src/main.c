@@ -19,6 +19,13 @@
 #include <stdio.h>
 #include <glib.h>
 #include <usb.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
 
 #define RNDIS_MSG_COMPLETION            0x80000000
 
@@ -318,7 +325,8 @@ handle_device (struct usb_device *dev)
   guint mac_addr_len;
   guint32 pf;
   guchar *buf;
-  gint len;
+  gint len, fd = -1, err;
+  struct ifreq ifr;
 
   h = usb_open (dev);
   if (h == NULL)
@@ -391,6 +399,18 @@ handle_device (struct usb_device *dev)
 
   puts ("packet filter set");
 
+  if ((fd = open ("/dev/net/tun", O_RDWR)) < 0)
+    goto SYS_ERROR;
+
+  memset (&ifr, 0, sizeof (ifr));
+  ifr.ifr_flags = IFF_TAP;
+
+  if ((err = ioctl (fd, TUNSETIFF, (void *) &ifr)) < 0) {
+      goto SYS_ERROR;
+  }
+
+  printf ("got '%s'\n", ifr.ifr_name);
+
   buf = g_new (guchar, max_transfer_size);
 
   puts ("doing bulk read");
@@ -403,6 +423,12 @@ handle_device (struct usb_device *dev)
 
 ERROR:
   fprintf (stderr, "error occurred: %s\n", usb_strerror ());
+  goto OUT;
+
+SYS_ERROR:
+  fprintf (stderr, "error occurred: %s\n", strerror (errno));
+  if (fd > 0)
+      close (fd);
 
 OUT:
   return;
