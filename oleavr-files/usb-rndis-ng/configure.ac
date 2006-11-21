@@ -15,6 +15,9 @@ dnl Check for libraries.
 PKG_CHECK_MODULES(GLIB, glib-2.0,
   [], AC_MSG_ERROR(Cannot find glib-2.0))
 
+PKG_CHECK_MODULES(GTHREAD, gthread-2.0,
+  [], AC_MSG_ERROR(Cannot find gthread-2.0))
+
 PKG_CHECK_MODULES(LIBUSB, libusb,
   [], AC_MSG_ERROR(Cannot find libusb))
 
