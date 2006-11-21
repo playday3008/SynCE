@@ -29,6 +29,7 @@
 
 #define RNDIS_MSG_COMPLETION            0x80000000
 
+#define RNDIS_MSG_PACKET                         1
 #define RNDIS_MSG_INIT                           2
 #define RNDIS_MSG_QUERY                          4
 #define RNDIS_MSG_SET                            5
@@ -135,6 +136,23 @@ struct rndis_set_c {
     guint32 msg_len;
     guint32 request_id;
     guint32 status;
+} __attribute__ ((packed));
+
+struct rndis_data {
+    guint32 msg_type;
+    guint32 msg_len;
+    guint32 data_offset;
+    guint32 data_len;
+
+    guint32 oob_data_offset;
+    guint32 oob_data_len;
+    guint32 num_oob;
+
+    guint32 packet_data_offset;
+    guint32 packet_data_len;
+
+    guint32 vc_handle;
+    guint32 reserved;
 } __attribute__ ((packed));
 
 void
@@ -255,7 +273,7 @@ rndis_init (usb_dev_handle *h,
 gboolean
 rndis_query (usb_dev_handle *h,
              guint32 oid,
-             guchar **result,
+             guchar *result,
              guint *res_len)
 {
   struct rndis_query req;
@@ -285,7 +303,9 @@ rndis_query (usb_dev_handle *h,
       return FALSE;
     }
 
-  *result = (guchar *) resp + sizeof (struct rndis_message) + resp->offset;
+  memcpy (result,
+      (guchar *) resp + sizeof (struct rndis_message) + resp->offset,
+      resp->len);
   *res_len = resp->len;
 
   return TRUE;
@@ -315,18 +335,127 @@ rndis_set (usb_dev_handle *h,
   return TRUE;
 }
 
+typedef struct {
+    usb_dev_handle *h;
+    gint fd;
+    guint max_transfer_size;
+    guint alignment;
+} RNDISContext;
+
+static gpointer
+recv_thread (gpointer data)
+{
+  RNDISContext *ctx = data;
+  guchar *buf;
+  gint len;
+
+  puts ("recv_thread speaking");
+
+  buf = g_new (guchar, ctx->max_transfer_size);
+
+  while (TRUE)
+    {
+      len = usb_bulk_read (ctx->h, 0x82, (gchar *) buf,
+                           ctx->max_transfer_size, 1000);
+      if (len > 0)
+        {
+          printf ("recv_thread: usb_bulk_read read %d!\n", len);
+        }
+      else
+        {
+          fprintf (stderr, "recv_thread: usb_bulk_read returned %d: %s\n",
+                   len, usb_strerror ());
+        }
+    }
+
+  printf ("recv_thread exiting\n");
+
+  return NULL;
+}
+
+static gpointer
+send_thread (gpointer data)
+{
+  RNDISContext *ctx = data;
+  guchar *buf;
+  gint len, result;
+  guint i = 0;
+
+  puts ("send_thread speaking");
+
+  buf = g_new (guchar, ctx->max_transfer_size);
+
+  while (TRUE)
+    {
+      struct rndis_data *hdr = (struct rndis_data *) buf;
+      gchar str[256];
+      guint msg_len;
+
+      /* temporary, just to make debugging easier */
+      memset (buf, 0, ctx->max_transfer_size);
+
+      len = read (ctx->fd, buf + sizeof (struct rndis_data),
+                  ctx->max_transfer_size - sizeof (struct rndis_data));
+      if (len <= 0)
+        {
+          fprintf (stderr, "recv failed because len = %d: %s\n", len,
+                   strerror (errno));
+
+          return NULL;
+        }
+
+      printf ("send_thread: relaying %d bytes\n", len);
+
+      memset (hdr, 0, sizeof (struct rndis_data));
+
+      msg_len = sizeof (struct rndis_data) + len;
+      if (msg_len % ctx->alignment != 0)
+        {
+          guint padding = ctx->alignment - (msg_len % ctx->alignment);
+
+          printf ("send_thread: message length changed from %d to %d\n",
+                  msg_len, msg_len + padding);
+
+          msg_len += padding;
+        }
+
+      hdr->msg_type = GUINT32_TO_LE (RNDIS_MSG_PACKET);
+      hdr->msg_len = GUINT32_TO_LE (msg_len);
+
+      hdr->data_offset = GUINT32_TO_LE (sizeof (struct rndis_data) -
+                                        sizeof (struct rndis_message));
+      hdr->data_len = GUINT32_TO_LE (len);
+
+      result = usb_bulk_write (ctx->h, 0x03, (gchar *) buf, msg_len,
+                               RNDIS_TIMEOUT_MS);
+      if (result <= 0)
+        {
+          fprintf (stderr, "send_thread: error occurred: %s\n",
+                   usb_strerror ());
+          return NULL;
+        }
+
+      sprintf (str, "/tmp/sent_packet_%04d.bin", ++i);
+      log_data (str, buf, msg_len);
+    }
+
+  printf ("send_thread exiting\n");
+
+  return NULL;
+}
+
 void
 handle_device (struct usb_device *dev)
 {
   usb_dev_handle *h;
   struct rndis_init_c *resp;
-  guint max_transfer_size;
-  guchar *mac_addr;
+  guchar mac_addr[6];
   guint mac_addr_len;
+  gchar mac_addr_str[20], str[64];
   guint32 pf;
-  guchar *buf;
-  gint len, fd = -1, err;
+  gint fd = -1, err;
   struct ifreq ifr;
+  RNDISContext *ctx1 = NULL, *ctx2 = NULL;
 
   h = usb_open (dev);
   if (h == NULL)
@@ -380,16 +509,22 @@ handle_device (struct usb_device *dev)
           resp->af_list_offset,
           resp->af_list_size);
 
-  max_transfer_size = resp->max_transfer_size;
+  ctx1 = g_new (RNDISContext, 1);
+  ctx1->h = h;
+  ctx1->max_transfer_size = resp->max_transfer_size;
+  ctx1->alignment = 1 << resp->packet_alignment;
+
+  ctx2 = g_new (RNDISContext, 1);
 
   puts ("doing rndis_query for OID_802_3_CURRENT_ADDRESS");
   mac_addr_len = 6;
-  if (!rndis_query (h, OID_802_3_CURRENT_ADDRESS, &mac_addr, &mac_addr_len))
+  if (!rndis_query (h, OID_802_3_CURRENT_ADDRESS, mac_addr, &mac_addr_len))
     goto OUT;
 
-  printf ("rndis_query succeeded, got MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
-          mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4],
-          mac_addr[5]);
+  sprintf (mac_addr_str, "%02x:%02x:%02x:%02x:%02x:%02x",
+           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
+           mac_addr[4], mac_addr[5]);
+  printf ("rndis_query succeeded, got MAC address: %s\n", mac_addr_str);
 
   puts ("setting packet filter");
   pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_DIRECTED
@@ -403,21 +538,30 @@ handle_device (struct usb_device *dev)
     goto SYS_ERROR;
 
   memset (&ifr, 0, sizeof (ifr));
-  ifr.ifr_flags = IFF_TAP;
+  ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
 
   if ((err = ioctl (fd, TUNSETIFF, (void *) &ifr)) < 0) {
       goto SYS_ERROR;
   }
 
-  printf ("got '%s'\n", ifr.ifr_name);
+  printf ("got device '%s'\n", ifr.ifr_name);
 
-  buf = g_new (guchar, max_transfer_size);
+  ctx1->fd = fd;
+  memcpy (ctx2, ctx1, sizeof (RNDISContext));
 
-  puts ("doing bulk read");
-  len = usb_bulk_read (h, 0x82, (gchar *) buf, max_transfer_size, 60 * 1000);
-  printf ("usb_bulk_read returned %d\n", len);
+  /* hackish */
+  sprintf (str, "ifconfig %s hw ether %s", ifr.ifr_name, mac_addr_str);
+  system (str);
 
-  g_free (buf);
+  system ("ifconfig tap0 up");
+
+  if (!g_thread_create (recv_thread, ctx1, TRUE, NULL))
+    goto SYS_ERROR;
+
+  if (!g_thread_create (send_thread, ctx2, TRUE, NULL))
+    goto SYS_ERROR;
+
+  puts ("all good");
 
   goto OUT;
 
@@ -430,6 +574,9 @@ SYS_ERROR:
   if (fd > 0)
       close (fd);
 
+  g_free (ctx1);
+  g_free (ctx2);
+
 OUT:
   return;
 }
@@ -440,6 +587,8 @@ main(gint argc, gchar *argv[])
   GMainContext *ctx;
   GMainLoop *loop;
   struct usb_bus *busses, *bus;
+
+  g_thread_init (NULL);
 
   ctx = g_main_context_new ();
   loop = g_main_loop_new (ctx, TRUE);
