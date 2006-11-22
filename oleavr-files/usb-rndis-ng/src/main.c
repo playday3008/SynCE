@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+//#define INSANE_DEBUG 1
+
 #include <stdio.h>
 #include <glib.h>
 #include <usb.h>
@@ -389,7 +391,9 @@ recv_thread (gpointer data)
 
       remaining = len;
 
+#ifdef INSANE_DEBUG
       printf ("recv_thread: usb_bulk_read read %d!\n", len);
+#endif
 
       while (remaining)
         {
@@ -436,7 +440,9 @@ recv_thread (gpointer data)
 
           eth_buf = buf + sizeof (struct rndis_message) + hdr->data_offset;
 
+#ifdef INSANE_DEBUG
           printf ("writing ethernet frame with size=%d\n", hdr->data_len);
+#endif
 
           len = write (ctx->fd, eth_buf, hdr->data_len);
           if (len <= 0)
@@ -467,7 +473,9 @@ send_thread (gpointer data)
   RNDISContext *ctx = data;
   guchar *buf;
   gint len, result;
+#ifdef INSANE_DEBUG
   guint i = 0;
+#endif
 
   puts ("send_thread speaking");
 
@@ -476,7 +484,9 @@ send_thread (gpointer data)
   while (TRUE)
     {
       struct rndis_data *hdr = (struct rndis_data *) buf;
+#ifdef INSANE_DEBUG
       gchar str[256];
+#endif
       guint msg_len;
 
       /* temporary, just to make debugging easier */
@@ -492,7 +502,9 @@ send_thread (gpointer data)
           return NULL;
         }
 
+#ifdef INSANE_DEBUG
       printf ("send_thread: relaying %d bytes\n", len);
+#endif
 
       memset (hdr, 0, sizeof (struct rndis_data));
 
@@ -501,8 +513,10 @@ send_thread (gpointer data)
         {
           guint padding = ctx->alignment - (msg_len % ctx->alignment);
 
+#ifdef INSANE_DEBUG
           printf ("send_thread: message length changed from %d to %d\n",
                   msg_len, msg_len + padding);
+#endif
 
           msg_len += padding;
         }
@@ -523,8 +537,10 @@ send_thread (gpointer data)
           return NULL;
         }
 
+#ifdef INSANE_DEBUG
       sprintf (str, "/tmp/sent_packet_%04d.bin", ++i);
       log_data (str, buf, msg_len);
+#endif
     }
 
   printf ("send_thread exiting\n");
@@ -615,11 +631,11 @@ handle_device (struct usb_device *dev)
   printf ("rndis_query succeeded, got MAC address: %s\n", mac_addr_str);
 
   puts ("setting packet filter");
-  /*
+
   pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_DIRECTED
                       | NDIS_PACKET_TYPE_MULTICAST
-                      | NDIS_PACKET_TYPE_BROADCAST);*/
-  pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS);
+                      | NDIS_PACKET_TYPE_BROADCAST);
+  //pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS);
   rndis_set (h, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf, sizeof (pf));
 
   puts ("packet filter set");
