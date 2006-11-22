@@ -38,6 +38,7 @@
 
 #define RNDIS_TIMEOUT_MS                      5000
 
+#define OID_802_3_PERMANENT_ADDRESS     0x01010101
 #define OID_802_3_CURRENT_ADDRESS       0x01010102
 #define OID_GEN_CURRENT_PACKET_FILTER   0x0001010E
 
@@ -317,22 +318,34 @@ rndis_set (usb_dev_handle *h,
            guchar *value,
            guint value_len)
 {
-  struct rndis_set req;
+  gboolean success;
+  guchar *buf;
+  guint msg_len;
+  struct rndis_set *req;
   struct rndis_set_c *resp;
 
-  req.msg_type = RNDIS_MSG_SET;
-  req.msg_len = sizeof (req) + value_len;
+  msg_len = sizeof (struct rndis_set) + value_len;
 
-  req.oid = GUINT32_TO_LE (oid);
-  req.len = GUINT32_TO_LE (value_len);
-  req.offset = GUINT32_TO_LE (sizeof (req) - sizeof (struct rndis_message));
-  req.handle = GUINT32_TO_LE (0);
+  buf = g_new (guchar, msg_len);
+  req = (struct rndis_set *) buf;
 
-  if (!rndis_command (h, (struct rndis_request *) &req,
-                      (struct rndis_response **) &resp))
-    return FALSE;
+  req->msg_type = RNDIS_MSG_SET;
+  req->msg_len = msg_len;
 
-  return TRUE;
+  req->oid = GUINT32_TO_LE (oid);
+  req->len = GUINT32_TO_LE (value_len);
+  req->offset = GUINT32_TO_LE (sizeof (struct rndis_set)
+                               - sizeof (struct rndis_message));
+  req->handle = GUINT32_TO_LE (0);
+
+  memcpy (buf + sizeof (struct rndis_set), value, value_len);
+
+  success = rndis_command (h, (struct rndis_request *) req,
+                           (struct rndis_response **) &resp);
+
+  g_free (buf);
+
+  return success;
 }
 
 typedef struct {
@@ -355,21 +368,96 @@ recv_thread (gpointer data)
 
   while (TRUE)
     {
+      gint remaining;
+
       len = usb_bulk_read (ctx->h, 0x82, (gchar *) buf,
                            ctx->max_transfer_size, 1000);
-      if (len > 0)
+      if (len <= 0)
         {
-          printf ("recv_thread: usb_bulk_read read %d!\n", len);
+          /* not a timeout? */
+          if (len != -110)
+            {
+              fprintf (stderr, "recv_thread: usb_bulk_read returned %d: %s\n",
+                       len, usb_strerror ());
+              goto OUT;
+            }
+          else
+            {
+              continue;
+            }
         }
-      else
+
+      remaining = len;
+
+      printf ("recv_thread: usb_bulk_read read %d!\n", len);
+
+      while (remaining)
         {
-          fprintf (stderr, "recv_thread: usb_bulk_read returned %d: %s\n",
-                   len, usb_strerror ());
+          struct rndis_data *hdr = (struct rndis_data *) buf;
+          guchar *eth_buf;
+
+          if (remaining < 8)
+            {
+              fprintf (stderr, "ignoring short packet with remaining=%d\n",
+                       remaining);
+              break;
+            }
+
+          hdr->msg_type = GUINT32_FROM_LE (hdr->msg_type);
+          hdr->msg_len = GUINT32_FROM_LE (hdr->msg_len);
+
+          if (hdr->msg_type != RNDIS_MSG_PACKET)
+            {
+              fprintf (stderr, "ignoring msg_type=%d\n", hdr->msg_type);
+              break;
+            }
+
+          if (hdr->msg_len > remaining)
+            {
+              fprintf (stderr, "msg_len=%d > remaining=%d\n",
+                       hdr->msg_len, remaining);
+              break;
+            }
+          else if (hdr->msg_len == 0)
+            {
+              fprintf (stderr, "ignoring short message\n");
+              break;
+            }
+
+          hdr->data_offset = GUINT32_FROM_LE (hdr->data_offset);
+          hdr->data_len = GUINT32_FROM_LE (hdr->data_len);
+
+          if (sizeof (struct rndis_message) + hdr->data_offset
+              + hdr->data_len > hdr->msg_len)
+            {
+              fprintf (stderr, "ignoring truncated message\n");
+              break;
+            }
+
+          eth_buf = buf + sizeof (struct rndis_message) + hdr->data_offset;
+
+          printf ("writing ethernet frame with size=%d\n", hdr->data_len);
+
+          len = write (ctx->fd, eth_buf, hdr->data_len);
+          if (len <= 0)
+            {
+              fprintf (stderr, "recv failed because len = %d: %s\n", len,
+                       strerror (errno));
+              goto OUT;
+            }
+          else if (len != hdr->data_len)
+            {
+              fprintf (stderr, "short write, %d out of %d bytes written\n",
+                       len, hdr->data_len);
+            }
+
+          buf += hdr->msg_len;
+          remaining -= hdr->msg_len;
         }
     }
 
+OUT:
   printf ("recv_thread exiting\n");
-
   return NULL;
 }
 
@@ -516,9 +604,9 @@ handle_device (struct usb_device *dev)
 
   ctx2 = g_new (RNDISContext, 1);
 
-  puts ("doing rndis_query for OID_802_3_CURRENT_ADDRESS");
+  puts ("doing rndis_query for OID_802_3_PERMANENT_ADDRESS");
   mac_addr_len = 6;
-  if (!rndis_query (h, OID_802_3_CURRENT_ADDRESS, mac_addr, &mac_addr_len))
+  if (!rndis_query (h, OID_802_3_PERMANENT_ADDRESS, mac_addr, &mac_addr_len))
     goto OUT;
 
   sprintf (mac_addr_str, "%02x:%02x:%02x:%02x:%02x:%02x",
@@ -527,9 +615,11 @@ handle_device (struct usb_device *dev)
   printf ("rndis_query succeeded, got MAC address: %s\n", mac_addr_str);
 
   puts ("setting packet filter");
+  /*
   pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_DIRECTED
                       | NDIS_PACKET_TYPE_MULTICAST
-                      | NDIS_PACKET_TYPE_BROADCAST);
+                      | NDIS_PACKET_TYPE_BROADCAST);*/
+  pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS);
   rndis_set (h, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf, sizeof (pf));
 
   puts ("packet filter set");
