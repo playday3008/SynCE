@@ -44,6 +44,9 @@
 
 #define RNDIS_TIMEOUT_MS                      5000
 
+/* FIXME: don't assume USB 2.0 */
+#define HOST_MAX_TRANSFER_SIZE               16384
+
 #define OID_802_3_PERMANENT_ADDRESS     0x01010101
 #define OID_802_3_CURRENT_ADDRESS       0x01010102
 #define OID_GEN_CURRENT_PACKET_FILTER   0x0001010E
@@ -162,7 +165,7 @@ struct rndis_data {
     guint32 reserved;
 } __attribute__ ((packed));
 
-void
+static void
 log_data (const gchar *filename,
           const guchar *buf,
           int len)
@@ -176,7 +179,7 @@ log_data (const gchar *filename,
   fclose (f);
 }
 
-gboolean
+static gboolean
 rndis_command (usb_dev_handle *h,
                struct rndis_request *req,
                struct rndis_response **resp)
@@ -243,7 +246,7 @@ ERROR:
   return FALSE;
 }
 
-gboolean
+static gboolean
 rndis_init (usb_dev_handle *h,
             struct rndis_init_c **response)
 {
@@ -255,7 +258,7 @@ rndis_init (usb_dev_handle *h,
 
   req.major_version = GUINT32_TO_LE (1);
   req.minor_version = GUINT32_TO_LE (0);
-  req.max_transfer_size = GUINT32_TO_LE (16384);
+  req.max_transfer_size = GUINT32_TO_LE (HOST_MAX_TRANSFER_SIZE);
 
   if (!rndis_command (h, (struct rndis_request *) &req,
                       (struct rndis_response **) &resp))
@@ -277,7 +280,7 @@ rndis_init (usb_dev_handle *h,
   return TRUE;
 }
 
-gboolean
+static gboolean
 rndis_query (usb_dev_handle *h,
              guint32 oid,
              guchar *result,
@@ -318,7 +321,7 @@ rndis_query (usb_dev_handle *h,
   return TRUE;
 }
 
-gboolean
+static gboolean
 rndis_set (usb_dev_handle *h,
            guint32 oid,
            guchar *value,
@@ -357,7 +360,8 @@ rndis_set (usb_dev_handle *h,
 typedef struct {
     usb_dev_handle *h;
     gint fd;
-    guint max_transfer_size;
+    guint host_max_transfer_size;
+    guint device_max_transfer_size;
     guint alignment;
 } RNDISContext;
 
@@ -370,7 +374,7 @@ recv_thread (gpointer data)
 
   puts ("recv_thread speaking");
 
-  buf = g_new (guchar, ctx->max_transfer_size);
+  buf = g_new (guchar, ctx->host_max_transfer_size);
 
   while (TRUE)
     {
@@ -378,7 +382,7 @@ recv_thread (gpointer data)
       guchar *p;
 
       len = usb_bulk_read (ctx->h, 0x82, (gchar *) buf,
-                           ctx->max_transfer_size, 1000);
+                           ctx->host_max_transfer_size, 1000);
       if (len <= 0)
         {
           /* not a timeout? */
@@ -395,7 +399,7 @@ recv_thread (gpointer data)
         }
 
 #ifdef INSANE_DEBUG
-      printf ("recv_thread: usb_bulk_read read %d!\n", len);
+      printf ("recv_thread: usb_bulk_read read %d\n", len);
 #endif
 
       p = buf;
@@ -416,6 +420,10 @@ recv_thread (gpointer data)
           hdr->msg_type = GUINT32_FROM_LE (hdr->msg_type);
           hdr->msg_len = GUINT32_FROM_LE (hdr->msg_len);
 
+#ifdef INSANE_DEBUG
+          printf ("recv_thread: msg_len=%d\n", hdr->msg_len);
+#endif
+
           if (hdr->msg_type != RNDIS_MSG_PACKET)
             {
               fprintf (stderr, "ignoring msg_type=%d\n", hdr->msg_type);
@@ -435,6 +443,31 @@ recv_thread (gpointer data)
 
           hdr->data_offset = GUINT32_FROM_LE (hdr->data_offset);
           hdr->data_len = GUINT32_FROM_LE (hdr->data_len);
+
+          if (hdr->oob_data_offset ||
+              hdr->oob_data_len ||
+              hdr->num_oob ||
+              hdr->packet_data_offset ||
+              hdr->packet_data_len)
+            {
+              hdr->oob_data_offset = GUINT32_FROM_LE (hdr->oob_data_offset);
+              hdr->oob_data_len = GUINT32_FROM_LE (hdr->oob_data_len);
+              hdr->num_oob = GUINT32_FROM_LE (hdr->num_oob);
+              hdr->packet_data_offset = GUINT32_FROM_LE (hdr->packet_data_offset);
+              hdr->packet_data_len = GUINT32_FROM_LE (hdr->packet_data_len);
+
+              printf ("recv_thread: interesting packet:\n");
+              printf ("  oob_data_offset=%d\n"
+                      "  oob_data_len=%d\n"
+                      "  num_oob=%d\n"
+                      "  packet_data_offset=%d\n"
+                      "  packet_data_len=%d\n",
+                      hdr->oob_data_offset,
+                      hdr->oob_data_len,
+                      hdr->num_oob,
+                      hdr->packet_data_offset,
+                      hdr->packet_data_len);
+            }
 
           if (sizeof (struct rndis_message) + hdr->data_offset
               + hdr->data_len > hdr->msg_len)
@@ -486,7 +519,7 @@ send_thread (gpointer data)
 
   puts ("send_thread speaking");
 
-  buf = g_new (guchar, ctx->max_transfer_size);
+  buf = g_new (guchar, ctx->device_max_transfer_size);
 
   while (TRUE)
     {
@@ -497,7 +530,7 @@ send_thread (gpointer data)
       guint msg_len;
 
       len = read (ctx->fd, buf + sizeof (struct rndis_data),
-                  ctx->max_transfer_size - sizeof (struct rndis_data));
+                  ctx->device_max_transfer_size - sizeof (struct rndis_data));
       if (len <= 0)
         {
           fprintf (stderr, "recv failed because len = %d: %s\n", len,
@@ -553,7 +586,7 @@ send_thread (gpointer data)
   return NULL;
 }
 
-void
+static void
 handle_device (struct usb_device *dev)
 {
   usb_dev_handle *h;
@@ -620,7 +653,8 @@ handle_device (struct usb_device *dev)
 
   ctx1 = g_new (RNDISContext, 1);
   ctx1->h = h;
-  ctx1->max_transfer_size = resp->max_transfer_size;
+  ctx1->host_max_transfer_size = HOST_MAX_TRANSFER_SIZE;
+  ctx1->device_max_transfer_size = resp->max_transfer_size;
   ctx1->alignment = 1 << resp->packet_alignment;
 
   ctx2 = g_new (RNDISContext, 1);
