@@ -375,6 +375,7 @@ recv_thread (gpointer data)
   while (TRUE)
     {
       gint remaining;
+      guchar *p;
 
       len = usb_bulk_read (ctx->h, 0x82, (gchar *) buf,
                            ctx->max_transfer_size, 1000);
@@ -393,15 +394,16 @@ recv_thread (gpointer data)
             }
         }
 
-      remaining = len;
-
 #ifdef INSANE_DEBUG
       printf ("recv_thread: usb_bulk_read read %d!\n", len);
 #endif
 
+      p = buf;
+      remaining = len;
+
       while (remaining)
         {
-          struct rndis_data *hdr = (struct rndis_data *) buf;
+          struct rndis_data *hdr = (struct rndis_data *) p;
           guchar *eth_buf;
 
           if (remaining < 8)
@@ -419,8 +421,7 @@ recv_thread (gpointer data)
               fprintf (stderr, "ignoring msg_type=%d\n", hdr->msg_type);
               break;
             }
-
-          if (hdr->msg_len > remaining)
+          else if (hdr->msg_len > remaining)
             {
               fprintf (stderr, "msg_len=%d > remaining=%d\n",
                        hdr->msg_len, remaining);
@@ -442,7 +443,7 @@ recv_thread (gpointer data)
               break;
             }
 
-          eth_buf = buf + sizeof (struct rndis_message) + hdr->data_offset;
+          eth_buf = p + sizeof (struct rndis_message) + hdr->data_offset;
 
 #ifdef INSANE_DEBUG
           printf ("writing ethernet frame with size=%d\n", hdr->data_len);
@@ -461,10 +462,12 @@ recv_thread (gpointer data)
                        len, hdr->data_len);
             }
 
-          buf += hdr->msg_len;
+          p += hdr->msg_len;
           remaining -= hdr->msg_len;
         }
     }
+
+  g_free (buf);
 
 OUT:
   printf ("recv_thread exiting\n");
@@ -547,8 +550,9 @@ send_thread (gpointer data)
 #endif
     }
 
-  printf ("send_thread exiting\n");
+  g_free (buf);
 
+  printf ("send_thread exiting\n");
   return NULL;
 }
 
@@ -704,6 +708,9 @@ main(gint argc, gchar *argv[])
   loop = g_main_loop_new (ctx, TRUE);
 
   usb_init ();
+
+  printf ("scanning for devices\n");
+
   usb_find_busses ();
   usb_find_devices ();
 
@@ -724,6 +731,8 @@ main(gint argc, gchar *argv[])
             }
         }
     }
+
+  printf ("done scanning for devices\n");
 
   g_main_loop_run (loop);
 
