@@ -496,9 +496,6 @@ send_thread (gpointer data)
 #endif
       guint msg_len;
 
-      /* temporary, just to make debugging easier */
-      memset (buf, 0, ctx->max_transfer_size);
-
       len = read (ctx->fd, buf + sizeof (struct rndis_data),
                   ctx->max_transfer_size - sizeof (struct rndis_data));
       if (len <= 0)
