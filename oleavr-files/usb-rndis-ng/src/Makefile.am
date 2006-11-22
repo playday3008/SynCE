@@ -1,6 +1,6 @@
 AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_CFLAGS@ @LIBUSB_CFLAGS@
 AM_LDFLAGS = @GLIB_LIBS@ @GTHREAD_LIBS@ @LIBUSB_LIBS@
 
-bin_PROGRAMS = usb-rndis
+bin_PROGRAMS = usb-rndis-driver
 
-usb_rndis_SOURCES = main.c
+usb_rndis_driver_SOURCES = main.c
