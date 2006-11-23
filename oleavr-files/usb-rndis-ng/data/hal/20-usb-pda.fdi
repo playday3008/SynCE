@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deviceinfo version="0.2">
+  <!-- USB RNDIS PDAs (Windows Mobile 5 and newer) -->
+  <device>
+    <match key="usb_device.device_class" int="0xef">
+      <match key="usb_device.device_subclass" int="0x1">
+        <match key="usb_device.device_protocol" int="0x1">
+          <append key="info.capabilities" type="strlist">pda</append>
+          <merge key="pda.platform" type="string">pocketpc</merge>
+          <merge key="info.product" type="string">USB RNDIS PDA</merge>
+          <append key="info.callouts.add" type="strlist">hal-usb-rndis-ng.sh</append>
+        </match>
+      </match>
+    </match>
+  </device>
+</deviceinfo>

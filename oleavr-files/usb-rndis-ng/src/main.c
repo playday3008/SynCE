@@ -526,6 +526,10 @@ recv_thread (gpointer data)
 
 OUT:
   printf ("recv_thread exiting\n");
+
+  /* just assume the device was disconnected for now */
+  exit (0);
+
   return NULL;
 }
 
@@ -603,6 +607,10 @@ send_thread (gpointer data)
   g_free (buf);
 
   printf ("send_thread exiting\n");
+
+  /* just assume the device was disconnected for now */
+  exit (0);
+
   return NULL;
 }
 
@@ -733,7 +741,11 @@ handle_device (struct usb_device *dev)
       printf ("sending keepalive\n");
 #endif
 
-      rndis_keepalive (h);
+      if (!rndis_keepalive (h))
+        {
+          /* just assume the device was disconnected for now */
+          break;
+        }
     }
 
   goto OUT;
