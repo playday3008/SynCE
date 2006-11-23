@@ -39,6 +39,7 @@
 #define RNDIS_MSG_INIT                           2
 #define RNDIS_MSG_QUERY                          4
 #define RNDIS_MSG_SET                            5
+#define RNDIS_MSG_KEEPALIVE                      8
 
 #define RNDIS_STATUS_SUCCESS                     0
 
@@ -148,6 +149,12 @@ struct rndis_set_c {
     guint32 status;
 } __attribute__ ((packed));
 
+struct rndis_keepalive {
+    guint32 msg_type;
+    guint32 msg_len;
+    guint32 request_id;
+} __attribute__ ((packed));
+
 struct rndis_data {
     guint32 msg_type;
     guint32 msg_len;
@@ -165,6 +172,7 @@ struct rndis_data {
     guint32 reserved;
 } __attribute__ ((packed));
 
+#ifdef INSANE_DEBUG
 static void
 log_data (const gchar *filename,
           const guchar *buf,
@@ -178,6 +186,7 @@ log_data (const gchar *filename,
 
   fclose (f);
 }
+#endif
 
 static gboolean
 rndis_command (usb_dev_handle *h,
@@ -357,6 +366,19 @@ rndis_set (usb_dev_handle *h,
   return success;
 }
 
+static gboolean
+rndis_keepalive (usb_dev_handle *h)
+{
+  struct rndis_keepalive req;
+  void *resp;
+
+  req.msg_type = RNDIS_MSG_KEEPALIVE;
+  req.msg_len = sizeof (struct rndis_keepalive);
+
+  return rndis_command (h, (struct rndis_request *) &req,
+                        (struct rndis_response **) &resp);
+}
+
 typedef struct {
     usb_dev_handle *h;
     gint fd;
@@ -365,14 +387,14 @@ typedef struct {
     guint alignment;
 } RNDISContext;
 
+static RNDISContext device_ctx;
+
 static gpointer
 recv_thread (gpointer data)
 {
   RNDISContext *ctx = data;
   guchar *buf;
   gint len;
-
-  puts ("recv_thread speaking");
 
   buf = g_new (guchar, ctx->host_max_transfer_size);
 
@@ -517,8 +539,6 @@ send_thread (gpointer data)
   guint i = 0;
 #endif
 
-  puts ("send_thread speaking");
-
   buf = g_new (guchar, ctx->device_max_transfer_size);
 
   while (TRUE)
@@ -586,9 +606,10 @@ send_thread (gpointer data)
   return NULL;
 }
 
-static void
+static gboolean
 handle_device (struct usb_device *dev)
 {
+  gboolean success = TRUE;
   usb_dev_handle *h;
   struct rndis_init_c *resp;
   guchar mac_addr[6];
@@ -597,7 +618,6 @@ handle_device (struct usb_device *dev)
   guint32 pf;
   gint fd = -1, err;
   struct ifreq ifr;
-  RNDISContext *ctx1 = NULL, *ctx2 = NULL;
 
   h = usb_open (dev);
   if (h == NULL)
@@ -651,13 +671,10 @@ handle_device (struct usb_device *dev)
           resp->af_list_offset,
           resp->af_list_size);
 
-  ctx1 = g_new (RNDISContext, 1);
-  ctx1->h = h;
-  ctx1->host_max_transfer_size = HOST_MAX_TRANSFER_SIZE;
-  ctx1->device_max_transfer_size = resp->max_transfer_size;
-  ctx1->alignment = 1 << resp->packet_alignment;
-
-  ctx2 = g_new (RNDISContext, 1);
+  device_ctx.h = h;
+  device_ctx.host_max_transfer_size = HOST_MAX_TRANSFER_SIZE;
+  device_ctx.device_max_transfer_size = resp->max_transfer_size;
+  device_ctx.alignment = 1 << resp->packet_alignment;
 
   puts ("doing rndis_query for OID_802_3_PERMANENT_ADDRESS");
   mac_addr_len = 6;
@@ -691,56 +708,76 @@ handle_device (struct usb_device *dev)
 
   printf ("got device '%s'\n", ifr.ifr_name);
 
-  ctx1->fd = fd;
-  memcpy (ctx2, ctx1, sizeof (RNDISContext));
+  device_ctx.fd = fd;
 
   /* hackish */
   sprintf (str, "ifconfig %s hw ether %s", ifr.ifr_name, mac_addr_str);
   system (str);
 
-  system ("ifconfig tap0 up");
+  sprintf (str, "ifconfig %s up", ifr.ifr_name);
+  system (str);
 
-  if (!g_thread_create (recv_thread, ctx1, TRUE, NULL))
+  if (!g_thread_create (recv_thread, &device_ctx, TRUE, NULL))
     goto SYS_ERROR;
 
-  if (!g_thread_create (send_thread, ctx2, TRUE, NULL))
+  if (!g_thread_create (send_thread, &device_ctx, TRUE, NULL))
     goto SYS_ERROR;
 
-  puts ("all good");
+  printf ("the device is now up and running\n");
+
+  while (TRUE)
+    {
+      sleep (5);
+
+#ifdef INSANE_DEBUG
+      printf ("sending keepalive\n");
+#endif
+
+      rndis_keepalive (h);
+    }
 
   goto OUT;
 
 ERROR:
+  success = FALSE;
   fprintf (stderr, "error occurred: %s\n", usb_strerror ());
   goto OUT;
 
 SYS_ERROR:
+  success = FALSE;
   fprintf (stderr, "error occurred: %s\n", strerror (errno));
   if (fd > 0)
       close (fd);
 
-  g_free (ctx1);
-  g_free (ctx2);
-
 OUT:
-  return;
+  return success;
 }
 
 gint
 main(gint argc, gchar *argv[])
 {
-  GMainContext *ctx;
-  GMainLoop *loop;
+  gint bus_id = -1, dev_id = -1;
   struct usb_bus *busses, *bus;
+
+  if (argc != 1 && argc != 3)
+    {
+      fprintf (stderr, "usage: %s [bus-id device-id]\n", argv[0]);
+      return 1;
+    }
+
+  if (argc == 3)
+    {
+      bus_id = atoi (argv[1]);
+      dev_id = atoi (argv[2]);
+    }
+  else
+    {
+      printf ("scanning for a USB RNDIS device\n");
+    }
 
   g_thread_init (NULL);
 
-  ctx = g_main_context_new ();
-  loop = g_main_loop_new (ctx, TRUE);
-
   usb_init ();
-
-  printf ("scanning for devices\n");
 
   usb_find_busses ();
   usb_find_devices ();
@@ -749,24 +786,45 @@ main(gint argc, gchar *argv[])
   for (bus = busses; bus; bus = bus->next)
     {
       struct usb_device *dev;
+      int cur_bus_id = atoi (bus->dirname);
+
+      if (bus_id != -1 && cur_bus_id != bus_id)
+        continue;
 
       for (dev = bus->devices; dev; dev = dev->next)
         {
           struct usb_device_descriptor *desc = &dev->descriptor;
 
+          printf ("dev->devnum=%d\n", dev->devnum);
+
+          if (dev_id != -1 && dev->devnum != dev_id)
+            {
+              continue;
+            }
+
           if (desc->bDeviceClass == 0xef &&
               desc->bDeviceSubClass == 0x01 &&
               desc->bDeviceProtocol == 0x01)
             {
-              handle_device (dev);
+              return handle_device (dev) != TRUE;
+            }
+          else if (dev_id != -1)
+            {
+              fprintf (stderr, "device does not look like an RNDIS device\n");
+              return 1;
             }
         }
     }
 
-  printf ("done scanning for devices\n");
+  if (bus_id != -1)
+    {
+      fprintf (stderr, "device not found\n");
+    }
+  else
+    {
+      fprintf (stderr, "no devices found\n");
+    }
 
-  g_main_loop_run (loop);
-
-  return 0;
+  return 1;
 }
 
