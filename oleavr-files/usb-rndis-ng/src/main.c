@@ -795,8 +795,6 @@ main(gint argc, gchar *argv[])
         {
           struct usb_device_descriptor *desc = &dev->descriptor;
 
-          printf ("dev->devnum=%d\n", dev->devnum);
-
           if (dev_id != -1 && dev->devnum != dev_id)
             {
               continue;
