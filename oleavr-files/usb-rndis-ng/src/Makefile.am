@@ -3,4 +3,4 @@ AM_LDFLAGS = @GLIB_LIBS@ @GTHREAD_LIBS@ @LIBUSB_LIBS@
 
 bin_PROGRAMS = usb-rndis-driver
 
-usb_rndis_driver_SOURCES = main.c
+usb_rndis_driver_SOURCES = rndis.c main.c

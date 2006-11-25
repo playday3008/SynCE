@@ -22,168 +22,25 @@
 
 //#define INSANE_DEBUG 1
 
+#if 0
 #include <stdio.h>
 #include <glib.h>
 #include <usb.h>
-#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <linux/sockios.h>
+#endif
+
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
-
-#define RNDIS_MSG_COMPLETION            0x80000000
-
-#define RNDIS_MSG_PACKET                         1
-#define RNDIS_MSG_INIT                           2
-#define RNDIS_MSG_QUERY                          4
-#define RNDIS_MSG_SET                            5
-#define RNDIS_MSG_KEEPALIVE                      8
-
-#define RNDIS_STATUS_SUCCESS                     0
-
-#define RNDIS_TIMEOUT_MS                      5000
-
-/* FIXME: don't assume USB 2.0 */
-#define HOST_MAX_TRANSFER_SIZE               16384
-
-#define OID_802_3_PERMANENT_ADDRESS     0x01010101
-#define OID_802_3_CURRENT_ADDRESS       0x01010102
-#define OID_GEN_CURRENT_PACKET_FILTER   0x0001010E
-
-#define NDIS_PACKET_TYPE_DIRECTED       0x00000001
-#define NDIS_PACKET_TYPE_MULTICAST      0x00000002
-#define NDIS_PACKET_TYPE_ALL_MULTICAST  0x00000004
-#define NDIS_PACKET_TYPE_BROADCAST      0x00000008
-#define NDIS_PACKET_TYPE_SOURCE_ROUTING 0x00000010
-#define NDIS_PACKET_TYPE_PROMISCUOUS    0x00000020
-#define NDIS_PACKET_TYPE_SMT            0x00000040
-#define NDIS_PACKET_TYPE_ALL_LOCAL      0x00000080
-#define NDIS_PACKET_TYPE_GROUP          0x00000100
-#define NDIS_PACKET_TYPE_ALL_FUNCTIONAL 0x00000200
-#define NDIS_PACKET_TYPE_FUNCTIONAL     0x00000400
-#define NDIS_PACKET_TYPE_MAC_FRAME      0x00000800
-
-#define INTERRUPT_MAX_PACKET_SIZE              128
-#define RESPONSE_BUFFER_SIZE                  1025
-
-#define USB_DIR_OUT                              0 /* to device */
-#define USB_DIR_IN                            0x80 /* to host */
-
-struct rndis_message {
-    guint32 msg_type;
-    guint32 msg_len;
-} __attribute__ ((packed));
-
-struct rndis_request {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-} __attribute__ ((packed));
-
-struct rndis_response {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 status;
-} __attribute__ ((packed));
-
-struct rndis_init {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 major_version;
-    guint32 minor_version;
-    guint32 max_transfer_size;
-} __attribute__ ((packed));
-
-struct rndis_init_c {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 status;
-    guint32 major_version;
-    guint32 minor_version;
-    guint32 device_flags;
-    guint32 medium;
-    guint32 max_packets_per_message;
-    guint32 max_transfer_size;
-    guint32 packet_alignment;
-    guint32 af_list_offset;
-    guint32 af_list_size;
-} __attribute__ ((packed));
-
-struct rndis_query {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 oid;
-    guint32 len;
-    guint32 offset;
-    guint32 handle;
-} __attribute__ ((packed));
-
-struct rndis_query_c {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 status;
-    guint32 len;
-    guint32 offset;
-} __attribute__ ((packed));
-
-struct rndis_set {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 oid;
-    guint32 len;
-    guint32 offset;
-    guint32 handle;
-} __attribute__ ((packed));
-
-struct rndis_set_c {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-    guint32 status;
-} __attribute__ ((packed));
-
-struct rndis_keepalive {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 request_id;
-} __attribute__ ((packed));
-
-struct rndis_data {
-    guint32 msg_type;
-    guint32 msg_len;
-    guint32 data_offset;
-    guint32 data_len;
-
-    guint32 oob_data_offset;
-    guint32 oob_data_len;
-    guint32 num_oob;
-
-    guint32 packet_data_offset;
-    guint32 packet_data_len;
-
-    guint32 vc_handle;
-    guint32 reserved;
-} __attribute__ ((packed));
-
-typedef struct {
-    usb_dev_handle *h;
-    gint fd;
-    guint host_max_transfer_size;
-    guint device_max_transfer_size;
-    guint alignment;
-
-    struct usb_endpoint_descriptor *ep_int_in;
-    struct usb_endpoint_descriptor *ep_bulk_in;
-    struct usb_endpoint_descriptor *ep_bulk_out;
-} RNDISContext;
+#include <linux/usbdevice_fs.h>
+#include "rndis.h"
 
 static RNDISContext device_ctx;
 
@@ -202,205 +59,6 @@ log_data (const gchar *filename,
   fclose (f);
 }
 #endif
-
-static gboolean
-rndis_command (RNDISContext *ctx,
-               struct rndis_request *req,
-               struct rndis_response **resp)
-{
-  gint len;
-  guchar int_buf[INTERRUPT_MAX_PACKET_SIZE];
-  static guchar response_buf[RESPONSE_BUFFER_SIZE];
-  static guint id = 2;
-  struct rndis_response *r;
-
-  req->msg_type = GUINT32_TO_LE (req->msg_type);
-  req->msg_len = GUINT32_TO_LE (req->msg_len);
-  req->request_id = GUINT32_TO_LE (id++);
-
-  len = usb_control_msg (ctx->h, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
-                         USB_REQ_GET_STATUS, 0, 0, (gchar *) req, req->msg_len,
-                         RNDIS_TIMEOUT_MS);
-  if (len <= 0)
-    goto USB_ERROR;
-  else if (len != req->msg_len)
-    {
-      fprintf (stderr, "short write, wrote %d out of %d\n", len,
-               req->msg_len);
-      goto ERROR;
-    }
-
-  /**
-   * Interrupt requests should always be wMaxPacketSize.
-   * Thanks to Sander Hoentjen for assistance in tracking this down. :)
-   */
-  len = usb_interrupt_read (ctx->h, ctx->ep_int_in->bEndpointAddress,
-                            (gchar *) int_buf,
-                            ctx->ep_int_in->wMaxPacketSize,
-                            RNDIS_TIMEOUT_MS);
-  if (len <= 0)
-    goto USB_ERROR;
-  else if (len < 8)
-    {
-      fprintf (stderr, "read %d, expected 8 or more\n", len);
-      goto ERROR;
-    }
-
-  len = usb_control_msg (ctx->h, USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
-                         USB_REQ_CLEAR_FEATURE, 0, 0, (gchar *) response_buf,
-                         sizeof(response_buf), RNDIS_TIMEOUT_MS);
-  if (len <= 0)
-    goto USB_ERROR;
-  else if (len < sizeof (struct rndis_response))
-    goto ERROR;
-
-  *resp = (struct rndis_response *) response_buf;
-  r = *resp;
-
-  r->msg_type = GUINT32_FROM_LE (r->msg_type);
-  r->msg_len = GUINT32_FROM_LE (r->msg_len);
-  r->request_id = GUINT32_FROM_LE (r->request_id);
-  r->status = GUINT32_FROM_LE (r->status);
-
-  if (r->msg_type !=
-      (GUINT32_FROM_LE (req->msg_type) | RNDIS_MSG_COMPLETION))
-    goto ERROR;
-  else if (r->request_id != GUINT32_FROM_LE (req->request_id))
-    goto ERROR;
-
-  return TRUE;
-
-USB_ERROR:
-  fprintf (stderr, "USB error: %s\n",
-      (len == 0) ? "device disconnected" : usb_strerror ());
-
-ERROR:
-  return FALSE;
-}
-
-static gboolean
-rndis_init (RNDISContext *ctx,
-            struct rndis_init_c **response)
-{
-  struct rndis_init req;
-  struct rndis_init_c *resp;
-
-  req.msg_type = RNDIS_MSG_INIT;
-  req.msg_len = sizeof (req);
-
-  req.major_version = GUINT32_TO_LE (1);
-  req.minor_version = GUINT32_TO_LE (0);
-  req.max_transfer_size = GUINT32_TO_LE (HOST_MAX_TRANSFER_SIZE);
-
-  if (!rndis_command (ctx, (struct rndis_request *) &req,
-                      (struct rndis_response **) &resp))
-    return FALSE;
-
-  resp->major_version = GUINT32_FROM_LE (resp->major_version);
-  resp->minor_version = GUINT32_FROM_LE (resp->minor_version);
-  resp->device_flags = GUINT32_FROM_LE (resp->device_flags);
-  resp->medium = GUINT32_FROM_LE (resp->medium);
-  resp->max_packets_per_message = GUINT32_FROM_LE (
-                                    resp->max_packets_per_message);
-  resp->max_transfer_size = GUINT32_FROM_LE (resp->max_transfer_size);
-  resp->packet_alignment = GUINT32_FROM_LE (resp->packet_alignment);
-  resp->af_list_offset = GUINT32_FROM_LE (resp->af_list_offset);
-  resp->af_list_size = GUINT32_FROM_LE (resp->af_list_size);
-
-  *response = resp;
-
-  return TRUE;
-}
-
-static gboolean
-rndis_query (RNDISContext *ctx,
-             guint32 oid,
-             guchar *result,
-             guint *res_len)
-{
-  struct rndis_query req;
-  struct rndis_query_c *resp;
-
-  req.msg_type = RNDIS_MSG_QUERY;
-  req.msg_len = sizeof (req) + *res_len;
-
-  req.oid = GUINT32_TO_LE (oid);
-  req.len = GUINT32_TO_LE (*res_len);
-  req.offset = GUINT32_TO_LE (sizeof (req) - sizeof (struct rndis_message));
-  req.handle = GUINT32_TO_LE (0);
-
-  if (!rndis_command (ctx, (struct rndis_request *) &req,
-                      (struct rndis_response **) &resp))
-    return FALSE;
-
-  resp->len = GUINT32_FROM_LE (resp->len);
-  resp->offset = GUINT32_FROM_LE (resp->offset);
-
-  if (resp->len > *res_len)
-    return FALSE;
-
-  if (sizeof (struct rndis_message) + resp->offset + resp->len
-      > RESPONSE_BUFFER_SIZE)
-    {
-      return FALSE;
-    }
-
-  memcpy (result,
-      (guchar *) resp + sizeof (struct rndis_message) + resp->offset,
-      resp->len);
-  *res_len = resp->len;
-
-  return TRUE;
-}
-
-static gboolean
-rndis_set (RNDISContext *ctx,
-           guint32 oid,
-           guchar *value,
-           guint value_len)
-{
-  gboolean success;
-  guchar *buf;
-  guint msg_len;
-  struct rndis_set *req;
-  struct rndis_set_c *resp;
-
-  msg_len = sizeof (struct rndis_set) + value_len;
-
-  buf = g_new (guchar, msg_len);
-  req = (struct rndis_set *) buf;
-
-  req->msg_type = RNDIS_MSG_SET;
-  req->msg_len = msg_len;
-
-  req->oid = GUINT32_TO_LE (oid);
-  req->len = GUINT32_TO_LE (value_len);
-  req->offset = GUINT32_TO_LE (sizeof (struct rndis_set)
-                               - sizeof (struct rndis_message));
-  req->handle = GUINT32_TO_LE (0);
-
-  memcpy (buf + sizeof (struct rndis_set), value, value_len);
-
-  success = rndis_command (ctx, (struct rndis_request *) req,
-                           (struct rndis_response **) &resp);
-
-  g_free (buf);
-
-  return success;
-}
-
-static gboolean
-rndis_keepalive (RNDISContext *ctx)
-{
-  struct rndis_keepalive req;
-  void *resp;
-
-  req.msg_type = RNDIS_MSG_KEEPALIVE;
-  req.msg_len = sizeof (struct rndis_keepalive);
-
-  return rndis_command (ctx, (struct rndis_request *) &req,
-                        (struct rndis_response **) &resp);
-}
 
 static gpointer
 recv_thread (gpointer data)
@@ -674,6 +332,49 @@ OUT:
   return found_all;
 }
 
+/**
+ * has_fast_connection
+ *
+ * Internal convenience function used to determine whether a device is
+ * connected to a USB 2.0 hub vs. a slower USB1.x hub.  Too bad that
+ * libusb doesn't expose this functionality. :-(
+ */
+static gboolean
+has_fast_connection (struct usb_device *dev)
+{
+  gboolean result = TRUE;
+  gint fd = -1, ret;
+  struct usbdevfs_connectinfo ci;
+  gchar path[PATH_MAX + 1];
+
+  sprintf (path, "/proc/bus/usb/%s/%s", dev->bus->dirname, dev->filename);
+
+  if ((fd = open (path, O_RDWR)) < 0)
+    {
+      fprintf (stderr, "has_fast_connection: failed to open %s: %s\n",
+               path, strerror (errno));
+      goto OUT;
+    }
+
+  if ((ret = ioctl (fd, USBDEVFS_CONNECTINFO, &ci)) < 0)
+    {
+      fprintf (stderr, "has_fast_connection: ioctl failed: %s\n",
+               strerror (errno));
+      goto OUT;
+    }
+
+  result = ci.slow == 0;
+
+OUT:
+  if (fd != -1)
+    close (fd);
+
+  printf ("device is connected to a %s hub\n",
+      (result) ? "fast" : "slow");
+
+  return result;
+}
+
 static gboolean
 handle_device (struct usb_device *dev)
 {
@@ -703,18 +404,7 @@ handle_device (struct usb_device *dev)
     goto USB_ERROR;
 
   device_ctx.h = h;
-
-  if (dev->descriptor.bNumConfigurations > 1)
-    {
-      printf ("warning: more than one configuration found -- using "
-              "configuration 0\n");
-    }
-
-  if (dev->config->bNumInterfaces != 2)
-    {
-      printf ("warning: bNumInterfaces != 2 but %d\n",
-              dev->config->bNumInterfaces);
-    }
+  device_ctx.host_max_transfer_size = (has_fast_connection (dev)) ? 16384 : 8192;
 
   if (usb_claim_interface (h, 0) != 0)
     goto USB_ERROR;
@@ -731,7 +421,7 @@ handle_device (struct usb_device *dev)
    */
 
   puts ("doing rndis_init");
-  if (!rndis_init (&device_ctx, &resp))
+  if (!_rndis_init (&device_ctx, &resp))
     goto OUT;
 
   printf ("rndis_init succeeded:\n");
@@ -752,14 +442,13 @@ handle_device (struct usb_device *dev)
           resp->af_list_offset,
           resp->af_list_size);
 
-  device_ctx.host_max_transfer_size = HOST_MAX_TRANSFER_SIZE;
   device_ctx.device_max_transfer_size = resp->max_transfer_size;
   device_ctx.alignment = 1 << resp->packet_alignment;
 
   puts ("doing rndis_query for OID_802_3_PERMANENT_ADDRESS");
   mac_addr_len = 6;
-  if (!rndis_query (&device_ctx, OID_802_3_PERMANENT_ADDRESS, mac_addr,
-                    &mac_addr_len))
+  if (!_rndis_query (&device_ctx, OID_802_3_PERMANENT_ADDRESS, mac_addr,
+                     &mac_addr_len))
     {
       goto ANY_ERROR;
     }
@@ -775,8 +464,8 @@ handle_device (struct usb_device *dev)
                       | NDIS_PACKET_TYPE_MULTICAST
                       | NDIS_PACKET_TYPE_BROADCAST);
   //pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS);
-  if (!rndis_set (&device_ctx, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf,
-                  sizeof (pf)))
+  if (!_rndis_set (&device_ctx, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf,
+                   sizeof (pf)))
     {
       goto ANY_ERROR;
     }
@@ -821,7 +510,7 @@ handle_device (struct usb_device *dev)
       printf ("sending keepalive\n");
 #endif
 
-      if (!rndis_keepalive (&device_ctx))
+      if (!_rndis_keepalive (&device_ctx))
         {
           /* just assume the device was disconnected for now */
           break;
