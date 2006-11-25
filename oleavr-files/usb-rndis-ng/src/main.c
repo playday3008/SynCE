@@ -333,75 +333,18 @@ OUT:
   return found_all;
 }
 
-/**
- * dev_has_fast_connection
- *
- * Internal convenience function used to determine whether a device is
- * connected to a USB 2.0 hub vs. a slower USB1.x hub.  Too bad that
- * libusb doesn't expose this functionality. :-(
- */
 static gboolean
-dev_has_fast_connection (struct usb_device *dev)
+has_hi_speed_connection (struct usb_device *dev)
 {
-  gboolean result = TRUE;
-  gint i, fd = -1, ret;
-  gchar path[PATH_MAX + 1];
-  struct usbdevfs_connectinfo ci;
-  const gchar *usbdevfs_paths[] = {
-      "/dev/bus/usb",
-      "/proc/bus/usb"
-  };
-
-  for (i = 0; i < sizeof (usbdevfs_paths) / sizeof (usbdevfs_paths[0]); i++)
-    {
-      sprintf (path, "%s/%s/%s", usbdevfs_paths[i], dev->bus->dirname,
-               dev->filename);
-      fd = open (path, O_RDWR);
-      if (fd >= 0)
-        break;
-    }
-
-  if (fd < 0)
-    {
-      fprintf (stderr, "has_fast_connection: failed to open %s: %s\n",
-               path, strerror (errno));
-      goto OUT;
-    }
-
-  if ((ret = ioctl (fd, USBDEVFS_CONNECTINFO, &ci)) < 0)
-    {
-      fprintf (stderr, "has_fast_connection: ioctl failed: %s\n",
-               strerror (errno));
-      goto OUT;
-    }
-
-  printf ("%s: ci.slow=%d\n", path, ci.slow);
-
-  result = ci.slow == 0;
-
-OUT:
-  if (fd != -1)
-    close (fd);
-
-  return result;
-}
-
-static gboolean
-has_fast_connection (struct usb_device *dev)
-{
-  gboolean fast = dev_has_fast_connection (dev);
-  if (fast)
-    {
-      fast = dev_has_fast_connection (dev->bus->root_dev);
-      if (!fast)
-        {
-          printf ("warning: hi-speed device connected to a low-speed hub\n");
-        }
-    }
-
-  printf ("operating device in %s-speed mode\n", (fast) ? "hi" : "low");
-
-  return fast;
+  /**
+   * FIXME: Is there any way we can auto-detect this?
+   *
+   * The ioctl USBDEVFS_CONNECTINFO's usbdevfs_connectinfo struct has a member
+   * called slow, which isn't currently exposed by libusb, however, this member
+   * seems to be set to 0 even for 11 Mbps, so it's probably for < 11 Mbps
+   * and thus useless...
+   */
+  return TRUE;
 }
 
 static gboolean
@@ -433,7 +376,7 @@ handle_device (struct usb_device *dev)
     goto USB_ERROR;
 
   device_ctx.h = h;
-  device_ctx.host_max_transfer_size = (has_fast_connection (dev)) ? 16384 : 8192;
+  device_ctx.host_max_transfer_size = (has_hi_speed_connection (dev)) ? 16384 : 8192;
 
   if (usb_claim_interface (h, 0) != 0)
     goto USB_ERROR;
