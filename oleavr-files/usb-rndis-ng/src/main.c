@@ -51,10 +51,37 @@ log_data (const gchar *filename,
 }
 #endif
 
+static gint
+handle_sys_error (const gchar *sender, gint code)
+{
+  fprintf (stderr, "%s: error occurred: code=%d, msg=%s\n",
+           sender, code, strerror (errno));
+
+  return 1;
+}
+
+static gint
+handle_usb_error (const gchar *sender, gint code)
+{
+  if (code == -ENODEV)
+    {
+      printf ("device disconnected, exiting\n");
+      return 0;
+    }
+  else
+    {
+      fprintf (stderr, "%s: error occurred: code=%d, msg=%s\n",
+               sender, code, usb_strerror ());
+    }
+
+  return 1;
+}
+
 static gpointer
 recv_thread (gpointer data)
 {
   RNDISContext *ctx = data;
+  gint exit_code = 0;
   guchar *buf;
   gint len;
 
@@ -68,17 +95,16 @@ recv_thread (gpointer data)
       do
         {
           len = usb_bulk_read (ctx->h, ctx->ep_bulk_in->bEndpointAddress,
-                               (gchar *) buf, ctx->host_max_transfer_size, 1000);
+                               (gchar *) buf, ctx->host_max_transfer_size, 60000);
         }
       while (len == 0);
 
       if (len < 0)
         {
           /* not a timeout? */
-          if (len != -110)
+          if (len != -ETIMEDOUT)
             {
-              fprintf (stderr, "recv_thread: usb_bulk_read returned %d: %s\n",
-                       len, usb_strerror ());
+              exit_code = handle_usb_error (__FUNCTION__, len);
               goto OUT;
             }
           else
@@ -94,7 +120,7 @@ recv_thread (gpointer data)
       p = buf;
       remaining = len;
 
-      while (remaining)
+      while (remaining > 0)
         {
           struct rndis_data *hdr = (struct rndis_data *) p;
           guchar *eth_buf;
@@ -174,13 +200,12 @@ recv_thread (gpointer data)
           len = write (ctx->fd, eth_buf, hdr->data_len);
           if (len <= 0)
             {
-              fprintf (stderr, "recv failed because len = %d: %s\n", len,
-                       strerror (errno));
+              exit_code = handle_sys_error (__FUNCTION__, len);
               goto OUT;
             }
           else if (len != hdr->data_len)
             {
-              fprintf (stderr, "short write, %d out of %d bytes written\n",
+              fprintf (stderr, "recv_thread: short write, %d out of %d bytes\n",
                        len, hdr->data_len);
             }
 
@@ -189,13 +214,10 @@ recv_thread (gpointer data)
         }
     }
 
+OUT:
   g_free (buf);
 
-OUT:
-  printf ("recv_thread exiting\n");
-
-  /* just assume the device was disconnected for now */
-  exit (0);
+  exit (exit_code);
 
   return NULL;
 }
@@ -204,8 +226,9 @@ static gpointer
 send_thread (gpointer data)
 {
   RNDISContext *ctx = data;
+  gint exit_code = 0;
   guchar *buf;
-  gint len, result;
+  gint len;
 #ifdef INSANE_DEBUG
   guint i = 0;
 #endif
@@ -224,10 +247,8 @@ send_thread (gpointer data)
                   ctx->device_max_transfer_size - sizeof (struct rndis_data));
       if (len <= 0)
         {
-          fprintf (stderr, "recv failed because len = %d: %s\n", len,
-                   strerror (errno));
-
-          return NULL;
+          exit_code = handle_sys_error (__FUNCTION__, len);
+          goto OUT;
         }
 
 #ifdef INSANE_DEBUG
@@ -258,16 +279,20 @@ send_thread (gpointer data)
 
       do
         {
-          result = usb_bulk_write (ctx->h, ctx->ep_bulk_out->bEndpointAddress,
-                                   (gchar *) buf, msg_len, RNDIS_TIMEOUT_MS);
+          len = usb_bulk_write (ctx->h, ctx->ep_bulk_out->bEndpointAddress,
+                                (gchar *) buf, msg_len, RNDIS_TIMEOUT_MS);
         }
-      while (result == 0);
+      while (len == 0);
 
-      if (result < 0)
+      if (len < 0)
         {
-          fprintf (stderr, "send_thread: USB error occurred: %s\n",
-                   usb_strerror ());
-          return NULL;
+          exit_code = handle_usb_error (__FUNCTION__, len);
+          goto OUT;
+        }
+      else if (len != msg_len)
+        {
+          fprintf (stderr, "send_thread: short write, %d out of %d bytes\n",
+                   len, msg_len);
         }
 
 #ifdef INSANE_DEBUG
@@ -276,12 +301,10 @@ send_thread (gpointer data)
 #endif
     }
 
+OUT:
   g_free (buf);
 
-  printf ("send_thread exiting\n");
-
-  /* just assume the device was disconnected for now */
-  exit (0);
+  exit (exit_code);
 
   return NULL;
 }
