@@ -76,6 +76,7 @@ recv_thread (gpointer data)
 
       len = usb_bulk_read (ctx->h, ctx->ep_bulk_in->bEndpointAddress,
                            (gchar *) buf, ctx->host_max_transfer_size, 1000);
+
       if (len <= 0)
         {
           /* not a timeout? */
@@ -373,6 +374,8 @@ dev_has_fast_connection (struct usb_device *dev)
                strerror (errno));
       goto OUT;
     }
+
+  printf ("%s: ci.slow=%d\n", path, ci.slow);
 
   result = ci.slow == 0;
 
