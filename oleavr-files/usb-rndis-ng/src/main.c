@@ -65,6 +65,7 @@
 #define NDIS_PACKET_TYPE_FUNCTIONAL     0x00000400
 #define NDIS_PACKET_TYPE_MAC_FRAME      0x00000800
 
+#define INTERRUPT_MAX_PACKET_SIZE              128
 #define RESPONSE_BUFFER_SIZE                  1025
 
 #define USB_DIR_OUT                              0 /* to device */
@@ -172,6 +173,20 @@ struct rndis_data {
     guint32 reserved;
 } __attribute__ ((packed));
 
+typedef struct {
+    usb_dev_handle *h;
+    gint fd;
+    guint host_max_transfer_size;
+    guint device_max_transfer_size;
+    guint alignment;
+
+    struct usb_endpoint_descriptor *ep_int_in;
+    struct usb_endpoint_descriptor *ep_bulk_in;
+    struct usb_endpoint_descriptor *ep_bulk_out;
+} RNDISContext;
+
+static RNDISContext device_ctx;
+
 #ifdef INSANE_DEBUG
 static void
 log_data (const gchar *filename,
@@ -189,12 +204,12 @@ log_data (const gchar *filename,
 #endif
 
 static gboolean
-rndis_command (usb_dev_handle *h,
+rndis_command (RNDISContext *ctx,
                struct rndis_request *req,
                struct rndis_response **resp)
 {
   gint len;
-  guchar buf[8];
+  guchar int_buf[INTERRUPT_MAX_PACKET_SIZE];
   static guchar response_buf[RESPONSE_BUFFER_SIZE];
   static guint id = 2;
   struct rndis_response *r;
@@ -203,10 +218,10 @@ rndis_command (usb_dev_handle *h,
   req->msg_len = GUINT32_TO_LE (req->msg_len);
   req->request_id = GUINT32_TO_LE (id++);
 
-  len = usb_control_msg (h, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+  len = usb_control_msg (ctx->h, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
                          USB_REQ_GET_STATUS, 0, 0, (gchar *) req, req->msg_len,
                          RNDIS_TIMEOUT_MS);
-  if (len < 0)
+  if (len <= 0)
     goto USB_ERROR;
   else if (len != req->msg_len)
     {
@@ -215,19 +230,26 @@ rndis_command (usb_dev_handle *h,
       goto ERROR;
     }
 
-  len = usb_interrupt_read (h, 0x81, (gchar *) buf, sizeof(buf), RNDIS_TIMEOUT_MS);
-  if (len < 0)
+  /**
+   * Interrupt requests should always be wMaxPacketSize.
+   * Thanks to Sander Hoentjen for assistance in tracking this down. :)
+   */
+  len = usb_interrupt_read (ctx->h, ctx->ep_int_in->bEndpointAddress,
+                            (gchar *) int_buf,
+                            ctx->ep_int_in->wMaxPacketSize,
+                            RNDIS_TIMEOUT_MS);
+  if (len <= 0)
     goto USB_ERROR;
-  else if (len != sizeof(buf))
+  else if (len < 8)
     {
-      fprintf (stderr, "read %d, expected %d\n", len, sizeof(buf));
+      fprintf (stderr, "read %d, expected 8 or more\n", len);
       goto ERROR;
     }
 
-  len = usb_control_msg (h, USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+  len = usb_control_msg (ctx->h, USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
                          USB_REQ_CLEAR_FEATURE, 0, 0, (gchar *) response_buf,
                          sizeof(response_buf), RNDIS_TIMEOUT_MS);
-  if (len < 0)
+  if (len <= 0)
     goto USB_ERROR;
   else if (len < sizeof (struct rndis_response))
     goto ERROR;
@@ -249,14 +271,15 @@ rndis_command (usb_dev_handle *h,
   return TRUE;
 
 USB_ERROR:
-  fprintf (stderr, usb_strerror ());
+  fprintf (stderr, "USB error: %s\n",
+      (len == 0) ? "device disconnected" : usb_strerror ());
 
 ERROR:
   return FALSE;
 }
 
 static gboolean
-rndis_init (usb_dev_handle *h,
+rndis_init (RNDISContext *ctx,
             struct rndis_init_c **response)
 {
   struct rndis_init req;
@@ -269,7 +292,7 @@ rndis_init (usb_dev_handle *h,
   req.minor_version = GUINT32_TO_LE (0);
   req.max_transfer_size = GUINT32_TO_LE (HOST_MAX_TRANSFER_SIZE);
 
-  if (!rndis_command (h, (struct rndis_request *) &req,
+  if (!rndis_command (ctx, (struct rndis_request *) &req,
                       (struct rndis_response **) &resp))
     return FALSE;
 
@@ -290,7 +313,7 @@ rndis_init (usb_dev_handle *h,
 }
 
 static gboolean
-rndis_query (usb_dev_handle *h,
+rndis_query (RNDISContext *ctx,
              guint32 oid,
              guchar *result,
              guint *res_len)
@@ -306,7 +329,7 @@ rndis_query (usb_dev_handle *h,
   req.offset = GUINT32_TO_LE (sizeof (req) - sizeof (struct rndis_message));
   req.handle = GUINT32_TO_LE (0);
 
-  if (!rndis_command (h, (struct rndis_request *) &req,
+  if (!rndis_command (ctx, (struct rndis_request *) &req,
                       (struct rndis_response **) &resp))
     return FALSE;
 
@@ -331,7 +354,7 @@ rndis_query (usb_dev_handle *h,
 }
 
 static gboolean
-rndis_set (usb_dev_handle *h,
+rndis_set (RNDISContext *ctx,
            guint32 oid,
            guchar *value,
            guint value_len)
@@ -358,7 +381,7 @@ rndis_set (usb_dev_handle *h,
 
   memcpy (buf + sizeof (struct rndis_set), value, value_len);
 
-  success = rndis_command (h, (struct rndis_request *) req,
+  success = rndis_command (ctx, (struct rndis_request *) req,
                            (struct rndis_response **) &resp);
 
   g_free (buf);
@@ -367,7 +390,7 @@ rndis_set (usb_dev_handle *h,
 }
 
 static gboolean
-rndis_keepalive (usb_dev_handle *h)
+rndis_keepalive (RNDISContext *ctx)
 {
   struct rndis_keepalive req;
   void *resp;
@@ -375,19 +398,9 @@ rndis_keepalive (usb_dev_handle *h)
   req.msg_type = RNDIS_MSG_KEEPALIVE;
   req.msg_len = sizeof (struct rndis_keepalive);
 
-  return rndis_command (h, (struct rndis_request *) &req,
+  return rndis_command (ctx, (struct rndis_request *) &req,
                         (struct rndis_response **) &resp);
 }
-
-typedef struct {
-    usb_dev_handle *h;
-    gint fd;
-    guint host_max_transfer_size;
-    guint device_max_transfer_size;
-    guint alignment;
-} RNDISContext;
-
-static RNDISContext device_ctx;
 
 static gpointer
 recv_thread (gpointer data)
@@ -403,8 +416,8 @@ recv_thread (gpointer data)
       gint remaining;
       guchar *p;
 
-      len = usb_bulk_read (ctx->h, 0x82, (gchar *) buf,
-                           ctx->host_max_transfer_size, 1000);
+      len = usb_bulk_read (ctx->h, ctx->ep_bulk_in->bEndpointAddress,
+                           (gchar *) buf, ctx->host_max_transfer_size, 1000);
       if (len <= 0)
         {
           /* not a timeout? */
@@ -589,11 +602,11 @@ send_thread (gpointer data)
                                         sizeof (struct rndis_message));
       hdr->data_len = GUINT32_TO_LE (len);
 
-      result = usb_bulk_write (ctx->h, 0x03, (gchar *) buf, msg_len,
-                               RNDIS_TIMEOUT_MS);
+      result = usb_bulk_write (ctx->h, ctx->ep_bulk_out->bEndpointAddress,
+                               (gchar *) buf, msg_len, RNDIS_TIMEOUT_MS);
       if (result <= 0)
         {
-          fprintf (stderr, "send_thread: error occurred: %s\n",
+          fprintf (stderr, "send_thread: USB error occurred: %s\n",
                    usb_strerror ());
           return NULL;
         }
@@ -615,10 +628,57 @@ send_thread (gpointer data)
 }
 
 static gboolean
+find_endpoints (struct usb_device *dev,
+                RNDISContext *ctx)
+{
+  gboolean found_all = FALSE;
+  gint i, j;
+
+  for (i = 0; i < dev->config->bNumInterfaces; i++)
+    {
+      struct usb_interface_descriptor *desc = dev->config->interface[i].altsetting;
+
+      for (j = 0; j < desc->bNumEndpoints; j++)
+        {
+          struct usb_endpoint_descriptor *ep = &desc->endpoint[j];
+          guchar type = ep->bmAttributes & USB_ENDPOINT_TYPE_MASK;
+
+          if ((ep->bEndpointAddress & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN)
+            {
+              if (type == USB_ENDPOINT_TYPE_INTERRUPT)
+                {
+                  ctx->ep_int_in = ep;
+                }
+              else if (type == USB_ENDPOINT_TYPE_BULK)
+                {
+                  ctx->ep_bulk_in = ep;
+                }
+            }
+          else
+            {
+              if (type == USB_ENDPOINT_TYPE_BULK)
+                {
+                  ctx->ep_bulk_out = ep;
+                }
+            }
+
+          if (ctx->ep_int_in && ctx->ep_bulk_in && ctx->ep_bulk_out)
+            {
+              found_all = TRUE;
+              goto OUT;
+            }
+        }
+    }
+
+OUT:
+  return found_all;
+}
+
+static gboolean
 handle_device (struct usb_device *dev)
 {
   gboolean success = TRUE;
-  usb_dev_handle *h;
+  usb_dev_handle *h = NULL;
   struct rndis_init_c *resp;
   guchar mac_addr[6];
   guint mac_addr_len;
@@ -627,9 +687,22 @@ handle_device (struct usb_device *dev)
   gint fd = -1, err;
   struct ifreq ifr;
 
+  if (!find_endpoints (dev, &device_ctx))
+    return FALSE;
+
+  /* should never happen */
+  if (device_ctx.ep_int_in->wMaxPacketSize > INTERRUPT_MAX_PACKET_SIZE)
+    {
+      fprintf (stderr, "Interrupt ep wMaxPacketSize=%d > %d\n",
+          device_ctx.ep_int_in->wMaxPacketSize, INTERRUPT_MAX_PACKET_SIZE);
+      return FALSE;
+    }
+
   h = usb_open (dev);
   if (h == NULL)
-    goto ERROR;
+    goto USB_ERROR;
+
+  device_ctx.h = h;
 
   if (dev->descriptor.bNumConfigurations > 1)
     {
@@ -644,10 +717,10 @@ handle_device (struct usb_device *dev)
     }
 
   if (usb_claim_interface (h, 0) != 0)
-    goto ERROR;
+    goto USB_ERROR;
 
   if (usb_claim_interface (h, 1) != 0)
-    goto ERROR;
+    goto USB_ERROR;
 
   /*
   if (usb_set_configuration (h, 1) != 0)
@@ -658,7 +731,7 @@ handle_device (struct usb_device *dev)
    */
 
   puts ("doing rndis_init");
-  if (!rndis_init (h, &resp))
+  if (!rndis_init (&device_ctx, &resp))
     goto OUT;
 
   printf ("rndis_init succeeded:\n");
@@ -679,15 +752,17 @@ handle_device (struct usb_device *dev)
           resp->af_list_offset,
           resp->af_list_size);
 
-  device_ctx.h = h;
   device_ctx.host_max_transfer_size = HOST_MAX_TRANSFER_SIZE;
   device_ctx.device_max_transfer_size = resp->max_transfer_size;
   device_ctx.alignment = 1 << resp->packet_alignment;
 
   puts ("doing rndis_query for OID_802_3_PERMANENT_ADDRESS");
   mac_addr_len = 6;
-  if (!rndis_query (h, OID_802_3_PERMANENT_ADDRESS, mac_addr, &mac_addr_len))
-    goto OUT;
+  if (!rndis_query (&device_ctx, OID_802_3_PERMANENT_ADDRESS, mac_addr,
+                    &mac_addr_len))
+    {
+      goto ANY_ERROR;
+    }
 
   sprintf (mac_addr_str, "%02x:%02x:%02x:%02x:%02x:%02x",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
@@ -700,7 +775,11 @@ handle_device (struct usb_device *dev)
                       | NDIS_PACKET_TYPE_MULTICAST
                       | NDIS_PACKET_TYPE_BROADCAST);
   //pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS);
-  rndis_set (h, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf, sizeof (pf));
+  if (!rndis_set (&device_ctx, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf,
+                  sizeof (pf)))
+    {
+      goto ANY_ERROR;
+    }
 
   puts ("packet filter set");
 
@@ -710,9 +789,10 @@ handle_device (struct usb_device *dev)
   memset (&ifr, 0, sizeof (ifr));
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
 
-  if ((err = ioctl (fd, TUNSETIFF, (void *) &ifr)) < 0) {
+  if ((err = ioctl (fd, TUNSETIFF, (void *) &ifr)) < 0)
+    {
       goto SYS_ERROR;
-  }
+    }
 
   printf ("got device '%s'\n", ifr.ifr_name);
 
@@ -741,7 +821,7 @@ handle_device (struct usb_device *dev)
       printf ("sending keepalive\n");
 #endif
 
-      if (!rndis_keepalive (h))
+      if (!rndis_keepalive (&device_ctx))
         {
           /* just assume the device was disconnected for now */
           break;
@@ -750,14 +830,18 @@ handle_device (struct usb_device *dev)
 
   goto OUT;
 
-ERROR:
+USB_ERROR:
   success = FALSE;
   fprintf (stderr, "error occurred: %s\n", usb_strerror ());
-  goto OUT;
+  goto ANY_ERROR;
 
 SYS_ERROR:
   success = FALSE;
   fprintf (stderr, "error occurred: %s\n", strerror (errno));
+
+ANY_ERROR:
+  if (h != NULL)
+    usb_close (h);
   if (fd > 0)
       close (fd);
 
