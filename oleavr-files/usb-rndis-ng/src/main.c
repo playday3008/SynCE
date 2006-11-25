@@ -355,9 +355,6 @@ has_fast_connection (struct usb_device *dev)
     {
       sprintf (path, "%s/%s/%s", usbdevfs_paths[i], dev->bus->dirname,
                dev->filename);
-
-      printf ("trying '%s'\n", path);
-
       fd = open (path, O_RDWR);
       if (fd >= 0)
         break;
