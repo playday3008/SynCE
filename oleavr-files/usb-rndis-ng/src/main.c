@@ -343,13 +343,27 @@ static gboolean
 has_fast_connection (struct usb_device *dev)
 {
   gboolean result = TRUE;
-  gint fd = -1, ret;
-  struct usbdevfs_connectinfo ci;
+  gint i, fd = -1, ret;
   gchar path[PATH_MAX + 1];
+  struct usbdevfs_connectinfo ci;
+  const gchar *usbdevfs_paths[] = {
+      "/dev/bus/usb",
+      "/proc/bus/usb"
+  };
 
-  sprintf (path, "/proc/bus/usb/%s/%s", dev->bus->dirname, dev->filename);
+  for (i = 0; i < sizeof (usbdevfs_paths) / sizeof (usbdevfs_paths[0]); i++)
+    {
+      sprintf (path, "%s/%s/%s", usbdevfs_paths[i], dev->bus->dirname,
+               dev->filename);
 
-  if ((fd = open (path, O_RDWR)) < 0)
+      printf ("trying '%s'\n", path);
+
+      fd = open (path, O_RDWR);
+      if (fd >= 0)
+        break;
+    }
+
+  if (fd < 0)
     {
       fprintf (stderr, "has_fast_connection: failed to open %s: %s\n",
                path, strerror (errno));
