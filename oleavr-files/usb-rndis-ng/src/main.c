@@ -22,15 +22,6 @@
 
 //#define INSANE_DEBUG 1
 
-#if 0
-#include <stdio.h>
-#include <glib.h>
-#include <usb.h>
-#include <errno.h>
-#include <string.h>
-#include <linux/sockios.h>
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -74,10 +65,14 @@ recv_thread (gpointer data)
       gint remaining;
       guchar *p;
 
-      len = usb_bulk_read (ctx->h, ctx->ep_bulk_in->bEndpointAddress,
-                           (gchar *) buf, ctx->host_max_transfer_size, 1000);
+      do
+        {
+          len = usb_bulk_read (ctx->h, ctx->ep_bulk_in->bEndpointAddress,
+                               (gchar *) buf, ctx->host_max_transfer_size, 1000);
+        }
+      while (len == 0);
 
-      if (len <= 0)
+      if (len < 0)
         {
           /* not a timeout? */
           if (len != -110)
@@ -261,9 +256,14 @@ send_thread (gpointer data)
                                         sizeof (struct rndis_message));
       hdr->data_len = GUINT32_TO_LE (len);
 
-      result = usb_bulk_write (ctx->h, ctx->ep_bulk_out->bEndpointAddress,
-                               (gchar *) buf, msg_len, RNDIS_TIMEOUT_MS);
-      if (result <= 0)
+      do
+        {
+          result = usb_bulk_write (ctx->h, ctx->ep_bulk_out->bEndpointAddress,
+                                   (gchar *) buf, msg_len, RNDIS_TIMEOUT_MS);
+        }
+      while (result == 0);
+
+      if (result < 0)
         {
           fprintf (stderr, "send_thread: USB error occurred: %s\n",
                    usb_strerror ());

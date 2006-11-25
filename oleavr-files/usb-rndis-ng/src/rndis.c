@@ -35,10 +35,15 @@ _rndis_command (RNDISContext *ctx,
   req->msg_len = GUINT32_TO_LE (req->msg_len);
   req->request_id = GUINT32_TO_LE (id++);
 
-  len = usb_control_msg (ctx->h, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
-                         USB_REQ_GET_STATUS, 0, 0, (gchar *) req, req->msg_len,
-                         RNDIS_TIMEOUT_MS);
-  if (len <= 0)
+  do
+    {
+      len = usb_control_msg (ctx->h, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+                             USB_REQ_GET_STATUS, 0, 0, (gchar *) req, req->msg_len,
+                             RNDIS_TIMEOUT_MS);
+    }
+  while (len == 0);
+
+  if (len < 0)
     goto USB_ERROR;
   else if (len != req->msg_len)
     {
@@ -51,11 +56,16 @@ _rndis_command (RNDISContext *ctx,
    * Interrupt requests should always be wMaxPacketSize.
    * Thanks to Sander Hoentjen for assistance in tracking this down. :)
    */
-  len = usb_interrupt_read (ctx->h, ctx->ep_int_in->bEndpointAddress,
-                            (gchar *) int_buf,
-                            ctx->ep_int_in->wMaxPacketSize,
-                            RNDIS_TIMEOUT_MS);
-  if (len <= 0)
+  do
+    {
+      len = usb_interrupt_read (ctx->h, ctx->ep_int_in->bEndpointAddress,
+                                (gchar *) int_buf,
+                                ctx->ep_int_in->wMaxPacketSize,
+                                RNDIS_TIMEOUT_MS);
+    }
+  while (len == 0);
+
+  if (len < 0)
     goto USB_ERROR;
   else if (len < 8)
     {
@@ -63,13 +73,22 @@ _rndis_command (RNDISContext *ctx,
       goto ERROR;
     }
 
-  len = usb_control_msg (ctx->h, USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
-                         USB_REQ_CLEAR_FEATURE, 0, 0, (gchar *) response_buf,
-                         sizeof(response_buf), RNDIS_TIMEOUT_MS);
-  if (len <= 0)
+  do
+    {
+      len = usb_control_msg (ctx->h, USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+                             USB_REQ_CLEAR_FEATURE, 0, 0, (gchar *) response_buf,
+                             sizeof(response_buf), RNDIS_TIMEOUT_MS);
+    }
+  while (len == 0);
+
+  if (len < 0)
     goto USB_ERROR;
   else if (len < sizeof (struct rndis_response))
-    goto ERROR;
+    {
+      fprintf (stderr, "short read, read %d out of %d\n", len,
+               sizeof (struct rndis_response));
+      goto ERROR;
+    }
 
   *resp = (struct rndis_response *) response_buf;
   r = *resp;
