@@ -333,14 +333,14 @@ OUT:
 }
 
 /**
- * has_fast_connection
+ * dev_has_fast_connection
  *
  * Internal convenience function used to determine whether a device is
  * connected to a USB 2.0 hub vs. a slower USB1.x hub.  Too bad that
  * libusb doesn't expose this functionality. :-(
  */
 static gboolean
-has_fast_connection (struct usb_device *dev)
+dev_has_fast_connection (struct usb_device *dev)
 {
   gboolean result = TRUE;
   gint i, fd = -1, ret;
@@ -380,10 +380,25 @@ OUT:
   if (fd != -1)
     close (fd);
 
-  printf ("device is connected to a %s hub\n",
-      (result) ? "fast" : "slow");
-
   return result;
+}
+
+static gboolean
+has_fast_connection (struct usb_device *dev)
+{
+  gboolean fast = dev_has_fast_connection (dev);
+  if (fast)
+    {
+      fast = dev_has_fast_connection (dev->bus->root_dev);
+      if (!fast)
+        {
+          printf ("warning: hi-speed device connected to a low-speed hub\n");
+        }
+    }
+
+  printf ("operating device in %s-speed mode\n", (fast) ? "hi" : "low");
+
+  return fast;
 }
 
 static gboolean
