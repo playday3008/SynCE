@@ -481,7 +481,7 @@ handle_device (struct usb_device *dev)
   memset (&ifr, 0, sizeof (ifr));
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
 
-  if ((err = ioctl (fd, TUNSETIFF, (void *) &ifr)) < 0)
+  if ((err = ioctl (fd, TUNSETIFF, &ifr)) < 0)
     {
       goto SYS_ERROR;
     }
@@ -523,12 +523,6 @@ handle_device (struct usb_device *dev)
   close (sock_fd);
   sock_fd = -1;
 
-  if (!g_thread_create (recv_thread, &device_ctx, TRUE, NULL))
-    goto SYS_ERROR;
-
-  if (!g_thread_create (send_thread, &device_ctx, TRUE, NULL))
-    goto SYS_ERROR;
-
   printf ("%s is now up and running\n", ifr.ifr_name);
 
   if (run_as_daemon)
@@ -550,6 +544,12 @@ handle_device (struct usb_device *dev)
       close (STDOUT_FILENO);
       close (STDERR_FILENO);
     }
+
+  if (!g_thread_create (recv_thread, &device_ctx, TRUE, NULL))
+    goto SYS_ERROR;
+
+  if (!g_thread_create (send_thread, &device_ctx, TRUE, NULL))
+    goto SYS_ERROR;
 
   while (TRUE)
     {
