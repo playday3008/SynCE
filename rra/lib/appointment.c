@@ -416,7 +416,8 @@ static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)/*{{{*
 static bool on_mdir_line_exdate(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
-  rra_mdir_line_vector_add(event_parser_data->exdates, line);
+  if (line)
+    rra_mdir_line_vector_add(event_parser_data->exdates, line);
   return true;
 }/*}}}*/
 #endif
