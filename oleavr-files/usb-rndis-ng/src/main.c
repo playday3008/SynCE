@@ -524,13 +524,13 @@ handle_device (struct usb_device *dev)
     goto SYS_ERROR;
 
   /* set the MTU */
-  ifr.ifr_mtu = mtu;
+  ifr.ifr_mtu = mtu - ETH_HLEN;
   if ((err = ioctl (sock_fd, SIOCSIFMTU, &ifr)) < 0)
     {
       if (errno == EINVAL && mtu > ETH_DATA_LEN)
         {
           fprintf (stderr, "failed to set jumbo MTU (%d), patched tun driver "
-                   "required\n", mtu);
+                   "required\n", mtu - ETH_HLEN);
         }
       else
         {
