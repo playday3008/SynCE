@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include "rndis.h"
@@ -107,8 +108,13 @@ _rndis_command (RNDISContext *ctx,
   return TRUE;
 
 USB_ERROR:
-  fprintf (stderr, "USB error: %s\n",
-      (len == 0) ? "device disconnected" : usb_strerror ());
+  if (len == -ENODEV)
+    {
+      printf ("device disconnected, exiting\n");
+      exit (EXIT_SUCCESS);
+    }
+
+  fprintf (stderr, "USB error: %s\n", usb_strerror ());
 
 ERROR:
   return FALSE;

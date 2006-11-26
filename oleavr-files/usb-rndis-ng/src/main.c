@@ -33,6 +33,9 @@
 #include <linux/usbdevice_fs.h>
 #include "rndis.h"
 
+static gboolean run_as_daemon = TRUE, hispeed_capable = TRUE;
+static gint bus_id = -1, dev_id = -1;
+
 static RNDISContext device_ctx;
 
 #ifdef INSANE_DEBUG
@@ -367,7 +370,7 @@ has_hi_speed_connection (struct usb_device *dev)
    * seems to be set to 0 even for 11 Mbps, so it's probably for < 11 Mbps
    * and thus useless...
    */
-  return TRUE;
+  return hispeed_capable;
 }
 
 static gboolean
@@ -382,6 +385,7 @@ handle_device (struct usb_device *dev)
   guint32 pf;
   gint fd = -1, err;
   struct ifreq ifr;
+  pid_t pid;
 
   if (!find_endpoints (dev, &device_ctx))
     return FALSE;
@@ -497,6 +501,26 @@ handle_device (struct usb_device *dev)
 
   printf ("the device is now up and running\n");
 
+  if (run_as_daemon)
+    {
+      pid = fork ();
+      if (pid < 0)
+        goto SYS_ERROR;
+
+      if (pid > 0)
+        goto OUT;
+
+      if (setsid () < 0)
+        goto SYS_ERROR;
+
+      if (chdir ("/") < 0)
+        goto SYS_ERROR;
+
+      close (STDIN_FILENO);
+      close (STDOUT_FILENO);
+      close (STDERR_FILENO);
+    }
+
   while (TRUE)
     {
       sleep (5);
@@ -506,10 +530,7 @@ handle_device (struct usb_device *dev)
 #endif
 
       if (!_rndis_keepalive (&device_ctx))
-        {
-          /* just assume the device was disconnected for now */
-          break;
-        }
+        goto ANY_ERROR;
     }
 
   goto OUT;
@@ -533,22 +554,50 @@ OUT:
   return success;
 }
 
+static void
+print_usage (const gchar *name)
+{
+  printf ("Usage:\n"
+          "\t%s [-f] [-l] [bus-id device-id]\n\n"
+          "\t-f           Do not run as a daemon\n"
+          "\t-l           Device or hub is incapable of hi-speed operation\n\n",
+          name);
+}
+
 gint
 main(gint argc, gchar *argv[])
 {
-  gint bus_id = -1, dev_id = -1;
+  gint c, nonopt_argc;
   struct usb_bus *busses, *bus;
 
-  if (argc != 1 && argc != 3)
+  while ((c = getopt (argc, argv, "fl")) != -1)
     {
-      fprintf (stderr, "usage: %s [bus-id device-id]\n", argv[0]);
-      return 1;
+      switch (c)
+        {
+          case 'f':
+            run_as_daemon = FALSE;
+            break;
+          case 'l':
+            hispeed_capable = FALSE;
+            break;
+          default:
+            print_usage (argv[0]);
+            return EXIT_FAILURE;
+        }
     }
 
-  if (argc == 3)
+  nonopt_argc = argc - optind;
+
+  if (nonopt_argc)
     {
-      bus_id = atoi (argv[1]);
-      dev_id = atoi (argv[2]);
+      if (nonopt_argc != 2)
+        {
+          print_usage (argv[0]);
+          return EXIT_FAILURE;
+        }
+
+      bus_id = atoi (argv[optind]);
+      dev_id = atoi (argv[optind + 1]);
     }
   else
     {
@@ -584,7 +633,7 @@ main(gint argc, gchar *argv[])
               desc->bDeviceSubClass == 0x01 &&
               desc->bDeviceProtocol == 0x01)
             {
-              return handle_device (dev) != TRUE;
+              return (handle_device (dev)) ? EXIT_SUCCESS : EXIT_FAILURE;
             }
           else if (dev_id != -1)
             {
@@ -603,6 +652,6 @@ main(gint argc, gchar *argv[])
       fprintf (stderr, "no devices found\n");
     }
 
-  return 1;
+  return EXIT_FAILURE;
 }
 
