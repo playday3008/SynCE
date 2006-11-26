@@ -92,7 +92,7 @@ bool WindowsCEDevice::handleInfoMessage(uint32_t header)
     buffer = new char[ header ];
     if ( buffer != NULL ) {
         if (synce_socket_read(socket, buffer, header)) {
-            osVersion = letoh16( *( uint16_t* ) ( buffer + 0x04 ) );
+						osVersion = letoh16( *( uint16_t* ) ( buffer + 0x04 ) ) & 0xFF;
             buildNumber = letoh16( *( uint16_t* ) ( buffer + 0x06 ) );
             processorType = letoh16( *( uint16_t* ) ( buffer + 0x08 ) );
             partnerId1 = letoh32( *( uint32_t* ) ( buffer + 0x10 ) );
