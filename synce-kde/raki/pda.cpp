@@ -692,7 +692,7 @@ void PDA::init()
         }
 
         initProgress = new InitProgress( raki, "InitProgress", true,
-                                         WStyle_Customize | WStyle_NoBorder | WStyle_Tool/ | WX11BypassWM );
+                                         WStyle_Customize | WStyle_NoBorder | WStyle_Tool | WX11BypassWM );
 
         progressBar = initProgress->progressBar;
         progressBar->setTotalSteps( 11 ); /* 7 */
