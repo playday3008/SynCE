@@ -380,8 +380,9 @@ handle_device (struct usb_device *dev)
   gboolean success = TRUE;
   usb_dev_handle *h = NULL;
   struct rndis_init_c *resp;
+  guint32 mtu;
   guchar mac_addr[6];
-  guint mac_addr_len;
+  guint mac_addr_len, mtu_len;
   gchar mac_addr_str[20];
   guint32 pf;
   gint fd = -1, sock_fd = -1, err, i;
@@ -445,20 +446,31 @@ handle_device (struct usb_device *dev)
   device_ctx.device_max_transfer_size = resp->max_transfer_size;
   device_ctx.alignment = 1 << resp->packet_alignment;
 
-  puts ("doing rndis_query for OID_802_3_PERMANENT_ADDRESS");
+  printf ("rndis_query(OID_GEN_MAXIMUM_FRAME_SIZE) => ");
+  mtu_len = sizeof (mtu);
+  if (!_rndis_query (&device_ctx, OID_GEN_MAXIMUM_FRAME_SIZE, (guchar *) &mtu,
+                     &mtu_len))
+    {
+      goto RNDIS_ERROR;
+    }
+
+  mtu = GUINT32_FROM_LE (mtu);
+  printf ("%d\n", mtu);
+
+  printf ("rndis_query(OID_802_3_PERMANENT_ADDRESS) => ");
   mac_addr_len = 6;
   if (!_rndis_query (&device_ctx, OID_802_3_PERMANENT_ADDRESS, mac_addr,
                      &mac_addr_len))
     {
-      goto ANY_ERROR;
+      goto RNDIS_ERROR;
     }
 
   sprintf (mac_addr_str, "%02x:%02x:%02x:%02x:%02x:%02x",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
            mac_addr[4], mac_addr[5]);
-  printf ("rndis_query succeeded, got MAC address: %s\n", mac_addr_str);
+  printf ("%s\n", mac_addr_str);
 
-  puts ("setting packet filter");
+  printf ("rndis_set(OID_GEN_CURRENT_PACKET_FILTER) => ");
 
   pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_DIRECTED
                       | NDIS_PACKET_TYPE_MULTICAST
@@ -467,10 +479,10 @@ handle_device (struct usb_device *dev)
   if (!_rndis_set (&device_ctx, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf,
                    sizeof (pf)))
     {
-      goto ANY_ERROR;
+      goto RNDIS_ERROR;
     }
 
-  puts ("packet filter set");
+  printf ("ok\n");
 
   /* create a tap device */
   if ((fd = open ("/dev/net/tun", O_RDWR)) < 0)
@@ -499,7 +511,7 @@ handle_device (struct usb_device *dev)
       err = ioctl (sock_fd, SIOCSIFNAME, &ifr);
       if (err == 0)
         break;
-      else if (err != -EEXIST)
+      else if (errno != -EEXIST)
         goto SYS_ERROR;
     }
 
@@ -510,6 +522,21 @@ handle_device (struct usb_device *dev)
   memcpy (ifr.ifr_hwaddr.sa_data, mac_addr, sizeof (mac_addr));
   if ((err = ioctl (sock_fd, SIOCSIFHWADDR, &ifr)) < 0)
     goto SYS_ERROR;
+
+  /* set the MTU */
+  ifr.ifr_mtu = mtu;
+  if ((err = ioctl (sock_fd, SIOCSIFMTU, &ifr)) < 0)
+    {
+      if (errno == EINVAL && mtu > ETH_DATA_LEN)
+        {
+          fprintf (stderr, "failed to set jumbo MTU (%d), patched tun driver "
+                   "required\n", mtu);
+        }
+      else
+        {
+          goto SYS_ERROR;
+        }
+    }
 
   /* bring the interface up */
   if ((err = ioctl (sock_fd, SIOCGIFFLAGS, &ifr)) < 0)
@@ -566,15 +593,19 @@ handle_device (struct usb_device *dev)
   goto OUT;
 
 USB_ERROR:
-  success = FALSE;
   fprintf (stderr, "error occurred: %s\n", usb_strerror ());
   goto ANY_ERROR;
 
 SYS_ERROR:
-  success = FALSE;
   fprintf (stderr, "error occurred: %s\n", strerror (errno));
+  goto ANY_ERROR;
+
+RNDIS_ERROR:
+  printf ("failed\n");
 
 ANY_ERROR:
+  success = FALSE;
+
   if (h != NULL)
     usb_close (h);
   if (fd >= 0)

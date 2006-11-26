@@ -104,6 +104,8 @@ _rndis_command (RNDISContext *ctx,
     goto ERROR;
   else if (r->request_id != GUINT32_FROM_LE (req->request_id))
     goto ERROR;
+  else if (r->status != RNDIS_STATUS_SUCCESS)
+    goto ERROR;
 
   return TRUE;
 
