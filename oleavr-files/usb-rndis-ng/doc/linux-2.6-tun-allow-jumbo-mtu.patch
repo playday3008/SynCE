@@ -1,0 +1,25 @@
+--- linux-2.6.19-rc6/drivers/net/tun.c-orig	2006-11-26 04:59:23.000000000 +0100
++++ linux-2.6.19-rc6/drivers/net/tun.c	2006-11-26 05:01:01.000000000 +0100
+@@ -173,6 +173,14 @@
+ 	return &tun->stats;
+ }
+ 
++static int tap_change_mtu(struct net_device *dev, int new_mtu)
++{
++	if (new_mtu < 68)
++		return -EINVAL;
++	dev->mtu = new_mtu;
++	return 0;
++}
++
+ /* Initialize net device. */
+ static void tun_net_init(struct net_device *dev)
+ {
+@@ -197,6 +205,7 @@
+ 
+ 		ether_setup(dev);
+ 		random_ether_addr(dev->dev_addr);
++		dev->change_mtu = tap_change_mtu;
+ 		dev->tx_queue_len = TUN_READQ_SIZE;  /* We prefer our own queue length */
+ 		break;
+ 	}
