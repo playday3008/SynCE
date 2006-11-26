@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if.h>
+#include <linux/if_arp.h>
 #include <linux/if_tun.h>
 #include <linux/usbdevice_fs.h>
 #include "rndis.h"
@@ -381,9 +382,9 @@ handle_device (struct usb_device *dev)
   struct rndis_init_c *resp;
   guchar mac_addr[6];
   guint mac_addr_len;
-  gchar mac_addr_str[20], str[64];
+  gchar mac_addr_str[20];
   guint32 pf;
-  gint fd = -1, err;
+  gint fd = -1, sock_fd = -1, err, i;
   struct ifreq ifr;
   pid_t pid;
 
@@ -471,8 +472,11 @@ handle_device (struct usb_device *dev)
 
   puts ("packet filter set");
 
+  /* create a tap device */
   if ((fd = open ("/dev/net/tun", O_RDWR)) < 0)
     goto SYS_ERROR;
+
+  device_ctx.fd = fd;
 
   memset (&ifr, 0, sizeof (ifr));
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
@@ -482,16 +486,42 @@ handle_device (struct usb_device *dev)
       goto SYS_ERROR;
     }
 
-  printf ("got device '%s'\n", ifr.ifr_name);
+  if ((sock_fd = socket (PF_INET, SOCK_STREAM, 0)) < 0)
+    {
+      goto SYS_ERROR;
+    }
 
-  device_ctx.fd = fd;
+  /* name it */
+  for (i = 0; i < 100; i++)
+    {
+      sprintf (ifr.ifr_newname, "rndis%d", i);
 
-  /* hackish */
-  sprintf (str, "ifconfig %s hw ether %s", ifr.ifr_name, mac_addr_str);
-  system (str);
+      err = ioctl (sock_fd, SIOCSIFNAME, &ifr);
+      if (err == 0)
+        break;
+      else if (err != -EEXIST)
+        goto SYS_ERROR;
+    }
 
-  sprintf (str, "ifconfig %s up", ifr.ifr_name);
-  system (str);
+  strcpy (ifr.ifr_name, ifr.ifr_newname);
+
+  /* change the MAC address */
+  ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+  memcpy (ifr.ifr_hwaddr.sa_data, mac_addr, sizeof (mac_addr));
+  if ((err = ioctl (sock_fd, SIOCSIFHWADDR, &ifr)) < 0)
+    goto SYS_ERROR;
+
+  /* bring the interface up */
+  if ((err = ioctl (sock_fd, SIOCGIFFLAGS, &ifr)) < 0)
+    goto SYS_ERROR;
+
+  ifr.ifr_flags |= IFF_UP;
+
+  if ((err = ioctl (sock_fd, SIOCSIFFLAGS, &ifr)) < 0)
+    goto SYS_ERROR;
+
+  close (sock_fd);
+  sock_fd = -1;
 
   if (!g_thread_create (recv_thread, &device_ctx, TRUE, NULL))
     goto SYS_ERROR;
@@ -499,7 +529,7 @@ handle_device (struct usb_device *dev)
   if (!g_thread_create (send_thread, &device_ctx, TRUE, NULL))
     goto SYS_ERROR;
 
-  printf ("the device is now up and running\n");
+  printf ("%s is now up and running\n", ifr.ifr_name);
 
   if (run_as_daemon)
     {
@@ -547,8 +577,10 @@ SYS_ERROR:
 ANY_ERROR:
   if (h != NULL)
     usb_close (h);
-  if (fd > 0)
-      close (fd);
+  if (fd >= 0)
+    close (fd);
+  if (sock_fd >= 0)
+    close (sock_fd);
 
 OUT:
   return success;
