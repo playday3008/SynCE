@@ -638,7 +638,7 @@ main(gint argc, gchar *argv[])
           else if (dev_id != -1)
             {
               fprintf (stderr, "device does not look like an RNDIS device\n");
-              return 1;
+              return EXIT_FAILURE;
             }
         }
     }
