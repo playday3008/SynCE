@@ -395,6 +395,7 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
   gboolean initialized = FALSE;
   gchar **devices = NULL;
   gint num_devices, i;
+  gchar *nwif_udi = NULL;
 
   dbus_error_init (&error);
 
@@ -405,6 +406,7 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
   if (!libhal_ctx_set_dbus_connection (hal_ctx,
         dbus_bus_get (DBUS_BUS_SYSTEM, &error)))
     {
+      func_name = "dbus_bus_get";
       goto DBUS_ERROR;
     }
 
@@ -424,6 +426,7 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
   for (i = 0; i < num_devices; i++)
     {
       gchar *udi = devices[i];
+      gchar str[64];
 
       if (!libhal_device_property_exists (hal_ctx, udi, HAL_PROP_USB_DEVNO,
                                           NULL))
@@ -443,9 +446,59 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
           continue;
         }
 
-      g_debug ("found it! udi='%s'", udi);
+#if 0
+      nwif_udi = libhal_new_device (hal_ctx, &error);
+      if (nwif_udi == NULL)
+        {
+          func_name = "libhal_new_device";
+          goto DBUS_ERROR;
+        }
 
-      /* FIXME: add a "Networking Interface" object to HAL */
+      libhal_device_add_capability (hal_ctx, nwif_udi, "net", &error);
+      libhal_device_add_capability (hal_ctx, nwif_udi, "net.80203", &error);
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "info.category",
+                                             "net.80203", &error);
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "info.parent",
+                                             udi, &error);
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "info.product",
+                                             "Networking Interface", &error);
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "linux.subsystem",
+                                             "net", &error);
+
+      sprintf (str, "/sys/class/net/%s", ctx->ifname);
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "linux.sysfs_path",
+                                             str, &error);
+
+      libhal_device_set_property_uint64 (hal_ctx, nwif_udi, "net.80203.mac_address",
+                                         ctx->mac_addr, &error);
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "net.address",
+                                             ctx->mac_addr_str, &error);
+
+      libhal_device_set_property_int (hal_ctx, nwif_udi, "net.arp_proto_hw_id",
+                                      1, &error);
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "net.interface",
+                                             ctx->ifname, &error);
+
+      libhal_device_set_property_bool (hal_ctx, nwif_udi, "net.interface_up",
+                                       TRUE, &error);
+
+      /* FIXME: net.linux.ifindex */
+
+      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "net.physical_device",
+                                             udi, &error);
+
+      sprintf (str, "/org/freedesktop/Hal/devices/%s", ctx->ifname);
+      if (!libhal_device_commit_to_gdl (hal_ctx, nwif_udi, str, &error))
+        {
+          goto DBUS_ERROR;
+        }
+#endif
 
       success = TRUE;
     }
@@ -462,6 +515,8 @@ DBUS_ERROR:
              func_name, error.name, error.message);
 
 OUT:
+  g_free (nwif_udi);
+
   if (devices != NULL)
     libhal_free_string_array (devices);
 
@@ -485,7 +540,6 @@ handle_device (struct usb_device *dev,
   guint32 mtu;
   guchar mac_addr[6];
   guint mac_addr_len, mtu_len;
-  gchar mac_addr_str[20];
   guint32 pf;
   gint fd = -1, sock_fd = -1, err, i;
   struct ifreq ifr;
@@ -567,10 +621,17 @@ handle_device (struct usb_device *dev,
       goto RNDIS_ERROR;
     }
 
-  sprintf (mac_addr_str, "%02x:%02x:%02x:%02x:%02x:%02x",
+  device_ctx.mac_addr = (guint64) mac_addr[0] << 40 |
+                        (guint64) mac_addr[1] << 32 |
+                        (guint64) mac_addr[2] << 24 |
+                        (guint64) mac_addr[3] << 16 |
+                        (guint64) mac_addr[4] <<  8 |
+                        (guint64) mac_addr[5];
+
+  sprintf (device_ctx.mac_addr_str, "%02x:%02x:%02x:%02x:%02x:%02x",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
            mac_addr[4], mac_addr[5]);
-  printf ("%s\n", mac_addr_str);
+  printf ("%s\n", device_ctx.mac_addr_str);
 
   printf ("rndis_set(OID_GEN_CURRENT_PACKET_FILTER) => ");
 
@@ -618,6 +679,7 @@ handle_device (struct usb_device *dev,
     }
 
   strcpy (ifr.ifr_name, ifr.ifr_newname);
+  strcpy (device_ctx.ifname, ifr.ifr_name);
 
   /* change the MAC address */
   ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
