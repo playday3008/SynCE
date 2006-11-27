@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PATH="/usr/local/bin:$PATH"
+export PATH="/usr/local/sbin:$PATH"
 
 if [ "$HALD_ACTION" = "add" ]; then
   sleep 1 #argh

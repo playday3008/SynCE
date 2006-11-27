@@ -1,6 +1,11 @@
 AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_CFLAGS@ @LIBUSB_CFLAGS@
 AM_LDFLAGS = @GLIB_LIBS@ @GTHREAD_LIBS@ @LIBUSB_LIBS@
 
-bin_PROGRAMS = usb-rndis-driver
+if HAVE_HAL
+  AM_CFLAGS += @HAL_CFLAGS@
+  AM_LDFLAGS += @HAL_LIBS@
+endif
+
+sbin_PROGRAMS = usb-rndis-driver
 
 usb_rndis_driver_SOURCES = rndis.c main.c

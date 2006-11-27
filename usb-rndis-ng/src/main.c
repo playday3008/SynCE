@@ -22,6 +22,7 @@
 
 //#define INSANE_DEBUG 1
 
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -32,6 +33,9 @@
 #include <linux/if_arp.h>
 #include <linux/if_tun.h>
 #include <linux/usbdevice_fs.h>
+#ifdef HAVE_HAL
+#include <libhal.h>
+#endif
 #include "rndis.h"
 
 static gboolean run_as_daemon = TRUE, hispeed_capable = TRUE;
@@ -374,8 +378,106 @@ has_hi_speed_connection (struct usb_device *dev)
   return hispeed_capable;
 }
 
+#ifdef HAVE_HAL
+
+#define HAL_DBUS_SERVICE   "org.freedesktop.Hal"
+
+#define HAL_PROP_USB_BUSNO "usb_device.bus_number"
+#define HAL_PROP_USB_DEVNO "usb_device.linux.device_number"
+
 static gboolean
-handle_device (struct usb_device *dev)
+notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
+{
+  gboolean success = FALSE;
+  const gchar *func_name = "";
+  DBusError error;
+  LibHalContext *hal_ctx = NULL;
+  gboolean initialized = FALSE;
+  gchar **devices = NULL;
+  gint num_devices, i;
+
+  dbus_error_init (&error);
+
+  hal_ctx = libhal_ctx_new ();
+  if (hal_ctx == NULL)
+    goto OUT;
+
+  if (!libhal_ctx_set_dbus_connection (hal_ctx,
+        dbus_bus_get (DBUS_BUS_SYSTEM, &error)))
+    {
+      goto DBUS_ERROR;
+    }
+
+  if (!libhal_ctx_init (hal_ctx, &error))
+    {
+      func_name = "libhal_ctx_init";
+      goto DBUS_ERROR;
+    }
+
+  initialized = TRUE;
+
+  devices = libhal_find_device_by_capability (hal_ctx, "pda", &num_devices,
+                                              &error);
+  if (devices == NULL)
+    goto DBUS_ERROR;
+
+  for (i = 0; i < num_devices; i++)
+    {
+      gchar *udi = devices[i];
+
+      if (!libhal_device_property_exists (hal_ctx, udi, HAL_PROP_USB_DEVNO,
+                                          NULL))
+        {
+          continue;
+        }
+
+      if (libhal_device_get_property_int (hal_ctx, udi, HAL_PROP_USB_DEVNO,
+                                          NULL) != dev_no)
+        {
+          continue;
+        }
+
+      if (libhal_device_get_property_int (hal_ctx, udi, HAL_PROP_USB_BUSNO,
+                                          NULL) != bus_no)
+        {
+          continue;
+        }
+
+      g_debug ("found it! udi='%s'", udi);
+
+      /* FIXME: add a "Networking Interface" object to HAL */
+
+      success = TRUE;
+    }
+
+  if (!success)
+    {
+      g_warning ("device not found by HAL");
+    }
+
+  goto OUT;
+
+DBUS_ERROR:
+  g_warning ("%s failed with D-Bus error %s: %s\n",
+             func_name, error.name, error.message);
+
+OUT:
+  if (devices != NULL)
+    libhal_free_string_array (devices);
+
+  if (initialized)
+    libhal_ctx_shutdown (hal_ctx, NULL);
+
+  if (hal_ctx != NULL)
+    libhal_ctx_free (hal_ctx);
+
+  return success;
+}
+#endif
+
+static gboolean
+handle_device (struct usb_device *dev,
+               gint bus_no, gint dev_no)
 {
   gboolean success = TRUE;
   usb_dev_handle *h = NULL;
@@ -578,6 +680,11 @@ handle_device (struct usb_device *dev)
   if (!g_thread_create (send_thread, &device_ctx, TRUE, NULL))
     goto SYS_ERROR;
 
+#ifdef HAVE_HAL
+  if (!notify_hal (&device_ctx, bus_no, dev_no))
+    goto SYS_ERROR;
+#endif
+
   while (TRUE)
     {
       sleep (5);
@@ -678,7 +785,7 @@ main(gint argc, gchar *argv[])
   for (bus = busses; bus; bus = bus->next)
     {
       struct usb_device *dev;
-      int cur_bus_id = atoi (bus->dirname);
+      gint cur_bus_id = atoi (bus->dirname);
 
       if (bus_id != -1 && cur_bus_id != bus_id)
         continue;
@@ -696,7 +803,8 @@ main(gint argc, gchar *argv[])
               desc->bDeviceSubClass == 0x01 &&
               desc->bDeviceProtocol == 0x01)
             {
-              return (handle_device (dev)) ? EXIT_SUCCESS : EXIT_FAILURE;
+              return (handle_device (dev, cur_bus_id, dev->devnum))
+                ? EXIT_SUCCESS : EXIT_FAILURE;
             }
           else if (dev_id != -1)
             {
