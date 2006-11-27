@@ -380,8 +380,6 @@ has_hi_speed_connection (struct usb_device *dev)
 
 #ifdef HAVE_HAL
 
-#define HAL_DBUS_SERVICE   "org.freedesktop.Hal"
-
 #define HAL_PROP_USB_BUSNO "usb_device.bus_number"
 #define HAL_PROP_USB_DEVNO "usb_device.linux.device_number"
 
