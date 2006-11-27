@@ -426,7 +426,7 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
   for (i = 0; i < num_devices; i++)
     {
       gchar *udi = devices[i];
-      gchar str[64];
+      gchar str[64], *p;
 
       if (!libhal_device_property_exists (hal_ctx, udi, HAL_PROP_USB_DEVNO,
                                           NULL))
@@ -446,7 +446,6 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
           continue;
         }
 
-#if 0
       nwif_udi = libhal_new_device (hal_ctx, &error);
       if (nwif_udi == NULL)
         {
@@ -454,51 +453,85 @@ notify_hal (RNDISContext *ctx, gint bus_no, gint dev_no)
           goto DBUS_ERROR;
         }
 
-      libhal_device_add_capability (hal_ctx, nwif_udi, "net", &error);
-      libhal_device_add_capability (hal_ctx, nwif_udi, "net.80203", &error);
-
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "info.category",
-                                             "net.80203", &error);
-
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "info.parent",
-                                             udi, &error);
-
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "info.product",
-                                             "Networking Interface", &error);
-
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "linux.subsystem",
-                                             "net", &error);
+      func_name = "libhal_device_set_property_string";
 
       sprintf (str, "/sys/class/net/%s", ctx->ifname);
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "linux.sysfs_path",
-                                             str, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "linux.sysfs_path",
+                                              str, &error))
+        goto DBUS_ERROR;
 
-      libhal_device_set_property_uint64 (hal_ctx, nwif_udi, "net.80203.mac_address",
-                                         ctx->mac_addr, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "linux.subsystem",
+                                              "net", &error))
+        goto DBUS_ERROR;
 
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "net.address",
-                                             ctx->mac_addr_str, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "info.parent",
+                                              udi, &error))
+        goto DBUS_ERROR;
 
-      libhal_device_set_property_int (hal_ctx, nwif_udi, "net.arp_proto_hw_id",
-                                      1, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "info.product",
+                                              "Networking Interface", &error))
+        goto DBUS_ERROR;
 
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "net.interface",
-                                             ctx->ifname, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "info.category",
+                                              "net.80203", &error))
+        goto DBUS_ERROR;
 
-      libhal_device_set_property_bool (hal_ctx, nwif_udi, "net.interface_up",
-                                       TRUE, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "net.physical_device",
+                                              udi, &error))
+        goto DBUS_ERROR;
 
-      /* FIXME: net.linux.ifindex */
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "net.interface",
+                                              ctx->ifname, &error))
+        goto DBUS_ERROR;
 
-      libhal_device_property_strlist_append (hal_ctx, nwif_udi, "net.physical_device",
-                                             udi, &error);
+      if (!libhal_device_set_property_string (hal_ctx, nwif_udi, "net.address",
+                                              ctx->mac_addr_str, &error))
+        goto DBUS_ERROR;
 
-      sprintf (str, "/org/freedesktop/Hal/devices/%s", ctx->ifname);
-      if (!libhal_device_commit_to_gdl (hal_ctx, nwif_udi, str, &error))
+      func_name = "libhal_device_set_property_int";
+
+      if (!libhal_device_set_property_int (hal_ctx, nwif_udi, "net.linux.ifindex",
+                                           ctx->ifindex, &error))
+        goto DBUS_ERROR;
+
+      if (!libhal_device_set_property_int (hal_ctx, nwif_udi, "net.arp_proto_hw_id",
+                                           ARPHRD_ETHER, &error))
+        goto DBUS_ERROR;
+
+      if (!libhal_device_set_property_bool (hal_ctx, nwif_udi, "net.interface_up",
+                                            TRUE, &error))
         {
+          func_name = "libhal_device_set_property_bool";
           goto DBUS_ERROR;
         }
-#endif
+
+      if (!libhal_device_set_property_uint64 (hal_ctx, nwif_udi, "net.80203.mac_address",
+                                              ctx->mac_addr, &error))
+        {
+          func_name = "libhal_device_set_property_uint64";
+          goto DBUS_ERROR;
+        }
+
+      func_name = "libhal_device_add_capability";
+
+      if (!libhal_device_add_capability (hal_ctx, nwif_udi, "net", &error))
+        goto DBUS_ERROR;
+
+      if (!libhal_device_add_capability (hal_ctx, nwif_udi, "net.80203", &error))
+        goto DBUS_ERROR;
+
+      sprintf (str, "/org/freedesktop/Hal/devices/net_%s", ctx->mac_addr_str);
+      for (p = str; *p != '\0'; p++)
+        {
+          if (*p == ':')
+            *p = '_';
+        }
+
+      if (!libhal_device_commit_to_gdl (hal_ctx, nwif_udi, str, &error))
+        {
+          func_name = "libhal_device_commit_to_gdl";
+          goto DBUS_ERROR;
+        }
 
       success = TRUE;
     }
@@ -638,7 +671,7 @@ handle_device (struct usb_device *dev,
   pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_DIRECTED
                       | NDIS_PACKET_TYPE_MULTICAST
                       | NDIS_PACKET_TYPE_BROADCAST);
-  //pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS);
+  /* pf = GUINT32_TO_LE (NDIS_PACKET_TYPE_PROMISCUOUS); */
   if (!_rndis_set (&device_ctx, OID_GEN_CURRENT_PACKET_FILTER, (guchar *) &pf,
                    sizeof (pf)))
     {
@@ -701,6 +734,12 @@ handle_device (struct usb_device *dev,
           goto SYS_ERROR;
         }
     }
+
+  /* get the interface index */
+  if ((err = ioctl (sock_fd, SIOCGIFINDEX, &ifr)) < 0)
+    goto SYS_ERROR;
+
+  device_ctx.ifindex = ifr.ifr_ifindex;
 
   /* bring the interface up */
   if ((err = ioctl (sock_fd, SIOCGIFFLAGS, &ifr)) < 0)

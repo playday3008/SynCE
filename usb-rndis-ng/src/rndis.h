@@ -146,9 +146,11 @@ typedef struct {
     usb_dev_handle *h;
     gint fd;
 
+    guint32 ifindex;
+    gchar ifname[16];
+
     guint64 mac_addr;
     gchar mac_addr_str[20];
-    gchar ifname[16];
 
     guint host_max_transfer_size;
     guint device_max_transfer_size;
