@@ -545,6 +545,8 @@ DBUS_ERROR:
   g_warning ("%s failed with D-Bus error %s: %s\n",
              func_name, error.name, error.message);
 
+  dbus_error_free (&error);
+
 OUT:
   g_free (nwif_udi);
 
