@@ -50,7 +50,8 @@ else
 fi
 
 if test "$enable_hal" = "yes"; then
-  prefixes="/ /usr /usr/local"
+  prefixes="/usr /usr/local /"
+  callout_dirs="/lib64/hal/scripts /lib64/hal /lib/hal/scripts /lib/hal"
 
   AC_MSG_CHECKING(for location of HAL fdi files)
   found=0
@@ -71,13 +72,17 @@ if test "$enable_hal" = "yes"; then
   AC_MSG_CHECKING(for location of HAL callouts)
   found=0
   for pfx in $prefixes; do
-    dir=$pfx/lib/hal
-    if test -d $dir; then
-      found=1
-      AC_MSG_RESULT($dir)
-      HAL_CALLOUT_DIR=$dir
-      break
-    fi
+    for dir in $callout_dirs; do
+      path=$pfx$dir
+      if test -d $path; then
+        found=1
+        AC_MSG_RESULT($path)
+        HAL_CALLOUT_DIR=$path
+        break
+      fi
+    done
+
+    if test $found -eq 1; then break; fi
   done
 
   if test $found -eq 0; then
