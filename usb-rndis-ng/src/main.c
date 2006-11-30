@@ -877,6 +877,9 @@ main(gint argc, gchar *argv[])
 
   g_thread_init (NULL);
 
+  /* make sure that the usb filesystem is up-to-date */
+  sync ();
+
   usb_init ();
 
   usb_find_busses ();
