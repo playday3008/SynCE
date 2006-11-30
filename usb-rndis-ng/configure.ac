@@ -51,7 +51,7 @@ fi
 
 if test "$enable_hal" = "yes"; then
   prefixes="/usr /usr/local /"
-  callout_dirs="/lib64/hal/scripts /lib64/hal /lib/hal/scripts /lib/hal"
+  callout_dirs="/lib64/hal/scripts /lib64/hal /lib/hal/scripts /lib/hal /share/hal/scripts"
 
   AC_MSG_CHECKING(for location of HAL fdi files)
   found=0
