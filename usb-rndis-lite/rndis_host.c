@@ -254,6 +254,7 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
  * of that mess as possible.
  */
 #define OID_802_3_PERMANENT_ADDRESS	ccpu2(0x01010101)
+#define OID_GEN_MAXIMUM_FRAME_SIZE      ccpu2(0x00010106)
 #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
 
 /*
@@ -388,6 +389,72 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
 	return -ETIMEDOUT;
 }
 
+/*
+ * rndis_query:
+ *
+ * Performs a query for #oid along with 0 or more bytes of
+ * payload as specified by #in_len. If #reply_len is not set
+ * to -1 then the reply length is checked against this value,
+ * resulting in an error if it doesn't match.
+ *
+ *
+ * NOTE: Adding a payload exactly the same size as the expected response
+ * payload is an evident requirement MSFT added for ActiveSync.
+ * However, #in_len is typically set to 0 for OIDs that return a variable
+ * sized response, and to n for OIDs that are expected to return exactly n
+ * bytes of data.
+ * This undocumented (and nonsensical) issue was found by sniffing
+ * protocol requests from the ActiveSync 4.1 Windows driver.
+ */
+static int rndis_query(struct usbnet *dev, struct usb_interface *intf,
+		       void *buf, u32 oid, u32 in_len,
+		       void **reply, int *reply_len)
+{
+	int retval;
+	union {
+		void			*buf;
+		struct rndis_msg_hdr	*header;
+		struct rndis_query	*get;
+		struct rndis_query_c	*get_c;
+	} u;
+	u32 off, len;
+
+	u.buf = buf;
+
+	memset(u.get, 0, sizeof *u.get + in_len);
+	u.get->msg_type = RNDIS_MSG_QUERY;
+	u.get->msg_len = ccpu2(sizeof *u.get + in_len);
+	u.get->oid = oid;
+	u.get->len = ccpu2(in_len);
+	u.get->offset = ccpu2(20);
+	
+	retval = rndis_command(dev, u.header);
+	if (unlikely(retval < 0)) {
+		dev_err(&intf->dev, "RNDIS_MSG_QUERY(0x%08x) failed, %d\n",
+				oid, retval);
+		return retval;
+	}
+	
+	off = le32_to_cpu(u.get_c->offset);
+	len = le32_to_cpu(u.get_c->len);
+	if (unlikely((8 + off + len) > CONTROL_BUFFER_SIZE))
+		goto response_error;
+
+	if (*reply_len != -1 && len != *reply_len)
+		goto response_error;
+
+	*reply = (unsigned char *) &u.get_c->request_id + off;
+	*reply_len = len;
+
+	return retval;
+
+response_error:
+	dev_err(&intf->dev, "RNDIS_MSG_QUERY(0x%08x) failed because of an "
+			"invalid response - off %d len %d\n",
+		oid, off, len);
+	return -EDOM;
+}
+
 static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
 {
 	int			retval;
@@ -402,7 +469,9 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
 		struct rndis_set	*set;
 		struct rndis_set_c	*set_c;
 	} u;
-	u32			tmp;
+	u32			tmp, *dwp;
+	int			reply_len;
+	unsigned char		*bp;
 
 	/* we can't rely on i/o from stack working, or stack allocation */
 	u.buf = kmalloc(CONTROL_BUFFER_SIZE, GFP_KERNEL);
@@ -456,34 +525,24 @@ fail:
 		dev->hard_mtu, tmp, dev->rx_urb_size,
 		1 << le32_to_cpu(u.init_c->packet_alignment));
 
-	/* Get designated host ethernet address.
-	 *
-	 * Adding a payload exactly the same size as the expected response
-	 * payload is an evident requirement MSFT added for ActiveSync.
-	 * This undocumented (and nonsensical) issue was found by sniffing
-	 * protocol requests from the ActiveSync 4.1 Windows driver.
-	 */
-	memset(u.get, 0, sizeof *u.get + 48);
-	u.get->msg_type = RNDIS_MSG_QUERY;
-	u.get->msg_len = ccpu2(sizeof *u.get + 48);
-	u.get->oid = OID_802_3_PERMANENT_ADDRESS;
-	u.get->len = ccpu2(48);
-	u.get->offset = ccpu2(20);
+	/* Get designated host ethernet address. */
+	reply_len = ETH_ALEN;
+	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
+			     48, (void **) &bp, &reply_len);
+	if (unlikely(retval < 0))
+		goto fail;
 
-	retval = rndis_command(dev, u.header);
-	if (unlikely(retval < 0)) {
-		dev_err(&intf->dev, "rndis get ethaddr, %d\n", retval);
+	memcpy(net->dev_addr, bp, ETH_ALEN);
+
+	/* Get the preferred MTU. */
+	reply_len = 4;
+	retval = rndis_query(dev, intf, u.buf, OID_GEN_MAXIMUM_FRAME_SIZE, 4,
+			     (void **) &dwp, &reply_len);
+	if (unlikely(retval < 0))
 		goto fail;
-	}
-	tmp = le32_to_cpu(u.get_c->offset);
-	if (unlikely((tmp + 8) > (CONTROL_BUFFER_SIZE - ETH_ALEN)
-			|| u.get_c->len != ccpu2(ETH_ALEN))) {
-		dev_err(&intf->dev, "rndis ethaddr off %d len %d ?\n",
-			tmp, le32_to_cpu(u.get_c->len));
-		retval = -EDOM;
-		goto fail;
-	}
-	memcpy(net->dev_addr, tmp + (char *)&u.get_c->request_id, ETH_ALEN);
+
+	net->mtu = le32_to_cpu(*dwp);
+	dev->hard_mtu = net->mtu + net->hard_header_len;
 
 	/* set a nonzero filter to enable data transfers */
 	memset(u.set, 0, sizeof *u.set);
