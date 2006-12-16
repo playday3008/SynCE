@@ -254,7 +254,7 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
  * of that mess as possible.
  */
 #define OID_802_3_PERMANENT_ADDRESS	ccpu2(0x01010101)
-#define OID_GEN_MAXIMUM_FRAME_SIZE      ccpu2(0x00010106)
+#define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
 #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
 
 /*
@@ -397,12 +397,11 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
  * to -1 then the reply length is checked against this value,
  * resulting in an error if it doesn't match.
  *
- *
- * NOTE: Adding a payload exactly the same size as the expected response
- * payload is an evident requirement MSFT added for ActiveSync.
- * However, #in_len is typically set to 0 for OIDs that return a variable
- * sized response, and to n for OIDs that are expected to return exactly n
- * bytes of data.
+ * NOTE: Adding a payload exactly or greater than the size of
+ * the expected response payload is an evident requirement MSFT
+ * added for ActiveSync.
+ * The only exception is for OIDs that return a variably sized
+ * response, in which case no payload should be added.
  * This undocumented (and nonsensical) issue was found by sniffing
  * protocol requests from the ActiveSync 4.1 Windows driver.
  */
