@@ -30,8 +30,8 @@
  * issues can usefully be addressed by this framework.
  */
 
-#define	DEBUG			// error path messages, extra info
-#define	VERBOSE			// more; success messages
+// #define	DEBUG			// error path messages, extra info
+// #define	VERBOSE			// more; success messages
 
 #include <linux/module.h>
 #include <linux/sched.h>
@@ -1181,10 +1181,13 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
 	// NOTE net->name still not usable ...
 	if (info->bind) {
 		status = info->bind (dev, udev);
-		// heuristic:  "usb%d" for links we know are two-host,
-		// else "eth%d" when there's reasonable doubt.  userspace
-		// can rename the link if it knows better.
-		if ((dev->driver_info->flags & FLAG_ETHER) != 0
+		// heuristic:  "rndis%d" for links with RNDIS framing,
+		// "usb%d" for links we know are two-host, else "eth%d" when
+		// there's reasonable doubt.  userspace can rename the link
+		// if it knows better.
+		if ((dev->driver_info->flags & FLAG_FRAMING_RN) != 0)
+			strcpy (net->name, "rndis%d");
+		else if ((dev->driver_info->flags & FLAG_ETHER) != 0
 				&& (net->dev_addr [0] & 0x02) == 0)
 			strcpy (net->name, "eth%d");
 

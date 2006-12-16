@@ -17,8 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define	DEBUG			// error path messages, extra info
-#define	VERBOSE			// more; success messages
+// #define	DEBUG			// error path messages, extra info
+// #define	VERBOSE			// more; success messages
 
 #include <linux/module.h>
 #include <linux/sched.h>
