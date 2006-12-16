@@ -141,6 +141,7 @@ int usbnet_get_endpoints(struct usbnet *dev, struct usb_interface *intf)
 	if (!alt || !in || !out)
 		return -EINVAL;
 
+#if 0
 	if (alt->desc.bAlternateSetting != 0
 			|| !(dev->driver_info->flags & FLAG_NO_SETINT)) {
 		tmp = usb_set_interface (dev->udev, alt->desc.bInterfaceNumber,
@@ -148,6 +149,7 @@ int usbnet_get_endpoints(struct usbnet *dev, struct usb_interface *intf)
 		if (tmp < 0)
 			return tmp;
 	}
+#endif
 	
 	dev->in = usb_rcvbulkpipe (dev->udev,
 			in->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
