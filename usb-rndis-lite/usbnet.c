@@ -1204,11 +1204,10 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
 			status = 0;
 
 	}
-	/*
 	if (status == 0 && dev->status)
 		status = init_status (dev, udev);
 	if (status < 0)
-		goto out1;*/
+		goto out1;
 
 	if (!dev->rx_urb_size)
 		dev->rx_urb_size = dev->hard_mtu;

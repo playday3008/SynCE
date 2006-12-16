@@ -76,10 +76,12 @@ struct rndis_msg_hdr {
 	// ... and more
 } __attribute__ ((packed));
 
+/* MS-Windows uses this strange size, but RNDIS spec says 1024 minimum */
 #define	CONTROL_BUFFER_SIZE		1025
 
-/* RNDIS defines this (absurdly huge) control timeout,
- * but ActiveSync seems to use a more usual 5 second timeout.
+/* RNDIS defines an (absurdly huge) 10 second control timeout,
+ * but ActiveSync seems to use a more usual 5 second timeout
+ * (which matches the USB 2.0 spec).
  */
 #define	RNDIS_CONTROL_TIMEOUT_MS	(5 * 1000)
 
@@ -410,28 +412,50 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
 	if (retval < 0)
 		goto done;
 
-	net->hard_header_len += sizeof (struct rndis_data_hdr);
-	dev->rx_urb_size = (dev->udev->speed == USB_SPEED_FULL) ? 16384 : 8192;
-
-	/* initialize; max transfer is 16KB at full speed */
 	u.init->msg_type = RNDIS_MSG_INIT;
 	u.init->msg_len = ccpu2(sizeof *u.init);
 	u.init->major_version = ccpu2(1);
 	u.init->minor_version = ccpu2(0);
-	u.init->max_transfer_size = ccpu2(dev->rx_urb_size);
+
+	/* max transfer (in spec) is 0x4000 at full speed, but for
+	 * TX we'll stick to one Ethernet packet plus RNDIS framing.
+	 * For RX we handle drivers that zero-pad to end-of-packet.
+	 * Don't let userspace change these settings.
+	 */
+	net->hard_header_len += sizeof (struct rndis_data_hdr);
+	dev->hard_mtu = net->mtu + net->hard_header_len;
+
+	dev->rx_urb_size = dev->hard_mtu + (dev->maxpacket + 1);
+	dev->rx_urb_size &= ~(dev->maxpacket - 1);
+	u.init->max_transfer_size = cpu_to_le32(dev->rx_urb_size);
+
+	net->change_mtu = NULL;
 
 	retval = rndis_command(dev, u.header);
 	if (unlikely(retval < 0)) {
+		struct cdc_state		*info;
+
 		/* it might not even be an RNDIS device!! */
 		dev_err(&intf->dev, "RNDIS init failed, %d\n", retval);
 fail:
-		usb_driver_release_interface(driver_of(intf),
-			((struct cdc_state *)&(dev->data))->data);
+		info = (void *) &dev->data;
+		usb_set_intfdata(info->data, NULL);
+		usb_driver_release_interface(driver_of(intf), info->data);
+		info->data = NULL;
 		goto done;
 	}
-	dev->hard_mtu = le32_to_cpu(u.init_c->max_transfer_size);
+	tmp = le32_to_cpu(u.init_c->max_transfer_size);
+	if (tmp < dev->hard_mtu) {
+		dev_err(&intf->dev,
+			"dev can't take %u byte packets (max %u)\n",
+			dev->hard_mtu, tmp);
+		goto fail;
+	}
+
 	/* REVISIT:  peripheral "alignment" request is ignored ... */
-	dev_dbg(&intf->dev, "hard mtu %u, align %d\n", dev->hard_mtu,
+	dev_dbg(&intf->dev,
+		"hard mtu %u (%u from dev), rx buflen %Zu, align %d\n",
+		dev->hard_mtu, tmp, dev->rx_urb_size,
 		1 << le32_to_cpu(u.init_c->packet_alignment));
 
 	/* Get designated host ethernet address.

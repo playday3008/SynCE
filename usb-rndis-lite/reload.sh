@@ -1,5 +1,7 @@
 #!/bin/bash
 
+make
+
 sudo rmmod rndis_host
 sudo rmmod cdc_ether
 sudo rmmod usbnet
