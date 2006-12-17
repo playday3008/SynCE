@@ -131,7 +131,8 @@ class SyncEngine(dbus.service.Object):
         for pship in self.slots:
             print pship
 
-    def _init_transports(self):
+    def _set_dtpt_network(self):
+        """ This isn't used at the moment, and probably not needed. """
         entries = config_query_get(self.session, None, "CM_ProxyEntries").children.values()
         transport = None
         for entry in entries:
@@ -149,6 +150,7 @@ class SyncEngine(dbus.service.Object):
         config_query_set(self.session, "CM_NetEntries", dtpt)
         print "CurrentDTPTNetwork set"
 
+    def _init_transports(self):
         site = server.Site(self.asr)
         factory = channel.HTTPFactory(site)
         reactor.listenTCP(26675, factory)
