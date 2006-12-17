@@ -239,6 +239,9 @@ class SyncEngine(dbus.service.Object):
         pship = Partnership(slot, generate_id(), generate_guid(),
                             socket.gethostname(), name)
 
+        for item in sync_items:
+            pship.sync_items.append(item)
+
         #
         # Create the synchronization config data source
         #
