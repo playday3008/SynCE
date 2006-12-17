@@ -312,6 +312,9 @@ ERROR:
              op, strerror (errno));
 
 OUT:
+  if (fd != -1)
+    close (fd);
+
   return result;
 }
 
