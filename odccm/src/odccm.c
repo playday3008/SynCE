@@ -16,16 +16,43 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "odccm-device-manager.h"
 #include "util.h"
 
 #define ODCCM_BUS_NAME "org.synce.odccm"
 
+static void
+print_usage (const gchar *name)
+{
+  printf ("Usage:\n"
+          "\t%s [-f]\n\n"
+          "\t-f           Do not run as a daemon\n\n",
+          name);
+}
+
 gint main(gint argc, gchar *argv[])
 {
+  gint c;
+  gboolean run_as_daemon = TRUE;
   GMainLoop *mainloop;
   OdccmDeviceManager *mgr;
   DBusGConnection *bus;
+
+  while ((c = getopt (argc, argv, "f")) != -1)
+    {
+      switch (c)
+        {
+          case 'f':
+            run_as_daemon = FALSE;
+            break;
+          default:
+            print_usage (argv[0]);
+            return EXIT_FAILURE;
+        }
+    }
 
   g_type_init ();
 
@@ -36,9 +63,28 @@ gint main(gint argc, gchar *argv[])
 
   mgr = g_object_new (ODCCM_TYPE_DEVICE_MANAGER, NULL);
 
-  g_debug ("running mainloop");
+  if (run_as_daemon)
+    {
+      pid_t pid = fork ();
+      if (pid < 0)
+        return EXIT_FAILURE;
+
+      if (pid > 0)
+        return EXIT_FAILURE;
+
+      if (setsid () < 0)
+        return EXIT_FAILURE;
+
+      if (chdir ("/") < 0)
+        return EXIT_FAILURE;
+
+      close (STDIN_FILENO);
+      close (STDOUT_FILENO);
+      close (STDERR_FILENO);
+    }
+
   g_main_loop_run (mainloop);
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
