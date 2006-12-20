@@ -34,6 +34,7 @@
 // #define	VERBOSE			// more; success messages
 
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/sched.h>
 #include <linux/init.h>
 #include <linux/netdevice.h>
@@ -219,7 +220,6 @@ void usbnet_skb_return (struct usbnet *dev, struct sk_buff *skb)
 }
 EXPORT_SYMBOL_GPL(usbnet_skb_return);
 
-
 /*-------------------------------------------------------------------------
  *
  * Network Device Driver (peer link to "Host Device", from USB host)
@@ -554,7 +554,11 @@ static int usbnet_stop (struct net_device *net)
 {
 	struct usbnet		*dev = netdev_priv(net);
 	int			temp;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK (unlink_wakeup);
+#else
+	DECLARE_WAIT_QUEUE_HEAD (unlink_wakeup);
+#endif
 	DECLARE_WAITQUEUE (wait, current);
 
 	netif_stop_queue (net);
