@@ -216,9 +216,11 @@ next_desc:
 	/* Microsoft ActiveSync based RNDIS devices lack the CDC descriptors,
 	 * so we'll hard-wire the interfaces and not check for descriptors.
 	 */
-	if (is_activesync(&intf->cur_altsetting->desc) && !info->u) {
-		info->control = usb_ifnum_to_if(dev->udev, 0);
-		info->data = usb_ifnum_to_if(dev->udev, 1);
+	if (is_activesync(&intf->cur_altsetting->desc)) {
+		if (!info->u) {
+			info->control = usb_ifnum_to_if(dev->udev, 0);
+			info->data = usb_ifnum_to_if(dev->udev, 1);
+		}
 		if (!info->control || !info->data) {
 			dev_dbg(&intf->dev,
 				"activesync: master #0/%p slave #1/%p\n",
