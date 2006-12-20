@@ -24,7 +24,7 @@ dnl Check for GNet
 PKG_CHECK_MODULES(GNET, gnet-2.0)
 
 dnl Check for D-Bus
-PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.61, dbus-glib-1 >= 0.61])
+PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60])
 
 dnl Check for HAL
 PKG_CHECK_MODULES(HAL, hal)
