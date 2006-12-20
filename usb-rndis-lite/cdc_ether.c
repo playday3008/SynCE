@@ -22,6 +22,7 @@
 // #define	VERBOSE			// more; success messages
 
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/sched.h>
 #include <linux/init.h>
 #include <linux/netdevice.h>
@@ -31,7 +32,12 @@
 #include <linux/workqueue.h>
 #include <linux/mii.h>
 #include <linux/usb.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
 #include <linux/usb/cdc.h>
+#else
+#include <linux/usb_cdc.h>
+#endif
 
 #include "usbnet.h"
 
