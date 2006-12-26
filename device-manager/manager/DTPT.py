@@ -78,6 +78,9 @@ class DTPTServer:
     def _handle_connection_session(self, s):
         print "ConnectionSession"
 
+
+SVCID_INET_HOSTADDRBYNAME = "{0002A803-0000-0000-C000-000000000046}"
+
 class QuerySet:
     def __init__(self):
         pass
@@ -87,8 +90,16 @@ class QuerySet:
         self._offset = 0
         
         raw_flat = self.read_field(60)
-        print "ServiceInstanceName: '%s'" % self.read_string()
-        
+        print "Size: %d" % struct.unpack("<I", raw_flat[0:4])
+        print "ServiceInstanceName: %s" % self.read_string()
+        print "ServiceClassID: %s" % self.read_guid()
+        print "Version: 0x%08x" % struct.unpack("<L", raw_flat[12:16])
+        print "Comment: %s" % self.read_string()
+        print "NameSpace: 0x%08x" % struct.unpack("<L", raw_flat[20:24])
+        print "NSProviderId: %s" % self.read_guid()
+        print "Context: %s" % self.read_string()
+        print "NumberOfProtocols: %d" % struct.unpack("<L", raw_flat[32:36])
+
     def read_dword(self):
         dw = struct.unpack("<I", self._data[self._offset:self._offset + 4])[0]
         self._offset += 4
@@ -118,6 +129,17 @@ class QuerySet:
             return s
         #open("/tmp/woot.bin", "wb").write(s)
         return s.decode("utf_16_le").rstrip("\0")
+    
+    def read_guid(self):
+        data = self.read_field(16)
+        if data == None:
+            return data
+
+        v1, v2, v3 = struct.unpack("<LHH", data[0:8])        
+        return "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}" % \
+            (v1, v2, v3, ord(data[8]), ord(data[9]), ord(data[10]),
+             ord(data[11]), ord(data[12]), ord(data[13]), ord(data[14]),
+             ord(data[15]))
 
 if __name__ == "__main__":
     srv = DTPTServer()
