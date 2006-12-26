@@ -38,17 +38,21 @@ class DTPTServer:
     
     def _handle_client(self, s):
         print "handling client"
-        buf = s.recv(2, socket.MSG_PEEK | socket.MSG_WAITALL)
-        print "%02x %02x" % (ord(buf[0]), ord(buf[1]))
-        if ord(buf[0]) != 1:
-            print "invalid protocol"
-        if ord(buf[1]) == 9:
-            self._handle_nsp_session(s)
-        elif ord(buf[1]) == 1:
-            self._handle_connection_session(s)
-        else:
-            print "unknown session type"
-        return
+        try:
+            buf = s.recv(2, socket.MSG_PEEK | socket.MSG_WAITALL)
+            print "%02x %02x" % (ord(buf[0]), ord(buf[1]))
+            if ord(buf[0]) != 1:
+                print "invalid protocol"
+            if ord(buf[1]) == 9:
+                self._handle_nsp_session(s)
+            elif ord(buf[1]) == 1:
+                self._handle_connection_session(s)
+            else:
+                print "unknown session type"
+            return
+        except Exception, e:
+            print dir(e)
+            print e
 
     def _handle_nsp_session(self, s):
         print "NSPSession"
@@ -73,7 +77,7 @@ class DTPTServer:
             return
         open("/tmp/request.bin", "w").write(buf)
         qs = QuerySet()
-        qs.initialize(buf)
+        qs.unserialize(buf)
 
     def _handle_connection_session(self, s):
         print "ConnectionSession"
@@ -81,18 +85,18 @@ class DTPTServer:
 
 class RPCStream:
     def __init__(self, data=""):
-        self.initialize(data, 0)
+        self.initialize(data)
 
     def initialize(self, data):
         self._data = data
         self._offset = 0
-        
+
     def get_data(self):
         return self._data
-    
+
     def get_offset(self):
         return self._offset
-    
+
     def get_length(self):
         return len(self._data)
 
@@ -100,10 +104,10 @@ class RPCStream:
         dw = struct.unpack("<I", self._data[self._offset:self._offset + 4])[0]
         self._offset += 4
         return dw
-    
+
     def write_dword(self, dw):
         self._data += struct.pack("<I", dw)
-    
+
     def read_n_bytes(self, n):
         buf = self._data[self._offset:self._offset + n]
         if len(buf) % 4 != 0:
@@ -165,12 +169,12 @@ class RPCStream:
                                int(guid[15:19], 16),
                                int(guid[20:22], 16),
                                int(guid[22:24], 16),
-                               int(guid[24:26], 16),
-                               int(guid[26:28], 16),
-                               int(guid[28:30], 16),
-                               int(guid[30:32], 16),
-                               int(guid[32:34], 16),
-                               int(guid[34:36], 16))
+                               int(guid[25:27], 16),
+                               int(guid[27:29], 16),
+                               int(guid[29:31], 16),
+                               int(guid[31:33], 16),
+                               int(guid[33:35], 16),
+                               int(guid[35:37], 16))
             self.write_field(data)
         else:
             self.write_dword(0)
@@ -216,7 +220,7 @@ class QuerySet:
             print "FIXME2"
         self.output_flags = struct.unpack("<L", raw_flat[52:56])[0]
         self.blob_size = s.read_dword()
-        
+
         assert s.get_offset() == s.get_length()
 
     def serialize(self):
