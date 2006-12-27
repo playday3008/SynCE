@@ -21,6 +21,7 @@ import socket
 import thread
 import struct
 import random
+import select
 
 DTPT_PORT = 5721
 DUMMY_PTR = 0xDEADBEEF
@@ -32,6 +33,7 @@ WSAHOST_NOT_FOUND = 11001
 class DTPTServer:
     def __init__(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(("0.0.0.0", DTPT_PORT))
         s.listen(5)
@@ -41,24 +43,25 @@ class DTPTServer:
         self._running = True
         while self._running:
             (s, address) = self._sock.accept()
+            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             thread.start_new_thread(self._handle_client, (s,))
     
     def _handle_client(self, s):
-        print "Handling client"
         buf = s.recv(2, socket.MSG_PEEK | socket.MSG_WAITALL)
         if ord(buf[0]) != 1:
             print "Invalid protocol"
             return
+        
+        session = None
         if ord(buf[1]) == 9:
-            s = NSPSession(s)
-            s.run()
+            session = NSPSession(s)
         elif ord(buf[1]) == 1:
-            self._handle_connection_session(s)
+            session = ConnectionSession(s)
         else:
-            print "unknown session type"
-
-    def _handle_connection_session(self, s):
-        print "ConnectionSession"
+            print "Unknown session type %d" % ord(buf[1])
+            return
+        
+        session.run()
 
 
 class NSPSession:
@@ -72,12 +75,12 @@ class NSPSession:
         self.response = None
 
     def run(self):
+        print "NSPSession::run"
+
         while True:
             buf = self.socket.recv(20, socket.MSG_WAITALL)
             if len(buf) != 20:
-                if len(buf) == 0:
-                    print "NSPSession: client disconnected"
-                else:
+                if len(buf) != 0:
                     print "NSPSession: read %d bytes, expected %d" % (len(buf), 20)
                 return
 
@@ -86,13 +89,10 @@ class NSPSession:
                 raise ValueError("ver=%d, expected 1" % ver)
             
             if type == 9:
-                print "NSPSession: handling LookupBegin"
                 self._handle_lookup_begin(qv, dv1, dv2)
             elif type == 11:
-                print "NSPSession: handling LookupNext"
                 self._handle_lookup_next(qv, dv1, dv2)
             elif type == 13:
-                print "NSPSession: handling LookupEnd"
                 self.initialize()
             else:
                 print "NSPSession: unhandled type=%d" % type
@@ -158,10 +158,71 @@ class NSPSession:
             self._send_reply(12, 0, WSAEFAULT, len(self.response))
 
     def _send_reply(self, msg_type, qvalue, dvalue1, dvalue2):
-        print "NSPSession: sending reply, msg_type=%d, qvalue=%d, dvalue1=%d, dvalue2=%d" \
-            % (msg_type, qvalue, dvalue1, dvalue2)
         buf = struct.pack("<BBxxQII", 1, msg_type, qvalue, dvalue1, dvalue2)
         self.socket.sendall(buf)
+
+
+class ConnectionSession:
+    def __init__(self, s):
+        self.socket = s
+        self.ext_socket = None
+
+    def run(self):
+        print "ConnectionSession::run"
+
+        self._initialize_connection()
+        
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 0)
+
+        while True:
+            rfds, wfds, xfds = select.select((self.socket, self.ext_socket), (), ())
+            for fd in rfds:
+                if fd == self.socket:
+                    other_fd = self.ext_socket
+                else:
+                    other_fd = self.socket
+
+                try:
+                    buf = fd.recv(2048)
+                    if len(buf) == 0:  return
+                    other_fd.sendall(buf)
+                except:
+                    return
+
+    def _initialize_connection(self):
+        buf = self.socket.recv(36, socket.MSG_WAITALL)
+        if len(buf) != 36:
+            if len(buf) != 0:
+                print "ConnectionSession: read %d bytes, expected %d" % (len(buf), 36)
+            return
+
+        family = struct.unpack("<L", buf[2:6])[0]
+        if family != socket.AF_INET:
+            print "Unsupported family %d" % family
+            return
+
+        port = struct.unpack(">H", buf[10:12])[0]
+        addr = socket.inet_ntoa(buf[12:16])
+
+        ext_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        errno = ext_socket.connect_ex((addr, port))
+        local_addr, local_port = ext_socket.getsockname()
+        
+        if errno == 0:
+            msg_type = 0x5A
+        else:
+            msg_type = 0x5B
+        
+        head = struct.pack("<BBLxxxx", 1, msg_type, family)
+        body = struct.pack(">H", local_port)
+        body += socket.inet_aton(local_addr)
+        body += struct.pack("xxxxxxxxxxxxxxxx")
+        tail = struct.pack("<L", errno) # FIXME: translate errno to WSAError
+
+        reply = head + body + tail
+        self.socket.sendall(reply)
+
+        self.ext_socket = ext_socket
 
 
 class RPCStream:
@@ -222,7 +283,6 @@ class RPCStream:
         s = self.read_field()
         if s == None:
             return s
-        #open("/tmp/woot.bin", "wb").write(s)
         return s.decode("utf_16_le").rstrip("\0")
 
     def write_string(self, s):
@@ -447,7 +507,9 @@ class CSAddrInfo:
         if family == socket.AF_INET:
             port = struct.unpack(">H", data[2:4])[0]
             return (family, socket.inet_ntoa(data[4:8]), port)
-
+        else:
+            raise NotImplementedError("Unhandled family %d" % family)
+    
     def _serialize_sockaddr(self, addr):
         if addr == None:
             return None
@@ -458,23 +520,14 @@ class CSAddrInfo:
         s += struct.pack(">H", port)
         s += socket.inet_aton(ascii_addr)
         s += "\x00\x00\x00\x00\x00\x00\x00\x00"
-
+    
         return s
 
     def __str__(self):
         return "<CSAddrInfo><LocalAddress>%s</LocalAddress><RemoteAddress>%s</RemoteAddress><SocketType>%d</SocketType><Protocol>%d</Protocol></CSAddrInfo>" % \
             (self.local_addr, self.remote_addr, self.socket_type, self.protocol)
 
-def test():
-    req = QuerySet()
-    req.unserialize(open("/home/oleavr/incoming/request.bin", "rb").read())
-    resp = QuerySet()
-    resp.unserialize(open("/home/oleavr/incoming/response.bin", "rb").read())
-    
-    print req
-    print resp
 
 if __name__ == "__main__":
-    #test()
     srv = DTPTServer()
     srv.run()
