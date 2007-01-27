@@ -1,0 +1,12 @@
+diff -r -u opensync-original/formats/vformats-xml/vformat.c opensync/formats/vformats-xml/vformat.c
+--- opensync-original/formats/vformats-xml/vformat.c	2007-01-27 15:34:39.000000000 -0500
++++ opensync/formats/vformats-xml/vformat.c	2007-01-27 11:52:10.000000000 -0500
+@@ -708,7 +708,7 @@
+ 			break;
+ 		case ',':
+ 			if (type == VFORMAT_CARD_30 || type == VFORMAT_EVENT_20 || type == VFORMAT_TODO_20)
+-				str = g_string_append (str, "\\,");
++				str = g_string_append (str, ",");
+ 			else
+ 				str = g_string_append_c (str, *p);
+ 			break;
