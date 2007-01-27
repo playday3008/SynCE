@@ -1,0 +1,4 @@
+org.synce.SyncEngine
+org.synce.SyncEngine.Error.Disconnected
+org.synce.SyncEngine.Error.InvalidArgument
+org.synce.SyncEngine.Error.NoFreeSlots
