@@ -1,0 +1,142 @@
+diff -r -u wbxml2-0.9.2-original/src/wbxml_tables.c wbxml2-0.9.2/src/wbxml_tables.c
+--- wbxml2-0.9.2-original/src/wbxml_tables.c	2007-01-27 15:21:43.000000000 -0500
++++ wbxml2-0.9.2/src/wbxml_tables.c	2007-01-27 15:13:48.000000000 -0500
+@@ -2806,6 +2806,23 @@
+     { NULL,                     0x00, 0x00 }
+ };
+ 
++const WBXMLNameSpaceEntry sv_airsync_ns_table[] = {
++    { "AirSync:",           0x00 },     /**< Code Page 0 */
++    { "POOMCONTACTS:",      0x01 },     /**< Code Page 1 */
++    { "POOMMAIL:",          0x02 },     /**< Code Page 2 */
++    { "AirNotify:",         0x03 },     /**< Code Page 3 */
++    { "POOMCAL:",           0x04 },     /**< Code Page 4 */
++    { "Move:",              0x05 },     /**< Code Page 5 */
++    { "GetItemEstimate:",   0x06 },     /**< Code Page 6 */
++    { "FolderHierarchy:",   0x07 },     /**< Code Page 7 */
++    { "MeetingResponse:",   0x08 },     /**< Code Page 8 */
++    { "POOMTASKS:",         0x09 },     /**< Code Page 9 */
++    { "ResolveRecipients:", 0x0a },     /**< Code Page 10 */
++    { "ValidateCert:",      0x0b },     /**< Code Page 11 */
++    { "POOMCONTACTS2:",     0x0c },     /**< Code Page 12 */
++    { NULL,                 0x00 }
++};
++
+ #endif /* WBXML_SUPPORT_AIRSYNC */
+ 
+ 
+@@ -2885,7 +2902,7 @@
+ #endif /* WBXML_SUPPORT_WV */
+ 
+ #if defined( WBXML_SUPPORT_AIRSYNC )
+-    { WBXML_LANG_AIRSYNC,           &sv_airsync_public_id,          sv_airsync_tag_table,           NULL,                           NULL,                       NULL,                           NULL },
++    { WBXML_LANG_AIRSYNC,           &sv_airsync_public_id,          sv_airsync_tag_table,           sv_airsync_ns_table,            NULL,                       NULL,                           NULL },
+ #endif /* WBXML_SUPPORT_AIRSYNC */
+ 
+     { WBXML_LANG_UNKNOWN,           NULL,                           NULL,                           NULL,                           NULL,                       NULL,                           NULL }
+@@ -3169,3 +3186,21 @@
+ 
+     return NULL;
+ }
++
++WBXML_DECLARE(WB_UTINY) wbxml_tables_get_code_page(const WBXMLNameSpaceEntry *ns_table, const WB_TINY* xmlns)
++{
++    WB_ULONG i = 0;
++
++    if (ns_table == NULL)
++        return NULL;
++
++    while (ns_table[i].xmlNameSpace != NULL)
++    {
++        if (strcmp(ns_table[i].xmlNameSpace, xmlns) == 0)
++            return ns_table[i].wbxmlCodePage;
++
++        i++;
++    }
++
++    return NULL;
++}
+diff -r -u wbxml2-0.9.2-original/src/wbxml_tables.h wbxml2-0.9.2/src/wbxml_tables.h
+--- wbxml2-0.9.2-original/src/wbxml_tables.h	2007-01-27 15:21:43.000000000 -0500
++++ wbxml2-0.9.2/src/wbxml_tables.h	2007-01-27 15:13:32.000000000 -0500
+@@ -310,6 +310,9 @@
+ WBXML_DECLARE(const WB_TINY *) wbxml_tables_get_xmlns(const WBXMLNameSpaceEntry *ns_table,
+                                                       WB_UTINY code_page);
+ 
++WBXML_DECLARE(WB_UTINY) wbxml_tables_get_code_page(const WBXMLNameSpaceEntry *ns_table,
++                                                   const WB_TINY* xmlns);
++
+ /** @} */
+ 
+ #ifdef __cplusplus
+diff -r -u wbxml2-0.9.2-original/src/wbxml_tree.c wbxml2-0.9.2/src/wbxml_tree.c
+--- wbxml2-0.9.2-original/src/wbxml_tree.c	2007-01-27 15:21:43.000000000 -0500
++++ wbxml2-0.9.2/src/wbxml_tree.c	2007-01-27 15:16:02.000000000 -0500
+@@ -34,6 +34,7 @@
+ 
+ #include "wbxml.h"
+ 
++#define WBXML_NAMESPACE_SEPARATOR ':'
+ 
+ /***************************************************
+  *    Public Functions
+@@ -201,9 +202,9 @@
+         *tree = NULL;
+ 
+     /* Create Expat XML Parser */
+-    if ((xml_parser = XML_ParserCreate(NULL)) == NULL)
++    if ((xml_parser = XML_ParserCreateNS(NULL, WBXML_NAMESPACE_SEPARATOR)) == NULL)
+         return WBXML_ERROR_NOT_ENOUGH_MEMORY;
+-    
++
+     /* Init context */
+     wbxml_tree_clb_ctx.current = NULL;
+     wbxml_tree_clb_ctx.error = WBXML_OK;
+@@ -1091,9 +1092,32 @@
+     const WBXMLTagEntry *tag_entry = NULL;
+     WBXMLTreeNode *node = NULL;
+     WBXMLTag *tag = NULL;
+-    
++    WB_UTINY *sep = NULL;
++    const WB_UTINY *namespace_name = NULL;
++    const WB_UTINY *element_name = NULL;
++
++    /* Separate the namespace from the element name */
++    sep = (WB_UTINY *)strrchr((const WB_TINY *) name, WBXML_NAMESPACE_SEPARATOR);
++    if (sep != NULL) {
++        /* Temporarily split the string by changing the separater to a null-terminator */
++        *sep = '\0';
++        
++        namespace_name = name;
++        element_name = sep+1;
++    }
++    else {
++        /* No namespace, so just set it to an empty string (specifically, the null-terminator at the end of the elemet name */
++        namespace_name = name + strlen((const WB_TINY *) name);
++        element_name = name;
++    }
++
++    WBXML_DEBUG((WBXML_CONV, "Parsed element name: Namespace='%s', Element='%s'", namespace_name, element_name));
++
++    /* Update the current code page to match the one specified by the namespace */
++    tree->cur_code_page = wbxml_tables_get_code_page(tree->lang->nsTable, (const WB_TINY *) namespace_name);
++
+     /* Search for XML Tag Name in Table */
+-    if ((tag_entry = wbxml_tables_get_tag_from_xml(tree->lang, tree->cur_code_page, (const WB_UTINY *) name)) != NULL) {
++    if ((tag_entry = wbxml_tables_get_tag_from_xml(tree->lang, tree->cur_code_page, element_name)) != NULL) {
+         tree->cur_code_page = tag_entry->wbxmlCodePage;
+ 
+         /* Found : token tag */
+@@ -1104,6 +1128,11 @@
+         tag = wbxml_tag_create_literal(name);
+     }
+ 
++    if (sep != NULL) {
++        /* We are done with the element and namespace names, so put the separator character back */
++        *sep = WBXML_NAMESPACE_SEPARATOR;
++    }
++    
+     if (tag == NULL)
+         return NULL;
+ 
+
