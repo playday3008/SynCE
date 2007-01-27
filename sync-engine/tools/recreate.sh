@@ -1,12 +1,11 @@
 #!/bin/bash
 
-./test_sync clean
-#./create_partnership "Linux desktop" Contacts,Calendar
-#./create_partnership "Linux desktop" Calendar
-./create_partnership "Linux desktop" Contacts
-msynctool --delgroup evo2-sync
-msynctool --addgroup evo2-sync
-msynctool --addmember evo2-sync evo2-sync
-msynctool --addmember evo2-sync synce-plugin
-msynctool --configure evo2-sync 1
-
+./clean_partnerships.py
+#./create_partnership.py "Linux desktop" Contacts,Calendar
+#./create_partnership.py "Linux desktop" Calendar
+./create_partnership.py "LinuxDesktop" "Contacts,Calendar,Tasks"
+msynctool --delgroup treo-kde
+msynctool --addgroup treo-kde
+msynctool --addmember treo-kde kdepim-sync
+msynctool --addmember treo-kde synce-plugin
+msynctool --configure treo-kde 2

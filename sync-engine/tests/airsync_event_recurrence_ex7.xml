@@ -1,0 +1,34 @@
+<ApplicationData>
+    <DtStamp>
+        20070120T190703Z
+    </DtStamp>
+    <StartTime>
+        20070120T203000Z
+    </StartTime>
+    <EndTime>
+        20070120T210000Z
+    </EndTime>
+    <Location>
+        Event Location
+    </Location>
+    <Subject>
+        Event Subject
+    </Subject>
+    <Recurrence>
+        <Until>
+            20080808T050000Z
+        </Until>
+        <DayOfWeek>
+            16
+        </DayOfWeek>
+        <WeekOfMonth>
+            3
+        </WeekOfMonth>
+        <MonthOfYear>
+            5
+        </MonthOfYear>
+        <Type>
+            6
+        </Type>
+    </Recurrence>
+</ApplicationData>

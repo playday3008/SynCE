@@ -1,0 +1,27 @@
+<ApplicationData>
+    <Timezone>xP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAIAAAAAAAAAxP///w==</Timezone>
+    <AllDayEvent>1</AllDayEvent>
+    <BusyStatus>0</BusyStatus>
+    <Rtf/>
+    <DtStamp>20060723T092111Z</DtStamp>
+    <EndTime>19780725T220000Z</EndTime>
+    <MeetingStatus>0</MeetingStatus>
+    <OrganizerEmail>Unknown</OrganizerEmail>
+    <OrganizerName>Unknown</OrganizerName>
+    <Reminder>15</Reminder>
+    <Sensitivity>0</Sensitivity>
+    <Subject>Badger AAA's Birthday</Subject>
+    <StartTime>19780724T220000Z</StartTime>
+    <UID>040000008200E00074C5B7101A82E00800000000A74EBEDCEA2251234DB90AB7101DED243FE9E2BDBF83D195E0063E04F0061ADF</UID>
+    <Recurrence>
+        <DayOfMonth>25</DayOfMonth>
+        <MonthOfYear>7</MonthOfYear>
+        <Type>5</Type>
+    </Recurrence>
+    <Exceptions>
+        <Exception>
+            <Deleted>1</Deleted>
+            <ExceptionStartTime>20060724T220000Z</ExceptionStartTime>
+        </Exception>
+    </Exceptions>
+</ApplicationData>

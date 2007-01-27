@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import dbus
+import sys
 
-bus = dbus.SessionBus()
-proxy_obj = bus.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
-engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
+sys.path.insert(0, "..")
+from engine.constants import *
+
+engine = dbus.Interface(dbus.SessionBus().get_object(DBUS_SYNCENGINE_BUSNAME, DBUS_SYNCENGINE_OBJPATH), DBUS_SYNCENGINE_BUSNAME)
 
 item_types = engine.GetItemTypes()
 i = 0
@@ -20,11 +21,4 @@ for id, name, host, items in engine.GetPartnerships():
     print "Items: %s" % str
     i += 1
 
-if i == 0 or i > 1:
-    suffix = "s"
-else:
-    suffix = ""
-
-if i > 0:
-    print
-print "%d partnership%s" % (i, suffix)
+print "%d partnership(s)" % i

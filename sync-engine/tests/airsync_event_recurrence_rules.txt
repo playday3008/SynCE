@@ -1,0 +1,108 @@
+
+    // Daily: Every 'n' days
+    // RRULE:FREQ=DAILY;UNTIL=20080808T050000Z
+    <Recurrence>
+            <Until>
+                    20080808T050000
+            </Until>
+            <Type>
+                    0
+            </Type>
+    </Recurrence>
+
+    
+    // Daily: Every weekday
+    // RRULE:FREQ=WEEKLY;UNTIL=20080808T050000Z;BYDAY=MO,TU,WE,TH,FR
+    <Recurrence>
+        <Until>
+                20080808T050000
+        </Until>
+        <DayOfWeek>
+                62
+        </DayOfWeek>
+        <Type>
+                0
+        </Type>
+    </Recurrence>
+
+    // Weekly:
+    // RRULE:FREQ=WEEKLY;UNTIL=20080808T050000Z;BYDAY=MO,TU,WE,TH,FR,SA,SU
+    <Recurrence>
+        <Until>
+                20080808T050000
+        </Until>
+        <DayOfWeek>
+                127
+        </DayOfWeek>
+        <Type>
+                1
+        </Type>
+    </Recurrence>
+
+    // Monthly: On 'n' day of every month
+    // RRULE:FREQ=MONTHLY;UNTIL=20080808T050000Z;BYMONTHDAY=2
+    <Recurrence>
+        <Until>
+                20080808T050000
+        </Until>
+        <DayOfMonth>
+                2
+        </DayOfMonth>
+        <Type>
+                2
+        </Type>
+    </Recurrence>
+
+    // Monthly: On 'n'th 'd' of every month
+    // RRULE:FREQ=MONTHLY;UNTIL=20080808T050000Z;BYDAY=4SU   (Note that BYDAY='-1SU' -> WeekOfMonth=5
+    <Recurrence>
+        <Until>
+            20080808T050000
+        </Until>
+        <DayOfWeek>
+            1
+        </DayOfWeek>
+        <WeekOfMonth>
+            4
+        </WeekOfMonth>
+        <Type>
+            3
+        </Type>
+    </Recurrence>
+
+    // Yearly: Every 'm' 'n'th
+    // RRULE:FREQ=YEARLY;UNTIL=20080808T050000Z;BYMONTHDAY=4;BYMONTH=4
+    <Recurrence>
+        <Until>
+                20080808T050000
+        </Until>
+        <DayOfMonth>
+                4
+        </DayOfMonth>
+        <MonthOfYear>
+                4
+        </MonthOfYear>
+        <Type>
+                5
+        </Type>
+    </Recurrence>
+    
+    // Yearly: The 'n' 'd' of 'm'
+    // RRULE:FREQ=YEARLY;UNTIL=20080808T050000Z;BYDAY=3SA;BYMONTH=1
+    <Recurrence>
+            <Until>
+                    20080808T050000
+            </Until>
+            <DayOfWeek>
+                    16
+            </DayOfWeek>
+            <WeekOfMonth>
+                    3
+            </WeekOfMonth>
+            <MonthOfYear>
+                    5
+            </MonthOfYear>
+            <Type>
+                    6
+            </Type>
+    </Recurrence>

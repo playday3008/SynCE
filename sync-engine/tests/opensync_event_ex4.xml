@@ -1,0 +1,52 @@
+<vcal>
+    <Method>
+        <Content>PUBLISH</Content>
+    </Method>
+    <Event>
+        <LastModified>
+            <Content>20070127T083213Z</Content>
+        </LastModified>
+        <DateStarted>
+            <Content>20070127T170000</Content>
+        </DateStarted>
+        <DateEnd>
+            <Content>20070127T190000</Content>
+        </DateEnd>
+        <Summary>
+            <Content>Simple Event</Content>
+        </Summary>
+        <Location>
+            <Content>new Location</Content>
+        </Location>
+        <Categories>
+            <Category>Friends</Category>
+        </Categories>
+        <Categories>
+            <Category>IBM</Category>
+        </Categories>
+        <Alarm>
+            <AlarmTrigger>
+                <Content>-PT45M</Content>
+                <Value>DURATION</Value>
+                <Related>START</Related>
+            </AlarmTrigger>
+            <AlarmAction>DISPLAY</AlarmAction>
+            <AlarmDescription>Simple Event</AlarmDescription>
+        </Alarm>
+        <RecurrenceRule>
+            <Rule>INTERVAL=1</Rule>
+            <Rule>FREQ=WEEKLY</Rule>
+            <Rule>BYDAY=SA,SU</Rule>
+        </RecurrenceRule>
+        <ExclusionDate>
+            <Content>20070203</Content>
+            <Value>DATE</Value>
+        </ExclusionDate>
+        <Transparency>
+            <Content>OPAQUE</Content>
+        </Transparency>
+        <Class>
+            <Content>PUBLIC</Content>
+        </Class>
+    </Event>
+</vcal>

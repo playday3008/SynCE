@@ -1,0 +1,46 @@
+<ApplicationData>
+    <DtStamp>
+        20070120T190703Z
+    </DtStamp>
+    <StartTime>
+        20070120T203000Z
+    </StartTime>
+    <EndTime>
+        20070120T210000Z
+    </EndTime>
+    <Location>
+        Event Location
+    </Location>
+    <Subject>
+        Event Subject
+    </Subject>
+    <Recurrence>
+        <Until>
+            20080808T050000Z
+        </Until>
+        <DayOfWeek>
+            62
+        </DayOfWeek>
+        <Type>
+            0
+        </Type>
+    </Recurrence>
+    <Exceptions>
+        <Exception>
+            <Deleted>
+                1
+            </Deleted>
+            <ExceptionStartTime>
+                20070124T000000Z
+            </ExceptionStartTime>
+        </Exception>
+        <Exception>
+            <Deleted>
+                1
+            </Deleted>
+            <ExceptionStartTime>
+                20070201T000000Z
+            </ExceptionStartTime>
+        </Exception>
+    </Exceptions>
+</ApplicationData>

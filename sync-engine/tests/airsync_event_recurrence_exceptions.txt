@@ -1,0 +1,64 @@
+    // 2 entries of series are deleted
+    <Exceptions>
+            <Exception>
+                    <Deleted>
+                            1
+                    </Deleted>
+                    <ExceptionStartTime>
+                            20070124T133000Z
+                    </ExceptionStartTime>
+            </Exception>
+            <Exception>
+                    <Deleted>
+                            1
+                    </Deleted>
+                    <ExceptionStartTime>
+                            20070201T133000Z
+                    </ExceptionStartTime>
+            </Exception>
+    </Exceptions>
+
+
+    // 2 entries of series are deleted, 1 entry modified
+    <Exceptions>
+            <Exception>
+                    <Deleted>
+                            0
+                    </Deleted>
+                    <ExceptionStartTime>
+                            20070123T133000Z
+                    </ExceptionStartTime>
+                    <Location>
+                            WebAhead Lab
+                    </Location>
+                    <StartTime>
+                            20070123T133000Z
+                    </StartTime>
+                    <EndTime>
+                            20070123T140000Z
+                    </EndTime>
+                    <AllDayEvent>
+                            0
+                    </AllDayEvent>
+                    <Reminder>
+                            15
+                    </Reminder>
+            </Exception>
+            <Exception>
+                    <Deleted>
+                            1
+                    </Deleted>
+                    <ExceptionStartTime>
+                            20070124T133000Z
+                    </ExceptionStartTime>
+            </Exception>
+            <Exception>
+                    <Deleted>
+                            1
+                    </Deleted>
+                    <ExceptionStartTime>
+                            20070201T133000Z
+                    </ExceptionStartTime>
+            </Exception>
+    </Exceptions>
+    

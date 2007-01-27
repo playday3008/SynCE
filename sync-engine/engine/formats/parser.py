@@ -1,25 +1,36 @@
 # -*- coding: utf-8 -*-
-#
-# Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
+############################################################################
+#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
+#                                                                          #
+#    This program is free software; you can redistribute it and#or modify  #
+#    it under the terms of the GNU General Public License as published by  #
+#    the Free Software Foundation; either version 2 of the License, or     #
+#    (at your option) any later version.                                   #
+#                                                                          #
+#    This program is distributed in the hope that it will be useful,       #
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+#    GNU General Public License for more details.                          #
+#                                                                          #
+#    You should have received a copy of the GNU General Public License     #
+#    along with this program; if not, write to the                         #
+#    Free Software Foundation, Inc.,                                       #
+#    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+############################################################################
 
 from xml.dom import minidom
 from xml import xpath
+from engine.xmlutil import *
 from engine.util import *
+import logging
+
+logger = logging.getLogger("engine.formats.parser")
+
+def set_children_namespace(node, namespace):
+    for node in node.childNodes:
+        if node.nodeType == node.ownerDocument.ELEMENT_NODE:
+            node.setAttribute('xmlns', namespace)
+        set_children_namespace(node, namespace)
 
 def from_airsync(guid, app_node, root_name, conv_spec, ignore_spec):
     dom = minidom.getDOMImplementation()
@@ -35,8 +46,7 @@ def from_airsync(guid, app_node, root_name, conv_spec, ignore_spec):
     for src_spec, dst_spec in conv_spec:
         if isinstance(src_spec, basestring):
             matches = xpath.Evaluate(src_spec, app_node)
-            if matches:
-                node = matches[0]
+            for node in matches:
 
                 value = node_get_value(node)
                 if value == None and len(xpath.Evaluate("*", node)) == 0:
@@ -102,15 +112,12 @@ def from_airsync(guid, app_node, root_name, conv_spec, ignore_spec):
 
     nodes = xpath.Evaluate("*", app_node)
     if nodes:
-        print "from_airsync: Unparsed XML:"
-        print app_node.toprettyxml()
-        print
+        logger.info("from_airsync: Unparsed XML = %s", app_node.toprettyxml())
 
     return doc
 
-def to_airsync(os_doc, root_name, conv_spec):
-    dom = minidom.getDOMImplementation()
-    doc = dom.createDocument(None, "ApplicationData", None)
+def to_airsync(os_doc, root_name, conv_spec, namespace):
+    doc = minidom.getDOMImplementation().createDocument(None, "ApplicationData", None)
     app_node = doc.documentElement
 
     # FIXME: do this properly
@@ -151,11 +158,13 @@ def to_airsync(os_doc, root_name, conv_spec):
                 if mappings == None or i >= len(mappings):
                     break
 
+    # Fix up the namespace attributes of all the nodes in the Airsync doc if necessary
+    if namespace != None and namespace != "":
+        set_children_namespace(doc.documentElement, namespace)
+
     nodes = xpath.Evaluate("*/*", root_node)
     if nodes:
-        print "to_airsync: Unparsed XML:"
-        print root_node.toprettyxml()
-        print
+        logger.info("to_airsync: Unparsed XML = %s", root_node.toprettyxml())
 
     return doc
 

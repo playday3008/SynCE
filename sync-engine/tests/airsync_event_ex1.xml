@@ -1,0 +1,29 @@
+<ApplicationData>
+    <Timezone>xP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAIAAAAAAAAAxP///w==</Timezone>
+    <AllDayEvent>0</AllDayEvent>
+    <BusyStatus>2</BusyStatus>
+    <Categories>
+        <Category>Arbeid</Category>
+        <Category>Sesongbasert</Category>
+    </Categories>
+    <Rtf>4gAAAEMCAABMWkZ1txdOST8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMc0sgScBwC1ANmYtQRdg8y2ULXEyMQqFCoAuxy2BLjYthC2gCoV9MSA=</Rtf>
+    <DtStamp>20060728T115046Z</DtStamp>
+    <EndTime>20060729T160000Z</EndTime>
+    <Location>BjArheimsbygd</Location>
+    <MeetingStatus>1</MeetingStatus>
+    <Reminder>180</Reminder>
+    <Sensitivity>3</Sensitivity>
+    <Subject>MAte</Subject>
+    <StartTime>20060729T100000Z</StartTime>
+    <UID>040000008200E00074C5B7101A82E00800000000A74EBEDCEA2251234DB90AB7101DED24707699C4F862945BAA4D98CC9A4EB207</UID>
+    <Attendees>
+        <Attendee>
+            <Name>Doe &quot;foo&quot; Hauge</Name>
+            <Email>foo@sysrq.no</Email>
+        </Attendee>
+        <Attendee>
+            <Name>Joe IdsAe</Name>
+            <Email>joe@badgers.net</Email>
+        </Attendee>
+    </Attendees>
+</ApplicationData>
