@@ -1,0 +1,55 @@
+<contact>
+    <Categories>
+        <Category>Friends</Category>
+        <Category>RPI</Category>
+    </Categories>
+    <Class>
+        <Content>PUBLIC</Content>
+    </Class>
+    <EMail>
+        <Content>js@js.edu</Content>
+    </EMail>
+    <EMail>
+        <Content>ab@js.edu</Content>
+    </EMail>
+    <FormattedName>
+        <Content>John Smith</Content>
+    </FormattedName>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+    <Revision>
+        <Content>20070120T013906Z</Content>
+    </Revision>
+    <Telephone>
+        <Content>1112220000</Content>
+        <Type>CELL</Type>
+    </Telephone>
+    <Telephone>
+        <Content>3409310131</Content>
+        <Type>HOME</Type>
+    </Telephone>
+    <Telephone>
+        <Content>1111111111</Content>
+        <Type>HOME</Type>
+        <Type>FAX</Type>
+    </Telephone>
+    <Uid>
+        <Content>ztQEmP8cI4</Content>
+    </Uid>
+    <Address>
+        <Type>HOME</Type>
+        <Street>11 Dummy Ln</Street>
+        <City>HomeCity</City>
+        <State>HomeState</State>
+        <Country>USA</Country>
+        <PostalCode>00000</PostalCode>
+    </Address>
+    <Anniversary>
+        19770429
+    </Anniversary>
+    <Birthday>
+        19520429
+    </Birthday>
+</contact>
