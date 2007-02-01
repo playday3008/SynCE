@@ -1,4 +1,4 @@
-<ApplicationData>
+<AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
     <DtStamp>
         20070120T190703Z
     </DtStamp>
@@ -43,4 +43,4 @@
             </ExceptionStartTime>
         </Exception>
     </Exceptions>
-</ApplicationData>
+</AS:ApplicationData>

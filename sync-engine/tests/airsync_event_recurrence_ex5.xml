@@ -1,4 +1,4 @@
-<ApplicationData>
+<AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
     <DtStamp>
         20070120T190703Z
     </DtStamp>
@@ -28,4 +28,4 @@
             3
         </Type>
     </Recurrence>
-</ApplicationData>
+</AS:ApplicationData>

@@ -1,4 +1,4 @@
-<ApplicationData>
+<AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
     <Timezone>xP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAIAAAAAAAAAxP///w==</Timezone>
     <AllDayEvent>0</AllDayEvent>
     <BusyStatus>2</BusyStatus>
@@ -26,4 +26,4 @@
             <Email>joe@badgers.net</Email>
         </Attendee>
     </Attendees>
-</ApplicationData>
+</AS:ApplicationData>

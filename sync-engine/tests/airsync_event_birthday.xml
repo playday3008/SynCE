@@ -1,4 +1,4 @@
-<ApplicationData>
+<AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
     <Timezone>xP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAIAAAAAAAAAxP///w==</Timezone>
     <AllDayEvent>1</AllDayEvent>
     <BusyStatus>0</BusyStatus>
@@ -24,4 +24,4 @@
             <ExceptionStartTime>20060724T220000Z</ExceptionStartTime>
         </Exception>
     </Exceptions>
-</ApplicationData>
+</AS:ApplicationData>
