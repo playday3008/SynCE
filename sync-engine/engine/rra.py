@@ -289,6 +289,8 @@ class RRAHandler(SocketServer.BaseRequestHandler):
 
 class RRAServer(SocketServer.ThreadingTCPServer):
 
+    allow_reuse_address = True
+
     def __init__(self, server_address, RequestHandlerClass, thread, engine):
         SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
         self.logger = logging.getLogger("engine.rra.RRAServer")
