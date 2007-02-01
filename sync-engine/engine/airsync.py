@@ -218,12 +218,16 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         os_doc = minidom.parseString(data)
                         as_doc = None
 
+                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", os_doc.toprettyxml())
+
                         if item.type == SYNC_ITEM_CONTACTS:
                             as_doc = formats.contact.to_airsync(os_doc)
                         elif item.type == SYNC_ITEM_CALENDAR:
                             as_doc = formats.event.to_airsync(os_doc)
                         else:
                             raise Exception("Can't convert data of item_type %d" % item.type)
+
+                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.toprettyxml())
 
                         rsp_change_node.appendChild(as_doc.documentElement)
 
@@ -252,12 +256,16 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if chg_type in (CHANGE_ADDED, CHANGE_MODIFIED):
                     app_node = node_get_child(req_cmd_node, "ApplicationData")
 
+                    self.server.logger.debug("_handle_sync: converting item from airsync, source is \n%s", app_node.toprettyxml())
+
                     if item.type == SYNC_ITEM_CONTACTS:
-                        os_doc = formats.contact.from_airsync(guid, app_node)
+                        os_doc = formats.contact.from_airsync(app_node)
                     elif item.type == SYNC_ITEM_CALENDAR:
-                        os_doc = formats.event.from_airsync(guid, app_node)
+                        os_doc = formats.event.from_airsync(app_node)
                     else:
                         raise Exception("Can't convert data of item_type %d" % item.type)
+
+                    self.server.logger.debug("_handle_sync: converting item from airsync, result is \n%s", os_doc.toprettyxml())
 
                     xml = os_doc.documentElement.toxml()
 
