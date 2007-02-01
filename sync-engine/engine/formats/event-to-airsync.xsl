@@ -8,7 +8,7 @@
     <xsl:template match="/vcal">
         <AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
 
-            <xsl:for-each select="Event/Alarm/AlarmTrigger/Content[position() = 1]">
+            <xsl:for-each select="Event/Alarm/AlarmTrigger[position() = 1]">
                 <Reminder><xsl:value-of select="convert:event_reminder_to_airsync()"/></Reminder>
             </xsl:for-each>
 

@@ -129,7 +129,15 @@ def contact_birthday_from_airsync(ctx):
 
 def event_reminder_to_airsync(ctx):
     parser_ctx, transform_ctx = _extract_contexts(ctx)
-    s = node_value(transform_ctx.current())
+    src_node = transform_ctx.current()
+    content_node = node_find_child(src_node, "Content")
+    value_node = node_find_child(src_node, "Value")
+    related_node = node_find_child(src_node, "Related")
+    if value_node == None or node_value(value_node).lower() != "duration":
+        return ""
+    if related_node != None and node_value(related_node).lower() != "start":
+        return ""
+    s = node_value(content_node)
     s = s.lstrip("-PT")
     minutes = int(s[:-1])
     units = s[-1:].upper()
