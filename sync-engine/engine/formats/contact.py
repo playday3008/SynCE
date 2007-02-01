@@ -31,10 +31,10 @@ from engine.constants import *
 from engine.xmlutil import *
 
 def from_airsync(as_node):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml()), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml().encode('UTF-8')), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml()), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml().encode('UTF-8')), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
     dst_doc = minidom.parseString(str(dst_doc))
     return dst_doc
