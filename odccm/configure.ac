@@ -18,7 +18,7 @@ dnl Check for libsynce
 PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.3)
 
 dnl Check for GLib
-PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.4, gobject-2.0 >= 2.4])
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4])
 
 dnl Check for GNet
 PKG_CHECK_MODULES(GNET, gnet-2.0)
