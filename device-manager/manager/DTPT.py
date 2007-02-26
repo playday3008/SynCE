@@ -50,6 +50,7 @@ class DTPTServer:
         buf = s.recv(2, socket.MSG_PEEK | socket.MSG_WAITALL)
         if ord(buf[0]) != 1:
             print "Invalid protocol"
+            s.close()
             return
         
         session = None
@@ -59,9 +60,11 @@ class DTPTServer:
             session = ConnectionSession(s)
         else:
             print "Unknown session type %d" % ord(buf[1])
+            s.close()
             return
         
         session.run()
+        s.close()
 
 
 class NSPSession:
@@ -135,6 +138,7 @@ class NSPSession:
                 self._send_reply(12, 0, WSAHOST_NOT_FOUND, 0)
                 return
             
+            first = 1
             for result in results:
                 family, socket_type, proto, canonname, sockaddr = result
                 
@@ -143,6 +147,11 @@ class NSPSession:
                 ai.remote_addr = (family, sockaddr[0], sockaddr[1])
                 ai.socket_type = socket_type
                 ai.protocol = proto
+                if first == 1:
+                    blob = BlobHostent()
+                    qs.blob = blob.serialize(qs.service_instance_name, sockaddr[0])
+                    qs.blob_size = len(qs.blob)
+                    first = 0
                 
                 qs.cs_addrs.append(ai)
             
@@ -334,6 +343,7 @@ class QuerySet:
         self.query_string = None
         self.cs_addrs = []
         self.output_flags = 0
+        self.blob = None
         self.blob_size = 0
 
     def unserialize(self, data):
@@ -352,7 +362,12 @@ class QuerySet:
         self.context = s.read_string()
         self.num_protocols = s.read_dword()
         if self.num_protocols > 0:
-            print "FIXME1"
+            self.len_protocols = s.read_dword()
+            for p in range(0,self.num_protocols):
+                iAddressFamily = s.read_dword()
+                iProtocol = s.read_dword()
+            # Forget it.
+            self.num_protocols = 0
         self.query_string = s.read_string()
         
         self.cs_addrs = []
@@ -443,7 +458,13 @@ class QuerySet:
         for addr in addrs:
             s.write_field(addr)
         
-        s.write_dword(0) # FIXME: WSAQUERYSET.lpBlob
+        if self.blob_size>0:
+            s.write_dword(8)
+            s.write_dword(self.blob_size)
+            s.write_dword(DUMMY_PTR)
+            s.write_field(self.blob)
+        else:
+            s.write_dword(0)
 
         return s.get_data()
 
@@ -474,6 +495,21 @@ class QuerySet:
              self.ns_provider_id, self.context, self.query_string,
              addrs, self.output_flags)
 
+
+class BlobHostent:
+    def serialize(self, hostname, ascii_addr):
+        s =  struct.pack("<L", 32)             #  0 hostname index     -> 32
+        s += struct.pack("<L", 16)             #  4 alias list index   -> 16
+        s += struct.pack("<H", socket.AF_INET) #  8 family=AF_INET
+        s += struct.pack("<H", 4)              # 10 length(address)=4
+        s += struct.pack("<L", 20)             # 12 address list index -> 20
+        s += struct.pack("<L", 0)              # 16 alias list end
+        s += struct.pack("<L", 28)             # 20 address index      -> 28
+        s += struct.pack("<L", 0)              # 24 address list end
+        s += socket.inet_aton(ascii_addr)      # 28 address
+        s += hostname.encode("ascii")          # 32 hostname
+        s += "\x00"                            # zero-termination
+        return s
 
 class CSAddrInfo:
     def __init__(self):
