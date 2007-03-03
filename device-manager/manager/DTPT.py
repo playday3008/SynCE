@@ -138,21 +138,25 @@ class NSPSession:
                 self._send_reply(12, 0, WSAHOST_NOT_FOUND, 0)
                 return
             
-            first = 1
+            qs.blob = None
             for result in results:
                 family, socket_type, proto, canonname, sockaddr = result
                 
                 ai = CSAddrInfo()
-                ai.local_addr = (family, "0.0.0.0", 0)
+                if (family == socket.AF_INET):
+                    ai.local_addr = (family, "0.0.0.0", 0)
+                else:
+                    raise NotImplementedError("Unhandled family %d" % family)
                 ai.remote_addr = (family, sockaddr[0], sockaddr[1])
                 ai.socket_type = socket_type
                 ai.protocol = proto
-                if first == 1:
-                    blob = BlobHostent()
-                    qs.blob = blob.serialize(qs.service_instance_name, sockaddr[0])
-                    qs.blob_size = len(qs.blob)
-                    first = 0
-                
+                if qs.blob == None:
+                    qs.blob = Hostent(family)
+                    qs.blob.h_name = qs.service_instance_name
+                # All addresses in Hostent must be of the same family.
+                # Every address should appear only once.
+                if family == qs.blob.h_addrtype and (not sockaddr[0] in qs.blob.h_addr_list):
+                    qs.blob.h_addr_list.append(sockaddr[0])
                 qs.cs_addrs.append(ai)
             
             self.response = qs.serialize()
@@ -207,8 +211,7 @@ class ConnectionSession:
 
         family = struct.unpack("<L", buf[2:6])[0]
         if family != socket.AF_INET:
-            print "Unsupported family %d" % family
-            return
+            raise NotImplementedError("Unhandled family %d" % family)
 
         port = struct.unpack(">H", buf[10:12])[0]
         addr = socket.inet_ntoa(buf[12:16])
@@ -416,7 +419,7 @@ class QuerySet:
         if len(self.cs_addrs) > 0: cs_addrs_ptr = DUMMY_PTR
         else: cs_addrs_ptr = 0
 
-        if self.blob_size > 0: blob_ptr = DUMMY_PTR
+        if self.blob != None: blob_ptr = DUMMY_PTR
         else: blob_ptr = 0
 
         buf = struct.pack("<LLLLLLLLLLLLLLL",
@@ -458,11 +461,12 @@ class QuerySet:
         for addr in addrs:
             s.write_field(addr)
         
-        if self.blob_size>0:
+        if self.blob != None:
+            blob_data = self.blob.serialize()
             s.write_dword(8)
-            s.write_dword(self.blob_size)
+            s.write_dword(len(blob_data))
             s.write_dword(DUMMY_PTR)
-            s.write_field(self.blob)
+            s.write_field(blob_data)
         else:
             s.write_dword(0)
 
@@ -495,20 +499,64 @@ class QuerySet:
              self.ns_provider_id, self.context, self.query_string,
              addrs, self.output_flags)
 
+class Hostent:
+    def __init__(self, family=socket.AF_INET):
+        self.h_name = "";
+        self.h_aliases = []
+        self.h_addrtype = family
+        if self.h_addrtype == socket.AF_INET:
+            self.h_length = 4
+        else:
+            raise NotImplementedError("Unhandled family %d" % family)
+        self.h_addr_list = []
 
-class BlobHostent:
-    def serialize(self, hostname, ascii_addr):
-        s =  struct.pack("<L", 32)             #  0 hostname index     -> 32
-        s += struct.pack("<L", 16)             #  4 alias list index   -> 16
-        s += struct.pack("<H", socket.AF_INET) #  8 family=AF_INET
-        s += struct.pack("<H", 4)              # 10 length(address)=4
-        s += struct.pack("<L", 20)             # 12 address list index -> 20
-        s += struct.pack("<L", 0)              # 16 alias list end
-        s += struct.pack("<L", 28)             # 20 address index      -> 28
-        s += struct.pack("<L", 0)              # 24 address list end
-        s += socket.inet_aton(ascii_addr)      # 28 address
-        s += hostname.encode("ascii")          # 32 hostname
-        s += "\x00"                            # zero-termination
+    def serialize(self):
+        # Base index: after the structure itself.
+        pos = 16
+
+        # Encode h_aliases.
+        h_aliases_index = pos
+        h_aliases_length = len(self.h_aliases) + 1
+        h_aliases_bin_list = ""
+        h_aliases_bin_data = ""
+        pos += 4 * h_aliases_length
+        for alias in self.h_aliases:
+            h_aliases_bin_list += struct.pack("<L", pos)
+            alias_bin = alias.encode("ascii") + "\x00"
+            pos += len(alias_bin)
+            h_aliases_bin_data += alias_bin
+        h_aliases_bin_list += struct.pack("<L", 0)
+
+        # Encode h_addr_list.
+        h_addr_list_index = pos
+        h_addr_list_length = len(self.h_addr_list) + 1
+        h_addr_list_bin_list = ""
+        h_addr_list_bin_data = ""
+        pos += 4 * h_addr_list_length
+        for addr in self.h_addr_list:
+            h_addr_list_bin_list += struct.pack("<L", pos)
+            addr_bin = socket.inet_pton(self.h_addrtype, addr)
+            pos += len(addr_bin)
+            h_addr_list_bin_data += addr_bin
+        h_addr_list_bin_list += struct.pack("<L", 0)
+
+        # Encode h_name.
+        h_name_index = pos
+        h_name_bin = self.h_name.encode("ascii") + "\x00"
+        pos += len(h_name_bin)
+        
+        # Put everything together.
+        s  = struct.pack("<L", h_name_index)
+        s += struct.pack("<L", h_aliases_index)
+        s += struct.pack("<H", self.h_addrtype)
+        s += struct.pack("<H", self.h_length)
+        s += struct.pack("<L", h_addr_list_index)
+        s += h_aliases_bin_list
+        s += h_aliases_bin_data
+        s += h_addr_list_bin_list
+        s += h_addr_list_bin_data
+        s += h_name_bin
+
         return s
 
 class CSAddrInfo:
@@ -554,8 +602,11 @@ class CSAddrInfo:
         
         s = struct.pack("<H", family)
         s += struct.pack(">H", port)
-        s += socket.inet_aton(ascii_addr)
-        s += "\x00\x00\x00\x00\x00\x00\x00\x00"
+        if family == socket.AF_INET:
+            s += socket.inet_aton(ascii_addr)
+            s += "\x00\x00\x00\x00\x00\x00\x00\x00"
+        else:
+            raise NotImplementedError("Unhandled family %d" % family)
     
         return s
 
