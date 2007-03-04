@@ -1,0 +1,80 @@
+AC_PREREQ(2.53)
+AC_INIT([librtfcomp], [1.02])
+AM_INIT_AUTOMAKE([1.9 foreign])
+
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AM_PROG_LIBTOOL
+
+dnl # test for visibility flag - compile with all symbols visible
+dnl # if we do not have it
+
+dnl save_CFLAGS="$CFLAGS"
+dnl CFLAGS="$CFLAGS -Wall -Werror"
+AC_MSG_CHECKING([whether $CC supports the GNUC visibility attribute])
+AC_COMPILE_IFELSE(AC_LANG_SOURCE(
+[
+  void __attribute__ ((visibility("default"))) test_default (void) {}
+  void __attribute__ ((visibility("hidden"))) test_hidden (void) {}
+  int main (int argc, char **argv) { test_default (); test_hidden (); return 0; }
+]),
+[
+  have_gccvisibility=yes
+  AC_MSG_RESULT([yes])
+],
+[
+  AC_MSG_RESULT([no])
+])
+
+if test x"$have_gccvisibility" = x"yes"; then
+	VISIBILITY="-DHAVE_GCCVISIBILITY -fvisibility=hidden"
+fi
+AC_SUBST(VISIBILITY)
+
+dnl # Now we must check for Python/Pyrex
+
+dnl (need python, python headers, and pyrex)
+
+AC_ARG_ENABLE(python-bindings, AS_HELP_STRING([--enable-python-bindings], [build python bindings]),[enable_python=$enableval], [enable_python=no])
+ 
+if test x$enable_python = xno; then
+    have_python=no
+else
+    AC_MSG_NOTICE([Checking to see if we can build Python bindings])
+    have_python=no
+    if test x$enable_python != xyes -a x$enable_python != xauto; then
+        minimum_version=$enable_python
+	enable_python=yes
+    else
+        minimum_version=2.2
+    fi
+	AM_PATH_PYTHON($minimum_version)
+	AC_CHECK_PROGS(PYREX, pyrexc)
+	AM_CHECK_PYTHON_HEADERS([have_python_header=yes], [have_python_header=no])
+	
+	if test x$have_python_header = xno ; then
+            if test x$enable_python = xyes ; then
+                AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings])
+            fi
+	else
+	    if test -z "$PYTHON" ; then
+	        AC_MSG_WARN([Python not found])
+	    else
+		have_python=yes
+	    fi
+	
+	    if test x$have_python = xno ; then
+	        if test x$enable_python = xyes ; then
+	            AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings])
+	        fi
+	    fi
+	fi
+fi
+AM_CONDITIONAL(HAVE_PYTHON, test x$have_python = xyes)
+
+# build files
+
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile python/Makefile])
+AC_OUTPUT
+

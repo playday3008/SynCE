@@ -1,0 +1,23 @@
+librtfcomp changelog
+====================
+
+
+1/3/2007 Dr J A Gow
+-------------------
+
+Version 1.0 released. Discard and destroy any versions you have that are older
+than this, as they have an incomplete and incompatible API, and they do not
+have the Python bindings. Furthermore, versions lower than 1.0 are bug-ridden
+and just don't work.
+
+V1.0 contains: First API release. Can decompress/recompress compressed RTF, 
+and can convert from UTF8 to RTF for use in things like AirSync protocols.
+
+4/3/2007 Dr J A Gow
+-------------------
+
+Applied patch by Robert Jarzmik to fix:
+
+ - memory overflow when notes are bigger than 512 bytes
+ - UTF8 to RTF conversion mishandling
+
