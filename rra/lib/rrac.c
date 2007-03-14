@@ -905,6 +905,7 @@ bool rrac_send_data(/*{{{*/
 	ChunkHeader chunk_header;
 	size_t offset = 0;
 	size_t bytes_left = size;
+	unsigned short chunk_block_count = 0x0010;
 
 	synce_trace("object_id=0x%x, type_id=0x%x, flags=0x%x, data size=0x%x", 
       object_id, type_id, flags, size);
@@ -931,21 +932,20 @@ bool rrac_send_data(/*{{{*/
 	{
 		size_t chunk_size = MIN(bytes_left, CHUNK_MAX_SIZE);
 		size_t aligned_size = (chunk_size + 3) & ~3;
-    uint16_t stuff = 0xffa0;
+		uint16_t stuff = 0xffa0;
 		
 		chunk_header.size = htole16(chunk_size);
 		bytes_left -= chunk_size;
 
 		if (bytes_left > 0)
-			chunk_header.stuff = htole16(offset);
-		else
-    {
-      /* And how obvious is this? */
-      if (aligned_size > chunk_size)
-        stuff |= (aligned_size - chunk_size) << 2;
+			chunk_header.stuff = htole16(chunk_block_count);
+		else {
+      			/* And how obvious is this? */
+      			if (aligned_size > chunk_size)
+        			stuff |= (aligned_size - chunk_size) << 2;
 
 			chunk_header.stuff = htole16(stuff);
-    }
+		}
 
 #if VERBOSE
     synce_trace("chunk_size = %04x, aligned_size = %04x, stuff = %04x",
@@ -981,6 +981,7 @@ bool rrac_send_data(/*{{{*/
 		}
 
 		offset += chunk_size;
+		chunk_block_count += 0x0010;
 	}
 
 	success = true;
