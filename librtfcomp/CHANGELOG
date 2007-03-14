@@ -21,3 +21,16 @@ Applied patch by Robert Jarzmik to fix:
  - memory overflow when notes are bigger than 512 bytes
  - UTF8 to RTF conversion mishandling
 
+14/3/2007 Dr J A Gow
+--------------------
+
+Applied patch by Robert Jarzmik to:
+
+ - significantly improve RTF handling for Unicode characters
+ - isolation of control words for futur support (color, font, bullets)
+ - identification of group level (braces)
+ - handling for unicode characters in RTF flow 
+   (euro symbol, accents, exotic caracters => rtf control \uNc)
+
+
+

@@ -2,6 +2,8 @@
 // RTFCONVERT.C
 //
 // Dr J A Gow : 26/2/2007
+//              14/3/2007  Applied patch by Robert Jarzmik to significanly 
+//                         improve RTF handling
 //
 // Conversion module with functions allowing RTF data to be converted to and
 // from a UTF8 string. Very crude, but designed to work with ANSI encoded
@@ -16,6 +18,12 @@
 #include <rtfcomp/rtfcomp.h>
 #include "sysincludes.h"
 #include "utf8conv.h"
+
+// Internal functions
+
+static int RTFCharget(const unsigned char *sin, int maxlen, unsigned int *computed_UTF8);
+static int RTFGetControlWordLen(const unsigned char *sin, int maxlen);
+static int RTFGetClosingBraceIndex(const unsigned char *sin, int maxlen);
 
 //
 // Exported functions
@@ -38,6 +46,7 @@ int _DLLAPI LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen
 	unsigned char * ip=0;
 	unsigned char * strt=0;
 	unsigned char   curch;
+	int             pNextCh = 0;
 	unsigned char * n;
 	unsigned int	tosend;
 	unsigned int	sflg=0;
@@ -45,15 +54,18 @@ int _DLLAPI LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen
 	unsigned char * pOut;
 	unsigned int	olen;
 	unsigned int    ctrllen=0;
-	const unsigned char * par = (unsigned char *)"par";
-	const unsigned char * fonttbl = (unsigned char *)"fonttbl";
+	int             brace_level = 0;
+	int             cmd_brace_level = 0;
+	unsigned char   buf[2048];
+	const unsigned char * par = (unsigned char *)"\\par";
+	const unsigned char * fonttbl = (unsigned char *)"\\fonttbl";
 	RTFOPTS		opts;
+
+	
 
 	enum {
 		IDLE,
-		START_CTRL,
-		IN_CTRL,
-		GROUP_CMD
+		GROUP_CMD,
 	} state;
 
 	if(!utfout||!rtfin||rtflen==0) {
@@ -82,7 +94,7 @@ int _DLLAPI LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen
 			return rc;
 		}
 	}
-
+	
 	ip=rtfin;
 
 	// start here
@@ -92,87 +104,66 @@ int _DLLAPI LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen
 		return LZRTF_ERR_NOMEM;
 	}
 
-	state = IDLE;
-
-	while(rtflen--) {
-
+	brace_level = 0;
+	
+	while(rtflen>0) {
+		
 		curch = *ip;
 		sflg  = 0;
+		pNextCh = -1;
+		memset(buf, 0, sizeof(buf));
+		
+		// First, check if is a character (unicoded, ascii or escaped) 
 
-		switch(state) {
+		pNextCh = RTFCharget(ip, rtflen, &tosend);
+		if (pNextCh != -1) {
+			sflg = 1;
+		}
+		
+		// Second, check if is a rtf control word 
 
-			case IDLE:		if(curch=='\\') {
-							state = START_CTRL;
-						} else {
-							if((curch!=0x0a)&&(curch!=0x0d)&&(curch!='{')&&(curch!='}')) {
-								tosend = curch;
-								sflg=1;
-							}
-						}
-						break;
-	
-			case START_CTRL:	ctrllen=1;
-						strt = ip;
-						state = IN_CTRL;
-						break;
+		if (pNextCh == -1) {
+		    pNextCh = RTFGetControlWordLen(ip, rtflen);
+		}
 
-			case IN_CTRL:		if((curch == '\\')||(curch<=0x20)||(curch=='{')||(curch=='}')||(curch==';')) {
+		// Third, keep trace of brace level (not needed by now) 
 
-							// process control code
+		if (curch == '{') {
+			brace_level++;
+		}
 
-							if(ctrllen >= 3) {
+		if (curch == '}') {
+			brace_level--;
+		}
 
-								if(!memcmp(strt,par,3)) {
+		// Fourth, handle special control word \fonttbl 
 
-									// send newline
+		if ((pNextCh >= strlen(fonttbl)) && (strncmp(ip, fonttbl, strlen(fonttbl)) == 0)) {
+			pNextCh = RTFGetClosingBraceIndex(ip, rtflen);
+		}
 
-									tosend = 0x0a;
-									sflg = 1;
-									state = IDLE;
+		// Fifth, handle special control word \par 
 
-								}
+		if ((pNextCh >= strlen(par)) && (strncmp(ip, par, strlen(par)) == 0)) {
+			tosend = 0x0a;
+			sflg = 1;
+		}
 
-								if(!memcmp(strt,fonttbl,ctrllen)) {
+		// Default: just skip the rtf character 
 
-									state=GROUP_CMD;
-								}
-
-								if(*strt == 0x27) {
-
-									// we have two digits of hex
-									if(sscanf((char *)strt+1,"%2x",&tosend)==1) {
-										sflg=1;
-									}
-									state = IDLE;
-								}
-							}
-							if(curch=='\\') {
-								state = START_CTRL;
-							} 
-
-						} else {
-							ctrllen++;
-						}
-						break;
-
-			case GROUP_CMD:		if(curch=='}') {
-							state = IDLE;
-						}
-						break;
-
-			default:		break;
+		if (pNextCh <= 0) {
+			pNextCh = 1;
 		}
 
 		if(sflg) {
-
 			int u8len;
-
+			
 			// one to send: get the UTF8 length
-
+			
 			u8len = CV_SizeOfUTF8(tosend);
-
+			
 			if(u8len!=-1) {
-
+				
 				if((oOut+u8len)>=olen) {
 					olen+=256;
 					if((n=(unsigned char *)realloc(pOut,olen))==NULL) {
@@ -188,7 +179,9 @@ int _DLLAPI LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen
 				oOut+=CV_UTF8FromUTF32(tosend,pOut+oOut);
 			} 
 		}
-		ip++;
+		
+		ip += pNextCh;
+		rtflen -= pNextCh;
 	}
 
 	*utfout = pOut;
@@ -293,15 +286,15 @@ int _DLLAPI LZRTFConvertUTF8ToRTF(unsigned char ** rtfout, unsigned int * lenout
 
 		// if we get here, we have a good Unicode code point in uc.
 		// Process it. If it is 0x0a, replace with rtf \par. Out
-		// of ANSI range, replace (for the moment) with 0x20 (space)
+		// of ANSI or 16bits UNICODE replace (for the moment) with 0x20 (space)
 
-		if(uc>255) {
+		if(uc>65535) {
 			uc = 0x20;
 		}
 
-		// shouldn't be greater than 7
+		// shouldn't be greater than 8
 
-		if((oOut+7) > olen) {
+		if((oOut+12) > olen) {
 
 			olen+=512;
 
@@ -317,7 +310,10 @@ int _DLLAPI LZRTFConvertUTF8ToRTF(unsigned char ** rtfout, unsigned int * lenout
 			memcpy(out+oOut,par,9);
 			oOut += 9;
 		} else {
-			oOut+=sprintf((char *)(out+oOut),"\\'%2.2x",uc);
+			if (uc<256)
+				oOut+=sprintf((char *)(out+oOut),"\\'%2.2x",uc);
+			else
+				oOut+=sprintf((char *)(out+oOut),"\\u%d\\'3f",uc);
 		}
 	}
 
@@ -364,8 +360,161 @@ int _DLLAPI LZRTFConvertUTF8ToRTF(unsigned char ** rtfout, unsigned int * lenout
 	return rc;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// RTFCharget
+//
+// INTERNAL
+//
+// Return len in byte of RTF char in string (-1 if not char)
+//        unicode UTF32 char
+//
+// The len would be : 4 for \'20, greater than 2 for \uNNN, 1 for ANSI
+// This is crude - we just assume that the RTF encoding is ANSI and that all 
+// characters are either raw, or escaped out with the backslash/apostrophe 
+// sequence or unicode rtf sequence \uxxxx (where xxxx is decimal 16bit signed
+// value)
+///////////////////////////////////////////////////////////////////////////////
 
+static int RTFCharget(const unsigned char *sin, int maxlen, unsigned int *computed_UTF8)
+{
+	static char *escape_header = "\\'";
+	static char *unicode_header = "\\u";
+	int len = -1;
+	int skip_next = -1;
+	unsigned char c;
+	unsigned int skipped_utf;
 
+	if (
+	      (maxlen >= sizeof(escape_header + 2)) 
+	        && 
+              (strncmp(sin, escape_header, strlen(escape_header))) == 0
+           ) {
+		len = 4;
+		if (sscanf(sin+strlen(escape_header), "%2x",computed_UTF8) != 1) {
+			len = -1;
+		}
+	}
 
+	if (
+             (maxlen >= sizeof(unicode_header + 1)) 
+	        && 
+             (strncmp(sin, unicode_header, strlen(unicode_header))) == 0
+           ) {
+		len = 2;
+		c = sin[len];
 
+		while ((len<maxlen) && ((c == '-') || ((c>= '0') && (c <= '9')))) {
+			c = sin[++len];
+		}
 
+		if (sscanf(sin+strlen(unicode_header), "%d",computed_UTF8) != 1) {
+			len = -1;
+		}
+
+		// Skip next character after \uN, according to RTF spec
+
+		if ((len >= 1) && (maxlen - len >= 1)) {
+			skip_next = RTFCharget(sin+len, maxlen - len, &skipped_utf);
+		}
+
+		if (skip_next > 0) {
+			len += skip_next;
+		}
+	}
+
+	if ((*sin >= 32) && (*sin <= 127) && (*sin != '\\') && 
+            (*sin != '{') && (*sin != '}')) {
+		len = 1;
+		*computed_UTF8 = *sin;
+	}
+
+	return len;		
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RTFGetControlWordLen
+//
+// INTERNAL
+//
+// Return len in byte of control work
+//
+// The len would be : 6 for \bold0, -1 for a
+///////////////////////////////////////////////////////////////////////////////
+
+static int RTFGetControlWordLen(const unsigned char *sin, int maxlen)
+{
+	int len = -1;
+	int idx = 0;
+	unsigned char c;
+
+	if (sin[idx++] != '\\')
+		idx = maxlen;
+
+	while (idx < maxlen) {
+		if ((sin[idx] >= 'a') && (sin[idx] <= 'z')) {
+			idx ++;
+		} else {
+			break;
+		}
+	}
+
+	while (idx < maxlen) {
+		if ((sin[idx] >= '0') && (sin[idx] <= '9')) {
+			idx ++;
+		} else {
+			break;
+		}
+	}
+
+	while (idx < maxlen) {
+		if ((sin[idx] == ';') || (sin[idx] == ' ')) {
+			idx ++;
+		} else {
+			break;
+		}
+	}
+
+	if (idx < maxlen) {
+		len = idx;
+	}
+
+	return len;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RTFGetClosingBraceIndex
+//
+// INTERNAL
+//
+// Return string index in bytes to the matching closing brace, or -1 if failure
+//
+// The index in string would be : 12 for \bold{titi}a}cc, -1 for a
+///////////////////////////////////////////////////////////////////////////////
+
+static int RTFGetClosingBraceIndex(const unsigned char *sin, int maxlen)
+{
+	int len = -1;
+	int idx = 0;
+	int brace_level = 1;
+	unsigned char c;
+
+	while (idx < maxlen) {
+
+		c = sin[idx];
+
+		switch(c) {
+			case '{':	brace_level++;
+					break;
+			
+			case '}':	brace_level--;
+					break;
+		}
+		if (brace_level == 0) {
+			len = idx;
+			break;
+		}
+		idx ++;
+	}
+
+	return len;
+}
