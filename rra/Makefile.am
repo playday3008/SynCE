@@ -15,4 +15,4 @@ EXTRA_DIST = librra.pc.in
 
 CLEANFILES = $(pcfiles)
 
-SUBDIRS = lib src man .
+SUBDIRS = lib src man python .
