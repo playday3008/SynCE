@@ -1,4 +1,4 @@
-<AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
     <Timezone>
         LAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
     </Timezone>
@@ -26,7 +26,7 @@
         20070120T210000Z
     </EndTime>
     <Location>
-        WebAhead Lab
+        Lab
     </Location>
     <MeetingStatus>
         1
@@ -49,18 +49,18 @@
     <Attendees>
         <Attendee>
             <Name>
-                Amanda Riessen
+                Jon Doe
             </Name>
             <Email>
-                riessa@rpi.edu
+                jondoe@rpi.edu
             </Email>
         </Attendee>
         <Attendee>
             <Name>
-                Briel Steinberg
+                Jan Doe
             </Name>
             <Email>
-                briel.steinberg@gmail.com
+                jan.doe@gmail.com
             </Email>
         </Attendee>
     </Attendees>

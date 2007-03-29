@@ -1,4 +1,4 @@
-<AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
     <Timezone>
         LAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
     </Timezone>
@@ -49,10 +49,10 @@
     <Attendees>
         <Attendee>
             <Name>
-                Brian Spaeth
+                Jon Doe
             </Name>
             <Email>
-                spaetb@rpi.edu
+                jondoe@rpi.edu
             </Email>
         </Attendee>
     </Attendees>
