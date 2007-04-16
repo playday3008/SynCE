@@ -575,7 +575,11 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
 	struct rndis_halt	*halt;
 
 	/* try to clear any rndis state/activity (no i/o from stack!) */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+	halt = kcalloc(1, sizeof *halt, GFP_KERNEL);
+#else
 	halt = kcalloc(1, sizeof *halt, SLAB_KERNEL);
+#endif
 	if (halt) {
 		halt->msg_type = RNDIS_MSG_HALT;
 		halt->msg_len = ccpu2(sizeof *halt);

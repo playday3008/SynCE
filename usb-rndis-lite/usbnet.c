@@ -180,7 +180,11 @@ static int init_status (struct usbnet *dev, struct usb_interface *intf)
 	period = max ((int) dev->status->desc.bInterval,
 		(dev->udev->speed == USB_SPEED_HIGH) ? 7 : 3);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+	buf = kmalloc (maxp, GFP_KERNEL);
+#else
 	buf = kmalloc (maxp, SLAB_KERNEL);
+#endif
 	if (buf) {
 		dev->interrupt = usb_alloc_urb (0, SLAB_KERNEL);
 		if (!dev->interrupt) {
@@ -1150,7 +1154,11 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
 	skb_queue_head_init (&dev->done);
 	dev->bh.func = usbnet_bh;
 	dev->bh.data = (unsigned long) dev;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+	INIT_WORK (&dev->kevent, kevent);
+#else
 	INIT_WORK (&dev->kevent, kevent, dev);
+#endif
 	dev->delay.function = usbnet_bh;
 	dev->delay.data = (unsigned long) dev;
 	init_timer (&dev->delay);
