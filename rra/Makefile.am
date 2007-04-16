@@ -13,6 +13,6 @@ pkgconfig_DATA = $(pcfiles)
 
 EXTRA_DIST = librra.pc.in
 
-CLEANFILES = $(pcfiles)
+CLEANFILES = $(pcfiles) python/pyrra.c
 
 SUBDIRS = lib src man python .
