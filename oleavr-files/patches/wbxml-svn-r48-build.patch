@@ -1,0 +1,104 @@
+diff -Naur wbxml2-original/Makefile.am wbxml2-modified/Makefile.am
+--- wbxml2-original/Makefile.am	2007-04-15 15:41:40.000000000 -0400
++++ wbxml2-modified/Makefile.am	2007-04-15 18:59:22.000000000 -0400
+@@ -21,12 +21,7 @@
+ 	README\
+ 	References\
+ 	THANKS\
+-	TODO\
+-	doxygen.h
+-
+-install-data-local:
+-	$(mkinstalldirs) $(DESTDIR)$(wbxmldocdir)/manual
+-	cp -Rp doc/* $(DESTDIR)$(wbxmldocdir)/manual
++	TODO
+ 
+ dist-bz2: distdir
+ 	sed -e "s/tar.gz/tar.bz2/g" $(distdir)/wbxml2.spec > $(distdir)/wbxml2.spec.aux
+diff -Naur wbxml2-original/bootstrap wbxml2-modified/bootstrap
+--- wbxml2-original/bootstrap	2007-04-15 15:41:40.000000000 -0400
++++ wbxml2-modified/bootstrap	2007-04-15 18:59:05.000000000 -0400
+@@ -1,8 +1,2 @@
+-#! /bin/sh
+-libtoolize
+-aclocal
+-autoheader
+-#  automake --foreign --add-missing --copy
+-automake --add-missing
+-autoconf
+-./configure --prefix=/usr
++#!/bin/sh
++autoreconf -i
+diff -Naur wbxml2-original/configure.in wbxml2-modified/configure.in
+--- wbxml2-original/configure.in	2007-04-15 15:41:40.000000000 -0400
++++ wbxml2-modified/configure.in	2007-04-15 18:59:05.000000000 -0400
+@@ -1,11 +1,11 @@
+ dnl  Process this file with autoconf to produce a configure script.
+-AC_INIT(doxygen.h)
+-AM_INIT_AUTOMAKE(wbxml2, 0.9.0)
++AC_INIT(src/wbxml.h)
++AM_INIT_AUTOMAKE(wbxml2, 0.9.2)
+ AM_CONFIG_HEADER(config.h)
+ 
+ 
+ dnl Define common variables
+-VERSION="0.9.0"
++VERSION="0.9.2"
+ AC_SUBST(VERSION)
+ RELEASE="1"
+ AC_SUBST(RELEASE)
+diff -Naur wbxml2-original/libwbxml2.pc.in wbxml2-modified/libwbxml2.pc.in
+--- wbxml2-original/libwbxml2.pc.in	2007-04-15 15:41:40.000000000 -0400
++++ wbxml2-modified/libwbxml2.pc.in	2007-04-15 18:59:05.000000000 -0400
+@@ -8,4 +8,4 @@
+ Version: @VERSION@
+ Requires: libxml-2.0 >= 2.6
+ Libs: -L${libdir} -lwbxml2
+-Cflags: -I${includedir}
++Cflags: -I${includedir} -DHAVE_EXPAT -D_REENTRANT -DWBXML_ENCODER_USE_STRTBL -DWBXML_SUPPORT_WML -DWBXML_SUPPORT_WTA -DWBXML_SUPPORT_SI -DWBXML_SUPPORT_SL -DWBXML_SUPPORT_CO -DWBXML_SUPPORT_PROV -DWBXML_SUPPORT_EMN -DWBXML_SUPPORT_DRMREL -DWBXML_SUPPORT_OTA_SETTINGS -DWBXML_SUPPORT_SYNCML -DWBXML_SUPPORT_WV -DWBXML_SUPPORT_AIRSYNC
+diff -Naur wbxml2-original/src/Makefile.am wbxml2-modified/src/Makefile.am
+--- wbxml2-original/src/Makefile.am	2007-04-15 15:41:39.000000000 -0400
++++ wbxml2-modified/src/Makefile.am	2007-04-15 18:59:05.000000000 -0400
+@@ -3,7 +3,7 @@
+ INCLUDES =\
+ 	 -I. -I/usr/include
+ 
+-CFLAGS =\
++AM_CFLAGS =\
+ 	 -DHAVE_CONFIG_H\
+ 	 -DHAVE_EXPAT\
+ 	 -D_REENTRANT\
+@@ -20,9 +20,7 @@
+ 	 -DWBXML_SUPPORT_SYNCML\
+ 	 -DWBXML_SUPPORT_WV\
+ 	 -DWBXML_SUPPORT_AIRSYNC\
+-	 -Wall -Wimplicit -Wreturn-type -Wunused -Wswitch -Wcomment -Wuninitialized -Wparentheses -Wpointer-arith -Wmissing-prototypes\
+-	 -O3\
+-	 -g
++	 -Wall
+ 
+ lib_LTLIBRARIES = libwbxml2.la
+ 
+diff -Naur wbxml2-original/tools/Makefile.am wbxml2-modified/tools/Makefile.am
+--- wbxml2-original/tools/Makefile.am	2007-04-15 15:41:40.000000000 -0400
++++ wbxml2-modified/tools/Makefile.am	2007-04-15 18:59:05.000000000 -0400
+@@ -3,7 +3,7 @@
+ INCLUDES =\
+ 	 -I. -I../src -I/usr/include
+ 
+-CFLAGS =\
++AM_CFLAGS =\
+ 	 -DHAVE_CONFIG_H\
+ 	 -DHAVE_EXPAT\
+ 	 -D_REENTRANT\
+@@ -20,9 +20,7 @@
+ 	 -DWBXML_SUPPORT_SYNCML\
+ 	 -DWBXML_SUPPORT_WV\
+ 	 -DWBXML_SUPPORT_AIRSYNC\
+-	 -Wall -Wimplicit -Wreturn-type -Wunused -Wswitch -Wcomment -Wuninitialized -Wparentheses -Wpointer-arith -Wmissing-prototypes\
+-	 -O3\
+-	 -g
++	 -Wall
+ 
+ bin_PROGRAMS = wbxml2xml xml2wbxml
+ 
