@@ -32,7 +32,7 @@ cdef extern from "synce.h":
 cdef extern from "synce_log.h":
 	void synce_log_set_level(int level)
 
-cdef extern from "rra/syncmgr.h":
+cdef extern from "../lib/syncmgr.h":
 	ctypedef void  RRA_SyncMgr
 	ctypedef struct RRA_SyncMgrType:
 		uint32_t	id
