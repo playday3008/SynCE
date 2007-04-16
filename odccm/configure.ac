@@ -33,4 +33,5 @@ AC_OUTPUT([
 Makefile
 src/Makefile
 tests/Makefile
+man/Makefile
 ])
