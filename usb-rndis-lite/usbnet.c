@@ -186,7 +186,11 @@ static int init_status (struct usbnet *dev, struct usb_interface *intf)
 	buf = kmalloc (maxp, SLAB_KERNEL);
 #endif
 	if (buf) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+		dev->interrupt = usb_alloc_urb (0, GFP_KERNEL);
+#else
 		dev->interrupt = usb_alloc_urb (0, SLAB_KERNEL);
+#endif
 		if (!dev->interrupt) {
 			kfree (buf);
 			return -ENOMEM;
