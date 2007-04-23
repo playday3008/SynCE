@@ -23,6 +23,7 @@ DEPEND=">=dev-libs/check-0.8.2
 	!app-pda/libopensync-plugin-synce
 	!app-pda/synce-multisync_plugin
 	!app-pda/synce-sync-engine
+	>=app-pda/synce-odccm-0.9.99
 	>=app-pda/synce-libsynce-0.9.99
 	>=app-pda/synce-rra-0.9.99
 	>=app-pda/synce-librtfcomp-0.9.99
