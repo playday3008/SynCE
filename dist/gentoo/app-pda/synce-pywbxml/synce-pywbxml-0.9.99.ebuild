@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-inherit eutils subversion
+inherit python eutils subversion
 
 
 DESCRIPTION="Common Library for Synce (connecting WinCE devices to Linux)"
@@ -15,7 +15,7 @@ KEYWORDS="~x86 ~amd64"
 IUSE=""
 
 DEPEND=">=dev-libs/check-0.8.2
-	>=app-pda/synce-wbxml2-0.9.99"
+	>=dev-libs/libwbxml-0.9.2_p48"
 
 ESVN_REPO_URI="https://svn.sourceforge.net/svnroot/synce/trunk/oleavr-files/pywbxml"
 ESVN_FETCH_CMD="svn checkout"
@@ -28,8 +28,7 @@ src_unpack() {
 }
 
 src_compile() {
-	export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.4/site-packages/
-	export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
+	export PYTHONPATH=$PYTHONPATH:${ROOT}usr/$(get_libdir)/python${PYVER}/site-packages
 	./bootstrap
 	econf || die "econf failed"
 	emake || die

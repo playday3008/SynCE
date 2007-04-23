@@ -31,8 +31,8 @@ src_unpack() {
 
 src_compile() {
 	./bootstrap
-	./configure --prefix=/usr
-	emake LIBS=/usr/lib/libsynce.so || die "make failed"
+	econf || die "configure failed"
+	emake || die "make failed"
 }
 
 src_install() {
