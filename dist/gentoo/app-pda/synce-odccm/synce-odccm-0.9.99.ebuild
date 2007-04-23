@@ -16,16 +16,14 @@ DEPEND=">=dev-libs/check-0.8.3.1
 		>=net-libs/gnet-2.0.0
 		!app-pda/synce-dccm
 		!app-pda/synce-vdccm
-		app-pda/synce-libsynce"
+		>=app-pda/synce-libsynce-0.9.99
+		>=app-pda/synce-librapi2-0.9.99"
 
 # useflag release, if set it will create release-archives in /opt/yacy-svn/RELEASE
 
 ESVN_REPO_URI="https://synce.svn.sourceforge.net/svnroot/synce/trunk/odccm"
 ESVN_FETCH_CMD="svn checkout"
 ESVN_UPDATE_CMD="svn up"
-
-#export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
-#make LIBS=/usr/local/lib/libsynce.so
 
 S="${WORKDIR}/trunk"
 src_unpack() {
@@ -34,8 +32,8 @@ src_unpack() {
 }
 
 src_compile() {
-	autoreconf -i
-	econf
+	./bootstrap
+	econf || die "configure failed" 
 	emake || die "make failed"
 }
 
@@ -45,24 +43,8 @@ src_install() {
 	mkdir -p ${D}/etc/dbus-1/system.d/
 	cp data/dbus/odccm.conf ${D}/etc/dbus-1/system.d/
 
-	mkdir -p ${D}/lib/rcscripts/net
-	cp ${FILESDIR}/triggerconnection.sh ${D}/lib/rcscripts/net/
-
 	mkdir -p ${D}/etc/init.d
-	cp ${FILESDIR}/init.synce ${D}/etc/init.d/synce
-
-	ewarn " do:"
-	ewarn ""
-	ewarn "cd /etc/init.d"
-	ewarn "ln -s net.lo net.eth1"
-	ewarn ""
-	ewarn " add in /etc/conf.d/net:"
-	ewarn ""
-	ewarn "modules=( \"dhclient\" )"
-	ewarn "config_eth1=( \"dhcp\" \"triggerconnection\" )"
-	ewarn "modules_eth1=( \"dhclient\")"
-	ewarn "modules_eth1=( \"triggerconnection\" )"
-	ewarn "dhclient_eth1=\" \""
+	cp ${FILESDIR}/init.odccm ${D}/etc/init.d/odccm
 
 	dodoc README NEWS
 }
