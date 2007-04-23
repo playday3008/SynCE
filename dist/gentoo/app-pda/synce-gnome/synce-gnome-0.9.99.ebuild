@@ -13,9 +13,8 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 DEPEND=">=dev-libs/check-0.8.3.1
+		>=app-pda/synce-odccm-0.9.99
 		dev-python/dbus-python"
-
-# useflag release, if set it will create release-archives in /opt/yacy-svn/RELEASE
 
 ESVN_REPO_URI="https://synce.svn.sourceforge.net/svnroot/synce/trunk/oleavr-files/synce-gnome"
 ESVN_FETCH_CMD="svn checkout"
