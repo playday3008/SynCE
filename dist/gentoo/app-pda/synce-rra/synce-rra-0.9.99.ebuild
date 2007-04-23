@@ -13,9 +13,9 @@ KEYWORDS="~amd64 ~ppc ~x86"
 IUSE=""
 
 DEPEND=">=dev-libs/check-0.8.2
-	>=dev-libs/libmimedir-0.4
-	=app-pda/synce-libsynce-0.9.99
-	=app-pda/synce-librapi2-0.9.99"
+	dev-libs/libmimedir
+	>=app-pda/synce-libsynce-0.9.99
+	>=app-pda/synce-librapi2-0.9.99"
 
 
 ESVN_REPO_URI="https://svn.sourceforge.net/svnroot/synce/trunk/rra"
@@ -25,17 +25,14 @@ ESVN_UPDATE_CMD="svn up"
 S="${WORKDIR}/trunk"
 src_unpack() {
 	subversion_src_unpack
-	cd ${S}/lib
-	#dirty workaround...
-	ln -s . rra
+	cd ${S}
 }
 
 src_compile() {
 	cd ${S}
 	./bootstrap
-	econf \
-		|| die "econf failed"
-	CFLAGS="$CFLAGS -Ilib" emake || die
+	econf || die "econf failed"
+	emake || die "make failed"
 }
 
 src_install() {
