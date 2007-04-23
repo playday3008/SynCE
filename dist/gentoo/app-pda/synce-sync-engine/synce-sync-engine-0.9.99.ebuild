@@ -15,22 +15,17 @@ IUSE=""
 
 DEPEND=">=dev-libs/check-0.8.2
 	dev-python/pygobject
-	dev-python/pyrex
 	dev-python/dbus-python
-	app-pda/libopensync
+	>=app-pda/libopensync-0.21
+	>=app-pda/libopensync-plugin-python-0.21
 	dev-libs/libxml2
-	dev-lang/swig
-	dev-libs/expat
+	dev-libs/libxslt
 	!app-pda/libopensync-plugin-synce
 	!app-pda/synce-multisync_plugin
 	>=app-pda/synce-librtfcomp-0.9.99
-	=app-pda/synce-libsynce-0.9.99
-	=app-pda/synce-rra-0.9.99
+	>=app-pda/synce-libsynce-0.9.99
+	>=app-pda/synce-rra-0.9.99
 	>=app-pda/synce-pywbxml-0.9.99"
-
-#  libxml2-dev
-# libexpat1-dev
-# python2.4-dev
 
 ESVN_REPO_URI="https://synce.svn.sourceforge.net/svnroot/synce/trunk/sync-engine"
 ESVN_FETCH_CMD="svn checkout"
@@ -44,15 +39,11 @@ src_unpack() {
 
 src_compile() {
 	einfo "nothing to compile"
-#	cd ${S}/doc
-	#emake
 }
 
 src_install() {
-	mkdir -p ${D}/usr/shared/sync-engine
-	cp -r ${S}/* ${D}/usr/shared/sync-engine
-	#cp -r ${S}/tools ${S}/engine ${D}/usr/shared/sync-engine
+	mkdir -p ${D}/usr/shared/sync-engine || die
+	cp -r ${S}/* ${D}/usr/shared/sync-engine || die
 	mkdir -p ${D}/usr/lib/opensync/python-plugins
-	cd ${D}/usr/lib/opensync/python-plugins
-	ln -sf ../../../shared/sync-engine/opensync-plugin.py synce.py
+	cp ${D}/usr/shared/sync-engine/opensync-plugin.py ${D}/usr/lib/opensync/python-plugins/synce.py || die
 }
