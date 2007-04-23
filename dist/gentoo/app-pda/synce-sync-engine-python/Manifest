@@ -1,0 +1,11 @@
+EBUILD synce-sync-engine-python-0.9.99.ebuild 1525 RMD160 fb4fe63dd50ed4352d571c39cc7b1ce762df1946 SHA1 b8af81faa47c590a0d58253c9530be5a988a0517 SHA256 a5b63485eb1447047be20f5797abb7ad355bf4c4b924dd953da1bff718823767
+MD5 faab23c64e14fdcb5a95c3d3c6cd965b synce-sync-engine-python-0.9.99.ebuild 1525
+RMD160 fb4fe63dd50ed4352d571c39cc7b1ce762df1946 synce-sync-engine-python-0.9.99.ebuild 1525
+SHA256 a5b63485eb1447047be20f5797abb7ad355bf4c4b924dd953da1bff718823767 synce-sync-engine-python-0.9.99.ebuild 1525
+MISC .synce-sync-engine-0.9.99.ebuild.swp 12288 RMD160 48f4cf474e972a869cc2b8340ffa7beadab8f3c2 SHA1 3031ac9ef6b2e9245bea71dcaba7f403b963bdbc SHA256 6dc84f23548e9d3b739aeb568cc9901f27bc7d4aa252c7c2038ec718f2aeb346
+MD5 6141321e6fa1fef0e35537b531327f6f .synce-sync-engine-0.9.99.ebuild.swp 12288
+RMD160 48f4cf474e972a869cc2b8340ffa7beadab8f3c2 .synce-sync-engine-0.9.99.ebuild.swp 12288
+SHA256 6dc84f23548e9d3b739aeb568cc9901f27bc7d4aa252c7c2038ec718f2aeb346 .synce-sync-engine-0.9.99.ebuild.swp 12288
+MD5 d41d8cd98f00b204e9800998ecf8427e files/digest-synce-sync-engine-python-0.9.99 0
+RMD160 9c1185a5c5e9fc54612808977ee8f548b2258d31 files/digest-synce-sync-engine-python-0.9.99 0
+SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 files/digest-synce-sync-engine-python-0.9.99 0

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<layman>
+  <overlay
+      type = "svn"
+      src  = "https://synce.svn.sourceforge.net/svnroot/synce/trunk/dist/gentoo"
+      contact = "synce-windowsmobile5@lists.sourceforge.net"
+      name = "synce">
+
+    <link>
+      http://www.synce.org
+    </link>
+
+    <description>
+      Synce (connecting WinCE-WM5 devices to Linux) overlay
+    </description>
+  </overlay>
+</layman>
