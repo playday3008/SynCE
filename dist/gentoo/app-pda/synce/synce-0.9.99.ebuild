@@ -9,7 +9,7 @@ SRC_URI=""
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86 ~ppc"
-IUSE="gnome kde usb serial syncengine wininstallers"
+IUSE="gnome usb serial syncengine wininstallers"
 
 #		!app-pda/synce
 
@@ -27,8 +27,7 @@ DEPEND="=app-pda/synce-libsynce-0.9.99
 		wininstallers? (>=app-pda/dynamite-0.1
 			>=app-pda/orange-0.3
 			>=app-arch/unshield-0.5
-		)
-		kde? ( >=app-pda/synce-kde-0.8 )"
+		)"
 
 
 src_compile() {
