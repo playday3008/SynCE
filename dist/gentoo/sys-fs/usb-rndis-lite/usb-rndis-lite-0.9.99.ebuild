@@ -45,11 +45,6 @@ pkg_setup() {
 src_unpack() {
 	subversion_src_unpack
 	cd ${S}
-
-	if kernel_is gt 2 6 19; then
-#		epatch ${FILESDIR}/kernel-2.6.20.patch
-		patch -p0 < ${FILESDIR}/kernel-2.6.20.patch || die "patching failed"
-	fi
 }
 
 src_compile() {
