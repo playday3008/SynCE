@@ -13,10 +13,7 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE="dbus"
 DEPEND=">=dev-libs/check-0.8.3.1
-		>=net-libs/gnet-2.0.0
-		!app-pda/synce-dccm
-		!app-pda/synce-vdccm
-		app-pda/synce-libsynce"
+		>=app-pda/synce-libsynce-0.9.99"
 
 ESVN_REPO_URI="https://synce.svn.sourceforge.net/svnroot/synce/trunk/librtfcomp"
 ESVN_FETCH_CMD="svn checkout"
@@ -30,7 +27,7 @@ src_unpack() {
 
 src_compile() {
 	./bootstrap
-	econf
+	econf || die "configure failed"
 	emake || die "make failed"
 }
 

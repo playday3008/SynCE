@@ -1,7 +1,7 @@
-EBUILD synce-librtfcomp-0.9.99.ebuild 852 RMD160 4d176eb7e66bc12931b72cc36c93c7513bab917f SHA1 e8e85fd62d14797c791c8318296ea1c894aa944a SHA256 37b9acb6b79475c9512ac106c3b5b35173418ea5e248e0d9ddc1639abb512bce
-MD5 08bc103f01ce4f2e9c08fe538860eadc synce-librtfcomp-0.9.99.ebuild 852
-RMD160 4d176eb7e66bc12931b72cc36c93c7513bab917f synce-librtfcomp-0.9.99.ebuild 852
-SHA256 37b9acb6b79475c9512ac106c3b5b35173418ea5e248e0d9ddc1639abb512bce synce-librtfcomp-0.9.99.ebuild 852
+EBUILD synce-librtfcomp-0.9.99.ebuild 818 RMD160 d2f9fcfe3d1ca8488df6319364e6bfe5e4d6ebc9 SHA1 8dfbd88da603a193fcd0b22ccb5d272243e0c2c4 SHA256 f40a871453898e441a25e5fdb0f6943db8dd43ea744838aaef56b26d394059a3
+MD5 56e9e5c5ed1738e518ceeda9820fd2a5 synce-librtfcomp-0.9.99.ebuild 818
+RMD160 d2f9fcfe3d1ca8488df6319364e6bfe5e4d6ebc9 synce-librtfcomp-0.9.99.ebuild 818
+SHA256 f40a871453898e441a25e5fdb0f6943db8dd43ea744838aaef56b26d394059a3 synce-librtfcomp-0.9.99.ebuild 818
 MD5 d41d8cd98f00b204e9800998ecf8427e files/digest-synce-librtfcomp-0.9.99 0
 RMD160 9c1185a5c5e9fc54612808977ee8f548b2258d31 files/digest-synce-librtfcomp-0.9.99 0
 SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 files/digest-synce-librtfcomp-0.9.99 0
