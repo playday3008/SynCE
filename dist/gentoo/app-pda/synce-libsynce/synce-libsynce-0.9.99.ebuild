@@ -27,7 +27,7 @@ src_compile() {
 	./bootstrap
 	#--disable-libtool-lock
 	#--disable-rpath
-	econf --enable-desktop-integration
+	econf --enable-desktop-integration || die "configure failed"
 	emake || die "make failed"
 }
 
