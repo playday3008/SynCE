@@ -44,8 +44,8 @@ src_compile() {
 }
 
 src_install() {
-	mkdir -p ${D}/usr/shared/sync-engine || die
-	cp -r ${S}/* ${D}/usr/shared/sync-engine || die
+	mkdir -p ${D}/usr/share/sync-engine || die
+	cp -r ${S}/* ${D}/usr/share/sync-engine || die
 	mkdir -p ${D}/usr/lib/opensync/python-plugins
-	cp ${D}/usr/shared/sync-engine/opensync-plugin.py ${D}/usr/lib/opensync/python-plugins/synce.py || die
+	cp ${D}/usr/share/sync-engine/opensync-plugin.py ${D}/usr/lib/opensync/python-plugins/synce.py || die
 }
