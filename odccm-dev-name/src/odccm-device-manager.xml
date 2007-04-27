@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node name="/OdccmDeviceManager">
+  <interface name="org.synce.odccm.DeviceManager">
+    <method name="GetConnectedDevices">
+      <arg direction="out" type="ao"/>
+    </method>
+    <signal name="DeviceConnected">
+      <arg name="name" type="s"/>
+    </signal>
+    <signal name="DeviceDisconnected">
+      <arg name="name" type="s"/>
+    </signal>
+  </interface>
+</node>
