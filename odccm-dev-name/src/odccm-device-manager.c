@@ -302,45 +302,69 @@ interface_timed_cb (gpointer data)
   return TRUE;
 }
 
+static int
+hal_device_is_pda (LibHalContext *ctx, const char *udi, gchar **ret_ifname)
+{
+  int result = 0;
+  
+  DBusError error;
+  dbus_error_init (&error);
+  
+  /* Be sure it is a network interface */
+  gchar *ifname = libhal_device_get_property_string (ctx, udi, "net.interface", &error);
+  if (ifname == NULL) goto DONE;
+  if (ret_ifname != NULL) *ret_ifname = g_strdup(ifname);
+  libhal_free_string (ifname);
+
+  /* We'll then check some properties of its parent */
+  gchar *parentname = libhal_device_get_property_string (ctx, udi, "info.parent", &error);
+  if (parentname == NULL) goto DONE;
+
+  /* Check the parent's device driver name */
+  gchar *parentdrvname = libhal_device_get_property_string (ctx, parentname, "info.linux.driver", &error);
+  if (parentdrvname == NULL)
+    {
+      libhal_free_string (parentname);
+      goto DONE;
+    }
+
+  if (strncmp("rndis_host", parentdrvname, 11) == 0) result = 1;
+
+  libhal_free_string (parentdrvname);
+  libhal_free_string (parentname);
+
+DONE:
+  dbus_error_free (&error);
+  return result;
+}
+
 static void
 hal_device_added_cb (LibHalContext *ctx, const gchar *udi)
 {
   OdccmDeviceManager *self = ODCCM_DEVICE_MANAGER (
       libhal_ctx_get_user_data (ctx));
   OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
-  DBusError error;
   gchar *ifname;
 
-  dbus_error_init (&error);
-
-  ifname = libhal_device_get_property_string (ctx, udi, "net.interface", &error);
-  if (ifname != NULL)
+  if (hal_device_is_pda(ctx, udi, &ifname))
     {
-      if (strncmp (ifname, "rndis", 5) == 0)
+      g_debug ("PDA network interface discovered! udi='%s'", udi);
+
+      if (priv->udi != NULL)
         {
-          g_debug ("PDA network interface discovered! udi='%s', device='%s'",
-                   udi, ifname);
-
-          if (priv->udi != NULL)
-            {
-              g_warning ("Only the first device discovered will be auto-"
-                         "configured for now");
-              return;
-            }
-
-          priv->udi = g_strdup (udi);
-          priv->ifname = g_strdup (ifname);
-
-          _odccm_configure_interface (ifname, LOCAL_IP_ADDRESS, LOCAL_NETMASK,
-                                      LOCAL_BROADCAST);
-
-          g_timeout_add (50, interface_timed_cb, self);
+          g_warning ("Only the first device discovered will be auto-"
+                     "configured for now");
+          return;
         }
 
-      libhal_free_string (ifname);
-    }
+      priv->udi = g_strdup (udi);
+      priv->ifname = g_strdup (ifname);
 
-  dbus_error_free (&error);
+      _odccm_configure_interface (ifname, LOCAL_IP_ADDRESS, LOCAL_NETMASK,
+                                  LOCAL_BROADCAST);
+
+      g_timeout_add (50, interface_timed_cb, self);
+    }
 }
 
 static void
