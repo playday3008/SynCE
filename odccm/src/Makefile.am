@@ -19,7 +19,12 @@ odccm_SOURCES = $(BUILT_SOURCES) \
 		odccm-connection-broker.c odccm-connection-broker.h \
 		odccm-device.c odccm-device.h \
 		odccm-device-manager.c odccm-device-manager.h \
-		odccm.c
+		odccm.c odccm-constants.h
+
+EXTRA_DIST = odccm-device-manager-signals-marshal.list \
+		odccm-device-manager.xml \
+		odccm-device-signals-marshal.list
+		odccm-device.xml
 
 %-glue.h: %.xml
 	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
