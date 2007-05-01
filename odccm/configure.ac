@@ -15,7 +15,7 @@ dnl Check for header files.
 AC_STDC_HEADERS
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.3)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
 
 dnl Check for GLib
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4])
