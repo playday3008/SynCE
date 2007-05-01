@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT(libdescriptor, 0.1, voc@users.sourceforge.net)
 AC_CONFIG_SRCDIR([config.h.in])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(vdccm, 0.9.3)
+AM_INIT_AUTOMAKE(vdccm, 0.10.0)
 
 # Checks for programs.
 AC_PROG_CXX
@@ -19,7 +19,7 @@ AC_DISABLE_STATIC
 AM_PROG_LIBTOOL
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.3)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
 
 # Checks for header files.
 AC_HEADER_DIRENT
