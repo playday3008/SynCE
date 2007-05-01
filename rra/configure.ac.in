@@ -16,10 +16,10 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
 
 dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.10.0)
 
   AC_ARG_WITH(libmimedir,
     AC_HELP_STRING(
