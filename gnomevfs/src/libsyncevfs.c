@@ -285,7 +285,7 @@ static GnomeVFSResult synce_open/*{{{*/
   g_free(location);
   wstr_free_string(wide_path);
 
-  *((HANDLE *)method_handle_return) = handle;
+	*(method_handle_return) = GUINT_TO_POINTER(handle);
 
   if((handle == INVALID_HANDLE_VALUE) || (synce_open_mode & GENERIC_WRITE))
     result = gnome_vfs_result_from_rapi();
@@ -369,7 +369,7 @@ static GnomeVFSResult synce_create/*{{{*/
   g_free(location);
   wstr_free_string(wide_path);
 
-  *((HANDLE *)method_handle_return) = handle;
+	*(method_handle_return) = GUINT_TO_POINTER(handle);
 
   if((handle == INVALID_HANDLE_VALUE) || (synce_open_mode & GENERIC_WRITE))
     result = gnome_vfs_result_from_rapi();
@@ -398,7 +398,7 @@ static GnomeVFSResult synce_close/*{{{*/
   if ((result = initialize_rapi()) != GNOME_VFS_OK)
     return result;
 
-  handle = (HANDLE) method_handle;
+	handle = GPOINTER_TO_UINT(method_handle);
 
   D("synce_close: CeCloseHandle()\n");
   MUTEX_LOCK (mutex);
@@ -426,7 +426,7 @@ static GnomeVFSResult synce_read/*{{{*/
 {
   GnomeVFSResult result;
   int success;
-  size_t read_return;
+	DWORD read_return;
   HANDLE handle;
 
   D("------------------ synce_read() ---------------------\n");
@@ -435,7 +435,7 @@ static GnomeVFSResult synce_read/*{{{*/
   if ((result = initialize_rapi()) != GNOME_VFS_OK)
     return result;
 
-  handle = (HANDLE) method_handle;
+	handle = GPOINTER_TO_UINT(method_handle);
 
   D("CeReadFile\n");
   MUTEX_LOCK (mutex);
@@ -479,14 +479,14 @@ static GnomeVFSResult synce_write/*{{{*/
   GnomeVFSResult result;
   int success;
   HANDLE handle;
-  size_t bytes_written;
+	DWORD bytes_written;
 
   D("----------------- synce_write() -------------------\n");
 
   if ((result = initialize_rapi()) != GNOME_VFS_OK)
     return result;
 
-  handle = (HANDLE) method_handle;
+	handle = GPOINTER_TO_UINT(method_handle);
 
   D("CeWriteFile()\n");
   MUTEX_LOCK (mutex);
