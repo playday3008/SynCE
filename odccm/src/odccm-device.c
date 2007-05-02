@@ -765,9 +765,18 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
 
   if (priv->pw_key != 0)
     {
-      priv->state = CTRL_STATE_AUTH;
-      change_password_flags (self, ODCCM_DEVICE_PASSWORD_FLAG_SET |
-                             ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+      if (priv->pw_key != 0xffffffff)
+        {
+          priv->state = CTRL_STATE_AUTH;
+          change_password_flags (self, ODCCM_DEVICE_PASSWORD_FLAG_SET |
+                                 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+        }
+      else
+        {
+          /* TODO: extend the API to handle this (introduced by WM6) */
+          g_warning ("%s: device is locked, please unlock it", G_STRFUNC);
+          priv->state = CTRL_STATE_CONNECTED;
+        }
     }
   else
     {
