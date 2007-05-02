@@ -604,7 +604,7 @@ static void
 device_info_received (OdccmDevice *self, const guchar *buf, gint length)
 {
   OdccmDevicePrivate *priv = ODCCM_DEVICE_GET_PRIVATE (self);
-  gchar *guid, *name, *platform_name, *model_name;
+  gchar *guid = NULL, *name = NULL, *platform_name = NULL, *model_name = NULL;
   guint os_major, os_minor, version, cpu_type, cur_partner_id, id, comp_count;
   gchar *safe_guid, *obj_path;
   const gchar safe_chars[] = {
@@ -612,16 +612,24 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       "0123456789_"
   };
-  const guchar *p = buf;
+  const guchar *p = buf, *end_ptr = buf + length;
   guint consumed;
 
   priv->state = CTRL_STATE_GOT_INFO;
 
+  g_debug (G_STRFUNC);
+  _odccm_print_hexdump (buf, length);
+
   /*
    * Parse and set device properties.
-   *
-   * TODO: do bounds- and proper sanity-checking
    */
+  if (p + 24 > end_ptr)
+    {
+      g_warning ("%s: short read trying to read GUID/OsMajor/OsMinor",
+          G_STRFUNC);
+      goto ERROR;
+    }
+
   guid = _odccm_guid_to_string (p);
   p += 16;
 
@@ -631,8 +639,20 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
   os_minor = GUINT32_FROM_LE (*((guint32 *) p));
   p += sizeof (guint32);
 
-  name = _odccm_rapi_unicode_string_to_string (p, &consumed);
-  p += consumed;
+  name = _odccm_rapi_unicode_string_to_string (p, end_ptr, 31, &consumed);
+  if (name == NULL)
+    {
+      g_warning ("%s: DeviceName is out of bounds or too long", G_STRFUNC);
+      goto ERROR;
+    }
+  p += consumed + sizeof (WCHAR);
+
+  if (p + 20 > end_ptr)
+    {
+      g_warning ("%s: short read trying to read Version/CpuType/"
+          "Flags/CurPartnerId/Id", G_STRFUNC);
+      goto ERROR;
+    }
 
   version = GUINT32_FROM_LE (*((guint32 *) p));
   p += sizeof (guint32);
@@ -649,24 +669,64 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
   id = GUINT32_FROM_LE (*((guint32 *) p));
   p += sizeof (guint32);
 
-  platform_name = _odccm_rapi_ascii_string_to_string (p, &consumed);
+  /* TODO: PlatformName is actually a list of strings,
+   *       terminated with an extra NUL byte */
+  platform_name = _odccm_rapi_ascii_string_to_string (p, end_ptr, 255,
+      &consumed);
+  if (platform_name == NULL)
+    {
+      g_warning ("%s: PlatformName is out of bounds or too long", G_STRFUNC);
+      goto ERROR;
+    }
   p += consumed;
 
-  model_name = _odccm_rapi_ascii_string_to_string (p, &consumed);
-  p += consumed;
+  model_name = _odccm_rapi_ascii_string_to_string (p, end_ptr, 255, &consumed);
+  if (model_name == NULL)
+    {
+      g_warning ("%s: ModelName is out of bounds or too long", G_STRFUNC);
+      goto ERROR;
+    }
+  p += consumed + 1;
 
   /* TODO: parse the platform component versions,
    *       for now we just ignore them */
+  if (p + 4 > end_ptr)
+    {
+      g_warning ("%s: short read trying to read ComponentCount", G_STRFUNC);
+      goto ERROR;
+    }
   comp_count = GUINT32_FROM_LE (*((guint32 *) p));
+  if (comp_count > 6)
+    {
+      g_warning ("%s: ComponentCount %d is out of range", G_STRFUNC, comp_count);
+      goto ERROR;
+    }
   p += sizeof (guint32) + (comp_count * 8);
 
+  if (p + 4 > end_ptr)
+    {
+      g_warning ("%s: short read trying to read Components/PasswordKey",
+          G_STRFUNC);
+      goto ERROR;
+    }
   priv->pw_key = GUINT32_FROM_LE (*((guint32 *) p));
   p += sizeof (guint32);
 
   if (p < buf + length)
     {
-      guint n = GUINT32_FROM_LE (*((guint32 *) p));
-      p += sizeof (guint32);
+      guint n;
+
+      if (p + 4 > end_ptr)
+        {
+          g_warning ("%s: short read trying to read ExtraData size", G_STRFUNC);
+          goto ERROR;
+        }
+      n = GUINT32_FROM_LE (*((guint32 *) p));
+      if (p + n > end_ptr)
+        {
+          g_warning ("%s: short read trying to read ExtraData data", G_STRFUNC);
+          goto ERROR;
+        }
 
       g_debug ("extradata:");
       _odccm_print_hexdump (p, n);
@@ -686,12 +746,6 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
       "platform-name", platform_name,
       "model-name", model_name,
       NULL);
-
-  g_free (guid);
-  g_free (name);
-  g_free (platform_name);
-  g_free (model_name);
-
 
   /*
    * Register ourself with D-Bus.
@@ -719,6 +773,21 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
     {
       priv->state = CTRL_STATE_CONNECTED;
     }
+
+  goto OUT;
+
+ERROR:
+  /* TODO: do something sensible here */
+
+OUT:
+  if (guid != NULL)
+    g_free (guid);
+  if (name != NULL)
+    g_free (name);
+  if (platform_name != NULL)
+    g_free (platform_name);
+  if (model_name != NULL)
+    g_free (model_name);
 }
 
 gboolean

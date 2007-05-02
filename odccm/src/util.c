@@ -138,22 +138,54 @@ _odccm_guid_to_string (const guchar *p)
 }
 
 gchar *
-_odccm_rapi_unicode_string_to_string (const guchar *buf, guint *bytes_consumed)
+_odccm_rapi_unicode_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, guint *bytes_consumed)
 {
-  guint32 len = GUINT32_FROM_LE (*((guint32 *) buf));
-  gchar *ret = wstr_to_utf8 ((LPCWSTR) (buf + 4));
+  gchar *ret;
+  guint32 len;
+
+  if (buf + 4 > buf_max)
+    return NULL;
+
+  len = GUINT32_FROM_LE (*((guint32 *) buf));
+  if (buf + 4 + (len * sizeof (WCHAR)) > buf_max || len > max_len)
+    return NULL;
+
+  if (len > 0)
+    {
+      ret = wstr_to_utf8 ((LPCWSTR) (buf + 4));
+    }
+  else
+    {
+      ret = g_strdup ("");
+    }
 
   if (bytes_consumed != NULL)
-    *bytes_consumed = sizeof (len) + ((len + 1) * sizeof (WCHAR));
+    *bytes_consumed = sizeof (len) + (len * sizeof (WCHAR));
 
   return ret;
 }
 
 gchar *
-_odccm_rapi_ascii_string_to_string (const guchar *buf, guint *bytes_consumed)
+_odccm_rapi_ascii_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, guint *bytes_consumed)
 {
-  guint32 len = GUINT32_FROM_LE (*((guint32 *) buf));
-  gchar *ret = g_strdup ((const gchar *) (buf + 4));
+  gchar *ret;
+  guint32 len;
+
+  if (buf + 4 > buf_max)
+    return NULL;
+
+  len = GUINT32_FROM_LE (*((guint32 *) buf));
+  if (buf + 4 + len > buf_max || len > max_len)
+    return NULL;
+
+  if (len > 0)
+    {
+      ret = g_strdup ((const gchar *) (buf + 4));
+    }
+  else
+    {
+      ret = g_strdup ("");
+    }
 
   if (bytes_consumed != NULL)
     *bytes_consumed = sizeof (len) + len;

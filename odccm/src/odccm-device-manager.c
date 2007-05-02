@@ -306,35 +306,39 @@ static int
 hal_device_is_pda (LibHalContext *ctx, const char *udi, gchar **ret_ifname)
 {
   int result = 0;
-  
+
   DBusError error;
   dbus_error_init (&error);
-  
+
   /* Be sure it is a network interface */
-  gchar *ifname = libhal_device_get_property_string (ctx, udi, "net.interface", &error);
+  gchar *ifname = libhal_device_get_property_string (ctx, udi, "net.interface",
+      &error);
   if (ifname == NULL) goto DONE;
   if (ret_ifname != NULL) *ret_ifname = g_strdup(ifname);
   libhal_free_string (ifname);
 
   /* We'll then check some properties of its parent */
-  gchar *parentname = libhal_device_get_property_string (ctx, udi, "info.parent", &error);
+  gchar *parentname = libhal_device_get_property_string (ctx, udi,
+      "info.parent", &error);
   if (parentname == NULL) goto DONE;
 
   /* Check the parent's device driver name */
-  gchar *parentdrvname = libhal_device_get_property_string (ctx, parentname, "info.linux.driver", &error);
+  gchar *parentdrvname = libhal_device_get_property_string (ctx, parentname,
+      "info.linux.driver", &error);
   if (parentdrvname == NULL)
     {
       libhal_free_string (parentname);
       goto DONE;
     }
 
-  if (strncmp("rndis_host", parentdrvname, 11) == 0) result = 1;
+  if (strncmp ("rndis_host", parentdrvname, 11) == 0) result = 1;
 
   libhal_free_string (parentdrvname);
   libhal_free_string (parentname);
 
 DONE:
   dbus_error_free (&error);
+  /*g_debug ("%s: udi='%s', result=%d", G_STRFUNC, udi, result);*/
   return result;
 }
 
@@ -346,7 +350,7 @@ hal_device_added_cb (LibHalContext *ctx, const gchar *udi)
   OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
   gchar *ifname;
 
-  if (hal_device_is_pda(ctx, udi, &ifname))
+  if (hal_device_is_pda (ctx, udi, &ifname))
     {
       g_debug ("PDA network interface discovered! udi='%s'", udi);
 

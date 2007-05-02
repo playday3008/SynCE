@@ -24,8 +24,11 @@ DBusGConnection *_odccm_get_dbus_conn ();
 void _odccm_request_dbus_name (const gchar *bus_name);
 void _odccm_get_dbus_sender_uid (const gchar *sender, guint *uid);
 gchar *_odccm_guid_to_string (const guchar *p);
-gchar *_odccm_rapi_unicode_string_to_string (const guchar *buf, guint *bytes_consumed);
-gchar *_odccm_rapi_ascii_string_to_string (const guchar *buf, guint *bytes_consumed);
+
+/* TODO: make these two handle strings that are optionally null-terminated,
+ *       or disambiguate on whether the prefixed length includes the NUL. */
+gchar *_odccm_rapi_unicode_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, guint *bytes_consumed);
+gchar *_odccm_rapi_ascii_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, guint *bytes_consumed);
 
 gboolean _odccm_configure_interface (const gchar *ifname, const gchar *ip_addr, const gchar *netmask, const gchar *bcast_addr);
 gboolean _odccm_interface_is_configured (const gchar *ifname, const gchar *expected_address);
