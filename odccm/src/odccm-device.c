@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Ole André Vadla Ravnås <oleavr@gmail.com>
+ * Copyright (C) 2006-2007 Ole André Vadla Ravnås <oleavr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -511,7 +511,7 @@ conn_event_cb (GConn *conn,
               v = 7; g_array_append_val (resp, v);
               v = 8; g_array_append_val (resp, v);
               v = 4; g_array_append_val (resp, v);
-              v = 1; g_array_append_val (resp, v);
+              v = 5; g_array_append_val (resp, v);
               break;
             default:
               g_warning ("%s: unknown request 0x%08x", G_STRFUNC, req);
@@ -605,7 +605,7 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
 {
   OdccmDevicePrivate *priv = ODCCM_DEVICE_GET_PRIVATE (self);
   gchar *guid, *name, *platform_name, *model_name;
-  guint os_major, os_minor, version, cpu_type, cur_partner_id, id;
+  guint os_major, os_minor, version, cpu_type, cur_partner_id, id, comp_count;
   gchar *safe_guid, *obj_path;
   const gchar safe_chars[] = {
       "abcdefghijklmnopqrstuvwxyz"
@@ -619,6 +619,8 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
 
   /*
    * Parse and set device properties.
+   *
+   * TODO: do bounds- and proper sanity-checking
    */
   guid = _odccm_guid_to_string (p);
   p += 16;
@@ -653,6 +655,25 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
   model_name = _odccm_rapi_ascii_string_to_string (p, &consumed);
   p += consumed;
 
+  /* TODO: parse the platform component versions,
+   *       for now we just ignore them */
+  comp_count = GUINT32_FROM_LE (*((guint32 *) p));
+  p += sizeof (guint32) + (comp_count * 8);
+
+  priv->pw_key = GUINT32_FROM_LE (*((guint32 *) p));
+  p += sizeof (guint32);
+
+  if (p < buf + length)
+    {
+      guint n = GUINT32_FROM_LE (*((guint32 *) p));
+      p += sizeof (guint32);
+
+      g_debug ("extradata:");
+      _odccm_print_hexdump (p, n);
+
+      p += n;
+    }
+
   g_object_set (self,
       "guid", guid,
       "os-major", os_major,
@@ -671,7 +692,6 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
   g_free (platform_name);
   g_free (model_name);
 
-  priv->pw_key = GUINT32_FROM_LE (*((guint32 *) (buf + length - sizeof (guint32))));
 
   /*
    * Register ourself with D-Bus.
