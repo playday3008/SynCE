@@ -14,7 +14,8 @@ KEYWORDS="~x86 ~amd64"
 IUSE="dbus"
 DEPEND=">=dev-libs/check-0.8.3.1
 		>=net-libs/gnet-2.0.0
-		app-pda/synce-libsynce"
+		>=app-pda/synce-libsynce-0.9.99
+		>=app-pda/synce-librapi2-0.9.99"
 
 # useflag release, if set it will create release-archives in /opt/yacy-svn/RELEASE
 
