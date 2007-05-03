@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([librtfcomp], [1.02])
+AC_INIT([librtfcomp], [1.1])
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_PROG_CC
