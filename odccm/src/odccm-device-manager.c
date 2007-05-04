@@ -22,6 +22,9 @@
 #include <arpa/inet.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <libhal.h>
+#include <linux/netlink.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "odccm-device-manager.h"
 
@@ -65,6 +68,7 @@ struct _OdccmDeviceManagerPrivate
   LibHalContext *hal_ctx;
   gchar *udi;
   gchar *ifname;
+  GIOChannel *udev_chann;
 };
 
 #define ODCCM_DEVICE_MANAGER_GET_PRIVATE(o) \
@@ -77,6 +81,7 @@ odccm_device_manager_init (OdccmDeviceManager *self)
 
 static void client_connected_cb (GServer *server, GConn *conn, gpointer user_data);
 static void init_hal (OdccmDeviceManager *self);
+static void init_udev (OdccmDeviceManager *self);
 
 static GObject *
 odccm_device_manager_constructor (GType type, guint n_props,
@@ -96,6 +101,7 @@ odccm_device_manager_constructor (GType type, guint n_props,
                                        DEVICE_MANAGER_OBJECT_PATH, obj);
 
   init_hal (ODCCM_DEVICE_MANAGER (obj));
+  init_udev (ODCCM_DEVICE_MANAGER (obj));
 
   return obj;
 }
@@ -482,3 +488,168 @@ OUT:
     }
 }
 
+static void
+udev_device_added (gpointer self, gchar *ifname, gchar *udi)
+{
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  // Check if this is "our" interface
+  if (!_odccm_interface_address (ifname, LOCAL_IP_ADDRESS)) 
+     return;
+
+  g_debug ("PDA network interface discovered! udi='%s'", udi);
+
+  priv->udi = g_strdup (udi);
+  priv->ifname = g_strdup (ifname);
+ 
+  g_timeout_add (50, interface_timed_cb, self);
+}
+
+static void
+udev_device_removed (gpointer self, gchar *ifname, gchar *udi)
+{
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
+  GSList *cur;
+
+  if (priv->udi == NULL)
+    return;
+
+  if (strcmp (udi, priv->udi) != 0)
+    return;
+
+  g_debug ("PDA disconnected! udi='%s', device='%s'", priv->udi, priv->ifname);
+
+  /* FIXME: Hack.  We should have a hashtable mapping UDIs to IP-addresses and
+   *        use that instead of this ugly approach... */
+  for (cur = priv->devices; cur != NULL; cur = cur->next)
+    {
+      OdccmDevice *dev = cur->data;
+      guint32 addr;
+
+      g_object_get (dev, "ip-address", &addr, NULL);
+
+      if (addr == inet_addr (DEVICE_IP_ADDRESS))
+        {
+          gchar *obj_path;
+
+          g_object_get (dev, "object-path", &obj_path, NULL);
+          g_signal_emit (self, signals[DEVICE_DISCONNECTED], 0, obj_path);
+          g_free (obj_path);
+
+          priv->devices = g_slist_delete_link (priv->devices, cur);
+          g_object_unref (dev);
+
+          break;
+        }
+    }
+
+  g_free (priv->udi);
+  priv->udi = NULL;
+  g_free (priv->ifname);
+  priv->ifname = NULL;
+}
+
+static gboolean
+udev_read_cb (GIOChannel *source,
+              GIOCondition condition,
+              gpointer user_data)
+{
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (user_data);
+#define UEVENT_BUFFER_SIZE 2048
+  gchar buf[UEVENT_BUFFER_SIZE*2];
+  GIOError ioError;
+  guint buflen = 0;
+  size_t bufpos;
+  gboolean is_net = FALSE, is_ppp = FALSE, added = FALSE;
+  gchar iface[10];
+  gchar udi[UEVENT_BUFFER_SIZE];
+  
+  ioError = g_io_channel_read(priv->udev_chann, &buf, sizeof(buf), &buflen);
+
+  if (ioError != G_IO_ERROR_NONE) {
+    g_warning("%s: error reading event",G_STRFUNC);
+  }  
+
+  bufpos = strlen(buf) + 1;
+  while (bufpos < (size_t)buflen) {
+    int keylen;
+    char *key;
+    char *tmpptr;
+    
+    key = &buf[bufpos];
+    keylen = strlen(key);
+    if (keylen == 0) break;
+    
+    if (strncmp("SUBSYSTEM=net",key,13)==0) is_net = TRUE;
+    if (strncmp("INTERFACE=ppp",key,13)==0){
+      is_ppp = TRUE;
+      tmpptr = strchr(key,'=');
+      strncpy(iface,tmpptr+1,10);
+    }
+    if (strncmp("ACTION=remove",key,13)==0) added = FALSE;
+    if (strncmp("ACTION=add",key,13)==0) added = TRUE;
+    if (strncmp("DEVPATH",key,7)==0) {
+      tmpptr = strchr(key,'=');
+      strncpy(udi,tmpptr+1,UEVENT_BUFFER_SIZE);
+    }
+    bufpos += keylen + 1;
+  }
+
+  if (is_net == TRUE && is_ppp == TRUE) {
+    if (added == TRUE) {
+      udev_device_added(user_data,iface,udi);
+    } else {
+      udev_device_removed(user_data,iface,udi);
+    }
+  }
+
+  return TRUE;
+}
+
+static void
+init_udev (OdccmDeviceManager *self)
+{
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
+  gboolean success = FALSE;
+  const gchar *func_name = "";
+  struct sockaddr_nl snl;
+  int retval;
+  int udev_sock;
+
+  udev_sock = -1;
+
+  memset(&snl,0, sizeof(struct sockaddr_nl));
+  snl.nl_family = AF_NETLINK;
+  snl.nl_pid = getpid();
+  snl.nl_groups = 1;
+
+  udev_sock = socket(PF_NETLINK,SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+
+  if (udev_sock == -1) {
+    func_name = "socket";
+    goto ERROR;
+  }
+
+  retval = bind(udev_sock, (struct sockaddr *) &snl,
+                sizeof(struct sockaddr_nl));
+
+  if (retval < 0) {
+    func_name = "bind";
+    close(udev_sock);
+    goto ERROR;
+  }
+  priv->udev_chann = g_io_channel_unix_new(udev_sock);
+  g_io_add_watch (priv->udev_chann, G_IO_IN, udev_read_cb, self);
+
+  success = TRUE;
+  goto OUT;
+
+ERROR:
+  g_warning ("%s: %s() failed", G_STRFUNC, func_name);
+
+OUT:
+  if (!success)
+    {
+      g_warning ("%s: failed", G_STRFUNC);
+    }
+}

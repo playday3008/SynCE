@@ -314,6 +314,85 @@ OUT:
 }
 
 gboolean
+_odccm_interface_address (const gchar *ifname,
+                          const gchar *expected_address)
+{
+#define SETTLE_TIME 5 
+  gboolean result = FALSE, found = FALSE;
+  const gchar *op = "socket()";
+  gint fd = -1;
+  struct ifreq ifr[10];
+  int i,p;
+  struct ifconf ifc;
+  struct sockaddr_in *addr;
+
+  // Give interface time to get IP address
+  // by default not more than 10 seconds
+  for (p=0; p<SETTLE_TIME; p++) {
+    if ((fd = socket (PF_INET, SOCK_STREAM, 0)) < 0)
+      goto ERROR;
+
+    memset (&ifr, 0, sizeof (ifr));
+    memset (&ifc, 0, sizeof (ifc));
+    ifc.ifc_len = sizeof(ifr);
+    ifc.ifc_req = ifr;
+
+    if (ioctl (fd, SIOCGIFCONF, &ifc) < 0)
+      {
+        op = "ioctl(SIOCGIFCONF)";
+        goto ERROR;
+      }
+
+    if (ifc.ifc_len == sizeof(ifr))
+      {
+        g_warning ("%s: too many interfaces",G_STRFUNC);
+      }
+
+    for (i=0; i<ifc.ifc_len/sizeof(struct ifreq); i++) {
+      addr = (struct sockaddr_in *) &ifr[i].ifr_addr;
+      if (strcmp(ifname,ifr[i].ifr_name)==0) {
+        if (addr->sin_addr.s_addr == inet_addr (expected_address)) {
+          found = TRUE;
+	      g_debug("%s: found matching interface", G_STRFUNC);
+          break;
+        }
+      }
+    }
+    if (found == TRUE) {
+      break;
+    } else {
+      g_debug("%s: waiting for IP address on %s",G_STRFUNC,ifname);
+      close(fd);
+      sleep(1);
+    }
+  }
+
+  if (found == FALSE) goto OUT;
+
+  if (ioctl (fd, SIOCGIFFLAGS, &ifr[i]) < 0)
+    {
+      op = "ioctl(SIOCGIFFLAGS)";
+      goto ERROR;
+    }
+
+  if ((ifr[i].ifr_flags & IFF_UP) == 0)
+    goto OUT;
+
+  result = TRUE;
+  goto OUT;
+
+ERROR:
+  g_warning ("failed to get configuration for %s. %s failed: %s",
+             ifname, op, strerror (errno));
+
+OUT:
+  if (fd != -1)
+    close (fd);
+
+  return result;
+}
+
+gboolean
 _odccm_trigger_connection ()
 {
   gboolean result = FALSE;
