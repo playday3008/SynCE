@@ -1,0 +1,35 @@
+Source: librapi2
+Section: libs
+Priority: optional
+Maintainer: Volker Christian <voc@users.sourceforge.net>
+Uploaders: Volker Christian <voc@users.sourceforge.net>
+Build-Depends: debhelper (>> 4.0.0), libsynce0 (>= 0.8.9), libsynce0-dev (>= 0.8.9)
+Standards-Version: 3.5.8
+
+Package: librapi2-dev
+Section: libdevel
+Architecture: any
+Depends: librapi2 (= ${Source-Version})
+Description: Make RAPI calls to a WinCE device, development libraries
+ These are the development files for librapi2, which is equivalent to
+ rapi.dll on a Windows machine. It allows you to make remote calls to
+ your WinCE device. 
+
+Package: librapi2
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Make RAPI calls to a WinCE device, runtime libraries
+ This library is equivalent to rapi.dll on a Windows machine. It allows you
+ to make remote calls to your WinCE device. 
+
+Package: librapi2-tools
+Section: utils
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Tools for talking to a WinCE machine from the command line
+ These tools use the rapi2 library to talk to a WinCE machine to perform
+ various functions. Many of these are simply remote versions of standard
+ unix file utilities: pcp, pls, pmkdir, pmv, pmkdir & prmdir. There are
+ also tools to display the status of the device, run a program on the device
+ and list the programs installed.

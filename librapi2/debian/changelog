@@ -1,0 +1,26 @@
+librapi2 (0.8.9-1) unstable; urgency=low
+
+  * New upstream release
+  * New Maintainer Volker Christian
+
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 14 Feb 2004 20:34:43 +0100
+
+librapi2 (0.8-1) unstable; urgency=low
+
+  * First proper Debian upload.
+
+ -- Jonathan McDowell <noodles@earth.li>  Thu, 07 Aug 2003 21:19:29 +0100
+
+librapi2 (0.7-2) unstable; urgency=low
+
+  * added bootstrap to rules
+  * changed description
+
+ -- Thomas Butter <thomas@i.rule-the.net>  Sun,  8 Jun 2003 22:08:05 +0200
+
+librapi2 (0.7-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Thomas Butter <thomas@i.rule-the.net>  Thu,  6 Mar 2003 13:33:07 +0100
+

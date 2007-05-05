@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: librapi2
+Description: Make RAPI calls to a WinCE device
+Version: @VERSION@
+Requires: libsynce
+Libs: -L${libdir} -lrapi
+Cflags: -I${includedir}

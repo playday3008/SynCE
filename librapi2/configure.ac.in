@@ -1,0 +1,142 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(src/rapi.c)
+
+AC_CANONICAL_TARGET
+
+AM_INIT_AUTOMAKE(librapi, YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT)
+AM_CONFIG_HEADER(rapi_config.h)
+
+CFLAGS="-Wsign-compare -Wno-long-long $CFLAGS"
+
+case $target in
+
+	powerpc-apple-*)
+		dnl Prevent "Undefined Macro argument list" error.
+		CFLAGS="-no-cpp-precomp $CFLAGS"
+		;;
+
+	*)
+		;;
+
+esac
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+saved_CFLAGS="$CFLAGS"
+CFLAGS=""
+AC_C_CONST
+CFLAGS="$saved_CFLAGS"
+
+AC_CHECK_SIZEOF(void *)
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_CC
+AC_PROG_LIBTOOL
+AC_PROG_MAKE_SET
+dnl AM_PATH_CHECK(,,AC_MSG_WARN([Check not available.]))
+
+dnl Check for dmalloc first
+AC_ARG_WITH(dmalloc,
+		AC_HELP_STRING([--with-dmalloc=PREFIX],[use dmalloc (default is NO)]),
+[case "${withval}" in
+  yes) dmalloc=true ;;
+  no)  dmalloc=false ;;
+  *) dmalloc=true; dmalloc_prefix="-L${withval}" ;;
+esac],[dmalloc=false])
+
+if ${dmalloc}; then
+	AC_CHECK_LIB(dmalloc,main,,[
+			AC_MSG_ERROR([Can't find dmalloc library])
+		],${dmalloc_prefix})
+	AC_CHECK_HEADERS(dmalloc.h,,[
+			AC_MSG_ERROR([Can't find dmalloc.h])
+		])
+fi
+
+dnl Checks for libraries.
+AC_LIB_RPATH
+
+dnl Check for libsynce
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
+
+dnl Checks for header files.
+dnl For readv/writev
+AC_CHECK_HEADERS(sys/uio.h)
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(readv)
+AC_CHECK_FUNCS(writev)
+
+dnl #
+dnl # Now we must check for Python/Pyrex
+dnl #
+dnl # (need python, python headers, and pyrex)
+
+AC_ARG_ENABLE(python-bindings, AS_HELP_STRING([--disable-python-bindings], [do not build python bindings]),[enable_python=$enableval], [enable_python=yes])
+ 
+if test x$enable_python = xno; then
+    have_python=no
+else
+    AC_MSG_NOTICE([Checking to see if we can build Python bindings])
+    have_python=no
+    if test x$enable_python != xyes -a x$enable_python != xauto; then
+        minimum_version=$enable_python
+	enable_python=yes
+    else
+        minimum_version=2.2
+    fi
+	AM_PATH_PYTHON($minimum_version)
+	AC_CHECK_PROGS(PYREX, pyrexc)
+	AM_CHECK_PYTHON_HEADERS([have_python_header=yes], [have_python_header=no])
+	
+	if test x$have_python_header = xno ; then
+            if test x$enable_python = xyes ; then
+                AC_MSG_ERROR([Building python bindings requested, but can't build them])
+            fi
+	else
+	    if test -z "$PYTHON" ; then
+	        AC_MSG_WARN([Python not found])
+	    else
+		have_python=yes
+	    fi
+	
+	    if test x$have_python = xno ; then
+	        if test x$enable_python = xyes ; then
+	            AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings])
+	        fi
+	    fi
+	fi
+fi
+AM_CONDITIONAL(HAVE_PYTHON, test x$have_python = xyes)
+
+
+AC_CONFIG_FILES(
+	[script/synce-install-cab],
+	[chmod +x script/synce-install-cab]
+)
+
+AC_CONFIG_FILES(
+	[script/synce-remove-program],
+	[chmod +x script/synce-remove-program]
+)
+
+AC_OUTPUT([librapi2.pc
+           Makefile
+           src/Makefile
+           src/support/Makefile
+           src/config/Makefile
+           src/rapi/Makefile
+           src/rapi2/Makefile
+           script/Makefile
+           tests/Makefile
+           tests/CeRapiInvoke/Makefile
+           tests/rapi/Makefile
+           tools/Makefile
+           tools/man/Makefile
+           python/Makefile
+           python/tests/Makefile])
+

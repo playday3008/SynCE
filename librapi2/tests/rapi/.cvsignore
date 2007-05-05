@@ -1,0 +1,16 @@
+CeCreateDatabase
+CeCreateDirectory
+CeCreateFile
+CeFindAllDatabases
+CeFindAllFiles
+CeFindFirstFile
+CeGetSpecialFolderPath
+CeGetVersionEx
+CeMoveFile
+CeOpenDatabase
+CeRapiInit
+.deps
+.gdb_history
+.libs
+Makefile
+Makefile.in
