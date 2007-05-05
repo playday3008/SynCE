@@ -1,8 +1,0 @@
-include README* bootstrap.sh LICENSE
-include src/pyrapi_wrap.i
-include tests/*.py
-exclude *~
-recursive-include examples *.py
-recursive-include contrib *
-recursive-exclude contrib *~
-

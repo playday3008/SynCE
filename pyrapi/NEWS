@@ -1,6 +1,0 @@
-Version 0.4.0
-    * Added contrib directory for addon scripts. 
-    * Added qt DirView and client/server qt Dirview code from Markus Biermaier.
-    * Fixed binary file copies.
-
-
