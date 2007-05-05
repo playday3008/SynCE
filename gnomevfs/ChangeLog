@@ -1,3 +1,15 @@
+2007-05-05  Mark Ellis  <mark@mpellis.org.uk>
+
+	* corrected gnome-vfs system config file
+	* fixed bug when url points to non-existent file
+	* updated configure.ac.in and corrected version handling
+	* fixed storage of HANDLE on non 64-bit platforms in _seek & _tell
+
+2007-05-02  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixed incompatible pointer types
+	* fixed storage of HANDLE on non 64-bit platforms
+
 2003-12-31  Mattias Eriksson  <snaggen@acc.umu.se>
 
 	* Added a ChangeLog and other files wanted by automake.

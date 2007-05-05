@@ -1,8 +1,8 @@
 AC_PREREQ(2.52)
-AC_INIT(gnome-vfs-synce-module, 0.1)
-AM_CONFIG_HEADER(config.h)
+AC_INIT(gnome-vfs-synce-module, @@VERSION@@)
+AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_SRCDIR(src/libsyncevfs.c)
-AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AM_INIT_AUTOMAKE
 
 AM_MAINTAINER_MODE
 

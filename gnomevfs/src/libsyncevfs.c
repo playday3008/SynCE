@@ -162,6 +162,11 @@ static int get_location(GnomeVFSURI *uri, gchar **location)/*{{{*/
       result = INDEX_DEVICE;
       *location = NULL;
     }
+  else if (0 == strcmp(path[1], ""))
+    {
+      result = INDEX_DEVICE;
+      *location = NULL;
+    }
 #if SHOW_APPLICATIONS
   else if (0 == strcmp(path[1], NAME_APPLICATIONS))
     {
@@ -186,7 +191,7 @@ static int get_location(GnomeVFSURI *uri, gchar **location)/*{{{*/
     }
   else
     {
-      result = INDEX_DEVICE;
+      result = INDEX_INVALID;
       *location = NULL;
     }
 
@@ -536,7 +541,7 @@ synce_seek (GnomeVFSMethod *method,
   if ((result = initialize_rapi ()) != GNOME_VFS_OK)
     return result;
 
-  handle = (HANDLE) method_handle;
+  handle = GPOINTER_TO_UINT(method_handle);
 
   switch (whence) {
     case GNOME_VFS_SEEK_START:
@@ -590,7 +595,7 @@ synce_tell (GnomeVFSMethod *method,
   if ((result = initialize_rapi ()) != GNOME_VFS_OK)
     return result;
 
-  handle = (HANDLE) method_handle;
+  handle = GPOINTER_TO_UINT(method_handle);
 
   D("CeSetFilePointer()\n");
 
