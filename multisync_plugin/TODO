@@ -1,8 +1,0 @@
-$Id$
-
-TODO for multisync_plugin
-=========================
-
-o Support vdccm so that more than one device can be connected and synchronized
-at the same time.
-

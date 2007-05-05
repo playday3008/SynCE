@@ -1,7 +1,0 @@
-.deps
-Makefile
-Makefile.in
-synce-serial-config
-synce-serial-common
-synce-serial-start
-synce-serial-abort
