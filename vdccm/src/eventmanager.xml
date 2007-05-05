@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node name="/VDCCMEventManager">
+    <interface name="org.synce.vdccm.EventManager">
+        <signal name="DeviceAttached">
+        </signal>
+        <signal name="DeviceDetached">
+        </signal>
+        <signal name="DeviceConnected">
+            <arg name="name" type="s"/>
+        </signal>
+        <signal name="DeviceDisconnected">
+            <arg name="name" type="s"/>
+        </signal>
+    </interface>
+</node>

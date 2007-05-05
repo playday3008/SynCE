@@ -1,0 +1,82 @@
+.\" This -*- nroff -*- file has been generated from
+.\" DocBook SGML with docbook-to-man on Debian GNU/Linux.
+...\"
+...\"	transcript compatibility for postscript use.
+...\"
+...\"	synopsis:  .P! <file.ps>
+...\"
+.de P!
+\\&.
+.fl			\" force out current output buffer
+\\!%PB
+\\!/showpage{}def
+...\" the following is from Ken Flowers -- it prevents dictionary overflows
+\\!/tempdict 200 dict def tempdict begin
+.fl			\" prolog
+.sy cat \\$1\" bring in postscript file
+...\" the following line matches the tempdict above
+\\!end % tempdict %
+\\!PE
+\\!.
+.sp \\$2u	\" move below the image
+..
+.de pF
+.ie     \\*(f1 .ds f1 \\n(.f
+.el .ie \\*(f2 .ds f2 \\n(.f
+.el .ie \\*(f3 .ds f3 \\n(.f
+.el .ie \\*(f4 .ds f4 \\n(.f
+.el .tm ? font overflow
+.ft \\$1
+..
+.de fP
+.ie     !\\*(f4 \{\
+.	ft \\*(f4
+.	ds f4\"
+'	br \}
+.el .ie !\\*(f3 \{\
+.	ft \\*(f3
+.	ds f3\"
+'	br \}
+.el .ie !\\*(f2 \{\
+.	ft \\*(f2
+.	ds f2\"
+'	br \}
+.el .ie !\\*(f1 \{\
+.	ft \\*(f1
+.	ds f1\"
+'	br \}
+.el .tm ? font underflow
+..
+.ds f1\"
+.ds f2\"
+.ds f3\"
+.ds f4\"
+'\" t 
+.ta 8n 16n 24n 32n 40n 48n 56n 64n 72n  
+.TH "triggerconnection - SYNCE" "1" 
+.SH "NAME" 
+triggerconnection \(em is used to establish a connection of a device using the rndis transport
+and vdccm running on the host 
+.SH "SYNOPSIS" 
+.PP 
+\fBtriggerconnection\fP IP-ADDRESS-OF-DEVICE 
+.SH "DESCRIPTION" 
+.PP 
+This manual page documents briefly the 
+\fBtriggerconnection\fP command. 
+.PP 
+\fBtriggerconnection\fP is part of vdccm, the generalization of the native
+SynCE-DCCM. It is used to trigger a device using the rndis transport to connect to vdccm running
+on the host system
+
+.SH "OPTIONS" 
+.PP 
+.IP "\fBIP-ADDRESS-OF-DEVICE" 10
+The IP-Address of the device using the rndis transport.  
+.SH "SEE ALSO" 
+.PP 
+synce (1), vdccm(1), dccm (1). 
+.SH "AUTHOR" 
+.PP 
+This manual page was written by Volker Christian voc@users.sourceforge.net. 
+...\" created by instant / docbook-to-man, Wed 20 Aug 2003, 12:02 
