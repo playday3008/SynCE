@@ -1,8 +1,0 @@
-AM_CFLAGS = @LIBSYNCE_CFLAGS@
-AM_LDFLAGS = @LIBSYNCE_LIBS@
-
-bin_PROGRAMS = dccm
-
-dccm_SOURCES = dccm.c
-dccm_LDADD = @LIBOBJS@
-

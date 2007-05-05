@@ -1,5 +1,0 @@
-*.o
-.deps
-Makefile
-Makefile.in
-db2ical
