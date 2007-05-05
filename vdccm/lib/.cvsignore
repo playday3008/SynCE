@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-*.cpp~
-*.h~
-*.o
-*.lo
-*.la
-.libs
-.deps
