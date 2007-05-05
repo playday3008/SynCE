@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ############################################################################
-#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
+#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>         #
+#    MODIFIED: 17/2/2007 Dr J A Gow: Task support added			   #
 #                                                                          #
 #    This program is free software; you can redistribute it and#or modify  #
 #    it under the terms of the GNU General Public License as published by  #
@@ -21,8 +22,28 @@
 import libxml2
 import libxslt
 import string
+import pyrtfcomp
+import base64
+import tzconv
+from time import gmtime, strftime
+import tzutils
+import xml2util
 
 ### conversion constants ###
+
+RTFHDR = "\\ansi \\deff0{\\fonttbl{\\f0\\fnil\\fcharset0\\fprq0 Tahoma;}{\\f1\\froman\\fcharset2\\fprq2 "
+RTFHDR += "Symbol;}{\\f2\\fswiss\\fcharset204\\fprq2  ;}}{\\colortbl;\\red0\\green0\\blue0;\\red128\\green128"
+RTFHDR += "\\blue128;\\red192\\green192\\blue192;\\red255\\green255\\blue255;\\red255\\green0\\blue0;\\red0"
+RTFHDR += "\\green255\\blue0;\\red0\\green0\\blue255;\\red0\\green255\\blue255;\\red255\\green0\\blue255;"
+RTFHDR += "\\red255\\green255\\blue0;\\red128\\green0\\blue0;\\red0\\green128\\blue0;\\red0\\green0"
+RTFHDR += "\\blue128;\\red0\\green128\\blue128;\\red128\\green0\\blue128;\\red128\\green128\\blue0;}\x0a\x0d"
+RTFHDR += "\\f0 \\fs16 "
+
+DATE_FORMAT_NORMAL  = '%Y%m%dT%H%M%SZ'
+DATE_FORMAT_EVENT   = '%Y%m%dT%H%M%SZ'
+DATE_FORMAT_EVLOCAL = '%Y%m%dT%H%M%S'
+DATE_FORMAT_TASK  = '%Y-%m-%dT%H:%M:%S.000Z'
+DATE_FORMAT_SHORT = '%Y%m%d'
 
 MINUTES_PER_HOUR    = 60
 MINUTES_PER_DAY     = MINUTES_PER_HOUR * 24
@@ -30,6 +51,7 @@ MINUTES_PER_DAY     = MINUTES_PER_HOUR * 24
 vcal_days_to_airsync_days_map = { "SU" : 1,
                                   "MO" : 2,
                                   "TU" : 4,
+				  
                                   "WE" : 8,
                                   "TH" : 16,
                                   "FR" : 32,
@@ -44,45 +66,7 @@ airsync_days_to_vcal_days_map = {  1   : "SU",
                                    64  : "SA" }
 
 
-### libxml2 utility functions ###
-
-def node_find_child(node, name):
-    child = node.children
-    while child != None:
-        if child.name == name:
-            return child
-        child = child.next
-    return None
-
-def node_value(node):
-    if node is None:
-        return ""
-    else:
-        return str(node.content).strip()
-
-### libxslt utility functions ###
-
-def _extract_contexts(ctx):
-    parser_ctx = libxslt.xpathParserContext(_obj=ctx).context()
-    transform_ctx = parser_ctx.transformContext()
-    return parser_ctx, transform_ctx
-
-
 ### Conversion Utility functions ###
-
-def short_date_to_complete_date(value):
-    value = value.upper()
-    if value.find("T") < 0:
-        value += "T000000"
-    if value.find("Z") < 0:
-        value += "Z"
-    return value
-
-def complete_date_to_short_date(value):
-    timepos = value.find("T")
-    if timepos >= 0:
-        value = value[:timepos]
-    return value
 
 def vcal_days_to_airsync_days(vcal_days):
     airsync_days = 0
@@ -111,45 +95,53 @@ def generate_vcal_byday(airsync_week, airsync_day):
 ### conversion functions ###
 
 def contact_anniversary_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return node_value(transform_ctx.current()) + "T00:00:00.000Z"
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return xml2util.GetNodeValue(transform_ctx.current()) + "T00:00:00.000Z"
 
 def contact_birthday_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    s = node_value(transform_ctx.current())
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s = xml2util.GetNodeValue(transform_ctx.current())
     return "%s-%s-%sT00:00:00.000Z" % (s[0:4], s[4:6], s[6:8])
 
 def contact_anniversary_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return node_value(transform_ctx.current()).split("T")[0]
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0]
 
 def contact_birthday_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return node_value(transform_ctx.current()).split("T")[0].replace("-", "")
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0].replace("-", "")
 
 def event_reminder_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
-    content_node = node_find_child(src_node, "Content")
-    value_node = node_find_child(src_node, "Value")
-    related_node = node_find_child(src_node, "Related")
-    if value_node == None or node_value(value_node).lower() != "duration":
+    content_node = xml2util.FindChildNode(src_node, "Content")
+    value_node = xml2util.FindChildNode(src_node, "Value")
+    related_node = xml2util.FindChildNode(src_node, "Related")
+    if value_node == None or xml2util.GetNodeValue(value_node).lower() != "duration":
         return ""
-    if related_node != None and node_value(related_node).lower() != "start":
+    if related_node != None and xml2util.GetNodeValue(related_node).lower() != "start":
         return ""
-    s = node_value(content_node)
+    s = xml2util.GetNodeValue(content_node)
     s = s.lstrip("-PT")
-    minutes = int(s[:-1])
-    units = s[-1:].upper()
-    if units == "H":
-        minutes *= MINUTES_PER_HOUR
-    elif units == "D":
-        minutes *= MINUTES_PER_DAY
-    return str(minutes)
+    s = s.upper()
+    days=0
+    hours=0
+    minutes=0
+    if s.rfind("D") != -1:
+        days = int(s[:s.rfind("D")])
+        s = s[s.rfind("D")+1:]
+    if s.rfind("H") != -1:
+        hours = int(s[:s.rfind("H")])
+        s = s[s.rfind("H")+1:]
+    if s.rfind("M") != -1:
+        minutes = int(s[:s.rfind("M")])
+        s = s[s.rfind("M")+1:]
+
+    return str(days * MINUTES_PER_DAY + hours * MINUTES_PER_HOUR + minutes)
 
 def event_reminder_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    s = int(node_value(transform_ctx.current()))
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s = int(xml2util.GetNodeValue(transform_ctx.current()))
     if s % MINUTES_PER_DAY == 0:
         return "-P%iD" % (s / MINUTES_PER_DAY)
     elif s % MINUTES_PER_HOUR == 0:
@@ -158,65 +150,105 @@ def event_reminder_from_airsync(ctx):
         return "-PT%iM" % s
 
 def event_busystatus_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    if node_value(transform_ctx.current()) == "TRANSPARENT":
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    if xml2util.GetNodeValue(transform_ctx.current()) == "TRANSPARENT":
         return "0"
     else:
         return "2" # 'Busy' is our default value
 
 def event_busystatus_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    if node_value(transform_ctx.current()) == "0":
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    if xml2util.GetNodeValue(transform_ctx.current()) == "0":
         return "TRANSPARENT"
     else:
         return "OPAQUE" # 'Busy' is our default value
 
 def event_dtstamp_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return short_date_to_complete_date(node_value(transform_ctx.current()))
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_EVENT)
 
 def event_dtstamp_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return short_date_to_complete_date(node_value(transform_ctx.current()))
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_EVENT)
+
+def event_dtstamp_from_now(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return strftime("%Y%m%dT%H%M%SZ", gmtime())
 
 def event_alldayevent_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    if node_value(transform_ctx.current()).find("T") >= 0:
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    if xml2util.GetNodeValue(transform_ctx.current()).find("T") >= 0:
         return "0"
     else:
         return "1"
 
 def event_starttime_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return short_date_to_complete_date(node_value(transform_ctx.current()))
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_EVENT)
 
 def event_starttime_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
-    allday_node = node_find_child(src_node.parent, "AllDayEvent")
-    result = short_date_to_complete_date(node_value(transform_ctx.current()))
-    if allday_node == None or node_value(allday_node) == "0":
-        return result
+    dst_node = transform_ctx.insertNode()
+
+    allday_node = xml2util.FindChildNode(src_node.parent, "AllDayEvent")
+    asdate = tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current()))
+
+    if tzconv.curtz() != None:
+	    
+	# if we have a tz, we must insert the ID and convert to it
+	
+	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+    	result = asdate.strftime(DATE_FORMAT_EVLOCAL)
     else:
-        return result[0:8]
+	result = asdate.strftime(DATE_FORMAT_EVENT)
+
+    if allday_node != None and xml2util.GetNodeValue(allday_node) != "0":
+        result=result[0:8]
+	
+    dst_node.newChild(None,"Content",result)
+    return ""
+
 
 def event_endtime_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    return short_date_to_complete_date(node_value(transform_ctx.current()))
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_EVENT)
 
 def event_endtime_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
-    allday_node = node_find_child(src_node.parent, "AllDayEvent")
-    result = short_date_to_complete_date(node_value(transform_ctx.current()))
-    if allday_node == None or node_value(allday_node) == "0":
+    dst_node = transform_ctx.insertNode()
+
+    allday_node = xml2util.FindChildNode(src_node.parent, "AllDayEvent")
+    asdate = tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current()))
+
+    if tzconv.curtz() != None:
+
+	# if we have a tz, we must insert the ID and convert to it
+	
+	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+
+	result = asdate.strftime(DATE_FORMAT_EVLOCAL)
+    else:
+	result = asdate.strftime(DATE_FORMAT_EVENT)
+
+    if allday_node != None and xml2util.GetNodeValue(allday_node) != "0":
+        result=result[0:8]
+	
+    dst_node.newChild(None,"Content",result)
+    return ""
+
+    result = tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_EVENT)
+    if allday_node == None or xml2util.GetNodeValue(allday_node) == "0":
         return result
     else:
         return result[0:8]
 
 def event_sensitivity_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    s = node_value(transform_ctx.current())
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s = xml2util.GetNodeValue(transform_ctx.current())
     if s == "PRIVATE":
         return "2"
     elif s == "CONFIDENTIAL":
@@ -225,8 +257,8 @@ def event_sensitivity_to_airsync(ctx):
         return "0" # 'PUBLIC' is our default value
 
 def event_sensitivity_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
-    s = node_value(transform_ctx.current())
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s = xml2util.GetNodeValue(transform_ctx.current())
     if s == "2":
         return "PRIVATE"
     elif s == "3":
@@ -235,29 +267,29 @@ def event_sensitivity_from_airsync(ctx):
         return "0" # 'PUBLIC' is our default value
 
 def event_attendee_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
-    email = node_value(node_find_child(src_node, "Content"))[7:]
-    name = node_value(node_find_child(src_node, "CommonName"))
+    email = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Content"))[7:]
+    name = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "CommonName"))
     if name != "":
         dst_node.newChild(None, "Name", name)
     dst_node.newChild(None, "Email", email)
     return ""
 
 def event_attendee_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
-    email = node_value(node_find_child(src_node, "Email"))
-    name = node_value(node_find_child(src_node, "Name"))
+    email = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Email"))
+    name = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Name"))
     if email != "":
         dst_node.newChild(None, "Content", "MAILTO:%s" % email)
     dst_node.newChild(None, "CommonName", name)
     return ""
 
 def event_recurrence_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
 
@@ -266,7 +298,7 @@ def event_recurrence_to_airsync(ctx):
     child = src_node.children
     while child != None:
         if child.name == "Rule":
-            rrule_val = node_value(child)
+            rrule_val = xml2util.GetNodeValue(child)
             sep = rrule_val.index("=")
             key = rrule_val[:sep]
             val = rrule_val[sep+1:]
@@ -277,7 +309,7 @@ def event_recurrence_to_airsync(ctx):
     if src_rules.has_key("interval"):
         dst_node.newChild(None, "Interval", src_rules["interval"])
     if src_rules.has_key("until"):
-        dst_node.newChild(None, "Until", short_date_to_complete_date(src_rules["until"]))
+        dst_node.newChild(None, "Until", tzutils.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
     if src_rules.has_key("count"):
         dst_node.newChild(None, "Occurrences", src_rules["count"])
 
@@ -349,29 +381,29 @@ def event_recurrence_to_airsync(ctx):
     return ""
 
 def event_recurrence_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
 
-    interval_node    = node_find_child(src_node, "Interval")
-    until_node       = node_find_child(src_node, "Until")
-    occurrences_node = node_find_child(src_node, "Occurrences")
-    type_node        = node_find_child(src_node, "Type")
-    dayofweek_node   = node_find_child(src_node, "DayOfWeek")
-    dayofmonth_node  = node_find_child(src_node, "DayOfMonth")
-    weekofmonth_node = node_find_child(src_node, "WeekOfMonth")
-    monthofyear_node = node_find_child(src_node, "MonthOfYear")
+    interval_node    = xml2util.FindChildNode(src_node, "Interval")
+    until_node       = xml2util.FindChildNode(src_node, "Until")
+    occurrences_node = xml2util.FindChildNode(src_node, "Occurrences")
+    type_node        = xml2util.FindChildNode(src_node, "Type")
+    dayofweek_node   = xml2util.FindChildNode(src_node, "DayOfWeek")
+    dayofmonth_node  = xml2util.FindChildNode(src_node, "DayOfMonth")
+    weekofmonth_node = xml2util.FindChildNode(src_node, "WeekOfMonth")
+    monthofyear_node = xml2util.FindChildNode(src_node, "MonthOfYear")
 
     # Add the common nodes that don't really require conversion
     if interval_node != None:
-        dst_node.newChild(None, "Rule", "INTERVAL=%s" % node_value(interval_node))
+        dst_node.newChild(None, "Rule", "INTERVAL=%s" % xml2util.GetNodeValue(interval_node))
     if until_node != None:
-        dst_node.newChild(None, "Rule", "UNTIL=%s" % node_value(until_node))
+        dst_node.newChild(None, "Rule", "UNTIL=%s" % xml2util.GetNodeValue(until_node))
     if occurrences_node != None:
-        dst_node.newChild(None, "Rule", "COUNT=%s" % node_value(occurrences_node))
+        dst_node.newChild(None, "Rule", "COUNT=%s" % xml2util.GetNodeValue(occurrences_node))
 
     if type_node != None:
-        type = int(node_value(type_node))
+        type = int(xml2util.GetNodeValue(type_node))
 
         # Special case: we can treat this as simple weekly event
         if type == 0 and dayofweek_node != None:
@@ -381,21 +413,21 @@ def event_recurrence_from_airsync(ctx):
             dst_node.newChild(None, "Rule", "FREQ=DAILY")
         elif type == 1:
             dst_node.newChild(None, "Rule", "FREQ=WEEKLY")
-            dst_node.newChild(None, "Rule", "BYDAY=%s" % airsync_days_to_vcal_days(node_value(dayofweek_node)))
+            dst_node.newChild(None, "Rule", "BYDAY=%s" % airsync_days_to_vcal_days(xml2util.GetNodeValue(dayofweek_node)))
         elif type == 2:
             dst_node.newChild(None, "Rule", "FREQ=MONTHLY")
-            dst_node.newChild(None, "Rule", "BYMONTHDAY=%s" % node_value(dayofmonth_node))
+            dst_node.newChild(None, "Rule", "BYMONTHDAY=%s" % xml2util.GetNodeValue(dayofmonth_node))
         elif type == 3:
             dst_node.newChild(None, "Rule", "FREQ=MONTHLY")
-            dst_node.newChild(None, "Rule", "BYDAY=%s" % generate_vcal_byday(node_value(weekofmonth_node), node_value(dayofweek_node)))
+            dst_node.newChild(None, "Rule", "BYDAY=%s" % generate_vcal_byday(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
         elif type == 5:
             dst_node.newChild(None, "Rule", "FREQ=YEARLY")
-            dst_node.newChild(None, "Rule", "BYMONTH=%s" % node_value(monthofyear_node))
-            dst_node.newChild(None, "Rule", "BYMONTHDAY=%s" % node_value(dayofmonth_node))
+            dst_node.newChild(None, "Rule", "BYMONTH=%s" % xml2util.GetNodeValue(monthofyear_node))
+            dst_node.newChild(None, "Rule", "BYMONTHDAY=%s" % xml2util.GetNodeValue(dayofmonth_node))
         elif type == 6:
             dst_node.newChild(None, "Rule", "FREQ=YEARLY")
-            dst_node.newChild(None, "Rule", "BYMONTH=%s" % node_value(monthofyear_node))
-            dst_node.newChild(None, "Rule", "BYDAY=%s" % generate_vcal_byday(node_value(weekofmonth_node), node_value(dayofweek_node)))
+            dst_node.newChild(None, "Rule", "BYMONTH=%s" % xml2util.GetNodeValue(monthofyear_node))
+            dst_node.newChild(None, "Rule", "BYDAY=%s" % generate_vcal_byday(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
         else:
             # Unsupported type
             raise ValueError("Unknown recurrence type %d from Airsync" % type)
@@ -407,28 +439,155 @@ def event_recurrence_from_airsync(ctx):
     return ""
 
 def event_exception_to_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
-    exclusion_date = node_value(node_find_child(src_node, "Content"))
-    exclusion_value = node_value(node_find_child(src_node, "Value"))
+    exclusion_date = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Content"))
+    exclusion_value = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Value"))
     if exclusion_value.lower() != "date":
         raise ValueError("Exclusions with values other than 'DATE' are not supported")
     dst_node.newChild(None, "Deleted", "1")
-    dst_node.newChild(None, "ExceptionStartTime", short_date_to_complete_date(exclusion_date))
+    dst_node.newChild(None, "ExceptionStartTime", tzutils.TextToDate(exclusion_date).strftime(DATE_FORMAT_EVENT))
     return ""
 
 def event_exception_from_airsync(ctx):
-    parser_ctx, transform_ctx = _extract_contexts(ctx)
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
-    exception_deleted = node_value(node_find_child(src_node, "Deleted"))
-    exception_date = node_value(node_find_child(src_node, "ExceptionStartTime"))
+    exception_deleted = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Deleted"))
+    exception_date = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "ExceptionStartTime"))
     if exception_deleted != "1":
         raise ValueError("Opensync does not support exceptions for modified occurrences")
-    dst_node.newChild(None, "Content", complete_date_to_short_date(exception_date))
+    dst_node.newChild(None, "Content", tzutils.TextToDate(exception_date).strftime(DATE_FORMAT_SHORT))
     dst_node.newChild(None, "Value", "DATE")
     return ""
+
+def task_date_to_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_TASK)
+
+def task_date_from_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzutils.TaskTextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_NORMAL)
+
+def task_classification_to_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s = xml2util.GetNodeValue(transform_ctx.current())
+    if s == "PRIVATE":
+        return "2"
+    elif s == "CONFIDENTIAL":
+        return "3"
+    else:
+        return "0" # 'PUBLIC' is our default value
+
+def task_classification_from_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s = xml2util.GetNodeValue(transform_ctx.current())
+    if s == "2":
+        return "PRIVATE"
+    elif s == "3":
+        return "CONFIDENTIAL"
+    else:
+        return "0" # 'PUBLIC' is our default value
+    
+    # We only sync the 'COMPLETED' state here. Evo2 maintains a number of 
+    # different status values for various states of a job except COMPLETED
+    # and we don't want to clobber these. AirStink seems only to maintain
+    # the two states: Not Completed and Completed. However, we force 
+    # the PercentComplete field to 100 if the task is marked as completed
+    
+def task_status_from_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    src_node = transform_ctx.current()
+    s=xml2util.GetNodeValue(transform_ctx.current())
+    if s == "1":
+        base_node = transform_ctx.insertNode()
+        stat_node = base_node.newChild(None, "Status", None)
+        stat_node.newChild(None, "Content", "COMPLETED")
+	pcnt_node = base_node.newChild(None, "PercentComplete", None)
+	pcnt_node.newChild(None, "Content", "100")
+    return ""
+
+def task_status_to_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    curnode = transform_ctx.current()
+    s=xml2util.GetNodeValue(curnode)
+    if s == "COMPLETED":
+	return "1"
+    else:
+	# check that PercentComplete == 100% - mark it completed if
+	# this is the case.
+        up = xml2util.FindChildNode(curnode.parent.parent,"PercentComplete")
+        if up != None:
+            ct = xml2util.FindChildNode(up,"Content")
+	    if ct != None:
+	        if xml2util.GetNodeValue(ct) == "100":
+	            return "1"
+    return "0"
+    
+# Here. let us not destroy the 'unspecified' priority when going
+# _to_ airsync. We can't really help reassigning this as 'low' 
+# in the other direction.
+#
+# Please, somebody show me how to strip the namespace prefix of the
+# child of src_node before we emit it - this way we can do this better
+# (see the commented out code)
+
+def task_prio_to_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    # src_node = transform_ctx.current()
+    d = "0"
+    s=xml2util.GetNodeValue(transform_ctx.current())
+    if s > "0":
+	if s == "7":
+	    d = "0"
+	elif s == "5":
+	    d = "1"
+	elif s == "3":
+            d = "2"
+	else:
+	    d = "0"
+	#dst_node = transform_ctx.insertNode()
+	#dst_node = dst_node.newChild(None, "Priority", d)
+    return d
+
+def task_prio_from_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    s=xml2util.GetNodeValue(transform_ctx.current())
+    if s == "0":
+	return "7"
+    elif s == "1":
+	return "5"
+    elif s == "2":
+	return "3"
+    else:
+        return "0" # We can use the unspecced one here if we get such an one from Airsync
+
+def all_description_from_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    src_node = transform_ctx.current()
+    s=xml2util.GetNodeValue(transform_ctx.current())
+    asnote = ""
+    if len(s) > 0:
+        dc = base64.b64decode(s)
+        try:
+            asnote = pyrtfcomp.RTFConvertToUTF8(dc,1)
+        except pyrtfcomp.RTFException, ConvErr:
+            pass
+    return asnote
+	
+def all_description_to_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    src_node = transform_ctx.current()
+    s=xml2util.GetNodeValue(transform_ctx.current())
+    ec = ""
+    if len(s) > 0:
+        try:
+            asnote = pyrtfcomp.RTFConvertFromUTF8(s,RTFHDR,1)
+            ec=base64.b64encode(asnote)
+        except pyrtfcomp.RTFException, ConvErr:
+            pass
+    return ec
 
 def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("contact_anniversary_to_airsync",     "http://synce.org/convert", contact_anniversary_to_airsync)
@@ -441,6 +600,7 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("event_busystatus_from_airsync",      "http://synce.org/convert", event_busystatus_from_airsync)
     libxslt.registerExtModuleFunction("event_dtstamp_to_airsync",           "http://synce.org/convert", event_dtstamp_to_airsync)
     libxslt.registerExtModuleFunction("event_dtstamp_from_airsync",         "http://synce.org/convert", event_dtstamp_from_airsync)
+    libxslt.registerExtModuleFunction("event_dtstamp_from_now",             "http://synce.org/convert", event_dtstamp_from_now)
     libxslt.registerExtModuleFunction("event_alldayevent_to_airsync",       "http://synce.org/convert", event_alldayevent_to_airsync)
     libxslt.registerExtModuleFunction("event_starttime_to_airsync",         "http://synce.org/convert", event_starttime_to_airsync)
     libxslt.registerExtModuleFunction("event_starttime_from_airsync",       "http://synce.org/convert", event_starttime_from_airsync)
@@ -454,3 +614,14 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("event_recurrence_from_airsync",      "http://synce.org/convert", event_recurrence_from_airsync)
     libxslt.registerExtModuleFunction("event_exception_to_airsync",         "http://synce.org/convert", event_exception_to_airsync)
     libxslt.registerExtModuleFunction("event_exception_from_airsync",       "http://synce.org/convert", event_exception_from_airsync)
+    libxslt.registerExtModuleFunction("task_date_from_airsync",             "http://synce.org/convert", task_date_from_airsync)
+    libxslt.registerExtModuleFunction("task_date_to_airsync",               "http://synce.org/convert", task_date_to_airsync)
+    libxslt.registerExtModuleFunction("task_classification_from_airsync",   "http://synce.org/convert", task_classification_from_airsync)
+    libxslt.registerExtModuleFunction("task_classification_to_airsync",     "http://synce.org/convert", task_classification_to_airsync)
+    libxslt.registerExtModuleFunction("task_status_from_airsync",           "http://synce.org/convert", task_status_from_airsync)
+    libxslt.registerExtModuleFunction("task_status_to_airsync",             "http://synce.org/convert", task_status_to_airsync)
+    libxslt.registerExtModuleFunction("task_prio_to_airsync",               "http://synce.org/convert", task_prio_to_airsync)
+    libxslt.registerExtModuleFunction("task_prio_from_airsync",             "http://synce.org/convert", task_prio_from_airsync)
+    libxslt.registerExtModuleFunction("all_description_to_airsync",         "http://synce.org/convert", all_description_to_airsync)
+    libxslt.registerExtModuleFunction("all_description_from_airsync",       "http://synce.org/convert", all_description_from_airsync)
+    

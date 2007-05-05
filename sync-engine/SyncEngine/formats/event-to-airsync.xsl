@@ -3,10 +3,17 @@
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:convert="http://synce.org/convert"
-               exclude-result-prefixes="convert">
+               xmlns:tz="http://synce.org/tz"
+               exclude-result-prefixes="convert tz">
 
     <xsl:template match="/vcal">
-        <AS:ApplicationData xmlns:AS="AirSync:" xmlns="POOMCAL:">
+
+        <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+
+            <xsl:for-each select="Timezone">
+                <Timezone><xsl:value-of select="tz:ExtractTZData()"/></Timezone>
+            </xsl:for-each>
+
 
             <xsl:for-each select="Event/Alarm/AlarmTrigger[position() = 1]">
                 <Reminder><xsl:value-of select="convert:event_reminder_to_airsync()"/></Reminder>
@@ -16,19 +23,23 @@
                 <BusyStatus><xsl:value-of select="convert:event_busystatus_to_airsync()"/></BusyStatus>
             </xsl:for-each>
 
-            <xsl:for-each select="Event/LastModified/Content[position() = 1]">
+            <xsl:for-each select="Event/LastModified[position() = 1]">
                 <DtStamp><xsl:value-of select="convert:event_dtstamp_to_airsync()"/></DtStamp>
             </xsl:for-each>
 
+            <xsl:if test="not(Event/LastModified/Content)">
+                <DtStamp><xsl:value-of select="convert:event_dtstamp_from_now()"/></DtStamp>
+            </xsl:if>
+    
             <xsl:for-each select="Event/DateStarted/Content[position() = 1]">
                 <AllDayEvent><xsl:value-of select="convert:event_alldayevent_to_airsync()"/></AllDayEvent>
             </xsl:for-each>
 
-            <xsl:for-each select="Event/DateStarted/Content[position() = 1]">
+            <xsl:for-each select="Event/DateStarted[position() = 1]">
                 <StartTime><xsl:value-of select="convert:event_starttime_to_airsync()"/></StartTime>
             </xsl:for-each>
 
-            <xsl:for-each select="Event/DateEnd/Content[position() = 1]">
+            <xsl:for-each select="Event/DateEnd[position() = 1]">
                 <EndTime><xsl:value-of select="convert:event_endtime_to_airsync()"/></EndTime>
             </xsl:for-each>
 
@@ -36,10 +47,13 @@
 
             <Subject><xsl:value-of select="Event/Summary/Content"/></Subject>
 
+	    <xsl:for-each select="Event/Description/Content[position() = 1]">
+		<Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
+	    </xsl:for-each>
+
             <xsl:for-each select="Event/Class/Content[position() = 1]">
                 <Sensitivity><xsl:value-of select="convert:event_sensitivity_to_airsync()"/></Sensitivity>
             </xsl:for-each>
-
 
             <Categories>
                 <xsl:for-each select="Event/Categories">

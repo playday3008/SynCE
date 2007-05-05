@@ -4,7 +4,7 @@
 import sys
 import logging
 sys.path.insert(0, "..")
-from engine import formats
+from SyncEngine import formats
 from xml.dom import minidom
 
 logging.basicConfig(level=logging.DEBUG,

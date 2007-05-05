@@ -4,9 +4,9 @@
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:convert="http://synce.org/convert"
                exclude-result-prefixes="convert"
-               xmlns:AS="AirSync:"
-               xmlns:C1="POOMCONTACTS:"
-               xmlns:C2="POOMCONTACTS2:">
+               xmlns:AS="http://synce.org/formats/airsync_wm5/airsync"
+               xmlns:C1="http://synce.org/formats/airsync_wm5/contacts"
+               xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2">
 
     <xsl:template match="/contact">
         <AS:ApplicationData>
@@ -35,7 +35,7 @@
 
             <C2:NickName><xsl:value-of select="Nickname/Content"/></C2:NickName>
 
-            <C1:Picture><xsl:value-of select="Photo"/></C1:Picture>
+            <C1:Picture><xsl:value-of select="Photo/Content[position()=1]"/></C1:Picture>
 
             <xsl:for-each select="Address[Type='HOME'][position() = 1]">
                 <C1:HomeCity><xsl:value-of select="City"/></C1:HomeCity>
@@ -164,6 +164,10 @@
             <xsl:for-each select="Birthday[position() = 1]">
                 <C1:Birthday><xsl:value-of select="convert:contact_birthday_to_airsync()"/></C1:Birthday>
             </xsl:for-each>
+	    <xsl:for-each select="Note/Content[position() = 1]">
+		<Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
+	    </xsl:for-each>
+
 
         </AS:ApplicationData>
     </xsl:template>

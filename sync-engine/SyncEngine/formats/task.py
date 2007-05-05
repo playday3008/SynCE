@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ############################################################################
-#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
+#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>         #
+#    MODIFIED: Dr J A Gow 2/2007 - added preliminary task support	   #
 #                                                                          #
 #    This program is free software; you can redistribute it and#or modify  #
 #    it under the terms of the GNU General Public License as published by  #
@@ -18,19 +19,18 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-
 import parser
 import libxml2
-from engine.constants import *
-from engine.xmlutil import *
+from SyncEngine.constants import *
+from SyncEngine.xmlutil import *
 
 libxml2.pedanticParserDefault(0)
 
 def from_airsync(as_node):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml().encode('UTF-8')), SYNC_ITEM_CALENDAR, parser.FMT_FROM_AIRSYNC)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml().encode('UTF-8')), SYNC_ITEM_TASKS, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml().encode('UTF-8')), SYNC_ITEM_CALENDAR, parser.FMT_TO_AIRSYNC)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml().encode('UTF-8')), SYNC_ITEM_TASKS, parser.FMT_TO_AIRSYNC)
     dst_doc = minidom.parseString(str(dst_doc))
     return dst_doc

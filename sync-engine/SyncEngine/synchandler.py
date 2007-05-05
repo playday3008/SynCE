@@ -78,6 +78,8 @@ class SyncHandler(Thread):
         if not self.stopped:
             self.logger.debug("run: saving partnership state")
             self.engine.partnerships.get_current().save_state()
+	    self.logger.debug("run: saving itemDB")
+	    self.engine.partnerships.get_current().SaveItemDB()
 
         self.logger.info("run: finished synchronization")
         self.engine.syncing.unlock()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ############################################################################
 #    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
@@ -20,53 +19,25 @@
 ############################################################################
 
 """
-Provider of D-Bus services aiming to replace librra.
+    Unhandled fields:
+        Body (subnodes/attrs: Body{Size,Truncated}), Children (subnodes: Child),
+        Yomi{CompanyName,FirstName,LastName}, {Customer,Government}Id,
+        AccountName, MMS and Rtf
 """
 
-version = (0, 1, 0)
+import parser
+import libxml2
+from SyncEngine.constants import *
+from SyncEngine.xmlutil import *
 
-import gobject
+def from_airsync(as_node):
+    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml().encode('UTF-8')), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
+    print
+    print "STRTOPARSE"
+    print str(dst_doc)
+    return minidom.parseString(str(dst_doc))
 
-import dbus
-import dbus.glib
-
-import os
-import signal
-import sys
-import threading
-import logging
-
-from SyncEngine.kernel import SyncEngine
-
-logger = None
-mainloop = None
-
-def term_handler(signum, frame):
-    logger.info("Received termination signal. Exiting")
-    gobject.idle_add(mainloop.quit)
-    engine.notify_quit()
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
-                        stream=sys.stdout,
-                        format='%(asctime)s %(levelname)s %(name)s : %(message)s')
-
-    logger = logging.getLogger("syncengine")
-
-    logger.debug("creating SyncEngine object")
-    engine = SyncEngine()
-
-    logger.debug("installing signal handlers")
-    signal.signal(signal.SIGTERM, term_handler)
-    signal.signal(signal.SIGINT, term_handler)
-
-    logger.debug("running main loop")
-    gobject.threads_init()
-    mainloop = gobject.MainLoop()
-    try:
-        mainloop.run()
-    except KeyboardInterrupt:
-        pass
-
-    logger.debug("waiting for engine to clean up")
-    engine.wait_quit()
+def to_airsync(os_doc):
+    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml().encode('UTF-8')), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
+    dst_doc = minidom.parseString(str(dst_doc))
+    return dst_doc

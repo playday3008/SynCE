@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
 ############################################################################
-#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
+#    Copyright (C) 2007 Dr J A Gow 18/2/2007                               #
 #                                                                          #
 #    This program is free software; you can redistribute it and#or modify  #
 #    it under the terms of the GNU General Public License as published by  #
@@ -19,54 +19,60 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-"""
-Provider of D-Bus services aiming to replace librra.
-"""
-
-version = (0, 1, 0)
-
-import gobject
 
 import dbus
-import dbus.glib
-
-import os
-import signal
 import sys
-import threading
-import logging
 
-from SyncEngine.kernel import SyncEngine
+sys.path.insert(0, "..")
+from SyncEngine.constants import *
 
-logger = None
-mainloop = None
+engine = dbus.Interface(dbus.SessionBus().get_object(DBUS_SYNCENGINE_BUSNAME, DBUS_SYNCENGINE_OBJPATH), DBUS_SYNCENGINE_BUSNAME)
 
-def term_handler(signum, frame):
-    logger.info("Received termination signal. Exiting")
-    gobject.idle_add(mainloop.quit)
-    engine.notify_quit()
+item_types = engine.GetItemTypes()
+i = 0
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
-                        stream=sys.stdout,
-                        format='%(asctime)s %(levelname)s %(name)s : %(message)s')
+ids = {}
 
-    logger = logging.getLogger("syncengine")
+for id, name, host, items in engine.GetPartnerships():
+    ids[i] = id
+    print "\n"
+    print "Partnership %d:" % i
+    print "\tID: %#x" % id
+    print "\tName: '%s'" % name
+    print "\tHost: '%s'" % host
+    str = "["
+    for id in items:
+        str += " %s" % item_types[id]
+    str += " ]"
+    print "\tItems: %s" % str
+    i += 1
 
-    logger.debug("creating SyncEngine object")
-    engine = SyncEngine()
+print "\nTotal number of partnership(s) - %d\n" % i
 
-    logger.debug("installing signal handlers")
-    signal.signal(signal.SIGTERM, term_handler)
-    signal.signal(signal.SIGINT, term_handler)
+if i > 0:
 
-    logger.debug("running main loop")
-    gobject.threads_init()
-    mainloop = gobject.MainLoop()
-    try:
-        mainloop.run()
-    except KeyboardInterrupt:
-        pass
+   v=None
+   while v == None:
 
-    logger.debug("waiting for engine to clean up")
-    engine.wait_quit()
+  	try:
+    		v = int(raw_input("Partnership to make current?"))
+	except:
+    		print "bad value"
+	
+	if v > i or v < 0:
+		v=None
+
+
+   print "Setting current partnership to %d" % v
+
+   res = engine.SetCurrentPartnership(ids[v])
+    
+   print "result -"
+   if res == 0:
+       print " done"
+   else: 
+       print " failed"
+
+else:
+
+    print "No partnerships to select."

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<syncengine-config>
+	<Global>
+		<SlowSyncDisable>0</SlowSyncDisable>
+	</Global>
+	<Autosync>
+		<AutoSyncCommand>xterm -e msynctool --sync wm5sync</AutoSyncCommand>
+		<Disable>1</Disable>
+	</Autosync>
+	<FileSync>
+		<LocalFilePath>/nfshomes/jgow/PDAFiles</LocalFilePath>
+		<Disable>0</Disable>
+		<LocalUpdateFreq>10</LocalUpdateFreq>
+		<ExtraDeleteDelay>0</ExtraDeleteDelay>
+		<ObjectReportTimeout>8</ObjectReportTimeout>
+	</FileSync>
+</syncengine-config>

@@ -3,8 +3,8 @@
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:convert="http://synce.org/convert"
-               xmlns:C1="POOMCONTACTS:"
-               xmlns:C2="POOMCONTACTS2:"
+               xmlns:C1="http://synce.org/formats/airsync_wm5/contacts"
+               xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2"
                exclude-result-prefixes="convert C1 C2">
 
     <xsl:template match="ApplicationData">
@@ -23,7 +23,7 @@
 
             <Nickname><Content><xsl:value-of select="C2:NickName"/></Content></Nickname>
 
-            <Photo><xsl:value-of select="C1:Picture"/></Photo>
+            <Photo><Content><xsl:value-of select="C1:Picture"/></Content></Photo>
 
             <xsl:for-each select="(C1:HomeCity | C1:HomeCountry | C1:HomePostalCode | C1:HomeState | C1:HomeStreet)[position() = 1]">
                 <Address>
@@ -182,6 +182,11 @@
             <xsl:for-each select="C1:Birthday[position() = 1]">
                 <Birthday><xsl:value-of select="convert:contact_birthday_from_airsync()"/></Birthday>
             </xsl:for-each>
+
+	    <xsl:for-each select="C1:Rtf">
+		<Note><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Note>
+	    </xsl:for-each>
+
 
         </contact>
     </xsl:template>

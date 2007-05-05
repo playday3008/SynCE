@@ -33,7 +33,7 @@ import logging
 
 import pywbxml
 
-import formats
+import formatapi
 from xmlutil import *
 from constants import *
 
@@ -173,7 +173,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         req_doc = self._read_xml_request()
         self.server.logger.debug("_handle_sync: request document is \n%s", req_doc.toprettyxml())
 
-        rsp_doc = self._create_wbxml_doc("Sync", "AirSync:")
+        rsp_doc = self._create_wbxml_doc("Sync", "http://synce.org/formats/airsync_wm5/airsync")
         rsp_colls_node = node_append_child(rsp_doc.documentElement, "Collections")
 
         state = self.server.engine.partnerships.get_current().state
@@ -194,6 +194,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             node_append_child(rsp_coll_node, "Status", 1)
 
             item = state.items[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
+	    
             if not first_request and item.get_local_change_count() > 0:
                 window_size = int(node_get_value(node_get_child(n, "WindowSize")))
                 changes = item.extract_local_changes(window_size)
@@ -207,30 +208,31 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     change_type, data = change
 
                     if change_type == CHANGE_ADDED:
-                        luid, guid = state.register_guid(guid)
-                    else:
-                        luid = state.get_luid_from_guid(guid)
+                        luid, guid = state.obtain_guid(guid)
+ 		    else:
+		        luid = state.get_luid_from_guid(guid)
 
                     rsp_change_node = node_append_child(rsp_cmd_node, CHANGE_TYPE_TO_NODE_NAME[change_type])
-                    node_append_child(rsp_change_node, "ServerId", luid)
-
-                    if change_type != CHANGE_DELETED:
+		    self.server.logger.debug("arrived at rsp_change_node")
+		    
+		    node_append_child(rsp_change_node, "ServerId", luid)
+                    
+		    if change_type != CHANGE_DELETED:
                         os_doc = minidom.parseString(data)
                         as_doc = None
 
                         self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", os_doc.toprettyxml())
 
-                        if item.type == SYNC_ITEM_CONTACTS:
-                            as_doc = formats.contact.to_airsync(os_doc)
-                        elif item.type == SYNC_ITEM_CALENDAR:
-                            as_doc = formats.event.to_airsync(os_doc)
-                        else:
-                            raise Exception("Can't convert data of item_type %d" % item.type)
-
+			as_doc=formatapi.ConvertFormat(DIR_TO_AIRSYNC,item.type,os_doc)
+	
                         self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.toprettyxml())
-
+			
+                        item.idb_intersect(guid,as_doc.toxml(encoding="utf-8"))
                         rsp_change_node.appendChild(as_doc.documentElement)
+                    else:
+                        item.idb_remove(guid)
 
+            self.server.logger.debug("arrived at rsp_responses_node")
             rsp_responses_node = rsp_doc.createElement("Responses")
 
             cmd_count = 0
@@ -239,6 +241,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 chg_type = CHANGE_TYPE_FROM_NODE_NAME[cmd_name]
 
                 if chg_type == CHANGE_ADDED:
+		    self.server.logger.debug("Commands - chg_type is CHANGE_ADDED")
                     rsp_response_node = node_append_child(rsp_responses_node, cmd_name)
 
                     cid = node_get_value(node_get_child(req_cmd_node, "ClientId"))
@@ -249,6 +252,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     node_append_child(rsp_response_node, "ServerId", luid)
                     node_append_child(rsp_response_node, "Status", 1)
                 else:
+		    self.server.logger.debug("Commands - chg_type is NOT CHANGE_ADDED")
                     luid = node_get_value(node_get_child(req_cmd_node, "ServerId"))
                     guid = state.get_guid_from_luid(luid)
 
@@ -258,16 +262,14 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     self.server.logger.debug("_handle_sync: converting item from airsync, source is \n%s", app_node.toprettyxml())
 
-                    if item.type == SYNC_ITEM_CONTACTS:
-                        os_doc = formats.contact.from_airsync(app_node)
-                    elif item.type == SYNC_ITEM_CALENDAR:
-                        os_doc = formats.event.from_airsync(app_node)
-                    else:
-                        raise Exception("Can't convert data of item_type %d" % item.type)
+                    os_doc=formatapi.ConvertFormat(DIR_FROM_AIRSYNC,item.type,app_node)
 
                     self.server.logger.debug("_handle_sync: converting item from airsync, result is \n%s", os_doc.toprettyxml())
 
-                    xml = os_doc.documentElement.toxml()
+                    item.idb_intersect(guid,app_node.toxml(encoding="utf-8"))
+                    xml = os_doc.documentElement.toxml(encoding="utf-8")
+                else:
+                    item.idb_remove(guid)
 
                 item.add_remote_change(guid, chg_type, xml)
                 cmd_count += 1
@@ -276,7 +278,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 rsp_coll_node.appendChild(rsp_responses_node)
 
         self.server.logger.debug("_handle_sync: response document is \n%s", rsp_doc.toprettyxml())
-        self._send_wbxml_response(rsp_doc.toxml())
+        self._send_wbxml_response(rsp_doc.toxml(encoding="utf-8"))
 
     def _handle_foldersync(self):
         req_doc = self._read_xml_request()
@@ -287,7 +289,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if req_key != "0":
             raise ValueError("SyncKey in FolderSync request is not 0")
 
-        rsp_doc = self._create_wbxml_doc("FolderSync", "FolderHierarchy:")
+        rsp_doc = self._create_wbxml_doc("FolderSync", "http://synce.org/formats/airsync_wm5/folderhierarchy")
         rsp_folder_node = rsp_doc.documentElement
 
         node_append_child(rsp_folder_node, "Status", 1)
@@ -310,13 +312,13 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             node_append_child(add_node, "Type", type)
 
         self.server.logger.debug("handle_foldersync: response document is \n%s", rsp_doc.toprettyxml())
-        self._send_wbxml_response(rsp_doc.toxml())
+        self._send_wbxml_response(rsp_doc.toxml(encoding="utf-8"))
 
     def _handle_get_item_estimate(self):
         req_doc = self._read_xml_request()
         self.server.logger.debug("_handle_get_item_estimate: request document is \n%s", req_doc.toprettyxml())
 
-        rsp_doc = self._create_wbxml_doc("GetItemEstimate", "GetItemEstimate:")
+        rsp_doc = self._create_wbxml_doc("GetItemEstimate", "http://synce.org/formats/airsync_wm5/getitemestimate")
 
         state = self.server.engine.partnerships.get_current().state
 
@@ -337,7 +339,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             node_append_child(coll_node, "Estimate", item.get_local_change_count())
 
         self.server.logger.debug("_handle_get_item_estimate: response document is \n%s", rsp_doc.toprettyxml())
-        self._send_wbxml_response(rsp_doc.toxml())
+        self._send_wbxml_response(rsp_doc.toxml(encoding="utf-8"))
 
     def _handle_status(self):
         req_doc = self._read_xml_request()

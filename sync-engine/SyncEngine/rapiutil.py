@@ -19,7 +19,6 @@
 ############################################################################
 
 from xml.dom import minidom
-
 from xmlutil import *
 
 QUERY_TYPE_GET    = 0

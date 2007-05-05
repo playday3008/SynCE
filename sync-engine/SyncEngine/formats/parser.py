@@ -23,9 +23,10 @@ import libxslt
 
 import os
 
-from engine.constants import *
-from engine.xmlutil import *
+from SyncEngine.constants import *
+from SyncEngine.xmlutil import *
 import conversions
+import tzconv
 import logging
 
 FMT_TO_AIRSYNC   = 1
@@ -53,6 +54,8 @@ class Parser:
     def __init__(self):
         self.logger = logging.getLogger("engine.formats.parser.Parser")
         conversions.register_xslt_extension_functions()
+	tzconv.RegisterXSLTExtensionFunctions()
+	
 
     def convert(self, src_doc, item_type, format):
         if not self.STYLESHEETS.has_key(item_type):

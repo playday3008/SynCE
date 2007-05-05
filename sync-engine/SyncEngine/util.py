@@ -19,6 +19,7 @@
 ############################################################################
 
 import random
+import os
 
 def generate_id():
     w1 = random.randint(0x0, 0x0FFF)
@@ -109,3 +110,48 @@ def encode_wstr(s):
 
 def decode_wstr(s):
     return s.decode("utf_16_le").rstrip("\0")
+
+#
+# 'deltree' - recursively delete a non-empty directory
+# Why, oh why , is this never provided as an API by the OS?
+#
+
+def deltree(folder):
+
+    # belts and braces..
+    # We really don't want to risk nuking our root or home dirs.
+
+    if folder == '/' or folder == "~" or folder==os.path.expanduser("~"):
+        return
+
+    # walk the path and trash the contents
+
+    if os.path.isdir(folder):
+        for path,dirs,files in os.walk(folder,topdown=False):
+            for p in files:
+
+                # Errors will most likely be permissions-related
+                # so we just ignore them. Deal with files first
+
+                try:
+                    os.remove(os.path.join(path,p))
+                except:
+                    pass
+
+            for p in dirs:
+
+                # Same applies here for errors -  just ignore them,
+                # the result will leave the dir in place.
+
+                try:
+                    os.rmdir(os.path.join(path,p))
+                except:
+                    pass
+
+    # Dump the actual folder.
+
+    try:
+        os.rmdir(folder)
+    except:
+        pass
+    

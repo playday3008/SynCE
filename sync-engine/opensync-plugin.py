@@ -27,6 +27,7 @@ import time
 import sys
 import logging
 from opensync import *
+import array
 
 SYNC_ITEM_CALENDAR  = 0
 SYNC_ITEM_CONTACTS  = 1
@@ -81,6 +82,7 @@ class SyncClass:
         self.engine_synced = False
         self.engine.Synchronize()
 
+	self.logger.info("waiting for engine to complete sync")
         while not self.engine_synced:
             time.sleep(1)
 
@@ -98,19 +100,31 @@ class SyncClass:
     def get_changeinfo(self, ctx):
         self.logger.debug("get_changeinfo() called")
 
-        if self.__member.get_slow_sync("data"):
-            self.logger.info("slow-sync requested")
+	isSlow = 0
+	prefill = []
+        if self.__member.get_slow_sync("contact"):
+	    self.logger.debug("slow sync requested for Contacts")
+	    prefill.append("Contacts")
+	if self.__member.get_slow_sync("event"):
+	    self.logger.debug("slow sync requested for Calendar")
+	    prefill.append("Calendar")
+	if self.__member.get_slow_sync("todo"):
+	    self.logger.debug("slow sync requested for Tasks")
+	    prefill.append("Tasks")
 
+	time.sleep(1)
         self._do_sync()
 
-        self.logger.debug("requesting remote changes")
-        changesets = self.engine.GetRemoteChanges(self.engine.GetSynchronizedItemTypes())
+	if len(prefill) > 0:
+		self.engine.PrefillRemote(prefill)
 
+        self.logger.debug("requesting remote changes")
+       	changesets = self.engine.GetRemoteChanges(self.engine.GetSynchronizedItemTypes())
         self.logger.debug("got %d changesets", len(changesets))
 
         for item_type, changes in changesets.items():
             if changes:
-                self.logger.debug("processing changes for item type %d", item_type)
+                self.logger.debug("processing changes for %d items of item type %d", len(changesets.items()), item_type)
             else:
                 self.logger.debug("no changes for item type %d", item_type)
 
@@ -120,15 +134,17 @@ class SyncClass:
                 guid, chg_type, data = change
 
                 change = OSyncChange()
-                change.uid = guid.encode("utf-8")
+		change.uid = array.array('B',guid).tostring() 
                 change.changetype = chg_type
+
+		self.logger.debug("first part")
 
                 if item_type in SUPPORTED_ITEM_TYPES:
                     change.objtype, change.format = SUPPORTED_ITEM_TYPES[item_type]
 
                     if chg_type != CHANGE_DELETED:
                         bytes = '<?xml version="1.0" encoding="utf-8"?>\n'
-                        bytes += data.encode("utf-8")
+                        bytes += array.array('B',data).tostring()
 
                         change.set_data(bytes)
                 else:
@@ -136,7 +152,7 @@ class SyncClass:
 
                 change.report(ctx)
 
-                acks[item_type].append(guid)
+                acks[item_type].append(array.array('B',guid).tostring())
 
             if len(acks[item_type]) > 0:
                 self.logger.debug("acknowledging remote changes for item type %d", item_type)
@@ -145,21 +161,17 @@ class SyncClass:
         ctx.report_success()
 
     def commit_change(self, ctx, chg):
-        self.logger.debug("commit_change() called for item %s with change type %d", chg.uid.decode("utf-8"), chg.changetype)
+        self.logger.debug("commit_change() called for item %s with change type %d", chg.uid, chg.changetype)
 
         if chg.objtype in OBJ_TYPE_TO_ITEM_TYPE:
+		
             item_type = OBJ_TYPE_TO_ITEM_TYPE[chg.objtype]
 
             data = ""
             if chg.changetype != CHANGE_DELETED:
-                data = chg.data.decode("utf-8")
+                data = chg.data
 
-            self.engine.AddLocalChanges(
-                    {
-                        item_type : ((chg.uid.decode("utf-8"),
-                                      chg.changetype,
-                                      data),),
-                    })
+            self.engine.AddLocalChanges( { item_type : ((chg.uid,chg.changetype,data),),} )
 
         else:
             raise Exception("SynCE: object type %s not yet handled" % chg.objtype)
@@ -171,6 +183,7 @@ class SyncClass:
 
         self._do_sync()
 
+	self.engine.FlushItemDB()
         ctx.report_success()
 
     def disconnect(self, ctx):

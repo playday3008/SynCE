@@ -44,7 +44,7 @@ SYNC_ITEMS = {
     SYNC_ITEM_CONTACTS  : ("Contacts", False),
     SYNC_ITEM_EMAIL     : ("E-mail", False),
     SYNC_ITEM_FAVORITES : ("Favorites", True),
-    SYNC_ITEM_FILES     : ("Files", True),
+    SYNC_ITEM_FILES     : ("Files", False),
     SYNC_ITEM_MEDIA     : ("Media", True),
     SYNC_ITEM_NOTES     : ("Notes", True),
     SYNC_ITEM_TASKS     : ("Tasks", False),
@@ -55,6 +55,12 @@ SYNC_ITEM_CLASS_TO_ID = {
     "Contacts" : SYNC_ITEM_CONTACTS,
     "E-mail"   : SYNC_ITEM_EMAIL,
     "Tasks"    : SYNC_ITEM_TASKS,
+}
+
+SYNC_ITEM_PSHIPID_TO_RRANAME = {
+    SYNC_ITEM_FILES : "File",
+    SYNC_ITEM_MEDIA : "Media",
+    SYNC_ITEM_FAVORITES : "Favorite"
 }
 
 GUID_WM5_ACTIVESYNC_ENGINE = "{176F4FFD-F20C-4BD4-BDD7-01D0726C567B}"
@@ -90,6 +96,12 @@ SYNC_ITEM_ID_TO_GUID = {
     SYNC_ITEM_NOTES     : GUID_WM5_ITEM_NOTES,
     SYNC_ITEM_TASKS     : GUID_WM5_ITEM_TASKS,
 }
+
+#
+# Direction flags for the formatter function
+
+DIR_TO_AIRSYNC = 0
+DIR_FROM_AIRSYNC = 1
 
 REMSYNC_PORT = 999
 RRA_PORT     = 5678

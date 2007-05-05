@@ -1,0 +1,408 @@
+17/02/07 - 215000 Dr J A Gow
+----------------------------
+
+Initial implementation for synchronization of tasks
+Needs work on PercentComplete and the priority code
+
+18/02/07 - 182700 Dr J A Gow
+----------------------------
+
+Added code to allow partnership selection, new tool
+select_partnership.py to select the current partnership
+and allow it to be altered. The sync-engine now saves
+the current partnership on the host and will always
+use this one when set up.
+
+The setting up of partnerships may take some fiddling
+and the code is still a bit flakey, but once set up
+the sync process seems quite solid.
+
+18/02/07 - 192900 Dr J A Gow
+----------------------------
+
+Improved partnership selection processes by blocking
+the autosync in the absence of a valid partership.
+
+
+19/02/07 - 220600 Dr J A Gow
+----------------------------
+
+Changed the way the tasks are marked complete. Logic
+now works as follows:
+
+ AirSync -> vcal: If task is marked complete, both the
+                  status COMPLETE field is set AND the
+                  'PercentComplete field is emitted and
+                  set to 100. If task is not marked
+                  complete, then neither the status
+                  COMPLETE field nor the PercentComplete
+                  field are emitted.
+
+ vcal -> AirSync: If PercentComplete is 100 OR status
+                  COMPLETE field is set, then the task
+                  is marked complete.
+
+21/02/07 - 003900 Dr J A Gow
+----------------------------
+
+Added a fix to maintain the luid/guids when confronted with
+a slow sync. This certainly prevents the hang in sync-engine
+and also should ensure clean slow syncing. 
+
+01/03/07 - 230000 Dr J A Gow
+----------------------------
+
+Added the code to allow notes attached to tasks, contacts and
+events to be synced. This introduces the dependency on 
+librtfcomp, which should be installed together with its
+Python bindings before running this sync-engine.
+
+02/03/07 - 190000 Dr J A Gow
+----------------------------
+
+Folded in patch provided by Robert Jarzmik in order to fix 
+the following issues
+
+ - AirSync error 800700E : memory error (causes by lack of 
+   DtStamp from opensync/file-sync for example)
+ - Engine error on alarm reminders of format : -PT1D3H33M 
+   (from kde-pim)
+
+17/03/07 - 213800 Dr J A Gow
+----------------------------
+
+Big, big changes in the RRA department. This release contains
+a functional file sync system, and the sync-engine config
+class is becoming more useful.
+
+A dependency is now introduced on librra and pyrra. Make sure
+you have both installed in order to use it. Now, take the
+config.xml file from this sync-engine distribution, create a
+.synce file in your home directory, and copy the config.xml
+to this location. Then alter the path to point to the local
+folder you would like to sync to the handheld. Then cross
+fingers, and start sync-engine. File sync is totally automatic
+and does not need prompting, or the running of any other 
+programs.
+
+The PIM syncing is totally unaffected by these changes: file
+sync uses RRAC via librra, PIM syncing uses AirSync.
+
+Bugs: 	Loads. Loads I know about, loads I don't know about.
+	The ones I know about include:
+
+	No error handling on file ops
+	No disk space checking on local or handheld
+	Others, but I can't think of them at the moment
+
+The config file is re-read for each connection, so another 
+app can be used to configure sync-engine, with the changes
+being picked up on the next connection.
+
+
+19/03/07 - 202300 Dr J A Gow
+----------------------------
+
+Corrected minor bug in the XML transforms that prevented
+pictures attached to contacts being synced correctly.
+
+20/03/07 - 194500 Dr J A Gow
+----------------------------
+
+Couple of important bug fixes in file sync code - these
+are worth upgrading for!
+
+ - File database is now saved in the correct place!
+   This caused problems with multiple partnerships - the
+   file was being saved in the sync-engine root rather than
+   the .synce directory
+ - Changed name of file database to include partnership ID
+   to ensure syncing with multiple partnerships works. (still
+   need to make sure this is deleted on deletion of partnership
+   to avoid leaving cruft behind)
+ - Items deleted on handheld while disconnected will now 
+   be correctly deleted on the desktop upon reconnection.
+
+21/03/07 - 213300 Dr J A Gow
+----------------------------
+
+Fixed deletion of directory trees in the file sync code - this should
+help with the deletion of directory names with non-base ASCII characters
+in them (i.e. unicode).
+
+Cleaned up partnership storage. Now all partnership-specific
+data is stored in a directory within the .synce hierarchy with a name of
+the partnership ID. In this directory, the file database and the state file
+reside. As partnerships are created and deleted, the directory is 
+created/deleted.
+
+Fixed deletion of current partnership. Made safe the operation of the
+sync threads while no current partnership is available, including when
+the current partnership is deleted. Now, all service threads apart from
+the RAPI session are shut down prior to deletion of the current partnership,
+and not restarted until a new one is created. Likewise, they are not
+started if a device is connected with no valid partnership. This just makes
+things safer in preparation for the following.
+
+Made significant changes to the handling of slow sync: Now, slow sync is
+correctly detected in opensync-plugin. When a slow sync is triggered, an
+argument is passed to the sync-engine's Synchronize method. If this argument
+is nonzero, the sync-engine will delete and recreate the partnership through a
+new Refresh method in Partnerships (preserving the selected sync-items). This 
+is not as slow as could be, and it successfully forces a slow sync.
+
+HOWEVER:
+
+1) Opensync does not seem to de-duplicate the items properly. Not sure yet
+   whether this is an OpenSync problem, or whether there is some subtle difference
+   in the entries from the evo2-plugin and those from AirSync that is preventing the
+   de-duplication code in OpenSync from working.
+
+2) Opensync allows selective slow-syncing on each object. We just can't be
+   selective by refreshing the partnership - we end up resyncing the lot (all objects).
+   So, when we do a slow-sync we need to do it on all object types.
+
+It's not an ideal solution. There must be a way to find the sync state information on
+the phone itself and use this to force a slow resync of individual object types. I
+am working on this.
+
+22/03/2007 - 131900 Dr J A Gow
+------------------------------
+
+Corrected programming error in util.deltree(). Directories should now be
+correctly deleted when deleted from the handheld. There is a catch in 
+util.deltree() to prevent commmon dangerous deletions e.g. root or home.
+
+22/03/2007 - 223300 Dr J A Gow
+------------------------------
+
+Enhanced configuration system.
+
+ - Slow sync using partnership refresh found to cause some problems in
+   certain circumstances, so have made it configureable through the
+   config.xml file and disabled it by default - functionality is now
+   as was unless you manually turn it on.
+
+ - Added the rudiments of an autosync system - this is also disabled
+   by default, and still needs some work. If you want to try it, add
+   the command to run on autosync to the config.xml file and set the
+   Disable element to zero.
+
+24/03/2007 - 190000 Dr J A Gow
+------------------------------
+
+Slow-sync:
+
+ - At last, a working slow-sync method! Recreating partnerships problem-riddled
+   and no un-hackish way to do it on the phone. So now we do it with a database.
+   On first sync of a new partnership, we create a database of items, and
+   maintain it on subsequent syncs. On a slow sync, we send all data back to OpenSync.
+   The database contains AirSync data - although it could be coded easier if we
+   saved OpenSync data, there is the danger of local changes that have elements 
+   that are not transformed by the XML transforms becoming embedded in the database.
+   This might be acceptable, but it seemed a cleaner solution to mirror data on the
+   phone.
+ - Now this data is stored in item-specific files in the partnership area. It is loaded
+   on sync start and can be flushed by the plugin when all syncing is complete. This 
+   way we do not hog memory by leaving the database in RAM when we are not syncing.
+ - The database is saved at the end of each sync, but is only loaded if it needs to be,
+   thereby limiting disk activity.
+ - Only problem, OpenSync does not see the items as the 'same', only 'similar' so it 
+   asks the user for interaction with every slow-synced item.
+
+Syncing:
+
+ - Externally-triggered syncing now works!
+ - The original code could sync the handheld up to three times, especially on an 
+   externally triggered sync. Now we preserve the results of the first AirSync
+   sync (triggered by the autosync) and use this for the next Synchronize() request.
+   This way we only ever sync twice.
+
+ - BUG - sometimes, for a weird reason, the OpenSync plugin seems to hang in _do_sync()
+   while calling the Synchronize() method in sync-engine. Under these circumstances
+   The hang is in the call, not the sync-engine method. Something weird with d-bus? If
+   you just close the msynctool process and restart it (leaving sync-engine running)
+   a slow-sync is triggered due to the interrupted process, but everything then works0.
+   This only seems to affect autosync, not the manual ones. Problem definitely seems to
+   be on the plugin/dbus side as the sync-engine code is not even being called.
+
+Config:
+
+ - SlowSyncEnable changed to SlowSyncDisable in config file
+
+25/03/2007 - 185200 Dr J A Gow
+-------------------------------
+
+Suspecting timing issue on starting the opensync-plugin's d-bus integration,
+a 1-second delay has been added between connecting and the call to _do_sync(). This
+seems to cure the hang issue! Not 100% sure why but suspect that call to _do_sync()
+is occurring sufficiently quickly before the d-bus loop is established?
+
+28/03/2007 - 212700 Dr J A Gow
+------------------------------
+
+Fix preventing spurious rtfcomp error message when translating notes with no content
+Minimal error checking added to file sync object writer
+
+15/04/2007 - 184500 Dr J A Gow
+------------------------------
+
+Big, big changes in the time/date conversion department. We now have seemingly
+correct timezone and DST processing, although it could certainly do with
+more testing. 
+
+We now grab the 'Timezone' information from vcal, parse out the DST recurrences
+and store the timezones for future use. The way this works in a sync session
+is as follows.
+
+AirSync-Opensync:
+
+	This is OK. Since AirSync actually does something sensible for a change,
+	and stores everything in UTC, we can just send these to vcal as UTC times.
+	To correctly display the times on the desktop side, it is _essential_ that
+	the desktop is set to the same timezone as the handheld, but not doing so
+	will not result in corruption of event times.
+
+Opensync-Airsync:
+
+	Here's where the fun starts. Vcal spits out the timezone as an id and a 
+	batch of recurrences for the start events for DST and standard time - and 
+	then spits out the time in local time. UTC times can be distinguished 
+	by the 'Z' suffix. So we process the timezone block to get the info,
+	then convert the local time to UTC before throwing it at AirSync.
+
+This has been implemented for tasks and events. Not sure yet if any of the
+Contacts fields use timezones, but will add as I find them (should be simple to
+do as the DST and timezone infrastructure is now in place).
+
+Testing: Could anyone who lives in a different timezone please test for events
+and tasks? Especially any timezones that have an irregular or no definition for
+DST. Report any irregularities.
+
+The code should not get upset by events that cross DST boundaries, however it
+may be possible to create an event with zero duration at the end of DST.
+
+Limitations:
+
+	The code will choke on any DST recurrence that uses the SETPOS rule - 
+	I haven't supported it yet. I don't think there are any, but......
+
+Other fixes:
+
+	Small fix in slow-sync code to correct an issue that could corrupt
+	the internal XML database of objects. Has a positive side effect that
+	a few less bytes per object need to be stored in the database.
+
+16/04/2007 - 200100 Dr J A Gow
+------------------------------
+
+Attribute checking fix in file sync: this should eliminate some errors
+when synchronizing directories with additional attributes.
+
+22/04/2007 - 233600 Dr J A Gow
+------------------------------
+
+Fix to add encoding attribute to XML header used when running slow-sync.
+This should prevent errors when used with non-ascii characters in the
+XML.
+
+27/04/2007 - 230000 Dr J A Gow
+------------------------------
+
+Significant fixes to the file sync code. It would appear that RRAC reports
+no more than 32 unchanged oids at a time - and spaces the callbacks out. The
+fixes in this release account for this and also make the file deletion system
+considerably more robust:
+
+ - Items scheduled for deletion now have their own queue. This queue is scanned
+   for items to guard against rapid delete-recreate cycles from leaving an 
+   object on one side only.
+ - Timed checks are carried out to ensure that the initial object report is
+   completed in its entirety before scheduling unreported OIDs for deletion.
+ - New config element 'ObjectReportTimeout' available to configure the 
+   initial object report timeout for different devices.
+
+28/04/2007 - 194700 Dr J A Gow
+------------------------------
+
+1) Fix for recurrent events across DST transitions. This fix fills the
+   AirSync <Timezone> element based upon the presented timezone information
+   in the vcal data. This means that recurrent events spanning DST transitions
+   should now be rendered correctly on the phone side.
+
+Limitations:
+
+   - It's crude. By that I mean that the conversion relies on the DST recurrence
+     rules having a specific format (i.e. it must be a start date / BYDAY=
+     / BYMONTH rule for the conversions to work. Basically the AirSync timezone
+     structure is very limiting whereas the vcal timezone structure is universal.
+     If there are any timezones out there with an oddball DST definition they
+     may not (yet) convert correctly 
+
+   - The conversion does not yet work both ways, it only works vcal->AirSync.
+     Reports indicate that kdepim handles the DST transitions internally and has
+     is unaffected in this direction. Evolution, however, does not sort it out
+     and would probably need the timezone info in the event. However, going the
+     other way is not as easy...
+
+2) Minor fix in slow-sync database format. We still have an encoding issue but
+   this seems to be a limitation of minidom's toxml() not being able to specify an
+   encoding. Database entries with UTF-8 sequences may fall over during a 
+   slow sync.
+
+3) Renamed 'syncengine.py' to 'kernel.py'. Two 'syncengines' seems confusing.
+
+
+29/04/2007 - 233300 Dr J A Gow
+------------------------------
+
+Fix for encoding: 'toxml()' now always has an encoding specified so we should
+not have any more problems with UTF8 sequences in the events etc.
+
+Added part of the infrastructure to allow vcal timezones to be constructed 
+from AirSync timezones. This code is not yet called so its presence will not
+affect functionality.
+
+30/04/2007 - 222000 Dr J A Gow
+------------------------------
+
+Completed reverse timezone functionality, this is now implemented and working
+(for events only at the moment). This code captures the AirSync timezone date
+and if it specifies a valid DST set for the current year, generates a vcal 
+timezone that matches it. This allows recurrent events set up across a DST
+transition boundary to be correctly represented to Opensync. If the event is
+subsequently modified on the Opensync side, the timezone is updated if
+necessary, so everything seems to work.
+
+This does, of course, rely on OpenSync correctly exporting vcal timezone
+stanzas! 
+
+The code now handles timezoned events in both directions.
+
+03/05/2007 - 205200 Dr J A Gow
+------------------------------
+
+Odd problems with syncing events,tasks etc with non-English characters detected
+and (potentially) sorted. Turns out that dbus-python has a particular dislike
+of being able to efficiently send just unadulterated byte streams as part of
+a method call/return. The synchronization mechanism conveniently provides 
+UTF-8 encoded XML data preserving all characters > 0x7f. Dbus itself uses
+UTF-8 natively, but versions of dbus-python < 0x80 can not handle this
+natively without requiring the string to be decoded into Unicode, then recoded
+the other side of the IPC. This is about as efficient as a pork pie salesman
+in a kibbutz - the string is decoded from UTF-8 to Unicode, then (somewhere
+in the binding) being recoded into UTF-8 before being sent to dbus, then the
+whole shooting match is done in reverse upon receipt. Nasty.
+
+Dbus-python 0.80 helps a bit as it can render byte-arrays as strings through
+use of the byte_arrays keyword on the proxies - problem is a large number of 
+distros (including SuSE 10.2) ship with dbus-python < 0.80. To get round
+this we explicitly convert the array back to a string on receipt, preserving
+the encoding and thus not requiring multiple encodes/decodes to get it across
+the IPC.
+
+So the key data streams are now switched to byte-arrays. Not only will this
+make things easier if code other than Python has to communicate with
+sync-engine, but also should solve problems with syncing items with
+non-English characters in it.
+

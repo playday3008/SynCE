@@ -1,4 +1,4 @@
-<ApplicationData xmlns:C1="POOMCONTACTS:" xmlns:C2="POOMCONTACTS2:">
+<ApplicationData xmlns:C1="http://synce.org/formats/airsync_wm5/contacts" xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2">
     <C1:Anniversary>2000-09-30T22:00:00.000Z</C1:Anniversary>
     <C1:AssistantName>Jane Bond</C1:AssistantName>
     <C1:AssistnamePhoneNumber>+47007ASSISTANT</C1:AssistnamePhoneNumber>
