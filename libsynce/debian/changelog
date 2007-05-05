@@ -1,0 +1,33 @@
+libsynce (0.8.9-2) unstable; urgency=low
+
+  * Changed the section of the dev package to libdevel
+
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 29 Feb 2004 22:47:03 +0100
+
+libsynce (0.8.9-1) unstable; urgency=low
+
+  * New upstream release
+  * New maintainer Volker Christian
+  * Added --disable-rpath
+
+ -- Volker Christian <voc@users.sourceforge.net>  Sat, 14 Feb 2004 20:27:01 +0100
+
+libsynce (0.8-1) unstable; urgency=low
+
+  * First proper Debian upload.
+  * added bootstrap to rules
+
+ -- Thomas Butter <thomas@i.rule-the.net>  Sun,  8 Jun 2003 20:47:51 +0200
+
+libsynce (0.7-2) unstable; urgency=low
+
+  * fixed a dependency
+
+ -- Thomas Butter <thomas@i.rule-the.net>  Sun,  9 Mar 2003 21:59:58 +0100
+
+libsynce (0.7-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Thomas Butter <thomas@i.rule-the.net>  Thu,  6 Mar 2003 13:14:33 +0100
+

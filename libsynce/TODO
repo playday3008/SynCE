@@ -1,0 +1,9 @@
+$Id$
+
+TODO for libsynce
+=================
+
+o Change logging to be able to use syslog and not only stderr
+
+o Put error codes in config file, not hard-coded in errors.c
+

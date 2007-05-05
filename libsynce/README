@@ -1,0 +1,24 @@
+Libsynce is part of the SynCE project:
+  
+  http://www.synce.org/
+
+The SynCE library is required to compile (at least) the following parts of the
+SynCE project:
+
+	o librapi2
+	o dccmd
+
+
+License
+-------
+
+MIT License, see the file LICENSE for details.
+
+
+Support
+-------
+
+Please visit the website for more information:
+
+  http://www.synce.org/
+

@@ -1,0 +1,285 @@
+/* $Id$ */
+#define _BSD_SOURCE 1
+#ifdef HAVE_CONFIG_H
+#include "synce_config.h"
+#endif
+#include "synce.h"
+#include "synce_log.h"
+#include "config/config.h"
+#if ENABLE_DESKTOP_INTEGRATION
+#define DBUS_API_SUBJECT_TO_CHANGE 1
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#endif
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if ENABLE_DESKTOP_INTEGRATION
+static const char* const ODCCM_SERVICE      = "org.synce.odccm";
+static const char* const ODCCM_MGR_PATH     = "/org/synce/odccm/DeviceManager";
+static const char* const ODCCM_MGR_IFACE    = "org.synce.odccm.DeviceManager";
+static const char* const ODCCM_DEV_IFACE    = "org.synce.odccm.Device";
+#endif
+
+#define FREE(x)     if(x) free(x)
+
+static char *STRDUP(const char* str)
+{
+  return str ? strdup(str) : NULL;
+}
+
+static SynceInfo* synce_info_from_file(const char* filename)
+{
+  SynceInfo* result = calloc(1, sizeof(SynceInfo));
+  bool success = false;
+  char* connection_filename;
+ 	struct configFile* config = NULL;
+
+  if (filename)
+    connection_filename = strdup(filename);
+  else
+    synce_get_connection_filename(&connection_filename);
+
+	config = readConfigFile(connection_filename);
+	if (!config)
+	{
+		synce_error("unable to open file: %s", connection_filename);
+		goto exit;
+	}
+
+  result->dccm_pid        = getConfigInt(config, "dccm",   "pid");
+
+  result->key             = getConfigInt(config, "device", "key");
+  result->os_version      = getConfigInt(config, "device", "os_version");
+  result->build_number    = getConfigInt(config, "device", "build_number");
+  result->processor_type  = getConfigInt(config, "device", "processor_type");
+  result->partner_id_1    = getConfigInt(config, "device", "partner_id_1");
+  result->partner_id_2    = getConfigInt(config, "device", "partner_id_2");
+
+  result->ip        = STRDUP(getConfigString(config, "device", "ip"));
+  result->password  = STRDUP(getConfigString(config, "device", "password"));
+  result->name      = STRDUP(getConfigString(config, "device", "name"));
+  result->os_name   = STRDUP(getConfigString(config, "device", "os_name"));
+  result->model     = STRDUP(getConfigString(config, "device", "model"));
+
+  result->transport = STRDUP(getConfigString(config, "connection", "transport"));
+
+  success = true;
+
+exit:
+  FREE(connection_filename);
+
+  if (config)
+    unloadConfigFile(config);
+
+  if (success)
+    return result;
+  else
+  {
+    synce_info_destroy(result);
+    return NULL;
+  }
+}
+
+#if ENABLE_DESKTOP_INTEGRATION
+
+gint
+get_socket_from_odccm(const gchar *unix_path)
+{
+  int fd = -1, dev_fd, ret;
+  struct sockaddr_un sa;
+  struct msghdr msg = { 0, };
+  struct cmsghdr *cmsg;
+  struct iovec iov;
+  char cmsg_buf[512];
+  char data_buf[512];
+
+  fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0)
+    goto ERROR;
+
+  sa.sun_family = AF_UNIX;
+  strcpy(sa.sun_path, unix_path);
+
+  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0)
+    goto ERROR;
+
+  msg.msg_control = cmsg_buf;
+  msg.msg_controllen = sizeof(cmsg_buf);
+  msg.msg_iov = &iov;
+  msg.msg_iovlen = 1;
+  msg.msg_flags = MSG_WAITALL;
+
+  iov.iov_base = data_buf;
+  iov.iov_len = sizeof(data_buf);
+
+  ret = recvmsg(fd, &msg, 0);
+  if (ret < 0)
+    goto ERROR;
+
+  cmsg = CMSG_FIRSTHDR (&msg);
+  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS)
+    goto ERROR;
+
+  dev_fd = *((int *) CMSG_DATA(cmsg));
+  goto OUT;
+
+ERROR:
+  dev_fd = -1;
+
+OUT:
+  if (fd >= 0)
+    close(fd);
+
+  return dev_fd;
+}
+
+#define ODCCM_TYPE_OBJECT_PATH_ARRAY \
+  (dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH))
+
+static SynceInfo *synce_info_from_odccm(const char* path)
+{
+  SynceInfo *result;
+  GError *error = NULL;
+  DBusGConnection *bus = NULL;
+  DBusGProxy *mgr_proxy = NULL;
+  GPtrArray *devices = NULL;
+  guint i;
+
+  result = calloc(1, sizeof(SynceInfo));
+  if (result == NULL)
+    goto ERROR;
+
+  g_type_init();
+
+  bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+  if (bus == NULL)
+  {
+    g_warning("Failed to connect to system bus: %s", error->message);
+    goto ERROR;
+  }
+
+  mgr_proxy = dbus_g_proxy_new_for_name(bus, ODCCM_SERVICE,
+                                        ODCCM_MGR_PATH,
+                                        ODCCM_MGR_IFACE);
+  if (mgr_proxy == NULL) {
+    g_warning("Failed to get DeviceManager proxy object");
+    goto ERROR;
+  }
+
+  if (!dbus_g_proxy_call(mgr_proxy, "GetConnectedDevices", &error,
+                         G_TYPE_INVALID,
+                         ODCCM_TYPE_OBJECT_PATH_ARRAY, &devices,
+                         G_TYPE_INVALID))
+  {
+    g_warning("Failed to get devices: %s", error->message);
+    goto ERROR;
+  }
+
+  if (devices->len == 0) {
+    g_warning("No devices connected to odccm");
+    goto ERROR;
+  }
+
+  for (i = 0; i < devices->len; i++) {
+    gchar *obj_path = g_ptr_array_index(devices, i);
+    DBusGProxy *proxy = dbus_g_proxy_new_for_name(bus, ODCCM_SERVICE,
+                                                  obj_path,
+                                                  ODCCM_DEV_IFACE);
+    gchar *unix_path;
+
+    if (proxy == NULL) {
+      g_warning("Failed to get proxy for device '%s'", obj_path);
+      goto ERROR;
+    }
+
+    if (!dbus_g_proxy_call(proxy, "RequestConnection", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_STRING, &unix_path,
+                           G_TYPE_INVALID))
+    {
+      g_warning("Failed to get a connection: %s", error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+
+    g_object_unref(proxy);
+
+    result->fd = get_socket_from_odccm(unix_path);
+    g_free(unix_path);
+
+    if (result->fd < 0)
+    {
+      g_warning("Failed to get file-descriptor from odccm");
+      goto ERROR;
+    }
+
+    result->transport = g_strdup("odccm");
+
+    /* FIXME: Make it possible to choose a device explicitly. */
+    break;
+  }
+
+  goto OUT;
+
+ERROR:
+  if (error != NULL)
+    g_error_free(error);
+  synce_info_destroy(result);
+  result = NULL;
+
+OUT:
+  if (devices != NULL) {
+    for (i = 0; i < devices->len; i++)
+      g_free(g_ptr_array_index(devices, i));
+
+    g_ptr_array_free(devices, TRUE);
+  }
+
+  if (mgr_proxy != NULL)
+    g_object_unref (mgr_proxy);
+  if (bus != NULL)
+    dbus_g_connection_unref (bus);
+
+  return result;
+}
+#endif /* ENABLE_DESKTOP_INTEGRATION */
+
+SynceInfo* synce_info_new(const char* path)
+{
+  SynceInfo* result = NULL;
+
+#if ENABLE_DESKTOP_INTEGRATION
+  result = synce_info_from_odccm(path);
+
+#if ENABLE_MIDASYNC
+  if (!result)
+    result = synce_info_from_midasyncd(path);
+#endif
+#endif
+
+  if (!result)
+    result = synce_info_from_file(path);
+
+  return result;
+}
+
+
+void synce_info_destroy(SynceInfo* info)
+{
+  if (info)
+  {
+    FREE(info->ip);
+    FREE(info->password);
+    FREE(info->name);
+    FREE(info->os_name);
+    FREE(info->model);
+    FREE(info->transport);
+    free(info);
+  }
+}
+
