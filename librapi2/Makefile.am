@@ -11,7 +11,7 @@ all_local: $(pcfiles)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)
 
-EXTRA_DIST = librapi2.pc.in
+EXTRA_DIST = librapi2.pc.in BUGS
 
 CLEANFILES = $(pcfiles)
 
