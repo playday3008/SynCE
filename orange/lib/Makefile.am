@@ -10,6 +10,7 @@ liborange_la_SOURCES = \
 	extract.c \
 	helper.c \
 	installshield_sfx.c \
+	liborange_log.c \
 	nullsoft.c \
 	pe.h pe.c \
 	rsrc.c \

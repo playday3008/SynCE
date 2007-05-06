@@ -1,8 +1,10 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
+#if WITH_LIBDYNAMITE
 #include <libdynamite.h>
-#include <synce_log.h>
+#endif
+#include "liborange_log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,6 +28,7 @@ typedef struct _Cookie
   FILE* output_file;
 } Cookie;
 
+#if WITH_LIBDYNAMITE
 static size_t reader(void* buffer, size_t size, void* cookie)
 {
   return fread(buffer, 1, size, ((Cookie*)cookie)->input_file);
@@ -35,6 +38,7 @@ static size_t writer(void* buffer, size_t size, void* cookie)
 {
   return fwrite(buffer, 1, size, ((Cookie*)cookie)->output_file);
 }
+#endif
 
 static int orange_get_setup_factory_version(FILE* input_file)/*{{{*/
 {
@@ -73,6 +77,8 @@ static bool orange_explode(/*{{{*/
 {
   bool success = false;
   long next_file_offset = ftell(input_file) + size;
+
+#if WITH_LIBDYNAMITE
   DynamiteResult result;
   Cookie cookie;
   char output_filename[256];
@@ -113,6 +119,8 @@ exit:
 #if DEBUG
   synce_trace("Current offset: %08x", ftell(input_file));
 #endif
+#endif
+
   fseek(input_file, next_file_offset, SEEK_SET);
   return success;
 }/*}}}*/

@@ -18,6 +18,32 @@ case $target in
 
 esac
 
+dnl Check where uint16_t and uint32_t may be found
+AC_SUBST(INT_HEADER)
+
+dnl Old compilers
+AC_CHECK_HEADERS(inttypes.h,[INT_HEADER=inttypes.h])
+
+dnl C99 compliant compilers
+AC_CHECK_HEADERS(stdint.h,[INT_HEADER=stdint.h])
+
+if test -z "$INT_HEADER"; then
+	AC_MSG_ERROR([Don't know how to get uint16_t and uint32_t on your system])
+fi
+
+AC_CHECK_HEADERS(stdbool.h,,[
+  AC_MSG_ERROR([Don't know how to get bool values on your system])
+])
+
+dnl Big-endian stuff
+AC_SUBST(WORDS_BIGENDIAN)
+AC_C_BIGENDIAN()
+if test "$ac_cv_c_bigendian" = yes; then
+  WORDS_BIGENDIAN=1
+else
+  WORDS_BIGENDIAN=0
+fi
+
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
@@ -30,14 +56,44 @@ dnl AM_PATH_CHECK()
 dnl Checks for libraries.
 AC_LIB_RPATH
 
-dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+dnl Conditional use of libsynce (to allow stand-alone orange)
+AC_ARG_WITH(libsynce,
+  AC_HELP_STRING(
+    [--without-libsynce],
+    [Don't require libsynce (for stand-alone use, defaults to require)]),
+  [my_with_libsynce="${withval}"],
+  [my_with_libsynce=yes]
+  )
+if test "x$my_with_libsynce" = "xyes"; then
+  PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
+  AC_DEFINE_UNQUOTED(WITH_LIBSYNCE, 1, [Set to 1 when compiled with libsynce])
+fi
 
-dnl Check for libdynamite
-PKG_CHECK_MODULES(LIBDYNAMITE, libdynamite >= 0.1)
+dnl Conditional use of libdynamite
+AC_ARG_WITH(libdynamite,
+  AC_HELP_STRING(
+    [--without-libdynamite],
+    [Don't use libdynamite (defaults to use)]),
+  [my_with_libdynamite="${withval}"],
+  [my_with_libdynamite=yes]
+  )
+if test "x$my_with_libdynamite" = "xyes"; then
+  PKG_CHECK_MODULES(LIBDYNAMITE, libdynamite >= 0.1)
+  AC_DEFINE_UNQUOTED(WITH_LIBDYNAMITE, 1, [Set to 1 when compiled with libdynamite])
+fi
 
-dnl Check for libunshield
-PKG_CHECK_MODULES(LIBUNSHIELD, libunshield >= 0.5)
+dnl Conditional use of libunshield
+AC_ARG_WITH(libunshield,
+  AC_HELP_STRING(
+    [--without-libunshield],
+    [Don't use libunshield (defaults to use)]),
+  [my_with_libunshield="${withval}"],
+  [my_with_libunshield=yes]
+  )
+if test "x$my_with_libunshield" = "xyes"; then
+  PKG_CHECK_MODULES(LIBUNSHIELD, libunshield >= 0.5)
+  AC_DEFINE_UNQUOTED(WITH_LIBUNSHIELD, 1, [Set to 1 when compiled with libunshield])
+fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 SAVED_CFLAGS="$CFLAGS"
@@ -149,4 +205,5 @@ AC_CHECK_LIB(z,inflate,,[
 AC_OUTPUT([liborange.pc
            Makefile
            lib/Makefile
+	   lib/liborange_stub.h
            src/Makefile])

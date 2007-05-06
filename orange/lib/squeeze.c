@@ -4,7 +4,7 @@
 #include "config.h"
 #endif
 #include "liborange_internal.h"
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <dirent.h>
 #include <errno.h>
 #include <paths.h>

@@ -5,7 +5,7 @@
 #include "liborange_internal.h"
 
 #include <stdlib.h>
-#include <synce_log.h>
+#include "liborange_log.h"
 
 #include "pe.h"
 

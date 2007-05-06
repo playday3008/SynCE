@@ -3,8 +3,10 @@
 #define _POSIX_C_SOURCE 2
 #include "config.h"
 #include <liborange.h>
+#if WITH_LIBUNSHIELD
 #include <libunshield.h>
-#include <synce_log.h>
+#endif
+#include <liborange_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,7 +76,9 @@ static bool handle_parameters(
 	}
 
 	synce_log_set_level(log_level);
+#if WITH_LIBUNSHIELD
 	unshield_set_log_level(log_level);
+#endif
 
   if (optind < argc)
     *input_filename = argv[optind];

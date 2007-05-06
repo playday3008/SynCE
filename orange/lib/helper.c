@@ -1,7 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

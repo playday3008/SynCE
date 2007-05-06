@@ -1,7 +1,9 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
+#if WITH_LIBUNSHIELD
 #include <libunshield.h>
+#endif
 #include <ctype.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -12,6 +14,8 @@ bool orange_extract_is_cab(/*{{{*/
     const char* output_directory)
 {
   bool success = false;
+
+#if WITH_LIBUNSHIELD
   Unshield* unshield = NULL;
   int i;
   int count;
@@ -50,6 +54,8 @@ bool orange_extract_is_cab(/*{{{*/
   
 exit:
   unshield_close(unshield);
+#endif
+
   return success;
 }/*}}}*/
 

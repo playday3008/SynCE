@@ -2,7 +2,11 @@
 #ifndef __liborange_h__
 #define __liborange_h__
 
+#if WITH_LIBSYNCE
 #include <synce.h>
+#else
+#include <liborange_stub.h>
+#endif
 
 typedef struct _CabInfo
 {

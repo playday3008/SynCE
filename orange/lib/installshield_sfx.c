@@ -2,7 +2,7 @@
 #include "liborange_internal.h"
 #include "liborange.h"
 #include "pe.h"
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

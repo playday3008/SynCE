@@ -1,7 +1,7 @@
 /* $Id$ */
 #include "liborange_internal.h"
 
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <zlib.h>
 #include <stdio.h>
 #include <stdlib.h>

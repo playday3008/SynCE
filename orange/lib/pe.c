@@ -1,6 +1,6 @@
 #include "pe.h"
 #include "liborange_internal.h"
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <stdlib.h>
 #include <string.h>
 

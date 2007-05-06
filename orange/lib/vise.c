@@ -2,7 +2,7 @@
 #define _BSD_SOURCE 1
 #include "liborange_internal.h"
 #include <ctype.h>
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <stdlib.h>
 #include <string.h>
 #include <zlib.h>

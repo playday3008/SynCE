@@ -5,8 +5,9 @@
 #include <gsf/gsf-input-stdio.h>
 #include <gsf/gsf-infile.h>
 #include <gsf/gsf-infile-msole.h>
-#include <synce_log.h>
 #include <string.h>
+
+#include "liborange_log.h"
 
 bool orange_extract_msi(
     const char* input_filename,
