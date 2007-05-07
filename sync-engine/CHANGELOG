@@ -431,3 +431,10 @@ Fixed silly bug in file sync code that attempted to delete files that had
 just been downloaded during initial sync. Also corrected debug log message
 that was not correctly constructed.
 
+08/05/2007 - 000400 Dr J A Gow
+------------------------------
+
+Fixed timeouts on slow sync prefill by making the prefill call asynchronous
+(similar to do_sync in synce-plugin). This should prevent timeout errors
+when syncing any number of contacts/tasks/events.
+

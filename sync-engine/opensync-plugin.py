@@ -58,6 +58,7 @@ class SyncClass:
 
         self.__member = member
         self.engine = None
+	self.isPrefilled=False
 
         gobject.threads_init()
 
@@ -77,6 +78,19 @@ class SyncClass:
         self.logger.info("device synchronization complete")
         self.engine_synced = True
 
+    def _prefillcomplete_cb(self):
+        self.logger.info("prefill complete")
+        self.isPrefilled = True
+
+    def _do_prefill(self, items):
+        self.logger.info("initiating prefill")
+	self.isPrefilled = False
+        rc = self.engine.PrefillRemote(items)
+        if rc == 1:
+            while self.isPrefilled==False:
+                time.sleep(1)
+        return rc
+
     def _do_sync(self):
         self.logger.info("requesting device synchronization")
         self.engine_synced = False
@@ -91,6 +105,7 @@ class SyncClass:
             proxy_obj = dbus.SessionBus().get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
             self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._synchronized_cb))
+	    self.engine.connect_to_signal("PrefillComplete", lambda: gobject.idle_add(self._prefillcomplete_cb))
 
             ctx.report_success()
         except Exception, e:
@@ -115,8 +130,9 @@ class SyncClass:
 	time.sleep(1)
         self._do_sync()
 
-	if len(prefill) > 0:
-		self.engine.PrefillRemote(prefill)
+        if len(prefill) > 0:
+            if self._do_prefill(prefill) == 0:
+                self.logger.debug("prefill failed")
 
         self.logger.debug("requesting remote changes")
        	changesets = self.engine.GetRemoteChanges(self.engine.GetSynchronizedItemTypes())
