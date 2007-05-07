@@ -304,10 +304,15 @@ def FindASDateElementContent(doc,element):
 def curtz():
 	return CUR_TZ["current"]
 
+###############################################################################
+# ConvertASTimezoneToVcal
 #
-# Timezone handler stubs
+# Take an AS timezone, if fully specified, and convert it to a valid
+# (but unknown) VCAL timezone.
+#
 
-def timezone_AStoVCAL(ctx):
+def ConvertASTimezoneToVcal(ctx):
+	
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()
@@ -318,8 +323,7 @@ def timezone_AStoVCAL(ctx):
 	astd = ASTimezoneData()
 	astd.UnpackFromAirsync(dcas)
 	astd.dump()
-	
-	
+
 	sdate = FindASDateElementContent(src_node.parent,"StartTime")
 	
 	if sdate ==None:
@@ -327,8 +331,6 @@ def timezone_AStoVCAL(ctx):
 		year = sdate.year
 	else:
 		year = int(sdate[0:4])
-	
-	print "START_TIME: ", sdate
 	
 	astd.ToVcalTZ(dst_node,year)
 	CUR_TZ["current"] = astd.tzcurrent
@@ -406,18 +408,20 @@ def ConvertToLocal(date,tz):
 def ConvertDateNodeToUTC(node):
 	date = None
 	tdate = None
+	udate = None
 	ctnode = xml2util.FindChildNode(node,"Content")
 	if ctnode != None:
 		tdate = xml2util.GetNodeValue(ctnode).upper()
 		if tdate != "":
 			date = tzutils.TextToDate(tdate)
+			udate = date
 			if date.tzname() != "UTC":
 				tzn=xml2util.FindChildNode(node,"TimezoneID")
 				if tzn!=None:
-					date = ConvertToUTC(date,xml2util.GetNodeValue(tzn))
+					udate = ConvertToUTC(date,xml2util.GetNodeValue(tzn))
 	else:
 		raise ValueError("Bad date content")
-	return date
+	return date,udate
 	
 ###############################################################################
 # RegisterXSLTExtensionFunctions
@@ -426,8 +430,8 @@ def ConvertDateNodeToUTC(node):
 	
 def RegisterXSLTExtensionFunctions():
 
-	libxslt.registerExtModuleFunction("ExtractTZData"    ,"http://synce.org/tz", ExtractTZData)
-	libxslt.registerExtModuleFunction("timezone_AStoVCAL","http://synce.org/tz", timezone_AStoVCAL)
+	libxslt.registerExtModuleFunction("ExtractTZData"          ,"http://synce.org/tz", ExtractTZData)
+	libxslt.registerExtModuleFunction("ConvertASTimezoneToVcal","http://synce.org/tz", ConvertASTimezoneToVcal)
 
   
   

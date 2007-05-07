@@ -31,13 +31,10 @@ from SyncEngine.constants import *
 from SyncEngine.xmlutil import *
 
 def from_airsync(as_node):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml().encode('UTF-8')), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
-    print
-    print "STRTOPARSE"
-    print str(dst_doc)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml().encode('UTF-8')), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml(encoding="utf-8")), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
     dst_doc = minidom.parseString(str(dst_doc))
     return dst_doc

@@ -23,14 +23,18 @@ import parser
 import libxml2
 from SyncEngine.constants import *
 from SyncEngine.xmlutil import *
+import tzconv
 
 libxml2.pedanticParserDefault(0)
 
 def from_airsync(as_node):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml().encode('UTF-8')), SYNC_ITEM_TASKS, parser.FMT_FROM_AIRSYNC)
+	
+    tzconv.CUR_TZ["current"] = None
+	
+    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_TASKS, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml().encode('UTF-8')), SYNC_ITEM_TASKS, parser.FMT_TO_AIRSYNC)
+    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml(encoding="utf-8")), SYNC_ITEM_TASKS, parser.FMT_TO_AIRSYNC)
     dst_doc = minidom.parseString(str(dst_doc))
     return dst_doc

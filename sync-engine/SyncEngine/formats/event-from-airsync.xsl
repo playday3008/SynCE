@@ -17,7 +17,7 @@
         <vcal>
 
         <xsl:for-each select = "C:Timezone[position() = 1]">
-                <xsl:value-of select="tz:timezone_AStoVCAL()"/>
+                <xsl:value-of select="tz:ConvertASTimezoneToVcal()"/>
         </xsl:for-each>
 
             <Event>

@@ -3,12 +3,18 @@
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:convert="http://synce.org/convert"
+               xmlns:tz="http://synce.org/tz"
                xmlns:AS="http://synce.org/formats/airsync_wm5/airsync"
                xmlns:T="http://synce.org/formats/airsync_wm5/tasks"
+
                exclude-result-prefixes="convert T AS">
 
 <xsl:template match="ApplicationData | AS:ApplicationData">
     <vcal>
+        <xsl:for-each select = "T:Timezone[position() = 1]">
+                <xsl:value-of select="tz:ConvertASTimezoneToVcal()"/>
+        </xsl:for-each>
+
 	<Todo>
                <xsl:for-each select="T:Reminder[position() = 1]">
                     <Alarm>
@@ -25,11 +31,11 @@
                	<Summary><Content><xsl:value-of select="T:Subject"/></Content></Summary>
 
                	<xsl:for-each select="T:DueDate[position() = 1]">
-                    <DateDue><Content><xsl:value-of select="convert:task_date_from_airsync()"/></Content></DateDue>
+                    <DateDue><xsl:value-of select="convert:task_due_date_from_airsync()"/></DateDue>
         	</xsl:for-each>
 
                	<xsl:for-each select="T:StartDate[position() = 1]">
-                    <DateStarted><Content><xsl:value-of select="convert:task_date_from_airsync()"/></Content></DateStarted>
+                    <DateStarted><xsl:value-of select="convert:task_start_date_from_airsync()"/></DateStarted>
                 </xsl:for-each>
 
 		<xsl:for-each select="T:Sensitivity[position() = 1]">

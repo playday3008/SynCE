@@ -137,8 +137,6 @@ class SyncClass:
 		change.uid = array.array('B',guid).tostring() 
                 change.changetype = chg_type
 
-		self.logger.debug("first part")
-
                 if item_type in SUPPORTED_ITEM_TYPES:
                     change.objtype, change.format = SUPPORTED_ITEM_TYPES[item_type]
 

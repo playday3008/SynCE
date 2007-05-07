@@ -406,3 +406,28 @@ make things easier if code other than Python has to communicate with
 sync-engine, but also should solve problems with syncing items with
 non-English characters in it.
 
+07/05/2007 - 190500 Dr J A Gow
+------------------------------
+
+Fix to task times. Airsync tasks do not appear to use timezones, although
+it would seem that they can under certain circumstances. They do provide
+a StartDate and UtcStartDate. It is impossible to map these directly to 
+a vcal timezone in the absence of an AirSync timezone, so we first check
+for an AirSync timezone, in which case we convert to local time. If we do
+not have this, we look for UtcxxxxDate and use this as UTC. If all else
+fails we just send in local time
+
+This works, but there seems to be a bug in Evolution. The start date 
+converts OK, but the end time seems to be out by the UTC offset. Unknown
+if this affects other sync targets - needs testing.
+
+RRA thread now runs in the absence of a subscribed RRA object. This prevents
+weird timeouts on the device, but at the penalty of a 'noise' message from
+librra indicating that there are no subscribed items.
+
+Couple of encoding fixes added.
+
+Fixed silly bug in file sync code that attempted to delete files that had
+just been downloaded during initial sync. Also corrected debug log message
+that was not correctly constructed.
+

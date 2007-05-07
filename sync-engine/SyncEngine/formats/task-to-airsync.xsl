@@ -8,18 +8,18 @@
 
 <xsl:template match="/vcal">
 
-    <xsl:for-each select="Timezone">
-        <xsl:value-of select="tz:ExtractTZData()"/>
-    </xsl:for-each>
-
     <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/tasks">
+
+        <!-- AirSync tasks do not use a timezone. Instead we need to maintain two time fields for each
+             timed entity: StartDate and UTCStartDate, also DueDate and UTCDueDate. How brain-damaged
+             is this... -->
 
 	<xsl:for-each select="Todo/Status/Content[position() = 1]">
 		<Complete><xsl:value-of select = "convert:task_status_to_airsync()"/></Complete>
 	</xsl:for-each>
 
         <xsl:for-each select="Todo/DateDue[position() = 1]">
-		<DueDate><xsl:value-of select="convert:task_date_to_airsync()"/></DueDate>
+		<xsl:value-of select="convert:task_due_date_to_airsync()"/>
 	</xsl:for-each>
 
 	<xsl:for-each select="Todo/Priority/Content[position() = 1]">
@@ -37,7 +37,7 @@
 	</xsl:for-each>
 
         <xsl:for-each select="Todo/DateStarted[position() = 1]">
-		<StartDate><xsl:value-of select="convert:task_date_to_airsync()"/></StartDate>
+		<xsl:value-of select="convert:task_start_date_to_airsync()"/>
 	</xsl:for-each>
 
         <Categories>

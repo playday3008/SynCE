@@ -591,7 +591,7 @@ class FileProcessor(Processor):
 			if self.initrepdelay > self.reporttimeout:
 				for oid in self.fdb.db.keys():
 					if not self.fdb.db[oid].Reported:
-						self.logger.debug("object %d unreported - scheduling for deletion")
+						self.logger.debug("object %d unreported - scheduling for deletion",oid)
 						self.fdb.ScheduleForDeletion(oid)
 				self.initial = False
 			else:
@@ -819,6 +819,7 @@ class FileProcessor(Processor):
 			
 				mtime = os.path.getmtime(fullpath)
 				self.fdb.db[objID] = FileDBEntry(path,mtime,LOCAL_STATE_UNCHANGED,isDir)
+				self.fdb.db[objID].Reported = True
 				
 				# Problem is, we also need to guard against a fast delete/recreate cycle.
 				# of a file with the same name - if we don't clear the delete entry the file
@@ -932,6 +933,7 @@ class ObjTypeHandler:
 	def __init__(self,name,processor):
 		self.name = name
 		self.processor = processor
+		self.subscribed = False
 
 ###############################################################################
 # RRAThread
@@ -980,6 +982,10 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 		# It should be possible to add derivatives from the Processor class
 		# to handle these items without having to rewrite the threading code.
 		
+		self.tidhandlers = {} 
+		
+		# scan for object types
+		
 		for ot in oj:
 			print "object id %d type %s" % (ot.id, ot.name1)
 			if ot.name1 == "File":
@@ -996,6 +1002,7 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 						if self.SubscribeObjectEvents(tid) == -1:
 							self.logger.debug("Subscribe failed: type %s",self.tidhandlers[oid].name)
 						else:
+							self.tidhandlers[tid].subscribed=True
 							rc=True
 		return rc
 
@@ -1034,8 +1041,8 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 				
 				if self.stopping:
 					break	
-
-				self.tidhandlers[th].processor.Process()
+				if self.tidhandlers[th].subscribed:
+					self.tidhandlers[th].processor.Process()
 					
 			if self.stopping:
 				break
@@ -1108,10 +1115,9 @@ class RRASyncManager:
 			self.thread.Connect()
 			self.logger.info("connected")
 			if self.thread.isConnected() != 0:
-				if self.thread.Subscribe(pship):
-					self.thread.start()
-				else:
-					self.logger.debug("No RRA type subscriptions: not starting RRA thread")
+				if not self.thread.Subscribe(pship):
+					self.logger.debug("No RRA type subscriptions - ignoring RRA sync items")
+				self.thread.start()
 			else:
 				self.logger.debug("Unable to set up RRA connection")
 		else:

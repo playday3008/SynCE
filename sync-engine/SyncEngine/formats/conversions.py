@@ -39,11 +39,14 @@ RTFHDR += "\\red255\\green255\\blue0;\\red128\\green0\\blue0;\\red0\\green128\\b
 RTFHDR += "\\blue128;\\red0\\green128\\blue128;\\red128\\green0\\blue128;\\red128\\green128\\blue0;}\x0a\x0d"
 RTFHDR += "\\f0 \\fs16 "
 
-DATE_FORMAT_NORMAL  = '%Y%m%dT%H%M%SZ'
-DATE_FORMAT_EVENT   = '%Y%m%dT%H%M%SZ'
-DATE_FORMAT_EVLOCAL = '%Y%m%dT%H%M%S'
-DATE_FORMAT_TASK  = '%Y-%m-%dT%H:%M:%S.000Z'
-DATE_FORMAT_SHORT = '%Y%m%d'
+DATE_FORMAT_NORMAL        = '%Y%m%dT%H%M%SZ'
+DATE_FORMAT_EVENT         = '%Y%m%dT%H%M%SZ'
+DATE_FORMAT_EVLOCAL       = '%Y%m%dT%H%M%S'
+DATE_FORMAT_TASK          = '%Y-%m-%dT%H:%M:%S.000Z'
+DATE_FORMAT_TASKLOCAL     = '%Y-%m-%dT%H:%M:%S.000'
+DATE_FORMAT_VCALTASK      = '%Y%m%dT%H%M%SZ'
+DATE_FORMAT_VCALTASKLOCAL = '%Y%m%dT%H%M%S'
+DATE_FORMAT_SHORT         = '%Y%m%d'
 
 MINUTES_PER_HOUR    = 60
 MINUTES_PER_DAY     = MINUTES_PER_HOUR * 24
@@ -165,7 +168,7 @@ def event_busystatus_from_airsync(ctx):
 
 def event_dtstamp_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_EVENT)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current())[1].strftime(DATE_FORMAT_EVENT)
 
 def event_dtstamp_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -184,7 +187,7 @@ def event_alldayevent_to_airsync(ctx):
 
 def event_starttime_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_EVENT)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current())[1].strftime(DATE_FORMAT_EVENT)
 
 def event_starttime_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -213,7 +216,7 @@ def event_starttime_from_airsync(ctx):
 
 def event_endtime_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_EVENT)
+    return tzconv.ConvertDateNodeToUTC(transform_ctx.current())[1].strftime(DATE_FORMAT_EVENT)
 
 def event_endtime_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -239,12 +242,6 @@ def event_endtime_from_airsync(ctx):
 	
     dst_node.newChild(None,"Content",result)
     return ""
-
-    result = tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_EVENT)
-    if allday_node == None or xml2util.GetNodeValue(allday_node) == "0":
-        return result
-    else:
-        return result[0:8]
 
 def event_sensitivity_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -462,13 +459,87 @@ def event_exception_from_airsync(ctx):
     dst_node.newChild(None, "Value", "DATE")
     return ""
 
-def task_date_to_airsync(ctx):
+def task_start_date_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzconv.ConvertDateNodeToUTC(transform_ctx.current()).strftime(DATE_FORMAT_TASK)
+    localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
+    dst_node = transform_ctx.insertNode()
+    n=dst_node.newChild(None,"StartDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
+    n.setNs(None)
+    n=dst_node.newChild(None,"UtcStartDate",utcDate.strftime(DATE_FORMAT_TASK))
+    n.setNs(None)
+    return ""
 
-def task_date_from_airsync(ctx):
+def task_due_date_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzutils.TaskTextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_NORMAL)
+    localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
+    dst_node = transform_ctx.insertNode()
+    n=dst_node.newChild(None,"DueDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
+    n.setNs(None)
+    n=dst_node.newChild(None,"UtcDueDate",utcDate.strftime(DATE_FORMAT_TASK))
+    n.setNs(None)
+    return ""
+
+def task_start_date_from_airsync(ctx):
+    
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    src_node = transform_ctx.current()
+    
+    asdate = tzutils.TaskTextToDate(xml2util.GetNodeValue(transform_ctx.current()))
+
+    if tzconv.curtz() != None:
+
+	# if we have a tz, we must insert the ID and convert to it
+	
+	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+
+	result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    else:
+	# if not, does the source have a UtcStartDate element?
+	nd = xml2util.FindChildNode(src_node.parent,"UtcStartDate")
+	if nd != None:
+		result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
+		
+	else:
+		# we don't have this either. Better hope that the StartDate value
+		# is correct.
+		
+		result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+
+    dst_node = transform_ctx.insertNode()
+    dst_node.newChild(None,"Content",result)
+    return ""
+
+def task_due_date_from_airsync(ctx):
+    
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    src_node = transform_ctx.current()
+    
+    asdate = tzutils.TaskTextToDate(xml2util.GetNodeValue(transform_ctx.current()))
+
+    if tzconv.curtz() != None:
+
+	# if we have a tz, we must insert the ID and convert to it
+	
+	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+
+	result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    else:
+	# if not, does the source have a UtcStartDate element?
+	nd = xml2util.FindChildNode(src_node.parent,"UtcDueDate")
+	if nd != None:
+		result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
+
+	else:
+		# we don't have this either. Better hope that the DueDate value
+		# is correct.
+		
+		result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+
+    dst_node = transform_ctx.insertNode()
+    dst_node.newChild(None,"Content",result)
+    return ""
 
 def task_classification_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -524,18 +595,14 @@ def task_status_to_airsync(ctx):
 	        if xml2util.GetNodeValue(ct) == "100":
 	            return "1"
     return "0"
-    
+ 
 # Here. let us not destroy the 'unspecified' priority when going
 # _to_ airsync. We can't really help reassigning this as 'low' 
 # in the other direction.
 #
-# Please, somebody show me how to strip the namespace prefix of the
-# child of src_node before we emit it - this way we can do this better
-# (see the commented out code)
 
 def task_prio_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    # src_node = transform_ctx.current()
     d = "0"
     s=xml2util.GetNodeValue(transform_ctx.current())
     if s > "0":
@@ -547,8 +614,6 @@ def task_prio_to_airsync(ctx):
             d = "2"
 	else:
 	    d = "0"
-	#dst_node = transform_ctx.insertNode()
-	#dst_node = dst_node.newChild(None, "Priority", d)
     return d
 
 def task_prio_from_airsync(ctx):
@@ -614,8 +679,10 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("event_recurrence_from_airsync",      "http://synce.org/convert", event_recurrence_from_airsync)
     libxslt.registerExtModuleFunction("event_exception_to_airsync",         "http://synce.org/convert", event_exception_to_airsync)
     libxslt.registerExtModuleFunction("event_exception_from_airsync",       "http://synce.org/convert", event_exception_from_airsync)
-    libxslt.registerExtModuleFunction("task_date_from_airsync",             "http://synce.org/convert", task_date_from_airsync)
-    libxslt.registerExtModuleFunction("task_date_to_airsync",               "http://synce.org/convert", task_date_to_airsync)
+    libxslt.registerExtModuleFunction("task_start_date_to_airsync",         "http://synce.org/convert", task_start_date_to_airsync)
+    libxslt.registerExtModuleFunction("task_due_date_to_airsync",           "http://synce.org/convert", task_due_date_to_airsync)
+    libxslt.registerExtModuleFunction("task_start_date_from_airsync",       "http://synce.org/convert", task_start_date_from_airsync)
+    libxslt.registerExtModuleFunction("task_due_date_from_airsync",         "http://synce.org/convert", task_due_date_from_airsync)
     libxslt.registerExtModuleFunction("task_classification_from_airsync",   "http://synce.org/convert", task_classification_from_airsync)
     libxslt.registerExtModuleFunction("task_classification_to_airsync",     "http://synce.org/convert", task_classification_to_airsync)
     libxslt.registerExtModuleFunction("task_status_from_airsync",           "http://synce.org/convert", task_status_from_airsync)
