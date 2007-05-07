@@ -717,8 +717,6 @@ class SyncItem:
 	    
         for guid in self.itemdb.keys():
 
-            print self.itemdb[guid]
-
             d = minidom.parseString(self.itemdb[guid])
 
             os_doc = formatapi.ConvertFormat(DIR_FROM_AIRSYNC,self.type,d)

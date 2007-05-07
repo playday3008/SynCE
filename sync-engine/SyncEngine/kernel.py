@@ -24,6 +24,7 @@ import logging
 import rrasyncmanager
 import os
 import array
+import prefill
 
 from mutex import mutex
 from pyrapi2 import *
@@ -257,33 +258,26 @@ class SyncEngine(dbus.service.Object):
     # remote changes that will be reported to the synchronizer plugin to include everything
     # in the db.
 	
-    @dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='as', out_signature='')
+    @dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='as', out_signature='u')
     def PrefillRemote(self,types):
         self._check_valid_partnership()
-		
 	self.logger.info("prefill: slow sync prefill triggered")
-	
+
+        rc = 0
+
         if not self.config.config_Global.cfg["SlowSyncDisable"]:
-	
-            if not self.syncing.testandset():
+            if self.syncing.testandset():
+                pfThread = prefill.PrefillThread(self,types)
+                pfThread.start()
+                rc=1
+            else:
                 self.logger.debug("prefill: impossible while syncing")
-                return
-
-            ps = self.partnerships.get_current()
-            if ps.has_state():
-                for a in types:
-                    if SYNC_ITEM_CLASS_TO_ID.has_key(a):
-                        tid = SYNC_ITEM_CLASS_TO_ID[a]
-                        if ps.state.items.has_key(tid):
-                            self.logger.info("prefill: prefilling for item type %d" % tid)
-                            ps.state.items[tid].prefill_remote_change()
-
-            self.logger.info("prefill: prefill complete")
-            self.syncing.unlock()
-	    
         else:
             self.logger.info("slow sync prefill disabled in config")
-    
+
+        return rc
+
+
     @dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='a{us}')
     def GetItemTypes(self):
         """
@@ -398,6 +392,10 @@ class SyncEngine(dbus.service.Object):
 	
         """
         self.partnerships.delete(self.partnerships.get(id))
+
+    @dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature="")
+    def PrefillComplete(self):
+        self.logger.info("Prefill complete: Emitting PrefillComplete signal")
 
     @dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature="")
     def Synchronized(self):
