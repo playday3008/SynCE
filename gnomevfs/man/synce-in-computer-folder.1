@@ -1,0 +1,25 @@
+.TH "synce-in-computer-folder" 1 "May 2007" "The SynCE project" "http://www.synce.org/"
+.SH NAME
+synce-in-computer-folder \- Manages SynCE icon into the Computer folder
+.SH SYNOPSIS
+.B synce-in-computer-folder
+install|uninstall|connect|disconnect
+.SH DESCRIPTION
+Manages the SynCE icon in the Computer folder in Nautilus. This involves adding, removing, connecting and disconneting the shortcut. This shortcut resolves to synce:/// so the GNOME VFS plugin must be installed correctly for this shortcut to be of any use.
+.SH OPTIONS
+.TP
+.B install
+Call this program on device connect/disconnect.
+.TP
+.B uninstall
+Do not call this program on device connect/disconnect.
+.TP
+.B connect
+Add "Mobile Device" to Computer folder.
+.TP
+.B disconnect
+Remove "Mobile Device" from Computer folder.
+.SH "AUTHOR"
+This manual page was written by Jonny Lamb <jonnylamb@jonnylamb.com>.
+.SH "SEE ALSO"
+synce(1)
