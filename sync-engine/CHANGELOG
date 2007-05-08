@@ -438,3 +438,27 @@ Fixed timeouts on slow sync prefill by making the prefill call asynchronous
 (similar to do_sync in synce-plugin). This should prevent timeout errors
 when syncing any number of contacts/tasks/events.
 
+08/05/2007 - 204300 Dr J A Gow
+------------------------------
+
+Added support for password-protected devices, and made the device connection/
+removal more robust. The control for password protected devices is through the
+new config.xml element <AuthMethod> in the Global section. 
+AuthMethod may have the following values: INTERNAL_CLI, INTERNAL_GUI, or it
+can be the path to a program. In all cases authorization is carried out
+through an external program - this way we can trigger GUI sync without
+sync-engine itself becoming dependent upon a GUI framework.
+
+If set to INTERNAL_CLI, the authorization system calls the program 
+'authcli.py' in sync-engine/tools. By default it will run in the same console
+as sync-engine.
+
+If set to INTERNAL_GUI, the authorization system calls the program
+'authgui.py' in sync-engine/tools. This pops up a dialog permitting the
+password to be entered. 'authgui.py' depends on gtk.
+
+If set to a path to a user authorization program, the user program must take
+a single argument on the command line - the dbus object path of the device.
+It must return nonzero if authorized, zero if authorization failed.
+
+

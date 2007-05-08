@@ -2,6 +2,23 @@
 <syncengine-config>
 	<Global>
 		<SlowSyncDisable>0</SlowSyncDisable>
+		
+		<!-- 
+		     AuthMethod can be one of the following:
+		         INTERNAL_GUI uses internal GUI auth prog
+			 INTERNAL_CLI uses internal console auth prog
+			 [pathname_to_prog] uses external auth prog
+			 
+			 Note: INTERNAL_GUI uses GTK to display the box.
+			 
+			       INTERNAL_CLI uses the console and will work on systems
+			       without GTK
+			       
+			       If this element is not specified, the default will be
+			       INTERNAL_CLI
+	        -->
+		<AuthMethod>INTERNAL_GUI</AuthMethod>
+		
 	</Global>
 	<Autosync>
 		<AutoSyncCommand>xterm -e msynctool --sync wm5sync</AutoSyncCommand>

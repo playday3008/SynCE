@@ -149,14 +149,20 @@ class GlobalConfig(ConfigObject):
 		ConfigObject.__init__(self)
 		self.logger = logging.getLogger("GlobalConfig")
 		
-		self.handlers = { "SlowSyncDisable" : self.validate_SlowSyncEnable }
-		self.cfg = { "SlowSyncDisable" : 0 }
+		self.handlers = { "SlowSyncDisable" : self.validate_SlowSyncEnable,
+		                  "AuthMethod"      : self.validate_AuthMethod }
+		self.cfg = { "SlowSyncDisable" : 0,
+		             "AuthMethod"      : "INTERNAL_CLI"
+			   }
 			
 	def validate_SlowSyncEnable(self,arg):
 		try:
 			self.cfg["SlowSyncDisable"] = int(arg)
 		except:
 			self.logger.debug("'SlowSyncDisable': invalid argument %s in config file" % arg)
+			
+	def validate_AuthMethod(self,arg):
+		self.cfg["AuthMethod"] = arg
 			
 	def dump(self):
 		self.logger.info("Global config: ")

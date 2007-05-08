@@ -25,6 +25,7 @@ import rrasyncmanager
 import os
 import array
 import prefill
+import auth
 
 from mutex import mutex
 from pyrapi2 import *
@@ -61,28 +62,89 @@ class SyncEngine(dbus.service.Object):
         self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
         self.device_manager.connect_to_signal("DeviceConnected", self._device_connected_cb)
         self.device_manager.connect_to_signal("DeviceDisconnected", self._device_disconnected_cb)
+	
+	self.device = None
+	self.deviceName = ""
+	self.devicePath = ""
 
-        if len(self.device_manager.GetConnectedDevices()) > 0:
+	obj_paths = self.device_manager.GetConnectedDevices()
+        if len(obj_paths) > 0:
             self.logger.info("__init__: connected device found")
-            self.OnConnect()
+            self._device_connected_cb(obj_paths[0])
 
     def _device_connected_cb(self, obj_path):
-        self.logger.info("_device_connected_cb: device connected at path %s", obj_path)
-        self.OnConnect()
+	 
+	self.logger.info("_device_connected_cb: device connected at path %s", obj_path)
+
+	if self.partnerships == None:
+		
+		# update config from file
+	
+		self.config.UpdateConfig()
+
+		deviceObject = dbus.SystemBus().get_object("org.synce.odccm",obj_path)
+		self.device = dbus.Interface(deviceObject,"org.synce.odccm.Device")
+        	self.device.connect_to_signal("PasswordFlagsChanged", self._CBDeviceAuthStateChanged)
+		self.deviceName = self.device.GetName()
+		self.logger.info(" device %s connected" % self.deviceName)
+		self.devicePath = obj_path
+        	if self._ProcessAuth():
+			self.OnConnect()
+	else:
+		if obj_path == self.devicePath:
+			self.logger.info("_device_connected_cb: device already connected")
+		else:
+			self.logger.info("_device_connected_cb: other device already connected - ignoring new device")
 
     def _device_disconnected_cb(self, obj_path):
         self.logger.info("_device_disconnected_cb: device disconnected from path %s", obj_path)
-	self.OnDisconnect()
+	if self.devicePath == obj_path:
+		self.device=None
+		self.deviceName = ""
+		self.OnDisconnect()
+	else:
+		self.logger.info("_device_disconnected_cb: ignoring non-live device detach")
 
     def _check_device_connected(self):
         if self.partnerships == None:
             raise Disconnected("No device connected")
 
+    def _CBDeviceAuthStateChanged(self,added,removed):
+        self.logger.info("device authorization state changed: reauthorizing")
+	self._ProcessAuth()
+
     def _check_valid_partnership(self):
         self._check_device_connected()
         if self.partnerships.get_current() is None:
             raise NotAvailable("No current partnership")
-
+    #
+    # _ProcessAuth
+    #
+    # INTERNAL
+    #
+    # Process authorization on either callback or initial connection
+    
+    def _ProcessAuth(self):
+	
+	self.logger.info("ProcessAuth : processing authorization for device '%s'" % self.deviceName) 
+	rc=True
+	if auth.IsAuthRequired(self.device):
+		
+		# if we suddenly need auth, first shut down all threads if they
+		# are running
+		
+		if self.partnerships != None:
+			self.OnDisconnect()
+			
+		if auth.Authorize(self.devicePath,self.device,self.config.config_Global):
+			self.logger.info("Authorization successful - reconnecting to device")
+		else:
+			self.logger.info("Failed to authorize - disconnect and reconnect device to try again")
+			rc = False
+	else:
+		self.logger.info("ProcessAuth: authorization not required for device '%s'" % self.deviceName)
+	return rc
+		
     #
     # _reset_current_state
     #
@@ -94,13 +156,9 @@ class SyncEngine(dbus.service.Object):
     def _reset_current_state(self):
         autosync_triggered=False
 
-
     # Additional functions to separate device and sync handlers 
     
     def OnConnect(self):
-	# update config from file
-	
-	self.config.UpdateConfig()
 	
 	# ensure current state is set to defaults
 	

@@ -1,0 +1,94 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+###############################################################################
+# authgui.py
+#
+# Helper tool for authorization in sync-engine. Run as a stand-alone unit - it
+# is not bound to sync-engine in case gtk is not available
+#
+###############################################################################
+
+import dbus
+import dbus.glib
+import gtk
+import sys
+
+ODCCM_DEVICE_PASSWORD_FLAG_SET     = 1
+ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE = 2
+
+# EntryDialog
+#
+# Password entry dialog for GUI entry of password
+#
+
+class EntryDialog(gtk.Dialog):
+    def __init__(self, parent, title, text, password=False):
+        gtk.Dialog.__init__(self, title, parent,
+                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                             gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+
+        label = gtk.Label(text)
+        label.set_alignment(0.0, 0.5)
+        self.vbox.pack_start(label, False)
+        self._label = label
+
+        entry = gtk.Entry()
+        entry.set_visibility(not password)
+        self.vbox.pack_start(entry, False, True, 5)
+        self._entry = entry
+
+        self.show_all()
+
+    def get_text(self):
+        return self._entry.get_text()
+
+# 
+# AuthGui
+#
+# Application class.
+
+class AuthGui:
+	
+	def __init__(self,objpath):
+
+		bus = dbus.SystemBus()
+		self.deviceObject = bus.get_object("org.synce.odccm", objpath)
+		self.device = dbus.Interface(self.deviceObject, "org.synce.odccm.Device")
+		self.deviceName = self.device.GetName()
+	
+	def Authorize(self):
+		
+		# no need to run if for some reason we are called on a 
+		# device that is not blocked
+		
+		flags = self.device.GetPasswordFlags()
+		rc=1
+		if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
+			stopAsking = False
+			while not stopAsking:
+				dlg = EntryDialog(None,	"SynCE: Password required to synchronize device",
+							"Enter password for device '%s'" % self.deviceName,
+							True)
+
+				if dlg.run() == gtk.RESPONSE_ACCEPT:
+					stopAsking = self.device.ProvidePassword(dlg.get_text())
+					if stopAsking:
+						rc=1
+				else:
+		    			stopAsking = True
+					rc=0
+                		dlg.destroy()
+		return rc
+
+#
+# main
+#
+# Get the objpath from the command line, then authorize
+
+if len(sys.argv) > 1:
+	devobjpath = sys.argv[1]
+	app = AuthGui(devobjpath)
+	exit(app.Authorize())
+else:
+	exit(0)
