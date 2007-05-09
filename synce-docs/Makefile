@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 # Stylesheet paths
-xsl_prefix=/usr/share/xml/docbook/stylesheet/nwalsh
+xsl_prefix=http://docbook.sourceforge.net/release/xsl/current
 html_docbook=${xsl_prefix}/html/docbook.xsl
 html_chunk=${xsl_prefix}/html/chunk.xsl
 
