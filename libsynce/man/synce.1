@@ -1,42 +1,31 @@
 .\" $Id$
-.TH "SynCE" "1" "November 2002" "The SynCE project" "http://synce.sourceforge.net/"
+.TH "SynCE" "1" "November 2002" "The SynCE project" "http://www.synce.org/"
 .SH NAME
-SynCE \- A project for connecting to devices running Windows CE or Pocket PC.
+SynCE \- A project for connecting to devices running Microsoft Windows Mobile.
 
 .SH "DESCRIPTION"
 The following steps are required to get started with SynCE:
 
 .SS 
-(1) Configure connection (as root)
+(1) Ensure kernel module is installed
 .PP
-Use synce-serial-config(8) to setup a connection using serial cable or infrared.
-This configuration must be done with root privileges.
-
-.PP
-This only needs to be done the first time you run SynCE, or when you want to
-connect through a different port.
+You must either use the usb-rndis-[lite|ng] driver from SynCE, or if you are using a kernel >= 2.6.21 then you must have patched your kernel.
 
 .SS
-(2) Start the connection daemon (as user)
+(2) Start the connection daemon (as root)
 .PP
-The dccm(1) program handles the SynCE connection. This daemon is run by the
-user.
+The odccm(1) program handles the SynCE connection. This daemon is run by the root.
 
 .SS
-(3) Start the connection (as root)
-.PP
-Use synce-serial-start(8) to make your device initiate a connection to dccm.
-
-.SS
-(4) Run tools that access the device (as user)
+(3) Run tools that access the device (as user)
 .PP
 See for example pls(1) and pcp(1).
 
 .PP
-See http://synce.sourceforge.net/ for more information about the SynCE project.
+See http://www.synce.org/ for more information about the SynCE project.
 .SH "AUTHOR"
 .PP
-This manual page was written by David Eriksson <twogood@users.sourceforge.net>.
+This manual page was written by David Eriksson <twogood@users.sourceforge.net>. It was later updated by Jonny Lamb <jonnylamb@jonnylamb.com>.
 .SH "SEE ALSO"
-dccm(1) synce-serial-config(8) synce-serial-start(8) synce-serial-abort(8)
+odccm(1)
 
