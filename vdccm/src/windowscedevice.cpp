@@ -26,6 +26,8 @@
 #include <tcpserversocket.h>
 #include <multiplexer.h>
 #include <synce_log.h>
+#include <cstdlib>
+#include <cctype>
 
 #include <devicemanager.h>
 

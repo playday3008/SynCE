@@ -33,6 +33,7 @@
 #include "utils.h"
 #include <localserversocket.h>
 #include <synce_log.h>
+#include <cstdlib>
 #include <iostream>
 #include <wait.h>
 

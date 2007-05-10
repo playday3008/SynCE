@@ -18,6 +18,7 @@
 #include "rapiproxyfactory.h"
 #include <synce_log.h>
 #include <synce.h>
+#include <cstdlib>
 #include <errno.h>
 
 #include <arpa/inet.h>

@@ -23,6 +23,7 @@
 #include "utils.h"
 
 #include <signal.h>
+#include <cstdlib>
 #include <string>
 #include <fstream>
 #include <sstream>

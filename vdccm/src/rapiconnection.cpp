@@ -20,6 +20,7 @@
 #include "cmdlineargs.h"
 #include "synce.h"
 #include "synce_log.h"
+#include <algorithm>
 #include <multiplexer.h>
 
 using namespace std;

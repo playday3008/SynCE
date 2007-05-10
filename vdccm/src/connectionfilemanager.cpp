@@ -22,6 +22,8 @@
  ***************************************************************************/
 #include "connectionfilemanager.h"
 #include "windowscedevicebase.h"
+#include <cstdlib>
+#include <algorithm>
 #include <fstream>
 #include <sys/types.h>
 #include <unistd.h>

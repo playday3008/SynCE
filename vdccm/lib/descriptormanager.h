@@ -23,6 +23,7 @@
 #ifndef DESCRIPTORMANAGER_H
 #define DESCRIPTORMANAGER_H
 
+#include <sys/types.h>
 #include <list>
 #include "descriptor.h"
 
