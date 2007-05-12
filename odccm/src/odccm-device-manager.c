@@ -328,18 +328,24 @@ hal_device_is_pda (LibHalContext *ctx, const char *udi, gchar **ret_ifname)
       "info.parent", &error);
   if (parentname == NULL) goto DONE;
 
-  /* Check the parent's device driver name */
-  gchar *parentdrvname = libhal_device_get_property_string (ctx, parentname,
+  /* Check the parent's device driver name (for usb-rndis-lite) */
+  gchar *drvname = libhal_device_get_property_string (ctx, parentname,
       "info.linux.driver", &error);
-  if (parentdrvname == NULL)
+  if (drvname != NULL)
     {
-      libhal_free_string (parentname);
-      goto DONE;
+      if (strncmp ("rndis_host", drvname, 11) == 0) result = 1;
+      libhal_free_string (drvname);
     }
 
-  if (strncmp ("rndis_host", parentdrvname, 11) == 0) result = 1;
+  /* Check pda.platform property (for usb-rndis-ng) */
+  gchar *pdaplatform = libhal_device_get_property_string (ctx, parentname,
+      "pda.platform", &error);
+  if (pdaplatform != NULL)
+    {
+      if (strncmp ("pocketpc", pdaplatform, 8) == 0) result = 1;
+      libhal_free_string (pdaplatform);
+    }
 
-  libhal_free_string (parentdrvname);
   libhal_free_string (parentname);
 
 DONE:
