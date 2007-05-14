@@ -307,6 +307,8 @@ class SyncEngine(dbus.service.Object):
 	    self.autosync_triggered = False
 	    self.Synchronized()
 
+	self.logger.info("Synchronize: leaving method")
+
     #
     # PrefillRemote
     #

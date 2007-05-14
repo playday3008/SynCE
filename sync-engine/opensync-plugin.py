@@ -95,7 +95,6 @@ class SyncClass:
         self.logger.info("requesting device synchronization")
         self.engine_synced = False
         self.engine.Synchronize()
-
 	self.logger.info("waiting for engine to complete sync")
         while not self.engine_synced:
             time.sleep(1)
