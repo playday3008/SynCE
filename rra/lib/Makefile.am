@@ -45,4 +45,4 @@ librra_la_SOURCES = \
 	matchmaker.h
 
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
-librra_la_LIBADD   = @LTLIBOBJS@
+librra_la_LIBADD   = @LTLIBOBJS@ @LIBRAPI2_LIBS@
