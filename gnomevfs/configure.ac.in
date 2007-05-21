@@ -28,11 +28,21 @@ PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
 dnl Check for librapi2
 PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.10.0)
 
+dnl
+dnl debugging output
+dnl
+AC_ARG_WITH(verbose-debug, AC_HELP_STRING([--without-verbose-debug], [Build without copious syslog debugging output]))
+if test x"$with_verbose_debug" != xno; then
+	AC_DEFINE(WITH_VERBOSE_DEBUG, 1, [Build with copious syslog debugging output])
+fi
+
 dnl Prevent "NONE" used as prefix!
 test "x$prefix" = xNONE && eval prefix=$ac_default_prefix
 test "x$exec_prefix" = xNONE && eval exec_prefix='${prefix}'
 
+## need to expand these an extra time since autoconf introduced $datarootdir
 eval SYNCE_IN_COMPUTER_FOLDER_SH="${datadir}/synce/synce-in-computer-folder.sh"
+eval SYNCE_IN_COMPUTER_FOLDER_SH="${SYNCE_IN_COMPUTER_FOLDER_SH}"
 AC_DEFINE_UNQUOTED(SYNCE_IN_COMPUTER_FOLDER_SH, "$SYNCE_IN_COMPUTER_FOLDER_SH", "Script for use with dccm.")
 
 eval SYNCE_BINDIR="${bindir}"
@@ -41,8 +51,8 @@ AC_CONFIG_FILES( [script/synce-in-computer-folder.sh] )
 
 AC_OUTPUT([
 	Makefile
-  pixmaps/Makefile
-  script/Makefile
+	pixmaps/Makefile
+	script/Makefile
 	src/Makefile
 	man/Makefile
 ])

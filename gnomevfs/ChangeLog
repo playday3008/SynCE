@@ -1,3 +1,12 @@
+2007-05-09  Mark Ellis  <mark@mpellis.org.uk>
+	* fixed invalid return in _open & _create if mode GENERIC_WRITE
+	* added and tidied debugging output
+	* added --without-verbose-debug to configure
+	* fix var expansion for later autoconf version
+	* fixed memory leak in close_dir
+	* modified open_dir for Applications
+	* added more error codes
+
 2007-05-05  Mark Ellis  <mark@mpellis.org.uk>
 
 	* corrected gnome-vfs system config file
