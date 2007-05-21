@@ -25,8 +25,25 @@ char* synce_strerror(DWORD error)
 
 		case ERROR_FILE_NOT_FOUND:    result = "File not found"; break;
 		case ERROR_PATH_NOT_FOUND:    result = "Path not found"; break;
-		case ERROR_DIR_NOT_EMPTY:     result = "Directory not empty"; break;
+		case ERROR_TOO_MANY_OPEN_FILES: result = "Too many open files"; break;
+		case ERROR_ACCESS_DENIED: result = "Access is denied"; break;
+		case ERROR_INVALID_HANDLE:    result = "Invalid file handle"; break;
+		case ERROR_NOT_ENOUGH_MEMORY: result = "Not enough memory"; break;
+		case ERROR_NO_MORE_FILES:     result = "There are no more files"; break;
+		case ERROR_SEEK: result = "Drive seek error"; break;
+		case ERROR_SHARING_VIOLATION: result = "Sharing violation"; break;
+		case ERROR_NOT_SUPPORTED: result = "Not supported"; break;
+		case ERROR_DUP_NAME: result = "Duplicate name"; break;
+		case ERROR_FILE_EXISTS: result = "File exists"; break;
 		case ERROR_INVALID_PARAMETER: result = "Invalid parameter"; break;
+		case ERROR_DISK_FULL:         result = "Not enough space on disk"; break;
+		case ERROR_INSUFFICIENT_BUFFER:   result = "Insufficient buffer"; break;
+		case ERROR_INVALID_NAME:     result = "Invalid name"; break;
+		case ERROR_DIR_NOT_EMPTY:     result = "Directory not empty"; break;
+		case ERROR_ALREADY_EXISTS:     result = "File already exists"; break;
+		case ERROR_NO_DATA:     result = "No more data in pipe"; break;
+		case ERROR_NO_MORE_ITEMS:     result = "No more data available"; break;
+		case ERROR_KEY_DELETED:     result = "Registry key marked for deletion"; break;
 		
 		default: 
 			synce_trace("Unknown error code: 0x%08x", error);
