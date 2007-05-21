@@ -34,8 +34,6 @@ test "x$exec_prefix" = xNONE && eval exec_prefix='${prefix}'
 
 eval SYNCE_IN_COMPUTER_FOLDER_SH="${datadir}/synce/synce-in-computer-folder.sh"
 AC_DEFINE_UNQUOTED(SYNCE_IN_COMPUTER_FOLDER_SH, "$SYNCE_IN_COMPUTER_FOLDER_SH", "Script for use with dccm.")
-eval SYNCE_ICON="${datadir}/pixmaps/synce/synce-color.png"
-AC_DEFINE_UNQUOTED(SYNCE_ICON, "$SYNCE_ICON", "Icon file path.")
 
 eval SYNCE_BINDIR="${bindir}"
 AC_SUBST(SYNCE_BINDIR)
