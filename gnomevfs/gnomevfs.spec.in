@@ -45,5 +45,5 @@ test -f $FILE && rm $FILE
 %{_libdir}/gnome-vfs-2.0/modules/libsyncevfs.la
 %{_sysconfdir}/gnome-vfs-2.0/modules/synce-module.conf
 %{_bindir}/synce-in-computer-folder
-%{_datadir}/pixmaps/synce/synce-color.png
+%{_datadir}/pixmaps/synce/synce-gnomevfs.png
 %{_datadir}/synce/synce-in-computer-folder.sh

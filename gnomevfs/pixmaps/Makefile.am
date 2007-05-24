@@ -1,7 +1,7 @@
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 
 pixmapdir = $(datadir)/icons/hicolor/48x48/apps
-pixmap_DATA = synce-color.png
+pixmap_DATA = synce-gnomevfs.png
 gtk_update_icon_cache = gtk-update-icon-cache -f -t $(datadir)/icons/hicolor
 install-data-hook: update-icon-cache
 uninstall-hook: update-icon-cache

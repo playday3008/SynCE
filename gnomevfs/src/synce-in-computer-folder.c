@@ -14,7 +14,7 @@
 
 #define DISPLAY_NAME "Mobile Device"
 #define URI "synce:///"
-#define ICON "synce-color"
+#define ICON "synce-gnomevfs"
 
 #define COMMAND_STRING_INSTALL      "install"
 #define COMMAND_STRING_UNINSTALL    "uninstall"
