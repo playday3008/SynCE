@@ -794,9 +794,19 @@ static struct ethtool_ops usbnet_ethtool_ops = {
  * especially now that control transfers can be queued.
  */
 static void
-kevent (void *data)
+kevent (
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+		struct work_struct *work
+#else
+		void *data
+#endif
+       )
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+	struct usbnet		*dev = container_of(work, struct usbnet, kevent);
+#else
 	struct usbnet		*dev = data;
+#endif
 	int			status;
 
 	/* usb_clear_halt() needs a thread context */
