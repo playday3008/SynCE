@@ -307,8 +307,21 @@ bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size)
 	{
 		int result = write(socket->fd, data, bytes_left);
 
-		if (result <= 0)
+		if (result == 0)
 		{
+			/* Should only happen if 'bytes_left == 0'.  That is,
+			 * no more data left to be written. */
+			break;
+		}
+		else if (result < 0 && (errno == EINTR || errno == EAGAIN))
+		{
+			/* There was either an interrupt or some other reason
+			 * we should try again. */
+			continue;
+		}
+		else if (result < 0)
+		{
+			/* Something else went wrong. */
 			synce_socket_error("write failed, error: %i \"%s\"", errno, strerror(errno));
 
 			/* Close socket on unrecoverable errors */
@@ -340,8 +353,20 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 
 		/* synce_socket_trace("read returned %i, needed %i bytes", result, bytes_needed); */
 
-		if (result <= 0)
+		if (result == 0)
 		{
+			/* EOF */
+			break;
+		}
+		else if (result < 0 && (errno == EINTR || errno == EAGAIN))
+		{
+			/* There was either an interrupt or some other reason
+			 * we should try again. */
+			continue;
+		}
+		else if (result < 0)
+		{
+			/* Something else went wrong. */
 			synce_socket_error("read failed, error: %i \"%s\"", errno, strerror(errno));
 
 			/* Close socket on unrecoverable errors */
