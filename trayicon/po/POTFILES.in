@@ -1,0 +1,6 @@
+src/gtop_stuff.c
+src/properties.c
+src/eggtrayicon.c
+src/synce-trayicon.c
+src/keyring.c
+data/synce_trayicon_properties.glade

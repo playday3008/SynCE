@@ -1,0 +1,21 @@
+2007-05-05  Mark Ellis <mark@mpellis.org.uk>
+
+	* updated configure.ac.in and corrected version handling
+	* typo for password_label in preferences.c
+	* remove excess _set_sensitive for software manager menu item
+	* change deprecated gtk_idle_add for g_idle_add
+	* store password in gnome-keyring
+	* add start/stop/restart dccm menu items
+	* use gtk stock icon functions
+
+2004-01-22  Mattias Eriksson <snaggen@acc.umu.se
+
+	* Add the russian translation by Michael Shigorin
+
+2004-01-21  Mattias Eriksson <snaggen@acc.umu.se
+
+	* Add some files wanted by automake
+	* Add i18n and swedish translation
+	* And add this ChangeLog
+	* Correcting the files I stole from some other project 
+	  with their credits and stuff... ooops ;-)

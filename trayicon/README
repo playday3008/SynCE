@@ -1,0 +1,10 @@
+Gnome keyring support
+---------------------
+
+Trayicon now uses gnome-keyring by default to store connection passwords.
+It is probably a good idea to unset the gconf key
+/apps/synce/trayicon/password for your user if you have been using
+password support.
+
+To revert to storing passwords in gconf, pass --without-gnome-keyring
+to configure.
