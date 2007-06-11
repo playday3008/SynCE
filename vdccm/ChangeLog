@@ -1,3 +1,7 @@
+2007-06-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* Fix to connection file write when password involved
+
 2005-03-30 20:04  voc
 
 	* Initial version of the new, object-oriented vdccm
