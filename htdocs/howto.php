@@ -272,6 +272,7 @@ need to perform some special configuration:</p>
 
 <ol>
 
+<!--
 <li><p>Only if your Linux kernel is 2.6.10 or later: please send a mail to <a
 href="mailto:synce-devel@lists.sourceforge.net">
 synce-devel@lists.sourceforge.net</a> and tell us...</p>
@@ -282,6 +283,7 @@ synce-devel@lists.sourceforge.net</a> and tell us...</p>
 <li>vendor/product USB IDs for your device (see Vendor= and ProdID=)</li>
 </ol>
 </li>
+-->
 
 <li><p>Follow the instructions in Appendix A to add options like this, but
 replace the red digits with the corresponding ones from the output from the
