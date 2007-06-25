@@ -46,6 +46,7 @@
 #include <libgnomeui/gnome-dialog.h>
 #include <libgnomeui/gnome-about.h>
 #include <gconf/gconf-client.h>
+
 #include "eggtrayicon.h"
 #include "gtop_stuff.h"
 #include "properties.h"
@@ -53,14 +54,26 @@
 #ifdef WITH_GNOME_KEYRING
 #include "keyring.h"
 #endif
+#include "dccm-client.h"
+#include "vdccm-client.h"
+#include "odccm-client.h"
+#include "device-manager.h"
 
 #define SYNCE_SOFTWARE_MANAGER "synce-software-manager"
+
+enum {
+  USE_ODCCM,
+  USE_VDCCM
+};
+
+static guint which_dccm = USE_ODCCM;
 
 GConfClient *synce_conf_client = NULL;
 
 static bool in_background = true;
-static bool is_connected = false;
-static char* device_name = NULL;
+DccmClient *comms_client = NULL;
+WmDeviceManager *device_list = NULL;
+
 
 static EggTrayIcon* tray_icon = NULL;
 static GtkTooltips* tooltips = NULL;
@@ -71,110 +84,80 @@ static const struct poptOption options[] = {
 	{NULL, '\0', 0, NULL, 0} /* end the list */
 };
 
-static const char* get_battery_flag_string(unsigned flag)
-{
-	const char* name;
-	
-	switch (flag)
-	{
-		case BATTERY_FLAG_HIGH:        name = _("High");       break;
-		case BATTERY_FLAG_LOW:         name = _("Low");        break;
-		case BATTERY_FLAG_CRITICAL:    name = _("Critical");   break;
-		case BATTERY_FLAG_CHARGING:    name = _("Charging");   break;
-		case BATTERY_FLAG_NO_BATTERY:  name = _("NoBattery");  break;
 
-		default: name = _("Unknown"); break;
-	}
-
-	return name;
+static bool is_connected() {
+  if (wm_device_manager_device_count(device_list) > 0) {
+    return TRUE;
+  }
+  return FALSE;
 }
+
 
 static void set_status_tooltips()
 {
-	SYSTEM_POWER_STATUS_EX power;
-	STORE_INFORMATION store;
-	char* power_str = NULL;
-	char* store_str = NULL;
-	char* tooltip_str = NULL;
-	
-	memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
-	if (CeGetSystemPowerStatusEx(&power, false) &&
-			BATTERY_PERCENTAGE_UNKNOWN != power.BatteryLifePercent)
-	{
-		power_str = g_strdup_printf(
-				"%i%% (%s)", 
-				power.BatteryLifePercent, 
-				get_battery_flag_string(power.BatteryFlag));
-	}
-	else
-	{
-		power_str = g_strdup(_("Unknown"));
-	}
-	 
-	memset(&store, 0, sizeof(store));
-	if (CeGetStoreInformation(&store) && store.dwStoreSize != 0)
-	{
-		store_str = g_strdup_printf(
-				_("%i%% (%i megabytes)"), 
-				100 * store.dwFreeSize / store.dwStoreSize,
-				store.dwFreeSize >> 20);
-	}
-	else
-	{
-		store_str = g_strdup(_("Unknown"));
-	}
+  gchar *power_str = NULL;
+  gchar *store_str = NULL;
+  gchar *pdaname = NULL;
+  gchar *tooltip_str = NULL;
+  gchar *tmpstr = NULL;
+  guint device_count, i = 0;
+  WmDevice *device;
 
-	tooltip_str = g_strdup_printf(
-		_("Battery life:\t%s\nFree store:\t%s"),
-		power_str,
-		store_str);
+  if (!is_connected()) {
+    gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), _("Not connected"), NULL);
+    return;
+  }
 
-	gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), tooltip_str, NULL);
+  device_count = wm_device_manager_device_count(device_list);
 
-	g_free(power_str);
-	g_free(store_str);
-	g_free(tooltip_str);
+  for (i = 0; i < device_count; i++) {
+    device = wm_device_manager_find_by_index(device_list,i);
+
+    power_str = wm_device_get_power_status(device);
+    store_str = wm_device_get_store_status(device);
+    pdaname = wm_device_get_name(device);
+    if (tooltip_str)
+      tmpstr = g_strdup_printf(_("%s\n%s Battery life: %s  Free store: %s"),
+			       tooltip_str, pdaname, power_str, store_str);
+    else
+      tmpstr = g_strdup_printf(_("%s Battery life: %s  Free store: %s"),
+			       pdaname, power_str, store_str);
+
+
+    g_free(tooltip_str);
+    g_free(power_str);
+    g_free(store_str);
+    g_free(pdaname);
+    tooltip_str = tmpstr;
+  }
+
+  gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), tooltip_str, NULL);
+  g_free(tooltip_str);
+  return;
 }
 
 void start_dccm ()
 {
-	char *argv[3] = {
-		"dccm","-p",""
-	};
-	char argc = 1;
+  char *argv[3] = {
+    DCCM_BIN,""
+  };
+  char argc = 1;
 
-	if (gconf_client_get_bool (synce_conf_client,
-			                "/apps/synce/trayicon/enable_password", NULL)) {
-
-#ifdef WITH_GNOME_KEYRING
-		if (!(argv[2] = get_key_from_keyring(NULL)))
-		{
-			argc = 1;
-		} else {
-			argc = 3;
-		}
-#else
-		argv[2] = gconf_client_get_string (synce_conf_client,
-					"/apps/synce/trayicon/password", NULL);
-		argc = 3;
-#endif
-	}
-
-	if (!dccm_is_running()) {
-		synce_trace("starting dccm");
-		if (gnome_execute_async(NULL,argc, argv) == -1) {
-			synce_error_dialog(_("Can't start dccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again."));
-			synce_trace("Failed to start dccm");
-		}
-	} else {
-		synce_trace("dccm is already running!");
-	}
+  if (!dccm_is_running()) {
+    synce_trace("starting %s", DCCM_BIN);
+    if (gnome_execute_async(NULL,argc, argv) == -1) {
+      synce_error_dialog(_("Can't start vdccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again."));
+      synce_trace("Failed to start %s", DCCM_BIN);
+    }
+  } else {
+    synce_trace("%s is already running!", DCCM_BIN);
+  }
 }
 
 
 void stop_dccm ()
 {
-	send_signal_dccm(SIGTERM);
+  send_signal_dccm(SIGTERM);
 }
 
 
@@ -200,7 +183,7 @@ static void menu_software (GtkWidget *button, EggTrayIcon *icon)
 
 static void menu_preferences (GtkWidget *button, EggTrayIcon *icon)
 {
-	init_prefgui();
+  run_prefs_dialog();
 }
 
 static void menu_about (GtkWidget *button, EggTrayIcon *icon)
@@ -225,9 +208,15 @@ static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 	gtk_widget_show(about);
 }
 
-static void menu_disconnect(GtkWidget *button, EggTrayIcon *icon)
+static void menu_disconnect(GtkWidget *button, gpointer data)
 {
-	send_signal_dccm(SIGHUP);
+  WmDevice *device = WM_DEVICE(data);
+  gchar *name = wm_device_get_name(device);
+
+  synce_debug("***** Asked to disconnect %s by user ******", name);
+
+  dccm_client_request_disconnect(comms_client, name);
+  g_free(name);
 }
 
 static void menu_start_dccm(GtkWidget *button, EggTrayIcon *icon)
@@ -268,11 +257,14 @@ static void menu_exit(GtkWidget *button, EggTrayIcon *icon)
 	gtk_main_quit();
 }
 	
-static void trayicon_menu(GdkEventButton *event) 
+static void trayicon_menu(GdkEventButton *event)
 {
 	static GtkWidget *menu = NULL;
 	GtkWidget *entry;
 	char buffer[MAX_PATH];
+	gchar *device_name;
+	gint i;
+	WmDevice *device;
 
 	if (menu) {
 		gtk_widget_destroy(menu);
@@ -282,14 +274,14 @@ static void trayicon_menu(GdkEventButton *event)
 
 	entry = gtk_menu_item_new_with_label(_("Explore with Filemanager"));
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_explore), NULL);
-	gtk_widget_set_sensitive(entry, is_connected);
+	gtk_widget_set_sensitive(entry, is_connected());
 	gtk_menu_append(GTK_MENU(menu), entry);
 	
 	entry = gtk_menu_item_new_with_label(_("Add/Remove Programs"));
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_software), NULL);
 	gtk_menu_append(GTK_MENU(menu), entry);
 	if (g_find_program_in_path(SYNCE_SOFTWARE_MANAGER) != NULL && 
-			is_connected) {
+			is_connected()) {
 		gtk_widget_set_sensitive(entry, TRUE);
 	} else {
 		gtk_widget_set_sensitive(entry, FALSE);
@@ -298,36 +290,46 @@ static void trayicon_menu(GdkEventButton *event)
 	entry = gtk_separator_menu_item_new();
 	gtk_menu_append(GTK_MENU(menu), entry);
 		
-	if (is_connected)
-		snprintf(buffer, sizeof(buffer), _("Disconnect from '%s'"), device_name);
-	else
-		strcpy(buffer, _("(No device connected)"));
-	
-	entry = gtk_menu_item_new_with_label(buffer);
-	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), NULL);
-	gtk_menu_append(GTK_MENU(menu), entry);
-	
-	entry = gtk_separator_menu_item_new();
-	gtk_menu_append(GTK_MENU(menu), entry);
+	if (is_connected()) {
+	  for (i = 0; i < wm_device_manager_device_count(device_list); i++) {
+	    device = wm_device_manager_find_by_index(device_list, i);
+	    device_name = wm_device_get_device_name(device);
+	    g_snprintf(buffer, sizeof(buffer), _("Disconnect from '%s'"), device_name);
 
-	if (dccm_is_running()) {
-	  entry = gtk_menu_item_new_with_label(_("Stop DCCM"));
-	  g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_stop_dccm), NULL);
-	  gtk_menu_append(GTK_MENU(menu), entry);
-	  gtk_widget_set_sensitive(entry, !is_connected);
+	    entry = gtk_menu_item_new_with_label(buffer);
+	    g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), (gpointer) device);
+	    gtk_menu_append(GTK_MENU(menu), entry);
 
-	  entry = gtk_menu_item_new_with_label(_("Restart DCCM"));
-	  g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_restart_dccm), NULL);
-	  gtk_menu_append(GTK_MENU(menu), entry);
-	  gtk_widget_set_sensitive(entry, !is_connected);
+	    g_free(device_name);
+	  }
 	} else {
-	  entry = gtk_menu_item_new_with_label(_("Start DCCM"));
-	  g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_start_dccm), NULL);
+	  strcpy(buffer, _("(No device connected)"));
+	  entry = gtk_menu_item_new_with_label(buffer);
 	  gtk_menu_append(GTK_MENU(menu), entry);
 	}
 
 	entry = gtk_separator_menu_item_new();
 	gtk_menu_append(GTK_MENU(menu), entry);
+
+	if (which_dccm == USE_VDCCM) {
+	  if (dccm_is_running()) {
+	    entry = gtk_menu_item_new_with_label(_("Stop DCCM"));
+	    g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_stop_dccm), NULL);
+	    gtk_menu_append(GTK_MENU(menu), entry);
+	    gtk_widget_set_sensitive(entry, !is_connected());
+
+	    entry = gtk_menu_item_new_with_label(_("Restart DCCM"));
+	    g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_restart_dccm), NULL);
+	    gtk_menu_append(GTK_MENU(menu), entry);
+	    gtk_widget_set_sensitive(entry, !is_connected());
+	  } else {
+	    entry = gtk_menu_item_new_with_label(_("Start DCCM"));
+	    g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_start_dccm), NULL);
+	    gtk_menu_append(GTK_MENU(menu), entry);
+	  }
+	  entry = gtk_separator_menu_item_new();
+	  gtk_menu_append(GTK_MENU(menu), entry);
+	}
 
 	entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_PREFERENCES,
 			             NULL);
@@ -368,7 +370,7 @@ static GtkWidget *icon = NULL;
 
 static void set_icon()
 {
-	if (is_connected)
+	if (is_connected())
 	  gtk_image_set_from_icon_name(GTK_IMAGE(icon), "synce-color-small", GTK_ICON_SIZE_SMALL_TOOLBAR);
 	else
 	  gtk_image_set_from_icon_name(GTK_IMAGE(icon), "synce-gray-small", GTK_ICON_SIZE_SMALL_TOOLBAR);
@@ -377,124 +379,14 @@ static void set_icon()
 		gtk_main_iteration ();
 }
 
-static void update()
+static gboolean update(gpointer data)
 {
-	HRESULT hr;
-	LONG result;
-	WCHAR* tmp = NULL;
-	HKEY key = 0;
-	DWORD type = 0;
-	DWORD size;
-	WCHAR buffer[MAX_PATH];
+  set_icon();
+  set_status_tooltips();
 
-	hr = CeRapiInit();
-	if (FAILED(hr))
-	{
-		is_connected = false;
-		set_icon();
-		gtk_tooltips_set_tip(tooltips, GTK_WIDGET(tray_icon), _("Not connected"), NULL);
-		return;
-	}
-
-	is_connected = true;
-	set_icon();
-
-	tmp = wstr_from_ascii("Ident");
-	result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, tmp, 0, 0, &key);
-	wstr_free_string(tmp);
-
-	if (ERROR_SUCCESS != result)
-	{
-		synce_error("CeRegOpenKeyEx failed");
-		goto exit;
-	}
-
-	tmp = wstr_from_ascii("Name");
-	size = sizeof(buffer);
-
-	result = CeRegQueryValueEx(key, tmp, 0, &type, (LPBYTE)buffer, &size);
-	
-	wstr_free_string(tmp);
-
-	if (ERROR_SUCCESS != result)
-	{
-		synce_error("CeRegQueryValueEx failed");
-		goto exit;
-	}
- 
-	if (REG_SZ != type)
-	{
-		synce_error("Unexpected value type: 0x%08x = %i", type, type);
-		goto exit;
-	}
-	 
-	wstr_free_string(device_name);
-	device_name = wstr_to_ascii(buffer);
-
-	set_status_tooltips();
-
-exit:
-	CeRapiUninit();
-}
-
-static gboolean update_event(gpointer data)
-{
-	synce_trace("gotta update");
-	update();
-	return FALSE; /* prevent function from running again, right? */
-}
-
-static void sighup_handler()
-{
-	synce_trace("SIGHUP");
-	g_idle_add(update_event, NULL);
-}
-
-static bool write_script()
-{
-	bool success = false;
-	char* directory = NULL;
-	char buffer[MAX_PATH];
-	FILE* file = NULL;
-	
-	if (!synce_get_script_directory(&directory))
-		goto exit;
-
-	snprintf(buffer, sizeof(buffer), "%s/trayicon.sh", directory);
-	
-	file = fopen(buffer, "w");
-	if (!file)
-		goto exit;
-
-	/* XXX: killall does not exist everywhere... */
-	fprintf(file,
-			"#!/bin/sh\n"
-			"# The contents of this file will be lost next time you run synce-trayicon\n"
-			"\n"
-			"OS=`uname -s`\n"
-			"if [ \"$OS\" = \"SunOS\" ]; then\n"
-			"\tkiller=pkill\n"
-			"else\n"
-			"\tkiller=killall\n"
-			"fi\n"
-			"$killer -HUP synce-trayicon\n"
-			);
-
-	fclose(file); 
-	file = NULL;
-
-	chmod(buffer, 0700);
-
-	success = true;
-
-exit:
-	if (file)
-		fclose(file);
-	
-	if (directory)
-		free(directory);
-
-	return success;
+  /* prevent function from running again when
+   set with g_idle_add */
+  return FALSE;
 }
 
 
@@ -567,11 +459,152 @@ init_sm ()
             GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
 }
 
+void
+device_added_cb(GObject *obj, gpointer user_data)
+{
+  g_idle_add(update, NULL);
+}
+
+void
+device_removed_cb(GObject *obj, gpointer user_data)
+{
+  g_idle_add(update, NULL);
+}
+
+void
+password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
+{
+  GtkWidget *dialog;
+
+  GnomeKeyringResult keyring_ret;
+
+  keyring_ret = keyring_delete_key(pdaname);
+
+  dialog = gtk_message_dialog_new (NULL,
+				   GTK_DIALOG_DESTROY_WITH_PARENT,
+				   GTK_MESSAGE_WARNING,
+				   GTK_BUTTONS_CLOSE,
+				   "Password for device \"%s\" was rejected",
+				   pdaname);
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
+}
+
+void
+password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
+{
+  gchar *password;
+
+  password = device_get_password(pdaname);
+
+  dccm_client_provide_password(comms_client, pdaname, password);
+  g_free(password);
+}
+
+void
+device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpointer user_data)
+{
+  WmDevice *device;
+  SynceInfo * synce_info = (SynceInfo *)info;
+
+  synce_debug("looking for preexisting device");
+  if ((device = wm_device_manager_find_by_name(device_list, pdaname))) {
+    synce_debug("Ignoring connection message for \"%s\", already connected", pdaname);
+    synce_info_destroy(synce_info);
+    return;
+  }
+
+  device = g_object_new(WM_DEVICE_TYPE, NULL);
+  device = wm_device_from_synce_info(device, synce_info);
+  wm_device_manager_add(device_list, device);
+
+  synce_info_destroy(synce_info);
+}
+
+void
+device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
+{
+  WmDevice *device;
+
+  if (!(device = wm_device_manager_remove_by_name(device_list, pdaname))) {
+    synce_debug("Ignoring disconnection message for \"%s\", not connected", pdaname);
+    return;
+  }
+
+  g_object_unref(device);
+}
+
+bool
+uninit_client_comms(DccmClient *comms_client)
+{
+  if (comms_client) {
+    dccm_client_uninit_comms(comms_client);
+    g_object_unref(comms_client);
+  }
+
+  return TRUE;
+}
+
+void
+service_stopping_cb(DccmClient *comms_client, gpointer user_data)
+{
+  synce_debug("**** Entering service_stopping_cb() ******");
+  synce_warning_dialog("VDCCM has signalled that it is stopping");
+
+  uninit_client_comms(comms_client);
+  g_object_unref(comms_client);
+  comms_client = NULL;
+
+  wm_device_manager_remove_all(device_list);
+
+  synce_debug("**** Leaving service_stopping_cb() ******");
+}
+
+DccmClient *
+init_client_comms()
+{
+  DccmClient *comms_client;
+
+  if (which_dccm == USE_VDCCM)
+    comms_client = DCCM_CLIENT(g_object_new(VDCCM_CLIENT_TYPE, NULL));
+  else
+    comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
+
+  if (!(comms_client)) {
+    synce_error("Unable to create vdccm comms client");
+    return NULL;
+  }
+  if (!(dccm_client_init_comms(comms_client))) {
+    synce_error("Unable to initialise dccm comms client");
+    g_object_unref(comms_client);
+    return NULL;
+  }
+
+  g_signal_connect (G_OBJECT (comms_client), "password-rejected",
+            GTK_SIGNAL_FUNC (password_rejected_cb), NULL);
+
+  g_signal_connect (G_OBJECT (comms_client), "password-required",
+            GTK_SIGNAL_FUNC (password_required_cb), NULL);
+
+  g_signal_connect (G_OBJECT (comms_client), "service-stopping",
+            GTK_SIGNAL_FUNC (service_stopping_cb), NULL);
+
+  g_signal_connect (G_OBJECT (comms_client), "device-connected",
+            GTK_SIGNAL_FUNC (device_connected_cb), NULL);
+
+  g_signal_connect (G_OBJECT (comms_client), "device-disconnected",
+            GTK_SIGNAL_FUNC (device_disconnected_cb), NULL);
+
+  return comms_client;
+}
+
 int
 main (gint argc, gchar **argv)
 {
 	int result = 1;
 	GtkWidget *box;
+	GError *error = NULL;
+	gchar *synce_dir, *script_path = NULL;
 
 #ifdef ENABLE_NLS
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -579,12 +612,10 @@ main (gint argc, gchar **argv)
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
-	write_script();
-
 	gnome_program_init ("synce-trayicon", VERSION,
 			LIBGNOMEUI_MODULE,
 			argc, argv,
-            GNOME_PARAM_POPT_TABLE,options,
+			GNOME_PARAM_POPT_TABLE,options,
 			GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce TrayIcon"),
 			NULL);
 
@@ -604,6 +635,13 @@ main (gint argc, gchar **argv)
 		synce_trace("Running in foreground");
 	}
 
+	/* remove obsolete script */
+	if (!(synce_get_script_directory(&synce_dir)))
+	  g_error("Cannot obtain synce script dir: %s", G_STRFUNC);
+	script_path = g_strdup_printf("%s/trayicon.sh", synce_dir);
+	g_unlink(script_path);
+	g_free(script_path);
+
 	/* Gconf */
 	synce_conf_client = gconf_client_get_default ();
 
@@ -612,8 +650,44 @@ main (gint argc, gchar **argv)
 			GCONF_CLIENT_PRELOAD_ONELEVEL,
 			NULL);
 
-	
-	start_dccm();
+       	if (!(device_list = g_object_new(WM_DEVICE_MANAGER_TYPE, NULL)))
+	  g_error("Couldn't initialize device list: %s", G_STRFUNC);
+
+	g_signal_connect (G_OBJECT (device_list), "device-added",
+			  (GCallback)device_added_cb, NULL);
+
+	g_signal_connect (G_OBJECT (device_list), "device-removed",
+			  (GCallback)device_removed_cb, NULL);
+
+	gchar *dccm_tmp = gconf_client_get_string (synce_conf_client,
+					"/apps/synce/trayicon/dccm", NULL);
+	if (!dccm_tmp) {
+	  if (error)
+	    g_error("Error contacting gconf: %s: %s", error->message, G_STRFUNC);
+	  which_dccm = USE_ODCCM;
+	} else {
+	  if (!(g_ascii_strcasecmp(dccm_tmp, "v")))
+	    which_dccm = USE_VDCCM;
+	  else
+	    which_dccm = USE_ODCCM;
+	  g_free(dccm_tmp);
+	}
+
+	if (which_dccm == USE_VDCCM) {
+	  if (gconf_client_get_bool (synce_conf_client,
+				     "/apps/synce/trayicon/start_vdccm", NULL)) {
+	    start_dccm();
+	    sleep(3);
+	  }
+	}
+
+	if (!(comms_client = init_client_comms())) {
+	  if (which_dccm == USE_VDCCM)
+	    synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
+	  else
+	    synce_warning_dialog("Unable to contact ODCCM, check it is installed and running");
+	}
+
 	tray_icon = egg_tray_icon_new ("SynCE");
 	box = gtk_event_box_new();
 	icon = gtk_image_new();
@@ -627,15 +701,21 @@ main (gint argc, gchar **argv)
 
 	tooltips = gtk_tooltips_new();
 	
-	set_icon();
-	update();
+	/* set initial state */
+	update(NULL);
 
-	signal(SIGHUP, sighup_handler);
-  
 	gtk_main ();
 
+	uninit_client_comms(comms_client);
+	g_object_unref(device_list);
+
 	result = 0;
- 
 exit:
-  return result;
+	if (which_dccm == USE_VDCCM) {
+	  if (gconf_client_get_bool (synce_conf_client,
+					"/apps/synce/trayicon/start_vdccm", NULL))
+	    stop_dccm();
+	}
+
+	return result;
 }

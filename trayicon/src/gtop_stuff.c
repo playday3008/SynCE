@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
+#include "gtop_stuff.h"
 
 static char *
 get_process_name (gchar *cmd, gchar *args)
@@ -88,7 +89,7 @@ find_dccm () {
 		glibtop_get_proc_state (&procstate, pid_list[i]);
 		arguments = glibtop_get_proc_args (&procargs, pid_list[i], 0);
 		name = get_process_name (procstate.cmd, arguments);
-		if (g_ascii_strncasecmp("dccm", name, 4) == 0) {
+		if (g_ascii_strncasecmp(DCCM_BIN, name, 4) == 0) {
 		  g_array_append_val(dccm_list, pid_list[i]);
 		}	
 		g_free(name);
@@ -112,7 +113,7 @@ gboolean
 dccm_is_running () {
   GArray *dccm_list;
 
-  if (dccm_list = find_dccm())
+  if ((dccm_list = find_dccm()))
     {
       g_array_free(dccm_list, TRUE);
 	return TRUE;

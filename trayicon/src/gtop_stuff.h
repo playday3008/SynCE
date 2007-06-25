@@ -1,4 +1,6 @@
-#include<glib.h>
+#include <glib.h>
+
+#define DCCM_BIN "vdccm"
 
 gboolean
 dccm_is_running ();

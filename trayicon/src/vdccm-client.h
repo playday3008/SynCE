@@ -20,16 +20,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-#include <gnome-keyring.h>
+#ifndef VDCCM_CLIENT_H
+#define VDCCM_CLIENT_H
 
-GnomeKeyringResult
-keyring_get_key(gchar *name, gchar **key);
+#include <glib-object.h>
 
-GnomeKeyringResult
-keyring_delete_key(gchar *name);
+G_BEGIN_DECLS
 
-GnomeKeyringResult
-keyring_set_key(gchar *name, const gchar *key);
+typedef struct _VdccmClient VdccmClient;
+struct _VdccmClient {
+  GObject parent;
+};
 
-gchar *
-keyring_strerror(GnomeKeyringResult error);
+typedef struct _VdccmClientClass VdccmClientClass;
+struct _VdccmClientClass {
+  GObjectClass parent_class;
+};
+
+GType vdccm_client_get_type (void);
+
+#define VDCCM_CLIENT_TYPE (vdccm_client_get_type())
+#define VDCCM_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), VDCCM_CLIENT_TYPE, VdccmClient))
+#define VDCCM_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), VDCCM_CLIENT_TYPE, VdccmClientClass))
+#define IS_VDCCM_CLIENT(obj) (G_TYPE_CHECK_TYPE ((obj), VDCCM_CLIENT_TYPE))
+#define IS_VDCCM_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), VDCCM_CLIENT_TYPE))
+#define VDCCM_CLIENT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), VDCCM_CLIENT_TYPE, VdccmClientClass))
+
+G_END_DECLS
+
+#endif /* VDCCM_CLIENT_H */

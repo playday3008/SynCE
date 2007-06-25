@@ -1,3 +1,16 @@
+2007-06-24  Mark Ellis <mark@mpellis.org.uk>
+
+	* major structural changes, using gobject
+	* dropped support for 'classic' dccm
+	* added support for vdccm
+	* added untested support for odccm
+	* added skeleton support for multiple devices
+	* support for password per device
+
+2007-06-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* eggtrayicon changes from Whoopie
+
 2007-05-05  Mark Ellis <mark@mpellis.org.uk>
 
 	* updated configure.ac.in and corrected version handling

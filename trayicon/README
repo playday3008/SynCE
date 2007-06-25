@@ -1,10 +1,12 @@
+DCCM
+----
+The old synce-dccm, also known as dccmd, is no longer supported. Use
+vdccm or odccm.
+
 Gnome keyring support
 ---------------------
+Trayicon now uses gnome-keyring by default to store connection passwords
+on a per-device basis. It is probably a good idea to unset the gconf key
+/apps/synce/trayicon/password, and /apps/synce/trayicon/enable_password,
+for your user if you have been using password support.
 
-Trayicon now uses gnome-keyring by default to store connection passwords.
-It is probably a good idea to unset the gconf key
-/apps/synce/trayicon/password for your user if you have been using
-password support.
-
-To revert to storing passwords in gconf, pass --without-gnome-keyring
-to configure.

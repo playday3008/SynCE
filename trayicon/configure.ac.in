@@ -27,6 +27,10 @@ PKG_CHECK_MODULES(GNOME2,
 AC_SUBST(GNOME2_CFLAGS)
 AC_SUBST(GNOME2_LIBS)
 
+dnl Check for D-Bus
+PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.61, dbus-glib-1 >= 0.61],
+                    dbus=yes, dbus=no)
+
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.
