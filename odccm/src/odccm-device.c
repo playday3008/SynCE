@@ -22,6 +22,7 @@
 #include <arpa/inet.h>
 
 #include "odccm-device.h"
+#include "odccm-device-private.h"
 
 #include "odccm-device-glue.h"
 #include "odccm-device-signals-marshal.h"
@@ -65,49 +66,27 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0, };
 
-/* private stuff */
-typedef enum {
-    CTRL_STATE_HANDSHAKE,
-    CTRL_STATE_GETTING_INFO,
-    CTRL_STATE_GOT_INFO,
-    CTRL_STATE_AUTH,
-    CTRL_STATE_CONNECTED,
-} ControlState;
+static void conn_event_cb_impl (GConn *conn, GConnEvent *event, gpointer user_data);
+static void odccm_device_request_connection_impl (OdccmDevice *self, DBusGMethodInvocation *ctx);
+static void odccm_device_provide_password_impl (OdccmDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
 
-typedef struct _OdccmDevicePrivate OdccmDevicePrivate;
-
-struct _OdccmDevicePrivate
+void
+odccm_device_request_connection (OdccmDevice *self, DBusGMethodInvocation *ctx)
 {
-  gboolean dispose_has_run;
+  ODCCM_DEVICE_GET_CLASS (self)->odccm_device_request_connection (self, ctx);
+}
 
-  GConn *conn;
-  gchar *obj_path;
+static void
+conn_event_cb (GConn *conn, GConnEvent *event, gpointer user_data)
+{
+  ODCCM_DEVICE_GET_CLASS (user_data)->conn_event_cb (conn, event, user_data);
+}
 
-  gchar *guid;
-  guint os_major;
-  guint os_minor;
-  gchar *name;
-  guint version;
-  guint cpu_type;
-  guint cur_partner_id;
-  guint id;
-  gchar *platform_name;
-  gchar *model_name;
-
-  /* state */
-  ControlState state;
-  gint32 info_buf_size;
-  OdccmDevicePasswordFlags pw_flags;
-
-  guint32 pw_key;
-  DBusGMethodInvocation *pw_ctx;
-
-  GHashTable *requests;
-  guint req_id;
-};
-
-#define ODCCM_DEVICE_GET_PRIVATE(o) \
-    (G_TYPE_INSTANCE_GET_PRIVATE((o), ODCCM_TYPE_DEVICE, OdccmDevicePrivate))
+void
+odccm_device_provide_password (OdccmDevice *self, const gchar *password, DBusGMethodInvocation *ctx)
+{
+  ODCCM_DEVICE_GET_CLASS (self)->odccm_device_provide_password (self, password, ctx);
+}
 
 static void
 odccm_device_init (OdccmDevice *self)
@@ -243,8 +222,6 @@ odccm_device_set_property (GObject      *obj,
   }
 }
 
-static void conn_event_cb (GConn *conn, GConnEvent *event, gpointer user_data);
-
 static GObject *
 odccm_device_constructor (GType type, guint n_props,
                                  GObjectConstructParam *props)
@@ -321,6 +298,10 @@ odccm_device_class_init (OdccmDeviceClass *dev_class)
 
   obj_class->dispose = odccm_device_dispose;
   obj_class->finalize = odccm_device_finalize;
+
+  dev_class->conn_event_cb = conn_event_cb_impl;
+  dev_class->odccm_device_request_connection = odccm_device_request_connection_impl;
+  dev_class->odccm_device_provide_password = odccm_device_provide_password_impl;
 
   param_spec = g_param_spec_pointer ("connection", "GConn object",
                                      "GConn object.",
@@ -447,7 +428,7 @@ odccm_device_class_init (OdccmDeviceClass *dev_class)
                                    &dbus_glib_odccm_device_object_info);
 }
 
-static void
+void
 change_password_flags (OdccmDevice *self,
                        OdccmDevicePasswordFlags add,
                        OdccmDevicePasswordFlags remove)
@@ -473,7 +454,7 @@ change_password_flags (OdccmDevice *self,
 static void device_info_received (OdccmDevice *self, const guchar *buf, gint length);
 
 static void
-conn_event_cb (GConn *conn,
+conn_event_cb_impl (GConn *conn,
                GConnEvent *event,
                gpointer user_data)
 {
@@ -918,8 +899,8 @@ odccm_device_get_password_flags (OdccmDevice *self, guint *pw_flags,
   return TRUE;
 }
 
-void
-odccm_device_provide_password (OdccmDevice *self,
+static void
+odccm_device_provide_password_impl (OdccmDevice *self,
                                const gchar *password,
                                DBusGMethodInvocation *ctx)
 {
@@ -965,7 +946,7 @@ OUT:
     dbus_g_method_return_error (ctx, error);
 }
 
-static void
+void
 conn_broker_done_cb (OdccmConnectionBroker *broker,
                      gpointer user_data)
 {
@@ -979,7 +960,7 @@ conn_broker_done_cb (OdccmConnectionBroker *broker,
 }
 
 void
-odccm_device_request_connection (OdccmDevice *self, DBusGMethodInvocation *ctx)
+odccm_device_request_connection_impl (OdccmDevice *self, DBusGMethodInvocation *ctx)
 {
   OdccmDevicePrivate *priv = ODCCM_DEVICE_GET_PRIVATE (self);
   GError *error = NULL;

@@ -31,6 +31,9 @@
 #include "odccm-device-manager-glue.h"
 
 #include "odccm-device.h"
+#ifdef ENABLE_LEGACY_SUPPORT
+#include "odccm-device-legacy.h"
+#endif
 #include "util.h"
 
 /* FIXME: make these configurable */
@@ -62,6 +65,9 @@ struct _OdccmDeviceManagerPrivate
   gboolean dispose_has_run;
 
   GServer *server;
+#ifdef ENABLE_LEGACY_SUPPORT
+  GServer *legacy_server;
+#endif
 
   GSList *devices;
 
@@ -96,6 +102,9 @@ odccm_device_manager_constructor (GType type, guint n_props,
   priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (obj);
 
   priv->server = gnet_server_new (NULL, 990, client_connected_cb, obj);
+#ifdef ENABLE_LEGACY_SUPPORT
+  priv->legacy_server = gnet_server_new (NULL, 5679, client_connected_cb, obj);
+#endif
 
   dbus_g_connection_register_g_object (_odccm_get_dbus_conn (),
                                        DEVICE_MANAGER_OBJECT_PATH, obj);
@@ -222,7 +231,17 @@ client_connected_cb (GServer *server,
     }
   else
     {
+#ifdef ENABLE_LEGACY_SUPPORT
+      GInetAddr *local_inet_addr = gnet_tcp_socket_get_local_inetaddr (conn->socket);
+      if (gnet_inetaddr_get_port(local_inet_addr) == 5679)
+	dev = g_object_new (ODCCM_TYPE_DEVICE_LEGACY, "connection", conn, NULL);
+      else
+	dev = g_object_new (ODCCM_TYPE_DEVICE, "connection", conn, NULL);
+      gnet_inetaddr_unref(local_inet_addr);
+#else
       dev = g_object_new (ODCCM_TYPE_DEVICE, "connection", conn, NULL);
+#endif
+
       priv->devices = g_slist_append (priv->devices, dev);
 
       g_signal_connect (dev, "notify::object-path",

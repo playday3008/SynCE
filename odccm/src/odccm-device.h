@@ -39,6 +39,10 @@ struct _OdccmDevice
 struct _OdccmDeviceClass
 {
   GObjectClass parent_class;
+
+  void (*conn_event_cb) (GConn *conn, GConnEvent *event, gpointer user_data);
+  void (*odccm_device_request_connection) (OdccmDevice *self, DBusGMethodInvocation *ctx);
+  void (*odccm_device_provide_password) (OdccmDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
 };
 
 GType odccm_device_get_type (void);

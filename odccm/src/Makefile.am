@@ -17,9 +17,13 @@ odccm_SOURCES = $(BUILT_SOURCES) \
 		util.c util.h \
 		odccm-errors.c odccm-errors.h \
 		odccm-connection-broker.c odccm-connection-broker.h \
-		odccm-device.c odccm-device.h \
+		odccm-device.c odccm-device.h odccm-device-private.h \
 		odccm-device-manager.c odccm-device-manager.h \
 		odccm.c odccm-constants.h
+
+if ENABLE_LEGACY_SUPPORT
+odccm_SOURCES += odccm-device-legacy.c odccm-device-legacy.h
+endif
 
 EXTRA_DIST = odccm-device-manager-signals-marshal.list \
 		odccm-device-manager.xml \

@@ -14,6 +14,12 @@ AC_PROG_INSTALL
 dnl Check for header files.
 AC_STDC_HEADERS
 
+AC_ARG_ENABLE(legacy-support, AC_HELP_STRING([--enable-legacy-support], [Build with pre Windows Mobile 5 support]),:,enable_legacy_support=no)
+AM_CONDITIONAL(ENABLE_LEGACY_SUPPORT, test x"$enable_legacy_support" != xno)
+if test x"$enable_legacy_support" != xno; then
+       AC_DEFINE(ENABLE_LEGACY_SUPPORT, 1, [Building with pre Windows Mobile 5 support])
+fi
+
 dnl Check for libsynce
 PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
 

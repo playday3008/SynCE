@@ -6,3 +6,13 @@ odccm is a legacy-free dccm-implementation for Windows Mobile 5 (and newer) devi
 Please visit the SynCE website for more information:
 
   http://www.synce.org/
+
+
+pre WM5 support
+---------------
+odccm does now support pre Windows Mobile 5 devices. Pass
+--enable-legacy-support to configure.
+
+It does not replaceteh functionality of synce-serial, which
+must still be installed and configured.
+
