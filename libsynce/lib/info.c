@@ -191,11 +191,36 @@ static SynceInfo *synce_info_from_odccm(const char* path)
                                                   obj_path,
                                                   ODCCM_DEV_IFACE);
     gchar *unix_path;
+    guint os_major;
+    guint os_minor;
 
     if (proxy == NULL) {
       g_warning("Failed to get proxy for device '%s'", obj_path);
       goto ERROR;
     }
+
+    if (!dbus_g_proxy_call(proxy, "GetName", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_STRING, &(result->name),
+                           G_TYPE_INVALID))
+    {
+      g_warning("Failed to get device name: %s", error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+
+    if (!dbus_g_proxy_call(proxy, "GetOsVersion", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_UINT, &os_major,
+                           G_TYPE_UINT, &os_minor,
+                           G_TYPE_INVALID))
+    {
+      g_warning("Failed to get device os: %s", error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+
+    result->os_version = os_major;
 
     if (!dbus_g_proxy_call(proxy, "RequestConnection", &error,
                            G_TYPE_INVALID,
