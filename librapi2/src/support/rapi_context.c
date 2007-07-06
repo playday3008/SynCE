@@ -166,7 +166,10 @@ HRESULT rapi_context_connect(RapiContext* context)
             synce_error("failed to connect to proxy for %s", info->ip);
             goto fail;
         }
-        context->rapi_ops = &rapi2_ops;
+	if (info->os_version < 5)
+	  context->rapi_ops = &rapi_ops;
+	else
+	  context->rapi_ops = &rapi2_ops;
     }
 
 	context->is_initialized = true;
