@@ -81,13 +81,13 @@ wm_device_manager_device_count_impl(WmDeviceManager *self)
 {
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -102,13 +102,13 @@ wm_device_manager_find_by_name_impl(WmDeviceManager *self, gchar *name)
   gchar *tmpname;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -122,7 +122,7 @@ wm_device_manager_find_by_name_impl(WmDeviceManager *self, gchar *name)
     g_free(tmpname);
   }
 
-  g_warning("Device %s not found: %s", name, G_STRFUNC);
+  g_warning("%s: Device %s not found", G_STRFUNC, name);
   return NULL;
 }
 
@@ -132,17 +132,17 @@ wm_device_manager_find_by_index_impl(WmDeviceManager *self, gint index)
   WmDevice *device = NULL;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
   if (index >= priv->devices->len) {
-    g_critical("Attempt to find index %d, only %d present: %s", index, priv->devices->len, G_STRFUNC);
+    g_critical("%s: Attempt to find index %d, only %d present", G_STRFUNC, index, priv->devices->len);
     return NULL;
   }
   device = g_ptr_array_index(priv->devices, index);
@@ -158,13 +158,13 @@ wm_device_manager_remove_by_name_impl(WmDeviceManager *self, gchar *name)
   gchar *tmpname;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -179,7 +179,7 @@ wm_device_manager_remove_by_name_impl(WmDeviceManager *self, gchar *name)
     }
     g_free(tmpname);
   }
-  g_warning("Device %s not removed: %s", name, G_STRFUNC);
+  g_warning("%s: Device %s not removed", G_STRFUNC, name);
   return NULL;
 }
 
@@ -189,13 +189,13 @@ wm_device_manager_remove_all_impl(WmDeviceManager *self)
   WmDevice *device = NULL;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
 
@@ -211,13 +211,13 @@ gboolean
 wm_device_manager_add_impl(WmDeviceManager *self, WmDevice *device)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return FALSE;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return FALSE;
   }
 

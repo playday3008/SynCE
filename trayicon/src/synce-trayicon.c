@@ -40,20 +40,20 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gnome.h>
 #include <glade/glade.h>
 #include <libgnomeui/gnome-dialog.h>
 #include <libgnomeui/gnome-about.h>
 #include <gconf/gconf-client.h>
+#include <dbus/dbus-glib.h>
 
 #include "eggtrayicon.h"
 #include "gtop_stuff.h"
 #include "properties.h"
 #include "utils.h"
-#ifdef WITH_GNOME_KEYRING
 #include "keyring.h"
-#endif
 #include "dccm-client.h"
 #include "vdccm-client.h"
 #include "odccm-client.h"
@@ -74,7 +74,6 @@ static bool in_background = true;
 DccmClient *comms_client = NULL;
 WmDeviceManager *device_list = NULL;
 
-
 static EggTrayIcon* tray_icon = NULL;
 static GtkTooltips* tooltips = NULL;
 
@@ -84,6 +83,8 @@ static const struct poptOption options[] = {
 	{NULL, '\0', 0, NULL, 0} /* end the list */
 };
 
+void uninit_client_comms();
+DccmClient * init_client_comms();
 
 static bool is_connected() {
   if (wm_device_manager_device_count(device_list) > 0) {
@@ -148,15 +149,20 @@ void start_dccm ()
     if (gnome_execute_async(NULL,argc, argv) == -1) {
       synce_error_dialog(_("Can't start vdccm which is needed to comunicate \nwith the PDA. Make sure it is installed and try again."));
       synce_trace("Failed to start %s", DCCM_BIN);
+      return;
     }
   } else {
     synce_trace("%s is already running!", DCCM_BIN);
   }
+
+  sleep(2);
+  comms_client = init_client_comms();
 }
 
 
 void stop_dccm ()
 {
+  uninit_client_comms();
   send_signal_dccm(SIGTERM);
 }
 
@@ -291,17 +297,21 @@ static void trayicon_menu(GdkEventButton *event)
 	gtk_menu_append(GTK_MENU(menu), entry);
 		
 	if (is_connected()) {
-	  for (i = 0; i < wm_device_manager_device_count(device_list); i++) {
-	    device = wm_device_manager_find_by_index(device_list, i);
-	    device_name = wm_device_get_device_name(device);
-	    g_snprintf(buffer, sizeof(buffer), _("Disconnect from '%s'"), device_name);
 
-	    entry = gtk_menu_item_new_with_label(buffer);
-	    g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), (gpointer) device);
-	    gtk_menu_append(GTK_MENU(menu), entry);
+	  if (which_dccm == USE_VDCCM) {
+	    for (i = 0; i < wm_device_manager_device_count(device_list); i++) {
+	      device = wm_device_manager_find_by_index(device_list, i);
+	      device_name = wm_device_get_device_name(device);
+	      g_snprintf(buffer, sizeof(buffer), _("Disconnect from '%s'"), device_name);
 
-	    g_free(device_name);
+	      entry = gtk_menu_item_new_with_label(buffer);
+	      g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), (gpointer) device);
+	      gtk_menu_append(GTK_MENU(menu), entry);
+
+	      g_free(device_name);
+	    }
 	  }
+
 	} else {
 	  strcpy(buffer, _("(No device connected)"));
 	  entry = gtk_menu_item_new_with_label(buffer);
@@ -478,6 +488,8 @@ password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
 
   GnomeKeyringResult keyring_ret;
 
+  g_debug("%s: removing password from keyring", G_STRFUNC);
+
   keyring_ret = keyring_delete_key(pdaname);
 
   dialog = gtk_message_dialog_new (NULL,
@@ -504,21 +516,17 @@ password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
 void
 device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpointer user_data)
 {
+  WmDevice *new_device = WM_DEVICE(info);
   WmDevice *device;
-  SynceInfo * synce_info = (SynceInfo *)info;
 
-  synce_debug("looking for preexisting device");
+  synce_debug("looking for preexisting device %s", pdaname);
   if ((device = wm_device_manager_find_by_name(device_list, pdaname))) {
     synce_debug("Ignoring connection message for \"%s\", already connected", pdaname);
-    synce_info_destroy(synce_info);
+    g_object_unref(device);
     return;
   }
 
-  device = g_object_new(WM_DEVICE_TYPE, NULL);
-  device = wm_device_from_synce_info(device, synce_info);
-  wm_device_manager_add(device_list, device);
-
-  synce_info_destroy(synce_info);
+  wm_device_manager_add(device_list, new_device);
 }
 
 void
@@ -534,15 +542,16 @@ device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_d
   g_object_unref(device);
 }
 
-bool
-uninit_client_comms(DccmClient *comms_client)
+void
+uninit_client_comms()
 {
-  if (comms_client) {
+  if (IS_DCCM_CLIENT(comms_client)) {
     dccm_client_uninit_comms(comms_client);
     g_object_unref(comms_client);
+    comms_client = NULL;
   }
 
-  return TRUE;
+  return;
 }
 
 void
@@ -551,9 +560,7 @@ service_stopping_cb(DccmClient *comms_client, gpointer user_data)
   synce_debug("**** Entering service_stopping_cb() ******");
   synce_warning_dialog("VDCCM has signalled that it is stopping");
 
-  uninit_client_comms(comms_client);
-  g_object_unref(comms_client);
-  comms_client = NULL;
+  uninit_client_comms();
 
   wm_device_manager_remove_all(device_list);
 
@@ -568,16 +575,19 @@ init_client_comms()
   if (which_dccm == USE_VDCCM)
     comms_client = DCCM_CLIENT(g_object_new(VDCCM_CLIENT_TYPE, NULL));
   else
-    comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
+    {
+      dbus_g_thread_init();
+      comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
+    }
 
   if (!(comms_client)) {
     synce_error("Unable to create vdccm comms client");
-    return NULL;
+    goto error;
   }
   if (!(dccm_client_init_comms(comms_client))) {
     synce_error("Unable to initialise dccm comms client");
     g_object_unref(comms_client);
-    return NULL;
+    goto error;
   }
 
   g_signal_connect (G_OBJECT (comms_client), "password-rejected",
@@ -596,6 +606,13 @@ init_client_comms()
             GTK_SIGNAL_FUNC (device_disconnected_cb), NULL);
 
   return comms_client;
+
+error:
+  if (which_dccm == USE_VDCCM)
+    synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
+  else
+    synce_warning_dialog("Unable to contact ODCCM, check it is installed and running");
+  return NULL;
 }
 
 int
@@ -637,7 +654,7 @@ main (gint argc, gchar **argv)
 
 	/* remove obsolete script */
 	if (!(synce_get_script_directory(&synce_dir)))
-	  g_error("Cannot obtain synce script dir: %s", G_STRFUNC);
+	  g_error("%s: Cannot obtain synce script dir", G_STRFUNC);
 	script_path = g_strdup_printf("%s/trayicon.sh", synce_dir);
 	g_unlink(script_path);
 	g_free(script_path);
@@ -651,7 +668,7 @@ main (gint argc, gchar **argv)
 			NULL);
 
        	if (!(device_list = g_object_new(WM_DEVICE_MANAGER_TYPE, NULL)))
-	  g_error("Couldn't initialize device list: %s", G_STRFUNC);
+	  g_error("%s: Couldn't initialize device list", G_STRFUNC);
 
 	g_signal_connect (G_OBJECT (device_list), "device-added",
 			  (GCallback)device_added_cb, NULL);
@@ -663,7 +680,7 @@ main (gint argc, gchar **argv)
 					"/apps/synce/trayicon/dccm", NULL);
 	if (!dccm_tmp) {
 	  if (error)
-	    g_error("Error contacting gconf: %s: %s", error->message, G_STRFUNC);
+	    g_error("%s: Error contacting gconf: %s", G_STRFUNC, error->message);
 	  which_dccm = USE_ODCCM;
 	} else {
 	  if (!(g_ascii_strcasecmp(dccm_tmp, "v")))
@@ -673,20 +690,11 @@ main (gint argc, gchar **argv)
 	  g_free(dccm_tmp);
 	}
 
-	if (which_dccm == USE_VDCCM) {
-	  if (gconf_client_get_bool (synce_conf_client,
-				     "/apps/synce/trayicon/start_vdccm", NULL)) {
-	    start_dccm();
-	    sleep(3);
-	  }
-	}
-
-	if (!(comms_client = init_client_comms())) {
-	  if (which_dccm == USE_VDCCM)
-	    synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
-	  else
-	    synce_warning_dialog("Unable to contact ODCCM, check it is installed and running");
-	}
+	if ((which_dccm == USE_VDCCM) &&
+	    (gconf_client_get_bool (synce_conf_client, "/apps/synce/trayicon/start_vdccm", NULL)))
+	  start_dccm();
+	else
+	  comms_client = init_client_comms();
 
 	tray_icon = egg_tray_icon_new ("SynCE");
 	box = gtk_event_box_new();
@@ -706,16 +714,17 @@ main (gint argc, gchar **argv)
 
 	gtk_main ();
 
-	uninit_client_comms(comms_client);
+	uninit_client_comms();
+	wm_device_manager_remove_all(device_list);
 	g_object_unref(device_list);
 
-	result = 0;
-exit:
 	if (which_dccm == USE_VDCCM) {
 	  if (gconf_client_get_bool (synce_conf_client,
 					"/apps/synce/trayicon/start_vdccm", NULL))
 	    stop_dccm();
 	}
 
+	result = 0;
+exit:
 	return result;
 }

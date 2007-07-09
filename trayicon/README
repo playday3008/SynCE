@@ -5,8 +5,8 @@ vdccm or odccm.
 
 Gnome keyring support
 ---------------------
-Trayicon now uses gnome-keyring by default to store connection passwords
-on a per-device basis. It is probably a good idea to unset the gconf key
+Trayicon now uses gnome-keyring to store connection passwords on a 
+per-device basis. It is probably a good idea to unset the gconf key
 /apps/synce/trayicon/password, and /apps/synce/trayicon/enable_password,
 for your user if you have been using password support.
 

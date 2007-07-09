@@ -294,6 +294,7 @@
 	    <widget class="GtkButton" id="password_dialog_ok">
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
+	      <property name="has_default">True</property>
 	      <property name="can_focus">True</property>
 	      <property name="label">gtk-ok</property>
 	      <property name="use_stock">True</property>
@@ -474,6 +475,7 @@
 			<widget class="GtkEntry" id="password_dialog_entry">
 			  <property name="visible">True</property>
 			  <property name="can_focus">True</property>
+			  <property name="has_focus">True</property>
 			  <property name="editable">True</property>
 			  <property name="visibility">False</property>
 			  <property name="max_length">0</property>

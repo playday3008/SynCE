@@ -33,10 +33,13 @@ IN THE SOFTWARE.
 #include <string.h>
 #include <glib.h>
 #include <synce.h>
+#include <rapi.h>
 
 #include "vdccm-client.h"
 #include "dccm-client-signals-marshal.h"
 #include "dccm-client.h"
+#include "device.h"
+#include "utils.h"
 
 static void dccm_client_interface_init (gpointer g_iface, gpointer iface_data);
 G_DEFINE_TYPE_EXTENDED (VdccmClient, vdccm_client, G_TYPE_OBJECT, 0, G_IMPLEMENT_INTERFACE (DCCM_CLIENT_TYPE, dccm_client_interface_init))
@@ -45,7 +48,6 @@ typedef struct _VdccmClientPrivate VdccmClientPrivate;
 struct _VdccmClientPrivate {
   GIOChannel *csock;
   guint read_watch_id;
-  guint hup_watch_id;
 
   gboolean disposed;
 };
@@ -59,51 +61,49 @@ gboolean
 vdccm_client_uninit_comms_impl(VdccmClient *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return FALSE;
   }
 
   VdccmClientPrivate *priv = VDCCM_CLIENT_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return FALSE;
   }
   if (!priv->csock) {
-    g_warning("Uninitialised object passed: %s", G_STRFUNC);
+    g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return TRUE;
   }
   g_source_remove(priv->read_watch_id);
-  g_source_remove(priv->hup_watch_id);
   g_io_channel_unref(priv->csock);
   priv->csock = NULL;
 
   return TRUE;
 }
 
-gboolean
+void
 vdccm_client_provide_password_impl(VdccmClient *self, gchar *pdaname, gchar *password)
 {
   gchar *command_str;
   gsize bytes_written = 0;
   GError *error = NULL;
   GIOStatus ret;
-  gboolean result = FALSE;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
-    return result;
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
   }
 
   VdccmClientPrivate *priv = VDCCM_CLIENT_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
-    return result;
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
   }
   if (!priv->csock) {
-    g_warning("Uninitialised object passed: %s", G_STRFUNC);
-    return result;
+    g_warning("%s: Uninitialised object passed", G_STRFUNC);
+    return;
   }
 
   command_str = g_strjoin(NULL, "R", pdaname, "=", password, NULL);
@@ -111,27 +111,24 @@ vdccm_client_provide_password_impl(VdccmClient *self, gchar *pdaname, gchar *pas
   ret = g_io_channel_write_chars(priv->csock, command_str, strlen(command_str), &bytes_written, &error);
 
   if (ret != G_IO_STATUS_NORMAL) {
-    g_critical("Error on write to vdccm: %s: %s", error->message, G_STRFUNC);
+    g_critical("%s: Error on write to vdccm: %s", G_STRFUNC, error->message);
     if (error->code == G_IO_CHANNEL_ERROR_PIPE)
       g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-      dccm_client_uninit_comms(DCCM_CLIENT(self));
     g_error_free(error);
     goto exit;
   }
 
   if (g_io_channel_flush(priv->csock, &error) != G_IO_STATUS_NORMAL) {
-    g_critical("Error flushing vdccm socket: %s: %s", error->message, G_STRFUNC);
+    g_critical("%s: Error flushing vdccm socket: %s", G_STRFUNC, error->message);
     if (error->code == G_IO_CHANNEL_ERROR_PIPE)
       g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-      dccm_client_uninit_comms(DCCM_CLIENT(self));
     g_error_free(error);
     goto exit;
   }
 
-  result = TRUE;
 exit:
   g_free(command_str);
-  return result;
+  return;
 }
 
 gboolean
@@ -144,18 +141,18 @@ vdccm_client_request_disconnect_impl(VdccmClient *self, gchar *pdaname)
   gboolean result = FALSE;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return result;
   }
 
   VdccmClientPrivate *priv = VDCCM_CLIENT_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return result;
   }
   if (!priv->csock) {
-    g_warning("Uninitialised object passed: %s", G_STRFUNC);
+    g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return result;
   }
 
@@ -164,19 +161,17 @@ vdccm_client_request_disconnect_impl(VdccmClient *self, gchar *pdaname)
   ret = g_io_channel_write_chars(priv->csock, command_str, strlen(command_str), &bytes_written, &error);
 
   if (ret != G_IO_STATUS_NORMAL) {
-    g_critical("Error on write to vdccm: %s: %s", error->message, G_STRFUNC);
+    g_critical("%s: Error on write to vdccm: %s", G_STRFUNC, error->message);
     if (error->code == G_IO_CHANNEL_ERROR_PIPE)
       g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-      dccm_client_uninit_comms(DCCM_CLIENT(self));
     g_error_free(error);
     goto exit;
   }
 
   if (g_io_channel_flush(priv->csock, &error) != G_IO_STATUS_NORMAL) {
-    g_critical("Error flushing vdccm socket: %s: %s", error->message, G_STRFUNC);
+    g_critical("%s: Error flushing vdccm socket: %s", G_STRFUNC, error->message);
     if (error->code == G_IO_CHANNEL_ERROR_PIPE)
       g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-      dccm_client_uninit_comms(DCCM_CLIENT(self));
     g_error_free(error);
     goto exit;
   }
@@ -186,6 +181,68 @@ exit:
   g_free(command_str);
   return result;
 }
+
+static WmDevice *
+vdccm_create_device(SynceInfo *info)
+{
+  WmDevice *device;
+  gchar *device_name;
+
+  device = g_object_new(WM_DEVICE_TYPE,
+			"name", info->name,
+			"os-major", info->os_version,
+			"os-minor", 0,
+			"build-number", info->build_number,
+			"processor-type", info->processor_type,
+			"partner-id-1", info->partner_id_1,
+			"partner-id-2", info->partner_id_2,
+			"class", info->os_name,
+			"hardware", info->model,
+			"password", info->password,
+			"key", info->key,
+			"dccm-pid", info->dccm_pid,
+			"ip", info->ip,
+			"transport", info->transport,
+			NULL);
+
+  if (!device) {
+    g_warning("%s: Error creating new device", G_STRFUNC);
+    return NULL;
+  }
+
+  HRESULT hr;
+  RapiConnection *rapi_conn;
+
+  g_debug("%s: Initialising device rapi connection", G_STRFUNC);
+
+  rapi_conn = rapi_connection_from_info(info);
+  rapi_connection_select(rapi_conn);
+
+  hr = CeRapiInit();
+  if (FAILED(hr)) {
+    g_critical("%s: Rapi connection to %s failed: %d: %s", G_STRFUNC, info->name, hr, synce_strerror(hr));
+    g_object_unref(device);
+    rapi_connection_destroy(rapi_conn);
+    return NULL;
+  }
+
+  g_object_set(device, "rapi-conn", rapi_conn, NULL);
+
+  device_name = get_device_name_via_rapi();
+
+  if (!(device_name)) {
+    CeRapiUninit();
+    rapi_connection_destroy(rapi_conn);
+    g_object_unref(device);
+    return NULL;
+  }
+
+  g_object_set(device, "device-name", device_name, NULL);
+  g_free(device_name);
+
+  return device;
+}
+
 
 gboolean
 vdccm_client_read_cb(GIOChannel *source,
@@ -206,7 +263,7 @@ vdccm_client_read_cb(GIOChannel *source,
   SynceInfo *synce_info = NULL;
 
   if (!data) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return result;
   }
 
@@ -214,11 +271,11 @@ vdccm_client_read_cb(GIOChannel *source,
   VdccmClientPrivate *priv = VDCCM_CLIENT_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return result;
   }
   if (!priv->csock) {
-    g_warning("Uninitialised object passed: %s", G_STRFUNC);
+    g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return result;
   }
 
@@ -243,18 +300,15 @@ vdccm_client_read_cb(GIOChannel *source,
 					&error);
 
   if (read_result == G_IO_STATUS_EOF) {
-    g_critical("Lost connection to vdccm");
+    g_critical("%s: Lost connection to vdccm", G_STRFUNC);
     g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-    dccm_client_uninit_comms(DCCM_CLIENT(self));
-    g_error_free(error);
     goto exit;
   }
 
   if (read_result == G_IO_STATUS_ERROR) {
-    g_critical("Error on read from vdccm: %s: %s", error->message, G_STRFUNC);
+    g_critical("%s: Error on read from vdccm: %s", G_STRFUNC, error->message);
     if (error->code == G_IO_CHANNEL_ERROR_PIPE)
       g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-      dccm_client_uninit_comms(DCCM_CLIENT(self));
     g_error_free(error);
     goto exit;
   }
@@ -270,44 +324,46 @@ vdccm_client_read_cb(GIOChannel *source,
       switch(command) {
       case 'C':
 	/* pdaname connected */
-	g_debug("Run connect for %s: %s", pdaname, G_STRFUNC);
+	g_debug("%s: Run connect for %s", G_STRFUNC, pdaname);
 
 	if (!synce_get_directory(&synce_dir)) {
-	  g_critical("Unable to obtain synce directory: %s", G_STRFUNC);
+	  g_critical("%s: Unable to obtain synce directory", G_STRFUNC);
 	  return result;
 	}
 	synce_path = g_strjoin("/", synce_dir, pdaname, NULL);
 	synce_info = synce_info_new(synce_path);
-	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)synce_info);
+
+	WmDevice *new_dev = vdccm_create_device(synce_info);
+	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)new_dev);
 	g_free(synce_path);
 
 	break;
       case 'D':
 	/* pdaname disconnected */
-	g_debug("Run disconnect for %s: %s", pdaname, G_STRFUNC);
+	g_debug("%s: Run disconnect for %s", G_STRFUNC, pdaname);
 
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_DISCONNECTED], 0, pdaname);
 	break;
       case 'P':
 	/* pdaname requires password */
-	g_debug("Run password required for %s: %s", pdaname, G_STRFUNC);
+	g_debug("%s: Run password required for %s", G_STRFUNC, pdaname);
 
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, pdaname);
 	break;
       case 'R':
 	/* pdaname given invalid password */
-	g_debug("Run password rejected for %s: %s", pdaname, G_STRFUNC);
+	g_debug("%s: Run password rejected for %s", G_STRFUNC, pdaname);
 
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REJECTED], 0, pdaname);
 	break;
       case 'S':
 	/* dccm stopping */
-	g_debug("Run dccm stopping: %s", G_STRFUNC);
+	g_debug("%s: Run dccm stopping", G_STRFUNC);
 
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
 	break;
       default:
-	g_critical("Received invalid command %c for pda %s: %s", command, pdaname, G_STRFUNC);
+	g_critical("%s: Received invalid command %c for pda %s", G_STRFUNC, command, pdaname);
 	break;
       }
       i++;
@@ -320,23 +376,6 @@ exit:
   return result;
 }
 
-gboolean
-vdccm_client_hup_cb(GIOChannel *source,
-	      GIOCondition condition,
-	      gpointer data)
-{
-  if (!data) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
-    return FALSE;
-  }
-
-  VdccmClient *self = VDCCM_CLIENT(data);
-
-  g_critical("Connection to vdccm lost: %s", G_STRFUNC);
-  g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-  dccm_client_uninit_comms(DCCM_CLIENT(self));
-  return TRUE;
-}
 
 gboolean
 vdccm_client_init_comms_impl(VdccmClient *self)
@@ -347,31 +386,32 @@ vdccm_client_init_comms_impl(VdccmClient *self)
   int csock_fd, csock_path_len;
   struct sockaddr_un csockaddr;
   GIOFlags flags;
+  GIOStatus status;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return result;
   }
 
   VdccmClientPrivate *priv = VDCCM_CLIENT_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return result;
   }
   if (priv->csock) {
-    g_warning("Initialised object passed: %s", G_STRFUNC);
+    g_warning("%s: Initialised object passed", G_STRFUNC);
     return result;
   }
 
   if (!(synce_get_directory(&synce_dir))) {
-    g_critical("Cannot obtain synce directory: %s", G_STRFUNC);
+    g_critical("%s: Cannot obtain synce directory", G_STRFUNC);
     return result;
   }
 
   csock_fd = socket(PF_UNIX, SOCK_STREAM, 0);
   if (csock_fd < 0) {
-    g_critical("Cannot obtain communication socket: %s: %s", strerror(errno), G_STRFUNC);
+    g_critical("%s: Cannot obtain communication socket: %s", G_STRFUNC, strerror(errno));
     return result;
   }
 
@@ -379,22 +419,27 @@ vdccm_client_init_comms_impl(VdccmClient *self)
   
   csock_path_len = g_snprintf(csockaddr.sun_path, 108, "%s/csock", synce_dir);
   if (csock_path_len > 108) {
-    g_critical("Cannot open vdccm communication socket %s/csock: Path too long: %s", synce_dir, G_STRFUNC);
+    g_critical("%s: Cannot open vdccm communication socket %s/csock: Path too long", G_STRFUNC, synce_dir);
     return result;
   }
 
   if (connect(csock_fd, (struct sockaddr *)&csockaddr, sizeof(csockaddr)) < 0) {
-    g_critical("Cannot connect to vdccm communication socket %s: %s: %s", csockaddr.sun_path, strerror(errno), G_STRFUNC);
+    g_critical("%s: Cannot connect to vdccm communication socket %s: %s", G_STRFUNC, csockaddr.sun_path, strerror(errno));
     return result;
   }
 
   if (!(priv->csock = g_io_channel_unix_new(csock_fd))) {
-    g_critical("Cannot convert vdccm socket fd to GIOChannel: %s", G_STRFUNC);
+    g_critical("%s: Cannot convert vdccm socket fd to GIOChannel", G_STRFUNC);
     shutdown(csock_fd, SHUT_RDWR);
     return result;
   }
 
   g_io_channel_set_close_on_unref(priv->csock, TRUE);
+
+  if ((status = g_io_channel_set_encoding(priv->csock, NULL, &error)) != G_IO_STATUS_NORMAL) {
+    g_critical("%s: Error setting NULL encoding on control socket: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+  }
 
   if (g_io_channel_get_buffered(priv->csock))
     g_io_channel_set_buffered(priv->csock, 0);
@@ -403,7 +448,7 @@ vdccm_client_init_comms_impl(VdccmClient *self)
   flags = flags | G_IO_FLAG_NONBLOCK;
   if (g_io_channel_set_flags (priv->csock, flags, &error) != G_IO_STATUS_NORMAL) {
     if (error) {
-      g_warning("Error setting flags on vdccm comm socket: %s: %s", error->message, G_STRFUNC);
+      g_warning("%s: Error setting flags on vdccm comm socket: %s", G_STRFUNC, error->message);
       g_error_free(error);
       return result;
     }
@@ -411,9 +456,6 @@ vdccm_client_init_comms_impl(VdccmClient *self)
 
   priv->read_watch_id = g_io_add_watch(priv->csock, G_IO_IN,
 			    (GIOFunc) vdccm_client_read_cb,
-			    self);
-  priv->hup_watch_id = g_io_add_watch(priv->csock, G_IO_HUP,
-			    (GIOFunc) vdccm_client_hup_cb,
 			    self);
   result = TRUE;
   return result;
@@ -452,8 +494,6 @@ vdccm_client_dispose (GObject *obj)
 static void
 vdccm_client_finalize (GObject *obj)
 {
-  VdccmClient *self = VDCCM_CLIENT(obj);
-
   if (G_OBJECT_CLASS (vdccm_client_parent_class)->finalize)
     G_OBJECT_CLASS (vdccm_client_parent_class)->finalize (obj);
 }
@@ -476,6 +516,6 @@ dccm_client_interface_init (gpointer g_iface, gpointer iface_data)
 
   iface->dccm_client_init_comms = (gboolean (*) (DccmClient *self)) vdccm_client_init_comms_impl;
   iface->dccm_client_uninit_comms = (gboolean (*) (DccmClient *self)) vdccm_client_uninit_comms_impl;
-  iface->dccm_client_provide_password = (gboolean (*) (DccmClient *self, gchar *pdaname, gchar *password)) vdccm_client_provide_password_impl;
+  iface->dccm_client_provide_password = (void (*) (DccmClient *self, gchar *pdaname, gchar *password)) vdccm_client_provide_password_impl;
   iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, gchar *pdaname)) vdccm_client_request_disconnect_impl;
 }

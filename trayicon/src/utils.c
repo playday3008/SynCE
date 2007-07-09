@@ -1,7 +1,32 @@
+/*
+Copyright (c) 2007 Mark Ellis <mark@mpellis.org.uk>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+*/
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gtk/gtk.h>
-#include <libgnomeui/libgnomeui.h>
 #include <glade/glade.h>
-#include <synce_log.h>
+#include <rapi.h>
 
 #include "keyring.h"
 
@@ -66,7 +91,7 @@ device_do_password_dialog (gchar *pdaname)
   gtk_label_set_text(GTK_LABEL(password_dialog_pdaname), pdaname);
 
   gtk_widget_set_sensitive(password_dialog_ok, FALSE);
-  gtk_entry_set_text(GTK_ENTRY(password_dialog_entry), NULL);
+  gtk_editable_delete_text(GTK_EDITABLE(password_dialog_entry), 0, -1);
 
   g_signal_connect (G_OBJECT (password_dialog_entry), "changed",
 		    G_CALLBACK (device_password_dialog_entry_changed_cb), password_dialog_ok);
@@ -76,6 +101,7 @@ device_do_password_dialog (gchar *pdaname)
   response = gtk_dialog_run(GTK_DIALOG(password_dialog));
   if (response == GTK_RESPONSE_OK)
     password = gtk_editable_get_chars(GTK_EDITABLE(password_dialog_entry), 0, -1);
+  gtk_editable_delete_text(GTK_EDITABLE(password_dialog_entry), 0, -1);
 
   gtk_widget_destroy(password_dialog);
   return password;
@@ -105,7 +131,47 @@ device_get_password(gchar *pdaname)
       gtk_widget_destroy (dialog);
     }
   } else {
-    synce_debug("Failed to get password for device %s from user", pdaname);
+    g_debug("Failed to get password for device %s from user", pdaname);
   }
   return password;
+}
+
+gchar *
+get_device_name_via_rapi()
+{
+  LONG result;
+  WCHAR* key_name = NULL;
+  HKEY key_handle = 0;
+  DWORD type = 0;
+  DWORD size;
+  WCHAR buffer[MAX_PATH];
+  gchar *device_name;
+
+  key_name = wstr_from_ascii("Ident");
+  result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, key_name, 0, 0, &key_handle);
+  wstr_free_string(key_name);
+
+  if (result != ERROR_SUCCESS) {
+    g_critical("%s: CeRegOpenKeyEx failed getting device name", G_STRFUNC);
+    return NULL;
+  }
+
+  key_name = wstr_from_ascii("Name");
+  size = sizeof(buffer);
+
+  result = CeRegQueryValueEx(key_handle, key_name, 0, &type, (LPBYTE)buffer, &size);
+  wstr_free_string(key_name);
+
+  if (result != ERROR_SUCCESS) {
+    g_critical("%s: CeRegQueryValueEx failed getting device name", G_STRFUNC);
+    return NULL;
+  }
+
+  if (type != REG_SZ) {
+    g_critical("%s: Unexpected value type: 0x%08x = %i", G_STRFUNC, type, type);
+    return NULL;
+  }
+
+  device_name = wstr_to_ascii(buffer);
+  return device_name;
 }

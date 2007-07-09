@@ -48,7 +48,7 @@ struct _DccmClientInterface {
 
   gboolean (*dccm_client_init_comms) (DccmClient *self);
   gboolean (*dccm_client_uninit_comms) (DccmClient *self);
-  gboolean (*dccm_client_provide_password) (DccmClient *self, gchar *pdaname, gchar *password);
+  void (*dccm_client_provide_password) (DccmClient *self, gchar *pdaname, gchar *password);
   gboolean (*dccm_client_request_disconnect) (DccmClient *self, gchar *pdaname);
 };
 
@@ -65,7 +65,7 @@ dccm_client_init_comms(DccmClient *self);
 gboolean
 dccm_client_uninit_comms(DccmClient *self);
 
-gboolean
+void
 dccm_client_provide_password(DccmClient *self, gchar *pdaname, gchar *password);
 
 gboolean

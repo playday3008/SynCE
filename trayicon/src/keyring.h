@@ -31,5 +31,5 @@ keyring_delete_key(gchar *name);
 GnomeKeyringResult
 keyring_set_key(gchar *name, const gchar *key);
 
-gchar *
+const gchar *
 keyring_strerror(GnomeKeyringResult error);

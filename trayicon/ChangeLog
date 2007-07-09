@@ -1,3 +1,13 @@
+2007-07-05  Mark Ellis <mark@mpellis.org.uk>
+
+	* fixed odccm support
+	* fixed comms when stopping/starting vdccm
+	* make gnome keyring mandatory
+	* explicitly use default keyring to delete secret
+	* give password entry focus in dialog
+	* remove disconnect from menu when using odccm
+	* tidy logging statements
+
 2007-06-24  Mark Ellis <mark@mpellis.org.uk>
 
 	* major structural changes, using gobject

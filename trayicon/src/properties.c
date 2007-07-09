@@ -95,7 +95,7 @@ run_prefs_dialog (void)
 					      "/apps/synce/trayicon/dccm", &error))) {
     which_dccm = g_strdup("o");
     if (error) {
-      g_warning("Get dccm type from gconf failed: %s", error->message);
+      g_warning("%s: Get dccm type from gconf failed: %s", G_STRFUNC, error->message);
       g_error_free(error);
     }
   }

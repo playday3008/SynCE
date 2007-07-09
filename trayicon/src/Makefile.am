@@ -24,11 +24,8 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			device-manager.c device-manager.h \
 			vdccm-client.c vdccm-client.h \
 			odccm-client.c odccm-client.h \
-			dccm-client.c dccm-client.h
-
-if WITH_GNOME_KEYRING
-synce_trayicon_SOURCES += keyring.c keyring.h
-endif
+			dccm-client.c dccm-client.h \
+			keyring.c keyring.h
 
 EXTRA_DIST = vdccm-clientsignals-marshal.list
 

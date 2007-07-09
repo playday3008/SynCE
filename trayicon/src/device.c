@@ -31,32 +31,21 @@ IN THE SOFTWARE.
 
 #include "device.h"
 
-#ifdef G_THREADS_ENABLED
-#define MUTEX_NEW()     g_mutex_new ()
-#define MUTEX_FREE(a)   g_mutex_free (a)
-#define MUTEX_LOCK(a)   if ((a) != NULL) g_mutex_lock (a)
-#define MUTEX_UNLOCK(a) if ((a) != NULL) g_mutex_unlock (a)
-#else
-#define MUTEX_NEW()     NULL
-#define MUTEX_FREE(a)
-#define MUTEX_LOCK(a)
-#define MUTEX_UNLOCK(a)
-#endif
-
 G_DEFINE_TYPE (WmDevice, wm_device, G_TYPE_OBJECT)
 
 typedef struct _WmDevicePrivate WmDevicePrivate;
 struct _WmDevicePrivate {
-  uint16_t os_version;
+  /* lowercase name from info file */
+  gchar *name;
+
+  uint16_t os_major;
+  uint16_t os_minor;
   uint16_t build_number;
   uint16_t processor_type;
   uint32_t partner_id_1;
   uint32_t partner_id_2;
-  /* lowercase name from info file */
-  gchar *name;
   gchar *class;
   gchar *hardware;
-
   /* real name, get from registry */
   gchar *device_name;
 
@@ -75,7 +64,29 @@ struct _WmDevicePrivate {
 
 #define WM_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), WM_DEVICE_TYPE, WmDevicePrivate))
 
-static GMutex * mutex = NULL;
+/* properties */
+enum
+  {
+    PROP_NAME = 1,
+    PROP_OS_MAJOR,
+    PROP_OS_MINOR,
+    PROP_BUILD_NUMBER,
+    PROP_PROCESSOR_TYPE,
+    PROP_PARTNER_ID_1,
+    PROP_PARTNER_ID_2,
+    PROP_CLASS,
+    PROP_HARDWARE,
+    PROP_DEVICE_NAME,
+    PROP_PASSWORD,
+    PROP_KEY,
+    PROP_DCCM_PID,
+    PROP_IP,
+    PROP_TRANSPORT,
+    PROP_PORT,
+    PROP_RAPI_CONN,
+
+    LAST_PROPERTY
+  };
 
 
      /* methods */
@@ -85,108 +96,43 @@ wm_device_debug_device(WmDevice *self)
 {
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
-  g_debug("Name (from dccm): %s", priv->name);
-  g_debug("Device name: %s", priv->device_name);
-  g_debug("OS Version: %d", priv->os_version);
-  g_debug("Build number: %d", priv->build_number);
-  g_debug("Processor type: %d", priv->processor_type);
-  g_debug("Partder id 1: %d", priv->partner_id_1);
-  g_debug("Partner id 2: %d", priv->partner_id_2);
-  g_debug("Class: %s", priv->class);
-  g_debug("Hardware: %s", priv->hardware);
+  g_debug("%s: Name (from dccm): %s", G_STRFUNC, priv->name);
+  g_debug("%s: Device name: %s", G_STRFUNC, priv->device_name);
+  g_debug("%s: OS Version: %d.%d", G_STRFUNC, priv->os_major, priv->os_minor);
+  g_debug("%s: Build number: %d", G_STRFUNC, priv->build_number);
+  g_debug("%s: Processor type: %d", G_STRFUNC, priv->processor_type);
+  g_debug("%s: Partner id 1: %d", G_STRFUNC, priv->partner_id_1);
+  g_debug("%s: Partner id 2: %d", G_STRFUNC, priv->partner_id_2);
+  g_debug("%s: Class: %s", G_STRFUNC, priv->class);
+  g_debug("%s: Hardware: %s", G_STRFUNC, priv->hardware);
 
   if (priv->password) {
-    g_debug("Password: %s", priv->password);
-    g_debug("Key: %d", priv->key);
+    g_debug("%s: Password: %s", G_STRFUNC, priv->password);
+    g_debug("%s: Key: %d", G_STRFUNC, priv->key);
   }
 
-  g_debug("DCCM pid: %d", priv->dccm_pid);
-  g_debug("IP: %s", priv->ip);
-  g_debug("Transport: %s", priv->transport);
+  g_debug("%s: DCCM pid: %d", G_STRFUNC, priv->dccm_pid);
+  g_debug("%s: IP: %s", G_STRFUNC, priv->ip);
+  g_debug("%s: Transport: %s", G_STRFUNC, priv->transport);
 }
 
-static gboolean
-wm_device_rapi_connect(WmDevice *self)
-{
-  HRESULT hr;
-  gboolean result = FALSE;
-  RapiConnection *rapi_conn;
 
+static void
+wm_device_rapi_select(WmDevice *self)
+{
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
-    return FALSE;
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
-    return FALSE;
-  }
-
-  SynceInfo *info = g_malloc0(sizeof(SynceInfo));
-
-  info->os_version = priv->os_version;
-  info->build_number = priv->build_number;
-  info->processor_type = priv->processor_type;
-  info->partner_id_1 = priv->partner_id_1;
-  info->partner_id_2 = priv->partner_id_2;
-  info->name = g_strdup(priv->name);
-  info->os_name = g_strdup(priv->class);
-  info->model = g_strdup(priv->hardware);
-  info->password = g_strdup(priv->password);
-  info->key = priv->key;
-  info->dccm_pid = priv->dccm_pid;
-  info->ip = g_strdup(priv->ip);
-  info->transport = g_strdup(priv->transport);
-  info->os_name = g_strdup(priv->device_name);
-
-  rapi_conn = rapi_connection_from_info(info);
-  rapi_connection_select(rapi_conn);
-  hr = CeRapiInit();
-  if (FAILED(hr)) {
-    g_critical("Rapi connection to %s failed: %d: %s: %s", priv->name, hr, synce_strerror(hr), G_STRFUNC);
-    goto exit;
-  }
-
-  priv->rapi_conn = rapi_conn;
-  result = TRUE;
-exit:
-  synce_info_destroy(info);
-  return result;
-}
-
-
-static gboolean
-wm_device_rapi_disconnect(WmDevice *self)
-{
-  gboolean result = FALSE;
-
-  if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
-    return result;
-  }
-  WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
-    return result;
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
   }
 
   rapi_connection_select(priv->rapi_conn);
-  CeRapiUninit();
-  rapi_connection_destroy(priv->rapi_conn);
-  priv->rapi_conn = NULL;
-
-  result = TRUE;
-
-  return result;
-}
-
-
-WmDevice *
-wm_device_from_synce_info(WmDevice *self, SynceInfo *info)
-{
-  return WM_DEVICE_GET_CLASS (self)->wm_device_from_synce_info(self, info);
+  return;
 }
 
 uint16_t
@@ -291,122 +237,34 @@ wm_device_get_store_status(WmDevice *self)
   return WM_DEVICE_GET_CLASS (self)->wm_device_get_store_status(self);
 }
 
-
-WmDevice *
-wm_device_from_synce_info_impl(WmDevice *self, SynceInfo *info)
-{
-  LONG result;
-  WCHAR* key_name = NULL;
-  HKEY key_handle = 0;
-  DWORD type = 0;
-  DWORD size;
-  WCHAR buffer[MAX_PATH];
-
-  if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
-    return NULL;
-  }
-  WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
-    return NULL;
-  }
-
-  priv->os_version = info->os_version;
-  priv->build_number = info->build_number;
-  priv->processor_type = info->processor_type;
-  priv->partner_id_1 = info->partner_id_1;
-  priv->partner_id_2 = info->partner_id_2;
-  priv->name = g_strdup(info->name);
-  priv->class = g_strdup(info->os_name);
-  priv->hardware = g_strdup(info->model);
-  priv->password = g_strdup(info->password);
-  priv->key = info->key;
-  priv->dccm_pid = info->dccm_pid;
-  priv->ip = g_strdup(info->ip);
-  priv->transport = g_strdup(info->transport);
-  priv->port = NULL;
-
-  g_free(priv->device_name);
-  priv->device_name = NULL;
-  MUTEX_LOCK(mutex);
-  if (!(wm_device_rapi_connect(self))) {
-    MUTEX_UNLOCK (mutex);
-    goto exit;
-  }
-
-  key_name = wstr_from_ascii("Ident");
-  result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, key_name, 0, 0, &key_handle);
-  wstr_free_string(key_name);
-
-  if (result != ERROR_SUCCESS) {
-    g_critical("CeRegOpenKeyEx failed getting device name: %s", G_STRFUNC);
-    wm_device_rapi_disconnect(self);
-    MUTEX_UNLOCK (mutex);
-    goto exit;
-  }
-
-  key_name = wstr_from_ascii("Name");
-  size = sizeof(buffer);
-
-  result = CeRegQueryValueEx(key_handle, key_name, 0, &type, (LPBYTE)buffer, &size);
-  wstr_free_string(key_name);
-
-  if (result != ERROR_SUCCESS) {
-    g_critical("CeRegQueryValueEx failed getting device name: %s", G_STRFUNC);
-    wm_device_rapi_disconnect(self);
-    MUTEX_UNLOCK (mutex);
-    goto exit;
-  }
-
-  if (type != REG_SZ) {
-    g_critical("Unexpected value type: 0x%08x = %i: %s", type, type, G_STRFUNC);
-    wm_device_rapi_disconnect(self);
-    MUTEX_UNLOCK (mutex);
-    goto exit;
-  }
-
-  priv->device_name = wstr_to_ascii(buffer);
-
-  wm_device_rapi_disconnect(self);
-  MUTEX_UNLOCK (mutex);
-
-exit:
-  wm_device_debug_device(self);
-
-  return self;
-}
-
-
 uint16_t
 wm_device_get_os_version_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
-  return priv->os_version;
+  return priv->os_major;
 }
 
 uint16_t
 wm_device_get_build_number_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -417,13 +275,13 @@ uint16_t
 wm_device_get_processor_type_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -434,13 +292,13 @@ uint32_t
 wm_device_get_partner_id_1_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -451,13 +309,13 @@ uint32_t
 wm_device_get_partner_id_2_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -468,13 +326,13 @@ gchar *
 wm_device_get_name_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -485,13 +343,13 @@ gchar *
 wm_device_get_class_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -502,13 +360,13 @@ gchar *
 wm_device_get_hardware_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -519,13 +377,13 @@ gchar *
 wm_device_get_device_name_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -536,13 +394,13 @@ gchar *
 wm_device_get_password_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -553,13 +411,13 @@ int
 wm_device_get_key_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -570,13 +428,13 @@ pid_t
 wm_device_get_dccm_pid_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return 0;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return 0;
   }
 
@@ -587,13 +445,13 @@ gchar *
 wm_device_get_ip_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -604,13 +462,13 @@ gchar *
 wm_device_get_transport_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -621,13 +479,13 @@ gchar *
 wm_device_get_port_impl(WmDevice *self)
 {
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
@@ -660,22 +518,17 @@ wm_device_get_power_status_impl(WmDevice *self)
   gchar* power_str = NULL;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
 
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
-  MUTEX_LOCK (mutex);
-  if (!(wm_device_rapi_connect(self))) {
-    MUTEX_UNLOCK (mutex);
-    power_str = g_strdup(_("Unknown"));
-    goto exit;
-  }
+  wm_device_rapi_select(self);
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
   if (CeGetSystemPowerStatusEx(&power, false) &&
@@ -688,9 +541,6 @@ wm_device_get_power_status_impl(WmDevice *self)
       power_str = g_strdup(_("Unknown"));
     }
 
-  wm_device_rapi_disconnect(self);
-  MUTEX_UNLOCK (mutex);
-exit:
   return power_str;
 }
 	 
@@ -701,23 +551,17 @@ wm_device_get_store_status_impl(WmDevice *self)
   gchar* store_str = NULL;
 
   if (!self) {
-    g_warning("Invalid object passed: %s", G_STRFUNC);
+    g_warning("%s: Invalid object passed", G_STRFUNC);
     return NULL;
   }
 
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
   if (priv->disposed) {
-    g_warning("Disposed object passed: %s", G_STRFUNC);
+    g_warning("%s: Disposed object passed", G_STRFUNC);
     return NULL;
   }
 
-  MUTEX_LOCK (mutex);
-
-  if (!(wm_device_rapi_connect(self))) {
-    MUTEX_UNLOCK (mutex);
-    store_str = g_strdup(_("Unknown"));
-    goto exit;
-  }
+  wm_device_rapi_select(self);
 
   memset(&store, 0, sizeof(store));
   if (CeGetStoreInformation(&store) && store.dwStoreSize != 0)
@@ -729,9 +573,6 @@ wm_device_get_store_status_impl(WmDevice *self)
       store_str = g_strdup(_("Unknown"));
     }
 
-  wm_device_rapi_disconnect(self);
-  MUTEX_UNLOCK (mutex);
-exit:
   return store_str;
 }
 
@@ -744,7 +585,8 @@ wm_device_init(WmDevice *self)
 {
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
-  priv->os_version = 0;
+  priv->os_major = 0;
+  priv->os_minor = 0;
   priv->build_number = 0;
   priv->processor_type = 0;
   priv->partner_id_1 = 0;
@@ -759,6 +601,156 @@ wm_device_init(WmDevice *self)
   priv->ip = NULL;
   priv->transport = NULL;
   priv->port = NULL;
+  priv->rapi_conn = NULL;
+}
+
+
+static void
+wm_device_get_property (GObject    *obj,
+			guint       property_id,
+			GValue     *value,
+			GParamSpec *pspec)
+{
+  WmDevice *self = WM_DEVICE (obj);
+  WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
+
+  switch (property_id) {
+
+  case PROP_NAME:
+    g_value_set_string (value, priv->name);
+    break;
+  case PROP_OS_MAJOR:
+    g_value_set_uint (value, priv->os_major);
+    break;
+  case PROP_OS_MINOR:
+    g_value_set_uint (value, priv->os_minor);
+    break;
+  case PROP_BUILD_NUMBER:
+    g_value_set_uint (value, priv->build_number);
+    break;
+  case PROP_PROCESSOR_TYPE:
+    g_value_set_uint (value, priv->processor_type);
+    break;
+  case PROP_PARTNER_ID_1:
+    g_value_set_uint (value, priv->partner_id_1);
+    break;
+  case PROP_PARTNER_ID_2:
+    g_value_set_uint (value, priv->partner_id_2);
+    break;
+  case PROP_CLASS:
+    g_value_set_string (value, priv->class);
+    break;
+  case PROP_HARDWARE:
+    g_value_set_string (value, priv->hardware);
+    break;
+  case PROP_DEVICE_NAME:
+    g_value_set_string (value, priv->device_name);
+    break;
+  case PROP_PASSWORD:
+    g_value_set_string (value, priv->password);
+    break;
+  case PROP_KEY:
+    g_value_set_uint (value, priv->key);
+    break;
+  case PROP_DCCM_PID:
+    g_value_set_uint (value, priv->dccm_pid);
+    break;
+  case PROP_IP:
+    g_value_set_string (value, priv->ip);
+    break;
+  case PROP_TRANSPORT:
+    g_value_set_string (value, priv->transport);
+    break;
+  case PROP_PORT:
+    g_value_set_string (value, priv->port);
+    break;
+  case PROP_RAPI_CONN:
+    g_value_set_pointer (value, priv->rapi_conn);
+    break;
+
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+wm_device_set_property (GObject      *obj,
+			guint         property_id,
+			const GValue *value,
+			GParamSpec   *pspec)
+{
+  WmDevice *self = WM_DEVICE (obj);
+  WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
+
+  switch (property_id) {
+  case PROP_NAME:
+    g_free (priv->name);
+    priv->name = g_value_dup_string (value);
+    break;
+  case PROP_OS_MAJOR:
+    priv->os_major = g_value_get_uint (value);
+    break;
+  case PROP_OS_MINOR:
+    priv->os_minor = g_value_get_uint (value);
+    break;
+  case PROP_BUILD_NUMBER:
+    priv->build_number = g_value_get_uint (value);
+    break;
+  case PROP_PROCESSOR_TYPE:
+    priv->processor_type = g_value_get_uint (value);
+    break;
+  case PROP_PARTNER_ID_1:
+    priv->partner_id_1 = g_value_get_uint (value);
+    break;
+  case PROP_PARTNER_ID_2:
+    priv->partner_id_2 = g_value_get_uint (value);
+    break;
+  case PROP_CLASS:
+    g_free (priv->class);
+    priv->class = g_value_dup_string (value);
+    break;
+  case PROP_HARDWARE:
+    g_free (priv->hardware);
+    priv->hardware = g_value_dup_string (value);
+    break;
+  case PROP_DEVICE_NAME:
+    g_free (priv->device_name);
+    priv->device_name = g_value_dup_string (value);
+    break;
+  case PROP_PASSWORD:
+    g_free (priv->password);
+    priv->password = g_value_dup_string (value);
+    break;
+  case PROP_KEY:
+    priv->key = g_value_get_uint (value);
+    break;
+  case PROP_DCCM_PID:
+    priv->dccm_pid = g_value_get_uint (value);
+    break;
+  case PROP_IP:
+    g_free (priv->ip);
+    priv->ip = g_value_dup_string (value);
+    break;
+  case PROP_TRANSPORT:
+    g_free (priv->transport);
+    priv->transport = g_value_dup_string (value);
+    break;
+  case PROP_PORT:
+    g_free (priv->port);
+    priv->port = g_value_dup_string (value);
+    break;
+  case PROP_RAPI_CONN:
+    if (priv->rapi_conn != NULL)
+	rapi_connection_destroy (priv->rapi_conn);
+    priv->rapi_conn = g_value_get_pointer (value);
+    break;
+
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
 }
 
 static void
@@ -773,6 +765,10 @@ wm_device_dispose (GObject *obj)
   priv->disposed = TRUE;
 
   /* unref other objects */
+
+  rapi_connection_select(priv->rapi_conn);
+  CeRapiUninit();
+  rapi_connection_destroy(priv->rapi_conn);
 
   if (G_OBJECT_CLASS (wm_device_parent_class)->dispose)
     G_OBJECT_CLASS (wm_device_parent_class)->dispose (obj);
@@ -802,13 +798,15 @@ static void
 wm_device_class_init (WmDeviceClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  gobject_class->dispose = wm_device_dispose;
-  gobject_class->finalize = wm_device_finalize;
+  GParamSpec *param_spec;
 
   g_type_class_add_private (klass, sizeof (WmDevicePrivate));
   
-  klass->wm_device_from_synce_info = &wm_device_from_synce_info_impl;
+  gobject_class->get_property = wm_device_get_property;
+  gobject_class->set_property = wm_device_set_property;
+
+  gobject_class->dispose = wm_device_dispose;
+  gobject_class->finalize = wm_device_finalize;
 
   klass->wm_device_get_os_version = &wm_device_get_os_version_impl;
   klass->wm_device_get_build_number = &wm_device_get_build_number_impl;
@@ -827,4 +825,139 @@ wm_device_class_init (WmDeviceClass *klass)
   klass->wm_device_get_port = &wm_device_get_port_impl;
   klass->wm_device_get_power_status = &wm_device_get_power_status_impl;
   klass->wm_device_get_store_status = &wm_device_get_store_status_impl;
+
+  param_spec = g_param_spec_string ("name", "Device name",
+                                    "The device's name.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_NAME, param_spec);
+
+  param_spec = g_param_spec_uint ("os-major", "OS major version",
+                                  "The device's OS major version.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_OS_MAJOR, param_spec);
+
+  param_spec = g_param_spec_uint ("os-minor", "OS minor version",
+                                  "The device's OS minor version.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_OS_MINOR, param_spec);
+
+  param_spec = g_param_spec_uint ("build-number", "Device build number",
+                                  "The device's build number.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_BUILD_NUMBER, param_spec);
+
+  param_spec = g_param_spec_uint ("processor-type", "Device processor type",
+                                  "The device's processor type.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_PROCESSOR_TYPE, param_spec);
+
+  param_spec = g_param_spec_uint ("partner-id-1", "Partner id 1",
+                                  "The device's first partner id.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_PARTNER_ID_1, param_spec);
+
+  param_spec = g_param_spec_uint ("partner-id-2", "Partner id 2",
+                                  "The device's second partner id.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_PARTNER_ID_2, param_spec);
+
+  param_spec = g_param_spec_string ("class", "Class name",
+                                    "The device's class.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_CLASS, param_spec);
+
+  param_spec = g_param_spec_string ("hardware", "Hardware name",
+                                    "The device's hardware name.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_HARDWARE, param_spec);
+
+  param_spec = g_param_spec_string ("device-name", "Device real name",
+                                    "The device's real name.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME, param_spec);
+
+  param_spec = g_param_spec_string ("password", "Device password",
+                                    "The device's password.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_PASSWORD, param_spec);
+
+  param_spec = g_param_spec_uint ("key", "Password key",
+                                  "The device's password key.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_KEY, param_spec);
+
+  param_spec = g_param_spec_uint ("dccm-pid", "DCCM PID",
+                                  "The device's connected DCCM PID .",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_DCCM_PID, param_spec);
+
+  param_spec = g_param_spec_string ("ip", "Device ip",
+                                    "The device's IP address.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_IP, param_spec);
+
+  param_spec = g_param_spec_string ("transport", "Device transport",
+                                    "The device's transport DCCM type.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_TRANSPORT, param_spec);
+
+  param_spec = g_param_spec_string ("port", "Device port",
+                                    "The device's ip port.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_PORT, param_spec);
+
+  param_spec = g_param_spec_pointer ("rapi-conn", "Rapi connection",
+                                     "The device's rapi connection",
+                                     G_PARAM_READWRITE |
+                                     G_PARAM_STATIC_NICK |
+                                     G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_RAPI_CONN, param_spec);
 }

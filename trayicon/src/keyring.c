@@ -26,7 +26,6 @@ IN THE SOFTWARE.
 
 #include <glib.h>
 #include <gnome.h>
-#include <synce_log.h>
 
 #include "keyring.h"
 #include "utils.h"
@@ -49,15 +48,13 @@ keyring_get_key(gchar *name, gchar **key)
                                         NULL);
   if (ret != GNOME_KEYRING_RESULT_OK)
   {
-    synce_trace("Error retrieving password from keyring. Ret=%d %s", ret, keyring_strerror(ret));
+    g_debug("%s: Error retrieving password from keyring. Ret=%d %s", G_STRFUNC, ret, keyring_strerror(ret));
     return ret;
   }    
 
   found = (GnomeKeyringFound *) found_list->data;
   *key = g_strdup (found->secret);
   gnome_keyring_found_list_free (found_list);
-
-  synce_trace("Found password in keyring");
 
   return ret;
 }
@@ -82,7 +79,7 @@ keyring_delete_key(gchar *name)
                                         NULL);
   if (ret != GNOME_KEYRING_RESULT_OK)
   {
-    synce_trace("Error retrieving password from keyring. Ret=%d %s", ret, keyring_strerror(ret));
+    g_debug("%s: Error retrieving password from keyring. Ret=%d %s", G_STRFUNC, ret, keyring_strerror(ret));
     return ret;
   }    
 
@@ -90,7 +87,7 @@ keyring_delete_key(gchar *name)
   item_id = found->item_id;
   gnome_keyring_found_list_free (found_list);
 
-  ret = gnome_keyring_item_delete_sync(NULL, item_id);
+  ret = gnome_keyring_item_delete_sync("default", item_id);
   return ret;
 }
 
@@ -121,7 +118,7 @@ keyring_set_key(gchar *name, const gchar *key)
 					&item_id);
   if (ret != GNOME_KEYRING_RESULT_OK)
     {
-      synce_trace("Error storing password in keyring. Ret=%d", ret);
+      g_warning("%s: Error storing password in keyring. Ret=%d", G_STRFUNC, ret);
     }
 
   gnome_keyring_attribute_list_free (attributes);
@@ -130,7 +127,7 @@ keyring_set_key(gchar *name, const gchar *key)
 }
 
 
-gchar *
+const gchar *
 keyring_strerror(GnomeKeyringResult error)
 {
   gchar *message;

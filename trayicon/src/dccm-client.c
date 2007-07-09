@@ -41,10 +41,10 @@ dccm_client_uninit_comms(DccmClient *self)
   return DCCM_CLIENT_GET_INTERFACE (self)->dccm_client_uninit_comms(self);
 }
 
-gboolean
+void
 dccm_client_provide_password(DccmClient *self, gchar *pdaname, gchar *password)
 {
-  return DCCM_CLIENT_GET_INTERFACE (self)->dccm_client_provide_password(self, pdaname, password);
+  DCCM_CLIENT_GET_INTERFACE (self)->dccm_client_provide_password(self, pdaname, password);
 }
 
 gboolean

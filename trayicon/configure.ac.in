@@ -31,23 +31,15 @@ dnl Check for D-Bus
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.61, dbus-glib-1 >= 0.61],
                     dbus=yes, dbus=no)
 
+dnl Check for Gnome Keyring
+PKG_CHECK_MODULES(GNOME_KEYRING, gnome-keyring-1)
+AC_SUBST(GNOME_KEYRING_CFLAGS)
+AC_SUBST(GNOME_KEYRING_LIBS)
+
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-
-dnl
-dnl GNOME keyring support
-dnl
-AC_ARG_WITH(gnome-keyring, AC_HELP_STRING([--without-gnome-keyring], [Build without GNOME keyring support, i.e. use gconf]))
-AM_CONDITIONAL(WITH_GNOME_KEYRING, test x"$with_gnome_keyring" != xno)
-
-if test x"$with_gnome_keyring" != xno; then
-        PKG_CHECK_MODULES(GNOME_KEYRING, gnome-keyring-1)
-        AC_SUBST(GNOME_KEYRING_CFLAGS)
-        AC_SUBST(GNOME_KEYRING_LIBS)
-	AC_DEFINE(WITH_GNOME_KEYRING, 1, [Using Gnome Keyring for password storage])
-fi
 
 ALL_LINGUAS="sv ru"
 

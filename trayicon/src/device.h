@@ -25,7 +25,6 @@ IN THE SOFTWARE.
 
 #include <glib-object.h>
 #include <stdint.h>
-#include <synce.h>
 
 G_BEGIN_DECLS
 
@@ -37,8 +36,6 @@ struct _WmDevice {
 typedef struct _WmDeviceClass WmDeviceClass;
 struct _WmDeviceClass {
   GObjectClass parent_class;
-
-  WmDevice * (*wm_device_from_synce_info) (WmDevice *self, SynceInfo *info);
 
   uint16_t (*wm_device_get_os_version) (WmDevice *self);
   uint16_t (*wm_device_get_build_number) (WmDevice *self);
@@ -68,9 +65,6 @@ GType wm_device_get_type (void);
 #define WM_IS_DEVICE(obj) (G_TYPE_CHECK_TYPE ((obj), WM_DEVICE_TYPE))
 #define WM_IS_DEVICE_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), WM_DEVICE_TYPE))
 #define WM_DEVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), WM_DEVICE_TYPE, WmDeviceClass))
-
-
-WmDevice * wm_device_from_synce_info(WmDevice *self, SynceInfo *info);
 
 uint16_t wm_device_get_os_version(WmDevice *self);
 uint16_t wm_device_get_build_number(WmDevice *self);
