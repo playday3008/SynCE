@@ -15,7 +15,8 @@ BUILT_SOURCES = \
 CLEANFILES = $(BUILT_SOURCES)
 
 synce_trayicon_SOURCES = $(BUILT_SOURCES) \
-			synce-trayicon.c \
+			main.c \
+			synce-trayicon.c synce-trayicon.h \
 			eggtrayicon.c eggtrayicon.h \
 			gtop_stuff.c gtop_stuff.h \
 			properties.c properties.h \
@@ -27,7 +28,7 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			dccm-client.c dccm-client.h \
 			keyring.c keyring.h
 
-EXTRA_DIST = vdccm-clientsignals-marshal.list
+EXTRA_DIST = dccm-client-signals-marshal.list
 
 synce_trayicon_LDADD = $(GNOME2_LIBS) $(GNOME_KEYRING_FLAGS)
 ##$(LDFLAGS)

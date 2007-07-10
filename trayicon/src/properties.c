@@ -8,13 +8,14 @@
 
 #include "properties.h"
 
-extern GConfClient *synce_conf_client;
 GladeXML *xml;
 
 static void
 prefs_changed_cb (GConfClient *client, guint id,
 		  GConfEntry *entry, gpointer data)
 {
+  SynceTrayIcon *self = SYNCE_TRAYICON(data);
+  GConfClient *conf_client = gconf_client_get_default();
   const gchar *key;
   const GConfValue *value;
 
@@ -34,7 +35,7 @@ prefs_changed_cb (GConfClient *client, guint id,
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_odccm), TRUE);
       gtk_widget_set_sensitive(prefs_start_stop_vdccm, FALSE);
     } else {
-      gconf_client_set_string (synce_conf_client,
+      gconf_client_set_string (conf_client,
 			    "/apps/synce/trayicon/dccm", "o", NULL);
     }
   }
@@ -46,14 +47,15 @@ prefs_use_odccm_toggled_cb (GtkWidget *widget, gpointer data)
 {
     gboolean state;
     GtkWidget *prefs_start_stop_vdccm = GTK_WIDGET(data);
+    GConfClient *conf_client = gconf_client_get_default();
 
     state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
     if (state) {
-      gconf_client_set_string (synce_conf_client,
+      gconf_client_set_string (conf_client,
             "/apps/synce/trayicon/dccm", "o", NULL);
 
     } else {
-      gconf_client_set_string (synce_conf_client,
+      gconf_client_set_string (conf_client,
             "/apps/synce/trayicon/dccm", "v", NULL);
     }
     gtk_widget_set_sensitive(prefs_start_stop_vdccm, !state);
@@ -62,9 +64,12 @@ prefs_use_odccm_toggled_cb (GtkWidget *widget, gpointer data)
 static void
 prefs_start_stop_vdccm_toggled_cb (GtkWidget *widget, gpointer data)
 {
-    gboolean state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+  SynceTrayIcon *self = SYNCE_TRAYICON(data);
+  GConfClient *conf_client = gconf_client_get_default();
 
-    gconf_client_set_bool (synce_conf_client,
+  gboolean state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+
+  gconf_client_set_bool (conf_client,
             "/apps/synce/trayicon/start_vdccm", state, NULL);
 }
 
@@ -77,11 +82,13 @@ prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 
 
 GtkWidget *
-run_prefs_dialog (void)
+run_prefs_dialog (SynceTrayIcon *trayicon)
 {
   GtkWidget *prefs_window, *prefs_use_odccm, *prefs_use_vdccm, *prefs_start_stop_vdccm, *close_button;
   gchar *which_dccm;
   GError *error = NULL;
+
+  GConfClient *conf_client = gconf_client_get_default();
 
   xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "prefs_window", NULL);
 
@@ -91,7 +98,7 @@ run_prefs_dialog (void)
   prefs_use_vdccm = glade_xml_get_widget (xml, "prefs_use_vdccm");	
   prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");	
 
-  if (!(which_dccm = gconf_client_get_string (synce_conf_client,
+  if (!(which_dccm = gconf_client_get_string (conf_client,
 					      "/apps/synce/trayicon/dccm", &error))) {
     which_dccm = g_strdup("o");
     if (error) {
@@ -107,22 +114,22 @@ run_prefs_dialog (void)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_vdccm), TRUE);
     gtk_widget_set_sensitive(prefs_start_stop_vdccm, TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_start_stop_vdccm), 
-				  gconf_client_get_bool (synce_conf_client,
+				  gconf_client_get_bool (conf_client,
 							 "/apps/synce/trayicon/start_vdccm", NULL));
   }
 
   g_signal_connect (G_OBJECT (prefs_use_odccm), "toggled",
 		      G_CALLBACK (prefs_use_odccm_toggled_cb), prefs_start_stop_vdccm);
   g_signal_connect (G_OBJECT (prefs_start_stop_vdccm), "toggled",
-		      G_CALLBACK (prefs_start_stop_vdccm_toggled_cb), NULL);
+		      G_CALLBACK (prefs_start_stop_vdccm_toggled_cb), trayicon);
 
   close_button = glade_xml_get_widget (xml, "prefs_closebutton");    
   g_signal_connect (G_OBJECT (close_button), "clicked",
 		    G_CALLBACK (prefs_close_button_clicked_cb), NULL);
 
-  gconf_client_notify_add (synce_conf_client, 
+  gconf_client_notify_add (conf_client, 
 			   "/apps/synce/trayicon", 
-			   prefs_changed_cb, NULL, NULL, NULL);
+			   prefs_changed_cb, trayicon, NULL, NULL);
 
   gtk_widget_show_all (prefs_window);
 

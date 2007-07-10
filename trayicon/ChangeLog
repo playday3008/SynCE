@@ -1,3 +1,7 @@
+2007-07-10  Mark Ellis <mark@mpellis.org.uk>
+
+	* made SynceTrayIcon as subclass of EggTrayIcon
+
 2007-07-09  Mark Ellis <mark@mpellis.org.uk>
 
 	* added man page
