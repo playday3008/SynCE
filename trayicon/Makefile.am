@@ -1,5 +1,5 @@
 ## Makefile.am -- Process thisdd file with automake to produce Makefile.in
-SUBDIRS = src pixmaps data po
+SUBDIRS = src pixmaps data po man
 
 EXTRA_DIST = \
 			 AUTHORS         \

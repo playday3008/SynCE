@@ -44,8 +44,6 @@
 #include <gtk/gtk.h>
 #include <gnome.h>
 #include <glade/glade.h>
-#include <libgnomeui/gnome-dialog.h>
-#include <libgnomeui/gnome-about.h>
 #include <gconf/gconf-client.h>
 #include <dbus/dbus-glib.h>
 
@@ -71,17 +69,20 @@ static guint which_dccm = USE_ODCCM;
 GConfClient *synce_conf_client = NULL;
 
 static bool in_background = true;
+static gint log_level = SYNCE_LOG_LEVEL_LOWEST;
 DccmClient *comms_client = NULL;
 WmDeviceManager *device_list = NULL;
 
 static EggTrayIcon* tray_icon = NULL;
 static GtkTooltips* tooltips = NULL;
 
-static const struct poptOption options[] = {
-	{NULL, 'd', POPT_ARG_INT, NULL, 0, N_("debug"), NULL},
-	{NULL, 'f', POPT_ARG_NONE, NULL, 0, N_("debug"), NULL},
-	{NULL, '\0', 0, NULL, 0} /* end the list */
-};
+static GOptionEntry options[] = 
+  {
+    { "debug", 'd', 0, G_OPTION_ARG_INT, &log_level, N_("Set debug level 1-5"), "level" },
+    { "foreground", 'f', G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE, &in_background, "Run in foreground", NULL },
+    { NULL }
+  };
+
 
 void uninit_client_comms();
 DccmClient * init_client_comms();
@@ -194,24 +195,25 @@ static void menu_preferences (GtkWidget *button, EggTrayIcon *icon)
 
 static void menu_about (GtkWidget *button, EggTrayIcon *icon)
 {
-	GtkWidget *about;
-	const gchar* authors[] = {
-		"David Eriksson <twogood@users.sourceforge.net>",
-		"Mattias Eriksson <snaggen@users.sourceforge.net>",
-		NULL
-	};
-	
-	about = gnome_about_new (
-			_("SynCE Tray Icon"),
-			VERSION,
-			_("Copyright (c) 2002, David Eriksson"),
-			_("Displays information about devices connected through SynCE"),
-			authors,
-			NULL,
-			NULL,
-			NULL);
+  GtkWidget *about;
+  const gchar* authors[] = {
+    "David Eriksson <twogood@users.sourceforge.net>",
+    "Mattias Eriksson <snaggen@users.sourceforge.net>",
+    "Mark Ellis <mark_ellis@users.sourceforge.net>",
+    NULL
+  };
 
-	gtk_widget_show(about);
+  about = gtk_about_dialog_new();
+
+  gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), _("SynCE Tray Icon"));
+  gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
+  gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2002, David Eriksson"));
+  gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _("Displays information about devices connected through SynCE"));
+  gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://www.synce.org");
+  gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);
+
+  gtk_dialog_run (GTK_DIALOG (about));
+  gtk_widget_destroy (GTK_WIDGET(about));
 }
 
 static void menu_disconnect(GtkWidget *button, gpointer data)
@@ -400,57 +402,6 @@ static gboolean update(gpointer data)
 }
 
 
-/**
- * Write help message to stderr
- */
-#if 0
-static void show_usage(char *name)
-{
-	fprintf(
-			stderr, 
-			"Syntax:\n"
-			"\n"
-			"\t%s [-d LEVEL] [-f] [-h]\n"
-			"\n"
-			"\t-d LEVEL     Set debug log level\n"
-			"\t                 0 - No logging (default)\n"
-			"\t                 1 - Errors only\n"
-			"\t                 2 - Errors and warnings\n"
-			"\t                 3 - Everything\n"
-			"\t-f           Run in foreground (default is to run in background)\n"
-			"\t-h           Show this help message\n",
-			name);
-}
-#endif 
-
-static bool handle_parameters(int argc, char** argv)
-{
-	int c;
-	int log_level = SYNCE_LOG_LEVEL_LOWEST;
-
-	while ((c = getopt(argc, argv, "d:f")) != -1)
-	{
-		switch (c)
-		{
-			case 'd':
-				log_level = atoi(optarg);
-				break;
-			
-			/*
-			 * The -f parameter specifies that we want to run in the foreground
-			 */
-			case 'f':
-				in_background = false;
-				break;
-		}
-	}
-
-	synce_log_set_level(log_level);
-
-	return true;
-}
-
-
 static void
 init_sm ()
 {
@@ -629,21 +580,22 @@ main (gint argc, gchar **argv)
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
+	GOptionContext *option_context = g_option_context_new (" - gnome control for synCE");
+	g_option_context_add_main_entries (option_context, options, GETTEXT_PACKAGE);
 	gnome_program_init ("synce-trayicon", VERSION,
 			LIBGNOMEUI_MODULE,
 			argc, argv,
-			GNOME_PARAM_POPT_TABLE,options,
-			GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce TrayIcon"),
+			GNOME_PARAM_GOPTION_CONTEXT, option_context,
+			GNOME_PARAM_HUMAN_READABLE_NAME, _("Synce TrayIcon"),
 			NULL);
+
+ 	synce_log_set_level(log_level);
 
 	glade_gnome_init ();
 
-	if (!handle_parameters(argc, argv))
-		goto exit;
-
 	if (in_background)
 	{
-	  synce_log_use_syslog();
+		synce_log_use_syslog();
 		synce_trace("Forking into background");
 		daemon(0,0);
 	}

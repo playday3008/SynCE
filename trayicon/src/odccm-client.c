@@ -199,14 +199,14 @@ odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
-    return;
+    return FALSE;
   }
 
   OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
-    return;
+    return FALSE;
   }
   if (!priv->dev_mgr_proxy) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
@@ -798,8 +798,6 @@ odccm_client_dispose (GObject *obj)
 static void
 odccm_client_finalize (GObject *obj)
 {
-  OdccmClient *self = ODCCM_CLIENT(obj);
-
   if (G_OBJECT_CLASS (odccm_client_parent_class)->finalize)
     G_OBJECT_CLASS (odccm_client_parent_class)->finalize (obj);
 }
