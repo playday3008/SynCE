@@ -34,6 +34,9 @@ IN THE SOFTWARE.
 #include <gconf/gconf-client.h>
 #include <dbus/dbus-glib.h>
 #include <synce.h>
+#ifdef ENABLE_NOTIFY
+#include <libnotify/notify.h>
+#endif /* ENABLE_NOTIFY */
 
 #include "synce-trayicon.h"
 #include "gtop_stuff.h"
@@ -57,6 +60,10 @@ struct _SynceTrayIconPrivate {
   GtkTooltips* tooltips;
   GtkWidget *icon;
   GtkWidget *menu;
+
+#ifdef ENABLE_NOTIFY
+  NotifyNotification *notification;
+#endif /* ENABLE_NOTIFY */
 
   gboolean disposed;
 };
@@ -88,6 +95,11 @@ static gboolean update(gpointer data);
 static void device_added_cb(GObject *obj, gpointer user_data);
 static void device_removed_cb(GObject *obj, gpointer user_data);
 static void trayicon_clicked(GtkWidget *button, GdkEventButton *event, gpointer user_data);
+
+#ifdef ENABLE_NOTIFY
+static void event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body);
+#endif /* ENABLE_NOTIFY */
+
 
      /* methods */
 
@@ -217,6 +229,9 @@ device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpo
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
   WmDevice *new_device = WM_DEVICE(info);
   WmDevice *device;
+#ifdef ENABLE_NOTIFY
+  gchar *model, *platform, *name, *notify_string;
+#endif /* ENABLE_NOTIFY */
 
   g_debug("%s: looking for preexisting device %s", G_STRFUNC, pdaname);
   if ((device = wm_device_manager_find_by_name(priv->device_list, pdaname))) {
@@ -226,6 +241,20 @@ device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpo
   }
 
   wm_device_manager_add(priv->device_list, new_device);
+
+#ifdef ENABLE_NOTIFY
+  g_object_get(new_device, "name", &name, NULL);
+  g_object_get(new_device, "hardware", &model, NULL);
+  g_object_get(new_device, "class", &platform, NULL);
+
+  notify_string = g_strdup_printf("A %s %s '%s' just connected.", model, platform, name);
+  event_notification(self, "PDA connected", notify_string);
+
+  g_free(name);
+  g_free(model);
+  g_free(platform);
+  g_free(notify_string);
+#endif /* ENABLE_NOTIFY */
 }
 
 static void
@@ -234,11 +263,24 @@ device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_d
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
   WmDevice *device;
+#ifdef ENABLE_NOTIFY
+  gchar *name, *notify_string;
+#endif /* ENABLE_NOTIFY */
 
   if (!(device = wm_device_manager_remove_by_name(priv->device_list, pdaname))) {
     g_debug("%s: Ignoring disconnection message for \"%s\", not connected", G_STRFUNC, pdaname);
     return;
   }
+
+#ifdef ENABLE_NOTIFY
+  g_object_get(device, "name", &name, NULL);
+
+  notify_string = g_strdup_printf("'%s' just disconnected.", name);
+  event_notification(self, "PDA disconnected", notify_string);
+
+  g_free(name);
+  g_free(notify_string);
+#endif /* ENABLE_NOTIFY */
 
   g_object_unref(device);
 }
@@ -609,6 +651,24 @@ trayicon_clicked(GtkWidget *button, GdkEventButton *event, gpointer user_data)
   }
 }
 
+#ifdef ENABLE_NOTIFY
+
+static void
+event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
+{
+  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+  if (priv->notification) {
+    notify_notification_close(priv->notification, NULL);
+    g_object_unref (priv->notification);
+  }
+
+  priv->notification = notify_notification_new (summary, body, NULL, GTK_WIDGET (self));
+  notify_notification_show (priv->notification, NULL);
+}
+
+#endif /* ENABLE_NOTIFY */
+
 /*
 
 static void
@@ -664,6 +724,13 @@ synce_trayicon_init(SynceTrayIcon *self)
 
   priv->disposed = FALSE;
   priv->menu = NULL;
+
+#ifdef ENABLE_NOTIFY
+  priv->notification = NULL;
+
+  if (!notify_is_initted ())
+    notify_init ("synce-trayicon");
+#endif /* ENABLE_NOTIFY */
 
   /* gconf */
   priv->conf_client = gconf_client_get_default();
@@ -740,6 +807,16 @@ synce_trayicon_dispose (GObject *obj)
 
   /* dccm comms */
   uninit_client_comms(self);
+
+#ifdef ENABLE_NOTIFY
+  /* notification */
+  if (priv->notification)
+    {
+      notify_notification_close (priv->notification, NULL);
+      g_object_unref (priv->notification);
+    }
+  notify_uninit();
+#endif /* ENABLE_NOTIFY */
 
   if (G_OBJECT_CLASS (synce_trayicon_parent_class)->dispose)
     G_OBJECT_CLASS (synce_trayicon_parent_class)->dispose (obj);

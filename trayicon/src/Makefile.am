@@ -1,12 +1,8 @@
-AM_CFLAGS = @LIBRAPI2_CFLAGS@ @DBUS_CFLAGS@
-AM_LDFLAGS = @LIBRAPI2_LIBS@ @DBUS_LIBS@
 
 bin_PROGRAMS = synce-trayicon
 
-INCLUDES  = \
-			$(GNOME2_CFLAGS) $(GNOME_KEYRING_FLAGS) \
-			-DDATADIR=\"$(datadir)\" 		\
-			-DSYNCE_DATA=\""$(datadir)/synce/"\" 
+INCLUDES  = 
+
 
 BUILT_SOURCES = \
 	dccm-client-signals-marshal.h \
@@ -30,8 +26,25 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 
 EXTRA_DIST = dccm-client-signals-marshal.list
 
-synce_trayicon_LDADD = $(GNOME2_LIBS) $(GNOME_KEYRING_FLAGS)
-##$(LDFLAGS)
+synce_trayicon_CPPFLAGS = \
+	$(GNOME2_CFLAGS) \
+	$(GNOME_KEYRING_CFLAGS) \
+	$(LIBRAPI2_CFLAGS) \
+	$(DBUS_CFLAGS) \
+	-DDATADIR=\"$(datadir)\" \
+	-DSYNCE_DATA=\""$(datadir)/synce/"\" 
+
+synce_trayicon_LDADD = \
+	$(GNOME2_LIBS) \
+	$(GNOME_KEYRING_LIBS) \
+	$(LIBRAPI2_LIBS) \
+	$(DBUS_LIBS)
+
+if ENABLE_NOTIFY
+synce_trayicon_CPPFLAGS += $(NOTIFY_CFLAGS)
+synce_trayicon_LDADD += $(NOTIFY_LIBS)
+endif
+
 
 %-signals-marshal.h: %-signals-marshal.list
 	glib-genmarshal --header --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.h
