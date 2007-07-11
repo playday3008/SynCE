@@ -69,6 +69,8 @@ AC_OUTPUT([
 	Makefile
 	src/Makefile
 	pixmaps/Makefile
+	pixmaps/22x22/Makefile
+	pixmaps/48x48/Makefile
 	data/Makefile
 	man/Makefile
 	po/Makefile.in

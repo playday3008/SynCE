@@ -32,6 +32,7 @@
 
 #include <synce_log.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gnome.h>
 #include <glade/glade.h>

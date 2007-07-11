@@ -12,6 +12,7 @@ CLEANFILES = $(BUILT_SOURCES)
 
 synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			main.c \
+			stock-icons.h \
 			synce-trayicon.c synce-trayicon.h \
 			eggtrayicon.c eggtrayicon.h \
 			gtop_stuff.c gtop_stuff.h \

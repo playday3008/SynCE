@@ -2,6 +2,8 @@
 
 	* added notification for device (dis)connect
 	* src/Makefile.am - tidy up
+	* src/main.c - add glib/gstdio.h
+	* improve icon use
 
 2007-07-10  Mark Ellis <mark@mpellis.org.uk>
 

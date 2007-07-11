@@ -47,6 +47,7 @@ IN THE SOFTWARE.
 #include "vdccm-client.h"
 #include "odccm-client.h"
 #include "device-manager.h"
+#include "stock-icons.h"
 
 G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, EGG_TYPE_TRAY_ICON)
 
@@ -166,9 +167,9 @@ set_icon(SynceTrayIcon *self)
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
   if (is_connected(self))
-    gtk_image_set_from_icon_name(GTK_IMAGE(priv->icon), "synce-color-small", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_image_set_from_icon_name(GTK_IMAGE(priv->icon), SYNCE_STOCK_CONNECTED, GTK_ICON_SIZE_SMALL_TOOLBAR);
   else
-    gtk_image_set_from_icon_name(GTK_IMAGE(priv->icon), "synce-gray-small", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_image_set_from_icon_name(GTK_IMAGE(priv->icon), SYNCE_STOCK_DISCONNECTED, GTK_ICON_SIZE_SMALL_TOOLBAR);
 	
   while (gtk_events_pending ())
     gtk_main_iteration ();
@@ -465,6 +466,7 @@ menu_about (GtkWidget *button, SynceTrayIcon *icon)
   gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _("Displays information about devices connected through SynCE"));
   gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://www.synce.org");
   gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);
+  gtk_about_dialog_set_logo_icon_name(GTK_ABOUT_DIALOG(about), SYNCE_STOCK_CONNECTED);
 
   gtk_dialog_run (GTK_DIALOG (about));
   gtk_widget_destroy (GTK_WIDGET(about));
