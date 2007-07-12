@@ -1,6 +1,7 @@
 2007-07-12  Mark Ellis <mark@mpellis.org.uk>
 
 	* added gconf schema
+	* improve gnome_program_ usage
 
 2007-07-11  Mark Ellis <mark@mpellis.org.uk>
 

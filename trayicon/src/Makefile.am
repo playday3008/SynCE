@@ -1,8 +1,12 @@
 
 bin_PROGRAMS = synce-trayicon
 
-INCLUDES  = 
-
+INCLUDES  = \
+	-DDATADIR=\"$(datadir)\"                        \
+	-DPREFIX=\""$(prefix)"\"                        \
+	-DSYSCONFDIR=\""$(sysconfdir)"\"                \
+	-DLIBDIR=\""$(libdir)"\"                        \
+	-DSYNCE_DATA=\""$(datadir)/synce/"\" 
 
 BUILT_SOURCES = \
 	dccm-client-signals-marshal.h \
@@ -31,9 +35,7 @@ synce_trayicon_CPPFLAGS = \
 	$(GNOME2_CFLAGS) \
 	$(GNOME_KEYRING_CFLAGS) \
 	$(LIBRAPI2_CFLAGS) \
-	$(DBUS_CFLAGS) \
-	-DDATADIR=\"$(datadir)\" \
-	-DSYNCE_DATA=\""$(datadir)/synce/"\" 
+	$(DBUS_CFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GNOME2_LIBS) \

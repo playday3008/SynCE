@@ -108,11 +108,12 @@ main (gint argc, gchar **argv)
 
 	GOptionContext *option_context = g_option_context_new (" - gnome control for synCE");
 	g_option_context_add_main_entries (option_context, options, GETTEXT_PACKAGE);
-	gnome_program_init ("synce-trayicon", VERSION,
+	gnome_program_init (PACKAGE, VERSION,
 			LIBGNOMEUI_MODULE,
 			argc, argv,
 			GNOME_PARAM_GOPTION_CONTEXT, option_context,
-			GNOME_PARAM_HUMAN_READABLE_NAME, _("Synce TrayIcon"),
+			GNOME_PARAM_HUMAN_READABLE_NAME, _("SynCE Tray Icon"),
+			GNOME_PROGRAM_STANDARD_PROPERTIES,
 			NULL);
 
  	synce_log_set_level(log_level);
