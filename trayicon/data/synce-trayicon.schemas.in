@@ -1,0 +1,30 @@
+<gconfschemafile>
+  <schemalist>
+
+    <schema>
+      <key>/schemas/apps/synce/trayicon/start_vdccm</key>
+      <applyto>/apps/synce/trayicon/start_vdccm</applyto>
+      <owner>synce-trayicon</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>If we should start and stop the vdccm daemon</short>
+        <long>If we should start and stop the vdccm daemon. Only applies when using vdccm for communications.</long>
+      </locale>
+    </schema>
+
+
+    <schema>
+      <key>/schemas/apps/synce/trayicon/dccm</key>
+      <applyto>/apps/synce/trayicon/dccm</applyto>
+      <owner>synce-trayicon</owner>
+      <type>string</type>
+      <default>o</default>
+      <locale name="C">
+        <short>The dccm implementation used</short>
+        <long>The dccm implementation used, 'o' for odccm (the default), 'v' for vdccm.</long>
+      </locale>
+    </schema>
+
+  </schemalist>
+</gconfschemafile>
