@@ -393,7 +393,7 @@ OUT:
 }
 
 gboolean
-_odccm_trigger_connection ()
+_odccm_trigger_connection (const gchar *device_ip)
 {
   gboolean result = FALSE;
   const gchar *op = "socket()";
@@ -406,7 +406,7 @@ _odccm_trigger_connection ()
 
   sa.sin_family = AF_INET;
   sa.sin_port = htons (5679);
-  inet_aton ("169.254.2.1", &sa.sin_addr);
+  inet_aton (device_ip, &sa.sin_addr);
 
   if (sendto (fd, &b, sizeof (b), 0, (const struct sockaddr *) &sa,
               sizeof (sa)) != 1)

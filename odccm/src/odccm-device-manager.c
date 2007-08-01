@@ -36,13 +36,18 @@
 #endif
 #include "util.h"
 
-/* FIXME: make these configurable */
-#define DEVICE_IP_ADDRESS "169.254.2.1"
-#define LOCAL_IP_ADDRESS "169.254.2.2"
-#define LOCAL_NETMASK    "255.255.255.0"
-#define LOCAL_BROADCAST  "169.254.2.255"
-
 G_DEFINE_TYPE (OdccmDeviceManager, odccm_device_manager, G_TYPE_OBJECT)
+
+/* properties */
+enum
+{
+  PROP_DEVICE_IP_ADDRESS = 1,
+  PROP_LOCAL_IP_ADDRESS,
+  PROP_LOCAL_NETMASK,
+  PROP_LOCAL_BROADCAST,
+
+  LAST_PROPERTY
+};
 
 /* signals */
 enum
@@ -75,6 +80,11 @@ struct _OdccmDeviceManagerPrivate
   gchar *udi;
   gchar *ifname;
   GIOChannel *udev_chann;
+
+  gchar *device_ip_address;
+  gchar *local_ip_address;
+  gchar *local_netmask;
+  gchar *local_broadcast;
 };
 
 #define ODCCM_DEVICE_MANAGER_GET_PRIVATE(o) \
@@ -83,6 +93,67 @@ struct _OdccmDeviceManagerPrivate
 static void
 odccm_device_manager_init (OdccmDeviceManager *self)
 {
+}
+
+static void
+odccm_device_manager_get_property (GObject    *obj,
+				   guint       property_id,
+				   GValue     *value,
+				   GParamSpec *pspec)
+{
+  OdccmDeviceManager *self = ODCCM_DEVICE_MANAGER (obj);
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  switch (property_id) {
+
+  case PROP_DEVICE_IP_ADDRESS:
+    g_value_set_string (value, priv->device_ip_address);
+    break;
+  case PROP_LOCAL_IP_ADDRESS:
+    g_value_set_string (value, priv->local_ip_address);
+    break;
+  case PROP_LOCAL_NETMASK:
+    g_value_set_string (value, priv->local_netmask);
+    break;
+  case PROP_LOCAL_BROADCAST:
+    g_value_set_string (value, priv->local_broadcast);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
+}
+
+static void
+odccm_device_manager_set_property (GObject      *obj,
+				   guint         property_id,
+				   const GValue *value,
+				   GParamSpec   *pspec)
+{
+  OdccmDeviceManager *self = ODCCM_DEVICE_MANAGER (obj);
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  switch (property_id) {
+  case PROP_DEVICE_IP_ADDRESS:
+    g_free (priv->device_ip_address);
+    priv->device_ip_address = g_value_dup_string (value);
+    break;
+  case PROP_LOCAL_IP_ADDRESS:
+    g_free (priv->local_ip_address);
+    priv->local_ip_address = g_value_dup_string (value);
+    break;
+  case PROP_LOCAL_NETMASK:
+    g_free (priv->local_netmask);
+    priv->local_netmask = g_value_dup_string (value);
+    break;
+  case PROP_LOCAL_BROADCAST:
+    g_free (priv->local_broadcast);
+    priv->local_broadcast = g_value_dup_string (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
 }
 
 static void client_connected_cb (GServer *server, GConn *conn, gpointer user_data);
@@ -139,6 +210,11 @@ odccm_device_manager_finalize (GObject *obj)
   g_free (priv->udi);
   g_free (priv->ifname);
 
+  g_free (priv->device_ip_address);
+  g_free (priv->local_ip_address);
+  g_free (priv->local_netmask);
+  g_free (priv->local_broadcast);
+
   G_OBJECT_CLASS (odccm_device_manager_parent_class)->finalize (obj);
 }
 
@@ -146,14 +222,54 @@ static void
 odccm_device_manager_class_init (OdccmDeviceManagerClass *dev_mgr_class)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (dev_mgr_class);
+  GParamSpec *param_spec;
 
   g_type_class_add_private (dev_mgr_class,
                             sizeof (OdccmDeviceManagerPrivate));
 
   obj_class->constructor = odccm_device_manager_constructor;
 
+  obj_class->get_property = odccm_device_manager_get_property;
+  obj_class->set_property = odccm_device_manager_set_property;
+
   obj_class->dispose = odccm_device_manager_dispose;
   obj_class->finalize = odccm_device_manager_finalize;
+
+  param_spec = g_param_spec_string ("device-ip", "Device IP",
+                                    "The device's IP address.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+				    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_DEVICE_IP_ADDRESS, param_spec);
+
+  param_spec = g_param_spec_string ("local-ip", "Local IP",
+                                    "The local IP address.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_LOCAL_IP_ADDRESS, param_spec);
+
+  param_spec = g_param_spec_string ("local-netmask", "Local netmask",
+                                    "The local netmask.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_LOCAL_NETMASK, param_spec);
+
+  param_spec = g_param_spec_string ("local-broadcast", "Local broadcast",
+                                    "The local broadcast address.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_LOCAL_BROADCAST, param_spec);
 
   signals[DEVICE_ATTACHED] =
     g_signal_new ("device-attached",
@@ -312,17 +428,17 @@ interface_timed_cb (gpointer data)
     return FALSE;
 
   /* Has the device been re-configured? */
-  if (!_odccm_interface_is_configured (priv->ifname, LOCAL_IP_ADDRESS))
+  if (!_odccm_interface_is_configured (priv->ifname, priv->local_ip_address))
     {
       /* It has, reconfigure and try again on the next tick. */
-      _odccm_configure_interface (priv->ifname, LOCAL_IP_ADDRESS, LOCAL_NETMASK,
-                                  LOCAL_BROADCAST);
+      _odccm_configure_interface (priv->ifname, priv->local_ip_address, priv->local_netmask,
+                                  priv->local_broadcast);
 
       return TRUE;
     }
 
   /* Send a trigger-packet to make the device connect. */
-  _odccm_trigger_connection (self);
+  _odccm_trigger_connection (priv->device_ip_address);
 
   return TRUE;
 }
@@ -395,8 +511,8 @@ hal_device_added_cb (LibHalContext *ctx, const gchar *udi)
       priv->udi = g_strdup (udi);
       priv->ifname = g_strdup (ifname);
 
-      _odccm_configure_interface (ifname, LOCAL_IP_ADDRESS, LOCAL_NETMASK,
-                                  LOCAL_BROADCAST);
+      _odccm_configure_interface (ifname, priv->local_ip_address, priv->local_netmask,
+                                  priv->local_broadcast);
 
       g_timeout_add (50, interface_timed_cb, self);
     }
@@ -427,7 +543,7 @@ hal_device_removed_cb (LibHalContext *ctx, const gchar *udi)
 
       g_object_get (dev, "ip-address", &addr, NULL);
 
-      if (addr == inet_addr (DEVICE_IP_ADDRESS))
+      if (addr == inet_addr (priv->device_ip_address))
         {
           gchar *obj_path;
 
@@ -519,7 +635,7 @@ udev_device_added (gpointer self, gchar *ifname, gchar *udi)
   OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   // Check if this is "our" interface
-  if (!_odccm_interface_address (ifname, LOCAL_IP_ADDRESS)) 
+  if (!_odccm_interface_address (ifname, priv->local_ip_address)) 
      return;
 
   g_debug ("PDA network interface discovered! udi='%s'", udi);
@@ -553,7 +669,7 @@ udev_device_removed (gpointer self, gchar *ifname, gchar *udi)
 
       g_object_get (dev, "ip-address", &addr, NULL);
 
-      if (addr == inet_addr (DEVICE_IP_ADDRESS))
+      if (addr == inet_addr (priv->device_ip_address))
         {
           gchar *obj_path;
 

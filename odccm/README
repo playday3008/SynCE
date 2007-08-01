@@ -13,6 +13,6 @@ pre WM5 support
 odccm does now support pre Windows Mobile 5 devices. Pass
 --enable-legacy-support to configure.
 
-It does not replaceteh functionality of synce-serial, which
+It does not replace the functionality of synce-serial, which
 must still be installed and configured.
 

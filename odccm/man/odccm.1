@@ -8,8 +8,20 @@ odccm \- Daemon to keep connection to Windows Mobile device
 A legacy-free dccm-implementation for Windows Mobile 5 (and newer) devices. It responds to keep alives and provides other members of the SynCE suite of tools with details of the connected device.
 .SH OPTIONS
 .TP
-.B \-f
+.B \-f, \-\-foreground
 Runs as non-daemon.
+.TP
+.B --device-ip
+Specify device's IP address.
+.TP
+.B --local-ip
+Specify local IP address.
+.TP
+.B --local-netmask
+Specify local netmask.
+.TP
+.B --local-broadcast
+Specify local broadcast address.
 .SH "AUTHOR"
 This manual page was written by Jonny Lamb <jonnylamb@jonnylamb.com>.
 .SH "SEE ALSO"

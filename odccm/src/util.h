@@ -33,4 +33,4 @@ gchar *_odccm_rapi_ascii_string_to_string (const guchar *buf, const guchar *buf_
 gboolean _odccm_configure_interface (const gchar *ifname, const gchar *ip_addr, const gchar *netmask, const gchar *bcast_addr);
 gboolean _odccm_interface_is_configured (const gchar *ifname, const gchar *expected_address);
 gboolean _odccm_interface_address (const gchar *ifname, const gchar *expected_address);
-gboolean _odccm_trigger_connection ();
+gboolean _odccm_trigger_connection (const gchar *device_ip);
