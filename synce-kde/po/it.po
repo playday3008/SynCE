@@ -1,0 +1,956 @@
+# translation of it.po to
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Alessandro Galli <alessandro.galli@gmail.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: it\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-08-22 23:54+0200\n"
+"PO-Revision-Date: 2007-07-31 13:36+0200\n"
+"Last-Translator: Alessandro Galli <alessandro.galli@gmail.com>\n"
+"Language-Team:  <it@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.2\n"
+
+#: rakisyncplugin.cpp:91
+msgid "Nothing to configure."
+msgstr "Nulla da configurare."
+
+#: _translatorinfo.cpp:1
+msgid ""
+"_: NAME OF TRANSLATORS\n"
+"Your names"
+msgstr "Alessandro Galli"
+
+#: _translatorinfo.cpp:3
+msgid ""
+"_: EMAIL OF TRANSLATORS\n"
+"Your emails"
+msgstr "alessandro.galli@gmail.com"
+
+#: configdialogimpl.cpp:80
+msgid ""
+"Could not copy a valid dccm.sh script.\n"
+"Error was: %1\n"
+"Please check your installation and start again!"
+msgstr ""
+"Non posso copiare uno script dccm.sh valido.\n"
+"L'errore è stato: %1\n"
+"Ricontrolla la tua installazione e riprova!"
+
+#: managerimpl.cpp:43
+msgid "Win CE version unknown"
+msgstr "Versione di Win CE sconosciuta"
+
+#: managerimpl.cpp:75
+msgid "PDA-Processor unknown"
+msgstr "Processore del PDA sconosciuto"
+
+#: managerimpl.cpp:105
+msgid "Battery state-high"
+msgstr "Stato batteria carica"
+
+#: managerimpl.cpp:108
+msgid "Battery state-low"
+msgstr "Stato batteria quasi scarica"
+
+#: managerimpl.cpp:111
+msgid "Battery state-critical"
+msgstr "Stato batteria scarica"
+
+#: managerimpl.cpp:114
+msgid "Battery state-charging"
+msgstr "Stato batteria in ricarica"
+
+#: managerimpl.cpp:117
+msgid "Battery state-nobattery"
+msgstr "Stato batteria assente"
+
+#: managerimpl.cpp:120
+msgid "Battery state-unknown"
+msgstr "Stato batteria sconosciuto"
+
+#: managerimpl.cpp:130 managerimpl.cpp:154
+msgid "Ready"
+msgstr "Pronto"
+
+#: managerimpl.cpp:193
+msgid "Processor architecture"
+msgstr "Architettura processore"
+
+#: managerimpl.cpp:219 managerimpl.cpp:222 managerimpl.cpp:225
+#: managerimpl.cpp:231 managerimpl.cpp:234 managerimpl.cpp:238
+msgid "Battery"
+msgstr "Batteria"
+
+#: managerimpl.cpp:299
+msgid "Uninstalling software ..."
+msgstr "Disinstallazione software..."
+
+#: managerimpl.cpp:321
+msgid "Retrieve system-info ..."
+msgstr "Raccolta informazioni sul sistema..."
+
+#: managerimpl.cpp:342
+msgid "Retrieve battery-info ..."
+msgstr "Raccolta informazioni sulla batteria..."
+
+#: managerimpl.cpp:365
+msgid "Retrieve software-list ..."
+msgstr "Raccolta lista dei programmi..."
+
+#: matchmaker.cpp:49
+msgid "Matchmaker-Connect"
+msgstr "Connetti Matchmaker"
+
+#: matchmaker.cpp:69
+msgid "Matchmaker-Disconnect"
+msgstr "Disconnetti Matchmacher"
+
+#: matchmaker.cpp:178
+msgid "Partnership creation succeeded. Using partnership index %1"
+msgstr "Creazione della partnership completata. Verrà usato l'indice di partnership %1"
+
+#: matchmaker.cpp:180
+msgid "Partnership creation failed."
+msgstr "Creazione della partnership fallita."
+
+#: matchmaker.cpp:195
+msgid "Partnership replacement succeeded."
+msgstr "Rimpiazzo della partnership avvenuta con successo."
+
+#: matchmaker.cpp:197
+msgid "Partnership replacement failed."
+msgstr "Rimpiazzo della partneship fallita."
+
+#: matchmaker.cpp:202
+msgid "Invalid or missing index of partnership to replace."
+msgstr "L'indice della partnership da sotituire assente o non valido."
+
+#: pda.cpp:65
+msgid "Execute on %1"
+msgstr "Esegui su %1"
+
+#: pda.cpp:68
+msgid "Info and Management for %1"
+msgstr "Informazioni e gestione per %1"
+
+#: pda.cpp:74
+msgid "Password for %1"
+msgstr "Password per %1"
+
+#: pda.cpp:78
+msgid "Configuration for %1"
+msgstr "Configurazione per %1"
+
+#: pda.cpp:82
+msgid "Synchronize %1"
+msgstr "Sincronizza %1"
+
+#: pda.cpp:93
+msgid "&Synchronize"
+msgstr "&Sincronizza"
+
+#: pda.cpp:98
+msgid "&Info && Management..."
+msgstr "&Informazioni e Management"
+
+#: pda.cpp:104
+msgid "&Open %1"
+msgstr "&Apri %1"
+
+#: pda.cpp:108
+msgid "Run &KCeMirror"
+msgstr "Avvia &KCeMirror"
+
+#: pda.cpp:111
+msgid "&Execute..."
+msgstr "&Esegui..."
+
+#: pda.cpp:118
+msgid "Configure %1"
+msgstr "Configura %1"
+
+#: pda.cpp:131
+msgid "Deleting PDA"
+msgstr "Cancella PDA"
+
+#: pda.cpp:395
+msgid "There are already two partnerships configured on the device - using guest"
+msgstr "Ci sono già due partnership configurate nel dispositivo - verrà usata la modalità ospite"
+
+#: pda.cpp:396
+msgid "Error configuring partnership"
+msgstr "Errore nella configurazione della partnership"
+
+#: pda.cpp:405
+msgid ""
+"A Partnership with name %1 already exists on the desktop side. Should this "
+"partnership be replaced?"
+msgstr "Esiste già una partnership con nome %1 lato desktop. Deve essere rimpiazzata?"
+
+#: pda.cpp:437
+msgid "Could not create a RRA-connection"
+msgstr "Non riesco a creare una connessione RRA"
+
+#: pda.cpp:497
+msgid "PDA::init"
+msgstr "PDA::init"
+
+#: pda.cpp:510
+msgid "Using Guest"
+msgstr "Modalità guest"
+
+#: pda.cpp:572
+msgid "Partnership already known but id not valid"
+msgstr "Partnership conosciuta ma con un id non valido"
+
+#: pda.cpp:573
+msgid "Should ask user if partnership should be deleted"
+msgstr "Chiedi all'utente se la partnership deve essere cancellata"
+
+#: pda.cpp:579
+msgid "Configuration of %1"
+msgstr "Configurazione di %1"
+
+#: pda.cpp:586
+msgid "New Partnership created"
+msgstr "Creata la nuova Partnership"
+
+#: pda.cpp:590 pda.cpp:599
+msgid "Guest"
+msgstr "Ospite"
+
+#: pda.cpp:594
+msgid "Partnership known"
+msgstr "Partnership conosciuta"
+
+#: pda.cpp:598
+msgid "Using guest partnership"
+msgstr "Utilizzo la partnership ospite"
+
+#: pda.cpp:620
+msgid "PDA-init"
+msgstr "PDA-inizializzazione"
+
+#: pda.cpp:658
+msgid "End PDA::syncronizationTasks()"
+msgstr "Fine PDA::syncronizationTasks()"
+
+#: pdaconfigdialogimpl.cpp:263
+msgid "Partnership created:"
+msgstr "Partnership creata:"
+
+#: raki.cpp:69 raki.cpp:72
+msgid "Connected Devices"
+msgstr "Dispositivi connessi"
+
+#: raki.cpp:81
+msgid "Raki Applet"
+msgstr "Applet Raki"
+
+#: raki.cpp:88
+msgid "&Start DCCM"
+msgstr "&Avvia DCCM"
+
+#: raki.cpp:91
+msgid "S&top DCCM"
+msgstr "A&rresta DCCM"
+
+#: raki.cpp:98
+msgid "&Configure..."
+msgstr "&Configura..."
+
+#: raki.cpp:239
+msgid "Password for PDA \" %1 \" invalid!"
+msgstr "Password errata per il PDA \"%1\"!"
+
+#: raki.cpp:405
+msgid ""
+"Could not start dccm or dccm has exited.\n"
+"Maybe there is already a dccm running"
+msgstr ""
+"Non riesco ad avviare dccm o dccm è uscito.\n"
+"Forse c'è già un server dccm avviato."
+
+#: raki.cpp:492
+msgid "Devices"
+msgstr "Dispositivi"
+
+#: raki.cpp:495 synctasklistitem.cpp:328
+msgid "Name:"
+msgstr "Nome:"
+
+#: raki.cpp:501
+msgid "No Device connected"
+msgstr "Nessun dispositivo connesso"
+
+#: raki.cpp:592
+msgid "Could not create masqueraded route"
+msgstr "Non riesco a creare la route per utilizzare masquerade (NAT)"
+
+#: raki.cpp:595
+msgid "Masqueraded route created"
+msgstr "Route per il masquerade creata"
+
+#: raki.cpp:598
+msgid "iptables terminated due to a signal"
+msgstr "A causa di un segnale iptables è stato interrotto"
+
+#: raki.cpp:636 raki.cpp:656
+msgid "Could not start iptables"
+msgstr "Non riesco ad avviare iptables"
+
+#: raki.cpp:689
+msgid "Anonymous"
+msgstr "Anonimo"
+
+#: raki.cpp:819
+msgid "Raki"
+msgstr "Raki"
+
+#: raki.cpp:826
+msgid "is the Initiator of the SynCE-Project."
+msgstr "è il creatore del progetto SynCE"
+
+#: raki.cpp:829
+msgid "is the current Project Manager."
+msgstr "è l'attuale Project Manager."
+
+#: raki.cpp:832
+msgid "has developed the serial-over-USB driver."
+msgstr "ha sviluppato il driver serial-over-USB."
+
+#: raki.cpp:835
+msgid "ported the AvantGo support from Malsync to SynCE."
+msgstr "ha fatto il porting del supporto ad AvantGo da Malsync a SynCE"
+
+#: rc.cpp:1
+msgid "Raki Configuration"
+msgstr "Configurazione di Raki"
+
+#: rc.cpp:2 rc.cpp:88
+msgid "Connection Setting"
+msgstr "Impostazioni di connessione"
+
+#: rc.cpp:3
+msgid "Start dccm at start up"
+msgstr "Avvia dccm all'avvio"
+
+#: rc.cpp:4
+msgid "Path to dccm:"
+msgstr "Percorso per dccm:"
+
+#: rc.cpp:5
+msgid "Notifications"
+msgstr "Notifiche"
+
+#: rc.cpp:6
+msgid "Connect:"
+msgstr "Connetti:"
+
+#: rc.cpp:7
+msgid "Disconnect:"
+msgstr "Disconnetti:"
+
+#: rc.cpp:8
+msgid "Password Request:"
+msgstr "Richiesta password:"
+
+#: rc.cpp:9
+msgid "Password Rejected:"
+msgstr "Password rifiutata:"
+
+#: rc.cpp:10
+msgid "IP-Tables"
+msgstr "IP-Tables"
+
+#: rc.cpp:11
+msgid "Path to IP-Tables:"
+msgstr "Percorso per iptables:"
+
+#: rc.cpp:13 rc.cpp:25 rc.cpp:72 rc.cpp:82 rc.cpp:97 rc.cpp:108 rc.cpp:121
+#: rc.cpp:27
+msgid "F1"
+msgstr "F1"
+
+#: rc.cpp:19
+msgid "InitPda"
+msgstr "InitPda"
+
+#: rc.cpp:20
+msgid "pdaName"
+msgstr "pdaName"
+
+#: rc.cpp:21 rc.cpp:22
+msgid "Installation"
+msgstr "Installazione"
+
+#: rc.cpp:23
+msgid "Destination:"
+msgstr "Destinazione:"
+
+#: rc.cpp:26
+msgid "&Install"
+msgstr "&Installa"
+
+#: rc.cpp:27
+msgid "Alt+I"
+msgstr "Alt+I"
+
+#: rc.cpp:30
+msgid "PDA Info and Management"
+msgstr "Informazioni e gestione PDA"
+
+#: rc.cpp:31
+msgid "System Information"
+msgstr "Informazioni sistema"
+
+#: rc.cpp:32
+msgid "System"
+msgstr "Sistema"
+
+#: rc.cpp:33
+msgid "Major"
+msgstr "Maggiore"
+
+#: rc.cpp:34
+msgid "Minor"
+msgstr "Minore"
+
+#: rc.cpp:35
+msgid "Build"
+msgstr "Build"
+
+#: rc.cpp:36 rc.cpp:39
+msgid "Name"
+msgstr "Nome"
+
+#: rc.cpp:37
+msgid "Platform"
+msgstr "Piattaforma"
+
+#: rc.cpp:38
+msgid "Id"
+msgstr "Id"
+
+#: rc.cpp:40
+msgid "Details"
+msgstr "Dettagli"
+
+#: rc.cpp:41
+msgid "Processor"
+msgstr "Processore"
+
+#: rc.cpp:42
+msgid "Architecture"
+msgstr "Architettura"
+
+#: rc.cpp:43
+msgid "Type"
+msgstr "Tipo"
+
+#: rc.cpp:44
+msgid "Page size"
+msgstr "Dimensione pagina"
+
+#: rc.cpp:45
+msgid "Storage"
+msgstr "Storage"
+
+#: rc.cpp:46
+msgid "Size"
+msgstr "Dimensione"
+
+#: rc.cpp:47
+msgid "Free"
+msgstr "Liberi"
+
+#: rc.cpp:48 rc.cpp:65 rc.cpp:70
+msgid "Refresh"
+msgstr "Aggiorna"
+
+#: rc.cpp:49
+msgid "Power status"
+msgstr "Stato alimentazione"
+
+#: rc.cpp:50
+msgid "AC Power Status"
+msgstr "Stato alimentazione AC"
+
+#: rc.cpp:51
+msgid "Online"
+msgstr "Collegato"
+
+#: rc.cpp:52
+msgid "Offline"
+msgstr "Scollegato"
+
+#: rc.cpp:53
+msgid "Backup Power"
+msgstr "Alimentazione di backup"
+
+#: rc.cpp:54
+msgid "Invalid"
+msgstr "Non valido"
+
+#: rc.cpp:55
+msgid "Main Battery"
+msgstr "Batteria principale"
+
+#: rc.cpp:56 rc.cpp:61
+msgid "Flag"
+msgstr "Flag"
+
+#: rc.cpp:57 rc.cpp:62
+msgid "LifePercent"
+msgstr "Percentuale vita"
+
+#: rc.cpp:58 rc.cpp:63
+msgid "LifeTime"
+msgstr "Tempo rimanente"
+
+#: rc.cpp:59 rc.cpp:64
+msgid "FullLifeTime"
+msgstr "Tempo totale"
+
+#: rc.cpp:60
+msgid "Backup Battery"
+msgstr "Batteria di backup"
+
+#: rc.cpp:66
+msgid "Software Manager"
+msgstr "Gestione programmi"
+
+#: rc.cpp:67
+msgid "Installed Software"
+msgstr "Programmi installati"
+
+#: rc.cpp:68
+msgid "Uninstall"
+msgstr "Disinstalla"
+
+#: rc.cpp:75
+msgid "Status Information:"
+msgstr "Informazioni di stato:"
+
+#: rc.cpp:76
+msgid "PasswordDialog"
+msgstr "Maschera password"
+
+#: rc.cpp:77
+msgid "Password"
+msgstr "Password"
+
+#: rc.cpp:78
+msgid "Enter Password for"
+msgstr "Inserici una password per"
+
+#: rc.cpp:79 rc.cpp:89 rc.cpp:18 rc.cpp:40
+msgid "Password:"
+msgstr "Password:"
+
+#: rc.cpp:80
+msgid "Remember Password"
+msgstr "Ricorda password"
+
+#: rc.cpp:87
+msgid "Pda Configuration"
+msgstr "Configurazione Pda"
+
+#: rc.cpp:90
+msgid "Masquerading"
+msgstr "Masquerading"
+
+#: rc.cpp:91
+msgid "Enable Masquerading:"
+msgstr "Abilita masquerading:"
+
+#: rc.cpp:92
+msgid "Synchronization Settings"
+msgstr "Impostazioni di sincronizzazione"
+
+#: rc.cpp:93
+msgid "Possible Synchronization Types"
+msgstr "Tipi di sincronizzazione possibili"
+
+#: rc.cpp:94
+msgid "Syncronize at PDA-Connect"
+msgstr "Sincronizza al momento della connessione del PDA"
+
+#: rc.cpp:95
+msgid "Config"
+msgstr "Config"
+
+#: rc.cpp:103
+msgid "Remove Partnership"
+msgstr "Rimuovi la partnership"
+
+#: rc.cpp:104
+msgid ""
+"There are already two partnerships configured on the device.<br>You have to "
+"delete at least one before you can set up a new partnership."
+msgstr ""
+"Ci sono già due partnerships configurate nul dispositivo.<br>Devi cancellarne almeno "
+" una prima di creare una nuova partnership."
+
+#: rc.cpp:105
+msgid "Current Partnerships"
+msgstr "Partnership corrente"
+
+#: rc.cpp:106
+msgid "Remove marked Partnerships"
+msgstr "Rimuovi le partnerships selezionate"
+
+#: rc.cpp:111
+msgid "Execute on PDA"
+msgstr "Esegui sul PDA"
+
+#: rc.cpp:112
+msgid "File to execute: (rapip:/)"
+msgstr "File da eseguire: (rapip:/)"
+
+#: rc.cpp:113
+msgid "Execute"
+msgstr "Esegui"
+
+#: rc.cpp:115
+msgid "MyDialog1"
+msgstr "MyDialog1"
+
+#: rc.cpp:116
+msgid "Replication"
+msgstr "Replica"
+
+#: rc.cpp:117
+msgid "Replication Task"
+msgstr "Attività di replica"
+
+#: rc.cpp:118
+msgid "Comment"
+msgstr "Commento"
+
+#: rc.cpp:119
+msgid "Progress"
+msgstr "Avanzamento"
+
+#: rc.cpp:126
+msgid "WelcomeDialog"
+msgstr "MascheraDiBenvenuto"
+
+#: rc.cpp:127
+msgid "<p align=\"center\">Welcome to Raki</p>"
+msgstr "<p align=\"center\">Benvenuto a Raki</p>"
+
+#: rc.cpp:128
+msgid "(c) 2003, 2004 by V. Christian"
+msgstr "(c) 2003, 2004 by V. Christian"
+
+#: rc.cpp:129
+msgid "You have either started Raki for the first time, or you have just"
+msgstr "O hai avviato Raki per la prima volta o hai"
+
+#: rc.cpp:130
+msgid "upgraded from a previous release. In case of upgrade, please"
+msgstr "aggiornato da una versione precedente. In caso di upgrade, ti prego"
+
+#: rc.cpp:131
+msgid "remove your previous raki.sh script from the ~/.synce/scripts"
+msgstr "di rimuovere lo script raki.sh precedente dalla cartella ~/.synce/scripts"
+
+#: rc.cpp:132
+msgid "directory before you continue."
+msgstr "prima di continuare."
+
+#: rc.cpp:133
+msgid "In order to work properly, Raki needs to know"
+msgstr "Per lavorare in modo corretto, Raki deve conoscere"
+
+#: rc.cpp:134
+msgid "the version of dccm you want to use. It is"
+msgstr "la versione di dccm che vuoi utilizzare. E'"
+
+#: rc.cpp:135
+msgid "recommended to use vdccm because it enables"
+msgstr "raccomandato utilizzare vdccm perchè abilita"
+
+#: rc.cpp:136
+msgid "the \"multiple-devices\" feature of Raki."
+msgstr "la possibilità di collegare più devices contemporaneamente."
+
+#: rc.cpp:138
+msgid "vdccm"
+msgstr "vdccm"
+
+#: rc.cpp:139
+msgid "dccm"
+msgstr "dccm"
+
+#: rc.cpp:140
+msgid "This dialog will not appear again!"
+msgstr "Questa maschera non apparirà più!"
+
+#: removepartnershipdialogimpl.cpp:63
+msgid "Removing partnerships"
+msgstr "Stò rimuovendo le partnerships"
+
+#: rra.cpp:69
+msgid "RRA-Connect"
+msgstr "Connetti RRA"
+
+#: rra.cpp:91
+msgid "RRA-Disconnect"
+msgstr "Disconnetti RRA"
+
+#: rra.cpp:142
+msgid "-------- unchanged --------"
+msgstr "-------- invariato --------"
+
+#: rra.cpp:146
+msgid "--------- changed ---------"
+msgstr "--------- modificato ---------"
+
+#: rra.cpp:150
+msgid "--------- deleted ---------"
+msgstr "--------- cancellato ---------"
+
+#: synctasklistitem.cpp:190
+msgid "Waiting..."
+msgstr "Attendi..."
+
+#: synctasklistitem.cpp:235
+msgid "Select Name:"
+msgstr "Scegli il nome:"
+
+#: synctasklistitem.cpp:236 synctasklistitem.cpp:274 synctasklistitem.cpp:329
+msgid "Library:"
+msgstr "Libreria:"
+
+#: synctasklistitem.cpp:263 synctasklistitem.cpp:265
+msgid "Services for"
+msgstr "Servizi per"
+
+#: synctasklistitem.cpp:273
+msgid "Open Name:"
+msgstr "Open Name:"
+
+#: synctasklistitem.cpp:333
+msgid "There was an error:"
+msgstr "C'è stato un errore:"
+
+#: synctasklistitem.cpp:345
+msgid "Library no Raki-Plugin"
+msgstr "La libreria non è un plugin Raki"
+
+#: synctasklistitem.cpp:356
+msgid "No Synchronizer found for"
+msgstr "Non ho trovato nessun sincronizzatore per"
+
+#: synctasklistitem.cpp:362 synctasklistitem.cpp:368
+msgid "Wrong library type for"
+msgstr "Tipo di libreria sbagliato per"
+
+#: synctasklistitem.cpp:383
+msgid "Started"
+msgstr "Iniziato"
+
+#: synctasklistitem.cpp:389
+msgid "Started syncing with"
+msgstr "Iniziata la sincronizzazione con"
+
+#: synctasklistitem.cpp:394
+msgid "Finished syncing with"
+msgstr "Finita la sincronizzazione con"
+
+#: synctasklistitem.cpp:404
+msgid "Finished"
+msgstr "Finito"
+
+#: synctasklistitem.cpp:407
+msgid "Error during synchronization"
+msgstr "Errore durante la sincronizzazione"
+
+#: wince_ids.cpp:51
+msgid "C-Time:"
+msgstr "C-Time"
+
+#: wince_ids.cpp:54
+msgid "CurrentTime (UTC):"
+msgstr "Ora corrente (UTC):"
+
+#: wince_ids.cpp:55
+msgid "CurrentTime (LOCAL):"
+msgstr "Ora corrente (LOCAL):"
+
+#: wince_ids.cpp:57
+msgid "Valud (UTC):"
+msgstr "Valud (UTC):"
+
+#: wince_ids.cpp:59
+msgid "Valud (LOCAL):"
+msgstr "Valud (LOCAL):"
+
+#: wince_ids.cpp:61 wince_ids.cpp:62
+msgid "Name1:"
+msgstr "Nome1:"
+
+#: wince_ids.cpp:63
+msgid "Timezone:"
+msgstr "Timezone:"
+
+#: wince_ids.cpp:64
+msgid "Daylight"
+msgstr "Giorno"
+
+#: agsync.cpp:179
+msgid "ERROR ON COMMAND"
+msgstr "ERRORE NEL COMANDO"
+
+#: agsync.cpp:242
+msgid "AvantGo error on asStartServer:"
+msgstr "Errore AvantGo su asStartServer:"
+
+#: agsync.cpp:254
+msgid "Beginning synchonization attempt on server."
+msgstr "Inizio tentativo di sincronizzazione con il server."
+
+#: agsync.cpp:259
+msgid "Failed to retrieve device information!"
+msgstr "Incapace di recuperare le informazioni sul server!"
+
+#: agsync.cpp:294
+msgid "Avantgo error on asEndServer:"
+msgstr "Errrore di AvantGo su asEndServer:"
+
+#: agsync.cpp:330
+msgid ""
+"The AvantGo Client has been installed on your device.\n"
+"Please finish the installation on the device but do not restart it until the "
+"first synchronization has finished!\n"
+"Press <OK> to start syncing your AvantGo channels"
+msgstr ""
+"Il client AvantGo è stato installato sul vostro dispositivo.\n"
+"Per piacere concludi l'installazione sul dispositivo ma non riavviarlo fino a che "
+"la prima sincronizzazione non è finita!\n"
+"Premi <OK> per iniziare la sincronizzazione dei vostri canali AvantGo"
+
+#: agsync.cpp:334
+msgid "AvantGo Client installed"
+msgstr "Client AvantGo installato"
+
+#: agsync.cpp:352
+msgid "Failed to receive user configuration from device."
+msgstr "Incapace di recuperare la configurazione dell'utente dal dispositivo."
+
+#: agsync.cpp:364
+msgid "Processing %1 servers."
+msgstr "Attualmente in elaborazione %1 servers."
+
+#: agsync.cpp:372
+msgid "Failed to store user configuration to device."
+msgstr "Fallito il salvataggio della configurazione dell'utente nel dispositivo."
+
+#: agsync.cpp:386
+msgid "Using HttpProxy"
+msgstr "HttpProxy utilizzato"
+
+#: agsync.cpp:392
+msgid "Using HttpProxy Authentification"
+msgstr "HttpProxy Autentificazione utilizzata"
+
+#: agsync.cpp:398
+msgid "Using SocksProxy"
+msgstr "SocksProxy utilizzato"
+
+#: rc.cpp:1
+msgid "AvantGo Synchronizer"
+msgstr "Sincronizzatore AvantGo"
+
+#: rc.cpp:2
+msgid "Server/Client Setting"
+msgstr "Impostazioni Server/Client"
+
+#: rc.cpp:3 rc.cpp:32
+msgid "Server Setting"
+msgstr "Impostazioni server"
+
+#: rc.cpp:4
+msgid "Server Name                                                  "
+msgstr "Nome server                                                  "
+
+#: rc.cpp:5
+msgid "Server Port"
+msgstr "Porta del server"
+
+#: rc.cpp:9
+msgid "Client Setting"
+msgstr "Impostazioni client"
+
+#: rc.cpp:10
+msgid "Install AvantGo Client-Software on the Device at next Sync"
+msgstr "Installa il client AvantGo sul dispositivo alla prossima sincronizzazione"
+
+#: rc.cpp:11
+msgid "It's best practis to let it like it is. "
+msgstr "E' consigliato lasciare l'impostazione di default."
+
+#: rc.cpp:12
+msgid "Proxy Setting"
+msgstr "Impostazioni proxy"
+
+#: rc.cpp:13 rc.cpp:24
+msgid "HTTP Proxy"
+msgstr "Proxy HTTP"
+
+#: rc.cpp:14 rc.cpp:20
+msgid "Host:"
+msgstr "Host:"
+
+#: rc.cpp:15 rc.cpp:21 rc.cpp:35
+msgid "Port:"
+msgstr "Porta:"
+
+#: rc.cpp:16
+msgid "Use Authentication"
+msgstr "Usa autentificazione"
+
+#: rc.cpp:17 rc.cpp:39
+msgid "Username:"
+msgstr "Nome utente:"
+
+#: rc.cpp:19 rc.cpp:25
+msgid "Socks Proxy"
+msgstr "Socks Proxy"
+
+#: rc.cpp:22
+msgid "Active Proxy"
+msgstr "Attiva Proxy"
+
+#: rc.cpp:23
+msgid "No Proxy"
+msgstr "Nessun Proxy"
+
+#: rc.cpp:33
+msgid "Server address"
+msgstr "Indirizzo Server"
+
+#: rc.cpp:34
+msgid "Hostname:"
+msgstr "Nome host:"
+
+#: rc.cpp:37
+msgid "80"
+msgstr "80"
+
+#: rc.cpp:38
+msgid "Your account"
+msgstr "Account"
+
+#: rc.cpp:41
+msgid "Ok"
+msgstr "Ok"
+
