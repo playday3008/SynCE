@@ -58,7 +58,7 @@ class SyncClass:
 
         self.__member = member
         self.engine = None
-	self.isPrefilled=False
+        self.isPrefilled=False
 
         gobject.threads_init()
 
@@ -84,7 +84,7 @@ class SyncClass:
 
     def _do_prefill(self, items):
         self.logger.info("initiating prefill")
-	self.isPrefilled = False
+        self.isPrefilled = False
         rc = self.engine.PrefillRemote(items)
         if rc == 1:
             while self.isPrefilled==False:
@@ -95,7 +95,7 @@ class SyncClass:
         self.logger.info("requesting device synchronization")
         self.engine_synced = False
         self.engine.Synchronize()
-	self.logger.info("waiting for engine to complete sync")
+        self.logger.info("waiting for engine to complete sync")
         while not self.engine_synced:
             time.sleep(1)
 
@@ -104,7 +104,7 @@ class SyncClass:
             proxy_obj = dbus.SessionBus().get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
             self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._synchronized_cb))
-	    self.engine.connect_to_signal("PrefillComplete", lambda: gobject.idle_add(self._prefillcomplete_cb))
+            self.engine.connect_to_signal("PrefillComplete", lambda: gobject.idle_add(self._prefillcomplete_cb))
 
             ctx.report_success()
         except Exception, e:
@@ -114,19 +114,19 @@ class SyncClass:
     def get_changeinfo(self, ctx):
         self.logger.debug("get_changeinfo() called")
 
-	isSlow = 0
-	prefill = []
+        isSlow = 0
+        prefill = []
         if self.__member.get_slow_sync("contact"):
-	    self.logger.debug("slow sync requested for Contacts")
-	    prefill.append("Contacts")
-	if self.__member.get_slow_sync("event"):
-	    self.logger.debug("slow sync requested for Calendar")
-	    prefill.append("Calendar")
-	if self.__member.get_slow_sync("todo"):
-	    self.logger.debug("slow sync requested for Tasks")
-	    prefill.append("Tasks")
+            self.logger.debug("slow sync requested for Contacts")
+            prefill.append("Contacts")
+        if self.__member.get_slow_sync("event"):
+            self.logger.debug("slow sync requested for Calendar")
+            prefill.append("Calendar")
+        if self.__member.get_slow_sync("todo"):
+            self.logger.debug("slow sync requested for Tasks")
+            prefill.append("Tasks")
 
-	time.sleep(1)
+        time.sleep(1)
         self._do_sync()
 
         if len(prefill) > 0:
@@ -134,7 +134,7 @@ class SyncClass:
                 self.logger.debug("prefill failed")
 
         self.logger.debug("requesting remote changes")
-       	changesets = self.engine.GetRemoteChanges(self.engine.GetSynchronizedItemTypes())
+        changesets = self.engine.GetRemoteChanges(self.engine.GetSynchronizedItemTypes())
         self.logger.debug("got %d changesets", len(changesets))
 
         for item_type, changes in changesets.items():
@@ -149,7 +149,7 @@ class SyncClass:
                 guid, chg_type, data = change
 
                 change = OSyncChange()
-		change.uid = array.array('B',guid).tostring() 
+                change.uid = array.array('B',guid).tostring() 
                 change.changetype = chg_type
 
                 if item_type in SUPPORTED_ITEM_TYPES:
@@ -177,7 +177,7 @@ class SyncClass:
         self.logger.debug("commit_change() called for item %s with change type %d", chg.uid, chg.changetype)
 
         if chg.objtype in OBJ_TYPE_TO_ITEM_TYPE:
-		
+                
             item_type = OBJ_TYPE_TO_ITEM_TYPE[chg.objtype]
 
             data = ""
@@ -196,7 +196,7 @@ class SyncClass:
 
         self._do_sync()
 
-	self.engine.FlushItemDB()
+        self.engine.FlushItemDB()
         ctx.report_success()
 
     def disconnect(self, ctx):
