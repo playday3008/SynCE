@@ -463,7 +463,8 @@ menu_about (GtkWidget *button, SynceTrayIcon *icon)
 
   gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), gnome_program_get_human_readable_name (prog_info));
   gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), gnome_program_get_app_version (prog_info));
-  gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2002, David Eriksson"));
+  gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2002, David Eriksson\n"
+							    "Copyright (c) 2007, Mark Ellis"));
   gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _("Displays information about devices connected through SynCE"));
   gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://www.synce.org");
   gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);
