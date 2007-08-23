@@ -1,3 +1,7 @@
+2007-08-23  Mark Ellis  <mark@mpellis.org.uk>
+
+	* use time_fields_from_filetime() instead of filetime_to_unix_time()
+
 2007-07-16  Mark Ellis  <mark@mpellis.org.uk>
 
 	* corrections to src/Makefile.am

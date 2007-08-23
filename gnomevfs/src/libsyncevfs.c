@@ -828,6 +828,35 @@ static GnomeVFSResult synce_close_dir/*{{{*/
   return GNOME_VFS_OK;
 }/*}}}*/
 
+
+static time_t
+convert_time(const FILETIME* filetime)
+{
+  struct tm tm_time;
+  TIME_FIELDS time_fields;
+
+  time_fields_from_filetime(filetime, &time_fields);
+
+  tm_time.tm_sec = time_fields.Second;
+  tm_time.tm_min = time_fields.Minute;
+  tm_time.tm_hour = time_fields.Hour;
+  tm_time.tm_mday = time_fields.Day;
+  tm_time.tm_mon = time_fields.Month - 1;
+
+  /* time_fields.Year count starts at 1601, what happens in mktime with -ve year ? */
+  if (time_fields.Year < 1901) {
+    tm_time.tm_year = 1;
+  } else {
+    tm_time.tm_year = time_fields.Year - 1900;
+  }
+
+  tm_time.tm_wday = 0;
+  tm_time.tm_yday = 0;
+  tm_time.tm_isdst = -1;
+
+  return mktime(&tm_time);
+}
+
 /* Have to fix the mime-type conversion */
 static BOOL get_file_attributes/*{{{*/
 (
@@ -852,9 +881,9 @@ static BOOL get_file_attributes/*{{{*/
   else
     file_info->size = entry->nFileSizeLow;
 
-  file_info->atime = filetime_to_unix_time(&entry->ftLastAccessTime);
-  file_info->mtime = filetime_to_unix_time(&entry->ftLastWriteTime);
-  file_info->ctime = filetime_to_unix_time(&entry->ftCreationTime);;
+  file_info->atime = convert_time(&entry->ftLastAccessTime);
+  file_info->mtime = convert_time(&entry->ftLastWriteTime);
+  file_info->ctime = convert_time(&entry->ftCreationTime);;
 
   file_info->permissions = 0664;
 
