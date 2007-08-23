@@ -99,6 +99,7 @@ int
 main (gint argc, gchar **argv)
 {
 	int result = 1;
+	SynceTrayIcon *trayicon;
 
 #ifdef ENABLE_NLS
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -135,7 +136,7 @@ main (gint argc, gchar **argv)
 
 	init_sm();
 
-	SynceTrayIcon *trayicon = g_object_new (SYNCE_TRAYICON_TYPE, "title", "SynCE", NULL);
+	trayicon = g_object_new (SYNCE_TRAYICON_TYPE, "title", "SynCE", NULL);
 
 	gtk_main ();
 

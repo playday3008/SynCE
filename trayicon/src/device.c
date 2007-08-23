@@ -91,33 +91,7 @@ enum
 
      /* methods */
 
-static void
-wm_device_debug_device(WmDevice *self)
-{
-  WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
-
-  g_debug("%s: Name (from dccm): %s", G_STRFUNC, priv->name);
-  g_debug("%s: Device name: %s", G_STRFUNC, priv->device_name);
-  g_debug("%s: OS Version: %d.%d", G_STRFUNC, priv->os_major, priv->os_minor);
-  g_debug("%s: Build number: %d", G_STRFUNC, priv->build_number);
-  g_debug("%s: Processor type: %d", G_STRFUNC, priv->processor_type);
-  g_debug("%s: Partner id 1: %d", G_STRFUNC, priv->partner_id_1);
-  g_debug("%s: Partner id 2: %d", G_STRFUNC, priv->partner_id_2);
-  g_debug("%s: Class: %s", G_STRFUNC, priv->class);
-  g_debug("%s: Hardware: %s", G_STRFUNC, priv->hardware);
-
-  if (priv->password) {
-    g_debug("%s: Password: %s", G_STRFUNC, priv->password);
-    g_debug("%s: Key: %d", G_STRFUNC, priv->key);
-  }
-
-  g_debug("%s: DCCM pid: %d", G_STRFUNC, priv->dccm_pid);
-  g_debug("%s: IP: %s", G_STRFUNC, priv->ip);
-  g_debug("%s: Transport: %s", G_STRFUNC, priv->transport);
-}
-
-
-static void
+void
 wm_device_rapi_select(WmDevice *self)
 {
   if (!self) {

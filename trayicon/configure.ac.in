@@ -17,6 +17,8 @@ AC_PROG_MAKE_SET
 
 dnl Check for librapi2
 PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
+dnl Check for librra
+PKG_CHECK_MODULES(LIBRRA, librra >= 0.9.1)
 
 PKG_CHECK_MODULES(GNOME2, 
 				  glib-2.0       \

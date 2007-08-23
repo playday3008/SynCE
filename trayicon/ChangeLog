@@ -1,3 +1,9 @@
+2007-08-23  Mark Ellis <mark@mpellis.org.uk>
+
+	* add device info dialog for system info,
+	   power status, partnership control(for pre-WM5)
+	* removed unused vars and old debugging
+
 2007-07-12  Mark Ellis <mark@mpellis.org.uk>
 
 	* added gconf schema

@@ -84,6 +84,8 @@ gchar *wm_device_get_port(WmDevice *self);
 gchar *wm_device_get_power_status(WmDevice *self);
 gchar *wm_device_get_store_status(WmDevice *self);
 
+void wm_device_rapi_select(WmDevice *device);
+
 G_END_DECLS
 
 #endif /* WM_DEVICE_H */

@@ -14,7 +14,6 @@ static void
 prefs_changed_cb (GConfClient *client, guint id,
 		  GConfEntry *entry, gpointer data)
 {
-  SynceTrayIcon *self = SYNCE_TRAYICON(data);
   GConfClient *conf_client = gconf_client_get_default();
   const gchar *key;
   const GConfValue *value;
@@ -64,7 +63,6 @@ prefs_use_odccm_toggled_cb (GtkWidget *widget, gpointer data)
 static void
 prefs_start_stop_vdccm_toggled_cb (GtkWidget *widget, gpointer data)
 {
-  SynceTrayIcon *self = SYNCE_TRAYICON(data);
   GConfClient *conf_client = gconf_client_get_default();
 
   gboolean state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));

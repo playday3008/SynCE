@@ -48,6 +48,7 @@ IN THE SOFTWARE.
 #include "odccm-client.h"
 #include "device-manager.h"
 #include "stock-icons.h"
+#include "device-info.h"
 
 G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, EGG_TYPE_TRAY_ICON)
 
@@ -192,7 +193,6 @@ update(gpointer data)
 static void
 password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
 {
-  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   GtkWidget *dialog;
 
   GnomeKeyringResult keyring_ret;
@@ -214,7 +214,6 @@ password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
 static void
 password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
 {
-  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   gchar *password;
 
   password = device_get_password(pdaname);
@@ -448,6 +447,12 @@ menu_preferences (GtkWidget *button, SynceTrayIcon *self)
 }
 
 static void
+menu_device_info (GtkWidget *button, WmDevice *device)
+{
+  run_device_info_dialog(device);
+}
+
+static void
 menu_about (GtkWidget *button, SynceTrayIcon *icon)
 {
   GtkWidget *about;
@@ -517,7 +522,6 @@ menu_start_vdccm(GtkWidget *button, SynceTrayIcon *self)
 static void
 menu_stop_vdccm(GtkWidget *button, SynceTrayIcon *self)
 {
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
   uninit_client_comms(self);
 }
 
@@ -569,7 +573,25 @@ trayicon_menu(GdkEventButton *event, SynceTrayIcon *self)
 	
   entry = gtk_separator_menu_item_new();
   gtk_menu_append(GTK_MENU(priv->menu), entry);
-		
+
+  if (is_connected(self)) {
+
+    for (i = 0; i < wm_device_manager_device_count(priv->device_list); i++) {
+      device = wm_device_manager_find_by_index(priv->device_list, i);
+      device_name = wm_device_get_name(device);
+      g_snprintf(buffer, sizeof(buffer), _("Info for '%s'"), device_name);
+
+      entry = gtk_menu_item_new_with_label(buffer);
+      g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_device_info), device);
+      gtk_menu_append(GTK_MENU(priv->menu), entry);
+
+      g_free(device_name);
+    }
+    entry = gtk_separator_menu_item_new();
+    gtk_menu_append(GTK_MENU(priv->menu), entry);
+
+  }  
+
   if (is_connected(self)) {
 
     if (priv->which_dccm == USE_VDCCM) {
@@ -822,6 +844,9 @@ synce_trayicon_dispose (GObject *obj)
   notify_uninit();
 #endif /* ENABLE_NOTIFY */
 
+  g_object_unref(priv->tooltips);
+  g_object_unref(priv->icon);
+
   if (G_OBJECT_CLASS (synce_trayicon_parent_class)->dispose)
     G_OBJECT_CLASS (synce_trayicon_parent_class)->dispose (obj);
 }
@@ -829,16 +854,6 @@ synce_trayicon_dispose (GObject *obj)
 static void
 synce_trayicon_finalize (GObject *obj)
 {
-  SynceTrayIcon *self = SYNCE_TRAYICON(obj);
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-
-
-  /*
-  priv->tooltips = NULL;
-  priv->icon = NULL;
-  */
-
-
   if (G_OBJECT_CLASS (synce_trayicon_parent_class)->finalize)
     G_OBJECT_CLASS (synce_trayicon_parent_class)->finalize (obj);
 }

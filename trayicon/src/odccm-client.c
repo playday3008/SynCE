@@ -303,11 +303,11 @@ odccm_device_connected_cb(DBusGProxy *proxy,
     return;
   }
 
-  guint dccm_pid, password_flags;
-  gint key, os_major, os_minor, build_number;
-  gint processor_type, partner_id_1, partner_id_2;
-  gchar *ip, *password, *name, *os_name;
-  gchar *model, *transport;
+  guint password_flags;
+  gint os_major, os_minor,
+    processor_type, partner_id_1;
+  gchar *ip, *name, *os_name,
+    *model, *transport;
 
   g_debug("%s: Received connect from odccm: %s", G_STRFUNC, obj_path);
 
@@ -384,24 +384,7 @@ odccm_device_connected_cb(DBusGProxy *proxy,
     goto error_exit;
   }
 
-  g_debug("%s: Name: %s", G_STRFUNC, name);
-  g_debug("%s: IP: %s", G_STRFUNC, ip);
-  g_debug("%s: Processor type: %d", G_STRFUNC, processor_type);
-  g_debug("%s: OS Version: %d.%d", G_STRFUNC, os_major, os_minor);
-  g_debug("%s: Partner id: %d", G_STRFUNC, partner_id_1);
-  g_debug("%s: Platform name: %s", G_STRFUNC, os_name);
-  g_debug("%s: Model: %s", G_STRFUNC, model);
-
   transport = g_strdup("odccm");
-
-  /*
-  pid_t dccm_pid;
-  char* password;
-  int key;
-  int build_number;
-  int partner_id_2;
-  int fd;
-  */
 
   device = g_object_new(WM_DEVICE_TYPE,
 			"name", name,

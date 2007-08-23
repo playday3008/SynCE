@@ -27,7 +27,8 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			vdccm-client.c vdccm-client.h \
 			odccm-client.c odccm-client.h \
 			dccm-client.c dccm-client.h \
-			keyring.c keyring.h
+			keyring.c keyring.h \
+			device-info.c device-info.h
 
 EXTRA_DIST = dccm-client-signals-marshal.list
 
@@ -35,12 +36,14 @@ synce_trayicon_CPPFLAGS = \
 	$(GNOME2_CFLAGS) \
 	$(GNOME_KEYRING_CFLAGS) \
 	$(LIBRAPI2_CFLAGS) \
+	$(LIBRRA_CFLAGS) \
 	$(DBUS_CFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GNOME2_LIBS) \
 	$(GNOME_KEYRING_LIBS) \
 	$(LIBRAPI2_LIBS) \
+	$(LIBRRA_LIBS) \
 	$(DBUS_LIBS)
 
 if ENABLE_NOTIFY
