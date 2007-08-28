@@ -1,10 +1,18 @@
+
+INCLUDES  = \
+	-DDATADIR=\"$(datadir)\"                        \
+	-DPREFIX=\""$(prefix)"\"                        \
+	-DSYSCONFDIR=\""$(sysconfdir)"\"                \
+	-DLIBDIR=\""$(libdir)"\"                        \
+	-DSYNCE_IN_COMPUTER_FOLDER_SH=\""$(datadir)/synce/synce-in-computer-folder.sh"\"
+
 module_flags = -export_dynamic -avoid-version -module -no-undefined
 
 modulesconfdir=$(sysconfdir)/gnome-vfs-2.0/modules
 modulesconf_DATA=synce-module.conf
 
-modulesdir=$(libdir)/gnome-vfs-2.0/modules
 
+modulesdir=$(libdir)/gnome-vfs-2.0/modules
 
 modules_LTLIBRARIES=libsyncevfs.la
 

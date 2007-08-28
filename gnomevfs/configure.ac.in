@@ -14,13 +14,11 @@ AC_PROG_RANLIB
 
 AM_PROG_LIBTOOL
 
-GNOME_VFS_REQUIRED=2.0.0
+GNOME_VFS_REQUIRED=2.14.0
 
 PKG_CHECK_MODULES(VFS, gnome-vfs-2.0 >= $GNOME_VFS_REQUIRED gnome-vfs-module-2.0 >= $GNOME_VFS_REQUIRED)
 AC_SUBST(VFS_CFLAGS)
 AC_SUBST(VFS_LIBS)
-
-libdir=`pkg-config --variable=libdir gnome-vfs-2.0`
 
 dnl Check for libsynce
 PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
@@ -39,11 +37,6 @@ fi
 dnl Prevent "NONE" used as prefix!
 test "x$prefix" = xNONE && eval prefix=$ac_default_prefix
 test "x$exec_prefix" = xNONE && eval exec_prefix='${prefix}'
-
-## need to expand these an extra time since autoconf introduced $datarootdir
-eval SYNCE_IN_COMPUTER_FOLDER_SH="${datadir}/synce/synce-in-computer-folder.sh"
-eval SYNCE_IN_COMPUTER_FOLDER_SH="${SYNCE_IN_COMPUTER_FOLDER_SH}"
-AC_DEFINE_UNQUOTED(SYNCE_IN_COMPUTER_FOLDER_SH, "$SYNCE_IN_COMPUTER_FOLDER_SH", "Script for use with dccm.")
 
 eval SYNCE_BINDIR="${bindir}"
 AC_SUBST(SYNCE_BINDIR)

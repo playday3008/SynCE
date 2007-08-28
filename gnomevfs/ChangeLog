@@ -1,3 +1,9 @@
+2007-08-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* build system cleanup, require gnomevfs 2.14
+	* general tidy, minor fixes
+	* fix to file info and permissions
+
 2007-08-23  Mark Ellis  <mark@mpellis.org.uk>
 
 	* use time_fields_from_filetime() instead of filetime_to_unix_time()
