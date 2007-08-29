@@ -1524,6 +1524,35 @@ static GnomeVFSResult synce_same_fs/*{{{*/
   return GNOME_VFS_OK;
 }/*}}}*/
 
+static GnomeVFSResult
+synce_get_volume_free_space
+(
+ GnomeVFSMethod *method,
+ const GnomeVFSURI *uri,
+ GnomeVFSFileSize *free_space
+ )
+{
+  GnomeVFSResult result;
+  STORE_INFORMATION store;
+
+  D("-------------- synce_get_volume_free_space() ---------------\n");
+
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    goto exit;
+
+  if (CeGetStoreInformation(&store)) {
+    *free_space = store.dwFreeSize;
+    result = GNOME_VFS_OK;
+  } else {
+    synce_error("%s: Failed to get store information", G_STRFUNC);
+    result = gnome_vfs_result_from_rapi();
+  }
+
+exit:
+  D("------------ synce_get_volume_free_space() end ---------\n");
+  return result;
+}
+
 static GnomeVFSMethod method = 
 {
   sizeof(GnomeVFSMethod),
@@ -1550,6 +1579,11 @@ static GnomeVFSMethod method =
   NULL,	/* truncate */
   NULL, /* find_directory */
   NULL, /* create_symbolic_link */
+  NULL, /* monitor_add */
+  NULL, /* monitor_cancel */
+  NULL, /* file_control */
+  NULL, /* forget_cache */
+  synce_get_volume_free_space
 };
 
 GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)

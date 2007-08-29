@@ -1,3 +1,7 @@
+2007-08-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* implement get volume free space
+
 2007-08-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* build system cleanup, require gnomevfs 2.14
