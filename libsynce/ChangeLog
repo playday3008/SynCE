@@ -1,0 +1,5 @@
+2007-08-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* started Changelog !
+	* return from synce_strerror should be const
+	* added man pages for functions in synce.h

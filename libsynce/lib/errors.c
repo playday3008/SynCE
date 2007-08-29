@@ -2,7 +2,7 @@
 #include "synce.h"
 #include "synce_log.h"
 
-char* synce_strerror(DWORD error)
+const char* synce_strerror(DWORD error)
 {
 	char* result = NULL;
 	

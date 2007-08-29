@@ -145,7 +145,7 @@ bool synce_get_script_directory(char** directory);
  * Error handling
  */
 
-char* synce_strerror(DWORD error);
+const char* synce_strerror(DWORD error);
 
 
 /*
