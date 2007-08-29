@@ -15,4 +15,4 @@ EXTRA_DIST = librapi2.pc.in BUGS README.contributing README.design
 
 CLEANFILES = $(pcfiles)
 
-SUBDIRS = src script tools tests python .
+SUBDIRS = src script tools tests python man .

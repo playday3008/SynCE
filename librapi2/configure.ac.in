@@ -131,6 +131,7 @@ AC_OUTPUT([librapi2.pc
            src/config/Makefile
            src/rapi/Makefile
            src/rapi2/Makefile
+           man/Makefile
            script/Makefile
            tests/Makefile
            tests/CeRapiInvoke/Makefile
