@@ -1,6 +1,7 @@
 2007-08-29  Mark Ellis  <mark@mpellis.org.uk>
 
 	* implement get volume free space
+	* minor fixes & logging in synce-in-computer-folder
 
 2007-08-25  Mark Ellis  <mark@mpellis.org.uk>
 

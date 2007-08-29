@@ -28,21 +28,27 @@
 
 static GnomeVFSVolume *find_volume(GnomeVFSVolumeMonitor *monitor)
 {
-  GnomeVFSVolume *volume;
+  GnomeVFSVolume *volume, *found_vol = NULL;
   GList *volumes, *l;
+  gchar *name;
+
   volumes = gnome_vfs_volume_monitor_get_mounted_volumes (monitor);
 
   for (l = volumes; l != NULL; l = l->next) {
     volume = l->data;
+    name = gnome_vfs_volume_get_display_name(volume);
 
-    synce_debug("Volume: '%s'", gnome_vfs_volume_get_display_name(volume));
-
-    if (strcmp(gnome_vfs_volume_get_display_name(volume), 
-      DISPLAY_NAME) == 0 )
-      return volume;
+    if (strcmp(name, DISPLAY_NAME) == 0 ) {
+      if (found_vol)
+	gnome_vfs_volume_unref(found_vol);
+      found_vol = gnome_vfs_volume_ref(volume);
+    }
+    g_free(name);
+    gnome_vfs_volume_unref(volume);
   }
 
-  return NULL;
+  g_list_free(volumes);
+  return found_vol;
 }
 
 static void show_usage(const char *argv0)
@@ -61,15 +67,17 @@ static void show_usage(const char *argv0)
 }
 
 static void callback (gboolean succeeded,
-					  char *error,
-					  char *detailed_error,
-					  gpointer data)
+		      char *error,
+		      char *detailed_error,
+		      gpointer data)
 {
-  /* Do nothing */
+  gchar *name = (gchar *) data;
+
   if (succeeded)
-    synce_trace("Succeeded");
+    synce_trace("GnomeVFS: Succeeded in disconnecting %s", name);
   else
-    synce_trace("Failed: '%s' '%s'\n", error, detailed_error);
+    synce_trace("GnomeVFS: Failed to disconnect %s: '%s' '%s'", name, error, detailed_error);
+  g_free(name);
 }
 
 
@@ -155,7 +163,7 @@ int main(int argc, const char **argv)
   {
     if (!gnome_vfs_init()) 
     {
-      fprintf (stderr, "Cannot initialize gnome-vfs.\n");
+      synce_trace("Cannot initialize gnome-vfs");
       return 1;
     }
 
@@ -170,8 +178,9 @@ int main(int argc, const char **argv)
       if (command == COMMAND_DISCONNECT)
       {
         synce_info("Disconnecting SynCE volume");
-        gnome_vfs_volume_unmount(volume, callback, NULL);
+        gnome_vfs_volume_unmount(volume, callback, gnome_vfs_volume_get_display_name(volume));
       }
+      gnome_vfs_volume_unref(volume);
     }
     else
     {
