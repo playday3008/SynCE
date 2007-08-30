@@ -140,6 +140,8 @@ main (gint argc, gchar **argv)
 
 	gtk_main ();
 
+	g_object_unref(trayicon);
+
 	unreg_sm();
 
 	result = 0;

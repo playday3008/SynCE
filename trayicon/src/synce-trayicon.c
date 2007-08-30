@@ -49,6 +49,7 @@ IN THE SOFTWARE.
 #include "device-manager.h"
 #include "stock-icons.h"
 #include "device-info.h"
+#include "module.h"
 
 G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, EGG_TYPE_TRAY_ICON)
 
@@ -242,19 +243,21 @@ device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpo
 
   wm_device_manager_add(priv->device_list, new_device);
 
-#ifdef ENABLE_NOTIFY
   g_object_get(new_device, "name", &name, NULL);
+  module_run_connect(name);
+
+#ifdef ENABLE_NOTIFY
   g_object_get(new_device, "hardware", &model, NULL);
   g_object_get(new_device, "class", &platform, NULL);
 
   notify_string = g_strdup_printf("A %s %s '%s' just connected.", model, platform, name);
   event_notification(self, "PDA connected", notify_string);
 
-  g_free(name);
   g_free(model);
   g_free(platform);
   g_free(notify_string);
 #endif /* ENABLE_NOTIFY */
+  g_free(name);
 }
 
 static void
@@ -272,16 +275,18 @@ device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_d
     return;
   }
 
-#ifdef ENABLE_NOTIFY
   g_object_get(device, "name", &name, NULL);
+  module_run_disconnect(name);
+
+#ifdef ENABLE_NOTIFY
 
   notify_string = g_strdup_printf("'%s' just disconnected.", name);
   event_notification(self, "PDA disconnected", notify_string);
 
-  g_free(name);
   g_free(notify_string);
 #endif /* ENABLE_NOTIFY */
 
+  g_free(name);
   g_object_unref(device);
 }
 
@@ -804,6 +809,10 @@ synce_trayicon_init(SynceTrayIcon *self)
   gtk_widget_show_all(GTK_WIDGET(self));
   g_signal_connect(G_OBJECT(box), "button-press-event", G_CALLBACK(trayicon_clicked), self);
 
+
+  /* module initialisation */
+  module_load_all();
+
   /* set initial state */
   update(self);
 }
@@ -846,6 +855,8 @@ synce_trayicon_dispose (GObject *obj)
 
   g_object_unref(priv->tooltips);
   g_object_unref(priv->icon);
+
+  module_unload_all();
 
   if (G_OBJECT_CLASS (synce_trayicon_parent_class)->dispose)
     G_OBJECT_CLASS (synce_trayicon_parent_class)->dispose (obj);

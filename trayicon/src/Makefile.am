@@ -28,7 +28,8 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			odccm-client.c odccm-client.h \
 			dccm-client.c dccm-client.h \
 			keyring.c keyring.h \
-			device-info.c device-info.h
+			device-info.c device-info.h \
+			module.c module.h
 
 EXTRA_DIST = dccm-client-signals-marshal.list
 
@@ -50,6 +51,9 @@ if ENABLE_NOTIFY
 synce_trayicon_CPPFLAGS += $(NOTIFY_CFLAGS)
 synce_trayicon_LDADD += $(NOTIFY_LIBS)
 endif
+
+
+noinst_HEADERS = synce-trayicon-module.h
 
 
 %-signals-marshal.h: %-signals-marshal.list
