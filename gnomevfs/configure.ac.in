@@ -12,7 +12,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
 
-AM_PROG_LIBTOOL
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
 
 GNOME_VFS_REQUIRED=2.14.0
 
@@ -25,6 +26,13 @@ PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.10.0)
 
 dnl Check for librapi2
 PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.10.0)
+
+AC_ARG_ENABLE(trayicon-plugin, AC_HELP_STRING([--disable-trayicon-plugin], [Build plugin for synce-trayicon]),:,enable_trayicon_plugin=yes)
+AM_CONDITIONAL(ENABLE_TRAYICON_PLUGIN, test x"$enable_trayicon_plugin" != xno)
+if test x"$enable_trayicon_plugin" != xno; then
+       AC_DEFINE(ENABLE_TRAYICON_PLUGIN, 1, [Building plugin for synce-trayicon])
+       PKG_CHECK_MODULES(GMODULE, glib-2.0 gmodule-2.0)
+fi
 
 dnl
 dnl debugging output
