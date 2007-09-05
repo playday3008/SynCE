@@ -45,6 +45,15 @@
 #define INDEX_FILESYSTEM    3
 #define INDEX_DOCUMENTS     4
 
+#define NAME_SD_CARD        "SD-MMC Card"
+#define NAME_ROM_STORAGE    "ROM Storage"
+
+enum {
+  FS_DEVICE = 0,
+  FS_SD_CARD,
+  FS_ROM_STORAGE
+};
+
 typedef struct _DIR_HANDLE
 {
   int index;
@@ -73,6 +82,8 @@ typedef struct _ErrorCodeTriple
 #define ERROR_DISK_FULL              112
 #endif
 
+#define ERROR_NOT_SAME_DEVICE         17
+
 static ErrorCodeTriple error_codes[] =
 {
     {GNOME_VFS_OK,                        ERROR_SUCCESS,        S_OK        },
@@ -87,7 +98,8 @@ static ErrorCodeTriple error_codes[] =
     {GNOME_VFS_ERROR_NOT_PERMITTED,       ERROR_ACCESS_DENIED,  0},
     {GNOME_VFS_ERROR_TOO_MANY_OPEN_FILES, ERROR_TOO_MANY_OPEN_FILES,  0},
     {GNOME_VFS_ERROR_NOT_FOUND,           ERROR_NO_MORE_FILES,  0},
-    {GNOME_VFS_ERROR_NO_SPACE,            ERROR_DISK_FULL,  0}
+    {GNOME_VFS_ERROR_NO_SPACE,            ERROR_DISK_FULL,  0},
+    {GNOME_VFS_ERROR_NOT_SAME_FILE_SYSTEM, ERROR_NOT_SAME_DEVICE,  0}
 };
 
 static GnomeVFSResult gnome_vfs_result_from_rapi()/*{{{*/
@@ -156,24 +168,12 @@ static GnomeVFSResult initialize_rapi()/*{{{*/
   return GNOME_VFS_OK;
 }/*}}}*/
 
-static gint get_location(GnomeVFSURI *uri, gchar **location)/*{{{*/
+static gint get_location(const GnomeVFSURI *uri, gchar **location)/*{{{*/
 {
   gint result = INDEX_INVALID;
   gchar **path = NULL;
 
-  /*
   path = g_strsplit(gnome_vfs_unescape_string(gnome_vfs_uri_get_path(uri),"\\"), "/", 0);
-  */
-
-  const gchar *uri_path = gnome_vfs_uri_get_path(uri);
-  D("uri_path = %s", uri_path);
-
-  gchar *unescaped_path = gnome_vfs_unescape_string(uri_path, "\\");
-  D("unescaped_path = %s", unescaped_path);
-
-  path = g_strsplit(unescaped_path, "/", 0);
-
-  g_free(unescaped_path);
 
 #ifdef WITH_VERBOSE_DEBUG
     {
@@ -860,6 +860,7 @@ static void get_file_attributes/*{{{*/
     | GNOME_VFS_FILE_INFO_FIELDS_ATIME
     | GNOME_VFS_FILE_INFO_FIELDS_MTIME
     | GNOME_VFS_FILE_INFO_FIELDS_CTIME
+    | GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE
     | GNOME_VFS_FILE_INFO_FIELDS_IDS
     | GNOME_VFS_FILE_INFO_FIELDS_IO_BLOCK_SIZE;
 
@@ -1512,16 +1513,84 @@ static GnomeVFSResult synce_same_fs/*{{{*/
  GnomeVFSContext *context
  )
 {
+  GnomeVFSResult result;
+  gchar *location_a, *location_b;
+  gint fs_a, fs_b, index_a, index_b;
+
   D("----------------- synce_same_fs() --------------\n");
 
-  /* return TRUE if on same fs ? 
-     should we default to FALSE for now ?
-  */
+  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+    goto exit;
 
-  *same_fs_return = 1;
+  index_a = get_location(a, &location_a);
+  if (index_a == INDEX_INVALID) {
+    result = GNOME_VFS_ERROR_INVALID_URI;
+    goto exit;
+  }
+#if SHOW_APPLICATIONS
+  if (index_a == INDEX_APPLICATIONS) {
+    result = GNOME_VFS_ERROR_NOT_PERMITTED;
+    goto exit;
+  }
+#endif
+
+  index_b = get_location(b, &location_b);
+  if (index_b == INDEX_INVALID) {
+    result = GNOME_VFS_ERROR_INVALID_URI;
+    goto exit;
+  }
+#if SHOW_APPLICATIONS
+  if (index_b == INDEX_APPLICATIONS) {
+    result = GNOME_VFS_ERROR_NOT_PERMITTED;
+    goto exit;
+  }
+#endif
+
+  fs_a = FS_DEVICE;
+  if (index_a == INDEX_FILESYSTEM) {
+    gchar **split = g_strsplit(location_a, "\\", 0);
+
+    if (split && split[0] && split[1]) {
+      if (strcmp(split[1], NAME_SD_CARD) == 0)
+	fs_a = FS_SD_CARD;
+    }
+    if (split && split[0] && split[1]) {
+      if (strcmp(split[1], NAME_ROM_STORAGE) == 0)
+	fs_a = FS_ROM_STORAGE;
+    }
+    g_strfreev(split);
+  }
+
+  fs_b = FS_DEVICE;
+  if (index_b == INDEX_FILESYSTEM) {
+    gchar **split = g_strsplit(location_b, "\\", 0);
+
+    if (split && split[0] && split[1]) {
+      if (strcmp(split[1], NAME_SD_CARD) == 0)
+	fs_b = FS_SD_CARD;
+    }
+
+    if (split && split[0] && split[1]) {
+      if (strcmp(split[1], NAME_ROM_STORAGE) == 0)
+	fs_b = FS_ROM_STORAGE;
+    }
+
+    g_strfreev(split);
+  }
+
+  if (fs_a == fs_b)
+    *same_fs_return = TRUE;
+  else
+    *same_fs_return = FALSE;
+
+  result = GNOME_VFS_OK;
+
+exit:
+  if (location_a) g_free(location_a);
+  if (location_b) g_free(location_b);
 
   D("--------------- synce_same_fs() end ------------\n");
-  return GNOME_VFS_OK;
+  return result;
 }/*}}}*/
 
 static GnomeVFSResult
@@ -1534,11 +1603,43 @@ synce_get_volume_free_space
 {
   GnomeVFSResult result;
   STORE_INFORMATION store;
+  gchar *location;
+  gint index;
 
   D("-------------- synce_get_volume_free_space() ---------------\n");
 
   if ((result = initialize_rapi()) != GNOME_VFS_OK)
     goto exit;
+
+  index = get_location(uri, &location);
+  if (index == INDEX_INVALID) {
+    result = GNOME_VFS_ERROR_INVALID_URI;
+    goto exit;
+  }
+#if SHOW_APPLICATIONS
+  if (index == INDEX_APPLICATIONS) {
+    result = GNOME_VFS_ERROR_NOT_PERMITTED;
+    goto exit;
+  }
+#endif
+
+  if (index == INDEX_FILESYSTEM) {
+    gchar **split = g_strsplit(location, "\\", 0);
+
+    if (split && split[0] && split[1]) {
+      if (strcmp(split[1], NAME_SD_CARD) == 0) {
+	result = GNOME_VFS_ERROR_NOT_SUPPORTED;
+	goto exit;
+      }
+
+      if (strcmp(split[1], NAME_ROM_STORAGE) == 0) {
+	result = GNOME_VFS_ERROR_NOT_SUPPORTED;
+	goto exit;
+      }
+
+    }
+    g_strfreev(split);
+  }
 
   if (CeGetStoreInformation(&store)) {
     *free_space = store.dwFreeSize;
@@ -1549,6 +1650,8 @@ synce_get_volume_free_space
   }
 
 exit:
+  if (location) g_free(location);
+
   D("------------ synce_get_volume_free_space() end ---------\n");
   return result;
 }

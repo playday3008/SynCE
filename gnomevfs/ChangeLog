@@ -1,3 +1,9 @@
+2007-09-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* flag "SD-MMC Card" and "ROM Storage" as separate filesystems
+	* return NOT_SUPPORTED for free space on SD card and ROM,
+	   required call not implemented in librapi2
+
 2007-08-30  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add plugin for trayicon to add server volume
