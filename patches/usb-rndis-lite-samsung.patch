@@ -1,6 +1,6 @@
 Index: cdc_ether.c
 ===================================================================
---- cdc_ether.c	(revision 2998)
+--- cdc_ether.c	(revision 3009)
 +++ cdc_ether.c	(working copy)
 @@ -18,8 +18,8 @@
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -15,7 +15,7 @@ Index: cdc_ether.c
  #include <linux/version.h>
 Index: usbnet.c
 ===================================================================
---- usbnet.c	(revision 2997)
+--- usbnet.c	(revision 3009)
 +++ usbnet.c	(working copy)
 @@ -30,8 +30,8 @@
   * issues can usefully be addressed by this framework.
@@ -30,7 +30,7 @@ Index: usbnet.c
  #include <linux/version.h>
 Index: rndis_host.c
 ===================================================================
---- rndis_host.c	(revision 2998)
+--- rndis_host.c	(revision 3009)
 +++ rndis_host.c	(working copy)
 @@ -17,8 +17,8 @@
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
