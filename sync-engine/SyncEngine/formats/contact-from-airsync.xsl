@@ -5,9 +5,10 @@
                xmlns:convert="http://synce.org/convert"
                xmlns:C1="http://synce.org/formats/airsync_wm5/contacts"
                xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2"
+               xmlns:AS="http://synce.org/formats/airsync_wm5/airsync"
                exclude-result-prefixes="convert C1 C2">
 
-    <xsl:template match="ApplicationData">
+    <xsl:template match="ApplicationData | AS:ApplicationData">
         <contact>
             <FileAs><Content><xsl:value-of select="C1:FileAs"/></Content></FileAs>
 
