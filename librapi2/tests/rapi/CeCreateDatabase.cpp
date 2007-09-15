@@ -61,7 +61,7 @@ int main()
 	write_values[3].val.iVal = 0x1234;
 
 	write_values[4].propid = 0x50000 | CEVT_I4;
-	write_values[4].val.iVal = 0x23456789;
+	write_values[4].val.lVal = 0x23456789;
 
 	write_values[5].propid = 0x60000 | CEVT_LPWSTR;
 	write_values[5].val.lpwstr = to_unicode("Some string value"); // Note: uneven length
@@ -70,7 +70,7 @@ int main()
 	write_values[6].val.uiVal = 0xbcde;
 
 	write_values[7].propid = 0x80000 | CEVT_UI4;
-	write_values[7].val.uiVal = 0x98765432;
+	write_values[7].val.ulVal = 0x98765432;
 
 #if 0
 	/* Write each value */
