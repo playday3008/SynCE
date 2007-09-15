@@ -179,8 +179,6 @@ static bool list_matching_files(WCHAR* wide_path)
 	unsigned i;
 
 	synce_trace_wstr(wide_path);
-	wide_path = adjust_remote_path(wide_path, true);
-	synce_trace_wstr(wide_path);
 
 	result = CeFindAllFiles(
 			wide_path,
@@ -268,6 +266,7 @@ int main(int argc, char** argv)
 		char new_path[MAX_PATH];
 		snprintf(new_path, sizeof(new_path), "%s*", path);
 		wide_path = wstr_from_current(new_path);
+		wide_path = adjust_remote_path(wide_path, true);
 
 		if (!list_matching_files(wide_path))
 			goto exit;
