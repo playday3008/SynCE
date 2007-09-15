@@ -143,8 +143,11 @@ AC_CHECK_HEADERS(iconv.h,,[
 		AC_MSG_WARN([iconv.h not found (INCICONV=$INCICONV)])
 		])
 
+saved_CFLAGS="$CFLAGS"
+CFLAGS=`echo $CFLAGS | sed 's/-Werror//'`
 AC_CHECK_LIB(socket, socket, AC_CHECK_LIB(nsl, getpwnam), [])
 AC_CHECK_LIB(m, floor)
+CFLAGS="$saved_CFLAGS"
 
 AC_CONFIG_FILES( [lib/synce.h] )
 
