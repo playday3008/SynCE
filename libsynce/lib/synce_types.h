@@ -141,6 +141,7 @@ typedef int32_t  HRESULT;
 #define ERROR_NOT_ENOUGH_MEMORY        8
 #define ERROR_NO_MORE_FILES           18
 #define ERROR_SEEK                    25
+#define ERROR_GEN_FAILURE             31
 #define ERROR_SHARING_VIOLATION       32
 #define ERROR_NOT_SUPPORTED           50
 #define ERROR_DUP_NAME                52
