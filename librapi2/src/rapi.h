@@ -393,7 +393,7 @@ typedef struct _CEBLOB {
 typedef union _CEVALUNION {
 	short iVal;
 	USHORT uiVal;
-	long lVal;
+	LONG lVal;
 	ULONG ulVal;
 	FILETIME filetime;
 	LPWSTR lpwstr;
