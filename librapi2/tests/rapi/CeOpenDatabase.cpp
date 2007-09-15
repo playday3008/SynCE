@@ -102,7 +102,7 @@ int handle_property(PCEPROPVAL value)
 	switch (type)
 	{
 		case CEVT_I2:  printf("0x%04x/%i",  value->val.iVal,  value->val.iVal);  break;
-		case CEVT_I4:  printf("0x%08x/%li", value->val.lVal,  value->val.lVal);  break;
+		case CEVT_I4:  printf("0x%08x/%i", value->val.lVal,  value->val.lVal);  break;
 		case CEVT_UI2: printf("0x%04x/%u",  value->val.uiVal, value->val.uiVal); break;
 		case CEVT_UI4: printf("0x%08x/%u",  value->val.ulVal, value->val.ulVal); break;
 		case CEVT_BOOL: printf("0x%08x/%u",  value->val.boolVal, value->val.boolVal); break;
