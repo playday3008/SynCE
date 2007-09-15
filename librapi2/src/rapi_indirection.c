@@ -87,12 +87,14 @@ DWORD CeSetFilePointer(
     dwMoveMethod );
 }
 
+#if 0
 BOOL CeSetEndOfFile(
         HANDLE hFile)
 {
     RapiContext * context = rapi_context_current();
-//    return ( *context->rapi_ops->CeSetEndOfFile ) ( hFile );
+    return ( *context->rapi_ops->CeSetEndOfFile ) ( hFile );
 }
+#endif
 
 BOOL CeGetFileTime(
         HANDLE hFile,
