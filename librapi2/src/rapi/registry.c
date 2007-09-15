@@ -15,7 +15,7 @@ LONG _CeRegCreateKeyEx( /*{{{*/
 		LPDWORD lpdwDisposition)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 	HKEY result = 0;
 	DWORD disposition = 0;
 
@@ -26,7 +26,7 @@ LONG _CeRegCreateKeyEx( /*{{{*/
 	/* remaining parameters are ignored */
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -54,7 +54,7 @@ LONG _CeRegOpenKeyEx(/*{{{*/
 		PHKEY phkResult)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x1e);
 	rapi_buffer_write_uint32(context->send_buffer, hKey);
@@ -62,7 +62,7 @@ LONG _CeRegOpenKeyEx(/*{{{*/
 	/* remaining parameters are ignored */
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -85,7 +85,7 @@ LONG _CeRegQueryValueEx( /*{{{*/
 		LPDWORD lpcbData)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = -1;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x26);
 	rapi_buffer_write_uint32(context->send_buffer, hKey);
@@ -137,13 +137,13 @@ LONG _CeRegCloseKey(/*{{{*/
 		HKEY hKey)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x21);
 	rapi_buffer_write_uint32(context->send_buffer, hKey);
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -166,7 +166,7 @@ LONG _CeRegQueryInfoKey( /*{{{*/
 		PFILETIME lpftLastWriteTime)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x25);
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
@@ -183,7 +183,7 @@ LONG _CeRegQueryInfoKey( /*{{{*/
 	rapi_buffer_write_optional       (context->send_buffer, lpftLastWriteTime, sizeof(FILETIME), false);
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -217,7 +217,7 @@ LONG _CeRegEnumValue( /*{{{*/
 		LPDWORD lpcbData)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x23);
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
@@ -230,7 +230,7 @@ LONG _CeRegEnumValue( /*{{{*/
 	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbData, true);
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -259,7 +259,7 @@ LONG _CeRegEnumKeyEx( /*{{{*/
 		PFILETIME lpftLastWriteTime)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x1f);
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
@@ -272,7 +272,7 @@ LONG _CeRegEnumKeyEx( /*{{{*/
 	rapi_buffer_write_optional       (context->send_buffer, lpftLastWriteTime, sizeof(FILETIME), false);
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -301,7 +301,7 @@ LONG _CeRegSetValueEx( /*{{{*/
 		DWORD cbData)
 {
 	RapiContext* context = rapi_context_current();
-	LONG return_value = 0;
+	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x27);
 	rapi_buffer_write_uint32(context->send_buffer, hKey);
@@ -318,12 +318,12 @@ LONG _CeRegSetValueEx( /*{{{*/
 	rapi_buffer_write_uint32(context->send_buffer, cbData);
 
 	if ( !rapi_context_call(context) )
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	if (!rapi_buffer_read_uint32(context->recv_buffer, &context->last_error))
-		return false;
+		return ERROR_GEN_FAILURE;
 	if (!rapi_buffer_read_int32(context->recv_buffer, &return_value))
-		return false;
+		return ERROR_GEN_FAILURE;
 
 	return return_value;
 }/*}}}*/
