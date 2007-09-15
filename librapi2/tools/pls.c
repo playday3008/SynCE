@@ -161,7 +161,7 @@ static bool print_entry(CE_FIND_DATA* entry)
 	 */
 
 	filename = wstr_to_current(entry->cFileName);
-        printf(filename);
+        printf("%s", filename);
 	wstr_free_string(filename);
 	if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		printf("/");
