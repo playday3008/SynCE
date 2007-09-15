@@ -169,7 +169,7 @@ DWORD _CeSetFilePointer(
 	rapi_context_begin_command(context, 0x15);
 	rapi_buffer_write_uint32(context->send_buffer, hFile);
 	rapi_buffer_write_uint32(context->send_buffer, lDistanceToMove);
-	rapi_buffer_write_uint32(context->send_buffer, lpDistanceToMoveHigh);
+	rapi_buffer_write_uint32(context->send_buffer, lpDistanceToMoveHigh ? *lpDistanceToMoveHigh : 0);
 	rapi_buffer_write_uint32(context->send_buffer, dwMoveMethod);
 
 	if ( !rapi_context_call(context) )
