@@ -27,4 +27,4 @@ liborange_la_DEPENDENCIES = @INNO_LIBADD@ @VISE_LIBADD@ @MSI_LIBADD@
 
 liborange_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
-include_HEADERS = liborange.h
+include_HEADERS = liborange.h liborange_stub.h

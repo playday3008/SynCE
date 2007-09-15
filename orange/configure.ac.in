@@ -67,7 +67,11 @@ AC_ARG_WITH(libsynce,
 if test "x$my_with_libsynce" = "xyes"; then
   PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.9.1)
   AC_DEFINE_UNQUOTED(WITH_LIBSYNCE, 1, [Set to 1 when compiled with libsynce])
+  SYNCE_HEADER=synce.h
+else
+  SYNCE_HEADER=liborange_stub.h
 fi
+AC_SUBST([SYNCE_HEADER])
 
 dnl Conditional use of libdynamite
 AC_ARG_WITH(libdynamite,
@@ -205,5 +209,6 @@ AC_CHECK_LIB(z,inflate,,[
 AC_OUTPUT([liborange.pc
            Makefile
            lib/Makefile
-	   lib/liborange_stub.h
+           lib/liborange.h
+           lib/liborange_stub.h
            src/Makefile])
