@@ -25,6 +25,7 @@ IN THE SOFTWARE.
 
 #include <glib-object.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 G_BEGIN_DECLS
 

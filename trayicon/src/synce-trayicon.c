@@ -230,8 +230,9 @@ device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpo
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
   WmDevice *new_device = WM_DEVICE(info);
   WmDevice *device;
+  gchar *name;
 #ifdef ENABLE_NOTIFY
-  gchar *model, *platform, *name, *notify_string;
+  gchar *model, *platform, *notify_string;
 #endif /* ENABLE_NOTIFY */
 
   g_debug("%s: looking for preexisting device %s", G_STRFUNC, pdaname);
@@ -266,8 +267,9 @@ device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_d
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
   WmDevice *device;
+  gchar *name;
 #ifdef ENABLE_NOTIFY
-  gchar *name, *notify_string;
+  gchar *notify_string;
 #endif /* ENABLE_NOTIFY */
 
   if (!(device = wm_device_manager_remove_by_name(priv->device_list, pdaname))) {

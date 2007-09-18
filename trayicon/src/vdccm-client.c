@@ -259,7 +259,6 @@ vdccm_client_read_cb(GIOChannel *source,
   gchar *pdaname;
   gint i;
   gboolean result = FALSE;
-  gchar *synce_dir, *synce_path;
   SynceInfo *synce_info = NULL;
 
   if (!data) {
@@ -326,16 +325,10 @@ vdccm_client_read_cb(GIOChannel *source,
 	/* pdaname connected */
 	g_debug("%s: Run connect for %s", G_STRFUNC, pdaname);
 
-	if (!synce_get_directory(&synce_dir)) {
-	  g_critical("%s: Unable to obtain synce directory", G_STRFUNC);
-	  return result;
-	}
-	synce_path = g_strjoin("/", synce_dir, pdaname, NULL);
-	synce_info = synce_info_new(synce_path);
+	synce_info = synce_info_new(pdaname);
 
 	WmDevice *new_dev = vdccm_create_device(synce_info);
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)new_dev);
-	g_free(synce_path);
 
 	break;
       case 'D':
