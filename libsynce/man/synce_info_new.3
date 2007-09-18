@@ -24,7 +24,7 @@ synce_info_new \- allocate a new SynceInfo struct
 .nf
 .B #include <synce.h>
 .sp
-.BI "SynceInfo *synce_info_new(const char *" filename );
+.BI "SynceInfo *synce_info_new(const char *" device_name );
 .sp
 .BI "void synce_info_destroy(SynceInfo *" info );
 .fi
@@ -33,18 +33,22 @@ The
 .BR synce_info_new ()
 function returns a pointer to a newly allocated and populated
 SynceInfo struct for a mobile device.
-The exact behaviour currently depends on the flavour of dccm daemon in use.
 .sp
-The use of
-.BR dccm (1)
-is deprecated. When using
+If
+.BR device_name
+is non-NULL, the returned struct relates to a mobile device with that name, or NULL if no device of that name is connected.
+.sp
+If
+.BR device_name
+is NULL, the exact behaviour depends on the flavour of dccm daemon in use.
+When using
 .BR vdccm (1)
-.BR filename
-points towards a configuration file written by the daemon, typically in the ~/.synce/ directory, or the default device configuration if NULL. With 
+or the deprecated
+.BR dccm (1),
+the current active device is selected. This is usually the last device connected, specifically that described in the active_connection file which is by default
+in the ~/.synce/ directory. With 
 .BR odccm (1)
-the 
-.BR filename
-parameter is ignored, information is gathered for the first (only) connected device.
+the first device connected will be returned.
 .sp
 This struct should be freed with
 .BR synce_info_destroy (3).

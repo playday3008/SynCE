@@ -1,3 +1,11 @@
+2007-09-06  Mark Ellis  <mark@mpellis.org.uk>
+
+	* modified synce_info_new()
+	  - optional parameter is now device name, not path
+	  - if device name is NULL, uses first device found by odccm
+	       or active device with vdccm
+	  - with non-NULL name, looks for that device
+	
 2007-08-29  Mark Ellis  <mark@mpellis.org.uk>
 
 	* started Changelog !

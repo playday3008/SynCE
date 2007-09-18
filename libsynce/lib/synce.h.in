@@ -150,6 +150,7 @@ const char* synce_strerror(DWORD error);
 
 /*
  * Info from the ~/.synce/active_connection file
+ * written by (v)dccm, or obtained from odccm
  */
 
 typedef struct _SynceInfo
@@ -170,7 +171,7 @@ typedef struct _SynceInfo
   int fd;
 } SynceInfo;
 
-SynceInfo* synce_info_new(const char* filename);
+SynceInfo* synce_info_new(const char* device_name);
 void synce_info_destroy(SynceInfo* info);
 
 

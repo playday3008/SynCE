@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #if ENABLE_DESKTOP_INTEGRATION
@@ -32,24 +33,37 @@ static char *STRDUP(const char* str)
   return str ? strdup(str) : NULL;
 }
 
-static SynceInfo* synce_info_from_file(const char* filename)
+static SynceInfo* synce_info_from_file(const char* device_name)
 {
   SynceInfo* result = calloc(1, sizeof(SynceInfo));
   bool success = false;
   char* connection_filename;
- 	struct configFile* config = NULL;
+  struct configFile* config = NULL;
 
-  if (filename)
-    connection_filename = strdup(filename);
+  if (device_name) {
+    char *synce_dir;
+    if (!synce_get_directory(&synce_dir)) {
+      synce_error("unable to determine synce directory");
+      goto exit;
+    }
+    int path_len = strlen(synce_dir) + strlen(device_name) + 2;
+    connection_filename = (char *) malloc(sizeof(char) * path_len);
+
+    if (snprintf(connection_filename, path_len, "%s/%s", synce_dir, device_name) >= path_len) {
+      FREE(synce_dir);
+      synce_error("error determining synce connection filename");
+      goto exit;
+    }
+  }
   else
     synce_get_connection_filename(&connection_filename);
 
-	config = readConfigFile(connection_filename);
-	if (!config)
-	{
-		synce_error("unable to open file: %s", connection_filename);
-		goto exit;
-	}
+  config = readConfigFile(connection_filename);
+  if (!config)
+    {
+      synce_error("unable to open file: %s", connection_filename);
+      goto exit;
+    }
 
   result->dccm_pid        = getConfigInt(config, "dccm",   "pid");
 
@@ -141,25 +155,21 @@ OUT:
 #define ODCCM_TYPE_OBJECT_PATH_ARRAY \
   (dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH))
 
-static SynceInfo *synce_info_from_odccm(const char* path)
+static SynceInfo *synce_info_from_odccm(const char* device_name)
 {
-  SynceInfo *result;
+  SynceInfo *result = NULL;
   GError *error = NULL;
   DBusGConnection *bus = NULL;
   DBusGProxy *mgr_proxy = NULL;
   GPtrArray *devices = NULL;
   guint i;
 
-  result = calloc(1, sizeof(SynceInfo));
-  if (result == NULL)
-    goto ERROR;
-
   g_type_init();
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
   if (bus == NULL)
   {
-    g_warning("Failed to connect to system bus: %s", error->message);
+    g_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
     goto ERROR;
   }
 
@@ -167,7 +177,7 @@ static SynceInfo *synce_info_from_odccm(const char* path)
                                         ODCCM_MGR_PATH,
                                         ODCCM_MGR_IFACE);
   if (mgr_proxy == NULL) {
-    g_warning("Failed to get DeviceManager proxy object");
+    g_warning("%s: Failed to get DeviceManager proxy object", G_STRFUNC);
     goto ERROR;
   }
 
@@ -176,7 +186,7 @@ static SynceInfo *synce_info_from_odccm(const char* path)
                          ODCCM_TYPE_OBJECT_PATH_ARRAY, &devices,
                          G_TYPE_INVALID))
   {
-    g_warning("Failed to get devices: %s", error->message);
+    g_warning("%s: Failed to get devices: %s", G_STRFUNC, error->message);
     goto ERROR;
   }
 
@@ -187,27 +197,42 @@ static SynceInfo *synce_info_from_odccm(const char* path)
 
   for (i = 0; i < devices->len; i++) {
     gchar *obj_path = g_ptr_array_index(devices, i);
+    gchar *name;
     DBusGProxy *proxy = dbus_g_proxy_new_for_name(bus, ODCCM_SERVICE,
                                                   obj_path,
                                                   ODCCM_DEV_IFACE);
-    gchar *unix_path;
-    guint os_major;
-    guint os_minor;
-
     if (proxy == NULL) {
-      g_warning("Failed to get proxy for device '%s'", obj_path);
+      g_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, obj_path);
       goto ERROR;
     }
 
     if (!dbus_g_proxy_call(proxy, "GetName", &error,
                            G_TYPE_INVALID,
-                           G_TYPE_STRING, &(result->name),
+                           G_TYPE_STRING, &name,
                            G_TYPE_INVALID))
     {
-      g_warning("Failed to get device name: %s", error->message);
+      g_warning("%s: Failed to get device name: %s", G_STRFUNC, error->message);
       g_object_unref(proxy);
       goto ERROR;
     }
+
+    if ( (device_name != NULL) && (strcmp(device_name, name) != 0) ) {
+      g_free(name);
+      continue;
+    }
+
+    if (!(result = calloc(1, sizeof(SynceInfo)))) {
+      g_critical("%s: Failed to allocate SynceInfo", G_STRFUNC);
+      g_object_unref(proxy);
+      g_free(name);
+      goto ERROR;
+    }
+
+    gchar *unix_path;
+    guint os_major;
+    guint os_minor;
+
+    result->name = name;
 
     if (!dbus_g_proxy_call(proxy, "GetOsVersion", &error,
                            G_TYPE_INVALID,
@@ -215,7 +240,7 @@ static SynceInfo *synce_info_from_odccm(const char* path)
                            G_TYPE_UINT, &os_minor,
                            G_TYPE_INVALID))
     {
-      g_warning("Failed to get device os: %s", error->message);
+      g_warning("%s: Failed to get device OS for %s: %s", G_STRFUNC, result->name, error->message);
       g_object_unref(proxy);
       goto ERROR;
     }
@@ -227,7 +252,7 @@ static SynceInfo *synce_info_from_odccm(const char* path)
                            G_TYPE_STRING, &unix_path,
                            G_TYPE_INVALID))
     {
-      g_warning("Failed to get a connection: %s", error->message);
+      g_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, result->name, error->message);
       g_object_unref(proxy);
       goto ERROR;
     }
@@ -239,13 +264,12 @@ static SynceInfo *synce_info_from_odccm(const char* path)
 
     if (result->fd < 0)
     {
-      g_warning("Failed to get file-descriptor from odccm");
+      g_warning("%s: Failed to get file-descriptor from odccm for %s", G_STRFUNC, result->name);
       goto ERROR;
     }
 
     result->transport = g_strdup("odccm");
 
-    /* FIXME: Make it possible to choose a device explicitly. */
     break;
   }
 
@@ -254,7 +278,7 @@ static SynceInfo *synce_info_from_odccm(const char* path)
 ERROR:
   if (error != NULL)
     g_error_free(error);
-  synce_info_destroy(result);
+  if (result) synce_info_destroy(result);
   result = NULL;
 
 OUT:
@@ -274,21 +298,21 @@ OUT:
 }
 #endif /* ENABLE_DESKTOP_INTEGRATION */
 
-SynceInfo* synce_info_new(const char* path)
+SynceInfo* synce_info_new(const char* device_name)
 {
   SynceInfo* result = NULL;
 
 #if ENABLE_DESKTOP_INTEGRATION
-  result = synce_info_from_odccm(path);
+  result = synce_info_from_odccm(device_name);
 
 #if ENABLE_MIDASYNC
   if (!result)
-    result = synce_info_from_midasyncd(path);
+    result = synce_info_from_midasyncd(device_name);
 #endif
 #endif
 
   if (!result)
-    result = synce_info_from_file(path);
+    result = synce_info_from_file(device_name);
 
   return result;
 }
