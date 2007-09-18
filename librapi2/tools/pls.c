@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-char* devpath = NULL;
+char* devname = NULL;
 
 static bool numeric_file_attributes = false;
 static bool show_hidden_files = false;
@@ -17,7 +17,7 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-a] [-d LEVEL] [-p DEVPATH] [-h] [-n] [DIRECTORY]\n"
+			"\t%s [-a] [-d LEVEL] [-p DEVNAME] [-h] [-n] [DIRECTORY]\n"
 			"\n"
 			"\t-a        Show all files including those marked as hidden\n"
 			"\t-d LEVEL  Set debug log level\n"
@@ -26,7 +26,7 @@ static void show_usage(const char* name)
 			"\t              2 - Errors and warnings\n"
 			"\t              3 - Everything\n"
 			"\t-h         Show this help message\n"
-                        "\t-p DEVPATH Device path\n"
+                        "\t-p DEVNAME Mobile device name\n"
 			"\t-n         Show numeric value for file attributes\n"
 			"\tDIRECTORY  The remote directory where you want to list files\n",
 			name);
@@ -46,7 +46,7 @@ static bool handle_parameters(int argc, char** argv, char** path)
 				break;
 					
                         case 'p':
-                                devpath = optarg;
+                                devname = optarg;
                                 break;
 			
               		case 'd':
@@ -233,11 +233,11 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &path))
 		goto exit;
 
-        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        if ((connection = rapi_connection_from_name(devname)) == NULL)
         {
           fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
                   argv[0],
-                  devpath?devpath:"(Default)");
+                  devname?devname:"(Default)");
           goto exit;
         }
         rapi_connection_select(connection);

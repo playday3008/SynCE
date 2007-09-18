@@ -6,14 +6,14 @@
 #include <unistd.h>
 #include <getopt.h>
 
-char* devpath = NULL;
+char* devname = NULL;
 
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-p DEVPATH] [-h]\n"
+			"\t%s [-d LEVEL] [-p DEVNAME] [-h]\n"
 			"\n"
 			"\t-d LEVEL     Set debug log level\n"
 			"\t                 0 - No logging (default)\n"
@@ -21,7 +21,7 @@ static void show_usage(const char* name)
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
 			"\t-h           Show this help message\n"
-                        "\t-p DEVPATH   Device path\n",
+                        "\t-p DEVNAME   Mobile device name\n",
 			name);
 }
 
@@ -39,7 +39,7 @@ static bool handle_parameters(int argc, char** argv)
 				break;
 
                         case 'p':
-                                devpath = optarg;
+                                devname = optarg;
                                 break;
 			
 			case 'h':
@@ -63,11 +63,11 @@ int main(int argc, char** argv)
   if (!handle_parameters(argc, argv))
     goto exit;
 
-  if ((connection = rapi_connection_from_path(devpath)) == NULL)
+  if ((connection = rapi_connection_from_name(devname)) == NULL)
   {
     fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
         argv[0],
-        devpath?devpath:"(Default)");
+        devname?devname:"(Default)");
     goto exit;
   }
   rapi_connection_select(connection);

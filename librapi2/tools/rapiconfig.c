@@ -8,21 +8,21 @@
 #include <string.h>
 #include <unistd.h>
 
-char* devpath = NULL;
+char* devname = NULL;
 
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-P DEVPATH ] [-h] [-p] [-m] FILENAME"
+			"\t%s [-d LEVEL] [-P DEVNAME ] [-h] [-p] [-m] FILENAME"
 			"\n"
 			"\t-d LEVEL     Set debug log level\n"
 			"\t                 0 - No logging (default)\n"
 			"\t                 1 - Errors only\n"
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
-			"\t-P DEVPATH   Device path\n"
+			"\t-P DEVNAME   Mobile device name\n"
 			"\t-h           Show this help message\n"
 			"\t-p           Process the document\n"
 			"\t-m           Return metadata\n"
@@ -37,7 +37,7 @@ static bool handle_parameters(int argc, char** argv, DWORD* flags, const char** 
 
   *flags = 0;
 
-	while ((c = getopt(argc, argv, "d:hmp:")) != -1)
+	while ((c = getopt(argc, argv, "d:hmpP:")) != -1)
 	{
 		switch (c)
 		{
@@ -46,7 +46,7 @@ static bool handle_parameters(int argc, char** argv, DWORD* flags, const char** 
 				break;
 			
                         case 'P':
-                                devpath = optarg;
+                                devname = optarg;
                                 break;
 			
 			case 'h':
@@ -172,11 +172,11 @@ int main(int argc, char** argv)
      Do the bossanova
    */
 
-        if ((connection = rapi_connection_from_path(devpath)) == NULL)
+        if ((connection = rapi_connection_from_name(devname)) == NULL)
         {
           fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
                   argv[0],
-                  devpath?devpath:"(Default)");
+                  devname?devname:"(Default)");
           goto exit;
         }
         rapi_connection_select(connection);

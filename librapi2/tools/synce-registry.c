@@ -14,7 +14,7 @@
 #define ACTION_NEWKEY 4
 #define ACTION_DELETEKEY 5
 
-char* devpath = NULL;
+char* devname = NULL;
 int action = ACTION_READVAL;
 DWORD valType = REG_SZ;
 const char *prog_name;
@@ -26,7 +26,7 @@ static void show_usage(const char* name)
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-d LEVEL] [-p DEVPATH] [-t TYPE ] [-h]\n"
+			"\t%s [-d LEVEL] [-p DEVNAME] [-t TYPE ] [-h]\n"
                         "\t[-r] PARENTKEY KEY VALUE\t\tRead value\n"
                         "\t  -w PARENTKEY KEY VALUE NEWVALUE\tWrite value\n"
                         "\t  -l PARENTKEY KEY VALUE\t\tList key\n"
@@ -40,7 +40,7 @@ static void show_usage(const char* name)
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
 			"\t-h           Show this help message\n"
-                        "\t-p DEVPATH   Device path\n"
+                        "\t-p DEVNAME   Mobile device name\n"
                         "\t-t TYPE      New type for writes:\n"
                         "\t\tsz         String (default)\n"
                         "\t\tdword      Double-word\n"
@@ -103,7 +103,7 @@ static bool handle_parameters(int argc, char** argv, char** parent_str, char** k
 				break;
 
                         case 'p':
-                                devpath = optarg;
+                                devname = optarg;
                                 break;
 			
                         case 'r':
@@ -478,11 +478,11 @@ int main(int argc, char** argv)
     goto exit;
   }
 
-  if ((connection = rapi_connection_from_path(devpath)) == NULL)
+  if ((connection = rapi_connection_from_name(devname)) == NULL)
   {
     fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
         argv[0],
-        devpath?devpath:"(Default)");
+        devname?devname:"(Default)");
     goto exit;
   }
   rapi_connection_select(connection);

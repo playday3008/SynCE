@@ -15,7 +15,7 @@ cdef extern from "synce_log.h":
     void synce_log_set_level(int level)
 
 cdef extern from "rapi.h":
-    void *rapi_connection_from_path(char *path)
+    void *rapi_connection_from_name(char *device_name)
     void rapi_connection_select(void *connection)
     HRESULT CeRapiInit()
     HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
@@ -275,7 +275,7 @@ class RAPISession:
         cdef void *conn
 
         synce_log_set_level(log_level)
-        conn = rapi_connection_from_path(NULL)
+        conn = rapi_connection_from_name(NULL)
         rapi_connection_select(conn)
         CeRapiInit()
 

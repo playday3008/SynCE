@@ -35,11 +35,11 @@ extern "C"
  *
  * It shows two different ways to get a RapiConnection object.
  *
- *   RapiConnection* a = rapi_connection_from_path("/home/david/.synce/a");
+ *   RapiConnection* a = rapi_connection_from_name("device_a");
  *   rapi_connection_select(a);
  *   CeRapiInit()
  *
- *   SynceInfo* info_b = synce_info_new("/home/david/.synce/b");
+ *   SynceInfo* info_b = synce_info_new("device_b");
  *   RapiConnection* b = rapi_connection_from_info(info_b);
  *   rapi_connection_select(b);
  *   CeRapiInit()
@@ -57,6 +57,7 @@ extern "C"
  *   rapi_connection_select(b);
  *   CeRapiUninit();
  *   rapi_connection_destroy(b);
+ *   synce_info_destroy(info_b);
  */
 
 typedef struct _RapiConnection RapiConnection;
@@ -66,7 +67,7 @@ typedef struct _RapiConnection RapiConnection;
  *
  * @path Parameter sent to synce_info_new() in libsynce/lib/info.c
  */
-RapiConnection* rapi_connection_from_path(const char* path);
+RapiConnection* rapi_connection_from_name(const char* device_name);
 
 /**
  * Create a connection - low-level version

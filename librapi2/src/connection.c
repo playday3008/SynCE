@@ -12,9 +12,9 @@ struct _RapiConnection
   SynceInfo* owned_info;
 };
 
-RapiConnection* rapi_connection_from_path(const char* path)
+RapiConnection* rapi_connection_from_name(const char* device_name)
 {
-  SynceInfo* info = synce_info_new(path);
+  SynceInfo* info = synce_info_new(device_name);
   if (info == NULL)
     return NULL;
   RapiConnection* result = rapi_connection_from_info(info);

@@ -1,0 +1,5 @@
+2007-09-18  Mark Ellis  <mark@mpellis.org.uk>
+
+	* started Changelog !
+	* changed rapi_connection_from_path to rapi_connection_from_name
+
