@@ -17,7 +17,22 @@
 			       If this element is not specified, the default will be
 			       INTERNAL_CLI
 	        -->
+		
 		<AuthMethod>INTERNAL_GUI</AuthMethod>
+		
+		<!--
+		    Subject to the following conditions, AppendDefaultTimezone set
+		    to 1 will ensure that the default timezone specifier is always
+		    exported to the host, if:
+		
+		    	- /etc/timezone exists
+			- the device does not send a timezone specifier with the event
+			
+		    Setting it to zero disables this completely.
+		    
+		-->
+		
+		<AppendDefaultTimezone>0</AppendDefaultTimezone>
 		
 	</Global>
 	<Autosync>

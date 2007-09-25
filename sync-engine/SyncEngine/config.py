@@ -150,9 +150,11 @@ class GlobalConfig(ConfigObject):
 		self.logger = logging.getLogger("GlobalConfig")
 		
 		self.handlers = { "SlowSyncDisable" : self.validate_SlowSyncEnable,
-		                  "AuthMethod"      : self.validate_AuthMethod }
+		                  "AuthMethod"      : self.validate_AuthMethod,
+				  "AppendDefaultTimezone" : self.validate_AppendDefaultTimezone }
 		self.cfg = { "SlowSyncDisable" : 0,
-		             "AuthMethod"      : "INTERNAL_CLI"
+		             "AuthMethod"      : "INTERNAL_CLI",
+			     "AppendDefaultTimezone" : 0
 			   }
 			
 	def validate_SlowSyncEnable(self,arg):
@@ -164,6 +166,12 @@ class GlobalConfig(ConfigObject):
 	def validate_AuthMethod(self,arg):
 		self.cfg["AuthMethod"] = arg
 			
+	def validate_AppendDefaultTimezone(self,arg):
+		try:
+			self.cfg["AppendDefaultTimezone"] = int(arg)
+		except:
+			self.logger.debug("'Disable': invalid argument %s in config file" % arg)
+		
 	def dump(self):
 		self.logger.info("Global config: ")
 		self.logger.info("   SlowSyncDisable: %d " % self.cfg["SlowSyncEnable"])

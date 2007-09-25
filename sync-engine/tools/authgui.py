@@ -24,10 +24,11 @@ ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE = 2
 class EntryDialog(gtk.Dialog):
     def __init__(self, parent, title, text, password=False):
         gtk.Dialog.__init__(self, title, parent,
-                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
-                             gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                            gtk.STOCK_OK, gtk.RESPONSE_ACCEPT | gtk.CAN_DEFAULT))
 
+        self.set_default_response(gtk.RESPONSE_ACCEPT)
         label = gtk.Label(text)
         label.set_alignment(0.0, 0.5)
         self.vbox.pack_start(label, False)
@@ -35,6 +36,7 @@ class EntryDialog(gtk.Dialog):
 
         entry = gtk.Entry()
         entry.set_visibility(not password)
+	entry.set_activates_default(True)
         self.vbox.pack_start(entry, False, True, 5)
         self._entry = entry
 

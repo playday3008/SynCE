@@ -165,7 +165,7 @@ class ASTimezoneData:
 		# Now, if we do not have a DST definition, then the timezone
 		# field is of no use to us as we can not just specify offsets. So
 		# do not generate anything if the self.dst_month or self.std_month 
-		# is zero
+		# is zero. 
 	
 		if self.dst_month!=0 and self.std_month!=0:
 	
