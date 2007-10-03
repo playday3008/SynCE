@@ -1,5 +1,8 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
 #include "liborange_internal.h"
 #if WITH_LIBDYNAMITE
 #include <libdynamite.h>

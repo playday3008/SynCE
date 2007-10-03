@@ -208,6 +208,7 @@ AC_CHECK_LIB(z,inflate,,[
 
 AC_OUTPUT([liborange.pc
            Makefile
+           man/Makefile
            lib/Makefile
            lib/liborange.h
            lib/liborange_stub.h

@@ -1,4 +1,7 @@
 #define _BSD_SOURCE 1
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
 #include "liborange_internal.h"
 /*#include <gsf/gsf-utils.h>*/
 #include <gsf/gsf-output-stdio.h>

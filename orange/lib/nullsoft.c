@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
 #include "liborange_internal.h"
 
 #include <stdio.h>

@@ -1,0 +1,7 @@
+2007-09-30  Mark Ellis <mark@mpellis.org.uk>
+
+	* started changelog
+	* added man page from debian package
+	* included config.h in source files
+	* fix linking with unshield/dynamite
+

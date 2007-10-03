@@ -1,5 +1,8 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
 #include "inno.h"
 #include "liborange_internal.h"
 #include <synce_log.h>
