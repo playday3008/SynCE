@@ -740,9 +740,11 @@ wm_device_dispose (GObject *obj)
 
   /* unref other objects */
 
-  rapi_connection_select(priv->rapi_conn);
-  CeRapiUninit();
-  rapi_connection_destroy(priv->rapi_conn);
+  if (priv->rapi_conn) {
+    rapi_connection_select(priv->rapi_conn);
+    CeRapiUninit();
+    rapi_connection_destroy(priv->rapi_conn);
+  }
 
   if (G_OBJECT_CLASS (wm_device_parent_class)->dispose)
     G_OBJECT_CLASS (wm_device_parent_class)->dispose (obj);

@@ -1,3 +1,7 @@
+2007-10-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* bugfixes for failed rapi connection
+
 2007-09-18  Mark Ellis <mark@mpellis.org.uk>
 
 	* synce_info_new() has changed

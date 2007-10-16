@@ -260,19 +260,21 @@ odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
     rapi_connection_destroy(rapi_conn);
     goto error_exit;;
   }
-  g_object_set(device, "rapi-conn", rapi_conn, NULL);
 
   device_name = get_device_name_via_rapi();
   if (!(device_name)) {
     CeRapiUninit();
+    rapi_connection_destroy(rapi_conn);
     goto error_exit;
   }
 
+  g_object_set(device, "rapi-conn", rapi_conn, NULL);
   g_object_set(device, "device-name", device_name, NULL);
   g_free(device_name);
 
   return TRUE;
 error_exit:
+  synce_info_destroy(info);
   return FALSE;
 }
 
@@ -411,13 +413,6 @@ odccm_device_connected_cb(DBusGProxy *proxy,
     goto error_exit;
   }
 
-  g_object_get(device, "name", &name, NULL);
-  proxy_store *p_store = g_malloc0(sizeof(proxy_store));
-  p_store->pdaname = g_strdup(name);
-  p_store->proxy = new_proxy;
-
-  g_ptr_array_add(priv->dev_proxies, p_store);
-
   dbus_g_proxy_add_signal (new_proxy, "PasswordFlagsChanged",
 			   G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INVALID);
   dbus_g_proxy_connect_signal (new_proxy, "PasswordFlagsChanged",
@@ -432,6 +427,13 @@ odccm_device_connected_cb(DBusGProxy *proxy,
     goto error_exit;
   }
 
+  g_object_get(device, "name", &name, NULL);
+  proxy_store *p_store = g_malloc0(sizeof(proxy_store));
+  p_store->pdaname = g_strdup(name);
+  p_store->proxy = new_proxy;
+
+  g_ptr_array_add(priv->dev_proxies, p_store);
+
   if (password_flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE) {
     g_hash_table_insert(priv->pending_devices, g_strdup(name), device);
     g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, name);
@@ -439,8 +441,12 @@ odccm_device_connected_cb(DBusGProxy *proxy,
   }
 
   /* get rapi connection */
-  if (!(odccm_device_get_rapi_connection(self, device)))
-     goto error_exit;
+  if (!(odccm_device_get_rapi_connection(self, device))) {
+    g_ptr_array_remove(priv->dev_proxies, p_store);
+    g_free(p_store->pdaname);
+    g_free(p_store);
+    goto error_exit;
+  }
 
   g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
   g_free(name);
