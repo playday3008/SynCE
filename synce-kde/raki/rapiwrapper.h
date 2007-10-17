@@ -193,6 +193,22 @@ public:
     }
 
 
+    static HRESULT ProcessConfig(
+        LPCWSTR config,
+        DWORD flags,
+        LPWSTR* reply)
+    {
+        HRESULT hr;
+
+        hr = synce::CeProcessConfig(
+                 config,
+                 flags,
+                 reply);
+
+        return hr;
+    }
+
+
     static bool writeFile(
         HANDLE hFile,
         LPCVOID lpBuffer,
@@ -265,3 +281,4 @@ public:
 
 
 #endif
+

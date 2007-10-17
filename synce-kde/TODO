@@ -3,3 +3,20 @@ SynCE-KDE
 
 * Rewriting of the codebase
 * Implement synchronizer for all Windows CE databases
+
+
+
+BUGs to fix
+===========
+-RAKI:		fix software manager when more devices connected
+-RAKI:		update version strings
+-RAPIP:		allow capitals and spaces in phone name
+-VDCCM:		allow connecting of second device after password protected device connected
+-VDCCM:		connecting password protected WM6 devices
+
+BUGs fixed
+==========
+-RAKI:		support fetching software list on WM2003
+-RAKI:		support installing software on WM2003 (uploading to right folder)
+-RAKI:		support uninstalling software using Configuration Service Provider
+-KCeMirror:	F1 is no longer used for help

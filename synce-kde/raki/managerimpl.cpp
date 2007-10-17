@@ -21,6 +21,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
+#include <synce.h>
+
 #include "managerimpl.h"
 #include "rapiwrapper.h"
 
@@ -45,19 +47,15 @@ QString version_string(synce::CEOSVERSIONINFO* version)
     if (version->dwMajorVersion == 5) {
         result = "Magneto: Windows Mobile 5";
     } else if (version->dwMajorVersion == 4 &&
-            version->dwMinorVersion == 20 &&
-            version->dwBuildNumber == 1081) {
-        result = "Ozone: Pocket PC 2003";
+            version->dwMinorVersion == 21) {
+        result = "Ozone: Windows Mobile 2003 SE";
+    } else if (version->dwMajorVersion == 4 &&
+            version->dwMinorVersion == 20) {
+        result = "Ozone: Windows Mobile 2003";
     } else if (version->dwMajorVersion == 3 &&
             version->dwMinorVersion == 0) {
-        switch (version->dwBuildNumber) {
-        case 9348:
-            result = "Rapier: Pocket PC"; break;
-        case 11171:
-            result = "Merlin: Pocket PC 2002"; break;
-        }
+        result = "Merlin: Pocket PC 2002";
     }
-
     return result;
 }
 
@@ -304,17 +302,39 @@ void ManagerImpl::uninstallSoftware(QThread */*qt*/, void */*data*/)
         msg = i18n("Uninstalling software ...");
         postManagerImplEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
-        if(Ce::createProcess(QString("unload.exe").ucs2(),
+        if (Ce::createProcess(QString("unload.exe").ucs2(),
                 QString(item->text()).ucs2(), NULL, NULL, false, 0, NULL,
                 NULL, NULL, &info)) {
 
                     postManagerImplEvent(&ManagerImpl::uninstalledEvent, item, noBlock);
+        } else {
+            Ce::rapiUninit();
+            //kdDebug(2120) << i18n("Failed to start unload.exe, trying to uninstall via Configuration Service Provider ...") << endl;
+            char *configXML;
+            LPWSTR config = NULL;
+            DWORD flags = CONFIG_PROCESS_DOCUMENT;
+            LPWSTR reply = NULL;
+            HRESULT hr;
+            configXML = new char[512];
+            memset(configXML, 0, 512 * sizeof(char));
+            strcat(configXML, (char*)"<wap-provisioningdoc>\n\r<characteristic type=\"UnInstall\">\n\r<characteristic type=\"");
+            strcat(configXML, (char*)item->text().latin1());
+            strcat(configXML, (char*)"\">\n\r<parm name=\"uninstall\" value=\"1\"/>\n\r</characteristic>\n\r</characteristic>\n\r</wap-provisioningdoc>\n\r");
+
+            Ce::rapiInit(pdaName);
+            config = synce::wstr_from_current(configXML);
+            hr = Ce::ProcessConfig(config, flags, &reply);
+            if (SUCCEEDED(hr)) {
+                postManagerImplEvent(&ManagerImpl::uninstalledEvent, item, noBlock);
+            }
+            synce::CeRapiFreeBuffer(configXML);
+            synce::wstr_free_string(config);
+            synce::wstr_free_string(reply);
         }
         Ce::rapiUninit();
 
         postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
     }
-
 }
 
 
@@ -355,8 +375,6 @@ void ManagerImpl::fetchBatteryStatus(QThread */*qt*/, void */*data*/)
 
         postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
     }
-
-
 }
 
 
@@ -365,50 +383,48 @@ void ManagerImpl::fetchSoftwareList(QThread */*qt*/, void */*data*/)
     LONG result;
     HKEY parent_key;
     DWORD i;
+    bool smartphone = false;
 
     if (Ce::rapiInit(pdaName)) {
         msg = i18n("Retrieve software-list ...");
         postManagerImplEvent(&ManagerImpl::beginEvent, 0, noBlock);
 
-        result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                QString("Software\\Apps").ucs2(), 0, 0, &parent_key);
-        if (ERROR_SUCCESS == result) {
-            for (i = 0; !stopRequested(); i++) {
-                WCHAR wide_name[MAX_PATH];
-                DWORD name_size = sizeof(wide_name);
-                HKEY program_key;
-                DWORD installed = 0;
-                DWORD value_size = sizeof(installed);
-                DWORD type;
+        result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, QString("Security\\AppInstall").ucs2(), 0, 0, &parent_key);
+        if (ERROR_SUCCESS == result) smartphone = true;
+        else result = synce::CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, QString("Software\\Apps").ucs2(), 0, 0, &parent_key);
 
-                result = synce::CeRegEnumKeyEx(parent_key, i, wide_name,
-                        &name_size, NULL, NULL, NULL, NULL);
+        for (i = 0; !stopRequested(); i++) {
+            WCHAR wide_name[MAX_PATH];
+            DWORD name_size = sizeof(wide_name);
+            HKEY program_key;
+            DWORD installed = 0;
+            DWORD value_size = sizeof(installed);
+            DWORD type;
 
-                if (ERROR_SUCCESS != result) {
-                    break;
-                }
+            result = synce::CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, NULL, NULL, NULL, NULL);
 
-                result = synce::CeRegOpenKeyEx(parent_key, wide_name, 0, 0,
-                        &program_key);
+            if (ERROR_SUCCESS != result) {
+                break;
+            }
+
+            if (!smartphone) {
+                result = synce::CeRegOpenKeyEx(parent_key, wide_name, 0, 0, &program_key);
 
                 if (ERROR_SUCCESS != result) {
                     continue;
                 }
 
-                result = synce::CeRegQueryValueEx(program_key,
-                        QString("Instl").ucs2(), NULL, &type,
-                        (LPBYTE)&installed, &value_size);
-
-                synce::CeRegCloseKey(program_key);
-
-                if (ERROR_SUCCESS == result && installed) {
-                    postManagerImplEvent(&ManagerImpl::insertInstalledItemEvent,
-                            qstrdup(QString::fromUcs2(wide_name).ascii()),
-                            noBlock);
-                }
+                result = synce::CeRegQueryValueEx(program_key, QString("Instl").ucs2(), NULL, &type, (LPBYTE)&installed, &value_size);
             }
-            synce::CeRegCloseKey(parent_key);
+
+            synce::CeRegCloseKey(program_key);
+
+            if ((ERROR_SUCCESS == result && installed) || (ERROR_SUCCESS == result && smartphone)) {
+                postManagerImplEvent(&ManagerImpl::insertInstalledItemEvent, qstrdup(QString::fromUcs2(wide_name).ascii()), noBlock);
+            }
         }
+        synce::CeRegCloseKey(parent_key);
+
         Ce::rapiUninit();
 
         postManagerImplEvent(&ManagerImpl::endEvent, NULL, noBlock);
@@ -469,3 +485,4 @@ void ManagerImpl::refreshSoftwareSlot()
     RakiWorkerThread::rakiWorkerThread->stop();
     startWorkerThread(this, &ManagerImpl::fetchSoftwareList, NULL);
 }
+

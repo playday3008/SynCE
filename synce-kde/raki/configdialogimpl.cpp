@@ -239,7 +239,7 @@ void ConfigDialogImpl::readConfig()
         dccmPath = "vdccm";
     }
     if (ipTables.isEmpty()) {
-        ipTables = "/usr/sbin/iptables";
+        ipTables = "/sbin/iptables";
     }
 }
 

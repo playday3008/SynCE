@@ -26,6 +26,7 @@
 #include "rakiworkerthread.h"
 #include "pda.h"
 
+#include <string>
 #include <qstringlist.h>
 #include <kapplication.h>
 #include <kcombobox.h>
@@ -41,6 +42,7 @@ Installer* Installer::self = NULL;
 QStringList Installer::installFiles;
 QDict<PDA> *Installer::pdaList = NULL;
 bool Installer::ready = true;
+std::string storage = "/Storage";
 
 Installer::Installer(QWidget *parent, QDict<PDA> *pdaList)
         : InstallDialog(parent)
@@ -132,7 +134,7 @@ void Installer::procFiles(KIO::Job *job, const KURL& from, const KURL& to)
     PDA *pda = (PDA *) pdaList->find(pdaName);
 
     if (pda != NULL) {
-        dest = KURL("rapip://" + pdaName + "/Windows/AppMgr/Install/" +
+        dest = KURL("rapip://" + pdaName + storage + "/Windows/AppMgr/Install/" +
                 from.fileName());
         pda->addURLByCopyJob((KIO::CopyJob *) job, dest);
     }
@@ -170,35 +172,41 @@ void Installer::installReal(Installer *installer, QString pdaName)
 
 
 #if KDE_VERSION < KDE_MAKE_VERSION(3,2,0) // KDE-3.1
-        if (!KIO::NetAccess::exists("rapip://" + pdaName +
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Storage/Windows/AppMgr")) {
+            storage = "";
+        }
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + storage +
                 "/Windows/AppMgr/Install")) {
-            if (!KIO::NetAccess::exists("rapip://" + pdaName +
+            if (!KIO::NetAccess::exists("rapip://" + pdaName + storage +
                     "/Windows/AppMgr")) {                
-                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName + storage +
                         "/Windows/AppMgr");
             }
             if (mkdirSuccess) {
-                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName + storage +
                         "/Windows/AppMgr/Install");
             }
         }
 #else // KDE-3.2
-        if (!KIO::NetAccess::exists("rapip://" + pdaName +
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + "/Storage/Windows/AppMgr", false, NULL)) {
+            storage = "";
+        }
+        if (!KIO::NetAccess::exists("rapip://" + pdaName + storage +
                 "/Windows/AppMgr/Install", false, NULL)) {
-            if (!KIO::NetAccess::exists("rapip://" + pdaName +
+            if (!KIO::NetAccess::exists("rapip://" + pdaName + storage +
                     "/Windows/AppMgr", false, NULL)) {
-                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName + storage +
                         "/Windows/AppMgr", (QWidget *) NULL);
             }
             if (mkdirSuccess) {
-                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName +
+                mkdirSuccess = KIO::NetAccess::mkdir("rapip://" + pdaName + storage +
                         "/Windows/AppMgr/Install", (QWidget *) NULL);
             }
         }
 #endif
 
         if (mkdirSuccess) {
-            KIO::CopyJob *copyJob = KIO::copy(ul, KURL("rapip://" + pdaName +
+            KIO::CopyJob *copyJob = KIO::copy(ul, KURL("rapip://" + pdaName + storage +
                     "/Windows/AppMgr/Install/"), true);
             connect(copyJob, SIGNAL(result(KIO::Job *)), installer,
                     SLOT(copyResult(KIO::Job *)));
