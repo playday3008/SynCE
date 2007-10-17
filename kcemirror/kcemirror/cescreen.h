@@ -29,6 +29,7 @@
 #include <ksock.h>
 #include <kaboutdata.h>
 #include <kaboutapplication.h>
+#include <kaboutkde.h>
 #include <kdebug.h>
 #include "decoder.h"
 
@@ -55,8 +56,9 @@
 class CeScreen : public KMainWindow
 {
     Q_OBJECT
+
 public:
-    CeScreen(KAboutApplication *aboutApplication);
+    CeScreen();
     ~CeScreen();
     bool connectPda(QString pdaName, bool isSynCeDevice = true, bool forceInstall = false);
 
@@ -64,6 +66,7 @@ public slots:
     virtual void fileSave();
     virtual void filePrint();
     virtual void showAboutApplication();
+    virtual void showAboutKDE();
 
 private slots:
     void readSocket(KSocket *socket);
@@ -101,6 +104,7 @@ private:
     KToolBar *tb;
     KPopupMenu *filemenu;
     KAboutApplication *aboutApplication;
+    KAboutKDE *aboutKDE;
     int pauseItem;
     Decoder *decoderChain;
     unsigned char *bmpData;
@@ -114,5 +118,5 @@ private:
     } keymap[];
 };
 
-
 #endif
+

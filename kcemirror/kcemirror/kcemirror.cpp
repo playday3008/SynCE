@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     KApplication a;
 #endif
 
-    CeScreen *ceScreen = new CeScreen(new KAboutApplication(&aboutData));
+    CeScreen *ceScreen = new CeScreen();
 
     QObject::connect(ceScreen, SIGNAL(pdaError()), &a, SLOT(quit()));
 
@@ -125,3 +125,4 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+

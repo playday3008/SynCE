@@ -48,13 +48,15 @@
 #include <X11/keysymdef.h>
 
 
-CeScreen::CeScreen(KAboutApplication *aboutApplication)
+CeScreen::CeScreen()
         : KMainWindow(NULL, "KCeScreen")
 {
     pdaSocket = NULL;
     pause = false;
     setFixedSize(0, 0);
-    this->aboutApplication = aboutApplication;
+
+    aboutApplication = new KAboutApplication(this, "about", false);
+    aboutKDE = new KAboutKDE(this, "aboutkde", false);
 
     imageViewer = new ImageViewer(this);
     setCentralWidget(imageViewer);
@@ -72,7 +74,14 @@ CeScreen::CeScreen(KAboutApplication *aboutApplication)
                          kapp, SLOT(quit()), 0, 4, 6);
     menuBar()->insertItem(i18n("&File"), filemenu);
 
-    KPopupMenu *helpmenu = customHelpMenu("PDAMirror");
+    KPopupMenu *helpmenu = new KPopupMenu();
+    helpmenu->insertItem(SmallIcon("contents"), i18n("KCeMirror &Handbook"),
+                         this, SLOT(appHelpActivated()));
+    helpmenu->insertSeparator();
+    helpmenu->insertItem(kapp->miniIcon(), i18n("&About KCeMirror"),
+                         this, SLOT(showAboutApplication()));
+    helpmenu->insertItem(SmallIcon("about_kde"), i18n("About &KDE"),
+                         this, SLOT(showAboutKDE()));
     menuBar()->insertItem(i18n("&Help"), helpmenu);
 
     tb = new KToolBar(this, QMainWindow::Top, false, "Utils", true, true);
@@ -108,6 +117,12 @@ CeScreen::~CeScreen()
 void CeScreen::showAboutApplication()
 {
     aboutApplication->show();
+}
+
+
+void CeScreen::showAboutKDE()
+{
+    aboutKDE->show();
 }
 
 
@@ -692,3 +707,4 @@ void CeScreen::filePrint()
 }
 
 #include "cescreen.moc"
+
