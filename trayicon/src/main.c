@@ -51,7 +51,7 @@ static GOptionEntry options[] =
 
 
 static void
-init_sm ()
+init_sm (gboolean restart_immediately)
 {
     GnomeClient *master;
     GnomeClientFlags flags;
@@ -59,8 +59,10 @@ init_sm ()
     master = gnome_master_client ();
     flags = gnome_client_get_flags (master);
     if (flags & GNOME_CLIENT_IS_CONNECTED) {
-        gnome_client_set_restart_style (master,
-                GNOME_RESTART_IMMEDIATELY);
+       if (restart_immediately)
+          gnome_client_set_restart_style (master, GNOME_RESTART_IMMEDIATELY);
+       else
+          gnome_client_set_restart_style (master, GNOME_RESTART_NEVER);
         gnome_client_flush (master);
     }
                                                                                 
@@ -100,6 +102,7 @@ main (gint argc, gchar **argv)
 {
 	int result = 1;
 	SynceTrayIcon *trayicon;
+	gboolean restart = TRUE;
 
 #ifdef ENABLE_NLS
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -130,11 +133,12 @@ main (gint argc, gchar **argv)
 	else
 	{
 		g_debug("Running in foreground");
+		restart = FALSE;
 	}
 
 	remove_obsolete_script();
 
-	init_sm();
+	init_sm (restart);
 
 	trayicon = g_object_new (SYNCE_TRAYICON_TYPE, "title", "SynCE", NULL);
 
