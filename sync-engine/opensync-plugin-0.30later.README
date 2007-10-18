@@ -1,0 +1,78 @@
+SynCE plugin for OpenSync >= 0.30
+=================================
+
+---------
+-WARNING-
+---------
+
+This code is EXPERIMENTAL and is not yet ready for production use. If you want
+to run a production system, stick with OpenSync 2.x and use the old 
+opensync-plugin.py.
+
+
+---------------
+Current status:
+---------------
+
+This plugin currently IS NOT FULLY FUNCTIONAL. It is provided for development
+and test only and is a work in progress. It will be updated regularly and may
+change rapidly, so keep an eye on SVN releases.
+
+Once operational, this will be announced here.
+
+
+18/10/07
+--------
+I have had a good two-way slow sync using the file-sync plugin from OpenSync
+SVN, but there is still a couple of issues related to OpenSync integration.
+Expect an assert in OpenSync code when not slow-syncing. Random segfaults
+seem to appear on a 64-bit system - these are proving to be a perfect swine
+to trace and I suspect at the moment these are related to dbus-python.
+If someone could test on a 32 bit system this would be very helpful as I
+am unable to do this here at the moment. Otherwise this looks promising.
+
+
+###############################################################################
+
+INSTALLATION
+------------
+
+Using the http://www.opensync.org/wiki/devel-branch-0.30 docs as a reference,
+install opensync, msynctool, file-plugin, python-plugin and vformat.
+Symlink to opensync-plugin-0.30later.py from a link synce-plugin.py in the
+/usr/local/lib/opensync/python-plugin directory (just like the old plugin).
+
+Create a new group, add members:
+
+msynctool --addgroup wm5file
+msynctool --addmember wm5file file-sync
+msynctool --addmember wm5file synce-plugin
+
+Configure file-sync (one directory stanza for every item you want to sync
+to files - I have just shown contacts here):
+
+<?xml version="1.0"?>
+<config>
+  <directory>
+    <path>/scratchpad/sync</path>
+    <objtype>contact</objtype>
+    <objformat>vcard30</objformat>
+  </directory>
+</config
+
+Then discover objects:
+
+msynctool --discover wm5file 1
+msynctool --discover wm5file 2
+
+and sync:
+
+msynctool --sync wm5file 
+
+
+-> Have fun!
+-> Dr J A Gow, 18/10/2007
+
+
+
+
