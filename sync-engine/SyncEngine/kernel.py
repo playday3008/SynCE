@@ -43,8 +43,9 @@ class SyncEngine(dbus.service.Object):
     """
 
     def __init__(self):
+	    
         dbus.service.Object.__init__(self, dbus.service.BusName(DBUS_SYNCENGINE_BUSNAME, bus=dbus.SessionBus()), DBUS_SYNCENGINE_OBJPATH)
-        self.logger = logging.getLogger("engine.syncengine.SyncEngine")
+	self.logger = logging.getLogger("engine.syncengine.SyncEngine")
 	self.config = Config()
 
         self.partnerships = None

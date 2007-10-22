@@ -10,6 +10,16 @@
 #
 # +-+- NOT READY FOR PRODUCTION USE -+-+
 #
+# 22/10/07 - JAG - Some further code cleanups
+#                  TODO: Must check and update XML formats
+#
+# 20/10/07 - JAG - Successfully slow-synced events and tasks with 
+#                  file-sync. However, have not yet checked the complete 
+#                  integrity of the actual content (believe XML format
+#                  used by OpenSync has changed).
+#
+# 19/10/07 - JAG - Some code cleanups. Still no joy tracing those segfaults
+#
 # 18/10/07 - JAG - Got a good two-way sync with the file-sync plugin, but
 #                  do see an assert in OpenSync on non-slow syncs:
 #                  opensync/engine/opensync_obj_engine.c:212:E:
@@ -25,7 +35,8 @@
 ############################################################################
 
 import dbus
-import dbus.glib
+#import dbus.glib
+from dbus.mainloop.glib import DBusGMainLoop
 import gobject
 import thread
 import threading
@@ -89,15 +100,16 @@ class EngineIntermediary:
         	
 		self.logger         = logging.getLogger("SynCE")
         	self.engine         = None
-		self.engine_synced  = False
-        	self.isPrefilled    = False
 		self.refcnt_connect = 0
 		self.refcnt_sync    = 0
-	
-		gobject.threads_init()
 		self.EventLoopExitEvent  = threading.Event()
 		self.ConnectEvent        = threading.Event()
 		self.EventLoopStartEvent = threading.Event()
+		self.SyncEvent           = threading.Event()
+		self.PrefillEvent        = threading.Event()
+	
+		DBusGMainLoop(set_as_default=True)
+		gobject.threads_init()
 	
 		self.logger.info("Intermediary init complete")
 
@@ -111,26 +123,25 @@ class EngineIntermediary:
 
     	def _CBSynchronized(self):
         	self.logger.info("device synchronization complete")
-        	self.engine_synced = True
+        	self.SyncEvent.set()
 
     	def _CBPrefillComplete(self):
         	self.logger.info("prefill complete")
-        	self.isPrefilled = True
+        	self.PrefillEvent.set()
 
 	def _TriggerDeviceSync(self):
         	self.logger.info("requesting device synchronization")
-        	self.engine_synced = False
+		self.SyncEvent.clear()
 		self.engine.Synchronize()
         	self.logger.info("waiting for engine to complete sync")
-        	while not self.engine_synced:
-			time.sleep(1)
+		self.SyncEvent.wait()
 
 	def _CBConnectOnIdle(self):
 		try:
 			self.logger.info("Connecting")
 			proxy_obj = dbus.SessionBus().get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
 			self.engine = dbus.Interface(proxy_obj, dbus_interface="org.synce.SyncEngine")
-			self.engine.connect_to_signal("Synchronized", self._CBSynchronized)
+			self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._CBSynchronized))
 			self.engine.connect_to_signal("PrefillComplete", lambda: gobject.idle_add(self._CBPrefillComplete))
 			self.logger.info("Connected")
 			self.ConnectEvent.set()
@@ -139,7 +150,6 @@ class EngineIntermediary:
 			self.logger.error("Connection failed. Unable to connect to running SyncEngine")
 			self.ConnectEvent.set()
 			raise
-
 
     	def Connect(self):
 		
@@ -151,7 +161,6 @@ class EngineIntermediary:
 			if self.engine == None:
 				try:
 					self.logger.debug("triggering connection")
-        				#gobject.idle_add(self._CBConnectOnIdle)
 					self._CBConnectOnIdle()
 					self.logger.debug("connection queued")
 					self.ConnectEvent.wait()
@@ -186,7 +195,7 @@ class EngineIntermediary:
 		if self.refcnt_sync > 0:
 			self.refcnt_sync -= 1
 			if self.refcnt_sync == 0:
-				self.logger.info("triggering second device synchronization")
+				self.logger.info("all changes committed: triggering second device synchronization")
 				self._TriggerDeviceSync()
 			else:
 				self.logger.info("other items to be synced: postponing final sync (%d)" % self.refcnt_sync)
@@ -195,11 +204,10 @@ class EngineIntermediary:
 
     	def TriggerPrefill(self, items):
         	self.logger.info("initiating prefill")
-        	self.isPrefilled = False
+        	self.PrefillEvent.clear()
         	rc = self.engine.PrefillRemote(items)
         	if rc == 1:
-        		while self.isPrefilled==False:
-				time.sleep(1)
+        		self.PrefillEvent.wait()
         	return rc
 	
 ###############################################################################
@@ -214,6 +222,7 @@ class EngineIntermediary:
 class ItemSink(opensync.ObjTypeSinkCallbacks):
 	
 	def __init__(self, item):
+		
 		self.objtype,self.format = SUPPORTED_ITEM_TYPES[item]
 		opensync.ObjTypeSinkCallbacks.__init__(self, self.objtype)
 		self.sink.add_objformat(self.format)
@@ -226,6 +235,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	#
 
 	def connect(self, info, ctx):
+		
 		engine = intermediaries[0]
 		engine.Connect()
 
@@ -238,26 +248,26 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	#
 
 	def get_changes(self, info, ctx):
-		engine = intermediaries[0]
 		
-		engine.logger.info("Getting changes for item %s" % self.sink.get_name())
+		intermediary = intermediaries[0]
+		
+		intermediary.logger.info("Getting changes for item %s" % self.sink.get_name())
 		
 		prefill = []
 		if self.sink.get_slowsync():
-			engine.logger.info("slow sync requested for item %s" % self.sink.get_name())
+			intermediary.logger.info("slow sync requested for item %s" % self.sink.get_name())
 			prefill.append(TYPETONAMES[self.sink.get_name()])
 			
-		engine.AcquireChanges()	
+		intermediary.AcquireChanges()	
 		
 	        if len(prefill) > 0:
-			if engine.TriggerPrefill(prefill) == 0:
-				engine.logger.error("prefill failed")
+			if intermediary.TriggerPrefill(prefill) == 0:
+				intermediary.logger.error("prefill failed")
 
-	        engine.logger.debug("requesting remote changes for %s " %self.sink.get_name())
+	        intermediary.logger.debug("requesting remote changes for %s " %self.sink.get_name())
 		t = OBJ_TYPE_TO_ITEM_TYPE[self.sink.get_name()]
-        	changesets = engine.engine.GetRemoteChanges([t])
-		time.sleep(3)
-        	engine.logger.debug("got %d changesets", len(changesets))
+        	changesets = intermediary.engine.GetRemoteChanges([t])
+        	intermediary.logger.debug("got %d changesets", len(changesets))
 
 		acks = {}	
 			
@@ -269,7 +279,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 			item_type = OBJ_TYPE_TO_ITEM_TYPE[self.sink.get_name()]
 			changes = changesets[item_type]
 		
-        		engine.logger.debug("processing changes for item type %d" % item_type)
+        		intermediary.logger.debug("processing changes for item type %d" % item_type)
 
                 	acks[item_type] = []
 
@@ -287,21 +297,21 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 					osdata.set_objtype(self.sink.get_name())
                        			change.set_data(osdata)
 				
-				engine.logger.debug("reporting change")
+				intermediary.logger.debug("reporting change")
 				ctx.report_change(change)
-				engine.logger.debug("change reported")
+				intermediary.logger.debug("change reported")
 				
                     		acks[item_type].append(array.array('B',guid).tostring())
 				
             	else:
-                		engine.logger.debug("no changes for item type %d" % item_type)
+                		intermediary.logger.debug("no changes for item type %d" % item_type)
 
 		if acks!={}:
-            		engine.logger.debug("acknowledging remote changes for item type %d", item_type)
-            		engine.engine.AcknowledgeRemoteChanges(acks)
-	    		engine.logger.debug("acknowledgement complete")
+            		intermediary.logger.debug("acknowledging remote changes for item type %d", item_type)
+            		intermediary.engine.AcknowledgeRemoteChanges(acks)
+	    		intermediary.logger.debug("acknowledgement complete")
 			
-		engine.logger.debug("exitting get_changeinfo")
+		intermediary.logger.debug("exitting get_changeinfo")
 	
 	#
 	# commit
@@ -310,9 +320,9 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	#
 	
 	def commit(self, info, ctx, chg):
-		engine = intermediaries[0]
+		intermediary = intermediaries[0]
 		
-		engine.logger.debug("commit called for item %s with change type %d", chg.uid, chg.changetype)
+		intermediary.logger.debug("commit called for item %s with change type %d", chg.uid, chg.changetype)
 
         	if chg.objtype in OBJ_TYPE_TO_ITEM_TYPE:
                 
@@ -322,7 +332,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
             		if chg.changetype != opensync.CHANGE_TYPE_DELETED:
                 		data = chg.get_data().get_data()
 
-            		engine.engine.AddLocalChanges( { item_type : ((chg.get_uid(),chg.get_changetype(),data),),} )
+            		intermediary.engine.AddLocalChanges( { item_type : ((chg.get_uid(),chg.get_changetype(),data),),} )
 
         	else:
             		raise Exception("SynCE: object type %s not yet handled" % chg.objtype)
@@ -335,18 +345,10 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	#
 	
 	def committed_all(self, info, ctx):
-		engine = intermediaries[0]
-		engine.logger.info("All items committed")
-		engine.TransmitChanges()
-	
-#	def read(self, info, ctx, chg):
-#		print "read called!"
-#		print "OpenSync wants me to read the data for UID", chg.uid
-
-#	def write(self, info, ctx, chg):
-#		print "write called!"
-#		print "Opensync wants me to write data for UID", chg.uid
-	
+		intermediary = intermediaries[0]
+		intermediary.logger.info("All SynCE items committed")
+		intermediary.TransmitChanges()
+		
 	#
 	# disconnect
 	#
@@ -354,8 +356,8 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	# have been synced (sunk?) :-)
 	
 	def disconnect(self, info, ctx):
-		engine = intermediaries[0]
-		engine.Disconnect()
+		intermediary = intermediaries[0]
+		intermediary.Disconnect()
 
 	#
 	# sync_done
@@ -364,7 +366,8 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	# the TransmitChanges call here if necessary.
 
 	def sync_done(self, info, ctx):
-		print "sync_done called!"
+		intermediary = intermediaries[0]
+		intermediary.logger.info("sync_done called!")
 
 
 # 
@@ -388,15 +391,16 @@ def initialize(info):
 # partnership is capable of.
 
 def discover(info):
-	intermediaries[0].Connect()
-	SyncTypes = intermediaries[0].engine.GetSynchronizedItemTypes()
+	intermediary = intermediaries[0]
+	intermediary.Connect()
+	SyncTypes = intermediary.engine.GetSynchronizedItemTypes()
 	for sink in info.objtypes:
 		for wmtype in SyncTypes:
 			if OBJ_TYPE_TO_ITEM_TYPE[sink.get_name()] == wmtype:
 				sink.available = True
 	info.version = opensync.Version()
 	info.version.plugin = "synce-plugin"
-	intermediaries[0].Disconnect()
+	intermediary.Disconnect()
 
 #
 # get_sync_info
