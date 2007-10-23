@@ -454,11 +454,11 @@ class SyncEngine(dbus.service.Object):
         """
         self.partnerships.delete(self.partnerships.get(id))
 
-    @dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature="")
+    @dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature='')
     def PrefillComplete(self):
         self.logger.info("Prefill complete: Emitting PrefillComplete signal")
 
-    @dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature="")
+    @dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature='')
     def Synchronized(self):
         self.logger.info("Synchronized: Emitting Synchronized signal")
 

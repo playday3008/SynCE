@@ -20,6 +20,14 @@ change rapidly, so keep an eye on SVN releases.
 
 Once operational, this will be announced here.
 
+23/10/07
+--------
+
+Fixed both the random segfaults and the issue with an assert on non-slow syncs.
+This was down to thread safety in the event loop. We now get a perfect two-way
+sync (using the file-sync plugin). However, the format translation is not quite
+right yet so some of the content will be missing from the items.
+
 
 18/10/07
 --------

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ############################################################################
-#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
+#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>         #
 #                                                                          #
 #    This program is free software; you can redistribute it and#or modify  #
 #    it under the terms of the GNU General Public License as published by  #
@@ -16,14 +16,22 @@
 #    along with this program; if not, write to the                         #
 #    Free Software Foundation, Inc.,                                       #
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+#
+# 23/10/2007 - JAG - Updated to support dbus and dbus-python > 0.80 and to 
+#                    ensure thread safety in these environments. This has 
+#                    been back-ported from the OpenSync 0.30 plugin. We
+#                    also clean up the wait systems by using events rather
+#                    than endless loops. This fixes the random crashes and
+#                    'broken pipe' messages with dbus-python 0,80
+#                    Some code cleanups
+#
 ############################################################################
 
 import dbus
-import dbus.glib
+import dbus.service
 import gobject
 import thread
 import threading
-import time
 import sys
 import logging
 from opensync import *
@@ -54,6 +62,7 @@ OBJ_TYPE_TO_ITEM_TYPE = {
 
 class SyncClass:
     def __init__(self, member):
+        global dbus
         self.logger = logging.getLogger("SynCE")
 
         self.__member = member
@@ -61,55 +70,69 @@ class SyncClass:
         self.isPrefilled=False
 
         gobject.threads_init()
+        
+	self.MainloopExitEvent    = threading.Event()
+	self.SyncCompleteEvent    = threading.Event()
+	self.PrefillCompleteEvent = threading.Event()
+	
+	# How we initialize the dbus comms and main loop
+	# is somewhat version-dependent....
+	
+	DBusVersion = getattr(dbus,'version', (0,0,0))
+	if DBusVersion < (0,80,0):
+		import dbus.glib
+		dbus.glib.init_threads()
+	else:
+		from dbus.mainloop.glib import DBusGMainLoop
+		from dbus.mainloop.glib import threads_init
+		dbus.mainloop.glib.threads_init()
+		DBusGMainLoop(set_as_default=True)
+		
+        thread.start_new_thread(self._MainLoopEntry, ())
 
-        self.mainloop_exit_event = threading.Event()
-        thread.start_new_thread(self._mainloop_thread_func, ())
-
-    def _mainloop_thread_func(self):
+    def _MainLoopEntry(self):
         self.mainloop = gobject.MainLoop()
         self.mainloop.run()
-        self.mainloop_exit_event.set()
+        self.MainloopExitEvent.set()
 
-    def connect(self, ctx):
-        self.logger.debug("connect() called")
-        gobject.idle_add(self._do_connect_idle_cb, ctx)
-
-    def _synchronized_cb(self):
+    def _CBSyncComplete(self):
         self.logger.info("device synchronization complete")
-        self.engine_synced = True
+        self.SyncCompleteEvent.set()
 
-    def _prefillcomplete_cb(self):
+    def _CBPrefillComplete(self):
         self.logger.info("prefill complete")
-        self.isPrefilled = True
+        self.PrefillCompleteEvent.set()
 
-    def _do_prefill(self, items):
+    def _TriggerPrefill(self, items):
         self.logger.info("initiating prefill")
-        self.isPrefilled = False
-        rc = self.engine.PrefillRemote(items)
+        self.PrefillCompleteEvent.clear()
+	rc = self.engine.PrefillRemote(items)
         if rc == 1:
-            while self.isPrefilled==False:
-                time.sleep(1)
-        return rc
+		self.PrefillCompleteEvent.wait()
+	return rc
 
-    def _do_sync(self):
-        self.logger.info("requesting device synchronization")
-        self.engine_synced = False
+    def _TriggerSync(self):
+        self.logger.info("initiating device synchronization")
+        self.SyncCompleteEvent.clear()
         self.engine.Synchronize()
         self.logger.info("waiting for engine to complete sync")
-        while not self.engine_synced:
-            time.sleep(1)
+	self.SyncCompleteEvent.wait()
 
-    def _do_connect_idle_cb(self, ctx):
+    def _CBConnectOnIdle(self, ctx):
         try:
             proxy_obj = dbus.SessionBus().get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.engine = dbus.Interface(proxy_obj, "org.synce.SyncEngine")
-            self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._synchronized_cb))
-            self.engine.connect_to_signal("PrefillComplete", lambda: gobject.idle_add(self._prefillcomplete_cb))
+            self.engine.connect_to_signal("Synchronized", lambda: gobject.idle_add(self._CBSyncComplete))
+            self.engine.connect_to_signal("PrefillComplete", lambda: gobject.idle_add(self._CBPrefillComplete))
 
             ctx.report_success()
         except Exception, e:
             self.logger.error("connect() failed: %s", e)
             ctx.report_error()
+
+    def connect(self, ctx):
+        self.logger.debug("Connect() called")
+        gobject.idle_add(self._CBConnectOnIdle, ctx)
 
     def get_changeinfo(self, ctx):
         self.logger.debug("get_changeinfo() called")
@@ -126,12 +149,11 @@ class SyncClass:
             self.logger.debug("slow sync requested for Tasks")
             prefill.append("Tasks")
 
-        time.sleep(1)
-        self._do_sync()
+        self._TriggerSync()
 
         if len(prefill) > 0:
-            if self._do_prefill(prefill) == 0:
-                self.logger.debug("prefill failed")
+            if self._TriggerPrefill(prefill) == 0:
+                self.logger.debug("failed to prefill - reverting to normal sync")
 
         self.logger.debug("requesting remote changes")
         changesets = self.engine.GetRemoteChanges(self.engine.GetSynchronizedItemTypes())
@@ -194,7 +216,7 @@ class SyncClass:
     def sync_done(self, ctx):
         self.logger.debug("sync_done() called")
 
-        self._do_sync()
+        self._TriggerSync()
 
         self.engine.FlushItemDB()
         ctx.report_success()
@@ -210,7 +232,7 @@ class SyncClass:
         self.logger.debug("finalize() called")
 
         gobject.idle_add(self.mainloop.quit)
-        self.mainloop_exit_event.wait()
+        self.MainloopExitEvent.wait()
 
 def initialize(member):
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)

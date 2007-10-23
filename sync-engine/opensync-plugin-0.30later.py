@@ -8,7 +8,25 @@
 # Based upon original plugin but adapted to fit in with the later 0.30
 # framework
 #
+# Prerequisites:
+#
+#   dbus and dbus-python > 0.80
+#   OpenSync >= 0.30
+#
 # +-+- NOT READY FOR PRODUCTION USE -+-+
+#
+# 23/10/07 - JAG - Fixed those bloody segfaults and random crashes. Turned 
+#                  out to be a problem with thread safety in dbus-python
+#                  requiring a simple call to 
+#                  dbus.mainloop.glib.threads_init() in addition to the call
+#                  to gobject.threads_init() This requirement (only 
+#                  necessary in multithreaded dbus main loop environments)
+#                  is highly non-obvious and absent from the dbus-python
+#                  docs. This would also explain problems with dbus-python-0.8x
+#                  in the earlier plugin so this fix has been backported.
+#                  Also fixed the asserts on non-slow syncs. This was
+#                  simply down to data corruption due to the repeated 
+#                  segfaults and crashing.
 #
 # 22/10/07 - JAG - Some further code cleanups
 #                  TODO: Must check and update XML formats
@@ -35,8 +53,8 @@
 ############################################################################
 
 import dbus
-#import dbus.glib
 from dbus.mainloop.glib import DBusGMainLoop
+from dbus.mainloop.glib import threads_init
 import gobject
 import thread
 import threading
@@ -81,6 +99,7 @@ TYPETONAMES = { "contact" : "Contacts",
 
 intermediaries = []
 
+
 ###############################################################################
 # class EngineIntermediary
 #
@@ -102,14 +121,15 @@ class EngineIntermediary:
         	self.engine         = None
 		self.refcnt_connect = 0
 		self.refcnt_sync    = 0
-		self.EventLoopExitEvent  = threading.Event()
 		self.ConnectEvent        = threading.Event()
+		self.EventLoopExitEvent  = threading.Event()
 		self.EventLoopStartEvent = threading.Event()
 		self.SyncEvent           = threading.Event()
 		self.PrefillEvent        = threading.Event()
-	
+		
 		DBusGMainLoop(set_as_default=True)
 		gobject.threads_init()
+		dbus.mainloop.glib.threads_init()
 	
 		self.logger.info("Intermediary init complete")
 
@@ -264,7 +284,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 			if intermediary.TriggerPrefill(prefill) == 0:
 				intermediary.logger.error("prefill failed")
 
-	        intermediary.logger.debug("requesting remote changes for %s " %self.sink.get_name())
+	        intermediary.logger.debug("requesting remote changes for %s objects" %self.sink.get_name())
 		t = OBJ_TYPE_TO_ITEM_TYPE[self.sink.get_name()]
         	changesets = intermediary.engine.GetRemoteChanges([t])
         	intermediary.logger.debug("got %d changesets", len(changesets))
@@ -368,7 +388,6 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	def sync_done(self, info, ctx):
 		intermediary = intermediaries[0]
 		intermediary.logger.info("sync_done called!")
-
 
 # 
 # initialize
