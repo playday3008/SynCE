@@ -30,7 +30,6 @@ libxml2.pedanticParserDefault(0)
 def from_airsync(as_node):
 	
     tzconv.CUR_TZ["current"] = None
-	
     dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_TASKS, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 

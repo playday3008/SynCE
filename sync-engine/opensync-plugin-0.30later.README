@@ -20,6 +20,20 @@ change rapidly, so keep an eye on SVN releases.
 
 Once operational, this will be announced here.
 
+25/10/07
+--------
+
+Sync process functionality now virtually flawless with OpenSync SVN - HOWEVER,
+the XML schemas for OpenSync 0.3x have changed more significantly over the old
+version than can be inferred from the documentation. As such, although items
+will appear to sync, the actual content will either disappear or be corrupted.
+I am working on the format conversions, and now have an internal version that
+can sync events successfully against the Evolution OpenSync plugin - which
+is in a much more advanced state than can be inferred from the associated
+README. I will release this when it can be implemented so as not to break
+support for older OpenSync releases. The structure of timezones has changed
+significantly and this will take a bit longer to support.
+
 23/10/07
 --------
 

@@ -261,7 +261,7 @@ def event_sensitivity_from_airsync(ctx):
     elif s == "3":
         return "CONFIDENTIAL"
     else:
-        return "0" # 'PUBLIC' is our default value
+        return "PUBLIC" # 'PUBLIC' is our default value
 
 def event_attendee_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
