@@ -55,8 +55,6 @@ class CeDevice:
         self.model_name = dev.GetModelName()
         self.dev_iface = dev
         
-        dev.connect_to_signal("PasswordFlagsChanged", self.password_flags_changed_cb)
-        
         self._print_debug()
         
         self._password_flags_changed()
@@ -90,9 +88,17 @@ class CeDevice:
                 dlg = EntryDialog(None, "Password required",
                                   "The PDA '%s' is password-protected.  Enter password:" % self.name,
                                   True)
-                if dlg.run() == gtk.RESPONSE_ACCEPT:
-                    authenticated = self.dev_iface.ProvidePassword(dlg.get_text())
+                if dlg.run() != gtk.RESPONSE_ACCEPT:
+                    print "Dialog canceled by user"
+                    dlg.destroy()
+                    return
+                authenticated = self.dev_iface.ProvidePassword(dlg.get_text())
                 dlg.destroy()
+                if not authenticated:
+                    print "Password mismatch"
+            print "Password accepted. Have a nice day."
+        else:
+            print "Device is not requiring a password"
 
 
 class EntryDialog(gtk.Dialog):
