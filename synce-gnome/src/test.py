@@ -11,7 +11,12 @@ class TestApp:
 
         bus = dbus.SystemBus()
         self.bus = bus
-        proxy_obj = bus.get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
+        try:
+            proxy_obj = bus.get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
+        except dbus.DBusException:
+            print "Error: Could not connect to odccm. Is it started?"
+            raise
+
         mgr = dbus.Interface(proxy_obj, "org.synce.odccm.DeviceManager")
 
         mgr.connect_to_signal("DeviceConnected", self.device_connected_cb)
@@ -23,6 +28,8 @@ class TestApp:
 
         for obj_path in mgr.GetConnectedDevices():
             self._add_device(obj_path, False)
+
+        print "Waiting for device to hotplug"
         
     def device_connected_cb(self, obj_path):
         self._add_device(obj_path, True)
