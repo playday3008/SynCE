@@ -713,13 +713,13 @@ class SyncItem:
     # Note that we save on the AirSync side - this way we mirror what is stored in the phone,
     # not what is stored locally.
 
-    def prefill_remote_change(self):
+    def prefill_remote_change(self,engineconfig):
 	    
         for guid in self.itemdb.keys():
 
             d = minidom.parseString(self.itemdb[guid])
 
-            os_doc = formatapi.ConvertFormat(DIR_FROM_AIRSYNC,self.type,d)
+            os_doc = formatapi.ConvertFormat(DIR_FROM_AIRSYNC,self.type,engineconfig.config_Global.cfg["OpensyncXMLFormat"])
 
             ct = CHANGE_ADDED
             if self.remote_changes.has_key(guid):
@@ -766,6 +766,7 @@ class SyncItem:
             #   MODIFIED -> MODIFIED : overwrite change record
 
             # JAG: check - is this right? - can we miss a delete this way? OK for modified though
+	    # .... seems OK so far, no spurious reports of missed deletes.
 
             cur_change_type, cur_data = self.remote_changes[guid]
             if cur_change_type in (CHANGE_ADDED, CHANGE_MODIFIED) and change_type == CHANGE_DELETED:

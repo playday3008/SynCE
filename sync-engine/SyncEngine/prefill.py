@@ -42,7 +42,7 @@ class PrefillThread(threading.Thread):
 					tid = SYNC_ITEM_CLASS_TO_ID[a]
 					if ps.state.items.has_key(tid):
 						self.logger.info("prefill: prefilling for item type %d" % tid)
-						ps.state.items[tid].prefill_remote_change()
+						ps.state.items[tid].prefill_remote_change(self.engine.config)
 
 		self.logger.info("prefill: prefill complete")
 		self.engine.syncing.unlock()

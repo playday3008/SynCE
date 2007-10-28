@@ -223,7 +223,10 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                         self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", os_doc.toprettyxml())
 
-			as_doc=formatapi.ConvertFormat(DIR_TO_AIRSYNC,item.type,os_doc)
+			as_doc=formatapi.ConvertFormat(DIR_TO_AIRSYNC,
+			                               item.type,
+						       os_doc,
+						       self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 	
                         self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.toprettyxml())
 			
@@ -262,7 +265,10 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     self.server.logger.debug("_handle_sync: converting item from airsync, source is \n%s", app_node.toprettyxml())
 
-                    os_doc=formatapi.ConvertFormat(DIR_FROM_AIRSYNC,item.type,app_node)
+                    os_doc=formatapi.ConvertFormat(DIR_FROM_AIRSYNC,
+		                                   item.type,
+						   app_node,
+						   self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 
                     self.server.logger.debug("_handle_sync: converting item from airsync, result is \n%s", os_doc.toprettyxml())
 

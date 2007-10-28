@@ -462,3 +462,45 @@ a single argument on the command line - the dbus object path of the device.
 It must return nonzero if authorized, zero if authorization failed.
 
 
+28/10/2007 - 183000 Dr J A Gow
+------------------------------
+
+I was a bit slack in updating this changelog over the last few months. For
+information about minor changes please refer to the SVN commit log.
+
+A number of minor changes preceded this entry:
+
+   - Fixed miscellaneous crashing in synce-plugin due to the lack of
+     thread safety in the dbus-python event loop
+   - Added OpenSync 0.3x plugin
+
+
+Major changes: Now added infrastructure to support three different formats
+at the OpenSync interface within sync-engine. The OpenSync 0.3x plugin
+requires different XML schemas than the earlier version. The directory
+SyncEngine/formats contains the 0.2x formats, while the directory
+SyncEngine/formats30 contains the formatting code for OpenSync 0.3x.
+Current state of this code is that events now sync well with OpenSync 0.3x
+(except for the timezones which are still in OpenSync 0.2x format - this 
+is on my todo list). Tasks, contacts and better timezone support will
+follow shortly providing full sync support with OpenSync 0.3x
+
+The approach does duplicate some code, but will make it a _lot_ easier
+both to code the OS 0.3x support and to deprecate and subsequently 
+'amputate' the OS 0.2x support once the OS people issue a new stable
+release.
+
+To change between the schemas, add the following line to the <Global>
+section of the config.xml file in the ~/.synce directory
+
+<OpensyncXMLFormat>OS20</OpensyncXMLFormat>
+
+where the element content can be one of OS20, OS30 or NONE. This will
+allow sync-engine to speak OpenSync 0.2x XML, OpenSync 0.3x XML, or 
+raw AirSync XML at the OpenSync interface. For more information see
+the comments in the sample config.xml file in the tree.
+
+Todo: clean up the OS30 event formatting code (which is a bit
+hack-ey at the moment, add OS30 timezone support along with
+tasks and contacts support in OS30. Watch this space....
+

@@ -1,6 +1,14 @@
 <?xml version="1.0" ?>
 <syncengine-config>
 	<Global>
+		<!--
+		    SlowSyncDisable, when set to 1, will bypass the slow sync
+		    database and allow only normal syncing with the handheld. 
+		    Useful only really for debugging - when using sync-engine
+		    in anger this should always be set to 0
+		    
+		-->
+		
 		<SlowSyncDisable>0</SlowSyncDisable>
 		
 		<!-- 
@@ -30,9 +38,31 @@
 			
 		    Setting it to zero disables this completely.
 		    
+		    NOT FULLY IMPLEMENTED YET
 		-->
 		
 		<AppendDefaultTimezone>0</AppendDefaultTimezone>
+		
+		<!--
+		    Specifies the type of format conversion to use on the data from
+		    the handheld.
+		    
+		        - NONE performs no format conversion and exports the data
+			  in AirSync/XML (Use this for debugging or with the
+			  OpenSync format plugin only)
+			
+			- OS30 uses OpenSync 0.3x XML schemas. Set this if you are
+			  using OpenSync 0.3x or later with opensync-plugin-0.30later.py
+			  
+			- OS20 (default) uses the pre-0.3x schemas. Set this if using a
+			  version of OpenSync that is pre-0.3x. This mode is likely to
+			  be deprecated and subsequently removed once OpenSync 0.3
+			  formats go mainstream at which point OS30 will become the
+			  default
+			  
+		-->
+		
+		<OpensyncXMLFormat>OS20</OpensyncXMLFormat>
 		
 	</Global>
 	<Autosync>

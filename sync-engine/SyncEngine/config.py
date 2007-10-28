@@ -26,6 +26,7 @@ import string
 import logging
 from xml.dom import minidom
 from xmlutil import *
+from formatapi import SupportedFormats,DefaultFormat
 
 ############################################################################
 # ConfigObject
@@ -151,10 +152,13 @@ class GlobalConfig(ConfigObject):
 		
 		self.handlers = { "SlowSyncDisable" : self.validate_SlowSyncEnable,
 		                  "AuthMethod"      : self.validate_AuthMethod,
-				  "AppendDefaultTimezone" : self.validate_AppendDefaultTimezone }
+				  "AppendDefaultTimezone" : self.validate_AppendDefaultTimezone,
+				  "OpensyncXMLFormat" : self.validate_OpensyncXMLFormat }
+				  
 		self.cfg = { "SlowSyncDisable" : 0,
 		             "AuthMethod"      : "INTERNAL_CLI",
-			     "AppendDefaultTimezone" : 0
+			     "AppendDefaultTimezone" : 0,
+			     "OpensyncXMLFormat" : DefaultFormat
 			   }
 			
 	def validate_SlowSyncEnable(self,arg):
@@ -171,6 +175,12 @@ class GlobalConfig(ConfigObject):
 			self.cfg["AppendDefaultTimezone"] = int(arg)
 		except:
 			self.logger.debug("'Disable': invalid argument %s in config file" % arg)
+		
+	def validate_OpensyncXMLFormat(self,arg):
+		if arg in SupportedFormats:
+			self.cfg["OpensyncXMLFormat"] = arg
+		else:
+			self.logger.debug("'OpensyncXMLFormat': no such format type '%s', substituting default" % arg)
 		
 	def dump(self):
 		self.logger.info("Global config: ")
