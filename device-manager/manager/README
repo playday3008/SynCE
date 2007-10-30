@@ -1,0 +1,157 @@
+Subject:  [SynCE-WindowsMobile5] DTPT.py
+Date:   Tue, 13 Feb 2007 11:11:55 +0100
+
+Hello!
+
+I'm using as PDA a FSC Pocket Loox 520 with WM5. usb-rndis is working and I see
+in Wireshark on the PC incoming connections to TCP port 5721. I got 
+/trunk/device-manager/manager/DTPT.py (rev 2727) and tried it out.
+
+It did not work.
+
+In my DTPT packets, the self.num_protocols = s.read_dword() does not contain a
+0 but 2. As such the further parsing was wrong. I added a protocol parser just
+to read out the values and let the rest do its work but put self.num_protocols
+back to 0, as the reply packet will contain a 0 anyway. BTW, what values should
+family and protocol have usually? I got 16,2 and 17,2. I would understand a
+family 2 (AF_INET) and protocol 6 (IPPROTO_TCP) or 17 (IPPROTO_UDP).
+
+The parsing stopped again, because the self.blob_size could not be read any
+more. It is definitely missing in the packets. I added a short work-around to
+come over this and set self.blob_size=0, if the packet does not contain this
+field at the end at all.
+
+I attach the patch to DTPT.py to show what I did but it still does not work.
+I tried in vxInfo to get the time from pool.ntp.org but already the host name
+resolving did not work. I have recorded a full tcpdump of all this.
+
+I see 2 problems: possibly the reply packet should contain the proper
+num_protocols value and the listed protocols from the request? The other is the
+missing blob at the end. Maybe I should not send a blob_size 0 back, but
+shorten the reply packet too?
+
+I'm a developer of Wireshark and will implement a DTPT dissector for Wireshark.
+Is http://www.synce.org/index.php/DTPT all we have as information about DTPT?
+
+Regards, Uwe Girlich
+
+
+--
+
+
+Subject:  Re: [SynCE-WindowsMobile5] DTPT.py
+Date:   Sun, 18 Feb 2007 12:47:12 +0100
+
+Hello!
+
+On Tue, Feb 13, 2007 at 11:11:55AM +0100, uwe@planetquake.com wrote:
+> I'm using as PDA a FSC Pocket Loox 520 with WM5. usb-rndis is working and I
+> see in Wireshark on the PC incoming connections to TCP port 5721. I got 
+> /trunk/device-manager/manager/DTPT.py (rev 2727) and tried it out.
+> 
+> It did not work.
+> 
+> In my DTPT packets, the self.num_protocols = s.read_dword() does not contain a
+> 0 but 2. As such the further parsing was wrong. I added a protocol parser just
+> to read out the values and let the rest do its work but put self.num_protocols
+> back to 0, as the reply packet will contain a 0 anyway. BTW, what values
+> should family and protocol have usually? I got 16,2 and 17,2. I would
+> understand a family 2 (AF_INET) and protocol 6 (IPPROTO_TCP) or 17
+> (IPPROTO_UDP).
+I made a small mistake here. If the number of protocols is > 0, first follows
+the total number of bytes for all protocols (these are 8*num_protocols bytes).
+Then everything is fine and I get normal requests for the protocols TCP and
+UDP.
+
+> The parsing stopped again, because the self.blob_size could not be read any
+> more. It is definitely missing in the packets. I added a short work-around to
+> come over this and set self.blob_size=0, if the packet does not contain this
+> field at the end at all.
+This follows from my wrong-parsing the protocol. It is gone now.
+
+> I attach the patch to DTPT.py to show what I did but it still does not work.
+This time I attach the complete DTPT-UG.py, which I 'enhanced' with many debug
+prints, a working code for num_protocols>0 and a first idea about blobs.
+
+After reading at
+http://developer.novell.com/support/winsock/doc/chap4pt1.htm
+the chapters 4.3.2 Basic Approach and 4.3.5 gethostbyname() and especially
+after looking again at the ControlFlags field in the 
+WSAServiceLookupBegin request, I found, that vxUtil on the PDA must be using
+the old-style gethostbyname() function call, which is implemented with
+the WSAServiceLookup* functions and LUP_RETURN_BLOB is set in the ControlFlag!
+
+Thus I tried to generate the right answer BLOB by reading
+the source of QueryCopyQuerySetTo()
+at
+http://darwinsource.opendarwin.org/Current/mDNSResponder-107.4/mDNSWindows/mdnsNSP/mdnsNSP.c
+Unfortunately, I'm still not sure, if family and address length are 32 bits
+or 16 bits in a Windows hostent structure. I tried both (see class BlobHostent
+in DTPT-UG.py) but in both cases vxInfo did not understand the reply packet.
+
+The DTPT parser for Wireshark is almost ready (as far as I understand the
+protocol). Probably I'll commit it later today to SVN.
+
+Could you please give me a hint, what the return blob should look like? Does
+anyone have a tcpdump of a working DTPT connection with a filled blob at the
+end? I probably could find it out all by myself by disassembling the client
+side /Windows/dtpt_lsp.dll but 'pls' can't see the file and 'pcp' can't copy
+it to the PC.
+
+Regards, Uwe Girlich
+
+--
+
+
+Subject:  Re: [SynCE-WindowsMobile5] DTPT.py
+Date:   Mon, 19 Feb 2007 11:06:43 +0100
+
+Hello!
+
+On Sun, Feb 18, 2007 at 12:47:12PM +0100, uwe@planetquake.com wrote:
+> The DTPT parser for Wireshark is almost ready (as far as I understand the
+> protocol). Probably I'll commit it later today to SVN.
+Done. Wireshark contains from revision 20839 onwards a DTPT dissector.
+
+Regards, Uwe Girlich
+
+--
+
+Subject:  Re: [SynCE-WindowsMobile5] DTPT.py
+Date:   Wed, 21 Feb 2007 22:06:52 +0100
+
+Hello!
+
+Attached is a corrected version of DTPT.py. With this DTPT proxy it is possible
+to share the network connection of the PC with a ActiveSync connected PDA (over
+the USB cable with rndis). The old version from SVN might already have worked
+in some few cases but now it works also with a Fujitsu Siemens Pocket Loox 520
+running Mobile Windows 5.
+
+Here are my changes:
+
+1) Close the internal socket upon thread end. The socket object is still known
+in the main program (where the accept() happens) and as such the close does not
+happen automatically after the thread end. The external socket is closed
+automatically via the garbage collection of the socket object! The result is,
+that if an external server closes an established connection, the client on the
+PDA remains connected to the proxy indefinitely. It would be better to remove
+the whole object 's' after the corresponding thread ends (I would do this after
+a pthread_join() in C) but for such a change my Python knowledge is too small.
+
+2) Some clients ask for the address in a BLOB. This was not implemented at all.
+I added a first rough version, which only puts the first resolved address into
+the returned blob. The real solution would be to return the blob only if it was
+asked for in the corresponding Request packet (LUP_RETURN_BLOB set in
+ControlFlags). Secondly, the full list of resolved addresses should be
+returned in the blob, which would make the blob creation much more difficult.
+
+3) If the request packet contains protocols, the old parser could not handle
+the packet. I added a first rough version, which simply discards the protocols.
+The protocols should be used upon address resolution.
+
+Even further development is needed. Currently only SVCID_INET_HOSTADDRBYNAME is
+implemented. I already saw a packet with SVCID_INET_HOSTADDRBYINETSTRING.
+
+Regards, Uwe Girlich
+
