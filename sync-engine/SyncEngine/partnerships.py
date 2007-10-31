@@ -719,7 +719,7 @@ class SyncItem:
 
             d = minidom.parseString(self.itemdb[guid])
 
-            os_doc = formatapi.ConvertFormat(DIR_FROM_AIRSYNC,self.type,engineconfig.config_Global.cfg["OpensyncXMLFormat"])
+            os_doc = formatapi.ConvertFormat(DIR_FROM_AIRSYNC,self.type,d,engineconfig.config_Global.cfg["OpensyncXMLFormat"])
 
             ct = CHANGE_ADDED
             if self.remote_changes.has_key(guid):
