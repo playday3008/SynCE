@@ -91,6 +91,8 @@ struct rndis_msg_hdr {
  */
 #define	RNDIS_CONTROL_TIMEOUT_MS	(5 * 1000)
 
+/* SC_* Samsung processors needs an extra timeout */
+#define SC_SLEEP_TIMEOUT		20
 
 #define ccpu2 __constant_cpu_to_le32
 
@@ -327,6 +329,7 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
 	rsp = buf->msg_type | RNDIS_MSG_COMPLETION;
 	for (count = 0; count < 10; count++) {
 		memset(buf, 0, CONTROL_BUFFER_SIZE);
+		msleep(SC_SLEEP_TIMEOUT * 10);
 		retval = usb_control_msg(dev->udev,
 			usb_rcvctrlpipe(dev->udev, 0),
 			USB_CDC_GET_ENCAPSULATED_RESPONSE,
@@ -334,6 +337,7 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
 			0, master_ifnum,
 			buf, CONTROL_BUFFER_SIZE,
 			RNDIS_CONTROL_TIMEOUT_MS);
+		msleep(SC_SLEEP_TIMEOUT * 10);
 		if (likely(retval >= 8)) {
 			msg_len = le32_to_cpu(buf->msg_len);
 			request_id = (__force u32) buf->request_id;
