@@ -23,22 +23,27 @@ import parser
 import libxml2
 from SyncEngine.constants import *
 from SyncEngine.xmlutil import *
-import tzconv
+import tzdatabase
 
 libxml2.pedanticParserDefault(0)
 
 def from_airsync(as_node):
 
-    # reset this for each event
-	
-    tzconv.CUR_TZ["current"]=None
-    
+    # Flush all timezones between events
+
+    tzdatabase.tzdb.Flush()
+
     # parse it out
-    
+
     dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_CALENDAR, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
+
+    # Flush all timezones between events
+
+    tzdatabase.tzdb.Flush()
+
     doc = libxml2.parseDoc(os_doc.toxml(encoding="utf-8"))
     dst_doc = parser.parser.convert(doc, SYNC_ITEM_CALENDAR, parser.FMT_TO_AIRSYNC)
     dst_doc = minidom.parseString(str(dst_doc))

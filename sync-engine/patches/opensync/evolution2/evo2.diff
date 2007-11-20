@@ -1,0 +1,42 @@
+Index: src/evolution2_sync.c
+===================================================================
+--- src/evolution2_sync.c	(revision 2850)
++++ src/evolution2_sync.c	(working copy)
+@@ -359,23 +359,24 @@
+ 		goto error_free_book;
+ 	}
+ 	
+-	OSyncCapabilities* capabilities = osync_capabilities_new(error);
+-	if(capabilities == NULL)
+-		goto error;
++	//OSyncCapabilities* capabilities = osync_capabilities_new(error);
++	//if(capabilities == NULL)
++	//	goto error;
+ 	
+-	for(; fields; fields = g_list_next(fields))
+-	{
+-		osync_capability_new(capabilities, "contact", fields->data, error);
+-		g_free(fields->data);	
+-	}
++	//for(; fields; fields = g_list_next(fields))
++	//{
++	//	osync_trace(TRACE_ENTRY,"CAPABILITY -%s",fields->data);
++	//	osync_capability_new(capabilities, "contact", fields->data, error);
++	//	g_free(fields->data);	
++	//}
++
+ 	g_list_free(fields);
+-	
++
+ 	g_object_unref(ebook);
+ 	
+-	osync_plugin_info_set_capabilities(info, capabilities);
+-	osync_capabilities_unref(capabilities);
+-	
+-	
++	//osync_plugin_info_set_capabilities(info, capabilities);
++	//osync_capabilities_unref(capabilities);
++
+ 	osync_trace(TRACE_EXIT, "%s", __func__);
+ 	return TRUE;
+ 

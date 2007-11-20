@@ -157,6 +157,7 @@ class EngineIntermediary:
 		self.SyncEvent.wait()
 
 	def _CBConnectOnIdle(self):
+
 		try:
 			self.logger.info("Connecting")
 			proxy_obj = dbus.SessionBus().get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
@@ -310,21 +311,22 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
                     		change.set_uid(array.array('B',guid).tostring())
                     		change.set_changetype(chg_type)
 
+				bytes=None
                        		if chg_type != opensync.CHANGE_TYPE_DELETED:
-                       			bytes = '<?xml version="1.0" encoding="utf-8"?>\n'
-                       			bytes += array.array('B',data).tostring()
-					osdata = opensync.Data(bytes,fmt)
-					osdata.set_objtype(self.sink.get_name())
-                       			change.set_data(osdata)
+	                       		bytes = '<?xml version="1.0" encoding="utf-8"?>\n'
+        	               		bytes += array.array('B',data).tostring()
+				
+				osdata = opensync.Data(bytes,fmt)
+				osdata.set_objtype(self.sink.get_name())
+                       		change.set_data(osdata)
 				
 				intermediary.logger.debug("reporting change")
 				ctx.report_change(change)
 				intermediary.logger.debug("change reported")
 				
                     		acks[item_type].append(array.array('B',guid).tostring())
-				
             	else:
-                		intermediary.logger.debug("no changes for item type %d" % item_type)
+                	intermediary.logger.debug("no changes for item type %d" % item_type)
 
 		if acks!={}:
             		intermediary.logger.debug("acknowledging remote changes for item type %d", item_type)

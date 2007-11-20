@@ -11,7 +11,6 @@
 
 import datetime
 import recurrence
-import dateutil
 import libxml2
 
 #
@@ -35,9 +34,79 @@ class UtcTZ(datetime.tzinfo):
 utc = UtcTZ()
 
 #
+# TZComponent class
+#
+# Class provides a container for each 'component' of the timezone. This
+# 'component' consists of a name and a number of recurrence rules
+#
+
+class TZComponent:
+	
+	#
+	# __init__
+	#
+	# New components must have a name, but possess an empty list
+	#
+	# Note that RFC2445 indicates that ical timezones MUST have 
+	# both offset and offsetfrom attributes - so we can rely on
+	# this. Each component may have multiple RRules and RDates
+	
+	def __init__(self):
+		self.name   = ""
+		self.offsetfrom = datetime.timedelta(seconds=0)
+		self.offset = datetime.timedelta(seconds=0)
+		self.rrules = []	# list of recurrence rules
+		self.rdates = []	# list of rdates
+		self.startdate = None	# startdate
+		
+	# 
+	# GetMinDelta
+	#
+	# From a specified date, get the difference between us and the last
+	# transition of the last rule. This takes into account both RDate list
+	# and RRule lists
+		
+	def GetMinDelta(self,date):
+		delta = datetime.timedelta.max
+				
+		if self.startdate != None:
+			if date >= self.startdate:
+
+				for rr in self.rrules:
+					print rr.startdate
+					rr.ProcessIteration(date)
+
+				# we are only interested in the delta if the
+				# rdate is earlier than the supplied date
+		
+				for rd in self.rdates:
+					if rd < date:
+						delta = date - rd
+		
+				# now process the recurrence rule lists. Again
+				# we look for minimum distance to the next earliest
+				# rrule recurrence.
+		
+				for rr in self.rrules:
+			
+					idelta = datetime.timedelta.max
+		
+					for m in reversed(rr.ilist):
+						if m > date:
+							continue
+						idelta = date - m
+						break
+					if idelta < delta:
+						delta = idelta
+		
+		return delta
+
+
+#
 # VcalTZ class
 #
-# Derived timezone class that reflects a vcal timezone
+# Derived timezone class that reflects a vcal timezone. This has now been
+# updated to handle multiple components
 
 class VcalTZ(datetime.tzinfo):
 	
@@ -45,28 +114,49 @@ class VcalTZ(datetime.tzinfo):
 	# __init__
 	#
 	# required by the definition for a tzinfo
+	# We do not check for dupes when adding new components as they
+	# won't kill us (but may slow things down a bit)
+	#
+	# An empty VcalTZ class, without any components, will describe UTC
+	# but we still maintain the UtcTZ class for clarity.
 	
-	def __init__(self):
-		
-		self.name = None
+	def __init__(self,name):
+	
+		self.name = name
 		self.loc  = None
-		
-		self.dstname = ""
-		self.dstoffset = datetime.timedelta(seconds=0)
-		self.dstRecurrence = recurrence.RecurrentEvent()
-		
-		self.stdname = ""
-		self.stdoffset = datetime.timedelta(seconds=0)
-		self.stdRecurrence = recurrence.RecurrentEvent()
-		
+	
+		self.stdcomponents = []
+		self.dstcomponents = []
+
 	#
 	# utcoffset
 	#
-	# return the utc offset including dst
-		
-		
+	# return the utc offset including dst.
+	#
+			
 	def utcoffset(self,dt):
-		return self.stdoffset + self.dst(dt)
+		
+		# get a date we can play with (without the timezone)
+		
+		date = dt.replace(tzinfo=None)
+		
+		os=datetime.timedelta(seconds=0)
+				
+		# here we get the closest standard offset time
+				
+		delta = datetime.timedelta.max
+		index = None
+				
+		for i in range(len(self.stdcomponents)):
+			d = self.stdcomponents[i].GetMinDelta(date) 
+			if d < delta:
+				delta = d
+				index = i
+
+		if index != None:
+			os = self.stdcomponents[index].offset
+	
+		return os + self.dst(dt)
 		
 	#
 	# dst
@@ -74,42 +164,37 @@ class VcalTZ(datetime.tzinfo):
 	# return dst
 		
 	def dst(self,dt):
+		
 		dlt = dt.replace(tzinfo=None)
-		
-		# make sure we have sufficient DST and STD recurrences
-		# to take us to the current date
-		
-		self.dstRecurrence.ProcessIteration(dlt)
-		self.stdRecurrence.ProcessIteration(dlt)
-			
-		# Now get the deltas between us and the DST events
-		
-		deltaDST = datetime.timedelta.max
-		deltaSTD = datetime.timedelta.max
-		
-		# If no valid dstRecurrence, delta is zero
-		
-		for m in reversed(self.dstRecurrence.ilist):
-			if m > dlt:
-				continue
-			deltaDST = dlt - m
-			break
-		
-		# if no valid stdRecurrence, delta is zero 
-		 
-		for m in reversed(self.stdRecurrence.ilist):
-			if m > dlt:
-				continue
-			deltaSTD = dlt - m
-			break
-					
-		if deltaDST < deltaSTD:
-			# we are in DST
-			return self.dstoffset
-		else:
-			# we are in STD
-			return datetime.timedelta(0)
+				
+		os=datetime.timedelta(seconds=0)
+				
+		# here we get the closest dst offset time
+				
+		delta = datetime.timedelta.max
+		isDST = False
+		index = 0
 
+		for i in range(len(self.stdcomponents)):
+			d = self.stdcomponents[i].GetMinDelta(dlt) 
+			if d < delta:
+				delta = d
+				isDST = False
+
+		for i in range(len(self.dstcomponents)):
+			d = self.dstcomponents[i].GetMinDelta(dlt) 
+			if d < delta:
+				delta = d
+				isDST = True
+				index = i
+
+		if isDST == True:
+			os = self.dstcomponents[index].offset - self.dstcomponents[index].offsetfrom
+		else:
+			os = datetime.timedelta(seconds=0)
+	
+		return os
+		
 	#
 	# tzname
 	#
@@ -117,66 +202,3 @@ class VcalTZ(datetime.tzinfo):
 	def tzname(self,dt):
 		return self.name
 
-#
-# TZInfoFromVcal
-#
-# Function providing vcal support 
-	
-def TZInfoFromVcal(tznode):
-	
-	tz = VcalTZ()
-	
-	child = tznode.children
-	while child != None:
-		
-		if child.name == "TimezoneID":
-			tzid = str(child.content).strip()
-			tz.name = tzid
-		if child.name == "Location":
-			loc  = str(child.content).strip()
-			tz.loc = loc
-		if child.name == "Standard":
-			cstd = child.children
-			while cstd != None:
-				if cstd.name == "TimezoneName":
-					tz.stdname = str(cstd.content).strip()
-				if cstd.name == "DateStarted":
-					tz.stdRecurrence.SetStartDateFromText(str(cstd.content).strip())
-				if cstd.name == "RecurrenceRule":
-					rules = cstd.children
-					while rules != None:
-						if rules.name == "Rule":
-							tz.stdRecurrence.AppendStringRule(str(rules.content).strip())
-						rules=rules.next
-				if cstd.name == "TZOffsetTo":
-					tz.stdoffset = dateutil.OffsetToDelta(str(cstd.content).strip())
-				
-				cstd = cstd.next
-		
-		if child.name == "DaylightSavings":
-			dso1 = datetime.timedelta(0)
-			dso2 = datetime.timedelta(0)
-			cstd = child.children			
-			while cstd != None:
-				
-				if cstd.name == "TimezoneName":
-					tz.dstname = str(cstd.content).strip()
-				if cstd.name == "DateStarted":
-					tz.dstRecurrence.SetStartDateFromText(str(cstd.content).strip())
-				if cstd.name == "RecurrenceRule":
-					rules = cstd.children
-					while rules != None:
-						if rules.name == "Rule":
-							tz.dstRecurrence.AppendStringRule(str(rules.content).strip())
-						rules=rules.next
-				if cstd.name == "TZOffsetTo":
-					dso1 = dateutil.OffsetToDelta(str(cstd.content).strip())
-				if cstd.name == "TZOffsetFrom":
-					dso2 = dateutil.OffsetToDelta(str(cstd.content).strip())
-				
-				cstd = cstd.next
-			tz.dstoffset = dso1-dso2
-	
-		child=child.next
-
-	return tz

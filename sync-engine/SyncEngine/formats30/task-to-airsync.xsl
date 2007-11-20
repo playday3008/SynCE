@@ -1,61 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- Adapted for Opensync 0.3x -->
+
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-               xmlns:convert="http://synce.org/convert"
+               xmlns:common="http://synce.org/common"
+               xmlns:task="http://synce.org/task"
                xmlns:tz="http://synce.org/tz"
-               exclude-result-prefixes="convert tz">
+               exclude-result-prefixes="common task tz">
 
-<xsl:template match="/vcal">
+<xsl:template match="/todo">
 
     <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/tasks">
 
         <!-- AirSync tasks do not use a timezone. Instead we need to maintain two time fields for each
              timed entity: StartDate and UTCStartDate, also DueDate and UTCDueDate. How brain-damaged
-             is this... -->
+             is this... 
+             However, we retain the timezone read code here as there is the possibility that
+             timezones may be supported in future -->
 
-	<xsl:for-each select="Todo/Status/Content[position() = 1]">
-		<Complete><xsl:value-of select = "convert:task_status_to_airsync()"/></Complete>
+        <!-- Timezones are way different in OpenSync 0.30. We need to capture the likelihood of a 
+             timezone in an Opensync task and use this to compute UTCxxxxDate. However, we do not
+             export a timezone to Airsync. We gather together all timezone-specific entries before
+             anything else is processed -->
+
+        <xsl:for-each select="Timezone">
+        	<xsl:value-of select="common:HandleOSTZ()"/>
+        </xsl:for-each>
+        <xsl:for-each select="TimezoneComponent">
+        	<xsl:value-of select="common:HandleOSTZComponent()"/>
+        </xsl:for-each>
+        <xsl:for-each select="TimezoneRule">
+        	<xsl:value-of select="common:HandleOSTZRule()"/>
+        </xsl:for-each>
+
+        <!-- OpenSync 0.3 schema allows unbounded number of 'Alarm' elements 
+             TODO: Wrong. Will update -->
+
+        <xsl:for-each select="Alarm[position() = 1]">
+	        <Reminder><xsl:value-of select="common:AlarmToAirsync()"/></Reminder>
+        </xsl:for-each>
+
+
+        <!-- Opensync 0.3x - Content -->
+
+	<xsl:for-each select="Status/Content[position() = 1]">
+		<Complete><xsl:value-of select = "task:StatusToAirsync()"/></Complete>
 	</xsl:for-each>
 
-        <xsl:for-each select="Todo/DateDue[position() = 1]">
-		<xsl:value-of select="convert:task_due_date_to_airsync()"/>
+        <!-- Opensync 0.3x -DateDue and DateStarted both require UTC conversion. 
+             Note that Airsync chokes if StartDate is present without DueDate - this
+             is quite legal for OS. DueDate without StartDate seems OK. -->
+
+        <xsl:for-each select="Due[position() = 1]">
+                <DueDate><xsl:value-of select="task:DateToAirsyncLocal()"/></DueDate>
+                <UtcDueDate><xsl:value-of select="task:DateToAirsyncUTC()"/></UtcDueDate>
+	</xsl:for-each>
+	<xsl:if test="count(Due) = 0">
+		<xsl:for-each select="DateStarted[position() = 1]">
+			<DueDate><xsl:value-of select="task:DateToAirsyncLocal()"/></DueDate>
+			<UtcDueDate><xsl:value-of select="task:DateToAirsyncUTC()"/></UtcDueDate>
+		</xsl:for-each>
+	</xsl:if>
+
+        <xsl:for-each select="DateStarted[position() = 1]">
+                <StartDate><xsl:value-of select="task:DateToAirsyncLocal()"/></StartDate>
+                <UtcStartDate><xsl:value-of select="task:DateToAirsyncUTC()"/></UtcStartDate>
 	</xsl:for-each>
 
-	<xsl:for-each select="Todo/Priority/Content[position() = 1]">
-		<Importance><xsl:value-of select = "convert:task_prio_to_airsync()"/></Importance>
+	<!-- Opensync 0.3x - Priority conversion similar -->
+
+	<xsl:for-each select="Priority/Content[position() = 1]">
+		<Importance><xsl:value-of select = "task:PriorityToAirsync()"/></Importance>
 	</xsl:for-each>
 
-        <xsl:for-each select="Todo/RecurrenceRule[position() = 1]">
+        <!-- Opensync 0.3x - Recurrence rule is unbounded -->
+
+        <xsl:for-each select="RecurrenceRule">
             <Recurrence>
-                <xsl:value-of select="convert:event_recurrence_to_airsync()"/>
+                <xsl:value-of select="common:RecurrenceRuleToAirsync()"/>
             </Recurrence>
         </xsl:for-each>
 
-        <xsl:for-each select="Todo/Class/Content[position() = 1]">
-		<Sensitivity><xsl:value-of select="convert:task_classification_to_airsync()"/></Sensitivity>
+	<!-- Opensync 0.3x - Class is the same -->
+
+        <xsl:for-each select="Class/Content[position() = 1]">
+		<Sensitivity><xsl:value-of select="common:ClassToAirsync()"/></Sensitivity>
 	</xsl:for-each>
 
-        <xsl:for-each select="Todo/DateStarted[position() = 1]">
-		<xsl:value-of select="convert:task_start_date_to_airsync()"/>
-	</xsl:for-each>
+        <!-- OpenSync 0.3 - Categories remain the same -->
 
-        <Categories>
-               <xsl:for-each select="Todo/Categories">
-                   <xsl:for-each select="Category">
-                       <Category><xsl:value-of select="."/></Category>
-                   </xsl:for-each>
-               </xsl:for-each>
-        </Categories>
+        <xsl:if test="count(Category) &gt; 0">
+        	<Categories>
+        		<xsl:for-each select="Categories">
+            			<xsl:for-each select="Category">
+                            		<Category><xsl:value-of select="."/></Category>
+                        	</xsl:for-each>
+                    	</xsl:for-each>
+                </Categories>
+        </xsl:if>
 
-        <xsl:for-each select="Todo/Class/Content[position() = 1]">
-		<Sensitivity><xsl:value-of select="convert:event_sensitivity_to_airsync()"/></Sensitivity>
-	</xsl:for-each>
+	<!-- Opensync 0.3x - Summary and Description handled similar to events -->
 
-	<Subject><xsl:value-of select="Todo/Summary/Content"/></Subject>
+	<xsl:for-each select="Summary[position()=1]">
+		<Subject><xsl:value-of select="Content"/></Subject>
+        </xsl:for-each>
 	
-	<xsl:for-each select="Todo/Description/Content[position() = 1]">
-		<Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
+	<xsl:for-each select="Description/Content[position() = 1]">
+		<Rtf><xsl:value-of select="common:OSTextToAirsyncRTF()"/></Rtf>
 	</xsl:for-each>
 
     </AS:ApplicationData>

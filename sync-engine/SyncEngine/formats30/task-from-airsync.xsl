@@ -1,69 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- Amended for Opensync 0.3x -->
+
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-               xmlns:convert="http://synce.org/convert"
-               xmlns:tz="http://synce.org/tz"
+               xmlns:common="http://synce.org/common"
+               xmlns:task="http://synce.org/task"
                xmlns:AS="http://synce.org/formats/airsync_wm5/airsync"
                xmlns:T="http://synce.org/formats/airsync_wm5/tasks"
-
-               exclude-result-prefixes="convert T AS">
+               exclude-result-prefixes="common task T AS">
 
 <xsl:template match="ApplicationData | AS:ApplicationData">
-    <vcal>
-        <xsl:for-each select = "T:Timezone[position() = 1]">
-                <xsl:value-of select="tz:ConvertASTimezoneToVcal()"/>
-        </xsl:for-each>
+	
+	<todo>
 
-	<Todo>
-               <xsl:for-each select="T:Reminder[position() = 1]">
-                    <Alarm>
-                        <AlarmTrigger>
-                            <Content><xsl:value-of select="convert:event_reminder_from_airsync()"/></Content>
-                            <Value>DURATION</Value>
-                            <Related>START</Related>
-                        </AlarmTrigger>
-                        <AlarmAction>DISPLAY</AlarmAction>
-                        <AlarmDescription><xsl:value-of select="Subject"/></AlarmDescription>
-                    </Alarm>
-                </xsl:for-each>
+		<!-- OpenSync 0.3. This is very different -->
 
-               	<Summary><Content><xsl:value-of select="T:Subject"/></Content></Summary>
+		<xsl:for-each select = "T:Timezone[position() = 1]">
+                	<xsl:value-of select="tz:ConvertASTimezoneToVcal()"/>
+        	</xsl:for-each>
+
+		<xsl:value-of select="common:AllTZToOpensync()"/>
+
+		<!-- Opensync 0.3 -  Alarm is common with events -->
+
+	        <xsl:for-each select="T:Reminder[position() = 1]">
+                	<Alarm>
+                	        <xsl:attribute name="Value">DURATION</xsl:attribute>
+                        	<AlarmAction>DISPLAY</AlarmAction>
+	                        <AlarmDescription><xsl:value-of select="Subject"/></AlarmDescription>
+        	                <AlarmTrigger><xsl:value-of select="common:AlarmFromAirsync()"/></AlarmTrigger>
+                	</Alarm>
+	        </xsl:for-each>
+
+		<!-- Opensync 0.3x - 'Subject' is an easy conversion -->
+
+		<xsl:for-each select="T:Subject[position() = 1]">
+		    	<Summary>
+				<Content>
+					<xsl:value-of select="."/>
+				</Content>
+			</Summary>
+		</xsl:for-each>
+
+		<!-- Opensync 0.3x - UTCxxxxDate and xxxxDate need to be handled together
+                     Note that the extension checks for the presence of UtcDueDate and
+                     UtcStartDate -->
 
                	<xsl:for-each select="T:DueDate[position() = 1]">
-                    <DateDue><xsl:value-of select="convert:task_due_date_from_airsync()"/></DateDue>
+                    <Due><xsl:value-of select="task:DateFromAirsync()"/></Due>
         	</xsl:for-each>
 
                	<xsl:for-each select="T:StartDate[position() = 1]">
-                    <DateStarted><xsl:value-of select="convert:task_start_date_from_airsync()"/></DateStarted>
+                    <DateStarted><xsl:value-of select="task:DateFromAirsync()"/></DateStarted>
                 </xsl:for-each>
 
-		<xsl:for-each select="T:Sensitivity[position() = 1]">
-		    <Class><Content><xsl:value-of select="convert:task_classification_from_airsync()"/></Content></Class>
-		</xsl:for-each>
+                <!-- OpenSync 0.3, same mechanism as events -->
 
-                <Categories>
-                    <xsl:for-each select="T:Categories">
-                        <xsl:for-each select="T:Category">
-                            <Category><xsl:value-of select="."/></Category>
+                <xsl:for-each select="T:Sensitivity[position() = 1]">
+                    <Class><Content><xsl:value-of select="common:ClassFromAirsync()"/></Content></Class>
+                </xsl:for-each>
+
+                <!-- OpenSync 0.3 - Categories remain the same -->
+
+                <xsl:if test="count(T:Categories) &gt; 0">
+                    <Categories>
+                        <xsl:for-each select="T:Categories">
+                            <xsl:for-each select="T:Category">
+                                <Category><xsl:value-of select="."/></Category>
+                            </xsl:for-each>
                         </xsl:for-each>
-                    </xsl:for-each>
-                </Categories>
+                    </Categories>
+                </xsl:if>
+
+		<!-- Opensync 0.3x - Completion is synced with limits' -->
 
 		<xsl:for-each select="T:Complete">
-			<xsl:value-of select="convert:task_status_from_airsync()"/>
+			<xsl:value-of select="task:StatusFromAirsync()"/>
 		</xsl:for-each>
+
+		<!-- Opensync 0.3x - Priority handled similarly -->
 
 		<xsl:for-each select="T:Importance">
-			<Priority><Content><xsl:value-of select="convert:task_prio_from_airsync()"/></Content></Priority>
+			<Priority>
+				<Content><xsl:value-of select="task:PriorityFromAirsync()"/></Content>
+			</Priority>
 		</xsl:for-each>
 	
-		<xsl:for-each select="T:Rtf">
-			<Description><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Description>
-		</xsl:for-each>
+		<!-- Opensync 0.3x - Content handled similarly -->
 
-	</Todo>
-    </vcal>
+		<xsl:for-each select="T:Rtf">
+			<Description>
+				<Content><xsl:value-of select="common:OSTextFromAirsyncRTF()"/></Content>
+			</Description>
+		</xsl:for-each>
+	</todo>
 </xsl:template>
 
 </xsl:transform>

@@ -28,6 +28,13 @@ def GetNodeValue(node):
 	else:
 		return str(node.content).strip()
 
+def GetNodeAttr(node,attr):
+	p=node.hasProp(attr)
+	if p:
+		return str(p.content).strip()
+	else:
+		return None
+
 ### libxslt utility functions ###
 
 def ExtractContexts(ctx):

@@ -12,11 +12,45 @@ import string
 import datetime
 import timespan
 import calendar
-import dateutil
+import libxml2
 
 WEEKDAYS = {"MO" : 0, "TU" : 1, "WE" : 2, "TH" : 3, "FR" : 4, "SA" : 5, "SU" : 6 }
+WEEKDAYLIST = ["MO","TU","WE","TH","FR","SA","SU"]
 FREQS    = { "SECONDLY":6, "MINUTELY":5, "HOURLY":4, "DAILY":3, "WEEKLY":2, "MONTHLY":1, "YEARLY":0 }
+FREQLIST = ["YEARLY","MONTHLY","WEEKLY","DAILY","HOURLY","MINUTELY","SECONDLY"]
+
 (YEARLY,MONTHLY,WEEKLY,DAILY,HOURLY,MINUTELY,SECONDLY) = range(7)
+
+###############################################################################
+# _TextToDate
+#
+# INTERNAL
+#
+# Utility, timezone agnostic
+
+def _TextToDate(text):
+	
+	text = text.upper()
+	
+	if len(text) < 8:
+		raise ValueError("Corrupted date string")
+			
+	text=text.lstrip('Z')
+	
+	if text.find("T") < 0:
+		text += "T000000"
+
+	try:
+		year   = int(text[0:4])
+		month  = int(text[4:6])
+		day    = int(text[6:8])
+		hour   = int(text[9:11])
+		minute = int(text[11:13])
+		second = int(text[13:15])
+	except:
+		raise ValueError("Corrupted date string")
+	
+	return datetime.datetime(year,month,day,hour,minute,second,0,tzinfo=None)
 
 ###############################################################################
 # RecurrentEvent
@@ -25,8 +59,8 @@ FREQS    = { "SECONDLY":6, "MINUTELY":5, "HOURLY":4, "DAILY":3, "WEEKLY":2, "MON
 
 class RecurrentEvent:
 
-	def __init__(self):
-		self.startdate = None
+	def __init__(self,start=None):
+		self.startdate = start
 		self.ruleset = []
 		self.ClearRuleSet()
 		self.currentEvent = None
@@ -53,12 +87,94 @@ class RecurrentEvent:
 		
 		self.evCount = 0
 		self.ilist = []
+	
+	#
+	# AppendRule
+	#
+	# Mechanism to allow the recurrence ruleset to be built up
+	# through multiple calls to this function specifying the
+	# command and the rule. Multiple calls to the same
+	# command will overwrite the previous rule. Unrecognized 
+	# commands are just ignored; the function will return false 
+	# in this case.
+	
+	def AppendRule(self,cmd,rule):
+				
+		if cmd == "Frequency":
+			self.freq = YEARLY
+			if rule in FREQS.keys():
+				self.freq = FREQS[rule]
+				return True
+			return False
 		
-	def SetStartDateFromText(self,date):
-		self.startdate = dateutil.TextToDate(date)
+		if cmd == "Interval":
+			self.interval = int(rule)
+			return True
+		
+		if cmd == "Count":
+			self.count = int(rule)
+			return True
+		
+		if cmd == "Until":
+			self.until = _TextToDate(rule)
+			return True
+		
+		if cmd == "ByMonth":
+			self.byMonth += list(int(x) for x in rule.split(','))
+			self.byMonth.sort()
+			return True
+		
+		if cmd == "ByWeekNo":
+			self.byWeekNo += list(int(x) for x in rule.split(','))
+			self.byWeekNo.sort()
+			return True
+		
+		if cmd == "ByDay":
+			self.byDay = []
+			l=list(rule.split(','))
+			for x in l:
+				if len(x) >=2:
+					day = x.lstrip("-+1234567890")
+					if WEEKDAYS.has_key(day):
+						d = WEEKDAYS[day]
+						pos = 0
+						if len(x) > 2:
+							pos = (int(x[0:len(x)-2]))
+						self.byDay.append((d,pos))
+					else:
+						return False
+			self.byDay.sort()
+			return True
+						
+		if cmd == "ByMonthDay":
+			self.byMonthDay += list(int(x) for x in rule.split(','))
+			self.byMonthDay.sort()
+			return True
+		
+		if cmd == "ByYearDay":
+			self.byYearDay += list(int(x) for x in rule.split(','))
+			self.byYearDay.sort()
+			return True
+		
+ 		if cmd == "ByHour":
+			self.byHour += list(int(x) for x in rule.split(','))
+			self.byHour.sort()
+			return True
+		
+		if cmd == "ByMinute":
+			self.byMinute += list(int(x) for x in rule.split(','))
+			self.byMinute.sort()
+			return True
+		
+		if cmd == "BySecond":
+			self.bySecond += list(int(x) for x in rule.split(','))
+			self.bySecond.sort()
+			return True
+		
+		return False
 		
 	def AppendStringRule(self,rule):
-		
+				
 		cmd,val = rule.split("=")
 		
 		if cmd == "FREQ":
@@ -77,7 +193,7 @@ class RecurrentEvent:
 			return True
 		
 		if cmd == "UNTIL":
-			self.until = dateutil.TextToDate(val)
+			self.until = _TextToDate(val)
 			return True
 		
 		if cmd == "BYMONTH":
@@ -133,8 +249,7 @@ class RecurrentEvent:
 			return True
 		
 		return False
-					
-	
+		
 	#####################################################################
 	# PROCESSOR FUNCTIONS
 	#

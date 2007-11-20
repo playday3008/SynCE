@@ -504,3 +504,30 @@ Todo: clean up the OS30 event formatting code (which is a bit
 hack-ey at the moment, add OS30 timezone support along with
 tasks and contacts support in OS30. Watch this space....
 
+
+20/11/2007 - 190000 Dr J A Gow
+------------------------------
+
+tools/do_sync.py removed (not really necessary now)
+
+Major changes in the format30 tree. We now have largely functional
+support for Opensync 0.3x and later. In the formats30 conversion
+code, the timezone handling has been completely overhauled and cleaned up.
+XSLT extensions have been split off from conversions.py and implemented in 
+four new files: taskconv.py, eventconv.py, contactconv.py and commonconv.py.
+The functions have been renamed in a consistent manner. This is to make the
+activation barrier easier for individuals to support new fields as they
+become available and to move towards a format converter module that can
+be easily split off from sync-engine and be implemented as a separate 
+plugin.
+
+There are still some known problems as we are currently chasing a moving
+target while Opensync and its plugins update the XML schemas - so
+expect the OS0.3x stuff to break regularly until Opensync finalize these
+schemas.
+
+To enable Opensync 0.3x conversion, insert:
+
+<OpensyncXMLFormat>OS30</OpensyncXMLFormat> 
+
+into your config.xml (see the above CHANGELOG entry)

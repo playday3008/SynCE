@@ -446,8 +446,6 @@ class TimeSpan:
 		
 		return rlist
 
-
-
 #
 # TSFromStartAndDelta
 #

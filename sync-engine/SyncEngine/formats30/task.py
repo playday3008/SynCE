@@ -19,21 +19,29 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-import parser
-import libxml2
 from SyncEngine.constants import *
 from SyncEngine.xmlutil import *
-import tzconv
+import parser
+import libxml2
+import tzdatabase
 
 libxml2.pedanticParserDefault(0)
 
 def from_airsync(as_node):
-	
-    tzconv.CUR_TZ["current"] = None
+
+    # Flush all timezones between events
+
+    tzdatabase.tzdb.Flush()
+
     dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_TASKS, parser.FMT_FROM_AIRSYNC)
     return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
+
+    # Flush all timezones between events
+
+    tzdatabase.tzdb.Flush()
+	
     dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml(encoding="utf-8")), SYNC_ITEM_TASKS, parser.FMT_TO_AIRSYNC)
     dst_doc = minidom.parseString(str(dst_doc))
     return dst_doc

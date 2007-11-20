@@ -25,46 +25,52 @@ import os
 
 from SyncEngine.constants import *
 from SyncEngine.xmlutil import *
-import conversions
-import tzconv
 import logging
+import commonconv
+import eventconv
+import contactconv
+import taskconv
 
 FMT_TO_AIRSYNC   = 1
 FMT_FROM_AIRSYNC = 2
 
 class Parser:
 
-    FORMATS_PATH = os.path.dirname(os.path.abspath(__file__))
+	FORMATS_PATH = os.path.dirname(os.path.abspath(__file__))
 
-    XSL_CONTACT_TO_AIRSYNC   = FORMATS_PATH + "/contact-to-airsync.xsl"
-    XSL_CONTACT_FROM_AIRSYNC = FORMATS_PATH + "/contact-from-airsync.xsl"
-    XSL_EVENT_TO_AIRSYNC     = FORMATS_PATH + "/event-to-airsync.xsl"
-    XSL_EVENT_FROM_AIRSYNC   = FORMATS_PATH + "/event-from-airsync.xsl"
-    XSL_TASK_TO_AIRSYNC      = FORMATS_PATH + "/task-to-airsync.xsl"
-    XSL_TASK_FROM_AIRSYNC    = FORMATS_PATH + "/task-from-airsync.xsl"
+	XSL_CONTACT_TO_AIRSYNC   = FORMATS_PATH + "/contact-to-airsync.xsl"
+	XSL_CONTACT_FROM_AIRSYNC = FORMATS_PATH + "/contact-from-airsync.xsl"
+	XSL_EVENT_TO_AIRSYNC     = FORMATS_PATH + "/event-to-airsync.xsl"
+	XSL_EVENT_FROM_AIRSYNC   = FORMATS_PATH + "/event-from-airsync.xsl"
+	XSL_TASK_TO_AIRSYNC      = FORMATS_PATH + "/task-to-airsync.xsl"
+	XSL_TASK_FROM_AIRSYNC    = FORMATS_PATH + "/task-from-airsync.xsl"
 
-    STYLESHEETS  = { SYNC_ITEM_CONTACTS : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_TO_AIRSYNC)),
-                                            FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_FROM_AIRSYNC)) },
-                     SYNC_ITEM_CALENDAR : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_TO_AIRSYNC)),
-                                            FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_FROM_AIRSYNC)) },
-                     SYNC_ITEM_TASKS    : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_TO_AIRSYNC)),
-                                            FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_FROM_AIRSYNC)) },
-                   }
+	STYLESHEETS  = { SYNC_ITEM_CONTACTS : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_TO_AIRSYNC)),
+						FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_FROM_AIRSYNC)) },
+			 SYNC_ITEM_CALENDAR : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_TO_AIRSYNC)),
+						FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_FROM_AIRSYNC)) },
+			 SYNC_ITEM_TASKS    : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_TO_AIRSYNC)),
+						FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_FROM_AIRSYNC)) },
+		       }
 
-    def __init__(self):
-        self.logger = logging.getLogger("engine.formats.parser.Parser")
-        conversions.register_xslt_extension_functions()
-	tzconv.RegisterXSLTExtensionFunctions()
+	def __init__(self):
+        
+		self.logger = logging.getLogger("engine.formats.parser.Parser")
 	
+		commonconv.RegisterXSLTExtensionFunctions()
+		eventconv.RegisterXSLTExtensionFunctions()
+		contactconv.RegisterXSLTExtensionFunctions()
+		taskconv.RegisterXSLTExtensionFunctions()
 
-    def convert(self, src_doc, item_type, format):
-        if not self.STYLESHEETS.has_key(item_type):
-            raise ValueError("Unsupported item type %d" % item_type)
+	def convert(self, src_doc, item_type, format):
 
-        if not self.STYLESHEETS[item_type].has_key(format):
-            raise ValueError("Unsupported format %d" % format)
+		if not self.STYLESHEETS.has_key(item_type):
+			raise ValueError("Unsupported item type %d" % item_type)
 
-        stylesheet_doc = self.STYLESHEETS[item_type][format]
-        return stylesheet_doc.applyStylesheet(src_doc, None)
+		if not self.STYLESHEETS[item_type].has_key(format):
+			raise ValueError("Unsupported format %d" % format)
+
+		stylesheet_doc = self.STYLESHEETS[item_type][format]
+		return stylesheet_doc.applyStylesheet(src_doc, None)
 
 parser = Parser()

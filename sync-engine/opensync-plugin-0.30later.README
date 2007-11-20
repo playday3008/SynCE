@@ -5,20 +5,76 @@ SynCE plugin for OpenSync >= 0.30
 -WARNING-
 ---------
 
-This code is EXPERIMENTAL and is not yet ready for production use. If you want
-to run a production system, stick with OpenSync 2.x and use the old 
-opensync-plugin.py.
-
+This code is EXPERIMENTAL and is not yet ready for production use. If you 
+are a user and want to run a production system, stick with OpenSync 0.2x and
+use the old opensync-plugin.py.
 
 ---------------
 Current status:
 ---------------
 
-This plugin currently IS NOT FULLY FUNCTIONAL. It is provided for development
-and test only and is a work in progress. It will be updated regularly and may
-change rapidly, so keep an eye on SVN releases.
+This plugin is functional, but NOT STABLE. It may break at any time. This 
+is in part due to the fact that OpenSync 0.3x is currently not stable and
+to some degree we will be chasing a moving target. It is provided for
+development and test only and is a work in progress. It will be updated
+regularly and may change rapidly, so keep an eye on SVN releases.
 
-Once operational, this will be announced here.
+If you are a developer or tester, please feed back the results of any testing
+you have carried out using this plugin. If possible, try and identify whether
+the problem you have is on the Opensync side, or on the SynCE side as this
+will simplify the process.
+
+----------------
+Call for Testing
+----------------
+
+Any contribution to testing at this stage is most welcome. When reporting
+your findings, please remember to include at a _minimum_ the complete console
+log from sync-engine and the details of the specific item that won't sync
+correctly. If you can isolate the problem to one specific item and run a
+sync with just this item, this would reduce the amount of information to
+that relevant to the problem. Please reference the dated entries below and
+the main sync-engine CHANGELOG for known problems.
+
+Specific areas:
+
+    - All testing to date has been carried out by syncing against the 
+      Evolution2 plugin. Syncing against other targets has not been tested.
+      Testing with kdepim etc. would help
+
+    - The timezone conversion code has been completely overhauled and 
+      cleaned up considerably. Please check against 'awkward' timezones.
+
+20/11/07
+--------
+
+Corrected bug resulting in Opensync crashing when trying to delete from the
+device side. Many, many major changes to the Opensync 0.3x format conversions,
+with the result that the Opensync 0.3x plugin is now at least functional.
+There are a number of known problems which are highlighted below. Note that all
+testing has been carried out syncing against the Evolution2 plugin.
+
+    - Using the Evo2 plugin, contacts will sync OK from host to device, but
+      will give an empty contact in reverse. This is a problem not with our
+      code but with the Evo2 plugin itself not reporting its capabilities in
+      a form that the Opensync engine understands - with the result that 
+      the Opensync merger strips out all the data! To workaround this, please
+      apply the patch in sync-engine/patches/opensync/evolution2/evo2.diff
+      to the evolution2 plugin source tree. It is not known if kdepim or
+      other targets have similar problems. Bug has been raised with Opensync.
+
+    - timezone IDs specified in <LastModified> style entries are retained,
+      but the timezone itself is not left in the event. This will be
+      changed in our code never to timezone a <LastModified> as a way
+      of getting round this, but the core problem is on the Opensync side.
+
+    - Reminders sync OK host to device, but going from device->host the
+      reminder seems not to be recognized. We are exporting correct XML
+      according to the Opensync schemas so this is clearly a problem with
+      the Opensync code.
+
+    - Tasks seem to sync OK throughout.
+
 
 25/10/07
 --------
@@ -67,11 +123,11 @@ Symlink to opensync-plugin-0.30later.py from a link synce-plugin.py in the
 Create a new group, add members:
 
 msynctool --addgroup wm5file
-msynctool --addmember wm5file file-sync
+msynctool --addmember wm5file <<your-favourite-plugin>>
 msynctool --addmember wm5file synce-plugin
 
-Configure file-sync (one directory stanza for every item you want to sync
-to files - I have just shown contacts here):
+If using the file-sync plugin, configure file-sync (one directory stanza
+for every item you want to sync to files - I have just shown contacts here):
 
 <?xml version="1.0"?>
 <config>

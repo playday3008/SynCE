@@ -18,23 +18,28 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-"""
-    Unhandled fields:
-        Body (subnodes/attrs: Body{Size,Truncated}), Children (subnodes: Child),
-        Yomi{CompanyName,FirstName,LastName}, {Customer,Government}Id,
-        AccountName, MMS and Rtf
-"""
 
 import parser
 import libxml2
 from SyncEngine.constants import *
 from SyncEngine.xmlutil import *
+import tzdatabase
 
 def from_airsync(as_node):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
-    return minidom.parseString(str(dst_doc))
+	     
+	# Flush all timezones between contacts
+
+	tzdatabase.tzdb.Flush()
+
+	dst_doc = parser.parser.convert(libxml2.parseDoc(as_node.toxml(encoding="utf-8")), SYNC_ITEM_CONTACTS, parser.FMT_FROM_AIRSYNC)
+	return minidom.parseString(str(dst_doc))
 
 def to_airsync(os_doc):
-    dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml(encoding="utf-8")), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
-    dst_doc = minidom.parseString(str(dst_doc))
-    return dst_doc
+
+	# Flush all timezones between contacts
+
+	tzdatabase.tzdb.Flush()
+	
+	dst_doc = parser.parser.convert(libxml2.parseDoc(os_doc.toxml(encoding="utf-8")), SYNC_ITEM_CONTACTS, parser.FMT_TO_AIRSYNC)
+	dst_doc = minidom.parseString(str(dst_doc))
+	return dst_doc
