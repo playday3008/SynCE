@@ -309,6 +309,40 @@ odccm_device_manager_class_init (OdccmDeviceManagerClass *dev_mgr_class)
 
 static void device_obj_path_changed_cb (GObject *obj, GParamSpec *param, gpointer user_data);
 
+#ifdef ENABLE_LEGACY_SUPPORT
+static void
+legacy_device_noping_cb(OdccmDeviceLegacy *device,
+			guint remove_addr,
+			gpointer user_data)
+{
+  OdccmDeviceManager *self = ODCCM_DEVICE_MANAGER (user_data);
+  OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (self);
+  GSList *cur;
+
+  for (cur = priv->devices; cur != NULL; cur = cur->next)
+    {
+      OdccmDevice *dev = cur->data;
+      guint32 addr;
+
+      g_object_get (dev, "ip-address", &addr, NULL);
+
+      if (addr == remove_addr)
+        {
+          gchar *obj_path;
+
+          g_object_get (dev, "object-path", &obj_path, NULL);
+          g_signal_emit (self, signals[DEVICE_DISCONNECTED], 0, obj_path);
+          g_free (obj_path);
+
+          priv->devices = g_slist_delete_link (priv->devices, cur);
+          g_object_unref (dev);
+
+          break;
+        }
+    }
+}
+#endif
+
 static void
 client_connected_cb (GServer *server,
                      GConn *conn,
@@ -349,8 +383,10 @@ client_connected_cb (GServer *server,
     {
 #ifdef ENABLE_LEGACY_SUPPORT
       GInetAddr *local_inet_addr = gnet_tcp_socket_get_local_inetaddr (conn->socket);
-      if (gnet_inetaddr_get_port(local_inet_addr) == 5679)
+      if (gnet_inetaddr_get_port(local_inet_addr) == 5679) {
 	dev = g_object_new (ODCCM_TYPE_DEVICE_LEGACY, "connection", conn, NULL);
+	g_signal_connect(dev, "device-legacy-noping", G_CALLBACK(legacy_device_noping_cb), self);
+      }
       else
 	dev = g_object_new (ODCCM_TYPE_DEVICE, "connection", conn, NULL);
       gnet_inetaddr_unref(local_inet_addr);

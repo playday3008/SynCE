@@ -51,6 +51,15 @@ struct _OdccmDeviceLegacyPrivate
 #define ODCCM_DEVICE_LEGACY_GET_PRIVATE(o) \
     (G_TYPE_INSTANCE_GET_PRIVATE((o), ODCCM_TYPE_DEVICE_LEGACY, OdccmDeviceLegacyPrivate))
 
+/* signals */
+enum
+{
+  DEVICE_LEGACY_NOPING,
+
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void conn_event_cb_legacy_impl (GConn *conn, GConnEvent *event, gpointer user_data);
 static void odccm_device_request_connection_legacy_impl (OdccmDevice *self, DBusGMethodInvocation *ctx);
@@ -71,6 +80,16 @@ odccm_device_legacy_init (OdccmDeviceLegacy *self)
 }
 
 static void
+odccm_device_legacy_dispose (GObject *obj)
+{
+  OdccmDeviceLegacy *self = ODCCM_DEVICE_LEGACY (obj);
+  OdccmDeviceLegacyPrivate *priv = ODCCM_DEVICE_LEGACY_GET_PRIVATE (self);
+
+  if (G_OBJECT_CLASS (odccm_device_legacy_parent_class)->dispose)
+    G_OBJECT_CLASS (odccm_device_legacy_parent_class)->dispose (obj);
+}
+
+static void
 odccm_device_legacy_finalize (GObject *obj)
 {
   OdccmDeviceLegacy *self = ODCCM_DEVICE_LEGACY (obj);
@@ -78,7 +97,8 @@ odccm_device_legacy_finalize (GObject *obj)
 
   g_free (priv->password);
 
-  G_OBJECT_CLASS (odccm_device_legacy_parent_class)->finalize (obj);
+  if (G_OBJECT_CLASS (odccm_device_legacy_parent_class)->finalize)
+    G_OBJECT_CLASS (odccm_device_legacy_parent_class)->finalize (obj);
 }
 
 static void
@@ -86,11 +106,21 @@ odccm_device_legacy_class_init (OdccmDeviceLegacyClass *dev_class)
 {
   g_type_class_add_private (dev_class, sizeof (OdccmDeviceLegacyPrivate));
 
+  G_OBJECT_CLASS(dev_class)->dispose = odccm_device_legacy_dispose;
   G_OBJECT_CLASS(dev_class)->finalize = odccm_device_legacy_finalize;
 
   ODCCM_DEVICE_CLASS(dev_class)->conn_event_cb = conn_event_cb_legacy_impl;
   ODCCM_DEVICE_CLASS(dev_class)->odccm_device_request_connection = odccm_device_request_connection_legacy_impl;
   ODCCM_DEVICE_CLASS(dev_class)->odccm_device_provide_password = odccm_device_provide_password_impl;
+
+  signals[DEVICE_LEGACY_NOPING] =
+    g_signal_new ("device-legacy-noping",
+                  G_OBJECT_CLASS_TYPE (dev_class),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__UINT,
+                  G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 
@@ -238,7 +268,14 @@ odccm_device_legacy_send_ping(gpointer data)
   gnet_conn_write(priv->conn, (gchar *) &ping, sizeof(ping));
 
   if (++priv_legacy->ping_count == DCCM_MAX_PING_COUNT) {
-    g_warning("%s: Device not responded to %d pings, disconnected ?", G_STRFUNC, DCCM_MAX_PING_COUNT);
+    gchar *name = NULL;
+    guint32 addr;
+    g_object_get(self, "name", &name, NULL);
+    g_object_get(self, "ip-address", &addr, NULL);
+
+    g_warning("%s: Device %s not responded to %d pings, assume disconnected", G_STRFUNC, name, DCCM_MAX_PING_COUNT);
+    g_signal_emit (self, signals[DEVICE_LEGACY_NOPING], 0, addr);
+    g_free(name);
     return FALSE;
   }
 
@@ -347,9 +384,16 @@ device_info_received_legacy (OdccmDeviceLegacy *self, const guchar *buf, gint le
 
   /* what are version, id ? */
 
-  /* we dont have guid, we'll use name for now */
+  /* we dont have guid, we'll use ip address */
+  guint32 addr;
+  g_object_get(self, "ip-address", &addr, NULL);
+
+  struct in_addr tmp_addr;
+  tmp_addr.s_addr = addr;
+  gchar *str_addr = inet_ntoa(tmp_addr);
+
   g_object_set (self,
-      "guid", name,
+      "guid", str_addr,
       "os-major", os_major,
       "os-minor", os_minor,
       "name", name,
@@ -407,10 +451,21 @@ OUT:
 
 
 static void
-client_event_dummy_cb (GConn *conn,
-                 GConnEvent *event,
-                 gpointer user_data)
+legacy_client_event_cb (GConn *conn,
+			GConnEvent *event,
+			gpointer user_data)
 {
+  if (event->type == GNET_CONN_CONNECT) {
+    if (ODCCM_IS_CONNECTION_BROKER(user_data)) {
+      _odccm_connection_broker_take_connection (ODCCM_CONNECTION_BROKER(user_data), conn);
+    } else {
+      g_warning("%s: not passed a connection broker", G_STRFUNC);
+    }
+    return;
+  }
+
+  g_warning ("%s: unhandled event", G_STRFUNC);
+
   return;
 }
 
@@ -440,7 +495,8 @@ client_event_password_cb (GConn *conn,
   result = *((guint8 *) event->buffer);
   if (result != 0) {
       _odccm_connection_broker_take_connection (broker, conn);
-      gnet_conn_set_callback (conn, client_event_dummy_cb, NULL);
+
+      gnet_conn_set_callback (conn, legacy_client_event_cb, broker);
       return;
   } else {
     g_warning("%s: Password rejected", G_STRFUNC);
@@ -481,15 +537,12 @@ odccm_device_request_connection_legacy_impl (OdccmDevice *self, DBusGMethodInvoc
 
   g_signal_connect (broker, "done", (GCallback) conn_broker_done_cb, self);
 
-  rapi_inet_addr = gnet_inetaddr_clone(priv->conn->inetaddr);
-  gnet_inetaddr_set_port(rapi_inet_addr, RAPI_PORT);
-  rapi_conn = gnet_conn_new_inetaddr(rapi_inet_addr, client_event_dummy_cb, NULL);
-  gnet_conn_connect(rapi_conn);
-
-  /* password stuff for new sock */
-
   OdccmDeviceLegacy *legacy_self = ODCCM_DEVICE_LEGACY(self);
   OdccmDeviceLegacyPrivate *legacy_priv = ODCCM_DEVICE_LEGACY_GET_PRIVATE (legacy_self);
+
+  rapi_inet_addr = gnet_inetaddr_clone(priv->conn->inetaddr);
+  gnet_inetaddr_set_port(rapi_inet_addr, RAPI_PORT);
+
   if (legacy_priv->password && strlen(legacy_priv->password))
     {
       guchar *buf;
@@ -504,17 +557,21 @@ odccm_device_request_connection_legacy_impl (OdccmDevice *self, DBusGMethodInvoc
 	}
 
       buf_size = GUINT16_TO_LE (buf_size);
+
+      rapi_conn = gnet_conn_new_inetaddr(rapi_inet_addr, client_event_password_cb, broker);
+      gnet_conn_connect(rapi_conn);
+
       gnet_conn_write (rapi_conn, (gchar *) &buf_size, sizeof (buf_size));
       gnet_conn_write (rapi_conn, (gchar *) buf, buf_size);
 
-      gnet_conn_set_callback (rapi_conn, client_event_password_cb, broker);
       gnet_conn_readn (rapi_conn, sizeof (guint8));
 
       goto OUT;
     }
 
+  rapi_conn = gnet_conn_new_inetaddr(rapi_inet_addr, legacy_client_event_cb, broker);
+  gnet_conn_connect(rapi_conn);
 
-  _odccm_connection_broker_take_connection (broker, rapi_conn);
 OUT:
   if (error != NULL)
     dbus_g_method_return_error (ctx, error);

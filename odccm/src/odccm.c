@@ -89,17 +89,21 @@ gint main(gint argc, gchar *argv[])
 
   if (run_as_daemon)
     {
-      pid_t pid = fork ();
-      if (pid < 0)
+      if (chdir ("/") < 0) {
+	g_critical("%s: Failed to change to root directory", G_STRFUNC);
         return EXIT_FAILURE;
+      }
+
+      pid_t pid = fork ();
+      if (pid < 0) {
+	g_critical("%s: Failed to create child process", G_STRFUNC);
+        return EXIT_FAILURE;
+      }
 
       if (pid > 0)
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
 
       if (setsid () < 0)
-        return EXIT_FAILURE;
-
-      if (chdir ("/") < 0)
         return EXIT_FAILURE;
 
       close (STDIN_FILENO);

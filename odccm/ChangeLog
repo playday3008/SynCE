@@ -1,3 +1,10 @@
+2007-11-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* improve backgrounding in odccm.c
+	* device-legacy to emit disconnect signal when ping reply overdue
+	* device-legacy fixes to connection requests, minor fixes
+	* device-legacy use IP as dbus path and guid, not name
+
 2007-07-31  Mark Ellis <mark@mpellis.org.uk>
 
 	* added command options for ip configuration
