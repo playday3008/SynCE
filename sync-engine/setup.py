@@ -10,7 +10,6 @@ setup(
                'tools/clean_partnerships.py',
                'tools/create_partnership.py',
                'tools/delete_partnership.py',
-               'tools/do_sync.py',
                'tools/list_partnerships.py',
                'tools/select_partnership.py'],
     package_data = {
