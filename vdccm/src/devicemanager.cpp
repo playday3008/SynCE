@@ -81,7 +81,6 @@ void DeviceManager::addConnectedDevice(WindowsCEDeviceBase * windowsCEDevice)
                 break;
             }
         }
-        Utils::runScripts("connect", deviceName);
         synce_info("Device connected: %s", deviceName.c_str());
     } else {
         // A device with same name is already known here!
@@ -107,7 +106,6 @@ void DeviceManager::removeConnectedDevice(WindowsCEDeviceBase * windowsCEDevice)
 
         connectionFileManager.removeConnectionFile(windowsCEDevice);
         connectedDevices.remove(windowsCEDevice);
-        Utils::runScripts("disconnect", deviceName);
         synce_info("Device disconnected: %s", deviceName.c_str());
     }
 }
