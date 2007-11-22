@@ -94,28 +94,33 @@ bool WindowsCEDevice::handleInfoMessage(uint32_t header)
     buffer = new char[ header ];
     if ( buffer != NULL ) {
         if (synce_socket_read(socket, buffer, header)) {
-						osVersion = letoh16( *( uint16_t* ) ( buffer + 0x04 ) ) & 0xFF;
+            osVersion = letoh16( *( uint16_t* ) ( buffer + 0x04 ) ) & 0xFF;
             buildNumber = letoh16( *( uint16_t* ) ( buffer + 0x06 ) );
             processorType = letoh16( *( uint16_t* ) ( buffer + 0x08 ) );
             partnerId1 = letoh32( *( uint32_t* ) ( buffer + 0x10 ) );
             partnerId2 = letoh32( *( uint32_t* ) ( buffer + 0x14 ) );
             char *tmp = ( char * ) string_at( buffer, header, 0x18 );
-            deviceName = tmp;
-            realName = tmp;
-            free(tmp);
-
-            string::iterator it;
-            for (it = deviceName.begin(); it != deviceName.end(); ++it) {
-                *it = tolower(*it);
+            if (tmp) {
+                deviceName = tmp;
+                realName = tmp;
+                free(tmp);
+                string::iterator it;
+                for (it = deviceName.begin(); it != deviceName.end(); ++it) {
+                    *it = tolower(*it);
+                }
             }
 
             tmp = ( char * ) string_at( buffer, header, 0x1c );
-            deviceClass = tmp;
-            free(tmp);
+            if (tmp) {
+                deviceClass = tmp;
+                free(tmp);
+            }
 
             tmp = ( char * ) string_at( buffer, header, 0x20 );
-            hardware = tmp;
-            free(tmp);
+            if (tmp) {
+                hardware = tmp;
+                free(tmp);
+            }
 
             delete[] buffer;
             buffer = NULL;
