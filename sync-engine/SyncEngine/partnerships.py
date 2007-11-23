@@ -132,9 +132,10 @@ class Partnerships:
 
                         if provider.type in SYNC_ITEM_ID_FROM_GUID:
                             id = SYNC_ITEM_ID_FROM_GUID[provider.type]
-                        else:
-                            if provider["Name"] == "Media":
-                                id = SYNC_ITEM_MEDIA
+                        elif provider["Name"] == "Media":
+                            id = SYNC_ITEM_MEDIA
+                        elif provider["Name"] == "WorldMate":
+			    id = SYNC_ITEM_WORLDMATE
 
                         if id == None:
                             raise ValueError("Unknown GUID \"%s\" for provider with name \"%s\"" \

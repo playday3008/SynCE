@@ -564,3 +564,9 @@ noticeable :)
 
 Broken the characteristic class out of xmlutil prior to removing xmlutil.py
 and placed it in its own 'characteristics.py'. Removed DOM dependence.
+
+23/11/2007 - 183000 Dr J A Gow
+------------------------------
+
+Folded in GUID data for 'WorldMate' (bug 1729381) details thanks to Nils
+Pickert.
