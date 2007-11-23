@@ -25,49 +25,13 @@ from constants import *
 SupportedFormats = ["NONE", "OS20", "OS30"]
 DefaultFormat = "OS20"
 
-# _NullConverter forward declaration
-
-def _NullConverter(as_node):
-	pass
-
 #
-# These handler dispatch tables ensure the correct format handlers are called for
-# each correct object type using very simple runtime code.
+# This handler array dispatches the appropriate format converter according to the 
+# format specified
 
-FormatHandlers20 = { DIR_TO_AIRSYNC   : { SYNC_ITEM_TASKS    : formats.task.to_airsync,
-                                          SYNC_ITEM_CONTACTS : formats.contact.to_airsync,
-                                          SYNC_ITEM_CALENDAR : formats.event.to_airsync
-                                        },
-                     DIR_FROM_AIRSYNC : { SYNC_ITEM_TASKS    : formats.task.from_airsync,
-                                          SYNC_ITEM_CONTACTS : formats.contact.from_airsync,
-                                          SYNC_ITEM_CALENDAR : formats.event.from_airsync
-                                        }
-                   }
-
-FormatHandlers30 = { DIR_TO_AIRSYNC   : { SYNC_ITEM_TASKS    : formats30.task.to_airsync,
-                                          SYNC_ITEM_CONTACTS : formats30.contact.to_airsync,
-                                          SYNC_ITEM_CALENDAR : formats30.event.to_airsync
-                                        },
-                     DIR_FROM_AIRSYNC : { SYNC_ITEM_TASKS    : formats30.task.from_airsync,
-                                          SYNC_ITEM_CONTACTS : formats30.contact.from_airsync,
-                                          SYNC_ITEM_CALENDAR : formats30.event.from_airsync
-                                        }
-                   }
-
-NoConvHandlers =   { DIR_TO_AIRSYNC   : { SYNC_ITEM_TASKS    : _NullConverter,
-                                          SYNC_ITEM_CONTACTS : _NullConverter,
-                                          SYNC_ITEM_CALENDAR : _NullConverter
-                                        },
-                     DIR_FROM_AIRSYNC : { SYNC_ITEM_TASKS    : _NullConverter,
-                                          SYNC_ITEM_CONTACTS : _NullConverter,
-                                          SYNC_ITEM_CALENDAR : _NullConverter
-                                        }
-                   }
-
-
-HandlerArray = { "NONE" : NoConvHandlers,
-                 "OS20" : FormatHandlers20,
-		 "OS30" : FormatHandlers30
+HandlerArray = { "NONE" : None,
+                 "OS20" : formats.parser.parser.convert,
+		 "OS30" : formats30.parser.parser.convert
 	       }
 
 #
@@ -81,22 +45,10 @@ HandlerArray = { "NONE" : NoConvHandlers,
 def ConvertFormat(direction, type_id, data, fmt_type):
 	if fmt_type in HandlerArray.keys():
 		converter = HandlerArray[fmt_type]
-		if converter[direction].has_key(type_id):
-			return converter[direction][type_id](data)
+		if converter != None:
+			return converter(data,type_id,direction)
 		else:
-			raise Exception("Unable to convert data of item type %d" % type_id)
+			return data
 	else:
 		raise Exception("Unknown format conversion %s" % fmt_type)
 
-#
-# NullConverter
-#
-# INTERNAL
-#
-# Converts the XML without actually converting the formats
-#
-
-def _NullConverter(as_node):
-	
-	dst_doc = as_node.toxml(encoding="utf-8")
-	return minidom.parseString(str(dst_doc))

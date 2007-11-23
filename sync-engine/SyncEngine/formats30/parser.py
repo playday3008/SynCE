@@ -24,15 +24,13 @@ import libxslt
 import os
 
 from SyncEngine.constants import *
-from SyncEngine.xmlutil import *
 import logging
 import commonconv
 import eventconv
 import contactconv
 import taskconv
+import tzdatabase
 
-FMT_TO_AIRSYNC   = 1
-FMT_FROM_AIRSYNC = 2
 
 class Parser:
 
@@ -45,12 +43,12 @@ class Parser:
 	XSL_TASK_TO_AIRSYNC      = FORMATS_PATH + "/task-to-airsync.xsl"
 	XSL_TASK_FROM_AIRSYNC    = FORMATS_PATH + "/task-from-airsync.xsl"
 
-	STYLESHEETS  = { SYNC_ITEM_CONTACTS : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_TO_AIRSYNC)),
-						FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_FROM_AIRSYNC)) },
-			 SYNC_ITEM_CALENDAR : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_TO_AIRSYNC)),
-						FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_FROM_AIRSYNC)) },
-			 SYNC_ITEM_TASKS    : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_TO_AIRSYNC)),
-						FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_FROM_AIRSYNC)) },
+	STYLESHEETS  = { SYNC_ITEM_CONTACTS : { DIR_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_TO_AIRSYNC)),
+						DIR_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_FROM_AIRSYNC)) },
+			 SYNC_ITEM_CALENDAR : { DIR_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_TO_AIRSYNC)),
+						DIR_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_FROM_AIRSYNC)) },
+			 SYNC_ITEM_TASKS    : { DIR_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_TO_AIRSYNC)),
+						DIR_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_FROM_AIRSYNC)) },
 		       }
 
 	def __init__(self):
@@ -62,15 +60,16 @@ class Parser:
 		contactconv.RegisterXSLTExtensionFunctions()
 		taskconv.RegisterXSLTExtensionFunctions()
 
-	def convert(self, src_doc, item_type, format):
+	def convert(self, src_doc, item_type, direction):
 
 		if not self.STYLESHEETS.has_key(item_type):
 			raise ValueError("Unsupported item type %d" % item_type)
 
-		if not self.STYLESHEETS[item_type].has_key(format):
-			raise ValueError("Unsupported format %d" % format)
+		if not self.STYLESHEETS[item_type].has_key(direction):
+			raise ValueError("Unsupported direction %d" % direction)
 
-		stylesheet_doc = self.STYLESHEETS[item_type][format]
+		tzdatabase.tzdb.Flush()
+		stylesheet_doc = self.STYLESHEETS[item_type][direction]
 		return stylesheet_doc.applyStylesheet(src_doc, None)
 
 parser = Parser()

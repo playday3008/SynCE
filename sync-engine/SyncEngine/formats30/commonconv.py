@@ -17,7 +17,7 @@ from time import gmtime, strftime
 import tzutils
 import tzdatabase
 import dateutil
-import xml2util
+import SyncEngine.xml2util as xml2util
 
 # exactly what it says on the tin.
 

@@ -15,7 +15,7 @@ import struct
 import datetime
 import dateutil
 import tzutils
-import xml2util
+import SyncEngine.xml2util as xml2util
 import base64
 import SyncEngine.util
 import calendar

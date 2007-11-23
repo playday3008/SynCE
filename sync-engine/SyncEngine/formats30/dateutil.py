@@ -12,7 +12,7 @@
 import datetime
 import tzutils
 import tzdatabase
-import xml2util
+import SyncEngine.xml2util as xml2util
 
 #
 # Day of week constant

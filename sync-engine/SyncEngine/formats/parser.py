@@ -20,11 +20,8 @@
 
 import libxml2
 import libxslt
-
 import os
-
 from SyncEngine.constants import *
-from SyncEngine.xmlutil import *
 import conversions
 import tzconv
 import logging
@@ -57,14 +54,15 @@ class Parser:
 	tzconv.RegisterXSLTExtensionFunctions()
 	
 
-    def convert(self, src_doc, item_type, format):
+    def convert(self, src_doc, item_type, direction):
         if not self.STYLESHEETS.has_key(item_type):
             raise ValueError("Unsupported item type %d" % item_type)
 
-        if not self.STYLESHEETS[item_type].has_key(format):
-            raise ValueError("Unsupported format %d" % format)
+        if not self.STYLESHEETS[item_type].has_key(direction):
+            raise ValueError("Unsupported format %d" % direction)
 
-        stylesheet_doc = self.STYLESHEETS[item_type][format]
+        tzconv.CUR_TZ["current"]=None
+        stylesheet_doc = self.STYLESHEETS[item_type][direction]
         return stylesheet_doc.applyStylesheet(src_doc, None)
 
 parser = Parser()

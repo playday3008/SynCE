@@ -11,7 +11,6 @@
 
 import datetime
 import recurrence
-import libxml2
 
 #
 # UTC timezone class

@@ -25,6 +25,7 @@ import logging
 import socket
 import config
 import formatapi
+import libxml2
 
 from pyrapi2 import *
 
@@ -32,6 +33,8 @@ from util import *
 from errors import *
 from constants import *
 from rapiutil import *
+
+import characteristics
 
 class Partnerships:
 
@@ -224,7 +227,7 @@ class Partnerships:
             pship.sync_items.append(item)
 
         # Create the synchronization config data source
-        source = Characteristic(pship.guid)
+        source = characteristics.Characteristic(pship.guid)
         source["Name"] = pship.name
         source["Server"] = pship.hostname
 
@@ -233,13 +236,13 @@ class Partnerships:
         #  3 = Exchange server
         source["StoreType"] = "2"
 
-        engines = Characteristic("Engines")
+        engines = characteristics.Characteristic("Engines")
         source.add_child(engines)
 
-        engine = Characteristic(GUID_WM5_ACTIVESYNC_ENGINE)
+        engine = characteristics.Characteristic(GUID_WM5_ACTIVESYNC_ENGINE)
         engines.add_child(engine)
 
-        settings = Characteristic("Settings")
+        settings = characteristics.Characteristic("Settings")
         settings["User"] = "DEFAULT"
         settings["Domain"] = "DEFAULT"
         settings["Password"] = "DEFAULT"
@@ -249,7 +252,7 @@ class Partnerships:
         settings["URI"] = "Microsoft-Server-ActiveSync"
         engine.add_child(settings)
 
-        providers = Characteristic("Providers")
+        providers = characteristics.Characteristic("Providers")
         engine.add_child(providers)
 
         for item_id, item_rec in SYNC_ITEMS.items():
@@ -257,7 +260,7 @@ class Partnerships:
             item_guid = SYNC_ITEM_ID_TO_GUID[item_id]
             item_enabled = (item_id in sync_items)
 
-            provider = Characteristic(item_guid)
+            provider = characteristics.Characteristic(item_guid)
             provider["Enabled"] = str(int(item_enabled))
             provider["ReadOnly"] = str(int(item_readonly))
             provider["Name"] = item_str
@@ -717,14 +720,14 @@ class SyncItem:
 	    
         for guid in self.itemdb.keys():
 
-            d = minidom.parseString(self.itemdb[guid])
+            d = libxml2.parseDoc(self.itemdb[guid])
 
             os_doc = formatapi.ConvertFormat(DIR_FROM_AIRSYNC,self.type,d,engineconfig.config_Global.cfg["OpensyncXMLFormat"])
 
             ct = CHANGE_ADDED
             if self.remote_changes.has_key(guid):
                 ct,data = self.remote_changes[guid]
-            self.remote_changes[guid] = ct, os_doc.documentElement.toxml(encoding="utf-8")
+            self.remote_changes[guid] = ct, os_doc.getRootElement().serialize("utf-8",0)
 	
 	# Now scan for items marked as DELETED and remove them - in a slow sync
 	# we only want to know what's actually in the db combined with what's actually

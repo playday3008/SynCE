@@ -18,55 +18,61 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-from xml.dom import minidom
-
-from threading import Thread
+import libxml2
+import threading
 import logging
 import time
 
-class SyncHandler(Thread):
+class SyncHandler(threading.Thread):
 
     def __init__(self, engine, auto_sync):
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
         self.logger = logging.getLogger("engine.synchandler.SyncHandler")
 
         self.engine = engine
         self.auto_sync = auto_sync
 
-        self.sync_done = False
         self.stopped = False
+	self.evtSyncRunFinished = threading.Event()
 
     def stop(self):
         self.stopped = True
+	self.evtSyncRunFinished.set()
 
     def run(self):
-        # Temporarily uninstall the previous handler for the beginning of the
+        
+	# Clear the end-of-sync event
+	
+	self.evtSyncRunFinished.clear()
+	
+	# Temporarily uninstall the previous handler for the beginning of the
         # synchronization.  The previous handler was for the auto-syncs, which
         # we disable temporarily while we are syncing here
+	
         self.engine.airsync.handler_block(self.engine.sync_begin_handler_id)
 
         # Set up our own handler so we can catch the end of the Airsync phase
-        self.sync_end_handler_id = self.engine.airsync.connect("sync-end", self._sync_end_cb)
+        
+	self.sync_end_handler_id = self.engine.airsync.connect("sync-end", self._sync_end_cb)
 
         if not self.auto_sync:
+		
             # If the sync wasn't automatically started, we must manually request it
-            doc = minidom.Document()
-            doc_node = doc.createElement("sync")
-            doc_node.setAttribute("xmlns", "http://schemas.microsoft.com/as/2004/core")
-            doc_node.setAttribute("type", "Interactive")
-            doc.appendChild(doc_node)
+	    
+	    doc = libxml2.newDoc("1.0")
+	    doc_node=doc.newChild(None,"sync",None)
+	    doc_node.setProp("xmlns", "http://schemas.microsoft.com/as/2004/core")
+	    doc_node.setProp("type", "Interactive")
+ 
+ 	    partnernode = doc_node.newChild(None,"partner",None)
+	    partnernode.setProp("id",self.engine.partnerships.get_current().guid)
 
-            node = doc.createElement("partner")
-            node.setAttribute("id", self.engine.partnerships.get_current().guid)
-            doc_node.appendChild(node)
-
-            self.logger.debug("run: sending request to device \n%s", doc_node.toprettyxml())
-            self.engine.rapi_session.sync_start(doc_node.toxml())
+            self.logger.debug("run: sending request to device \n%s", doc_node.serialize("utf-8",1))
+            self.engine.rapi_session.sync_start(doc_node.serialize("utf-8",0))
 
         self.logger.debug("run: performing synchronization")
 
-        while not self.sync_done and not self.stopped:
-            time.sleep(1)
+	self.evtSyncRunFinished.wait()
 
         if self.stopped:
             self.logger.warning("run: Synchronization stopped prematurely!")
@@ -91,5 +97,5 @@ class SyncHandler(Thread):
 
     def _sync_end_cb(self, res):
         self.logger.info("_sync_end_cb: Called")
-        self.sync_done = True
+	self.evtSyncRunFinished.set()
         self.engine.airsync.disconnect(self.sync_end_handler_id)

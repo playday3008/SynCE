@@ -12,7 +12,6 @@ import string
 import datetime
 import timespan
 import calendar
-import libxml2
 
 WEEKDAYS = {"MO" : 0, "TU" : 1, "WE" : 2, "TH" : 3, "FR" : 4, "SA" : 5, "SU" : 6 }
 WEEKDAYLIST = ["MO","TU","WE","TH","FR","SA","SU"]

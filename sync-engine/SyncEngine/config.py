@@ -24,8 +24,10 @@ import os
 import os.path
 import string
 import logging
-from xml.dom import minidom
-from xmlutil import *
+#from xml.dom import minidom
+#from xmlutil import *
+import libxml2
+import xml2util
 from formatapi import SupportedFormats,DefaultFormat
 
 ############################################################################
@@ -272,9 +274,9 @@ class Config:
 			self.logger.info("UpdateConfig - could not read config file - using defaults")
 			return False
 		
-		confdoc = minidom.parseString(cf)
+		confdoc = libxml2.parseDoc(cf)
 		
-		config = node_find_child(confdoc,"syncengine-config")
+		config = xml2util.FindChildNode(confdoc,"syncengine-config")
 		if config is not None:
 			self._ReadConfElements(config,"FileSync",self.config_FileSync)
 			self._ReadConfElements(config,"Autosync",self.config_AutoSync)	
@@ -288,12 +290,13 @@ class Config:
 		
 	def _ReadConfElements(self,doc, element, conf_obj):
 		
-		conf_element = node_find_child(doc,element)
+		conf_element = xml2util.FindChildNode(doc,element)
 		if conf_element is not None:
-			for item in conf_element.childNodes:
-				if item.nodeType == item.ELEMENT_NODE and conf_obj.cfg.has_key(item.localName):
-					f=node_get_value(item)
-					if f is not None:
-						conf_obj.handlers[item.localName](f)
+			if conf_element.children != None:
+				for item in conf_element.children:
+					if item.type == "element" and conf_obj.cfg.has_key(item.name):
+						f=xml2util.GetNodeValue(item)
+						if f is not None:
+							conf_obj.handlers[item.name](f)
 
 		

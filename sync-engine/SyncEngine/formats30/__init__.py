@@ -19,6 +19,3 @@
 ############################################################################
 
 import parser
-import contact
-import event
-import task

@@ -531,3 +531,36 @@ To enable Opensync 0.3x conversion, insert:
 <OpensyncXMLFormat>OS30</OpensyncXMLFormat> 
 
 into your config.xml (see the above CHANGELOG entry)
+
+
+20/11/2007 - 194900 Dr J A Gow
+------------------------------
+
+Removed nasty loop from synchandler and replaced it with a blocking event.
+
+22/11/2007 - 191000 Dr J A Gow
+------------------------------
+
+Hitherto the pathway of synced objects was horrible:
+text->dom->text->libxml2->xslt->text->dom->text. This was far from
+efficient. Removed all airsync.py dependencies on DOM, so that now
+all XML objects are processed by libxml2 from start to finish (a much
+thinner layer than dom/minidom). There is no conversion back to text
+anywhere in the sync path now except at the start when converting from
+wbxml, at the end when going back to wbxml, and when storing an object
+in the slow-sync database. This has a number of very positive side-effects in
+terms of also getting rid of two convoluted levels of indirection: 
+formatapi.py->event/task/contact.py->parser.py. Now the path is formatapi.py
+straight to parser.py. Now only parser.py needs to actually make a decision
+as to the stylesheet to use - so any future additions to syncable types only
+require a new stylesheet and changes to parser.py.
+
+We also get rid of event.py/task.py/contact.py.
+
+Resulting code is much cleaner, less convoluted and easier to follow.
+
+The speed increase when syncing big object lists is very, very
+noticeable :)
+
+Broken the characteristic class out of xmlutil prior to removing xmlutil.py
+and placed it in its own 'characteristics.py'. Removed DOM dependence.

@@ -20,8 +20,8 @@
 
 import gobject
 
-from xml.dom import minidom
-from xml import xpath
+import libxml2
+import xml2util
 
 import socket
 import urlparse
@@ -34,7 +34,6 @@ import logging
 import pywbxml
 
 import formatapi
-from xmlutil import *
 from constants import *
 
 AIRSYNC_DOC_NAME = "AirSync"
@@ -115,14 +114,15 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if self.headers.has_key("Content-Type") and self.headers["Content-Type"] == "application/vnd.ms-sync.wbxml":
                 self.server.logger.debug("_read_xml_request: converting request from wbxml")
                 req = pywbxml.wbxml2xml(req)
-            return minidom.parseString(req)
+            return libxml2.parseDoc(req)
         else:
             raise ValueError("Request did not specify Content-Length header")
 
     def _create_wbxml_doc(self, root_node_name, namespace):
-        dom = minidom.getDOMImplementation()
-        doc = dom.createDocument(None, root_node_name, dom.createDocumentType(AIRSYNC_DOC_NAME, AIRSYNC_PUBLIC_ID, AIRSYNC_SYSTEM_ID))
-        doc.documentElement.setAttribute("xmlns", namespace)
+        doc = libxml2.newDoc("1.0")
+	doc.createIntSubset(AIRSYNC_DOC_NAME, AIRSYNC_PUBLIC_ID, AIRSYNC_SYSTEM_ID)
+	root=doc.newChild(None,root_node_name,None)
+	root.setProp("xmlns", namespace)
         return doc
 
     def do_QUIT (self):
@@ -144,11 +144,13 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                                             ("MS-ASProtocolCommands", "Sync,SendMail,SmartForward,SmartReply,GetAttachment,FolderSync,FolderCreate,FolderUpdate,MoveItems,GetItemEstimate,MeetingResponse")))
 
     def do_POST(self):
+
         req_path, req_params = self._parse_path()
 
         if req_path == "/Microsoft-Server-ActiveSync":
 
             if req_params.has_key("Cmd") and len(req_params["Cmd"]) > 0:
+
                 cmd = req_params["Cmd"][0]
 
                 self.server.logger.info("do_POST: received %s command", cmd)
@@ -162,47 +164,57 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 elif cmd == "GetItemEstimate":
                     self._handle_get_item_estimate()
                     return
+		
         elif req_path == "/Microsoft-Server-ActiveSync/SyncStat.dll":
+		
             self.server.logger.info("do_POST: received Status command")
             self._handle_status()
             return
 
         self._send_empty_response(500)
 
+
     def _handle_sync(self):
-        req_doc = self._read_xml_request()
-        self.server.logger.debug("_handle_sync: request document is \n%s", req_doc.toprettyxml())
+ 
+	req_doc = self._read_xml_request()
+        self.server.logger.debug("_handle_sync: request document is \n%s", req_doc.serialize("utf-8",1))
 
         rsp_doc = self._create_wbxml_doc("Sync", "http://synce.org/formats/airsync_wm5/airsync")
-        rsp_colls_node = node_append_child(rsp_doc.documentElement, "Collections")
+	
+        rsp_colls_node = rsp_doc.getRootElement().newChild(None,"Collections",None)
 
         state = self.server.engine.partnerships.get_current().state
 
-        for n in xpath.Evaluate("/Sync/Collections/Collection", req_doc):
-            coll_cls = node_get_value(node_get_child(n, "Class"))
-            coll_key = node_get_value(node_get_child(n, "SyncKey"))
-            coll_id = node_get_value(node_get_child(n, "CollectionId"))
+	xp = req_doc.xpathNewContext()
+	xp.xpathRegisterNs("s","http://synce.org/formats/airsync_wm5/airsync")
+	
+        for n in xp.xpathEval("/s:Sync/s:Collections/s:Collection"):
+		
+            coll_cls = xml2util.GetNodeValue(xml2util.FindChildNode(n,"Class"))
+            coll_key = xml2util.GetNodeValue(xml2util.FindChildNode(n,"SyncKey"))
+            coll_id  = xml2util.GetNodeValue(xml2util.FindChildNode(n,"CollectionId"))
 
             first_request = (coll_key == "0")
 
             coll_key = "%s%d" % (coll_id, int(coll_key.split("}")[-1]) + 1)
 
-            rsp_coll_node = node_append_child(rsp_colls_node, "Collection")
-            node_append_child(rsp_coll_node, "Class", coll_cls)
-            node_append_child(rsp_coll_node, "SyncKey", coll_key)
-            node_append_child(rsp_coll_node, "CollectionId", coll_id)
-            node_append_child(rsp_coll_node, "Status", 1)
+            rsp_coll_node = rsp_colls_node.newChild(None,"Collection",None)
 
-            item = state.items[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
+            rsp_coll_node.newChild(None,"Class",coll_cls)
+            rsp_coll_node.newChild(None,"SyncKey",coll_key)
+            rsp_coll_node.newChild(None,"CollectionId",coll_id)
+	    rsp_coll_node.newChild(None,"Status","1")
+            
+	    item = state.items[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
 	    
             if not first_request and item.get_local_change_count() > 0:
-                window_size = int(node_get_value(node_get_child(n, "WindowSize")))
+                window_size = int(xml2util.GetNodeValue(xml2util.FindChildNode(n,"WindowSize")))
                 changes = item.extract_local_changes(window_size)
 
                 if item.get_local_change_count() > 0:
-                    node_append_child(rsp_coll_node, "MoreAvailable")
+                    rsp_coll_node.newChild(None,"MoreAvailable",None)
 
-                rsp_cmd_node = node_append_child(rsp_coll_node, "Commands")
+                rsp_cmd_node = rsp_coll_node.newChild(None,"Commands",None)
 
                 for guid, change in changes.items():
                     change_type, data = change
@@ -212,184 +224,231 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
  		    else:
 		        luid = state.get_luid_from_guid(guid)
 
-                    rsp_change_node = node_append_child(rsp_cmd_node, CHANGE_TYPE_TO_NODE_NAME[change_type])
-		    self.server.logger.debug("arrived at rsp_change_node")
+		    rsp_change_node = rsp_cmd_node.newChild(None,CHANGE_TYPE_TO_NODE_NAME[change_type],None)
 		    
-		    node_append_child(rsp_change_node, "ServerId", luid)
-                    
+                    rsp_change_node.newChild(None,"ServerId",luid)
+		    
 		    if change_type != CHANGE_DELETED:
-                        os_doc = minidom.parseString(data)
+			    
+                        os_doc = libxml2.parseDoc(data)
                         as_doc = None
 
-                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", os_doc.toprettyxml())
+                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", os_doc.serialize("utf-8",1))
 
 			as_doc=formatapi.ConvertFormat(DIR_TO_AIRSYNC,
 			                               item.type,
 						       os_doc,
 						       self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 	
-                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.toprettyxml())
+                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.serialize("utf-8",1))
 			
-                        item.idb_intersect(guid,as_doc.toxml(encoding="utf-8"))
-                        rsp_change_node.appendChild(as_doc.documentElement)
-                    else:
+                        item.idb_intersect(guid,as_doc.serialize("utf-8",0))
+			
+			rsp_change_node.addChild(as_doc.getRootElement())
+                    
+		    else:
                         item.idb_remove(guid)
 
-            self.server.logger.debug("arrived at rsp_responses_node")
-            rsp_responses_node = rsp_doc.createElement("Responses")
-
+	    rsp_responses_node = rsp_doc.getRootElement().newChild(None,"Responses",None)
+	    
             cmd_count = 0
-            for req_cmd_node in xpath.Evaluate("Commands/*", n):
-                cmd_name = req_cmd_node.localName
+
+            xp.setContextNode(n)
+	    
+	    for req_cmd_node in xp.xpathEval("s:Commands/*"):
+		    
+                cmd_name = req_cmd_node.name
+		
                 chg_type = CHANGE_TYPE_FROM_NODE_NAME[cmd_name]
 
                 if chg_type == CHANGE_ADDED:
+			
 		    self.server.logger.debug("Commands - chg_type is CHANGE_ADDED")
-                    rsp_response_node = node_append_child(rsp_responses_node, cmd_name)
+                    rsp_response_node = rsp_responses_node.newChild(None,cmd_name,None)
 
-                    cid = node_get_value(node_get_child(req_cmd_node, "ClientId"))
-                    node_append_child(rsp_response_node, "ClientId", cid)
+		    cid  = xml2util.GetNodeValue(xml2util.FindChildNode(req_cmd_node,"ClientId"))
+                    rsp_response_node.newChild(None,"ClientId",cid)
 
                     luid, guid = state.register_luid()
 
-                    node_append_child(rsp_response_node, "ServerId", luid)
-                    node_append_child(rsp_response_node, "Status", 1)
-                else:
+                    rsp_response_node.newChild(None,"ServerId",luid)
+		    rsp_response_node.newChild(None,"Status","1")
+                
+		else:
+		    
 		    self.server.logger.debug("Commands - chg_type is NOT CHANGE_ADDED")
-                    luid = node_get_value(node_get_child(req_cmd_node, "ServerId"))
+		    
+		    luid = xml2util.GetNodeValue(xml2util.FindChildNode(req_cmd_node,"ServerId"))
                     guid = state.get_guid_from_luid(luid)
 
                 xml = u""
                 if chg_type in (CHANGE_ADDED, CHANGE_MODIFIED):
-                    app_node = node_get_child(req_cmd_node, "ApplicationData")
+			
+                    app_node = xml2util.FindChildNode(req_cmd_node,"ApplicationData")
 
-                    self.server.logger.debug("_handle_sync: converting item from airsync, source is \n%s", app_node.toprettyxml())
+                    self.server.logger.debug("_handle_sync: converting item from airsync, source is \n%s", app_node.serialize("utf-8",1))
 
                     os_doc=formatapi.ConvertFormat(DIR_FROM_AIRSYNC,
 		                                   item.type,
 						   app_node,
 						   self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 
-                    self.server.logger.debug("_handle_sync: converting item from airsync, result is \n%s", os_doc.toprettyxml())
+                    self.server.logger.debug("_handle_sync: converting item from airsync, result is \n%s", os_doc.serialize("utf-8",1))
 
-                    item.idb_intersect(guid,app_node.toxml(encoding="utf-8"))
-                    xml = os_doc.documentElement.toxml(encoding="utf-8")
-                else:
+                    item.idb_intersect(guid,app_node.serialize("utf-8",0))
+                    xml = os_doc.getRootElement().serialize("utf-8",0)
+                
+		else:
                     item.idb_remove(guid)
 
                 item.add_remote_change(guid, chg_type, xml)
                 cmd_count += 1
 
-            if rsp_responses_node.childNodes:
-                rsp_coll_node.appendChild(rsp_responses_node)
+            if rsp_responses_node.children:
+		rsp_coll_node.addChild(rsp_responses_node)
 
-        self.server.logger.debug("_handle_sync: response document is \n%s", rsp_doc.toprettyxml())
-        self._send_wbxml_response(rsp_doc.toxml(encoding="utf-8"))
+        self.server.logger.debug("_handle_sync: response document is \n%s", rsp_doc.serialize("utf-8",1))
+        self._send_wbxml_response(rsp_doc.serialize("utf-8",0))
+
 
     def _handle_foldersync(self):
+	    
         req_doc = self._read_xml_request()
-        self.server.logger.debug("_handle_foldersync: request document is\n %s", req_doc.toprettyxml())
+	
+        self.server.logger.debug("_handle_foldersync: request document is\n %s", req_doc.serialize("utf-8",1))
 
-        req_folder_node = node_get_child(req_doc, "FolderSync")
-        req_key = node_get_value(node_get_child(req_folder_node, "SyncKey"))
+        req_folder_node = xml2util.FindChildNode(req_doc,"FolderSync")
+	
+	req_key = xml2util.GetNodeValue(xml2util.FindChildNode(req_folder_node,"SyncKey"))
+		
         if req_key != "0":
             raise ValueError("SyncKey in FolderSync request is not 0")
 
         rsp_doc = self._create_wbxml_doc("FolderSync", "http://synce.org/formats/airsync_wm5/folderhierarchy")
-        rsp_folder_node = rsp_doc.documentElement
+	
+        rsp_folder_node = rsp_doc.getRootElement()
 
-        node_append_child(rsp_folder_node, "Status", 1)
-        node_append_child(rsp_folder_node, "SyncKey", "{00000000-0000-0000-0000-000000000000}1")
+	rsp_folder_node.newChild(None,"Status","1")
+        rsp_folder_node.newChild(None,"SyncKey","{00000000-0000-0000-0000-000000000000}1")
 
-        rsp_changes_node = node_append_child(rsp_folder_node, "Changes")
+        rsp_changes_node = rsp_folder_node.newChild(None,"Changes",None)
 
         state = self.server.engine.partnerships.get_current().state
 
-        node_append_child(rsp_changes_node, "Count", len(state.folders))
+	rsp_changes_node.newChild(None,"Count",str(len(state.folders)))
 
         for server_id, data in state.folders.items():
+		
             parent_id, display_name, type = data
 
-            add_node = node_append_child(rsp_changes_node, "Add")
+            add_node = rsp_changes_node.newChild(None,"Add",None)
 
-            node_append_child(add_node, "ServerId", server_id)
-            node_append_child(add_node, "ParentId", parent_id)
-            node_append_child(add_node, "DisplayName", display_name)
-            node_append_child(add_node, "Type", type)
+            add_node.newChild(None,"ServerId", server_id)
+	    add_node.newChild(None,"ParentId", str(parent_id))
+            add_node.newChild(None,"DisplayName",display_name)
+            add_node.newChild(None,"Type",str(type))
 
-        self.server.logger.debug("handle_foldersync: response document is \n%s", rsp_doc.toprettyxml())
-        self._send_wbxml_response(rsp_doc.toxml(encoding="utf-8"))
+        self.server.logger.debug("handle_foldersync: response document is \n%s", rsp_doc.serialize("utf-8",1))
+        
+	self._send_wbxml_response(rsp_doc.serialize("utf-8",0))
+
 
     def _handle_get_item_estimate(self):
+	    
         req_doc = self._read_xml_request()
-        self.server.logger.debug("_handle_get_item_estimate: request document is \n%s", req_doc.toprettyxml())
+        
+	self.server.logger.debug("_handle_get_item_estimate: request document is \n%s", req_doc.serialize("utf-8",1))
 
         rsp_doc = self._create_wbxml_doc("GetItemEstimate", "http://synce.org/formats/airsync_wm5/getitemestimate")
 
         state = self.server.engine.partnerships.get_current().state
 
-        for n in xpath.Evaluate("/GetItemEstimate/Collections/Collection", req_doc):
-            rsp_node = node_append_child(rsp_doc.documentElement, "Response")
-            node_append_child(rsp_node, "Status", 1)
+	xp=req_doc.xpathNewContext()
+	xp.xpathRegisterNs("e","http://synce.org/formats/airsync_wm5/getitemestimate")
+	
+        for n in xp.xpathEval("/e:GetItemEstimate/e:Collections/e:Collection"):
+			    
+            rsp_node = rsp_doc.getRootElement().newChild(None,"Response",None)
+	    
+	    rsp_node.newChild(None,"Status", "1")
 
-            coll_cls = node_get_value(node_get_child(n, "Class"))
-            coll_id = node_get_value(node_get_child(n, "CollectionId"))
-            coll_filter = node_get_value(node_get_child(n, "FilterType"))
-            coll_key = node_get_value(node_get_child(n, "SyncKey"))
+            coll_cls    = xml2util.GetNodeValue(xml2util.FindChildNode(n,"Class"))
+            coll_id     = xml2util.GetNodeValue(xml2util.FindChildNode(n,"CollectionId"))
+            coll_filter = xml2util.GetNodeValue(xml2util.FindChildNode(n,"FilterType"))
+	    coll_key    = xml2util.GetNodeValue(xml2util.FindChildNode(n,"SyncKey"))
 
-            coll_node = node_append_child(rsp_node, "Collection")
-            node_append_child(coll_node, "Class", coll_cls)
-            node_append_child(coll_node, "CollectionId", coll_id)
+            coll_node = rsp_node.newChild(None,"Collection",None)
+            coll_node.newChild(None,"Class",coll_cls)
+            coll_node.newChild(None,"CollectionId",coll_id)
 
             item = state.items[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
-            node_append_child(coll_node, "Estimate", item.get_local_change_count())
+            coll_node.newChild(None,"Estimate",str(item.get_local_change_count()))
 
-        self.server.logger.debug("_handle_get_item_estimate: response document is \n%s", rsp_doc.toprettyxml())
-        self._send_wbxml_response(rsp_doc.toxml(encoding="utf-8"))
+        self.server.logger.debug("_handle_get_item_estimate: response document is \n%s", rsp_doc.serialize("utf-8",1))
+        self._send_wbxml_response(rsp_doc.serialize("utf-8",0))
+
 
     def _handle_status(self):
+	    
         req_doc = self._read_xml_request()
-        self.server.logger.debug("_handle_status: request document is \n%s", req_doc.toprettyxml())
+        
+	self.server.logger.debug("_handle_status: request document is \n%s", req_doc.serialize("utf-8",1))
 
-        for n in req_doc.documentElement.childNodes:
-            if n.nodeType != n.ELEMENT_NODE:
+        for n in req_doc.getRootElement().children:
+            if n.type != "element":
                 continue
 
             # FIXME: It is possible for a device to get into an (invalid) state in which
             # it sends both a SyncBegin and SyncEnd.  For now, we don't deal with this.  It is
             # true that this *shouldn't* happen, but it would screw up our current state enough
             # that we should deal with it.
-            if n.localName in ("SyncBegin", "SyncEnd"):
-                self.server.datatype = n.getAttribute("Datatype")
-                self.server.partner = n.getAttribute("Partner")
+	    
+            if n.name in ("SyncBegin", "SyncEnd"):
+		    
+                self.server.datatype = xml2util.GetNodeAttr(n,"Datatype")
+                self.server.partner = xml2util.GetNodeAttr(n,"Partner")
 
                 if self.server.datatype == "" and self.server.partner == "":
-                    if n.localName == "SyncBegin":
+			
+                    if n.name == "SyncBegin":
+			    
                         self.server.thread.emit("sync-begin")
                         # Error information gets reset when a sync begins
                         self.server.error_body = ""
                         self.server.error_title = ""
                         self.server.error_code = ""
+			
                     else:
+			    
                         self.server.thread.emit("sync-end")
                         # Reset all state information except for error info
                         self.server.progress_current = 0
                         self.server.progress_max = 100
                         self.server.status = ""
                         self.server.status_type = ""
-            elif n.localName == "Status" and n.getAttribute("Partner") == self.server.partner:
-                for s in n.childNodes:
-                    if s.localName == "Progress":
-                        self.server.progress_current = int(s.getAttribute("value"))
-                    elif s.localName == "Total":
-                        self.server.progress_max = int(s.getAttribute("value"))
-                    elif s.localName == "StatusString":
-                        self.server.status = s.getAttribute("value")
-                        self.server.status_type = s.getAttribute("type")
-            elif n.localName == "Error" and n.getAttribute("Partner") == self.server.partner:
-                self.server.error_body = n.getAttribute("Body")
-                self.server.error_title = n.getAttribute("Title")
-                self.server.error_code = n.getAttribute("Code")
+			
+            elif n.name == "Status" and xml2util.GetNodeAttr(n,"Partner") == self.server.partner:
+		    
+                for s in n.children:
+			
+                    if s.name == "Progress":
+			    
+                        self.server.progress_current = int(xml2util.GetNodeAttr(s,"value"))
+			
+                    elif s.name == "Total":
+			    
+                        self.server.progress_max = int(xml2util.GetNodeAttr(s,"value"))
+			
+                    elif s.name == "StatusString":
+			    
+                        self.server.status = xml2util.GetNodeAttr(s,"value")
+                        self.server.status_type = xml2util.GetNodeAttr(s,"type")
+			
+            elif n.name == "Error" and xml2util.GetNodeAttr(n,"Partner") == self.server.partner:
+		    
+                self.server.error_body = xml2util.GetNodeAttr(n,"Body")
+                self.server.error_title = xml2util.GetNodeAttr(n,"Title")
+                self.server.error_code = xml2util.GetNodeAttr(n,"Code")
 
         self._send_empty_response(200)
 

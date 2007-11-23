@@ -11,7 +11,7 @@
 
 import libxml2
 import libxslt
-import xml2util
+import SyncEngine.xml2util as xml2util
 import dateutil
 import tzdatabase
 import tzutils

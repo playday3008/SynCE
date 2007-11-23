@@ -27,7 +27,7 @@ import base64
 import tzconv
 from time import gmtime, strftime
 import tzutils
-import xml2util
+import SyncEngine.xml2util as xml2util
 
 ### conversion constants ###
 
