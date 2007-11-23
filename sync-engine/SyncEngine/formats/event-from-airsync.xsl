@@ -82,9 +82,7 @@
                 </xsl:for-each>
 
                 <xsl:for-each select="C:Exceptions/C:Exception">
-                    <ExclusionDate>
-                        <xsl:value-of select="convert:event_exception_from_airsync()"/>
-                    </ExclusionDate>
+                    <xsl:value-of select="convert:event_exception_from_airsync()"/>
                 </xsl:for-each>
 
             </Event>

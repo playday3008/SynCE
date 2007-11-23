@@ -453,10 +453,10 @@ def event_exception_from_airsync(ctx):
     dst_node = transform_ctx.insertNode()
     exception_deleted = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Deleted"))
     exception_date = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "ExceptionStartTime"))
-    if exception_deleted != "1":
-        raise ValueError("Opensync does not support exceptions for modified occurrences")
-    dst_node.newChild(None, "Content", tzutils.TextToDate(exception_date).strftime(DATE_FORMAT_SHORT))
-    dst_node.newChild(None, "Value", "DATE")
+    if exception_deleted == "1":
+        blocknode = dst_node.newChild(None,"ExclusionDate",None)
+        blocknode.newChild(None, "Content", tzutils.TextToDate(exception_date).strftime(DATE_FORMAT_SHORT))
+        blocknode.newChild(None, "Value", "DATE")
     return ""
 
 def task_start_date_to_airsync(ctx):

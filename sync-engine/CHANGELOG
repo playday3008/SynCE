@@ -570,3 +570,14 @@ and placed it in its own 'characteristics.py'. Removed DOM dependence.
 
 Folded in GUID data for 'WorldMate' (bug 1729381) details thanks to Nils
 Pickert.
+
+23/11/2007 - 185000 Dr J A Gow
+------------------------------
+
+Removed exception in formats/event_exception_from_airsync() to clear
+bug 1835339
+
+TODO: Need to go through all XSLT extensions and remove exception 
+generation except where serious enough to warrant non-syncing of the
+item. (On my todo list for formats30 as well)
+
