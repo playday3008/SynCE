@@ -26,9 +26,6 @@ import conversions
 import tzconv
 import logging
 
-FMT_TO_AIRSYNC   = 1
-FMT_FROM_AIRSYNC = 2
-
 class Parser:
 
     FORMATS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -40,12 +37,12 @@ class Parser:
     XSL_TASK_TO_AIRSYNC      = FORMATS_PATH + "/task-to-airsync.xsl"
     XSL_TASK_FROM_AIRSYNC    = FORMATS_PATH + "/task-from-airsync.xsl"
 
-    STYLESHEETS  = { SYNC_ITEM_CONTACTS : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_TO_AIRSYNC)),
-                                            FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_FROM_AIRSYNC)) },
-                     SYNC_ITEM_CALENDAR : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_TO_AIRSYNC)),
-                                            FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_FROM_AIRSYNC)) },
-                     SYNC_ITEM_TASKS    : { FMT_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_TO_AIRSYNC)),
-                                            FMT_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_FROM_AIRSYNC)) },
+    STYLESHEETS  = { SYNC_ITEM_CONTACTS : { DIR_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_TO_AIRSYNC)),
+                                            DIR_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_CONTACT_FROM_AIRSYNC)) },
+                     SYNC_ITEM_CALENDAR : { DIR_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_TO_AIRSYNC)),
+                                            DIR_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_EVENT_FROM_AIRSYNC)) },
+                     SYNC_ITEM_TASKS    : { DIR_TO_AIRSYNC   : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_TO_AIRSYNC)),
+                                            DIR_FROM_AIRSYNC : libxslt.parseStylesheetDoc(libxml2.parseFile(XSL_TASK_FROM_AIRSYNC)) },
                    }
 
     def __init__(self):
