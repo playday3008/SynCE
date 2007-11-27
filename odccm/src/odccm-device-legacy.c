@@ -82,9 +82,6 @@ odccm_device_legacy_init (OdccmDeviceLegacy *self)
 static void
 odccm_device_legacy_dispose (GObject *obj)
 {
-  OdccmDeviceLegacy *self = ODCCM_DEVICE_LEGACY (obj);
-  OdccmDeviceLegacyPrivate *priv = ODCCM_DEVICE_LEGACY_GET_PRIVATE (self);
-
   if (G_OBJECT_CLASS (odccm_device_legacy_parent_class)->dispose)
     G_OBJECT_CLASS (odccm_device_legacy_parent_class)->dispose (obj);
 }
@@ -413,7 +410,7 @@ device_info_received_legacy (OdccmDeviceLegacy *self, const guchar *buf, gint le
   obj_path = g_strdup_printf (DEVICE_BASE_OBJECT_PATH "/%s", safe_guid);
   g_free (safe_guid);
 
-  g_debug ("%s: registering object path '%s'", G_STRFUNC, obj_path);
+  g_message ("%s: registering object path '%s'", G_STRFUNC, obj_path);
 
   dbus_g_connection_register_g_object (_odccm_get_dbus_conn (),
                                        obj_path, G_OBJECT (self));

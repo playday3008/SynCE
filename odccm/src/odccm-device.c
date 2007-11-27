@@ -736,7 +736,7 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
   obj_path = g_strdup_printf (DEVICE_BASE_OBJECT_PATH "/%s", safe_guid);
   g_free (safe_guid);
 
-  g_debug ("%s: registering object path '%s'", G_STRFUNC, obj_path);
+  g_message ("%s: registering object path '%s'", G_STRFUNC, obj_path);
 
   dbus_g_connection_register_g_object (_odccm_get_dbus_conn (),
                                        obj_path, G_OBJECT (self));
