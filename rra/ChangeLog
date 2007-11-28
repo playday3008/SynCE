@@ -1,0 +1,5 @@
+2007-11-28  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* started Changelog
+	* added synce and rapi flags to python Makefile.am
+
