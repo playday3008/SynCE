@@ -188,6 +188,11 @@ static bool list_matching_files(WCHAR* wide_path)
 
 	if (!result)
 		goto exit;
+
+	if (file_count == 0) {
+		fprintf(stderr, "No such file or directory");
+		goto exit;
+	}
 	
 	for (i = 0; i < file_count; i++)
 		print_entry(find_data + i);

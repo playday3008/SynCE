@@ -74,7 +74,19 @@ Copy a file from remote device to host computer:
 pcp ":/My Documents/snore.wav" /tmp/snore.wav
 
 .LP
-Copy a file from one location on the remove device to another:
+Copy a file from host computer to remote device into the "My Document" folder - you
+can leave off the last parameter:
+.IP
+pcp "work/mytext.txt"
+
+.LP
+Copy a file from remote device to host computer into the current directory - you
+can leave off the last parameter:
+.IP
+pcp ":/My Documents/snore.wav"
+
+.LP
+Copy a file from one location on the remote device to another:
 .IP
 pcp ":/My Documents/important.pwi" ":/My Documents/important.backup.pwi" 
 
