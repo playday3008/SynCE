@@ -30,9 +30,9 @@
             <property name="visible">True</property>
             <property name="spacing">10</property>
             <child>
-              <widget class="GtkLabel" id="label1">
+              <widget class="GtkLabel" id="fetch_window_label">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Fetching information from the PDA.</property>
+                <property name="wrap">True</property>
               </widget>
               <packing>
                 <property name="expand">False</property>

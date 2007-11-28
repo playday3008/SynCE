@@ -109,7 +109,8 @@ exit:
 }
 
 gint
-rapi_mkdir(const gchar *dir) {
+rapi_mkdir(const gchar *dir, gchar **error_return)
+{
   WCHAR* wide_path = NULL;
   gchar *path = NULL;
   gint result = 0;
@@ -123,12 +124,15 @@ rapi_mkdir(const gchar *dir) {
   if (!CeCreateDirectory(wide_path, NULL)) {
     DWORD error = CeGetLastError();
     if (error != ERROR_ALREADY_EXISTS) {
+      const gchar *error_str = synce_strerror(error);
       g_warning("%s: Failed to create directory '%s': %s",
 		G_STRFUNC,
 		path,
-		synce_strerror(error));
+		error_str);
 
-      result = -2;
+      result = 1;
+      if (error_return)
+	*error_return = g_strdup(error_str);
     }
   }
 
@@ -138,16 +142,10 @@ rapi_mkdir(const gchar *dir) {
   return result;
 }
 
-static gboolean
-remote_copy(const gchar* ascii_source, const gchar* ascii_dest)
-{
-  return CeCopyFileA(ascii_source, ascii_dest, false);
-}
-
 #define ANYFILE_BUFFER_SIZE (64*1024)
 
 static gboolean
-anyfile_copy(const gchar* source_ascii, const gchar* dest_ascii, gsize* bytes_copied, GtkWidget *progressbar)
+anyfile_copy(const gchar* source_ascii, const gchar* dest_ascii, gsize* bytes_copied, GtkWidget *progressbar, gchar **error_return)
 {
   gboolean success = false;
   gsize bytes_read;
@@ -158,16 +156,19 @@ anyfile_copy(const gchar* source_ascii, const gchar* dest_ascii, gsize* bytes_co
 
   if (!(buffer = (guchar *) g_malloc(ANYFILE_BUFFER_SIZE))) {
     g_warning("%s: Failed to allocate buffer of size %i", G_STRFUNC, ANYFILE_BUFFER_SIZE);
+    *error_return = g_strdup("Failed to allocate buffer");
     goto exit;
   }
 
   if (!(source = anyfile_open(source_ascii, READ))) {
     g_warning("%s: Failed to open source file '%s'", G_STRFUNC, source_ascii);
+    *error_return = g_strdup("Failed to open source file");
     goto exit;
   }
 
   if (!(dest = anyfile_open(dest_ascii, WRITE))) {
     g_warning("%s: Failed to open destination file '%s'", G_STRFUNC, dest_ascii);
+    *error_return = g_strdup("Failed to open destination file");
     goto exit;
   }
 
@@ -183,6 +184,7 @@ anyfile_copy(const gchar* source_ascii, const gchar* dest_ascii, gsize* bytes_co
 
       if (!anyfile_read(source, buffer, ANYFILE_BUFFER_SIZE, &bytes_read)) {
 	g_warning("%s: Failed to read from source file '%s'", G_STRFUNC, source_ascii);
+	*error_return = g_strdup("Failed to read from source file");
 	goto exit;
       }
 
@@ -193,12 +195,14 @@ anyfile_copy(const gchar* source_ascii, const gchar* dest_ascii, gsize* bytes_co
 
       if (!anyfile_write(dest, buffer, bytes_read, &bytes_written)) {
 	g_warning("%s: Failed to write to destination file '%s'", G_STRFUNC, dest_ascii);
+	*error_return = g_strdup("Failed to write to destination file");
 	goto exit;
       }
 
       if (bytes_written != bytes_read) {
 	g_warning("%s: Only wrote %i bytes of %i to destination file '%s'\n", G_STRFUNC,
 		  (int)bytes_written, (int)bytes_read, dest_ascii);
+	*error_return = g_strdup("Failed to write to destination file");
 	goto exit;
       }
 
@@ -224,36 +228,26 @@ exit:
 }
 
 gint
-rapi_copy(const gchar *source, const gchar *dest, GtkWidget *progressbar)
+rapi_copy_to_device(const gchar *source, const gchar *dest, GtkWidget *progressbar, gchar **error_return)
 {
   gint result = 1;
   gsize bytes_copied = 0;
 
   if ((!source) || (!dest)) {
-    g_error("%s: Source or destination for copy not given", G_STRFUNC);
+    g_error("%s: Source or destination for copy is (null)", G_STRFUNC);
   }
 
-  if (0 == strcmp(source, dest)) {
-    g_warning("%s: You don't want to copy a file to itself.", G_STRFUNC);
-    goto exit;
-  }
+  gchar *file_base = g_strrstr(source, "/") + 1;
+  gchar *device_filename = g_strdup_printf(":%s/%s", dest, file_base);
 
-  if (is_remote_file(source) && is_remote_file(dest)) {
-    if (!remote_copy(source, dest))
-      goto exit;
-  } else {
-    if (!anyfile_copy(source, dest,  &bytes_copied, progressbar))
-      goto exit;
-  }
-
-  result = 0;
-exit:
+  if (anyfile_copy(source, device_filename, &bytes_copied, progressbar, error_return))
+    result = 0;
 
   return result;
 }
 
 gint
-rapi_run(const gchar *program, const gchar *parameters)
+rapi_run(const gchar *program, const gchar *parameters, gchar **error_return)
 {
   gint result = 1;
   WCHAR* wide_program = NULL;
@@ -281,10 +275,13 @@ rapi_run(const gchar *program, const gchar *parameters)
 		       NULL,
 		       &info
 		       )) {
+    const gchar *error_str = synce_strerror(CeGetLastError());
     g_warning("%s: Failed to execute '%s': %s",
 	      G_STRFUNC,
 	      tmpprogram,
-	      synce_strerror(CeGetLastError()));
+	      error_str);
+    if (error_return)
+      *error_return = g_strdup(error_str);
     goto exit;
   }
 

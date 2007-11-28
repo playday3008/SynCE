@@ -1,3 +1,9 @@
+2007-11-28  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* improve error and status reporting
+	* remove redundant code
+	* exclude CABs for other processors
+
 2007-11-25  Mark Ellis <mark_ellis@users.sourceforge.net>
 
 	* create independent software manager widget class
