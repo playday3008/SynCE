@@ -4,11 +4,7 @@ AM_LDFLAGS = @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@
 INCLUDES = -I$(top_srcdir)/lib
 LDADD = -L$(top_builddir)/lib $(top_builddir)/lib/librra.la
 
-bin_PROGRAMS = synce-matchmaker
-
-synce_matchmaker_SOURCES = rra-partners.c
-
-noinst_PROGRAMS = rra-get-types rra-get-ids \
+MINOR_TOOLS_LIST = rra-get-types rra-get-ids \
 	rra-get-data rra-put-data rra-delete \
 	rra-decode rra-subscribe \
 	rra-get-recurring-appointments \
@@ -16,6 +12,18 @@ noinst_PROGRAMS = rra-get-types rra-get-ids \
 	rra-appointment-from-vevent rra-appointment-to-vevent \
 	rra-task-from-vtodo rra-task-to-vtodo \
 	rra-timezone
+
+bin_PROGRAMS = synce-matchmaker 
+
+noinst_PROGRAMS =
+
+if ENABLE_MINOR_TOOLS
+bin_PROGRAMS += $(MINOR_TOOLS_LIST)
+else
+noinst_PROGRAMS += $(MINOR_TOOLS_LIST)
+endif
+
+synce_matchmaker_SOURCES = rra-partners.c
 
 rra_get_types_SOURCES   = rra-get-types.c
 rra_get_ids_SOURCES     = rra-get-ids.c

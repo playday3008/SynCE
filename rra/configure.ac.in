@@ -136,6 +136,12 @@ else
 fi
 AM_CONDITIONAL(HAVE_PYTHON, test x$have_python = xyes)
 
+AC_ARG_ENABLE(minor-tools, AC_HELP_STRING([--disable-minor-tools], [Build without minor rra command line tools]),:,enable_legacy_support=yes)
+AM_CONDITIONAL(ENABLE_MINOR_TOOLS, test x"$enable_minor_tools" != xno)
+if test x"$enable_minor_tools" != xno; then
+       AC_DEFINE(ENABLE_MINOR_TOOLS, 1, [Building with minor rra command line tools])
+fi
+AM_CONDITIONAL(ENABLE_MINOR_TOOLS, test x"$enable_minor_tools" != xno)
 
 AC_OUTPUT([librra.pc
            Makefile

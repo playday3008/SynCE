@@ -1,3 +1,8 @@
+2007-11-29  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* from Debian package, man pages for minor utils, and 
+	  install them (disable in configure)
+
 2007-11-28  Mark Ellis <mark_ellis@users.sourceforge.net>
 
 	* started Changelog
