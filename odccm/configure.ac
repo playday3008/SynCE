@@ -14,7 +14,15 @@ AC_PROG_INSTALL
 dnl Check for header files.
 AC_STDC_HEADERS
 
-AC_ARG_ENABLE(legacy-support, AC_HELP_STRING([--enable-legacy-support], [Build with pre Windows Mobile 5 support]),:,enable_legacy_support=no)
+AC_ARG_ENABLE(legacy-support,
+	AC_HELP_STRING([--disable-legacy-support], [Build without pre Windows Mobile 5 support]),
+	[if test "x$enableval" = "xno"; then
+	    enable_legacy_support=no
+	 else
+	    enable_legacy_support=yes
+	 fi],
+	enable_legacy_support=yes
+	)
 AM_CONDITIONAL(ENABLE_LEGACY_SUPPORT, test x"$enable_legacy_support" != xno)
 if test x"$enable_legacy_support" != xno; then
        AC_DEFINE(ENABLE_LEGACY_SUPPORT, 1, [Building with pre Windows Mobile 5 support])
