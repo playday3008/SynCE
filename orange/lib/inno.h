@@ -190,7 +190,7 @@ typedef struct
 #endif
 } TSetupFileEntry;
 
-P typedef struct
+typedef struct
 {
   uint32_t FirstDisk;
   uint32_t LastDisk;
@@ -201,7 +201,7 @@ P typedef struct
   uint32_t Date;
   uint32_t FileVersionMS;
   uint32_t FileVersionLS;
-} TSetupFileLocationEntry;
+} P TSetupFileLocationEntry;
 
 #define SETUP_FILE_LOCATION_ENTRY_SIZE  0x29
 
