@@ -319,3 +319,8 @@ class RAPISession:
         retval = CeSyncPause()
         if retval != 0:
             raise RAPIError(retval)
+
+    def SyncTimeToPC(self):
+        retval = CeSyncTimeToPc()
+        if retval != 0:
+            raise RAPIError(retval)
