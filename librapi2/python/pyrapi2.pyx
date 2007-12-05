@@ -30,6 +30,7 @@ cdef extern from "rapi.h":
     HRESULT CeSyncStart(LPCWSTR params)
     HRESULT CeSyncResume()
     HRESULT CeSyncPause()
+    HRESULT CeSyncTimeToPc()
 
 
 #
@@ -320,7 +321,5 @@ class RAPISession:
         if retval != 0:
             raise RAPIError(retval)
 
-    def SyncTimeToPC(self):
-        retval = CeSyncTimeToPc()
-        if retval != 0:
-            raise RAPIError(retval)
+    def SyncTimeToPc(self):
+        return CeSyncTimeToPc()
