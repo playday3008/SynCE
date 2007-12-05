@@ -1,0 +1,4 @@
+src/rapi_stuff.c
+src/main.c
+src/pcommon.c
+data/synce-registry-tool.glade
