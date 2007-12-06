@@ -2,6 +2,8 @@
 #include "rapi2_api.h"
 #include "rapi_context.h"
 #include <stdlib.h>
+#include <stdio.h>
+
 
 LONG _CeRegCreateKeyEx2(
 		HKEY hKey,
@@ -193,7 +195,7 @@ LONG _CeRegDeleteValue2(
 }
 
 
-/*
+
 LONG _CeRegQueryInfoKey2(
 		HKEY hKey,
 		LPWSTR lpClass,
@@ -211,19 +213,13 @@ LONG _CeRegQueryInfoKey2(
 	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
-	rapi_context_begin_command(context, 0x25);
-	rapi_buffer_write_uint32         (context->send_buffer, hKey);
-	rapi_buffer_write_optional       (context->send_buffer, lpClass, lpcbClass ? *lpcbClass * sizeof(WCHAR) : 0, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbClass, true);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpReserved, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcSubKeys, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbMaxSubKeyLen, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbMaxClassLen, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcValues, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbMaxValueNameLen, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbMaxValueLen, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbSecurityDescriptor, false);
-	rapi_buffer_write_optional       (context->send_buffer, lpftLastWriteTime, sizeof(FILETIME), false);
+	rapi_context_begin_command(context, 0x36);
+	rapi_buffer_write_uint32        (context->send_buffer, hKey);
+	rapi_buffer_write_uint32        (context->send_buffer, lpcbClass ? *lpcbClass : 0 );
+
+	//lpftLastWriteTime, this should be put to 0
+	rapi_buffer_write_uint32        (context->send_buffer, 0 );
+
 
 	if ( !rapi2_context_call(context) )
 		return ERROR_GEN_FAILURE;
@@ -231,23 +227,44 @@ LONG _CeRegQueryInfoKey2(
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
 
+	
+
 	if (ERROR_SUCCESS == return_value)
 	{
-		rapi_buffer_read_optional       (context->recv_buffer, lpClass, lpcbClass ? *lpcbClass * sizeof(WCHAR) : 0);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbClass);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpReserved);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcSubKeys);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbMaxSubKeyLen);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbMaxClassLen);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcValues);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbMaxValueNameLen);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbMaxValueLen);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbSecurityDescriptor);
-		rapi_buffer_read_optional_filetime(context->recv_buffer, lpftLastWriteTime);
+		DWORD foo = 0 ; 
+
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpClass)
+		{
+			*lpcbClass = foo ;
+			rapi_buffer_read_string(context->recv_buffer, lpClass, lpcbClass );
+
+		}
+
+		
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcSubKeys)
+			*lpcSubKeys = foo ; 
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcbMaxSubKeyLen)
+			*lpcbMaxSubKeyLen = foo ; 
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcbMaxClassLen)
+			*lpcbMaxClassLen = foo ; 
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcValues)
+			*lpcValues = foo ; 
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcbMaxValueNameLen)
+			*lpcbMaxValueNameLen = foo ; 
+		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcbMaxValueLen)
+			*lpcbMaxValueLen = foo ; 
 	}
 
 	return return_value;
 }
+
 
 LONG _CeRegEnumValue2(
 		HKEY hKey,
@@ -262,35 +279,56 @@ LONG _CeRegEnumValue2(
 	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
-	rapi_context_begin_command(context, 0x23);
+	rapi_context_begin_command(context, 0x34);
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
 	rapi_buffer_write_uint32         (context->send_buffer, dwIndex);
-	rapi_buffer_write_optional       (context->send_buffer, lpszValueName, lpcbValueName ? *lpcbValueName * sizeof(WCHAR) : 0, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbValueName, true);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpReserved, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpType, false);
-	rapi_buffer_write_optional       (context->send_buffer, lpData, lpcbData ? *lpcbData : 0, false);
-	rapi_buffer_write_optional_uint32(context->send_buffer, lpcbData, true);
+
+	//What is the size of the buffer we have for ValueName
+	rapi_buffer_write_uint32(context->send_buffer, *lpcbValueName);
+	//What is the size of the buffer we have for the data
+	rapi_buffer_write_uint32(context->send_buffer, *lpcbData );
+
 
 	if ( !rapi2_context_call(context) )
 		return false;
+	
+	
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
+	
+
 
 	if (ERROR_SUCCESS == return_value)
 	{
-		rapi_buffer_read_optional       (context->recv_buffer, lpszValueName, lpcbValueName ? *lpcbValueName * sizeof(WCHAR) : 0);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbValueName);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpReserved);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpType);
-		rapi_buffer_read_optional       (context->recv_buffer, lpData, lpcbData ? *lpcbData : 0);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbData);
+		DWORD foo ; 
+
+		//First read the valuename		
+		rapi_buffer_read_string(context->recv_buffer, lpszValueName, lpcbValueName ) ; 
+	
+		//Then read the type
+		foo = 0 ; 
+        rapi_buffer_read_uint32(context->recv_buffer, &foo );
+        if (lpType)
+            *lpType = foo ;
+
+		
+		//Then read the data if needed
+        rapi_buffer_read_uint32(context->recv_buffer, &foo );
+        if (lpData) {
+			*lpcbData = foo ; 
+
+            if (REG_DWORD == *lpType) {
+                rapi_buffer_read_uint32(context->recv_buffer, (uint32_t *) lpData);
+            } else {
+                rapi_buffer_read_data(context->recv_buffer, lpData, *lpcbData);
+            }
+        }
 	}
 
 	return return_value;
 }
-*/
+
 
 LONG _CeRegEnumKeyEx2(
 		HKEY hKey,
@@ -310,7 +348,7 @@ LONG _CeRegEnumKeyEx2(
 	rapi_buffer_write_uint32         (context->send_buffer, dwIndex);
 
     rapi_buffer_write_uint32(context->send_buffer, *lpcbName);
-    rapi_buffer_write_uint32(context->send_buffer,  0);
+	rapi_buffer_write_uint32(context->send_buffer, lpcbClass ? *lpcbClass : 0 );
     rapi_buffer_write_uint32(context->send_buffer, 0);
 
 
@@ -322,7 +360,14 @@ LONG _CeRegEnumKeyEx2(
 
 	if (ERROR_SUCCESS == return_value)
     {
-        rapi_buffer_read_string(context->recv_buffer, lpName, lpcbName );
+		if (lpName)
+		{
+			rapi_buffer_read_string(context->recv_buffer, lpName, lpcbName );
+		}
+		if (lpClass)
+		{
+			rapi_buffer_read_string(context->recv_buffer, lpClass, lpcbClass );
+		}
     }
 
 	return return_value;

@@ -1,3 +1,10 @@
+2007-12-06  Mark Ellis  <mark@mpellis.org.uk>
+
+	* patch from Guido Diepen, many thanks !!
+	* added CeRegQueryInfoKey and CeRegEnumValue2 to rapi2
+	* fix to rapi_buffer_read_string
+	* new debuging functions
+
 2007-11-28  Mark Ellis  <mark@mpellis.org.uk>
 
 	* pls.c and pcp.1 patch from Debian package

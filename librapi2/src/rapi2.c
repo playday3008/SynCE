@@ -68,9 +68,9 @@ struct rapi_ops_s rapi2_ops =
         _CeRegCloseKey2,                  /* CeRegCloseKey */
         _CeRegDeleteKey2,                 /* CeRegDeleteKey */
         _CeRegDeleteValue2,               /* CeRegDeleteValue */
-        NULL,                             /* CeRegQueryInfoKey */
+        _CeRegQueryInfoKey2,              /* CeRegQueryInfoKey */
         _CeRegQueryValueEx2,              /* CeRegQueryValueEx */
-        NULL,                             /* CeRegEnumValue */
+        _CeRegEnumValue2,                 /* CeRegEnumValue */
         _CeRegEnumKeyEx2,                 /* CeRegEnumKeyEx */
         _CeRegSetValueEx2,                /* CeRegSetValueEx */
 #endif /* SWIG */

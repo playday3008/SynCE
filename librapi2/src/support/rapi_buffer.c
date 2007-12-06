@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #if HAVE_SYS_UIO_H
 /* For readv/writev */
@@ -434,12 +435,13 @@ bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
 
 	*size = exact_size;
 
-	if ( !rapi_buffer_read_data(buffer, unicode, (exact_size+1) * sizeof(WCHAR)) )
+	if ( !rapi_buffer_read_data(buffer, unicode, (exact_size) * sizeof(WCHAR)) )
 	{
 		rapi_buffer_error("failed to read buffer");
 		return false;
 	}
-
+	//Ensure that last character is 0 terminator!!!
+	unicode[exact_size] = 0 ; 
 	return true;
 }
 
@@ -647,6 +649,82 @@ fail:
 	synce_socket_close(socket);
 	return false;
 }
+
+
+
+
+void rapi_buffer_dump_buffer_from_current_point( char* desc, RapiBuffer* buffer)
+{
+	uint8_t* buf = (uint8_t*)buffer->data;  
+	size_t len = buffer->bytes_used ;
+	size_t i, j;
+	char hex[8 * 3 + 1];
+	char chr[8 + 1];
+
+
+	printf("%s (%d remaining bytes):\n", desc, len);
+	for (i = buffer->read_index ; i < len + 7; i += 8) {
+		for (j = 0; j < 8; j++) 
+			if (j + i >= len) {
+				hex[3*j+0] = ' ';
+				hex[3*j+1] = ' ';
+				hex[3*j+2] = ' ';
+				chr[j] = ' ';
+			} else {
+				uint8_t c = buf[j + i];
+				const char *hexchr = "0123456789abcdef";
+				hex[3*j+0] = hexchr[(c >> 4) & 0xf];
+				hex[3*j+1] = hexchr[c & 0xf];
+				hex[3*j+2] = ' ';
+				if (c > ' ' && c <= '~')
+					chr[j] = c;
+				else
+					chr[j] = '.';
+			}
+		hex[8*3] = '\0';
+		chr[8] = '\0';
+		printf("  %04x: %s %s\n", i, hex, chr);
+	}
+}
+
+
+
+
+
+void rapi_buffer_debug_dump_buffer( char* desc, RapiBuffer* buffer)
+{
+	uint8_t* buf = (uint8_t*)buffer->data;  
+	size_t len = buffer->bytes_used ;
+	size_t i, j;
+	char hex[8 * 3 + 1];
+	char chr[8 + 1];
+
+	printf("%s (%d bytes):\n", desc, len);
+	for (i = 0; i < len + 7; i += 8) {
+		for (j = 0; j < 8; j++) 
+			if (j + i >= len) {
+				hex[3*j+0] = ' ';
+				hex[3*j+1] = ' ';
+				hex[3*j+2] = ' ';
+				chr[j] = ' ';
+			} else {
+				uint8_t c = buf[j + i];
+				const char *hexchr = "0123456789abcdef";
+				hex[3*j+0] = hexchr[(c >> 4) & 0xf];
+				hex[3*j+1] = hexchr[c & 0xf];
+				hex[3*j+2] = ' ';
+				if (c > ' ' && c <= '~')
+					chr[j] = c;
+				else
+					chr[j] = '.';
+			}
+		hex[8*3] = '\0';
+		chr[8] = '\0';
+		printf("  %04x: %s %s\n", i, hex, chr);
+	}
+}
+
+
 
 bool rapi_buffer_read_find_data(
         RapiBuffer* buffer,

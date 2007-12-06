@@ -87,6 +87,21 @@ BOOL _CeCopyFile2(
         LPCWSTR lpNewFileName,
         BOOL bFailIfExists);
 
+
+LONG _CeRegQueryInfoKey2(
+        HKEY hKey,
+        LPWSTR lpClass,
+        LPDWORD lpcbClass,
+        LPDWORD lpReserved,
+        LPDWORD lpcSubKeys,
+        LPDWORD lpcbMaxSubKeyLen,
+        LPDWORD lpcbMaxClassLen,
+        LPDWORD lpcValues,
+        LPDWORD lpcbMaxValueNameLen,
+        LPDWORD lpcbMaxValueLen,
+        LPDWORD lpcbSecurityDescriptor,
+        PFILETIME lpftLastWriteTime);
+
 BOOL _CeCopyFileA2(
         LPCSTR lpExistingFileName,
         LPCSTR lpNewFileName,
@@ -143,6 +158,16 @@ LONG _CeRegOpenKeyEx2(
         DWORD ulOptions,
         REGSAM samDesired,
         PHKEY phkResult);
+
+LONG _CeRegEnumValue2( 
+        HKEY hKey, 
+        DWORD dwIndex, 
+        LPWSTR lpszValueName, 
+        LPDWORD lpcbValueName, 
+        LPDWORD lpReserved, 
+        LPDWORD lpType, 
+        LPBYTE lpData, 
+        LPDWORD lpcbData); 
 
 LONG _CeRegEnumKeyEx2(
         HKEY hKey,
