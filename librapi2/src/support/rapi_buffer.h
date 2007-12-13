@@ -162,7 +162,7 @@ bool rapi_buffer_read_find_data(
 /**
  * Dump the complete buffer that is supplied as parameter
  */
-void rapi_buffer_dump_buffer(
+void rapi_buffer_debug_dump_buffer(
 		char* desc, 
 		RapiBuffer* buffer) ;
 
@@ -170,7 +170,7 @@ void rapi_buffer_dump_buffer(
  * Dump the remainder of the buffer that is supplied as 
  * a parameter. Mostly of use when dumping the recv buffer
  */
-void rapi_buffer_dump_buffer_from_current_point(
+void rapi_buffer_debug_dump_buffer_from_current_point(
 		char* desc, 
 		RapiBuffer* buffer) ;
 

@@ -13,13 +13,19 @@
 #define ACTION_LISTKEY 3
 #define ACTION_NEWKEY 4
 #define ACTION_DELETEKEY 5
+#define ACTION_DUMP_REGISTRY 6
+
 
 char* devname = NULL;
 int action = ACTION_READVAL;
+bool list_recurse = false ; 
 DWORD valType = REG_SZ;
 const char *prog_name;
 
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
+
+int read_val(char *parent_str, char *key_str, HKEY key, LPCWSTR value_name_wide) ;
+
 
 static void show_usage(const char* name)
 {
@@ -39,6 +45,8 @@ static void show_usage(const char* name)
 			"\t                 1 - Errors only\n"
 			"\t                 2 - Errors and warnings\n"
 			"\t                 3 - Everything\n"
+			"\t-D           Dump complete registry to screen\n"
+			"\t-L           Enable list recursion\n"
 			"\t-h           Show this help message\n"
                         "\t-p DEVNAME   Mobile device name\n"
                         "\t-t TYPE      New type for writes:\n"
@@ -94,7 +102,7 @@ static bool handle_parameters(int argc, char** argv, char** parent_str, char** k
 {
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
-	while ((c = getopt(argc, argv, "d:hp:t:rwxlnX")) != -1)
+	while ((c = getopt(argc, argv, "d:hp:t:rwxlnXDL")) != -1)
 	{
 		switch (c)
 		{
@@ -102,6 +110,9 @@ static bool handle_parameters(int argc, char** argv, char** parent_str, char** k
 				log_level = atoi(optarg);
 				break;
 
+						case 'L':
+								list_recurse = true ;
+								break ;
                         case 'p':
                                 devname = optarg;
                                 break;
@@ -130,7 +141,11 @@ static bool handle_parameters(int argc, char** argv, char** parent_str, char** k
                                 action = ACTION_DELETEKEY;
                                 break;
 
-                        case 't':
+                        case 'D':
+                                action = ACTION_DUMP_REGISTRY;
+                                break;
+                        
+						case 't':
                                 if (strcasecmp(optarg,"binary") == 0)
                                 {
                                   valType = REG_BINARY;
@@ -275,13 +290,90 @@ int new_key(HKEY parent, LPCWSTR key_name_wide)
   return 0;
 }
 
-int list_key(HKEY key)
-{
+
+int list_key(HKEY key, char* key_path, bool do_recurse) 
+{ 
+  //First print the path till now:
+  printf("\n[%s]\n", key_path );
+
+
   int result;
   int i;
 
+
+  //First determine the size of the holding arrays for all 
+  //subvalues/keys
+  DWORD lpcSubKeys ; 
+  DWORD lpcbMaxSubKeyLen ; 
+  DWORD lpcbMaxClassLen ; 
+  DWORD lpcValues ; 
+  DWORD lpcbMaxValueNameLen ; 
+  DWORD lpcbMaxValueLen ; 
+
+  result = CeRegQueryInfoKey(key, NULL, NULL, NULL, 
+		  &lpcSubKeys, &lpcbMaxSubKeyLen, &lpcbMaxClassLen, 
+		  &lpcValues, &lpcbMaxValueNameLen, &lpcbMaxValueLen, 
+		  NULL, NULL) ;
+
+  //One important thing is to add +1 to all string lengths, since we need to 
+  //add the zero-terminator also, which is not present in the device.
+ 
+  lpcbMaxClassLen++ ; 
+  lpcbMaxValueNameLen++ ; 
+  lpcbMaxValueLen++ ; 
+  lpcbMaxSubKeyLen++ ; 
+
+
+
+	//First print all of the values
   for(i = 0; ; i++)
   {
+	DWORD value_name_wide_size = lpcbMaxValueNameLen ; 
+    WCHAR value_name_wide[value_name_wide_size];
+	
+	DWORD value_size = lpcbMaxValueLen ; 
+	uint8_t value[value_size];
+
+    DWORD value_type;
+
+
+
+    result = CeRegEnumValue(key, i, value_name_wide , 
+			&value_name_wide_size, NULL, &value_type, 
+			value , &value_size );
+
+    if (ERROR_NO_MORE_ITEMS == result)
+      break;
+    else if (ERROR_SUCCESS != result)
+    {
+      fprintf(stderr,"Failed to list subkey #%d: %s\n",
+              i,
+              synce_strerror(result));
+      return 1;
+    }
+	
+    printf("\"%s\"=",  wstr_to_ascii(value_name_wide));
+
+    switch (value_type)
+    {
+      case REG_SZ:
+        printf("\"%s\"\n", wstr_to_ascii((LPCWSTR)value));
+        break;
+      
+      case REG_DWORD:
+        printf("dword=%08x\n", *(DWORD*)value);
+        break;
+  
+      default:
+        dump("Value", value, value_size);
+        break;
+    }
+  }
+
+  
+  for(i = 0; ; i++)
+  {
+
     WCHAR wide_name[MAX_PATH];
     DWORD name_size = sizeof(wide_name);
     
@@ -296,34 +388,80 @@ int list_key(HKEY key)
               synce_strerror(result));
       return 1;
     }
-    printf("K %s\n",wstr_to_ascii(wide_name));
+
+
+	if (!do_recurse){
+	  //Then just print all the subkeys
+	  printf("\n") ; 
+	  fprintf(stdout, "[%s\\%s]\n", key_path, wstr_to_ascii(wide_name)) ; 
+	}
+	else{
+	  HKEY childKey = 0 ; 
+	  char* child_key_name = wstr_to_ascii( wide_name ) ; 
+	  char child_key_path[MAX_PATH] ; 
+	  sprintf(child_key_path,"%s\\%s", key_path, child_key_name) ; 
+	  	
+	  if (!rapi_reg_open_key( key, child_key_name, &childKey ))
+	  { 
+	  	return 1 ;
+	  }
+		
+	  //We have childkey now
+	  //Do list_key on this
+	  list_key( childKey , child_key_path, do_recurse) ; 
+    }
   }
 
-  for(i = 0; ; i++)
-  {
-    WCHAR wide_name[MAX_PATH];
-    DWORD name_size = sizeof(wide_name);
-    DWORD type;
-    
-    result = CeRegEnumValue(key, i, wide_name, &name_size, NULL, &type,
-                            NULL, NULL);
-    if (ERROR_NO_MORE_ITEMS == result)
-      break;
-    else if (ERROR_SUCCESS != result)
-    {
-      fprintf(stderr,"Failed to list subkey #%d: %s\n",
-              i,
-              synce_strerror(result));
-      return 1;
-    }
-    /* TODO: We already have the value type, might as well display it. */
-    /* TODO: We have the value itself, too, so maybe just display that. */
-    /* TODO: It's probably pretty easy to make this work recursively, while we're at it */
-    /* TODO: Which would be a pretty good registry dump tool. */
-    printf("V %s\n",wstr_to_ascii(wide_name));
-  }
-  return 0;
+
+  return 0 ; 
 }
+
+
+
+
+int dump_registry()
+{
+  //First the HKLM
+  HKEY rootKey = HKEY_LOCAL_MACHINE ;
+  
+  int result = 0 ; 
+  
+  result = list_key( rootKey, "HKEY_LOCAL_MACHINE", true) ; 
+  
+  if (result != 0){
+  	return result ; 
+  }
+  
+  //Then the HKCU
+  rootKey = HKEY_CURRENT_USER ; 
+  
+  result = 0 ; 
+  
+  result = list_key( rootKey, "HKEY_CURRENT_USER", true ) ; 
+  
+  if (result != 0){
+  	return result ; 
+  }
+  
+  
+  
+  //And finally the HKCR
+  rootKey = HKEY_CLASSES_ROOT ; 
+  
+  result = 0 ; 
+  
+  result = list_key( rootKey, "HKEY_CLASSES_ROOT", true ) ; 
+  
+  if (result != 0){
+  	return result ; 
+  }
+  
+  return 0 ; 
+}
+
+
+
+
 
 int delete_val(HKEY key, LPCWSTR value_name)
 {
@@ -344,6 +482,7 @@ int delete_val(HKEY key, LPCWSTR value_name)
 #endif      
 
 }
+
 
 int read_val(char *parent_str, char *key_str, HKEY key, LPCWSTR value_name_wide)
 {
@@ -453,7 +592,36 @@ int main(int argc, char** argv)
   
   if (!handle_parameters(argc,argv,&parent_str,&key_name,&value_name,&new_value))
     goto exit;
-  
+
+
+  //Add this before anything, since we don't need the
+  //parent_str etc..
+  if (action==ACTION_DUMP_REGISTRY){
+	  if ((connection = rapi_connection_from_name(devname)) == NULL)
+	  {
+		  fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
+				  argv[0],
+				  devname?devname:"(Default)");
+		  goto exit;
+	  }
+	  rapi_connection_select(connection);
+	  if (S_OK != (hr = CeRapiInit()))
+	  {
+		  fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
+				  argv[0],
+				  synce_strerror(hr));
+		  goto exit;
+	  }
+
+	  result = dump_registry() ;
+	  if (result != 0){
+		  fprintf(stdout, "SOMETHING WENT WRONG!!!!\n" ) ; 
+	  }
+	  goto exit;
+  }
+
+
+
   /* handle abbreviations */
   if (STR_EQUAL(parent_str, "HKCR"))
     parent_str = "HKEY_CLASSES_ROOT";
@@ -516,7 +684,9 @@ int main(int argc, char** argv)
 
   if (action == ACTION_LISTKEY)
   {
-    result = list_key(key);
+	char path[255] ; 
+	sprintf(path,"%s\\%s", parent_str, key_name ) ; 
+    result = list_key(key, path, list_recurse);
     goto exit;
   }
 

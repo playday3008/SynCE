@@ -228,11 +228,10 @@ LONG _CeRegQueryInfoKey2(
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
 
 	
-
+	
 	if (ERROR_SUCCESS == return_value)
 	{
 		DWORD foo = 0 ; 
-
 		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
 		if (lpClass)
 		{
@@ -280,19 +279,36 @@ LONG _CeRegEnumValue2(
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x34);
+	//These two values are NOT allowed to be NULL, therefore, just send them
+	//right away
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
 	rapi_buffer_write_uint32         (context->send_buffer, dwIndex);
 
-	//What is the size of the buffer we have for ValueName
-	rapi_buffer_write_uint32(context->send_buffer, *lpcbValueName);
-	//What is the size of the buffer we have for the data
-	rapi_buffer_write_uint32(context->send_buffer, *lpcbData );
-
+	
+	
+	//After some testing, turned out that we need to tell the device the
+	//size of the buffer we have on our side. BUT, you are not allowed to 
+	//send 0, probably you tell the device how much total you expect for the
+	//string to be in the reply of the device, which includes the actual 
+	//length of the string
+	//
+	//The device reports |lenght|string
+	//
+	//If we send the value 00, this results in a problem, since the device
+	//can't even send the legth of the string.
+	//The length reported by the device should be 1 less then the value 
+	
+	//So if the user is not interested in the value 
+	//(i.e. pcbData, or lpcbValueName is null) then send value 1
+	
+	//Furthermore, DON'T use the write_optional, for some reason 
+	//that does not work, at writes too many things to the send buffer
+	rapi_buffer_write_uint32(context->send_buffer, lpcbValueName ? *lpcbValueName : 1 );
+	rapi_buffer_write_uint32(context->send_buffer, lpcbData ? *lpcbData : 1 );
 
 	if ( !rapi2_context_call(context) )
 		return false;
-	
-	
+
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
@@ -303,10 +319,22 @@ LONG _CeRegEnumValue2(
 	{
 		DWORD foo ; 
 
-		//First read the valuename		
-		rapi_buffer_read_string(context->recv_buffer, lpszValueName, lpcbValueName ) ; 
+		//If the user wants to know the valuename
+		if (lpszValueName){
+			//First read the valuename		
+			rapi_buffer_read_string(context->recv_buffer, lpszValueName, lpcbValueName ) ; 
+			//Just to be sure for the moment:
+			lpszValueName[*lpcbValueName] = 0 ; 
+		}
+		else{
+			//Other the value 0 will be printed to the buffer by the device, indicating
+			//the length of the string sent
+			rapi_buffer_read_uint32(context->recv_buffer, &foo) ; 
+		}
+
 	
-		//Then read the type
+		//Then read the type, this is always returned by the device
+		//Just skip the value if it is not needed.
 		foo = 0 ; 
         rapi_buffer_read_uint32(context->recv_buffer, &foo );
         if (lpType)

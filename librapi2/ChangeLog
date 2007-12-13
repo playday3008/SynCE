@@ -1,3 +1,10 @@
+2007-12-13  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixes to rapi_buffer_debug_ header
+	* fixes to CeRegQueryInfoKey & CeRegEnumValue in rapi1
+	* improved NULL handling in rapi2 from Guido Diepen
+	* extra functionality in synce-registry from Guido Diepen
+
 2007-12-06  Mark Ellis  <mark@mpellis.org.uk>
 
 	* patch from Guido Diepen, many thanks !!

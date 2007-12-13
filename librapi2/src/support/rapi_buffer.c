@@ -653,7 +653,7 @@ fail:
 
 
 
-void rapi_buffer_dump_buffer_from_current_point( char* desc, RapiBuffer* buffer)
+void rapi_buffer_debug_dump_buffer_from_current_point( char* desc, RapiBuffer* buffer)
 {
 	uint8_t* buf = (uint8_t*)buffer->data;  
 	size_t len = buffer->bytes_used ;
