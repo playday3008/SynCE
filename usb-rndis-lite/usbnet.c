@@ -1178,7 +1178,9 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
 	init_timer (&dev->delay);
 	mutex_init (&dev->phy_mutex);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
 	SET_MODULE_OWNER (net);
+#endif
 	dev->net = net;
 	strcpy (net->name, "usb%d");
 	memcpy (net->dev_addr, node_id, sizeof node_id);
