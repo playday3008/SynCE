@@ -46,3 +46,4 @@ autoheader
 libtoolize --copy --automake
 automake --copy --foreign --add-missing
 autoconf
+./configure $@
