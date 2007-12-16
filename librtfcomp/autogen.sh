@@ -2,3 +2,4 @@
 
 autoreconf -ifv
 
+./configure $@
