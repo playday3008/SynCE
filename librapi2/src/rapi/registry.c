@@ -330,3 +330,47 @@ LONG _CeRegSetValueEx( /*{{{*/
 
 	return return_value;
 }/*}}}*/
+
+LONG _CeRegDeleteValue( /*{{{*/
+		HKEY hKey,
+		LPCWSTR lpszValueName)
+{
+	RapiContext* context = rapi_context_current();
+	LONG return_value = ERROR_GEN_FAILURE;
+
+	rapi_context_begin_command(context, 0x24);
+	rapi_buffer_write_uint32(context->send_buffer, hKey);
+	rapi_buffer_write_optional_string(context->send_buffer, lpszValueName);
+
+	if ( !rapi_context_call(context) )
+		return ERROR_GEN_FAILURE;
+
+	if (!rapi_buffer_read_uint32(context->recv_buffer, &context->last_error))
+		return ERROR_GEN_FAILURE;
+	if (!rapi_buffer_read_int32(context->recv_buffer, &return_value))
+		return ERROR_GEN_FAILURE;
+
+	return return_value;
+}/*}}}*/
+
+LONG _CeRegDeleteKey( /*{{{*/
+		HKEY hKey,
+		LPCWSTR lpszSubKey)
+{
+	RapiContext* context = rapi_context_current();
+	LONG return_value = ERROR_GEN_FAILURE;
+
+	rapi_context_begin_command(context, 0x22);
+	rapi_buffer_write_uint32(context->send_buffer, hKey);
+	rapi_buffer_write_optional_string(context->send_buffer, lpszSubKey);
+
+	if ( !rapi_context_call(context) )
+		return ERROR_GEN_FAILURE;
+
+	if (!rapi_buffer_read_uint32(context->recv_buffer, &context->last_error))
+		return ERROR_GEN_FAILURE;
+	if (!rapi_buffer_read_int32(context->recv_buffer, &return_value))
+		return ERROR_GEN_FAILURE;
+
+	return return_value;
+}/*}}}*/

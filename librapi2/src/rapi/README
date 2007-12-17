@@ -40,9 +40,9 @@ List of RAPI command codes:
 
 [i] 20 CeRegCreateKeyEx	
 [i] 21 CeRegCloseKey		
-[ ] 22 CeRegDeleteKey		
+[i] 22 CeRegDeleteKey		
 [i] 23 CeRegEnumValue		
-[ ] 24 CeRegDeleteValue	
+[i] 24 CeRegDeleteValue	
 [i] 25 CeRegQueryInfoKey	
 [i] 26 CeRegQueryValueEx	
 [i] 27 CeRegSetValueEx		

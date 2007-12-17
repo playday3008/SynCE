@@ -256,6 +256,14 @@ LONG _CeRegSetValueEx(
         const BYTE *lpData,
         DWORD cbData);
 
+LONG _CeRegDeleteValue(
+	HKEY hKey,
+	LPCWSTR lpszValueName);
+
+LONG _CeRegDeleteKey(
+	HKEY hKey,
+	LPCWSTR lpszSubKey);
+
 /*
  * Convenience functions for easy registry access
  */

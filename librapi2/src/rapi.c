@@ -74,8 +74,8 @@ struct rapi_ops_s rapi_ops =
         &_CeRegCreateKeyEx,               /* CeRegCreateKeyEx */
         &_CeRegOpenKeyEx,                 /* CeRegOpenKeyEx */
         &_CeRegCloseKey,                  /* CeRegCloseKey */
-        NULL,                             /* CeRegDeleteKey */
-        NULL,                             /* CeRegDeleteValue */
+        &_CeRegDeleteKey,                 /* CeRegDeleteKey */
+        &_CeRegDeleteValue,               /* CeRegDeleteValue */
         &_CeRegQueryInfoKey,              /* CeRegQueryInfoKey */
         &_CeRegQueryValueEx,              /* CeRegQueryValueEx */
         &_CeRegEnumValue,                 /* CeRegEnumValue */

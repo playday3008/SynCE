@@ -1,6 +1,7 @@
 2007-12-17  Mark Ellis  <mark@mpellis.org.uk>
 
 	* more registry fixes in rapi1
+	* added CeRegDeleteKey() and CeRegDeleteValue() to rapi 1
 	
 2007-12-13  Mark Ellis  <mark@mpellis.org.uk>
 
