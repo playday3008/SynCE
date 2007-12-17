@@ -192,7 +192,8 @@ LONG _CeRegQueryInfoKey( /*{{{*/
 	{
 		rapi_buffer_read_optional       (context->recv_buffer, lpClass, lpcbClass ? *lpcbClass * sizeof(WCHAR) : 0);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbClass);
-		/* rapi_buffer_read_optional_uint32(context->recv_buffer, lpReserved); */
+		if (lpReserved)
+		  *lpReserved = 0;
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcSubKeys);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbMaxSubKeyLen);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbMaxClassLen);
@@ -239,7 +240,8 @@ LONG _CeRegEnumValue( /*{{{*/
 	{
 		rapi_buffer_read_optional       (context->recv_buffer, lpszValueName, lpcbValueName ? *lpcbValueName * sizeof(WCHAR) : 0);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbValueName);
-		/* rapi_buffer_read_optional_uint32(context->recv_buffer, lpReserved); */
+		if (lpReserved)
+		  *lpReserved = 0;
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpType);
 		rapi_buffer_read_optional       (context->recv_buffer, lpData, lpcbData ? *lpcbData : 0);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbData);
@@ -281,7 +283,8 @@ LONG _CeRegEnumKeyEx( /*{{{*/
 	{
 		rapi_buffer_read_optional       (context->recv_buffer, lpName, lpcbName ? *lpcbName * sizeof(WCHAR) : 0);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbName);
-		rapi_buffer_read_optional_uint32(context->recv_buffer, lpReserved);
+		if (lpReserved)
+		  *lpReserved = 0;
 		rapi_buffer_read_optional       (context->recv_buffer, lpClass, lpcbClass ? *lpcbClass * sizeof(WCHAR) : 0);
 		rapi_buffer_read_optional_uint32(context->recv_buffer, lpcbClass);
 
