@@ -55,4 +55,20 @@ cdef extern from "synce.h":
 
 cdef extern from "rapi.h":
     ctypedef void*              LPSECURITY_ATTRIBUTES
-
+	
+    ctypedef struct _SYSTEM_POWER_STATUS_EX: 
+        BYTE ACLineStatus
+        BYTE BatteryFlag
+        BYTE BatteryLifePercent
+        BYTE Reserved1
+        DWORD BatteryLifeTime
+        DWORD BatteryFullLifeTime
+        BYTE Reserved2
+        BYTE BackupBatteryFlag
+        BYTE BackupBatteryLifePercent
+        BYTE Reserved3
+        DWORD BackupBatteryLifeTime
+        DWORD BackupBatteryFullLifeTime
+    ctypedef _SYSTEM_POWER_STATUS_EX	SYSTEM_POWER_STATUS_EX 
+    ctypedef SYSTEM_POWER_STATUS_EX*	PSYSTEM_POWER_STATUS_EX
+	

@@ -1,3 +1,7 @@
+2007-12-18  Guido Diepen  <guido@jcwodan.nl>
+
+	* added python binding for CeGetSystemPowerStatus
+	
 2007-12-17  Mark Ellis  <mark@mpellis.org.uk>
 
 	* more registry fixes in rapi1

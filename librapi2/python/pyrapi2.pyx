@@ -31,7 +31,7 @@ cdef extern from "rapi.h":
     HRESULT CeSyncResume()
     HRESULT CeSyncPause()
     HRESULT CeSyncTimeToPc()
-
+    BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh)
 
 #
 # Public constants
@@ -64,6 +64,14 @@ REG_MULTI_SZ            = 7
 
 REG_CREATED_NEW_KEY     = 1
 REG_OPENED_EXISTING_KEY = 2
+
+BATTERY_FLAG_HIGH          =    0x01
+BATTERY_FLAG_LOW           =    0x02
+BATTERY_FLAG_CRITICAL      =    0x04
+BATTERY_FLAG_CHARGING      =    0x08
+BATTERY_FLAG_NO_BATTERY    =    0x80
+BATTERY_FLAG_UNKNOWN       =    0xFF
+
 
 
 class RAPIError:
@@ -323,3 +331,28 @@ class RAPISession:
 
     def SyncTimeToPc(self):
         return CeSyncTimeToPc()
+
+    def getSystemPowerStatus(self, refresh):
+        cdef SYSTEM_POWER_STATUS_EX powerStatus
+        
+        retval = CeGetSystemPowerStatusEx( &powerStatus, 0 )
+        #In contrast to other functions, this returns a boolean,
+        #denoting whether the call was succesfull
+        if retval == 0:
+            raise RAPIError(retval)
+
+		#Now construct the dictionary:
+        result = dict()
+        result["ACLineStatus"] = powerStatus.ACLineStatus
+        result["BatteryFlag"]               = powerStatus.BatteryFlag
+        result["BatteryLifePercent"]        = powerStatus.BatteryLifePercent
+        result["Reserved1"]                 = powerStatus.Reserved1
+        result["BatteryLifeTime"]           = powerStatus.BatteryLifeTime
+        result["BatteryFullLifeTime"]       = powerStatus.BatteryFullLifeTime
+        result["Reserved2"]                 = powerStatus.Reserved2
+        result["BackupBatteryFlag"]         = powerStatus.BackupBatteryFlag
+        result["BackupBatteryLifePercent"]  = powerStatus.BackupBatteryLifePercent
+        result["Reserved3"]                 = powerStatus.Reserved3
+        result["BackupBatteryLifeTime"]     = powerStatus.BackupBatteryLifeTime
+        result["BackupBatteryFullLifeTime"] = powerStatus.BackupBatteryFullLifeTime
+        return result 
