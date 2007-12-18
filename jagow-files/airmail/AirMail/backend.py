@@ -14,6 +14,7 @@ import os.path
 import email
 import email.generator
 import util
+import base64
 from constants import *
 
 
@@ -37,7 +38,10 @@ class Backend:
 		#
 		# folderlist is keyed by folder guid
 		#
-		# guid: (parent displayname type uptodate, {itemsbyID}, {itemIDbyName})
+		# guid: (parent,displayname,type,change,{itemsbyID},{itemIDbyName})
+		#
+		# nametoguid is a direct mapping for folders
+		#
 		
 		self.folderlist = {}
 		self.nametoguid = {}
@@ -52,35 +56,40 @@ class Backend:
 	
 	def _GetPathToFolder(self,folderID):
 					
-		# get path to folder
+		# get path to folder. Backwards.
 
 		curParentID = folderID
 		path=None
 		while curParentID != "0":
 			(curParentID,parentname,p_type,p_uptodate,p_itemsbyID,p_itemIDByName) = self.folderlist[curParentID]
 			if path==None:
-				path = parentname
+				path=parentname
 			else:
 				path=os.path.join(parentname,path)
-						
+				
+		path = os.path.join(self.amfolders,path)
 		return path
-
-
-	#
-	# InitializeFolderList
-	#
-	# Load us from permanent storage. If our pickle does not
-	# exist, then create it.
 	
-	def InitializeFolderList(self):
-		
-		if self.LoadFolderList()==True:
-			return True
-		
+	#
+	# _ScanFolders
+	#
+	# This internal function scans our folder tree for changes, and updates the internal database
+	# appropriately
+	#
+	
+	def _ScanFolders(self):
+
 		if os.path.isdir(self.amfolders):
 			
 			parent = "0"
 			isFirstLevel=True
+			
+			#
+			# whip round all folders and set them to OBJECT_DELETE
+			
+			for itemID in self.folderlist.keys():
+				parent,displayname,typeval,change,itemsbyID,itemIDByName = self.folderlist[itemID]
+				self.folderlist[itemID] = parent,displayname,typeval,OBJECT_TODEL,itemsbyID,itemIDByName
 			
 			for path,dirs,files in os.walk(self.amfolders,topdown=True):
 
@@ -94,29 +103,51 @@ class Backend:
 					parent = self.nametoguid[pname]
 
 				for fldrname in dirs:
-
-					# Same applies here for errors -  just ignore them,
-					# the result will leave the dir in place.
-
-					try:
-							
-						fldrid = util.generate_guid()
 					
-						if fldrname in AM_FOLDER_TYPES.keys():
-							fldrtype = AM_FOLDER_TYPES[fldrname]
-						else:
-							fldrtype = 1
-							
-						self.folderlist[fldrid] = (parent,fldrname,fldrtype,False,{},{})
-						self.nametoguid[fldrname] = fldrid
+					# if we already have it in the database, mark its
+					# change type as OBJECT_NOCHANGE. Otherwise
+					# mark it as OBJECT_NEW
+
+					if fldrname in self.nametoguid.keys():
 						
-					except:
-						pass
-		
-		return self.SaveFolderList()
-		
+						db_fldrID = self.nametoguid[fldrname]
+						parent,displayname,typeval,change,itemsbyID,itemIDByName = self.folderlist[db_fldrID]
+						self.folderlist[db_fldrID] = (parent,displayname,typeval,OBJECT_NOCHANGE,itemsbyID,itemIDByName)
+						
+					else:
+						
+						# Same applies here for errors -  just ignore them,
+						# the result will leave the dir in place.
+
+						try:
+							
+							fldrid = util.generate_guid()
+					
+							if fldrname in AM_FOLDER_TYPES.keys():
+								fldrtype = AM_FOLDER_TYPES[fldrname]
+							else:
+								fldrtype = 1
+							
+							self.folderlist[fldrid] = (parent,fldrname,fldrtype,OBJECT_NEW,{},{})
+							self.nametoguid[fldrname] = fldrid
+
+						except:
+							pass
+
+
+	#
+	# InitializeFolderList
+	#
+	# Load us from permanent storage. If our pickle does not
+	# exist, then create it.
 	
-	
+	def InitializeFolderList(self):
+		
+		self.LoadFolderList()
+		self._ScanFolders()
+		self.SaveFolderList()
+
+
 	#
 	# SaveFolderList
 	#
@@ -194,18 +225,45 @@ class Backend:
 	# Return any new folders
 	#
 	
-	def QueryFolderChanges(self):
+	def QueryFolderChanges(self,initialsync):
+		
+		self._ScanFolders()
+		
 		flist = []
-		for guid in self.folderlist.keys():
-			parentID,displayname,type,uptodate,itemsbyID, itemIDByName = self.folderlist[guid]
-			if uptodate == False:
-				flist.append((guid,parentID,displayname,type))
-				uptodate = True
-				self.folderlist[guid]= parentID,displayname,type,uptodate,itemsbyID, itemIDByName
+		for folderID in self.folderlist.keys():
+			parentID,displayname,type,change,itemsbyID, itemIDByName = self.folderlist[folderID]
+			if initialsync:
+				self.folderlist[folderID]= parentID,displayname,type,OBJECT_NEW,itemsbyID, itemIDByName
+				flist.append((folderID,parentID,OBJECT_NEW,displayname,type))
+				
+			else:
+				if change != OBJECT_NOCHANGE:
+					flist.append((folderID,parentID,change,displayname,type))
+					self.folderlist[folderID]= parentID,displayname,type,change,itemsbyID, itemIDByName
 				
 		self.SaveFolderList()
 		return flist
 		
+	#
+	# AcknowledgeFolderChanges
+	#
+	# Called back from the sync process when a change has been actioned
+	
+	def AcknowledgeFolderChanges(self,changes):
+		
+		for folderID,parentID,change,displayname,type in changes:
+			parentID,displayname,type,change,itemsbyID, itemIDByName = self.folderlist[folderID]
+			if change == OBJECT_TODEL:
+				path = self._GetPathToFolder(folderID)
+				
+				del self.folderlist[folderID]
+				del self.nametoguid[displayname]
+				
+				util.deltree(path)
+			else:
+				self.folderlist[folderID] = parentID,displayname,type,OBJECT_NOCHANGE,itemsbyID,itemIDByName
+		self.SaveFolderList()
+	
 	#
 	# AddFolder
 	#
@@ -229,11 +287,15 @@ class Backend:
 			print " New folder %s " % name
 			print " Parent ID  %s " % parent
 			
-			while curParentID != "0":
-				(curParentID,parentname,type,uptodate,itemsbyID,itemIDByName) = self.folderlist[curParentID]
-				path=os.path.join(parentname,path)
+			try:
+				while curParentID != "0":
+					(curParentID,parentname,type,uptodate,itemsbyID,itemIDByName) = self.folderlist[curParentID]
+					path=os.path.join(parentname,path)
 		
-			path = os.path.join(self.amfolders,path)
+				path = os.path.join(self.amfolders,path)
+			except:
+				print "can not find parent"
+				return ""
 			
 			# make the physical dir.
 			
@@ -584,7 +646,7 @@ class Backend:
 	#
 	# Move an item between folders
 	
-	def MoveItem(src_fldrID,dst_fldrID, itemID):
+	def MoveItem(self,src_fldrID,dst_fldrID,itemID):
 		
 		if self.folderlist.has_key(src_fldrID) and self.folderlist.has_key(dst_fldrID):
 			
@@ -605,7 +667,7 @@ class Backend:
 					data = fp.read()
 					fp.close()
 				except:
-					print "MoveItem: can not load file data"
+					print "MoveItem: can not load file data %s" % spath
 					return False
 				
 				dpath = os.path.join(dst_path,name)
@@ -615,7 +677,7 @@ class Backend:
 					fp.write(data)
 					fp.close()
 				except:
-					print "MoveItem: can not write file"
+					print "MoveItem: can not write file %s" % dpath
 					return False
 				
 				# Now we can transfer the file and update the IDs
@@ -637,4 +699,31 @@ class Backend:
 			return False
 				
 				
-				
+	#
+	# GetAttachment
+	#
+	# Given a specific folder ID, message ID, filename and index, return
+	# the (contenttype,data).
+	
+	def GetAttachment(self,folderID,messageID, filename, index):
+		
+		item = self.FetchItem(folderID,messageID)
+		if item != None:
+			itemID,change,message=item
+			
+			# now need to find attachment in message
+			
+			idx = 0
+			for msgpart in message.walk():
+				fn=msgpart.get_filename()
+				print "Part: index %d filename %s" % (idx,fn)
+				if fn==filename and index==idx:
+					print "Content-Type %s" % msgpart.get_content_type()
+					print "index        %d" % idx
+					print "data length  %d" % len(msgpart.get_payload())
+					return (msgpart.get_content_type(),base64.b64decode(msgpart.get_payload()))
+				idx += 1
+			print "not found"
+		else:
+			print "fetch failed"
+		return None	

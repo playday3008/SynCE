@@ -11,7 +11,7 @@ import xml2util
 import libxml2
 import time
 import email
-
+import util
 
 #
 #
@@ -117,7 +117,7 @@ class MailConvert:
 	#
 	# MailToApplicationNode
 	
-	def MailToApplicationNode(self,mailmessage):
+	def MailToApplicationNode(self,itemID,mailmessage):
 		
 		msgnode=libxml2.newNode("ApplicationData")
 				
@@ -166,6 +166,7 @@ class MailConvert:
 	
 		haveBody = False
 		attidx = 0
+		attNode = None
 	
 		for msgpart in mailmessage.walk():
 			
@@ -198,19 +199,22 @@ class MailConvert:
 			
 			fn = msgpart.get_filename()
 			if fn:
+				if attNode == None:
+					attNode = self.NewNode(msgnode,"Attachments",None)
+					
 				# we have an attachment. Get its details (but we don't actually
 				# want the data here
 				
 				attsize = len(msgpart.get_payload(None,True))
 				atttype = msgpart.get_content_type()
-				attname = self.folderName + "/" + fn + "/" + str(attidx+1) # close to Airsync
-				
-				
-				attnode = self.NewNode(msgnode,"Attachment",None)
-				self.NewNode(attnode,"AttMethod","1")
-				self.NewNode(attnode,"AttSize",str(attsize))
-				self.NewNode(attnode,"DisplayName",fn)
-				self.NewNode(attnode,"AttName",attname)
+				attname = util.GenerateCombinedID(self.folderName,itemID) + "/" + fn + "/" + str(attidx) # close to Airsync
+
+				thisattnode = self.NewNode(attNode,"Attachment",None)
+				self.NewNode(thisattnode,"AttMethod","1")
+				self.NewNode(thisattnode,"AttSize",str(attsize))
+				self.NewNode(thisattnode,"DisplayName",fn)
+				self.NewNode(thisattnode,"AttName",attname)
+			attidx += 1
 
 		# set the body node
 
@@ -224,6 +228,18 @@ class MailConvert:
 
 		
 		return msgnode
-		
-		
+	
+#
+# ParseAttachmentName
+#
+# Get the folder ID, the message ID, the attachment filename and the index from the attachment name
+
+def ParseAttachmentName(attname):
+	
+	strs = attname.split("/")
+	combinedID = strs[0]
+	filename = strs[1]
+	index = strs[2]
+	folderID,itemID=util.SplitCombinedID(combinedID)
+	return folderID,itemID,filename,index
 	

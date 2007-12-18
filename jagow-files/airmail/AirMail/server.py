@@ -91,9 +91,9 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 
 	def _SendWBXMLResponse(self, xml):
 
-		self.server.logger.debug("_send_wbxml_response: Emitting response %d code to client", 200)
+		self.server.logger.debug("_SendWBXMLResponse: Emitting response %d code to client", 200)
 		self.send_response(200)
-		self.server.logger.debug("_send_wbxml_response: Finished emitting response %d code to client", 200)
+		self.server.logger.debug("_SendWBXMLResponse: Finished emitting response %d code to client", 200)
 		self._InitHeaders()
 
 		wbxml = pywbxml.xml2wbxml(xml)
@@ -102,9 +102,24 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 		self.send_header("Content-Length", len(wbxml))
 		self.end_headers()
 
-		self.server.logger.debug("_send_wbxml_response: Emitting wbxml (length = %d)", len(wbxml))
+		self.server.logger.debug("_SendWBXMLResponse: Emitting wbxml (length = %d)", len(wbxml))
 		self.wfile.write(wbxml)
-		self.server.logger.debug("_send_wbxml_response: Finished emitting wbxml")
+		self.server.logger.debug("_SendWBXMLResponse: Finished emitting wbxml")
+
+	def _SendRawResponse(self, contenttype, data):
+
+		self.server.logger.debug("_SendRawResponse: Emitting response %d code to client", 200)
+		self.send_response(200)
+		self.server.logger.debug("_SendRawResponse: Finished emitting response %d code to client", 200)
+		self._InitHeaders()
+	
+		self.send_header("Content-Type", contenttype)
+		self.send_header("Content-Length", len(data))
+		self.end_headers()
+
+		self.server.logger.debug("_SendRawResponse: Emitting data (length = %d)", len(data))
+		self.wfile.write(data)
+		self.server.logger.debug("_SendRawResponse: Finished emitting data")
 
 	def _ParsePath(self):
 		p = urlparse.urlparse(self.path)
@@ -543,11 +558,12 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 				for itemID,change,message in changes:
 			
 					rsp_change_node = rsp_cmd_node.newChild(None,CHANGE_TYPE_TO_NODE_NAME[change],None)
-					rsp_change_node.newChild(None,"ServerId",util.GenerateCombinedID(folderID,itemID))
+					combinedID = util.GenerateCombinedID(folderID,itemID)
+					rsp_change_node.newChild(None,"ServerId",combinedID)
 		    
 					if change!=OBJECT_TODEL:
 		
-						xmlmail = converter.MailToApplicationNode(message)
+						xmlmail = converter.MailToApplicationNode(itemID,message)
 
 						self.server.logger.debug("document data is \n%s", xmlmail.serialize("utf-8",1))
 						
@@ -638,20 +654,24 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 		keydata = xml2util.GetNodeValue(xml2util.FindChildNode(req_folder_node,"SyncKey"))
 		keyID,keyval = util.GetSyncKeyData(keydata)
 		
+		initialsync = (keyval==0)
+		
 		if keyval == 0:
-			self.server.logger.info("_handle_foldersync: must search for local changes here")
-			keyval = 1
+			self.server.logger.info("_ProcessFolderSync :  initial sync.")
+			
 		if keyID == "":
 			keyID = self.backend.sync_key
+			
+		newKey = keyID + str(keyval+1)
 
-		changes = self.backend.QueryFolderChanges()
+		changes = self.backend.QueryFolderChanges(initialsync)
 
 		rsp_doc = self._CreateWBXMLDoc("FolderSync", "http://synce.org/formats/airsync_wm5/folderhierarchy")
 	
 		rsp_folder_node = rsp_doc.getRootElement()
 		
 		rsp_folder_node.newChild(None,"Status","1")
-		rsp_folder_node.newChild(None,"SyncKey",keyID+str(keyval+1))
+		rsp_folder_node.newChild(None,"SyncKey",newKey)
 
 		rsp_changes_node = rsp_folder_node.newChild(None,"Changes",None)
 		 
@@ -659,14 +679,34 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 	
 		for chg in changes:
 		
-			folderID,parentID,displayname,foldertype = chg
+			folderID,parentID,change,displayname,foldertype = chg
+			
+			if change==OBJECT_NEW:
 
-			add_node = rsp_changes_node.newChild(None,"Add",None)
+				add_node = rsp_changes_node.newChild(None,"Add",None)
 
-			add_node.newChild(None,"ServerId", folderID)
-			add_node.newChild(None,"ParentId", parentID)
-			add_node.newChild(None,"DisplayName",displayname)
-			add_node.newChild(None,"Type",str(foldertype))
+				add_node.newChild(None,"ServerId", folderID)
+				add_node.newChild(None,"ParentId", parentID)
+				add_node.newChild(None,"DisplayName",displayname)
+				add_node.newChild(None,"Type",str(foldertype))
+				
+			elif change==OBJECT_TODEL:
+				
+				add_node = rsp_changes_node.newChild(None,"Delete",None)
+				add_node.newChild(None,"ServerId", folderID)
+			
+			elif change==OBJECT_CHANGED:
+				
+				add_node = rsp_changes_node.newChild(None,"Update",None)
+
+				add_node.newChild(None,"ServerId", folderID)
+				add_node.newChild(None,"ParentId", parentID)
+				add_node.newChild(None,"DisplayName",displayname)
+				add_node.newChild(None,"Type",str(foldertype))
+			else:
+				self.server.logger.debug("ProcessFolderSync: unsupported change type %s" % str(change))
+				
+		self.backend.AcknowledgeFolderChanges(changes)
 
         	self.server.logger.debug("handle_foldersync: response document is \n%s", rsp_doc.serialize("utf-8",1))
         
@@ -774,11 +814,11 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 			if src_msgfldr == src_fldID:
 				rc = self.backend.MoveItem(src_fldID,dst_fldID,src_msg)
 				if rc:
-					status=1
+					status=3
 				else:
 					status=2
 			else:
-				status=3
+				status=0
 				
 			respnode.newChild(None,"Status",str(status))
 			respnode.newChild(None,"DstMsgId",util.GenerateCombinedID(dst_fldID,src_msg))
@@ -816,19 +856,33 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 	def _ProcessGetAttachment(self,arglist):
 		
 		if arglist.has_key("AttachmentName"):
-			attname = arglist["AttachmentName"][0]
-			attname = base64.b64decode(attname)
 			
-			# grab attachment here - then send it by brute-force
+			attname = arglist["AttachmentName"][0]
+			
+			# grab attachment here - then just send it down the wire as is.
 			
 			self.server.logger.info("ProcessGetAttachment: requested attachment %s" % attname)
 			
-			# send it here with correct 'Content-Type' header added (maybe function?)
+			folderID,itemID,filename,index = mailconv.ParseAttachmentName(attname)
+		
+			index=int(index)
+			self.server.logger.info("ProcessGetAttachment: folderID %s" % folderID)
+			self.server.logger.info("ProcessGetAttachment: itemID   %s" % itemID)
+			self.server.logger.info("ProcessGetAttachment: filename %s" % filename)
+			self.server.logger.info("ProcessGetAttachment: index    %s" % index)
 			
-			self.SendEmptyResponse(400)	# for now only
+			
+			contenttype, attdata = self.backend.GetAttachment(folderID,itemID,filename,index)
+			
+			# send it back
+			
+			if attdata != None:
+				self._SendRawResponse(contenttype,attdata)	# for now only
+			else:
+				self._SendEmptyResponse(400)
 			
 		else:
-			self.SendEmptyResponse(400)
+			self._SendEmptyResponse(400)
 			
 			
 	#
