@@ -1,4 +1,4 @@
-INCLUDES = -I../include
+INCLUDES = -I$(top_srcdir)/include
 LDADD = ../src/librtfcomp.la
 
 bin_PROGRAMS = test tortf fromrtf

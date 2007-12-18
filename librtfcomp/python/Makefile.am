@@ -1,6 +1,9 @@
 
 if HAVE_PYTHON
 
+INCLUDES = -I$(top_srcdir)/include
+CLEANFILES = pyrtfcomp.c
+
 rtfcompbindingsdir = $(pyexecdir)
 rtfcompbindings_LTLIBRARIES = pyrtfcomp.la
 
