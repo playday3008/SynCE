@@ -1,0 +1,615 @@
+007-12-16 22:34:18,921 DEBUG AirMail : starting AirMail servers
+2007-12-16 22:34:18,923 DEBUG AirMail : installing termination handlers
+2007-12-16 22:34:18,923 DEBUG AirMail : running main loop
+2007-12-16 22:34:18,924 DEBUG AirmailThread : listening for requests
+New Backend
+2007-12-16 22:34:19,285 DEBUG engine.airsync.AirsyncServer : _send_empty_response: Emitting response 200 code to client
+2007-12-16 22:34:19,288 DEBUG engine.airsync.AirsyncServer : HTTP Request: "OPTIONS /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC HTTP/1.1" 200 -
+2007-12-16 22:34:19,288 DEBUG engine.airsync.AirsyncServer : _send_empty_response: Finished emitting response 200 code to client
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 13
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:34:20,268 INFO engine.airsync.AirsyncServer : do_POST: received FolderSync command
+2007-12-16 22:34:20,268 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:34:20,269 DEBUG engine.airsync.AirsyncServer : _handle_foldersync: request document is
+ <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <SyncKey>0</SyncKey>
+</FolderSync>
+
+2007-12-16 22:34:20,270 INFO engine.airsync.AirsyncServer : _handle_foldersync: must search for local changes here
+2007-12-16 22:34:20,287 DEBUG engine.airsync.AirsyncServer : handle_foldersync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <Status>1</Status>
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}2</SyncKey>
+  <Changes>
+    <Count>7</Count>
+    <Add>
+      <ServerId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>Inbox</DisplayName>
+      <Type>2</Type>
+    </Add>
+    <Add>
+      <ServerId>{B1AD83FB-4C49-09DB-077B-1595388FF3D0}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>test</DisplayName>
+      <Type>1</Type>
+    </Add>
+    <Add>
+      <ServerId>{7286404A-02D5-54CA-6AB1-BE851A59D2BD}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>Sent Items</DisplayName>
+      <Type>1</Type>
+    </Add>
+    <Add>
+      <ServerId>{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>ttyy</DisplayName>
+      <Type>1</Type>
+    </Add>
+    <Add>
+      <ServerId>{4E56A50E-8162-BF06-4109-934E34BB52DE}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>Deleted</DisplayName>
+      <Type>4</Type>
+    </Add>
+    <Add>
+      <ServerId>{FF40400C-FC8B-336C-616D-FEA48A796DA6}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>Drafts</DisplayName>
+      <Type>3</Type>
+    </Add>
+    <Add>
+      <ServerId>{3500C93B-69AE-8DCB-CF80-CF08B87203E2}</ServerId>
+      <ParentId>0</ParentId>
+      <DisplayName>Junk</DisplayName>
+      <Type>1</Type>
+    </Add>
+  </Changes>
+</FolderSync>
+
+2007-12-16 22:34:20,287 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:34:20,288 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=FolderSync HTTP/1.1" 200 -
+2007-12-16 22:34:20,288 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:34:20,289 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 509)
+2007-12-16 22:34:20,289 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+Accept-Encoding: gzip
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 66
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:34:20,898 INFO engine.airsync.AirsyncServer : do_POST: received Sync command
+2007-12-16 22:34:20,899 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:34:20,899 DEBUG engine.airsync.AirsyncServer : ProcessSyncCommand: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<Sync xmlns="http://synce.org/formats/airsync_wm5/airsync">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <SyncKey>0</SyncKey>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+    </Collection>
+  </Collections>
+</Sync>
+
+2007-12-16 22:34:20,900 DEBUG engine.airsync.AirsyncServer : _handle_sync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<Sync xmlns="http://synce.org/formats/airsync_wm5/airsync">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <SyncKey>{C0064987-D6DF-35BC-341C-6D1996F2504D}1</SyncKey>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <Status>1</Status>
+    </Collection>
+  </Collections>
+  <Responses/>
+</Sync>
+
+2007-12-16 22:34:20,901 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:34:20,901 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=Sync HTTP/1.1" 200 -
+2007-12-16 22:34:20,901 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:34:20,902 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 110)
+2007-12-16 22:34:20,902 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 113
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:34:21,417 INFO engine.airsync.AirsyncServer : do_POST: received GetItemEstimate command
+2007-12-16 22:34:21,417 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:34:21,418 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{C0064987-D6DF-35BC-341C-6D1996F2504D}1</SyncKey>
+    </Collection>
+  </Collections>
+</GetItemEstimate>
+
+2007-12-16 22:34:21,419 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+</GetItemEstimate>
+
+2007-12-16 22:34:21,419 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:34:21,419 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=GetItemEstimate HTTP/1.1" 200 -
+2007-12-16 22:34:21,420 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:34:21,420 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 73)
+2007-12-16 22:34:21,421 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+New Backend
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 51
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:34:23,711 INFO engine.airsync.AirsyncServer : do_POST: received FolderSync command
+2007-12-16 22:34:23,711 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:34:23,712 DEBUG engine.airsync.AirsyncServer : _handle_foldersync: request document is
+ <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}2</SyncKey>
+</FolderSync>
+
+2007-12-16 22:34:23,725 DEBUG engine.airsync.AirsyncServer : handle_foldersync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <Status>1</Status>
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}3</SyncKey>
+  <Changes>
+    <Count>0</Count>
+  </Changes>
+</FolderSync>
+
+2007-12-16 22:34:23,725 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:34:23,725 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=FolderSync HTTP/1.1" 200 -
+2007-12-16 22:34:23,726 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:34:23,726 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 63)
+2007-12-16 22:34:23,727 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 113
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:34:24,197 INFO engine.airsync.AirsyncServer : do_POST: received GetItemEstimate command
+2007-12-16 22:34:24,197 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:34:24,198 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{C0064987-D6DF-35BC-341C-6D1996F2504D}1</SyncKey>
+    </Collection>
+  </Collections>
+</GetItemEstimate>
+
+2007-12-16 22:34:24,199 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+</GetItemEstimate>
+
+2007-12-16 22:34:24,199 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:34:24,200 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=GetItemEstimate HTTP/1.1" 200 -
+2007-12-16 22:34:24,200 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:34:24,201 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 73)
+2007-12-16 22:34:24,201 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+
+
+
+
+
+
+
+
+
+
+
+New Backend
+
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 72
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:36:47,507 INFO engine.airsync.AirsyncServer : do_POST: received FolderCreate command
+2007-12-16 22:36:47,507 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:36:47,508 DEBUG engine.airsync.AirsyncServer : ProcessSyncCommand: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderCreate xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}3</SyncKey>
+  <ParentId>0</ParentId>
+  <DisplayName>gaggle</DisplayName>
+  <Type>12</Type>
+</FolderCreate>
+
+2007-12-16 22:36:47,508 DEBUG engine.airsync.AirsyncServer : New folder gaggle
+2007-12-16 22:36:47,509 DEBUG engine.airsync.AirsyncServer : ParentId   0
+ New folder gaggle
+ Parent ID  0
+2007-12-16 22:36:47,525 DEBUG engine.airsync.AirsyncServer : ProcessCreateFolder: reply document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderCreate xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <Status>1</Status>
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}1</SyncKey>
+  <ServerId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</ServerId>
+</FolderCreate>
+
+2007-12-16 22:36:47,526 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:36:47,526 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=FolderCreate HTTP/1.1" 200 -
+2007-12-16 22:36:47,526 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:36:47,527 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 98)
+2007-12-16 22:36:47,527 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 51
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:36:47,803 INFO engine.airsync.AirsyncServer : do_POST: received FolderSync command
+2007-12-16 22:36:47,804 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:36:47,804 DEBUG engine.airsync.AirsyncServer : _handle_foldersync: request document is
+ <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}1</SyncKey>
+</FolderSync>
+
+2007-12-16 22:36:47,823 DEBUG engine.airsync.AirsyncServer : handle_foldersync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <Status>1</Status>
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}2</SyncKey>
+  <Changes>
+    <Count>0</Count>
+  </Changes>
+</FolderSync>
+
+2007-12-16 22:36:47,823 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:36:47,824 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=FolderSync HTTP/1.1" 200 -
+2007-12-16 22:36:47,825 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:36:47,825 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 63)
+2007-12-16 22:36:47,826 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+Accept-Encoding: gzip
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 66
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:36:48,264 INFO engine.airsync.AirsyncServer : do_POST: received Sync command
+2007-12-16 22:36:48,265 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:36:48,265 DEBUG engine.airsync.AirsyncServer : ProcessSyncCommand: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<Sync xmlns="http://synce.org/formats/airsync_wm5/airsync">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <SyncKey>0</SyncKey>
+      <CollectionId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</CollectionId>
+    </Collection>
+  </Collections>
+</Sync>
+
+2007-12-16 22:36:48,266 DEBUG engine.airsync.AirsyncServer : _handle_sync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<Sync xmlns="http://synce.org/formats/airsync_wm5/airsync">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <SyncKey>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}1</SyncKey>
+      <CollectionId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</CollectionId>
+      <Status>1</Status>
+    </Collection>
+  </Collections>
+  <Responses/>
+</Sync>
+
+2007-12-16 22:36:48,266 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:36:48,267 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=Sync HTTP/1.1" 200 -
+2007-12-16 22:36:48,267 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:36:48,268 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 110)
+2007-12-16 22:36:48,268 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 218
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:36:48,796 INFO engine.airsync.AirsyncServer : do_POST: received GetItemEstimate command
+2007-12-16 22:36:48,796 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:36:48,797 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}1</SyncKey>
+    </Collection>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{C0064987-D6DF-35BC-341C-6D1996F2504D}1</SyncKey>
+    </Collection>
+  </Collections>
+</GetItemEstimate>
+
+2007-12-16 22:36:48,798 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+</GetItemEstimate>
+
+2007-12-16 22:36:48,799 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:36:48,799 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=GetItemEstimate HTTP/1.1" 200 -
+2007-12-16 22:36:48,801 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:36:48,802 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 138)
+2007-12-16 22:36:48,802 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+
+
+
+
+
+
+
+
+New Backend
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 51
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:39:10,060 INFO engine.airsync.AirsyncServer : do_POST: received FolderSync command
+2007-12-16 22:39:10,061 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:39:10,061 DEBUG engine.airsync.AirsyncServer : _handle_foldersync: request document is
+ <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}2</SyncKey>
+</FolderSync>
+
+2007-12-16 22:39:10,071 DEBUG engine.airsync.AirsyncServer : handle_foldersync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<FolderSync xmlns="http://synce.org/formats/airsync_wm5/folderhierarchy">
+  <Status>1</Status>
+  <SyncKey>{062E8DA7-CA3D-5972-AC10-5164ABD0FF24}3</SyncKey>
+  <Changes>
+    <Count>0</Count>
+  </Changes>
+</FolderSync>
+
+2007-12-16 22:39:10,072 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:39:10,072 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=FolderSync HTTP/1.1" 200 -
+2007-12-16 22:39:10,073 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:39:10,074 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 63)
+2007-12-16 22:39:10,074 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+Accept-Encoding: gzip
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 66
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:39:10,522 INFO engine.airsync.AirsyncServer : do_POST: received Sync command
+2007-12-16 22:39:10,522 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:39:10,523 DEBUG engine.airsync.AirsyncServer : ProcessSyncCommand: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<Sync xmlns="http://synce.org/formats/airsync_wm5/airsync">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <SyncKey>0</SyncKey>
+      <CollectionId>{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}</CollectionId>
+    </Collection>
+  </Collections>
+</Sync>
+
+2007-12-16 22:39:10,524 DEBUG engine.airsync.AirsyncServer : _handle_sync: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<Sync xmlns="http://synce.org/formats/airsync_wm5/airsync">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <SyncKey>{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}1</SyncKey>
+      <CollectionId>{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}</CollectionId>
+      <Status>1</Status>
+    </Collection>
+  </Collections>
+  <Responses/>
+</Sync>
+
+2007-12-16 22:39:10,524 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:39:10,525 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=Sync HTTP/1.1" 200 -
+2007-12-16 22:39:10,525 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:39:10,526 DEBUG engine.airsync.AirsyncServer  : _send_wbxml_response: Emitting wbxml (length = 110)
+2007-12-16 22:39:10,526 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+Accept-Language: en-gb
+MS-ASProtocolVersion: 2.5
+Content-Type: application/vnd.ms-sync.wbxml
+X-MS-PolicyKey: 0
+User-Agent: MSFT-PPC/5.1.2300
+Host: 81.86.3.91
+Content-Length: 323
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+2007-12-16 22:39:10,956 INFO engine.airsync.AirsyncServer : do_POST: received GetItemEstimate command
+2007-12-16 22:39:10,957 DEBUG engine.airsync.AirsyncServer : _read_xml_request: converting request from wbxml
+2007-12-16 22:39:10,957 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: request document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Collections>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}1</SyncKey>
+    </Collection>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{C0064987-D6DF-35BC-341C-6D1996F2504D}1</SyncKey>
+    </Collection>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}</CollectionId>
+      <FilterType xmlns="http://synce.org/formats/airsync_wm5/airsync">2</FilterType>
+      <SyncKey xmlns="http://synce.org/formats/airsync_wm5/airsync">{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}1</SyncKey>
+    </Collection>
+  </Collections>
+</GetItemEstimate>
+
+2007-12-16 22:39:10,959 DEBUG engine.airsync.AirsyncServer : _handle_get_item_estimate: response document is
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE AirSync PUBLIC "-//AIRSYNC//DTD AirSync//EN" "http://www.microsoft.com/">
+<GetItemEstimate xmlns="http://synce.org/formats/airsync_wm5/getitemestimate">
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{F45957C2-DE61-1C1D-25B5-E51FFD2AC6E6}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0064987-D6DF-35BC-341C-6D1996F2504D}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+  <Response>
+    <Status>1</Status>
+    <Collection>
+      <Class>Email</Class>
+      <CollectionId>{C0482C1D-F52A-0205-5B6B-2B3C1C2E8658}</CollectionId>
+      <Estimate>0</Estimate>
+    </Collection>
+  </Response>
+</GetItemEstimate>
+
+2007-12-16 22:39:10,960 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting response 200 code to client
+2007-12-16 22:39:10,960 DEBUG engine.airsync.AirsyncServer : HTTP Request: "POST /Microsoft-Server-ActiveSync?User=jrghy&DeviceId=CD1DE74A1F3ED7842D85C153E40EE842&DeviceType=PocketPC&Cmd=GetItemEstimate HTTP/1.1" 200 -
+2007-12-16 22:39:10,960 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting response 200 code to client
+2007-12-16 22:39:10,961 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Emitting wbxml (length = 203)
+2007-12-16 22:39:10,961 DEBUG engine.airsync.AirsyncServer : _send_wbxml_response: Finished emitting wbxml
+                            
