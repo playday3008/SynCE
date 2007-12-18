@@ -7,5 +7,7 @@ nodist_pywbxml_la_SOURCES = pywbxml.c
 
 EXTRA_DIST = types.pxi pywbxml.pyx
 
+CLEANFILES = pywbxml.c
+
 pywbxml.c: $(srcdir)/types.pxi $(srcdir)/pywbxml.pyx
 	pyrexc $(srcdir)/pywbxml.pyx -o ./pywbxml.c
