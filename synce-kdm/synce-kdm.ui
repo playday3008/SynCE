@@ -1,0 +1,158 @@
+<ui version="4.0" >
+ <class>mainWindow</class>
+ <widget class="QWidget" name="mainWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>576</width>
+    <height>443</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>SynCE KDE Device Manager</string>
+  </property>
+  <widget class="QGroupBox" name="groupBox" >
+   <property name="geometry" >
+    <rect>
+     <x>30</x>
+     <y>10</y>
+     <width>521</width>
+     <height>101</height>
+    </rect>
+   </property>
+   <property name="title" >
+    <string>Device Status</string>
+   </property>
+   <widget class="QLabel" name="label" >
+    <property name="geometry" >
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string>Device:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2" >
+    <property name="geometry" >
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string>Battery status:</string>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="batteryStatus" >
+    <property name="geometry" >
+     <rect>
+      <x>100</x>
+      <y>40</y>
+      <width>118</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="value" >
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_devicename" >
+    <property name="geometry" >
+     <rect>
+      <x>100</x>
+      <y>20</y>
+      <width>44</width>
+      <height>14</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string/>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_2" >
+   <property name="geometry" >
+    <rect>
+     <x>30</x>
+     <y>120</y>
+     <width>521</width>
+     <height>271</height>
+    </rect>
+   </property>
+   <property name="title" >
+    <string>Programs</string>
+   </property>
+   <widget class="QPushButton" name="pushButton_InstallCAB" >
+    <property name="geometry" >
+     <rect>
+      <x>440</x>
+      <y>240</y>
+      <width>75</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string>&amp;Install CAB</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Uninstall" >
+    <property name="geometry" >
+     <rect>
+      <x>440</x>
+      <y>50</y>
+      <width>75</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string>&amp;Uninstall</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listInstalledPrograms" >
+    <property name="geometry" >
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>411</width>
+      <height>211</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Refresh" >
+    <property name="geometry" >
+     <rect>
+      <x>440</x>
+      <y>20</y>
+      <width>75</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string>&amp;Refresh</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="pushButton_Quit" >
+   <property name="geometry" >
+    <rect>
+     <x>470</x>
+     <y>400</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>&amp;Quit</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

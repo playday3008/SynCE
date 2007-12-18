@@ -1,0 +1,13 @@
+Some major TODO:
+* Create proxy class, that will take care of the rapi connection
+  because this should not be in the GUI classes
+ 
+* Have some error handling, instead of just trying to access the 
+  device if it is not connected, resulting in a segfault
+ 
+* Implement uninstall program
+
+* Implement install Cab file
+
+* Implement connection with liborange, such that any installer can be 
+  installed through the program.
