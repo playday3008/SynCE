@@ -1,0 +1,10 @@
+2007-12-19	Guido Diepen	<guido@jcwodan.nl>
+
+	* Before operations, the checks whether there still is a connection
+	* Added an initial communcation class for handling the communcation
+	  with the device
+	* Added possibility of uninstalling programs from the device
+
+2007-12-18	Guido Diepen	<guido@jcwodan.nl>
+
+	* Initial version
