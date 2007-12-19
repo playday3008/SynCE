@@ -549,6 +549,9 @@ class Backend:
 						try:
 							os.remove(mpath)
 						except:
+							# if we fail to remove the file, it will get added back
+							# in on the next scan
+							
 							print "Unable to remove file %s" % mpath
 	
 					else:

@@ -832,21 +832,25 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 	# To be implemented
 	
 	def _ProcessSmartReply(self):
-		req_doc = self._ReadXMLRequest()
-		self.server.logger.info("ProcessSmartReply: request is \n%s",req_doc.serialize("utf-8",1))
+		req_doc = self._ReadRawData()
+		self.server.logger.info("ProcessSmartReply: request is \n%s",req_doc)
 
-		self._SendEmptyResponse(500)
+		self._SendEmptyResponse(200)
 		
 	#
 	# ProcessSmartForward
 	#
-	# To be implemented
+	# SmartForward instructs the server to forward an existing mail item:
+	# Commands are in header:
+	#   ItemId=<full item ID of mail to forward>
+	#   CollectionId = folder ID of mail to forward
+	#   
 	
 	def _ProcessSmartForward(self):
-		req_doc = self._ReadXMLRequest()
-		self.server.logger.info("ProcessSmartForward: request is \n%s",req_doc.serialize("utf-8",1))
+		req_doc = self._ReadRawData()
+		self.server.logger.info("ProcessSmartForward: request is \n%s",req_doc)
 
-		self._SendEmptyResponse(500)
+		self._SendEmptyResponse(200)
 
 	#
 	# ProcessGetAttachment
@@ -893,8 +897,12 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 	
 	def _ProcessKeepalive(self):
 		
-		node = self._ReadXMLRequest()
-		interval = xml2util.GetNodeValue(xml2util.FindChildNode(node,"HeartbeatInterval"))
+		req_doc = self._ReadXMLRequest()
+		self.server.logger.info("ProcessKeepAlive: request is \n%s",req_doc.serialize("utf-8",1))
+		
+		req_node = req_doc.getRootElement()
+		
+		interval = xml2util.GetNodeValue(xml2util.FindChildNode(req_node,"HeartbeatInterval"))
 		
 		self.server.logger.info("ProcessKeepAlive: requested interval -%s-" % interval)
 		
@@ -903,7 +911,7 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 		if interval != "":
 			ivalue = int(interval)
 		else:
-			ivalue = 360  # get this from config later?
+			ivalue = 60  # get this from config later?
 			
 		self.server.logger.info("ProcessKeepAlive: actual interval -%d-" % ivalue)
 		
@@ -924,10 +932,11 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 		folderIDs = []
 		
 		rsp_doc = self._CreateWBXMLDoc("Ping", "http://synce.org/formats/airsync_wm5/ping")
-		statusnode = rsp_doc.newChild(None,"PingStatus",str(status))
+		rsp_node = rsp_doc.getRootElement()
+		statusnode = rsp_node.newChild(None,"PingStatus",str(status))
 		
 		for folderID in folderIDs:
-			pf=rsp_doc.newChild(None,"PingFolders",None)
+			pf=rsp_node.newChild(None,"PingFolders",None)
 			pf.newChild(None,"PingFolderID",str(folderID))
 			
 		self.server.logger.info("ProcessEndKeepalive: response \n%s" % rsp_doc.serialize("utf-8",1))
