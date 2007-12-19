@@ -20,6 +20,7 @@ import tzdatabase
 import SyncEngine.xml2util as xml2util
 import dateutil
 import commonconv
+import datetime
 
 DATE_FORMAT_SHORT         = '%Y%m%d'
 DATE_FORMAT_EVENT         = '%Y%m%dT%H%M%SZ'
@@ -162,6 +163,7 @@ def ExceptionDateTimeFromAirsync(ctx):
 	# We need to convert to current timezone if one is provided, else
 	# we can assume UTC
 	
+	date = dateutil.TextToDate(exception_date)
 	curtz = tzdatabase.tzdb.GetCurrentTimezone()
 	if curtz!=None:
 		date = date.astimezone(curtz)

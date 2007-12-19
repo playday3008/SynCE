@@ -176,7 +176,7 @@
                                  <C1:HomePhoneNumber><xsl:value-of select="Content"/></C1:HomePhoneNumber>
                              </xsl:when>
                              <xsl:when test="(position() &lt;= 2 and position() &gt; 1) and (not(@Type) or @Type='Voice')">
-                                 <xsl:element name="{concat('C1:Home', position(), 'PhoneNumber')}"><xsl:value-of select="."/></xsl:element>
+                                 <xsl:element name="{concat('C1:Home', position(), 'PhoneNumber')}"><xsl:value-of select="Content "/></xsl:element>
                              </xsl:when>
                              <xsl:otherwise>
                                  <xsl:if test="@Type='Fax'"><C1:HomeFaxNumber><xsl:value-of select="Content"/></C1:HomeFaxNumber></xsl:if>

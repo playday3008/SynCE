@@ -112,7 +112,6 @@ intermediaries = []
 #
 ###############################################################################
 
-
 class EngineIntermediary:
 
 	def __init__(self):
@@ -313,8 +312,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 
 				bytes=None
                        		if chg_type != opensync.CHANGE_TYPE_DELETED:
-	                       		bytes = '<?xml version="1.0" encoding="utf-8"?>\n'
-        	               		bytes += array.array('B',data).tostring()
+        	               		bytes = array.array('B',data).tostring()
 				
 				osdata = opensync.Data(bytes,fmt)
 				osdata.set_objtype(self.sink.get_name())

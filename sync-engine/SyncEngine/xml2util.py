@@ -46,6 +46,9 @@ def GetNodeOnLevel(parent, level):
                     				break
                 			else:
                     				return el
+		else:
+			return None
+
 
 ### libxslt utility functions ###
 

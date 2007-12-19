@@ -10,15 +10,27 @@ engine = dbus.Interface(dbus.SessionBus().get_object(DBUS_SYNCENGINE_BUSNAME, DB
 
 item_types = engine.GetItemTypes()
 i = 0
-for id, name, host, items in engine.GetPartnerships():
-    print "ID: %#x" % id
-    print "Name: '%s'" % name
-    print "Host: '%s'" % host
-    str = "["
-    for id in items:
-        str += " %s" % item_types[id]
-    str += " ]"
-    print "Items: %s" % str
-    i += 1
 
-print "%d partnership(s)" % i
+print
+print "            AVAILABLE DEVICE PARTNERSHIPS"
+print "Index     Name         Device      Host         SyncItems"
+print "-----     ----         ------      ----         ---------"
+print
+
+idx = 0
+
+for pship in engine.GetPartnerships():
+	
+	
+	id,guid,name,hostname,devicename,items = pship
+	
+	s="%d\t%s\t%s\t%s\t" % (idx,name,devicename,hostname)
+	s+="["
+	for item in items:
+		s += "%s " % str(item_types[item])
+	s+="]"
+	print s
+	idx+=1
+
+
+

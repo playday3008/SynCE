@@ -18,10 +18,10 @@ import select
 import os
 import os.path
 import struct
+import pshipmgr
 import util
 from errors import *
 import cPickle as pickle
-from partnerships import Partnership
 from constants import *
 import config
 
@@ -93,8 +93,8 @@ class FileDB:
 		self.dbdel = {}
 		self.dbnew = []
 	        self.logger = logging.getLogger("FileDB")
-		self.config_dir = pship.pship_dir
-        	self.config_path = pship.fdb_file
+		self.config_dir = pship.pshippath
+        	self.config_path = pship.idbpath + "-FILE"
 		self.syncdir = syncdir
 		self.ExtraDeleteDelay = extra_deletedelay
 
@@ -123,13 +123,14 @@ class FileDB:
 	
 	def SaveDB(self):
 		
-		try:
-			os.makedirs(self.config_dir)
-			
-        	except OSError, e:
-			if e.errno != 17:
-				self.logger.error("SaveDB: Failed to create directory %s: %s", self.config_dir, e)
-				return
+# not needed with new partnership code
+#		try:
+#			os.makedirs(self.config_dir)
+#			
+#       	except OSError, e:
+#			if e.errno != 17:
+#				self.logger.error("SaveDB: Failed to create directory %s: %s", self.config_dir, e)
+#				return
 
         	try:
 			f = open(self.config_path, "wb")
@@ -993,7 +994,7 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 			
 		# search for and subscribe to events specified by the partnership
 			
-		for item_id in pship.sync_items:
+		for item_id in pship.devicesyncitems:
 			if SYNC_ITEM_PSHIPID_TO_RRANAME.has_key(item_id):
 				rra_item_name = SYNC_ITEM_PSHIPID_TO_RRANAME[item_id]
 				for tid in self.tidhandlers.keys():
@@ -1106,7 +1107,7 @@ class RRASyncManager:
 		
 		# get current partnership
 		
-		pship = self.engine.partnerships.get_current()
+		pship = self.engine.PshipManager.GetCurrentPartnership()
 		self.thread = RRAThread()
 		self.thread.syncmgr = self
 		self.thread.config = self.engine.config

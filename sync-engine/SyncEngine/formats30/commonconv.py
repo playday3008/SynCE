@@ -348,7 +348,7 @@ def RecurrenceRuleToAirsync(ctx):
 	elif src_rules["frequency"].lower() == "weekly":
 
 		dst_node.newChild(None, "Type", "1")
-		dst_node.newChild(None, "DayOfWeek", str(commonconv.VcalDaysToAirsyncDays(src_rules["byday"])))
+		dst_node.newChild(None, "DayOfWeek", str(VcalDaysToAirsyncDays(src_rules["byday"])))
 		
 	elif src_rules["frequency"].lower() == "monthly":
 		
@@ -360,7 +360,7 @@ def RecurrenceRuleToAirsync(ctx):
 
 			week, day = VcalSplitByDay(src_rules["byday"])
 			dst_node.newChild(None, "Type", "3")
-			dst_node.newChild(None, "DayOfWeek", str(commonconv.VcalDaysToAirsyncDays(day)))
+			dst_node.newChild(None, "DayOfWeek", str(VcalDaysToAirsyncDays(day)))
 
 			if week >= 0:
 		
@@ -396,7 +396,7 @@ def RecurrenceRuleToAirsync(ctx):
 				week, day = VcalSplitByDay(src_rules["byday"])
 				dst_node.newChild(None, "Type", "6")
 				dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
-				dst_node.newChild(None, "DayOfWeek", str(commonconv.VcalDaysToAirsyncDays(day)))
+				dst_node.newChild(None, "DayOfWeek", str(VcalDaysToAirsyncDays(day)))
         			
 				if week >= 0:
 					dst_node.newChild(None, "WeekOfMonth", week)
@@ -477,7 +477,7 @@ def RecurrenceRuleFromAirsync(ctx):
 		elif type == 1:
 			
 			dst_node.newChild(None, "Frequency", "WEEKLY")
-			dst_node.newChild(None, "ByDay", "%s" % commonconv.AirsyncDaysToVcalDays(xml2util.GetNodeValue(dayofweek_node)))
+			dst_node.newChild(None, "ByDay", "%s" % AirsyncDaysToVcalDays(xml2util.GetNodeValue(dayofweek_node)))
 		
 		elif type == 2:
 
@@ -487,7 +487,7 @@ def RecurrenceRuleFromAirsync(ctx):
 		elif type == 3:
 			
 			dst_node.newChild(None, "Frequency", "MONTHLY")
-			dst_node.newChild(None, "ByDay", "%s" % commonconv.GenerateVcalByDay(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
+			dst_node.newChild(None, "ByDay", "%s" % GenerateVcalByDay(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
 
 		elif type == 5:
 
@@ -499,7 +499,7 @@ def RecurrenceRuleFromAirsync(ctx):
 
 			dst_node.newChild(None, "Frequency", "YEARLY")
 			dst_node.newChild(None, "ByMonth", "%s" % xml2util.GetNodeValue(monthofyear_node))
-			dst_node.newChild(None, "ByDay", "%s" % commonconv.GenerateVcalByDay(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
+			dst_node.newChild(None, "ByDay", "%s" % GenerateVcalByDay(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
 
 		else:
 

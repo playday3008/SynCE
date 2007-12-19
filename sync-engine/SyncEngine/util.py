@@ -43,9 +43,9 @@ def generate_guid():
 
     return guid
 
-def generate_opensync_guid():
-    return "pas-id-%08X%08X" % (random.randint(0, 0xFFFFFFFF),
-                                random.randint(0, 0xFFFFFFFF))
+#def generate_opensync_guid():
+#    return "pas-id-%08X%08X" % (random.randint(0, 0xFFFFFFFF),
+#                                random.randint(0, 0xFFFFFFFF))
 
 def hexdump(raw):
     buf = ""

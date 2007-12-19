@@ -178,8 +178,7 @@ class SyncClass:
                     change.objtype, change.format = SUPPORTED_ITEM_TYPES[item_type]
 
                     if chg_type != CHANGE_DELETED:
-                        bytes = '<?xml version="1.0" encoding="utf-8"?>\n'
-                        bytes += array.array('B',data).tostring()
+                        bytes = array.array('B',data).tostring()
 
                         change.set_data(bytes)
                 else:
@@ -191,8 +190,12 @@ class SyncClass:
 
             if len(acks[item_type]) > 0:
                 self.logger.debug("acknowledging remote changes for item type %d", item_type)
-                self.engine.AcknowledgeRemoteChanges(acks)
+		try:
+                	self.engine.AcknowledgeRemoteChanges(acks)
+		except Exception,e:
+			self.logger.debug("exception %s",e)
 
+	self.logger.debug("reporting success")
         ctx.report_success()
 
     def commit_change(self, ctx, chg):

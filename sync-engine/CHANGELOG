@@ -581,3 +581,44 @@ TODO: Need to go through all XSLT extensions and remove exception
 generation except where serious enough to warrant non-syncing of the
 item. (On my todo list for formats30 as well)
 
+19/12/2007 - 231400 Dr J A Gow
+------------------------------
+
+IMPORTANT - IF USING AN EARLIER VERSION THAN THIS, EXCEPT FOR config.xml 
+PLEASE DELETE THE CONTENTS OF YOUR ~/.synce DIRECTORY INCLUDING THE
+partnerships SUBDIRECTORY . AND RECREATE YOUR PARTNERSHIPS.
+
+What's changed? Lots. The partnership code has been considerably overhauled
+with a view to getting rid of some serious flaws in the old code. The 
+partnership concept is now split into two parts: the partnership on the phone
+and the 'binding' on the host. Both must exist and match to create a
+partnership. It is now possible to bind successfully with multiple devices
+(although not at once). Syncing can only occur with a bound partnership.
+This process is transparent to the user.
+
+Unfortunately the bug with deletion of Exchange Server partnerships is still
+present -the workaround is to create the partnership with sync-engine first.
+
+We now have per-partnership configuration! - Look at configure_bindings.py
+in the tools directory.
+
+delete_partnership.py no longer needs the user to phaff about with running
+list_partnerships.py and grabbing long hex numbers. It directly presents the
+user with a list selectable by index.
+
+select_partnership.py has gone, it is no longer needed with the new code.
+Selection will occur automatically, properly, when the device is connected.
+
+DTPT has now been fully implemented in sync-engine and should be turned on
+by default, and should 'just work' for WM5 and WM6. It can be turned off
+globally in config.xml, or on a per-partnership basis with
+configure_bindings.py.
+
+Some bugs fixed in the OpenSync 0.3x conversion code, but it continues
+to be experimental at this time. Opensync 0.2x should be generally reliable.
+
+The item data pathway has been de-convoluted and made a lot more obvious
+and cleaner. Look at syncdb.py for more info. I will try and document
+this a bit later.
+
+

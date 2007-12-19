@@ -58,7 +58,7 @@ SYNC_ITEM_CLASS_TO_ID = {
     "Calendar" : SYNC_ITEM_CALENDAR,
     "Contacts" : SYNC_ITEM_CONTACTS,
     "E-mail"   : SYNC_ITEM_EMAIL,
-    "Tasks"    : SYNC_ITEM_TASKS,
+    "Tasks"    : SYNC_ITEM_TASKS
 }
 
 SYNC_ITEM_PSHIPID_TO_RRANAME = {

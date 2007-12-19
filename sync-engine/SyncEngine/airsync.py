@@ -30,6 +30,7 @@ import httplib
 import BaseHTTPServer
 import threading
 import logging
+import util
 
 import pywbxml
 
@@ -183,7 +184,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 	
         rsp_colls_node = rsp_doc.getRootElement().newChild(None,"Collections",None)
 
-        state = self.server.engine.partnerships.get_current().state
+        AvailableItemDBs = self.server.engine.PshipManager.GetCurrentPartnership().deviceitemdbs
 
 	xp = req_doc.xpathNewContext()
 	xp.xpathRegisterNs("s","http://synce.org/formats/airsync_wm5/airsync")
@@ -205,49 +206,47 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             rsp_coll_node.newChild(None,"CollectionId",coll_id)
 	    rsp_coll_node.newChild(None,"Status","1")
             
-	    item = state.items[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
+	    itemDB = AvailableItemDBs[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
 	    
-            if not first_request and item.get_local_change_count() > 0:
+            if not first_request and itemDB.GetLocalChangeCount() > 0:
+		    
                 window_size = int(xml2util.GetNodeValue(xml2util.FindChildNode(n,"WindowSize")))
-                changes = item.extract_local_changes(window_size)
+		
+                changes = itemDB.QueryLocalChanges(window_size)
 
-                if item.get_local_change_count() > 0:
+                if itemDB.GetLocalChangeCount() > 0:
                     rsp_coll_node.newChild(None,"MoreAvailable",None)
 
                 rsp_cmd_node = rsp_coll_node.newChild(None,"Commands",None)
 
-                for guid, change in changes.items():
-                    change_type, data = change
+                for itemID,change in changes:
+			
+                    remID, change_type, data = change
 
                     if change_type == CHANGE_ADDED:
-                        luid, guid = state.obtain_guid(guid)
- 		    else:
-		        luid = state.get_luid_from_guid(guid)
+			if remID == None:
+                        	remID = util.generate_guid()
 
 		    rsp_change_node = rsp_cmd_node.newChild(None,CHANGE_TYPE_TO_NODE_NAME[change_type],None)
 		    
-                    rsp_change_node.newChild(None,"ServerId",luid)
+                    rsp_change_node.newChild(None,"ServerId",remID)
 		    
 		    if change_type != CHANGE_DELETED:
 			    
                         os_doc = libxml2.parseDoc(data)
-                        as_doc = None
 
                         self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", os_doc.serialize("utf-8",1))
 
 			as_doc=formatapi.ConvertFormat(DIR_TO_AIRSYNC,
-			                               item.type,
+			                               itemDB.type,
 						       os_doc,
 						       self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 	
                         self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.serialize("utf-8",1))
-			
-                        item.idb_intersect(guid,as_doc.serialize("utf-8",0))
-			
+					
 			rsp_change_node.addChild(as_doc.getRootElement())
                     
-		    else:
-                        item.idb_remove(guid)
+		    itemDB.AcknowledgeLocalChanges([(itemID,remID)])
 
 	    rsp_responses_node = rsp_doc.getRootElement().newChild(None,"Responses",None)
 	    
@@ -262,24 +261,20 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 chg_type = CHANGE_TYPE_FROM_NODE_NAME[cmd_name]
 
                 if chg_type == CHANGE_ADDED:
-			
-		    self.server.logger.debug("Commands - chg_type is CHANGE_ADDED")
+
                     rsp_response_node = rsp_responses_node.newChild(None,cmd_name,None)
 
 		    cid  = xml2util.GetNodeValue(xml2util.FindChildNode(req_cmd_node,"ClientId"))
                     rsp_response_node.newChild(None,"ClientId",cid)
 
-                    luid, guid = state.register_luid()
+		    remID = util.generate_guid()
 
-                    rsp_response_node.newChild(None,"ServerId",luid)
+                    rsp_response_node.newChild(None,"ServerId",remID)
 		    rsp_response_node.newChild(None,"Status","1")
                 
 		else:
-		    
-		    self.server.logger.debug("Commands - chg_type is NOT CHANGE_ADDED")
-		    
-		    luid = xml2util.GetNodeValue(xml2util.FindChildNode(req_cmd_node,"ServerId"))
-                    guid = state.get_guid_from_luid(luid)
+
+		    remID = xml2util.GetNodeValue(xml2util.FindChildNode(req_cmd_node,"ServerId"))
 
                 xml = u""
                 if chg_type in (CHANGE_ADDED, CHANGE_MODIFIED):
@@ -289,19 +284,16 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.server.logger.debug("_handle_sync: converting item from airsync, source is \n%s", app_node.serialize("utf-8",1))
 
                     os_doc=formatapi.ConvertFormat(DIR_FROM_AIRSYNC,
-		                                   item.type,
+		                                   itemDB.type,
 						   app_node,
 						   self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 
                     self.server.logger.debug("_handle_sync: converting item from airsync, result is \n%s", os_doc.serialize("utf-8",1))
 
-                    item.idb_intersect(guid,app_node.serialize("utf-8",0))
-                    xml = os_doc.getRootElement().serialize("utf-8",0)
-                
-		else:
-                    item.idb_remove(guid)
+#                    xml = os_doc.getRootElement().serialize("utf-8",0)
+                    xml=os_doc.serialize("utf-8",0)
 
-                item.add_remote_change(guid, chg_type, xml)
+                itemDB.AddRemoteChanges([(remID, chg_type, xml)])
                 cmd_count += 1
 
             if rsp_responses_node.children:
@@ -312,7 +304,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
     def _handle_foldersync(self):
-	    
+
         req_doc = self._read_xml_request()
 	
         self.server.logger.debug("_handle_foldersync: request document is\n %s", req_doc.serialize("utf-8",1))
@@ -333,11 +325,11 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         rsp_changes_node = rsp_folder_node.newChild(None,"Changes",None)
 
-        state = self.server.engine.partnerships.get_current().state
+        cpship = self.server.engine.PshipManager.GetCurrentPartnership()
 
-	rsp_changes_node.newChild(None,"Count",str(len(state.folders)))
+	rsp_changes_node.newChild(None,"Count",str(len(cpship.info.folders)))
 
-        for server_id, data in state.folders.items():
+        for server_id, data in cpship.info.folders.items():
 		
             parent_id, display_name, type = data
 
@@ -361,7 +353,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         rsp_doc = self._create_wbxml_doc("GetItemEstimate", "http://synce.org/formats/airsync_wm5/getitemestimate")
 
-        state = self.server.engine.partnerships.get_current().state
+        AvailableItemDBs = self.server.engine.PshipManager.GetCurrentPartnership().deviceitemdbs
 
 	xp=req_doc.xpathNewContext()
 	xp.xpathRegisterNs("e","http://synce.org/formats/airsync_wm5/getitemestimate")
@@ -381,8 +373,8 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             coll_node.newChild(None,"Class",coll_cls)
             coll_node.newChild(None,"CollectionId",coll_id)
 
-            item = state.items[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
-            coll_node.newChild(None,"Estimate",str(item.get_local_change_count()))
+            itemDB = AvailableItemDBs[SYNC_ITEM_CLASS_TO_ID[coll_cls]]
+	    coll_node.newChild(None,"Estimate",str(itemDB.GetLocalChangeCount()))
 
         self.server.logger.debug("_handle_get_item_estimate: response document is \n%s", rsp_doc.serialize("utf-8",1))
         self._send_wbxml_response(rsp_doc.serialize("utf-8",0))

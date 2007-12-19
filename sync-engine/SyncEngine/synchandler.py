@@ -65,7 +65,7 @@ class SyncHandler(threading.Thread):
 	    doc_node.setProp("type", "Interactive")
  
  	    partnernode = doc_node.newChild(None,"partner",None)
-	    partnernode.setProp("id",self.engine.partnerships.get_current().guid)
+	    partnernode.setProp("id",self.engine.PshipManager.GetCurrentPartnership().info.guid)
 
             self.logger.debug("run: sending request to device \n%s", doc_node.serialize("utf-8",1))
             self.engine.rapi_session.sync_start(doc_node.serialize("utf-8",0))
@@ -82,11 +82,9 @@ class SyncHandler(threading.Thread):
         self.engine.rapi_session.sync_resume()
 
         if not self.stopped:
-            self.logger.debug("run: saving partnership state")
-            self.engine.partnerships.get_current().save_state()
-	    self.logger.debug("run: saving itemDB")
-	    self.engine.partnerships.get_current().SaveItemDB()
-
+            self.logger.debug("run: saving itemDB")
+	    self.engine.PshipManager.GetCurrentPartnership().SaveItemDB()
+	    
         self.logger.info("run: finished synchronization")
         self.engine.syncing.unlock()
 

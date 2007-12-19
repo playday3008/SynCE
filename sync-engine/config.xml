@@ -49,7 +49,7 @@
 		    
 		        - NONE performs no format conversion and exports the data
 			  in AirSync/XML (Use this for debugging or with the
-			  OpenSync format plugin only)
+			  OpenSync AirSync format plugin only)
 			
 			- OS30 uses OpenSync 0.3x XML schemas. Set this if you are
 			  using OpenSync 0.3x or later with opensync-plugin-0.30later.py
@@ -63,6 +63,16 @@
 		-->
 		
 		<OpensyncXMLFormat>OS20</OpensyncXMLFormat>
+		
+		<!--
+		    If set to 1 will automatically flush the item database and mapping
+		    tables from memory between syncs. Otherwise will rely on a call 
+		    from the plugin to do it.
+		    
+		    Default is enabled
+		-->
+		
+		<FlushIDB>1</FlushIDB>
 		
 	</Global>
 	<Autosync>

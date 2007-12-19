@@ -155,12 +155,16 @@ class GlobalConfig(ConfigObject):
 		self.handlers = { "SlowSyncDisable" : self.validate_SlowSyncEnable,
 		                  "AuthMethod"      : self.validate_AuthMethod,
 				  "AppendDefaultTimezone" : self.validate_AppendDefaultTimezone,
-				  "OpensyncXMLFormat" : self.validate_OpensyncXMLFormat }
+				  "OpensyncXMLFormat" : self.validate_OpensyncXMLFormat,
+				  "FlushIDB" : self.validate_FlushIDB,
+				  "EnableDTPT" : self.validate_EnableDTPT }
 				  
 		self.cfg = { "SlowSyncDisable" : 0,
 		             "AuthMethod"      : "INTERNAL_CLI",
 			     "AppendDefaultTimezone" : 0,
-			     "OpensyncXMLFormat" : DefaultFormat
+			     "OpensyncXMLFormat" : DefaultFormat,
+			     "FlushIDB" : 1,
+			     "EnableDTPT" : 1
 			   }
 			
 	def validate_SlowSyncEnable(self,arg):
@@ -183,7 +187,19 @@ class GlobalConfig(ConfigObject):
 			self.cfg["OpensyncXMLFormat"] = arg
 		else:
 			self.logger.debug("'OpensyncXMLFormat': no such format type '%s', substituting default" % arg)
-		
+
+	def validate_FlushIDB(self,arg):
+		try:
+			self.cfg["FlushIDB"] = int(arg)
+		except:
+			self.logger.debug("'Disable': invalid argument %s in config file" % arg)
+
+	def validate_EnableDTPT(self,arg):
+		try:
+			self.cfg["EnableDTPT"] = int(arg)
+		except:
+			self.logger.debug("'Disable': invalid argument %s in config file" % arg)
+
 	def dump(self):
 		self.logger.info("Global config: ")
 		self.logger.info("   SlowSyncDisable: %d " % self.cfg["SlowSyncEnable"])
@@ -208,53 +224,6 @@ class Config:
 
 		self.config_dir   = os.path.join(os.path.expanduser("~"), ".synce")
 		self.config_path  = os.path.join(self.config_dir, "config.xml")
-		self.state_path   = os.path.join(self.config_dir, "sync_state")
-		self.curpshippath = os.path.join(self.config_dir, "cur_pship")
-
-	def LoadCurrentPartnership(self):
-		try:
-			f = open(self.curpshippath,"rb")
-		except:
-			self.logger.info("LoadCurrentPartnership: no current partnership available")
-			return None
-	 
-		try:
-			self.logger.info("Loading current partnership")
-			cps = pickle.load(f)
-			f.close()
-
-		except:
-			self.logger.warning("LoadCurrentPartnership: error loading partnership file, deleting")
-			f.close()
-			os.remove(self.curpshippath)
-			cps = None
-
-		return cps
-	 
-	def SaveCurrentPartnership(self,pship):
-	
-		try:
-			os.makedirs(self.config_dir)
-		except OSError, e:
-			if e.errno != 17:
-				self.logger.error("SaveCurrentPartnership: can't save current partnership")
-				return
-
-		try:
-			f = open(self.curpshippath, "wb")
-		except:
-			self.logger.warning("SaveCurrentPartnership: unable to open current partnership for saving")
-			return None
-	 
-		try:
-			self.logger.info("saving partnership file")
-			pickle.dump(pship,f,pickle.HIGHEST_PROTOCOL)
-			f.close()
-		except:
-			self.logger.warning("SaveCurrentPartnership: unable to write current partnership file")
-			f.close()
-			os.remove(self.curpshippath)
-		return
 	
 	#
 	# UpdateConfig updates information that may be changed between connections. It is re-read
