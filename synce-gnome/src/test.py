@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import sys
 import dbus
 import dbus.glib
 import gtk
@@ -11,26 +11,79 @@ class TestApp:
 
         bus = dbus.SystemBus()
         self.bus = bus
+
+        
         try:
-            proxy_obj = bus.get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
+            proxy_obj_dbus = bus.get_object("org.freedesktop.DBus", "/org/freedesktop/DBus")
         except dbus.DBusException:
-            print "Error: Could not connect to odccm. Is it started?"
-            raise
+            print "Error: Could not connect to dbus. Is it started?"
+            print "Without DBus there really is no use for this program..."
+            sys.exit(1) 
 
-        mgr = dbus.Interface(proxy_obj, "org.synce.odccm.DeviceManager")
 
-        mgr.connect_to_signal("DeviceConnected", self.device_connected_cb)
-        mgr.connect_to_signal("DeviceDisconnected", self.device_disconnected_cb)
+        mgrOdccm = dbus.Interface(proxy_obj_dbus, "org.freedesktop.DBus")
+        mgrOdccm.connect_to_signal("NameOwnerChanged", self.odccm_status_changed_cb)
 
         session_bus = dbus.SessionBus()
         notif_obj = session_bus.get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
         self.notify_iface = dbus.Interface(notif_obj, "org.freedesktop.Notifications")
 
-        for obj_path in mgr.GetConnectedDevices():
-            self._add_device(obj_path, False)
-
-        print "Waiting for device to hotplug"
         
+        try:
+            proxy_obj = bus.get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
+            self.odccmRunning = True
+        except dbus.DBusException:
+            self.odccmRunning = False
+
+
+        if self.odccmRunning:
+            try:
+                self.mgr = dbus.Interface(proxy_obj, "org.synce.odccm.DeviceManager")
+
+                self.mgr.connect_to_signal("DeviceConnected", self.device_connected_cb)
+                self.mgr.connect_to_signal("DeviceDisconnected", self.device_disconnected_cb)
+
+                for obj_path in self.mgr.GetConnectedDevices():
+                    self._add_device(obj_path, False)
+            except:
+                print "Odccm seems to be running, but there are problems with connecting to it"
+                raise
+
+        if self.odccmRunning == False:
+            print "Waiting for odccm to start"
+        else:
+            print "Waiting for device to hotplug"
+
+    def odccm_status_changed_cb(self, obj_path, param2, param3):
+        if obj_path == "org.synce.odccm":
+            #If this parameter is empty, the odccm just came online 
+            if param2 == "":
+                self.odccmRunning = True
+
+            #If this parameter is empty, the odccm just went offline
+            if param3 == "":
+                self.odccmRunning = False
+                print "Waiting for odccm to start"
+            
+            
+            if self.odccmRunning:
+                try:
+                    proxy_obj = self.bus.get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
+                    mgr = dbus.Interface(proxy_obj, "org.synce.odccm.DeviceManager")
+
+                    mgr.connect_to_signal("DeviceConnected", self.device_connected_cb)
+                    mgr.connect_to_signal("DeviceDisconnected", self.device_disconnected_cb)
+
+                    for obj_path in mgr.GetConnectedDevices():
+                        self._add_device(obj_path, False)
+                    
+                    print "Waiting for device to hotplug"
+                except:
+                    print "Something went really wrong, odccm came online, but we can't connect..."
+                    raise
+
+
+
     def device_connected_cb(self, obj_path):
         self._add_device(obj_path, True)
 
