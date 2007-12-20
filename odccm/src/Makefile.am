@@ -27,8 +27,12 @@ endif
 
 EXTRA_DIST = odccm-device-manager-signals-marshal.list \
 		odccm-device-manager.xml \
-		odccm-device-signals-marshal.list
-		odccm-device.xml
+		odccm-device-signals-marshal.list \
+		odccm-device.xml \
+		odccm.conf
+
+dbusservicedir = "`pkg-config --variable=sysconfdir dbus-1`/dbus-1/system.d"
+dbusservice_DATA = odccm.conf
 
 %-glue.h: %.xml
 	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
