@@ -236,7 +236,7 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 					self._ProcessSmartReply()
 					return
 				elif cmd == "SmartForward":
-					self._ProcessSmartForward()
+					self._ProcessSmartForward(req_params)
 					return
 				elif cmd == "GetAttachment":
 					self._ProcessGetAttachment(req_params)
@@ -844,13 +844,36 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 	# Commands are in header:
 	#   ItemId=<full item ID of mail to forward>
 	#   CollectionId = folder ID of mail to forward
-	#   
+	#   Message data consists of a valid email message.
 	
-	def _ProcessSmartForward(self):
+	def _ProcessSmartForward(self,cmds):
+		
 		req_doc = self._ReadRawData()
 		self.server.logger.info("ProcessSmartForward: request is \n%s",req_doc)
-
-		self._SendEmptyResponse(200)
+		itemID = cmds["ItemId"]
+		folderID = cmds["CollectionId"]
+		
+		folderID_s, messageID = util.SplitCombinedID(itemID)
+		 
+		if folderID == folderID_s:
+			msg = self.backend.FetchItem(folderID,messageID)
+			if msg != None:
+				itemID,changes,message = msg
+				newmsg = email.message_from_string(req_doc)
+				newmsg.attach(message)
+				try:
+					self.server.logger.info("sending forwarded message")
+					self.backend.IncomingMail(message)
+					self._SendEmptyResponse(200)
+				except:
+					self.server.logger.info("unable to send forwarded message")
+					self._SendEmptyResponse(500)
+			else:
+				self.server.logger.info("could not find message")
+				self._SendEmptyResponse(500)
+		else:
+			self.server.logger.info("Folder ID error")
+			self._SendEmptyResponse(500)
 
 	#
 	# ProcessGetAttachment
