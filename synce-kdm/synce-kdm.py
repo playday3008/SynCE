@@ -17,21 +17,34 @@ from commutil import *
 
 
 
-class MainWindowsSynceKDM(QtGui.QMainWindow):
-    def updateStatusBar(self):
-        if self.phoneCommunicator.phoneConnected:
-            self.statusBar().showMessage("Phone connected")
-        else:
-            self.statusBar().showMessage("No phone connected")
-
-
-
+class MainWindowSynceKDM(QtGui.QMainWindow):
     def __init__(self, *args):
         QtGui.QMainWindow.__init__(self, *args)
         uic.loadUi("synce-kdm.ui", self)
         self.phoneCommunicator = PhoneCommunicator()
-       
-        self.updateStatusBar() 
+        self.phoneCommunicator.addListener( self.updateView )
+        
+        self.updateView() 
+
+
+
+    #Use the param later to distinguish what needs to be updated:
+    #   0   Everything
+    #   1   Battery
+    #   2   Installed programs 
+    def updateView(self,param=None):
+        print "Busy retrieving info!!"
+        self.updateStatusBar() ;
+        self.updatePowerInformation() ; 
+        self.updateInstalledProgramsList() ; 
+
+
+    def updateStatusBar(self):
+        if self.phoneCommunicator.phoneConnected:
+            self.statusBar().showMessage("Connected to phone " + self.phoneCommunicator.device.name )
+        else:
+            self.statusBar().showMessage("No phone connected")
+
 
     def updatePowerInformation(self):
         battPercent, battFlag, aclineStat = self.phoneCommunicator.getPowerStatus()
@@ -43,6 +56,9 @@ class MainWindowsSynceKDM(QtGui.QMainWindow):
 
         self.updateStatusBar() 
 
+    @pyqtSignature("")
+    def on_pushButton_Install_clicked(self):
+        self.rapi_session.checkConnection()
 
         
     @pyqtSignature("")
@@ -128,8 +144,8 @@ class MainWindowsSynceKDM(QtGui.QMainWindow):
 
 
 app = QtGui.QApplication(sys.argv)
-mainWindowsSynceKDM = MainWindowsSynceKDM()
-mainWindowsSynceKDM.show()
+mainWindowSynceKDM = MainWindowSynceKDM()
+mainWindowSynceKDM.show()
 app.exec_()
 
         

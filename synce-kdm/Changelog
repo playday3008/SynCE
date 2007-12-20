@@ -1,3 +1,14 @@
+2007-12-20	Guido Diepen	<guido@jcwodan.nl>
+
+	* SynCE-KDM now makes use of DBus to get information about 
+	  connected phone. Furthermore the DBus information is also
+	  used to find out if odccm is running and when devices
+	  are connected/disconnected
+	* Included CeDevice class, copied from synce-gnome application
+	* Made the PhoneCommunicator class Observable. Other classes
+	  can add a listener with a callback that will be called as
+	  soon as the state of the phone changes.
+
 2007-12-19	Guido Diepen	<guido@jcwodan.nl>
 
 	* Before operations, the checks whether there still is a connection
