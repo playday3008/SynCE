@@ -34,6 +34,7 @@ typedef uint32_t  HWND;
 typedef uint32_t  BOOL;
 
 typedef int64_t LONGLONG;
+typedef uint64_t  ULARGE_INTEGER;
 
 
 /* XXX: sizeof(double) must be 8 */
@@ -51,6 +52,9 @@ typedef WCHAR*  LPWSTR;
 typedef HKEY*   PHKEY;
 typedef DWORD*  LPDWORD;
 typedef LONG*   PLONG;
+typedef ULARGE_INTEGER*         PULARGE_INTEGER ;
+typedef ULARGE_INTEGER*         LPULARGE_INTEGER;
+
 
 
 /*
@@ -60,6 +64,7 @@ typedef LONG*   PLONG;
 typedef const void*   LPCVOID;
 typedef const char*   LPCSTR;
 typedef const WCHAR*  LPCWSTR;
+typedef const char*   LPCTSTR ;
 
 
 /*
