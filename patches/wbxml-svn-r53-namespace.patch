@@ -1,5 +1,5 @@
---- wbxml2/src/wbxml_elt.c	2007-12-19 22:48:48.453077959 +0000
-+++ wbxml2-svn-patched/src/wbxml_elt.c	2007-12-19 22:35:33.667076654 +0000
+--- wbxml2/src/wbxml_elt.c	2007-12-20 14:23:01.740386803 +0000
++++ wbxml2-new/src/wbxml_elt.c	2007-12-19 22:56:18.496621309 +0000
 @@ -39,6 +39,8 @@
  #define WBXML_ELT_UNKNOWN_NAME ((WB_UTINY *)"unknown")
  
@@ -41,8 +41,8 @@
 +    }
 +}
 +
---- wbxml2/src/wbxml_elt.h	2007-12-19 22:48:48.461077737 +0000
-+++ wbxml2-svn-patched/src/wbxml_elt.h	2007-12-19 22:35:33.671076543 +0000
+--- wbxml2/src/wbxml_elt.h	2007-12-20 14:23:01.744386678 +0000
++++ wbxml2-new/src/wbxml_elt.h	2007-12-19 22:56:18.496621309 +0000
 @@ -227,6 +227,13 @@
   */
  WBXML_DECLARE(const WB_UTINY *) wbxml_attribute_get_xml_value(WBXMLAttribute *attr);
@@ -57,8 +57,8 @@
  
  /** @} */
  
---- wbxml2/src/wbxml_encoder.c	2007-12-19 22:49:15.292335081 +0000
-+++ wbxml2-svn-patched/src/wbxml_encoder.c	2007-12-19 22:35:33.683076211 +0000
+--- wbxml2/src/wbxml_encoder.c	2007-12-20 14:23:19.831821871 +0000
++++ wbxml2-new/src/wbxml_encoder.c	2007-12-19 22:56:18.516620756 +0000
 @@ -1631,7 +1631,7 @@
      }
      else {
@@ -68,9 +68,9 @@
          {
              token = tag->wbxmlToken;
              page = tag->wbxmlCodePage;
---- wbxml2/src/wbxml_tables.c	2007-12-19 22:48:48.449078070 +0000
-+++ wbxml2-svn-patched/src/wbxml_tables.c	2007-12-19 22:43:31.285856756 +0000
-@@ -2803,9 +2803,57 @@
+--- wbxml2/src/wbxml_tables.c	2007-12-20 14:23:01.732387052 +0000
++++ wbxml2-new/src/wbxml_tables.c	2007-12-20 14:22:35.265213529 +0000
+@@ -2803,9 +2803,60 @@
      { "NickName",               0x0c, 0x0d },
      { "MMS",                    0x0c, 0x0e },
  
@@ -80,6 +80,8 @@
 +    { "HeartbeatInterval",      0x0d, 0x08 },
 +    { "PingFolders",            0x0d, 0x09 },
 +    { "PingFolderId",           0x0d, 0x0a },
++    { "Id",                     0x0d, 0x0b },
++    { "Class",                  0x0d, 0x0c },
 +
      { NULL,                     0x00, 0x00 }
  };
@@ -105,6 +107,7 @@
 + *   ResolveRecipients:   http://synce.org/formats/airsync_wm5/resolverecipients
 + *   ValidateCert:        http://synce.org/formats/airsync_wm5/validatecert
 + *   POOMCONTACTS2:       http://synce.org/formats/airsync_wm5/contacts2
++ *   Ping:                http://synce.org/formats/airsync_wm5/ping
 + *
 + */
 +const WBXMLNameSpaceEntry sv_airsync_ns_table[] = {
@@ -128,7 +131,7 @@
  #endif /* WBXML_SUPPORT_AIRSYNC */
  
  
-@@ -2885,7 +2933,7 @@
+@@ -2885,7 +2936,7 @@
  #endif /* WBXML_SUPPORT_WV */
  
  #if defined( WBXML_SUPPORT_AIRSYNC )
@@ -137,7 +140,7 @@
  #endif /* WBXML_SUPPORT_AIRSYNC */
  
      { WBXML_LANG_UNKNOWN,           NULL,                           NULL,                           NULL,                           NULL,                       NULL,                           NULL }
-@@ -2992,6 +3040,7 @@
+@@ -2992,6 +3043,7 @@
  
  
  WBXML_DECLARE(const WBXMLTagEntry *) wbxml_tables_get_tag_from_xml(const WBXMLLangEntry *lang_table,
@@ -145,7 +148,7 @@
                                                                     const WB_UTINY *xml_name)
  {
      WB_ULONG i = 0;
-@@ -2999,6 +3048,16 @@
+@@ -2999,6 +3051,16 @@
      if ((lang_table == NULL) || (lang_table->tagTable == NULL) || (xml_name == NULL))
          return NULL;
  
@@ -162,7 +165,7 @@
      while (lang_table->tagTable[i].xmlName != NULL) {
          if (WBXML_STRCMP(lang_table->tagTable[i].xmlName, xml_name) == 0)
              return &(lang_table->tagTable[i]);
-@@ -3146,3 +3205,21 @@
+@@ -3146,3 +3208,21 @@
  
      return NULL;
  }
@@ -184,8 +187,8 @@
 +
 +    return 0;
 +}
---- wbxml2/src/wbxml_tables.h	2007-12-19 22:48:48.453077959 +0000
-+++ wbxml2-svn-patched/src/wbxml_tables.h	2007-12-19 22:35:33.719075215 +0000
+--- wbxml2/src/wbxml_tables.h	2007-12-20 14:23:01.736386927 +0000
++++ wbxml2-new/src/wbxml_tables.h	2007-12-19 22:56:18.564619427 +0000
 @@ -252,10 +252,12 @@
  /**
   * @brief Search for a Tag Entry in Language Table, given the XML Name of the Tag
@@ -215,8 +218,8 @@
  /** @} */
  
  #ifdef __cplusplus
---- wbxml2/src/wbxml_tree.c	2007-12-19 22:49:15.368332978 +0000
-+++ wbxml2-svn-patched/src/wbxml_tree.c	2007-12-19 22:35:33.731074883 +0000
+--- wbxml2/src/wbxml_tree.c	2007-12-20 14:23:19.871820622 +0000
++++ wbxml2-new/src/wbxml_tree.c	2007-12-19 22:56:18.588618763 +0000
 @@ -34,6 +34,7 @@
  
  #include "wbxml.h"
@@ -330,8 +333,8 @@
      return node;
  }
  
---- wbxml2/src/wbxml_tree.h	2007-12-19 22:48:48.445078180 +0000
-+++ wbxml2-svn-patched/src/wbxml_tree.h	2007-12-19 22:35:33.731074883 +0000
+--- wbxml2/src/wbxml_tree.h	2007-12-20 14:23:01.728387177 +0000
++++ wbxml2-new/src/wbxml_tree.h	2007-12-19 22:56:18.596618541 +0000
 @@ -72,6 +72,8 @@
      WBXMLBuffer         *content;   /**< Node Content (if  type is 'WBXML_TREE_TEXT_NODE')  */
      struct WBXMLTree_s  *tree;      /**< Node Tree (if  type is 'WBXML_TREE_TREE_NODE') */
