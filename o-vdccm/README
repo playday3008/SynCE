@@ -1,0 +1,19 @@
+o-vdccm
+-------
+
+This is a daemon process that sits between odccm and any
+non-odccm aware application that require information about
+connected synCE devices. Note that this is not required for
+rapi calls, only apps that talk directly to the dccm.
+
+In particular this will allow raki, in the synce-kde package,
+to respond to odccm events.
+
+This daemon should be installed in place of vdccm if you
+plan to use odccm with synce-kde. It looks sufficiently
+similar to vdccm to replace it.
+
+The only item of note that is missing compared to regular
+vdccm is the ability to disconnect a device from raki. This
+is because the underlying odccm does not support this function.
+Disconnect from your device instead.
