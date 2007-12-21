@@ -11,7 +11,7 @@ setup(
                'tools/create_partnership.py',
                'tools/delete_partnership.py',
                'tools/list_partnerships.py',
-               'tools/select_partnership.py'],
+               'tools/configure_bindings.py'],
     package_data = {
         '': ['*.xsl'],
     },
