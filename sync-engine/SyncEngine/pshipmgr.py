@@ -141,9 +141,13 @@ class PartnershipManager:
 			self.logger.info("ReadDevicePartnerships: Deleting dangling registry entry: %s", entry)
 			hklm.delete_sub_key(r"Software\Microsoft\Windows CE Services\Partners\P%d" % entry[0])
 		
-		for entry in sync_entries:
-			self.logger.info("ReadDevicePartnerships: Deleting dangling sync source: %s", entry)
-			self.engine.rapi_session.RemoveConfig("Sync.Sources", entry[0])
+		# Let's not delete dangling entries for now - this seems to kill Exchange server
+		# partnerships. I am not sure we actually need to do this anyway. Dangling registry
+		# entries (above) can still be deleted.
+		
+		#for entry in sync_entries:
+		#	self.logger.info("ReadDevicePartnerships: Deleting dangling sync source: %s", entry)
+		#	self.engine.rapi_session.RemoveConfig("Sync.Sources", entry[0])
 
 
 	######################################

@@ -622,3 +622,21 @@ and cleaner. Look at syncdb.py for more info. I will try and document
 this a bit later.
 
 
+22/12/2007 - 022600 Guido Diepen
+------------------------------
+
+Updated kernel.py to make use of my previous patch from synce-gnome/test.py
+and the routines I use in synce-kdm to check whether odccm is running or not.
+
+A DBus callback is installed for events regarding "NameChangeOwner" indicating
+that odccm just came online. If it did, the correct callbacks for device
+connection and disconnection are set. 
+
+22/12/2007 - 130900 Dr J A Gow
+------------------------------
+
+Changed the partnership scan code so we don't delete partnerships that are
+'dangling'. This may not be necessary and it seems to kill Exchange server
+partnerships, so it has been removed. No adverse effects have been detected
+yet.
+

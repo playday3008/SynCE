@@ -18,6 +18,10 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
+DBUS_DBUS_BUSNAME	= "org.freedesktop.DBus"
+DBUS_DBUS_IFACE		= "org.freedesktop.DBus"
+DBUS_DBUS_OBJPATH	= "/org/freedesktop/DBus"
+
 DBUS_SYNCENGINE_BUSNAME = "org.synce.SyncEngine"
 DBUS_SYNCENGINE_IFACE   = "org.synce.SyncEngine"
 DBUS_SYNCENGINE_OBJPATH = "/org/synce/SyncEngine"

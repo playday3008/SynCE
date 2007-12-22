@@ -54,6 +54,8 @@ class SyncEngine(dbus.service.Object):
         self.PshipManager = pshipmgr.PartnershipManager(self)
 	
 	self.isConnected = False
+	
+	self.isOdccmRunning = False
 
         self.synchandler = None
         self.syncing = mutex()
@@ -66,18 +68,63 @@ class SyncEngine(dbus.service.Object):
         self.sync_begin_handler_id = None
 	self.autosync_triggered = False
 
-        self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
-        self.device_manager.connect_to_signal("DeviceConnected", self._device_connected_cb)
-        self.device_manager.connect_to_signal("DeviceDisconnected", self._device_disconnected_cb)
+
+        self.odccm_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_DBUS_BUSNAME, DBUS_DBUS_OBJPATH), DBUS_DBUS_IFACE)
+        self.odccm_manager.connect_to_signal("NameOwnerChanged", self._odccm_status_changed_cb)
 	
 	self.device = None
 	self.deviceName = ""
 	self.devicePath = ""
 
-	obj_paths = self.device_manager.GetConnectedDevices()
-        if len(obj_paths) > 0:
-            self.logger.info("__init__: connected device found")
-            self._device_connected_cb(obj_paths[0])
+	try:
+            self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
+            self.device_manager.connect_to_signal("DeviceConnected", self._device_connected_cb)
+            self.device_manager.connect_to_signal("DeviceDisconnected", self._device_disconnected_cb)
+
+	    self.isOdccmRunning = True
+	    
+
+	    obj_paths = self.device_manager.GetConnectedDevices()
+            if len(obj_paths) > 0:
+                self.logger.info("__init__: connected device found")
+                self._device_connected_cb(obj_paths[0])
+	except:
+	    self.isOdccmRunning = False
+
+
+    def _odccm_status_changed_cb(self, obj_path, param2, param3):
+        if obj_path == "org.synce.odccm":
+            #If this parameter is empty, the odccm just came online 
+            if param2 == "":
+                self.isOdccmRunning = True
+                self.logger.info("_odccm_status_changed_cb: odccm came online")
+
+            #If this parameter is empty, the odccm just went offline
+            if param3 == "":
+                self.isOdccmRunning = False
+                self.logger.info("_odccm_status_changed_cb: odccm went offline")
+            
+            
+            if self.isOdccmRunning:
+		self.device = None
+		self.deviceName = ""
+		self.devicePath = ""
+
+		try:
+		    self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
+		    self.device_manager.connect_to_signal("DeviceConnected", self._device_connected_cb)
+		    self.device_manager.connect_to_signal("DeviceDisconnected", self._device_disconnected_cb)
+
+		    self.isOdccmRunning = True
+
+		    obj_paths = self.device_manager.GetConnectedDevices()
+		    if len(obj_paths) > 0:
+			self.logger.info("_odccm_status_changed_cb: connected device found")
+			self._device_connected_cb(obj_paths[0])
+		except:
+		    self.isOdccmRunning = False
+
+
 
     def _device_connected_cb(self, obj_path):
 	 
