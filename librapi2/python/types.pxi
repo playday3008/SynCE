@@ -9,6 +9,7 @@ cdef extern from "stdint.h":
     # FIXME: this isn't portable
     ctypedef unsigned long      uint32_t
     ctypedef long int           int64_t
+    ctypedef unsigned long long	uint64_t
 
 cdef extern from "synce.h":
     ctypedef void               VOID
@@ -34,6 +35,9 @@ cdef extern from "synce.h":
     ctypedef uint32_t           BOOL
 
     ctypedef int64_t            LONGLONG
+    ctypedef uint64_t			ULARGE_INTEGER
+    
+    ctypedef uint64_t*			PULARGE_INTEGER
 
     # XXX: sizeof(double) must be 8 */
     ctypedef double             DATE
@@ -49,6 +53,7 @@ cdef extern from "synce.h":
 
     ctypedef void*              LPCVOID
     ctypedef char*              LPCSTR
+    ctypedef char*              LPCTSTR
     ctypedef WCHAR*             LPCWSTR
 
     ctypedef int32_t            HRESULT

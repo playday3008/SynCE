@@ -32,6 +32,7 @@ cdef extern from "rapi.h":
     HRESULT CeSyncPause()
     HRESULT CeSyncTimeToPc()
     BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh)
+    DWORD CeGetDiskFreeSpaceEx( LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 
 #
 # Public constants
@@ -336,6 +337,20 @@ class RAPISession:
 
     def SyncTimeToPc(self):
         return CeSyncTimeToPc()
+
+    def getDiskFreeSpaceEx(self, path):
+        cdef ULARGE_INTEGER freeBytesAvailable  
+        cdef ULARGE_INTEGER totalNumberOfBytes  
+        cdef ULARGE_INTEGER totalNumberOfFreeBytes 
+
+        retval = CeGetDiskFreeSpaceEx( path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes) 
+
+        #This functions returns 0 if something went wrong....
+        if retval == 0:
+            raise RAPIError(retval)
+
+        #return a tuple at the moment, maybe later make this a list
+        return (freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes) 
 
     def getSystemPowerStatus(self, refresh):
         cdef SYSTEM_POWER_STATUS_EX powerStatus

@@ -1,5 +1,9 @@
 2007-12-23  Guido Diepen  <guido@jcwodan.nl>
 
+	* Added python binding for CeGetDiskFreeSpaceEx()
+	
+2007-12-23  Guido Diepen  <guido@jcwodan.nl>
+
 	* added RAPI2 implementation of CeGetDiskFreeSpaceEx()
 	  rapi call.
 	* Some minor fixes in types (also were fixed in libsynce)
