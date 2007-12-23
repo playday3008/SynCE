@@ -538,6 +538,24 @@ LONG CeRegDeleteValue(
 }
 
 
+
+DWORD CeGetDiskFreeSpaceEx(
+		LPCTSTR _lpDirectoryName, 
+		PULARGE_INTEGER lpFreeBytesAvailable, 
+		PULARGE_INTEGER lpTotalNumberOfBytes, 
+		PULARGE_INTEGER lpTotalNumberOfFreeBytes)
+{
+    RapiContext * context = rapi_context_current();
+    return ( *context->rapi_ops->CeGetDiskFreeSpaceEx ) (
+			_lpDirectoryName,
+			lpFreeBytesAvailable,
+			lpTotalNumberOfBytes,
+			lpTotalNumberOfFreeBytes
+    );
+}
+
+
+
 LONG CeRegQueryInfoKey(
         HKEY hKey,
     LPWSTR lpClass,

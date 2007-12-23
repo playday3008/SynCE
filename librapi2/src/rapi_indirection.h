@@ -342,6 +342,14 @@ struct rapi_ops_s
 
     BOOL ( *CeKillAllApps ) ();
 
+	DWORD ( *CeGetDiskFreeSpaceEx)(
+			LPCTSTR _lpDirectoryName, 
+			PULARGE_INTEGER lpFreeBytesAvailable, 
+			PULARGE_INTEGER lpTotalNumberOfBytes, 
+			PULARGE_INTEGER lpTotalNumberOfFreeBytes
+			);
+
+
 #endif /* SWIG */
 
 

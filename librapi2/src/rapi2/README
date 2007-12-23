@@ -1,96 +1,98 @@
 List of RAPI command codes:
 
-00 CeEventHasOccured
-01 CeSyncTimeToPc
-02 CeStartReplication
-03 RegCopyFile
-04 RegRestoreFile
-05 GetPasswordActive
-06 SetPasswordActive
-07 SetPassword
-08 GetSystemMemoryDivision
-09 SetSystemMemoryDivision
-0a CeBackupDatabase
-0b CeRestoreDatabase
-0c CeBackupFile
-0d CeKillAllApps
-0e CeProcessConfig
-0f CeSyncPause
-10 CeSyncResume
-11 CeFindFirstFile
-12 CeFindNextFile
-13 CeFindClose
-14 CeGetFileAttributes
-15 CeSetFileAttributes
-16 CeCreateFile
-17 CeReadFile
-18 CeWriteFile
-19 CeCloseHandle
-1a CeFindAllFiles
-1b CeFindFirstDatabase
-1c CeFindNextDatabase
-1d CeOidGetInfo
-1e CeCreateDatabase
-1f CeOpenDatabase
-20 CeDeleteDatabase
-21 CeReadRecordProps
-22 CeWriteRecordProps
-23 CeDeleteRecord
-24 CeSeekDatabase
-25 CeSetDatabaseInfo
-26 CeSetFilePointer
-27 CeSetEndOfFile
-28 CeCreateDirectory
-29 CeRemoveDirectory
-2a CeCreateProcess
-2b CeMoveFile
-2c CeCopyFile
-2d CeDeleteFile
-2e CeGetFileSize
-2f CeRegOpenKeyEx
-30 CeRegEnumKeyEx
-31 CeRegCreateKeyEx
-32 CeRegCloseKey
-33 CeRegDeleteKey
-34 CeRegEnumValue
-35 CeRegDeleteValue
-36 CeRegQueryInfoKey
-37 CeRegQueryValueEx
-38 CeRegSetValueEx
-39 CeGetStoreInformation
-3a CeGetSystemMetrics
-3b CeGetDesktopDeviceCaps
-3c CeFindAllDatabases
-3d CeGetSystemInfo
-3e CeSHCreateShortcut
-3f CeSHGetShortcutTarget
-40 CeCheckPassword
-41 CeGetFileTime
-42 CeSetFileTime
-43 CeGetVersionEx
-44 CeGetWindow
-45 CeGetWindowLong
-46 CeGetWindowText
-47 CeGetClassName
-48 CeGetGlobalMemoryStatus
-49 CeGetSystemPowerStatusEx
-4a CeGetTempPath
-4b CeGetSpecialFolderPath
-4c CeSetDatabaseInfoEx
-4d CeFindFirstDatabaseEx
-4e CeFindNextDatabaseEx
-4f CeCreateDatabaseEx
-50 CeSetDatabaseInfoEx
-51 CeOpenDatabaseInfoEx
-52 CeDeleteDatabaseEx
-53 CeReadRecordPropsEx
-54 CeMountDBVol
-55 CeUnmountDBVol
-56 CeFlushDBVol
-57 CeEnumDBVolumes
-58 CeOidGetInfoEx
-59 CeSyncStart
-5a CeSyncStop
-5b CeQueryInstructionSet
-5c CeGetFreeDiskspaceEx
+[i] = Implemented (maybe not tested)
+
+[ ] 00 CeEventHasOccured
+[i] 01 CeSyncTimeToPc
+[ ] 02 CeStartReplication
+[ ] 03 RegCopyFile
+[ ] 04 RegRestoreFile
+[ ] 05 GetPasswordActive
+[ ] 06 SetPasswordActive
+[ ] 07 SetPassword
+[i] 08 GetSystemMemoryDivision
+[ ] 09 SetSystemMemoryDivision
+[ ] 0a CeBackupDatabase
+[ ] 0b CeRestoreDatabase
+[ ] 0c CeBackupFile
+[ ] 0d CeKillAllApps
+[i] 0e CeProcessConfig
+[i] 0f CeSyncPause
+[i] 10 CeSyncResume
+[i] 11 CeFindFirstFile
+[ ] 12 CeFindNextFile
+[ ] 13 CeFindClose
+[i] 14 CeGetFileAttributes
+[ ] 15 CeSetFileAttributes
+[i] 16 CeCreateFile
+[i] 17 CeReadFile
+[i] 18 CeWriteFile
+[i] 19 CeCloseHandle
+[i] 1a CeFindAllFiles
+[ ] 1b CeFindFirstDatabase
+[ ] 1c CeFindNextDatabase
+[ ] 1d CeOidGetInfo
+[ ] 1e CeCreateDatabase
+[ ] 1f CeOpenDatabase
+[ ] 20 CeDeleteDatabase
+[ ] 21 CeReadRecordProps
+[ ] 22 CeWriteRecordProps
+[ ] 23 CeDeleteRecord
+[ ] 24 CeSeekDatabase
+[ ] 25 CeSetDatabaseInfo
+[i] 26 CeSetFilePointer
+[i] 27 CeSetEndOfFile
+[i] 28 CeCreateDirectory
+[i] 29 CeRemoveDirectory
+[i] 2a CeCreateProcess
+[i] 2b CeMoveFile
+[i] 2c CeCopyFile
+[i] 2d CeDeleteFile
+[i] 2e CeGetFileSize
+[i] 2f CeRegOpenKeyEx
+[i] 30 CeRegEnumKeyEx
+[i] 31 CeRegCreateKeyEx
+[i] 32 CeRegCloseKey
+[i] 33 CeRegDeleteKey
+[i] 34 CeRegEnumValue
+[i] 35 CeRegDeleteValue
+[i] 36 CeRegQueryInfoKey
+[i] 37 CeRegQueryValueEx
+[i] 38 CeRegSetValueEx
+[i] 39 CeGetStoreInformation
+[ ] 3a CeGetSystemMetrics
+[ ] 3b CeGetDesktopDeviceCaps
+[ ] 3c CeFindAllDatabases
+[i] 3d CeGetSystemInfo
+[ ] 3e CeSHCreateShortcut
+[ ] 3f CeSHGetShortcutTarget
+[ ] 40 CeCheckPassword
+[i] 41 CeGetFileTime
+[i] 42 CeSetFileTime
+[i] 43 CeGetVersionEx
+[ ] 44 CeGetWindow
+[ ] 45 CeGetWindowLong
+[ ] 46 CeGetWindowText
+[ ] 47 CeGetClassName
+[ ] 48 CeGetGlobalMemoryStatus
+[i] 49 CeGetSystemPowerStatusEx
+[ ] 4a CeGetTempPath
+[i] 4b CeGetSpecialFolderPath
+[ ] 4c CeSetDatabaseInfoEx
+[ ] 4d CeFindFirstDatabaseEx
+[ ] 4e CeFindNextDatabaseEx
+[ ] 4f CeCreateDatabaseEx
+[ ] 50 CeSetDatabaseInfoEx
+[ ] 51 CeOpenDatabaseInfoEx
+[ ] 52 CeDeleteDatabaseEx
+[ ] 53 CeReadRecordPropsEx
+[ ] 54 CeMountDBVol
+[ ] 55 CeUnmountDBVol
+[ ] 56 CeFlushDBVol
+[ ] 57 CeEnumDBVolumes
+[ ] 58 CeOidGetInfoEx
+[i] 59 CeSyncStart
+[ ] 5a CeSyncStop
+[ ] 5b CeQueryInstructionSet
+[i] 5c CeGetFreeDiskspaceEx
 

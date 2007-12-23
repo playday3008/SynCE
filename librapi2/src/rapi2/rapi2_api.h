@@ -218,4 +218,11 @@ HRESULT _CeSyncPause2(void);
 
 BOOL _CeSyncTimeToPc2();
 
+DWORD _CeGetDiskFreeSpaceEx2(
+		LPCTSTR _lpDirectoryName, 
+		PULARGE_INTEGER lpFreeBytesAvailable, 
+		PULARGE_INTEGER lpTotalNumberOfBytes, 
+		PULARGE_INTEGER lpTotalNumberOfFreeBytes);
+
+
 #endif /* __rapi2_api_h__ */

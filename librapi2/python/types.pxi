@@ -52,10 +52,11 @@ cdef extern from "synce.h":
     ctypedef WCHAR*             LPCWSTR
 
     ctypedef int32_t            HRESULT
+    ctypedef uint32_t           HANDLE
 
 cdef extern from "rapi.h":
     ctypedef void*              LPSECURITY_ATTRIBUTES
-	
+    ctypedef void*				LPOVERLAPPED
     ctypedef struct _SYSTEM_POWER_STATUS_EX: 
         BYTE ACLineStatus
         BYTE BatteryFlag
@@ -71,4 +72,3 @@ cdef extern from "rapi.h":
         DWORD BackupBatteryFullLifeTime
     ctypedef _SYSTEM_POWER_STATUS_EX	SYSTEM_POWER_STATUS_EX 
     ctypedef SYSTEM_POWER_STATUS_EX*	PSYSTEM_POWER_STATUS_EX
-	

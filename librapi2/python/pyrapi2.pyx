@@ -286,7 +286,12 @@ class RAPISession:
         synce_log_set_level(log_level)
         conn = rapi_connection_from_name(NULL)
         rapi_connection_select(conn)
-        CeRapiInit()
+        
+        retval = CeRapiInit()
+        
+        if retval != 0:
+            raise RAPIError(retval)
+
 
     def process_config(self, config, flags):
         cdef LPWSTR config_w

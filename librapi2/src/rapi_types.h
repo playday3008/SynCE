@@ -38,6 +38,9 @@ typedef uint32_t  ULONG;
 typedef uint32_t  HWND;
 typedef uint32_t  BOOL;
 
+typedef uint64_t  ULARGE_INTEGER
+
+
 /*
  * Pointer types
  */
@@ -50,6 +53,10 @@ typedef WCHAR*  LPWSTR;
 typedef HKEY*   PHKEY;
 typedef DWORD*  LPDWORD;
 
+typedef ULARGE_INTEGER*		PULARGE_INTEGER
+typedef ULARGE_INTEGER*		LPULARGE_INTEGER
+
+
 
 /*
  * Const pointer types
@@ -57,6 +64,7 @@ typedef DWORD*  LPDWORD;
 
 typedef const void*   LPCVOID;
 typedef const char*   LPCSTR;
+typedef const char*   LPCTSTR;
 typedef const WCHAR*  LPCWSTR;
 
 

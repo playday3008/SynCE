@@ -103,6 +103,7 @@ struct rapi_ops_s rapi_ops =
         &_CeRegCopyFile,                  /* CeRegCopyFile */
         &_CeRegRestoreFile,               /* CeRegRestoreFile */
         &_CeKillAllApps,                  /* CeKillAllApps */
+		NULL,							  /* CeGetDiskFreeSpaceEx */
 #endif /* SWIG */
         /*
          * CeRapiInvoke stuff

@@ -848,6 +848,12 @@ BOOL CeRegRestoreFile(LPCWSTR filename);
 
 BOOL CeKillAllApps();
 
+DWORD CeGetDiskFreeSpaceEx( 
+	LPCTSTR lpDirectoryName, 
+	PULARGE_INTEGER lpFreeBytesAvailable, 
+	PULARGE_INTEGER lpTotalNumberOfBytes, 
+	PULARGE_INTEGER lpTotalNumberOfFreeBytes);
+
 #endif /* SWIG */
 
 /*

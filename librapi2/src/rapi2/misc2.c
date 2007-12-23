@@ -380,3 +380,63 @@ BOOL _CeSyncTimeToPc2()
 exit:
     return result;
 }
+
+
+
+DWORD _CeGetDiskFreeSpaceEx2(
+		LPCTSTR _lpDirectoryName, 
+		PULARGE_INTEGER lpFreeBytesAvailable, 
+		PULARGE_INTEGER lpTotalNumberOfBytes, 
+		PULARGE_INTEGER lpTotalNumberOfFreeBytes){
+	
+	RapiContext* context = rapi_context_current();
+	LONG return_value = ERROR_GEN_FAILURE;
+
+	rapi_context_begin_command(context, 0x5c);
+	
+	WCHAR* lpDirName_wide = wstr_from_current( _lpDirectoryName ) ; 
+	rapi2_buffer_write_string(context->send_buffer,  lpDirName_wide );
+
+	//NOTE: Some personat microsoft decided that CeGetDiskFreeSpaceEx should return
+	//a zero value on success and a non-zero function on failure. This contradicts
+	//with majority of all rapi functions!
+	if ( !rapi2_context_call(context) )
+		return 0 ;
+
+	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+	rapi_buffer_read_int32(context->recv_buffer, &return_value);
+	
+	
+	uint32_t dword1 ; 
+	uint32_t dword2 ; 
+
+	//First read the two uint32s for the FreeBytesAvailable
+	rapi_buffer_read_int32(context->recv_buffer, &dword1);
+	rapi_buffer_read_int32(context->recv_buffer, &dword2);
+
+	//The construct the uint64 out of this.
+	*lpFreeBytesAvailable     = dword2 ; 
+	(*lpFreeBytesAvailable) <<= 32 ;
+	(*lpFreeBytesAvailable)  |= dword1 ;
+
+	//Read the two uint32s for the TotalNumberOfBytes
+	rapi_buffer_read_int32(context->recv_buffer, &dword1);
+	rapi_buffer_read_int32(context->recv_buffer, &dword2);
+
+	//The construct the uint64 out of this.
+	*lpTotalNumberOfBytes     = dword2 ; 
+	(*lpTotalNumberOfBytes) <<= 32 ;
+	(*lpTotalNumberOfBytes)  |= dword1 ;
+
+	//Finally read the two uint32s for the TotalNumberOfFreeBytes
+	rapi_buffer_read_int32(context->recv_buffer, &dword1);
+	rapi_buffer_read_int32(context->recv_buffer, &dword2);
+
+	//The construct the uint64 out of this.
+	*lpTotalNumberOfFreeBytes     = dword2 ; 
+	(*lpTotalNumberOfFreeBytes) <<= 32 ;
+	(*lpTotalNumberOfFreeBytes)  |= dword1 ;
+			
+	return return_value ;
+}
+
