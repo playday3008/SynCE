@@ -59,6 +59,15 @@ cdef extern from "synce.h":
     ctypedef int32_t            HRESULT
     ctypedef uint32_t           HANDLE
 
+
+    ctypedef struct _FILETIME:
+        DWORD dwLowDateTime
+        DWORD dwHighDateTime
+
+    ctypedef _FILETIME  FILETIME
+    ctypedef FILETIME*  PFILETIME
+    ctypedef FILETIME*  LPFILETIME
+
 cdef extern from "rapi.h":
     ctypedef void*              LPSECURITY_ATTRIBUTES
     ctypedef void*				LPOVERLAPPED
@@ -77,3 +86,26 @@ cdef extern from "rapi.h":
         DWORD BackupBatteryFullLifeTime
     ctypedef _SYSTEM_POWER_STATUS_EX	SYSTEM_POWER_STATUS_EX 
     ctypedef SYSTEM_POWER_STATUS_EX*	PSYSTEM_POWER_STATUS_EX
+    
+    ctypedef struct _CE_FIND_DATA:
+        DWORD dwFileAttributes
+        FILETIME ftCreationTime
+        FILETIME ftLastAccessTime
+        FILETIME ftLastWriteTime
+        DWORD nFileSizeHigh
+        DWORD nFileSizeLow
+        DWORD dwOID
+        WCHAR cFileName[256]
+    ctypedef _CE_FIND_DATA  CE_FIND_DATA
+    ctypedef CE_FIND_DATA*  LPCE_FIND_DATA
+    ctypedef CE_FIND_DATA** LPLPCE_FIND_DATA
+
+    ctypedef struct _PROCESS_INFORMATION:
+        HANDLE hProcess
+        HANDLE hThread
+        DWORD dwProcessId
+        DWORD dwThreadId
+    ctypedef _PROCESS_INFORMATION   PROCESS_INFORMATION
+    ctypedef PROCESS_INFORMATION*   LPPROCESS_INFORMATION
+
+

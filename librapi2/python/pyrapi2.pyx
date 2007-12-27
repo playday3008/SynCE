@@ -1,9 +1,12 @@
 include "types.pxi"
 import sys
 
+cdef extern from "Python.h":
+    object PyString_FromStringAndSize ( char *, int )
 
 cdef extern from "stdlib.h":
     void *malloc(size_t size)
+    void *realloc(void *ptr, size_t size)
     void free(void *ptr)
 
 cdef extern from "synce.h":
@@ -33,6 +36,17 @@ cdef extern from "rapi.h":
     HRESULT CeSyncTimeToPc()
     BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh)
     DWORD CeGetDiskFreeSpaceEx( LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes)
+    BOOL CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray)
+
+    BOOL CeCloseHandle(HANDLE hObject)
+    HANDLE CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+    BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
+    BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+
+    BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
+
+
+    
 
 #
 # Public constants
@@ -72,6 +86,76 @@ BATTERY_FLAG_CRITICAL      =    0x04
 BATTERY_FLAG_CHARGING      =    0x08
 BATTERY_FLAG_NO_BATTERY    =    0x80
 BATTERY_FLAG_UNKNOWN       =    0xFF
+
+
+FAF_ATTRIBUTES               = 0x00001
+FAF_CREATION_TIME            = 0x00002
+FAF_LASTACCESS_TIME          = 0x00004
+FAF_LASTWRITE_TIME           = 0x00008
+
+FAF_SIZE_HIGH                = 0x00010
+FAF_SIZE_LOW                 = 0x00020
+FAF_OID                      = 0x00040
+FAF_NAME                     = 0x00080
+
+FAF_ATTRIB_CHILDREN          = 0x01000
+FAF_ATTRIB_NO_HIDDEN         = 0x02000
+FAF_FOLDERS_ONLY             = 0x04000
+FAF_NO_HIDDEN_SYS_ROMMODULES = 0x08000
+
+
+
+
+
+CSIDL_PROGRAMS               = 0x0002
+CSIDL_PERSONAL               = 0x0005
+CSIDL_FAVORITES_GRYPHON      = 0x0006
+CSIDL_STARTUP                = 0x0007
+CSIDL_RECENT                 = 0x0008
+CSIDL_STARTMENU              = 0x000b
+CSIDL_DESKTOPDIRECTORY       = 0x0010
+CSIDL_FONTS                  = 0x0014
+CSIDL_FAVORITES              = 0x0016
+
+
+#dwShareMode 
+GENERIC_WRITE                = 0x40000000
+GENERIC_READ                 = 0x80000000
+FILE_SHARE_READ              = 0x00000001
+
+#dwCreationDisposition 
+CREATE_NEW                   = 1
+CREATE_ALWAYS                = 2
+OPEN_EXISTING                = 3
+OPEN_ALWAYS                  = 4
+TRUNCATE_EXISTING            = 5
+OPEN_FOR_LOADER              = 6
+
+#dwFlagsAndAttributes 
+FILE_ATTRIBUTE_READONLY      = 0x00000001
+FILE_ATTRIBUTE_HIDDEN        = 0x00000002
+FILE_ATTRIBUTE_SYSTEM        = 0x00000004
+FILE_ATTRIBUTE_1             = 0x00000008
+
+FILE_ATTRIBUTE_DIRECTORY     = 0x00000010
+FILE_ATTRIBUTE_ARCHIVE       = 0x00000020
+FILE_ATTRIBUTE_INROM         = 0x00000040
+FILE_ATTRIBUTE_NORMAL        = 0x00000080
+
+FILE_ATTRIBUTE_TEMPORARY     = 0x00000100
+FILE_ATTRIBUTE_2             = 0x00000200
+FILE_ATTRIBUTE_3             = 0x00000400
+FILE_ATTRIBUTE_COMPRESSED    = 0x00000800
+
+FILE_ATTRIBUTE_ROMSTATICREF  = 0x00001000
+FILE_ATTRIBUTE_ROMMODULE     = 0x00002000
+FILE_ATTRIBUTE_4             = 0x00004000
+FILE_ATTRIBUTE_5             = 0x00008000
+
+FILE_ATTRIBUTE_HAS_CHILDREN  = 0x00010000
+FILE_ATTRIBUTE_SHORTCUT      = 0x00020000
+FILE_ATTRIBUTE_6             = 0x00040000
+FILE_ATTRIBUTE_7             = 0x00080000
 
 
 
@@ -375,4 +459,117 @@ class RAPISession:
         result["Reserved3"]                 = powerStatus.Reserved3
         result["BackupBatteryLifeTime"]     = powerStatus.BackupBatteryLifeTime
         result["BackupBatteryFullLifeTime"] = powerStatus.BackupBatteryFullLifeTime
-        return result 
+        return result
+
+
+    def findAllFiles( self, query, flags ):
+        cdef LPWSTR query_w
+        query_w = wstr_from_utf8(query)
+        
+        
+        cdef LPCE_FIND_DATA find_data 
+        cdef DWORD numberOfFiles
+
+        cdef CE_FIND_DATA found_file
+
+
+        retval = CeFindAllFiles( query_w, flags , &numberOfFiles, &find_data ) 
+
+        #Now create a list of dictionaries
+        result = [] 
+        i=0
+        while i < numberOfFiles:
+            found_file = find_data[ i ] 
+            
+            this_file = dict()
+
+            if flags & FAF_ATTRIBUTES:
+                this_file["Attributes"] = found_file.dwFileAttributes
+
+            if flags & FAF_CREATION_TIME:
+                this_file["CreationLowDateTime"] = found_file.ftCreationTime.dwLowDateTime
+                this_file["CreationHighDateTime"] = found_file.ftCreationTime.dwHighDateTime
+            
+            if flags & FAF_LASTACCESS_TIME:
+                this_file["LastAccessLowDateTime"] = found_file.ftLastAccessTime.dwLowDateTime
+                this_file["LastAccessHighDateTime"] = found_file.ftLastAccessTime.dwHighDateTime
+            
+            if flags & FAF_LASTWRITE_TIME:
+                this_file["LastWriteLowDateTime"] = found_file.ftCreationTime.dwLowDateTime
+                this_file["LastWriteHighDateTime"] = found_file.ftCreationTime.dwHighDateTime
+
+            if flags & FAF_SIZE_HIGH:
+                this_file["SizeHigh"] = found_file.nFileSizeHigh
+             
+            if flags & FAF_SIZE_LOW:
+                this_file["SizeLow"] = found_file.nFileSizeLow
+            
+            if flags & FAF_OID:
+                this_file["OID"] = found_file.dwOID
+
+            if flags & FAF_NAME:
+                this_file["Name"] = wstr_to_utf8(found_file.cFileName)
+
+
+            result.append( this_file )
+            i = i + 1
+
+
+        return result
+
+
+
+    #TODO: ERROR HANDLING!
+    def closeHandle(self, hObject):
+     retval = CeCloseHandle( hObject ) 
+     #Non-zero indicates success, zero indicates failure
+     if retval == 0:
+         raise
+
+    #TODO: ERROR HANDLING!
+    def createFile(self, filename, desiredAccess, shareMode, createDisposition, flagsAndAttributes):
+        cdef LPWSTR filename_w
+        cdef HANDLE fileHandle
+
+        filename_w = wstr_from_utf8(filename)
+
+        fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0 ) 
+
+        return fileHandle
+
+
+    #TODO: ERROR HANDLING!
+    def readFile( self, fileHandle, numberOfBytesToRead ):
+        cdef DWORD numberOfBytesRead
+        cdef DWORD dwNumberOfBytesToRead
+        dwNumberOfBytesToRead = numberOfBytesToRead
+        cdef LPBYTE c_buffer
+       
+        c_buffer = <LPBYTE> malloc (numberOfBytesToRead)
+        
+        CeReadFile( fileHandle, c_buffer , numberOfBytesToRead, &numberOfBytesRead, NULL )
+        
+        if numberOfBytesRead < numberOfBytesToRead:
+            c_buffer = <LPBYTE> realloc( c_buffer, numberOfBytesRead)
+
+        cdef object returnstring
+        returnstring = PyString_FromStringAndSize(<char *>c_buffer, numberOfBytesRead)
+
+        free(c_buffer)
+        return returnstring, numberOfBytesRead
+
+    #TODO: ERROR HANDLING!
+    #TODO: Provide the user with the processInformation
+    def writeFile( self, fileHandle, buffer, numberOfBytesToWrite ):
+        cdef DWORD numberOfBytesWritten
+        cdef DWORD dwNumberOfBytesToWrite
+        cdef char* c_buffer
+
+        c_buffer = buffer 
+        CeWriteFile( fileHandle, c_buffer , numberOfBytesToWrite, &numberOfBytesWritten, NULL)
+    
+    def createProcess(self, applicationName, applicationParams):
+        cdef PROCESS_INFORMATION processInformation
+
+        return CeCreateProcess( wstr_from_utf8(applicationName), wstr_from_utf8(applicationParams), NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
+

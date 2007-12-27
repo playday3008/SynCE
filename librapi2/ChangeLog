@@ -1,3 +1,17 @@
+2007-12-27  Guido Diepen  <guido@jcwodan.nl>
+
+	* Small fix in rapi2 call of CeCreateProcess2 (remove optional-read)
+	* Added python binding for CeFindAllFiles
+	* Added python binding for CeCloseHandle
+	* Added python binding for CeCreateFile
+	* Added python binding for CeReadFile
+	* Added python binding for CeWriteFilea
+	* Added python binding for CeCreateProcess
+	* Note, all of the above are initial implementations, more studying
+	  has to be done regarding error handling. Problem is inconsistency
+	  with error handling in the original microsoft code, sometimes 
+	  zero means succes, sometimes non-zero means succes
+	
 2007-12-23  Guido Diepen  <guido@jcwodan.nl>
 
 	* Added python binding for CeGetDiskFreeSpaceEx()

@@ -33,17 +33,21 @@ BOOL _CeCreateProcess2(/*{{{*/
     rapi_buffer_write_uint32(context->send_buffer, 0);
     /*    rapi_buffer_write_optional_out(context->send_buffer, lpProcessInformation, sizeof(PROCESS_INFORMATION)); */
 
+	rapi_buffer_debug_dump_buffer("sending", context->send_buffer) ;
     if ( !rapi2_context_call(context) )
         goto exit;
-
+	
+	rapi_buffer_debug_dump_buffer("received", context->recv_buffer) ;
+	
     rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
     synce_trace("last_error = %i", context->last_error);
     rapi_buffer_read_uint32(context->recv_buffer, &result);
     synce_trace("result = %i", result);
 
-    if ( !rapi_buffer_read_optional(context->recv_buffer, lpProcessInformation, sizeof(PROCESS_INFORMATION)) )
-        goto exit;
-
+	if ( !rapi_buffer_read_data(context->recv_buffer, lpProcessInformation, sizeof(PROCESS_INFORMATION)) ){
+		synce_error("Failed to read lpSystemInfo");
+		goto exit;
+	}
     if (lpProcessInformation)
     {
         lpProcessInformation->hProcess     = letoh32(lpProcessInformation->hProcess);
@@ -411,8 +415,8 @@ DWORD _CeGetDiskFreeSpaceEx2(
 	uint32_t dword2 ; 
 
 	//First read the two uint32s for the FreeBytesAvailable
-	rapi_buffer_read_int32(context->recv_buffer, &dword1);
-	rapi_buffer_read_int32(context->recv_buffer, &dword2);
+	rapi_buffer_read_uint32(context->recv_buffer, &dword1);
+	rapi_buffer_read_uint32(context->recv_buffer, &dword2);
 
 	//The construct the uint64 out of this.
 	*lpFreeBytesAvailable     = dword2 ; 
@@ -420,8 +424,8 @@ DWORD _CeGetDiskFreeSpaceEx2(
 	(*lpFreeBytesAvailable)  |= dword1 ;
 
 	//Read the two uint32s for the TotalNumberOfBytes
-	rapi_buffer_read_int32(context->recv_buffer, &dword1);
-	rapi_buffer_read_int32(context->recv_buffer, &dword2);
+	rapi_buffer_read_uint32(context->recv_buffer, &dword1);
+	rapi_buffer_read_uint32(context->recv_buffer, &dword2);
 
 	//The construct the uint64 out of this.
 	*lpTotalNumberOfBytes     = dword2 ; 
@@ -429,8 +433,8 @@ DWORD _CeGetDiskFreeSpaceEx2(
 	(*lpTotalNumberOfBytes)  |= dword1 ;
 
 	//Finally read the two uint32s for the TotalNumberOfFreeBytes
-	rapi_buffer_read_int32(context->recv_buffer, &dword1);
-	rapi_buffer_read_int32(context->recv_buffer, &dword2);
+	rapi_buffer_read_uint32(context->recv_buffer, &dword1);
+	rapi_buffer_read_uint32(context->recv_buffer, &dword2);
 
 	//The construct the uint64 out of this.
 	*lpTotalNumberOfFreeBytes     = dword2 ; 
