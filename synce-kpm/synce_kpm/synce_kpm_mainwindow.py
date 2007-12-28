@@ -9,7 +9,7 @@ import libxml2
 import xml2util
 import characteristics
 import logging
-from commutil import * 
+#from commutil import * 
 
 
 class synce_kpm_mainwindow(QtGui.QMainWindow):
