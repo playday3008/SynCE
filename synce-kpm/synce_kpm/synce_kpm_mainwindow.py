@@ -11,16 +11,11 @@ import characteristics
 import logging
 from commutil import * 
 
-#rapi_session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
-#rapi_session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
 
-
-
-
-class MainWindowSynceKDM(QtGui.QMainWindow):
+class synce_kpm_mainwindow(QtGui.QMainWindow):
     def __init__(self, *args):
         QtGui.QMainWindow.__init__(self, *args)
-        uic.loadUi("synce-kdm.ui", self)
+        uic.loadUi("synce-kpm-mainwindow.ui", self)
         self.phoneCommunicator = PhoneCommunicator()
         self.phoneCommunicator.addListener( self.updateView )
         
@@ -143,9 +138,3 @@ class MainWindowSynceKDM(QtGui.QMainWindow):
         QApplication.quit()
 
 
-app = QtGui.QApplication(sys.argv)
-mainWindowSynceKDM = MainWindowSynceKDM()
-mainWindowSynceKDM.show()
-app.exec_()
-
-        
