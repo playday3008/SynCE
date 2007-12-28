@@ -1,3 +1,11 @@
+2007-12-28	Guido Diepen	<guido@jcwodan.nl>
+
+	* SynCE-KDM project renamed to SynCE-KPM. The problem is
+	  that the KDM part could easily be confused with the 
+	  KDE Desktop Manager. The name is now
+	  SynCE KDE PDA Manager  (SynCE-KPM)
+	* Changes in directory structure to make packaging easier later on
+
 2007-12-20	Guido Diepen	<guido@jcwodan.nl>
 
 	* SynCE-KDM now makes use of DBus to get information about 
