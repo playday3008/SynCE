@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+from synce_kpm.synce_kpm_mainwindow import synce_kpm_mainwindow
+
+app = QtGui.QApplication(sys.argv)
+mainWindow = synce_kpm_mainwindow()
+mainWindow.show()
+app.exec_()
