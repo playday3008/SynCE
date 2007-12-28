@@ -623,7 +623,7 @@ this a bit later.
 
 
 22/12/2007 - 022600 Guido Diepen
-------------------------------
+--------------------------------
 
 Updated kernel.py to make use of my previous patch from synce-gnome/test.py
 and the routines I use in synce-kdm to check whether odccm is running or not.
@@ -639,4 +639,27 @@ Changed the partnership scan code so we don't delete partnerships that are
 'dangling'. This may not be necessary and it seems to kill Exchange server
 partnerships, so it has been removed. No adverse effects have been detected
 yet.
+
+28/12/2007 - 215000 Dr J A Gow
+------------------------------
+
+Updated and cleaned up kernel.py and sync-engine. Added a whole bunch of
+new command line options that change the behaviour of sync-engine.
+
+Use sync-engine -h to display the usage
+
+The sync-engine can be configured to run for just one connection with the
+-o option, and it can run in the foreground or in the background using the
+-d option. It can now log to a file and the loglevel can be specified.
+
+A useful option is --config. It is now possible to have multiple
+sync-engine configuration directories (including partnerships and itemDBs)
+for debug or similar purposes and switch between them with the --config
+option.
+
+Made the d-bus main loop in sync-engine thread safe. This should mop up
+the odd random segfault.
+
+
+
 

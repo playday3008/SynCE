@@ -22,13 +22,64 @@
 import cPickle as pickle
 import os
 import os.path
+import getopt
 import string
 import logging
-#from xml.dom import minidom
-#from xmlutil import *
 import libxml2
 import xml2util
 from formatapi import SupportedFormats,DefaultFormat
+
+#
+# Debug log levels
+
+DBLOGLEVELS = { "INFO"    : logging.INFO,
+		"DEBUG"   : logging.DEBUG,
+		"WARNING" : logging.WARNING,
+		"ERROR"   : logging.ERROR
+	      }
+
+
+#
+#
+# ValidateCommandOptions
+#
+# Validate command line options.
+
+def ValidateCommandOptions(olist):
+	
+	try:
+		opts,args = getopt.getopt(olist,
+					  "hc:ov:l:d",
+					  ["help","config=","once","verbosity=","logfile=","detached"])
+		if len(args) > 1:
+			raise Exception("cmderr")
+		for opt,arg in opts:
+			if opt in ("-h","--help"):
+				raise Exception("usage")
+	except:
+		print "Usage: sync-engine [opts]"
+		print
+		print "Options"
+		print "-------"
+		print " -h, --help          Display usage info"
+		print
+		print " -c<confdir>,"
+		print " --config=<confdir>  Use <confdir> as the sync-engine config location"
+		print
+		print " -o, --once          Run for one connection only"
+		print 
+		print " -v<arg>,"
+		print " --verbosity=<arg>   Set the log level to one of:"
+		print "                     INFO,DEBUG,ERROR"
+		print " -l<file>,"
+		print " --logfile=<file>    Set the log file to <file>. If not specified"
+		print "                     will log to stdout"
+		print
+		print " -d, --detached      Daemonize the sync-engine"
+		raise
+	
+	return opts,args
+
 
 ############################################################################
 # ConfigObject
@@ -215,7 +266,7 @@ class GlobalConfig(ConfigObject):
 
 class Config:
 	
-	def __init__(self):
+	def __init__(self,progopts):
 		
 		self.logger = logging.getLogger("engine.config.Config")
 		self.config_FileSync = FileSyncConfig()
@@ -224,6 +275,36 @@ class Config:
 
 		self.config_dir   = os.path.join(os.path.expanduser("~"), ".synce")
 		self.config_path  = os.path.join(self.config_dir, "config.xml")
+		
+		self.logfile = None
+	
+		self.runonce = False
+		self.fork = False
+		self.loglevel = DBLOGLEVELS["DEBUG"]
+		self._ProcessCommandOptions(progopts)
+		
+	#
+	# _ProcessCommandOptions
+	#
+	# Process the command line options
+	
+	def _ProcessCommandOptions(self,olist):
+		opts,args = olist
+		for opt,arg in opts:
+			if opt in ("-o","--once"):
+				self.runonce = True
+			if opt in ("-c","--config"):
+				self.config_dir = os.path.join(arg,".synce")
+			if opt in ("-d","--detached"):
+				self.fork = True
+			if opt in ("-l","--logfile"):
+				self.logfile = os.path.expanduser(arg)
+			if opt in ("-v","--verbosity"):
+				if DBLOGLEVELS.has_key(arg):
+					self.loglevel = DBLOGLEVELS[arg]
+				else:
+					print "error: unknown log level %s, defaulting to DEBUG" % arg
+					
 	
 	#
 	# UpdateConfig updates information that may be changed between connections. It is re-read

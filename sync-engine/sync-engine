@@ -1,72 +1,161 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ############################################################################
-#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
-#                                                                          #
-#    This program is free software; you can redistribute it and#or modify  #
-#    it under the terms of the GNU General Public License as published by  #
-#    the Free Software Foundation; either version 2 of the License, or     #
-#    (at your option) any later version.                                   #
-#                                                                          #
-#    This program is distributed in the hope that it will be useful,       #
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of        #
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
-#    GNU General Public License for more details.                          #
-#                                                                          #
-#    You should have received a copy of the GNU General Public License     #
-#    along with this program; if not, write to the                         #
-#    Free Software Foundation, Inc.,                                       #
-#    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+# sync-engine
+#
+# Entry point and manager for sync-engine
+# 
+# Adapted by Dr J A Gow 12/2007 from the original sync-engine
+#
+# Original sync-engine copyright (C) 2006  Ole André Vadla Ravnås
+# <oleavr@gmail.com>
+#
+# This program is free software; you can redistribute it and#or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, 
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.
+# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ############################################################################
 
-"""
-Provider of D-Bus services aiming to replace librra.
-"""
 
-version = (0, 1, 0)
+
+version = (0, 1, 1)
 
 import gobject
 
 import dbus
-import dbus.glib
+from dbus.mainloop.glib import DBusGMainLoop
+from dbus.mainloop.glib import threads_init
 
 import os
 import signal
 import sys
 import threading
 import logging
-
+import getopt
+import SyncEngine.config as Config
 from SyncEngine.kernel import SyncEngine
 
 logger = None
 mainloop = None
 
-def term_handler(signum, frame):
-    logger.info("Received termination signal. Exiting")
-    gobject.idle_add(mainloop.quit)
-    engine.notify_quit()
+#
+# TerminationHandler
+#
+# Called when a request to terminate has been received, used to shut down
+# the main loop
+
+def TerminationHandler(signum, frame):
+	
+	logger.info("Received termination signal. Exiting")
+	engine.StopSessions()
+	gobject.idle_add(mainloop.quit)
+
+#
+# MAIN ENTRY POINT
+#
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
-                        stream=sys.stdout,
-                        format='%(asctime)s %(levelname)s %(name)s : %(message)s')
+		
+	try:
+		progopts = Config.ValidateCommandOptions(sys.argv[1:])
+		
+	except Exception,e:
+		
+		if str(e) != "usage":
+			print
+			print "Command line error"
+			print
+			
+		exit(0)
+	
+	
+	print "SynCE sync-engine starting up"
+	
+	configObj = Config.Config(progopts)
+	
+	# now, if we need to log, open our log file
+	
+	if configObj.logfile != None:
+		try:
+			logstream = open(configObj.logfile,"wb")
+		except:
+			print "error: unable to open logfile %s, logging redirected to stdout" % configObj.logfile
+			logstream = sys.stdout
+	else:
+		logstream = sys.stdout
+	
+	# now fork, if we need to
+		
+	if configObj.fork==True:
+		try:
+			forkPid = os.fork()
+			if forkPid > 0:
+				print "SynCE sync-engine started as PID %d" % forkPid
+				sys.exit(0)
+		except OSError,e:
+			print "error: failed to fork - running in foreground (%s)" % e.strerror
+			pass
+			
+		# if we get here, we're running in the daemon thread
+		# decouple from our terminal
+		
+		os.chdir("/")
+		os.setsid()
+		
+		# Redirect stdout and stderr to the logfile - unless the logfile is itself
+		# stdout in which case redirect it to /dev/null
+		
+		f=os.open("/dev/null",os.O_RDWR)
+		if logstream != sys.stdout:
+			os.dup2(logstream.fileno(),1)
+			os.dup2(logstream.fileno(),2)
+		else:
+			os.dup2(f,1)
+			os.dup2(f,2)
+				
+		# Redirect stdin to /dev/null
+		
+		os.dup2(f,0)
+		
+		if f>2:
+			os.close(f)
+			
+	#
+	# Here, we are either the child process, or we are running in the foreground
+			
+	logging.basicConfig(level=configObj.loglevel,
+			    stream=logstream,
+			    format='%(asctime)s %(levelname)s %(name)s : %(message)s')
 
-    logger = logging.getLogger("syncengine")
+	logger = logging.getLogger("syncengine")
 
-    logger.debug("creating SyncEngine object")
-    engine = SyncEngine()
+	DBusGMainLoop(set_as_default=True)
+	logger.debug("running main loop")
+	gobject.threads_init()
+	dbus.mainloop.glib.threads_init()
+	mainloop = gobject.MainLoop()
 
-    logger.debug("installing signal handlers")
-    signal.signal(signal.SIGTERM, term_handler)
-    signal.signal(signal.SIGINT, term_handler)
+	logger.debug("creating SyncEngine object")
+	engine = SyncEngine(configObj,mainloop)
 
-    logger.debug("running main loop")
-    gobject.threads_init()
-    mainloop = gobject.MainLoop()
-    try:
-        mainloop.run()
-    except KeyboardInterrupt:
-        pass
+	logger.debug("installing signal handlers")
+	signal.signal(signal.SIGTERM, TerminationHandler)
+	signal.signal(signal.SIGINT, TerminationHandler)
+	
+	try:
+		mainloop.run()
+	except KeyboardInterrupt:
+		pass
 
-    logger.debug("waiting for engine to clean up")
-    engine.wait_quit()
+	logger.debug("waiting for engine to clean up")
+	engine.WaitForStoppingSessions()
