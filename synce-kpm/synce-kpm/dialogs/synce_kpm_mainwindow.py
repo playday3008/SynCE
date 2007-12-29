@@ -6,16 +6,20 @@ from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
 import libxml2
-import xml2util
-import characteristics
+import util.xml2util
+import util.characteristics
 import logging
-#from commutil import * 
+
+from util.commutil import * 
+
+import dialogs.ui_synce_kpm_mainwindow
 
 
-class synce_kpm_mainwindow(QtGui.QMainWindow):
+class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui_mainWindow):
     def __init__(self, *args):
-        QtGui.QMainWindow.__init__(self, *args)
-        uic.loadUi("synce-kpm-mainwindow.ui", self)
+        QtGui.QWidget.__init__(self, *args)
+        self.setupUi(self)
+
         self.phoneCommunicator = PhoneCommunicator()
         self.phoneCommunicator.addListener( self.updateView )
         

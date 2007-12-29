@@ -18,6 +18,16 @@
 ############################################################################## 
 
 import sys
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4 import *
+
+from dialogs.synce_kpm_mainwindow import *
+
 
 def main():
-    print "HELLO :) "
+    app = QtGui.QApplication(sys.argv)
+    mainWindow = synce_kpm_mainwindow()
+    mainWindow.show()
+    app.exec_()
+

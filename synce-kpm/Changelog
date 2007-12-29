@@ -1,3 +1,8 @@
+2007-12-29	Guido Diepen	<guido@jcwodan.nl>
+
+	* Finished updating directory structure, program will start
+	  again if fetched from SVN
+
 2007-12-28	Guido Diepen	<guido@jcwodan.nl>
 
 	* SynCE-KDM project renamed to SynCE-KPM. The problem is
