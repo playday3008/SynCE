@@ -17,20 +17,12 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ############################################################################## 
 
-#from synce_kpm.synce_kpm_mainwindow import synce_kpm_mainwindow
-#from PyQt4 import QtGui
 import sys
-import os
 
-#sys.path.append('/home/guido/syncing/synce-kpm/data')
-#ys.path.insert(0,'/home/guido/syncing/synce-kpm/data')
+#Add the correct path to the system path:
+sys.path.insert(0,@syncekpmbuilddir@)
 
-currentDir = os.path.abspath(os.path.dirname(__file__))
-print os.path.join (currentDir, "data")
-#print join(os.path.abspath(__file__), "data")
+import synce_kpm_main
 
+synce_kpm_main.main()
 
-#app = QtGui.QApplication(sys.argv)
-#mainWindow = synce_kpm_mainwindow()
-#mainWindow.show()
-#app.exec_()
