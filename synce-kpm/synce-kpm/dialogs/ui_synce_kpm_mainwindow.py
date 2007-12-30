@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-mainwindow.ui'
 #
-# Created: Sun Dec 30 13:33:22 2007
+# Created: Sun Dec 30 21:58:43 2007
 #      by: PyQt4 UI code generator 4.3.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -76,7 +76,7 @@ class Ui_mainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(synce_kpm_mainwindow)
 
     def retranslateUi(self, synce_kpm_mainwindow):
-        synce_kpm_mainwindow.setWindowTitle(QtGui.QApplication.translate("mainWindow", "SynCE PDA Device Manager", None, QtGui.QApplication.UnicodeUTF8))
+        synce_kpm_mainwindow.setWindowTitle(QtGui.QApplication.translate("mainWindow", "SynCE KDE PDA Manager", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("mainWindow", "Device Status", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("mainWindow", "Device:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("mainWindow", "Battery status:", None, QtGui.QApplication.UnicodeUTF8))

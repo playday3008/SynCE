@@ -10,7 +10,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>SynCE PDA Device Manager</string>
+   <string>SynCE KDE PDA Manager</string>
   </property>
   <widget class="QGroupBox" name="groupBox" >
    <property name="geometry" >
