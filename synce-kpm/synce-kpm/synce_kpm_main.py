@@ -24,10 +24,16 @@ from PyQt4 import *
 
 from dialogs.synce_kpm_mainwindow import *
 
+app = None
 
 def main():
     app = QtGui.QApplication(sys.argv)
     mainWindow = synce_kpm_mainwindow()
     mainWindow.show()
+
     app.exec_()
+
+
+
+
 

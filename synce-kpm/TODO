@@ -1,9 +1,17 @@
 Some major TODO:
 
-* Implement install Cab file
-
 * Implement connection with liborange, such that any installer can be 
   installed through the program.
 
 * Display more info about the phone when connected. Should be quite easy
   to implement this.
+
+* Make the PhoneCommunicator class more of a proxy object, that will fetch
+  and cache some of the data. Furthermore, it should check every (say 15) 
+  seconds and look for changes in any status
+
+* Start making use of threading
+
+* While copying file, make use of a callback function that will allow the
+  user to see the progress of the file copy 
+

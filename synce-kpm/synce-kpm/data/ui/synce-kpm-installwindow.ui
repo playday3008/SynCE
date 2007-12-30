@@ -1,0 +1,134 @@
+<ui version="4.0" >
+ <class>synce_kpm_installwindow</class>
+ <widget class="QWidget" name="synce_kpm_installwindow" >
+  <property name="windowModality" >
+   <enum>Qt::ApplicationModal</enum>
+  </property>
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>505</width>
+    <height>182</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Install CAB File</string>
+  </property>
+  <widget class="QLineEdit" name="localCabFile" >
+   <property name="geometry" >
+    <rect>
+     <x>160</x>
+     <y>30</y>
+     <width>281</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="readOnly" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label" >
+   <property name="geometry" >
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>Install CAB file</string>
+   </property>
+  </widget>
+  <widget class="QToolButton" name="openFileChooserButton" >
+   <property name="geometry" >
+    <rect>
+     <x>450</x>
+     <y>30</y>
+     <width>26</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>...</string>
+   </property>
+   <property name="icon" >
+    <iconset>synce-kpm/data/folder.png</iconset>
+   </property>
+   <property name="iconSize" >
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="deleteCAB" >
+   <property name="geometry" >
+    <rect>
+     <x>30</x>
+     <y>100</y>
+     <width>231</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="layoutDirection" >
+    <enum>Qt::LeftToRight</enum>
+   </property>
+   <property name="text" >
+    <string>Delete the CAB file after being started</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2" >
+   <property name="geometry" >
+    <rect>
+     <x>30</x>
+     <y>60</y>
+     <width>105</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>Temp is root of device:</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="deviceList" >
+   <property name="geometry" >
+    <rect>
+     <x>160</x>
+     <y>60</y>
+     <width>281</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="okButton" >
+   <property name="geometry" >
+    <rect>
+     <x>320</x>
+     <y>130</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>OK</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="cancelButton" >
+   <property name="geometry" >
+    <rect>
+     <x>410</x>
+     <y>130</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>Cancel</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

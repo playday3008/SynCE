@@ -1,3 +1,14 @@
+2007-12-30	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Implemented use of tray icon. Currently only showing connection
+	  status by means of the icon color. Will be minimize-to-tray
+	* Implemented message balloons indicating connection status change
+	* Implemented the possibility of installing CAB files through 
+	  the application
+	* Important note is that almost none to none checking is done!!
+	  This program is still in heavy development
+	* Added some new items to TODO
+
 2007-12-29	Guido Diepen	<guido@jcwodan.nl>
 
 	* Finished updating directory structure, program will start

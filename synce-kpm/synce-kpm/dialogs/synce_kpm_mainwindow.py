@@ -1,4 +1,24 @@
 #!/usr/bin/env python
+
+#    Copyright (C) 2007 Guido Diepen
+#    Email: Guido Diepen <guido@guidodiepen.nl>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+############################################################################## 
+
+
 import sys
 
 from PyQt4.QtCore import *
@@ -13,51 +33,98 @@ import logging
 from util.commutil import * 
 
 import dialogs.ui_synce_kpm_mainwindow
+import dialogs.synce_kpm_installwindow
 
 
 class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui_mainWindow):
     def __init__(self, *args):
         QtGui.QWidget.__init__(self, *args)
         self.setupUi(self)
-
-        self.phoneCommunicator = PhoneCommunicator()
-        self.phoneCommunicator.addListener( self.updateView )
         
+        self.iconDisconnected = QtGui.QIcon("synce-kpm/data/blue_22x22.png")
+        self.iconConnected  = QtGui.QIcon("synce-kpm/data/green_22x22.png")
+        
+
+        self.setWindowIcon(self.iconConnected)
+
+        self.tray = QtGui.QSystemTrayIcon(self)
+        self.trayMenu = QtGui.QMenu()
+        self.action_quit = QtGui.QAction(QtGui.QIcon("images/quit.png"), u'Quit', self)
+
+        self.trayMenu.addAction(self.action_quit)
+        self.tray.setContextMenu(self.trayMenu)
+        self.tray.setIcon(self.iconDisconnected)
+        self.tray.setToolTip(u"SynCE KDE PDA Manager")
+        self.tray.show()
+
+         
+       
+        self.phoneCommunicator = PhoneCommunicator(self.updateView)
+        self.installWindow = dialogs.synce_kpm_installwindow.synce_kpm_installwindow( self.phoneCommunicator )
+
         self.updateView() 
+    """
+    @pyqtSignature("")
+    def hideEvent(self,event):
+        print "abc"
+        self.hide()
+        event.accept()
+
+    @pyqtSignature("")
+    def closeEvent(self,event):
+        event.ignore()
+        self.hide()
+    """
+
+    def updateTray(self):
+        if self.phoneCommunicator.phoneConnected:
+            self.tray.setIcon(self.iconConnected)
+        else:
+            self.tray.setIcon(self.iconDisconnected)
 
 
+    #Use the param later to distinguish what the reason was
+    #for the model update 
+    def updateView(self,reason=None):
 
-    #Use the param later to distinguish what needs to be updated:
-    #   0   Everything
-    #   1   Battery
-    #   2   Installed programs 
-    def updateView(self,param=None):
-        print "Busy retrieving info!!"
-        self.updateStatusBar() ;
-        self.updatePowerInformation() ; 
-        self.updateInstalledProgramsList() ; 
+        if reason == ACTION_PHONE_DISCONNECTED:
+            if self.installWindow.isVisible:
+                self.installWindow.hide()
+            self.tabWidget.setEnabled(False)
+            self.tray.showMessage("Phone Disconnected", "Just disconnected the phone")
 
+
+        if reason == ACTION_PHONE_CONNECTED:
+            self.tabWidget.setEnabled(True)
+            self.tray.showMessage("Phone Connected", "The phone %s just connected"%self.phoneCommunicator.device.name)
+
+
+        #And do a round of updating of all other widgets..
+        self.updateStatusBar()
+        self.updatePowerInformation() 
+        self.updateInstalledProgramsList() 
+        self.updateTray()
+        
 
     def updateStatusBar(self):
         if self.phoneCommunicator.phoneConnected:
-            self.statusBar().showMessage("Connected to phone " + self.phoneCommunicator.device.name )
+            self.statusBar().showMessage("Connected to phone %s"%self.phoneCommunicator.device.name )
         else:
             self.statusBar().showMessage("No phone connected")
 
 
     def updatePowerInformation(self):
-        battPercent, battFlag, aclineStat = self.phoneCommunicator.getPowerStatus()
-        
         if self.phoneCommunicator.phoneConnected:
+            battPercent, battFlag, aclineStat = self.phoneCommunicator.getPowerStatus()
             self.batteryStatus.setValue( battPercent )
         else:
             self.batteryStatus.setValue( 0 ) 
 
-        self.updateStatusBar() 
 
     @pyqtSignature("")
-    def on_pushButton_Install_clicked(self):
-        self.rapi_session.checkConnection()
+    def on_pushButton_InstallCAB_clicked(self):
+        #self.rapi_session.checkConnection()
+        self.installWindow.show()
 
         
     @pyqtSignature("")
@@ -83,33 +150,8 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
         if reply == QMessageBox.Yes:
 
-            print "Going to uninstall:",programName
-            doc = libxml2.newDoc("1.0")
-            doc_node = doc.newChild(None,"wap-provisioningdoc",None)
-            parent=doc_node
-
-            node = parent.newChild(None,"characteristic",None)
-            node.setProp("type", "UnInstall") ; 
-
-            parent = node ; 
-            node = parent.newChild(None,"characteristic",None)
-            node.setProp("type", unicode(programName)) ; 
-
-            parent = node ;
-            node = parent.newChild(None,"parm",None)
-            node.setProp("name", "uninstall") ; 
-            node.setProp("value", "1") ; 
-
-            print "_config_query: CeProcessConfig request is \n", doc_node.serialize("utf-8",1)
-            reply = self.phoneCommunicator.rapi_session.process_config(doc_node.serialize("utf-8",0), 1)
-            reply_doc = libxml2.parseDoc(reply)
-
-            print "_config_query: CeProcessConfig response is \n", reply_doc.serialize("utf-8",1)
-
-            reply_node = xml2util.GetNodeOnLevel(reply_doc, 2 )
-
-
-
+            #print "Going to uninstall:",programName
+            self.phoneCommunicator.uninstallProgram(programName)
 
             self.updateInstalledProgramsList()
 
@@ -124,10 +166,10 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
     def updateInstalledProgramsList(self):
         self.listInstalledPrograms.clear()
-        programs = self.phoneCommunicator.getListInstalledPrograms()
-        for program in programs:
-            self.listInstalledPrograms.addItem( program ) 
-        self.updateStatusBar() 
+        if self.phoneCommunicator.phoneConnected:
+            programs = self.phoneCommunicator.getListInstalledPrograms()
+            for program in programs:
+                self.listInstalledPrograms.addItem( program ) 
 
 
 
