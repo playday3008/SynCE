@@ -33,11 +33,8 @@ BOOL _CeCreateProcess2(/*{{{*/
     rapi_buffer_write_uint32(context->send_buffer, 0);
     /*    rapi_buffer_write_optional_out(context->send_buffer, lpProcessInformation, sizeof(PROCESS_INFORMATION)); */
 
-	rapi_buffer_debug_dump_buffer("sending", context->send_buffer) ;
     if ( !rapi2_context_call(context) )
         goto exit;
-	
-	rapi_buffer_debug_dump_buffer("received", context->recv_buffer) ;
 	
     rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
     synce_trace("last_error = %i", context->last_error);
