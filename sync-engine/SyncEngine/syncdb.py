@@ -234,7 +234,7 @@ class ItemDB:
 		if len(self.localchanges) <= max:
 			changeset = self.localchanges.items()
 		else:
-			changeset = changeset.items()[:max]
+			changeset = self.localchanges.items()[:max]
 			
         	return changeset
 

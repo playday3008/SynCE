@@ -689,7 +689,7 @@ class SyncEngine(dbus.service.Object):
 		id=self.PshipManager.CreateNewPartnership(name, sync_items).info.id
 
 		if start:
-			self.sessions_start()
+			self.StartSessions()
 		
 		return id
 	

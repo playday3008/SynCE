@@ -661,5 +661,10 @@ Made the d-bus main loop in sync-engine thread safe. This should mop up
 the odd random segfault.
 
 
+31/12/2007 - 120100 Dr J A Gow
+------------------------------
+
+Applied small patch by Scott Bronson to fix a couple of typos in the code.
+
 
 
