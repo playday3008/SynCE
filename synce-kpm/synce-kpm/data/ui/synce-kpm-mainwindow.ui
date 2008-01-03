@@ -1,5 +1,5 @@
 <ui version="4.0" >
- <class>mainWindow</class>
+ <class>synce_kpm_mainwindow</class>
  <widget class="QWidget" name="synce_kpm_mainwindow" >
   <property name="geometry" >
    <rect>
@@ -61,11 +61,14 @@
     </property>
     <property name="font" >
      <font>
-      <family>Penguin Attack</family>
+      <pointsize>9</pointsize>
      </font>
     </property>
     <property name="value" >
      <number>0</number>
+    </property>
+    <property name="invertedAppearance" >
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label_devicename" >
@@ -75,6 +78,19 @@
       <y>20</y>
       <width>44</width>
       <height>14</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelDeviceName" >
+    <property name="geometry" >
+     <rect>
+      <x>100</x>
+      <y>20</y>
+      <width>71</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text" >

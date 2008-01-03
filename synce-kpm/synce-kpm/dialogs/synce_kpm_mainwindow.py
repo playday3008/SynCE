@@ -35,8 +35,17 @@ from util.commutil import *
 import dialogs.ui_synce_kpm_mainwindow
 import dialogs.synce_kpm_installwindow
 
+class PhoneCommunicatorCallbackEvent(QEvent):
+    def __init__(self, _reason=-1):
+        self.reason = _reason
+        QEvent.__init__(self, QEvent.User)
 
-class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui_mainWindow):
+    def type(self):
+        print "called"
+        return QEvent.User
+
+
+class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui_synce_kpm_mainwindow):
     def __init__(self, *args):
         QtGui.QWidget.__init__(self, *args)
         self.setupUi(self)
@@ -63,6 +72,9 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         self.installWindow = dialogs.synce_kpm_installwindow.synce_kpm_installwindow( self.phoneCommunicator )
 
         self.updateView() 
+
+
+
     """
     @pyqtSignature("")
     def hideEvent(self,event):
@@ -82,29 +94,67 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         else:
             self.tray.setIcon(self.iconDisconnected)
 
+    def updateDeviceStatus(self):
+        #print "updateStatus()"
+        if self.phoneCommunicator.phoneConnected:
+            self.labelDeviceName.setText(self.phoneCommunicator.device.name)
+        else:
+            self.labelDeviceName.setText("")
+
+
 
     #Use the param later to distinguish what the reason was
     #for the model update 
-    def updateView(self,reason=None):
-
-        if reason == ACTION_PHONE_DISCONNECTED:
+    def updateView(self,reason=-1):
+        callbackEvent = PhoneCommunicatorCallbackEvent(reason)
+        QCoreApplication.postEvent(self, callbackEvent)
+         
+    @pyqtSignature("")
+    def customEvent(self,event):
+        if event.reason == ACTION_PHONE_DISCONNECTED:
             if self.installWindow.isVisible:
                 self.installWindow.hide()
             self.tabWidget.setEnabled(False)
-            self.tray.showMessage("Phone Disconnected", "Just disconnected the phone")
+            self.updateTray()
+            self.tray.showMessage("Phone Disconnected", "The phone %s just disconnected"%self.phoneCommunicator.savedDevice.name)
+            self.updateStatusBar()
+            self.updatePowerInformation()
+            self.updateInstalledProgramsList()
+            self.updateDeviceStatus()
+            return
 
 
-        if reason == ACTION_PHONE_CONNECTED:
+        if event.reason == ACTION_PHONE_CONNECTED:
             self.tabWidget.setEnabled(True)
+            self.updateTray()
             self.tray.showMessage("Phone Connected", "The phone %s just connected"%self.phoneCommunicator.device.name)
+            self.updateStatusBar()
+            self.updateDeviceStatus()
+            return
 
 
-        #And do a round of updating of all other widgets..
-        self.updateStatusBar()
-        self.updatePowerInformation() 
-        self.updateInstalledProgramsList() 
-        self.updateTray()
+        if event.reason == ACTION_POWERSTATUS_CHANGED:
+            self.updatePowerInformation()
+            return
         
+        if event.reason == ACTION_STORAGE_CHANGED:
+            print "Storage chagned..."
+            return
+
+        if event.reason == ACTION_INSTALLED_PROGRAMS_CHANGED:
+            self.updateInstalledProgramsList()
+            return
+
+        #if we got here, it is just the initial update
+        #If we update everyhing, they will automatically become disabled 
+        #when needed
+        self.updateInstalledProgramsList()
+        self.updatePowerInformation()
+        self.updateStatusBar()
+        self.tabWidget.setEnabled(self.phoneCommunicator.phoneConnected)
+        self.updateTray()
+        self.updateDeviceStatus()
+
 
     def updateStatusBar(self):
         if self.phoneCommunicator.phoneConnected:
@@ -114,8 +164,9 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
 
     def updatePowerInformation(self):
-        if self.phoneCommunicator.phoneConnected:
-            battPercent, battFlag, aclineStat = self.phoneCommunicator.getPowerStatus()
+        powerStatus = self.phoneCommunicator.getPowerStatus()
+        if powerStatus is not None:
+            battPercent = self.phoneCommunicator.getPowerStatus()["BatteryLifePercent"]
             self.batteryStatus.setValue( battPercent )
         else:
             self.batteryStatus.setValue( 0 ) 
@@ -123,7 +174,6 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
     @pyqtSignature("")
     def on_pushButton_InstallCAB_clicked(self):
-        #self.rapi_session.checkConnection()
         self.installWindow.show()
 
         
@@ -181,6 +231,7 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
     @pyqtSignature("")
     def on_pushButton_Quit_clicked(self):
+        self.phoneCommunicator.stopAllThreads()
         QApplication.quit()
 
 

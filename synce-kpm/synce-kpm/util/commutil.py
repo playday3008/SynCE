@@ -33,18 +33,34 @@ from CeDevice import *
 import dbus
 import dbus.glib
 
+from threading import Thread
+from threading import Timer
+import time
 
-ACTION_PHONE_DISCONNECTED = 0
-ACTION_PHONE_CONNECTED    = 1
-ACTION_BATTERY_CHANGED    = 2
-ACTION_STORAGE_CHANGED    = 3
 
+ACTION_PHONE_DISCONNECTED         = 0
+ACTION_PHONE_CONNECTED            = 1
+ACTION_POWERSTATUS_CHANGED        = 2
+ACTION_STORAGE_CHANGED            = 3
+ACTION_INSTALLED_PROGRAMS_CHANGED = 4
+
+TIMER_INTERVAL = 15 
 
 class PhoneCommunicator(Observable):
     def __init__(self, observer=None):
         super(PhoneCommunicator,self).__init__()
+
         self.phoneConnected = False
         self.rapi_session = None
+
+        self.checkTimer = None
+        self.savedDevice= None
+
+    
+
+        self._listInstalledPrograms = []
+        self.powerStatus = None
+
 
 ##Make the program DBus aware. Furthermore, make sure that the program just 
 ##keeps working whenever odccm is not running
@@ -79,8 +95,9 @@ class PhoneCommunicator(Observable):
                 self.mgr.connect_to_signal("DeviceDisconnected", self.device_disconnected_cb)
 
                 if len(self.mgr.GetConnectedDevices()) > 0:
-                    self.device = CeDevice( self.bus, self.mgr.GetConnectedDevices()[0] )
-                    self.phoneConnected = True
+                    #The device was already connected, this means that we can 
+                    #call the callback function with extra param with value True
+                    self.device_connected_cb( self.mgr.GetConnectedDevices()[0] , True)
             except:
                 print "Odccm seems to be running, but there are problems with connecting to it"
                 raise
@@ -90,6 +107,7 @@ class PhoneCommunicator(Observable):
             print "Waiting for odccm to start"
         else:
             print "Waiting for device to hotplug"
+
 
 
 
@@ -115,58 +133,90 @@ class PhoneCommunicator(Observable):
                     mgr.connect_to_signal("DeviceConnected", self.device_connected_cb)
                     mgr.connect_to_signal("DeviceDisconnected", self.device_disconnected_cb)
 
-                    for obj_path in mgr.GetConnectedDevices():
-                        self._add_device(obj_path, False)
+                    if len(mgr.GetConnectedDevices()) > 0:
+                        #The device was already connected, this means that we can 
+                        #call the callback function with extra param with value True
+                        self.device_connected_cb( self.mgr.GetConnectedDevices()[0] , True)
                     
                     print "Waiting for device to hotplug"
                 except:
                     print "Something went really wrong, odccm came online, but we can't connect..."
                     raise
 
+    def timer_cb(self):
+        #update the battery status
+        #update the list of installed programs
+        self.updateListInstalledPrograms()
+        self.updatePowerStatus()
+        self.checkTimer = Timer(TIMER_INTERVAL, self.timer_cb)
+        self.checkTimer.start()
 
 
 
-    def device_connected_cb(self, obj_path):
+    def device_connected_cb(self, obj_path, alreadyConnected=False):
         self.device = CeDevice( self.bus, obj_path )
-        self.phoneConnected = True
-        self.sendMessage(ACTION_PHONE_CONNECTED)
-
-    def device_disconnected_cb(self, obj_path):
-        self.device = None
-        self.phoneConnected = False
-        self.sendMessage(ACTION_PHONE_DISCONNECTED)
-
-
-    def checkConnection(self):
-        before = self.phoneConnected
+        self.savedDevice = CeDevice( self.bus, obj_path ) 
         try:
             self.rapi_session = RAPISession(0)
             self.phoneConnected = True
         except:
 			self.phoneConnected = False
+        
+        if self.phoneConnected:
+            if not alreadyConnected:
+                self.sendMessage(ACTION_PHONE_CONNECTED)
+            
+            self.checkTimer = Timer(0.1, self.timer_cb)
+            self.checkTimer.start()
+            print "Just started timer"
 
-    def installProgram(self, localFilenameAndPath, copyToDirectory, deleteCab):
+    def device_disconnected_cb(self, obj_path):
+        self.device = None
+        self.phoneConnected = False
+        self.powerStatus = None
+        self.sendMessage(ACTION_PHONE_DISCONNECTED)
+        #self.checkerThread = None
+        if self.checkTimer is not None:
+            self.checkTimer.cancel()
+            self.checkTimer = None
+            print "Just canceled timer"
+
+
+    #This function might be used to make a threaded version of the copier in future
+    def installProgram(self, localFilenameAndPath, copyToDirectory, deleteCab, progressCallback=None):
+        self._installProgram(localFilenameAndPath, copyToDirectory, deleteCab, progressCallback)
+
+
+    def _installProgram(self, localFilenameAndPath, copyToDirectory, deleteCab, progressCallback=None):
         fileName = os.path.basename (localFilenameAndPath)
+        fileSize = os.stat( localFilenameAndPath ).st_size
+        
+        RAPI_BUFFER_SIZE = 65535
+
         fileHandle = self.rapi_session.createFile("%s%s"%(copyToDirectory,fileName), GENERIC_WRITE , 0, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL )
         if fileHandle != 0xffffffff:
             print "Copying file to device"
+
+
             fileObject = open(localFilenameAndPath,"rb")
-            read_buffer = fileObject.read(65535)
+            read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
+
+            bytesWritten = 0 
+
+            if progressCallback is not None:
+                progressCallback( (100 * bytesWritten)/fileSize )
+
             while len(read_buffer) > 0:
                 self.rapi_session.writeFile( fileHandle, read_buffer, len(read_buffer) )
-                read_buffer = fileObject.read(65535)
+                bytesWritten += len(read_buffer) 
+                if progressCallback is not None:
+                    progressCallback( (100 * bytesWritten)/fileSize )
+
+                read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
 
             print "Closing filehandle..."
             returnValue = self.rapi_session.closeHandle(fileHandle)
             fileObject.close()
-
-#            applicationName = "wceload.exe"
-#            applicationParms = "%s%s"%(copyToDirectory,programName)
-#            if not deleteCab:
-#                applicationParms += " /nodelete"
-#            
-#            print "%s %s"%(applicationName,applicationParms)
-#            print "Programname: %s"%programNameAndPath
 
             applicationName = "wceload.exe"
             applicationParms = "%s%s"%(copyToDirectory,fileName)
@@ -201,31 +251,51 @@ class PhoneCommunicator(Observable):
 
 
     
+    
 
     def getPowerStatus(self):
-        self.checkConnection() 
+        return self.powerStatus
 
+
+    def updatePowerStatus(self):
+        oldPowerStatus = self.powerStatus
         if self.phoneConnected:
-            powerStatus = self.rapi_session.getSystemPowerStatus(True)
-            return ( powerStatus["BatteryLifePercent"], powerStatus["BatteryFlag"] , powerStatus["ACLineStatus"] )
+            self.powerStatus = self.rapi_session.getSystemPowerStatus(True)
+        else:
+            self.powerStatus = None
 
-        return (0,0,0)
-        
+        if oldPowerStatus != self.powerStatus:
+            self.sendMessage( ACTION_POWERSTATUS_CHANGED )
 
 
 
+
+
+    def stopAllThreads(self):
+        if self.checkTimer is not None:
+            if self.checkTimer.isAlive:
+                self.checkTimer.cancel()
+                self.checkTimer = None
+    
+    
     def getListInstalledPrograms(self):
-        result = []
+        return self._listInstalledPrograms
+
+    def updateListInstalledPrograms(self):
+        old_listInstalledPrograms = self._listInstalledPrograms
+
+        self._listInstalledPrograms = []
         #if no phone is connected, try to build up connection
-        self.checkConnection()
 
 		#if we have connection, use it :)
         if self.phoneConnected:
             try:
                 for program in config_query_get(self.rapi_session, None ,   "UnInstall").children.values():
-                    result.append( program.type )
-                    #print "",program.type
+                    self._listInstalledPrograms.append( program.type )
             except:
                 self.phoneConnected = False
+        if old_listInstalledPrograms != self._listInstalledPrograms:
+            self.sendMessage( ACTION_INSTALLED_PROGRAMS_CHANGED )
         
-        return result	
+
+

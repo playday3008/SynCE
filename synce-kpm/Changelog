@@ -1,3 +1,13 @@
+2008-01-03	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Implemented a Periodic Timer, that will keep updating the
+	  PhoneCommunicator object and notify any observers in case
+	  something gets updated in the model
+	* Implemented customEvent for updating the GUI outside of the
+	  GUI thread.
+	* Implemented initial progress report on copying CAB file to
+	  device (console based for now)
+
 2007-12-30	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Implemented use of tray icon. Currently only showing connection

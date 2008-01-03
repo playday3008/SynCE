@@ -87,10 +87,13 @@ class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.
     def on_cancelButton_clicked(self):
         self.hide()
 
+    def copy_progress_cb( self, progress ):
+        print "%i percent"%progress
+    
     @pyqtSignature("")
     def on_okButton_clicked(self):
         #Install the file through rapiutil
 
-        self.phoneCommunicator.installProgram( unicode(self.localCabFile.text()), self.deviceListRoot[self.deviceList.currentIndex()], self.deleteCAB.isChecked() )
+        self.phoneCommunicator.installProgram( unicode(self.localCabFile.text()), self.deviceListRoot[self.deviceList.currentIndex()], self.deleteCAB.isChecked() , self.copy_progress_cb )
         self.hide()
 
