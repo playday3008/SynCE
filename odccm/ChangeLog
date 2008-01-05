@@ -1,3 +1,8 @@
+2008-01-05  Guido Diepen <guido@guidodiepen.nl>
+
+	* Added support for locked WM6 devices. Odccm initiates unlock procedure
+	  upon connection of device.
+
 2007-11-29  Mark Ellis <mark@mpellis.org.uk>
 
 	* build legacy support by default

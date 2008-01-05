@@ -553,30 +553,71 @@ conn_event_cb_impl (GConn *conn,
     }
   else if (priv->state == CTRL_STATE_AUTH)
     {
-      if (event->type == GNET_CONN_READ)
+      if (priv->pw_key != 0xffffffff)
+        //If we are not dealing with wm6 devices, take the old route
         {
-          guint16 result;
-
-          if (event->length != sizeof (guint16))
+          if (event->type == GNET_CONN_READ)
             {
-              g_warning ("%s: event->length != 2", G_STRFUNC);
-              return;
+              guint16 result;
+
+              if (event->length != sizeof (guint16))
+                {
+                  g_warning ("%s: event->length != 2", G_STRFUNC);
+                  return;
+                }
+
+              result = GUINT16_FROM_LE (*((guint16 *) event->buffer));
+
+              if (result != 0)
+                {
+                  priv->state = CTRL_STATE_CONNECTED;
+                }
+              else
+                {
+                  change_password_flags (self, ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+                }
+
+              dbus_g_method_return (priv->pw_ctx, result != 0);
+              priv->pw_ctx = NULL;
             }
-
-          result = GUINT16_FROM_LE (*((guint16 *) event->buffer));
-
-          if (result != 0)
+        }
+      else
+        {
+          if (event->type == GNET_CONN_READ)
             {
-              priv->state = CTRL_STATE_CONNECTED;
-            }
-          else
-            {
-              change_password_flags (self, ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE,
-                                     0);
-            }
+              guint32 result;
+              result = GUINT32_FROM_LE (*((guint32 *) event->buffer));
+              if (result == 0)
+                {
+                  g_debug("Phone succesfully unlocked") ;
+                  priv->state = CTRL_STATE_CONNECTED;
 
-          dbus_g_method_return (priv->pw_ctx, result != 0);
-          priv->pw_ctx = NULL;
+                  guint32 extraDataForPhone ; 
+
+
+                  //This response looks like a confirmation that needs to
+                  //be sent to the phone
+                  extraDataForPhone = 0 ;
+
+                  extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
+                  gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone, 
+                                                sizeof (extraDataForPhone));
+
+                  //I don't know what this response is for. Wiredumps showed
+                  //ActiveSync sending this also. If you don't send this value
+                  //you can briefly start a rapi session, and after short 
+                  //period of time the odccm process starts using 100% CPU.
+                  extraDataForPhone = 0xc ;
+                  extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
+                  gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone, 
+                                                sizeof (extraDataForPhone));
+
+                }
+              else
+                {
+                  g_warning("Don't understand the client response after unlocking device!") ;
+                }
+            }
         }
     }
 }
@@ -750,13 +791,23 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
         {
           priv->state = CTRL_STATE_AUTH;
           change_password_flags (self, ODCCM_DEVICE_PASSWORD_FLAG_SET |
-                                 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+              ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
         }
       else
         {
           /* TODO: extend the API to handle this (introduced by WM6) */
           g_warning ("%s: device is locked, please unlock it", G_STRFUNC);
-          priv->state = CTRL_STATE_CONNECTED;
+          priv->state = CTRL_STATE_AUTH ;
+
+          guint32 requestShowUnlockScreen ; 
+
+          requestShowUnlockScreen = 8 ;
+
+          requestShowUnlockScreen = GUINT32_TO_LE(requestShowUnlockScreen) ;
+
+          gnet_conn_write (priv->conn, (gchar *) &requestShowUnlockScreen, 
+                                        sizeof (requestShowUnlockScreen));
+          gnet_conn_readn (priv->conn, sizeof (guint32));
         }
     }
   else
