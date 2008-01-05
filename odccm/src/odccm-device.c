@@ -592,9 +592,11 @@ conn_event_cb_impl (GConn *conn,
                   g_debug("Phone succesfully unlocked") ;
                   priv->state = CTRL_STATE_CONNECTED;
 
+                  /* Remove the ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE bit from the flags */ 
+                  change_password_flags (self, 0,  ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE);
+
+                  
                   guint32 extraDataForPhone ; 
-
-
                   /*
                    * This response looks like a confirmation that needs to
                    * be sent to the phone
@@ -802,7 +804,7 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
           /* TODO: extend the API to handle this (introduced by WM6) */
           g_warning ("%s: device is locked, please unlock it", G_STRFUNC);
           priv->state = CTRL_STATE_AUTH ;
-
+          
           guint32 requestShowUnlockScreen ; 
 
           requestShowUnlockScreen = 8 ;
@@ -812,6 +814,13 @@ device_info_received (OdccmDevice *self, const guchar *buf, gint length)
           gnet_conn_write (priv->conn, (gchar *) &requestShowUnlockScreen, 
                                         sizeof (requestShowUnlockScreen));
           gnet_conn_readn (priv->conn, sizeof (guint32));
+
+          /* 
+           * The flag should be that the password is set AND that the device
+           * is waiting to be unlocked, on the device itself
+           */
+          change_password_flags (self, ODCCM_DEVICE_PASSWORD_FLAG_SET |
+                                       ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE, 0);
         }
     }
   else

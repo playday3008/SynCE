@@ -2,6 +2,9 @@
 
 	* Added support for locked WM6 devices. Odccm initiates unlock procedure
 	  upon connection of device.
+	* Added the needed flags for handling the unlock procedure introduced
+	  with WM6 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE.
+	  Client programs will get trigger if device is unlocked by user
 
 2007-11-29  Mark Ellis <mark@mpellis.org.uk>
 
