@@ -554,7 +554,7 @@ conn_event_cb_impl (GConn *conn,
   else if (priv->state == CTRL_STATE_AUTH)
     {
       if (priv->pw_key != 0xffffffff)
-        //If we are not dealing with wm6 devices, take the old route
+        /* If we are not dealing with wm6 devices, take the old route */
         {
           if (event->type == GNET_CONN_READ)
             {
@@ -595,18 +595,22 @@ conn_event_cb_impl (GConn *conn,
                   guint32 extraDataForPhone ; 
 
 
-                  //This response looks like a confirmation that needs to
-                  //be sent to the phone
+                  /*
+                   * This response looks like a confirmation that needs to
+                   * be sent to the phone
+                   */
                   extraDataForPhone = 0 ;
 
                   extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
                   gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone, 
                                                 sizeof (extraDataForPhone));
 
-                  //I don't know what this response is for. Wiredumps showed
-                  //ActiveSync sending this also. If you don't send this value
-                  //you can briefly start a rapi session, and after short 
-                  //period of time the odccm process starts using 100% CPU.
+                  /*
+                   * I don't know what this response is for. Wiredumps showed
+                   * ActiveSync sending this also. If you don't send this value
+                   * you can briefly start a rapi session, and after short 
+                   * period of time the odccm process starts using 100% CPU.
+                   */
                   extraDataForPhone = 0xc ;
                   extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
                   gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone, 
