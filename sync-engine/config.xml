@@ -1,89 +1,152 @@
 <?xml version="1.0" ?>
 <syncengine-config>
+	<!--
+		Global
+		General SyncEngine configuration.
+	-->
 	<Global>
 		<!--
-		    SlowSyncDisable, when set to 1, will bypass the slow sync
-		    database and allow only normal syncing with the handheld. 
-		    Useful only really for debugging - when using sync-engine
-		    in anger this should always be set to 0
-		    
+			SlowSyncDisable
+			When set to 1, will bypass the slow sync database and allow
+			only normal syncing with the handheld. Useful only really for
+			debugging - when using sync-engine in anger this should always
+			be set to 0.
 		-->
-		
 		<SlowSyncDisable>0</SlowSyncDisable>
 		
 		<!-- 
-		     AuthMethod can be one of the following:
-		         INTERNAL_GUI uses internal GUI auth prog
-			 INTERNAL_CLI uses internal console auth prog
-			 [pathname_to_prog] uses external auth prog
+			AuthMethod
+			This can be one of the following:
+				- INTERNAL_GUI uses internal GUI auth prog
+				- INTERNAL_CLI uses internal console auth prog
+				- [pathname_to_prog] uses external auth prog
+
+			Note: INTERNAL_GUI uses GTK to display the box.
 			 
-			 Note: INTERNAL_GUI uses GTK to display the box.
-			 
-			       INTERNAL_CLI uses the console and will work on systems
-			       without GTK
+			INTERNAL_CLI uses the console and will work on systems
+			without GTK
 			       
-			       If this element is not specified, the default will be
-			       INTERNAL_CLI
+			If this element is not specified, the default will be
+			INTERNAL_CLI
 	        -->
-		
 		<AuthMethod>INTERNAL_GUI</AuthMethod>
 		
 		<!--
-		    Subject to the following conditions, AppendDefaultTimezone set
-		    to 1 will ensure that the default timezone specifier is always
-		    exported to the host, if:
-		
-		    	- /etc/timezone exists
-			- the device does not send a timezone specifier with the event
-			
-		    Setting it to zero disables this completely.
+			AppendDefaultTimezone
+			When this is 1, SyncEngine will ensure that the default timezone
+			specifier is always exported to the host, if:
+				- /etc/timezone exists
+				- the device does not send a timezone specifier with the event
+
+			Setting it to zero disables this completely.
 		    
-		    NOT FULLY IMPLEMENTED YET
+			NOT FULLY IMPLEMENTED YET
 		-->
-		
 		<AppendDefaultTimezone>0</AppendDefaultTimezone>
 		
 		<!--
-		    Specifies the type of format conversion to use on the data from
-		    the handheld.
+			OpensyncXMLFormat specifies the type of format conversion to use 
+			on the data from the handheld. It is one of the following:
 		    
-		        - NONE performs no format conversion and exports the data
-			  in AirSync/XML (Use this for debugging or with the
-			  OpenSync AirSync format plugin only)
-			
-			- OS30 uses OpenSync 0.3x XML schemas. Set this if you are
-			  using OpenSync 0.3x or later with opensync-plugin-0.30later.py
-			  
-			- OS20 (default) uses the pre-0.3x schemas. Set this if using a
-			  version of OpenSync that is pre-0.3x. This mode is likely to
-			  be deprecated and subsequently removed once OpenSync 0.3
-			  formats go mainstream at which point OS30 will become the
-			  default
-			  
+				- NONE performs no format conversion and exports the data
+				in AirSync/XML (Use this for debugging or with the
+				OpenSync AirSync format plugin only)
+
+				- OS30 uses OpenSync 0.3x XML schemas. Set this if you are
+				using OpenSync 0.3x or later with opensync-plugin-0.30later.py
+
+				- OS20 (default) uses the pre-0.3x schemas. Set this if using a
+				version of OpenSync that is pre-0.3x. This mode is likely to
+				be deprecated and subsequently removed once OpenSync 0.3
+				formats go mainstream at which point OS30 will become the
+				default	  
 		-->
-		
 		<OpensyncXMLFormat>OS20</OpensyncXMLFormat>
 		
 		<!--
-		    If set to 1 will automatically flush the item database and mapping
-		    tables from memory between syncs. Otherwise will rely on a call 
-		    from the plugin to do it.
-		    
-		    Default is enabled
+			FlushIDB
+			If set to 1 will automatically flush the item database and mapping tables
+			from memory between syncs. Otherwise will rely on a call from the plugin
+			to do it.
+
+			Default is enabled
 		-->
-		
 		<FlushIDB>1</FlushIDB>
-		
+
 	</Global>
+
+	<!--
+		Autosync
+		Control device-triggered synchronization.
+	-->
 	<Autosync>
+		<!--
+			AutoSyncCommand
+			The command run by SyncEngine in response to a device-triggered
+			synchronization. It can be set to any executable program specified
+			by the user. The default, in the absence of this element, is an
+			empty path - nothing is run.
+		-->
 		<AutoSyncCommand>xterm -e msynctool --sync wm5sync</AutoSyncCommand>
+
+		<!--
+			Disable
+			Enable or disables device-triggered synchronization. When this is '1',
+			device-triggered synchronizations will have no effect and AutoSyncCommand
+			will be ignored. If set to '0' and AutoSyncCommand contains a valid path,
+			then hte executable specified in AutoSyncCommand will be run when the handheld
+			triggers an automatic synchronization.
+		-->
 		<Disable>1</Disable>
+
 	</Autosync>
+
+	<!--
+		FileSync
+		This controls file synchronization. Note that file synchronization is independent from
+		PIM data synchronization, and is entirely within SyncEngine (does not use OpenSync).
+	-->
 	<FileSync>
+		<!--
+			LocalFilePath
+			The path to the directory on the desktop that will mirror the handheld.
+			This should point to a valid path to a directory. When first creating the
+			partnership, ensure this directory is empty.
+		-->
 		<LocalFilePath>/nfshomes/jgow/PDAFiles</LocalFilePath>
+
+		<!--
+			Disable
+			Enables or disables file synchronization. Can be '1' or '0', default is '1'.
+			'1' disables file synchronization. '0' enables file synchronization.
+		-->
 		<Disable>0</Disable>
+
+		<!--
+			LocalUpdateFreq
+			Additional delay in approximate seconds between local directory scans.
+			Actual delay is LocalUpdateFreq+10. The default is '10' and should not
+			need to be reduced below this figure.
+			Increasing it will increase the delay between local files being written and
+			them being reflected on the handheld.
+		-->
 		<LocalUpdateFreq>10</LocalUpdateFreq>
+
+		<!--
+			ExtraDeleteDelay
+			Controls the delay between a local object being scheduled for deletion and
+			the delete occurring. Default is '0' and it should not be necessary to change
+			this value unless you have a slow handheld.
+		-->
 		<ExtraDeleteDelay>0</ExtraDeleteDelay>
+
+		<!--
+			ObjectReportTimeout
+			Controls the amount of time we wait for the device to make its initial object
+			list report. Default is '8' and it should not be necessary to change this value
+			unless you have a slow handheld. OK to increase this, but should not be decreased.
+		-->
 		<ObjectReportTimeout>8</ObjectReportTimeout>
+
 	</FileSync>
 </syncengine-config>
