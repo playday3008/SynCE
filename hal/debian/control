@@ -1,0 +1,16 @@
+Source: synce-hal
+Section: utils
+Priority: optional
+Maintainer: Mark Ellis <mark@mpellis.org.uk>
+Build-Depends: cdbs, debhelper (>= 5), autotools-dev, pkg-config (>= 0.21), libsynce0-dev (>= 0.10.0), libglib2.0-dev, libgnet2.0-dev, libdbus-glib-1-dev, libhal-dev
+Standards-Version: 3.7.2
+
+Package: synce-hal
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Maintain a connection to Windows Mobile devices
+ A dccm-implementation for Windows Mobile devices with HAL
+ integration. It responds to keep alives and provides other
+ members of the SynCE suite of tools with access to the device.
+ .
+  Homepage: http://www.synce.org/

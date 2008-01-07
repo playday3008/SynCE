@@ -1,0 +1,129 @@
+#!/bin/sh
+
+
+DEVICE_FILE=${HAL_PROP_LINUX_DEVICE_FILE}
+
+THIS=`basename $0`
+
+# logging functions
+#
+LOGGER="logger -t ${THIS}[$$]"
+#FACILITY=daemon
+FACILITY=local5
+ERROR="${LOGGER} -p ${FACILITY}.err"
+WARNING="${LOGGER} -p ${FACILITY}.warning"
+NOTICE="${LOGGER} -p ${FACILITY}.notice"
+INFO="${LOGGER} -p ${FACILITY}.info"
+DEBUG="${LOGGER} -p ${FACILITY}.debug"
+
+# ppp setup
+#
+PPP_OPTIONS=/etc/ppp/options
+PPP_PEERS=/etc/ppp/peers
+PPPD=/usr/sbin/pppd
+VAR_PPP=/var/run
+
+DEVICE_PREFIX=synce-device
+PEER=$DEVICE_PREFIX
+PEER_FILE=${PPP_PEERS}/${PEER}
+COMMAND="${PPPD} call ${PEER}"
+
+# see the "linkname" option in the man page for pppd
+PID_FILE=/var/run/ppp-$PEER.pid
+
+pppopts="nodefaultroute noauth local crtscts"
+if [ -t 1 ]; then
+  pppopts="$pppopts updetach"
+fi
+
+# include alternate settings file if it exists
+if [ -e "@ETC_SYNCE@/synce-serial.conf" ]; then
+	. @ETC_SYNCE@/synce-serial.conf
+fi
+
+DEFAULT_NETWORK=${DEFAULT_NETWORK:-"192.168.131"}
+DEFAULT_LOCAL_IP=$DEFAULT_NETWORK.102
+DEFAULT_REMOTE_IP=$DEFAULT_NETWORK.201
+DEFAULT_IPS=$DEFAULT_LOCAL_IP:$DEFAULT_REMOTE_IP
+
+
+if [ -c ${DEVICE_FILE} ]; then
+  SYNCE_DEV=${DEVICE_FILE};
+else 
+  ${ERROR} "${THIS}: unable to find a character device named \"$1\""
+  exit 1
+fi
+
+SYNCE_DEVNUM="`echo "$SYNCE_DEV" |sed -e 's/^[^0-9]*\([0-9]*\)$/\1/'`"
+if [ -z "$SYNCE_DEVNUM" ]; then
+  SYNCE_DEVNUM=0
+fi
+
+# Add 120 for /dev/ttyS*, to support both standard serial
+# and USB
+if echo "$SYNCE_DEV" |grep ttyS >/dev/null 2>&1; then
+  SYNCE_DEVNUM="`expr $SYNCE_DEVNUM + 120`"
+fi
+
+SYNCE_DEVNAME="$DEVICE_PREFIX$SYNCE_DEVNUM" 
+
+SYNCE_LOCALIP="$DEFAULT_NETWORK.`expr 1 + $SYNCE_DEVNUM`"
+SYNCE_REMOTEIP="$DEFAULT_NETWORK.`expr 129 + $SYNCE_DEVNUM`"
+SYNCE_IPADDR="$SYNCE_LOCALIP:$SYNCE_REMOTEIP"
+SYNCE_DNS="$SYNCE_LOCALIP"
+
+
+synce_serial_start_device()
+{
+  # Shut off the connection in case it's running.
+  synce-serial-abort-device >/dev/null 2>&1
+
+  ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@SYNCE_SERIAL_CHAT@} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
+
+  # Now bring up the connection
+  ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@SYNCE_SERIAL_CHAT@} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
+
+  if [ "$?" != "0" ]; then
+    ${ERROR} "Failed to initialize ppp connection"
+  fi
+}
+
+synce_serial_abort_device()
+{
+  PIDFILE="$VAR_PPP/ppp-$SYNCE_DEVNAME.pid"
+
+  if ! [ -f "$PIDFILE" ]; then
+    ${WARNING} "${THIS}: unable find a running SynCE connection. Will do nothing."
+    exit 1
+  fi
+
+
+  while [ -f "$PIDFILE" ]; do
+    PID="`head -1 $VAR_PPP/ppp-$SYNCE_DEVNAME.pid`"
+
+    if [ -z "${PID}" ]; then
+      ${ERROR} "${THIS}: found invalid PID in ppp-$SYNCE_DEVNAME; giving up."
+      exit 1
+    fi
+
+    ${INFO} "${THIS}: Killing process with PID ${PID}"
+
+    if kill ${PID}; then
+      ${INFO} "${THIS}: requested shutdown of $SYNCE_DEVNAME."
+    else
+      ${ERROR} "${THIS}: unable stop the SynCE connection with PID ${PID}."
+      exit 1
+    fi
+    sleep 3
+  done
+}
+
+
+if [ ${HALD_ACTION} == "add" ]; then
+    synce_serial_start_device
+    hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
+fi
+
+if [ ${HALD_ACTION} == "remove" ]; then
+    synce_serial_abort_device
+fi

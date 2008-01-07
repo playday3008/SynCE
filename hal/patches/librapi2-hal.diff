@@ -1,0 +1,32 @@
+diff -Nur librapi2-0.10.0.svn20071219.orig/ChangeLog librapi2-0.10.0.svn20071219/ChangeLog
+--- librapi2-0.10.0.svn20071219.orig/ChangeLog	2007-12-18 20:31:58.000000000 +0000
++++ librapi2-0.10.0.svn20071219/ChangeLog	2008-01-01 13:02:45.000000000 +0000
+@@ -1,3 +1,7 @@
++2008-01-01  Mark Ellis  <mark@mpellis.org.uk>
++
++	* added hal support to rapi_context
++	
+ 2007-12-18  Guido Diepen  <guido@jcwodan.nl>
+ 
+ 	* added python binding for CeGetSystemPowerStatus
+diff -Nur librapi2-0.10.0.svn20071219.orig/src/support/rapi_context.c librapi2-0.10.0.svn20071219/src/support/rapi_context.c
+--- librapi2-0.10.0.svn20071219.orig/src/support/rapi_context.c	2007-07-06 15:46:00.000000000 +0100
++++ librapi2-0.10.0.svn20071219/src/support/rapi_context.c	2008-01-01 13:00:08.000000000 +0000
+@@ -101,7 +101,7 @@
+ 		goto fail;
+ 	}
+ 
+-    if (info->transport == NULL || strcmp(info->transport, "odccm") != 0) {
++    if (info->transport == NULL || ( strcmp(info->transport, "odccm") != 0 && strcmp(info->transport, "hal") != 0 ) ) {
+         if (!info->dccm_pid)
+         {
+             synce_error("DCCM PID entry not found for current connection");
+@@ -158,7 +158,7 @@
+         }
+         context->rapi_ops = &rapi_ops;
+     } else {
+-        if (strcmp(info->transport, "odccm") == 0) {
++        if (strcmp(info->transport, "odccm") == 0 || strcmp(info->transport, "hal") == 0) {
+             synce_socket_take_descriptor(context->socket, info->fd);
+         }
+         else if ( !synce_socket_connect_proxy(context->socket, info->ip) )

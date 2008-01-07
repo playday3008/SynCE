@@ -1,0 +1,11 @@
+#!/bin/sh
+
+IFACE = ${HAL_PROP_NET_INTERFACE}
+DEVICE_IP = 169.254.2.1
+LOCAL_IP = 169.254.2.2
+NETMASK = 255.255.255.0
+BROADCAST = 169.254.2.255
+
+ifconfig ${IFACE} ${LOCAL_IP} netmask ${NETMASK} broadcast ${BROADCAST}
+
+hal-dccm --rndis --device-ip=${DEVICE_IP}

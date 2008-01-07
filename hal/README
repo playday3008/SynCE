@@ -1,0 +1,16 @@
+synce-hal
+---------
+
+Synce-hal is a connection framework and dccm-implementation 
+for Windows Mobile devices that integrates with HAL.
+
+Please visit the SynCE website for more information:
+
+  http://www.synce.org/
+
+
+***** THIS IS ALPHA SOFTWARE *****
+
+If you want to access your device with the synce tools, you
+will need to patch libsynce and librapi2 with the files in
+the patches directory.

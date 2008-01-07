@@ -1,0 +1,48 @@
+AC_PREREQ(2.52)
+AC_INIT(synce-hal, @@VERSION@@)
+AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_SRCDIR(src/main.c)
+AM_INIT_AUTOMAKE
+
+AM_MAINTAINER_MODE
+AC_PROG_MAKE_SET
+
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_RANLIB
+
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+
+dnl Check for header files.
+AC_STDC_HEADERS
+
+dnl Check for GLib
+PKG_CHECK_MODULES(SYNCE, [libsynce >= 0.10.0])
+
+dnl Check for GLib
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4])
+
+dnl Check for GNet
+PKG_CHECK_MODULES(GNET, gnet-2.0)
+
+dnl Check for D-Bus
+PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60])
+
+dnl Check for HAL
+PKG_CHECK_MODULES(HAL, hal)
+
+AS_AC_EXPAND(SYNCE_SERIAL_CHAT, "$libexecdir/synce-serial-chat")
+AS_AC_EXPAND(ETC_SYNCE, "$sysconfdir")
+
+AC_CONFIG_FILES([
+        hal/hal-synce-rndis \
+        hal/hal-synce-legacy \
+        etc/synce-serial.conf] )
+
+AC_OUTPUT([
+	Makefile
+	hal/Makefile
+	src/Makefile
+])

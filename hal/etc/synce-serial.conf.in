@@ -1,0 +1,4 @@
+# example config file, copy to @ETC_SYNCE@/synce-serial.conf
+
+# set the network used
+DEFAULT_NETWORK=192.168.131
