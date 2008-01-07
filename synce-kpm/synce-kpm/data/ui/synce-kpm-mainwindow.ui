@@ -18,7 +18,7 @@
      <x>30</x>
      <y>10</y>
      <width>521</width>
-     <height>101</height>
+     <height>51</height>
     </rect>
    </property>
    <property name="title" >
@@ -35,40 +35,6 @@
     </property>
     <property name="text" >
      <string>Device:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2" >
-    <property name="geometry" >
-     <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>71</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text" >
-     <string>Battery status:</string>
-    </property>
-   </widget>
-   <widget class="QProgressBar" name="batteryStatus" >
-    <property name="geometry" >
-     <rect>
-      <x>100</x>
-      <y>40</y>
-      <width>118</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="font" >
-     <font>
-      <pointsize>9</pointsize>
-     </font>
-    </property>
-    <property name="value" >
-     <number>0</number>
-    </property>
-    <property name="invertedAppearance" >
-     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label_devicename" >
@@ -97,6 +63,46 @@
      <string/>
     </property>
    </widget>
+   <widget class="QToolButton" name="toolButtonDeviceIsLocked" >
+    <property name="enabled" >
+     <bool>true</bool>
+    </property>
+    <property name="geometry" >
+     <rect>
+      <x>310</x>
+      <y>20</y>
+      <width>25</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string>...</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelDeviceIsLocked" >
+    <property name="geometry" >
+     <rect>
+      <x>340</x>
+      <y>20</y>
+      <width>171</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="font" >
+     <font>
+      <pointsize>9</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <stylestrategy>PreferDefault</stylestrategy>
+     </font>
+    </property>
+    <property name="text" >
+     <string>Device is locked, please unlock</string>
+    </property>
+    <property name="scaledContents" >
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QPushButton" name="pushButton_Quit" >
    <property name="geometry" >
@@ -112,12 +118,15 @@
    </property>
   </widget>
   <widget class="QTabWidget" name="tabWidget" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="geometry" >
     <rect>
      <x>30</x>
-     <y>120</y>
+     <y>80</y>
      <width>521</width>
-     <height>311</height>
+     <height>351</height>
     </rect>
    </property>
    <property name="currentIndex" >
@@ -127,6 +136,193 @@
     <attribute name="title" >
      <string>System Information</string>
     </attribute>
+    <widget class="QLabel" name="label_3" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Owner:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelDeviceOwner" >
+     <property name="geometry" >
+      <rect>
+       <x>150</x>
+       <y>20</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Model name:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelModelName" >
+     <property name="geometry" >
+      <rect>
+       <x>150</x>
+       <y>50</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7" >
+     <property name="geometry" >
+      <rect>
+       <x>310</x>
+       <y>110</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Total</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelStorageTotal" >
+     <property name="geometry" >
+      <rect>
+       <x>370</x>
+       <y>110</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="storageSelector" >
+     <property name="geometry" >
+      <rect>
+       <x>150</x>
+       <y>110</y>
+       <width>121</width>
+       <height>20</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>110</y>
+       <width>101</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Storage space</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11" >
+     <property name="geometry" >
+      <rect>
+       <x>310</x>
+       <y>140</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Used:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelStorageUsed" >
+     <property name="geometry" >
+      <rect>
+       <x>370</x>
+       <y>140</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_13" >
+     <property name="geometry" >
+      <rect>
+       <x>310</x>
+       <y>170</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Free:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelStorageFree" >
+     <property name="geometry" >
+      <rect>
+       <x>370</x>
+       <y>170</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string/>
+     </property>
+    </widget>
+    <widget class="QProgressBar" name="batteryStatus" >
+     <property name="geometry" >
+      <rect>
+       <x>150</x>
+       <y>80</y>
+       <width>118</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="value" >
+      <number>0</number>
+     </property>
+     <property name="invertedAppearance" >
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Battery status:</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_2" >
     <attribute name="title" >
@@ -136,9 +332,9 @@
      <property name="geometry" >
       <rect>
        <x>10</x>
-       <y>30</y>
+       <y>10</y>
        <width>411</width>
-       <height>211</height>
+       <height>251</height>
       </rect>
      </property>
     </widget>
@@ -146,7 +342,7 @@
      <property name="geometry" >
       <rect>
        <x>430</x>
-       <y>30</y>
+       <y>10</y>
        <width>75</width>
        <height>24</height>
       </rect>
@@ -159,7 +355,7 @@
      <property name="geometry" >
       <rect>
        <x>430</x>
-       <y>60</y>
+       <y>40</y>
        <width>75</width>
        <height>24</height>
       </rect>
@@ -172,7 +368,7 @@
      <property name="geometry" >
       <rect>
        <x>10</x>
-       <y>250</y>
+       <y>270</y>
        <width>75</width>
        <height>24</height>
       </rect>

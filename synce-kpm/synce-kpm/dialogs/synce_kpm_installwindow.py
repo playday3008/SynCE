@@ -49,24 +49,11 @@ class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.
         self.deleteCAB.setChecked(False)
 
         if self.phoneCommunicator.phoneConnected:
-			
-            rapi_session = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
-            
-            #Amount free on mainMemory:
-            freeDisk,totalDisk,freeDiskTotal = rapi_session.getDiskFreeSpaceEx("\\")
-            self.deviceList.addItem("MainMemory [Free: %.2fMB , Total: %.2fMB]" % (freeDisk/(1024.0*1024.0),totalDisk/(1024.0*1024.0)) )
-            self.deviceListRoot.append("\\")
+            for storageItem in self.phoneCommunicator.getStorageInformation():
+                storageName, storageLocation, freeDisk,totalDisk,freeDiskTotal = storageItem
+                self.deviceList.addItem("%s [Free: %.2fMB , Total: %.2fMB]" % (storageName,freeDisk/(1024.0*1024.0),totalDisk/(1024.0*1024.0)) )
+                self.deviceListRoot.append(storageLocation)
 
-            
-
-            myFiles = rapi_session.findAllFiles("\\*.*",FAF_FOLDERS_ONLY|FAF_ATTRIBUTES| FAF_NAME)
-            
-            for folder in myFiles:
-                if folder["Attributes"] & FILE_ATTRIBUTE_TEMPORARY:
-                    freeDisk,totalDisk,freeDiskTotal = rapi_session.getDiskFreeSpaceEx("\\"+folder["Name"]+"\\")
-                    
-                    self.deviceList.addItem("/%s [Free: %.2fMB , Total: %.2fMB]" % (folder["Name"],freeDisk/(1024.0*1024.0),totalDisk/(1024.0*1024.0)) )
-                    self.deviceListRoot.append("\\%s\\"%folder["Name"])
 
     
     
@@ -80,7 +67,6 @@ class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.
             return
         
         self.localCabFile.setText( fname ) 
-        #print "Selected the file %s for opening" % fname
 
 
     @pyqtSignature("")

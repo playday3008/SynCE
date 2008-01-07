@@ -41,7 +41,6 @@ class PhoneCommunicatorCallbackEvent(QEvent):
         QEvent.__init__(self, QEvent.User)
 
     def type(self):
-        print "called"
         return QEvent.User
 
 
@@ -50,30 +49,43 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         QtGui.QWidget.__init__(self, *args)
         self.setupUi(self)
         
+        self.toolButtonDeviceIsLocked.setVisible(False)
+        self.labelDeviceIsLocked.setVisible(False)
+        self.toolButtonDeviceIsLocked.setIcon(QtGui.QIcon("synce-kpm/data/lock.svg"))
+
+        self._showingUnlockMessage = False
+
+        self.storageInformation = []
+
+
         self.iconDisconnected = QtGui.QIcon("synce-kpm/data/blue_22x22.png")
         self.iconConnected  = QtGui.QIcon("synce-kpm/data/green_22x22.png")
         
-
         self.setWindowIcon(self.iconConnected)
 
         self.tray = QtGui.QSystemTrayIcon(self)
         self.trayMenu = QtGui.QMenu()
-        self.action_quit = QtGui.QAction(QtGui.QIcon("images/quit.png"), u'Quit', self)
+        self.action_about = QtGui.QAction( u'About', self)
+        self.action_show = QtGui.QAction( u'Show mainscreen', self)
+        self.action_quit = QtGui.QAction( u'Quit', self)
 
+        self.connect(self.action_quit, SIGNAL("triggered()"), self.quitApplication)
+        self.connect(self.action_about, SIGNAL("triggered()"), self.helpAbout)
+        self.connect(self.action_show, SIGNAL("triggered()"), self.show)
+
+        self.trayMenu.addAction(self.action_about)
+        self.trayMenu.addAction(self.action_show)
         self.trayMenu.addAction(self.action_quit)
         self.tray.setContextMenu(self.trayMenu)
         self.tray.setIcon(self.iconDisconnected)
         self.tray.setToolTip(u"SynCE KDE PDA Manager")
         self.tray.show()
 
+        self.connect(self.storageSelector, SIGNAL("currentIndexChanged(int)"), self.updateFreeUsedTotalDiskSpace)
          
-       
-        self.phoneCommunicator = PhoneCommunicator(self.updateView)
+        self.phoneCommunicator = PhoneCommunicator(self.updateView_cb)
+        
         self.installWindow = dialogs.synce_kpm_installwindow.synce_kpm_installwindow( self.phoneCommunicator )
-
-        self.updateView() 
-
-
 
     """
     @pyqtSignature("")
@@ -81,12 +93,21 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         print "abc"
         self.hide()
         event.accept()
+    """
+
+
+    def helpAbout(self):
+        QMessageBox.about(self, "About SynCE-KPM",
+                """<b>SynCE KDE PDA Manager</b> v %s
+                <p>This application can be used to manage a WM5/WM6 PDA
+                connected to the computer with SynCE.
+                <p>Author: Guido Diepen <guido@guidodiepen.nl>
+                """%"0.0.1")
 
     @pyqtSignature("")
     def closeEvent(self,event):
         event.ignore()
         self.hide()
-    """
 
     def updateTray(self):
         if self.phoneCommunicator.phoneConnected:
@@ -95,9 +116,8 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
             self.tray.setIcon(self.iconDisconnected)
 
     def updateDeviceStatus(self):
-        #print "updateStatus()"
         if self.phoneCommunicator.phoneConnected:
-            self.labelDeviceName.setText(self.phoneCommunicator.device.name)
+            self.labelDeviceName.setText(self.phoneCommunicator.device.GetName())
         else:
             self.labelDeviceName.setText("")
 
@@ -105,68 +125,116 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
     #Use the param later to distinguish what the reason was
     #for the model update 
-    def updateView(self,reason=-1):
+    def updateView_cb(self,reason=-1):
         callbackEvent = PhoneCommunicatorCallbackEvent(reason)
         QCoreApplication.postEvent(self, callbackEvent)
-         
+        
+
     @pyqtSignature("")
     def customEvent(self,event):
         if event.reason == ACTION_PHONE_DISCONNECTED:
+            if self._showingUnlockMessage:
+                QApplication.activeWindow().close()
+                self._showingUnlockMessage = False
+            
             if self.installWindow.isVisible:
                 self.installWindow.hide()
             self.tabWidget.setEnabled(False)
             self.updateTray()
-            self.tray.showMessage("Phone Disconnected", "The phone %s just disconnected"%self.phoneCommunicator.savedDevice.name)
+            self.tray.showMessage("Phone Disconnected", "The phone %s just disconnected"%self.phoneCommunicator.deviceName)
             self.updateStatusBar()
             self.updatePowerInformation()
             self.updateInstalledProgramsList()
             self.updateDeviceStatus()
+            self.updateStorageInformation()
+            self.labelStorageTotal.setText("")
+            self.labelStorageUsed.setText("")
+            self.labelStorageFree.setText("")
+            
+            self.labelDeviceOwner.setText("")
+            self.labelModelName.setText("")
+            
+            self.toolButtonDeviceIsLocked.setVisible(False)
+            self.labelDeviceIsLocked.setVisible(False)
+
             return
+
+        if event.reason == ACTION_PHONE_AUTHORIZED:
+            self.toolButtonDeviceIsLocked.setVisible(False)
+            self.labelDeviceIsLocked.setVisible(False)
+
+
+            if self._showingUnlockMessage: 
+                QApplication.activeWindow().close() 
+                self._showingUnlockMessage = False
+            
+            self.tabWidget.setEnabled(True)
+            self.labelModelName.setText( self.phoneCommunicator.getModelName() )
+            
+            self.updateStatusBar()
+            self.updateDeviceStatus()
+            
 
 
         if event.reason == ACTION_PHONE_CONNECTED:
-            self.tabWidget.setEnabled(True)
             self.updateTray()
-            self.tray.showMessage("Phone Connected", "The phone %s just connected"%self.phoneCommunicator.device.name)
-            self.updateStatusBar()
-            self.updateDeviceStatus()
+            self.tray.showMessage("Phone Connected", "The phone %s just connected"%self.phoneCommunicator.deviceName)
+            self.toolButtonDeviceIsLocked.setVisible(True)
+            self.labelDeviceIsLocked.setVisible(True)
             return
 
+        if event.reason == ACTION_PASSWORD_NEEDED_ON_DEVICE:
+            self.show()
+            self.labelDeviceIsLocked.setVisible(True)
+            self._showingUnlockMessage = True
+            QMessageBox.information( self, "Locked device", "The device %s is locked. Please unlock it by following instructions on the device"%self.phoneCommunicator.deviceName)
+            self._showingUnlockMessage = False
+            
+
+        if event.reason == ACTION_PASSWORD_NEEDED:
+            self.show()
+            self._showingUnlockMessage = True
+            qs_text, pressedOK = QInputDialog.getText(self,"Locked device", "Please provide password:", QLineEdit.Password, "")
+            u_text = unicode(qs_text)
+            self._showingUnlockMessage = False
+          
+            if pressedOK:
+                self.phoneCommunicator.processAuthorization( u_text )
 
         if event.reason == ACTION_POWERSTATUS_CHANGED:
             self.updatePowerInformation()
             return
         
         if event.reason == ACTION_STORAGE_CHANGED:
-            print "Storage chagned..."
+            self.updateStorageInformation()
+            return
+        
+        if event.reason == ACTION_DEVICE_OWNER_CHANGED:
+            self.updateDeviceOwner()
             return
 
         if event.reason == ACTION_INSTALLED_PROGRAMS_CHANGED:
             self.updateInstalledProgramsList()
             return
 
-        #if we got here, it is just the initial update
-        #If we update everyhing, they will automatically become disabled 
-        #when needed
-        self.updateInstalledProgramsList()
-        self.updatePowerInformation()
-        self.updateStatusBar()
-        self.tabWidget.setEnabled(self.phoneCommunicator.phoneConnected)
-        self.updateTray()
-        self.updateDeviceStatus()
+
+
+    def updateDeviceOwner(self):
+        self.labelDeviceOwner.setText( self.phoneCommunicator.getDeviceOwner() )
 
 
     def updateStatusBar(self):
         if self.phoneCommunicator.phoneConnected:
-            self.statusBar().showMessage("Connected to phone %s"%self.phoneCommunicator.device.name )
+            self.statusBar().showMessage("Connected to phone %s"%self.phoneCommunicator.deviceName )
         else:
             self.statusBar().showMessage("No phone connected")
+
 
 
     def updatePowerInformation(self):
         powerStatus = self.phoneCommunicator.getPowerStatus()
         if powerStatus is not None:
-            battPercent = self.phoneCommunicator.getPowerStatus()["BatteryLifePercent"]
+            battPercent = powerStatus["BatteryLifePercent"]
             self.batteryStatus.setValue( battPercent )
         else:
             self.batteryStatus.setValue( 0 ) 
@@ -192,11 +260,13 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         currentItem = self.listInstalledPrograms.currentItem()
 
         if currentItem == None:
+            self.updateStatusBar()
+            self.updateDeviceStatus()
             return
 
         programName = currentItem.text()
         
-        reply = QMessageBox.question(self, "Confirm uninstall", "Are you really sure you want to uninstall \""+programName+"\"", QMessageBox.Yes, QMessageBox.No|QMessageBox.Default|QMessageBox.Escape) 
+        reply = QMessageBox.question(self,"Confirm uninstall", "Are you really sure you want to uninstall %s"%programName, QMessageBox.Yes, QMessageBox.No|QMessageBox.Default|QMessageBox.Escape) 
 
         if reply == QMessageBox.Yes:
 
@@ -209,29 +279,54 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
 
 
+    def updateFreeUsedTotalDiskSpace(self):
+        if self.storageSelector.currentIndex() == -1:
+            self.labelStorageTotal.setText("")
+            self.labelStorageUsed.setText("")
+            self.labelStorageFree.setText("")
 
+        else:
+            storageName, storageLocation, freeDisk,totalDisk,freeDiskTotal = self.storageInformation[ self.storageSelector.currentIndex() ]
+            
+            usedDisk = totalDisk - freeDisk
+            self.labelStorageTotal.setText("%.2fMB"%(totalDisk/(1024.0*1024.0)))
+            self.labelStorageUsed.setText("%.2fMB"%(usedDisk/(1024.0*1024.0)))
+            self.labelStorageFree.setText("%.2fMB"%(freeDisk/(1024.0*1024.0)))
+    
+    def updateStorageInformation(self):
+        self.storageInformation = []
+
+        if self.phoneCommunicator.phoneConnected:
+            self.storageInformation = self.phoneCommunicator.getStorageInformation()
+
+        self.storageSelector.clear()
+        for storageItem in self.storageInformation:
+            storageName, storageLocation, freeDisk,totalDisk,freeDiskTotal = storageItem
+            self.storageSelector.addItem("%s"%storageName)
+            #self.deviceList.addItem("%s [Free: %.2fMB , Total: %.2fMB]" % (storageName,freeDisk/(1024.0*1024.0),totalDisk/(1024.0*1024.0)) )
+            #self.deviceListRoot.append(storageLocation)
 
 
 
 
     def updateInstalledProgramsList(self):
         self.listInstalledPrograms.clear()
-        if self.phoneCommunicator.phoneConnected:
-            programs = self.phoneCommunicator.getListInstalledPrograms()
-            for program in programs:
-                self.listInstalledPrograms.addItem( program ) 
+        programs = self.phoneCommunicator.getListInstalledPrograms()
+        for program in programs:
+            self.listInstalledPrograms.addItem( program ) 
 
 
 
     @pyqtSignature("")
     def on_pushButton_Refresh_clicked(self):
         self.updateInstalledProgramsList() 
-        self.updatePowerInformation()
-        
+       
+    def quitApplication(self):
+        self.phoneCommunicator.stopAllThreads()
+        QApplication.quit()
 
     @pyqtSignature("")
     def on_pushButton_Quit_clicked(self):
-        self.phoneCommunicator.stopAllThreads()
-        QApplication.quit()
+        self.quitApplication()
 
 

@@ -1,3 +1,13 @@
+2008-01-08	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Implemented Minimize-to-tray. Application must be quit
+	  through Quit button, not through closing window
+	* Implemented About dialog
+	* Implemented handling of locked WM5 devices
+	* Implemented handling of locked WM6 devices
+	* Implemented more information on sysinfo screen
+	* Did a bit of code-cleanup (more of this is needed)
+
 2008-01-03	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Implemented a Periodic Timer, that will keep updating the
