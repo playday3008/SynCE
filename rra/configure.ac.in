@@ -4,7 +4,7 @@ AC_INIT(lib/syncmgr.h)
 dnl AC_CANONICAL_HOST
 dnl AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE(rra, 0.1)
+AM_INIT_AUTOMAKE(librra, 0.1)
 AM_CONFIG_HEADER(rra_config.h)
 
 dnl Checks for programs.
