@@ -239,6 +239,11 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         else:
             self.batteryStatus.setValue( 0 ) 
 
+    @pyqtSignature("")
+    def on_toolButtonDeviceIsLocked_clicked(self):
+        callbackEvent = PhoneCommunicatorCallbackEvent(ACTION_PASSWORD_NEEDED)
+        QCoreApplication.postEvent(self, callbackEvent)
+
 
     @pyqtSignature("")
     def on_pushButton_InstallCAB_clicked(self):
