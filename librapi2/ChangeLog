@@ -1,6 +1,8 @@
 2008-01-07  Guido Diepen  <guido@guidodiepen.nl>
 
 	* Fixed small bug in raising error in closeHandle function
+	* Added python binding for CeGetSystemInfo
+	* Added python binding for CeGetVersionEx
 
 2007-12-27  Guido Diepen  <guido@jcwodan.nl>
 

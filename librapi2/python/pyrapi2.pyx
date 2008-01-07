@@ -44,9 +44,10 @@ cdef extern from "rapi.h":
     BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 
     BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
-
-
     
+    VOID CeGetSystemInfo( LPSYSTEM_INFO lpSystemInfo)
+    BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation)
+
 
 #
 # Public constants
@@ -573,3 +574,41 @@ class RAPISession:
 
         return CeCreateProcess( wstr_from_utf8(applicationName), wstr_from_utf8(applicationParams), NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
 
+    def getVersion(self):
+        cdef CEOSVERSIONINFO osVersionInfo
+        #cdef SYSTEM_POWER_STATUS_EX powerStatus
+        
+        retval = CeGetVersionEx( &osVersionInfo)
+     
+        if retval == 0:
+            raise RAPIError(retval)
+
+		#Now construct the dictionary:
+        result = dict()
+        result["OSVersionInfoSize"] = osVersionInfo.dwOSVersionInfoSize
+        result["MajorVersion"]      = osVersionInfo.dwMajorVersion
+        result["MinorVersion"]      = osVersionInfo.dwMinorVersion
+        result["BuildNumber"]       = osVersionInfo.dwBuildNumber
+        result["PlatformId"]        = osVersionInfo.dwPlatformId
+        
+        return result
+    
+    def getSystemInfo(self):
+        cdef SYSTEM_INFO systemInfo
+        
+        CeGetSystemInfo( &systemInfo )
+        
+        result = dict()
+        result["ProcessorArchitecture"]                 = systemInfo.wProcessorArchitecture
+        result["Reserved"]                              = systemInfo.wReserved
+        result["PageSize"]                              = systemInfo.dwPageSize
+        result["MinimumApplicationAddress"]             = systemInfo.lpMinimumApplicationAddress
+        result["MaximumApplicationAddress"]             = systemInfo.lpMaximumApplicationAddress
+        result["ActiveProcessorMask"]                   = systemInfo.dwActiveProcessorMask
+        result["NumberOfProcessors"]                    = systemInfo.dwNumberOfProcessors
+        result["ProcessorType"]                         = systemInfo.dwProcessorType
+        result["AllocationGranularity"]                 = systemInfo.dwAllocationGranularity
+        result["ProcessorLevel"]                        = systemInfo.wProcessorLevel
+        result["ProcessorRevision"]                     = systemInfo.wProcessorRevision
+        
+        return result

@@ -108,4 +108,28 @@ cdef extern from "rapi.h":
     ctypedef _PROCESS_INFORMATION   PROCESS_INFORMATION
     ctypedef PROCESS_INFORMATION*   LPPROCESS_INFORMATION
 
+    ctypedef struct _SYSTEM_INFO:
+        WORD wProcessorArchitecture
+        WORD wReserved
+        DWORD dwPageSize
+        ULONG lpMinimumApplicationAddress
+        ULONG lpMaximumApplicationAddress
+        DWORD dwActiveProcessorMask
+        DWORD dwNumberOfProcessors
+        DWORD dwProcessorType
+        DWORD dwAllocationGranularity
+        WORD wProcessorLevel
+        WORD wProcessorRevision
+    ctypedef _SYSTEM_INFO       SYSTEM_INFO
+    ctypedef SYSTEM_INFO*       LPSYSTEM_INFO
+
+    ctypedef struct _CEOSVERSIONINFO:
+        DWORD dwOSVersionInfoSize
+        DWORD dwMajorVersion
+        DWORD dwMinorVersion
+        DWORD dwBuildNumber
+        DWORD dwPlatformId
+        WCHAR szCSDVersion[128]
+    ctypedef _CEOSVERSIONINFO   CEOSVERSIONINFO
+    ctypedef CEOSVERSIONINFO*   LPCEOSVERSIONINFO
 
