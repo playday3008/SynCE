@@ -666,5 +666,25 @@ the odd random segfault.
 
 Applied small patch by Scott Bronson to fix a couple of typos in the code.
 
+07/12/2007 - 204100 Dr J A Gow
+------------------------------
+
+Changed plugin names to a more sensible scheme and moved them to a 
+'plugins' directory from which they can be copied to the OpenSync working
+directory. Had to use 'synce-opensync-plugin-2x' etc, as the OpenSync
+plugin architecture can not handle periods in the filenames.
+Removed dependency of file-sync code on absolute paths and modified 
+the base config.xml file to include sensible defaults. Moved the config
+file to a subdirectory 'config' as sync-engine root was getting cluttered.
+Applied patch from Jonny Lamb including new synce-install-plugins. Modified
+this script to move rather than copy (in case a user hoses their OpenSync
+installation we then do not lose the plugin as well). Also corrected the
+python plugins directory (appears as opensync-1.0/python-plugins not
+opensync-1.0/plugins/python-plugins). The script can be re-run at
+any time to refresh the plugins in the OpenSync directory.
+
+Setup.py needs updating to reflect these changes.
+
+
 
 

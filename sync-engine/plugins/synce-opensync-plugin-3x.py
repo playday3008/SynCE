@@ -15,6 +15,12 @@
 #
 # +-+- NOT READY FOR PRODUCTION USE -+-+
 #
+# 07/01/08 - JAG - The plugin itself seems to work very well. All the
+#                  remaining problems appear to be related to format 
+#                  conversion. It is for this reason alone that I have
+#                  left the 'not ready' banner above. Once the format
+#                  conversion code is ready, this will be removed.
+#
 # 23/10/07 - JAG - Fixed those bloody segfaults and random crashes. Turned 
 #                  out to be a problem with thread safety in dbus-python
 #                  requiring a simple call to 
@@ -106,8 +112,7 @@ intermediaries = []
 # This provides a reference-counted wrapper to ensure that we only connect
 # once, disconnect once, and trigger a device sync twice per sync session. 
 # The initialization of the d-bus communication chain has been reordered over
-# that in the old plugin (seems to relieve a segfault on dbus-python > 0.80 
-# - though I can't think why) and events rather than loops are used to wait and
+# that in the old plugin and events rather than loops are used to wait and
 # ensure better sequencing of sync-engine communication
 #
 ###############################################################################
@@ -418,7 +423,7 @@ def discover(info):
 			if OBJ_TYPE_TO_ITEM_TYPE[sink.get_name()] == wmtype:
 				sink.available = True
 	info.version = opensync.Version()
-	info.version.plugin = "synce-plugin"
+	info.version.plugin = "synce-opensync-plugin"
 	intermediary.Disconnect()
 
 #
@@ -427,7 +432,7 @@ def discover(info):
 # Provide information about the plugin to Opensync
 
 def get_sync_info(plugin):
-	plugin.name = "synce-plugin"
+	plugin.name = "synce-opensync-plugin"
 	plugin.longname = "Plugin to synchronize with Windows Mobile 5/6 devices"
 	plugin.description = "Developed by Dr J A Gow 2007 for Opensync version >= 0.30"
 	plugin.config_type = opensync.PLUGIN_NO_CONFIGURATION

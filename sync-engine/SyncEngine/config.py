@@ -27,6 +27,7 @@ import string
 import logging
 import libxml2
 import xml2util
+import shutil
 from formatapi import SupportedFormats,DefaultFormat
 
 #
@@ -37,7 +38,6 @@ DBLOGLEVELS = { "INFO"    : logging.INFO,
 		"WARNING" : logging.WARNING,
 		"ERROR"   : logging.ERROR
 	      }
-
 
 #
 #
@@ -123,7 +123,7 @@ class FileSyncConfig(ConfigObject):
 			   }
 	
 	def validate_LocalFilePath(self,arg):
-		self.cfg["LocalFilePath"] = arg
+		self.cfg["LocalFilePath"] = os.path.expanduser(arg)
 		
 	def validate_Disable(self,arg):
 		try:
@@ -273,8 +273,25 @@ class Config:
 		self.config_AutoSync = AutoSyncConfig()
 		self.config_Global   = GlobalConfig()
 
+		# Now, get our current path (this may be useful)
+		# Avoids messing about with having to pull a PREFIX from
+		# an installer
+		
+		self.sepath = str(xml2util).split()[3][1:-2]
+		self.sepath = os.path.dirname(self.sepath)	# lose module name
+		self.sepath = os.path.dirname(self.sepath)	# lose SyncEngine
+		
+		# check if we have a config
+
 		self.config_dir   = os.path.join(os.path.expanduser("~"), ".synce")
 		self.config_path  = os.path.join(self.config_dir, "config.xml")
+		
+		if not os.path.exists(self.config_path):
+			if not os.path.isdir(self.config_dir):
+				os.mkdir(self.config_dir)
+			oldconf = os.path.join(self.path,"config.xml")
+			shutil.copy(oldconf, self.config_path)
+
 		
 		self.logfile = None
 	

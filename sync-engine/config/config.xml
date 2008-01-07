@@ -113,7 +113,7 @@
 			This should point to a valid path to a directory. When first creating the
 			partnership, ensure this directory is empty.
 		-->
-		<LocalFilePath>/nfshomes/jgow/PDAFiles</LocalFilePath>
+		<LocalFilePath>~/PDAFiles</LocalFilePath>
 
 		<!--
 			Disable
