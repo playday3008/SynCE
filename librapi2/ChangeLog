@@ -1,3 +1,7 @@
+2008-01-07  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Fixed small bug in raising error in closeHandle function
+
 2007-12-27  Guido Diepen  <guido@jcwodan.nl>
 
 	* Small fix in rapi2 call of CeCreateProcess2 (remove optional-read)

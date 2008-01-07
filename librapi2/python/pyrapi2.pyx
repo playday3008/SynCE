@@ -524,7 +524,7 @@ class RAPISession:
      retval = CeCloseHandle( hObject ) 
      #Non-zero indicates success, zero indicates failure
      if retval == 0:
-         raise
+        raise RAPIError(retval)
 
     #TODO: ERROR HANDLING!
     def createFile(self, filename, desiredAccess, shareMode, createDisposition, flagsAndAttributes):
