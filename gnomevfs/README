@@ -1,11 +1,24 @@
+synce-gnomevfs
+==============
+
 This is a gnome-vfs module that enables access to the Windows CE or Pocket
 PC file system through the gnome-vfs functions.
+
+
+Installation
+============
 
 Install by running ./configure and  make, then make install as root. If
 libsynce or librapi isn't installed in /usr then run ./configure with
 --with-libsynce=/path/to/libsynce or --with-librapi2=/path/to/librapi.
 
 You may also need to use the --sysconfdir=/etc parameter to configure.
+
+!!! Important !!!
+Gnome can be very particular about where components are installed. To be
+sure this module will work it should be installed in the same prefix as
+the rest of gnome and gnomevfs. If your gnome installation is part of the
+distribution, this will almost certainly be /usr.
 
 Then you should be able to access your PPC using synce:/ for example in
 Nautilus.
@@ -19,3 +32,4 @@ after installation:
 Please visit the website for more information:
 
   http://www.synce.org/
+

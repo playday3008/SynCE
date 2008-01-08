@@ -1,3 +1,7 @@
+2008-01-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* added note in README about installation prefix
+
 2007-09-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* flag "SD-MMC Card" and "ROM Storage" as separate filesystems
