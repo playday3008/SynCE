@@ -13,7 +13,7 @@
           Which can and should be used here.-->
       <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-      <!--<append key="info.callouts.add" type="strlist">hal-synce-rndis</append>-->
+      <append key="info.callouts.add" type="strlist">hal-synce-rndis</append>
     </match>
   </device>
 
