@@ -1,6 +1,7 @@
 2008-01-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* added LICENSE to EXTRA_DIST
+	* added hal support to rapi_context
 
 2008-01-07  Guido Diepen  <guido@guidodiepen.nl>
 

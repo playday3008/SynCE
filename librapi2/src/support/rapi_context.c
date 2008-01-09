@@ -101,7 +101,7 @@ HRESULT rapi_context_connect(RapiContext* context)
 		goto fail;
 	}
 
-    if (info->transport == NULL || strcmp(info->transport, "odccm") != 0) {
+    if (info->transport == NULL || ( strcmp(info->transport, "odccm") != 0 && strcmp(info->transport, "hal") != 0 ) ) {
         if (!info->dccm_pid)
         {
             synce_error("DCCM PID entry not found for current connection");
@@ -158,7 +158,7 @@ HRESULT rapi_context_connect(RapiContext* context)
         }
         context->rapi_ops = &rapi_ops;
     } else {
-        if (strcmp(info->transport, "odccm") == 0) {
+        if (strcmp(info->transport, "odccm") == 0 || strcmp(info->transport, "hal") == 0) {
             synce_socket_take_descriptor(context->socket, info->fd);
         }
         else if ( !synce_socket_connect_proxy(context->socket, info->ip) )
