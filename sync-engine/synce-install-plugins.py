@@ -9,11 +9,11 @@ import SyncEngine.kernel
 
 
 def GetEnginePluginSource():
-	sepath = str(SyncEngine.kernel).split()[3][1:-2]
-	sepath = os.path.dirname(sepath)	
-	sepath = os.path.dirname(sepath)	
-	sepath = os.path.join(sepath,"plugins")
-	return sepath
+    sepath = str(SyncEngine.kernel).split()[3][1:-2]
+    sepath = os.path.dirname(sepath)
+    sepath = os.path.dirname(sepath)
+    sepath = os.path.join(sepath,"plugins")
+    return sepath
 
 
 def get_plugindir():
@@ -28,7 +28,11 @@ def get_plugindir():
         print 'Could not get OpenSync plugin directory; pkg-config is not installed.'
         sys.exit(1)
 
-    plugindir=os.path.join(os.path.dirname(plugindir),"python-plugins")
+    plugindir = os.path.join(os.path.dirname(plugindir),"plugins", "python-plugins")
+
+    if not os.path.isdir(plugindir):
+        os.system('mkdir -p %s' % plugindir)
+
     return plugindir
 
 def get_opensync_version():

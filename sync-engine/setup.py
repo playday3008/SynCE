@@ -2,13 +2,6 @@
 
 from setuptools import setup, find_packages
 
-if get_opensync_version() >= 0.30:
-    pluginfile = ['opensync-plugin-0.30later.py']
-    otherplugin = ['opensync-plugin.py']
-else:
-    pluginfile = ['opensync-plugin.py']
-    otherplugin = ['opensync-plugin-0.30later.py']
-
 setup(
     name = "SyncEngine",
     version = "0.1",
@@ -22,6 +15,6 @@ setup(
                'synce-install-plugins.py'],
     package_data = {
         '': ['*.xsl'],
-    }
+    },
 )
 
