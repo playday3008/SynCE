@@ -31,7 +31,9 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			device-info.c device-info.h \
 			module.c module.h
 
-EXTRA_DIST = dccm-client-signals-marshal.list
+EXTRA_DIST = dccm-client-signals-marshal.list \
+		LICENSE.eggtrayicon \
+		LICENSE.synce
 
 synce_trayicon_CPPFLAGS = \
 	$(GNOME2_CFLAGS) \
