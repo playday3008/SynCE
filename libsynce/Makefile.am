@@ -11,7 +11,7 @@ all_local: $(pcfiles)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)
 
-EXTRA_DIST = libsynce.pc.in
+EXTRA_DIST = libsynce.pc.in LICENSE
 
 CLEANFILES = $(pcfiles)
 
