@@ -44,7 +44,7 @@ install-exec-hook:
 
 man_MANS = vdccm.1
 
-EXTRA_DIST = $(man_MANS)
+EXTRA_DIST = $(man_MANS) eventmanager.xml
 
 if ENABLE_DESKTOP_INTEGRATION
 %-glue.h: %.xml

@@ -1,3 +1,7 @@
+2008-01-09  Mark Ellis <mark@mpellis.org.uk>
+
+	* added src/eventmanager.xml to EXTRA_DIST
+
 2007-12-19  Jonny Lamb <jonnylamb@jonnylamb.com>
 
 	* 0.10.1 release.
