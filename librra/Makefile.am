@@ -11,7 +11,7 @@ all_local: $(pcfiles)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)
 
-EXTRA_DIST = librra.pc.in
+EXTRA_DIST = librra.pc.in LICENSE
 
 CLEANFILES = $(pcfiles) python/pyrra.c
 
