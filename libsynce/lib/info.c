@@ -323,7 +323,6 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   gint i;
   gchar **device_list = NULL;
   gint num_devices;
-  LibHalPropertySet *properties = NULL;
 
   g_type_init();
   dbus_error_init(&dbus_error);
@@ -364,23 +363,19 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   }
 
   for (i = 0; i < num_devices; i++) {
-    const gchar *name = NULL;
+    gchar *name = NULL;
 
-    properties = libhal_device_get_all_properties(hal_ctx,
-						  device_list[i],
-						  &dbus_error);
+    name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain properties for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    if (!(name = libhal_ps_get_string(properties, "pda.pocketpc.name"))) {
       g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
       goto error_exit;
     }
 
+    if (!name)
+      continue;
+
     if ( (device_name != NULL) && (strcmp(device_name, name) != 0) ) {
-      libhal_free_property_set(properties);
+      libhal_free_string(name);
       continue;
     }
 
@@ -390,7 +385,13 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     }
 
     result->name = g_strdup(name);
-    result->os_version = libhal_ps_get_uint64(properties, "pda.pocketpc.os_major");
+    libhal_free_string(name);
+
+    result->os_version = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.os_major for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
 
     gchar *unix_path;
 
@@ -425,16 +426,12 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
 
     result->transport = g_strdup("hal");
 
-    libhal_free_property_set(properties);
-
     break;
   }
 
   goto exit;
 
 error_exit:
-  if (properties)
-    libhal_free_property_set(properties);
   if (error != NULL)
     g_error_free(error);
   if (dbus_error_is_set(&dbus_error))
