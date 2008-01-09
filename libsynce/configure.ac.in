@@ -99,7 +99,7 @@ AC_ARG_ENABLE(hal-support,
 
 if ! test "$enable_hal_support" = "no"; then
   dnl Check for DBus and Hal
-  PKG_CHECK_MODULES(HAL, [hal >= 0.5.8, dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
+  PKG_CHECK_MODULES(HAL, [hal >= 0.5.10, dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
                     hal_found=yes, hal_found=no)
 
   if test "$hal_found" = "no"; then
