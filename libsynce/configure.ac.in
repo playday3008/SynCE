@@ -25,6 +25,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
+PKG_PROG_PKG_CONFIG
+
 dnl AM_PATH_CHECK()
 
 dnl Check for dmalloc first
@@ -48,33 +50,76 @@ fi
 dnl Checks for libraries.
 AC_LIB_RPATH
 
-AC_ARG_ENABLE(desktop-integration,
-              [  --enable-desktop-integration  enable desktop integration (requires D-Bus)],
-              enable_desktop_integration=$enableval, enable_desktop_integration=yes)
+AC_ARG_ENABLE(dccm-file-support,
+              [  --enable-dccm-file-support  enable dccm file support],
+              enable_dccm_file_support=$enableval, enable_dccm_file_support=yes)
 
-if ! test "$enable_desktop_integration" = "no"; then
+if ! test "$enable_dccm_file_support" = "no"; then
+  AC_MSG_NOTICE([Building with dccm file support])
+  AC_DEFINE(ENABLE_DCCM_FILE_SUPPORT, 1, [Define if building with dccm file support])
+  enable_dccm_file_support=yes
+else
+  AC_MSG_NOTICE([Building without dccm file support])
+fi
+
+if test "$enable_dccm_file_support" = "yes"; then dccm_file=1; else dccm_file=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_DCCM_FILE_SUPPORT, $dccm_file, [Define to 1 if you want dccm file support.])
+
+AC_ARG_ENABLE(odccm-support,
+              [  --enable-odccm-support  enable odccm support (requires D-Bus)],
+              enable_odccm_support=$enableval, enable_odccm_support=yes)
+
+if ! test "$enable_odccm_support" = "no"; then
   dnl Check for D-Bus
   PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
                     dbus=yes, dbus=no)
 
   if test "$dbus" = "no"; then
-    if test "$enable_desktop_integration" = "auto"; then
-      AC_MSG_NOTICE([D-Bus not found, building without desktop integration])
-      enable_desktop_integration=no
+    if test "$enable_odccm_support" = "auto"; then
+      AC_MSG_NOTICE([D-Bus not found, building without odccm support])
+      enable_odccm_support=no
     else
-      AC_MSG_ERROR([desktop integration requested but D-Bus could not be found])
+      AC_MSG_ERROR([odccm support requested but D-Bus could not be found])
     fi
   else
-    AC_MSG_NOTICE([Building with desktop integration])
-    AC_DEFINE(ENABLE_DESKTOP_INTEGRATION, 1, [Define if building with desktop integration])
-    enable_desktop_integration=yes
+    AC_MSG_NOTICE([Building with odccm support])
+    AC_DEFINE(ENABLE_ODCCM_SUPPORT, 1, [Define if building with odccm support])
+    enable_odccm_support=yes
   fi
 else
-  AC_MSG_NOTICE([Building without desktop integration])
+  AC_MSG_NOTICE([Building without odccm support])
 fi
 
-if test "$enable_desktop_integration" = "yes"; then desktop=1; else desktop=0; fi
-AC_DEFINE_UNQUOTED(ENABLE_DESKTOP_INTEGRATION, $desktop, [Define to 1 if you want desktop integration.])
+if test "$enable_odccm_support" = "yes"; then odccm=1; else odccm=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_ODCCM_SUPPORT, $odccm, [Define to 1 if you want odccm support.])
+
+AC_ARG_ENABLE(hal-support,
+              [  --enable-hal-support  enable hal support (requires D-Bus)],
+              enable_hal_support=$enableval, enable_hal_support=yes)
+
+if ! test "$enable_hal_support" = "no"; then
+  dnl Check for DBus and Hal
+  PKG_CHECK_MODULES(HAL, [hal >= 0.5.10, dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
+                    hal_found=yes, hal_found=no)
+
+  if test "$hal_found" = "no"; then
+    if test "$enable_hal_support" = "auto"; then
+      AC_MSG_NOTICE([Hal not found, building without hal support])
+      enable_hal_support=no
+    else
+      AC_MSG_ERROR([Hal support requested but hal could not be found])
+    fi
+  else
+    AC_MSG_NOTICE([Building with hal support])
+    AC_DEFINE(ENABLE_HAL_SUPPORT, 1, [Define if building with hal support])
+    enable_hal_support=yes
+  fi
+else
+  AC_MSG_NOTICE([Building without hal support])
+fi
+
+if test "$enable_hal_support" = "yes"; then hal=1; else hal=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_HAL_SUPPORT, $hal, [Define to 1 if you want hal support.])
 
 dnl Checks for header files.
 

@@ -1,6 +1,8 @@
 2008-01-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* added LICENSE to EXTRA_DIST
+	* added hal support to synce_info_new()
+	* make (v)dccm file support optional (default=yes)
 
 2007-09-06  Mark Ellis  <mark@mpellis.org.uk>
 

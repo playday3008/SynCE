@@ -1,4 +1,4 @@
-AM_CFLAGS = @DBUS_CFLAGS@
+AM_CFLAGS = @DBUS_CFLAGS@ @HAL_CFLAGS@
 
 INCLUDES = -I..
 
@@ -24,7 +24,7 @@ libsynce_la_SOURCES = \
 	wstr.c
 
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@
+libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@ @HAL_LIBS@
 
 include_HEADERS = \
 	synce.h synce_hash.h synce_ini.h synce_log.h synce_socket.h synce_types.h \

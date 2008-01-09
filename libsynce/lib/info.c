@@ -6,7 +6,7 @@
 #include "synce.h"
 #include "synce_log.h"
 #include "config/config.h"
-#if ENABLE_DESKTOP_INTEGRATION
+#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
 #define DBUS_API_SUBJECT_TO_CHANGE 1
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -18,8 +18,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#if ENABLE_HAL_SUPPORT
+#include <dbus/dbus-glib-lowlevel.h>
+#include <libhal.h>
+#endif
 
-#if ENABLE_DESKTOP_INTEGRATION
+#if ENABLE_ODCCM_SUPPORT
 static const char* const ODCCM_SERVICE      = "org.synce.odccm";
 static const char* const ODCCM_MGR_PATH     = "/org/synce/odccm/DeviceManager";
 static const char* const ODCCM_MGR_IFACE    = "org.synce.odccm.DeviceManager";
@@ -28,6 +32,7 @@ static const char* const ODCCM_DEV_IFACE    = "org.synce.odccm.Device";
 
 #define FREE(x)     if(x) free(x)
 
+#if ENABLE_DCCM_FILE_SUPPORT
 static char *STRDUP(const char* str)
 {
   return str ? strdup(str) : NULL;
@@ -99,10 +104,12 @@ exit:
   }
 }
 
-#if ENABLE_DESKTOP_INTEGRATION
+#endif /* ENABLE_DCCM_FILE_SUPPORT */
+
+#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
 
 gint
-get_socket_from_odccm(const gchar *unix_path)
+get_socket_from_dccm(const gchar *unix_path)
 {
   int fd = -1, dev_fd, ret;
   struct sockaddr_un sa;
@@ -151,6 +158,9 @@ OUT:
 
   return dev_fd;
 }
+#endif
+
+#if ENABLE_ODCCM_SUPPORT
 
 #define ODCCM_TYPE_OBJECT_PATH_ARRAY \
   (dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH))
@@ -259,7 +269,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
 
     g_object_unref(proxy);
 
-    result->fd = get_socket_from_odccm(unix_path);
+    result->fd = get_socket_from_dccm(unix_path);
     g_free(unix_path);
 
     if (result->fd < 0)
@@ -296,14 +306,169 @@ OUT:
 
   return result;
 }
-#endif /* ENABLE_DESKTOP_INTEGRATION */
+#endif /* ENABLE_ODCCM_SUPPORT */
+
+
+#if ENABLE_HAL_SUPPORT
+
+static SynceInfo *synce_info_from_hal(const char* device_name)
+{
+  SynceInfo *result = NULL;
+  DBusGConnection *system_bus = NULL;
+  LibHalContext *hal_ctx = NULL;
+
+  GError *error = NULL;
+  DBusError dbus_error;
+
+  gint i;
+  gchar **device_list = NULL;
+  gint num_devices;
+  LibHalPropertySet *properties = NULL;
+
+  g_type_init();
+  dbus_error_init(&dbus_error);
+
+  if (!(system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
+    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+
+  if (!(hal_ctx = libhal_ctx_new())) {
+    g_critical("%s: Failed to get hal context", G_STRFUNC);
+    goto error_exit;
+  }
+
+  if (!libhal_ctx_set_dbus_connection(hal_ctx, dbus_g_connection_get_connection(system_bus))) {
+    g_critical("%s: Failed to set DBus connection for hal context", G_STRFUNC);
+    goto error_exit;
+  }
+
+  if (!libhal_ctx_init(hal_ctx, &dbus_error)) {
+    g_critical("%s: Failed to initialise hal context: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
+
+  device_list = libhal_manager_find_device_string_match(hal_ctx,
+							"usb.product",
+							"Windows Mobile Device",
+							&num_devices,
+							&dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_warning("%s: Failed to obtain list of attached devices: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
+
+  if (num_devices == 0) {
+    g_message("Hal reports no devices connected");
+    goto exit;
+  }
+
+  for (i = 0; i < num_devices; i++) {
+    const gchar *name = NULL;
+
+    properties = libhal_device_get_all_properties(hal_ctx,
+						  device_list[i],
+						  &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain properties for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    if (!(name = libhal_ps_get_string(properties, "pda.pocketpc.name"))) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    if ( (device_name != NULL) && (strcmp(device_name, name) != 0) ) {
+      libhal_free_property_set(properties);
+      continue;
+    }
+
+    if (!(result = calloc(1, sizeof(SynceInfo)))) {
+      g_critical("%s: Failed to allocate SynceInfo", G_STRFUNC);
+      goto error_exit;
+    }
+
+    result->name = g_strdup(name);
+    result->os_version = libhal_ps_get_uint64(properties, "pda.pocketpc.os_major");
+
+    gchar *unix_path;
+
+    DBusGProxy *proxy = dbus_g_proxy_new_for_name(system_bus,
+						  "org.freedesktop.Hal",
+                                                  device_list[i],
+                                                  "org.freedesktop.Hal.Device.Synce");
+    if (proxy == NULL) {
+      g_critical("%s: Failed to get proxy for device '%s'", G_STRFUNC, device_list[i]);
+      goto error_exit;
+    }
+
+    if (!dbus_g_proxy_call(proxy, "RequestConnection", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_STRING, &unix_path,
+                           G_TYPE_INVALID))
+    {
+      g_critical("%s: Failed to get a connection for %s: %s: %s", G_STRFUNC, device_list[i], result->name, error->message);
+      g_object_unref(proxy);
+      goto error_exit;
+    }
+
+    g_object_unref(proxy);
+
+    result->fd = get_socket_from_dccm(unix_path);
+    g_free(unix_path);
+
+    if (result->fd < 0) {
+      g_critical("%s: Failed to get file-descriptor from dccm for %s", G_STRFUNC, device_list[i]);
+      goto error_exit;
+    }
+
+    result->transport = g_strdup("hal");
+
+    libhal_free_property_set(properties);
+
+    break;
+  }
+
+  goto exit;
+
+error_exit:
+  if (properties)
+    libhal_free_property_set(properties);
+  if (error != NULL)
+    g_error_free(error);
+  if (dbus_error_is_set(&dbus_error))
+    dbus_error_free(&dbus_error);
+  if (result)
+    synce_info_destroy(result);
+  result = NULL;
+
+exit:
+  if (device_list != NULL)
+    libhal_free_string_array(device_list);
+  if (hal_ctx != NULL) {
+    libhal_ctx_shutdown(hal_ctx, NULL);
+    libhal_ctx_free(hal_ctx);
+  }
+  if (system_bus != NULL)
+    dbus_g_connection_unref (system_bus);
+
+  return result;
+}
+#endif /* ENABLE_HAL_SUPPORT */
+
 
 SynceInfo* synce_info_new(const char* device_name)
 {
   SynceInfo* result = NULL;
 
-#if ENABLE_DESKTOP_INTEGRATION
-  result = synce_info_from_odccm(device_name);
+#if ENABLE_HAL_SUPPORT
+  result = synce_info_from_hal(device_name);
+#endif
+
+#if ENABLE_ODCCM_SUPPORT
+  if (!result)
+    result = synce_info_from_odccm(device_name);
 
 #if ENABLE_MIDASYNC
   if (!result)
@@ -311,8 +476,10 @@ SynceInfo* synce_info_new(const char* device_name)
 #endif
 #endif
 
+#if ENABLE_DCCM_FILE_SUPPORT
   if (!result)
     result = synce_info_from_file(device_name);
+#endif
 
   return result;
 }
