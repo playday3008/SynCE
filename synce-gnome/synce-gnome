@@ -188,4 +188,8 @@ class EntryDialog(gtk.Dialog):
 
 
 TestApp()
-gtk.main()
+
+try:
+    gtk.main()
+except KeyboardInterrupt:
+    sys.exit()
