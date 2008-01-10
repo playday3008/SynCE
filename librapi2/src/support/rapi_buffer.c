@@ -600,7 +600,7 @@ bool rapi_buffer_recv(RapiBuffer* buffer, SynceSocket* socket)
 	unsigned char* data    = NULL;
   short         events = EVENT_READ;
 
-  if (!synce_socket_wait(socket, 15, &events))
+  if (!synce_socket_wait(socket, 120, &events))
   {
     rapi_buffer_error("Failed to wait for event");
     goto fail;

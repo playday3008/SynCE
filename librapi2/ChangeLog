@@ -1,3 +1,8 @@
+2008-01-11  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Increased the timeout used for reading data from the socket. Old value
+	  of 15 was causing too many timeouts. New value is set to 120 seconds.
+
 2008-01-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* added LICENSE to EXTRA_DIST
