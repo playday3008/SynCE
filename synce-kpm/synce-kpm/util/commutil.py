@@ -302,7 +302,8 @@ class PhoneCommunicator(Observable):
             fileObject.close()
 
             applicationName = "wceload.exe"
-            applicationParms = "%s%s"%(copyToDirectory,fileName)
+            #Add the quotes to make sure paths with spaces are no problem
+            applicationParms = "\"%s%s\""%(copyToDirectory,fileName)
             if not deleteCab:
                 applicationParms += " /nodelete"
             result = self.rapi_session.createProcess( applicationName, applicationParms )

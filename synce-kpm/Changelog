@@ -1,5 +1,10 @@
 2008-01-08	Guido Diepen	<guido@guidodiepen.nl>
 
+	* Minor bugfix, add quotes around path and files to 
+	  cope with spaces within them
+
+2008-01-08	Guido Diepen	<guido@guidodiepen.nl>
+
 	* Implemented Minimize-to-tray. Application must be quit
 	  through Quit button, not through closing window
 	* Implemented About dialog
