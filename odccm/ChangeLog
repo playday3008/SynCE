@@ -1,3 +1,9 @@
+2008-01-11  Guido Diepen <guido@guidodiepen.nl>
+
+	* Removed Race Condition when multiple clients would request a rapi
+	  connection at the same time. A global variable is used which during
+	  the function might be increased by other thread
+
 2008-01-05  Guido Diepen <guido@guidodiepen.nl>
 
 	* Added support for locked WM6 devices. Odccm initiates unlock procedure

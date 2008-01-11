@@ -239,7 +239,7 @@ odccm_device_constructor (GType type, guint n_props,
 
   priv->requests = g_hash_table_new_full (g_int_hash,
                                           g_int_equal,
-                                          NULL,
+                                          g_free,
                                           g_object_unref);
 
   gnet_conn_set_callback (priv->conn, conn_event_cb, obj);
@@ -1040,22 +1040,27 @@ odccm_device_request_connection_impl (OdccmDevice *self, DBusGMethodInvocation *
       goto OUT;
     }
 
-  priv->req_id++;
+  /* 
+   * Create a local copy of the global req_id variable. This to minimize
+   * the chances of Race Conditions occuring.
+   */
+  guint *req_id_local = (guint *) g_malloc (sizeof (guint));
+  *req_id_local = ++(priv->req_id) ;
 
   broker = g_object_new (ODCCM_TYPE_CONNECTION_BROKER,
-                         "id", priv->req_id,
+                         "id", *req_id_local,
                          "context", ctx,
                          NULL);
 
   /* FIXME: have OdccmConnectionBroker emit a signal when the request has
    *        timed out so that we don't risk zombie requests hanging around. */
-  g_hash_table_insert (priv->requests, &priv->req_id, broker);
+  g_hash_table_insert (priv->requests, req_id_local , broker);
 
   g_signal_connect (broker, "done", (GCallback) conn_broker_done_cb, self);
 
   buf[0] = GUINT32_TO_LE (5);
   buf[1] = GUINT32_TO_LE (4);
-  buf[2] = GUINT32_TO_LE (priv->req_id);
+  buf[2] = GUINT32_TO_LE (*req_id_local);
 
   gnet_conn_write (priv->conn, (gchar *) buf, sizeof (buf));
 
