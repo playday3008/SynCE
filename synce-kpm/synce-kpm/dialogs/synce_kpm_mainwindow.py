@@ -493,9 +493,9 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
                     if reply != QMessageBox.Yes:
                         return
                 
-                #If we got here, then the user is 100% sure the partnership
-                #should be deleted. Then we do this ;)
-                self.phoneCommunicator.deletePartnership( id,guid )
+            #If we got here, then the user is 100% sure the partnership
+            #should be deleted. Then we do this ;)
+            self.phoneCommunicator.deletePartnership( id,guid )
 
 
 
