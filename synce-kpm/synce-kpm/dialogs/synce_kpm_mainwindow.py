@@ -34,6 +34,7 @@ from util.commutil import *
 
 import dialogs.ui_synce_kpm_mainwindow
 import dialogs.synce_kpm_installwindow
+import dialogs.synce_kpm_create_pshipwindow
 
 class PhoneCommunicatorCallbackEvent(QEvent):
     def __init__(self, _reason=-1):
@@ -89,6 +90,9 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         self.phoneCommunicator = PhoneCommunicator(self.updateView_cb)
         
         self.installWindow = dialogs.synce_kpm_installwindow.synce_kpm_installwindow( self.phoneCommunicator )
+
+        self.createPshipWindow = dialogs.synce_kpm_create_pshipwindow.synce_kpm_create_pshipwindow(self.phoneCommunicator)
+
 
 
         #
@@ -425,6 +429,11 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
         self.viewPartnerships.expandAll()
         
+    
+    
+    @pyqtSignature("")
+    def on_button_add_pship_clicked(self):
+        self.createPshipWindow.show()
 
        
     @pyqtSignature("")
@@ -453,7 +462,6 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
             if reply != QMessageBox.Yes:
                 return
 
-            print "User wants to delete partnership: %s"%name
            
             #This is for checking whether the user is having a WM6 device
             if self.phoneCommunicator.deviceOsVersion[0] == 5 and self.phoneCommunicator.deviceOsVersion[1] == 2:
@@ -495,7 +503,10 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
                 
             #If we got here, then the user is 100% sure the partnership
             #should be deleted. Then we do this ;)
-            self.phoneCommunicator.deletePartnership( id,guid )
+            try:
+                self.phoneCommunicator.deletePartnership( id,guid )
+            except Exception,e:
+                QMessageBox.warning(self,"Failed to delete the partnerships", "Error: %s"%e,QMessageBox.Ok)
 
 
 

@@ -487,17 +487,16 @@ class PhoneCommunicator(Observable):
     def getModelName(self):
         return self.device.GetModelName()
 
+    def createPartnership(self, name, items):
+        self.dbusSyncEngine.CreatePartnership(name,items)
+        self.updatePartnerships()
+        self.sendMessage(ACTION_SYNCENGINE_CHANGED)
 
 
     def deletePartnership(self, id, guid):
-        try:
-            self.dbusSyncEngine.DeletePartnership(id,guid)
-            #print "Partnership deleted"
-            self.updatePartnerships()
-            self.sendMessage(ACTION_SYNCENGINE_CHANGED)
-        except Exception,e:     
-            print "error: Failed to delete partnership"
-            print "   %s" % e
+        self.dbusSyncEngine.DeletePartnership(id,guid)
+        self.updatePartnerships()
+        self.sendMessage(ACTION_SYNCENGINE_CHANGED)
 
     
     def getPartnerships(self):
