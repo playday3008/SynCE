@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-mainwindow.ui'
 #
-# Created: Mon Jan  7 22:45:52 2008
-#      by: PyQt4 UI code generator 4.3.1
+# Created: Sat Jan 19 15:31:46 2008
+#      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -32,14 +32,13 @@ class Ui_synce_kpm_mainwindow(object):
 
         self.toolButtonDeviceIsLocked = QtGui.QToolButton(self.groupBox)
         self.toolButtonDeviceIsLocked.setEnabled(True)
-        self.toolButtonDeviceIsLocked.setGeometry(QtCore.QRect(310,20,25,23))
+        self.toolButtonDeviceIsLocked.setGeometry(QtCore.QRect(270,20,25,23))
         self.toolButtonDeviceIsLocked.setObjectName("toolButtonDeviceIsLocked")
 
         self.labelDeviceIsLocked = QtGui.QLabel(self.groupBox)
-        self.labelDeviceIsLocked.setGeometry(QtCore.QRect(340,20,171,18))
+        self.labelDeviceIsLocked.setGeometry(QtCore.QRect(300,20,221,18))
 
         font = QtGui.QFont()
-        font.setPointSize(9)
         font.setWeight(75)
         font.setBold(True)
         self.labelDeviceIsLocked.setFont(font)
@@ -59,19 +58,19 @@ class Ui_synce_kpm_mainwindow(object):
         self.tab.setObjectName("tab")
 
         self.label_3 = QtGui.QLabel(self.tab)
-        self.label_3.setGeometry(QtCore.QRect(10,20,91,16))
+        self.label_3.setGeometry(QtCore.QRect(10,20,131,18))
         self.label_3.setObjectName("label_3")
 
         self.labelDeviceOwner = QtGui.QLabel(self.tab)
-        self.labelDeviceOwner.setGeometry(QtCore.QRect(150,20,91,16))
+        self.labelDeviceOwner.setGeometry(QtCore.QRect(150,20,180,16))
         self.labelDeviceOwner.setObjectName("labelDeviceOwner")
 
         self.label_5 = QtGui.QLabel(self.tab)
-        self.label_5.setGeometry(QtCore.QRect(10,50,91,16))
+        self.label_5.setGeometry(QtCore.QRect(10,50,131,18))
         self.label_5.setObjectName("label_5")
 
         self.labelModelName = QtGui.QLabel(self.tab)
-        self.labelModelName.setGeometry(QtCore.QRect(150,50,91,16))
+        self.labelModelName.setGeometry(QtCore.QRect(150,50,180,16))
         self.labelModelName.setObjectName("labelModelName")
 
         self.label_7 = QtGui.QLabel(self.tab)
@@ -80,14 +79,15 @@ class Ui_synce_kpm_mainwindow(object):
 
         self.labelStorageTotal = QtGui.QLabel(self.tab)
         self.labelStorageTotal.setGeometry(QtCore.QRect(370,110,91,16))
+        self.labelStorageTotal.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.labelStorageTotal.setObjectName("labelStorageTotal")
 
         self.storageSelector = QtGui.QComboBox(self.tab)
-        self.storageSelector.setGeometry(QtCore.QRect(150,110,121,20))
+        self.storageSelector.setGeometry(QtCore.QRect(150,110,141,20))
         self.storageSelector.setObjectName("storageSelector")
 
         self.label_9 = QtGui.QLabel(self.tab)
-        self.label_9.setGeometry(QtCore.QRect(10,110,101,16))
+        self.label_9.setGeometry(QtCore.QRect(10,110,131,18))
         self.label_9.setObjectName("label_9")
 
         self.label_11 = QtGui.QLabel(self.tab)
@@ -96,6 +96,7 @@ class Ui_synce_kpm_mainwindow(object):
 
         self.labelStorageUsed = QtGui.QLabel(self.tab)
         self.labelStorageUsed.setGeometry(QtCore.QRect(370,140,91,16))
+        self.labelStorageUsed.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.labelStorageUsed.setObjectName("labelStorageUsed")
 
         self.label_13 = QtGui.QLabel(self.tab)
@@ -104,10 +105,11 @@ class Ui_synce_kpm_mainwindow(object):
 
         self.labelStorageFree = QtGui.QLabel(self.tab)
         self.labelStorageFree.setGeometry(QtCore.QRect(370,170,91,16))
+        self.labelStorageFree.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.labelStorageFree.setObjectName("labelStorageFree")
 
         self.batteryStatus = QtGui.QProgressBar(self.tab)
-        self.batteryStatus.setGeometry(QtCore.QRect(150,80,118,16))
+        self.batteryStatus.setGeometry(QtCore.QRect(150,80,141,16))
 
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -117,7 +119,7 @@ class Ui_synce_kpm_mainwindow(object):
         self.batteryStatus.setObjectName("batteryStatus")
 
         self.label_2 = QtGui.QLabel(self.tab)
-        self.label_2.setGeometry(QtCore.QRect(10,80,71,16))
+        self.label_2.setGeometry(QtCore.QRect(10,80,131,18))
         self.label_2.setObjectName("label_2")
         self.tabWidget.addTab(self.tab,"")
 
@@ -140,6 +142,33 @@ class Ui_synce_kpm_mainwindow(object):
         self.pushButton_InstallCAB.setGeometry(QtCore.QRect(10,270,75,24))
         self.pushButton_InstallCAB.setObjectName("pushButton_InstallCAB")
         self.tabWidget.addTab(self.tab_2,"")
+
+        self.tab_3 = QtGui.QWidget()
+        self.tab_3.setObjectName("tab_3")
+
+        self.viewPartnerships = QtGui.QTreeView(self.tab_3)
+        self.viewPartnerships.setGeometry(QtCore.QRect(10,10,411,251))
+        self.viewPartnerships.setItemsExpandable(False)
+        self.viewPartnerships.setObjectName("viewPartnerships")
+
+        self.labelSyncEngineNotRunning = QtGui.QLabel(self.tab_3)
+        self.labelSyncEngineNotRunning.setGeometry(QtCore.QRect(90,110,281,18))
+
+        font = QtGui.QFont()
+        font.setWeight(75)
+        font.setBold(True)
+        self.labelSyncEngineNotRunning.setFont(font)
+        self.labelSyncEngineNotRunning.setScaledContents(True)
+        self.labelSyncEngineNotRunning.setObjectName("labelSyncEngineNotRunning")
+
+        self.button_add_pship = QtGui.QPushButton(self.tab_3)
+        self.button_add_pship.setGeometry(QtCore.QRect(430,10,75,24))
+        self.button_add_pship.setObjectName("button_add_pship")
+
+        self.button_delete_pship = QtGui.QPushButton(self.tab_3)
+        self.button_delete_pship.setGeometry(QtCore.QRect(430,40,75,24))
+        self.button_delete_pship.setObjectName("button_delete_pship")
+        self.tabWidget.addTab(self.tab_3,"")
 
         self.retranslateUi(synce_kpm_mainwindow)
         self.tabWidget.setCurrentIndex(0)
@@ -164,4 +193,8 @@ class Ui_synce_kpm_mainwindow(object):
         self.pushButton_Uninstall.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "&Uninstall", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_InstallCAB.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "&Install CAB", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtGui.QApplication.translate("synce_kpm_mainwindow", "Software Manager", None, QtGui.QApplication.UnicodeUTF8))
+        self.labelSyncEngineNotRunning.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "Make sure Sync-Engine is running...", None, QtGui.QApplication.UnicodeUTF8))
+        self.button_add_pship.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "Add", None, QtGui.QApplication.UnicodeUTF8))
+        self.button_delete_pship.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "Delete", None, QtGui.QApplication.UnicodeUTF8))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtGui.QApplication.translate("synce_kpm_mainwindow", "Partnership manager", None, QtGui.QApplication.UnicodeUTF8))
 

@@ -69,7 +69,7 @@
     </property>
     <property name="geometry" >
      <rect>
-      <x>310</x>
+      <x>270</x>
       <y>20</y>
       <width>25</width>
       <height>23</height>
@@ -82,18 +82,16 @@
    <widget class="QLabel" name="labelDeviceIsLocked" >
     <property name="geometry" >
      <rect>
-      <x>340</x>
+      <x>300</x>
       <y>20</y>
-      <width>171</width>
+      <width>221</width>
       <height>18</height>
      </rect>
     </property>
     <property name="font" >
      <font>
-      <pointsize>9</pointsize>
       <weight>75</weight>
       <bold>true</bold>
-      <stylestrategy>PreferDefault</stylestrategy>
      </font>
     </property>
     <property name="text" >
@@ -141,8 +139,8 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>91</width>
-       <height>16</height>
+       <width>131</width>
+       <height>18</height>
       </rect>
      </property>
      <property name="text" >
@@ -154,7 +152,7 @@
       <rect>
        <x>150</x>
        <y>20</y>
-       <width>91</width>
+       <width>180</width>
        <height>16</height>
       </rect>
      </property>
@@ -167,8 +165,8 @@
       <rect>
        <x>10</x>
        <y>50</y>
-       <width>91</width>
-       <height>16</height>
+       <width>131</width>
+       <height>18</height>
       </rect>
      </property>
      <property name="text" >
@@ -180,7 +178,7 @@
       <rect>
        <x>150</x>
        <y>50</y>
-       <width>91</width>
+       <width>180</width>
        <height>16</height>
       </rect>
      </property>
@@ -210,6 +208,9 @@
        <height>16</height>
       </rect>
      </property>
+     <property name="layoutDirection" >
+      <enum>Qt::RightToLeft</enum>
+     </property>
      <property name="text" >
       <string/>
      </property>
@@ -219,7 +220,7 @@
       <rect>
        <x>150</x>
        <y>110</y>
-       <width>121</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -229,8 +230,8 @@
       <rect>
        <x>10</x>
        <y>110</y>
-       <width>101</width>
-       <height>16</height>
+       <width>131</width>
+       <height>18</height>
       </rect>
      </property>
      <property name="text" >
@@ -259,6 +260,9 @@
        <height>16</height>
       </rect>
      </property>
+     <property name="layoutDirection" >
+      <enum>Qt::RightToLeft</enum>
+     </property>
      <property name="text" >
       <string/>
      </property>
@@ -285,6 +289,9 @@
        <height>16</height>
       </rect>
      </property>
+     <property name="layoutDirection" >
+      <enum>Qt::RightToLeft</enum>
+     </property>
      <property name="text" >
       <string/>
      </property>
@@ -294,7 +301,7 @@
       <rect>
        <x>150</x>
        <y>80</y>
-       <width>118</width>
+       <width>141</width>
        <height>16</height>
       </rect>
      </property>
@@ -315,8 +322,8 @@
       <rect>
        <x>10</x>
        <y>80</y>
-       <width>71</width>
-       <height>16</height>
+       <width>131</width>
+       <height>18</height>
       </rect>
      </property>
      <property name="text" >
@@ -375,6 +382,72 @@
      </property>
      <property name="text" >
       <string>&amp;Install CAB</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_3" >
+    <attribute name="title" >
+     <string>Partnership manager</string>
+    </attribute>
+    <widget class="QTreeView" name="viewPartnerships" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>411</width>
+       <height>251</height>
+      </rect>
+     </property>
+     <property name="itemsExpandable" >
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelSyncEngineNotRunning" >
+     <property name="geometry" >
+      <rect>
+       <x>90</x>
+       <y>110</y>
+       <width>281</width>
+       <height>18</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text" >
+      <string>Make sure Sync-Engine is running...</string>
+     </property>
+     <property name="scaledContents" >
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="button_add_pship" >
+     <property name="geometry" >
+      <rect>
+       <x>430</x>
+       <y>10</y>
+       <width>75</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Add</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="button_delete_pship" >
+     <property name="geometry" >
+      <rect>
+       <x>430</x>
+       <y>40</y>
+       <width>75</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Delete</string>
      </property>
     </widget>
    </widget>

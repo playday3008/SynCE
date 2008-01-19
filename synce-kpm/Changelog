@@ -1,3 +1,9 @@
+2008-01-19	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Some minor bugfixes in code
+	* Some minor changes in GUI desgin
+	* Preliminary support for displaying partnerships 
+
 2008-01-08	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Minor bugfix, add quotes around path and files to 

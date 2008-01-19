@@ -48,6 +48,10 @@ ACTION_POWERSTATUS_CHANGED        = 5
 ACTION_STORAGE_CHANGED            = 6
 ACTION_INSTALLED_PROGRAMS_CHANGED = 7
 ACTION_DEVICE_OWNER_CHANGED       = 8
+ACTION_SYNCENGINE_CHANGED_ONLINE  = 9
+ACTION_SYNCENGINE_CHANGED_OFFLINE = 10
+ACTION_SYNCENGINE_CHANGED         = 11
+
 
 TIMER_INTERVAL = 15 
 
@@ -59,13 +63,24 @@ class PhoneCommunicator(Observable):
     def __init__(self, observer=None):
         super(PhoneCommunicator,self).__init__()
 
+        #
+        # Initially, we set all of the values to None or False
+        # meaning that there are no phones connected.
         self._stopTimer = False
         self.phoneConnected = False
         self.rapi_session = None
+        self.syncEngineRunning = False
+        self.dbusSyncEngine = None
 
+        #
+        # These are for saving the signal matches for the D-Bus callbacks
+        #Whenever the phone disconnects, we must disconnect the callbacks
+        #also
         self._sm_phone_connected        = None
         self._sm_phone_disconnected     = None
         self._sm_password_flags_changed = None
+
+
 
         self.checkTimer = None
         self.deviceName= None
@@ -73,22 +88,59 @@ class PhoneCommunicator(Observable):
         self.powerStatus = None
         self.deviceOwner = ""
         self.storageInformation = []
+        self.item_types = None
+        self.partnerships = None
 
 
-
+        #
+        # Add any observers right away
         if observer is not None:
             self.addListener( observer )
 
+
+
+
+        #
+        # Make the proram aware of the session dbus, for creating connections to
+        # the Sync-Engine
+        sessionBus = dbus.SessionBus()
         
+        try:
+            proxy_obj_session_dbus = sessionBus.get_object("org.freedesktop.DBus", 
+                                                    "/org/freedesktop/DBus")
+        except dbus.DBusException:
+            print "Error: Could not connect to session dbus. Is it started?"
+            print "This program relies on DBus, please make sure it is running"
+            sys.exit(1) 
+
+
+
+        #
+        # Make sure that we start listening to whether sync-engine goes 
+        # online/offline
+        mgrSyncEngine = dbus.Interface(proxy_obj_session_dbus, "org.freedesktop.DBus")
+        mgrSyncEngine.connect_to_signal("NameOwnerChanged", 
+                                    self.syncengine_status_changed_cb)
+
+        try:
+            pass
+            self.dbusSyncEngine = sessionBus.get_object( "org.synce.SyncEngine",
+                                                         "/org/synce/SyncEngine",
+                                                         "org.synce.SyncEngine")
+            self.syncEngineRunning = True
+            self.updatePartnerships()
+            self.sendMessage(ACTION_SYNCENGINE_CHANGED_ONLINE)
+        except dbus.DBusException:
+            print "SyncEngine is NOT running.... Will listen for sync-engine on dbus"
+
+            
         
         ##Make the program DBus aware. Furthermore, make sure that the 
         ##program just keeps working whenever odccm is not running
-        bus = dbus.SystemBus()
-        self.bus = bus
 
         try:
-            proxy_obj_dbus = bus.get_object("org.freedesktop.DBus", 
-                                            "/org/freedesktop/DBus")
+            proxy_obj_dbus = dbus.SystemBus().get_object("org.freedesktop.DBus", 
+                                                        "/org/freedesktop/DBus")
         except dbus.DBusException:
             print "Error: Could not connect to dbus. Is it started?"
             print "This program relies on DBus, please make sure it is running"
@@ -100,7 +152,7 @@ class PhoneCommunicator(Observable):
                                     self.odccm_status_changed_cb)
 
         try:
-            proxy_obj = bus.get_object("org.synce.odccm", 
+            proxy_obj = dbus.SystemBus().get_object("org.synce.odccm", 
                                         "/org/synce/odccm/DeviceManager")
             self.odccmRunning = True
         except dbus.DBusException:
@@ -134,6 +186,31 @@ class PhoneCommunicator(Observable):
 
 
 
+    def syncengine_status_changed_cb(self, obj_path, param2, param3):
+        if obj_path == "org.synce.SyncEngine":
+            #If this parameter is empty, the odccm just came online 
+            if param2 == "":
+                try:
+                    sessionBus = dbus.SessionBus()
+                    self.dbusSyncEngine = sessionBus.get_object( "org.synce.SyncEngine",
+                                                                 "/org/synce/SyncEngine",
+                                                                 "org.synce.SyncEngine")
+                    
+                    self.syncEngineRunning = True
+                    self.updatePartnerships()
+                    self.sendMessage( ACTION_SYNCENGINE_CHANGED_ONLINE )
+                    
+                    
+                    print "sync-engine just came online"
+                except:
+                    print "Something went wrong with dbus communcaiton."
+            
+            #If this parameter is empty, the odccm just went offline
+            if param3 == "":
+                self.syncEngineRunning = False
+                self.dbusSyncEngine = None
+                self.sendMessage( ACTION_SYNCENGINE_CHANGED_OFFLINE )
+                print "sync-engine just went offline"
 
     def odccm_status_changed_cb(self, obj_path, param2, param3):
         if obj_path == "org.synce.odccm":
@@ -151,7 +228,7 @@ class PhoneCommunicator(Observable):
             #the messages
             if self.odccmRunning:
                 try:
-                    proxy_obj = self.bus.get_object("org.synce.odccm", 
+                    proxy_obj = dbus.SystemBus().get_object("org.synce.odccm", 
                                                     "/org/synce/odccm/DeviceManager")
                     mgr = dbus.Interface(proxy_obj, "org.synce.odccm.DeviceManager")
 
@@ -407,6 +484,35 @@ class PhoneCommunicator(Observable):
 
     def getModelName(self):
         return self.device.GetModelName()
+
+
+
+
+    
+    def getPartnerships(self):
+        return (self.item_types, self.partnerships)
+
+    def updatePartnerships(self):
+        if self.syncEngineRunning:
+            self.item_types = self.dbusSyncEngine.GetItemTypes()
+
+            self.partnerships = self.dbusSyncEngine.GetPartnerships()
+
+            for pship in self.partnerships:
+                id,guid,name,hostname,devicename,items = pship
+            
+                print name
+
+            #we are interested in:
+            # * Calendar
+            # * Files
+            # * Contacts
+            # * Tasks
+
+
+
+        else:
+            print "Syncengine not running, not updating"
 
 
     def getStorageInformation(self):
