@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-mainwindow.ui'
 #
-# Created: Sat Jan 19 15:31:46 2008
+# Created: Sat Jan 19 17:29:44 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_synce_kpm_mainwindow(object):
         self.label_devicename.setObjectName("label_devicename")
 
         self.labelDeviceName = QtGui.QLabel(self.groupBox)
-        self.labelDeviceName.setGeometry(QtCore.QRect(100,20,71,16))
+        self.labelDeviceName.setGeometry(QtCore.QRect(100,20,161,18))
         self.labelDeviceName.setObjectName("labelDeviceName")
 
         self.toolButtonDeviceIsLocked = QtGui.QToolButton(self.groupBox)

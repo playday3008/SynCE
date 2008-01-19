@@ -84,6 +84,7 @@ class PhoneCommunicator(Observable):
 
         self.checkTimer = None
         self.deviceName= None
+        self.deviceOsVersion = None
         self._listInstalledPrograms = []
         self.powerStatus = None
         self.deviceOwner = ""
@@ -273,6 +274,7 @@ class PhoneCommunicator(Observable):
     #    called
     def onConnect(self):
         self.deviceName = self.device.GetName()
+        self.deviceOsVersion = self.device.GetOsVersion()
         self.sendMessage(ACTION_PHONE_CONNECTED)
 
     #This means that the phone has been authorized. When a device
@@ -487,6 +489,15 @@ class PhoneCommunicator(Observable):
 
 
 
+    def deletePartnership(self, id, guid):
+        try:
+            self.dbusSyncEngine.DeletePartnership(id,guid)
+            #print "Partnership deleted"
+            self.updatePartnerships()
+            self.sendMessage(ACTION_SYNCENGINE_CHANGED)
+        except Exception,e:     
+            print "error: Failed to delete partnership"
+            print "   %s" % e
 
     
     def getPartnerships(self):
@@ -501,7 +512,7 @@ class PhoneCommunicator(Observable):
             for pship in self.partnerships:
                 id,guid,name,hostname,devicename,items = pship
             
-                print name
+                #print name
 
             #we are interested in:
             # * Calendar

@@ -236,11 +236,16 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
         if event.reason == ACTION_SYNCENGINE_CHANGED_ONLINE:
             self.labelSyncEngineNotRunning.setVisible(False)
             self.viewPartnerships.setVisible(True)
-            self.button_add_pship.setVisible(False)
-            self.button_delete_pship.setVisible(False)
+            self.button_add_pship.setVisible(True)
+            self.button_delete_pship.setVisible(True)
             self.updatePartnerships()
             return
         
+        if event.reason == ACTION_SYNCENGINE_CHANGED:
+            self.updatePartnerships()
+            return
+
+
         if event.reason == ACTION_SYNCENGINE_CHANGED_OFFLINE:
             self.labelSyncEngineNotRunning.setVisible(True)
             self.viewPartnerships.setVisible(False)
@@ -417,37 +422,82 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
 
 
         self.modelPartnerships.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.QVariant("Partnerships"))
-        """
-        rootItem = QStandardItem( "Microsoft Exchange Server" )
-        rootItem.setIcon(self.iconConnected)
-        self.modelPartnerships.appendRow( rootItem)
-
-
-        rootItem2 = QStandardItem( "Linux PC" )
-        rootItem2.setIcon(self.iconDisconnected)
-        self.modelPartnerships.appendRow(rootItem2)
-
-        
-        self.myAAA(rootItem)
-        self.myAAA(rootItem2)
-        #self.childItem_1_Files = QStandardItem("Files")
-        #self.childItem_1_Files.setCheckable(True)
-        #rootItem.appendRow( self.childItem_1_Files )
-        """
 
         self.viewPartnerships.expandAll()
         
-        print "aaa"
 
        
     @pyqtSignature("")
     def on_button_delete_pship_clicked(self):
+
+        #Only delete things if user selected something
         if len( self.viewPartnerships.selectedIndexes() ) > 0:
-            print "something was selected"
-            print self.viewPartnerships.selectedIndexes()[0].row()
-            print self.viewPartnerships.selectedIndexes()[0].parent()
-        else:
-            print "something was selected"
+            #Determine which partnership the user wants to delete
+            
+            #First option: the user selected one of the subitems
+            pshipIdx = self.viewPartnerships.selectedIndexes()[0].parent().row()
+
+            #The parent of the selected item is -1, this means that the
+            #user selected the partnership line itself.
+            if pshipIdx == -1:
+                pshipIdx = self.viewPartnerships.selectedIndexes()[0].row()
+            
+            #Ask the user if he is sure ;)
+            sync_items, partnerships = self.phoneCommunicator.getPartnerships()
+            selected_partnership = partnerships[pshipIdx]
+            id,guid,name,hostname,devicename,items = selected_partnership
+
+
+            reply = QMessageBox.question(self,"Confirm partnership deletion", "Are you really sure you want to delete the partnership %s"%name, QMessageBox.Yes, QMessageBox.No|QMessageBox.Default|QMessageBox.Escape) 
+
+            if reply != QMessageBox.Yes:
+                return
+
+            print "User wants to delete partnership: %s"%name
+           
+            #This is for checking whether the user is having a WM6 device
+            if self.phoneCommunicator.deviceOsVersion[0] == 5 and self.phoneCommunicator.deviceOsVersion[1] == 2:
+                showExtraWarning = False
+                orphanedItems=[]
+
+                
+                pshipConnections = dict()
+                for _item in sync_items:
+                    pshipConnections[ _item ] = 0
+
+
+
+                #Check whether the removal of this particular partnership would result
+                #in orphaned itemtypes, that would be deleted by wm6
+                for pship in partnerships:
+                    id2,guid2,name2,hostname2,devicename2,items2 = pship
+                    for _item2 in items2:
+                        pshipConnections[ _item2 ] = pshipConnections[ _item2 ] + 1
+
+                for _item in items:
+                    #If this partnership connection was the last one for this particular
+                    #type of syncitem, we must notify the user
+                    if pshipConnections[ _item ] == 1:
+                        showExtraWarning = True 
+                        orphanedItems.append( sync_items[ _item ] ) 
+
+                    
+
+                if showExtraWarning:
+                    _orphanedItemsString=""
+                    for orphanedItem in orphanedItems:
+                        _orphanedItemsString = "%s,%s"%(_orphanedItemsString, orphanedItem)
+                    _orphanedItemsString = _orphanedItemsString[1:]
+                    reply = QMessageBox.warning(self,"Possible deletion of 'orphaned' items", "It appears you are using a Windows Mobile 6 device.\nDeleting the partnership might result in all items of [%s] to be deleted from device because no other partnership is connected with these.\nAre you really sure you want to delete this partnership?"%_orphanedItemsString, QMessageBox.Yes, QMessageBox.No|QMessageBox.Default|QMessageBox.Escape) 
+
+                    if reply != QMessageBox.Yes:
+                        return
+                
+                #If we got here, then the user is 100% sure the partnership
+                #should be deleted. Then we do this ;)
+                self.phoneCommunicator.deletePartnership( id,guid )
+
+
 
     @pyqtSignature("")
     def on_BUTTON_TEST_clicked(self):

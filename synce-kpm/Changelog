@@ -2,7 +2,8 @@
 
 	* Some minor bugfixes in code
 	* Some minor changes in GUI desgin
-	* Preliminary support for displaying partnerships 
+	* Added support for displaying partnerships 
+	* Added support for removing partnerships
 
 2008-01-08	Guido Diepen	<guido@guidodiepen.nl>
 
