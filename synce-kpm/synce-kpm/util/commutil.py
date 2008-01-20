@@ -36,6 +36,7 @@ import dbus.glib
 from threading import Thread
 from threading import Timer
 from threading import *
+import threading
 import time
 
 
@@ -53,7 +54,7 @@ ACTION_SYNCENGINE_CHANGED_OFFLINE = 10
 ACTION_SYNCENGINE_CHANGED         = 11
 
 
-TIMER_INTERVAL = 480 
+TIMER_INTERVAL = 15 
 
 ODCCM_DEVICE_PASSWORD_FLAG_SET               = 1
 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE           = 2
@@ -62,6 +63,8 @@ ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = 4
 class PhoneCommunicator(Observable):
     def __init__(self, observer=None):
         super(PhoneCommunicator,self).__init__()
+        
+        self.rapiLock = threading.Lock()
 
         #
         # Initially, we set all of the values to None or False
@@ -355,8 +358,10 @@ class PhoneCommunicator(Observable):
         fileSize = os.stat( localFilenameAndPath ).st_size
         
         RAPI_BUFFER_SIZE = 65535
-
+        
+        self.rapiLock.acquire()
         fileHandle = self.rapi_session.createFile("%s%s"%(copyToDirectory,fileName), GENERIC_WRITE , 0, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL )
+        self.rapiLock.release()
         if fileHandle != 0xffffffff:
             print "Copying file to device"
 
@@ -369,7 +374,9 @@ class PhoneCommunicator(Observable):
                 progressCallback( (100 * bytesWritten)/fileSize )
 
             while len(read_buffer) > 0:
+                self.rapiLock.acquire()
                 self.rapi_session.writeFile( fileHandle, read_buffer, len(read_buffer) )
+                self.rapiLock.release()
                 bytesWritten += len(read_buffer) 
                 if progressCallback is not None:
                     progressCallback( (100 * bytesWritten)/fileSize )
@@ -377,7 +384,10 @@ class PhoneCommunicator(Observable):
                 read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
 
             print "Closing filehandle..."
+            self.rapiLock.acquire()
             returnValue = self.rapi_session.closeHandle(fileHandle)
+            self.rapiLock.release()
+
             fileObject.close()
 
             applicationName = "wceload.exe"
@@ -385,7 +395,9 @@ class PhoneCommunicator(Observable):
             applicationParms = "\"%s%s\""%(copyToDirectory,fileName)
             if not deleteCab:
                 applicationParms += " /nodelete"
+            self.rapiLock.acquire()
             result = self.rapi_session.createProcess( applicationName, applicationParms )
+            self.rapiLock.release()
 
     def uninstallProgram(self, programName):
         doc = libxml2.newDoc("1.0")
@@ -405,7 +417,9 @@ class PhoneCommunicator(Observable):
         node.setProp("value", "1") ; 
 
         print "_config_query: CeProcessConfig request is \n", doc_node.serialize("utf-8",1)
+        self.rapiLock.acquire()
         reply = self.rapi_session.process_config(doc_node.serialize("utf-8",0), 1)
+        self.rapiLock.release()
         reply_doc = libxml2.parseDoc(reply)
 
         print "_config_query: CeProcessConfig response is \n", reply_doc.serialize("utf-8",1)
@@ -426,7 +440,10 @@ class PhoneCommunicator(Observable):
 
         self.powerStatus = None
         if self.phoneConnected:
+            self.rapiLock.acquire()
             self.powerStatus = self.rapi_session.getSystemPowerStatus(True)
+            self.rapiLock.release()
+
 
         if oldPowerStatus != self.powerStatus:
             self.sendMessage( ACTION_POWERSTATUS_CHANGED )
@@ -453,8 +470,12 @@ class PhoneCommunicator(Observable):
 
 		#if we have connection, use it :)
         if self.phoneConnected:
+
+            self.rapiLock.acquire()
+            _programs = config_query_get(self.rapi_session, None ,   "UnInstall").children.values()
+            self.rapiLock.release()
             try:
-                for program in config_query_get(self.rapi_session, None ,   "UnInstall").children.values():
+                for program in _programs:
                     self._listInstalledPrograms.append( program.type )
             except:
                 self.phoneConnected = False
@@ -472,9 +493,11 @@ class PhoneCommunicator(Observable):
 
         if self.phoneConnected:
             try:
+                self.rapiLock.acquire()
                 hkcu = self.rapi_session.HKEY_CURRENT_USER
                 owner_key = hkcu.open_sub_key(r"ControlPanel\Owner")
                 self.deviceOwner = owner_key.query_value("Name")
+                self.rapiLock.release()
             except:
                 print "Something went wrong with fetching the info from the registry"
         if self.deviceOwner != old_deviceOnwer:
@@ -535,14 +558,20 @@ class PhoneCommunicator(Observable):
 
         if self.phoneConnected:
             #Amount free on mainMemory:
+            self.rapiLock.acquire()
             freeDisk,totalDisk,freeDiskTotal = self.rapi_session.getDiskFreeSpaceEx("\\")
+            self.rapiLock.release()
             self.storageInformation.append( ("MainMemory","\\" ,freeDisk,totalDisk,freeDiskTotal) )
 
+            self.rapiLock.acquire()
             myFiles = self.rapi_session.findAllFiles("\\*.*",FAF_FOLDERS_ONLY|FAF_ATTRIBUTES| FAF_NAME)
+            self.rapiLock.release()
             
             for folder in myFiles:
                 if folder["Attributes"] & FILE_ATTRIBUTE_TEMPORARY:
+                    self.rapiLock.acquire()
                     freeDisk,totalDisk,freeDiskTotal = self.rapi_session.getDiskFreeSpaceEx("\\"+folder["Name"]+"\\")
+                    self.rapiLock.release()
                     self.storageInformation.append( ("/%s"%folder["Name"],"\\%s\\"%folder["Name"], freeDisk,totalDisk,freeDiskTotal) )
 
         if self.storageInformation != old_storageInformation:
