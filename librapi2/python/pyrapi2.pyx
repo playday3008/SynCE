@@ -3,6 +3,14 @@ import sys
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize ( char *, int )
+    
+    ctypedef struct PyThreadState
+    PyThreadState *PyEval_SaveThread()
+    void PyEval_RestoreThread(PyThreadState *_save)
+
+
+
+
 
 cdef extern from "stdlib.h":
     void *malloc(size_t size)
@@ -48,6 +56,34 @@ cdef extern from "rapi.h":
     VOID CeGetSystemInfo( LPSYSTEM_INFO lpSystemInfo)
     BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation)
 
+#
+# Wrapper functions for the C RAPI calls that will release the GIL lock
+#
+
+cdef HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply):
+    cdef HRESULT retval
+    cdef PyThreadState *_save
+    _save = PyEval_SaveThread()
+    retval = CeProcessConfig(config, flags, reply)
+    PyEval_RestoreThread(_save)
+    return retval
+
+cdef BOOL _CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh):
+    cdef BOOL retval
+    cdef PyThreadState *_save
+    _save = PyEval_SaveThread()
+    retval = CeGetSystemPowerStatusEx(pSystemPowerStatus, refresh)
+    PyEval_RestoreThread(_save)
+    return retval
+
+
+cdef BOOL _CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped):
+    cdef BOOL retval
+    cdef PyThreadState *_save
+    _save = PyEval_SaveThread()
+    retval = CeWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped)
+    PyEval_RestoreThread(_save)
+    return retval
 
 #
 # Public constants
@@ -379,12 +415,19 @@ class RAPISession:
             raise RAPIError(retval)
 
 
+	
+
+
+
+
+
     def process_config(self, config, flags):
         cdef LPWSTR config_w
         cdef LPWSTR reply_w
         cdef char *reply
 
         config_w = wstr_from_utf8(config)
+        #retval = _CeProcessConfig(config_w, flags, &reply_w)
         retval = CeProcessConfig(config_w, flags, &reply_w)
         wstr_free_string(config_w)
 
@@ -567,7 +610,7 @@ class RAPISession:
         cdef char* c_buffer
 
         c_buffer = buffer 
-        CeWriteFile( fileHandle, c_buffer , numberOfBytesToWrite, &numberOfBytesWritten, NULL)
+        _CeWriteFile( fileHandle, c_buffer , numberOfBytesToWrite, &numberOfBytesWritten, NULL)
     
     def createProcess(self, applicationName, applicationParams):
         cdef PROCESS_INFORMATION processInformation
