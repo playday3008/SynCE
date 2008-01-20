@@ -1,7 +1,8 @@
 2008-01-20	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Rewrote code to make use of locking for access to librapi2
-
+	* Added window to show progress of CAB file copying (This needs
+	  latest SVN librapi, for non-blocking CeWriteFile)
 
 2008-01-19	Guido Diepen	<guido@guidodiepen.nl>
 

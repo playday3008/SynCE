@@ -348,12 +348,7 @@ class PhoneCommunicator(Observable):
             self.checkTimer = None
 
 
-    #This function might be used to make a threaded version of the copier in future
     def installProgram(self, localFilenameAndPath, copyToDirectory, deleteCab, progressCallback=None):
-        self._installProgram(localFilenameAndPath, copyToDirectory, deleteCab, progressCallback)
-
-
-    def _installProgram(self, localFilenameAndPath, copyToDirectory, deleteCab, progressCallback=None):
         fileName = os.path.basename (localFilenameAndPath)
         fileSize = os.stat( localFilenameAndPath ).st_size
         

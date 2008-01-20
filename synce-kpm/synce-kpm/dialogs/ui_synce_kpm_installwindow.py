@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-installwindow.ui'
 #
-# Created: Sun Jan 20 00:57:43 2008
+# Created: Sun Jan 20 14:21:42 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!

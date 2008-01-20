@@ -39,11 +39,27 @@ class synce_kpm_copycab_progresswindow(QtGui.QWidget, dialogs.ui_synce_kpm_copyc
 
         self.labelProgress.setText("")
         self.copyProgress.setValue(0)
+        self.currentProgress = 0
 
+    @pyqtSignature("")
+    def customEvent(self,event):
+        #This means we are finished, hide everything and return
+        if self.currentProgress < 0:
+            self.currentProgress = 100
+            self.hide()
+            QMessageBox.information(self,"Install CAB file", "Please follow instructions on the device now to install the program.", QMessageBox.Ok) 
+            return
 
-        
+        self.copyProgress.setValue(self.currentProgress)
+
+       
+    def updateProgress_cb(self, progressValue):
+        self.currentProgress = progressValue
+        progressUpdateEvent = QEvent(QEvent.User)
+        QCoreApplication.postEvent(self, progressUpdateEvent)
     
     def showEvent(self,event):
         self.labelProgress.setText("")
         self.copyProgress.setValue(0)
+        self.currentProgress = 0
 

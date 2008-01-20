@@ -13,6 +13,9 @@
    <string>Progress copy file</string>
   </property>
   <widget class="QLabel" name="labelProgress" >
+   <property name="windowModality" >
+    <enum>Qt::NonModal</enum>
+   </property>
    <property name="geometry" >
     <rect>
      <x>10</x>

@@ -28,9 +28,28 @@ import logging
 from util.commutil import * 
 
 
-
 import dialogs.ui_synce_kpm_installwindow
 import dialogs.synce_kpm_copycab_progresswindow
+import threading
+
+class InstallerThread(threading.Thread):
+    def __init__ (self,phoneCommunicator, localCabFilePath, destinationPath,deleteCab, copyProgress_cb):
+        Thread.__init__(self)
+        self.phoneCommunicator= phoneCommunicator
+        self.localCabFilePath = localCabFilePath
+        self.destinationPath  = destinationPath
+        self.deleteCab        = deleteCab
+        self.copyProgress_cb = copyProgress_cb
+    
+    def run(self):
+        self.phoneCommunicator.installProgram( self.localCabFilePath , self.destinationPath, self.deleteCab, self.copyProgress_cb )
+
+        #We are finished with copying
+        if self.copyProgress_cb is not None:
+            self.copyProgress_cb(-1)
+
+
+
 
 class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.Ui_synce_kpm_installwindow):
     def __init__(self, _phoneCommunicator):
@@ -79,8 +98,13 @@ class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.
     
     @pyqtSignature("")
     def on_okButton_clicked(self):
-        #Install the file through rapiutil
 
-        self.phoneCommunicator.installProgram( unicode(self.localCabFile.text()), self.deviceListRoot[self.deviceList.currentIndex()], self.deleteCAB.isChecked() , self.copy_progress_cb )
+        self.progressWindow.show()
+        self.progressWindow.labelProgress.setText("Copying <b>%s</b> to the device:"%os.path.basename(unicode(self.localCabFile.text())))
+        #Create a new thread
+        installerThread = InstallerThread( self.phoneCommunicator, unicode(self.localCabFile.text()), self.deviceListRoot[self.deviceList.currentIndex()], self.deleteCAB.isChecked() , self.progressWindow.updateProgress_cb)
+
+        installerThread.start()
+        
         self.hide()
 
