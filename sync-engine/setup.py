@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = "SyncEngine",
+    name = "sync-engine",
     version = "0.11",
     packages = find_packages(),
     scripts = ['sync-engine',
