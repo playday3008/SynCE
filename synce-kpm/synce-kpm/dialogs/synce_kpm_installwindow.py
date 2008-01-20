@@ -30,16 +30,17 @@ from util.commutil import *
 
 
 import dialogs.ui_synce_kpm_installwindow
-
+import dialogs.synce_kpm_copycab_progresswindow
 
 class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.Ui_synce_kpm_installwindow):
     def __init__(self, _phoneCommunicator):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)
         self.phoneCommunicator = _phoneCommunicator
-
         self.deviceListRoot = [] 
-        
+
+        self.progressWindow = dialogs.synce_kpm_copycab_progresswindow.synce_kpm_copycab_progresswindow()
+
     
     def showEvent(self,event):
         self.deviceList.clear()

@@ -1,3 +1,7 @@
+2008-01-20	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Small workaround patch for non-threadsafe librapi2
+
 2008-01-19	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Some minor bugfixes in code

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-mainwindow.ui'
 #
-# Created: Sat Jan 19 17:29:44 2008
+# Created: Sun Jan 20 00:27:03 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -109,11 +109,7 @@ class Ui_synce_kpm_mainwindow(object):
         self.labelStorageFree.setObjectName("labelStorageFree")
 
         self.batteryStatus = QtGui.QProgressBar(self.tab)
-        self.batteryStatus.setGeometry(QtCore.QRect(150,80,141,16))
-
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.batteryStatus.setFont(font)
+        self.batteryStatus.setGeometry(QtCore.QRect(150,80,141,20))
         self.batteryStatus.setProperty("value",QtCore.QVariant(0))
         self.batteryStatus.setInvertedAppearance(False)
         self.batteryStatus.setObjectName("batteryStatus")
