@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-copycab-progresswindow.ui'
 #
-# Created: Sun Jan 20 14:23:23 2008
+# Created: Sun Jan 20 14:46:52 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -16,7 +16,7 @@ class Ui_synce_kpm_copycab_progresswindow(object):
 
         self.labelProgress = QtGui.QLabel(synce_kpm_copycab_progresswindow)
         self.labelProgress.setWindowModality(QtCore.Qt.NonModal)
-        self.labelProgress.setGeometry(QtCore.QRect(10,10,351,18))
+        self.labelProgress.setGeometry(QtCore.QRect(10,10,381,18))
         self.labelProgress.setObjectName("labelProgress")
 
         self.copyProgress = QtGui.QProgressBar(synce_kpm_copycab_progresswindow)

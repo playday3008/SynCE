@@ -132,8 +132,9 @@ class PhoneCommunicator(Observable):
                                                          "/org/synce/SyncEngine",
                                                          "org.synce.SyncEngine")
             self.syncEngineRunning = True
-            self.updatePartnerships()
             self.sendMessage(ACTION_SYNCENGINE_CHANGED_ONLINE)
+            #self.updatePartnerships()
+
         except dbus.DBusException:
             print "SyncEngine is NOT running.... Will listen for sync-engine on dbus"
 
@@ -201,11 +202,13 @@ class PhoneCommunicator(Observable):
                                                                  "org.synce.SyncEngine")
                     
                     self.syncEngineRunning = True
-                    self.updatePartnerships()
                     self.sendMessage( ACTION_SYNCENGINE_CHANGED_ONLINE )
-                    
-                    
+                   
                     print "sync-engine just came online"
+                
+                    if self.phoneConnected:
+                        self.updatePartnerships()
+                    
                 except:
                     print "Something went wrong with dbus communcaiton."
             
@@ -296,6 +299,8 @@ class PhoneCommunicator(Observable):
             self.sendMessage(ACTION_PHONE_AUTHORIZED)
             self.checkTimer = Timer(0.1, self.timer_cb)
             self.checkTimer.start()
+            if self.syncEngineRunning:
+                self.updatePartnerships()
 
 
     def password_flags_changed_cb( self, added, removed ):
@@ -508,19 +513,20 @@ class PhoneCommunicator(Observable):
     def createPartnership(self, name, items):
         self.dbusSyncEngine.CreatePartnership(name,items)
         self.updatePartnerships()
-        self.sendMessage(ACTION_SYNCENGINE_CHANGED)
+#        self.sendMessage(ACTION_SYNCENGINE_CHANGED)
 
 
     def deletePartnership(self, id, guid):
         self.dbusSyncEngine.DeletePartnership(id,guid)
         self.updatePartnerships()
-        self.sendMessage(ACTION_SYNCENGINE_CHANGED)
+#        self.sendMessage(ACTION_SYNCENGINE_CHANGED)
 
     
     def getPartnerships(self):
         return (self.item_types, self.partnerships)
 
     def updatePartnerships(self):
+
         if self.syncEngineRunning:
             self.item_types = self.dbusSyncEngine.GetItemTypes()
 
@@ -537,10 +543,11 @@ class PhoneCommunicator(Observable):
             # * Contacts
             # * Tasks
 
-
+            self.sendMessage(ACTION_SYNCENGINE_CHANGED)
 
         else:
             print "Syncengine not running, not updating"
+
 
 
     def getStorageInformation(self):

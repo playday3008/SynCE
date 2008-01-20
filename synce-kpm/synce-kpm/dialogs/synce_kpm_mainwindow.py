@@ -191,7 +191,6 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
             
             self.updateStatusBar()
             self.updateDeviceStatus()
-            self.updatePartnerships()
             return
             
 
@@ -242,7 +241,6 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
             self.viewPartnerships.setVisible(True)
             self.button_add_pship.setVisible(True)
             self.button_delete_pship.setVisible(True)
-            self.updatePartnerships()
             return
         
         if event.reason == ACTION_SYNCENGINE_CHANGED:
