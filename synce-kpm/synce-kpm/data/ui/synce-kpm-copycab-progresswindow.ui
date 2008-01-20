@@ -1,0 +1,44 @@
+<ui version="4.0" >
+ <class>synce_kpm_copycab_progresswindow</class>
+ <widget class="QWidget" name="synce_kpm_copycab_progresswindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>84</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Progress copy file</string>
+  </property>
+  <widget class="QLabel" name="labelProgress" >
+   <property name="geometry" >
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>351</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QProgressBar" name="copyProgress" >
+   <property name="geometry" >
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>381</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="value" >
+    <number>24</number>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
