@@ -289,7 +289,7 @@ class Config:
 		if not os.path.exists(self.config_path):
 			if not os.path.isdir(self.config_dir):
 				os.mkdir(self.config_dir)
-			oldconf = os.path.join(self.path,"config.xml")
+			oldconf = os.path.join(self.sepath,"config/config.xml")
 			shutil.copy(oldconf, self.config_path)
 
 		

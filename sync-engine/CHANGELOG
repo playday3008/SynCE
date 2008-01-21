@@ -686,5 +686,12 @@ any time to refresh the plugins in the OpenSync directory.
 Setup.py needs updating to reflect these changes.
 
 
+21/01/2008 - 212100 Dr J A Gow
+------------------------------
+
+Fixed typo in config.py leading to an exception when config.xml is not
+present. Note that this requires config.xml to be copied over by the
+package manager and left in the same location relative to the 
+sync-engine root.
 
 
