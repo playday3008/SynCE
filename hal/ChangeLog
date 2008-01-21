@@ -1,3 +1,8 @@
+2008-01-19  Mark Ellis <mark@mpellis.org.uk>
+
+	* Only listen for connections on interface for our
+	  specified local ip
+
 2008-01-07  Mark Ellis <mark@mpellis.org.uk>
 
 	* Initial code

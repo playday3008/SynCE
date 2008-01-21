@@ -97,6 +97,76 @@ hal_device_removed_callback(LibHalContext *ctx,
   return;
 }
 
+static void
+iface_list_free_func(gpointer data,
+		     gpointer user_data)
+{
+  gnet_inetaddr_unref((GInetAddr*)data);
+}
+
+static gboolean
+check_interface_cb (gpointer data)
+{
+  gchar *tmp_bytes, *local_ip_bytes;
+  GInetAddr *local_iface = NULL;
+  gint addr_length;
+
+  GList *iface_list = gnet_inetaddr_list_interfaces();
+  GList *iface_list_iter = g_list_first(iface_list);
+
+  local_ip_bytes = ip4_bytes_from_dotted_quad(local_ip);
+
+  while (iface_list_iter) {
+    addr_length = gnet_inetaddr_get_length((GInetAddr*)iface_list_iter->data);
+    tmp_bytes = g_malloc0(addr_length);
+    gnet_inetaddr_get_bytes((GInetAddr*)iface_list_iter->data, tmp_bytes);
+
+    if ((*(guint32*)tmp_bytes) == (*(guint32*)local_ip_bytes)) {
+      g_free(tmp_bytes);
+      local_iface = (GInetAddr*)iface_list_iter->data;
+      gnet_inetaddr_ref(local_iface);
+      break;
+    }
+
+    g_free(tmp_bytes);
+
+    iface_list_iter = g_list_next(iface_list_iter);
+  }
+
+  g_list_foreach(iface_list, iface_list_free_func, NULL);
+  g_list_free(iface_list);
+  g_free(local_ip_bytes);
+
+  if (!local_iface) {
+    return TRUE;
+  }
+
+  g_debug("%s: found device iface", G_STRFUNC);
+
+  GInetAddr *server_990_addr = gnet_inetaddr_clone(local_iface);
+  gnet_inetaddr_set_port(server_990_addr, 990);
+
+  server_990 = gnet_server_new (server_990_addr, 990, client_connected_cb, data);
+  if (!server_990) {
+    g_error("%s: server_990 invalid", G_STRFUNC);
+  }
+
+  GInetAddr *server_5679_addr = gnet_inetaddr_clone(local_iface);
+  gnet_inetaddr_set_port(server_5679_addr, 5679);
+
+  server_5679 = gnet_server_new (server_5679_addr, 5679, client_connected_cb, data);
+  if (!server_5679)
+    g_error("%s: server_5679 invalid", G_STRFUNC);
+
+  gnet_inetaddr_unref(server_990_addr);
+  gnet_inetaddr_unref(server_5679_addr);
+  gnet_inetaddr_unref(local_iface);
+
+  if (rndis_device)
+    synce_trigger_connection (device_ip);
+
+  return FALSE;
+}
 
 gint
 main(gint argc,
@@ -149,6 +219,8 @@ main(gint argc,
   close (STDOUT_FILENO);
   close (STDERR_FILENO);
 
+  g_debug("%s: called with device-ip=%s, local-ip=%s", G_STRFUNC, device_ip, local_ip);
+
   dbus_error_init(&dbus_error);
 
   if (!(main_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
@@ -177,99 +249,7 @@ main(gint argc,
     return EXIT_FAILURE;
   }
 
-  /* **************** */
-
-  gchar *bytes = ip4_bytes_from_dotted_quad(device_ip);
-  GInetAddr *device_inetaddr = gnet_inetaddr_new_bytes(bytes, 4);
-  g_free(bytes);
-
-  gint addr_length = gnet_inetaddr_get_length(device_inetaddr);
-  bytes = g_malloc0(addr_length);
-  gnet_inetaddr_get_bytes(device_inetaddr, bytes);
-  g_debug("%s: ip from device_inetaddr: %u.%u.%u.%u", G_STRFUNC, (guint8)bytes[0], (guint8)bytes[1], (guint8)bytes[2], (guint8)bytes[3]);
-  g_free(bytes);
-
-  /* *************** 
-
-  GInetAddr *local_from_device_inetaddr = gnet_inetaddr_get_interface_to(device_inetaddr);
-  addr_length = gnet_inetaddr_get_length(local_from_device_inetaddr);
-  bytes = g_malloc0(addr_length);
-  gnet_inetaddr_get_bytes(local_from_device_inetaddr, bytes);
-  g_debug("%s: ip from get_interface: %u.%u.%u.%u", G_STRFUNC, (guint8)bytes[0], (guint8)bytes[1], (guint8)bytes[2], (guint8)bytes[3]);
-  g_free(bytes);
-  gnet_inetaddr_unref(local_from_device_inetaddr);
-
-   *************** */
-
-  bytes = ip4_bytes_from_dotted_quad(local_ip);
-  GInetAddr *local_inetaddr = gnet_inetaddr_new_bytes(bytes, 4);
-  g_free(bytes);
-
-  addr_length = gnet_inetaddr_get_length(local_inetaddr);
-  bytes = g_malloc0(addr_length);
-  gnet_inetaddr_get_bytes(local_inetaddr, bytes);
-  g_debug("%s: ip from local_inetaddr: %u.%u.%u.%u", G_STRFUNC, (guint8)bytes[0], (guint8)bytes[1], (guint8)bytes[2], (guint8)bytes[3]);
-  g_free(bytes);
-
-  if (gnet_inetaddr_is_private(local_inetaddr))
-    g_debug("%s: local ip works as private", G_STRFUNC);
-  if (gnet_inetaddr_is_ipv4(local_inetaddr))
-    g_debug("%s: local ip works as ipv4", G_STRFUNC);
-
-  /* *************** */
-
-  GList* addr_list = gnet_inetaddr_list_interfaces();
-
-  GList *tmp = g_list_first(addr_list);
-  bytes = ip4_bytes_from_dotted_quad(local_ip);
-
-  while (tmp) {
-
-    addr_length = gnet_inetaddr_get_length((GInetAddr*)tmp->data);
-    bytes = g_malloc0(addr_length);
-    gnet_inetaddr_get_bytes((GInetAddr*)tmp->data, bytes);
-    g_debug("%s: list interfaces : %u.%u.%u.%u", G_STRFUNC, (guint8)bytes[0], (guint8)bytes[1], (guint8)bytes[2], (guint8)bytes[3]);
-    g_free(bytes);
-
-    gnet_inetaddr_unref((GInetAddr*)tmp->data);
-
-    tmp = g_list_next(tmp);
-  }
-
-  g_list_free(addr_list);
-
-  /* *************** */
-
-  GInetAddr *server_990_addr = gnet_inetaddr_clone(local_inetaddr);
-
-  gnet_inetaddr_set_port(server_990_addr, 990);
-  /* gnet_inetaddr_set_port(local_inetaddr, 990); */
-  /* server_990 = gnet_server_new (server_990_addr, 990, client_connected_cb, mainloop); */
-  server_990 = gnet_server_new (NULL, 990, client_connected_cb, mainloop);
-  if (!server_990) {
-    g_error("%s: server_990 invalid", G_STRFUNC);
-  }
-
-  GInetAddr *server_5679_addr = gnet_inetaddr_clone(local_inetaddr);
-
-  gnet_inetaddr_set_port(server_5679_addr, 5679);
-  /* gnet_inetaddr_set_port(local_inetaddr, 5679); */
-  /* server_5679 = gnet_server_new (server_5679_addr, 5679, client_connected_cb, mainloop); */
-  server_5679 = gnet_server_new (NULL, 5679, client_connected_cb, mainloop);
-  if (!server_5679)
-    g_error("%s: server_5679 invalid", G_STRFUNC);
-
-
-  gnet_inetaddr_unref(server_990_addr);
-  gnet_inetaddr_unref(server_5679_addr);
-  gnet_inetaddr_unref(local_inetaddr);
-  gnet_inetaddr_unref(device_inetaddr);
-
-
-  if (rndis_device)
-    synce_trigger_connection (device_ip);
-
-  /* ********************************* */
+  g_timeout_add (100, check_interface_cb, mainloop);
 
   g_main_loop_run (mainloop);
 
