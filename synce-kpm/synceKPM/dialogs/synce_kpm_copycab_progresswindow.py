@@ -22,17 +22,18 @@ from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
 import libxml2
-import util.xml2util
-import util.characteristics
+import synceKPM.util.xml2util
+import synceKPM.util.characteristics
 import logging
-from util.commutil import * 
+from synceKPM.util.commutil import * 
 
 
 
-import dialogs.ui_synce_kpm_copycab_progresswindow
+#import synceKPM.dialogs.ui_synce_kpm_copycab_progresswindow
+from synceKPM.dialogs.ui_synce_kpm_copycab_progresswindow import *
 
 
-class synce_kpm_copycab_progresswindow(QtGui.QWidget, dialogs.ui_synce_kpm_copycab_progresswindow.Ui_synce_kpm_copycab_progresswindow):
+class synce_kpm_copycab_progresswindow(QtGui.QWidget, Ui_synce_kpm_copycab_progresswindow):
     def __init__(self):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)

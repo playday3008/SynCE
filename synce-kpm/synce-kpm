@@ -19,14 +19,9 @@
 """
 Starter file of the SynCE KDE PDA Manager
 """
-import sys
-import os
 
-#Add the correct path to the system path:
-sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), 
-								"synce-kpm"))
 
-import synce_kpm_main
+import synceKPM.synce_kpm_main
 
-synce_kpm_main.main()
+synceKPM.synce_kpm_main.main()
 

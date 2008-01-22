@@ -22,7 +22,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import *
 
-from dialogs.synce_kpm_mainwindow import *
+from synceKPM.dialogs.synce_kpm_mainwindow import *
 
 app = None
 

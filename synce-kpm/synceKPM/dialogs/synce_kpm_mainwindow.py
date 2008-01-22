@@ -26,15 +26,17 @@ from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
 import libxml2
-import util.xml2util
-import util.characteristics
+import synceKPM.util.xml2util
+import synceKPM.util.characteristics
 import logging
 
-from util.commutil import * 
+from synceKPM.util.commutil import * 
 
-import dialogs.ui_synce_kpm_mainwindow
-import dialogs.synce_kpm_installwindow
-import dialogs.synce_kpm_create_pshipwindow
+from synceKPM.dialogs.ui_synce_kpm_mainwindow import *
+from synceKPM.dialogs.synce_kpm_installwindow import *
+from synceKPM.dialogs.synce_kpm_create_pshipwindow import *
+
+
 
 class PhoneCommunicatorCallbackEvent(QEvent):
     def __init__(self, _reason=-1):
@@ -45,7 +47,7 @@ class PhoneCommunicatorCallbackEvent(QEvent):
         return QEvent.User
 
 
-class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui_synce_kpm_mainwindow):
+class synce_kpm_mainwindow(QtGui.QMainWindow, synceKPM.dialogs.ui_synce_kpm_mainwindow.Ui_synce_kpm_mainwindow):
     def __init__(self, *args):
         QtGui.QWidget.__init__(self, *args)
         self.setupUi(self)
@@ -89,9 +91,9 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, dialogs.ui_synce_kpm_mainwindow.Ui
          
         self.phoneCommunicator = PhoneCommunicator(self.updateView_cb)
         
-        self.installWindow = dialogs.synce_kpm_installwindow.synce_kpm_installwindow( self.phoneCommunicator )
+        self.installWindow = synce_kpm_installwindow( self.phoneCommunicator )
 
-        self.createPshipWindow = dialogs.synce_kpm_create_pshipwindow.synce_kpm_create_pshipwindow(self.phoneCommunicator)
+        self.createPshipWindow = synce_kpm_create_pshipwindow(self.phoneCommunicator)
 
 
 

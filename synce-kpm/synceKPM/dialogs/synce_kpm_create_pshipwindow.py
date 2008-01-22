@@ -22,17 +22,19 @@ from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
 import libxml2
-import util.xml2util
-import util.characteristics
 import logging
-from util.commutil import * 
+
+
+from synceKPM.util.commutil import * 
+import synceKPM.util.xml2util
+import synceKPM.util.characteristics
+
+#import synceKPM.dialogs.ui_synce_kpm_create_pshipwindow
+from synceKPM.dialogs.ui_synce_kpm_create_pshipwindow import *
 
 
 
-import dialogs.ui_synce_kpm_create_pshipwindow
-
-
-class synce_kpm_create_pshipwindow(QtGui.QWidget, dialogs.ui_synce_kpm_create_pshipwindow.Ui_synce_kpm_create_pshipwindow):
+class synce_kpm_create_pshipwindow(QtGui.QWidget, synceKPM.dialogs.ui_synce_kpm_create_pshipwindow.Ui_synce_kpm_create_pshipwindow):
     def __init__(self, _phoneCommunicator):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)

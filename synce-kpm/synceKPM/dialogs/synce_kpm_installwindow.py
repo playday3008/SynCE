@@ -22,15 +22,19 @@ from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
 import libxml2
-import util.xml2util
-import util.characteristics
 import logging
-from util.commutil import * 
-
-
-import dialogs.ui_synce_kpm_installwindow
-import dialogs.synce_kpm_copycab_progresswindow
 import threading
+
+
+from synceKPM.util.commutil import * 
+import synceKPM.util.xml2util
+import synceKPM.util.characteristics
+
+
+#import synceKPM.dialogs.ui_synce_kpm_installwindow
+#import synceKPM.dialogs.synce_kpm_copycab_progresswindow
+from synceKPM.dialogs.ui_synce_kpm_installwindow import *
+from synceKPM.dialogs.synce_kpm_copycab_progresswindow import *
 
 class InstallerThread(threading.Thread):
     def __init__ (self,phoneCommunicator, localCabFilePath, destinationPath,deleteCab, copyProgress_cb):
@@ -51,14 +55,14 @@ class InstallerThread(threading.Thread):
 
 
 
-class synce_kpm_installwindow(QtGui.QWidget, dialogs.ui_synce_kpm_installwindow.Ui_synce_kpm_installwindow):
+class synce_kpm_installwindow(QtGui.QWidget, Ui_synce_kpm_installwindow):
     def __init__(self, _phoneCommunicator):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)
         self.phoneCommunicator = _phoneCommunicator
         self.deviceListRoot = [] 
 
-        self.progressWindow = dialogs.synce_kpm_copycab_progresswindow.synce_kpm_copycab_progresswindow()
+        self.progressWindow = synce_kpm_copycab_progresswindow()
 
     
     def showEvent(self,event):
