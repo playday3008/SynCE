@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #    Copyright (C) 2007 Guido Diepen
 #    Email: Guido Diepen <guido@guidodiepen.nl>
 #
@@ -116,11 +114,13 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, synceKPM.dialogs.ui_synce_kpm_main
 
     def helpAbout(self):
         QMessageBox.about(self, "About SynCE-KPM",
-                """<b>SynCE KDE PDA Manager</b> v %s
-                <p>This application can be used to manage a WM5/WM6 PDA
-                connected to the computer with SynCE.
-                <p>Author: Guido Diepen <guido@guidodiepen.nl>
-                """%"0.0.1")
+            """<b>SynCE KDE PDA Manager</b> v %s
+            <p>SynCE-KPM allows you to manage the basic features of your 
+            WM5/WM6 device under Linux like the ActiveSync application does  
+            under MS-Windows.
+            <p>Copyright (c) 2008 Guido Diepen &lt;guido@guidodiepen.nl&gt;
+            <p>SynCE-KPM is licensed under GPL
+            """%"0.11")
 
     @pyqtSignature("")
     def closeEvent(self,event):

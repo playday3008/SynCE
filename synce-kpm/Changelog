@@ -1,3 +1,8 @@
+2008-01-22	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Converted the directory structure for easy packaging
+	* Created setup.py for distutils
+
 2008-01-20	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Rewrote code to make use of locking for access to librapi2
