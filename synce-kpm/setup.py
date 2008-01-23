@@ -12,18 +12,13 @@ setup(
     packages = find_packages(),
     scripts = ['synce-kpm'],
    
-    data_files=[('synceKPM/data', [  'data/blue_22x22.png', 
-                            'data/blue_48x48.png',
-                            'data/folder.png',  
-                            'data/green_22x22.png',
-                            'data/green_48x48.png', 
-                            'data/lock.svg'
+    data_files=[('synceKPM/data', [  'synceKPM/data/blue_22x22.png', 
+                            'synceKPM/data/blue_48x48.png',
+                            'synceKPM/data/folder.png',  
+                            'synceKPM/data/green_22x22.png',
+                            'synceKPM/data/green_48x48.png', 
+                            'synceKPM/data/lock.svg'
                          ]),
-                ('data/ui',[ 'data/ui/synce-kpm-mainwindow.ui',
-                             'data/ui/synce-kpm-copycab-progresswindow.ui',
-                             'data/ui/synce-kpm-create-pshipwindow.ui',
-                             'data/ui/synce-kpm-installwindow.ui'
-                           ]) 
                ],
 )
 

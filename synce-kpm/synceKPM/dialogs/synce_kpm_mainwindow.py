@@ -23,6 +23,8 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
+from pkg_resources import resource_filename
+
 import libxml2
 import synceKPM.util.xml2util
 import synceKPM.util.characteristics
@@ -46,13 +48,18 @@ class PhoneCommunicatorCallbackEvent(QEvent):
 
 
 class synce_kpm_mainwindow(QtGui.QMainWindow, synceKPM.dialogs.ui_synce_kpm_mainwindow.Ui_synce_kpm_mainwindow):
+    
+
+
     def __init__(self, *args):
         QtGui.QWidget.__init__(self, *args)
         self.setupUi(self)
-        
+
+
         self.toolButtonDeviceIsLocked.setVisible(False)
         self.labelDeviceIsLocked.setVisible(False)
-        self.toolButtonDeviceIsLocked.setIcon(QtGui.QIcon("synce-kpm/data/lock.svg"))
+        self.iconLocked = QtGui.QIcon( "%s/lock.svg"%resource_filename('synceKPM', 'data'))
+        self.toolButtonDeviceIsLocked.setIcon( self.iconLocked )
         self.viewPartnerships.setVisible(False)
         self.button_add_pship.setVisible(False)
         self.button_delete_pship.setVisible(False)
@@ -62,8 +69,8 @@ class synce_kpm_mainwindow(QtGui.QMainWindow, synceKPM.dialogs.ui_synce_kpm_main
         self.storageInformation = []
 
 
-        self.iconDisconnected = QtGui.QIcon("synce-kpm/data/blue_22x22.png")
-        self.iconConnected  = QtGui.QIcon("synce-kpm/data/green_22x22.png")
+        self.iconDisconnected = QtGui.QIcon("%s/blue_22x22.png"%resource_filename('synceKPM','data'))
+        self.iconConnected = QtGui.QIcon("%s/green_22x22.png"%resource_filename('synceKPM','data'))
         
         self.setWindowIcon(self.iconConnected)
 
