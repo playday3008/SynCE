@@ -11,8 +11,8 @@ setup(
     version = '0.11',
     packages = find_packages(),
     scripts = ['synce-kpm'],
-    
-    data_files=[('data', [  'data/blue_22x22.png', 
+   
+    data_files=[('synceKPM/data', [  'data/blue_22x22.png', 
                             'data/blue_48x48.png',
                             'data/folder.png',  
                             'data/green_22x22.png',
