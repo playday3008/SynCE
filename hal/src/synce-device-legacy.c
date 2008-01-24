@@ -396,13 +396,19 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
       goto OUT;
     }
 
-  priv->req_id++;
+  /* 
+   * Create a local copy of the global req_id variable to avoid
+   * the chances of race conditions
+   */
+  guint *req_id_local = (guint *) g_malloc (sizeof (guint));
+  *req_id_local = ++(priv->req_id) ;
+
   broker = g_object_new (SYNCE_TYPE_CONNECTION_BROKER,
-                         "id", priv->req_id,
+                         "id", *req_id_local,
                          "context", ctx,
                          NULL);
 
-  g_hash_table_insert (priv->requests, &priv->req_id, broker);
+  g_hash_table_insert (priv->requests, req_id_local, broker);
 
   g_signal_connect (broker, "done", (GCallback) synce_device_conn_broker_done_cb, self);
 

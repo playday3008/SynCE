@@ -1,3 +1,8 @@
+2008-01-24  Mark Ellis <mark@mpellis.org.uk>
+
+	* Removed possible race condition when multiple clients would request a rapi
+	  connection at the same time, thanks to Guido's odccm patch
+
 2008-01-19  Mark Ellis <mark@mpellis.org.uk>
 
 	* Only listen for connections on interface for our

@@ -335,7 +335,7 @@ synce_device_init (SynceDevice *self)
 
   priv->requests = g_hash_table_new_full(g_int_hash,
 					 g_int_equal,
-					 NULL,
+					 g_free,
 					 g_object_unref);
 
   /* hal context setup */

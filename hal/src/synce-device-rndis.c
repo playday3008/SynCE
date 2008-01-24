@@ -342,22 +342,27 @@ synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvoca
       goto OUT;
     }
 
-  priv->req_id++;
+  /* 
+   * Create a local copy of the global req_id variable to avoid
+   * the chances of race conditions
+   */
+  guint *req_id_local = (guint *) g_malloc (sizeof (guint));
+  *req_id_local = ++(priv->req_id) ;
 
   broker = g_object_new (SYNCE_TYPE_CONNECTION_BROKER,
-                         "id", priv->req_id,
+                         "id", *req_id_local,
                          "context", ctx,
                          NULL);
 
   /* FIXME: have SynceConnectionBroker emit a signal when the request has
    *        timed out so that we don't risk zombie requests hanging around. */
-  g_hash_table_insert (priv->requests, &priv->req_id, broker);
+  g_hash_table_insert (priv->requests, req_id_local, broker);
 
   g_signal_connect (broker, "done", (GCallback) synce_device_conn_broker_done_cb, self);
 
   buf[0] = GUINT32_TO_LE (5);
   buf[1] = GUINT32_TO_LE (4);
-  buf[2] = GUINT32_TO_LE (priv->req_id);
+  buf[2] = GUINT32_TO_LE (*req_id_local);
 
   gnet_conn_write (priv->conn, (gchar *) buf, sizeof (buf));
 
