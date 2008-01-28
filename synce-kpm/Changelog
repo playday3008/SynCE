@@ -1,3 +1,7 @@
+2008-01-28	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Minor update in setup.py for correct handling of icons with packaging.
+
 2008-01-23	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Working setup.py, no more problems with icons
