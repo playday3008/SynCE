@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2007 Mark Ellis <mark@mpellis.org.uk>
+Copyright (c) 2008 Mark Ellis <mark@mpellis.org.uk>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
@@ -20,9 +20,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-void synce_error_dialog(const char *message);
-void synce_warning_dialog(const char *message);
+#ifndef HAL_CLIENT_H
+#define HAL_CLIENT_H
 
-gchar *device_get_password(gchar *pdaname);
-void device_do_password_on_device_dialog(gchar *pdaname);
-gchar *get_device_name_via_rapi();
+#include <glib-object.h>
+
+G_BEGIN_DECLS
+
+typedef struct _HalClient HalClient;
+struct _HalClient {
+  GObject parent;
+};
+
+typedef struct _HalClientClass HalClientClass;
+struct _HalClientClass {
+  GObjectClass parent_class;
+};
+
+GType hal_client_get_type (void);
+
+#define HAL_CLIENT_TYPE (hal_client_get_type())
+#define HAL_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), HAL_CLIENT_TYPE, HalClient))
+#define HAL_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), HAL_CLIENT_TYPE, HalClientClass))
+#define IS_HAL_CLIENT(obj) (G_TYPE_CHECK_TYPE ((obj), HAL_CLIENT_TYPE))
+#define IS_HAL_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), HAL_CLIENT_TYPE))
+#define HAL_CLIENT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), HAL_CLIENT_TYPE, HalClientClass))
+
+G_END_DECLS
+
+#endif /* HAL_CLIENT_H */

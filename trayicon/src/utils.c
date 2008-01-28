@@ -107,6 +107,21 @@ device_do_password_dialog (gchar *pdaname)
   return password;
 }
 
+void
+device_do_password_on_device_dialog (gchar *pdaname)
+{
+  GtkWidget *password_dialog;
+
+  password_dialog = gtk_message_dialog_new (NULL,
+				   GTK_DIALOG_DESTROY_WITH_PARENT,
+				   GTK_MESSAGE_INFO,
+				   GTK_BUTTONS_OK,
+				   "The device %s is locked. Please unlock it by following instructions on the device",
+				   pdaname);
+  gtk_dialog_run (GTK_DIALOG (password_dialog));
+  gtk_widget_destroy (password_dialog);
+}
+
 gchar *
 device_get_password(gchar *pdaname)
 {

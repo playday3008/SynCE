@@ -24,6 +24,7 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			utils.c utils.h  \
 			device.c device.h \
 			device-manager.c device-manager.h \
+			hal-client.c hal-client.h \
 			vdccm-client.c vdccm-client.h \
 			odccm-client.c odccm-client.h \
 			dccm-client.c dccm-client.h \
@@ -40,14 +41,16 @@ synce_trayicon_CPPFLAGS = \
 	$(GNOME_KEYRING_CFLAGS) \
 	$(LIBRAPI2_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
-	$(DBUS_CFLAGS)
+	$(DBUS_CFLAGS) \
+	$(HAL_CFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GNOME2_LIBS) \
 	$(GNOME_KEYRING_LIBS) \
 	$(LIBRAPI2_LIBS) \
 	$(LIBRRA_LIBS) \
-	$(DBUS_LIBS)
+	$(DBUS_LIBS) \
+	$(HAL_LIBS)
 
 if ENABLE_NOTIFY
 synce_trayicon_CPPFLAGS += $(NOTIFY_CFLAGS)

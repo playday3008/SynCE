@@ -1,3 +1,8 @@
+2008-01-24  Mark Ellis <mark@mpellis.org.uk>
+
+	* support for hal
+	* support for WM6 passworded devices
+
 2008-01-09  Mark Ellis <mark@mpellis.org.uk>
 
 	* added src/LICENCE.* to EXTRA_DIST

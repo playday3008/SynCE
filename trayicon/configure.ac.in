@@ -39,6 +39,9 @@ dnl Check for D-Bus
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.61, dbus-glib-1 >= 0.61],
                     dbus=yes, dbus=no)
 
+dnl Check for Hal
+PKG_CHECK_MODULES(HAL, hal)
+
 dnl Check for Gnome Keyring
 PKG_CHECK_MODULES(GNOME_KEYRING, gnome-keyring-1)
 AC_SUBST(GNOME_KEYRING_CFLAGS)

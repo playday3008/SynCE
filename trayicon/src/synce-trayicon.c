@@ -46,6 +46,7 @@ IN THE SOFTWARE.
 #include "dccm-client.h"
 #include "vdccm-client.h"
 #include "odccm-client.h"
+#include "hal-client.h"
 #include "device-manager.h"
 #include "stock-icons.h"
 #include "device-info.h"
@@ -75,6 +76,7 @@ struct _SynceTrayIconPrivate {
 
 enum {
   USE_ODCCM,
+  USE_HAL,
   USE_VDCCM
 };
 
@@ -88,6 +90,7 @@ static DccmClient *init_client_comms(SynceTrayIcon *self);
 static void uninit_client_comms(SynceTrayIcon *self);
 static void password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
 static void password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
+static void password_required_on_device_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
 static void device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpointer user_data);
 static void device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
 static void service_stopping_cb(DccmClient *comms_client, gpointer user_data);
@@ -221,6 +224,12 @@ password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
 
   dccm_client_provide_password(comms_client, pdaname, password);
   g_free(password);
+}
+
+static void
+password_required_on_device_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
+{
+  device_do_password_on_device_dialog(pdaname);
 }
 
 static void
@@ -358,19 +367,24 @@ static DccmClient *
 init_client_comms(SynceTrayIcon *self)
 {
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-  DccmClient *comms_client;
+  DccmClient *comms_client = NULL;
 
-  if (priv->which_dccm == USE_VDCCM) {
+  switch (priv->which_dccm) {
+  case USE_VDCCM:
     if (gconf_client_get_bool (priv->conf_client, "/apps/synce/trayicon/start_vdccm", NULL))
       if (!(start_dccm()))
 	return NULL;
     comms_client = DCCM_CLIENT(g_object_new(VDCCM_CLIENT_TYPE, NULL));
+    break;
+  case USE_ODCCM:
+    dbus_g_thread_init();
+    comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
+    break;
+  case USE_HAL:
+    dbus_g_thread_init();
+    comms_client = DCCM_CLIENT(g_object_new(HAL_CLIENT_TYPE, NULL));
+    break;
   }
-  else
-    {
-      dbus_g_thread_init();
-      comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
-    }
 
   if (!(comms_client)) {
     g_critical("%s: Unable to create vdccm comms client", G_STRFUNC);
@@ -388,6 +402,9 @@ init_client_comms(SynceTrayIcon *self)
   g_signal_connect (G_OBJECT (comms_client), "password-required",
             GTK_SIGNAL_FUNC (password_required_cb), self);
 
+  g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
+            GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
+
   g_signal_connect (G_OBJECT (comms_client), "service-stopping",
             GTK_SIGNAL_FUNC (service_stopping_cb), self);
 
@@ -400,10 +417,17 @@ init_client_comms(SynceTrayIcon *self)
   return comms_client;
 
 error:
-  if (priv->which_dccm == USE_VDCCM)
+  switch (priv->which_dccm) {
+  case USE_VDCCM:
     synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
-  else
+    break;
+  case USE_ODCCM:
     synce_warning_dialog("Unable to contact ODCCM, check it is installed and running");
+    break;
+  case USE_HAL:
+    synce_warning_dialog("Unable to contact Hal, check it is installed and running");
+    break;
+  }
   return NULL;
 }
 
@@ -782,6 +806,8 @@ synce_trayicon_init(SynceTrayIcon *self)
   else {
     if (!(g_ascii_strcasecmp(tmpstr, "v")))
       priv->which_dccm = USE_VDCCM;
+    else if (!(g_ascii_strcasecmp(tmpstr, "h")))
+      priv->which_dccm = USE_HAL;
     else
       priv->which_dccm = USE_ODCCM;
     g_free(tmpstr);

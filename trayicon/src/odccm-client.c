@@ -63,7 +63,8 @@ struct _OdccmClientPrivate {
 
 enum {
   ODCCM_DEVICE_PASSWORD_FLAG_SET = 1,
-  ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE
+  ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE = 2,
+  ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = 4
 };
 
 typedef struct _proxy_store proxy_store;
@@ -118,6 +119,8 @@ password_flags_changed_cb(DBusGProxy *proxy,
 
   if (added & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE)
     g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, pdaname);
+  if (added & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE)
+    g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, pdaname);
 
   return;
 }
@@ -437,6 +440,11 @@ odccm_device_connected_cb(DBusGProxy *proxy,
   if (password_flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE) {
     g_hash_table_insert(priv->pending_devices, g_strdup(name), device);
     g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, name);
+    goto exit;
+  }
+  if (password_flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE) {
+    g_hash_table_insert(priv->pending_devices, g_strdup(name), device);
+    g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, name);
     goto exit;
   }
 

@@ -92,6 +92,14 @@ dccm_client_base_init (gpointer klass)
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
+  iface->signals[PASSWORD_REQUIRED_ON_DEVICE] = g_signal_new ("password-required-on-device",
+                  G_TYPE_FROM_INTERFACE (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
+
   iface->signals[PASSWORD_REJECTED] = g_signal_new ("password-rejected",
                   G_TYPE_FROM_INTERFACE (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
