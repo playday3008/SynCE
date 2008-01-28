@@ -18,8 +18,11 @@ typedef enum {
 } ControlState;
 
 typedef enum {
-  SYNCE_DEVICE_PASSWORD_FLAG_SET     = 1,
-  SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE = 2,
+  SYNCE_DEVICE_PASSWORD_FLAG_UNSET             = 0,
+  SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE           = 1,
+  SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = 2,
+  SYNCE_DEVICE_PASSWORD_FLAG_CHECKING          = 3,
+  SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED          = 4,
 } SynceDevicePasswordFlags;
 
 typedef struct _SynceDevicePrivate SynceDevicePrivate;
@@ -64,7 +67,7 @@ struct _SynceDevicePrivate
 
 void synce_device_provide_password (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
 void synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx);
-void synce_device_change_password_flags (SynceDevice *self, SynceDevicePasswordFlags add, SynceDevicePasswordFlags remove);
+void synce_device_change_password_flags (SynceDevice *self, SynceDevicePasswordFlags new_flag);
 void synce_device_conn_broker_done_cb (SynceConnectionBroker *broker, gpointer user_data);
 void synce_device_set_hal_props (SynceDevice *device);
 

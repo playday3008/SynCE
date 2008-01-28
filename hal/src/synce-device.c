@@ -101,7 +101,7 @@ synce_device_provide_password_impl (SynceDevice *self,
   gnet_conn_write (priv->conn, (gchar *) buf, buf_size);
   gnet_conn_readn (priv->conn, sizeof (guint16));
 
-  synce_device_change_password_flags (self, 0, SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
+  synce_device_change_password_flags (self, SYNCE_DEVICE_PASSWORD_FLAG_CHECKING);
 
  OUT:
   if (error != NULL)
@@ -240,20 +240,6 @@ synce_device_set_hal_props(SynceDevice *self)
   }
   g_free(ip_str);
 
-  prop_name = "pda.pocketpc.locked";
-  gboolean locked = FALSE;
-  if (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE)
-    locked = TRUE;
-  result = libhal_device_set_property_bool(priv->hal_ctx,
-					   priv->udi,
-					   prop_name,
-					   locked,
-					   &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
   /* register object on hal dbus connection */
 
   dbus_g_connection_register_g_object (priv->hal_bus,
@@ -283,27 +269,53 @@ synce_device_set_hal_props(SynceDevice *self)
 
 void
 synce_device_change_password_flags (SynceDevice *self,
-				    SynceDevicePasswordFlags add,
-				    SynceDevicePasswordFlags remove)
+				    SynceDevicePasswordFlags new_flag)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  SynceDevicePasswordFlags flags, added, removed;
+  gchar *prop_str = NULL;
+  DBusError dbus_error;
 
-  flags = priv->pw_flags;
+  if (priv->pw_flags == new_flag)
+    return;
 
-  added = add & ~flags;
-  flags |= added;
+  g_object_set (self, "password-flags", new_flag, NULL);
 
-  removed = remove & flags;
-  flags &= ~removed;
+  dbus_error_init(&dbus_error);
 
-  if (added != 0 || removed != 0)
+  switch (new_flag)
     {
-      g_object_set (self, "password-flags", flags, NULL);
-      /*
-      g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(self)->signals[SYNCE_DEVICE_SIGNAL_PASSWORD_FLAGS_CHANGED], 0, added, removed);
-      */
+    case SYNCE_DEVICE_PASSWORD_FLAG_UNSET:
+      prop_str = "unset";
+      g_debug("%s: setting password flags unset", G_STRFUNC);
+      break;
+    case SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE:
+      prop_str = "provide";
+      g_debug("%s: setting password flags provide", G_STRFUNC);
+      break;
+    case SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
+      prop_str = "provide-on-device";
+      g_debug("%s: setting password flags provide-on-device", G_STRFUNC);
+      break;
+    case SYNCE_DEVICE_PASSWORD_FLAG_CHECKING:
+      prop_str = "checking";
+      g_debug("%s: setting password flags checking", G_STRFUNC);
+      break;
+    case SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED:
+      prop_str = "unlocked";
+      g_debug("%s: setting password flags unlocked", G_STRFUNC);
+      break;
     }
+
+  if (!(libhal_device_set_property_string(priv->hal_ctx,
+					  priv->udi,
+					  "pda.pocketpc.password",
+					  prop_str,
+					  &dbus_error)))
+    {
+      g_critical("%s: failed to set property \"pda.pocketpc.password\": %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+      dbus_error_free(&dbus_error);
+    }
+  return;
 }
 
 void
@@ -331,6 +343,7 @@ synce_device_init (SynceDevice *self)
   g_debug("%s: running for udi %s", G_STRFUNC, priv->udi);
 
   priv->state = CTRL_STATE_HANDSHAKE;
+  priv->pw_flags = SYNCE_DEVICE_PASSWORD_FLAG_UNSET;
   priv->info_buf_size = -1;
 
   priv->requests = g_hash_table_new_full(g_int_hash,

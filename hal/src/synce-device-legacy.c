@@ -162,11 +162,12 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 		"model-name", model_name,
 		NULL);
 
+  synce_device_set_hal_props(SYNCE_DEVICE(self));
+
   if (priv->pw_key != 0)
     {
       priv->state = CTRL_STATE_AUTH;
-      synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_SET |
-                             SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+      synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
     }
   else
     {
@@ -174,8 +175,6 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
       priv->state = CTRL_STATE_CONNECTED;
       g_timeout_add((DCCM_PING_INTERVAL * 1000), synce_device_legacy_send_ping, self);
     }
-
-  synce_device_set_hal_props(SYNCE_DEVICE(self));
 
   goto OUT;
 
@@ -229,7 +228,9 @@ synce_device_legacy_conn_event_cb_impl (GConn *conn,
           } else {
             /* password challenge */
             priv->pw_key = header & 0xff;
-            synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+	    /*
+            synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
+	    */
             gnet_conn_readn (conn, 4);
           }
         }
@@ -272,12 +273,13 @@ synce_device_legacy_conn_event_cb_impl (GConn *conn,
           if (result != 0)
             {
               priv->state = CTRL_STATE_CONNECTED;
+              synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
               g_timeout_add((DCCM_PING_INTERVAL * 1000), synce_device_legacy_send_ping, self);
             }
           else
             {
-              synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE,
-                                     0);
+	      g_free(priv_legacy->password);
+              synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
             }
 
           dbus_g_method_return (priv->pw_ctx, result != 0);

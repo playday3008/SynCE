@@ -159,27 +159,42 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
 		"model-name", model_name,
 		NULL);
 
+  synce_device_set_hal_props(SYNCE_DEVICE(self));
+
   if (priv->pw_key != 0)
     {
       if (priv->pw_key != 0xffffffff)
         {
+	  /* WM5 */
           priv->state = CTRL_STATE_AUTH;
-          synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_SET |
-                                 SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE, 0);
+          synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
         }
       else
         {
-          /* TODO: extend the API to handle this (introduced by WM6) */
-          g_warning ("%s: device is locked, please unlock it", G_STRFUNC);
-          priv->state = CTRL_STATE_CONNECTED;
+          /* WM6 */
+          priv->state = CTRL_STATE_AUTH ;
+
+          guint32 requestShowUnlockScreen ;
+
+          requestShowUnlockScreen = 8 ;
+
+          requestShowUnlockScreen = GUINT32_TO_LE(requestShowUnlockScreen) ;
+
+          gnet_conn_write (priv->conn, (gchar *) &requestShowUnlockScreen,
+			   sizeof (requestShowUnlockScreen));
+          gnet_conn_readn (priv->conn, sizeof (guint32));
+
+          /*
+           * The flag should be that the password is set AND that the device
+           * is waiting to be unlocked, on the device itself
+           */
+          synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE);
         }
     }
   else
     {
       priv->state = CTRL_STATE_CONNECTED;
     }
-
-  synce_device_set_hal_props(SYNCE_DEVICE(self));
 
   goto OUT;
 
@@ -300,27 +315,71 @@ synce_device_rndis_conn_event_cb_impl (GConn *conn,
     {
       if (event->type == GNET_CONN_READ)
         {
-          guint16 result;
 
-          if (event->length != sizeof (guint16))
-            {
-              g_warning ("%s: event->length != 2", G_STRFUNC);
-              return;
-            }
+	  if (priv->pw_key != 0xffffffff) {
+	    /* wm5 - password sent to device */
 
-          result = GUINT16_FROM_LE (*((guint16 *) event->buffer));
+	    guint16 result;
 
-          if (result != 0)
-            {
-              priv->state = CTRL_STATE_CONNECTED;
-            }
-          else
-            {
-              synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE,
-                                     0);
-            }
-          dbus_g_method_return (priv->pw_ctx, result != 0);
-          priv->pw_ctx = NULL;
+	    if (event->length != sizeof (guint16))
+	      {
+		g_warning ("%s: event->length != 2", G_STRFUNC);
+		return;
+	      }
+
+	    result = GUINT16_FROM_LE (*((guint16 *) event->buffer));
+
+	    if (result != 0)
+	      {
+		priv->state = CTRL_STATE_CONNECTED;
+		synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
+	      }
+	    else
+	      {
+		synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
+	      }
+	    dbus_g_method_return (priv->pw_ctx, result != 0);
+	    priv->pw_ctx = NULL;
+
+	  } else {
+	    /* wm6 - password entered on device */
+
+	    guint32 result;
+	    result = GUINT32_FROM_LE (*((guint32 *) event->buffer));
+	    if (result == 0)
+	      {
+		priv->state = CTRL_STATE_CONNECTED;
+		synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
+
+		guint32 extraDataForPhone ;
+		/*
+		 * This response looks like a confirmation that needs to
+		 * be sent to the phone
+		 */
+		extraDataForPhone = 0 ;
+
+		extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
+		gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone,
+				 sizeof (extraDataForPhone));
+
+		/*
+		 * I don't know what this response is for. Wiredumps showed
+		 * ActiveSync sending this also. If you don't send this value
+		 * you can briefly start a rapi session, and after short
+		 * period of time the odccm process starts using 100% CPU.
+		 */
+		extraDataForPhone = 0xc ;
+		extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
+		gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone,
+				 sizeof (extraDataForPhone));
+
+	      }
+	    else
+	      {
+		g_warning("Don't understand the client response after unlocking device!") ;
+	      }
+
+	  }
         }
     }
 }

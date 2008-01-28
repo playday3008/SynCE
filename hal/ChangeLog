@@ -1,3 +1,7 @@
+2008-01-25  Mark Ellis <mark@mpellis.org.uk>
+
+	* Finish password procedures
+
 2008-01-24  Mark Ellis <mark@mpellis.org.uk>
 
 	* Removed possible race condition when multiple clients would request a rapi
