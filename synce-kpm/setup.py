@@ -12,6 +12,7 @@ setup(
     packages = find_packages(),
     scripts = ['synce-kpm'],
 
-    package_data = { 'synceKPM' : ['data/*.png'] },
+    package_data = { 'synceKPM' : ['data/*.png',
+                                   'data/*.svg'] },
 )
 
