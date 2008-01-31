@@ -149,7 +149,8 @@ def CurrentTZToAirsync(ctx):
 	if tz!=None:
 		dst_node = transform_ctx.insertNode()
 		tznode=dst_node.newChild(None,"Timezone",base64.b64encode(tzdatabase.TZToAirsync(tz)))
-		tznode.setNs(None)
+		ns=tznode.newNs("http://synce.org/formats/airsync_wm5/calendar",None)
+		tznode.setNs(ns)
 		
 	return ""
 

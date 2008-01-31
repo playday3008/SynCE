@@ -32,7 +32,7 @@ import threading
 import logging
 import util
 
-import pywbxml
+import wbxml
 
 import formatapi
 from constants import *
@@ -95,14 +95,15 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.server.logger.debug("_send_wbxml_response: Finished emitting response %d code to client", 200)
         self._init_server_headers()
 
-        wbxml = pywbxml.xml2wbxml(xml)
+	self.server.logger.debug("_send_wbxml_response: starting document conversion")
+	wbxmldata = wbxml.XMLToWBXML(xml)
 
         self.send_header("Content-Type", "application/vnd.ms-sync.wbxml")
-        self.send_header("Content-Length", len(wbxml))
+        self.send_header("Content-Length", len(wbxmldata))
         self.end_headers()
 
-        self.server.logger.debug("_send_wbxml_response: Emitting wbxml (length = %d)", len(wbxml))
-        self.wfile.write(wbxml)
+        self.server.logger.debug("_send_wbxml_response: Emitting wbxml (length = %d)", len(wbxmldata))
+        self.wfile.write(wbxmldata)
         self.server.logger.debug("_send_wbxml_response: Finished emitting wbxml")
 
     def _parse_path(self):
@@ -114,8 +115,10 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             req = self.rfile.read(int(self.headers["Content-Length"])).rstrip("\0")
             if self.headers.has_key("Content-Type") and self.headers["Content-Type"] == "application/vnd.ms-sync.wbxml":
                 self.server.logger.debug("_read_xml_request: converting request from wbxml")
-                req = pywbxml.wbxml2xml(req)
-            return libxml2.parseDoc(req)
+                req = wbxml.WBXMLToXML(req)
+            else:
+                req = libxml2.parseDoc(req)	# not wbxml (status etc)
+            return req
         else:
             raise ValueError("Request did not specify Content-Length header")
 
@@ -123,7 +126,10 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         doc = libxml2.newDoc("1.0")
 	doc.createIntSubset(AIRSYNC_DOC_NAME, AIRSYNC_PUBLIC_ID, AIRSYNC_SYSTEM_ID)
 	root=doc.newChild(None,root_node_name,None)
-	root.setProp("xmlns", namespace)
+	ns=root.newNs(namespace,None)
+	root.setNs(ns)
+#	root.setProp("xmlns", namespace)
+	
         return doc
 
     def do_QUIT (self):
@@ -242,7 +248,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 						       os_doc,
 						       self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
 	
-                        self.server.logger.debug("_handle_sync: converting item to airsync, source is \n%s", as_doc.serialize("utf-8",1))
+                        self.server.logger.debug("_handle_sync: converting item to airsync, result is \n%s", as_doc.serialize("utf-8",1))
 					
 			rsp_change_node.addChild(as_doc.getRootElement())
                     
@@ -300,7 +306,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		rsp_coll_node.addChild(rsp_responses_node)
 
         self.server.logger.debug("_handle_sync: response document is \n%s", rsp_doc.serialize("utf-8",1))
-        self._send_wbxml_response(rsp_doc.serialize("utf-8",0))
+        self._send_wbxml_response(rsp_doc)
 
 
     def _handle_foldersync(self):
@@ -342,7 +348,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.server.logger.debug("handle_foldersync: response document is \n%s", rsp_doc.serialize("utf-8",1))
         
-	self._send_wbxml_response(rsp_doc.serialize("utf-8",0))
+	self._send_wbxml_response(rsp_doc)
 
 
     def _handle_get_item_estimate(self):
@@ -377,7 +383,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 	    coll_node.newChild(None,"Estimate",str(itemDB.GetLocalChangeCount()))
 
         self.server.logger.debug("_handle_get_item_estimate: response document is \n%s", rsp_doc.serialize("utf-8",1))
-        self._send_wbxml_response(rsp_doc.serialize("utf-8",0))
+        self._send_wbxml_response(rsp_doc)
 
 
     def _handle_status(self):

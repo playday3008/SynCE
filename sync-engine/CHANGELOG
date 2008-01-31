@@ -694,4 +694,28 @@ present. Note that this requires config.xml to be copied over by the
 package manager and left in the same location relative to the 
 sync-engine root.
 
+31/01/2008 - 202100 Dr J A Gow
+------------------------------
+
+From this point, sync-engine no longer relies on libwbxml and pywbxml.
+An internal wbxml converter has been implemented in 
+SyncEngine/wbxml (thanks to Jonny Lamb for the low level wbxml stuff).
+The user-facing API is unchanged.
+
+Note that this has been tested successfully with the OS30 formats, but
+has NOT YET BEEN FULLY TESTED with Opensync 0.2x. The only problem that
+may be present here is incorrect namespace assignment within the converter
+code. Libwbxml parses it out from the strings whereas the internal
+implementation looks out for namespace assignments directly to the nodes
+in the libxml2 structures.
+
+The implementation of this uncovered a couple of subtle errors in the
+general XML handling within sync-engine. These have been fixed, and the
+entire pathway will be checked when airsync.py is cleaned up shortly.
+
+Attribute processing is badly broken in the wbxml implementation - this
+is not a problem for sync-engine as AirSync does not use attributes
+in its XML code. However this should be fixed up (can be as a low priority
+job) at some point for completeness and in case Microsoft go and change
+things at a later date.
 
