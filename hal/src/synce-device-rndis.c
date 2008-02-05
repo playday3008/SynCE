@@ -193,6 +193,7 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
     }
   else
     {
+      synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNSET);
       priv->state = CTRL_STATE_CONNECTED;
     }
 

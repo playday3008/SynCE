@@ -171,6 +171,7 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
     }
   else
     {
+      synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNSET);
       g_debug("%s: setting CTRL_STATE_CONNECTED", G_STRFUNC);
       priv->state = CTRL_STATE_CONNECTED;
       g_timeout_add((DCCM_PING_INTERVAL * 1000), synce_device_legacy_send_ping, self);

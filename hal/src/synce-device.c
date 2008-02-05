@@ -275,9 +275,6 @@ synce_device_change_password_flags (SynceDevice *self,
   gchar *prop_str = NULL;
   DBusError dbus_error;
 
-  if (priv->pw_flags == new_flag)
-    return;
-
   g_object_set (self, "password-flags", new_flag, NULL);
 
   dbus_error_init(&dbus_error);
