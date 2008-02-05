@@ -1,3 +1,7 @@
+2008-02-05  Mark Ellis <mark@mpellis.org.uk>
+
+	* allow for lower version libhal
+
 2008-01-24  Mark Ellis <mark@mpellis.org.uk>
 
 	* support for hal

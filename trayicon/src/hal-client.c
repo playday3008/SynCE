@@ -229,6 +229,15 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
     return;
   }
 
+  WmDevice *device = NULL;
+  gint os_major, os_minor,
+    processor_type, partner_id_1;
+  gchar *ip;
+  gchar *name;
+  gchar *os_name;
+  gchar *model;
+  const gchar *transport;
+  gchar *pw_status;
   DBusError dbus_error;
   dbus_bool_t dbus_ret;
 
@@ -239,7 +248,7 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
 					   "pda.pocketpc.name",
 					   &dbus_error);
   if (dbus_error_is_set(&dbus_error)) {
-    g_critical("%s: error getting property from device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+    g_critical("%s: error checking property pda.pocketpc.name from device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
     goto error_exit;
   }
 
@@ -249,46 +258,50 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
 
   g_debug("%s: Received device connected from hal: %s", G_STRFUNC, udi);
 
-  WmDevice *device = NULL;
-  const gchar *pw_status;
-  gint os_major, os_minor,
-    processor_type, partner_id_1;
-  const gchar *ip;
-  const gchar *name;
-  const gchar *os_name;
-  const gchar *model;
-  const gchar *transport;
-  LibHalPropertySet *properties = NULL;
-
-  properties = libhal_device_get_all_properties(priv->hal_ctx,
-						udi,
-						&dbus_error);
+  name = libhal_device_get_property_string(priv->hal_ctx, udi, "pda.pocketpc.name", &dbus_error);
   if (dbus_error_is_set(&dbus_error)) {
-    g_critical("%s: Failed to obtain properties for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
-    goto error_exit;
-  }
-
-
-  if (!(name = libhal_ps_get_string(properties, "pda.pocketpc.name"))) {
     g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
     goto error_exit;
   }
 
-  if (!(ip = libhal_ps_get_string(properties, "pda.pocketpc.ip_address"))) {
+  ip = libhal_device_get_property_string(priv->hal_ctx, udi, "pda.pocketpc.ip_address", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
     g_critical("%s: Failed to obtain property pda.pocketpc.ip_address for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
     goto error_exit;
   }
 
-  processor_type = libhal_ps_get_uint64(properties, "pda.pocketpc.cpu_type");
-  os_major = libhal_ps_get_uint64(properties, "pda.pocketpc.os_major");
-  os_minor = libhal_ps_get_uint64(properties, "pda.pocketpc.os_minor");
-  partner_id_1 = libhal_ps_get_uint64(properties, "pda.pocketpc.current_partner_id");
+  processor_type = libhal_device_get_property_uint64(priv->hal_ctx, udi, "pda.pocketpc.cpu_type", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_critical("%s: Failed to obtain property pda.pocketpc.cpu_type for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
 
-  if (!(os_name = libhal_ps_get_string(properties, "pda.pocketpc.platform"))) {
+  os_major = libhal_device_get_property_uint64(priv->hal_ctx, udi, "pda.pocketpc.os_major", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_critical("%s: Failed to obtain property pda.pocketpc.os_major for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
+
+  os_minor = libhal_device_get_property_uint64(priv->hal_ctx, udi, "pda.pocketpc.os_minor", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_critical("%s: Failed to obtain property pda.pocketpc.os_minor for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
+
+  partner_id_1 = libhal_device_get_property_uint64(priv->hal_ctx, udi, "pda.pocketpc.current_partner_id", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_critical("%s: Failed to obtain property pda.pocketpc.current_partner_id for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
+
+  os_name = libhal_device_get_property_string(priv->hal_ctx, udi, "pda.pocketpc.platform", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
     g_critical("%s: Failed to obtain property pda.pocketpc.platform for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
     goto error_exit;
   }
-  if (!(model = libhal_ps_get_string(properties, "pda.pocketpc.model"))) {
+
+  model = libhal_device_get_property_string(priv->hal_ctx, udi, "pda.pocketpc.model", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
     g_critical("%s: Failed to obtain property pda.pocketpc.model for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
     goto error_exit;
   }
@@ -314,7 +327,11 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
     goto error_exit;
   }
 
-  pw_status = libhal_ps_get_string(properties, "pda.pocketpc.password");
+  pw_status = libhal_device_get_property_string(priv->hal_ctx, udi, "pda.pocketpc.password", &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_critical("%s: Failed to obtain password status for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+    goto error_exit;
+  }
 
   if ((pw_status) && (strcmp(pw_status, "unset") != 0) && (strcmp(pw_status, "unlocked") != 0)) {
     if (!libhal_device_add_property_watch(priv->hal_ctx, udi, &dbus_error)) {
@@ -345,9 +362,13 @@ error_exit:
     dbus_error_free(&dbus_error);
   if (device)
     g_object_unref(device);
+
 exit:
-  if (properties)
-    libhal_free_property_set(properties);
+  g_free(name);
+  g_free(ip);
+  g_free(os_name);
+  g_free(model);
+  g_free(pw_status);
 
   return;
 }
