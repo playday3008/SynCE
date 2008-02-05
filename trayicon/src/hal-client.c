@@ -232,12 +232,12 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
   WmDevice *device = NULL;
   gint os_major, os_minor,
     processor_type, partner_id_1;
-  gchar *ip;
-  gchar *name;
-  gchar *os_name;
-  gchar *model;
+  gchar *ip = NULL;
+  gchar *name = NULL;
+  gchar *os_name = NULL;
+  gchar *model = NULL;
   const gchar *transport;
-  gchar *pw_status;
+  gchar *pw_status = NULL;
   DBusError dbus_error;
   dbus_bool_t dbus_ret;
 
