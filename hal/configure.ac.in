@@ -31,7 +31,7 @@ dnl Check for D-Bus
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60])
 
 dnl Check for earlier version of dbus-glib
-PKG_CHECK_MODULES(EARLYDBUSGLIB, [dbus-glib-1 >= 0.74], [early_dbusglib=no], [early_dbusglib=yes])
+PKG_CHECK_MODULES(DBUSGLIB074, [dbus-glib-1 >= 0.74], [early_dbusglib=no], [early_dbusglib=yes])
 if test "x$early_dbusglib" == "xyes"; then
    AC_DEFINE_UNQUOTED([EARLY_DBUSGLIB], [1], [dbus-glib older than 0.74])
 fi
