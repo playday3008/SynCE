@@ -1,3 +1,7 @@
+2008-02-06  Mark Ellis <mark@mpellis.org.uk>
+
+	* add partnership viewing for WM5/sync-engine
+
 2008-02-05  Mark Ellis <mark@mpellis.org.uk>
 
 	* allow for lower version libhal

@@ -6,8 +6,11 @@
 #include <glade/glade.h>
 #include <rapi.h>
 #include <rra/matchmaker.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
 
 #include "device-info.h"
+#include "sync-engine-glue.h"
 
 
 enum
@@ -150,6 +153,8 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer user_data)
   gint index, id;
   gchar *name;
   GtkWidget *partners_create_button, *partners_remove_button;
+  guint32 os_major = 0;
+  WmDevice *device = WM_DEVICE(user_data);
 
   partners_create_button = glade_xml_get_widget (xml, "partners_create_button");	
   partners_remove_button = glade_xml_get_widget (xml, "partners_remove_button");	
@@ -166,6 +171,12 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer user_data)
       g_debug("%s: You selected index %d, id %d, name %s", G_STRFUNC, index, id, name);
       g_free (name);
 
+      /* WM5 and sync-engine is untested, don't mess with partnerships yet */
+      g_object_get(device, "os-major", &os_major, NULL);
+      if (os_major > 4) {
+	return;
+      }
+
       if (id == 0) {
 	gtk_widget_set_sensitive(partners_create_button, TRUE);
 	gtk_widget_set_sensitive(partners_remove_button, FALSE);
@@ -179,7 +190,99 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer user_data)
 
 
 static void
-partners_setup_view_store(WmDevice *device)
+partners_setup_view_store_synceng(WmDevice *device)
+{
+  GtkWidget *partners_list_view = glade_xml_get_widget (xml, "partners_list");	
+  GtkTreeIter iter;
+  guint32 index;
+  gboolean result;
+  GPtrArray* partnership_list;
+  GError *error;
+  DBusGConnection *dbus_connection;
+  DBusGProxy *sync_engine_proxy;
+
+  GtkListStore *store = gtk_list_store_new (N_COLUMNS,
+					    G_TYPE_BOOLEAN, /* current partner ? */
+					    G_TYPE_INT,     /* partnee index */
+					    G_TYPE_UINT,    /* partner id */
+					    G_TYPE_STRING); /* partner name */
+
+  dbus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  if (dbus_connection == NULL) {
+    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
+    g_error_free (error);
+    goto exit;
+  }
+
+  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
+						 "org.synce.SyncEngine",
+						 "/org/synce/SyncEngine",
+						 "org.synce.SyncEngine");
+  if (sync_engine_proxy == NULL) {
+    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
+    goto exit;
+  }
+
+  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list, &error);
+  if (!result) {
+    g_critical("%s: Error getting partnership list from sync-engine: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    goto exit;
+  }
+
+  GValueArray *partnership = NULL;
+  GArray *sync_items = NULL;
+
+  index = 0;
+  while(index < partnership_list->len)
+    {
+      gtk_list_store_append (store, &iter);  /* Acquire an iterator */
+
+      partnership = g_ptr_array_index(partnership_list, index);
+
+      guint partnership_id = g_value_get_uint(g_value_array_get_nth (partnership, 0));
+      const gchar *partnership_guid = g_value_get_string(g_value_array_get_nth (partnership, 1));
+      const gchar *partnership_name = g_value_get_string(g_value_array_get_nth (partnership, 2));
+      const gchar *hostname = g_value_get_string(g_value_array_get_nth (partnership, 3));
+      const gchar *device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
+
+      /* an array of sync item ids - au - array of uint32 */
+      sync_items = g_value_get_pointer(g_value_array_get_nth (partnership, 5));
+
+      gtk_list_store_set (store, &iter,
+			  CURRENT_COLUMN, FALSE,
+			  INDEX_COLUMN, index,
+			  ID_COLUMN, partnership_id,
+			  NAME_COLUMN, hostname,
+			  -1);
+      index++;
+    }
+
+  gtk_tree_view_set_model (GTK_TREE_VIEW(partners_list_view), GTK_TREE_MODEL (store));
+
+  index = 0;
+  while(index < partnership_list->len) {
+    partnership = g_ptr_array_index(partnership_list, index);
+    sync_items = g_value_get_pointer(g_value_array_get_nth (partnership, 5));
+    g_array_free(sync_items, TRUE);
+    g_value_array_free(partnership);
+
+    index++;
+  }
+  g_ptr_array_free(partnership_list, TRUE);
+
+exit:
+  g_object_unref (G_OBJECT (store));
+
+  if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
+  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
+
+  return;
+}
+
+
+static void
+partners_setup_view_store_rra(WmDevice *device)
 {
   GtkWidget *partners_list_view = glade_xml_get_widget (xml, "partners_list");	
   GtkTreeIter iter;
@@ -255,6 +358,7 @@ partners_setup_view(WmDevice *device)
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
+  guint32 os_major = 0;
 
   partners_create_button = glade_xml_get_widget (xml, "partners_create_button");
   partners_remove_button = glade_xml_get_widget (xml, "partners_remove_button");	
@@ -268,7 +372,14 @@ partners_setup_view(WmDevice *device)
   g_signal_connect (G_OBJECT (partners_remove_button), "clicked",
 		    G_CALLBACK (partners_remove_button_clicked_cb), device);
 
-  partners_setup_view_store(device);
+
+  /* WM5 uses sync-engine, older uses rra */
+  g_object_get(device, "os-major", &os_major, NULL);
+  if (os_major > 4) {
+    partners_setup_view_store_synceng(device);
+  } else {
+    partners_setup_view_store_rra(device);
+  }
 
   renderer = gtk_cell_renderer_toggle_new ();
   gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(renderer), TRUE);
@@ -303,7 +414,7 @@ partners_setup_view(WmDevice *device)
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (selection), "changed",
-		    G_CALLBACK (partners_selection_changed_cb),NULL);
+		    G_CALLBACK (partners_selection_changed_cb), device);
 
   gtk_widget_show (partners_list);
 }
@@ -658,8 +769,16 @@ static void
 device_info_refresh_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
   WmDevice *device = WM_DEVICE(data);
+  guint32 os_major = 0;
 
-  partners_setup_view_store(device);
+  /* WM5 uses sync-engine, older uses rra */
+  g_object_get(device, "os-major", &os_major, NULL);
+  if (os_major > 4) {
+    partners_setup_view_store_synceng(device);
+  } else {
+    partners_setup_view_store_rra(device);
+  }
+
   system_info_setup_view_store(device);
   system_power_setup_view(device);
 }

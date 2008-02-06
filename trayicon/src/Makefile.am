@@ -10,7 +10,8 @@ INCLUDES  = \
 
 BUILT_SOURCES = \
 	dccm-client-signals-marshal.h \
-	dccm-client-signals-marshal.c
+	dccm-client-signals-marshal.c \
+	sync-engine-glue.h
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -33,6 +34,7 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			module.c module.h
 
 EXTRA_DIST = dccm-client-signals-marshal.list \
+		sync-engine.xml \
 		LICENSE.eggtrayicon \
 		LICENSE.synce
 
@@ -66,3 +68,7 @@ noinst_HEADERS = synce-trayicon-module.h
 
 %-signals-marshal.c: %-signals-marshal.list
 	glib-genmarshal --body --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.c
+
+%-glue.h: %.xml
+	dbus-binding-tool --mode=glib-client --output=$@ --prefix=$(subst -,_,$*) $<
+
