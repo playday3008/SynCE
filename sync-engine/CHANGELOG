@@ -719,3 +719,9 @@ in its XML code. However this should be fixed up (can be as a low priority
 job) at some point for completeness and in case Microsoft go and change
 things at a later date.
 
+06/02/2008 - 1931 Dr J A Gow
+----------------------------
+
+Fixed exception caused by typo in commonconv.py (OS30) - unchanged
+time handler in <until> tags in recurrence rules.
+

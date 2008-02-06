@@ -335,7 +335,7 @@ def RecurrenceRuleToAirsync(ctx):
 	if src_rules.has_key("interval"):
         	dst_node.newChild(None, "Interval", src_rules["interval"])
 	if src_rules.has_key("until"):
-		dst_node.newChild(None, "Until", tzutils.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
+		dst_node.newChild(None, "Until", dateutil.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
 	if src_rules.has_key("count"):
 		dst_node.newChild(None, "Occurrences", src_rules["count"])
 
