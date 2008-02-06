@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/SyncEngine">
+  <interface name="org.synce.syncengine">
+
+    <method name="Synchronize">
+    </method>
+
+    <method name="PrefillRemote">
+      <arg direction="in" type="as"/>
+      <arg direction="out" type="u"/>
+    </method>
+
+    <method name="GetItemTypes">
+      <arg direction="out" type="a{us}"/>
+    </method>
+
+    <method name="GetPartnerships">
+      <arg direction="out" type="a(ussssau)"/>
+    </method>
+
+    <method name="GetPartnershipBindings">
+      <arg direction="out" type="a(ussssau)"/>
+    </method>
+
+    <method name="QueryBindingConfig">
+      <arg direction="in" type="us"/>
+      <arg direction="out" type="s"/>
+    </method>
+
+    <method name="SetBindingConfig">
+      <arg direction="in" type="uss"/>
+    </method>
+
+    <method name="CreatePartnership">
+      <arg direction="in" type="sau"/>
+      <arg direction="out" type="u"/>
+    </method>
+
+    <method name="GetSynchronizedItemTypes">
+      <arg direction="out" type="au"/>
+    </method>
+
+    <method name="DeletePartnership">
+      <arg direction="in" type="us"/>
+    </method>
+
+<!--
+    <method name="AddLocalChanges">
+      <arg direction="in" type="a{ua(ayuay)}"/>
+    </method>
+
+    <method name="GetRemoteChanges">
+      <arg direction="in" type="au"/>
+      <arg direction="out" type="a{ua(ayuay)}"/>
+    </method>
+
+    <method name="AcknowledgeRemoteChanges">
+      <arg direction="in" type="a{uaay}"/>
+    </method>
+-->
+
+    <method name="FlushItemDB">
+    </method>
+
+    <signal name="PrefillComplete">
+    </signal>
+
+    <signal name="Synchronized">
+    </signal>
+
+  </interface>
+</node>
