@@ -1,0 +1,9 @@
+Makefile
+Makefile.in
+configure.in.in
+.deps
+.libs
+.xvpics
+*.la
+*.lo
+*.la.closure
