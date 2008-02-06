@@ -1,3 +1,7 @@
+2008-02-06 01:02  Mark Ellis <mark@mpellis.org.uk>
+
+	* split rapip out of synce-kde
+
 2005-02-24 01:02  voc
 
 	* amd64/gcc-4.0 compile fix

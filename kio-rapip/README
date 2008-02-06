@@ -1,23 +1,7 @@
-SynCE-KDE
-=========
-
-One effort in integrating SynCE into KDE is the SynCE-KDE project - formerly 
-Rapip/Raki. SynCE-KDE essentially consists of the three subprojects RAPIP, RAKI,
-and VDCCM. In general, they all support the same devices which are supported by
-the underlying SynCE libraries.
+SynCE kio-rapip
+===============
 
 RAPIP is the short form for "RAPI-Protocol". It is a full featured KIOSlave 
-used to browse through the PDA file system and to copy files to and from the 
-PDA by drag and drop via Konqueror.
+used to browse through the PDA file system via the SynCE infrastructure, and to
+copy files to and from the PDA by drag and drop via Konqueror.
 
-RAKI is a synonym for "Remote-Access-KIcker-applet". As the name suggests it 
-has first been an applet for kicker, the KDE panel but as time goes by the 
-application-type changed. Today RAKI  is an application docking into the KDE 
-system-tray. It is responsible for all additional tasks which are desired for 
-interacting with the PDA via the desktop.
-
-VDCCM is a generalization of the native SynCE-DCCM but is fully compatible with 
-it. In addition to all DCCM features it is capable of supporting more than one 
-PDA connected at the same time. It is responsible for reporting all connects 
-and disconnects of PDAs to interested clients via an unix-socket by use of a 
-simple protocol. E.g. RAKI is one of such an interested client.

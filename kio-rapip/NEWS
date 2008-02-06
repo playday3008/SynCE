@@ -1,3 +1,11 @@
+   SynCE kio-rapip 0.9.1
+   =====================
+
+    * The rapip kio slave has broken away from synce-kde into it's own
+      package. The primary reason for this is that raki, the other component
+      remaining in synce-kde, has not been maintained for some time, and
+      there are newer alternatives becoming available, ie synce-kpm.
+
    SynCE-KDE 0.6
    =============
    
