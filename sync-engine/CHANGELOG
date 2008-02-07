@@ -725,3 +725,11 @@ things at a later date.
 Fixed exception caused by typo in commonconv.py (OS30) - unchanged
 time handler in <until> tags in recurrence rules.
 
+07/02/2008 - 200600 Dr J A Gow
+------------------------------
+
+Corrected namespace error in formats30 preventing contacts with pictures being
+correctly synced to the device.
+
+
+

@@ -232,7 +232,7 @@
             <!-- Opensync 0.3x - 'Note' is handled the same way -->
 
             <xsl:for-each select="Note/Content[position() = 1]">
-                <Rtf><xsl:value-of select="common:OSTextToAirsyncRTF()"/></Rtf>
+                <C1:Rtf><xsl:value-of select="common:OSTextToAirsyncRTF()"/></C1:Rtf>
             </xsl:for-each>
 
         </AS:ApplicationData>
