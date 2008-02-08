@@ -286,96 +286,129 @@ def event_attendee_from_airsync(ctx):
     return ""
 
 def event_recurrence_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    src_node = transform_ctx.current()
-    dst_node = transform_ctx.insertNode()
 
-    # Extract the rules
-    src_rules = {}
-    child = src_node.children
-    while child != None:
-        if child.name == "Rule":
-            rrule_val = xml2util.GetNodeValue(child)
-            sep = rrule_val.index("=")
-            key = rrule_val[:sep]
-            val = rrule_val[sep+1:]
-            src_rules[key.lower()] = val.lower()
-        child = child.next
+	parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+	src_node = transform_ctx.current()
+	dst_node = transform_ctx.insertNode()
 
-    # Interval, Count, and Until rules have straightforward conversions
-    if src_rules.has_key("interval"):
-        dst_node.newChild(None, "Interval", src_rules["interval"])
-    if src_rules.has_key("until"):
-        dst_node.newChild(None, "Until", tzutils.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
-    if src_rules.has_key("count"):
-        dst_node.newChild(None, "Occurrences", src_rules["count"])
+	# Extract the rules
 
-    # Handle different types of recurrences on a case-by-case basis
-    if src_rules["freq"].lower() == "daily":
-        # There really isn't much to convert in this case..
-        dst_node.newChild(None, "Type", "0")
-    elif src_rules["freq"].lower() == "weekly":
-        dst_node.newChild(None, "Type", "1")
-        dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(src_rules["byday"])))
-    elif src_rules["freq"].lower() == "monthly":
-        if src_rules.has_key("bymonthday"):
-            dst_node.newChild(None, "Type", "2")
-            dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
-        elif src_rules.has_key("byday"):
-            week, day = vcal_split_byday(src_rules["byday"])
-            dst_node.newChild(None, "Type", "3")
-            dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
-            if week >= 0:
-                dst_node.newChild(None, "WeekOfMonth", week)
-            elif week == -1:
-                # Airsync deals with this as a special case
-                dst_node.newChild(None, "WeekOfMonth", "5")
-            else:
-                # Not supported (as far as I can tell...)
-                # Airsync cannot count backwards from the end of the
-                # month in general
-                raise ValueError("Airsync does not support counting from end of month")
-        else:
-            # It seems like this should be against the rules, and filling in
-            # a default might not make sense because either of the above interpretations
-            # is equally valid.
-            raise ValueError("Monthly events must either specify BYMONTHDAY or BYDAY rules")
-    elif src_rules["freq"].lower() == "yearly":
-        if src_rules.has_key("bymonth"):
-            if src_rules.has_key("bymonthday"):
-                dst_node.newChild(None, "Type", "5")
-                dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
-                dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
-            elif src_rules.has_key("byday"):
-                week, day = vcal_split_byday(src_rules["byday"])
-                dst_node.newChild(None, "Type", "6")
-                dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
-                dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
-                if week >= 0:
-                    dst_node.newChild(None, "WeekOfMonth", week)
-                elif week == -1:
-                    # Airsync deals with this as a special case
-                    dst_node.newChild(None, "WeekOfMonth", "5")
-                else:
-                    # Not supported (as far as I can tell...)
-                    # Airsync cannot count backwards from the end of the
-                    # month in general
-                    raise ValueError("Airsync does not support counting from end of month")
-            else:
-                # It seems like this should be against the rules, and filling in
-                # a default might not make sense because either of the above interpretations
-                # is equally valid.
-                raise ValueError("Yearly events which are by month must either specify BYMONTHDAY or BYDAY rules")
-        elif src_rules.has_key("byyearday"):
-            # Not supported (as far as I can tell...)
-            # Airsync does not have a 'DayOfYear' field
-            raise ValueError("Airsync does not support day-of-year yearly events")
-        else:
-            # It seems like this should be against the rules, and filling in
-            # a default might not make sense because either of the above interpretations
-            # is equally valid.
-            raise ValueError("Yearly events must either specify BYMONTH or BYYEARDAY rules")
-    return ""
+	src_rules = {}
+	child = src_node.children
+
+	while child != None:
+		if child.name == "Rule":
+			rrule_val = xml2util.GetNodeValue(child)
+			sep = rrule_val.index("=")
+			key = rrule_val[:sep]
+			val = rrule_val[sep+1:]
+			src_rules[key.lower()] = val.lower()
+		child = child.next
+
+
+	# Interval, Count, and Until rules have straightforward conversions
+
+	if src_rules.has_key("interval"):
+		dst_node.newChild(None, "Interval", src_rules["interval"])
+	if src_rules.has_key("until"):
+		dst_node.newChild(None, "Until", tzutils.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
+	if src_rules.has_key("count"):
+		dst_node.newChild(None, "Occurrences", src_rules["count"])
+
+	# Handle different types of recurrences on a case-by-case basis
+
+	if src_rules["freq"].lower() == "daily":
+		
+		# There really isn't much to convert in this case..
+		dst_node.newChild(None, "Type", "0")
+		
+	elif src_rules["freq"].lower() == "weekly":
+		dst_node.newChild(None, "Type", "1")
+		dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(src_rules["byday"])))
+		
+	elif src_rules["freq"].lower() == "monthly":
+		if src_rules.has_key("bymonthday"):
+			dst_node.newChild(None, "Type", "2")
+			dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
+			
+		elif src_rules.has_key("byday"):
+
+			week, day = vcal_split_byday(src_rules["byday"])
+			dst_node.newChild(None, "Type", "3")
+			dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
+			if week >= 0:
+				dst_node.newChild(None, "WeekOfMonth", week)
+			elif week == -1:
+				# Airsync deals with this as a special case
+				dst_node.newChild(None, "WeekOfMonth", "5")
+			else:
+				# Not supported (as far as I can tell...)
+				# Airsync cannot count backwards from the end of the
+				# month in general
+				raise ValueError("Airsync does not support counting from end of month")
+		else:
+			# It seems like this should be against the rules, and filling in
+			# a default might not make sense because either of the above interpretations
+			# is equally valid.
+			raise ValueError("Monthly events must either specify BYMONTHDAY or BYDAY rules")
+	
+	elif src_rules["freq"].lower() == "yearly":
+
+		if src_rules.has_key("bymonth"):
+			
+			if src_rules.has_key("bymonthday"):
+				
+				dst_node.newChild(None, "Type", "5")
+				dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
+				dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
+				
+			elif src_rules.has_key("byday"):
+				
+				week, day = vcal_split_byday(src_rules["byday"])
+				dst_node.newChild(None, "Type", "6")
+				dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
+				dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
+				
+				if week >= 0:
+					dst_node.newChild(None, "WeekOfMonth", week)
+				elif week == -1:
+					# Airsync deals with this as a special case
+					dst_node.newChild(None, "WeekOfMonth", "5")
+				else:
+					# Not supported (as far as I can tell...)
+					# Airsync cannot count backwards from the end of the
+					# month in general
+					raise ValueError("Airsync does not support counting from end of month")
+			else:
+				
+				# It seems like this should be against the rules, and filling in
+				# a default might not make sense because either of the above interpretations
+				# is equally valid.
+		
+				raise ValueError("Yearly events which are by month must either specify BYMONTHDAY or BYDAY rules")
+			
+		elif src_rules.has_key("byyearday"):
+
+			# Not supported (as far as I can tell...)
+			# Airsync does not have a 'DayOfYear' field
+			raise ValueError("Airsync does not support day-of-year yearly events")
+		
+        	else:
+			# we need to get the start/recurrence date from the start date
+			# Get the start date - we need this to expand yearly rules
+			# We should always have a start date in a legal event!
+		
+			start = xml2util.FindChildNode(src_node.parent,"DateStarted")
+			utcdate=tzconv.ConvertDateNodeToUTC(start)[1]
+
+			# We need the month and the day
+		
+			dst_node.newChild(None,"Type", "5")
+			dst_node.newChild(None,"MonthOfYear",str(utcdate.month))
+			dst_node.newChild(None,"DayOfMonth",str(utcdate.day))
+
+		
+	return ""
 
 def event_recurrence_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)

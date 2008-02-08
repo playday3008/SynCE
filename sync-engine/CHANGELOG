@@ -731,5 +731,12 @@ time handler in <until> tags in recurrence rules.
 Corrected namespace error in formats30 preventing contacts with notes being
 correctly synced to the device.
 
+08/02/2008 - 202500 Dr J A Gow
+------------------------------
+
+Fixed syncing of yearly recurrent events from Opensync to Airsync for both
+Opensync formats. Also fixed up the test scripts event_air2os.py and
+event_os2air.py - this is temporary as the format conversion test scripts
+are to be overhauled completely soon.
 
 

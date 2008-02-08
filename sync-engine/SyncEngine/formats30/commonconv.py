@@ -386,9 +386,10 @@ def RecurrenceRuleToAirsync(ctx):
 			
 			raise ValueError("Monthly events must either specify BYMONTHDAY or BYDAY rules")
 		
-	elif src_rules["freq"].lower() == "yearly":
+	elif src_rules["frequency"].lower() == "yearly":
 
 		if src_rules.has_key("bymonth"):
+			
 			if src_rules.has_key("bymonthday"):
 				dst_node.newChild(None, "Type", "5")
 				dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
@@ -418,6 +419,7 @@ def RecurrenceRuleToAirsync(ctx):
 				# It seems like this should be against the rules, and filling in
 				# a default might not make sense because either of the above interpretations
 				# is equally valid.
+				
 				raise ValueError("Yearly events which are by month must either specify BYMONTHDAY or BYDAY rules")
 			
 		elif src_rules.has_key("byyearday"):
@@ -427,10 +429,22 @@ def RecurrenceRuleToAirsync(ctx):
 			raise ValueError("Airsync does not support day-of-year yearly events")
 
 		else:
-			# It seems like this should be against the rules, and filling in
-			# a default might not make sense because either of the above interpretations
-			# is equally valid.
-			raise ValueError("Yearly events must either specify BYMONTH or BYYEARDAY rules")
+			# we need to get the start/recurrence date from the start date
+			# Get the start date - we need this to expand yearly rules
+			# We should always have a start date in a legal event!
+	
+			start = xml2util.FindChildNode(src_node.parent,"DateStarted")
+			date = dateutil.XMLDateTimeToDate(start,tzdatabase.tzdb)
+			utcdate = date.astimezone(tzutils.tzone.utc)
+
+			# We need the month and the day
+			
+			dst_node.newChild(None,"Type", "5")
+			dst_node.newChild(None,"MonthOfYear",str(utcdate.month))
+			dst_node.newChild(None,"DayOfMonth",str(utcdate.day))
+			
+			# 'Count' is already handled
+			
 	return ""
 
 ###############################################################################
