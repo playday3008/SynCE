@@ -241,6 +241,10 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
     gchar *unix_path;
     guint os_major;
     guint os_minor;
+    gchar* ip;
+    guint cpu_type;
+    gchar* os_name;
+    gchar* model;
 
     result->name = name;
 
@@ -254,8 +258,51 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       g_object_unref(proxy);
       goto ERROR;
     }
-
     result->os_version = os_major;
+
+    if (!dbus_g_proxy_call(proxy, "GetIpAddress", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_STRING, &ip,
+                           G_TYPE_INVALID))
+    {
+      g_warning("%s: Failed to get device IP address for %s: %s", result->name, G_STRFUNC, error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+    result->ip = ip;
+
+    if (!dbus_g_proxy_call(proxy, "GetCpuType", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_UINT, &cpu_type,
+                           G_TYPE_INVALID))
+    {
+      g_warning("%s: Failed to get device cpu type for %s: %s", G_STRFUNC, result->name, error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+    result->processor_type = cpu_type;
+
+    if (!dbus_g_proxy_call(proxy, "GetPlatformName", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_STRING, &os_name,
+                           G_TYPE_INVALID))
+    {
+      g_warning("%s: Failed to get device platform name for %s: %s", result->name, G_STRFUNC, error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+    result->os_name = os_name;
+
+    if (!dbus_g_proxy_call(proxy, "GetModelName", &error,
+                           G_TYPE_INVALID,
+                           G_TYPE_STRING, &model,
+                           G_TYPE_INVALID))
+    {
+      g_warning("%s: Failed to get device model name for %s: %s", result->name, G_STRFUNC, error->message);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+    result->model = model;
 
     if (!dbus_g_proxy_call(proxy, "RequestConnection", &error,
                            G_TYPE_INVALID,
@@ -390,6 +437,30 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     result->os_version = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
       g_critical("%s: Failed to obtain property pda.pocketpc.os_major for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    result->processor_type = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.cpu_type", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.cpu_type for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    result->ip = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.ip_address", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.ip_address for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    result->os_name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.platform", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.platform for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    result->model = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.model", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.model for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
       goto error_exit;
     }
 
