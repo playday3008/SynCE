@@ -198,8 +198,8 @@ partners_setup_view_store_synceng(WmDevice *device)
   gboolean result;
   GPtrArray* partnership_list;
   GError *error;
-  DBusGConnection *dbus_connection;
-  DBusGProxy *sync_engine_proxy;
+  DBusGConnection *dbus_connection = NULL;
+  DBusGProxy *sync_engine_proxy = NULL;
 
   GtkListStore *store = gtk_list_store_new (N_COLUMNS,
 					    G_TYPE_BOOLEAN, /* current partner ? */

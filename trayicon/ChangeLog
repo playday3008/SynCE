@@ -1,3 +1,7 @@
+2008-02-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* initialize dbus pointers to NULL in sync-engine func
+
 2008-02-06  Mark Ellis <mark@mpellis.org.uk>
 
 	* add partnership viewing for WM5/sync-engine
