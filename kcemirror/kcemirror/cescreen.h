@@ -89,14 +89,14 @@ signals:
 private:
     KSocket *pdaSocket;
 
-    void sendMouseEvent(unsigned long int button, unsigned long int cmd,
-            unsigned long int x, unsigned long int y);
-    void sendKeyEvent(unsigned long int code, unsigned long int cmd);
+    void sendMouseEvent(uint32_t button, uint32_t cmd,
+            uint32_t x, uint32_t y);
+    void sendKeyEvent(uint32_t code, uint32_t cmd);
     bool readEncodedImage(KSocket *socket);
     bool readSizeMessage(KSocket *socket);
     bool readBmpHeader(KSocket *socket);
     QString getDeviceIp(QString pdaAddress);
-    unsigned long toKeySym(int ascii, int code);
+    uint32_t toKeySym(int ascii, int code);
     ImageViewer *imageViewer;
     uint32_t width;
     uint32_t height;

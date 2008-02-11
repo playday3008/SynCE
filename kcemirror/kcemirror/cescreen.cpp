@@ -280,8 +280,8 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
     unsigned char packageType;
 
     p = read(pdaSocket->socket(), &packageType, sizeof(unsigned char));
-    m = read(pdaSocket->socket(), &xN, sizeof(long));
-    k = read(pdaSocket->socket(), &yN, sizeof(long));
+    m = read(pdaSocket->socket(), &xN, sizeof(uint32_t));
+    k = read(pdaSocket->socket(), &yN, sizeof(uint32_t));
 
     if (m > 0 && k > 0) {
         width = ntohl(xN);
@@ -325,18 +325,18 @@ bool CeScreen::readBmpHeader(KSocket *socket)
 
     kdDebug(2120) << "Reading Bitmap Header" << endl;
 
-    int n = read(socket->socket(), &bmpSizeN, sizeof(long));
+    int n = read(socket->socket(), &bmpSizeN, sizeof(uint32_t));
 
-    if (n == sizeof(long)) {
+    if (n == sizeof(uint32_t)) {
         bmpSize = ntohl(bmpSizeN);
     } else {
         KMessageBox::error(this, "Connection to PDA broken", "Error");
         return false;
     }
 
-    n = read(socket->socket(), &headerSizeN, sizeof(long));
+    n = read(socket->socket(), &headerSizeN, sizeof(uint32_t));
 
-    if (n == sizeof(long)) {
+    if (n == sizeof(uint32_t)) {
         headerSize = ntohl(headerSizeN);
         kdDebug(2120) << "Header size: " << headerSize << endl;
         if (bmpData != NULL) {
@@ -370,9 +370,9 @@ bool CeScreen::readSizeMessage(KSocket *socket)
 
     kdDebug(2120) << "Reading Size Message" << endl;
 
-    int m = read(socket->socket(), &xN, sizeof(long));
-    int k = read(socket->socket(), &yN, sizeof(long));
-    if (m == sizeof(long) && k == sizeof(long)) {
+    int m = read(socket->socket(), &xN, sizeof(uint32_t));
+    int k = read(socket->socket(), &yN, sizeof(uint32_t));
+    if (m == sizeof(long) && k == sizeof(uint32_t)) {
         uint32_t x = ntohl(xN);
         uint32_t y = ntohl(yN);
         emit pdaSize((int) x, (int) y);
@@ -433,8 +433,8 @@ void CeScreen::closeSocket(KSocket *socket)
 }
 
 
-void CeScreen::sendMouseEvent(unsigned long int button, unsigned long int cmd,
-                              unsigned long int x, unsigned long int y)
+void CeScreen::sendMouseEvent(uint32_t button, uint32_t cmd,
+                              uint32_t x, uint32_t y)
 {
     if (!pause) {
         unsigned char buf[4 * sizeof(uint32_t)];
@@ -449,7 +449,7 @@ void CeScreen::sendMouseEvent(unsigned long int button, unsigned long int cmd,
 }
 
 
-void CeScreen::sendKeyEvent(unsigned long int code, unsigned long int cmd)
+void CeScreen::sendKeyEvent(uint32_t code, uint32_t cmd)
 {
     if (!pause) {
         unsigned char buf[4 * sizeof(uint32_t)];
@@ -539,7 +539,7 @@ void CeScreen::wheelRolled(int delta)
 }
 
 
-unsigned long CeScreen::toKeySym(int ascii, int code)
+uint32_t CeScreen::toKeySym(int ascii, int code)
 {
     if ( (ascii >= 'a') && (ascii <= 'z') ) {
         ascii = code;
@@ -673,7 +673,7 @@ unsigned long CeScreen::toKeySym(int ascii, int code)
 
 void CeScreen::keyPressed(int ascii, int code)
 {
-    unsigned long vncCode = this->toKeySym(ascii, code);
+    uint32_t vncCode = this->toKeySym(ascii, code);
 
     if (vncCode != 0) {
         sendKeyEvent(vncCode, KEY_PRESSED);
@@ -685,7 +685,7 @@ void CeScreen::keyPressed(int ascii, int code)
 
 void CeScreen::keyReleased(int ascii, int code)
 {
-    unsigned long vncCode = this->toKeySym(ascii, code);
+    uint32_t vncCode = this->toKeySym(ascii, code);
 
     if (vncCode != 0) {
         sendKeyEvent(vncCode, KEY_RELEASED);

@@ -77,10 +77,10 @@ bool Decoder::chainDecode(unsigned char *rawData, size_t rawSize)
 
 bool Decoder::readSize(int s)
 {
-    u_long encSizeN;
+    uint32_t encSizeN;
     bool ret = false;
 
-    if (recv(s, (void *) &encSizeN, sizeof(u_long), 0) == sizeof(u_long)) {
+    if (recv(s, (void *) &encSizeN, sizeof(uint32_t), 0) == sizeof(uint32_t)) {
         ret = true;
         encSize = ntohl(encSizeN);
     }
@@ -107,10 +107,10 @@ bool Decoder::chainReadSize(int s)
 
 bool Decoder::readData(int s, size_t encSize)
 {
-    u_long readSize = 0;
+    uint32_t readSize = 0;
     bool ret = false;
     encData = new unsigned char[encSize];
-    u_long n = 0;
+    uint32_t n = 0;
 
     do {
         n = recv(s, encData + readSize, encSize - readSize, 0);
@@ -128,9 +128,9 @@ bool Decoder::readData(int s, size_t encSize)
 size_t Decoder::chainRead(int s)
 {
     bool ret;
-    u_long rawSizeN;
+    uint32_t rawSizeN;
 
-    if ((ret = (recv(s, (void *) &rawSizeN, sizeof(u_long), 0) == sizeof(u_long)))) {
+    if ((ret = (recv(s, (void *) &rawSizeN, sizeof(uint32_t), 0) == sizeof(uint32_t)))) {
         rawSize = ntohl(rawSizeN);
         if (!(ret = chainReadSize(s))) {
             kdDebug(2120) << "Read sizes error" << endl;

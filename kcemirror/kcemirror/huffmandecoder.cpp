@@ -33,7 +33,7 @@
 typedef struct huffman_node_tag
 {
     unsigned char isLeaf;
-    unsigned long count;
+    uint32_t count;
     struct huffman_node_tag *parent;
 
     union _myunion
@@ -50,7 +50,7 @@ huffman_node;
 typedef struct huffman_code_tag
 {
     /* The length of this code in bits. */
-    unsigned long numbits;
+    uint32_t numbits;
 
     /* The bits that make up this code. The first
        bit is at position 0 in bits[0]. The second
@@ -61,8 +61,8 @@ typedef struct huffman_code_tag
 }
 huffman_code;
 
-static unsigned long
-numbytes_from_numbits(unsigned long numbits)
+static uint32_t
+numbytes_from_numbits(uint32_t numbits)
 {
     return numbits / 8 + (numbits % 8 ? 1 : 0);
 }
@@ -72,15 +72,15 @@ numbytes_from_numbits(unsigned long numbits)
  * in the 0th position of the return value.
  */
 static unsigned char
-get_bit(unsigned char* bits, unsigned long i)
+get_bit(unsigned char* bits, uint32_t i)
 {
     return (bits[i / 8] >> i % 8) & 1;
 }
 
 static void
-reverse_bits(unsigned char* bits, unsigned long numbits)
+reverse_bits(unsigned char* bits, uint32_t numbits)
 {
-    unsigned long numbytes = numbytes_from_numbits(numbits);
+    uint32_t numbytes = numbytes_from_numbits(numbits);
     unsigned char *tmp =
         (unsigned char*)alloca(numbytes);
     long curbit;
@@ -111,14 +111,14 @@ new_code(const huffman_node* leaf)
      * the root node and then reversing the bits,
      * since the Huffman code is calculated by
      * walking down the tree. */
-    unsigned long numbits = 0;
+    uint32_t numbits = 0;
     unsigned char* bits = NULL;
     huffman_code *p;
 
     while(leaf && leaf->parent) {
         huffman_node *parent = leaf->parent;
         unsigned char cur_bit = numbits % 8;
-        unsigned long cur_byte = numbits / 8;
+        uint32_t cur_byte = numbits / 8;
 
         /* If we need another byte to hold the code,
            then allocate it. */
@@ -163,7 +163,7 @@ new_leaf_node(unsigned char symbol)
 }
 
 static huffman_node*
-new_nonleaf_node(unsigned long count, huffman_node *zero, huffman_node *one)
+new_nonleaf_node(uint32_t count, huffman_node *zero, huffman_node *one)
 {
     huffman_node *p = (huffman_node*)malloc(sizeof(huffman_node));
     p->isLeaf = 0;
@@ -331,7 +331,7 @@ read_code_table_from_memory(const unsigned char* bufin,
 static bool huffman_decode_memory(const unsigned char *bufin,
                           unsigned int bufinlen,
                           unsigned char **pbufout,
-                          unsigned int *pbufoutlen)
+                          size_t *pbufoutlen)
 {
     huffman_node *root, *p;
     unsigned int data_count;
@@ -392,7 +392,7 @@ HuffmanDecoder::~HuffmanDecoder()
 bool HuffmanDecoder::decode(unsigned char *rawData, size_t rawSize, unsigned char *encData, size_t encSize)
 {
     size_t bufOutLen;
-    unsigned char *bufOut;
+    unsigned char *bufOut = NULL;
     bool ret = true;
 
     ret = huffman_decode_memory(encData, encSize, &bufOut, &bufOutLen);
