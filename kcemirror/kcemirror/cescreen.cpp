@@ -155,34 +155,19 @@ void CeScreen::updatePause()
 }
 
 
-QString CeScreen::getDeviceIp(QString pdaName)
-{
-    char *path = NULL;
-    synce::synce_get_directory(&path);
-    QString synceDir = QString(path);
-    QString deviceIp = "";
-
-    if (path) {
-        delete path;
-    }
-
-    KSimpleConfig activeConnection(synceDir + "/" + pdaName, true);
-    if (activeConnection.hasGroup("device")) {
-        activeConnection.setGroup("device");
-        deviceIp = activeConnection.readEntry("ip");
-    }
-
-    return deviceIp;
-}
-
-
 bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall)
 {
     synce::PROCESS_INFORMATION info = {0, 0, 0, 0};
     QString deviceAddress = pdaName;
 
     if (isSynCeDevice) {
-        deviceAddress = getDeviceIp(pdaName);
+	synce::SynceInfo *dev_info = synce::synce_info_new(pdaName.ascii());
+	if (dev_info)
+	  deviceAddress = QString(dev_info->ip);
+	else
+	  deviceAddress = "";
+	if (dev_info) synce::synce_info_destroy(dev_info);
+
         if (deviceAddress.isEmpty()) {
             return false;
         }

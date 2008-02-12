@@ -95,7 +95,6 @@ private:
     bool readEncodedImage(KSocket *socket);
     bool readSizeMessage(KSocket *socket);
     bool readBmpHeader(KSocket *socket);
-    QString getDeviceIp(QString pdaAddress);
     uint32_t toKeySym(int ascii, int code);
     ImageViewer *imageViewer;
     uint32_t width;
