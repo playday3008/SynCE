@@ -13,33 +13,26 @@
 #include "utils.h"
 
 
-DBusGConnection *
-synce_get_dbus_g_conn()
-{
-  static DBusGConnection *bus = NULL;
-
-  if (bus == NULL) {
-    GError *error = NULL;
-
-    bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-    if (bus == NULL)
-      g_error ("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-  }
-  return bus;
-}
-
 static DBusGProxy *
 synce_get_dbus_g_bus_proxy()
 {
   static DBusGProxy *bus_proxy = NULL;
 
   if (bus_proxy == NULL) {
-    bus_proxy = dbus_g_proxy_new_for_name (synce_get_dbus_g_conn(),
-					   "org.freedesktop.DBus",
-					   "/org/freedesktop/DBus",
-					   "org.freedesktop.DBus");
+    GError *error = NULL;
+    DBusGConnection *bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+    if (bus == NULL) {
+      g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
+      g_error_free(error);
+      return NULL;
+    }
+
+    bus_proxy = dbus_g_proxy_new_for_name(bus,
+					  "org.freedesktop.DBus",
+					  "/org/freedesktop/DBus",
+					  "org.freedesktop.DBus");
     if (bus_proxy == NULL)
-      g_error ("%s: Failed to get proxy object to DBus", G_STRFUNC);
+      g_critical("%s: Failed to get proxy to DBus", G_STRFUNC);
   }
   return bus_proxy;
 }
@@ -48,8 +41,13 @@ void
 synce_get_dbus_sender_uid(const gchar *sender, guint *uid)
 {
   GError *error = NULL;
+  DBusGProxy *dbus_proxy = synce_get_dbus_g_bus_proxy();
+  if (!dbus_proxy) {
+    *uid = 0;
+    return;
+  }
 
-  if (!dbus_g_proxy_call(synce_get_dbus_g_bus_proxy(),
+  if (!dbus_g_proxy_call(dbus_proxy,
 			 "GetConnectionUnixUser",
 			 &error,
 			 G_TYPE_STRING, sender,

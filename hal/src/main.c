@@ -42,6 +42,7 @@ static void
 device_disconnected_cb(SynceDevice *device,
 		       gpointer user_data)
 {
+  g_debug("%s: receieved disconnect from device", G_STRFUNC);
   g_object_unref(synce_dev);
   g_main_loop_quit((GMainLoop*)user_data);
 }
@@ -57,6 +58,8 @@ client_connected_cb (GServer *server,
     return;
   }
 
+  GMainLoop *mainloop = (GMainLoop *)user_data;
+
   GInetAddr *local_inet_addr = gnet_tcp_socket_get_local_inetaddr (conn->socket);
   gint local_port = gnet_inetaddr_get_port(local_inet_addr);
 
@@ -66,13 +69,13 @@ client_connected_cb (GServer *server,
     if (!synce_dev) {
       gnet_server_delete(server_990);
       synce_dev = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, NULL);
-      g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), user_data);
+      g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     }
   } else {
     if (!synce_dev) {
       gnet_server_delete(server_5679);
       synce_dev = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, NULL);
-      g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), user_data);
+      g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(synce_dev), conn);
     }
@@ -107,6 +110,8 @@ iface_list_free_func(gpointer data,
 static gboolean
 check_interface_cb (gpointer data)
 {
+  GMainLoop *mainloop = (GMainLoop *)data;
+
   gchar *tmp_bytes, *local_ip_bytes;
   GInetAddr *local_iface = NULL;
   gint addr_length;
@@ -141,26 +146,31 @@ check_interface_cb (gpointer data)
     return TRUE;
   }
 
-  g_debug("%s: found device iface", G_STRFUNC);
+  g_debug("%s: found device interface", G_STRFUNC);
 
   GInetAddr *server_990_addr = gnet_inetaddr_clone(local_iface);
   gnet_inetaddr_set_port(server_990_addr, 990);
 
-  server_990 = gnet_server_new (server_990_addr, 990, client_connected_cb, data);
+  server_990 = gnet_server_new (server_990_addr, 990, client_connected_cb, mainloop);
   if (!server_990) {
-    g_error("%s: server_990 invalid", G_STRFUNC);
+    g_critical("%s: unable to listen on rndis port (990), server invalid", G_STRFUNC);
+    g_main_loop_quit(mainloop);
   }
 
   GInetAddr *server_5679_addr = gnet_inetaddr_clone(local_iface);
   gnet_inetaddr_set_port(server_5679_addr, 5679);
 
-  server_5679 = gnet_server_new (server_5679_addr, 5679, client_connected_cb, data);
-  if (!server_5679)
-    g_error("%s: server_5679 invalid", G_STRFUNC);
+  server_5679 = gnet_server_new (server_5679_addr, 5679, client_connected_cb, mainloop);
+  if (!server_5679) {
+    g_critical("%s: unable to listen on legacy port (5679), server invalid", G_STRFUNC);
+    g_main_loop_quit(mainloop);
+  }
 
   gnet_inetaddr_unref(server_990_addr);
   gnet_inetaddr_unref(server_5679_addr);
   gnet_inetaddr_unref(local_iface);
+
+  g_debug("%s: listening for device", G_STRFUNC);
 
   if (rndis_device)
     synce_trigger_connection (device_ip);
@@ -248,6 +258,8 @@ main(gint argc,
     g_critical("%s: failed to set device removed cb", G_STRFUNC);
     return EXIT_FAILURE;
   }
+
+  g_debug("%s: connected to hal, waiting for interface...", G_STRFUNC);
 
   g_timeout_add (100, check_interface_cb, mainloop);
 
