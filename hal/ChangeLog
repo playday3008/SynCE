@@ -1,3 +1,7 @@
+2008-02-13  Mark Ellis <mark@mpellis.org.uk>
+
+	* call gnet_init()
+
 2008-02-12  Mark Ellis <mark@mpellis.org.uk>
 
 	* tidy debugging and utils

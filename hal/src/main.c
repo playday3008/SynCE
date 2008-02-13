@@ -189,6 +189,7 @@ main(gint argc,
   LibHalContext *main_ctx;
 
   g_type_init ();
+  gnet_init();
 
   GOptionContext *option_context = g_option_context_new (" - keep connection to Windows Mobile device");
   g_option_context_add_main_entries (option_context, options, NULL);
