@@ -6,3 +6,6 @@ haldir = ${prefix}/lib/hal
 hal_SCRIPTS = \
 	hal-synce-rndis \
 	hal-synce-legacy 
+
+EXTRA_DIST = $(haldata_DATA)
+

@@ -1,6 +1,8 @@
 2008-02-15  Mark Ellis <mark@mpellis.org.uk>
 
 	* correct typo for synce-device.h in src/Makefile.am
+	* added 10-synce.fdi, synce-device-signals-marshal.list,
+	  synce-device.xml to EXTRA_DIST
 
 2008-02-13  Mark Ellis <mark@mpellis.org.uk>
 
