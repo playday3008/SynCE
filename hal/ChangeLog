@@ -1,3 +1,7 @@
+2008-02-15  Mark Ellis <mark@mpellis.org.uk>
+
+	* correct typo for synce-device.h in src/Makefile.am
+
 2008-02-13  Mark Ellis <mark@mpellis.org.uk>
 
 	* call gnet_init()

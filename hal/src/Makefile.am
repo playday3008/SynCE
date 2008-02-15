@@ -11,7 +11,7 @@ CLEANFILES = $(BUILT_SOURCES)
 hal_dccm_SOURCES = $(BUILT_SOURCES) \
 		main.c \
 		log.c log.h \
-		synce-device.c synce_device.h synce-device-internal.h \
+		synce-device.c synce-device.h synce-device-internal.h \
 		synce-device-rndis.c synce-device-rndis.h \
 		synce-device-legacy.c synce-device-legacy.h \
 		synce-connection-broker.c synce-connection-broker.h \
