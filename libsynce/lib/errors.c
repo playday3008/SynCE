@@ -8,20 +8,20 @@ const char* synce_strerror(DWORD error)
 	
 	switch (error)
 	{
-		case S_OK: 			result = "Success";   break;
+		case S_OK:			result = "Success";   break;
 		case S_FALSE: 	result = "FALSE"; 		break;
 
-    case E_ABORT:         result = "The operation was aborted because of an unspecified error"; break;
-    case E_ACCESSDENIED:  result = "A general access-denied error"; break;
+		case E_ABORT:         result = "The operation was aborted because of an unspecified error"; break;
+		case E_ACCESSDENIED:  result = "A general access-denied error"; break;
 		case E_FAIL: 		      result = "An unspecified failure has occurred"; 	break;
-    case E_HANDLE:        result = "An invalid handle was used"; break;
-    case E_INVALIDARG:  	result = "One or more arguments are invalid."; break;
+		case E_HANDLE:        result = "An invalid handle was used"; break;
+		case E_INVALIDARG:  	result = "One or more arguments are invalid."; break;
 
-    case E_NOTIMPL:       result = "The method is not implemented"; break;
-    case E_OUTOFMEMORY:   result = "The method failed to allocate necessary memory"; break;
-    case E_PENDING:       result = "The data necessary to complete the operation is not yet available"; break;
-    case E_POINTER:       result = "An invalid pointer was used"; break;
-    case E_UNEXPECTED:    result = "A catastrophic failure has occurred"; break;
+		case E_NOTIMPL:       result = "The method is not implemented"; break;
+		case E_OUTOFMEMORY:   result = "The method failed to allocate necessary memory"; break;
+		case E_PENDING:       result = "The data necessary to complete the operation is not yet available"; break;
+		case E_POINTER:       result = "An invalid pointer was used"; break;
+		case E_UNEXPECTED:    result = "A catastrophic failure has occurred"; break;
 
 		case ERROR_FILE_NOT_FOUND:    result = "File not found"; break;
 		case ERROR_PATH_NOT_FOUND:    result = "Path not found"; break;
@@ -29,8 +29,10 @@ const char* synce_strerror(DWORD error)
 		case ERROR_ACCESS_DENIED: result = "Access is denied"; break;
 		case ERROR_INVALID_HANDLE:    result = "Invalid file handle"; break;
 		case ERROR_NOT_ENOUGH_MEMORY: result = "Not enough memory"; break;
+		case ERROR_NOT_SAME_DEVICE: result = "The system cannot move the file to a different disk drive"; break;
 		case ERROR_NO_MORE_FILES:     result = "There are no more files"; break;
 		case ERROR_SEEK: result = "Drive seek error"; break;
+		case ERROR_GEN_FAILURE: result = "A device attached to the system is not functioning"; break;
 		case ERROR_SHARING_VIOLATION: result = "Sharing violation"; break;
 		case ERROR_NOT_SUPPORTED: result = "Not supported"; break;
 		case ERROR_DUP_NAME: result = "Duplicate name"; break;

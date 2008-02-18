@@ -2,6 +2,7 @@
 
 	* add .so man pages to 'real' pages
 	* point to synce.7, not synce.1
+	* more error codes
 
 2008-02-11  Mark Ellis  <mark@mpellis.org.uk>
 
