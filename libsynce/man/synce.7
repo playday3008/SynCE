@@ -4,17 +4,17 @@
 SynCE \- A project for connecting to devices running Microsoft Windows Mobile.
 
 .SH "DESCRIPTION"
-The following steps are required to get started with SynCE with a WM5 or WM6 device:
+The following steps are required to get started with SynCE:
 
 .SS 
-(1) Ensure kernel module is installed
+(1) Ensure kernel module or synce-serial is installed
 .PP
-You must either use the usb-rndis-[lite|ng] driver from SynCE, or if you are using a kernel >= 2.6.21 then you must have patched your kernel.
+You must either use the usb-rndis-[lite|ng] driver from SynCE with a WM5 or later device, or install and configure the synce-serial package for an earlier device.
 
 .SS
 (2) Start the connection daemon (as root)
 .PP
-The odccm(1) program handles the SynCE connection. This daemon is run by the root.
+The odccm(1) program handles the SynCE connection. This daemon must run as the root user.
 
 .SS
 (3) Run tools that access the device (as user)
@@ -25,7 +25,6 @@ See for example pls(1) and pcp(1).
 See http://www.synce.org/ for more information about the SynCE project.
 .SH "AUTHOR"
 .PP
-This manual page was written by David Eriksson <twogood@users.sourceforge.net>. It was later updated by Jonny Lamb <jonnylamb@jonnylamb.com>.
+This manual page was written by David Eriksson <twogood@users.sourceforge.net>. It was later updated by Jonny Lamb <jonnylamb@jonnylamb.com> and Mark Ellis <mark@mpellis.org.uk>.
 .SH "SEE ALSO"
 odccm(1)
-
