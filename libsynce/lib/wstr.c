@@ -61,14 +61,13 @@ static char* get_current_codeset()
 /**
  * Convert a string from UCS2 to some other code
  */
-static char* wstr_to_x(LPCWSTR inbuf, const char* code, size_t multiplier)
+static char* wstr_to_x(LPCWSTR inbuf, const char* code)
 {
-	size_t length = wstr_strlen(inbuf);
-	size_t inbytesleft = length * 2, outbytesleft = length * multiplier;
-	char* outbuf = malloc(outbytesleft+sizeof(char));
+	size_t length = wstr_strlen(inbuf), size = length;
+	size_t inbytesleft = length * 2, outbytesleft = size;
+	char* outbuf = malloc(outbytesleft+sizeof(char)), *tmp;
   char* outbuf_iterator = outbuf;
   ICONV_CONST char* inbuf_iterator = (ICONV_CONST char*)inbuf;
-	size_t result;
 	iconv_t cd = INVALID_ICONV_HANDLE;
 
 	if (!inbuf)
@@ -83,18 +82,32 @@ static char* wstr_to_x(LPCWSTR inbuf, const char* code, size_t multiplier)
 		wstr_error("iconv_open(%s, %s) failed: %s", code, wstr_WIDE, strerror(errno));
 		return NULL;
 	}
+	
+	while (iconv(cd, &inbuf_iterator, &inbytesleft,
+		     &outbuf_iterator, &outbytesleft) == (size_t)-1) {
+		if (errno != E2BIG) {
+			wstr_error("iconv failed: inbytesleft=%i, outbytesleft="
+				   "%i", inbytesleft, outbytesleft);
+			/* it would be nice to use rapi_trace_wstr here, but
+			   that would cause recursion */
+			wstr_free_string(outbuf);
+			return NULL;
+		}
 
-  result = iconv(cd, &inbuf_iterator, &inbytesleft, &outbuf_iterator, &outbytesleft);
+		size += length;
+		tmp = realloc(outbuf, size + 1);
+		if (tmp == NULL) {
+			wstr_error("realloc failed");
+			free(outbuf);
+			return NULL;
+		}
+		outbytesleft += length;
+		outbuf_iterator += tmp - outbuf;
+		outbuf = tmp;
+	}
+
   iconv_close(cd);
 
-  if ((size_t)-1 == result)
-	{
-		wstr_error("iconv failed: inbytesleft=%i, outbytesleft=%i", inbytesleft, outbytesleft);
-		/* it would be nice to use rapi_trace_wstr here, but that would cause recursion */
-		wstr_free_string(outbuf);
-		return NULL;
-	}
-    
 	*outbuf_iterator = '\0';
 
   return outbuf;
@@ -105,7 +118,7 @@ static char* wstr_to_x(LPCWSTR inbuf, const char* code, size_t multiplier)
  */
 char* wstr_to_ascii(LPCWSTR unicode)
 {
-	return wstr_to_x(unicode, wstr_ASCII, 1);
+	return wstr_to_x(unicode, wstr_ASCII);
 }
 
 /*
@@ -113,7 +126,7 @@ char* wstr_to_ascii(LPCWSTR unicode)
  */
 char* wstr_to_utf8(LPCWSTR unicode)
 {
-	return wstr_to_x(unicode, wstr_UTF8, 2);
+	return wstr_to_x(unicode, wstr_UTF8);
 }
 
 #if HAVE_SETLOCALE && HAVE_NL_LANGINFO
@@ -122,7 +135,7 @@ char* wstr_to_utf8(LPCWSTR unicode)
  */
 char* wstr_to_current(LPCWSTR unicode)
 {
-  return wstr_to_x(unicode, get_current_codeset(), 2);
+  return wstr_to_x(unicode, get_current_codeset());
 }
 #endif
 

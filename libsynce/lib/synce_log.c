@@ -32,7 +32,10 @@ void synce_log_use_syslog()
 
 void _synce_log(int level, const char* file, int line, const char* format, ...)
 {
-	va_list ap;
+  va_list ap;
+
+  if (level > current_log_level)
+    return;
 
   if (use_syslog)
   {
@@ -43,9 +46,6 @@ void _synce_log(int level, const char* file, int line, const char* format, ...)
   }
   else
   {
-    if (level > current_log_level)
-      return;
-
     fprintf(stderr, "[%s:%i] ", file, line);
 
     va_start(ap, format);

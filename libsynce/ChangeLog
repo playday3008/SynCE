@@ -1,3 +1,9 @@
+2008-02-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* only log to syslog up to requested level
+	* wstr_to_ fixes for > 2 byte encodings, thanks to
+	  HIRANO Takahito (bug #1836234)
+
 2008-02-18  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add .so man pages to 'real' pages
