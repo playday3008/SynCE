@@ -1,3 +1,9 @@
+2008-02-13  Mark Ellis  <mark@mpellis.org.uk>
+
+	* use a rapi connection per operation instead of globally
+	* structure for multi device support
+	* tidying up
+
 2008-01-08  Mark Ellis  <mark@mpellis.org.uk>
 
 	* added note in README about installation prefix

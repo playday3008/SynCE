@@ -1,25 +1,13 @@
 #include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <rapi.h>
 #include <synce_log.h>
-
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
 #include <libgnomevfs/gnome-vfs-module.h>
 #include <libgnomevfs/gnome-vfs-utils.h>
 
 #define SHOW_APPLICATIONS   0
-
-#ifdef WITH_VERBOSE_DEBUG
-#define D(x...) synce_debug(x)
-#else
-#define D(x...)
-#endif
 
 #ifdef G_THREADS_ENABLED
 #define MUTEX_NEW()     g_mutex_new ()
@@ -54,18 +42,30 @@ enum {
   FS_ROM_STORAGE
 };
 
-typedef struct _DIR_HANDLE
+/* structures for info held by gnomevfs between calls */
+
+typedef struct _VFS_DIR_HANDLE
 {
+  GnomeVFSURI *uri;
+  RapiConnection *rapi_conn;
   int index;
   char *location;
   CE_FIND_DATA *data;
   int itemcount;
   int count;
-} DIR_HANDLE;
+} VFS_DIR_HANDLE;
+
+typedef struct _VFS_FILE_HANDLE
+{
+  GnomeVFSURI *uri;
+  RapiConnection *rapi_conn;
+  HANDLE handle;
+} VFS_FILE_HANDLE;
+
+/* static data, mutex */
 
 static GMutex * mutex = NULL;
 
-static gboolean initialized_rapi = FALSE;
 
 typedef struct _ErrorCodeTriple
 {
@@ -75,14 +75,9 @@ typedef struct _ErrorCodeTriple
 } ErrorCodeTriple;
 
 /* hack, these should be in synce.h */
-#ifndef ERROR_TOO_MANY_OPEN_FILES
-#define ERROR_TOO_MANY_OPEN_FILES      4
-#define ERROR_INVALID_HANDLE           6
-#define ERROR_NO_MORE_FILES           18
-#define ERROR_DISK_FULL              112
-#endif
-
+#ifndef ERROR_NOT_SAME_DEVICE
 #define ERROR_NOT_SAME_DEVICE         17
+#endif
 
 static ErrorCodeTriple error_codes[] =
 {
@@ -102,23 +97,39 @@ static ErrorCodeTriple error_codes[] =
     {GNOME_VFS_ERROR_NOT_SAME_FILE_SYSTEM, ERROR_NOT_SAME_DEVICE,  0}
 };
 
-static GnomeVFSResult gnome_vfs_result_from_rapi()/*{{{*/
+
+static gchar *get_host_from_uri(const GnomeVFSURI *uri)/*{{{*/
+{
+  gchar *host = NULL;
+
+  host = gnome_vfs_unescape_string(gnome_vfs_uri_get_host_name(uri),"\\");
+
+  synce_debug("%s: host = '%s'", G_STRFUNC, host);
+
+  return host;
+}/*}}}*/
+
+
+static GnomeVFSResult gnome_vfs_result_from_rapi(gboolean *connection_error)/*{{{*/
 {
   GnomeVFSResult result = GNOME_VFS_ERROR_GENERIC;
   HRESULT hr;
   unsigned error;
   int i;
 
+  if (connection_error)
+    *connection_error = FALSE;
+
   hr    = CeRapiGetError();
   error = CeGetLastError();
 
   if (FAILED(hr))
     {
-      /* This is a connection error, so we close the connection */
-      CeRapiUninit();
-      initialized_rapi = FALSE;
+      /* This is a connection error, so we signal to close the connection */
+      if (connection_error)
+	*connection_error = TRUE;
 
-      synce_trace("HRESULT = %08x: %s", hr, synce_strerror(hr));
+      synce_error("HRESULT = %08x: %s", hr, synce_strerror(hr));
 
       for (i = 0; i < sizeof(error_codes)/sizeof(ErrorCodeTriple); i++)
         {
@@ -131,7 +142,7 @@ static GnomeVFSResult gnome_vfs_result_from_rapi()/*{{{*/
     }
   else
     {
-      synce_trace("error = %i: %s", error, synce_strerror(error));
+      synce_info("error = %i: %s", error, synce_strerror(error));
 
       for (i = 0; i < sizeof(error_codes)/sizeof(ErrorCodeTriple); i++)
         {
@@ -143,30 +154,46 @@ static GnomeVFSResult gnome_vfs_result_from_rapi()/*{{{*/
         }
     }
 
-  synce_trace("GnomeVFSResult = %s", gnome_vfs_result_to_string(result));
+  synce_debug("GnomeVFSResult = %s", gnome_vfs_result_to_string(result));
   return result;
 }/*}}}*/
 
-static GnomeVFSResult initialize_rapi()/*{{{*/
+
+static GnomeVFSResult initialize_rapi(const GnomeVFSURI *uri, RapiConnection **rapi_conn)/*{{{*/
 {
-  if (!initialized_rapi)
+  gchar *host;
+  RapiConnection *connection = NULL;
+  GnomeVFSResult result = GNOME_VFS_OK;
+  HRESULT hr;
+
+  host = get_host_from_uri(uri);
+  synce_debug("%s: initialize for host %s", G_STRFUNC, host);
+
+  connection = rapi_connection_from_name(host);
+  if (!connection) {
+    synce_warning("Unable to initialize RAPI for host '%s': connection failed", host);
+    result = GNOME_VFS_ERROR_LOGIN_FAILED;
+    goto exit;
+  }
+
+  rapi_connection_select(connection);
+  hr = CeRapiInit();
+
+  if (FAILED(hr))
     {
-      MUTEX_LOCK (mutex); 
-      HRESULT hr = CeRapiInit();
-      MUTEX_UNLOCK (mutex); 
-
-      if (FAILED(hr))
-        {
-          synce_error("Unable to initialize RAPI: %08x: %s",
-              hr, synce_strerror(hr));
-          return GNOME_VFS_ERROR_LOGIN_FAILED;
-        }
-
-      initialized_rapi = TRUE;
+      synce_warning("Unable to initialize RAPI for host '%s': %s", host, synce_strerror(hr));
+      rapi_connection_destroy(connection);
+      result = GNOME_VFS_ERROR_LOGIN_FAILED;
+    } else {
+      synce_debug("%s: new connection for host '%s' successful", G_STRFUNC, host);
+      *rapi_conn = connection;
     }
 
-  return GNOME_VFS_OK;
+exit:
+  g_free(host);
+  return result;
 }/*}}}*/
+
 
 static gint get_location(const GnomeVFSURI *uri, gchar **location)/*{{{*/
 {
@@ -175,13 +202,11 @@ static gint get_location(const GnomeVFSURI *uri, gchar **location)/*{{{*/
 
   path = g_strsplit(gnome_vfs_unescape_string(gnome_vfs_uri_get_path(uri),"\\"), "/", 0);
 
-#ifdef WITH_VERBOSE_DEBUG
-    {
-      int i;
-      for (i = 0; path[i]; i++)
-        synce_trace("path[%i] = '%s'", i, path[i]);
-    }
-#endif
+  {
+    int i;
+    for (i = 0; path[i]; i++)
+      synce_debug("%s: path[%i] = '%s'", G_STRFUNC, i, path[i]);
+  }
 
   if (!path || !path[0] || !path[1])
     {
@@ -221,9 +246,7 @@ static gint get_location(const GnomeVFSURI *uri, gchar **location)/*{{{*/
       *location = NULL;
     }
 
-#ifdef WITH_VERBOSE_DEBUG
-  synce_trace("index = %i, location = '%s'", result, *location);
-#endif
+  synce_debug("%s: index = %i, location = '%s'", G_STRFUNC, result, *location);
 
   g_strfreev(path);
   return result;
@@ -261,16 +284,14 @@ static GnomeVFSResult synce_open/*{{{*/
  GnomeVFSContext *context)
 {
   GnomeVFSResult result;
-  char *location = NULL;
+  gchar *location = NULL;
   WCHAR *wide_path = NULL;
-  int synce_open_mode;
-  int synce_create_mode;
+  gint synce_open_mode, synce_create_mode;
   HANDLE handle;
+  VFS_FILE_HANDLE *fh = NULL;
+  RapiConnection *rapi_conn = NULL;
 
-  D("------------------ synce_open() ------------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(uri, &location))
     {
@@ -291,14 +312,17 @@ static GnomeVFSResult synce_open/*{{{*/
       goto exit;
     }
 
-  D("location: %s\n", location);
+  vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
+
+  MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
 
   wide_path = wstr_from_utf8(location);
 
-  vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
-
-  D("CeCreateFile()\n");
-  MUTEX_LOCK (mutex);
+  synce_debug("%s: CeCreateFile()", G_STRFUNC);
   handle = CeCreateFile
     (
      wide_path,
@@ -310,20 +334,26 @@ static GnomeVFSResult synce_open/*{{{*/
      0
     );
 
-  if(handle == INVALID_HANDLE_VALUE)
-    result = gnome_vfs_result_from_rapi();
-  else
+  wstr_free_string(wide_path);
+  if(handle == INVALID_HANDLE_VALUE) {
+    result = gnome_vfs_result_from_rapi(NULL);
+    CeRapiUninit();
+    rapi_connection_destroy(rapi_conn);
+  } else {
+    fh = (VFS_FILE_HANDLE*) g_malloc0(sizeof(VFS_FILE_HANDLE));
+    fh->uri = gnome_vfs_uri_dup(uri);
+    fh->handle = handle;
+    fh->rapi_conn = rapi_conn;
+    *((VFS_FILE_HANDLE**)method_handle_return) = fh;
+
     result = GNOME_VFS_OK;
+  }
 
   MUTEX_UNLOCK (mutex);
 
-  g_free(location);
-  wstr_free_string(wide_path);
-
-  *(method_handle_return) = GUINT_TO_POINTER(handle);
-
 exit:
-  D("------------------ synce_open() end --------------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -339,16 +369,14 @@ static GnomeVFSResult synce_create/*{{{*/
  )
 {
   GnomeVFSResult result;
-  char *location = NULL;
+  gchar *location = NULL;
   WCHAR *wide_path = NULL;
-  int synce_open_mode;
-  int synce_create_mode;
+  gint synce_open_mode, synce_create_mode;
   HANDLE handle;
+  VFS_FILE_HANDLE *fh = NULL;
+  RapiConnection *rapi_conn = NULL;
 
-  D("------------------ synce_create() ----------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(uri, &location))
     {
@@ -369,14 +397,17 @@ static GnomeVFSResult synce_create/*{{{*/
       goto exit;
     }
 
-  D("location: %s\n", location);
+  vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
+
+  MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
 
   wide_path = wstr_from_utf8(location);
 
-  vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
-
-  D("CeCreateFile()");
-  MUTEX_LOCK (mutex);
+  synce_debug("%s: CeCreateFile()", G_STRFUNC);
   handle = CeCreateFile
     (
      wide_path,
@@ -388,20 +419,26 @@ static GnomeVFSResult synce_create/*{{{*/
      0
     );
 
-  if(handle == INVALID_HANDLE_VALUE)
-    result = gnome_vfs_result_from_rapi();
-  else
+  wstr_free_string(wide_path);
+  if(handle == INVALID_HANDLE_VALUE) {
+    result = gnome_vfs_result_from_rapi(NULL);
+    CeRapiUninit();
+    rapi_connection_destroy(rapi_conn);
+  } else {
+    fh = (VFS_FILE_HANDLE*) g_malloc0(sizeof(VFS_FILE_HANDLE));
+    fh->uri = gnome_vfs_uri_dup(uri);
+    fh->handle = handle;
+    fh->rapi_conn = rapi_conn;
+    *((VFS_FILE_HANDLE**)method_handle_return) = fh;
+
     result = GNOME_VFS_OK;
+  }
 
   MUTEX_UNLOCK (mutex);
 
-  g_free(location);
-  wstr_free_string(wide_path);
-
-  *(method_handle_return) = GUINT_TO_POINTER(handle);
-
 exit:
-  D("------------------ synce_create() end ------------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -413,29 +450,32 @@ static GnomeVFSResult synce_close/*{{{*/
  )
 {
   GnomeVFSResult result;
-  HANDLE handle;
-  int success;
+  VFS_FILE_HANDLE *fh;
+  gint success;
 
-  D("------------------- synce_close() ----------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  fh = (VFS_FILE_HANDLE *)method_handle;
 
-  handle = GPOINTER_TO_UINT(method_handle);
-
-  D("synce_close: CeCloseHandle()\n");
+  synce_debug("%s: CeCloseHandle()", G_STRFUNC);
   MUTEX_LOCK (mutex);
-  success = CeCloseHandle(handle);
+  rapi_connection_select(fh->rapi_conn);
+  success = CeCloseHandle(fh->handle);
 
   if (success)
     result = GNOME_VFS_OK;
   else
-    result = gnome_vfs_result_from_rapi();
+    result = gnome_vfs_result_from_rapi(NULL);
+
+  CeRapiUninit();
+  rapi_connection_destroy(fh->rapi_conn);
 
   MUTEX_UNLOCK (mutex);
 
-exit:
-  D("------------------- synce_close() end ------------\n");
+  gnome_vfs_uri_unref(fh->uri);
+  g_free(fh);
+
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -450,22 +490,22 @@ static GnomeVFSResult synce_read/*{{{*/
  )
 {
   GnomeVFSResult result;
-  int success;
+  gint success;
   DWORD read_return;
-  HANDLE handle;
+  VFS_FILE_HANDLE *fh;
+  gboolean conn_err;
 
-  D("------------------ synce_read() ------------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  fh = (VFS_FILE_HANDLE *)method_handle;
 
-  handle = GPOINTER_TO_UINT(method_handle);
-
-  D("CeReadFile\n");
   MUTEX_LOCK (mutex);
+  rapi_connection_select(fh->rapi_conn);
+
+  synce_debug("%s: CeReadFile()", G_STRFUNC);
   success = CeReadFile
     (
-     handle,
+     fh->handle,
      buffer,
      num_bytes,
      &read_return,
@@ -474,7 +514,11 @@ static GnomeVFSResult synce_read/*{{{*/
 
   if (!success)
     {
-      result = gnome_vfs_result_from_rapi();
+      result = gnome_vfs_result_from_rapi(&conn_err);
+      if (conn_err) {
+	CeRapiUninit();
+	rapi_connection_destroy(fh->rapi_conn);
+      }
     }
   else if (read_return == 0)
     {
@@ -486,10 +530,9 @@ static GnomeVFSResult synce_read/*{{{*/
       *bytes_read_return = read_return;
       result = GNOME_VFS_OK;
     }
-
   MUTEX_UNLOCK (mutex);
-exit:
-  D("------------------ synce_read() end --------------\n");
+
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -504,22 +547,22 @@ static GnomeVFSResult synce_write/*{{{*/
  )
 {
   GnomeVFSResult result;
-  int success;
-  HANDLE handle;
+  gint success;
+  VFS_FILE_HANDLE *fh;
   DWORD bytes_written;
+  gboolean conn_err;
 
-  D("----------------- synce_write() ------------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  fh = (VFS_FILE_HANDLE *)method_handle;
 
-  handle = GPOINTER_TO_UINT(method_handle);
-
-  D("CeWriteFile()\n");
   MUTEX_LOCK (mutex);
+  rapi_connection_select(fh->rapi_conn);
+
+  synce_debug("%s: CeWriteFile()", G_STRFUNC);
   success = CeWriteFile
     (
-     handle,
+     fh->handle,
      buffer,
      num_bytes,
      &bytes_written,
@@ -528,7 +571,11 @@ static GnomeVFSResult synce_write/*{{{*/
 
   if (!success)
     {
-      result = gnome_vfs_result_from_rapi();
+      result = gnome_vfs_result_from_rapi(&conn_err);
+      if (conn_err) {
+	CeRapiUninit();
+	rapi_connection_destroy(fh->rapi_conn);
+      }
     }
   else if (bytes_written == 0)
     {
@@ -540,10 +587,10 @@ static GnomeVFSResult synce_write/*{{{*/
       *bytes_written_return = bytes_written;
       result = GNOME_VFS_OK;
     }
+
   MUTEX_UNLOCK (mutex);
 
-exit:
-  D("----------------- synce_write() end --------------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -556,14 +603,12 @@ synce_seek (GnomeVFSMethod *method,
 {
   GnomeVFSResult result;
   DWORD retval, move_method;
-  HANDLE handle;
+  VFS_FILE_HANDLE *fh;
+  gboolean conn_err;
 
-  D("------------------ synce_seek() -------------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi ()) != GNOME_VFS_OK)
-    goto exit;
-
-  handle = GPOINTER_TO_UINT(method_handle);
+  fh = (VFS_FILE_HANDLE *)method_handle;
 
   switch (whence) {
     case GNOME_VFS_SEEK_START:
@@ -579,16 +624,22 @@ synce_seek (GnomeVFSMethod *method,
       g_assert_not_reached ();
   }
 
-  D("CeSetFilePointer()\n");
   MUTEX_LOCK (mutex);
-  retval = CeSetFilePointer (handle,
+  rapi_connection_select(fh->rapi_conn);
+
+  synce_debug("%s: CeSetFilePointer()", G_STRFUNC);
+  retval = CeSetFilePointer (fh->handle,
                              offset,
                              NULL,
                              move_method);
 
   if (retval == 0xFFFFFFFF)
     {
-      result = gnome_vfs_result_from_rapi ();
+      result = gnome_vfs_result_from_rapi (&conn_err);
+      if (conn_err) {
+	CeRapiUninit();
+	rapi_connection_destroy(fh->rapi_conn);
+      }
     }
   else
     {
@@ -597,8 +648,7 @@ synce_seek (GnomeVFSMethod *method,
 
   MUTEX_UNLOCK (mutex);
 
-exit:
-  D("------------------ synce_seek() end --------------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }
 
@@ -609,25 +659,29 @@ synce_tell (GnomeVFSMethod *method,
 {
   GnomeVFSResult result;
   DWORD retval;
-  HANDLE handle;
+  VFS_FILE_HANDLE *fh;
+  gboolean conn_err;
 
-  D("------------------ synce_tell() -------------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi ()) != GNOME_VFS_OK)
-    goto exit;
+  fh = (VFS_FILE_HANDLE *)method_handle;
 
-  handle = GPOINTER_TO_UINT(method_handle);
-
-  D("CeSetFilePointer()\n");
   MUTEX_LOCK (mutex);
-  retval = CeSetFilePointer (handle,
+  rapi_connection_select(fh->rapi_conn);
+
+  synce_debug("%s: CeSetFilePointer()", G_STRFUNC);
+  retval = CeSetFilePointer (fh->handle,
                              0,
                              NULL,
                              FILE_CURRENT);
 
   if (retval == 0xFFFFFFFF)
     {
-      result = gnome_vfs_result_from_rapi ();
+      result = gnome_vfs_result_from_rapi (&conn_err);
+      if (conn_err) {
+	CeRapiUninit();
+	rapi_connection_destroy(fh->rapi_conn);
+      }
     }
   else
     {
@@ -637,8 +691,7 @@ synce_tell (GnomeVFSMethod *method,
 
   MUTEX_UNLOCK (mutex);
 
-exit:
-  D("------------------ synce_tell() end --------------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }
 
@@ -652,24 +705,29 @@ static GnomeVFSResult synce_open_dir/*{{{*/
  )
 {
   GnomeVFSResult result;
-  char *location;
-  char *new_path;
-  DIR_HANDLE *dh;
+  gchar *location = NULL;
+  gchar *new_path = NULL;
+  VFS_DIR_HANDLE *dh = NULL;
   CE_FIND_DATA *data = NULL;
-  int optionflags;
-  unsigned int itemcount;
-  WCHAR *tempwstr;
-  int index;
+  gint optionflags;
+  guint itemcount;
+  WCHAR *tempwstr = NULL;
+  gint index;
+  RapiConnection *rapi_conn = NULL;
 
-  D("------------------ synce_open_dir() --------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
+  MUTEX_LOCK (mutex); 
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
     goto exit;
+  }
 
   switch ((index = get_location(uri, &location)))
     {
     case INDEX_DEVICE:
-      dh = (DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
+      MUTEX_UNLOCK (mutex); 
+      dh = (VFS_DIR_HANDLE*) g_malloc0(sizeof(VFS_DIR_HANDLE));
 
       dh->index = INDEX_DEVICE;
       dh->location = NULL;
@@ -680,29 +738,34 @@ static GnomeVFSResult synce_open_dir/*{{{*/
 #endif
       dh->count = 0;
       dh->data = NULL;
+      dh->uri = gnome_vfs_uri_dup(uri);
+      dh->rapi_conn = rapi_conn;
 
-      *((DIR_HANDLE **) method_handle) = dh;
+      *((VFS_DIR_HANDLE**)method_handle) = dh;
 
       result = GNOME_VFS_OK;
       goto exit;
 
 #if SHOW_APPLICATIONS
     case INDEX_APPLICATIONS:
+      MUTEX_UNLOCK (mutex); 
       if (location && location[0] != '\0')
         {
           result = GNOME_VFS_ERROR_NOT_FOUND;
           goto exit;
         }
 
-      dh = (DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
+      dh = (VFS_DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
 
       dh->index = INDEX_APPLICATIONS;
       dh->location = NULL;
       dh->itemcount = 0;
       dh->count = 0;
       dh->data = NULL;
+      dh->uri = gnome_vfs_uri_dup(uri);
+      dh->rapi_conn = rapi_conn;
 
-      *((DIR_HANDLE **) method_handle) = dh;
+      *(method_handle) = dh;
       result = GNOME_VFS_OK;
       goto exit;
 #endif
@@ -712,6 +775,7 @@ static GnomeVFSResult synce_open_dir/*{{{*/
       break;
 
     default:
+      MUTEX_UNLOCK (mutex); 
       result = GNOME_VFS_ERROR_NOT_FOUND;
       goto exit;
     }
@@ -749,12 +813,13 @@ static GnomeVFSResult synce_open_dir/*{{{*/
 
   tempwstr = wstr_from_utf8(location);
 
-  MUTEX_LOCK (mutex); 
+  synce_debug("%s: CeFindAllFiles()", G_STRFUNC);
   if (!CeFindAllFiles(tempwstr, optionflags, &itemcount, &data))
     {
-      g_free(location);
       wstr_free_string(tempwstr);
-      result = gnome_vfs_result_from_rapi();
+      result = gnome_vfs_result_from_rapi(NULL);
+      CeRapiUninit();
+      rapi_connection_destroy(rapi_conn);
       MUTEX_UNLOCK (mutex); 
       goto exit;
     }
@@ -762,20 +827,23 @@ static GnomeVFSResult synce_open_dir/*{{{*/
 
   wstr_free_string(tempwstr);
 
-  dh = (DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
+  dh = (VFS_DIR_HANDLE*) g_malloc0(sizeof(VFS_DIR_HANDLE));
 
   dh->index = index;
-  dh->location = location;
+  dh->location = g_strdup(location);
   dh->itemcount = itemcount;
   dh->count = 0;
   dh->data = data;
+  dh->uri = gnome_vfs_uri_dup(uri);
+  dh->rapi_conn = rapi_conn;
 
-  *((DIR_HANDLE **) method_handle) = dh;
+  *((VFS_DIR_HANDLE**)method_handle) = dh;
 
   result = GNOME_VFS_OK;
 
 exit:
-  D("------------------ synce_open_dir() end ----------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -787,32 +855,36 @@ static GnomeVFSResult synce_close_dir/*{{{*/
  )
 {
   GnomeVFSResult result;
-  DIR_HANDLE *dh;
+  VFS_DIR_HANDLE *dh;
   HRESULT hr; 
 
-  D("----------------- synce_close_dir() --------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  dh = (VFS_DIR_HANDLE *)method_handle;
 
-  dh = (DIR_HANDLE *)method_handle;
+  MUTEX_LOCK (mutex);
+  if (dh->rapi_conn) {
+    rapi_connection_select(dh->rapi_conn);
+    CeRapiUninit();
+    rapi_connection_destroy(dh->rapi_conn);
+  }
 
-  g_free(dh->location);
-
-  MUTEX_LOCK (mutex); 
   hr = CeRapiFreeBuffer(dh->data);
+
   MUTEX_UNLOCK (mutex); 
 
   if (FAILED(hr)) {
-    synce_trace("CeRapiFreeBuffer(): failed");
+    synce_warning("CeRapiFreeBuffer(): failed");
     result = GNOME_VFS_ERROR_GENERIC;
   } else {
     result = GNOME_VFS_OK;
   }
+
+  g_free(dh->location);
+  gnome_vfs_uri_unref(dh->uri);
   g_free(dh);
 
-exit:
-  D("----------------- synce_close_dir() end ----------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -928,9 +1000,17 @@ static void get_special_directory_attributes(GnomeVFSFileInfo *file_info, const 
   file_info->gid = getgid();
 }/*}}}*/
 
-static void get_root_attributes(GnomeVFSFileInfo *file_info)/*{{{*/
+static void get_root_attributes(GnomeVFSFileInfo *file_info, gchar *hostname)/*{{{*/
 {
-  get_special_directory_attributes(file_info, "Mobile Device");
+  gchar *display_name;
+  if (hostname)
+    display_name = g_strjoin(NULL, "Mobile Device (", hostname, ")", NULL);
+  else
+    display_name = g_strdup("Mobile Device");
+
+  get_special_directory_attributes(file_info, display_name);
+
+  g_free(display_name);
 }/*}}}*/
 
 static GnomeVFSResult synce_read_dir/*{{{*/
@@ -941,24 +1021,21 @@ static GnomeVFSResult synce_read_dir/*{{{*/
  GnomeVFSContext *context
  )
 {
-  GnomeVFSResult result;
-  DIR_HANDLE *dh;
+  GnomeVFSResult result = GNOME_VFS_OK;
+  VFS_DIR_HANDLE *dh;
 
-  D("------------------ synce_read_dir() --------------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
-
-  dh = (DIR_HANDLE *)method_handle;
+  dh = (VFS_DIR_HANDLE *)method_handle;
 
   if(dh->itemcount == dh->count)
     {
-      D("synce_read_dir: Ok: End of file");
+      synce_debug("%s: Ok: End of file", G_STRFUNC);
       result = GNOME_VFS_ERROR_EOF;
       goto exit;
     }
 
-  synce_trace("index = %i, location = '%s'", dh->index, dh->location);
+  synce_debug("%s: index = %i, location = '%s'", G_STRFUNC, dh->index, dh->location);
 
   switch (dh->index)
     {
@@ -1017,16 +1094,16 @@ static GnomeVFSResult synce_read_dir/*{{{*/
 
   if(result != GNOME_VFS_OK)
     {
-      D("synce_read_dir: Failed\n");
+      synce_debug("%s: Failed", G_STRFUNC);
       goto exit;
     }
 
-  D("synce_read_dir: Name: %s\n", file_info->name);
-  D("synce_read_dir: Mime-type: %s\n", file_info->mime_type);
-  D("synce_read_dir: Ok\n");
+  synce_debug("%s: Name: %s", G_STRFUNC, file_info->name);
+  synce_debug("%s: Mime-type: %s", G_STRFUNC, file_info->mime_type);
+  synce_debug("%s: Ok", G_STRFUNC);
 
 exit:
-  D("------------------ synce_read_dir() end ----------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1040,21 +1117,21 @@ static GnomeVFSResult synce_get_file_info/*{{{*/
  )
 {
   GnomeVFSResult result;
-  gchar *location;
+  gchar *location = NULL, *host = NULL;
   CE_FIND_DATA entry;
-  WCHAR *tempwstr;
+  WCHAR *tempwstr = NULL;
+  RapiConnection *rapi_conn = NULL;
 
-  D("------------- synce_get_file_info() --------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(uri, &location))
     {
     case INDEX_DEVICE:
       if (location == NULL)
         {
-          get_root_attributes(file_info);
+	  host = get_host_from_uri(uri);
+	  get_root_attributes(file_info, host);
+	  g_free(host);
           result = GNOME_VFS_OK;
         }
       else
@@ -1085,49 +1162,59 @@ static GnomeVFSResult synce_get_file_info/*{{{*/
     }
   if(strcmp(location, "\\") == 0)
     {
-      D("synce_get_file_info: Root folder\n");
-      get_root_attributes(file_info);
+      synce_debug("%s: Root folder", G_STRFUNC);
+      host = get_host_from_uri(uri);
+      get_root_attributes(file_info, host);
+      g_free(host);
       result = GNOME_VFS_OK;
       goto exit;
     }
 
   if(location[strlen(location)-1] == '\\')
     {
-      D("synce_get_file_info: Folder with \\\n");
+      synce_debug("%s: Folder with \\", G_STRFUNC);
       /* This is a directory, chop of the \ to make it readable to FindFirstFile */
       location[strlen(location)-1] = '\0';
     }
   else
     {
-      D("synce_get_file_info: Folder/File\n");
+      synce_debug("%s: Folder/File", G_STRFUNC);
     }
 
-  D("synce_get_file_info: CeFindFirstFile()\n");
+  MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
+
+  synce_debug("%s: CeFindFirstFile()", G_STRFUNC);
   tempwstr = wstr_from_utf8(location);
 
-  MUTEX_LOCK (mutex); 
   if(CeFindFirstFile(tempwstr, &entry) == INVALID_HANDLE_VALUE)
     {
-      result = gnome_vfs_result_from_rapi();
-      D("synce_get_file_info: Failed\n");
+      result = gnome_vfs_result_from_rapi(NULL);
+      synce_debug("%s: Failed", G_STRFUNC);
     }
   else
     {
       get_file_attributes(file_info, &entry);
 
-      D("synce_get_file_info: Name: %s\n", file_info->name);
-      D("synce_get_file_info: Mime-type: %s\n", file_info->mime_type);
-      D("synce_get_file_info: Ok\n");
+      synce_debug("%s: Name: %s", G_STRFUNC, file_info->name);
+      synce_debug("%s: Mime-type: %s", G_STRFUNC, file_info->mime_type);
+      synce_debug("%s: Ok", G_STRFUNC);
 
       result = GNOME_VFS_OK;
     }
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
+
   MUTEX_UNLOCK (mutex); 
 
   wstr_free_string(tempwstr);
-  g_free(location);
 
 exit:
-  D("------------- synce_get_file_info() end ----------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1140,8 +1227,8 @@ static GnomeVFSResult synce_get_file_info_from_handle/*{{{*/
  GnomeVFSContext *context
  )
 {
-  D("--------- synce_get_file_info_from_handle --------\n");
-  D("------- synce_get_file_info_from_handle end ------\n");
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
 
   return GNOME_VFS_ERROR_NOT_SUPPORTED;
 }/*}}}*/
@@ -1164,13 +1251,11 @@ static GnomeVFSResult synce_mkdir/*{{{*/
  )
 {
   GnomeVFSResult result;
-  gchar *location;
-  WCHAR *tempwstr;
+  gchar *location = NULL;
+  WCHAR *tempwstr = NULL;
+  RapiConnection *rapi_conn = NULL;
 
-  D("------------------ synce_mkdir() -----------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(uri, &location))
     {
@@ -1201,21 +1286,28 @@ static GnomeVFSResult synce_mkdir/*{{{*/
 
   tempwstr = wstr_from_utf8(location);
 
-  result = GNOME_VFS_OK;
-  D("CeCreateDirectory()\n");
   MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
+
+  result = GNOME_VFS_OK;
+  synce_debug("%s: CeCreateDirectory()", G_STRFUNC);
   if(!CeCreateDirectory(tempwstr, NULL))
     {
-      result = gnome_vfs_result_from_rapi();
+      result = gnome_vfs_result_from_rapi(NULL);
     }
 
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
   MUTEX_UNLOCK (mutex);
 
-  g_free(location);
   wstr_free_string(tempwstr);
 
 exit:
-  D("---------------- synce_mkdir() end ---------------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1227,13 +1319,11 @@ static GnomeVFSResult synce_rmdir/*{{{*/
  )
 {
   GnomeVFSResult result;
-  gchar *location;
-  WCHAR *tempwstr;
+  gchar *location = NULL;
+  WCHAR *tempwstr = NULL;
+  RapiConnection *rapi_conn = NULL;
 
-  D("----------------- synce_rmdir() ------------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(uri, &location))
     {
@@ -1262,21 +1352,29 @@ static GnomeVFSResult synce_rmdir/*{{{*/
     goto exit;
   }
 
-  tempwstr = wstr_from_utf8(location);
-  D("CeRemoveDirectory()\n");
   MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
+
+  tempwstr = wstr_from_utf8(location);
+
+  synce_debug("%s: CeRemoveDirectory()", G_STRFUNC);
   if (CeRemoveDirectory(tempwstr))
     result = GNOME_VFS_OK;
   else
-    result = gnome_vfs_result_from_rapi();
+    result = gnome_vfs_result_from_rapi(NULL);
 
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
   MUTEX_UNLOCK (mutex);
 
   wstr_free_string(tempwstr);
-  g_free(location);
 
 exit:
-  D("----------------- synce_rmdir() end --------------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1290,17 +1388,15 @@ static GnomeVFSResult synce_move/*{{{*/
  )
 {
   GnomeVFSResult result;
-  gchar *new_location;
-  WCHAR *new_wstr;
-  gchar *old_location;
-  WCHAR *old_wstr;
+  gchar *new_location = NULL;
+  WCHAR *new_wstr = NULL;
+  gchar *old_location = NULL;
+  WCHAR *old_wstr = NULL;
   int success;
   int err;
+  RapiConnection *rapi_conn = NULL;
 
-  D("------------------ synce_move() ------------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(new_uri, &new_location))
     {
@@ -1351,23 +1447,27 @@ static GnomeVFSResult synce_move/*{{{*/
     }
 
   if (!old_location) {
-    g_free(new_location);
     synce_error("%s: NULL old_location, should not happen", G_STRFUNC);
     result = GNOME_VFS_ERROR_INVALID_URI;
+    goto exit;
+  }
+
+  MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(old_uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
     goto exit;
   }
 
   old_wstr = wstr_from_utf8(old_location);
   new_wstr = wstr_from_utf8(new_location);
 
-  D("CeMoveFile()\n");
-  MUTEX_LOCK (mutex);
+  synce_debug("%s: CeMoveFile()", G_STRFUNC);
   success = CeMoveFile(old_wstr, new_wstr);
   err = CeGetLastError();
 
   if (err == ERROR_ALREADY_EXISTS) /* If the destination file exists we end up here */
     {
-      /* if the user wants we delete the dest file and moves the source there */
+      /* if the user wants we delete the dest file and move the source there */
       if (force_replace)
         {
           success = CeDeleteFile(new_wstr);
@@ -1380,17 +1480,19 @@ static GnomeVFSResult synce_move/*{{{*/
   if (success)
     result = GNOME_VFS_OK;
   else
-    result = gnome_vfs_result_from_rapi();
+    result = gnome_vfs_result_from_rapi(NULL);
 
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
   MUTEX_UNLOCK (mutex);
 
-  g_free(old_location);
-  g_free(new_location);
   wstr_free_string(old_wstr);
   wstr_free_string(new_wstr);
 
 exit:
-  D("---------------- synce_move() end ------------------\n");
+  g_free(old_location);
+  g_free(new_location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1405,10 +1507,7 @@ synce_set_file_info (GnomeVFSMethod *method,
   GnomeVFSURI *parent_uri, *new_uri;
   GnomeVFSResult result;
 
-  D("-------------- synce_set_file_info() ---------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   /* For now, we only support changing the name. */
   if ((mask & ~(GNOME_VFS_SET_FILE_INFO_NAME)) != 0) {
@@ -1437,7 +1536,7 @@ synce_set_file_info (GnomeVFSMethod *method,
   gnome_vfs_uri_unref (new_uri);
 
 exit:
-  D("------------ synce_set_file_info() end ---------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1449,13 +1548,11 @@ static GnomeVFSResult synce_unlink/*{{{*/
  )
 {
   GnomeVFSResult result;
-  gchar *location;
-  WCHAR *tempwstr;
+  gchar *location = NULL;
+  WCHAR *tempwstr = NULL;
+  RapiConnection *rapi_conn = NULL;
 
-  D("----------------- synce_unlink() ---------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   switch (get_location(uri, &location))
     {
@@ -1478,29 +1575,34 @@ static GnomeVFSResult synce_unlink/*{{{*/
       goto exit;
     }
 
-  tempwstr = wstr_from_utf8(location);
-
   if (!location) {
     synce_error("%s: NULL location, should not happen", G_STRFUNC);
     result = GNOME_VFS_ERROR_INVALID_URI;
     goto exit;
   }
 
-  D("CeDeleteFile()\n");
   MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
+  tempwstr = wstr_from_utf8(location);
 
+  synce_debug("%s: CeDeleteFile()", G_STRFUNC);
   if (CeDeleteFile(tempwstr))
     result = GNOME_VFS_OK;
   else
-    result = gnome_vfs_result_from_rapi();
+    result = gnome_vfs_result_from_rapi(NULL);
 
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
   MUTEX_UNLOCK (mutex);
 
   wstr_free_string(tempwstr);
-  g_free(location);
 
 exit:
-  D("--------------- synce_unlink() end -------------\n");
+  g_free(location);
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1514,13 +1616,10 @@ static GnomeVFSResult synce_same_fs/*{{{*/
  )
 {
   GnomeVFSResult result;
-  gchar *location_a, *location_b;
+  gchar *location_a = NULL, *location_b = NULL;
   gint fs_a, fs_b, index_a, index_b;
 
-  D("----------------- synce_same_fs() --------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   index_a = get_location(a, &location_a);
   if (index_a == INDEX_INVALID) {
@@ -1586,10 +1685,10 @@ static GnomeVFSResult synce_same_fs/*{{{*/
   result = GNOME_VFS_OK;
 
 exit:
-  if (location_a) g_free(location_a);
-  if (location_b) g_free(location_b);
+  g_free(location_a);
+  g_free(location_b);
 
-  D("--------------- synce_same_fs() end ------------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }/*}}}*/
 
@@ -1603,13 +1702,11 @@ synce_get_volume_free_space
 {
   GnomeVFSResult result;
   STORE_INFORMATION store;
-  gchar *location;
+  gchar *location = NULL;
   gint index;
+  RapiConnection *rapi_conn = NULL;
 
-  D("-------------- synce_get_volume_free_space() ---------------\n");
-
-  if ((result = initialize_rapi()) != GNOME_VFS_OK)
-    goto exit;
+  synce_debug("%s: ------ entering ------", G_STRFUNC);
 
   index = get_location(uri, &location);
   if (index == INDEX_INVALID) {
@@ -1641,18 +1738,27 @@ synce_get_volume_free_space
     g_strfreev(split);
   }
 
+  MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
+
   if (CeGetStoreInformation(&store)) {
     *free_space = store.dwFreeSize;
     result = GNOME_VFS_OK;
   } else {
     synce_error("%s: Failed to get store information", G_STRFUNC);
-    result = gnome_vfs_result_from_rapi();
+    result = gnome_vfs_result_from_rapi(NULL);
   }
 
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
+  MUTEX_UNLOCK (mutex);
 exit:
-  if (location) g_free(location);
+  g_free(location);
 
-  D("------------ synce_get_volume_free_space() end ---------\n");
+  synce_debug("%s: ------ leaving -------", G_STRFUNC);
   return result;
 }
 
@@ -1694,8 +1800,12 @@ GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)
   if (!mutex)
     mutex = MUTEX_NEW ();
 
+#ifdef WITH_VERBOSE_DEBUG
+  synce_log_set_level(SYNCE_LOG_LEVEL_HIGHEST);
+#endif
+
   synce_log_use_syslog();
-  synce_debug("vfs_module_init(method_name = '%s', args = '%s')",
+  synce_debug("%s: method_name = '%s', args = '%s'", G_STRFUNC,
       method_name, args);
 
   return &method;
@@ -1703,9 +1813,5 @@ GnomeVFSMethod *vfs_module_init(const char *method_name, const char *args)
 
 void vfs_module_shutdown(GnomeVFSMethod *method)
 {
-  MUTEX_LOCK (mutex);
-  CeRapiUninit();
-  MUTEX_UNLOCK (mutex);
-
   MUTEX_FREE(mutex);
 }
