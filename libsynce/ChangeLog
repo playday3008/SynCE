@@ -1,3 +1,7 @@
+2008-02-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* ignore case of device host name with odccm and hal
+
 2008-02-19  Mark Ellis  <mark@mpellis.org.uk>
 
 	* only log to syslog up to requested level

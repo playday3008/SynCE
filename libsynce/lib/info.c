@@ -226,7 +226,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       goto ERROR;
     }
 
-    if ( (device_name != NULL) && (strcmp(device_name, name) != 0) ) {
+    if ( (device_name != NULL) && (strcasecmp(device_name, name) != 0) ) {
       g_free(name);
       continue;
     }
@@ -421,7 +421,7 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     if (!name)
       continue;
 
-    if ( (device_name != NULL) && (strcmp(device_name, name) != 0) ) {
+    if ( (device_name != NULL) && (strcasecmp(device_name, name) != 0) ) {
       libhal_free_string(name);
       continue;
     }
