@@ -60,6 +60,7 @@ private:
     bool ceOk;
     bool isConnected;
     QString actualHost;
+    synce::RapiConnection *rapiconn;
 };
 
 #endif

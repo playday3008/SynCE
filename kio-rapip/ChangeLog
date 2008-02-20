@@ -1,3 +1,8 @@
+2008-02-20  Mark Ellis <mark@mpellis.org.uk>
+
+	* establish connection with rapi_connection_* instead of
+	  filename functions, compatible with all dccm's
+
 2008-02-06 01:02  Mark Ellis <mark@mpellis.org.uk>
 
 	* split rapip out of synce-kde

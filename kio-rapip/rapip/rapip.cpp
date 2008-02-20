@@ -62,9 +62,18 @@ void kio_rapipProtocol::openConnection()
     HRESULT hr;
 
     if (!actualHost.isEmpty())
-        synce::synce_set_connection_filename(actualHost.ascii());
+      rapiconn = synce::rapi_connection_from_name(actualHost.ascii());
     else
-        synce::synce_set_default_connection_filename();
+      rapiconn = synce::rapi_connection_from_name(NULL);
+
+    if (!rapiconn) {
+      ceOk = false;
+      isConnected = false;
+      error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
+      return;
+    }
+
+    synce::rapi_connection_select(rapiconn);
 
     ceOk = true;
 
@@ -73,6 +82,7 @@ void kio_rapipProtocol::openConnection()
     if (FAILED(hr)) {
         ceOk = false;
         isConnected = false;
+	synce::rapi_connection_destroy(rapiconn);
         error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
     } else {
         isConnected = true;
@@ -84,8 +94,11 @@ void kio_rapipProtocol::openConnection()
 
 void kio_rapipProtocol::closeConnection()
 {
-    if (isConnected)
+    if (isConnected) {
         synce::CeRapiUninit();
+	synce::rapi_connection_destroy(rapiconn);
+    }
+
     isConnected = false;
 }
 
