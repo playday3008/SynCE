@@ -1,3 +1,10 @@
+2008-02-20  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* check for alternative installation directory
+	* support uninstall using Configuration Service Provider on
+	  newer devices
+	* general code improvements
+
 2007-11-28  Mark Ellis <mark_ellis@users.sourceforge.net>
 
 	* improve error and status reporting

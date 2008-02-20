@@ -108,40 +108,6 @@ exit:
   return (list);
 }
 
-gint
-rapi_mkdir(const gchar *dir, gchar **error_return)
-{
-  WCHAR* wide_path = NULL;
-  gchar *path = NULL;
-  gint result = 0;
-
-  path = (gchar *) strdup(dir);
-  convert_to_backward_slashes(path);
-
-  wide_path = wstr_from_utf8(path);
-  wide_path = adjust_remote_path(wide_path, true);
-
-  if (!CeCreateDirectory(wide_path, NULL)) {
-    DWORD error = CeGetLastError();
-    if (error != ERROR_ALREADY_EXISTS) {
-      const gchar *error_str = synce_strerror(error);
-      g_warning("%s: Failed to create directory '%s': %s",
-		G_STRFUNC,
-		path,
-		error_str);
-
-      result = 1;
-      if (error_return)
-	*error_return = g_strdup(error_str);
-    }
-  }
-
-  if (wide_path)
-    wstr_free_string(wide_path);
-  g_free(path);
-  return result;
-}
-
 #define ANYFILE_BUFFER_SIZE (64*1024)
 
 static gboolean

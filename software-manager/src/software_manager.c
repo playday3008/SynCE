@@ -20,6 +20,7 @@
 #include "config.h"
 #endif
 
+#include <stdarg.h>
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
@@ -59,33 +60,47 @@ enum
 
 
 static void
-synce_error_dialog(const char *message)
+synce_error_dialog(const gchar *format, ...)
 {
+  va_list ap;
   GtkWidget *error_dialog;
+  gchar *tmpstr = NULL;
+
+  va_start(ap, format);
+  tmpstr = g_strdup_vprintf(format, ap);
+  va_end(ap);
 
   error_dialog = gtk_message_dialog_new (NULL,
 					 GTK_DIALOG_DESTROY_WITH_PARENT,
 					 GTK_MESSAGE_ERROR,
 					 GTK_BUTTONS_OK,
-					 message);
+					 tmpstr);
 
   gtk_dialog_run (GTK_DIALOG (error_dialog));
   gtk_widget_destroy (error_dialog);
+  g_free(tmpstr);
 }
 
 static void
-synce_info_dialog(const char *message)
+synce_info_dialog(const char *format, ...)
 {
+  va_list ap;
   GtkWidget *info_dialog;
+  gchar *tmpstr = NULL;
+
+  va_start(ap, format);
+  tmpstr= g_strdup_vprintf(format, ap);
+  va_end(ap);
 
   info_dialog = gtk_message_dialog_new (NULL,
 					GTK_DIALOG_DESTROY_WITH_PARENT,
 					GTK_MESSAGE_INFO,
 					GTK_BUTTONS_OK,
-					message);
+					tmpstr);
 
   gtk_dialog_run (GTK_DIALOG (info_dialog));
   gtk_widget_destroy (info_dialog);
+  g_free(tmpstr);
 }
 
 static void
@@ -298,12 +313,145 @@ extract_with_orange(const gchar *arch_file, const gchar *dest_dir, DWORD process
   return return_list;
 }
 
+static gchar *
+get_install_dir(gchar **error_message)
+{
+  WCHAR* wide_path = NULL;
+  gchar *path = NULL;
+  gchar *tmppath = NULL;
+  BOOL result;
+  CE_FIND_DATA entry;
+  HANDLE handle;
+  HRESULT hr;
+  DWORD error;
+
+  path = g_strdup("\\Storage\\Windows\\AppMgr");
+
+  wide_path = wstr_from_utf8(path);
+  handle = CeFindFirstFile(wide_path, &entry);
+  wstr_free_string(wide_path);
+
+  if (handle != INVALID_HANDLE_VALUE) {
+    CeFindClose(handle);
+  } else {
+    if (FAILED(hr = CeRapiGetError())) {
+      if (error_message)
+	*error_message = g_strdup(synce_strerror(hr));
+      g_free(path);
+      return NULL;
+    }
+
+    error = CeGetLastError();
+    if (error != ERROR_PATH_NOT_FOUND) {
+      if (error_message)
+	*error_message = g_strdup(synce_strerror(error));
+      g_free(path);
+      return NULL;
+    }
+
+    g_free(path);
+    path = g_strdup("\\Windows\\AppMgr");
+
+    wide_path = wstr_from_utf8(path);
+    handle = CeFindFirstFile(wide_path, &entry);
+    wstr_free_string(wide_path);
+
+    if (handle != INVALID_HANDLE_VALUE) {
+      CeFindClose(handle);
+    } else {
+      if (FAILED(hr = CeRapiGetError())) {
+	if (error_message)
+	  *error_message = g_strdup(synce_strerror(hr));
+	g_free(path);
+	return NULL;
+      }
+
+      error = CeGetLastError();
+      if (error != ERROR_PATH_NOT_FOUND) {
+	if (error_message)
+	  *error_message = g_strdup(synce_strerror(error));
+	g_free(path);
+	return NULL;
+      }
+
+      wide_path = wstr_from_utf8(path);
+
+      result = CeCreateDirectory(wide_path, NULL);
+      wstr_free_string(wide_path);
+      if (!result) {
+	if (FAILED(hr = CeRapiGetError())) {
+	  if (error_message)
+	    *error_message = g_strdup(synce_strerror(hr));
+	  g_free(path);
+	  return NULL;
+	}
+
+	error = CeGetLastError();
+	if (error_message)
+	  *error_message = g_strdup(synce_strerror(error));
+	g_free(path);
+	return NULL;
+      }
+    }
+  }
+
+  tmppath = g_strdup_printf("%s\\Install", path);
+  g_free(path);
+  path = tmppath;
+
+  wide_path = wstr_from_utf8(path);
+  handle = CeFindFirstFile(wide_path, &entry);
+  wstr_free_string(wide_path);
+
+  if (handle != INVALID_HANDLE_VALUE) {
+    CeFindClose(handle);
+  } else {
+    if (FAILED(hr = CeRapiGetError())) {
+      if (error_message)
+	*error_message = g_strdup(synce_strerror(hr));
+      g_free(path);
+      return NULL;
+    }
+
+    error = CeGetLastError();
+    if (error != ERROR_PATH_NOT_FOUND) {
+      if (error_message)
+	*error_message = g_strdup(synce_strerror(error));
+      g_free(path);
+      return NULL;
+    }
+
+    wide_path = wstr_from_utf8(path);
+
+    result = CeCreateDirectory(wide_path, NULL);
+    wstr_free_string(wide_path);
+    if (!result) {
+      if (FAILED(hr = CeRapiGetError())) {
+	if (error_message)
+	  *error_message = g_strdup(synce_strerror(hr));
+	g_free(path);
+	return NULL;
+      }
+
+      error = CeGetLastError();
+      if (error_message)
+	*error_message = g_strdup(synce_strerror(error));
+      g_free(path);
+      return NULL;
+    }
+  }
+
+  g_debug("%s: install dir is %s", G_STRFUNC, path);
+  return path;
+}
+
 static void
 install_file(SynceSoftwareManager *self, const gchar *filepath)
 {
   SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
 
   gchar *error_str = NULL;
+  gchar *install_path = NULL;
   SYSTEM_INFO system;
 
   GladeXML *gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, 
@@ -331,20 +479,11 @@ install_file(SynceSoftwareManager *self, const gchar *filepath)
 
   /* Do some install things */
 
-  if (rapi_mkdir("/Windows/AppMgr", &error_str) != 0) {
+  install_path = get_install_dir(&error_str);
+  if (!install_path) {
     gtk_widget_hide(fetchwindow);
-    g_warning("%s: unable to create directory /Windows/AppMgr on device: %s", G_STRFUNC, error_str);
-    gchar *tmpstr = g_strdup_printf(_("Failed to create the installation\ndirectory on the device:\n%s"), error_str);
-    synce_error_dialog(tmpstr);
-    g_free(tmpstr);
-    goto exit;
-  }
-  if (rapi_mkdir("/Windows/AppMgr/Install", &error_str) != 0) {
-    gtk_widget_hide(fetchwindow);
-    g_warning("%s: unable to create directory /Windows/AppMgr/Install on device: %s", G_STRFUNC, error_str);
-    gchar *tmpstr = g_strdup_printf(_("Failed to create the installation\ndirectory on the device:\n%s"), error_str); 
-    synce_error_dialog(tmpstr);
-    g_free(tmpstr);
+    g_warning("%s: unable to obtain installation directory on device: %s", G_STRFUNC, error_str);
+    synce_error_dialog(_("Unable to obtain the installation\ndirectory on the device:\n%s"), error_str);
     goto exit;
   }
 
@@ -353,12 +492,10 @@ install_file(SynceSoftwareManager *self, const gchar *filepath)
     gchar *cabname = tmplist->data;
     g_debug("%s: copying file %s to device", G_STRFUNC, cabname);
 
-    if (rapi_copy_to_device(cabname, "/Windows/AppMgr/Install", progressbar, &error_str) != 0) {
+    if (rapi_copy_to_device(cabname, install_path, progressbar, &error_str) != 0) {
       gtk_widget_hide(fetchwindow);
       g_warning("%s: failed to copy file \"%s\" to device: %s", G_STRFUNC, cabname, error_str);
-      gchar *tmpstr = g_strdup_printf(_("Failed to install the program:\nCould not copy the file to the PDA:\n%s"), error_str);
-      synce_error_dialog(tmpstr);
-      g_free(tmpstr);
+      synce_error_dialog(_("Failed to install the program:\nCould not copy the file to the PDA:\n%s"), error_str);
       goto exit;
     }
 
@@ -368,9 +505,7 @@ install_file(SynceSoftwareManager *self, const gchar *filepath)
   if (rapi_run("wceload.exe", NULL, &error_str) != 0) {
     gtk_widget_hide(fetchwindow);
     g_warning("%s: failed to execute the installer on the device: %s", G_STRFUNC, error_str);
-    gchar *tmpstr = g_strdup_printf(_("Failed to install the program:\nCould not execute the installer on the PDA:\n%s"), error_str);
-    synce_error_dialog(tmpstr);
-    g_free(tmpstr);
+    synce_error_dialog(_("Failed to install the program:\nCould not execute the installer on the PDA:\n%s"), error_str);
     goto exit;
   }
 
@@ -421,6 +556,78 @@ on_add_button_clicked(GtkButton *button, gpointer user_data)
   g_free(filepath);
 }
 
+static gboolean
+uninstall_prog(gchar *program, gchar **error_message)
+{
+  HRESULT hr;
+  DWORD error;
+  BOOL result;
+
+  /* unload.exe */
+  WCHAR* wide_command = NULL;
+  WCHAR* wide_parameters = NULL;
+  PROCESS_INFORMATION info;
+  gchar *command = NULL;
+
+  /* process config */
+  gchar *configXML = NULL;
+  LPWSTR config = NULL;
+  DWORD flags = CONFIG_PROCESS_DOCUMENT;
+  LPWSTR reply = NULL;
+
+  g_debug("%s: requested removal of program %s", G_STRFUNC, program);
+
+  /* try unload.exe */
+
+  command = g_strdup("unload.exe");
+  wide_command = wstr_from_utf8(command);
+  wide_parameters = wstr_from_utf8(program);
+  memset(&info, 0, sizeof(info));
+
+  result = CeCreateProcess(wide_command, wide_parameters,
+			   NULL, NULL, false, 0, NULL, NULL, NULL,
+			   &info);
+  CeCloseHandle(info.hProcess);
+  CeCloseHandle(info.hThread);
+  wstr_free_string(wide_command);
+  wstr_free_string(wide_parameters);
+  g_free(command);
+
+  if (result)
+    return TRUE;
+
+  if (FAILED(hr = CeRapiGetError())) {
+    *error_message = g_strdup(synce_strerror(hr));
+    return FALSE;
+  }
+
+  if ((error = CeGetLastError()) != ERROR_FILE_NOT_FOUND) {
+    *error_message = g_strdup(synce_strerror(error));
+    return FALSE;
+  }
+
+  /* Failed to start unload.exe, trying to uninstall via Configuration Service Provider ... */
+
+  configXML = g_strdup_printf("%s%s%s",
+			      "<wap-provisioningdoc>\n\r<characteristic type=\"UnInstall\">\n\r<characteristic type=\"",
+			      program,
+			      "\">\n\r<parm name=\"uninstall\" value=\"1\"/>\n\r</characteristic>\n\r</characteristic>\n\r</wap-provisioningdoc>\n\r");
+  config = wstr_from_current(configXML);
+
+  hr = CeProcessConfig(config, flags, &reply);
+  wstr_free_string(config);
+  g_free(configXML);
+
+  if (SUCCEEDED(hr)) {
+    wstr_free_string(reply);
+    return TRUE;
+  }
+
+  *error_message = wstr_to_current(reply);
+  wstr_free_string(reply);
+  return FALSE;
+}
+
 void
 on_remove_button_clicked(GtkButton *button, gpointer user_data)
 {
@@ -432,32 +639,25 @@ on_remove_button_clicked(GtkButton *button, gpointer user_data)
   GtkTreeModel *model;
   GtkTreeSelection *selection;
   gint number;
-  gchar *program;
-  gchar *tmpstr;
+  gchar *program = NULL;
+  gchar *error_message = NULL;
 
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(programs_treeview));
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
     {
-      gchar *error_str = NULL;
-
       gtk_tree_model_get (model, &iter,
 			  NAME_COLUMN, &program,
 			  INDEX_COLUMN, &number,
 			  -1);
 
-      g_debug("%s: requested removal of program %s", G_STRFUNC, program);
-      if (rapi_run("unload.exe", program, &error_str) != 0) {
-	g_warning("%s: failed to remove program %s: %s", G_STRFUNC, program, error_str);
-	tmpstr = g_strdup_printf(_("The program \"%s\"\ncould not be removed:\n%s"), program, error_str);
-	synce_error_dialog(tmpstr);
-	g_free(tmpstr);
-	g_free(error_str);
-      } else {
+      if (uninstall_prog(program, &error_message)) {
 	g_debug("%s: successfully removed program %s", G_STRFUNC, program);
-	tmpstr = g_strdup_printf(_("The program \"%s\"\nwas successfully removed."), program);
-	synce_info_dialog(tmpstr);
-	g_free(tmpstr);
+	synce_info_dialog(_("The program \"%s\"\nwas successfully removed."), program);
 	setup_programs_treeview_store(programs_treeview);
+      } else {
+	g_warning("%s: failed to remove program %s: %s", G_STRFUNC, program, error_message);
+	synce_error_dialog(_("The program \"%s\"\ncould not be removed:\n%s"), program, error_message);
+	g_free(error_message);
       }
       g_free (program);
     }
