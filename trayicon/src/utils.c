@@ -30,30 +30,46 @@ IN THE SOFTWARE.
 
 #include "keyring.h"
 
-void synce_error_dialog(const char *message)
+void synce_error_dialog(const gchar *format, ...)
 {
+  va_list ap;
   GtkWidget *dialog;
+  gchar *tmpstr = NULL;
+
+  va_start(ap, format);
+  tmpstr = g_strdup_vprintf(format, ap);
+  va_end(ap);
 
   dialog = gtk_message_dialog_new (NULL,
 				   GTK_DIALOG_DESTROY_WITH_PARENT,
 				   GTK_MESSAGE_ERROR,
 				   GTK_BUTTONS_OK,
-				   message);
+				   tmpstr);
+
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
+  g_free(tmpstr);
 }
 
-void synce_warning_dialog(const char *message)
+void synce_warning_dialog(const gchar *format, ...)
 {
+  va_list ap;
   GtkWidget *dialog;
+  gchar *tmpstr = NULL;
+
+  va_start(ap, format);
+  tmpstr = g_strdup_vprintf(format, ap);
+  va_end(ap);
 
   dialog = gtk_message_dialog_new (NULL,
 				   GTK_DIALOG_DESTROY_WITH_PARENT,
 				   GTK_MESSAGE_WARNING,
 				   GTK_BUTTONS_OK,
-				   message);
+				   tmpstr);
+
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
+  g_free(tmpstr);
 }
 
 void device_password_dialog_entry_changed_cb (GtkWidget *widget, gpointer data)

@@ -211,12 +211,8 @@ exit:
 
 
 static void
-hal_device_connected_cb(LibHalContext *ctx, const char *udi)
+hal_add_device(HalClient *self, const char *udi)
 {
-  void *user_data = libhal_ctx_get_user_data(ctx);
-
-  HalClient *self = HAL_CLIENT(user_data);
-
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
     return;
@@ -371,6 +367,13 @@ exit:
   g_free(pw_status);
 
   return;
+}
+
+static void
+hal_device_connected_cb(LibHalContext *ctx, const char *udi)
+{
+  HalClient *self = HAL_CLIENT(libhal_ctx_get_user_data(ctx));
+  hal_add_device(self, udi);
 }
 
 
@@ -624,6 +627,9 @@ hal_client_init_comms_impl(HalClient *self)
   GError *error = NULL;
   DBusError dbus_error;
   gboolean result = FALSE;
+  gchar **dev_list = NULL;
+  gint i, num_devices;
+  gchar *udi = NULL;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -684,25 +690,24 @@ hal_client_init_comms_impl(HalClient *self)
     goto error_exit;
   }
 
-  /* currently connected devices 
-     TODO
-     enumerate through these properly 
+  /* currently connected devices */
 
-  GPtrArray* dev_list;
-  if (!(dbus_g_proxy_call(priv->dev_mgr_proxy, "GetConnectedDevices",
-			  &error, G_TYPE_INVALID,
-			  dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
-			  &dev_list,
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device list from odccm: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return TRUE;
+  dev_list = libhal_manager_find_device_string_match(priv->hal_ctx,
+						     "pda.platform",
+						     "pocketpc",
+						     &num_devices,
+						     &dbus_error);
+  if (dbus_error_is_set(&dbus_error)) {
+    g_warning("%s: Failed to obtain list of attached devices: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+    dbus_error_free(&dbus_error);
   }
-  int i;
-  for (i = 0; i < dev_list->len; i++) {
-    g_debug("%s: device %d: %s", G_STRFUNC, i, (char *)g_ptr_array_index(dev_list, i));
+
+  for (i = 0; i < num_devices; i++) {
+    udi = dev_list[i];
+    g_debug("%s: adding device: %s", G_STRFUNC, udi);
+    hal_add_device(self, udi);
   }
-  */
+  libhal_free_string_array(dev_list);
 
   result = TRUE;
   goto exit;

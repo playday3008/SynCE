@@ -282,15 +282,12 @@ error_exit:
 }
 
 static void
-odccm_device_connected_cb(DBusGProxy *proxy,
-			 gchar *obj_path,
-			 gpointer user_data)
+odccm_add_device(OdccmClient *self,
+		 gchar *obj_path)
 {
   GError *error = NULL;
   DBusGProxy *new_proxy;
   WmDevice *device = NULL;
-
-  OdccmClient *self = ODCCM_CLIENT(user_data);
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -465,6 +462,15 @@ error_exit:
   if (device) g_object_unref(device);
 exit:
   return;
+}
+
+static void
+odccm_device_connected_cb(DBusGProxy *proxy,
+			  gchar *obj_path,
+			  gpointer user_data)
+{
+  OdccmClient *self = ODCCM_CLIENT(user_data);
+  odccm_add_device(self, obj_path);
 }
 
 void
@@ -684,6 +690,9 @@ odccm_client_init_comms_impl(OdccmClient *self)
 {
   GError *error = NULL;
   gboolean result = FALSE;
+  GPtrArray* dev_list = NULL;
+  gint i;
+  gchar *obj_path = NULL;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -729,11 +738,8 @@ odccm_client_init_comms_impl(OdccmClient *self)
   dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
 			       G_CALLBACK(odccm_device_disconnected_cb), self, NULL);
 
-  /* currently connected devices 
-     TODO
-     enumerate through these properly */
+  /* currently connected devices */
 
-  GPtrArray* dev_list;
   if (!(dbus_g_proxy_call(priv->dev_mgr_proxy, "GetConnectedDevices",
 			  &error, G_TYPE_INVALID,
 			  dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
@@ -743,10 +749,13 @@ odccm_client_init_comms_impl(OdccmClient *self)
     g_error_free(error);
     return TRUE;
   }
-  int i;
   for (i = 0; i < dev_list->len; i++) {
-    g_debug("%s: device %d: %s", G_STRFUNC, i, (char *)g_ptr_array_index(dev_list, i));
+    obj_path = (gchar *)g_ptr_array_index(dev_list, i);
+    g_debug("%s: adding device: %s", G_STRFUNC, obj_path);
+    odccm_add_device(self, obj_path);
+    g_free(obj_path);
   }
+  g_ptr_array_free(dev_list, TRUE);
 
   result = TRUE;
 

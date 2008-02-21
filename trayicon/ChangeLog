@@ -1,3 +1,9 @@
+2008-02-20  Mark Ellis <mark@mpellis.org.uk>
+
+	* objectify device info dialog
+	* add submenu per device for info and explore
+	* check for connected devices on start
+
 2008-02-11  Mark Ellis <mark@mpellis.org.uk>
 
 	* initialize dbus pointers to NULL in sync-engine func

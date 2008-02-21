@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2007 Mark Ellis <mark@mpellis.org.uk>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+*/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -12,6 +34,26 @@
 #include "device-info.h"
 #include "sync-engine-glue.h"
 
+G_DEFINE_TYPE (WmDeviceInfo, wm_device_info, G_TYPE_OBJECT)
+
+typedef struct _WmDeviceInfoPrivate WmDeviceInfoPrivate;
+struct _WmDeviceInfoPrivate {
+  WmDevice *device;
+  GtkWidget *dialog;
+  GladeXML *xml;
+
+  gboolean disposed;
+};
+
+#define WM_DEVICE_INFO_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), WM_DEVICE_INFO_TYPE, WmDeviceInfoPrivate))
+
+/* properties */
+enum
+  {
+    PROP_DEVICE = 1,
+
+    LAST_PROPERTY
+  };
 
 enum
 {
@@ -22,22 +64,29 @@ enum
   N_COLUMNS
 };
 
-
-static GladeXML *xml;
-
-
 /* partnership */
 
 static void
 partners_create_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   guint32 index;
   gint id;
   gchar *name;
   GtkTreeIter iter;
   GtkTreeModel *model;
-  GtkWidget *device_info_dialog = glade_xml_get_widget (xml, "device_info_dialog");	
-  GtkWidget *partners_list_view = glade_xml_get_widget (xml, "partners_list");	
+  GtkWidget *device_info_dialog = glade_xml_get_widget (priv->xml, "device_info_dialog");	
+  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
 
   g_debug("%s: create button_clicked", G_STRFUNC);
@@ -85,11 +134,22 @@ partners_create_button_clicked_cb (GtkWidget *widget, gpointer data)
 static void
 partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   gint index, id;
   gchar *name;
   GtkTreeIter iter;
   GtkTreeModel *model;
-  GtkWidget *partners_list_view = glade_xml_get_widget (xml, "partners_list");	
+  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
 
   g_debug("%s: remove button_clicked", G_STRFUNC);
@@ -109,7 +169,7 @@ partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
       return;
     }
 
-  GtkWidget *device_info_dialog = glade_xml_get_widget (xml, "device_info_dialog");
+  GtkWidget *device_info_dialog = glade_xml_get_widget (priv->xml, "device_info_dialog");
   GtkWidget *confirm_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
 						     GTK_DIALOG_DESTROY_WITH_PARENT,
 						     GTK_MESSAGE_QUESTION,
@@ -146,18 +206,28 @@ partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
 
 
 static void
-partners_selection_changed_cb (GtkTreeSelection *selection, gpointer user_data)
+partners_selection_changed_cb (GtkTreeSelection *selection, gpointer data)
 {
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   GtkTreeIter iter;
   GtkTreeModel *model;
   gint index, id;
   gchar *name;
   GtkWidget *partners_create_button, *partners_remove_button;
   guint32 os_major = 0;
-  WmDevice *device = WM_DEVICE(user_data);
 
-  partners_create_button = glade_xml_get_widget (xml, "partners_create_button");	
-  partners_remove_button = glade_xml_get_widget (xml, "partners_remove_button");	
+  partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");	
+  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
     {
@@ -172,7 +242,7 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer user_data)
       g_free (name);
 
       /* WM5 and sync-engine is untested, don't mess with partnerships yet */
-      g_object_get(device, "os-major", &os_major, NULL);
+      g_object_get(priv->device, "os-major", &os_major, NULL);
       if (os_major > 4) {
 	return;
       }
@@ -190,9 +260,19 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer user_data)
 
 
 static void
-partners_setup_view_store_synceng(WmDevice *device)
+partners_setup_view_store_synceng(WmDeviceInfo *self)
 {
-  GtkWidget *partners_list_view = glade_xml_get_widget (xml, "partners_list");	
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
   GtkTreeIter iter;
   guint32 index;
   gboolean result;
@@ -282,9 +362,19 @@ exit:
 
 
 static void
-partners_setup_view_store_rra(WmDevice *device)
+partners_setup_view_store_rra(WmDeviceInfo *self)
 {
-  GtkWidget *partners_list_view = glade_xml_get_widget (xml, "partners_list");	
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
   GtkTreeIter iter;
   RRA_Matchmaker* matchmaker = NULL;
   guint32 curr_partner = 0, partner_id, i;
@@ -299,12 +389,12 @@ partners_setup_view_store_rra(WmDevice *device)
 					    G_TYPE_STRING); /* partner name */
 
   /* WM5 not yet supported */
-  g_object_get(device, "os-major", &os_major, NULL);
+  g_object_get(priv->device, "os-major", &os_major, NULL);
   if (os_major > 4) {
     goto exit;
   }
 
-  wm_device_rapi_select(device);
+  wm_device_rapi_select(priv->device);
 
   if (!(matchmaker = rra_matchmaker_new())) {
     g_critical("%s: Failed to create match-maker", G_STRFUNC);
@@ -352,33 +442,44 @@ exit:
 
 
 static void
-partners_setup_view(WmDevice *device)
+partners_setup_view(WmDeviceInfo *self)
 {
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   GtkWidget *partners_create_button, *partners_remove_button, *partners_list;
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
   guint32 os_major = 0;
 
-  partners_create_button = glade_xml_get_widget (xml, "partners_create_button");
-  partners_remove_button = glade_xml_get_widget (xml, "partners_remove_button");	
-  partners_list = glade_xml_get_widget (xml, "partners_list");
+  wm_device_rapi_select(priv->device);
+
+  partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");
+  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+  partners_list = glade_xml_get_widget (priv->xml, "partners_list");
 
   gtk_widget_set_sensitive(partners_create_button, FALSE);
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
 
   g_signal_connect (G_OBJECT (partners_create_button), "clicked",
-		    G_CALLBACK (partners_create_button_clicked_cb), device);
+		    G_CALLBACK (partners_create_button_clicked_cb), self);
   g_signal_connect (G_OBJECT (partners_remove_button), "clicked",
-		    G_CALLBACK (partners_remove_button_clicked_cb), device);
-
+		    G_CALLBACK (partners_remove_button_clicked_cb), self);
 
   /* WM5 uses sync-engine, older uses rra */
-  g_object_get(device, "os-major", &os_major, NULL);
+  g_object_get(priv->device, "os-major", &os_major, NULL);
   if (os_major > 4) {
-    partners_setup_view_store_synceng(device);
+    partners_setup_view_store_synceng(self);
   } else {
-    partners_setup_view_store_rra(device);
+    partners_setup_view_store_rra(self);
   }
 
   renderer = gtk_cell_renderer_toggle_new ();
@@ -414,7 +515,7 @@ partners_setup_view(WmDevice *device)
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (selection), "changed",
-		    G_CALLBACK (partners_selection_changed_cb), device);
+		    G_CALLBACK (partners_selection_changed_cb), self);
 
   gtk_widget_show (partners_list);
 }
@@ -503,19 +604,31 @@ processor(gint n)
 
 
 static void
-system_info_setup_view_store(WmDevice *device)
+system_info_setup_view_store(WmDeviceInfo *self)
 {
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   GtkWidget *sys_info_store_size, *sys_info_store_free,
     *sys_info_store_ram, *sys_info_store_storage;
   STORE_INFORMATION store;
   DWORD storage_pages = 0, ram_pages = 0, page_size = 0;
 
+  wm_device_rapi_select(priv->device);
+
   memset(&store, 0, sizeof(store));
 
-  sys_info_store_size = glade_xml_get_widget (xml, "sys_info_store_size");
-  sys_info_store_free = glade_xml_get_widget (xml, "sys_info_store_free");
-  sys_info_store_ram = glade_xml_get_widget (xml, "sys_info_store_ram");
-  sys_info_store_storage = glade_xml_get_widget (xml, "sys_info_store_storage");
+  sys_info_store_size = glade_xml_get_widget (priv->xml, "sys_info_store_size");
+  sys_info_store_free = glade_xml_get_widget (priv->xml, "sys_info_store_free");
+  sys_info_store_ram = glade_xml_get_widget (priv->xml, "sys_info_store_ram");
+  sys_info_store_storage = glade_xml_get_widget (priv->xml, "sys_info_store_storage");
 
   if (CeGetStoreInformation(&store)) {
     gchar *store_size = g_strdup_printf("%i bytes (%i MB)", store.dwStoreSize, store.dwStoreSize / (1024*1024));
@@ -545,19 +658,29 @@ system_info_setup_view_store(WmDevice *device)
 }
 
 static void
-system_info_setup_view(WmDevice *device)
+system_info_setup_view(WmDeviceInfo *self)
 {
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   GtkWidget *sys_info_model, *sys_info_version, *sys_info_platform, *sys_info_details,
     *sys_info_proc_arch, *sys_info_proc_type, *sys_info_page_size;
   CEOSVERSIONINFO version;
   SYSTEM_INFO system;
   gchar *class, *hardware, *model_str;
 
-  wm_device_rapi_select(device);
+  wm_device_rapi_select(priv->device);
 
-  sys_info_model = glade_xml_get_widget (xml, "sys_info_model");
-  g_object_get(device, "class", &class, NULL);
-  g_object_get(device, "hardware", &hardware, NULL);
+  sys_info_model = glade_xml_get_widget (priv->xml, "sys_info_model");
+  g_object_get(priv->device, "class", &class, NULL);
+  g_object_get(priv->device, "hardware", &hardware, NULL);
   model_str = g_strdup_printf("%s (%s)", hardware, class);
   gtk_label_set_text(GTK_LABEL(sys_info_model), model_str);
   g_free(class);
@@ -566,9 +689,9 @@ system_info_setup_view(WmDevice *device)
 
   /* Version */
 
-  sys_info_version = glade_xml_get_widget (xml, "sys_info_version");
-  sys_info_platform = glade_xml_get_widget (xml, "sys_info_platform");
-  sys_info_details = glade_xml_get_widget (xml, "sys_info_details");
+  sys_info_version = glade_xml_get_widget (priv->xml, "sys_info_version");
+  sys_info_platform = glade_xml_get_widget (priv->xml, "sys_info_platform");
+  sys_info_details = glade_xml_get_widget (priv->xml, "sys_info_details");
 
   memset(&version, 0, sizeof(version));
   version.dwOSVersionInfoSize = sizeof(version);
@@ -605,9 +728,9 @@ system_info_setup_view(WmDevice *device)
 
   /* platform */
 
-  sys_info_proc_arch = glade_xml_get_widget (xml, "sys_info_proc_arch");
-  sys_info_proc_type = glade_xml_get_widget (xml, "sys_info_proc_type");
-  sys_info_page_size = glade_xml_get_widget (xml, "sys_info_page_size");
+  sys_info_proc_arch = glade_xml_get_widget (priv->xml, "sys_info_proc_arch");
+  sys_info_proc_type = glade_xml_get_widget (priv->xml, "sys_info_proc_type");
+  sys_info_page_size = glade_xml_get_widget (priv->xml, "sys_info_page_size");
 
   memset(&system, 0, sizeof(system));
 
@@ -636,7 +759,7 @@ system_info_setup_view(WmDevice *device)
 
   /* store */
 
-  system_info_setup_view_store(device);
+  system_info_setup_view_store(self);
 
 }
 
@@ -681,23 +804,35 @@ get_battery_flag_string(unsigned flag)
 
 
 static void
-system_power_setup_view(WmDevice *device)
+system_power_setup_view(WmDeviceInfo *self)
 {
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  wm_device_rapi_select(priv->device);
+
   SYSTEM_POWER_STATUS_EX power;
   GtkWidget *sys_info_ac_status,
     *sys_info_main_batt_lifetime, *sys_info_main_batt_fulllife, *sys_info_main_batt_bar,
     *sys_info_bup_batt_lifetime, *sys_info_bup_batt_fulllife, *sys_info_bup_batt_bar;
   gchar *lifetime, *fulllife, *lifepercent;
 
-  sys_info_ac_status = glade_xml_get_widget (xml, "sys_info_ac_status");
+  sys_info_ac_status = glade_xml_get_widget (priv->xml, "sys_info_ac_status");
 
-  sys_info_main_batt_lifetime = glade_xml_get_widget (xml, "sys_info_main_batt_lifetime");
-  sys_info_main_batt_fulllife = glade_xml_get_widget (xml, "sys_info_main_batt_fulllife");
-  sys_info_main_batt_bar = glade_xml_get_widget (xml, "sys_info_main_batt_bar");
+  sys_info_main_batt_lifetime = glade_xml_get_widget (priv->xml, "sys_info_main_batt_lifetime");
+  sys_info_main_batt_fulllife = glade_xml_get_widget (priv->xml, "sys_info_main_batt_fulllife");
+  sys_info_main_batt_bar = glade_xml_get_widget (priv->xml, "sys_info_main_batt_bar");
 
-  sys_info_bup_batt_lifetime = glade_xml_get_widget (xml, "sys_info_bup_batt_lifetime");
-  sys_info_bup_batt_fulllife = glade_xml_get_widget (xml, "sys_info_bup_batt_fulllife");
-  sys_info_bup_batt_bar = glade_xml_get_widget (xml, "sys_info_bup_batt_bar");
+  sys_info_bup_batt_lifetime = glade_xml_get_widget (priv->xml, "sys_info_bup_batt_lifetime");
+  sys_info_bup_batt_fulllife = glade_xml_get_widget (priv->xml, "sys_info_bup_batt_fulllife");
+  sys_info_bup_batt_bar = glade_xml_get_widget (priv->xml, "sys_info_bup_batt_bar");
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
 
@@ -768,60 +903,232 @@ system_power_setup_view(WmDevice *device)
 static void
 device_info_refresh_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
-  WmDevice *device = WM_DEVICE(data);
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   guint32 os_major = 0;
 
   /* WM5 uses sync-engine, older uses rra */
-  g_object_get(device, "os-major", &os_major, NULL);
+  g_object_get(priv->device, "os-major", &os_major, NULL);
   if (os_major > 4) {
-    partners_setup_view_store_synceng(device);
+    partners_setup_view_store_synceng(self);
   } else {
-    partners_setup_view_store_rra(device);
+    partners_setup_view_store_rra(self);
   }
 
-  system_info_setup_view_store(device);
-  system_power_setup_view(device);
+  system_info_setup_view_store(self);
+  system_power_setup_view(self);
 }
 
 
 static void
 device_info_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
-  gtk_widget_destroy(gtk_widget_get_toplevel(widget));
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+  gtk_widget_hide(priv->dialog);
+  g_signal_emit (self, WM_DEVICE_INFO_GET_CLASS (self)->signals[DEVICE_INFO_CLOSED], 0);
 }
 
-GtkWidget *
-run_device_info_dialog (WmDevice *device)
+static void
+device_info_setup_dialog (WmDeviceInfo *self)
 {
-  GtkWidget *device_info_dialog, *device_info_dialog_close, *device_info_dialog_refresh;
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *device_info_dialog_close, *device_info_dialog_refresh;
   gchar *device_name, *title;
 
-  xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "device_info_dialog", NULL);
+  priv->xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "device_info_dialog", NULL);
+  priv->dialog = glade_xml_get_widget (priv->xml, "device_info_dialog");
 
-  device_info_dialog = glade_xml_get_widget (xml, "device_info_dialog");
-  device_info_dialog_close = glade_xml_get_widget (xml, "device_info_dialog_close");
-  device_info_dialog_refresh = glade_xml_get_widget (xml, "device_info_dialog_refresh");
+  device_info_dialog_close = glade_xml_get_widget (priv->xml, "device_info_dialog_close");
+  device_info_dialog_refresh = glade_xml_get_widget (priv->xml, "device_info_dialog_refresh");
 
   g_signal_connect (G_OBJECT (device_info_dialog_close), "clicked",
-		    G_CALLBACK (device_info_close_button_clicked_cb), NULL);
+		    G_CALLBACK (device_info_close_button_clicked_cb), self);
 
   g_signal_connect (G_OBJECT (device_info_dialog_refresh), "clicked",
-		    G_CALLBACK (device_info_refresh_button_clicked_cb), device);
+		    G_CALLBACK (device_info_refresh_button_clicked_cb), self);
 
-  g_object_get(device, "name", &device_name, NULL);
+  g_object_get(priv->device, "name", &device_name, NULL);
   title = g_strdup_printf("%s Information", device_name);
-  gtk_window_set_title(GTK_WINDOW(device_info_dialog), title);
+  gtk_window_set_title(GTK_WINDOW(priv->dialog), title);
   g_free(device_name);
   g_free(title);
 
-  partners_setup_view(device);
+  partners_setup_view(self);
+  system_info_setup_view(self);
+  system_power_setup_view(self);
 
-  system_info_setup_view(device);
+  gtk_widget_show_all (priv->dialog);
 
-  system_power_setup_view(device);
+  return;
+}
+
+void
+device_removed(gpointer data, GObject *removed_device)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+  gtk_widget_hide(priv->dialog);
+  g_signal_emit (self, WM_DEVICE_INFO_GET_CLASS (self)->signals[DEVICE_INFO_CLOSED], 0);
+}
 
 
-  gtk_widget_show_all (device_info_dialog);
+/* class & instance functions */
 
-  return device_info_dialog;
+static void
+wm_device_info_init(WmDeviceInfo *self)
+{
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+
+  priv->disposed = FALSE;
+  priv->device = NULL;
+}
+
+
+static void
+wm_device_info_get_property (GObject    *obj,
+			     guint       property_id,
+			     GValue     *value,
+			     GParamSpec *pspec)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO (obj);
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+
+  switch (property_id) {
+
+  case PROP_DEVICE:
+    g_value_set_pointer (value, priv->device);
+    break;
+
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+wm_device_info_set_property (GObject      *obj,
+			     guint         property_id,
+			     const GValue *value,
+			     GParamSpec   *pspec)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO (obj);
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+
+  switch (property_id) {
+
+  case PROP_DEVICE:
+    priv->device = g_value_get_pointer (value);
+    g_object_weak_ref(G_OBJECT(priv->device),
+		      device_removed,
+		      self);
+    device_info_setup_dialog(self);
+    break;
+
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
+}
+
+static void
+wm_device_info_dispose (GObject *obj)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(obj);
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    return;
+  }
+  priv->disposed = TRUE;
+
+  /* unref other objects */
+
+  g_object_weak_unref(G_OBJECT(priv->device),
+		      device_removed,
+		      self);
+  priv->device = NULL;
+  gtk_widget_destroy(priv->dialog);
+  g_object_unref(priv->xml);
+
+  if (G_OBJECT_CLASS (wm_device_info_parent_class)->dispose)
+    G_OBJECT_CLASS (wm_device_info_parent_class)->dispose (obj);
+}
+
+
+static void
+wm_device_info_finalize (GObject *obj)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(obj);
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+
+  if (G_OBJECT_CLASS (wm_device_info_parent_class)->finalize)
+    G_OBJECT_CLASS (wm_device_info_parent_class)->finalize (obj);
+}
+
+static void
+wm_device_info_class_init (WmDeviceInfoClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GParamSpec *param_spec;
+
+  g_type_class_add_private (klass, sizeof (WmDeviceInfoPrivate));
+  
+  gobject_class->get_property = wm_device_info_get_property;
+  gobject_class->set_property = wm_device_info_set_property;
+
+  gobject_class->dispose = wm_device_info_dispose;
+  gobject_class->finalize = wm_device_info_finalize;
+
+  klass->signals[DEVICE_INFO_CLOSED] = g_signal_new ("device-info-closed",
+						     G_TYPE_FROM_CLASS (klass),
+						     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+						     0,
+						     NULL, NULL,
+						     g_cclosure_marshal_VOID__VOID,
+						     G_TYPE_NONE, 0);
+  klass->signals[DEVICE_INFO_LAST_SIGNAL] = 0;
+
+  param_spec = g_param_spec_pointer ("device", "Device",
+                                     "The device object",
+                                     G_PARAM_READWRITE |
+                                     G_PARAM_CONSTRUCT_ONLY |
+                                     G_PARAM_STATIC_NICK |
+                                     G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_DEVICE, param_spec);
 }
