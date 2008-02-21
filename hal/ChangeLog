@@ -1,3 +1,7 @@
+2008-02-21  Mark Ellis <mark@mpellis.org.uk>
+
+	* 10-synce.fdi - add pda.platform property for usb-rndis-*
+
 2008-02-15  Mark Ellis <mark@mpellis.org.uk>
 
 	* correct typo for synce-device.h in src/Makefile.am
