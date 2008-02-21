@@ -3,8 +3,8 @@
 
 import gobject
 
-import pywbxml
 import libxml2
+import wbxml
 import xml2util
 import mailconv
 
@@ -96,7 +96,7 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 		self.server.logger.debug("_SendWBXMLResponse: Finished emitting response %d code to client", 200)
 		self._InitHeaders()
 
-		wbxml = pywbxml.xml2wbxml(xml)
+		wbxml = wbxml.XMLToWBXML(xml)
 	
 		self.send_header("Content-Type", "application/vnd.ms-sync.wbxml")
 		self.send_header("Content-Length", len(wbxml))
@@ -131,7 +131,7 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 			req = self.rfile.read(int(self.headers["Content-Length"])).rstrip("\0")
 			if self.headers.has_key("Content-Type") and self.headers["Content-Type"] == "application/vnd.ms-sync.wbxml":
 				self.server.logger.debug("_read_xml_request: converting request from wbxml")
-				req = pywbxml.wbxml2xml(req)
+				req = wbxml.WBXMLToXML(req)
 			return libxml2.parseDoc(req)
 		else:
 			raise ValueError("Request did not specify Content-Length header")
@@ -190,10 +190,19 @@ class AirmailHandler(BaseHTTPServer.BaseHTTPRequestHandler, gobject.GObject):
 		if self.headers.has_key("authorization"):
 			auth = self.headers['Authorization']
 			authtype,authpwd = str(auth).split(" ")
-			self.server.logger.info("Authorization type :%s" % type)
+			self.server.logger.info("Authorization type :%s" % authtype)
 			self.server.logger.info("Authorization pwd  :%s" % base64.b64decode(authpwd))
 		else:
 			self.server.logger.info("No authorization")
+			
+			# grab the content otherwise odd things seem to happen
+			
+			req = self.rfile.read(int(self.headers["Content-Length"])).rstrip("\0")
+			
+			# flag unauthorized.
+			
+			self._SendEmptyResponse(401)
+			return
 
 		# before we process
 

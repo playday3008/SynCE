@@ -25,8 +25,6 @@ AM_FOLDER_TYPES = { "Junk"    : 1,
 		    "Sent"    : 5,
 		    "Outbox"  : 6 }
 
-
-
 class Backend:
 	
 	def __init__(self):
