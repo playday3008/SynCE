@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include <string.h>
+
 RapiProxyConnection::RapiProxyConnection(RapiConnection *rapiConnection, RapiProxy *rapiProxy,
                                          RapiProvisioningClient *rapiProvisioningClient)
     : rapiConnection(rapiConnection),

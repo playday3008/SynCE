@@ -14,6 +14,8 @@
 
 #include <tcpacceptedsocket.h>
 
+#include <limits.h>
+
 /**
 	@author Volker Christian <voc@users.sourceforge.net>
 */

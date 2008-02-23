@@ -22,6 +22,7 @@
  ***************************************************************************/
 #include "localconnectedsocket.h"
 #include <netdb.h>
+#include <string.h>
 
 using namespace std;
 

@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <errno.h>
 #include <synce.h>
+#include <string.h>
 
 
 using namespace std;

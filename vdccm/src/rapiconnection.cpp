@@ -22,6 +22,7 @@
 #include "synce_log.h"
 #include <algorithm>
 #include <multiplexer.h>
+#include <string.h>
 
 using namespace std;
 

@@ -23,6 +23,7 @@
 #include "tcpconnectedsocket.h"
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <string.h>
 
 // Ugly hack - the header <linux/in.h> could not be included
 // due to conflicts with other systemheader
