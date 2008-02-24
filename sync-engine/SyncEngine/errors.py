@@ -1,55 +1,103 @@
 # -*- coding: utf-8 -*-
 ############################################################################
-#    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>       #
-#                                                                          #
-#    This program is free software; you can redistribute it and#or modify  #
-#    it under the terms of the GNU General Public License as published by  #
-#    the Free Software Foundation; either version 2 of the License, or     #
-#    (at your option) any later version.                                   #
-#                                                                          #
-#    This program is distributed in the hope that it will be useful,       #
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of        #
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
-#    GNU General Public License for more details.                          #
-#                                                                          #
-#    You should have received a copy of the GNU General Public License     #
-#    along with this program; if not, write to the                         #
-#    Free Software Foundation, Inc.,                                       #
-#    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+# ERRORS.py
+#
+# Error and exception classes for sync-engine. Designed to make error
+# handling a little cleaner than using bare exceptions. It also contains
+# the dbus exception classes generated from dbus.exception from the original
+# errors.py
+#
+# This module will be expanded as error handling is slowly cleaned up.
+#
+# Original errors.py (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>
+#
+# Dr J A Gow 24/02/08
+#
 ############################################################################
 
 import dbus
 
-_SYNC_ENGINE_ERROR_IFACE = "org.synce.SyncEngine.Error"
+############################################################################
+# SynceError
+#
+# API error exception base class
+#
+############################################################################
 
-class Disconnected(dbus.DBusException):
-    """
-    Device is not currently connected.
-    """
-    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".Disconnected"
+class SynceError(dbus.DBusException):
+	_dbus_error_name = "org.synce.SyncEngine.Error"
 
-class InvalidArgument(dbus.DBusException):
-    """
-    One of the arguments specified is invalid.
-    """
-    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".InvalidArgument"
+############################################################################
+# Disconnected
+#
+# Device is not currently connected.
+#
+############################################################################
+
+class Disconnected(SynceError):
+	_dbus_error_name = SynceError._dbus_error_name + ".Disconnected"
+
+############################################################################
+# InvalidArgument
+#
+# One of the arguments specified is invalid.
+#
+############################################################################
+
+class InvalidArgument(SynceError):
+    _dbus_error_name = SynceError._dbus_error_name + ".InvalidArgument"
+
+############################################################################
+# NotAvailable
+#
+# The requested operation is not available.
+#
+############################################################################
 
 class NotAvailable(dbus.DBusException):
-    """
-    The requested operation is not available.
-    """
-    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".NotAvailable"
+    _dbus_error_name = SynceError._dbus_error_name + ".NotAvailable"
+
+############################################################################
+# NoFreeSlots
+#
+# No free slots on the device. Delete an existing partnership and
+# try again.
+#
+############################################################################
 
 class NoFreeSlots(dbus.DBusException):
-    """
-    No free slots on the device. Delete an existing partnership and
-    try again.
-    """
-    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".NoFreeSlots"
+    _dbus_error_name = SynceError._dbus_error_name + ".NoFreeSlots"
+
+############################################################################
+# ProtocolError
+#
+# An unexpected protocol error occured. This usually means that there's
+# a bug in the implementation.
+#
+############################################################################
 
 class ProtocolError(dbus.DBusException):
-    """
-    An unexpected protocol error occured. This usually means that there's
-    a bug in the implementation.
-    """
-    _dbus_error_name = _SYNC_ENGINE_ERROR_IFACE + ".ProtocolError"
+    _dbus_error_name = SynceError._dbus_error_name + ".ProtocolError"
+
+############################################################################
+# SyncRunning
+#
+# A sync is running, and the requested action must wait until the
+# sync is complete
+#
+############################################################################
+
+class SyncRunning(dbus.DBusException):
+    _dbus_error_name = SynceError._dbus_error_name + ".SyncRunning"
+
+############################################################################
+# NoBoundPartnership
+#
+# There is no bound partnership in the device and the current action
+# can not continue
+#
+############################################################################
+
+class NoBoundPartnership(dbus.DBusException):
+    _dbus_error_name = SynceError._dbus_error_name + ".NoBoundPartnership"
+

@@ -621,7 +621,6 @@ The item data pathway has been de-convoluted and made a lot more obvious
 and cleaner. Look at syncdb.py for more info. I will try and document
 this a bit later.
 
-
 22/12/2007 - 022600 Guido Diepen
 --------------------------------
 
@@ -738,5 +737,23 @@ Fixed syncing of yearly recurrent events from Opensync to Airsync for both
 Opensync formats. Also fixed up the test scripts event_air2os.py and
 event_os2air.py - this is temporary as the format conversion test scripts
 are to be overhauled completely soon.
+
+24/02/2008 - 130700 Dr J A Gow
+------------------------------
+
+Fixed typo in _CheckDeviceConnected leading to confusing exceptions being
+generated when tools are run without a device connected.
+
+Considerably improved error handling in the tools. Errors such as
+sync-engine not running, devices not connected and the like are handled
+cleanly and generate informative error messages. Added usage string to
+create_partnerships. This should prevent tracebacks being displayed to
+the user unless there really is an error, as opposed to bad input or
+configuration.
+
+This will hopefully reduce the number of bug reports caused by issues
+such as sync-engine not running, or a device not connected correctly.
+Updates to errors.py augment the error handling structure.
+
 
 

@@ -77,6 +77,9 @@ class SyncHandler(threading.Thread):
         if self.stopped:
             self.logger.warning("run: Synchronization stopped prematurely!")
 
+	# TODO - we need  to check if device has been pulled here, before doing
+	# this, otherwise we get RAPI timeouts.
+
         self.logger.debug("run: calling RAPI sync_pause and sync_resume")
         self.engine.rapi_session.sync_pause()
         self.engine.rapi_session.sync_resume()

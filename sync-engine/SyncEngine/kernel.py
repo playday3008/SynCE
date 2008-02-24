@@ -41,6 +41,7 @@ import dtptserver
 import pshipmgr
 import libxml2
 import gobject
+import errors
 
 from mutex import mutex
 from constants import *
@@ -226,8 +227,8 @@ class SyncEngine(dbus.service.Object):
 
 	def _CheckDeviceConnected(self):
 			
-		if self.isConnected == None:
-			raise Disconnected("No device connected")
+		if not self.isConnected:
+			raise errors.Disconnected
 
 	#
 	# _CBDeviceAuthStateChanged
@@ -256,7 +257,7 @@ class SyncEngine(dbus.service.Object):
 		self._CheckDeviceConnected()
 		pship = self.PshipManager.GetCurrentPartnership()
 		if pship is None:
-			raise Exception("No current bound partnership, need to create one")
+			raise errors.NoBoundPartnership
 		return pship
 
 	#
@@ -463,8 +464,8 @@ class SyncEngine(dbus.service.Object):
 		pship=self._CheckAndGetValidPartnership()
 	
 		if not self.syncing.testandset():
-			raise Exception("Received sync request when already syncing")
-
+			raise errors.SyncRunning
+		
 		self.logger.info("_CBStartDeviceTriggeredSync: monitoring auto sync with partnership %s", pship)
 	
 		if not pship.itemDBLoaded:
@@ -678,7 +679,7 @@ class SyncEngine(dbus.service.Object):
 	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='sau', out_signature='u')
 	def CreatePartnership(self, name, sync_items):
 
-		self._CheckDeviceConnected()
+		self._CheckDeviceConnected()	
 	
 		# set a flag if we have a current partnership (already bound)
 	
@@ -718,7 +719,7 @@ class SyncEngine(dbus.service.Object):
 	def DeletePartnership(self,id,guid):
 	
 		if not self.syncing.testandset():
-			raise Exception("Need to wait for sync to finish")
+			raise errors.SyncRunning
 	
 		# We need to do this in all cases
 	
