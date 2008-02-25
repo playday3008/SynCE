@@ -1,12 +1,13 @@
-Libsynce is part of the SynCE project:
-  
-  http://www.synce.org/
+The purpose of the SynCE project is to provide a means of communication with
+a Windows Mobile, or Windows CE, device from a computer running Linux,
+FreeBSD or a similar operating system.
 
-The SynCE library is required to compile (at least) the following parts of the
-SynCE project:
+Libsynce is a common library for various SynCE project tools, containing
+various utility and helper functions. It is required to compile (at least)
+the following parts of the SynCE project:
 
 	o librapi2
-	o dccmd
+	o librra
 
 
 License
