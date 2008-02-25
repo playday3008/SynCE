@@ -74,9 +74,9 @@ main (int argc, char **argv)
     gtk_container_add(GTK_CONTAINER(mainwindow), vbox);
 
     GtkWidget *menu_bar = gtk_menu_bar_new();
-    GtkWidget *file_menu_item = gtk_menu_item_new_with_label("File");
+    GtkWidget *file_menu_item = gtk_menu_item_new_with_mnemonic("_File");
     GtkWidget *file_menu = gtk_menu_new();
-    GtkWidget *file_quit_menu_item = gtk_menu_item_new_with_label("Quit");
+    GtkWidget *file_quit_menu_item = gtk_menu_item_new_with_mnemonic("_Quit");
     gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), file_quit_menu_item);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_menu_item), file_menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), file_menu_item);

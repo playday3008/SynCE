@@ -13,8 +13,7 @@ INCLUDES  = \
 synce_software_manager_SOURCES =	\
 	main.c \
 	software_manager.c software_manager.h \
-	rapi_stuff.c rapi_stuff.h \
-	pcommon.c pcommon.h
+	synce_app_man.c synce_app_man.h
 
 synce_software_manager_CPPFLAGS = \
 	$(GTK2_CFLAGS) \

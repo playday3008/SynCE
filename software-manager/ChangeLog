@@ -1,3 +1,10 @@
+2008-02-25  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* major structural rewrite
+	* moved all device and backend processing into new file
+	  synce_app_man.c
+	* various minor changes
+
 2008-02-20  Mark Ellis <mark_ellis@users.sourceforge.net>
 
 	* check for alternative installation directory

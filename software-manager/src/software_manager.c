@@ -22,21 +22,16 @@
 
 #include <stdarg.h>
 #include <glib.h>
-#include <glib/gprintf.h>
-#include <glib/gstdio.h>
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
 #include <glade/glade.h>
 #include <synce.h>
 #include <synce_log.h>
-#include <liborange.h>
-#include <libunshield.h>
-#include <stdio.h>
 #include <rapi.h>
-#include <string.h>
+#include <libunshield.h>
 
 #include "software_manager.h"
-#include "rapi_stuff.h"
+#include "synce_app_man.h"
 
 G_DEFINE_TYPE (SynceSoftwareManager, synce_software_manager, GTK_TYPE_HBOX)
 
@@ -104,6 +99,15 @@ synce_info_dialog(const char *format, ...)
 }
 
 static void
+progress_bar_pulse(gpointer data)
+{
+  gtk_progress_bar_pulse(GTK_PROGRESS_BAR(data));
+  while (gtk_events_pending()) {
+    gtk_main_iteration_do(FALSE);
+  }
+}
+
+static void
 programs_selection_changed (GtkTreeSelection *selection, gpointer user_data) 
 {
   GtkTreeIter iter;
@@ -116,14 +120,17 @@ programs_selection_changed (GtkTreeSelection *selection, gpointer user_data)
 			NAME_COLUMN, &program,
 			INDEX_COLUMN, &number,
 			-1);
-    g_debug("%s: selected %d: %s\n", G_STRFUNC, number, program);
+    g_debug("%s: selected %d: %s", G_STRFUNC, number, program);
     g_free (program);
   }
 }
 
 static void
-setup_programs_treeview_store(GtkWidget *treeview) 
+setup_programs_treeview_store(SynceSoftwareManager *self) 
 {
+  SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
+  GtkWidget *programs_treeview = glade_xml_get_widget(priv->gladefile,"programs_treeview");
+
   GtkListStore *store = gtk_list_store_new (N_COLUMNS,
 					    G_TYPE_INT,     /* index */
 					    G_TYPE_STRING); /* program name */
@@ -133,25 +140,31 @@ setup_programs_treeview_store(GtkWidget *treeview)
   GList *programlist = NULL;
   GList *tmplist = NULL;
   int i = 0;
+  gchar *error = NULL;
+  SynceAppManResult result;
 
-  gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, 
-			    "fetchwindow", NULL); 
+  gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "fetchwindow", NULL); 
   fetchwindow = glade_xml_get_widget(gladefile,"fetchwindow");
   progressbar = glade_xml_get_widget(gladefile,"fetch_progressbar");
   fetchlabel = glade_xml_get_widget(gladefile,"fetch_window_label");
 
-  gtk_label_set_text(GTK_LABEL(fetchlabel), _("Fetching information from the PDA."));
+  gtk_label_set_text(GTK_LABEL(fetchlabel), _("Fetching the list of installed applications from the PDA."));
   gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
   gtk_widget_show_all(fetchwindow);
 
   while (gtk_events_pending()) {
-    gtk_main_iteration();
+    gtk_main_iteration_do(FALSE);
   }
-  programlist = create_program_list(programlist, progressbar); 
+
+  result = synce_app_man_create_program_list(&programlist, &error, progress_bar_pulse, progressbar);
+  if (result != SYNCE_AM_OK) {
+    synce_error_dialog(_("Couldn't fetch the list of applications from the device: %s"), error);
+    g_free(error);
+  }
 
   tmplist = programlist;
 
-  /* i is not realy used except to insert a sequence number in the list */
+  /* i is not really used except to insert a sequence number in the list */
   i = 0;
   while (tmplist != NULL) {
     gtk_list_store_append (store, &iter);  /* Acquire an iterator */
@@ -165,7 +178,7 @@ setup_programs_treeview_store(GtkWidget *treeview)
     i++;
   }
 
-  gtk_tree_view_set_model (GTK_TREE_VIEW(treeview), GTK_TREE_MODEL (store));
+  gtk_tree_view_set_model (GTK_TREE_VIEW(programs_treeview), GTK_TREE_MODEL (store));
   g_object_unref (G_OBJECT (store));
 
   tmplist = programlist;
@@ -178,8 +191,11 @@ setup_programs_treeview_store(GtkWidget *treeview)
 }
 
 static void
-setup_programs_treeview(GtkWidget *treeview) 
+setup_programs_treeview(SynceSoftwareManager *self) 
 {
+  SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
+  GtkWidget *programs_treeview = glade_xml_get_widget(priv->gladefile,"programs_treeview");
+
   GtkListStore *store = gtk_list_store_new (N_COLUMNS,
 					    G_TYPE_INT,     /* index */
 					    G_TYPE_STRING); /* program name */
@@ -187,7 +203,7 @@ setup_programs_treeview(GtkWidget *treeview)
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
 
-  gtk_tree_view_set_model (GTK_TREE_VIEW(treeview), GTK_TREE_MODEL (store));
+  gtk_tree_view_set_model (GTK_TREE_VIEW(programs_treeview), GTK_TREE_MODEL (store));
   g_object_unref (G_OBJECT (store));
 
   column = gtk_tree_view_column_new ();
@@ -197,7 +213,7 @@ setup_programs_treeview(GtkWidget *treeview)
 				       "text", INDEX_COLUMN, NULL);
 
   gtk_tree_view_column_set_visible(GTK_TREE_VIEW_COLUMN(column), FALSE);
-  gtk_tree_view_append_column (GTK_TREE_VIEW(treeview), column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(programs_treeview), column);
 
   column = gtk_tree_view_column_new ();
   gtk_tree_view_column_set_title (GTK_TREE_VIEW_COLUMN(column),"Program");
@@ -206,427 +222,80 @@ setup_programs_treeview(GtkWidget *treeview)
   gtk_tree_view_column_set_attributes (column, renderer,
 				       "text", NAME_COLUMN, NULL);
 
-  gtk_tree_view_append_column (GTK_TREE_VIEW(treeview), column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(programs_treeview), column);
 
-  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (treeview));
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (programs_treeview));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (selection), "changed",
 		    G_CALLBACK (programs_selection_changed),NULL);
 
-  gtk_widget_show (treeview);
+  gtk_widget_show (programs_treeview);
 }
 
-typedef struct _orange_cookie
-{
-  DWORD processor_type;
-  gchar *output_directory;
-  GList *file_list;
-} orange_cookie;
-
-static gboolean
-cab_copy(const gchar *source_file, const gchar *dest_file)
-{
-  FILE* input = NULL;
-  FILE* output = NULL;
-  size_t bytes;
-  char buffer[1024];
-  gboolean success = FALSE;
-
-  if (!(input = fopen(source_file, "r"))) {
-    g_critical("%s: Failed to open input file for copying: %s", G_STRFUNC, source_file);
-    return FALSE;
-  }
-
-  if (!(output = fopen(dest_file, "w"))) {
-    g_critical("%s: Failed to open output file for copying: %s", G_STRFUNC, dest_file);
-    fclose(input);
-    g_unlink(dest_file);
-    return FALSE;
-  }
-
-  while (TRUE)
-    {
-      bytes = fread(buffer, 1, sizeof(buffer), input);
-      if (bytes < sizeof(buffer)) {
-	if (feof(input)) {
-	  fwrite(buffer, 1, bytes, output);
-	  success = TRUE;
-	  break;
-	}
-
-	g_critical("%s: error reading input file for copying: %s", G_STRFUNC, source_file);
-	g_unlink(dest_file);
-	break;
-      }
-
-      if (fwrite(buffer, 1, bytes, output) < bytes) {
-	g_critical("%s: error writing output file for copying: %s", G_STRFUNC, dest_file);
-	g_unlink(dest_file);
-	break;
-      }
-    }
-
-  fclose(output);
-  fclose(input);
-  return success;
-}
-
-static bool
-orange_callback(const char* filename, CabInfo* info, void *cookie )
-{
-  gboolean success = FALSE;
-
-  orange_cookie *data_exchange = (orange_cookie *) cookie;
-
-  gchar *output_filename = g_strdup_printf("%s/%s", data_exchange->output_directory, ( g_strrstr(filename, "/") + 1 ));
-  g_debug("%s: squeezing out %s for processor type %d", G_STRFUNC, output_filename, info->processor);
-
-  if (info->processor != ((orange_cookie *)cookie)->processor_type)
-    return TRUE;
-
-  if (cab_copy(filename, output_filename)) {
-    data_exchange->file_list = g_list_append(data_exchange->file_list, output_filename);
-    success = TRUE;
-  } else {
-    g_warning("%s: Failed to copy from '%s' to '%s'", G_STRFUNC, filename, output_filename);
-    g_free(output_filename);
-  }
-
-  return success;
-}
-
-static GList *
-extract_with_orange(const gchar *arch_file, const gchar *dest_dir, DWORD processor_type)
-{
-  GList *return_list = NULL;
-
-  orange_cookie *cookie = g_malloc0(sizeof(orange_cookie));
-  cookie->output_directory = g_strdup(dest_dir);
-  cookie->processor_type = processor_type;
-
-  orange_squeeze_file(arch_file, orange_callback, cookie);
-
-  g_free(cookie->output_directory);
-  return_list = cookie->file_list;
-  g_free(cookie);
-
-  return return_list;
-}
-
-static gchar *
-get_install_dir(gchar **error_message)
-{
-  WCHAR* wide_path = NULL;
-  gchar *path = NULL;
-  gchar *tmppath = NULL;
-  BOOL result;
-  CE_FIND_DATA entry;
-  HANDLE handle;
-  HRESULT hr;
-  DWORD error;
-
-  path = g_strdup("\\Storage\\Windows\\AppMgr");
-
-  wide_path = wstr_from_utf8(path);
-  handle = CeFindFirstFile(wide_path, &entry);
-  wstr_free_string(wide_path);
-
-  if (handle != INVALID_HANDLE_VALUE) {
-    CeFindClose(handle);
-  } else {
-    if (FAILED(hr = CeRapiGetError())) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(hr));
-      g_free(path);
-      return NULL;
-    }
-
-    error = CeGetLastError();
-    if (error != ERROR_PATH_NOT_FOUND) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(error));
-      g_free(path);
-      return NULL;
-    }
-
-    g_free(path);
-    path = g_strdup("\\Windows\\AppMgr");
-
-    wide_path = wstr_from_utf8(path);
-    handle = CeFindFirstFile(wide_path, &entry);
-    wstr_free_string(wide_path);
-
-    if (handle != INVALID_HANDLE_VALUE) {
-      CeFindClose(handle);
-    } else {
-      if (FAILED(hr = CeRapiGetError())) {
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(hr));
-	g_free(path);
-	return NULL;
-      }
-
-      error = CeGetLastError();
-      if (error != ERROR_PATH_NOT_FOUND) {
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(error));
-	g_free(path);
-	return NULL;
-      }
-
-      wide_path = wstr_from_utf8(path);
-
-      result = CeCreateDirectory(wide_path, NULL);
-      wstr_free_string(wide_path);
-      if (!result) {
-	if (FAILED(hr = CeRapiGetError())) {
-	  if (error_message)
-	    *error_message = g_strdup(synce_strerror(hr));
-	  g_free(path);
-	  return NULL;
-	}
-
-	error = CeGetLastError();
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(error));
-	g_free(path);
-	return NULL;
-      }
-    }
-  }
-
-  tmppath = g_strdup_printf("%s\\Install", path);
-  g_free(path);
-  path = tmppath;
-
-  wide_path = wstr_from_utf8(path);
-  handle = CeFindFirstFile(wide_path, &entry);
-  wstr_free_string(wide_path);
-
-  if (handle != INVALID_HANDLE_VALUE) {
-    CeFindClose(handle);
-  } else {
-    if (FAILED(hr = CeRapiGetError())) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(hr));
-      g_free(path);
-      return NULL;
-    }
-
-    error = CeGetLastError();
-    if (error != ERROR_PATH_NOT_FOUND) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(error));
-      g_free(path);
-      return NULL;
-    }
-
-    wide_path = wstr_from_utf8(path);
-
-    result = CeCreateDirectory(wide_path, NULL);
-    wstr_free_string(wide_path);
-    if (!result) {
-      if (FAILED(hr = CeRapiGetError())) {
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(hr));
-	g_free(path);
-	return NULL;
-      }
-
-      error = CeGetLastError();
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(error));
-      g_free(path);
-      return NULL;
-    }
-  }
-
-  g_debug("%s: install dir is %s", G_STRFUNC, path);
-  return path;
-}
 
 static void
-install_file(SynceSoftwareManager *self, const gchar *filepath)
-{
-  SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
-
-  gchar *error_str = NULL;
-  gchar *install_path = NULL;
-  SYSTEM_INFO system;
-
-  GladeXML *gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, 
-				      "fetchwindow", NULL); 
-  GtkWidget *fetchwindow = glade_xml_get_widget(gladefile,"fetchwindow");
-  GtkWidget *progressbar = glade_xml_get_widget(gladefile,"fetch_progressbar");
-  GtkWidget *fetchlabel = glade_xml_get_widget(gladefile,"fetch_window_label");
-
-  gchar *message = g_strdup_printf(_("Installing from file \"%s\"..."), filepath);
-  gtk_label_set_text(GTK_LABEL(fetchlabel), message);
-  g_free(message);
-  gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
-  gtk_widget_show_all(fetchwindow);
-
-  memset(&system, 0, sizeof(system));
-  CeGetSystemInfo(&system);
-
-  GList *cab_list = extract_with_orange(filepath, "/tmp", system.dwProcessorType);
-  if (!cab_list) {
-    gtk_widget_hide(fetchwindow);
-    g_message("%s: no cabinet files found in %s", G_STRFUNC, filepath);
-    synce_error_dialog(_("Failed to install the program:\nNo Cabinet files found."));
-    goto exit;
-  }
-
-  /* Do some install things */
-
-  install_path = get_install_dir(&error_str);
-  if (!install_path) {
-    gtk_widget_hide(fetchwindow);
-    g_warning("%s: unable to obtain installation directory on device: %s", G_STRFUNC, error_str);
-    synce_error_dialog(_("Unable to obtain the installation\ndirectory on the device:\n%s"), error_str);
-    goto exit;
-  }
-
-  GList *tmplist = g_list_first(cab_list);
-  while(tmplist) {
-    gchar *cabname = tmplist->data;
-    g_debug("%s: copying file %s to device", G_STRFUNC, cabname);
-
-    if (rapi_copy_to_device(cabname, install_path, progressbar, &error_str) != 0) {
-      gtk_widget_hide(fetchwindow);
-      g_warning("%s: failed to copy file \"%s\" to device: %s", G_STRFUNC, cabname, error_str);
-      synce_error_dialog(_("Failed to install the program:\nCould not copy the file to the PDA:\n%s"), error_str);
-      goto exit;
-    }
-
-    tmplist = g_list_next(tmplist);
-  }
-
-  if (rapi_run("wceload.exe", NULL, &error_str) != 0) {
-    gtk_widget_hide(fetchwindow);
-    g_warning("%s: failed to execute the installer on the device: %s", G_STRFUNC, error_str);
-    synce_error_dialog(_("Failed to install the program:\nCould not execute the installer on the PDA:\n%s"), error_str);
-    goto exit;
-  }
-
-  gtk_widget_hide(fetchwindow);
-  g_debug("%s: successfully installed %s on device", G_STRFUNC, filepath);
-  synce_info_dialog(_("The installation was successful!\nCheck your PDA to see if any additional steps are required.\nYou must manually refresh the program list\nfor the new program to be listed."));
-
-exit:
-  gtk_widget_destroy(fetchwindow);
-  g_free(error_str);
-
-  tmplist = g_list_first(cab_list);
-  while(tmplist)
-    {
-      g_unlink((gchar *)(tmplist->data));
-      tmplist = g_list_next(tmplist);
-    }
-}
-
-void
 on_add_button_clicked(GtkButton *button, gpointer user_data)
 {
   SynceSoftwareManager *self = SYNCE_SOFTWARE_MANAGER(user_data);
   SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
 
-  GladeXML *gladefile = NULL;
-  GtkWidget *installdialog;
-  GtkWidget *file_entry;
+  GladeXML *install_xml, *fetch_xml;
+  GtkWidget *installdialog, *file_entry;
+  GtkWidget *fetchwindow, *progressbar, *fetchlabel;
   gchar *filepath;
-  gint result;
+  gint response;
+  gchar *error = NULL;
+  gchar *message = NULL;
+  SynceAppManResult result;
 
-  gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, 
-			    "installdialog", NULL); 
+  install_xml = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "installdialog", NULL); 
+  fetch_xml = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "fetchwindow", NULL); 
 
-  installdialog = glade_xml_get_widget(gladefile, "installdialog");
-  file_entry = glade_xml_get_widget(gladefile, "file_entry");
+  installdialog = glade_xml_get_widget(install_xml, "installdialog");
+  file_entry = glade_xml_get_widget(install_xml, "file_entry");
 
-  result = gtk_dialog_run (GTK_DIALOG (installdialog));
+  fetchwindow = glade_xml_get_widget(fetch_xml, "fetchwindow");
+  progressbar = glade_xml_get_widget(fetch_xml, "fetch_progressbar");
+  fetchlabel = glade_xml_get_widget(fetch_xml, "fetch_window_label");
+
+  response = gtk_dialog_run (GTK_DIALOG (installdialog));
   filepath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_entry));
   gtk_widget_hide_all (installdialog);
 
-  if (result == GTK_RESPONSE_APPLY) {
+  if (response == GTK_RESPONSE_APPLY) {
+    gtk_window_set_title(GTK_WINDOW(fetchwindow), _("Installing Software..."));
+    message = g_strdup_printf(_("Installing from file \"%s\"..."), filepath);
+    gtk_label_set_text(GTK_LABEL(fetchlabel), message);
+    g_free(message);
+
+    gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
+    gtk_widget_show_all(fetchwindow);
+
+    while (gtk_events_pending()) {
+      gtk_main_iteration_do(FALSE);
+    }
+
     g_debug("%s: requested installation of file %s", G_STRFUNC, filepath);
-    install_file(self, filepath);
+    result = synce_app_man_install(filepath, &error, progress_bar_pulse, progressbar);
+
+    gtk_widget_hide_all(fetchwindow);
+    if (result != SYNCE_AM_OK) {
+      synce_error_dialog(_("Failed to install from file %s: %s"), filepath, error);
+      g_free(error);
+    } else {
+      synce_info_dialog(_("Successfully started installation of file \"%s\". Check your device to see if any additional steps are required. The program list must be manually refreshed after installation has completed."), filepath);
+    }
   }
 
   gtk_widget_destroy (installdialog);
   g_free(filepath);
+
+  gtk_widget_destroy(fetchwindow);
+
+  g_object_unref(install_xml);
+  g_object_unref(fetch_xml);
 }
 
-static gboolean
-uninstall_prog(gchar *program, gchar **error_message)
-{
-  HRESULT hr;
-  DWORD error;
-  BOOL result;
-
-  /* unload.exe */
-  WCHAR* wide_command = NULL;
-  WCHAR* wide_parameters = NULL;
-  PROCESS_INFORMATION info;
-  gchar *command = NULL;
-
-  /* process config */
-  gchar *configXML = NULL;
-  LPWSTR config = NULL;
-  DWORD flags = CONFIG_PROCESS_DOCUMENT;
-  LPWSTR reply = NULL;
-
-  g_debug("%s: requested removal of program %s", G_STRFUNC, program);
-
-  /* try unload.exe */
-
-  command = g_strdup("unload.exe");
-  wide_command = wstr_from_utf8(command);
-  wide_parameters = wstr_from_utf8(program);
-  memset(&info, 0, sizeof(info));
-
-  result = CeCreateProcess(wide_command, wide_parameters,
-			   NULL, NULL, false, 0, NULL, NULL, NULL,
-			   &info);
-  CeCloseHandle(info.hProcess);
-  CeCloseHandle(info.hThread);
-  wstr_free_string(wide_command);
-  wstr_free_string(wide_parameters);
-  g_free(command);
-
-  if (result)
-    return TRUE;
-
-  if (FAILED(hr = CeRapiGetError())) {
-    *error_message = g_strdup(synce_strerror(hr));
-    return FALSE;
-  }
-
-  if ((error = CeGetLastError()) != ERROR_FILE_NOT_FOUND) {
-    *error_message = g_strdup(synce_strerror(error));
-    return FALSE;
-  }
-
-  /* Failed to start unload.exe, trying to uninstall via Configuration Service Provider ... */
-
-  configXML = g_strdup_printf("%s%s%s",
-			      "<wap-provisioningdoc>\n\r<characteristic type=\"UnInstall\">\n\r<characteristic type=\"",
-			      program,
-			      "\">\n\r<parm name=\"uninstall\" value=\"1\"/>\n\r</characteristic>\n\r</characteristic>\n\r</wap-provisioningdoc>\n\r");
-  config = wstr_from_current(configXML);
-
-  hr = CeProcessConfig(config, flags, &reply);
-  wstr_free_string(config);
-  g_free(configXML);
-
-  if (SUCCEEDED(hr)) {
-    wstr_free_string(reply);
-    return TRUE;
-  }
-
-  *error_message = wstr_to_current(reply);
-  wstr_free_string(reply);
-  return FALSE;
-}
 
 void
 on_remove_button_clicked(GtkButton *button, gpointer user_data)
@@ -641,6 +310,7 @@ on_remove_button_clicked(GtkButton *button, gpointer user_data)
   gint number;
   gchar *program = NULL;
   gchar *error_message = NULL;
+  SynceAppManResult result;
 
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(programs_treeview));
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
@@ -650,13 +320,13 @@ on_remove_button_clicked(GtkButton *button, gpointer user_data)
 			  INDEX_COLUMN, &number,
 			  -1);
 
-      if (uninstall_prog(program, &error_message)) {
+      if ((result = synce_app_man_uninstall(program, &error_message)) == SYNCE_AM_OK) {
 	g_debug("%s: successfully removed program %s", G_STRFUNC, program);
-	synce_info_dialog(_("The program \"%s\"\nwas successfully removed."), program);
-	setup_programs_treeview_store(programs_treeview);
+	synce_info_dialog(_("The program \"%s\" was successfully removed."), program);
+	setup_programs_treeview_store(self);
       } else {
 	g_warning("%s: failed to remove program %s: %s", G_STRFUNC, program, error_message);
-	synce_error_dialog(_("The program \"%s\"\ncould not be removed:\n%s"), program, error_message);
+	synce_error_dialog(_("The program \"%s\" could not be removed: %s"), program, error_message);
 	g_free(error_message);
       }
       g_free (program);
@@ -669,7 +339,6 @@ on_refresh_button_clicked(GtkButton *button, gpointer user_data)
   SynceSoftwareManager *self = SYNCE_SOFTWARE_MANAGER(user_data);
   SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
 
-  GtkWidget *programs_treeview = glade_xml_get_widget(priv->gladefile,"programs_treeview");
   GtkWidget *add_button = glade_xml_get_widget(priv->gladefile,"add_button");
   GtkWidget *remove_button = glade_xml_get_widget(priv->gladefile,"remove_button");
 
@@ -688,18 +357,13 @@ on_refresh_button_clicked(GtkButton *button, gpointer user_data)
     gtk_widget_set_sensitive(remove_button, priv->connected);
   }
 
-  setup_programs_treeview_store(programs_treeview);
+  setup_programs_treeview_store(self);
 }
 
 static gboolean
 idle_populate_treeview(gpointer user_data)
 {
-  SynceSoftwareManager *self = SYNCE_SOFTWARE_MANAGER(user_data);
-  SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
-
-  GtkWidget *programs_treeview = programs_treeview = glade_xml_get_widget(priv->gladefile,"programs_treeview");
-  setup_programs_treeview_store(programs_treeview);
-
+  setup_programs_treeview_store(SYNCE_SOFTWARE_MANAGER(user_data));
   return FALSE;
 }
 
@@ -713,19 +377,17 @@ synce_software_manager_init(SynceSoftwareManager *self)
 
   priv->disposed = FALSE;
   priv->connected = FALSE;
-
-  priv->gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, 
-			    "software_manager", NULL); 
+  priv->gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "software_manager", NULL); 
 
   GtkWidget *software_manager = NULL, *programs_treeview,
     *add_button, *remove_button, *refresh_button;
 
-  software_manager = glade_xml_get_widget(priv->gladefile,"software_manager");
+  software_manager = glade_xml_get_widget(priv->gladefile, "software_manager");
 
-  programs_treeview = glade_xml_get_widget(priv->gladefile,"programs_treeview");
-  add_button = glade_xml_get_widget(priv->gladefile,"add_button");
-  remove_button = glade_xml_get_widget(priv->gladefile,"remove_button");
-  refresh_button = glade_xml_get_widget(priv->gladefile,"refresh_button");
+  programs_treeview = glade_xml_get_widget(priv->gladefile, "programs_treeview");
+  add_button = glade_xml_get_widget(priv->gladefile, "add_button");
+  remove_button = glade_xml_get_widget(priv->gladefile, "remove_button");
+  refresh_button = glade_xml_get_widget(priv->gladefile, "refresh_button");
 
   g_signal_connect(G_OBJECT(add_button), "clicked",
 		   G_CALLBACK(on_add_button_clicked),
@@ -757,7 +419,7 @@ synce_software_manager_init(SynceSoftwareManager *self)
   gtk_widget_set_sensitive(add_button, priv->connected);
   gtk_widget_set_sensitive(remove_button, priv->connected);
 
-  setup_programs_treeview(programs_treeview);
+  setup_programs_treeview(self);
 
   if (priv->connected)
     g_idle_add(idle_populate_treeview, self);
@@ -777,6 +439,7 @@ synce_software_manager_dispose (GObject *obj)
 
   /* unref other objects */
 
+  g_object_unref(priv->gladefile);
   if (priv->connected) {
     CeRapiUninit();
     priv->connected = FALSE;

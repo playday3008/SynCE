@@ -25,7 +25,7 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl GNOME_INIT
-pkg_modules="glib-2.0 gmodule-2.0 gtk+-2.0 libgnome-2.0 libglade-2.0"
+pkg_modules="glib-2.0 gtk+-2.0 libgnome-2.0 libglade-2.0"
 PKG_CHECK_MODULES(GTK2, [$pkg_modules])
 
 dnl Check for SynCE libs
