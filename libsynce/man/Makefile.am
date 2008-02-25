@@ -5,7 +5,8 @@ real_MANS = synce.7 \
 	synce_strerror.3 \
 	wstr_to_ascii.3 \
 	time_fields_from_filetime.3 \
-	date_from_tm.3
+	date_from_tm.3 \
+	synce_error.3
 
 EXTRA_DIST = $(real_MANS)
 
@@ -34,7 +35,9 @@ TIME_LINKS = time_fields_to_filetime.3
 
 DATE_LINKS = date_to_tm.3
 
-ALL_LINKS = $(INFO_LINKS) $(GETDIR_LINKS) $(GETCONN_LINKS) $(WSTR_LINKS) $(TIME_LINKS) $(DATE_LINKS)
+ERROR_LINKS = synce_warning.3 synce_info.3 synce_debug.3 synce_trace.3 synce_warning_unless.3 synce_log_set_level.3 synce_log_use_syslog.3
+
+ALL_LINKS = $(INFO_LINKS) $(GETDIR_LINKS) $(GETCONN_LINKS) $(WSTR_LINKS) $(TIME_LINKS) $(DATE_LINKS) $(ERROR_LINKS)
 
 CLEANFILES = $(ALL_LINKS)
 
@@ -57,4 +60,7 @@ $(TIME_LINKS): time_fields_from_filetime.3
 	echo ".so man3/$^" > $@ 
 
 $(DATE_LINKS): date_from_tm.3
+	echo ".so man3/$^" > $@ 
+
+$(ERROR_LINKS): synce_error.3
 	echo ".so man3/$^" > $@ 
