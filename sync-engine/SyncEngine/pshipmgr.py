@@ -59,27 +59,34 @@ class PartnershipManager:
 
 		# Inspect registry entries
 		
-		self.logger.debug("ReadDevicePartnerships: reading partnerships from device registry")
-		partners_key = hklm.create_sub_key(r"Software\Microsoft\Windows CE Services\Partners")
+		try:
 		
-		for pos in xrange(1, 3):
-			key = partners_key.create_sub_key("P%d" % pos)
-			if key.disposition == pyrapi2.REG_OPENED_EXISTING_KEY:
-				try:
-					id = key.query_value("PId")
-					hostname = key.query_value("PName")
+			self.logger.debug("ReadDevicePartnerships: reading partnerships from device registry")
+			partners_key = hklm.create_sub_key(r"Software\Microsoft\Windows CE Services\Partners")
+		
+			for pos in xrange(1, 3):
+				key = partners_key.create_sub_key("P%d" % pos)
+				if key.disposition == pyrapi2.REG_OPENED_EXISTING_KEY:
+					try:
+						id = key.query_value("PId")
+						hostname = key.query_value("PName")
 
-					self.logger.debug("ReadDevicePartnerships: read partnership ID = %s, Hostname = %s", id, hostname)
+						self.logger.debug("ReadDevicePartnerships: read partnership ID = %s, Hostname = %s" % (id, hostname))
 
-					if id != 0 and len(hostname) > 0:
-						self.logger.debug("_read_device: Adding entry")
-						reg_entries[hostname] = (pos, id)
+						if id != 0 and len(hostname) > 0:
+							self.logger.debug("_read_device: Adding entry")
+							reg_entries[hostname] = (pos, id)
 						
-				except pyrapi2.RAPIError, e:
+					except pyrapi2.RAPIError, e:
 					
-					self.logger.warn("ReadDevicePartnerships: Error getting partnership key %d from device registry: %s", pos, e)
-			key.close()
-		partners_key.close()
+						self.logger.warn("ReadDevicePartnerships: Error getting partnership key %d from device registry: %s" % (pos, e))
+				key.close()
+			partners_key.close()
+			
+		except pyrapi2.RAPIError, e:
+	
+			self.logger.warn("ReadDevicePartnerships: Error opening partnership keys in remote registry (%d)" % e.retval)
+
 
 		# Look up the synchronization data on each
 		
