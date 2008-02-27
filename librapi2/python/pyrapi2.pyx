@@ -8,10 +8,6 @@ cdef extern from "Python.h":
     PyThreadState *PyEval_SaveThread()
     void PyEval_RestoreThread(PyThreadState *_save)
 
-
-
-
-
 cdef extern from "stdlib.h":
     void *malloc(size_t size)
     void *realloc(void *ptr, size_t size)
@@ -195,8 +191,10 @@ FILE_ATTRIBUTE_6             = 0x00040000
 FILE_ATTRIBUTE_7             = 0x00080000
 
 
+#
+# RAPIError is a subclass of Exception
 
-class RAPIError:
+class RAPIError(Exception):
     def __init__(self, retval):
         self.retval = retval
 
@@ -234,6 +232,8 @@ class RegKey:
         cdef DWORD disposition
         cdef LPWSTR sub_key_w
         cdef LPWSTR key_class_w
+
+        raise RAPIError(3)
 
         if sub_key != None:
             sub_key_w = wstr_from_utf8(sub_key)
