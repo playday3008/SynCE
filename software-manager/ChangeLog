@@ -1,3 +1,9 @@
+2008-02-27  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* use GError
+	* build simple widgets manually where glade not necessary
+	* only activate remove button when app selected
+
 2008-02-25  Mark Ellis <mark_ellis@users.sourceforge.net>
 
 	* major structural rewrite

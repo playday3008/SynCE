@@ -33,19 +33,28 @@
 
 #define BUFFER_SIZE (64*1024)
 
-SynceAppManResult
-synce_app_man_create_program_list(GList **list, gchar **error_message, SynceAppManBusyFunc busy_func, gpointer busy_data)
+GQuark
+synce_app_man_error_quark (void)
+{
+  return g_quark_from_string ("synce-app-man-error-quark");
+}
+
+
+gboolean
+synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   LONG rapi_result;
+  gboolean result = TRUE;
   HKEY parent_key;
   gchar *parent_key_name_ascii = NULL;
   WCHAR* parent_key_name_wide = NULL;
   WCHAR* value_name = NULL;
   DWORD i;
   gboolean smartphone = false;
-  SynceAppManResult result = SYNCE_AM_OK;
   GList *tmp_list = NULL;
   gchar *app_name = NULL;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   if (busy_func)
     (*busy_func)(busy_data);
@@ -69,9 +78,12 @@ synce_app_man_create_program_list(GList **list, gchar **error_message, SynceAppM
     rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name_wide, 0, 0, &parent_key);
 
     if (ERROR_SUCCESS != rapi_result) {
-      if (error_message)
-	*error_message = g_strdup_printf("%s: %s", _("Unable to open applications registry key"), synce_strerror(rapi_result));
-      result = SYNCE_AM_RAPI_ERROR;
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI,
+		  _("Unable to open applications registry key: %s"),
+		  synce_strerror(rapi_result));
+      result = FALSE;
       goto exit;
     }
   }
@@ -93,10 +105,14 @@ synce_app_man_create_program_list(GList **list, gchar **error_message, SynceAppM
       break;
 
     if (rapi_result != ERROR_SUCCESS) {
-      g_warning("%s: %s '%s': %s", G_STRFUNC, _("Unable to enumerate registry key"), parent_key_name_ascii, synce_strerror(rapi_result));
-      if (error_message)
-	*error_message = g_strdup_printf("%s '%s': %s", _("Unable to enumerate registry key"), parent_key_name_ascii, synce_strerror(rapi_result));
-      result = SYNCE_AM_RAPI_ERROR;
+      g_warning("%s: Unable to enumerate registry key '%s': %s", G_STRFUNC, parent_key_name_ascii, synce_strerror(rapi_result));
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI,
+		  _("Unable to enumerate registry key '%s': %s"),
+		  parent_key_name_ascii,
+		  synce_strerror(rapi_result));
+      result = FALSE;
       break;
     }
 
@@ -126,7 +142,7 @@ synce_app_man_create_program_list(GList **list, gchar **error_message, SynceAppM
   CeRegCloseKey(parent_key);
 
 exit:
-  if (result != SYNCE_AM_OK) {
+  if (!result) {
     GList *list_iter = g_list_first(tmp_list);
     while (list_iter != NULL) {
       g_free(list_iter->data);
@@ -237,8 +253,8 @@ extract_with_orange(const gchar *arch_file, const gchar *dest_dir, DWORD process
   return return_list;
 }
 
-static SynceAppManResult
-get_install_dir(gchar **install_dir, gchar **error_message)
+static gchar*
+get_install_dir(GError **error)
 {
   WCHAR* wide_path = NULL;
   gchar *path = NULL;
@@ -247,7 +263,9 @@ get_install_dir(gchar **install_dir, gchar **error_message)
   CE_FIND_DATA entry;
   HANDLE handle;
   HRESULT hr;
-  DWORD error;
+  DWORD rapi_error;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   path = g_strdup("\\Storage\\Windows\\AppMgr");
 
@@ -258,22 +276,27 @@ get_install_dir(gchar **install_dir, gchar **error_message)
   if (handle != INVALID_HANDLE_VALUE) {
     CeFindClose(handle);
   } else {
-    if (FAILED(hr = CeRapiGetError())) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(hr));
-      g_free(path);
-      return SYNCE_AM_RAPI_TERM_ERROR;
-    }
-
-    error = CeGetLastError();
-    if (error != ERROR_PATH_NOT_FOUND) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(error));
-      g_free(path);
-      return SYNCE_AM_RAPI_ERROR;
-    }
-
     g_free(path);
+
+    if (FAILED(hr = CeRapiGetError())) {
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		  _("Unable to determine installer directory: %s"),
+		  synce_strerror(hr));
+      return NULL;
+    }
+
+    rapi_error = CeGetLastError();
+    if (rapi_error != ERROR_PATH_NOT_FOUND) {
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI,
+		  _("Unable to determine installer directory: %s"),
+		  synce_strerror(rapi_error));
+      return NULL;
+    }
+
     path = g_strdup("\\Windows\\AppMgr");
 
     wide_path = wstr_from_utf8(path);
@@ -284,18 +307,24 @@ get_install_dir(gchar **install_dir, gchar **error_message)
       CeFindClose(handle);
     } else {
       if (FAILED(hr = CeRapiGetError())) {
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(hr));
 	g_free(path);
-	return SYNCE_AM_RAPI_TERM_ERROR;
+	g_set_error(error,
+		    SYNCE_APP_MAN_ERROR,
+		    SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		    _("Unable to determine installer directory: %s"),
+		    synce_strerror(hr));
+	return NULL;
       }
 
-      error = CeGetLastError();
-      if (error != ERROR_PATH_NOT_FOUND) {
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(error));
+      rapi_error = CeGetLastError();
+      if (rapi_error != ERROR_PATH_NOT_FOUND) {
 	g_free(path);
-	return SYNCE_AM_RAPI_ERROR;
+	g_set_error(error,
+		    SYNCE_APP_MAN_ERROR,
+		    SYNCE_APP_MAN_ERROR_RAPI,
+		    _("Unable to determine installer directory: %s"),
+		    synce_strerror(rapi_error));
+	return NULL;
       }
 
       wide_path = wstr_from_utf8(path);
@@ -304,17 +333,23 @@ get_install_dir(gchar **install_dir, gchar **error_message)
       wstr_free_string(wide_path);
       if (!result) {
 	if (FAILED(hr = CeRapiGetError())) {
-	  if (error_message)
-	    *error_message = g_strdup(synce_strerror(hr));
 	  g_free(path);
-	  return SYNCE_AM_RAPI_TERM_ERROR;
+	  g_set_error(error,
+		      SYNCE_APP_MAN_ERROR,
+		      SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		      _("Unable to determine installer directory: %s"),
+		      synce_strerror(hr));
+	  return NULL;
 	}
 
-	error = CeGetLastError();
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(error));
+	rapi_error = CeGetLastError();
 	g_free(path);
-	return SYNCE_AM_RAPI_ERROR;
+	g_set_error(error,
+		    SYNCE_APP_MAN_ERROR,
+		    SYNCE_APP_MAN_ERROR_RAPI,
+		    _("Unable to determine installer directory: %s"),
+		    synce_strerror(rapi_error));
+	return NULL;
       }
     }
   }
@@ -331,18 +366,24 @@ get_install_dir(gchar **install_dir, gchar **error_message)
     CeFindClose(handle);
   } else {
     if (FAILED(hr = CeRapiGetError())) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(hr));
       g_free(path);
-      return SYNCE_AM_RAPI_TERM_ERROR;
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		  _("Unable to determine installer directory: %s"),
+		  synce_strerror(hr));
+      return NULL;
     }
 
-    error = CeGetLastError();
-    if (error != ERROR_PATH_NOT_FOUND) {
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(error));
+    rapi_error = CeGetLastError();
+    if (rapi_error != ERROR_PATH_NOT_FOUND) {
       g_free(path);
-      return SYNCE_AM_RAPI_ERROR;
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI,
+		  _("Unable to determine installer directory: %s"),
+		  synce_strerror(rapi_error));
+      return NULL;
     }
 
     wide_path = wstr_from_utf8(path);
@@ -351,47 +392,56 @@ get_install_dir(gchar **install_dir, gchar **error_message)
     wstr_free_string(wide_path);
     if (!result) {
       if (FAILED(hr = CeRapiGetError())) {
-	if (error_message)
-	  *error_message = g_strdup(synce_strerror(hr));
 	g_free(path);
-	return SYNCE_AM_RAPI_TERM_ERROR;
+	g_set_error(error,
+		    SYNCE_APP_MAN_ERROR,
+		    SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		    _("Unable to determine installer directory: %s"),
+		    synce_strerror(hr));
+	return NULL;
       }
 
-      error = CeGetLastError();
-      if (error_message)
-	*error_message = g_strdup(synce_strerror(error));
+      rapi_error = CeGetLastError();
       g_free(path);
-      return SYNCE_AM_RAPI_ERROR;
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI,
+		  _("Unable to determine installer directory: %s"),
+		  synce_strerror(rapi_error));
+      return NULL;
     }
   }
 
   g_debug("%s: install dir is %s", G_STRFUNC, path);
-  *install_dir = path;
-
-  return SYNCE_AM_OK;
+  return path;
 }
 
 
-static SynceAppManResult
-copy_to_device(const gchar *source, const gchar *dest_dir, gchar **error_return, SynceAppManBusyFunc busy_func, gpointer busy_data)
+static gboolean
+copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
-  SynceAppManResult result = SYNCE_AM_OK;
+  gboolean result = TRUE;
   gsize bytes_read;
   guchar* buffer = NULL;
   WCHAR* wide_filename = NULL;
   HANDLE dest_handle;
   HRESULT hr;
-  DWORD error;
+  DWORD rapi_error;
   BOOL retval;
   DWORD bytes_written;;
   FILE *src_handle;
   gint errnum;
 
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
   if (!(buffer = (guchar *) g_malloc(BUFFER_SIZE))) {
-    g_warning("%s: %s", _("Failed to allocate file copy buffer"), G_STRFUNC);
-    if (error_return)
-      *error_return = g_strdup(_("Failed to allocate file copy buffer"));
-    result = SYNCE_AM_FAILED;
+    g_warning("%s: Failed to allocate file copy buffer", G_STRFUNC);
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_FAILED,
+		_("Failed to copy file \"%s\" to device: failed to allocate buffer"),
+		source);
+    result = FALSE;
     goto exit;
   }
 
@@ -405,25 +455,37 @@ copy_to_device(const gchar *source, const gchar *dest_dir, gchar **error_return,
   wstr_free_string(wide_filename);
   if (INVALID_HANDLE_VALUE == dest_handle) {
     if (FAILED(hr = CeRapiGetError())) {
-      if (error_return)
-	*error_return = g_strdup_printf(_("Failed to open destination file: %s"), synce_strerror(hr));
-      result = SYNCE_AM_RAPI_TERM_ERROR;
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		  _("Failed to copy file \"%s\" to device: failed to open destination file: %s"),
+		  source,
+		  synce_strerror(hr));
+      result = FALSE;
       goto exit;
     }
 
-    error = CeGetLastError();
-    if (error_return)
-      *error_return = g_strdup_printf(_("Failed to open destination file: %s"), synce_strerror(error));
-    result = SYNCE_AM_RAPI_ERROR;
+    rapi_error = CeGetLastError();
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Failed to copy file \"%s\" to device: failed to open destination file: %s"),
+		source,
+		synce_strerror(rapi_error));
+    result = FALSE;
     goto exit;
   }
 
   src_handle = fopen(source, "r");
   if (src_handle == NULL) {
     errnum = errno;
-    if (error_return)
-      *error_return = g_strdup_printf(_("Failed to open source file: %s"), g_strerror(errnum));
-    result = SYNCE_AM_FAILED;
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_FAILED,
+		_("Failed to copy file \"%s\" to device: failed to open source file: %s"),
+		source,
+		g_strerror(errnum));
+    result = FALSE;
     goto exit;
   }
 
@@ -435,9 +497,12 @@ copy_to_device(const gchar *source, const gchar *dest_dir, gchar **error_return,
       bytes_read = fread(buffer, 1, BUFFER_SIZE, src_handle);
       if (bytes_read != BUFFER_SIZE) {
 	if (ferror(src_handle)) {
-	  if (error_return)
-	    *error_return = g_strdup(_("Failed to read from source file"));
-	  result = SYNCE_AM_FAILED;
+	  g_set_error(error,
+		      SYNCE_APP_MAN_ERROR,
+		      SYNCE_APP_MAN_ERROR_FAILED,
+		      _("Failed to copy file \"%s\" to device: failed to read from source file"),
+		      source);
+	  result = FALSE;
 	  goto exit;
 	}
 
@@ -447,26 +512,36 @@ copy_to_device(const gchar *source, const gchar *dest_dir, gchar **error_return,
       retval = CeWriteFile(dest_handle, buffer, bytes_read, &bytes_written, NULL);
       if (!retval) {
 	if (FAILED(hr = CeRapiGetError())) {
-	  if (error_return)
-	    *error_return = g_strdup_printf(_("Failed to write to destination file: %s"), synce_strerror(hr));
-	  result = SYNCE_AM_RAPI_TERM_ERROR;
+	  g_set_error(error,
+		      SYNCE_APP_MAN_ERROR,
+		      SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		      _("Failed to copy file \"%s\" to device: failed to write to destination file: %s"),
+		      source,
+		      synce_strerror(hr));
+	  result = FALSE;
 	  goto exit;
 	}
 
-	error = CeGetLastError();
-	if (error_return)
-	  *error_return = g_strdup_printf(_("Failed to write to destination file: %s"), synce_strerror(error));
-	result = SYNCE_AM_RAPI_ERROR;
+	rapi_error = CeGetLastError();
+	g_set_error(error,
+		    SYNCE_APP_MAN_ERROR,
+		    SYNCE_APP_MAN_ERROR_RAPI,
+		    _("Failed to copy file \"%s\" to device: failed to write to destination file: %s"),
+		    source,
+		    synce_strerror(rapi_error));
+	result = FALSE;
 	goto exit;
       }
 
       if (bytes_written != bytes_read) {
-	if (error_return)
-	  *error_return = g_strdup(_("Failed to write to destination file"));
-	result = SYNCE_AM_FAILED;
+	g_set_error(error,
+		    SYNCE_APP_MAN_ERROR,
+		    SYNCE_APP_MAN_ERROR_FAILED,
+		    _("Failed to copy file \"%s\" to device: failed to write to destination file"),
+		    source);
+	result = FALSE;
 	goto exit;
       }
-
     }
 
 exit:
@@ -482,18 +557,19 @@ exit:
 }
 
 
-SynceAppManResult
-synce_app_man_install(const gchar *filepath, gchar **error_message, SynceAppManBusyFunc busy_func, gpointer busy_data)
+gboolean
+synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
-  gchar *error_str = NULL;
   gchar *install_path = NULL;
   SYSTEM_INFO system;
-  SynceAppManResult result;
+  gboolean result;
   WCHAR* wide_program = NULL;
   PROCESS_INFORMATION info;
   BOOL rapi_res;
   HRESULT hr;
-  DWORD error;
+  DWORD rapi_error;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   if (busy_func)
     (*busy_func)(busy_data);
@@ -503,18 +579,19 @@ synce_app_man_install(const gchar *filepath, gchar **error_message, SynceAppManB
 
   GList *cab_list = extract_with_orange(filepath, "/tmp", system.dwProcessorType);
   if (!cab_list) {
-    if (error_message)
-      *error_message = g_strdup(_("No CAB files found"));
-    return SYNCE_AM_INVALID_INSTALL_FILE;
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_INVALID_INSTALL_FILE,
+		_("No CAB files found"));
+    return FALSE;
   }
 
   /* Do some install things */
 
-  result = get_install_dir(&install_path, &error_str);
-  if (result != SYNCE_AM_OK) {
-    if (error_message)
-      *error_message = g_strdup_printf(_("Unable to determine installation directory on device: %s"), error_str);
-    return result;
+  install_path = get_install_dir(error);
+  if (!install_path) {
+    result = FALSE;
+    goto exit;
   }
 
   GList *tmplist = g_list_first(cab_list);
@@ -522,10 +599,9 @@ synce_app_man_install(const gchar *filepath, gchar **error_message, SynceAppManB
     gchar *cabname = tmplist->data;
     g_debug("%s: copying file %s to device", G_STRFUNC, cabname);
 
-    if ((result = copy_to_device(cabname, install_path, &error_str, busy_func, busy_data)) != SYNCE_AM_OK) {
-      if (error_message)
-	*error_message = g_strdup_printf(_("Failed to copy file \"%s\" to device: %s"), cabname, error_str);
-      return result;
+    if (!copy_to_device(cabname, install_path, busy_func, busy_data, error)) {
+      result = FALSE;
+      goto exit;
     }
 
     tmplist = g_list_next(tmplist);
@@ -544,21 +620,27 @@ synce_app_man_install(const gchar *filepath, gchar **error_message, SynceAppManB
 
   if (!rapi_res) {
     if (FAILED(hr = CeRapiGetError())) {
-      if (error_message)
-	*error_message = g_strdup_printf(_("Failed to execute installer: %s"), synce_strerror(hr));
-      result = SYNCE_AM_RAPI_TERM_ERROR;
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		  _("Failed to execute installer: %s"),
+		  synce_strerror(hr));
+      result = FALSE;
       goto exit;
     }
 
-    error = CeGetLastError();
-    if (error_message)
-      *error_message = g_strdup_printf(_("Failed to execute installer: %s"), synce_strerror(error));
-    result = SYNCE_AM_RAPI_ERROR;
+    rapi_error = CeGetLastError();
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Failed to execute installer: %s"),
+		synce_strerror(rapi_error));
+    result = FALSE;
     goto exit;
   }
 
   g_debug("%s: successfully installed %s on device", G_STRFUNC, filepath);
-  result = SYNCE_AM_OK;
+  result = TRUE;
 
 exit:
 
@@ -571,11 +653,11 @@ exit:
   return result;
 }
 
-SynceAppManResult
-synce_app_man_uninstall(const gchar *program, gchar **error_message)
+gboolean
+synce_app_man_uninstall(const gchar *program, GError **error)
 {
   HRESULT hr;
-  DWORD error;
+  DWORD rapi_error;
   BOOL result;
   gchar *tmp = NULL;
 
@@ -590,6 +672,8 @@ synce_app_man_uninstall(const gchar *program, gchar **error_message)
   LPWSTR config = NULL;
   DWORD flags = CONFIG_PROCESS_DOCUMENT;
   LPWSTR reply = NULL;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   g_debug("%s: requested removal of program %s", G_STRFUNC, program);
 
@@ -610,18 +694,24 @@ synce_app_man_uninstall(const gchar *program, gchar **error_message)
   g_free(command);
 
   if (result)
-    return SYNCE_AM_OK;
+    return TRUE;
 
   if (FAILED(hr = CeRapiGetError())) {
-    if (error_message)
-      *error_message = g_strdup_printf(_("Failed to execute uninstaller: %s"), synce_strerror(hr));
-    return SYNCE_AM_RAPI_TERM_ERROR;
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		_("Failed to execute uninstaller: %s"),
+		synce_strerror(hr));
+    return FALSE;
   }
 
-  if ((error = CeGetLastError()) != ERROR_FILE_NOT_FOUND) {
-    if (error_message)
-      *error_message = g_strdup_printf(_("Failed to execute uninstaller: %s"), synce_strerror(hr));
-    return SYNCE_AM_RAPI_ERROR;
+  if ((rapi_error = CeGetLastError()) != ERROR_FILE_NOT_FOUND) {
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Failed to execute uninstaller: %s"),
+		synce_strerror(rapi_error));
+    return FALSE;
   }
 
   /* Failed to start unload.exe, trying to uninstall via Configuration Service Provider ... */
@@ -638,14 +728,16 @@ synce_app_man_uninstall(const gchar *program, gchar **error_message)
 
   if (SUCCEEDED(hr)) {
     wstr_free_string(reply);
-    return SYNCE_AM_OK;
+    return TRUE;
   }
 
-  if (error_message) {
-    tmp = wstr_to_current(reply);
-    *error_message = g_strdup_printf(_("Failed to uninstall application: %s"), tmp);
-    g_free(tmp);
-  }
+  tmp = wstr_to_current(reply);
+  g_set_error(error,
+	      SYNCE_APP_MAN_ERROR,
+	      SYNCE_APP_MAN_ERROR_RAPI,
+	      _("Failed to uninstall application: %s"),
+	      tmp);
+  g_free(tmp);
   wstr_free_string(reply);
-  return SYNCE_AM_RAPI_ERROR;
+  return FALSE;
 }

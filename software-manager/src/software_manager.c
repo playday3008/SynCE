@@ -107,13 +107,45 @@ progress_bar_pulse(gpointer data)
   }
 }
 
+GtkWidget *
+busy_window_new(const gchar *title, const gchar *message, GtkWidget **progressbar)
+{
+  GtkWidget *window, *hbox, *image, *vbox, *label;
+
+  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(window), title);
+  gtk_container_set_border_width(GTK_CONTAINER(window), 14);
+
+  hbox = gtk_hbox_new(FALSE, 10);
+  gtk_container_add(GTK_CONTAINER(window), hbox);
+
+  image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
+  gtk_container_add(GTK_CONTAINER(hbox), image);
+
+  vbox = gtk_vbox_new(FALSE, 10);
+  gtk_container_add(GTK_CONTAINER(hbox), vbox);
+
+  label = gtk_label_new(message);
+  gtk_container_add(GTK_CONTAINER(vbox), label);
+
+  *progressbar = gtk_progress_bar_new();
+  gtk_container_add(GTK_CONTAINER(vbox), *progressbar);
+
+  return window;
+}
+
 static void
 programs_selection_changed (GtkTreeSelection *selection, gpointer user_data) 
 {
+  SynceSoftwareManager *self = SYNCE_SOFTWARE_MANAGER(user_data);
+  SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
+
   GtkTreeIter iter;
   GtkTreeModel *model;
   gint number;
   gchar *program;
+
+  GtkWidget *remove_button = glade_xml_get_widget(priv->gladefile, "remove_button");
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
     gtk_tree_model_get (model, &iter,
@@ -122,6 +154,9 @@ programs_selection_changed (GtkTreeSelection *selection, gpointer user_data)
 			-1);
     g_debug("%s: selected %d: %s", G_STRFUNC, number, program);
     g_free (program);
+    gtk_widget_set_sensitive(remove_button, TRUE);
+  } else {
+    gtk_widget_set_sensitive(remove_button, FALSE);
   }
 }
 
@@ -129,26 +164,22 @@ static void
 setup_programs_treeview_store(SynceSoftwareManager *self) 
 {
   SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
-  GtkWidget *programs_treeview = glade_xml_get_widget(priv->gladefile,"programs_treeview");
+  GtkWidget *programs_treeview = glade_xml_get_widget(priv->gladefile, "programs_treeview");
+  GtkWidget *remove_button = glade_xml_get_widget(priv->gladefile, "remove_button");
 
   GtkListStore *store = gtk_list_store_new (N_COLUMNS,
 					    G_TYPE_INT,     /* index */
 					    G_TYPE_STRING); /* program name */
   GtkTreeIter iter;
-  GladeXML *gladefile = NULL;
-  GtkWidget *fetchwindow, *progressbar, *fetchlabel;
+  GtkWidget *fetchwindow, *progressbar;
   GList *programlist = NULL;
   GList *tmplist = NULL;
   int i = 0;
-  gchar *error = NULL;
-  SynceAppManResult result;
+  GError *error = NULL;
+  gboolean result;
 
-  gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "fetchwindow", NULL); 
-  fetchwindow = glade_xml_get_widget(gladefile,"fetchwindow");
-  progressbar = glade_xml_get_widget(gladefile,"fetch_progressbar");
-  fetchlabel = glade_xml_get_widget(gladefile,"fetch_window_label");
+  fetchwindow = busy_window_new(_("Fetching information..."), _("Fetching the list of installed applications from the PDA."), &progressbar);
 
-  gtk_label_set_text(GTK_LABEL(fetchlabel), _("Fetching the list of installed applications from the PDA."));
   gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
   gtk_widget_show_all(fetchwindow);
 
@@ -156,11 +187,12 @@ setup_programs_treeview_store(SynceSoftwareManager *self)
     gtk_main_iteration_do(FALSE);
   }
 
-  result = synce_app_man_create_program_list(&programlist, &error, progress_bar_pulse, progressbar);
-  if (result != SYNCE_AM_OK) {
-    synce_error_dialog(_("Couldn't fetch the list of applications from the device: %s"), error);
-    g_free(error);
+  result = synce_app_man_create_program_list(&programlist, progress_bar_pulse, progressbar, &error);
+  if (!result) {
+    synce_error_dialog(_("Couldn't fetch the list of applications from the device: %s"), error->message);
+    g_error_free(error);
   }
+  gtk_widget_destroy(fetchwindow);
 
   tmplist = programlist;
 
@@ -187,7 +219,8 @@ setup_programs_treeview_store(SynceSoftwareManager *self)
     tmplist = g_list_next(tmplist);    
   }
   g_list_free(programlist);
-  gtk_widget_destroy(fetchwindow);
+
+  gtk_widget_set_sensitive(remove_button, FALSE);
 }
 
 static void
@@ -227,7 +260,7 @@ setup_programs_treeview(SynceSoftwareManager *self)
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (programs_treeview));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (selection), "changed",
-		    G_CALLBACK (programs_selection_changed),NULL);
+		    G_CALLBACK (programs_selection_changed), self);
 
   gtk_widget_show (programs_treeview);
 }
@@ -239,33 +272,27 @@ on_add_button_clicked(GtkButton *button, gpointer user_data)
   SynceSoftwareManager *self = SYNCE_SOFTWARE_MANAGER(user_data);
   SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
 
-  GladeXML *install_xml, *fetch_xml;
-  GtkWidget *installdialog, *file_entry;
-  GtkWidget *fetchwindow, *progressbar, *fetchlabel;
+  GtkWidget *installdialog;
+  GtkWidget *fetchwindow, *progressbar;
   gchar *filepath;
   gint response;
-  gchar *error = NULL;
+  GError *error = NULL;
   gchar *message = NULL;
-  SynceAppManResult result;
+  gboolean result;
 
-  install_xml = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "installdialog", NULL); 
-  fetch_xml = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, "fetchwindow", NULL); 
-
-  installdialog = glade_xml_get_widget(install_xml, "installdialog");
-  file_entry = glade_xml_get_widget(install_xml, "file_entry");
-
-  fetchwindow = glade_xml_get_widget(fetch_xml, "fetchwindow");
-  progressbar = glade_xml_get_widget(fetch_xml, "fetch_progressbar");
-  fetchlabel = glade_xml_get_widget(fetch_xml, "fetch_window_label");
-
+  installdialog = gtk_file_chooser_dialog_new (_("Select installation file"),
+					       NULL,
+					       GTK_FILE_CHOOSER_ACTION_OPEN,
+					       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+					       GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+					       NULL);
   response = gtk_dialog_run (GTK_DIALOG (installdialog));
-  filepath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_entry));
-  gtk_widget_hide_all (installdialog);
+  filepath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(installdialog));
+  gtk_widget_destroy (installdialog);
 
-  if (response == GTK_RESPONSE_APPLY) {
-    gtk_window_set_title(GTK_WINDOW(fetchwindow), _("Installing Software..."));
+  if (response == GTK_RESPONSE_ACCEPT) {
     message = g_strdup_printf(_("Installing from file \"%s\"..."), filepath);
-    gtk_label_set_text(GTK_LABEL(fetchlabel), message);
+    fetchwindow = busy_window_new(_("Installing Software..."), message, &progressbar);
     g_free(message);
 
     gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
@@ -276,24 +303,19 @@ on_add_button_clicked(GtkButton *button, gpointer user_data)
     }
 
     g_debug("%s: requested installation of file %s", G_STRFUNC, filepath);
-    result = synce_app_man_install(filepath, &error, progress_bar_pulse, progressbar);
+    result = synce_app_man_install(filepath, progress_bar_pulse, progressbar, &error);
 
     gtk_widget_hide_all(fetchwindow);
-    if (result != SYNCE_AM_OK) {
-      synce_error_dialog(_("Failed to install from file %s: %s"), filepath, error);
-      g_free(error);
+    gtk_widget_destroy(fetchwindow);
+    if (!result) {
+      synce_error_dialog(_("Failed to install from file %s: %s"), filepath, error->message);
+      g_error_free(error);
     } else {
       synce_info_dialog(_("Successfully started installation of file \"%s\". Check your device to see if any additional steps are required. The program list must be manually refreshed after installation has completed."), filepath);
     }
   }
 
-  gtk_widget_destroy (installdialog);
   g_free(filepath);
-
-  gtk_widget_destroy(fetchwindow);
-
-  g_object_unref(install_xml);
-  g_object_unref(fetch_xml);
 }
 
 
@@ -309,8 +331,7 @@ on_remove_button_clicked(GtkButton *button, gpointer user_data)
   GtkTreeSelection *selection;
   gint number;
   gchar *program = NULL;
-  gchar *error_message = NULL;
-  SynceAppManResult result;
+  GError *error = NULL;
 
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(programs_treeview));
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
@@ -320,14 +341,14 @@ on_remove_button_clicked(GtkButton *button, gpointer user_data)
 			  INDEX_COLUMN, &number,
 			  -1);
 
-      if ((result = synce_app_man_uninstall(program, &error_message)) == SYNCE_AM_OK) {
+      if (synce_app_man_uninstall(program, &error)) {
 	g_debug("%s: successfully removed program %s", G_STRFUNC, program);
 	synce_info_dialog(_("The program \"%s\" was successfully removed."), program);
 	setup_programs_treeview_store(self);
       } else {
-	g_warning("%s: failed to remove program %s: %s", G_STRFUNC, program, error_message);
-	synce_error_dialog(_("The program \"%s\" could not be removed: %s"), program, error_message);
-	g_free(error_message);
+	g_warning("%s: failed to remove program %s: %s", G_STRFUNC, program, error->message);
+	synce_error_dialog(_("The program \"%s\" could not be removed: %s"), program, error->message);
+	g_error_free(error);
       }
       g_free (program);
     }
@@ -340,7 +361,6 @@ on_refresh_button_clicked(GtkButton *button, gpointer user_data)
   SynceSoftwareManagerPrivate *priv = SYNCE_SOFTWARE_MANAGER_GET_PRIVATE (self);
 
   GtkWidget *add_button = glade_xml_get_widget(priv->gladefile,"add_button");
-  GtkWidget *remove_button = glade_xml_get_widget(priv->gladefile,"remove_button");
 
   if (!(priv->connected)) {
     HRESULT hr;
@@ -354,7 +374,6 @@ on_refresh_button_clicked(GtkButton *button, gpointer user_data)
     }
     priv->connected = TRUE;
     gtk_widget_set_sensitive(add_button, priv->connected);
-    gtk_widget_set_sensitive(remove_button, priv->connected);
   }
 
   setup_programs_treeview_store(self);
@@ -417,7 +436,6 @@ synce_software_manager_init(SynceSoftwareManager *self)
     priv->connected = TRUE;
   }
   gtk_widget_set_sensitive(add_button, priv->connected);
-  gtk_widget_set_sensitive(remove_button, priv->connected);
 
   setup_programs_treeview(self);
 

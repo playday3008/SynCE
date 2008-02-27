@@ -41,8 +41,8 @@ on_mainwindow_destroy(GtkWidget *widget, gpointer user_data){
 int
 main (int argc, char **argv)
 {
-    GladeXML *gladefile = NULL;
     GtkWidget *mainwindow;
+    GnomeProgram *app;
     SynceSoftwareManager *software_manager;
     gint result = 0;
 
@@ -52,20 +52,18 @@ main (int argc, char **argv)
     textdomain (GETTEXT_PACKAGE);
 #endif
 
-    gnome_program_init(PACKAGE, VERSION,
-		       LIBGNOME_MODULE,
-		       argc, argv,
-		       GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce Software Manager"),
-		       GNOME_PROGRAM_STANDARD_PROPERTIES,
-		       NULL);
+    app = gnome_program_init(PACKAGE, VERSION,
+			     LIBGNOME_MODULE,
+			     argc, argv,
+			     GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce Software Manager"),
+			     GNOME_PROGRAM_STANDARD_PROPERTIES,
+			     NULL);
 
     gtk_init (&argc, &argv);
     glade_init ();
 
-    gladefile = glade_xml_new(SYNCE_SOFTWARE_MANAGER_GLADEFILE, 
-			      "mainwindow", NULL); 
-
-    mainwindow = glade_xml_get_widget(gladefile,"mainwindow");
+    mainwindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(mainwindow), gnome_program_get_human_readable_name(app));
 
     g_signal_connect (G_OBJECT(mainwindow),"destroy",
 		      G_CALLBACK(on_mainwindow_destroy),NULL);

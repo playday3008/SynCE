@@ -22,24 +22,27 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  SYNCE_AM_OK,
-  SYNCE_AM_FAILED,
-  SYNCE_AM_RAPI_ERROR,
-  SYNCE_AM_RAPI_TERM_ERROR,
-  SYNCE_AM_INVALID_INSTALL_FILE,
-  SYNCE_AM_INVALID_PATH
-} SynceAppManResult;
+  SYNCE_APP_MAN_ERROR_FAILED,
+  SYNCE_APP_MAN_ERROR_RAPI,
+  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+  SYNCE_APP_MAN_ERROR_INVALID_INSTALL_FILE,
+  SYNCE_APP_MAN_ERROR_INVALID_PATH
+} SynceAppManError;
+
+GQuark synce_app_man_error_quark (void);
+#define SYNCE_APP_MAN_ERROR synce_app_man_error_quark ()
+
 
 typedef void (*SynceAppManBusyFunc) (gpointer user_data);
 
-SynceAppManResult
-synce_app_man_install(const gchar *filepath, gchar **error_message, SynceAppManBusyFunc func, gpointer busy_data);
+gboolean
+synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc func, gpointer busy_data, GError **error);
 
-SynceAppManResult
-synce_app_man_uninstall(const gchar *program, gchar **error_message);
+gboolean
+synce_app_man_uninstall(const gchar *program, GError **error);
 
-SynceAppManResult
-synce_app_man_create_program_list(GList **list, gchar **error_message, SynceAppManBusyFunc func, gpointer busy_data);
+gboolean
+synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc func, gpointer busy_data, GError **error);
 
 G_END_DECLS
 
