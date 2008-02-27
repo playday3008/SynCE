@@ -233,8 +233,6 @@ class RegKey:
         cdef LPWSTR sub_key_w
         cdef LPWSTR key_class_w
 
-        raise RAPIError(3)
-
         if sub_key != None:
             sub_key_w = wstr_from_utf8(sub_key)
         else:
