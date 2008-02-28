@@ -217,49 +217,14 @@ odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
   }
 
   g_object_get(device, "name", &name, NULL);
-  while (i < priv->dev_proxies->len) {
-    if (!(g_ascii_strcasecmp(name, ((proxy_store *)g_ptr_array_index(priv->dev_proxies, i))->pdaname))) {
-      p_store = (proxy_store *)g_ptr_array_index(priv->dev_proxies, i);
-      break;
-    }
-    i++;
-  }
-  if (!p_store) {
-    g_critical("%s: called for unfound device %s", G_STRFUNC, name);
-    g_free(name);
-    return FALSE;
-  }
-  g_free(name);
-
-  if (!(dbus_g_proxy_call(p_store->proxy, "RequestConnection",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_STRING, &unix_path,
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Failed to request a connection: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return FALSE;
-  }
-
-  SynceInfo *info = (SynceInfo *) g_malloc0(sizeof(SynceInfo));
-  info->fd = get_rapi_socket_from_odccm(unix_path);
-  g_free(unix_path);
-
-  if (info->fd < 0) {
-    g_warning("%s: Failed to get file descriptor from odccm", G_STRFUNC);
-    g_free(info);
-    return FALSE;
-  }
-
-  info->transport = g_strdup("odccm");
-
-  rapi_conn = rapi_connection_from_info(info);
+  rapi_conn = rapi_connection_from_name(name);
 
   rapi_connection_select(rapi_conn);
   CeRapiInit();
 
   hr = CeRapiInit();
   if (FAILED(hr)) {
-    g_critical("%s: Rapi connection to %s failed: %d: %s", G_STRFUNC, info->name, hr, synce_strerror(hr));
+    g_critical("%s: Rapi connection to %s failed: %d: %s", G_STRFUNC, name, hr, synce_strerror(hr));
     rapi_connection_destroy(rapi_conn);
     goto error_exit;;
   }
@@ -274,10 +239,11 @@ odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
   g_object_set(device, "rapi-conn", rapi_conn, NULL);
   g_object_set(device, "device-name", device_name, NULL);
   g_free(device_name);
+  g_free(name);
 
   return TRUE;
 error_exit:
-  synce_info_destroy(info);
+  g_free(name);
   return FALSE;
 }
 

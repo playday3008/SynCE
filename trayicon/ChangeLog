@@ -1,6 +1,8 @@
 2008-02-28  Mark Ellis <mark@mpellis.org.uk>
 
 	* report type of rapi errors in get_device_name_via_rapi()
+	* get rapi_conn from odccm via rapi_connection_from_name(),
+	  fixes WM5 connections
 
 2008-02-20  Mark Ellis <mark@mpellis.org.uk>
 
