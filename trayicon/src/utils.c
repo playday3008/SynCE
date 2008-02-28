@@ -183,7 +183,7 @@ get_device_name_via_rapi()
   wstr_free_string(key_name);
 
   if (result != ERROR_SUCCESS) {
-    g_critical("%s: CeRegOpenKeyEx failed getting device name", G_STRFUNC);
+    g_critical("%s: CeRegOpenKeyEx failed getting device name: %s", G_STRFUNC, synce_strerror(result));
     return NULL;
   }
 
@@ -194,7 +194,7 @@ get_device_name_via_rapi()
   wstr_free_string(key_name);
 
   if (result != ERROR_SUCCESS) {
-    g_critical("%s: CeRegQueryValueEx failed getting device name", G_STRFUNC);
+    g_critical("%s: CeRegQueryValueEx failed getting device name: %s", G_STRFUNC, synce_strerror(result));
     return NULL;
   }
 
