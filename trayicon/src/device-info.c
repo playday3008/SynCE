@@ -277,7 +277,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   guint32 index;
   gboolean result;
   GPtrArray* partnership_list;
-  GError *error;
+  GError *error = NULL;
   DBusGConnection *dbus_connection = NULL;
   DBusGProxy *sync_engine_proxy = NULL;
 

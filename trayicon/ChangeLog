@@ -3,6 +3,7 @@
 	* report type of rapi errors in get_device_name_via_rapi()
 	* get rapi_conn from odccm via rapi_connection_from_name(),
 	  fixes WM5 connections
+	* initialize GError in partners_setup_view_store_synceng()
 
 2008-02-20  Mark Ellis <mark@mpellis.org.uk>
 
