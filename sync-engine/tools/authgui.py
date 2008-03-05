@@ -91,6 +91,6 @@ class AuthGui:
 if len(sys.argv) > 1:
 	devobjpath = sys.argv[1]
 	app = AuthGui(devobjpath)
-	exit(app.Authorize())
+	sys.exit(app.Authorize())
 else:
-	exit(0)
+	sys.exit(0)

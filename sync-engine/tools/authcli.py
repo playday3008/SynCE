@@ -57,6 +57,6 @@ class AuthCli:
 if len(sys.argv) > 1:
 	devobjpath = sys.argv[1]
 	app = AuthCli(devobjpath)
-	exit(app.Authorize())
+	sys.exit(app.Authorize())
 else:
-	exit(0)
+	sys.exit(0)

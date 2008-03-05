@@ -756,4 +756,12 @@ such as sync-engine not running, or a device not connected correctly.
 Updates to errors.py augment the error handling structure.
 
 
+05/03/2008 - 180700 Guido Diepen
+------------------------------
+
+Fixed some missing sys. prefixes before the exit statements in the
+tools.
+Using exit(0) will give the following error: 
+    TypeError: 'str' object is not callable
+
 

@@ -26,12 +26,12 @@ try:
 except:
 	print "\nerror: unable to connect to running sync-engine"
 	print "\nPlease ensure sync-engine is running before executing this command\n"
-	exit(1)
+	sys.exit(1)
 	
 if len(sys.argv) != 3:
 	print "\nerror: Invalid argument count\n"
 	PrintUsage()	
-	exit(1)
+	sys.exit(1)
 
 name_to_id = {}
 for id, name in itypes:
@@ -45,7 +45,7 @@ for token in sys.argv[2].split(","):
 	else:
 		print "\nerror: Invalid sync item type \"%s\"\n" % name
 		PrintUsage()
-		exit(1)
+		sys.exit(1)
 
 try:
 
@@ -68,5 +68,5 @@ except dbus.DBusException,e:
 		print e
 	else:
 		print "error: %s" % e._dbus_error_name
-	exit(1)
+	sys.exit(1)
 

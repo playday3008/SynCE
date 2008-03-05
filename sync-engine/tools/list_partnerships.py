@@ -12,7 +12,7 @@ try:
 except:
 	print "\nerror: unable to connect to running sync-engine"
 	print "\nPlease ensure sync-engine is running before executing this command\n"
-	exit(1)
+	sys.exit(1)
 
 try:
 	partnerships = engine.GetPartnerships()
@@ -46,7 +46,7 @@ except dbus.DBusException,e:
 		print e
 	else:
 		print "error: %s" % e._dbus_error_name
-	exit(0)
+	sys.exit(0)
 
 
 

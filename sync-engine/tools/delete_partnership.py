@@ -11,7 +11,7 @@ try:
 except:
 	print "\nerror: unable to connect to running sync-engine"
 	print "\nPlease ensure sync-engine is running before executing this command\n"
-	exit(1)
+	sys.exit(1)
 
 try:
 	pships = engine.GetPartnerships()
@@ -44,7 +44,7 @@ try:
 		s=raw_input("Select index of partnership to delete, or empty to exit -")
 		if s=="":
 			print "No partnership selected, exitting"
-			exit(0)
+			sys.exit(0)
 		try:
 			i=int(s)
 			if i > (idx-1):
@@ -74,6 +74,6 @@ except dbus.DBusException,e:
 			print e
 		else:
 			print "error: %s" % e._dbus_error_name
-		exit(0)
+		sys.exit(0)
 
 	

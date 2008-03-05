@@ -12,7 +12,7 @@ try:
 	engine = dbus.Interface(dbus.SessionBus().get_object(DBUS_SYNCENGINE_BUSNAME, DBUS_SYNCENGINE_OBJPATH), DBUS_SYNCENGINE_BUSNAME)
 except:
 	print "error: unable to connect to running sync-engine"
-	exit(1)
+	sys.exit(1)
 
 try:
 	bindings = engine.GetPartnershipBindings()
@@ -20,7 +20,7 @@ try:
 except Exception,e:
 	print "error: failed to query information from sync-engine"
 	print "   %s" % e
-	exit(1)
+	sys.exit(1)
 
 print
 print "AVAILABLE HOST BINDINGS"
@@ -45,7 +45,7 @@ print
 while i==-1:
 	s=raw_input("Select index of binding to configure, or empty to exit -")
 	if s=="":
-		exit(0)
+		sys.exit(0)
 	try:
 		i=int(s)
 		if i > (idx-1):
@@ -64,7 +64,7 @@ try:
 except Exception,e:
 	print "error: unable to query binding configuration"
 	print "    %s" % e
-	exit(1)
+	sys.exit(1)
 
 # Now create the file for config. This is nasty and there must be a better way
 # than this....
@@ -80,12 +80,12 @@ try:
 	f.close()
 except Exception, e:
 	print "error: problem reading/writing temporary files"
-	exit(1)
+	sys.exit(1)
 
 try:
 	engine.SetBindingConfig(id,guid,string)
 except Exception, e:
 	print "error: unable to set binding configuration"
-	exit(1)
+	sys.exit(1)
 
 
