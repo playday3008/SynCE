@@ -688,7 +688,7 @@ fill:
 
 
 static const struct driver_info	rndis_info = {
-	.description =	"RNDIS device",
+	.description =	"RNDIS device (SynCE patched)",
 	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
 	.bind =		rndis_bind,
 	.unbind =	rndis_unbind,
