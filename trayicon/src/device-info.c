@@ -287,7 +287,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 					    G_TYPE_UINT,    /* partner id */
 					    G_TYPE_STRING); /* partner name */
 
-  dbus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
   if (dbus_connection == NULL) {
     g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
     g_error_free (error);
