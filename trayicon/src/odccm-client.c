@@ -218,13 +218,17 @@ odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
 
   g_object_get(device, "name", &name, NULL);
   rapi_conn = rapi_connection_from_name(name);
+  if (!rapi_conn) {
+    g_critical("%s: Failed to obtain rapi connection to %s", G_STRFUNC, name);
+    goto error_exit;;
+  }
 
   rapi_connection_select(rapi_conn);
   CeRapiInit();
 
   hr = CeRapiInit();
   if (FAILED(hr)) {
-    g_critical("%s: Rapi connection to %s failed: %d: %s", G_STRFUNC, name, hr, synce_strerror(hr));
+    g_critical("%s: Failed to initialise rapi connection to %s: %d: %s", G_STRFUNC, name, hr, synce_strerror(hr));
     rapi_connection_destroy(rapi_conn);
     goto error_exit;;
   }

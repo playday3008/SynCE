@@ -1,3 +1,8 @@
+2008-03-13  Mark Ellis <mark@mpellis.org.uk>
+
+	* don't try CeRapiInit if rapi_conn is NULL in odccm-client.c
+	  and hal-client.c
+
 2008-03-12  Mark Ellis <mark@mpellis.org.uk>
 
 	* connect to session bus, not system, for sync-engine
