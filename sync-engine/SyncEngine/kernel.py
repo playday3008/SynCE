@@ -900,7 +900,53 @@ class SyncEngine(dbus.service.Object):
 	# Message will be sent out on d-bus when remote synchronization with the itemDB is 
 	# complete. As with prefill, running asynchronously prevents a user tool from appearing
 	# to hang and also reduces the likelihood of d-bus timeouts
-
+	
 	@dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature='')
 	def Synchronized(self):
 		self.logger.info("Synchronized: Emitting Synchronized signal")
+
+
+
+
+
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='u')
+	def StatusSetMaxProgressValue(self, maxProgressValue):
+		self.logger.info("Status: Emitting StatusSetMaxProgressValue signal")
+
+	
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='u')
+	def StatusSetProgressValue(self, progressValue):
+		self.logger.info("Status: Emitting StatusSetProgressValue signal")
+
+
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='s')
+	def StatusSetStatusString(self, statusString):
+		self.logger.info("Status: Emitting StatusSetStatusString signal")
+
+
+
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='')
+	def StatusSyncStart(self):
+		self.logger.info("Status: Emitting StatusSyncStart signal")
+	
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='')
+	def StatusSyncEnd(self):
+		self.logger.info("Status: Emitting StatusSyncEnd signal")
+	
+	
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='s')
+	def StatusSyncStartPartner(self,partner):
+		self.logger.info("Status: Emitting StatusSyncStartPartner signal")
+	
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='s')
+	def StatusSyncEndPartner(self,partner):
+		self.logger.info("Status: Emitting StatusSyncEndPartner signal")
+	
+	
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='ss')
+	def StatusSyncStartDatatype(self,partner,datatype):
+		self.logger.info("Status: Emitting StatusSyncStartDatatype signal")
+	
+	@dbus.service.signal('org.synce.SyncEngine.Status', signature='ss')
+	def StatusSyncEndDatatype(self,partner,datatype):
+		self.logger.info("Status: Emitting StatusSyncEndDatatype signal")

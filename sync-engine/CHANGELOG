@@ -765,3 +765,36 @@ Using exit(0) will give the following error:
     TypeError: 'str' object is not callable
 
 
+15/03/2008 - 204500 Guido Diepen
+------------------------------
+
+Added D-Bus signals for notifying clients about the status of syncing.
+These signals have the base 
+org.synce.SyncEngine.Status
+and notify possible clients about the updates during the ActiveSync
+process that are shown on the screen of the device.
+
+The signals are:
+ * StatusSetMaxProgressValue(self, maxProgressValue):
+ 	The client must update the maximum value of the progress bar
+ * StatusSetProgressValue(self, progressValue):
+ 	The client must update the value of the progress bar
+ * StatusSetStatusString(self, statusString):
+ 	The client must update the string regarding what is done
+ * StatusSyncStart(self):
+ 	A Sync just got started. The client should update such that
+	it shows the sync is started.
+ * StatusSyncEnd(self):
+ 	A sync just finished. The client should update such that
+	it reverts to the state before the sync started (no progressbar etc)
+ * StatusSyncStartPartner(self,partner):
+ 	Denotes the sync of the given partnership just started
+ * StatusSyncEndPartner(self,partner):
+ 	Denotes the sync of the given partnership just finished
+ * StatusSyncStartDatatype(self,partner,datatype):
+ 	Denotes the sync of the given type of sync item of the given partnership 
+	just started
+ * StatusSyncEndDatatype(self,partner,datatype):
+ 	Denotes the sync of the given type of sync item of the given partnership 
+	just finished
+

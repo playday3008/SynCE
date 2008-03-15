@@ -415,6 +415,9 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         self.server.error_body = ""
                         self.server.error_title = ""
                         self.server.error_code = ""
+                        
+                        self.server.engine.StatusSyncStart()
+
 			
                     else:
 			    
@@ -424,6 +427,47 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         self.server.progress_max = 100
                         self.server.status = ""
                         self.server.status_type = ""
+                        
+                        self.server.engine.StatusSyncEnd()
+                elif self.server.datatype == "":
+                   
+					#This is to deal with the fact that not all partners have a name
+					#One example of this is the exchange partnership
+                    _my_partner = self.server.partner 
+                    for p in self.server.engine.PshipManager.GetList():
+                        if p.info.guid == self.server.partner:
+                            _my_partner = p.info.name
+
+
+
+                    if n.name == "SyncBegin":
+                        self.server.engine.StatusSyncStartPartner(_my_partner)
+                    else:
+                        self.server.engine.StatusSyncEndPartner(_my_partner)
+                
+                
+                else:
+                    _my_datatype = self.server.datatype
+
+                    if self.server.datatype in SYNC_ITEM_ID_FROM_GUID:
+                        _my_datatype = SYNC_ITEMS[ SYNC_ITEM_ID_FROM_GUID[ self.server.datatype ]][0]
+
+
+
+
+                    _my_partner = self.server.partner 
+                    for p in self.server.engine.PshipManager.GetList():
+                        if p.info.guid == self.server.partner:
+                            _my_partner = p.info.name
+
+
+
+
+                    if n.name == "SyncBegin":
+
+                        self.server.engine.StatusSyncStartDatatype(_my_partner, _my_datatype)
+                    else:
+                        self.server.engine.StatusSyncEndDatatype(_my_partner, _my_datatype)
 			
             elif n.name == "Status" and xml2util.GetNodeAttr(n,"Partner") == self.server.partner:
 		    
@@ -432,15 +476,18 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     if s.name == "Progress":
 			    
                         self.server.progress_current = int(xml2util.GetNodeAttr(s,"value"))
+                        self.server.engine.StatusSetProgressValue( self.server.progress_current )
 			
                     elif s.name == "Total":
 			    
                         self.server.progress_max = int(xml2util.GetNodeAttr(s,"value"))
+                        self.server.engine.StatusSetMaxProgressValue( self.server.progress_max )
 			
                     elif s.name == "StatusString":
 			    
                         self.server.status = xml2util.GetNodeAttr(s,"value")
                         self.server.status_type = xml2util.GetNodeAttr(s,"type")
+                        self.server.engine.StatusSetStatusString( self.server.status )
 			
             elif n.name == "Error" and xml2util.GetNodeAttr(n,"Partner") == self.server.partner:
 		    
@@ -505,3 +552,5 @@ class AirsyncThread(gobject.GObject, threading.Thread):
     def run(self):
         self.logger.debug("run: listening for Airsync requests")
         self.server.serve_forever()
+
+
