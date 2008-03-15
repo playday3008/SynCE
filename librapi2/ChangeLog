@@ -1,3 +1,8 @@
+2008-03-15  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Made librapi2 thread-safe by removing the static RapiContext. This is
+	  replaced by pthreads thread local storage. 
+
 2008-01-11  Guido Diepen  <guido@guidodiepen.nl>
 
 	* Added a non-blocking CeWriteFile (it will release GIL before starting)

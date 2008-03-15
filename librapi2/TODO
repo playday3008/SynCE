@@ -3,8 +3,6 @@ $Id$
 TODO for librapi2
 =================
 
-o Make it possible to build a thread-safe version of librapi
-
 o Fix bug in CeWriteRecordProps
 
 o Implement more of RAPI

@@ -113,6 +113,17 @@ else
 fi
 AM_CONDITIONAL(HAVE_PYTHON, test x$have_python = xyes)
 
+# checks for pthreads
+ACX_PTHREAD([enable_threads="pthread"],[enable_threads="no"])
+if test $enable_threads != "pthread"; then
+	AC_MSG_ERROR([unable to find pthreads, currently this is required])
+else
+	AC_DEFINE(HAVE_PTHREAD,1,[Define if you have POSIX threads libraries and header files.])
+	LIBS="$PTHREAD_LIBS $LIBS"
+	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+	CXXFLAGS="$PTHREAD_CFLAGS $CXXFLAGS"
+fi
+
 
 AC_CONFIG_FILES(
 	[script/synce-install-cab],
