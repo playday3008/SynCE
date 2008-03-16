@@ -327,7 +327,18 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       const gchar *device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
 
       /* an array of sync item ids - au - array of uint32 */
-      sync_items = g_value_get_pointer(g_value_array_get_nth (partnership, 5));
+      sync_items = g_value_get_boxed(g_value_array_get_nth (partnership, 5));
+
+      g_debug("%s: partnership %d id: %d", G_STRFUNC, index, partnership_id);
+      g_debug("%s: partnership %d guid: %s", G_STRFUNC, index, partnership_guid);
+      g_debug("%s: partnership %d name: %s", G_STRFUNC, index, partnership_name);
+      g_debug("%s: partnership %d host name: %s", G_STRFUNC, index, hostname);
+      g_debug("%s: partnership %d device name: %s", G_STRFUNC, index, device_name);
+
+      gint i;
+      for (i = 0; i < sync_items->len; i++) {
+        g_debug("%s: partnership %d   sync_items %d: %d", G_STRFUNC, index, i, g_array_index(sync_items, guint, i));
+      }
 
       gtk_list_store_set (store, &iter,
 			  CURRENT_COLUMN, FALSE,
@@ -343,8 +354,6 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   index = 0;
   while(index < partnership_list->len) {
     partnership = g_ptr_array_index(partnership_list, index);
-    sync_items = g_value_get_pointer(g_value_array_get_nth (partnership, 5));
-    g_array_free(sync_items, TRUE);
     g_value_array_free(partnership);
 
     index++;

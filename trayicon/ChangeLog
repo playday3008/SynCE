@@ -1,3 +1,9 @@
+2008-03-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* retrieve sync_items from sync_engine partnership as g_value boxed
+	* remove confusing warning about device not found in
+	  wm_device_manager_find_by_name_impl()
+
 2008-03-13  Mark Ellis <mark@mpellis.org.uk>
 
 	* don't try CeRapiInit if rapi_conn is NULL in odccm-client.c

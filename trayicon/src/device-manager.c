@@ -122,7 +122,6 @@ wm_device_manager_find_by_name_impl(WmDeviceManager *self, gchar *name)
     g_free(tmpname);
   }
 
-  g_warning("%s: Device %s not found", G_STRFUNC, name);
   return NULL;
 }
 
