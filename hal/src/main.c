@@ -62,6 +62,7 @@ client_connected_cb (GServer *server,
 
   GInetAddr *local_inet_addr = gnet_tcp_socket_get_local_inetaddr (conn->socket);
   gint local_port = gnet_inetaddr_get_port(local_inet_addr);
+  gnet_inetaddr_unref(local_inet_addr);
 
   g_debug("%s: have a connection to port %d", G_STRFUNC, local_port);
 
@@ -78,10 +79,10 @@ client_connected_cb (GServer *server,
       g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(synce_dev), conn);
+      return;
     }
   }
 
-  gnet_inetaddr_unref(local_inet_addr);
   gnet_conn_unref (conn);
 }
 

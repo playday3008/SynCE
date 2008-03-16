@@ -1,3 +1,8 @@
+2008-03-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* don't unref incoming client conn to WM5/6 device in
+	  main.c client_connected_cb()
+
 2008-02-21  Mark Ellis <mark@mpellis.org.uk>
 
 	* 10-synce.fdi - add pda.platform property for usb-rndis-*
