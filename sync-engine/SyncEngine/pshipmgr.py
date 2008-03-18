@@ -28,6 +28,7 @@ import logging
 import util
 import characteristics
 import socket
+import errors
 
 class PartnershipManager:
 
@@ -393,7 +394,7 @@ class PartnershipManager:
 				raise InvalidArgument("sync item identifier %d is invalid" % item)
 
 		if not (None in self.DevicePartnerships):
-			raise NoFreeSlots("all slots are currently full")
+			raise errors.NoFreeSlots("all slots are currently full")
 
 		slot = self.DevicePartnerships.index(None) + 1
 

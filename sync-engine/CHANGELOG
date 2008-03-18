@@ -798,3 +798,12 @@ The signals are:
  	Denotes the sync of the given type of sync item of the given partnership 
 	just finished
 
+19/03/2008 - 001500 Guido Diepen
+------------------------------
+
+Added import of module "errors" to the pshipmgr and updated the raised 
+error to be from that module. 
+This solves the following error when trying to create more than 2 pships:
+	CreateNewPartnership
+	    raise NoFreeSlots("all slots are currently full")
+	NameError: global name 'NoFreeSlots' is not defined
