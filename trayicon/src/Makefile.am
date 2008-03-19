@@ -70,5 +70,5 @@ noinst_HEADERS = synce-trayicon-module.h
 	glib-genmarshal --body --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.c
 
 %-glue.h: %.xml
-	dbus-binding-tool --mode=glib-client --output=$@ --prefix=$(subst -,_,$*) $<
+	dbus-binding-tool --mode=glib-client --ignore-unsupported --output=$@ --prefix=$(subst -,_,$*) $<
 

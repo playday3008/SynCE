@@ -1,3 +1,7 @@
+2008-03-19  Mark Ellis <mark@mpellis.org.uk>
+
+	* create and remove sync-engine partnerships in device info
+
 2008-03-16  Mark Ellis <mark@mpellis.org.uk>
 
 	* retrieve sync_items from sync_engine partnership as g_value boxed

@@ -7,42 +7,47 @@
     </method>
 
     <method name="PrefillRemote">
-      <arg direction="in" type="as"/>
+      <arg direction="in" type="as" name="types"/>
       <arg direction="out" type="u"/>
     </method>
 
     <method name="GetItemTypes">
-      <arg direction="out" type="a{us}"/>
+      <arg direction="out" type="a{us}" name="types"/>
     </method>
 
     <method name="GetPartnerships">
-      <arg direction="out" type="a(ussssau)"/>
+      <arg direction="out" type="a(ussssau)" name="partnerships"/>
     </method>
 
     <method name="GetPartnershipBindings">
-      <arg direction="out" type="a(ussssau)"/>
+      <arg direction="out" type="a(ussssau)" name="bindings"/>
     </method>
 
     <method name="QueryBindingConfig">
-      <arg direction="in" type="us"/>
-      <arg direction="out" type="s"/>
+      <arg direction="in" type="u" name="id"/>
+      <arg direction="in" type="s" name="guid"/>
+      <arg direction="out" type="s" name="config"/>
     </method>
 
     <method name="SetBindingConfig">
-      <arg direction="in" type="uss"/>
+      <arg direction="in" type="u" name="id"/>
+      <arg direction="in" type="s" name="guid"/>
+      <arg direction="in" type="s" name="config"/>
     </method>
 
     <method name="CreatePartnership">
-      <arg direction="in" type="sau"/>
-      <arg direction="out" type="u"/>
+      <arg direction="in" type="s" name="name"/>
+      <arg direction="in" type="au" name="items"/>
+      <arg direction="out" type="u" name="id"/>
     </method>
 
     <method name="GetSynchronizedItemTypes">
-      <arg direction="out" type="au"/>
+      <arg direction="out" type="au" name="items"/>
     </method>
 
     <method name="DeletePartnership">
-      <arg direction="in" type="us"/>
+      <arg direction="in" type="u" name="id"/>
+      <arg direction="in" type="s" name="guid"/>
     </method>
 
 <!--

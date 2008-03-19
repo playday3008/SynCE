@@ -57,17 +57,39 @@ enum
 
 enum
 {
-  CURRENT_COLUMN,
-  INDEX_COLUMN,
-  ID_COLUMN,
-  NAME_COLUMN,
-  N_COLUMNS
+  RRA_CURRENT_COLUMN,
+  RRA_INDEX_COLUMN,
+  RRA_ID_COLUMN,
+  RRA_NAME_COLUMN,
+  RRA_N_COLUMNS
 };
+
+enum
+{
+  SYNCENG_CURRENT_COLUMN,
+  SYNCENG_INDEX_COLUMN,
+  SYNCENG_ID_COLUMN,
+  SYNCENG_GUID_COLUMN,
+  SYNCENG_NAME_COLUMN,
+  SYNCENG_ACTIVEITEM_COLUMN,
+  SYNCENG_HOSTNAME_COLUMN,
+  SYNCENG_DEVICENAME_COLUMN,
+  SYNCENG_N_COLUMNS
+};
+
+enum
+{
+  SYNCITEM_INDEX_COLUMN,
+  SYNCITEM_SELECTED_COLUMN,
+  SYNCITEM_NAME_COLUMN,
+  SYNCITEM_N_COLUMNS
+};
+
 
 /* partnership */
 
 static void
-partners_create_button_clicked_cb (GtkWidget *widget, gpointer data)
+partners_create_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
 {
   WmDeviceInfo *self = WM_DEVICE_INFO(data);
   if (!self) {
@@ -85,7 +107,7 @@ partners_create_button_clicked_cb (GtkWidget *widget, gpointer data)
   gchar *name;
   GtkTreeIter iter;
   GtkTreeModel *model;
-  GtkWidget *device_info_dialog = glade_xml_get_widget (priv->xml, "device_info_dialog");	
+  GtkWidget *device_info_dialog = priv->dialog;
   GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
 
@@ -95,9 +117,9 @@ partners_create_button_clicked_cb (GtkWidget *widget, gpointer data)
     {
       gtk_tree_model_get (model,
 			  &iter,
-			  INDEX_COLUMN, &index,
-			  ID_COLUMN, &id,
-			  NAME_COLUMN, &name,
+			  RRA_INDEX_COLUMN, &index,
+			  RRA_ID_COLUMN, &id,
+			  RRA_NAME_COLUMN, &name,
 			  -1);
     }
   else
@@ -132,7 +154,7 @@ partners_create_button_clicked_cb (GtkWidget *widget, gpointer data)
 }
 
 static void
-partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
+partners_remove_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
 {
   WmDeviceInfo *self = WM_DEVICE_INFO(data);
   if (!self) {
@@ -158,9 +180,9 @@ partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
     {
       gtk_tree_model_get (model,
 			  &iter,
-			  INDEX_COLUMN, &index,
-			  ID_COLUMN, &id,
-			  NAME_COLUMN, &name,
+			  RRA_INDEX_COLUMN, &index,
+			  RRA_ID_COLUMN, &id,
+			  RRA_NAME_COLUMN, &name,
 			  -1);
     }
   else
@@ -169,7 +191,7 @@ partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
       return;
     }
 
-  GtkWidget *device_info_dialog = glade_xml_get_widget (priv->xml, "device_info_dialog");
+  GtkWidget *device_info_dialog = priv->dialog;
   GtkWidget *confirm_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
 						     GTK_DIALOG_DESTROY_WITH_PARENT,
 						     GTK_MESSAGE_QUESTION,
@@ -206,7 +228,7 @@ partners_remove_button_clicked_cb (GtkWidget *widget, gpointer data)
 
 
 static void
-partners_selection_changed_cb (GtkTreeSelection *selection, gpointer data)
+partners_selection_changed_rra_cb (GtkTreeSelection *selection, gpointer data)
 {
   WmDeviceInfo *self = WM_DEVICE_INFO(data);
   if (!self) {
@@ -233,19 +255,13 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer data)
     {
       gtk_tree_model_get (model,
 			  &iter,
-			  INDEX_COLUMN, &index,
-			  ID_COLUMN, &id,
-			  NAME_COLUMN, &name,
+			  RRA_INDEX_COLUMN, &index,
+			  RRA_ID_COLUMN, &id,
+			  RRA_NAME_COLUMN, &name,
 			  -1);
 
       g_debug("%s: You selected index %d, id %d, name %s", G_STRFUNC, index, id, name);
       g_free (name);
-
-      /* WM5 and sync-engine is untested, don't mess with partnerships yet */
-      g_object_get(priv->device, "os-major", &os_major, NULL);
-      if (os_major > 4) {
-	return;
-      }
 
       if (id == 0) {
 	gtk_widget_set_sensitive(partners_create_button, TRUE);
@@ -258,6 +274,380 @@ partners_selection_changed_cb (GtkTreeSelection *selection, gpointer data)
     }
 }
 
+
+static void
+partners_setup_view_store_synceng(WmDeviceInfo *self);
+
+
+static void
+setup_sync_item_store(gpointer key, gpointer value, gpointer user_data)
+{
+  GtkListStore *store = GTK_LIST_STORE(user_data);
+  GtkTreeIter iter;
+
+  gtk_list_store_append (store, &iter);  /* Acquire an iterator */
+
+  gtk_list_store_set (store, &iter,
+		      SYNCITEM_INDEX_COLUMN, key,
+		      SYNCITEM_SELECTED_COLUMN, FALSE,
+		      SYNCITEM_NAME_COLUMN, (gchar *)value,
+		      -1);
+}
+
+static void
+partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  gint response;
+  guint32 index, item;
+  gboolean active, result;
+  gint id;
+  gchar *name = NULL;
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  GtkCellRenderer *renderer;
+  GtkTreeViewColumn *column;
+  GtkWidget *device_info_dialog = priv->dialog;
+  GtkWidget *create_pship_dialog = glade_xml_get_widget (priv->xml, "create_partnership_dialog"); 
+  GtkWidget *pship_name_entry = glade_xml_get_widget (priv->xml, "pship_name_entry");
+  GtkWidget *sync_items_listview = glade_xml_get_widget (priv->xml, "sync_items_listview");
+  GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (sync_items_listview));
+  GArray *sync_items_required = NULL;
+  GHashTable *sync_items = NULL;
+  GError *error = NULL;
+  DBusGConnection *dbus_connection = NULL;
+  DBusGProxy *sync_engine_proxy = NULL;
+
+  g_debug("%s: create button_clicked", G_STRFUNC);
+
+  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+  if (dbus_connection == NULL) {
+    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Creation of a new partnership was unsuccessful: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    g_error_free (error);
+    goto exit;
+  }
+
+  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
+						 "org.synce.SyncEngine",
+						 "/org/synce/SyncEngine",
+						 "org.synce.SyncEngine");
+  if (sync_engine_proxy == NULL) {
+    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Creation of a new partnership was unsuccessful: Failed to connect to SyncEngine");
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    goto exit;
+  }
+
+  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items, &error);
+  if (!result) {
+    g_critical("%s: Error creating partnership via sync-engine: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Creation of a new partnership was unsuccessful: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    g_error_free(error);
+    goto exit;
+  }
+
+  GtkListStore *store = gtk_list_store_new (SYNCITEM_N_COLUMNS,
+                                            G_TYPE_INT,     /* index */
+                                            G_TYPE_BOOLEAN,     /* selected */
+                                            G_TYPE_STRING); /* program name */
+
+  g_hash_table_foreach(sync_items, setup_sync_item_store, store);
+  g_hash_table_destroy(sync_items);
+
+  gtk_tree_view_set_model (GTK_TREE_VIEW(sync_items_listview), GTK_TREE_MODEL(store));
+  g_object_unref (G_OBJECT (store));
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(renderer), FALSE);
+  column = gtk_tree_view_column_new_with_attributes("Selected",
+                                                    renderer,
+                                                    "active", SYNCITEM_SELECTED_COLUMN,
+                                                    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(sync_items_listview), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes("SyncItem",
+                                                    renderer,
+                                                    "text", SYNCITEM_NAME_COLUMN,
+                                                    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(sync_items_listview), column);
+
+  response = gtk_dialog_run(GTK_DIALOG(create_pship_dialog));
+  if (response != GTK_RESPONSE_OK) {
+    gtk_widget_destroy(create_pship_dialog);
+    return;
+  }
+
+  gtk_widget_hide(create_pship_dialog);
+
+  name = g_strdup(gtk_entry_get_text(GTK_ENTRY(pship_name_entry)));
+
+  sync_items_required = g_array_new(FALSE, TRUE, sizeof(guint32));
+
+  store = GTK_LIST_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(sync_items_listview)));
+  if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter))
+    goto exit;
+
+  gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+		     SYNCITEM_INDEX_COLUMN, &item,
+		     SYNCITEM_SELECTED_COLUMN, &active,
+		     -1);
+  if (active)
+    g_array_append_val(sync_items_required, item);
+
+  while (gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter)) {
+    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+		       SYNCITEM_INDEX_COLUMN, &item,
+		       SYNCITEM_SELECTED_COLUMN, &active,
+		       -1);
+    if (active)
+      g_array_append_val(sync_items_required, item);
+  }
+
+  g_debug("%s: partnership name: %s", G_STRFUNC, name);
+  gint i;
+  for (i = 0; i < sync_items_required->len; i++) {
+    g_debug("%s:     sync_items %d: %d", G_STRFUNC, i, g_array_index(sync_items_required, guint, i));
+  }
+
+  result = org_synce_syncengine_create_partnership(sync_engine_proxy, name, sync_items_required, &id, &error);
+  if (!result) {
+    g_critical("%s: Error creating partnership via sync-engine: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Creation of a new partnership was unsuccessful: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    g_error_free(error);
+    goto exit;
+  }
+
+  partners_setup_view_store_synceng(self);
+exit:
+  if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
+  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
+  if (create_pship_dialog) gtk_widget_destroy(create_pship_dialog);
+
+  g_free(name);
+}
+
+
+static void
+partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  guint index, id;
+  gchar *guid = NULL;
+  gchar *name;
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+  GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
+  GError *error = NULL;
+  DBusGConnection *dbus_connection = NULL;
+  DBusGProxy *sync_engine_proxy = NULL;
+
+  g_debug("%s: remove button_clicked", G_STRFUNC);
+
+  if (gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+      gtk_tree_model_get (model,
+			  &iter,
+			  SYNCENG_INDEX_COLUMN, &index,
+			  SYNCENG_ID_COLUMN, &id,
+			  SYNCENG_GUID_COLUMN, &guid,
+			  SYNCENG_NAME_COLUMN, &name,
+			  -1);
+    }
+  else
+    {
+      g_warning("%s: Failed to get selection", G_STRFUNC);
+      return;
+    }
+
+  GtkWidget *device_info_dialog = priv->dialog;
+  GtkWidget *confirm_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						     GTK_DIALOG_DESTROY_WITH_PARENT,
+						     GTK_MESSAGE_QUESTION,
+						     GTK_BUTTONS_YES_NO,
+						     "Are you sure you want to remove the partnership '%s' ?",
+						     name);
+
+  gint result = gtk_dialog_run(GTK_DIALOG(confirm_dialog));
+  gtk_widget_destroy (confirm_dialog);
+  switch (result)
+    {
+    case GTK_RESPONSE_YES:
+      break;
+    default:
+      return;
+      break;
+    }
+
+  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+  if (dbus_connection == NULL) {
+    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Deletion of partnership was unsuccessful: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    g_error_free (error);
+    goto exit;
+  }
+
+  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
+						 "org.synce.SyncEngine",
+						 "/org/synce/SyncEngine",
+						 "org.synce.SyncEngine");
+  if (sync_engine_proxy == NULL) {
+    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Deletion of partnership was unsuccessful: Failed to connect to SyncEngine");
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    goto exit;
+  }
+
+  result = org_synce_syncengine_delete_partnership(sync_engine_proxy, id, guid, &error);
+  if (!result) {
+    g_critical("%s: Error deleting partnership via sync-engine: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Deletion of partnership was unsuccessful: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    g_error_free(error);
+    goto exit;
+  }
+
+  partners_setup_view_store_synceng(self);
+exit:
+  if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
+  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
+  g_free(guid);
+  g_free (name);
+}
+
+
+static void
+partners_selection_changed_synceng_cb (GtkTreeSelection *selection, gpointer data)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  gint index, id;
+  gchar *name;
+  GtkWidget *partners_create_button, *partners_remove_button;
+  guint32 os_major = 0;
+
+  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+
+  if (gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+      gtk_tree_model_get (model,
+			  &iter,
+			  SYNCENG_INDEX_COLUMN, &index,
+			  SYNCENG_ID_COLUMN, &id,
+			  SYNCENG_NAME_COLUMN, &name,
+			  -1);
+
+      g_debug("%s: You selected partnership index %d, id %d, name %s", G_STRFUNC, index, id, name);
+      g_free (name);
+
+      gtk_widget_set_sensitive(partners_remove_button, TRUE);
+    }
+}
+
+
+static gint
+sync_item_sort(gconstpointer a, gconstpointer b)
+{
+  return *(guint32*)a - *(guint32*)b;
+}
 
 static void
 partners_setup_view_store_synceng(WmDeviceInfo *self)
@@ -273,23 +663,32 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   }
 
   GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
-  GtkTreeIter iter;
+  GtkTreeIter iter, sub_iter;
   guint32 index;
   gboolean result;
   GPtrArray* partnership_list;
   GError *error = NULL;
+  GtkTreeStore *store = NULL;
   DBusGConnection *dbus_connection = NULL;
   DBusGProxy *sync_engine_proxy = NULL;
-
-  GtkListStore *store = gtk_list_store_new (N_COLUMNS,
-					    G_TYPE_BOOLEAN, /* current partner ? */
-					    G_TYPE_INT,     /* partnee index */
-					    G_TYPE_UINT,    /* partner id */
-					    G_TYPE_STRING); /* partner name */
+  GValueArray *partnership = NULL;
+  GArray *sync_items_active = NULL;
+  GHashTable *sync_items = NULL;
 
   dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
   if (dbus_connection == NULL) {
     g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Failed to retrieve partnership information: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
     g_error_free (error);
     goto exit;
   }
@@ -300,23 +699,70 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 						 "org.synce.SyncEngine");
   if (sync_engine_proxy == NULL) {
     g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Failed to retrieve partnership information: Failed to connect to SyncEngine");
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    goto exit;
+  }
+
+  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items, &error);
+  if (!result) {
+    g_critical("%s: Error fetching sync item list: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Failed to retrieve partnership information: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
+    g_error_free(error);
     goto exit;
   }
 
   result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list, &error);
   if (!result) {
     g_critical("%s: Error getting partnership list from sync-engine: %s", G_STRFUNC, error->message);
+
+    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
+						      GTK_DIALOG_DESTROY_WITH_PARENT,
+						      GTK_MESSAGE_WARNING,
+						      GTK_BUTTONS_OK,
+						      "Failed to retrieve partnership information: %s",
+						      error->message);
+
+    gtk_dialog_run(GTK_DIALOG(failed_dialog));
+    gtk_widget_destroy (failed_dialog);
+
     g_error_free(error);
     goto exit;
   }
 
-  GValueArray *partnership = NULL;
-  GArray *sync_items = NULL;
+  store = gtk_tree_store_new (SYNCENG_N_COLUMNS,
+			      G_TYPE_BOOLEAN, /* current partner */
+			      G_TYPE_INT,     /* partnee index */
+			      G_TYPE_UINT,    /* partner id */
+			      G_TYPE_STRING,  /* partner guid */
+			      G_TYPE_STRING,  /* partnership name */
+			      G_TYPE_BOOLEAN, /* active for sync items */
+			      G_TYPE_STRING,  /* host name */
+			      G_TYPE_STRING   /* device name */
+			      );
 
   index = 0;
   while(index < partnership_list->len)
     {
-      gtk_list_store_append (store, &iter);  /* Acquire an iterator */
+      gtk_tree_store_append (store, &iter, NULL);  /* Acquire an iterator */
 
       partnership = g_ptr_array_index(partnership_list, index);
 
@@ -327,7 +773,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       const gchar *device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
 
       /* an array of sync item ids - au - array of uint32 */
-      sync_items = g_value_get_boxed(g_value_array_get_nth (partnership, 5));
+      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 5));
 
       g_debug("%s: partnership %d id: %d", G_STRFUNC, index, partnership_id);
       g_debug("%s: partnership %d guid: %s", G_STRFUNC, index, partnership_guid);
@@ -336,16 +782,53 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       g_debug("%s: partnership %d device name: %s", G_STRFUNC, index, device_name);
 
       gint i;
-      for (i = 0; i < sync_items->len; i++) {
-        g_debug("%s: partnership %d   sync_items %d: %d", G_STRFUNC, index, i, g_array_index(sync_items, guint, i));
+      for (i = 0; i < sync_items_active->len; i++) {
+        g_debug("%s: partnership %d   sync_items %d: %d", G_STRFUNC, index, i, g_array_index(sync_items_active, guint, i));
       }
 
-      gtk_list_store_set (store, &iter,
-			  CURRENT_COLUMN, FALSE,
-			  INDEX_COLUMN, index,
-			  ID_COLUMN, partnership_id,
-			  NAME_COLUMN, hostname,
+      gtk_tree_store_set (store, &iter,
+			  SYNCENG_CURRENT_COLUMN, FALSE,
+			  SYNCENG_INDEX_COLUMN, index,
+			  SYNCENG_ID_COLUMN, partnership_id,
+			  SYNCENG_GUID_COLUMN, partnership_guid,
+			  SYNCENG_NAME_COLUMN, partnership_name,
+			  SYNCENG_ACTIVEITEM_COLUMN, FALSE,
+			  SYNCENG_HOSTNAME_COLUMN, hostname,
+			  SYNCENG_DEVICENAME_COLUMN, device_name,
 			  -1);
+
+      GList *item_keys = g_hash_table_get_keys(sync_items);
+      item_keys = g_list_sort(item_keys, sync_item_sort);
+      GList *tmp_list = item_keys;
+
+      gboolean active;
+
+      while (tmp_list) {
+	gtk_tree_store_append (store, &sub_iter, &iter);
+
+	active = FALSE;
+	gint active_index;
+	for (active_index = 0; active_index < sync_items_active->len; active_index++) {
+	  if (g_array_index(sync_items_active, guint, active_index) == (*(guint*)tmp_list->data)) {
+	    active = TRUE;
+	    break;
+	  }
+	}
+
+	gtk_tree_store_set (store, &sub_iter,
+			    SYNCENG_CURRENT_COLUMN, FALSE,
+			    SYNCENG_INDEX_COLUMN, 0,
+			    SYNCENG_ID_COLUMN, 0,
+			    SYNCENG_GUID_COLUMN, NULL,
+			    SYNCENG_NAME_COLUMN, g_hash_table_lookup(sync_items, tmp_list->data),
+			    SYNCENG_ACTIVEITEM_COLUMN, active,
+			    SYNCENG_HOSTNAME_COLUMN, NULL,
+			    SYNCENG_DEVICENAME_COLUMN, NULL,
+			    -1);
+      }
+
+      g_list_free(item_keys);
+
       index++;
     }
 
@@ -361,12 +844,93 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   g_ptr_array_free(partnership_list, TRUE);
 
 exit:
-  g_object_unref (G_OBJECT (store));
+  if (store) g_object_unref (G_OBJECT (store));
+  if (sync_items) g_hash_table_destroy(sync_items);
 
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
   if (dbus_connection) dbus_g_connection_unref(dbus_connection);
 
   return;
+}
+
+
+static void
+partners_setup_view_synceng(WmDeviceInfo *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *partners_create_button, *partners_remove_button, *partners_list;
+  GtkCellRenderer *renderer;
+  GtkTreeViewColumn *column;
+  GtkTreeSelection *selection;
+  guint32 os_major = 0;
+
+  wm_device_rapi_select(priv->device);
+
+  partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");
+  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+  partners_list = glade_xml_get_widget (priv->xml, "partners_list");
+
+  gtk_widget_set_sensitive(partners_create_button, TRUE);
+  gtk_widget_set_sensitive(partners_remove_button, FALSE);
+
+  g_signal_connect (G_OBJECT (partners_create_button), "clicked",
+		    G_CALLBACK (partners_create_button_clicked_synceng_cb), self);
+  g_signal_connect (G_OBJECT (partners_remove_button), "clicked",
+		    G_CALLBACK (partners_remove_button_clicked_synceng_cb), self);
+
+  partners_setup_view_store_synceng(self);
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(renderer), TRUE);
+  column = gtk_tree_view_column_new_with_attributes("C",                                         /* title */
+						    renderer,                                    /* renderer to use */
+						    "active", SYNCENG_CURRENT_COLUMN,            /* attribute to use and column of store to get it from */
+						    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes("Index",
+						    renderer,
+						    "text", SYNCENG_INDEX_COLUMN,
+						    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes("Partnership Name",
+						    renderer,
+						    "text", SYNCENG_NAME_COLUMN,
+						    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes("Host Name",
+						    renderer,
+						    "text", SYNCENG_HOSTNAME_COLUMN,
+						    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes("Device Name",
+						    renderer,
+						    "text", SYNCENG_DEVICENAME_COLUMN,
+						    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
+
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list));
+  gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
+  g_signal_connect (G_OBJECT (selection), "changed",
+		    G_CALLBACK (partners_selection_changed_synceng_cb), self);
+
+  gtk_widget_show (partners_list);
 }
 
 
@@ -391,7 +955,7 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
   gboolean is_current;
   guint32 os_major = 0;
 
-  GtkListStore *store = gtk_list_store_new (N_COLUMNS,
+  GtkListStore *store = gtk_list_store_new (RRA_N_COLUMNS,
 					    G_TYPE_BOOLEAN, /* current partner ? */
 					    G_TYPE_INT,     /* partnee index */
 					    G_TYPE_UINT,    /* partner id */
@@ -431,10 +995,10 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
 	is_current = FALSE;
 
       gtk_list_store_set (store, &iter,
-			  CURRENT_COLUMN, is_current,
-			  INDEX_COLUMN, i,
-			  ID_COLUMN, partner_id,
-			  NAME_COLUMN, partner_name,
+			  RRA_CURRENT_COLUMN, is_current,
+			  RRA_INDEX_COLUMN, i,
+			  RRA_ID_COLUMN, partner_id,
+			  RRA_NAME_COLUMN, partner_name,
 			  -1);
 
       rra_matchmaker_free_partner_name(partner_name);
@@ -451,7 +1015,7 @@ exit:
 
 
 static void
-partners_setup_view(WmDeviceInfo *self)
+partners_setup_view_rra(WmDeviceInfo *self)
 {
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -479,44 +1043,38 @@ partners_setup_view(WmDeviceInfo *self)
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
 
   g_signal_connect (G_OBJECT (partners_create_button), "clicked",
-		    G_CALLBACK (partners_create_button_clicked_cb), self);
+		    G_CALLBACK (partners_create_button_clicked_rra_cb), self);
   g_signal_connect (G_OBJECT (partners_remove_button), "clicked",
-		    G_CALLBACK (partners_remove_button_clicked_cb), self);
+		    G_CALLBACK (partners_remove_button_clicked_rra_cb), self);
 
-  /* WM5 uses sync-engine, older uses rra */
-  g_object_get(priv->device, "os-major", &os_major, NULL);
-  if (os_major > 4) {
-    partners_setup_view_store_synceng(self);
-  } else {
-    partners_setup_view_store_rra(self);
-  }
+  partners_setup_view_store_rra(self);
 
   renderer = gtk_cell_renderer_toggle_new ();
   gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(renderer), TRUE);
   column = gtk_tree_view_column_new_with_attributes("C",
 						    renderer,
-						    "active", CURRENT_COLUMN,
+						    "active", RRA_CURRENT_COLUMN,
 						    NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("Index",
 						    renderer,
-						    "text", INDEX_COLUMN,
+						    "text", RRA_INDEX_COLUMN,
 						    NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("Partner Id",
 						    renderer,
-						    "text", ID_COLUMN,
+						    "text", RRA_ID_COLUMN,
 						    NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("Partner Name",
 						    renderer,
-						    "text", NAME_COLUMN,
+						    "text", RRA_NAME_COLUMN,
 						    NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
 
@@ -524,9 +1082,32 @@ partners_setup_view(WmDeviceInfo *self)
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (selection), "changed",
-		    G_CALLBACK (partners_selection_changed_cb), self);
+		    G_CALLBACK (partners_selection_changed_rra_cb), self);
 
   gtk_widget_show (partners_list);
+}
+
+static void
+partners_setup_view(WmDeviceInfo *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  /* WM5 uses sync-engine, older uses rra */
+  guint32 os_major = 0;
+  g_object_get(priv->device, "os-major", &os_major, NULL);
+  if (os_major > 4) {
+    partners_setup_view_synceng(self);
+  } else {
+    partners_setup_view_rra(self);
+  }
 }
 
 
