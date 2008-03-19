@@ -807,3 +807,10 @@ This solves the following error when trying to create more than 2 pships:
 	CreateNewPartnership
 	    raise NoFreeSlots("all slots are currently full")
 	NameError: global name 'NoFreeSlots' is not defined
+
+
+19/03/2008 - 174500 Guido Diepen
+------------------------------
+
+Added module prefix of errors. to the InvalidArgument raise in pshipsmgr.py
+Without these prefix, you get NameErrors with InvalidArgument not defined.

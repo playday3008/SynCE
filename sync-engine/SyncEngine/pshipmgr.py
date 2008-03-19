@@ -387,11 +387,11 @@ class PartnershipManager:
 		# Basic argument checking
 
 		if len(name) > 20:
-			raise InvalidArgument("name too long (20 chars max)")
+			raise errors.InvalidArgument("name too long (20 chars max)")
 
 		for item in sync_items:
 			if not item in SYNC_ITEMS:
-				raise InvalidArgument("sync item identifier %d is invalid" % item)
+				raise errors.InvalidArgument("sync item identifier %d is invalid" % item)
 
 		if not (None in self.DevicePartnerships):
 			raise errors.NoFreeSlots("all slots are currently full")
@@ -533,7 +533,7 @@ class PartnershipManager:
 					break;
 
 		if not match:
-			raise InvalidArgument("Invalid partnership %s" % pship)
+			raise errors.InvalidArgument("Invalid partnership %s" % pship)
 
 
 
