@@ -649,6 +649,16 @@ sync_item_sort(gconstpointer a, gconstpointer b)
   return GPOINTER_TO_UINT(a) - GPOINTER_TO_UINT(b);
 }
 
+
+#if GLIB_MINOR_VERSION < 14
+get_sync_item_keys(gpointer key,
+		   gpointer value,
+		   gpointer user_data)
+{
+  *user_data = g_list_append(*user_data, key);
+}
+#endif
+
 static void
 partners_setup_view_store_synceng(WmDeviceInfo *self)
 {
@@ -674,6 +684,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GValueArray *partnership = NULL;
   GArray *sync_items_active = NULL;
   GHashTable *sync_items = NULL;
+  GList *item_keys = NULL;
 
   dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
   if (dbus_connection == NULL) {
@@ -797,7 +808,14 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			  SYNCENG_DEVICENAME_COLUMN, device_name,
 			  -1);
 
-      GList *item_keys = g_hash_table_get_keys(sync_items);
+#if GLIB_MINOR_VERSION < 14
+      g_hash_table_foreach(sync_items,
+			   get_sync_item_keys,
+			   &item_keys);
+#else
+      item_keys = g_hash_table_get_keys(sync_items);
+#endif
+
       item_keys = g_list_sort(item_keys, sync_item_sort);
       GList *tmp_list = item_keys;
 

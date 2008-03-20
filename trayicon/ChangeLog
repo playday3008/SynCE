@@ -1,6 +1,7 @@
 2008-03-20  Mark Ellis <mark@mpellis.org.uk>
 
 	* correct sorting of sync item type keys
+	* check for presence of g_hash_table_get_keys()
 
 2008-03-19  Mark Ellis <mark@mpellis.org.uk>
 
