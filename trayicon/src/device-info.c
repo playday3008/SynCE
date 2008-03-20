@@ -311,7 +311,7 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   gint response;
   guint32 index, item;
   gboolean active, result;
-  gint id;
+  guint id;
   gchar *name = NULL;
   GtkTreeIter iter;
   GtkTreeModel *model;
@@ -655,7 +655,7 @@ get_sync_item_keys(gpointer key,
 		   gpointer value,
 		   gpointer user_data)
 {
-  *user_data = g_list_append(*user_data, key);
+  *(GList **)user_data = g_list_append(*(GList **)user_data, key);
 }
 #endif
 
