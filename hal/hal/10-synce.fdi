@@ -55,4 +55,25 @@
       </match>
     </match>
   </device>
+
+
+  <!-- FreeBSD ucom
+       should be more generic, but it's a good start -->
+
+  <device>
+    <match key="freebsd.driver" contains="ucom">
+      <match key="info.vendor" string="HTC">
+        <append key="info.capabilities" type="strlist">sync</append>
+        <merge key="usb.interface.description" type="string">Windows Mobile Data Provider</merge>
+        <merge key="info.category" type="string">pda</merge>
+        <merge key="sync.engine" type="string">opensync</merge>
+        <merge key="sync.plugin" type="string">synce</merge>
+
+        <merge key="usb.product" type="string">Windows Mobile Device</merge>
+
+        <append key="info.callouts.add" type="strlist">hal-synce-legacy</append>
+      </match>
+    </match>
+  </device>
+
 </deviceinfo>
