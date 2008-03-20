@@ -646,7 +646,7 @@ partners_selection_changed_synceng_cb (GtkTreeSelection *selection, gpointer dat
 static gint
 sync_item_sort(gconstpointer a, gconstpointer b)
 {
-  return *(guint32*)a - *(guint32*)b;
+  return GPOINTER_TO_UINT(a) - GPOINTER_TO_UINT(b);
 }
 
 static void
