@@ -3,6 +3,7 @@
 #include "rapi_context.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <sys/socket.h>
 
 struct _IRAPIStream
 {

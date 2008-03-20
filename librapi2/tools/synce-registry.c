@@ -16,7 +16,7 @@
 #define ACTION_DUMP_REGISTRY 6
 
 
-char* devname = NULL;
+char* dev_name = NULL;
 int action = ACTION_READVAL;
 bool list_recurse = false ; 
 DWORD valType = REG_SZ;
@@ -114,7 +114,7 @@ static bool handle_parameters(int argc, char** argv, char** parent_str, char** k
 								list_recurse = true ;
 								break ;
                         case 'p':
-                                devname = optarg;
+                                dev_name = optarg;
                                 break;
 			
                         case 'r':
@@ -597,11 +597,11 @@ int main(int argc, char** argv)
   //Add this before anything, since we don't need the
   //parent_str etc..
   if (action==ACTION_DUMP_REGISTRY){
-	  if ((connection = rapi_connection_from_name(devname)) == NULL)
+	  if ((connection = rapi_connection_from_name(dev_name)) == NULL)
 	  {
 		  fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
 				  argv[0],
-				  devname?devname:"(Default)");
+				  dev_name?dev_name:"(Default)");
 		  goto exit;
 	  }
 	  rapi_connection_select(connection);
@@ -646,11 +646,11 @@ int main(int argc, char** argv)
     goto exit;
   }
 
-  if ((connection = rapi_connection_from_name(devname)) == NULL)
+  if ((connection = rapi_connection_from_name(dev_name)) == NULL)
   {
     fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
         argv[0],
-        devname?devname:"(Default)");
+        dev_name?dev_name:"(Default)");
     goto exit;
   }
   rapi_connection_select(connection);

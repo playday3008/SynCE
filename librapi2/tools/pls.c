@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-char* devname = NULL;
+char* dev_name = NULL;
 
 static bool numeric_file_attributes = false;
 static bool show_hidden_files = false;
@@ -46,7 +46,7 @@ static bool handle_parameters(int argc, char** argv, char** path)
 				break;
 					
                         case 'p':
-                                devname = optarg;
+                                dev_name = optarg;
                                 break;
 			
               		case 'd':
@@ -238,11 +238,11 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &path))
 		goto exit;
 
-        if ((connection = rapi_connection_from_name(devname)) == NULL)
+        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
         {
           fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
                   argv[0],
-                  devname?devname:"(Default)");
+                  dev_name?dev_name:"(Default)");
           goto exit;
         }
         rapi_connection_select(connection);

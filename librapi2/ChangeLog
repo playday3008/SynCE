@@ -1,3 +1,7 @@
+2008-03-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* BSD compatible fixes suggested by Bakulin Ilya, many thanks
+
 2008-03-15  Guido Diepen  <guido@guidodiepen.nl>
 
 	* Made librapi2 thread-safe by removing the static RapiContext. This is

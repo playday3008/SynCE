@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
-char* devname = NULL;
+char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -42,7 +42,7 @@ static bool handle_parameters(int argc, char** argv, char **shortcut, char **tar
 				break;
 
                         case 'p':
-                                devname = optarg;
+                                dev_name = optarg;
                                 break;
 			
 			case 'h':
@@ -81,11 +81,11 @@ int main(int argc, char** argv)
   if (!handle_parameters(argc, argv, &shortcut, &target))
     goto exit;
 
-  if ((connection = rapi_connection_from_name(devname)) == NULL)
+  if ((connection = rapi_connection_from_name(dev_name)) == NULL)
   {
     fprintf(stderr, "%s: Could not find configuration at path '%s'\n", 
             argv[0],
-            devname?devname:"(Default)");
+            dev_name?dev_name:"(Default)");
     goto exit;
   }
   rapi_connection_select(connection);
