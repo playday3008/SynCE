@@ -827,7 +827,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 	active = FALSE;
 	gint active_index;
 	for (active_index = 0; active_index < sync_items_active->len; active_index++) {
-	  if (g_array_index(sync_items_active, guint, active_index) == (*(guint*)tmp_list->data)) {
+	  if (g_array_index(sync_items_active, guint, active_index) == GPOINTER_TO_UINT(tmp_list->data)) {
 	    active = TRUE;
 	    break;
 	  }
@@ -843,6 +843,8 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			    SYNCENG_HOSTNAME_COLUMN, NULL,
 			    SYNCENG_DEVICENAME_COLUMN, NULL,
 			    -1);
+
+	tmp_list = g_list_next(tmp_list);
       }
 
       g_list_free(item_keys);

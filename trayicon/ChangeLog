@@ -1,3 +1,7 @@
+2008-03-22  Mark Ellis <mark@mpellis.org.uk>
+
+	* access list of sync item keys correctly
+
 2008-03-20  Mark Ellis <mark@mpellis.org.uk>
 
 	* correct sorting of sync item type keys
