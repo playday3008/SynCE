@@ -524,13 +524,19 @@ odccm_device_request_connection_legacy_impl (OdccmDevice *self, DBusGMethodInvoc
       goto OUT;
     }
 
-  priv->req_id++;
+  /* 
+   * Create a local copy of the global req_id variable. This to minimize
+   * the chances of Race Conditions occuring.
+   */
+  guint *req_id_local = (guint *) g_malloc (sizeof (guint));
+  *req_id_local = ++(priv->req_id) ;
+
   broker = g_object_new (ODCCM_TYPE_CONNECTION_BROKER,
-                         "id", priv->req_id,
+                         "id", *req_id_local,
                          "context", ctx,
                          NULL);
 
-  g_hash_table_insert (priv->requests, &priv->req_id, broker);
+  g_hash_table_insert (priv->requests, req_id_local, broker);
 
   g_signal_connect (broker, "done", (GCallback) conn_broker_done_cb, self);
 
