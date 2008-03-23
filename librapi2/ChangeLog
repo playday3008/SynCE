@@ -1,3 +1,9 @@
+2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Put the thread-safety code in ifdef. Turned out that sync-engine
+      became less stable with this. 
+      Currently thread-safe code has been deactivated till further notice.
+
 2008-03-20  Mark Ellis  <mark@mpellis.org.uk>
 
 	* BSD compatible fixes suggested by Bakulin Ilya, many thanks

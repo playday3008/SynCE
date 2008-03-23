@@ -8,7 +8,10 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
+
+#ifdef USE_THREAD_SAFE_VERSION
 #include <pthread.h>
+#endif
 
 #define CERAPI_E_ALREADYINITIALIZED  0x8004101
 
@@ -25,6 +28,9 @@
 #endif
 #define rapi_context_error(args...)    synce_error(args)
 
+
+
+#ifdef USE_THREAD_SAFE_VERSION
 /*This holds the value for the key where the contexts are stored*/
 static pthread_key_t context_key = -1;
 /*Make sure we can only have one program create the key, use this mutex*/
@@ -35,12 +41,17 @@ static pthread_mutex_t once_masterlock = PTHREAD_MUTEX_INITIALIZER ;
  * to bother at all anymore.
  */
 static int _pthread_key_initialized = 0 ; 
+#else
+static RapiContext* current_context;
+
+#endif
 
 
 extern struct rapi_ops_s rapi_ops;
 extern struct rapi_ops_s rapi2_ops;
 
 
+#ifdef USE_THREAD_SAFE_VERSION
 /* This method will aquire a mutex lock. After the 
  * lock has been aquired, it will check if the key was 
  * already initialized. If it was not initialized yet, 
@@ -56,7 +67,7 @@ void create_pthread_key(){
 	}
 	pthread_mutex_unlock(&once_masterlock);
 }
-
+#endif
 
 
 
@@ -68,6 +79,7 @@ void create_pthread_key(){
 
 RapiContext* rapi_context_current()/*{{{*/
 {
+#ifdef USE_THREAD_SAFE_VERSION
 	/* If the key for the thread_local context variables was not initalized yet,
 	 * do that now
 	 */
@@ -90,10 +102,20 @@ RapiContext* rapi_context_current()/*{{{*/
 	}
 	
 	return thread_current_context;
+#else
+	if (!current_context)
+	{
+			rapi_context_set(rapi_context_new());
+	}
+
+	return current_context;
+#endif
+
 }/*}}}*/
 
 void rapi_context_set(RapiContext* context)
 {
+#ifdef USE_THREAD_SAFE_VERSION
 	/* If the key for the thread_local context variables was not initalized yet,
 	 * do that now
 	 */
@@ -104,6 +126,9 @@ void rapi_context_set(RapiContext* context)
 	
 	/* Set the context for this thread in its local thread variable */
 	pthread_setspecific(context_key, (void*) context ) ;
+#else
+	current_context = context;
+#endif
 }
 
 
