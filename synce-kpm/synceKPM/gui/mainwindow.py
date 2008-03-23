@@ -477,7 +477,8 @@ Qt.WindowMinimized)
         if self.animationThread is None:
             self.animationThread = QTimer(self)
             self.animationThread.connect(self.animationThread, SIGNAL("timeout()"), self.myAnimationThread_cb)
-            self.animationThread.start(150)
+        
+        self.animationThread.start(150)
 
     def stopSyncAnimation(self):
         self.animationIndex = 0
