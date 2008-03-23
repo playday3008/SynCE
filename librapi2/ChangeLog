@@ -1,5 +1,12 @@
 2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
 
+	* Renabled the thread-safe code. Segfaults in sync-engine were
+	  caused by the fact that sync-engine tried to access rapi_context of 
+	  one thread via another thread. Resolved in sync-engine
+
+      became less stable with this. 
+2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
+
 	* Put the thread-safety code in ifdef. Turned out that sync-engine
       became less stable with this. 
       Currently thread-safe code has been deactivated till further notice.

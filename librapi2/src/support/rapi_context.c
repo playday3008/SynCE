@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <errno.h>
 
+#define USE_THREAD_SAFE_VERSION 1
 #ifdef USE_THREAD_SAFE_VERSION
 #include <pthread.h>
 #endif
