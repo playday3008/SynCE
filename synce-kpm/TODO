@@ -3,7 +3,4 @@ Some major TODO:
 * Implement connection with liborange, such that any installer can be 
   installed through the program.
 
-* While copying file, make use of a callback function that will allow the
-  user to see the progress of the file copy 
-
 * error handling/exception handling is still a major todo. 

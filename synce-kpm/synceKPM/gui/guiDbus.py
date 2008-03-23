@@ -59,20 +59,26 @@ class GuiDbus(dbus.service.Object):
 
 
     def handleSyncEngineStatus_SetMaxValue(self , maxValue):
-        pass
+        __value = self.mainwindow.sync_progressbar.value()
+        self.mainwindow.sync_progressbar.setMaximum(maxValue)
+        self.mainwindow.sync_progressbar.reset()
+        self.mainwindow.sync_progressbar.setValue(__value)
+
 
     def handleSyncEngineStatus_SetValue(self , value):
-        pass
+        self.mainwindow.sync_progressbar.setValue(value)
+
 
     def handleSyncEngineStatus_SetStatusString(self , statusString):
+        print statusString
         pass
 
     def handleSyncEngineStatus_SyncStart(self , ):
-        self.mainwindow.startSyncAnimation()
+        self.mainwindow.startActiveSyncSync()
 
 
     def handleSyncEngineStatus_SyncEnd(self , ):
-        self.mainwindow.stopSyncAnimation()
+        self.mainwindow.stopActiveSyncSync()
     pass
 
     def handleSyncEngineStatus_SyncStartPartner(self , parter):
@@ -130,7 +136,7 @@ class GuiDbus(dbus.service.Object):
         self.__sync_items = sync_items 
         self.__partnerships = partnerships
         self.mainwindow.updateDevicePartnerships(sync_items, partnerships)
-        
+         
         QTimer.singleShot(5000, self.checkActivePartnership )
 
 
@@ -282,12 +288,6 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.show()
 
     
-    @dbus.service.method(synceKPM.constants.DBUS_SYNCEKPM_GUI_IFACE, in_signature='', out_signature='')
-    def ToggleAnimation(self):
-        print "Toggling animation"
-        self.mainwindow.on_activesyncStatusIcon_clicked()
-
-
     
 
     @dbus.service.method(synceKPM.constants.DBUS_SYNCEKPM_GUI_IFACE, in_signature='', out_signature='')

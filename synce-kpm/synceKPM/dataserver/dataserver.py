@@ -220,7 +220,7 @@ class DataServer(dbus.service.Object):
 
     @dbus.service.method(synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE, in_signature='', out_signature='')
     def updatePartnerships(self):
-        if self.syncEngineRunning:
+        if self.syncEngineRunning and self.deviceIsConnected:
 
             syncEngineProxy = self.busConn.get_object("org.synce.SyncEngine","/org/synce/SyncEngine")
             syncEngineObj   = dbus.Interface(syncEngineProxy,"org.synce.SyncEngine")
@@ -527,7 +527,11 @@ class DataServer(dbus.service.Object):
         dbusSyncEngine = self.busConn.get_object( "org.synce.SyncEngine",
                                                 "/org/synce/SyncEngine",
                                                 "org.synce.SyncEngine")
-        dbusSyncEngine.CreatePartnership(name,items)
+        try:
+            dbusSyncEngine.CreatePartnership(name,items)
+        except:
+            pass
+
         self.updatePartnerships()
 
 

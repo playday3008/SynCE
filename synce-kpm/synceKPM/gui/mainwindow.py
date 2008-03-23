@@ -373,6 +373,9 @@ Qt.WindowMinimized)
         self.modelPartnerships.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.QVariant("Partnerships"))
         self.viewPartnerships.expandAll()
 
+
+
+
     def formatDeviceSyncItems(self, parent, item_types, selected_item_types):
         for item_type in item_types:
             childItem = QStandardItem(item_types[item_type])
@@ -420,7 +423,7 @@ Qt.WindowMinimized)
 
            
             #This is for checking whether the user is having a WM6 device
-            if not (self.OsVersion[0] == 5 and self.OsVersion[1] == 2):
+            if self.OsVersion[0] == 5 and self.OsVersion[1] == 2:
                 showExtraWarning = False
                 orphanedItems=[]
 
@@ -461,8 +464,16 @@ Qt.WindowMinimized)
             #should be deleted. Then we do this ;)
             self.guiDbus.deletePartnership( id,guid )
    
+    def startActiveSyncSync(self):
+        self.startSyncAnimation()
+        self.sync_progressbar.setValue(0)
+        self.sync_progressbar.setMaximum(100)
+        self.sync_progressbar.setVisible(True)
 
 
+    def stopActiveSyncSync(self):
+        self.sync_progressbar.setVisible(False)
+        self.stopSyncAnimation()
 
     def myAnimationThread_cb(self):
         self.animationIndex = (self.animationIndex + 1)%10

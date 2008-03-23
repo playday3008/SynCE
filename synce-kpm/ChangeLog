@@ -1,4 +1,9 @@
 2008-03-23	Guido Diepen	<guido@guidodiepen.nl>
+	
+	* Now also progress of the sync process is shown with progressbar
+	* Small code fixes
+
+2008-03-23	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Major rewrite into two separate components, one GUI component and one
 	  dataserver component. These both run in their own separate proces,
