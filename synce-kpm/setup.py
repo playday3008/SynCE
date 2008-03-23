@@ -13,6 +13,7 @@ setup(
     scripts = ['synce-kpm'],
 
     package_data = { 'synceKPM' : ['data/*.png',
-                                   'data/*.svg'] },
+                                   'data/*.svg',
+								   'data/anim/*.svg'] },
 )
 
