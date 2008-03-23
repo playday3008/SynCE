@@ -22,7 +22,8 @@ import libxml2
 import threading
 import logging
 import time
-
+import rapicontext
+import pyrapi2
 class SyncHandler(threading.Thread):
 
     def __init__(self, engine, auto_sync):
@@ -44,6 +45,9 @@ class SyncHandler(threading.Thread):
 	# Clear the end-of-sync event
 	
 	self.evtSyncRunFinished.clear()
+
+
+	self.rapi_context =rapicontext.RapiContext(pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
 	
 	# Temporarily uninstall the previous handler for the beginning of the
         # synchronization.  The previous handler was for the auto-syncs, which
@@ -68,7 +72,7 @@ class SyncHandler(threading.Thread):
 	    partnernode.setProp("id",self.engine.PshipManager.GetCurrentPartnership().info.guid)
 
             self.logger.debug("run: sending request to device \n%s", doc_node.serialize("utf-8",1))
-            self.engine.rapi_session.sync_start(doc_node.serialize("utf-8",0))
+            self.rapi_context.sync_start(doc_node.serialize("utf-8",0))
 
         self.logger.debug("run: performing synchronization")
 
@@ -81,8 +85,8 @@ class SyncHandler(threading.Thread):
 	# this, otherwise we get RAPI timeouts.
 
         self.logger.debug("run: calling RAPI sync_pause and sync_resume")
-        self.engine.rapi_session.sync_pause()
-        self.engine.rapi_session.sync_resume()
+        self.rapi_context.sync_pause()
+        self.rapi_context.sync_resume()
 
         if not self.stopped:
             self.logger.debug("run: saving itemDB")

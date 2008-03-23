@@ -814,3 +814,12 @@ This solves the following error when trying to create more than 2 pships:
 
 Added module prefix of errors. to the InvalidArgument raise in pshipsmgr.py
 Without these prefix, you get NameErrors with InvalidArgument not defined.
+
+23/03/2008 - 220000 Guido Diepen
+------------------------------
+
+Patched sync-engine to not segfault with thread-safe librapi2. This error
+occurred because in another thread the rapi_session would be NULL due to
+the Thread Local Storage.
+
+Thanks Markus Niemistö for supplying the patch.
