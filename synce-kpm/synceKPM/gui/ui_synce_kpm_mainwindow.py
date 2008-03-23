@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-mainwindow.ui'
 #
-# Created: Sun Jan 20 00:27:03 2008
+# Created: Sat Mar 22 15:58:03 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,8 @@ from PyQt4 import QtCore, QtGui
 class Ui_synce_kpm_mainwindow(object):
     def setupUi(self, synce_kpm_mainwindow):
         synce_kpm_mainwindow.setObjectName("synce_kpm_mainwindow")
-        synce_kpm_mainwindow.resize(QtCore.QSize(QtCore.QRect(0,0,582,494).size()).expandedTo(synce_kpm_mainwindow.minimumSizeHint()))
+        synce_kpm_mainwindow.resize(QtCore.QSize(QtCore.QRect(0,0,582,606).size()).expandedTo(synce_kpm_mainwindow.minimumSizeHint()))
+        synce_kpm_mainwindow.setCursor(QtCore.Qt.ArrowCursor)
 
         self.groupBox = QtGui.QGroupBox(synce_kpm_mainwindow)
         self.groupBox.setGeometry(QtCore.QRect(30,10,521,51))
@@ -46,12 +47,12 @@ class Ui_synce_kpm_mainwindow(object):
         self.labelDeviceIsLocked.setObjectName("labelDeviceIsLocked")
 
         self.pushButton_Quit = QtGui.QPushButton(synce_kpm_mainwindow)
-        self.pushButton_Quit.setGeometry(QtCore.QRect(470,440,75,24))
+        self.pushButton_Quit.setGeometry(QtCore.QRect(470,570,75,24))
         self.pushButton_Quit.setObjectName("pushButton_Quit")
 
         self.tabWidget = QtGui.QTabWidget(synce_kpm_mainwindow)
         self.tabWidget.setEnabled(False)
-        self.tabWidget.setGeometry(QtCore.QRect(30,80,521,351))
+        self.tabWidget.setGeometry(QtCore.QRect(30,210,521,351))
         self.tabWidget.setObjectName("tabWidget")
 
         self.tab = QtGui.QWidget()
@@ -166,6 +167,59 @@ class Ui_synce_kpm_mainwindow(object):
         self.button_delete_pship.setObjectName("button_delete_pship")
         self.tabWidget.addTab(self.tab_3,"")
 
+        self.groupBox_2 = QtGui.QGroupBox(synce_kpm_mainwindow)
+        self.groupBox_2.setGeometry(QtCore.QRect(30,70,521,121))
+        self.groupBox_2.setObjectName("groupBox_2")
+
+        self.label_partnership_2 = QtGui.QLabel(self.groupBox_2)
+        self.label_partnership_2.setGeometry(QtCore.QRect(10,40,121,18))
+        self.label_partnership_2.setObjectName("label_partnership_2")
+
+        self.label_partnership_3 = QtGui.QLabel(self.groupBox_2)
+        self.label_partnership_3.setGeometry(QtCore.QRect(10,60,121,18))
+        self.label_partnership_3.setObjectName("label_partnership_3")
+
+        self.label_partnership_1 = QtGui.QLabel(self.groupBox_2)
+        self.label_partnership_1.setGeometry(QtCore.QRect(10,20,121,18))
+        self.label_partnership_1.setObjectName("label_partnership_1")
+
+        self.sync_progressbar = QtGui.QProgressBar(self.groupBox_2)
+        self.sync_progressbar.setGeometry(QtCore.QRect(140,90,371,23))
+        self.sync_progressbar.setProperty("value",QtCore.QVariant(0))
+        self.sync_progressbar.setTextVisible(False)
+        self.sync_progressbar.setObjectName("sync_progressbar")
+
+        self.label_partnership_1_text = QtGui.QLabel(self.groupBox_2)
+        self.label_partnership_1_text.setGeometry(QtCore.QRect(140,20,131,18))
+        self.label_partnership_1_text.setObjectName("label_partnership_1_text")
+
+        self.label_partnership_3_text = QtGui.QLabel(self.groupBox_2)
+        self.label_partnership_3_text.setGeometry(QtCore.QRect(140,60,131,18))
+        self.label_partnership_3_text.setObjectName("label_partnership_3_text")
+
+        self.label_partnership_2_text = QtGui.QLabel(self.groupBox_2)
+        self.label_partnership_2_text.setGeometry(QtCore.QRect(140,40,131,18))
+        self.label_partnership_2_text.setObjectName("label_partnership_2_text")
+
+        self.label_sync_stat = QtGui.QLabel(self.groupBox_2)
+        self.label_sync_stat.setGeometry(QtCore.QRect(10,90,121,18))
+        self.label_sync_stat.setObjectName("label_sync_stat")
+
+        self.activesyncStatusIcon = QtGui.QToolButton(self.groupBox_2)
+        self.activesyncStatusIcon.setEnabled(True)
+        self.activesyncStatusIcon.setGeometry(QtCore.QRect(450,20,61,61))
+        self.activesyncStatusIcon.setObjectName("activesyncStatusIcon")
+
+        self.labelSyncEngineNotRunning_2 = QtGui.QLabel(self.groupBox_2)
+        self.labelSyncEngineNotRunning_2.setGeometry(QtCore.QRect(120,40,281,18))
+
+        font = QtGui.QFont()
+        font.setWeight(75)
+        font.setBold(True)
+        self.labelSyncEngineNotRunning_2.setFont(font)
+        self.labelSyncEngineNotRunning_2.setScaledContents(True)
+        self.labelSyncEngineNotRunning_2.setObjectName("labelSyncEngineNotRunning_2")
+
         self.retranslateUi(synce_kpm_mainwindow)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(synce_kpm_mainwindow)
@@ -193,4 +247,7 @@ class Ui_synce_kpm_mainwindow(object):
         self.button_add_pship.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "Add", None, QtGui.QApplication.UnicodeUTF8))
         self.button_delete_pship.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "Delete", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtGui.QApplication.translate("synce_kpm_mainwindow", "Partnership manager", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("synce_kpm_mainwindow", "ActiveSync Status", None, QtGui.QApplication.UnicodeUTF8))
+        self.activesyncStatusIcon.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "...", None, QtGui.QApplication.UnicodeUTF8))
+        self.labelSyncEngineNotRunning_2.setText(QtGui.QApplication.translate("synce_kpm_mainwindow", "Make sure Sync-Engine is running...", None, QtGui.QApplication.UnicodeUTF8))
 

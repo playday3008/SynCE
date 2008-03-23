@@ -1,3 +1,4 @@
+############################################################################## 
 #    Copyright (C) 2007 Guido Diepen
 #    Email: Guido Diepen <guido@guidodiepen.nl>
 #
@@ -21,27 +22,23 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
-import libxml2
 import logging
 
 
-from synceKPM.util.commutil import * 
-import synceKPM.util.xml2util
-import synceKPM.util.characteristics
+from synceKPM.gui.ui_synce_kpm_create_pshipwindow import *
+import synceKPM.constants
 
-#import synceKPM.dialogs.ui_synce_kpm_create_pshipwindow
-from synceKPM.dialogs.ui_synce_kpm_create_pshipwindow import *
-
-
-
-class synce_kpm_create_pshipwindow(QtGui.QWidget, synceKPM.dialogs.ui_synce_kpm_create_pshipwindow.Ui_synce_kpm_create_pshipwindow):
-    def __init__(self, _phoneCommunicator):
+class createpshipwindow(QtGui.QWidget, synceKPM.gui.ui_synce_kpm_create_pshipwindow.Ui_synce_kpm_create_pshipwindow):
+    def __init__(self, mainwindow):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)
-        self.phoneCommunicator = _phoneCommunicator
+        self.guiDbus = mainwindow.guiDbus
         self.modelSyncItems = QStandardItemModel(0,2)
         self.viewSyncItems.setModel(self.modelSyncItems)
-        
+        self.mainwindow = mainwindow
+
+            
+
 
 
 
@@ -50,7 +47,8 @@ class synce_kpm_create_pshipwindow(QtGui.QWidget, synceKPM.dialogs.ui_synce_kpm_
     def showEvent(self,event):
         self.modelSyncItems.clear()
 
-        avail_sync_items, __foo = self.phoneCommunicator.getPartnerships()
+        #avail_sync_items, __foo = self.phoneCommunicator.getPartnerships()
+        avail_sync_items = self.mainwindow.sync_items
         
         name_to_id = {}
 
@@ -80,7 +78,7 @@ class synce_kpm_create_pshipwindow(QtGui.QWidget, synceKPM.dialogs.ui_synce_kpm_
             return
         
 
-        avail_sync_items, __foo = self.phoneCommunicator.getPartnerships()
+        avail_sync_items = self.mainwindow.sync_items
         name_to_id = {}
         for id, name in avail_sync_items.items():
             name_to_id[name] = id
@@ -96,7 +94,7 @@ class synce_kpm_create_pshipwindow(QtGui.QWidget, synceKPM.dialogs.ui_synce_kpm_
             return
 
         #print "Name=%s, items="%self.namePartnership.text() , items
-        self.phoneCommunicator.createPartnership( unicode(self.namePartnership.text()), items) 
+        self.guiDbus.createPartnership( unicode(self.namePartnership.text()), items) 
 
         self.hide()
 

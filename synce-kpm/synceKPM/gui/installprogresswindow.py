@@ -1,3 +1,4 @@
+############################################################################## 
 #    Copyright (C) 2007 Guido Diepen
 #    Email: Guido Diepen <guido@guidodiepen.nl>
 #
@@ -21,19 +22,15 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore, uic
 
-import libxml2
-import synceKPM.util.xml2util
-import synceKPM.util.characteristics
 import logging
-from synceKPM.util.commutil import * 
+import dbus
+import dbus.service
 
 
-
-#import synceKPM.dialogs.ui_synce_kpm_copycab_progresswindow
-from synceKPM.dialogs.ui_synce_kpm_copycab_progresswindow import *
+from synceKPM.gui.ui_synce_kpm_copycab_progresswindow import *
 
 
-class synce_kpm_copycab_progresswindow(QtGui.QWidget, Ui_synce_kpm_copycab_progresswindow):
+class installprogresswindow(QtGui.QWidget, Ui_synce_kpm_copycab_progresswindow):
     def __init__(self):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)
@@ -42,22 +39,16 @@ class synce_kpm_copycab_progresswindow(QtGui.QWidget, Ui_synce_kpm_copycab_progr
         self.copyProgress.setValue(0)
         self.currentProgress = 0
 
-    @pyqtSignature("")
-    def customEvent(self,event):
-        #This means we are finished, hide everything and return
-        if self.currentProgress < 0:
-            self.currentProgress = 100
-            self.hide()
-            QMessageBox.information(self,"Install CAB file", "Please follow instructions on the device now to install the program.", QMessageBox.Ok) 
-            return
+        dataServer = dbus.SessionBus().get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        dataServerIface = dbus.Interface( dataServer, "org.synce.kpm.DataServerInterface")
+        dataServerIface.connect_to_signal("installationCopyProgress", self.handleInstallationCopyProgress )
 
-        self.copyProgress.setValue(self.currentProgress)
+		
 
-       
-    def updateProgress_cb(self, progressValue):
-        self.currentProgress = progressValue
-        progressUpdateEvent = QEvent(QEvent.User)
-        QCoreApplication.postEvent(self, progressUpdateEvent)
+
+    def handleInstallationCopyProgress(self, progress):
+        self.copyProgress.setValue(progress)
+
     
     def showEvent(self,event):
         self.labelProgress.setText("")

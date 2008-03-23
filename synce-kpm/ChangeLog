@@ -1,3 +1,18 @@
+2008-03-23	Guido Diepen	<guido@guidodiepen.nl>
+
+	* Major rewrite into two separate components, one GUI component and one
+	  dataserver component. These both run in their own separate proces,
+	  meaning we don't have any problems with the threading within python
+	  anymore.
+	* Added support for listening to Status events generated when ActiveSync
+	  process is going on. Currently it only shows an animated icon when
+	  sync to sync-engine is in progress (NB does not have to be sync with
+	  opensync!)
+	* Added support for only starting the application once
+	* Added support for starting the application in system-tray
+	* Added support for starting the dataserver only (useful for later with
+   	  d-busactivation)
+
 2008-01-28	Guido Diepen	<guido@guidodiepen.nl>
 
 	* Minor update in setup.py for correct handling of icons with packaging.

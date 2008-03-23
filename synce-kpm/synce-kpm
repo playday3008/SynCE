@@ -21,7 +21,7 @@ Starter file of the SynCE KDE PDA Manager
 """
 
 
-import synceKPM.synce_kpm_main
+import synceKPM.main
 
-synceKPM.synce_kpm_main.main()
+synceKPM.main.main()
 
