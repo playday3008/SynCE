@@ -30,19 +30,22 @@ def main(startIconified):
     if abortStart:
         sys.exit(0) 
 
-
-    pixmap = QPixmap("%s/splashscreen.png"%resource_filename('synceKPM','data'));
-    splash = QSplashScreen(pixmap);
-    splash.show();
-    app.processEvents();
-
-    QTimer.singleShot(2000, splash.hide)
-
-    mainWindow = mainwindow()
-    app.processEvents();
-    
     if not startIconified:
+        pixmap = QPixmap("%s/splashscreen.png"%resource_filename('synceKPM','data'));
+        splash = QSplashScreen(pixmap);
+        splash.show();
+        app.processEvents();
+
+        QTimer.singleShot(2000, splash.hide)
+
+        mainWindow = mainwindow()
+        app.processEvents();
+    
         mainWindow.show()
+
+    else:
+        mainWindow = mainwindow()
+
     
     app.setQuitOnLastWindowClosed(False)	
     app.exec_()
