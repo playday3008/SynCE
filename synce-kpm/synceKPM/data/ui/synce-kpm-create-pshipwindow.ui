@@ -13,7 +13,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>Create Parternship</string>
+   <string>Create Partnership</string>
   </property>
   <widget class="QListView" name="viewSyncItems" >
    <property name="geometry" >

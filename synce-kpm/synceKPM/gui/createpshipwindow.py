@@ -46,6 +46,7 @@ class createpshipwindow(QtGui.QWidget, synceKPM.gui.ui_synce_kpm_create_pshipwin
     
     def showEvent(self,event):
         self.modelSyncItems.clear()
+        self.namePartnership.setText("")
 
         #avail_sync_items, __foo = self.phoneCommunicator.getPartnerships()
         avail_sync_items = self.mainwindow.sync_items
@@ -59,6 +60,7 @@ class createpshipwindow(QtGui.QWidget, synceKPM.gui.ui_synce_kpm_create_pshipwin
             i += 1
             myItem.setCheckable(True)
             myItem.setEnabled( False )
+            myItem.setEditable( False )
             #Set the data of the item to the id number, presented by sync-engine
             self.modelSyncItems.appendRow( myItem )
         

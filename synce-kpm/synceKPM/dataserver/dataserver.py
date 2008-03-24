@@ -45,7 +45,6 @@ class DataServer(dbus.service.Object):
 
         self.odccm_device = None
         self.syncEngineRunning = False
-        self.dbusSyncEngine = None
 
 
         #
@@ -70,6 +69,7 @@ class DataServer(dbus.service.Object):
         self._sm_syncengine_status_sync_start_datatype   = None
         self._sm_syncengine_status_sync_end_datatype     = None
 
+        self._sm_syncengine_partnerships_changed		 = None
         
         self._programList = None
         self._powerStatus = None
@@ -268,6 +268,8 @@ class DataServer(dbus.service.Object):
             self._sm_syncengine_status_sync_end_partner      =   dbusSyncEngine.connect_to_signal("StatusSyncEndPartner"   ,self.handle_syncengine_status_sync_end_partner)
             self._sm_syncengine_status_sync_start_datatype   =   dbusSyncEngine.connect_to_signal("StatusSyncStartDatatype",self.handle_syncengine_status_sync_start_datatype)
             self._sm_syncengine_status_sync_end_datatype     =   dbusSyncEngine.connect_to_signal("StatusSyncEndDatatype"  ,self.handle_syncengine_status_sync_end_datatype)
+            self._sm_syncengine_partnerships_changed		 = dbusSyncEngine.connect_to_signal("PartnershipsChanged"  ,self.handleSyncEnginePartnershipsChanged )
+
             
         else:
             self._sm_syncengine_status_set_max_value         = None
@@ -282,9 +284,12 @@ class DataServer(dbus.service.Object):
 
             self._sm_syncengine_status_sync_start_datatype   = None
             self._sm_syncengine_status_sync_end_datatype     = None
+            self._sm_syncengine_partnerships_changed		 = None
 
 
-   
+    def handleSyncEnginePartnershipsChanged(self):
+        self.updatePartnerships()
+
     @dbus.service.signal('org.synce.kpm.DataServerInterface')
     def SyncEngineStatusChange(self, isOnline):
         pass
@@ -472,7 +477,7 @@ class DataServer(dbus.service.Object):
 
         reply_node = xml2util.GetNodeOnLevel(reply_doc, 2 )
         
-        updateListInstalledPrograms()
+        self.updateListInstalledPrograms()
 
 
     @dbus.service.signal('org.synce.kpm.DataServerInterface')
@@ -524,15 +529,20 @@ class DataServer(dbus.service.Object):
     
     @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="sau")
     def createPartnership(self, name, items):
+
+        print "DS :: Create partnership"
         dbusSyncEngine = self.busConn.get_object( "org.synce.SyncEngine",
                                                 "/org/synce/SyncEngine",
                                                 "org.synce.SyncEngine")
         try:
-            dbusSyncEngine.CreatePartnership(name,items)
-        except:
-            pass
+            itypes = dbusSyncEngine.GetItemTypes().items()
 
-        self.updatePartnerships()
+            dbusSyncEngine.CreatePartnership(name,items)
+        except dbus.DBusException,e:
+            raise e
+
+        #self.updatePartnerships()
+
 
 
 
@@ -543,7 +553,7 @@ class DataServer(dbus.service.Object):
                                                 "org.synce.SyncEngine")
 
         dbusSyncEngine.DeletePartnership(id,guid)
-        self.updatePartnerships()
+        #self.updatePartnerships()
 
     @dbus.service.signal('org.synce.kpm.DataServerInterface')
     def CabInstallStarted(self):

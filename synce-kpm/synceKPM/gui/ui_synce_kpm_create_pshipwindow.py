@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-create-pshipwindow.ui'
 #
-# Created: Sat Jan 19 23:07:56 2008
+# Created: Mon Mar 24 15:33:28 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -44,7 +44,7 @@ class Ui_synce_kpm_create_pshipwindow(object):
         QtCore.QMetaObject.connectSlotsByName(synce_kpm_create_pshipwindow)
 
     def retranslateUi(self, synce_kpm_create_pshipwindow):
-        synce_kpm_create_pshipwindow.setWindowTitle(QtGui.QApplication.translate("synce_kpm_create_pshipwindow", "Create Parternship", None, QtGui.QApplication.UnicodeUTF8))
+        synce_kpm_create_pshipwindow.setWindowTitle(QtGui.QApplication.translate("synce_kpm_create_pshipwindow", "Create Partnership", None, QtGui.QApplication.UnicodeUTF8))
         self.button_create.setText(QtGui.QApplication.translate("synce_kpm_create_pshipwindow", "Create", None, QtGui.QApplication.UnicodeUTF8))
         self.button_cancel.setText(QtGui.QApplication.translate("synce_kpm_create_pshipwindow", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("synce_kpm_create_pshipwindow", "Name of partnership:", None, QtGui.QApplication.UnicodeUTF8))

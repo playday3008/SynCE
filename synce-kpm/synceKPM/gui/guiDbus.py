@@ -70,8 +70,7 @@ class GuiDbus(dbus.service.Object):
 
 
     def handleSyncEngineStatus_SetStatusString(self , statusString):
-        print statusString
-        pass
+        self.mainwindow.setActiveSyncStatusString(statusString)
 
     def handleSyncEngineStatus_SyncStart(self , ):
         self.mainwindow.startActiveSyncSync()
@@ -81,17 +80,21 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.stopActiveSyncSync()
     pass
 
-    def handleSyncEngineStatus_SyncStartPartner(self , parter):
-        pass
+    def handleSyncEngineStatus_SyncStartPartner(self , partner):
+        self.mainwindow.currentActiveSyncStatusPartner = partner
+        self.mainwindow.setActiveSyncStatusString("")
 
-    def handleSyncEngineStatus_SyncEndPartner(self , parter):
-        pass
+    def handleSyncEngineStatus_SyncEndPartner(self , partner):
+        self.mainwindow.setActiveSyncStatusString("")
+        self.mainwindow.currentActiveSyncStatusPartner = ""
 
-    def handleSyncEngineStatus_SyncStartDatatype(self , parter,datatype):
-        pass
+    def handleSyncEngineStatus_SyncStartDatatype(self , partner,datatype):
+        self.mainwindow.currentActiveSyncStatusDatatype = datatype
+        self.mainwindow.setActiveSyncStatusString("")
 
-    def handleSyncEngineStatus_SyncEndDatatype(self , parter,datatype):
-        pass
+    def handleSyncEngineStatus_SyncEndDatatype(self , partner,datatype):
+        self.mainwindow.currentActiveSyncStatusDatatype = ""
+        self.mainwindow.setActiveSyncStatusString("")
 
 
 
@@ -227,6 +230,11 @@ class GuiDbus(dbus.service.Object):
 
         self.mainwindow.tabWidget.setEnabled(False)
 
+        self.mainwindow.array_async_status_pships_label[0].setText( "" )
+        self.mainwindow.array_async_status_pships_label[1].setText( "" )
+        self.mainwindow.array_async_status_pships_label[2].setText( "" )
+
+
         self.mainwindow.modelPartnerships.clear()
         self.mainwindow.listInstalledPrograms.clear()
        
@@ -336,18 +344,24 @@ class GuiDbus(dbus.service.Object):
 
 
     def handle_deletePartnership(self):
+        self.mainwindow.button_add_pship.setEnabled(True)
+        self.mainwindow.button_delete_pship.setEnabled(True)
         self.mainwindow.setCursor(QtCore.Qt.ArrowCursor)
         print "Finished deleting partnership"
         pass
 
 
     def handle_deletePartnership_error(self,error):
+        self.mainwindow.button_add_pship.setEnabled(True)
+        self.mainwindow.button_delete_pship.setEnabled(True)
         self.mainwindow.setCursor(QtCore.Qt.ArrowCursor)
         print "Error happened during deletion of partnership..."
         print error
 
     def deletePartnership(self, id, guid):
         dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        self.mainwindow.button_add_pship.setEnabled(False)
+        self.mainwindow.button_delete_pship.setEnabled(False)
 
         self.mainwindow.setCursor(QtCore.Qt.BusyCursor)
         dataServer.deletePartnership(id, guid, dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE,
@@ -357,18 +371,59 @@ class GuiDbus(dbus.service.Object):
 
 
 
+    def updateListPartnerships(self):
+        print "Updating the list of partnerships"
+        dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        dataServer.updatePartnerships(dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE,
+                                    reply_handler=self.handle_update_partnerships,
+                                    error_handler=self.handle_update_partnerships_error)
+
+
     def handle_createPartnership(self):
         self.mainwindow.setCursor(QtCore.Qt.ArrowCursor)
-        print "Finished creating partnership"
-        pass
+        
+        self.mainwindow.button_add_pship.setEnabled(True)
+        self.mainwindow.button_delete_pship.setEnabled(True)
+        
+#        self.updateListPartnerships()
+        
+
 
     def handle_createPartnership_error(self,error):
+        self.mainwindow.button_add_pship.setEnabled(True)
+        self.mainwindow.button_delete_pship.setEnabled(True)
         self.mainwindow.setCursor(QtCore.Qt.ArrowCursor)
         print "Error happened during creation of partnership..."
-        print error
+        if error._dbus_error_name=="org.synce.SyncEngine.Error.InvalidArgument":
+            QTimer.singleShot(250, self.__showErrorInvalidArgument)
+        elif error._dbus_error_name=="org.synce.SyncEngine.Error.NoFreeSlots":
+            QTimer.singleShot(250, self.__showErrorNoFreeSlots)
+        elif error._dbus_error_name=="org.freedesktop.DBus.Python.socket.error":
+            QTimer.singleShot(250, self.__showCriticalErrorSE)
+        else:
+            print "Error was:"
+            print error
+        
+
+#        self.updateListPartnerships()
+    
+
+    def __showErrorInvalidArgument(self):
+        self.mainwindow.showErrorMessage("Error whil creating partnership","You supplied an invalid argument")
+
+    def __showErrorNoFreeSlots(self):
+        self.mainwindow.showErrorMessage("Error whil creating partnership","No more free slots are available to create partnerships.\nYou can have a maximum of two partnerships.")
+            
+            
+    def __showCriticalErrorSE(self):
+        self.mainwindow.showCriticalError("Problem with sync-engine", "While creating a partnership, something went wrong with sync-engine.\nPlease shutdown the sync-engine and restart it\nor unplug the phone and plug it in again")
+
 
     def createPartnership(self, id, guid):
+        self.mainwindow.button_add_pship.setEnabled(False)
+        self.mainwindow.button_delete_pship.setEnabled(False)
         dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        print "GUI :: Creating partnership"    
 
         self.mainwindow.setCursor(QtCore.Qt.BusyCursor)
         dataServer.createPartnership(id, guid, dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE,

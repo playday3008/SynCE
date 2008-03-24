@@ -5,6 +5,8 @@ from dbus.mainloop.qt import DBusQtMainLoop
 
 from synceKPM.gui.mainwindow import *
 import synceKPM.constants
+from pkg_resources import resource_filename
+
 
 import sys
 
@@ -29,9 +31,18 @@ def main(startIconified):
         sys.exit(0) 
 
 
+    pixmap = QPixmap("%s/splashscreen.png"%resource_filename('synceKPM','data'));
+    splash = QSplashScreen(pixmap);
+    splash.show();
+    app.processEvents();
+
+    QTimer.singleShot(2000, splash.hide)
 
     mainWindow = mainwindow()
+    app.processEvents();
+    
     if not startIconified:
         mainWindow.show()
+    
     app.setQuitOnLastWindowClosed(False)	
     app.exec_()

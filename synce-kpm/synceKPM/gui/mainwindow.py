@@ -53,6 +53,8 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.guiDbus = synceKPM.gui.guiDbus.GuiDbus( self.session_bus, self )
 
 
+        
+
         self.toolButtonDeviceIsLocked.setVisible(False)
         self.labelDeviceIsLocked.setVisible(False)
         self.iconLocked = QtGui.QIcon( "%s/lock.svg"%resource_filename('synceKPM', 'data'))
@@ -79,6 +81,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.activesyncStatusIcon.setIconSize( QSize( self.activesyncStatusIcon.width(),self.activesyncStatusIcon.height()) )
         #self.activesyncStatusIcon.setIcon( self.animIcons[0] ) 
         self.activesyncStatusIcon.setIcon( self.iconDisconnected ) 
+        
 
         self.animating = False
         self.animationIndex = 0 
@@ -107,25 +110,6 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.tray.connect(self.tray, SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),
                 self.cb_systray_activated)
 
-        """
-
-        Qt.QObject.connect(self.systray,
-> Qt.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),
-> self.cb_systray_activated)
-        if reason != QtGui.QSystemTrayIcon.Context:
-            self.hide()
-        self.connect(self.tray
-
-def OnActivated(self, reason):
-        if reason != QtGui.QSystemTrayIcon.Context:
-                    self.hide()
-        if self.windowState() & Qt.WindowMinimized:
-                    self.showNormal()
-        else:
-                    self.setWindowState(self.windowState() |
-Qt.WindowMinimized)
-
-        """
 
 
         self.connect(self.storageSelector, SIGNAL("currentIndexChanged(int)"), self.updateFreeUsedTotalDiskSpace)
@@ -150,6 +134,38 @@ Qt.WindowMinimized)
 
         self.deviceName = ""
         self.guiDbus.InitializeDataServer()
+
+
+        self.array_async_status_pships_label = []
+        self.array_async_status_pships_text  = []
+
+        self.array_async_status_pships_label.append( self.label_partnership_1)
+        self.array_async_status_pships_label.append( self.label_partnership_2)
+        self.array_async_status_pships_label.append( self.label_partnership_3)
+            
+        self.array_async_status_pships_text.append( self.label_partnership_1_text)
+        self.array_async_status_pships_text.append( self.label_partnership_2_text)
+        self.array_async_status_pships_text.append( self.label_partnership_3_text)
+
+        self.currentActiveSyncStatusPartner = ""
+        self.currentActiveSyncStatusDatatype = ""
+        self.mapping_pship_to_label_idx = {}
+
+    def getASLabelIdx(self, pshipName):
+        if pshipName in self.mapping_pship_to_label_idx:
+            return self.mapping_pship_to_label_idx[ pshipName ]
+        else:
+            #This is currently for Exchange partnerships, till jagow updates sync-engine
+            self.array_async_status_pships_label[ len(self.partnerships) ].setText( pshipName )
+            return len(self.partnerships)
+
+
+    def setActiveSyncStatusString(self, statusString):
+        __currentIdx = self.getASLabelIdx( self.currentActiveSyncStatusPartner )
+        if self.currentActiveSyncStatusDatatype == "":
+            self.array_async_status_pships_text[ __currentIdx ].setText("%s"%statusString)
+        else:
+            self.array_async_status_pships_text[ __currentIdx ].setText("%s: %s"%(self.currentActiveSyncStatusDatatype, statusString))
 
 
     def cb_systray_activated(self, reason):
@@ -280,6 +296,8 @@ Qt.WindowMinimized)
 
     @pyqtSignature("")
     def on_pushButton_InstallCAB_clicked(self):
+        self.installWindow.move(self.x() + self.width()/2 -  self.installWindow.width()/2 , self.y() + self.height()/2 - self.installWindow.height()/2)
+        self.installWindow.progressWindow.move(self.x() + self.width()/2 -  self.installWindow.progressWindow.width()/2 , self.y() + self.height()/2 - self.installWindow.progressWindow.height()/2)
         self.installWindow.show()
         
 
@@ -301,8 +319,11 @@ Qt.WindowMinimized)
         if reply == QMessageBox.Yes:
             self.guiDbus.uninstallProgram(programName)
 
+    def showErrorMessage(self, title, message):
+        QMessageBox.warning(self,title,message)
 
-
+    def showCriticalError(self,title, message):
+        QMessageBox.critical(self,title,message)
 
 
 
@@ -360,11 +381,22 @@ Qt.WindowMinimized)
         self.modelPartnerships.clear() 
         self.partnerships = partnerships 
         self.sync_items   = sync_items
+
+        self.array_async_status_pships_label[0].setText( "" )
+        self.array_async_status_pships_label[1].setText( "" )
+        self.array_async_status_pships_label[2].setText( "" )
+        
+        self.mapping_pship_to_label_idx = {}
+        i=0
         for pship in partnerships:
             id,guid,name,hostname,devicename,items = pship
 
-            print id,guid,name
+            #print id,guid,name
+            
+            self.mapping_pship_to_label_idx[ name ] = i
 
+            self.array_async_status_pships_label[i].setText( name )
+            
             rootItem = QStandardItem( name )
             rootItem.setIcon(self.iconConnected)
             self.modelPartnerships.appendRow(rootItem)
@@ -392,6 +424,7 @@ Qt.WindowMinimized)
     
     @pyqtSignature("")
     def on_button_add_pship_clicked(self):
+        self.createPshipWindow.move(self.x() + self.width()/2 -  self.createPshipWindow.width()/2 , self.y() + self.height()/2 - self.createPshipWindow.height()/2)
         self.createPshipWindow.show()
 
        
@@ -474,6 +507,7 @@ Qt.WindowMinimized)
     def stopActiveSyncSync(self):
         self.sync_progressbar.setVisible(False)
         self.stopSyncAnimation()
+
 
     def myAnimationThread_cb(self):
         self.animationIndex = (self.animationIndex + 1)%10

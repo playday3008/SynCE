@@ -1,3 +1,17 @@
+2008-03-24	Guido Diepen	<guido@guidodiepen.nl>
+	
+	* Added splashscreen
+	* Added error handling when creating partnerships. Sometimes sync-engine
+	tries to rebind certain dtpt ports after creating new pship
+	* Added ActiveSync status information to the mainscreen. When an
+	activesync is active, the screen will show (almost) the same information
+	as the screen on the device
+	* Updated the placements of the different screens. Now they are all placed
+	centrally over the mainwindow
+	* Fixed typo in partnership creation screen
+	* Start listening to the PartnershipsChanged signal emitted by sync-engine
+	* Made items in partnership-creation window non-editable
+
 2008-03-23	Guido Diepen	<guido@guidodiepen.nl>
 	
 	* Now also progress of the sync process is shown with progressbar
