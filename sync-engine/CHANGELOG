@@ -823,3 +823,12 @@ occurred because in another thread the rapi_session would be NULL due to
 the Thread Local Storage.
 
 Thanks Markus Niemistö for supplying the patch.
+
+24/03/2008 - 160000 Guido Diepen
+------------------------------
+
+Added signal "PartnershipsChanged" that will be emitted the moment a 
+partnership is created or a partnership is deleted through sync-engine.
+
+With this signal other clients will be notified to update their listings.
+

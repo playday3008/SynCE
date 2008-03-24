@@ -692,6 +692,7 @@ class SyncEngine(dbus.service.Object):
 		if start:
 			self.StartSessions()
 		
+		self.PartnershipsChanged()
 		return id
 	
 	#
@@ -737,6 +738,7 @@ class SyncEngine(dbus.service.Object):
 		self.PshipManager.DeleteDevicePartnership(id,guid)
 	
 		self.syncing.unlock()
+		self.PartnershipsChanged()
 	
 	#
 	# AddLocalChanges
@@ -904,6 +906,21 @@ class SyncEngine(dbus.service.Object):
 	@dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature='')
 	def Synchronized(self):
 		self.logger.info("Synchronized: Emitting Synchronized signal")
+
+
+	#
+	# PartnershipsChanged
+	#
+	# EXPORTED: DBUS SERVICE SIGNAL
+	#
+	# Message will be sent out on d-bus when a partnership is deleted / created. This will
+	# make sure all clients are updated with these changes
+	
+	@dbus.service.signal(DBUS_SYNCENGINE_IFACE, signature='')
+	def PartnershipsChanged(self):
+		self.logger.info("Synchronized: Emitting PartnershipsChanged signal")
+
+
 
 
 
