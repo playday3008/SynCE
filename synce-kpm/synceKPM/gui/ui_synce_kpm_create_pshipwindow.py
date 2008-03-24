@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-create-pshipwindow.ui'
 #
-# Created: Mon Mar 24 15:33:28 2008
+# Created: Mon Mar 24 17:00:28 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!

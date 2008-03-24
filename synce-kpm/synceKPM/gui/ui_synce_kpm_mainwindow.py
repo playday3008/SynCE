@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'synce-kpm-mainwindow.ui'
 #
-# Created: Sat Mar 22 15:58:03 2008
+# Created: Mon Mar 24 17:01:46 2008
 #      by: PyQt4 UI code generator 4.3.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -172,33 +172,33 @@ class Ui_synce_kpm_mainwindow(object):
         self.groupBox_2.setObjectName("groupBox_2")
 
         self.label_partnership_2 = QtGui.QLabel(self.groupBox_2)
-        self.label_partnership_2.setGeometry(QtCore.QRect(10,40,121,18))
+        self.label_partnership_2.setGeometry(QtCore.QRect(10,40,141,18))
         self.label_partnership_2.setObjectName("label_partnership_2")
 
         self.label_partnership_3 = QtGui.QLabel(self.groupBox_2)
-        self.label_partnership_3.setGeometry(QtCore.QRect(10,60,121,18))
+        self.label_partnership_3.setGeometry(QtCore.QRect(10,60,141,18))
         self.label_partnership_3.setObjectName("label_partnership_3")
 
         self.label_partnership_1 = QtGui.QLabel(self.groupBox_2)
-        self.label_partnership_1.setGeometry(QtCore.QRect(10,20,121,18))
+        self.label_partnership_1.setGeometry(QtCore.QRect(10,20,141,18))
         self.label_partnership_1.setObjectName("label_partnership_1")
 
         self.sync_progressbar = QtGui.QProgressBar(self.groupBox_2)
-        self.sync_progressbar.setGeometry(QtCore.QRect(140,90,371,23))
+        self.sync_progressbar.setGeometry(QtCore.QRect(160,90,351,23))
         self.sync_progressbar.setProperty("value",QtCore.QVariant(0))
         self.sync_progressbar.setTextVisible(False)
         self.sync_progressbar.setObjectName("sync_progressbar")
 
         self.label_partnership_1_text = QtGui.QLabel(self.groupBox_2)
-        self.label_partnership_1_text.setGeometry(QtCore.QRect(140,20,131,18))
+        self.label_partnership_1_text.setGeometry(QtCore.QRect(170,20,241,18))
         self.label_partnership_1_text.setObjectName("label_partnership_1_text")
 
         self.label_partnership_3_text = QtGui.QLabel(self.groupBox_2)
-        self.label_partnership_3_text.setGeometry(QtCore.QRect(140,60,131,18))
+        self.label_partnership_3_text.setGeometry(QtCore.QRect(170,60,241,18))
         self.label_partnership_3_text.setObjectName("label_partnership_3_text")
 
         self.label_partnership_2_text = QtGui.QLabel(self.groupBox_2)
-        self.label_partnership_2_text.setGeometry(QtCore.QRect(140,40,131,18))
+        self.label_partnership_2_text.setGeometry(QtCore.QRect(170,40,241,18))
         self.label_partnership_2_text.setObjectName("label_partnership_2_text")
 
         self.label_sync_stat = QtGui.QLabel(self.groupBox_2)
