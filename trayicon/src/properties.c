@@ -25,7 +25,7 @@ prefs_changed_cb (GConfClient *client, guint id,
     const gchar *which_dccm = gconf_value_get_string(value);
     GtkWidget *prefs_use_odccm = glade_xml_get_widget (xml, "prefs_use_odccm");	
     GtkWidget *prefs_use_vdccm = glade_xml_get_widget (xml, "prefs_use_vdccm");	
-    GtkWidget *prefs_use_hal = glade_xml_get_widget (xml, "prefs_use_vdccm");	
+    GtkWidget *prefs_use_hal = glade_xml_get_widget (xml, "prefs_use_hal");	
     GtkWidget *prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");	
 
     if (!(g_ascii_strcasecmp(which_dccm, "v"))) {
@@ -149,7 +149,7 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
 		      G_CALLBACK (prefs_use_odccm_toggled_cb), NULL);
   g_signal_connect (G_OBJECT (prefs_use_vdccm), "toggled",
 		      G_CALLBACK (prefs_use_vdccm_toggled_cb), prefs_start_stop_vdccm);
-  g_signal_connect (G_OBJECT (prefs_use_odccm), "toggled",
+  g_signal_connect (G_OBJECT (prefs_use_hal), "toggled",
 		      G_CALLBACK (prefs_use_hal_toggled_cb), NULL);
   g_signal_connect (G_OBJECT (prefs_start_stop_vdccm), "toggled",
 		      G_CALLBACK (prefs_start_stop_vdccm_toggled_cb), trayicon);
