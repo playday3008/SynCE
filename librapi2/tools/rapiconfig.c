@@ -128,7 +128,8 @@ int main(int argc, char** argv)
   }
 
   bytes_left = fsize(file);
-  buffer = malloc(bytes_left);
+  buffer = malloc(bytes_left+1);
+  memset(buffer, 0, bytes_left+1);
 
   if (!buffer)
   {

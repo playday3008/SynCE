@@ -1,3 +1,8 @@
+2008-03-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixed input buffer length in tools/rapiconfig.c
+	* fixed rapi1 CeProcessConfig (after a fashion)
+
 2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
 
 	* Rewrote the thread-safe code to make use of pthread_once. Instead of

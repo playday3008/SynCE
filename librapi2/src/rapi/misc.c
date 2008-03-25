@@ -278,6 +278,7 @@ HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
   HRESULT result = E_UNEXPECTED;
   BOOL has_reply = FALSE;
   DWORD size = 0;
+  DWORD dummy = 0;
   LPWSTR buffer = NULL;
 
   if (!config || !reply)
@@ -298,6 +299,12 @@ HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
     goto exit;
   synce_trace("result = 0x%08x", result);
 
+  /*
+    should use rapi_buffer_read_optional(), but this needs an allocated
+    buffer of a known size, which we don't know. Is there a system
+    wide max size ?
+  */
+
   if (!rapi_buffer_read_uint32(context->recv_buffer, &has_reply))
     goto exit;
 
@@ -314,6 +321,9 @@ HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
     synce_error("Failed to allocated %i bytes", size);
     goto exit;
   }
+
+  if (!rapi_buffer_read_uint32(context->recv_buffer, &dummy))
+    goto exit;
 
   if (!rapi_buffer_read_data(context->recv_buffer, buffer, size))
     goto exit;
