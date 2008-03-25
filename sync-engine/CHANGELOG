@@ -839,3 +839,7 @@ Reverted yesterdays patch. For some reason the previous patch causes problems
 when other people use python 2.5.
 I have tested everything locally with python 2.4 and I can't get it to 
 cause problems. Therefore this patch is removed for the moment
+UPDATE: AdamW thought problems occurred due to the 3337 patch. Turned out that
+this patch did not patch cleanly to the 0.11 release. Sorry for all the 
+fuss folks! :)  (If you want to blame somebody, pick AdamW :) )
+
