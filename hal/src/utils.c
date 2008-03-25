@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <linux/if.h>
 #include <sys/ioctl.h>
 #include <synce.h>
 #include <dbus/dbus-glib.h>

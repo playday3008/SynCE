@@ -1,3 +1,8 @@
+2008-03-25  Mark Ellis <mark@mpellis.org.uk>
+
+	* removed unneeded linux/if.h include from utils.c for
+	  cross platform compatability
+
 2008-03-20  Mark Ellis <mark@mpellis.org.uk>
 
 	* 10-synce.fdi - added freebsd ucom rule
