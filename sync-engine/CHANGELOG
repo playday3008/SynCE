@@ -832,3 +832,10 @@ partnership is created or a partnership is deleted through sync-engine.
 
 With this signal other clients will be notified to update their listings.
 
+25/03/2008 - 225000 Guido Diepen
+------------------------------
+
+Reverted yesterdays patch. For some reason the previous patch causes problems 
+when other people use python 2.5.
+I have tested everything locally with python 2.4 and I can't get it to 
+cause problems. Therefore this patch is removed for the moment
