@@ -1,0 +1,87 @@
+diff -ruN linux-source-2.6.24/drivers/net/usb/usbnet.c linux-source-2.6.24.new/drivers/net/usb/usbnet.c
+--- linux-source-2.6.24/drivers/net/usb/usbnet.c	2008-01-24 11:52:31.000000000 +0100
++++ linux-source-2.6.24.new/drivers/net/usb/usbnet.c	2008-02-05 23:02:51.000000000 +0100
+@@ -90,8 +90,7 @@
+ 
+ /*-------------------------------------------------------------------------*/
+ 
+-/* handles CDC Ethernet and many other network "bulk data" interfaces */
+-int usbnet_get_endpoints(struct usbnet *dev, struct usb_interface *intf)
++static struct usb_host_interface *usbnet_get_in_out(struct usbnet *dev, struct usb_interface *intf)
+ {
+ 	int				tmp;
+ 	struct usb_host_interface	*alt = NULL;
+@@ -137,7 +136,28 @@
+ 		if (in && out)
+ 			break;
+ 	}
++
+ 	if (!alt || !in || !out)
++		return NULL;
++
++	dev->in = usb_rcvbulkpipe (dev->udev,
++			in->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
++	dev->out = usb_sndbulkpipe (dev->udev,
++			out->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
++	dev->status = status;
++
++	return alt;
++}
++
++/* handles CDC Ethernet and many other network "bulk data" interfaces */
++int usbnet_get_endpoints(struct usbnet *dev, struct usb_interface *intf)
++{
++	int				tmp;
++	struct usb_host_interface	*alt;
++
++	alt = usbnet_get_in_out(dev, intf);
++
++	if (!alt) 
+ 		return -EINVAL;
+ 
+ 	if (alt->desc.bAlternateSetting != 0
+@@ -148,11 +168,6 @@
+ 			return tmp;
+ 	}
+ 
+-	dev->in = usb_rcvbulkpipe (dev->udev,
+-			in->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
+-	dev->out = usb_sndbulkpipe (dev->udev,
+-			out->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
+-	dev->status = status;
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(usbnet_get_endpoints);
+@@ -1191,6 +1206,15 @@
+ 	net->tx_timeout = usbnet_tx_timeout;
+ 	net->ethtool_ops = &usbnet_ethtool_ops;
+ 
++	if (info->out && info->in) {
++		dev->in = usb_rcvbulkpipe (dev->udev, info->in);
++		dev->out = usb_sndbulkpipe (dev->udev, info->out);
++	} else {
++		interface = usbnet_get_in_out(dev, udev);
++	}
++		
++	dev->maxpacket = usb_maxpacket (dev->udev, dev->out, 1);
++
+ 	// allow device-specific bind/init procedures
+ 	// NOTE net->name still not usable ...
+ 	if (info->bind) {
+@@ -1211,8 +1235,6 @@
+ 	} else if (!info->in || !info->out)
+ 		status = usbnet_get_endpoints (dev, udev);
+ 	else {
+-		dev->in = usb_rcvbulkpipe (xdev, info->in);
+-		dev->out = usb_sndbulkpipe (xdev, info->out);
+ 		if (!(info->flags & FLAG_NO_SETINT))
+ 			status = usb_set_interface (xdev,
+ 				interface->desc.bInterfaceNumber,
+@@ -1228,7 +1250,6 @@
+ 
+ 	if (!dev->rx_urb_size)
+ 		dev->rx_urb_size = dev->hard_mtu;
+-	dev->maxpacket = usb_maxpacket (dev->udev, dev->out, 1);
+ 
+ 	SET_NETDEV_DEV(net, &udev->dev);
+ 	status = register_netdev (net);
