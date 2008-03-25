@@ -34,14 +34,8 @@
 #ifdef USE_THREAD_SAFE_VERSION
 /*This holds the value for the key where the contexts are stored*/
 static pthread_key_t context_key = -1;
-/*Make sure we can only have one program create the key, use this mutex*/
-static pthread_mutex_t once_masterlock = PTHREAD_MUTEX_INITIALIZER ; 
-/*Use this extra variable to figure out whether we have already 
- * initialized the pthread_key. It will also prevend using mutexes all
- * all of the time, because if we are initialized, then we don't have 
- * to bother at all anymore.
- */
-static int _pthread_key_initialized = 0 ; 
+/*This makes sure that the a key is created only once, we can also use pthread for this*/
+static pthread_once_t key_is_created = PTHREAD_ONCE_INIT;
 #else
 static RapiContext* current_context;
 
@@ -53,20 +47,17 @@ extern struct rapi_ops_s rapi2_ops;
 
 
 #ifdef USE_THREAD_SAFE_VERSION
-/* This method will aquire a mutex lock. After the 
- * lock has been aquired, it will check if the key was 
- * already initialized. If it was not initialized yet, 
- * it will create a key to save the thread_local 
- * context variables in.
+/* This method will create a key to hold the context_key
+ * with which each thread can access the thread local 
+ * rapi_context.
+ * It must be called ONLY once, there for this method
+ * will always be used in combination with the 
+ * pthread_once method.
+ * Do not run it multiple times, this will result in 
+ * unpredictable behaviour and might crash things!
  */
 void create_pthread_key(){
-	pthread_mutex_lock(&once_masterlock);
-	if (!_pthread_key_initialized)
-	{
-		pthread_key_create( &context_key, NULL ) ;
-		_pthread_key_initialized = 1 ; 
-	}
-	pthread_mutex_unlock(&once_masterlock);
+	pthread_key_create( &context_key, NULL ) ;
 }
 #endif
 
@@ -84,10 +75,7 @@ RapiContext* rapi_context_current()/*{{{*/
 	/* If the key for the thread_local context variables was not initalized yet,
 	 * do that now
 	 */
-	if (!_pthread_key_initialized)
-	{
-		create_pthread_key() ;
-	}
+	(void) pthread_once(&key_is_created, create_pthread_key);
 
 	/* Get the thread local current_context */
 	RapiContext* thread_current_context = (RapiContext*)pthread_getspecific(context_key) ;
@@ -120,10 +108,7 @@ void rapi_context_set(RapiContext* context)
 	/* If the key for the thread_local context variables was not initalized yet,
 	 * do that now
 	 */
-	if (!_pthread_key_initialized)
-	{
-		create_pthread_key() ;
-	}
+	(void) pthread_once(&key_is_created, create_pthread_key);
 	
 	/* Set the context for this thread in its local thread variable */
 	pthread_setspecific(context_key, (void*) context ) ;

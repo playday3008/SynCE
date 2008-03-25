@@ -1,5 +1,12 @@
 2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
 
+	* Rewrote the thread-safe code to make use of pthread_once. Instead of
+	using my own mutexes to ensure a key for the TSL was only created once, I
+	now use pthread_once to ensure that the create_key method is called only
+	once. Thanks David for pointing this out.
+
+2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
+
 	* Renabled the thread-safe code. Segfaults in sync-engine were
 	  caused by the fact that sync-engine tried to access rapi_context of 
 	  one thread via another thread. Resolved in sync-engine
