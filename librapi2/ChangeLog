@@ -1,3 +1,7 @@
+2008-03-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* correct build without python bindings (bug 1708885)
+
 2008-03-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* fixed input buffer length in tools/rapiconfig.c
