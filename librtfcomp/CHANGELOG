@@ -33,4 +33,6 @@ Applied patch by Robert Jarzmik to:
    (euro symbol, accents, exotic caracters => rtf control \uNc)
 
 
+2008-03-26  Mark Ellis  <mark@mpellis.org.uk>
 
+* correct build without python bindings (bug 1708885)

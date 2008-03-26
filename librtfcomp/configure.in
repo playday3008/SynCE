@@ -36,7 +36,7 @@ dnl # Now we must check for Python/Pyrex
 
 dnl (need python, python headers, and pyrex)
 
-AC_ARG_ENABLE(python-bindings, AS_HELP_STRING([--disable-python-bindings], [do not build python bindings]),[enable_python=$enableval], [enable_python=yes])
+AC_ARG_ENABLE(python-bindings, AS_HELP_STRING([--disable-python-bindings], [do not build python bindings]),[enable_python=$enableval], [enable_python=auto])
  
 if test x$enable_python = xno; then
     have_python=no
@@ -49,13 +49,15 @@ else
     else
         minimum_version=2.2
     fi
-	AM_PATH_PYTHON($minimum_version)
+	AM_PATH_PYTHON($minimum_version, [have_python_path=yes], [have_python_path=no] )
 	AC_CHECK_PROGS(PYREX, pyrexc)
 	AM_CHECK_PYTHON_HEADERS([have_python_header=yes], [have_python_header=no])
 	
-	if test x$have_python_header = xno ; then
+	if test x$have_python_path = xno -o x$have_python_header = xno -o x$PYREX != xpyrexc ; then
             if test x$enable_python = xyes ; then
                 AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings])
+            else
+                AC_MSG_NOTICE([Not building Python bindings])
             fi
 	else
 	    if test -z "$PYTHON" ; then
