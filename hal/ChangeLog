@@ -1,3 +1,9 @@
+2008-03-28  Mark Ellis <mark@mpellis.org.uk>
+
+	* replaced rndis callout script with python script to
+	  first attempt dhcp configuration, then fall back to
+	  static config
+
 2008-03-25  Mark Ellis <mark@mpellis.org.uk>
 
 	* removed unneeded linux/if.h include from utils.c for
