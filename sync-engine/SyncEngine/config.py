@@ -108,22 +108,22 @@ class FileSyncConfig(ConfigObject):
 		self.logger = logging.getLogger("FileSyncConfig")
 		self.LocalFilePath=""
 		self.Disabled = 1
-		self.handlers = { "LocalFilePath" : self.validate_LocalFilePath,
+		self.handlers = { "BaseFilePath" : self.validate_BaseFilePath,
 				  "Disable" : self.validate_Disable,
 				  "LocalUpdateFreq" : self.validate_UpdateFreq, 
 				  "ExtraDeleteDelay" : self.validate_DeleteDelay,
 				  "ObjectReportTimeout" : self.validate_ObjectReportTimeout
 				}
 				
-		self.cfg = { "LocalFilePath" : "",
+		self.cfg = { "BaseFilePath" : "~/PDAFiles",
 		             "Disable" : 1,
 			     "LocalUpdateFreq" : 10,
 			     "ExtraDeleteDelay" : 0,
 			     "ObjectReportTimeout" : 8
 			   }
 	
-	def validate_LocalFilePath(self,arg):
-		self.cfg["LocalFilePath"] = os.path.expanduser(arg)
+	def validate_BaseFilePath(self,arg):
+		self.cfg["BaseFilePath"] = os.path.expanduser(arg)
 		
 	def validate_Disable(self,arg):
 		try:
@@ -151,7 +151,7 @@ class FileSyncConfig(ConfigObject):
 	
 	def dump(self):
 		print "File-sync config: "
-		print "   local path           %s " % self.cfg["LocalFilePath"]
+		print "   local path           %s " % self.cfg["BaseFilePath"]
 		print "   disable?             %d " % self.cfg["Disable"]
 		print "   LocalUpdateFreq      %d " % self.cfg["LocalUpdateFreq"]
 		print "   ExtraDeleteDelay     %d " % self.cfg["ExtraDeleteDelay"]

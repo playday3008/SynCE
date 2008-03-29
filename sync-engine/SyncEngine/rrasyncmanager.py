@@ -123,15 +123,6 @@ class FileDB:
 	
 	def SaveDB(self):
 		
-# not needed with new partnership code
-#		try:
-#			os.makedirs(self.config_dir)
-#			
-#       	except OSError, e:
-#			if e.errno != 17:
-#				self.logger.error("SaveDB: Failed to create directory %s: %s", self.config_dir, e)
-#				return
-
         	try:
 			f = open(self.config_path, "wb")
 			pickle.dump(self.db, f, pickle.HIGHEST_PROTOCOL)
@@ -276,7 +267,6 @@ class FileDB:
 				except:
 					self.logger.debug("WARNING: Unable to create directory")
 
-
 	#
 	# Delete file by OID and remove from database
 	#
@@ -378,12 +368,12 @@ class FileProcessor(Processor):
 		# now read the config
 				
 		self.CfgItem = thread.config.config_FileSync
-		self.CfgItem.dump()
 		
-		path = os.path.expanduser(self.CfgItem.cfg["LocalFilePath"])
+		path = os.path.join(os.path.expanduser(self.CfgItem.cfg["BaseFilePath"]),
+		                    os.path.expanduser(pship.QueryConfig("/syncpartner-config/General/LocalFilePath[position() = 1]","0")))
 		
 		self.fdb = FileDB(thread.config.config_dir,\
-		                  os.path.expanduser(self.CfgItem.cfg["LocalFilePath"]),\
+		                  path,\
 				  pship,\
 				  self.CfgItem.cfg["ExtraDeleteDelay"])
 		self.UpdateDB = True
@@ -988,7 +978,6 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 		# scan for object types
 		
 		for ot in oj:
-			print "object id %d type %s" % (ot.id, ot.name1)
 			if ot.name1 == "File":
 				self.tidhandlers[ot.id] = ObjTypeHandler(ot.name1,FileProcessor(ot.id,pship,self))
 			

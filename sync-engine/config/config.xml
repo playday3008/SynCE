@@ -108,12 +108,14 @@
 	-->
 	<FileSync>
 		<!--
-			LocalFilePath
-			The path to the directory on the desktop that will mirror the handheld.
-			This should point to a valid path to a directory. When first creating the
-			partnership, ensure this directory is empty.
+			BaseFilePath
+			The path to the directory on the desktop in which all local PDA files are
+			stored. The actual path is the concatenation of this path with the path
+			specified in LocalFilePath in the partnership binding configuration - providing
+			the path specified in the partnership binding is relative. If the partnership
+			in the partnership binding is absolute, it takes precedence.
 		-->
-		<LocalFilePath>~/PDAFiles</LocalFilePath>
+		<BaseFilePath>~/PDAFiles</BaseFilePath>
 
 		<!--
 			Disable

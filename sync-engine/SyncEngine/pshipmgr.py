@@ -721,6 +721,7 @@ class Partnership:
 		confnode = self.config.newChild(None,"syncpartner-config",None)
 		generalnode = confnode.newChild(None,"General",None)
 		synctime = generalnode.newChild(None,"SyncTimeToPc", "0")
+		filepath = generalnode.newChild(None,"LocalFilePath", self.info.name)
 		dtptnode = confnode.newChild(None,"DTPT",None)
 		dtptnode.newChild(None,"Enabled","1")
 		dtptnode.newChild(None,"EnableMultihoming","0")

@@ -792,7 +792,7 @@ The signals are:
  * StatusSyncEndPartner(self,partner):
  	Denotes the sync of the given partnership just finished
  * StatusSyncStartDatatype(self,partner,datatype):
- 	Denotes the sync of the given type of sync item of the given partnership 
+ 	Denotes the sync of the given type of sync item of the given partnership
 	just started
  * StatusSyncEndDatatype(self,partner,datatype):
  	Denotes the sync of the given type of sync item of the given partnership 
@@ -842,4 +842,32 @@ cause problems. Therefore this patch is removed for the moment
 UPDATE: AdamW thought problems occurred due to the 3337 patch. Turned out that
 this patch did not patch cleanly to the 0.11 release. Sorry for all the 
 fuss folks! :)  (If you want to blame somebody, pick AdamW :) )
+
+29/03/2008 - 160700 Dr J A Gow
+------------------------------
+
+Fixed problem with contacts 'Rtf' field failing to sync to PDA (Opensync 0.2x)
+- for some reason a namespace had got clobbered in the XSLT transform scripts.
+Opensync 0.3x should not have been affected by this bug.
+
+Added a per-partnership configuration for the location of the directory
+in which files are to be synchronized. By default this is set to
+~PDAFiles/<partnership name>. It can be changed in two ways.
+
+Firstly it should be noted that the element <LocalFilePath> has been deleted
+from the global config.xml. This has been superseded by a new element
+<BaseFilePath> which provides a global base directory.
+
+Each partnership now has an element <LocalFilePath> in the <General> section
+of its per-partnership config.
+
+The actual directory into which a given partnership will sync is given
+by the intelligent concatenation of the <BaseFilePath> from the global config
+and the <LocalFilePath> from the per-partnership config.
+
+If <LocalFilePath> is absolute, or is prefixed by '~', it will take precedence
+over <BaseFilePath> and the absolute path will be used. If it is a relative
+path, the final directory will be formed by the concatenation of
+<LocalFilePath> and <BaseFilePath> - this forms the most flexible way to do
+this.
 

@@ -165,7 +165,7 @@
                 <C1:Birthday><xsl:value-of select="convert:contact_birthday_to_airsync()"/></C1:Birthday>
             </xsl:for-each>
 	    <xsl:for-each select="Note/Content[position() = 1]">
-		<Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
+		<C1:Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></C1:Rtf>
 	    </xsl:for-each>
 
 
