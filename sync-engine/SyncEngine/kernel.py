@@ -598,14 +598,14 @@ class SyncEngine(dbus.service.Object):
 	#     Device name
 	#     an array of sync item ids
 
-	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='a(ussssau)')
+	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='a(ussssuau)')
 	def GetPartnerships(self):
 
 		self._CheckDeviceConnected()
 
 		ret = []
 		for p in self.PshipManager.GetList():
-			ret.append((p.info.id, p.info.guid, p.info.name, p.info.hostname, p.info.devicename, p.devicesyncitems))
+			ret.append((p.info.id, p.info.guid, p.info.name, p.info.hostname, p.info.devicename, p.storetype, p.devicesyncitems))
 		return ret
 
 	#

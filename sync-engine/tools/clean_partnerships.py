@@ -23,13 +23,23 @@ try:
 
 	if s=='Y' or s=="y":
 
-		print "Deleting all partnerships..."
+		print "Deleting all partnerships...\n"
 		sys.stdout.flush()
 
 		for pship in partnerships:
-			engine.DeletePartnership(pship[0])
+			id,guid,name,hostname,devicename,storetype,items = pship
+			if storetype != PSHMGR_STORETYPE_AS:
+				if storetype==PSHMGR_STORETYPE_EXCH:
+					v="Server"
+				else:
+					v="Unknown"
+				print "\nDelete %s partnership (%s)? (Y<enter> or just <enter> not to delete?)\n" % (name,v)
+				s=raw_input("-")
+				if s!='Y' and s!='y':
+					continue
+			engine.DeletePartnership(id,guid)
 
-		print "..done\n"
+		print "Deletion complete\n"
 
 	else:
 		print "No partnerships have been deleted."

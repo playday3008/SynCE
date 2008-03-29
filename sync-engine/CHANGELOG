@@ -878,3 +878,35 @@ Fixed errors in code causing strange 'socket errors' on deleting and then
 recreating partnerships. These typos were stopping sessions being stopped -
 hence the socket error!
 
+29/03/2008 - 190700 Dr J A Gow
+------------------------------
+
+*** CAUTION: API CHANGE ***
+
+This update has introduced the ability to manage Exchange Server partnerships
+via the sync-engine API (to list and delete, but not yet create). This has
+necessitated a change to the GetPartnerships API. The new d-bus signature
+is a(ussssuau) and this reflects the following change to the exported data,
+which is now an array of:
+
+(id, guid, name, hostname, devicename, storetype, devicesyncitems)
+
+Note the change is in the addition of the 'storetype' - an integer value
+which can be one of PSHMGR_STORETYPE_EXCH (exchange server) or
+PSHMGR_STORETYPE_AS (ActiveSync). The command line tools have been updated
+to match. Exchange server partnerships can now be seen in the listing, and
+can be deleted by both delete_partnership.py and clean_partnerships.py.
+In the case of clean_partnerships.py, there will be an additional prompt
+to delete server partnerships which will be displayed only if such
+partnerships are present.
+
+Currently we handle a maximum of 3 partnerships (2 AS, 1 server) - this
+appears to be the maximum that WMx will handle - but with care this could
+be increased easily.
+
+Creation of server partnerships from the host is being looked at as 
+a later addition.
+
+
+
+

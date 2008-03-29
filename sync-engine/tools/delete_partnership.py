@@ -28,13 +28,18 @@ try:
 	for pship in engine.GetPartnerships():
 	
 	
-		id,guid,name,hostname,devicename,items = pship
+		id,guid,name,hostname,devicename,storetype,items = pship
 	
 		s="%d\t%s\t%s\t%s\t" % (idx,name,devicename,hostname)
-		s+="["
-		for item in items:
-			s += "%s " % str(item_types[item])
-		s+="]"
+		if storetype==PSHMGR_STORETYPE_EXCH:
+			s+="(Server)"
+		elif storetype==PSHMGR_STORETYPE_AS:
+			s+="["
+			for item in items:
+				s += "%s " % str(item_types[item])
+			s+="]"
+		else:
+			s+="(unknown storage type)"
 		print s
 		idx+=1
 
@@ -60,7 +65,7 @@ try:
 
 	print "Deleting partnership..."
 	sys.stdout.flush()
-	id,guid,name,hostname,devicename,items = pships[i]
+	id,guid,name,hostname,devicename,storetype,items = pships[i]
 	engine.DeletePartnership(id,guid)
 	print "Partnership deleted"
 

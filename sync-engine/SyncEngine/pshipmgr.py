@@ -38,7 +38,7 @@ class PartnershipManager:
 		self.engine = engine
 
 		self.current = None
-		self.DevicePartnerships = [ None, None ]
+		self.DevicePartnerships = [ None, None, None ]
 
 	###############################
 	# INTERNAL FUNCTIONS
@@ -54,7 +54,7 @@ class PartnershipManager:
 	def _ReadDevicePartnerships(self):
 
 		reg_entries = {}
-		sync_entries = []
+		dangling_entries = []
 
 		hklm = self.engine.rapi_session.HKEY_LOCAL_MACHINE
 
@@ -88,7 +88,6 @@ class PartnershipManager:
 	
 			self.logger.warn("ReadDevicePartnerships: Error opening partnership keys in remote registry (%d)" % e.retval)
 
-
 		# Look up the synchronization data on each
 		
 		self.logger.debug("ReadDevicePartnerships: querying synchronization source information from device")
@@ -98,64 +97,87 @@ class PartnershipManager:
 			sub_ctic = self.engine.rapi_session.GetConfig("Sync.Sources", ctic.type, recursive=True)
 
 			guid        = sub_ctic.type
+			storetype   = int(sub_ctic["StoreType"])
 			hostname    = sub_ctic["Server"]
 			description = sub_ctic["Name"]
 
 			self.logger.debug("ReadDevicePartnerships: read source GUID = %s, Hostname = %s, Description = %s", guid, hostname, description)
 			
-			if hostname in reg_entries:
+			if storetype == PSHMGR_STORETYPE_AS:
+				
+				if hostname in reg_entries:
 
-				pos, id = reg_entries[hostname]
-				del reg_entries[hostname]
+					pos, id = reg_entries[hostname]
+					del reg_entries[hostname]
 
-               			self.logger.debug("ReadDevicePartnerships: source matches partnerhip from registry.  Initializing partnership")
+					# 'pos' for AS partnerships can only exist as 1 and 2. We reserve the third slot for
+					# server partnerships
 
-				pship = Partnership(self.engine.config, pos, id, guid, hostname, description,self.engine.deviceName,self.engine.rapi_session)
-				self.DevicePartnerships[pos-1] = pship
+               				self.logger.debug("ReadDevicePartnerships: source matches partnerhip from registry.  Initializing partnership")
+					
+					pship = Partnership(self.engine.config, pos, id, guid, hostname, description, storetype, self.engine.deviceName,self.engine.rapi_session)
 
-				self.logger.debug("ReadDevicePartnerships: querying partnerhip synchronization items (providers)")
+					self.DevicePartnerships[pos-1] = pship
 
-				engine = sub_ctic.children["Engines"].children[GUID_WM5_ACTIVESYNC_ENGINE]
-				for provider in engine.children["Providers"].children.values():
+					self.logger.debug("ReadDevicePartnerships: querying partnerhip synchronization items (providers)")
 
-					self.logger.debug("ReadDevicePartnerships: found provider %s", provider["Name"])
+					engine = sub_ctic.children["Engines"].children[GUID_WM5_ACTIVESYNC_ENGINE]
+					for provider in engine.children["Providers"].children.values():
 
-					if int(provider["Enabled"]) != 0:
-						id = None
+						self.logger.debug("ReadDevicePartnerships: found provider %s", provider["Name"])
 
-						self.logger.debug("ReadDevicePartnerships: provider is enabled")
+						if int(provider["Enabled"]) != 0:
+							id = None
 
-						if provider.type in SYNC_ITEM_ID_FROM_GUID:
-							id = SYNC_ITEM_ID_FROM_GUID[provider.type]
-						elif provider["Name"] == "Media":
-							id = SYNC_ITEM_MEDIA
-						elif provider["Name"] == "WorldMate":
-							id = SYNC_ITEM_WORLDMATE
+							self.logger.debug("ReadDevicePartnerships: provider is enabled")
 
-						if id == None:
-							raise ValueError("Unknown GUID \"%s\" for provider with name \"%s\"" % (provider.type, provider["Name"]))
+							if provider.type in SYNC_ITEM_ID_FROM_GUID:
+								id = SYNC_ITEM_ID_FROM_GUID[provider.type]
+							elif provider["Name"] == "Media":
+								id = SYNC_ITEM_MEDIA
+							elif provider["Name"] == "WorldMate":
+								id = SYNC_ITEM_WORLDMATE
 
-						self.logger.debug("ReadDevicePartnerships: provider ID is %d", id)
+							if id == None:
+								raise ValueError("Unknown GUID \"%s\" for provider with name \"%s\"" % (provider.type, provider["Name"]))
 
-						pship.devicesyncitems.append(id)
-			else:
+							self.logger.debug("ReadDevicePartnerships: provider ID is %d", id)
 
-				self.logger.debug("ReadDevicePartnerships: Found dangling sync source: GUID = %s, Hostname = %s, Description = %s",
-				                  guid, hostname, description)
+							pship.devicesyncitems.append(id)
+				else:
+
+					self.logger.debug("ReadDevicePartnerships: Found dangling sync source: GUID = %s, Hostname = %s, Description = %s",
+					                  guid, hostname, description)
 						  
-				sync_entries.append((guid, hostname, description))
+					dangling_entries.append((guid, hostname, description))
+					
+					
+			elif storetype == PSHMGR_STORETYPE_EXCH:
+				
+					pos=3;
+				
+					self.logger.debug("ReadDevicePartnerships: Found server sync source: GUID = %s, Hostname = %s, Description = %s",
+					                  guid, hostname, description)
+									
+					self.DevicePartnerships[pos-1] = Partnership(self.engine.config, pos, 0, guid, hostname, description, storetype, self.engine.deviceName,self.engine.rapi_session)
+
+			else:
+				
+				self.logger.debug("ReadDevicePartnerships: Found partnership with unknown storetype: GUID = %s, Hostname = %s, Description = %s",
+					                  guid, hostname, description)
+				self.logger.debug("ReadDevicePartnerships: - this will be ignored");
+
+		# get rid of registry entries without a corresponding characteristic
 	
 		for entry in reg_entries.values():
 			self.logger.info("ReadDevicePartnerships: Deleting dangling registry entry: %s", entry)
 			hklm.delete_sub_key(r"Software\Microsoft\Windows CE Services\Partners\P%d" % entry[0])
 		
-		# Let's not delete dangling entries for now - this seems to kill Exchange server
-		# partnerships. I am not sure we actually need to do this anyway. Dangling registry
-		# entries (above) can still be deleted.
+		# Delete dangling entries that claim to be AS but do not have a registry key
 		
-		#for entry in sync_entries:
-		#	self.logger.info("ReadDevicePartnerships: Deleting dangling sync source: %s", entry)
-		#	self.engine.rapi_session.RemoveConfig("Sync.Sources", entry[0])
+		for entry in dangling_entries:
+			self.logger.info("ReadDevicePartnerships: Deleting dangling sync source: %s", entry)
+			self.engine.rapi_session.RemoveConfig("Sync.Sources", entry[0])
 
 
 	######################################
@@ -165,8 +187,8 @@ class PartnershipManager:
 	#
 	# ClearDevicePartnerships
 	#
-	# Remove all recorded device partnerships. If we have a current bound partnership, save it before
-	# deletion
+	# Remove all recorded device partnerships.If we have a current
+	# bound partnership, save it before deletion
 	#
 	
 	def ClearDevicePartnerships(self):
@@ -177,7 +199,7 @@ class PartnershipManager:
 			self.current.SaveItemDB()
 		self.current = None
 		del self.DevicePartnerships
-		self.DevicePartnerships = [None,None]
+		self.DevicePartnerships = [ None, None, None]
 
 	#
 	# GetDevicePartnerships (formerly get_list)
@@ -217,7 +239,6 @@ class PartnershipManager:
 			
 			fullPath = os.path.join(psdir,d)
 			if not os.path.isdir(fullPath):
-				print "isfile %s" % fullPath
 				continue
 			
 			# it is a dir. Look for a psinfo.dat file
@@ -227,7 +248,6 @@ class PartnershipManager:
 			# no psinfo, just ignore it
 			
 			if not os.path.isfile(infofp):
-				print "no info"
 				continue
 			
 			# otherwise attempt to load the psinfo file
@@ -355,7 +375,7 @@ class PartnershipManager:
 		
 		# Iterate through our partnerships and try and find a binding
 		
-		for i in self.DevicePartnerships:
+		for i in self.DevicePartnerships[0:2]:
 			if i != None:
 				if i.AttemptToBind():
 					self.current = i
@@ -393,16 +413,17 @@ class PartnershipManager:
 			if not item in SYNC_ITEMS:
 				raise errors.InvalidArgument("sync item identifier %d is invalid" % item)
 
-		if not (None in self.DevicePartnerships):
+		if not (None in self.DevicePartnerships[0:2]):
 			raise errors.NoFreeSlots("all slots are currently full")
 
-		slot = self.DevicePartnerships.index(None) + 1
+		slot = self.DevicePartnerships[0:2].index(None) + 1
 
 		self.logger.debug("CreateNewPartnership: attempting to create new partnership in slot %d", slot)
 		pship = Partnership(self.engine.config, 
 		                    slot, 
 				    util.generate_id(), util.generate_guid(), 
-				    socket.gethostname(), name, 
+				    socket.gethostname(), name,
+				    PSHMGR_STORETYPE_AS,
 				    self.engine.deviceName,
 				    self.engine.rapi_session)
 
@@ -417,10 +438,8 @@ class PartnershipManager:
 		source["Server"] = pship.info.hostname
 
 		# StoreType
-		#  2 = ActiveSync desktop
-		#  3 = Exchange server
 	
-		source["StoreType"] = "2"
+		source["StoreType"] = str(PSHMGR_STORETYPE_AS)
 
 		ASEngines = characteristics.Characteristic("Engines")
 		source.add_child(ASEngines)
@@ -520,8 +539,9 @@ class PartnershipManager:
 						partners.set_value("PCur", 0, pyrapi2.REG_DWORD)
 						self.current = None
 		
-					self.logger.info("DeletePartnership: Deleting registry entry: %s", pship.slot)
-					hklm.delete_sub_key(r"Software\Microsoft\Windows CE Services\Partners\P%d" % pship.slot)
+					if pship.storetype == PSHMGR_STORETYPE_AS:
+						self.logger.info("DeletePartnership: Deleting registry entry: %s", pship.slot)
+						hklm.delete_sub_key(r"Software\Microsoft\Windows CE Services\Partners\P%d" % pship.slot)
 
 					self.logger.debug("DeletePartnership: removing partnership %s from device", pship)
 					self.engine.rapi_session.RemoveConfig("Sync.Sources", pship.info.guid)
@@ -606,7 +626,7 @@ class PSInfo:
 
 class Partnership:
 	
-	def __init__(self, config, slot, id, guid, hostname, name, devicename, rapisession):
+	def __init__(self, config, slot, id, guid, hostname, name, storetype, devicename, rapisession):
 	
 		self.logger = logging.getLogger("engine.partnerships.Partnership")
 
@@ -624,6 +644,10 @@ class Partnership:
 
 		self.isBound = False
 		self.itemDBLoaded = False
+		
+		# store type
+		
+		self.storetype = storetype
 		
 		# configuration (established during bind)
 		
@@ -784,6 +808,13 @@ class Partnership:
 	
 	def AttemptToBind(self):
 		
+		# Partnerships with a store-type of PSHMGR_STORETYPE_EXCH can not be
+		# bound by sync-engine
+		
+		if self.storetype == PSHMGR_STORETYPE_EXCH:
+			self.logger.info("unable to bind Exchange Server partnership %s" % hostname);
+			return False
+		
 		# The path will have already been constructed by the initializer. Check
 		# if it exists. If not, we have no binding.
 		
@@ -859,6 +890,10 @@ class Partnership:
 	
 	def CreateNewBinding(self):
 		
+		if self.storetype != PSHMGR_STORETYPE_AS:
+			self.logger.error("CreateNewBinding: Exchange Server partnerships can not be bound")
+			return False
+		
 		# The path will have already been constructed by the initializer. Check
 		# if it exists. If so, we must clean it up ready for the new binding. If not, 
 		# create it.
@@ -898,6 +933,10 @@ class Partnership:
 	# Remove a host binding for this partnership
 	
 	def DeleteBinding(self):
+		
+		if self.storetype != PSHMGR_STORETYPE_AS:
+			self.logger.info("DeleteBinding: Exchange Server partnerships have no binding - doing nothing")
+			return False
 		
 		self.logger.info("DeleteBinding: deleting host binding for partnership %s",self.info.name)
 		
