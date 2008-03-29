@@ -907,6 +907,9 @@ be increased easily.
 Creation of server partnerships from the host is being looked at as 
 a later addition.
 
+Also now correctly handles dangling registry entries and partnerships
+without clobbering server partnerships.
+
 
 
 
