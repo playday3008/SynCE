@@ -729,8 +729,8 @@ class SyncEngine(dbus.service.Object):
 			if cpship.info.id == id:
 				self.logger.debug("DeletePartnership: calling sync pause")
 				self.rapi_session.sync_pause()
-				self.sessions_stop()
-				self.sessions_wait_for_stop()
+				self.StopSessions()
+				self.WaitForStoppingSessions()
 		except Exception,e:
 			# ignore if we have no valid partnership
 			pass

@@ -871,3 +871,10 @@ path, the final directory will be formed by the concatenation of
 <LocalFilePath> and <BaseFilePath> - this forms the most flexible way to do
 this.
 
+29/03/2008 - 164500 Dr J A Gow
+------------------------------
+
+Fixed errors in code causing strange 'socket errors' on deleting and then
+recreating partnerships. These typos were stopping sessions being stopped -
+hence the socket error!
+
