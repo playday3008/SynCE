@@ -232,14 +232,33 @@ class DataServer(dbus.service.Object):
 
             try:
                 partnerships = syncEngineObj.GetPartnerships()
-
-                for pship in partnerships:
-                    id,guid,name,hostname,devicename,items = pship
-
             except Exception,e:
-                pass
+                print "Error while getting partnerships..."
+                return
+                
+            oldAPI = False
 
-            self.DevicePartnerships(item_types, partnerships)
+            try:
+                for pship in partnerships:
+                    id,guid,name,hostname,devicename,storetype,items = pship
+            except Exception,e:
+                oldAPI = True
+
+
+            __updatedPartnerships = []
+            if oldAPI:
+                print "Using old partnership api of sync-engine"
+                __updatedPartnerships = partnerships
+
+            else:
+                print "Using new partnership api of sync-engine"
+                for pship in partnerships:
+                    id,guid,name,hostname,devicename,storetype,items = pship
+                    __updatedPartnerships.append( (id,guid,name,hostname,devicename,items) )
+                 
+        
+
+            self.DevicePartnerships(item_types, __updatedPartnerships)
             
 
     def handleSyncEngineStatusChange(self, isOnline):

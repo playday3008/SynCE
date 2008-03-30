@@ -1,3 +1,8 @@
+2008-03-30	Guido Diepen	<guido@guidodiepen.nl>
+	
+	* Updated the partnership listing code. It will handle both the old and
+	the new API of sync-engine (i.e. with or without Exchange partnerships)
+
 2008-03-24	Guido Diepen	<guido@guidodiepen.nl>
 	
 	* Added splashscreen
