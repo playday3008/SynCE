@@ -401,6 +401,8 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
             rootItem.setIcon(self.iconConnected)
             self.modelPartnerships.appendRow(rootItem)
             self.formatDeviceSyncItems( rootItem, sync_items, items )
+
+            i+=1
         
         self.modelPartnerships.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.QVariant("Partnerships"))
         self.viewPartnerships.expandAll()
