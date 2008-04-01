@@ -1,6 +1,8 @@
 2008-04-01  Mark Ellis <mark@mpellis.org.uk>
 
 	* cleaned up build system, should help *bsd'ers
+	* removed libsynce and librapi2 patches, these have been committed
+	* added patch for sync-engine
 
 2008-03-28  Mark Ellis <mark@mpellis.org.uk>
 
