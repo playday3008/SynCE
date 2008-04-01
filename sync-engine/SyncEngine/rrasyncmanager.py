@@ -280,7 +280,10 @@ class FileDB:
 					self.logger.debug("running deltree(%s)" % pth)
 					util.deltree(pth)
 				else:
-					os.remove(pth)
+					try:
+						os.remove(pth)
+					except:
+						self.logger.debug("unable to delete %s, possibly already removed" % pth)
 			del self.dbdel[oid]
 			return True
 		return False

@@ -910,6 +910,13 @@ a later addition.
 Also now correctly handles dangling registry entries and partnerships
 without clobbering server partnerships.
 
+01/04/2008 - 115100 Dr J A Gow
+------------------------------
+
+Fixed minor problem with exceptions being generated in file sync code
+when an item has been removed on both host and remote before syncing.
+
+
 
 
 
