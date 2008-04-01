@@ -39,8 +39,8 @@ fi
 dnl Check for HAL
 PKG_CHECK_MODULES(HAL, hal)
 
-AS_AC_EXPAND(SYNCE_SERIAL_CHAT, "$libexecdir/synce-serial-chat")
-AS_AC_EXPAND(ETC_SYNCE, "$sysconfdir")
+AS_AC_EXPAND(LIBEXECDIR, "$libexecdir")
+AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
 
 AC_CONFIG_FILES([
         hal/hal-synce-rndis \

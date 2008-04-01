@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-DEVICE_FILE=${HAL_PROP_LINUX_DEVICE_FILE}
+DEVICE_FILE=${HAL_PROP_SERIAL_DEVICE}
 
 THIS=`basename $0`
 
@@ -37,8 +37,8 @@ if [ -t 1 ]; then
 fi
 
 # include alternate settings file if it exists
-if [ -e "@ETC_SYNCE@/synce-serial.conf" ]; then
-	. @ETC_SYNCE@/synce-serial.conf
+if [ -e "@SYSCONFDIR@/synce-serial.conf" ]; then
+	. @SYSCONFDIR@/synce-serial.conf
 fi
 
 DEFAULT_NETWORK=${DEFAULT_NETWORK:-"192.168.131"}
@@ -78,10 +78,10 @@ synce_serial_start_device()
   # Shut off the connection in case it's running.
   synce-serial-abort-device >/dev/null 2>&1
 
-  ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@SYNCE_SERIAL_CHAT@} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
+  ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
 
   # Now bring up the connection
-  ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@SYNCE_SERIAL_CHAT@} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
+  ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
 
   if [ "$?" != "0" ]; then
     ${ERROR} "Failed to initialize ppp connection"
@@ -121,7 +121,7 @@ synce_serial_abort_device()
 
 if [ ${HALD_ACTION} == "add" ]; then
     synce_serial_start_device
-    hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
+    @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
 fi
 
 if [ ${HALD_ACTION} == "remove" ]; then

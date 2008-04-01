@@ -1,8 +1,8 @@
 
-haldatadir = ${prefix}/share/hal/fdi/policy/20thirdparty
+haldatadir = ${datadir}/hal/fdi/policy/20thirdparty
 haldata_DATA = 10-synce.fdi
 
-haldir = ${prefix}/lib/hal
+haldir = ${libexecdir}
 hal_SCRIPTS = \
 	hal-synce-rndis \
 	hal-synce-legacy 

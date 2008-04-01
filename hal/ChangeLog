@@ -1,3 +1,7 @@
+2008-04-01  Mark Ellis <mark@mpellis.org.uk>
+
+	* cleaned up build system, should help *bsd'ers
+
 2008-03-28  Mark Ellis <mark@mpellis.org.uk>
 
 	* replaced rndis callout script with python script to

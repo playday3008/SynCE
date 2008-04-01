@@ -78,7 +78,7 @@ def RunDhclient(iface):
 def RunDccm(device_ip):
 
     logger.debug("starting hal-dccm ...")
-    clist = ["hal-dccm","--rndis","--device-ip="+device_ip]
+    clist = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip]
 
     proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return

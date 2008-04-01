@@ -1,6 +1,6 @@
 AM_CFLAGS = -Wall
 
-sbin_PROGRAMS = hal-dccm
+libexec_PROGRAMS = hal-dccm synce-serial-chat
 
 BUILT_SOURCES = synce-device-signals-marshal.h \
 		synce-device-signals-marshal.c \
@@ -33,7 +33,6 @@ hal_dccm_LDADD = \
 	$(DBUS_LIBS)
 
 
-libexec_PROGRAMS = synce-serial-chat
 
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
