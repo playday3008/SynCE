@@ -1,3 +1,8 @@
+2008-04-01  Mark Ellis  <mark@mpellis.org.uk>
+
+	* dummy function for rapi1 CeGetDiskFreeSpaceEx, prevents segfault
+	  when this is called
+
 2008-03-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* correct build without python bindings (bug 1708885)

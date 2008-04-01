@@ -24,3 +24,5 @@ o Improve synce-install-cab script:
 
 o Make the RAPI commands timeout of the connection is lost to the device
 
+o Implement dummy functions for unimplemented calls to orevent segfaults,
+  particularly when implemented for one rapi version and not the other

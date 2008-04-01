@@ -513,3 +513,21 @@ exit:
 
 
 }
+
+
+/*
+ *
+ * dummy function, not yet implemented
+ *
+ */
+DWORD _CeGetDiskFreeSpaceEx(
+		LPCTSTR _lpDirectoryName, 
+		PULARGE_INTEGER lpFreeBytesAvailable, 
+		PULARGE_INTEGER lpTotalNumberOfBytes, 
+		PULARGE_INTEGER lpTotalNumberOfFreeBytes){
+	
+	LONG return_value = ERROR_GEN_FAILURE;
+			
+	return return_value ;
+}
+
