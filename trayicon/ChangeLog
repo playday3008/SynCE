@@ -1,3 +1,8 @@
+2008-04-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* more fixes to sync-engine partnerships
+	* removed some redundant code in odccm-client
+
 2008-03-25  Mark Ellis <mark@mpellis.org.uk>
 
 	* correction to setting dccm in prefs window

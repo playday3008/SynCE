@@ -134,71 +134,13 @@ free_proxy_store(proxy_store *p_store)
 }
 
 
-/* get_rapi_socket_from_odccm() is copied from get_socket_from_odccm()
-   in libsynce, which doesn't export the function */
-
-static gint
-get_rapi_socket_from_odccm(const gchar *unix_path)
-{
-  int fd = -1, dev_fd, ret;
-  struct sockaddr_un sa;
-  struct msghdr msg = { 0, };
-  struct cmsghdr *cmsg;
-  struct iovec iov;
-  char cmsg_buf[512];
-  char data_buf[512];
-
-  fd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (fd < 0)
-    goto ERROR;
-
-  sa.sun_family = AF_UNIX;
-  strcpy(sa.sun_path, unix_path);
-
-  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0)
-    goto ERROR;
-
-  msg.msg_control = cmsg_buf;
-  msg.msg_controllen = sizeof(cmsg_buf);
-  msg.msg_iov = &iov;
-  msg.msg_iovlen = 1;
-  msg.msg_flags = MSG_WAITALL;
-
-  iov.iov_base = data_buf;
-  iov.iov_len = sizeof(data_buf);
-
-  ret = recvmsg(fd, &msg, 0);
-  if (ret < 0)
-    goto ERROR;
-
-  cmsg = CMSG_FIRSTHDR (&msg);
-  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS)
-    goto ERROR;
-
-  dev_fd = *((int *) CMSG_DATA(cmsg));
-  goto OUT;
-
- ERROR:
-  dev_fd = -1;
-
- OUT:
-  if (fd >= 0)
-    close(fd);
-
-  return dev_fd;
-}
-
 static gboolean
 odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
 {
-  proxy_store *p_store = NULL;
-  GError *error = NULL;
   RapiConnection *rapi_conn;
   HRESULT hr;
-  gchar *unix_path = NULL;
   gchar *name = NULL;
   gchar *device_name;
-  gint i = 0;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);

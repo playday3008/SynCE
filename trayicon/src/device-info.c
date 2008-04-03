@@ -66,12 +66,11 @@ enum
 
 enum
 {
-  SYNCENG_CURRENT_COLUMN,
+  SYNCENG_ACTIVEITEM_COLUMN,
   SYNCENG_INDEX_COLUMN,
   SYNCENG_ID_COLUMN,
   SYNCENG_GUID_COLUMN,
   SYNCENG_NAME_COLUMN,
-  SYNCENG_ACTIVEITEM_COLUMN,
   SYNCENG_HOSTNAME_COLUMN,
   SYNCENG_DEVICENAME_COLUMN,
   SYNCENG_N_COLUMNS
@@ -246,7 +245,6 @@ partners_selection_changed_rra_cb (GtkTreeSelection *selection, gpointer data)
   gint index, id;
   gchar *name;
   GtkWidget *partners_create_button, *partners_remove_button;
-  guint32 os_major = 0;
 
   partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");	
   partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
@@ -294,6 +292,49 @@ setup_sync_item_store(gpointer key, gpointer value, gpointer user_data)
 		      -1);
 }
 
+
+static void
+partners_create_sync_item_selected_cb (GtkCellRendererToggle *cell_renderer,
+				       gchar                 *path,
+				       gpointer               user_data)
+{
+  GtkTreeIter iter;
+  gint index;
+  gboolean selected;
+  gchar *name = NULL;
+
+  GtkWidget *sync_items_listview = GTK_WIDGET(user_data);
+  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(sync_items_listview)));
+  GtkTreePath* toggled_path = gtk_tree_path_new_from_string(path);
+
+  if (gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &iter, toggled_path))
+    {
+      gtk_tree_model_get (GTK_TREE_MODEL(store),
+			  &iter,
+			  SYNCITEM_INDEX_COLUMN, &index,
+			  SYNCITEM_SELECTED_COLUMN, &selected,
+			  SYNCITEM_NAME_COLUMN, &name,
+			  -1);
+
+
+      g_debug("%s: You activated sync_item %s", G_STRFUNC, name);
+
+
+      if (gtk_cell_renderer_toggle_get_active(cell_renderer))
+	gtk_list_store_set (store, &iter,
+			    SYNCITEM_SELECTED_COLUMN, FALSE,
+			    -1);
+      else
+	gtk_list_store_set (store, &iter,
+			    SYNCITEM_SELECTED_COLUMN, TRUE,
+			    -1);
+
+      g_free(name);
+
+    }
+}
+
+
 static void
 partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 {
@@ -318,9 +359,10 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkWidget *device_info_dialog = priv->dialog;
-  GtkWidget *create_pship_dialog = glade_xml_get_widget (priv->xml, "create_partnership_dialog"); 
-  GtkWidget *pship_name_entry = glade_xml_get_widget (priv->xml, "pship_name_entry");
-  GtkWidget *sync_items_listview = glade_xml_get_widget (priv->xml, "sync_items_listview");
+  GladeXML *xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "create_partnership_dialog", NULL);
+  GtkWidget *create_pship_dialog = glade_xml_get_widget (xml, "create_partnership_dialog"); 
+  GtkWidget *pship_name_entry = glade_xml_get_widget (xml, "pship_name_entry");
+  GtkWidget *sync_items_listview = glade_xml_get_widget (xml, "sync_items_listview");
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (sync_items_listview));
   GArray *sync_items_required = NULL;
   GHashTable *sync_items = NULL;
@@ -398,11 +440,15 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 
   renderer = gtk_cell_renderer_toggle_new ();
   gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(renderer), FALSE);
+  g_object_set(G_OBJECT(renderer), "activatable", TRUE, NULL);
   column = gtk_tree_view_column_new_with_attributes("Selected",
                                                     renderer,
                                                     "active", SYNCITEM_SELECTED_COLUMN,
                                                     NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(sync_items_listview), column);
+
+  g_signal_connect (G_OBJECT (renderer), "toggled",
+		    G_CALLBACK (partners_create_sync_item_selected_cb), sync_items_listview);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("SyncItem",
@@ -622,7 +668,6 @@ partners_selection_changed_synceng_cb (GtkTreeSelection *selection, gpointer dat
   gint index, id;
   gchar *name;
   GtkWidget *partners_create_button, *partners_remove_button;
-  guint32 os_major = 0;
 
   partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
 
@@ -673,6 +718,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   }
 
   GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+
   GtkTreeIter iter, sub_iter;
   guint32 index;
   gboolean result;
@@ -685,6 +731,9 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GArray *sync_items_active = NULL;
   GHashTable *sync_items = NULL;
   GList *item_keys = NULL;
+
+  GtkWidget *partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+  gtk_widget_set_sensitive(partners_remove_button, FALSE);
 
   dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
   if (dbus_connection == NULL) {
@@ -760,12 +809,11 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   }
 
   store = gtk_tree_store_new (SYNCENG_N_COLUMNS,
-			      G_TYPE_BOOLEAN, /* current partner */
+			      G_TYPE_BOOLEAN, /* active for sync items */
 			      G_TYPE_INT,     /* partnee index */
 			      G_TYPE_UINT,    /* partner id */
 			      G_TYPE_STRING,  /* partner guid */
 			      G_TYPE_STRING,  /* partnership name */
-			      G_TYPE_BOOLEAN, /* active for sync items */
 			      G_TYPE_STRING,  /* host name */
 			      G_TYPE_STRING   /* device name */
 			      );
@@ -798,12 +846,11 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       }
 
       gtk_tree_store_set (store, &iter,
-			  SYNCENG_CURRENT_COLUMN, FALSE,
+			  SYNCENG_ACTIVEITEM_COLUMN, FALSE,
 			  SYNCENG_INDEX_COLUMN, index,
 			  SYNCENG_ID_COLUMN, partnership_id,
 			  SYNCENG_GUID_COLUMN, partnership_guid,
 			  SYNCENG_NAME_COLUMN, partnership_name,
-			  SYNCENG_ACTIVEITEM_COLUMN, FALSE,
 			  SYNCENG_HOSTNAME_COLUMN, hostname,
 			  SYNCENG_DEVICENAME_COLUMN, device_name,
 			  -1);
@@ -834,12 +881,11 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 	}
 
 	gtk_tree_store_set (store, &sub_iter,
-			    SYNCENG_CURRENT_COLUMN, FALSE,
+			    SYNCENG_ACTIVEITEM_COLUMN, active,
 			    SYNCENG_INDEX_COLUMN, 0,
 			    SYNCENG_ID_COLUMN, 0,
 			    SYNCENG_GUID_COLUMN, NULL,
 			    SYNCENG_NAME_COLUMN, g_hash_table_lookup(sync_items, tmp_list->data),
-			    SYNCENG_ACTIVEITEM_COLUMN, active,
 			    SYNCENG_HOSTNAME_COLUMN, NULL,
 			    SYNCENG_DEVICENAME_COLUMN, NULL,
 			    -1);
@@ -891,7 +937,6 @@ partners_setup_view_synceng(WmDeviceInfo *self)
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
-  guint32 os_major = 0;
 
   wm_device_rapi_select(priv->device);
 
@@ -913,7 +958,7 @@ partners_setup_view_synceng(WmDeviceInfo *self)
   gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(renderer), TRUE);
   column = gtk_tree_view_column_new_with_attributes("C",                                         /* title */
 						    renderer,                                    /* renderer to use */
-						    "active", SYNCENG_CURRENT_COLUMN,            /* attribute to use and column of store to get it from */
+						    "active", SYNCENG_ACTIVEITEM_COLUMN,            /* attribute to use and column of store to get it from */
 						    NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
 
@@ -973,19 +1018,12 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
   guint32 curr_partner = 0, partner_id, i;
   gchar *partner_name;
   gboolean is_current;
-  guint32 os_major = 0;
 
   GtkListStore *store = gtk_list_store_new (RRA_N_COLUMNS,
 					    G_TYPE_BOOLEAN, /* current partner ? */
 					    G_TYPE_INT,     /* partnee index */
 					    G_TYPE_UINT,    /* partner id */
 					    G_TYPE_STRING); /* partner name */
-
-  /* WM5 not yet supported */
-  g_object_get(priv->device, "os-major", &os_major, NULL);
-  if (os_major > 4) {
-    goto exit;
-  }
 
   wm_device_rapi_select(priv->device);
 
@@ -1051,7 +1089,6 @@ partners_setup_view_rra(WmDeviceInfo *self)
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
-  guint32 os_major = 0;
 
   wm_device_rapi_select(priv->device);
 
