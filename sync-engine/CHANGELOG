@@ -917,6 +917,25 @@ Fixed minor problem with exceptions being generated in file sync code
 when an item has been removed on both host and remote before syncing.
 
 
+05/04/2008 - 130900 Dr J A Gow
+------------------------------
+
+Added new API to sync-engine: GetDeviceBindingState().
+in_signature is none, out_signature is 'u'. It takes no arguments
+and returns an integer, which can take on one of the three values
+below (defined in constants.py).
+
+BSTATE_DEVNOTCONNECTED (0): device not connected
+BSTATE_DEVNOTBOUND     (1): device connected but no partnership binding
+                            available
+BSTATE_DEVBOUND        (2): device fully bound and ready to sync.
+
+This function will not throw exceptions and is designed to be able
+to cleanly query the state of the device as seen by sync-engine at any time.
+
+This change was committed in r3363 but owing to an oversight this CHANGELOG
+entry was omitted.
+
 
 
 
