@@ -936,6 +936,11 @@ to cleanly query the state of the device as seen by sync-engine at any time.
 This change was committed in r3363 but owing to an oversight this CHANGELOG
 entry was omitted.
 
+05/04/2008 - 143500 Dr J A Gow
+------------------------------
+
+Code cleanups in airsync.py, no functionality changes.
+
 
 
 
