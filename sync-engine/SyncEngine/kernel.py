@@ -498,6 +498,27 @@ class SyncEngine(dbus.service.Object):
 	##
 
 	#
+	# GetDeviceBindingState
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Query the binding state of the device, and if it is connected
+	# or not. If it is connected, whether it is bound. This function
+	# is safe to call at any time and should not throw.
+	#
+
+	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='u')
+	def GetDeviceBindingState(self):
+		
+		rc=BSTATE_DEVNOTCONNECTED
+		
+		if self.isConnected:
+			rc=BSTATE_DEVNOTBOUND
+			if self.PshipManager.GetCurrentPartnership() is not None:
+				rc=BSTATE_DEVBOUND
+	
+		return rc
+	#
 	# Synchronize
 	#
 	# EXPORTED: DBUS SERVICED API
