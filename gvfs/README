@@ -1,0 +1,16 @@
+This is a very early implementation of a gvfs backend for SynCE.
+
+Gvfs is still new, and there does not yet appear to be an easy way
+of building 3rd party, 'out of tree' backends. To build this
+package, you will therefore need a built source tree of gvfs
+available, and pass --with-gvfs-source=<path-to-source> to this
+packages configure script.
+
+
+Currently only the following operations are implemented.
+
+mounting
+unmounting
+file info queries
+
+This software WILL crash, all bug reports are welcome.

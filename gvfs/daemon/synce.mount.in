@@ -1,0 +1,5 @@
+[Mount]
+Type=synce
+Exec=@libexecdir@/gvfsd-synce
+AutoMount=false
+Scheme=synce
