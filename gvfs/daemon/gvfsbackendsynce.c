@@ -102,6 +102,14 @@ typedef struct _ErrorCodeTriple
   HRESULT hresult;
 } ErrorCodeTriple;
 
+
+/* these should be in synce.h
+   put here for error codes not in latest libsynce release */
+#ifndef ERROR_NOT_SAME_DEVICE
+#define ERROR_NOT_SAME_DEVICE         17
+#endif
+
+
 static ErrorCodeTriple error_codes[] =
   {
     {G_IO_ERROR_FAILED,                   ERROR_SUCCESS,             S_OK           },            /* is this required ? */
