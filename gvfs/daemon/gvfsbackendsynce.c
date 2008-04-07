@@ -268,7 +268,8 @@ g_error_from_rapi(gboolean *connection_error)
 
 
 static gint
-get_location(const gchar *pathname, gchar **location)
+get_location(const gchar *pathname,
+	     gchar **location)
 {
   gint result = INDEX_INVALID;
   gchar **path = NULL;
@@ -359,20 +360,22 @@ static void
 get_file_attributes(GVfsBackendSynce *backend,
                     GFileInfo *info,
                     CE_FIND_DATA *entry,
-                    const gchar *filename,
                     GFileAttributeMatcher *matcher)
 {
-
   GTimeVal t;
   GIcon *icon;
   gchar *content_type;
   gchar *display_name;
   gchar *basename;
 
+  g_debug("%s: get filename from wide str", G_STRFUNC);
+  gchar *filename = wstr_to_utf8(entry->cFileName);
 
+  g_debug("%s: get basename", G_STRFUNC);
   basename = g_path_get_basename(filename);
   g_file_info_set_name (info, basename);
 
+  g_debug("%s: set display name", G_STRFUNC);
   if (g_file_attribute_matcher_matches(matcher, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME))
     {
       if (strcmp (basename, "/") == 0)
@@ -393,6 +396,7 @@ get_file_attributes(GVfsBackendSynce *backend,
       g_free (display_name);
     }
 
+  g_debug("%s: set edit name", G_STRFUNC);
   if (g_file_attribute_matcher_matches (matcher, G_FILE_ATTRIBUTE_STANDARD_EDIT_NAME))
     {
       char *edit_name = g_filename_display_name (basename);
@@ -400,11 +404,11 @@ get_file_attributes(GVfsBackendSynce *backend,
       g_free (edit_name);
     }
 
-  g_free(basename);
-
+  g_debug("%s: set hidden", G_STRFUNC);
   if (entry->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
     g_file_info_set_is_hidden(info, TRUE);
 
+  g_debug("%s: set type", G_STRFUNC);
   if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
     g_file_info_set_file_type (info, G_FILE_TYPE_DIRECTORY);
     g_file_info_set_size (info, 0);
@@ -413,15 +417,18 @@ get_file_attributes(GVfsBackendSynce *backend,
     g_file_info_set_size (info, entry->nFileSizeLow);
   }
 
-
+  g_debug("%s: set mod time", G_STRFUNC);
   t.tv_usec = 0;
   t.tv_sec = convert_time(&entry->ftLastWriteTime);
   g_file_info_set_modification_time (info, &t);
 
+  g_debug("%s: set access time", G_STRFUNC);
   g_file_info_set_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_ACCESS, convert_time(&entry->ftLastAccessTime));
+
+  g_debug("%s: set creation time", G_STRFUNC);
   g_file_info_set_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_CREATED, convert_time(&entry->ftCreationTime));
 
-
+  g_debug("%s: set content type and icon", G_STRFUNC);
   if (g_file_attribute_matcher_matches (matcher, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE) ||
       g_file_attribute_matcher_matches (matcher, G_FILE_ATTRIBUTE_STANDARD_ICON))
     {
@@ -459,13 +466,15 @@ get_file_attributes(GVfsBackendSynce *backend,
       g_object_unref (icon);
     }
 
-
+  g_debug("%s: set readonly", G_STRFUNC);
   if(entry->dwFileAttributes & FILE_ATTRIBUTE_READONLY)
     g_file_info_set_attribute_boolean (info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE, FALSE);
 
+  g_debug("%s: set archive", G_STRFUNC);
   if(entry->dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
     g_file_info_set_attribute_boolean (info, G_FILE_ATTRIBUTE_DOS_IS_ARCHIVE, TRUE);
 
+  g_debug("%s: set system", G_STRFUNC);
   if(entry->dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
     g_file_info_set_attribute_boolean (info, G_FILE_ATTRIBUTE_DOS_IS_SYSTEM, TRUE);
 
@@ -483,20 +492,21 @@ get_file_attributes(GVfsBackendSynce *backend,
   file_info->gid = getgid();
   */
 
+  g_debug("%s: free basename", G_STRFUNC);
   g_free(basename);
 
 }
 
 static void
-get_special_directory_attributes(GVfsBackendSynce *backend, GFileInfo *file_info, const gchar *filename, GFileAttributeMatcher *matcher)
+get_special_directory_attributes(GVfsBackendSynce *backend,
+				 GFileInfo *file_info,
+				 const gchar *filename,
+				 GFileAttributeMatcher *matcher)
 {
-
-
   GIcon *icon;
   gchar *content_type;
   gchar *display_name;
   gchar *basename;
-
 
   basename = g_path_get_basename(filename);
   g_file_info_set_name (file_info, basename);
@@ -561,7 +571,10 @@ get_special_directory_attributes(GVfsBackendSynce *backend, GFileInfo *file_info
 
 
 static void
-get_root_attributes(GVfsBackendSynce *backend, GFileInfo *file_info, const gchar *hostname, GFileAttributeMatcher *matcher)
+get_root_attributes(GVfsBackendSynce *backend,
+		    GFileInfo *file_info,
+		    const gchar *hostname,
+		    GFileAttributeMatcher *matcher)
 {
   gchar *display_name;
   if (hostname)
@@ -584,15 +597,12 @@ synce_gvfs_query_info (GVfsBackend *backend,
 		       GFileAttributeMatcher *matcher)
 {
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
-
   GError *error = NULL;
-
-  g_debug("%s: entering ...", G_STRFUNC);
-  g_debug("%s: for filename %s", G_STRFUNC, filename);
-
   gchar *location = NULL;
   CE_FIND_DATA entry;
   WCHAR *tempwstr = NULL;
+
+  g_debug("%s: getting info for filename %s", G_STRFUNC, filename);
 
   switch (get_location(filename, &location))
     {
@@ -672,7 +682,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
     {
       g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
-      get_file_attributes(synce_backend, info, &entry, filename, matcher);
+      get_file_attributes(synce_backend, info, &entry, matcher);
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
       g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
@@ -692,6 +702,465 @@ exit:
 }
 
 
+/* ******************************************************************************** */
+
+static void
+synce_gvfs_open_for_read (GVfsBackend *backend,
+			  GVfsJobOpenForRead *job,
+			  const char *filename)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  g_debug("%s: open_for_read file %s", G_STRFUNC, filename);
+
+  gchar *location = NULL;
+  WCHAR *wide_path = NULL;
+  gint synce_open_mode, synce_create_mode;
+  HANDLE handle;
+  GError *error = NULL;
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  /*
+  vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
+  */
+
+  synce_open_mode = GENERIC_READ;
+  synce_create_mode = OPEN_EXISTING;
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  wide_path = wstr_from_utf8(location);
+
+  g_debug("%s: CeCreateFile()", G_STRFUNC);
+  handle = CeCreateFile
+    (
+     wide_path,
+     synce_open_mode,
+     0,
+     NULL,
+     synce_create_mode,
+     FILE_ATTRIBUTE_NORMAL,
+     0
+     );
+
+  if(handle == INVALID_HANDLE_VALUE) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+  } else {
+    g_vfs_job_open_for_read_set_can_seek (job, TRUE);
+
+    /* use GINT_TO_POINTER ? */
+    g_vfs_job_open_for_read_set_handle (job, GUINT_TO_POINTER(handle));
+
+
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+  }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+  wstr_free_string(wide_path);
+
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+
+
+
+static void
+synce_gvfs_read (GVfsBackend *backend,
+		 GVfsJobRead *job,
+		 GVfsBackendHandle handle,
+		 char *buffer,
+		 gsize bytes_requested)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+  gint success;
+  DWORD read_return;
+  gboolean conn_err;
+  HANDLE synce_handle;
+  GError *error = NULL;
+
+  g_debug("%s: read file", G_STRFUNC);
+
+  /* use GPOINTER_TO_UINT ? */
+  synce_handle = GPOINTER_TO_UINT(handle);
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  g_debug("%s: CeReadFile()", G_STRFUNC);
+  success = CeReadFile
+    (
+     synce_handle,
+     buffer,
+     bytes_requested,
+     &read_return,
+     NULL
+     );
+
+  if (!success)
+    {
+      error = g_error_from_rapi(NULL);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free (error);
+    }
+  else if (read_return == 0)
+    {
+      g_vfs_job_read_set_size (job, 0);
+      g_vfs_job_succeeded (G_VFS_JOB (job));
+
+      /*
+       *bytes_read_return = 0;
+       g_vfs_job_failed (G_VFS_JOB (job),
+                        G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+       result = GNOME_VFS_ERROR_EOF;
+      */
+    }
+  else
+    {
+      g_vfs_job_read_set_size (job, read_return);
+      g_vfs_job_succeeded (G_VFS_JOB (job));
+    }
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+static void
+synce_gvfs_close_read (GVfsBackend *backend,
+		       GVfsJobCloseRead *job,
+		       GVfsBackendHandle handle)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  gint success;
+  HANDLE synce_handle;
+  GError *error = NULL;
+
+  g_debug("%s: close file", G_STRFUNC);
+
+  /* use GPOINTER_TO_UINT ? */
+  synce_handle = GPOINTER_TO_UINT(handle);
+
+  g_debug("%s: CeCloseHandle()", G_STRFUNC);
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+  success = CeCloseHandle(synce_handle);
+
+  if (success)
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+  else {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+  }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_seek_on_read (GVfsBackend *backend,
+			 GVfsJobSeekRead *job,
+			 GVfsBackendHandle handle,
+			 goffset    offset,
+			 GSeekType  type)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  DWORD retval, move_method;
+  gboolean conn_err;
+  HANDLE synce_handle;
+  GError *error = NULL;
+
+  g_debug("%s: seek file", G_STRFUNC);
+
+  /* use GPOINTER_TO_UINT ? */
+  synce_handle = GPOINTER_TO_UINT(handle);
+
+  switch (type) {
+  case G_SEEK_SET:
+    move_method = FILE_BEGIN;
+    break;
+  case G_SEEK_CUR:
+    move_method = FILE_CURRENT;
+    break;
+  case G_SEEK_END:
+    move_method = FILE_END;
+    break;
+  default:
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		      _("Unsupported seek type"));
+    return;
+  }
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  g_debug("%s: CeSetFilePointer()", G_STRFUNC);
+  retval = CeSetFilePointer (synce_handle,
+                             offset,
+                             NULL,
+                             move_method);
+
+  if (retval == 0xFFFFFFFF)
+    {
+      error = g_error_from_rapi(NULL);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free (error);
+    }
+  else
+    {
+      g_vfs_job_seek_read_set_offset (job, retval);
+      g_vfs_job_succeeded (G_VFS_JOB (job));
+    }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+static void
+synce_gvfs_enumerate(GVfsBackend *backend,
+		     GVfsJobEnumerate *job,
+		     const char *filename,
+		     GFileAttributeMatcher *matcher,
+		     GFileQueryInfoFlags flags)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  g_debug("%s: enumerating dir %s", G_STRFUNC, filename);
+
+  GError *error = NULL;
+  GList *files = NULL;
+  GFileInfo *info = NULL;
+  GString *fullpath = NULL;
+  gint fullpath_start_len;
+
+  gchar *location = NULL;
+  gchar *new_path = NULL;
+  CE_FIND_DATA *data = NULL;
+  gint optionflags;
+  guint itemcount;
+  WCHAR *tempwstr = NULL;
+  gint index;
+  gint count;
+  HRESULT hr;
+
+  fullpath = g_string_new(filename);
+  /* put a terminating slash if not present */
+  if (fullpath->str[fullpath->len - 1] != '/')
+    g_string_append_c (fullpath, '/');
+  fullpath_start_len = fullpath->len;
+
+  g_debug("%s: entering ...", G_STRFUNC);
+
+  switch ((index = get_location(filename, &location)))
+    {
+    case INDEX_DEVICE:
+      info = g_file_info_new ();
+      get_special_directory_attributes(synce_backend, info, NAME_DOCUMENTS, matcher);
+      files = g_list_prepend (files, info);
+
+      info = g_file_info_new ();
+      get_special_directory_attributes(synce_backend, info, NAME_FILESYSTEM, matcher);
+      files = g_list_prepend (files, info);
+
+#if SHOW_APPLICATIONS
+      info = g_file_info_new ();
+      get_special_directory_attributes(synce_backend, info, NAME_APPLICATIONS, matcher);
+      files = g_list_prepend (files, info);
+#endif
+
+      g_vfs_job_succeeded (G_VFS_JOB (job));
+      goto exit;
+
+#if SHOW_APPLICATIONS
+    case INDEX_APPLICATIONS:
+      if (location && location[0] != '\0')
+        {
+          result = GNOME_VFS_ERROR_NOT_FOUND;
+          goto exit;
+        }
+
+      dh = (VFS_DIR_HANDLE*) g_malloc0(sizeof(DIR_HANDLE));
+
+      dh->index = INDEX_APPLICATIONS;
+      dh->location = NULL;
+      dh->itemcount = 0;
+      dh->count = 0;
+      dh->data = NULL;
+      dh->uri = gnome_vfs_uri_dup(uri);
+      dh->rapi_conn = rapi_conn;
+
+      *(method_handle) = dh;
+      result = GNOME_VFS_OK;
+      goto exit;
+#endif
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("File not found"));
+      goto exit;
+    }
+
+  g_debug("%s: location %s", G_STRFUNC, location);
+
+  if(!location)
+    {
+      location = g_strdup("*");
+    }
+  else if(location[1] == '\0')
+    {
+      g_free(location);
+      location = g_strdup("*");
+    }
+  else if(location[strlen(location)-1] == '\\')
+    {
+      new_path = g_strjoin(NULL, location, "*", NULL);
+      g_free(location);
+      location = new_path;
+    }
+  else
+    {
+      new_path = g_strjoin(NULL, location, "\\*", NULL);
+      g_free(location);
+      location = new_path;
+    }
+
+  g_debug("%s: modified location %s", G_STRFUNC, location);
+
+  optionflags =
+    FAF_ATTRIBUTES
+    | FAF_CREATION_TIME
+    | FAF_LASTACCESS_TIME
+    | FAF_LASTWRITE_TIME
+    | FAF_NAME
+    | FAF_SIZE_LOW
+    | FAF_OID;
+
+  g_debug("%s: getting wide string", G_STRFUNC);
+  tempwstr = wstr_from_utf8(location);
+
+  g_debug("%s: locking mutex", G_STRFUNC);
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  g_debug("%s: CeFindAllFiles()", G_STRFUNC);
+  if (!CeFindAllFiles(tempwstr, optionflags, &itemcount, &data))
+    {
+      g_warning("%s: CeFindAllFiles() failed", G_STRFUNC);
+      wstr_free_string(tempwstr);
+      error = g_error_from_rapi(NULL);
+      MUTEX_UNLOCK (synce_backend->mutex);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free (error);
+      goto exit;
+    }
+
+  g_debug("%s: CeFindAllFiles() succeeded", G_STRFUNC);
+
+  g_debug("%s: unlocking mutex", G_STRFUNC);
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_debug("%s: freeing wide string", G_STRFUNC);
+  wstr_free_string(tempwstr);
+
+  count = 0;
+
+  g_debug("%s: found %d items", G_STRFUNC);
+
+  while (count < itemcount) {
+    info = g_file_info_new ();
+    g_debug("%s: running get_file_attributes for file %d", G_STRFUNC, count);
+    get_file_attributes(synce_backend, info, data+count, matcher);
+
+    g_debug("%s: appending info to list", G_STRFUNC);
+    files = g_list_prepend (files, info);
+    count++;
+  }
+
+  MUTEX_LOCK (synce_backend->mutex);
+
+  g_debug("%s: CeRapiFreeBuffer()", G_STRFUNC);
+  hr = CeRapiFreeBuffer(data);
+  if (FAILED(hr))
+    g_warning("CeRapiFreeBuffer(): failed");
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_vfs_job_succeeded (G_VFS_JOB (job));
+
+ exit:
+  g_free(location);
+  g_string_free (fullpath, TRUE);
+
+  if (files)
+    {
+      files = g_list_reverse (files);
+      g_vfs_job_enumerate_add_infos (job, files);
+      g_list_foreach (files, (GFunc)g_object_unref, NULL);
+      g_list_free (files);
+    }
+
+  g_vfs_job_enumerate_done (job);
+
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
 
 static void
 synce_gvfs_mount (GVfsBackend *backend,
@@ -703,7 +1172,6 @@ synce_gvfs_mount (GVfsBackend *backend,
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
   GMountSpec *synce_mount_spec = NULL;
   gchar *display_name = NULL;
-
   HRESULT hr;
 
   g_debug("%s: entering ...", G_STRFUNC);
@@ -715,11 +1183,12 @@ synce_gvfs_mount (GVfsBackend *backend,
   synce_backend->rapi_conn = rapi_connection_from_name(synce_backend->device_name);
   if (!synce_backend->rapi_conn) {
     g_warning("%s: failed to obtain rapi connection", G_STRFUNC);
+    g_free(synce_backend->device_name);
+    MUTEX_UNLOCK (synce_backend->mutex);
+
     g_vfs_job_failed (G_VFS_JOB (job),
 		      G_IO_ERROR, G_IO_ERROR_HOST_NOT_FOUND,
 		      _("Unable to connect to device"));
-
-    g_free(synce_backend->device_name);
     return;
   }
 
@@ -731,6 +1200,7 @@ synce_gvfs_mount (GVfsBackend *backend,
       g_warning("%s: failed to initialize RAPI connection: %s", G_STRFUNC, synce_strerror(hr));
       rapi_connection_destroy(synce_backend->rapi_conn);
       g_free(synce_backend->device_name);
+      MUTEX_UNLOCK (synce_backend->mutex);
 
       g_vfs_job_failed (G_VFS_JOB (job),
 			G_IO_ERROR, G_IO_ERROR_FAILED,
@@ -754,8 +1224,8 @@ synce_gvfs_mount (GVfsBackend *backend,
   g_vfs_backend_set_display_name (backend, display_name);
   g_free(display_name);
 
-  /*
-  g_vfs_backend_set_icon_name (backend, MOUNT_ICON_NAME);
+  /* doesn't seem to get this information
+     g_vfs_backend_set_icon_name (backend, MOUNT_ICON_NAME);
   */
 
   synce_mount_spec = g_mount_spec_new("synce");
@@ -774,17 +1244,15 @@ synce_gvfs_unmount (GVfsBackend *backend,
 {
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
 
-  g_debug("%s: entering ...", G_STRFUNC);
-
   g_debug("%s: unmounting %s", G_STRFUNC, synce_backend->device_name);
-
-  g_free(synce_backend->device_name);
 
   MUTEX_LOCK (synce_backend->mutex);
   rapi_connection_select(synce_backend->rapi_conn);
   CeRapiUninit();
   rapi_connection_destroy(synce_backend->rapi_conn);
   MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_free(synce_backend->device_name);
 
   g_vfs_job_succeeded (G_VFS_JOB (job));
 
@@ -804,6 +1272,8 @@ g_vfs_backend_synce_finalize (GObject *object)
 {
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(object);
 
+  MUTEX_FREE(synce_backend->mutex);
+
   if (G_OBJECT_CLASS (g_vfs_backend_synce_parent_class)->finalize)
     (*G_OBJECT_CLASS (g_vfs_backend_synce_parent_class)->finalize) (object);
 }
@@ -817,7 +1287,6 @@ g_vfs_backend_synce_init (GVfsBackendSynce *synce_backend)
   g_vfs_backend_set_display_name (backend, "Mobile Device");
 
   synce_backend->mutex = MUTEX_NEW ();
-
 }
 
 
@@ -833,14 +1302,12 @@ g_vfs_backend_synce_class_init (GVfsBackendSynceClass *klass)
   backend_class->mount = synce_gvfs_mount;
   backend_class->unmount = synce_gvfs_unmount;
   backend_class->query_info = synce_gvfs_query_info;
-  /*
-  backend_class->open_for_read = do_open_for_read;
-  backend_class->close_read = do_close_read;
-  backend_class->read = do_read;
-  backend_class->enumerate = do_enumerate;
-  */
+  backend_class->enumerate = synce_gvfs_enumerate;
 
-
+  backend_class->open_for_read = synce_gvfs_open_for_read;
+  backend_class->close_read = synce_gvfs_close_read;
+  backend_class->read = synce_gvfs_read;
+  backend_class->seek_on_read = synce_gvfs_seek_on_read;
 
 
   /*
