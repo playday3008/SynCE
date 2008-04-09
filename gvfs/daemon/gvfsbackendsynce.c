@@ -1062,7 +1062,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
       g_vfs_job_failed (G_VFS_JOB (job),
 			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
 			_("File not found"));
-      goto exit;
+      goto error_exit;
     }
 
   g_debug("%s: location %s", G_STRFUNC, location);
@@ -1116,7 +1116,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
       MUTEX_UNLOCK (synce_backend->mutex);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free (error);
-      goto exit;
+      goto error_exit;
     }
 
   g_debug("%s: CeFindAllFiles() succeeded", G_STRFUNC);
@@ -1129,7 +1129,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
 
   count = 0;
 
-  g_debug("%s: found %d items", G_STRFUNC);
+  g_debug("%s: found %d items", G_STRFUNC, itemcount);
 
   while (count < itemcount) {
     info = g_file_info_new ();
@@ -1152,8 +1152,6 @@ synce_gvfs_enumerate(GVfsBackend *backend,
   g_vfs_job_succeeded (G_VFS_JOB (job));
 
  exit:
-  g_free(location);
-  g_string_free (fullpath, TRUE);
 
   if (files)
     {
@@ -1164,6 +1162,10 @@ synce_gvfs_enumerate(GVfsBackend *backend,
     }
 
   g_vfs_job_enumerate_done (job);
+
+ error_exit:
+  g_free(location);
+  g_string_free (fullpath, TRUE);
 
   g_debug("%s: leaving ...", G_STRFUNC);
   return;

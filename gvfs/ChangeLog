@@ -1,3 +1,7 @@
+2008-04-09  Mark Ellis <mark@mpellis.org.uk>
+
+	* fixed error handling in _enumerate_ causing segfault
+
 2008-04-07  Mark Ellis <mark@mpellis.org.uk>
 
 	* added dir enumeration (listing) and file reading
