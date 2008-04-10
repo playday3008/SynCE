@@ -1,3 +1,7 @@
+2008-04-10  Mark Ellis <mark@mpellis.org.uk>
+
+	* more FreeBSD fixes, thanks to Ilya Bakulin
+
 2008-04-01  Mark Ellis <mark@mpellis.org.uk>
 
 	* cleaned up build system, should help *bsd'ers

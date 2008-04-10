@@ -1,7 +1,12 @@
 #!/bin/sh
 
+SYS_NAME=`uname`
 
-DEVICE_FILE=${HAL_PROP_SERIAL_DEVICE}
+if [ ${SYS_NAME} = "FreeBSD" ] ; then
+  DEVICE_FILE=/dev/ttyU${HAL_PROP_FREEBSD_UNIT}
+else
+  DEVICE_FILE=${HAL_PROP_SERIAL_DEVICE}
+fi
 
 THIS=`basename $0`
 
@@ -78,10 +83,22 @@ synce_serial_start_device()
   # Shut off the connection in case it's running.
   synce-serial-abort-device >/dev/null 2>&1
 
-  ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
 
   # Now bring up the connection
-  ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
+  if [ ${SYS_NAME} = "FreeBSD" ] ; then
+
+    # FreeBSD pppd doesn't support the linkname option
+    ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS"
+
+    ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS
+
+  else
+
+    ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
+
+    ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
+
+  fi
 
   if [ "$?" != "0" ]; then
     ${ERROR} "Failed to initialize ppp connection"
@@ -119,11 +136,11 @@ synce_serial_abort_device()
 }
 
 
-if [ ${HALD_ACTION} == "add" ]; then
+if [ ${HALD_ACTION} = "add" ]; then
     synce_serial_start_device
     @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
 fi
 
-if [ ${HALD_ACTION} == "remove" ]; then
+if [ ${HALD_ACTION} = "remove" ]; then
     synce_serial_abort_device
 fi
