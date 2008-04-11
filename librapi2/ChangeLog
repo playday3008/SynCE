@@ -1,3 +1,8 @@
+2008-04-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* modified rapi_context_connect() to deal with version 5.0
+	  that is actually WM2003
+
 2008-04-01  Mark Ellis  <mark@mpellis.org.uk>
 
 	* dummy function for rapi1 CeGetDiskFreeSpaceEx, prevents segfault

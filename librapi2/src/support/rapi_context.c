@@ -239,10 +239,12 @@ HRESULT rapi_context_connect(RapiContext* context)
             synce_error("failed to connect to proxy for %s", info->ip);
             goto fail;
         }
-	if (info->os_version < 5)
-	  context->rapi_ops = &rapi_ops;
-	else
+
+	/* rapi 2 seems to be used on devices with OS version of 5.1 or greater */
+	if ((info->os_version > 4) && (info->os_minor > 0))
 	  context->rapi_ops = &rapi2_ops;
+	else
+	  context->rapi_ops = &rapi_ops;
     }
 
 	context->is_initialized = true;
