@@ -45,7 +45,7 @@
 #include "gvfsdaemonutils.h"
 #include "gvfskeyring.h"
 
-#define MOUNT_ICON_NAME "synce-color"
+#define MOUNT_ICON_NAME "synce-gvfs"
 
 struct _GVfsBackendSynce
 {
@@ -367,6 +367,7 @@ convert_time(const FILETIME* filetime)
 static void
 get_file_attributes(GVfsBackendSynce *backend,
                     GFileInfo *info,
+		    gint index,
                     CE_FIND_DATA *entry,
                     GFileAttributeMatcher *matcher)
 {
@@ -378,6 +379,7 @@ get_file_attributes(GVfsBackendSynce *backend,
 
   g_debug("%s: get filename from wide str", G_STRFUNC);
   gchar *filename = wstr_to_utf8(entry->cFileName);
+  g_debug("%s: filename is %s", G_STRFUNC, filename);
 
   g_debug("%s: get basename", G_STRFUNC);
   basename = g_path_get_basename(filename);
@@ -386,9 +388,17 @@ get_file_attributes(GVfsBackendSynce *backend,
   g_debug("%s: set display name", G_STRFUNC);
   if (g_file_attribute_matcher_matches(matcher, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME))
     {
+
+
+      /* ########################### */
+
       if (strcmp (basename, "/") == 0)
-        display_name = g_strdup_printf (_("Mobile Device %s"), backend->device_name);
-      else
+        display_name = g_strdup(NAME_FILESYSTEM);
+      else if ((strcmp (basename, NAME_MY_DOCUMENTS) == 0) && (index == INDEX_DOCUMENTS))
+	{
+	  display_name = g_strdup(NAME_DOCUMENTS);
+	}
+      else 
 	{
 	  display_name = g_filename_display_name (basename);
 
@@ -402,6 +412,10 @@ get_file_attributes(GVfsBackendSynce *backend,
 
       g_file_info_set_display_name (info, display_name);
       g_free (display_name);
+
+
+
+
     }
 
   g_debug("%s: set edit name", G_STRFUNC);
@@ -522,7 +536,7 @@ get_special_directory_attributes(GVfsBackendSynce *backend,
   if (g_file_attribute_matcher_matches(matcher, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME))
     {
       if (strcmp (basename, "/") == 0)
-        display_name = g_strdup_printf (_("Mobile Device %s"), backend->device_name);
+        display_name = g_strdup(NAME_FILESYSTEM);
       else
 	{
 	  display_name = g_filename_display_name (basename);
@@ -585,10 +599,7 @@ get_root_attributes(GVfsBackendSynce *backend,
 		    GFileAttributeMatcher *matcher)
 {
   gchar *display_name;
-  if (hostname)
-    display_name = g_strjoin(NULL, "Mobile Device (", hostname, ")", NULL);
-  else
-    display_name = g_strdup("Mobile Device");
+  display_name = g_strdup(NAME_FILESYSTEM);
 
   get_special_directory_attributes(backend, file_info, display_name, matcher);
 
@@ -609,10 +620,11 @@ synce_gvfs_query_info (GVfsBackend *backend,
   gchar *location = NULL;
   CE_FIND_DATA entry;
   WCHAR *tempwstr = NULL;
+  gint index;
 
   g_debug("%s: getting info for filename %s", G_STRFUNC, filename);
 
-  switch (get_location(filename, &location))
+  switch (index = get_location(filename, &location))
     {
     case INDEX_DEVICE:
       if (location == NULL)
@@ -690,7 +702,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
     {
       g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
-      get_file_attributes(synce_backend, info, &entry, matcher);
+      get_file_attributes(synce_backend, info, index, &entry, matcher);
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
       g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
@@ -1134,7 +1146,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
   while (count < itemcount) {
     info = g_file_info_new ();
     g_debug("%s: running get_file_attributes for file %d", G_STRFUNC, count);
-    get_file_attributes(synce_backend, info, data+count, matcher);
+    get_file_attributes(synce_backend, info, index, data+count, matcher);
 
     g_debug("%s: appending info to list", G_STRFUNC);
     files = g_list_prepend (files, info);
@@ -1149,10 +1161,12 @@ synce_gvfs_enumerate(GVfsBackend *backend,
     g_warning("CeRapiFreeBuffer(): failed");
   MUTEX_UNLOCK (synce_backend->mutex);
 
+  g_debug("%s: g_vfs_job_succeeded()", G_STRFUNC);
   g_vfs_job_succeeded (G_VFS_JOB (job));
 
  exit:
 
+  g_debug("%s: freeing files()", G_STRFUNC);
   if (files)
     {
       files = g_list_reverse (files);
@@ -1161,6 +1175,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
       g_list_free (files);
     }
 
+  g_debug("%s: g_vfs_job_enumerate_done()", G_STRFUNC);
   g_vfs_job_enumerate_done (job);
 
  error_exit:
@@ -1234,9 +1249,7 @@ synce_gvfs_mount (GVfsBackend *backend,
   g_vfs_backend_set_display_name (backend, display_name);
   g_free(display_name);
 
-  /* doesn't seem to get this information
-     g_vfs_backend_set_icon_name (backend, MOUNT_ICON_NAME);
-  */
+  g_vfs_backend_set_icon_name (backend, MOUNT_ICON_NAME);
 
   synce_mount_spec = g_mount_spec_new("synce");
   g_mount_spec_set(synce_mount_spec, "host", synce_backend->device_name);

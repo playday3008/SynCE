@@ -1,3 +1,9 @@
+2008-04-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* fixed display names of virtual Filesystem and Documents
+	  directories
+	* install icon
+
 2008-04-09  Mark Ellis <mark@mpellis.org.uk>
 
 	* fixed error handling in _enumerate_ causing segfault

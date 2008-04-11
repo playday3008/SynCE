@@ -1,5 +1,6 @@
 SUBDIRS = \
-	daemon
+	daemon \
+	pixmaps
 
 EXTRA_DIST = \
 	MAINTAINERS		\

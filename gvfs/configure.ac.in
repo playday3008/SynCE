@@ -82,5 +82,6 @@ dnl AM_GLIB_DEFINE_LOCALEDIR(GVFS_LOCALEDIR)
 AC_OUTPUT([
 	Makefile
 	daemon/Makefile
+	pixmaps/Makefile
 	po/Makefile.in
 ])
