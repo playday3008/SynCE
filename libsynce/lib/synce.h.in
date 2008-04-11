@@ -160,6 +160,7 @@ typedef struct _SynceInfo
   char* password;
   int key;
   int os_version;
+  int os_minor;
   int build_number;
   int processor_type;
   int partner_id_1;

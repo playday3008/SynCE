@@ -1,3 +1,8 @@
+2008-04-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* added os_minor to SynceInfo to deal with version 5.0
+	  that is actually WM2003
+
 2008-02-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* manpage for logging functions

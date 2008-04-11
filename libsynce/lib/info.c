@@ -259,6 +259,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       goto ERROR;
     }
     result->os_version = os_major;
+    result->os_minor = os_minor;
 
     if (!dbus_g_proxy_call(proxy, "GetIpAddress", &error,
                            G_TYPE_INVALID,
@@ -437,6 +438,12 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     result->os_version = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
       g_critical("%s: Failed to obtain property pda.pocketpc.os_major for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
+    result->os_minor = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_minor", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.os_minor for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
       goto error_exit;
     }
 

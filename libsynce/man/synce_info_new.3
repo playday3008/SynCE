@@ -60,7 +60,8 @@ typedef struct _SynceInfo {
     char* ip;            /* device ip address */
     char* password;      /* device password */
     int key;             /* device pass key */
-    int os_version;      /* device OS version */
+    int os_version;      /* device OS major version */
+    int os_minor;        /* device OS minor version */
     int build_number;    /* OS build number */
     int processor_type;  /* device processor */
     int partner_id_1;    /* first sync partner id number */
@@ -81,7 +82,9 @@ The use of
 is deprecated. When using
 .BR vdccm (1)
 all fields are populated except for 
-.BR fd .
+.BR fd 
+and 
+.BR os_minor .
 With 
 .BR odccm (1)
 and
