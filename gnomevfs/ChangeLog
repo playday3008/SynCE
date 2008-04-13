@@ -1,5 +1,10 @@
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
+	* VERSION: Upped version number.
+	* configure.ac.in: Upped deps on libsynce and librapi2.
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
 	* .cvsignore:
 	* pixmaps/.cvsignore:
 	* script/.cvsignore:
