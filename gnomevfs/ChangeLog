@@ -1,3 +1,8 @@
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* autogen.sh: Removed references to *.spec.in files.
+	* gnomevfs.spec.in: Removed.
+
 2008-02-13  Mark Ellis  <mark@mpellis.org.uk>
 
 	* use a rapi connection per operation instead of globally
