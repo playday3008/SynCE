@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.53)
-AC_INIT(odccm, 0.11)
+AC_INIT(odccm, 0.11.1)
 AC_CONFIG_SRCDIR(README)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -29,7 +29,7 @@ if test x"$enable_legacy_support" != xno; then
 fi
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.11)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.11.1)
 
 dnl Check for GLib
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4])
