@@ -1,5 +1,24 @@
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
+	* man/rra-appointment-from-vevent.1:
+	* man/rra-appointment-to-vevent.1:
+	* man/rra-contact-from-vcard.1:
+	* man/rra-contact-to-vcard.1:
+	* man/rra-decode.1:
+	* man/rra-delete.1:
+	* man/rra-get-data.1:
+	* man/rra-get-ids.1:
+	* man/rra-get-recurring-appointments.1:
+	* man/rra-get-types.1:
+	* man/rra-put-data.1:
+	* man/rra-subscribe.1:
+	* man/rra-task-from-vtodo.1:
+	* man/rra-task-to-vtodo.1:
+	* man/rra-timezone.1: Escaped minus signs so they're not hyphens.
+	Notified by lintian: hyphen-used-as-minus-sign.
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
 	* Removed spec file.
 
 2008-03-26  Mark Ellis  <mark@mpellis.org.uk>
