@@ -1,5 +1,12 @@
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
+	* .cvsignore:
+	* pixmaps/.cvsignore:
+	* script/.cvsignore:
+	* src/.cvsignore: Removed useless files.
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
 	* autogen.sh: Removed references to *.spec.in files.
 	* gnomevfs.spec.in: Removed.
 
