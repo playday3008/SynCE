@@ -1,5 +1,25 @@
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
+	* script/synce-install-cab.1:
+	* script/synce-remove-program.1:
+	* tools/man/pcp.1:
+	* tools/man/pkillall.1:
+	* tools/man/pls.1:
+	* tools/man/pmkdir.1:
+	* tools/man/pmv.1:
+	* tools/man/prm.1:
+	* tools/man/prmdir.1:
+	* tools/man/prun.1:
+	* tools/man/psettime.1:
+	* tools/man/pshortcut.1:
+	* tools/man/pstatus.1:
+	* tools/man/rapiconfig.1:
+	* tools/man/synce-list-programs.1:
+	* tools/man/synce-registry.1: Escaped minus signs so they're not
+	hyphens. Notified by lintian: hyphen-used-as-minus-sign. 
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
 	* Removed spec file.
 
 2008-04-11  Mark Ellis  <mark@mpellis.org.uk>

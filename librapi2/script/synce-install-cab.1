@@ -4,7 +4,7 @@
 synce-install-cab \- install .cab file
 
 .SH SYNOPSIS
-\fBsynce-install-cab\fR [-d \fILEVEL\fR] [-p \fIdevice_path\fR] [-o \fIWCE_OPT\fR] [-n] \fIFILENAME\fR ...\fR
+\fBsynce-install-cab\fR [\-d \fILEVEL\fR] [\-p \fIdevice_path\fR] [\-o \fIWCE_OPT\fR] [\-n] \fIFILENAME\fR ...\fR
 
 .SH "DESCRIPTION"
 
@@ -14,7 +14,7 @@ SynCE.
 
 .SH "OPTIONS"
 .TP
--d \fILEVEL\fR
+\-d \fILEVEL\fR
 Set debug log level:
 .IP
 0 - No logging (default)
@@ -26,15 +26,15 @@ Set debug log level:
 3 - Everything
 
 .TP
--p \fIPATH\fR
+\-p \fIPATH\fR
 Path to device
 
 .TP
--h
+\-h
 Display help message.
 
 .TP
--o \fIWCE_OPT\fR
+\-o \fIWCE_OPT\fR
 Flags to pass to \fIwceload.exe\fR on the remote device.  Useful flags
 include:
 .IP
@@ -49,7 +49,7 @@ include:
 /noaskdest - Get install information from registry
 
 .TP
--n
+\-n
 Don't run wceload (just copy CAB files)
 
 

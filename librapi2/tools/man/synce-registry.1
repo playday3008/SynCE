@@ -4,13 +4,13 @@
 synce-registry \- read or modify the registry on a PDA
 
 .SH SYNOPSIS
-\fBsynce-registry\fR [-d \fILEVEL\fR] [-p \fIDEVNAME\fR] [-h]
-   [-r] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR
-     -w [-t TYPE] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR \fINEWVALUE\fR
-     -l \fIPARENTKEY\fR \fIKEY\fR
-     -n \fIPARENTKEY\fR \fINEWKEY\fR
-     -x \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR (\fBnot supported\fR)
-     -X \fIPARENTKEY\fR \fIKEY\fR (\fBnot supported\fR)
+\fBsynce-registry\fR [\-d \fILEVEL\fR] [\-p \fIDEVNAME\fR] [\-h]
+   [\-r] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR
+     \-w [\-t TYPE] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR \fINEWVALUE\fR
+     \-l \fIPARENTKEY\fR \fIKEY\fR
+     \-n \fIPARENTKEY\fR \fINEWKEY\fR
+     \-x \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR (\fBnot supported\fR)
+     \-X \fIPARENTKEY\fR \fIKEY\fR (\fBnot supported\fR)
 
 .SH "DESCRIPTION"
 
@@ -28,7 +28,7 @@ This tool must be run as the same user as the dccmd daemon.
 
 .SH "OPTIONS"
 .TP
--d \fILEVEL\fR
+\-d \fILEVEL\fR
 Set debug log level:
 .IP
 0 - No logging (default)
@@ -40,20 +40,20 @@ Set debug log level:
 3 - Everything
 
 .TP
--p \fIDEVNAME\fR
+\-p \fIDEVNAME\fR
 Use the device with the given name, instead of the default.
 
 .TP
--h
+\-h
 Display help message.
 
 .TP
-[-r] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR
+[\-r] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR
 
 Read a value.  This is the default.
 
 .TP
--w [-t TYPE] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR \fINEWVALUE\fR
+\-w [\-t TYPE] \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR \fINEWVALUE\fR
 
 Write a value.  If \fITYPE\fR is supplied, that type of value will be
 written; otherwise a string.  The following options are valid for
@@ -73,19 +73,19 @@ written; otherwise a string.  The following options are valid for
 \fIbinary\fR - Binary data (\fBnot supported\fR)
 
 .TP
--l \fIPARENTKEY\fR \fIKEY\fR
+\-l \fIPARENTKEY\fR \fIKEY\fR
 List the names of values and subkeys in the given \fIKEY\fR.
 
 .TP
--n \fIPARENTKEY\fR \fIKEY\fR
+\-n \fIPARENTKEY\fR \fIKEY\fR
 Create a new key.
 
 .TP
--x \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR
+\-x \fIPARENTKEY\fR \fIKEY\fR \fIVALUE\fR
 Delete the given \fIVALUE\fR from the given \fIKEY\fR.  (\fBnot implemented\fR)
 
 .TP
--X \fIPARENTKEY\fR \fIKEY\fR
+\-X \fIPARENTKEY\fR \fIKEY\fR
 Delete the given \fIKEY\fR. (\fBnot implemented\fR)
 
 .TP
