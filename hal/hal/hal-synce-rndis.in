@@ -11,6 +11,12 @@ DEFAULT_LOCAL_IP = "169.254.2.2"
 DEFAULT_NETMASK = "255.255.255.0"
 DEFAULT_BROADCAST = "169.254.2.255"
 
+global device_ip
+global local_ip
+
+device_ip = False
+local_ip = False
+
 logger = None
 
 #
@@ -35,7 +41,11 @@ def RunIfconfig(iface):
         return False
 
     logger.debug("ifconfig succeeded")
-    return DEFAULT_DEVICE_IP
+
+    device_ip = DEFAULT_DEVICE_IP
+    local_ip = DEFAULT_LOCAL_IP
+
+    return
 
 
 #
@@ -45,6 +55,9 @@ def RunDhclient(iface):
 
     logger.debug("attempting dynamic ip configuration")
     cmd_list = ["dhclient",iface]
+
+    global device_ip
+    global local_ip
 
     # returns a Popen object
     proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -56,9 +69,9 @@ def RunDhclient(iface):
         return False
 
     output_list = output_text.split('\n')
-    device_ip = False
 
     dhcp_ack_re = re.compile('DHCPACK from (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+    dhcp_bound_re = re.compile('bound to (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 
     for line in output_list:
         logger.debug("dhclient output: "+line)
@@ -66,21 +79,36 @@ def RunDhclient(iface):
         match_obj = dhcp_ack_re.match(line)
         if match_obj != None:
             device_ip = match_obj.group(1)
-            logger.debug("dhclient returned ip_address "+device_ip)
-            return device_ip
+            logger.debug("dhclient returned device address "+device_ip)
 
-    return device_ip
+        match_obj = dhcp_bound_re.match(line)
+        if match_obj != None:
+            local_ip = match_obj.group(1)
+            logger.debug("dhclient returned local address "+local_ip)
+
+    return
 
 
 #
 # run dccm after the interface is configured
 #
-def RunDccm(device_ip):
+def RunDccm():
 
     logger.debug("starting hal-dccm ...")
-    clist = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip]
+    cmd_list = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level=6"]
 
-    proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+##############
+
+    logger.debug(cmd_list)
+
+#    proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(cmd_list)
+    logger.debug("executed hal-dccm with pid %d", proc.pid)
+
+#    execl("/usr/lib/synce-hal/hal-dccm", "--rndis", "--device-ip="+device_ip, "--local-ip="+local_ip)
+
+##################
+
     return
 
 
@@ -103,17 +131,22 @@ if __name__ == '__main__':
 
     logger.debug("attempting to configure interface "+iface)
 
-    device_ip = RunDhclient(iface)
-    if device_ip == False:
+    RunDhclient(iface)
+
+    logger.debug("back from RunDhclient, device_ip=%s, local_ip=%s", device_ip, local_ip)
+
+    if device_ip == False or local_ip == False:
         logger.debug("error running dhclient, trying static config")
 
-        device_ip = RunIfconfig(iface)
-        if device_ip == False:
+        RunIfconfig(iface)
+        if device_ip == False or local_ip == False:
             logger.warning("failed to configure interface")
             sys.exit(1)
 
     logger.debug("successfully configured interface")
 
-    RunDccm(device_ip)
+    RunDccm()
+
+    logger.debug("exiting ...")
 
     sys.exit(0)

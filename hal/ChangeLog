@@ -1,3 +1,8 @@
+2008-04-14  Mark Ellis <mark@mpellis.org.uk>
+
+	* fixed rndis dhcp connection
+	* make sure dccm logs everything to syslog
+
 2008-04-10  Mark Ellis <mark@mpellis.org.uk>
 
 	* more FreeBSD fixes, thanks to Ilya Bakulin

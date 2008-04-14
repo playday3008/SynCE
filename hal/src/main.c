@@ -192,6 +192,11 @@ main(gint argc,
   g_type_init ();
   gnet_init();
 
+  openlog(g_get_prgname(), LOG_PID, LOG_LOCAL5);
+  g_log_set_default_handler(log_to_syslog, &log_level);
+
+  g_debug("%s: starting ...", G_STRFUNC);
+
   GOptionContext *option_context = g_option_context_new (" - keep connection to Windows Mobile device");
   g_option_context_add_main_entries (option_context, options, NULL);
   g_option_context_parse (option_context, &argc, &argv, &error);
@@ -200,13 +205,13 @@ main(gint argc,
     switch (error->code)
       {
       case G_OPTION_ERROR_UNKNOWN_OPTION:
-	g_printerr("%s\n", error->message);
+	g_critical("%s\n", error->message);
 	break;
       case G_OPTION_ERROR_BAD_VALUE:
-	g_printerr("%s\n", error->message);
+	g_critical("%s\n", error->message);
 	break;
       default:
-	g_printerr("Unexpected error: %s\n", error->message);
+	g_critical("Unexpected error: %s\n", error->message);
       }
     g_error_free(error);
     return EXIT_FAILURE;
@@ -223,9 +228,6 @@ main(gint argc,
   }
 
   mainloop = g_main_loop_new (NULL, FALSE);
-
-  openlog(g_get_prgname(), LOG_PID, LOG_LOCAL5);
-  g_log_set_default_handler(log_to_syslog, &log_level);
 
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
