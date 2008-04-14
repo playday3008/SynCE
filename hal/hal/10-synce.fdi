@@ -15,7 +15,7 @@
 
       <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-      <append key="info.callouts.add" type="strlist">hal-synce-rndis</append>
+      <append key="info.addons" type="strlist">hal-synce-rndis</append>
     </match>
   </device>
 
@@ -34,7 +34,7 @@
 
       <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-      <append key="info.callouts.add" type="strlist">hal-synce-rndis</append>
+      <append key="info.addons" type="strlist">hal-synce-rndis</append>
     </match>
   </device>
 
@@ -51,7 +51,7 @@
 
         <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-        <append key="info.callouts.add" type="strlist">hal-synce-legacy</append>
+        <append key="info.addons" type="strlist">hal-synce-legacy</append>
       </match>
     </match>
   </device>
@@ -74,7 +74,7 @@
 
         <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-        <append key="info.callouts.add" type="strlist">hal-synce-legacy</append>
+        <append key="info.addons" type="strlist">hal-synce-legacy</append>
       </match>
     </match>
   </device>

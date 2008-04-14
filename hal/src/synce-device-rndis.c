@@ -26,6 +26,9 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
   guint os_major, os_minor, version, cpu_type, cur_partner_id, id, comp_count;
   const guchar *p = buf, *end_ptr = buf + length;
   guint consumed;
+  DBusError error;
+
+  dbus_error_init(&error);
 
   priv->state = CTRL_STATE_GOT_INFO;
 
@@ -196,6 +199,17 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
       synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNSET);
       priv->state = CTRL_STATE_CONNECTED;
     }
+
+  /* tell hal device is ready */
+
+  g_debug("%s: notify hal that device is ready to be advertised", G_STRFUNC);
+
+  if (!(libhal_device_addon_is_ready(priv->hal_ctx,
+				     priv->udi,
+				     &error))) {
+    g_critical("%s: failed to notify hal that device is ready: %s: %s", G_STRFUNC, error.name, error.message);
+    dbus_error_free(&error);
+  }
 
   goto OUT;
 

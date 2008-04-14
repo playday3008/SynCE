@@ -2,6 +2,8 @@
 
 	* fixed rndis dhcp connection
 	* make sure dccm logs everything to syslog
+	* become an addon when device is added instead of a callout,
+	  prevents the device being advertised until properly set up
 
 2008-04-10  Mark Ellis <mark@mpellis.org.uk>
 

@@ -97,17 +97,14 @@ def RunDccm():
     logger.debug("starting hal-dccm ...")
     cmd_list = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level=6"]
 
-##############
-
     logger.debug(cmd_list)
 
 #    proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    proc = subprocess.Popen(cmd_list)
-    logger.debug("executed hal-dccm with pid %d", proc.pid)
+#    proc = subprocess.Popen(cmd_list)
+#    logger.debug("executed hal-dccm with pid %d", proc.pid)
 
-#    execl("/usr/lib/synce-hal/hal-dccm", "--rndis", "--device-ip="+device_ip, "--local-ip="+local_ip)
-
-##################
+#    execl("/usr/lib/synce-hal/hal-dccm", "--rndis", "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level=6")
+    os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
 
     return
 

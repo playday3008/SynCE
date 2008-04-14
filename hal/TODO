@@ -1,0 +1,2 @@
+* deal with hald sending us a SIGTERM on device disconnect
+  now that we are an addon

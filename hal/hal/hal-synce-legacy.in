@@ -136,9 +136,9 @@ synce_serial_abort_device()
 }
 
 
-if [ ${HALD_ACTION} = "add" ]; then
+if [ ${HALD_ACTION} = "addon" ]; then
     synce_serial_start_device
-    @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
+    exec @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
 fi
 
 if [ ${HALD_ACTION} = "remove" ]; then
