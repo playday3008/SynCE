@@ -1,3 +1,22 @@
+############################################################################## 
+#    Copyright (C) 2007 Guido Diepen
+#    Email: Guido Diepen <guido@guidodiepen.nl>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+############################################################################## 
+
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -170,13 +189,45 @@ class GuiDbus(dbus.service.Object):
         for program in programsList:
             self.mainwindow.listInstalledPrograms.addItem( program ) 
     
-    def handleSyncEngineStatusChange(self, isOnline):
+    def handleSyncEngineStatusChange(self, isOnline, wasAlreadyOnline):
         self.mainwindow.syncEngineStatusChange(isOnline)
 
+        if not wasAlreadyOnline: 
+            self.updateListPartnerships()
+        
+        if not isOnline:
+            self.mainwindow.showCreatePShipMessage = False
 
-    def checkActivePartnership(self):
-        if len(self.__partnerships) == 0:
+
+
+    def __handleMessageCreatePartnership(self):
+        if not self.mainwindow.isVisible():
             self.mainwindow.tray.showMessage("No partnerships detected on device","Please go to the partnership tab to create a partnership")
+            self.mainwindow.showCreatePShipMessage = True
+        else:
+            self.mainwindow.askUserForPshipCreation()
+
+
+    def handle_GetDeviceBindingState(self, _state):
+        #this means that the device is not having a bound partnership
+        if _state == 1:
+            #self.mainwindow.tray.showMessage("No partnerships detected on device","Please go to the partnership tab to create a partnership")
+            QTimer.singleShot(250, self.__handleMessageCreatePartnership)
+        else:
+            print "An actively bound partnership already exists."
+
+    def handle_GetDeviceBindingState_error(self, error):
+        print error
+        
+    
+    def checkActivePartnership(self):
+        print "checking for active partnerships, querying dataserver"
+        dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        dataServer.GetDeviceBindingState(dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE,
+                                        reply_handler=self.handle_GetDeviceBindingState,
+                                        error_handler=self.handle_GetDeviceBindingState_error)
+
+
 
 
 
@@ -195,8 +246,6 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.labelDeviceIsLocked.setVisible(False)
         self.mainwindow.toolButtonDeviceIsLocked.setVisible(False)
 
-
-        #gobject.timeout_add(2000, self.updateDeviceInformation)
 
         self.mainwindow.toolButtonDeviceIsLocked.setVisible(False)
         self.mainwindow.labelDeviceIsLocked.setVisible(False)
@@ -225,6 +274,7 @@ class GuiDbus(dbus.service.Object):
 
 
     def handleDeviceDisconnected(self,deviceName):
+        self.mainwindow.showCreatePShipMessage = False
         self.mainwindow.updateTray(False)
         self.mainwindow.tray.showMessage("Device disconnected", "The device %s just disconnected"%deviceName, QtGui.QSystemTrayIcon.Information,5000)
 
@@ -385,7 +435,6 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.button_add_pship.setEnabled(True)
         self.mainwindow.button_delete_pship.setEnabled(True)
         
-#        self.updateListPartnerships()
         
 
 
@@ -405,7 +454,6 @@ class GuiDbus(dbus.service.Object):
             print error
         
 
-#        self.updateListPartnerships()
     
 
     def __showErrorInvalidArgument(self):

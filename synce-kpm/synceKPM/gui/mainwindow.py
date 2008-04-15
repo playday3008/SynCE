@@ -53,7 +53,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.guiDbus = synceKPM.gui.guiDbus.GuiDbus( self.session_bus, self )
 
 
-        
+        self.showCreatePShipMessage = False 
 
         self.toolButtonDeviceIsLocked.setVisible(False)
         self.labelDeviceIsLocked.setVisible(False)
@@ -169,12 +169,12 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
 
     def cb_systray_activated(self, reason):
-        print "Reason of activation was: %i"%reason
-        if reason != QtGui.QSystemTrayIcon.Context:
-            if self.windowState() & Qt.WindowMinimized:
-                self.showNormal()
-            else:
-                self.setWindowState(self.windowState() | Qt.WindowMinimized)
+
+		if reason != QtGui.QSystemTrayIcon.Context:
+			if not self.isVisible():
+				self.show()
+			else:
+				self.hide()
 
 
     def myDrawNoBranches(self,  painter, rect, index):
@@ -250,7 +250,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
             under MS-Windows.
             <p>Copyright (c) 2008 Guido Diepen &lt;guido@guidodiepen.nl&gt;
             <p>SynCE-KPM is licensed under GPL
-            """%"0.11")
+            """%"0.11.1")
 
 
     def updateTray(self, deviceConnected):
@@ -554,5 +554,20 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
     def handleUnlockDeviceViaDevice(self):
         self.labelDeviceIsLocked.setVisible(True)
         QMessageBox.information( self, "Locked device", "The device %s is locked. Please unlock it by following instructions on the device"%self.deviceName)
-         
+    
+
+    def showEvent(self, event):
+        if self.showCreatePShipMessage:
+            self.showCreatePShipMessage = False
+            QTimer.singleShot(0,self.askUserForPshipCreation )
+
+
+
+    def askUserForPshipCreation(self):
+        self.showCreatePShipMessage = False
+        reply = QMessageBox.information(self,"No active partnerships found", "No active partnerships have been found with the device. Would you like to create a partnership right now?", QMessageBox.Yes, QMessageBox.No|QMessageBox.Default|QMessageBox.Escape) 
+        if reply == QMessageBox.Yes:
+            self.tabWidget.setCurrentIndex(2)
+            self.on_button_add_pship_clicked()
+
 

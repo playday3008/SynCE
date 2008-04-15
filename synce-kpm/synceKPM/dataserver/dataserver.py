@@ -261,15 +261,16 @@ class DataServer(dbus.service.Object):
             self.DevicePartnerships(item_types, __updatedPartnerships)
             
 
-    def handleSyncEngineStatusChange(self, isOnline):
-        self.SyncEngineStatusChange(isOnline)
-
+    def handleSyncEngineStatusChange(self, isOnline, wasAlreadyOnline):
         self.syncEngineRunning = isOnline 
-        
-        if isOnline:
-            self.updatePartnerships()
-
         self.updateStatusListeners()
+        
+        self.SyncEngineStatusChange(isOnline, wasAlreadyOnline)
+
+        
+        #if isOnline:
+        #    self.updatePartnerships()
+
 
     def updateStatusListeners(self):
 
@@ -310,7 +311,7 @@ class DataServer(dbus.service.Object):
         self.updatePartnerships()
 
     @dbus.service.signal('org.synce.kpm.DataServerInterface')
-    def SyncEngineStatusChange(self, isOnline):
+    def SyncEngineStatusChange(self, isOnline, wasAlreadyOnline):
         pass
     
 
@@ -354,7 +355,7 @@ class DataServer(dbus.service.Object):
             isOnline = True
             if param3 == "":
                 isOnline = False
-            self.handleSyncEngineStatusChange( isOnline )
+            self.handleSyncEngineStatusChange( isOnline, False )
 
     @dbus.service.method(synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE, in_signature='', out_signature='')
     def ShutdownDataServer(self):
@@ -381,9 +382,9 @@ class DataServer(dbus.service.Object):
 
         try:
             self.busConn.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
-            self.handleSyncEngineStatusChange( True ) 
+            self.handleSyncEngineStatusChange( True, True ) 
         except dbus.DBusException:
-            self.handleSyncEngineStatusChange( False ) 
+            self.handleSyncEngineStatusChange( False, False) 
             print "SyncEngine is NOT running!!"
 
      
@@ -667,6 +668,16 @@ class DataServer(dbus.service.Object):
         pass
 
 
+
+    @dbus.service.method(synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE, in_signature='', out_signature='u')
+    def GetDeviceBindingState(self):
+        if self.syncEngineRunning and self.deviceIsConnected:
+            syncEngineProxy = self.busConn.get_object("org.synce.SyncEngine","/org/synce/SyncEngine")
+            syncEngineObj   = dbus.Interface(syncEngineProxy,"org.synce.SyncEngine")
+            deviceBindingState = syncEngineObj.GetDeviceBindingState()
+
+            return deviceBindingState
+        return 0
 
 
 

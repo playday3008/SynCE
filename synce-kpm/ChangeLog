@@ -1,7 +1,17 @@
+2008-04-15	Guido Diepen	<guido@guidodiepen.nl>
+	
+	* When the application is minimized, only show tray balloon message in in
+	case of no bound partnerships. When application is shown, notify user with
+	a dialog box (this will also be shown when app was iconified and gets
+	activated later)
+	* Upped version to 0.11.1 
+
 2008-03-30	Guido Diepen	<guido@guidodiepen.nl>
 	
 	* Updated the partnership listing code. It will handle both the old and
 	the new API of sync-engine (i.e. with or without Exchange partnerships)
+	* Updated small forgotten update of counter variable. Now also on the
+	ActiveSync Status screens all partnerships should be shown nicely.
 
 2008-03-24	Guido Diepen	<guido@guidodiepen.nl>
 	
