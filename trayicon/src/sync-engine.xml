@@ -16,7 +16,7 @@
     </method>
 
     <method name="GetPartnerships">
-      <arg direction="out" type="a(ussssau)" name="partnerships"/>
+      <arg direction="out" type="a(ussssuau)" name="partnerships"/>
     </method>
 
     <method name="GetPartnershipBindings">

@@ -1,3 +1,7 @@
+2008-04-15  Mark Ellis <mark@mpellis.org.uk>
+
+	* change in sync-engine dbus api for GetPartnerships
+
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* VERSION: Upped version number.

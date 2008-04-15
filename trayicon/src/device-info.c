@@ -71,6 +71,7 @@ enum
   SYNCENG_ID_COLUMN,
   SYNCENG_GUID_COLUMN,
   SYNCENG_NAME_COLUMN,
+  SYNCENG_TYPE_COLUMN,
   SYNCENG_HOSTNAME_COLUMN,
   SYNCENG_DEVICENAME_COLUMN,
   SYNCENG_N_COLUMNS
@@ -84,6 +85,11 @@ enum
   SYNCITEM_N_COLUMNS
 };
 
+enum
+{
+  PSHMGR_STORETYPE_AS   = 2,
+  PSHMGR_STORETYPE_EXCH
+};
 
 /* partnership */
 
@@ -814,6 +820,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			      G_TYPE_UINT,    /* partner id */
 			      G_TYPE_STRING,  /* partner guid */
 			      G_TYPE_STRING,  /* partnership name */
+			      G_TYPE_STRING,  /* partnership type */
 			      G_TYPE_STRING,  /* host name */
 			      G_TYPE_STRING   /* device name */
 			      );
@@ -830,13 +837,21 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       const gchar *partnership_name = g_value_get_string(g_value_array_get_nth (partnership, 2));
       const gchar *hostname = g_value_get_string(g_value_array_get_nth (partnership, 3));
       const gchar *device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
+      guint partnership_type = g_value_get_uint(g_value_array_get_nth (partnership, 5));
 
       /* an array of sync item ids - au - array of uint32 */
-      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 5));
+      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 6));
+
+      const gchar *pship_type_str = NULL;
+      if (partnership_type == PSHMGR_STORETYPE_EXCH)
+	pship_type_str = "EX";
+      else
+	pship_type_str = "AS";
 
       g_debug("%s: partnership %d id: %d", G_STRFUNC, index, partnership_id);
       g_debug("%s: partnership %d guid: %s", G_STRFUNC, index, partnership_guid);
       g_debug("%s: partnership %d name: %s", G_STRFUNC, index, partnership_name);
+      g_debug("%s: partnership %d type: %s", G_STRFUNC, index, pship_type_str);
       g_debug("%s: partnership %d host name: %s", G_STRFUNC, index, hostname);
       g_debug("%s: partnership %d device name: %s", G_STRFUNC, index, device_name);
 
@@ -851,6 +866,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			  SYNCENG_ID_COLUMN, partnership_id,
 			  SYNCENG_GUID_COLUMN, partnership_guid,
 			  SYNCENG_NAME_COLUMN, partnership_name,
+			  SYNCENG_TYPE_COLUMN, pship_type_str,
 			  SYNCENG_HOSTNAME_COLUMN, hostname,
 			  SYNCENG_DEVICENAME_COLUMN, device_name,
 			  -1);
@@ -886,6 +902,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			    SYNCENG_ID_COLUMN, 0,
 			    SYNCENG_GUID_COLUMN, NULL,
 			    SYNCENG_NAME_COLUMN, g_hash_table_lookup(sync_items, tmp_list->data),
+			    SYNCENG_TYPE_COLUMN, NULL,
 			    SYNCENG_HOSTNAME_COLUMN, NULL,
 			    SYNCENG_DEVICENAME_COLUMN, NULL,
 			    -1);
@@ -973,6 +990,13 @@ partners_setup_view_synceng(WmDeviceInfo *self)
   column = gtk_tree_view_column_new_with_attributes("Partnership Name",
 						    renderer,
 						    "text", SYNCENG_NAME_COLUMN,
+						    NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes("Type",
+						    renderer,
+						    "text", SYNCENG_TYPE_COLUMN,
 						    NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(partners_list), column);
 
