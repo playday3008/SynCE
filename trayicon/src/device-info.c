@@ -529,6 +529,7 @@ exit:
 
 
 #if GLIB_MINOR_VERSION < 14
+static void
 get_sync_item_keys(gpointer key,
 		   gpointer value,
 		   gpointer user_data)
