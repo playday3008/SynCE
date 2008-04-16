@@ -1,3 +1,9 @@
+2008-04-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* check for orphaned WM6 items when deleting partnership
+	* if delete partnership selected for a sync item, get the parent
+	* fix pointer signedness warning in vdccm gtop
+
 2008-04-15  Mark Ellis <mark@mpellis.org.uk>
 
 	* change in sync-engine dbus api for GetPartnerships
