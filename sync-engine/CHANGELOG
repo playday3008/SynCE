@@ -942,5 +942,14 @@ entry was omitted.
 Code cleanups in airsync.py, no functionality changes.
 
 
+16/04/2008 - 170200 Mark Ellis
+------------------------------
+
+Added initialisation of self.partnerships, which was causing a traceback from
+_ProcessAuth on connection of a locked device because the attribute did not
+yet exist.
+
+Added support for devices connected via synce-hal. Odccm support is unaffected,
+no configuration is required.
 
 

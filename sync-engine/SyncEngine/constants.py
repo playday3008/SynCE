@@ -30,6 +30,11 @@ DBUS_ODCCM_BUSNAME      = "org.synce.odccm"
 DBUS_ODCCM_IFACE        = "org.synce.odccm.DeviceManager"
 DBUS_ODCCM_OBJPATH      = "/org/synce/odccm/DeviceManager"
 
+DBUS_HAL_BUSNAME         = "org.freedesktop.Hal"
+DBUS_HAL_MANAGER_IFACE   = "org.freedesktop.Hal.Manager"
+DBUS_HAL_MANAGER_OBJPATH = "/org/freedesktop/Hal/Manager"
+DBUS_HAL_DEVICE_IFACE    = "org.freedesktop.Hal.Device"
+
 SYNC_ITEM_CALENDAR  = 0
 SYNC_ITEM_CONTACTS  = 1
 SYNC_ITEM_EMAIL     = 2

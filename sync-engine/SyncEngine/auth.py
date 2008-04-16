@@ -12,10 +12,18 @@ import dbus.service
 import dbus
 import os.path
 import config
+import re
 
 
 ODCCM_DEVICE_PASSWORD_FLAG_SET     = 1
 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE = 2
+
+HAL_DEVICE_PASSWORD_FLAG_UNSET             = "unset"
+HAL_DEVICE_PASSWORD_FLAG_PROVIDE           = "provide"
+HAL_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = "provide-on-device"
+HAL_DEVICE_PASSWORD_FLAG_CHECKING          = "checking"
+HAL_DEVICE_PASSWORD_FLAG_UNLOCKED          = "unlocked"
+
 	
 AUTH_TOOLS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),"../tools")
 CLI_TOOL = os.path.join(AUTH_TOOLS_PATH,"authcli.py")
@@ -27,6 +35,12 @@ GUI_TOOL = os.path.join(AUTH_TOOLS_PATH,"authgui.py")
 # Is authorization required to use this device?
 	
 def IsAuthRequired(device):
+	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
+		flags = device.GetPropertyString("pda.pocketpc.password")
+		if flags == "provide":
+			return True
+		return False
+
 	flags = device.GetPasswordFlags()
         if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
 		return True

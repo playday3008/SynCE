@@ -101,6 +101,7 @@ class SyncEngine(dbus.service.Object):
 		self.device = None
 		self.deviceName = ""
 		self.devicePath = ""
+		self.partnerships = None
 
 		# Attempt to connect to a running odccm. If a running odccm is not available, we can wait for
 		# it to become available.
@@ -117,6 +118,22 @@ class SyncEngine(dbus.service.Object):
 				self._CBDeviceConnected(obj_paths[0])
 		except:
 			self.isOdccmRunning = False
+
+
+		# Attempt to connect to Hal manager
+
+		try:
+			self.hal_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, DBUS_HAL_MANAGER_OBJPATH), DBUS_HAL_MANAGER_IFACE)
+			self.hal_manager.connect_to_signal("DeviceAdded", self._CBHalDeviceConnected)
+			self.hal_manager.connect_to_signal("DeviceRemoved", self._CBHalDeviceDisconnected)
+
+			obj_paths = self.hal_manager.FindDeviceStringMatch("pda.platform", "pocketpc")
+
+			if len(obj_paths) > 0:
+				self.logger.info("__init__: connected device found")
+				self._CBHalDeviceConnected(obj_paths[0])
+		except Exception, inst:
+			self.logger.info("__init__: exception %s", inst)
 
 	#
 	# _CBODCCMStatusChanged
@@ -218,6 +235,67 @@ class SyncEngine(dbus.service.Object):
 			self.logger.info("_CBDeviceDisconnected: ignoring non-live device detach")
 
 	#
+	# _CBHalDeviceConnected
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a device is connected through Hal.
+	#
+
+	def _CBHalDeviceConnected(self, obj_path):
+	 
+		if self.isOdccmRunning:
+			return
+
+		# check if it's a pocketpc
+		deviceObject = dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, obj_path)
+		device = dbus.Interface(deviceObject,DBUS_HAL_DEVICE_IFACE)
+
+		if not device.PropertyExists("pda.pocketpc.name"):
+			device = None
+			return
+
+		self.logger.info("_CBHalDeviceConnected: device connected at udi %s", obj_path)
+
+		if self.isConnected == False:
+			self.device = device
+
+			# update config from file
+	
+			self.config.UpdateConfig()
+
+			self.device.connect_to_signal("PropertyModified", self._CBHalDeviceAuthStateChanged)
+			self.deviceName = self.device.GetPropertyString("pda.pocketpc.name")
+			self.logger.info(" device %s connected" % self.deviceName)
+			self.devicePath = obj_path
+			if self._ProcessAuth():
+				self.OnConnect()
+		else:
+			if obj_path == self.devicePath:
+				self.logger.info("_CBHalDeviceConnected: device already connected")
+			else:
+				self.logger.info("_CBHalDeviceConnected: other device already connected - ignoring new device")
+
+	#
+	# _CBHalDeviceDisconnected
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a device is disconnected through Hal
+	#
+
+	def _CBHalDeviceDisconnected(self, obj_path):
+
+		if self.isOdccmRunning:
+			return
+
+		if self.devicePath == obj_path:
+			self.logger.info("_CBHalDeviceDisconnected: device disconnected from udi %s", obj_path)
+			self.device=None
+			self.deviceName = ""
+			self.OnDisconnect()
+
+	#
 	# _CheckDeviceConnected
 	#
 	# INTERNAL
@@ -242,6 +320,22 @@ class SyncEngine(dbus.service.Object):
 			
 		self.logger.info("_CBDeviceAuthStateChanged: device authorization state changed: reauthorizing")
 		self._ProcessAuth()
+
+	#
+	# _CBHalDeviceAuthStateChanged
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a Hal device property is changed, for checking authorization state changes
+	#
+
+	def _CBHalDeviceAuthStateChanged(self,num_changes,properties):
+			
+		for property in properties:
+			property_name, added, removed = property
+			if property_name == "pda.pocketpc.password":
+				self.logger.info("_CBHalDeviceAuthStateChanged: device authorization state changed: reauthorizing")
+				self._ProcessAuth()
 
 	#
 	# _CheckAndGetValidPartnership
