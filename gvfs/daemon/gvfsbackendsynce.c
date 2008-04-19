@@ -364,6 +364,13 @@ convert_time(const FILETIME* filetime)
 }
 
 
+static gchar *
+create_etag (CE_FIND_DATA *entry)
+{
+  return g_strdup_printf ("%lu", (long unsigned int)convert_time(&entry->ftLastWriteTime));
+}
+
+
 static void
 get_file_attributes(GVfsBackendSynce *backend,
                     GFileInfo *info,
@@ -388,10 +395,6 @@ get_file_attributes(GVfsBackendSynce *backend,
   g_debug("%s: set display name", G_STRFUNC);
   if (g_file_attribute_matcher_matches(matcher, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME))
     {
-
-
-      /* ########################### */
-
       if (strcmp (basename, "/") == 0)
         display_name = g_strdup(NAME_FILESYSTEM);
       else if ((strcmp (basename, NAME_MY_DOCUMENTS) == 0) && (index == INDEX_DOCUMENTS))
@@ -412,9 +415,6 @@ get_file_attributes(GVfsBackendSynce *backend,
 
       g_file_info_set_display_name (info, display_name);
       g_free (display_name);
-
-
-
 
     }
 
@@ -500,14 +500,18 @@ get_file_attributes(GVfsBackendSynce *backend,
   if(entry->dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
     g_file_info_set_attribute_boolean (info, G_FILE_ATTRIBUTE_DOS_IS_SYSTEM, TRUE);
 
-  /*
   if (g_file_attribute_matcher_matches (matcher, G_FILE_ATTRIBUTE_ETAG_VALUE))
     {
-      char *etag = create_etag (entry);
+      gchar *etag = create_etag (entry);
       g_file_info_set_attribute_string (info, G_FILE_ATTRIBUTE_ETAG_VALUE, etag);
       g_free (etag);
     }
-  */
+
+  /* just set owner to the user */
+  if (g_file_attribute_matcher_matches (matcher, G_FILE_ATTRIBUTE_OWNER_USER))
+    {
+      g_file_info_set_attribute_string (info, G_FILE_ATTRIBUTE_OWNER_USER, g_get_user_name());
+    }
 
   /*
   file_info->uid = getuid();
@@ -621,6 +625,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
   CE_FIND_DATA entry;
   WCHAR *tempwstr = NULL;
   gint index;
+  HANDLE handle;
 
   g_debug("%s: getting info for filename %s", G_STRFUNC, filename);
 
@@ -691,7 +696,8 @@ synce_gvfs_query_info (GVfsBackend *backend,
   rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
-  if(CeFindFirstFile(tempwstr, &entry) == INVALID_HANDLE_VALUE)
+  handle = CeFindFirstFile(tempwstr, &entry);
+  if(handle == INVALID_HANDLE_VALUE)
     {
       g_debug("%s: CeFindFirstFile failed", G_STRFUNC);
 
@@ -703,6 +709,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
       g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
       get_file_attributes(synce_backend, info, index, &entry, matcher);
+      CeFindClose(handle);
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
       g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
@@ -764,10 +771,6 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
       goto exit;
     }
 
-  /*
-  vfs_to_synce_mode(mode, &synce_open_mode, &synce_create_mode);
-  */
-
   synce_open_mode = GENERIC_READ;
   synce_create_mode = OPEN_EXISTING;
 
@@ -795,7 +798,6 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
   } else {
     g_vfs_job_open_for_read_set_can_seek (job, TRUE);
 
-    /* use GINT_TO_POINTER ? */
     g_vfs_job_open_for_read_set_handle (job, GUINT_TO_POINTER(handle));
 
 
@@ -811,11 +813,7 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
   return;
 }
 
-
 /* ******************************************************************************** */
-
-
-
 
 
 static void
@@ -828,13 +826,11 @@ synce_gvfs_read (GVfsBackend *backend,
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
   gint success;
   DWORD read_return;
-  gboolean conn_err;
   HANDLE synce_handle;
   GError *error = NULL;
 
   g_debug("%s: read file", G_STRFUNC);
 
-  /* use GPOINTER_TO_UINT ? */
   synce_handle = GPOINTER_TO_UINT(handle);
 
   MUTEX_LOCK (synce_backend->mutex);
@@ -896,7 +892,6 @@ synce_gvfs_close_read (GVfsBackend *backend,
 
   g_debug("%s: close file", G_STRFUNC);
 
-  /* use GPOINTER_TO_UINT ? */
   synce_handle = GPOINTER_TO_UINT(handle);
 
   g_debug("%s: CeCloseHandle()", G_STRFUNC);
@@ -932,13 +927,11 @@ synce_gvfs_seek_on_read (GVfsBackend *backend,
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
 
   DWORD retval, move_method;
-  gboolean conn_err;
   HANDLE synce_handle;
   GError *error = NULL;
 
   g_debug("%s: seek file", G_STRFUNC);
 
-  /* use GPOINTER_TO_UINT ? */
   synce_handle = GPOINTER_TO_UINT(handle);
 
   switch (type) {
@@ -987,6 +980,1318 @@ synce_gvfs_seek_on_read (GVfsBackend *backend,
 
 
 /* ******************************************************************************** */
+
+typedef struct {
+  HANDLE handle;
+  gchar *filename;
+  gchar *tmp_filename;
+  gchar *backup_filename;
+} SynceWriteHandle;
+
+static void
+synce_write_handle_free (SynceWriteHandle *handle)
+{
+  g_free (handle->filename);
+  g_free (handle->tmp_filename);
+  g_free (handle->backup_filename);
+  g_free (handle);
+}
+
+
+
+static void
+synce_gvfs_create (GVfsBackend *backend,
+		   GVfsJobOpenForWrite *job,
+		   const char *filename,
+		   GFileCreateFlags flags)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  g_debug("%s: create file %s", G_STRFUNC, filename);
+
+  gchar *location = NULL;
+  WCHAR *wide_path = NULL;
+  HANDLE handle;
+  GError *error = NULL;
+  SynceWriteHandle *write_handle = NULL;
+  gint synce_open_mode, synce_create_mode;
+
+  synce_open_mode = GENERIC_WRITE;
+  synce_create_mode = CREATE_NEW;
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  wide_path = wstr_from_utf8(location);
+
+  g_debug("%s: CeCreateFile()", G_STRFUNC);
+  handle = CeCreateFile
+    (
+     wide_path,
+     synce_open_mode,
+     0,
+     NULL,
+     synce_create_mode,
+     FILE_ATTRIBUTE_NORMAL,
+     0
+     );
+
+  if(handle == INVALID_HANDLE_VALUE) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+  } else {
+    write_handle = g_new0(SynceWriteHandle, 1);
+    write_handle->handle = handle;
+
+    g_vfs_job_open_for_write_set_can_seek (job, TRUE);
+
+    g_vfs_job_open_for_write_set_handle (job, write_handle);
+
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+  }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+  wstr_free_string(wide_path);
+
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_append_to (GVfsBackend *backend,
+		      GVfsJobOpenForWrite *job,
+		      const char *filename,
+		      GFileCreateFlags flags)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  g_debug("%s: append to file %s", G_STRFUNC, filename);
+
+  gchar *location = NULL;
+  WCHAR *wide_path = NULL;
+  HANDLE handle;
+  DWORD retval;
+  GError *error = NULL;
+  SynceWriteHandle *write_handle = NULL;
+  gint synce_open_mode, synce_create_mode;
+
+  synce_open_mode = GENERIC_WRITE;
+  synce_create_mode = OPEN_ALWAYS;
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  wide_path = wstr_from_utf8(location);
+
+  g_debug("%s: CeCreateFile()", G_STRFUNC);
+  handle = CeCreateFile
+    (
+     wide_path,
+     synce_open_mode,
+     0,
+     NULL,
+     synce_create_mode,
+     FILE_ATTRIBUTE_NORMAL,
+     0
+     );
+
+  wstr_free_string(wide_path);
+
+  if(handle == INVALID_HANDLE_VALUE) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+    MUTEX_UNLOCK (synce_backend->mutex);
+    goto exit;
+  }
+
+  g_debug("%s: CeSetFilePointer()", G_STRFUNC);
+  retval = CeSetFilePointer (handle,
+                             0,
+                             NULL,
+                             FILE_END);
+
+  if (retval == 0xFFFFFFFF) {
+    error = g_error_from_rapi (NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+    MUTEX_UNLOCK (synce_backend->mutex);
+    goto exit;
+  }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  write_handle = g_new0(SynceWriteHandle, 1);
+  write_handle->handle = handle;
+
+  g_vfs_job_open_for_write_set_handle (job, write_handle);
+
+  g_vfs_job_open_for_write_set_can_seek (job, TRUE);
+  g_vfs_job_open_for_write_set_initial_offset (job, retval);
+
+  g_vfs_job_succeeded (G_VFS_JOB (job));
+
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+static void
+random_chars (char *str, int len)
+{
+  int i;
+  const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  for (i = 0; i < len; i++)
+    str[i] = chars[g_random_int_range (0, strlen(chars))];
+}
+
+
+static void
+synce_gvfs_replace (GVfsBackend *backend,
+		    GVfsJobOpenForWrite *job,
+		    const char *filename,
+		    const char *etag,
+		    gboolean make_backup,
+		    GFileCreateFlags flags)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+
+  g_debug("%s: replace file %s", G_STRFUNC, filename);
+
+  gchar *location = NULL;
+  gchar *tmp_filename = NULL, *backup_filename = NULL, *current_etag = NULL;
+  WCHAR *wide_path = NULL;
+  HANDLE handle;
+  HANDLE find_handle;
+  GError *error = NULL;
+  SynceWriteHandle *write_handle = NULL;
+  CE_FIND_DATA entry;
+  gint synce_open_mode, synce_create_mode;
+
+  synce_open_mode = GENERIC_WRITE;
+  synce_create_mode = CREATE_NEW;
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			_("Not permitted"));
+      goto exit;
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  if (make_backup)
+    backup_filename = g_strconcat (location, "~", NULL);
+  else
+    backup_filename = NULL;
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  wide_path = wstr_from_utf8(location);
+
+  g_debug("%s: initial CeCreateFile()", G_STRFUNC);
+  handle = CeCreateFile
+    (
+     wide_path,
+     GENERIC_WRITE,
+     0,
+     NULL,
+     CREATE_NEW,
+     FILE_ATTRIBUTE_NORMAL,
+     0
+     );
+
+  if(handle == INVALID_HANDLE_VALUE) {
+    error = g_error_from_rapi(NULL);
+
+    if (error->code != G_IO_ERROR_EXISTS) {
+
+      /* actual error */
+      g_debug("%s: error is %s", G_STRFUNC, error->message);
+
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free (error);
+      MUTEX_UNLOCK (synce_backend->mutex);
+      wstr_free_string(wide_path);
+      goto exit;
+    }
+
+    /* file exists */
+
+    g_debug("%s: fie already exists", G_STRFUNC);
+
+    if (etag != NULL)
+      {
+	g_debug("%s: check etags", G_STRFUNC);
+	g_debug("%s: CeFindFirstFile()", G_STRFUNC);
+
+	find_handle = CeFindFirstFile(wide_path, &entry);
+	if (find_handle == INVALID_HANDLE_VALUE)
+	  {
+	    g_debug("%s: CeFindFirstFile failed", G_STRFUNC);
+
+	    error = g_error_from_rapi(NULL);
+	    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+	    g_error_free (error);
+	    MUTEX_UNLOCK (synce_backend->mutex);
+	    wstr_free_string(wide_path);
+	    goto exit;
+	  }
+	g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
+	CeFindClose(find_handle);
+
+	current_etag = create_etag (&entry);
+	if (strcmp (etag, current_etag) != 0)
+	  {
+	    g_debug("%s: etags dont match", G_STRFUNC);
+
+	    g_free (current_etag);
+	    g_vfs_job_failed (G_VFS_JOB (job),
+			      G_IO_ERROR, G_IO_ERROR_WRONG_ETAG,
+			      _("The file was externally modified"));
+	    MUTEX_UNLOCK (synce_backend->mutex);
+	    wstr_free_string(wide_path);
+	    goto exit;
+	  }
+	g_free (current_etag);
+
+	g_debug("%s: etags match", G_STRFUNC);
+      }
+
+    wstr_free_string(wide_path);
+
+    g_debug("%s: starting backup strategy", G_STRFUNC);
+
+    /* Backup strategy:
+     *
+     * By default we:
+     *  1) save to a tmp file (that doesn't exist already)
+     *  2) rename orig file to backup file
+     *     (or delete it if not backing up)
+     *  3) rename tmp file to orig file
+     *
+     * However, this can fail if we can't write to the directory.
+     * In that case we just truncate the file, after having 
+     * copied directly to the backup filename.
+     */
+
+    gchar *tmpfile = g_strdup("~gvfXXXX.tmp");
+
+    gchar *dir = g_path_get_dirname(location);
+
+    do {
+      random_chars (tmpfile + 4, 4);
+      tmp_filename = g_strconcat (dir, tmpfile, NULL);
+
+      wide_path = wstr_from_utf8(tmp_filename);
+
+      g_debug("%s: try temp file CeCreateFile()", G_STRFUNC);
+      handle = CeCreateFile
+	(
+	 wide_path,
+	 GENERIC_WRITE,
+	 0,
+	 NULL,
+	 CREATE_NEW,
+	 FILE_ATTRIBUTE_NORMAL,
+	 0
+	 );
+
+      wstr_free_string(wide_path);
+
+      if(handle == INVALID_HANDLE_VALUE) {
+	g_free(tmp_filename);
+	error = g_error_from_rapi(NULL);
+
+	if (error->code != G_IO_ERROR_EXISTS) {
+
+	  /* actual error */
+
+	  g_error_free (error);
+	  break;
+	} else {
+	  g_error_free(error);
+	}
+      }
+
+    } while (handle == INVALID_HANDLE_VALUE);
+
+    g_free(tmpfile);
+    g_free(dir);
+
+    if (handle == INVALID_HANDLE_VALUE) {
+
+      if (make_backup)
+	{
+	  BOOL copied = FALSE;
+	  WCHAR *wide_backup = wstr_from_utf8(backup_filename);
+	  wide_path = wstr_from_utf8(location);
+
+	  copied = CeCopyFile(wide_path, wide_backup, TRUE);
+
+	  wstr_free_string(wide_path);
+	  wstr_free_string(wide_backup);
+
+	  if (!copied)
+	    {
+	      error = g_error_from_rapi(NULL);
+	      g_error_free(error);
+
+	      g_vfs_job_failed (G_VFS_JOB (job),
+				G_IO_ERROR, G_IO_ERROR_CANT_CREATE_BACKUP,
+				_("Backup file creation failed"));
+	      g_free (backup_filename);
+	      goto exit;
+	    }
+	  g_free (backup_filename);
+	  backup_filename = NULL;
+	}
+
+      wide_path = wstr_from_utf8(location);
+      synce_create_mode = CREATE_ALWAYS;
+
+      g_debug("%s: CeCreateFile()", G_STRFUNC);
+      handle = CeCreateFile
+	(
+	 wide_path,
+	 synce_open_mode,
+	 0,
+	 NULL,
+	 synce_create_mode,
+	 FILE_ATTRIBUTE_NORMAL,
+	 0
+	 );
+      wstr_free_string(wide_path);
+
+      if(handle == INVALID_HANDLE_VALUE) {
+	error = g_error_from_rapi(NULL);
+
+	g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+	g_error_free (error);
+	MUTEX_UNLOCK (synce_backend->mutex);
+	goto exit;
+      }
+    }
+
+  } else {
+    /* file doesn't exist, just write */
+
+    g_debug("%s: file doesn't already exist", G_STRFUNC);
+
+    wstr_free_string(wide_path);
+    g_free(backup_filename);
+  }
+
+  write_handle = g_new0(SynceWriteHandle, 1);
+  write_handle->handle = handle;
+  write_handle->filename = g_strdup(location);
+  write_handle->tmp_filename = tmp_filename;
+  write_handle->backup_filename = backup_filename;
+
+  g_vfs_job_open_for_write_set_can_seek (job, TRUE);
+  g_vfs_job_open_for_write_set_handle (job, write_handle);
+  g_vfs_job_succeeded (G_VFS_JOB (job));
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_close_write (GVfsBackend *backend,
+			GVfsJobCloseWrite *job,
+			GVfsBackendHandle _handle)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+  SynceWriteHandle *handle = _handle;
+  GError *error = NULL;
+  BOOL result;
+  WCHAR *wide_path_1 = NULL;
+  WCHAR *wide_path_2 = NULL;
+
+  g_debug("%s: close file", G_STRFUNC);
+
+  g_debug("%s: CeCloseHandle()", G_STRFUNC);
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+  result = CeCloseHandle(handle->handle);
+
+  if (!result) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+
+    if (handle->tmp_filename) {
+      wide_path_1 = wstr_from_utf8(handle->tmp_filename);
+
+      g_debug("%s: CeDeleteFile()", G_STRFUNC);
+      result = CeDeleteFile(wide_path_1);
+
+      wstr_free_string(wide_path_1);
+    }
+
+    goto exit;
+  }
+
+  if (handle->tmp_filename)
+    {
+      if (handle->backup_filename)
+	{
+
+	  wide_path_2 = wstr_from_utf8(handle->backup_filename);
+	  wide_path_1 = wstr_from_utf8(handle->filename);
+
+	  result = CeMoveFile(wide_path_1, wide_path_2);
+
+	  wstr_free_string(wide_path_1);
+	  wstr_free_string(wide_path_2);
+
+	  if (!result)
+	    {
+	      error = g_error_from_rapi(NULL);
+	      g_vfs_job_failed (G_VFS_JOB (job),
+				G_IO_ERROR, G_IO_ERROR_CANT_CREATE_BACKUP,
+				_("Backup file creation failed: %s"), error->message);
+	      g_error_free (error);
+
+	      wide_path_1 = wstr_from_utf8(handle->tmp_filename);
+	      g_debug("%s: CeDeleteFile()", G_STRFUNC);
+	      result = CeDeleteFile(wide_path_1);
+
+	      wstr_free_string(wide_path_1);
+	      goto exit;
+	    }
+	}
+      else
+	{
+	  wide_path_1 = wstr_from_utf8(handle->filename);
+	  g_debug("%s: CeDeleteFile()", G_STRFUNC);
+	  result = CeDeleteFile(wide_path_1);
+	  wstr_free_string(wide_path_1);
+	}
+
+      wide_path_1 = wstr_from_utf8(handle->tmp_filename);
+      wide_path_2 = wstr_from_utf8(handle->filename);
+
+      result = CeMoveFile(wide_path_1, wide_path_2);
+
+      wstr_free_string(wide_path_1);
+      wstr_free_string(wide_path_2);
+
+      if (!result)
+	{
+	  error = g_error_from_rapi(NULL);
+	  g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+	  g_error_free (error);
+
+	  wide_path_1 = wstr_from_utf8(handle->tmp_filename);
+	  g_debug("%s: CeDeleteFile()", G_STRFUNC);
+	  result = CeDeleteFile(wide_path_1);
+	  wstr_free_string(wide_path_1);
+
+	  goto exit;
+	}
+    }
+
+  /* not sure if this is required
+  
+  if (stat_res == 0)
+    {
+      char *etag;
+      etag = create_etag (&stat_at_close);
+      g_vfs_job_close_write_set_etag (job, etag);
+      g_free (etag);
+    }
+
+  */
+  
+  g_vfs_job_succeeded (G_VFS_JOB (job));
+
+ exit:
+  MUTEX_UNLOCK (synce_backend->mutex);
+  synce_write_handle_free (handle);  
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_write (GVfsBackend *backend,
+		  GVfsJobWrite *job,
+		  GVfsBackendHandle _handle,
+		  char *buffer,
+		  gsize buffer_size)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+  SynceWriteHandle *handle = _handle;
+
+  GError *error = NULL;
+  BOOL result;
+  DWORD bytes_written;
+
+  g_debug("%s: write file", G_STRFUNC);
+
+
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  synce_debug("%s: CeWriteFile()", G_STRFUNC);
+  result = CeWriteFile
+    (
+     handle->handle,
+     buffer,
+     buffer_size,
+     &bytes_written,
+     NULL
+     );
+
+
+  if (!result) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free(error);
+  } else {
+    g_vfs_job_write_set_written_size (job, bytes_written);
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+  }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_seek_on_write(GVfsBackend *backend,
+			 GVfsJobSeekWrite *job,
+			 GVfsBackendHandle _handle,
+			 goffset    offset,
+			 GSeekType  type)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
+
+  DWORD retval, move_method;
+  GError *error = NULL;
+
+  g_debug("%s: seek file", G_STRFUNC);
+
+  SynceWriteHandle *handle = _handle;
+
+  switch (type) {
+  case G_SEEK_SET:
+    move_method = FILE_BEGIN;
+    break;
+  case G_SEEK_CUR:
+    move_method = FILE_CURRENT;
+    break;
+  case G_SEEK_END:
+    move_method = FILE_END;
+    break;
+  default:
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		      _("Unsupported seek type"));
+    return;
+  }
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  g_debug("%s: CeSetFilePointer()", G_STRFUNC);
+  retval = CeSetFilePointer (handle->handle,
+                             offset,
+                             NULL,
+                             move_method);
+
+  if (retval == 0xFFFFFFFF)
+    {
+      error = g_error_from_rapi(NULL);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free (error);
+    }
+  else
+    {
+      g_vfs_job_seek_write_set_offset (job, retval);
+      g_vfs_job_succeeded (G_VFS_JOB (job));
+    }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_delete (GVfsBackend *backend,
+		   GVfsJobDelete *job,
+		   const char *filename)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+
+  GError *error = NULL;
+  gchar *location = NULL;
+  WCHAR *tempwstr = NULL;
+  CE_FIND_DATA entry;
+  HANDLE handle;
+  BOOL result;
+
+  g_debug("%s: delete %s", G_STRFUNC, filename);
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+
+#if SHOW_APPLICATIONS
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+#endif
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  if (!location) {
+    g_critical("%s: NULL location, should not happen", G_STRFUNC);
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_INVALID_FILENAME,
+		      _("Not found"));
+    goto exit;
+  }
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  tempwstr = wstr_from_utf8(location);
+
+  g_debug("%s: CeFindFirstFile()", G_STRFUNC);
+  handle = CeFindFirstFile(tempwstr, &entry);
+  if(handle == INVALID_HANDLE_VALUE) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free(error);
+    wstr_free_string(tempwstr);
+    goto exit;
+  }
+  CeFindClose(handle);
+
+  if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    result = CeRemoveDirectory(tempwstr);
+  else
+    result = CeDeleteFile(tempwstr);
+
+  if (result)
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+  else {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free (error);
+  }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+  wstr_free_string(tempwstr);
+
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_make_directory (GVfsBackend *backend,
+			   GVfsJobMakeDirectory *job,
+			   const char *filename)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+
+  GError *error = NULL;
+  gchar *location = NULL;
+  WCHAR *tempwstr = NULL;
+  BOOL result;
+
+  g_debug("%s: make directory %s", G_STRFUNC, filename);
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+
+#if SHOW_APPLICATIONS
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+#endif
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  if (!location) {
+    g_critical("%s: NULL location, should not happen", G_STRFUNC);
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_INVALID_FILENAME,
+		      _("Not found"));
+    goto exit;
+  }
+
+  tempwstr = wstr_from_utf8(location);
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  g_debug("%s: CeCreateDirectory()", G_STRFUNC);
+  result = CeCreateDirectory(tempwstr, NULL);
+  wstr_free_string(tempwstr);
+
+  if(!result) {
+    error = g_error_from_rapi(NULL);
+    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+    g_error_free(error);
+  } else
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+
+  MUTEX_UNLOCK (synce_backend->mutex);
+
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+static void
+synce_gvfs_move (GVfsBackend *backend,
+		 GVfsJobMove *job,
+		 const char *source,
+		 const char *destination,
+		 GFileCopyFlags flags,
+		 GFileProgressCallback progress_callback,
+		 gpointer progress_callback_data)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+  GError *error = NULL;
+  gchar *source_loc, *dest_loc, *backup_name;
+  gboolean destination_exist, source_is_dir, result;
+  WCHAR *source_wstr = NULL, *dest_wstr = NULL, *backup_wstr = NULL;
+  CE_FIND_DATA entry;
+  HANDLE handle;
+
+  g_debug("%s: move %s to %s", G_STRFUNC, source, destination);
+
+  switch (get_location(source, &source_loc))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+
+#if SHOW_APPLICATIONS
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+#endif
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  if (!source_loc) {
+    g_critical("%s: NULL location, should not happen", G_STRFUNC);
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_INVALID_FILENAME,
+		      _("Not found"));
+    goto exit;
+  }
+
+
+  switch (get_location(source, &dest_loc))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+
+#if SHOW_APPLICATIONS
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+#endif
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  if (!dest_loc) {
+    g_critical("%s: NULL location, should not happen", G_STRFUNC);
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_INVALID_FILENAME,
+		      _("Not found"));
+    goto exit;
+  }
+
+
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  source_wstr = wstr_from_utf8(source_loc);
+
+  g_debug("%s: CeFindFirstFile()", G_STRFUNC);
+  handle = CeFindFirstFile(source_wstr, &entry);
+  if(handle == INVALID_HANDLE_VALUE) {
+    error = g_error_from_rapi(NULL);
+
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR,
+		      error->code,
+		      _("Error moving file: %s"),
+		      error->message);
+
+    g_error_free(error);
+    wstr_free_string(source_wstr);
+    MUTEX_UNLOCK (synce_backend->mutex);
+    goto exit;
+  }
+
+  CeFindClose(handle);
+  if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    source_is_dir = TRUE;
+
+  destination_exist = FALSE;
+
+  dest_wstr = wstr_from_utf8(dest_loc);
+
+  g_debug("%s: CeFindFirstFile()", G_STRFUNC);
+  handle = CeFindFirstFile(dest_wstr, &entry);
+
+  if (handle != INVALID_HANDLE_VALUE)
+    {
+      destination_exist = TRUE; /* Target file exists */
+
+      if (flags & G_FILE_COPY_OVERWRITE)
+	{
+	  /* Always fail on dirs, even with overwrite */
+	  if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	    {
+	      g_vfs_job_failed (G_VFS_JOB (job),
+				G_IO_ERROR,
+				G_IO_ERROR_WOULD_MERGE,
+				_("Can't move directory over directory"));
+	      MUTEX_UNLOCK (synce_backend->mutex);
+	      goto exit;
+	    }
+	}
+      else
+	{
+	  g_vfs_job_failed (G_VFS_JOB (job),
+			    G_IO_ERROR,
+			    G_IO_ERROR_EXISTS,
+			    _("Target file already exists"));
+	  MUTEX_UNLOCK (synce_backend->mutex);
+	  goto exit;
+	}
+    } else
+      CeFindClose(handle);
+
+  if (flags & G_FILE_COPY_BACKUP && destination_exist)
+    {
+      backup_name = g_strconcat (dest_loc, "~", NULL);
+      backup_wstr = wstr_from_utf8(backup_name);
+
+      result = CeMoveFile(dest_wstr, backup_wstr);
+
+      wstr_free_string(backup_wstr);
+      g_free(backup_name);
+
+      if (!result)
+	{
+	  error = g_error_from_rapi(NULL);
+
+	  g_vfs_job_failed (G_VFS_JOB (job),
+			    G_IO_ERROR,
+			    G_IO_ERROR_CANT_CREATE_BACKUP,
+			    _("Backup file creation failed: %s"),
+			    error->message);
+	  g_error_free(error);
+	  MUTEX_UNLOCK (synce_backend->mutex);
+	  goto exit;
+	}
+      destination_exist = FALSE; /* It did, but no more */
+    }
+
+  if (source_is_dir && destination_exist && (flags & G_FILE_COPY_OVERWRITE))
+    {
+      /* Source is a dir, destination exists (and is not a dir, because that would have failed
+	 earlier), and we're overwriting. Manually remove the target so we can do the rename. */
+
+      result = CeDeleteFile(dest_wstr);
+
+      if (!result)
+	{
+	  error = g_error_from_rapi(NULL);
+
+	  g_vfs_job_failed (G_VFS_JOB (job), G_IO_ERROR,
+			    error->code,
+			    _("Error removing target file: %s"),
+			    error->message);
+	  g_error_free (error);
+	  MUTEX_UNLOCK (synce_backend->mutex);
+	  goto exit;
+	}
+    }
+
+
+  result = CeMoveFile(source_wstr, dest_wstr);
+
+  if (!result)
+    {
+      error = g_error_from_rapi(NULL);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free(error);
+    }
+  else
+    g_vfs_job_succeeded (G_VFS_JOB (job));
+
+    MUTEX_UNLOCK (synce_backend->mutex);
+exit:
+  g_free(source_loc);
+  g_free(dest_loc);
+  wstr_free_string(source_wstr);
+  wstr_free_string(dest_wstr);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_query_fs_info (GVfsBackend *backend,
+			  GVfsJobQueryFsInfo *job,
+			  const char *filename,
+			  GFileInfo *info,
+			  GFileAttributeMatcher *attribute_matcher)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+
+  g_debug("%s: query fs info at %s", G_STRFUNC, filename);
+
+  GError *error = NULL;
+  STORE_INFORMATION store;
+  gchar *location = NULL;
+  gint index;
+  gboolean other_storage = FALSE;
+
+  index = get_location(filename, &location);
+  if (index == INDEX_INVALID) {
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+		      _("Not found"));
+    goto exit;
+  }
+#if SHOW_APPLICATIONS
+  if (index == INDEX_APPLICATIONS) {
+    result = GNOME_VFS_ERROR_NOT_PERMITTED;
+    goto exit;
+  }
+#endif
+
+  g_file_info_set_attribute_string (info, G_FILE_ATTRIBUTE_FILESYSTEM_TYPE, "synce");
+  g_file_info_set_attribute_boolean (info, G_FILE_ATTRIBUTE_FILESYSTEM_READONLY, FALSE);
+  g_file_info_set_attribute_uint32 (info, G_FILE_ATTRIBUTE_FILESYSTEM_USE_PREVIEW, G_FILESYSTEM_PREVIEW_TYPE_NEVER);
+
+  if (index == INDEX_FILESYSTEM) {
+    gchar **split = g_strsplit(location, "\\", 0);
+
+    if (split && split[0] && split[1]) {
+      if (strcmp(split[1], NAME_SD_CARD) == 0) {
+	/* get size for this */
+	other_storage = TRUE;
+      }
+
+      if (strcmp(split[1], NAME_ROM_STORAGE) == 0) {
+	/* get size for this */
+	other_storage = TRUE;
+      }
+
+    }
+    g_strfreev(split);
+  }
+
+  if (!other_storage) {
+
+    MUTEX_LOCK (synce_backend->mutex);
+    rapi_connection_select(synce_backend->rapi_conn);
+
+    if (CeGetStoreInformation(&store)) {
+      g_file_info_set_attribute_uint64 (info,
+					G_FILE_ATTRIBUTE_FILESYSTEM_SIZE,
+					store.dwStoreSize);
+
+      g_file_info_set_attribute_uint64 (info,
+					G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+					store.dwFreeSize);
+    } else {
+      error = g_error_from_rapi(NULL);
+      g_critical("%s: Failed to get store information: %s", G_STRFUNC, error->message);
+      g_error_free(error);
+    }
+
+    MUTEX_UNLOCK (synce_backend->mutex);
+  }
+
+  g_vfs_job_succeeded (G_VFS_JOB (job));
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+
+/* ******************************************************************************** */
+
+
+static void
+synce_gvfs_set_display_name (GVfsBackend *backend,
+			     GVfsJobSetDisplayName *job,
+			     const char *filename,
+			     const char *display_name)
+{
+  GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
+  gchar *location, *dirname, *new_path, *tmp_path;
+  WCHAR *from_wstr = NULL, *to_wstr = NULL;
+  gboolean result;
+  GError *error = NULL;
+
+  g_debug("%s: rename %s to %s", G_STRFUNC, filename, display_name);
+
+  switch (get_location(filename, &location))
+    {
+    case INDEX_DEVICE:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+
+#if SHOW_APPLICATIONS
+    case INDEX_APPLICATIONS:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+			_("Not permitted"));
+      goto exit;
+#endif
+
+    case INDEX_DOCUMENTS:
+    case INDEX_FILESYSTEM:
+      break;
+
+    default:
+      g_vfs_job_failed (G_VFS_JOB (job),
+			G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+			_("Not found"));
+      goto exit;
+    }
+
+  if (!location) {
+    g_critical("%s: NULL location, should not happen", G_STRFUNC);
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_INVALID_FILENAME,
+		      _("Not found"));
+    goto exit;
+  }
+
+  dirname = g_path_get_dirname (filename);
+  tmp_path = g_build_filename (dirname, display_name, NULL);
+  get_location(tmp_path, &new_path);
+
+  g_free(dirname);
+  g_free(tmp_path);
+
+  g_debug("%s: renaming %s to %s", G_STRFUNC, location, new_path);
+
+  MUTEX_LOCK(synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
+  from_wstr = wstr_from_utf8(location);
+  to_wstr = wstr_from_utf8(new_path);
+
+  result = CeMoveFile(from_wstr, to_wstr);
+
+  wstr_free_string(from_wstr);
+  wstr_free_string(to_wstr);
+
+  if (!result)
+    {
+      error = g_error_from_rapi(NULL);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      g_error_free(error);
+    }
+  else
+    {
+      g_vfs_job_set_display_name_set_new_path (job, new_path);
+      g_vfs_job_succeeded (G_VFS_JOB (job));
+    }
+
+  MUTEX_UNLOCK(synce_backend->mutex);
+  g_free (new_path);
+ exit:
+  g_free(location);
+  g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+}
+
+
+/* ******************************************************************************** */
+
 
 static void
 synce_gvfs_enumerate(GVfsBackend *backend,
@@ -1332,40 +2637,55 @@ g_vfs_backend_synce_class_init (GVfsBackendSynceClass *klass)
   backend_class->read = synce_gvfs_read;
   backend_class->seek_on_read = synce_gvfs_seek_on_read;
 
+  backend_class->create = synce_gvfs_create;
+  backend_class->append_to = synce_gvfs_append_to;
+  backend_class->replace = synce_gvfs_replace;
+  backend_class->close_write = synce_gvfs_close_write;
+  backend_class->write = synce_gvfs_write;
+  backend_class->seek_on_write = synce_gvfs_seek_on_write;
+
+  backend_class->delete = synce_gvfs_delete;
+  backend_class->make_directory = synce_gvfs_make_directory;
+  backend_class->move = synce_gvfs_move;
+  backend_class->query_fs_info = synce_gvfs_query_fs_info;
+  backend_class->set_display_name = synce_gvfs_set_display_name;
 
   /*
-  backend_class->mount = 
-  backend_class->unmount = do_unmount;
-  backend_class->mount_mountable = NULL;
-  backend_class->unmount_mountable = NULL;
-  backend_class->eject_mountable = NULL;
-  backend_class->open_for_read = do_open_for_read;
-  backend_class->close_read = do_close_read;
-  backend_class->read = do_read;
-  backend_class->seek_on_read = do_seek_on_read;
-  backend_class->create = do_create;
-  backend_class->append_to = do_append_to;
-  backend_class->replace = do_replace;
-  backend_class->close_write = do_close_write;
-  backend_class->write = do_write;
-  backend_class->seek_on_write = do_seek_on_write;
-  backend_class->query_info = do_query_info;
-  backend_class->query_fs_info = do_query_fs_info;
-  backend_class->enumerate = do_enumerate;
-  backend_class->set_display_name = do_set_display_name;
-  backend_class->delete = do_delete;
-  backend_class->trash = do_trash;
-  backend_class->make_directory = do_make_directory;
-  backend_class->make_symlink = do_make_symlink;
-  backend_class->copy = do_copy; 
-  backend_class->upload = do_move;
-  backend_class->move = do_move;
-  backend_class->set_attribute = do_set_attribute;
-  backend_class->create_dir_monitor = do_create_dir_monitor;
-  backend_class->create_file_monitor = do_create_file_monitor;
-  backend_class->query_settable_attributes = do_query_settable_attributes;
-  backend_class->query_writable_namespaces = do_query_writable_namespaces;
+  backend_class->try_query_settable_attributes = try_query_settable_attributes;
+  */
 
+  /*
+    backend_class->mount                            tested
+    backend_class->unmount                          tested
+    backend_class->mount_mountable =
+    backend_class->unmount_mountable =
+    backend_class->eject_mountable =                NO
+    backend_class->open_for_read                    tested
+    backend_class->close_read                       tested
+    backend_class->read                             tested
+    backend_class->seek_on_read                     tested
+    backend_class->create                           in
+    backend_class->append_to                        in
+    backend_class->replace                          in
+    backend_class->close_write                      in
+    backend_class->write                            in
+    backend_class->seek_on_write                    in
+    backend_class->query_info =                     tested
+    backend_class->query_fs_info =                  in
+    backend_class->enumerate =                      tested
+    backend_class->set_display_name =               in
+    backend_class->delete =                         in
+    backend_class->trash =                          NO
+    backend_class->make_directory =                 in
+    backend_class->make_symlink =                   NO
+    backend_class->copy =
+    backend_class->upload =
+    backend_class->move =                           in
+    backend_class->set_attribute =
+    backend_class->create_dir_monitor =             NO
+    backend_class->create_file_monitor =            NO
+    backend_class->query_settable_attributes =
+    backend_class->query_writable_namespaces =
   */
 
 }

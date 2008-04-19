@@ -1,3 +1,12 @@
+2008-04-18  Mark Ellis <mark@mpellis.org.uk>
+
+	* added etags
+	* set all files to be owned by the user
+	* close opened find handles
+	* added file writing (create, append, replace)
+	* added delete, make dir, move, rename
+	* added file system info
+
 2008-04-11  Mark Ellis <mark@mpellis.org.uk>
 
 	* fixed display names of virtual Filesystem and Documents
