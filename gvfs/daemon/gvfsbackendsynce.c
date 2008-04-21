@@ -521,6 +521,7 @@ get_file_attributes(GVfsBackendSynce *backend,
   g_debug("%s: free basename", G_STRFUNC);
   g_free(basename);
 
+  g_debug("%s: leaving ...", G_STRFUNC);
 }
 
 static void
@@ -709,7 +710,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
       g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
       get_file_attributes(synce_backend, info, index, &entry, matcher);
-      CeFindClose(handle);
+      /* CeFindClose(handle); */
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
       g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
@@ -742,7 +743,6 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
 
   gchar *location = NULL;
   WCHAR *wide_path = NULL;
-  gint synce_open_mode, synce_create_mode;
   HANDLE handle;
   GError *error = NULL;
 
@@ -771,9 +771,6 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
       goto exit;
     }
 
-  synce_open_mode = GENERIC_READ;
-  synce_create_mode = OPEN_EXISTING;
-
   MUTEX_LOCK (synce_backend->mutex);
   rapi_connection_select(synce_backend->rapi_conn);
 
@@ -783,10 +780,10 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
   handle = CeCreateFile
     (
      wide_path,
-     synce_open_mode,
+     GENERIC_READ,
      0,
      NULL,
-     synce_create_mode,
+     OPEN_EXISTING,
      FILE_ATTRIBUTE_NORMAL,
      0
      );
@@ -1014,10 +1011,6 @@ synce_gvfs_create (GVfsBackend *backend,
   HANDLE handle;
   GError *error = NULL;
   SynceWriteHandle *write_handle = NULL;
-  gint synce_open_mode, synce_create_mode;
-
-  synce_open_mode = GENERIC_WRITE;
-  synce_create_mode = CREATE_NEW;
 
   switch (get_location(filename, &location))
     {
@@ -1053,10 +1046,10 @@ synce_gvfs_create (GVfsBackend *backend,
   handle = CeCreateFile
     (
      wide_path,
-     synce_open_mode,
+     GENERIC_WRITE,
      0,
      NULL,
-     synce_create_mode,
+     CREATE_NEW,
      FILE_ATTRIBUTE_NORMAL,
      0
      );
@@ -1105,10 +1098,6 @@ synce_gvfs_append_to (GVfsBackend *backend,
   DWORD retval;
   GError *error = NULL;
   SynceWriteHandle *write_handle = NULL;
-  gint synce_open_mode, synce_create_mode;
-
-  synce_open_mode = GENERIC_WRITE;
-  synce_create_mode = OPEN_ALWAYS;
 
   switch (get_location(filename, &location))
     {
@@ -1144,10 +1133,10 @@ synce_gvfs_append_to (GVfsBackend *backend,
   handle = CeCreateFile
     (
      wide_path,
-     synce_open_mode,
+     GENERIC_WRITE,
      0,
      NULL,
-     synce_create_mode,
+     OPEN_ALWAYS,
      FILE_ATTRIBUTE_NORMAL,
      0
      );
@@ -1228,10 +1217,6 @@ synce_gvfs_replace (GVfsBackend *backend,
   GError *error = NULL;
   SynceWriteHandle *write_handle = NULL;
   CE_FIND_DATA entry;
-  gint synce_open_mode, synce_create_mode;
-
-  synce_open_mode = GENERIC_WRITE;
-  synce_create_mode = CREATE_NEW;
 
   switch (get_location(filename, &location))
     {
@@ -1317,7 +1302,7 @@ synce_gvfs_replace (GVfsBackend *backend,
 	    goto exit;
 	  }
 	g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
-	CeFindClose(find_handle);
+	/* CeFindClose(find_handle); */
 
 	current_etag = create_etag (&entry);
 	if (strcmp (etag, current_etag) != 0)
@@ -1427,16 +1412,15 @@ synce_gvfs_replace (GVfsBackend *backend,
 	}
 
       wide_path = wstr_from_utf8(location);
-      synce_create_mode = CREATE_ALWAYS;
 
       g_debug("%s: CeCreateFile()", G_STRFUNC);
       handle = CeCreateFile
 	(
 	 wide_path,
-	 synce_open_mode,
+	 GENERIC_WRITE,
 	 0,
 	 NULL,
-	 synce_create_mode,
+	 CREATE_ALWAYS,
 	 FILE_ATTRIBUTE_NORMAL,
 	 0
 	 );
@@ -1624,7 +1608,7 @@ synce_gvfs_write (GVfsBackend *backend,
   MUTEX_LOCK (synce_backend->mutex);
   rapi_connection_select(synce_backend->rapi_conn);
 
-  synce_debug("%s: CeWriteFile()", G_STRFUNC);
+  g_debug("%s: CeWriteFile()", G_STRFUNC);
   result = CeWriteFile
     (
      handle->handle,
@@ -1783,7 +1767,7 @@ synce_gvfs_delete (GVfsBackend *backend,
     wstr_free_string(tempwstr);
     goto exit;
   }
-  CeFindClose(handle);
+  /* CeFindClose(handle); */
 
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     result = CeRemoveDirectory(tempwstr);
@@ -1942,7 +1926,7 @@ synce_gvfs_move (GVfsBackend *backend,
   }
 
 
-  switch (get_location(source, &dest_loc))
+  switch (get_location(destination, &dest_loc))
     {
     case INDEX_DEVICE:
       g_vfs_job_failed (G_VFS_JOB (job),
@@ -2000,7 +1984,7 @@ synce_gvfs_move (GVfsBackend *backend,
     goto exit;
   }
 
-  CeFindClose(handle);
+  /* CeFindClose(handle); */
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     source_is_dir = TRUE;
 
@@ -2038,7 +2022,7 @@ synce_gvfs_move (GVfsBackend *backend,
 	  goto exit;
 	}
     } else
-      CeFindClose(handle);
+      /* CeFindClose(handle); */
 
   if (flags & G_FILE_COPY_BACKUP && destination_exist)
     {
@@ -2207,7 +2191,7 @@ synce_gvfs_set_display_name (GVfsBackend *backend,
 			     const char *display_name)
 {
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE (backend);
-  gchar *location, *dirname, *new_path, *tmp_path;
+  gchar *location, *dirname, *new_path, *new_location;
   WCHAR *from_wstr = NULL, *to_wstr = NULL;
   gboolean result;
   GError *error = NULL;
@@ -2250,19 +2234,18 @@ synce_gvfs_set_display_name (GVfsBackend *backend,
   }
 
   dirname = g_path_get_dirname (filename);
-  tmp_path = g_build_filename (dirname, display_name, NULL);
-  get_location(tmp_path, &new_path);
+  new_path = g_build_filename (dirname, display_name, NULL);
+  get_location(new_path, &new_location);
 
   g_free(dirname);
-  g_free(tmp_path);
 
-  g_debug("%s: renaming %s to %s", G_STRFUNC, location, new_path);
+  g_debug("%s: renaming %s to %s", G_STRFUNC, location, new_location);
 
   MUTEX_LOCK(synce_backend->mutex);
   rapi_connection_select(synce_backend->rapi_conn);
 
   from_wstr = wstr_from_utf8(location);
-  to_wstr = wstr_from_utf8(new_path);
+  to_wstr = wstr_from_utf8(new_location);
 
   result = CeMoveFile(from_wstr, to_wstr);
 
@@ -2282,7 +2265,8 @@ synce_gvfs_set_display_name (GVfsBackend *backend,
     }
 
   MUTEX_UNLOCK(synce_backend->mutex);
-  g_free (new_path);
+  g_free(new_path);
+  g_free(new_location);
  exit:
   g_free(location);
   g_debug("%s: leaving ...", G_STRFUNC);

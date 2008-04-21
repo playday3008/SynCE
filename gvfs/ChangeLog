@@ -1,3 +1,10 @@
+2008-04-21  Mark Ellis <mark@mpellis.org.uk>
+
+	* commented out all uses of CeFindClose(), not implemented
+	  yet in rapi2
+	* removed unnecessary use of variable open modes
+	* fixed move and rename functions
+
 2008-04-18  Mark Ellis <mark@mpellis.org.uk>
 
 	* added etags
