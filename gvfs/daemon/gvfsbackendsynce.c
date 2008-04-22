@@ -61,6 +61,9 @@ G_DEFINE_TYPE (GVfsBackendSynce, g_vfs_backend_synce, G_VFS_TYPE_BACKEND)
 
 #define SHOW_APPLICATIONS   0
 
+/* CeFindClose not in rapi2 until librapi2 > 0.11.1 */
+#define USE_FIND_CLOSE      0
+
 #ifdef G_THREADS_ENABLED
 #define MUTEX_NEW()     g_mutex_new ()
 #define MUTEX_FREE(a)   g_mutex_free (a)
@@ -238,7 +241,8 @@ g_error_from_rapi(gboolean *connection_error)
 
   if (FAILED(hr))
     {
-      /* This is a connection error, so we signal to close the connection */
+      /* This is a connection error, so should we try to unmount ? */
+
       if (connection_error)
         *connection_error = TRUE;
 
@@ -587,6 +591,11 @@ get_special_directory_attributes(GVfsBackendSynce *backend,
       g_object_unref (icon);
     }
 
+  /* just set owner to the user */
+  if (g_file_attribute_matcher_matches (matcher, G_FILE_ATTRIBUTE_OWNER_USER))
+    {
+      g_file_info_set_attribute_string (file_info, G_FILE_ATTRIBUTE_OWNER_USER, g_get_user_name());
+    }
 
   /*
   file_info->uid = getuid();
@@ -710,7 +719,10 @@ synce_gvfs_query_info (GVfsBackend *backend,
       g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
       get_file_attributes(synce_backend, info, index, &entry, matcher);
-      /* CeFindClose(handle); */
+
+#if USE_FIND_CLOSE
+      CeFindClose(handle);
+#endif
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
       g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
@@ -827,6 +839,14 @@ synce_gvfs_read (GVfsBackend *backend,
   GError *error = NULL;
 
   g_debug("%s: read file", G_STRFUNC);
+
+  if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_CANCELLED,
+		      _("Operation was cancelled"));
+    g_debug("%s: cancelled ...", G_STRFUNC);
+    return;
+  }
 
   synce_handle = GPOINTER_TO_UINT(handle);
 
@@ -1302,7 +1322,10 @@ synce_gvfs_replace (GVfsBackend *backend,
 	    goto exit;
 	  }
 	g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
-	/* CeFindClose(find_handle); */
+
+#if USE_FIND_CLOSE
+	CeFindClose(find_handle);
+#endif
 
 	current_etag = create_etag (&entry);
 	if (strcmp (etag, current_etag) != 0)
@@ -1387,6 +1410,14 @@ synce_gvfs_replace (GVfsBackend *backend,
 
       if (make_backup)
 	{
+	  if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+	    g_vfs_job_failed (G_VFS_JOB (job),
+			      G_IO_ERROR, G_IO_ERROR_CANCELLED,
+			      _("Operation was cancelled"));
+	    g_free (backup_filename);
+	    goto exit;
+	  }
+
 	  BOOL copied = FALSE;
 	  WCHAR *wide_backup = wstr_from_utf8(backup_filename);
 	  wide_path = wstr_from_utf8(location);
@@ -1506,6 +1537,12 @@ synce_gvfs_close_write (GVfsBackend *backend,
     {
       if (handle->backup_filename)
 	{
+	  if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+	    g_vfs_job_failed (G_VFS_JOB (job),
+			      G_IO_ERROR, G_IO_ERROR_CANCELLED,
+			      _("Operation was cancelled"));
+	    goto exit;
+	  }
 
 	  wide_path_2 = wstr_from_utf8(handle->backup_filename);
 	  wide_path_1 = wstr_from_utf8(handle->filename);
@@ -1538,6 +1575,13 @@ synce_gvfs_close_write (GVfsBackend *backend,
 	  result = CeDeleteFile(wide_path_1);
 	  wstr_free_string(wide_path_1);
 	}
+
+      if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+	g_vfs_job_failed (G_VFS_JOB (job),
+			  G_IO_ERROR, G_IO_ERROR_CANCELLED,
+			  _("Operation was cancelled"));
+	goto exit;
+      }
 
       wide_path_1 = wstr_from_utf8(handle->tmp_filename);
       wide_path_2 = wstr_from_utf8(handle->filename);
@@ -1603,7 +1647,13 @@ synce_gvfs_write (GVfsBackend *backend,
 
   g_debug("%s: write file", G_STRFUNC);
 
-
+  if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_CANCELLED,
+		      _("Operation was cancelled"));
+    g_debug("%s: cancelled ...", G_STRFUNC);
+    return;
+  }
 
   MUTEX_LOCK (synce_backend->mutex);
   rapi_connection_select(synce_backend->rapi_conn);
@@ -1767,7 +1817,10 @@ synce_gvfs_delete (GVfsBackend *backend,
     wstr_free_string(tempwstr);
     goto exit;
   }
-  /* CeFindClose(handle); */
+
+#if USE_FIND_CLOSE
+  CeFindClose(handle);
+#endif
 
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     result = CeRemoveDirectory(tempwstr);
@@ -1961,7 +2014,6 @@ synce_gvfs_move (GVfsBackend *backend,
     goto exit;
   }
 
-
   MUTEX_LOCK (synce_backend->mutex);
   rapi_connection_select(synce_backend->rapi_conn);
 
@@ -1984,7 +2036,10 @@ synce_gvfs_move (GVfsBackend *backend,
     goto exit;
   }
 
-  /* CeFindClose(handle); */
+#if USE_FIND_CLOSE
+  CeFindClose(handle);
+#endif
+
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     source_is_dir = TRUE;
 
@@ -2022,7 +2077,18 @@ synce_gvfs_move (GVfsBackend *backend,
 	  goto exit;
 	}
     } else
-      /* CeFindClose(handle); */
+#if USE_FIND_CLOSE
+      CeFindClose(handle);
+#endif
+
+  if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_CANCELLED,
+		      _("Operation was cancelled"));
+    g_debug("%s: cancelled ...", G_STRFUNC);
+    MUTEX_UNLOCK (synce_backend->mutex);
+    goto exit;
+  }
 
   if (flags & G_FILE_COPY_BACKUP && destination_exist)
     {
@@ -2071,6 +2137,14 @@ synce_gvfs_move (GVfsBackend *backend,
 	}
     }
 
+  if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_CANCELLED,
+		      _("Operation was cancelled"));
+    g_debug("%s: cancelled ...", G_STRFUNC);
+    MUTEX_UNLOCK (synce_backend->mutex);
+    goto exit;
+  }
 
   result = CeMoveFile(source_wstr, dest_wstr);
 

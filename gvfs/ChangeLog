@@ -1,3 +1,9 @@
+2008-04-22  Mark Ellis <mark@mpellis.org.uk>
+
+	* uncommented all uses of CeFindClose(), enclosed in #if instead
+	* set owner on 'special' directories
+	* made various jobs cancellable
+
 2008-04-21  Mark Ellis <mark@mpellis.org.uk>
 
 	* commented out all uses of CeFindClose(), not implemented
