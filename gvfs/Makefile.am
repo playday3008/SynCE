@@ -3,7 +3,6 @@ SUBDIRS = \
 	pixmaps
 
 EXTRA_DIST = \
-	MAINTAINERS		\
 	intltool-extract.in	\
 	intltool-merge.in	\
 	intltool-update.in
