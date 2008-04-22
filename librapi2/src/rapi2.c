@@ -32,8 +32,8 @@ struct rapi_ops_s rapi2_ops =
         &_CeDeleteFile2,                  /* CeDeleteFile */
         &_CeFindAllFiles2,                /* CeFindAllFiles */
         &_CeFindFirstFile2,               /* CeFindFirstFile */
-        NULL,                             /* CeFindNextFile */
-        NULL,                             /* CeFindClose */
+        &_CeFindNextFile2,                /* CeFindNextFile */
+        &_CeFindClose2,                   /* CeFindClose */
         &_CeGetFileAttributes2,           /* CeGetFileAttributes */
         &_CeGetFileSize2,                 /* CeGetFileSize */
         &_CeGetSpecialFolderPath2,        /* CeGetSpecialFolderPath */

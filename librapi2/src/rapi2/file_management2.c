@@ -142,6 +142,50 @@ HANDLE _CeFindFirstFile2(
 }
 
 
+BOOL _CeFindNextFile2(
+        HANDLE hFindFile,
+        LPCE_FIND_DATA lpFindFileData)
+{
+    RapiContext* context = rapi_context_current();
+    BOOL return_value = false;
+
+    rapi_context_begin_command(context, 0x12);
+    rapi_buffer_write_uint32(context->send_buffer, hFindFile);
+
+    if ( !rapi2_context_call(context) )
+        return false;
+
+    rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+    rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+    if ( !rapi_buffer_read_find_data(context->recv_buffer, lpFindFileData) )
+        return false;
+
+    return return_value;
+}
+
+
+BOOL _CeFindClose2(
+        HANDLE hFindFile)
+{
+    RapiContext* context = rapi_context_current();
+    BOOL return_value = 0;
+
+    synce_trace("begin");
+
+    rapi_context_begin_command(context, 0x13);
+    rapi_buffer_write_uint32(context->send_buffer, hFindFile);
+
+    if ( !rapi2_context_call(context) )
+        return false;
+
+    rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
+    rapi_buffer_read_uint32(context->recv_buffer, &return_value);
+
+    return return_value;
+}
+
+
 DWORD _CeGetFileAttributes2(
         LPCWSTR lpFileName)
 {

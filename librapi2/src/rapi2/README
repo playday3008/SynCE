@@ -20,8 +20,8 @@ List of RAPI command codes:
 [i] 0f CeSyncPause
 [i] 10 CeSyncResume
 [i] 11 CeFindFirstFile
-[ ] 12 CeFindNextFile
-[ ] 13 CeFindClose
+[i] 12 CeFindNextFile
+[i] 13 CeFindClose
 [i] 14 CeGetFileAttributes
 [ ] 15 CeSetFileAttributes
 [i] 16 CeCreateFile

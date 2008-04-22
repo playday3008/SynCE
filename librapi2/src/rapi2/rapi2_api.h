@@ -17,6 +17,13 @@ HANDLE _CeFindFirstFile2(
         LPCWSTR lpFileName,
         LPCE_FIND_DATA lpFindFileData);
 
+BOOL _CeFindNextFile2(
+        HANDLE hFindFile,
+        LPCE_FIND_DATA lpFindFileData);
+
+BOOL _CeFindClose2(
+        HANDLE hFindFile);
+
 DWORD _CeGetFileAttributes2(
         LPCWSTR lpFileName);
 
