@@ -953,3 +953,7 @@ Added support for devices connected via synce-hal. Odccm support is unaffected,
 no configuration is required.
 
 
+23/04/2008 - 200000 Mark Ellis
+------------------------------
+
+Changes to auth procedure on locked devices for WM6.

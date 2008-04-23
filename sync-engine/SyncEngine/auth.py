@@ -17,6 +17,7 @@ import re
 
 ODCCM_DEVICE_PASSWORD_FLAG_SET     = 1
 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE = 2
+ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = 4
 
 HAL_DEVICE_PASSWORD_FLAG_UNSET             = "unset"
 HAL_DEVICE_PASSWORD_FLAG_PROVIDE           = "provide"
@@ -37,12 +38,12 @@ GUI_TOOL = os.path.join(AUTH_TOOLS_PATH,"authgui.py")
 def IsAuthRequired(device):
 	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
 		flags = device.GetPropertyString("pda.pocketpc.password")
-		if flags == "provide":
+		if flags == "provide" or flags == "provide-on-device":
 			return True
 		return False
 
 	flags = device.GetPasswordFlags()
-        if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
+        if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE or flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
 		return True
 	return False
 

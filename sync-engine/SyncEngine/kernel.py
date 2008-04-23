@@ -319,7 +319,9 @@ class SyncEngine(dbus.service.Object):
 	def _CBDeviceAuthStateChanged(self,added,removed):
 			
 		self.logger.info("_CBDeviceAuthStateChanged: device authorization state changed: reauthorizing")
-		self._ProcessAuth()
+		if not self.isConnected:
+			if self._ProcessAuth():
+				self.OnConnect()
 
 	#
 	# _CBHalDeviceAuthStateChanged
@@ -335,7 +337,9 @@ class SyncEngine(dbus.service.Object):
 			property_name, added, removed = property
 			if property_name == "pda.pocketpc.password":
 				self.logger.info("_CBHalDeviceAuthStateChanged: device authorization state changed: reauthorizing")
-				self._ProcessAuth()
+				if not self.isConnected:
+					if self._ProcessAuth():
+						self.OnConnect()
 
 	#
 	# _CheckAndGetValidPartnership
