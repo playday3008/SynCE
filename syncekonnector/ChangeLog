@@ -1,0 +1,4 @@
+2008-04-23  Mark Ellis <mark@mpellis.org.uk>
+
+	* update build to enable use of automake 1.10
+
