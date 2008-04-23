@@ -8,6 +8,6 @@ bin_PROGRAMS = kcemirror
 noinst_HEADERS = imageviewer.h rapiwrapper.h cescreen.h decoder.h rledecoder.h huffmandecoder.h xordecoder.h
 
 kcemirror_SOURCES = imageviewer.cpp cescreen.cpp decoder.cpp rledecoder.cpp huffmandecoder.cpp xordecoder.cpp rapiwrapper.cpp kcemirror.cpp
-kcemirror_LDADD = $(LIB_KDEPRINT) $(LIB_KIO) $(LIB_KDEUI) $(RAPI_LIB)
-kcemirror_LDFLAGS = $(KDE_RPATH) $(RAPI_LDFLAGS)
+kcemirror_LDADD = $(LIB_KDEPRINT) $(LIB_KIO) $(LIB_KDEUI) $(LIBRAPI2_LIBS)
+kcemirror_LDFLAGS = $(KDE_RPATH)
 applnkUtilitiesdir = $(kde_appsdir)/Utilities
