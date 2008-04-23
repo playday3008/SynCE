@@ -1,3 +1,7 @@
+2008-04-23  Mark Ellis <mark@mpellis.org.uk>
+
+	* update build to enable use of automake 1.10
+
 2008-02-18  Mark Ellis  <mark@mpellis.org.uk>
 
 	* raki/plugins/Makefile.am - added pimsync to SUBDIRS for make dist

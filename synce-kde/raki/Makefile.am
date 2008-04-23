@@ -8,12 +8,12 @@ bin_PROGRAMS = raki
 INCLUDES = -I$(top_srcdir)/raki/interfaces $(all_includes)
 
 # the library search path.
-raki_LDFLAGS = $(KDE_RPATH) $(ORANGE_LDFLAGS) $(RRA_LDFLAGS) $(RAPI_LDFLAGS) \
-	$(SYNCE_LDFLAGS) $(UNSHIELD_LDFLAGS) $(DYNAMITE_LDFLAGS) $(all_libraries) \
+raki_LDFLAGS = $(KDE_RPATH) $(ORANGE_LDFLAGS) $(LIBRRA_LDFLAGS) \
+	$(UNSHIELD_LDFLAGS) $(DYNAMITE_LDFLAGS) $(all_libraries) \
 	-Wl,--export-dynamic --whole-archive -Wno-non-virtual-dtor
 
 # the libraries to link against.
-raki_LDADD = $(top_builddir)/raki/interfaces/libinterfaces.a $(LIB_KDEUI) $(LIB_KABC) $(ORANGE_LIB) $(RRA_LIB) $(RAPI_LIB) $(SYNCE_LIB) $(UNSHIELD_LIB) $(DYNAMITE_LIB)
+raki_LDADD = $(top_builddir)/raki/interfaces/libinterfaces.a $(LIB_KDEUI) $(LIB_KABC) $(LIBORANGE_LIBS) $(LIBRRA_LIBS) $(UNSHIELD_LIB) $(DYNAMITE_LIB)
 
 # which sources should be compiled for raki
 raki_SOURCES = management.ui raki.cpp rakiworkerthread.cpp runwindow.ui \

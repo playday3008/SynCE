@@ -5,3 +5,12 @@ AC_C_BIGENDIAN
 AC_CHECK_KDEMAXPATHLEN
 
 AC_DEFINE(QT_NO_ASCII_CAST, 1, [Define if you don't want QString casted to char *])
+
+dnl Check for librapi
+PKG_CHECK_MODULES(LIBRAPI, librra >= 0.9.1)
+
+dnl Check for librra
+PKG_CHECK_MODULES(LIBRRA, librra >= 0.9.1)
+
+dnl Check for liborange
+PKG_CHECK_MODULES(LIBORANGE, liborange >= 0.3)

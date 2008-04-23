@@ -18,8 +18,3 @@ AC_ARG_ENABLE(unique,
 	]
 )
 
-dnl Check for librra
-PKG_CHECK_MODULES(LIBRRA, librra >= 0.9.1)
-
-dnl Check for liborange
-PKG_CHECK_MODULES(LIBORANGE, liborange >= 0.3)
