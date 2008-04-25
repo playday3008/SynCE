@@ -396,8 +396,8 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   }
 
   device_list = libhal_manager_find_device_string_match(hal_ctx,
-							"usb.product",
-							"Windows Mobile Device",
+							"pda.platform",
+							"pocketpc",
 							&num_devices,
 							&dbus_error);
   if (dbus_error_is_set(&dbus_error)) {

@@ -1,3 +1,7 @@
+2008-04-25  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* change property used to find devices through hal
+
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* Removed spec file.
