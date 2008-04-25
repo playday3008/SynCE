@@ -8,9 +8,21 @@ Please visit the SynCE website for more information:
 
   http://www.synce.org/
 
+To use this package, you will require at least version 0.11
+of the core synce libraries and tools.
 
-***** THIS IS ALPHA SOFTWARE *****
+For usb connections, most devices should be autodetected, if
+yours is not please inform the synce project and we'll fix it !
 
-If you want to access your device with the synce tools, you
-will need to patch libsynce and librapi2 with the files in
-the patches directory.
+FreeBSD
+-------
+The majority of development has been with Linux, however
+FreeBSD does seem to work. The detection rules are not as
+refined however.
+
+Bluetooth
+---------
+Wireless interfaces are a little trickier over hal. There
+are some ideas in the bluetooth directory, which have shown
+some success.
+

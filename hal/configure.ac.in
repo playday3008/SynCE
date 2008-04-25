@@ -45,10 +45,12 @@ AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
 AC_CONFIG_FILES([
         hal/hal-synce-rndis \
         hal/hal-synce-legacy \
+        bluetooth/hal-synce-bluetooth \
         etc/synce-serial.conf] )
 
 AC_OUTPUT([
 	Makefile
 	hal/Makefile
 	src/Makefile
+	bluetooth/Makefile
 ])

@@ -1,3 +1,7 @@
+2008-04-25  Mark Ellis <mark@mpellis.org.uk>
+
+	* added some bluetooth scripts, updated README
+
 2008-04-14  Mark Ellis <mark@mpellis.org.uk>
 
 	* fixed rndis dhcp connection

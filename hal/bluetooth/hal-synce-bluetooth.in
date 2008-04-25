@@ -1,0 +1,6 @@
+#!/bin/sh
+
+IPREMOTE=192.168.131.201
+IPLOCAL=192.168.131.102
+
+exec @LIBEXECDIR@/hal-dccm --device-ip=${IPREMOTE} --local-ip=${IPLOCAL} --log-level=6

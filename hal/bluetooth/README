@@ -1,0 +1,23 @@
+Setting up synce-hal for Bluetooth connections isn't
+difficult, it's just not well tested, and may not
+turn out to be the 'right' way.
+
+Depending on your distribution, some of the locations
+may vary, this example is for Debian.
+
+cp hal-synce-bluetooth /usr/lib/hal
+cp synce-bt.ip-down /etc/ppp/ip-down.d/synce-bt
+cp synce-bt.ip-up /etc/ppp/ip-up.d/synce-bt
+cp synce-bt.peers /etc/ppp/peers/synce-bt
+
+The first three must be set as executable.
+
+Finally you need to run dund with these options.
+
+--listen --activesync --msdun call synce-bt
+
+There is probably a method in your distro's boot
+sequence to set this to come up automatically.
+
+Then connect to the PC from the device with the 
+ActiveSync over bluetooth option.
