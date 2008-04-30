@@ -132,18 +132,14 @@ static ErrorCodeTriple error_codes[] =
   };
 
 
+gint max_log_level = 6;
+
 void
 log_to_syslog(const gchar *log_domain,
 	      GLogLevelFlags log_level,
 	      const gchar *message,
 	      gpointer user_data)
 {
-  gint max_log_level;
-  if (user_data)
-    max_log_level = *(gint*)user_data;
-  else
-    max_log_level = 3;
-
   gboolean is_fatal = (log_level & G_LOG_FLAG_FATAL) != 0;
   gsize msg_len = 0;
   gchar msg_prefix[25];
@@ -2752,12 +2748,10 @@ g_vfs_backend_synce_class_init (GVfsBackendSynceClass *klass)
 void
 g_vfs_synce_daemon_init (void)
 {
-  gint log_level = 6;
-
   g_set_application_name (_("Pocket PC Filesystem Service"));
 
   openlog(g_get_prgname(), LOG_PID, LOG_USER);
-  g_log_set_default_handler(log_to_syslog, &log_level);
+  g_log_set_default_handler(log_to_syslog, NULL);
 
   synce_log_use_syslog();
 }

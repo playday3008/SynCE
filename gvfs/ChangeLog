@@ -1,3 +1,7 @@
+2008-04-29  Mark Ellis <mark@mpellis.org.uk>
+
+	* made max_log_level global
+
 2008-04-22  Mark Ellis <mark@mpellis.org.uk>
 
 	* uncommented all uses of CeFindClose(), enclosed in #if instead
