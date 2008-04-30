@@ -1,3 +1,9 @@
+2008-04-30  Mark Ellis <mark@mpellis.org.uk>
+
+	* exit gracefully after receiving SIGTERM, which hal sends
+	  when device disconnects
+	* make log level configurable in scripts, tidy logging
+
 2008-04-25  Mark Ellis <mark@mpellis.org.uk>
 
 	* added some bluetooth scripts, updated README

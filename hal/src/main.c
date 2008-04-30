@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <syslog.h>
 #include <string.h>
+#include <signal.h>
+#include <errno.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <gnet.h>
@@ -28,6 +31,8 @@ static GServer *server_990;
 static GServer *server_5679;
 static SynceDevice *synce_dev;
 
+static int signal_pipe[2];
+
 static GOptionEntry options[] =
   {
     { "log-level", 'l', 0, G_OPTION_ARG_INT, &log_level, "Set log level 0 (none) to 6 (debug), default 3", NULL },
@@ -36,6 +41,60 @@ static GOptionEntry options[] =
     { "rndis", 0, 0, G_OPTION_ARG_NONE, &rndis_device, "Interface is rndis", NULL },
     { NULL }
   };
+
+
+/* handle the sigterm we get from hal when device is removed */
+
+static void
+pipe_posix_signals(int signal)
+{
+  if(write(signal_pipe[1], &signal, sizeof(int)) != sizeof(int))
+    g_error("%s: Could not handle SIGTERM", G_STRFUNC);
+}
+
+
+static gboolean
+deliver_posix_signal(GIOChannel *source, GIOCondition condition, gpointer data)
+{
+  GMainLoop *mainloop = (GMainLoop *)data;
+  GError *error = NULL;
+
+  GIOStatus status;
+  gsize bytes_read;
+  int sig;
+  
+  gchar *buf = g_malloc0(sizeof(int));
+
+  while((status = g_io_channel_read_chars(source, buf, sizeof(int), &bytes_read, &error)) == G_IO_STATUS_NORMAL)
+    {
+      if(bytes_read != sizeof(int)){
+	g_critical("%s: lost data in signal pipe (expected %lu, received %lu)", G_STRFUNC, sizeof(int), bytes_read);
+	continue;
+      }
+
+      sig = *((int*)buf);
+
+      if (sig == SIGTERM) {
+	g_debug("%s: received SIGTERM, exiting normally", G_STRFUNC);
+	g_main_loop_quit(mainloop);
+      } else {
+	g_warning("%s: handling signal %d, not supposed to happen", G_STRFUNC, sig);
+      }
+
+    }
+
+  if (status == G_IO_STATUS_ERROR) {
+    g_critical("%s: reading signal pipe failed: %s", G_STRFUNC, error->message);
+    g_main_loop_quit(mainloop);
+  }
+  if (status == G_IO_STATUS_EOF) {
+    g_critical("%s: signal pipe has been closed", G_STRFUNC);
+    g_main_loop_quit(mainloop);
+  }
+
+  g_free(buf);
+  return TRUE;
+}
 
 
 static void
@@ -188,6 +247,9 @@ main(gint argc,
   DBusError dbus_error;
   DBusGConnection *main_bus;
   LibHalContext *main_ctx;
+  GIOChannel *signal_in = NULL;
+  long fd_flags;
+  struct sigaction *sigact = NULL;
 
   g_type_init ();
   gnet_init();
@@ -229,6 +291,56 @@ main(gint argc,
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
+  /* catch the SIGTERM we get from hal on device disconnect */
+
+  if(pipe(signal_pipe)) {
+    g_critical("%s: failed to create signal processing pipe: %s", G_STRFUNC, g_strerror(errno));
+    return EXIT_FAILURE;
+  }
+
+  /* set write end to nonblocking mode */
+  fd_flags = fcntl(signal_pipe[1], F_GETFL);
+  if(fd_flags == -1)
+    {
+      g_critical("%s: failed to read signal processing pipe flags: %s", G_STRFUNC, g_strerror(errno));
+      return EXIT_FAILURE;
+    }
+  if(fcntl(signal_pipe[1], F_SETFL, fd_flags | O_NONBLOCK) == -1)
+    {
+      g_critical("%s: failed to write signal processing pipe flags: %s", G_STRFUNC, g_strerror(errno));
+      return EXIT_FAILURE;
+    }
+
+  /* convert the reading end of the pipe into a GIOChannel */
+  signal_in = g_io_channel_unix_new(signal_pipe[0]);
+
+  if (g_io_channel_set_encoding(signal_in, NULL, &error) != G_IO_STATUS_NORMAL) {
+    g_critical("%s: failed to set encoding on signal processing pipe: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return EXIT_FAILURE;
+  }
+
+  /* put the reading end also into non-blocking mode */
+  if (g_io_channel_set_flags(signal_in, g_io_channel_get_flags(signal_in) | G_IO_FLAG_NONBLOCK, &error) != G_IO_STATUS_NORMAL) {
+    g_critical("%s: failed to set non blocking on signal processing pipe: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return EXIT_FAILURE;
+  }
+
+  g_io_add_watch(signal_in, G_IO_IN | G_IO_PRI, deliver_posix_signal, mainloop);
+
+  /* Install the unix signal handler pipe_signals for the signals of interest */
+
+  sigact = g_new0(struct sigaction, 1);
+  sigact->sa_handler = pipe_posix_signals;
+  if (sigaction(SIGTERM, sigact, NULL) != 0) {
+    g_critical("%s: failed to set SIGTERM signal handler", G_STRFUNC);
+    return EXIT_FAILURE;
+  }
+
+  g_free(sigact);
+
+
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
   close (STDERR_FILENO);
@@ -269,9 +381,9 @@ main(gint argc,
 
   g_main_loop_run (mainloop);
 
-  closelog();
-
   g_debug("%s: exiting normally", G_STRFUNC);
+
+  closelog();
 
   return EXIT_SUCCESS;
 }

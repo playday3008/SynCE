@@ -27,14 +27,13 @@ def RunIfconfig(iface):
     logger.debug("attempting static ip configuration")
     cmd_list = ["ifconfig",iface,DEFAULT_LOCAL_IP,"netmask",DEFAULT_NETMASK,"broadcast",DEFAULT_BROADCAST]
 
+    global device_ip
+    global local_ip
+
     # returns a Popen object
     proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output_text = proc.communicate()[0]
     rc = proc.returncode
-
-    #output_list = output_text.split('\n')
-    #for line in output_list:
-    #    print line
 
     if rc != 0:
         logger.debug("ifconfig failed with return code %d",rc)
@@ -92,19 +91,25 @@ def RunDhclient(iface):
 #
 # run dccm after the interface is configured
 #
-def RunDccm():
+def RunDccm(py_log_level):
 
     logger.debug("starting hal-dccm ...")
-    cmd_list = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level=6"]
+
+    log_level = "1"
+
+    if py_log_level <= logging.DEBUG:
+        log_level = "6"
+    elif py_log_level <= logging.INFO:
+        log_level = "4"
+    elif py_log_level <= logging.WARNING:
+        log_level = "3"
+
+    cmd_list = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+log_level]
 
     logger.debug(cmd_list)
 
-#    proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#    proc = subprocess.Popen(cmd_list)
-#    logger.debug("executed hal-dccm with pid %d", proc.pid)
-
-#    execl("/usr/lib/synce-hal/hal-dccm", "--rndis", "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level=6")
     os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
+    logger.error("failed to exec hal-dccm !!")
 
     return
 
@@ -114,10 +119,13 @@ def RunDccm():
 #
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.DEBUG,
+    log_level = logging.DEBUG
+    log_facility = logging.handlers.SysLogHandler.LOG_LOCAL5
+
+    logging.basicConfig(level=log_level,
                         format='%(asctime)s %(name)s %(levelname)s : %(message)s')
     logger = logging.getLogger("hal-synce-rndis")
-    sys_log = logging.handlers.SysLogHandler("/dev/log", logging.handlers.SysLogHandler.LOG_LOCAL5)
+    sys_log = logging.handlers.SysLogHandler("/dev/log", log_facility)
     logger.addHandler(sys_log)
 
     if os.environ.has_key("HAL_PROP_NET_INTERFACE"):
@@ -126,14 +134,12 @@ if __name__ == '__main__':
         logger.warning("Hal environment not set")
         sys.exit(1)
 
-    logger.debug("attempting to configure interface "+iface)
+    logger.debug("running as addon for interface "+iface)
 
     RunDhclient(iface)
 
-    logger.debug("back from RunDhclient, device_ip=%s, local_ip=%s", device_ip, local_ip)
-
     if device_ip == False or local_ip == False:
-        logger.debug("error running dhclient, trying static config")
+        logger.info("error running dhclient, trying static config")
 
         RunIfconfig(iface)
         if device_ip == False or local_ip == False:
@@ -142,8 +148,8 @@ if __name__ == '__main__':
 
     logger.debug("successfully configured interface")
 
-    RunDccm()
+    RunDccm(log_level)
 
-    logger.debug("exiting ...")
+    logger.error("exiting ...")
 
     sys.exit(0)

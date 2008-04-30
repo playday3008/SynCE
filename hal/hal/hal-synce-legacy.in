@@ -1,5 +1,7 @@
 #!/bin/sh
 
+LOG_LEVEL=6
+
 SYS_NAME=`uname`
 
 if [ ${SYS_NAME} = "FreeBSD" ] ; then
@@ -15,11 +17,28 @@ THIS=`basename $0`
 LOGGER="logger -t ${THIS}[$$]"
 #FACILITY=daemon
 FACILITY=local5
+
 ERROR="${LOGGER} -p ${FACILITY}.err"
-WARNING="${LOGGER} -p ${FACILITY}.warning"
-NOTICE="${LOGGER} -p ${FACILITY}.notice"
-INFO="${LOGGER} -p ${FACILITY}.info"
-DEBUG="${LOGGER} -p ${FACILITY}.debug"
+if [ ${LOG_LEVEL} -ge 3 ]; then
+  WARNING="${LOGGER} -p ${FACILITY}.warning"
+else
+  WARNING="/bin/true"
+fi
+if [ ${LOG_LEVEL} -ge 4 ]; then
+  NOTICE="${LOGGER} -p ${FACILITY}.notice"
+else
+  NOTICE="/bin/true"
+fi
+if [ ${LOG_LEVEL} -ge 5 ]; then
+  INFO="${LOGGER} -p ${FACILITY}.info"
+else
+  INFO="/bin/true"
+fi
+if [ ${LOG_LEVEL} -ge 6 ]; then
+  DEBUG="${LOGGER} -p ${FACILITY}.debug"
+else
+    DEBUG="/bin/true"
+fi
 
 # ppp setup
 #
@@ -83,18 +102,17 @@ synce_serial_start_device()
   # Shut off the connection in case it's running.
   synce-serial-abort-device >/dev/null 2>&1
 
-
   # Now bring up the connection
   if [ ${SYS_NAME} = "FreeBSD" ] ; then
 
     # FreeBSD pppd doesn't support the linkname option
-    ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS"
+    ${DEBUG} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS"
 
     ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS
 
   else
 
-    ${INFO} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
+    ${DEBUG} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
 
     ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
 
@@ -102,6 +120,7 @@ synce_serial_start_device()
 
   if [ "$?" != "0" ]; then
     ${ERROR} "Failed to initialize ppp connection"
+    exit 1
   fi
 }
 
@@ -113,7 +132,6 @@ synce_serial_abort_device()
     ${WARNING} "${THIS}: unable find a running SynCE connection. Will do nothing."
     exit 1
   fi
-
 
   while [ -f "$PIDFILE" ]; do
     PID="`head -1 $VAR_PPP/ppp-$SYNCE_DEVNAME.pid`"
@@ -137,10 +155,12 @@ synce_serial_abort_device()
 
 
 if [ ${HALD_ACTION} = "addon" ]; then
+    ${DEBUG} "${THIS}: running as addon for ${SYNCE_DEVNAME}."
     synce_serial_start_device
-    exec @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=6
+    exec @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=${LOG_LEVEL}
 fi
 
 if [ ${HALD_ACTION} = "remove" ]; then
+    ${DEBUG} "${THIS}: running for removal of ${SYNCE_DEVNAME}."
     synce_serial_abort_device
 fi
