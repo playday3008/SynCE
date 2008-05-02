@@ -1,2 +1,4 @@
 * integrate bluetooth properly
 
+* find a better name for the -rndis class in hal-dccm, WM5/6
+  doesn't have to connect via rndis

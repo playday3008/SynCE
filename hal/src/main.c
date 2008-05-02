@@ -254,7 +254,7 @@ main(gint argc,
   g_type_init ();
   gnet_init();
 
-  openlog(g_get_prgname(), LOG_PID, LOG_LOCAL5);
+  openlog(g_get_prgname(), LOG_PID, LOG_DAEMON);
   g_log_set_default_handler(log_to_syslog, &log_level);
 
   g_debug("%s: starting ...", G_STRFUNC);

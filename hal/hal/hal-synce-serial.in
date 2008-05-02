@@ -2,7 +2,7 @@
 
 # LOG_LEVEL can be set from 1 to 6, with 6 being
 # the highest
-LOG_LEVEL=6
+LOG_LEVEL=3
 
 SYS_NAME=`uname`
 
@@ -18,7 +18,7 @@ THIS=`basename $0`
 #
 LOGGER="logger -t ${THIS}[$$]"
 #FACILITY=daemon
-FACILITY=local5
+FACILITY=daemon
 
 ERROR="${LOGGER} -p ${FACILITY}.err"
 if [ ${LOG_LEVEL} -ge 3 ]; then

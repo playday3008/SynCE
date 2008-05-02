@@ -1,6 +1,8 @@
 2008-05-02  Mark Ellis <mark@mpellis.org.uk>
 
-	* instructions for changing log level
+	* instructions for changing log level, set default to
+	  warning
+	* changed log facility to daemon
 	* fix make dist
 	* improve README
 	* change hal-synce-legacy to hal-synce-serial
