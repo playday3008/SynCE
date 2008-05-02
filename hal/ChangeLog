@@ -1,3 +1,9 @@
+2008-05-02  Mark Ellis <mark@mpellis.org.uk>
+
+	* instructions for changing log level
+	* fix make dist
+	* improve README
+
 2008-04-30  Mark Ellis <mark@mpellis.org.uk>
 
 	* exit gracefully after receiving SIGTERM, which hal sends

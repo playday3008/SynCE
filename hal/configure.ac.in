@@ -53,4 +53,5 @@ AC_OUTPUT([
 	hal/Makefile
 	src/Makefile
 	bluetooth/Makefile
+	patches/Makefile
 ])

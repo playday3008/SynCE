@@ -6,6 +6,10 @@ import re
 import subprocess
 import logging, logging.handlers
 
+# log_level can be set to one of (prefixed by logging.)
+# DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level = logging.DEBUG
+
 DEFAULT_DEVICE_IP = "169.254.2.1"
 DEFAULT_LOCAL_IP = "169.254.2.2"
 DEFAULT_NETMASK = "255.255.255.0"
@@ -119,7 +123,6 @@ def RunDccm(py_log_level):
 #
 if __name__ == '__main__':
 
-    log_level = logging.DEBUG
     log_facility = logging.handlers.SysLogHandler.LOG_LOCAL5
 
     logging.basicConfig(level=log_level,

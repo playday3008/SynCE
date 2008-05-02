@@ -13,6 +13,12 @@ of the core synce libraries and tools.
 
 For usb connections, most devices should be autodetected, if
 yours is not please inform the synce project and we'll fix it !
+Both WM5/6 and older style devices are fully supported. If you
+want to connect WM5/6 over rndis (advanced network functionality)
+then you will need to install the usb-rndis-lite modules, until
+such time as the changes required are accepted into the main
+kernel tree. Rndis connections will attempt to use dhcp, only
+falling back to a static configuration if that is unsuccessful.
 
 FreeBSD
 -------
@@ -26,3 +32,9 @@ Wireless interfaces are a little trickier over hal. There
 are some ideas in the bluetooth directory, which have shown
 some success.
 
+Bug reports
+-----------
+If you find you have problems, before reporting them can you
+please increase the debugging output level to the logs. This can
+be done at the top of the hal scripts hal-synce-legacy and
+hal-synce-rndis, depending on the connection method you are using.

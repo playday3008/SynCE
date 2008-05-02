@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# LOG_LEVEL can be set from 1 to 6, with 6 being
+# the highest
 LOG_LEVEL=6
 
 SYS_NAME=`uname`
