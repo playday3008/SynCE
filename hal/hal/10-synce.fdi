@@ -51,7 +51,7 @@
 
         <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-        <append key="info.addons" type="strlist">hal-synce-legacy</append>
+        <append key="info.addons" type="strlist">hal-synce-serial</append>
       </match>
     </match>
   </device>
@@ -74,7 +74,7 @@
 
         <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
-        <append key="info.addons" type="strlist">hal-synce-legacy</append>
+        <append key="info.addons" type="strlist">hal-synce-serial</append>
       </match>
     </match>
   </device>

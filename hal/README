@@ -36,5 +36,5 @@ Bug reports
 -----------
 If you find you have problems, before reporting them can you
 please increase the debugging output level to the logs. This can
-be done at the top of the hal scripts hal-synce-legacy and
+be done at the top of the hal scripts hal-synce-serial and
 hal-synce-rndis, depending on the connection method you are using.

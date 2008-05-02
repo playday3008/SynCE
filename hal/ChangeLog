@@ -3,6 +3,7 @@
 	* instructions for changing log level
 	* fix make dist
 	* improve README
+	* change hal-synce-legacy to hal-synce-serial
 
 2008-04-30  Mark Ellis <mark@mpellis.org.uk>
 

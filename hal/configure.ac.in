@@ -44,7 +44,7 @@ AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
 
 AC_CONFIG_FILES([
         hal/hal-synce-rndis \
-        hal/hal-synce-legacy \
+        hal/hal-synce-serial \
         bluetooth/hal-synce-bluetooth \
         etc/synce-serial.conf] )
 
