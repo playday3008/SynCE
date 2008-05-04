@@ -74,6 +74,7 @@ static SynceInfo* synce_info_from_file(const char* device_name)
 
   result->key             = getConfigInt(config, "device", "key");
   result->os_version      = getConfigInt(config, "device", "os_version");
+  result->os_minor        = getConfigInt(config, "device", "os_minor");
   result->build_number    = getConfigInt(config, "device", "build_number");
   result->processor_type  = getConfigInt(config, "device", "processor_type");
   result->partner_id_1    = getConfigInt(config, "device", "partner_id_1");

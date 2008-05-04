@@ -14,7 +14,7 @@ if [ -f $ACFILE ]; then
 	rm $ACFILE
 fi
 echo -n "Creating $ACFILE..."
-cat $ACFILE_IN | sed "s/\\(AM_INIT_AUTOMAKE(.*,\\).*)/\\1 $VERSION)/" > $ACFILE
+cat $ACFILE_IN | sed "s/@@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@/$VERSION/" > $ACFILE
 if [ -s $ACFILE ]; then
 	echo "done."
 else

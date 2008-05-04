@@ -1,4 +1,11 @@
-2008-04-25  Jonny Lamb  <jonnylamb@jonnylamb.com>
+2008-05-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add all error codes
+	* remove duplicate inet_pton.c
+	* get os_minor from dccm file if available
+	* update autotools initialisation
+
+2008-04-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* change property used to find devices through hal
 

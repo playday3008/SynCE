@@ -131,36 +131,9 @@ typedef int32_t  HRESULT;
 
 /*
  * System Errors
- *
- * Add more from this page if needed:
- *
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/html/_sdk_error_values.asp
  */
 
-#define ERROR_SUCCESS                  0
-#define ERROR_FILE_NOT_FOUND           2
-#define ERROR_PATH_NOT_FOUND           3
-#define ERROR_TOO_MANY_OPEN_FILES      4
-#define ERROR_ACCESS_DENIED            5
-#define ERROR_INVALID_HANDLE           6
-#define ERROR_NOT_ENOUGH_MEMORY        8
-#define ERROR_NOT_SAME_DEVICE         17
-#define ERROR_NO_MORE_FILES           18
-#define ERROR_SEEK                    25
-#define ERROR_GEN_FAILURE             31
-#define ERROR_SHARING_VIOLATION       32
-#define ERROR_NOT_SUPPORTED           50
-#define ERROR_DUP_NAME                52
-#define ERROR_FILE_EXISTS             80
-#define ERROR_INVALID_PARAMETER       87
-#define ERROR_DISK_FULL              112
-#define ERROR_INSUFFICIENT_BUFFER    122
-#define ERROR_INVALID_NAME           123
-#define ERROR_DIR_NOT_EMPTY          145
-#define ERROR_ALREADY_EXISTS         183
-#define ERROR_NO_DATA                232
-#define ERROR_NO_MORE_ITEMS          259
-#define ERROR_KEY_DELETED           1018
+#include <synce_sys_error.h>
 
 /*
  * Other macros
