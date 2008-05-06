@@ -957,3 +957,11 @@ no configuration is required.
 ------------------------------
 
 Changes to auth procedure on locked devices for WM6.
+
+06/05/2008 - 214500 Dr J A Gow
+------------------------------
+
+Folded in patches from Daniel Frickemeyer to correct the handling of categories
+in tasks and events when using Opensync 0.3x.
+
+

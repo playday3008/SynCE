@@ -99,7 +99,7 @@
 
             <!-- OpenSync 0.3 - Categories remain the same -->
 
-            <xsl:if test="count(Category) &gt; 0">
+            <xsl:if test="count(Category) &gt; 0 or cont(Categories) &gt; 0">
                 <Categories>
                     <xsl:for-each select="Categories">
                         <xsl:for-each select="Category">
