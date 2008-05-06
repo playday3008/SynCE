@@ -413,7 +413,7 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value)
 	return true;
 }
 
-bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size)
+bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, LPDWORD size)
 {
 	uint32_t exact_size = 0;
 
@@ -662,7 +662,7 @@ void rapi_buffer_debug_dump_buffer_from_current_point( char* desc, RapiBuffer* b
 	char chr[8 + 1];
 
 
-	printf("%s (%d remaining bytes):\n", desc, len);
+	printf("%s (%zd remaining bytes):\n", desc, len);
 	for (i = buffer->read_index ; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
 			if (j + i >= len) {
@@ -683,7 +683,7 @@ void rapi_buffer_debug_dump_buffer_from_current_point( char* desc, RapiBuffer* b
 			}
 		hex[8*3] = '\0';
 		chr[8] = '\0';
-		printf("  %04x: %s %s\n", i, hex, chr);
+		printf("  %04zx: %s %s\n", i, hex, chr);
 	}
 }
 
@@ -699,7 +699,7 @@ void rapi_buffer_debug_dump_buffer( char* desc, RapiBuffer* buffer)
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
 
-	printf("%s (%d bytes):\n", desc, len);
+	printf("%s (%zd bytes):\n", desc, len);
 	for (i = 0; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
 			if (j + i >= len) {
@@ -720,7 +720,7 @@ void rapi_buffer_debug_dump_buffer( char* desc, RapiBuffer* buffer)
 			}
 		hex[8*3] = '\0';
 		chr[8] = '\0';
-		printf("  %04x: %s %s\n", i, hex, chr);
+		printf("  %04zx: %s %s\n", i, hex, chr);
 	}
 }
 

@@ -73,7 +73,7 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
 
-	printf("%s (%d bytes):\n", desc, len);
+	printf("%s (%zd bytes):\n", desc, len);
 	for (i = 0; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
 			if (j + i >= len) {
@@ -94,7 +94,7 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 			}
 		hex[8*3] = '\0';
 		chr[8] = '\0';
-		printf("  %04x: %s %s\n", i, hex, chr);
+		printf("  %04zx: %s %s\n", i, hex, chr);
 	}
 }/*}}}*/
 

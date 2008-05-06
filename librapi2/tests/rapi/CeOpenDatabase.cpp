@@ -179,7 +179,9 @@ int handle_database(HANDLE db, DWORD num_records)
 	{
 		WORD property_count;
 		CEOID oid;
-		TEST_NOT_FALSE(oid = CeReadRecordProps(db, CEDB_ALLOWREALLOC, &property_count, NULL, (BYTE**)&values, &buffer_size));
+
+		LPBYTE values_lpbyte = (LPBYTE)values;
+		TEST_NOT_FALSE(oid = CeReadRecordProps(db, CEDB_ALLOWREALLOC, &property_count, NULL, &values_lpbyte, &buffer_size));
 	
 		printf("Row %u (oid=0x%x): ", i, oid);
 	

@@ -118,7 +118,7 @@ bool rapi_buffer_read_uint32(RapiBuffer* buffer, uint32_t* value);
 /**
  * Get string with length in number of wide chars
  */
-bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, size_t* size);
+bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, LPDWORD size);
 
 /**
  * Read an optional parameter

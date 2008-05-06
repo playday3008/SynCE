@@ -46,7 +46,7 @@ int main()
 	CEPROPVAL write_values[VALUE_COUNT];
 	memset(&write_values, 0, sizeof(write_values));
 
-	char* blob_data = "Binary Large Object"; // Note: uneven length
+	const char* blob_data = "Binary Large Object"; // Note: uneven length
 	write_values[0].propid = 0x10000 | CEVT_BLOB;
 	write_values[0].val.blob.dwCount = strlen(blob_data);
 	write_values[0].val.blob.lpb = (LPBYTE)blob_data;
@@ -162,8 +162,10 @@ int main()
 	CEPROPVAL* read_value = NULL;
 	DWORD read_size = 0;
 	WORD read_count = 0;
+
+	LPBYTE read_value_lpbyte = (LPBYTE)read_value;
 	TEST_NOT_FALSE(read_record = CeReadRecordProps(database, CEDB_ALLOWREALLOC, 
-				&read_count, NULL, (LPBYTE*)&read_value, &read_size));
+				&read_count, NULL, &read_value_lpbyte, &read_size));
 
 
 

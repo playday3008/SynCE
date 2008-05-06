@@ -126,7 +126,7 @@ static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name,
 
 		if ((int)bytes_written != (int)bytes_read)
 		{
-			fprintf(stderr, "%s: Only wrote %i bytes of %i to destination file '%s'\n", name, 
+			fprintf(stderr, "%s: Only wrote %zi bytes of %zi to destination file '%s'\n", name, 
 					bytes_written, bytes_read, dest_ascii);
 			goto exit;
 		}
@@ -277,7 +277,7 @@ int main(int argc, char** argv)
 		if (0 == duration)
 			printf("File copy took less than one second!\n");
 		else
-			printf("File copy of %i bytes took %li minutes and %li seconds, that's %li bytes/s.\n",
+			printf("File copy of %zi bytes took %li minutes and %li seconds, that's %li bytes/s.\n",
 					bytes_copied, duration / 60, duration % 60, bytes_copied / duration);
 
 	}

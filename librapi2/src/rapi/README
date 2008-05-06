@@ -73,11 +73,11 @@ List of RAPI command codes:
 [ ] 3f CeGetClassName		
 
 [ ] 40 CeGlobalMemoryStatus	
-[ ] 41 CeGetSystemPowerStatusEx	
+[i] 41 CeGetSystemPowerStatusEx	
 [i] 42 SetSystemMemoryDivision  [undocumented as RAPI function]
 [ ] 43 CeGetTempPath		
 [i] 44 CeGetSpecialFolderPath	
-[ ] 45 CeRapiInvoke
+[i] 45 CeRapiInvoke
 [ ] 46 CeRestoreDatabase        [undocumented]
 [ ] 47 CeBackupDatabase         [undocumented]
 [ ] 48 CeBackupFile             [undocumented]
@@ -95,7 +95,7 @@ List of RAPI command codes:
 [ ] 53 CeFlushDBVol		
 [ ] 54 CeEnumDBVolumes		
 [ ] 55 CeOidGetInfoEx		
-[ ] 56 CeProcessConfig          [undocumented]
+[i] 56 CeProcessConfig          [undocumented]
 
 
 CeEventHasOccured details:

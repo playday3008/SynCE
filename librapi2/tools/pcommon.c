@@ -81,12 +81,20 @@ static void anyfile_remote_close(AnyFile* file)
 
 static bool anyfile_remote_read(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
 {
-	return CeReadFile(file->handle.remote, buffer, bytes, bytesAccessed, NULL);
+	BOOL result;
+	DWORD lpNumberOfBytesRead = 0;
+	result = CeReadFile(file->handle.remote, buffer, bytes, &lpNumberOfBytesRead, NULL);
+	*bytesAccessed = lpNumberOfBytesRead;
+	return result;
 }
 
 static bool anyfile_remote_write(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
 {
-	return CeWriteFile(file->handle.remote, buffer, bytes, bytesAccessed, NULL);
+	BOOL result;
+	DWORD lpNumberOfBytesWritten = 0;
+	result = CeWriteFile(file->handle.remote, buffer, bytes, &lpNumberOfBytesWritten, NULL);
+	*bytesAccessed = lpNumberOfBytesWritten;
+	return result;
 }
 
 static void anyfile_local_close(AnyFile* file)

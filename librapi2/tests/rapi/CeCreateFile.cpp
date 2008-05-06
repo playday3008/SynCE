@@ -21,7 +21,7 @@ int main()
 	TEST_NOT_EQUAL(INVALID_HANDLE_VALUE, handle = CeCreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0));
 
 	// Write data to file
-	char* write_buffer = "Hej hopp!\r\n";
+	const char* write_buffer = "Hej hopp!\r\n";
 	const DWORD should_write = strlen(write_buffer);
 	DWORD did_write = (DWORD)-1;
 	TEST_NOT_FALSE(CeWriteFile(handle, write_buffer, should_write, &did_write, NULL));

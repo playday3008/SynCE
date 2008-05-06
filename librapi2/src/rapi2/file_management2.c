@@ -12,7 +12,7 @@ DWORD _CeGetSpecialFolderPath2(
         LPWSTR lpBuffer)
 {
     RapiContext* context = rapi_context_current();
-    size_t string_length = nBufferLength;
+    DWORD string_length = nBufferLength;
 
     rapi_context_begin_command(context, 0x4b);
     rapi_buffer_write_uint32(context->send_buffer, (uint32_t)nFolder);

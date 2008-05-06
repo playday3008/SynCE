@@ -9,7 +9,7 @@ int main()
 	memset(&version, 0, sizeof(CEOSVERSIONINFO));
 	version.dwOSVersionInfoSize = sizeof(CEOSVERSIONINFO);
 	
-	printf("size = 0x%x\n", sizeof(CEOSVERSIONINFO));
+	printf("size = 0x%zx\n", sizeof(CEOSVERSIONINFO));
 	
 	TEST_NOT_EQUAL(0, CeGetVersionEx(&version));
 	
