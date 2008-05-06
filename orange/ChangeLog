@@ -1,5 +1,15 @@
 2008-05-06  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
+	* .cvsignore:
+	* cvsclean:
+	* lib/.cvsignore:
+	* src/.cvsignore: Removed useless CVS files.
+
+	* bootstrap:
+	* orange.spec.in: Removed spec file.
+
+2008-05-06  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
 	* VERSION: Upped version number.
 
 2008-01-09  Mark Ellis <mark@mpellis.org.uk>
