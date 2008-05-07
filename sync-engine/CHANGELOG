@@ -965,3 +965,9 @@ Folded in patches from Daniel Frickemeyer to correct the handling of categories
 in tasks and events when using Opensync 0.3x.
 
 
+07/05/2008 - 140000 Mark Ellis
+------------------------------
+
+Clarify handling of WM6 authorisation on device from user perspective, ie. output 
+a suitable message instead of 'auth failed'
+

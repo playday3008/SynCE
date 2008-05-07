@@ -376,9 +376,13 @@ class SyncEngine(dbus.service.Object):
 		
 			if self.partnerships != None:
 				self.OnDisconnect()
-			
-			if auth.Authorize(self.devicePath,self.device,self.config.config_Global):
+
+			result = auth.Authorize(self.devicePath,self.device,self.config.config_Global)
+			if result == 1:
 				self.logger.info("Authorization successful - reconnecting to device")
+			elif result == 2:
+				self.logger.info("Authorization pending - waiting for password on device")
+				rc = False
 			else:
 				self.logger.info("Failed to authorize - disconnect and reconnect device to try again")
 				rc = False

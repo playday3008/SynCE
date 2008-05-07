@@ -47,41 +47,66 @@ def IsAuthRequired(device):
 		return True
 	return False
 
+###############################################################################
+# CanSendAuth
+#
+# Do we need to send the password over the wire ?
+
+def CanSendAuth(device):
+	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
+		flags = device.GetPropertyString("pda.pocketpc.password")
+		if flags == "provide":
+			return True
+		return False
+
+	flags = device.GetPasswordFlags()
+        if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
+		return True
+	return False
+
 ############################################################################
 # Authorize
 #
-# Obtain an authorization token to continue device connection. If this
-# fails, we return False and the device will remain disconnected. Success
-# will return True and allow the device to proceed with connection
+# Obtain an authorization token to continue device connection. 
+# Success (the device is unlocked) will return 1 and allow the
+#   device to proceed with connection
+# A password entry required on the device (WM6) will return 2,
+#   the device will remain disconnected for now
+# A failed authorisation attempt over the wire will return 3,
+#   the device will remain disconnected
 
 def Authorize(devpath,device,config):
 	
-	rc=1
-        if IsAuthRequired(device):
+        if IsAuthRequired(device) == False:
+            return 1
 
-		# get the program we need
-		
-		prog = config.cfg["AuthMethod"]
-		
-		if prog == "INTERNAL_GUI":
-			clist = [GUI_TOOL,devpath]
-		elif prog == "INTERNAL_CLI":
-			clist = [CLI_TOOL,devpath]
+        if CanSendAuth(device) == False:
+            return 2
+
+	rc=1
+	# get the program we need
+
+	prog = config.cfg["AuthMethod"]
+
+	if prog == "INTERNAL_GUI":
+		clist = [GUI_TOOL,devpath]
+	elif prog == "INTERNAL_CLI":
+		clist = [CLI_TOOL,devpath]
+	else:
+		clist = [prog,devpath]
+	
+	# check that we have it
+	
+	if os.path.exists(clist[0]):
+		rc = os.spawnvp(os.P_WAIT,clist[0],clist)
+		if rc<0:
+			rc = 3
+		if not IsAuthRequired(device):
+			rc = 1
 		else:
-			clist = [prog,devpath]
-			
-		# check that we have it
-			
-		if os.path.exists(clist[0]):
-			rc = os.spawnvp(os.P_WAIT,clist[0],clist)
-			if rc<0:
-				rc = 0
-			if not IsAuthRequired(device):
-				rc = 1
-			else:
-				rc = 0
-		else:
-			print "auth: auth prog %s does not exist" % prog
-			rc = 0
+			rc = 3
+	else:
+		print "auth: auth prog %s does not exist" % prog
+		rc = 3
 
 	return rc
