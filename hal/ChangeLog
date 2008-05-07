@@ -1,3 +1,9 @@
+2008-05-07  Mark Ellis <mark@mpellis.org.uk>
+
+	* 10-synce.fdi: fix to freebsd ucom match
+	* hal-synce-serial.in: use ':' instead of /bin/true as no-op,
+	  don't call synce-serial-abort-device on connection
+
 2008-05-02  Mark Ellis <mark@mpellis.org.uk>
 
 	* instructions for changing log level, set default to

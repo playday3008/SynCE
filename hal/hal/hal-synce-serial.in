@@ -24,22 +24,22 @@ ERROR="${LOGGER} -p ${FACILITY}.err"
 if [ ${LOG_LEVEL} -ge 3 ]; then
   WARNING="${LOGGER} -p ${FACILITY}.warning"
 else
-  WARNING="/bin/true"
+  WARNING=":"
 fi
 if [ ${LOG_LEVEL} -ge 4 ]; then
   NOTICE="${LOGGER} -p ${FACILITY}.notice"
 else
-  NOTICE="/bin/true"
+  NOTICE=":"
 fi
 if [ ${LOG_LEVEL} -ge 5 ]; then
   INFO="${LOGGER} -p ${FACILITY}.info"
 else
-  INFO="/bin/true"
+  INFO=":"
 fi
 if [ ${LOG_LEVEL} -ge 6 ]; then
   DEBUG="${LOGGER} -p ${FACILITY}.debug"
 else
-    DEBUG="/bin/true"
+  DEBUG=":"
 fi
 
 # ppp setup
@@ -101,9 +101,6 @@ SYNCE_DNS="$SYNCE_LOCALIP"
 
 synce_serial_start_device()
 {
-  # Shut off the connection in case it's running.
-  synce-serial-abort-device >/dev/null 2>&1
-
   # Now bring up the connection
   if [ ${SYS_NAME} = "FreeBSD" ] ; then
 
