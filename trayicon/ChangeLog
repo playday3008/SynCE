@@ -1,3 +1,8 @@
+2008-05-08  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* man/synce-trayicon.1: Escaped minus sign, as it is currently being
+	used as a hyphen; caught by Lintian.
+
 2008-04-16  Mark Ellis <mark@mpellis.org.uk>
 
 	* check for orphaned WM6 items when deleting partnership
