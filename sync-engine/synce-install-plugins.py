@@ -40,7 +40,7 @@ def get_opensync_version():
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option('-i', '--ignore-root', action='store_true', dest='ignore_root', default=False, help='Check for root')
+    parser.add_option('-i', '--ignore-root', action='store_true', dest='ignore_root', default=False, help='Do not check for root')
     (options, args) = parser.parse_args()
 
     user = commands.getoutput('whoami')
