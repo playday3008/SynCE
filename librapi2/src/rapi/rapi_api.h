@@ -40,6 +40,18 @@ DWORD _CeSetFilePointer(
         LONG *lpDistanceToMoveHigh,
         DWORD dwMoveMethod);
 
+BOOL _NotImplementedCeGetFileTime(
+        HANDLE hFile,
+        LPFILETIME lpCreationTime,
+        LPFILETIME lpLastAccessTime,
+        LPFILETIME lpLastWriteTime);
+
+BOOL _NotImplementedCeSetFileTime(
+        HANDLE hFile,
+        LPFILETIME lpCreationTime,
+        LPFILETIME lpLastAccessTime,
+        LPFILETIME lpLastWriteTime);
+
 #endif /* SWIG */
 
 
@@ -149,6 +161,14 @@ HANDLE _CeOpenDatabase(
         DWORD dwFlags,
         HWND hwndNotify);
 
+CEOID _NotImplementedCeReadRecordProps(
+        HANDLE hDbase,
+        DWORD dwFlags,
+        LPWORD lpcPropID,
+        CEPROPID *rgPropID,
+        LPBYTE *lplpBuffer,
+        LPDWORD lpcbBuffer);
+
 CEOID _CeReadRecordProps(
         HANDLE hDbase,
         DWORD dwFlags,
@@ -162,6 +182,12 @@ CEOID _CeSeekDatabase(
         DWORD dwSeekType,
         DWORD dwValue,
         LPDWORD lpdwIndex);
+
+CEOID _NotImplementedCeWriteRecordProps(
+        HANDLE hDbase,
+        CEOID oidRecord,
+        WORD cPropID,
+        CEPROPVAL *rgPropVal);
 
 CEOID _CeWriteRecordProps(
         HANDLE hDbase,
@@ -340,6 +366,12 @@ HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply);
 
 BOOL _CeStartReplication( void );
 
+HRESULT _NotImplementedCeSyncStart(LPCWSTR params);
+
+HRESULT _NotImplementedCeSyncResume(void);
+
+HRESULT _NotImplementedCeSyncPause(void);
+
 BOOL _CeGetSystemMemoryDivision(
     LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
@@ -353,7 +385,7 @@ BOOL _CeRegRestoreFile(LPCWSTR filename);
 
 BOOL _CeKillAllApps();
 
-DWORD _CeGetDiskFreeSpaceEx(
+DWORD _NotImplementedCeGetDiskFreeSpaceEx(
 		LPCTSTR _lpDirectoryName, 
 		PULARGE_INTEGER lpFreeBytesAvailable, 
 		PULARGE_INTEGER lpTotalNumberOfBytes, 

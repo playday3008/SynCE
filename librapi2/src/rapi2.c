@@ -39,25 +39,25 @@ struct rapi_ops_s rapi2_ops =
         &_CeGetSpecialFolderPath2,        /* CeGetSpecialFolderPath */
         &_CeMoveFile2,                    /* CeMoveFile */
         &_CeRemoveDirectory2,             /* CeRemoveDirectory */
-        NULL,                             /* CeSetFileAttributes */
-        NULL,                             /* CeSHCreateShortcut */
+        &_NotImplementedCeSetFileAttributes2, /* CeSetFileAttributes */
+        &_NotImplementedCeSHCreateShortcut2, /* CeSHCreateShortcut */
         _CeSyncTimeToPc2,                 /* CeSyncTimeToPc */
 #endif /* SWIG */
         /*
          * Database functions
         */
 #ifndef SWIG
-        NULL,                             /* CeCreateDatabase */
-        NULL,                             /* CeDeleteDatabase */
-        NULL,                             /* CeFindAllDatabases */
-        NULL,                             /* CeFindFirstDatabase */
-        NULL,                             /* CeFindNextDatabase */
-        NULL,                             /* CeOpenDatabase */
-        NULL,                             /* CeReadRecordProps */
-        NULL,                             /* CeSeekDatabase */
-        NULL,                             /* CeWriteRecordProps */
-        NULL,                             /* CeDeleteRecord */
-        NULL,                             /* CeSetDatabaseInfo */
+        _NotImplementedCeCreateDatabase2, /* CeCreateDatabase */
+        _NotImplementedCeDeleteDatabase2, /* CeDeleteDatabase */
+        _NotImplementedCeFindAllDatabases2, /* CeFindAllDatabases */
+        _NotImplementedCeFindFirstDatabase2, /* CeFindFirstDatabase */
+        _NotImplementedCeFindNextDatabase2, /* CeFindNextDatabase */
+        _NotImplementedCeOpenDatabase2,   /* CeOpenDatabase */
+        _NotImplementedCeReadRecordProps2, /* CeReadRecordProps */
+        _NotImplementedCeSeekDatabase2,   /* CeSeekDatabase */
+        _NotImplementedCeWriteRecordProps2, /* CeWriteRecordProps */
+        _NotImplementedCeDeleteRecord2,   /* CeDeleteRecord */
+        _NotImplementedCeSetDatabaseInfo2, /* CeSetDatabaseInfo */
 #endif /* SWIG */
         /*
          * Registry
@@ -78,24 +78,24 @@ struct rapi_ops_s rapi2_ops =
          * Misc functions
         */
 #ifndef SWIG
-        NULL,                             /* CeCheckPassword */
+        _NotImplementedCeCheckPassword2,  /* CeCheckPassword */
         _CeCreateProcess2,                /* CeCreateProcess */
         _CeGetStoreInformation2,          /* CeGetStoreInformation */
         _CeGetSystemInfo2,                /* CeGetSystemInfo */
         _CeGetSystemPowerStatusEx2,       /* CeGetSystemPowerStatusEx */
         _CeGetVersionEx2,                 /* CeGetVersionEx */
-        NULL,                             /* CeOidGetInfo */
+        _NotImplementedCeOidGetInfo2,     /* CeOidGetInfo */
         _CeProcessConfig2,                /* CeProcessConfig */
         _CeStartReplication2,             /* CeStartReplication */
         _CeSyncStart2,                    /* CeSyncStart */
         _CeSyncResume2,                   /* CeSyncResume */
         _CeSyncPause2,                    /* CeSyncPause */
-        _CeGetSystemMemoryDivision2,      /* CeGetSystemMemoryDivision */
-        NULL,                             /* CeSetSystemMemoryDivision */
-        NULL,                             /* CeRegCopyFile */
-        NULL,                             /* CeRegRestoreFile */
-        NULL,                             /* CeKillAllApps */
-        _CeGetDiskFreeSpaceEx2,			  /* CeGetDiskFreeSpaceEx */
+        _NotImplementedCeGetSystemMemoryDivision2, /* CeGetSystemMemoryDivision */
+        _NotImplementedCeSetSystemMemoryDivision2, /* CeSetSystemMemoryDivision */
+        _NotImplementedCeRegCopyFile2,    /* CeRegCopyFile */
+        _NotImplementedCeRegRestoreFile2, /* CeRegRestoreFile */
+        _NotImplementedCeKillAllApps2,    /* CeKillAllApps */
+        _CeGetDiskFreeSpaceEx2,           /* CeGetDiskFreeSpaceEx */
 #endif /* SWIG */
         /*
          * CeRapiInvoke stuff

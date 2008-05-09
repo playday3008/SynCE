@@ -1,3 +1,10 @@
+2008-05-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* introduced dummy functions for most calls represented in the
+	  header but not implemented, returns failure with rapi error
+	  set to E_NOTIMPL instead of segfaulting
+	* in rapi 1, pass result_2 into rapi error, this is an HRESULT
+
 2008-05-09  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* script/synce-remove-program.1: Escaped minus signs so they're not

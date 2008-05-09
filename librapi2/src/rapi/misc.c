@@ -515,19 +515,42 @@ exit:
 }
 
 
-/*
- *
- * dummy function, not yet implemented
- *
- */
-DWORD _CeGetDiskFreeSpaceEx(
-		LPCTSTR _lpDirectoryName, 
-		PULARGE_INTEGER lpFreeBytesAvailable, 
-		PULARGE_INTEGER lpTotalNumberOfBytes, 
-		PULARGE_INTEGER lpTotalNumberOfFreeBytes){
-	
-	LONG return_value = ERROR_GEN_FAILURE;
-			
-	return return_value ;
+DWORD _NotImplementedCeGetDiskFreeSpaceEx(
+					  LPCTSTR _lpDirectoryName, 
+					  PULARGE_INTEGER lpFreeBytesAvailable, 
+					  PULARGE_INTEGER lpTotalNumberOfBytes, 
+					  PULARGE_INTEGER lpTotalNumberOfFreeBytes){
+
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return 0;
+}
+
+
+HRESULT _NotImplementedCeSyncStart(LPCWSTR params)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return E_NOTIMPL;
+}
+
+
+HRESULT _NotImplementedCeSyncResume(void)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return E_NOTIMPL;
+}
+
+
+HRESULT _NotImplementedCeSyncPause(void)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return E_NOTIMPL;
 }
 

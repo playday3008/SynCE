@@ -377,3 +377,23 @@ BOOL _CeMoveFile2(
 
     return return_value;
 }
+
+BOOL _NotImplementedCeSetFileAttributes2(
+		LPCWSTR lpFileName,
+		DWORD dwFileAttributes)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+BOOL _NotImplementedCeSHCreateShortcut2(
+  LPCWSTR lpszShortcut,
+  LPCWSTR lpszTarget)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}

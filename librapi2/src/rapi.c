@@ -19,8 +19,8 @@ struct rapi_ops_s rapi_ops =
         &_CeWriteFile,                    /* CeWriteFile */
         &_CeSetFilePointer,               /* CeSetFilePointer */
         &_CeSetEndOfFile,                 /* CeSetEndOfFile */
-        NULL,                             /* CeGetFileTime */
-        NULL,                             /* CeSetFileTime */
+        &_NotImplementedCeGetFileTime,    /* CeGetFileTime */
+        &_NotImplementedCeSetFileTime,    /* CeSetFileTime */
 #endif /* SWIG */
         /*
          * File management functions
@@ -56,13 +56,13 @@ struct rapi_ops_s rapi_ops =
 #if SIZEOF_VOID_P == 4
         &_CeReadRecordProps,              /* CeReadRecordProps */
 #else
-        NULL,                             /* CeReadRecordProps */
+        &_NotImplementedCeReadRecordProps, /* CeReadRecordProps */
 #endif
         &_CeSeekDatabase,                 /* CeSeekDatabase */
 #if SIZEOF_VOID_P == 4
         &_CeWriteRecordProps,             /* CeWriteRecordProps */
 #else
-        NULL,                             /* CeWriteRecordProps */
+        &_NotImplementedCeWriteRecordProps, /* CeWriteRecordProps */
 #endif
         &_CeDeleteRecord,                 /* CeDeleteRecord */
         &_CeSetDatabaseInfo,              /* CeSetDatabaseInfo */
@@ -95,15 +95,15 @@ struct rapi_ops_s rapi_ops =
         &_CeOidGetInfo,                   /* CeOidGetInfo */
         &_CeProcessConfig,                /* CeProcessConfig */
         &_CeStartReplication,             /* CeStartReplication */
-        NULL,                             /* CeSyncStart */
-        NULL,                             /* CeSyncResume */
-        NULL,                             /* CeSyncPause */
+        &_NotImplementedCeSyncStart,      /* CeSyncStart */
+        &_NotImplementedCeSyncResume,     /* CeSyncResume */
+        &_NotImplementedCeSyncPause,      /* CeSyncPause */
         &_CeGetSystemMemoryDivision,      /* CeGetSystemMemoryDivision */
         &_CeSetSystemMemoryDivision,      /* CeSetSystemMemoryDivision */
         &_CeRegCopyFile,                  /* CeRegCopyFile */
         &_CeRegRestoreFile,               /* CeRegRestoreFile */
         &_CeKillAllApps,                  /* CeKillAllApps */
-        &_CeGetDiskFreeSpaceEx,            /* CeGetDiskFreeSpaceEx */
+        &_NotImplementedCeGetDiskFreeSpaceEx, /* CeGetDiskFreeSpaceEx */
 #endif /* SWIG */
         /*
          * CeRapiInvoke stuff

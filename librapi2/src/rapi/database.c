@@ -629,6 +629,30 @@ fail:
 	goto exit;
 }/*}}}*/
 
+#else /* SIZEOF_VOID_P == 4 */
+
+CEOID _NotImplementedCeReadRecordProps(/*{{{*/
+		HANDLE hDbase,
+		DWORD dwFlags,
+		LPWORD lpcPropID,
+		CEPROPID *rgPropID,
+		LPBYTE *lplpBuffer,
+		LPDWORD lpcbBuffer)
+{
+	RapiContext* context = rapi_context_current();
+	context->rapi_error = E_NOTIMPL;
+	context->last_error = ERROR_SUCCESS;
+	return 0;
+}
+
+CEOID _NotImplementedCeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVAL* rgPropVal)/*{{{*/
+{
+	RapiContext* context = rapi_context_current();
+	context->rapi_error = E_NOTIMPL;
+	context->last_error = ERROR_SUCCESS;
+	return 0;
+}
+
 #endif /* SIZEOF_VOID_P == 4 */
 
 CEOID _CeSeekDatabase(/*{{{*/

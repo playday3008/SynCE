@@ -1,6 +1,7 @@
 List of RAPI command codes:
 
 [i] = Implemented (maybe not tested)
+[d] = Not implemented, returns failure with rapi error E_NOTIMPL
 
 
 [i] 00 CeFindFirstFile		
@@ -20,9 +21,9 @@ List of RAPI command codes:
 [i] 0e CeOpenDatabase		
 [i] 0f CeDeleteDatabase	
 
-[i] 10 CeReadRecordProps	
+[i] 10 CeReadRecordProps
 [ ] 10 CeReadRecordPropsEx
-[i] 11 CeWriteRecordProps	
+[i] 11 CeWriteRecordProps
 [i] 12 CeDeleteRecord		
 [i] 13 CeSeekDatabase		
 [i] 14 CeSetDatabaseInfo	
@@ -46,13 +47,13 @@ List of RAPI command codes:
 [i] 25 CeRegQueryInfoKey	
 [i] 26 CeRegQueryValueEx	
 [i] 27 CeRegSetValueEx		
-[i] 28 GetSystemMemoryDivision  [undocumented as RAPI function]
+[i] 28 CeGetSystemMemoryDivision  [undocumented as RAPI function]
 [i] 29 CeGetStoreInformation	
 [ ] 2a CeGetSystemMetrics	
 [ ] 2b CeGetDesktopDeviceCaps	
 [i] 2c CeFindAllDatabases	
-[i] 2d RegCopyFile              [undocumented as RAPI function]
-[i] 2e RegRestoreFile           [undocumented as RAPI function]
+[i] 2d CeRegCopyFile              [undocumented as RAPI function]
+[i] 2e CeRegRestoreFile           [undocumented as RAPI function]
 [i] 2f CeGetSystemInfo		
 
 [i] 30 CeSHCreateShortcut	
@@ -64,8 +65,8 @@ List of RAPI command codes:
 [ ] 36 CeEventHasOccured        [undocumented as RAPI function]
 [i] 37 CeSyncTimeToPc           [undocumented]
 [i] 38 CeStartReplication       [undocumented]
-[ ] 39 CeGetFileTime		
-[ ] 3a CeSetFileTime		
+[d] 39 CeGetFileTime
+[d] 3a CeSetFileTime
 [i] 3b CeGetVersionEx		
 [ ] 3c CeGetWindow		
 [ ] 3d CeGetWindowLong		
@@ -74,7 +75,7 @@ List of RAPI command codes:
 
 [ ] 40 CeGlobalMemoryStatus	
 [i] 41 CeGetSystemPowerStatusEx	
-[i] 42 SetSystemMemoryDivision  [undocumented as RAPI function]
+[i] 42 CeSetSystemMemoryDivision  [undocumented as RAPI function]
 [ ] 43 CeGetTempPath		
 [i] 44 CeGetSpecialFolderPath	
 [i] 45 CeRapiInvoke
@@ -96,6 +97,12 @@ List of RAPI command codes:
 [ ] 54 CeEnumDBVolumes		
 [ ] 55 CeOidGetInfoEx		
 [i] 56 CeProcessConfig          [undocumented]
+
+[d] ?? CeSyncStart
+[d] ?? CeSyncResume
+[d] ?? CeSyncPause
+[d] ?? CeGetDiskFreeSpaceEx
+
 
 
 CeEventHasOccured details:

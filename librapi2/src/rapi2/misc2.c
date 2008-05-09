@@ -199,6 +199,8 @@ exit:
 }/*}}}*/
 
 
+#if 0
+
 BOOL _CeGetSystemMemoryDivision2(
         LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
@@ -227,6 +229,21 @@ BOOL _CeGetSystemMemoryDivision2(
     /* exit: */
         return result;
 }
+
+#else
+
+BOOL _NotImplementedCeGetSystemMemoryDivision2(
+    LPDWORD lpdwStoragePages,
+    LPDWORD lpdwRamPages,
+    LPDWORD lpdwPageSize)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+#endif
 
 
 /**
@@ -441,3 +458,46 @@ DWORD _CeGetDiskFreeSpaceEx2(
 	return return_value ;
 }
 
+
+BOOL _NotImplementedCeRegCopyFile2(LPCWSTR filename)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+BOOL _NotImplementedCeRegRestoreFile2(LPCWSTR filename)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+BOOL _NotImplementedCeKillAllApps2()
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+DWORD _NotImplementedCeSetSystemMemoryDivision2(
+    DWORD dwStoragePages)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+BOOL _NotImplementedCeOidGetInfo2(/*{{{*/
+		CEOID oid,
+		CEOIDINFO *poidInfo)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}/*}}}*/

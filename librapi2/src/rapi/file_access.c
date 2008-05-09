@@ -182,3 +182,30 @@ exit:
 	return return_value;
 
 }
+
+
+BOOL _NotImplementedCeGetFileTime(
+        HANDLE hFile,
+        LPFILETIME lpCreationTime,
+        LPFILETIME lpLastAccessTime,
+        LPFILETIME lpLastWriteTime)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+
+
+BOOL _NotImplementedCeSetFileTime(
+        HANDLE hFile,
+        LPFILETIME lpCreationTime,
+        LPFILETIME lpLastAccessTime,
+        LPFILETIME lpLastWriteTime)
+{
+  RapiContext* context = rapi_context_current();
+  context->rapi_error = E_NOTIMPL;
+  context->last_error = ERROR_SUCCESS;
+  return FALSE;
+}
+

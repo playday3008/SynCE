@@ -143,10 +143,21 @@ BOOL _CeGetSystemPowerStatusEx2(
 BOOL _CeGetStoreInformation2(
         LPSTORE_INFORMATION lpsi);
 
+#if 0
+
 BOOL _CeGetSystemMemoryDivision2(
         LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
     LPDWORD lpdwPageSize);
+
+#else
+
+BOOL _NotImplementedCeGetSystemMemoryDivision2(
+	LPDWORD lpdwStoragePages,
+	LPDWORD lpdwRamPages,
+	LPDWORD lpdwPageSize);
+
+#endif
 
 LONG _CeRegCreateKeyEx2(
         HKEY hKey,
@@ -230,6 +241,86 @@ DWORD _CeGetDiskFreeSpaceEx2(
 		PULARGE_INTEGER lpFreeBytesAvailable, 
 		PULARGE_INTEGER lpTotalNumberOfBytes, 
 		PULARGE_INTEGER lpTotalNumberOfFreeBytes);
+
+BOOL _NotImplementedCeSetFileAttributes2(
+	LPCWSTR lpFileName,
+	DWORD dwFileAttributes);
+
+BOOL _NotImplementedCeSHCreateShortcut2(
+	LPCWSTR lpszShortcut,
+	LPCWSTR lpszTarget);
+
+BOOL _NotImplementedCeRegCopyFile2(LPCWSTR filename);
+
+BOOL _NotImplementedCeRegRestoreFile2(LPCWSTR filename);
+
+BOOL _NotImplementedCeKillAllApps2();
+
+DWORD _NotImplementedCeSetSystemMemoryDivision2(
+	DWORD dwStoragePages);
+
+BOOL _NotImplementedCeOidGetInfo2(
+	CEOID oid,
+	CEOIDINFO *poidInfo);
+
+BOOL _NotImplementedCeCheckPassword2(
+	LPWSTR lpszPassword);
+
+CEOID _NotImplementedCeCreateDatabase2(
+	LPWSTR lpszName,
+	DWORD dwDbaseType,
+	WORD wNumSortOrder,
+	SORTORDERSPEC *rgSortSpecs);
+
+BOOL _NotImplementedCeDeleteDatabase2(
+	CEOID oid);
+
+BOOL _NotImplementedCeFindAllDatabases2(
+	DWORD dwDbaseType,
+	WORD wFlags,
+	LPWORD cFindData,
+	LPLPCEDB_FIND_DATA ppFindData);
+
+HANDLE _NotImplementedCeFindFirstDatabase2(
+	DWORD dwDbaseType);
+
+CEOID _NotImplementedCeFindNextDatabase2(
+	HANDLE hEnum);
+
+HANDLE _NotImplementedCeOpenDatabase2(
+	PCEOID poid,
+	LPWSTR lpszName,
+	CEPROPID propid,
+	DWORD dwFlags,
+	HWND hwndNotify);
+
+CEOID _NotImplementedCeReadRecordProps2(
+	HANDLE hDbase,
+	DWORD dwFlags,
+	LPWORD lpcPropID,
+	CEPROPID *rgPropID,
+	LPBYTE *lplpBuffer,
+	LPDWORD lpcbBuffer);
+
+CEOID _NotImplementedCeWriteRecordProps2(
+	HANDLE hDbase,
+	CEOID oidRecord,
+	WORD cPropID,
+	CEPROPVAL* rgPropVal);
+
+CEOID _NotImplementedCeSeekDatabase2(
+	HANDLE hDatabase,
+	DWORD dwSeekType,
+	DWORD dwValue,
+	LPDWORD lpdwIndex);
+
+BOOL _NotImplementedCeDeleteRecord2(
+	HANDLE hDatabase,
+	CEOID oidRecord);
+
+BOOL _NotImplementedCeSetDatabaseInfo2(
+	CEOID oidDbase,
+	CEDBASEINFO* pNewInfo);
 
 
 #endif /* __rapi2_api_h__ */
