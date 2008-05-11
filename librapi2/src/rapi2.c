@@ -101,11 +101,11 @@ struct rapi_ops_s rapi2_ops =
          * CeRapiInvoke stuff
         */
 #ifndef SWIG
-        NULL,                             /* IRAPIStream_Release */
-        NULL,                             /* IRAPIStream_Read */
-        NULL,                             /* IRAPIStream_Write */
+        _NotImplementedIRAPIStream_Release2, /* IRAPIStream_Release */
+        _NotImplementedIRAPIStream_Read2,  /* IRAPIStream_Read */
+        _NotImplementedIRAPIStream_Write2, /* IRAPIStream_Write */
         /* IRAPIStream_GetRawSocket, */   /* IRAPIStream_GetRawSocket */
-        NULL,                             /* CeRapiInvoke */
-        NULL,                             /* CeRapiInvokeA */
+        _NotImplementedCeRapiInvoke2,     /* CeRapiInvoke */
+        _NotImplementedCeRapiInvokeA2,    /* CeRapiInvokeA */
 #endif /* SWIG */
 };

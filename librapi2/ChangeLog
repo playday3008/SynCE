@@ -1,3 +1,7 @@
+2008-05-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* remaining dummy functions for unimplemented calls
+
 2008-05-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* introduced dummy functions for most calls represented in the

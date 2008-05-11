@@ -98,3 +98,4 @@ List of RAPI command codes:
 [ ] 5b CeQueryInstructionSet
 [i] 5c CeGetDiskFreespaceEx
 
+[d] ?? CeRapiInvoke

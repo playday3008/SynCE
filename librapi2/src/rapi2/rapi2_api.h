@@ -322,5 +322,46 @@ BOOL _NotImplementedCeSetDatabaseInfo2(
 	CEOID oidDbase,
 	CEDBASEINFO* pNewInfo);
 
+/*
+ * CeRapiInvoke stuff
+ */
+
+#ifndef SWIG
+
+ULONG _NotImplementedIRAPIStream_Release2(IRAPIStream* stream);
+
+HRESULT _NotImplementedIRAPIStream_Read2(
+        IRAPIStream* stream,
+        void *pv,
+        ULONG cb,
+        ULONG *pcbRead);
+
+HRESULT _NotImplementedIRAPIStream_Write2(
+        IRAPIStream* stream,
+        void const *pv,
+        ULONG cb,
+        ULONG *pcbWritten);
+
+HRESULT _NotImplementedCeRapiInvoke2(
+        LPCWSTR pDllPath,
+        LPCWSTR pFunctionName,
+        DWORD cbInput,
+        const BYTE *pInput,
+        DWORD *pcbOutput,
+        BYTE **ppOutput,
+        IRAPIStream **ppIRAPIStream,
+        DWORD dwReserved);
+
+HRESULT _NotImplementedCeRapiInvokeA2(
+        LPCSTR pDllPath,
+        LPCSTR pFunctionName,
+        DWORD cbInput,
+        const BYTE *pInput,
+        DWORD *pcbOutput,
+        BYTE **ppOutput,
+        IRAPIStream **ppIRAPIStream,
+        DWORD dwReserved);
+
+#endif /* SWIG */
 
 #endif /* __rapi2_api_h__ */
