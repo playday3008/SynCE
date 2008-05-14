@@ -2211,6 +2211,16 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
 	other_storage = TRUE;
       }
 
+      if (strcmp(split[1], "SD-MMCard") == 0) {
+	/* get size for this */
+	other_storage = TRUE;
+      }
+
+      if (strcmp(split[1], "CF-Card") == 0) {
+	/* get size for this */
+	other_storage = TRUE;
+      }
+
       if (strcmp(split[1], NAME_ROM_STORAGE) == 0) {
 	/* get size for this */
 	other_storage = TRUE;
