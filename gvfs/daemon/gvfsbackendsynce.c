@@ -2180,7 +2180,10 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
 
   GError *error = NULL;
   STORE_INFORMATION store;
+  DWORD attributes;
   gchar *location = NULL;
+  gchar *root_dir;
+  LPWSTR wide_root_dir = NULL;
   gint index;
   gboolean other_storage = FALSE;
 
@@ -2202,39 +2205,29 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
   g_file_info_set_attribute_boolean (info, G_FILE_ATTRIBUTE_FILESYSTEM_READONLY, FALSE);
   g_file_info_set_attribute_uint32 (info, G_FILE_ATTRIBUTE_FILESYSTEM_USE_PREVIEW, G_FILESYSTEM_PREVIEW_TYPE_NEVER);
 
+  MUTEX_LOCK (synce_backend->mutex);
+  rapi_connection_select(synce_backend->rapi_conn);
+
   if (index == INDEX_FILESYSTEM) {
     gchar **split = g_strsplit(location, "\\", 0);
 
     if (split && split[0] && split[1]) {
-      if (strcmp(split[1], NAME_SD_CARD) == 0) {
-	/* get size for this */
-	other_storage = TRUE;
-      }
 
-      if (strcmp(split[1], "SD-MMCard") == 0) {
-	/* get size for this */
-	other_storage = TRUE;
-      }
+      root_dir = g_strdup_printf("\\%s", split[1]);
+      wide_root_dir = wstr_from_current(root_dir);
+      attributes = CeGetFileAttributes(wide_root_dir);
+      wstr_free_string(wide_root_dir);
+      g_free(root_dir);
 
-      if (strcmp(split[1], "CF-Card") == 0) {
+      if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY))
 	/* get size for this */
 	other_storage = TRUE;
-      }
-
-      if (strcmp(split[1], NAME_ROM_STORAGE) == 0) {
-	/* get size for this */
-	other_storage = TRUE;
-      }
 
     }
     g_strfreev(split);
   }
 
   if (!other_storage) {
-
-    MUTEX_LOCK (synce_backend->mutex);
-    rapi_connection_select(synce_backend->rapi_conn);
-
     if (CeGetStoreInformation(&store)) {
       g_file_info_set_attribute_uint64 (info,
 					G_FILE_ATTRIBUTE_FILESYSTEM_SIZE,
@@ -2249,8 +2242,9 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
       g_error_free(error);
     }
 
-    MUTEX_UNLOCK (synce_backend->mutex);
   }
+
+  MUTEX_UNLOCK (synce_backend->mutex);
 
   g_vfs_job_succeeded (G_VFS_JOB (job));
  exit:
