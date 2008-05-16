@@ -116,7 +116,7 @@ class FileSyncConfig(ConfigObject):
 				}
 				
 		self.cfg = { "BaseFilePath" : "~/PDAFiles",
-		             "Disable" : 1,
+		             "Disable" : 0,
 			     "LocalUpdateFreq" : 10,
 			     "ExtraDeleteDelay" : 0,
 			     "ObjectReportTimeout" : 8
@@ -211,7 +211,7 @@ class GlobalConfig(ConfigObject):
 				  "EnableDTPT" : self.validate_EnableDTPT }
 				  
 		self.cfg = { "SlowSyncDisable" : 0,
-		             "AuthMethod"      : "INTERNAL_CLI",
+		             "AuthMethod"      : "INTERNAL_GUI",
 			     "AppendDefaultTimezone" : 0,
 			     "OpensyncXMLFormat" : DefaultFormat,
 			     "FlushIDB" : 1,

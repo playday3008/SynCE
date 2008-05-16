@@ -12,9 +12,10 @@
 			debugging - when using sync-engine in anger this should always
 			be set to 0.
 		-->
-		<SlowSyncDisable>0</SlowSyncDisable>
 		
-		<!-- 
+		<!-- <SlowSyncDisable>0</SlowSyncDisable> -->
+		 
+		<!--
 			AuthMethod
 			This can be one of the following:
 				- INTERNAL_GUI uses internal GUI auth prog
@@ -28,10 +29,12 @@
 			       
 			If this element is not specified, the default will be
 			INTERNAL_CLI
-	        -->
-		<AuthMethod>INTERNAL_GUI</AuthMethod>
+		-->
+		
+		<!-- <AuthMethod>INTERNAL_GUI</AuthMethod> -->
 		
 		<!--
+		
 			AppendDefaultTimezone
 			When this is 1, SyncEngine will ensure that the default timezone
 			specifier is always exported to the host, if:
@@ -39,15 +42,16 @@
 				- the device does not send a timezone specifier with the event
 
 			Setting it to zero disables this completely.
-		    
+
 			NOT FULLY IMPLEMENTED YET
 		-->
-		<AppendDefaultTimezone>0</AppendDefaultTimezone>
 		
+		<!-- <AppendDefaultTimezone>0</AppendDefaultTimezone> -->
+
 		<!--
 			OpensyncXMLFormat specifies the type of format conversion to use 
 			on the data from the handheld. It is one of the following:
-		    
+
 				- NONE performs no format conversion and exports the data
 				in AirSync/XML (Use this for debugging or with the
 				OpenSync AirSync format plugin only)
@@ -60,8 +64,10 @@
 				be deprecated and subsequently removed once OpenSync 0.3
 				formats go mainstream at which point OS30 will become the
 				default	  
+
 		-->
-		<OpensyncXMLFormat>OS20</OpensyncXMLFormat>
+		
+		<!-- <OpensyncXMLFormat>OS20</OpensyncXMLFormat> -->
 		
 		<!--
 			FlushIDB
@@ -70,24 +76,37 @@
 			to do it.
 
 			Default is enabled
+			
 		-->
-		<FlushIDB>1</FlushIDB>
+		
+		<!-- <FlushIDB>1</FlushIDB> -->
 
+		<!--
+	
+			EnableDTPT
+			Global enable for DTPT on the device. If set to 1 (default), the DTPT server is
+			enabled. Set to 0 to disable
+			
+		-->
+		
+		<!-- <EnableDTPT>1</EnableDTPT> -->
+		
 	</Global>
 
-	<!--
-		Autosync
-		Control device-triggered synchronization.
-	-->
-	<Autosync>
 		<!--
-			AutoSyncCommand
-			The command run by SyncEngine in response to a device-triggered
-			synchronization. It can be set to any executable program specified
-			by the user. The default, in the absence of this element, is an
-			empty path - nothing is run.
+			Autosync
+			Control device-triggered synchronization.
 		-->
-		<AutoSyncCommand>xterm -e msynctool --sync wm5sync</AutoSyncCommand>
+		<Autosync>
+			<!--
+				AutoSyncCommand
+				The command run by SyncEngine in response to a device-triggered
+				synchronization. It can be set to any executable program specified
+				by the user. The default, in the absence of this element, is an
+				empty path - nothing is run.
+			-->
+			
+			<!-- <AutoSyncCommand>xterm -e msynctool --sync wm5sync</AutoSyncCommand> -->
 
 		<!--
 			Disable
@@ -97,15 +116,16 @@
 			then hte executable specified in AutoSyncCommand will be run when the handheld
 			triggers an automatic synchronization.
 		-->
-		<Disable>1</Disable>
+		
+		<!-- <Disable>1</Disable> -->
 
-	</Autosync>
+		</Autosync>
 
-	<!--
-		FileSync
-		This controls file synchronization. Note that file synchronization is independent from
-		PIM data synchronization, and is entirely within SyncEngine (does not use OpenSync).
-	-->
+			<!--
+				FileSync
+				This controls file synchronization. Note that file synchronization is independent from
+				PIM data synchronization, and is entirely within SyncEngine (does not use OpenSync).
+			-->
 	<FileSync>
 		<!--
 			BaseFilePath
@@ -115,14 +135,16 @@
 			the path specified in the partnership binding is relative. If the partnership
 			in the partnership binding is absolute, it takes precedence.
 		-->
-		<BaseFilePath>~/PDAFiles</BaseFilePath>
+		
+		<!-- <BaseFilePath>~/PDAFiles</BaseFilePath> -->
 
 		<!--
 			Disable
 			Enables or disables file synchronization. Can be '1' or '0', default is '1'.
 			'1' disables file synchronization. '0' enables file synchronization.
 		-->
-		<Disable>0</Disable>
+		
+		<!-- <Disable>0</Disable> -->
 
 		<!--
 			LocalUpdateFreq
@@ -132,7 +154,8 @@
 			Increasing it will increase the delay between local files being written and
 			them being reflected on the handheld.
 		-->
-		<LocalUpdateFreq>10</LocalUpdateFreq>
+		
+		<!-- <LocalUpdateFreq>10</LocalUpdateFreq> -->
 
 		<!--
 			ExtraDeleteDelay
@@ -140,7 +163,8 @@
 			the delete occurring. Default is '0' and it should not be necessary to change
 			this value unless you have a slow handheld.
 		-->
-		<ExtraDeleteDelay>0</ExtraDeleteDelay>
+		
+		<!-- <ExtraDeleteDelay>0</ExtraDeleteDelay> -->
 
 		<!--
 			ObjectReportTimeout
@@ -148,7 +172,9 @@
 			list report. Default is '8' and it should not be necessary to change this value
 			unless you have a slow handheld. OK to increase this, but should not be decreased.
 		-->
-		<ObjectReportTimeout>8</ObjectReportTimeout>
+		
+		<!-- <ObjectReportTimeout>8</ObjectReportTimeout> -->
 
 	</FileSync>
+	
 </syncengine-config>

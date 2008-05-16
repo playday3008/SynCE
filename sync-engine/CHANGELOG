@@ -968,6 +968,14 @@ in tasks and events when using Opensync 0.3x.
 07/05/2008 - 140000 Mark Ellis
 ------------------------------
 
-Clarify handling of WM6 authorisation on device from user perspective, ie. output 
-a suitable message instead of 'auth failed'
+Clarify handling of WM6 authorisation on device from user perspective, ie.
+output a suitable message instead of 'auth failed'
+
+16/05/2008 - 225000 Dr J A Gow
+------------------------------
+
+Removed hard defaults from config.xml, leaving them commented in. Checked and
+updated the defaults in the code to match the current file defaults. Modifed
+a line in CHANGELOG to have a length less than 80chrs.
+
 
