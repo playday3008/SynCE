@@ -164,7 +164,7 @@ bool kio_rapipProtocol::list_matching_files(QString &path)
                 entry = find_data + i;
 
                 atom.m_uds = KIO::UDS_NAME;
-                atom.m_str = QString::fromUcs2(entry->cFileName).ascii();
+                atom.m_str = QString::fromUcs2(entry->cFileName);
                 udsEntry.append( atom );
 
                 atom.m_uds = KIO::UDS_SIZE;

@@ -1,3 +1,9 @@
+2008-05-18  Mark Ellis <mark@mpellis.org.uk>
+
+	* rapip.cpp: to not attempt to ascii() filename in 
+	  list_matching_files, for non-ascii character sets, thanks
+	  Yakov Shereshevsky
+
 2008-04-23  Mark Ellis <mark@mpellis.org.uk>
 
 	* update build to enable use of automake 1.10
