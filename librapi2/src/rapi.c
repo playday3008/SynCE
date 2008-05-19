@@ -53,17 +53,9 @@ struct rapi_ops_s rapi_ops =
         &_CeFindFirstDatabase,            /* CeFindFirstDatabase */
         &_CeFindNextDatabase,             /* CeFindNextDatabase */
         &_CeOpenDatabase,                 /* CeOpenDatabase */
-#if SIZEOF_VOID_P == 4
         &_CeReadRecordProps,              /* CeReadRecordProps */
-#else
-        &_NotImplementedCeReadRecordProps, /* CeReadRecordProps */
-#endif
         &_CeSeekDatabase,                 /* CeSeekDatabase */
-#if SIZEOF_VOID_P == 4
         &_CeWriteRecordProps,             /* CeWriteRecordProps */
-#else
-        &_NotImplementedCeWriteRecordProps, /* CeWriteRecordProps */
-#endif
         &_CeDeleteRecord,                 /* CeDeleteRecord */
         &_CeSetDatabaseInfo,              /* CeSetDatabaseInfo */
 #endif /* SWIG */

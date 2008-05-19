@@ -1,3 +1,8 @@
+2008-05-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* rewrite rapi 1 CeReadRecordProps() and CeWriteRecordProps() to
+	  account for non-32 bit host pointers
+
 2008-05-11  Mark Ellis  <mark@mpellis.org.uk>
 
 	* remaining dummy functions for unimplemented calls

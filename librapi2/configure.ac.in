@@ -26,8 +26,6 @@ CFLAGS=""
 AC_C_CONST
 CFLAGS="$saved_CFLAGS"
 
-AC_CHECK_SIZEOF(void *)
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC

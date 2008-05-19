@@ -3,8 +3,6 @@ $Id$
 TODO for librapi2
 =================
 
-o Fix bug in CeWriteRecordProps
-
 o Implement more of RAPI
 
 o Make config use synce_log and not perror.
@@ -24,5 +22,6 @@ o Improve synce-install-cab script:
 
 o Make the RAPI commands timeout of the connection is lost to the device
 
-o Implement dummy functions for unimplemented calls to orevent segfaults,
-  particularly when implemented for one rapi version and not the other
+o In rapi 1 CeReadRecordProps() and CeWriteRecordProps(), figure out how
+  to deal with CEVT_R8, and make use of rgPropID in CeReadRecordProps() 
+

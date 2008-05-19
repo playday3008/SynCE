@@ -161,14 +161,6 @@ HANDLE _CeOpenDatabase(
         DWORD dwFlags,
         HWND hwndNotify);
 
-CEOID _NotImplementedCeReadRecordProps(
-        HANDLE hDbase,
-        DWORD dwFlags,
-        LPWORD lpcPropID,
-        CEPROPID *rgPropID,
-        LPBYTE *lplpBuffer,
-        LPDWORD lpcbBuffer);
-
 CEOID _CeReadRecordProps(
         HANDLE hDbase,
         DWORD dwFlags,
@@ -182,12 +174,6 @@ CEOID _CeSeekDatabase(
         DWORD dwSeekType,
         DWORD dwValue,
         LPDWORD lpdwIndex);
-
-CEOID _NotImplementedCeWriteRecordProps(
-        HANDLE hDbase,
-        CEOID oidRecord,
-        WORD cPropID,
-        CEPROPVAL *rgPropVal);
 
 CEOID _CeWriteRecordProps(
         HANDLE hDbase,

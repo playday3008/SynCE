@@ -97,7 +97,8 @@ int handle_property(PCEPROPVAL value)
 			break;
 	}
 	printf("=");
-	
+
+	char *tmp_str = NULL;
 	unsigned type = value->propid & 0xffff;
 	switch (type)
 	{
@@ -108,7 +109,9 @@ int handle_property(PCEPROPVAL value)
 		case CEVT_BOOL: printf("0x%08x/%u",  value->val.boolVal, value->val.boolVal); break;
 		
 		case CEVT_LPWSTR:
-			printf("\"%s\"", from_unicode(value->val.lpwstr));
+			tmp_str = wstr_to_ascii(value->val.lpwstr);
+			printf("\"%s\"", tmp_str);
+			free(tmp_str);
 			break;
 
 		case CEVT_FILETIME:
@@ -172,11 +175,14 @@ int handle_record(PCEPROPVAL values, DWORD property_count)
 int handle_database(HANDLE db, DWORD num_records)
 {
 #define MYBUFSIZE  (16*1024)
-	PCEPROPVAL values = (PCEPROPVAL)malloc(MYBUFSIZE);
-	DWORD buffer_size = MYBUFSIZE;
+	PCEPROPVAL values = NULL;
+	DWORD buffer_size = NULL;
 
 	for (unsigned i = 0; i < num_records; i++)
 	{
+		values = (PCEPROPVAL)malloc(MYBUFSIZE);
+		buffer_size = MYBUFSIZE;
+
 		WORD property_count;
 		CEOID oid;
 
@@ -197,6 +203,7 @@ int handle_database(HANDLE db, DWORD num_records)
 			printf("%02x %c\n", c, isprint(c) ? c : '.');
 		}
 	
+		CeRapiFreeBuffer(values);
 		
 	} // for every row
 
