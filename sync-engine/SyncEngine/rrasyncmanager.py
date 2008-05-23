@@ -375,7 +375,7 @@ class FileProcessor(Processor):
 		path = os.path.join(os.path.expanduser(self.CfgItem.cfg["BaseFilePath"]),
 		                    os.path.expanduser(pship.QueryConfig("/syncpartner-config/General/LocalFilePath[position() = 1]","0")))
 		
-		self.fdb = FileDB(thread.config.config_dir,\
+		self.fdb = FileDB(thread.config.config_user_dir,\
 		                  path,\
 				  pship,\
 				  self.CfgItem.cfg["ExtraDeleteDelay"])

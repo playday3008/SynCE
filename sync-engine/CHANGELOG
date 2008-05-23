@@ -978,4 +978,12 @@ Removed hard defaults from config.xml, leaving them commented in. Checked and
 updated the defaults in the code to match the current file defaults. Modifed
 a line in CHANGELOG to have a length less than 80chrs.
 
+23/05/2008 - 162100 Dr J A Gow
+------------------------------
+
+Applied patch from Mark Ellis to allow processing of config files in system
+(etc), user (.synce) locations, after removing some redundancy.
+Renamed config.xml to syncengine.conf.xml (including the template file in the
+source tree).
+
 

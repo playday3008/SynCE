@@ -16,5 +16,6 @@ setup(
     package_data = {
         '': ['*.xsl'],
     },
+    data_files=[('share/doc/sync-engine', ['config/config.xml'])]
 )
 

@@ -225,7 +225,7 @@ class PartnershipManager:
 		
 		self.logger.info("GetHostBindings: reading existing host bindings")
 		
-		psdir = os.path.join(self.engine.config.config_dir,"partnerships")
+		psdir = os.path.join(self.engine.config.config_user_dir,"partnerships")
 		bindings = []
 		
 		# get all items in the dir.
@@ -274,7 +274,7 @@ class PartnershipManager:
 		# we need to load the config entries for a partnership from its
 		# bindings
 		
-		psdir = os.path.join(self.engine.config.config_dir,"partnerships")
+		psdir = os.path.join(self.engine.config.config_user_dir,"partnerships")
 		pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
 		
 		s = ""
@@ -310,7 +310,7 @@ class PartnershipManager:
 		# we need to load the config entries for a partnership from its
 		# bindings
 		
-		psdir = os.path.join(self.engine.config.config_dir,"partnerships")
+		psdir = os.path.join(self.engine.config.config_user_dir,"partnerships")
 		pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
 
 		if os.path.isdir(pspath):
@@ -661,7 +661,7 @@ class Partnership:
 		self.devicesyncitems = []	# formerly sync_items
 		self.deviceitemdbs = {}		# item databases
 
-		self.psdir       = os.path.join(config.config_dir,"partnerships")
+		self.psdir       = os.path.join(config.config_user_dir,"partnerships")
 		self.pshippath   = os.path.join(self.psdir, "PS" + "-" + str(self.info.id) + "-" + str(self.info.guid))
 		self.configpath  = os.path.join(self.pshippath, "psconfig.xml")
 		self.infopath    = os.path.join(self.pshippath, "psinfo.dat")

@@ -106,7 +106,7 @@
 				empty path - nothing is run.
 			-->
 			
-			<!-- <AutoSyncCommand>xterm -e msynctool --sync wm5sync</AutoSyncCommand> -->
+			<!-- <AutoSyncCommand>xterm -e (your_sync_command e.g. msynctool)</AutoSyncCommand> -->
 
 		<!--
 			Disable

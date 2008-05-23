@@ -22,6 +22,7 @@
 import cPickle as pickle
 import os
 import os.path
+import sys
 import getopt
 import string
 import logging
@@ -283,16 +284,14 @@ class Config:
 		
 		# check if we have a config
 
-		self.config_dir   = os.path.join(os.path.expanduser("~"), ".synce")
-		self.config_path  = os.path.join(self.config_dir, "config.xml")
-		
-		if not os.path.exists(self.config_path):
-			if not os.path.isdir(self.config_dir):
-				os.mkdir(self.config_dir)
-			oldconf = os.path.join(self.sepath,"config/config.xml")
-			shutil.copy(oldconf, self.config_path)
+		self.config_user_dir   = os.path.join(os.path.expanduser("~"), ".synce")
+		self.config_user_path  = os.path.join(self.config_user_dir, "syncengine.conf.xml")
 
-		
+		if sys.prefix == "/usr":
+			self.config_system_path  = os.path.join("/etc", "syncengine.conf.xml")
+		else:
+			self.config_system_path  = os.path.join(sys.prefix, "etc", "syncengine.conf.xml")
+
 		self.logfile = None
 	
 		self.runonce = False
@@ -311,7 +310,7 @@ class Config:
 			if opt in ("-o","--once"):
 				self.runonce = True
 			if opt in ("-c","--config"):
-				self.config_dir = os.path.join(arg,".synce")
+				self.config_user_dir = os.path.join(arg,".synce")
 			if opt in ("-d","--detached"):
 				self.fork = True
 			if opt in ("-l","--logfile"):
@@ -324,25 +323,37 @@ class Config:
 					
 	
 	#
-	# UpdateConfig updates information that may be changed between connections. It is re-read
+	# UpdateConfig updates information that may be changed between connections. It is called
 	# at the start of each connectiomn
 
 	def UpdateConfig(self):
-	
+		self._ScanConfigFile(self.config_system_path)
+		self._ScanConfigFile(self.config_user_path)
+
+	#
+	# _ScanConfigFile
+	#
+	# Attempts to read a config file from a specified location.
+
+	def _ScanConfigFile(self,path):
 		try:
-			f = open(self.config_path, "rb")
+			f = open(self.path, "rb")
 		except:
-			self.logger.info("UpdateConfig - unable to open config file - using defaults")
+			self.logger.info("UpdateConfig - unable to open system config file - using defaults")
 			return False
 		try:
 			cf = f.read()
 			f.close()
 		except:
-			self.logger.info("UpdateConfig - could not read config file - using defaults")
+			self.logger.info("UpdateConfig - could not read system config file - using defaults")
 			return False
-		
-		confdoc = libxml2.parseDoc(cf)
-		
+
+		try:
+			confdoc = libxml2.parseDoc(cf)
+		except libxml2.parserError:
+			self.logger.info("UpdateConfig - error parsing system config file - using defaults")
+			return False
+
 		config = xml2util.FindChildNode(confdoc,"syncengine-config")
 		if config is not None:
 			self._ReadConfElements(config,"FileSync",self.config_FileSync)
