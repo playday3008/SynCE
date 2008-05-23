@@ -132,7 +132,7 @@ class RRAError:
 cdef bool _CB_TypesCallback(RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count, uint32_t * ids, context):
 	ida=[]
 	cdef bool rc
-	for i from 0 <= i < count:
+	for 0 <= i < count:
 		ida.append(ids[i])
 	rc=context.CB_TypeCallback(<RRA_SyncMgrTypeEvent> event,type,ida)
 	return rc
@@ -192,9 +192,9 @@ cdef class RRASession:
 	# Event processing
 	#
 
-	def SubscribeObjectEvents(self,type):
+	def SubscribeObjectEvents(self,type_id):
 		if self.connected != 0:
-			rra_syncmgr_subscribe(self.instance, type, _CB_TypesCallback, self)
+			rra_syncmgr_subscribe(self.instance, type_id, _CB_TypesCallback, self)
 			return 0
 		return -1
 
@@ -260,7 +260,7 @@ cdef class RRASession:
 		c_oids = <uint32_t *>malloc(sizeof(uint32_t)*c_cnt)
 		rc=0
 		if c_oids != NULL:
-			for i from 0 <= i < c_cnt:
+			for 0 <= i < c_cnt:
 				c_oids[i] = oids[i]
 			rc= rra_syncmgr_get_multiple_objects(self.instance,type_id, c_cnt, c_oids,_CB_WriterCallback, self)
 			free(c_oids)
@@ -291,7 +291,7 @@ cdef class RRASession:
 				rc = rra_syncmgr_put_multiple_objects(self.instance,type_id,c_oidcount,
 								      c_oids,c_newoids,flags,_CB_ReaderCallback,self)
 				if rc == True:
-					for i from 0 <= i < c_oidcount:
+					for 0 <= i < c_oidcount:
 						newoid_array.append(c_newoids[i])
 			free(c_oids)
 		return rc
@@ -312,7 +312,7 @@ cdef class RRASession:
 	# (to be overloaded by user)
 	#
 
-	def CB_TypeCallback(self, event, type, idarray):
+	def CB_TypeCallback(self, event, type_id, idarray):
 		return False
 		
 	def CB_ObjectWriterCallback(self,type_id, obj_id, data):

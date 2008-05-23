@@ -1,3 +1,9 @@
+2008-05-23  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* python/pyrra.pyx: Converted x < i < y for loops to the new-style
+	syntax and fixed a build-error of using the word "type" as a variable
+	name -- this is a reserved Python keyword. (See Debian #482258)
+
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* man/rra-appointment-from-vevent.1:
