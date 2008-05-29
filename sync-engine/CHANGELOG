@@ -916,7 +916,6 @@ without clobbering server partnerships.
 Fixed minor problem with exceptions being generated in file sync code
 when an item has been removed on both host and remote before syncing.
 
-
 05/04/2008 - 130900 Dr J A Gow
 ------------------------------
 
@@ -941,7 +940,6 @@ entry was omitted.
 
 Code cleanups in airsync.py, no functionality changes.
 
-
 16/04/2008 - 170200 Mark Ellis
 ------------------------------
 
@@ -951,7 +949,6 @@ yet exist.
 
 Added support for devices connected via synce-hal. Odccm support is unaffected,
 no configuration is required.
-
 
 23/04/2008 - 200000 Mark Ellis
 ------------------------------
@@ -985,5 +982,12 @@ Applied patch from Mark Ellis to allow processing of config files in system
 (etc), user (.synce) locations, after removing some redundancy.
 Renamed config.xml to syncengine.conf.xml (including the template file in the
 source tree).
+
+29/05/2008 - 181900 Dr J A Gow
+------------------------------
+
+Fixed typo in _ProcessAuth preventing authorization from working correctly.
+
+
 
 

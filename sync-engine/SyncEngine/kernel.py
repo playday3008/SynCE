@@ -374,7 +374,7 @@ class SyncEngine(dbus.service.Object):
 			# if we suddenly need auth, first shut down all threads if they
 			# are running
 		
-			if self.partnerships != None:
+			if self.PshipManager.GetCurrentPartnership() != None:
 				self.OnDisconnect()
 
 			result = auth.Authorize(self.devicePath,self.device,self.config.config_Global)
