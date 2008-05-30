@@ -988,6 +988,12 @@ source tree).
 
 Fixed typo in _ProcessAuth preventing authorization from working correctly.
 
+30/05/2008 - 113600 Dr J A Gow
+------------------------------
+
+Minor fix to debug messages in authorization code for clarity.
+
+
 
 
 

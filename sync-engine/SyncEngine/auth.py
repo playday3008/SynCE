@@ -106,7 +106,7 @@ def Authorize(devpath,device,config):
 		else:
 			rc = 3
 	else:
-		print "auth: auth prog %s does not exist" % prog
+		print "auth: auth prog %s does not exist" % clist[0]
 		rc = 3
 
 	return rc
