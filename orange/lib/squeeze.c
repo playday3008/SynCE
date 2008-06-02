@@ -211,7 +211,7 @@ static bool squeeze_by_magic(/*{{{*/
 #if VERBOSE_MAGIC
   synce_trace("%s: %s", filename, description);
 #endif
-  if (strstr(description, "Microsoft Cabinet file"))
+  if (strstr(description, "Microsoft Cabinet"))
   {
     CabInfo cab_info;
     if (orange_get_installable_cab_info(filename, &cab_info))
