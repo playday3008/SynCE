@@ -1,16 +1,28 @@
-This is a very early implementation of a gvfs backend for SynCE.
+This is an implementation of a gvfs backend for SynCE. Gvfs is a
+replacement for gnome-vfs, allowing applications to access a
+variety of filesystems in userspace, in this case a Windows
+Mobile device via SynCE.
 
-Gvfs is still new, and there does not yet appear to be an easy way
-of building 3rd party, 'out of tree' backends. To build this
-package, you will therefore need a built source tree of gvfs
-available, and pass --with-gvfs-source=<path-to-source> to this
-packages configure script.
+Most of the common operations are now implemented.
 
 
-Currently only the following operations are implemented.
+Building
+--------
+Gvfs is still new, and there is not yet an easy way of building
+3rd party, 'out of tree' backends. A number of source files from
+the main gvfs tree are required. There are two ways to build this
+package.
 
-mounting
-unmounting
-file info queries
+1) Have a built source tree of gvfs available, and pass 
+   --with-gvfs-source=<path-to-source> to this package's configure
+   script.
 
-This software WILL crash, all bug reports are welcome.
+2) Have a source tree of gvfs available. In the make-dist
+   subdirectory, edit make-dist.sh and change @with_gvfs_source@
+   to the root of this tree. Run make-dist.sh, which will copy the
+   required files and change build files. At this point you can
+   build normally or 'make dist', for example.
+
+
+
+This software may well crash, all bug reports are welcome.

@@ -1,3 +1,9 @@
+2008-06-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* added po/ChangeLog
+	* added po to root Makefile.am
+	* added hack to build self contained source package
+
 2008-05-14  Mark Ellis <mark@mpellis.org.uk>
 
 	* check for alternative media card names
