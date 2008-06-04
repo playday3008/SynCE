@@ -1,5 +1,10 @@
 2008-04-15	Guido Diepen	<guido@guidodiepen.nl>
 	
+	* Update the program to work with python-qt4.4.0 and greater. Just
+	work-around the issues with autoconnecting of slots/signals
+
+2008-04-15	Guido Diepen	<guido@guidodiepen.nl>
+	
 	* When the application is minimized, only show tray balloon message in in
 	case of no bound partnerships. When application is shown, notify user with
 	a dialog box (this will also be shown when app was iconified and gets

@@ -49,6 +49,17 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.setupUi(self)
         dbus.mainloop.qt.DBusQtMainLoop
 
+        
+        #For some reason the autoconnecting is having some issues with pyqt4 >= 4.4.0.
+        #Just to make sure we don't run into issues, we manually connect all signals and slots
+        self.connect( self.toolButtonDeviceIsLocked  , SIGNAL("clicked()"),   self.on_toolButtonDeviceIsLocked_clicked_slot   )
+        self.connect( self.pushButton_InstallCAB     , SIGNAL("clicked()"),   self.on_pushButton_InstallCAB_clicked_slot   )
+        self.connect( self.pushButton_Uninstall      , SIGNAL("clicked()"),   self.on_pushButton_Uninstall_clicked_slot   )
+        self.connect( self.pushButton_Refresh        , SIGNAL("clicked()"),   self.on_pushButton_Refresh_clicked_slot   )
+        self.connect( self.pushButton_Quit           , SIGNAL("clicked()"),   self.on_pushButton_Quit_clicked_slot   )
+        self.connect( self.button_add_pship          , SIGNAL("clicked()"),   self.on_button_add_pship_clicked_slot   )
+        self.connect( self.button_delete_pship       , SIGNAL("clicked()"),   self.on_button_delete_pship_clicked_slot   )
+
         self.session_bus = dbus.SessionBus()
         self.guiDbus = synceKPM.gui.guiDbus.GuiDbus( self.session_bus, self )
 
@@ -287,7 +298,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
             self.batteryStatus.setValue( 0 ) 
 
     @pyqtSignature("")
-    def on_toolButtonDeviceIsLocked_clicked(self):
+    def on_toolButtonDeviceIsLocked_clicked_slot(self):
         qs_text, pressedOK = QInputDialog.getText(self,"Locked device", "Please provide password:", QLineEdit.Password, "")
         u_text = unicode(qs_text)
         if pressedOK:
@@ -295,7 +306,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
 
     @pyqtSignature("")
-    def on_pushButton_InstallCAB_clicked(self):
+    def on_pushButton_InstallCAB_clicked_slot(self):
         self.installWindow.move(self.x() + self.width()/2 -  self.installWindow.width()/2 , self.y() + self.height()/2 - self.installWindow.height()/2)
         self.installWindow.progressWindow.move(self.x() + self.width()/2 -  self.installWindow.progressWindow.width()/2 , self.y() + self.height()/2 - self.installWindow.progressWindow.height()/2)
         self.installWindow.show()
@@ -305,7 +316,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
         
     @pyqtSignature("")
-    def on_pushButton_Uninstall_clicked(self):
+    def on_pushButton_Uninstall_clicked_slot(self):
         #Determine the program
         currentItem = self.listInstalledPrograms.currentItem()
 
@@ -363,7 +374,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
 
     @pyqtSignature("")
-    def on_pushButton_Refresh_clicked(self):
+    def on_pushButton_Refresh_clicked_slot(self):
         self.guiDbus.triggerListInstalledPrograms()
        
     def quitApplication(self):
@@ -372,7 +383,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
 
     @pyqtSignature("")
-    def on_pushButton_Quit_clicked(self):
+    def on_pushButton_Quit_clicked_slot(self):
         self.quitApplication()
 
 
@@ -425,13 +436,13 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
     
     
     @pyqtSignature("")
-    def on_button_add_pship_clicked(self):
+    def on_button_add_pship_clicked_slot(self):
         self.createPshipWindow.move(self.x() + self.width()/2 -  self.createPshipWindow.width()/2 , self.y() + self.height()/2 - self.createPshipWindow.height()/2)
         self.createPshipWindow.show()
 
        
     @pyqtSignature("")
-    def on_button_delete_pship_clicked(self):
+    def on_button_delete_pship_clicked_slot(self):
 
         #Only delete things if user selected something
         if len( self.viewPartnerships.selectedIndexes() ) > 0:
@@ -568,6 +579,6 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         reply = QMessageBox.information(self,"No active partnerships found", "No active partnerships have been found with the device. Would you like to create a partnership right now?", QMessageBox.Yes, QMessageBox.No|QMessageBox.Default|QMessageBox.Escape) 
         if reply == QMessageBox.Yes:
             self.tabWidget.setCurrentIndex(2)
-            self.on_button_add_pship_clicked()
+            self.on_button_add_pship_clicked_slot()
 
 

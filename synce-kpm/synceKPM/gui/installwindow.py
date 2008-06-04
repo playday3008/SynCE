@@ -39,6 +39,12 @@ class installwindow(QtGui.QWidget, Ui_synce_kpm_installwindow):
     def __init__(self, dbusGui):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)
+
+        self.connect( self.openFileChooserButton  , SIGNAL("clicked()"),   self.on_openFileChooserButton_clicked_slot   )
+        self.connect( self.cancelButton  , SIGNAL("clicked()"),   self.on_cancelButton_clicked_slot   )
+        self.connect( self.okButton  , SIGNAL("clicked()"),   self.on_okButton_clicked_slot   )
+
+
         self.deviceListRoot = [] 
         self.dbusGui = dbusGui
         self.iconFolder = QtGui.QIcon( "%s/folder.png"%resource_filename('synceKPM', 'data'))
@@ -55,7 +61,7 @@ class installwindow(QtGui.QWidget, Ui_synce_kpm_installwindow):
     
     
     @pyqtSignature("")
-    def on_openFileChooserButton_clicked(self):
+    def on_openFileChooserButton_clicked_slot(self):
         dir = "."
         formats = [ "*.cab"] 
         fname = unicode(QFileDialog.getOpenFileName(self, "SynCE-KPM - Choose CAB", dir, "Microsoft Cabinet files (%s)"%" ".join(formats)))
@@ -67,12 +73,12 @@ class installwindow(QtGui.QWidget, Ui_synce_kpm_installwindow):
 
 
     @pyqtSignature("")
-    def on_cancelButton_clicked(self):
+    def on_cancelButton_clicked_slot(self):
         self.hide()
 
     
     @pyqtSignature("")
-    def on_okButton_clicked(self):
+    def on_okButton_clicked_slot(self):
         self.hide()
         self.progressWindow.show()
         self.progressWindow.labelProgress.setText("Copying <b>%s</b> to the device:"%os.path.basename(unicode(self.localCabFile.text())))

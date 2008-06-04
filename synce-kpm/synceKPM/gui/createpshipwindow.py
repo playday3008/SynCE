@@ -32,6 +32,10 @@ class createpshipwindow(QtGui.QWidget, synceKPM.gui.ui_synce_kpm_create_pshipwin
     def __init__(self, mainwindow):
         QtGui.QWidget.__init__(self)
         self.setupUi(self)
+
+        self.connect( self.button_create  , SIGNAL("clicked()"),   self.on_button_create_clicked_slot )
+        self.connect( self.button_cancel  , SIGNAL("clicked()"),   self.on_button_cancel_clicked_slot )
+
         self.guiDbus = mainwindow.guiDbus
         self.modelSyncItems = QStandardItemModel(0,2)
         self.viewSyncItems.setModel(self.modelSyncItems)
@@ -73,7 +77,7 @@ class createpshipwindow(QtGui.QWidget, synceKPM.gui.ui_synce_kpm_create_pshipwin
     
     
     @pyqtSignature("")
-    def on_button_create_clicked(self):
+    def on_button_create_clicked_slot(self):
         #Going to try and create the partnership now
         if  self.namePartnership.text() == "":
             QMessageBox.warning(self,"Error in user input", "Please provide a name for the partnership",QMessageBox.Ok)
@@ -103,6 +107,6 @@ class createpshipwindow(QtGui.QWidget, synceKPM.gui.ui_synce_kpm_create_pshipwin
     
 
     @pyqtSignature("")
-    def on_button_cancel_clicked(self):
+    def on_button_cancel_clicked_slot(self):
         self.hide()
 
