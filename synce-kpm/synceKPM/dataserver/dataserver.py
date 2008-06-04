@@ -31,9 +31,6 @@ from synceKPM.dataserver.rapiutil import *
 
 import synceKPM.constants
 
-ODCCM_DEVICE_PASSWORD_FLAG_SET               = 1
-ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE           = 2
-ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = 4
 
 class DataServer(dbus.service.Object):
     def __init__(self, busConn, dataServerEventLoop):
@@ -44,6 +41,7 @@ class DataServer(dbus.service.Object):
         self.deviceIsConnected = False 
 
         self.odccm_device = None
+        self.hal_device = None
         self.syncEngineRunning = False
 
 
@@ -97,12 +95,25 @@ class DataServer(dbus.service.Object):
 
 
     def odccm_password_flags_changed_cb( self, added, removed ):
-        if removed & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
+        if removed & synceKPM.constants.ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
             self.onAuthorized()
             pass
-        if removed & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
+        if removed & synceKPM.constants.ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
             pass
             self.onAuthorized()
+
+
+    def hal_password_flags_changed_cb( self, num_changes, properties ):
+        for property in properties:
+            property_name, added, removed = property
+            if property_name == "pda.pocketpc.password":
+                flag = self.hal_device.GetPropertyString("pda.pocketpc.password")
+
+                if flag == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNSET:
+                    self.onAuthorized()
+                if flag == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED:
+                    self.onAuthorized()
+
     
     
     def odccm_device_disconnected_cb(self, obj_path ):
@@ -155,6 +166,63 @@ class DataServer(dbus.service.Object):
 
 
 
+    def hal_device_connected_cb(self, obj_path, alreadyConnected=False ):
+        deviceObject = dbus.SystemBus().get_object("org.freedesktop.Hal",obj_path)
+        device = dbus.Interface(deviceObject,"org.freedesktop.Hal.Device")
+
+        if not device.PropertyExists("pda.pocketpc.name"):
+            device = None
+            return
+        self.hal_device = device
+        self.hal_device_synce = dbus.Interface(deviceObject,"org.freedesktop.Hal.Device.Synce")
+
+        self.deviceName = self.hal_device.GetPropertyString("pda.pocketpc.name")
+        self.deviceModelName = self.hal_device.GetPropertyString("pda.pocketpc.model")
+
+        self.deviceConnected(self.deviceName,alreadyConnected)
+
+        os_major = self.hal_device.GetPropertyInteger("pda.pocketpc.os_major")
+        os_minor = self.hal_device.GetPropertyInteger("pda.pocketpc.os_minor")
+        __deviceOsVersion=[os_major,os_minor]
+        self.deviceOsVersion( __deviceOsVersion )
+
+        #Start listening to Hal for changes in the status of authorization
+        self._sm_hal_password_flags_changed = self.hal_device.connect_to_signal("PropertyModified", self.hal_password_flags_changed_cb)
+
+        #self.onConnect()
+
+        flags = self.hal_device.GetPropertyString("pda.pocketpc.password")
+        
+        if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE:
+            #This means the WM5 style
+            #self.sendMessage(ACTION_PASSWORD_NEEDED)
+            self.UnlockDeviceViaHost()
+            return 
+
+        if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
+            #print "Dealing with a WM6 phone, user must unlock device on device itself"
+            self.sendMessage(ACTION_PASSWORD_NEEDED_ON_DEVICE)
+            self.UnlockDeviceViaDevice()
+            return 
+
+        #If the device is not locked at all, then we can build up rapi connections
+        #and notify all listeners. This is done by the onAuthorized method.
+        self.onAuthorized()
+
+        #pass
+
+
+    def hal_device_disconnected_cb(self, obj_path):
+        print "disconnecting device ", self.deviceName 
+        self.deviceDisconnected( self.deviceName )
+        self.hal_device = None
+        self.hal_device_synce = None
+        self.deviceName   = ""
+        self.deviceIsConnected = False
+        self._programList = []
+        pass
+
+
 
     def onAuthorized(self):
         #Only now the device is actually connected!!
@@ -162,7 +230,11 @@ class DataServer(dbus.service.Object):
         self.deviceIsConnected = True
         
         self.DeviceOwner( self.getDeviceOwner() )
-        self.DeviceModel( self.odccm_device.GetModelName() )
+
+        if self.hal_device != None:
+            self.DeviceModel( self.hal_device.GetPropertyString("pda.pocketpc.model") )
+        else:
+            self.DeviceModel( self.odccm_device.GetModelName() )
         
         self.updateDeviceInformation()
 
@@ -380,6 +452,23 @@ class DataServer(dbus.service.Object):
             print "odccm is NOT running!!"
 
 
+        # connect to Hal device manager
+
+        hal_manager = None
+        try:
+            hal_manager = dbus.Interface(dbus.SystemBus().get_object("org.freedesktop.Hal", "/org/freedesktop/Hal/Manager"), "org.freedesktop.Hal.Manager")
+            self._sm_hal_device_connected = hal_manager.connect_to_signal("DeviceAdded", self.hal_device_connected_cb)
+            self._sm_hal_device_disconnected = hal_manager.connect_to_signal("DeviceRemoved", self.hal_device_disconnected_cb)
+
+        except:
+            print "Problems connecting to Hal, is it running ?"
+
+        if hal_manager != True:
+            obj_paths = hal_manager.FindDeviceStringMatch("pda.platform", "pocketpc")
+            if len(obj_paths) > 0:
+                self.hal_device_connected_cb(obj_paths[0], True)
+
+
         try:
             self.busConn.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.handleSyncEngineStatusChange( True, True ) 
@@ -428,13 +517,13 @@ class DataServer(dbus.service.Object):
             rapi_session = RAPISession(0)
             self._powerStatus = rapi_session.getSystemPowerStatus(True)
         except Exception,e:
-            print "Error while retrieving list of installed programs:"
+            print "Error while retrieving battery information:"
             print e
             self.deviceIsConnected = False
 
-
-        if oldPowerStatus != self._powerStatus:
-            self.PowerStatus( self._powerStatus )
+        self.PowerStatus( self._powerStatus )
+        #if oldPowerStatus != self._powerStatus:
+        #    self.PowerStatus( self._powerStatus )
 
     @dbus.service.signal('org.synce.kpm.DataServerInterface', signature="a{sv}")
     def PowerStatus(self, _status ):
@@ -587,6 +676,10 @@ class DataServer(dbus.service.Object):
 
     @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="s")
     def processAuthorization(self, password):
+        if self.hal_device != None:
+            self.hal_device_synce.ProvidePassword( password )
+            return
+
         self.odccm_device.ProvidePassword( password )
         #authenticated = self.dev_iface.ProvidePassword(dlg.get_text())
 

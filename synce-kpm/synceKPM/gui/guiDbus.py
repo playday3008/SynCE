@@ -284,6 +284,7 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.array_async_status_pships_label[1].setText( "" )
         self.mainwindow.array_async_status_pships_label[2].setText( "" )
 
+        self.mainwindow.batteryStatus.setValue( 0 )
 
         self.mainwindow.modelPartnerships.clear()
         self.mainwindow.listInstalledPrograms.clear()

@@ -1,7 +1,9 @@
-2008-04-15	Guido Diepen	<guido@guidodiepen.nl>
+2008-06-04	Guido Diepen	<guido@guidodiepen.nl>
 	
 	* Update the program to work with python-qt4.4.0 and greater. Just
 	work-around the issues with autoconnecting of slots/signals
+	* Update the program to work with hal-dccm. Thanks Mark Ellis for
+	supplying the needed patches.
 
 2008-04-15	Guido Diepen	<guido@guidodiepen.nl>
 	

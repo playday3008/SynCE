@@ -289,13 +289,6 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
 
 
-    def updatePowerInformation(self):
-        powerStatus = self.phoneCommunicator.getPowerStatus()
-        if powerStatus is not None:
-            battPercent = powerStatus["BatteryLifePercent"]
-            self.batteryStatus.setValue( battPercent )
-        else:
-            self.batteryStatus.setValue( 0 ) 
 
     @pyqtSignature("")
     def on_toolButtonDeviceIsLocked_clicked_slot(self):
