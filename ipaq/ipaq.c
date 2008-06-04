@@ -72,6 +72,7 @@ static __u16 product, vendor;
 static int debug;
 static int connect_retries = KP_RETRIES;
 static int initial_wait;
+static int ttyUSB = 0;
 
 /* Function prototypes for an ipaq */
 static int  ipaq_open (struct usb_serial_port *port, struct file *filp);
@@ -959,7 +960,11 @@ static int __init ipaq_init(void)
 		ipaq_id_table[0].idVendor = vendor;
 		ipaq_id_table[0].idProduct = product;
 	}
+	ipaq_device.num_bulk_in = ttyUSB + 1;
+	ipaq_device.num_bulk_out = ttyUSB + 1;
+	ipaq_device.num_ports = ttyUSB + 1;
 	retval = usb_register(&ipaq_driver);
+	dbg("%s - iPAQ module configured for port ttyUSB%d", __FUNCTION__, ttyUSB);
 	if (retval)
 		goto failed_usb_register;
 		  
@@ -987,6 +992,9 @@ MODULE_LICENSE("GPL");
 
 module_param(debug, bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(debug, "Debug enabled or not");
+
+module_param(ttyUSB, int, 0);
+MODULE_PARM_DESC(ttyUSB, "User specified ttyUSB port number");
 
 module_param(vendor, ushort, 0);
 MODULE_PARM_DESC(vendor, "User specified USB idVendor");
