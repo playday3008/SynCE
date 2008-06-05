@@ -1634,6 +1634,7 @@ static void unescape_string(char* value)/*{{{*/
 
 				default:
 					synce_warning("Unexpected escape: '%c%c'", source[0], source[1]);
+					source += 2;
 					break;
 			}
 		}
