@@ -3,7 +3,7 @@
 #include "config.h"
 #endif
 #include "liborange_internal.h"
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <libole2/libole2.h>
 #include <stdio.h>
 #include <string.h>

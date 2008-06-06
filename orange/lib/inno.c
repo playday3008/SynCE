@@ -5,7 +5,7 @@
 #endif
 #include "inno.h"
 #include "liborange_internal.h"
-#include <synce_log.h>
+#include "liborange_log.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
