@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define WIDE_BACKSLASH   htole16('\\')
 
@@ -71,48 +72,102 @@ struct _AnyFile
 	ANYFILE_ACCESSOR read;
 	ANYFILE_ACCESSOR write;
 	ANYFILE_CLOSE close;
-		
 };
 
 static void anyfile_remote_close(AnyFile* file)
 {
-	CeCloseHandle(file->handle.remote);
+	HRESULT hr;
+	DWORD last_error;
+
+	if (CeCloseHandle(file->handle.remote)) {
+	  if (FAILED(hr = CeRapiGetError())) {
+	    synce_error("Error closing remote file: %08x: %s",
+			hr, synce_strerror(hr));
+	  } else {
+	    last_error = CeGetLastError();
+	    synce_error("Error closing remote file: %d: %s",
+			last_error, synce_strerror(last_error));
+	  }
+	}
 }
 
 static bool anyfile_remote_read(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
 {
+	HRESULT hr;
+	DWORD last_error;
+
 	BOOL result;
 	DWORD lpNumberOfBytesRead = 0;
 	result = CeReadFile(file->handle.remote, buffer, bytes, &lpNumberOfBytesRead, NULL);
 	*bytesAccessed = lpNumberOfBytesRead;
+
+	if (!result) {
+	  if (FAILED(hr = CeRapiGetError())) {
+	    synce_error("Failed to read from remote file: %08x: %s",
+			hr, synce_strerror(hr));
+	  } else {
+	    last_error = CeGetLastError();
+	    synce_error("Failed to read from remote file: %d: %s",
+			last_error, synce_strerror(last_error));
+	  }
+	}
+
 	return result;
 }
 
 static bool anyfile_remote_write(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
 {
+	HRESULT hr;
+	DWORD last_error;
+
 	BOOL result;
 	DWORD lpNumberOfBytesWritten = 0;
 	result = CeWriteFile(file->handle.remote, buffer, bytes, &lpNumberOfBytesWritten, NULL);
 	*bytesAccessed = lpNumberOfBytesWritten;
+
+	if (!result) {
+	  if (FAILED(hr = CeRapiGetError())) {
+	    synce_error("Failed to write to remote file: %08x: %s",
+			hr, synce_strerror(hr));
+	  } else {
+	    last_error = CeGetLastError();
+	    synce_error("Failed to write to remote file: %d: %s",
+			last_error, synce_strerror(last_error));
+	  }
+	}
+
 	return result;
 }
 
 static void anyfile_local_close(AnyFile* file)
 {
 	if (file->handle.local)
-		fclose(file->handle.local);
+	  if (fclose(file->handle.local) != 0)
+	    synce_error("Error closing local file: %d: %s", errno, strerror(errno));
+
+	return;
 }
 
 static bool anyfile_local_read(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
 {
 	*bytesAccessed = fread(buffer, 1, bytes, file->handle.local);
-	return !ferror(file->handle.local);
+	if (ferror(file->handle.local)) {
+	  synce_error("Failed to read from local file: %d: %s", errno, strerror(errno));
+	  return false;
+	}
+
+	return true;
 }
 
 static bool anyfile_local_write(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
 {
 	*bytesAccessed = fwrite(buffer, 1, bytes, file->handle.local);
-	return !ferror(file->handle.local);
+	if (ferror(file->handle.local)) {
+	  synce_error("Failed to write to local file: %d: %s", errno, strerror(errno));
+	  return false;
+	}
+
+	return true;
 }
 
 
@@ -121,6 +176,9 @@ static bool anyfile_local_write(AnyFile* file, unsigned char* buffer, size_t byt
  */
 static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 {
+	HRESULT hr;
+	DWORD last_error;
+
 	WCHAR* wide_filename = wstr_from_current(filename);
 	AnyFile* file = (AnyFile*)calloc(1, sizeof(AnyFile));
 
@@ -139,10 +197,18 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 	
 	if (INVALID_HANDLE_VALUE == file->handle.remote)
 	{
-		synce_error("Failed to open file '%s': %s", 
-				filename, synce_strerror(CeGetLastError()));
-		free(file);
-		file = NULL;
+
+	  if (FAILED(hr = CeRapiGetError())) {
+	    synce_error("Failed to open file '%s': %08x: %s",
+			filename, hr, synce_strerror(hr));
+	  } else {
+	    last_error = CeGetLastError();
+	    synce_error("Failed to open file '%s': %d: %s",
+			filename, last_error, synce_strerror(last_error));
+	  }
+
+	  free(file);
+	  file = NULL;
 	}
 	else
 	{
@@ -175,6 +241,8 @@ static AnyFile* anyfile_local_open(const char* filename, ANYFILE_ACCESS access)
 	
 	if (NULL == file->handle.local)
 	{
+		synce_error("Failed to open file '%s': %d: %s",
+			    filename, errno, strerror(errno));
 		free(file);
 		file = NULL;
 	}
@@ -194,8 +262,8 @@ static AnyFile* anyfile_local_open(const char* filename, ANYFILE_ACCESS access)
 AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access)
 {
     char *tmpfilename;
-	AnyFile* file = NULL;
-	
+    AnyFile* file = NULL;
+
     tmpfilename = (char *) strdup(filename);
 	if (is_remote_file(tmpfilename))
 	{
@@ -208,7 +276,7 @@ AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access)
 	}
     free (tmpfilename);
 
-	return file;
+    return file;
 }
 
 void anyfile_close(AnyFile* file)

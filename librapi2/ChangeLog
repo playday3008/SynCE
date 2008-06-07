@@ -1,3 +1,7 @@
+2008-06-07  Mark Ellis  <mark@mpellis.org.uk>
+
+	* more useful error messages for pls and pcp
+
 2008-05-19  Mark Ellis  <mark@mpellis.org.uk>
 
 	* rewrite rapi 1 CeReadRecordProps() and CeWriteRecordProps() to

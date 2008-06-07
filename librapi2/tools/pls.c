@@ -177,6 +177,8 @@ static bool list_matching_files(WCHAR* wide_path)
 	CE_FIND_DATA* find_data = NULL;
 	DWORD file_count = 0;
 	unsigned i;
+	HRESULT hr;
+	DWORD last_error;
 
 	synce_trace_wstr(wide_path);
 
@@ -184,13 +186,23 @@ static bool list_matching_files(WCHAR* wide_path)
 			wide_path,
 			(show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
 		 	FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
-      &file_count, &find_data);
+			&file_count, &find_data);
 
-	if (!result)
+	if (!result) {
+		if (FAILED(hr = CeRapiGetError())) {
+		  fprintf(stderr, "Error finding files: %08x: %s.\n",
+			  hr, synce_strerror(hr));
+		  goto exit;
+		}
+
+		last_error = CeGetLastError();
+		fprintf(stderr, "Error finding files: %d: %s.\n",
+			last_error, synce_strerror(last_error));
 		goto exit;
+	}
 
 	if (file_count == 0) {
-		fprintf(stderr, "No such file or directory");
+		fprintf(stderr, "No such file or directory\n");
 		goto exit;
 	}
 	
@@ -211,7 +223,7 @@ static       WCHAR empty[]   = {'\0'};
 bool list_directory(WCHAR* directory)
 {
 	WCHAR path[MAX_PATH];
-  WCHAR* tmp = NULL;
+	WCHAR* tmp = NULL;
 
 	if (!directory)
 	{
@@ -223,7 +235,7 @@ bool list_directory(WCHAR* directory)
 	wstrcpy(path, directory);
 	synce_trace_wstr(path);
 	wstr_append(path, (tmp = wstr_from_current(wildcards)), sizeof(path));
-  wstr_free_string(tmp);
+	wstr_free_string(tmp);
 	return list_matching_files(path);
 }
 

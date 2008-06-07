@@ -72,7 +72,27 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 
 static bool remote_copy(const char* ascii_source, const char* ascii_dest)
 {
-	return CeCopyFileA(ascii_source, ascii_dest, false);
+  HRESULT hr;
+  DWORD last_error;
+  BOOL result;
+
+  result = CeCopyFileA(ascii_source, ascii_dest, false);
+
+  if (!result) {
+    if (FAILED(hr = CeRapiGetError())) {
+      fprintf(stderr, "Failed to copy %s to %s: %s.\n",
+	      ascii_source, ascii_dest, synce_strerror(hr));
+      goto exit;
+    }
+
+    last_error = CeGetLastError();
+    fprintf(stderr, "Failed to copy %s to %s: %s.\n",
+	    ascii_source, ascii_dest, synce_strerror(last_error));
+    goto exit;
+  }
+
+ exit:
+  return result;
 }
 
 #define ANYFILE_BUFFER_SIZE (64*1024)
@@ -165,6 +185,7 @@ int main(int argc, char** argv)
 	time_t start;
 	time_t duration;
 	size_t bytes_copied = 0;
+	DWORD last_error;
 	
 	if (!handle_parameters(argc, argv, &source, &dest))
 		goto exit;
@@ -229,11 +250,19 @@ int main(int argc, char** argv)
 			}
 
 			if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(mydocuments), mydocuments))
-			{
-				fprintf(stderr, "%s: Unable to get the \"My Documents\" path.\n",
-						argv[0]);
-				goto exit;
-			}
+			  {
+
+			    if (FAILED(hr = CeRapiGetError())) {
+			      fprintf(stderr, "%s: Unable to get the \"My Documents\" path: %s.\n",
+				      argv[0], synce_strerror(hr));
+			      goto exit;
+			    }
+
+			    last_error = CeGetLastError();
+			    fprintf(stderr, "%s: Unable to get the \"My Documents\" path: %s.\n",
+				    argv[0], synce_strerror(last_error));
+			    goto exit;
+			  }
 
 			dest = calloc(1, 1 + wstr_strlen(mydocuments) + 1 + strlen(p) + 1);
 			
@@ -266,7 +295,7 @@ int main(int argc, char** argv)
 	{
 		start = time(NULL);
 
-			/*
+		/*
 		 * At least one is local, Use the AnyFile functions
 		 */
 		if (!anyfile_copy(source, dest, argv[0], &bytes_copied))
