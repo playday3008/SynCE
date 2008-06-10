@@ -337,7 +337,7 @@ class Config:
 
 	def _ScanConfigFile(self,path):
 		try:
-			f = open(self.path, "rb")
+			f = open(path, "rb")
 		except:
 			self.logger.info("UpdateConfig - unable to open system config file - using defaults")
 			return False

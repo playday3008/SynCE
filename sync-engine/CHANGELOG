@@ -993,6 +993,21 @@ Fixed typo in _ProcessAuth preventing authorization from working correctly.
 
 Minor fix to debug messages in authorization code for clarity.
 
+10/06/2008 - 193900 Dr J A Gow
+------------------------------
+
+Folded in patches from Daniel Frickermeyer to fix:
+
+    - config file opening
+    - config file in setup.py
+    - XML handling in formats30
+
+Also added code to release the sync event when the device is disconnected
+while synchronizing - have discovered that under certain circumstances it
+is possible for a device to get its state screwed up. This results in a 
+sync-engine refusing to sync the device when it is replugged! This should
+clear this problem but time will tell.
+
 
 
 

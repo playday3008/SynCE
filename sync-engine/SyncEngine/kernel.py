@@ -402,6 +402,7 @@ class SyncEngine(dbus.service.Object):
 	def _ResetCurrentState(self):
 			
 		autosync_triggered=False
+		self.syncing.unlock()
 
 	# 
 	# OnConnect
