@@ -23,8 +23,8 @@ static void show_usage(const char* name)
 			"\t                 3 - Everything\n"
 			"\t-h           Show this help message\n"
                         "\t-p DEVNAME   Mobile device name\n"
-			"\tSOURCE       The source filename\n"
-			"\tDESTINATION  The destination filename\n",
+			"\tSOURCE       The source filename, prepended with \":\" for remote files\n"
+			"\tDESTINATION  The destination filename, prepended with \":\" for remote files\n",
 			name);
 }
 
@@ -293,6 +293,12 @@ int main(int argc, char** argv)
 	}
 	else
 	{
+  	if (!is_remote_file(source) && !is_remote_file(dest))
+    {
+      fprintf(stderr, "Warning: You are about to copy from one local file to another.\n"
+          "Please view the built-in help or read the man page.\n");
+    }
+
 		start = time(NULL);
 
 		/*
