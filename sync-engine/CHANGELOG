@@ -1008,6 +1008,16 @@ is possible for a device to get its state screwed up. This results in a
 sync-engine refusing to sync the device when it is replugged! This should
 clear this problem but time will tell.
 
+17/06/2008 - 200700 Dr J A Gow
+------------------------------
+
+Corrected serious bug in task conversion code preventing successful
+synchronization of tasks with a start or due date from desktop to handheld. The
+problem was down to an incorrect namespace assignment in the task handling of
+formats20 causing an exception in the wbxml conversion. The formats30 should
+not be affected.
+
+
 
 
 

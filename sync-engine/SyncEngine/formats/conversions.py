@@ -497,9 +497,10 @@ def task_start_date_to_airsync(ctx):
     localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
     dst_node = transform_ctx.insertNode()
     n=dst_node.newChild(None,"StartDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
-    n.setNs(None)
+    nsNew=n.newNs("http://synce.org.formats/airsync_wm5/tasks","T")
+    n.setNs(nsNew)
     n=dst_node.newChild(None,"UtcStartDate",utcDate.strftime(DATE_FORMAT_TASK))
-    n.setNs(None)
+    n.setNs(nsNew)
     return ""
 
 def task_due_date_to_airsync(ctx):
@@ -507,9 +508,10 @@ def task_due_date_to_airsync(ctx):
     localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
     dst_node = transform_ctx.insertNode()
     n=dst_node.newChild(None,"DueDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
-    n.setNs(None)
+    nsNew=n.newNs("http://synce.org/formats/airsync_wm5/tasks","T")
+    n.setNs(nsNew)
     n=dst_node.newChild(None,"UtcDueDate",utcDate.strftime(DATE_FORMAT_TASK))
-    n.setNs(None)
+    n.setNs(nsNew)
     return ""
 
 def task_start_date_from_airsync(ctx):
