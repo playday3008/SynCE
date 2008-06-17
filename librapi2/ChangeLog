@@ -1,3 +1,7 @@
+2008-06-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* recursive directory copy for pcp
+
 2008-06-07  Mark Ellis  <mark@mpellis.org.uk>
 
 	* more useful error messages for pls and pcp

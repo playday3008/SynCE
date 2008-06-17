@@ -79,7 +79,7 @@ static void anyfile_remote_close(AnyFile* file)
 	HRESULT hr;
 	DWORD last_error;
 
-	if (CeCloseHandle(file->handle.remote)) {
+	if (!(CeCloseHandle(file->handle.remote))) {
 	  if (FAILED(hr = CeRapiGetError())) {
 	    synce_error("Error closing remote file: %08x: %s",
 			hr, synce_strerror(hr));
