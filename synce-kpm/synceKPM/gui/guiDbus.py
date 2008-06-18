@@ -242,6 +242,12 @@ class GuiDbus(dbus.service.Object):
 
 
     def handleDeviceAuthorized(self):
+        #print QtGui.QApplication.activeModalWidget()
+        if QtGui.QApplication.activeModalWidget() is not None:
+            QtGui.QApplication.activeWindow().close()
+
+
+
         self.mainwindow.tabWidget.setEnabled(True)
         self.mainwindow.labelDeviceIsLocked.setVisible(False)
         self.mainwindow.toolButtonDeviceIsLocked.setVisible(False)
