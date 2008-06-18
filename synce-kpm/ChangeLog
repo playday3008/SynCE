@@ -1,3 +1,6 @@
+2008-06-18	Guido Diepen	<guido@guidodiepen.nl>
+	* Fixed leftOver sendMessage which does not exist anymore
+
 2008-06-04	Guido Diepen	<guido@guidodiepen.nl>
 	
 	* Update the program to work with python-qt4.4.0 and greater. Just

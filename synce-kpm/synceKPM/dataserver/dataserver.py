@@ -201,7 +201,7 @@ class DataServer(dbus.service.Object):
 
         if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
             #print "Dealing with a WM6 phone, user must unlock device on device itself"
-            self.sendMessage(ACTION_PASSWORD_NEEDED_ON_DEVICE)
+            #self.sendMessage(ACTION_PASSWORD_NEEDED_ON_DEVICE)
             self.UnlockDeviceViaDevice()
             return 
 
@@ -638,7 +638,6 @@ class DataServer(dbus.service.Object):
     
     @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="sau")
     def createPartnership(self, name, items):
-
         print "DS :: Create partnership"
         dbusSyncEngine = self.busConn.get_object( "org.synce.SyncEngine",
                                                 "/org/synce/SyncEngine",
@@ -650,7 +649,6 @@ class DataServer(dbus.service.Object):
         except dbus.DBusException,e:
             raise e
 
-        #self.updatePartnerships()
 
 
 
