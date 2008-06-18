@@ -1,5 +1,7 @@
 2008-06-18	Guido Diepen	<guido@guidodiepen.nl>
 	* Fixed leftOver sendMessage which does not exist anymore
+	* Locked WM6 devices result in a messagebox being shown. When the user
+	unlocks the device, this messagebox is automatically closed. 
 
 2008-06-04	Guido Diepen	<guido@guidodiepen.nl>
 	
