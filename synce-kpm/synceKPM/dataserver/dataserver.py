@@ -73,6 +73,7 @@ class DataServer(dbus.service.Object):
         self._powerStatus = None
         self._storageInformation = None
 
+        self.deviceName   = ""
 
 
 

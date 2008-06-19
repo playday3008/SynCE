@@ -1,6 +1,7 @@
 2008-06-19	Guido Diepen	<guido@guidodiepen.nl>
 	* Fixed issue with closing messagebox telling the user to unlock his WM6
 	device when the program does not have focus
+	* Fixed a small problem with non-initialized global var in dataserver
 
 2008-06-18	Guido Diepen	<guido@guidodiepen.nl>
 	* Fixed leftOver sendMessage which does not exist anymore
