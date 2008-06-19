@@ -244,7 +244,7 @@ class GuiDbus(dbus.service.Object):
     def handleDeviceAuthorized(self):
         #print QtGui.QApplication.activeModalWidget()
         if QtGui.QApplication.activeModalWidget() is not None:
-            QtGui.QApplication.activeWindow().close()
+            QtGui.QApplication.activeModalWidget().close()
 
 
 
