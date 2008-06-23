@@ -1017,7 +1017,10 @@ problem was down to an incorrect namespace assignment in the task handling of
 formats20 causing an exception in the wbxml conversion. The formats30 should
 not be affected.
 
+23/06/2008 - 212900 Mark Ellis
+------------------------------
 
+Install example dbus activation config file in /usr/share/doc/sync-engine
 
 
 
