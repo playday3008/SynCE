@@ -66,7 +66,6 @@ keyring_delete_key(gchar *name)
   GnomeKeyringResult      ret;
   GList *                 found_list = NULL;
   GnomeKeyringFound *     found;
-  guint32 item_id;
 
 
   ret = gnome_keyring_find_itemsv_sync (GNOME_KEYRING_ITEM_GENERIC_SECRET,
@@ -84,10 +83,14 @@ keyring_delete_key(gchar *name)
   }    
 
   found = (GnomeKeyringFound *) found_list->data;
-  item_id = found->item_id;
-  gnome_keyring_found_list_free (found_list);
 
-  ret = gnome_keyring_item_delete_sync("default", item_id);
+  ret = gnome_keyring_item_delete_sync(found->keyring, found->item_id);
+  if (ret != GNOME_KEYRING_RESULT_OK)
+  {
+    g_debug("%s: Error deleting password from keyring. Ret=%d %s", G_STRFUNC, ret, keyring_strerror(ret));
+  }    
+
+  gnome_keyring_found_list_free (found_list);
   return ret;
 }
 

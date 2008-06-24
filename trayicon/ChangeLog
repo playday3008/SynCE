@@ -2,6 +2,7 @@
 
 	* synce-trayicon.schemas.in - add synce-hal description
 	* display N/A in RAM/storage split for WM5
+	* correctly delete incorrect password from keyring
 
 2008-05-08  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
