@@ -28,10 +28,14 @@
 #include <rapi.h>
 #include <string.h>
 #include <errno.h>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
 
 #include "synce_app_man.h"
 
 #define BUFFER_SIZE (64*1024)
+#define REG_PATH_SMARTPHONE_2002 "Security\\AppInstall"
+#define REG_PATH_POCKETPC_2002 "Software\\Apps"
 
 GQuark
 synce_app_man_error_quark (void)
@@ -41,41 +45,138 @@ synce_app_man_error_quark (void)
 
 
 gboolean
-synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+{
+  GList *prog_list = NULL;
+
+  xmlDocPtr doc = NULL;
+  xmlDocPtr reply_doc = NULL;
+  xmlNodePtr parent = NULL;
+  xmlNodePtr root_node = NULL, node = NULL, reply_node = NULL;
+  xmlChar *doc_string = NULL;
+  gint doc_size;
+
+  LPWSTR config_w = NULL;
+  LPWSTR reply_w = NULL;
+  HRESULT result;
+
+  gchar *reply = NULL;
+  gchar *prop = NULL;
+
+  doc = xmlNewDoc((xmlChar *)"1.0");
+  root_node = xmlNewNode(NULL, (xmlChar *)"wap-provisioningdoc");
+  xmlDocSetRootElement(doc, root_node);
+  parent = root_node;
+
+  node = xmlNewNode(NULL, (xmlChar *)"characteristic-query");
+  xmlNewProp(node, (xmlChar *)"recursive", (xmlChar *)"false");
+  xmlNewProp(node, (xmlChar *)"type", (xmlChar *)"UnInstall");
+  xmlAddChild(parent, node);
+
+  xmlDocDumpMemoryEnc(doc, &doc_string, &doc_size, "utf-8");
+  g_debug("%s: CeProcessConfig request is \n%s", G_STRFUNC, doc_string);
+
+  config_w = wstr_from_utf8((char *)doc_string);
+  xmlFree(doc_string);
+  xmlFreeDoc(doc);
+
+  result = CeProcessConfig(config_w, CONFIG_PROCESS_DOCUMENT, &reply_w);
+
+  wstr_free_string(config_w);
+
+  if (result != 0) {
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Unable to obtain application list: %s"),
+		synce_strerror(result));
+    return FALSE;
+  }
+
+  reply = wstr_to_utf8(reply_w);
+  wstr_free_string(reply_w);
+
+  reply_doc = xmlReadMemory(reply, strlen(reply), "reply.xml", NULL, 0);
+
+  xmlDocDumpMemoryEnc(reply_doc, &doc_string, &doc_size, "utf-8");
+  g_debug("%s: CeProcessConfig response is \n%s", G_STRFUNC, doc_string);
+  xmlFree(doc_string);
+
+  reply_node = NULL;
+  node = xmlDocGetRootElement(reply_doc);
+  node = node->children;
+
+  while(node)
+    {
+      if (node->type == XML_ELEMENT_NODE)
+	{
+	  reply_node = node;
+	}
+      node = node->next;
+    }
+  if (!reply_node) {
+    xmlFreeDoc(reply_doc);
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Unable to obtain application list: Unexpected reply XML structure"));
+
+    return FALSE;
+  }
+
+  node = reply_node->children;
+  while (node) {
+    prop = (gchar *)xmlGetProp(node, (xmlChar *)"type");
+    g_strstrip(prop);
+    prog_list = g_list_append(prog_list, prop);
+
+    node = node->next;
+  }
+  xmlFreeDoc(reply_doc);
+
+  *list = prog_list;
+  return TRUE;
+}
+
+gboolean
+create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   LONG rapi_result;
   gboolean result = TRUE;
-  HKEY parent_key;
-  gchar *parent_key_name_ascii = NULL;
-  WCHAR* parent_key_name_wide = NULL;
+  HKEY app_parent_key;
+  const gchar *app_parent_key_name_ascii = NULL;
+  WCHAR* app_parent_key_name_wide = NULL;
   WCHAR* value_name = NULL;
-  DWORD i;
-  gboolean smartphone = false;
+  DWORD app_count;
+  gboolean smartphone = FALSE;
   GList *tmp_list = NULL;
   gchar *app_name = NULL;
+  WCHAR app_name_wide[MAX_PATH];
+  DWORD app_name_size = MAX_PATH;
+  HKEY app_key;
+  DWORD installed = 0;
+  DWORD value_size = sizeof(installed);
 
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   if (busy_func)
     (*busy_func)(busy_data);
 
-  /* Path on SmartPhone 2002 */
-  parent_key_name_ascii = "Security\\AppInstall";
-  parent_key_name_wide = wstr_from_ascii(parent_key_name_ascii);
+  app_parent_key_name_ascii = REG_PATH_SMARTPHONE_2002;
+  app_parent_key_name_wide = wstr_from_ascii(app_parent_key_name_ascii);
 
-  rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name_wide, 0, 0, &parent_key);
+  rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
+  wstr_free_string(app_parent_key_name_wide);
 
   if (ERROR_SUCCESS == rapi_result) {
-    smartphone = true;
+    smartphone = TRUE;
   } else {
-    smartphone = false;
-    wstr_free_string(parent_key_name_wide);
+    smartphone = FALSE;
 
-    /* Path on Pocket PC 2002 */
-    parent_key_name_ascii = "Software\\Apps";
-    parent_key_name_wide = wstr_from_ascii(parent_key_name_ascii);
+    app_parent_key_name_ascii = REG_PATH_POCKETPC_2002;
+    app_parent_key_name_wide = wstr_from_ascii(app_parent_key_name_ascii);
 
-    rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name_wide, 0, 0, &parent_key);
+    rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
+    wstr_free_string(app_parent_key_name_wide);
 
     if (ERROR_SUCCESS != rapi_result) {
       g_set_error(error,
@@ -87,30 +188,29 @@ synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, g
       goto exit;
     }
   }
+
   value_name = wstr_from_ascii("Instl");
 
   if (busy_func)
     (*busy_func)(busy_data);
 
-  for (i = 0; ; i++) {
-    WCHAR wide_name[MAX_PATH];
-    DWORD name_size = sizeof(wide_name);
-    HKEY program_key;
-    DWORD installed = 0;
-    DWORD value_size = sizeof(installed);
+  for (app_count = 0; ; app_count++) {
+    app_name_size = MAX_PATH;
+    installed = 0;
+    value_size = sizeof(installed);
 
-    rapi_result = CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, 
+    rapi_result = CeRegEnumKeyEx(app_parent_key, app_count, app_name_wide, &app_name_size, 
 				 NULL, NULL, NULL, NULL);
     if (rapi_result == ERROR_NO_MORE_ITEMS)
       break;
 
     if (rapi_result != ERROR_SUCCESS) {
-      g_warning("%s: Unable to enumerate registry key '%s': %s", G_STRFUNC, parent_key_name_ascii, synce_strerror(rapi_result));
+      g_warning("%s: Unable to enumerate registry key '%s': %s", G_STRFUNC, app_parent_key_name_ascii, synce_strerror(rapi_result));
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI,
 		  _("Unable to enumerate registry key '%s': %s"),
-		  parent_key_name_ascii,
+		  app_parent_key_name_ascii,
 		  synce_strerror(rapi_result));
       result = FALSE;
       break;
@@ -120,26 +220,27 @@ synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, g
       (*busy_func)(busy_data);
 
     if (smartphone) {
-      app_name = wstr_to_utf8(wide_name);
+      app_name = wstr_to_utf8(app_name_wide);
       tmp_list = g_list_append(tmp_list, app_name);
     } else {
-      rapi_result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, &program_key);
+      rapi_result = CeRegOpenKeyEx(app_parent_key, app_name_wide, 0, 0, &app_key);
       if (ERROR_SUCCESS != rapi_result)
 	continue;
 
-      rapi_result = CeRegQueryValueEx(program_key, value_name, NULL, NULL,
+      rapi_result = CeRegQueryValueEx(app_key, value_name, NULL, NULL,
 				 (LPBYTE)&installed, &value_size);
 
-      if (ERROR_SUCCESS == rapi_result && installed) {
-	app_name = wstr_to_utf8(wide_name);
+      if ((ERROR_SUCCESS == rapi_result) && installed) {
+	app_name = wstr_to_utf8(app_name_wide);
 	tmp_list = g_list_append(tmp_list, app_name);
       }
-      CeRegCloseKey(program_key);
+      CeRegCloseKey(app_key);
     }
 
   }
 
-  CeRegCloseKey(parent_key);
+  CeRegCloseKey(app_parent_key);
+  wstr_free_string(value_name);
 
 exit:
   if (!result) {
@@ -153,6 +254,42 @@ exit:
     *list = tmp_list;
   }
   return result;
+}
+
+gboolean
+synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+{
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  CEOSVERSIONINFO version_info;
+  HRESULT hr;
+  DWORD last_error;
+
+  version_info.dwOSVersionInfoSize = sizeof(CEOSVERSIONINFO);
+  if (!CeGetVersionEx(&version_info)) {
+    if (FAILED(hr = CeRapiGetError())) {
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		  _("Unable to obtain application list: Unable to determine OS version: %s"),
+		  synce_strerror(hr));
+      return FALSE;
+    }
+
+    last_error = CeGetLastError();
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Unable to obtain application list: Unable to determine OS version: %s"),
+		synce_strerror(last_error));
+    return FALSE;
+  }
+
+  if ((version_info.dwMajorVersion < 5) || ((version_info.dwMajorVersion == 5) && (version_info.dwMinorVersion == 0))) {
+    return create_program_list_legacy(list, busy_func, busy_data, error);
+  }
+
+  return create_program_list(list, busy_func, busy_data, error);
 }
 
 typedef struct _orange_cookie
@@ -263,7 +400,7 @@ get_install_dir(GError **error)
   CE_FIND_DATA entry;
   HANDLE handle;
   HRESULT hr;
-  DWORD rapi_error;
+  DWORD last_error;
 
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
@@ -287,13 +424,13 @@ get_install_dir(GError **error)
       return NULL;
     }
 
-    rapi_error = CeGetLastError();
-    if (rapi_error != ERROR_PATH_NOT_FOUND) {
+    last_error = CeGetLastError();
+    if ((last_error != ERROR_PATH_NOT_FOUND) && (last_error != ERROR_NO_MORE_FILES)) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI,
 		  _("Unable to determine installer directory: %s"),
-		  synce_strerror(rapi_error));
+		  synce_strerror(last_error));
       return NULL;
     }
 
@@ -316,14 +453,14 @@ get_install_dir(GError **error)
 	return NULL;
       }
 
-      rapi_error = CeGetLastError();
-      if (rapi_error != ERROR_PATH_NOT_FOUND) {
+      last_error = CeGetLastError();
+      if ((last_error != ERROR_PATH_NOT_FOUND) && (last_error != ERROR_NO_MORE_FILES)) {
 	g_free(path);
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
 		    SYNCE_APP_MAN_ERROR_RAPI,
 		    _("Unable to determine installer directory: %s"),
-		    synce_strerror(rapi_error));
+		    synce_strerror(last_error));
 	return NULL;
       }
 
@@ -342,13 +479,13 @@ get_install_dir(GError **error)
 	  return NULL;
 	}
 
-	rapi_error = CeGetLastError();
+	last_error = CeGetLastError();
 	g_free(path);
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
 		    SYNCE_APP_MAN_ERROR_RAPI,
 		    _("Unable to determine installer directory: %s"),
-		    synce_strerror(rapi_error));
+		    synce_strerror(last_error));
 	return NULL;
       }
     }
@@ -375,14 +512,14 @@ get_install_dir(GError **error)
       return NULL;
     }
 
-    rapi_error = CeGetLastError();
-    if (rapi_error != ERROR_PATH_NOT_FOUND) {
+    last_error = CeGetLastError();
+    if ((last_error != ERROR_PATH_NOT_FOUND) && (last_error != ERROR_NO_MORE_FILES)) {
       g_free(path);
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI,
 		  _("Unable to determine installer directory: %s"),
-		  synce_strerror(rapi_error));
+		  synce_strerror(last_error));
       return NULL;
     }
 
@@ -401,13 +538,13 @@ get_install_dir(GError **error)
 	return NULL;
       }
 
-      rapi_error = CeGetLastError();
+      last_error = CeGetLastError();
       g_free(path);
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI,
 		  _("Unable to determine installer directory: %s"),
-		  synce_strerror(rapi_error));
+		  synce_strerror(last_error));
       return NULL;
     }
   }
@@ -426,7 +563,7 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
   WCHAR* wide_filename = NULL;
   HANDLE dest_handle;
   HRESULT hr;
-  DWORD rapi_error;
+  DWORD last_error;
   BOOL retval;
   DWORD bytes_written;;
   FILE *src_handle;
@@ -465,13 +602,13 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
       goto exit;
     }
 
-    rapi_error = CeGetLastError();
+    last_error = CeGetLastError();
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI,
 		_("Failed to copy file \"%s\" to device: failed to open destination file: %s"),
 		source,
-		synce_strerror(rapi_error));
+		synce_strerror(last_error));
     result = FALSE;
     goto exit;
   }
@@ -522,13 +659,13 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
 	  goto exit;
 	}
 
-	rapi_error = CeGetLastError();
+	last_error = CeGetLastError();
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
 		    SYNCE_APP_MAN_ERROR_RAPI,
 		    _("Failed to copy file \"%s\" to device: failed to write to destination file: %s"),
 		    source,
-		    synce_strerror(rapi_error));
+		    synce_strerror(last_error));
 	result = FALSE;
 	goto exit;
       }
@@ -567,7 +704,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
   PROCESS_INFORMATION info;
   BOOL rapi_res;
   HRESULT hr;
-  DWORD rapi_error;
+  DWORD last_error;
 
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -629,12 +766,12 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
       goto exit;
     }
 
-    rapi_error = CeGetLastError();
+    last_error = CeGetLastError();
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI,
 		_("Failed to execute installer: %s"),
-		synce_strerror(rapi_error));
+		synce_strerror(last_error));
     result = FALSE;
     goto exit;
   }
@@ -654,30 +791,75 @@ exit:
 }
 
 gboolean
-synce_app_man_uninstall(const gchar *program, GError **error)
+app_uninstall(const gchar *program, GError **error)
+{
+  xmlChar *config = NULL;
+  LPWSTR config_w = NULL;
+  DWORD flags = CONFIG_PROCESS_DOCUMENT;
+  LPWSTR reply_w = NULL;
+  gchar *reply = NULL;
+  HRESULT hr;
+
+  xmlDocPtr doc = NULL;
+  xmlNodePtr parent = NULL, node = NULL;
+  gint config_size;
+
+  doc = xmlNewDoc((xmlChar *)"1.0");
+  parent = xmlNewNode(NULL, (xmlChar *)"wap-provisioningdoc");
+  xmlDocSetRootElement(doc, parent);
+
+  node = xmlNewNode(NULL, (xmlChar *)"characteristic");
+  xmlNewProp(node, (xmlChar *)"type", (xmlChar *)"UnInstall");
+  xmlAddChild(parent, node);
+  parent = node;
+
+  node = xmlNewNode(NULL, (xmlChar *)"characteristic");
+  xmlNewProp(node, (xmlChar *)"type", (xmlChar *)program);
+  xmlAddChild(parent, node);
+  parent = node;
+
+  node = xmlNewNode(NULL, (xmlChar *)"parm");
+  xmlNewProp(node, (xmlChar *)"name", (xmlChar *)"uninstall");
+  xmlNewProp(node, (xmlChar *)"value", (xmlChar *)"1");
+  xmlAddChild(parent, node);
+
+  xmlDocDumpMemoryEnc(doc, &config, &config_size, "utf-8");
+  xmlFreeDoc(doc);
+  g_debug("%s: config doc: %s", G_STRFUNC, config);
+
+  config_w = wstr_from_current((gchar *)config);
+  g_free(config);
+  hr = CeProcessConfig(config_w, flags, &reply_w);
+  wstr_free_string(config_w);
+
+  if (SUCCEEDED(hr)) {
+    wstr_free_string(reply_w);
+    return TRUE;
+  }
+
+  reply = wstr_to_current(reply_w);
+  g_debug("%s: reply doc: %s", G_STRFUNC, reply);
+  g_set_error(error,
+	      SYNCE_APP_MAN_ERROR,
+	      SYNCE_APP_MAN_ERROR_RAPI,
+	      _("Failed to uninstall application: %s"),
+	      reply);
+  g_free(reply);
+  wstr_free_string(reply_w);
+  return FALSE;
+}
+
+gboolean
+app_uninstall_legacy(const gchar *program, GError **error)
 {
   HRESULT hr;
-  DWORD rapi_error;
+  DWORD last_error;
   BOOL result;
-  gchar *tmp = NULL;
 
-  /* unload.exe */
   WCHAR* wide_command = NULL;
   WCHAR* wide_parameters = NULL;
   PROCESS_INFORMATION info;
   gchar *command = NULL;
-
-  /* process config */
-  gchar *configXML = NULL;
-  LPWSTR config = NULL;
-  DWORD flags = CONFIG_PROCESS_DOCUMENT;
-  LPWSTR reply = NULL;
-
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-  g_debug("%s: requested removal of program %s", G_STRFUNC, program);
-
-  /* try unload.exe */
 
   command = g_strdup("unload.exe");
   wide_command = wstr_from_utf8(command);
@@ -685,7 +867,7 @@ synce_app_man_uninstall(const gchar *program, GError **error)
   memset(&info, 0, sizeof(info));
 
   result = CeCreateProcess(wide_command, wide_parameters,
-			   NULL, NULL, false, 0, NULL, NULL, NULL,
+			   NULL, NULL, FALSE, 0, NULL, NULL, NULL,
 			   &info);
   CeCloseHandle(info.hProcess);
   CeCloseHandle(info.hThread);
@@ -705,39 +887,50 @@ synce_app_man_uninstall(const gchar *program, GError **error)
     return FALSE;
   }
 
-  if ((rapi_error = CeGetLastError()) != ERROR_FILE_NOT_FOUND) {
-    g_set_error(error,
-		SYNCE_APP_MAN_ERROR,
-		SYNCE_APP_MAN_ERROR_RAPI,
-		_("Failed to execute uninstaller: %s"),
-		synce_strerror(rapi_error));
-    return FALSE;
-  }
-
-  /* Failed to start unload.exe, trying to uninstall via Configuration Service Provider ... */
-
-  configXML = g_strdup_printf("%s%s%s",
-			      "<wap-provisioningdoc>\n\r<characteristic type=\"UnInstall\">\n\r<characteristic type=\"",
-			      program,
-			      "\">\n\r<parm name=\"uninstall\" value=\"1\"/>\n\r</characteristic>\n\r</characteristic>\n\r</wap-provisioningdoc>\n\r");
-  config = wstr_from_current(configXML);
-
-  hr = CeProcessConfig(config, flags, &reply);
-  wstr_free_string(config);
-  g_free(configXML);
-
-  if (SUCCEEDED(hr)) {
-    wstr_free_string(reply);
-    return TRUE;
-  }
-
-  tmp = wstr_to_current(reply);
+  last_error = CeGetLastError();
   g_set_error(error,
 	      SYNCE_APP_MAN_ERROR,
 	      SYNCE_APP_MAN_ERROR_RAPI,
-	      _("Failed to uninstall application: %s"),
-	      tmp);
-  g_free(tmp);
-  wstr_free_string(reply);
+	      _("Failed to execute uninstaller: %s"),
+	      synce_strerror(last_error));
   return FALSE;
 }
+
+gboolean
+synce_app_man_uninstall(const gchar *program, GError **error)
+{
+  CEOSVERSIONINFO version_info;
+  HRESULT hr;
+  DWORD last_error;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  g_debug("%s: requested removal of program %s", G_STRFUNC, program);
+
+  version_info.dwOSVersionInfoSize = sizeof(CEOSVERSIONINFO);
+  if (!CeGetVersionEx(&version_info)) {
+    if (FAILED(hr = CeRapiGetError())) {
+      g_set_error(error,
+		  SYNCE_APP_MAN_ERROR,
+		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
+		  _("Unable to uninstall application: Unable to determine OS version: %s"),
+		  synce_strerror(hr));
+      return FALSE;
+    }
+
+    last_error = CeGetLastError();
+    g_set_error(error,
+		SYNCE_APP_MAN_ERROR,
+		SYNCE_APP_MAN_ERROR_RAPI,
+		_("Unable to uninstall application: Unable to determine OS version: %s"),
+		synce_strerror(last_error));
+    return FALSE;
+  }
+
+  if ((version_info.dwMajorVersion < 5) || ((version_info.dwMajorVersion == 5) && (version_info.dwMinorVersion == 0))) {
+    return app_uninstall_legacy(program, error);
+  }
+
+  return app_uninstall(program, error);
+}
+

@@ -1,3 +1,8 @@
+2008-06-24  Mark Ellis <mark_ellis@users.sourceforge.net>
+
+	* add AM_PROG_CC_C_O to configure.ac.in
+	* fix WM5 support
+
 2008-02-27  Mark Ellis <mark_ellis@users.sourceforge.net>
 
 	* use GError
