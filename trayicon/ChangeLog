@@ -1,3 +1,8 @@
+2008-06-24  Mark Ellis <mark@mpellis.org.uk>
+
+	* synce-trayicon.schemas.in - add synce-hal description
+	* display N/A in RAM/storage split for WM5
+
 2008-05-08  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* man/synce-trayicon.1: Escaped minus sign, as it is currently being

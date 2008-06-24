@@ -22,7 +22,7 @@
       <default>o</default>
       <locale name="C">
         <short>The dccm implementation used</short>
-        <long>The dccm implementation used, 'o' for odccm (the default), 'v' for vdccm.</long>
+        <long>The dccm implementation used, 'o' for odccm (the default), 'h' for synce-hal, 'v' for vdccm.</long>
       </locale>
     </schema>
 

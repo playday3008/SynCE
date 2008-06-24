@@ -1595,6 +1595,9 @@ system_info_setup_view_store(WmDeviceInfo *self)
 
     g_free(storage_size);
     g_free(ram_size);
+  } else {
+    gtk_label_set_text(GTK_LABEL(sys_info_store_ram), "N/A");
+    gtk_label_set_text(GTK_LABEL(sys_info_store_storage), "N/A");
   }
 }
 
