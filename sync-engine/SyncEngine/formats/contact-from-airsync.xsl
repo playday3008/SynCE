@@ -24,7 +24,7 @@
 
             <Nickname><Content><xsl:value-of select="C2:NickName"/></Content></Nickname>
 
-            <Photo><Content><xsl:value-of select="C1:Picture"/></Content></Photo>
+            <Photo><Content><xsl:value-of select="C1:Picture"/></Content><Encoding>B</Encoding></Photo>
 
             <xsl:for-each select="(C1:HomeCity | C1:HomeCountry | C1:HomePostalCode | C1:HomeState | C1:HomeStreet)[position() = 1]">
                 <Address>
@@ -106,6 +106,7 @@
             <xsl:for-each select="C1:HomePhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>HOME</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -113,6 +114,7 @@
             <xsl:for-each select="C1:Home2PhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>HOME</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -120,6 +122,7 @@
             <xsl:for-each select="C1:BusinessPhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>WORK</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -127,6 +130,7 @@
             <xsl:for-each select="C1:Business2PhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>WORK</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -134,6 +138,7 @@
             <xsl:for-each select="C1:CarPhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>CAR</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -141,6 +146,7 @@
             <xsl:for-each select="C1:MobilePhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>CELL</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -148,6 +154,7 @@
             <xsl:for-each select="C1:PagerNumber[position() = 1]">
                 <Telephone>
                     <Type>PAGER</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -155,6 +162,7 @@
             <xsl:for-each select="C1:AssistnamePhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>Assistant</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -162,6 +170,7 @@
             <xsl:for-each select="C2:CompanyMainPhone[position() = 1]">
                 <Telephone>
                     <Type>Company</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -169,6 +178,7 @@
             <xsl:for-each select="C1:RadioPhoneNumber[position() = 1]">
                 <Telephone>
                     <Type>Radio</Type>
+                    <Type>VOICE</Type>
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>
@@ -184,10 +194,9 @@
                 <Birthday><xsl:value-of select="convert:contact_birthday_from_airsync()"/></Birthday>
             </xsl:for-each>
 
-	    <xsl:for-each select="C1:Rtf">
-		<Note><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Note>
-	    </xsl:for-each>
-
+            <xsl:for-each select="C1:Rtf">
+                <Note><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Note>
+            </xsl:for-each>
 
         </contact>
     </xsl:template>

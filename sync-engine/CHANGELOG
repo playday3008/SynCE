@@ -1022,6 +1022,33 @@ not be affected.
 
 Install example dbus activation config file in /usr/share/doc/sync-engine
 
+05/07/2008 - 203400 Dr J A Gow
+------------------------------
 
+Applied patches from 'merKur' to enhance support in synchronization of 
+contacts and resolve some timezone issues.
+
+EVO->WM5:
+- Note not being sync'ed,
+  At least on my phone, the note should be in <C1:Body>, not in <C1:Rtf>
+- If both "Business phone" and "Business fax" were defined, "Business
+  phone" ended up in "Work Phone 2"
+  This was due to usage of position() in the XSLT, while some elements
+  were skipped. Instead filter by Type=WORK & Type=VOICE.
+- PO Box was not being sync'ed
+  It seems WM5 has no 'PostalBox' field. I appended this info in the
+  'Street' field.
+- Street in Evolution can be multi-line, but only 1st line was sync'ed.
+  The rest of the lines appear in the 'ExtendedAddress' field.
+  I appended this to the 'Street' field.
+
+WM5->EVO:
+- Photo was not being sync'ed.
+  I added an 'Encoding' attribute which solves this.
+- Phone updates were messed up.
+  Added 'VOICE' Type attribute to the relevant ones.
+- Timezone conversion problems.
+  See my thread "SynCE AirSync->VCal Timezone conversion bug" in
+  synce-users dated 1-Jul-2008. Patch attached here as well.
 
 

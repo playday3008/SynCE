@@ -313,6 +313,7 @@ def curtz():
 
 def ConvertASTimezoneToVcal(ctx):
 	
+    return ""
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
     dst_node = transform_ctx.insertNode()

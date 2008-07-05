@@ -42,12 +42,24 @@
                 <C1:HomeCountry><xsl:value-of select="Country"/></C1:HomeCountry>
                 <C1:HomePostalCode><xsl:value-of select="PostalCode"/></C1:HomePostalCode>
                 <C1:HomeState><xsl:value-of select="Region"/></C1:HomeState>
-                <C1:HomeStreet><xsl:value-of select="Street"/></C1:HomeStreet>
+                <C1:HomeStreet>
+                    <xsl:value-of select="Street"/>
+                    <xsl:if test="count(ExtendedAddress) &gt; 0">
+                        <xsl:text>
+</xsl:text>
+                        <xsl:value-of select="ExtendedAddress"/>
+                    </xsl:if>
+                    <xsl:if test="count(PostalBox) &gt; 0">
+                        <xsl:text>
+PO Box </xsl:text>
+                        <xsl:value-of select="PostalBox"/>
+                    </xsl:if>
+                </C1:HomeStreet>
             </xsl:for-each>
 
             <xsl:if test="count(Address[Type='HOME']) = 0">
                 <xsl:for-each select="Address[count(parent::node()/Type) = 0][position() = 1]">
-                    <xsl:if test="1">
+                    <xsl:if test="0">
                         <C1:HomeCity><xsl:value-of select="City"/></C1:HomeCity>
                         <C1:HomeCountry><xsl:value-of select="Country"/></C1:HomeCountry>
                         <C1:HomePostalCode><xsl:value-of select="PostalCode"/></C1:HomePostalCode>
@@ -61,13 +73,37 @@
             <C1:BusinessCountry><xsl:value-of select="Address[Type='WORK']/Country"/></C1:BusinessCountry>
             <C1:BusinessPostalCode><xsl:value-of select="Address[Type='WORK']/PostalCode"/></C1:BusinessPostalCode>
             <C1:BusinessState><xsl:value-of select="Address[Type='WORK']/Region"/></C1:BusinessState>
-            <C1:BusinessStreet><xsl:value-of select="Address[Type='WORK']/Street"/></C1:BusinessStreet>
+            <C1:BusinessStreet>
+                <xsl:value-of select="Address[Type='WORK']/Street"/>
+                <xsl:if test="count(Address[Type='WORK']/ExtendedAddress) &gt; 0">
+                    <xsl:text>
+</xsl:text>
+                    <xsl:value-of select="Address[Type='WORK']/ExtendedAddress"/>
+                </xsl:if>
+                <xsl:if test="count(Address[Type='WORK']/PostalBox) &gt; 0">
+                    <xsl:text>
+PO Box </xsl:text>
+                    <xsl:value-of select="Address[Type='WORK']/PostalBox"/>
+                </xsl:if>
+            </C1:BusinessStreet>
 
             <C1:OtherCity><xsl:value-of select="Address[Type='OTHER']/City"/></C1:OtherCity>
             <C1:OtherCountry><xsl:value-of select="Address[Type='OTHER']/Country"/></C1:OtherCountry>
             <C1:OtherPostalCode><xsl:value-of select="Address[Type='OTHER']/PostalCode"/></C1:OtherPostalCode>
             <C1:OtherState><xsl:value-of select="Address[Type='OTHER']/Region"/></C1:OtherState>
-            <C1:OtherStreet><xsl:value-of select="Address[Type='OTHER']/Street"/></C1:OtherStreet>
+            <C1:OtherStreet>
+                <xsl:value-of select="Address[Type='OTHER']/Street"/>
+                <xsl:if test="count(Address[Type='OTHER']/ExtendedAddress) &gt; 0">
+                    <xsl:text>
+</xsl:text>
+                    <xsl:value-of select="Address[Type='OTHER']/ExtendedAddress"/>
+                </xsl:if>
+                <xsl:if test="count(Address[Type='OTHER']/PostalBox) &gt; 0">
+                    <xsl:text>
+PO Box </xsl:text>
+                    <xsl:value-of select="Address[Type='OTHER']/PostalBox"/>
+                </xsl:if>
+            </C1:OtherStreet>
 
             <C1:Categories>
                 <xsl:for-each select="Categories">
@@ -113,38 +149,34 @@
             <C1:HomeFaxNumber><xsl:value-of select="Telephone[Type='HOME'][Type='FAX']/Content"/></C1:HomeFaxNumber>
             <C1:BusinessFaxNumber><xsl:value-of select="Telephone[Type='WORK'][Type='FAX']/Content"/></C1:BusinessFaxNumber>
 
-            <xsl:for-each select="Telephone[Type='HOME']/Content">
-                <xsl:if test="count(parent::node()[Type='FAX']) = 0">
-                    <xsl:choose>
-                        <xsl:when test="position() = 1">
-                            <C1:HomePhoneNumber>
-                                <xsl:value-of select="."/>
-                            </C1:HomePhoneNumber>
-                        </xsl:when>
-                        <xsl:when test="position() &lt;= 2">
-                            <xsl:element name="{concat('C1:Home', position(), 'PhoneNumber')}">
-                                <xsl:value-of select="."/>
-                            </xsl:element>
-                        </xsl:when>
-                    </xsl:choose>
-                </xsl:if>
+            <xsl:for-each select="Telephone[Type='HOME' and Type='VOICE']/Content">
+                <xsl:choose>
+                    <xsl:when test="position() = 1">
+                        <C1:HomePhoneNumber>
+                            <xsl:value-of select="."/>
+                        </C1:HomePhoneNumber>
+                    </xsl:when>
+                    <xsl:when test="position() &lt;= 2">
+                        <xsl:element name="{concat('C1:Home', position(), 'PhoneNumber')}">
+                            <xsl:value-of select="."/>
+                        </xsl:element>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:for-each>
 
-            <xsl:for-each select="Telephone[Type='WORK']/Content">
-                <xsl:if test="count(parent::node()[Type='FAX']) = 0">
-                    <xsl:choose>
-                        <xsl:when test="position() = 1">
-                            <C1:BusinessPhoneNumber>
-                                <xsl:value-of select="."/>
-                            </C1:BusinessPhoneNumber>
-                        </xsl:when>
-                        <xsl:when test="position() &lt;= 2">
-                            <xsl:element name="{concat('C1:Business', position(), 'PhoneNumber')}">
-                                <xsl:value-of select="."/>
-                            </xsl:element>
-                        </xsl:when>
-                    </xsl:choose>
-                </xsl:if>
+            <xsl:for-each select="Telephone[Type='WORK' and Type='VOICE']/Content">
+                <xsl:choose>
+                    <xsl:when test="position() = 1">
+                        <C1:BusinessPhoneNumber>
+                            <xsl:value-of select="."/>
+                        </C1:BusinessPhoneNumber>
+                    </xsl:when>
+                    <xsl:when test="position() &lt;= 2">
+                        <xsl:element name="{concat('C1:Business', position(), 'PhoneNumber')}">
+                            <xsl:value-of select="."/>
+                        </xsl:element>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:for-each>
 
             <C1:CarPhoneNumber><xsl:value-of select="Telephone[Type='CAR']/Content"/></C1:CarPhoneNumber>
@@ -164,10 +196,8 @@
             <xsl:for-each select="Birthday[position() = 1]">
                 <C1:Birthday><xsl:value-of select="convert:contact_birthday_to_airsync()"/></C1:Birthday>
             </xsl:for-each>
-	    <xsl:for-each select="Note/Content[position() = 1]">
-		<C1:Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></C1:Rtf>
-	    </xsl:for-each>
 
+            <C1:Body><xsl:value-of select="Note/Content"/></C1:Body>
 
         </AS:ApplicationData>
     </xsl:template>
