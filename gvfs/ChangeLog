@@ -1,3 +1,7 @@
+2008-07-07  Mark Ellis <mark@mpellis.org.uk>
+
+	* remove error code that is now present in libsynce
+
 2008-06-03  Mark Ellis <mark@mpellis.org.uk>
 
 	* added po/ChangeLog
