@@ -74,11 +74,6 @@ typedef struct _ErrorCodeTriple
   HRESULT hresult;
 } ErrorCodeTriple;
 
-/* hack, these should be in synce.h */
-#ifndef ERROR_NOT_SAME_DEVICE
-#define ERROR_NOT_SAME_DEVICE         17
-#endif
-
 static ErrorCodeTriple error_codes[] =
 {
     {GNOME_VFS_OK,                        ERROR_SUCCESS,        S_OK        },
