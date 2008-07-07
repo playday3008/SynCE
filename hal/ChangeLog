@@ -1,3 +1,7 @@
+2008-07-07  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal-synce-serial.in: always add updetach to pppd options
+
 2008-05-07  Mark Ellis <mark@mpellis.org.uk>
 
 	* 10-synce.fdi: fix to freebsd ucom match

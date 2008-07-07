@@ -57,10 +57,7 @@ COMMAND="${PPPD} call ${PEER}"
 # see the "linkname" option in the man page for pppd
 PID_FILE=/var/run/ppp-$PEER.pid
 
-pppopts="nodefaultroute noauth local crtscts"
-if [ -t 1 ]; then
-  pppopts="$pppopts updetach"
-fi
+pppopts="nodefaultroute noauth local crtscts updetach"
 
 # include alternate settings file if it exists
 if [ -e "@SYSCONFDIR@/synce-serial.conf" ]; then
