@@ -12,5 +12,5 @@ Primary-site:   ftp://ftp.kde.org/pub/kde/unstable/apps/utils
                 xxxxxx  rapip-0.1.tar.gz
                 xxx     rapip-0.1.lsm
 Platform:       Linux. Needs KDE 2.x
-Copying-policy: GPL
+Copying-policy: MIT
 End

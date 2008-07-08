@@ -1,3 +1,8 @@
+2008-07-08  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* rapip/rapip.lsm: Changed incorrect license field from GPL to MIT.
+	* COPYING (deleted): Removed pointless GPL file.
+
 2008-05-18  Mark Ellis <mark@mpellis.org.uk>
 
 	* rapip.cpp: to not attempt to ascii() filename in 
