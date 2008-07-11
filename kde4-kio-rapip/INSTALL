@@ -1,0 +1,40 @@
+Compiling and Installing
+Requisites
+    * Install the base SynCE libraries (libsynce, librapi2) as described at
+      http://www.synce.org/. If you installed binary packages provided by your
+      distribution, ensure you install the -devel packages as well.
+    * Make the SynCE libraries work by getting connected for the first time.
+      This would involve either *dccm or synce-hal. Test by running
+	  # pstatus
+      which should return information about your device when it is connected.
+    * Install the KDE4 development files and all its dependencies, usually
+      provided by your distribution. The package is often named kdelibs4-devel or
+      libkde4-devel.
+
+SynCE kio-rapip compilation and installation
+
+NOTE: This package now uses CMAKE!
+
+   1. Download the source tarball or check out the latest code from the SVN
+      repository. If you have downloaded from SVN go ahead to step 4.
+
+   2. Unpack the downloaded file into your favorite source directory
+          # tar -xjf kde4-kio-rapip-VERSION.tar.bz2
+
+   3. Create a build directory
+	  # mkdir ./build
+	  # cd ./build
+
+   4. Configure your source tree with cmake.
+	  # cmake ..
+      Your installation of KDE may not look within the /usr/local directory for
+      services. In that case instead run
+	  # cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+      which will install directly to the /usr directory instead.
+
+   5. After configuring, compile and install it by simply doing from within the
+      build directory a
+          # make
+      and as root (or using sudo)
+          # make install
+
