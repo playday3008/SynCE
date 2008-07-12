@@ -31,7 +31,8 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			dccm-client.c dccm-client.h \
 			keyring.c keyring.h \
 			device-info.c device-info.h \
-			module.c module.h
+			module.c module.h \
+			synce_app_man.c synce_app_man.h
 
 EXTRA_DIST = dccm-client-signals-marshal.list \
 		sync-engine.xml \
@@ -44,7 +45,8 @@ synce_trayicon_CPPFLAGS = \
 	$(LIBRAPI2_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
 	$(DBUS_CFLAGS) \
-	$(HAL_CFLAGS)
+	$(HAL_CFLAGS) \
+	$(LIBORANGE_CFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GNOME2_LIBS) \
@@ -52,7 +54,8 @@ synce_trayicon_LDADD = \
 	$(LIBRAPI2_LIBS) \
 	$(LIBRRA_LIBS) \
 	$(DBUS_LIBS) \
-	$(HAL_LIBS)
+	$(HAL_LIBS) \
+	$(LIBORANGE_LIBS)
 
 if ENABLE_NOTIFY
 synce_trayicon_CPPFLAGS += $(NOTIFY_CFLAGS)

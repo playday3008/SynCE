@@ -55,6 +55,9 @@ if test "x$enable_notify" != "xno"; then
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, test x"$enable_notify" != xno)
 
+dnl Check for liborange
+PKG_CHECK_MODULES(LIBORANGE, liborange >= 0.3.2)
+
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.

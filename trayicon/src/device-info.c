@@ -30,9 +30,12 @@ IN THE SOFTWARE.
 #include <rra/matchmaker.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
+#include <libunshield.h>
 
 #include "device-info.h"
 #include "sync-engine-glue.h"
+#include "synce_app_man.h"
+#include "utils.h"
 
 G_DEFINE_TYPE (WmDeviceInfo, wm_device_info, G_TYPE_OBJECT)
 
@@ -91,7 +94,19 @@ enum
   PSHMGR_STORETYPE_EXCH
 };
 
-/* partnership */
+enum
+{
+  APP_INDEX_COLUMN,
+  APP_NAME_COLUMN,
+  APP_N_COLUMNS
+};
+
+
+/*
+ **************************
+ partnership
+ **************************
+*/
 
 static void
 partners_create_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
@@ -1462,7 +1477,11 @@ partners_setup_view(WmDeviceInfo *self)
 }
 
 
-/* system info */
+/*
+ ***********************
+ system info
+ ***********************
+*/
 
 /* from librapi2 pstatus */
 static const char*
@@ -1708,7 +1727,11 @@ system_info_setup_view(WmDeviceInfo *self)
 }
 
 
-/* power */
+/*
+ **************
+ power
+ **************
+*/
 
 static const gchar*
 get_ACLineStatus_string(unsigned ACLineStatus)
@@ -1844,6 +1867,328 @@ system_power_setup_view(WmDeviceInfo *self)
 }
 
 
+/*
+ ****************
+ applications
+ ****************
+ */
+
+static void
+progress_bar_pulse(gpointer data)
+{
+  gtk_progress_bar_pulse(GTK_PROGRESS_BAR(data));
+  while (gtk_events_pending()) {
+    gtk_main_iteration_do(FALSE);
+  }
+}
+
+GtkWidget *
+busy_window_new(const gchar *title, const gchar *message, GtkWidget **progressbar)
+{
+  GtkWidget *window, *hbox, *image, *vbox, *label;
+
+  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(window), title);
+  gtk_container_set_border_width(GTK_CONTAINER(window), 14);
+
+  hbox = gtk_hbox_new(FALSE, 10);
+  gtk_container_add(GTK_CONTAINER(window), hbox);
+
+  image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
+  gtk_container_add(GTK_CONTAINER(hbox), image);
+
+  vbox = gtk_vbox_new(FALSE, 10);
+  gtk_container_add(GTK_CONTAINER(hbox), vbox);
+
+  label = gtk_label_new(message);
+  gtk_container_add(GTK_CONTAINER(vbox), label);
+
+  *progressbar = gtk_progress_bar_new();
+  gtk_container_add(GTK_CONTAINER(vbox), *progressbar);
+
+  return window;
+}
+
+static void
+applications_selection_changed (GtkTreeSelection *selection, gpointer user_data) 
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(user_data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  gint number;
+  gchar *program;
+
+  GtkWidget *app_remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
+
+  if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+    gtk_tree_model_get (model, &iter,
+			APP_NAME_COLUMN, &program,
+			APP_INDEX_COLUMN, &number,
+			-1);
+    g_debug("%s: selected %d: %s", G_STRFUNC, number, program);
+    g_free (program);
+    gtk_widget_set_sensitive(app_remove_button, TRUE);
+  } else {
+    gtk_widget_set_sensitive(app_remove_button, FALSE);
+  }
+}
+
+
+static void
+applications_setup_view_store(WmDeviceInfo *self) 
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
+  GtkWidget *remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
+
+  GtkListStore *store = gtk_list_store_new (APP_N_COLUMNS,
+					    G_TYPE_INT,     /* index */
+					    G_TYPE_STRING); /* program name */
+  GtkTreeIter iter;
+  GtkWidget *fetchwindow, *progressbar;
+  GList *programlist = NULL;
+  GList *tmplist = NULL;
+  int i = 0;
+  GError *error = NULL;
+  gboolean result;
+
+  fetchwindow = busy_window_new(_("Fetching information..."), _("Fetching the list of installed applications from the PDA."), &progressbar);
+
+  gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
+  gtk_widget_show_all(fetchwindow);
+
+  while (gtk_events_pending()) {
+    gtk_main_iteration_do(FALSE);
+  }
+
+  result = synce_app_man_create_program_list(&programlist, progress_bar_pulse, progressbar, &error);
+  if (!result) {
+    synce_error_dialog(_("Couldn't fetch the list of applications from the device: %s"), error->message);
+    g_error_free(error);
+  }
+  gtk_widget_destroy(fetchwindow);
+
+  tmplist = programlist;
+
+  /* i is not really used except to insert a sequence number in the list */
+  i = 0;
+  while (tmplist != NULL) {
+    gtk_list_store_append (store, &iter);  /* Acquire an iterator */
+
+    gtk_list_store_set (store, &iter,
+			APP_INDEX_COLUMN, i,
+			APP_NAME_COLUMN, tmplist->data,
+			-1);
+
+    tmplist = g_list_next(tmplist);    
+    i++;
+  }
+
+  gtk_tree_view_set_model (GTK_TREE_VIEW(app_treeview), GTK_TREE_MODEL (store));
+  g_object_unref (G_OBJECT (store));
+
+  tmplist = programlist;
+  while (tmplist != NULL) {
+    g_free(tmplist->data);
+    tmplist = g_list_next(tmplist);    
+  }
+  g_list_free(programlist);
+
+  gtk_widget_set_sensitive(remove_button, FALSE);
+}
+
+
+static void
+on_app_add_button_clicked(GtkButton *button, gpointer user_data)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(user_data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *installdialog;
+  GtkWidget *fetchwindow, *progressbar;
+  gchar *filepath;
+  gint response;
+  GError *error = NULL;
+  gchar *message = NULL;
+  gboolean result;
+
+  installdialog = gtk_file_chooser_dialog_new (_("Select installation file"),
+					       NULL,
+					       GTK_FILE_CHOOSER_ACTION_OPEN,
+					       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+					       GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+					       NULL);
+  response = gtk_dialog_run (GTK_DIALOG (installdialog));
+  filepath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(installdialog));
+  gtk_widget_destroy (installdialog);
+
+  if (response == GTK_RESPONSE_ACCEPT) {
+    message = g_strdup_printf(_("Installing from file \"%s\"..."), filepath);
+    fetchwindow = busy_window_new(_("Installing Software..."), message, &progressbar);
+    g_free(message);
+
+    gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
+    gtk_widget_show_all(fetchwindow);
+
+    while (gtk_events_pending()) {
+      gtk_main_iteration_do(FALSE);
+    }
+
+    g_debug("%s: requested installation of file %s", G_STRFUNC, filepath);
+    result = synce_app_man_install(filepath, progress_bar_pulse, progressbar, &error);
+
+    gtk_widget_hide_all(fetchwindow);
+    gtk_widget_destroy(fetchwindow);
+    if (!result) {
+      synce_error_dialog(_("Failed to install from file %s: %s"), filepath, error->message);
+      g_error_free(error);
+    } else {
+      synce_info_dialog(_("Successfully started installation of file \"%s\". Check your device to see if any additional steps are required. The program list must be manually refreshed after installation has completed."), filepath);
+    }
+  }
+
+  g_free(filepath);
+}
+
+void
+on_app_remove_button_clicked(GtkButton *button, gpointer user_data)
+{
+  WmDeviceInfo *self = WM_DEVICE_INFO(user_data);
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  GtkWidget *app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  GtkTreeSelection *selection;
+  gint number;
+  gchar *program = NULL;
+  GError *error = NULL;
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(app_treeview));
+  if (gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+      gtk_tree_model_get (model, &iter,
+			  APP_NAME_COLUMN, &program,
+			  APP_INDEX_COLUMN, &number,
+			  -1);
+
+      if (synce_app_man_uninstall(program, &error)) {
+	g_debug("%s: successfully removed program %s", G_STRFUNC, program);
+	synce_info_dialog(_("The program \"%s\" was successfully removed."), program);
+	applications_setup_view_store(self);
+      } else {
+	g_warning("%s: failed to remove program %s: %s", G_STRFUNC, program, error->message);
+	synce_error_dialog(_("The program \"%s\" could not be removed: %s"), program, error->message);
+	g_error_free(error);
+      }
+      g_free (program);
+    }
+}
+
+
+static void
+applications_setup_view(WmDeviceInfo *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceInfoPrivate *priv = WM_DEVICE_INFO_GET_PRIVATE (self);
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  wm_device_rapi_select(priv->device);
+
+  GtkCellRenderer *renderer;
+  GtkTreeViewColumn *column;
+  GtkTreeSelection *selection;
+  GtkWidget *app_treeview, *app_add_button, *app_remove_button;
+
+  app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
+  app_add_button = glade_xml_get_widget(priv->xml, "app_add_button");
+  app_remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
+
+  g_signal_connect(G_OBJECT(app_add_button), "clicked",
+		   G_CALLBACK(on_app_add_button_clicked),
+		   self);
+
+  g_signal_connect(G_OBJECT(app_remove_button), "clicked",
+		   G_CALLBACK(on_app_remove_button_clicked),
+		   self);
+
+  unshield_set_log_level(UNSHIELD_LOG_LEVEL_WARNING);
+
+  applications_setup_view_store(self) ;
+
+  column = gtk_tree_view_column_new ();
+  renderer = gtk_cell_renderer_text_new ();
+  gtk_tree_view_column_pack_start (column, renderer, TRUE);
+  gtk_tree_view_column_set_attributes (column, renderer,
+				       "text", APP_INDEX_COLUMN, NULL);
+
+  gtk_tree_view_column_set_visible(GTK_TREE_VIEW_COLUMN(column), FALSE);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(app_treeview), column);
+
+  column = gtk_tree_view_column_new ();
+  gtk_tree_view_column_set_title (GTK_TREE_VIEW_COLUMN(column),"Application");
+  renderer = gtk_cell_renderer_text_new ();
+  gtk_tree_view_column_pack_start (column, renderer, TRUE);
+  gtk_tree_view_column_set_attributes (column, renderer,
+				       "text", APP_NAME_COLUMN, NULL);
+
+  gtk_tree_view_append_column (GTK_TREE_VIEW(app_treeview), column);
+
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (app_treeview));
+  gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
+  g_signal_connect (G_OBJECT (selection), "changed",
+		    G_CALLBACK (applications_selection_changed), self);
+
+  gtk_widget_show (app_treeview);
+}
+
+/*
+ *************
+ general
+ *************
+ */
+
 static void
 device_info_refresh_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
@@ -1868,6 +2213,7 @@ device_info_refresh_button_clicked_cb (GtkWidget *widget, gpointer data)
     partners_setup_view_store_rra(self);
   }
 
+  applications_setup_view_store(self);
   system_info_setup_view_store(self);
   system_power_setup_view(self);
 }
@@ -1925,6 +2271,7 @@ device_info_setup_dialog (WmDeviceInfo *self)
   g_free(title);
 
   partners_setup_view(self);
+  applications_setup_view(self);
   system_info_setup_view(self);
   system_power_setup_view(self);
 

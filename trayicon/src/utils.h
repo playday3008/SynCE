@@ -22,6 +22,7 @@ IN THE SOFTWARE.
 
 void synce_error_dialog(const gchar *format, ...);
 void synce_warning_dialog(const gchar *format, ...);
+void synce_info_dialog(const gchar *format, ...);
 
 gchar *device_get_password(gchar *pdaname);
 void device_do_password_on_device_dialog(gchar *pdaname);

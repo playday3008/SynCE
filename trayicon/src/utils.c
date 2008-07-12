@@ -72,6 +72,27 @@ void synce_warning_dialog(const gchar *format, ...)
   g_free(tmpstr);
 }
 
+void synce_info_dialog(const gchar *format, ...)
+{
+  va_list ap;
+  GtkWidget *dialog;
+  gchar *tmpstr = NULL;
+
+  va_start(ap, format);
+  tmpstr = g_strdup_vprintf(format, ap);
+  va_end(ap);
+
+  dialog = gtk_message_dialog_new (NULL,
+				   GTK_DIALOG_DESTROY_WITH_PARENT,
+				   GTK_MESSAGE_INFO,
+				   GTK_BUTTONS_OK,
+				   tmpstr);
+
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
+  g_free(tmpstr);
+}
+
 void device_password_dialog_entry_changed_cb (GtkWidget *widget, gpointer data)
 {
   gchar *entry_string;

@@ -606,19 +606,6 @@ trayicon_menu(GdkEventButton *event, SynceTrayIcon *self)
 
   priv->menu = gtk_menu_new();
 
-  entry = gtk_menu_item_new_with_label(_("Add/Remove Programs"));
-  g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_software), self);
-  gtk_menu_append(GTK_MENU(priv->menu), entry);
-  if (g_find_program_in_path(SYNCE_SOFTWARE_MANAGER) != NULL && 
-      is_connected(self)) {
-    gtk_widget_set_sensitive(entry, TRUE);
-  } else {
-    gtk_widget_set_sensitive(entry, FALSE);
-  }
-	
-  entry = gtk_separator_menu_item_new();
-  gtk_menu_append(GTK_MENU(priv->menu), entry);
-
   if (is_connected(self)) {
     GtkWidget *device_menu;
 
