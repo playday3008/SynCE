@@ -261,7 +261,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
             under MS-Windows.
             <p>Copyright (c) 2008 Guido Diepen &lt;guido@guidodiepen.nl&gt;
             <p>SynCE-KPM is licensed under GPL
-            """%"0.11.1")
+            """%"0.12")
 
 
     def updateTray(self, deviceConnected):

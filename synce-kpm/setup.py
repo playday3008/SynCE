@@ -8,7 +8,7 @@ setup(
     description='SynCE KDE PDA Manager',
     url='http://www.guidodiepen.nl',
     name = 'synce-kpm',
-    version = '0.11.1',
+    version = '0.12',
     packages = find_packages(),
     scripts = ['synce-kpm'],
 
