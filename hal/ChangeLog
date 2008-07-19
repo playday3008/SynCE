@@ -1,3 +1,7 @@
+2008-07-19  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal-synce-rndis.in: fix for dhclient output format change
+
 2008-07-07  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal-synce-serial.in: always add updetach to pppd options
