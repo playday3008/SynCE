@@ -1,2 +1,2 @@
-SUBDIRS = src hal bluetooth patches
+SUBDIRS = src hal bluetooth
 
