@@ -1,3 +1,7 @@
+2008-07-20  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal-client.c - fixed detection of newly unlocked wm6 device
+
 2008-07-12  Mark Ellis <mark@mpellis.org.uk>
 
 	* added application manager to device info dialog, now

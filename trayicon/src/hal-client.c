@@ -188,7 +188,7 @@ password_status_changed_cb(LibHalContext *ctx,
     goto exit;
   }
 
-  if ( (strcmp(pw_status, "unset") == 0) || (strcmp(pw_status, "unlocked")) ) {
+  if ( (strcmp(pw_status, "unset") == 0) || (strcmp(pw_status, "unlocked") == 0) ) {
     g_ptr_array_remove_index(priv->pending_devices, i);
 
     if (!libhal_device_remove_property_watch(priv->hal_ctx, udi, &dbus_error))
