@@ -39,6 +39,18 @@ fi
 dnl Check for HAL
 PKG_CHECK_MODULES(HAL, hal)
 
+dnl Check for override of default hal addon dir
+AC_MSG_CHECKING([hal addon dir ...])
+AC_ARG_WITH(hal-addon-dir, [  --with-hal-addon-dir=PATH     Location of the hal addon scripts.],
+            with_hal_addon_dir="$withval", with_hal_addon_dir="no")
+if test "x${with_hal_addon_dir}" == "xno"; then
+    hal_addon_dir="`pkg-config --variable=libdir hal`/hal"
+else
+    hal_addon_dir="$with_hal_addon_dir"
+fi
+AC_MSG_RESULT([$hal_addon_dir])
+AC_SUBST(hal_addon_dir)
+
 AS_AC_EXPAND(LIBEXECDIR, "$libexecdir")
 AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
 

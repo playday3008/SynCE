@@ -1,3 +1,9 @@
+2008-07-30  Mark Ellis <mark@mpellis.org.uk>
+
+	* configure.ac.in: default hal addon dir to hal's $libdir/hal
+	  and add option to override
+	* hal/Makefile.am: install addon scripts to determined dir
+
 2008-07-19  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal-synce-rndis.in: fix for dhclient output format change
