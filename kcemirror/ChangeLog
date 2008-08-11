@@ -1,3 +1,8 @@
+2008-08-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* sort out docs
+	* configure.in.in - increase version to 0.2
+
 2008-04-23  Mark Ellis <mark@mpellis.org.uk>
 
 	* update build to enable use of automake 1.10
