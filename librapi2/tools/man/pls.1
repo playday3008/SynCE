@@ -4,7 +4,7 @@
 pls \- list directory contents
 
 .SH SYNOPSIS
-\fBpls\fR [\-a] [\-d \fILEVEL\fR] [\-p \fIDEVNAME\fR] [\-h] [\fIDIRECTORY\fR]
+\fBpls\fR [\-a] [\-R] [\-d \fILEVEL\fR] [\-p \fIDEVNAME\fR] [\-h] [\fIDIRECTORY\fR]
 
 .SH "DESCRIPTION"
 .PP
@@ -59,12 +59,16 @@ Use the device with the given name, instead of the default.
 Show all files including those marked as hidden.
 
 .TP
+\-R
+Recursively list subdirectories.
+
+.TP
 \-h
 Display help message.
 
 .TP
 \fIDIRECTORY\fR
-The full path name to the directory. If this parameter is omitted, the contents of the "My Documents folder" is listed.
+The full path name to the directory. Wild cards are allowed, but only for the trailing part of the path. If this parameter is relative, it is assumed to be relative to the "My Documents" folder. Similarly, if this parameter is omitted, the contents of the "My Documents" folder is listed.
 
 .SH "AUTHOR"
 .PP

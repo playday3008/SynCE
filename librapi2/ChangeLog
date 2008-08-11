@@ -1,3 +1,8 @@
+2008-08-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pls.c - option for recursive listing
+	* tools/man/pls.1 - man page update for recursive listing
+
 2008-06-17  Mark Ellis  <mark@mpellis.org.uk>
 
 	* recursive directory copy for pcp
