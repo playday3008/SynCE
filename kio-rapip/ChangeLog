@@ -1,3 +1,7 @@
+2008-08-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* configure.in.in - increase version to 0.10
+
 2008-07-08  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* rapip/rapip.lsm: Changed incorrect license field from GPL to MIT.
