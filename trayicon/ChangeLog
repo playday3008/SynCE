@@ -1,3 +1,9 @@
+2008-08-12  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/synce-trayicon.c - display notification instead of dialog
+	  for locked WM6 device, remove obsolete function
+	* configure.ac.in - add AM_PROG_CC_C_O
+
 2008-07-20  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal-client.c - fixed detection of newly unlocked wm6 device

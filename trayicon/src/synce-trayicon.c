@@ -229,7 +229,21 @@ password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
 static void
 password_required_on_device_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
 {
+#ifdef ENABLE_NOTIFY
+
+  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
+  gchar *notify_string = NULL;
+
+  notify_string = g_strdup_printf("The device %s is locked. Please unlock it by following instructions on the device", pdaname);
+  event_notification(self, "Device locked", notify_string);
+  g_free(notify_string);
+
+#else  /* ENABLE_NOTIFY */
+
   device_do_password_on_device_dialog(pdaname);
+
+#endif /* ENABLE_NOTIFY */
+
 }
 
 static void
@@ -468,17 +482,6 @@ menu_explore (GtkWidget *button, WmDevice *device)
     synce_error_dialog(_("Can't explore the PDA with the filemanager,\nmake sure you have nautilus and the synce gnome-vfs module installed"));
   }
   g_free(arg_str);
-}
-
-static void
-menu_software (GtkWidget *button, SynceTrayIcon *self)
-{
-  char *argv[1] = {
-    SYNCE_SOFTWARE_MANAGER
-  };
-  if (gnome_execute_async(NULL,1, argv) == -1) {
-    synce_error_dialog(_("Can't open the software manager\nmake sure you have synce-software-manager installed"));
-  }
 }
 
 static void
