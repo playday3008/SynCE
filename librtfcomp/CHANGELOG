@@ -36,3 +36,7 @@ Applied patch by Robert Jarzmik to:
 2008-03-26  Mark Ellis  <mark@mpellis.org.uk>
 
 * correct build without python bindings (bug 1708885)
+
+2008-08-12   Tejas Guruswamy	<masterpatricko@gmail.com>
+
+* No longer install test binaries to /usr/bin
