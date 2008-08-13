@@ -9,23 +9,24 @@ Requisites
       which should return information about your device when it is connected.
     * Install the KDE4 development files and all its dependencies, usually
       provided by your distribution. The package is often named kdelibs4-devel or
-      libkde4-devel.
+      libkde4-devel. To perform the actual configuration of the sources install cmake.
 
-SynCE kio-rapip compilation and installation
+SynCE kde4-kio-rapip compilation and installation
 
-NOTE: This package now uses CMAKE!
+NOTE: This package uses CMAKE, not autotools to configure and build the sources!
 
    1. Download the source tarball or check out the latest code from the SVN
-      repository. If you have downloaded from SVN go ahead to step 4.
+      repository.
 
-   2. Unpack the downloaded file into your favorite source directory
-          # tar -xjf kde4-kio-rapip-VERSION.tar.bz2
+   2. If you are using the source tarball, unpack the downloaded file into your 
+      favorite source directory
+          # tar -xzvf kde4-kio-rapip-VERSION.tar.gz
 
-   3. Create a build directory
+   3. If you checked out a copy from subversion, create a build directory.
 	  # mkdir ./build
-	  # cd ./build
 
    4. Configure your source tree with cmake.
+	  # cd ./build
 	  # cmake ..
       Your installation of KDE may not look within the /usr/local directory for
       services. In that case instead run
@@ -38,3 +39,6 @@ NOTE: This package now uses CMAKE!
       and as root (or using sudo)
           # make install
 
+   6. To uninstall simply issue from within the build directory as root
+	  # make uninstall
+      or alternatively use the list of installed files from install_manifest.txt.
