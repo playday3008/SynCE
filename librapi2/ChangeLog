@@ -1,3 +1,7 @@
+2008-08-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - don't segfault on empty strings
+
 2008-08-11  Mark Ellis  <mark@mpellis.org.uk>
 
 	* tools/pls.c - option for recursive listing

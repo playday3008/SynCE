@@ -412,17 +412,12 @@ class RAPISession:
         if retval != 0:
             raise RAPIError(retval)
 
-
-	
-
-
-
-
-
     def process_config(self, config, flags):
         cdef LPWSTR config_w
         cdef LPWSTR reply_w
         cdef char *reply
+
+        reply_w = NULL;
 
         config_w = wstr_from_utf8(config)
         #retval = _CeProcessConfig(config_w, flags, &reply_w)
@@ -435,7 +430,10 @@ class RAPISession:
         if retval != 0:
             raise RAPIError(retval)
 
-        return reply
+        if reply == NULL:
+            return ""
+        else:
+            return reply
 
     def start_replication(self):
         retval = CeStartReplication()
