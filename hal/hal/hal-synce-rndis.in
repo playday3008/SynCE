@@ -35,12 +35,17 @@ def RunIfconfig(iface):
     global local_ip
 
     # returns a Popen object
-    proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output_text = proc.communicate()[0]
+    try:
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output_text = proc.communicate()[0]
+    except Exception,e:
+        logger.error("failure running ifconfig: %s" % e)
+        return False
+
     rc = proc.returncode
 
     if rc != 0:
-        logger.debug("ifconfig failed with return code %d",rc)
+        logger.error("ifconfig failed with return code %d",rc)
         return False
 
     logger.debug("ifconfig succeeded")
@@ -63,12 +68,17 @@ def RunDhclient(iface):
     global local_ip
 
     # returns a Popen object
-    proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output_text = proc.communicate()[0]
+    try:
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output_text = proc.communicate()[0]
+    except Exception,e:
+        logger.error("failure running dhclient: %s" % e)
+        return False
+
     rc = proc.returncode
 
     if rc != 0:
-        logger.debug("dhclient failed with return code %d",rc)
+        logger.error("dhclient failed with return code %d",rc)
         return False
 
     output_list = output_text.split('\n')
@@ -112,8 +122,10 @@ def RunDccm(py_log_level):
 
     logger.debug(cmd_list)
 
-    os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
-    logger.error("failed to exec hal-dccm !!")
+    try:
+        os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
+    except Exception,e:
+        logger.error("failed to exec hal-dccm !!: %s" % e)
 
     return
 
@@ -129,6 +141,8 @@ if __name__ == '__main__':
                         format='%(asctime)s %(name)s %(levelname)s : %(message)s')
     logger = logging.getLogger("hal-synce-rndis")
     sys_log = logging.handlers.SysLogHandler("/dev/log", log_facility)
+    syslog_form = logging.Formatter('%(name)s[%(process)d] %(levelname)s : %(message)s')
+    sys_log.setFormatter(syslog_form)
     logger.addHandler(sys_log)
 
     if os.environ.has_key("HAL_PROP_NET_INTERFACE"):

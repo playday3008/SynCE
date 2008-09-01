@@ -1,3 +1,7 @@
+2008-09-01  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal/hal-synce-rndis.in - catch os exceptions, improve logging
+
 2008-07-30  Mark Ellis <mark@mpellis.org.uk>
 
 	* configure.ac.in: default hal addon dir to hal's $libdir/hal
