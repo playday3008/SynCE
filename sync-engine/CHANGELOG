@@ -1052,3 +1052,10 @@ WM5->EVO:
   synce-users dated 1-Jul-2008. Patch attached here as well.
 
 
+10/09/2008 - 163500 Mark Ellis
+------------------------------
+
+Add config setting to allow authorization to be handled by an external
+process
+
+Fix comment in syncengine.conf.xml, default is INTERNAL_GTK

@@ -68,6 +68,8 @@ def CanSendAuth(device):
 # Authorize
 #
 # Obtain an authorization token to continue device connection. 
+# If we are set to allow an external program to handle auth,
+#   return 0 and remain disconnected
 # Success (the device is unlocked) will return 1 and allow the
 #   device to proceed with connection
 # A password entry required on the device (WM6) will return 2,
@@ -87,6 +89,9 @@ def Authorize(devpath,device,config):
 	# get the program we need
 
 	prog = config.cfg["AuthMethod"]
+
+	if prog == "EXTERNAL":
+            return 0
 
 	if prog == "INTERNAL_GUI":
 		clist = [GUI_TOOL,devpath]

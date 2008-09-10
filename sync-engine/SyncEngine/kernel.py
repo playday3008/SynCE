@@ -378,7 +378,10 @@ class SyncEngine(dbus.service.Object):
 				self.OnDisconnect()
 
 			result = auth.Authorize(self.devicePath,self.device,self.config.config_Global)
-			if result == 1:
+			if result == 0:
+				self.logger.info("Authorization pending - waiting for external authorization")
+				rc = False
+			elif result == 1:
 				self.logger.info("Authorization successful - reconnecting to device")
 			elif result == 2:
 				self.logger.info("Authorization pending - waiting for password on device")

@@ -20,6 +20,8 @@
 			This can be one of the following:
 				- INTERNAL_GUI uses internal GUI auth prog
 				- INTERNAL_CLI uses internal console auth prog
+				- EXTERNAL waits for an external program to unlock
+				  the device
 				- [pathname_to_prog] uses external auth prog
 
 			Note: INTERNAL_GUI uses GTK to display the box.
@@ -28,7 +30,7 @@
 			without GTK
 			       
 			If this element is not specified, the default will be
-			INTERNAL_CLI
+			INTERNAL_GTK
 		-->
 		
 		<!-- <AuthMethod>INTERNAL_GUI</AuthMethod> -->
