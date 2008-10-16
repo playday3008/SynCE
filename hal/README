@@ -14,11 +14,19 @@ of the core synce libraries and tools.
 For usb connections, most devices should be autodetected, if
 yours is not please inform the synce project and we'll fix it !
 Both WM5/6 and older style devices are fully supported. If you
-want to connect WM5/6 over rndis (advanced network functionality)
-then you will need to install the usb-rndis-lite modules, until
-such time as the changes required are accepted into the main
-kernel tree. Rndis connections will attempt to use dhcp, only
-falling back to a static configuration if that is unsuccessful.
+want to connect WM5/6 over rndis (advanced network functionality),
+the rndis_host module in the kernel is reasonable from 2.6.24 or
+2.6.26, depending on the distribution. Otherwise you will need
+to install the usb-rndis-lite modules. Rndis connections will
+attempt to use dhcp, only falling back to a static configuration
+if that is unsuccessful.
+
+Configuration
+-------------
+Defaults should be adequate for most uses. An optional
+configuration file will be accessed at $sysconfdir/synce-hal.conf,
+an example of which can be found in the etc directory. The most
+useful item is 'loglevel'.
 
 FreeBSD
 -------
@@ -35,6 +43,5 @@ some success.
 Bug reports
 -----------
 If you find you have problems, before reporting them can you
-please increase the debugging output level to the logs. This can
-be done at the top of the hal scripts hal-synce-serial and
-hal-synce-rndis, depending on the connection method you are using.
+please increase the debugging output level to the logs, using the
+configuration file.

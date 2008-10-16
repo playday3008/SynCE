@@ -1,162 +1,253 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-# LOG_LEVEL can be set from 1 to 6, with 6 being
-# the highest
-LOG_LEVEL=3
+import sys
+import os
+import re
+import stat
+import time
+import subprocess
+import logging, logging.handlers
+import platform
+import ConfigParser
 
-SYS_NAME=`uname`
-
-if [ ${SYS_NAME} = "FreeBSD" ] ; then
-  DEVICE_FILE=/dev/ttyU${HAL_PROP_FREEBSD_UNIT}
-else
-  DEVICE_FILE=${HAL_PROP_SERIAL_DEVICE}
-fi
-
-THIS=`basename $0`
-
-# logging functions
-#
-LOGGER="logger -t ${THIS}[$$]"
-#FACILITY=daemon
-FACILITY=daemon
-
-ERROR="${LOGGER} -p ${FACILITY}.err"
-if [ ${LOG_LEVEL} -ge 3 ]; then
-  WARNING="${LOGGER} -p ${FACILITY}.warning"
-else
-  WARNING=":"
-fi
-if [ ${LOG_LEVEL} -ge 4 ]; then
-  NOTICE="${LOGGER} -p ${FACILITY}.notice"
-else
-  NOTICE=":"
-fi
-if [ ${LOG_LEVEL} -ge 5 ]; then
-  INFO="${LOGGER} -p ${FACILITY}.info"
-else
-  INFO=":"
-fi
-if [ ${LOG_LEVEL} -ge 6 ]; then
-  DEBUG="${LOGGER} -p ${FACILITY}.debug"
-else
-  DEBUG=":"
-fi
+# defaults
+config_file = '@SYSCONFDIR@/synce-hal.conf'
+log_level = logging.WARNING
+default_network = "192.168.131"
+pppopts = ["nodefaultroute", "noauth", "local", "crtscts"]
 
 # ppp setup
 #
-PPP_OPTIONS=/etc/ppp/options
-PPP_PEERS=/etc/ppp/peers
-PPPD=/usr/sbin/pppd
-VAR_PPP=/var/run
-
-DEVICE_PREFIX=synce-device
-PEER=$DEVICE_PREFIX
-PEER_FILE=${PPP_PEERS}/${PEER}
-COMMAND="${PPPD} call ${PEER}"
-
-# see the "linkname" option in the man page for pppd
-PID_FILE=/var/run/ppp-$PEER.pid
-
-pppopts="nodefaultroute noauth local crtscts updetach"
-
-# include alternate settings file if it exists
-if [ -e "@SYSCONFDIR@/synce-serial.conf" ]; then
-	. @SYSCONFDIR@/synce-serial.conf
-fi
-
-DEFAULT_NETWORK=${DEFAULT_NETWORK:-"192.168.131"}
-DEFAULT_LOCAL_IP=$DEFAULT_NETWORK.102
-DEFAULT_REMOTE_IP=$DEFAULT_NETWORK.201
-DEFAULT_IPS=$DEFAULT_LOCAL_IP:$DEFAULT_REMOTE_IP
+PPPD = "/usr/sbin/pppd"
+VAR_PPP = "/var/run"
+DEVSPEED = '115200'
 
 
-if [ -c ${DEVICE_FILE} ]; then
-  SYNCE_DEV=${DEVICE_FILE};
-else 
-  ${ERROR} "${THIS}: unable to find a character device named \"$1\""
-  exit 1
-fi
+def synce_serial_start_device(device_file, local_ip, remote_ip, linkname):
 
-SYNCE_DEVNUM="`echo "$SYNCE_DEV" |sed -e 's/^[^0-9]*\([0-9]*\)$/\1/'`"
-if [ -z "$SYNCE_DEVNUM" ]; then
-  SYNCE_DEVNUM=0
-fi
+    ipaddr = local_ip+":"+remote_ip
 
-# Add 120 for /dev/ttyS*, to support both standard serial
-# and USB
-if echo "$SYNCE_DEV" |grep ttyS >/dev/null 2>&1; then
-  SYNCE_DEVNUM="`expr $SYNCE_DEVNUM + 120`"
-fi
+    cmd_list = [PPPD, device_file, DEVSPEED, "connect", "@LIBEXECDIR@/synce-serial-chat", ipaddr, "ms-dns", local_ip]
+    for item in pppopts:
+        cmd_list.append(item)
 
-SYNCE_DEVNAME="$DEVICE_PREFIX$SYNCE_DEVNUM" 
+    if platform.system() != "FreeBSD":
+        cmd_list.append("linkname")
+        cmd_list.append(linkname)
 
-SYNCE_LOCALIP="$DEFAULT_NETWORK.`expr 1 + $SYNCE_DEVNUM`"
-SYNCE_REMOTEIP="$DEFAULT_NETWORK.`expr 129 + $SYNCE_DEVNUM`"
-SYNCE_IPADDR="$SYNCE_LOCALIP:$SYNCE_REMOTEIP"
-SYNCE_DNS="$SYNCE_LOCALIP"
+    logger.debug("calling pppd as:")
+    logger.debug(cmd_list)
 
+    # Now bring up the connection
 
-synce_serial_start_device()
-{
-  # Now bring up the connection
-  if [ ${SYS_NAME} = "FreeBSD" ] ; then
+    # returns a Popen object
+    try:
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output_text = proc.communicate()[0]
+    except Exception,e:
+        logger.error("failure running pppd: %s" % e)
+        return False
 
-    # FreeBSD pppd doesn't support the linkname option
-    ${DEBUG} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS"
+    rc = proc.returncode
 
-    ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} $pppopts $SYNCE_PPP_OPTIONS
+    if rc != 0:
+        logger.error("failed to initialize ppp connection, return code %d",rc)
+        return False
 
-  else
-
-    ${DEBUG} "Bringing up serial link:   ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS"
-
-    ${SYNCE_PPP:-$PPPD} ${SYNCE_DEV} ${SYNCE_DEVSPEED:-115200} connect ${SYNCE_PPP_CONNECT:-@LIBEXECDIR@/synce-serial-chat} ${SYNCE_IPADDR:-$DEFAULT_IPS} ms-dns ${SYNCE_DNS:-$DEFAULT_LOCAL_IP} linkname ${SYNCE_DEVNAME:-$PEER} $pppopts $SYNCE_PPP_OPTIONS
-
-  fi
-
-  if [ "$?" != "0" ]; then
-    ${ERROR} "Failed to initialize ppp connection"
-    exit 1
-  fi
-}
-
-synce_serial_abort_device()
-{
-  PIDFILE="$VAR_PPP/ppp-$SYNCE_DEVNAME.pid"
-
-  if ! [ -f "$PIDFILE" ]; then
-    ${WARNING} "${THIS}: unable find a running SynCE connection. Will do nothing."
-    exit 1
-  fi
-
-  while [ -f "$PIDFILE" ]; do
-    PID="`head -1 $VAR_PPP/ppp-$SYNCE_DEVNAME.pid`"
-
-    if [ -z "${PID}" ]; then
-      ${ERROR} "${THIS}: found invalid PID in ppp-$SYNCE_DEVNAME; giving up."
-      exit 1
-    fi
-
-    ${INFO} "${THIS}: Killing process with PID ${PID}"
-
-    if kill ${PID}; then
-      ${INFO} "${THIS}: requested shutdown of $SYNCE_DEVNAME."
-    else
-      ${ERROR} "${THIS}: unable stop the SynCE connection with PID ${PID}."
-      exit 1
-    fi
-    sleep 3
-  done
-}
+    return True
 
 
-if [ ${HALD_ACTION} = "addon" ]; then
-    ${DEBUG} "${THIS}: running as addon for ${SYNCE_DEVNAME}."
-    synce_serial_start_device
-    exec @LIBEXECDIR@/hal-dccm --device-ip=${SYNCE_REMOTEIP} --local-ip=${SYNCE_LOCALIP} --log-level=${LOG_LEVEL}
-fi
+def synce_serial_stop_device(linkname):
 
-if [ ${HALD_ACTION} = "remove" ]; then
-    ${DEBUG} "${THIS}: running for removal of ${SYNCE_DEVNAME}."
-    synce_serial_abort_device
-fi
+    pidfile = VAR_PPP+"/ppp-"+linkname+".pid"
+
+    if os.path.isfile(pidfile) != True:
+        logger.warning("unable find a running SynCE connection for %d", linkname)
+        sys.exit(1)
+
+    while os.path.isfile(pidfile):
+        try:
+            f = open(pidfile, 'r')
+            textpid = f.readline().rstrip()
+            f.close()
+        except Exception, e:
+            logger.warning("unable to read PID from %s: %s", pidfile, e)
+            sys.exit(1)
+
+        try:
+            pid = int(textpid)
+        except Exception, e:
+            logger.error("found invalid PID in %s: %s", pidfile, e)
+            sys.exit(1)
+
+        logger.info("killing process with PID %d", pid)
+
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except Exception,e:
+            logger.error("unable stop the SynCE connection with PID %d: %s", pid, e)
+            sys.exit(1)
+
+        logger.info("requested shutdown of %s", linkname)
+
+        time.sleep(3)
+
+
+#
+# run dccm after the interface is configured
+#
+def RunDccm(device_ip, local_ip):
+
+    logger.debug("starting hal-dccm ...")
+
+    dccm_log_level = "1"
+
+    if log_level <= logging.DEBUG:
+        dccm_log_level = "6"
+    elif log_level <= logging.INFO:
+        dccm_log_level = "4"
+    elif log_level <= logging.WARNING:
+        dccm_log_level = "3"
+
+    cmd_list = ["@LIBEXECDIR@/hal-dccm", "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
+
+    logger.debug("calling hal-dccm as:")
+    logger.debug(cmd_list)
+
+    try:
+        os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
+    except Exception,e:
+        logger.error("failed to exec hal-dccm !!: %s" % e)
+
+    return
+
+
+def ProcessConfig():
+
+    global log_level
+    global default_network
+    global pppopts
+
+    logger = logging.getLogger("hal-synce-serial")
+
+    config = ConfigParser.ConfigParser()
+    try:
+        config.read(config_file)
+    except Exception,e:
+        logger.warning("failed to parse config file %s: %s" % (config_file, e))
+        return False
+
+    if config.has_option('general', 'loglevel'):
+        loglevel_txt = config.get('general', 'loglevel').lower()
+        if loglevel_txt == 'critical':
+            log_level = logging.CRITICAL
+        elif loglevel_txt == 'error':
+            log_level = logging.ERROR
+        elif loglevel_txt == 'warning':
+            log_level = logging.WARNING
+        elif loglevel_txt == 'info':
+            log_level = logging.INFO
+        elif loglevel_txt == 'debug':
+            log_level = logging.DEBUG
+        else:
+            logger.warning("found invalid loglevel in config file %s: %s" % (config_file, loglevel_txt))
+
+        logger.setLevel(log_level)
+
+    if config.has_option('serial', 'pppopts'):
+        extra_opts = config.get('serial', 'pppopts').split()
+        for item in extra_opts:
+            pppopts.append(item)
+
+    if config.has_option('serial', 'network'):
+        new_network = config.get('serial', 'network')
+        
+        network_re = re.compile('^(\d{1,3}\.\d{1,3}\.\d{1,3}$)')
+        network_match = network_re.match(new_network)
+        if network_match != None:
+            default_network = new_network
+        else:
+            logger.warning("found invalid network in config file %s: %s" % (config_file, new_network))
+
+    return True
+
+
+#
+# main()
+#
+if __name__ == '__main__':
+
+    log_facility = logging.handlers.SysLogHandler.LOG_DAEMON
+
+    logging.basicConfig(level=logging.WARNING,
+                        format='%(asctime)s %(name)s %(levelname)s : %(message)s')
+    logger = logging.getLogger("hal-synce-serial")
+    sys_log = logging.handlers.SysLogHandler("/dev/log", log_facility)
+    syslog_form = logging.Formatter('%(name)s[%(process)d] %(levelname)s : %(message)s')
+    sys_log.setFormatter(syslog_form)
+    logger.addHandler(sys_log)
+
+    if os.environ.has_key("HALD_ACTION"):
+        hald_action = os.environ["HALD_ACTION"]
+    else:
+        logger.critical("Hal environment not set")
+        sys.exit(1)
+
+    ProcessConfig()
+
+    if platform.system() == "FreeBSD":
+        try:
+            device_file = "/dev/ttyU"+os.environ["HAL_PROP_FREEBSD_UNIT"]
+        except Exception,e:
+            logger.critical("Hal environment not set: %s" % e)
+            sys.exit(1)
+    else:
+        try:
+            device_file = os.environ["HAL_PROP_SERIAL_DEVICE"]
+        except Exception,e:
+            logger.critical("Hal environment not set: %s" % e)
+            sys.exit(1)
+
+    if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
+        logger.critical("unable to find a character device named "+device_file)
+        sys.exit(1)
+
+    devnum_re = re.compile('^[^0-9]*([0-9]*)$')
+    devnum_match = devnum_re.match(device_file)
+    if devnum_match != None:
+        devnum = devnum_match.group(1)
+    else:
+        devnum = 0
+
+    # Add 120 for /dev/ttyS*, to support both standard serial
+    # and USB
+    serial_re = re.compile('ttyS')
+    serial_match = serial_re.match(device_file)
+    if serial_match != None:
+        devnum = int(devnum) + 120
+
+    # see the "linkname" option in the man page for pppd
+    linkname = "synce-device"+devnum
+
+    if hald_action == "addon":
+        logger.debug("running as addon for device "+device_file)
+
+        local_ip = default_network+"."+str(int(devnum) + 1)
+        remote_ip = default_network+"."+str(int(devnum) + 129)
+
+        if synce_serial_start_device(device_file, local_ip, remote_ip, linkname) == False:
+            logger.critical("failed to establish serial connection, aborting...")
+            sys.exit(1)
+
+        logger.debug("successfully configured interface")
+
+        RunDccm(remote_ip, local_ip)
+
+        logger.error("aborting ...")
+        sys.exit(1)
+
+
+    if hald_action == "remove":
+        logger.debug("running for removal of device "+device_file)
+        synce_serial_stop_device(linkname)
+

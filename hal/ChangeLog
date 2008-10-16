@@ -1,3 +1,13 @@
+2008-10-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* etc/synce-hal.conf.in - replaces synce-serial.conf.in, an
+	  (optional) .ini style config file instead of a shell snippet
+	* configure.ac.in - added new config file
+	* hal/hal-synce-rndis.in - use new config file, structural
+	  improvements
+	* hal/hal-synce-serial.in - new python version, uses new 
+	  config file
+
 2008-09-01  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal/hal-synce-rndis.in - catch os exceptions, improve logging
