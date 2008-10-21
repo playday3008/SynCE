@@ -35,7 +35,7 @@ static void show_usage(const char* name)
 			"\t%s [-d LEVEL] [-p DEVNAME] [-t TYPE ] [-h]\n"
                         "\t[-r] PARENTKEY KEY VALUE\t\tRead value\n"
                         "\t  -w PARENTKEY KEY VALUE NEWVALUE\tWrite value\n"
-                        "\t  -l PARENTKEY KEY VALUE\t\tList key\n"
+                        "\t  -l PARENTKEY KEY\t\tList key\n"
                         "\t  -n PARENTKEY KEY\t\t\tNew key\n"
                         "\t  -x PARENTKEY KEY VALUE\t\tDelete value (not supported)\n"
                         "\t  -X PARENTKEY KEY\t\t\tDelete key (not supported)\n"
