@@ -379,7 +379,7 @@ class SyncEngine(dbus.service.Object):
 
 			result = auth.Authorize(self.devicePath,self.device,self.config.config_Global)
 			if result == 0:
-				self.logger.info("Authorization pending - waiting for external authorization")
+				self.logger.info("Authorization pending")
 				rc = False
 			elif result == 1:
 				self.logger.info("Authorization successful - reconnecting to device")

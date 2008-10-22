@@ -1059,3 +1059,10 @@ Add config setting to allow authorization to be handled by an external
 process
 
 Fix comment in syncengine.conf.xml, default is INTERNAL_GTK
+
+
+22/10/2008 - 104500 Mark Ellis
+------------------------------
+
+Fixes to authorization framework, we were trying to connect while
+authorization was pending.

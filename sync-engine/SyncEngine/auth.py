@@ -38,29 +38,12 @@ GUI_TOOL = os.path.join(AUTH_TOOLS_PATH,"authgui.py")
 def IsAuthRequired(device):
 	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
 		flags = device.GetPropertyString("pda.pocketpc.password")
-		if flags == "provide" or flags == "provide-on-device":
-			return True
-		return False
+		if flags == "unset" or flags == "unlocked":
+			return False
+		return True
 
 	flags = device.GetPasswordFlags()
         if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE or flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
-		return True
-	return False
-
-###############################################################################
-# CanSendAuth
-#
-# Do we need to send the password over the wire ?
-
-def CanSendAuth(device):
-	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
-		flags = device.GetPropertyString("pda.pocketpc.password")
-		if flags == "provide":
-			return True
-		return False
-
-	flags = device.GetPasswordFlags()
-        if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE:
 		return True
 	return False
 
@@ -68,8 +51,8 @@ def CanSendAuth(device):
 # Authorize
 #
 # Obtain an authorization token to continue device connection. 
-# If we are set to allow an external program to handle auth,
-#   return 0 and remain disconnected
+# If we are set to allow an external program to handle auth, or
+#   if an auth attempt is pending, return 0 and remain disconnected
 # Success (the device is unlocked) will return 1 and allow the
 #   device to proceed with connection
 # A password entry required on the device (WM6) will return 2,
@@ -82,8 +65,16 @@ def Authorize(devpath,device,config):
         if IsAuthRequired(device) == False:
             return 1
 
-        if CanSendAuth(device) == False:
-            return 2
+	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
+		flags = device.GetPropertyString("pda.pocketpc.password")
+		if flags == "provide-on-device":
+			return 2
+		if flags == "pending":
+			return 0
+	else:
+		flags = device.GetPasswordFlags()
+		if flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
+			return 2
 
 	rc=1
 	# get the program we need
