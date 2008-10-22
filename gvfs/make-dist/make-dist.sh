@@ -1,6 +1,6 @@
 #!/bin/sh
 
-gvfs_src_dir="/home/mark/sources/synce/gvfs/gvfs-0.2.3"
+gvfs_src_dir="/home/mark/sources/synce/gvfs/gvfs-1.0.2"
 #gvfs_src_dir = @with_gvfs_source@
 
 
@@ -55,6 +55,10 @@ cp -a "${gvfs_src_dir}/daemon/gvfsjobseekwrite.c" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobseekwrite.h" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobclosewrite.c" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobclosewrite.h" ../daemon
+cp -a "${gvfs_src_dir}/daemon/gvfsjobpull.c" ../daemon
+cp -a "${gvfs_src_dir}/daemon/gvfsjobpull.h" ../daemon
+cp -a "${gvfs_src_dir}/daemon/gvfsjobpush.c" ../daemon
+cp -a "${gvfs_src_dir}/daemon/gvfsjobpush.h" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobqueryinfo.c" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobqueryinfo.h" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobqueryfsinfo.c" ../daemon
@@ -69,8 +73,6 @@ cp -a "${gvfs_src_dir}/daemon/gvfsjobdelete.c" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobdelete.h" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobcopy.c" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobcopy.h" ../daemon
-cp -a "${gvfs_src_dir}/daemon/gvfsjobupload.c" ../daemon
-cp -a "${gvfs_src_dir}/daemon/gvfsjobupload.h" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobmove.c" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobmove.h" ../daemon
 cp -a "${gvfs_src_dir}/daemon/gvfsjobmakedirectory.c" ../daemon
