@@ -1066,3 +1066,14 @@ Fix comment in syncengine.conf.xml, default is INTERNAL_GTK
 
 Fixes to authorization framework, we were trying to connect while
 authorization was pending.
+
+25/10/2008 - 195000 Dr J A Gow
+------------------------------
+
+Fixed handling of birthdays in contacts for OS0.2x. Birthdays will now sync in
+both directions (bug in XSLT transforms: 'Content' elements missing)
+
+Also fixed anniversaries Opensync->Airsync. However anniversaries
+Airsync->Opensymc still do not work. The XML is correct and a bug in Opensync
+is suspected.
+

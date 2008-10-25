@@ -107,7 +107,6 @@ class FileSyncConfig(ConfigObject):
 	def __init__(self):
 		ConfigObject.__init__(self)
 		self.logger = logging.getLogger("FileSyncConfig")
-		self.LocalFilePath=""
 		self.Disabled = 1
 		self.handlers = { "BaseFilePath" : self.validate_BaseFilePath,
 				  "Disable" : self.validate_Disable,

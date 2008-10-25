@@ -106,9 +106,11 @@ def contact_birthday_to_airsync(ctx):
     s = xml2util.GetNodeValue(transform_ctx.current())
     return "%s-%s-%sT00:00:00.000Z" % (s[0:4], s[4:6], s[6:8])
 
+# OS0.2x has an inconsistency in date representation
+
 def contact_anniversary_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0]
+    return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0].replace("-", "")
 
 def contact_birthday_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)

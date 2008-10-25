@@ -188,10 +188,10 @@
             <Url><Content><xsl:value-of select="C1:WebPage"/></Content></Url>
 
             <xsl:for-each select="C1:Anniversary[position() = 1]">
-                <Anniversary><xsl:value-of select="convert:contact_anniversary_from_airsync()"/></Anniversary>
+                <Anniversary><Content><xsl:value-of select="convert:contact_anniversary_from_airsync()"/></Content></Anniversary>
             </xsl:for-each>
             <xsl:for-each select="C1:Birthday[position() = 1]">
-                <Birthday><xsl:value-of select="convert:contact_birthday_from_airsync()"/></Birthday>
+                <Birthday><Content><xsl:value-of select="convert:contact_birthday_from_airsync()"/></Content></Birthday>
             </xsl:for-each>
 
             <xsl:for-each select="C1:Rtf">

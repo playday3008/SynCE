@@ -190,10 +190,10 @@ PO Box </xsl:text>
 
             <C1:WebPage><xsl:value-of select="Url/Content"/></C1:WebPage>
 
-            <xsl:for-each select="Anniversary[position() = 1]">
+            <xsl:for-each select="Anniversary[position() = 1]/Content">
                 <C1:Anniversary><xsl:value-of select="convert:contact_anniversary_to_airsync()"/></C1:Anniversary>
             </xsl:for-each>
-            <xsl:for-each select="Birthday[position() = 1]">
+            <xsl:for-each select="Birthday[position() = 1]/Content">
                 <C1:Birthday><xsl:value-of select="convert:contact_birthday_to_airsync()"/></C1:Birthday>
             </xsl:for-each>
 

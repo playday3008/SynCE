@@ -486,6 +486,7 @@ class SyncEngine(dbus.service.Object):
 		#### we MUST change this to bind to the device address only!
 	
 		if mh == "1" and gh == 1:
+			self.logger.debug("StartSessions: DTPT starting")
 			self.dtptsession = dtptserver.DTPTServer("0.0.0.0")
 			self.dtptsession.start()
 		else:
