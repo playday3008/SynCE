@@ -46,9 +46,11 @@ G_DEFINE_TYPE_EXTENDED (HalClient, hal_client, G_TYPE_OBJECT, 0, G_IMPLEMENT_INT
 
 typedef struct _HalClientPrivate HalClientPrivate;
 struct _HalClientPrivate {
-  DBusGConnection *system_bus_connection;
+  DBusGConnection *dbus_connection;
+  DBusGProxy *dbus_proxy;
   LibHalContext *hal_ctx;
 
+  gboolean online;
   GPtrArray *pending_devices;
   GHashTable *udi_name_table;
 
@@ -57,6 +59,13 @@ struct _HalClientPrivate {
 
 #define HAL_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), HAL_CLIENT_TYPE, HalClientPrivate))
 
+#define DBUS_SERVICE "org.freedesktop.DBus"
+#define DBUS_IFACE   "org.freedesktop.DBus"
+#define DBUS_PATH    "/org/freedesktop/DBus"
+
+#define HAL_SERVICE   "org.freedesktop.Hal"
+#define HAL_MGR_PATH  "/org/freedesktop/Hal/Manager"
+#define HAL_MGR_IFACE "org.freedesktop.Hal.Manager"
 
 /* methods */
 
@@ -309,6 +318,8 @@ hal_add_device(HalClient *self, const char *udi)
   transport = "hal";
 
   device = g_object_new(WM_DEVICE_TYPE,
+			"object-name", udi,
+                        "dccm-type", "hal",
 			"name", name,
 			"os-major", os_major,
 			"os-minor", os_minor,
@@ -438,52 +449,6 @@ exit:
   return;
 }
 
-static void
-clear_pending_devices(gpointer data, gpointer user_data)
-{
-  g_object_unref(WM_DEVICE(data));
-  return;
-}
-
-gboolean
-hal_client_uninit_comms_impl(HalClient *self)
-{
-  if (!self) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return FALSE;
-  }
-
-  HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return FALSE;
-  }
-  if (!priv->system_bus_connection) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return TRUE;
-  }
-
-  DBusError dbus_error;
-  dbus_error_init(&dbus_error);
-
-  if (!libhal_ctx_shutdown(priv->hal_ctx, &dbus_error)) {
-    g_critical("%s: Failed to shutdown hal context: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
-    dbus_error_free(&dbus_error);
-  }
-
-  libhal_ctx_free(priv->hal_ctx);
-  dbus_g_connection_unref(priv->system_bus_connection);
-  priv->system_bus_connection = NULL;
-
-  g_ptr_array_foreach(priv->pending_devices, clear_pending_devices, NULL);
-  g_ptr_array_free(priv->pending_devices, TRUE);
-
-  g_hash_table_destroy(priv->udi_name_table);
-
-  return TRUE;
-}
-
 void
 hal_client_provide_password_impl(HalClient *self, gchar *pdaname, gchar *password)
 {
@@ -507,7 +472,7 @@ hal_client_provide_password_impl(HalClient *self, gchar *pdaname, gchar *passwor
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-  if (!priv->system_bus_connection) {
+  if (!priv->dbus_connection) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
@@ -548,7 +513,7 @@ hal_client_provide_password_impl(HalClient *self, gchar *pdaname, gchar *passwor
     return;
   }
 
-  proxy = dbus_g_proxy_new_for_name(priv->system_bus_connection,
+  proxy = dbus_g_proxy_new_for_name(priv->dbus_connection,
 				    "org.freedesktop.Hal",
 				    device_list[0],
 				    "org.freedesktop.Hal.Device.Synce");
@@ -625,38 +590,63 @@ hal_client_request_disconnect_impl(HalClient *self, gchar *pdaname)
 }
 
 
-gboolean
-hal_client_init_comms_impl(HalClient *self)
+static void
+clear_pending_devices(gpointer data, gpointer user_data)
 {
-  GError *error = NULL;
+  g_object_unref(WM_DEVICE(data));
+  return;
+}
+
+static void
+hal_disconnect(HalClient *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
   DBusError dbus_error;
-  gboolean result = FALSE;
+  dbus_error_init(&dbus_error);
+
+  if (!libhal_ctx_shutdown(priv->hal_ctx, &dbus_error)) {
+    g_critical("%s: Failed to shutdown hal context: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+    dbus_error_free(&dbus_error);
+  }
+
+  libhal_ctx_free(priv->hal_ctx);
+  priv->hal_ctx = NULL;
+
+  g_ptr_array_foreach(priv->pending_devices, clear_pending_devices, NULL);
+  g_hash_table_remove_all(priv->udi_name_table);
+
+  g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
+}
+
+static void
+hal_connect(HalClient *self)
+{
+  DBusError dbus_error;
   gchar **dev_list = NULL;
   gint i, num_devices;
   gchar *udi = NULL;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
-    goto exit;
+    return;
   }
   HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
 
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    goto exit;
-  }
-  if (priv->system_bus_connection) {
-    g_warning("%s: Initialised object passed", G_STRFUNC);
-    goto exit;
-  }
-
   dbus_error_init(&dbus_error);
 
-  priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM,
-					  &error);
-  if (priv->system_bus_connection == NULL) {
-    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
-    goto error_exit;
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
   }
 
   if (!(priv->hal_ctx = libhal_ctx_new())) {
@@ -664,7 +654,7 @@ hal_client_init_comms_impl(HalClient *self)
     goto error_exit;
   }
 
-  if (!libhal_ctx_set_dbus_connection(priv->hal_ctx, dbus_g_connection_get_connection(priv->system_bus_connection))) {
+  if (!libhal_ctx_set_dbus_connection(priv->hal_ctx, dbus_g_connection_get_connection(priv->dbus_connection))) {
     g_critical("%s: Failed to set DBus connection for hal context", G_STRFUNC);
     goto error_exit;
   }
@@ -713,24 +703,153 @@ hal_client_init_comms_impl(HalClient *self)
   }
   libhal_free_string_array(dev_list);
 
-  result = TRUE;
-  goto exit;
+  return;
 
 error_exit:
-  if (error)
-    g_error_free (error);
+  priv->online = FALSE;
   if (dbus_error_is_set(&dbus_error))
     dbus_error_free(&dbus_error);
   if (priv->hal_ctx) {
     libhal_ctx_shutdown(priv->hal_ctx, NULL);
     libhal_ctx_free(priv->hal_ctx);
   }
-  if (priv->system_bus_connection) {
-    dbus_g_connection_unref(priv->system_bus_connection);
-    priv->system_bus_connection = NULL;
+  return;
+}
+
+static void
+hal_status_changed_cb(DBusGProxy *proxy,
+                      gchar *name,
+                      gchar *old_owner,
+                      gchar *new_owner,
+                      gpointer user_data)
+{
+        HalClient *self = HAL_CLIENT(user_data);
+        if (!self) {
+                g_warning("%s: Invalid object passed", G_STRFUNC);
+                return;
+        }
+        HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
+
+        if (priv->disposed) {
+                g_warning("%s: Disposed object passed", G_STRFUNC);
+                return;
+        }
+
+        if (strcmp(name, HAL_SERVICE) != 0)
+                return;
+
+        /* If this parameter is empty, odccm just came online */
+
+        if (strcmp(old_owner, "") == 0) {
+                priv->online = TRUE;
+                g_debug("%s: hal came online", G_STRFUNC);
+                hal_connect(self);
+                return;
+        }
+
+        /* If this parameter is empty, odccm just went offline */
+
+        if (strcmp(new_owner, "") == 0) {
+                priv->online = FALSE;
+                g_debug("%s: hal went offline", G_STRFUNC);
+                hal_disconnect(self);
+                return;
+        }
+}
+
+gboolean
+hal_client_uninit_comms_impl(HalClient *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return FALSE;
   }
-exit:
-  return result;
+
+  HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return FALSE;
+  }
+  if (!priv->dbus_connection) {
+    g_warning("%s: Uninitialised object passed", G_STRFUNC);
+    return TRUE;
+  }
+
+  if (priv->hal_ctx)
+          hal_disconnect(self);
+
+  dbus_g_proxy_disconnect_signal (priv->dbus_proxy, "NameOwnerChanged",
+                                  G_CALLBACK(hal_status_changed_cb), NULL);
+
+  g_object_unref(priv->dbus_proxy);
+  priv->dbus_proxy = NULL;
+
+  dbus_g_connection_unref(priv->dbus_connection);
+  priv->dbus_connection = NULL;
+
+  return TRUE;
+}
+
+gboolean
+hal_client_init_comms_impl(HalClient *self)
+{
+  GError *error = NULL;
+  gboolean result = FALSE;
+  gboolean has_owner = FALSE;
+
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return FALSE;
+  }
+  HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return FALSE;
+  }
+  if (priv->dbus_connection) {
+    g_warning("%s: Initialised object passed", G_STRFUNC);
+    return FALSE;
+  }
+
+  priv->dbus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM,
+					  &error);
+  if (priv->dbus_connection == NULL) {
+    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
+    g_error_free (error);
+    return result;
+  }
+
+  priv->dbus_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
+                                                DBUS_SERVICE,
+                                                DBUS_PATH,
+                                                DBUS_IFACE);
+
+  dbus_g_proxy_add_signal (priv->dbus_proxy, "NameOwnerChanged",
+			   G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
+
+  dbus_g_proxy_connect_signal (priv->dbus_proxy, "NameOwnerChanged",
+			       G_CALLBACK(hal_status_changed_cb), self, NULL);
+
+  if (!(dbus_g_proxy_call(priv->dbus_proxy, "NameHasOwner",
+			  &error,
+                          G_TYPE_STRING, HAL_SERVICE,
+                          G_TYPE_INVALID,
+			  G_TYPE_BOOLEAN, &has_owner,
+			  G_TYPE_INVALID))) {
+          g_critical("%s: Error checking owner of %s: %s", G_STRFUNC, HAL_SERVICE, error->message);
+          g_error_free(error);
+          return TRUE;
+  }
+
+  if (has_owner) {
+          priv->online = TRUE;
+          hal_connect(self);
+  } else
+          priv->online = FALSE;
+
+  return TRUE;
 }
 
 
@@ -741,6 +860,11 @@ hal_client_init(HalClient *self)
 {
   HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
 
+  priv->dbus_connection = NULL;
+  priv->dbus_proxy = NULL;
+  priv->hal_ctx = NULL;
+
+  priv->online = FALSE;
   priv->pending_devices = g_ptr_array_new();
   priv->udi_name_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
@@ -754,8 +878,11 @@ hal_client_dispose (GObject *obj)
   if (priv->disposed) {
     return;
   }
-  if (priv->system_bus_connection)
+  if (priv->dbus_connection)
     dccm_client_uninit_comms(DCCM_CLIENT(self));
+
+  g_ptr_array_free(priv->pending_devices, TRUE);
+  g_hash_table_destroy(priv->udi_name_table);
 
   priv->disposed = TRUE;
 

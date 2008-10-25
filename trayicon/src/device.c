@@ -35,6 +35,10 @@ G_DEFINE_TYPE (WmDevice, wm_device, G_TYPE_OBJECT)
 
 typedef struct _WmDevicePrivate WmDevicePrivate;
 struct _WmDevicePrivate {
+  /* identifier from dccm */
+  gchar *object_name;
+  gchar *dccm_type;
+
   /* lowercase name from info file */
   gchar *name;
 
@@ -67,7 +71,9 @@ struct _WmDevicePrivate {
 /* properties */
 enum
   {
-    PROP_NAME = 1,
+    PROP_OBJECT_NAME = 1,
+    PROP_DCCM_TYPE,
+    PROP_NAME,
     PROP_OS_MAJOR,
     PROP_OS_MINOR,
     PROP_BUILD_NUMBER,
@@ -559,6 +565,8 @@ wm_device_init(WmDevice *self)
 {
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
+  priv->object_name = NULL;
+  priv->dccm_type = NULL;
   priv->os_major = 0;
   priv->os_minor = 0;
   priv->build_number = 0;
@@ -590,6 +598,12 @@ wm_device_get_property (GObject    *obj,
 
   switch (property_id) {
 
+  case PROP_OBJECT_NAME:
+    g_value_set_string (value, priv->object_name);
+    break;
+  case PROP_DCCM_TYPE:
+    g_value_set_string (value, priv->dccm_type);
+    break;
   case PROP_NAME:
     g_value_set_string (value, priv->name);
     break;
@@ -659,6 +673,14 @@ wm_device_set_property (GObject      *obj,
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   switch (property_id) {
+  case PROP_OBJECT_NAME:
+    g_free (priv->object_name);
+    priv->object_name = g_value_dup_string (value);
+    break;
+  case PROP_DCCM_TYPE:
+    g_free (priv->dccm_type);
+    priv->dccm_type = g_value_dup_string (value);
+    break;
   case PROP_NAME:
     g_free (priv->name);
     priv->name = g_value_dup_string (value);
@@ -757,6 +779,8 @@ wm_device_finalize (GObject *obj)
   WmDevice *self = WM_DEVICE(obj);
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
+  g_free(priv->object_name);
+  g_free(priv->dccm_type);
   g_free(priv->name);
   g_free(priv->class);
   g_free(priv->hardware);
@@ -801,6 +825,22 @@ wm_device_class_init (WmDeviceClass *klass)
   klass->wm_device_get_port = &wm_device_get_port_impl;
   klass->wm_device_get_power_status = &wm_device_get_power_status_impl;
   klass->wm_device_get_store_status = &wm_device_get_store_status_impl;
+
+  param_spec = g_param_spec_string ("object-name", "Object Name",
+                                    "The device's dccm specific object name.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_OBJECT_NAME, param_spec);
+
+  param_spec = g_param_spec_string ("dccm-type", "Dccm type",
+                                    "Which dccm type the device is connected to.",
+                                    NULL,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_DCCM_TYPE, param_spec);
 
   param_spec = g_param_spec_string ("name", "Device name",
                                     "The device's name.",

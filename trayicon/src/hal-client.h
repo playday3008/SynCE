@@ -42,7 +42,13 @@ GType hal_client_get_type (void);
 #define HAL_CLIENT_TYPE (hal_client_get_type())
 #define HAL_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), HAL_CLIENT_TYPE, HalClient))
 #define HAL_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), HAL_CLIENT_TYPE, HalClientClass))
+
+#ifdef G_TYPE_CHECK_TYPE
 #define IS_HAL_CLIENT(obj) (G_TYPE_CHECK_TYPE ((obj), HAL_CLIENT_TYPE))
+#else
+#define IS_HAL_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), HAL_CLIENT_TYPE))
+#endif
+
 #define IS_HAL_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), HAL_CLIENT_TYPE))
 #define HAL_CLIENT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), HAL_CLIENT_TYPE, HalClientClass))
 

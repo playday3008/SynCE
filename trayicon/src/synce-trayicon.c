@@ -57,9 +57,11 @@ G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, EGG_TYPE_TRAY_ICON)
 typedef struct _SynceTrayIconPrivate SynceTrayIconPrivate;
 struct _SynceTrayIconPrivate {
 
-  guint which_dccm;
   GConfClient *conf_client;
-  DccmClient *comms_client;
+  guint conf_watch_id;
+  DccmClient *hal_client;
+  DccmClient *odccm_client;
+  DccmClient *vdccm_client;
   WmDeviceManager *device_list;
   GtkTooltips* tooltips;
   GtkWidget *icon;
@@ -74,19 +76,11 @@ struct _SynceTrayIconPrivate {
 
 #define SYNCE_TRAYICON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SYNCE_TRAYICON_TYPE, SynceTrayIconPrivate))
 
-enum {
-  USE_ODCCM,
-  USE_HAL,
-  USE_VDCCM
-};
-
-#define SYNCE_SOFTWARE_MANAGER "synce-software-manager"
-
      /* method declarations */
 
 static gboolean start_dccm ();
 static void stop_dccm ();
-static DccmClient *init_client_comms(SynceTrayIcon *self);
+static void init_client_comms(SynceTrayIcon *self);
 static void uninit_client_comms(SynceTrayIcon *self);
 static void password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
 static void password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
@@ -316,42 +310,111 @@ device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_d
 }
 
 static void
-service_stopping_cb(DccmClient *comms_client, gpointer user_data)
-{
-  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
-
-  synce_warning_dialog("VDCCM has signalled that it is stopping");
-
-  uninit_client_comms(self);
-}
-
-
-static void
 stop_dccm ()
 {
   send_signal_dccm(SIGTERM);
 }
 
 static void
-uninit_client_comms(SynceTrayIcon *self)
+uninit_vdccm_client_comms(SynceTrayIcon *self)
 {
+        SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+        GError *error = NULL;
+
+        gboolean enable_vdccm = gconf_client_get_bool(priv->conf_client,
+                                                      "/apps/synce/trayicon/enable_vdccm",
+                                                      &error);
+        if (error) {
+                g_critical("%s: Error getting '/apps/synce/trayicon/enable_vdccm' from gconf: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+  
+        if (!enable_vdccm)
+                return;
+
+        gboolean stop_vdccm = gconf_client_get_bool (priv->conf_client,
+                                                     "/apps/synce/trayicon/start_vdccm", &error);
+        if (error) {
+                g_critical("%s: Error getting '/apps/synce/trayicon/start_vdccm' from gconf: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        if (stop_vdccm)
+                stop_dccm();
+
+        if (IS_DCCM_CLIENT(priv->vdccm_client)) {
+                dccm_client_uninit_comms(priv->vdccm_client);
+                g_object_unref(priv->vdccm_client);
+                priv->vdccm_client = NULL;
+        }
+
+        wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "vdccm");
+
+        return;
+}
+
+static void
+service_stopping_cb(DccmClient *comms_client, gpointer user_data)
+{
+  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
-  if (priv->which_dccm == USE_VDCCM) {
-    if (gconf_client_get_bool (priv->conf_client,
-			       "/apps/synce/trayicon/start_vdccm", NULL))
-      stop_dccm();
+  if (IS_HAL_CLIENT(comms_client)) {
+#ifdef ENABLE_NOTIFY
+          event_notification(self, "Service stopping", "SynCE-Hal has signalled that it is stopping");
+#else  /* ENABLE_NOTIFY */
+          synce_warning_dialog("SynCE-Hal has signalled that it is stopping");
+#endif /* ENABLE_NOTIFY */
+          wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "hal");
+          return;
   }
 
-  if (IS_DCCM_CLIENT(priv->comms_client)) {
-    dccm_client_uninit_comms(priv->comms_client);
-    g_object_unref(priv->comms_client);
-    priv->comms_client = NULL;
+  if (IS_ODCCM_CLIENT(comms_client)) {
+#ifdef ENABLE_NOTIFY
+          event_notification(self, "Service stopping", "Odccm has signalled that it is stopping");
+#else  /* ENABLE_NOTIFY */
+          synce_warning_dialog("Odccm has signalled that it is stopping");
+#endif /* ENABLE_NOTIFY */
+          wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "odccm");
+          return;
   }
 
-  wm_device_manager_remove_all(priv->device_list);
+  if (IS_VDCCM_CLIENT(comms_client)) {
+#ifdef ENABLE_NOTIFY
+          event_notification(self, "Service stopping", "Vdccm has signalled that it is stopping");
+#else  /* ENABLE_NOTIFY */
+          synce_warning_dialog("Vdccm has signalled that it is stopping");
+#endif /* ENABLE_NOTIFY */
+          uninit_vdccm_client_comms(self);
+          return;
+  }
+}
 
-  return;
+
+static void
+uninit_client_comms(SynceTrayIcon *self)
+{
+        SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+        if (IS_DCCM_CLIENT(priv->hal_client)) {
+                dccm_client_uninit_comms(priv->hal_client);
+                g_object_unref(priv->hal_client);
+                priv->hal_client = NULL;
+                wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "hal");
+        }
+
+        if (IS_DCCM_CLIENT(priv->odccm_client)) {
+                dccm_client_uninit_comms(priv->odccm_client);
+                g_object_unref(priv->odccm_client);
+                priv->odccm_client = NULL;
+                wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "odccm");
+        }
+
+        uninit_vdccm_client_comms(self);
+
+        return;
 }
 
 static gboolean
@@ -377,72 +440,135 @@ start_dccm ()
   return TRUE;
 }
 
-static DccmClient *
+
+static void
+init_vdccm_client_comms(SynceTrayIcon *self)
+{
+        SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+        DccmClient *comms_client = NULL;
+        GError *error = NULL;
+
+        gboolean enable_vdccm = gconf_client_get_bool(priv->conf_client,
+                                                      "/apps/synce/trayicon/enable_vdccm",
+                                                      &error);
+        if (error) {
+                g_critical("%s: Error getting '/apps/synce/trayicon/enable_vdccm' from gconf: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        if (!enable_vdccm)
+                return;
+
+        gboolean start_vdccm = gconf_client_get_bool (priv->conf_client, "/apps/synce/trayicon/start_vdccm", &error);
+        if (error) {
+                g_critical("%s: Error getting '/apps/synce/trayicon/start_vdccm' from gconf: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        if (start_vdccm)
+                if (!(start_dccm())) {
+                        g_critical("%s: Unable to start vdccm", G_STRFUNC);
+                        return;
+                }
+
+        comms_client = DCCM_CLIENT(g_object_new(VDCCM_CLIENT_TYPE, NULL));
+
+        g_signal_connect (G_OBJECT (comms_client), "password-rejected",
+                          GTK_SIGNAL_FUNC (password_rejected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "password-required",
+                          GTK_SIGNAL_FUNC (password_required_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
+                          GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "service-stopping",
+                          GTK_SIGNAL_FUNC (service_stopping_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-connected",
+                          GTK_SIGNAL_FUNC (device_connected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-disconnected",
+                          GTK_SIGNAL_FUNC (device_disconnected_cb), self);
+
+        if (!(dccm_client_init_comms(comms_client))) {
+                g_critical("%s: Unable to initialise vdccm comms client", G_STRFUNC);
+                synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
+                g_object_unref(comms_client);
+        }
+
+        priv->vdccm_client = comms_client;
+
+        return;
+}
+
+static void
 init_client_comms(SynceTrayIcon *self)
 {
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-  DccmClient *comms_client = NULL;
+        SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+        DccmClient *comms_client = NULL;
 
-  switch (priv->which_dccm) {
-  case USE_VDCCM:
-    if (gconf_client_get_bool (priv->conf_client, "/apps/synce/trayicon/start_vdccm", NULL))
-      if (!(start_dccm()))
-	return NULL;
-    comms_client = DCCM_CLIENT(g_object_new(VDCCM_CLIENT_TYPE, NULL));
-    break;
-  case USE_ODCCM:
-    dbus_g_thread_init();
-    comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
-    break;
-  case USE_HAL:
-    dbus_g_thread_init();
-    comms_client = DCCM_CLIENT(g_object_new(HAL_CLIENT_TYPE, NULL));
-    break;
-  }
+        dbus_g_thread_init();
 
-  if (!(comms_client)) {
-    g_critical("%s: Unable to create vdccm comms client", G_STRFUNC);
-    goto error;
-  }
+        comms_client = DCCM_CLIENT(g_object_new(HAL_CLIENT_TYPE, NULL));
 
-  g_signal_connect (G_OBJECT (comms_client), "password-rejected",
-            GTK_SIGNAL_FUNC (password_rejected_cb), self);
+        g_signal_connect (G_OBJECT (comms_client), "password-rejected",
+                          GTK_SIGNAL_FUNC (password_rejected_cb), self);
 
-  g_signal_connect (G_OBJECT (comms_client), "password-required",
-            GTK_SIGNAL_FUNC (password_required_cb), self);
+        g_signal_connect (G_OBJECT (comms_client), "password-required",
+                          GTK_SIGNAL_FUNC (password_required_cb), self);
 
-  g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
-            GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
+        g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
+                          GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
 
-  g_signal_connect (G_OBJECT (comms_client), "service-stopping",
-            GTK_SIGNAL_FUNC (service_stopping_cb), self);
+        g_signal_connect (G_OBJECT (comms_client), "service-stopping",
+                          GTK_SIGNAL_FUNC (service_stopping_cb), self);
 
-  g_signal_connect (G_OBJECT (comms_client), "device-connected",
-            GTK_SIGNAL_FUNC (device_connected_cb), self);
+        g_signal_connect (G_OBJECT (comms_client), "device-connected",
+                          GTK_SIGNAL_FUNC (device_connected_cb), self);
 
-  g_signal_connect (G_OBJECT (comms_client), "device-disconnected",
-            GTK_SIGNAL_FUNC (device_disconnected_cb), self);
+        g_signal_connect (G_OBJECT (comms_client), "device-disconnected",
+                          GTK_SIGNAL_FUNC (device_disconnected_cb), self);
 
-  if (!(dccm_client_init_comms(comms_client))) {
-    g_critical("%s: Unable to initialise dccm comms client", G_STRFUNC);
-    g_object_unref(comms_client);
-    goto error;
-  }
-  return comms_client;
+        if (!(dccm_client_init_comms(comms_client))) {
+                g_critical("%s: Unable to initialise hal dccm comms client", G_STRFUNC);
+                g_object_unref(comms_client);
+        }
 
-error:
-  switch (priv->which_dccm) {
-  case USE_VDCCM:
-    synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
-    break;
-  case USE_ODCCM:
-    synce_warning_dialog("Unable to contact ODCCM, check it is installed and running");
-    break;
-  case USE_HAL:
-    synce_warning_dialog("Unable to contact Hal, check it is installed and running");
-    break;
-  }
-  return NULL;
+        priv->hal_client = comms_client;
+
+        comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
+
+        g_signal_connect (G_OBJECT (comms_client), "password-rejected",
+                          GTK_SIGNAL_FUNC (password_rejected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "password-required",
+                          GTK_SIGNAL_FUNC (password_required_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
+                          GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "service-stopping",
+                          GTK_SIGNAL_FUNC (service_stopping_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-connected",
+                          GTK_SIGNAL_FUNC (device_connected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-disconnected",
+                          GTK_SIGNAL_FUNC (device_disconnected_cb), self);
+
+        if (!(dccm_client_init_comms(comms_client))) {
+                g_critical("%s: Unable to initialise odccm comms client", G_STRFUNC);
+                g_object_unref(comms_client);
+        }
+
+        priv->odccm_client = comms_client;
+
+        init_vdccm_client_comms(self);
+
+        return;
 }
 
 
@@ -561,7 +687,7 @@ menu_disconnect(GtkWidget *button, SynceTrayIcon *self)
 
   g_debug("%s: Asked to disconnect %s by user", G_STRFUNC, name);
 
-  dccm_client_request_disconnect(priv->comms_client, name);
+  dccm_client_request_disconnect(priv->vdccm_client, name);
   g_free(name);
   g_list_free(child_list);
 }
@@ -569,23 +695,21 @@ menu_disconnect(GtkWidget *button, SynceTrayIcon *self)
 static void
 menu_start_vdccm(GtkWidget *button, SynceTrayIcon *self)
 {
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-  priv->comms_client = init_client_comms(self);
+  init_vdccm_client_comms(self);
 }
 
 static void
 menu_stop_vdccm(GtkWidget *button, SynceTrayIcon *self)
 {
-  uninit_client_comms(self);
+  uninit_vdccm_client_comms(self);
 }
 
 static void
 menu_restart_vdccm(GtkWidget *button, SynceTrayIcon *self)
 {
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-  uninit_client_comms(self);
+  uninit_vdccm_client_comms(self);
   sleep(1);
-  priv->comms_client = init_client_comms(self);
+  init_vdccm_client_comms(self);
 }
 
 static void
@@ -631,7 +755,7 @@ trayicon_menu(GdkEventButton *event, SynceTrayIcon *self)
       g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_device_info), device);
       gtk_menu_append(GTK_MENU(device_menu), entry);
 
-      if (priv->which_dccm == USE_VDCCM) {
+      if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
 	entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_DISCONNECT, NULL);
 	g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), device);
 	gtk_menu_append(GTK_MENU(priv->menu), entry);
@@ -647,7 +771,7 @@ trayicon_menu(GdkEventButton *event, SynceTrayIcon *self)
   entry = gtk_separator_menu_item_new();
   gtk_menu_append(GTK_MENU(priv->menu), entry);
 
-  if (priv->which_dccm == USE_VDCCM) {
+  if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
     if (dccm_is_running()) {
       entry = gtk_menu_item_new_with_label(_("Stop DCCM"));
       g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_stop_vdccm), self);
@@ -720,6 +844,32 @@ event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
 
 #endif /* ENABLE_NOTIFY */
 
+static void
+prefs_changed_cb (GConfClient *client, guint id,
+		  GConfEntry *entry, gpointer data)
+{
+  SynceTrayIcon *self = SYNCE_TRAYICON(data);
+
+  const gchar *key;
+  const GConfValue *value;
+
+  key = gconf_entry_get_key(entry);
+  value = gconf_entry_get_value(entry);
+
+  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/enable_vdccm"))) {
+    gboolean enable_vdccm = gconf_value_get_bool(value);
+
+    if (enable_vdccm)
+            init_vdccm_client_comms(self);
+    else
+            uninit_vdccm_client_comms(self);
+
+    return;
+  }
+
+}
+
+
 /*
 
 static void
@@ -788,23 +938,11 @@ synce_trayicon_init(SynceTrayIcon *self)
   gconf_client_add_dir (priv->conf_client,
                         "/apps/synce/trayicon",
                         GCONF_CLIENT_PRELOAD_ONELEVEL,
-                        NULL);
-
-  gchar *tmpstr = gconf_client_get_string (priv->conf_client,
-					   "/apps/synce/trayicon/dccm",
-					   &error);
-  if (error)
-    g_error("%s: Error contacting gconf: %s", G_STRFUNC, error->message);
-  if (!tmpstr)
-    priv->which_dccm = USE_ODCCM;
-  else {
-    if (!(g_ascii_strcasecmp(tmpstr, "v")))
-      priv->which_dccm = USE_VDCCM;
-    else if (!(g_ascii_strcasecmp(tmpstr, "h")))
-      priv->which_dccm = USE_HAL;
-    else
-      priv->which_dccm = USE_ODCCM;
-    g_free(tmpstr);
+                        &error);
+  if (error) {
+    g_critical("%s: failed to add watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    error = NULL;
   }
 
   /* device list */
@@ -830,7 +968,16 @@ synce_trayicon_init(SynceTrayIcon *self)
 
 
   /* dccm comms */
-  priv->comms_client = init_client_comms(self);
+  init_client_comms(self);
+
+  priv->conf_watch_id = gconf_client_notify_add (priv->conf_client, 
+                                                 "/apps/synce/trayicon", 
+                                                 prefs_changed_cb, self, NULL, &error);
+  if (error) {
+          g_warning("%s: failed to add watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }                  
 
   /* module initialisation */
   module_load_all();
@@ -844,6 +991,7 @@ synce_trayicon_dispose (GObject *obj)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(obj);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+  GError *error = NULL;
 
   if (priv->disposed) {
     return;
@@ -853,9 +1001,16 @@ synce_trayicon_dispose (GObject *obj)
   /* unref other objects */
 
   /* gconf */
+  gconf_client_notify_remove(priv->conf_client, priv->conf_watch_id);
+
   gconf_client_remove_dir(priv->conf_client,
 			  "/apps/synce/trayicon",
-			  NULL);
+			  &error);
+  if (error) {
+    g_critical("%s: failed to remove watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    error = NULL;
+  }
   g_object_unref(priv->conf_client);
 
   /* device list */

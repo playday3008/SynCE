@@ -63,7 +63,13 @@ GType wm_device_get_type (void);
 #define WM_DEVICE_TYPE (wm_device_get_type())
 #define WM_DEVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), WM_DEVICE_TYPE, WmDevice))
 #define WM_DEVICE_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), WM_DEVICE_TYPE, WmDeviceClass))
+
+#ifdef G_TYPE_CHECK_TYPE
 #define WM_IS_DEVICE(obj) (G_TYPE_CHECK_TYPE ((obj), WM_DEVICE_TYPE))
+#else
+#define WM_IS_DEVICE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), WM_DEVICE_TYPE))
+#endif
+
 #define WM_IS_DEVICE_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), WM_DEVICE_TYPE))
 #define WM_DEVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), WM_DEVICE_TYPE, WmDeviceClass))
 

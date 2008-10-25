@@ -183,6 +183,40 @@ wm_device_manager_remove_by_name_impl(WmDeviceManager *self, gchar *name)
 }
 
 void
+wm_device_manager_remove_by_prop(WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val)
+{
+  WmDevice *device = NULL;
+  gchar *tmpval = NULL;
+  guint i;
+
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+
+    g_object_get(device, prop_name, &tmpval, NULL);
+
+    if (!(g_ascii_strcasecmp(prop_val, tmpval))) {
+      g_ptr_array_remove_index_fast(priv->devices, i);
+      g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_REMOVED], 0);
+      g_object_unref(device);
+    }
+    g_free(tmpval);
+  }
+
+  return;
+}
+
+void
 wm_device_manager_remove_all_impl(WmDeviceManager *self)
 {
   WmDevice *device = NULL;

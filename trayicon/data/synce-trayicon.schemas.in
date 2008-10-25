@@ -13,6 +13,17 @@
       </locale>
     </schema>
 
+    <schema>
+      <key>/schemas/apps/synce/trayicon/enable_vdccm</key>
+      <applyto>/apps/synce/trayicon/enable_vdccm</applyto>
+      <owner>synce-trayicon</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Enable use of Vdccm</short>
+        <long>Enable use of the legacy Vdccm communications daemon.</long>
+      </locale>
+    </schema>
 
     <schema>
       <key>/schemas/apps/synce/trayicon/dccm</key>
@@ -21,8 +32,8 @@
       <type>string</type>
       <default>o</default>
       <locale name="C">
-        <short>The dccm implementation used</short>
-        <long>The dccm implementation used, 'o' for odccm (the default), 'h' for synce-hal, 'v' for vdccm.</long>
+        <short>** obsolete ** The dccm implementation used</short>
+        <long>** obsolete ** The dccm implementation used, 'o' for odccm (the default), 'h' for synce-hal, 'v' for vdccm.</long>
       </locale>
     </schema>
 

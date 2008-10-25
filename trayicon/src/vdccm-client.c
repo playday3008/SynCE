@@ -189,6 +189,8 @@ vdccm_create_device(SynceInfo *info)
   gchar *device_name;
 
   device = g_object_new(WM_DEVICE_TYPE,
+			"object-name", info->name,
+                        "dccm-type", "vdccm",
 			"name", info->name,
 			"os-major", info->os_version,
 			"os-minor", 0,

@@ -1,3 +1,11 @@
+2008-10-24  Mark Ellis <mark@mpellis.org.uk>
+
+	* add object-name and dccm-type to device properties
+	* add remove_by_prop to device-manager
+	* try both {o,hal-}dccm clients, allow for service interruptions,
+	  vdccm still optional in properties
+	* check for use of G_TYPE_CHECK_TYPE or G_TYPE_CHECK_INSTANCE_TYPE
+
 2008-08-12  Mark Ellis <mark@mpellis.org.uk>
 
 	* src/synce-trayicon.c - display notification instead of dialog

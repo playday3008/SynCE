@@ -42,7 +42,13 @@ GType vdccm_client_get_type (void);
 #define VDCCM_CLIENT_TYPE (vdccm_client_get_type())
 #define VDCCM_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), VDCCM_CLIENT_TYPE, VdccmClient))
 #define VDCCM_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), VDCCM_CLIENT_TYPE, VdccmClientClass))
+
+#ifdef G_TYPE_CHECK_TYPE
 #define IS_VDCCM_CLIENT(obj) (G_TYPE_CHECK_TYPE ((obj), VDCCM_CLIENT_TYPE))
+#else
+#define IS_VDCCM_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VDCCM_CLIENT_TYPE))
+#endif
+
 #define IS_VDCCM_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), VDCCM_CLIENT_TYPE))
 #define VDCCM_CLIENT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), VDCCM_CLIENT_TYPE, VdccmClientClass))
 

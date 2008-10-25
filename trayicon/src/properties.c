@@ -14,101 +14,87 @@ static void
 prefs_changed_cb (GConfClient *client, guint id,
 		  GConfEntry *entry, gpointer data)
 {
-  GConfClient *conf_client = gconf_client_get_default();
   const gchar *key;
   const GConfValue *value;
 
   key = gconf_entry_get_key(entry);
   value = gconf_entry_get_value(entry);
 
-  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/dccm"))) {
-    const gchar *which_dccm = gconf_value_get_string(value);
-    GtkWidget *prefs_use_odccm = glade_xml_get_widget (xml, "prefs_use_odccm");	
-    GtkWidget *prefs_use_vdccm = glade_xml_get_widget (xml, "prefs_use_vdccm");	
-    GtkWidget *prefs_use_hal = glade_xml_get_widget (xml, "prefs_use_hal");	
-    GtkWidget *prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");	
+  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/enable_vdccm"))) {
+    gboolean enable_vdccm = gconf_value_get_bool(value);
+    GtkWidget *prefs_enable_vdccm = glade_xml_get_widget (xml, "prefs_enable_vdccm");	
 
-    if (!(g_ascii_strcasecmp(which_dccm, "v"))) {
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_vdccm), TRUE);
-      gtk_widget_set_sensitive(prefs_start_stop_vdccm, TRUE);
-    } else if (!(g_ascii_strcasecmp(which_dccm, "o"))) {
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_odccm), TRUE);
-      gtk_widget_set_sensitive(prefs_start_stop_vdccm, FALSE);
-    } else if (!(g_ascii_strcasecmp(which_dccm, "h"))) {
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_hal), TRUE);
-      gtk_widget_set_sensitive(prefs_start_stop_vdccm, FALSE);
-    } else {
-      gconf_client_set_string (conf_client,
-			    "/apps/synce/trayicon/dccm", "o", NULL);
-    }
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_enable_vdccm), enable_vdccm);
+
+    return;
+  }
+
+  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/start_vdccm"))) {
+    gboolean start_vdccm = gconf_value_get_bool(value);
+    GtkWidget *prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");
+
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_start_stop_vdccm), start_vdccm);
+
+    return;
   }
 }
 
 
 static void
-prefs_use_odccm_toggled_cb (GtkWidget *widget, gpointer data)
+prefs_enable_vdccm_toggled_cb (GtkWidget *widget, gpointer data)
 {
-    gboolean state;
-    GConfClient *conf_client = gconf_client_get_default();
+        gboolean state;
+        GError *error = NULL;
+        GtkWidget *prefs_start_stop_vdccm = GTK_WIDGET(data);
+        GConfClient *conf_client = gconf_client_get_default();
 
-    state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
-    if (state)
-      gconf_client_set_string (conf_client,
-			       "/apps/synce/trayicon/dccm", "o", NULL);
+        state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+    
+        if (!(gconf_client_set_bool (conf_client, "/apps/synce/trayicon/enable_vdccm", state, &error))) {
+                g_warning("%s: setting '/apps/synce/trayicon/enable_vdccm' in gconf failed: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        gtk_widget_set_sensitive(prefs_start_stop_vdccm, state);
+
+        g_object_unref(conf_client);
 }
 
-static void
-prefs_use_vdccm_toggled_cb (GtkWidget *widget, gpointer data)
-{
-    gboolean state;
-    GtkWidget *prefs_start_stop_vdccm = GTK_WIDGET(data);
-    GConfClient *conf_client = gconf_client_get_default();
-
-    state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
-    if (state)
-      gconf_client_set_string (conf_client,
-			       "/apps/synce/trayicon/dccm", "v", NULL);
-
-    gtk_widget_set_sensitive(prefs_start_stop_vdccm, !state);
-}
-
-static void
-prefs_use_hal_toggled_cb (GtkWidget *widget, gpointer data)
-{
-    gboolean state;
-    GConfClient *conf_client = gconf_client_get_default();
-
-    state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
-    if (state)
-      gconf_client_set_string (conf_client,
-			       "/apps/synce/trayicon/dccm", "h", NULL);
-
-}
 
 static void
 prefs_start_stop_vdccm_toggled_cb (GtkWidget *widget, gpointer data)
 {
-  GConfClient *conf_client = gconf_client_get_default();
+        GError *error = NULL;
+        GConfClient *conf_client = gconf_client_get_default();
 
-  gboolean state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+        gboolean state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
 
-  gconf_client_set_bool (conf_client,
-            "/apps/synce/trayicon/start_vdccm", state, NULL);
+        if (!(gconf_client_set_bool (conf_client, "/apps/synce/trayicon/start_vdccm", state, &error))) {
+                g_warning("%s: setting '/apps/synce/trayicon/start_vdccm' in gconf failed: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        g_object_unref(conf_client);
 }
 
 
 static void
 prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
-  gtk_widget_destroy(gtk_widget_get_toplevel(widget));
+        GConfClient *conf_client = gconf_client_get_default();
+        gconf_client_notify_remove(conf_client, GPOINTER_TO_UINT(data));
+
+        gtk_widget_destroy(gtk_widget_get_toplevel(widget));
 }
 
 
 GtkWidget *
 run_prefs_dialog (SynceTrayIcon *trayicon)
 {
-  GtkWidget *prefs_window, *prefs_use_odccm, *prefs_use_vdccm, *prefs_use_hal, *prefs_start_stop_vdccm, *close_button;
-  gchar *which_dccm;
+  GtkWidget *prefs_window, *prefs_enable_vdccm, *prefs_start_stop_vdccm, *close_button;
+  gboolean enable_vdccm, start_stop_vdccm;
   GError *error = NULL;
 
   GConfClient *conf_client = gconf_client_get_default();
@@ -117,50 +103,45 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
 
   prefs_window = glade_xml_get_widget (xml, "prefs_window");
 
-  prefs_use_odccm = glade_xml_get_widget (xml, "prefs_use_odccm");
-  prefs_use_vdccm = glade_xml_get_widget (xml, "prefs_use_vdccm");
-  prefs_use_hal = glade_xml_get_widget (xml, "prefs_use_hal");
+  prefs_enable_vdccm = glade_xml_get_widget (xml, "prefs_enable_vdccm");
   prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");
 
-  if (!(which_dccm = gconf_client_get_string (conf_client,
-					      "/apps/synce/trayicon/dccm", &error))) {
-    which_dccm = g_strdup("o");
-    if (error) {
-      g_warning("%s: Get dccm type from gconf failed: %s", G_STRFUNC, error->message);
-      g_error_free(error);
-    }
+  enable_vdccm = gconf_client_get_bool (conf_client, "/apps/synce/trayicon/enable_vdccm", &error);
+  if (error) {
+          g_warning("%s: Getting '/apps/synce/trayicon/enable_vdccm' from gconf failed: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
   }
 
-  if (!(g_ascii_strcasecmp(which_dccm, "h"))) {
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_hal), TRUE);
-    gtk_widget_set_sensitive(prefs_start_stop_vdccm, FALSE);
-  } else if (!(g_ascii_strcasecmp(which_dccm, "v"))) {
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_vdccm), TRUE);
-    gtk_widget_set_sensitive(prefs_start_stop_vdccm, TRUE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_start_stop_vdccm), 
-				  gconf_client_get_bool (conf_client,
-							 "/apps/synce/trayicon/start_vdccm", NULL));
-  } else {
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_use_odccm), TRUE);
-    gtk_widget_set_sensitive(prefs_start_stop_vdccm, FALSE);
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_enable_vdccm), enable_vdccm);
+  gtk_widget_set_sensitive(prefs_start_stop_vdccm, enable_vdccm);
+  if (enable_vdccm) {
+          start_stop_vdccm = gconf_client_get_bool (conf_client, "/apps/synce/trayicon/start_vdccm", &error);
+          if (error) {
+                  g_warning("%s: Getting '/apps/synce/trayicon/start_vdccm' from gconf failed: %s", G_STRFUNC, error->message);
+                  g_error_free(error);
+                  error = NULL;
+          }
+          gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_start_stop_vdccm), start_stop_vdccm);
   }
 
-  g_signal_connect (G_OBJECT (prefs_use_odccm), "toggled",
-		      G_CALLBACK (prefs_use_odccm_toggled_cb), NULL);
-  g_signal_connect (G_OBJECT (prefs_use_vdccm), "toggled",
-		      G_CALLBACK (prefs_use_vdccm_toggled_cb), prefs_start_stop_vdccm);
-  g_signal_connect (G_OBJECT (prefs_use_hal), "toggled",
-		      G_CALLBACK (prefs_use_hal_toggled_cb), NULL);
+  g_signal_connect (G_OBJECT (prefs_enable_vdccm), "toggled",
+		      G_CALLBACK (prefs_enable_vdccm_toggled_cb), prefs_start_stop_vdccm);
   g_signal_connect (G_OBJECT (prefs_start_stop_vdccm), "toggled",
-		      G_CALLBACK (prefs_start_stop_vdccm_toggled_cb), trayicon);
+		      G_CALLBACK (prefs_start_stop_vdccm_toggled_cb), NULL);
+
+  guint id = gconf_client_notify_add (conf_client, 
+			   "/apps/synce/trayicon", 
+			   prefs_changed_cb, trayicon, NULL, &error);
+  if (error) {                                                                                                                                                             
+          g_warning("%s: failed to add watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }                  
 
   close_button = glade_xml_get_widget (xml, "prefs_closebutton");    
   g_signal_connect (G_OBJECT (close_button), "clicked",
-		    G_CALLBACK (prefs_close_button_clicked_cb), NULL);
-
-  gconf_client_notify_add (conf_client, 
-			   "/apps/synce/trayicon", 
-			   prefs_changed_cb, trayicon, NULL, NULL);
+		    G_CALLBACK (prefs_close_button_clicked_cb), GUINT_TO_POINTER(id));
 
   gtk_widget_show_all (prefs_window);
 

@@ -45,7 +45,9 @@ G_DEFINE_TYPE_EXTENDED (OdccmClient, odccm_client, G_TYPE_OBJECT, 0, G_IMPLEMENT
 typedef struct _OdccmClientPrivate OdccmClientPrivate;
 struct _OdccmClientPrivate {
   DBusGConnection *dbus_connection;
+  DBusGProxy *dbus_proxy;
   DBusGProxy *dev_mgr_proxy;
+  gboolean online;
 
   GPtrArray *dev_proxies;
   GHashTable *pending_devices;
@@ -55,6 +57,9 @@ struct _OdccmClientPrivate {
 
 #define ODCCM_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), ODCCM_CLIENT_TYPE, OdccmClientPrivate))
 
+#define DBUS_SERVICE "org.freedesktop.DBus"
+#define DBUS_IFACE   "org.freedesktop.DBus"
+#define DBUS_PATH    "/org/freedesktop/DBus"
 
 #define ODCCM_SERVICE   "org.synce.odccm"
 #define ODCCM_MGR_PATH  "/org/synce/odccm/DeviceManager"
@@ -77,8 +82,8 @@ struct _proxy_store{
 
 static void 
 password_flags_changed_cb(DBusGProxy *proxy,
-			       guint added, guint removed,
-			       gpointer user_data)
+                          guint added, guint removed,
+                          gpointer user_data)
 {
   if (!user_data) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -90,10 +95,6 @@ password_flags_changed_cb(DBusGProxy *proxy,
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
-    return;
-  }
-  if (!priv->dev_mgr_proxy) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
 
@@ -153,7 +154,7 @@ odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return FALSE;
   }
-  if (!priv->dev_mgr_proxy) {
+  if (!priv->dbus_connection) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return TRUE;
   }
@@ -212,7 +213,7 @@ odccm_add_device(OdccmClient *self,
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-  if (!priv->dev_mgr_proxy) {
+  if (!priv->dbus_connection) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
@@ -301,6 +302,8 @@ odccm_add_device(OdccmClient *self,
   transport = g_strdup("odccm");
 
   device = g_object_new(WM_DEVICE_TYPE,
+                        "object-name", obj_path,
+                        "dccm-type", "odccm",
 			"name", name,
 			"os-major", os_major,
 			"os-minor", os_minor,
@@ -387,8 +390,8 @@ odccm_device_connected_cb(DBusGProxy *proxy,
 
 void
 odccm_device_disconnected_cb(DBusGProxy *proxy,
-		      gchar *obj_path,
-		      gpointer user_data)
+                             gchar *obj_path,
+                             gpointer user_data)
 {
   OdccmClient *self = ODCCM_CLIENT(user_data);
 
@@ -403,7 +406,7 @@ odccm_device_disconnected_cb(DBusGProxy *proxy,
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-  if (!priv->dev_mgr_proxy) {
+  if (!priv->dbus_connection) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
@@ -435,59 +438,6 @@ odccm_device_disconnected_cb(DBusGProxy *proxy,
   return;
 }
 
-static gboolean
-clear_pending_devices(gpointer key, gpointer value, gpointer data)
-{
-  g_object_unref(WM_DEVICE(value));
-  return TRUE;
-}
-
-gboolean
-odccm_client_uninit_comms_impl(OdccmClient *self)
-{
-  gint i;
-  proxy_store *p_store;
-
-  if (!self) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return FALSE;
-  }
-
-  OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return FALSE;
-  }
-  if (!priv->dev_mgr_proxy) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return TRUE;
-  }
-
-  dbus_g_proxy_disconnect_signal (priv->dev_mgr_proxy, "DeviceConnected",
-			       G_CALLBACK(odccm_device_connected_cb), NULL);
-
-  dbus_g_proxy_disconnect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
-			       G_CALLBACK(odccm_device_disconnected_cb), NULL);
-
-  g_object_unref (priv->dev_mgr_proxy);
-  priv->dev_mgr_proxy = NULL;
-
-  dbus_g_connection_unref(priv->dbus_connection);
-  priv->dbus_connection = NULL;
-
-  for (i = 0; i < priv->dev_proxies->len; i++) {
-    p_store = (proxy_store *)g_ptr_array_index(priv->dev_proxies, i);
-    free_proxy_store(p_store);
-  }
-  g_ptr_array_free(priv->dev_proxies, TRUE);
-
-  g_hash_table_foreach_remove(priv->pending_devices, clear_pending_devices, NULL);
-  g_hash_table_destroy(priv->pending_devices);
-
-  return TRUE;
-}
-
 void
 odccm_client_provide_password_impl(OdccmClient *self, gchar *pdaname, gchar *password)
 {
@@ -508,7 +458,7 @@ odccm_client_provide_password_impl(OdccmClient *self, gchar *pdaname, gchar *pas
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-  if (!priv->dev_mgr_proxy) {
+  if (!priv->dbus_connection) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
@@ -585,7 +535,7 @@ odccm_client_request_disconnect_impl(OdccmClient *self, gchar *pdaname)
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return result;
   }
-  if (!priv->dev_mgr_proxy) {
+  if (!priv->dbus_connection) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return result;
   }
@@ -596,15 +546,179 @@ odccm_client_request_disconnect_impl(OdccmClient *self, gchar *pdaname)
   return result;
 }
 
+static gboolean
+clear_pending_devices(gpointer key, gpointer value, gpointer data)
+{
+  g_object_unref(WM_DEVICE(value));
+  return TRUE;
+}
+
+static void
+odccm_disconnect(OdccmClient *self)
+{
+        gint i;
+        proxy_store *p_store;
+
+        OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
+
+        if (priv->disposed) {
+                g_warning("%s: Disposed object passed", G_STRFUNC);
+                return;
+        }
+
+        dbus_g_proxy_disconnect_signal (priv->dev_mgr_proxy, "DeviceConnected",
+                                        G_CALLBACK(odccm_device_connected_cb), self);
+
+        dbus_g_proxy_disconnect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
+                                        G_CALLBACK(odccm_device_disconnected_cb), self);
+
+        g_object_unref(priv->dev_mgr_proxy);
+        priv->dev_mgr_proxy = NULL;
+
+        for (i = 0; i < priv->dev_proxies->len; i++) {
+                p_store = (proxy_store *)g_ptr_array_index(priv->dev_proxies, i);
+                free_proxy_store(p_store);
+        }
+
+        g_hash_table_foreach_remove(priv->pending_devices, clear_pending_devices, NULL);
+
+        g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
+}
+
+static void
+odccm_connect(OdccmClient *self)
+{
+  GPtrArray* dev_list = NULL;
+  gint i;
+  gchar *obj_path = NULL;
+  GError *error = NULL;
+
+  OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  priv->dev_mgr_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
+                                     ODCCM_SERVICE,
+                                     ODCCM_MGR_PATH,
+                                     ODCCM_MGR_IFACE);
+  if (priv->dev_mgr_proxy == NULL) {
+      g_critical("%s: Failed to create proxy to device manager", G_STRFUNC);
+      priv->online = FALSE;
+      return;
+  }
+
+  dbus_g_proxy_add_signal (priv->dev_mgr_proxy, "DeviceConnected",
+			   G_TYPE_STRING, G_TYPE_INVALID);
+
+  dbus_g_proxy_add_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
+			   G_TYPE_STRING, G_TYPE_INVALID);
+
+  dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceConnected",
+			       G_CALLBACK(odccm_device_connected_cb), self, NULL);
+
+  dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
+			       G_CALLBACK(odccm_device_disconnected_cb), self, NULL);
+
+  /* currently connected devices */
+
+  if (!(dbus_g_proxy_call(priv->dev_mgr_proxy, "GetConnectedDevices",
+			  &error, G_TYPE_INVALID,
+			  dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
+			  &dev_list,
+			  G_TYPE_INVALID))) {
+    g_critical("%s: Error getting device list from odccm: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return;
+  }
+  for (i = 0; i < dev_list->len; i++) {
+    obj_path = (gchar *)g_ptr_array_index(dev_list, i);
+    g_debug("%s: adding device: %s", G_STRFUNC, obj_path);
+    odccm_add_device(self, obj_path);
+    g_free(obj_path);
+  }
+  g_ptr_array_free(dev_list, TRUE);
+
+}
+
+static void
+odccm_status_changed_cb(DBusGProxy *proxy,
+                        gchar *name,
+                        gchar *old_owner,
+                        gchar *new_owner,
+                        gpointer user_data)
+{
+        OdccmClient *self = ODCCM_CLIENT(user_data);
+        if (!self) {
+                g_warning("%s: Invalid object passed", G_STRFUNC);
+                return;
+        }
+        OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
+
+        if (priv->disposed) {
+                g_warning("%s: Disposed object passed", G_STRFUNC);
+                return;
+        }
+
+        if (strcmp(name, ODCCM_SERVICE) != 0)
+                return;
+
+        /* If this parameter is empty, odccm just came online */
+
+        if (strcmp(old_owner, "") == 0) {
+                priv->online = TRUE;
+                g_debug("%s: odccm came online", G_STRFUNC);
+                odccm_connect(self);
+                return;
+        }
+
+        /* If this parameter is empty, odccm just went offline */
+
+        if (strcmp(new_owner, "") == 0) {
+                priv->online = FALSE;
+                g_debug("%s: odccm went offline", G_STRFUNC);
+                odccm_disconnect(self);
+                return;
+        }
+}
+
+gboolean
+odccm_client_uninit_comms_impl(OdccmClient *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return FALSE;
+  }
+
+  OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return FALSE;
+  }
+  if (priv->dev_mgr_proxy)
+          odccm_disconnect(self);
+
+  dbus_g_proxy_disconnect_signal (priv->dbus_proxy, "NameOwnerChanged",
+                                  G_CALLBACK(odccm_status_changed_cb), NULL);
+
+  g_object_unref(priv->dbus_proxy);
+  priv->dbus_proxy = NULL;
+
+  dbus_g_connection_unref(priv->dbus_connection);
+  priv->dbus_connection = NULL;
+
+  return TRUE;
+}
 
 gboolean
 odccm_client_init_comms_impl(OdccmClient *self)
 {
   GError *error = NULL;
   gboolean result = FALSE;
-  GPtrArray* dev_list = NULL;
-  gint i;
-  gchar *obj_path = NULL;
+  gboolean has_owner = FALSE;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -630,48 +744,35 @@ odccm_client_init_comms_impl(OdccmClient *self)
       return result;
     }
 
-  priv->dev_mgr_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
-                                     ODCCM_SERVICE,
-                                     ODCCM_MGR_PATH,
-                                     ODCCM_MGR_IFACE);
-  if (priv->dev_mgr_proxy == NULL) {
-      g_critical("%s: Failed to create proxy to device manager", G_STRFUNC);
-    }
+  priv->dbus_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
+                                                DBUS_SERVICE,
+                                                DBUS_PATH,
+                                                DBUS_IFACE);
 
-  dbus_g_proxy_add_signal (priv->dev_mgr_proxy, "DeviceConnected",
-			   G_TYPE_STRING, G_TYPE_INVALID);
+  dbus_g_proxy_add_signal (priv->dbus_proxy, "NameOwnerChanged",
+			   G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
 
-  dbus_g_proxy_add_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
-			   G_TYPE_STRING, G_TYPE_INVALID);
+  dbus_g_proxy_connect_signal (priv->dbus_proxy, "NameOwnerChanged",
+			       G_CALLBACK(odccm_status_changed_cb), self, NULL);
 
-  dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceConnected",
-			       G_CALLBACK(odccm_device_connected_cb), self, NULL);
-
-  dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
-			       G_CALLBACK(odccm_device_disconnected_cb), self, NULL);
-
-  /* currently connected devices */
-
-  if (!(dbus_g_proxy_call(priv->dev_mgr_proxy, "GetConnectedDevices",
-			  &error, G_TYPE_INVALID,
-			  dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
-			  &dev_list,
+  if (!(dbus_g_proxy_call(priv->dbus_proxy, "NameHasOwner",
+			  &error,
+                          G_TYPE_STRING, ODCCM_SERVICE,
+                          G_TYPE_INVALID,
+			  G_TYPE_BOOLEAN, &has_owner,
 			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device list from odccm: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return TRUE;
+          g_critical("%s: Error checking owner of %s: %s", G_STRFUNC, ODCCM_SERVICE, error->message);
+          g_error_free(error);
+          return TRUE;
   }
-  for (i = 0; i < dev_list->len; i++) {
-    obj_path = (gchar *)g_ptr_array_index(dev_list, i);
-    g_debug("%s: adding device: %s", G_STRFUNC, obj_path);
-    odccm_add_device(self, obj_path);
-    g_free(obj_path);
-  }
-  g_ptr_array_free(dev_list, TRUE);
 
-  result = TRUE;
+  if (has_owner) {
+          priv->online = TRUE;
+          odccm_connect(self);
+  } else
+          priv->online = FALSE;
 
-  return result;
+  return TRUE;
 }
 
 
@@ -688,9 +789,12 @@ odccm_client_init(OdccmClient *self)
 {
   OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
 
+  priv->dbus_connection = NULL;
+  priv->dbus_proxy = NULL;
   priv->dev_mgr_proxy = NULL;
   priv->dev_proxies = g_ptr_array_new();
   priv->pending_devices = g_hash_table_new_full(g_str_hash, g_str_equal, hash_key_str_destroy, NULL);
+  priv->online = FALSE;
 }
 
 static void
@@ -702,12 +806,15 @@ odccm_client_dispose (GObject *obj)
   if (priv->disposed) {
     return;
   }
-  if (priv->dev_mgr_proxy)
+  if (priv->dbus_connection)
     dccm_client_uninit_comms(DCCM_CLIENT(self));
 
   priv->disposed = TRUE;
 
   /* unref other objects */
+
+  g_ptr_array_free(priv->dev_proxies, TRUE);
+  g_hash_table_destroy(priv->pending_devices);
 
   if (G_OBJECT_CLASS (odccm_client_parent_class)->dispose)
     G_OBJECT_CLASS (odccm_client_parent_class)->dispose (obj);

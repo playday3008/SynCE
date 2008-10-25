@@ -44,7 +44,8 @@ void synce_error_dialog(const gchar *format, ...)
 				   GTK_DIALOG_DESTROY_WITH_PARENT,
 				   GTK_MESSAGE_ERROR,
 				   GTK_BUTTONS_OK,
-				   tmpstr);
+				   "%s",
+                                   tmpstr);
 
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
@@ -65,7 +66,8 @@ void synce_warning_dialog(const gchar *format, ...)
 				   GTK_DIALOG_DESTROY_WITH_PARENT,
 				   GTK_MESSAGE_WARNING,
 				   GTK_BUTTONS_OK,
-				   tmpstr);
+				   "%s",
+                                   tmpstr);
 
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
@@ -86,7 +88,8 @@ void synce_info_dialog(const gchar *format, ...)
 				   GTK_DIALOG_DESTROY_WITH_PARENT,
 				   GTK_MESSAGE_INFO,
 				   GTK_BUTTONS_OK,
-				   tmpstr);
+				   "%s",
+                                   tmpstr);
 
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);

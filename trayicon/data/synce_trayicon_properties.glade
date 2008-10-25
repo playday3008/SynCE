@@ -52,51 +52,16 @@
                       <widget class="GtkVBox" id="vbox6">
                         <property name="visible">True</property>
                         <property name="spacing">6</property>
+                        <property name="homogeneous">True</property>
                         <child>
-                          <widget class="GtkRadioButton" id="prefs_use_odccm">
+                          <widget class="GtkCheckButton" id="prefs_enable_vdccm">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Odccm</property>
-                            <property name="use_underline">True</property>
+                            <property name="label" translatable="yes">Enable Vdccm support
+</property>
                             <property name="response_id">0</property>
                             <property name="draw_indicator">True</property>
                           </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkRadioButton" id="prefs_use_hal">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Hal</property>
-                            <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
-                            <property name="draw_indicator">True</property>
-                            <property name="group">prefs_use_odccm</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkRadioButton" id="prefs_use_vdccm">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Vdccm</property>
-                            <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
-                            <property name="draw_indicator">True</property>
-                            <property name="group">prefs_use_odccm</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">2</property>
-                          </packing>
                         </child>
                         <child>
                           <widget class="GtkHBox" id="hbox12">
@@ -105,22 +70,12 @@
                               <placeholder/>
                             </child>
                             <child>
-                              <widget class="GtkVBox" id="vbox10">
+                              <widget class="GtkCheckButton" id="prefs_start_stop_vdccm">
                                 <property name="visible">True</property>
-                                <child>
-                                  <widget class="GtkCheckButton" id="prefs_start_stop_vdccm">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="label" translatable="yes">Start/Stop on Start/Quit</property>
-                                    <property name="use_underline">True</property>
-                                    <property name="response_id">0</property>
-                                    <property name="draw_indicator">True</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                  </packing>
-                                </child>
+                                <property name="can_focus">True</property>
+                                <property name="label" translatable="yes">Start/Stop on Start/Quit</property>
+                                <property name="response_id">0</property>
+                                <property name="draw_indicator">True</property>
                               </widget>
                               <packing>
                                 <property name="position">1</property>
@@ -128,11 +83,12 @@
                             </child>
                           </widget>
                           <packing>
-                            <property name="position">3</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </widget>
                       <packing>
+                        <property name="padding">2</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
