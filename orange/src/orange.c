@@ -14,6 +14,8 @@
 #include <string.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #if WITH_LIBGSF
 #include <gsf/gsf-utils.h>
@@ -104,19 +106,35 @@ static long fsize(FILE* file)
 static bool copy_file(const char* input_filename, const char* output_filename)
 {
   bool success = false;
-  uint8_t* buffer = malloc(BUFFER_SIZE);
-  FILE* input_file  = fopen(input_filename,  "r");
-  FILE* output_file = fopen(output_filename, "w");
+  uint8_t* buffer = NULL;
+  FILE* input_file  = NULL;
+  FILE* output_file = NULL;
   long bytes_left = 0;
-  
-  if (!buffer)
-    goto exit;
-  
-  if (!input_file)
-    goto exit;
+  int tmperrno = 0;
+  struct stat stat_buf;
 
-  if (!output_file)
-    goto exit;
+  if (!(buffer = malloc(BUFFER_SIZE))) {
+          tmperrno = errno;
+          fprintf(stderr, "Failed to allocate buffer: %d: %s\n", tmperrno, strerror(tmperrno));
+          goto exit;
+  }
+  
+  if (!(input_file  = fopen(input_filename,  "r"))) {
+          tmperrno = errno;
+          fprintf(stderr, "Failed to open input file %s: %d: %s\n", input_filename, tmperrno, strerror(tmperrno));
+          goto exit;
+  }
+
+  if (stat(output_filename, &stat_buf) == 0) {
+          fprintf(stderr, "Output file %s already exists\n", output_filename);
+          goto exit;
+  }
+
+  if (!(output_file = fopen(output_filename, "w"))) {
+          tmperrno = errno;
+          fprintf(stderr, "Failed to open output file %s: %d: %s\n", output_filename, tmperrno, strerror(tmperrno));
+          goto exit;
+  }
 
   bytes_left = fsize(input_file);
 
@@ -124,11 +142,17 @@ static bool copy_file(const char* input_filename, const char* output_filename)
   {
     unsigned bytes_to_copy = MIN(bytes_left, BUFFER_SIZE);
 
-    if (bytes_to_copy != fread(buffer, 1, bytes_to_copy, input_file))
-      goto exit;
-    
-    if (bytes_to_copy != fwrite(buffer, 1, bytes_to_copy, output_file))
-      goto exit;
+    if (bytes_to_copy != fread(buffer, 1, bytes_to_copy, input_file)) {
+          tmperrno = errno;
+          fprintf(stderr, "Failed to read from input file %s: %d: %s\n", input_filename, tmperrno, strerror(tmperrno));
+          goto exit;
+    }
+
+    if (bytes_to_copy != fwrite(buffer, 1, bytes_to_copy, output_file)) {
+          tmperrno = errno;
+          fprintf(stderr, "Failed to write to output file %s: %d: %s\n", output_filename, tmperrno, strerror(tmperrno));
+          goto exit;
+    }
 
     bytes_left -= bytes_to_copy;
   }
@@ -136,9 +160,9 @@ static bool copy_file(const char* input_filename, const char* output_filename)
   success = true;
 
 exit:
-  FREE(buffer);
-  FCLOSE(input_file);
-  FCLOSE(output_file);
+  if (buffer) FREE(buffer);
+  if (input_file) FCLOSE(input_file);
+  if (output_file) FCLOSE(output_file);
   return success;
 }
 

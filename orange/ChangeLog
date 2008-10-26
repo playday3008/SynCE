@@ -1,3 +1,8 @@
+2008-10-26  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/orange.c - improved error reporting, refuse to
+	  overwrite existing file
+
 2008-06-06  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* VERSION: Upped version number for a new release.
