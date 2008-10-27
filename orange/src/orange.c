@@ -160,9 +160,9 @@ static bool copy_file(const char* input_filename, const char* output_filename)
   success = true;
 
 exit:
-  if (buffer) FREE(buffer);
-  if (input_file) FCLOSE(input_file);
-  if (output_file) FCLOSE(output_file);
+  FREE(buffer);
+  FCLOSE(input_file);
+  FCLOSE(output_file);
   return success;
 }
 
