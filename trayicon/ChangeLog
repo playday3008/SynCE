@@ -1,3 +1,8 @@
+2008-10-27  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/synce_app_man.c - assume cabs with processor type 0 are ok,
+	  extract cabs to subdir in /tmp
+
 2008-10-24  Mark Ellis <mark@mpellis.org.uk>
 
 	* add object-name and dccm-type to device properties

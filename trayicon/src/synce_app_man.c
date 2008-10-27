@@ -352,14 +352,30 @@ static bool
 orange_callback(const char* filename, CabInfo* info, void *cookie )
 {
   gboolean success = FALSE;
+  gchar *processor_name = NULL;
 
   orange_cookie *data_exchange = (orange_cookie *) cookie;
 
   gchar *output_filename = g_strdup_printf("%s/%s", data_exchange->output_directory, ( g_strrstr(filename, "/") + 1 ));
-  g_debug(_("%s: squeezing out %s for processor type %d"), G_STRFUNC, output_filename, info->processor);
 
-  if (info->processor != ((orange_cookie *)cookie)->processor_type)
-    return TRUE;
+  switch (info->processor)
+          {
+          case PROCESSOR_STRONGARM:    processor_name = "StrongARM";  break;
+          case PROCESSOR_MIPS_R4000:   processor_name = "MIPS R4000"; break;
+          case PROCESSOR_HITACHI_SH3:  processor_name = "SH3";        break;
+
+          default:
+                  processor_name = "Unknown";
+                  break;
+          }
+
+  g_debug(_("%s: squeezing out %s for processor type %d (%s)"), G_STRFUNC, output_filename, info->processor, processor_name);
+
+  if ((info->processor != ((orange_cookie *)cookie)->processor_type) && (info->processor != 0)) {
+          g_debug(_("%s: ignoring %s for incorrect processor type %d (%s)"), G_STRFUNC, output_filename, info->processor, processor_name);
+          g_free(output_filename);
+          return TRUE;
+  }
 
   if (cab_copy(filename, output_filename)) {
     data_exchange->file_list = g_list_append(data_exchange->file_list, output_filename);
@@ -705,6 +721,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
   BOOL rapi_res;
   HRESULT hr;
   DWORD last_error;
+  gchar *tmpdir = NULL;
 
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -714,7 +731,19 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
   memset(&system, 0, sizeof(system));
   CeGetSystemInfo(&system);
 
-  GList *cab_list = extract_with_orange(filepath, "/tmp", system.dwProcessorType);
+  tmpdir = tempnam(g_get_tmp_dir(), "sti");
+  if (g_mkdir(tmpdir, 0700) != 0) {
+    g_set_error(error,
+		G_FILE_ERROR,
+		g_file_error_from_errno(errno),
+		_("Failed to create temp directory '%s': %s"),
+                tmpdir,
+		g_strerror(errno));
+    result = FALSE;
+    goto exit;
+  }
+
+  GList *cab_list = extract_with_orange(filepath, tmpdir, system.dwProcessorType);
   if (!cab_list) {
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
@@ -787,6 +816,12 @@ exit:
       g_unlink((gchar *)(tmplist->data));
       tmplist = g_list_next(tmplist);
     }
+
+  if (tmpdir) {
+          g_rmdir(tmpdir);
+          g_free(tmpdir);
+  }
+
   return result;
 }
 
