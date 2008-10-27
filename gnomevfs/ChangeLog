@@ -1,3 +1,8 @@
+2008-10-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/libsyncevfs.c - look for TEMPORARY attribute on
+	  directories in root for attached file systems
+
 2008-07-07  Mark Ellis  <mark@mpellis.org.uk>
 
 	* remove error code that is now present in libsynce

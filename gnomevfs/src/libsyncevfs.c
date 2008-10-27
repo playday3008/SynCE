@@ -33,15 +33,6 @@
 #define INDEX_FILESYSTEM    3
 #define INDEX_DOCUMENTS     4
 
-#define NAME_SD_CARD        "SD-MMC Card"
-#define NAME_ROM_STORAGE    "ROM Storage"
-
-enum {
-  FS_DEVICE = 0,
-  FS_SD_CARD,
-  FS_ROM_STORAGE
-};
-
 /* structures for info held by gnomevfs between calls */
 
 typedef struct _VFS_DIR_HANDLE
@@ -1612,7 +1603,13 @@ static GnomeVFSResult synce_same_fs/*{{{*/
 {
   GnomeVFSResult result;
   gchar *location_a = NULL, *location_b = NULL;
-  gint fs_a, fs_b, index_a, index_b;
+  gint index_a, index_b;
+  gboolean fs_a_device, fs_b_device;
+  DWORD attributes;
+  LPWSTR wide_root_dir = NULL;
+  gchar *fs_a_root = NULL;
+  gchar *fs_b_root = NULL;
+  RapiConnection *rapi_conn = NULL;
 
   synce_debug("%s: ------ entering ------", G_STRFUNC);
 
@@ -1640,42 +1637,70 @@ static GnomeVFSResult synce_same_fs/*{{{*/
   }
 #endif
 
-  fs_a = FS_DEVICE;
+  MUTEX_LOCK (mutex);
+  if ((result = initialize_rapi(a, &rapi_conn)) != GNOME_VFS_OK) {
+    MUTEX_UNLOCK (mutex);
+    goto exit;
+  }
+
+  fs_a_device = TRUE;
   if (index_a == INDEX_FILESYSTEM) {
     gchar **split = g_strsplit(location_a, "\\", 0);
 
     if (split && split[0] && split[1]) {
-      if (strcmp(split[1], NAME_SD_CARD) == 0)
-	fs_a = FS_SD_CARD;
-    }
-    if (split && split[0] && split[1]) {
-      if (strcmp(split[1], NAME_ROM_STORAGE) == 0)
-	fs_a = FS_ROM_STORAGE;
+
+            fs_a_root = g_strdup_printf("\\%s", split[1]);
+            wide_root_dir = wstr_from_current(fs_a_root);
+            attributes = CeGetFileAttributes(wide_root_dir);
+            wstr_free_string(wide_root_dir);
+
+            if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY))
+                    /* get size for this */
+                    fs_a_device = FALSE;
+            else
+                    g_free(fs_a_root);
     }
     g_strfreev(split);
   }
 
-  fs_b = FS_DEVICE;
+  fs_b_device = TRUE;
   if (index_b == INDEX_FILESYSTEM) {
     gchar **split = g_strsplit(location_b, "\\", 0);
 
     if (split && split[0] && split[1]) {
-      if (strcmp(split[1], NAME_SD_CARD) == 0)
-	fs_b = FS_SD_CARD;
-    }
 
-    if (split && split[0] && split[1]) {
-      if (strcmp(split[1], NAME_ROM_STORAGE) == 0)
-	fs_b = FS_ROM_STORAGE;
-    }
+            fs_b_root = g_strdup_printf("\\%s", split[1]);
+            wide_root_dir = wstr_from_current(fs_b_root);
+            attributes = CeGetFileAttributes(wide_root_dir);
+            wstr_free_string(wide_root_dir);
 
+            if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY))
+                    /* get size for this */
+                    fs_b_device = FALSE;
+            else
+                    g_free(fs_b_root);
+    }
     g_strfreev(split);
   }
 
-  if (fs_a == fs_b)
-    *same_fs_return = TRUE;
+  CeRapiUninit();
+  rapi_connection_destroy(rapi_conn);
+  MUTEX_UNLOCK (mutex);
+
+  if (fs_a_device && fs_b_device)
+          *same_fs_return = TRUE;
+  else if (fs_a_device != fs_b_device)
+          *same_fs_return = FALSE;
   else
-    *same_fs_return = FALSE;
+          {
+                  if (strcmp(fs_a_root, fs_b_root) == 0)          
+                          *same_fs_return = TRUE;
+                  else
+                          *same_fs_return = FALSE;
+          }
+
+  g_free(fs_a_root);
+  g_free(fs_b_root);
 
   result = GNOME_VFS_OK;
 
@@ -1700,6 +1725,9 @@ synce_get_volume_free_space
   gchar *location = NULL;
   gint index;
   RapiConnection *rapi_conn = NULL;
+  DWORD attributes;
+  gchar *root_dir = NULL;
+  LPWSTR wide_root_dir = NULL;
 
   synce_debug("%s: ------ entering ------", G_STRFUNC);
 
@@ -1715,28 +1743,31 @@ synce_get_volume_free_space
   }
 #endif
 
-  if (index == INDEX_FILESYSTEM) {
-    gchar **split = g_strsplit(location, "\\", 0);
-
-    if (split && split[0] && split[1]) {
-      if (strcmp(split[1], NAME_SD_CARD) == 0) {
-	result = GNOME_VFS_ERROR_NOT_SUPPORTED;
-	goto exit;
-      }
-
-      if (strcmp(split[1], NAME_ROM_STORAGE) == 0) {
-	result = GNOME_VFS_ERROR_NOT_SUPPORTED;
-	goto exit;
-      }
-
-    }
-    g_strfreev(split);
-  }
-
   MUTEX_LOCK (mutex);
   if ((result = initialize_rapi(uri, &rapi_conn)) != GNOME_VFS_OK) {
     MUTEX_UNLOCK (mutex);
     goto exit;
+  }
+
+  if (index == INDEX_FILESYSTEM) {
+    gchar **split = g_strsplit(location, "\\", 0);
+
+    if (split && split[0] && split[1]) {
+            root_dir = g_strdup_printf("\\%s", split[1]);
+            wide_root_dir = wstr_from_current(root_dir);
+            attributes = CeGetFileAttributes(wide_root_dir);
+            wstr_free_string(wide_root_dir);
+            g_free(root_dir);
+
+            if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY)) {
+                    result = GNOME_VFS_ERROR_NOT_SUPPORTED;
+                    CeRapiUninit();
+                    rapi_connection_destroy(rapi_conn);
+                    MUTEX_UNLOCK (mutex);
+                    goto exit;
+            }
+    }
+    g_strfreev(split);
   }
 
   if (CeGetStoreInformation(&store)) {
