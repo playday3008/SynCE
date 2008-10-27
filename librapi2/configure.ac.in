@@ -62,12 +62,7 @@ dnl Check for libsynce
 PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.12)
 
 dnl Checks for header files.
-dnl For readv/writev
-AC_CHECK_HEADERS(sys/uio.h)
 
-dnl Checks for library functions.
-AC_CHECK_FUNCS(readv)
-AC_CHECK_FUNCS(writev)
 
 dnl #
 dnl # Now we must check for Python/Pyrex

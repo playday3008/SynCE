@@ -1,3 +1,9 @@
+2008-10-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi_buffer.c - remove writev(), causes problems at least
+	  on FreeBSD, and provides no benefit
+	* configure.ac.in - remove checks for writev() and readv()
+
 2008-09-10  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/rapi_indirection.c - enable CeSetEndOfFile()

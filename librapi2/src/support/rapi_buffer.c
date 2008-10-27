@@ -5,11 +5,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
-
-#if HAVE_SYS_UIO_H
-/* For readv/writev */
-#include <sys/uio.h>
-#endif
+#include <errno.h>
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -68,7 +64,7 @@ static bool rapi_buffer_enlarge(RapiBuffer* buffer, size_t bytes_needed)/*{{{*/
 	}
 	else
 	{
-		rapi_buffer_error("realloc %i bytes failed", new_size);
+		rapi_buffer_error("realloc %i bytes failed: %s", new_size, strerror(errno));
 	}
 
 	return success;
@@ -541,28 +537,6 @@ bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket)
   bool success = false;
   uint32_t size_le = htole32(rapi_buffer_get_size(buffer));
 
-#if HAVE_SYS_UIO_H && HAVE_WRITEV
-
-  int fd = synce_socket_get_descriptor(socket);
-  struct iovec parts[2];
-  ssize_t total_size = 0;
-  ssize_t result;
-
-  parts[0].iov_base = &size_le;
-  parts[0].iov_len  = sizeof(size_le);
-  total_size += parts[0].iov_len;
-
-  parts[1].iov_base = rapi_buffer_get_raw(buffer);
-  parts[1].iov_len  = rapi_buffer_get_size(buffer);
-  total_size += parts[1].iov_len;
-
-  if ((result = writev(fd, parts, 2)) == total_size)
-    success = true;
-  else
-    rapi_buffer_error("writev failed, returned %i and not %i", result, total_size);
-
-#else
-
   size_t total_size = sizeof(size_le) + rapi_buffer_get_size(buffer);
 
   /* send everything as a single buffer */
@@ -580,8 +554,6 @@ bool rapi_buffer_send(RapiBuffer* buffer, SynceSocket* socket)
   success = synce_socket_write(socket, tmp, total_size);
 
   free(tmp);
-
-#endif
 
   if (!success)
   {
