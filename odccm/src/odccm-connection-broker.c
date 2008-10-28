@@ -252,6 +252,8 @@ server_socket_readable_cb (GIOChannel *source,
       g_warning ("%s: sendmsg returned %d", G_STRFUNC, ret);
     }
 
+  gnet_unix_socket_unref(sock);
+
   g_signal_emit (self, signals[DONE], 0);
 
   return FALSE;

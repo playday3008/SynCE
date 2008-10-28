@@ -1,3 +1,9 @@
+2008-10-28  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/odccm-connection-broker.c - close fd used to pass connection
+	  to user clients
+	* src/utils.c - correct use of g_debug()
+
 2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
 
 	* man/odccm.1: Escaped minus signs so they're not hyphens. Notified by
