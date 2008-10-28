@@ -243,6 +243,7 @@ g_error_from_rapi(gboolean *connection_error)
             {
 	      result = g_error_new(G_IO_ERROR,
 				   error_codes[i].gio_error_result,
+                                   "%s",
 				   synce_strerror(hr));
               break;
             }
@@ -258,6 +259,7 @@ g_error_from_rapi(gboolean *connection_error)
             {
 	      result = g_error_new(G_IO_ERROR,
 				   error_codes[i].gio_error_result,
+                                   "%s",
 				   synce_strerror(error));
               break;
             }
@@ -2179,6 +2181,7 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
   LPWSTR wide_root_dir = NULL;
   gint index;
   gboolean other_storage = FALSE;
+  ULARGE_INTEGER FreeBytesAvailable, TotalNumberOfBytes, TotalNumberOfFreeBytes;
 
   index = get_location(filename, &location);
   if (index == INDEX_INVALID) {
@@ -2209,13 +2212,31 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
       root_dir = g_strdup_printf("\\%s", split[1]);
       wide_root_dir = wstr_from_current(root_dir);
       attributes = CeGetFileAttributes(wide_root_dir);
-      wstr_free_string(wide_root_dir);
-      g_free(root_dir);
 
-      if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY))
-	/* get size for this */
+      if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY)) {
+
 	other_storage = TRUE;
 
+        if (CeGetDiskFreeSpaceEx(root_dir, 
+                                 &FreeBytesAvailable, 
+                                 &TotalNumberOfBytes, 
+                                 &TotalNumberOfFreeBytes) != 0) {
+                g_file_info_set_attribute_uint64 (info,
+                                                  G_FILE_ATTRIBUTE_FILESYSTEM_SIZE,
+                                                  TotalNumberOfBytes);
+
+                g_file_info_set_attribute_uint64 (info,
+                                                  G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+                                                  TotalNumberOfFreeBytes);
+        } else {
+                error = g_error_from_rapi(NULL);
+                g_critical("%s: Failed to get store information: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+        }
+      }
+
+      wstr_free_string(wide_root_dir);
+      g_free(root_dir);
     }
     g_strfreev(split);
   }
