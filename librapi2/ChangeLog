@@ -1,3 +1,7 @@
+2008-10-28  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pcp.c - fix for copying <source> file to <dest> dir
+
 2008-10-27  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/rapi_buffer.c - remove writev(), causes problems at least

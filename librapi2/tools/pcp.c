@@ -548,7 +548,32 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
 
     free(actual_dest);
   } else {
-    result = copy_file(source, dest, bytes_copied);
+
+    if (does_exist(dest)) {
+      if (!is_dir(dest)) {
+	fprintf(stderr, "%s: file '%s' already exists\n", prog_name, dest);
+	return false;
+      }
+
+      dir_name = any_basename(source);
+
+      actual_dest = calloc(1, 1 + strlen(dest) + 1 + strlen(dir_name) + 1);
+
+      actual_dest = strcat(actual_dest, dest);
+      if (is_remote_file(dest))
+	actual_dest = strcat(actual_dest, "\\");
+      else
+	actual_dest = strcat(actual_dest, "/");
+      actual_dest = strcat(actual_dest, dir_name);
+
+      free(dir_name);
+
+    } else {
+      actual_dest = strdup(dest);
+    }
+
+    result = copy_file(source, actual_dest, bytes_copied);
+    free(actual_dest);
   }
 
   return result;
