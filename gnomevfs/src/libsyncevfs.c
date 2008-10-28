@@ -70,6 +70,7 @@ static ErrorCodeTriple error_codes[] =
     {GNOME_VFS_OK,                        ERROR_SUCCESS,        S_OK        },
     {GNOME_VFS_ERROR_GENERIC,             0,                    E_FAIL      },
     {GNOME_VFS_ERROR_INTERNAL,            0,                    E_UNEXPECTED},
+    {GNOME_VFS_ERROR_NOT_SUPPORTED,       0,                    E_NOTIMPL},
     {GNOME_VFS_ERROR_NOT_FOUND,           ERROR_FILE_NOT_FOUND, 0},
     {GNOME_VFS_ERROR_NOT_FOUND,           ERROR_PATH_NOT_FOUND, 0},
     {GNOME_VFS_ERROR_INVALID_URI,         ERROR_INVALID_NAME,   0},
@@ -1728,6 +1729,7 @@ synce_get_volume_free_space
   DWORD attributes;
   gchar *root_dir = NULL;
   LPWSTR wide_root_dir = NULL;
+  ULARGE_INTEGER FreeBytesAvailable, TotalNumberOfBytes, TotalNumberOfFreeBytes;
 
   synce_debug("%s: ------ entering ------", G_STRFUNC);
 
@@ -1757,15 +1759,27 @@ synce_get_volume_free_space
             wide_root_dir = wstr_from_current(root_dir);
             attributes = CeGetFileAttributes(wide_root_dir);
             wstr_free_string(wide_root_dir);
-            g_free(root_dir);
 
             if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY)) {
-                    result = GNOME_VFS_ERROR_NOT_SUPPORTED;
+                    if (CeGetDiskFreeSpaceEx(root_dir,
+                                             &FreeBytesAvailable,
+                                             &TotalNumberOfBytes,
+                                             &TotalNumberOfFreeBytes) != 0) {
+
+                            *free_space = TotalNumberOfFreeBytes;
+                            result = GNOME_VFS_OK;
+                    } else {
+                            synce_error("%s: Failed to get store information", G_STRFUNC);
+                            result = gnome_vfs_result_from_rapi(NULL);
+                    }
+
+                    g_free(root_dir);
                     CeRapiUninit();
                     rapi_connection_destroy(rapi_conn);
                     MUTEX_UNLOCK (mutex);
                     goto exit;
             }
+            g_free(root_dir);
     }
     g_strfreev(split);
   }

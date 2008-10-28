@@ -1,3 +1,8 @@
+2008-10-28  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/libsyncevfs.c - use CeGetDiskFreeSpaceEx() to obtain 
+	  space details for non main storage
+
 2008-10-27  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/libsyncevfs.c - look for TEMPORARY attribute on
