@@ -1,3 +1,9 @@
+2008-10-28  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/utils.c - correct use of g_debug()
+	* src/synce-connection-broker.c - close fd used to pass
+	  connection to user clients
+
 2008-10-16  Mark Ellis <mark@mpellis.org.uk>
 
 	* etc/synce-hal.conf.in - replaces synce-serial.conf.in, an

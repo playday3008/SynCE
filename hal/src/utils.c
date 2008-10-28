@@ -72,7 +72,7 @@ synce_print_hexdump (const void *buf, gint len)
 			      (i > 0) ? " " : "", ((guchar *) buf)[i]);
     }
 
-  g_debug (s->str);
+  g_debug ("%s", s->str);
 
   g_string_free (s, TRUE);
 }
