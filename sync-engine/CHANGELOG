@@ -1077,3 +1077,7 @@ Also fixed anniversaries Opensync->Airsync. However anniversaries
 Airsync->Opensymc still do not work. The XML is correct and a bug in Opensync
 is suspected.
 
+29/10/2008 - 165500 Mark Ellis
+------------------------------
+Minor update for change in pyrapi2.RAPIError
+

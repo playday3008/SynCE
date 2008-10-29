@@ -86,7 +86,7 @@ class PartnershipManager:
 			
 		except pyrapi2.RAPIError, e:
 	
-			self.logger.warn("ReadDevicePartnerships: Error opening partnership keys in remote registry (%d)" % e.retval)
+			self.logger.warn("ReadDevicePartnerships: Error opening partnership keys in remote registry (%d, %s)" % (e.err_code, e))
 
 		# Look up the synchronization data on each
 		
