@@ -17,6 +17,7 @@ cdef extern from "synce.h":
     char *wstr_to_utf8(LPCWSTR unicode)
     LPWSTR wstr_from_utf8(char *utf8)
     void wstr_free_string(void *str)
+    char* synce_strerror(DWORD error)
 
 cdef extern from "synce_log.h":
     void synce_log_set_level(int level)
@@ -51,6 +52,8 @@ cdef extern from "rapi.h":
     
     VOID CeGetSystemInfo( LPSYSTEM_INFO lpSystemInfo)
     BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation)
+    HRESULT CeRapiGetError()
+    DWORD CeGetLastError()
 
 #
 # Wrapper functions for the C RAPI calls that will release the GIL lock
@@ -84,6 +87,8 @@ cdef BOOL _CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWr
 #
 # Public constants
 #
+
+# from synce_log.h
 SYNCE_LOG_LEVEL_LOWEST  = 0
 
 SYNCE_LOG_LEVEL_ERROR   = 1
@@ -95,11 +100,30 @@ SYNCE_LOG_LEVEL_TRACE   = SYNCE_LOG_LEVEL_DEBUG
 SYNCE_LOG_LEVEL_HIGHEST = 5
 SYNCE_LOG_LEVEL_DEFAULT = 2
 
+# from synce_sys_error.h
 ERROR_SUCCESS           = 0
 
+# from synce_types.h
 FALSE                   = 0
 TRUE                    = 1
 
+E_ABORT                 = 0x80004004
+E_ACCESSDENIED          = 0x80070005
+E_FAIL                  = 0x80004005
+E_HANDLE                = 0x80070006
+E_OUTOFMEMORY           = 0x8007000E
+E_INVALIDARG            = 0x80070057
+E_NOINTERFACE           = 0x80004002
+E_NOTIMPL               = 0x80004001
+E_OUTOFMEMORY           = 0x8007000E
+E_PENDING               = 0x8000000A
+E_POINTER               = 0x80004003
+E_UNEXPECTED            = 0x8000FFFF
+S_FALSE                 = 0x00000001
+S_OK                    = 0x00000000
+
+
+# from rapi.h
 REG_NONE                = 0
 REG_SZ                  = 1
 REG_EXPAND_SZ           = 2
@@ -120,7 +144,6 @@ BATTERY_FLAG_CHARGING      =    0x08
 BATTERY_FLAG_NO_BATTERY    =    0x80
 BATTERY_FLAG_UNKNOWN       =    0xFF
 
-
 FAF_ATTRIBUTES               = 0x00001
 FAF_CREATION_TIME            = 0x00002
 FAF_LASTACCESS_TIME          = 0x00004
@@ -136,10 +159,6 @@ FAF_ATTRIB_NO_HIDDEN         = 0x02000
 FAF_FOLDERS_ONLY             = 0x04000
 FAF_NO_HIDDEN_SYS_ROMMODULES = 0x08000
 
-
-
-
-
 CSIDL_PROGRAMS               = 0x0002
 CSIDL_PERSONAL               = 0x0005
 CSIDL_FAVORITES_GRYPHON      = 0x0006
@@ -149,7 +168,6 @@ CSIDL_STARTMENU              = 0x000b
 CSIDL_DESKTOPDIRECTORY       = 0x0010
 CSIDL_FONTS                  = 0x0014
 CSIDL_FAVORITES              = 0x0016
-
 
 #dwShareMode 
 GENERIC_WRITE                = 0x40000000
@@ -195,11 +213,22 @@ FILE_ATTRIBUTE_7             = 0x00080000
 # RAPIError is a subclass of Exception
 
 class RAPIError(Exception):
-    def __init__(self, retval):
-        self.retval = retval
+    def __init__(self, err_code=None):
+        cdef HRESULT hr
+        cdef DWORD last_error
+
+        if err_code != None:
+            self.err_code = err_code
+        else:
+            hr = CeRapiGetError()
+            if hr < 0:
+                self.err_code = hr
+            else:
+                last_error = CeGetLastError()
+                self.err_code = last_error
 
     def __str__(self):
-        return str(self.retval)
+        return str(synce_strerror(self.err_code))
 
 
 class RegKey:
@@ -341,7 +370,7 @@ class RegKey:
                 (<LPDWORD> data)[0] = self._dword_le_from_host(value_data)
                 data_size = 4
             else:
-                raise RAPIError("support for type %d not yet implemented" % value_type)
+                raise RAPIError(E_NOTIMPL)
 
             retval = CeRegSetValueEx(self.handle, name_w, 0, value_type, data, data_size)
 
@@ -405,6 +434,9 @@ class RAPISession:
 
         synce_log_set_level(log_level)
         conn = rapi_connection_from_name(NULL)
+        if conn == NULL:
+            raise RAPIError(E_FAIL)
+
         rapi_connection_select(conn)
         
         retval = CeRapiInit()
@@ -447,17 +479,17 @@ class RAPISession:
         retval = CeSyncStart(params_w)
         wstr_free_string(params_w)
         if retval != 0:
-            raise RAPIError(retval)
+            raise RAPIError
 
     def sync_resume(self):
         retval = CeSyncResume()
         if retval != 0:
-            raise RAPIError(retval)
+            raise RAPIError
 
     def sync_pause(self):
         retval = CeSyncPause()
         if retval != 0:
-            raise RAPIError(retval)
+            raise RAPIError
 
     def SyncTimeToPc(self):
         return CeSyncTimeToPc()
@@ -471,7 +503,7 @@ class RAPISession:
 
         #This functions returns 0 if something went wrong....
         if retval == 0:
-            raise RAPIError(retval)
+            raise RAPIError
 
         #return a tuple at the moment, maybe later make this a list
         return (freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes) 
@@ -483,7 +515,7 @@ class RAPISession:
         #In contrast to other functions, this returns a boolean,
         #denoting whether the call was succesfull
         if retval == 0:
-            raise RAPIError(retval)
+            raise RAPIError
 
 		#Now construct the dictionary:
         result = dict()
@@ -505,15 +537,16 @@ class RAPISession:
     def findAllFiles( self, query, flags ):
         cdef LPWSTR query_w
         query_w = wstr_from_utf8(query)
-        
-        
+
         cdef LPCE_FIND_DATA find_data 
         cdef DWORD numberOfFiles
 
         cdef CE_FIND_DATA found_file
 
-
-        retval = CeFindAllFiles( query_w, flags , &numberOfFiles, &find_data ) 
+        retval = CeFindAllFiles( query_w, flags , &numberOfFiles, &find_data )
+        wstr_free_string(query_w)
+        if retval == 0:
+            raise RAPIError
 
         #Now create a list of dictionaries
         result = [] 
@@ -558,15 +591,13 @@ class RAPISession:
         return result
 
 
-
-    #TODO: ERROR HANDLING!
     def closeHandle(self, hObject):
-     retval = CeCloseHandle( hObject ) 
-     #Non-zero indicates success, zero indicates failure
-     if retval == 0:
-        raise RAPIError(retval)
+        retval = CeCloseHandle( hObject ) 
+        #Non-zero indicates success, zero indicates failure
+        if retval == 0:
+            raise RAPIError
 
-    #TODO: ERROR HANDLING!
+
     def createFile(self, filename, desiredAccess, shareMode, createDisposition, flagsAndAttributes):
         cdef LPWSTR filename_w
         cdef HANDLE fileHandle
@@ -575,10 +606,13 @@ class RAPISession:
 
         fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0 ) 
 
+        wstr_free_string(filename_w)
+        if fileHandle == -1:
+            raise RAPIError
+
         return fileHandle
 
 
-    #TODO: ERROR HANDLING!
     def readFile( self, fileHandle, numberOfBytesToRead ):
         cdef DWORD numberOfBytesRead
         cdef DWORD dwNumberOfBytesToRead
@@ -588,6 +622,10 @@ class RAPISession:
         c_buffer = <LPBYTE> malloc (numberOfBytesToRead)
         
         CeReadFile( fileHandle, c_buffer , numberOfBytesToRead, &numberOfBytesRead, NULL )
+
+        if retval == 0:
+            free(c_buffer)
+            raise RAPIError
         
         if numberOfBytesRead < numberOfBytesToRead:
             c_buffer = <LPBYTE> realloc( c_buffer, numberOfBytesRead)
@@ -598,29 +636,47 @@ class RAPISession:
         free(c_buffer)
         return returnstring, numberOfBytesRead
 
-    #TODO: ERROR HANDLING!
-    #TODO: Provide the user with the processInformation
+
     def writeFile( self, fileHandle, buffer, numberOfBytesToWrite ):
         cdef DWORD numberOfBytesWritten
         cdef DWORD dwNumberOfBytesToWrite
         cdef char* c_buffer
 
         c_buffer = buffer 
-        _CeWriteFile( fileHandle, c_buffer , numberOfBytesToWrite, &numberOfBytesWritten, NULL)
+        retval = _CeWriteFile( fileHandle, c_buffer , numberOfBytesToWrite, &numberOfBytesWritten, NULL)
+        if retval == 0:
+            raise RAPIError
+
+        return numberOfBytesWritten
+
     
+    #TODO: Provide the user with the processInformation
     def createProcess(self, applicationName, applicationParams):
         cdef PROCESS_INFORMATION processInformation
+        cdef LPWSTR applicationName_w
+        cdef LPWSTR applicationParams_w
 
-        return CeCreateProcess( wstr_from_utf8(applicationName), wstr_from_utf8(applicationParams), NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
+        applicationName_w = wstr_from_utf8(applicationName)
+        applicationParams_w = wstr_from_utf8(applicationParams)
+
+        retval = CeCreateProcess( applicationName_w, applicationParams_w, NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
+
+        wstr_free_string(applicationName_w)
+        wstr_free_string(applicationParams_w)
+
+        if retval == 0:
+            raise RAPIError
+
+        return retval
+
 
     def getVersion(self):
         cdef CEOSVERSIONINFO osVersionInfo
-        #cdef SYSTEM_POWER_STATUS_EX powerStatus
         
         retval = CeGetVersionEx( &osVersionInfo)
      
         if retval == 0:
-            raise RAPIError(retval)
+            raise RAPIError
 
 		#Now construct the dictionary:
         result = dict()

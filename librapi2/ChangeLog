@@ -1,3 +1,8 @@
+2008-10-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - enhance RAPIError exception, add error
+	  checking to remaining functions
+
 2008-10-28  Mark Ellis  <mark@mpellis.org.uk>
 
 	* tools/pcp.c - fix for copying <source> file to <dest> dir
