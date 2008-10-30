@@ -2,6 +2,7 @@
 
 	* add service-starting signal for dccm clients
 	* replace info dialogs with notifications
+	* change from eggtrayicon to GtkStatusIcon
 
 2008-10-27  Mark Ellis <mark@mpellis.org.uk>
 

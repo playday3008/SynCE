@@ -140,7 +140,7 @@ main (gint argc, gchar **argv)
 
 	init_sm (restart);
 
-	trayicon = g_object_new (SYNCE_TRAYICON_TYPE, "title", "SynCE", NULL);
+	trayicon = g_object_new (SYNCE_TRAYICON_TYPE, NULL);
 
 	gtk_main ();
 

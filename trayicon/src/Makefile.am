@@ -19,7 +19,6 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			main.c \
 			stock-icons.h \
 			synce-trayicon.c synce-trayicon.h \
-			eggtrayicon.c eggtrayicon.h \
 			gtop_stuff.c gtop_stuff.h \
 			properties.c properties.h \
 			utils.c utils.h  \
@@ -35,9 +34,7 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			synce_app_man.c synce_app_man.h
 
 EXTRA_DIST = dccm-client-signals-marshal.list \
-		sync-engine.xml \
-		LICENSE.eggtrayicon \
-		LICENSE.synce
+		sync-engine.xml
 
 synce_trayicon_CPPFLAGS = \
 	$(GNOME2_CFLAGS) \

@@ -52,7 +52,7 @@ IN THE SOFTWARE.
 #include "device-info.h"
 #include "module.h"
 
-G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, EGG_TYPE_TRAY_ICON)
+G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, GTK_TYPE_STATUS_ICON)
 
 typedef struct _SynceTrayIconPrivate SynceTrayIconPrivate;
 struct _SynceTrayIconPrivate {
@@ -63,8 +63,6 @@ struct _SynceTrayIconPrivate {
   DccmClient *odccm_client;
   DccmClient *vdccm_client;
   WmDeviceManager *device_list;
-  GtkTooltips* tooltips;
-  GtkWidget *icon;
   GtkWidget *menu;
 
 #ifdef ENABLE_NOTIFY
@@ -75,31 +73,6 @@ struct _SynceTrayIconPrivate {
 };
 
 #define SYNCE_TRAYICON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SYNCE_TRAYICON_TYPE, SynceTrayIconPrivate))
-
-     /* method declarations */
-
-static gboolean start_dccm ();
-static void stop_dccm ();
-static void init_client_comms(SynceTrayIcon *self);
-static void uninit_client_comms(SynceTrayIcon *self);
-static void password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
-static void password_required_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
-static void password_required_on_device_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
-static void device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpointer user_data);
-static void device_disconnected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data);
-static void service_stopping_cb(DccmClient *comms_client, gpointer user_data);
-static gboolean is_connected(SynceTrayIcon *self);
-static void set_status_tooltips(SynceTrayIcon *self);
-static void set_icon(SynceTrayIcon *self);
-static gboolean update(gpointer data);
-static void device_added_cb(GObject *obj, gpointer user_data);
-static void device_removed_cb(GObject *obj, gpointer user_data);
-static void trayicon_clicked(GtkWidget *button, GdkEventButton *event, gpointer user_data);
-
-#ifdef ENABLE_NOTIFY
-static void event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body);
-#endif /* ENABLE_NOTIFY */
-
 
      /* methods */
 
@@ -129,8 +102,8 @@ set_status_tooltips(SynceTrayIcon *self)
   WmDevice *device;
 
   if (!(is_connected(self))) {
-    gtk_tooltips_set_tip(priv->tooltips, GTK_WIDGET(self), _("Not connected"), NULL);
-    return;
+          gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), _("Not connected"));
+          return;
   }
 
   device_count = wm_device_manager_device_count(priv->device_list);
@@ -155,7 +128,7 @@ set_status_tooltips(SynceTrayIcon *self)
     tooltip_str = tmpstr;
   }
 
-  gtk_tooltips_set_tip(priv->tooltips, GTK_WIDGET(self), tooltip_str, NULL);
+  gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), tooltip_str);
   g_free(tooltip_str);
   return;
 }
@@ -163,12 +136,10 @@ set_status_tooltips(SynceTrayIcon *self)
 static void
 set_icon(SynceTrayIcon *self)
 {
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-
   if (is_connected(self))
-    gtk_image_set_from_icon_name(GTK_IMAGE(priv->icon), SYNCE_STOCK_CONNECTED, GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_CONNECTED);
   else
-    gtk_image_set_from_icon_name(GTK_IMAGE(priv->icon), SYNCE_STOCK_DISCONNECTED, GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_DISCONNECTED);
 	
   while (gtk_events_pending ())
     gtk_main_iteration ();
@@ -187,6 +158,26 @@ update(gpointer data)
   return FALSE;
 }
 
+
+#ifdef ENABLE_NOTIFY
+
+static void
+event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
+{
+  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+  if (priv->notification) {
+    notify_notification_close(priv->notification, NULL);
+    g_object_unref (priv->notification);
+  }
+
+  if (gtk_status_icon_is_embedded(GTK_STATUS_ICON(self))) {
+          priv->notification = notify_notification_new_with_status_icon (summary, body, NULL, GTK_STATUS_ICON(self));
+          notify_notification_show (priv->notification, NULL);
+  }
+}
+
+#endif /* ENABLE_NOTIFY */
 
 static void
 password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
@@ -370,7 +361,6 @@ static void
 service_starting_cb(DccmClient *comms_client, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
   if (IS_HAL_CLIENT(comms_client)) {
 #ifdef ENABLE_NOTIFY
@@ -782,7 +772,7 @@ menu_exit(GtkWidget *button, SynceTrayIcon *self)
 }
 
 static void
-trayicon_menu(GdkEventButton *event, SynceTrayIcon *self)
+trayicon_update_menu(SynceTrayIcon *self)
 {
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
@@ -866,46 +856,28 @@ trayicon_menu(GdkEventButton *event, SynceTrayIcon *self)
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_exit), self);
   gtk_menu_append(GTK_MENU(priv->menu), entry);
 
-  gtk_widget_show_all(priv->menu);
-  gtk_menu_popup(GTK_MENU(priv->menu), NULL, NULL, NULL, NULL, event->button, event->time);
 }
 
 static void
-trayicon_clicked(GtkWidget *button, GdkEventButton *event, gpointer user_data)
+trayicon_activate_cb(GtkStatusIcon *status_icon, gpointer user_data)
+{
+  g_debug("%s: synce trayicon activated", G_STRFUNC);
+  return;
+}
+
+static void
+trayicon_popup_menu_cb(GtkStatusIcon *status_icon, guint button, guint activate_time, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
-
-  if (event->type != GDK_BUTTON_PRESS)
-    return;
-
-  switch (event->button) {
-  case 1:
-    break;
-  case 2:
-    break;
-  case 3:
-    trayicon_menu(event, self);
-    break;
-  }
-}
-
-#ifdef ENABLE_NOTIFY
-
-static void
-event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
-{
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
-  if (priv->notification) {
-    notify_notification_close(priv->notification, NULL);
-    g_object_unref (priv->notification);
-  }
+  trayicon_update_menu(self);
 
-  priv->notification = notify_notification_new (summary, body, NULL, GTK_WIDGET (self));
-  notify_notification_show (priv->notification, NULL);
+  gtk_widget_show_all(priv->menu);
+  gtk_menu_popup(GTK_MENU(priv->menu), NULL, NULL,
+                 gtk_status_icon_position_menu, status_icon,
+                 button, activate_time);
 }
-
-#endif /* ENABLE_NOTIFY */
 
 static void
 prefs_changed_cb (GConfClient *client, guint id,
@@ -1018,17 +990,9 @@ synce_trayicon_init(SynceTrayIcon *self)
   g_signal_connect (G_OBJECT (priv->device_list), "device-removed",
 		    (GCallback)device_removed_cb, self);
 
-  /* tooltip */
-  priv->tooltips = gtk_tooltips_new();
-
   /* visible icon */
-  priv->icon = gtk_image_new();
-  GtkWidget *box = gtk_event_box_new();
-  gtk_container_add(GTK_CONTAINER(box), priv->icon);
-  gtk_container_add(GTK_CONTAINER(self), box);
-  gtk_widget_show_all(GTK_WIDGET(self));
-  g_signal_connect(G_OBJECT(box), "button-press-event", G_CALLBACK(trayicon_clicked), self);
-
+  g_signal_connect(G_OBJECT(self), "activate", G_CALLBACK(trayicon_activate_cb), self);
+  g_signal_connect(G_OBJECT(self), "popup-menu", G_CALLBACK(trayicon_popup_menu_cb), self);
 
   /* dccm comms */
   init_client_comms(self);
@@ -1076,12 +1040,12 @@ synce_trayicon_dispose (GObject *obj)
   }
   g_object_unref(priv->conf_client);
 
+  /* dccm comms */
+  uninit_client_comms(self);
+
   /* device list */
   wm_device_manager_remove_all(priv->device_list);
   g_object_unref(priv->device_list);
-
-  /* dccm comms */
-  uninit_client_comms(self);
 
 #ifdef ENABLE_NOTIFY
   /* notification */
@@ -1092,9 +1056,6 @@ synce_trayicon_dispose (GObject *obj)
     }
   notify_uninit();
 #endif /* ENABLE_NOTIFY */
-
-  g_object_unref(priv->tooltips);
-  g_object_unref(priv->icon);
 
   module_unload_all();
 

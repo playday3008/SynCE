@@ -24,18 +24,17 @@ IN THE SOFTWARE.
 #define SYNCE_TRAYICON_H
 
 #include <glib-object.h>
-#include "eggtrayicon.h"
 
 G_BEGIN_DECLS
 
 typedef struct _SynceTrayIcon SynceTrayIcon;
 struct _SynceTrayIcon {
-  EggTrayIcon parent;
+  GtkStatusIcon parent;
 };
 
 typedef struct _SynceTrayIconClass SynceTrayIconClass;
 struct _SynceTrayIconClass {
-  EggTrayIconClass parent_class;
+  GtkStatusIconClass parent_class;
 };
 
 GType synce_trayicon_get_type (void);

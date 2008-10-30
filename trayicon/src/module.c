@@ -118,6 +118,7 @@ module_unload_all()
     mod_data->connect = NULL;
     mod_data->disconnect = NULL;
     g_free(mod_data);
+    curr_mod = g_list_next(curr_mod);
   }
 
   g_list_free(module_list);
