@@ -147,6 +147,7 @@ device_do_password_dialog (gchar *pdaname)
   return password;
 }
 
+#ifndef ENABLE_NOTIFY
 void
 device_do_password_on_device_dialog (gchar *pdaname)
 {
@@ -161,6 +162,7 @@ device_do_password_on_device_dialog (gchar *pdaname)
   gtk_dialog_run (GTK_DIALOG (password_dialog));
   gtk_widget_destroy (password_dialog);
 }
+#endif /* ENABLE_NOTIFY */
 
 gchar *
 device_get_password(gchar *pdaname)

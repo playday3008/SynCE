@@ -108,6 +108,14 @@ dccm_client_base_init (gpointer klass)
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
+  iface->signals[SERVICE_STARTING] = g_signal_new ("service-starting",
+                  G_TYPE_FROM_INTERFACE (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+
   iface->signals[SERVICE_STOPPING] = g_signal_new ("service-stopping",
                   G_TYPE_FROM_INTERFACE (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,

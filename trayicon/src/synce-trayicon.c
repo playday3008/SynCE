@@ -191,14 +191,23 @@ update(gpointer data)
 static void
 password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
 {
-  GtkWidget *dialog;
-
+  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   GnomeKeyringResult keyring_ret;
 
   g_debug("%s: removing password from keyring", G_STRFUNC);
-
   keyring_ret = keyring_delete_key(pdaname);
 
+#ifdef ENABLE_NOTIFY
+
+  gchar *notify_string = NULL;
+
+  notify_string = g_strdup_printf("Password for device \"%s\" was rejected", pdaname);
+  event_notification(self, "Incorrect password", notify_string);
+  g_free(notify_string);
+
+#else  /* ENABLE_NOTIFY */
+
+  GtkWidget *dialog;
   dialog = gtk_message_dialog_new (NULL,
 				   GTK_DIALOG_DESTROY_WITH_PARENT,
 				   GTK_MESSAGE_WARNING,
@@ -207,6 +216,8 @@ password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
 				   pdaname);
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
+
+#endif /* ENABLE_NOTIFY */
 }
 
 static void
@@ -356,6 +367,41 @@ uninit_vdccm_client_comms(SynceTrayIcon *self)
 }
 
 static void
+service_starting_cb(DccmClient *comms_client, gpointer user_data)
+{
+  SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
+  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+  if (IS_HAL_CLIENT(comms_client)) {
+#ifdef ENABLE_NOTIFY
+          event_notification(self, "Service starting", "Hal has signalled that it is starting");
+#else  /* ENABLE_NOTIFY */
+          synce_warning_dialog("Hal has signalled that it is stopping");
+#endif /* ENABLE_NOTIFY */
+          return;
+  }
+
+  if (IS_ODCCM_CLIENT(comms_client)) {
+#ifdef ENABLE_NOTIFY
+          event_notification(self, "Service starting", "Odccm has signalled that it is starting");
+#else  /* ENABLE_NOTIFY */
+          synce_warning_dialog("Odccm has signalled that it is starting");
+#endif /* ENABLE_NOTIFY */
+          return;
+  }
+
+  if (IS_VDCCM_CLIENT(comms_client)) {
+#ifdef ENABLE_NOTIFY
+          event_notification(self, "Service starting", "Vdccm has signalled that it is starting");
+#else  /* ENABLE_NOTIFY */
+          synce_warning_dialog("Vdccm has signalled that it is starting");
+#endif /* ENABLE_NOTIFY */
+          return;
+  }
+}
+
+
+static void
 service_stopping_cb(DccmClient *comms_client, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
@@ -363,9 +409,9 @@ service_stopping_cb(DccmClient *comms_client, gpointer user_data)
 
   if (IS_HAL_CLIENT(comms_client)) {
 #ifdef ENABLE_NOTIFY
-          event_notification(self, "Service stopping", "SynCE-Hal has signalled that it is stopping");
+          event_notification(self, "Service stopping", "Hal has signalled that it is stopping");
 #else  /* ENABLE_NOTIFY */
-          synce_warning_dialog("SynCE-Hal has signalled that it is stopping");
+          synce_warning_dialog("Hal has signalled that it is stopping");
 #endif /* ENABLE_NOTIFY */
           wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "hal");
           return;
@@ -418,7 +464,7 @@ uninit_client_comms(SynceTrayIcon *self)
 }
 
 static gboolean
-start_dccm ()
+start_dccm (SynceTrayIcon *self)
 {
   gchar *argv[3] = {
     DCCM_BIN,""
@@ -428,7 +474,11 @@ start_dccm ()
   if (!(dccm_is_running())) {
     g_debug("%s: starting %s", G_STRFUNC, DCCM_BIN);
     if (gnome_execute_async(NULL, argc, argv) == -1) {
-      synce_error_dialog(_("Can't start vdccm which is needed to communicate \nwith the PDA. Make sure it is installed and try again."));
+#ifdef ENABLE_NOTIFY
+            event_notification(self, "Service failure", _("Can't start vdccm which is needed to communicate with the PDA. Make sure it is installed and try again."));
+#else /* ENABLE_NOTIFY */
+            synce_error_dialog(_("Can't start vdccm which is needed to communicate \nwith the PDA. Make sure it is installed and try again."));
+#endif /* ENABLE_NOTIFY */
       g_warning("%s: Failed to start %s", G_STRFUNC, DCCM_BIN);
       return FALSE;
     }
@@ -468,7 +518,7 @@ init_vdccm_client_comms(SynceTrayIcon *self)
         }
 
         if (start_vdccm)
-                if (!(start_dccm())) {
+                if (!(start_dccm(self))) {
                         g_critical("%s: Unable to start vdccm", G_STRFUNC);
                         return;
                 }
@@ -484,6 +534,9 @@ init_vdccm_client_comms(SynceTrayIcon *self)
         g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
                           GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
 
+        g_signal_connect (G_OBJECT (comms_client), "service-starting",
+                          GTK_SIGNAL_FUNC (service_stopping_cb), self);
+
         g_signal_connect (G_OBJECT (comms_client), "service-stopping",
                           GTK_SIGNAL_FUNC (service_stopping_cb), self);
 
@@ -495,7 +548,11 @@ init_vdccm_client_comms(SynceTrayIcon *self)
 
         if (!(dccm_client_init_comms(comms_client))) {
                 g_critical("%s: Unable to initialise vdccm comms client", G_STRFUNC);
+#ifdef ENABLE_NOTIFY
+                event_notification(self, "Service failure", "Unable to contact VDCCM, check it is installed and set to run");
+#else /* ENABLE_NOTIFY */
                 synce_warning_dialog("Unable to contact VDCCM, check it is installed and set to run");
+#endif /* ENABLE_NOTIFY */
                 g_object_unref(comms_client);
         }
 
@@ -523,6 +580,9 @@ init_client_comms(SynceTrayIcon *self)
         g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
                           GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
 
+        g_signal_connect (G_OBJECT (comms_client), "service-starting",
+                          GTK_SIGNAL_FUNC (service_starting_cb), self);
+
         g_signal_connect (G_OBJECT (comms_client), "service-stopping",
                           GTK_SIGNAL_FUNC (service_stopping_cb), self);
 
@@ -549,6 +609,9 @@ init_client_comms(SynceTrayIcon *self)
 
         g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
                           GTK_SIGNAL_FUNC (password_required_on_device_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "service-starting",
+                          GTK_SIGNAL_FUNC (service_starting_cb), self);
 
         g_signal_connect (G_OBJECT (comms_client), "service-stopping",
                           GTK_SIGNAL_FUNC (service_stopping_cb), self);

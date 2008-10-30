@@ -581,8 +581,6 @@ odccm_disconnect(OdccmClient *self)
         }
 
         g_hash_table_foreach_remove(priv->pending_devices, clear_pending_devices, NULL);
-
-        g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
 }
 
 static void
@@ -671,6 +669,8 @@ odccm_status_changed_cb(DBusGProxy *proxy,
                 priv->online = TRUE;
                 g_debug("%s: odccm came online", G_STRFUNC);
                 odccm_connect(self);
+
+                g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STARTING], 0);
                 return;
         }
 
@@ -680,6 +680,8 @@ odccm_status_changed_cb(DBusGProxy *proxy,
                 priv->online = FALSE;
                 g_debug("%s: odccm went offline", G_STRFUNC);
                 odccm_disconnect(self);
+
+                g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
                 return;
         }
 }

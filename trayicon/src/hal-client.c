@@ -624,8 +624,6 @@ hal_disconnect(HalClient *self)
 
   g_ptr_array_foreach(priv->pending_devices, clear_pending_devices, NULL);
   g_hash_table_remove_all(priv->udi_name_table);
-
-  g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
 }
 
 static void
@@ -744,6 +742,8 @@ hal_status_changed_cb(DBusGProxy *proxy,
                 priv->online = TRUE;
                 g_debug("%s: hal came online", G_STRFUNC);
                 hal_connect(self);
+
+                g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STARTING], 0);
                 return;
         }
 
@@ -753,6 +753,8 @@ hal_status_changed_cb(DBusGProxy *proxy,
                 priv->online = FALSE;
                 g_debug("%s: hal went offline", G_STRFUNC);
                 hal_disconnect(self);
+
+                g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
                 return;
         }
 }
