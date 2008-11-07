@@ -14,7 +14,7 @@ cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *s, int len)
     int PyString_AsStringAndSize(object obj, char **buffer, int *length)
 
-class WBXMLParseError:
+class WBXMLParseError(Exception):
     def __init__(self, code):
         self.code = code
         self.description = <char *> wbxml_errors_string(code)
