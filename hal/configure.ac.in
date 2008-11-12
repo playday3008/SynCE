@@ -53,6 +53,8 @@ AC_SUBST(hal_addon_dir)
 
 AS_AC_EXPAND(LIBEXECDIR, "$libexecdir")
 AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
+AS_AC_EXPAND(LOCALSTATEDIR, "$localstatedir")
+AS_AC_EXPAND(DATADIR, "$datadir")
 
 AC_CONFIG_FILES([
         hal/hal-synce-rndis \
@@ -64,5 +66,6 @@ AC_OUTPUT([
 	Makefile
 	hal/Makefile
 	src/Makefile
+	etc/Makefile
 	bluetooth/Makefile
 ])

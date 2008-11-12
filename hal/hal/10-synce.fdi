@@ -16,6 +16,7 @@
       <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
       <append key="info.addons" type="strlist">hal-synce-rndis</append>
+      <append key="info.callouts.remove" type="strlist">hal-synce-rndis</append>
     </match>
   </device>
 
@@ -35,6 +36,7 @@
       <merge key="usb.product" type="string">Windows Mobile Device</merge>
 
       <append key="info.addons" type="strlist">hal-synce-rndis</append>
+      <append key="info.callouts.remove" type="strlist">hal-synce-rndis</append>
     </match>
   </device>
 

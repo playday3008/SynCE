@@ -59,7 +59,12 @@ def RunIfconfig(iface):
 def RunDhclient(iface):
 
     logger.debug("attempting dynamic ip configuration")
-    cmd_list = ["dhclient",iface]
+
+    pidfile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".pid"
+    leasefile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".lease"
+    configfile = "@DATADIR@/synce-hal/dhclient.conf"
+
+    cmd_list = ["dhclient","-pf",pidfile,"-lf",leasefile,"-cf",configfile,iface]
 
     global device_ip
     global local_ip
@@ -97,6 +102,41 @@ def RunDhclient(iface):
             logger.debug("dhclient returned local address "+local_ip)
 
     return
+
+
+#
+# if we're using dhcp, release it
+#
+def EndDhclient(iface):
+
+    logger.debug("attempting to release dhcp lease")
+
+    pidfile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".pid"
+    leasefile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".lease"
+    configfile = "@DATADIR@/synce-hal/dhclient.conf"
+
+    if os.path.isfile(pidfile) != True:
+        logger.debug("no pid file %s, not releasing", pidfile)
+        return False
+
+    cmd_list = ["dhclient","-r","-pf",pidfile,"-lf",leasefile,"-cf",configfile,iface]
+
+    # returns a Popen object
+    try:
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output_text = proc.communicate()[0]
+    except Exception,e:
+        logger.error("failure running dhclient: %s" % e)
+        return True
+
+    rc = proc.returncode
+
+    if rc != 0:
+        logger.info("dhclient failed with return code %d",rc)
+        return True
+
+    logger.debug("released dhcp lease")
+    return True
 
 
 #
@@ -255,6 +295,9 @@ if __name__ == '__main__':
         logger.error("aborting ...")
         sys.exit(1)
 
+    if hald_action == "remove":
+        logger.debug("running for removal of interface "+iface)
+        EndDhclient(iface)
 
     sys.exit(0)
 

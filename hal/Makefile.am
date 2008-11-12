@@ -1,2 +1,2 @@
-SUBDIRS = src hal bluetooth
+SUBDIRS = src hal bluetooth etc
 
