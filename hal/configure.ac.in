@@ -51,6 +51,14 @@ fi
 AC_MSG_RESULT([$hal_addon_dir])
 AC_SUBST(hal_addon_dir)
 
+
+AC_ARG_ENABLE(bluetooth-support, AC_HELP_STRING([--enable-bluetooth-support], [Build in bluetooth support]),enable_bluetooth_support="$enableval",enable_bluetooth_support=no)
+AM_CONDITIONAL(ENABLE_BLUETOOTH_SUPPORT, test x"$enable_bluetooth_support" == xyes)
+if test x"$enable_bluetooth_support" == xyes; then
+       AC_DEFINE(ENABLE_BLUETOOTH_SUPPORT, 1, [Building in bluetooth support])
+fi
+
+
 AS_AC_EXPAND(LIBEXECDIR, "$libexecdir")
 AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
 AS_AC_EXPAND(LOCALSTATEDIR, "$localstatedir")
@@ -60,6 +68,8 @@ AC_CONFIG_FILES([
         hal/hal-synce-rndis \
         hal/hal-synce-serial \
         bluetooth/hal-synce-bluetooth \
+        bluetooth/synce-bt-ipup \
+        bluetooth/synce-bt-ipdown \
         etc/synce-hal.conf] )
 
 AC_OUTPUT([

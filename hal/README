@@ -36,9 +36,10 @@ refined however.
 
 Bluetooth
 ---------
-Wireless interfaces are a little trickier over hal. There
-are some ideas in the bluetooth directory, which have shown
-some success.
+Wireless interfaces are a little trickier over hal. There is an
+experimental framework, that can be enabled by a configure option,
+which has shown some success. Please see the README in the
+bluetooth directory.
 
 Bug reports
 -----------

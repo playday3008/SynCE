@@ -1,55 +1,46 @@
 #!/usr/bin/env python
 
 import sys
-import os
-import re
-import stat
-import time
 import subprocess
 import logging, logging.handlers
-import platform
 import ConfigParser
 
 # defaults
 config_file = '@SYSCONFDIR@/synce-hal.conf'
 log_level = logging.WARNING
-local_ip = "192.168.132.102"
-device_ip = "192.168.132.201"
 
-#
-# run dccm after the interface is configured
-#
-def RunDccm(device_ip, local_ip):
 
-    logger.debug("starting hal-dccm ...")
+def remove_device(device_ip, iface, device_file):
 
-    dccm_log_level = "1"
+    udi = "synce_bluetooth_device_"+device_ip.replace(".","_")
 
-    if log_level <= logging.DEBUG:
-        dccm_log_level = "6"
-    elif log_level <= logging.INFO:
-        dccm_log_level = "4"
-    elif log_level <= logging.WARNING:
-        dccm_log_level = "3"
+    cmd_list = ["hal-device", "--remove", udi]
 
-    cmd_list = ["@LIBEXECDIR@/hal-dccm", "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
-
-    logger.debug("calling hal-dccm as:")
+    logger.debug("removing bluetooth device from hal:")
     logger.debug(cmd_list)
 
     try:
-        os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output_text = proc.communicate()[0]
     except Exception,e:
-        logger.error("failed to exec hal-dccm !!: %s" % e)
+        logger.error("failure running hal-device: %s" % e)
+        return False
 
-    return
+    rc = proc.returncode
+
+    # success returns 13
+    if rc != 13:
+        logger.error("failed to remove bluetooth device in hal, return code %d, %s", (rc, output_text))
+        return False
+
+    return True
 
 
 def ProcessConfig():
 
     global log_level
 
-    logger = logging.getLogger("hal-synce-bluetooth")
+    logger = logging.getLogger("synce-bt-ipdown")
 
     config = ConfigParser.ConfigParser()
     try:
@@ -78,35 +69,31 @@ def ProcessConfig():
     return True
 
 
-#
-# main()
-#
 if __name__ == '__main__':
 
     log_facility = logging.handlers.SysLogHandler.LOG_DAEMON
 
     logging.basicConfig(level=logging.WARNING,
                         format='%(asctime)s %(name)s %(levelname)s : %(message)s')
-    logger = logging.getLogger("hal-synce-bluetooth")
+    logger = logging.getLogger("synce-bt-ipdown")
     sys_log = logging.handlers.SysLogHandler("/dev/log", log_facility)
     syslog_form = logging.Formatter('%(name)s[%(process)d] %(levelname)s : %(message)s')
     sys_log.setFormatter(syslog_form)
     logger.addHandler(sys_log)
 
-    if os.environ.has_key("HALD_ACTION"):
-        hald_action = os.environ["HALD_ACTION"]
-    else:
-        logger.critical("Hal environment not set")
-        sys.exit(1)
+    iface = sys.argv[1]
+    devfile = sys.argv[2]
+    speed = sys.argv[3]
+    local_ip = sys.argv[4]
+    device_ip = sys.argv[5]
+    ipparam = sys.argv[6]
+
+    if ipparam != "synce-bt":
+        sys.exit(0)
 
     ProcessConfig()
 
-
-    if hald_action == "addon":
-        logger.debug("running as addon for bluetooth device")
-
-        RunDccm(device_ip, local_ip)
-
-        logger.error("aborting ...")
+    if remove_device(device_ip, iface, devfile) == False:
         sys.exit(1)
 
+    sys.exit(0)
