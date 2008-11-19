@@ -1,3 +1,8 @@
+2008-11-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/synce_socket.c - applied patch from andyakadum
+	  to build on Solaris, many thanks !
+
 2008-05-06  Mark Ellis  <mark@mpellis.org.uk>
 
 	* update synce.7, add some comments to configure.ac.in

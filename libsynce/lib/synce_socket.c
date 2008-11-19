@@ -21,6 +21,11 @@
 int inet_pton(int af, const char *src, void *dst);
 #endif
 
+// No AF_LOCAL on solaris
+#ifndef AF_LOCAL
+#define AF_LOCAL AF_UNIX
+#endif
+
 #if HAVE_DMALLOC_H
 #include "dmalloc.h"
 #endif
