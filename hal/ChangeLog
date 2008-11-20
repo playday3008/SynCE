@@ -1,3 +1,7 @@
+2008-11-19  Mark Ellis <mark@mpellis.org.uk>
+
+	* add hal fields used by gnome-volume-manager
+
 2008-11-13  Mark Ellis <mark@mpellis.org.uk>
 
 	* improve bluetooth support, can be enabled through configure

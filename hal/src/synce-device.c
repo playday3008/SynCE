@@ -247,6 +247,18 @@ synce_device_set_hal_props(SynceDevice *self)
   }
   g_free(ip_str);
 
+  /* for an oddity gnome-volume-manager */
+  prop_name = "pda.pocketpc.hotsync_interface";
+  result = libhal_device_set_property_string(priv->hal_ctx,
+					     priv->udi,
+					     prop_name,
+					     priv->name,
+					     &error);
+  if (!result) {
+    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
+    dbus_error_free(&error);
+  }
+
   /* register object on hal dbus connection */
 
   dbus_g_connection_register_g_object (priv->hal_bus,

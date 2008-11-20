@@ -6,6 +6,7 @@
   <device>
     <match key="@info.parent:info.linux.driver" string="rndis_host">
       <append key="info.capabilities" type="strlist">sync</append>
+      <append key="info.capabilities" type="strlist">pda</append>
 
       <merge key="pda.platform" type="string">pocketpc</merge>
 
@@ -25,6 +26,7 @@
   <device>
     <match key="@info.parent:pda.platform" string="pocketpc">
       <append key="info.capabilities" type="strlist">sync</append>
+      <append key="info.capabilities" type="strlist">pda</append>
 
       <merge key="pda.platform" type="string">pocketpc</merge>
 
@@ -46,6 +48,7 @@
     <match key="info.capabilities" contains="serial">
       <match key="@info.parent:info.linux.driver" string="ipaq">
         <append key="info.capabilities" type="strlist">sync</append>
+        <append key="info.capabilities" type="strlist">pda</append>
         <merge key="usb.interface.description" type="string">Windows Mobile Data Provider</merge>
         <merge key="info.category" type="string">pda</merge>
         <merge key="sync.engine" type="string">opensync</merge>
@@ -66,6 +69,7 @@
     <match key="@info.parent:freebsd.driver" contains="ucom">
       <match key="@info.parent:info.vendor" string="HTC">
         <append key="info.capabilities" type="strlist">sync</append>
+        <append key="info.capabilities" type="strlist">pda</append>
         <append key="freebsd.unit" type="copy_property">@info.parent:freebsd.unit</append>
 	
         <merge key="pda.platform" type="string">pocketpc</merge>
