@@ -1,3 +1,22 @@
+2008-12-10  Mark Ellis <mark@mpellis.org.uk>
+
+	* make libnotify required
+	* device class - add device property connection-status for
+	  passworded devices,  move rapi connection method from dccm
+	  clients to here, check if device is locked methods that require
+	  a connection
+	* dccm client classes - add device-unlocked signal to dccm-client,
+	  pass locked devices to device-manager instead of holding on to them
+	* device-manager class - add methods providing count of all / 
+	  connected / password required devices, and list of names
+	  by these categories; add name parameter to device-removed and 
+	  device-added signal; ask device to establish rapi connection when
+	  fully connected
+	* dont pop up password dialog immediately, put up notification of
+	  password required, activation signal (left click) activates password
+	  dialog, deal with multiple devices needing passwords
+	* various code cleanups
+
 2008-10-30  Mark Ellis <mark@mpellis.org.uk>
 
 	* add service-starting signal for dccm clients

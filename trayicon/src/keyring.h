@@ -23,13 +23,11 @@ IN THE SOFTWARE.
 #include <gnome-keyring.h>
 
 GnomeKeyringResult
-keyring_get_key(gchar *name, gchar **key);
+keyring_get_key(const gchar *name, gchar **key);
 
 GnomeKeyringResult
-keyring_delete_key(gchar *name);
+keyring_delete_key(const gchar *name);
 
 GnomeKeyringResult
-keyring_set_key(gchar *name, const gchar *key);
+keyring_set_key(const gchar *name, const gchar *key);
 
-const gchar *
-keyring_strerror(GnomeKeyringResult error);

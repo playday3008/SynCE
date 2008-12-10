@@ -42,13 +42,13 @@ dccm_client_uninit_comms(DccmClient *self)
 }
 
 void
-dccm_client_provide_password(DccmClient *self, gchar *pdaname, gchar *password)
+dccm_client_provide_password(DccmClient *self, const gchar *pdaname, const gchar *password)
 {
   DCCM_CLIENT_GET_INTERFACE (self)->dccm_client_provide_password(self, pdaname, password);
 }
 
 gboolean
-dccm_client_request_disconnect(DccmClient *self, gchar *pdaname)
+dccm_client_request_disconnect(DccmClient *self, const gchar *pdaname)
 {
   return DCCM_CLIENT_GET_INTERFACE (self)->dccm_client_request_disconnect(self, pdaname);
 }
@@ -101,6 +101,14 @@ dccm_client_base_init (gpointer klass)
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
   iface->signals[PASSWORD_REJECTED] = g_signal_new ("password-rejected",
+                  G_TYPE_FROM_INTERFACE (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  iface->signals[DEVICE_UNLOCKED] = g_signal_new ("device-unlocked",
                   G_TYPE_FROM_INTERFACE (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   0,

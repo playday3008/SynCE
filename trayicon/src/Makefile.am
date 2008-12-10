@@ -43,7 +43,8 @@ synce_trayicon_CPPFLAGS = \
 	$(LIBRRA_CFLAGS) \
 	$(DBUS_CFLAGS) \
 	$(HAL_CFLAGS) \
-	$(LIBORANGE_CFLAGS)
+	$(LIBORANGE_CFLAGS) \
+	$(NOTIFY_CFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GNOME2_LIBS) \
@@ -52,12 +53,8 @@ synce_trayicon_LDADD = \
 	$(LIBRRA_LIBS) \
 	$(DBUS_LIBS) \
 	$(HAL_LIBS) \
-	$(LIBORANGE_LIBS)
-
-if ENABLE_NOTIFY
-synce_trayicon_CPPFLAGS += $(NOTIFY_CFLAGS)
-synce_trayicon_LDADD += $(NOTIFY_LIBS)
-endif
+	$(LIBORANGE_LIBS) \
+	$(NOTIFY_LIBS)
 
 
 noinst_HEADERS = synce-trayicon-module.h

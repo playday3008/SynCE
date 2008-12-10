@@ -51,7 +51,6 @@ struct _HalClientPrivate {
   LibHalContext *hal_ctx;
 
   gboolean online;
-  GPtrArray *pending_devices;
   GHashTable *udi_name_table;
 
   gboolean disposed;
@@ -68,60 +67,6 @@ struct _HalClientPrivate {
 #define HAL_MGR_IFACE "org.freedesktop.Hal.Manager"
 
 /* methods */
-
-static gboolean
-hal_device_get_rapi_connection(HalClient *self, WmDevice *device)
-{
-  RapiConnection *rapi_conn;
-  HRESULT hr;
-  gchar *name = NULL;
-  gchar *device_name;
-
-  if (!self) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return FALSE;
-  }
-
-  HalClientPrivate *priv = HAL_CLIENT_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return FALSE;
-  }
-
-  g_object_get(device, "name", &name, NULL);
-
-  rapi_conn = rapi_connection_from_name(name);
-  g_free(name);
-  if (!rapi_conn) {
-    g_critical("%s: Failed to obtain rapi connection to %s", G_STRFUNC, name);
-    goto error_exit;;
-  }
-
-  rapi_connection_select(rapi_conn);
-  CeRapiInit();
-
-  hr = CeRapiInit();
-  if (FAILED(hr)) {
-    g_critical("%s: Failed to initialise rapi connection to %s: %d: %s", G_STRFUNC, name, hr, synce_strerror(hr));
-    goto error_exit;;
-  }
-
-  device_name = get_device_name_via_rapi();
-  if (!(device_name)) {
-    CeRapiUninit();
-    goto error_exit;
-  }
-
-  g_object_set(device, "rapi-conn", rapi_conn, NULL);
-  g_object_set(device, "device-name", device_name, NULL);
-  g_free(device_name);
-
-  return TRUE;
-error_exit:
-  rapi_connection_destroy(rapi_conn);
-  return FALSE;
-}
 
 static void 
 password_status_changed_cb(LibHalContext *ctx,
@@ -148,35 +93,14 @@ password_status_changed_cb(LibHalContext *ctx,
   if (strcmp(key, "pda.pocketpc.password") != 0) 
     return;
 
-  gchar *pdaname = NULL, *tmpname;
-  gint i;
+  gchar *pdaname = NULL;
   DBusError dbus_error;
-  WmDevice *device = NULL;
   gchar *pw_status;
 
   dbus_error_init(&dbus_error);
 
   pdaname = (gchar*) g_hash_table_lookup(priv->udi_name_table, udi);
   if (!pdaname) {
-    g_warning("%s: Received password flags changed for unfound device: %s", G_STRFUNC, udi);
-    goto error_exit;;
-  }
-
-  i = 0;
-  while (i < priv->pending_devices->len) {
-    device = g_ptr_array_index(priv->pending_devices, i);
-    g_object_get(device, "name", &tmpname, NULL);
-
-    if (g_ascii_strcasecmp(tmpname, pdaname) == 0) {
-      g_free(tmpname);
-      break;
-    }
-    device = NULL;
-    g_free(tmpname);
-    i++;
-  }
-
-  if (!device) {
     g_warning("%s: Received password flags changed for unfound device: %s", G_STRFUNC, udi);
     goto error_exit;;
   }
@@ -198,19 +122,14 @@ password_status_changed_cb(LibHalContext *ctx,
   }
 
   if ( (strcmp(pw_status, "unset") == 0) || (strcmp(pw_status, "unlocked") == 0) ) {
-    g_ptr_array_remove_index(priv->pending_devices, i);
 
-    if (!libhal_device_remove_property_watch(priv->hal_ctx, udi, &dbus_error))
-      g_critical("%s: Failed to remove property watch for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+          if (!libhal_device_remove_property_watch(priv->hal_ctx, udi, &dbus_error)) {
+                  g_warning("%s: Failed to remove property watch for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
+                  if (dbus_error_is_set(&dbus_error))
+                          dbus_error_free(&dbus_error);
+          }
 
-    /* get rapi connection */
-    if (!(hal_device_get_rapi_connection(self, device))) {
-      g_object_unref(device);
-      g_hash_table_remove(priv->udi_name_table, udi);
-      goto error_exit;
-    }
-
-    g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)device);
+          g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_UNLOCKED], 0, pdaname);
   }
   goto exit;
 
@@ -320,6 +239,7 @@ hal_add_device(HalClient *self, const char *udi)
   device = g_object_new(WM_DEVICE_TYPE,
 			"object-name", udi,
                         "dccm-type", "hal",
+                        "connection-status", DEVICE_STATUS_UNKNOWN,
 			"name", name,
 			"os-major", os_major,
 			"os-minor", os_minor,
@@ -349,21 +269,23 @@ hal_add_device(HalClient *self, const char *udi)
       g_critical("%s: Failed to set property watch for device %s: %s: %s", G_STRFUNC, udi, dbus_error.name, dbus_error.message);
       goto error_exit;
     }
-    g_ptr_array_add(priv->pending_devices, device);
+
     g_hash_table_insert(priv->udi_name_table, g_strdup(udi), g_strdup(name));
 
-    if ((strcmp(pw_status, "provide") == 0))
-      g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, name);
-    if ((strcmp(pw_status, "provide-on-device") == 0))
-      g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, name);
+    if ((strcmp(pw_status, "provide") == 0)) {
+            g_object_set(device, "connection-status", DEVICE_STATUS_PASSWORD_REQUIRED, NULL);
+            g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
+            g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, name);
+    }
+    if ((strcmp(pw_status, "provide-on-device") == 0)) {
+            g_object_set(device, "connection-status", DEVICE_STATUS_PASSWORD_REQUIRED_ON_DEVICE, NULL);
+            g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
+            g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, name);
+    }
     goto exit;
   }
 
-  /* get rapi connection */
-  if (!(hal_device_get_rapi_connection(self, device))) {
-    goto error_exit;
-  }
-
+  g_object_set(device, "connection-status", DEVICE_STATUS_CONNECTED, NULL);
   g_hash_table_insert(priv->udi_name_table, g_strdup(udi), g_strdup(name));
   g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
 
@@ -411,6 +333,7 @@ hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
   }
 
   gchar *pdaname = NULL;
+  DBusError dbus_error;
 
   pdaname = (gchar*) g_hash_table_lookup(priv->udi_name_table, udi);
 
@@ -419,46 +342,29 @@ hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
 
   g_debug("%s: Received device disconnected from hal: %s", G_STRFUNC, udi);
 
-  gint i;
-  gchar *tmp;
-  WmDevice *device;
+  dbus_error_init(&dbus_error);
 
-  i = 0;
-
-  while (i < priv->pending_devices->len) {
-    device = g_ptr_array_index(priv->pending_devices, i);
-    g_object_get(device, "name", &tmp, NULL);
-
-    if (g_ascii_strcasecmp(pdaname, tmp) == 0) {
-      libhal_device_remove_property_watch(priv->hal_ctx, udi, NULL);
-      g_ptr_array_remove_index(priv->pending_devices, i);
-      g_object_unref(device);
-      g_free(tmp);
-      goto exit;
-    }
-
-    g_free(tmp);
-    i++;
+  if (!(libhal_device_remove_property_watch(priv->hal_ctx, udi, &dbus_error))) {
+          g_warning("%s: Error removing watch on device: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+          if (dbus_error_is_set(&dbus_error))
+                  dbus_error_free(&dbus_error);
   }
 
   g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_DISCONNECTED], 0, pdaname);
 
-exit:
   g_hash_table_remove(priv->udi_name_table, udi);
 
   return;
 }
 
 void
-hal_client_provide_password_impl(HalClient *self, gchar *pdaname, gchar *password)
+hal_client_provide_password_impl(HalClient *self, const gchar *pdaname, const gchar *password)
 {
   GError *error = NULL;
   gboolean password_accepted = FALSE, result;
   gint i, num_devices;
   DBusGProxy *proxy = NULL;
   DBusError dbus_error;
-  WmDevice *device = NULL;
-  gchar *name;
   gchar **device_list;
 
   if (!self) {
@@ -478,25 +384,6 @@ hal_client_provide_password_impl(HalClient *self, gchar *pdaname, gchar *passwor
   }
 
   dbus_error_init(&dbus_error);
-
-  i = 0;
-  while (i < priv->pending_devices->len) {
-    device = g_ptr_array_index(priv->pending_devices, i);
-    g_object_get(device, "name", &name, NULL);
-
-    if (g_ascii_strcasecmp(pdaname, name) == 0) {
-      g_free(name);
-      break;
-    }
-    g_free(name);
-    device = NULL;
-    i++;
-  }
-
-  if (!device) {
-    g_warning("%s: Password provided for unfound device: %s", G_STRFUNC, pdaname);
-    return;
-  }
 
   device_list = libhal_manager_find_device_string_match(priv->hal_ctx,
                                                         "pda.pocketpc.name",
@@ -541,16 +428,7 @@ hal_client_provide_password_impl(HalClient *self, gchar *pdaname, gchar *passwor
     goto exit;
   }
 
-  g_ptr_array_remove_index(priv->pending_devices, i);
-
-  /* get rapi connection */
-  if (!(hal_device_get_rapi_connection(self, device))) {
-      g_object_unref(device);
-      goto error_exit;
-  }
-
-  g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)device);
-
+  g_debug("%s: Password accepted for %s", G_STRFUNC, pdaname);
   goto exit;
 error_exit:
   if (dbus_error_is_set(&dbus_error))
@@ -567,7 +445,7 @@ exit:
 }
 
 gboolean
-hal_client_request_disconnect_impl(HalClient *self, gchar *pdaname)
+hal_client_request_disconnect_impl(HalClient *self, const gchar *pdaname)
 {
   gboolean result = FALSE;
 
@@ -589,13 +467,6 @@ hal_client_request_disconnect_impl(HalClient *self, gchar *pdaname)
   return result;
 }
 
-
-static void
-clear_pending_devices(gpointer data, gpointer user_data)
-{
-  g_object_unref(WM_DEVICE(data));
-  return;
-}
 
 static void
 hal_disconnect(HalClient *self)
@@ -622,7 +493,6 @@ hal_disconnect(HalClient *self)
   libhal_ctx_free(priv->hal_ctx);
   priv->hal_ctx = NULL;
 
-  g_ptr_array_foreach(priv->pending_devices, clear_pending_devices, NULL);
   g_hash_table_remove_all(priv->udi_name_table);
 }
 
@@ -867,7 +737,6 @@ hal_client_init(HalClient *self)
   priv->hal_ctx = NULL;
 
   priv->online = FALSE;
-  priv->pending_devices = g_ptr_array_new();
   priv->udi_name_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
@@ -883,7 +752,6 @@ hal_client_dispose (GObject *obj)
   if (priv->dbus_connection)
     dccm_client_uninit_comms(DCCM_CLIENT(self));
 
-  g_ptr_array_free(priv->pending_devices, TRUE);
   g_hash_table_destroy(priv->udi_name_table);
 
   priv->disposed = TRUE;
@@ -925,6 +793,6 @@ dccm_client_interface_init (gpointer g_iface, gpointer iface_data)
 
   iface->dccm_client_init_comms = (gboolean (*) (DccmClient *self)) hal_client_init_comms_impl;
   iface->dccm_client_uninit_comms = (gboolean (*) (DccmClient *self)) hal_client_uninit_comms_impl;
-  iface->dccm_client_provide_password = (void (*) (DccmClient *self, gchar *pdaname, gchar *password)) hal_client_provide_password_impl;
-  iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, gchar *pdaname)) hal_client_request_disconnect_impl;
+  iface->dccm_client_provide_password = (void (*) (DccmClient *self, const gchar *pdaname, const gchar *password)) hal_client_provide_password_impl;
+  iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, const gchar *pdaname)) hal_client_request_disconnect_impl;
 }

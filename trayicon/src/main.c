@@ -66,8 +66,8 @@ init_sm (gboolean restart_immediately)
         gnome_client_flush (master);
     }
                                                                                 
-    g_signal_connect (GTK_OBJECT (master), "die",
-            GTK_SIGNAL_FUNC (gtk_main_quit), NULL);
+    g_signal_connect (G_OBJECT (master), "die",
+            G_CALLBACK (gtk_main_quit), NULL);
 }
 
 static void

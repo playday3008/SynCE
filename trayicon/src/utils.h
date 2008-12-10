@@ -24,10 +24,4 @@ void synce_error_dialog(const gchar *format, ...);
 void synce_warning_dialog(const gchar *format, ...);
 void synce_info_dialog(const gchar *format, ...);
 
-gchar *device_get_password(gchar *pdaname);
-
-#ifndef ENABLE_NOTIFY
-void device_do_password_on_device_dialog(gchar *pdaname);
-#endif /* ENABLE_NOTIFY */
-
 gchar *get_device_name_via_rapi();

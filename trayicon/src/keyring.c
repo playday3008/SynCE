@@ -25,14 +25,13 @@ IN THE SOFTWARE.
 #endif
 
 #include <glib.h>
-#include <gnome.h>
+#include <glib/gi18n.h>
 
 #include "keyring.h"
-#include "utils.h"
 
 
 GnomeKeyringResult
-keyring_get_key(gchar *name, gchar **key)
+keyring_get_key(const gchar *name, gchar **key)
 {
   GnomeKeyringResult      ret;
   GList *                 found_list = NULL;
@@ -48,7 +47,7 @@ keyring_get_key(gchar *name, gchar **key)
                                         NULL);
   if (ret != GNOME_KEYRING_RESULT_OK)
   {
-    g_debug("%s: Error retrieving password from keyring. Ret=%d %s", G_STRFUNC, ret, keyring_strerror(ret));
+    g_debug("%s: failed to retrieve password from keyring: %d: %s", G_STRFUNC, ret, gnome_keyring_result_to_message(ret));
     return ret;
   }    
 
@@ -61,12 +60,11 @@ keyring_get_key(gchar *name, gchar **key)
 
 
 GnomeKeyringResult
-keyring_delete_key(gchar *name)
+keyring_delete_key(const gchar *name)
 {
   GnomeKeyringResult      ret;
   GList *                 found_list = NULL;
   GnomeKeyringFound *     found;
-
 
   ret = gnome_keyring_find_itemsv_sync (GNOME_KEYRING_ITEM_GENERIC_SECRET,
                                         &found_list,
@@ -76,9 +74,9 @@ keyring_delete_key(gchar *name)
 					/* attr.value.string */
                                         name,
                                         NULL);
-  if (ret != GNOME_KEYRING_RESULT_OK)
-  {
-    g_debug("%s: Error retrieving password from keyring. Ret=%d %s", G_STRFUNC, ret, keyring_strerror(ret));
+
+  if (ret != GNOME_KEYRING_RESULT_OK) {
+    g_debug("%s: failed to retrieve password from keyring: %d: %s", G_STRFUNC, ret, gnome_keyring_result_to_message(ret));
     return ret;
   }    
 
@@ -86,9 +84,7 @@ keyring_delete_key(gchar *name)
 
   ret = gnome_keyring_item_delete_sync(found->keyring, found->item_id);
   if (ret != GNOME_KEYRING_RESULT_OK)
-  {
-    g_debug("%s: Error deleting password from keyring. Ret=%d %s", G_STRFUNC, ret, keyring_strerror(ret));
-  }    
+    g_debug("%s: failed to delete password from keyring: %d: %s", G_STRFUNC, ret, gnome_keyring_result_to_message(ret));
 
   gnome_keyring_found_list_free (found_list);
   return ret;
@@ -96,7 +92,7 @@ keyring_delete_key(gchar *name)
 
 
 GnomeKeyringResult
-keyring_set_key(gchar *name, const gchar *key)
+keyring_set_key(const gchar *name, const gchar *key)
 {
   GnomeKeyringAttributeList *     attributes;
   GnomeKeyringAttribute           attr;
@@ -119,53 +115,11 @@ keyring_set_key(gchar *name, const gchar *key)
 					key,
 					TRUE,
 					&item_id);
-  if (ret != GNOME_KEYRING_RESULT_OK)
-    {
-      g_warning("%s: Error storing password in keyring. Ret=%d", G_STRFUNC, ret);
-    }
 
   gnome_keyring_attribute_list_free (attributes);
+  if (ret != GNOME_KEYRING_RESULT_OK)
+          g_warning("%s: failed to store password in keyring: %d: %s", G_STRFUNC, ret, gnome_keyring_result_to_message(ret));
 
   return ret;
 }
 
-
-const gchar *
-keyring_strerror(GnomeKeyringResult error)
-{
-  gchar *message;
-
-  switch(error) {
-  case GNOME_KEYRING_RESULT_OK:
-    message = "Gnome keyring: OK";
-    break;
-  case GNOME_KEYRING_RESULT_DENIED:
-    message = "Gnome keyring: permission denied";
-    break;
-  case GNOME_KEYRING_RESULT_NO_KEYRING_DAEMON:
-    message = "Gnome keyring: no keyring daemon running";
-    break;
-  case GNOME_KEYRING_RESULT_ALREADY_UNLOCKED:
-    message = "Gnome keyring: already unlocked";
-    break;
-  case GNOME_KEYRING_RESULT_NO_SUCH_KEYRING:
-    message = "Gnome keyring: no such keyring";
-    break;
-  case GNOME_KEYRING_RESULT_BAD_ARGUMENTS:
-    message = "Gnome keyring: bad arguments";
-    break;
-  case GNOME_KEYRING_RESULT_IO_ERROR:
-    message = "Gnome keyring: IO error";
-    break;
-  case GNOME_KEYRING_RESULT_CANCELLED:
-    message = "Gnome keyring: cancelled";
-    break;
-  case GNOME_KEYRING_RESULT_ALREADY_EXISTS:
-    message = "Gnome keyring: already exists";
-    break;
-  default:
-    message = "Gnome keyring: unknown error";
-    break;
-  }
-  return message;
-}

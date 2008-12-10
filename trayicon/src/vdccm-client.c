@@ -83,7 +83,7 @@ vdccm_client_uninit_comms_impl(VdccmClient *self)
 }
 
 void
-vdccm_client_provide_password_impl(VdccmClient *self, gchar *pdaname, gchar *password)
+vdccm_client_provide_password_impl(VdccmClient *self, const gchar *pdaname, const gchar *password)
 {
   gchar *command_str;
   gsize bytes_written = 0;
@@ -132,7 +132,7 @@ exit:
 }
 
 gboolean
-vdccm_client_request_disconnect_impl(VdccmClient *self, gchar *pdaname)
+vdccm_client_request_disconnect_impl(VdccmClient *self, const gchar *pdaname)
 {
   gchar *command_str;
   gsize bytes_written = 0;
@@ -183,14 +183,31 @@ exit:
 }
 
 static WmDevice *
-vdccm_create_device(SynceInfo *info)
+vdccm_device_connected(const gchar *pdaname, gboolean locked)
 {
   WmDevice *device;
-  gchar *device_name;
+  SynceInfo *info = NULL;
+
+  if (locked) {
+          device = g_object_new(WM_DEVICE_TYPE,
+                                "object-name", pdaname,
+                                "dccm-type", "vdccm",
+                                "name", pdaname,
+                                "connection_status", DEVICE_STATUS_PASSWORD_REQUIRED,
+                                NULL);
+          return device;
+  }
+
+  info = synce_info_new(pdaname);
+  if (!info) {
+    g_warning("%s: Error getting SynceInfo from vdccm new device", G_STRFUNC);
+    return NULL;
+  }
 
   device = g_object_new(WM_DEVICE_TYPE,
 			"object-name", info->name,
                         "dccm-type", "vdccm",
+                        "connection_status", DEVICE_STATUS_CONNECTED,
 			"name", info->name,
 			"os-major", info->os_version,
 			"os-minor", 0,
@@ -207,40 +224,12 @@ vdccm_create_device(SynceInfo *info)
 			"transport", info->transport,
 			NULL);
 
+  synce_info_destroy(info);
+
   if (!device) {
     g_warning("%s: Error creating new device", G_STRFUNC);
     return NULL;
   }
-
-  HRESULT hr;
-  RapiConnection *rapi_conn;
-
-  g_debug("%s: Initialising device rapi connection", G_STRFUNC);
-
-  rapi_conn = rapi_connection_from_info(info);
-  rapi_connection_select(rapi_conn);
-
-  hr = CeRapiInit();
-  if (FAILED(hr)) {
-    g_critical("%s: Rapi connection to %s failed: %d: %s", G_STRFUNC, info->name, hr, synce_strerror(hr));
-    g_object_unref(device);
-    rapi_connection_destroy(rapi_conn);
-    return NULL;
-  }
-
-  g_object_set(device, "rapi-conn", rapi_conn, NULL);
-
-  device_name = get_device_name_via_rapi();
-
-  if (!(device_name)) {
-    CeRapiUninit();
-    rapi_connection_destroy(rapi_conn);
-    g_object_unref(device);
-    return NULL;
-  }
-
-  g_object_set(device, "device-name", device_name, NULL);
-  g_free(device_name);
 
   return device;
 }
@@ -261,7 +250,6 @@ vdccm_client_read_cb(GIOChannel *source,
   gchar *pdaname;
   gint i;
   gboolean result = FALSE;
-  SynceInfo *synce_info = NULL;
 
   if (!data) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -279,6 +267,8 @@ vdccm_client_read_cb(GIOChannel *source,
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return result;
   }
+
+  WmDevice *new_dev = NULL;
 
   /* messages split by ;
      Cpdaname - connected to pdaname
@@ -327,9 +317,13 @@ vdccm_client_read_cb(GIOChannel *source,
 	/* pdaname connected */
 	g_debug("%s: Run connect for %s", G_STRFUNC, pdaname);
 
-	synce_info = synce_info_new(pdaname);
+	new_dev = vdccm_device_connected(pdaname, FALSE);
 
-	WmDevice *new_dev = vdccm_create_device(synce_info);
+        /* 
+           This is ugly, but vdccm doesn't really fit the model any more
+        */
+
+	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_DISCONNECTED], 0, pdaname);
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)new_dev);
 
 	break;
@@ -343,6 +337,8 @@ vdccm_client_read_cb(GIOChannel *source,
 	/* pdaname requires password */
 	g_debug("%s: Run password required for %s", G_STRFUNC, pdaname);
 
+	new_dev = vdccm_device_connected(pdaname, TRUE);
+	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)new_dev);
 	g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, pdaname);
 	break;
       case 'R':
@@ -511,6 +507,6 @@ dccm_client_interface_init (gpointer g_iface, gpointer iface_data)
 
   iface->dccm_client_init_comms = (gboolean (*) (DccmClient *self)) vdccm_client_init_comms_impl;
   iface->dccm_client_uninit_comms = (gboolean (*) (DccmClient *self)) vdccm_client_uninit_comms_impl;
-  iface->dccm_client_provide_password = (void (*) (DccmClient *self, gchar *pdaname, gchar *password)) vdccm_client_provide_password_impl;
-  iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, gchar *pdaname)) vdccm_client_request_disconnect_impl;
+  iface->dccm_client_provide_password = (void (*) (DccmClient *self, const gchar *pdaname, const gchar *password)) vdccm_client_provide_password_impl;
+  iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, const gchar *pdaname)) vdccm_client_request_disconnect_impl;
 }

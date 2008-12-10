@@ -50,7 +50,6 @@ struct _OdccmClientPrivate {
   gboolean online;
 
   GPtrArray *dev_proxies;
-  GHashTable *pending_devices;
 
   gboolean disposed;
 };
@@ -123,6 +122,10 @@ password_flags_changed_cb(DBusGProxy *proxy,
   if (added & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE)
     g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, pdaname);
 
+
+  if ((removed & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE) || (removed & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE))
+    g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_UNLOCKED], 0, pdaname);
+
   return;
 }
 
@@ -134,65 +137,6 @@ free_proxy_store(proxy_store *p_store)
   g_free(p_store);
 }
 
-
-static gboolean
-odccm_device_get_rapi_connection(OdccmClient *self, WmDevice *device)
-{
-  RapiConnection *rapi_conn;
-  HRESULT hr;
-  gchar *name = NULL;
-  gchar *device_name;
-
-  if (!self) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return FALSE;
-  }
-
-  OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return FALSE;
-  }
-  if (!priv->dbus_connection) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return TRUE;
-  }
-
-  g_object_get(device, "name", &name, NULL);
-  rapi_conn = rapi_connection_from_name(name);
-  if (!rapi_conn) {
-    g_critical("%s: Failed to obtain rapi connection to %s", G_STRFUNC, name);
-    goto error_exit;;
-  }
-
-  rapi_connection_select(rapi_conn);
-  CeRapiInit();
-
-  hr = CeRapiInit();
-  if (FAILED(hr)) {
-    g_critical("%s: Failed to initialise rapi connection to %s: %d: %s", G_STRFUNC, name, hr, synce_strerror(hr));
-    rapi_connection_destroy(rapi_conn);
-    goto error_exit;;
-  }
-
-  device_name = get_device_name_via_rapi();
-  if (!(device_name)) {
-    CeRapiUninit();
-    rapi_connection_destroy(rapi_conn);
-    goto error_exit;
-  }
-
-  g_object_set(device, "rapi-conn", rapi_conn, NULL);
-  g_object_set(device, "device-name", device_name, NULL);
-  g_free(device_name);
-  g_free(name);
-
-  return TRUE;
-error_exit:
-  g_free(name);
-  return FALSE;
-}
 
 static void
 odccm_add_device(OdccmClient *self,
@@ -304,6 +248,7 @@ odccm_add_device(OdccmClient *self,
   device = g_object_new(WM_DEVICE_TYPE,
                         "object-name", obj_path,
                         "dccm-type", "odccm",
+                        "connection-status", DEVICE_STATUS_UNKNOWN,
 			"name", name,
 			"os-major", os_major,
 			"os-minor", os_minor,
@@ -350,24 +295,21 @@ odccm_add_device(OdccmClient *self,
   g_ptr_array_add(priv->dev_proxies, p_store);
 
   if (password_flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE) {
-    g_hash_table_insert(priv->pending_devices, g_strdup(name), device);
-    g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, name);
-    goto exit;
+          g_object_set(device, "connection-status", DEVICE_STATUS_PASSWORD_REQUIRED, NULL);
+          g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
+          g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED], 0, name);
+          g_free(name);
+          goto exit;
   }
   if (password_flags & ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE) {
-    g_hash_table_insert(priv->pending_devices, g_strdup(name), device);
-    g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, name);
-    goto exit;
+          g_object_set(device, "connection-status", DEVICE_STATUS_PASSWORD_REQUIRED_ON_DEVICE, NULL);
+          g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
+          g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[PASSWORD_REQUIRED_ON_DEVICE], 0, name);
+          g_free(name);
+          goto exit;
   }
 
-  /* get rapi connection */
-  if (!(odccm_device_get_rapi_connection(self, device))) {
-    g_ptr_array_remove(priv->dev_proxies, p_store);
-    g_free(p_store->pdaname);
-    g_free(p_store);
-    goto error_exit;
-  }
-
+  g_object_set(device, "connection-status", DEVICE_STATUS_CONNECTED, NULL);
   g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, name, (gpointer)device);
   g_free(name);
 
@@ -439,13 +381,12 @@ odccm_device_disconnected_cb(DBusGProxy *proxy,
 }
 
 void
-odccm_client_provide_password_impl(OdccmClient *self, gchar *pdaname, gchar *password)
+odccm_client_provide_password_impl(OdccmClient *self, const gchar *pdaname, const gchar *password)
 {
   GError *error = NULL;
   gboolean password_accepted = FALSE, result;
   gint i;
   DBusGProxy *proxy = NULL;
-  WmDevice *device;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -488,13 +429,6 @@ odccm_client_provide_password_impl(OdccmClient *self, gchar *pdaname, gchar *pas
   if (result == FALSE) {
     g_critical("%s: Error sending password to odccm for %s: %s", G_STRFUNC, pdaname, error->message);
     g_error_free(error);
-    device = g_hash_table_lookup(priv->pending_devices, pdaname);
-    if (!device) {
-      g_critical("%s: Unknown pending device %s", G_STRFUNC, pdaname);
-    } else {
-      g_object_unref(device);
-      g_hash_table_remove(priv->pending_devices, pdaname);
-    }
     goto exit;
   }
 
@@ -504,23 +438,14 @@ odccm_client_provide_password_impl(OdccmClient *self, gchar *pdaname, gchar *pas
     goto exit;
   }
 
-  device = g_hash_table_lookup(priv->pending_devices, pdaname);
-  g_hash_table_remove(priv->pending_devices, pdaname);
-
-  /* get rapi connection */
-  if (!(odccm_device_get_rapi_connection(self, device))) {
-      g_object_unref(device);
-      goto exit;
-  }
-
-  g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_CONNECTED], 0, pdaname, (gpointer)device);
+  g_debug("%s: Password accepted for %s", G_STRFUNC, pdaname);
 
 exit:
   return;
 }
 
 gboolean
-odccm_client_request_disconnect_impl(OdccmClient *self, gchar *pdaname)
+odccm_client_request_disconnect_impl(OdccmClient *self, const gchar *pdaname)
 {
   gboolean result = FALSE;
 
@@ -544,13 +469,6 @@ odccm_client_request_disconnect_impl(OdccmClient *self, gchar *pdaname)
 
   result = FALSE;
   return result;
-}
-
-static gboolean
-clear_pending_devices(gpointer key, gpointer value, gpointer data)
-{
-  g_object_unref(WM_DEVICE(value));
-  return TRUE;
 }
 
 static void
@@ -579,8 +497,6 @@ odccm_disconnect(OdccmClient *self)
                 p_store = (proxy_store *)g_ptr_array_index(priv->dev_proxies, i);
                 free_proxy_store(p_store);
         }
-
-        g_hash_table_foreach_remove(priv->pending_devices, clear_pending_devices, NULL);
 }
 
 static void
@@ -781,12 +697,6 @@ odccm_client_init_comms_impl(OdccmClient *self)
 /* class & instance functions */
 
 static void
-hash_key_str_destroy(gpointer data)
-{
-  g_free((gchar *)data);
-}
-
-static void
 odccm_client_init(OdccmClient *self)
 {
   OdccmClientPrivate *priv = ODCCM_CLIENT_GET_PRIVATE (self);
@@ -795,7 +705,6 @@ odccm_client_init(OdccmClient *self)
   priv->dbus_proxy = NULL;
   priv->dev_mgr_proxy = NULL;
   priv->dev_proxies = g_ptr_array_new();
-  priv->pending_devices = g_hash_table_new_full(g_str_hash, g_str_equal, hash_key_str_destroy, NULL);
   priv->online = FALSE;
 }
 
@@ -816,7 +725,6 @@ odccm_client_dispose (GObject *obj)
   /* unref other objects */
 
   g_ptr_array_free(priv->dev_proxies, TRUE);
-  g_hash_table_destroy(priv->pending_devices);
 
   if (G_OBJECT_CLASS (odccm_client_parent_class)->dispose)
     G_OBJECT_CLASS (odccm_client_parent_class)->dispose (obj);
@@ -853,6 +761,6 @@ dccm_client_interface_init (gpointer g_iface, gpointer iface_data)
 
   iface->dccm_client_init_comms = (gboolean (*) (DccmClient *self)) odccm_client_init_comms_impl;
   iface->dccm_client_uninit_comms = (gboolean (*) (DccmClient *self)) odccm_client_uninit_comms_impl;
-  iface->dccm_client_provide_password = (void (*) (DccmClient *self, gchar *pdaname, gchar *password)) odccm_client_provide_password_impl;
-  iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, gchar *pdaname)) odccm_client_request_disconnect_impl;
+  iface->dccm_client_provide_password = (void (*) (DccmClient *self, const gchar *pdaname, const gchar *password)) odccm_client_provide_password_impl;
+  iface->dccm_client_request_disconnect = (gboolean (*) (DccmClient *self, const gchar *pdaname)) odccm_client_request_disconnect_impl;
 }

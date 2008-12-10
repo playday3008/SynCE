@@ -30,6 +30,7 @@ IN THE SOFTWARE.
 #include <string.h>
 
 #include "device.h"
+#include "utils.h"
 
 G_DEFINE_TYPE (WmDevice, wm_device, G_TYPE_OBJECT)
 
@@ -38,6 +39,8 @@ struct _WmDevicePrivate {
   /* identifier from dccm */
   gchar *object_name;
   gchar *dccm_type;
+
+  guint connection_status;
 
   /* lowercase name from info file */
   gchar *name;
@@ -73,6 +76,7 @@ enum
   {
     PROP_OBJECT_NAME = 1,
     PROP_DCCM_TYPE,
+    PROP_CONNECTION_STATUS,
     PROP_NAME,
     PROP_OS_MAJOR,
     PROP_OS_MINOR,
@@ -97,6 +101,60 @@ enum
 
      /* methods */
 
+gboolean
+wm_device_rapi_connect(WmDevice *self)
+{
+        if (!self) {
+                g_warning("%s: Invalid object passed", G_STRFUNC);
+                return FALSE;
+        }
+        WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
+
+        if (priv->disposed) {
+                g_warning("%s: Disposed object passed", G_STRFUNC);
+                return FALSE;
+        }
+
+        if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+                g_warning("%s: device not fully connected", G_STRFUNC);
+                return FALSE;
+        }
+
+        HRESULT hr;
+        RapiConnection *rapi_conn;
+
+        if (priv->rapi_conn)
+                return TRUE;
+
+        g_debug("%s: Initialising device rapi connection", G_STRFUNC);
+
+        rapi_conn = rapi_connection_from_name(priv->name);
+        if (!rapi_conn) {
+                g_critical("%s: Failed to obtain rapi connection to %s", G_STRFUNC, priv->name);
+                return FALSE;
+        }
+
+        rapi_connection_select(rapi_conn);
+
+        hr = CeRapiInit();
+        if (FAILED(hr)) {
+                g_critical("%s: Failed to initialise rapi connection to %s: %d: %s", G_STRFUNC, priv->name, hr, synce_strerror(hr));
+                rapi_connection_destroy(rapi_conn);
+                return FALSE;
+        }
+
+        priv->rapi_conn = rapi_conn;
+
+        priv->device_name = get_device_name_via_rapi();
+
+        if (!(priv->device_name)) {
+                CeRapiUninit();
+                rapi_connection_destroy(rapi_conn);
+                return FALSE;
+        }
+        return TRUE;
+}
+
 void
 wm_device_rapi_select(WmDevice *self)
 {
@@ -108,6 +166,11 @@ wm_device_rapi_select(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return;
   }
 
@@ -231,6 +294,11 @@ wm_device_get_os_version_impl(WmDevice *self)
     return 0;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return 0;
+  }
+
   return priv->os_major;
 }
 
@@ -245,6 +313,11 @@ wm_device_get_build_number_impl(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return 0;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return 0;
   }
 
@@ -265,6 +338,11 @@ wm_device_get_processor_type_impl(WmDevice *self)
     return 0;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return 0;
+  }
+
   return priv->processor_type;
 }
 
@@ -282,6 +360,11 @@ wm_device_get_partner_id_1_impl(WmDevice *self)
     return 0;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return 0;
+  }
+
   return priv->partner_id_1;
 }
 
@@ -296,6 +379,11 @@ wm_device_get_partner_id_2_impl(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return 0;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return 0;
   }
 
@@ -333,6 +421,11 @@ wm_device_get_class_impl(WmDevice *self)
     return NULL;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return NULL;
+  }
+
   return g_strdup(priv->class);
 }
 
@@ -347,6 +440,11 @@ wm_device_get_hardware_impl(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return NULL;
   }
 
@@ -367,6 +465,11 @@ wm_device_get_device_name_impl(WmDevice *self)
     return NULL;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return NULL;
+  }
+
   return g_strdup(priv->device_name);
 }
 
@@ -381,6 +484,11 @@ wm_device_get_password_impl(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return NULL;
   }
 
@@ -401,6 +509,11 @@ wm_device_get_key_impl(WmDevice *self)
     return 0;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return 0;
+  }
+
   return priv->key;
 }
 
@@ -415,6 +528,11 @@ wm_device_get_dccm_pid_impl(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return 0;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return 0;
   }
 
@@ -435,6 +553,11 @@ wm_device_get_ip_impl(WmDevice *self)
     return NULL;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return NULL;
+  }
+
   return g_strdup(priv->ip);
 }
 
@@ -452,6 +575,11 @@ wm_device_get_transport_impl(WmDevice *self)
     return NULL;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return NULL;
+  }
+
   return g_strdup(priv->transport);
 }
 
@@ -466,6 +594,11 @@ wm_device_get_port_impl(WmDevice *self)
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
     return NULL;
   }
 
@@ -508,6 +641,11 @@ wm_device_get_power_status_impl(WmDevice *self)
     return NULL;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return NULL;
+  }
+
   wm_device_rapi_select(self);
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
@@ -541,6 +679,11 @@ wm_device_get_store_status_impl(WmDevice *self)
     return NULL;
   }
 
+  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
+    g_warning("%s: device not fully connected", G_STRFUNC);
+    return NULL;
+  }
+
   wm_device_rapi_select(self);
 
   memset(&store, 0, sizeof(store));
@@ -567,6 +710,7 @@ wm_device_init(WmDevice *self)
 
   priv->object_name = NULL;
   priv->dccm_type = NULL;
+  priv->connection_status = DEVICE_STATUS_UNKNOWN;
   priv->os_major = 0;
   priv->os_minor = 0;
   priv->build_number = 0;
@@ -603,6 +747,9 @@ wm_device_get_property (GObject    *obj,
     break;
   case PROP_DCCM_TYPE:
     g_value_set_string (value, priv->dccm_type);
+    break;
+  case PROP_CONNECTION_STATUS:
+    g_value_set_uint (value, priv->connection_status);
     break;
   case PROP_NAME:
     g_value_set_string (value, priv->name);
@@ -680,6 +827,9 @@ wm_device_set_property (GObject      *obj,
   case PROP_DCCM_TYPE:
     g_free (priv->dccm_type);
     priv->dccm_type = g_value_dup_string (value);
+    break;
+  case PROP_CONNECTION_STATUS:
+    priv->connection_status = g_value_get_uint (value);
     break;
   case PROP_NAME:
     g_free (priv->name);
@@ -841,6 +991,14 @@ wm_device_class_init (WmDeviceClass *klass)
                                     G_PARAM_STATIC_NICK |
                                     G_PARAM_STATIC_BLURB);
   g_object_class_install_property (gobject_class, PROP_DCCM_TYPE, param_spec);
+
+  param_spec = g_param_spec_uint ("connection-status", "Connection status",
+                                  "The state of the connection to the device.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READWRITE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_STATUS, param_spec);
 
   param_spec = g_param_spec_string ("name", "Device name",
                                     "The device's name.",

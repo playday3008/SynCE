@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2007 Mark Ellis <mark@mpellis.org.uk>
+Copyright (c) 2007-2008 Mark Ellis <mark@mpellis.org.uk>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
@@ -47,12 +47,19 @@ struct _WmDeviceManagerClass {
 
   guint signals[DEVICE_MANAGER_LAST_SIGNAL];
 
-  gint (*wm_device_manager_device_count) (WmDeviceManager *self);
-  WmDevice * (*wm_device_manager_find_by_name) (WmDeviceManager *self, gchar *name);
+  gint (*wm_device_manager_device_all_count) (WmDeviceManager *self);
+  gint (*wm_device_manager_device_connected_count) (WmDeviceManager *self);
+  gint (*wm_device_manager_device_passwordreq_count) (WmDeviceManager *self);
+  WmDevice * (*wm_device_manager_find_by_name) (WmDeviceManager *self, const gchar *name);
   WmDevice * (*wm_device_manager_find_by_index) (WmDeviceManager *self, gint index);
-  WmDevice * (*wm_device_manager_remove_by_name) (WmDeviceManager *self, gchar *name);
+  void (*wm_device_manager_remove_by_name) (WmDeviceManager *self, const gchar *name);
+  void (*wm_device_manager_remove_by_prop) (WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val);
   void (*wm_device_manager_remove_all) (WmDeviceManager *self);
+  GList * (*wm_device_manager_get_all_names) (WmDeviceManager *self);
+  GList * (*wm_device_manager_get_connected_names) (WmDeviceManager *self);
+  GList * (*wm_device_manager_get_passwordreq_names) (WmDeviceManager *self);
   gboolean (*wm_device_manager_add) (WmDeviceManager *self, WmDevice *device);
+  void (*wm_device_manager_unlocked) (WmDeviceManager *self, const gchar *name);
 
 };
 
@@ -71,13 +78,19 @@ GType wm_device_manager_get_type (void);
 #define WM_IS_DEVICE_MANAGER_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), WM_DEVICE_MANAGER_TYPE))
 #define WM_DEVICE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), WM_DEVICE_MANAGER_TYPE, WmDeviceManagerClass))
 
-gint wm_device_manager_device_count(WmDeviceManager *self);
-WmDevice *wm_device_manager_find_by_name(WmDeviceManager *self, gchar *name);
+gint wm_device_manager_device_all_count(WmDeviceManager *self);
+gint wm_device_manager_device_connected_count(WmDeviceManager *self);
+gint wm_device_manager_device_passwordreq_count(WmDeviceManager *self);
+WmDevice *wm_device_manager_find_by_name(WmDeviceManager *self, const gchar *name);
 WmDevice *wm_device_manager_find_by_index(WmDeviceManager *self, gint index);
-WmDevice *wm_device_manager_remove_by_name(WmDeviceManager *self, gchar *name);
+void wm_device_manager_remove_by_name(WmDeviceManager *self, const gchar *name);
 void wm_device_manager_remove_by_prop(WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val);
 void wm_device_manager_remove_all(WmDeviceManager *self);
+GList *wm_device_manager_get_all_names(WmDeviceManager *self);
+GList *wm_device_manager_get_connected_names(WmDeviceManager *self);
+GList *wm_device_manager_get_passwordreq_names(WmDeviceManager *self);
 gboolean wm_device_manager_add(WmDeviceManager *self, WmDevice *device);
+void wm_device_manager_unlocked(WmDeviceManager *self, const gchar *name);
 
 G_END_DECLS
 

@@ -35,6 +35,7 @@ enum _DccmClientSignals
   PASSWORD_REQUIRED,
   PASSWORD_REQUIRED_ON_DEVICE,
   PASSWORD_REJECTED,
+  DEVICE_UNLOCKED,
   SERVICE_STARTING,
   SERVICE_STOPPING,
   DCCM_LAST_SIGNAL
@@ -50,8 +51,8 @@ struct _DccmClientInterface {
 
   gboolean (*dccm_client_init_comms) (DccmClient *self);
   gboolean (*dccm_client_uninit_comms) (DccmClient *self);
-  void (*dccm_client_provide_password) (DccmClient *self, gchar *pdaname, gchar *password);
-  gboolean (*dccm_client_request_disconnect) (DccmClient *self, gchar *pdaname);
+  void (*dccm_client_provide_password) (DccmClient *self, const gchar *pdaname, const gchar *password);
+  gboolean (*dccm_client_request_disconnect) (DccmClient *self, const gchar *pdaname);
 };
 
 GType dccm_client_get_type (void);
@@ -68,10 +69,10 @@ gboolean
 dccm_client_uninit_comms(DccmClient *self);
 
 void
-dccm_client_provide_password(DccmClient *self, gchar *pdaname, gchar *password);
+dccm_client_provide_password(DccmClient *self, const gchar *pdaname, const gchar *password);
 
 gboolean
-dccm_client_request_disconnect(DccmClient *self, gchar *pdaname);
+dccm_client_request_disconnect(DccmClient *self, const gchar *pdaname);
 
 G_END_DECLS
 

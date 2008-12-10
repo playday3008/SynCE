@@ -25,10 +25,7 @@ IN THE SOFTWARE.
 #endif
 
 #include <gtk/gtk.h>
-#include <glade/glade.h>
 #include <rapi.h>
-
-#include "keyring.h"
 
 void synce_error_dialog(const gchar *format, ...)
 {
@@ -96,102 +93,6 @@ void synce_info_dialog(const gchar *format, ...)
   g_free(tmpstr);
 }
 
-void device_password_dialog_entry_changed_cb (GtkWidget *widget, gpointer data)
-{
-  gchar *entry_string;
-
-  entry_string = gtk_editable_get_chars(GTK_EDITABLE(widget), 0, -1);
-  if (entry_string)
-    gtk_widget_set_sensitive(GTK_WIDGET(data), TRUE);
-  else
-    gtk_widget_set_sensitive(GTK_WIDGET(data), FALSE);
-
-  g_free(entry_string);
-}
-
-
-gchar *
-device_do_password_dialog (gchar *pdaname)
-{
-  GladeXML *xml;
-  GtkWidget *password_dialog, *password_dialog_entry, *password_dialog_cancel;
-  GtkWidget *password_dialog_ok, *password_dialog_pdaname ;
-  gchar *password = NULL;
-  gint response;
-
-  xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "password_dialog", NULL);
-
-  password_dialog = glade_xml_get_widget (xml, "password_dialog");
-
-  password_dialog_pdaname = glade_xml_get_widget (xml, "password_dialog_pdaname");
-  password_dialog_entry = glade_xml_get_widget (xml, "password_dialog_entry");
-  password_dialog_ok = glade_xml_get_widget (xml, "password_dialog_ok");
-  password_dialog_cancel = glade_xml_get_widget (xml, "password_dialog_cancel");
-
-  gtk_label_set_text(GTK_LABEL(password_dialog_pdaname), pdaname);
-
-  gtk_widget_set_sensitive(password_dialog_ok, FALSE);
-  gtk_editable_delete_text(GTK_EDITABLE(password_dialog_entry), 0, -1);
-
-  g_signal_connect (G_OBJECT (password_dialog_entry), "changed",
-		    G_CALLBACK (device_password_dialog_entry_changed_cb), password_dialog_ok);
-
-  gtk_widget_show_all (password_dialog);
-
-  response = gtk_dialog_run(GTK_DIALOG(password_dialog));
-  if (response == GTK_RESPONSE_OK)
-    password = gtk_editable_get_chars(GTK_EDITABLE(password_dialog_entry), 0, -1);
-  gtk_editable_delete_text(GTK_EDITABLE(password_dialog_entry), 0, -1);
-
-  gtk_widget_destroy(password_dialog);
-  return password;
-}
-
-#ifndef ENABLE_NOTIFY
-void
-device_do_password_on_device_dialog (gchar *pdaname)
-{
-  GtkWidget *password_dialog;
-
-  password_dialog = gtk_message_dialog_new (NULL,
-				   GTK_DIALOG_DESTROY_WITH_PARENT,
-				   GTK_MESSAGE_INFO,
-				   GTK_BUTTONS_OK,
-				   "The device %s is locked. Please unlock it by following instructions on the device",
-				   pdaname);
-  gtk_dialog_run (GTK_DIALOG (password_dialog));
-  gtk_widget_destroy (password_dialog);
-}
-#endif /* ENABLE_NOTIFY */
-
-gchar *
-device_get_password(gchar *pdaname)
-{
-  gchar *password;
-  GtkWidget *dialog;
-  GnomeKeyringResult keyring_ret;
-
-  if ((keyring_ret = keyring_get_key(pdaname, &password)) == GNOME_KEYRING_RESULT_OK)
-    return password;
-
-  password = device_do_password_dialog(pdaname);
-
-  if (password) {
-    if ((keyring_ret = keyring_set_key(pdaname, password)) != GNOME_KEYRING_RESULT_OK) {
-      dialog = gtk_message_dialog_new (NULL,
-				       GTK_DIALOG_DESTROY_WITH_PARENT,
-				       GTK_MESSAGE_WARNING,
-				       GTK_BUTTONS_CLOSE,
-				       "Unable to save password for device \"%s\" in your keyring: %s",
-				       pdaname, keyring_strerror(keyring_ret));
-      gtk_dialog_run (GTK_DIALOG (dialog));
-      gtk_widget_destroy (dialog);
-    }
-  } else {
-    g_debug("Failed to get password for device %s from user", pdaname);
-  }
-  return password;
-}
 
 gchar *
 get_device_name_via_rapi()

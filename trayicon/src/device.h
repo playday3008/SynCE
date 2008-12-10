@@ -73,6 +73,13 @@ GType wm_device_get_type (void);
 #define WM_IS_DEVICE_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), WM_DEVICE_TYPE))
 #define WM_DEVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), WM_DEVICE_TYPE, WmDeviceClass))
 
+enum {
+        DEVICE_STATUS_CONNECTED = 0,
+        DEVICE_STATUS_PASSWORD_REQUIRED,
+        DEVICE_STATUS_PASSWORD_REQUIRED_ON_DEVICE,
+        DEVICE_STATUS_UNKNOWN
+};
+
 uint16_t wm_device_get_os_version(WmDevice *self);
 uint16_t wm_device_get_build_number(WmDevice *self);
 uint16_t wm_device_get_processor_type(WmDevice *self);
@@ -91,6 +98,7 @@ gchar *wm_device_get_port(WmDevice *self);
 gchar *wm_device_get_power_status(WmDevice *self);
 gchar *wm_device_get_store_status(WmDevice *self);
 
+gboolean wm_device_rapi_connect(WmDevice *device);
 void wm_device_rapi_select(WmDevice *device);
 
 G_END_DECLS

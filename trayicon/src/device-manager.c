@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2007 Mark Ellis <mark@mpellis.org.uk>
+Copyright (c) 2007-2008 Mark Ellis <mark@mpellis.org.uk>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
@@ -40,13 +40,25 @@ struct _WmDeviceManagerPrivate {
      /* methods */
 
 gint
-wm_device_manager_device_count(WmDeviceManager *self)
+wm_device_manager_device_all_count(WmDeviceManager *self)
 {
-  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_device_count(self);
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_device_all_count(self);
+}
+
+gint
+wm_device_manager_device_connected_count(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_device_connected_count(self);
+}
+
+gint
+wm_device_manager_device_passwordreq_count(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_device_passwordreq_count(self);
 }
 
 WmDevice *
-wm_device_manager_find_by_name(WmDeviceManager *self, gchar *name)
+wm_device_manager_find_by_name(WmDeviceManager *self, const gchar *name)
 {
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_find_by_name(self, name);
 }
@@ -57,16 +69,46 @@ wm_device_manager_find_by_index(WmDeviceManager *self, gint index)
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_find_by_index(self, index);
 }
 
-WmDevice *
-wm_device_manager_remove_by_name(WmDeviceManager *self, gchar *name)
+void
+wm_device_manager_remove_by_name(WmDeviceManager *self, const gchar *name)
 {
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_remove_by_name(self, name);
+}
+
+void
+wm_device_manager_remove_by_prop(WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_remove_by_prop(self, prop_name, prop_val);
 }
 
 void
 wm_device_manager_remove_all(WmDeviceManager *self)
 {
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_remove_all(self);
+}
+
+GList *
+wm_device_manager_get_all_names(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_get_all_names(self);
+}
+
+GList *
+wm_device_manager_get_connected_names(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_get_connected_names(self);
+}
+
+GList *
+wm_device_manager_get_passwordreq_names(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_get_passwordreq_names(self);
+}
+
+void
+wm_device_manager_unlocked(WmDeviceManager *self, const gchar *name)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_unlocked(self, name);
 }
 
 gboolean
@@ -77,7 +119,7 @@ wm_device_manager_add(WmDeviceManager *self, WmDevice *device)
 
 
 gint
-wm_device_manager_device_count_impl(WmDeviceManager *self)
+wm_device_manager_device_all_count_impl(WmDeviceManager *self)
 {
 
   if (!self) {
@@ -94,8 +136,70 @@ wm_device_manager_device_count_impl(WmDeviceManager *self)
   return priv->devices->len;
 }
 
+gint
+wm_device_manager_device_connected_count_impl(WmDeviceManager *self)
+{
+
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return 0;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return 0;
+  }
+
+  guint connection_status;
+  guint count = 0;
+  gint i;
+  WmDevice *device = NULL;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    g_object_get(device, "connection-status", &connection_status, NULL);
+
+    if (connection_status == DEVICE_STATUS_CONNECTED)
+            count++;
+  }
+
+  return count;
+}
+
+gint
+wm_device_manager_device_passwordreq_count_impl(WmDeviceManager *self)
+{
+
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return 0;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return 0;
+  }
+
+  guint connection_status;
+  guint count = 0;
+  gint i;
+  WmDevice *device = NULL;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    g_object_get(device, "connection-status", &connection_status, NULL);
+
+    if (connection_status == DEVICE_STATUS_PASSWORD_REQUIRED)
+            count++;
+  }
+
+  return count;
+}
+
 WmDevice *
-wm_device_manager_find_by_name_impl(WmDeviceManager *self, gchar *name)
+wm_device_manager_find_by_name_impl(WmDeviceManager *self, const gchar *name)
 {
   WmDevice *device = NULL;
   int i;
@@ -149,8 +253,8 @@ wm_device_manager_find_by_index_impl(WmDeviceManager *self, gint index)
   return device;
 }
 
-WmDevice *
-wm_device_manager_remove_by_name_impl(WmDeviceManager *self, gchar *name)
+void
+wm_device_manager_remove_by_name_impl(WmDeviceManager *self, const gchar *name)
 {
   WmDevice *device = NULL;
   int i;
@@ -158,13 +262,13 @@ wm_device_manager_remove_by_name_impl(WmDeviceManager *self, gchar *name)
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
-    return NULL;
+    return;
   }
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
-    return NULL;
+    return;
   }
 
   for (i = 0; i < priv->devices->len; i++) {
@@ -172,22 +276,24 @@ wm_device_manager_remove_by_name_impl(WmDeviceManager *self, gchar *name)
     tmpname = wm_device_get_name(device);
     if (!(g_ascii_strcasecmp(name,tmpname))) {
       g_ptr_array_remove_index_fast(priv->devices, i);
-      g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_REMOVED], 0);
+      g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_REMOVED], 0, tmpname);
       g_free(tmpname);
-      return device;
+      g_object_unref(device);
+      return;
     }
     g_free(tmpname);
   }
-  g_warning("%s: Device %s not removed", G_STRFUNC, name);
-  return NULL;
+  g_warning("%s: Device '%s' not removed, not found", G_STRFUNC, name);
+  return;
 }
 
 void
-wm_device_manager_remove_by_prop(WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val)
+wm_device_manager_remove_by_prop_impl(WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val)
 {
   WmDevice *device = NULL;
   gchar *tmpval = NULL;
   guint i;
+  gchar *name = NULL;
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -207,7 +313,9 @@ wm_device_manager_remove_by_prop(WmDeviceManager *self, const gchar *prop_name, 
 
     if (!(g_ascii_strcasecmp(prop_val, tmpval))) {
       g_ptr_array_remove_index_fast(priv->devices, i);
-      g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_REMOVED], 0);
+      g_object_get(device, "name", &name, NULL);
+      g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_REMOVED], 0, name);
+      g_free(name);
       g_object_unref(device);
     }
     g_free(tmpval);
@@ -240,6 +348,103 @@ wm_device_manager_remove_all_impl(WmDeviceManager *self)
   return;
 }
 
+
+GList *
+wm_device_manager_get_all_names_impl(WmDeviceManager *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return NULL;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  WmDevice *device = NULL;
+  GList *device_names = NULL;
+  gchar *name = NULL;
+  gint i;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    name = wm_device_get_name(device);
+
+    device_names = g_list_append(device_names, name);
+  }
+
+  return device_names;
+}
+
+
+GList *
+wm_device_manager_get_connected_names_impl(WmDeviceManager *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return NULL;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  WmDevice *device = NULL;
+  GList *device_names = NULL;
+  gchar *name = NULL;
+  guint connection_status;
+  gint i;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    g_object_get(device, "connection-status", &connection_status, NULL);
+
+    if (connection_status == DEVICE_STATUS_CONNECTED) {
+            name = wm_device_get_name(device);
+            device_names = g_list_append(device_names, name);
+    }
+  }
+
+  return device_names;
+}
+
+GList *
+wm_device_manager_get_passwordreq_names_impl(WmDeviceManager *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return NULL;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  WmDevice *device = NULL;
+  GList *device_names = NULL;
+  gchar *name = NULL;
+  guint connection_status;
+  gint i;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    g_object_get(device, "connection-status", &connection_status, NULL);
+
+    if (connection_status == DEVICE_STATUS_PASSWORD_REQUIRED) {
+            name = wm_device_get_name(device);
+            device_names = g_list_append(device_names, name);
+    }
+  }
+
+  return device_names;
+}
+
 gboolean
 wm_device_manager_add_impl(WmDeviceManager *self, WmDevice *device)
 {
@@ -254,10 +459,63 @@ wm_device_manager_add_impl(WmDeviceManager *self, WmDevice *device)
     return FALSE;
   }
 
+  guint connection_status;
+  gchar *name = NULL;
+
   g_ptr_array_add(priv->devices, device);
-  g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_ADDED], 0);
+
+  g_object_get(device, "connection-status", &connection_status, NULL);
+  if (connection_status == DEVICE_STATUS_CONNECTED) {
+          wm_device_rapi_connect(device);
+          g_object_get(device, "name", &name, NULL);
+          g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_ADDED], 0, name);
+          g_free(name);
+  }
 
   return TRUE;
+}
+
+void
+wm_device_manager_unlocked_impl(WmDeviceManager *self, const gchar *name)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return;
+  }
+
+  WmDevice *device = NULL;
+  gchar *tmpname = NULL;
+  guint conn_stat;
+  gint i;
+
+  for (i = 0; i < priv->devices->len; i++) {
+          device = g_ptr_array_index(priv->devices, i);
+
+          tmpname = wm_device_get_name(device);
+          if (!(g_ascii_strcasecmp(name,tmpname))) {
+                  g_free(tmpname);
+                  g_object_get(device, "connection-status", &conn_stat, NULL);
+                  if (conn_stat == DEVICE_STATUS_CONNECTED) {
+                          g_debug("%s: ignoring unlocked message for \"%s\", already connected", G_STRFUNC, name);
+                          return;
+                  }
+
+                  g_object_set(device, "connection-status", DEVICE_STATUS_CONNECTED, NULL);
+                  wm_device_rapi_connect(device);
+                  g_signal_emit (self, WM_DEVICE_MANAGER_GET_CLASS (self)->signals[DEVICE_ADDED], 0, name);
+                  return;
+          }
+          g_free(tmpname);
+  }
+
+  g_debug("%s: ignoring unlocked message for \"%s\", not connected", G_STRFUNC, name);
+  return;
 }
 
 
@@ -321,23 +579,30 @@ wm_device_manager_class_init (WmDeviceManagerClass *klass)
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   0,
                   NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
-                  G_TYPE_NONE, 0);
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
 
   klass->signals[DEVICE_REMOVED] = g_signal_new ("device-removed",
                   G_OBJECT_CLASS_TYPE (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   0,
                   NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
-                  G_TYPE_NONE, 0);
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
 
   klass->signals[DEVICE_MANAGER_LAST_SIGNAL] = 0;
 
-  klass->wm_device_manager_device_count = &wm_device_manager_device_count_impl;
+  klass->wm_device_manager_device_all_count = &wm_device_manager_device_all_count_impl;
+  klass->wm_device_manager_device_connected_count = &wm_device_manager_device_connected_count_impl;
+  klass->wm_device_manager_device_passwordreq_count = &wm_device_manager_device_passwordreq_count_impl;
   klass->wm_device_manager_find_by_name = &wm_device_manager_find_by_name_impl;
   klass->wm_device_manager_find_by_index = &wm_device_manager_find_by_index_impl;
   klass->wm_device_manager_remove_by_name = &wm_device_manager_remove_by_name_impl;
+  klass->wm_device_manager_remove_by_prop = &wm_device_manager_remove_by_prop_impl;
   klass->wm_device_manager_remove_all = &wm_device_manager_remove_all_impl;
+  klass->wm_device_manager_get_all_names = &wm_device_manager_get_all_names_impl;
+  klass->wm_device_manager_get_connected_names = &wm_device_manager_get_connected_names_impl;
+  klass->wm_device_manager_get_passwordreq_names = &wm_device_manager_get_passwordreq_names_impl;
   klass->wm_device_manager_add = &wm_device_manager_add_impl;
+  klass->wm_device_manager_unlocked = &wm_device_manager_unlocked_impl;
 }
