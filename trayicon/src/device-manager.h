@@ -33,7 +33,7 @@ enum _WmDeviceManagerSignals
 {
   DEVICE_ADDED,
   DEVICE_REMOVED,
-  DEVICE_MANAGER_LAST_SIGNAL
+  DEVICE_MANAGER_NUM_SIGNALS
 };
 
 typedef struct _WmDeviceManager WmDeviceManager;
@@ -45,7 +45,7 @@ typedef struct _WmDeviceManagerClass WmDeviceManagerClass;
 struct _WmDeviceManagerClass {
   GObjectClass parent_class;
 
-  guint signals[DEVICE_MANAGER_LAST_SIGNAL];
+  guint signals[DEVICE_MANAGER_NUM_SIGNALS];
 
   gint (*wm_device_manager_device_all_count) (WmDeviceManager *self);
   gint (*wm_device_manager_device_connected_count) (WmDeviceManager *self);

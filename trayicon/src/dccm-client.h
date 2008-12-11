@@ -38,7 +38,7 @@ enum _DccmClientSignals
   DEVICE_UNLOCKED,
   SERVICE_STARTING,
   SERVICE_STOPPING,
-  DCCM_LAST_SIGNAL
+  DCCM_NUM_SIGNALS
 };
 
 typedef struct _DccmClient DccmClient;
@@ -47,7 +47,7 @@ typedef struct _DccmClientInterface DccmClientInterface;
 struct _DccmClientInterface {
   GTypeInterface parent;
 
-  guint signals[DCCM_LAST_SIGNAL];
+  guint signals[DCCM_NUM_SIGNALS];
 
   gboolean (*dccm_client_init_comms) (DccmClient *self);
   gboolean (*dccm_client_uninit_comms) (DccmClient *self);

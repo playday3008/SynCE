@@ -34,7 +34,7 @@ typedef enum _WmDeviceInfoSignals WmDeviceInfoSignals;
 enum _WmDeviceInfoSignals
 {
   DEVICE_INFO_CLOSED,
-  DEVICE_INFO_LAST_SIGNAL
+  DEVICE_INFO_NUM_SIGNALS
 };
 
 typedef struct _WmDeviceInfo WmDeviceInfo;
@@ -46,7 +46,7 @@ typedef struct _WmDeviceInfoClass WmDeviceInfoClass;
 struct _WmDeviceInfoClass {
   GObjectClass parent_class;
 
-  guint signals[DEVICE_INFO_LAST_SIGNAL];
+  guint signals[DEVICE_INFO_NUM_SIGNALS];
 };
 
 GType wm_device_info_get_type (void);

@@ -40,7 +40,7 @@ struct _WmDevicePrivate {
   gchar *object_name;
   gchar *dccm_type;
 
-  guint connection_status;
+  WmDeviceStatus connection_status;
 
   /* lowercase name from info file */
   gchar *name;

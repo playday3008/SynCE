@@ -590,8 +590,6 @@ wm_device_manager_class_init (WmDeviceManagerClass *klass)
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
-  klass->signals[DEVICE_MANAGER_LAST_SIGNAL] = 0;
-
   klass->wm_device_manager_device_all_count = &wm_device_manager_device_all_count_impl;
   klass->wm_device_manager_device_connected_count = &wm_device_manager_device_connected_count_impl;
   klass->wm_device_manager_device_passwordreq_count = &wm_device_manager_device_passwordreq_count_impl;

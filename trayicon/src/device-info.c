@@ -2410,7 +2410,6 @@ wm_device_info_class_init (WmDeviceInfoClass *klass)
 						     NULL, NULL,
 						     g_cclosure_marshal_VOID__VOID,
 						     G_TYPE_NONE, 0);
-  klass->signals[DEVICE_INFO_LAST_SIGNAL] = 0;
 
   param_spec = g_param_spec_pointer ("device", "Device",
                                      "The device object",

@@ -132,8 +132,6 @@ dccm_client_base_init (gpointer klass)
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
 
-  iface->signals[DCCM_LAST_SIGNAL] = 0;
-
 exit:
   return;
 }
