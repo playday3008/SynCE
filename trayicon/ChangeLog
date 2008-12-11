@@ -1,3 +1,7 @@
+2008-12-11  Mark Ellis <mark@mpellis.org.uk>
+
+	* corrected compiler warnings
+
 2008-12-10  Mark Ellis <mark@mpellis.org.uk>
 
 	* make libnotify required

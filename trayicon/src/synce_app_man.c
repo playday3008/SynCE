@@ -326,9 +326,13 @@ cab_copy(const gchar *source_file, const gchar *dest_file)
       bytes = fread(buffer, 1, sizeof(buffer), input);
       if (bytes < sizeof(buffer)) {
 	if (feof(input)) {
-	  fwrite(buffer, 1, bytes, output);
-	  success = TRUE;
-	  break;
+                if (fwrite(buffer, 1, bytes, output) < bytes) {
+                        g_critical(_("%s: error writing output file for copying: %s"), G_STRFUNC, dest_file);
+                        g_unlink(dest_file);
+                } else {
+                        success = TRUE;
+                }
+                break;
 	}
 
 	g_critical(_("%s: error reading input file for copying: %s"), G_STRFUNC, source_file);
@@ -722,6 +726,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
   HRESULT hr;
   DWORD last_error;
   gchar *tmpdir = NULL;
+  GList *cab_list = NULL;
 
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -743,7 +748,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
     goto exit;
   }
 
-  GList *cab_list = extract_with_orange(filepath, tmpdir, system.dwProcessorType);
+  cab_list = extract_with_orange(filepath, tmpdir, system.dwProcessorType);
   if (!cab_list) {
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,

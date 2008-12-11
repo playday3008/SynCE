@@ -36,6 +36,7 @@
 #include <gtk/gtk.h>
 #include <gnome.h>
 #include <glade/glade.h>
+#include <errno.h>
 
 #include "synce-trayicon.h"
 
@@ -128,7 +129,10 @@ main (gint argc, gchar **argv)
 	{
 		synce_log_use_syslog();
 		g_debug("Forking into background");
-		daemon(0,0);
+		if (daemon(0,0) == -1) {
+                        g_critical("%s: failed to fork into background: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+                        return -1;
+                }
 	}
 	else
 	{

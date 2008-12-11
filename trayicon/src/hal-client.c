@@ -362,7 +362,7 @@ hal_client_provide_password_impl(HalClient *self, const gchar *pdaname, const gc
 {
   GError *error = NULL;
   gboolean password_accepted = FALSE, result;
-  gint i, num_devices;
+  gint num_devices;
   DBusGProxy *proxy = NULL;
   DBusError dbus_error;
   gchar **device_list;
@@ -405,7 +405,7 @@ hal_client_provide_password_impl(HalClient *self, const gchar *pdaname, const gc
 				    device_list[0],
 				    "org.freedesktop.Hal.Device.Synce");
   if (proxy == NULL) {
-    g_critical("%s: Failed to get proxy for device '%s'", G_STRFUNC, device_list[i]);
+    g_critical("%s: Failed to get proxy for device '%s'", G_STRFUNC, device_list[0]);
     goto error_exit;
   }
 
