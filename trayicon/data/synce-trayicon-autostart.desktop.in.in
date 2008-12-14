@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Terminal=false
+_Name=SynCE Tray Icon
+_GenericName=SynCE Tray Icon
+_Comment=SynCE PDA control for GNOME
+Icon=synce-color
+Exec=@BINDIR@/synce-trayicon
+Categories=GNOME;GTK;Utility;
+OnlyShowIn=GNOME;
+

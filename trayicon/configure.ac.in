@@ -72,6 +72,7 @@ else
 	AC_DEFINE_UNQUOTED(LOCALEDIR, "${prefix}/${DATADIRNAME}/locale", [Locale dir])
 fi
 
+AS_AC_EXPAND(BINDIR, $bindir)
 
 AC_OUTPUT([
 	Makefile
@@ -80,6 +81,8 @@ AC_OUTPUT([
 	pixmaps/22x22/Makefile
 	pixmaps/48x48/Makefile
 	data/Makefile
+	data/synce-trayicon.desktop.in
+	data/synce-trayicon-autostart.desktop.in
 	man/Makefile
 	modules/Makefile
 	po/Makefile.in
