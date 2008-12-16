@@ -1,3 +1,11 @@
+2008-12-16  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/info.c - use correct keys to get os and hardware
+	  from vdccm info file
+	* lib/info.c - check odccm is running before attempting to
+	  get devices, ignore devices from hal without
+	  pda.pocketpc.name as these are not valid
+
 2008-11-19  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/synce_socket.c - applied patch from andyakadum

@@ -24,6 +24,10 @@
 #endif
 
 #if ENABLE_ODCCM_SUPPORT
+static const char* const DBUS_SERVICE       = "org.freedesktop.DBus";
+static const char* const DBUS_IFACE         = "org.freedesktop.DBus";
+static const char* const DBUS_PATH          = "/org/freedesktop/DBus";
+
 static const char* const ODCCM_SERVICE      = "org.synce.odccm";
 static const char* const ODCCM_MGR_PATH     = "/org/synce/odccm/DeviceManager";
 static const char* const ODCCM_MGR_IFACE    = "org.synce.odccm.DeviceManager";
@@ -83,8 +87,12 @@ static SynceInfo* synce_info_from_file(const char* device_name)
   result->ip        = STRDUP(getConfigString(config, "device", "ip"));
   result->password  = STRDUP(getConfigString(config, "device", "password"));
   result->name      = STRDUP(getConfigString(config, "device", "name"));
-  result->os_name   = STRDUP(getConfigString(config, "device", "os_name"));
-  result->model     = STRDUP(getConfigString(config, "device", "model"));
+
+  if (!(result->os_name = STRDUP(getConfigString(config, "device", "os_name"))))
+          result->os_name = STRDUP(getConfigString(config, "device", "class"));
+
+  if (!(result->model = STRDUP(getConfigString(config, "device", "model"))))
+          result->model = STRDUP(getConfigString(config, "device", "hardware"));
 
   result->transport = STRDUP(getConfigString(config, "connection", "transport"));
 
@@ -171,9 +179,11 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
   SynceInfo *result = NULL;
   GError *error = NULL;
   DBusGConnection *bus = NULL;
+  DBusGProxy *dbus_proxy = NULL;
   DBusGProxy *mgr_proxy = NULL;
   GPtrArray *devices = NULL;
   guint i;
+  gboolean odccm_running = FALSE;
 
   g_type_init();
 
@@ -182,6 +192,32 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
   {
     g_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
     goto ERROR;
+  }
+
+  dbus_proxy = dbus_g_proxy_new_for_name (bus,
+                                          DBUS_SERVICE,
+                                          DBUS_PATH,
+                                          DBUS_IFACE);
+  if (dbus_proxy == NULL) {
+    g_warning("%s: Failed to get dbus proxy object", G_STRFUNC);
+    goto ERROR;
+  }
+
+  if (!(dbus_g_proxy_call(dbus_proxy, "NameHasOwner",
+                          &error,
+                          G_TYPE_STRING, ODCCM_SERVICE,
+                          G_TYPE_INVALID,
+                          G_TYPE_BOOLEAN, &odccm_running,
+                          G_TYPE_INVALID))) {
+          g_critical("%s: Error checking owner of service %s: %s", G_STRFUNC, ODCCM_SERVICE, error->message);
+          g_object_unref(dbus_proxy);
+          goto ERROR;
+  }
+
+  g_object_unref(dbus_proxy);
+  if (!odccm_running) {
+          g_message("Odccm is not running, ignoring");
+          goto ERROR;
   }
 
   mgr_proxy = dbus_g_proxy_new_for_name(bus, ODCCM_SERVICE,
@@ -202,7 +238,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
   }
 
   if (devices->len == 0) {
-    g_warning("No devices connected to odccm");
+    g_message("No devices connected to odccm");
     goto ERROR;
   }
 
@@ -412,6 +448,15 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   }
 
   for (i = 0; i < num_devices; i++) {
+    if (!(libhal_device_property_exists(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error))) {
+            if (dbus_error_is_set(&dbus_error)) {
+                    g_critical("%s: Failed to check for property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+                    goto error_exit;
+            }
+            g_message("Device %s not fully set in Hal, skipping", device_list[i]);
+            continue;
+    }
+
     gchar *name = NULL;
 
     name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
