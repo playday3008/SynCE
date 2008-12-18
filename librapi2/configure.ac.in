@@ -80,7 +80,7 @@ else
         minimum_version=$enable_python
 	enable_python=yes
     else
-        minimum_version=2.2
+        minimum_version=2.3
     fi
 	AM_PATH_PYTHON($minimum_version, [have_python_path=yes], [have_python_path=no] )
 	AC_CHECK_PROGS(PYREX, pyrexc)
@@ -102,7 +102,33 @@ else
 	    if test x$have_python = xno ; then
 	        if test x$enable_python = xyes ; then
 	            AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings])
+		else
+		    AC_MSG_NOTICE([Not building Python bindings])
 	        fi
+	    else
+
+dnl # python 2.5 requires at least pyrex 0.9.6
+
+	    	`echo "$PYTHON_VERSION" | awk 'BEGIN { FS = "."; } { printf "export python_maj_ver=%s export python_min_ver=%s", $1, $2;}'`
+
+		if test "$python_maj_ver" -gt 2 || ( test "$python_maj_ver" -gt 1 && test "$python_min_ver" -gt 4 ); then
+		    AC_MSG_CHECKING([pyrex version])
+
+		    pyrex_ver=`$PYREX --version 2>&1 | sed -e 's/Pyrex version //'`
+	    	    `echo "$pyrex_ver" | awk 'BEGIN { FS = "."; } { printf "export pyrex_maj_ver=%s export pyrex_min_ver=%s export pyrex_sub_ver=%s", $1, $2, $3;}'`
+
+    		    if test "$pyrex_min_ver" -lt 9 || test "$pyrex_sub_ver" -lt 6 ; then
+		        AC_MSG_RESULT([$pyrex_ver])
+	        	if test x$enable_python = xyes ; then
+	            	   AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings, need at least pyrex 0.9.6])
+			else
+			   AC_MSG_NOTICE([Not building Python bindings, need at least pyrex 0.9.6])
+			   have_python=no
+	        	fi
+    		    else
+			AC_MSG_RESULT([ok])
+    		    fi
+		fi
 	    fi
 	fi
 fi
