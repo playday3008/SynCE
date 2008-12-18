@@ -1,3 +1,7 @@
+2008-12-18	Mark Ellis	<mark@mpellis.org.uk>
+	* dataserver.py - catch rapi errors from getting free space of unmounted
+	mount points eg. \Network; now requires pyrapi2 >= 0.13
+
 2008-07-15	Guido Diepen	<guido@guidodiepen.nl>
 	* Bumped the version to 0.12
 

@@ -277,8 +277,12 @@ class DataServer(dbus.service.Object):
             
             for folder in myFiles:
                 if folder["Attributes"] & FILE_ATTRIBUTE_TEMPORARY:
-                    freeDisk,totalDisk,freeDiskTotal = rapi_session.getDiskFreeSpaceEx("\\"+folder["Name"]+"\\")
-                    self._storageInformation.append( ("/%s"%folder["Name"],"\\%s\\"%folder["Name"], freeDisk,totalDisk,freeDiskTotal) )
+                    try:
+                        freeDisk,totalDisk,freeDiskTotal = rapi_session.getDiskFreeSpaceEx("\\"+folder["Name"]+"\\")
+                        self._storageInformation.append( ("/%s"%folder["Name"],"\\%s\\"%folder["Name"], freeDisk,totalDisk,freeDiskTotal) )
+                    except pyrapi2.RapiError, e:
+                        print "Failed to get disk space for %s, skipping: %d: %s" % (folder["Name"], e.err_code, e)
+
 
         if self._storageInformation != old_storageInformation:
             self.StorageInformation( self._storageInformation )
