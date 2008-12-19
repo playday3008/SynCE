@@ -2,6 +2,7 @@
 
 	* added synce: as a protocol, rapip: will deprecated
 	* renamed LICENSE to COPYING to satisfy build system
+	* added mime type description for Pocket Word & Excel
 
 2008-08-11  Mark Ellis <mark@mpellis.org.uk>
 
