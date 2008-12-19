@@ -40,6 +40,8 @@ DBLOGLEVELS = { "INFO"    : logging.INFO,
 		"ERROR"   : logging.ERROR
 	      }
 
+CONF_FILE_NAME = "syncengine.conf.xml"
+
 #
 #
 # ValidateCommandOptions
@@ -284,12 +286,11 @@ class Config:
 		# check if we have a config
 
 		self.config_user_dir   = os.path.join(os.path.expanduser("~"), ".synce")
-		self.config_user_path  = os.path.join(self.config_user_dir, "syncengine.conf.xml")
 
 		if sys.prefix == "/usr":
-			self.config_system_path  = os.path.join("/etc", "syncengine.conf.xml")
+			self.config_system_path  = os.path.join("/etc", CONF_FILE_NAME)
 		else:
-			self.config_system_path  = os.path.join(sys.prefix, "etc", "syncengine.conf.xml")
+			self.config_system_path  = os.path.join(sys.prefix, "etc", CONF_FILE_NAME)
 
 		self.logfile = None
 	
@@ -309,7 +310,7 @@ class Config:
 			if opt in ("-o","--once"):
 				self.runonce = True
 			if opt in ("-c","--config"):
-				self.config_user_dir = os.path.join(arg,".synce")
+				self.config_user_dir = arg
 			if opt in ("-d","--detached"):
 				self.fork = True
 			if opt in ("-l","--logfile"):
@@ -327,7 +328,7 @@ class Config:
 
 	def UpdateConfig(self):
 		self._ScanConfigFile(self.config_system_path)
-		self._ScanConfigFile(self.config_user_path)
+		self._ScanConfigFile(os.path.join(self.config_user_dir, CONF_FILE_NAME))
 
 	#
 	# _ScanConfigFile
@@ -337,20 +338,20 @@ class Config:
 	def _ScanConfigFile(self,path):
 		try:
 			f = open(path, "rb")
-		except:
-			self.logger.info("UpdateConfig - unable to open system config file - using defaults")
+		except Exception, e:
+			self.logger.info("UpdateConfig - unable to open config file %s (%s) - using defaults" % (path, e))
 			return False
 		try:
 			cf = f.read()
 			f.close()
-		except:
-			self.logger.info("UpdateConfig - could not read system config file - using defaults")
+		except Exception, e:
+			self.logger.info("UpdateConfig - could not read config file %s (%s) - using defaults" % (path, e))
 			return False
 
 		try:
 			confdoc = libxml2.parseDoc(cf)
-		except libxml2.parserError:
-			self.logger.info("UpdateConfig - error parsing system config file - using defaults")
+		except libxml2.parserError, e:
+			self.logger.info("UpdateConfig - error parsing config file %s (%s) - using defaults" % (path, e))
 			return False
 
 		config = xml2util.FindChildNode(confdoc,"syncengine-config")

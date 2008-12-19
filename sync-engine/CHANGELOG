@@ -1081,3 +1081,8 @@ is suspected.
 ------------------------------
 Minor update for change in pyrapi2.RAPIError
 
+18/12/2008 - 172600 Mark Ellis
+------------------------------
+Make -c command line option work more as expected, not silently adding .synce.
+Report useful errors from problems with config files.
+
