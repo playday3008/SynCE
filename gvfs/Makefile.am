@@ -1,7 +1,8 @@
 SUBDIRS = \
 	daemon \
 	pixmaps \
-	po
+	po \
+	data
 
 EXTRA_DIST = \
 	intltool-extract.in	\

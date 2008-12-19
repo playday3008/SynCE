@@ -47,6 +47,10 @@ if test "x${with_gvfs_source}" == "xno"; then
 fi
 AC_SUBST(with_gvfs_source)
 
+AC_ARG_ENABLE(update-mime-database,
+        AC_HELP_STRING([--disable-update-mime-database],
+       [do not run the update-mime-database utility (mostly useful for package maintainers) ]))
+AM_CONDITIONAL(UPDATE_MIME_DATABASE, test "$enable_update_mime_database" != "no")
 
 dnl ****************************
 dnl *** Checks for intltool  ***
@@ -84,4 +88,5 @@ AC_OUTPUT([
 	daemon/Makefile
 	pixmaps/Makefile
 	po/Makefile.in
+	data/Makefile
 ])
