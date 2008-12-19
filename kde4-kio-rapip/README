@@ -6,7 +6,9 @@ used to browse through the PDA file system via the SynCE infrastructure, and to
 copy files to and from the PDA by drag and drop via Konqueror.
 
 To use, simply open Konqueror, Dolphin, or any other KIO-enabled file manager
-and type in rapip://DEVICENAME/ to the address bar. If you are not sure about
-the name of your device, simply go to rapip:/ which will show the first device
+and type in synce://DEVICENAME/ to the address bar. If you are not sure about
+the name of your device, simply go to synce:/ which will show the first device
 it finds.
 
+The protocol name rapip: has been deprecated in favour of synce:, please use
+synce: .

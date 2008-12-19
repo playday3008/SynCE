@@ -1,0 +1,15 @@
+[Protocol]
+exec=kio_rapip
+protocol=synce
+input=none
+output=filesystem
+listing=Name,Type,Size,Date,AccessDate,Access,Owner,Group,Link
+Description=A kioslave for rapi
+reading=true
+writing=true
+makedir=true
+deleting=true
+moving=true
+Icon=rapip
+Class=:local
+URIMode=rawuri
