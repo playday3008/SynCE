@@ -1,3 +1,10 @@
+   SynCE kio-rapip 0.10
+   ====================
+
+    * The protocol name rapip: has been deprecated in favour of synce:,
+      please use synce: .
+
+
    SynCE kio-rapip 0.9.1
    =====================
 

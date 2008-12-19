@@ -5,3 +5,5 @@ RAPIP is the short form for "RAPI-Protocol". It is a full featured KIOSlave
 used to browse through the PDA file system via the SynCE infrastructure, and to
 copy files to and from the PDA by drag and drop via Konqueror.
 
+The protocol name rapip: has been deprecated in favour of synce:, please use
+synce: .
