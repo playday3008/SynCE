@@ -30,3 +30,4 @@ include_directories (${SYNCE_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DI
 
 add_subdirectory(src)
 add_subdirectory(icons)
+add_subdirectory(data)
