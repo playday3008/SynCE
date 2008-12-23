@@ -59,13 +59,13 @@ void _synce_log(int level, const char* file, int line, const char* format, ...)
 void _synce_log_wstr(int level, const char* file, int line, const char* name,
 		const WCHAR* wstr)
 {
-	if (level <= current_log_level)
+  if (level <= current_log_level)
   {
-    char* ascii = wstr_to_ascii(wstr);
+    char* str = wstr_to_current(wstr);
 
-    fprintf(stderr, "[%s:%i] %s=\"%s\"\n", file, line, name, ascii);
+    fprintf(stderr, "[%s:%i] %s=\"%s\"\n", file, line, name, str);
 
-    wstr_free_string(ascii);
+    wstr_free_string(str);
   }
 }
 

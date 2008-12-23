@@ -1,3 +1,7 @@
+2008-12-23  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/synce_log.c - use wstr_to_current() in wstr logging 
+
 2008-12-16  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/info.c - use correct keys to get os and hardware
