@@ -1,3 +1,8 @@
+2009-01-02  Mark Ellis  <mark@mpellis.org.uk>
+
+	* check for NULL returns from wstr conversions
+	* python/pyrapi2.pyx - fix warning checking for invalid handle
+
 2008-12-18  Mark Ellis  <mark@mpellis.org.uk>
 
 	* configure.ac.in - require at least python 2.3, pyrex doesn't

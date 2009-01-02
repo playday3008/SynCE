@@ -108,12 +108,16 @@ int main(int argc, char** argv)
 						   "============\n");
 				{
 					char *name = wstr_to_current(info.u.infFile.szFileName);
-					printf("Attributes:  %08x\n"
-							   "Name:        \"%s\"\n"
-								 , 
-								 info.u.infFile.dwAttributes,
-								 name);
-					wstr_free_string(name);
+                                        if (!name) {
+                                                printf("Error: failed to convert object name to current encoding\n");
+                                        } else {
+                                                printf("Attributes:  %08x\n"
+                                                       "Name:        \"%s\"\n"
+                                                       , 
+                                                       info.u.infFile.dwAttributes,
+                                                       name);
+                                                wstr_free_string(name);
+                                        }
 				}
 				break;
 				
@@ -122,15 +126,18 @@ int main(int argc, char** argv)
 						   "=================\n");
 				{
 					char *name = wstr_to_current(info.u.infDirectory.szDirName);
-					printf("Attributes:  %08x\n"
-							   "Parent OID:  %08x\n"
-							   "Name:        \"%s\"\n"
-								 , 
-								 info.u.infDirectory.dwAttributes,
-								 info.u.infDirectory.oidParent,
-								 name);
-					
-					wstr_free_string(name);
+                                        if (!name) {
+                                                printf("Error: failed to convert object name to current encoding\n");
+                                        } else {
+                                                printf("Attributes:  %08x\n"
+                                                       "Parent OID:  %08x\n"
+                                                       "Name:        \"%s\"\n"
+                                                       , 
+                                                       info.u.infDirectory.dwAttributes,
+                                                       info.u.infDirectory.oidParent,
+                                                       name);
+                                                wstr_free_string(name);
+					}
 				}
 				break;
 
@@ -140,21 +147,26 @@ int main(int argc, char** argv)
 						"=========\n");
 				{
 					char *name = wstr_to_current(info.u.infDatabase.szDbaseName);
-					printf(
-							"Flags: %08x\n"
-							"Name: \"%s\"\n"
-							"Type: %08x\n"
-							"Record count: %i\n"
-							"Sort order count: %i\n"
-							"Size: %i\n"
-							,
-							info.u.infDatabase.dwFlags,
-							name,
-							info.u.infDatabase.dwDbaseType,
-							info.u.infDatabase.wNumRecords,
-							info.u.infDatabase.wNumSortOrder,
-							info.u.infDatabase.dwSize
-							);
+                                        if (!name) {
+                                                printf("Error: failed to convert object name to current encoding\n");
+                                        } else {
+                                                printf(
+                                                       "Flags: %08x\n"
+                                                       "Name: \"%s\"\n"
+                                                       "Type: %08x\n"
+                                                       "Record count: %i\n"
+                                                       "Sort order count: %i\n"
+                                                       "Size: %i\n"
+                                                       ,
+                                                       info.u.infDatabase.dwFlags,
+                                                       name,
+                                                       info.u.infDatabase.dwDbaseType,
+                                                       info.u.infDatabase.wNumRecords,
+                                                       info.u.infDatabase.wNumSortOrder,
+                                                       info.u.infDatabase.dwSize
+                                                       );
+                                                wstr_free_string(name);
+					}
 				}
 				break;
 

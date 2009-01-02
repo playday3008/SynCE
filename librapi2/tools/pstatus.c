@@ -251,6 +251,11 @@ int main(int argc, char** argv)
     char *details = wstr_to_current(version.szCSDVersion);
     char *platform = NULL;
 
+    if (!details) {
+            fprintf(stderr, "%s: Failed to convert version info to current encoding\n", argv[0]);
+            details = strdup("");
+    }
+
     if (VER_PLATFORM_WIN32_CE == version.dwPlatformId)
       platform = "(Windows CE)";
 

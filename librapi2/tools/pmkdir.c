@@ -97,6 +97,13 @@ int main(int argc, char** argv)
 
 	convert_to_backward_slashes(path);
 	wide_path = wstr_from_current(path);
+        if (!wide_path) {
+		fprintf(stderr, "%s: Failed to convert path '%s' from current encoding to UCS2\n", 
+				argv[0],
+				path);
+		goto exit;
+        }
+
 	wide_path = adjust_remote_path(wide_path, true);
 
 	if (!CeCreateDirectory(wide_path, NULL))

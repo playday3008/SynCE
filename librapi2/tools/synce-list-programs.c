@@ -88,10 +88,14 @@ int main(int argc, char** argv)
 	}
 	
   
-  /* Path on SmartPhone 2002 */
-  parent_key_name = wstr_from_current("Security\\AppInstall");
+        /* Path on SmartPhone 2002 */
+        parent_key_name = wstr_from_current("Security\\AppInstall");
+        if (!parent_key_name) {
+		fprintf(stderr, "%s: Failed to convert registry key from current encoding to UCS2\n", argv[0]);
+		goto exit;
+        }
 
-	result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
+        result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
   
 	if (ERROR_SUCCESS == result)
   {
@@ -104,6 +108,10 @@ int main(int argc, char** argv)
 
     /* Path on Pocket PC 2002 */
     parent_key_name = wstr_from_current("Software\\Apps");
+    if (!parent_key_name) {
+            fprintf(stderr, "%s: Failed to convert registry key from current encoding to UCS2\n", argv[0]);
+            goto exit;
+    }
 
     result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
 
@@ -117,6 +125,10 @@ int main(int argc, char** argv)
   }
   
   value_name = wstr_from_current("Instl");
+  if (!value_name) {
+          fprintf(stderr, "%s: Failed to convert registry value name from current encoding to UCS2\n", argv[0]);
+          goto exit;
+  }
 	
 	for (i = 0; ; i++)
 	{
@@ -134,8 +146,13 @@ int main(int argc, char** argv)
     if (smartphone)
     {
       char* name = wstr_to_current(wide_name);
-      puts(name);
-      wstr_free_string(name);
+      if (!name) {
+              fprintf(stderr, "%s: Failed to convert application name to current encoding\n", argv[0]);
+              continue;
+      } else {
+              puts(name);
+              wstr_free_string(name);
+      }
     }
     else
     {
@@ -149,8 +166,13 @@ int main(int argc, char** argv)
       if (ERROR_SUCCESS == result && installed)
       {
         char* name = wstr_to_current(wide_name);
-        puts(name);
-        wstr_free_string(name);
+        if (!name) {
+                fprintf(stderr, "%s: Failed to convert application name to current encoding\n", argv[0]);
+                continue;
+        } else {
+                puts(name);
+                wstr_free_string(name);
+        }
       }
       CeRegCloseKey(program_key);
     }

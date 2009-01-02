@@ -57,6 +57,8 @@ bool rapi_reg_create_key(/*{{{*/
         HKEY parent, const char* name, HKEY* key)
 {
     WCHAR* name_wide = wstr_from_current(name);
+    if (!name_wide)
+            return FALSE;
 
     LONG result = CeRegCreateKeyEx(
             parent,
@@ -79,6 +81,8 @@ bool rapi_reg_open_key(/*{{{*/
         HKEY parent, const char* name, HKEY* key)
 {
     WCHAR* name_wide = wstr_from_current(name);
+    if (!name_wide)
+            return FALSE;
 
     LONG result = CeRegOpenKeyEx(
             parent,
@@ -99,6 +103,8 @@ bool rapi_reg_query_dword(/*{{{*/
     DWORD type;
     DWORD size = sizeof(DWORD);
     WCHAR* name_wide = wstr_from_current(name);
+    if (!name_wide)
+            return FALSE;
 
     LONG result = CeRegQueryValueEx(
             key,
@@ -124,6 +130,8 @@ bool rapi_reg_query_string(/*{{{*/
     DWORD size = 0;
     WCHAR* unicode = NULL;
     WCHAR* name_wide = wstr_from_current(name);
+    if (!name_wide)
+            return FALSE;
 
     LONG result = CeRegQueryValueEx(
             key,
@@ -163,6 +171,8 @@ bool rapi_reg_set_dword(/*{{{*/
         HKEY key, const char* name, DWORD value)
 {
     WCHAR* name_wide = wstr_from_current(name);
+    if (!name_wide)
+            return FALSE;
 
     LONG result = CeRegSetValueEx(
             key,
@@ -181,7 +191,13 @@ bool rapi_reg_set_string(/*{{{*/
         HKEY key, const char* name, const char *value)
 {
     WCHAR* name_wide = wstr_from_current(name);
+    if (!name_wide)
+            return FALSE;
     WCHAR* value_wide = wstr_from_current(value);
+    if (!value_wide) {
+            wstr_free_string(name_wide);
+            return FALSE;
+    }
     DWORD size = wstrlen(value_wide);
 
     LONG result = CeRegSetValueEx(

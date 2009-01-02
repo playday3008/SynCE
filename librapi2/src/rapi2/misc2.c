@@ -413,10 +413,16 @@ DWORD _CeGetDiskFreeSpaceEx2(
 	rapi_context_begin_command(context, 0x5c);
 	
 	WCHAR* lpDirName_wide = wstr_from_current( _lpDirectoryName ) ; 
+        if (!lpDirName_wide) {
+                context->rapi_error = S_OK;
+                context->last_error = ERROR_INVALID_PARAMETER;
+                return 0;
+        }
 	rapi2_buffer_write_string(context->send_buffer,  lpDirName_wide );
+        wstr_free_string(lpDirName_wide);
 
 	//NOTE: Some personat microsoft decided that CeGetDiskFreeSpaceEx should return
-	//a zero value on success and a non-zero function on failure. This contradicts
+	//a non-zero value on success and a zero on failure. This contradicts
 	//with majority of all rapi functions!
 	if ( !rapi2_context_call(context) )
 		return 0 ;

@@ -244,13 +244,21 @@ int delete_key(HKEY parent, LPCWSTR key_name_wide)
 {
 #if 0
   int error;
-  
+  char key_name = NULL;
+
   if (ERROR_SUCCESS != (error=CeRegDeleteKey(parent, key_name_wide)))
   {
-    fprintf(stderr,"Failed to delete key '%s': %s\n",
-            wstr_to_ascii(key_name),
-            synce_strerror(error));
-    return 1;
+          key_name = wstr_to_current(key_name_wide);
+          if (!key_name) {
+                  fprintf(stderr, "Failed to convert registry key to current encoding\n");
+                  return 1;
+          }
+
+          fprintf(stderr,"Failed to delete key '%s': %s\n",
+                  key_name,
+                  synce_strerror(error));
+          free(key_name);
+          return 1;
   }
   return 0;
 #else
@@ -264,26 +272,48 @@ int new_key(HKEY parent, LPCWSTR key_name_wide)
   int error;
   HKEY new_key;
   DWORD new_disposition;
-  
+  char *key_name = NULL;
+
   if (ERROR_SUCCESS != (error=CeRegCreateKeyEx(parent, key_name_wide, 0,0,0,0,NULL,&new_key,&new_disposition)))
   {
+    key_name = wstr_to_current(key_name_wide);
+    if (!key_name) {
+            fprintf(stderr, "Failed to convert registry key to current encoding\n");
+            return 1;
+    }
+
     fprintf(stderr,"Failed to create key '%s': %s\n",
-            wstr_to_ascii(key_name_wide),
+            key_name,
             synce_strerror(error));
+    free(key_name);
     return 1;
   }
   if (ERROR_SUCCESS != (error=CeRegCloseKey(new_key)))
   {
+    key_name = wstr_to_current(key_name_wide);
+    if (!key_name) {
+            fprintf(stderr, "Failed to convert registry key to current encoding\n");
+            return 1;
+    }
+
     fprintf(stderr,"Failed to close key '%s': %s\n",
-            wstr_to_ascii(key_name_wide),
+            key_name,
             synce_strerror(error));
+    free(key_name);
     return 1;
   }
 
   if (new_disposition != REG_CREATED_NEW_KEY)
   {
+    key_name = wstr_to_current(key_name_wide);
+    if (!key_name) {
+            fprintf(stderr, "Failed to convert registry key to current encoding\n");
+            return 1;
+    }
+
     fprintf(stderr,"Key '%s' already exists\n",
-            wstr_to_ascii(key_name_wide));
+            key_name);
+    free(key_name);
     return 1;
   }
   
@@ -299,7 +329,8 @@ int list_key(HKEY key, char* key_path, bool do_recurse)
 
   int result;
   int i;
-
+  char *key_name = NULL;
+  char *value_name = NULL;
 
   //First determine the size of the holding arrays for all 
   //subvalues/keys
@@ -335,7 +366,7 @@ int list_key(HKEY key, char* key_path, bool do_recurse)
 	uint8_t value[value_size];
 
     DWORD value_type;
-
+    char *value_str = NULL;
 
 
     result = CeRegEnumValue(key, i, value_name_wide , 
@@ -351,13 +382,25 @@ int list_key(HKEY key, char* key_path, bool do_recurse)
               synce_strerror(result));
       return 1;
     }
-	
-    printf("\"%s\"=",  wstr_to_ascii(value_name_wide));
+
+    value_name = wstr_to_current(value_name_wide);
+    if (!value_name) {
+            fprintf(stderr, "Failed to convert registry value name to current encoding\n");
+            continue;
+    }
+    printf("\"%s\"=", value_name);
+    free(value_name);
 
     switch (value_type)
     {
       case REG_SZ:
-        printf("\"%s\"\n", wstr_to_ascii((LPCWSTR)value));
+        value_str = wstr_to_current((LPCWSTR)value);
+        if (!value_str) {
+                fprintf(stderr, "Failed to convert registry string value to current encoding\n");
+                value_str = strdup("");
+        }
+        printf("\"%s\"\n", value_str);
+        free(value_str);
         break;
       
       case REG_DWORD:
@@ -392,24 +435,38 @@ int list_key(HKEY key, char* key_path, bool do_recurse)
 
 	if (!do_recurse){
 	  //Then just print all the subkeys
+
+          key_name = wstr_to_current(wide_name);
+          if (!key_name) {
+                  fprintf(stderr, "Failed to convert registry key name to current encoding, skipping\n");
+                  continue;
+          }
+
 	  printf("\n") ; 
-	  fprintf(stdout, "[%s\\%s]\n", key_path, wstr_to_ascii(wide_name)) ; 
-	}
-	else{
+	  fprintf(stdout, "[%s\\%s]\n", key_path, key_name); 
+          free(key_name);
+	} else {
 	  HKEY childKey = 0 ; 
-	  char* child_key_name = wstr_to_ascii( wide_name ) ; 
+	  char* child_key_name = wstr_to_current(wide_name);
+          if (!child_key_name) {
+                  fprintf(stderr, "Failed to convert registry key name to current encoding, skipping\n");
+                  continue;
+          }
+
 	  char child_key_path[MAX_PATH] ; 
 	  sprintf(child_key_path,"%s\\%s", key_path, child_key_name) ; 
 	  	
 	  if (!rapi_reg_open_key( key, child_key_name, &childKey ))
-	  { 
+	  {
+                free(child_key_name);
 	  	return 1 ;
 	  }
+          free(child_key_name);
 		
 	  //We have childkey now
 	  //Do list_key on this
 	  list_key( childKey , child_key_path, do_recurse) ; 
-    }
+        }
   }
 
 
@@ -462,17 +519,24 @@ int dump_registry()
 
 
 
-
 int delete_val(HKEY key, LPCWSTR value_name)
 {
 #if 0
   int error;
+  char *value_name_char = NULL;
   
   if (ERROR_SUCCESS != (error=CeRegDeleteKey(key, value_name)))
   {
+    value_name_char = wstr_to_current(value_name);
+    if (!value_name_char) {
+            fprintf(stderr, "Failed to convert registry value name to current encoding\n");
+            return 1;
+    }
+
     fprintf(stderr,"Failed to delete value '%s': %s\n",
-            wstr_to_ascii(value_name),
+            value_name_char,
             synce_strerror(error));
+    free(value_name_char);
     return 1;
   }
   return 0;
@@ -490,12 +554,21 @@ int read_val(char *parent_str, char *key_str, HKEY key, LPCWSTR value_name_wide)
   DWORD value_size = 0;
   uint8_t* value = NULL;
   DWORD value_type;
+  char *value_name = NULL;
+  char *value_str = NULL;
+
+  value_name = wstr_to_current(value_name_wide);
+  if (!value_name) {
+          fprintf(stderr, "Failed to convert registry value name to current encoding\n");
+          return 1;
+  }
 
   if (ERROR_SUCCESS != (error=CeRegQueryValueEx(key, value_name_wide, NULL, NULL, NULL, &value_size)))
   {
     fprintf(stderr, "Failed to get size of value '%s\\%s\\%s': %s\n", 
-        parent_str, key_str, wstr_to_ascii(value_name_wide),
+        parent_str, key_str, value_name,
         synce_strerror(error));
+    free(value_name);
     return 1;
   }
 
@@ -503,25 +576,33 @@ int read_val(char *parent_str, char *key_str, HKEY key, LPCWSTR value_name_wide)
   if (!value)
   {
     fprintf(stderr, "Failed to allocate %i bytes", value_size);
+    free(value_name);
     return 1;
   }
   
   if (ERROR_SUCCESS != (error=CeRegQueryValueEx(key, value_name_wide, NULL, &value_type, value, &value_size)))
   {
     fprintf(stderr, "Failed to get value '%s\\%s\\%s': %s\n", 
-        parent_str, key_str, wstr_to_ascii(value_name_wide),
+        parent_str, key_str, value_name,
         synce_strerror(error));
+    free(value_name);
     return 1;
   }
 
-  printf("[%s\\%s]\n\"%s\"=", parent_str, key_str, wstr_to_ascii(value_name_wide));
+  printf("[%s\\%s]\n\"%s\"=", parent_str, key_str, value_name);
 
   switch (value_type)
   {
     case REG_SZ:
-      printf("\"%s\"\n", wstr_to_ascii((LPCWSTR)value));
+      value_str = wstr_to_current((LPCWSTR)value);
+      if (!value_str) {
+              fprintf(stderr, "Failed to convert registry string value to current encoding\n");
+              value_str = strdup("");
+      }
+      printf("\"%s\"\n", value_str);
+      free(value_str);
       break;
-    
+
     case REG_DWORD:
       printf("dword=%08x\n", *(DWORD*)value);
       break;
@@ -531,6 +612,8 @@ int read_val(char *parent_str, char *key_str, HKEY key, LPCWSTR value_name_wide)
       break;
   }
 
+  free(value_name);
+  free(value);
   return 0;
 }
 
@@ -541,12 +624,19 @@ int write_val(HKEY key, LPCWSTR value_name, char * new_value)
   void *valBuf;
   int valSize;
   DWORD dwordVal;
+  int success = 1;
+  char *value_name_char = NULL;
   
   switch(valType)
   {
     case REG_SZ:
     case REG_EXPAND_SZ:
       valBuf = wstr_from_current(new_value);
+      if (!valBuf) {
+              fprintf(stderr, "Failed to convert registry string value from current encoding to UCS2\n");
+              return success;
+      }
+
       valSize = (wstrlen(valBuf)+1) * sizeof(WCHAR);
       break;
     case REG_DWORD:
@@ -556,22 +646,37 @@ int write_val(HKEY key, LPCWSTR value_name, char * new_value)
       break;
     case REG_DWORD_BIG_ENDIAN:
       fprintf(stderr,"REG_DWORD_BIG_ENDIAN not yet supported.\n");
-      return 1;
+      return success;
     case REG_MULTI_SZ:
       fprintf(stderr,"REG_MULTI_SZ not yet supported.\n");
-      return 1;
+      return success;
     default:
       fprintf(stderr,"Unrecognized value type somehow!\n");
-      return 1;
+      return success;
   }
   if (ERROR_SUCCESS != (error=CeRegSetValueEx(key,value_name,0,valType,valBuf,valSize)))
   {
-    fprintf(stderr, "%s: Unable to set value of '%s' to REG_SZ '%s': %s\n", 
-        prog_name,wstr_to_ascii(value_name),new_value,
-        synce_strerror(error));
-    return 1;
+    value_name_char = wstr_to_current(value_name);
+    if (!value_name_char) {
+            fprintf(stderr, "Failed to convert registry value name to current encoding\n");
+    } else {
+            fprintf(stderr, "%s: Unable to set value of '%s' to REG_SZ '%s': %s\n", 
+                    prog_name, value_name_char, new_value,
+                    synce_strerror(error));
+    }
+  } else {
+          success = 0;
   }
-  return 0;
+
+  switch(valType)
+  {
+    case REG_SZ:
+    case REG_EXPAND_SZ:
+      wstr_free_string(valBuf);
+      break;
+  }
+
+  return success;
 }
 
 int main(int argc, char** argv)
@@ -664,6 +769,10 @@ int main(int argc, char** argv)
 
   convert_to_backward_slashes(key_name);
   key_name_wide = wstr_from_current(key_name);
+  if (!key_name_wide) {
+          fprintf(stderr, "%s: Failed to convert registry key from current encoding to UCS2\n", argv[0]);
+          goto exit;
+  }
 
   if (action == ACTION_DELETEKEY)
   {
@@ -691,6 +800,10 @@ int main(int argc, char** argv)
   }
 
   value_name_wide = wstr_from_current(value_name);
+  if (!value_name_wide) {
+          fprintf(stderr, "%s: Failed to convert registry value name from current encoding to UCS2\n", argv[0]);
+          goto exit;
+  }
 
   if (action == ACTION_DELETEVAL)
   {

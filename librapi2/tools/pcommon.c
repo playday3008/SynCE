@@ -180,6 +180,11 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 	DWORD last_error;
 
 	WCHAR* wide_filename = wstr_from_current(filename);
+        if (!wide_filename) {
+                synce_error("Failed to convert filename '%s' from current encoding to UCS2", filename);
+                return NULL;
+        }
+
 	AnyFile* file = (AnyFile*)calloc(1, sizeof(AnyFile));
 
 	switch (access)

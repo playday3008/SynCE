@@ -104,8 +104,22 @@ int main(int argc, char** argv)
 
 	convert_to_backward_slashes(program);
 	wide_program = wstr_from_current(program);
-	if (parameters)
+        if (!wide_program) {
+		fprintf(stderr, "%s: Failed to convert program '%s' from current encoding to UCS2\n", 
+				argv[0],
+				program);
+		goto exit;
+        }
+
+	if (parameters) {
 		wide_parameters = wstr_from_current(parameters);
+                if (!wide_parameters) {
+                        fprintf(stderr, "%s: Failed to convert parameters '%s' from current encoding to UCS2\n", 
+				argv[0],
+				program);
+                        goto exit;
+                }
+        }
 
 	memset(&info, 0, sizeof(info));
 	

@@ -95,7 +95,13 @@ static bool print_entry(CE_FIND_DATA* entry)
 	char time_string[50] = {0};
 	struct tm* time_struct = NULL;
 	char* filename = NULL;
-	
+
+	filename = wstr_to_current(entry->cFileName);
+        if (!filename) {
+                fprintf(stderr, "Failed to convert a filename to the current encoding, skipping\n");
+                return false;
+        }
+
 	/*
 	 * Print file attributes
 	 */
@@ -168,7 +174,6 @@ static bool print_entry(CE_FIND_DATA* entry)
 	 * Filename
 	 */
 
-	filename = wstr_to_current(entry->cFileName);
         printf("%s", filename);
 	wstr_free_string(filename);
 	if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -197,6 +202,11 @@ absolutize_path(const char *path)
 	}
 
 	tmp_path1 = wstr_to_current(path_w);
+        if (!tmp_path1) {
+                fprintf(stderr, "Failed to convert the \"My Documents\" path to the current encoding\n");
+                return NULL;
+        }
+
 	tmp_path2 = malloc(strlen(tmp_path1) + strlen(path) + 2);
 	snprintf(tmp_path2, strlen(tmp_path1) + strlen(path) + 2, "%s\\%s", tmp_path1, path);
 	free(tmp_path1);
@@ -260,6 +270,12 @@ static bool list_matching_files(const char* path, bool first_pass)
 	  return FALSE;
 
 	wide_path = wstr_from_current(full_path);
+        if (!wide_path) {
+                fprintf(stderr, "Failed to convert the path '%s' from the current encoding to UCS2\n", full_path);
+                free(full_path);
+                return false;
+        }
+
 	free(full_path);
 	synce_trace_wstr(wide_path);
 
@@ -288,6 +304,11 @@ static bool list_matching_files(const char* path, bool first_pass)
 		base_path = dirname(path);
 
 		entry_name = wstr_to_current(find_data->cFileName);
+                if (!entry_name) {
+                        fprintf(stderr, "Failed to convert the path to the current encoding\n");
+                        free(base_path);
+                        goto exit;
+                }
 
 		new_path = malloc(strlen(base_path) + strlen(entry_name) + 6);
 		snprintf(new_path, strlen(base_path) + strlen(entry_name) + 6, "%s\\%s\\%s", base_path, entry_name, wildcards);
@@ -297,7 +318,7 @@ static bool list_matching_files(const char* path, bool first_pass)
 		success = list_matching_files(new_path, FALSE);
 
 		free(new_path);
-		return success;
+		goto exit;
 	}
 	
 	if ((file_count == 0) && first_pass) {
@@ -317,6 +338,10 @@ static bool list_matching_files(const char* path, bool first_pass)
 			if ((find_data + i)->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				entry_name = wstr_to_current((find_data + i)->cFileName);
+                                if (!entry_name) {
+                                        fprintf(stderr, "Failed to convert a path to the current encoding, skipping.\n");
+                                        continue;
+                                }
 				printf("\n%s:\n", entry_name);
 
 				base_path = dirname(path);

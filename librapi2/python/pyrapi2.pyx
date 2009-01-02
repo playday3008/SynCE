@@ -607,7 +607,7 @@ class RAPISession:
         fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0 ) 
 
         wstr_free_string(filename_w)
-        if fileHandle == -1:
+        if fileHandle == <HANDLE> -1:
             raise RAPIError
 
         return fileHandle

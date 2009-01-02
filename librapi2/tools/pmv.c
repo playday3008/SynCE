@@ -100,10 +100,24 @@ int main(int argc, char** argv)
 
 	convert_to_backward_slashes(source);
 	wide_source = wstr_from_current(source);
+        if (!wide_source) {
+		fprintf(stderr, "%s: Failed to convert source path '%s' from current encoding to UCS2\n", 
+				argv[0],
+				source);
+		goto exit;
+        }
+
 	wide_source = adjust_remote_path(wide_source, true);
 
 	convert_to_backward_slashes(dest);
 	wide_dest   = wstr_from_current(dest);
+        if (!wide_dest) {
+		fprintf(stderr, "%s: Failed to convert dest path '%s' from current encoding to UCS2\n", 
+				argv[0],
+				source);
+		goto exit;
+        }
+
 	wide_dest   = adjust_remote_path(wide_dest, true);
 
 	if (!CeMoveFile(wide_source, wide_dest))

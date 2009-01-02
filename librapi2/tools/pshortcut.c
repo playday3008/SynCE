@@ -103,10 +103,24 @@ int main(int argc, char** argv)
 
   convert_to_backward_slashes(shortcut);
   wide_shortcut = wstr_from_current(shortcut);
+  if (!wide_shortcut) {
+          fprintf(stderr, "%s: Failed to convert shortcut name '%s' from current encoding to UCS2\n", 
+                  argv[0],
+                  shortcut);
+          goto exit;
+  }
+
   wide_shortcut = adjust_remote_path(wide_shortcut, true);
 
   convert_to_backward_slashes(target);
   wide_target = wstr_from_current(target);
+  if (!wide_target) {
+          fprintf(stderr, "%s: Failed to convert shortcut target '%s' from current encoding to UCS2\n", 
+                  argv[0],
+                  target);
+          goto exit;
+  }
+
   wide_target = adjust_remote_path(wide_target, true);
   /* Wrap target in quotes.  This is required for paths with spaces (for some reason) */
   tmp_quote = wstr_from_current("\"");

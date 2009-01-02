@@ -231,6 +231,11 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
     convert_to_backward_slashes(src_list);
 
     widestr = wstr_from_current(src_list+1);
+    if (!widestr) {
+            fprintf(stderr, "%s: Failed to convert the name '%s' from the current encoding to UCS2\n", prog_name, src_list+1);
+            return false;
+    }
+
     free(src_list);
 
     rapi_result = CeFindAllFiles(widestr, FAF_ATTRIBUTES | FAF_NAME , &itemcount, &data);
@@ -252,6 +257,10 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
 
     for (i = 0; i < itemcount; i++) {
       filename = wstr_to_current(data[i].cFileName);
+      if (!filename) {
+              fprintf(stderr, "%s: Failed to convert a filename to the current encoding, skipping\n", prog_name);
+              continue;
+      }
 
       new_src = calloc(1, strlen(source) + 1 + strlen(filename) + 1);
       new_src = strcat(new_src, source);
@@ -265,6 +274,13 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
 
       if (data[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 	widestr = wstr_from_current(new_dest);
+        if (!widestr) {
+            fprintf(stderr, "%s: Failed to convert the directory name '%s' from the current encoding to UCS2, skipping\n", prog_name, new_dest);
+            free(new_src);
+            free(new_dest);
+            continue;
+        }
+
 	rapi_result = CeCreateDirectory(widestr, NULL);
 	wstr_free_string(widestr);
 
@@ -353,7 +369,12 @@ static bool does_exist(const char* name)
       HRESULT hr;
       DWORD last_error;
 
-      tempwstr = wstr_from_utf8(name+1);
+      tempwstr = wstr_from_current(name+1);
+      if (!tempwstr) {
+              fprintf(stderr, "%s: Failed to convert the name '%s' from the current encoding to UCS2\n", prog_name, name);
+              return false;
+      }
+
       handle = CeFindFirstFile(tempwstr, &entry);
       wstr_free_string(tempwstr);
 
@@ -404,7 +425,12 @@ static bool is_dir(const char* name)
       HRESULT hr;
       DWORD last_error;
 
-      tempwstr = wstr_from_utf8(name+1);
+      tempwstr = wstr_from_current(name+1);
+      if (!tempwstr) {
+              fprintf(stderr, "%s: Failed to convert the name '%s' from the current encoding to UCS2\n", prog_name, name);
+              return false;
+      }
+
       handle = CeFindFirstFile(tempwstr, &entry);
       wstr_free_string(tempwstr);
 
@@ -516,6 +542,12 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
       BOOL rapi_result;
 
       tmpwstr = wstr_from_current(actual_dest+1);
+      if (!tmpwstr) {
+              fprintf(stderr, "%s: Failed to convert the directory name '%s' from the current encoding to UCS2\n", prog_name, actual_dest);
+              free(actual_dest);
+              return false;
+      }
+
       rapi_result = CeCreateDirectory(tmpwstr, NULL);
       wstr_free_string(tmpwstr);
 
@@ -523,6 +555,7 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
 	if (FAILED(hr = CeRapiGetError())) {
 	  fprintf(stderr, "%s: error creating directory '%s': %08x: %s\n",
 		  prog_name, actual_dest, hr, synce_strerror(hr));
+	  free(actual_dest);
 	  return false;
 	}
 
@@ -531,6 +564,7 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
 	if (last_error != ERROR_ALREADY_EXISTS) {
 	  fprintf(stderr, "%s: error creating directory '%s': %d: %s\n",
 		  prog_name, actual_dest, last_error, synce_strerror(last_error));
+	  free(actual_dest);
 	  return false;
 	}
       }
@@ -638,7 +672,7 @@ int main(int argc, char** argv)
 		else
 		{
 			WCHAR mydocuments[MAX_PATH];
-			char* mydocuments_ascii = NULL;
+			char* mydocuments_char = NULL;
 			p = strrchr(source, '/');
 
 			if (p)
@@ -668,16 +702,20 @@ int main(int argc, char** argv)
 			    goto exit;
 			  }
 
+			mydocuments_char = wstr_to_current(mydocuments);
+                        if (!mydocuments_char) {
+                                fprintf(stderr, "%s: Failed to convert the \"My Documents\" path to the current encoding", argv[0]);
+                                goto exit;
+                        }
+
 			dest = calloc(1, 1 + wstr_strlen(mydocuments) + 1 + strlen(p) + 1);
-			
-			mydocuments_ascii = wstr_to_current(mydocuments);
-			
+
 			strcat(dest, ":");
-			strcat(dest, mydocuments_ascii);
+			strcat(dest, mydocuments_char);
 			strcat(dest, "\\");
 			strcat(dest, p);
 			
-			wstr_free_string(mydocuments_ascii);
+			wstr_free_string(mydocuments_char);
 		}
 	}
 

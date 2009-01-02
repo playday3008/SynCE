@@ -346,6 +346,12 @@ HRESULT _CeRapiInvokeA( /*{{{*/
   WCHAR* wide_dll_path       = wstr_from_current(pDllPath);
   WCHAR* wide_function_name  = wstr_from_current(pFunctionName);
 
+  if ((!wide_dll_path) || (!wide_function_name)) {
+          wstr_free_string(wide_dll_path);
+          wstr_free_string(wide_function_name);
+          return E_INVALIDARG;
+  }
+
   hr = CeRapiInvoke( wide_dll_path, wide_function_name, cbInput, pInput,
       pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
 
