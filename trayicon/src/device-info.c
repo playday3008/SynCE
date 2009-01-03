@@ -1660,7 +1660,7 @@ system_info_setup_view(WmDeviceInfo *self)
   version.dwOSVersionInfoSize = sizeof(version);
 
   if (CeGetVersionEx(&version)) {
-    char *details = wstr_to_current(version.szCSDVersion);
+    char *details = wstr_to_utf8(version.szCSDVersion);
     char *platform = NULL;
 
     if (VER_PLATFORM_WIN32_CE == version.dwPlatformId)

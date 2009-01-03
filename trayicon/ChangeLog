@@ -1,3 +1,7 @@
+2009-01-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* changed a few wstr_*_current and _ascii to _utf8
+
 2008-12-13  Mark Ellis <mark@mpellis.org.uk>
 
 	* added .desktop and autostart files

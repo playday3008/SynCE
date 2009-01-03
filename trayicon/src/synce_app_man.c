@@ -144,7 +144,7 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
   LONG rapi_result;
   gboolean result = TRUE;
   HKEY app_parent_key;
-  const gchar *app_parent_key_name_ascii = NULL;
+  const gchar *app_parent_key_name_utf8 = NULL;
   WCHAR* app_parent_key_name_wide = NULL;
   WCHAR* value_name = NULL;
   DWORD app_count;
@@ -161,8 +161,8 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
   if (busy_func)
     (*busy_func)(busy_data);
 
-  app_parent_key_name_ascii = REG_PATH_SMARTPHONE_2002;
-  app_parent_key_name_wide = wstr_from_ascii(app_parent_key_name_ascii);
+  app_parent_key_name_utf8 = REG_PATH_SMARTPHONE_2002;
+  app_parent_key_name_wide = wstr_from_utf8(app_parent_key_name_utf8);
 
   rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
   wstr_free_string(app_parent_key_name_wide);
@@ -172,8 +172,8 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
   } else {
     smartphone = FALSE;
 
-    app_parent_key_name_ascii = REG_PATH_POCKETPC_2002;
-    app_parent_key_name_wide = wstr_from_ascii(app_parent_key_name_ascii);
+    app_parent_key_name_utf8 = REG_PATH_POCKETPC_2002;
+    app_parent_key_name_wide = wstr_from_utf8(app_parent_key_name_utf8);
 
     rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
     wstr_free_string(app_parent_key_name_wide);
@@ -189,7 +189,7 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
     }
   }
 
-  value_name = wstr_from_ascii("Instl");
+  value_name = wstr_from_utf8("Instl");
 
   if (busy_func)
     (*busy_func)(busy_data);
@@ -205,12 +205,12 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
       break;
 
     if (rapi_result != ERROR_SUCCESS) {
-      g_warning("%s: Unable to enumerate registry key '%s': %s", G_STRFUNC, app_parent_key_name_ascii, synce_strerror(rapi_result));
+      g_warning("%s: Unable to enumerate registry key '%s': %s", G_STRFUNC, app_parent_key_name_utf8, synce_strerror(rapi_result));
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI,
 		  _("Unable to enumerate registry key '%s': %s"),
-		  app_parent_key_name_ascii,
+		  app_parent_key_name_utf8,
 		  synce_strerror(rapi_result));
       result = FALSE;
       break;
@@ -867,7 +867,7 @@ app_uninstall(const gchar *program, GError **error)
   xmlFreeDoc(doc);
   g_debug("%s: config doc: %s", G_STRFUNC, config);
 
-  config_w = wstr_from_current((gchar *)config);
+  config_w = wstr_from_utf8((gchar *)config);
   g_free(config);
   hr = CeProcessConfig(config_w, flags, &reply_w);
   wstr_free_string(config_w);
@@ -877,7 +877,7 @@ app_uninstall(const gchar *program, GError **error)
     return TRUE;
   }
 
-  reply = wstr_to_current(reply_w);
+  reply = wstr_to_utf8(reply_w);
   g_debug("%s: reply doc: %s", G_STRFUNC, reply);
   g_set_error(error,
 	      SYNCE_APP_MAN_ERROR,

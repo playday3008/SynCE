@@ -105,7 +105,7 @@ get_device_name_via_rapi()
   WCHAR buffer[MAX_PATH];
   gchar *device_name;
 
-  key_name = wstr_from_ascii("Ident");
+  key_name = wstr_from_utf8("Ident");
   result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, key_name, 0, 0, &key_handle);
   wstr_free_string(key_name);
 
@@ -114,7 +114,7 @@ get_device_name_via_rapi()
     return NULL;
   }
 
-  key_name = wstr_from_ascii("Name");
+  key_name = wstr_from_utf8("Name");
   size = sizeof(buffer);
 
   result = CeRegQueryValueEx(key_handle, key_name, 0, &type, (LPBYTE)buffer, &size);
@@ -130,6 +130,6 @@ get_device_name_via_rapi()
     return NULL;
   }
 
-  device_name = wstr_to_ascii(buffer);
+  device_name = wstr_to_utf8(buffer);
   return device_name;
 }
