@@ -1,3 +1,7 @@
+2009-01-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/libsyncevfs.c - change wstr_*_current to _utf8
+
 2008-12-21  Mark Ellis <mark@mpellis.org.uk>
 
 	* only update mime database when installing directly

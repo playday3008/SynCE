@@ -1651,7 +1651,7 @@ static GnomeVFSResult synce_same_fs/*{{{*/
     if (split && split[0] && split[1]) {
 
             fs_a_root = g_strdup_printf("\\%s", split[1]);
-            wide_root_dir = wstr_from_current(fs_a_root);
+            wide_root_dir = wstr_from_utf8(fs_a_root);
             attributes = CeGetFileAttributes(wide_root_dir);
             wstr_free_string(wide_root_dir);
 
@@ -1671,7 +1671,7 @@ static GnomeVFSResult synce_same_fs/*{{{*/
     if (split && split[0] && split[1]) {
 
             fs_b_root = g_strdup_printf("\\%s", split[1]);
-            wide_root_dir = wstr_from_current(fs_b_root);
+            wide_root_dir = wstr_from_utf8(fs_b_root);
             attributes = CeGetFileAttributes(wide_root_dir);
             wstr_free_string(wide_root_dir);
 
@@ -1756,7 +1756,7 @@ synce_get_volume_free_space
 
     if (split && split[0] && split[1]) {
             root_dir = g_strdup_printf("\\%s", split[1]);
-            wide_root_dir = wstr_from_current(root_dir);
+            wide_root_dir = wstr_from_utf8(root_dir);
             attributes = CeGetFileAttributes(wide_root_dir);
             wstr_free_string(wide_root_dir);
 
