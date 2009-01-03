@@ -2210,7 +2210,7 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
     if (split && split[0] && split[1]) {
 
       root_dir = g_strdup_printf("\\%s", split[1]);
-      wide_root_dir = wstr_from_current(root_dir);
+      wide_root_dir = wstr_from_utf8(root_dir);
       attributes = CeGetFileAttributes(wide_root_dir);
 
       if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY)) {
