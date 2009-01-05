@@ -4,10 +4,6 @@ import sys
 cdef extern from "Python.h":
     object PyString_FromStringAndSize ( char *, int )
     
-    ctypedef struct PyThreadState
-    PyThreadState *PyEval_SaveThread()
-    void PyEval_RestoreThread(PyThreadState *_save)
-
 cdef extern from "stdlib.h":
     void *malloc(size_t size)
     void *realloc(void *ptr, size_t size)
@@ -54,35 +50,6 @@ cdef extern from "rapi.h":
     BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation)
     HRESULT CeRapiGetError()
     DWORD CeGetLastError()
-
-#
-# Wrapper functions for the C RAPI calls that will release the GIL lock
-#
-
-cdef HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply):
-    cdef HRESULT retval
-    cdef PyThreadState *_save
-    _save = PyEval_SaveThread()
-    retval = CeProcessConfig(config, flags, reply)
-    PyEval_RestoreThread(_save)
-    return retval
-
-cdef BOOL _CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh):
-    cdef BOOL retval
-    cdef PyThreadState *_save
-    _save = PyEval_SaveThread()
-    retval = CeGetSystemPowerStatusEx(pSystemPowerStatus, refresh)
-    PyEval_RestoreThread(_save)
-    return retval
-
-
-cdef BOOL _CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped):
-    cdef BOOL retval
-    cdef PyThreadState *_save
-    _save = PyEval_SaveThread()
-    retval = CeWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped)
-    PyEval_RestoreThread(_save)
-    return retval
 
 #
 # Public constants
@@ -228,7 +195,7 @@ class RAPIError(Exception):
                 self.err_code = last_error
 
     def __str__(self):
-        return str(synce_strerror(self.err_code))
+        return str(self.err_code)+": "+str(synce_strerror(self.err_code))
 
 
 class RegKey:
@@ -447,17 +414,20 @@ class RAPISession:
     def process_config(self, config, flags):
         cdef LPWSTR config_w
         cdef LPWSTR reply_w
+        cdef DWORD flags_c
+        cdef HRESULT retval
         cdef char *reply
 
         reply_w = NULL;
 
         config_w = wstr_from_utf8(config)
-        #retval = _CeProcessConfig(config_w, flags, &reply_w)
-        retval = CeProcessConfig(config_w, flags, &reply_w)
-        wstr_free_string(config_w)
+        flags_c = flags
+        with nogil:
+            retval = CeProcessConfig(config_w, flags_c, &reply_w)
+            wstr_free_string(config_w)
 
-        reply = wstr_to_utf8(reply_w)
-        wstr_free_string(reply_w)
+            reply = wstr_to_utf8(reply_w)
+            wstr_free_string(reply_w)
 
         if retval != 0:
             raise RAPIError(retval)
@@ -510,14 +480,16 @@ class RAPISession:
 
     def getSystemPowerStatus(self, refresh):
         cdef SYSTEM_POWER_STATUS_EX powerStatus
-        
-        retval = CeGetSystemPowerStatusEx( &powerStatus, 0 )
+        cdef BOOL retval
+
+        with nogil:
+            retval = CeGetSystemPowerStatusEx( &powerStatus, 0 )
         #In contrast to other functions, this returns a boolean,
         #denoting whether the call was succesfull
-        if retval == 0:
+        if retval == FALSE:
             raise RAPIError
 
-		#Now construct the dictionary:
+        #Now construct the dictionary:
         result = dict()
         result["ACLineStatus"] = powerStatus.ACLineStatus
         result["BatteryFlag"]               = powerStatus.BatteryFlag
@@ -638,13 +610,19 @@ class RAPISession:
 
 
     def writeFile( self, fileHandle, buffer, numberOfBytesToWrite ):
+        cdef HANDLE hFile
+        cdef char * lpBuffer
+        cdef DWORD nNumberOfBytesToWrite
         cdef DWORD numberOfBytesWritten
-        cdef DWORD dwNumberOfBytesToWrite
-        cdef char* c_buffer
+        cdef BOOL retval
 
-        c_buffer = buffer 
-        retval = _CeWriteFile( fileHandle, c_buffer , numberOfBytesToWrite, &numberOfBytesWritten, NULL)
-        if retval == 0:
+        hFile = fileHandle
+        lpBuffer = buffer
+        nNumberOfBytesToWrite = numberOfBytesToWrite
+        with nogil:
+            retval = CeWriteFile( hFile, lpBuffer , nNumberOfBytesToWrite, &numberOfBytesWritten, NULL)
+
+        if retval == FALSE:
             raise RAPIError
 
         return numberOfBytesWritten
