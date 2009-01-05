@@ -1,3 +1,9 @@
+2009-01-05  Jonny Lamb  <jonny@debian.org>
+
+	* src/odccm.conf: Fix the permissions of odccm on the system bus. The
+	only reason it worked before was because the default configuration was
+	broken. See CVE-2008-4311 for more details.
+
 2008-10-28  Mark Ellis <mark@mpellis.org.uk>
 
 	* src/odccm-connection-broker.c - close fd used to pass connection
