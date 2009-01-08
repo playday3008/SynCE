@@ -1,3 +1,7 @@
+2009-01-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* some improvements to wstr conversion handling
+
 2008-12-18  Mark Ellis  <mark@mpellis.org.uk>
 
 	* configure.ac.in - require at least python 2.3, pyrex doesn't

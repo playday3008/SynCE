@@ -2,6 +2,7 @@
 #include "strbuf.h"
 #include <stdlib.h>
 #include <string.h>
+#include <synce_log.h>
 
 static void strbuf_enlarge(StrBuf *strbuf, size_t size)
 {
@@ -52,6 +53,11 @@ StrBuf* strbuf_append_wstr(StrBuf* strbuf, WCHAR* wstr)
 	if (wstr)
 	{
 		char* ascii_str = wstr_to_ascii(wstr);
+                if (!ascii_str) {
+                        synce_warning("Failed to convert UCS2 string to ascii");
+                        return strbuf;
+                }
+
 		strbuf_append(strbuf, ascii_str);
 		wstr_free_string(ascii_str);
 	}

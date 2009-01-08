@@ -108,25 +108,33 @@ static const char* data_type_as_string(uint16_t dataType)
 
 void decode_directory(uint8_t* buffer)
 {
-	char* ascii = wstr_to_ascii((WCHAR*)(buffer + 4));
-	printf("Directory: \"%s\"\n", ascii);
-	wstr_free_string(ascii);
+	char* buffer_c = wstr_to_current((WCHAR*)(buffer + 4));
+        if (!buffer_c) {
+                fprintf(stderr, "Failed to convert directory to current encoding\n");
+                return;
+        }
+	printf("Directory: \"%s\"\n", buffer_c);
+	wstr_free_string(buffer_c);
 }
 
 void decode_file(uint8_t* buffer, size_t size, const char* filename)
 {
 	WCHAR* wide   = (WCHAR*)(buffer + 4);
 	size_t extra  = 6 + 2 * wstrlen(wide);
-	char* ascii   = wstr_to_ascii(wide);
+	char* buffer_c   = wstr_to_current(wide);
+        if (!buffer_c) {
+                fprintf(stderr, "Failed to convert file contents to current encoding\n");
+                return;
+        }
 
-	printf("File: \"%s\"\n", ascii);
+	printf("File: \"%s\"\n", buffer_c);
 
 	if (filename)
 	{
 		FILE* file = NULL;
 		 
 		if (0 == strcmp(filename, "-"))
-			filename = ascii;
+			filename = buffer_c;
 		
 		file = fopen(filename, "w");
 		if (file)
@@ -143,7 +151,7 @@ void decode_file(uint8_t* buffer, size_t size, const char* filename)
 	else	
 		dump(buffer + extra, size - extra); 
 
-	wstr_free_string(ascii);
+	wstr_free_string(buffer_c);
 }
 
 bool decode_database_stream(uint8_t* buffer, unsigned id)
@@ -190,9 +198,13 @@ bool decode_database_stream(uint8_t* buffer, unsigned id)
 
 			case CEVT_LPWSTR:  
 				{
-					char* ascii = wstr_to_ascii(propvals[i].val.lpwstr);
-					printf("\"%s\"", ascii);
-					wstr_free_string(ascii);
+					char* buffer_c = wstr_to_current(propvals[i].val.lpwstr);
+                                        if (!buffer_c) {
+                                                fprintf(stderr, "Failed to convert data to current encoding\n");
+                                        } else {
+                                                printf("\"%s\"", buffer_c);
+                                                wstr_free_string(buffer_c);
+                                        }
 				}
 				break;
 

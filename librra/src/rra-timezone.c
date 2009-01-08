@@ -256,8 +256,16 @@ int main(int argc, char** argv)
 
     case FORMAT_RAW:
       {
-        char* ascii_standard_name = wstr_to_ascii(tzi.StandardName);
-        char* ascii_daylight_name = wstr_to_ascii(tzi.DaylightName);
+        char* standard_name = wstr_to_current(tzi.StandardName);
+        if (!standard_name) {
+                fprintf(stderr, "Failed to convert StandardName to current encoding");
+                standard_name = strdup("");
+        }
+        char* daylight_name = wstr_to_current(tzi.DaylightName);
+        if (!daylight_name) {
+                fprintf(stderr, "Failed to convert DaylightName to current encoding");
+                daylight_name = strdup("");
+        }
 
         fprintf(output,
             "Bias:                  %i\n"
@@ -273,20 +281,20 @@ int main(int argc, char** argv)
             "DaylightBias:          %i\n"
             ,
             tzi.Bias,
-            ascii_standard_name,
+            standard_name,
             tzi.StandardMonthOfYear, month_string(tzi.StandardMonthOfYear),
             tzi.StandardInstance, instance_string(tzi.StandardInstance),
             tzi.StandardStartHour,
             tzi.StandardBias,
-            ascii_daylight_name,
+            daylight_name,
             tzi.DaylightMonthOfYear, month_string(tzi.DaylightMonthOfYear),
             tzi.DaylightInstance, instance_string(tzi.DaylightInstance),
             tzi.DaylightStartHour,
             tzi.DaylightBias
               );
 
-            wstr_free_string(ascii_standard_name);
-            wstr_free_string(ascii_daylight_name);
+            wstr_free_string(standard_name);
+            wstr_free_string(daylight_name);
       }
       break;
 
