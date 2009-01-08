@@ -62,6 +62,8 @@ void _synce_log_wstr(int level, const char* file, int line, const char* name,
   if (level <= current_log_level)
   {
     char* str = wstr_to_current(wstr);
+    if (!str)
+            str = strdup("");
 
     fprintf(stderr, "[%s:%i] %s=\"%s\"\n", file, line, name, str);
 

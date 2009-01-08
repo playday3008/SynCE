@@ -1,3 +1,10 @@
+2009-01-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/synce_log.c - check for incomplete conversion in
+	  wstr logging
+	* man/wstr_to_ascii.3 - notes about NULL return from
+	  incomplete conversion
+
 2008-12-23  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/synce_log.c - use wstr_to_current() in wstr logging 

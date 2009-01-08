@@ -71,10 +71,14 @@ long. No bounds checking is performed.
 The remaining functions perform standard string operations on wide char strings.
 .sp
 .SH "RETURN VALUE"
-.BR wstr_to_xxx (),
-.BR wstr_from_xxx (),
+.BR wstr_to_xxx ()
+and
+.BR wstr_from_xxx ()
+return pointers to the allocated strings, or NULL on failure, which will occur
+if a source character cannot be represented in the destination encoding.
+.sp
 .BR wstrdup ()
-return pointers to allocated strings.
+return a pointer to the allocated string, or NULL on failure.
 .BR wstrlen ()
 returns the string length.
 .BR wstrcpy ()
@@ -91,6 +95,6 @@ returns true if
 .BR a
 and
 .BR b
-are equal, false otherwise..
+are equal, false otherwise.
 .SH "SEE ALSO"
 .BR synce (7)
