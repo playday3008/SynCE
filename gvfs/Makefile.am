@@ -2,7 +2,8 @@ SUBDIRS = \
 	daemon \
 	pixmaps \
 	po \
-	data
+	data \
+	gvfs
 
 EXTRA_DIST = \
 	intltool-extract.in	\

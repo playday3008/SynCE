@@ -1,32 +1,6 @@
-
 gvfs_src_dir = $(top_srcdir)/@with_gvfs_source@
 
-mountdir = $(datadir)/gvfs/mounts
-
-INCLUDES =					\
-	-I$(gvfs_src_dir)			\
-	-I$(gvfs_src_dir)/common		\
-	-I$(gvfs_src_dir)/daemon		\
-	$(GLIB_CFLAGS) $(DBUS_CFLAGS) 		\
-	-DDBUS_API_SUBJECT_TO_CHANGE		\
-	-DLIBEXEC_DIR=\"$(libexecdir)/\" 	\
-	-DMOUNTABLE_DIR=\"$(mountdir)/\" 	\
-	-DGVFS_LOCALEDIR=\""$(localedir)"\"     \
-	-DG_DISABLE_DEPRECATED
-
-noinst_LTLIBRARIES = libdaemon.la
-
-libraries = \
-	libdaemon.la				\
-	-lgvfscommon				\
-	$(GLIB_LIBS) $(DBUS_LIBS)
-
-%.mount: %.mount.in ../config.log
-	sed -e "s|\@libexecdir\@|$(libexecdir)|" $< > $@
-
-libexec_PROGRAMS=gvfsd-synce
-
-libdaemon_la_SOURCES = \
+libdaemon_sources = \
 	$(gvfs_src_dir)/daemon/gvfsdaemon.c $(gvfs_src_dir)/daemon/gvfsdaemon.h \
 	$(gvfs_src_dir)/daemon/gvfsbackend.c $(gvfs_src_dir)/daemon/gvfsbackend.h \
 	$(gvfs_src_dir)/daemon/gvfschannel.c $(gvfs_src_dir)/daemon/gvfschannel.h \
@@ -65,27 +39,23 @@ libdaemon_la_SOURCES = \
 	$(gvfs_src_dir)/daemon/gvfsjobqueryattributes.c $(gvfs_src_dir)/daemon/gvfsjobqueryattributes.h \
 	$(gvfs_src_dir)/daemon/gvfsjobcreatemonitor.c $(gvfs_src_dir)/daemon/gvfsjobcreatemonitor.h \
 	$(gvfs_src_dir)/daemon/dbus-gmain.h $(gvfs_src_dir)/daemon/dbus-gmain.c \
-	$(gvfs_src_dir)/daemon/gvfskeyring.h $(gvfs_src_dir)/daemon/gvfskeyring.c \
-	$(NULL)
+	$(gvfs_src_dir)/daemon/gvfskeyring.h $(gvfs_src_dir)/daemon/gvfskeyring.c
 
-mount_in_files = synce.mount.in
-mount_DATA = synce.mount
-
-EXTRA_DIST = $(mount_in_files)
-
-DISTCLEANFILES = $(mount_DATA)
-
-gvfsd_synce_SOURCES = \
-	gvfsbackendsynce.c gvfsbackendsynce.h \
-	$(gvfs_src_dir)/daemon/daemon-main.c $(gvfs_src_dir)/daemon/daemon-main.h \
+daemon_sources = \
+	$(gvfs_src_dir)/daemon/daemon-main.c \
+	$(gvfs_src_dir)/daemon/daemon-main.h \
 	$(gvfs_src_dir)/daemon/daemon-main-generic.c 
 
-gvfsd_synce_CPPFLAGS = \
-	-DBACKEND_HEADER=gvfsbackendsynce.h \
-	-DDEFAULT_BACKEND_TYPE=synce \
-	-DMAX_JOB_THREADS=1 \
-	$(LIBRAPI2_CFLAGS) \
-	-DBACKEND_TYPES='"synce", G_VFS_TYPE_BACKEND_SYNCE,'
+EXTRA_DIST = 
 
-gvfsd_synce_LDADD = $(libraries) $(LIBRAPI2_LIBS)
+if LOCAL_LIBDAEMON_SRC
+
+EXTRA_DIST += $(libdaemon_sources) $(daemon_sources)
+
+else
+
+dist-hook:
+	cp $(libdaemon_sources) $(daemon_sources) $(distdir)
+
+endif
 

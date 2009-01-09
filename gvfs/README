@@ -3,26 +3,30 @@ replacement for gnome-vfs, allowing applications to access a
 variety of filesystems in userspace, in this case a Windows
 Mobile device via SynCE.
 
-Most of the common operations are now implemented.
-
 
 Building
 --------
 Gvfs is still new, and there is not yet an easy way of building
-3rd party, 'out of tree' backends. A number of source files from
-the main gvfs tree are required. There are two ways to build this
-package.
+3rd party, 'out of tree' backends, due to the lack of a public
+interface. Therefore a number of source files from the main gvfs
+source tree are required.
 
-1) Have a built source tree of gvfs available, and pass 
-   --with-gvfs-source=<path-to-source> to this package's configure
-   script.
 
-2) Have a source tree of gvfs available. In the make-dist
-   subdirectory, edit make-dist.sh and change @with_gvfs_source@
-   to the root of this tree. Run make-dist.sh, which will copy the
-   required files and change build files. At this point you can
-   build normally or 'make dist', for example.
+1) If you have obtained this software as a package, it most likely
+   includes the required files from gvfs, and can be built with
+   the standard ./configure; make; make install.
 
+   If your distribution uses a different version of gvfs, you can
+   pass --with-gvfs-source=<path-to-source> to this package's
+   configure script.
+
+2) If you instead obtained this directly from synce svn, the
+   required gvfs source files are only dummy files, you must use
+   the --with-gvfs-source option to configure.
+
+   NB. when 'make dist' is used with this configure option, the
+   resulting package will contain the source files from the
+   source pointed to.
 
 
 This software may well crash, all bug reports are welcome.
