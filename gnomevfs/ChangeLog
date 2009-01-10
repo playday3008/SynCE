@@ -1,3 +1,7 @@
+2009-01-10  Mark Ellis <mark@mpellis.org.uk>
+
+	* 0.13 release
+
 2009-01-03  Mark Ellis <mark@mpellis.org.uk>
 
 	* src/libsyncevfs.c - change wstr_*_current to _utf8

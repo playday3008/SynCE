@@ -1086,3 +1086,6 @@ Minor update for change in pyrapi2.RAPIError
 Make -c command line option work more as expected, not silently adding .synce.
 Report useful errors from problems with config files.
 
+10/01/2009 - 192200 Mark Ellis
+------------------------------
+0.13 release

@@ -1,3 +1,7 @@
+2009-01-10  Mark Ellis <mark@mpellis.org.uk>
+
+	* 0.4 release
+
 2008-10-26  Mark Ellis <mark@mpellis.org.uk>
 
 	* src/orange.c - improved error reporting, refuse to

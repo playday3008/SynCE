@@ -1,3 +1,7 @@
+2009-01-10  Mark Ellis <mark@mpellis.org.uk>
+
+	* 0.2 release
+
 2009-01-09  Mark Ellis <mark@mpellis.org.uk>
 
 	* rework the build system, now require appropriate gvfs source
