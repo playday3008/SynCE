@@ -1,3 +1,7 @@
+2009-01-11  Jonny Lamb  <jonny@debian.org>
+
+	* lib/Makefile.am: Added -lm.
+
 2009-01-10  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.13 release

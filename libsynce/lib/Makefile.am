@@ -24,7 +24,7 @@ libsynce_la_SOURCES = \
 	wstr.c
 
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libsynce_la_LIBADD  = config/libconfig.la @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@ @HAL_LIBS@
+libsynce_la_LIBADD  = config/libconfig.la -lm @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@ @HAL_LIBS@
 
 include_HEADERS = \
 	synce.h \
