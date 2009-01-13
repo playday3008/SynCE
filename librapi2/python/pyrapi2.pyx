@@ -10,10 +10,10 @@ cdef extern from "stdlib.h":
     void free(void *ptr)
 
 cdef extern from "synce.h":
-    char *wstr_to_utf8(LPCWSTR unicode)
-    LPWSTR wstr_from_utf8(char *utf8)
-    void wstr_free_string(void *str)
-    char* synce_strerror(DWORD error)
+    char *wstr_to_utf8(LPCWSTR unicode) nogil
+    LPWSTR wstr_from_utf8(char *utf8) nogil
+    void wstr_free_string(void *str) nogil
+    char* synce_strerror(DWORD error) nogil
 
 cdef extern from "synce_log.h":
     void synce_log_set_level(int level)
@@ -22,7 +22,7 @@ cdef extern from "rapi.h":
     void *rapi_connection_from_name(char *device_name)
     void rapi_connection_select(void *connection)
     HRESULT CeRapiInit()
-    HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
+    HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply) nogil
     LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition)
     LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
     LONG CeRegCloseKey(HKEY hKey)
@@ -35,13 +35,13 @@ cdef extern from "rapi.h":
     HRESULT CeSyncResume()
     HRESULT CeSyncPause()
     HRESULT CeSyncTimeToPc()
-    BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh)
+    BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh) nogil
     DWORD CeGetDiskFreeSpaceEx( LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes)
     BOOL CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray)
 
     BOOL CeCloseHandle(HANDLE hObject)
     HANDLE CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
-    BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
+    BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) nogil
     BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 
     BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
