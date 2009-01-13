@@ -42,8 +42,8 @@ PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.11)
 
 AC_ARG_WITH(gvfs-source, [  --with-gvfs-source=PATH     Location of the GVFS source tree.],
             with_gvfs_source="$withval", with_gvfs_source="no")
-AM_CONDITIONAL(LOCAL_LIBDAEMON_SRC, test x"$with_gvfs_source" == xno)
-if test "x${with_gvfs_source}" == "xno"; then
+AM_CONDITIONAL(LOCAL_LIBDAEMON_SRC, test "x$with_gvfs_source" == xno)
+if test "x$with_gvfs_source" == "xno"; then
     AC_MSG_NOTICE([Assuming an internal gvfs source tree])
     with_gvfs_source="${srcdir}/gvfs"
 else
