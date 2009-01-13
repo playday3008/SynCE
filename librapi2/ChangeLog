@@ -1,5 +1,6 @@
 2009-01-13  Mark Ellis  <mark@mpellis.org.uk>
 
+	* 0.13.1 release
 	* python/pyrapi2.pyc - flagged functions that appear in nogil
 	  sections as nogil, fixes build failure with pyrex > 0.9.8.1
 
