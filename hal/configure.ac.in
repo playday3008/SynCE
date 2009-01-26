@@ -32,7 +32,7 @@ PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60])
 
 dnl Check for earlier version of dbus-glib
 PKG_CHECK_MODULES(DBUSGLIB074, [dbus-glib-1 >= 0.74], [early_dbusglib=no], [early_dbusglib=yes])
-if test "x$early_dbusglib" == "xyes"; then
+if test "x$early_dbusglib" = "xyes"; then
    AC_DEFINE_UNQUOTED([EARLY_DBUSGLIB], [1], [dbus-glib older than 0.74])
 fi
 
@@ -43,7 +43,7 @@ dnl Check for override of default hal addon dir
 AC_MSG_CHECKING([hal addon dir ...])
 AC_ARG_WITH(hal-addon-dir, [  --with-hal-addon-dir=PATH     Location of the hal addon scripts.],
             with_hal_addon_dir="$withval", with_hal_addon_dir="no")
-if test "x${with_hal_addon_dir}" == "xno"; then
+if test "x${with_hal_addon_dir}" = "xno"; then
     hal_addon_dir="`pkg-config --variable=libdir hal`/hal"
 else
     hal_addon_dir="$with_hal_addon_dir"
@@ -53,8 +53,8 @@ AC_SUBST(hal_addon_dir)
 
 
 AC_ARG_ENABLE(bluetooth-support, AC_HELP_STRING([--enable-bluetooth-support], [Build in bluetooth support]),enable_bluetooth_support="$enableval",enable_bluetooth_support=no)
-AM_CONDITIONAL(ENABLE_BLUETOOTH_SUPPORT, test x"$enable_bluetooth_support" == xyes)
-if test x"$enable_bluetooth_support" == xyes; then
+AM_CONDITIONAL(ENABLE_BLUETOOTH_SUPPORT, test "x$enable_bluetooth_support" = "xyes")
+if test "x$enable_bluetooth_support" = "xyes"; then
        AC_DEFINE(ENABLE_BLUETOOTH_SUPPORT, 1, [Building in bluetooth support])
 fi
 
