@@ -1,5 +1,6 @@
 2009-01-26  Mark Ellis <mark@mpellis.org.uk>
 
+	* 0.13.1 release
 	* configure.ac.in - fixed non-POSIX conditionals
 
 2009-01-10  Mark Ellis <mark@mpellis.org.uk>
