@@ -1,3 +1,8 @@
+2009-01-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* improve readability of endian section of synce.h, add
+	  big-endian conversion macros
+
 2009-01-11  Jonny Lamb  <jonny@debian.org>
 
 	* lib/Makefile.am: Added -lm.

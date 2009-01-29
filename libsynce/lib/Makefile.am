@@ -1,5 +1,3 @@
-AM_CFLAGS = @DBUS_CFLAGS@ @HAL_CFLAGS@
-
 INCLUDES = -I..
 
 ## create this library
@@ -7,7 +5,6 @@ lib_LTLIBRARIES = libsynce.la
 
 ## use these sources
 libsynce_la_SOURCES = \
-	bswap.c \
 	datetype.c \
 	errors.c \
 	files.c \
@@ -23,6 +20,11 @@ libsynce_la_SOURCES = \
 	time_fields.c \
 	wstr.c
 
+if IMPLEMENT_BSWAP_XX
+libsynce_la_SOURCES += bswap.c
+endif
+
+libsynce_la_CFLAGS = @DBUS_CFLAGS@ @HAL_CFLAGS@
 libsynce_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libsynce_la_LIBADD  = config/libconfig.la -lm @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@ @HAL_LIBS@
 

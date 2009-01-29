@@ -135,7 +135,7 @@ AC_DEFINE_UNQUOTED(ENABLE_HAL_SUPPORT, $hal, [Define to 1 if you want hal suppor
 
 dnl Checks for header files.
 
-dnl Big-endian stuff
+dnl Endian stuff
 AC_SUBST(WORDS_BIGENDIAN)
 AC_SUBST(BYTESWAP_HEADER,dummy)
 AC_SUBST(HAVE_BYTESWAP_HEADER,0)
@@ -144,11 +144,14 @@ AC_C_BIGENDIAN()
 
 if test "$ac_cv_c_bigendian" = yes; then
   WORDS_BIGENDIAN=1
-  AC_CHECK_HEADERS(sys/byteswap.h,[BYTESWAP_HEADER=sys/byteswap.h; HAVE_BYTESWAP_HEADER=1])
-  AC_CHECK_HEADERS(byteswap.h,    [BYTESWAP_HEADER=byteswap.h;     HAVE_BYTESWAP_HEADER=1])
 else
   WORDS_BIGENDIAN=0
 fi
+
+AC_CHECK_HEADERS(sys/byteswap.h,[BYTESWAP_HEADER=sys/byteswap.h; HAVE_BYTESWAP_HEADER=1])
+AC_CHECK_HEADERS(byteswap.h,    [BYTESWAP_HEADER=byteswap.h;     HAVE_BYTESWAP_HEADER=1])
+
+AM_CONDITIONAL(IMPLEMENT_BSWAP_XX, test "x$HAVE_BYTESWAP_HEADER" = "x0")
 
 dnl Check where uint16_t and uint32_t may be found
 AC_SUBST(INT_HEADER)
