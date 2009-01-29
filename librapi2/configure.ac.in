@@ -59,7 +59,7 @@ dnl Checks for libraries.
 AC_LIB_RPATH
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.12)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.14)
 
 dnl Checks for header files.
 

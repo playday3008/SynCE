@@ -1,3 +1,12 @@
+2009-01-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/support/rapi_buffer.c - check buffer has space for trailing
+	  NULL in rapi_buffer_read_string()
+	* src/rapi2/registry2.c - buffer and parameter checks and fixes
+	* tools/synce-registry.c - tidy up and various fixes; better display
+	  and support for more value types; enable key and value delete;
+	* configure.ac.in - depend on libsynce >= 0.14 for byteswap macros
+
 2009-01-13  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.13.1 release

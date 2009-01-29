@@ -87,6 +87,10 @@ LONG _CeRegQueryValueEx2(
 {
 	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
+
+        if (lpData && (!lpcbData))
+                return ERROR_INVALID_PARAMETER;
+
 	rapi_context_begin_command(context, 0x37);
 	rapi_buffer_write_uint32(context->send_buffer, hKey);
 	rapi2_buffer_write_string(context->send_buffer, lpValueName);
@@ -105,24 +109,24 @@ LONG _CeRegQueryValueEx2(
 	}
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
 
-	if (ERROR_SUCCESS == return_value)
-	{
-        DWORD type = 0;
+        if (ERROR_SUCCESS == return_value) {
+                DWORD tmp_dword = 0;
+                DWORD data_buf_size = 0;
 
-        rapi_buffer_read_uint32(context->recv_buffer, &type);
-        rapi_buffer_read_uint32(context->recv_buffer, (uint32_t*)lpcbData);
+                rapi_buffer_read_uint32(context->recv_buffer, &tmp_dword);
+                if (lpType)
+                        *lpType = tmp_dword;
 
-        if (lpType)
-            *lpType = type;
+                rapi_buffer_read_uint32(context->recv_buffer, &tmp_dword);
+                if (lpcbData) {
+                        data_buf_size = *lpcbData;
+			*lpcbData = tmp_dword;
+                }
 
-        if (lpData) {
-            if (REG_DWORD == type) {
-                rapi_buffer_read_uint32(context->recv_buffer, (uint32_t *) lpData);
-            } else {
-                rapi_buffer_read_data(context->recv_buffer, lpData, *lpcbData);
-            }
+                if (lpData) {
+                        rapi_buffer_read_data(context->recv_buffer, lpData, *lpcbData > data_buf_size ? data_buf_size : *lpcbData);
+                }
         }
-    }
 #if 0
 	else
 	{
@@ -213,13 +217,15 @@ LONG _CeRegQueryInfoKey2(
 	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
+        if (lpClass && (!lpcbClass))
+                return ERROR_INVALID_PARAMETER;
+
 	rapi_context_begin_command(context, 0x36);
 	rapi_buffer_write_uint32        (context->send_buffer, hKey);
 	rapi_buffer_write_uint32        (context->send_buffer, lpcbClass ? *lpcbClass : 0 );
 
 	//lpftLastWriteTime, this should be put to 0
-	rapi_buffer_write_uint32        (context->send_buffer, 0 );
-
+	rapi_buffer_write_uint32        (context->send_buffer, 0);
 
 	if ( !rapi2_context_call(context) )
 		return ERROR_GEN_FAILURE;
@@ -227,20 +233,17 @@ LONG _CeRegQueryInfoKey2(
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
 
-	
-	
-	if (ERROR_SUCCESS == return_value)
+       	if (ERROR_SUCCESS == return_value)
 	{
 		DWORD foo = 0 ; 
 		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
+		if (lpcbClass)
+			*lpcbClass = foo ; 
 		if (lpClass)
 		{
-			*lpcbClass = foo ;
 			rapi_buffer_read_string(context->recv_buffer, lpClass, lpcbClass );
-
 		}
 
-		
 		rapi_buffer_read_uint32 (context->recv_buffer, &foo ) ; 
 		if (lpcSubKeys)
 			*lpcSubKeys = foo ; 
@@ -284,74 +287,56 @@ LONG _CeRegEnumValue2(
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
 	rapi_buffer_write_uint32         (context->send_buffer, dwIndex);
 
-	
-	
-	//After some testing, turned out that we need to tell the device the
-	//size of the buffer we have on our side. BUT, you are not allowed to 
-	//send 0, probably you tell the device how much total you expect for the
-	//string to be in the reply of the device, which includes the actual 
-	//length of the string
-	//
-	//The device reports |lenght|string
-	//
-	//If we send the value 00, this results in a problem, since the device
-	//can't even send the legth of the string.
-	//The length reported by the device should be 1 less then the value 
-	
-	//So if the user is not interested in the value 
-	//(i.e. pcbData, or lpcbValueName is null) then send value 1
-	
+        /* a NULL lpszValueName is an error */
+        if (!lpszValueName)
+                return ERROR_INVALID_PARAMETER;
+
+        /* The value name buffer is not optional, if we are given zero as the size let the device flag the error */
+	rapi_buffer_write_uint32(context->send_buffer, lpcbValueName ? *lpcbValueName : 0);
+
 	//Furthermore, DON'T use the write_optional, for some reason 
 	//that does not work, at writes too many things to the send buffer
-	rapi_buffer_write_uint32(context->send_buffer, lpcbValueName ? *lpcbValueName : 1 );
-	rapi_buffer_write_uint32(context->send_buffer, lpcbData ? *lpcbData : 1 );
+
+        if (lpData && (!lpcbData))
+                return ERROR_INVALID_PARAMETER;
+
+	rapi_buffer_write_uint32(context->send_buffer, lpcbData ? *lpcbData : 0 );
 
 	if ( !rapi2_context_call(context) )
 		return false;
 
-
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
-	
 
+	//
+	//The device reports |lenght|string
+	//
 
 	if (ERROR_SUCCESS == return_value)
 	{
-		DWORD foo ; 
+		DWORD tmp_dword;
+                DWORD data_buf_size = 0;
 
-		//If the user wants to know the valuename
-		if (lpszValueName){
-			//First read the valuename		
-			rapi_buffer_read_string(context->recv_buffer, lpszValueName, lpcbValueName ) ; 
-			//Just to be sure for the moment:
-			lpszValueName[*lpcbValueName] = 0 ; 
-		}
-		else{
-			//Other the value 0 will be printed to the buffer by the device, indicating
-			//the length of the string sent
-			rapi_buffer_read_uint32(context->recv_buffer, &foo) ; 
-		}
+                /* read the valuename */
+                rapi_buffer_read_string(context->recv_buffer, lpszValueName, lpcbValueName ) ; 
 
-	
 		//Then read the type, this is always returned by the device
 		//Just skip the value if it is not needed.
-		foo = 0 ; 
-        rapi_buffer_read_uint32(context->recv_buffer, &foo );
-        if (lpType)
-            *lpType = foo ;
+                tmp_dword = 0;
+                rapi_buffer_read_uint32(context->recv_buffer, &tmp_dword);
+                if (lpType)
+                        *lpType = tmp_dword;
 
-		
 		//Then read the data if needed
-        rapi_buffer_read_uint32(context->recv_buffer, &foo );
-        if (lpData) {
-			*lpcbData = foo ; 
+                rapi_buffer_read_uint32(context->recv_buffer, &tmp_dword);
+                if (lpcbData) {
+                        data_buf_size = *lpcbData;
+			*lpcbData = tmp_dword;
+                }
 
-            if (REG_DWORD == *lpType) {
-                rapi_buffer_read_uint32(context->recv_buffer, (uint32_t *) lpData);
-            } else {
-                rapi_buffer_read_data(context->recv_buffer, lpData, *lpcbData);
-            }
-        }
+                if (lpData) {
+                        rapi_buffer_read_data(context->recv_buffer, lpData, *lpcbData > data_buf_size ? data_buf_size : *lpcbData);
+                }
 	}
 
 	return return_value;
@@ -371,13 +356,17 @@ LONG _CeRegEnumKeyEx2(
 	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
+        if (lpClass && (!lpcbClass))
+                return ERROR_INVALID_PARAMETER;
+
 	rapi_context_begin_command(context, 0x30);
 	rapi_buffer_write_uint32         (context->send_buffer, hKey);
 	rapi_buffer_write_uint32         (context->send_buffer, dwIndex);
 
-    rapi_buffer_write_uint32(context->send_buffer, *lpcbName);
+        /* lpcbName is not optional, but let the device catch the problem */
+        rapi_buffer_write_uint32(context->send_buffer, lpcbName ? *lpcbName : 0);
 	rapi_buffer_write_uint32(context->send_buffer, lpcbClass ? *lpcbClass : 0 );
-    rapi_buffer_write_uint32(context->send_buffer, 0);
+	rapi_buffer_write_uint32(context->send_buffer, 0);
 
 
 	if ( !rapi2_context_call(context) )
@@ -387,7 +376,7 @@ LONG _CeRegEnumKeyEx2(
 	rapi_buffer_read_int32(context->recv_buffer, &return_value);
 
 	if (ERROR_SUCCESS == return_value)
-    {
+	{
 		if (lpName)
 		{
 			rapi_buffer_read_string(context->recv_buffer, lpName, lpcbName );
@@ -396,7 +385,7 @@ LONG _CeRegEnumKeyEx2(
 		{
 			rapi_buffer_read_string(context->recv_buffer, lpClass, lpcbClass );
 		}
-    }
+	}
 
 	return return_value;
 }

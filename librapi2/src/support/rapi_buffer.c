@@ -423,9 +423,9 @@ bool rapi_buffer_read_string(RapiBuffer* buffer, LPWSTR unicode, LPDWORD size)
 		return false;
 	rapi_buffer_trace("exact_size = %i = 0x%x", exact_size, exact_size);
 
-	if ( exact_size > *size )
+	if ( (exact_size+1) > *size )
 	{
-		rapi_buffer_error("buffer too small (have %i bytes, need %i bytes)", *size, exact_size);
+		rapi_buffer_error("buffer too small (have %i bytes, need %i bytes)", *size, (exact_size+1));
 		return false;
 	}
 
@@ -628,13 +628,13 @@ fail:
 void rapi_buffer_debug_dump_buffer_from_current_point( char* desc, RapiBuffer* buffer)
 {
 	uint8_t* buf = (uint8_t*)buffer->data;  
-	size_t len = buffer->bytes_used ;
+	size_t len = buffer->bytes_used;
 	size_t i, j;
 	char hex[8 * 3 + 1];
 	char chr[8 + 1];
 
 
-	printf("%s (%zd remaining bytes):\n", desc, len);
+	printf("%s (%u bytes, %u remaining bytes):\n", desc, buffer->bytes_used, (buffer->bytes_used - buffer->read_index));
 	for (i = buffer->read_index ; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
 			if (j + i >= len) {
