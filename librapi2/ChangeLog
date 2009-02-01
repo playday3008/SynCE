@@ -1,3 +1,10 @@
+2009-02-01  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi/database.c - more parameter checking, enable open
+	  database by name
+	* src/rapi/misc.c - fix database data translation in CeOidGetInfo
+	* tools/ - add prototype database tool
+
 2009-01-29  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/support/rapi_buffer.c - check buffer has space for trailing

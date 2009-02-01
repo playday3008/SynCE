@@ -193,6 +193,7 @@ BOOL _CeOidGetInfo(/*{{{*/
 	RapiContext* context = rapi_context_current();
 	BOOL result = false;
 	uint16_t size = 0;
+        uint i;
 
 	if (!poidInfo)
 	{
@@ -238,13 +239,47 @@ BOOL _CeOidGetInfo(/*{{{*/
 			break;
 
 		case OBJTYPE_DATABASE:
-			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
-				goto fail;
-			synce_trace("size = %i", size);
 
-			/* XXX: not portable to big-endian CPUs! */
-			if ( !rapi_buffer_read_data(context->recv_buffer, 4 + (char*)poidInfo, size) )
+                        /* What were MS thinking ??!! 
+                           The first uint16 appears to be the length of the flags (DWORD) and
+                           name (NULL terminated WSTR)
+                        */
+
+			if ( !rapi_buffer_read_uint16(context->recv_buffer, &size) )
 				return false;
+
+			if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.dwFlags) )
+				return false;
+
+
+			if ( !rapi_buffer_read_data(context->recv_buffer, &poidInfo->u.infDatabase.szDbaseName, size - sizeof(DWORD)) )
+				return false;
+
+			if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.dwDbaseType) )
+				return false;
+
+			if ( !rapi_buffer_read_uint16(context->recv_buffer, &poidInfo->u.infDatabase.wNumRecords) )
+				return false;
+
+			if ( !rapi_buffer_read_uint16(context->recv_buffer, &poidInfo->u.infDatabase.wNumSortOrder) )
+				return false;
+
+			if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.dwSize) )
+				return false;
+
+			if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.ftLastModified.dwLowDateTime) )
+				return false;
+			if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.ftLastModified.dwHighDateTime) )
+				return false;
+
+                        for (i = 0; i < CEDB_MAXSORTORDER; i++) {
+                                if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.rgSortSpecs[i].propid) )
+                                        return false;
+                                if ( !rapi_buffer_read_uint32(context->recv_buffer, &poidInfo->u.infDatabase.rgSortSpecs[i].dwFlags) )
+                                        return false;
+                        }
+
+
 			break;
 
 		case OBJTYPE_RECORD:

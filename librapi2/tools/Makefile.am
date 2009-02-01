@@ -8,7 +8,7 @@ noinst_PROGRAMS = oidinfo
 oidinfo_SOURCES = oidinfo.c
 
 bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun pstatus rapiconfig pkillall pshortcut psettime \
-	synce-list-programs synce-registry
+	synce-list-programs synce-registry synce-database
 
 pcp_SOURCES    = pcommon.c pcp.c
 pls_SOURCES    = pcommon.c pls.c
@@ -26,6 +26,7 @@ rapiconfig_SOURCES = rapiconfig.c
 
 synce_list_programs_SOURCES = synce-list-programs.c
 synce_registry_SOURCES = synce-registry.c pcommon.c
+synce_database_SOURCES = synce-database.c pcommon.c
 
 SUBDIRS = man
 

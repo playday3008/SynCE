@@ -105,6 +105,12 @@ BOOL _CeFindAllDatabases(/*{{{*/
 	rapi_database_trace("begin");
 
 	rapi_context_begin_command(context, 0x2c);
+
+        if ((!cFindData) || (!ppFindData)) {
+                context->last_error = ERROR_INVALID_PARAMETER;
+                return false;
+        }
+
 	rapi_buffer_write_uint32(context->send_buffer, dwDbaseType);
 	rapi_buffer_write_uint16(context->send_buffer, wFlags);
 
@@ -268,10 +274,19 @@ HANDLE _CeOpenDatabase(/*{{{*/
 	rapi_database_trace("begin");
 
 	rapi_context_begin_command(context, 0x0e);
-	/* TODO: support databse open by name */
-	rapi_buffer_write_uint32(context->send_buffer, poid ? *poid : 0);
+
+        if (!poid) {
+                context->last_error = ERROR_INVALID_PARAMETER;
+                goto exit;
+        }
+
+	rapi_buffer_write_uint32(context->send_buffer, *poid);
+
 	rapi_buffer_write_uint32(context->send_buffer, propid);
 	rapi_buffer_write_uint32(context->send_buffer, dwFlags);
+        if (*poid == 0) {
+                rapi_buffer_write_string(context->send_buffer, lpszName);
+        }
 
 	if ( !rapi_context_call(context) )
 		goto exit;
@@ -282,6 +297,11 @@ HANDLE _CeOpenDatabase(/*{{{*/
 
 	if ( !rapi_buffer_read_uint32(context->recv_buffer, &handle) )
 		goto exit;
+
+        if (*poid == 0) {
+                if ( !rapi_buffer_read_uint32(context->recv_buffer, poid) )
+                        goto exit;
+        }
 
 exit:
 	return handle;
