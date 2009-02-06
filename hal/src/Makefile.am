@@ -39,6 +39,8 @@ synce_serial_chat_SOURCES = synce-serial-chat.c
 EXTRA_DIST = synce-device-signals-marshal.list \
 		synce-device.xml
 
+dist_bin_SCRIPTS = synce-unlock.py
+
 %-glue.h: %.xml
 	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
 
