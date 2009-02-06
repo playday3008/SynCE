@@ -18,7 +18,6 @@ noinst_LTLIBRARIES = libdaemon.la
 
 libraries = \
 	libdaemon.la				\
-	-lgvfscommon				\
 	$(GLIB_LIBS) $(DBUS_LIBS)
 
 %.mount: %.mount.in ../config.log

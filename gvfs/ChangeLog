@@ -1,3 +1,9 @@
+2009-02-06  Mark Ellis <mark@mpellis.org.uk>
+
+	* configure.ac.in - added check for libgvfscommon, require
+	  glib >= 2.18
+	* daemon/Makefile.am - removed ref to libgvfscommon, now in LIBS
+
 2009-01-26  Mark Ellis <mark@mpellis.org.uk>
 
 	* 0.2.2 release
