@@ -2,6 +2,7 @@
 
 	* added synce-unlock.py, script to unlock a device
 	  from the command line
+	* configure.ac.in - added better checking of hal addon dir
 
 2009-01-26  Mark Ellis <mark@mpellis.org.uk>
 
