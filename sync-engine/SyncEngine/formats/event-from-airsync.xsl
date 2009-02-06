@@ -57,7 +57,7 @@
 			<Description><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Description>
 		</xsl:for-each>
 
-                <xsl:for-each select="Sensitivity[position() = 1]">
+                <xsl:for-each select="C:Sensitivity[position() = 1]">
                     <Class><Content><xsl:value-of select="convert:event_sensitivity_from_airsync()"/></Content></Class>
                 </xsl:for-each>
 

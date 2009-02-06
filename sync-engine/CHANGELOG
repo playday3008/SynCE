@@ -1089,3 +1089,9 @@ Report useful errors from problems with config files.
 10/01/2009 - 192200 Mark Ellis
 ------------------------------
 0.13 release
+
+
+06/02/2009 - 162700 Mark Ellis
+------------------------------
+Add namespace identifier to Sensitivity in event-from-airsync.xsl, this item
+was being ignored.
