@@ -1,3 +1,9 @@
+2009-02-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pls.c - fix bug in listing single directory arguement
+	* tools/man/pls.1 - add comment on protecting wildcards from
+	  shell expansion
+
 2009-02-01  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/rapi/database.c - more parameter checking, enable open

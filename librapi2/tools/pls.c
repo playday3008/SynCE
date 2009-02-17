@@ -225,15 +225,16 @@ dirname(const char *path)
 	*/
 
 	i = strlen(path) - 1;
+        dir_end = -1;
 
 	while (i >= 0)
 	{
 		if ( (path[i] == '*') || (path[i] == '?') ) {
 			wildcard = true;
-			dir_end = 0;
+                        dir_end = -1;
 		}
 
-		if ( (path[i] == '\\') && (dir_end == 0) ) {
+		if ( (path[i] == '\\') && (dir_end == -1) ) {
 			dir_end = i;
 		}
 
@@ -243,11 +244,11 @@ dirname(const char *path)
 	if (!wildcard)
 		return strdup(path);
 
-	if (dir_end == 0)
+	if (dir_end == -1)
 		return strdup("");
 
-	tmp_path = malloc(dir_end + 1);
-	snprintf(tmp_path, dir_end +1, "%s", path);
+	tmp_path = malloc(dir_end + 2);
+	snprintf(tmp_path, dir_end + 2, "%s", path);
 	return tmp_path;
 }
 
@@ -303,17 +304,39 @@ static bool list_matching_files(const char* path, bool first_pass)
 
 		base_path = dirname(path);
 
-		entry_name = wstr_to_current(find_data->cFileName);
-                if (!entry_name) {
-                        fprintf(stderr, "Failed to convert the path to the current encoding\n");
-                        free(base_path);
-                        goto exit;
+                if (strcmp(base_path, path) != 0) {
+
+                        entry_name = wstr_to_current(find_data->cFileName);
+                        if (!entry_name) {
+                                fprintf(stderr, "Failed to convert the path to the current encoding\n");
+                                free(base_path);
+                                goto exit;
+                        }
+
+                        new_path = malloc(strlen(base_path) + strlen(entry_name) + 6);
+
+
+                        
+                        if (*base_path == 0) /* base_path can be an empty string when a relative path is given */
+                                snprintf(new_path, strlen(entry_name) + 5, "%s\\%s", entry_name, wildcards);
+                        else if (strcmp(base_path, "\\") == 0) /* if base path is root, we don't want a double slash */
+                                snprintf(new_path, strlen(entry_name) + 6, "\\%s\\%s", entry_name, wildcards);
+                        else
+                                snprintf(new_path, strlen(base_path) + strlen(entry_name) + 6, "%s\\%s\\%s", base_path, entry_name, wildcards);
+
+                        free(entry_name);
+
+                } else {
+                        new_path = malloc(strlen(base_path) + 6);
+                        if (*base_path == 0) /* base_path can be an empty string when a relative path is given */
+                                snprintf(new_path, 4, "%s", wildcards);
+                        else if (strcmp(base_path, "\\") == 0) /* if base path is root, we don't want a double slash */
+                                snprintf(new_path, 5, "\\%s", wildcards);
+                        else
+                                snprintf(new_path, strlen(base_path) + 5, "%s\\%s", base_path, wildcards);
                 }
 
-		new_path = malloc(strlen(base_path) + strlen(entry_name) + 6);
-		snprintf(new_path, strlen(base_path) + strlen(entry_name) + 6, "%s\\%s\\%s", base_path, entry_name, wildcards);
-		free(base_path);
-		free(entry_name);
+                free(base_path);
 
 		success = list_matching_files(new_path, FALSE);
 
