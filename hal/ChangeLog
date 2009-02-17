@@ -1,3 +1,8 @@
+2009-02-17  Mark Ellis <mark@mpellis.org.uk>
+
+	* install dbus config file to enable all user access to
+	  our hal interface
+
 2009-02-06  Mark Ellis <mark@mpellis.org.uk>
 
 	* added synce-unlock.py, script to unlock a device
