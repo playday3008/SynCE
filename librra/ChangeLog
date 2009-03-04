@@ -1,3 +1,8 @@
+2009-03-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/Makefile.am - removed explicit link against libpython,
+	  not required in an extension
+
 2009-01-10  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.13 release
