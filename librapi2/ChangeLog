@@ -2,6 +2,8 @@
 
 	* tools/pls.c - if no path arg, don't append backslash to
 	  My Documents path, causes wrong behaviour in rapi1
+	* tools/pcp.c - fixes to directory copying, many thanks to
+	  Pierre Ynard and cipe007 for patches
 
 2009-02-17  Mark Ellis  <mark@mpellis.org.uk>
 

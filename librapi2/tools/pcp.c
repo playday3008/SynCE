@@ -208,6 +208,7 @@ static bool copy_file(const char* source, const char* dest, size_t* bytes_copied
 	return true;
 }
 
+static bool do_copy(const char* source, const char* dest, size_t* bytes_copied);
 
 static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
 {
@@ -273,38 +274,7 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
       new_dest = strcat(new_dest, filename);
 
       if (data[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-	widestr = wstr_from_current(new_dest);
-        if (!widestr) {
-            fprintf(stderr, "%s: Failed to convert the directory name '%s' from the current encoding to UCS2, skipping\n", prog_name, new_dest);
-            free(new_src);
-            free(new_dest);
-            continue;
-        }
-
-	rapi_result = CeCreateDirectory(widestr, NULL);
-	wstr_free_string(widestr);
-
-	if (!rapi_result) {
-	  if (FAILED(hr = CeRapiGetError())) {
-	    fprintf(stderr, "%s: error creating directory '%s': %08x: %s\n",
-		    prog_name, new_dest, hr, synce_strerror(hr));
-	    free(new_src);
-	    free(new_dest);
-	    return false;
-	  }
-
-	  last_error = CeGetLastError();
-
-	  if (last_error != ERROR_ALREADY_EXISTS) {
-	    fprintf(stderr, "%s: error creating directory '%s': %d: %s\n",
-		    prog_name, new_dest, last_error, synce_strerror(last_error));
-	    free(new_src);
-	    free(new_dest);
-	    return false;
-	  }
-	}
-
-	result = copy_dir(new_src, new_dest, bytes_copied);
+	result = do_copy(new_src, new_dest, bytes_copied);
       } else {
 	result = copy_file(new_src, new_dest, bytes_copied);
       }
@@ -335,15 +305,7 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
       new_dest = strcat(new_dest, dir_entry->d_name);
 
       if (dir_entry->d_type == DT_DIR) {
-	if (mkdir(new_dest, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0)
-	  if (errno != EEXIST) {
-	    fprintf(stderr, "%s: unable to create directory '%s': %s\n", prog_name, new_dest, strerror(errno));
-	    free(new_src);
-	    free(new_dest);
-	    return false;
-	  }
-
-	result = copy_dir(new_src, new_dest, bytes_copied);
+	result = do_copy(new_src, new_dest, bytes_copied);
       } else {
 	result = copy_file(new_src, new_dest, bytes_copied);
       }
@@ -404,8 +366,6 @@ static bool does_exist(const char* name)
       struct stat entry;
 
       if (stat(name, &entry) != 0) {
-	fprintf(stderr, "%s: error finding %s: %s\n",
-		prog_name, name, strerror(errno));
 	return false;
       }
       return true;
@@ -494,7 +454,7 @@ static char *any_basename(const char *path)
       if (p)
 	name = strdup(p+1);
       else
-	name = strdup("");
+	name = strdup(path);
     }
   return name;
 }
