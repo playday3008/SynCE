@@ -207,9 +207,14 @@ absolutize_path(const char *path)
                 return NULL;
         }
 
-	tmp_path2 = malloc(strlen(tmp_path1) + strlen(path) + 2);
-	snprintf(tmp_path2, strlen(tmp_path1) + strlen(path) + 2, "%s\\%s", tmp_path1, path);
-	free(tmp_path1);
+        if (strlen(path) > 0) {
+                tmp_path2 = malloc(strlen(tmp_path1) + strlen(path) + 2);
+                snprintf(tmp_path2, strlen(tmp_path1) + strlen(path) + 2, "%s\\%s", tmp_path1, path);
+        } else
+                tmp_path2 = strdup(tmp_path1);
+
+        free(tmp_path1);
+
 	return tmp_path2;
 }
 
