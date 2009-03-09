@@ -1,3 +1,8 @@
+2009-03-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/info.c - check for hal property marking the extra
+	  port of a 4 endpoint serial device, and ignore it
+
 2009-01-29  Mark Ellis  <mark@mpellis.org.uk>
 
 	* improve readability of endian section of synce.h, add

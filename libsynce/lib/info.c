@@ -408,6 +408,7 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   gint i;
   gchar **device_list = NULL;
   gint num_devices;
+  gboolean disabled;
 
   g_type_init();
   dbus_error_init(&dbus_error);
@@ -448,6 +449,21 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   }
 
   for (i = 0; i < num_devices; i++) {
+
+    /* discard unused ports for 4 endpoint serial devices */
+    if (libhal_device_property_exists(hal_ctx, device_list[i], "pda.pocketpc.disabled", &dbus_error)) {
+
+            disabled = libhal_device_get_property_bool(hal_ctx, device_list[i], "pda.pocketpc.disabled", &dbus_error);
+            if (dbus_error_is_set(&dbus_error)) {
+                    g_critical("%s: Failed to obtain property pda.pocketpc.disabled for device %s: %s: %s",
+                               G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+                    goto error_exit;
+            }
+
+            if (disabled)
+                    continue;
+    }
+
     if (!(libhal_device_property_exists(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error))) {
             if (dbus_error_is_set(&dbus_error)) {
                     g_critical("%s: Failed to check for property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
