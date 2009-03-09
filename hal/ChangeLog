@@ -1,3 +1,8 @@
+2009-03-09  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal/synce-hal-serial.in - check if device is 2 port /
+	  4 endpoint, mark first port as unused and do not start dccm
+
 2009-02-17  Mark Ellis <mark@mpellis.org.uk>
 
 	* install dbus config file to enable all user access to

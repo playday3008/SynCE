@@ -9,6 +9,7 @@ import subprocess
 import logging, logging.handlers
 import platform
 import ConfigParser
+import dbus
 
 # defaults
 config_file = '@SYSCONFDIR@/synce-hal.conf'
@@ -22,6 +23,14 @@ PPPD = "/usr/sbin/pppd"
 VAR_PPP = "/var/run"
 DEVSPEED = '115200'
 
+DBUS_DBUS_BUSNAME       = "org.freedesktop.DBus"
+DBUS_DBUS_IFACE         = "org.freedesktop.DBus"
+DBUS_DBUS_OBJPATH       = "/org/freedesktop/DBus"
+
+DBUS_HAL_BUSNAME         = "org.freedesktop.Hal"
+DBUS_HAL_MANAGER_IFACE   = "org.freedesktop.Hal.Manager"
+DBUS_HAL_MANAGER_OBJPATH = "/org/freedesktop/Hal/Manager"
+DBUS_HAL_DEVICE_IFACE    = "org.freedesktop.Hal.Device"
 
 def synce_serial_start_device(device_file, local_ip, remote_ip, linkname):
 
@@ -194,6 +203,40 @@ if __name__ == '__main__':
         sys.exit(1)
 
     ProcessConfig()
+
+    # deal with 2 port devices
+    # we want to ignore the first port
+
+    our_udi = os.environ["HAL_PROP_INFO_UDI"]
+
+    try:
+        device_haldev = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, our_udi), DBUS_HAL_DEVICE_IFACE)
+    except:
+        logger.critical("failed to connect to hal object %s: %s" % (our_udi, e))
+        sys.exit(1)
+
+    parent_udi = device_haldev.GetPropertyString("info.parent")
+
+    try:
+        hal_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, DBUS_HAL_MANAGER_OBJPATH), DBUS_HAL_MANAGER_IFACE)
+    except:
+        logger.critical("failed to connect to hal device manager: %s" % e)
+        sys.exit(1)
+
+    udilist = hal_manager.GetAllDevices()
+
+    device_udilist = []
+
+    for udi in udilist:
+        if parent_udi in udi and parent_udi != udi:
+            device_udilist.append(udi)
+
+    if len(device_udilist) > 1:
+        device_udilist.sort()
+        if device_udi != device_udilist[len(device_udilist) - 1]:
+            device_haldev.SetPropertyBoolean("pda.pocketpc.disabled", True)
+            sys.exit(0)
+
 
     if platform.system() == "FreeBSD":
         try:
