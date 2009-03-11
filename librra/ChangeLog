@@ -1,3 +1,7 @@
+2009-03-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* replace duplicate man pages with links
+
 2009-03-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* python/Makefile.am - removed explicit link against libpython,

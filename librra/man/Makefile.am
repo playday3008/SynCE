@@ -1,5 +1,6 @@
-MINOR_TOOLS_MANS = rra-appointment-from-vevent.1 \
-	rra-appointment-to-vevent.1 \
+MINOR_TOOLS_MANS = rra-appointment-from-vevent.1
+
+MINOR_TOOLS_LINKS = rra-appointment-to-vevent.1 \
 	rra-contact-from-vcard.1 \
 	rra-contact-to-vcard.1 \
 	rra-decode.1 \
@@ -14,12 +15,16 @@ MINOR_TOOLS_MANS = rra-appointment-from-vevent.1 \
 	rra-task-to-vtodo.1 \
 	rra-timezone.1
 
+CLEANFILES = $(MINOR_TOOLS_LINKS)
+
 man_MANS = synce-matchmaker.1
 
 if ENABLE_MINOR_TOOLS
-man_MANS += $(MINOR_TOOLS_MANS)
+man_MANS += $(MINOR_TOOLS_MANS) $(MINOR_TOOLS_LINKS)
 EXTRA_DIST = $(man_MANS)
 else
 EXTRA_DIST = $(man_MANS) $(MINOR_TOOLS_MANS)
 endif
 
+$(MINOR_TOOLS_LINKS): rra-appointment-from-vevent.1
+	echo ".so man1/$^" > $@ 
