@@ -17,13 +17,14 @@ MINOR_TOOLS_LINKS = rra-appointment-to-vevent.1 \
 
 CLEANFILES = $(MINOR_TOOLS_LINKS)
 
-man_MANS = synce-matchmaker.1
+MATCHMAKER_MANS = synce-matchmaker.1
+
+man_MANS = $(MATCHMAKER_MANS)
+
+EXTRA_DIST = $(MATCHMAKER_MANS) $(MINOR_TOOLS_MANS)
 
 if ENABLE_MINOR_TOOLS
 man_MANS += $(MINOR_TOOLS_MANS) $(MINOR_TOOLS_LINKS)
-EXTRA_DIST = $(man_MANS)
-else
-EXTRA_DIST = $(man_MANS) $(MINOR_TOOLS_MANS)
 endif
 
 $(MINOR_TOOLS_LINKS): rra-appointment-from-vevent.1
