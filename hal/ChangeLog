@@ -1,3 +1,8 @@
+2009-03-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal/synce-hal-serial.in - reference correct udi when
+	  checking if this is the port to use
+
 2009-03-09  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal/synce-hal-serial.in - check if device is 2 port /

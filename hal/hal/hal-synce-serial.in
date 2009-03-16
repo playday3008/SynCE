@@ -233,7 +233,7 @@ if __name__ == '__main__':
 
     if len(device_udilist) > 1:
         device_udilist.sort()
-        if device_udi != device_udilist[len(device_udilist) - 1]:
+        if our_udi != device_udilist[len(device_udilist) - 1]:
             device_haldev.SetPropertyBoolean("pda.pocketpc.disabled", True)
             sys.exit(0)
 
