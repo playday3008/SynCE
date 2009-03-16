@@ -39,7 +39,7 @@ dnl *** Check for librapi2 ***
 dnl **************************
 
 dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.11)
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.12)
 
 
 AC_ARG_WITH(gvfs-source, [  --with-gvfs-source=PATH     Location of the GVFS source tree.],

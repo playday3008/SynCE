@@ -61,8 +61,6 @@ G_DEFINE_TYPE (GVfsBackendSynce, g_vfs_backend_synce, G_VFS_TYPE_BACKEND)
 
 #define SHOW_APPLICATIONS   0
 
-/* CeFindClose not in rapi2 until librapi2 > 0.11.1 */
-#define USE_FIND_CLOSE      0
 
 #ifdef G_THREADS_ENABLED
 #define MUTEX_NEW()     g_mutex_new ()
@@ -248,6 +246,15 @@ g_error_from_rapi(gboolean *connection_error)
               break;
             }
         }
+
+      if (!result)
+        {
+          result = g_error_new(G_IO_ERROR,
+                               G_IO_ERROR_FAILED,
+                               "HRESULT = %08x: %s",
+                               hr,
+                               synce_strerror(hr));
+        }
     }
   else
     {
@@ -263,6 +270,15 @@ g_error_from_rapi(gboolean *connection_error)
 				   synce_strerror(error));
               break;
             }
+        }
+
+      if (!result)
+        {
+          result = g_error_new(G_IO_ERROR,
+                               G_IO_ERROR_FAILED,
+                               "%i: %s",
+                               error,
+                               synce_strerror(error));
         }
     }
 
@@ -711,9 +727,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
 
       get_file_attributes(synce_backend, info, index, &entry, matcher);
 
-#if USE_FIND_CLOSE
       CeFindClose(handle);
-#endif
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
       g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
@@ -1314,9 +1328,7 @@ synce_gvfs_replace (GVfsBackend *backend,
 	  }
 	g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
-#if USE_FIND_CLOSE
 	CeFindClose(find_handle);
-#endif
 
 	current_etag = create_etag (&entry);
 	if (strcmp (etag, current_etag) != 0)
@@ -1802,6 +1814,7 @@ synce_gvfs_delete (GVfsBackend *backend,
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
   handle = CeFindFirstFile(tempwstr, &entry);
   if(handle == INVALID_HANDLE_VALUE) {
+    MUTEX_UNLOCK (synce_backend->mutex);
     error = g_error_from_rapi(NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free(error);
@@ -1809,14 +1822,14 @@ synce_gvfs_delete (GVfsBackend *backend,
     goto exit;
   }
 
-#if USE_FIND_CLOSE
   CeFindClose(handle);
-#endif
 
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     result = CeRemoveDirectory(tempwstr);
   else
     result = CeDeleteFile(tempwstr);
+
+  MUTEX_UNLOCK (synce_backend->mutex);
 
   if (result)
     g_vfs_job_succeeded (G_VFS_JOB (job));
@@ -1826,7 +1839,6 @@ synce_gvfs_delete (GVfsBackend *backend,
     g_error_free (error);
   }
 
-  MUTEX_UNLOCK (synce_backend->mutex);
   wstr_free_string(tempwstr);
 
  exit:
@@ -2027,9 +2039,7 @@ synce_gvfs_move (GVfsBackend *backend,
     goto exit;
   }
 
-#if USE_FIND_CLOSE
   CeFindClose(handle);
-#endif
 
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     source_is_dir = TRUE;
@@ -2068,9 +2078,7 @@ synce_gvfs_move (GVfsBackend *backend,
 	  goto exit;
 	}
     } else
-#if USE_FIND_CLOSE
       CeFindClose(handle);
-#endif
 
   if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
     g_vfs_job_failed (G_VFS_JOB (job),

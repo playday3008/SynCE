@@ -1,3 +1,10 @@
+2009-03-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* configure.ac.in - require librapi2 >= 0.12 for CeFindClose
+	* daemon/gvfsbackendsynce.c - fix handling of errors for which a
+	  particular G_IO_ERROR is not specified; release mutex on error
+	  in synce_gfs_delete(); always use CeFindClose()
+
 2009-02-06  Mark Ellis <mark@mpellis.org.uk>
 
 	* configure.ac.in - added check for libgvfscommon, require
