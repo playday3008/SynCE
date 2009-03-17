@@ -28,4 +28,4 @@ man_MANS += $(MINOR_TOOLS_MANS) $(MINOR_TOOLS_LINKS)
 endif
 
 $(MINOR_TOOLS_LINKS): rra-appointment-from-vevent.1
-	echo ".so man1/$^" > $@ 
+	echo ".so man1/rra-appointment-from-vevent.1" > $@ 
