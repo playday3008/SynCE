@@ -1,3 +1,12 @@
+2009-03-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/synce_plugin.c - add UTF8 flag to all conversions, and pass
+	  a codepage to modified rra conversion funcs
+
+
+
+
+
 version 0.01: initial version, only contact sync working... very buggy ;)
 version 0.02: added appointment and todo handling, but still very buggy.. ;)
 

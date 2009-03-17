@@ -205,7 +205,7 @@ bool m_report_contact_changes(OSyncContext *ctx,RRA_SyncMgrType *type,uint32_t *
 	
 		osync_debug("SynCE-SYNC", 4, "got object type: contact ids: %08x data_size: %i",ids[i],data_size);
 	
-		rra_contact_to_vcard(RRA_CONTACT_ID_UNKNOWN,data,data_size,&vcard,RRA_CONTACT_VERSION_3_0);
+		rra_contact_to_vcard(RRA_CONTACT_ID_UNKNOWN,data,data_size,&vcard,RRA_CONTACT_UTF8 | RRA_CONTACT_VERSION_3_0, "CP1252");
 		
 		OSyncChange *change = osync_change_new();
 		osync_change_set_member(change, env->member);
@@ -248,11 +248,7 @@ bool m_report_todo_changes(OSyncContext *ctx,RRA_SyncMgrType *type,uint32_t *ids
 	
 		osync_debug("SynCE-SYNC", 4, "got object type: todo ids: %08x data_size: %i",ids[i],data_size);
 	
-		rra_task_to_vtodo(RRA_TASK_ID_UNKNOWN,data,data_size,&vtodo,0,&env->timezone);
-		/* Workaround since a single vevent component would be broken */
-		char *newvtodo = g_strdup_printf("BEGIN:VCALENDAR\r\nVERSION:1.0\r\n%sEND:VCALENDAR\r\n", vtodo);
-		g_free(vtodo);
-		vtodo = newvtodo;
+		rra_task_to_vtodo(RRA_TASK_ID_UNKNOWN,data,data_size,&vtodo,RRA_TASK_UTF8,&env->timezone, "CP1252");
 		osync_trace(TRACE_INTERNAL, "Generated vtodo: %s", osync_print_binary((unsigned char *)vtodo, strlen(vtodo)));
 		
 		OSyncChange *change = osync_change_new();
@@ -295,12 +291,8 @@ bool m_report_cal_changes(OSyncContext *ctx,RRA_SyncMgrType *type,uint32_t *ids,
 	
 		osync_debug("SynCE-SYNC", 4, "got object type: cal ids: %08x data_size: %i",ids[i],data_size);
 	
-		rra_appointment_to_vevent(RRA_APPOINTMENT_ID_UNKNOWN,data,data_size,&vevent,0,&env->timezone);
+		rra_appointment_to_vevent(RRA_APPOINTMENT_ID_UNKNOWN,data,data_size,&vevent,RRA_APPOINTMENT_UTF8,&env->timezone, "CP1252");
 
-		/* Workaround since a single vevent component would be broken */
-		char *newvevent = g_strdup_printf("BEGIN:VCALENDAR\r\nVERSION:1.0\r\n%sEND:VCALENDAR\r\n", vevent);
-		g_free(vevent);
-		vevent = newvevent;
 		osync_trace(TRACE_INTERNAL, "Generated vevent: %s", osync_print_binary((unsigned char *)vevent, strlen(vevent)));
 		
 		OSyncChange *change = osync_change_new();
@@ -663,7 +655,7 @@ static osync_bool commit_contacts_change(OSyncContext *ctx, OSyncChange *change)
 
 			osync_debug("SynCE-SYNC", 4, "adding contact id %08x",id);
 
-			rra_contact_from_vcard(object,&dummy_id,&data,&data_size,RRA_CONTACT_UTF8 | RRA_CONTACT_VERSION_3_0);
+			rra_contact_from_vcard(object,&dummy_id,&data,&data_size,RRA_CONTACT_UTF8 | RRA_CONTACT_VERSION_3_0, "CP1252");
 
 			if (!rra_syncmgr_put_single_object(env->syncmgr,type->id,id,RRA_SYNCMGR_NEW_OBJECT,data,data_size,&dummy_id)){
 				osync_context_report_error(ctx, 1, "Can't add contact id: %08x",id);
@@ -686,7 +678,7 @@ static osync_bool commit_contacts_change(OSyncContext *ctx, OSyncChange *change)
 
 			osync_debug("SynCE-SYNC", 4, "updating contact id %08x",id);
 
-			rra_contact_from_vcard(object,&dummy_id,&data,&data_size,RRA_CONTACT_UTF8 | RRA_CONTACT_VERSION_3_0);
+			rra_contact_from_vcard(object,&dummy_id,&data,&data_size,RRA_CONTACT_UTF8 | RRA_CONTACT_VERSION_3_0, "CP1252");
 
 			if (!rra_syncmgr_put_single_object(env->syncmgr,type->id,id,RRA_SYNCMGR_UPDATE_OBJECT,data,data_size,&dummy_id)){
 				osync_context_report_error(ctx, 1, "Can't update contact id: %08x",id);
@@ -741,7 +733,7 @@ static osync_bool commit_todo_change(OSyncContext *ctx, OSyncChange *change)
 
 			osync_debug("SynCE-SYNC", 4, "adding task id %08x",id);
 
-			rra_task_from_vtodo(object,&dummy_id,&data,&data_size,0,&env->timezone);
+			rra_task_from_vtodo(object,&dummy_id,&data,&data_size,RRA_TASK_UTF8,&env->timezone, "CP1252");
 
 			if (!rra_syncmgr_put_single_object(env->syncmgr,type->id,id,RRA_SYNCMGR_NEW_OBJECT,data,data_size,&dummy_id)){
 				osync_context_report_error(ctx, 1, "Can't add task id: %08x",id);
@@ -764,7 +756,7 @@ static osync_bool commit_todo_change(OSyncContext *ctx, OSyncChange *change)
 			
 			osync_debug("SynCE-SYNC", 4, "updating task id %08x",id);
 
-			rra_task_from_vtodo(object,&dummy_id,&data,&data_size,0,&env->timezone);
+			rra_task_from_vtodo(object,&dummy_id,&data,&data_size,RRA_TASK_UTF8,&env->timezone, "CP1252");
 
 			if (!rra_syncmgr_put_single_object(env->syncmgr,type->id,id,RRA_SYNCMGR_UPDATE_OBJECT,data,data_size,&dummy_id)){
 				osync_context_report_error(ctx, 1, "Can't update task id: %08x",id);
@@ -819,7 +811,7 @@ static osync_bool commit_cal_change(OSyncContext *ctx, OSyncChange *change)
 
 			osync_debug("SynCE-SYNC", 4, "adding cal id %08x",id);
 
-			rra_appointment_from_vevent(object,&dummy_id,&data,&data_size,0,&env->timezone);
+			rra_appointment_from_vevent(object,&dummy_id,&data,&data_size,RRA_APPOINTMENT_UTF8,&env->timezone, "CP1252");
 
 			if (!rra_syncmgr_put_single_object(env->syncmgr,type->id,id,RRA_SYNCMGR_NEW_OBJECT,data,data_size,&dummy_id)){
 				osync_context_report_error(ctx, 1, "Can't add cal id: %08x",id);
@@ -842,7 +834,7 @@ static osync_bool commit_cal_change(OSyncContext *ctx, OSyncChange *change)
 
 			osync_debug("SynCE-SYNC", 4, "updating cal id %08x",id);
 
-			rra_appointment_from_vevent(object,&dummy_id,&data,&data_size,0,&env->timezone);
+			rra_appointment_from_vevent(object,&dummy_id,&data,&data_size,RRA_APPOINTMENT_UTF8,&env->timezone, "CP1252");
 
 			if (!rra_syncmgr_put_single_object(env->syncmgr,type->id,id,RRA_SYNCMGR_UPDATE_OBJECT,data,data_size,&dummy_id)){
 				osync_context_report_error(ctx, 1, "Can't update cal id: %08x",id);
