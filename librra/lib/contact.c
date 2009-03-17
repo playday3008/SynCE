@@ -7,6 +7,7 @@
 #include "strbuf.h"
 #include "dbstream.h"
 #include "strv.h"
+#include "common_handlers.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
@@ -15,9 +16,6 @@
 #include <ctype.h>
 #include <assert.h>
 #include "internal.h"
-
-extern char* convert_to_utf8(const char* inbuf);
-extern char* convert_from_utf8(const char* source);
 
 #define VERBOSE 0
 
@@ -247,7 +245,8 @@ static bool rra_contact_to_vcard2(/*{{{*/
 		CEPROPVAL* pFields, 
 		uint32_t count, 
 		char** ppVcard,
-		uint32_t flags)
+		uint32_t flags,
+		const char *codepage)
 {
   unsigned i, messaging_count, messaging_meta;
 	StrBuf* vcard = strbuf_new(NULL);
@@ -366,24 +365,24 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 	for (i = 0; i < count; i++)
 	{
-    messaging_count = messaging_meta = 0;
+		messaging_count = messaging_meta = 0;
 		/* TODO: validate data types */
 		switch (pFields[i].propid >> 16)
 		{
-      case ID_ANNIVERSARY:
-        strbuf_append_date(vcard, "X-EVOLUTION-ANNIVERSARY", &pFields[i].val.filetime);
-        break;
+			case ID_ANNIVERSARY:
+				strbuf_append_date(vcard, "X-EVOLUTION-ANNIVERSARY", &pFields[i].val.filetime);
+				break;
 
-      case ID_BIRTHDAY:
-        strbuf_append_date(vcard, "BDAY", &pFields[i].val.filetime);
-        break;
-      
+			case ID_BIRTHDAY:
+				strbuf_append_date(vcard, "BDAY", &pFields[i].val.filetime);
+				break;
+
 			case ID_NOTE:
 				{
 					unsigned j;
 					char *lpb_terminated;
 
-          for (j = 0; j < pFields[i].val.blob.dwCount && pFields[i].val.blob.lpb[j]; j++)
+					for (j = 0; j < pFields[i].val.blob.dwCount && pFields[i].val.blob.lpb[j]; j++)
 						;
 
 					if (j == pFields[i].val.blob.dwCount)
@@ -395,24 +394,24 @@ static bool rra_contact_to_vcard2(/*{{{*/
 
 						strbuf_append(vcard, "NOTE:");
 
-            if (flags & RRA_CONTACT_UTF8)
-            {
-              char *lpb_converted = convert_to_utf8(lpb_terminated);
-              free (lpb_terminated);
-              lpb_terminated = lpb_converted;
-            }
+						if (flags & RRA_CONTACT_UTF8)
+						{
+							char *lpb_converted = convert_to_utf8(lpb_terminated, codepage);
+							free (lpb_terminated);
+							lpb_terminated = lpb_converted;
+						}
 
-            /* Windows CE require that NOTE is pair
-             * if not we add a "End of text" character (0x3)
-             * at end of NOTE before send it to pda.
-             * We remove that character when we receive it
-             * from pda.
-             */
+						/* Windows CE require that NOTE is pair
+						 * if not we add a "End of text" character (0x3)
+						 * at end of NOTE before send it to pda.
+						 * We remove that character when we receive it
+						 * from pda.
+						 */
 
-            if (lpb_terminated[strlen(lpb_terminated) - 1] == 0x3)
-              lpb_terminated[strlen(lpb_terminated) - 1] = 0x0;
+						if (lpb_terminated[strlen(lpb_terminated) - 1] == 0x3)
+							lpb_terminated[strlen(lpb_terminated) - 1] = 0x0;
 
-            strbuf_append_escaped(vcard, lpb_terminated, flags);
+						strbuf_append_escaped(vcard, lpb_terminated, flags);
 						strbuf_append_crlf(vcard);
 
 						free(lpb_terminated);
@@ -1207,7 +1206,8 @@ bool rra_contact_to_vcard(/*{{{*/
 		const uint8_t* data, 
 		size_t data_size,
 		char** vcard,
-		uint32_t flags)
+		uint32_t flags,
+		const char *codepage)
 {
 	bool success = false;
 	uint32_t field_count = 0;
@@ -1253,7 +1253,8 @@ bool rra_contact_to_vcard(/*{{{*/
 				fields, 
 				field_count, 
 				vcard,
-				flags))
+				flags,
+				codepage))
 	{
 		fprintf(stderr, "Failed to create vCard\n");
 		goto exit;
@@ -1290,6 +1291,7 @@ typedef struct _Parser
 	CEPROPVAL* fields;
 	size_t field_index;
 	bool utf8;	/* default charset is utf8 */
+	const char *codepage;
   int count_email;
   int count_tel_work;
   int count_tel_home;
@@ -2050,7 +2052,7 @@ static bool parser_handle_field(/*{{{*/
 
     if (parser->utf8)
     {
-      char *value_utf8 = convert_from_utf8(value);
+      char *value_utf8 = convert_from_utf8(value, parser->codepage);
       free(value);
       value = value_utf8;
     }
@@ -2281,7 +2283,8 @@ static bool rra_contact_from_vcard2(/*{{{*/
 		uint32_t* id,
 		CEPROPVAL* fields,
 		size_t* field_count,
-		uint32_t flags)
+		uint32_t flags,
+		const char *codepage)
 {
 	bool success = false;
 	Parser parser;
@@ -2308,6 +2311,7 @@ static bool rra_contact_from_vcard2(/*{{{*/
 	parser.fields         = fields;
 	parser.field_index    = 0;
 	parser.utf8           = flags & RRA_CONTACT_UTF8;
+	parser.codepage       = codepage;
 
   parser.count_email = 0;
   parser.count_tel_work = 0;
@@ -2474,7 +2478,8 @@ bool rra_contact_from_vcard(/*{{{*/
 		uint32_t* id,
 		uint8_t** data, 
 		size_t* data_size,
-		uint32_t flags)
+		uint32_t flags,
+		const char *codepage)
 {
 	bool success = false;
 	CEPROPVAL fields[MAX_FIELD_COUNT];
@@ -2485,7 +2490,8 @@ bool rra_contact_from_vcard(/*{{{*/
 				id,
 				fields,
 				&field_count,
-				flags))
+				flags,
+				codepage))
 	{
 		synce_error("Failed to convert vCard to database entries");
 		goto exit;

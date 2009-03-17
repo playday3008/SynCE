@@ -6,6 +6,62 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <synce_log.h>
+
+char *codepage = NULL;
+
+static void show_usage(const char* name)
+{
+	fprintf(stderr,
+			"Syntax:\n"
+			"\n"
+			"\t%s [-c CODEPAGE] [-t TZFILE] APPOINTMENT_FILE [VEVENT_FILE]\n"
+			"\n"
+                        "\t-c CODEPAGE       Codepage to be used for APPOINTMENT_FILE (default CP1252)\n"
+                        "\t-t TZFILE         Timezone filename\n"
+			"\tAPPOINTMENT_FILE  The source appointment filename\n"
+			"\tVEVENT_FILE       The destination vevent filename\n",
+			name);
+}
+
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile)
+{
+	int c;
+	int path_count;
+
+	while ((c = getopt(argc, argv, "c:t:")) != -1)
+	{
+		switch (c)
+		{
+			case 'c':
+				codepage = optarg;
+				break;
+
+			case 't':
+				*tzfile = optarg;
+				break;
+			
+			case 'h':
+			default:
+				show_usage(argv[0]);
+				return false;
+		}
+	}
+				
+	path_count = argc - optind;
+	if (path_count < 1 || path_count > 2) {
+		fprintf(stderr, "%s: You need to specify source and optional destination file names on command line\n\n", argv[0]);
+		show_usage(argv[0]);
+		return false;
+	}
+		
+	*source = strdup(argv[optind++]);
+	if (path_count > 1)
+	       	*dest = strdup(argv[optind++]);
+
+	return true;
+}
 
 int main(int argc, char** argv)
 {
@@ -14,19 +70,22 @@ int main(int argc, char** argv)
 	uint8_t* buffer = NULL;
 	long file_size = 0;
 	char* vevent = NULL;
-  RRA_Timezone tzi;
-  RRA_Timezone* p_tzi = NULL;
+	RRA_Timezone tzi;
+	RRA_Timezone* p_tzi = NULL;
+        char *source = NULL, *dest = NULL, *tzfile = NULL;
 
-	if (argc < 2)
-	{
-		fprintf(stderr, "Filename missing on command line\n");
+	if (!handle_parameters(argc, argv, &source, &dest, &tzfile))
 		goto exit;
-	}
 
-	file = fopen(argv[1], "r");
+        synce_log_set_level(SYNCE_LOG_LEVEL_DEBUG);
+
+	if (!codepage)
+		codepage = "CP1252";
+
+	file = fopen(source, "r");
 	if (!file)
 	{
-		fprintf(stderr, "Unable to open file '%s'\n", argv[1]);
+		fprintf(stderr, "Unable to open file '%s'\n", source);
 		goto exit;
 	}
 
@@ -38,9 +97,9 @@ int main(int argc, char** argv)
 	buffer = (uint8_t*)malloc(file_size);
 	fread(buffer, file_size, 1, file);
 
-  if (argc >= 3)
+  if (tzfile)
   {
-    FILE* file = fopen(argv[2], "r");
+    FILE* file = fopen(tzfile, "r");
     if (file)
     {
       size_t bytes_read = fread(&tzi, 1, sizeof(RRA_Timezone), file);
@@ -51,7 +110,7 @@ int main(int argc, char** argv)
       else
       {
         fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
-            argv[0], (int) bytes_read, argv[2], strerror(errno));
+            argv[0], (int) bytes_read, tzfile, strerror(errno));
       }
 
       fclose(file);
@@ -59,7 +118,7 @@ int main(int argc, char** argv)
     else
     {
       fprintf(stderr, "%s: Unable to open time zone information file '%s': %s\n", 
-          argv[0], argv[2], strerror(errno));
+          argv[0], tzfile, strerror(errno));
     }
   }
 
@@ -69,13 +128,25 @@ int main(int argc, char** argv)
 			file_size,
 			&vevent,
 			0,
-      p_tzi))
+                        p_tzi,
+                        "CP1252"))
 	{
 		fprintf(stderr, "Failed to create vEvent\n");
 		goto exit;
 	}
 	
-	printf("%s", vevent);
+	if (dest) {
+		file = fopen(dest, "w");
+		if (!file)
+		{
+			fprintf(stderr, "Unable to open file '%s'\n", dest);
+			goto exit;
+		}
+		fprintf(file, "%s", vevent);
+	} else {
+		printf("%s", vevent);
+	}
+
 	result = 0;
 
 exit:

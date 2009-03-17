@@ -188,7 +188,7 @@ bool decode_database_stream(uint8_t* buffer, unsigned id)
 		switch (propvals[i].propid & 0xff)
 		{
 			case CEVT_I2: printf("0x%08x  %i", propvals[i].val.iVal, propvals[i].val.iVal); break;
-			case CEVT_I4: printf("0x%08lx  %li", propvals[i].val.lVal, propvals[i].val.lVal); break;
+			case CEVT_I4: printf("0x%08lx  %li", (long unsigned)propvals[i].val.lVal, (long)propvals[i].val.lVal); break;
 
 			case CEVT_R8:  break;
 			case CEVT_BOOL:  break;

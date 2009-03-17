@@ -62,9 +62,9 @@ static char* convert_string(const char* inbuf, const char* tocode, const char* f
   return outbuf;
 }
 
-char* convert_to_utf8(const char* inbuf)
+char* convert_to_utf8(const char* inbuf, const char* codepage)
 {
-  char* utf8 = convert_string(inbuf, CHARSET_UTF8, CHARSET_ISO88591);
+  char* utf8 = convert_string(inbuf, CHARSET_UTF8, codepage);
 
   if (utf8)
   {
@@ -100,7 +100,7 @@ char* convert_to_utf8(const char* inbuf)
     return NULL;
 }
 
-char* convert_from_utf8(const char* source)
+char* convert_from_utf8(const char* source, const char* codepage)
 {
   char* result = NULL;
   const unsigned char* q;
@@ -123,7 +123,7 @@ char* convert_from_utf8(const char* source)
       strbuf_append_c(euro_fix, *q);
   }
 
-  result = convert_string(euro_fix->buffer, CHARSET_ISO88591, CHARSET_UTF8);
+  result = convert_string(euro_fix->buffer, codepage, CHARSET_UTF8);
 
   strbuf_destroy(euro_fix, true);
   return result;
@@ -186,7 +186,7 @@ bool on_propval_location(Generator* g, CEPROPVAL* propval, void* cookie)
    Notes / Description
 */
 
-bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
+bool process_mdir_line_description(Parser* p, mdir_line* line, void* cookie, const char *codepage)
 {
   bool success = false;
   StrBuf* note = strbuf_new(NULL);
@@ -198,7 +198,7 @@ bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
 
     if (parser_utf8(p))
     {
-      source = convert_from_utf8(line->values[0]);
+      source = convert_from_utf8(line->values[0], codepage);
       if (!source)
       {
         synce_error("Failed to convert string from UTF-8");
@@ -254,7 +254,7 @@ bool blob_is_pwi(CEBLOB* blob)
     0 == strncmp(pwi_signature, (const char*)blob->lpb, strlen(pwi_signature));
 }
 
-bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+bool process_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie, const char *codepage)/*{{{*/
 {
   assert(CEVT_BLOB == (propval->propid & 0xffff));
 
@@ -272,7 +272,7 @@ bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 
       if (generator_utf8(g))
       {
-        char* utf8 = convert_to_utf8(tmp);
+        char* utf8 = convert_to_utf8(tmp, codepage);
         free(tmp);
         if (!utf8)
         {
@@ -429,13 +429,13 @@ void to_icalendar_trigger(Generator* generator, CEPROPVAL* reminder_enabled, CEP
 
     if (!(reminder_minutes->val.lVal % MINUTES_PER_DAY))
       snprintf(buffer, sizeof(buffer), "-P%liD", 
-      reminder_minutes->val.lVal / MINUTES_PER_DAY);
+      (long)(reminder_minutes->val.lVal / MINUTES_PER_DAY));
     else if (!(reminder_minutes->val.lVal % 60))
       snprintf(buffer, sizeof(buffer), "-PT%liH", 
-      reminder_minutes->val.lVal / 60);
+      (long)(reminder_minutes->val.lVal / 60));
     else
       snprintf(buffer, sizeof(buffer), "-PT%liM", 
-      reminder_minutes->val.lVal);
+      (long)(reminder_minutes->val.lVal));
 
     generator_begin_line         (generator, "TRIGGER");
 

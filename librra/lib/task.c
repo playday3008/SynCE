@@ -28,6 +28,7 @@ typedef struct
   FILETIME completed_time;
   CEPROPVAL* reminder_enabled;
   CEPROPVAL* reminder_minutes;
+  const char *codepage;
 } TaskGeneratorData;
 
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
@@ -114,19 +115,26 @@ static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* 
   return true;
 }
 
+static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  return process_propval_notes(g, propval, cookie, ((TaskGeneratorData*)cookie)->codepage);
+}
+
 bool rra_task_to_vtodo(
     uint32_t id,
     const uint8_t* data,
     size_t data_size,
     char** vtodo,
     uint32_t flags,
-    RRA_Timezone* tzi)
+    RRA_Timezone* tzi,
+    const char *codepage)
 {
   bool success = false;
   Generator* generator = NULL;
   unsigned generator_flags = 0;
   TaskGeneratorData task_generator_data;
   memset(&task_generator_data, 0, sizeof(TaskGeneratorData));
+  task_generator_data.codepage = codepage;
 
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
@@ -157,6 +165,9 @@ bool rra_task_to_vtodo(
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
+
+  generator_add_simple(generator, "BEGIN", "VCALENDAR");
+  generator_add_simple(generator, "VERSION", "1.0");
 
   generator_add_simple(generator, "BEGIN", "VTODO");
 
@@ -192,6 +203,8 @@ bool rra_task_to_vtodo(
 
   generator_add_simple(generator, "END", "VTODO");
 
+  generator_add_simple(generator, "END", "VCALENDAR");
+
   if (!generator_get_result(generator, vtodo))
     goto exit;
 
@@ -209,6 +222,7 @@ exit:
 typedef struct _EventParserData
 {
   mdir_line* trigger;
+  const char *codepage;
 } EventParserData;
 
 static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
@@ -278,13 +292,19 @@ static bool on_mdir_line_importance(Parser* p, mdir_line* line, void* cookie)
     return parser_add_int32(p, ID_IMPORTANCE, IMPORTANCE_NORMAL);
 }
 
+static bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
+{
+  return process_mdir_line_description(p, line, cookie, ((EventParserData*)cookie)->codepage);
+}
+
 bool rra_task_from_vtodo(
     const char* vtodo,
     uint32_t* id,
     uint8_t** data,
     size_t* data_size,
     uint32_t flags,
-    RRA_Timezone* tzi)
+    RRA_Timezone* tzi,
+    const char *codepage)
 {
 	bool success = false;
   Parser* parser = NULL;
@@ -295,7 +315,7 @@ bool rra_task_from_vtodo(
   int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
-
+  event_parser_data.codepage = codepage;
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
     case RRA_TASK_UTF8:

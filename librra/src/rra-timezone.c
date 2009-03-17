@@ -38,6 +38,7 @@ static void show_usage(const char* name)/*{{{*/
       "\t                   parameter is left out.\n"
       "\t-o OUTPUT-FILE     Write binary time zone information to this file.\n"
       "\t                   Standard output is used if this parameter is missing.\n"
+      "\t-b                 binary format\n"
       "\t-r                 Raw format\n"
       "\t-v                 VTIMEZONE output format (Default)\n"
       ,

@@ -46,6 +46,7 @@ typedef struct _EventGeneratorData
   CEPROPVAL* recurrence_timezone;
   CEPROPVAL* unique;
 #endif
+  const char *codepage;
 } EventGeneratorData;
 
 /*
@@ -145,19 +146,26 @@ bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
 }
 #endif
 
+static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  return process_propval_notes(g, propval, cookie, ((EventGeneratorData*)cookie)->codepage);
+}
+
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
     const uint8_t* data,
     size_t data_size,
     char** vevent,
     uint32_t flags,
-    RRA_Timezone* tzi)
+    RRA_Timezone* tzi,
+    const char *codepage)
 {
-	bool success = false;
+  bool success = false;
   Generator* generator = NULL;
   unsigned generator_flags = 0;
   EventGeneratorData event_generator_data;
   memset(&event_generator_data, 0, sizeof(EventGeneratorData));
+  event_generator_data.codepage = codepage;
 
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
   {
@@ -195,8 +203,10 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator_set_data(generator, data, data_size))
     goto exit;
 
-#if 0
   generator_add_simple(generator, "BEGIN", "VCALENDAR");
+  generator_add_simple(generator, "VERSION", "1.0");
+
+#if 0 /* for iCalendar ? */
   generator_add_simple(generator, "PRODID", "-//SynCE//NONSGML SynCE RRA//EN");
  
   switch (flags & RRA_APPOINTMENT_VERSION_MASK)
@@ -211,13 +221,13 @@ bool rra_appointment_to_vevent(/*{{{*/
  
   generator_add_simple(generator, "BEGIN", "VEVENT");
 
-	if (id != RRA_APPOINTMENT_ID_UNKNOWN)
-	{
-		char id_str[32];
-		snprintf(id_str, sizeof(id_str), "RRA-ID-%08x", id);
-		generator_add_simple(generator, "UID", id_str);
-	}
-   if (!generator_run(generator))
+  if (id != RRA_APPOINTMENT_ID_UNKNOWN)
+  {
+    char id_str[32];
+    snprintf(id_str, sizeof(id_str), "RRA-ID-%08x", id);
+    generator_add_simple(generator, "UID", id_str);
+  }
+  if (!generator_run(generator))
     goto exit;
 
   if (event_generator_data.start && 
@@ -287,7 +297,9 @@ bool rra_appointment_to_vevent(/*{{{*/
     }
   }
   else
+  {
     synce_warning("Missing start, duration or duration unit");
+  }
 
   to_icalendar_trigger(generator,
                        event_generator_data.reminder_enabled,
@@ -348,11 +360,9 @@ bool rra_appointment_to_vevent(/*{{{*/
   }
 #endif
 
-   generator_add_simple(generator, "END", "VEVENT");
-#if 0
+  generator_add_simple(generator, "END", "VEVENT");
+
   generator_add_simple(generator, "END", "VCALENDAR");
-#endif
-  
  
   if (!generator_get_result(generator, vevent))
     goto exit;
@@ -382,6 +392,7 @@ typedef struct _EventParserData
   mdir_line* rrule;
   mdir_line* uid;
 #endif
+  const char *codepage;
 } EventParserData;
 
 static bool on_timezone_tzid(Parser* p, mdir_line* line, void* cookie)
@@ -453,13 +464,19 @@ static bool on_mdir_line_uid(Parser* parser, mdir_line* line, void* cookie)/*{{{
 }/*}}}*/
 #endif
 
+static bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
+{
+  return process_mdir_line_description(p, line, cookie, ((EventParserData*)cookie)->codepage);
+}
+
 bool rra_appointment_from_vevent(/*{{{*/
     const char* vevent,
     uint32_t* id,
     uint8_t** data,
     size_t* data_size,
     uint32_t flags,
-    RRA_Timezone* tzi)
+    RRA_Timezone* tzi,
+    const char *codepage)
 {
 	bool success = false;
   Parser* parser = NULL;
@@ -471,7 +488,7 @@ bool rra_appointment_from_vevent(/*{{{*/
   int parser_flags = 0;
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
-  
+  event_parser_data.codepage = codepage;  
 #if ENABLE_RECURRENCE
   event_parser_data.exdates = rra_mdir_line_vector_new();
 #endif
@@ -493,7 +510,6 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_property_new("tzid", on_timezone_tzid));
   
   alarm = parser_component_new("vAlarm");
-
   parser_component_add_parser_property(alarm, 
       parser_property_new("trigger", on_alarm_trigger));
 

@@ -5,6 +5,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+char *codepage = NULL;
+
+static void show_usage(const char* name)
+{
+	fprintf(stderr,
+			"Syntax:\n"
+			"\n"
+			"\t%s [-c CODEPAGE] [-t TZFILE] VTODO_FILE TASK_FILE\n"
+			"\n"
+                        "\t-c CODEPAGE       Codepage to be used for TASK_FILE (default CP1252)\n"
+                        "\t-t TZFILE         Timezone filename\n"
+			"\tVTODO_FILE        The source vtodo filename\n"
+			"\tTASK_FILE         The destination task filename\n",
+			name);
+}
+
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile)
+{
+	int c;
+	int path_count;
+
+	while ((c = getopt(argc, argv, "c:t:")) != -1)
+	{
+		switch (c)
+		{
+			case 'c':
+				codepage = optarg;
+				break;
+
+			case 't':
+				*tzfile = optarg;
+				break;
+
+			case 'h':
+			default:
+				show_usage(argv[0]);
+				return false;
+		}
+	}
+				
+	path_count = argc - optind;
+	if (path_count != 2) {
+		fprintf(stderr, "%s: You need to specify source and destination file names on command line\n\n", argv[0]);
+		show_usage(argv[0]);
+		return false;
+	}
+		
+	*source = strdup(argv[optind++]);
+       	*dest = strdup(argv[optind++]);
+
+	return true;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -16,17 +71,18 @@ int main(int argc, char** argv)
 	size_t buffer_size = 0;
   RRA_Timezone tzi;
   RRA_Timezone* p_tzi = NULL;
+        char *source = NULL, *dest = NULL, *tzfile = NULL;
 
-	if (argc < 3)
-	{
-		fprintf(stderr, "Filenames missing on command line\n");
+	if (!handle_parameters(argc, argv, &source, &dest, &tzfile))
 		goto exit;
-	}
 
-	file = fopen(argv[1], "r");
+	if (!codepage)
+		codepage = "CP1252";
+
+	file = fopen(source, "r");
 	if (!file)
 	{
-		fprintf(stderr, "Unable to open file '%s'\n", argv[1]);
+		fprintf(stderr, "Unable to open file '%s'\n", source);
 		goto exit;
 	}
 
@@ -41,9 +97,9 @@ int main(int argc, char** argv)
 	fclose(file);
 	file = NULL;
 
-  if (argc >= 4)
+  if (tzfile)
   {
-    FILE* file = fopen(argv[3], "r");
+    FILE* file = fopen(tzfile, "r");
     if (file)
     {
       size_t bytes_read = fread(&tzi, 1, sizeof(RRA_Timezone), file);
@@ -54,7 +110,7 @@ int main(int argc, char** argv)
       else
       {
         fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
-            argv[0], (int) bytes_read, argv[3], strerror(errno));
+            argv[0], (int) bytes_read, tzfile, strerror(errno));
       }
 
       fclose(file);
@@ -62,7 +118,7 @@ int main(int argc, char** argv)
     else
     {
       fprintf(stderr, "%s: Unable to open time zone information file '%s': %s\n", 
-          argv[0], argv[3], strerror(errno));
+          argv[0], tzfile, strerror(errno));
     }
   }
 
@@ -72,16 +128,17 @@ int main(int argc, char** argv)
 			&buffer,
 			&buffer_size,
 			0,
-      p_tzi))
+			p_tzi,
+			codepage))
 	{
 		fprintf(stderr, "Failed to create data\n");
 		goto exit;
 	}
 	
-	file = fopen(argv[2], "w");
+	file = fopen(dest, "w");
 	if (!file)
 	{
-		fprintf(stderr, "Unable to open file '%s'\n", argv[1]);
+		fprintf(stderr, "Unable to open file '%s'\n", dest);
 		goto exit;
 	}
 

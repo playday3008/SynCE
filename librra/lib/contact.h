@@ -31,14 +31,16 @@ bool rra_contact_to_vcard(
 		const uint8_t* data, 
 		size_t data_size,
 		char** vcard,
-		uint32_t flags);
+		uint32_t flags,
+		const char *codepage);
 
 bool rra_contact_from_vcard(
 		const char* vcard, 
 		uint32_t* id,
 		uint8_t** data, 
 		size_t* data_size,
-		uint32_t flags);
+		uint32_t flags,
+		const char *codepage);
 #endif /* SWIG */
 
 struct FieldStrings

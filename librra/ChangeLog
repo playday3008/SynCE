@@ -1,3 +1,13 @@
+2009-03-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add codepage parameter to all exported conversion functions,
+	  should be the iconv name of the Windows codepage, currently
+	  only used in Notes/Description field
+	* add VCALENDAR container to VEVENT and VTODO containers
+	* fix some compiler warnings
+	* add codepage option to all conversion test programs, fix
+	  parameter handling and update man pages
+
 2009-03-11  Mark Ellis  <mark@mpellis.org.uk>
 
 	* replace duplicate man pages with links
