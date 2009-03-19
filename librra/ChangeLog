@@ -1,3 +1,7 @@
+2009-03-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add debug level option to conversion tools
+
 2009-03-17  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add codepage parameter to all exported conversion functions,

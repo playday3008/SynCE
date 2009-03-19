@@ -6,16 +6,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-char *codepage = NULL;
+#include <synce_log.h>
 
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-c CODEPAGE] [-t TZFILE] VTODO_FILE TASK_FILE\n"
+			"\t%s [-d LEVEL] [-c CODEPAGE] [-t TZFILE] VTODO_FILE TASK_FILE\n"
 			"\n"
+			"\t-d LEVEL          Set debug log level\n"
+			"\t                  0 - No logging\n"
+			"\t                  1 - Errors only (default)\n"
+			"\t                  2 - Errors and warnings\n"
+			"\t                  3 - Errors, warnings and info\n"
+			"\t                  4 - Everything\n"
                         "\t-c CODEPAGE       Codepage to be used for TASK_FILE (default CP1252)\n"
                         "\t-t TZFILE         Timezone filename\n"
 			"\tVTODO_FILE        The source vtodo filename\n"
@@ -23,17 +28,22 @@ static void show_usage(const char* name)
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile)
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile, char** codepage)
 {
 	int c;
 	int path_count;
+	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "c:t:")) != -1)
+	while ((c = getopt(argc, argv, "d:c:t:")) != -1)
 	{
 		switch (c)
 		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
 			case 'c':
-				codepage = optarg;
+				*codepage = optarg;
 				break;
 
 			case 't':
@@ -47,6 +57,8 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest,
 		}
 	}
 				
+	synce_log_set_level(log_level);
+
 	path_count = argc - optind;
 	if (path_count != 2) {
 		fprintf(stderr, "%s: You need to specify source and destination file names on command line\n\n", argv[0]);
@@ -69,11 +81,13 @@ int main(int argc, char** argv)
 	long file_size = 0;
 	uint8_t* buffer = NULL;
 	size_t buffer_size = 0;
-  RRA_Timezone tzi;
-  RRA_Timezone* p_tzi = NULL;
-        char *source = NULL, *dest = NULL, *tzfile = NULL;
+	RRA_Timezone tzi;
+	RRA_Timezone* p_tzi = NULL;
+	char *source = NULL, *dest = NULL, *tzfile = NULL;
+	char *codepage = NULL;
 
-	if (!handle_parameters(argc, argv, &source, &dest, &tzfile))
+
+	if (!handle_parameters(argc, argv, &source, &dest, &tzfile, &codepage))
 		goto exit;
 
 	if (!codepage)

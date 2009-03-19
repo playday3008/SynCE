@@ -9,15 +9,19 @@
 #include <unistd.h>
 #include <synce_log.h>
 
-char *codepage = NULL;
-
 static void show_usage(const char* name)
 {
 	fprintf(stderr,
 			"Syntax:\n"
 			"\n"
-			"\t%s [-c CODEPAGE] [-t TZFILE] APPOINTMENT_FILE [VEVENT_FILE]\n"
+			"\t%s [-d LEVEL] [-c CODEPAGE] [-t TZFILE] APPOINTMENT_FILE [VEVENT_FILE]\n"
 			"\n"
+			"\t-d LEVEL          Set debug log level\n"
+			"\t                  0 - No logging\n"
+			"\t                  1 - Errors only (default)\n"
+			"\t                  2 - Errors and warnings\n"
+			"\t                  3 - Errors, warnings and info\n"
+			"\t                  4 - Everything\n"
                         "\t-c CODEPAGE       Codepage to be used for APPOINTMENT_FILE (default CP1252)\n"
                         "\t-t TZFILE         Timezone filename\n"
 			"\tAPPOINTMENT_FILE  The source appointment filename\n"
@@ -25,17 +29,22 @@ static void show_usage(const char* name)
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile)
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile, char** codepage)
 {
 	int c;
 	int path_count;
+	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "c:t:")) != -1)
+	while ((c = getopt(argc, argv, "d:c:t:")) != -1)
 	{
 		switch (c)
 		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
 			case 'c':
-				codepage = optarg;
+				*codepage = optarg;
 				break;
 
 			case 't':
@@ -48,6 +57,8 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest,
 				return false;
 		}
 	}
+
+	synce_log_set_level(log_level);
 				
 	path_count = argc - optind;
 	if (path_count < 1 || path_count > 2) {
@@ -72,12 +83,12 @@ int main(int argc, char** argv)
 	char* vevent = NULL;
 	RRA_Timezone tzi;
 	RRA_Timezone* p_tzi = NULL;
-        char *source = NULL, *dest = NULL, *tzfile = NULL;
+	char *source = NULL, *dest = NULL, *tzfile = NULL;
+	char *codepage = NULL;
 
-	if (!handle_parameters(argc, argv, &source, &dest, &tzfile))
+
+	if (!handle_parameters(argc, argv, &source, &dest, &tzfile, &codepage))
 		goto exit;
-
-        synce_log_set_level(SYNCE_LOG_LEVEL_DEBUG);
 
 	if (!codepage)
 		codepage = "CP1252";
