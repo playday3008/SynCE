@@ -243,7 +243,7 @@ def initialize(member):
 
 def get_info(info):
     info.name = "synce-opensync-plugin"
-    info.longname = "Plugin to synchronize with Windows CE device"
+    info.longname = "Plugin to synchronize with Windows Mobile 5 and later devices"
     info.description = "by Ole Andre Vadla Ravnaas"
 
     info.version = 2

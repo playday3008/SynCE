@@ -1095,3 +1095,7 @@ Report useful errors from problems with config files.
 ------------------------------
 Add namespace identifier to Sensitivity in event-from-airsync.xsl, this item
 was being ignored.
+
+20/03/2009 - 162700 Mark Ellis
+------------------------------
+Changed longname of plugin to clarify this is for Windows Mobile 5 and later.
