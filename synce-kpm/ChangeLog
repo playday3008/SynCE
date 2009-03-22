@@ -1,3 +1,11 @@
+2009-03-22	Guido Diepen	<guido@guidodiepen.nl>
+	* dataserver.py - Ensure that when a HAL DeviceRemoved occurs (e.g
+	when a bluetooth device, not the wm device, is removed. This would
+	now result in synce-kpm considering the wm device to be disconnected
+	* dataserver.py - Check for sync-engine on Dbus whenever a device 
+	is connected. In case of sync-engine being dbus-autolaunched, this
+	will ensure that sync-engine is started as soon as device is plugged in.
+
 2009-01-10	Mark Ellis	<mark@mpellis.org.uk>
 
 	* 0.13 release

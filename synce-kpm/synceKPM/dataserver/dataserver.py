@@ -74,6 +74,7 @@ class DataServer(dbus.service.Object):
         self._storageInformation = None
 
         self.deviceName   = ""
+        self.deviceHalObjPath = ""
 
 
 
@@ -175,6 +176,8 @@ class DataServer(dbus.service.Object):
             device = None
             return
         self.hal_device = device
+        self.deviceHalObjPath = obj_path
+
         self.hal_device_synce = dbus.Interface(deviceObject,"org.freedesktop.Hal.Device.Synce")
 
         self.deviceName = self.hal_device.GetPropertyString("pda.pocketpc.name")
@@ -214,13 +217,15 @@ class DataServer(dbus.service.Object):
 
 
     def hal_device_disconnected_cb(self, obj_path):
-        print "disconnecting device ", self.deviceName 
-        self.deviceDisconnected( self.deviceName )
-        self.hal_device = None
-        self.hal_device_synce = None
-        self.deviceName   = ""
-        self.deviceIsConnected = False
-        self._programList = []
+        if obj_path == self.deviceHalObjPath:
+            print "disconnecting device ", self.deviceName , " obj_path = ", obj_path
+            self.deviceHalObjPath = ""
+            self.deviceDisconnected( self.deviceName )
+            self.hal_device = None
+            self.hal_device_synce = None
+            self.deviceName   = ""
+            self.deviceIsConnected = False
+            self._programList = []
         pass
 
 
@@ -238,6 +243,16 @@ class DataServer(dbus.service.Object):
             self.DeviceModel( self.odccm_device.GetModelName() )
         
         self.updateDeviceInformation()
+
+
+        try:
+            self.busConn.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
+            self.handleSyncEngineStatusChange( True, True ) 
+        except dbus.DBusException:
+            self.handleSyncEngineStatusChange( False, False) 
+            print "SyncEngine is NOT running!!"
+
+
 
         gobject.timeout_add(45000, self.updateDeviceInformation)
         
