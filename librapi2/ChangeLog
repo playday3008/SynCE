@@ -1,3 +1,7 @@
+2009-03-23  Mark Ellis  <mark@mpellis.org.uk>
+
+	* configure.ac.in - require pyrex >= 0.9.6 for gil releasing
+
 2009-03-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* tools/pls.c - if no path arg, don't append backslash to
