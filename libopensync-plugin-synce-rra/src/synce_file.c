@@ -225,7 +225,7 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 
 	osync_debug("SYNCE-SYNC", 4, "start: %s", __func__);	
         if(!env->config_file) {
-                osync_context_report_error(ctx, 1,
+                osync_context_report_error(ctx, OSYNC_ERROR_MISCONFIGURATION,
                                            "<file> parameter not set");
                 return FALSE;
         }
@@ -250,9 +250,8 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 			if (S_ISREG(ff->mode)) {	/* Regular file */
 				if (CeDeleteFile(wfn) == 0) {
 					e = CeGetLastError();
-					s = synce_strerror(e);
-					osync_context_report_error(ctx, 1,
-							"CeDeleteFile(%s) : %s", fn, s);
+					osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
+							"CeDeleteFile(%s) : %s", fn, synce_strerror(e));
 					wstr_free_string(wfn);
                                         g_free(lfn);
 					return FALSE;
@@ -279,10 +278,9 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 							&cnt, &find_data) == 0) {
 						/* FIX ME what does failure mean here ? */
 						e = CeGetLastError();
-						s = synce_strerror(e);
-						osync_context_report_error(ctx, 1,
+						osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
 							"CeFindAllFiles(%s) : %s",
-							lfn, s);
+							lfn, synce_strerror(e));
 						wstr_free_string(w);
 						wstr_free_string(wfn);
                                                 g_free(lfn);
@@ -293,10 +291,9 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 						fprintf(stderr, "Yow create(%s)\n", lfn);
 						if (CeCreateDirectory(w, NULL) == 0) {
 							e = CeGetLastError();
-							s = synce_strerror(e);
-							osync_context_report_error(ctx, 1,
+							osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
 								"CeCreateDirectory(%s) : %s",
-								lfn, s);
+								lfn, synce_strerror(e));
 							wstr_free_string(w);
 							wstr_free_string(wfn);
 							free(lfn);
@@ -337,9 +334,8 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 				/* FIX ME */
 				if (CeCreateDirectory(wfn, NULL) == 0) {
 					e = CeGetLastError();
-					s = synce_strerror(e);
-					osync_context_report_error(ctx, 1,
-							"CeCreateDirectory(%s) : %s", fn, s);
+					osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
+							"CeCreateDirectory(%s) : %s", fn, synce_strerror(e));
 					wstr_free_string(wfn);
                                         g_free(lfn);
 					return FALSE;
@@ -349,9 +345,8 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 						opt, FILE_ATTRIBUTE_NORMAL, 0);
 				if (h == 0) {
 					e = CeGetLastError();
-					s = synce_strerror(e);
-					osync_context_report_error(ctx, 1,
-							"CeCreateFile(%s) : %s", fn, s);
+					osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
+							"CeCreateFile(%s) : %s", fn, synce_strerror(e));
 					wstr_free_string(wfn);
                                         g_free(lfn);
 					return FALSE;
@@ -362,10 +357,9 @@ synce_file_commit(OSyncContext *ctx, OSyncChange *change)
 				 */
 				if (CeWriteFile(h, ff->data, ff->size, &wr, NULL) == 0) {
 					e = CeGetLastError();
-					s = synce_strerror(e);
-					osync_context_report_error(ctx, 1,
+					osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
 							"CeWriteFile(%s, sz %d) : %s",
-							lfn, ff->size, s);
+							lfn, ff->size, synce_strerror(e));
 					CeCloseHandle(h);
 					wstr_free_string(wfn);
                                         g_free(lfn);
@@ -410,7 +404,7 @@ synce_file_get_changeinfo(OSyncContext *ctx, OSyncError **error)
 	/* SynCE : check if RRA is connected */
 	if (!env->syncmgr || !rra_syncmgr_is_connected(env->syncmgr)){
 		/* not connected, exit */
-		osync_context_report_error(ctx, 1, "not connected to device, exit.");
+		osync_context_report_error(ctx, OSYNC_ERROR_NO_CONNECTION, "not connected to device, exit.");
 		return FALSE;
 	}
 
@@ -421,7 +415,7 @@ synce_file_get_changeinfo(OSyncContext *ctx, OSyncError **error)
 	 */
         if (env->config_file && 
             ! FilesFindAllFromDirectory(ctx, env->config_file, error)) {
-		osync_context_report_error(ctx, 1, "Error while checking for files");
+		osync_context_report_error(ctx, OSYNC_ERROR_GENERIC, "Error while checking for files");
 		return FALSE;
 	}
 
@@ -458,7 +452,7 @@ synce_file_getdata(OSyncContext *ctx, OSyncChange *change)
 	if (ff == NULL || ff->data == NULL || ff->size == 0) {
                 osync_debug("SynCE-File", 4,
                             "%s: NULL values encountered, returning\n", __func__);
-		osync_context_report_error(ctx, 1, "get_data got NULLs");
+		osync_context_report_error(ctx, OSYNC_ERROR_GENERIC, "get_data got NULLs");
 		return;
 	}
 #endif
@@ -480,10 +474,9 @@ synce_file_getdata(OSyncContext *ctx, OSyncChange *change)
         ff->size = CeGetFileSize(h, NULL);
         if(ff->size == 0xFFFFFFFF) {
                 DWORD e = CeGetLastError();
-                const char *s = synce_strerror(e);
-                osync_context_report_error(ctx, 4,
+                osync_context_report_error(ctx, OSYNC_ERROR_GENERIC,
                                            "\n%s: could not find out file size (%u): %s\n",
-                                           __func__, (unsigned)e, s);
+                                           __func__, (unsigned)e, synce_strerror(e));
                 CeCloseHandle(h);
                 g_free(lfn);
                 wstr_free_string(wfn);
@@ -495,9 +488,8 @@ synce_file_getdata(OSyncContext *ctx, OSyncChange *change)
                 if (r == 0) {
                         /* Error */
                         DWORD	e = CeGetLastError();
-                        char	*s = synce_strerror(e);
-                        osync_context_report_error(ctx, 1, "Error from CeReadFile (%d:%s)",
-                                                   e, s);
+                        osync_context_report_error(ctx, OSYNC_ERROR_GENERIC, "Error from CeReadFile (%d:%s)",
+                                                   e, synce_strerror(e));
                         CeCloseHandle(h);
                         return;
                 }
@@ -672,10 +664,9 @@ int main(int argc, char** argv)
 					&cnt, &find_data) == 0) {
 				/* FIX ME what does failure mean here ? */
 				e = CeGetLastError();
-				s = synce_strerror(e);
 				fprintf(stderr,
 					"CeFindAllFiles(%s) : %s",
-					lfn, s);
+					lfn, synce_strerror(e));
 				wstr_free_string(w);
 				wstr_free_string(wfn);
 				free(lfn);
@@ -686,10 +677,9 @@ int main(int argc, char** argv)
 				fprintf(stderr, "Yow create(%s)\n", lfn);
 				if (CeCreateDirectory(w, NULL) == 0) {
 					e = CeGetLastError();
-					s = synce_strerror(e);
 					fprintf(stderr,
 						"CeCreateDirectory(%s) : %s",
-						lfn, s);
+						lfn, synce_strerror(e));
 					wstr_free_string(w);
 					wstr_free_string(wfn);
 					free(lfn);
@@ -707,8 +697,7 @@ int main(int argc, char** argv)
 			CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
 	if (h == 0) {
 		e = CeGetLastError();
-		s = synce_strerror(e);
-		fprintf(stderr, "CeCreateFile(%s) : %s", lfn, s);
+		fprintf(stderr, "CeCreateFile(%s) : %s", lfn, synce_strerror(e));
 		free(lfn);
 		return FALSE;
 	}
@@ -719,8 +708,7 @@ int main(int argc, char** argv)
 	DWORD wr;
 	if (CeWriteFile(h, "Yow", 3, &wr, NULL) == 0) {
 		e = CeGetLastError();
-		s = synce_strerror(e);
-		fprintf(stderr, "CeWriteFile(%s) : %s", lfn, s);
+		fprintf(stderr, "CeWriteFile(%s) : %s", lfn, synce_strerror(e));
 		free(lfn);
 		return FALSE;
 	}

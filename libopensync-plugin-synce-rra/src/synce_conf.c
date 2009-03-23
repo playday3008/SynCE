@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2004-2005  Armin Bauer <armin.bauer@opensync.org>
  * Copyright © 2005 Danny Backx <dannybackx@users.sourceforge.net>
+ * Copyright © 2008 Mark Ellis <mark_ellis@users.sourceforge.net>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,11 +34,11 @@ osync_bool synce_parse_settings(SyncePluginPtr *env, char *data, int size, OSync
 	osync_trace(TRACE_ENTRY, "%s(%p, %p, %i)", __func__, env, data, size);
 	xmlDocPtr doc;
 	xmlNodePtr cur;
+        int i;
 
-	//set defaults
-	env->config_contacts = FALSE;
-	env->config_calendar = FALSE;
-	env->config_todos = FALSE;
+	/* set defaults */
+        for (i = 0; i < TYPE_INDEX_MAX; i++)
+                env->config_types[i] = FALSE;
 	env->config_file = NULL;
 
 	doc = xmlParseMemory(data, size);
@@ -71,35 +72,37 @@ osync_bool synce_parse_settings(SyncePluginPtr *env, char *data, int size, OSync
 		if (str) {
 			if (!xmlStrcmp(cur->name, (const xmlChar *)"contact")) {
 				/* Disable by mentioning NO or FALSE, otherwise enable. */
-				env->config_contacts = TRUE;
+				env->config_types[TYPE_INDEX_CONTACT] = TRUE;
 				if (g_ascii_strcasecmp(str, "FALSE") == 0)
-					env->config_contacts = FALSE;
+					env->config_types[TYPE_INDEX_CONTACT] = FALSE;
 				if (g_ascii_strcasecmp(str, "NO") == 0)
-					env->config_contacts = FALSE;
+					env->config_types[TYPE_INDEX_CONTACT] = FALSE;
 			}
 			if (!xmlStrcmp(cur->name, (const xmlChar *)"file")) {
 				env->config_file = g_strdup(str);
 			}
 			if (!xmlStrcmp(cur->name, (const xmlChar *)"calendar")) {
 				/* Disable by mentioning NO or FALSE, otherwise enable. */
-				env->config_calendar = TRUE;
+				env->config_types[TYPE_INDEX_CALENDAR] = TRUE;
 				if (g_ascii_strcasecmp(str, "FALSE") == 0)
-					env->config_calendar = FALSE;
+					env->config_types[TYPE_INDEX_CALENDAR] = FALSE;
 				if (g_ascii_strcasecmp(str, "NO") == 0)
-					env->config_calendar = FALSE;
+					env->config_types[TYPE_INDEX_CALENDAR] = FALSE;
 			}
 			if (!xmlStrcmp(cur->name, (const xmlChar *)"todos")) {
 				/* Disable by mentioning NO or FALSE, otherwise enable. */
-				env->config_todos = TRUE;
+				env->config_types[TYPE_INDEX_TODO] = TRUE;
 				if (g_ascii_strcasecmp(str, "FALSE") == 0)
-					env->config_todos = FALSE;
+					env->config_types[TYPE_INDEX_CALENDAR] = FALSE;
 				if (g_ascii_strcasecmp(str, "NO") == 0)
-					env->config_todos = FALSE;
+					env->config_types[TYPE_INDEX_CALENDAR] = FALSE;
 			}
 			xmlFree(str);
 		}
 		cur = cur->next;
 	}
+
+	xmlFreeDoc(doc);
 
 	/* This belongs in XXX_connect()
 	 * if (!osync_member_objtype_enabled(env->member, "contact"))
@@ -110,14 +113,13 @@ osync_bool synce_parse_settings(SyncePluginPtr *env, char *data, int size, OSync
 	 * 	env->config_calendar = FALSE;
 	 */
 
-	if (env->config_contacts == 0 && env->config_calendar == 0
-			&& env->config_todos == 0 && env->config_file == NULL) {
+	if (env->config_types[0] == 0 && env->config_types[1] == 0
+			&& env->config_types[2] == 0 && env->config_file == NULL) {
 		osync_error_set(error, OSYNC_ERROR_GENERIC, "Nothing was configured");
 		osync_trace(TRACE_EXIT_ERROR, "%s: %s", __func__, osync_error_print(error));
 		return FALSE;
 	}
 
-	xmlFreeDoc(doc);
 	osync_trace(TRACE_EXIT, "%s", __func__);
 	return TRUE;
 }

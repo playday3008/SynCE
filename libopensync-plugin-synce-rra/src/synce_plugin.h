@@ -3,6 +3,7 @@
  *
  * Copyright © 2005 by MirKuZ
  * Copyright © 2005 Danny Backx <dannybackx@users.sourceforge.net>
+ * Copyright © 2008 Mark Ellis <mark_ellis@users.sourceforge.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,15 +26,14 @@
 #include <rra/syncmgr.h>
 #include <rra/timezone.h>
 
-typedef struct ids_list {
-	uint32_t changed_count;
-	uint32_t unchanged_count;
-	uint32_t deleted_count;
-	uint32_t *changed_ids;
-	uint32_t *unchanged_ids;
-	uint32_t *deleted_ids;
-	RRA_SyncMgrType *type;
-} ids_list;
+#include <glib.h>
+
+enum {
+        TYPE_INDEX_CONTACT,
+        TYPE_INDEX_TODO,
+        TYPE_INDEX_CALENDAR,
+        TYPE_INDEX_MAX
+};
 
 typedef struct SyncePluginPtr {
 	OSyncMember	*member;
@@ -41,14 +41,15 @@ typedef struct SyncePluginPtr {
 
 	RRA_SyncMgr*	syncmgr;	/* This is the connection to SynCE */
 	RRA_Timezone	timezone;
+	char *codepage;
+        uint32_t	type_ids[3];
 	int		last_change_counter;
 	int		change_counter;
-	ids_list*	contact_ids;
-	ids_list*	todo_ids;
-	ids_list*	cal_ids;
+
+        GHashTable *objects[3];
 
 	/* Configuration */
-	osync_bool	config_contacts, config_todos, config_calendar;
+	osync_bool	config_types[3];
 	char		*config_file;
 } SyncePluginPtr;
 

@@ -1,3 +1,11 @@
+2009-03-23  Mark Ellis  <mark@mpellis.org.uk>
+
+	* restructure most of main plugin code to reduce code duplication for
+	  different item types, and allow flagging of success for only those
+	  items that were successfully converted and synced
+	* connect and disconnect with device in appropriate places
+	* obtain codepage from device registry
+
 2009-03-17  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/synce_plugin.c - add UTF8 flag to all conversions, and pass
