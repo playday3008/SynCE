@@ -1,3 +1,7 @@
+2009-03-23  Mark Ellis <mark@mpellis.org.uk>
+
+	* configure.ac.in - change default hal addon dir to hal/scripts
+
 2009-03-16  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal/synce-hal-serial.in - reference correct udi when
