@@ -212,7 +212,7 @@ def ProcessConfig():
         else:
             logger.warning("found invalid device_ip in config file %s: %s" % (config_file, new_ip))
 
-    if config.has_option('rndis', 'statis_local_ip'):
+    if config.has_option('rndis', 'static_local_ip'):
         new_ip = config.get('rndis', 'static_local_ip')
         
         ip_re = re.compile('^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$)')
