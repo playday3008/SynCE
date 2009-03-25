@@ -1,3 +1,10 @@
+2009-03-25  Mark Ellis <mark@mpellis.org.uk>
+
+	* hal/10-synce.fdi - only use an rndis_host interface with 
+	  class 239, subclass 1, protocol 1, which is a device in
+	  sync mode; leave Internet Connection Sharing to networking
+	  tools
+
 2009-03-24  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal/hal-synce-rndis.in - fix typo
