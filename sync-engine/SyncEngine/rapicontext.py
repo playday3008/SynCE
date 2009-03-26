@@ -25,8 +25,8 @@ QUERY_TYPE_REMOVE   = 2
 
 class RapiContext(pyrapi2.RAPISession):
 
-	def __init__(self,loglevel):
-		pyrapi2.RAPISession.__init__(self,loglevel)
+	def __init__(self,device,loglevel):
+		pyrapi2.RAPISession.__init__(self,device,loglevel)
 		
 	def GetConfig(self,path,leaf,recursive=False):
 		return self._ConfigQuery(QUERY_TYPE_GET, path, leaf, recursive)

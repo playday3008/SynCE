@@ -424,7 +424,7 @@ class SyncEngine(dbus.service.Object):
 		# and start the sessions
 
 		self.logger.debug("OnConnect: setting up RAPI session")
-		self.rapi_session = rapicontext.RapiContext(pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
+		self.rapi_session = rapicontext.RapiContext(None, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
 
 		self.logger.debug("OnConnect: Attempting to bind partnerships")
 		self.PshipManager.AttemptToBind()

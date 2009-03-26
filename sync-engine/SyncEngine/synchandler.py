@@ -47,7 +47,7 @@ class SyncHandler(threading.Thread):
 	self.evtSyncRunFinished.clear()
 
 
-	self.rapi_context =rapicontext.RapiContext(pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
+	self.rapi_context =rapicontext.RapiContext(None, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
 	
 	# Temporarily uninstall the previous handler for the beginning of the
         # synchronization.  The previous handler was for the auto-syncs, which

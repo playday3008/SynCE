@@ -1099,3 +1099,8 @@ was being ignored.
 20/03/2009 - 162700 Mark Ellis
 ------------------------------
 Changed longname of plugin to clarify this is for Windows Mobile 5 and later.
+
+26/03/2009 - 191400 Mark Ellis
+------------------------------
+Pass None as device name argument to new RAPISession constructor.
+
