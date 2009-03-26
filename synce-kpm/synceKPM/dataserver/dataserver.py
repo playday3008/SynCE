@@ -284,7 +284,7 @@ class DataServer(dbus.service.Object):
 
         if self.deviceIsConnected:
             #Amount free on mainMemory:
-            rapi_session = RAPISession(0)
+            rapi_session = RAPISession(None, 0)
             freeDisk,totalDisk,freeDiskTotal = rapi_session.getDiskFreeSpaceEx("\\")
             self._storageInformation.append( ("MainMemory","\\" ,freeDisk,totalDisk,freeDiskTotal) )
 
@@ -506,7 +506,7 @@ class DataServer(dbus.service.Object):
 
         if self.deviceIsConnected:
             try:
-                rapi_session = RAPISession(0)
+                rapi_session = RAPISession(None, 0)
                 _programs = config_query_get(rapi_session, None ,   "UnInstall").children.values()
                 for program in _programs:
                     self._programList.append( program.type )
@@ -534,7 +534,7 @@ class DataServer(dbus.service.Object):
 
         
         try:
-            rapi_session = RAPISession(0)
+            rapi_session = RAPISession(None, 0)
             self._powerStatus = rapi_session.getSystemPowerStatus(True)
         except Exception,e:
             print "Error while retrieving battery information:"
@@ -563,7 +563,7 @@ class DataServer(dbus.service.Object):
 
         if self.deviceIsConnected:
             try:
-                rapi_session = RAPISession(0)
+                rapi_session = RAPISession(None, 0)
                 hkcu = rapi_session.HKEY_CURRENT_USER
                 owner_key = hkcu.open_sub_key(r"ControlPanel\Owner")
                 owner = owner_key.query_value("Name")
@@ -599,7 +599,7 @@ class DataServer(dbus.service.Object):
         node.setProp("value", "1") ; 
 
         print "_config_query: CeProcessConfig request is \n", doc_node.serialize("utf-8",1)
-        rapi_session = RAPISession(0)
+        rapi_session = RAPISession(None, 0)
         reply = rapi_session.process_config(doc_node.serialize("utf-8",0), 1)
         reply_doc = libxml2.parseDoc(reply)
         print "_config_query: CeProcessConfig response is \n", reply_doc.serialize("utf-8",1)
@@ -620,7 +620,7 @@ class DataServer(dbus.service.Object):
         
         RAPI_BUFFER_SIZE = 65535
         
-        rapi_session = RAPISession(0)
+        rapi_session = RAPISession(None, 0)
         
         fileHandle = rapi_session.createFile("%s%s"%(copyToDirectory,fileName), GENERIC_WRITE , 0, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL )
         

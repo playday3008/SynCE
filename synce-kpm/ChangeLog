@@ -1,3 +1,7 @@
+2009-03-29	Mark Ellis	<mark@mpellis.org.uk>
+
+	* dataserver.py - add device name None to RAPISession calls
+
 2009-03-22	Guido Diepen	<guido@guidodiepen.nl>
 	* dataserver.py - Ensure that when a HAL DeviceRemoved occurs (e.g
 	when a bluetooth device, not the wm device, is removed. This would
