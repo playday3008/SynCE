@@ -57,6 +57,7 @@ cdef extern from "synce.h":
     ctypedef WCHAR*             LPCWSTR
 
     ctypedef int32_t            HRESULT
+    ctypedef HRESULT            STDAPI
     ctypedef uint32_t           HANDLE
 
 

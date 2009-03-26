@@ -19,9 +19,13 @@ cdef extern from "synce_log.h":
     void synce_log_set_level(int level)
 
 cdef extern from "rapi.h":
+    # connection functions
     void *rapi_connection_from_name(char *device_name)
     void rapi_connection_select(void *connection)
+    void rapi_connection_destroy(void *connection)
     HRESULT CeRapiInit()
+    STDAPI CeRapiUninit()
+
     HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply) nogil
     LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition)
     LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
@@ -74,6 +78,7 @@ ERROR_SUCCESS           = 0
 FALSE                   = 0
 TRUE                    = 1
 
+# some HRESULTs
 E_ABORT                 = 0x80004004
 E_ACCESSDENIED          = 0x80070005
 E_FAIL                  = 0x80004005
@@ -91,6 +96,7 @@ S_OK                    = 0x00000000
 
 
 # from rapi.h
+# registry value types
 REG_NONE                = 0
 REG_SZ                  = 1
 REG_EXPAND_SZ           = 2
@@ -101,9 +107,11 @@ REG_DWORD_BIG_ENDIAN    = 5
 REG_LINK                = 6
 REG_MULTI_SZ            = 7
 
+# registry key dispositions
 REG_CREATED_NEW_KEY     = 1
 REG_OPENED_EXISTING_KEY = 2
 
+# battery status
 BATTERY_FLAG_HIGH          =    0x01
 BATTERY_FLAG_LOW           =    0x02
 BATTERY_FLAG_CRITICAL      =    0x04
@@ -111,6 +119,7 @@ BATTERY_FLAG_CHARGING      =    0x08
 BATTERY_FLAG_NO_BATTERY    =    0x80
 BATTERY_FLAG_UNKNOWN       =    0xFF
 
+# flags for finding file info
 FAF_ATTRIBUTES               = 0x00001
 FAF_CREATION_TIME            = 0x00002
 FAF_LASTACCESS_TIME          = 0x00004
@@ -198,11 +207,15 @@ class RAPIError(Exception):
         return str(self.err_code)+": "+str(synce_strerror(self.err_code))
 
 
-class RegKey:
-    def __init__(self, handle, disposition=REG_OPENED_EXISTING_KEY):
+class RegKey(object):
+    def __init__(self, rapi_session, handle, disposition=REG_OPENED_EXISTING_KEY):
+        self.rapi_session = rapi_session
         self.handle = handle
         self.disposition = disposition
         self._host_le = (sys.byteorder == "little")
+
+    def __del__(self):
+        self.close()
 
     def open_sub_key(self, sub_key):
         cdef LPWSTR sub_key_w
@@ -213,18 +226,20 @@ class RegKey:
         else:
             sub_key_w = NULL
 
+        self.rapi_session.__session_select__()
+
         retval = CeRegOpenKeyEx(self.handle, sub_key_w, 0, 0, &opened_key)
 
-        if sub_key != None:
+        if sub_key_w != NULL:
             wstr_free_string(sub_key_w)
 
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
-        return RegKey(opened_key)
+        return RegKey(self.rapi_session, opened_key)
 
     def create_sub_key(self, sub_key, key_class=""):
-        cdef HKEY result
+        cdef HKEY new_key
         cdef DWORD disposition
         cdef LPWSTR sub_key_w
         cdef LPWSTR key_class_w
@@ -236,10 +251,12 @@ class RegKey:
 
         key_class_w = wstr_from_utf8(key_class)
 
-        retval = CeRegCreateKeyEx(self.handle, sub_key_w, 0, key_class_w,
-                                  0, 0, NULL, &result, &disposition)
+        self.rapi_session.__session_select__()
 
-        if sub_key != None:
+        retval = CeRegCreateKeyEx(self.handle, sub_key_w, 0, key_class_w,
+                                  0, 0, NULL, &new_key, &disposition)
+
+        if sub_key_w != NULL:
             wstr_free_string(sub_key_w)
 
         wstr_free_string(key_class_w)
@@ -247,7 +264,7 @@ class RegKey:
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
-        return RegKey(result, disposition)
+        return RegKey(self.rapi_session, new_key, disposition)
 
     def _dword_swap(self, dw):
         return (dw & 0x000000FF) << 24 | \
@@ -285,6 +302,7 @@ class RegKey:
 
             data = <LPBYTE> malloc(4096)
             data_size = 4096
+            self.rapi_session.__session_select__()
 
             retval = CeRegQueryValueEx(self.handle, name_w, NULL,
                                        &type, data, &data_size)
@@ -339,6 +357,8 @@ class RegKey:
             else:
                 raise RAPIError(E_NOTIMPL)
 
+            self.rapi_session.__session_select__()
+
             retval = CeRegSetValueEx(self.handle, name_w, 0, value_type, data, data_size)
 
             if retval != ERROR_SUCCESS:
@@ -358,6 +378,8 @@ class RegKey:
         cdef LPWSTR key_w
 
         key_w = wstr_from_utf8(sub_key)
+        self.rapi_session.__session_select__()
+
         retval = CeRegDeleteKey(self.handle, key_w)
         wstr_free_string(key_w)
 
@@ -374,6 +396,8 @@ class RegKey:
         else:
             name_w = NULL
 
+        self.rapi_session.__session_select__()
+
         retval = CeRegDeleteValue(self.handle, name_w)
 
         if name_w != NULL:
@@ -385,31 +409,70 @@ class RegKey:
         return retval
 
     def close(self):
+        self.rapi_session.__session_select__()
+
         retval = CeRegCloseKey(self.handle)
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
 
-class RAPISession:
-    HKEY_CLASSES_ROOT       = RegKey(0x80000000)
-    HKEY_CURRENT_USER       = RegKey(0x80000001)
-    HKEY_LOCAL_MACHINE      = RegKey(0x80000002)
-    HKEY_USERS              = RegKey(0x80000003)
+cdef class RAPISession:
+    cdef void *rapi_conn
+    cdef HKEY_CLASSES_ROOT_regkey
+    cdef HKEY_CURRENT_USER_regkey
+    cdef HKEY_LOCAL_MACHINE_regkey
+    cdef HKEY_USERS_regkey
 
-    def __init__(self, log_level=0):
-        cdef void *conn
-
+    def __cinit__(self, device=None, log_level=SYNCE_LOG_LEVEL_LOWEST, *args, **keywords):
         synce_log_set_level(log_level)
-        conn = rapi_connection_from_name(NULL)
-        if conn == NULL:
+
+        if device == None:
+            self.rapi_conn = rapi_connection_from_name(NULL)
+        else:
+            self.rapi_conn = rapi_connection_from_name(device)
+
+        if self.rapi_conn == NULL:
             raise RAPIError(E_FAIL)
 
-        rapi_connection_select(conn)
+        rapi_connection_select(self.rapi_conn)
         
         retval = CeRapiInit()
         
         if retval != 0:
             raise RAPIError(retval)
+
+
+    def __init__(self, device=None, log_level=SYNCE_LOG_LEVEL_LOWEST):
+        self.HKEY_CLASSES_ROOT_regkey       = RegKey(self, 0x80000000)
+        self.HKEY_CURRENT_USER_regkey       = RegKey(self, 0x80000001)
+        self.HKEY_LOCAL_MACHINE_regkey      = RegKey(self, 0x80000002)
+        self.HKEY_USERS_regkey              = RegKey(self, 0x80000003)
+
+
+    def __dealloc__(self):
+        if self.rapi_conn != NULL:
+            rapi_connection_select(self.rapi_conn)
+            CeRapiUninit()
+            rapi_connection_destroy(self.rapi_conn)
+            self.rapi_conn = NULL
+
+
+    def __getattr__(self, name):
+        if name == "HKEY_CLASSES_ROOT" or name == "HKCR":
+            return self.HKEY_CLASSES_ROOT_regkey
+        elif name == "HKEY_CURRENT_USER" or name == "HKCU":
+            return self.HKEY_CURRENT_USER_regkey
+        elif name == "HKEY_LOCAL_MACHINE" or name == "HKLM":
+            return self.HKEY_LOCAL_MACHINE_regkey
+        elif name == "HKEY_USERS" or name == "HKU":
+            return self.HKEY_USERS_regkey
+        else:
+            raise AttributeError("%s instance has no attribute '%s'" % (self.__class__.__name__, name))
+
+
+    def __session_select__(self):
+        rapi_connection_select(self.rapi_conn)
+
 
     def process_config(self, config, flags):
         cdef LPWSTR config_w
@@ -422,6 +485,9 @@ class RAPISession:
 
         config_w = wstr_from_utf8(config)
         flags_c = flags
+
+        self.__session_select__()
+
         with nogil:
             retval = CeProcessConfig(config_w, flags_c, &reply_w)
             wstr_free_string(config_w)
@@ -438,6 +504,8 @@ class RAPISession:
             return reply
 
     def start_replication(self):
+        self.__session_select__()
+
         retval = CeStartReplication()
         if retval != TRUE:
             raise RAPIError(retval)
@@ -446,28 +514,39 @@ class RAPISession:
         cdef LPWSTR params_w
 
         params_w = wstr_from_utf8(params)
+
+        self.__session_select__()
+
         retval = CeSyncStart(params_w)
         wstr_free_string(params_w)
         if retval != 0:
             raise RAPIError
 
     def sync_resume(self):
+        self.__session_select__()
+
         retval = CeSyncResume()
         if retval != 0:
             raise RAPIError
 
     def sync_pause(self):
+        self.__session_select__()
+
         retval = CeSyncPause()
         if retval != 0:
             raise RAPIError
 
     def SyncTimeToPc(self):
+        self.__session_select__()
+
         return CeSyncTimeToPc()
 
     def getDiskFreeSpaceEx(self, path):
         cdef ULARGE_INTEGER freeBytesAvailable  
         cdef ULARGE_INTEGER totalNumberOfBytes  
         cdef ULARGE_INTEGER totalNumberOfFreeBytes 
+
+        self.__session_select__()
 
         retval = CeGetDiskFreeSpaceEx( path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes) 
 
@@ -481,6 +560,8 @@ class RAPISession:
     def getSystemPowerStatus(self, refresh):
         cdef SYSTEM_POWER_STATUS_EX powerStatus
         cdef BOOL retval
+
+        self.__session_select__()
 
         with nogil:
             retval = CeGetSystemPowerStatusEx( &powerStatus, 0 )
@@ -514,6 +595,8 @@ class RAPISession:
         cdef DWORD numberOfFiles
 
         cdef CE_FIND_DATA found_file
+
+        self.__session_select__()
 
         retval = CeFindAllFiles( query_w, flags , &numberOfFiles, &find_data )
         wstr_free_string(query_w)
@@ -564,6 +647,8 @@ class RAPISession:
 
 
     def closeHandle(self, hObject):
+        self.__session_select__()
+
         retval = CeCloseHandle( hObject ) 
         #Non-zero indicates success, zero indicates failure
         if retval == 0:
@@ -575,6 +660,8 @@ class RAPISession:
         cdef HANDLE fileHandle
 
         filename_w = wstr_from_utf8(filename)
+
+        self.__session_select__()
 
         fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0 ) 
 
@@ -593,6 +680,8 @@ class RAPISession:
        
         c_buffer = <LPBYTE> malloc (numberOfBytesToRead)
         
+        self.__session_select__()
+
         CeReadFile( fileHandle, c_buffer , numberOfBytesToRead, &numberOfBytesRead, NULL )
 
         if retval == 0:
@@ -619,6 +708,9 @@ class RAPISession:
         hFile = fileHandle
         lpBuffer = buffer
         nNumberOfBytesToWrite = numberOfBytesToWrite
+
+        self.__session_select__()
+
         with nogil:
             retval = CeWriteFile( hFile, lpBuffer , nNumberOfBytesToWrite, &numberOfBytesWritten, NULL)
 
@@ -637,6 +729,8 @@ class RAPISession:
         applicationName_w = wstr_from_utf8(applicationName)
         applicationParams_w = wstr_from_utf8(applicationParams)
 
+        self.__session_select__()
+
         retval = CeCreateProcess( applicationName_w, applicationParams_w, NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
 
         wstr_free_string(applicationName_w)
@@ -651,6 +745,8 @@ class RAPISession:
     def getVersion(self):
         cdef CEOSVERSIONINFO osVersionInfo
         
+        self.__session_select__()
+
         retval = CeGetVersionEx( &osVersionInfo)
      
         if retval == 0:
@@ -669,6 +765,8 @@ class RAPISession:
     def getSystemInfo(self):
         cdef SYSTEM_INFO systemInfo
         
+        self.__session_select__()
+
         CeGetSystemInfo( &systemInfo )
         
         result = dict()

@@ -1,3 +1,8 @@
+2009-03-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* adjust RapiSession to allow for multiple devices,
+	  accept device name for constructor
+
 2009-03-23  Mark Ellis  <mark@mpellis.org.uk>
 
 	* configure.ac.in - require pyrex >= 0.9.6 for gil releasing
