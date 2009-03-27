@@ -1,4 +1,8 @@
-2009-03-29	Mark Ellis	<mark@mpellis.org.uk>
+2009-03-27	Mark Ellis	<mark@mpellis.org.uk>
+
+	* dataserver.py - use new pyrapi2 file handling API
+
+2009-03-26	Mark Ellis	<mark@mpellis.org.uk>
 
 	* dataserver.py - add device name None to RAPISession calls
 

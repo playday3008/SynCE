@@ -621,40 +621,43 @@ class DataServer(dbus.service.Object):
         RAPI_BUFFER_SIZE = 65535
         
         rapi_session = RAPISession(None, 0)
-        
-        fileHandle = rapi_session.createFile("%s%s"%(copyToDirectory,fileName), GENERIC_WRITE , 0, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL )
-        
-        if fileHandle != 0xffffffff:
-            print "Copying file to device"
 
-            fileObject = open(localFilenameAndPath,"rb")
-            read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
+        try:
+            fileHandle = rapi_session.file_open("%s%s"%(copyToDirectory,fileName), "w", 0, FILE_ATTRIBUTE_NORMAL )
+        except RAPIError, e:
+            print "Failed to open destination file: %s" % e
+            return
 
-            bytesWritten = 0 
+        print "Copying file to device"
 
+        fileObject = open(localFilenameAndPath,"rb")
+        read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
+
+        bytesWritten = 0 
+
+        self.installationCopyProgress( (100*bytesWritten) / fileSize )
+
+        while len(read_buffer) > 0:
+            fileHandle.write(read_buffer)
+            bytesWritten += len(read_buffer) 
             self.installationCopyProgress( (100*bytesWritten) / fileSize )
 
-            while len(read_buffer) > 0:
-                rapi_session.writeFile( fileHandle, read_buffer, len(read_buffer) )
-                bytesWritten += len(read_buffer) 
-                self.installationCopyProgress( (100*bytesWritten) / fileSize )
-
-                read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
+            read_buffer = fileObject.read(RAPI_BUFFER_SIZE)
 
 
-            print "Closing filehandle..."
-            returnValue = rapi_session.closeHandle(fileHandle)
+        print "Closing filehandle..."
+        fileHandle.close()
 
-            fileObject.close()
+        fileObject.close()
 
-            applicationName = "wceload.exe"
-            #Add the quotes to make sure paths with spaces are no problem
-            applicationParms = "\"%s%s\""%(copyToDirectory,fileName)
-            if not deleteCab:
-                applicationParms += " /nodelete"
-            result = rapi_session.createProcess( applicationName, applicationParms )
-            self.CabInstallStarted()
-         
+        applicationName = "wceload.exe"
+        #Add the quotes to make sure paths with spaces are no problem
+        applicationParms = "\"%s%s\""%(copyToDirectory,fileName)
+        if not deleteCab:
+            applicationParms += " /nodelete"
+        result = rapi_session.createProcess( applicationName, applicationParms )
+        self.CabInstallStarted()
+
     
     @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="sau")
     def createPartnership(self, name, items):
