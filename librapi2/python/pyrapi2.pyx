@@ -284,6 +284,18 @@ class RegKey(object):
         else:
             return self._dword_swap(dw)
 
+    def _dword_be_to_host(self, dw):
+        if self._host_le:
+            return self._dword_swap(dw)
+        else:
+            return dw
+
+    def _dword_be_from_host(self, dw):
+        if self._host_le:
+            return self._dword_swap(dw)
+        else:
+            return dw
+
     def query_value(self, value_name):
         cdef LPWSTR name_w
         cdef DWORD type
@@ -300,9 +312,16 @@ class RegKey(object):
             else:
                 name_w = NULL
 
-            data = <LPBYTE> malloc(4096)
-            data_size = 4096
             self.rapi_session.__session_select__()
+
+            data_size = 0
+            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+                                       &type, NULL, &data_size)
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+            data = <LPBYTE> malloc(data_size)
 
             retval = CeRegQueryValueEx(self.handle, name_w, NULL,
                                        &type, data, &data_size)
@@ -310,14 +329,25 @@ class RegKey(object):
             if retval != ERROR_SUCCESS:
                 raise RAPIError(retval)
 
-            if type == REG_DWORD:
+            if type == REG_NONE:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            elif type == REG_SZ or type == REG_EXPAND_SZ:
+                value = wstr_to_utf8(<LPCWSTR> data)
+            elif type == REG_BINARY:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            elif type == REG_DWORD:
                 dw_ptr = <LPDWORD> data
                 value = self._dword_le_to_host(dw_ptr[0])
-            elif type == REG_SZ:
-                value = wstr_to_utf8(<LPCWSTR> data)
+            elif type == REG_DWORD_BIG_ENDIAN:
+                dw_ptr = <LPDWORD> data
+                value = self._dword_be_to_host(dw_ptr[0])
+            elif type == REG_LINK:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            elif type == REG_MULTI_SZ:
+                # FIXME - this is doable
+                value = PyString_FromStringAndSize(<char *>data, data_size)
             else:
-                # FIXME
-                return <char *> data
+                value = PyString_FromStringAndSize(<char *>data, data_size)
 
             return value
         finally:
@@ -364,7 +394,7 @@ class RegKey(object):
             if retval != ERROR_SUCCESS:
                 raise RAPIError(retval)
 
-            return retval
+            return
         finally:
             if name_w != NULL:
                 wstr_free_string(name_w)
@@ -386,7 +416,7 @@ class RegKey(object):
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
-        return retval
+        return
 
     def delete_value(self, value_name=None):
         cdef LPWSTR name_w
@@ -406,12 +436,17 @@ class RegKey(object):
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
-        return retval
+        return
 
     def close(self):
+        # we probably dont want to close root keys
+        if self.handle == 0x80000000 or self.handle == 0x80000001 or self.handle == 0x80000002 or self.handle == 0x80000003 or self.handle == 0:
+            return
+
         self.rapi_session.__session_select__()
 
         retval = CeRegCloseKey(self.handle)
+        self.handle = 0
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
