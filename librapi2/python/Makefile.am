@@ -14,7 +14,7 @@ endif
 
 CLEANFILES = pyrapi2.c
 
-EXTRA_DIST = types.pxi pyrapi2.pyx
+EXTRA_DIST = types.pxi constants.pxi pyrapi2.pyx
 
 pyrapi2.c: $(srcdir)/types.pxi $(srcdir)/pyrapi2.pyx
 	pyrexc $(srcdir)/pyrapi2.pyx -o ./pyrapi2.c

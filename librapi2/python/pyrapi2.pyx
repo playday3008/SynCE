@@ -1,4 +1,5 @@
 include "types.pxi"
+include "constants.pxi"
 import sys
 
 cdef extern from "Python.h":
@@ -8,6 +9,9 @@ cdef extern from "stdlib.h":
     void *malloc(size_t size)
     void *realloc(void *ptr, size_t size)
     void free(void *ptr)
+
+cdef extern from "string.h":
+    void *memcpy(void *s1, void *s2, size_t n) 
 
 cdef extern from "synce.h":
     char *wstr_to_utf8(LPCWSTR unicode) nogil
@@ -47,6 +51,7 @@ cdef extern from "rapi.h":
     HANDLE CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
     BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) nogil
     BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+    DWORD CeSetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod)
 
     BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
     
@@ -146,17 +151,12 @@ CSIDL_FONTS                  = 0x0014
 CSIDL_FAVORITES              = 0x0016
 
 #dwShareMode 
-GENERIC_WRITE                = 0x40000000
-GENERIC_READ                 = 0x80000000
 FILE_SHARE_READ              = 0x00000001
 
-#dwCreationDisposition 
-CREATE_NEW                   = 1
-CREATE_ALWAYS                = 2
-OPEN_EXISTING                = 3
-OPEN_ALWAYS                  = 4
-TRUNCATE_EXISTING            = 5
-OPEN_FOR_LOADER              = 6
+# dwMoveMethod
+FILE_BEGIN                   = 0
+FILE_CURRENT                 = 1
+FILE_END                     = 2
 
 #dwFlagsAndAttributes 
 FILE_ATTRIBUTE_READONLY      = 0x00000001
@@ -451,6 +451,111 @@ class RegKey(object):
             raise RAPIError(retval)
 
 
+class RAPIFile(object):
+    def __init__(self, rapi_session, handle, filename, mode):
+        self.rapi_session = rapi_session
+        self.handle = handle
+        self.name = filename
+        self.mode = mode
+
+    def __del__(self):
+        self.close()
+
+    def read(self, size=-1):
+        cdef DWORD bytes_read
+        cdef DWORD bytes_to_read
+        cdef LPBYTE readbuf
+        cdef LPBYTE buffer
+        cdef BOOL retval
+        cdef DWORD total_read
+
+        total_read = 0
+
+        if size >= 0:
+            bytes_to_read = size
+        else:
+            bytes_to_read = 1024*1024
+
+        readbuf = <LPBYTE> malloc (bytes_to_read)
+        buffer = NULL
+
+        while TRUE:
+            retval = CeReadFile(self.handle, readbuf, bytes_to_read, &bytes_read, NULL)
+
+            if retval == FALSE:
+                free(readbuf)
+                free(buffer)
+                raise RAPIError
+
+            if bytes_read == 0:
+                break
+
+            buffer = <LPBYTE> realloc(buffer, (total_read + bytes_read))
+            memcpy(buffer+(sizeof(BYTE)*total_read), readbuf, bytes_read)
+            total_read = total_read + bytes_read
+
+            if bytes_read < bytes_to_read:
+                bytes_to_read = bytes_to_read - bytes_read
+                continue
+
+            if size >= 0:
+                break
+
+            bytes_to_read = 1024*1024
+
+        free(readbuf)
+
+        cdef object returnstring
+        returnstring = PyString_FromStringAndSize(<char *>buffer, total_read)
+        free(buffer)
+        return returnstring
+
+
+    def write(self, buffer):
+        cdef HANDLE hFile
+        cdef char * lpBuffer
+        cdef DWORD bytes_to_write
+        cdef DWORD bytes_written
+        cdef BOOL retval
+
+        hFile = self.handle
+        lpBuffer = buffer
+        bytes_to_write = len(buffer)
+
+        with nogil:
+            retval = CeWriteFile(hFile, lpBuffer, bytes_to_write, &bytes_written, NULL)
+
+        if retval == FALSE:
+            raise RAPIError
+
+        return bytes_written
+
+    def tell(self):
+        cdef DWORD retval
+
+        retval = CeSetFilePointer(self.handle, 0, NULL, FILE_CURRENT);
+        if retval == 0xFFFFFFFF:
+            raise RAPIError
+
+        return retval
+
+    def seek(self, offset, whence=0):
+        cdef DWORD retval
+
+        retval = CeSetFilePointer(self.handle, offset, NULL, whence);
+        if retval == 0xFFFFFFFF:
+            raise RAPIError
+
+    def close(self):
+        if self.handle == 0:
+            return
+
+        retval = CeCloseHandle(self.handle) 
+        self.handle = 0
+        if retval == FALSE:
+            raise RAPIError
+
+
 cdef class RAPISession:
     cdef void *rapi_conn
     cdef HKEY_CLASSES_ROOT_regkey
@@ -681,78 +786,43 @@ cdef class RAPISession:
         return result
 
 
-    def closeHandle(self, hObject):
-        self.__session_select__()
-
-        retval = CeCloseHandle( hObject ) 
-        #Non-zero indicates success, zero indicates failure
-        if retval == 0:
-            raise RAPIError
-
-
-    def createFile(self, filename, desiredAccess, shareMode, createDisposition, flagsAndAttributes):
+    def file_open(self, filename, mode="r", shareMode=0, flagsAndAttributes=0):
         cdef LPWSTR filename_w
         cdef HANDLE fileHandle
+        cdef DWORD desiredAccess
+        cdef DWORD createDisposition
+        cdef DWORD seek_ret
+
+        if mode[0] not in "rwa":
+            raise ValueError("mode string must begin with one of 'r', 'w' or 'a', not '%s'" % mode[0])
 
         filename_w = wstr_from_utf8(filename)
 
-        self.__session_select__()
+        if mode[0] == "r":
+            desiredAccess = GENERIC_READ
+            createDisposition = OPEN_EXISTING
+        elif mode[0] == "w":
+            desiredAccess = GENERIC_WRITE
+            createDisposition = CREATE_ALWAYS
+        else:
+            desiredAccess = GENERIC_WRITE
+            createDisposition = OPEN_ALWAYS
 
-        fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0 ) 
+        if "+" in mode:
+            desiredAccess = desiredAccess|GENERIC_WRITE
+
+        fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0) 
 
         wstr_free_string(filename_w)
         if fileHandle == <HANDLE> -1:
             raise RAPIError
 
-        return fileHandle
+        if mode[0] == "a":
+            seek_ret = CeSetFilePointer(fileHandle, 0, NULL, FILE_END)
+            if seek_ret == 0xFFFFFFFF:
+                raise RAPIError
 
-
-    def readFile( self, fileHandle, numberOfBytesToRead ):
-        cdef DWORD numberOfBytesRead
-        cdef DWORD dwNumberOfBytesToRead
-        dwNumberOfBytesToRead = numberOfBytesToRead
-        cdef LPBYTE c_buffer
-       
-        c_buffer = <LPBYTE> malloc (numberOfBytesToRead)
-        
-        self.__session_select__()
-
-        CeReadFile( fileHandle, c_buffer , numberOfBytesToRead, &numberOfBytesRead, NULL )
-
-        if retval == 0:
-            free(c_buffer)
-            raise RAPIError
-        
-        if numberOfBytesRead < numberOfBytesToRead:
-            c_buffer = <LPBYTE> realloc( c_buffer, numberOfBytesRead)
-
-        cdef object returnstring
-        returnstring = PyString_FromStringAndSize(<char *>c_buffer, numberOfBytesRead)
-
-        free(c_buffer)
-        return returnstring, numberOfBytesRead
-
-
-    def writeFile( self, fileHandle, buffer, numberOfBytesToWrite ):
-        cdef HANDLE hFile
-        cdef char * lpBuffer
-        cdef DWORD nNumberOfBytesToWrite
-        cdef DWORD numberOfBytesWritten
-        cdef BOOL retval
-
-        hFile = fileHandle
-        lpBuffer = buffer
-        nNumberOfBytesToWrite = numberOfBytesToWrite
-
-        self.__session_select__()
-
-        with nogil:
-            retval = CeWriteFile( hFile, lpBuffer , nNumberOfBytesToWrite, &numberOfBytesWritten, NULL)
-
-        if retval == FALSE:
-            raise RAPIError
-
-        return numberOfBytesWritten
+        return RAPIFile(self, fileHandle, filename, mode)
 
     
     #TODO: Provide the user with the processInformation

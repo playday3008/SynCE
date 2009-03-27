@@ -1,6 +1,8 @@
 2009-03-27  Mark Ellis  <mark@mpellis.org.uk>
 
 	* enhance pyrapi2 registry query_value, some small fixes
+	* move file operations into a pythonic file-type class, and
+	  move some file op flags into constants.pxi as enums
 
 2009-03-26  Mark Ellis  <mark@mpellis.org.uk>
 
