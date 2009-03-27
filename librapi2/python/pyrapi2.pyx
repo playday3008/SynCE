@@ -1,3 +1,11 @@
+"""Python bindings to librapi2
+
+RAPI is the protocol used to communicate with Windows CE and
+Windows Mobile devices, and librapi2 is the open source
+implementation from the SynCE project.
+
+For more information, go to www.synce.org"""
+
 include "types.pxi"
 include "constants.pxi"
 import sys
@@ -6,12 +14,12 @@ cdef extern from "Python.h":
     object PyString_FromStringAndSize ( char *, int )
     
 cdef extern from "stdlib.h":
-    void *malloc(size_t size)
-    void *realloc(void *ptr, size_t size)
-    void free(void *ptr)
+    void *malloc(size_t size) nogil
+    void *realloc(void *ptr, size_t size) nogil
+    void free(void *ptr) nogil
 
 cdef extern from "string.h":
-    void *memcpy(void *s1, void *s2, size_t n) 
+    void *memcpy(void *s1, void *s2, size_t n) nogil
 
 cdef extern from "synce.h":
     char *wstr_to_utf8(LPCWSTR unicode) nogil
@@ -20,45 +28,52 @@ cdef extern from "synce.h":
     char* synce_strerror(DWORD error) nogil
 
 cdef extern from "synce_log.h":
-    void synce_log_set_level(int level)
+    void synce_log_set_level(int level) nogil
 
 cdef extern from "rapi.h":
     # connection functions
-    void *rapi_connection_from_name(char *device_name)
-    void rapi_connection_select(void *connection)
-    void rapi_connection_destroy(void *connection)
-    HRESULT CeRapiInit()
-    STDAPI CeRapiUninit()
+    void *rapi_connection_from_name(char *device_name) nogil
+    void rapi_connection_select(void *connection) nogil
+    void rapi_connection_destroy(void *connection) nogil
+    HRESULT CeRapiInit() nogil
+    STDAPI CeRapiUninit() nogil
 
+    # registry functions
+    LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition) nogil
+    LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult) nogil
+    LONG CeRegCloseKey(HKEY hKey) nogil
+    LONG CeRegDeleteKey(HKEY hKey, LPCWSTR lpszSubKey) nogil
+    LONG CeRegDeleteValue(HKEY hKey, LPCWSTR lpszValueName) nogil
+    LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
+    LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData) nogil
+
+    # sync functions
+    BOOL CeStartReplication() nogil
+    HRESULT CeSyncStart(LPCWSTR params) nogil
+    HRESULT CeSyncResume() nogil
+    HRESULT CeSyncPause() nogil
+    HRESULT CeSyncTimeToPc() nogil
+
+    # miscellaneous functions
     HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply) nogil
-    LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition)
-    LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
-    LONG CeRegCloseKey(HKEY hKey)
-    LONG CeRegDeleteKey(HKEY hKey, LPCWSTR lpszSubKey)
-    LONG CeRegDeleteValue(HKEY hKey, LPCWSTR lpszValueName)
-    LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
-    LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData)
-    BOOL CeStartReplication()
-    HRESULT CeSyncStart(LPCWSTR params)
-    HRESULT CeSyncResume()
-    HRESULT CeSyncPause()
-    HRESULT CeSyncTimeToPc()
     BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh) nogil
-    DWORD CeGetDiskFreeSpaceEx( LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes)
-    BOOL CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray)
-
-    BOOL CeCloseHandle(HANDLE hObject)
-    HANDLE CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
-    BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) nogil
-    BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
-    DWORD CeSetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod)
-
-    BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
+    DWORD CeGetDiskFreeSpaceEx( LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes) nogil
+    BOOL CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray) nogil
+    BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation) nogil
     
-    VOID CeGetSystemInfo( LPSYSTEM_INFO lpSystemInfo)
-    BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation)
-    HRESULT CeRapiGetError()
-    DWORD CeGetLastError()
+    VOID CeGetSystemInfo( LPSYSTEM_INFO lpSystemInfo) nogil
+    BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation) nogil
+
+    # file access
+    BOOL CeCloseHandle(HANDLE hObject) nogil
+    HANDLE CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) nogil
+    BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) nogil
+    BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) nogil
+    DWORD CeSetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) nogil
+
+    # error handling
+    HRESULT CeRapiGetError() nogil
+    DWORD CeGetLastError() nogil
 
 #
 # Public constants
@@ -189,6 +204,7 @@ FILE_ATTRIBUTE_7             = 0x00080000
 # RAPIError is a subclass of Exception
 
 class RAPIError(Exception):
+    "An error resulting from a RAPI call"
     def __init__(self, err_code=None):
         cdef HRESULT hr
         cdef DWORD last_error
@@ -208,6 +224,7 @@ class RAPIError(Exception):
 
 
 class RegKey(object):
+    """Registry key entry from a Windows Mobile Device"""
     def __init__(self, rapi_session, handle, disposition=REG_OPENED_EXISTING_KEY):
         self.rapi_session = rapi_session
         self.handle = handle
@@ -218,6 +235,12 @@ class RegKey(object):
         self.close()
 
     def open_sub_key(self, sub_key):
+        """Open an existing sub key of this key.
+
+        Takes as an argument the name of the subkey relative to this key. The path
+        to a key more than one level down should be separated by backslashes. Returns
+        a new RegKey object on success."""
+
         cdef LPWSTR sub_key_w
         cdef HKEY opened_key
 
@@ -239,6 +262,13 @@ class RegKey(object):
         return RegKey(self.rapi_session, opened_key)
 
     def create_sub_key(self, sub_key, key_class=""):
+        """Creates a sub key of this key, or opens an existing key.
+
+        Takes as an argument the name of the subkey to create relative to this key.
+        The path to a key more than one level down should be separated by backslashes.
+        The optional key_class argument can be used to specify the class of the new key.
+        Returns a new RegKey object on success."""
+
         cdef HKEY new_key
         cdef DWORD disposition
         cdef LPWSTR sub_key_w
@@ -297,6 +327,12 @@ class RegKey(object):
             return dw
 
     def query_value(self, value_name):
+        """Obtain a value contained in this key
+
+        Takes as an argument the name of the value required, and returns
+        the value. Currently the registry types DWORD, DWORD_BIG_ENDIAN,
+        SZ, EXPAND_SZ are fully supported."""
+
         cdef LPWSTR name_w
         cdef DWORD type
         cdef LPBYTE data
@@ -358,6 +394,12 @@ class RegKey(object):
                 free(data)
 
     def set_value(self, value_name, value_data, value_type=None):
+        """Set a value contained in this key
+
+        Takes as arguments the name of the value, the data itself, and
+        optionally the value type. Currently only the registry types
+        DWORD and SZ (string) are fully supported."""
+
         cdef LPWSTR name_w
         cdef LPBYTE data
         cdef DWORD data_size
@@ -405,6 +447,12 @@ class RegKey(object):
                     free(data)
 
     def delete_sub_key(self, sub_key):
+        """Delete a sub key of this key.
+
+        Takes as an argument the name of the subkey to delete relative to this key.
+        The path to a key more than one level down should be separated by backslashes.
+        There is no return value."""
+
         cdef LPWSTR key_w
 
         key_w = wstr_from_utf8(sub_key)
@@ -419,6 +467,11 @@ class RegKey(object):
         return
 
     def delete_value(self, value_name=None):
+        """Delete a value contained in this key
+
+        Takes as an argument the name of the value to delete. There is
+        no return value."""
+
         cdef LPWSTR name_w
 
         if value_name != None:
@@ -439,6 +492,8 @@ class RegKey(object):
         return
 
     def close(self):
+        """Close the handle to this key."""
+
         # we probably dont want to close root keys
         if self.handle == 0x80000000 or self.handle == 0x80000001 or self.handle == 0x80000002 or self.handle == 0x80000003 or self.handle == 0:
             return
@@ -452,6 +507,10 @@ class RegKey(object):
 
 
 class RAPIFile(object):
+    """File object from a Windows Mobile Device
+
+    This attempts to be as close as possible to a standard Python file-like object"""
+
     def __init__(self, rapi_session, handle, filename, mode):
         self.rapi_session = rapi_session
         self.handle = handle
@@ -462,6 +521,10 @@ class RAPIFile(object):
         self.close()
 
     def read(self, size=-1):
+        """Read from the file.
+
+        Reads at most size bytes from the file, or the complete file if size is not given"""
+
         cdef DWORD bytes_read
         cdef DWORD bytes_to_read
         cdef LPBYTE readbuf
@@ -512,6 +575,10 @@ class RAPIFile(object):
 
 
     def write(self, buffer):
+        """Write to the file.
+
+        Writes the given buffer to the file."""
+
         cdef HANDLE hFile
         cdef char * lpBuffer
         cdef DWORD bytes_to_write
@@ -531,6 +598,8 @@ class RAPIFile(object):
         return bytes_written
 
     def tell(self):
+        """Return the position of the file pointer."""
+
         cdef DWORD retval
 
         retval = CeSetFilePointer(self.handle, 0, NULL, FILE_CURRENT);
@@ -540,6 +609,8 @@ class RAPIFile(object):
         return retval
 
     def seek(self, offset, whence=0):
+        """ Set the position of the file pointer."""
+
         cdef DWORD retval
 
         retval = CeSetFilePointer(self.handle, offset, NULL, whence);
@@ -547,6 +618,8 @@ class RAPIFile(object):
             raise RAPIError
 
     def close(self):
+        """Close the file handle."""
+
         if self.handle == 0:
             return
 
@@ -557,6 +630,8 @@ class RAPIFile(object):
 
 
 cdef class RAPISession:
+    """A connection to a Windows Mobile device."""
+
     cdef void *rapi_conn
     cdef HKEY_CLASSES_ROOT_regkey
     cdef HKEY_CURRENT_USER_regkey
@@ -615,6 +690,11 @@ cdef class RAPISession:
 
 
     def process_config(self, config, flags):
+        """Process the supplied configuration xml.
+
+        Returns the reply document if there is one, otherwise
+        an empty string."""
+
         cdef LPWSTR config_w
         cdef LPWSTR reply_w
         cdef DWORD flags_c
@@ -682,6 +762,12 @@ cdef class RAPISession:
         return CeSyncTimeToPc()
 
     def getDiskFreeSpaceEx(self, path):
+        """Retrieve the amount of space on a disk volume.
+
+        Takes as an argument a path to a storage location. Returns a tuple
+        consisting of free bytes available to the calling user, total number
+        of bytes available to the user, and total free bytes."""
+
         cdef ULARGE_INTEGER freeBytesAvailable  
         cdef ULARGE_INTEGER totalNumberOfBytes  
         cdef ULARGE_INTEGER totalNumberOfFreeBytes 
@@ -698,6 +784,10 @@ cdef class RAPISession:
         return (freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes) 
 
     def getSystemPowerStatus(self, refresh):
+        """Retrieves the system power status.
+
+        Returns a dictionary containing various details of the power status"""
+
         cdef SYSTEM_POWER_STATUS_EX powerStatus
         cdef BOOL retval
 
@@ -728,6 +818,12 @@ cdef class RAPISession:
 
 
     def findAllFiles( self, query, flags ):
+        """Retrieves information about files and directories.
+
+        Takes as arguments the path to search in, and a combination of
+        filter and search flags. Returns a list containing dictionaries
+        of attributes for each entry."""
+
         cdef LPWSTR query_w
         query_w = wstr_from_utf8(query)
 
@@ -787,6 +883,11 @@ cdef class RAPISession:
 
 
     def file_open(self, filename, mode="r", shareMode=0, flagsAndAttributes=0):
+        """Open a file.
+
+        Takes as an argument the name of the file, and the open mode. Returns
+        a RAPIFile object."""
+
         cdef LPWSTR filename_w
         cdef HANDLE fileHandle
         cdef DWORD desiredAccess
@@ -827,6 +928,11 @@ cdef class RAPISession:
     
     #TODO: Provide the user with the processInformation
     def createProcess(self, applicationName, applicationParams):
+        """Start a remote process.
+
+        Arguments are the name of the application to run, and a
+        string of the arguments to the application."""
+
         cdef PROCESS_INFORMATION processInformation
         cdef LPWSTR applicationName_w
         cdef LPWSTR applicationParams_w
@@ -848,6 +954,10 @@ cdef class RAPISession:
 
 
     def getVersion(self):
+        """Obtain operating system version information.
+
+        Returns a dictionary of version information."""
+
         cdef CEOSVERSIONINFO osVersionInfo
         
         self.__session_select__()
@@ -868,6 +978,10 @@ cdef class RAPISession:
         return result
     
     def getSystemInfo(self):
+        """Obtain information about the system.
+
+        Returns a dictionary containing the system information."""
+
         cdef SYSTEM_INFO systemInfo
         
         self.__session_select__()

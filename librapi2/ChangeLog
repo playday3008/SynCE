@@ -3,6 +3,8 @@
 	* enhance pyrapi2 registry query_value, some small fixes
 	* move file operations into a pythonic file-type class, and
 	  move some file op flags into constants.pxi as enums
+	* declare all non-python functions as nogil
+	* add pydocs
 
 2009-03-26  Mark Ellis  <mark@mpellis.org.uk>
 
