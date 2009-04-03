@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT([Synce Plugin], 0.22, [], libopensync-plugin-synce)
+AC_INIT([Synce Plugin RRA], @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@, [], libopensync-plugin-synce-rra)
 AM_INIT_AUTOMAKE(foreign)
 AC_CONFIG_SRCDIR(src/synce_plugin.c)
 AC_CONFIG_HEADER(config.h)
@@ -15,8 +15,12 @@ AC_SUBST(PACKAGE_LIBS)
 dnl AM_PATH_RRA forgets to add mimedir to the list of dependicies.
 dnl Fix it here. 
 LIBS="-lmimedir $LIBS"
-AM_PATH_RRA
-AM_PATH_LIBSYNCE
+
+PKG_CHECK_MODULES(LIBSYNCE, libsynce > 0.13)
+
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 > 0.13)
+
+PKG_CHECK_MODULES(LIBRRA, librra > 0.13)
 
 AC_ISC_POSIX
 AC_PROG_CC

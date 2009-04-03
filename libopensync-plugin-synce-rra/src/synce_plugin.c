@@ -186,7 +186,7 @@ connect(OSyncContext *ctx)
 	//4- creating syncmgr
 	env->syncmgr = rra_syncmgr_new();
 
-	if (!rra_syncmgr_connect(env->syncmgr))
+	if (!rra_syncmgr_connect(env->syncmgr, NULL))
 	{
 		osync_context_report_error(ctx, OSYNC_ERROR_NO_CONNECTION, "can't connect");
 		goto exit;
@@ -489,7 +489,7 @@ get_changeinfo(OSyncContext *ctx)
         //need to reinit the connection
         rra_syncmgr_disconnect(env->syncmgr);
 		
-        if (!rra_syncmgr_connect(env->syncmgr)) {
+        if (!rra_syncmgr_connect(env->syncmgr, NULL)) {
                 osync_context_report_error(ctx, OSYNC_ERROR_NO_CONNECTION, "can't connect");
                 return;
         }
@@ -505,7 +505,7 @@ get_changeinfo(OSyncContext *ctx)
 		//need to reinit the connection
 		rra_syncmgr_disconnect(env->syncmgr);
 	
-		if (!rra_syncmgr_connect(env->syncmgr))
+		if (!rra_syncmgr_connect(env->syncmgr, NULL))
 		{
 			osync_context_report_error(ctx, OSYNC_ERROR_NO_CONNECTION, "can't connect");
 			return;

@@ -18,10 +18,10 @@ synce_plugin_la_SOURCES = \
 	synce_file.h
 
 synce_plugin_la_LDFLAGS = -avoid-version -export-dynamic -module
-synce_plugin_la_LIBADD = @PACKAGE_LIBS@ @LIBS@ -lrapi -lsynce -lrra
+synce_plugin_la_LIBADD = @PACKAGE_LIBS@ @LIBS@ @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@ @LIBRRA_LIBS@
 
 noinst_PROGRAMS = ft
 
 ft_SOURCES=	synce_file.c synce_file.h
 ft_CFLAGS = -DTEST_FILE -Wall -Werror @PACKAGE_CFLAGS@
-ft_LDADD = @PACKAGE_LIBS@ @LIBS@ -lrapi -lsynce -lrra
+ft_LDADD = @PACKAGE_LIBS@ @LIBS@ @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@ @LIBRRA_LIBS@

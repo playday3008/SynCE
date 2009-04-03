@@ -1,3 +1,8 @@
+2009-04-03  Mark Ellis  <mark@mpellis.org.uk>
+
+	* build system changes
+	* pass NULL to syncmgr_connect as ip to listen on
+
 2009-03-23  Mark Ellis  <mark@mpellis.org.uk>
 
 	* restructure most of main plugin code to reduce code duplication for
