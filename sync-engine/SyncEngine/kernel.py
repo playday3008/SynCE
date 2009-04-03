@@ -101,6 +101,7 @@ class SyncEngine(dbus.service.Object):
 		self.device = None
 		self.deviceName = ""
 		self.devicePath = ""
+		self.iface_addr = ""
 		self.partnerships = None
 
 		# Attempt to connect to a running odccm. If a running odccm is not available, we can wait for
@@ -168,6 +169,7 @@ class SyncEngine(dbus.service.Object):
 				self.device = None
 				self.deviceName = ""
 				self.devicePath = ""
+				self.iface_addr = ""
 
 				try:
 					self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
@@ -208,6 +210,7 @@ class SyncEngine(dbus.service.Object):
 			self.deviceName = self.device.GetName()
 			self.logger.info(" device %s connected" % self.deviceName)
 			self.devicePath = obj_path
+			self.iface_addr = "0.0.0.0"
        			if self._ProcessAuth():
 				self.OnConnect()
 		else:
@@ -231,6 +234,8 @@ class SyncEngine(dbus.service.Object):
 			self.device=None
 			self.deviceName = ""
 			self.OnDisconnect()
+			self.devicePath = ""
+			self.iface_addr = ""
 		else:
 			self.logger.info("_CBDeviceDisconnected: ignoring non-live device detach")
 
@@ -268,6 +273,7 @@ class SyncEngine(dbus.service.Object):
 			self.deviceName = self.device.GetPropertyString("pda.pocketpc.name")
 			self.logger.info(" device %s connected" % self.deviceName)
 			self.devicePath = obj_path
+			self.iface_addr = self.device.GetPropertyString("pda.pocketpc.iface_address")
 			if self._ProcessAuth():
 				self.OnConnect()
 		else:
@@ -294,6 +300,8 @@ class SyncEngine(dbus.service.Object):
 			self.device=None
 			self.deviceName = ""
 			self.OnDisconnect()
+			self.devicePath = ""
+			self.iface_addr = ""
 
 	#
 	# _CheckDeviceConnected

@@ -1104,3 +1104,8 @@ Changed longname of plugin to clarify this is for Windows Mobile 5 and later.
 ------------------------------
 Pass None as device name argument to new RAPISession constructor.
 
+03/04/2009 - 123400 Mark Ellis
+------------------------------
+For device connected through hal, use iface_address property to create RRASession
+only listening on our interface.
+
