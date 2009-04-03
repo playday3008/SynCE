@@ -1,3 +1,9 @@
+2009-04-03  Mark Ellis  <mark@mpellis.org.uk>
+
+	* specify an IP for SyncMgr to connect to, rather than all
+	  interfaces
+	* pyrra.pyx - rename __new__to __cinit__
+
 2009-03-19  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add debug level option to conversion tools

@@ -182,12 +182,12 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self)/*{{{*/
   }
 }/*}}}*/
 
-bool rra_syncmgr_connect(RRA_SyncMgr* self)/*{{{*/
+bool rra_syncmgr_connect(RRA_SyncMgr* self, const char *ip_addr)/*{{{*/
 {
   if (self)
   {
     return 
-      rrac_connect(self->rrac) &&
+            rrac_connect(self->rrac, ip_addr) &&
       rra_syncmgr_retrieve_types(self);
   }
   else

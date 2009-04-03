@@ -145,29 +145,29 @@ bool rrac_set_command_69_callback(/*{{{*/
 
 /* create server socket, call CeStartReplication(), accept command and
  * data channel */
-bool rrac_connect(RRAC* rrac)/*{{{*/
+bool rrac_connect(RRAC* rrac, const char *ip_addr)/*{{{*/
 {
   HRESULT hr;
-	rrac->server = synce_socket_new();
+  rrac->server = synce_socket_new();
 
-	if (!synce_socket_listen(rrac->server, NULL, RRAC_PORT))
-		goto fail;
+  if (!synce_socket_listen(rrac->server, ip_addr, RRAC_PORT))
+    goto fail;
 
-	hr = CeStartReplication();
+  hr = CeStartReplication();
   if (FAILED(hr))
   {
     synce_error("CeStartReplication failed: %s", synce_strerror(hr));
     goto fail;
   }
 
-	rrac->cmd_socket   = synce_socket_accept(rrac->server, NULL);
-	rrac->data_socket  = synce_socket_accept(rrac->server, NULL);
+  rrac->cmd_socket   = synce_socket_accept(rrac->server, NULL);
+  rrac->data_socket  = synce_socket_accept(rrac->server, NULL);
 
-	return true;
+  return true;
 
 fail:
-	rrac_disconnect(rrac);
-	return false;
+  rrac_disconnect(rrac);
+  return false;
 }/*}}}*/
 
 /* disconnect sockets */

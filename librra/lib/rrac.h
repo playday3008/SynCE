@@ -25,7 +25,7 @@ bool rrac_set_command_69_callback(
     Command69Callback callback, 
     void* cookie);
 
-bool rrac_connect(RRAC* rrac);
+bool rrac_connect(RRAC* rrac, const char *ip_addr);
 
 void rrac_disconnect(RRAC* rrac);
 

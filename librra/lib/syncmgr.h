@@ -51,7 +51,7 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self);
    Connect or disconnect from device 
  */
 
-bool rra_syncmgr_connect(RRA_SyncMgr* self);
+bool rra_syncmgr_connect(RRA_SyncMgr* self, const char *ip_addr);
 void rra_syncmgr_disconnect(RRA_SyncMgr* self);
 bool rra_syncmgr_is_connected(RRA_SyncMgr* self);
 

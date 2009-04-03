@@ -55,7 +55,7 @@ cdef extern from "../lib/syncmgr.h":
 
 	void rra_syncmgr_destroy(RRA_SyncMgr * instance)
 
-	bool rra_syncmgr_connect(RRA_SyncMgr * instance)
+	bool rra_syncmgr_connect(RRA_SyncMgr * instance, char *ip_addr)
 
 	void rra_syncmgr_disconnect(RRA_SyncMgr * instance)
 
@@ -162,7 +162,7 @@ cdef class RRASession:
 	cdef bool connected
 	cdef uint32_t ntypes
 	
-	def __new__(self):
+	def __cinit__(self):
 		self.instance = <RRA_SyncMgr *>rra_syncmgr_new()
 		if not self.instance:
 			raise RRAError(-1)
@@ -176,8 +176,8 @@ cdef class RRASession:
 	# Connection and disconnection
 	#
 
-	def Connect(self):
-		self.connected = rra_syncmgr_connect(self.instance)
+	def Connect(self,ip_addr="0.0.0.0"):
+		self.connected = rra_syncmgr_connect(self.instance, ip_addr)
 		return self.connected
 
 	def isConnected(self):

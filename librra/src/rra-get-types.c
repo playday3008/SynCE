@@ -24,7 +24,7 @@ int main()
 
 	syncmgr = rra_syncmgr_new();
 
-	if (!rra_syncmgr_connect(syncmgr))
+	if (!rra_syncmgr_connect(syncmgr, NULL))
 	{
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
