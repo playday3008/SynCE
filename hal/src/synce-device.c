@@ -120,7 +120,7 @@ synce_device_set_hal_props(SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  GInetAddr *device_inetaddr;
+  GInetAddr *inetaddr;
   gchar *ip_bytes;
   gchar *ip_str;
 
@@ -229,13 +229,31 @@ synce_device_set_hal_props(SynceDevice *self)
     dbus_error_free(&error);
   }
 
-  device_inetaddr = gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket);
-  ip_bytes = g_malloc(gnet_inetaddr_get_length(device_inetaddr));
-  gnet_inetaddr_get_bytes (device_inetaddr, ip_bytes);
+  inetaddr = gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket);
+  ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
+  gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
   ip_str = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
   g_free(ip_bytes);
 
   prop_name = "pda.pocketpc.ip_address";
+  result = libhal_device_set_property_string(priv->hal_ctx,
+					     priv->udi,
+					     prop_name,
+					     ip_str,
+					     &error);
+  if (!result) {
+    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
+    dbus_error_free(&error);
+  }
+  g_free(ip_str);
+
+  inetaddr = gnet_tcp_socket_get_local_inetaddr (priv->conn->socket);
+  ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
+  gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
+  ip_str = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
+  g_free(ip_bytes);
+
+  prop_name = "pda.pocketpc.iface_address";
   result = libhal_device_set_property_string(priv->hal_ctx,
 					     priv->udi,
 					     prop_name,

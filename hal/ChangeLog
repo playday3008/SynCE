@@ -1,3 +1,8 @@
+2009-04-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/synce-device.c - provide local iface address as hal
+	  property pda.pocketpc.iface_address
+
 2009-03-25  Mark Ellis <mark@mpellis.org.uk>
 
 	* hal/10-synce.fdi - only use an rndis_host interface with 
