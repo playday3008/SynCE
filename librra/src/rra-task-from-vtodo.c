@@ -22,19 +22,20 @@ static void show_usage(const char* name)
 			"\t                  3 - Errors, warnings and info\n"
 			"\t                  4 - Everything\n"
                         "\t-c CODEPAGE       Codepage to be used for TASK_FILE (default CP1252)\n"
+                        "\t-u                Input vTodo is UTF8\n"
                         "\t-t TZFILE         Timezone filename\n"
 			"\tVTODO_FILE        The source vtodo filename\n"
 			"\tTASK_FILE         The destination task filename\n",
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile, char** codepage)
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile, char** codepage, uint32_t *flags)
 {
 	int c;
 	int path_count;
 	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "d:c:t:")) != -1)
+	while ((c = getopt(argc, argv, "d:c:t:u")) != -1)
 	{
 		switch (c)
 		{
@@ -44,6 +45,10 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest,
 			
 			case 'c':
 				*codepage = optarg;
+				break;
+
+			case 'u':
+				*flags = *flags | RRA_TASK_UTF8;
 				break;
 
 			case 't':
@@ -85,9 +90,9 @@ int main(int argc, char** argv)
 	RRA_Timezone* p_tzi = NULL;
 	char *source = NULL, *dest = NULL, *tzfile = NULL;
 	char *codepage = NULL;
+	uint32_t flags = 0;
 
-
-	if (!handle_parameters(argc, argv, &source, &dest, &tzfile, &codepage))
+	if (!handle_parameters(argc, argv, &source, &dest, &tzfile, &codepage, &flags))
 		goto exit;
 
 	if (!codepage)
@@ -125,6 +130,7 @@ int main(int argc, char** argv)
       {
         fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
             argv[0], (int) bytes_read, tzfile, strerror(errno));
+        goto exit;
       }
 
       fclose(file);
@@ -133,6 +139,7 @@ int main(int argc, char** argv)
     {
       fprintf(stderr, "%s: Unable to open time zone information file '%s': %s\n", 
           argv[0], tzfile, strerror(errno));
+      goto exit;
     }
   }
 
@@ -141,7 +148,7 @@ int main(int argc, char** argv)
 			NULL,
 			&buffer,
 			&buffer_size,
-			0,
+			flags,
 			p_tzi,
 			codepage))
 	{

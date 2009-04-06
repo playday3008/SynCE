@@ -6,8 +6,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-int main()
+static void show_usage(const char* name)
+{
+	fprintf(stderr,
+			"Syntax:\n"
+			"\n"
+			"\t%s [-d LEVEL]\n"
+			"\n"
+			"\t-d LEVEL          Set debug log level\n"
+			"\t                  0 - No logging\n"
+			"\t                  1 - Errors only (default)\n"
+			"\t                  2 - Errors and warnings\n"
+			"\t                  3 - Errors, warnings and info\n"
+			"\t                  4 - Everything\n",
+			name);
+}
+
+static bool handle_parameters(int argc, char** argv)
+{
+	int c;
+	int log_level = SYNCE_LOG_LEVEL_ERROR;
+
+	while ((c = getopt(argc, argv, "d:")) != -1)
+	{
+		switch (c)
+		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
+			case 'h':
+			default:
+				show_usage(argv[0]);
+				return false;
+		}
+	}
+
+	synce_log_set_level(log_level);
+				
+	return true;
+}
+
+int main(int argc, char** argv)
 {
 	int result = 1;
 	HRESULT hr;
@@ -16,23 +58,27 @@ int main()
 	size_t object_type_count = 0;
 	unsigned i;
 
-/*	synce_log_set_level(0);*/
+	if (!handle_parameters(argc, argv))
+		goto exit;
 	
 	hr = CeRapiInit();
 	if (FAILED(hr))
+	{
+		fprintf(stderr, "RAPI connection failed\n");
 		goto exit;
+	}
 
 	syncmgr = rra_syncmgr_new();
 
 	if (!rra_syncmgr_connect(syncmgr, NULL))
 	{
-		fprintf(stderr, "Connection failed\n");
+		fprintf(stderr, "RRA connection failed\n");
 		goto exit;
 	}
 
-  object_type_count = rra_syncmgr_get_type_count(syncmgr);
+	object_type_count = rra_syncmgr_get_type_count(syncmgr);
 
-  object_types = rra_syncmgr_get_types(syncmgr);
+	object_types = rra_syncmgr_get_types(syncmgr);
 
 	if (!object_types)
 	{
@@ -63,7 +109,8 @@ int main()
 		if (modified)
 			free(modified);
 	}
-	
+
+	rra_syncmgr_disconnect(syncmgr);
 exit:
 	rra_syncmgr_destroy(syncmgr);
 	

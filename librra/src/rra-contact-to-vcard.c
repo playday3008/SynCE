@@ -20,18 +20,19 @@ static void show_usage(const char* name)
 			"\t                  3 - Errors, warnings and info\n"
 			"\t                  4 - Everything\n"
                         "\t-c CODEPAGE       Codepage to be used for CONTACT_FILE (default CP1252)\n"
+                        "\t-u                Output vCard as UTF8\n"
 			"\tCONTACT_FILE      The source contact filename\n"
 			"\tVCARD_FILE        The destination vcard filename\n",
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** codepage)
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** codepage, uint32_t *flags)
 {
 	int c;
 	int path_count;
 	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "d:c:")) != -1)
+	while ((c = getopt(argc, argv, "d:c:u")) != -1)
 	{
 		switch (c)
 		{
@@ -41,6 +42,10 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest,
 			
 			case 'c':
 				*codepage = optarg;
+				break;
+
+			case 'u':
+				*flags = *flags | RRA_CONTACT_UTF8;
 				break;
 
 			case 'h':
@@ -75,9 +80,9 @@ int main(int argc, char** argv)
 	char* vcard = NULL;
 	char *source = NULL, *dest = NULL;
 	char *codepage = NULL;
+	uint32_t flags = 0;
 
-
-	if (!handle_parameters(argc, argv, &source, &dest, &codepage))
+	if (!handle_parameters(argc, argv, &source, &dest, &codepage, &flags))
 		goto exit;
 
 	if (!codepage)
@@ -103,7 +108,7 @@ int main(int argc, char** argv)
 			buffer,
 			file_size,
 			&vcard,
-			RRA_CONTACT_VERSION_3_0,
+			flags | RRA_CONTACT_VERSION_3_0,
 			codepage))
 	{
 		fprintf(stderr, "Failed to create vCard\n");

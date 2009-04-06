@@ -1,5 +1,7 @@
 /* $Id$ */
 #include "../lib/appointment.h"
+#include "../lib/timezone.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -20,18 +22,20 @@ static void show_usage(const char* name)
 			"\t                  3 - Errors, warnings and info\n"
 			"\t                  4 - Everything\n"
                         "\t-c CODEPAGE       Codepage to be used for APPOINTMENT_FILE (default CP1252) \n"
+                        "\t-u                Input vEvent is UTF8\n"
+                        "\t-t TZFILE         Timezone filename\n"
 			"\tVEVENT_FILE       The source vevent filename\n"
 			"\tAPPOINTMENT_FILE  The destination appointment filename\n",
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** codepage)
+static bool handle_parameters(int argc, char** argv, char** source, char** dest, char** tzfile, char** codepage, uint32_t *flags)
 {
 	int c;
 	int path_count;
 	int log_level = SYNCE_LOG_LEVEL_ERROR;
 
-	while ((c = getopt(argc, argv, "d:c:")) != -1)
+	while ((c = getopt(argc, argv, "d:c:t:u")) != -1)
 	{
 		switch (c)
 		{
@@ -41,6 +45,14 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest,
 			
 			case 'c':
 				*codepage = optarg;
+				break;
+			
+			case 't':
+				*tzfile = optarg;
+				break;
+			
+			case 'u':
+				*flags = *flags | RRA_APPOINTMENT_UTF8;
 				break;
 			
 			case 'h':
@@ -73,10 +85,13 @@ int main(int argc, char** argv)
 	long file_size = 0;
 	uint8_t* buffer = NULL;
 	size_t buffer_size = 0;
-        char *source = NULL, *dest = NULL;
+	RRA_Timezone tzi;
+	RRA_Timezone* p_tzi = NULL;
+        char *source = NULL, *dest = NULL, *tzfile = NULL;
         char *codepage = NULL;
+        uint32_t flags = 0;
 
-	if (!handle_parameters(argc, argv, &source, &dest, &codepage))
+	if (!handle_parameters(argc, argv, &source, &dest, &tzfile, &codepage, &flags))
 		goto exit;
 
 	if (!codepage)
@@ -100,13 +115,40 @@ int main(int argc, char** argv)
 	fclose(file);
 	file = NULL;
 
+	if (tzfile)
+	{
+		file = fopen(tzfile, "r");
+		if (file)
+		{
+			size_t bytes_read = fread(&tzi, 1, sizeof(RRA_Timezone), file);
+			if (sizeof(RRA_Timezone) == bytes_read)
+			{
+				p_tzi = &tzi;
+			}
+			else
+			{
+				fprintf(stderr, "%s: Only read %i bytes from time zone information file '%s': %s\n", 
+					argv[0], (int) bytes_read, tzfile, strerror(errno));
+				goto exit;
+			}
+
+			fclose(file);
+		}
+		else
+		{
+			fprintf(stderr, "%s: Unable to open time zone information file '%s': %s\n", 
+				argv[0], tzfile, strerror(errno));
+			goto exit;
+		}
+	}
+
 	if (!rra_appointment_from_vevent(
 			vevent,
 			NULL,
 			&buffer,
 			&buffer_size,
-			0,
-			NULL,
+			flags,
+			p_tzi,
 			codepage))
 	{
 		fprintf(stderr, "Failed to create data\n");
