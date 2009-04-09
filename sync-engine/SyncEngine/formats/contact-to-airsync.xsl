@@ -149,7 +149,7 @@ PO Box </xsl:text>
             <C1:HomeFaxNumber><xsl:value-of select="Telephone[Type='HOME'][Type='FAX']/Content"/></C1:HomeFaxNumber>
             <C1:BusinessFaxNumber><xsl:value-of select="Telephone[Type='WORK'][Type='FAX']/Content"/></C1:BusinessFaxNumber>
 
-            <xsl:for-each select="Telephone[Type='HOME' and Type='VOICE']/Content">
+            <xsl:for-each select="Telephone[Type='HOME' and Type!='FAX']/Content">
                 <xsl:choose>
                     <xsl:when test="position() = 1">
                         <C1:HomePhoneNumber>
@@ -164,7 +164,7 @@ PO Box </xsl:text>
                 </xsl:choose>
             </xsl:for-each>
 
-            <xsl:for-each select="Telephone[Type='WORK' and Type='VOICE']/Content">
+            <xsl:for-each select="Telephone[Type='WORK' and Type!='FAX']/Content">
                 <xsl:choose>
                     <xsl:when test="position() = 1">
                         <C1:BusinessPhoneNumber>

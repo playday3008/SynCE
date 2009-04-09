@@ -1109,3 +1109,8 @@ Pass None as device name argument to new RAPISession constructor.
 For device connected through hal, use iface_address property to create RRASession
 only listening on our interface.
 
+09/04/2009 - 202900 John Carr
+------------------------------
+Commit patch from Pawel Kot (via AdamW). Fixes some issues when syncing from WM to
+places other than Evolution (e.g. nokia <-> wm). This has been in Mandriva for a while
+without problems.
