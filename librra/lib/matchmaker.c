@@ -282,7 +282,7 @@ bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t ind
         "%s=%i\n"
         "%s=%s\n"
         ,
-        info->name,
+        synce_info_get_name(info),
         PARTERSHIP_SECTION,
         CURRENT_PARTNER,  index,
         PARTNER_ID,       id,

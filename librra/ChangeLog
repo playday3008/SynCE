@@ -1,3 +1,8 @@
+2009-04-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* use synce_info_get_ functions to access SynceInfo
+	* get device ip for syncmgr from rapi connection
+
 2009-04-06  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add utf8 option to all conversion tools; add optional timezone

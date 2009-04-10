@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <rapi.h>
 
 #define OBJECT_ID_STOP 0xffffffff
 
@@ -25,7 +26,7 @@ bool rrac_set_command_69_callback(
     Command69Callback callback, 
     void* cookie);
 
-bool rrac_connect(RRAC* rrac, const char *ip_addr);
+bool rrac_connect(RRAC* rrac, RapiConnection *connection);
 
 void rrac_disconnect(RRAC* rrac);
 

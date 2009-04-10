@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
-#include <rapi.h>
 
 #define LETOH16(x)  x = letoh16(x)
 #define LETOH32(x)  x = letoh32(x)
@@ -145,14 +144,20 @@ bool rrac_set_command_69_callback(/*{{{*/
 
 /* create server socket, call CeStartReplication(), accept command and
  * data channel */
-bool rrac_connect(RRAC* rrac, const char *ip_addr)/*{{{*/
+bool rrac_connect(RRAC* rrac, RapiConnection *connection)/*{{{*/
 {
   HRESULT hr;
   rrac->server = synce_socket_new();
 
+  const char *ip_addr = NULL;
+  if (connection)
+    ip_addr = rapi_connection_get_local_ip(connection);
+
   if (!synce_socket_listen(rrac->server, ip_addr, RRAC_PORT))
     goto fail;
 
+  if (connection)
+    rapi_connection_select(connection);
   hr = CeStartReplication();
   if (FAILED(hr))
   {

@@ -1,4 +1,5 @@
 import sys
+import pyrapi2
 
 cdef extern from "stddef.h":
 	ctypedef unsigned int  size_t
@@ -8,6 +9,7 @@ cdef extern from "time.h":
 
 cdef extern from "Python.h":
 	object PyString_FromStringAndSize(char *, int)
+	void * PyCObject_AsVoidPtr(object)
 
 cdef extern from "stdlib.h":
 	void *malloc(size_t size)
@@ -32,6 +34,9 @@ cdef extern from "synce.h":
 cdef extern from "synce_log.h":
 	void synce_log_set_level(int level)
 
+cdef extern from "rapi.h":
+	ctypedef void RapiConnection
+
 cdef extern from "../lib/syncmgr.h":
 	ctypedef void  RRA_SyncMgr
 	ctypedef struct RRA_SyncMgrType:
@@ -55,7 +60,7 @@ cdef extern from "../lib/syncmgr.h":
 
 	void rra_syncmgr_destroy(RRA_SyncMgr * instance)
 
-	bool rra_syncmgr_connect(RRA_SyncMgr * instance, char *ip_addr)
+	bool rra_syncmgr_connect(RRA_SyncMgr * instance, RapiConnection *connection)
 
 	void rra_syncmgr_disconnect(RRA_SyncMgr * instance)
 
@@ -176,8 +181,15 @@ cdef class RRASession:
 	# Connection and disconnection
 	#
 
-	def Connect(self,ip_addr="0.0.0.0"):
-		self.connected = rra_syncmgr_connect(self.instance, ip_addr)
+	def Connect(self, rapisession=None):
+		cdef RapiConnection *rapiconn
+
+		if rapisession == None:
+			rapiconn = NULL
+		else:
+			rapiconn = PyCObject_AsVoidPtr(rapisession.rapi_connection)
+
+		self.connected = rra_syncmgr_connect(self.instance, rapiconn)
 		return self.connected
 
 	def isConnected(self):
