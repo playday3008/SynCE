@@ -1,10 +1,10 @@
 #MIN_CONFIG
 
-AM_INIT_AUTOMAKE(kcemirror, 0.2)
+AM_INIT_AUTOMAKE(kcemirror, 0.2.1)
 AC_C_BIGENDIAN
 AC_CHECK_KDEMAXPATHLEN
 
-dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
+dnl Check for libsynce & librapi2
+PKG_CHECK_MODULES(LIBRAPI2, librapi2 > 0.13)
 
 AC_DEFINE(QT_NO_ASCII_CAST, 1, [Define if you don't want QString casted to char *])
