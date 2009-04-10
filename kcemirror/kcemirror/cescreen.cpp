@@ -163,7 +163,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
     if (isSynCeDevice) {
 	synce::SynceInfo *dev_info = synce::synce_info_new(pdaName.ascii());
 	if (dev_info)
-	  deviceAddress = QString(dev_info->ip);
+	  deviceAddress = QString(synce::synce_info_get_device_ip(dev_info));
 	else
 	  deviceAddress = "";
 	if (dev_info) synce::synce_info_destroy(dev_info);
