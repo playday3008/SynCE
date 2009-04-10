@@ -204,24 +204,27 @@ vdccm_device_connected(const gchar *pdaname, gboolean locked)
     return NULL;
   }
 
+  int os_major = 0, os_minor= 0;
+  synce_info_get_os_version(info, &os_major, &os_minor);
+
   device = g_object_new(WM_DEVICE_TYPE,
-			"object-name", info->name,
+			"object-name", synce_info_get_name(info),
                         "dccm-type", "vdccm",
                         "connection_status", DEVICE_STATUS_CONNECTED,
-			"name", info->name,
-			"os-major", info->os_version,
+			"name", synce_info_get_name(info),
+			"os-major", os_major,
 			"os-minor", 0,
-			"build-number", info->build_number,
-			"processor-type", info->processor_type,
-			"partner-id-1", info->partner_id_1,
-			"partner-id-2", info->partner_id_2,
-			"class", info->os_name,
-			"hardware", info->model,
-			"password", info->password,
-			"key", info->key,
-			"dccm-pid", info->dccm_pid,
-			"ip", info->ip,
-			"transport", info->transport,
+			"build-number", synce_info_get_build_number(info),
+			"processor-type", synce_info_get_processor_type(info),
+			"partner-id-1", synce_info_get_partner_id_1(info),
+			"partner-id-2", synce_info_get_partner_id_2(info),
+			"class", synce_info_get_os_name(info),
+			"hardware", synce_info_get_model(info),
+			"password", synce_info_get_password(info),
+			"key", synce_info_get_key(info),
+			"dccm-pid", synce_info_get_dccm_pid(info),
+			"ip", synce_info_get_device_ip(info),
+			"transport", synce_info_get_transport(info),
 			NULL);
 
   synce_info_destroy(info);
