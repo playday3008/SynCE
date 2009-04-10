@@ -12,6 +12,7 @@ import sys
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize ( char *, int )
+    object PyCObject_FromVoidPtr(void* cobj, void (*destr)(void *))
     
 cdef extern from "stdlib.h":
     void *malloc(size_t size) nogil
@@ -31,10 +32,12 @@ cdef extern from "synce_log.h":
     void synce_log_set_level(int level) nogil
 
 cdef extern from "rapi.h":
+    ctypedef void RapiConnection
+
     # connection functions
-    void *rapi_connection_from_name(char *device_name) nogil
-    void rapi_connection_select(void *connection) nogil
-    void rapi_connection_destroy(void *connection) nogil
+    RapiConnection *rapi_connection_from_name(char *device_name) nogil
+    void rapi_connection_select(RapiConnection *connection) nogil
+    void rapi_connection_destroy(RapiConnection *connection) nogil
     HRESULT CeRapiInit() nogil
     STDAPI CeRapiUninit() nogil
 
@@ -74,6 +77,17 @@ cdef extern from "rapi.h":
     # error handling
     HRESULT CeRapiGetError() nogil
     DWORD CeGetLastError() nogil
+
+    # connection parameters
+    char *rapi_connection_get_name(RapiConnection* connection) nogil
+    int rapi_connection_get_os_version(RapiConnection* connection, int *os_major, int *os_minor) nogil
+    int rapi_connection_get_build_number(RapiConnection* connection) nogil
+    int rapi_connection_get_processor_type(RapiConnection* connection) nogil
+    char *rapi_connection_get_os_name(RapiConnection* connection) nogil
+    char *rapi_connection_get_model(RapiConnection* connection) nogil
+    char *rapi_connection_get_device_ip(RapiConnection* connection) nogil
+    char *rapi_connection_get_local_ip(RapiConnection* connection) nogil
+    int rapi_connection_get_fd(RapiConnection* connection) nogil
 
 #
 # Public constants
@@ -632,7 +646,7 @@ class RAPIFile(object):
 cdef class RAPISession:
     """A connection to a Windows Mobile device."""
 
-    cdef void *rapi_conn
+    cdef RapiConnection *rapi_conn
     cdef HKEY_CLASSES_ROOT_regkey
     cdef HKEY_CURRENT_USER_regkey
     cdef HKEY_LOCAL_MACHINE_regkey
@@ -673,6 +687,10 @@ cdef class RAPISession:
 
 
     def __getattr__(self, name):
+        cdef int os_major
+        cdef int os_minor
+        cdef int retval
+
         if name == "HKEY_CLASSES_ROOT" or name == "HKCR":
             return self.HKEY_CLASSES_ROOT_regkey
         elif name == "HKEY_CURRENT_USER" or name == "HKCU":
@@ -681,6 +699,31 @@ cdef class RAPISession:
             return self.HKEY_LOCAL_MACHINE_regkey
         elif name == "HKEY_USERS" or name == "HKU":
             return self.HKEY_USERS_regkey
+        elif name == "name":
+            return rapi_connection_get_name(self.rapi_conn)
+        elif name == "os_version":
+            retval = rapi_connection_get_os_version(self.rapi_conn, &os_major, &os_minor)
+            if retval == 0:
+                return None
+            else:
+                return (os_major, os_minor)
+        elif name == "build_number":
+            return rapi_connection_get_build_number(self.rapi_conn)
+        elif name == "processor_type":
+            return rapi_connection_get_processor_type(self.rapi_conn)
+        elif name == "os_name":
+            return rapi_connection_get_os_name(self.rapi_conn)
+        elif name == "model":
+            return rapi_connection_get_model(self.rapi_conn)
+        elif name == "device_ip":
+            return rapi_connection_get_device_ip(self.rapi_conn)
+        elif name == "local_ip":
+            return rapi_connection_get_local_ip(self.rapi_conn)
+
+        # this gives access to the RapiConnection C object wrapped in a
+        # python CObject, be careful !!!
+        elif name == "rapi_connection":
+            return PyCObject_FromVoidPtr(<void *>self.rapi_conn, NULL)
         else:
             raise AttributeError("%s instance has no attribute '%s'" % (self.__class__.__name__, name))
 

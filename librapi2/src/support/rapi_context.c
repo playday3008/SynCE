@@ -62,13 +62,6 @@ void create_pthread_key(){
 #endif
 
 
-
-
-
-
-
-
-
 RapiContext* rapi_context_current()/*{{{*/
 {
 #ifdef USE_THREAD_SAFE_VERSION
@@ -155,60 +148,68 @@ void rapi_context_free(RapiContext* context)/*{{{*/
 
 HRESULT rapi_context_connect(RapiContext* context)
 {
-	HRESULT result = E_FAIL;
-  SynceInfo* info = NULL;
+    HRESULT result = E_FAIL;
+    SynceInfo* info = NULL;
 
-	if (context->is_initialized)
-	{
-		/* Fail immediately */
-		return CERAPI_E_ALREADYINITIALIZED;
-	}
+    if (context->is_initialized)
+    {
+        /* Fail immediately */
+            return CERAPI_E_ALREADYINITIALIZED;
+    }
 
-  if (context->info)
-    info = context->info;
-  else
-    info = synce_info_new(NULL);
-  if (!info)
-	{
-		synce_error("Failed to get connection info");
-		goto fail;
-	}
+    if (context->info)
+        info = context->info;
+    else
+        info = synce_info_new(NULL);
+    if (!info)
+    {
+        synce_error("Failed to get connection info");
+        goto fail;
+    }
 
-    if (info->transport == NULL || ( strcmp(info->transport, "odccm") != 0 && strcmp(info->transport, "hal") != 0 ) ) {
-        if (!info->dccm_pid)
+    const char *transport = synce_info_get_transport(info);
+    /*
+     *  original dccm or vdccm
+     */
+    if (transport == NULL || ( strcmp(transport, "odccm") != 0 && strcmp(transport, "hal") != 0 ) ) {
+        if (!synce_info_get_dccm_pid(info))
         {
             synce_error("DCCM PID entry not found for current connection");
             goto fail;
         }
 
-        if (kill(info->dccm_pid, 0) < 0)
+        if (kill(synce_info_get_dccm_pid(info), 0) < 0)
         {
             if (errno != EPERM)
             {
-                synce_error("DCCM not running with pid %i", info->dccm_pid);
+                synce_error("DCCM not running with pid %i", synce_info_get_dccm_pid(info));
                 goto fail;
             }
         }
 
-        if (!info->ip)
+        if (!synce_info_get_device_ip(info))
         {
             synce_error("IP entry not found for current connection");
             goto fail;
         }
     }
 
-    if (info->transport == NULL || strncmp(info->transport,  "ppp", 3) == 0) {
-        if ( !synce_socket_connect(context->socket, info->ip, RAPI_PORT) )
+    if (transport == NULL || strncmp(transport,  "ppp", 3) == 0) {
+        /*
+         *  original dccm or vdccm
+         */
+        if ( !synce_socket_connect(context->socket, synce_info_get_device_ip(info), RAPI_PORT) )
         {
-            synce_error("failed to connect to %s", info->ip);
-		  goto fail;
+            synce_error("failed to connect to %s", synce_info_get_device_ip(info));
+            goto fail;
         }
 
-        if (info->password && strlen(info->password))
+        const char *password = synce_info_get_password(info);
+        if (password && strlen(password))
         {
             bool password_correct = false;
 
-            if (!synce_password_send(context->socket, info->password, info->key))
+            if (!synce_password_send(context->socket, password, synce_info_get_key(info)))
             {
                 synce_error("failed to send password");
                 result = E_ACCESSDENIED;
@@ -231,29 +232,35 @@ HRESULT rapi_context_connect(RapiContext* context)
         }
         context->rapi_ops = &rapi_ops;
     } else {
-        if (strcmp(info->transport, "odccm") == 0 || strcmp(info->transport, "hal") == 0) {
-            synce_socket_take_descriptor(context->socket, info->fd);
+        /*
+         *  odccm, synce-hal, or proxy ?
+         */
+        if (strcmp(transport, "odccm") == 0 || strcmp(transport, "hal") == 0) {
+            synce_socket_take_descriptor(context->socket, synce_info_get_fd(info));
         }
-        else if ( !synce_socket_connect_proxy(context->socket, info->ip) )
+        else if ( !synce_socket_connect_proxy(context->socket, synce_info_get_device_ip(info)) )
         {
-            synce_error("failed to connect to proxy for %s", info->ip);
+            synce_error("failed to connect to proxy for %s", synce_info_get_device_ip(info));
             goto fail;
         }
 
 	/* rapi 2 seems to be used on devices with OS version of 5.1 or greater */
-	if ((info->os_version > 4) && (info->os_minor > 0))
+
+        int os_major = 0, os_minor = 0;
+        synce_info_get_os_version(info, &os_major, &os_minor);
+	if ((os_major > 4) && (os_minor > 0))
 	  context->rapi_ops = &rapi2_ops;
 	else
 	  context->rapi_ops = &rapi_ops;
     }
 
-	context->is_initialized = true;
-	result = S_OK;
+    context->is_initialized = true;
+    result = S_OK;
 
 fail:
-  if (!context->info)
-    synce_info_destroy(info);
-	return result;
+    if (!context->info)
+        synce_info_destroy(info);
+    return result;
 }
 
 bool rapi_context_begin_command(RapiContext* context, uint32_t command)/*{{{*/

@@ -80,6 +80,18 @@ void rapi_connection_select(RapiConnection* connection);
 /** Destroy connection object - use this after CeRapiUninit() */
 void rapi_connection_destroy(RapiConnection* connection);
 
+/** get information about the connected device */
+const char *rapi_connection_get_name(RapiConnection* connection);
+bool rapi_connection_get_os_version(RapiConnection* connection, int *os_major, int *os_minor);
+int rapi_connection_get_build_number(RapiConnection* connection);
+int rapi_connection_get_processor_type(RapiConnection* connection);
+const char *rapi_connection_get_os_name(RapiConnection* connection);
+const char *rapi_connection_get_model(RapiConnection* connection);
+const char *rapi_connection_get_device_ip(RapiConnection* connection);
+const char *rapi_connection_get_local_ip(RapiConnection* connection);
+/** this should not be used directly for data, only for monitoring purposes */
+int rapi_connection_get_fd(RapiConnection* connection);
+
 /*
  * Main RAPI functions
  */
