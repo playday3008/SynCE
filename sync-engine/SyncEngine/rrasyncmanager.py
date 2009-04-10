@@ -1105,7 +1105,7 @@ class RRASyncManager:
 		self.thread.config = self.engine.config
 		if pship:
 			self.logger.info("connecting to RRA")
-			self.thread.Connect(self.engine.iface_addr)
+			self.thread.Connect(self.engine.rapi_session)
 			self.logger.info("connected")
 			if self.thread.isConnected() != 0:
 				if not self.thread.Subscribe(pship):

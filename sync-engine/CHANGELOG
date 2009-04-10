@@ -1114,3 +1114,8 @@ only listening on our interface.
 Commit patch from Pawel Kot (via AdamW). Fixes some issues when syncing from WM to
 places other than Evolution (e.g. nokia <-> wm). This has been in Mandriva for a while
 without problems.
+
+10/04/2009 - 150600 Mark Ellis
+------------------------------
+Get interface ip for RRASession from RAPISession.
+
