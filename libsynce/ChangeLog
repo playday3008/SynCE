@@ -1,3 +1,8 @@
+2009-04-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add local_iface_ip to SynceInfo
+	* hide the SYnceInfo struct and create _get_ functions
+
 2009-03-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/info.c - check for hal property marking the extra

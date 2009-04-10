@@ -27,6 +27,22 @@ synce_info_new \- allocate a new SynceInfo struct
 .BI "SynceInfo *synce_info_new(const char *" device_name );
 .sp
 .BI "void synce_info_destroy(SynceInfo *" info );
+.sp
+.BI "const char *synce_info_get_name(SynceInfo *" info );
+.BI "bool synce_info_get_os_version(SynceInfo *" info ", int " os_major ", int " os_minor );
+.BI "int synce_info_get_build_number(SynceInfo *" info );
+.BI "int synce_info_get_processor_type(SynceInfo *" info );
+.BI "const char *synce_info_get_os_name(SynceInfo *" info );
+.BI "const char *synce_info_get_model(SynceInfo *" info );
+.BI "const char *synce_info_get_device_ip(SynceInfo *" info );
+.BI "const char *synce_info_get_local_ip(SynceInfo *" info );
+.BI "int synce_info_get_partner_id_1(SynceInfo *" info );
+.BI "int synce_info_get_partner_id_2(SynceInfo *" info );
+.BI "int synce_info_get_fd(SynceInfo *" info );
+.BI "pid_t synce_info_get_dccm_pid(SynceInfo *" info );
+.BI "const char *synce_info_get_transport(SynceInfo *" info );
+.BI "const char *synce_info_get_password(SynceInfo *" info );
+.BI "int synce_info_get_key(SynceInfo *" info );
 .fi
 .SH DESCRIPTION
 The
@@ -48,7 +64,9 @@ or the deprecated
 the current active device is selected. This is usually the last device connected, specifically that described in the active_connection file which is by default
 in the ~/.synce/ directory. With 
 .BR odccm (1)
-the first device connected will be returned.
+the first device connected will be returned. With 
+.BR synce-hal
+this depends on the device(s) in question, and should be considered undefined.
 .sp
 This struct should be freed with
 .BR synce_info_destroy (3).
@@ -56,32 +74,36 @@ This struct should be freed with
 .RS
 .nf
 typedef struct _SynceInfo {
-    pid_t dccm_pid;      /* process id of dccm daemon */
-    char* ip;            /* device ip address */
-    char* password;      /* device password */
-    int key;             /* device pass key */
-    int os_version;      /* device OS major version */
-    int os_minor;        /* device OS minor version */
-    int build_number;    /* OS build number */
-    int processor_type;  /* device processor */
-    int partner_id_1;    /* first sync partner id number */
-    int partner_id_2;    /* second sync partner id number */
-    char* name;          /* device name */
-    char* os_name;       /* device OS name eg. PocketPC */
-    char* model;         /* device hardware name */
-    char* transport;     /* interface type */
-    int fd;              /* file descriptor for RAPI calls */
+    pid_t dccm_pid;       /* process id of dccm daemon */
+    char* device_ip;      /* device ip address */
+    char* local_iface_ip; /* local interface ip address */
+    char* password;       /* device password */
+    int key;              /* device pass key */
+    int os_major;         /* device OS major version */
+    int os_minor;         /* device OS minor version */
+    int build_number;     /* OS build number */
+    int processor_type;   /* device processor */
+    int partner_id_1;     /* first sync partner id number */
+    int partner_id_2;     /* second sync partner id number */
+    char* name;           /* device name */
+    char* os_name;        /* device OS name eg. PocketPC */
+    char* model;          /* device hardware name */
+    char* transport;      /* interface type */
+    int fd;               /* file descriptor for RAPI calls */
 } SynceInfo;
 .fi
 .RE
 .PP
-The particular fields populated depend on the flavour of dccm daemon in use.
+These fields must be accessed with the 
+.BR synce_info_get_ 
+functions. The particular fields populated depend on the flavour of dccm daemon in use.
 .sp
 The use of
 .BR dccm (1)
 is deprecated. When using
 .BR vdccm (1)
 all fields are populated except for 
+.BR local_iface_ip, 
 .BR fd 
 and 
 .BR os_minor .
@@ -97,6 +119,9 @@ and
 and 
 .BR partner_id_2
 are not used.
+.BR odccm (1)
+also does not populate
+.BR local_iface_ip.
 .SH "RETURN VALUE"
 The
 .BR synce_info_new ()

@@ -23,6 +23,26 @@
 #include <libhal.h>
 #endif
 
+struct _SynceInfo
+{
+  pid_t dccm_pid;
+  char* device_ip;
+  char* local_iface_ip;
+  char* password;
+  int key;
+  int os_major;
+  int os_minor;
+  int build_number;
+  int processor_type;
+  int partner_id_1;
+  int partner_id_2;
+  char* name;
+  char* os_name;
+  char* model;
+  char* transport;
+  int fd;
+};
+
 #if ENABLE_ODCCM_SUPPORT
 static const char* const DBUS_SERVICE       = "org.freedesktop.DBus";
 static const char* const DBUS_IFACE         = "org.freedesktop.DBus";
@@ -77,14 +97,15 @@ static SynceInfo* synce_info_from_file(const char* device_name)
   result->dccm_pid        = getConfigInt(config, "dccm",   "pid");
 
   result->key             = getConfigInt(config, "device", "key");
-  result->os_version      = getConfigInt(config, "device", "os_version");
+  result->os_major        = getConfigInt(config, "device", "os_version");
   result->os_minor        = getConfigInt(config, "device", "os_minor");
   result->build_number    = getConfigInt(config, "device", "build_number");
   result->processor_type  = getConfigInt(config, "device", "processor_type");
   result->partner_id_1    = getConfigInt(config, "device", "partner_id_1");
   result->partner_id_2    = getConfigInt(config, "device", "partner_id_2");
 
-  result->ip        = STRDUP(getConfigString(config, "device", "ip"));
+  result->device_ip       = STRDUP(getConfigString(config, "device", "ip"));
+  result->local_iface_ip  = NULL;
   result->password  = STRDUP(getConfigString(config, "device", "password"));
   result->name      = STRDUP(getConfigString(config, "device", "name"));
 
@@ -295,7 +316,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       g_object_unref(proxy);
       goto ERROR;
     }
-    result->os_version = os_major;
+    result->os_major = os_major;
     result->os_minor = os_minor;
 
     if (!dbus_g_proxy_call(proxy, "GetIpAddress", &error,
@@ -307,7 +328,8 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       g_object_unref(proxy);
       goto ERROR;
     }
-    result->ip = ip;
+    result->device_ip = ip;
+    result->local_iface_ip = NULL;
 
     if (!dbus_g_proxy_call(proxy, "GetCpuType", &error,
                            G_TYPE_INVALID,
@@ -497,7 +519,7 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     result->name = g_strdup(name);
     libhal_free_string(name);
 
-    result->os_version = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
+    result->os_major = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
       g_critical("%s: Failed to obtain property pda.pocketpc.os_major for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
       goto error_exit;
@@ -515,10 +537,16 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
       goto error_exit;
     }
 
-    result->ip = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.ip_address", &dbus_error);
+    result->device_ip = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.ip_address", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
       g_critical("%s: Failed to obtain property pda.pocketpc.ip_address for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
       goto error_exit;
+    }
+
+    result->local_iface_ip = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.iface_address", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_warning("%s: Failed to obtain property pda.pocketpc.iface_address for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      result->local_iface_ip = NULL;
     }
 
     result->os_name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.platform", &dbus_error);
@@ -626,7 +654,8 @@ void synce_info_destroy(SynceInfo* info)
 {
   if (info)
   {
-    FREE(info->ip);
+    FREE(info->device_ip);
+    FREE(info->local_iface_ip);
     FREE(info->password);
     FREE(info->name);
     FREE(info->os_name);
@@ -636,3 +665,112 @@ void synce_info_destroy(SynceInfo* info)
   }
 }
 
+const char *
+synce_info_get_name(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->name;
+}
+
+bool
+synce_info_get_os_version(SynceInfo *info, int *os_major, int *os_minor)
+{
+  if (!info) return NULL;
+  if ((!os_major) || (!os_minor))
+    return false;
+
+  *os_major = info->os_major;
+  *os_minor = info->os_minor;
+  return true;
+}
+
+int
+synce_info_get_build_number(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->build_number;
+}
+
+int
+synce_info_get_processor_type(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->processor_type;
+}
+
+const char *
+synce_info_get_os_name(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->os_name;
+}
+
+const char *
+synce_info_get_model(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->model;
+}
+
+const char *
+synce_info_get_device_ip(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->device_ip;
+}
+
+const char *
+synce_info_get_local_ip(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->local_iface_ip;
+}
+
+int
+synce_info_get_partner_id_1(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->partner_id_1;
+}
+
+int
+synce_info_get_partner_id_2(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->partner_id_2;
+}
+
+int
+synce_info_get_fd(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->fd;
+}
+
+pid_t
+synce_info_get_dccm_pid(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->dccm_pid;
+}
+
+const char *
+synce_info_get_transport(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->transport;
+}
+
+const char *
+synce_info_get_password(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->password;
+}
+
+int
+synce_info_get_key(SynceInfo *info)
+{
+  if (!info) return 0;
+  return info->key;
+}
