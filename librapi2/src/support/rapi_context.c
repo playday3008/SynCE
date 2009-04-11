@@ -118,16 +118,18 @@ RapiContext* rapi_context_new()/*{{{*/
 
 	if (context)
 	{
-		if (!(
-					(context->send_buffer  = rapi_buffer_new()) &&
-					(context->recv_buffer = rapi_buffer_new()) &&
-					(context->socket = synce_socket_new())
-				 ))
+		if (!((context->send_buffer  = rapi_buffer_new()) &&
+		      (context->recv_buffer = rapi_buffer_new()) &&
+		      (context->socket = synce_socket_new())
+		      ))
 		{
 			rapi_context_free(context);
 			return NULL;
 		}
 	}
+
+	context->info = NULL;
+	context->own_info = false;
 
 	return context;
 }/*}}}*/
@@ -136,12 +138,14 @@ void rapi_context_free(RapiContext* context)/*{{{*/
 {
 	if (context)
 	{
-    if (context == rapi_context_current())
-      rapi_context_set(NULL);
+		if (context == rapi_context_current())
+			rapi_context_set(NULL);
 
 		rapi_buffer_free(context->send_buffer);
 		rapi_buffer_free(context->recv_buffer);
 		synce_socket_free(context->socket);
+		if (context->own_info && context->info)
+			synce_info_destroy(context->info);
 		free(context);
 	}
 }/*}}}*/
@@ -252,6 +256,12 @@ HRESULT rapi_context_connect(RapiContext* context)
 	  context->rapi_ops = &rapi2_ops;
 	else
 	  context->rapi_ops = &rapi_ops;
+    }
+
+    if (!context->info)
+    {
+      context->info = info;
+      context->own_info = true;
     }
 
     context->is_initialized = true;

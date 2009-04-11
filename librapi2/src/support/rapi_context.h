@@ -18,6 +18,7 @@ typedef struct _RapiContext
 	uint32_t rapi_error;
 	bool is_initialized;
 	SynceInfo* info;
+	bool own_info;
 	struct rapi_ops_s *rapi_ops;
 } RapiContext;
 
