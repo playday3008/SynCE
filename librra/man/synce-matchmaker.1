@@ -4,13 +4,13 @@
 synce-matchmaker \- Configure/view a device's partnership status
 
 .SH SYNOPSIS
-\fBsynce-matchmaker\fR [status|create|replace \fIINDEX\fR]
+\fBsynce-matchmaker\fR [-d \fILEVEL\fR] [status|create|replace \fIINDEX\fR]
 
 .SH "DESCRIPTION"
 .PP
-\fBsynce-matchmaker\fR is used to control a device's partnership status.
-It can show the current status, create a new partnership or update existing
-partnerships.
+\fBsynce-matchmaker\fR is used to control a (pre Windows Mobile 5) device's 
+partnership status. It can show the current status, create a new partnership 
+or update existing partnerships.
 
 .SH "OPTIONS"
 .TP
@@ -22,6 +22,9 @@ Create a partnership with the device.
 .TP
 replace \fIINDEX\fR
 Replace a partnership on the device (\fIINDEX\fR is 1 or 2).
+.TP
+clear \fIINDEX\fR
+Clear a partnership on the device (\fIINDEX\fR is 1 or 2).
 
 .SH "AUTHOR"
 .PP

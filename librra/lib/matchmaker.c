@@ -122,57 +122,36 @@ bool rra_matchmaker_get_current_partner(RRA_Matchmaker* matchmaker, uint32_t* in
 
 bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t id)
 {
-	HKEY partner_key = 0;
-
 	bool success = 
 		rra_matchmaker_create_key(matchmaker, index) &&
 		rapi_reg_set_dword(matchmaker->keys[index], PARTNER_ID, id);
-
-	if (partner_key)
-		CeRegCloseKey(partner_key);
 
 	return success;
 }
 
 bool rra_matchmaker_get_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t* id)
 {
-	HKEY partner_key = 0;
-
 	bool success = 
 		rra_matchmaker_open_key(matchmaker, index) &&
 		rapi_reg_query_dword(matchmaker->keys[index], PARTNER_ID, id);
-
-	if (partner_key)
-		CeRegCloseKey(partner_key);
 
 	return success;
 }
 
 bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, const char* name)
 {
-	HKEY partner_key = 0;
-	
 	bool success =
 		rra_matchmaker_open_key(matchmaker, index) &&
 		rapi_reg_set_string(matchmaker->keys[index], PARTNER_NAME, name);
-	
-	if (partner_key)
-		CeRegCloseKey(partner_key);
 	
 	return success;
 }
 
 bool rra_matchmaker_get_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, char** name)
 {
-	HKEY partner_key = 0;
-
 	bool success = 
-		(index == 1 || index == 2) &&
 		rra_matchmaker_open_key(matchmaker, index) &&
 		rapi_reg_query_string(matchmaker->keys[index], PARTNER_NAME, name);
-
-	if (partner_key)
-		CeRegCloseKey(partner_key);
 
 	return success;	
 }
@@ -198,15 +177,9 @@ bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t ind
   char hostname[256];
   uint32_t other_id = 0;
   uint32_t id = 0;
-  SynceInfo* info = synce_info_new(NULL);
   char* filename = NULL;
   char* p;
 
-  if (!info)
-  {
-    goto exit;
-  }
-  
   if (index != 1 && index != 2)
   {
     synce_error("Bad index: %i", index);
@@ -282,7 +255,7 @@ bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t ind
         "%s=%i\n"
         "%s=%s\n"
         ,
-        synce_info_get_name(info),
+        rapi_connection_get_name(NULL),
         PARTERSHIP_SECTION,
         CURRENT_PARTNER,  index,
         PARTNER_ID,       id,
@@ -292,7 +265,6 @@ bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t ind
   }
 
 exit:
-  synce_info_destroy(info);
   if (filename)
     free(filename);
   return success;

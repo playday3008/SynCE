@@ -16,6 +16,52 @@ static void ctrl_c_handler(int unused)
   running = false;
 }
 
+static void show_usage(const char* name)
+{
+	fprintf(stderr,
+			"Syntax:\n"
+			"\n"
+			"\t%s [-d LEVEL] TYPE-ID ...\n"
+			"\n"
+			"\t-d LEVEL          Set debug log level\n"
+			"\t                  0 - No logging\n"
+			"\t                  1 - Errors only (default)\n"
+			"\t                  2 - Errors and warnings\n"
+			"\t                  3 - Errors, warnings and info\n"
+			"\t                  4 - Everything\n"
+			"\tTYPE-ID ...       Zero or more RRA type-id's to monitor\n",
+			name);
+}
+
+static bool handle_parameters(int argc, char** argv, char ***type_id_list, uint *type_id_no)
+{
+	int c;
+	int log_level = SYNCE_LOG_LEVEL_ERROR;
+
+	while ((c = getopt(argc, argv, "d:")) != -1)
+	{
+		switch (c)
+		{
+			case 'd':
+				log_level = atoi(optarg);
+				break;
+			
+			case 'h':
+			default:
+				show_usage(argv[0]);
+				return false;
+		}
+	}
+
+	synce_log_set_level(log_level);
+				
+	*type_id_no = argc - optind;
+		
+	*type_id_list = &argv[optind];
+
+	return true;
+}
+
 static bool callback (
     RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count, uint32_t* ids, void* cookie)
 {
@@ -60,13 +106,16 @@ int main(int argc, char** argv)
 	int result = 1;
 	HRESULT hr;
 	RRA_SyncMgr* syncmgr = NULL;
-  const char* type_id_str = NULL;
+	char** type_id_list = NULL;
+	uint type_id_no = 0;
+	char* type_id_str = NULL;
 	uint32_t type_id = 0;
-  bool got_event = false;
+	bool got_event = false;
 	/*uint32_t* deleted_ids = NULL;
 	size_t deleted_count = 0;*/
 	
-	synce_log_set_level(0);
+	if (!handle_parameters(argc, argv, &type_id_list, &type_id_no))
+		goto exit;
 
 	hr = CeRapiInit();
 	if (FAILED(hr))
@@ -80,7 +129,7 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-  if (argc < 2)
+  if (type_id_no == 0)
   {
     /* Subcribe to all types */
     unsigned i;
@@ -95,11 +144,11 @@ int main(int argc, char** argv)
   {
     int i;
 
-    for (i = 1; i < argc; i++)
+    for (i = 0; i < type_id_no; i++)
     {
       RRA_SyncMgrType* type = NULL;
 
-      type_id_str = argv[i];
+      type_id_str = type_id_list[i];
 
       type = rra_syncmgr_type_from_name(syncmgr, type_id_str);
       if (type)

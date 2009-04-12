@@ -3,6 +3,7 @@ import pyrapi2
 
 cdef extern from "stddef.h":
 	ctypedef unsigned int  size_t
+	ctypedef int  ssize_t
 
 cdef extern from "time.h":
 	ctypedef time_t
@@ -23,6 +24,9 @@ cdef extern from "stdint.h":
 	ctypedef unsigned int uint32_t
 	ctypedef unsigned char uint8_t
 	
+cdef extern from *:
+	ctypedef uint8_t* const_uint8_ptr "const uint8_t*"
+
 cdef extern from "synce.h":
 	ctypedef uint16_t WCHAR
 	ctypedef uint32_t bool
@@ -55,6 +59,11 @@ cdef extern from "../lib/syncmgr.h":
 	ctypedef struct _RRA_Uint32Vector:
 		pass
 
+	ctypedef bool (*RRA_SyncMgrTypeCallback) (RRA_SyncMgrTypeEvent event, uint32_t type_id, uint32_t count, uint32_t* ids, void* cookie)
+
+	ctypedef ssize_t (*RRA_SyncMgrReader) (uint32_t type_id, unsigned index, uint8_t* data, size_t data_size, void* cookie)
+
+	ctypedef bool (*RRA_SyncMgrWriter) (uint32_t type_id, uint32_t object_id, const_uint8_ptr data, size_t data_size, void* cookie)
 	
 	RRA_SyncMgr * rra_syncmgr_new()
 
@@ -70,11 +79,9 @@ cdef extern from "../lib/syncmgr.h":
 
 	RRA_SyncMgrType * rra_syncmgr_get_types(RRA_SyncMgr * instance)
 
-	void rra_syncmgr_subscribe(RRA_SyncMgr * instance, uint32_t type,\
-                                   bool SyncMgrTypeCB(RRA_SyncMgrTypeEvent event,\
-                                                      uint32_t, uint32_t,\
-                                                      uint32_t * , context),\
-                                   context)
+	void rra_syncmgr_subscribe(RRA_SyncMgr * instance, uint32_t type_id,\
+                                   RRA_SyncMgrTypeCallback callback,\
+                                   void *cookie)
 
 	bool rra_syncmgr_start_events(RRA_SyncMgr * instance)
 
@@ -94,15 +101,13 @@ cdef extern from "../lib/syncmgr.h":
 
 	bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr * instance, uint32_t type_id,\
                                               uint32_t c_cnt, uint32_t * c_oids,\
-					      bool SyncMgrWriter(uint32_t type_id, uint32_t object_id,\
-								 uint8_t * data, size_t data_size, context),\
-					      context)
+					      RRA_SyncMgrWriter writer,\
+					      void *cookie)
 	bool rra_syncmgr_put_multiple_objects(RRA_SyncMgr * instance, uint32_t type_id,\
 					      uint32_t object_id_count, uint32_t * object_id_array,\
 					      uint32_t * recv_object_id_array, uint32_t flags,
-                                              size_t SyncMgrReader(uint32_t type_id, unsigned int index, \
-                                                                   uint8_t * data, size_t data_size, context),\
-					      context)
+                                              RRA_SyncMgrReader reader,\
+					      void *cookie)
 
 	void rra_syncmgr_free_data_buffer(uint8_t* buffer)
 
@@ -134,23 +139,23 @@ class RRAError:
 #
 # Callback for types
 
-cdef bool _CB_TypesCallback(RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count, uint32_t * ids, context):
+cdef bool _CB_TypesCallback(RRA_SyncMgrTypeEvent event, uint32_t type, uint32_t count, uint32_t * ids, void *cookie):
 	ida=[]
 	cdef bool rc
 	for i from 0 <= i < count:
 		ida.append(ids[i])
-	rc=context.CB_TypeCallback(<RRA_SyncMgrTypeEvent> event,type,ida)
+	rc=(<object>cookie).CB_TypeCallback(<RRA_SyncMgrTypeEvent> event,type,ida)
 	return rc
 
-cdef bool _CB_WriterCallback(uint32_t type_id, uint32_t obj_id, uint8_t * data, size_t data_size, context):
+cdef bool _CB_WriterCallback(uint32_t type_id, uint32_t obj_id, const_uint8_ptr data, size_t data_size, void *cookie):
 	pd=[]
 	if data_size > 0:
 		pd=PyString_FromStringAndSize(<char *>data,data_size)
-	return context.CB_ObjectWriterCallback(type_id, obj_id, pd)
+	return (<object>cookie).CB_ObjectWriterCallback(type_id, obj_id, pd)
 
-cdef size_t _CB_ReaderCallback(uint32_t type_id, uint32_t index, uint8_t * data, uint32_t max_size, context):
+cdef ssize_t _CB_ReaderCallback(uint32_t type_id, unsigned index, uint8_t * data, size_t max_size, void *cookie):
 	cdef char * pstr
-	pd=context.CB_ObjectReaderCallback(type_id, index, max_size)
+	pd=(<object>cookie).CB_ObjectReaderCallback(type_id, index, max_size)
 	rc = len(pd)
 	if rc > 0:
 		if rc > max_size:
@@ -206,7 +211,7 @@ cdef class RRASession:
 
 	def SubscribeObjectEvents(self,type_id):
 		if self.connected != 0:
-			rra_syncmgr_subscribe(self.instance, type_id, _CB_TypesCallback, self)
+			rra_syncmgr_subscribe(self.instance, type_id, _CB_TypesCallback, <void *>self)
 			return 0
 		return -1
 
@@ -274,7 +279,7 @@ cdef class RRASession:
 		if c_oids != NULL:
 			for i from 0 <= i < c_cnt:
 				c_oids[i] = oids[i]
-			rc= rra_syncmgr_get_multiple_objects(self.instance,type_id, c_cnt, c_oids,_CB_WriterCallback, self)
+			rc= rra_syncmgr_get_multiple_objects(self.instance,type_id, c_cnt, c_oids,_CB_WriterCallback, <void *>self)
 			free(c_oids)
 		return rc
 	
@@ -301,7 +306,7 @@ cdef class RRASession:
 			c_newoids = <uint32_t *>malloc(sizeof(uint32_t)*c_oidcount)
 			if c_newoids != NULL:
 				rc = rra_syncmgr_put_multiple_objects(self.instance,type_id,c_oidcount,
-								      c_oids,c_newoids,flags,_CB_ReaderCallback,self)
+								      c_oids,c_newoids,flags,_CB_ReaderCallback,<void *>self)
 				if rc == True:
 					for i from 0 <= i < c_oidcount:
 						newoid_array.append(c_newoids[i])

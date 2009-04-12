@@ -7,6 +7,7 @@
 #include <time.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 typedef enum
 {
@@ -17,6 +18,87 @@ typedef enum
   COMMAND_CLEAR,
 } COMMAND;
 
+static void show_usage(const char* name)
+{
+  fprintf(stderr,
+          "The purpose of this program is to manage partnerships with the currently\n"
+          "connected (pre Windows Mobile 5) device.\n"
+          "\n"
+          "Syntax:\n"
+          "\n"
+          "\t%s [-d LEVEL] [status|create|replace INDEX|clear INDEX]\n"
+          "\n"
+          "\t-d LEVEL          Set debug log level\n"
+          "\t                  0 - No logging\n"
+          "\t                  1 - Errors only (default)\n"
+          "\t                  2 - Errors and warnings\n"
+          "\t                  3 - Errors, warnings and info\n"
+          "\t                  4 - Everything\n"
+          "\tstatus   Show partnership status for device\n"
+          "\tcreate   Create partnership with device\n"
+          "\treplace  Replace partnership on device\n"
+          "\tclear    Clear a partnership on device\n"
+          "\tINDEX    The partnership index (1 or 2)\n",
+          name);
+}
+
+static bool handle_parameters(int argc, char** argv, COMMAND *command, uint32_t *index)
+{
+  int c;
+  int arg_count;
+  int log_level = SYNCE_LOG_LEVEL_ERROR;
+
+  while ((c = getopt(argc, argv, "d:")) != -1)
+  {
+    switch (c)
+    {
+      case 'd':
+        log_level = atoi(optarg);
+        break;
+
+      case 'h':
+      default:
+        show_usage(argv[0]);
+        return false;
+    }
+  }
+
+  synce_log_set_level(log_level);
+
+  arg_count = argc - optind;
+  if (arg_count == 0) {
+          show_usage(argv[0]);
+          return false;
+  }
+
+  if (0 == strcasecmp(argv[optind], "status"))
+    *command = COMMAND_STATUS;
+  else if (0 == strcasecmp(argv[optind], "create"))
+    *command = COMMAND_CREATE;
+  else if (0 == strcasecmp(argv[optind], "replace"))
+    *command = COMMAND_REPLACE;
+  else if (0 == strcasecmp(argv[optind], "clear"))
+    *command = COMMAND_CLEAR;
+  else
+  {
+    show_usage(argv[0]);
+    return false;
+  }
+
+  if ((*command == COMMAND_REPLACE) || (*command == COMMAND_CLEAR))
+  {
+    if (arg_count < 2)
+    {
+      show_usage(argv[0]);
+      return false;
+    }
+    optind++;
+    *index = atol(argv[optind]);
+  }
+
+  return true;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -26,39 +108,10 @@ int main(int argc, char** argv)
   uint32_t index = 0;
   HRESULT hr;
   int i;
-  COMMAND command = COMMAND_HELP; 
-  const char* command_string = "";
+  COMMAND command = COMMAND_HELP;
 
-  if (argc >= 2)
-    command_string = argv[1];
-
-  if (0 == strcasecmp(command_string, "status"))
-    command = COMMAND_STATUS;
-  else if (0 == strcasecmp(command_string, "create"))
-    command = COMMAND_CREATE;
-  else if (0 == strcasecmp(command_string, "replace"))
-    command = COMMAND_REPLACE;
-  else if (0 == strcasecmp(command_string, "clear"))
-    command = COMMAND_CLEAR;
-
-  if (command == COMMAND_HELP)
-  {
-    printf(
-        "The purpose of this program is to manage partnerships with the currently\n"
-        "connected device.\n"
-        "\n"
-        "Syntax:\n"
-        "\t%s [status|create|replace INDEX|clear INDEX]\n"
-        "\n"
-        "\tstatus   Show partnership status for device\n"
-        "\tcreate   Create partnership with device\n"
-        "\treplace  Replace partnership on device\n"
-        "\tclear    Clear a partnership on device\n"
-        "\tINDEX    The partnership index (1 or 2)\n",
-        argv[0]
-        );
+  if (!handle_parameters(argc, argv, &command, &index))
     goto exit;
-  }
 
   hr = CeRapiInit();
   if (FAILED(hr))
@@ -117,9 +170,6 @@ int main(int argc, char** argv)
       break;
 
     case COMMAND_REPLACE:
-      if (argc >= 3)
-        index = atol(argv[2]);
-
       if (index == 1 || index == 2)
       {
         if (rra_matchmaker_replace_partnership(matchmaker, index))
@@ -137,10 +187,7 @@ int main(int argc, char** argv)
         goto exit;
       }
       break;
-  case COMMAND_CLEAR:
-      if (argc >= 3)
-        index = atol(argv[2]);
-
+    case COMMAND_CLEAR:
       if (index == 1 || index == 2)
       {
         if (rra_matchmaker_clear_partnership(matchmaker, index))

@@ -1,3 +1,12 @@
+2009-04-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/matchmaker.c - remove unused code, access SynceInfo through
+	  existing rapi connection
+	* get local IP for SyncMgr from default connection if no explicit
+	  connection given
+	* add debug option to synce-matchmaker, rra-subscribe and rra-delete
+	* fix complier warnings in pyrra
+
 2009-04-10  Mark Ellis  <mark@mpellis.org.uk>
 
 	* use synce_info_get_ functions to access SynceInfo

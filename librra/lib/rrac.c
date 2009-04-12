@@ -147,11 +147,11 @@ bool rrac_set_command_69_callback(/*{{{*/
 bool rrac_connect(RRAC* rrac, RapiConnection *connection)/*{{{*/
 {
   HRESULT hr;
+  const char *ip_addr = NULL;
+
   rrac->server = synce_socket_new();
 
-  const char *ip_addr = NULL;
-  if (connection)
-    ip_addr = rapi_connection_get_local_ip(connection);
+  ip_addr = rapi_connection_get_local_ip(connection);
 
   if (!synce_socket_listen(rrac->server, ip_addr, RRAC_PORT))
     goto fail;
