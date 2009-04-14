@@ -13,14 +13,16 @@ struct _Parser;
 
 bool recurrence_generate_rrule(
     struct _Generator* g, 
-    struct _CEPROPVAL* propval);
+    struct _CEPROPVAL* propval,
+    RRA_Timezone *tzi);
 
 bool recurrence_parse_rrule(
     struct _Parser* p, 
     mdir_line* dtstart,
     mdir_line* dtend,
     mdir_line* rrule, 
-    RRA_MdirLineVector* exdates);
+    RRA_MdirLineVector* exdates,
+    RRA_Timezone *tzi);
 
 #endif
 

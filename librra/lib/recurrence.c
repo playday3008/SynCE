@@ -205,7 +205,8 @@ static bool recurrence_generate_monthnth_rrule(
 
 bool recurrence_generate_rrule(
     Generator* g, 
-    CEPROPVAL* propval)
+    CEPROPVAL* propval,
+    RRA_Timezone *tzi)
 {
   bool success = false;
   RRA_RecurrencePattern* pattern = NULL;
@@ -216,8 +217,7 @@ bool recurrence_generate_rrule(
     goto exit;
   }
   
-  pattern = rra_recurrence_pattern_from_buffer(
-    propval->val.blob.lpb, propval->val.blob.dwCount);
+  pattern = rra_recurrence_pattern_from_buffer(propval->val.blob.lpb, propval->val.blob.dwCount, tzi);
 
   if (!pattern)
   {
@@ -437,7 +437,8 @@ bool recurrence_parse_rrule(
     mdir_line* mdir_dtstart,
     mdir_line* mdir_dtend,
     mdir_line* mdir_rrule, 
-    RRA_MdirLineVector* exdates)
+    RRA_MdirLineVector* exdates,
+    RRA_Timezone *tzi)
 {
   bool success = false;
   RRule rrule;
@@ -579,10 +580,6 @@ bool recurrence_parse_rrule(
   {
     struct tm until;
     bool is_utc;
-    RRA_Timezone tzi;
-
-    CeRapiInit();
-    rra_timezone_get(&tzi);
 
     if (!parser_datetime_to_struct(rrule.until, &until, &is_utc))
       goto exit;
@@ -606,7 +603,7 @@ bool recurrence_parse_rrule(
   {
     uint8_t* buffer = NULL;
     size_t size = 0;
-    if (!rra_recurrence_pattern_to_buffer(pattern, &buffer, &size))
+    if (!rra_recurrence_pattern_to_buffer(pattern, &buffer, &size, tzi))
     {
       synce_error("Failed to convert recurrence pattern to buffer for RRULE '%s'", mdir_rrule->values[0]);
       goto exit;

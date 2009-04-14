@@ -6,6 +6,8 @@
 	* python/pyrra.pyx - add pydocs, export constants, throw exceptions
 	  on errors
 	* check returns of various file read/writes
+	* pass timezone info to recurrence routines
+	* calculate actual start date for recurrence pattern
 
 2009-04-11  Mark Ellis  <mark@mpellis.org.uk>
 

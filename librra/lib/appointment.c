@@ -309,7 +309,7 @@ bool rra_appointment_to_vevent(/*{{{*/
 #if ENABLE_RECURRENCE
   if (event_generator_data.recurrence_pattern)
   {
-    if (!recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern))
+    if (!recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern, tzi))
       synce_warning("Failed to generate RRULE from recurrence pattern.");
 
     if (event_generator_data.unique && id == RRA_APPOINTMENT_ID_UNKNOWN)
@@ -620,7 +620,8 @@ bool rra_appointment_from_vevent(/*{{{*/
             event_parser_data.dtstart,
             event_parser_data.dtend,
             event_parser_data.rrule, 
-            event_parser_data.exdates))
+            event_parser_data.exdates,
+            tzi))
         synce_warning("Failed to parse recurrence rule");
 
       if (event_parser_data.uid)

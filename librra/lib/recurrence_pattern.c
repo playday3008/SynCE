@@ -76,6 +76,11 @@ static const char* RECURRENCE_TYPE_NAME[] =
   "Daily", "Weekly", "Monthly", "MonthNth", "Yearly", "YearNth"
 };
 
+static const char* RECURRENCE_PATTERN_TYPE_NAME[] = 
+{
+  "Daily", "Weekly", "Monthly", "Yearly"
+};
+
 static const int DAYS_TO_MONTH[13] =
 {
   0,                                  /* jan */
@@ -576,6 +581,7 @@ static bool rra_recurrence_pattern_read_daily(/*{{{*/
   uint8_t* p = *buffer;
   uint32_t unknown_b;
 
+  /* 0x0a */
   unknown_b = READ_UINT32(p);  p += 4;
   synce_trace("Unknown      = %08x (maybe a duration of %f days?)", 
       unknown_b, unknown_b / (60.0 * 24.0));
@@ -656,11 +662,10 @@ static bool rra_recurrence_pattern_read_monthly(/*{{{*/
     size_t size)
 {
   uint8_t* p = *buffer;
-  uint32_t unknown_b;
 
-  unknown_b = READ_UINT32(p);  p += 4;
+  self->minutes_to_month = READ_UINT32(p);  p += 4;
   synce_trace("Days to month   = %08x = %u minutes = %f days", 
-      unknown_b, unknown_b, unknown_b / (60.0 * 24.0));
+      self->minutes_to_month, self->minutes_to_month, self->minutes_to_month / (60.0 * 24.0));
 
   self->interval      = READ_INT32(p);  p += 4;   /* 0x0e */
   synce_trace("Interval        = %08x", self->interval);
@@ -686,18 +691,18 @@ static bool rra_recurrence_pattern_read_monthnth(/*{{{*/
     size_t size)
 {
   uint8_t* p = *buffer;
-  uint32_t unknown_b, unknown_c;
+  uint32_t unknown;
 
-  unknown_b = READ_UINT32(p);  p += 4;
+  self->minutes_to_month = READ_UINT32(p);  p += 4;
   synce_trace("Days to month   = %08x = %u minutes = %f days", 
-      unknown_b, unknown_b, unknown_b / (60.0 * 24.0));
+              self->minutes_to_month, self->minutes_to_month, self->minutes_to_month / (60.0 * 24.0));
 
   self->interval          = READ_INT32(p);  p += 4;   /* 0x0e */
   synce_trace("Interval        = %08x", self->interval);
   
-  unknown_c = READ_UINT32(p);  p += 4;
-  synce_trace("Unknown         = %08x", unknown_c);
-  if (unknown_c != 0)
+  unknown = READ_UINT32(p);  p += 4;
+  synce_trace("Unknown         = %08x", unknown);
+  if (unknown != 0)
     synce_warning("Unknown not zero!");
    
   self->days_of_week_mask = READ_INT32(p);  p += 4;   /* 0x16 */
@@ -718,15 +723,15 @@ static bool rra_recurrence_pattern_read_header(/*{{{*/
     RRA_RecurrencePattern* self,
     uint8_t** buffer)
 {
-  uint16_t unknown_a[3];
+  uint16_t unknown_a[2];
   uint8_t* p = *buffer;
   int i;
   const char* recurrence_type_name = "Unknown";
 
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < 2; i++)
   {
     unknown_a[i] = READ_UINT16(p);  p += 2;
-    /*synce_trace("Unknown         = %04x = %i", unknown_a[i], unknown_a[i]);*/
+    synce_trace("Unknown[%d] = %04x = %i", i, unknown_a[i], unknown_a[i]);
   }
 
   if (unknown_a[0] != 0x3004)
@@ -735,45 +740,47 @@ static bool rra_recurrence_pattern_read_header(/*{{{*/
   if (unknown_a[0] != unknown_a[1])
     synce_warning("%04x != %04x", unknown_a[0], unknown_a[1]);
 
+  /* 0x04 */
+  self->recurrence_pattern_type = READ_UINT16(p);  p += 2;
+
+  /* 0x06 */
   self->recurrence_type = READ_INT32(p);  p += 4;
 
-  synce_trace("unknown_a[2]    = %04x", unknown_a[2]);
   switch (self->recurrence_type)
   {
     case olRecursDaily:
-      if (unknown_a[2] != 0x200a)
-        synce_warning("Expected 0x200a, got %04x", unknown_a[2]);
+      if (self->recurrence_pattern_type != RecurrenceDaily)
+        synce_warning("Expected 0x200a, got %04x", self->recurrence_pattern_type);
       break;
     case olRecursWeekly:
       /* 0x200a is used for "Daily - Every weekday" */
       /* 0x200b is used for "Weekly - Mo,Tu,On,To,Fr */
-      if (unknown_a[2] != 0x200a && unknown_a[2] != 0x200b)
-        synce_warning("Expected 0x200a or 0x200b, got %04x", unknown_a[2]);
+      if (self->recurrence_pattern_type != RecurrenceDaily && self->recurrence_pattern_type != RecurrenceWeekly)
+        synce_warning("Expected 0x200a or 0x200b, got %04x", self->recurrence_pattern_type);
       break;
     case olRecursMonthly:
     case olRecursMonthNth:
       /* 0x200c probably means "show as Monthly" */
       /* 0x200d probably means "show as Yearly" */
-      if (unknown_a[2] != 0x200c && unknown_a[2] != 0x200d)
-        synce_warning("Expected 0x200c or 0x200d, got %04x", unknown_a[2]);
+      if (self->recurrence_pattern_type != RecurrenceMonthly && self->recurrence_pattern_type != RecurrenceYearly)
+        synce_warning("Expected 0x200c or 0x200d, got %04x", self->recurrence_pattern_type);
       break;
     default:
       break;
   }
 
   {
-    unsigned show_type = unknown_a[2] - SHOW_AS_EXTRA;
-    const char* show_type_name = "Unknown";
+    unsigned show_type = self->recurrence_pattern_type - SHOW_AS_EXTRA;
+    const char* recurrence_pattern_type_name = "Unknown";
 
-    if (show_type < RRA_RECURRENCE_TYPE_COUNT)
-      show_type_name = RECURRENCE_TYPE_NAME[show_type];
-    synce_trace("Show as recurrence type %i (%s)", show_type, show_type_name);
+    if (show_type < RRA_RECURRENCE_PATTERN_TYPE_COUNT)
+      recurrence_pattern_type_name = RECURRENCE_PATTERN_TYPE_NAME[show_type];
+    synce_trace("Show as recurrence type %04x (%s)", self->recurrence_pattern_type, recurrence_pattern_type_name);
   }
 
   if (self->recurrence_type < RRA_RECURRENCE_TYPE_COUNT)
     recurrence_type_name = RECURRENCE_TYPE_NAME[self->recurrence_type];
   synce_trace("Recurrence type %i (%s)", self->recurrence_type, recurrence_type_name);
-
  
   *buffer = p;
   return true;
@@ -810,19 +817,344 @@ static size_t rra_recurrence_pattern_size(RRA_RecurrencePattern* self)
   return size;
 }
 
-RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_t size)/*{{{*/
+void rra_recurrence_pattern_calculate_real_start(RRA_RecurrencePattern *self)
+{
+
+  if (self->recurrence_type == olRecursDaily)
+  {
+    struct tm real_start = rra_minutes_to_struct(self->pattern_start_date);
+    uint32_t minutes;
+    real_start.tm_sec = 0;
+    real_start.tm_min = 0;
+    real_start.tm_hour = 0;
+    minutes = rra_minutes_from_struct(&real_start);
+
+    self->pattern_start_date = minutes;
+    return;
+  }
+
+  if (self->recurrence_type == olRecursWeekly)
+  {
+    /* if pattern start day week day is earlier or on any recurrence day of week,
+         start on that or the next recurrence day of that week,
+       else start on first recurrence day of that week + interval */
+
+    uint32_t minutes;
+    int days_list[7];
+    int start_pattern_wday = 0, real_start_day = 7, wday = 0, first = 0;
+    struct tm t_tmp;
+
+    /* calculate first day of week */
+    t_tmp = rra_minutes_to_struct(self->pattern_start_date);
+
+    start_pattern_wday = t_tmp.tm_wday;
+
+    t_tmp.tm_sec = 0;
+    t_tmp.tm_min = 0;
+    t_tmp.tm_hour = 0;
+
+    memset(days_list, 0, sizeof(days_list));
+
+    if (self->days_of_week_mask & olSunday)
+            days_list[0] = 1;
+    if (self->days_of_week_mask & olMonday)
+            days_list[1] = 1;
+    if (self->days_of_week_mask & olTuesday)
+            days_list[2] = 1;
+    if (self->days_of_week_mask & olWednesday)
+            days_list[3] = 1;
+    if (self->days_of_week_mask & olThursday)
+            days_list[4] = 1;
+    if (self->days_of_week_mask & olFriday)
+            days_list[5] = 1;
+    if (self->days_of_week_mask & olSaturday)
+            days_list[6] = 1;
+
+    while(wday < 7) {
+            if (days_list[wday] == 1) {
+                    if (wday >= start_pattern_wday) {
+                            real_start_day = wday;
+                            break;
+                    }
+                    if (first == 0)
+                            first = wday;
+            }
+            wday++;
+    }
+
+    if (real_start_day < 7)
+            t_tmp.tm_mday = t_tmp.tm_mday - start_pattern_wday + real_start_day;
+    else
+            t_tmp.tm_mday = t_tmp.tm_mday - (t_tmp.tm_wday - first) + (7 * self->interval);
+
+    minutes = rra_minutes_from_struct(&t_tmp);
+
+    self->pattern_start_date = minutes;
+    return;
+  }
+
+  if (self->recurrence_type == olRecursMonthly && self->recurrence_pattern_type == RecurrenceMonthly)
+  {
+    /* if recurrence day is after or on pattern start day, start on recurrence day of pattern start month,
+       else start on recurrence day of pattern start month + interval */
+
+    struct tm real_start = rra_minutes_to_struct(self->pattern_start_date);
+    uint32_t minutes;
+    real_start.tm_sec = 0;
+    real_start.tm_min = 0;
+    real_start.tm_hour = 0;
+
+    if (self->day_of_month < real_start.tm_mday)
+    {
+            real_start.tm_mon = real_start.tm_mon + self->interval;
+    }
+
+    real_start.tm_mday = self->day_of_month;
+
+    minutes = rra_minutes_from_struct(&real_start);
+
+    self->pattern_start_date = minutes;
+    return;
+  }
+
+
+  if (self->recurrence_type == olRecursMonthNth && self->recurrence_pattern_type == RecurrenceMonthly)
+  {
+    /* get the first day in the month of pattern_start_date, find the recurrence day in
+       that month, and determine if it's before pattern_start_date */
+
+    uint32_t minutes;
+    int days_in_month;
+    int days_list[7];
+    int mday = 0, wday = 0, count = 0, last = 0;
+    struct tm t_tmp;
+
+    /* calculate number of days in target month */
+    t_tmp = rra_minutes_to_struct(self->pattern_start_date);
+    t_tmp.tm_sec = 0;
+    t_tmp.tm_min = 0;
+    t_tmp.tm_hour = 0;
+    t_tmp.tm_mday = 32;
+    rra_minutes_from_struct(&t_tmp);
+    days_in_month = 32 - t_tmp.tm_mday;
+
+    t_tmp = rra_minutes_to_struct(self->pattern_start_date);
+    t_tmp.tm_sec = 0;
+    t_tmp.tm_min = 0;
+    t_tmp.tm_hour = 0;
+    t_tmp.tm_mday = 1;
+    rra_minutes_from_struct(&t_tmp);
+
+    mday = 0, wday = 0, count = 0, last = 0;
+    memset(days_list, 0, sizeof(days_list));
+
+    if (self->days_of_week_mask & olSunday)
+            days_list[0] = 1;
+    if (self->days_of_week_mask & olMonday)
+            days_list[1] = 1;
+    if (self->days_of_week_mask & olTuesday)
+            days_list[2] = 1;
+    if (self->days_of_week_mask & olWednesday)
+            days_list[3] = 1;
+    if (self->days_of_week_mask & olThursday)
+            days_list[4] = 1;
+    if (self->days_of_week_mask & olFriday)
+            days_list[5] = 1;
+    if (self->days_of_week_mask & olSaturday)
+            days_list[6] = 1;
+
+    wday = t_tmp.tm_wday - 1;
+
+    while(mday < days_in_month) {
+            mday++;
+            wday++;
+            if (wday == 7) wday = 0;
+            if (days_list[wday] == 1) {
+                    count++;
+                    last = mday;
+                    if ((self->instance < 5) && (count == self->instance))
+                            break;
+            }
+    }
+
+    if (self->instance == 5)
+            t_tmp.tm_mday = last;
+    else
+            t_tmp.tm_mday = mday;
+
+    minutes = rra_minutes_from_struct(&t_tmp);
+
+    /* if this recurrence date is on or after pattern_start_date, start on
+       recurrence day of pattern start month, otherwise start on recurrence
+       day of pattern start month + interval */
+
+    if (minutes >= self->pattern_start_date)
+    {
+      self->pattern_start_date = minutes;
+      return;
+    }
+
+    /* calculate number of days in target month */
+    t_tmp = rra_minutes_to_struct(self->pattern_start_date);
+    t_tmp.tm_sec = 0;
+    t_tmp.tm_min = 0;
+    t_tmp.tm_hour = 0;
+    t_tmp.tm_mday = 32;
+    t_tmp.tm_mon = t_tmp.tm_mon + self->interval;
+    rra_minutes_from_struct(&t_tmp);
+    days_in_month = 32 - t_tmp.tm_mday;
+
+    t_tmp = rra_minutes_to_struct(self->pattern_start_date);
+    t_tmp.tm_sec = 0;
+    t_tmp.tm_min = 0;
+    t_tmp.tm_hour = 0;
+    t_tmp.tm_mday = 1;
+    t_tmp.tm_mon = t_tmp.tm_mon + self->interval;
+    rra_minutes_from_struct(&t_tmp);
+
+    mday = 0, wday = 0, count = 0, last = 0;
+
+    memset(days_list, 0, sizeof(days_list));
+
+    if (self->days_of_week_mask & olSunday)
+            days_list[0] = 1;
+    if (self->days_of_week_mask & olMonday)
+            days_list[1] = 1;
+    if (self->days_of_week_mask & olTuesday)
+            days_list[2] = 1;
+    if (self->days_of_week_mask & olWednesday)
+            days_list[3] = 1;
+    if (self->days_of_week_mask & olThursday)
+            days_list[4] = 1;
+    if (self->days_of_week_mask & olFriday)
+            days_list[5] = 1;
+    if (self->days_of_week_mask & olSaturday)
+            days_list[6] = 1;
+
+    wday = t_tmp.tm_wday - 1;
+
+    while(mday < days_in_month) {
+            mday++;
+            wday++;
+            if (wday == 7) wday = 0;
+            if (days_list[wday] == 1) {
+                    count++;
+                    last = mday;
+                    if ((self->instance < 5) && (count == self->instance))
+                            break;
+            }
+    }
+
+    if (self->instance == 5)
+            t_tmp.tm_mday = last;
+    else
+            t_tmp.tm_mday = mday;
+
+    minutes = rra_minutes_from_struct(&t_tmp);
+
+    self->pattern_start_date = minutes;
+    return;
+  }
+
+
+  if (self->recurrence_type == olRecursMonthly && self->recurrence_pattern_type == RecurrenceYearly)
+  {
+    struct tm real_start = rra_minutes_to_struct(self->pattern_start_date);
+    uint32_t minutes;
+    real_start.tm_sec = 0;
+    real_start.tm_min = 0;
+    real_start.tm_hour = 0;
+    real_start.tm_mday = (self->minutes_to_month / MINUTES_PER_DAY) + self->day_of_month;
+    real_start.tm_mon = 0;
+    minutes = rra_minutes_from_struct(&real_start);
+
+    self->pattern_start_date = minutes;
+    return;
+  }
+
+  if (self->recurrence_type == olRecursMonthNth && self->recurrence_pattern_type == RecurrenceYearly)
+  {
+    struct tm real_start = rra_minutes_to_struct(self->pattern_start_date);
+    uint32_t minutes;
+    int days_in_month;
+    real_start.tm_sec = 0;
+    real_start.tm_min = 0;
+    real_start.tm_hour = 0;
+    real_start.tm_mday = (self->minutes_to_month / MINUTES_PER_DAY);
+    real_start.tm_mon = 0;
+    minutes = rra_minutes_from_struct(&real_start);
+
+    /* calculate number of days in target month */
+    struct tm t_tmp = rra_minutes_to_struct(self->pattern_start_date);
+    t_tmp.tm_sec = 0;
+    t_tmp.tm_min = 0;
+    t_tmp.tm_hour = 0;
+    t_tmp.tm_mday = (self->minutes_to_month / MINUTES_PER_DAY) + 32;
+    t_tmp.tm_mon = 0;
+    rra_minutes_from_struct(&t_tmp);
+    days_in_month = 32 - t_tmp.tm_mday;
+
+    int days_list[7];
+    int mday = 0, wday = 0, count = 0, last = 0;
+
+    memset(days_list, 0, sizeof(days_list));
+
+    if (self->days_of_week_mask & olSunday)
+            days_list[0] = 1;
+    if (self->days_of_week_mask & olMonday)
+            days_list[1] = 1;
+    if (self->days_of_week_mask & olTuesday)
+            days_list[2] = 1;
+    if (self->days_of_week_mask & olWednesday)
+            days_list[3] = 1;
+    if (self->days_of_week_mask & olThursday)
+            days_list[4] = 1;
+    if (self->days_of_week_mask & olFriday)
+            days_list[5] = 1;
+    if (self->days_of_week_mask & olSaturday)
+            days_list[6] = 1;
+
+    wday = real_start.tm_wday;
+
+    while(mday < days_in_month) {
+            mday++;
+            wday++;
+            if (wday == 7) wday = 0;
+            if (days_list[wday] == 1) {
+                    count++;
+                    last = mday;
+                    if ((self->instance < 5) && (count == self->instance))
+                            break;
+            }
+    }
+
+    if (self->instance == 5)
+            real_start.tm_mday = real_start.tm_mday + last;
+    else
+            real_start.tm_mday = real_start.tm_mday + mday;
+
+    minutes = rra_minutes_from_struct(&real_start);
+
+    self->pattern_start_date = minutes;
+    return;
+  }
+
+  return;
+}
+
+RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_t size, RRA_Timezone *tzi)/*{{{*/
 {
   bool success;
   uint8_t* p = buffer;
-  uint8_t* p_saved = NULL;
+
+  if (!tzi)
+    return NULL;
   
   RRA_RecurrencePattern* self = rra_recurrence_pattern_new();
   if (!self)
     return NULL;
 
   rra_recurrence_pattern_read_header(self, &p);
-
-  p_saved = p;
 
   switch (self->recurrence_type)
   {
@@ -865,30 +1197,18 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   rra_exceptions_read_summary(self->exceptions, &p);
   
   self->pattern_start_date = READ_UINT32(p);  p += 4;
-  TRACE_DATE("Pattern start date (localtime) = %s", self->pattern_start_date);
+  TRACE_DATE("Original pattern start date (localtime) = %s", self->pattern_start_date);
+
+  rra_recurrence_pattern_calculate_real_start(self);
+  TRACE_DATE("Adjusted pattern start date (localtime) = %s", self->pattern_start_date);
+
   self->pattern_end_date   = READ_UINT32(p);  p += 4;
-  /*synce_trace("Pattern end date     = %08x", self->pattern_end_date);*/
   TRACE_DATE("Pattern end   date (localtime) = %s", self->pattern_end_date);
 
   if ((self->flags & RecurrenceEndMask) == RecurrenceDoesNotEnd && 
       self->pattern_end_date != RRA_DoesNotEndDate) 
   {
     synce_warning("Recurrence does not end, but the end date is not the expected value");
-  }
-
-  /* Testing */
-  if (self->recurrence_type == olRecursMonthly)
-  {
-    uint32_t minutes_in_year = READ_UINT32(p_saved);
-    struct tm t = rra_minutes_to_struct(self->pattern_start_date);
-    uint32_t minutes;
-    t.tm_sec = 0;
-    t.tm_min = 0;
-    t.tm_hour = 0;
-    t.tm_mday = minutes_in_year / MINUTES_PER_DAY;
-    t.tm_mon = 0;
-    minutes = rra_minutes_from_struct(&t);
-    TRACE_DATE("Real start date?     = %s", minutes);
   }
 
   {
@@ -917,31 +1237,30 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
       self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
 
   /* ce stores recurring events as localtime with a timezone as blob.
-     we ignore the blob and get the timezone from the device */
+     we ignore the blob and use the passed timezone */
   {
-    RRA_Timezone tzi;
     uint32_t minutes;
     uint32_t utc_pattern_start_date;
     uint32_t utc_pattern_end_date;
     uint32_t utc_start_minute;
     uint32_t utc_end_minute;
 
-    /* XXX: shouldn't call this here! RAPI should already be initialized */
-    /* CeRapiInit(); */
-
-    rra_timezone_get(&tzi);
-    
-    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->start_minute)));
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->start_minute)));
     utc_pattern_start_date = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
     utc_start_minute       = minutes % MINUTES_PER_DAY;
 
     /* pattern_start_date with end_minutes */
-    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->end_minute)));
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->end_minute)));
     utc_end_minute         = minutes % MINUTES_PER_DAY;
 
-    /* pattern_start_date with end_minutes */
-    minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(&tzi, rra_minutes_to_unix_time(self->pattern_end_date + self->end_minute)));
-    utc_pattern_end_date   = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+    if (self->pattern_end_date == RRA_DoesNotEndDate)
+      utc_pattern_end_date = self->pattern_end_date;
+    else
+    {
+      /* pattern_end_date with end_minutes */
+      minutes = rra_minutes_from_unix_time(rra_timezone_convert_to_utc(tzi, rra_minutes_to_unix_time(self->pattern_end_date + self->end_minute)));
+      utc_pattern_end_date   = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+    }
 
     self->pattern_start_date = utc_pattern_start_date;
     self->pattern_end_date   = utc_pattern_end_date;
@@ -951,9 +1270,9 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
 
    TRACE_DATE("Pattern start date (utc)       = %s", self->pattern_start_date);
    TRACE_DATE("Pattern end   date (utc)       = %s", self->pattern_end_date);
-  synce_trace("Start time         (utc)       = %02i days, %02i hours, %02i min", 
+   synce_trace("Start time         (utc)       = %02i days, %02i hours, %02i min", 
       self->start_minute / (60*24), (self->start_minute / 60) % 24, self->start_minute % 60);
-  synce_trace("End time           (utc)       = %02i days, %02i hours, %02i min", 
+   synce_trace("End time           (utc)       = %02i days, %02i hours, %02i min", 
       self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
 
   rra_exceptions_read_details(self->exceptions, &p);
@@ -983,24 +1302,25 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   {
     uint8_t* new_buffer = NULL;
     size_t new_size = 0;
-    success = rra_recurrence_pattern_to_buffer(self, &new_buffer, &new_size);
+    success = rra_recurrence_pattern_to_buffer(self, &new_buffer, &new_size, tzi);
     if (success)
     {
       if (size == new_size && 0 == memcmp(buffer, new_buffer, size))
         synce_info("rra_recurrence_pattern_to_buffer() works great!");
       else
       {
-        FILE* file;
-
         synce_warning("rra_recurrence_pattern_to_buffer() returned a different buffer! (expected size %04x, got %04x)", 
             size, new_size);
 
+        /*
+        FILE* file;
         file = fopen("pattern-right.bin", "w");
         fwrite(buffer, size, 1, file);
         fclose(file);
         file = fopen("pattern-wrong.bin", "w");
         fwrite(new_buffer, new_size, 1, file);
         fclose(file);      
+        */
       }
     }
     else
@@ -1020,10 +1340,13 @@ exit:
   }
 }/*}}}*/
 
-bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buffer, size_t* size)
+bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buffer, size_t* size, RRA_Timezone *tzi)
 {
   bool success = false;
   uint8_t* p = NULL;
+
+  if (!tzi)
+    return NULL;
 
   uint32_t localtime_pattern_start_date = self->pattern_start_date;
   uint32_t localtime_pattern_end_date   = self->pattern_end_date;
@@ -1050,27 +1373,26 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
       self->end_minute   / (60*24), (self->end_minute   / 60) % 24, self->end_minute   % 60);
 
   /* ce stores recurring events as localtime with a timezone as blob.
-     we ignore the blob and get the timezone from the device */
+     we ignore the blob and use the passed timezone */
   {
-    RRA_Timezone tzi;
     uint32_t minutes;
 
-    /* XXX: shouldn't call this here! RAPI should already be initialized */
-    /* CeRapiInit(); */
-
-    rra_timezone_get(&tzi);
-    
-    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->start_minute)));
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->start_minute)));
     localtime_pattern_start_date = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
     localtime_start_minute       = minutes % MINUTES_PER_DAY;
 
     /* pattern_start_date with end_minutes */
-    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->end_minute)));
+    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(tzi, rra_minutes_to_unix_time(self->pattern_start_date + self->end_minute)));
     localtime_end_minute         = minutes % MINUTES_PER_DAY;
 
-    /* pattern_start_date with end_minutes */
-    minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(&tzi, rra_minutes_to_unix_time(self->pattern_end_date + self->end_minute)));
-    localtime_pattern_end_date   = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+    if (self->pattern_end_date == RRA_DoesNotEndDate)
+      localtime_pattern_end_date = self->pattern_end_date;
+    else
+    {
+      /* pattern_start_date with end_minutes */
+      minutes = rra_minutes_from_unix_time(rra_timezone_convert_from_utc(tzi, rra_minutes_to_unix_time(self->pattern_end_date + self->end_minute)));
+      localtime_pattern_end_date   = (minutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+    }
   }
 
    TRACE_DATE("Pattern start date (localtime) = %s", localtime_pattern_start_date);

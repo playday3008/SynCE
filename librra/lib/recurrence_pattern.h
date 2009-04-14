@@ -17,6 +17,16 @@ typedef enum
   RRA_RECURRENCE_TYPE_COUNT = 7
 } RRA_RecurrenceType;
 
+typedef enum
+{  
+  RecurrenceDaily   = 0x200a,
+  RecurrenceWeekly  = 0x200b,
+  RecurrenceMonthly = 0x200c,
+  RecurrenceYearly  = 0x200d,
+} RRA_RecurrencePatternType;
+
+#define RRA_RECURRENCE_PATTERN_TYPE_COUNT 4
+
 /* compatible with OlDaysOfWeek in pimstore.h */
 typedef enum
 {  
@@ -94,6 +104,7 @@ void rra_exceptions_make_reservation(RRA_Exceptions* self, size_t count);
 typedef struct _RRA_RecurrencePattern
 {
   int32_t recurrence_type;
+  int32_t recurrence_pattern_type;
   uint32_t pattern_start_date;  /* in minutes from January 1, 1601 */
   uint32_t pattern_end_date;    /* in minutes from January 1, 1601 */
   int32_t flags;
@@ -101,6 +112,7 @@ typedef struct _RRA_RecurrencePattern
   int32_t duration;
   int32_t interval;           /* olRecursDaily,    olRecursMonthly, olRecursMonthNth, olRecursWeekly */
   int32_t days_of_week_mask;  /* olRecursMonthNth, olRecursWeekly,  olRecursYearNth                  */
+  int32_t minutes_to_month;   /* olRecursMonthly,  olRecursMonthNth, olRecursYearly                  */
   int32_t day_of_month;       /* olRecursMonthly,  olRecursYearly                                    */
   int32_t instance;           /* olRecursMonthNth, olRecursYearNth                                   */
   int32_t month_of_year;      /* olRecursYearly,   olRecursYearNth                                   */
@@ -112,8 +124,8 @@ typedef struct _RRA_RecurrencePattern
 RRA_RecurrencePattern* rra_recurrence_pattern_new();
 void rra_recurrence_pattern_destroy(RRA_RecurrencePattern* self);
 
-RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_t size);
-bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buffer, size_t* size);
+RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_t size, RRA_Timezone *tzi);
+bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buffer, size_t* size, RRA_Timezone *tzi);
 #define rra_recurrence_pattern_free_buffer(buffer) if (buffer) free(buffer)
 
 /*
