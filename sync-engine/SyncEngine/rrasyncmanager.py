@@ -25,14 +25,10 @@ import cPickle as pickle
 from constants import *
 import config
 
-SYNCMGR_TYPE_EVENT_UNCHANGED=0
-SYNCMGR_TYPE_EVENT_CHANGED=1
-SYNCMGR_TYPE_EVENT_DELETED=2
-
 EVENT_TYPES = {
-	SYNCMGR_TYPE_EVENT_UNCHANGED : "Unchanged",
-	SYNCMGR_TYPE_EVENT_CHANGED   : "Changed",
-	SYNCMGR_TYPE_EVENT_DELETED   : "Deleted"
+	pyrra.SYNCMGR_TYPE_EVENT_UNCHANGED : "Unchanged",
+	pyrra.SYNCMGR_TYPE_EVENT_CHANGED   : "Changed",
+	pyrra.SYNCMGR_TYPE_EVENT_DELETED   : "Deleted"
 }
 
 LOCAL_STATE_NEW=0
@@ -634,8 +630,10 @@ class FileProcessor(Processor):
 			
 			self.logger.info("fetching %d items from handheld" % len(self.ToFetch))
 		
-			if self.thread.GetMultipleObjects(self.type_id, self.ToFetch) == False:
-				self.logger.debug("Failed to retrieve all files from handheld")
+			try:
+				self.thread.GetMultipleObjects(self.type_id, self.ToFetch)
+			except pyrra.RRAError, e:
+				self.logger.debug("Failed to retrieve all files from handheld: %s" % e)
 		
 			self.ToFetch = []
 						
@@ -656,7 +654,9 @@ class FileProcessor(Processor):
 			
 			newoids = []
 			self.readeroids = self.ToSend
-			if self.thread.PutMultipleObjects(self.type_id,self.ToSend,newoids,0x40) != False:
+
+			try:
+				self.thread.PutMultipleObjects(self.type_id, self.ToSend, newoids, pyrra.RRA_SYNCMGR_UPDATE_OBJECT)
 					
 				# update the oids in our database
 				
@@ -669,6 +669,9 @@ class FileProcessor(Processor):
 						db[newoids[i]] = f
 						
 				self.ToSend = []
+
+			except pyrra.RRAError, e:
+				self.logger.debug("Failed to send all files to handheld: %s" % e)
 			
 		if self.thread.stopping:
 			return
@@ -683,7 +686,9 @@ class FileProcessor(Processor):
 			newoids = []
 			
 			self.readeroids = oids
-			if self.thread.PutMultipleObjects(self.type_id, oids, newoids, 2) != False:
+
+			try:
+				self.thread.PutMultipleObjects(self.type_id, oids, newoids, pyrra.RRA_SYNCMGR_NEW_OBJECT)
 				
 				# we now must add the new oids for the new items back into
 				# the database
@@ -699,7 +704,10 @@ class FileProcessor(Processor):
 				# All new items sent and recorded.
 				
 				self.fdb.dbnew = []
-				
+
+			except pyrra.RRAError, e:
+				self.logger.debug("Failed to send all files to handheld: %s" % e)
+
 		if self.thread.stopping:
 			return
 				
@@ -964,7 +972,7 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 	
 		# get us a list of object IDs - we need this to know what we
 		# can support.
-	
+
 		oj = self.GetObjectTypes()
 		
 		self.logger.debug("have %d object types" % len(oj))
@@ -992,11 +1000,12 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 				for tid in self.tidhandlers.keys():
 					if self.tidhandlers[tid].name == rra_item_name:
 						self.logger.info("Subscribing to %s objects" % rra_item_name)
-						if self.SubscribeObjectEvents(tid) == -1:
-							self.logger.debug("Subscribe failed: type %s",self.tidhandlers[oid].name)
-						else:
+						try:
+							self.SubscribeObjectEvents(tid)
 							self.tidhandlers[tid].subscribed=True
 							rc=True
+						except pyrra.RRAError, e:
+							self.logger.debug("Subscribe failed: type %s: %s" % (self.tidhandlers[oid].name, e))
 		return rc
 
 
@@ -1023,7 +1032,10 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 			# grab 'em all at once. This handles the brain-damaged
 			# way in which folders are renamed (delete followed by change)
 			
-			self.HandleAllPendingEvents()
+			try:
+				self.HandleAllPendingEvents()
+			except pyrra.RRAError, e:
+				self.logger.debug("Failed in HandleAllPendingEvents(): %s" % e)
 							
 			# go process all supported event types
 			
@@ -1054,11 +1066,11 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 			
 			# we are subscribed to this type
 						
-			if event == SYNCMGR_TYPE_EVENT_UNCHANGED:
+			if event == pyrra.SYNCMGR_TYPE_EVENT_UNCHANGED:
 				self.tidhandlers[type].processor.unchanged += idarray
-			elif event == SYNCMGR_TYPE_EVENT_CHANGED:
+			elif event == pyrra.SYNCMGR_TYPE_EVENT_CHANGED:
 				self.tidhandlers[type].processor.modified += idarray
-			elif event == SYNCMGR_TYPE_EVENT_DELETED:
+			elif event == pyrra.SYNCMGR_TYPE_EVENT_DELETED:
 				self.tidhandlers[type].processor.deleted += idarray
 			else:
 				return False
@@ -1105,14 +1117,16 @@ class RRASyncManager:
 		self.thread.config = self.engine.config
 		if pship:
 			self.logger.info("connecting to RRA")
-			self.thread.Connect(self.engine.rapi_session)
-			self.logger.info("connected")
-			if self.thread.isConnected() != 0:
+			try:
+				self.thread.Connect(self.engine.rapi_session)
+
+				self.logger.info("connected")
 				if not self.thread.Subscribe(pship):
 					self.logger.debug("No RRA type subscriptions - ignoring RRA sync items")
 				self.thread.start()
-			else:
-				self.logger.debug("Unable to set up RRA connection")
+			except pyrra.RRAError, e:
+				self.logger.debug("Unable to start RRA event handler: %s" % e)
+				return
 		else:
 			self.logger.debug("No current partnerships for RRA connection")
 			

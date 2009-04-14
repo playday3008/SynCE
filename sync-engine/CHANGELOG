@@ -1119,3 +1119,7 @@ without problems.
 ------------------------------
 Get interface ip for RRASession from RAPISession.
 
+14/04/2009 - 122700 Mark Ellis
+------------------------------
+For changes in pyrra, mostly throwing exceptions on errors.
+
