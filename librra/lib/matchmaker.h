@@ -27,23 +27,23 @@ bool rra_matchmaker_set_current_partner(RRA_Matchmaker* matchmaker, uint32_t ind
 /** Get the current partnership index (1 or 2) */
 bool rra_matchmaker_get_current_partner(RRA_Matchmaker* matchmaker, uint32_t* index);
 
-/** Set numeric ID for partnership 1 or 2 */
-bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t id);
-
 /** Get numeric ID for partnership 1 or 2 */
 bool rra_matchmaker_get_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t* id);
-
-/** Set computer name for partnership 1 or 2 */
-bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, const char* name);
 
 /** Get computer name for partnership 1 or 2 */
 bool rra_matchmaker_get_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, char** name);
 
-/** Generate a new partnership at index 1 or 2 */
-bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t index);
+/** Generate a new partnership at empty index 1 or 2 */
+bool rra_matchmaker_new_partnership(RRA_Matchmaker* matchmaker, uint32_t index);
 
 /** Remove a partnership at index 1 or 2 */
 bool rra_matchmaker_clear_partnership(RRA_Matchmaker* matchmaker, uint32_t index);
+
+/** Do we have a valid partnership at index 1 or 2 */
+bool rra_matchmaker_have_partnership_at(RRA_Matchmaker* matchmaker, uint32_t index);
+
+/** Do we have a valid partnership */
+bool rra_matchmaker_have_partnership(RRA_Matchmaker* matchmaker, uint32_t* index);
 
 /** 
   If we don't have a partnership with this device:

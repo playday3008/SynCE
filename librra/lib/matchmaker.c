@@ -120,7 +120,7 @@ bool rra_matchmaker_get_current_partner(RRA_Matchmaker* matchmaker, uint32_t* in
 		rapi_reg_query_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
 }
 
-bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t id)
+static bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t id)
 {
 	bool success = 
 		rra_matchmaker_create_key(matchmaker, index) &&
@@ -138,7 +138,7 @@ bool rra_matchmaker_get_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, u
 	return success;
 }
 
-bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, const char* name)
+static bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, const char* name)
 {
 	bool success =
 		rra_matchmaker_open_key(matchmaker, index) &&
@@ -171,7 +171,7 @@ static char* rra_matchmaker_get_filename(uint32_t id)
   return strdup(filename);
 }
 
-bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
+bool rra_matchmaker_new_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
 {
   bool success = false;
   char hostname[256];
@@ -182,7 +182,16 @@ bool rra_matchmaker_replace_partnership(RRA_Matchmaker* matchmaker, uint32_t ind
 
   if (index != 1 && index != 2)
   {
-    synce_error("Bad index: %i", index);
+    synce_error("Invalid partnership index: %i", index);
+    goto exit;
+  }
+
+  if (!rra_matchmaker_get_partner_id(matchmaker, index, &id))
+    id = 0;
+
+  if (0 != id)
+  {
+    synce_error("Partnership exists, not overwriting at index: %i", index);
     goto exit;
   }
 
@@ -310,77 +319,104 @@ exit:
   return success;
 }
 
-bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* index)
+bool rra_matchmaker_have_partnership_at(RRA_Matchmaker* matchmaker, uint32_t index)
 {
   bool success = false;
-  int i;
-  uint32_t ids[2];
+  uint32_t id;
   SynceIni* ini = NULL;
 
-  for (i = 0; i < 2; i++)
+  if (!rra_matchmaker_get_partner_id(matchmaker, index, &id))
+    id = 0;
+
+  /* see if we have a partnership file */
+  if (id)
   {
-    if (!rra_matchmaker_get_partner_id(matchmaker, i+1, &ids[i]))
-      ids[i] = 0;
+    char* filename = rra_matchmaker_get_filename(id);
 
-    /* see if we have a partnership file */
-    if (ids[i])
+    if (!filename)
     {
-      char* filename = rra_matchmaker_get_filename(ids[i]);
+      synce_error("Failed to get filename for partner id %08x", id);
+      goto exit;
+    }
 
-      if (!filename)
+    ini = synce_ini_new(filename);
+    free(filename);
+
+    if (ini)
+    {
+      const char* local_name = synce_ini_get_string(ini, PARTERSHIP_SECTION, PARTNER_NAME);
+      char* remote_name = NULL;
+
+      /* verify that the hostnames match */
+      if (local_name &&
+          rra_matchmaker_get_partner_name(matchmaker, index, &remote_name) &&
+          remote_name &&
+          0 == strcmp(local_name, remote_name))
       {
-        synce_error("Failed to get filename for partner id %08x", ids[i]);
+        free(remote_name);
+        success = true;
         goto exit;
-      }
-
-      ini = synce_ini_new(filename);
-      free(filename);
-
-      if (ini)
-      {
-        const char* local_name = synce_ini_get_string(ini, PARTERSHIP_SECTION, PARTNER_NAME);
-        char* remote_name = NULL;
-
-        /* verify that the hostnames match */
-        if (local_name &&
-            rra_matchmaker_get_partner_name(matchmaker, i+1, &remote_name) &&
-            remote_name &&
-            0 == strcmp(local_name, remote_name))
-        {
-          free(remote_name);
-          *index = i+1;
-          success = true;
-          goto exit;
-        }
-        else
-        {
-          synce_trace("Local host name '%s' and remote host name '%s' do not match", 
-              local_name, remote_name);
-        }
       }
       else
       {
-        synce_trace("Partnership file not found for ID %08x", ids[i]);
+        synce_trace("Local host name '%s' and remote host name '%s' do not match", 
+                    local_name, remote_name);
       }
     }
     else
     {
-      synce_trace("Partnership slot %i is empty on device", i+1);
+      synce_trace("Partnership file not found for ID %08x", id);
     }
-  
-    /* prepare for next ini file */
-    synce_ini_destroy(ini);
-    ini = NULL;
   }
+  else
+  {
+    synce_trace("Partnership slot %i is empty on device", index);
+  }
+  
+exit:
+  synce_ini_destroy(ini);
+  return success;
+}
+
+bool rra_matchmaker_have_partnership(RRA_Matchmaker* matchmaker, uint32_t* index)
+{
+  bool success = false;
+  int i;
+
+  for (i = 0; i < 2; i++)
+  {
+    if (rra_matchmaker_have_partnership_at(matchmaker, i+1))
+    {
+      *index = i+1;
+      success = true;
+      goto exit;
+    }
+  }
+
+exit:
+  return success;
+}
+
+bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* index)
+{
+  bool success = false;
+  int i;
+  uint32_t id;
+
+  if ((success = rra_matchmaker_have_partnership(matchmaker, index)))
+    goto exit;
 
   /* If we get here, we have no partnership with the device.
      We try to create a partnership on an empty slot */
 
   for (i = 0; i < 2; i++)
   {
-    if (0 == ids[i])
+    if (!rra_matchmaker_get_partner_id(matchmaker, i+1, &id))
+      id = 0;
+
+    if (0 == id)
     {
-      if (rra_matchmaker_replace_partnership(matchmaker, i+1))
+      if (rra_matchmaker_new_partnership(matchmaker, i+1))
       {
         *index = i+1;
         success = true;
@@ -392,7 +428,6 @@ bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* ind
   synce_error("Partnership not found and there are no empty partner slots on device.");
 
 exit:
-  synce_ini_destroy(ini);
   if (success)
     success = rra_matchmaker_set_current_partner(matchmaker, *index);
   return success;

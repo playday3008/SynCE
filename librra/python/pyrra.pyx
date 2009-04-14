@@ -1,3 +1,11 @@
+"""Python bindings to librra
+
+RRA (Remote Replication Agent) is a protocol used to syncronise
+data with Windows CE and Windows Mobile devices, and librra
+is the open source implementation from the SynCE project.
+
+For more information, go to www.synce.org"""
+
 import sys
 import pyrapi2
 
@@ -52,9 +60,13 @@ cdef extern from "../lib/syncmgr.h":
 		char		name2[80]
 
 	ctypedef enum RRA_SyncMgrTypeEvent:
-		SYNCMGR_TYPE_EVENT_UNCHANGED
-		SYNCMGR_TYPE_EVENT_CHANGED
-		SYNCMGR_TYPE_EVENT_DELETED
+		SYNCMGR_TYPE_EVENT_UNCHANGED_h "SYNCMGR_TYPE_EVENT_UNCHANGED"
+		SYNCMGR_TYPE_EVENT_CHANGED_h "SYNCMGR_TYPE_EVENT_CHANGED"
+		SYNCMGR_TYPE_EVENT_DELETED_h "SYNCMGR_TYPE_EVENT_DELETED"
+
+	ctypedef enum:
+		RRA_SYNCMGR_NEW_OBJECT_h "RRA_SYNCMGR_NEW_OBJECT"
+		RRA_SYNCMGR_UPDATE_OBJECT_h "RRA_SYNCMGR_UPDATE_OBJECT"
 
 	ctypedef struct _RRA_Uint32Vector:
 		pass
@@ -120,7 +132,25 @@ cdef extern from "../lib/syncmgr.h":
                                        uint32_t type_id,\
                                        uint32_t object_id)
 
-class RRASyncObjectType:
+
+#
+# Public constants
+#
+
+# flags for RRASession.PutMultipleObjects, from syncmgr.h
+RRA_SYNCMGR_NEW_OBJECT     = RRA_SYNCMGR_NEW_OBJECT_h
+RRA_SYNCMGR_UPDATE_OBJECT  = RRA_SYNCMGR_UPDATE_OBJECT_h
+
+# event types, from syncmgr.h
+SYNCMGR_TYPE_EVENT_UNCHANGED = SYNCMGR_TYPE_EVENT_UNCHANGED_h
+SYNCMGR_TYPE_EVENT_CHANGED   = SYNCMGR_TYPE_EVENT_CHANGED_h
+SYNCMGR_TYPE_EVENT_DELETED   = SYNCMGR_TYPE_EVENT_DELETED_h
+
+class RRASyncObjectType(object):
+	"""An RRA object type
+
+	An object type that can be synchronised with a device
+	using RRA"""
 	def __init__(self,id,count,total_size,name1,name2):
 		self.id = id
 		self.count = count
@@ -128,7 +158,8 @@ class RRASyncObjectType:
 		self.name1 = name1
 		self.name2 = name2
 
-class RRAError:
+class RRAError(Exception):
+	"""An error resulting from an RRA call"""
 	def __init__(self, rc):
 		self.rc = rc
 
@@ -168,6 +199,8 @@ cdef ssize_t _CB_ReaderCallback(uint32_t type_id, unsigned index, uint8_t * data
 	return rc
 
 cdef class RRASession:
+	"""An RRA connection to a Windows Mobile device."""
+
 	cdef RRA_SyncMgr * instance
 	cdef bool connected
 	cdef uint32_t ntypes
@@ -175,7 +208,7 @@ cdef class RRASession:
 	def __cinit__(self):
 		self.instance = <RRA_SyncMgr *>rra_syncmgr_new()
 		if not self.instance:
-			raise RRAError(-1)
+			raise RRAError("SyncMgr creation failed")
 		self.connected = 0
 		self.ntypes = 0
 
@@ -187,6 +220,11 @@ cdef class RRASession:
 	#
 
 	def Connect(self, rapisession=None):
+		"""Connect to a device.
+
+		Connect the RRA session to the device attached to the RAPISession
+		given as an argument, or the default RAPI connection if none is
+		specified. Raises an RRAError on failure."""
 		cdef RapiConnection *rapiconn
 
 		if rapisession == None:
@@ -195,12 +233,17 @@ cdef class RRASession:
 			rapiconn = PyCObject_AsVoidPtr(rapisession.rapi_connection)
 
 		self.connected = rra_syncmgr_connect(self.instance, rapiconn)
-		return self.connected
+		if self.connected == 0:
+			raise RRAError("Connection failed")
+
+		return
 
 	def isConnected(self):
+		"""The connection state of the session."""
 		return self.connected
 
 	def Disconnect(self):
+		"""Disconnect from the device."""
 		rra_syncmgr_disconnect(self.instance)
 		self.connected=0
 		return self.connected
@@ -210,59 +253,106 @@ cdef class RRASession:
 	#
 
 	def SubscribeObjectEvents(self,type_id):
-		if self.connected != 0:
-			rra_syncmgr_subscribe(self.instance, type_id, _CB_TypesCallback, <void *>self)
-			return 0
-		return -1
+		"""Subscribe to events."""
+
+		"""Subscribe to events for object with a type of type_id. Raisess an RRAError on failure.
+		CB_TypeCallback is called to process events, and should be overridden."""
+		if self.connected == 0:
+			raise RRAError("Not connected")
+
+		rra_syncmgr_subscribe(self.instance, type_id, _CB_TypesCallback, <void *>self)
+		return
 
 	def StartEventListener(self):
-		if self.connected !=0:
-			rra_syncmgr_start_events(self.instance)
+		"""Start listening for events.
+
+		Raisess an RRAError on failure."""
+
+		if self.connected ==0:
+			raise RRAError("Not connected")
+
+		if rra_syncmgr_start_events(self.instance):
+			return
+		raise RRAError("Failed to start event listener")
 
 	def GetEventDescriptor(self):
+		"""Get connection descriptor.
+
+		Returns the file descriptor associated with the connection."""
 		return rra_syncmgr_get_event_descriptor(self.instance)
-		return rc
 
 	def WaitEvent(self,timeout):
+		"""Wait for an RRA event.
+
+		Wait for an event from the device for timeout seconds. Returns true
+		if an event has occured, false if not. Raises an RRAError otherwise."""
 		cdef bool gotone
 		cdef bool rc
 		rc=rra_syncmgr_event_wait(self.instance,timeout, &gotone)
 		if rc:
 			return gotone
 		else:
-			return 0
+			raise RRAError("Failed to wait for events")
 
 	def IsEventPresent(self):
+		"""Is an RRA event waiting.
+
+		Returns true if an event is waiting to be processed."""
 		return rra_syncmgr_event_pending(self.instance)
 
 	def HandleEvent(self):
-		return rra_syncmgr_handle_event(self.instance)
+		"""Handle a single pending RRA event.
+
+		Raisess an RRAError on failure."""
+		if rra_syncmgr_handle_event(self.instance):
+			return
+
+		raise RRAError("Failed to handle event")
 
 	def HandleAllPendingEvents(self):
-		return rra_syncmgr_handle_all_pending_events(self.instance)
+		"""Handle all pending RRA events.
+
+		Raisess an RRAError on failure and stops processing."""
+		if rra_syncmgr_handle_all_pending_events(self.instance):
+			return
+
+		raise RRAError("Failed to handle an event")
 
 	#
 	# Object type ID handling
 	#
 
 	def GetObjectTypeCount(self):
-		if self.connected !=0:
-			self.ntypes = rra_syncmgr_get_type_count(self.instance)
-			return self.ntypes
-		return 0
+		"""The number of object types supported by the device.
+
+		Raises an RRAError on failure."""
+
+		if self.connected == 0:
+			raise RRAError("Not connected")
+
+		self.ntypes = rra_syncmgr_get_type_count(self.instance)
+		return self.ntypes
 
 	def GetObjectTypes(self):
+		"""The object types supported by the device.
+
+		Returns a list of RRASyncObjectType representing the types available.
+		Raisess an RRAError on failure."""
+
 		cdef RRA_SyncMgrType * thetypes
 		rettypes = []
-		if self.connected:
-			self.GetObjectTypeCount()
-			thetypes = <RRA_SyncMgrType *>rra_syncmgr_get_types(self.instance)
-			for i in range(self.ntypes):
-				rettypes.append(RRASyncObjectType(thetypes[i].id,\
-                                	        thetypes[i].count,\
-                                        	thetypes[i].total_size,\
-                                         	thetypes[i].name1,\
-                                                thetypes[i].name2))
+
+		if self.connected == 0:
+			raise RRAError("Not connected")
+
+		self.GetObjectTypeCount()
+		thetypes = <RRA_SyncMgrType *>rra_syncmgr_get_types(self.instance)
+		for i in range(self.ntypes):
+			rettypes.append(RRASyncObjectType(thetypes[i].id,\
+					thetypes[i].count,\
+					thetypes[i].total_size,\
+					thetypes[i].name1,\
+					thetypes[i].name2))
 		return rettypes
 
 	#
@@ -270,58 +360,108 @@ cdef class RRASession:
 	#
 
 	def GetMultipleObjects(self,type_id, oids):
+		"""Retrieve multiple data objects from device.
+
+		Retrieve objects of type_id, the object ids of which are listed in oids.
+		CB_ObjectWriterCallback is called for each object, and should be overridden.
+		Raises an RRAError on failure."""
 		cdef uint32_t * c_oids
 		cdef uint32_t c_cnt
 
 		c_cnt = len(oids)
 		c_oids = <uint32_t *>malloc(sizeof(uint32_t)*c_cnt)
 		rc=0
-		if c_oids != NULL:
-			for i from 0 <= i < c_cnt:
-				c_oids[i] = oids[i]
-			rc= rra_syncmgr_get_multiple_objects(self.instance,type_id, c_cnt, c_oids,_CB_WriterCallback, <void *>self)
-			free(c_oids)
-		return rc
+		if c_oids == NULL:
+			raise MemoryError("Failed to allocate list of object ids")
+
+		for i from 0 <= i < c_cnt:
+			c_oids[i] = oids[i]
+		rc = rra_syncmgr_get_multiple_objects(self.instance,type_id, c_cnt, c_oids,_CB_WriterCallback, <void *>self)
+		free(c_oids)
+
+		if rc != 0:
+			return
+
+		raise RRAError("Failed to get multiple objects")
 	
 	def GetSingleObject(self,type_id,obj_id):
+		"""Retrieve an object from device.
+
+		Retrieve a single object of type_id, with object id of obj_id, and
+		return the buffer. Raises an RRAError on failure."""
 		cdef uint8_t * arr
 		cdef size_t cnt
 		cdef bool rc
 		data = ""
-		rc=rra_syncmgr_get_single_object(self.instance,type_id,obj_id,&arr,<size_t *>&cnt)
-		if rc:
+		rc=rra_syncmgr_get_single_object(self.instance,type_id,obj_id,&arr,&cnt)
+		if rc != 0:
 			data=PyString_FromStringAndSize(<char *>arr,cnt)
 			free(arr)
-		return data
+			return data
 
+		raise RRAError("Failed to get object")
 
 	def PutMultipleObjects(self, type_id, oid_array, newoid_array, flags):
+		"""Send multiple data objects to device.
+
+		Send objects of type_id, the object ids of which are listed in oid_array.
+		CB_ObjectReaderCallback is called for each object, and should be overridden.
+		Raises an RRAError on failure."""
 		cdef uint32_t * c_oids
 		cdef uint32_t * c_newoids
 		cdef uint32_t c_oidcount
 		c_oidcount = len(oid_array)
+
 		c_oids = <uint32_t *>malloc(sizeof(uint32_t)*c_oidcount)
-		rc = False
-		if c_oids != NULL:
-			c_newoids = <uint32_t *>malloc(sizeof(uint32_t)*c_oidcount)
-			if c_newoids != NULL:
-				rc = rra_syncmgr_put_multiple_objects(self.instance,type_id,c_oidcount,
-								      c_oids,c_newoids,flags,_CB_ReaderCallback,<void *>self)
-				if rc == True:
-					for i from 0 <= i < c_oidcount:
-						newoid_array.append(c_newoids[i])
+		if c_oids == NULL:
+			raise MemoryError("Failed to allocate list of object ids")
+
+		c_newoids = <uint32_t *>malloc(sizeof(uint32_t)*c_oidcount)
+		if c_newoids == NULL:
 			free(c_oids)
-		return rc
+			raise MemoryError("Failed to allocate list of object ids")
+
+		rc = False
+
+		for i from 0 <= i < c_oidcount:
+			c_oids[i] = oid_array[i]
+
+		rc = rra_syncmgr_put_multiple_objects(self.instance,type_id,c_oidcount,
+						      c_oids,c_newoids,flags,_CB_ReaderCallback,<void *>self)
+		if rc == True:
+			for i from 0 <= i < c_oidcount:
+				newoid_array.append(c_newoids[i])
+
+		free(c_oids)
+		free(c_newoids)
+
+		if rc == True:
+			return
+
+		raise RRAError("Failed to put multiple objects")
 
 	def MarkObjectUnchanged(self,type_id,obj_id):
-		return rra_syncmgr_mark_object_unchanged(self.instance,type_id,obj_id)
+		"""Mark an object unchanged.
+
+		Mark the object as unchanged. Raises an RRAError on failure."""
+
+		if rra_syncmgr_mark_object_unchanged(self.instance,type_id,obj_id):
+			return
+
+		raise RRAError("Failed to mark object unchanged")
 
 	#
 	# Object deletion
 	#
 
 	def DeleteObject(self,type_id, obj_id):
-		return rra_syncmgr_delete_object(self.instance,type_id,obj_id)
+		"""Delete the object.
+
+		Raises an RRAError on failure."""
+		if rra_syncmgr_delete_object(self.instance,type_id,obj_id):
+			return
+
+		raise RRAError("Failed to delete object")
 
 	#
 	# Callbacks
@@ -330,10 +470,22 @@ cdef class RRASession:
 	#
 
 	def CB_TypeCallback(self, event, type_id, idarray):
+		"""Callback for subscription events.
+
+		This method should be overridden. It is called for events
+		occuring for object types registered with SubscribeObjectEvents."""
 		return False
 		
 	def CB_ObjectWriterCallback(self,type_id, obj_id, data):
+		"""Callback for GetMultipleObjects.
+
+		This method should be overridden. It is called for each object id
+		passed in a call to GetMultipleObjects."""
 		return False
 
 	def CB_ObjectReaderCallback(self,type_id, index, maxlen):
+		"""Callback for PutMultipleObjects.
+
+		This method should be overridden. It is called for each object id
+		passed in a call to PutMultipleObjects."""
 		return False

@@ -14,7 +14,6 @@ typedef enum
   COMMAND_HELP,
   COMMAND_STATUS,
   COMMAND_CREATE,
-  COMMAND_REPLACE,
   COMMAND_CLEAR,
 } COMMAND;
 
@@ -26,7 +25,7 @@ static void show_usage(const char* name)
           "\n"
           "Syntax:\n"
           "\n"
-          "\t%s [-d LEVEL] [status|create|replace INDEX|clear INDEX]\n"
+          "\t%s [-d LEVEL] [status|create|clear INDEX]\n"
           "\n"
           "\t-d LEVEL          Set debug log level\n"
           "\t                  0 - No logging\n"
@@ -36,7 +35,6 @@ static void show_usage(const char* name)
           "\t                  4 - Everything\n"
           "\tstatus   Show partnership status for device\n"
           "\tcreate   Create partnership with device\n"
-          "\treplace  Replace partnership on device\n"
           "\tclear    Clear a partnership on device\n"
           "\tINDEX    The partnership index (1 or 2)\n",
           name);
@@ -75,8 +73,6 @@ static bool handle_parameters(int argc, char** argv, COMMAND *command, uint32_t 
     *command = COMMAND_STATUS;
   else if (0 == strcasecmp(argv[optind], "create"))
     *command = COMMAND_CREATE;
-  else if (0 == strcasecmp(argv[optind], "replace"))
-    *command = COMMAND_REPLACE;
   else if (0 == strcasecmp(argv[optind], "clear"))
     *command = COMMAND_CLEAR;
   else
@@ -85,7 +81,7 @@ static bool handle_parameters(int argc, char** argv, COMMAND *command, uint32_t 
     return false;
   }
 
-  if ((*command == COMMAND_REPLACE) || (*command == COMMAND_CLEAR))
+  if ((*command == COMMAND_CLEAR))
   {
     if (arg_count < 2)
     {
@@ -169,24 +165,6 @@ int main(int argc, char** argv)
       }
       break;
 
-    case COMMAND_REPLACE:
-      if (index == 1 || index == 2)
-      {
-        if (rra_matchmaker_replace_partnership(matchmaker, index))
-        {
-          printf("Partnership replacement succeeded.\n");
-        }
-        else
-        {
-          fprintf(stderr, "Partnership replacement failed.\n");
-        }
-      }
-      else
-      {
-        fprintf(stderr, "Invalid or missing index of partnership to replace.\n");
-        goto exit;
-      }
-      break;
     case COMMAND_CLEAR:
       if (index == 1 || index == 2)
       {

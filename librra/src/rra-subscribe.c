@@ -134,7 +134,7 @@ int main(int argc, char** argv)
     /* Subcribe to all types */
     unsigned i;
     uint32_t count = rra_syncmgr_get_type_count(syncmgr);
-    RRA_SyncMgrType* types = rra_syncmgr_get_types(syncmgr);
+    const RRA_SyncMgrType* types = rra_syncmgr_get_types(syncmgr);
     for (i = 0; i < count; i++)
     {
       rra_syncmgr_subscribe(syncmgr, types[i].id, callback, NULL);
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 
     for (i = 0; i < type_id_no; i++)
     {
-      RRA_SyncMgrType* type = NULL;
+      const RRA_SyncMgrType* type = NULL;
 
       type_id_str = type_id_list[i];
 

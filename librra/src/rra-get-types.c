@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 	int result = 1;
 	HRESULT hr;
   RRA_SyncMgr* syncmgr = NULL;
-	RRA_SyncMgrType* object_types = NULL;
+	const RRA_SyncMgrType* object_types = NULL;
 	size_t object_type_count = 0;
 	unsigned i;
 

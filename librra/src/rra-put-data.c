@@ -31,7 +31,7 @@ int main(int argc, char** argv)
   uint8_t* data = NULL;
   size_t data_size = 0;
   FILE* file = NULL;
-	RRA_SyncMgrType* type = NULL;
+  const RRA_SyncMgrType* type = NULL;
 
   /* synce_log_set_level(0); */
 
@@ -85,7 +85,11 @@ int main(int argc, char** argv)
 
   data = (uint8_t*)malloc(data_size);
 
-  fread(data, data_size, 1, file);
+  if (fread(data, data_size, 1, file) != 1)
+  {
+    fprintf(stderr, "Failed to read data from file '%s'\n", filename);
+    goto exit;
+  }
 
   type = rra_syncmgr_type_from_name(syncmgr, type_id_str);
   if (type)

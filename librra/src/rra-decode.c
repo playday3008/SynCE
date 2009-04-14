@@ -139,7 +139,8 @@ void decode_file(uint8_t* buffer, size_t size, const char* filename)
 		file = fopen(filename, "w");
 		if (file)
 		{
-			fwrite(buffer + extra, size-extra, 1, file);
+			if (fwrite(buffer + extra, size-extra, 1, file) != 1)
+				fprintf(stderr, "Failed to write data to file '%s'\n", filename);
 			fclose(file);
 		}
 		else
@@ -321,8 +322,7 @@ int main(int argc, char** argv)
 	FILE* file = NULL;
 	uint8_t* buffer = NULL;
 	long file_size = 0;
-  unsigned id = 0;
-
+	unsigned id = 0;
 	if (argc < 2)
 	{
 		fprintf(stderr, "Filename missing on command line\n");
@@ -348,7 +348,12 @@ int main(int argc, char** argv)
 	fseek(file, 0, SEEK_SET);
 
 	buffer = (uint8_t*)malloc(file_size);
-	fread(buffer, file_size, 1, file);
+
+	if (fread(buffer, file_size, 1, file) != 1)
+	{
+		fprintf(stderr, "Failed to read data from file '%s'\n", argv[1]);
+		goto exit;
+	}
 
 	if (*(uint32_t*)(buffer + 4) != 0)
 	{

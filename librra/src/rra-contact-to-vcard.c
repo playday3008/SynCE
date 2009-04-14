@@ -101,7 +101,11 @@ int main(int argc, char** argv)
 	fseek(file, 0, SEEK_SET);
 
 	buffer = (uint8_t*)malloc(file_size);
-	fread(buffer, file_size, 1, file);
+	if (fread(buffer, file_size, 1, file) != 1)
+        {
+		fprintf(stderr, "Unable to read data from file '%s'\n", source);
+		goto exit;
+	}
 
 	if (!rra_contact_to_vcard(
 			RRA_CONTACT_ID_UNKNOWN,

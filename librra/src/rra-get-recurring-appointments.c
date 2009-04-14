@@ -87,7 +87,8 @@ static bool writer
 
         if (file)
         {
-          fwrite(save_data, save_size, 1, file);
+          if (fwrite(save_data, save_size, 1, file) != 1)
+            fprintf(stderr, "Failed to write data to file '%s'\n", filename);
           fclose(file);
         }
         else

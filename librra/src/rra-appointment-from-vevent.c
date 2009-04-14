@@ -110,7 +110,12 @@ int main(int argc, char** argv)
 	fseek(file, 0, SEEK_SET);
 
 	vevent = (char*)malloc(file_size + 1);
-	fread(vevent, file_size, 1, file);
+	if (fread(vevent, file_size, 1, file) != 1)
+	{
+		fprintf(stderr, "Unable to read data from file '%s'\n", source);
+		goto exit;
+	}
+
 	vevent[file_size] = '\0';
 	fclose(file);
 	file = NULL;
@@ -162,7 +167,11 @@ int main(int argc, char** argv)
 		goto exit;
 	}
 
-	fwrite(buffer, buffer_size, 1, file);
+	if (fwrite(buffer, buffer_size, 1, file) != 1)
+	{
+		fprintf(stderr, "Unable to write data to file '%s'\n", dest);
+		goto exit;
+	}
 
 	result = 0;
 

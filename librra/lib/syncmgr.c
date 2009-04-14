@@ -219,7 +219,7 @@ uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)/*{{{*/
     return 0;
 }/*}}}*/
 
-RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
+const RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
     return self->types;
@@ -227,7 +227,7 @@ RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
     return NULL;
 }/*}}}*/
 
-RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id)/*{{{*/
+const RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id)/*{{{*/
 {
   RRA_SyncMgrType* result = NULL;
   unsigned i;
@@ -251,7 +251,7 @@ exit:
   return result;
 }/*}}}*/
 
-RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
+const RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
 {
   RRA_SyncMgrType* result = NULL;
   unsigned i;
@@ -383,7 +383,10 @@ bool rra_syncmgr_get_deleted_object_ids(/*{{{*/
     {
       char buffer[16];
       snprintf(buffer, sizeof(buffer), "%08x\n", current_ids->items[current]);
-      fwrite(buffer, strlen(buffer), 1, file);
+      if (fwrite(buffer, strlen(buffer), 1, file) != 1)
+      {
+        synce_error("Failed to write data to '%s'.", filename);
+      }
     }
 
     fclose(file);
@@ -490,7 +493,10 @@ bool rra_syncmgr_purge_deleted_object_ids(/*{{{*/
     {
       char buffer[16];
       snprintf(buffer, sizeof(buffer), "%08x\n", new_current_ids->items[current]);
-      fwrite(buffer, strlen(buffer), 1, file);
+      if (fwrite(buffer, strlen(buffer), 1, file) != 1)
+      {
+        synce_error("Failed to write data to '%s'.", filename);
+      }
     }
 
     fclose(file);
@@ -575,8 +581,11 @@ bool rra_syncmgr_register_added_object_ids(/*{{{*/
     {
       char buffer[16];
       snprintf(buffer, sizeof(buffer), "%08x\n", 
-previous_ids->items[previous]);
-      fwrite(buffer, strlen(buffer), 1, file);
+               previous_ids->items[previous]);
+      if (fwrite(buffer, strlen(buffer), 1, file) != 1)
+      {
+        synce_error("Failed to write data to '%s'.", filename);
+      }
     }
 
     fclose(file);

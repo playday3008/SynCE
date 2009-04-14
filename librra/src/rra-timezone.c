@@ -252,7 +252,12 @@ int main(int argc, char** argv)
         goto exit;
       }
       
-      fwrite(&tzi, sizeof(RRA_Timezone), 1, output);
+      if (fwrite(&tzi, sizeof(RRA_Timezone), 1, output) != 1)
+      {
+        fprintf(stderr, "%s: Failed to write data to file %s: %s\n", 
+            argv[0], output_filename, strerror(errno));
+        goto exit;
+      }
       break;
 
     case FORMAT_RAW:

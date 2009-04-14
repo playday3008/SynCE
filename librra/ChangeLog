@@ -1,3 +1,12 @@
+2009-04-14  Mark Ellis  <mark@mpellis.org.uk>
+
+	* matchmaker - break code into more useful functions, make usage
+	  of command line tool clearer
+	* lib/syncmgr.{c,h} - protect internal type data
+	* python/pyrra.pyx - add pydocs, export constants, throw exceptions
+	  on errors
+	* check returns of various file read/writes
+
 2009-04-11  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/matchmaker.c - remove unused code, access SynceInfo through

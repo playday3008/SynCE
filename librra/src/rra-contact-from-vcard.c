@@ -102,7 +102,12 @@ int main(int argc, char** argv)
 	fseek(file, 0, SEEK_SET);
 
 	vcard = (char*)malloc(file_size + 1);
-	fread(vcard, file_size, 1, file);
+	if (fread(vcard, file_size, 1, file) != 1)
+	{
+		fprintf(stderr, "Unable to read data from file '%s'\n", source);
+		goto exit;
+	}
+
 	vcard[file_size] = '\0';
 	fclose(file);
 	file = NULL;
@@ -122,11 +127,15 @@ int main(int argc, char** argv)
 	file = fopen(dest, "w");
 	if (!file)
 	{
-		fprintf(stderr, "Unable to open file '%s'\n", argv[1]);
+		fprintf(stderr, "Unable to open file '%s'\n", dest);
 		goto exit;
 	}
 
-	fwrite(buffer, buffer_size, 1, file);
+	if (fwrite(buffer, buffer_size, 1, file) != 1)
+	{
+		fprintf(stderr, "Unable to write data to file '%s'\n", dest);
+		goto exit;
+	}
 
 	result = 0;
 

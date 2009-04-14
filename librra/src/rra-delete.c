@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	char* type_id_str = NULL;
 	uint32_t type_id = 0;
 	uint32_t object_id = 0;
-	RRA_SyncMgrType* type = NULL;
+	const RRA_SyncMgrType* type = NULL;
 	int i;
 	char** object_id_list = NULL;
 	uint object_id_no = 0;

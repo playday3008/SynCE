@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 	uint8_t* data = NULL;
 	size_t data_size = 0;
 	FILE* file = NULL;
-	RRA_SyncMgrType* type = NULL;
+	const RRA_SyncMgrType* type = NULL;
 	
 	if (!handle_parameters(argc, argv, &type_id_str, &object_id_str, &filename))
 		goto exit;
@@ -123,9 +123,13 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Failed to open file '%s'\n", filename);
 		goto exit;
 	}
-	
-	fwrite(data, data_size, 1, file);
 
+	if (fwrite(data, data_size, 1, file) != 1)
+	{
+		fprintf(stderr, "Failed to write data to file '%s'\n", filename);
+		goto exit;
+	}
+	
 	result = 0;
 	
 	rra_syncmgr_disconnect(syncmgr);

@@ -61,9 +61,9 @@ bool rra_syncmgr_is_connected(RRA_SyncMgr* self);
  */
 
 uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self);
-RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self);
-RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id);
-RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name);
+const RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self);
+const RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id);
+const RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name);
 
 /*#define RRA_SYNCMGR_INVALID_TYPE_ID   ((uint32_t)0xffffffff)*/
 

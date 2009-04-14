@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 
   for (i = 0; i < type_id_no; i++)
   {
-    RRA_SyncMgrType* type = NULL;
+    const RRA_SyncMgrType* type = NULL;
     type_id_str = type_id_list[i];
 
     type = rra_syncmgr_type_from_name(syncmgr, type_id_str);
