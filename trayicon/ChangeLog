@@ -2,6 +2,8 @@
 
 	* src/synce-trayicon.c - do not free device when just checking
 	  it exists !
+	* src-synce-trayicon.c - use gtk 2.16 tooltip api if available
+	  to update tooltip when reqd
 
 2009-04-10  Mark Ellis <mark@mpellis.org.uk>
 

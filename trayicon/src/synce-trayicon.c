@@ -84,8 +84,13 @@ is_connected(SynceTrayIcon *self)
   return FALSE;
 }
 
+#if GTK_MINOR_VERSION > 15
+static void
+set_status_tooltip(SynceTrayIcon *self, GtkTooltip *tooltip)
+#else
 static void
 set_status_tooltips(SynceTrayIcon *self)
+#endif
 {
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
@@ -99,7 +104,11 @@ set_status_tooltips(SynceTrayIcon *self)
   GList *device_names_iter = NULL;
 
   if (!(is_connected(self))) {
+#if GTK_MINOR_VERSION > 15
+          gtk_tooltip_set_text(tooltip, _("Not connected"));
+#else
           gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), _("Not connected"));
+#endif
           return;
   }
 
@@ -134,10 +143,25 @@ set_status_tooltips(SynceTrayIcon *self)
   }
 
   g_list_free(device_names);
+#if GTK_MINOR_VERSION > 15
+  gtk_tooltip_set_text(tooltip, tooltip_str);
+#else
   gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), tooltip_str);
+#endif
   g_free(tooltip_str);
   return;
 }
+
+#if GTK_MINOR_VERSION > 15
+static gboolean
+query_tooltip_cb(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode, GtkTooltip *tooltip, gpointer user_data)
+{
+  set_status_tooltip(SYNCE_TRAYICON(user_data), tooltip);
+
+  /* show the tooltip */
+  return TRUE;
+}
+#endif
 
 static void
 set_icon(SynceTrayIcon *self)
@@ -157,8 +181,9 @@ update(gpointer data)
   SynceTrayIcon *self = SYNCE_TRAYICON(data);
 
   set_icon(self);
+#if GTK_MINOR_VERSION < 16
   set_status_tooltips(self);
-
+#endif
   /* prevent function from running again when
    set with g_idle_add */
   return FALSE;
@@ -1092,6 +1117,12 @@ synce_trayicon_init(SynceTrayIcon *self)
   /* visible icon */
   g_signal_connect(G_OBJECT(self), "activate", G_CALLBACK(trayicon_activate_cb), self);
   g_signal_connect(G_OBJECT(self), "popup-menu", G_CALLBACK(trayicon_popup_menu_cb), self);
+
+#if GTK_MINOR_VERSION > 15
+  /* tooltip */
+  gtk_status_icon_set_has_tooltip(GTK_STATUS_ICON(self), TRUE);
+  g_signal_connect(G_OBJECT(self), "query-tooltip", G_CALLBACK(query_tooltip_cb), self);
+#endif
 
   priv->conf_watch_id = gconf_client_notify_add (priv->conf_client, 
                                                  "/apps/synce/trayicon", 
