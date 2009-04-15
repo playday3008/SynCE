@@ -1,3 +1,8 @@
+2009-04-15  Mark Ellis <mark@mpellis.org.uk>
+
+	* src/synce-trayicon.c - do not free device when just checking
+	  it exists !
+
 2009-04-10  Mark Ellis <mark@mpellis.org.uk>
 
 	* access SynceInfo parameters with synce_info_get_ functions

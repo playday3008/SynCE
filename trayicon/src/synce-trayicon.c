@@ -373,7 +373,6 @@ device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpo
   g_debug("%s: looking for preexisting device %s", G_STRFUNC, pdaname);
   if ((device = wm_device_manager_find_by_name(priv->device_list, pdaname))) {
     g_debug("%s: Ignoring connection message for \"%s\", already connected", G_STRFUNC, pdaname);
-    g_object_unref(device);
     return;
   }
 
