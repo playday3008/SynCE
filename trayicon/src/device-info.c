@@ -24,7 +24,9 @@ IN THE SOFTWARE.
 #include "config.h"
 #endif
 
-#include <gnome.h>
+#include <gtk/gtk.h>
+#include <glib/gi18n.h>
+#include <string.h>
 #include <glade/glade.h>
 #include <rapi.h>
 #include <rra/matchmaker.h>

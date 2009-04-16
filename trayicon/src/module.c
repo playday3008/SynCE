@@ -5,12 +5,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gmodule.h>
-#include <libgnome/libgnome.h>
-
 
 typedef void (* ModuleConnectFunc) (const gchar *device_name);
 typedef void (* ModuleDisconnectFunc) (const gchar *device_name);
-
 
 typedef struct _module_data
 {
@@ -27,22 +24,15 @@ gboolean
 module_load_all()
 {
   GError *error = NULL;
-  gchar *dir_path, *file_path;
+  const gchar *dir_path;
+  gchar *file_path;
   const gchar *filename;
   GModule *module;
 
   if (!g_module_supported())
     return FALSE;
 
-  dir_path = gnome_program_locate_file(NULL,
-				       GNOME_FILE_DOMAIN_APP_LIBDIR,
-				       "synce-trayicon/modules",
-				       TRUE, /* only_if_exists */
-				       NULL);
-  if (!dir_path) {
-    g_critical("%s: module dir path not found", G_STRFUNC);
-    return FALSE;
-  }
+  dir_path = TRAYICON_MOD_DIR;
 
   GDir *module_dir = g_dir_open(dir_path, 0, &error);
   if (!module_dir) {
@@ -52,7 +42,6 @@ module_load_all()
     } else {
       g_critical("%s: Unknown error opening module dir %s", G_STRFUNC, dir_path);
     }
-    g_free(dir_path);
     return FALSE;
   }
 
@@ -97,7 +86,6 @@ module_load_all()
     g_free(file_path);
   }
   g_dir_close(module_dir);
-  g_free(dir_path);
 
   return TRUE;
 }

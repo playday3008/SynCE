@@ -6,7 +6,7 @@ INCLUDES  = \
 	-DLIBDIR=\""$(libdir)"\"                        \
 	-DSYNCE_DATA=\""$(datadir)/synce/"\" 
 
-moduledir = $(libdir)/synce-trayicon/modules
+moduledir = @TRAYICON_MOD_DIR@
 
 module_LTLIBRARIES = test-mod.la
 

@@ -123,7 +123,7 @@ main (gint argc, gchar **argv)
 
  	synce_log_set_level(log_level);
 
-	glade_gnome_init ();
+	glade_init ();
 
 	if (in_background)
 	{

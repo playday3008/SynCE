@@ -1,3 +1,7 @@
+2009-04-16  Mark Ellis <mark@mpellis.org.uk>
+
+	* some preparatory work for gnome3/gtk3
+
 2009-04-15  Mark Ellis <mark@mpellis.org.uk>
 
 	* src/synce-trayicon.c - do not free device when just checking

@@ -2,7 +2,6 @@
 #include "config.h"
 #endif
 
-#include <gnome.h>
 #include <glade/glade.h>
 #include <gconf/gconf-client.h>
 

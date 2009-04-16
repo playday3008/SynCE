@@ -73,6 +73,7 @@ else
 fi
 
 AS_AC_EXPAND(BINDIR, $bindir)
+AS_AC_EXPAND(TRAYICON_MOD_DIR, "$libdir/synce-trayicon/modules")
 
 AC_OUTPUT([
 	Makefile

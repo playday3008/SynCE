@@ -6,7 +6,8 @@ INCLUDES  = \
 	-DPREFIX=\""$(prefix)"\"                        \
 	-DSYSCONFDIR=\""$(sysconfdir)"\"                \
 	-DLIBDIR=\""$(libdir)"\"                        \
-	-DSYNCE_DATA=\""$(datadir)/synce/"\" 
+	-DSYNCE_DATA=\""$(datadir)/synce/"\"            \
+	-DTRAYICON_MOD_DIR=\"@TRAYICON_MOD_DIR@\"
 
 BUILT_SOURCES = \
 	dccm-client-signals-marshal.h \

@@ -30,7 +30,7 @@ IN THE SOFTWARE.
 #include <signal.h>
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <gnome.h>
+#include <libgnome/libgnome.h>
 #include <gconf/gconf-client.h>
 #include <dbus/dbus-glib.h>
 #include <synce.h>
@@ -84,7 +84,7 @@ is_connected(SynceTrayIcon *self)
   return FALSE;
 }
 
-#if GTK_MINOR_VERSION > 15
+#if GTK_CHECK_VERSION(2,16,0)
 static void
 set_status_tooltip(SynceTrayIcon *self, GtkTooltip *tooltip)
 #else
@@ -104,7 +104,7 @@ set_status_tooltips(SynceTrayIcon *self)
   GList *device_names_iter = NULL;
 
   if (!(is_connected(self))) {
-#if GTK_MINOR_VERSION > 15
+#if GTK_CHECK_VERSION(2,16,0)
           gtk_tooltip_set_text(tooltip, _("Not connected"));
 #else
           gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), _("Not connected"));
@@ -143,7 +143,7 @@ set_status_tooltips(SynceTrayIcon *self)
   }
 
   g_list_free(device_names);
-#if GTK_MINOR_VERSION > 15
+#if GTK_CHECK_VERSION(2,16,0)
   gtk_tooltip_set_text(tooltip, tooltip_str);
 #else
   gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), tooltip_str);
@@ -152,7 +152,7 @@ set_status_tooltips(SynceTrayIcon *self)
   return;
 }
 
-#if GTK_MINOR_VERSION > 15
+#if GTK_CHECK_VERSION(2,16,0)
 static gboolean
 query_tooltip_cb(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode, GtkTooltip *tooltip, gpointer user_data)
 {
@@ -181,7 +181,7 @@ update(gpointer data)
   SynceTrayIcon *self = SYNCE_TRAYICON(data);
 
   set_icon(self);
-#if GTK_MINOR_VERSION < 16
+#if !GTK_CHECK_VERSION(2,16,0)
   set_status_tooltips(self);
 #endif
   /* prevent function from running again when
@@ -1118,7 +1118,7 @@ synce_trayicon_init(SynceTrayIcon *self)
   g_signal_connect(G_OBJECT(self), "activate", G_CALLBACK(trayicon_activate_cb), self);
   g_signal_connect(G_OBJECT(self), "popup-menu", G_CALLBACK(trayicon_popup_menu_cb), self);
 
-#if GTK_MINOR_VERSION > 15
+#if GTK_CHECK_VERSION(2,16,0)
   /* tooltip */
   gtk_status_icon_set_has_tooltip(GTK_STATUS_ICON(self), TRUE);
   g_signal_connect(G_OBJECT(self), "query-tooltip", G_CALLBACK(query_tooltip_cb), self);
