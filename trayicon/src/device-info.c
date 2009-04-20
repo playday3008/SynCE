@@ -1025,6 +1025,9 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GHashTable *sync_items = NULL;
   GList *item_keys = NULL;
 
+  if (!wm_device_rapi_select(priv->device))
+    return;
+
   GtkWidget *partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
 
@@ -1242,8 +1245,6 @@ partners_setup_view_synceng(WmDeviceInfo *self)
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
 
-  wm_device_rapi_select(priv->device);
-
   partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");
   partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
   partners_list = glade_xml_get_widget (priv->xml, "partners_list");
@@ -1336,7 +1337,8 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
 					    G_TYPE_UINT,    /* partner id */
 					    G_TYPE_STRING); /* partner name */
 
-  wm_device_rapi_select(priv->device);
+  if (!wm_device_rapi_select(priv->device))
+    return;
 
   if (!(matchmaker = rra_matchmaker_new())) {
     g_critical("%s: Failed to create match-maker", G_STRFUNC);
@@ -1400,8 +1402,6 @@ partners_setup_view_rra(WmDeviceInfo *self)
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
-
-  wm_device_rapi_select(priv->device);
 
   partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");
   partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
@@ -1583,7 +1583,8 @@ system_info_setup_view_store(WmDeviceInfo *self)
   STORE_INFORMATION store;
   DWORD storage_pages = 0, ram_pages = 0, page_size = 0;
 
-  wm_device_rapi_select(priv->device);
+  if (!wm_device_rapi_select(priv->device))
+    return;
 
   memset(&store, 0, sizeof(store));
 
@@ -1641,7 +1642,8 @@ system_info_setup_view(WmDeviceInfo *self)
   SYSTEM_INFO system;
   gchar *class, *hardware, *model_str;
 
-  wm_device_rapi_select(priv->device);
+  if (!wm_device_rapi_select(priv->device))
+    return;
 
   sys_info_model = glade_xml_get_widget (priv->xml, "sys_info_model");
   g_object_get(priv->device, "class", &class, NULL);
@@ -1785,7 +1787,8 @@ system_power_setup_view(WmDeviceInfo *self)
     return;
   }
 
-  wm_device_rapi_select(priv->device);
+  if (!wm_device_rapi_select(priv->device))
+    return;
 
   SYSTEM_POWER_STATUS_EX power;
   GtkWidget *sys_info_ac_status,
@@ -1958,6 +1961,9 @@ applications_setup_view_store(WmDeviceInfo *self)
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
+
+  if (!wm_device_rapi_select(priv->device))
+    return;
 
   GtkWidget *app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
   GtkWidget *remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
@@ -2135,8 +2141,6 @@ applications_setup_view(WmDeviceInfo *self)
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-
-  wm_device_rapi_select(priv->device);
 
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;

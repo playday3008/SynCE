@@ -155,27 +155,32 @@ wm_device_rapi_connect(WmDevice *self)
         return TRUE;
 }
 
-void
+gboolean
 wm_device_rapi_select(WmDevice *self)
 {
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
-    return;
+    return FALSE;
   }
   WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
 
   if (priv->disposed) {
     g_warning("%s: Disposed object passed", G_STRFUNC);
-    return;
+    return FALSE;
   }
 
   if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
     g_warning("%s: device not fully connected", G_STRFUNC);
-    return;
+    return FALSE;
+  }
+
+  if (priv->rapi_conn == NULL) {
+    g_warning("%s: device has no rapi connection", G_STRFUNC);
+    return FALSE;
   }
 
   rapi_connection_select(priv->rapi_conn);
-  return;
+  return TRUE;
 }
 
 uint16_t
@@ -646,7 +651,8 @@ wm_device_get_power_status_impl(WmDevice *self)
     return NULL;
   }
 
-  wm_device_rapi_select(self);
+  if (!wm_device_rapi_select(self))
+    return NULL;
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
   if (CeGetSystemPowerStatusEx(&power, false) &&
@@ -684,7 +690,8 @@ wm_device_get_store_status_impl(WmDevice *self)
     return NULL;
   }
 
-  wm_device_rapi_select(self);
+  if (!wm_device_rapi_select(self))
+    return NULL;
 
   memset(&store, 0, sizeof(store));
   if (CeGetStoreInformation(&store) && store.dwStoreSize != 0)

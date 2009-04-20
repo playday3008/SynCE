@@ -100,7 +100,7 @@ gchar *wm_device_get_power_status(WmDevice *self);
 gchar *wm_device_get_store_status(WmDevice *self);
 
 gboolean wm_device_rapi_connect(WmDevice *device);
-void wm_device_rapi_select(WmDevice *device);
+gboolean wm_device_rapi_select(WmDevice *device);
 
 G_END_DECLS
 
