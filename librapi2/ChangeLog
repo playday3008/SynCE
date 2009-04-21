@@ -1,3 +1,9 @@
+2009-04-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* catch uninitialized RapiContext in function calls
+	* tidy up headers and shared constants, remove unused
+	  rapi_types.h
+
 2009-04-11  Mark Ellis  <mark@mpellis.org.uk>
 
 	* if RapiContext is auto-generated, keep it's SynceInfo

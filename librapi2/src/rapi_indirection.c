@@ -15,6 +15,13 @@ BOOL CeCloseHandle(
     HANDLE hObject )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeCloseHandle ) ( hObject );
 }
 
@@ -28,6 +35,13 @@ HANDLE CeCreateFile(
     HANDLE hTemplateFile )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return INVALID_HANDLE_VALUE;
+    }
+
     return ( *context->rapi_ops->CeCreateFile ) (
             lpFileName,
     dwDesiredAccess,
@@ -47,6 +61,13 @@ BOOL CeReadFile(
     LPOVERLAPPED lpOverlapped )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeReadFile ) (
             hFile,
     lpBuffer,
@@ -64,6 +85,13 @@ BOOL CeWriteFile(
     LPOVERLAPPED lpOverlapped )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeWriteFile ) (
             hFile,
     lpBuffer,
@@ -80,6 +108,13 @@ DWORD CeSetFilePointer(
     DWORD dwMoveMethod )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0xFFFFFFFF;
+    }
+
     return ( *context->rapi_ops->CeSetFilePointer ) (
             hFile,
     lDistanceToMove,
@@ -91,6 +126,13 @@ BOOL CeSetEndOfFile(
         HANDLE hFile)
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeSetEndOfFile ) ( hFile );
 }
 
@@ -101,6 +143,13 @@ BOOL CeGetFileTime(
     LPFILETIME lpLastWriteTime )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeGetFileTime ) (
             hFile,
     lpCreationTime,
@@ -115,6 +164,13 @@ BOOL CeSetFileTime(
     LPFILETIME lpLastWriteTime )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeSetFileTime ) (
             hFile,
     lpCreationTime,
@@ -137,6 +193,13 @@ BOOL CeCopyFileA(
     BOOL bFailIfExists )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeCopyFileA ) (
             lpExistingFileName,
     lpNewFileName,
@@ -150,6 +213,13 @@ BOOL CeCopyFile(
     BOOL bFailIfExists )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeCopyFile ) (
             lpExistingFileName,
     lpNewFileName,
@@ -162,6 +232,13 @@ BOOL CeCreateDirectory(
     LPSECURITY_ATTRIBUTES lpSecurityAttributes )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeCreateDirectory ) (
             lpPathName,
     lpSecurityAttributes );
@@ -172,6 +249,13 @@ BOOL CeDeleteFile(
         LPCWSTR lpFileName )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeDeleteFile ) (
             lpFileName );
 }
@@ -184,6 +268,13 @@ BOOL CeFindAllFiles(
     LPLPCE_FIND_DATA ppFindDataArray )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeFindAllFiles ) (
             szPath,
     dwFlags,
@@ -197,6 +288,13 @@ HANDLE CeFindFirstFile(
     LPCE_FIND_DATA lpFindFileData )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return INVALID_HANDLE_VALUE;
+    }
+
     return ( *context->rapi_ops->CeFindFirstFile ) (
             lpFileName,
     lpFindFileData );
@@ -208,6 +306,13 @@ BOOL CeFindNextFile(
     LPCE_FIND_DATA lpFindFileData )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeFindNextFile ) (
             hFindFile,
     lpFindFileData );
@@ -218,6 +323,13 @@ BOOL CeFindClose(
         HANDLE hFindFile )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeFindClose ) ( hFindFile );
 }
 
@@ -226,6 +338,13 @@ DWORD CeGetFileAttributes(
         LPCWSTR lpFileName )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0xFFFFFFFF;
+    }
+
     return ( *context->rapi_ops->CeGetFileAttributes ) ( lpFileName );
 }
 
@@ -235,6 +354,13 @@ DWORD CeGetFileSize(
     LPDWORD lpFileSizeHigh )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return INVALID_FILE_SIZE;
+    }
+
     return ( *context->rapi_ops->CeGetFileSize ) (
             hFile,
     lpFileSizeHigh );
@@ -247,6 +373,13 @@ DWORD CeGetSpecialFolderPath(
     LPWSTR lpBuffer )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->CeGetSpecialFolderPath ) (
             nFolder,
     nBufferLength,
@@ -259,6 +392,13 @@ BOOL CeMoveFile(
     LPCWSTR lpNewFileName )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeMoveFile ) (
             lpExistingFileName,
     lpNewFileName );
@@ -269,6 +409,13 @@ BOOL CeRemoveDirectory(
         LPCWSTR lpPathName )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeRemoveDirectory ) ( lpPathName );
 }
 
@@ -278,6 +425,13 @@ BOOL CeSetFileAttributes(
     DWORD dwFileAttributes )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeSetFileAttributes ) (
             lpFileName,
     dwFileAttributes );
@@ -289,6 +443,13 @@ BOOL CeSHCreateShortcut(
     LPCWSTR lpszTarget )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeSHCreateShortcut ) (
             lpszShortcut,
     lpszTarget );
@@ -298,6 +459,13 @@ BOOL CeSHCreateShortcut(
 BOOL CeSyncTimeToPc()
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeSyncTimeToPc ) ();
 }
 
@@ -318,6 +486,13 @@ CEOID CeCreateDatabase(
     SORTORDERSPEC *rgSortSpecs )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->CeCreateDatabase ) (
             lpszName,
     dwDbaseType,
@@ -329,6 +504,13 @@ CEOID CeCreateDatabase(
 BOOL CeDeleteDatabase( CEOID oid )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeDeleteDatabase ) ( oid );
 }
 
@@ -340,6 +522,13 @@ BOOL CeFindAllDatabases(
     LPLPCEDB_FIND_DATA ppFindData )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeFindAllDatabases ) (
             dwDbaseType,
     wFlags,
@@ -352,6 +541,13 @@ HANDLE CeFindFirstDatabase(
         DWORD dwDbaseType )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return INVALID_HANDLE_VALUE;
+    }
+
     return ( *context->rapi_ops->CeFindFirstDatabase ) (
             dwDbaseType );
 }
@@ -361,6 +557,13 @@ CEOID CeFindNextDatabase(
         HANDLE hEnum )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->CeFindNextDatabase ) (
             hEnum );
 }
@@ -374,6 +577,13 @@ HANDLE CeOpenDatabase(
     HWND hwndNotify )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return INVALID_HANDLE_VALUE;
+    }
+
     return ( *context->rapi_ops->CeOpenDatabase ) (
             poid,
     lpszName,
@@ -392,6 +602,13 @@ CEOID CeReadRecordProps(
     LPDWORD lpcbBuffer )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->CeReadRecordProps ) (
             hDbase,
     dwFlags,
@@ -409,6 +626,13 @@ CEOID CeSeekDatabase(
     LPDWORD lpdwIndex )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->CeSeekDatabase ) (
             hDatabase,
     dwSeekType,
@@ -424,6 +648,13 @@ CEOID CeWriteRecordProps(
     CEPROPVAL *rgPropVal )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->CeWriteRecordProps ) (
             hDbase,
     oidRecord,
@@ -437,6 +668,13 @@ BOOL CeDeleteRecord(
     CEOID oidRecord )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeDeleteRecord ) (
             hDatabase, oidRecord );
 }
@@ -447,6 +685,13 @@ BOOL CeSetDatabaseInfo(
     CEDBASEINFO* pNewInfo )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeSetDatabaseInfo ) (
             oidDbase,
     pNewInfo );
@@ -473,6 +718,11 @@ LONG CeRegCreateKeyEx(
     LPDWORD lpdwDisposition )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegCreateKeyEx ) (
             hKey,
     lpszSubKey,
@@ -494,6 +744,11 @@ LONG CeRegOpenKeyEx(
     PHKEY phkResult )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegOpenKeyEx ) (
             hKey,
     lpszSubKey,
@@ -507,6 +762,11 @@ LONG CeRegCloseKey(
         HKEY hKey )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegCloseKey ) (
             hKey );
 }
@@ -517,6 +777,11 @@ LONG CeRegDeleteKey(
     LPCWSTR lpszSubKey )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegDeleteKey ) (
             hKey,
     lpszSubKey
@@ -529,6 +794,11 @@ LONG CeRegDeleteValue(
     LPCWSTR lpszValueName )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegDeleteValue ) (
             hKey,
     lpszValueName
@@ -544,6 +814,13 @@ DWORD CeGetDiskFreeSpaceEx(
 		PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeGetDiskFreeSpaceEx ) (
 			_lpDirectoryName,
 			lpFreeBytesAvailable,
@@ -569,6 +846,11 @@ LONG CeRegQueryInfoKey(
     PFILETIME lpftLastWriteTime )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegQueryInfoKey ) (
             hKey,
     lpClass,
@@ -594,6 +876,11 @@ LONG CeRegQueryValueEx(
     LPDWORD lpcbData )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegQueryValueEx ) (
             hKey,
     lpValueName,
@@ -615,6 +902,11 @@ LONG CeRegEnumValue(
     LPDWORD lpcbData )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegEnumValue ) (
             hKey,
     dwIndex,
@@ -638,6 +930,11 @@ LONG CeRegEnumKeyEx(
     PFILETIME lpftLastWriteTime )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegEnumKeyEx ) (
             hKey,
     dwIndex,
@@ -659,6 +956,11 @@ LONG CeRegSetValueEx(
     DWORD cbData )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return ERROR_NOT_CONNECTED;
+    }
+
     return ( *context->rapi_ops->CeRegSetValueEx ) (
             hKey,
     lpValueName,
@@ -680,6 +982,13 @@ BOOL CeCheckPassword(
     LPWSTR lpszPassword )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeCheckPassword ) ( lpszPassword );
 }
 
@@ -697,6 +1006,13 @@ BOOL CeCreateProcess(
     LPPROCESS_INFORMATION lpProcessInformation )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeCreateProcess ) (
             lpApplicationName,
     lpCommandLine,
@@ -715,6 +1031,13 @@ BOOL CeGetStoreInformation(
         LPSTORE_INFORMATION lpsi )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeGetStoreInformation ) ( lpsi );
 }
 
@@ -723,6 +1046,13 @@ void CeGetSystemInfo(
         LPSYSTEM_INFO lpSystemInfo )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return;
+    }
+
     return ( *context->rapi_ops->CeGetSystemInfo ) (
             lpSystemInfo );
 }
@@ -731,6 +1061,13 @@ void CeGetSystemInfo(
 BOOL CeGetSystemPowerStatusEx( PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeGetSystemPowerStatusEx ) ( pSystemPowerStatus, refresh );
 }
 
@@ -739,6 +1076,13 @@ BOOL CeGetVersionEx(
         LPCEOSVERSIONINFO lpVersionInformation )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeGetVersionEx ) (
             lpVersionInformation );
 }
@@ -749,6 +1093,13 @@ BOOL CeOidGetInfo(
     CEOIDINFO *poidInfo )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeOidGetInfo ) (
             oid,
     poidInfo );
@@ -758,6 +1109,11 @@ BOOL CeOidGetInfo(
 HRESULT CeProcessConfig( LPCWSTR config, DWORD flags, LPWSTR* reply )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->CeProcessConfig ) ( config, flags, reply );
 }
 
@@ -765,6 +1121,13 @@ HRESULT CeProcessConfig( LPCWSTR config, DWORD flags, LPWSTR* reply )
 BOOL CeStartReplication( void )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeStartReplication ) ();
 }
 
@@ -772,6 +1135,11 @@ BOOL CeStartReplication( void )
 HRESULT CeSyncStart( LPCWSTR params )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->CeSyncStart ) ( params );
 }
 
@@ -779,6 +1147,11 @@ HRESULT CeSyncStart( LPCWSTR params )
 HRESULT CeSyncResume( void )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->CeSyncResume ) ();
 }
 
@@ -786,6 +1159,11 @@ HRESULT CeSyncResume( void )
 HRESULT CeSyncPause( void )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->CeSyncPause ) ();
 }
 
@@ -796,6 +1174,13 @@ BOOL CeGetSystemMemoryDivision(
     LPDWORD lpdwPageSize )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeGetSystemMemoryDivision ) (
             lpdwStoragePages,
     lpdwRamPages,
@@ -807,6 +1192,13 @@ DWORD CeSetSystemMemoryDivision(
         DWORD dwStoragePages )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 3;
+    }
+
     return ( *context->rapi_ops->CeSetSystemMemoryDivision ) ( dwStoragePages );
 }
 
@@ -814,6 +1206,13 @@ DWORD CeSetSystemMemoryDivision(
 BOOL CeRegCopyFile( LPCWSTR filename )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeRegCopyFile ) ( filename );
 }
 
@@ -821,6 +1220,13 @@ BOOL CeRegCopyFile( LPCWSTR filename )
 BOOL CeRegRestoreFile( LPCWSTR filename )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeRegRestoreFile ) ( filename );
 }
 
@@ -828,6 +1234,13 @@ BOOL CeRegRestoreFile( LPCWSTR filename )
 BOOL CeKillAllApps()
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return false;
+    }
+
     return ( *context->rapi_ops->CeKillAllApps ) ();
 }
 
@@ -843,6 +1256,13 @@ BOOL CeKillAllApps()
 ULONG IRAPIStream_Release( IRAPIStream* stream )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        context->rapi_error = S_OK;
+        context->last_error = ERROR_NOT_CONNECTED;
+        return 0;
+    }
+
     return ( *context->rapi_ops->IRAPIStream_Release ) ( stream );
 }
 
@@ -854,6 +1274,11 @@ HRESULT IRAPIStream_Read(
     ULONG *pcbRead )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->IRAPIStream_Read ) (
             stream,
     pv,
@@ -869,6 +1294,11 @@ HRESULT IRAPIStream_Write(
     ULONG *pcbWritten )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->IRAPIStream_Write ) (
             stream,
     pv,
@@ -891,6 +1321,11 @@ HRESULT CeRapiInvoke(
     DWORD dwReserved )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->CeRapiInvoke ) (
             pDllPath,
     pFunctionName,
@@ -914,6 +1349,11 @@ HRESULT CeRapiInvokeA(
     DWORD dwReserved )
 {
     RapiContext * context = rapi_context_current();
+    if (!context->is_initialized)
+    {
+        return E_UNEXPECTED;
+    }
+
     return ( *context->rapi_ops->CeRapiInvokeA ) (
             pDllPath,
     pFunctionName,

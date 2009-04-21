@@ -14,8 +14,6 @@
 #include <pthread.h>
 #endif
 
-#define CERAPI_E_ALREADYINITIALIZED  0x8004101
-
 #define RAPI_PORT  990
 
 #define RAPI_CONTEXT_DEBUG 0
@@ -118,6 +116,7 @@ RapiContext* rapi_context_new()/*{{{*/
 
 	if (context)
 	{
+		memset(context, 0, sizeof(RapiContext));
 		if (!((context->send_buffer  = rapi_buffer_new()) &&
 		      (context->recv_buffer = rapi_buffer_new()) &&
 		      (context->socket = synce_socket_new())

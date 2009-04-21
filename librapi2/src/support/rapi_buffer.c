@@ -98,6 +98,7 @@ static bool rapi_buffer_assure_size(RapiBuffer* buffer, size_t extra_size)/*{{{*
 RapiBuffer* rapi_buffer_new()
 {
 	RapiBuffer* buffer = calloc(1, sizeof(RapiBuffer));
+	memset(buffer, 0, sizeof(RapiBuffer));
 
 	return buffer;
 }

@@ -96,7 +96,7 @@ int rapi_connection_get_fd(RapiConnection* connection);
  * Main RAPI functions
  */
 
-#define CERAPI_E_ALREADYINITIALIZED  0x8004101
+#define CERAPI_E_ALREADYINITIALIZED  0x80041001
 
 #ifndef SWIG
 
@@ -164,6 +164,7 @@ DWORD CeRapiGetLastError();
 #define FILE_CURRENT    1
 #define FILE_END        2
 
+#define INVALID_FILE_SIZE 0xFFFFFFFF
 
 #ifndef SWIG
 

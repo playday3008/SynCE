@@ -268,14 +268,13 @@ BOOL _CeRemoveDirectory2(
     return return_value;
 }
 
-#define BAD_FILE_SIZE 0xffffffff
 
 DWORD _CeGetFileSize2(
         HANDLE hFile,
         LPDWORD lpFileSizeHigh)
 {
     RapiContext* context = rapi_context_current();
-    DWORD size = BAD_FILE_SIZE;
+    DWORD size = INVALID_FILE_SIZE;
 
     rapi_context_begin_command(context, 0x2e);
     rapi_buffer_write_uint32(context->send_buffer, (uint32_t)hFile);
@@ -283,17 +282,17 @@ DWORD _CeGetFileSize2(
     lpFileSizeHigh, sizeof(*lpFileSizeHigh));
 
     if ( !rapi2_context_call(context) )
-        return BAD_FILE_SIZE;
+        return INVALID_FILE_SIZE;
 
     if ( !rapi_buffer_read_uint32(context->recv_buffer, &context->last_error) )
-        return BAD_FILE_SIZE;
+        return INVALID_FILE_SIZE;
     synce_trace("last_error = %i", context->last_error);
 
     if ( !rapi_buffer_read_uint32(context->recv_buffer, &size) )
-        return BAD_FILE_SIZE;
+        return INVALID_FILE_SIZE;
 
     if ( !rapi_buffer_read_optional_uint32(context->recv_buffer, lpFileSizeHigh) )
-        return BAD_FILE_SIZE;
+        return INVALID_FILE_SIZE;
 
     return size;
 }
