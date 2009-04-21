@@ -26,7 +26,7 @@ STDAPI CeRapiUninit( void ) /*{{{*/
 
     if ( context->is_initialized )
     {
-        rapi_context_free( context );
+        rapi_context_set(NULL);
         return S_OK;
     } else
     {

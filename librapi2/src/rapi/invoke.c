@@ -26,7 +26,7 @@ static void rapi_stream_destroy(IRAPIStream* stream)/*{{{*/
 {
   if (stream)
   {
-    rapi_context_free(stream->context);
+    rapi_context_unref(stream->context);
     free(stream);
   }
 }/*}}}*/
@@ -307,7 +307,7 @@ static HRESULT CeRapiInvokeBuffers(
       rapi_buffer_get_size(context->recv_buffer));*/
 
 exit:
-  rapi_context_free(context);
+  rapi_context_unref(context);
   if (SUCCEEDED(hr))
     return return_value;
   else

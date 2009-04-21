@@ -20,6 +20,7 @@ typedef struct _RapiContext
 	SynceInfo* info;
 	bool own_info;
 	struct rapi_ops_s *rapi_ops;
+	unsigned refcount;
 } RapiContext;
 
 /**
@@ -29,18 +30,25 @@ RapiContext* rapi_context_current();
 
 /**
  * Set current RapiContext
+ * incs refcount of context, and decs refcount
+ * of previous current context
  */
 void rapi_context_set(RapiContext* context);
 
 /**
- * Create new context
+ * Create new context, with refcount of 1
  */
 RapiContext* rapi_context_new();
 
 /**
- * Free context
+ * Increment refcount of context
  */
-void rapi_context_free(RapiContext* context);
+void rapi_context_ref(RapiContext* context);
+
+/**
+ * Decrement refcount of context, free'd when zero
+ */
+void rapi_context_unref(RapiContext* context);
 
 /*
  * Connect to device

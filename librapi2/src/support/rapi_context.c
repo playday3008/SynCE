@@ -3,7 +3,6 @@
 #define _GNU_SOURCE
 #include "rapi_context.h"
 #include <stdlib.h>
-#include <synce_socket.h>
 #include <string.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -35,7 +34,7 @@ static pthread_key_t context_key = -1;
 /*This makes sure that the a key is created only once, we can also use pthread for this*/
 static pthread_once_t key_is_created = PTHREAD_ONCE_INIT;
 #else
-static RapiContext* current_context;
+static RapiContext* current_context = NULL;
 
 #endif
 
@@ -59,8 +58,8 @@ void create_pthread_key(){
 }
 #endif
 
-
-RapiContext* rapi_context_current()/*{{{*/
+static RapiContext *
+get_current_context()
 {
 #ifdef USE_THREAD_SAFE_VERSION
 	/* If the key for the thread_local context variables was not initalized yet,
@@ -71,29 +70,14 @@ RapiContext* rapi_context_current()/*{{{*/
 	/* Get the thread local current_context */
 	RapiContext* thread_current_context = (RapiContext*)pthread_getspecific(context_key) ;
 
-	/* If the thread local context is not initialized, setup a new one
-	 * DON'T forget to reload the thread local information that is updated 
-	 * by the rapi_context_set(rapi_context_new())!
-	 */
-	if (!thread_current_context)
-	{
-		rapi_context_set(rapi_context_new());
-		thread_current_context = (RapiContext*)pthread_getspecific(context_key) ;
-	}
-	
 	return thread_current_context;
 #else
-	if (!current_context)
-	{
-			rapi_context_set(rapi_context_new());
-	}
-
 	return current_context;
 #endif
+}
 
-}/*}}}*/
-
-void rapi_context_set(RapiContext* context)
+static void
+set_current_context(RapiContext *context)
 {
 #ifdef USE_THREAD_SAFE_VERSION
 	/* If the key for the thread_local context variables was not initalized yet,
@@ -109,6 +93,61 @@ void rapi_context_set(RapiContext* context)
 }
 
 
+RapiContext* rapi_context_current()/*{{{*/
+{
+	RapiContext *context = NULL;
+
+	context = get_current_context();
+
+	/* If the current context is not initialized, setup
+	    a new one and return it
+	 */
+	if (!context)
+	{
+		RapiContext *new_context = rapi_context_new();
+		set_current_context(new_context);
+		context = get_current_context();
+	}
+	
+	return context;
+
+}/*}}}*/
+
+void rapi_context_set(RapiContext* context)
+{
+	RapiContext *old_context = NULL;
+
+	/* Get the current context, if any */
+	old_context = get_current_context();
+
+	set_current_context(context);
+
+	if (context)
+		rapi_context_ref(context);
+	if (old_context)
+		rapi_context_unref(old_context);
+}
+
+static void rapi_context_free(RapiContext* context)/*{{{*/
+{
+	if (!context)
+		return;
+
+	/* check it against the current context,
+	 * this should never happen
+	 */
+	RapiContext* check_context = get_current_context();
+	if (check_context == context)
+		set_current_context(NULL);
+
+	rapi_buffer_free(context->send_buffer);
+	rapi_buffer_free(context->recv_buffer);
+	synce_socket_free(context->socket);
+	if (context->own_info && context->info)
+		synce_info_destroy(context->info);
+	free(context);
+
+}/*}}}*/
 
 RapiContext* rapi_context_new()/*{{{*/
 {
@@ -129,23 +168,24 @@ RapiContext* rapi_context_new()/*{{{*/
 
 	context->info = NULL;
 	context->own_info = false;
+	context->refcount = 1;
 
 	return context;
 }/*}}}*/
 
-void rapi_context_free(RapiContext* context)/*{{{*/
+void rapi_context_ref(RapiContext* context)/*{{{*/
+{
+	if (context)
+		(context->refcount)++;
+}/*}}}*/
+
+void rapi_context_unref(RapiContext* context)/*{{{*/
 {
 	if (context)
 	{
-		if (context == rapi_context_current())
-			rapi_context_set(NULL);
-
-		rapi_buffer_free(context->send_buffer);
-		rapi_buffer_free(context->recv_buffer);
-		synce_socket_free(context->socket);
-		if (context->own_info && context->info)
-			synce_info_destroy(context->info);
-		free(context);
+		(context->refcount)--;
+		if (context->refcount < 1)
+			rapi_context_free(context);
 	}
 }/*}}}*/
 

@@ -64,6 +64,7 @@ void rapi_connection_destroy(RapiConnection* connection)
   if (connection)
   {
     synce_info_destroy(connection->owned_info);
+    rapi_context_unref(connection->context);
     free(connection);
   }
 }

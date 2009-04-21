@@ -3,6 +3,7 @@
 	* catch uninitialized RapiContext in function calls
 	* tidy up headers and shared constants, remove unused
 	  rapi_types.h
+	* implement reference counting on RapiContext
 
 2009-04-11  Mark Ellis  <mark@mpellis.org.uk>
 
