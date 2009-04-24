@@ -121,6 +121,9 @@ main (gint argc, gchar **argv)
 			GNOME_PROGRAM_STANDARD_PROPERTIES,
 			NULL);
 
+        g_set_application_name(_("SynCE Tray Icon"));
+
+
  	synce_log_set_level(log_level);
 
 	glade_init ();

@@ -29,8 +29,8 @@ IN THE SOFTWARE.
 #include <string.h>
 #include <signal.h>
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <gtk/gtk.h>
-#include <libgnome/libgnome.h>
 #include <gconf/gconf-client.h>
 #include <dbus/dbus-glib.h>
 #include <synce.h>
@@ -546,16 +546,18 @@ uninit_client_comms(SynceTrayIcon *self)
 static gboolean
 start_dccm (SynceTrayIcon *self)
 {
-  gchar *argv[3] = {
-    DCCM_BIN,""
+  GError *error = NULL;
+
+  gchar *argv[1] = {
+          DCCM_BIN
   };
-  gint argc = 1;
 
   if (!(dccm_is_running())) {
     g_debug("%s: starting %s", G_STRFUNC, DCCM_BIN);
-    if (gnome_execute_async(NULL, argc, argv) == -1) {
+    if (!g_spawn_async (NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
             event_notification(self, "Service failure", _("Can't start vdccm which is needed to communicate with the PDA. Make sure it is installed and try again."));
-            g_warning("%s: Failed to start %s", G_STRFUNC, DCCM_BIN);
+            g_warning("%s: Failed to start %s: %s", G_STRFUNC, DCCM_BIN, error->message);
+            g_error_free(error);
             return FALSE;
     }
   } else {
@@ -769,18 +771,23 @@ menu_explore (GtkWidget *menu_item, SynceTrayIcon *self)
 {
   const gchar *name = NULL;
   gchar *arg_str = NULL;
+  GError *error = NULL;
 
   GtkWidget *device_menu = gtk_widget_get_parent(menu_item);
   name = gtk_menu_get_title(GTK_MENU(device_menu));
 
   arg_str = g_strdup_printf("synce://%s/", name);
-
-  char *argv[2] = {
-    "nautilus", arg_str
+  
+  char *argv[4] = {
+          "nautilus", "-n", arg_str, NULL
   };
-  if (gnome_execute_async(NULL, 2, argv) == -1) {
-          g_warning("%s: failed to explore '%s'", G_STRFUNC, arg_str);
+  
+  if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+          g_warning("%s: failed to explore '%s': %s", G_STRFUNC, arg_str, error->message);
+          g_error_free(error);
+          return;
   }
+
   g_free(arg_str);
 }
 
@@ -828,13 +835,12 @@ menu_about (GtkWidget *button, SynceTrayIcon *icon)
     NULL
   };
 
-  GnomeProgram *prog_info = gnome_program_get ();
   about = gtk_about_dialog_new();
 
-  gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), gnome_program_get_human_readable_name (prog_info));
-  gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), gnome_program_get_app_version (prog_info));
+  gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), g_get_application_name());
+  gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
   gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2002, David Eriksson\n"
-							    "Copyright (c) 2007, Mark Ellis"));
+							    "Copyright (c) 2007 - 2009, Mark Ellis"));
   gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _("Displays information about devices connected through SynCE"));
   gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://www.synce.org");
   gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);

@@ -1,3 +1,7 @@
+2009-04-24  Mark Ellis <mark@mpellis.org.uk>
+
+	* replace gnome_exec with g_spawn, start replacing GnomeProgram
+
 2009-04-20  Mark Ellis <mark@mpellis.org.uk>
 
 	* add some more error checking around rapi calls
