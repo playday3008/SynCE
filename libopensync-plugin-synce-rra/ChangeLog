@@ -1,3 +1,7 @@
+2009-04-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fix for librra RRA_SyncMgrType
+
 2009-04-03  Mark Ellis  <mark@mpellis.org.uk>
 
 	* build system changes

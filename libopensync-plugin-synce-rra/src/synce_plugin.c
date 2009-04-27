@@ -107,7 +107,7 @@ connect(OSyncContext *ctx)
 {
 	RRA_Matchmaker* matchmaker = NULL;
 	HRESULT hr;
-        RRA_SyncMgrType* type = NULL;
+        const RRA_SyncMgrType* type = NULL;
         int i;
         LONG result;
         HKEY intl_key;
@@ -150,7 +150,7 @@ connect(OSyncContext *ctx)
         }
 
         if ((reg_type != REG_DWORD) || (size != sizeof(DWORD))) {
-                osync_context_report_error(ctx, OSYNC_ERROR_GENERIC, "Unexpected value type for device codepage: 0x%08x = %i: size = %d", type, type, size);
+                osync_context_report_error(ctx, OSYNC_ERROR_GENERIC, "Unexpected value type for device codepage: 0x%08x = %i: size = %d", reg_type, reg_type, size);
                 return;
         }
 
@@ -522,7 +522,7 @@ commit_contacts_change: called when it's time to update device once a time for e
 static osync_bool commit_contacts_change(OSyncContext *ctx, OSyncChange *change)
 {
 	SyncePluginPtr *env = (SyncePluginPtr *)osync_context_get_plugin_data(ctx);
-	RRA_SyncMgrType *type = NULL;	
+	const RRA_SyncMgrType *type = NULL;	
 	uint32_t id=0;
 
 	osync_debug("SynCE-SYNC", 4, "start: %s", __func__);	
@@ -602,7 +602,7 @@ static osync_bool commit_contacts_change(OSyncContext *ctx, OSyncChange *change)
 static osync_bool commit_todo_change(OSyncContext *ctx, OSyncChange *change)
 {
 	SyncePluginPtr *env = (SyncePluginPtr *)osync_context_get_plugin_data(ctx);
-	RRA_SyncMgrType *type = NULL;	
+	const RRA_SyncMgrType *type = NULL;	
 	uint32_t id=0;
 
 	osync_debug("SynCE-SYNC", 4, "start: %s", __func__);	
@@ -682,7 +682,7 @@ static osync_bool commit_todo_change(OSyncContext *ctx, OSyncChange *change)
 static osync_bool commit_cal_change(OSyncContext *ctx, OSyncChange *change)
 {
 	SyncePluginPtr *env = (SyncePluginPtr *)osync_context_get_plugin_data(ctx);
-	RRA_SyncMgrType *type = NULL;	
+	const RRA_SyncMgrType *type = NULL;	
 	uint32_t id=0;
 
 	osync_debug("SynCE-SYNC", 4, "start: %s", __func__);	
