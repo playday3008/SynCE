@@ -64,6 +64,7 @@ struct _SynceTrayIconPrivate {
   WmDeviceManager *device_list;
   GtkWidget *menu;
   NotifyNotification *notification;
+  gboolean show_disconnected;
 
   gboolean disposed;
 };
@@ -166,23 +167,22 @@ query_tooltip_cb(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode, GtkT
 static void
 set_icon(SynceTrayIcon *self)
 {
-  if (is_connected(self))
+  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+  if (is_connected(self)) {
     gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_CONNECTED);
-  else
+    gtk_status_icon_set_visible(GTK_STATUS_ICON(self), true);
+  } else {
+    gtk_status_icon_set_visible(GTK_STATUS_ICON(self), priv->show_disconnected);
     gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_DISCONNECTED);
-	
-  while (gtk_events_pending ())
-    gtk_main_iteration ();
+  }
 }
 
 static gboolean 
 update(gpointer data)
 {
-  SynceTrayIcon *self = SYNCE_TRAYICON(data);
-
-  set_icon(self);
 #if !GTK_CHECK_VERSION(2,16,0)
-  set_status_tooltips(self);
+  set_status_tooltips(SYNCE_TRAYICON(data));
 #endif
   /* prevent function from running again when
    set with g_idle_add */
@@ -198,11 +198,14 @@ event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
   if (priv->notification) {
     notify_notification_close(priv->notification, NULL);
     g_object_unref (priv->notification);
+    priv->notification = NULL;
   }
 
   if (gtk_status_icon_is_embedded(GTK_STATUS_ICON(self))) {
           priv->notification = notify_notification_new_with_status_icon (summary, body, NULL, GTK_STATUS_ICON(self));
           notify_notification_show (priv->notification, NULL);
+  } else {
+          g_debug("%s: not embedded", G_STRFUNC);
   }
 }
 
@@ -731,6 +734,9 @@ device_added_cb(GObject *obj, gchar *name, gpointer user_data)
   if (!new_device)
           return;
 
+  set_icon(self);
+  g_idle_add(update, self);
+
   module_run_connect(name);
 
   g_object_get(new_device, "hardware", &model, NULL);
@@ -742,8 +748,6 @@ device_added_cb(GObject *obj, gchar *name, gpointer user_data)
   g_free(model);
   g_free(platform);
   g_free(notify_string);
-
-  g_idle_add(update, self);
 }
 
 static void
@@ -757,9 +761,9 @@ device_removed_cb(GObject *obj, gchar *name, gpointer user_data)
 
   notify_string = g_strdup_printf("'%s' just disconnected.", name);
   event_notification(self, "PDA disconnected", notify_string);
-
   g_free(notify_string);
 
+  set_icon(self);
   g_idle_add(update, self);
 }
 
@@ -1016,6 +1020,7 @@ prefs_changed_cb (GConfClient *client, guint id,
 		  GConfEntry *entry, gpointer data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(data);
+  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
   const gchar *key;
   const GConfValue *value;
@@ -1034,6 +1039,14 @@ prefs_changed_cb (GConfClient *client, guint id,
     return;
   }
 
+  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/show_disconnected"))) {
+    priv->show_disconnected = gconf_value_get_bool(value);
+    set_icon(self);
+
+    return;
+  }
+
+  return;
 }
 
 
@@ -1139,10 +1152,18 @@ synce_trayicon_init(SynceTrayIcon *self)
           error = NULL;
   }                  
 
+  priv->show_disconnected = gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/show_disconnected", &error);
+  if (error) {
+          g_critical("%s: Error getting '/apps/synce/trayicon/show_disconnected' from gconf: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
+
   /* module initialisation */
   module_load_all();
 
   /* set initial state */
+  set_icon(self);
   update(self);
 
   /* dccm comms */

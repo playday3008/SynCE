@@ -1,3 +1,8 @@
+2009-04-28  Mark Ellis <mark@mpellis.org.uk>
+
+	* By default do not show icon if no device is connected. Added gconf
+	  pref to always show. Many thanks to Frank de Lange
+
 2009-04-24  Mark Ellis <mark@mpellis.org.uk>
 
 	* replace gnome_exec with g_spawn, start replacing GnomeProgram

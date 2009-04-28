@@ -36,6 +36,15 @@ prefs_changed_cb (GConfClient *client, guint id,
 
     return;
   }
+
+  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/show_disconnected"))) {
+    gboolean show_disconnected = gconf_value_get_bool(value);
+    GtkWidget *prefs_show_disconnected = glade_xml_get_widget (xml, "prefs_show_disconnected");
+
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_disconnected), show_disconnected);
+
+    return;
+  }
 }
 
 
@@ -80,6 +89,25 @@ prefs_start_stop_vdccm_toggled_cb (GtkWidget *widget, gpointer data)
 
 
 static void
+prefs_show_disconnected_toggled_cb (GtkWidget *widget, gpointer data)
+{
+        gboolean state;
+        GError *error = NULL;
+        GConfClient *conf_client = gconf_client_get_default();
+
+        state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+
+        if (!(gconf_client_set_bool (conf_client, "/apps/synce/trayicon/show_disconnected", state, &error))) {
+                g_warning("%s: setting '/apps/synce/trayicon/show_disconnected' in gconf failed: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        g_object_unref(conf_client);
+}                            
+
+
+static void
 prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
         GConfClient *conf_client = gconf_client_get_default();
@@ -92,8 +120,8 @@ prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 GtkWidget *
 run_prefs_dialog (SynceTrayIcon *trayicon)
 {
-  GtkWidget *prefs_window, *prefs_enable_vdccm, *prefs_start_stop_vdccm, *close_button;
-  gboolean enable_vdccm, start_stop_vdccm;
+  GtkWidget *prefs_window, *prefs_enable_vdccm, *prefs_start_stop_vdccm, *prefs_show_disconnected, *close_button;
+  gboolean enable_vdccm, start_stop_vdccm, show_disconnected;
   GError *error = NULL;
 
   GConfClient *conf_client = gconf_client_get_default();
@@ -104,6 +132,7 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
 
   prefs_enable_vdccm = glade_xml_get_widget (xml, "prefs_enable_vdccm");
   prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");
+  prefs_show_disconnected = glade_xml_get_widget (xml, "prefs_show_disconnected");
 
   enable_vdccm = gconf_client_get_bool (conf_client, "/apps/synce/trayicon/enable_vdccm", &error);
   if (error) {
@@ -124,10 +153,20 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
           gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_start_stop_vdccm), start_stop_vdccm);
   }
 
+  show_disconnected = gconf_client_get_bool (conf_client, "/apps/synce/trayicon/show_disconnected", &error);
+  if (error) {
+          g_warning("%s: Getting '/apps/synce/trayicon/show_disconnected' from gconf failed: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_disconnected), show_disconnected);
+
   g_signal_connect (G_OBJECT (prefs_enable_vdccm), "toggled",
 		      G_CALLBACK (prefs_enable_vdccm_toggled_cb), prefs_start_stop_vdccm);
   g_signal_connect (G_OBJECT (prefs_start_stop_vdccm), "toggled",
 		      G_CALLBACK (prefs_start_stop_vdccm_toggled_cb), NULL);
+  g_signal_connect (G_OBJECT (prefs_show_disconnected), "toggled",
+		      G_CALLBACK (prefs_show_disconnected_toggled_cb), NULL);
 
   guint id = gconf_client_notify_add (conf_client, 
 			   "/apps/synce/trayicon", 

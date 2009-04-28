@@ -37,5 +37,17 @@
       </locale>
     </schema>
 
+    <schema>
+      <key>/schemas/apps/synce/trayicon/show_disconnected</key>
+      <applyto>/apps/synce/trayicon/show_disconnected</applyto>
+      <owner>synce-trayicon</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Show icon when disconnected</short>
+        <long>Whether the icon will be shown when the device is not connected (true) or only when it is connected (false). The latter is the default.</long>
+      </locale>
+    </schema>
+
   </schemalist>
 </gconfschemafile>
