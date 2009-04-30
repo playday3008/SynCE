@@ -22,9 +22,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
  ***************************************************************************/
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <KAboutData>
 #include <KApplication>
@@ -66,10 +64,10 @@ static const KLocalizedString MITlicense = ki18n(
 
 int main(int argc, char *argv[])
 {
-    KAboutData aboutData(QByteArray("kcemirror"),
+    KAboutData aboutData(QByteArray(PACKAGE_NAME),
                          NULL,
                          ki18n("KCeMirror"),
-                         QVariant(VERSION).toByteArray(),
+                         QByteArray(PACKAGE_VERSION),
                          description,
                          KAboutData::License_Custom,
                          ki18n("(c) 2003, Volker Christian (voc)\n(c) 2009, Mark Ellis"),
