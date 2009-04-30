@@ -26,7 +26,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <kdebug.h>
+#include <KDebug>
 
 
 Decoder::Decoder()
@@ -54,8 +54,6 @@ bool Decoder::decode(unsigned char *rawData, size_t /*rawSize*/, unsigned char *
 
 bool Decoder::chainDecode(unsigned char *rawData, size_t rawSize)
 {
-    kDebug(2120) << "** entering **" << endl;
-
     bool ret = true;
 
     if (chain != NULL) {
@@ -77,21 +75,28 @@ bool Decoder::chainDecode(unsigned char *rawData, size_t rawSize)
     return ret;
 }
 
+static size_t qsock_read_n(QTcpSocket *sock, char *buffer, size_t num)
+{
+    uint32_t readSize = 0;
+    int32_t n = 0;
+
+    do {
+        n = sock->read(buffer + readSize, num - readSize);
+        readSize += n;
+        if (readSize < num && n == 0)
+                sock->waitForReadyRead(3000);
+    } while (readSize < num && sock->state() == QAbstractSocket::ConnectedState);
+
+    return readSize;
+}
 
 bool Decoder::readSize(QTcpSocket *s)
 {
     uint32_t encSizeN;
     bool ret = false;
-
     uint32_t readSize = 0;
-    int32_t n = 0;
 
-    do {
-        n = s->read((char *)&encSizeN + readSize, sizeof(uint32_t) - readSize);
-        readSize += n;
-        if (readSize < sizeof(uint32_t) && n == 0)
-                s->waitForReadyRead(3000);
-    } while (readSize < sizeof(uint32_t) && s->state() == QAbstractSocket::ConnectedState);
+    readSize = qsock_read_n(s, (char *)&encSizeN, sizeof(uint32_t));
 
     if (readSize == sizeof(uint32_t)) {
         ret = true;
@@ -120,29 +125,13 @@ bool Decoder::chainReadSize(QTcpSocket *s)
 
 bool Decoder::readData(QTcpSocket *s, size_t encSize)
 {
-    kDebug(2120) << "encSize" << encSize << endl;
-
-
     uint32_t readSize = 0;
     bool ret = false;
     encData = new unsigned char[encSize];
-    int32_t n = 0;
 
-    kDebug(2120) << "bytes available " << s->bytesAvailable() << endl;
-    do {
-        n = s->read((char*)encData + readSize, encSize - readSize);
-        readSize += n;
+    readSize = qsock_read_n(s, (char*)encData, encSize);
 
-        if (readSize < encSize && n == 0)
-                s->waitForReadyRead(3000);
-
-    } while (readSize < encSize && s->state() == QAbstractSocket::ConnectedState);
-
-    /*
-    kDebug(2120) << "encSize" << encSize << "readSize" << readSize << "n" << n << endl;
-    */
-
-    if (n >= 0) {
+    if (readSize == encSize) {
         ret = true;
     }
 
@@ -152,31 +141,22 @@ bool Decoder::readData(QTcpSocket *s, size_t encSize)
 
 size_t Decoder::chainRead(QTcpSocket *s)
 {
-    int ret = 0;
+    bool ret = false;
     uint32_t rawSizeN = 0;
     uint32_t readSize = 0;
-    int32_t n = 0;
 
-    do {
-        n = s->read((char *)&rawSizeN + readSize, sizeof(uint32_t) - readSize);
-        readSize += n;
-        if (readSize < sizeof(uint32_t) && n == 0)
-                s->waitForReadyRead(3000);
-    } while (readSize < sizeof(uint32_t) && s->state() == QAbstractSocket::ConnectedState);
+    rawSize = 0;
 
-    ret = readSize;
+    readSize = qsock_read_n(s, (char*)&rawSizeN, sizeof(uint32_t));
 
-    if (ret == sizeof(uint32_t)) {
+    if (readSize == sizeof(uint32_t)) {
         rawSize = ntohl(rawSizeN);
         if (!(ret = chainReadSize(s))) {
             kDebug(2120) << "Read sizes error" << endl;
+            rawSize = 0;
         }
     } else {
-        kDebug(2120) << "Read raw-size error: " << ret << " read" << endl;
-    }
-
-    if (!ret) {
-        rawSize = 0;
+        kDebug(2120) << "Read raw-size error" << endl;
     }
 
     return rawSize;

@@ -39,15 +39,6 @@
 #include <KStandardAction>
 #include <KDebug>
 
-/*
-#include <qthread.h>
-#include <ksimpleconfig.h>
-#include <kiconloader.h>
-#include <khelpmenu.h>
-#include <kdebug.h>
-*/
-
-
 #include "rapiwrapper.h"
 #include "rledecoder.h"
 #include "huffmandecoder.h"
@@ -90,7 +81,7 @@ CeScreen::CeScreen()
 
     pauseMenuAction = new KAction(this);
     pauseMenuAction->setText(i18n("Pause"));
-    pauseMenuAction->setIcon(KIcon("stop"));
+    pauseMenuAction->setIcon(KIcon("media-playback-pause"));
     connect(pauseMenuAction, SIGNAL(triggered(bool)),
             this, SLOT(updatePause()));
     filemenu->addAction(pauseMenuAction);
@@ -127,7 +118,7 @@ CeScreen::CeScreen()
 
     pauseTbAction = new KAction(this);
     pauseTbAction->setText(i18n("Pause"));
-    pauseTbAction->setIcon(KIcon("stop"));
+    pauseTbAction->setIcon(KIcon("media-playback-pause"));
     connect(pauseTbAction, SIGNAL(triggered(bool)),
             this, SLOT(updatePause()));
     tb->addAction(pauseTbAction);
@@ -166,19 +157,19 @@ void CeScreen::updatePause()
     if (pause) {
         statusBar()->insertItem(i18n("Pause"), 3);
 
-        pauseTbAction->setIcon(KIcon("redo"));
+        pauseTbAction->setIcon(KIcon("edit-redo"));
         pauseTbAction->setText(QString("Restart"));
 
-        pauseMenuAction->setIcon(KIcon("redo"));
+        pauseMenuAction->setIcon(KIcon("edit-redo"));
         pauseMenuAction->setText(QString("Restart"));
 
     } else {
         statusBar()->removeItem(3);
 
-        pauseTbAction->setIcon(KIcon("stop"));
+        pauseTbAction->setIcon(KIcon("media-playback-pause"));
         pauseTbAction->setText(QString("Pause"));
 
-        pauseMenuAction->setIcon(KIcon("stop"));
+        pauseMenuAction->setIcon(KIcon("media-playback-pause"));
         pauseMenuAction->setText(QString("Pause"));
 
         imageViewer->drawImage();
@@ -190,6 +181,7 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
 {
     synce::PROCESS_INFORMATION info = {0, 0, 0, 0};
     QString deviceAddress = pdaName;
+    this->pdaName = pdaName;
 
     if (isSynCeDevice) {
 	synce::SynceInfo *dev_info = synce::synce_info_new(pdaName.toAscii().constData());
@@ -250,15 +242,6 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
             delete pdaSocket;
         }
 
-        /*
-         * FIXME this doesn't return an error immediately, need to listen for 
-         * QAbstractSocket signals
-         */
-
-        /*
-        pdaSocket = KSocketFactory::connectToHost(QString(""), deviceAddress, 1234);
-        */
-
         pdaSocket = KSocketFactory::synchronousConnectToHost(QString(""), deviceAddress, 1234);
         if (pdaSocket->state() == QAbstractSocket::ConnectedState)
                 kDebug(2120) << "connected " << endl;
@@ -296,18 +279,9 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
 
 bool CeScreen::readEncodedImage()
 {
-    kDebug(2120) << "** entering **" << endl;
-
     uint32_t rawSize = decoderChain->chainRead(pdaSocket);
     if (rawSize > 0) {
         if (decoderChain->chainDecode(bmpData + headerSize, rawSize)) {
-
-                /*
-            FILE* output = fopen("/home/mark/kce4.bmp", "w");
-            fwrite(bmpData, bmpSize, 1, output);
-            fclose(output);
-                */
-
             imageViewer->loadImage(bmpData, bmpSize);
             if (!pause) {
                 imageViewer->drawImage();
@@ -325,15 +299,28 @@ bool CeScreen::readEncodedImage()
 }
 
 
+size_t qsock_read_n(QTcpSocket *sock, char *buffer, size_t num)
+{
+    uint32_t readSize = 0;
+    int32_t n = 0;
+
+    do {
+        n = sock->read(buffer + readSize, num - readSize);
+        readSize += n;
+        if (readSize < num && n == 0)
+                sock->waitForReadyRead(3000);
+    } while (readSize < num && sock->state() == QAbstractSocket::ConnectedState);
+
+    return readSize;
+}
+
+
 bool CeScreen::readBmpHeader()
 {
     uint32_t headerSizeN;
     uint32_t bmpSizeN;
-    bool ret = false;
 
-    kDebug(2120) << "Reading Bitmap Header" << endl;
-
-    int n = pdaSocket->read((char*)&bmpSizeN, sizeof(uint32_t));
+    int n = qsock_read_n(pdaSocket, (char*)&bmpSizeN, sizeof(uint32_t));
 
     if (n == sizeof(uint32_t)) {
         bmpSize = ntohl(bmpSizeN);
@@ -342,31 +329,28 @@ bool CeScreen::readBmpHeader()
         return false;
     }
 
-    n = pdaSocket->read((char*)&headerSizeN, sizeof(uint32_t));
+    n = qsock_read_n(pdaSocket, (char*)&headerSizeN, sizeof(uint32_t));
 
-    if (n == sizeof(uint32_t)) {
-        headerSize = ntohl(headerSizeN);
-        kDebug(2120) << "Header size: " << headerSize << endl;
-        if (bmpData != NULL) {
-            delete[] bmpData;
-        }
-        bmpData = new unsigned char[bmpSize];
-        uint32_t readSize = 0;
-        do {
-                int n = pdaSocket->read((char*)bmpData + readSize, headerSize - readSize);
-            readSize += n;
-            if (n <= 0) {
-                KMessageBox::error(this, "Conection to PDA broken", "Error");
-                return false;
-            }
-        } while (readSize < headerSize);
-        ret = true;
-    } else {
+    if (n != sizeof(uint32_t)) {
         KMessageBox::error(this, "Conection to PDA broken", "Error");
         return false;
     }
 
-    return ret;
+
+    headerSize = ntohl(headerSizeN);
+    kDebug(2120) << "Header size: " << headerSize << endl;
+    if (bmpData != NULL) {
+        delete[] bmpData;
+    }
+    bmpData = new unsigned char[bmpSize];
+
+    n = qsock_read_n(pdaSocket, (char*)bmpData, headerSize);
+    if (n <= 0) {
+        KMessageBox::error(this, "Conection to PDA broken", "Error");
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -376,10 +360,8 @@ bool CeScreen::readSizeMessage()
     uint32_t yN;
     bool ret = true;
 
-    kDebug(2120) << "Reading Size Message" << endl;
-
-    int m = pdaSocket->read((char*)&xN, sizeof(uint32_t));
-    int k = pdaSocket->read((char*)&yN, sizeof(uint32_t));
+    int m = qsock_read_n(pdaSocket, (char*)&xN, sizeof(uint32_t));
+    int k = qsock_read_n(pdaSocket, (char*)&yN, sizeof(uint32_t));
     if (m == sizeof(long) && k == sizeof(uint32_t)) {
         uint32_t x = ntohl(xN);
         uint32_t y = ntohl(yN);
@@ -398,10 +380,6 @@ void CeScreen::readSocket()
     unsigned char packageType;
 
     if (!have_header) {
-            /*
-            statusBar()->removeItem(1);
-            statusBar()->insertItem(i18n("Connected to ") + pdaName, 1);
-            */
             uint32_t xN;
             uint32_t yN;
             int m;
@@ -409,24 +387,25 @@ void CeScreen::readSocket()
             int p;
             unsigned char packageType;
 
-            kDebug(2120) << "bytes available " << pdaSocket->bytesAvailable() << endl;
-            p = pdaSocket->read((char*)&packageType, sizeof(unsigned char));
-            m = pdaSocket->read((char*)&xN, sizeof(uint32_t));
-            k = pdaSocket->read((char*)&yN, sizeof(uint32_t));
-
-            /*
-            kDebug(2120) << "for pda " << pdaName.toAscii().constData() << endl;
-            */
+            p = qsock_read_n(pdaSocket, (char*)&packageType, sizeof(unsigned char));
+            m = qsock_read_n(pdaSocket, (char*)&xN, sizeof(uint32_t));
+            k = qsock_read_n(pdaSocket, (char*)&yN, sizeof(uint32_t));
 
             if (m > 0 && k > 0) {
                     width = ntohl(xN);
                     height = ntohl(yN);
                     have_header = true;
-                    kDebug(2120) << "width = " << width << "height = " << height << endl;
-                    emit pdaSize((int) width, (int) height);
-            } else {
 
-                    kDebug(2120) << "bumming out " << pdaSocket->errorString() << endl;
+                    emit pdaSize((int) width, (int) height);
+
+                    statusBar()->removeItem(1);
+                    statusBar()->insertItem(i18n("Connected to ") + pdaName, 1);
+
+            } else {
+                    kDebug(2120) << "Failed to read header" << pdaSocket->errorString() << endl;
+                    emit pdaError();
+                    delete pdaSocket;
+                    pdaSocket = NULL;
             }
             return;
 
@@ -434,10 +413,7 @@ void CeScreen::readSocket()
 
     this->show();
 
-    kDebug(2120) << "bytes available " << pdaSocket->bytesAvailable() << endl;
-
-
-    int p = pdaSocket->read((char*)&packageType, sizeof(unsigned char));
+    int p = qsock_read_n(pdaSocket, (char*)&packageType, sizeof(unsigned char));
     if (p != sizeof(unsigned char)) {
         KMessageBox::error(this, "Conection to PDA broken", "Error");
         emit pdaError();
@@ -446,7 +422,6 @@ void CeScreen::readSocket()
     } else {
         switch(packageType) {
         case XOR_IMAGE:
-            kDebug(2120) << "read xor_image" << endl;
             if (!readEncodedImage()) {
                 delete pdaSocket;
                 pdaSocket = NULL;
@@ -454,7 +429,6 @@ void CeScreen::readSocket()
             }
             break;
         case SIZE_MESSAGE:
-            kDebug(2120) << "read size_message" << endl;
             if (!readSizeMessage()) {
                 delete pdaSocket;
                 pdaSocket = NULL;
@@ -462,10 +436,9 @@ void CeScreen::readSocket()
             }
             break;
         case KEY_IMAGE:
-            kDebug(2120) << "read key_image" << endl;
+            kDebug(2120) << "no action for read key_image" << endl;
             break;
         case BMP_HEADER:
-            kDebug(2120) << "read bmp_header" << endl;
             if (!readBmpHeader()) {
                 delete pdaSocket;
                 pdaSocket = NULL;

@@ -1,5 +1,6 @@
 /***************************************************************************
  * Copyright (c) 2003 Volker Christian <voc@users.sourceforge.net>         *
+ * Copyright (c) 2009 Mark Ellis <mark@mpellis.org.uk>                     *
  *                                                                         *
  * Permission is hereby granted, free of charge, to any person obtaining a *
  * copy of this software and associated documentation files (the           *
@@ -36,6 +37,7 @@ static const KLocalizedString description = ki18n(
 
 static const KLocalizedString MITlicense = ki18n(
     "Copyright (c) 2003 Volker Christian\n"
+    "Copyright (c) 2009 Mark Ellis\n"
     "\n"
     "Permission is hereby granted, free of charge, to\n"
     "any person obtaining a copy of this software and\n"
@@ -70,14 +72,18 @@ int main(int argc, char *argv[])
                          QVariant(VERSION).toByteArray(),
                          description,
                          KAboutData::License_Custom,
-                         ki18n("(c) 2003, Volker Christian (voc)"),
+                         ki18n("(c) 2003, Volker Christian (voc)\n(c) 2009, Mark Ellis"),
                          ki18n(""),
-                         QByteArray("http://synce.sourceforge.net/synce/kde/"),
-                         QByteArray("voc@users.sourceforge.net"));
+                         QByteArray("http://www.synce.org/"),
+                         QByteArray("synce-users@lists.sourceforge.net"));
 
     aboutData.addAuthor(ki18n("Volker Christian"),
                         ki18n("is the original author"),
                         QByteArray("voc@users.sourceforge.net"),
+                        NULL);
+    aboutData.addAuthor(ki18n("Mark Ellis"),
+                        ki18n("ported it to KDE4"),
+                        QByteArray("mark_ellis@users.sourceforge.net"),
                         NULL);
     aboutData.addCredit(ki18n("Ludovic Lange"),
                         ki18n("is the Initiator of the SynCE-Project."),
@@ -111,10 +117,10 @@ int main(int argc, char *argv[])
     bool synce = args->isSet("synce");
     bool forceInstall = args->isSet("forceinstall");
 
+    KApplication a;
+
     kDebug(2120) << "Synce: " << synce << endl;
     kDebug(2120) << "ForceInstall: " << forceInstall << endl;
-
-    KApplication a;
 
     CeScreen *ceScreen = new CeScreen();
 

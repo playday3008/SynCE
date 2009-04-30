@@ -84,6 +84,7 @@ signals:
     void pdaError();
 
 private:
+    QString pdaName;
     QTcpSocket *pdaSocket;
     bool have_header;
 

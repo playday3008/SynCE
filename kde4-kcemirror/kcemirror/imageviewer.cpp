@@ -72,17 +72,14 @@ void ImageViewer::setPdaSize(int x, int y)
 void ImageViewer::drawImage()
 {
     pm = QPixmap::fromImage(image, Qt::AutoColor);
-    kDebug(2120) << "running update()" << endl;
     update();
 }
 
 
 void ImageViewer::loadImage(uchar *data, size_t size)
 {
-    if (image.loadFromData(data, size))
-            kDebug(2120) << "loaded image data, x = " << image.width() << "y = " << image.height() << endl;
-    else
-            kDebug(2120) << "failed to load image data" << endl;
+    if (!image.loadFromData(data, size))
+        kDebug(2120) << "failed to load image data" << endl;
 
     setPdaSize(image.width(), image.height());
 }
