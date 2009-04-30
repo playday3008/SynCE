@@ -547,6 +547,7 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     if (dbus_error_is_set(&dbus_error)) {
       g_warning("%s: Failed to obtain property pda.pocketpc.iface_address for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
       result->local_iface_ip = NULL;
+      dbus_error_free(&dbus_error);
     }
 
     result->os_name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.platform", &dbus_error);

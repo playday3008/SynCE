@@ -1,3 +1,7 @@
+2009-04-14  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/info.c - clear an error correctly when fetching local_iface_ip
+
 2009-04-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add local_iface_ip to SynceInfo
