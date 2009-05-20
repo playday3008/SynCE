@@ -1,0 +1,1067 @@
+/***************************************************************************
+ * Copyright (c) 2009 Mark Ellis <mark_ellis@users.sourceforge.net>         *
+ *                                                                         *
+ * Permission is hereby granted, free of charge, to any person obtaining a *
+ * copy of this software and associated documentation files (the           *
+ * "Software"), to deal in the Software without restriction, including     *
+ * without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to      *
+ * permit persons to whom the Software is furnished to do so, subject to   *
+ * the following conditions:                                               *
+ *                                                                         *
+ * The above copyright notice and this permission notice shall be included *
+ * in all copies or substantial portions of the Software.                  *
+ *                                                                         *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF              *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,    *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE       *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                  *
+ ***************************************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "cescreen.h"
+
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <glib/gi18n.h>
+#include <synce.h>
+#include <rapi.h>
+#include <errno.h>
+
+#include <gdk/gdkkeysyms.h>
+
+#include "rledecoder.h"
+#include "huffmandecoder.h"
+#include "xordecoder.h"
+#include "imageviewer.h"
+#include "gcemirror-signals-marshal.h"
+
+#define XK_MISCELLANY
+#define XK_LATIN1
+#include <X11/keysymdef.h>
+
+
+#define MOUSE_PRESSED   1
+#define MOUSE_RELEASED  2
+#define MOUSE_MOVED     3
+#define MOUSE_WHEEL     4
+#define KEY_PRESSED     5
+#define KEY_RELEASED    6
+
+#define LEFT_BUTTON     1
+#define RIGHT_BUTTON    2
+#define MID_BUTTON      3
+
+#define SIZE_MESSAGE    1
+#define XOR_IMAGE       2
+#define KEY_IMAGE       3
+#define BMP_HEADER      4
+
+G_DEFINE_TYPE (CeScreen, ce_screen, GTK_TYPE_WINDOW)
+
+typedef struct _CeScreenPrivate CeScreenPrivate;
+struct _CeScreenPrivate
+{
+        gboolean disposed;
+
+        /* private */
+        GIOChannel *socket;
+        gchar *name;
+        gboolean have_header;
+        ImageViewer *imageviewer;
+        guint32 width;
+        guint32 height;
+        gboolean pause;
+        GtkToolbar *tb;
+        GtkStatusbar *statusbar;
+        guint statusbar_context;
+        GtkWidget *pause_menu_item;
+        GtkWidget *pause_tb_item;
+        Decoder *decoder_chain;
+        guchar *bmp_data;
+        guint32 header_size;
+        guint32 bmp_size;
+};
+
+#define CE_SCREEN_GET_PRIVATE(o) \
+        (G_TYPE_INSTANCE_GET_PRIVATE((o), CE_SCREEN_TYPE, CeScreenPrivate))
+
+/* methods */
+
+static void
+ce_screen_update_pause_cb(GtkWidget *widget, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        priv->pause = !priv->pause;
+
+        if (priv->pause) {
+                gtk_statusbar_push(priv->statusbar, priv->statusbar_context, _("Pause"));
+
+                gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(priv->pause_tb_item), GTK_STOCK_MEDIA_PLAY);
+
+        } else {
+                gtk_statusbar_pop(priv->statusbar, priv->statusbar_context);
+
+                gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(priv->pause_tb_item), GTK_STOCK_MEDIA_PAUSE);
+
+                image_viewer_draw_image(priv->imageviewer);
+        }
+}
+
+static gsize
+sock_read_n(GIOChannel *sock, gchar *buffer, gsize num)
+{
+        guint32 read_size = 0;
+        gsize n = 0;
+        GIOStatus status;
+
+        do {
+                status = g_io_channel_read_chars(sock, buffer + read_size, num - read_size, &n, NULL);
+
+                read_size += n;
+        } while (read_size < num && (status == G_IO_STATUS_NORMAL || status == G_IO_STATUS_AGAIN) );
+
+        return read_size;
+}
+
+static gboolean
+ce_screen_read_encoded_image(CeScreen *self)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        guint32 raw_size = decoder_chain_read(priv->decoder_chain, priv->socket);
+        if (raw_size > 0) {
+                if (decoder_chain_decode(priv->decoder_chain, priv->bmp_data + priv->header_size, raw_size)) {
+
+                        image_viewer_load_image(priv->imageviewer, priv->bmp_data, priv->bmp_size);
+                        if (!priv->pause) {
+                                image_viewer_draw_image(priv->imageviewer);
+                        }
+                } else {
+                        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Decoding error");
+                        gtk_dialog_run(GTK_DIALOG(dialog));
+                        return false;
+                }
+        } else {
+                GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                return false;
+        }
+
+        return true;
+}
+
+
+static gboolean
+ce_screen_read_bmp_header(CeScreen *self)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        guint32 headerSizeN;
+        guint32 bmpSizeN;
+
+        gint n = sock_read_n(priv->socket, (gchar*)&bmpSizeN, sizeof(guint32));
+
+        if (n == sizeof(guint32)) {
+                priv->bmp_size = ntohl(bmpSizeN);
+        } else {
+                GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                return false;
+        }
+
+        n = sock_read_n(priv->socket, (gchar*)&headerSizeN, sizeof(guint32));
+
+        if (n != sizeof(guint32)) {
+                GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                return false;
+        }
+
+
+        priv->header_size = ntohl(headerSizeN);
+        g_debug("%s: Header size: %d", G_STRFUNC, priv->header_size);
+        if (priv->bmp_data != NULL) {
+                g_free(priv->bmp_data);
+        }
+        priv->bmp_data = g_malloc0(sizeof(guchar) * priv->bmp_size);
+
+        n = sock_read_n(priv->socket, (gchar*)priv->bmp_data, priv->header_size);
+        if (n <= 0) {
+                GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                return false;
+        }
+
+        return true;
+}
+
+
+static gboolean
+ce_screen_read_size_message(CeScreen *self)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        guint32 xN;
+        guint32 yN;
+        gboolean ret = true;
+
+        gint m = sock_read_n(priv->socket, (gchar*)&xN, sizeof(guint32));
+        gint k = sock_read_n(priv->socket, (gchar*)&yN, sizeof(guint32));
+        if (m == sizeof(glong) && k == sizeof(guint32)) {
+                guint32 x = ntohl(xN);
+                guint32 y = ntohl(yN);
+
+                gtk_widget_set_size_request(GTK_WIDGET(self), x, y);
+                g_signal_emit (self, CE_SCREEN_GET_CLASS(self)->signals[PDA_SIZE], 0, x, y);
+        } else {
+                GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                ret = false;
+        }
+
+        return ret;
+}
+
+
+static gboolean
+ce_screen_read_socket_cb(GIOChannel *source, GIOCondition condition, gpointer data)
+{
+        CeScreen *self = CE_SCREEN(data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        guchar package_type;
+
+        if (!priv->have_header) {
+                guint32 xN;
+                guint32 yN;
+                gint m;
+                gint k;
+                gint p;
+
+                p = sock_read_n(priv->socket, (gchar*)&package_type, sizeof(guchar));
+                m = sock_read_n(priv->socket, (gchar*)&xN, sizeof(guint32));
+                k = sock_read_n(priv->socket, (gchar*)&yN, sizeof(guint32));
+
+                if (m > 0 && k > 0) {
+                        priv->width = ntohl(xN);
+                        priv->height = ntohl(yN);
+                        priv->have_header = true;
+
+                        g_signal_emit (self, CE_SCREEN_GET_CLASS(self)->signals[PDA_SIZE], 0, priv->width, priv->height);
+
+                        gtk_statusbar_pop(priv->statusbar, priv->statusbar_context);
+
+                        gchar *text = g_strdup_printf(_("Connected to %s"), priv->name);
+                        gtk_statusbar_push(priv->statusbar, priv->statusbar_context, text);
+                        g_free(text);
+
+                } else {
+                        g_debug("%s: Failed to read header", G_STRFUNC);
+                        g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+
+                        g_io_channel_unref(priv->socket);
+                        priv->socket = NULL;
+                }
+                return TRUE;
+
+        }
+
+
+        gint p = sock_read_n(priv->socket, (gchar*)&package_type, sizeof(guchar));
+        if (p != sizeof(guchar)) {
+                GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Connection to PDA broken");
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+
+                g_io_channel_unref(priv->socket);
+                priv->socket = NULL;
+        } else {
+                switch(package_type) {
+                case XOR_IMAGE:
+                        if (!ce_screen_read_encoded_image(self)) {
+                                g_io_channel_unref(priv->socket);
+                                priv->socket = NULL;
+                                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                        }
+                        break;
+                case SIZE_MESSAGE:
+                        if (!ce_screen_read_size_message(self)) {
+                                g_io_channel_unref(priv->socket);
+                                priv->socket = NULL;
+                                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                        }
+                        break;
+                case KEY_IMAGE:
+                        g_debug("%s: no action for read key_image", G_STRFUNC);
+                        break;
+                case BMP_HEADER:
+                        if (!ce_screen_read_bmp_header(self)) {
+                                g_io_channel_unref(priv->socket);
+                                priv->socket = NULL;
+                                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                        }
+                        break;
+                }
+        }
+        return TRUE;
+}
+
+
+static gboolean
+ce_screen_close_socket_cb(GIOChannel *source, GIOCondition condition, gpointer data)
+{
+        CeScreen *self = CE_SCREEN(data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        if (priv->socket != NULL) {
+                g_io_channel_unref(priv->socket);
+                priv->socket = NULL;
+        }
+        return TRUE;
+}
+
+
+static void
+ce_screen_send_mouse_event(CeScreen *self, guint32 button, guint32 cmd, gdouble x, gdouble y)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+        GIOStatus status;
+        gsize bytes_written;
+
+        if (!priv->pause) {
+                g_debug("%s: sending mouse event, button %u, cmd %u, x %f, y %f", G_STRFUNC, button, cmd, x, y);
+
+                guchar buf[4 * sizeof(guint32)];
+
+                *(guint32 *) &buf[sizeof(guint32) * 0] = htonl(cmd);
+                *(guint32 *) &buf[sizeof(guint32) * 1] = htonl(button);
+
+                *(guint32 *) &buf[sizeof(guint32) * 2] = htonl((guint32) (65535 * x / priv->width));
+                *(guint32 *) &buf[sizeof(guint32) * 3] = htonl((guint32) (65535 * y / priv->height));
+
+                g_debug("%s: sending mouse event, button %u, cmd %u, x %ld, y %ld", G_STRFUNC, button, cmd, ((glong) (65535 * x / priv->width)), ((glong) (65535 * y / priv->height)));
+                status = g_io_channel_write_chars(priv->socket,
+                                                            (gchar*)buf,
+                                                            4 * sizeof(guint32),
+                                                            &bytes_written,
+                                                            NULL);
+
+                if (bytes_written != (4 * sizeof(guint32)))
+                        g_debug("%s: Failure sending mouse event", G_STRFUNC);
+        }
+}
+
+
+static void
+ce_screen_send_key_event(CeScreen *self, guint32 code, guint32 cmd)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+        GIOStatus status;
+        gsize bytes_written;
+
+        if (!priv->pause) {
+                guchar buf[4 * sizeof(guint32)];
+
+                *(guint32 *) &buf[sizeof(guint32) * 0] = htonl(cmd);
+                *(guint32 *) &buf[sizeof(guint32) * 1] = htonl(code);
+                *(guint32 *) &buf[sizeof(guint32) * 2] = 0;
+                *(guint32 *) &buf[sizeof(guint32) * 3] = 0;
+
+                status = g_io_channel_write_chars(priv->socket,
+                                                  (gchar*)buf,
+                                                  4 * sizeof(guint32),
+                                                  &bytes_written,
+                                                  NULL);
+
+                if (bytes_written != (4 * sizeof(uint32_t)))
+                        g_debug("%s: Failure sending key event", G_STRFUNC);
+        }
+}
+
+
+static void
+ce_screen_mouse_pressed_cb(ImageViewer *imageviewer, guint button, gdouble x, gdouble y, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+
+        glong button_number;
+
+        switch(button) {
+        case 1:
+                button_number = LEFT_BUTTON;
+                g_debug("%s: left button pressed, x = %f, y = %f", G_STRFUNC, x, y);
+                break;
+        case 2:
+                button_number = MID_BUTTON;
+                g_debug("%s: middle button pressed, x = %f, y = %f", G_STRFUNC, x, y);
+                break;
+        case 3:
+                button_number = RIGHT_BUTTON;
+                g_debug("%s: right button pressed, x = %f, y = %f", G_STRFUNC, x, y);
+                break;
+        default:
+                button_number = 0;
+                break;
+        }
+
+        ce_screen_send_mouse_event(self, button_number, MOUSE_PRESSED, x, y);
+}
+
+
+static void
+ce_screen_mouse_released_cb(ImageViewer *imageviewer, guint button, gdouble x, gdouble y, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+
+        glong button_number;
+
+        switch(button) {
+        case 1:
+                button_number = LEFT_BUTTON;
+                break;
+        case 2:
+                button_number = MID_BUTTON;
+                break;
+        case 3:
+                button_number = RIGHT_BUTTON;
+                break;
+        default:
+                button_number = 0;
+                break;
+        }
+
+        ce_screen_send_mouse_event(self, button_number, MOUSE_RELEASED, x, y);
+}
+
+
+static void
+ce_screen_mouse_moved_cb(ImageViewer *imageviewer, guint button, gdouble x, gdouble y, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+
+        glong button_number;
+
+        switch(button) {
+        case 1:
+                button_number = LEFT_BUTTON;
+                break;
+        case 2:
+                button_number = MID_BUTTON;
+                break;
+        case 3:
+                button_number = RIGHT_BUTTON;
+                break;
+        default:
+                button_number = 0;
+                break;
+        }
+
+        ce_screen_send_mouse_event(self, button_number, MOUSE_MOVED, x, y);
+}
+
+
+static void
+ce_screen_wheel_rolled_cb(ImageViewer *imageviewer, gint delta, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+
+        ce_screen_send_mouse_event(self, 0, MOUSE_WHEEL, delta, 0);
+}
+
+
+static guint32
+to_key_sym(CeScreen *self, gint code)
+{
+        switch (code) {
+        case GDK_a: return 'a';
+        case GDK_b: return 'b';
+        case GDK_c: return 'c';
+        case GDK_d: return 'd';
+        case GDK_e: return 'e';
+        case GDK_f: return 'f';
+        case GDK_g: return 'g';
+        case GDK_h: return 'h';
+        case GDK_i: return 'i';
+        case GDK_j: return 'j';
+        case GDK_k: return 'k';
+        case GDK_l: return 'l';
+        case GDK_m: return 'm';
+        case GDK_n: return 'n';
+        case GDK_o: return 'o';
+        case GDK_p: return 'p';
+        case GDK_q: return 'q';
+        case GDK_r: return 'r';
+        case GDK_s: return 's';
+        case GDK_t: return 't';
+        case GDK_u: return 'u';
+        case GDK_v: return 'v';
+        case GDK_w: return 'w';
+        case GDK_x: return 'x';
+        case GDK_y: return 'y';
+        case GDK_z: return 'z';
+
+        case GDK_A: return 'A';
+        case GDK_B: return 'B';
+        case GDK_C: return 'C';
+        case GDK_D: return 'D';
+        case GDK_E: return 'E';
+        case GDK_F: return 'F';
+        case GDK_G: return 'G';
+        case GDK_H: return 'H';
+        case GDK_I: return 'I';
+        case GDK_J: return 'J';
+        case GDK_K: return 'K';
+        case GDK_L: return 'L';
+        case GDK_M: return 'M';
+        case GDK_N: return 'N';
+        case GDK_O: return 'O';
+        case GDK_P: return 'P';
+        case GDK_Q: return 'Q';
+        case GDK_R: return 'R';
+        case GDK_S: return 'S';
+        case GDK_T: return 'T';
+        case GDK_U: return 'U';
+        case GDK_V: return 'V';
+        case GDK_W: return 'W';
+        case GDK_X: return 'X';
+        case GDK_Y: return 'Y';
+        case GDK_Z: return 'Z';
+
+        case GDK_Escape:    return XK_Escape;
+        case GDK_Tab:       return XK_Tab;
+        case GDK_BackSpace: return XK_BackSpace;
+        case GDK_Return:    return XK_Return;
+        case GDK_KP_Enter:  return XK_Return;
+        case GDK_Insert:    return XK_Insert;
+        case GDK_Delete:    return XK_Delete;
+        case GDK_Pause:     return XK_Pause;
+        case GDK_Print:     return XK_Print;
+        case GDK_Sys_Req:   return XK_Sys_Req;
+        case GDK_Home:      return XK_Home;
+        case GDK_End:       return XK_End;
+        case GDK_Left:      return XK_Left;
+        case GDK_Up:        return XK_Up;
+        case GDK_Right:     return XK_Right;
+        case GDK_Down:      return XK_Down;
+        case GDK_Prior:     return XK_Prior;
+        case GDK_Next:      return XK_Next;
+
+        case GDK_Shift_L:     return XK_Shift_L;
+        case GDK_Control_L:   return XK_Control_L;
+        case GDK_Meta_L:      return XK_Meta_L;
+        case GDK_Alt_L:       return XK_Alt_L;
+        case GDK_Caps_Lock:   return XK_Caps_Lock;
+        case GDK_Num_Lock:    return XK_Num_Lock;
+        case GDK_Scroll_Lock: return XK_Scroll_Lock;
+
+        case GDK_F1:      return XK_F1;
+        case GDK_F2:      return XK_F2;
+        case GDK_F3:      return XK_F3;
+        case GDK_F4:      return XK_F4;
+        case GDK_F5:      return XK_F5;
+        case GDK_F6:      return XK_F6;
+        case GDK_F7:      return XK_F7;
+        case GDK_F8:      return XK_F8;
+        case GDK_F9:      return XK_F9;
+        case GDK_F10:     return XK_F10;
+        case GDK_F11:     return XK_F11;
+        case GDK_F12:     return XK_F12;
+        case GDK_F13:     return XK_F13;
+        case GDK_F14:     return XK_F14;
+        case GDK_F15:     return XK_F15;
+        case GDK_F16:     return XK_F16;
+        case GDK_F17:     return XK_F17;
+        case GDK_F18:     return XK_F18;
+        case GDK_F19:     return XK_F19;
+        case GDK_F20:     return XK_F20;
+        case GDK_F21:     return XK_F21;
+        case GDK_F22:     return XK_F22;
+        case GDK_F23:     return XK_F23;
+        case GDK_F24:     return XK_F24;
+
+        default:
+                return 0;
+        }
+
+        return 0;
+}
+
+
+static void
+ce_screen_key_pressed_cb(ImageViewer *imageviewer, guint code, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+
+        g_debug("%s: keypress %d", G_STRFUNC, code);
+
+        guint32 key_code = to_key_sym(self, code);
+
+        if (key_code != 0) {
+                ce_screen_send_key_event(self, key_code, KEY_PRESSED);
+        } else {
+                g_debug("%s: Key with code %d not found in map", G_STRFUNC, code);
+        }
+}
+
+
+static void
+ce_screen_key_released_cb(ImageViewer *imageviewer, gint ascii, gint code, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+
+        guint32 key_code = to_key_sym(self, code);
+
+        if (key_code != 0) {
+                ce_screen_send_key_event(self, key_code, KEY_RELEASED);
+        } else {
+                g_debug("%s: Key with code %d not found in map", G_STRFUNC, code);
+        }
+}
+
+
+gboolean
+ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+        HRESULT hr;
+        DWORD last_error;
+        RapiConnection *rapiconn = NULL;
+
+        PROCESS_INFORMATION info = {0, 0, 0, 0};
+        gchar *device_address = NULL;
+        priv->name = g_strdup(pda_name);
+
+        if (is_synce_device) {
+                SynceInfo *dev_info = synce_info_new(pda_name);
+                if (dev_info)
+                        device_address = g_strdup(synce_info_get_device_ip(dev_info));
+                else
+                        device_address = NULL;
+
+                if (dev_info) synce_info_destroy(dev_info);
+
+                if (!device_address) {
+                        g_debug("%s: device address is NULL", G_STRFUNC);
+                        return FALSE;
+                }
+
+                if (!(rapiconn = rapi_connection_from_name(pda_name))) {
+                        g_debug("%s: failed to create rapi connection", G_STRFUNC);
+                        return FALSE;
+                }
+                rapi_connection_select(rapiconn);
+
+                if (FAILED(hr = CeRapiInit())) {
+                        g_debug("%s: failed to initialise rapi connection: %s", G_STRFUNC, synce_strerror(hr));
+                        rapi_connection_destroy(rapiconn);
+                        return FALSE;
+                }
+
+                SYSTEM_INFO system;
+                CeGetSystemInfo(&system);
+                const gchar *arch;
+
+                switch(system.wProcessorArchitecture) {
+                case PROCESSOR_ARCHITECTURE_MIPS:
+                        arch = ".mips";
+                        break;
+                case PROCESSOR_ARCHITECTURE_SHX:
+                        arch = ".shx";
+                        break;
+                case PROCESSOR_ARCHITECTURE_ARM:
+                        arch = ".arm";
+                        break;
+                }
+
+                gchar *binaryVersion = g_strdup_printf("screensnap.exe%s", arch);
+
+                /*
+
+                  if "synce://" + pda_name + "/Windows/screensnap.exe" does not exit, or force install is set
+                     copy correct version of screensnap.exe to device
+
+                */
+
+                g_free(binaryVersion);
+
+                WCHAR *widetmp = wstr_from_utf8("\\Windows\\screensnap.exe");
+
+                if (!CeCreateProcess(widetmp, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
+                        wstr_free_string(widetmp);
+
+                        if (FAILED(hr = CeRapiGetError())) {
+                                g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(hr));
+                                return FALSE;
+                        }
+
+                        last_error = CeGetLastError();
+                        g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(last_error));
+                        return FALSE;
+                }
+                wstr_free_string(widetmp);
+                CeRapiUninit();
+                rapi_connection_destroy(rapiconn);
+        }
+
+        priv->socket = NULL;
+
+        if (device_address == NULL)
+                device_address = g_strdup(pda_name);
+
+        gint connectcount = 0;
+
+
+        /* create socket */
+
+        gint sockfd = socket(PF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+                g_debug("%s: socket creation failed", G_STRFUNC);
+                return FALSE;
+        }
+
+        struct sockaddr_in addr;
+        memset (&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(1234);
+        addr.sin_addr.s_addr = inet_addr(device_address);
+
+        gint ret;
+
+        g_debug("%s: attempting connect to %s:%d", G_STRFUNC, device_address, 1234);
+        do {
+                ret = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
+                if (ret < 0)
+                        g_debug("%s: socket connect failed: %d: %s", G_STRFUNC, errno, strerror(errno));
+
+        } while (ret < 0 && connectcount++ < 10);
+
+        if (ret < 0) {
+                g_debug("%s: failed to connect to device", G_STRFUNC);
+                return false;
+        }
+
+        priv->socket = g_io_channel_unix_new(sockfd);
+        if (g_io_channel_set_encoding(priv->socket, NULL, NULL) != G_IO_STATUS_NORMAL)
+                g_warning("%s: failed to set raw encoding", G_STRFUNC);
+        g_io_channel_set_buffered(priv->socket, FALSE);
+
+        g_io_add_watch(priv->socket, G_IO_IN, ce_screen_read_socket_cb, self);
+        g_io_add_watch(priv->socket, G_IO_HUP, ce_screen_close_socket_cb, self);
+
+        g_signal_connect(G_OBJECT(priv->imageviewer), "wheel-rolled", G_CALLBACK(ce_screen_wheel_rolled_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "key-pressed", G_CALLBACK(ce_screen_key_pressed_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "key-released", G_CALLBACK(ce_screen_key_released_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-button-pressed", G_CALLBACK(ce_screen_mouse_pressed_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-button-released", G_CALLBACK(ce_screen_mouse_released_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-moved", G_CALLBACK(ce_screen_mouse_moved_cb), self);
+
+        /*
+          may need to connect a resize signal from self to call image_viewer_set_pda_size()
+        */
+
+        g_free(device_address);
+        return true;
+}
+
+
+static void
+ce_screen_file_save_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        GtkWidget *dialog = NULL;
+        dialog = gtk_file_chooser_dialog_new("Save Screenshot",
+                                             GTK_WINDOW(self),
+                                             GTK_FILE_CHOOSER_ACTION_SAVE,
+                                             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                             GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                             NULL);
+
+        gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+
+        gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), g_get_home_dir());
+        gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "cescreen");
+
+
+        GtkFileFilter *filter = gtk_file_filter_new();
+        gtk_file_filter_set_name(filter, "Image files");
+        gtk_file_filter_add_pixbuf_formats(filter);
+        gtk_file_chooser_add_filter(GTK_FILE_CHOOSER (dialog), filter);
+
+        if (gtk_dialog_run(GTK_DIALOG(dialog)) != GTK_RESPONSE_ACCEPT) {
+                gtk_widget_destroy(dialog);
+                return;
+        }
+
+        gchar *filename;
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+        gtk_widget_destroy(dialog);
+
+        if (!filename)
+                return;
+
+        g_debug("%s: saving to file %s", G_STRFUNC, filename);
+
+        image_viewer_save_image(priv->imageviewer, filename);
+        g_free (filename);
+}
+
+
+/* slot */
+static void
+ce_screen_file_print_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+        image_viewer_print_image(priv->imageviewer);
+}
+
+static const gchar *MITlicense = N_(
+    "Copyright (c) 2009 Mark Ellis\n"
+    "Copyright (c) 2003, Volker Christian\n"
+    "\n"
+    "Permission is hereby granted, free of charge, to\n"
+    "any person obtaining a copy of this software and\n"
+    "associated documentation files (the \"Software\"), to\n"
+    "deal in the Software without restriction, including\n"
+    "without limitation the rights to use, copy, modify,\n"
+    "merge, publish, distribute, sublicense, and/or sell\n"
+    "copies of the Software, and to permit persons to whom\n"
+    "the Software is furnished to do so, subject to the\n"
+    "following conditions:\n"
+    "\n"
+    "The above copyright notice and this permission notice\n"
+    "shall be included in all copies or substantial portions\n"
+    "of the Software.\n"
+    "\n"
+    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF\n"
+    "ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED\n"
+    "TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n"
+    "PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT\n"
+    "SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR\n"
+    "ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN\n"
+    "ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT\n"
+    "OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\n"
+    "OTHER DEALINGS IN THE SOFTWARE.");
+
+static void
+ce_screen_show_about_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+
+        GtkWidget *about;
+        const gchar* authors[] = {
+                "Mark Ellis <mark_ellis@users.sourceforge.net>",
+                "Volker Christian <voc@users.sourceforge.net>",
+                NULL
+        };
+
+        about = gtk_about_dialog_new();
+
+        gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), g_get_application_name());
+        gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
+        gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2009, Mark Ellis\n"
+                                                                  "Copyright (c) 2003, Volker Christian"));
+        gtk_about_dialog_set_license(GTK_ABOUT_DIALOG(about), MITlicense);
+
+        gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _("GCEMirror, a PocketPC Control Tool"));
+        gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://www.synce.org");
+
+        gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);
+
+        gtk_dialog_run (GTK_DIALOG (about));
+        gtk_widget_destroy (GTK_WIDGET(about));
+
+        return;
+}
+
+void
+ce_screen_quit_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+        gtk_main_quit();
+}
+
+
+/* class & instance functions */
+
+
+static void
+ce_screen_init(CeScreen *self)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        priv->socket = NULL;
+        priv->have_header = false;
+        priv->pause = false;
+        /*
+        gtk_widget_set_size_request(GTK_WIDGET(self), 0, 0);
+        */
+
+        GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
+
+        /*
+         * create menus
+         */
+        GtkMenuBar *menubar = GTK_MENU_BAR(gtk_menu_bar_new());
+        GtkMenu *menu = GTK_MENU(gtk_menu_new());
+        GtkWidget *entry = NULL;
+
+        entry = gtk_menu_item_new_with_label(_("Screenshot"));
+        g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_file_save_cb), self);
+        gtk_menu_append(GTK_MENU(menu), entry);
+
+        entry = gtk_image_menu_item_new_from_stock(GTK_STOCK_PRINT, NULL);
+        g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_file_print_cb), self);
+        gtk_menu_append(GTK_MENU(menu), entry);
+
+        entry = gtk_separator_menu_item_new();
+        gtk_menu_append(GTK_MENU(menu), entry);
+
+        /*
+          pause/resume GTK_STOCK_MEDIA_PAUSE / GTK_STOCK_MEDIA_PLAY / GTK_STOCK_REFRESH
+        */
+        priv->pause_menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PAUSE, NULL);
+        g_signal_connect(G_OBJECT(priv->pause_menu_item), "activate", G_CALLBACK(ce_screen_update_pause_cb), self);
+        gtk_menu_append(GTK_MENU(menu), priv->pause_menu_item);
+
+        entry = gtk_separator_menu_item_new();
+        gtk_menu_append(GTK_MENU(menu), entry);
+
+        entry = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
+        g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_quit_cb), self);
+        gtk_menu_append(GTK_MENU(menu), entry);
+
+        entry = gtk_menu_item_new_with_label(_("File"));
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(entry), GTK_WIDGET(menu));
+
+        gtk_menu_shell_append(GTK_MENU_SHELL(menubar), entry);
+
+
+        menu = GTK_MENU(gtk_menu_new());
+
+        entry = gtk_image_menu_item_new_from_stock(GTK_STOCK_ABOUT, NULL);
+        g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_show_about_cb), self);
+        gtk_menu_append(GTK_MENU(menu), entry);
+
+        entry = gtk_menu_item_new_with_label(_("Help"));
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(entry), GTK_WIDGET(menu));
+
+        gtk_menu_shell_append(GTK_MENU_SHELL(menubar), entry);
+
+        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(menubar), FALSE, FALSE, 3);
+
+        /*
+         * create toolbar
+         */
+        GtkToolbar *toolbar = GTK_TOOLBAR(gtk_toolbar_new());
+        GtkToolItem *tool_entry = NULL;
+
+        tool_entry = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
+        g_signal_connect(G_OBJECT(tool_entry), "clicked", G_CALLBACK(ce_screen_quit_cb), self);
+        gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_entry, -1);
+
+        tool_entry = gtk_tool_button_new(NULL, _("Screenshot"));
+        g_signal_connect(G_OBJECT(tool_entry), "clicked", G_CALLBACK(ce_screen_file_save_cb), self);
+        gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_entry, -1);
+
+        tool_entry = gtk_tool_button_new_from_stock(GTK_STOCK_PRINT);
+        g_signal_connect(G_OBJECT(tool_entry), "clicked", G_CALLBACK(ce_screen_file_print_cb), self);
+        gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_entry, -1);
+
+        priv->pause_tb_item = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_PAUSE));
+        g_signal_connect(G_OBJECT(priv->pause_tb_item), "clicked", G_CALLBACK(ce_screen_update_pause_cb), self);
+        gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(priv->pause_tb_item), -1);
+
+        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(toolbar), FALSE, FALSE, 3);
+
+
+        priv->imageviewer = g_object_new(IMAGE_VIEWER_TYPE, NULL);
+        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(priv->imageviewer), TRUE, FALSE, 3);
+
+
+        priv->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
+        priv->statusbar_context = gtk_statusbar_get_context_id(priv->statusbar, "gcemirror");
+        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(priv->statusbar), FALSE, FALSE, 3);
+        gtk_statusbar_push(priv->statusbar, priv->statusbar_context, _("Connecting..."));
+
+        gtk_container_add(GTK_CONTAINER(self), GTK_WIDGET(vbox));
+
+        priv->decoder_chain = NULL;
+        priv->decoder_chain = g_object_new(HUFFMAN_DECODER_TYPE, "chain", priv->decoder_chain, NULL);
+        priv->decoder_chain = g_object_new(RLE_DECODER_TYPE, "chain", priv->decoder_chain, NULL);
+        priv->decoder_chain = g_object_new(XOR_DECODER_TYPE, "chain", priv->decoder_chain, NULL);
+
+        priv->bmp_data = NULL;
+}
+
+static void
+ce_screen_dispose(GObject *obj)
+{
+        CeScreen *self = CE_SCREEN(obj);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        if (priv->disposed)
+                return;
+        priv->disposed = TRUE;
+
+        /* unref other objects */
+
+        if (priv->socket != NULL) {
+                g_io_channel_shutdown(priv->socket, FALSE, NULL);
+                g_io_channel_unref(priv->socket);
+        }
+
+        g_object_unref(priv->decoder_chain);
+
+        if (G_OBJECT_CLASS (ce_screen_parent_class)->dispose)
+                G_OBJECT_CLASS (ce_screen_parent_class)->dispose (obj);
+}
+
+static void
+ce_screen_finalize(GObject *obj)
+{
+        if (G_OBJECT_CLASS(ce_screen_parent_class)->finalize)
+                G_OBJECT_CLASS(ce_screen_parent_class)->finalize (obj);
+}
+
+static void
+ce_screen_class_init(CeScreenClass *klass)
+{
+        GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+        g_type_class_add_private(klass, sizeof(CeScreenPrivate));
+  
+        gobject_class->dispose = ce_screen_dispose;
+        gobject_class->finalize = ce_screen_finalize;
+
+        klass->signals[PDA_SIZE] = g_signal_new ("pda-size",
+                                                     G_OBJECT_CLASS_TYPE (klass),
+                                                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                                                     0,
+                                                     NULL, NULL,
+                                                     gcemirror_marshal_VOID__INT_INT,
+                                                     G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
+
+        klass->signals[PDA_ERROR] = g_signal_new ("pda-error",
+                                                     G_OBJECT_CLASS_TYPE (klass),
+                                                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                                                     0,
+                                                     NULL, NULL,
+                                                     g_cclosure_marshal_VOID__VOID,
+                                                     G_TYPE_NONE, 0, G_TYPE_NONE);
+}
+
+

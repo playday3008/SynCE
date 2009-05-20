@@ -1,0 +1,159 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-01-22 08:27+0100\n"
+"PO-Revision-Date: 2004-01-22 10:30+0200\n"
+"Last-Translator: Michael Shigorin <mike@altlinux.org>\n"
+"Language-Team: Russian <ru@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-r\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/synce-trayicon.c:66 src/synce-trayicon.c:67
+msgid "debug"
+msgstr ""
+
+#: src/synce-trayicon.c:77
+msgid "High"
+msgstr "Полная"
+
+#: src/synce-trayicon.c:78
+msgid "Low"
+msgstr "Разряжена"
+
+#: src/synce-trayicon.c:79
+msgid "Critical"
+msgstr "Критично"
+
+#: src/synce-trayicon.c:80
+msgid "Charging"
+msgstr "Заряжается"
+
+#: src/synce-trayicon.c:81
+msgid "NoBattery"
+msgstr "Нет батареи"
+
+#: src/synce-trayicon.c:83 src/synce-trayicon.c:122 src/synce-trayicon.c:135
+msgid "Unknown"
+msgstr "Неизвестно"
+
+#: src/synce-trayicon.c:129
+#, c-format
+msgid "%i%% (%i megabytes)"
+msgstr "%i%% (%i Мб)"
+
+#: src/synce-trayicon.c:139
+#, c-format
+msgid ""
+"Battery life:\t%s\n"
+"Free store:\t%s"
+msgstr ""
+"Батарея: %s\n"
+"Свободная память: %s"
+
+#: src/synce-trayicon.c:156
+msgid ""
+"Can't explore the PDA with the filemanager,\n"
+"make sure you have nautilus and the synce gnome-vfs module installed"
+msgstr ""
+"Невозможно запустить файл-менеджер по PDA,\n"
+"проверьте, установлен ли nautilus и модуль synce для gnome-vfs"
+
+#: src/synce-trayicon.c:166
+msgid ""
+"Can't open the software manager\n"
+"make sure you have synce-software-manager installed"
+msgstr ""
+"Невозможно открыть менеджер программ\n"
+"убедитесь, что установлен synce-software-manager"
+
+#: src/synce-trayicon.c:185
+msgid "SynCE Tray Icon"
+msgstr ""
+
+#: src/synce-trayicon.c:187
+msgid "Copyright (c) 2002, David Eriksson"
+msgstr ""
+
+#: src/synce-trayicon.c:188
+msgid "Displays information about devices connected through SynCE"
+msgstr "Отображает информацию об устройствах, работающих с SynCE"
+
+#: src/synce-trayicon.c:235
+msgid "Explore with Filemanager"
+msgstr "Запустить файл-менеджер"
+
+#: src/synce-trayicon.c:240
+msgid "Add/Remove Programs"
+msgstr "Установка программ"
+
+#: src/synce-trayicon.c:256
+#, c-format
+msgid "Disconnect from '%s'"
+msgstr "Отключиться от '%s'"
+
+#: src/synce-trayicon.c:258
+msgid "(No device connected)"
+msgstr "(ничего не подключено)"
+
+#: src/synce-trayicon.c:339
+msgid "Not connected"
+msgstr "Нет соединения"
+
+#: src/synce-trayicon.c:532
+msgid ""
+"Can't start dccm which is needed to comunicate \n"
+"with the PDA. Make sure it is installed and try again."
+msgstr ""
+"Невозможно запустить dccm (необходимо для связи с PDA).\n"
+"Убедитесь, что программа установлена, и попробуйте снова."
+
+#: src/synce-trayicon.c:559
+msgid "Synce TrayIcon"
+msgstr ""
+
+#: data/synce_trayicon_properties.glade.h:1
+msgid "    "
+msgstr ""
+
+#: data/synce_trayicon_properties.glade.h:2
+msgid "*"
+msgstr ""
+
+#: data/synce_trayicon_properties.glade.h:3
+msgid "<span weight=\"bold\">PocketPC password </span>"
+msgstr "<span weight=\"bold\">Пароль PocketPC </span>"
+
+#: data/synce_trayicon_properties.glade.h:4
+msgid "Enable password"
+msgstr "Активировать пароль"
+
+#: data/synce_trayicon_properties.glade.h:5
+msgid "Password: "
+msgstr "Пароль: "
+
+#: data/synce_trayicon_properties.glade.h:6
+msgid "SynCE Trayicon Preferences"
+msgstr "Настройки"
+
+#: data/synce_trayicon_properties.glade.h:7
+msgid ""
+"The password will be used the next time \"dccm\"  is started (next time you "
+"login).\n"
+" \n"
+"The password will be stored as plain text. This means that it might be read "
+"by other people. It is default stored so that only administrators have "
+"access, but that might not be true for all system setups."
+msgstr ""
+"Пароль будет использован при следующем входе в систему (запуске dccm).\n"
+" \n"
+"Он хранится открытым текстом и может быть прочитан другими людьми."
+"По умолчанию доступ разрешен только администраторам, но это может быть"
+"не так в зависимости от системного окружения."
