@@ -34,7 +34,6 @@ G_BEGIN_DECLS
 typedef enum _CeScreenSignals CeScreenSignals;
 enum _CeScreenSignals
 {
-  PDA_SIZE,
   PDA_ERROR,
   CE_SCREEN_NUM_SIGNALS
 };
@@ -66,6 +65,6 @@ GType ce_screen_get_type (void);
 #define CE_SCREEN_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj), CE_SCREEN_TYPE, CeScreenClass))
 
-gboolean ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install);
+void ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install);
 
 #endif /* CESCREEN_H */

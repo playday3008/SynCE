@@ -60,6 +60,9 @@ image_viewer_draw_image(ImageViewer *self)
 
         gtk_image_set_from_pixbuf(priv->image, priv->pixbuf);
 
+        if ((GTK_WIDGET_CAN_FOCUS(self)) && (!GTK_WIDGET_HAS_FOCUS(self)))
+                gtk_widget_grab_focus(GTK_WIDGET(self));
+
         return;
 }
 
@@ -243,6 +246,8 @@ image_viewer_init(ImageViewer *self)
         events_mask = events_mask | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
         gtk_widget_set_events(GTK_WIDGET(self), events_mask);
 
+        GTK_WIDGET_SET_FLAGS(self, GTK_CAN_FOCUS);
+
         gtk_widget_grab_focus(GTK_WIDGET(self));
         gtk_widget_set_sensitive(GTK_WIDGET(self), TRUE);
 
@@ -259,9 +264,9 @@ image_viewer_init(ImageViewer *self)
                          G_CALLBACK(image_viewer_mouse_move_event_cb), self);
         g_signal_connect(G_OBJECT(self), "scroll-event",
                          G_CALLBACK(image_viewer_wheel_event_cb), self);
-        g_signal_connect_after(G_OBJECT(self), "key-press-event",
+        g_signal_connect(G_OBJECT(self), "key-press-event",
                          G_CALLBACK(image_viewer_key_press_event_cb), self);
-        g_signal_connect_after(G_OBJECT(self), "key-release-event",
+        g_signal_connect(G_OBJECT(self), "key-release-event",
                          G_CALLBACK(image_viewer_key_release_event_cb), self);
 }
 

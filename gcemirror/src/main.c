@@ -40,11 +40,16 @@ static GOptionEntry options[] =
         };
 
 
+static void
+pda_error_cb(CeScreen *ce_screen, gpointer user_data)
+{
+        g_critical("%s: Could not contact PDA %s", G_STRFUNC, (gchar*)user_data);
+        gtk_main_quit();
+}
+
 gint
 main(gint argc, gchar *argv[])
 {
-        int result = 1;
-
 #ifdef ENABLE_NLS
         bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
         bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
@@ -71,7 +76,7 @@ main(gint argc, gchar *argv[])
                 g_error("%s: no device specified", G_STRFUNC);
 
 
-        const gchar *pda_name = argv[1];
+        gchar *pda_name = g_strdup(argv[1]);
 
         g_debug("%s: Synce: %d", G_STRFUNC, synce);
         g_debug("%s: ForceInstall: %d", G_STRFUNC, forceinstall);
@@ -79,18 +84,16 @@ main(gint argc, gchar *argv[])
 
         CeScreen *ce_screen = g_object_new(CE_SCREEN_TYPE, NULL);
 
-        g_signal_connect(G_OBJECT(ce_screen), "pda-error", G_CALLBACK(gtk_main_quit), NULL);
+        g_signal_connect(G_OBJECT(ce_screen), "pda-error", G_CALLBACK(pda_error_cb), pda_name);
 
-
-        if (!ce_screen_connect(ce_screen, pda_name, synce, forceinstall)) {
-                g_debug("%s: Could not contact PDA %s", G_STRFUNC, pda_name);
-                return -1;
-        }
+        ce_screen_connect(ce_screen, pda_name, synce, forceinstall);
 
         gtk_widget_show_all(GTK_WIDGET(ce_screen));
         gtk_main();
 
-        g_object_unref(ce_screen);
+        gtk_widget_destroy(GTK_WIDGET(ce_screen));
+
+        g_free(pda_name);
         return 0;
 }
 

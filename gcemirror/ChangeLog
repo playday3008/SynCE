@@ -1,3 +1,10 @@
+2009-05-26  Mark Ellis <mark@mpellis.org.uk>
+
+	* improve clean up of widgets
+	* set window size correctly
+	* fix key event processing
+	* fix connection processing, enable copying of screensnap.exe
+
 2009-05-20  Mark Ellis <mark@mpellis.org.uk>
 
 	* Initial code, mostly functional

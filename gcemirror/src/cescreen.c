@@ -88,6 +88,7 @@ struct _CeScreenPrivate
         guchar *bmp_data;
         guint32 header_size;
         guint32 bmp_size;
+        gboolean force_install;
 };
 
 #define CE_SCREEN_GET_PRIVATE(o) \
@@ -149,11 +150,13 @@ ce_screen_read_encoded_image(CeScreen *self)
                 } else {
                         GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Decoding error");
                         gtk_dialog_run(GTK_DIALOG(dialog));
+                        gtk_widget_destroy(dialog);
                         return false;
                 }
         } else {
                 GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
                 gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
                 return false;
         }
 
@@ -176,6 +179,7 @@ ce_screen_read_bmp_header(CeScreen *self)
         } else {
                 GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
                 gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
                 return false;
         }
 
@@ -184,6 +188,7 @@ ce_screen_read_bmp_header(CeScreen *self)
         if (n != sizeof(guint32)) {
                 GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
                 gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
                 return false;
         }
 
@@ -199,6 +204,7 @@ ce_screen_read_bmp_header(CeScreen *self)
         if (n <= 0) {
                 GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
                 gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
                 return false;
         }
 
@@ -222,10 +228,11 @@ ce_screen_read_size_message(CeScreen *self)
                 guint32 y = ntohl(yN);
 
                 gtk_widget_set_size_request(GTK_WIDGET(self), x, y);
-                g_signal_emit (self, CE_SCREEN_GET_CLASS(self)->signals[PDA_SIZE], 0, x, y);
+                image_viewer_set_pda_size(priv->imageviewer, x, y);
         } else {
                 GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Conection to PDA broken");
                 gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
                 ret = false;
         }
 
@@ -257,7 +264,7 @@ ce_screen_read_socket_cb(GIOChannel *source, GIOCondition condition, gpointer da
                         priv->height = ntohl(yN);
                         priv->have_header = true;
 
-                        g_signal_emit (self, CE_SCREEN_GET_CLASS(self)->signals[PDA_SIZE], 0, priv->width, priv->height);
+                        image_viewer_set_pda_size(priv->imageviewer, priv->width, priv->height);
 
                         gtk_statusbar_pop(priv->statusbar, priv->statusbar_context);
 
@@ -281,6 +288,7 @@ ce_screen_read_socket_cb(GIOChannel *source, GIOCondition condition, gpointer da
         if (p != sizeof(guchar)) {
                 GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Connection to PDA broken");
                 gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
                 g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
 
                 g_io_channel_unref(priv->socket);
@@ -615,7 +623,7 @@ ce_screen_key_pressed_cb(ImageViewer *imageviewer, guint code, gpointer user_dat
 
 
 static void
-ce_screen_key_released_cb(ImageViewer *imageviewer, gint ascii, gint code, gpointer user_data)
+ce_screen_key_released_cb(ImageViewer *imageviewer, guint code, gpointer user_data)
 {
         CeScreen *self = CE_SCREEN(user_data);
 
@@ -628,48 +636,120 @@ ce_screen_key_released_cb(ImageViewer *imageviewer, gint ascii, gint code, gpoin
         }
 }
 
-
-gboolean
-ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install)
+static void
+ce_screen_connect_socket(CeScreen *self, const gchar *device_address)
 {
         CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        gint connectcount = 0;
+        gint sockfd = -1;
+        struct sockaddr_in addr;
+        gint ret;
+        GError *error = NULL;
+
+        /* create socket */
+
+        sockfd = socket(PF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+                g_critical("%s: failed to create socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                return;
+        }
+
+        memset (&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(1234);
+        addr.sin_addr.s_addr = inet_addr(device_address);
+
+        g_debug("%s: attempting connect to %s:%d", G_STRFUNC, device_address, 1234);
+        do {
+                ret = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
+                if (ret < 0)
+                        g_warning("%s: socket connect failed: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+
+        } while (ret < 0 && connectcount++ < 10);
+
+        if (ret < 0) {
+                g_critical("%s: failed to connect to device: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                return;
+        }
+
+        priv->socket = g_io_channel_unix_new(sockfd);
+        if (g_io_channel_set_encoding(priv->socket, NULL, &error) != G_IO_STATUS_NORMAL) {
+                g_warning("%s: failed to set raw encoding: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+        g_io_channel_set_buffered(priv->socket, FALSE);
+
+        g_io_add_watch(priv->socket, G_IO_IN, ce_screen_read_socket_cb, self);
+        g_io_add_watch(priv->socket, G_IO_HUP, ce_screen_close_socket_cb, self);
+
+        return;
+}
+
+
+static void
+ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
         HRESULT hr;
         DWORD last_error;
         RapiConnection *rapiconn = NULL;
+        SYSTEM_INFO system;
+        PROCESS_INFORMATION proc_info = {0, 0, 0, 0};
+        const gchar *device_address = NULL;
+        const gchar *arch = NULL;
+        WCHAR *widestr = NULL;
+        GError *error = NULL;
 
-        PROCESS_INFORMATION info = {0, 0, 0, 0};
-        gchar *device_address = NULL;
-        priv->name = g_strdup(pda_name);
+        if (!(rapiconn = rapi_connection_from_name(pda_name))) {
+                g_critical("%s: failed to create rapi connection", G_STRFUNC);
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                return;
+        }
+        rapi_connection_select(rapiconn);
 
-        if (is_synce_device) {
-                SynceInfo *dev_info = synce_info_new(pda_name);
-                if (dev_info)
-                        device_address = g_strdup(synce_info_get_device_ip(dev_info));
-                else
-                        device_address = NULL;
+        if (FAILED(hr = CeRapiInit())) {
+                g_critical("%s: failed to initialise rapi connection: %s", G_STRFUNC, synce_strerror(hr));
+                rapi_connection_destroy(rapiconn);
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                return;
+        }
 
-                if (dev_info) synce_info_destroy(dev_info);
+        device_address = rapi_connection_get_device_ip(rapiconn);
 
-                if (!device_address) {
-                        g_debug("%s: device address is NULL", G_STRFUNC);
-                        return FALSE;
-                }
+        if (!device_address) {
+                g_critical("%s: device address is NULL", G_STRFUNC);
+                goto error_exit;
+        }
 
-                if (!(rapiconn = rapi_connection_from_name(pda_name))) {
-                        g_debug("%s: failed to create rapi connection", G_STRFUNC);
-                        return FALSE;
-                }
-                rapi_connection_select(rapiconn);
+        gchar *remote_snap_uri = g_strdup_printf("synce://%s/Filesystem/Windows/screensnap.exe", pda_name);
+        g_debug("%s: uri = %s", G_STRFUNC, remote_snap_uri);
+        GFile *remote_snap = g_file_new_for_uri(remote_snap_uri);
+        g_free(remote_snap_uri);
 
-                if (FAILED(hr = CeRapiInit())) {
-                        g_debug("%s: failed to initialise rapi connection: %s", G_STRFUNC, synce_strerror(hr));
-                        rapi_connection_destroy(rapiconn);
-                        return FALSE;
-                }
 
-                SYSTEM_INFO system;
+        GFileInfo *info = g_file_query_info(remote_snap, "", G_FILE_QUERY_INFO_NONE, NULL, &error);
+        if ((info == NULL) && (error->code != G_IO_ERROR_NOT_FOUND)) {
+                g_critical("%s: error checking for screensnap on device: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                g_object_unref(remote_snap);
+                goto error_exit;
+        }
+
+        if (info == NULL) {
+                g_debug("%s: expecting G_IO_ERROR_NOT_FOUND, got: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
+
+        if ((info == NULL) || (priv->force_install == TRUE)) {
+                g_debug("%s: copying screensnap to device", G_STRFUNC);
+
                 CeGetSystemInfo(&system);
-                const gchar *arch;
 
                 switch(system.wProcessorArchitecture) {
                 case PROCESSOR_ARCHITECTURE_MIPS:
@@ -683,94 +763,138 @@ ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_devic
                         break;
                 }
 
-                gchar *binaryVersion = g_strdup_printf("screensnap.exe%s", arch);
+                gchar *filename = g_strdup_printf("%sscreensnap.exe%s", SYNCE_DATA, arch);
+                g_debug("%s: local screensnap name: %s", G_STRFUNC, filename);
+                GFile *local_snap = g_file_new_for_path(filename);
+                g_free(filename);
 
-                /*
-
-                  if "synce://" + pda_name + "/Windows/screensnap.exe" does not exit, or force install is set
-                     copy correct version of screensnap.exe to device
-
-                */
-
-                g_free(binaryVersion);
-
-                WCHAR *widetmp = wstr_from_utf8("\\Windows\\screensnap.exe");
-
-                if (!CeCreateProcess(widetmp, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &info)) {
-                        wstr_free_string(widetmp);
-
-                        if (FAILED(hr = CeRapiGetError())) {
-                                g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(hr));
-                                return FALSE;
-                        }
-
-                        last_error = CeGetLastError();
-                        g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(last_error));
-                        return FALSE;
+                if (!g_file_copy(local_snap,
+                                 remote_snap,
+                                 G_FILE_COPY_OVERWRITE,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &error)) {
+                        g_critical("%s: failed to copy screensnap to device: %s", G_STRFUNC, error->message);
+                        g_error_free(error);
+                        g_object_unref(remote_snap);
+                        g_object_unref(local_snap);
+                        goto error_exit;;
                 }
-                wstr_free_string(widetmp);
-                CeRapiUninit();
-                rapi_connection_destroy(rapiconn);
+                g_object_unref(local_snap);
         }
 
-        priv->socket = NULL;
+        g_object_unref(remote_snap);
 
-        if (device_address == NULL)
-                device_address = g_strdup(pda_name);
+        widestr = wstr_from_utf8("\\Windows\\screensnap.exe");
 
-        gint connectcount = 0;
+        if (!CeCreateProcess(widestr, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &proc_info)) {
+                wstr_free_string(widestr);
+
+                if (FAILED(hr = CeRapiGetError())) {
+                        g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(hr));
+                        goto error_exit;
+                }
+
+                last_error = CeGetLastError();
+                g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(last_error));
+                goto error_exit;
+        }
+        wstr_free_string(widestr);
+        CeRapiUninit();
+        rapi_connection_destroy(rapiconn);
+
+        ce_screen_connect_socket(self, device_address);
+
+        return;
+
+ error_exit:
+        CeRapiUninit();
+        rapi_connection_destroy(rapiconn);
+        g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+        return;
+}
+
+static void
+ce_screen_gvfs_mount_ready(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        GError *error = NULL;
 
 
-        /* create socket */
+        if (!(g_file_mount_enclosing_volume_finish(G_FILE(source_object), res, &error))) {
+                g_critical("%s: failed to gvfs mount for device: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
 
-        gint sockfd = socket(PF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0) {
-                g_debug("%s: socket creation failed", G_STRFUNC);
-                return FALSE;
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+
+                return;
         }
 
-        struct sockaddr_in addr;
-        memset (&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(1234);
-        addr.sin_addr.s_addr = inet_addr(device_address);
+        ce_screen_do_synce_connect(self, priv->name);
 
-        gint ret;
+        return;
+}
 
-        g_debug("%s: attempting connect to %s:%d", G_STRFUNC, device_address, 1234);
-        do {
-                ret = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
-                if (ret < 0)
-                        g_debug("%s: socket connect failed: %d: %s", G_STRFUNC, errno, strerror(errno));
 
-        } while (ret < 0 && connectcount++ < 10);
+void
+ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install)
+{
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+        GError *error = NULL;
 
-        if (ret < 0) {
-                g_debug("%s: failed to connect to device", G_STRFUNC);
-                return false;
+        priv->name = g_strdup(pda_name);
+        priv->force_install = force_install;
+
+        if (!is_synce_device)
+                return ce_screen_connect_socket(self, pda_name);
+
+        gchar *uri = NULL;
+        GFile *remote_snap = NULL;
+        GMount *mount = NULL;
+
+        uri = g_strdup_printf("synce://%s/Filesystem/Windows/screensnap.exe", pda_name);
+        g_debug("%s: uri = %s", G_STRFUNC, uri);
+        remote_snap = g_file_new_for_uri(uri);
+        g_free(uri);
+
+        mount = g_file_find_enclosing_mount(remote_snap,
+                                            NULL,
+                                            &error);
+        if ((!mount) && (error->code != G_IO_ERROR_NOT_MOUNTED)) {
+                g_warning("%s: failed to get gvfs mount for device: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                goto exit;
         }
 
-        priv->socket = g_io_channel_unix_new(sockfd);
-        if (g_io_channel_set_encoding(priv->socket, NULL, NULL) != G_IO_STATUS_NORMAL)
-                g_warning("%s: failed to set raw encoding", G_STRFUNC);
-        g_io_channel_set_buffered(priv->socket, FALSE);
+        if (!mount) {
+                g_debug("%s: failed to get gvfs mount for device: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
 
-        g_io_add_watch(priv->socket, G_IO_IN, ce_screen_read_socket_cb, self);
-        g_io_add_watch(priv->socket, G_IO_HUP, ce_screen_close_socket_cb, self);
+                GMountOperation *mount_op = gtk_mount_operation_new(GTK_WINDOW(self));
+                g_file_mount_enclosing_volume(remote_snap,
+                                              G_MOUNT_MOUNT_NONE,
+                                              mount_op,
+                                              NULL,
+                                              ce_screen_gvfs_mount_ready,
+                                              self);
 
-        g_signal_connect(G_OBJECT(priv->imageviewer), "wheel-rolled", G_CALLBACK(ce_screen_wheel_rolled_cb), self);
-        g_signal_connect(G_OBJECT(priv->imageviewer), "key-pressed", G_CALLBACK(ce_screen_key_pressed_cb), self);
-        g_signal_connect(G_OBJECT(priv->imageviewer), "key-released", G_CALLBACK(ce_screen_key_released_cb), self);
-        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-button-pressed", G_CALLBACK(ce_screen_mouse_pressed_cb), self);
-        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-button-released", G_CALLBACK(ce_screen_mouse_released_cb), self);
-        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-moved", G_CALLBACK(ce_screen_mouse_moved_cb), self);
+                goto exit;
+        }
 
-        /*
-          may need to connect a resize signal from self to call image_viewer_set_pda_size()
-        */
+        ce_screen_do_synce_connect(self, pda_name);
 
-        g_free(device_address);
-        return true;
+ exit:
+        if (remote_snap) g_object_unref(remote_snap);
+        if (mount) g_object_unref(mount);
+
+        return;
 }
 
 
@@ -859,8 +983,6 @@ static void
 ce_screen_show_about_cb(GtkMenuItem *menuitem, gpointer user_data)
 {
         CeScreen *self = CE_SCREEN(user_data);
-        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
-
 
         GtkWidget *about;
         const gchar* authors[] = {
@@ -881,6 +1003,8 @@ ce_screen_show_about_cb(GtkMenuItem *menuitem, gpointer user_data)
         gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://www.synce.org");
 
         gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);
+
+        gtk_window_set_transient_for(GTK_WINDOW(about), GTK_WINDOW(self));
 
         gtk_dialog_run (GTK_DIALOG (about));
         gtk_widget_destroy (GTK_WIDGET(about));
@@ -904,11 +1028,13 @@ ce_screen_init(CeScreen *self)
         CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
 
         priv->socket = NULL;
-        priv->have_header = false;
-        priv->pause = false;
+        priv->have_header = FALSE;
+        priv->pause = FALSE;
+
         /*
-        gtk_widget_set_size_request(GTK_WIDGET(self), 0, 0);
+        gtk_window_set_default_size(GTK_WINDOW(self), 200, 200);
         */
+        gtk_window_set_resizable(GTK_WINDOW(self), FALSE);
 
         GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
 
@@ -987,9 +1113,21 @@ ce_screen_init(CeScreen *self)
 
         gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(toolbar), FALSE, FALSE, 3);
 
-
+        /*
+         * 2 boxes required t ensure the ImageViewer event box doesn't get allocated extra space
+         */
+        GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
         priv->imageviewer = g_object_new(IMAGE_VIEWER_TYPE, NULL);
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(priv->imageviewer), TRUE, FALSE, 3);
+        gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(priv->imageviewer), FALSE, FALSE, 0);
+
+        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox), FALSE, FALSE, 3);
+
+        g_signal_connect(G_OBJECT(priv->imageviewer), "wheel-rolled", G_CALLBACK(ce_screen_wheel_rolled_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "key-pressed", G_CALLBACK(ce_screen_key_pressed_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "key-released", G_CALLBACK(ce_screen_key_released_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-button-pressed", G_CALLBACK(ce_screen_mouse_pressed_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-button-released", G_CALLBACK(ce_screen_mouse_released_cb), self);
+        g_signal_connect(G_OBJECT(priv->imageviewer), "mouse-moved", G_CALLBACK(ce_screen_mouse_moved_cb), self);
 
 
         priv->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
@@ -1033,6 +1171,12 @@ ce_screen_dispose(GObject *obj)
 static void
 ce_screen_finalize(GObject *obj)
 {
+        CeScreen *self = CE_SCREEN(obj);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        g_free(priv->name);
+        g_free(priv->bmp_data);
+
         if (G_OBJECT_CLASS(ce_screen_parent_class)->finalize)
                 G_OBJECT_CLASS(ce_screen_parent_class)->finalize (obj);
 }
@@ -1046,14 +1190,6 @@ ce_screen_class_init(CeScreenClass *klass)
   
         gobject_class->dispose = ce_screen_dispose;
         gobject_class->finalize = ce_screen_finalize;
-
-        klass->signals[PDA_SIZE] = g_signal_new ("pda-size",
-                                                     G_OBJECT_CLASS_TYPE (klass),
-                                                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                                                     0,
-                                                     NULL, NULL,
-                                                     gcemirror_marshal_VOID__INT_INT,
-                                                     G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
 
         klass->signals[PDA_ERROR] = g_signal_new ("pda-error",
                                                      G_OBJECT_CLASS_TYPE (klass),
