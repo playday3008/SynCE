@@ -1,5 +1,5 @@
 
-SUBDIRS = src po man
+SUBDIRS = src po man screensnap
 
 EXTRA_DIST = \
 			 AUTHORS         \

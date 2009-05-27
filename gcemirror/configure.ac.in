@@ -49,6 +49,10 @@ AC_OUTPUT([
 	Makefile
 	src/Makefile
 	man/Makefile
+	screensnap/Makefile
+	screensnap/ARMRel/Makefile
+	screensnap/MIPSRel/Makefile
+	screensnap/SH3Rel/Makefile
 	po/Makefile.in
 ])
 

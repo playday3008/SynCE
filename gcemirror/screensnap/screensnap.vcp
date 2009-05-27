@@ -1,0 +1,467 @@
+# Microsoft eMbedded Visual Tools Project File - Name="screensnap" - Package Owner=<4>
+# Microsoft eMbedded Visual Tools Generated Build File, Format Version 6.02
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (WCE ARM) Application" 0x8501
+# TARGTYPE "Win32 (WCE SH3) Application" 0x8101
+# TARGTYPE "Win32 (WCE MIPS) Application" 0x8201
+
+CFG=screensnap - Win32 (WCE ARM) Release
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
+!MESSAGE 
+!MESSAGE NMAKE /f "screensnap.vcn".
+!MESSAGE 
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "screensnap.vcn" CFG="screensnap - Win32 (WCE ARM) Release"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "screensnap - Win32 (WCE ARM) Release" (based on "Win32 (WCE ARM) Application")
+!MESSAGE "screensnap - Win32 (WCE MIPS) Release" (based on "Win32 (WCE MIPS) Application")
+!MESSAGE "screensnap - Win32 (WCE SH3) Release" (based on "Win32 (WCE SH3) Application")
+!MESSAGE 
+
+# Begin Project
+# PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
+# PROP ATL_Project 2
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMRel"
+# PROP BASE Intermediate_Dir "ARMRel"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMRel"
+# PROP Intermediate_Dir "ARMRel"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /Oxs /M$(CECrtMT) /c
+# SUBTRACT CPP /YX
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel\screensnap.exe.arm" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "MIPSRel"
+# PROP BASE Intermediate_Dir "MIPSRel"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "MIPSRel"
+# PROP Intermediate_Dir "MIPSRel"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /Oxs /M$(CECrtMT) /c
+# SUBTRACT BASE CPP /YX
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /Oxs /M$(CECrtMT) /c
+# SUBTRACT CPP /YX
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/screensnap.exe.mips" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:MIPS
+# SUBTRACT LINK32 /pdb:none
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "SH3Rel"
+# PROP BASE Intermediate_Dir "SH3Rel"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "SH3Rel"
+# PROP Intermediate_Dir "SH3Rel"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
+CPP=shcl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /Oxs /M$(CECrtMT) /c
+# SUBTRACT BASE CPP /YX
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /Oxs /M$(CECrtMT) /c
+# SUBTRACT CPP /YX
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib aygshell.lib Winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Rel/screensnap.exe.sh3" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:SH3
+# SUBTRACT LINK32 /pdb:none
+
+!ENDIF 
+
+# Begin Target
+
+# Name "screensnap - Win32 (WCE ARM) Release"
+# Name "screensnap - Win32 (WCE MIPS) Release"
+# Name "screensnap - Win32 (WCE SH3) Release"
+# Begin Group "Source Files"
+
+# PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=.\encoder.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_ENCOD=\
+	".\encoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_ENCOD=\
+	".\encoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_ENCOD=\
+	".\encoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\eventprocessor.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_EVENT=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_EVENT=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_EVENT=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\vnckeymap.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\huffmanencoder.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_HUFFM=\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_HUFFM=\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_HUFFM=\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\rleencoder.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_RLEEN=\
+	".\encoder.h"\
+	".\rleencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_RLEEN=\
+	".\encoder.h"\
+	".\rleencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_RLEEN=\
+	".\encoder.h"\
+	".\rleencoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\screensnap.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_SCREE=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\serversocket.h"\
+	".\snap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_SCREE=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\serversocket.h"\
+	".\snap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_SCREE=\
+	".\encoder.h"\
+	".\eventprocessor.h"\
+	".\serversocket.h"\
+	".\snap.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\serversocket.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_SERVE=\
+	".\serversocket.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_SERVE=\
+	".\serversocket.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_SERVE=\
+	".\serversocket.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\snap.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_SNAP_=\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\snap.h"\
+	".\xorencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_SNAP_=\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\snap.h"\
+	".\xorencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_SNAP_=\
+	".\encoder.h"\
+	".\huffmanencoder.h"\
+	".\rleencoder.h"\
+	".\snap.h"\
+	".\xorencoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\vnckeymap.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_VNCKE=\
+	".\keysymdef.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_VNCKE=\
+	".\keysymdef.h"\
+	".\vnckeymap.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_VNCKE=\
+	".\keysymdef.h"\
+	".\vnckeymap.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\xorencoder.cpp
+
+!IF  "$(CFG)" == "screensnap - Win32 (WCE ARM) Release"
+
+DEP_CPP_XOREN=\
+	".\encoder.h"\
+	".\xorencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE MIPS) Release"
+
+DEP_CPP_XOREN=\
+	".\encoder.h"\
+	".\xorencoder.h"\
+	
+
+!ELSEIF  "$(CFG)" == "screensnap - Win32 (WCE SH3) Release"
+
+DEP_CPP_XOREN=\
+	".\encoder.h"\
+	".\xorencoder.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# End Group
+# Begin Group "Header Files"
+
+# PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\encoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\eventprocessor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\huffmanencoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\keysymdef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\rleencoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\serversocket.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\snap.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vnckeymap.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\xorencoder.h
+# End Source File
+# End Group
+# Begin Group "Resource Files"
+
+# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# End Group
+# End Target
+# End Project
