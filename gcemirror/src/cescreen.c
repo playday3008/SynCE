@@ -801,10 +801,11 @@ ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
                 goto error_exit;
         }
         wstr_free_string(widestr);
-        CeRapiUninit();
-        rapi_connection_destroy(rapiconn);
 
         ce_screen_connect_socket(self, device_address);
+
+        CeRapiUninit();
+        rapi_connection_destroy(rapiconn);
 
         return;
 
