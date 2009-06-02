@@ -1,3 +1,8 @@
+2009-06-02  Mark Ellis <mark@mpellis.org.uk>
+
+	* implement printing
+	* tidy window destruction
+
 2009-05-27  Mark Ellis <mark@mpellis.org.uk>
 
 	* fix premature freeing of device address

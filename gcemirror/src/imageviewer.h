@@ -70,9 +70,10 @@ GType image_viewer_get_type (void);
 void image_viewer_draw_image(ImageViewer *self);
 void image_viewer_load_image(ImageViewer *self, guchar *data, gsize size);
 
-void image_viewer_print_image(ImageViewer *self);
 void image_viewer_save_image(ImageViewer *self, const gchar *filename);
 void image_viewer_set_pda_size(ImageViewer *self, int x, int y);
+
+const GdkPixbuf *image_viewer_get_pixbuf(ImageViewer *self);
 
 G_END_DECLS
 

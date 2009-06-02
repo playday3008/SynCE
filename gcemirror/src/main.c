@@ -29,6 +29,7 @@
 static gint log_level = SYNCE_LOG_LEVEL_WARNING;
 static gboolean synce = TRUE;
 static gboolean forceinstall = FALSE;
+static CeScreen *ce_screen = NULL;
 
 static GOptionEntry options[] =
         {
@@ -45,6 +46,7 @@ pda_error_cb(CeScreen *ce_screen, gpointer user_data)
 {
         g_critical("%s: Could not contact PDA %s", G_STRFUNC, (gchar*)user_data);
         gtk_main_quit();
+        gtk_widget_destroy(GTK_WIDGET(ce_screen));
 }
 
 gint
@@ -82,7 +84,7 @@ main(gint argc, gchar *argv[])
         g_debug("%s: ForceInstall: %d", G_STRFUNC, forceinstall);
         g_debug("%s: device: %s", G_STRFUNC, pda_name);
 
-        CeScreen *ce_screen = g_object_new(CE_SCREEN_TYPE, NULL);
+        ce_screen = g_object_new(CE_SCREEN_TYPE, NULL);
 
         g_signal_connect(G_OBJECT(ce_screen), "pda-error", G_CALLBACK(pda_error_cb), pda_name);
 
@@ -90,8 +92,6 @@ main(gint argc, gchar *argv[])
 
         gtk_widget_show_all(GTK_WIDGET(ce_screen));
         gtk_main();
-
-        gtk_widget_destroy(GTK_WIDGET(ce_screen));
 
         g_free(pda_name);
         return 0;

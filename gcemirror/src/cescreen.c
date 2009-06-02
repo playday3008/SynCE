@@ -89,6 +89,8 @@ struct _CeScreenPrivate
         guint32 header_size;
         guint32 bmp_size;
         gboolean force_install;
+        GtkPrintSettings *print_settings;
+        GtkPageSetup *default_print_page;
 };
 
 #define CE_SCREEN_GET_PRIVATE(o) \
@@ -943,13 +945,77 @@ ce_screen_file_save_cb(GtkMenuItem *menuitem, gpointer user_data)
 }
 
 
-/* slot */
+static void
+ce_screen_begin_print_cb(GtkPrintOperation *operation, GtkPrintContext *context, gpointer user_data)
+{
+        gtk_print_operation_set_n_pages(operation, 1);
+}
+
+static void
+ce_screen_draw_page_cb(GtkPrintOperation *operation, GtkPrintContext *context, gint page_nr, gpointer user_data)
+{
+        CeScreen *self = CE_SCREEN(user_data);
+        CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+        g_debug("%s: printing page %d", G_STRFUNC, page_nr);
+
+        cairo_t *cr = gtk_print_context_get_cairo_context(context);
+
+        const GdkPixbuf *pixbuf = image_viewer_get_pixbuf(priv->imageviewer);
+
+        gdk_cairo_set_source_pixbuf(cr, pixbuf, 30.0, 30.0);
+
+        cairo_paint(cr);
+
+        return;
+}
+
 static void
 ce_screen_file_print_cb(GtkMenuItem *menuitem, gpointer user_data)
 {
         CeScreen *self = CE_SCREEN(user_data);
         CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
-        image_viewer_print_image(priv->imageviewer);
+
+        GtkPrintOperation *printop = NULL;
+
+        GtkPrintOperationResult res;
+        GError *error = NULL;
+        GtkWidget *dialog = NULL;
+
+        printop = gtk_print_operation_new();
+
+        if (priv->print_settings != NULL)
+                gtk_print_operation_set_print_settings(printop, priv->print_settings);
+
+        if (priv->default_print_page != NULL)
+                gtk_print_operation_set_default_page_setup(printop, priv->default_print_page);
+
+        g_signal_connect (printop, "begin-print", G_CALLBACK (ce_screen_begin_print_cb), self);
+        g_signal_connect (printop, "draw-page", G_CALLBACK (ce_screen_draw_page_cb), self);
+
+        res = gtk_print_operation_run (printop,
+                                       GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG,
+                                       GTK_WINDOW(self),
+                                       &error);
+
+        if (res == GTK_PRINT_OPERATION_RESULT_ERROR) {
+                dialog = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Error printing screenshot\n%s", error->message);
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
+                g_error_free(error);
+                error = NULL;
+        } else if (res == GTK_PRINT_OPERATION_RESULT_APPLY) {
+                if (priv->print_settings != NULL)
+                        g_object_unref(priv->print_settings);
+                priv->print_settings = g_object_ref(gtk_print_operation_get_print_settings(printop));
+
+                if (priv->default_print_page != NULL)
+                        g_object_unref(priv->default_print_page);
+                priv->default_print_page = g_object_ref(gtk_print_operation_get_default_page_setup(printop));
+        }
+
+        g_object_unref(printop);
+        return;
 }
 
 static const gchar *MITlicense = N_(
@@ -1031,6 +1097,8 @@ ce_screen_init(CeScreen *self)
         priv->socket = NULL;
         priv->have_header = FALSE;
         priv->pause = FALSE;
+        priv->print_settings = NULL;
+        priv->default_print_page = NULL;
 
         /*
         gtk_window_set_default_size(GTK_WINDOW(self), 200, 200);
@@ -1046,7 +1114,8 @@ ce_screen_init(CeScreen *self)
         GtkMenu *menu = GTK_MENU(gtk_menu_new());
         GtkWidget *entry = NULL;
 
-        entry = gtk_menu_item_new_with_label(_("Screenshot"));
+        entry = gtk_image_menu_item_new_with_label(_("Screenshot"));
+        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(entry), gtk_image_new_from_stock(GTK_STOCK_SAVE, GTK_ICON_SIZE_MENU));
         g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_file_save_cb), self);
         gtk_menu_append(GTK_MENU(menu), entry);
 
@@ -1057,9 +1126,6 @@ ce_screen_init(CeScreen *self)
         entry = gtk_separator_menu_item_new();
         gtk_menu_append(GTK_MENU(menu), entry);
 
-        /*
-          pause/resume GTK_STOCK_MEDIA_PAUSE / GTK_STOCK_MEDIA_PLAY / GTK_STOCK_REFRESH
-        */
         priv->pause_menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PAUSE, NULL);
         g_signal_connect(G_OBJECT(priv->pause_menu_item), "activate", G_CALLBACK(ce_screen_update_pause_cb), self);
         gtk_menu_append(GTK_MENU(menu), priv->pause_menu_item);
@@ -1100,7 +1166,7 @@ ce_screen_init(CeScreen *self)
         g_signal_connect(G_OBJECT(tool_entry), "clicked", G_CALLBACK(ce_screen_quit_cb), self);
         gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_entry, -1);
 
-        tool_entry = gtk_tool_button_new(NULL, _("Screenshot"));
+        tool_entry = gtk_tool_button_new(gtk_image_new_from_stock(GTK_STOCK_SAVE, GTK_ICON_SIZE_MENU), _("Screenshot"));
         g_signal_connect(G_OBJECT(tool_entry), "clicked", G_CALLBACK(ce_screen_file_save_cb), self);
         gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_entry, -1);
 
@@ -1115,7 +1181,7 @@ ce_screen_init(CeScreen *self)
         gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(toolbar), FALSE, FALSE, 3);
 
         /*
-         * 2 boxes required t ensure the ImageViewer event box doesn't get allocated extra space
+         * 2 boxes required to ensure the ImageViewer event box doesn't get allocated extra space
          */
         GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
         priv->imageviewer = g_object_new(IMAGE_VIEWER_TYPE, NULL);
@@ -1144,6 +1210,8 @@ ce_screen_init(CeScreen *self)
         priv->decoder_chain = g_object_new(XOR_DECODER_TYPE, "chain", priv->decoder_chain, NULL);
 
         priv->bmp_data = NULL;
+
+        g_signal_connect(G_OBJECT(self), "destroy", G_CALLBACK(ce_screen_quit_cb), NULL);
 }
 
 static void
@@ -1164,6 +1232,8 @@ ce_screen_dispose(GObject *obj)
         }
 
         g_object_unref(priv->decoder_chain);
+        if (priv->print_settings) g_object_unref(priv->print_settings);
+        if (priv->default_print_page) g_object_unref(priv->default_print_page);
 
         if (G_OBJECT_CLASS (ce_screen_parent_class)->dispose)
                 G_OBJECT_CLASS (ce_screen_parent_class)->dispose (obj);

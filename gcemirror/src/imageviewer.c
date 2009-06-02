@@ -125,12 +125,12 @@ image_viewer_load_image(ImageViewer *self, guchar *data, size_t size)
 }
 
 
-void
-image_viewer_print_image(ImageViewer *self)
+const GdkPixbuf *
+image_viewer_get_pixbuf(ImageViewer *self)
 {
-        g_debug("%s: printing not yet implemented", G_STRFUNC);
+        ImageViewerPrivate *priv = IMAGE_VIEWER_GET_PRIVATE (self);
 
-        return;
+        return priv->pixbuf;
 }
 
 
