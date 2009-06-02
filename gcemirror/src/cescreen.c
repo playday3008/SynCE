@@ -1060,7 +1060,7 @@ ce_screen_show_about_cb(GtkMenuItem *menuitem, gpointer user_data)
 
         about = gtk_about_dialog_new();
 
-        gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), g_get_application_name());
+        gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about), g_get_application_name());
         gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
         gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2009, Mark Ellis\n"
                                                                   "Copyright (c) 2003, Volker Christian"));
@@ -1117,25 +1117,25 @@ ce_screen_init(CeScreen *self)
         entry = gtk_image_menu_item_new_with_label(_("Screenshot"));
         gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(entry), gtk_image_new_from_stock(GTK_STOCK_SAVE, GTK_ICON_SIZE_MENU));
         g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_file_save_cb), self);
-        gtk_menu_append(GTK_MENU(menu), entry);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), entry);
 
         entry = gtk_image_menu_item_new_from_stock(GTK_STOCK_PRINT, NULL);
         g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_file_print_cb), self);
-        gtk_menu_append(GTK_MENU(menu), entry);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), entry);
 
         entry = gtk_separator_menu_item_new();
-        gtk_menu_append(GTK_MENU(menu), entry);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), entry);
 
         priv->pause_menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PAUSE, NULL);
         g_signal_connect(G_OBJECT(priv->pause_menu_item), "activate", G_CALLBACK(ce_screen_update_pause_cb), self);
-        gtk_menu_append(GTK_MENU(menu), priv->pause_menu_item);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), priv->pause_menu_item);
 
         entry = gtk_separator_menu_item_new();
-        gtk_menu_append(GTK_MENU(menu), entry);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), entry);
 
         entry = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
         g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_quit_cb), self);
-        gtk_menu_append(GTK_MENU(menu), entry);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), entry);
 
         entry = gtk_menu_item_new_with_label(_("File"));
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(entry), GTK_WIDGET(menu));
@@ -1147,7 +1147,7 @@ ce_screen_init(CeScreen *self)
 
         entry = gtk_image_menu_item_new_from_stock(GTK_STOCK_ABOUT, NULL);
         g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(ce_screen_show_about_cb), self);
-        gtk_menu_append(GTK_MENU(menu), entry);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), entry);
 
         entry = gtk_menu_item_new_with_label(_("Help"));
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(entry), GTK_WIDGET(menu));
