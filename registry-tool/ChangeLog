@@ -1,3 +1,7 @@
+2009-06-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* update deprecated calls, fix some warnings
+
 2007-12-05  Mark Ellis <mark@mpellis.org.uk>
 
 	* initial code release

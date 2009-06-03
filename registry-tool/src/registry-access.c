@@ -23,10 +23,11 @@
 #include <rapi.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <string.h>
 
 #include "registry-access.h"
 
-static
+static void
 extract_hive(const gchar *full_key_path, HKEY *hive, gchar **sub_key)
 {
   if ((hive == NULL) || (sub_key == NULL))

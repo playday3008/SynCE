@@ -16,11 +16,9 @@ AC_PROG_MAKE_SET
 dnl Check for SynCE libs
 PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
 
-PKG_CHECK_MODULES(GNOME2, 
+PKG_CHECK_MODULES(GTK, 
                   glib-2.0       \
                   gtk+-2.0       \
-                  libgnome-2.0   \
-                  libgnomeui-2.0   \
                   libglade-2.0)
 
 dnl Checks for header files.

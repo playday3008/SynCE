@@ -15,9 +15,9 @@ synce_registry_tool_SOURCES =				\
 		misc.c misc.h
 
 synce_registry_tool_CPPFLAGS =		\
-		$(GNOME2_CFLAGS) 	\
+		$(GTK_CFLAGS) 	\
 		$(LIBRAPI2_CFLAGS)
 
 synce_registry_tool_LDADD = 		\
-		$(GNOME2_LIBS) 		\
+		$(GTK_LIBS) 		\
 		$(LIBRAPI2_LIBS)

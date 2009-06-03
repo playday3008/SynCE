@@ -392,7 +392,7 @@ static void
 registry_key_tree_remove_children(GtkTreeModel *model, GtkTreeIter *iter)
 {
   gboolean have_child;
-  GtkTreeIter curr_iter, parent_iter, child_iter;
+  GtkTreeIter child_iter;
 
 
   if (!(have_child = gtk_tree_model_iter_children(model, &child_iter, iter)))

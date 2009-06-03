@@ -21,9 +21,9 @@
 #endif
 
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <gtk/gtk.h>
 #include <glade/glade.h>
-#include <gnome.h>
 #include <string.h>
 #include <synce_log.h>
 #include <rapi.h>
@@ -83,15 +83,15 @@ main (int argc, char **argv)
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  GOptionContext *option_context = g_option_context_new (" - gnome registry tool for synCE");
-  g_option_context_add_main_entries (option_context, options, GETTEXT_PACKAGE);
-  gnome_program_init (PACKAGE, VERSION,
-		      LIBGNOMEUI_MODULE,
-		      argc, argv,
-		      GNOME_PARAM_GOPTION_CONTEXT, option_context,
-		      GNOME_PARAM_HUMAN_READABLE_NAME,_("Synce Registry Tool"),
-		      GNOME_PROGRAM_STANDARD_PROPERTIES,
-		      NULL);
+  if (!gtk_init_with_args(&argc,
+                          &argv,
+                          " - gtk registry tool for synCE",
+                          options,
+                          NULL,
+                          NULL))
+          g_error("%s: failed to initialise GTK", G_STRFUNC);
+
+  g_set_application_name(_("SynCE Registry Tool"));
 
   synce_log_set_level(log_level);
 
@@ -129,7 +129,7 @@ main (int argc, char **argv)
   setup_registry_key_tree_view(GTK_TREE_VIEW(registry_key_treeview), GTK_TREE_VIEW(registry_value_listview));
 
   gtk_widget_show_all(mainwindow);
-  gtk_idle_add(idle_populate_key_treeview, registry_key_treeview);
+  g_idle_add(idle_populate_key_treeview, registry_key_treeview);
 
 
   gtk_main ();
