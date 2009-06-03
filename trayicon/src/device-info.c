@@ -27,7 +27,6 @@ IN THE SOFTWARE.
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 #include <string.h>
-#include <glade/glade.h>
 #include <rapi.h>
 #include <rra/matchmaker.h>
 #include <dbus/dbus.h>
@@ -45,7 +44,7 @@ typedef struct _WmDeviceInfoPrivate WmDeviceInfoPrivate;
 struct _WmDeviceInfoPrivate {
   WmDevice *device;
   GtkWidget *dialog;
-  GladeXML *xml;
+  GtkBuilder *builder;
 
   gboolean disposed;
 };
@@ -130,7 +129,7 @@ partners_create_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
   GtkTreeIter iter;
   GtkTreeModel *model;
   GtkWidget *device_info_dialog = priv->dialog;
-  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+  GtkWidget *partners_list_view = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
 
   g_debug("%s: create button_clicked", G_STRFUNC);
@@ -193,7 +192,7 @@ partners_remove_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
   gchar *name;
   GtkTreeIter iter;
   GtkTreeModel *model;
-  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+  GtkWidget *partners_list_view = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
 
   g_debug("%s: remove button_clicked", G_STRFUNC);
@@ -269,8 +268,8 @@ partners_selection_changed_rra_cb (GtkTreeSelection *selection, gpointer data)
   gchar *name;
   GtkWidget *partners_create_button, *partners_remove_button;
 
-  partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");	
-  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+  partners_create_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_create_button"));
+  partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
     {
@@ -382,13 +381,30 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkWidget *device_info_dialog = priv->dialog;
-  GladeXML *xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "create_partnership_dialog", NULL);
-  GtkWidget *create_pship_dialog = glade_xml_get_widget (xml, "create_partnership_dialog"); 
-  GtkWidget *pship_name_entry = glade_xml_get_widget (xml, "pship_name_entry");
-  GtkWidget *sync_items_listview = glade_xml_get_widget (xml, "sync_items_listview");
+
+  GtkBuilder *builder = gtk_builder_new();
+  guint builder_res;
+  GError *error = NULL;
+  gchar *namelist[] = { "create_partnership_dialog", NULL };
+
+  builder_res = gtk_builder_add_objects_from_file(builder,
+                                                  SYNCE_DATA "synce_trayicon_properties.glade",
+                                                  namelist,
+                                                  &error);
+  if (builder_res == 0) {
+          g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
+
+  GtkWidget *create_pship_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "create_partnership_dialog"));
+  GtkWidget *pship_name_entry = GTK_WIDGET(gtk_builder_get_object(builder, "pship_name_entry"));
+  GtkWidget *sync_items_listview = GTK_WIDGET(gtk_builder_get_object(builder, "sync_items_listview"));
+
+  g_object_unref(builder);
+
   GArray *sync_items_required = NULL;
   GHashTable *sync_items = NULL;
-  GError *error = NULL;
   DBusGConnection *dbus_connection = NULL;
   DBusGProxy *sync_engine_proxy = NULL;
 
@@ -815,7 +831,7 @@ partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   gchar *name;
   GtkTreeIter iter, parent_iter;
   GtkTreeModel *model;
-  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+  GtkWidget *partners_list_view = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
   GError *error = NULL;
   DBusGConnection *dbus_connection = NULL;
@@ -971,7 +987,7 @@ partners_selection_changed_synceng_cb (GtkTreeSelection *selection, gpointer dat
   gchar *name;
   GtkWidget *partners_remove_button;
 
-  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+  partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
     {
@@ -1010,7 +1026,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
     return;
   }
 
-  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+  GtkWidget *partners_list_view = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
 
   GtkTreeIter iter, sub_iter;
   guint32 index;
@@ -1028,7 +1044,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   if (!wm_device_rapi_select(priv->device))
     return;
 
-  GtkWidget *partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
+  GtkWidget *partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
 
   dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
@@ -1245,9 +1261,9 @@ partners_setup_view_synceng(WmDeviceInfo *self)
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
 
-  partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");
-  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
-  partners_list = glade_xml_get_widget (priv->xml, "partners_list");
+  partners_create_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_create_button"));
+  partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
+  partners_list = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
 
   gtk_widget_set_sensitive(partners_create_button, TRUE);
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
@@ -1324,7 +1340,8 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
     return;
   }
 
-  GtkWidget *partners_list_view = glade_xml_get_widget (priv->xml, "partners_list");	
+  GtkWidget *partners_list_view = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
+
   GtkTreeIter iter;
   RRA_Matchmaker* matchmaker = NULL;
   guint32 curr_partner = 0, partner_id, i;
@@ -1403,9 +1420,9 @@ partners_setup_view_rra(WmDeviceInfo *self)
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
 
-  partners_create_button = glade_xml_get_widget (priv->xml, "partners_create_button");
-  partners_remove_button = glade_xml_get_widget (priv->xml, "partners_remove_button");	
-  partners_list = glade_xml_get_widget (priv->xml, "partners_list");
+  partners_create_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_create_button"));
+  partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
+  partners_list = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
 
   gtk_widget_set_sensitive(partners_create_button, FALSE);
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
@@ -1588,10 +1605,10 @@ system_info_setup_view_store(WmDeviceInfo *self)
 
   memset(&store, 0, sizeof(store));
 
-  sys_info_store_size = glade_xml_get_widget (priv->xml, "sys_info_store_size");
-  sys_info_store_free = glade_xml_get_widget (priv->xml, "sys_info_store_free");
-  sys_info_store_ram = glade_xml_get_widget (priv->xml, "sys_info_store_ram");
-  sys_info_store_storage = glade_xml_get_widget (priv->xml, "sys_info_store_storage");
+  sys_info_store_size = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_store_size"));
+  sys_info_store_free = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_store_free"));
+  sys_info_store_ram = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_store_ram"));
+  sys_info_store_storage = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_store_storage"));
 
   if (CeGetStoreInformation(&store)) {
     gchar *store_size = g_strdup_printf("%i bytes (%i MB)", store.dwStoreSize, store.dwStoreSize / (1024*1024));
@@ -1645,7 +1662,8 @@ system_info_setup_view(WmDeviceInfo *self)
   if (!wm_device_rapi_select(priv->device))
     return;
 
-  sys_info_model = glade_xml_get_widget (priv->xml, "sys_info_model");
+  sys_info_model = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_model"));
+
   g_object_get(priv->device, "class", &class, NULL);
   g_object_get(priv->device, "hardware", &hardware, NULL);
   model_str = g_strdup_printf("%s (%s)", hardware, class);
@@ -1656,9 +1674,9 @@ system_info_setup_view(WmDeviceInfo *self)
 
   /* Version */
 
-  sys_info_version = glade_xml_get_widget (priv->xml, "sys_info_version");
-  sys_info_platform = glade_xml_get_widget (priv->xml, "sys_info_platform");
-  sys_info_details = glade_xml_get_widget (priv->xml, "sys_info_details");
+  sys_info_version = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_version"));
+  sys_info_platform = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_platform"));
+  sys_info_details = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_details"));
 
   memset(&version, 0, sizeof(version));
   version.dwOSVersionInfoSize = sizeof(version);
@@ -1695,9 +1713,9 @@ system_info_setup_view(WmDeviceInfo *self)
 
   /* platform */
 
-  sys_info_proc_arch = glade_xml_get_widget (priv->xml, "sys_info_proc_arch");
-  sys_info_proc_type = glade_xml_get_widget (priv->xml, "sys_info_proc_type");
-  sys_info_page_size = glade_xml_get_widget (priv->xml, "sys_info_page_size");
+  sys_info_proc_arch = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_proc_arch"));
+  sys_info_proc_type = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_proc_type"));
+  sys_info_page_size = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_page_size"));
 
   memset(&system, 0, sizeof(system));
 
@@ -1796,15 +1814,15 @@ system_power_setup_view(WmDeviceInfo *self)
     *sys_info_bup_batt_lifetime, *sys_info_bup_batt_fulllife, *sys_info_bup_batt_bar;
   gchar *lifetime, *fulllife, *lifepercent;
 
-  sys_info_ac_status = glade_xml_get_widget (priv->xml, "sys_info_ac_status");
+  sys_info_ac_status = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_ac_status"));
 
-  sys_info_main_batt_lifetime = glade_xml_get_widget (priv->xml, "sys_info_main_batt_lifetime");
-  sys_info_main_batt_fulllife = glade_xml_get_widget (priv->xml, "sys_info_main_batt_fulllife");
-  sys_info_main_batt_bar = glade_xml_get_widget (priv->xml, "sys_info_main_batt_bar");
+  sys_info_main_batt_lifetime = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_main_batt_lifetime"));
+  sys_info_main_batt_fulllife = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_main_batt_fulllife"));
+  sys_info_main_batt_bar = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_main_batt_bar"));
 
-  sys_info_bup_batt_lifetime = glade_xml_get_widget (priv->xml, "sys_info_bup_batt_lifetime");
-  sys_info_bup_batt_fulllife = glade_xml_get_widget (priv->xml, "sys_info_bup_batt_fulllife");
-  sys_info_bup_batt_bar = glade_xml_get_widget (priv->xml, "sys_info_bup_batt_bar");
+  sys_info_bup_batt_lifetime = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_bup_batt_lifetime"));
+  sys_info_bup_batt_fulllife = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_bup_batt_fulllife"));
+  sys_info_bup_batt_bar = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_bup_batt_bar"));
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
 
@@ -1933,7 +1951,7 @@ applications_selection_changed (GtkTreeSelection *selection, gpointer user_data)
   gint number;
   gchar *program;
 
-  GtkWidget *app_remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
+  GtkWidget *app_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "app_remove_button"));
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
     gtk_tree_model_get (model, &iter,
@@ -1965,8 +1983,8 @@ applications_setup_view_store(WmDeviceInfo *self)
   if (!wm_device_rapi_select(priv->device))
     return;
 
-  GtkWidget *app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
-  GtkWidget *remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
+  GtkWidget *app_treeview = GTK_WIDGET(gtk_builder_get_object(priv->builder, "applications_treeview"));
+  GtkWidget *remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "app_remove_button"));
 
   GtkListStore *store = gtk_list_store_new (APP_N_COLUMNS,
 					    G_TYPE_INT,     /* index */
@@ -2099,7 +2117,7 @@ on_app_remove_button_clicked(GtkButton *button, gpointer user_data)
     return;
   }
 
-  GtkWidget *app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
+  GtkWidget *app_treeview = GTK_WIDGET(gtk_builder_get_object(priv->builder, "applications_treeview"));
   GtkTreeIter iter;
   GtkTreeModel *model;
   GtkTreeSelection *selection;
@@ -2147,9 +2165,9 @@ applications_setup_view(WmDeviceInfo *self)
   GtkTreeSelection *selection;
   GtkWidget *app_treeview, *app_add_button, *app_remove_button;
 
-  app_treeview = glade_xml_get_widget(priv->xml, "applications_treeview");
-  app_add_button = glade_xml_get_widget(priv->xml, "app_add_button");
-  app_remove_button = glade_xml_get_widget(priv->xml, "app_remove_button");
+  app_treeview = GTK_WIDGET(gtk_builder_get_object(priv->builder, "applications_treeview"));
+  app_add_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "app_add_button"));
+  app_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "app_remove_button"));
 
   g_signal_connect(G_OBJECT(app_add_button), "clicked",
 		   G_CALLBACK(on_app_add_button_clicked),
@@ -2258,11 +2276,23 @@ device_info_setup_dialog (WmDeviceInfo *self)
   GtkWidget *device_info_dialog_close, *device_info_dialog_refresh;
   gchar *device_name, *title;
 
-  priv->xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "device_info_dialog", NULL);
-  priv->dialog = glade_xml_get_widget (priv->xml, "device_info_dialog");
+  guint builder_res;
+  GError *error = NULL;
+  gchar *namelist[] = { "device_info_dialog", NULL };
 
-  device_info_dialog_close = glade_xml_get_widget (priv->xml, "device_info_dialog_close");
-  device_info_dialog_refresh = glade_xml_get_widget (priv->xml, "device_info_dialog_refresh");
+  builder_res = gtk_builder_add_objects_from_file(priv->builder,
+                                                  SYNCE_DATA "synce_trayicon_properties.glade",
+                                                  namelist,
+                                                  &error);
+  if (builder_res == 0) {
+          g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
+
+  priv->dialog = GTK_WIDGET(gtk_builder_get_object(priv->builder, "device_info_dialog"));
+  device_info_dialog_close = GTK_WIDGET(gtk_builder_get_object(priv->builder, "device_info_dialog_close"));
+  device_info_dialog_refresh = GTK_WIDGET(gtk_builder_get_object(priv->builder, "device_info_dialog_refresh"));
 
   g_signal_connect (G_OBJECT (device_info_dialog_close), "clicked",
 		    G_CALLBACK (device_info_close_button_clicked_cb), self);
@@ -2313,6 +2343,7 @@ wm_device_info_init(WmDeviceInfo *self)
 
   priv->disposed = FALSE;
   priv->device = NULL;
+  priv->builder = gtk_builder_new();
 }
 
 
@@ -2381,7 +2412,7 @@ wm_device_info_dispose (GObject *obj)
 		      self);
   priv->device = NULL;
   gtk_widget_destroy(priv->dialog);
-  g_object_unref(priv->xml);
+  g_object_unref(priv->builder);
 
   if (G_OBJECT_CLASS (wm_device_info_parent_class)->dispose)
     G_OBJECT_CLASS (wm_device_info_parent_class)->dispose (obj);

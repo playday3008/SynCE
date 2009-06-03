@@ -2,12 +2,11 @@
 #include "config.h"
 #endif
 
-#include <glade/glade.h>
 #include <gconf/gconf-client.h>
 
 #include "properties.h"
 
-GladeXML *xml;
+GtkBuilder *builder = NULL;
 
 static void
 prefs_changed_cb (GConfClient *client, guint id,
@@ -21,7 +20,7 @@ prefs_changed_cb (GConfClient *client, guint id,
 
   if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/enable_vdccm"))) {
     gboolean enable_vdccm = gconf_value_get_bool(value);
-    GtkWidget *prefs_enable_vdccm = glade_xml_get_widget (xml, "prefs_enable_vdccm");	
+    GtkWidget *prefs_enable_vdccm = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_enable_vdccm"));
 
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_enable_vdccm), enable_vdccm);
 
@@ -30,7 +29,7 @@ prefs_changed_cb (GConfClient *client, guint id,
 
   if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/start_vdccm"))) {
     gboolean start_vdccm = gconf_value_get_bool(value);
-    GtkWidget *prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");
+    GtkWidget *prefs_start_stop_vdccm = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_start_stop_vdccm"));
 
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_start_stop_vdccm), start_vdccm);
 
@@ -39,7 +38,7 @@ prefs_changed_cb (GConfClient *client, guint id,
 
   if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/show_disconnected"))) {
     gboolean show_disconnected = gconf_value_get_bool(value);
-    GtkWidget *prefs_show_disconnected = glade_xml_get_widget (xml, "prefs_show_disconnected");
+    GtkWidget *prefs_show_disconnected = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_show_disconnected"));
 
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_disconnected), show_disconnected);
 
@@ -110,10 +109,17 @@ prefs_show_disconnected_toggled_cb (GtkWidget *widget, gpointer data)
 static void
 prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
-        GConfClient *conf_client = gconf_client_get_default();
-        gconf_client_notify_remove(conf_client, GPOINTER_TO_UINT(data));
-
         gtk_widget_destroy(gtk_widget_get_toplevel(widget));
+}
+
+
+static void
+prefs_window_destroy_cb(GtkObject *object, gpointer user_data)
+{
+        g_object_unref(builder);
+
+        GConfClient *conf_client = gconf_client_get_default();
+        gconf_client_notify_remove(conf_client, GPOINTER_TO_UINT(user_data));
 }
 
 
@@ -126,13 +132,24 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
 
   GConfClient *conf_client = gconf_client_get_default();
 
-  xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "prefs_window", NULL);
+  builder = gtk_builder_new();
+  guint builder_res;
+  gchar *namelist[] = { "prefs_window", NULL };
 
-  prefs_window = glade_xml_get_widget (xml, "prefs_window");
+  builder_res = gtk_builder_add_objects_from_file(builder,
+                                                  SYNCE_DATA "synce_trayicon_properties.glade",
+                                                  namelist,
+                                                  &error);
+  if (builder_res == 0) {
+          g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
 
-  prefs_enable_vdccm = glade_xml_get_widget (xml, "prefs_enable_vdccm");
-  prefs_start_stop_vdccm = glade_xml_get_widget (xml, "prefs_start_stop_vdccm");
-  prefs_show_disconnected = glade_xml_get_widget (xml, "prefs_show_disconnected");
+  prefs_window = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_window"));
+  prefs_enable_vdccm = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_enable_vdccm"));
+  prefs_start_stop_vdccm = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_start_stop_vdccm"));
+  prefs_show_disconnected = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_show_disconnected"));
 
   enable_vdccm = gconf_client_get_bool (conf_client, "/apps/synce/trayicon/enable_vdccm", &error);
   if (error) {
@@ -177,9 +194,12 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
           error = NULL;
   }                  
 
-  close_button = glade_xml_get_widget (xml, "prefs_closebutton");    
+  close_button = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_closebutton"));
   g_signal_connect (G_OBJECT (close_button), "clicked",
-		    G_CALLBACK (prefs_close_button_clicked_cb), GUINT_TO_POINTER(id));
+		    G_CALLBACK (prefs_close_button_clicked_cb), NULL);
+
+  g_signal_connect (G_OBJECT (prefs_window), "destroy",
+		    G_CALLBACK (prefs_window_destroy_cb), GUINT_TO_POINTER(id));
 
   gtk_widget_show_all (prefs_window);
 

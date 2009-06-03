@@ -1,169 +1,186 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--*- mode: xml -*-->
-<glade-interface>
-  <widget class="GtkDialog" id="prefs_window">
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy toplevel-contextual -->
+  <object class="GtkDialog" id="prefs_window">
     <property name="visible">True</property>
     <property name="border_width">6</property>
     <property name="title" translatable="yes">SynCE Trayicon Preferences</property>
     <property name="resizable">False</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <property name="has_separator">False</property>
     <child internal-child="vbox">
-      <widget class="GtkVBox" id="dialog-vbox1">
+      <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
         <property name="spacing">12</property>
         <child>
-          <widget class="GtkVBox" id="vbox6">
+          <object class="GtkVBox" id="vbox6">
             <property name="visible">True</property>
             <property name="spacing">6</property>
             <property name="homogeneous">True</property>
             <child>
-              <widget class="GtkCheckButton" id="prefs_show_disconnected">
+              <object class="GtkCheckButton" id="prefs_show_disconnected">
+                <property name="label" translatable="yes">Show icon when disconnected</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="tooltip" translatable="yes">Always show in the notification area, even when there is no device connected.</property>
-                <property name="label" translatable="yes">Show icon when disconnected</property>
-                <property name="response_id">0</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Always show in the notification area, even when there is no device connected.</property>
                 <property name="draw_indicator">True</property>
-              </widget>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkCheckButton" id="prefs_enable_vdccm">
+              <object class="GtkCheckButton" id="prefs_enable_vdccm">
+                <property name="label" translatable="yes">Enable Vdccm support</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">Enable Vdccm support</property>
-                <property name="response_id">0</property>
+                <property name="receives_default">False</property>
                 <property name="draw_indicator">True</property>
-              </widget>
+              </object>
               <packing>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkHBox" id="hbox12">
+              <object class="GtkHBox" id="hbox12">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkLabel" id="label5">
+                  <object class="GtkLabel" id="label5">
                     <property name="visible">True</property>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="padding">10</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkCheckButton" id="prefs_start_stop_vdccm">
+                  <object class="GtkCheckButton" id="prefs_start_stop_vdccm">
+                    <property name="label" translatable="yes">Start/Stop on Start/Quit</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">Start/Stop on Start/Quit</property>
-                    <property name="response_id">0</property>
+                    <property name="receives_default">False</property>
                     <property name="draw_indicator">True</property>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">1</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="position">2</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="padding">6</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child internal-child="action_area">
-          <widget class="GtkHButtonBox" id="dialog-action_area1">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
-              <widget class="GtkButton" id="prefs_closebutton">
+              <object class="GtkButton" id="prefs_closebutton">
+                <property name="label">gtk-close</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
-              </widget>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-  <widget class="GtkDialog" id="password_dialog">
+    <action-widgets>
+      <action-widget response="-7">prefs_closebutton</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="password_dialog">
     <property name="visible">True</property>
     <property name="title" translatable="yes">SynCE Password Request</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
-      <widget class="GtkVBox" id="dialog-vbox2">
+      <object class="GtkVBox" id="dialog-vbox2">
         <property name="visible">True</property>
         <child>
-          <widget class="GtkVBox" id="vbox8">
+          <object class="GtkVBox" id="vbox8">
             <property name="visible">True</property>
             <property name="border_width">4</property>
             <child>
-              <widget class="GtkLabel" id="label10">
+              <object class="GtkLabel" id="label10">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">&lt;span weight="bold"&gt;PocketPC password &lt;/span&gt;</property>
                 <property name="use_markup">True</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkHBox" id="hbox9">
+              <object class="GtkHBox" id="hbox9">
                 <property name="visible">True</property>
                 <property name="border_width">5</property>
                 <child>
-                  <widget class="GtkImage" id="image4">
+                  <object class="GtkImage" id="image4">
                     <property name="visible">True</property>
                     <property name="stock">gtk-info</property>
-                    <property name="icon_size">6</property>
-                  </widget>
+                    <property name="icon-size">6</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
-                  <widget class="GtkTable" id="table1">
+                  <object class="GtkTable" id="table1">
                     <property name="visible">True</property>
                     <property name="n_rows">3</property>
                     <property name="n_columns">2</property>
                     <property name="column_spacing">12</property>
                     <property name="row_spacing">6</property>
                     <child>
-                      <widget class="GtkLabel" id="password_dialog_pdaname_label">
+                      <object class="GtkLabel" id="password_dialog_pdaname_label">
                         <property name="visible">True</property>
                         <property name="xalign">0</property>
                         <property name="label" translatable="yes">Device:</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="x_options">GTK_FILL</property>
                         <property name="y_options"></property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkComboBox" id="password_dialog_pdaname">
+                      <object class="GtkComboBox" id="password_dialog_pdaname">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkLabel" id="password_dialog_entry_label">
+                      <object class="GtkLabel" id="password_dialog_entry_label">
                         <property name="visible">True</property>
                         <property name="xalign">0</property>
                         <property name="label" translatable="yes">Password:</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
@@ -172,13 +189,12 @@
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkEntry" id="password_dialog_entry">
+                      <object class="GtkEntry" id="password_dialog_entry">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="has_focus">True</property>
                         <property name="visibility">False</property>
-                        <property name="invisible_char">*</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
@@ -187,22 +203,22 @@
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkLabel" id="label4">
+                      <object class="GtkLabel" id="label4">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="top_attach">2</property>
                         <property name="bottom_attach">3</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkCheckButton" id="password_dialog_save_password">
+                      <object class="GtkCheckButton" id="password_dialog_save_password">
+                        <property name="label" translatable="yes">Save password</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="label" translatable="yes">Save password</property>
-                        <property name="response_id">0</property>
+                        <property name="receives_default">False</property>
                         <property name="draw_indicator">True</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
@@ -210,129 +226,143 @@
                         <property name="bottom_attach">3</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="padding">5</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="position">2</property>
           </packing>
         </child>
         <child internal-child="action_area">
-          <widget class="GtkHButtonBox" id="dialog-action_area2">
+          <object class="GtkHButtonBox" id="dialog-action_area2">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
-              <widget class="GtkButton" id="password_dialog_cancel">
+              <object class="GtkButton" id="password_dialog_cancel">
+                <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-cancel</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
-              </widget>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="password_dialog_ok">
+              <object class="GtkButton" id="password_dialog_ok">
+                <property name="label">gtk-ok</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
                 <property name="has_default">True</property>
-                <property name="label">gtk-ok</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-5</property>
-              </widget>
+              </object>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-  <widget class="GtkDialog" id="device_info_dialog">
+    <action-widgets>
+      <action-widget response="-6">password_dialog_cancel</action-widget>
+      <action-widget response="-5">password_dialog_ok</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="device_info_dialog">
     <property name="visible">True</property>
     <property name="border_width">6</property>
     <property name="title" translatable="yes">dialog1</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
-      <widget class="GtkVBox" id="dialog-vbox3">
+      <object class="GtkVBox" id="dialog-vbox3">
         <property name="visible">True</property>
         <child>
-          <widget class="GtkVBox" id="vbox11">
+          <object class="GtkVBox" id="vbox11">
             <property name="visible">True</property>
             <property name="border_width">3</property>
             <property name="homogeneous">True</property>
             <child>
-              <widget class="GtkNotebook" id="notebook1">
+              <object class="GtkNotebook" id="notebook1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="border_width">3</property>
                 <child>
-                  <widget class="GtkHBox" id="hbox13">
+                  <object class="GtkHBox" id="hbox13">
                     <property name="visible">True</property>
                     <property name="border_width">3</property>
                     <property name="spacing">3</property>
                     <child>
-                      <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                      <object class="GtkScrolledWindow" id="scrolledwindow1">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
-                        <property name="vscrollbar_policy">GTK_POLICY_NEVER</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="hscrollbar_policy">never</property>
+                        <property name="vscrollbar_policy">never</property>
+                        <property name="shadow_type">in</property>
                         <child>
-                          <widget class="GtkTreeView" id="partners_list">
+                          <object class="GtkTreeView" id="partners_list">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                          </widget>
+                          </object>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="padding">3</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkVBox" id="vbox11">
+                      <object class="GtkVBox" id="vbox1">
                         <property name="visible">True</property>
                         <property name="border_width">5</property>
                         <property name="spacing">5</property>
                         <child>
-                          <widget class="GtkButton" id="partners_create_button">
+                          <object class="GtkButton" id="partners_create_button">
+                            <property name="label" translatable="yes">Create</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Create</property>
+                            <property name="receives_default">False</property>
                             <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
                             <property name="padding">3</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkButton" id="partners_remove_button">
+                          <object class="GtkButton" id="partners_remove_button">
+                            <property name="label" translatable="yes">Remove</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Remove</property>
+                            <property name="receives_default">False</property>
                             <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
@@ -340,513 +370,550 @@
                             <property name="position">1</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="padding">5</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-                <child>
-                  <widget class="GtkLabel" id="partners_tab_label">
+                <child type="tab">
+                  <object class="GtkLabel" id="partners_tab_label">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Partners</property>
-                  </widget>
+                  </object>
                   <packing>
-                    <property name="type">tab</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkVBox" id="vbox12">
+                  <object class="GtkVBox" id="vbox12">
                     <property name="visible">True</property>
                     <property name="border_width">3</property>
                     <property name="spacing">3</property>
                     <child>
-                      <widget class="GtkVBox" id="vbox13">
+                      <object class="GtkVBox" id="vbox13">
                         <property name="visible">True</property>
                         <property name="border_width">3</property>
                         <property name="spacing">5</property>
                         <child>
-                          <widget class="GtkLabel" id="sys_info_model">
+                          <object class="GtkLabel" id="sys_info_model">
                             <property name="visible">True</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkHBox" id="hbox18">
+                          <object class="GtkHBox" id="hbox18">
                             <property name="visible">True</property>
                             <property name="border_width">5</property>
                             <property name="spacing">5</property>
                             <child>
-                              <widget class="GtkVBox" id="vbox14">
+                              <object class="GtkVBox" id="vbox14">
                                 <property name="visible">True</property>
                                 <property name="border_width">3</property>
                                 <property name="spacing">3</property>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox14">
+                                  <object class="GtkHBox" id="hbox14">
                                     <property name="visible">True</property>
                                     <property name="border_width">2</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label13">
+                                      <object class="GtkLabel" id="label13">
                                         <property name="visible">True</property>
                                         <property name="label" translatable="yes">Version: </property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="sys_info_version">
+                                      <object class="GtkLabel" id="sys_info_version">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox15">
+                                  <object class="GtkHBox" id="hbox15">
                                     <property name="visible">True</property>
                                     <property name="border_width">2</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label15">
+                                      <object class="GtkLabel" id="label15">
                                         <property name="visible">True</property>
                                         <property name="label" translatable="yes">Platform: </property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="sys_info_platform">
+                                      <object class="GtkLabel" id="sys_info_platform">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
                             <child>
-                              <widget class="GtkVBox" id="vbox16">
+                              <object class="GtkVBox" id="vbox16">
                                 <property name="visible">True</property>
                                 <property name="border_width">3</property>
                                 <property name="spacing">3</property>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox19">
+                                  <object class="GtkHBox" id="hbox19">
                                     <property name="visible">True</property>
                                     <property name="border_width">2</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label47">
+                                      <object class="GtkLabel" id="label47">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
                                       <placeholder/>
                                     </child>
-                                  </widget>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox20">
+                                  <object class="GtkHBox" id="hbox20">
                                     <property name="visible">True</property>
                                     <property name="border_width">2</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label17">
+                                      <object class="GtkLabel" id="label17">
                                         <property name="visible">True</property>
                                         <property name="label" translatable="yes">Details: </property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="sys_info_details">
+                                      <object class="GtkLabel" id="sys_info_details">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
                               <packing>
                                 <property name="position">1</property>
                               </packing>
                             </child>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkHBox" id="hbox21">
+                          <object class="GtkHBox" id="hbox21">
                             <property name="visible">True</property>
                             <property name="border_width">5</property>
                             <property name="spacing">5</property>
                             <child>
-                              <widget class="GtkVBox" id="vbox15">
+                              <object class="GtkVBox" id="vbox15">
                                 <property name="visible">True</property>
                                 <property name="border_width">3</property>
                                 <property name="spacing">3</property>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox16">
+                                  <object class="GtkHBox" id="hbox16">
                                     <property name="visible">True</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label19">
+                                      <object class="GtkLabel" id="label19">
                                         <property name="visible">True</property>
                                         <property name="label" translatable="yes">Processor architecture: </property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="sys_info_proc_arch">
+                                      <object class="GtkLabel" id="sys_info_proc_arch">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox17">
+                                  <object class="GtkHBox" id="hbox17">
                                     <property name="visible">True</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label21">
+                                      <object class="GtkLabel" id="label21">
                                         <property name="visible">True</property>
                                         <property name="label" translatable="yes">Processor type: </property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="sys_info_proc_type">
+                                      <object class="GtkLabel" id="sys_info_proc_type">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
                             <child>
-                              <widget class="GtkVBox" id="vbox17">
+                              <object class="GtkVBox" id="vbox17">
                                 <property name="visible">True</property>
                                 <property name="border_width">3</property>
                                 <property name="spacing">3</property>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox22">
+                                  <object class="GtkHBox" id="hbox22">
                                     <property name="visible">True</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label48">
+                                      <object class="GtkLabel" id="label48">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
                                       <placeholder/>
                                     </child>
-                                  </widget>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox23">
+                                  <object class="GtkHBox" id="hbox23">
                                     <property name="visible">True</property>
                                     <property name="spacing">5</property>
                                     <child>
-                                      <widget class="GtkLabel" id="label22">
+                                      <object class="GtkLabel" id="label22">
                                         <property name="visible">True</property>
                                         <property name="label" translatable="yes">Page size: </property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="sys_info_page_size">
+                                      <object class="GtkLabel" id="sys_info_page_size">
                                         <property name="visible">True</property>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
                               <packing>
                                 <property name="position">1</property>
                               </packing>
                             </child>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">2</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="padding">3</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkFrame" id="frame1">
+                      <object class="GtkFrame" id="frame1">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="shadow_type">in</property>
                         <child>
-                          <widget class="GtkAlignment" id="alignment1">
+                          <object class="GtkAlignment" id="alignment1">
                             <property name="visible">True</property>
                             <property name="left_padding">12</property>
                             <child>
-                              <widget class="GtkHBox" id="hbox24">
+                              <object class="GtkHBox" id="hbox24">
                                 <property name="visible">True</property>
                                 <property name="border_width">6</property>
                                 <property name="spacing">5</property>
                                 <child>
-                                  <widget class="GtkVBox" id="vbox18">
+                                  <object class="GtkVBox" id="vbox18">
                                     <property name="visible">True</property>
                                     <property name="border_width">5</property>
                                     <property name="spacing">3</property>
                                     <child>
-                                      <widget class="GtkHBox" id="hbox25">
+                                      <object class="GtkHBox" id="hbox25">
                                         <property name="visible">True</property>
                                         <property name="border_width">2</property>
                                         <property name="spacing">2</property>
                                         <child>
-                                          <widget class="GtkLabel" id="label25">
+                                          <object class="GtkLabel" id="label25">
                                             <property name="visible">True</property>
                                             <property name="label" translatable="yes">Size: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_store_size">
+                                          <object class="GtkLabel" id="sys_info_store_size">
                                             <property name="visible">True</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
+                                      <packing>
+                                        <property name="position">0</property>
+                                      </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkHBox" id="hbox26">
+                                      <object class="GtkHBox" id="hbox26">
                                         <property name="visible">True</property>
                                         <property name="border_width">2</property>
                                         <property name="spacing">2</property>
                                         <child>
-                                          <widget class="GtkLabel" id="label26">
+                                          <object class="GtkLabel" id="label26">
                                             <property name="visible">True</property>
                                             <property name="label" translatable="yes">Free: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_store_free">
+                                          <object class="GtkLabel" id="sys_info_store_free">
                                             <property name="visible">True</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkVBox" id="vbox19">
+                                  <object class="GtkVBox" id="vbox19">
                                     <property name="visible">True</property>
                                     <property name="border_width">5</property>
                                     <property name="spacing">3</property>
                                     <child>
-                                      <widget class="GtkHBox" id="hbox27">
+                                      <object class="GtkHBox" id="hbox27">
                                         <property name="visible">True</property>
                                         <property name="border_width">2</property>
                                         <property name="spacing">2</property>
                                         <child>
-                                          <widget class="GtkLabel" id="label27">
+                                          <object class="GtkLabel" id="label27">
                                             <property name="visible">True</property>
                                             <property name="label" translatable="yes">RAM: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_store_ram">
+                                          <object class="GtkLabel" id="sys_info_store_ram">
                                             <property name="visible">True</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
+                                      <packing>
+                                        <property name="position">0</property>
+                                      </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkHBox" id="hbox28">
+                                      <object class="GtkHBox" id="hbox28">
                                         <property name="visible">True</property>
                                         <property name="border_width">2</property>
                                         <property name="spacing">2</property>
                                         <child>
-                                          <widget class="GtkLabel" id="label28">
+                                          <object class="GtkLabel" id="label28">
                                             <property name="visible">True</property>
                                             <property name="label" translatable="yes">Storage: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_store_storage">
+                                          <object class="GtkLabel" id="sys_info_store_storage">
                                             <property name="visible">True</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
                             </child>
-                          </widget>
+                          </object>
                         </child>
-                        <child>
-                          <widget class="GtkLabel" id="label33">
+                        <child type="label">
+                          <object class="GtkLabel" id="label33">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">Store</property>
                             <property name="use_markup">True</property>
-                          </widget>
-                          <packing>
-                            <property name="type">label_item</property>
-                          </packing>
+                          </object>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="position">1</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">1</property>
                   </packing>
                 </child>
-                <child>
-                  <widget class="GtkLabel" id="label12">
+                <child type="tab">
+                  <object class="GtkLabel" id="label12">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">System Information</property>
-                  </widget>
+                  </object>
                   <packing>
-                    <property name="type">tab</property>
                     <property name="position">1</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkVBox" id="vbox20">
+                  <object class="GtkVBox" id="vbox20">
                     <property name="visible">True</property>
                     <property name="border_width">5</property>
                     <property name="spacing">3</property>
                     <child>
-                      <widget class="GtkHBox" id="hbox29">
+                      <object class="GtkHBox" id="hbox29">
                         <property name="visible">True</property>
                         <child>
-                          <widget class="GtkLabel" id="label34">
+                          <object class="GtkLabel" id="label34">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">AC Status: </property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkLabel" id="sys_info_ac_status">
+                          <object class="GtkLabel" id="sys_info_ac_status">
                             <property name="visible">True</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
@@ -856,409 +923,441 @@
                         <child>
                           <placeholder/>
                         </child>
-                      </widget>
+                      </object>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
                     </child>
                     <child>
-                      <widget class="GtkFrame" id="frame2">
+                      <object class="GtkFrame" id="frame2">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="shadow_type">in</property>
                         <child>
-                          <widget class="GtkAlignment" id="alignment2">
+                          <object class="GtkAlignment" id="alignment2">
                             <property name="visible">True</property>
                             <property name="border_width">3</property>
                             <property name="top_padding">2</property>
                             <property name="bottom_padding">2</property>
                             <property name="left_padding">12</property>
                             <child>
-                              <widget class="GtkHBox" id="hbox34">
+                              <object class="GtkHBox" id="hbox34">
                                 <property name="visible">True</property>
                                 <property name="border_width">8</property>
                                 <property name="spacing">10</property>
                                 <property name="homogeneous">True</property>
                                 <child>
-                                  <widget class="GtkProgressBar" id="sys_info_main_batt_bar">
+                                  <object class="GtkProgressBar" id="sys_info_main_batt_bar">
                                     <property name="visible">True</property>
                                     <property name="pulse_step">0.10000000149</property>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
+                                    <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox35">
+                                  <object class="GtkHBox" id="hbox35">
                                     <property name="visible">True</property>
                                     <property name="spacing">3</property>
                                     <child>
-                                      <widget class="GtkVBox" id="vbox23">
+                                      <object class="GtkVBox" id="vbox23">
                                         <property name="visible">True</property>
                                         <property name="spacing">5</property>
                                         <property name="homogeneous">True</property>
                                         <child>
-                                          <widget class="GtkLabel" id="label38">
+                                          <object class="GtkLabel" id="label38">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="label" translatable="yes">Lifetime: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="label40">
+                                          <object class="GtkLabel" id="label40">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="label" translatable="yes">Full Lifetime: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
+                                      <packing>
+                                        <property name="position">0</property>
+                                      </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkVBox" id="vbox24">
+                                      <object class="GtkVBox" id="vbox24">
                                         <property name="visible">True</property>
                                         <property name="spacing">5</property>
                                         <property name="homogeneous">True</property>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_main_batt_lifetime">
+                                          <object class="GtkLabel" id="sys_info_main_batt_lifetime">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_main_batt_fulllife">
+                                          <object class="GtkLabel" id="sys_info_main_batt_fulllife">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
                             </child>
-                          </widget>
+                          </object>
                         </child>
-                        <child>
-                          <widget class="GtkLabel" id="label36">
+                        <child type="label">
+                          <object class="GtkLabel" id="label36">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">Main Battery</property>
                             <property name="use_markup">True</property>
-                          </widget>
-                          <packing>
-                            <property name="type">label_item</property>
-                          </packing>
+                          </object>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="position">1</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkFrame" id="frame3">
+                      <object class="GtkFrame" id="frame3">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="shadow_type">in</property>
                         <child>
-                          <widget class="GtkAlignment" id="alignment3">
+                          <object class="GtkAlignment" id="alignment3">
                             <property name="visible">True</property>
                             <property name="border_width">3</property>
                             <property name="top_padding">2</property>
                             <property name="bottom_padding">2</property>
                             <property name="left_padding">12</property>
                             <child>
-                              <widget class="GtkHBox" id="hbox36">
+                              <object class="GtkHBox" id="hbox36">
                                 <property name="visible">True</property>
                                 <property name="border_width">8</property>
                                 <property name="spacing">10</property>
                                 <property name="homogeneous">True</property>
                                 <child>
-                                  <widget class="GtkProgressBar" id="sys_info_bup_batt_bar">
+                                  <object class="GtkProgressBar" id="sys_info_bup_batt_bar">
                                     <property name="visible">True</property>
                                     <property name="pulse_step">0.10000000149</property>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
+                                    <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkHBox" id="hbox37">
+                                  <object class="GtkHBox" id="hbox37">
                                     <property name="visible">True</property>
                                     <property name="spacing">3</property>
                                     <child>
-                                      <widget class="GtkVBox" id="vbox25">
+                                      <object class="GtkVBox" id="vbox25">
                                         <property name="visible">True</property>
                                         <property name="spacing">5</property>
                                         <property name="homogeneous">True</property>
                                         <child>
-                                          <widget class="GtkLabel" id="label44">
+                                          <object class="GtkLabel" id="label44">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="label" translatable="yes">Lifetime: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="label46">
+                                          <object class="GtkLabel" id="label46">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="label" translatable="yes">Full Lifetime: </property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
+                                      <packing>
+                                        <property name="position">0</property>
+                                      </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkVBox" id="vbox26">
+                                      <object class="GtkVBox" id="vbox26">
                                         <property name="visible">True</property>
                                         <property name="spacing">5</property>
                                         <property name="homogeneous">True</property>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_bup_batt_lifetime">
+                                          <object class="GtkLabel" id="sys_info_bup_batt_lifetime">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
+                                            <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <widget class="GtkLabel" id="sys_info_bup_batt_fulllife">
+                                          <object class="GtkLabel" id="sys_info_bup_batt_fulllife">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
-                                          </widget>
+                                          </object>
                                           <packing>
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
-                                      </widget>
+                                      </object>
                                       <packing>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                  </widget>
+                                  </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </widget>
+                              </object>
                             </child>
-                          </widget>
+                          </object>
                         </child>
-                        <child>
-                          <widget class="GtkLabel" id="label37">
+                        <child type="label">
+                          <object class="GtkLabel" id="label37">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">Backup Battery</property>
                             <property name="use_markup">True</property>
-                          </widget>
-                          <packing>
-                            <property name="type">label_item</property>
-                          </packing>
+                          </object>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="position">2</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">2</property>
                   </packing>
                 </child>
-                <child>
-                  <widget class="GtkLabel" id="label23">
+                <child type="tab">
+                  <object class="GtkLabel" id="label23">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Power</property>
-                  </widget>
+                  </object>
                   <packing>
-                    <property name="type">tab</property>
                     <property name="position">2</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkHBox" id="hbox2">
+                  <object class="GtkHBox" id="hbox2">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkScrolledWindow" id="scrolledwindow3">
+                      <object class="GtkScrolledWindow" id="scrolledwindow3">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="border_width">10</property>
-                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
                         <child>
-                          <widget class="GtkTreeView" id="applications_treeview">
+                          <object class="GtkTreeView" id="applications_treeview">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                          </widget>
+                          </object>
                         </child>
-                      </widget>
+                      </object>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
                     </child>
                     <child>
-                      <widget class="GtkVButtonBox" id="vbuttonbox1">
+                      <object class="GtkVButtonBox" id="vbuttonbox1">
                         <property name="visible">True</property>
                         <property name="border_width">10</property>
                         <property name="spacing">10</property>
-                        <property name="layout_style">GTK_BUTTONBOX_START</property>
+                        <property name="layout_style">start</property>
                         <child>
-                          <widget class="GtkButton" id="app_add_button">
+                          <object class="GtkButton" id="app_add_button">
+                            <property name="label" translatable="yes">gtk-add</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="label" translatable="yes">gtk-add</property>
                             <property name="use_stock">True</property>
-                            <property name="response_id">0</property>
-                          </widget>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">0</property>
+                          </packing>
                         </child>
                         <child>
-                          <widget class="GtkButton" id="app_remove_button">
+                          <object class="GtkButton" id="app_remove_button">
+                            <property name="label" translatable="yes">gtk-remove</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="can_default">True</property>
-                            <property name="label" translatable="yes">gtk-remove</property>
+                            <property name="receives_default">False</property>
                             <property name="use_stock">True</property>
-                            <property name="response_id">0</property>
-                          </widget>
+                          </object>
                           <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">3</property>
                   </packing>
                 </child>
-                <child>
-                  <widget class="GtkLabel" id="label3">
+                <child type="tab">
+                  <object class="GtkLabel" id="label3">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Applications</property>
-                  </widget>
+                  </object>
                   <packing>
-                    <property name="type">tab</property>
                     <property name="position">3</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="padding">3</property>
+                <property name="position">0</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="padding">3</property>
             <property name="position">2</property>
           </packing>
         </child>
         <child internal-child="action_area">
-          <widget class="GtkHButtonBox" id="dialog-action_area3">
+          <object class="GtkHButtonBox" id="dialog-action_area3">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_EDGE</property>
+            <property name="layout_style">edge</property>
             <child>
-              <widget class="GtkButton" id="device_info_dialog_refresh">
+              <object class="GtkButton" id="device_info_dialog_refresh">
+                <property name="label">gtk-refresh</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-refresh</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">0</property>
-              </widget>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="device_info_dialog_close">
+              <object class="GtkButton" id="device_info_dialog_close">
+                <property name="label">gtk-close</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
-              </widget>
+              </object>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-  <widget class="GtkDialog" id="create_partnership_dialog">
+    <action-widgets>
+      <action-widget response="0">device_info_dialog_refresh</action-widget>
+      <action-widget response="-7">device_info_dialog_close</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="create_partnership_dialog">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Create Partnership</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="window_position">center-on-parent</property>
+    <property name="type_hint">dialog</property>
     <property name="has_separator">False</property>
     <child internal-child="vbox">
-      <widget class="GtkVBox" id="dialog-vbox4">
+      <object class="GtkVBox" id="dialog-vbox4">
         <property name="visible">True</property>
         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
         <property name="spacing">6</property>
         <child>
-          <widget class="GtkVBox" id="vbox2">
+          <object class="GtkVBox" id="vbox2">
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <property name="border_width">5</property>
             <property name="spacing">5</property>
             <child>
-              <widget class="GtkHBox" id="hbox1">
+              <object class="GtkHBox" id="hbox1">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <child>
-                  <widget class="GtkLabel" id="label1">
+                  <object class="GtkLabel" id="label1">
                     <property name="visible">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <property name="label" translatable="yes">Name of Partnership:</property>
-                  </widget>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
-                  <widget class="GtkEntry" id="pship_name_entry">
+                  <object class="GtkEntry" id="pship_name_entry">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
@@ -1266,44 +1365,47 @@
                     <property name="position">1</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkLabel" id="label2">
+              <object class="GtkLabel" id="label2">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="label" translatable="yes">Sync Items:</property>
-              </widget>
+              </object>
               <packing>
                 <property name="padding">5</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkScrolledWindow" id="scrolledwindow2">
+              <object class="GtkScrolledWindow" id="scrolledwindow2">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="border_width">3</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="shadow_type">GTK_SHADOW_IN</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <property name="shadow_type">in</property>
                 <child>
-                  <widget class="GtkTreeView" id="sync_items_listview">
+                  <object class="GtkTreeView" id="sync_items_listview">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <property name="border_width">3</property>
                     <property name="headers_visible">False</property>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="padding">5</property>
                 <property name="position">2</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="padding">5</property>
@@ -1311,42 +1413,52 @@
           </packing>
         </child>
         <child internal-child="action_area">
-          <widget class="GtkHButtonBox" id="dialog-action_area4">
+          <object class="GtkHButtonBox" id="dialog-action_area4">
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
-              <widget class="GtkButton" id="button1">
+              <object class="GtkButton" id="button1">
+                <property name="label" translatable="yes">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="label" translatable="yes">gtk-cancel</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
-              </widget>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="button2">
+              <object class="GtkButton" id="button2">
+                <property name="label" translatable="yes">gtk-ok</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="label" translatable="yes">gtk-ok</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-5</property>
-              </widget>
+              </object>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-</glade-interface>
+    <action-widgets>
+      <action-widget response="-6">button1</action-widget>
+      <action-widget response="-5">button2</action-widget>
+    </action-widgets>
+  </object>
+</interface>

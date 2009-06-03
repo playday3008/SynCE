@@ -35,7 +35,6 @@ IN THE SOFTWARE.
 #include <dbus/dbus-glib.h>
 #include <synce.h>
 #include <libnotify/notify.h>
-#include <glade/glade.h>
 
 #include "synce-trayicon.h"
 #include "gtop_stuff.h"
@@ -169,13 +168,16 @@ set_icon(SynceTrayIcon *self)
 {
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
-  if (is_connected(self)) {
-    gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_CONNECTED);
-    gtk_status_icon_set_visible(GTK_STATUS_ICON(self), true);
-  } else {
-    gtk_status_icon_set_visible(GTK_STATUS_ICON(self), priv->show_disconnected);
-    gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_DISCONNECTED);
-  }
+
+  if (wm_device_manager_device_all_count(priv->device_list) > 0)
+          gtk_status_icon_set_visible(GTK_STATUS_ICON(self), TRUE);
+  else
+          gtk_status_icon_set_visible(GTK_STATUS_ICON(self), priv->show_disconnected);
+
+  if (is_connected(self))
+          gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_CONNECTED);
+  else
+          gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_DISCONNECTED);
 }
 
 static gboolean 
@@ -230,7 +232,7 @@ trayicon_supply_password(SynceTrayIcon *self)
 
         GList *locked_devices = NULL;
         GList *tmplist = NULL;
-        GladeXML *xml;
+        GtkBuilder *builder;
         GtkWidget *password_dialog, *password_dialog_entry, *password_dialog_cancel;
         GtkWidget *password_dialog_ok, *password_dialog_pdaname, *password_dialog_save_pw;
         gchar *password = NULL;
@@ -251,15 +253,30 @@ trayicon_supply_password(SynceTrayIcon *self)
         if (!locked_devices)
                 return;
 
-        xml = glade_xml_new (SYNCE_DATA "synce_trayicon_properties.glade", "password_dialog", NULL);
+        builder = gtk_builder_new();
+        guint builder_res;
+        GError *error = NULL;
+        gchar *namelist[] = { "password_dialog", NULL };
 
-        password_dialog = glade_xml_get_widget (xml, "password_dialog");
+        builder_res = gtk_builder_add_objects_from_file(builder,
+                                                        SYNCE_DATA "synce_trayicon_properties.glade",
+                                                        namelist,
+                                                        &error);
+        if (builder_res == 0) {
+                g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+                g_error_free(error);
+                error = NULL;
+        }
 
-        password_dialog_pdaname = glade_xml_get_widget (xml, "password_dialog_pdaname");
-        password_dialog_entry = glade_xml_get_widget (xml, "password_dialog_entry");
-        password_dialog_ok = glade_xml_get_widget (xml, "password_dialog_ok");
-        password_dialog_cancel = glade_xml_get_widget (xml, "password_dialog_cancel");
-        password_dialog_save_pw = glade_xml_get_widget (xml, "password_dialog_save_password");
+        password_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog"));
+
+        password_dialog_pdaname = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_pdaname"));
+        password_dialog_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_entry"));
+        password_dialog_ok = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_ok"));
+        password_dialog_cancel = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_cancel"));
+        password_dialog_save_pw = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_save_password"));
+
+        g_object_unref(builder);
 
         store = gtk_list_store_new (1, G_TYPE_STRING);
 
@@ -405,6 +422,7 @@ device_connected_cb(DccmClient *comms_client, gchar *pdaname, gpointer info, gpo
   }
 
   wm_device_manager_add(priv->device_list, new_device);
+  set_icon(self);
 }
 
 static void

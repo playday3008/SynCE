@@ -35,7 +35,6 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gnome.h>
-#include <glade/glade.h>
 #include <errno.h>
 
 #include "synce-trayicon.h"
@@ -125,8 +124,6 @@ main (gint argc, gchar **argv)
 
 
  	synce_log_set_level(log_level);
-
-	glade_init ();
 
 	if (in_background)
 	{

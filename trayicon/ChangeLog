@@ -1,3 +1,8 @@
+2009-06-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* moved from libglade to gtkbuilder
+	* show icon if passworded device present
+
 2009-04-28  Mark Ellis <mark@mpellis.org.uk>
 
 	* By default do not show icon if no device is connected. Added gconf
