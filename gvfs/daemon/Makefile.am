@@ -67,10 +67,25 @@ libdaemon_la_SOURCES = \
 	$(gvfs_src_dir)/daemon/gvfskeyring.h $(gvfs_src_dir)/daemon/gvfskeyring.c \
 	$(NULL)
 
+EXTRA_DIST = 
+
+if GVFS_VERSION_1_2
+libdaemon_la_SOURCES += \
+	$(gvfs_src_dir)/daemon/gvfsjobopeniconforread.c $(gvfs_src_dir)/daemon/gvfsjobopeniconforread.h \
+	$(gvfs_src_dir)/daemon/gvfsjobqueryinforead.c $(gvfs_src_dir)/daemon/gvfsjobqueryinforead.h \
+	$(gvfs_src_dir)/daemon/gvfsjobqueryinfowrite.c $(gvfs_src_dir)/daemon/gvfsjobqueryinfowrite.h
+else
+EXTRA_DIST += \
+	../gvfs/daemon/gvfsjobopeniconforread.c ../gvfs/daemon/gvfsjobopeniconforread.h \
+	../gvfs/daemon/gvfsjobqueryinforead.c ../gvfs/daemon/gvfsjobqueryinforead.h \
+	../gvfs/daemon/gvfsjobqueryinfowrite.c ../gvfs/daemon/gvfsjobqueryinfowrite.h
+endif
+
+
 mount_in_files = synce.mount.in
 mount_DATA = synce.mount
 
-EXTRA_DIST = $(mount_in_files)
+EXTRA_DIST += $(mount_in_files)
 
 DISTCLEANFILES = $(mount_DATA)
 

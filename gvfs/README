@@ -28,5 +28,8 @@ source tree are required.
    resulting package will contain the source files from the
    source pointed to.
 
+The --with-gvfs-source-version option should be used to tailor the
+build system for incompatible changes in gvfs. The default is gvfs
+1.2.x
 
 This software may well crash, all bug reports are welcome.

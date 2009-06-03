@@ -48,6 +48,21 @@ daemon_sources = \
 
 EXTRA_DIST = 
 
+
+if GVFS_VERSION_1_2
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjobopeniconforread.c $(gvfs_src_dir)/daemon/gvfsjobopeniconforread.h \
+	$(gvfs_src_dir)/daemon/gvfsjobqueryinforead.c $(gvfs_src_dir)/daemon/gvfsjobqueryinforead.h \
+	$(gvfs_src_dir)/daemon/gvfsjobqueryinfowrite.c $(gvfs_src_dir)/daemon/gvfsjobqueryinfowrite.h
+else
+EXTRA_DIST += \
+	gvfsjobopeniconforread.c gvfsjobopeniconforread.h \
+	gvfsjobqueryinforead.c gvfsjobqueryinforead.h \
+	gvfsjobqueryinfowrite.c gvfsjobqueryinfowrite.h
+endif
+
+
+
 if LOCAL_LIBDAEMON_SRC
 
 EXTRA_DIST += $(libdaemon_sources) $(daemon_sources)

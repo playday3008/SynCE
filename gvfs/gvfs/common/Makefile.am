@@ -12,6 +12,15 @@ gvfs_headers = \
 
 EXTRA_DIST = 
 
+
+if GVFS_VERSION_1_2
+gvfs_headers += $(gvfs_src_dir)/common/gvfsfileinfo.h
+else
+EXTRA_DIST += gvfsfileinfo.h
+endif
+
+
+
 if LOCAL_LIBDAEMON_SRC
 
 EXTRA_DIST += $(gvfs_headers)

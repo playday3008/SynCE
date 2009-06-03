@@ -1,3 +1,7 @@
+2009-06-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* hack the build system for incompatible changes in gvfs-1.2.x
+
 2009-03-16  Mark Ellis <mark@mpellis.org.uk>
 
 	* configure.ac.in - require librapi2 >= 0.12 for CeFindClose
