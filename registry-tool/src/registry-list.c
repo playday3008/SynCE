@@ -22,7 +22,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <glade/glade.h>
 #include <string.h>
 #include <rapi.h>
 
@@ -282,15 +281,27 @@ setup_registry_key_branch_store(GtkTreeStore *store,
 void
 setup_registry_key_tree_store(GtkTreeView *registry_key_treeview) 
 {
-  GladeXML *glade_fetch_window = NULL;
   GtkWidget *fetchwindow, *progressbar;
   GtkTreeIter iter;
   GtkTreeStore *store = gtk_tree_store_new (KEY_N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
-  glade_fetch_window = glade_xml_new(SYNCE_DATA "synce-registry-tool.glade",
-			    "fetchwindow", NULL); 
-  fetchwindow = glade_xml_get_widget(glade_fetch_window, "fetchwindow");
-  progressbar = glade_xml_get_widget(glade_fetch_window, "fetch_progressbar");
+  GtkBuilder *builder = gtk_builder_new();
+  guint builder_res;
+  GError *error = NULL;
+  gchar *namelist[] = { "fetchwindow", NULL };
+
+  builder_res = gtk_builder_add_objects_from_file(builder,
+                                                  SYNCE_DATA "synce-registry-tool.glade",
+                                                  namelist,
+                                                  &error);
+  if (builder_res == 0) {
+          g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
+
+  fetchwindow = GTK_WIDGET(gtk_builder_get_object(builder, "fetchwindow"));
+  progressbar = GTK_WIDGET(gtk_builder_get_object(builder, "fetch_progressbar"));
 
   gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
   gtk_widget_show_all(fetchwindow);
@@ -345,10 +356,24 @@ registry_key_tree_view_row_expanded(GtkTreeView *treeview,
   gchar *keyname, *tmpname, *keypath;
   gboolean have_child;
 
-  GladeXML *glade_fetch_window = glade_xml_new(SYNCE_DATA "synce-registry-tool.glade",
-					       "fetchwindow", NULL); 
-  fetchwindow = glade_xml_get_widget(glade_fetch_window, "fetchwindow");
-  progressbar = glade_xml_get_widget(glade_fetch_window, "fetch_progressbar");
+  GtkBuilder *builder = gtk_builder_new();
+  guint builder_res;
+  GError *error = NULL;
+  gchar *namelist[] = { "fetchwindow", NULL };
+
+  builder_res = gtk_builder_add_objects_from_file(builder,
+                                                  SYNCE_DATA "synce-registry-tool.glade",
+                                                  namelist,
+                                                  &error);
+  if (builder_res == 0) {
+          g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
+
+  fetchwindow = GTK_WIDGET(gtk_builder_get_object(builder, "fetchwindow"));
+  progressbar = GTK_WIDGET(gtk_builder_get_object(builder, "fetch_progressbar"));
+
   gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
   gtk_widget_show_all(fetchwindow);
 

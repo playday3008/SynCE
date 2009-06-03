@@ -23,7 +23,6 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
-#include <glade/glade.h>
 #include <string.h>
 #include <synce_log.h>
 #include <rapi.h>
@@ -75,7 +74,9 @@ main (int argc, char **argv)
     *tool_button_quit, *tool_button_refresh,
     *registry_key_treeview, *registry_value_listview;
 
-  GladeXML *gladefile = NULL;
+  GtkBuilder *builder = NULL;
+  guint builder_res;
+  GError *error = NULL;
 
 #ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -95,15 +96,25 @@ main (int argc, char **argv)
 
   synce_log_set_level(log_level);
 
-  gladefile = glade_xml_new(SYNCE_DATA "synce-registry-tool.glade",
-			    "mainwindow", NULL); 
+  gchar *namelist[] = { "mainwindow", NULL };
+  builder = gtk_builder_new();
 
-  mainwindow = glade_xml_get_widget(gladefile, "mainwindow");
-  tool_button_quit = glade_xml_get_widget(gladefile, "tool_button_quit");
-  tool_button_refresh = glade_xml_get_widget(gladefile, "tool_button_refresh");
+  builder_res = gtk_builder_add_objects_from_file(builder,
+                                                  SYNCE_DATA "synce-registry-tool.glade",
+                                                  namelist,
+                                                  &error);
+  if (builder_res == 0) {
+          g_error("%s: failed to load interface file: %s", G_STRFUNC, error->message);
+          g_error_free(error);
+          error = NULL;
+  }
 
-  registry_key_treeview = glade_xml_get_widget(gladefile, "registry_key_treeview");
-  registry_value_listview = glade_xml_get_widget(gladefile, "registry_value_listview");
+  mainwindow = GTK_WIDGET(gtk_builder_get_object(builder, "mainwindow"));
+
+  tool_button_quit = GTK_WIDGET(gtk_builder_get_object(builder, "tool_button_quit"));
+  tool_button_refresh = GTK_WIDGET(gtk_builder_get_object(builder, "tool_button_refresh"));
+  registry_key_treeview = GTK_WIDGET(gtk_builder_get_object(builder, "registry_key_treeview"));
+  registry_value_listview = GTK_WIDGET(gtk_builder_get_object(builder, "registry_value_listview"));
 
   g_signal_connect(G_OBJECT(tool_button_quit), "clicked",
 		   G_CALLBACK(on_quit_button_clicked),
