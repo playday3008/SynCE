@@ -303,6 +303,8 @@ setup_registry_key_tree_store(GtkTreeView *registry_key_treeview)
   fetchwindow = GTK_WIDGET(gtk_builder_get_object(builder, "fetchwindow"));
   progressbar = GTK_WIDGET(gtk_builder_get_object(builder, "fetch_progressbar"));
 
+  g_object_unref(builder);
+
   gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
   gtk_widget_show_all(fetchwindow);
 
@@ -373,6 +375,8 @@ registry_key_tree_view_row_expanded(GtkTreeView *treeview,
 
   fetchwindow = GTK_WIDGET(gtk_builder_get_object(builder, "fetchwindow"));
   progressbar = GTK_WIDGET(gtk_builder_get_object(builder, "fetch_progressbar"));
+
+  g_object_unref(builder);
 
   gtk_progress_bar_pulse(GTK_PROGRESS_BAR(progressbar));
   gtk_widget_show_all(fetchwindow);

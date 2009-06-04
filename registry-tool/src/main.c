@@ -116,6 +116,8 @@ main (int argc, char **argv)
   registry_key_treeview = GTK_WIDGET(gtk_builder_get_object(builder, "registry_key_treeview"));
   registry_value_listview = GTK_WIDGET(gtk_builder_get_object(builder, "registry_value_listview"));
 
+  g_object_unref(builder);
+
   g_signal_connect(G_OBJECT(tool_button_quit), "clicked",
 		   G_CALLBACK(on_quit_button_clicked),
 		   mainwindow);
