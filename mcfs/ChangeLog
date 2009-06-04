@@ -1,0 +1,10 @@
+2009-06-04  Mark Ellis <mark@mpellis.org.uk>
+
+	* re-written in python, my perl is very rusty :)
+	* renamed original README to README.orig
+
+2005-12-07  Mark Ellis <mark@mpellis.org.uk>
+
+	* Lev A. Melnikovsky submitted updated perl version to Sourceforge
+	  tracker feature requests
+

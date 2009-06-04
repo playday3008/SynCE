@@ -1,0 +1,215 @@
+#!/usr/bin/env python
+#
+# External filesystem for Windows CE, using SynCE, version 0.2,
+# by Mark Ellis <mark@mpellis.org.uk>
+#
+# Based on the original by Michael Lashkevich <lashkevi@landau.ac.ru> on 10.06.2003
+# with modifications by Lev A. Melnikovsky <leva@despammed.com>
+#
+# Starts in root "/" directory if launched as synceroot,
+# and "/My Documents/" otherwise.
+#
+# You have to establish SynCE connection before changing directory
+# to #synce
+# 
+
+import sys
+import os
+import re
+import subprocess
+
+pls = "synce-pls"
+pcp = "synce-pcp"
+prm = "synce-prm"
+pmkdir = "synce-pmkdir"
+prmdir = "synce-prmdir"
+
+
+def read_dir(path):
+
+    rv = []
+
+    cmd_line = [ pls, "-a", path ]
+
+    proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output_text = proc.communicate()[0]
+    rc = proc.returncode
+
+    output_list = output_text.split('\n')
+
+    for line in output_list:
+        if line == "":                          # ignore empty lines
+            continue
+        if line[0] == " ":                      # ignore `non-file' lines
+            continue
+        if "No such file or directory" in line:    # ignore output from empty dir
+            continue
+
+        name = line[45:]
+        pathname = path+name
+        attribs = line[0:10]
+        datetime = line[29:34]+"-"+line[24:28]+line[34:40]
+
+        tmp_attr = ""
+
+        if "D" in attribs:
+            tmp_attr = tmp_attr+"d"
+            size = 0
+            rv.append(pathname)
+        else:
+            tmp_attr = tmp_attr+"-"
+            size = line[11:22]
+
+        if "M" in attribs:
+            tmp_attr = tmp_attr+"-"
+        else:
+            tmp_attr = tmp_attr+"r"
+
+        if "R" in attribs:
+            tmp_attr = tmp_attr+"-"
+        else:
+            tmp_attr = tmp_attr+"w"
+
+        if "D" in attribs:
+            tmp_attr = tmp_attr+"x"
+        else:
+            tmp_attr = tmp_attr+"-"
+
+        print "%s------   1 %-8d %-8d %s %s %s" % ( tmp_attr, os.getuid(), os.getgid(), size, datetime, pathname )
+
+    return rv;
+
+def list(path):
+
+    dirs = read_dir(path)
+    for dir in dirs:
+        list(dir)
+
+def main():
+
+    command = sys.argv[1]
+
+    name = sys.argv[0][sys.argv[0].rfind("synce"):]
+
+    archivename = sys.argv[2]
+
+    if "synceroot" in name:
+        root="/"
+    else:
+        root=""
+
+    if "list" in command:
+        list(root)
+
+
+    elif "mkdir" in command:
+        if len(sys.argv) < 4:
+            return 1
+
+        cmd_list = [ pmkdir, sys.argv[3] ]
+
+        proc = subprocess.Popen(cmd_list)
+        output_text = proc.communicate()[1]
+        rc = proc.returncode
+
+        if rc != 0:
+            print output_text
+            return rc
+        else:
+            return 0
+
+    elif "rmdir" in command:
+        if len(sys.argv) < 4:
+            return 1
+
+        cmd_list = [ prmdir, sys.argv[3] ]
+
+        proc = subprocess.Popen(cmd_list)
+        output_text = proc.communicate()[1]
+        rc = proc.returncode
+
+        if rc != 0:
+            print output_text
+            return rc
+        else:
+            return 0
+
+    elif "rm" in command:
+        if len(sys.argv) < 4:
+            return 1
+
+        cmd_list = [ prm, sys.argv[3] ]
+
+        proc = subprocess.Popen(cmd_list)
+        output_text = proc.communicate()[1]
+        rc = proc.returncode
+
+        if rc != 0:
+            print output_text
+            return rc
+        else:
+            return 0
+
+    elif "copyout" in command:
+        if len(sys.argv) < 5:
+            return 1
+
+##########
+#        cmd_list = [ "logger", sys.argv[0]+" "+sys.argv[1]+" "+sys.argv[2]+" "+sys.argv[3]+" "+sys.argv[4] ]
+#        proc = subprocess.Popen(cmd_list)
+#        output_text = proc.communicate()[1]
+#        rc = proc.returncode
+
+#        return 1
+
+        src = sys.argv[3]
+        dest = sys.argv[4]
+
+        print src
+        print dest
+
+        if root == "":
+            src = "/My Documents/"+src
+
+        os.unlink(dest)
+
+        cmd_list = [ pcp, ":"+src, dest ]
+
+        proc = subprocess.Popen(cmd_list)
+        output_text = proc.communicate()[1]
+        rc = proc.returncode
+
+        if rc != 0:
+            print output_text
+            return rc
+        else:
+            return 0
+
+    elif "copyin" in command:
+        if len(sys.argv) < 5:
+            return 1
+
+        src = sys.argv[4]
+        dest = sys.argv[3]
+
+        if root == "":
+            dest = "/My Documents/"+dest
+
+        cmd_list = [ pcp, src, ":"+dest ]
+
+        proc = subprocess.Popen(cmd_list)
+        output_text = proc.communicate()[1]
+        rc = proc.returncode
+
+        if rc != 0:
+            print output_text
+            return rc
+        else:
+            return 0
+
+    else:                               # an unfamiliar command
+        return 1
+
+
+if __name__ == '__main__':
+      sys.exit(main())

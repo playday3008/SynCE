@@ -1,0 +1,61 @@
+SynCE-mcvf 0.1.1 by Michael Lashkevich, 10.06.2003
+
+
+       Midnight Commander virtual filesystem for SynCE
+
+
+INTRODUCTION
+
+The package "synce-mcvf" makes it possible to open the Windows CE
+filesystem of your Pocket PC as a Midnight Commander virtual filesystem,
+once you connected to your Pocket PC using SynCE.
+
+After installing this package you can use "cd #synce" or "cd #synceroot"
+to enter the filesystem of the Windows CE.
+
+cd #synce
+
+works faster and changes directory to "\My Documents".
+
+cd #synceroot
+
+starts much slower and enters the root directory ("\") of Windows CE.
+The last is intended for administrative use only.
+
+
+INSTALLATION
+
+Please, install SynCE package <http://synce.sourseforge.net/synce/> to
+make connection to your Pocket PC.
+
+Then follow the instructions:
+
+1. Enter your UNIX system as a root.
+
+2. Unpack the archive:
+
+tar zxvf synce-mcfs.tar.gz
+
+2. Change directory
+
+cd <prefix>/mc/extfs
+
+where <prefix> is tipically "/usr/share",  "/usr/lib",
+"/usr/local/share", or "/usr/local/lib".
+
+3. Copy the contents of the archive into this directory, e.g.:
+
+cp /root/synce-mcfs/src/* .
+
+4. Add the file "extfs.ini.add" to "extfs.ini" at the end:
+
+cat extfs.ini.add >> extfs.ini
+
+Installation is completed.
+
+
+BUG REPORTS
+
+Please, report all bugs to
+
+Michael Lashkevich <lashkevi@landau.ac.ru>
