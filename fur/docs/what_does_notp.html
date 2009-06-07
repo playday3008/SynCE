@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>what_does_not.html</title>
+</head>
+<body>
+<h1 align="center">What does not? (with alternatives to FUR)</h1>
+
+<ul>
+<li><p>Files attributes are not really supported: permissions are all assumed
+rwx for everything: if you try to write or read on the (mostly system)
+files which doesn't allow that, you end up with a (non descriptive)
+error.<br>
+</p></li>
+
+<li><p>More of the same about <i>strange</i> files attributes like
+"compressed", "system" and "ram" that i found on the <b>RAPI</b>
+specification and about what i have no clue: i simply assume
+that they don't exist at all.&nbsp; Just be a nice girl/guy, and don't
+go messing in the /windows directory, ok?! ;-)</p></li>
+
+<li><p>The proc-like filesystem doesn't work on the newer
+devices</p></li>
+
+<li>Some bugs might still be present, specifically there seems to be
+some issue with devices using special locale settings (i have an
+unresolved report of a user which had strange crashes with a WM5 which
+seemed to work perfectly with Synce...).</p></li>
+
+</ul>
+
+<p>At the moment i have only a HTC Dash (where FUR works fine) to test
+the code with: i don't have a broad picture of what happens with other
+devices.</p>
+
+<p> A final note about performances: i didn't tried to speed up
+<b>FUR</b> very much, however being a filesystem on top of userlevel
+libraries implies that <b>FUR</b> will <b>always</b> be slower than
+high level utilities like <a
+href="http://www.synce.org/index.php/KDE">raki</a>, <a
+href="http://www.synce.org/index.php/Gnome">synce</a> or the command
+line tools (<b>pcp</b>,<b>pls</b> and so on)
+
+<p>For the way it's constructed, FUR will do dozens of RAPI calls
+(which are the real bottleneck for the PC/PPC operations) each time
+you list a directory or transfer even a medium sized file (transfers
+are done in chunks) where the aforementioned utilities need only 1
+RAPI call for each transfer. This gap is particularly evident with the
+old Pocket PC 2003 devices (newer ones work remarkably well).</p>
+
+<p>If you don't care about the whole <i>"i have my device on the file
+system"</i> thing and you simply need a way to copy and access files
+on/from the Pocket PC with Linux as fast and effortless as possible,
+you should definitely use the aforementioned utilities (which are
+probably more stable than <b>FUR</b> as well, since better supported
+by the Synce team).</p>
+
+<p>I'd like also to mention <a
+href="http://www.lvivier.info/SynceFS/"> SynceFS</a>, a file system
+created by <a href="http://www.lvivier.info/"> Laurent Vivier</a> by
+modifying <a href="http://www.coda.cs.cmu.edu/">coda</a>: it's a
+kernel module, and therefore a different approach than FUR, but you
+might well be interested in trying it.<br>
+</p>
+<hr>
+<table align="center">
+  <tbody>
+    <tr>
+      <td>
+      <a href="what_does_work_nowp.html"><b>Prev</b></a>
+      </td>
+      <td>
+      <a href="main.html"><b>Home</b></a>
+      </td>
+      <td>
+      <a href="how_can_i_contact_youp.html"><b>Next</b></a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+</body>
+</html>

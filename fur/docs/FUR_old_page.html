@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>FUR (FUSE use libRAPI)</title>
+</head>
+<body>
+<h1 style="text-align: center;">FUR</h1>
+<div style="text-align: center;">
+<h2>(FUSE use libRAPI)</h2>
+<div style="text-align: justify;">
+<ul>
+  <li><a href="FUR%2520%28FUSE%2520use%2520libRAPI%29.html#What_it_is_">What
+it is?</a></li>
+  <li><span style="text-decoration: underline;"><a href="#What_it_does">What
+it does?</a></span></li>
+  <li><a href="#What_does_it_need">What does it need?</a></li>
+  <li><a href="#Where_can_i_find_it">Where can i find it?</a></li>
+  <li><a href="#How_do_i_make_it_work">How do i make it work?</a></li>
+  <li><a href="#What_work_now">What work now?</a></li>
+  <li><a href="#What_does_not">What does not?</a></li>
+  <li><a href="#How_can_i_contact_you">How can i contact you?</a></li>
+  <li><a href="#Why_should_i">Why should i?</a></li>
+  <li><a href="#And_who_are_you_anyway">And who are you anyway?</a></li>
+</ul>
+<h3><span style="color: rgb(255, 0, 0);">NEWS</span></h3>
+<span style="font-weight: bold;">5/06/2006</span> <span
+ style="font-weight: bold;">FUR</span> letargic but not dead: fixed a
+bug that prevented it from renaming a file overwriting an existing
+destination (Thanks to Clemens R. for the report!). <a
+ href="FUR-0.4.1.tar.gz">Here you go...</a><br>
+<br>
+<span style="font-weight: bold;">?/05/2006</span> Fixed a couple of
+broken links and re-tarred the package of FUR-0.4.0.tar.gz (which was
+incorrectly compressed with bzip2...). I apologize for every
+inconvenient this may have caused to you.<br>
+<br>
+<span style="font-weight: bold;">28/04/2006</span> <span
+ style="color: rgb(153, 0, 0);">SRPMS available for FUR! <span
+ style="color: rgb(0, 0, 0);">Genix, which i thank also for his
+precious feedback and help in the bug fixing on FUR as well as for a
+patch to enhance the configure script (not yet included, sorry... :-/ )
+has made available source packages for the ALT linux
+distribution:&nbsp; the page is in russian, but links are in plain
+English; it's likely that the synce library should be patched and
+compiled manually and that some incompatibilities could arise on
+non-ALT linux systems, notheless maybe they could be useful for people
+on RPM based system</span></span>.<br>
+<br>
+<span style="font-weight: bold;">22/04/2006</span> A new filesystem for
+browsing a Window CE device on linux called<span
+ style="color: rgb(153, 0, 0);"> SynCE FS</span> has been released by
+Laurent Vivier: the developer is spending a consistent effort to
+enhance the program, which might be worth checking: to get the latest
+news/releases, search "SynCE FS" in the SynCE-devel mailing list on
+sourceforge.<br>
+<span style="font-weight: bold;"><br>
+</span><span style="font-weight: bold;">?/03/2006</span> The bug
+revealed itself as a strange behaviour of the device (which contained 2
+files with names different only in case in the /windows directory). Im
+still puzzled if the crash is to be considered a bug or not (afaik,
+windowce uses vfat filesystem, which doens't distinguish between case
+in file names...). The problem has been solved for Lazlo commenting the
+assert at line 485 of fur_utils.c (which probably will be substituted
+with a warning in the next release).<br>
+<br>
+<span style="font-weight: bold;">24/03/2006</span> Discovered a bug
+which seem to crash <span style="font-weight: bold;">FUR</span> on
+some circumstances when reading the content of a directory (thanks to
+Laszlo for the report): im quite overloaded by work (as can be seen
+from the last release...) but i will work on it as soon as i will have
+more informations (and enough time).<br>
+<br>
+<span style="font-weight: bold;">27/02/2006</span> Received some patch
+to enhance the configuration script and enable a correct installation
+of FUR (Thank you Genix!): the files will be included in the next
+release.<br>
+<br>
+<span style="font-weight: bold;">6/02/2006</span> Added a proc like
+directory&nbsp; into <span style="font-weight: bold;">FUR: </span>there
+are 2 files for now: power_status and regkeys; do they need
+explanations? I think not... :-)<br>
+<br>
+The filesystem seems stable, but proc is not: don't expect it to work
+perfectly. <br>
+<br>
+The attributes can be read as raw data, don't expect fancy printing of
+numbers or endianess connection, i don't know if it will ever happen (i
+like them that way, but im open for suggestion) and... take a book
+before reading into the regkeys directory: you will need it while
+waiting ;-)<br>
+<br>
+Write in the procis not implemented: i don't know how much is needed
+and i think i will concentrate on other things in the future (like
+putting the correct time attribute on the files).<br>
+<br>
+The file is <a href="FUR-0.4.0.tar.gz">here</a>.<br>
+<br>
+<span style="font-weight: bold;">26/01/2006</span> Implemented a small
+patch to librapi (which you can find <a href="librapi.patch">here</a>):
+it doesn't change the behavior of the library <br>
+other than adding the CeSetFilePointer and CeSetEndOfFile API. Now that
+the whole crock which emulated them in FUR is<br>
+gone, FUR seems to be stable! <br>
+<br>
+You can find the new version <a href="FUR-0.3.0.tar.gz">here</a>: i
+used it quite for a while without noticing crash/bugs of any kind, if
+you find some, <span style="font-weight: bold;">please</span>, <br>
+tell me.<br>
+<br>
+Of course to use this version you have to install the patch: enter the
+synce-librapi2-0.9.1 directory and execute:<br>
+<br>
+&nbsp;&nbsp;&nbsp; patch -p1 &lt;<a href="librapi.patch">librapi.patch</a><br>
+<br>
+<span style="text-decoration: underline;">Recompile and reinstall</span>
+(this will <span style="text-decoration: underline;">not</span> change
+the behaviour of the library in other applications) and you should be
+ready to <br>
+run the flaming new FUR-0.3.0! <br>
+<br>
+As far as i know, FUR is working decently now tough many features are
+still missing: let me know if (how much :-) ) im wrong! <br>
+<br>
+<span style="font-weight: bold;">25/01/2006 </span>first milestone
+reached: <span style="font-weight: bold; color: rgb(255, 0, 0);">FUR
+compiled and executed (not mounted) on FUR</span>!<br>
+<br>
+<span style="font-weight: bold;">20/01/2006 </span>Good news: i
+discovered other bugs (-&gt; hopefully i will be able to correct them).
+Bad news: i discovered other bugs.<br>
+The seek/truncate workaround are driving me mad. Week end will be
+likely dedicated to make FUR a bit more stable. Stay tuned. <br>
+<br>
+<span style="font-weight: bold;">18/01/2006</span> Fur-0.2.2 released!
+You can find it <a href="FUR-0.2.2.tar.gz">here</a>: some bugs removed
+and a (what seem a) working seek function implemented.<br>
+<br>
+Truncate doesn't&nbsp; still work, but&nbsp; the fs should be more
+stable. Multi threading not tested (but may work also).<br>
+<br>
+I also have added a small Change log <a href="Changelog">here</a>.<br>
+<br>
+</div>
+<div style="text-align: left;">
+<h3><a name="What_it_is_"></a>What it is?<br>
+</h3>
+</div>
+<div style="text-align: left;"><span style="font-weight: bold;">FUR</span>
+is a application that let the user mount a Windows CE based device on
+your Linux file system: it uses the brilliant <span
+ style="font-weight: bold;">FUSE</span> (acronym of <span
+ style="font-style: italic;">File system in UserSpacE</span> of Miklos
+Szeredi)&nbsp; which you can find <a
+ href="http://fuse.sourceforge.net/">here</a> and the great
+librapi2 of the <a style="font-weight: bold;"
+ href="http://synce.sourceforge.net/synce/">Synce Project</a>, a unix
+implementation of the <span style="font-weight: bold;">RAPI</span>
+protocol (that your device use to communicate with your other operating
+$system ) which you can find here, along with other very nice tools.<br>
+</div>
+<div style="text-align: justify;"><br>
+<h3><a name="What_it_does"></a>What it does?</h3>
+You execute it with proper arguments, then (if everything goes fine)
+the entire file system of your (previously connected) handheld will
+appear automagically mounted like a regular Linux file system where you
+will be able to copy, move read and write data with your favorite
+programs.<br>
+<br>
+<h3><a name="What_does_it_need"></a>What does it need?</h3>
+FUR need at least a fuse distribution version 2.4.2 and synce-librapi2
+version 0.9.1 tough i cannot guarantee it will not work with older
+versions of both software.<br>
+<br>
+<h3><a name="Where_can_i_find_it"></a>Where can i find it?</h3>
+<a href="http://www.infis.univ.trieste.it/%7Ericcardo/FUR-latest.tar.gz">Try
+here...</a> (latest version)<br>
+<br>
+<h3><a name="How_do_i_make_it_work"></a>How do i make it work?</h3>
+I will not go inside the details of installation and configuration of <span
+ style="font-weight: bold;">FUSE</span> and <span
+ style="font-weight: bold;">Synce</span> on your machine (you can find
+all the instructions you may need <a
+ href="http://fuse.sourceforge.net/">here</a> and <a
+ href="http://synce.sourceforge.net/synce/howto.php">here</a>): once
+you have the first working
+(i.e. you can test it compiling and running one of the example programs
+included with the tgz, or you can download one of the _very_ fine
+projects you can find linked to the <span style="font-weight: bold;">FUSE</span>
+homepage (preferably not this...)) and a connection to your handheld
+(use the command synce-pls or pls to check if it's working), read this <a
+ href="COPYING">license</a>
+and, if you agree, configure and install fur. <br>
+<br>
+I apologize for quality of the configuration tool: this is my first
+try,one with bells and whistles will be available sooner or later, but
+until then there's
+only a
+small configure which <span style="font-style: italic;">should</span>
+work.<br>
+<br>
+After the ./configure step, simply issue:<br>
+<br>
+<pre>./make </pre>
+<br>
+and if everything goes well a small binary named <samp>Fur</samp>
+will appear in the directory. Do you want to try it, won't you?
+Execute: <br>
+<br>
+<pre>./Fur <span style="font-style: italic;">destination_directory</span><br></pre>
+<br>
+and your device fs should appear there. <br>
+<br>
+When you want to unmount it simply issue:<br>
+<br>
+<pre>fusermount -u <span style="font-style: italic;">destination_directory</span><br></pre>
+If something goes wrong and you can't unmount the file system,
+in order:<br>
+<br>
+<ol>
+  <li style="font-weight: bold;">DON'T PANIC</li>
+  <li>If <samp>fusermount -u</samp> say that the device is busy, use <samp>ps</samp>
+to check that there's no process running inside the FUSE file system</li>
+  <li>If everything fails, try <samp>killall -9 Fur </samp>and then
+again retry step 2.</li>
+</ol>
+<h3><a name="What_work_now"></a>What work now? (<span
+ style="color: rgb(255, 0, 0);">outdated</span>)<br>
+</h3>
+Fist of all, understand that <span
+ style="font-weight: bold; text-decoration: underline;">FUR</span><span
+ style="text-decoration: underline;"> is Beta software</span>, still in
+development, actually is a week end hack: it is not stable, optimized,
+nice, user friendly or anything... This does not mean it will not
+become
+such in the (maybe near) future, but don't expect it to be fast or rock
+solid; i actually use&nbsp; it and it never did anything so wrong that
+could not be undone with a couple of kill -9 and&nbsp; a fusermount
+-u plus remounting but i didn't test it thoroughly and i cannot
+guarantee it will not do something very <span
+ style="font-weight: bold; text-decoration: underline;">NASTY</span> to
+your universe of choice:
+make a backup of your handheld device before using it, and have a
+backup of your important data on your computer to, which is always a <span
+ style="text-decoration: underline;">Good</span> Idea, and keep in mind
+the <a href="COPYING">license</a>.<br>
+<span style="font-weight: bold;"><br>
+</span>5/1/2006<br>
+<ul>
+  <li>All read operations seem pretty stable: as long as you limit
+yourself to them you <span style="font-style: italic;">should</span>
+be safe&nbsp; (but&nbsp; please&nbsp; re-read the disclaimer and the
+previous paragraph again...), which means you can change and list
+directories, and read sequentially files (means you can copy them
+around without problem).</li>
+  <li>Rename/Move work.<br>
+  </li>
+  <li>Reading files in random access fashion also works, but due to the
+lack of a Seek api in the librapi2, the file pointer is moved with a
+combination of fake reads, open and close. Go figure.</li>
+  <li>The minimum set of attributes to make the fs usable work:
+file size, permissions and owner, tough permissions are actually not
+read from your device but assumed rw for every file (which is plain
+wrong for system files).<br>
+  </li>
+  <li>Mkdir and mknod seem to work.</li>
+  <li>Hic sunt leones: write almost work, with the same remarks for the
+read operation (sequential work fine, random access seem to) but there
+are unresolved issues (which i hope to handle soon), if you limit
+writing to file copying, should work decently tough.<br>
+  </li>
+</ul>
+<h3><a name="What_does_not"></a>What does not? (<span
+ style="color: rgb(255, 0, 0);">outdated</span>)<br>
+</h3>
+5/1/2005<br>
+<ul>
+  <li>Not very stable, particularly if used concurrently by different
+processes (but should be usable).</li>
+  <li>Not well tested.<br>
+  </li>
+  <li>The source is horrible(Tm).</li>
+  <li>The implementation is more involved than it should.<br>
+  </li>
+  <li>Lack documentation. <br>
+  </li>
+  <li>Not even remotely optimized.</li>
+  <li>Configuration tools deficient.<br>
+  </li>
+  <li>Random access I/O is anti-optimized.&nbsp;</li>
+  <li>The resource locking system (e.g. to prevent different processes
+to write on the same file)&nbsp; is only roughly implemented (there's a
+lot to be done).</li>
+  <li>Total absence of a caching system of some sort (which i hope to
+implement, sooner or later).</li>
+  <li>Some errors are to obscure (and maybe not well implemented).</li>
+  <li>Some attributes (e.g. ctime) are not implemented (the needed
+function in the librapi2 library is not yet implemented).</li>
+  <li>No UID/GID check: this is not a security issue: only the user
+that invoke the dccm demon can access the filesystem, but other users
+should be able to see some kind of error message (which i will
+implement soon).</li>
+  <li>Lot of other things i have forgot now.</li>
+  <li>The log reporting sucks.<br>
+  </li>
+</ul>
+<h3><a name="How_can_i_contact_you"></a>How can i contact you?</h3>
+You can send me a mail&nbsp; (riccardo A_t_&nbsp; infis Dot univ D0t
+trieste d0t it): please, specify something like "FUR:" or "fur:" in the
+title, so i can tell my spam eater not to trash it.<br>
+<h3><a name="Why_should_i"></a>Why should i?</h3>
+I.e. to tell me that you use <span style="font-weight: bold;">FUR</span>
+and you like it (or you did not): i can't promise anything,
+but the more will i feel that this project is useful to someone and the
+more i will feel like to fix bugs or add features/documentation:
+consider that <span style="font-weight: bold;">FUR</span> is yet good
+enough for me to use&nbsp; and as long as i don't receive feedback, my
+interest in this project is likely to decrease. <br>
+<br>
+Flames go to /dev/null. <br>
+<br>
+Another good reason is to inform me about a bug, but before you send me
+a report, first check that:<br>
+<ul>
+  <li>you have read <span
+ style="text-decoration: underline; font-weight: bold; font-style: italic;">ALL</span>
+the documentation (this page...): c'mon, it's not that much!<br>
+  </li>
+  <li>you have the right versions of the librapi2 and fuse.</li>
+  <li>both work.</li>
+  <li>You have the latest version of <span style="font-weight: bold;">FUR</span>.</li>
+  <li>Your problem is not yet listed in the <a href="BUGS.txt">bug
+list</a> (ok... when i have one...).<br>
+  </li>
+</ul>
+The best way to inform me about a bug compile it with the -g option and
+send me a core dump (you can obtain one executing <samp>ulimit
+-c unlimited</samp> before mounting <span style="font-weight: bold;">FUR</span>,
+the core will appear in the directory where <span
+ style="font-weight: bold;">FUR</span> was mounted, after a crash) and
+a description of the problem.<br>
+&nbsp;<br>
+I don't think that from the very moment this project will hit the web i
+will start receiving as much email as Madonna, but still i cannot
+guarantee that i will be able to answer to anyone:&nbsp; i will try
+tough, and if you don't receive a answer, don't take it personal: it
+could be that the question is out of context ("How do i install
+synce/fuse/linux?", "Why every time i mount&nbsp; <span
+ style="font-weight: bold;">FUR</span> i feel a sharp pain in the&nbsp;
+right&nbsp; eye?" and the like) or simply that i'm busy.<br>
+<h3><a name="And_who_are_you_anyway"></a>And who are you anyway?</h3>
+My name is Riccardo Di Meo, i actually work for the <a
+ href="http://www.ictp.it">ICTP</a> and more precisely in the <a
+ href="http://www.egrid.it">Egrid project </a>&nbsp; as programmer. I
+live in Trieste, a nice city in the NE of Italy. Almost all interest i
+have are related to computers (and programming mainly) or swimming, and
+this&nbsp; is the first project i&nbsp; submit to the the world. <br>
+<span style="font-weight: bold;"></span>
+<!--
+<h3>How can i help you?&nbsp;</h3>
+The most useful thing you can do to help me in the developing of <span
+ style="font-weight: bold;">FUR</span> is to help the guy of the Synce,
+since FUR rely almost entirely on their work and there are some missing
+rapi functions that are giving me headhaches: you can find detail about
+the way of helping them in the source tree of the librapi2, if you do,
+please specify that your help is provaided for the advance of FUR
+(too). <br>
+<br>
+For what concern my project, whishlist is (in order of importance):<br>
+<ol>
+  <li>CeSetFilePointer: to permit better random access to files.</li>
+  <li>CeSetEndOfFile:&nbsp; needed to implement the truncate operation</li>
+  <li>CeGet/SetFileTime</li>
+  <li>CeGlobalMemoryStatus <br>
+  </li>
+</ol>
+However patches and <br>
+<br>
+--></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+.PHONY: clean
+
+
+# Uncomment if you want to compile a debug version of the software (to send a bug report)
+#DEBUG=-g 
+
+# Your compiler
+CC=@CC@
+PREFIX=@prefix@
+CFLAGS=@CPPFLAGS@ @CFLAGS@ $(DEBUG)
+LIBS=@LDFLAGS@
+
+
+# Uncomment if you want fuse to generate file log.txt with a lot of (meaningless) output. 
+#MISC=-DVERBOSE
+
+OBJECTS=fur.o fur_utils.o cache.o special.o power.o registry.o common.o special_names.o registry_utils.o
+
+all: Fur
+
+install: Fur
+	-mkdir -p @prefix@/bin
+	chmod  755 @prefix@/bin
+	cp Fur @prefix@/bin
+	chmod  755 @prefix@/bin/Fur
+
+
+$(OBJECTS):%.o:%.c 
+	$(CC) -c $(CFLAGS) $(MISC) $< 
+
+
+Fur: $(OBJECTS)
+	$(CC) $(CFLAGS) $(MISC) -o $@ $^ $(LIBS)
+
+
+run mount: Fur
+	echo "Mounting the device on furtest"
+	./Fur furtest
+
+unmount:
+	-fusermount -u furtest
+
+debug: Fur
+	./Fur -f -d furtest
+
+
+clean: 
+	-fusermount -u furtest
+	rm -f Fur $(OBJECTS) 
+
+
+
+#FIXME dependancies
+fur_utils.o: fur_utils.c fur_utils.h  cache.h special.h
+fur.o: fur_utils.h fur.c cache.h
+cache.o: cache.h cache.c
+special.o: special.[ch] power.h cache.h
+power.o: power.[ch] cache.h macros.h
+registry.o: registry.[ch] macros.h
+common.o: common.c macros.h
+special_names.o:special_names.[ch]
+registry_utils.o: registry_utils.[ch]

@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>FUR.html</title>
+</head>
+<body>
+<h1 align="center">FUR</h1>
+<h2 align="center">(FUSE uses libRAPI)</h2>
+<h3><list><li><a href="what_it_isp.html">What it is?</a></li>
+<li><a href="what_it_doesp.html">What it does?</a></li>
+<li><a href="what_does_it_needp.html">What does it need?</a></li>
+<li><a href="where_can_i_find_itp.html">Where can i find it</a> (AKA download)?</li>
+<li><a href="how_do_i_make_it_workp.html">How do i make it work?</a></li>
+<li><a href="what_does_work_nowp.html">What does work now?</a></li>
+<li><a href="what_does_notp.html">What does not?</a></li>
+<li><a href="how_can_i_contact_youp.html">How can i contact you?</a></li>
+<li><a href="why_should_ip.html">Why should i?</a></li>
+<li><a style="color: rgb(255, 0, 0);" href="who_contributedp.html">Who contributed to FUR?</a></li>
+<li><a href="and_who_are_you_anywayp.html">And who are you, anyway?</a></li>
+</list>
+</h3>
+<h2 align="center">Latest News</h2>
+<p>
+<h3 style="color: rgb(255, 0, 0);">20/03/2009</h3>
+<p>
+Long time no see... :-) Checked the mail and found a nice patch,
+kindly provided by Alexander Logvinov with the code required to
+automatically disable multi-threaded operations with libfuse (which
+had to be manually done on the 0.4.4 version, with the recent versions
+of synce).</p>
+
+<p>Alexander also reported that FUR is FreeBSD compatible. Seems like
+i created a FreeBSD compatible code without ever having installed
+one. Geez... I'm good! <b>xD</b></p>
+
+<p>Starting from the release 0.4.5 the -s flag will not be necessary
+anymore! Thank you Alexander!</p>
+
+<h3 style="color: rgb(255, 0, 0);">7/12/2008</h3>
+<p>
+The problem of the compatibility between FUR and the new version of
+the librapi (0.12) seem to root in the multi thread access that FUR
+does, through fuse, to the synce functions.</p>
+<p> The new version of librapi <i>seems</i> to be less tolerant than
+the older one for multi thread access: a quick fix to this problem is
+to run Fur with the -s option, disabling the thread enabled main loop
+in fuse in favour of a serial one.</p>
+</p>
+<h3 style="color: rgb(255, 0, 0);">28/11/2008</h3>
+<p>
+I have verified that the current version of FUR (as well as the 0.4.3) doesn't seem to be compatible with the newer version of librapi (0.12), at least on the HTC Excalibur. I will investigate the issue.
+</p>
+<p>
+People interested in using FUR and with an older and working version of the synce libraries are encouraged to stick to it, at least until the issue will be sorted. Thank you for your patience.
+</p>
+<h3 style="color: rgb(255, 0, 0);">23/11/2008</h3>
+New minor version of FUR released: 0.4.4, made entirely from the code
+submitted by <b>Matthias Gruenewald</b>. No new features this time,
+but some problem has been taken care of. See the changelog for more.</p>
+<p>This release also (un)implement some changes that i slipped without
+notice in the 0.4.3 release: namely the truncate call, which caused a
+lot of problems with the new librapi releases which doesn't implement
+it, has been removed.
+</p>
+<h3 style="color: rgb(255, 0, 0);">10/10/2007</h3> I am now a (not so)
+proud owner of a HTC S620 which works with synce just fine: this means
+that i will be able again to work on <span style="font-weight:
+bold;">FUR</span>, if i will have time (not right now, since im in the
+middle of the solo campaign of "Splinter Cell: Chaos Theory" :-) what
+a busy life...).
+</p>
+<p>I have run the last version (<span style="font-weight:
+bold;">0.4.3</span>, patch entirely contributed by <span
+style="font-weight: bold;">Matthias Gruenewald</span>) from the first
+time and it worked fine (with the notable exception of the proc tree
+which never worked properly, since it's implementation, on WM5-WM6
+devices) however during the compilation i have noticed that the
+function <span style="font-weight: bold;">CESetEndOfFile</span> has
+been disabled in the <span style="font-weight: bold;">SVN</span>: this
+means that if you want to compile <span style="font-weight:
+bold;">FUR</span>, you'll have to use the freshmeat synce packages
+(0.10.0) or (if you want to compile the <span style="font-weight:
+bold;">Synce</span> packages) the source packages (not the SVN).</p>
+<p>
+Hard core programmers may of course simply use the svn source and
+remove the appropriate '#if 0/#endif' lines from the librapi2 package
+in order to re-enable the API again. At their own risk, of course :-)
+</p>
+<h3 style="color: rgb(255, 0, 0);">28/05/2007</h3>
+<span style="font-weight: bold;">FUR</span> is apparently working with
+Synce 0.10.0 without the need of patches of special compilations of
+sorts: this also means <span style="font-weight: bold;">WM5</span>
+support.<br>
+<br>
+The new version of the Synce is out (thanks to <span
+ style="font-weight: bold;">Genix</span> for waking me up...) and all
+the calls that <span style="font-weight: bold;">FUR </span>needs in
+order to work are now included (along with a lot of other calls <span
+ style="font-weight: bold;">FUR </span>might make good use of, if only
+i would work on it...): a big thank you to the people of the Synce
+Project. <br>
+<br>
+This means that you can use the 0.10.0 version of the <span
+ style="font-weight: bold;">Synce</span> project in order to run <span
+ style="font-weight: bold;">FUR</span> without patching, recompiling or
+anything, or at least this is what people told to me (thanks to <span
+ style="font-weight: bold;">LunohoD</span>)...<br>
+<br>
+Not all news are good: one of the reason why&nbsp; <span
+ style="font-weight: bold;">FUR</span> was almost abandonware&nbsp;
+last year is that since i have a new pocket PC (an HP rx1950) i have
+not been able to use the Synce tools (though i didn't tried very hard
+and it could be all my fault, im not complaining). This means that im
+not able to run my own software (<span style="font-weight: bold;">FUR</span>
+relies on a working <span style="font-weight: bold;">Synce</span>
+connection), which is very bad for me and that i cannot work on <span
+ style="font-weight: bold;">FUR</span> as well (which is bad for
+you...).<br>
+<br>
+However i will try to carry on the developing using the HP2100 of my
+father or my old and almost broken HP1910 tough im very overworked and
+not being able to make any use of <span style="font-weight: bold;">FUR</span>
+for myself is quite a put off... Don't expect new features in the short
+term... :-p.<br>
+<br>
+If someone has any news about connecting an rx1950 with synce in any
+way (is wireless connection feasible? AFAIK only USB is supported),
+this would be of great help.<br>
+<br>
+<span style="font-weight: bold;"></span>
+<h3>19/11/2006</h3>
+<p>Thank to <b>northx</b> im working on <b>FUR</b> again and i've
+noticed how unclear my site is (If 90% of people that read my site
+cannot find the informations they need to compile and install
+<i>maybe</i> it's my fault <b>:-)</b> ).</p>
+<p>Therefore im reorganizing my site, removing the obsolete
+informations and adding the latest news in the proper sections: i
+don't like to write documentation very much, but i have vowed not to
+let the "Latest News" section grow too much without integrating the
+infos in the site.</p>
+<p>The old <b>FUR</b> page will be available <a
+ href="FUR_old_page.html">here</a> as everlasting testament of my
+laziness.</p>
+<p>I browsed the <a href="http://synce.sourceforge.net/synce/">Synce
+Project page</a> and it seems the developers did a <b>lot</b> of work
+since the last time i checked (Thank you!), some of which will
+directly benefit <b>FUR</b> once i will have done the homework; the
+same can be said about <b><a href="http://fuse.sourceforge.net/">
+Fuse</a></b>: <b>FUR</b> uses it through the <i>API version 22</i>
+though the current is <i>26</i>.</p>
+
+<hr/>
+
+<p>At the moment I'm not much interested in FUR anymore: mostly
+because i don't connect winCE based devices to my computer anymore
+(and when i do, to just move data, i find FUR overkill and slow when
+compared with a SSD card reader), however i keep mantaining the
+project by applying third party patches and trying to fix bugs when
+they are reported, if I'm able to.</p>
+
+<p>Please be patient if i don't answer to your email immediately: as
+far as i know, everyone that contacted me about FUR always got an
+answer eventually (mean wait time ranges from 1 day to a week,
+depending on various factors, including spam...). Thank you all for
+your patience and contributions.</p>
+
+<hr>
+<table align="center">
+  <tbody>
+    <tr>
+      <td>
+      <a href="what_it_isp.html"><b>Next</b></a>
+      </td>
+      <td>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+</body>
+</html>

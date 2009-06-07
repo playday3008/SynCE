@@ -1,0 +1,69 @@
+Changelog
+
+0.4.5 
+  - Added a patch entirely provided by Alexander Logvinov that forces FUR into
+  single threaded mode.
+  - multithread support for FUR completely discarded: removed all
+  locks and references to the pthread library
+
+0.4.4 Patch kindly contributed by Matthias Gruenewald
+  - added a fuse hook to a void chmod call to allow konqueror and 
+  FUR to smoothly work together without annoying pop-ups (should 
+  be explicitly enabled in configure)	
+  - workaround to fix some issues in the librapi when listing the
+  "windows" directory on the device that disconnect the PDA on error
+
+
+0.4.3 
+  - Added the time property to the files. All the code for this
+  release has been kindly contributed by Matthias Gruenewald.
+
+
+0.4.2
+  - Only documentation changes. Since now the Synce provides everything 
+    that FUR needs, FUR will be able to run from here until eternity
+    withoug changes.
+
+0.4.1
+  - Fixed a bug that prevented FUR to rename a file to an existing destination
+  - Fixed a (bug? feature?)... something... which made FUR crash when listing directory with only case different names. 
+
+0.4.0
+  - Added a proc filesystem with a power_status file and a regkeys directory.
+  - various fix here and there.
+  
+0.3.0
+  - CeSetFilePointer and CeSetEndOfFile added: removed all kludges that
+  emulated them: fur now compile on itself (and deserves beta status :-) )
+  - Removed almost all the cache: leaved only a (experimental) caching 
+  of the offset to speed sequential read/write.
+
+0.2.3
+  - Changed locks again in a dummy safe thread mode. Now Fur *IS*
+  thread safe... well if we don't consider the cache :-/
+  - found bug in seek?
+
+0.2.2
+  
+  - Cleaned the code from experimental features not needed that
+  caused problems (uid/gid checks, fake directory for non dccm
+  curious). Not a great loss since fuse is usually run per user.
+  - Added a reference counter to the cache (which was what screwed
+  all file operations so much...)
+  - Rearranged locks in a more conservative way (first make it 
+  compile, second make it works, then optimize it...)
+  - Introduced Reset and SeekFoward/Backward which _should_ work.
+
+
+0.2.1 
+
+  - fixed wrong path conversion for names that 
+  are not directly convertibiles in ASCII.
+  - corrected the configuration script.
+  
+0.2.0 
+  
+  - Starting release
+
+	 LocalWords:  operability
+	

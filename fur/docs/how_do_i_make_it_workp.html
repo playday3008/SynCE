@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>How_do_i_make_it_work.html</title>
+</head>
+<body>
+<h1 align="center">How do i make it work?</h1>
+<p>I will not go inside the details of the installation and
+configuration of <b>FUSE</b> and the <b>Synce libraries and tools</b>
+on your machine (you can find all the instructions you may need <a
+ href="http://fuse.sourceforge.net/">here</a> and <a
+ href="http://synce.sourceforge.net/synce/howto.php">here</a>), just
+ remember that you will need the last pre-packaged version of the
+ <b>Synce</b> distribution in order to install everything without
+ problems.</p>
+
+
+<p>Please keep in mind that you should be able to connect your device
+with the <span style="font-weight: bold;">Synce</span> software and to
+mount a filesystem with <span style="font-weight: bold;">FUSE</span>
+before being able to use <span style="font-weight: bold;">FUR</span>.</p>
+<p>After you know for sure that both the programs that <b>FUR</b>
+relies on are working correctly on your system (you can do a
+<b>pls</b> and <b>pcp</b> on your Pocket PC and you correctly mounted
+a <b>Fuse filesystem</b>) you can download <b>FUR</b> from <a
+ href="downloads">here</a>.</p>
+<p></p>
+<p><b>FUR</b> has a configuration tool, yet far from perfect, which
+should work with a bit of tweaking with the <b>CFLAGS</b>,
+<b>CPPFLAGS</b> and <b>LDFLAGS</b> environment variables (or having a
+comprehensive <b>PKG_CONFIG_PATH</b> variable set).<br>
+</p>
+<p>On my system i install synce in the /usr/local/synce directory and
+therefore i do those steps before configuring:<br>
+</p>
+<pre>export CPPFLAGS=-I/usr/local/synce/include<br>export LDFLAGS=-L/usr/local/synce/lib</pre>
+<p>This is of course just an example... :-)<br>
+</p>
+<p>After the ./configure step, simply enter the <tt>src</tt> directory
+and issue:</p>
+<tt>./make</tt>
+<p>and if everything goes well a small binary named Fur will
+appear. <br>
+</p>
+<p>Do you want to try it, don't you? Run:</p>
+<tt>./Fur destination_directory</tt> (add a "-s" option for Fur
+versions prior 0.4.5)
+<p>and the content of your pocket PC should appear in that directory.</p>
+<p>When you want to unmount it simply issue:</p>
+<tt>fusermount -u destination_directory</tt>
+<p>If something goes wrong and you can't unmount the file system, in
+order:</p>
+<ol>
+  <li><b>DON'T PANIC</b></li>
+  <li>If <tt>fusermount -u</tt> says that the device is busy, use ps
+to
+check that there's no process running inside the <b>FUSE</b> file
+system.</li>
+  <li>If everything fails, try <tt>killall -9 Fur</tt> and then again
+retry step 2.</li>
+</ol>
+<hr>
+<table align="center">
+  <tbody>
+    <tr>
+      <td>
+      <a href="where_can_i_find_itp.html"><b>Prev</b></a>
+      </td>
+      <td>
+      <a href="main.html"><b>Home</b></a>
+      </td>
+      <td>
+      <a href="what_does_work_nowp.html"><b>Next</b></a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+</body>
+</html>

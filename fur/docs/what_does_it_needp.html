@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>whatdoesitneed.html</title>
+</head>
+<body>
+<h1 align="center">What does it need?</h1>
+<h2 align="center">Short answer</h2>
+<list>
+<li> a <b>GNU</b>/<b>Linux</b> system or <b>FreeBSD</b>.</li>
+<li>A <a href="http://fuse.sourceforge.net/"><b>Fuse</b></a>
+incarnation which provides at least the <i>22</i>
+  <i>API</i> version (the current one will do), with headers.</li>
+<li>the packages of the <b>Synce</b> project (the latest version should be ok, don't use the
+<b>SVN</b> version since <b>CESetEndOfFile</b> seem disabled) and
+  <b>librapi</b>, both with headers.</li>
+</list>
+<h2 align="center">Long answer</h2>
+
+<p><b>FUR</b> is entirely based on two other softwares: <a
+ href="http://fuse.sourceforge.net/"><b>FUSE</b></a> and the libraries
+of the <a href="http://synce.sourceforge.net/synce/">Synce Project</a>
+which means you need both in order to make it work.</p>
+
+<p>The current version (<i>0.4.5</i>) should work with the latest version of
+<b>Synce</b>: i don't check the new versions of Synce periodically I'm
+acraid, and therefore feel free to mail me if something in the last
+one is not compatible with FUR (in case you didn't noticed already,
+I'm really, really lazy :-) ).</p>
+
+<p>You also need <b>Fuse</b>, the version of which does not matter
+very much, since <b>FUR</b> uses a quite old version of the
+<b>APIs</b>.</p>
+
+<p><b>FUR</b> is developed on Linux systems, although it should work
+on FreeBSD (and possibly other BSD flavours): keep in mind however
+that i don't have the opportunity to test it personally and therefore
+i could not be able to iron OS related bugs...)</p>
+
+<p>As a rule of thumb, before even thinking about using <b>FUR</b> you
+should be able to:</p>
+<list>
+<li>Mount a <b>Fuse</b> based filesystem on your machine (one of the
+examples that comes with the package should do, but be sure to check
+the <b>Fuse</b> site for links to more interesting ones, like
+  <b>sshfs</b>)</li>
+<li>Connect your Pocket PC with the tools of the <b>Synce Project</b>
+and be able at the very least to do a <i>pls</i> and a <i>pcp</i> on
+it (just to be sure that everything works fine).</li>
+</list>
+<p>After this, if you are able to compile FUR on your OS, odds are
+that it will work too.</p>
+<hr>
+<table align="center">
+  <tbody>
+    <tr>
+      <td>
+      <a href="what_it_doesp.html"><b>Prev</b></a>
+      </td>
+      <td>
+      <a href="main.html"><b>Home</b></a>
+      </td>
+      <td>
+      <a href="where_can_i_find_itp.html"><b>Next</b></a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+</body>
+</html>
