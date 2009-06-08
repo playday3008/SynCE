@@ -1,12 +1,24 @@
 /* $Id$ */
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
+#if HAVE_CONFIG_H
+#include "rapi_config.h"
+#endif
 #include "rapi_context.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
+
+#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
+#define DBUS_API_SUBJECT_TO_CHANGE 1
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#endif
 
 #define USE_THREAD_SAFE_VERSION 1
 #ifdef USE_THREAD_SAFE_VERSION
@@ -16,6 +28,18 @@
 #define RAPI_PORT  990
 
 #define RAPI_CONTEXT_DEBUG 0
+
+#if ENABLE_ODCCM_SUPPORT
+static const char* const DBUS_SERVICE       = "org.freedesktop.DBus";
+static const char* const DBUS_IFACE         = "org.freedesktop.DBus";
+static const char* const DBUS_PATH          = "/org/freedesktop/DBus";
+
+static const char* const ODCCM_SERVICE      = "org.synce.odccm";
+static const char* const ODCCM_MGR_PATH     = "/org/synce/odccm/DeviceManager";
+static const char* const ODCCM_MGR_IFACE    = "org.synce.odccm.DeviceManager";
+static const char* const ODCCM_DEV_IFACE    = "org.synce.odccm.Device";
+#endif
+
 
 #if RAPI_CONTEXT_DEBUG
 #define rapi_context_trace(args...)    synce_trace(args)
@@ -189,6 +213,217 @@ void rapi_context_unref(RapiContext* context)/*{{{*/
 	}
 }/*}}}*/
 
+
+#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
+
+static gint
+get_socket_from_dccm(const gchar *unix_path)
+{
+  int fd = -1, dev_fd, ret;
+  struct sockaddr_un sa;
+  struct msghdr msg = { 0, };
+  struct cmsghdr *cmsg;
+  struct iovec iov;
+  char cmsg_buf[512];
+  char data_buf[512];
+
+  fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0)
+    goto ERROR;
+
+  sa.sun_family = AF_UNIX;
+  strcpy(sa.sun_path, unix_path);
+
+  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0)
+    goto ERROR;
+
+  msg.msg_control = cmsg_buf;
+  msg.msg_controllen = sizeof(cmsg_buf);
+  msg.msg_iov = &iov;
+  msg.msg_iovlen = 1;
+  msg.msg_flags = MSG_WAITALL;
+
+  iov.iov_base = data_buf;
+  iov.iov_len = sizeof(data_buf);
+
+  ret = recvmsg(fd, &msg, 0);
+  if (ret < 0)
+    goto ERROR;
+
+  cmsg = CMSG_FIRSTHDR (&msg);
+  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS)
+    goto ERROR;
+
+  dev_fd = *((int *) CMSG_DATA(cmsg));
+  goto OUT;
+
+ERROR:
+  dev_fd = -1;
+
+OUT:
+  if (fd >= 0)
+    close(fd);
+
+  return dev_fd;
+}
+#endif /* ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT */
+
+
+#if ENABLE_ODCCM_SUPPORT
+
+static int
+get_connection_from_odccm(SynceInfo *info)
+{
+  GError *error = NULL;
+  DBusGConnection *bus = NULL;
+  DBusGProxy *dbus_proxy = NULL;
+  DBusGProxy *dev_proxy = NULL;
+  gboolean odccm_running = FALSE;
+  gchar *unix_path = NULL;
+  gint fd = -1;
+
+  g_type_init();
+
+  bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+  if (bus == NULL)
+  {
+    synce_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
+    goto ERROR;
+  }
+
+  dbus_proxy = dbus_g_proxy_new_for_name (bus,
+                                          DBUS_SERVICE,
+                                          DBUS_PATH,
+                                          DBUS_IFACE);
+  if (dbus_proxy == NULL) {
+    synce_warning("%s: Failed to get dbus proxy object", G_STRFUNC);
+    goto ERROR;
+  }
+
+  if (!(dbus_g_proxy_call(dbus_proxy, "NameHasOwner",
+                          &error,
+                          G_TYPE_STRING, ODCCM_SERVICE,
+                          G_TYPE_INVALID,
+                          G_TYPE_BOOLEAN, &odccm_running,
+                          G_TYPE_INVALID))) {
+    synce_warning("%s: Error checking owner of service %s: %s", G_STRFUNC, ODCCM_SERVICE, error->message);
+    g_object_unref(dbus_proxy);
+    goto ERROR;
+  }
+
+  g_object_unref(dbus_proxy);
+  if (!odccm_running) {
+    synce_info("Odccm is not running, ignoring");
+    goto ERROR;
+  }
+
+  dev_proxy = dbus_g_proxy_new_for_name(bus, ODCCM_SERVICE,
+                                        synce_info_get_object_path(info),
+                                        ODCCM_DEV_IFACE);
+  if (dev_proxy == NULL) {
+    synce_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, synce_info_get_object_path(info));
+    goto ERROR;
+  }
+
+  if (!dbus_g_proxy_call(dev_proxy, "RequestConnection", &error,
+                         G_TYPE_INVALID,
+                         G_TYPE_STRING, &unix_path,
+                         G_TYPE_INVALID))
+  {
+    synce_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, synce_info_get_name(info), error->message);
+    g_object_unref(dev_proxy);
+    goto ERROR;
+  }
+
+  g_object_unref(dev_proxy);
+
+  fd = get_socket_from_dccm(unix_path);
+  g_free(unix_path);
+
+  if (fd < 0)
+  {
+    synce_warning("%s: Failed to get file-descriptor from odccm for %s", G_STRFUNC, synce_info_get_name(info));
+    goto ERROR;
+  }
+
+  goto OUT;
+
+ERROR:
+  if (error != NULL)
+    g_error_free(error);
+
+OUT:
+
+  if (bus != NULL)
+    dbus_g_connection_unref (bus);
+
+  return fd;
+}
+#endif /* ENABLE_ODCCM_SUPPORT */
+
+
+#if ENABLE_HAL_SUPPORT
+
+static int
+get_connection_from_hal(SynceInfo *info)
+{
+  DBusGConnection *system_bus = NULL;
+  DBusGProxy *dev_proxy = NULL;
+  GError *error = NULL;
+  gchar *unix_path = NULL;
+  gint fd = -1;
+
+  g_type_init();
+
+  if (!(system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
+    synce_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+
+  dev_proxy = dbus_g_proxy_new_for_name(system_bus,
+                                        "org.freedesktop.Hal",
+                                        synce_info_get_object_path(info),
+                                        "org.freedesktop.Hal.Device.Synce");
+  if (dev_proxy == NULL) {
+    synce_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, synce_info_get_object_path(info));
+    goto error_exit;
+  }
+
+  if (!dbus_g_proxy_call(dev_proxy, "RequestConnection", &error,
+                         G_TYPE_INVALID,
+                         G_TYPE_STRING, &unix_path,
+                         G_TYPE_INVALID))
+  {
+    synce_warning("%s: Failed to get a connection for %s: %s: %s", G_STRFUNC, synce_info_get_object_path(info), synce_info_get_name(info), error->message);
+    g_object_unref(dev_proxy);
+    goto error_exit;
+  }
+
+  g_object_unref(dev_proxy);
+
+  fd = get_socket_from_dccm(unix_path);
+  g_free(unix_path);
+
+  if (fd < 0) {
+    synce_warning("%s: Failed to get file-descriptor from dccm for %s", G_STRFUNC, synce_info_get_object_path(info));
+    goto error_exit;
+  }
+
+  goto exit;
+
+error_exit:
+  if (error != NULL)
+    g_error_free(error);
+
+exit:
+  if (system_bus != NULL)
+    dbus_g_connection_unref (system_bus);
+
+  return fd;
+}
+#endif /* ENABLE_HAL_SUPPORT */
+
+
 HRESULT rapi_context_connect(RapiContext* context)
 {
     HRESULT result = E_FAIL;
@@ -278,8 +513,11 @@ HRESULT rapi_context_connect(RapiContext* context)
         /*
          *  odccm, synce-hal, or proxy ?
          */
-        if (strcmp(transport, "odccm") == 0 || strcmp(transport, "hal") == 0) {
-            synce_socket_take_descriptor(context->socket, synce_info_get_fd(info));
+        if (strcmp(transport, "odccm") == 0) {
+            synce_socket_take_descriptor(context->socket, get_connection_from_odccm(info));
+        }
+        else if (strcmp(transport, "hal") == 0) {
+            synce_socket_take_descriptor(context->socket, get_connection_from_hal(info));
         }
         else if ( !synce_socket_connect_proxy(context->socket, synce_info_get_device_ip(info)) )
         {
@@ -310,6 +548,24 @@ fail:
     if (!context->info)
         synce_info_destroy(info);
     return result;
+}
+
+STDAPI rapi_context_disconnect(RapiContext* context)
+{
+    if (!context->is_initialized)
+        return E_FAIL;
+
+    context->rapi_ops = NULL;
+    if (context->own_info) {
+        synce_info_destroy(context->info);
+        context->info = NULL;
+        context->own_info = false;
+    }
+
+    synce_socket_close(context->socket);
+    context->is_initialized = false;
+
+    return S_OK;
 }
 
 bool rapi_context_begin_command(RapiContext* context, uint32_t command)/*{{{*/

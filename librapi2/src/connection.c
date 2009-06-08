@@ -200,7 +200,7 @@ rapi_connection_get_fd(RapiConnection* connection)
     context = rapi_context_current();
 
   if (context)
-    return synce_info_get_fd(context->info);
+    return synce_socket_get_descriptor(context->socket);
 
   return 0;
 }

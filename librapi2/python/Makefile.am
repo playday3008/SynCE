@@ -5,7 +5,7 @@ rapibindings_LTLIBRARIES = pyrapi2.la
 
 pyrapi2_la_CFLAGS = @PYTHON_INCLUDES@ @LIBSYNCE_CFLAGS@ -I../src
 pyrapi2_la_LDFLAGS = -module -avoid-version -fPIC
-pyrapi2_la_LIBADD = $(top_builddir)/src/librapi.la
+pyrapi2_la_LIBADD = $(top_builddir)/src/librapi.la @LIBSYNCE_LIBS@
 nodist_pyrapi2_la_SOURCES = pyrapi2.c
 
 SUBDIRS = tests

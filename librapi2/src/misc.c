@@ -24,14 +24,7 @@ STDAPI CeRapiUninit( void ) /*{{{*/
 {
     RapiContext * context = rapi_context_current();
 
-    if ( context->is_initialized )
-    {
-        rapi_context_set(NULL);
-        return S_OK;
-    } else
-    {
-        return E_FAIL;
-    }
+    return rapi_context_disconnect(context);
 } /*}}}*/
 
 HRESULT CeRapiGetError( void ) /*{{{*/

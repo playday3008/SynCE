@@ -51,7 +51,7 @@ static void show_usage(const char* name)
                 );
 }
 
-
+#if 0
 static void dump(const char *desc, void* data, size_t len)/*{{{*/
 {
 	uint8_t* buf = (uint8_t*)data;
@@ -83,6 +83,7 @@ static void dump(const char *desc, void* data, size_t len)/*{{{*/
 		printf("  %04zx: %s %s\n", i, hex, chr);
 	}
 }/*}}}*/
+#endif
 
 const char * property_type_to_str(CEPROPID propid)
 {
@@ -463,7 +464,6 @@ main(int argc, char** argv)
         int result = 1;
         RapiConnection* connection = NULL;
         HRESULT hr;
-        DWORD last_error;
 
         prog_name = argv[0];
 

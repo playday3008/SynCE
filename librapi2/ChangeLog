@@ -1,3 +1,12 @@
+2009-06-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* create bootstrap script that doesn't run configure,
+	  autogen.sh call bootstrap then configure
+	* add configure options for odccm and synce-hal support,
+	  and required dbus build structure
+	* move rapi socket connection for odccm and hal from
+	  libsynce to rapi_context, add rapi_context_disconnect()
+
 2009-04-20  Mark Ellis  <mark@mpellis.org.uk>
 
 	* catch uninitialized RapiContext in function calls

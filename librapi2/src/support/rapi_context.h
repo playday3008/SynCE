@@ -55,6 +55,11 @@ void rapi_context_unref(RapiContext* context);
  */
 HRESULT rapi_context_connect(RapiContext* context);
 
+/*
+ * Disconnect from device
+ */
+STDAPI rapi_context_disconnect(RapiContext* context);
+
 /**
  * Begin a command
  */
