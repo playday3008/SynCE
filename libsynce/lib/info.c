@@ -10,12 +10,10 @@
 #define DBUS_API_SUBJECT_TO_CHANGE 1
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 #endif
 #include <sys/types.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #if ENABLE_HAL_SUPPORT
@@ -40,7 +38,7 @@ struct _SynceInfo
   char* os_name;
   char* model;
   char* transport;
-  int fd;
+  char* object_path;
 };
 
 #if ENABLE_ODCCM_SUPPORT
@@ -108,6 +106,7 @@ static SynceInfo* synce_info_from_file(const char* device_name)
   result->local_iface_ip  = NULL;
   result->password  = STRDUP(getConfigString(config, "device", "password"));
   result->name      = STRDUP(getConfigString(config, "device", "name"));
+  result->object_path     = STRDUP(connection_filename);
 
   if (!(result->os_name = STRDUP(getConfigString(config, "device", "os_name"))))
           result->os_name = STRDUP(getConfigString(config, "device", "class"));
@@ -135,60 +134,6 @@ exit:
 }
 
 #endif /* ENABLE_DCCM_FILE_SUPPORT */
-
-#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
-
-gint
-get_socket_from_dccm(const gchar *unix_path)
-{
-  int fd = -1, dev_fd, ret;
-  struct sockaddr_un sa;
-  struct msghdr msg = { 0, };
-  struct cmsghdr *cmsg;
-  struct iovec iov;
-  char cmsg_buf[512];
-  char data_buf[512];
-
-  fd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (fd < 0)
-    goto ERROR;
-
-  sa.sun_family = AF_UNIX;
-  strcpy(sa.sun_path, unix_path);
-
-  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0)
-    goto ERROR;
-
-  msg.msg_control = cmsg_buf;
-  msg.msg_controllen = sizeof(cmsg_buf);
-  msg.msg_iov = &iov;
-  msg.msg_iovlen = 1;
-  msg.msg_flags = MSG_WAITALL;
-
-  iov.iov_base = data_buf;
-  iov.iov_len = sizeof(data_buf);
-
-  ret = recvmsg(fd, &msg, 0);
-  if (ret < 0)
-    goto ERROR;
-
-  cmsg = CMSG_FIRSTHDR (&msg);
-  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS)
-    goto ERROR;
-
-  dev_fd = *((int *) CMSG_DATA(cmsg));
-  goto OUT;
-
-ERROR:
-  dev_fd = -1;
-
-OUT:
-  if (fd >= 0)
-    close(fd);
-
-  return dev_fd;
-}
-#endif
 
 #if ENABLE_ODCCM_SUPPORT
 
@@ -296,7 +241,6 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       goto ERROR;
     }
 
-    gchar *unix_path;
     guint os_major;
     guint os_minor;
     gchar* ip;
@@ -305,6 +249,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
     gchar* model;
 
     result->name = name;
+    result->object_path = g_strdup(obj_path);
 
     if (!dbus_g_proxy_call(proxy, "GetOsVersion", &error,
                            G_TYPE_INVALID,
@@ -364,26 +309,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
     }
     result->model = model;
 
-    if (!dbus_g_proxy_call(proxy, "RequestConnection", &error,
-                           G_TYPE_INVALID,
-                           G_TYPE_STRING, &unix_path,
-                           G_TYPE_INVALID))
-    {
-      g_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, result->name, error->message);
-      g_object_unref(proxy);
-      goto ERROR;
-    }
-
     g_object_unref(proxy);
-
-    result->fd = get_socket_from_dccm(unix_path);
-    g_free(unix_path);
-
-    if (result->fd < 0)
-    {
-      g_warning("%s: Failed to get file-descriptor from odccm for %s", G_STRFUNC, result->name);
-      goto ERROR;
-    }
 
     result->transport = g_strdup("odccm");
 
@@ -518,6 +444,7 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
 
     result->name = g_strdup(name);
     libhal_free_string(name);
+    result->object_path = g_strdup(device_list[i]);
 
     result->os_major = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
@@ -559,37 +486,6 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
     result->model = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.model", &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
       g_critical("%s: Failed to obtain property pda.pocketpc.model for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    gchar *unix_path;
-
-    DBusGProxy *proxy = dbus_g_proxy_new_for_name(system_bus,
-						  "org.freedesktop.Hal",
-                                                  device_list[i],
-                                                  "org.freedesktop.Hal.Device.Synce");
-    if (proxy == NULL) {
-      g_critical("%s: Failed to get proxy for device '%s'", G_STRFUNC, device_list[i]);
-      goto error_exit;
-    }
-
-    if (!dbus_g_proxy_call(proxy, "RequestConnection", &error,
-                           G_TYPE_INVALID,
-                           G_TYPE_STRING, &unix_path,
-                           G_TYPE_INVALID))
-    {
-      g_critical("%s: Failed to get a connection for %s: %s: %s", G_STRFUNC, device_list[i], result->name, error->message);
-      g_object_unref(proxy);
-      goto error_exit;
-    }
-
-    g_object_unref(proxy);
-
-    result->fd = get_socket_from_dccm(unix_path);
-    g_free(unix_path);
-
-    if (result->fd < 0) {
-      g_critical("%s: Failed to get file-descriptor from dccm for %s", G_STRFUNC, device_list[i]);
       goto error_exit;
     }
 
@@ -662,6 +558,7 @@ void synce_info_destroy(SynceInfo* info)
     FREE(info->os_name);
     FREE(info->model);
     FREE(info->transport);
+    FREE(info->object_path);
     free(info);
   }
 }
@@ -741,11 +638,11 @@ synce_info_get_partner_id_2(SynceInfo *info)
   return info->partner_id_2;
 }
 
-int
-synce_info_get_fd(SynceInfo *info)
+const char *
+synce_info_get_object_path(SynceInfo *info)
 {
-  if (!info) return 0;
-  return info->fd;
+  if (!info) return NULL;
+  return info->object_path;
 }
 
 pid_t

@@ -38,7 +38,7 @@ synce_info_new \- allocate a new SynceInfo struct
 .BI "const char *synce_info_get_local_ip(SynceInfo *" info );
 .BI "int synce_info_get_partner_id_1(SynceInfo *" info );
 .BI "int synce_info_get_partner_id_2(SynceInfo *" info );
-.BI "int synce_info_get_fd(SynceInfo *" info );
+.BI "const char *synce_info_get_object_path(SynceInfo *" info );
 .BI "pid_t synce_info_get_dccm_pid(SynceInfo *" info );
 .BI "const char *synce_info_get_transport(SynceInfo *" info );
 .BI "const char *synce_info_get_password(SynceInfo *" info );
@@ -89,7 +89,7 @@ typedef struct _SynceInfo {
     char* os_name;        /* device OS name eg. PocketPC */
     char* model;          /* device hardware name */
     char* transport;      /* interface type */
-    int fd;               /* file descriptor for RAPI calls */
+    char* object_path;    /* path to device's information */
 } SynceInfo;
 .fi
 .RE
@@ -103,8 +103,7 @@ The use of
 is deprecated. When using
 .BR vdccm (1)
 all fields are populated except for 
-.BR local_iface_ip, 
-.BR fd 
+.BR local_iface_ip 
 and 
 .BR os_minor .
 With 

@@ -1,3 +1,8 @@
+2009-06-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* move rapi socket connection to librapi2, store device object path
+	  in SynceInfo
+
 2009-04-14  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/info.c - clear an error correctly when fetching local_iface_ip
