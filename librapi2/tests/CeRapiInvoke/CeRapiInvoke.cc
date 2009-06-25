@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <iostream>
 #include <stdint.h>
+#include <string.h>
 
 #include "rapi.h"
 #include "../../tools/pcommon.h"
@@ -12,7 +13,7 @@ using namespace synce;
 #define ANYFILE_BUFFER_SIZE (16*1024)
 
 // copied from pcp.c
-static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name, size_t* bytes_copied)/*{{{*/
+static bool anyfile_copy(const char* source_ascii, const char* dest_ascii, const char* name, size_t* bytes_copied)/*{{{*/
 {
 	bool success = false;
 	size_t bytes_read;
@@ -61,7 +62,7 @@ static bool anyfile_copy(char* source_ascii, char* dest_ascii, const char* name,
 
 		if (bytes_written != bytes_read)
 		{
-			fprintf(stderr, "%s: Only wrote %i bytes of %i to destination file '%s'\n", name, 
+			fprintf(stderr, "%s: Only wrote %zi bytes of %zi to destination file '%s'\n", name, 
 					bytes_written, bytes_read, dest_ascii);
 			goto exit;
 		}
@@ -105,7 +106,7 @@ static bool test_ping_result()
       NULL, NULL,
       NULL,
       0);
-  return hr == expected;
+  return hr == (HRESULT)expected;
 }
 
 #define PING_BUFFER_SIZE  1000
@@ -152,7 +153,7 @@ static bool test_ping_stream()
   if (hr != S_OK)
     return false;
 
-  cerr << "a" << endl;
+  cerr << "a ";
   
   ULONG count;
 
@@ -163,9 +164,8 @@ static bool test_ping_stream()
     cerr << "IRAPIStream_Write failed" << endl;
     goto exit;
   }
-  cerr << "b" << endl;
+  cerr << "b ";
 
-  DWORD output_size;
   BYTE output_buffer[PING_BUFFER_SIZE];
   hr = IRAPIStream_Read(stream, output_buffer, PING_BUFFER_SIZE, &count);
   if (FAILED(hr) || count != PING_BUFFER_SIZE)
@@ -173,7 +173,7 @@ static bool test_ping_stream()
     cerr << "IRAPIStream_Read failed" << endl;
     goto exit;
   }
-  cerr << "c" << endl;
+  cerr << "c ";
 
   success = 
     memcmp(input_buffer, output_buffer, PING_BUFFER_SIZE) == 0;
@@ -186,7 +186,8 @@ exit:
 static bool test_last_error()
 {
   DWORD last_error = ERROR_INVALID_PARAMETER;
-  HRESULT hr = CeRapiInvokeA(
+  HRESULT hr;
+  hr = CeRapiInvokeA(
       REMOTE_DLL,
       "TestLastError",
       sizeof(last_error), (BYTE*)&last_error,
@@ -211,7 +212,7 @@ int main()
   HRESULT hr = CeRapiInit();
   if (FAILED(hr))
   {
-    cerr << "CeRapiInit failed." << endl;
+    cerr << "CeRapiInit failed: " << synce_strerror(hr) << endl;
     ++error_count;
     goto exit;
   }
@@ -223,11 +224,12 @@ int main()
         BASENAME,
         &bytes_copied))
   {
-    cerr << "Failed to copy DLL to device." << endl;
+    cerr << "Failed to copy DLL to device:" << synce_strerror(hr) << endl;
     ++error_count;
     goto exit;
   }
 
+  cout << "Testing call to non-existent function... ";
   hr = CeRapiInvokeA(
       REMOTE_DLL,
       "ThisMethodShouldNotExist",
@@ -239,31 +241,40 @@ int main()
   {
     cerr << "CeRapiInvoke succeeded to call non-existant method?!" << endl;
     ++error_count;
-  }
+  } else
+    cout << "ok" << endl;
 
+  cout << "Testing setting error code... ";
   if (!test_last_error())
   {
     cerr << "TestLastError failed" << endl;
     ++error_count;
-  }
+  } else
+    cout << "ok" << endl;
 
+  cout << "Testing setting return code... ";
   if (!test_ping_result())
   {
     cerr << "PingResult failed" << endl;
     ++error_count;
-  }
+  } else
+    cout << "ok" << endl;
 
+  cout << "Testing \"ping\" by buffer... ";
   if (!test_ping_buffer())
   {
     cerr << "PingBuffer failed" << endl;
     ++error_count;
   }
+    cout << "ok" << endl;
 
+  cout << "Testing \"ping\" by stream... ";
   if (!test_ping_stream())
   {
     cerr << "PingStream failed" << endl;
     ++error_count;
   }
+    cout << "ok" << endl;
 
 exit:
 #if 1

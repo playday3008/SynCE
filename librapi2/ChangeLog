@@ -1,3 +1,7 @@
+2009-06-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixes to CeRapiInvoke tests
+
 2009-06-08  Mark Ellis  <mark@mpellis.org.uk>
 
 	* create bootstrap script that doesn't run configure,
