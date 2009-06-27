@@ -11,7 +11,7 @@ Requisites
       provided by your distribution. The package is often named kdelibs4-devel or
       libkde4-devel. To perform the actual configuration of the sources install cmake.
 
-SynCE kde4-kio-rapip compilation and installation
+SynCE kde4-kcemirror compilation and installation
 
 NOTE: This package uses CMAKE, not autotools to configure and build the sources!
 

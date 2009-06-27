@@ -614,9 +614,9 @@ uint32_t CeScreen::toKeySym(int ascii, int code)
         return XK_Right;
     case Qt::Key_Down:
         return XK_Down;
-    case Qt::Key_Prior:
+    case Qt::Key_PageUp:
         return XK_Prior;
-    case Qt::Key_Next:
+    case Qt::Key_PageDown:
         return XK_Next;
 
     case Qt::Key_Shift:

@@ -178,8 +178,8 @@ void ImageViewer::keyPressEvent(QKeyEvent *e)
     kDebug(2120) << "Key Press: ASCII = " << e->text() <<
                      ", State = " << e->modifiers() <<
                      ", Key = " << e->key() << endl;
-
-    emit keyPressed(e->ascii(), e->key());
+    int keyCode = e->text().at(0).toAscii();
+    emit keyPressed(keyCode, e->key());
 }
 
 
@@ -189,8 +189,8 @@ void ImageViewer::keyReleaseEvent(QKeyEvent *e)
     kDebug(2120) << "Key Release: ASCII = " << e->text() <<
                      ", State = " << e->modifiers() <<
                      ", Key = " << e->key() << endl;
-
-    emit keyReleased(e->ascii(), e->key());
+    int keyCode = e->text().at(0).toAscii();
+    emit keyReleased(keyCode, e->key());
 }
 
 

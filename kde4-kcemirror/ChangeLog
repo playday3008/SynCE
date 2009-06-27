@@ -1,3 +1,9 @@
+2009-06-27  Tejas Guruswamy <masterpatricko@gmail.com>
+	
+	* Removed last Qt3support requirements
+	* Updated cmake build system to generate better source packages from svn
+
+
 2009-04-30  Mark Ellis <mark@mpellis.org.uk>
 
 	* initial conversion to kde4

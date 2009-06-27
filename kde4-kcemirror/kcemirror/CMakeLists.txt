@@ -14,7 +14,7 @@ set(kcemirror_SRCS
 
 kde4_add_executable(kcemirror ${kcemirror_SRCS})
 
-target_link_libraries(kcemirror ${SYNCE_LINK_FLAGS} ${KDE4_KDECORE_LIBS} ${KDE4_KIO_LIBS} ${KDE4_KDEUI_LIBS})
+target_link_libraries(kcemirror ${SYNCE_LDFLAGS} ${KDE4_KDECORE_LIBS} ${KDE4_KIO_LIBS} ${KDE4_KDEUI_LIBS})
 
 install(TARGETS kcemirror ${INSTALL_TARGETS_DEFAULT_ARGS})
 
