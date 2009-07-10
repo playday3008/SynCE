@@ -342,7 +342,7 @@ HRESULT _NotImplementedIRAPIStream_Write2(
         ULONG cb,
         ULONG *pcbWritten);
 
-HRESULT _NotImplementedCeRapiInvoke2(
+HRESULT _CeRapiInvoke2(
         LPCWSTR pDllPath,
         LPCWSTR pFunctionName,
         DWORD cbInput,
@@ -352,7 +352,7 @@ HRESULT _NotImplementedCeRapiInvoke2(
         IRAPIStream **ppIRAPIStream,
         DWORD dwReserved);
 
-HRESULT _NotImplementedCeRapiInvokeA2(
+HRESULT _CeRapiInvokeA2(
         LPCSTR pDllPath,
         LPCSTR pFunctionName,
         DWORD cbInput,
