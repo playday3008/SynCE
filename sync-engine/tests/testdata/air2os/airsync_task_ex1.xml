@@ -1,0 +1,20 @@
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/tasks">
+        <Complete>0</Complete>
+        <DueDate>2007-02-08T00:00:00.000Z</DueDate>
+        <UtcDueDate>2007-02-08T05:00:00.000Z</UtcDueDate>
+        <Importance>1</Importance>
+        <Recurrence>
+                <Start>2007-01-27T00:00:00.000Z</Start>
+                <DayOfWeek>64</DayOfWeek>
+                <WeekOfMonth>4</WeekOfMonth>
+                <MonthOfYear>1</MonthOfYear>
+                <Type>6</Type>
+        </Recurrence>
+        <ReminderSet>1</ReminderSet>
+        <ReminderTime>2007-01-27T13:00:00.000Z</ReminderTime>
+        <Sensitivity>0</Sensitivity>
+        <StartDate>2007-01-27T00:00:00.000Z</StartDate>
+        <UtcStartDate>2007-01-27T05:00:00.000Z</UtcStartDate>
+        <Subject>Simple task</Subject>
+        <Rtf/>
+</AS:ApplicationData>

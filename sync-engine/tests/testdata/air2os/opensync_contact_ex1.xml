@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<contact xmlns:AS="http://synce.org/formats/airsync_wm5/airsync">
+	<FileAs>
+		<Content>Bavnd, James</Content>
+	</FileAs>
+	<FormattedName>
+		<Content>Bavnd, James</Content>
+	</FormattedName>
+	<Name>
+		<FirstName>James</FirstName>
+		<LastName>Bavnd</LastName>
+		<Additional>Ola</Additional>
+		<Suffix>007</Suffix>
+		<Prefix>Dr</Prefix>
+	</Name>
+	<Nickname>
+		<Content>Jbavnd</Content>
+	</Nickname>
+	<Photo>
+		<Content>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</Content>
+		<Encoding>B</Encoding>
+	</Photo>
+	<Address>
+		<Type>HOME</Type>
+		<City>Tau</City>
+		<Country>Norge</Country>
+		<PostalCode>4120</PostalCode>
+		<Region>Rogaland</Region>
+		<Street>Privrd 6</Street>
+	</Address>
+	<Address>
+		<Type>WORK</Type>
+		<City>Tau</City>
+		<Country>Norge</Country>
+		<PostalCode>4120</PostalCode>
+		<Region>Rogaland</Region>
+		<Street>Work road 7</Street>
+	</Address>
+	<Address>
+		<Type>OTHER</Type>
+		<City>Tau</City>
+		<Country>Norge</Country>
+		<PostalCode>4120</PostalCode>
+		<Region>Rogaland</Region>
+		<Street>Othd 7</Street>
+	</Address>
+	<Categories>
+		<Category>Arbeid</Category>
+		<Category>Helligdag</Category>
+		<Category>Personlig</Category>
+		<Category>Sesongbasert</Category>
+	</Categories>
+	<Assistant>
+		<Content>Jane Bond</Content>
+	</Assistant>
+	<EMail>
+		<Content>jbond-email@hotmail.com</Content>
+	</EMail>
+	<EMail>
+		<Content>jbond-email2@hotmail.com</Content>
+	</EMail>
+	<EMail>
+		<Content>jbond-email3@hotmail.com</Content>
+	</EMail>
+	<IM-MSN>
+		<Content>jbond-im@hotmail.com</Content>
+	</IM-MSN>
+	<IM-MSN>
+		<Content>jbond-im2@hotmail.com</Content>
+	</IM-MSN>
+	<IM-MSN>
+		<Content>jbond-im3@hotmail.com</Content>
+	</IM-MSN>
+	<Manager>
+		<Content>Arber Bond</Content>
+	</Manager>
+	<Organization>
+		<Name>Double H 7 Ltd</Name>
+		<Department>Rescue Dept.</Department>
+		<Unit>007b</Unit>
+	</Organization>
+	<Spouse>
+		<Content>Miss Bond</Content>
+	</Spouse>
+	<Telephone>
+		<Type>HOME</Type>
+		<Type>FAX</Type>
+		<Content>+47007FAXPRIV</Content>
+	</Telephone>
+	<Telephone>
+		<Type>WORK</Type>
+		<Type>FAX</Type>
+		<Content>+47007FAXWORK</Content>
+	</Telephone>
+	<Telephone>
+		<Type>HOME</Type>
+		<Type>VOICE</Type>
+		<Content>+47007PHPRIV</Content>
+	</Telephone>
+	<Telephone>
+		<Type>HOME</Type>
+		<Type>VOICE</Type>
+		<Content>+47007PHPRIV2</Content>
+	</Telephone>
+	<Telephone>
+		<Type>WORK</Type>
+		<Type>VOICE</Type>
+		<Content>+47007PHWORK</Content>
+	</Telephone>
+	<Telephone>
+		<Type>WORK</Type>
+		<Type>VOICE</Type>
+		<Content>+47007PHWORK2</Content>
+	</Telephone>
+	<Telephone>
+		<Type>CAR</Type>
+		<Type>VOICE</Type>
+		<Content>+47007CAR</Content>
+	</Telephone>
+	<Telephone>
+		<Type>CELL</Type>
+		<Type>VOICE</Type>
+		<Content>+47007CELL</Content>
+	</Telephone>
+	<Telephone>
+		<Type>PAGER</Type>
+		<Type>VOICE</Type>
+		<Content>+47007PAGER</Content>
+	</Telephone>
+	<Telephone>
+		<Type>Assistant</Type>
+		<Type>VOICE</Type>
+		<Content>+47007ASSISTANT</Content>
+	</Telephone>
+	<Telephone>
+		<Type>Company</Type>
+		<Type>VOICE</Type>
+		<Content>+47007COMPANY</Content>
+	</Telephone>
+	<Telephone>
+		<Type>Radio</Type>
+		<Type>VOICE</Type>
+		<Content>+47007RADIO</Content>
+	</Telephone>
+	<Title>
+		<Content>Hero</Content>
+	</Title>
+	<Url>
+		<Content>www.jbond.com</Content>
+	</Url>
+	<Anniversary>
+		<Content>20000930</Content>
+	</Anniversary>
+	<Birthday>
+		<Content>19700613</Content>
+	</Birthday>
+	<Note>
+		<Content>Kul fyr jeg møtte i Langtvekkistan.
+
+Foo bar baz...
+</Content>
+	</Note>
+</contact>

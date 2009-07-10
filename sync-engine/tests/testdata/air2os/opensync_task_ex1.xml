@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<vcal xmlns:tz="http://synce.org/tz">
+	<Todo>
+		<Summary>
+			<Content>Simple task</Content>
+		</Summary>
+		<DateDue>
+			<Content>20070208T050000Z</Content>
+		</DateDue>
+		<DateStarted>
+			<Content>20070127T050000Z</Content>
+		</DateStarted>
+		<Class>
+			<Content>0</Content>
+		</Class>
+		<Categories/>
+		<Priority>
+			<Content>5</Content>
+		</Priority>
+		<Description>
+			<Content/>
+		</Description>
+	</Todo>
+</vcal>

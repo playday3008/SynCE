@@ -1123,3 +1123,8 @@ Get interface ip for RRASession from RAPISession.
 ------------------------------
 For changes in pyrra, mostly throwing exceptions on errors.
 
+10/07/2009 - 121100 Mark Ellis
+------------------------------
+Convert tests to python unittest framework, many thanks to Aurelien Bompard for this.
+Tests can now be run using python-nose, with "nosetests -v tests".
+

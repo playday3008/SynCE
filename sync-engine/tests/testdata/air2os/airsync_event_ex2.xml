@@ -1,0 +1,29 @@
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+    <Timezone>LAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</Timezone>
+    <AllDayEvent>0</AllDayEvent>
+    <BusyStatus>2</BusyStatus>
+    <Categories>
+        <Category>Personal</Category>
+        <Category>IBM</Category>
+    </Categories>
+    <Rtf>CQEAAJsCAABMWkZ1SJX3Wj8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMcksgSc0CzAnNhqALZNWNxRgLZA5LYFlLYE3ty1ADAEulGYuBS3yMwqF/wqAMIctQS6yLfIu9gDgLljnLbEvIy+xNjYvDzAVNGIFCoV9NqA=</Rtf>
+    <DtStamp>20070120T190703Z</DtStamp>
+    <EndTime>20070120T210000Z</EndTime>
+    <Location>Lab</Location>
+    <MeetingStatus>1</MeetingStatus>
+    <Reminder>15</Reminder>
+    <Sensitivity>3</Sensitivity>
+    <Subject>Simple appointment</Subject>
+    <StartTime>20070120T203000Z</StartTime>
+    <UID>040000008200E00074C5B7101A82E008000000005C343B30F737833AB5A1D15370F1DA9DB86CE42D107BEBCDAE08F24E0E7C23E9</UID>
+    <Attendees>
+        <Attendee>
+            <Name>Jon Doe</Name>
+            <Email>jondoe@rpi.edu</Email>
+        </Attendee>
+        <Attendee>
+            <Name>Jan Doe</Name>
+            <Email>jan.doe@gmail.com</Email>
+        </Attendee>
+    </Attendees>
+</AS:ApplicationData>

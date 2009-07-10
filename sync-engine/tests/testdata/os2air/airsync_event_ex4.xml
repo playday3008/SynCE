@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+  <Timezone>PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAAAAAAAAAAAxP///w==</Timezone>
+  <Reminder>15</Reminder>
+  <BusyStatus>2</BusyStatus>
+  <DtStamp>20060728T123212Z</DtStamp>
+  <AllDayEvent>0</AllDayEvent>
+  <StartTime>20060729T053000Z</StartTime>
+  <EndTime>20060729T063000Z</EndTime>
+  <Location>Event location</Location>
+  <Subject>Event summary</Subject>
+  <Rtf>AQEAAGwCAABMWkZ1sNrfPz8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMEQnNBqAJzc2LQA22S0xNmUtQRRgJwwBLZPuNxdgLhMtpjYvNi42LzW8NzMtgTFxAcAtgTktQWcucS8jMjE2Zi3CCoB9ATOw</Rtf>
+  <Sensitivity>2</Sensitivity>
+  <Categories/>
+  <Attendees/>
+</AS:ApplicationData>
+

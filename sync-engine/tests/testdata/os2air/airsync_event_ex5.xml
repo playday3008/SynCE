@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+  <Timezone>PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAAAAAAAAAAAxP///w==</Timezone>
+  <Reminder>180</Reminder>
+  <BusyStatus>2</BusyStatus>
+  <DtStamp>20060728T123107Z</DtStamp>
+  <AllDayEvent>0</AllDayEvent>
+  <StartTime>20060729T110000Z</StartTime>
+  <EndTime>20060729T170000Z</EndTime>
+  <Location>Bjrheimsbygd</Location>
+  <Subject>Mte</Subject>
+  <Rtf>9gAAAEwCAABMWkZ14nwndz8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMCQnNAswJzcUYCc2vRqAJwwBLZAtMS2iNi1x/S3jNy1BLbEtYi1jAFAt1KsSAC2QZi1BOS1BMwqAAn0xsA==</Rtf>
+  <Sensitivity>2</Sensitivity>
+  <Categories/>
+  <Attendees>
+    <Attendee>
+      <Name>Ole Andr Vadla Ravns</Name>
+      <Email>ole.andre.ravnaas@foo.co.uk</Email>
+    </Attendee>
+    <Attendee>
+      <Email>Joe Idse</Email>
+    </Attendee>
+    <Attendee>
+      <Email>Tryggve Hauge</Email>
+    </Attendee>
+  </Attendees>
+</AS:ApplicationData>
+

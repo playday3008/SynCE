@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<vcal>
+	<Event>
+		<LastModified>
+			<Content>20070120T190703Z</Content>
+		</LastModified>
+		<DateStarted>
+			<Content>20070120T203000Z</Content>
+		</DateStarted>
+		<DateEnd>
+			<Content>20070120T210000Z</Content>
+		</DateEnd>
+		<Location>
+			<Content>Event Location</Content>
+		</Location>
+		<Summary>
+			<Content>Event Subject</Content>
+		</Summary>
+		<Categories/>
+		<RecurrenceRule>
+			<Rule>UNTIL=20080808T050000Z</Rule>
+			<Rule>FREQ=YEARLY</Rule>
+			<Rule>BYMONTH=5</Rule>
+			<Rule>BYDAY=3TH</Rule>
+		</RecurrenceRule>
+	</Event>
+</vcal>

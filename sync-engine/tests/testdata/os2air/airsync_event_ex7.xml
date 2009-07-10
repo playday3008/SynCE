@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+  <Reminder>45</Reminder>
+  <BusyStatus>2</BusyStatus>
+  <DtStamp>20070127T083213Z</DtStamp>
+  <AllDayEvent>0</AllDayEvent>
+  <StartTime>20070127T170000Z</StartTime>
+  <EndTime>20070127T190000Z</EndTime>
+  <Location>new Location</Location>
+  <Subject>Simple Event</Subject>
+  <Sensitivity>0</Sensitivity>
+  <Categories>
+    <Category>Friends</Category>
+    <Category>IBM</Category>
+  </Categories>
+  <Attendees/>
+  <Recurrence>
+    <Interval>1</Interval>
+    <Type>1</Type>
+    <DayOfWeek>65</DayOfWeek>
+  </Recurrence>
+  <Exceptions>
+    <Exception>
+      <Deleted>1</Deleted>
+      <ExceptionStartTime>20070203T000000Z</ExceptionStartTime>
+    </Exception>
+  </Exceptions>
+</AS:ApplicationData>
+

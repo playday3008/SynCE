@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:C1="http://synce.org/formats/airsync_wm5/contacts" xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2">
+  <C1:FileAs>John Smith</C1:FileAs>
+  <C1:FirstName>John</C1:FirstName>
+  <C1:LastName>Smith</C1:LastName>
+  <C1:MiddleName/>
+  <C1:Suffix/>
+  <C1:Title/>
+  <C2:NickName/>
+  <C1:Picture/>
+  <C1:HomeCity>HomeCity</C1:HomeCity>
+  <C1:HomeCountry>USA</C1:HomeCountry>
+  <C1:HomePostalCode>00000</C1:HomePostalCode>
+  <C1:HomeState/>
+  <C1:HomeStreet>11 Dummy Ln</C1:HomeStreet>
+  <C1:BusinessCity/>
+  <C1:BusinessCountry/>
+  <C1:BusinessPostalCode/>
+  <C1:BusinessState/>
+  <C1:BusinessStreet/>
+  <C1:OtherCity/>
+  <C1:OtherCountry/>
+  <C1:OtherPostalCode/>
+  <C1:OtherState/>
+  <C1:OtherStreet/>
+  <C1:Categories>
+    <C1:Category>Friends</C1:Category>
+    <C1:Category>RPI</C1:Category>
+  </C1:Categories>
+  <C1:AssistantName/>
+  <C1:Email1Address>js@js.edu</C1:Email1Address>
+  <C1:Email2Address>ab@js.edu</C1:Email2Address>
+  <C2:ManagerName/>
+  <C1:CompanyName/>
+  <C1:Department/>
+  <C1:OfficeLocation/>
+  <C1:Spouse/>
+  <C1:HomeFaxNumber>1111111111</C1:HomeFaxNumber>
+  <C1:BusinessFaxNumber/>
+  <C1:HomePhoneNumber>3409310131</C1:HomePhoneNumber>
+  <C1:Home2PhoneNumber>1111111111</C1:Home2PhoneNumber>
+  <C1:CarPhoneNumber/>
+  <C1:MobilePhoneNumber>1112220000</C1:MobilePhoneNumber>
+  <C1:PagerNumber/>
+  <C1:AssistnamePhoneNumber/>
+  <C2:CompanyMainPhone/>
+  <C1:RadioPhoneNumber/>
+  <C1:JobTitle/>
+  <C1:WebPage/>
+  <C1:Body/>
+</AS:ApplicationData>
+

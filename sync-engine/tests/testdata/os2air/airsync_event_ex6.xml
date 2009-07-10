@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+  <Reminder>105</Reminder>
+  <BusyStatus>2</BusyStatus>
+  <DtStamp>20060728T152609Z</DtStamp>
+  <AllDayEvent>1</AllDayEvent>
+  <StartTime>20060730T000000Z</StartTime>
+  <EndTime>20060731T000000Z</EndTime>
+  <Location>Bjrheimsbygd</Location>
+  <Subject>Hjelpe fatteren</Subject>
+  <Rtf>CQEAAHwCAABMWkZ1jkcnpD8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMMQnNBdgJzZhLUEagPMtUADgJzcBQC2TDAEtUP42LUEAUC4QFGAvUy2iAcD9LYVlLoULMC2UL3Euoi9jWzAyLzE2DDAvlGYwDWUFCoB9NLA=</Rtf>
+  <Sensitivity>2</Sensitivity>
+  <Categories/>
+  <Attendees/>
+</AS:ApplicationData>
+
