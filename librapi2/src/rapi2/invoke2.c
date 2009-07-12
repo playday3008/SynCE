@@ -10,30 +10,71 @@ struct _IRAPIStream
   RapiContext* context;
 };
 
-ULONG _NotImplementedIRAPIStream_Release2(IRAPIStream* stream)/*{{{*/
+static IRAPIStream* rapi_stream_new()/*{{{*/
 {
+  IRAPIStream* stream = calloc(1, sizeof(IRAPIStream));
+
+  if (stream)
+  {
+    stream->context = rapi_context_new();
+  }
+
+  return stream;
+}/*}}}*/
+
+static void rapi_stream_destroy(IRAPIStream* stream)/*{{{*/
+{
+  if (stream)
+  {
+    rapi_context_unref(stream->context);
+    free(stream);
+  }
+}/*}}}*/
+
+ULONG _IRAPIStream_Release2(IRAPIStream* stream)/*{{{*/
+{
+  rapi_stream_destroy(stream);
   return 0;
 }/*}}}*/
 
-HRESULT _NotImplementedIRAPIStream_Read2( /*{{{*/
+HRESULT _IRAPIStream_Read2( /*{{{*/
     IRAPIStream* stream,
     void *pv,
     ULONG cb,
     ULONG *pcbRead)
 {
-  HRESULT hr = E_NOTIMPL;
+  HRESULT hr = E_FAIL;
+
+  if (pv && synce_socket_read(stream->context->socket, pv, cb))
+  {
+    if (pcbRead)
+      *pcbRead = cb;
+
+    hr = S_OK;
+  }
+
   return hr;
 }/*}}}*/
 
-HRESULT _NotImplementedIRAPIStream_Write2( /*{{{*/
+HRESULT _IRAPIStream_Write2( /*{{{*/
     IRAPIStream* stream,
     void const *pv,
     ULONG cb,
     ULONG *pcbWritten)
 {
-  HRESULT hr = E_NOTIMPL;
+  HRESULT hr = E_FAIL;
+
+  if (pv && synce_socket_write(stream->context->socket, pv, cb))
+  {
+    if (pcbWritten)
+      *pcbWritten = cb;
+
+    hr = S_OK;
+  }
+
   return hr;
 }/*}}}*/
+
 
 static HRESULT CeRapiInvokeCommon2(
     RapiContext* context,
@@ -60,6 +101,72 @@ static HRESULT CeRapiInvokeCommon2(
 
   return S_OK;
 }
+
+static HRESULT CeRapiInvokeStream2( /*{{{*/
+    LPCWSTR pDllPath,
+    LPCWSTR pFunctionName,
+    DWORD cbInput,
+    const BYTE *pInput,
+    DWORD *pcbOutput,
+    BYTE **ppOutput,
+    IRAPIStream **ppIRAPIStream,
+    DWORD dwReserved)
+{
+  HRESULT return_value = E_FAIL;
+  RapiContext* context = NULL;
+
+  assert(ppIRAPIStream);
+
+  *ppIRAPIStream = rapi_stream_new();
+  context = (**ppIRAPIStream).context;
+
+  return_value = rapi_context_connect(context);
+  if (FAILED(return_value))
+  {
+    synce_error("rapi_context_connect failed");
+    goto exit;
+  }
+
+  return_value = CeRapiInvokeCommon2(
+      context,
+      pDllPath,
+      pFunctionName,
+      cbInput,
+      pInput,
+      dwReserved,
+      TRUE);
+  if (FAILED(return_value))
+  {
+    synce_error("CeRapiInvokeCommon failed");
+    goto exit;
+  }
+
+  if ( !rapi2_context_call(context) )
+  {
+    synce_error("rapi2_context_call failed");
+    return E_FAIL;
+  }
+
+  rapi_buffer_read_uint32(context->recv_buffer, &(context->last_error));
+  synce_trace("error code: 0x%08x", context->last_error);
+
+  if (context->last_error != ERROR_SUCCESS)
+  {
+    return_value = E_FAIL;
+    goto exit;
+  }
+
+  return_value = S_OK;
+
+exit:
+  if (FAILED(return_value))
+  {
+    rapi_stream_destroy(*ppIRAPIStream);
+    *ppIRAPIStream = NULL;
+  }
+  return return_value;
+}/*}}}*/
+
 
 static HRESULT CeRapiInvokeBuffers2(
     LPCWSTR pDllPath,
@@ -145,10 +252,8 @@ HRESULT _CeRapiInvoke2( /*{{{*/
     DWORD dwReserved)
 {
   if (ppIRAPIStream)
-  {
-    synce_error("Stream mode is not implemented");
-    return E_NOTIMPL;
-  }
+    return CeRapiInvokeStream2(pDllPath, pFunctionName, cbInput, pInput,
+        pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
   else
     return CeRapiInvokeBuffers2(pDllPath, pFunctionName, cbInput, pInput,
         pcbOutput, ppOutput, dwReserved);

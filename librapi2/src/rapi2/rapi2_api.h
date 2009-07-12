@@ -328,15 +328,15 @@ BOOL _NotImplementedCeSetDatabaseInfo2(
 
 #ifndef SWIG
 
-ULONG _NotImplementedIRAPIStream_Release2(IRAPIStream* stream);
+ULONG _IRAPIStream_Release2(IRAPIStream* stream);
 
-HRESULT _NotImplementedIRAPIStream_Read2(
+HRESULT _IRAPIStream_Read2(
         IRAPIStream* stream,
         void *pv,
         ULONG cb,
         ULONG *pcbRead);
 
-HRESULT _NotImplementedIRAPIStream_Write2(
+HRESULT _IRAPIStream_Write2(
         IRAPIStream* stream,
         void const *pv,
         ULONG cb,

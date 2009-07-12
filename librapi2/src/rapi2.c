@@ -101,9 +101,9 @@ struct rapi_ops_s rapi2_ops =
          * CeRapiInvoke stuff
         */
 #ifndef SWIG
-        _NotImplementedIRAPIStream_Release2, /* IRAPIStream_Release */
-        _NotImplementedIRAPIStream_Read2,  /* IRAPIStream_Read */
-        _NotImplementedIRAPIStream_Write2, /* IRAPIStream_Write */
+        _IRAPIStream_Release2, /* IRAPIStream_Release */
+        _IRAPIStream_Read2,  /* IRAPIStream_Read */
+        _IRAPIStream_Write2, /* IRAPIStream_Write */
         /* IRAPIStream_GetRawSocket, */   /* IRAPIStream_GetRawSocket */
         _CeRapiInvoke2,     /* CeRapiInvoke */
         _CeRapiInvokeA2,    /* CeRapiInvokeA */
