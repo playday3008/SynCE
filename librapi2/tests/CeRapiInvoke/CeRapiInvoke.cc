@@ -99,7 +99,7 @@ static bool test_ping_result()
 {
   uint32_t expected = 0x12345678;
   uint32_t le_expected = htole32(expected);
-  HRESULT hr = CeRapiInvokeA(
+  HRESULT hr = rapi_invoke(
       REMOTE_DLL,
       "PingResult",
       sizeof(le_expected), (BYTE*)&le_expected,
@@ -117,7 +117,7 @@ static bool test_ping_buffer()
   DWORD output_size;
   BYTE* output_buffer;
   
-  HRESULT hr = CeRapiInvokeA(
+  HRESULT hr = rapi_invoke(
       REMOTE_DLL,
       "PingBuffer",
       PING_BUFFER_SIZE, buffer,
@@ -143,7 +143,7 @@ static bool test_ping_stream()
   IRAPIStream* stream = NULL;
 
   DWORD le_size = htole32(PING_BUFFER_SIZE);
-  HRESULT hr = CeRapiInvokeA(
+  HRESULT hr = rapi_invoke(
       REMOTE_DLL,
       "PingStream",
       sizeof(le_size), (BYTE*)&le_size,
@@ -187,7 +187,7 @@ static bool test_last_error()
 {
   DWORD last_error = ERROR_INVALID_PARAMETER;
   HRESULT hr;
-  hr = CeRapiInvokeA(
+  hr = rapi_invoke(
       REMOTE_DLL,
       "TestLastError",
       sizeof(last_error), (BYTE*)&last_error,
@@ -230,7 +230,7 @@ int main()
   }
 
   cout << "Testing call to non-existent function... ";
-  hr = CeRapiInvokeA(
+  hr = rapi_invoke(
       REMOTE_DLL,
       "ThisMethodShouldNotExist",
       0, NULL,

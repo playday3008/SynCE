@@ -253,6 +253,7 @@ BOOL CeSetFileTime(
 
 #ifndef SWIG
 
+/* deprecated, use rapi_copy_file() */
 BOOL CeCopyFileA(
 		LPCSTR lpExistingFileName,
 		LPCSTR lpNewFileName,
@@ -326,6 +327,11 @@ BOOL CeSHCreateShortcut(
   LPCWSTR lpszTarget);
 
 BOOL CeSyncTimeToPc();
+
+bool rapi_copy_file(
+		const char *source_file_name,
+		const char *dest_file_name,
+		bool fail_if_exists);
 
 #endif /* SWIG */
 
@@ -904,9 +910,20 @@ HRESULT CeRapiInvoke(
 		IRAPIStream **ppIRAPIStream,
 		DWORD dwReserved);
 
+/* deprecated, use rapi_invoke() */
 HRESULT CeRapiInvokeA(
 		LPCSTR pDllPath,
 		LPCSTR pFunctionName,
+		DWORD cbInput,
+		const BYTE *pInput,
+		DWORD *pcbOutput,
+		BYTE **ppOutput,
+		IRAPIStream **ppIRAPIStream,
+		DWORD dwReserved);
+
+HRESULT rapi_invoke( /*{{{*/
+		const char *dll_path,
+		const char *function_name,
 		DWORD cbInput,
 		const BYTE *pInput,
 		DWORD *pcbOutput,

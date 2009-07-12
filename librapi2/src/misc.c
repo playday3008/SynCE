@@ -3,6 +3,7 @@
 #define _GNU_SOURCE
 #include "rapi_context.h"
 #include <stdlib.h>
+#include <synce_log.h>
 
 
 /* Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5 */
@@ -209,36 +210,85 @@ bool rapi_reg_set_string(/*{{{*/
 
 /**
  * This function copies an existing file to a new file.
+ */
+bool rapi_copy_file(
+		const char *source_file_name,
+		const char *dest_file_name,
+		bool fail_if_exists)
+{
+    BOOL return_value = 0;
+    LPWSTR lpExistingFileNameW = NULL;
+    LPWSTR lpNewFileNameW = NULL;
+
+    lpExistingFileNameW = wstr_from_current(source_file_name);
+    lpNewFileNameW      = wstr_from_current(dest_file_name);
+
+    if (source_file_name && !lpExistingFileNameW)
+        goto fail;
+
+    if (dest_file_name && !lpNewFileNameW)
+        goto fail;
+
+    return_value = CeCopyFile(lpExistingFileNameW, lpNewFileNameW, fail_if_exists);
+
+fail:
+    wstr_free_string(lpExistingFileNameW);
+    wstr_free_string(lpNewFileNameW);
+
+    return return_value;
+}
+
+/**
+ * This function copies an existing file to a new file.
  *
- * Ascii version.
+ * Ascii version. This is deprecated, use rapi_copy_file()
  */
 BOOL CeCopyFileA(
 		LPCSTR lpExistingFileName,
 		LPCSTR lpNewFileName,
 		BOOL bFailIfExists)
 {
-	BOOL return_value = 0;
-	LPWSTR lpExistingFileNameW = NULL;
-	LPWSTR lpNewFileNameW = NULL;
-
-	lpExistingFileNameW = wstr_from_current(lpExistingFileName);
-	lpNewFileNameW      = wstr_from_current(lpNewFileName);
-
-	if (lpExistingFileName && !lpExistingFileNameW)
-		goto fail;
-
-	if (lpNewFileName && !lpNewFileNameW)
-		goto fail;
-
-	return_value = CeCopyFile(lpExistingFileNameW, lpNewFileNameW, bFailIfExists);
-
-fail:
-	wstr_free_string(lpExistingFileNameW);
-	wstr_free_string(lpNewFileNameW);
-
-	return return_value;
+    synce_info("This function is deprecated. Use rapi_copy_file() instead.");
+    return rapi_copy_file(lpExistingFileName, lpNewFileName, bFailIfExists);
 }
 
+
+/**
+ * Ascii / utf8 version of CeRapiInvoke.
+ */
+HRESULT rapi_invoke( /*{{{*/
+    const char *dll_path,
+    const char *function_name,
+    DWORD cbInput,
+    const BYTE *pInput,
+    DWORD *pcbOutput,
+    BYTE **ppOutput,
+    IRAPIStream **ppIRAPIStream,
+    DWORD dwReserved)
+{
+    HRESULT hr;
+    WCHAR* wide_dll_path       = wstr_from_current(dll_path);
+    WCHAR* wide_function_name  = wstr_from_current(function_name);
+
+    if ((!wide_dll_path) || (!wide_function_name)) {
+            wstr_free_string(wide_dll_path);
+            wstr_free_string(wide_function_name);
+            return E_INVALIDARG;
+    }
+
+    hr = CeRapiInvoke( wide_dll_path, wide_function_name, cbInput, pInput,
+        pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
+
+    wstr_free_string(wide_dll_path);
+    wstr_free_string(wide_function_name);
+
+    return hr;
+}
+
+/**
+ * Ascii / utf8 version of CeRapiInvoke.
+ * This is deprecated, use rapi_invoke()
+ */
 HRESULT CeRapiInvokeA( /*{{{*/
     LPCSTR pDllPath,
     LPCSTR pFunctionName,
@@ -249,22 +299,7 @@ HRESULT CeRapiInvokeA( /*{{{*/
     IRAPIStream **ppIRAPIStream,
     DWORD dwReserved)
 {
-  HRESULT hr;
-  WCHAR* wide_dll_path       = wstr_from_current(pDllPath);
-  WCHAR* wide_function_name  = wstr_from_current(pFunctionName);
-
-  if ((!wide_dll_path) || (!wide_function_name)) {
-          wstr_free_string(wide_dll_path);
-          wstr_free_string(wide_function_name);
-          return E_INVALIDARG;
-  }
-
-  hr = CeRapiInvoke( wide_dll_path, wide_function_name, cbInput, pInput,
-      pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
-
-  wstr_free_string(wide_dll_path);
-  wstr_free_string(wide_function_name);
-
-  return hr;
+    synce_info("This function is deprecated. Use rapi_invoke() instead.");
+    return rapi_invoke( pDllPath, pFunctionName, cbInput, pInput,
+                        pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
 }
-

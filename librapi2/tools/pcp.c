@@ -87,7 +87,7 @@ static bool remote_copy(const char* ascii_source, const char* ascii_dest)
   DWORD last_error;
   BOOL result;
 
-  result = CeCopyFileA(ascii_source+1, ascii_dest+1, false);
+  result = rapi_copy_file(ascii_source+1, ascii_dest+1, false);
 
   if (!result) {
     if (FAILED(hr = CeRapiGetError())) {
