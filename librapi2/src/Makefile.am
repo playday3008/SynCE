@@ -7,7 +7,7 @@ lib_LTLIBRARIES = librapi.la
 
 ## use these sources
 librapi_la_SOURCES = rapi.c connection.c window.c rapi_indirection.c rapi2.c \
-	misc.c
+	misc.c irapistream.h irapistream.c
 librapi_la_CFLAGS = @LIBSYNCE_CFLAGS@
 librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
 librapi_la_LIBADD = $(top_builddir)/src/support/libsupport.la \

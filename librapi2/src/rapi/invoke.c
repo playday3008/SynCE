@@ -1,79 +1,10 @@
 /* $Id$ */
 #include "rapi_api.h"
 #include "rapi_context.h"
+#include "irapistream.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-
-struct _IRAPIStream
-{
-  RapiContext* context;
-};
-
-static IRAPIStream* rapi_stream_new()/*{{{*/
-{
-  IRAPIStream* stream = calloc(1, sizeof(IRAPIStream));
-
-  if (stream)
-  {
-    stream->context = rapi_context_new();
-  }
-
-  return stream;
-}/*}}}*/
-
-static void rapi_stream_destroy(IRAPIStream* stream)/*{{{*/
-{
-  if (stream)
-  {
-    rapi_context_unref(stream->context);
-    free(stream);
-  }
-}/*}}}*/
-
-ULONG _IRAPIStream_Release(IRAPIStream* stream)/*{{{*/
-{
-  rapi_stream_destroy(stream);
-  return 0;
-}/*}}}*/
-
-HRESULT _IRAPIStream_Read( /*{{{*/
-    IRAPIStream* stream,
-    void *pv,
-    ULONG cb,
-    ULONG *pcbRead)
-{
-  HRESULT hr = E_FAIL;
-
-  if (pv && synce_socket_read(stream->context->socket, pv, cb))
-  {
-    if (pcbRead)
-      *pcbRead = cb;
-
-    hr = S_OK;
-  }
-
-  return hr;
-}/*}}}*/
-
-HRESULT _IRAPIStream_Write( /*{{{*/
-    IRAPIStream* stream,
-    void const *pv,
-    ULONG cb,
-    ULONG *pcbWritten)
-{
-  HRESULT hr = E_FAIL;
-
-  if (pv && synce_socket_write(stream->context->socket, pv, cb))
-  {
-    if (pcbWritten)
-      *pcbWritten = cb;
-
-    hr = S_OK;
-  }
-
-  return hr;
-}/*}}}*/
 
 static HRESULT CeRapiInvokeCommon(
     RapiContext* context,
@@ -331,33 +262,4 @@ HRESULT _CeRapiInvoke( /*{{{*/
     return CeRapiInvokeBuffers(pDllPath, pFunctionName, cbInput, pInput,
         pcbOutput, ppOutput, dwReserved);
 }/*}}}*/
-
-HRESULT _CeRapiInvokeA( /*{{{*/
-    LPCSTR pDllPath,
-    LPCSTR pFunctionName,
-    DWORD cbInput,
-    const BYTE *pInput,
-    DWORD *pcbOutput,
-    BYTE **ppOutput,
-    IRAPIStream **ppIRAPIStream,
-    DWORD dwReserved)
-{
-  HRESULT hr;
-  WCHAR* wide_dll_path       = wstr_from_current(pDllPath);
-  WCHAR* wide_function_name  = wstr_from_current(pFunctionName);
-
-  if ((!wide_dll_path) || (!wide_function_name)) {
-          wstr_free_string(wide_dll_path);
-          wstr_free_string(wide_function_name);
-          return E_INVALIDARG;
-  }
-
-  hr = CeRapiInvoke( wide_dll_path, wide_function_name, cbInput, pInput,
-      pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
-
-  wstr_free_string(wide_dll_path);
-  wstr_free_string(wide_function_name);
-
-  return hr;
-}
 

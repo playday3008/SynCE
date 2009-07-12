@@ -26,7 +26,6 @@ struct rapi_ops_s rapi_ops =
          * File management functions
          */
 #ifndef SWIG
-        &_CeCopyFileA,                    /* CeCopyFileA */
         &_CeCopyFile,                     /* CeCopyFile */
         &_CeCreateDirectory,              /* CeCreateDirectory */
         &_CeDeleteFile,                   /* CeDeleteFile */
@@ -101,11 +100,6 @@ struct rapi_ops_s rapi_ops =
          * CeRapiInvoke stuff
          */
 #ifndef SWIG
-        &_IRAPIStream_Release,            /* IRAPIStream_Release */
-        &_IRAPIStream_Read,               /* IRAPIStream_Read */
-        &_IRAPIStream_Write,              /* IRAPIStream_Write */
-        /* &IRAPIStream_GetRawSocket, */     /* IRAPIStream_GetRawSocket */
         &_CeRapiInvoke,                   /* CeRapiInvoke */
-        &_CeRapiInvokeA,                  /* CeRapiInvokeA */
 #endif /* SWIG */
 };

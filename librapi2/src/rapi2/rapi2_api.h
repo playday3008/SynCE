@@ -109,11 +109,6 @@ LONG _CeRegQueryInfoKey2(
         LPDWORD lpcbSecurityDescriptor,
         PFILETIME lpftLastWriteTime);
 
-BOOL _CeCopyFileA2(
-        LPCSTR lpExistingFileName,
-        LPCSTR lpNewFileName,
-        BOOL bFailIfExists);
-
 BOOL _CeMoveFile2(
         LPCWSTR lpExistingFileName,
         LPCWSTR lpNewFileName);
@@ -328,33 +323,9 @@ BOOL _NotImplementedCeSetDatabaseInfo2(
 
 #ifndef SWIG
 
-ULONG _IRAPIStream_Release2(IRAPIStream* stream);
-
-HRESULT _IRAPIStream_Read2(
-        IRAPIStream* stream,
-        void *pv,
-        ULONG cb,
-        ULONG *pcbRead);
-
-HRESULT _IRAPIStream_Write2(
-        IRAPIStream* stream,
-        void const *pv,
-        ULONG cb,
-        ULONG *pcbWritten);
-
 HRESULT _CeRapiInvoke2(
         LPCWSTR pDllPath,
         LPCWSTR pFunctionName,
-        DWORD cbInput,
-        const BYTE *pInput,
-        DWORD *pcbOutput,
-        BYTE **ppOutput,
-        IRAPIStream **ppIRAPIStream,
-        DWORD dwReserved);
-
-HRESULT _CeRapiInvokeA2(
-        LPCSTR pDllPath,
-        LPCSTR pFunctionName,
         DWORD cbInput,
         const BYTE *pInput,
         DWORD *pcbOutput,

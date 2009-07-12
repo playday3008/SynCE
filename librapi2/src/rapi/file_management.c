@@ -245,8 +245,6 @@ DWORD _CeGetSpecialFolderPath(
 
 /**
  * This function copies an existing file to a new file.
- *
- * Unicode version.
  */
 BOOL _CeCopyFile(
 		LPCWSTR lpExistingFileName,
@@ -266,38 +264,6 @@ BOOL _CeCopyFile(
 
 	rapi_buffer_read_uint32(context->recv_buffer, &context->last_error);
 	rapi_buffer_read_uint32(context->recv_buffer, &return_value);
-
-	return return_value;
-}
-
-/**
- * This function copies an existing file to a new file.
- *
- * Ascii version.
- */
-BOOL _CeCopyFileA(
-		LPCSTR lpExistingFileName,
-		LPCSTR lpNewFileName,
-		BOOL bFailIfExists)
-{
-	BOOL return_value = 0;
-	LPWSTR lpExistingFileNameW = NULL;
-	LPWSTR lpNewFileNameW = NULL;
-
-	lpExistingFileNameW = wstr_from_current(lpExistingFileName);
-	lpNewFileNameW      = wstr_from_current(lpNewFileName);
-
-	if (lpExistingFileName && !lpExistingFileNameW)
-		goto fail;
-
-	if (lpNewFileName && !lpNewFileNameW)
-		goto fail;
-
-	return_value = CeCopyFile(lpExistingFileNameW, lpNewFileNameW, bFailIfExists);
-
-fail:
-	wstr_free_string(lpExistingFileNameW);
-	wstr_free_string(lpNewFileNameW);
 
 	return return_value;
 }

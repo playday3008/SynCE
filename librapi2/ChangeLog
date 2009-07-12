@@ -1,6 +1,9 @@
 2009-07-12  Mark Ellis  <mark@mpellis.org.uk>
 
 	* implement streaming CeRapiInvoke for rapi2
+	* move non RAPI API functions that are identical for all
+	  WM versions out of the indirection mechanism, ie. 
+	  CeCopyFileA, CeRapiInvokeA, and the IRAPIStream functions
 
 2009-07-10  Mark Ellis  <mark@mpellis.org.uk>
 

@@ -206,3 +206,65 @@ bool rapi_reg_set_string(/*{{{*/
 
     return ERROR_SUCCESS == result;
 }/*}}}*/
+
+/**
+ * This function copies an existing file to a new file.
+ *
+ * Ascii version.
+ */
+BOOL CeCopyFileA(
+		LPCSTR lpExistingFileName,
+		LPCSTR lpNewFileName,
+		BOOL bFailIfExists)
+{
+	BOOL return_value = 0;
+	LPWSTR lpExistingFileNameW = NULL;
+	LPWSTR lpNewFileNameW = NULL;
+
+	lpExistingFileNameW = wstr_from_current(lpExistingFileName);
+	lpNewFileNameW      = wstr_from_current(lpNewFileName);
+
+	if (lpExistingFileName && !lpExistingFileNameW)
+		goto fail;
+
+	if (lpNewFileName && !lpNewFileNameW)
+		goto fail;
+
+	return_value = CeCopyFile(lpExistingFileNameW, lpNewFileNameW, bFailIfExists);
+
+fail:
+	wstr_free_string(lpExistingFileNameW);
+	wstr_free_string(lpNewFileNameW);
+
+	return return_value;
+}
+
+HRESULT CeRapiInvokeA( /*{{{*/
+    LPCSTR pDllPath,
+    LPCSTR pFunctionName,
+    DWORD cbInput,
+    const BYTE *pInput,
+    DWORD *pcbOutput,
+    BYTE **ppOutput,
+    IRAPIStream **ppIRAPIStream,
+    DWORD dwReserved)
+{
+  HRESULT hr;
+  WCHAR* wide_dll_path       = wstr_from_current(pDllPath);
+  WCHAR* wide_function_name  = wstr_from_current(pFunctionName);
+
+  if ((!wide_dll_path) || (!wide_function_name)) {
+          wstr_free_string(wide_dll_path);
+          wstr_free_string(wide_function_name);
+          return E_INVALIDARG;
+  }
+
+  hr = CeRapiInvoke( wide_dll_path, wide_function_name, cbInput, pInput,
+      pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
+
+  wstr_free_string(wide_dll_path);
+  wstr_free_string(wide_function_name);
+
+  return hr;
+}
+

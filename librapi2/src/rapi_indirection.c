@@ -187,26 +187,6 @@ BOOL CeSetFileTime(
 
 #ifndef SWIG
 
-BOOL CeCopyFileA(
-    LPCSTR lpExistingFileName,
-    LPCSTR lpNewFileName,
-    BOOL bFailIfExists )
-{
-    RapiContext * context = rapi_context_current();
-    if (!context->is_initialized)
-    {
-        context->rapi_error = S_OK;
-        context->last_error = ERROR_NOT_CONNECTED;
-        return false;
-    }
-
-    return ( *context->rapi_ops->CeCopyFileA ) (
-            lpExistingFileName,
-    lpNewFileName,
-    bFailIfExists );
-}
-
-
 BOOL CeCopyFile(
         LPCWSTR lpExistingFileName,
     LPCWSTR lpNewFileName,
@@ -1253,63 +1233,6 @@ BOOL CeKillAllApps()
 
 #ifndef SWIG
 
-ULONG IRAPIStream_Release( IRAPIStream* stream )
-{
-    RapiContext * context = rapi_context_current();
-    if (!context->is_initialized)
-    {
-        context->rapi_error = S_OK;
-        context->last_error = ERROR_NOT_CONNECTED;
-        return 0;
-    }
-
-    return ( *context->rapi_ops->IRAPIStream_Release ) ( stream );
-}
-
-
-HRESULT IRAPIStream_Read(
-        IRAPIStream* stream,
-    void *pv,
-    ULONG cb,
-    ULONG *pcbRead )
-{
-    RapiContext * context = rapi_context_current();
-    if (!context->is_initialized)
-    {
-        return E_UNEXPECTED;
-    }
-
-    return ( *context->rapi_ops->IRAPIStream_Read ) (
-            stream,
-    pv,
-    cb,
-    pcbRead );
-}
-
-
-HRESULT IRAPIStream_Write(
-        IRAPIStream* stream,
-    void const *pv,
-    ULONG cb,
-    ULONG *pcbWritten )
-{
-    RapiContext * context = rapi_context_current();
-    if (!context->is_initialized)
-    {
-        return E_UNEXPECTED;
-    }
-
-    return ( *context->rapi_ops->IRAPIStream_Write ) (
-            stream,
-    pv,
-    cb,
-    pcbWritten );
-}
-
-/*
-int (*IRAPIStream_GetRawSocket)(IRAPIStream* stream);
-*/
-
 HRESULT CeRapiInvoke(
         LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
@@ -1327,34 +1250,6 @@ HRESULT CeRapiInvoke(
     }
 
     return ( *context->rapi_ops->CeRapiInvoke ) (
-            pDllPath,
-    pFunctionName,
-    cbInput,
-    pInput,
-    pcbOutput,
-    ppOutput,
-    ppIRAPIStream,
-    dwReserved );
-}
-
-
-HRESULT CeRapiInvokeA(
-        LPCSTR pDllPath,
-    LPCSTR pFunctionName,
-    DWORD cbInput,
-    const BYTE *pInput,
-    DWORD *pcbOutput,
-    BYTE **ppOutput,
-    IRAPIStream **ppIRAPIStream,
-    DWORD dwReserved )
-{
-    RapiContext * context = rapi_context_current();
-    if (!context->is_initialized)
-    {
-        return E_UNEXPECTED;
-    }
-
-    return ( *context->rapi_ops->CeRapiInvokeA ) (
             pDllPath,
     pFunctionName,
     cbInput,

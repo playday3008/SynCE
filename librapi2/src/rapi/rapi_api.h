@@ -61,11 +61,6 @@ BOOL _NotImplementedCeSetFileTime(
 
 #ifndef SWIG
 
-BOOL _CeCopyFileA(
-        LPCSTR lpExistingFileName,
-        LPCSTR lpNewFileName,
-        BOOL bFailIfExists);
-
 BOOL _CeCopyFile(
         LPCWSTR lpExistingFileName,
         LPCWSTR lpNewFileName,
@@ -385,35 +380,9 @@ DWORD _NotImplementedCeGetDiskFreeSpaceEx(
 
 #ifndef SWIG
 
-ULONG _IRAPIStream_Release(IRAPIStream* stream);
-
-HRESULT _IRAPIStream_Read(
-        IRAPIStream* stream,
-        void *pv,
-        ULONG cb,
-        ULONG *pcbRead);
-
-HRESULT _IRAPIStream_Write(
-        IRAPIStream* stream,
-        void const *pv,
-        ULONG cb,
-        ULONG *pcbWritten);
-
-int _IRAPIStream_GetRawSocket(IRAPIStream* stream);
-
 HRESULT _CeRapiInvoke(
         LPCWSTR pDllPath,
         LPCWSTR pFunctionName,
-        DWORD cbInput,
-        const BYTE *pInput,
-        DWORD *pcbOutput,
-        BYTE **ppOutput,
-        IRAPIStream **ppIRAPIStream,
-        DWORD dwReserved);
-
-HRESULT _CeRapiInvokeA(
-        LPCSTR pDllPath,
-        LPCSTR pFunctionName,
         DWORD cbInput,
         const BYTE *pInput,
         DWORD *pcbOutput,
