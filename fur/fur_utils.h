@@ -52,7 +52,6 @@ int writeFile(const char *path, const void *buffer, size_t size, off_t offset);
 // This actually is a kludge to overcome the absence of 
 // SetFilePointer in the librapi2. Hopefully they will disappear, 
 // some day...
-int Seek(const char *path, off_t offset);
 int Truncate(const char *path,off_t offset);
 
 

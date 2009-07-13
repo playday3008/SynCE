@@ -14,15 +14,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "registry_utils.h"
+#include "fur_utils.h"
 
 
-int registry_read(char *path,void *buf,size_t size,off_t offset)
+int registry_read(const char *path,void *buf,size_t size,off_t offset)
 {
-  int i;
   return ReadAttribute(path,buf,size,offset);
 }
 
-int path_is_in_registry(char *path)
+int path_is_in_registry(const char *path)
 {
   if(strncmp(PROC REGISTRY,path,proclen+registrylen)==0) {
     if(strlen(path)>proclen+registrylen)
@@ -38,14 +38,14 @@ int path_is_in_registry(char *path)
   return 0;
 }
 
-int path_is_registry(char *path)
+int path_is_registry(const char *path)
 {  
   if(path_is_in_registry(path) && strlen(path)==proclen+registrylen)
     return 1;
   return 0;
 }
 
-void registry_fill_dir(char *path,void *buf,fuse_fill_dir_t filler)
+void registry_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler)
 {
   if(path_is_registry(path)) {
     filler(buf,LOCAL+1,0,0);
@@ -57,7 +57,7 @@ void registry_fill_dir(char *path,void *buf,fuse_fill_dir_t filler)
   ListRegDir(path,buf,filler);
 }
 
-void registry_getattr(char *path,struct stat *stbuf)
+void registry_getattr(const char *path,struct stat *stbuf)
 {
   VERB("registry_getattr in %s\n",path);
 

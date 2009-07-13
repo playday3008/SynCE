@@ -28,7 +28,7 @@ void print_cache_entry(int index)
   fprintf(stderr,"Handle %8.8x\n",opened[index].h);
   fprintf(stderr,"Path   %s\n",opened[index].path);
   fprintf(stderr,"Flags %s\n",opened[index].flags|O_RDWR?"O_RDWR":(opened[index].flags|O_WRONLY?"O_WRONLY":"O_RDONLY"));
-  fprintf(stderr,"Offset %d\n",opened[index].offset);
+  fprintf(stderr,"Offset %zd\n",opened[index].offset);
 }
 
 // name can be NULL XOR h can be -1

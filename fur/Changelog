@@ -1,5 +1,8 @@
 Changelog
 
+  - fixed some compiler warnings
+  - improved some error messages
+
 0.4.5 
   - Added a patch entirely provided by Alexander Logvinov that forces FUR into
   single threaded mode.

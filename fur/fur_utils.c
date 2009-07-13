@@ -25,6 +25,8 @@
 #include "macros.h"
 #include "fur_utils.h"
 #include "cache.h"
+#include "special.h"
+#include "special_names.h"
 
 #ifdef VERBOSE
 FILE *logfile;
@@ -33,6 +35,17 @@ FILE *logfile;
 // This will act as a replacement for the missing
 // get/set time of the library
 time_t mount_time;
+
+void ReinitRAPI(void)
+{
+    HRESULT hr;
+
+    CeRapiUninit();
+    if(FAILED(hr = CeRapiInit())) {
+      printf("Rapi not initialized!: %s\n", synce_strerror(hr));
+      exit(1);
+    }
+}
 
 uid_t getfileuid(const char *path)
 {
@@ -510,8 +523,6 @@ void getFileInfo(const char *path, CE_FIND_DATA **data, unsigned int *count, int
   CE_FIND_DATA *fdata;
   unsigned int mcount;
   int res;
-  int size;
-  time_t t;
 
   
   // TODO FIXME: fdata have to be initialized??
@@ -660,14 +671,5 @@ int init(void)
 
 
   return 0;
-}
-
-int ReinitRAPI(void)
-{
-    CeRapiUninit();
-    if(CeRapiInit()) {
-      printf("Rapi not initialized!\n");
-      exit(1);
-    }
 }
 

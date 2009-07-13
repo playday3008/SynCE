@@ -22,6 +22,8 @@
 
 #include "fur_utils.h"
 #include "macros.h"
+#include "power.h"
+#include "registry.h"
 
 
 void special_init(void)
@@ -30,7 +32,7 @@ void special_init(void)
 }
 
 
-int path_is_special(char *path)
+int path_is_special(const char *path)
 {
   if(strncmp(PROC,path,proclen)==0) {
     if(strlen(path)>proclen)
@@ -55,7 +57,7 @@ int path_is_proc(char *path)
 }
 
 
-int special_fill_dir(char *path,void *buf,fuse_fill_dir_t filler)
+int special_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler)
 {
   VERB("Special_fill_dir in %s\n",path);
   //  /proc  files
@@ -73,7 +75,7 @@ int special_fill_dir(char *path,void *buf,fuse_fill_dir_t filler)
   return 0;
 }
 
-void special_getattr(char *path,struct stat *stbuf)
+void special_getattr(const char *path,struct stat *stbuf)
 {
   VERB("Special_getattr in %s\n",path);
 
@@ -116,7 +118,7 @@ void special_set_proc(void *buf,fuse_fill_dir_t filler)
   filler(buf,strdup(PROC+1),0,0);
 }
 
-int special_read_file(char *path,void *buf,size_t size,off_t offset)
+int special_read_file(const char *path,void *buf,size_t size,off_t offset)
 {
   VERB("Special_read_file in %s\n",path);
   if(strcmp(PROC POWER_STATUS_NAME,path)==0) 

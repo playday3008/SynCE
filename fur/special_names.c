@@ -17,7 +17,7 @@ int powerlen;
 int registrylen;
 int locallen,alllen,rootlen,userlen;
 
-int init_names(void)
+void init_names(void)
 {
   // proc directory name
   proclen=strlen(PROC);

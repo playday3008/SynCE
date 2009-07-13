@@ -36,6 +36,7 @@ SYSTEM_POWER_STATUS_EX *GetPowerStatus(void);
 // The size of the power message: 
 int get_power_file_size(void);
 
+int read_power_status(char *buf,size_t size,off_t offset);
 
 // Return a message
 char *power_message(void);

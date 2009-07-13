@@ -128,13 +128,13 @@ char *power_message(void)
   sprintf(result,
 	  "AC Line Status:                %7s\n"
 	  "Battery:                       %11s\n"
-	  "Battery Life:                  %3d\%\n"
-          "Battery Life Time:             %3d\%\n"
-          "Battery Full Life Time:        %3d\%\n"
+	  "Battery Life:                  %3d%%\n"
+          "Battery Life Time:             %3d%%\n"
+          "Battery Full Life Time:        %3d%%\n"
           "Backup Battery Flag:           %11s\n"
-          "Backup Battery Life:           %3d\%\n"
-          "Backup Battery Life Time:      %3d\%\n"
-          "Backup Battery Full Life Time: %3d\%\n",
+          "Backup Battery Life:           %3d%%\n"
+          "Backup Battery Life Time:      %3d%%\n"
+          "Backup Battery Full Life Time: %3d%%\n",
 	  getACLineStatus(d),
 	  getBatteryFlag(d),
 	  getBatteryLifePercent(d),

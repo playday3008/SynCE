@@ -100,6 +100,7 @@
 
 #include "macros.h"
 #include "special.h"
+#include "fur_utils.h"
 
 
 static int rapi_mknod(const char *path, mode_t mode, dev_t dev)
@@ -373,12 +374,13 @@ static struct fuse_operations hello_oper = {
 int main(int argc, char *argv[])
 {
   int retval;
+  HRESULT hr;
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
  
 
   // Initialize the RAPI support
-  if(CeRapiInit()) {
-    printf("Rapi not initialized!\n");
+  if(FAILED(hr = CeRapiInit())) {
+    printf("Rapi not initialized!: %s\n", synce_strerror(hr));
     exit(1);
   }
   

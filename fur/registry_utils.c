@@ -41,11 +41,8 @@ void GetAttributes(HKEY base,void *buf,fuse_fill_dir_t filler)
 
 
 // Data must be read entirely until the offset
-int ReadAttribute(char *path,void *buf,size_t size,off_t offset)
+int ReadAttribute(const char *path,void *buf,size_t size,off_t offset)
 {
-  void *null;
-
-  int len=0;
   HKEY key;
   char *attrname;
   LPWSTR lattrname;
@@ -91,9 +88,8 @@ int ReadAttribute(char *path,void *buf,size_t size,off_t offset)
 
 }
 
-int GetAttribSize(char *path)
+int GetAttribSize(const char *path)
 {
-  int len=0;
   HKEY key;
   char *attrname;
   LPWSTR lattrname;
@@ -154,7 +150,7 @@ void GetKeys(HKEY base,void *buf,fuse_fill_dir_t filler)
   free(lpName);
 }
 
-char **path2list(char *fake_path,int isdir)
+char **path2list(const char *fake_path,int isdir)
 {
  int tokens=0;
  char *p=strdup(fake_path);
@@ -189,7 +185,7 @@ char **path2list(char *fake_path,int isdir)
 }
 
 // Apre la chiave che si trova alla fine del path
-HKEY fakePathOpen(char *fake_path,int isdir)
+HKEY fakePathOpen(const char *fake_path,int isdir)
 {
   char **array=path2list(fake_path,isdir);
   HKEY keytype=-1;
@@ -243,7 +239,7 @@ HKEY fakePathOpen(char *fake_path,int isdir)
   return keytype;
 }
 
-void ListRegDir(char *fake_path,void *buf,fuse_fill_dir_t filler)
+void ListRegDir(const char *fake_path,void *buf,fuse_fill_dir_t filler)
 {
   HKEY key=fakePathOpen(fake_path,1);
   if(key==0)
@@ -256,7 +252,7 @@ void ListRegDir(char *fake_path,void *buf,fuse_fill_dir_t filler)
   CeRegCloseKey(key);
 }
 
-int PathIsAKey(char *fake_path)
+int PathIsAKey(const char *fake_path)
 {
   HKEY key;
   if((key=fakePathOpen(fake_path,1))==0)

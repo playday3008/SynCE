@@ -8,8 +8,8 @@
 
     FUSE is Copyright of Miklos Szeredi <miklos@szeredi.hu>
 */
-#ifndef SPECIAL_H
-#define SPECIAL_H
+#ifndef SPECIAL_NAMES_H
+#define SPECIAL_NAMES_H
 
 // Fake proc filesystem
 #define PROC "/proc"
@@ -35,6 +35,6 @@ extern int powerlen;
 extern int registrylen;
 extern int locallen,alllen,rootlen,userlen;
 
-int init_names(void);
+void init_names(void);
 
 #endif
