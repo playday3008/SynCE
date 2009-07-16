@@ -1128,3 +1128,7 @@ For changes in pyrra, mostly throwing exceptions on errors.
 Convert tests to python unittest framework, many thanks to Aurelien Bompard for this.
 Tests can now be run using python-nose, with "nosetests -v tests".
 
+16/07/2009 - 214900 Mark Ellis
+------------------------------
+0.14 release
+

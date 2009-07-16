@@ -1,3 +1,7 @@
+2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.2 release
+
 2009-04-10  Mark Ellis <mark@mpellis.org.uk>
 
 	* access SynceInfo parameters with synce_info_get_ functions
