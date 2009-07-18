@@ -134,12 +134,18 @@ run_prefs_dialog (SynceTrayIcon *trayicon)
 
   builder = gtk_builder_new();
   guint builder_res;
+#if GTK_CHECK_VERSION(2,14,0)
   gchar *namelist[] = { "prefs_window", NULL };
 
   builder_res = gtk_builder_add_objects_from_file(builder,
                                                   SYNCE_DATA "synce_trayicon_properties.glade",
                                                   namelist,
                                                   &error);
+#else
+  builder_res = gtk_builder_add_from_file(builder,
+                                                  SYNCE_DATA "synce_trayicon_properties.glade",
+                                                  &error);
+#endif
   if (builder_res == 0) {
           g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
           g_error_free(error);

@@ -24,7 +24,7 @@ PKG_CHECK_MODULES(LIBRRA, librra >= 0.14)
 PKG_CHECK_MODULES(GNOME2, 
 				  glib-2.0       \
 				  gmodule-2.0    \
-				  gtk+-2.0 >= 2.14 \
+				  gtk+-2.0 >= 2.12 \
 				  libgnome-2.0   \
 				  libgnomeui-2.0 \ 
 				  libgtop-2.0)
