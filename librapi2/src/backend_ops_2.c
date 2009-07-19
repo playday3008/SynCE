@@ -2,7 +2,7 @@
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
 #include "backend_ops_2/backend_ops_2.h"
-#include "rapi_indirection.h"
+#include "rapi_ops.h"
 #include <stdlib.h>
 #if HAVE_CONFIG_H
 #include "rapi_config.h"

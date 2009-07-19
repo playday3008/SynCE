@@ -17,6 +17,6 @@ librapi_la_LIBADD = $(top_builddir)/src/support/libsupport.la \
 	@LIBSYNCE_LIBS@
 
 include_HEADERS = rapi.h
-noinst_HEADERS = rapi_internal.h rapi_indirection.h
+noinst_HEADERS = rapi_internal.h rapi_ops.h
 
 SUBDIRS = support backend_ops_1 backend_ops_2 config
