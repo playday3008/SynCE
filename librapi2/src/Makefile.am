@@ -7,7 +7,7 @@ lib_LTLIBRARIES = librapi.la
 
 ## use these sources
 librapi_la_SOURCES = backend_ops_1.c backend_ops_2.c \
-	connection.c window.c rapi_indirection.c \
+	connection.c window.c rapi_api.c \
 	misc.c irapistream.h irapistream.c
 librapi_la_CFLAGS = @LIBSYNCE_CFLAGS@
 librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
