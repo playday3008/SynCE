@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 LONG _CeRegCreateKeyEx( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
 		DWORD Reserved,
@@ -14,7 +15,6 @@ LONG _CeRegCreateKeyEx( /*{{{*/
 		PHKEY phkResult,
 		LPDWORD lpdwDisposition)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 	HKEY result = 0;
 	DWORD disposition = 0;
@@ -47,13 +47,13 @@ LONG _CeRegCreateKeyEx( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegOpenKeyEx(/*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
 		DWORD ulOptions,
 		REGSAM samDesired,
 		PHKEY phkResult)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x1e);
@@ -77,6 +77,7 @@ LONG _CeRegOpenKeyEx(/*{{{*/
 }/*}}}*/
 
 LONG _CeRegQueryValueEx( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
 		LPDWORD lpReserved,
@@ -84,7 +85,6 @@ LONG _CeRegQueryValueEx( /*{{{*/
 		LPBYTE lpData,
 		LPDWORD lpcbData)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x26);
@@ -134,9 +134,9 @@ LONG _CeRegQueryValueEx( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegCloseKey(/*{{{*/
+                RapiContext *context,
 		HKEY hKey)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x21);
@@ -152,6 +152,7 @@ LONG _CeRegCloseKey(/*{{{*/
 }/*}}}*/
 
 LONG _CeRegQueryInfoKey( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPWSTR lpClass,
 		LPDWORD lpcbClass,
@@ -165,7 +166,6 @@ LONG _CeRegQueryInfoKey( /*{{{*/
 		LPDWORD lpcbSecurityDescriptor,
 		PFILETIME lpftLastWriteTime)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x25);
@@ -208,6 +208,7 @@ LONG _CeRegQueryInfoKey( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegEnumValue( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		DWORD dwIndex,
 		LPWSTR lpszValueName,
@@ -217,7 +218,6 @@ LONG _CeRegEnumValue( /*{{{*/
 		LPBYTE lpData,
 		LPDWORD lpcbData)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x23);
@@ -251,6 +251,7 @@ LONG _CeRegEnumValue( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegEnumKeyEx( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		DWORD dwIndex,
 		LPWSTR lpName,
@@ -260,7 +261,6 @@ LONG _CeRegEnumKeyEx( /*{{{*/
 		LPDWORD lpcbClass,
 		PFILETIME lpftLastWriteTime)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x1f);
@@ -296,6 +296,7 @@ LONG _CeRegEnumKeyEx( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegSetValueEx( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
 		DWORD Reserved,
@@ -303,7 +304,6 @@ LONG _CeRegSetValueEx( /*{{{*/
 		const BYTE *lpData,
 		DWORD cbData)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x27);
@@ -332,10 +332,10 @@ LONG _CeRegSetValueEx( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegDeleteValue( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszValueName)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x24);
@@ -354,10 +354,10 @@ LONG _CeRegDeleteValue( /*{{{*/
 }/*}}}*/
 
 LONG _CeRegDeleteKey( /*{{{*/
+                RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x22);

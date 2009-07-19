@@ -6,6 +6,7 @@
 
 
 LONG _CeRegCreateKeyEx2(
+		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
 		DWORD Reserved,
@@ -16,7 +17,6 @@ LONG _CeRegCreateKeyEx2(
 		PHKEY phkResult,
 		LPDWORD lpdwDisposition)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 	HKEY result = 0;
 	DWORD disposition = 0;
@@ -48,13 +48,13 @@ LONG _CeRegCreateKeyEx2(
 }
 
 LONG _CeRegOpenKeyEx2(
+		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
 		DWORD ulOptions,
 		REGSAM samDesired,
 		PHKEY phkResult)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x2f);
@@ -78,6 +78,7 @@ LONG _CeRegOpenKeyEx2(
 
 
 LONG _CeRegQueryValueEx2(
+		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
 		LPDWORD lpReserved,
@@ -85,7 +86,6 @@ LONG _CeRegQueryValueEx2(
 		LPBYTE lpData,
 		LPDWORD lpcbData)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
         if (lpData && (!lpcbData))
@@ -139,9 +139,9 @@ LONG _CeRegQueryValueEx2(
 
 
 LONG _CeRegCloseKey2(
+		RapiContext *context,
 		HKEY hKey)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x32);
@@ -158,10 +158,10 @@ LONG _CeRegCloseKey2(
 
 
 LONG _CeRegDeleteKey2(
+        RapiContext *context,
         HKEY hKey,
         LPCWSTR lpszSubKey)
 {
-    RapiContext* context = rapi_context_current();
     LONG return_value = ERROR_GEN_FAILURE;
 
     rapi_context_begin_command(context, 0x33);
@@ -179,10 +179,10 @@ LONG _CeRegDeleteKey2(
 
 
 LONG _CeRegDeleteValue2(
+        RapiContext *context,
         HKEY hKey,
         LPCWSTR lpszValueName)
 {
-    RapiContext* context = rapi_context_current();
     LONG return_value = ERROR_GEN_FAILURE;
 
     rapi_context_begin_command(context, 0x35);
@@ -201,6 +201,7 @@ LONG _CeRegDeleteValue2(
 
 
 LONG _CeRegQueryInfoKey2(
+		RapiContext *context,
 		HKEY hKey,
 		LPWSTR lpClass,
 		LPDWORD lpcbClass,
@@ -214,7 +215,6 @@ LONG _CeRegQueryInfoKey2(
 		LPDWORD lpcbSecurityDescriptor,
 		PFILETIME lpftLastWriteTime)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
         if (lpClass && (!lpcbClass))
@@ -269,6 +269,7 @@ LONG _CeRegQueryInfoKey2(
 
 
 LONG _CeRegEnumValue2(
+		RapiContext *context,
 		HKEY hKey,
 		DWORD dwIndex,
 		LPWSTR lpszValueName,
@@ -278,7 +279,6 @@ LONG _CeRegEnumValue2(
 		LPBYTE lpData,
 		LPDWORD lpcbData)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x34);
@@ -344,6 +344,7 @@ LONG _CeRegEnumValue2(
 
 
 LONG _CeRegEnumKeyEx2(
+		RapiContext *context,
 		HKEY hKey,
 		DWORD dwIndex,
 		LPWSTR lpName,
@@ -353,7 +354,6 @@ LONG _CeRegEnumKeyEx2(
 		LPDWORD lpcbClass,
 		PFILETIME lpftLastWriteTime)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
         if (lpClass && (!lpcbClass))
@@ -391,6 +391,7 @@ LONG _CeRegEnumKeyEx2(
 }
 
 LONG _CeRegSetValueEx2(
+		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
 		DWORD Reserved,
@@ -398,7 +399,6 @@ LONG _CeRegSetValueEx2(
 		const BYTE *lpData,
 		DWORD cbData)
 {
-	RapiContext* context = rapi_context_current();
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x38);

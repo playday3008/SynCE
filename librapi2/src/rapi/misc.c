@@ -6,18 +6,18 @@
 #include <time.h>
 
 BOOL _CeCreateProcess(/*{{{*/
-		LPCWSTR lpApplicationName,
-		LPCWSTR lpCommandLine,
-		void* lpProcessAttributes,
-		void* lpThreadAttributes,
-		BOOL bInheritHandles,
-		DWORD dwCreationFlags,
-		LPVOID lpEnvironment,
-		LPWSTR lpCurrentDirectory,
-		void* lpStartupInfo,
-		LPPROCESS_INFORMATION lpProcessInformation)
+    RapiContext *context,
+    LPCWSTR lpApplicationName,
+    LPCWSTR lpCommandLine,
+    void* lpProcessAttributes,
+    void* lpThreadAttributes,
+    BOOL bInheritHandles,
+    DWORD dwCreationFlags,
+    LPVOID lpEnvironment,
+    LPWSTR lpCurrentDirectory,
+    void* lpStartupInfo,
+    LPPROCESS_INFORMATION lpProcessInformation)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL result = false;
 
 	rapi_context_begin_command(context, 0x19);
@@ -56,9 +56,9 @@ exit:
 }/*}}}*/
 
 BOOL _CeGetStoreInformation( /*{{{*/
+                RapiContext *context,
 		LPSTORE_INFORMATION lpsi)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL result = false;
 
 	rapi_context_begin_command(context, 0x29);
@@ -87,10 +87,9 @@ exit:
 }/*}}}*/
 
 void _CeGetSystemInfo( /*{{{*/
+                RapiContext *context,
 		LPSYSTEM_INFO lpSystemInfo)
 {
-	RapiContext* context = rapi_context_current();
-
 	rapi_context_begin_command(context, 0x2f);
 	rapi_buffer_write_optional_out(context->send_buffer, lpSystemInfo, sizeof(SYSTEM_INFO));
 
@@ -127,10 +126,10 @@ void _CeGetSystemInfo( /*{{{*/
 }/*}}}*/
 
 BOOL _CeGetSystemPowerStatusEx( /*{{{*/
+                RapiContext *context,
 		PSYSTEM_POWER_STATUS_EX pSystemPowerStatus,
 		BOOL refresh)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL result = false;
 
 	rapi_context_begin_command(context, 0x41);
@@ -156,9 +155,9 @@ exit:
 }/*}}}*/
 
 BOOL _CeGetVersionEx(/*{{{*/
+                RapiContext *context,
 		LPCEOSVERSIONINFO lpVersionInformation)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL result = false;
 	uint32_t size = 0;
 
@@ -187,10 +186,10 @@ BOOL _CeGetVersionEx(/*{{{*/
 }/*}}}*/
 
 BOOL _CeOidGetInfo(/*{{{*/
+                RapiContext *context,
 		CEOID oid,
 		CEOIDINFO *poidInfo)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL result = false;
 	uint16_t size = 0;
         uint i;
@@ -307,9 +306,10 @@ fail:
   Undocumented function used by the RapiConfig.exe tool
 */
 
-HRESULT _CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply)
+HRESULT _CeProcessConfig(
+                RapiContext *context,
+                LPCWSTR config, DWORD flags, LPWSTR* reply)
 {
-  RapiContext* context = rapi_context_current();
   HRESULT result = E_UNEXPECTED;
   BOOL has_reply = FALSE;
   DWORD size = 0;
@@ -377,9 +377,8 @@ exit:
  *
  * http://sourceforge.net/mailarchive/forum.php?thread_id=844008&forum_id=1226
  */
-BOOL _CeStartReplication( void )/*{{{*/
+BOOL _CeStartReplication( RapiContext *context )/*{{{*/
 {
-	RapiContext* context = rapi_context_current();
 	DWORD result = false;
 
 	rapi_context_begin_command(context, 0x38);
@@ -401,11 +400,11 @@ BOOL _CeStartReplication( void )/*{{{*/
 */
 
 BOOL _CeGetSystemMemoryDivision(
+    RapiContext *context,
     LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
     LPDWORD lpdwPageSize)
 {
-  RapiContext* context = rapi_context_current();
   BOOL result = false;
 
   rapi_context_begin_command(context, 0x28);
@@ -428,9 +427,9 @@ exit:
 }
 
 DWORD _CeSetSystemMemoryDivision(
+    RapiContext *context,
     DWORD dwStoragePages)
 {
-  RapiContext* context = rapi_context_current();
   DWORD result = 3;
 
   rapi_context_begin_command(context, 0x42);
@@ -448,9 +447,10 @@ exit:
   return result;
 }
 
-BOOL _CeRegCopyFile(LPCWSTR filename)
+BOOL _CeRegCopyFile(
+    RapiContext *context,
+    LPCWSTR filename)
 {
-  RapiContext* context = rapi_context_current();
   BOOL result = FALSE;
 
   if (!filename)
@@ -475,9 +475,10 @@ exit:
   return result;
 }
 
-BOOL _CeRegRestoreFile(LPCWSTR filename)
+BOOL _CeRegRestoreFile(
+    RapiContext *context,
+    LPCWSTR filename)
 {
-  RapiContext* context = rapi_context_current();
   BOOL result = FALSE;
 
   if (!filename)
@@ -502,9 +503,8 @@ exit:
   return result;
 }
 
-BOOL _CeKillAllApps()
+BOOL _CeKillAllApps(RapiContext *context)
 {
-  RapiContext* context = rapi_context_current();
   BOOL result = FALSE;
 
   rapi_context_begin_command(context, 0x49);
@@ -521,9 +521,8 @@ exit:
   return result;
 }
 
-BOOL _CeSyncTimeToPc()
+BOOL _CeSyncTimeToPc(RapiContext *context)
 {
-  RapiContext* context = rapi_context_current();
   BOOL result = FALSE;
   FILETIME ftime_now;
 
@@ -551,39 +550,40 @@ exit:
 
 
 DWORD _NotImplementedCeGetDiskFreeSpaceEx(
-					  LPCTSTR _lpDirectoryName, 
-					  PULARGE_INTEGER lpFreeBytesAvailable, 
-					  PULARGE_INTEGER lpTotalNumberOfBytes, 
-					  PULARGE_INTEGER lpTotalNumberOfFreeBytes){
-
-  RapiContext* context = rapi_context_current();
+    RapiContext *context,
+    LPCTSTR _lpDirectoryName, 
+    PULARGE_INTEGER lpFreeBytesAvailable, 
+    PULARGE_INTEGER lpTotalNumberOfBytes, 
+    PULARGE_INTEGER lpTotalNumberOfFreeBytes)
+{
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return 0;
 }
 
 
-HRESULT _NotImplementedCeSyncStart(LPCWSTR params)
+HRESULT _NotImplementedCeSyncStart(
+    RapiContext *context,
+    LPCWSTR params)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return E_NOTIMPL;
 }
 
 
-HRESULT _NotImplementedCeSyncResume(void)
+HRESULT _NotImplementedCeSyncResume(
+    RapiContext *context)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return E_NOTIMPL;
 }
 
 
-HRESULT _NotImplementedCeSyncPause(void)
+HRESULT _NotImplementedCeSyncPause(
+    RapiContext *context)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return E_NOTIMPL;

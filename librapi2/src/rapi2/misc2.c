@@ -7,6 +7,7 @@
 #include <time.h>
 
 BOOL _CeCreateProcess2(/*{{{*/
+        RapiContext *context,
         LPCWSTR lpApplicationName,
         LPCWSTR lpCommandLine,
         void* lpProcessAttributes,
@@ -18,7 +19,6 @@ BOOL _CeCreateProcess2(/*{{{*/
         void* lpStartupInfo,
         LPPROCESS_INFORMATION lpProcessInformation)
 {
-    RapiContext* context = rapi_context_current();
     BOOL result = false;
 
     rapi_context_begin_command(context, 0x2a);
@@ -59,10 +59,9 @@ exit:
 
 
 void _CeGetSystemInfo2( /*{{{*/
+        RapiContext *context,
         LPSYSTEM_INFO lpSystemInfo)
 {
-    RapiContext* context = rapi_context_current();
-
     rapi_context_begin_command(context, 0x3d);
     rapi_buffer_write_optional_out(context->send_buffer, lpSystemInfo, sizeof(SYSTEM_INFO));
 
@@ -98,9 +97,9 @@ void _CeGetSystemInfo2( /*{{{*/
 
 
 BOOL _CeGetVersionEx2(/*{{{*/
+        RapiContext *context,
         LPCEOSVERSIONINFO lpVersionInformation)
 {
-    RapiContext* context = rapi_context_current();
     BOOL result = false;
     uint32_t size = 0;
 
@@ -137,10 +136,10 @@ BOOL _CeGetVersionEx2(/*{{{*/
 
 
 BOOL _CeGetSystemPowerStatusEx2( /*{{{*/
+        RapiContext *context,
         PSYSTEM_POWER_STATUS_EX pSystemPowerStatus,
         BOOL refresh)
 {
-    RapiContext* context = rapi_context_current();
     BOOL result = false;
 
     rapi_context_begin_command(context, 0x49);
@@ -168,9 +167,9 @@ exit:
 
 
 BOOL _CeGetStoreInformation2( /*{{{*/
+        RapiContext *context,
         LPSTORE_INFORMATION lpsi)
 {
-    RapiContext* context = rapi_context_current();
     BOOL result = false;
 
     rapi_context_begin_command(context, 0x39);
@@ -202,11 +201,11 @@ exit:
 #if 0
 
 BOOL _CeGetSystemMemoryDivision2(
+        RapiContext *context,
         LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
     LPDWORD lpdwPageSize)
 {
-    /*    RapiContext* context = rapi_context_current(); */
     BOOL result = false;
 
     /* Do we have this call on WM5? */
@@ -233,11 +232,11 @@ BOOL _CeGetSystemMemoryDivision2(
 #else
 
 BOOL _NotImplementedCeGetSystemMemoryDivision2(
+    RapiContext *context,
     LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
     LPDWORD lpdwPageSize)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;
@@ -250,9 +249,10 @@ BOOL _NotImplementedCeGetSystemMemoryDivision2(
   Undocumented function used by the RapiConfig.exe tool
  */
 
-HRESULT _CeProcessConfig2(LPCWSTR config, DWORD flags, LPWSTR* reply)
+HRESULT _CeProcessConfig2(
+        RapiContext *context,
+        LPCWSTR config, DWORD flags, LPWSTR* reply)
 {
-    RapiContext* context = rapi_context_current();
     HRESULT result = E_UNEXPECTED;
     DWORD size = 0;
     LPWSTR buffer = NULL;
@@ -303,9 +303,9 @@ exit:
  *
  * http://sourceforge.net/mailarchive/forum.php?thread_id=844008&forum_id=1226
  */
-BOOL _CeStartReplication2( void )/*{{{*/
+BOOL _CeStartReplication2(
+        RapiContext *context)/*{{{*/
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = FALSE;
 
     rapi_context_begin_command(context, 0x02);
@@ -320,9 +320,10 @@ BOOL _CeStartReplication2( void )/*{{{*/
 }/*}}}*/
 
 
-HRESULT _CeSyncStart2(LPCWSTR params)
+HRESULT _CeSyncStart2(
+        RapiContext *context,
+        LPCWSTR params)
 {
-    RapiContext* context = rapi_context_current();
     HRESULT return_value = -1;
 
     rapi_context_begin_command(context, 0x59);
@@ -339,9 +340,9 @@ HRESULT _CeSyncStart2(LPCWSTR params)
 }
 
 
-HRESULT _CeSyncResume2(void)
+HRESULT _CeSyncResume2(
+        RapiContext *context)
 {
-    RapiContext* context = rapi_context_current();
     HRESULT return_value = -1;
 
     rapi_context_begin_command(context, 0x10);
@@ -356,9 +357,9 @@ HRESULT _CeSyncResume2(void)
 }
 
 
-HRESULT _CeSyncPause2(void)
+HRESULT _CeSyncPause2(
+        RapiContext *context)
 {
-    RapiContext* context = rapi_context_current();
     HRESULT return_value = -1;
 
     rapi_context_begin_command(context, 0x0f);
@@ -373,9 +374,9 @@ HRESULT _CeSyncPause2(void)
 }
 
 
-BOOL _CeSyncTimeToPc2()
+BOOL _CeSyncTimeToPc2(
+        RapiContext *context)
 {
-    RapiContext* context = rapi_context_current();
     BOOL result = FALSE;
     FILETIME ftime_now;
 
@@ -402,12 +403,12 @@ exit:
 
 
 DWORD _CeGetDiskFreeSpaceEx2(
+        RapiContext *context,
 		LPCTSTR _lpDirectoryName, 
 		PULARGE_INTEGER lpFreeBytesAvailable, 
 		PULARGE_INTEGER lpTotalNumberOfBytes, 
-		PULARGE_INTEGER lpTotalNumberOfFreeBytes){
-	
-	RapiContext* context = rapi_context_current();
+		PULARGE_INTEGER lpTotalNumberOfFreeBytes)
+{
 	LONG return_value = ERROR_GEN_FAILURE;
 
 	rapi_context_begin_command(context, 0x5c);
@@ -465,44 +466,46 @@ DWORD _CeGetDiskFreeSpaceEx2(
 }
 
 
-BOOL _NotImplementedCeRegCopyFile2(LPCWSTR filename)
+BOOL _NotImplementedCeRegCopyFile2(
+        RapiContext *context,
+        LPCWSTR filename)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;
 }
 
-BOOL _NotImplementedCeRegRestoreFile2(LPCWSTR filename)
+BOOL _NotImplementedCeRegRestoreFile2(
+        RapiContext *context,
+        LPCWSTR filename)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;
 }
 
-BOOL _NotImplementedCeKillAllApps2()
+BOOL _NotImplementedCeKillAllApps2(
+        RapiContext *context)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;
 }
 
 DWORD _NotImplementedCeSetSystemMemoryDivision2(
+    RapiContext *context,
     DWORD dwStoragePages)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;
 }
 
 BOOL _NotImplementedCeOidGetInfo2(/*{{{*/
+        RapiContext *context,
 		CEOID oid,
 		CEOIDINFO *poidInfo)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;

@@ -9,9 +9,9 @@
 
 
 BOOL _CeCheckPassword( /*{{{*/
+                RapiContext *context,
 		LPWSTR lpszPassword)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 
 	rapi_context_begin_command(context, 0x34);

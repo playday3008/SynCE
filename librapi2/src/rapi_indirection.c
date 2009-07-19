@@ -22,7 +22,7 @@ BOOL CeCloseHandle(
         return false;
     }
 
-    return ( *context->rapi_ops->CeCloseHandle ) ( hObject );
+    return ( *context->rapi_ops->CeCloseHandle ) ( context, hObject );
 }
 
 HANDLE CeCreateFile(
@@ -43,6 +43,7 @@ HANDLE CeCreateFile(
     }
 
     return ( *context->rapi_ops->CeCreateFile ) (
+            context,
             lpFileName,
     dwDesiredAccess,
     dwShareMode,
@@ -69,6 +70,7 @@ BOOL CeReadFile(
     }
 
     return ( *context->rapi_ops->CeReadFile ) (
+            context,
             hFile,
     lpBuffer,
     nNumberOfBytesToRead,
@@ -93,6 +95,7 @@ BOOL CeWriteFile(
     }
 
     return ( *context->rapi_ops->CeWriteFile ) (
+            context,
             hFile,
     lpBuffer,
     nNumberOfBytesToWrite,
@@ -116,6 +119,7 @@ DWORD CeSetFilePointer(
     }
 
     return ( *context->rapi_ops->CeSetFilePointer ) (
+            context,
             hFile,
     lDistanceToMove,
     lpDistanceToMoveHigh,
@@ -133,7 +137,7 @@ BOOL CeSetEndOfFile(
         return false;
     }
 
-    return ( *context->rapi_ops->CeSetEndOfFile ) ( hFile );
+    return ( *context->rapi_ops->CeSetEndOfFile ) ( context, hFile );
 }
 
 BOOL CeGetFileTime(
@@ -151,6 +155,7 @@ BOOL CeGetFileTime(
     }
 
     return ( *context->rapi_ops->CeGetFileTime ) (
+            context,
             hFile,
     lpCreationTime,
     lpLastAccessTime,
@@ -172,6 +177,7 @@ BOOL CeSetFileTime(
     }
 
     return ( *context->rapi_ops->CeSetFileTime ) (
+            context,
             hFile,
     lpCreationTime,
     lpLastAccessTime,
@@ -201,6 +207,7 @@ BOOL CeCopyFile(
     }
 
     return ( *context->rapi_ops->CeCopyFile ) (
+            context,
             lpExistingFileName,
     lpNewFileName,
     bFailIfExists );
@@ -220,6 +227,7 @@ BOOL CeCreateDirectory(
     }
 
     return ( *context->rapi_ops->CeCreateDirectory ) (
+            context,
             lpPathName,
     lpSecurityAttributes );
 }
@@ -237,6 +245,7 @@ BOOL CeDeleteFile(
     }
 
     return ( *context->rapi_ops->CeDeleteFile ) (
+            context,
             lpFileName );
 }
 
@@ -256,6 +265,7 @@ BOOL CeFindAllFiles(
     }
 
     return ( *context->rapi_ops->CeFindAllFiles ) (
+            context,
             szPath,
     dwFlags,
     lpdwFoundCount,
@@ -276,6 +286,7 @@ HANDLE CeFindFirstFile(
     }
 
     return ( *context->rapi_ops->CeFindFirstFile ) (
+            context,
             lpFileName,
     lpFindFileData );
 }
@@ -294,6 +305,7 @@ BOOL CeFindNextFile(
     }
 
     return ( *context->rapi_ops->CeFindNextFile ) (
+            context,
             hFindFile,
     lpFindFileData );
 }
@@ -310,7 +322,7 @@ BOOL CeFindClose(
         return false;
     }
 
-    return ( *context->rapi_ops->CeFindClose ) ( hFindFile );
+    return ( *context->rapi_ops->CeFindClose ) ( context, hFindFile );
 }
 
 
@@ -325,7 +337,7 @@ DWORD CeGetFileAttributes(
         return 0xFFFFFFFF;
     }
 
-    return ( *context->rapi_ops->CeGetFileAttributes ) ( lpFileName );
+    return ( *context->rapi_ops->CeGetFileAttributes ) ( context, lpFileName );
 }
 
 
@@ -342,6 +354,7 @@ DWORD CeGetFileSize(
     }
 
     return ( *context->rapi_ops->CeGetFileSize ) (
+            context,
             hFile,
     lpFileSizeHigh );
 }
@@ -361,6 +374,7 @@ DWORD CeGetSpecialFolderPath(
     }
 
     return ( *context->rapi_ops->CeGetSpecialFolderPath ) (
+            context,
             nFolder,
     nBufferLength,
     lpBuffer );
@@ -380,6 +394,7 @@ BOOL CeMoveFile(
     }
 
     return ( *context->rapi_ops->CeMoveFile ) (
+            context,
             lpExistingFileName,
     lpNewFileName );
 }
@@ -396,7 +411,7 @@ BOOL CeRemoveDirectory(
         return false;
     }
 
-    return ( *context->rapi_ops->CeRemoveDirectory ) ( lpPathName );
+    return ( *context->rapi_ops->CeRemoveDirectory ) ( context, lpPathName );
 }
 
 
@@ -413,6 +428,7 @@ BOOL CeSetFileAttributes(
     }
 
     return ( *context->rapi_ops->CeSetFileAttributes ) (
+            context,
             lpFileName,
     dwFileAttributes );
 }
@@ -431,6 +447,7 @@ BOOL CeSHCreateShortcut(
     }
 
     return ( *context->rapi_ops->CeSHCreateShortcut ) (
+            context,
             lpszShortcut,
     lpszTarget );
 }
@@ -446,7 +463,7 @@ BOOL CeSyncTimeToPc()
         return false;
     }
 
-    return ( *context->rapi_ops->CeSyncTimeToPc ) ();
+    return ( *context->rapi_ops->CeSyncTimeToPc ) ( context );
 }
 
 
@@ -474,6 +491,7 @@ CEOID CeCreateDatabase(
     }
 
     return ( *context->rapi_ops->CeCreateDatabase ) (
+            context,
             lpszName,
     dwDbaseType,
     wNumSortOrder,
@@ -491,7 +509,7 @@ BOOL CeDeleteDatabase( CEOID oid )
         return false;
     }
 
-    return ( *context->rapi_ops->CeDeleteDatabase ) ( oid );
+    return ( *context->rapi_ops->CeDeleteDatabase ) ( context, oid );
 }
 
 
@@ -510,6 +528,7 @@ BOOL CeFindAllDatabases(
     }
 
     return ( *context->rapi_ops->CeFindAllDatabases ) (
+            context,
             dwDbaseType,
     wFlags,
     cFindData,
@@ -529,6 +548,7 @@ HANDLE CeFindFirstDatabase(
     }
 
     return ( *context->rapi_ops->CeFindFirstDatabase ) (
+            context,
             dwDbaseType );
 }
 
@@ -545,6 +565,7 @@ CEOID CeFindNextDatabase(
     }
 
     return ( *context->rapi_ops->CeFindNextDatabase ) (
+            context,
             hEnum );
 }
 
@@ -565,6 +586,7 @@ HANDLE CeOpenDatabase(
     }
 
     return ( *context->rapi_ops->CeOpenDatabase ) (
+            context,
             poid,
     lpszName,
     propid,
@@ -590,6 +612,7 @@ CEOID CeReadRecordProps(
     }
 
     return ( *context->rapi_ops->CeReadRecordProps ) (
+            context,
             hDbase,
     dwFlags,
     lpcPropID,
@@ -614,6 +637,7 @@ CEOID CeSeekDatabase(
     }
 
     return ( *context->rapi_ops->CeSeekDatabase ) (
+            context,
             hDatabase,
     dwSeekType,
     dwValue,
@@ -636,6 +660,7 @@ CEOID CeWriteRecordProps(
     }
 
     return ( *context->rapi_ops->CeWriteRecordProps ) (
+            context,
             hDbase,
     oidRecord,
     cPropID,
@@ -656,6 +681,7 @@ BOOL CeDeleteRecord(
     }
 
     return ( *context->rapi_ops->CeDeleteRecord ) (
+            context,
             hDatabase, oidRecord );
 }
 
@@ -673,6 +699,7 @@ BOOL CeSetDatabaseInfo(
     }
 
     return ( *context->rapi_ops->CeSetDatabaseInfo ) (
+            context,
             oidDbase,
     pNewInfo );
 }
@@ -704,6 +731,7 @@ LONG CeRegCreateKeyEx(
     }
 
     return ( *context->rapi_ops->CeRegCreateKeyEx ) (
+            context,
             hKey,
     lpszSubKey,
     Reserved,
@@ -730,6 +758,7 @@ LONG CeRegOpenKeyEx(
     }
 
     return ( *context->rapi_ops->CeRegOpenKeyEx ) (
+            context,
             hKey,
     lpszSubKey,
     ulOptions,
@@ -748,6 +777,7 @@ LONG CeRegCloseKey(
     }
 
     return ( *context->rapi_ops->CeRegCloseKey ) (
+            context,
             hKey );
 }
 
@@ -763,6 +793,7 @@ LONG CeRegDeleteKey(
     }
 
     return ( *context->rapi_ops->CeRegDeleteKey ) (
+            context,
             hKey,
     lpszSubKey
     );
@@ -780,6 +811,7 @@ LONG CeRegDeleteValue(
     }
 
     return ( *context->rapi_ops->CeRegDeleteValue ) (
+            context,
             hKey,
     lpszValueName
     );
@@ -802,6 +834,7 @@ DWORD CeGetDiskFreeSpaceEx(
     }
 
     return ( *context->rapi_ops->CeGetDiskFreeSpaceEx ) (
+            context,
 			_lpDirectoryName,
 			lpFreeBytesAvailable,
 			lpTotalNumberOfBytes,
@@ -832,6 +865,7 @@ LONG CeRegQueryInfoKey(
     }
 
     return ( *context->rapi_ops->CeRegQueryInfoKey ) (
+            context,
             hKey,
     lpClass,
     lpcbClass,
@@ -862,6 +896,7 @@ LONG CeRegQueryValueEx(
     }
 
     return ( *context->rapi_ops->CeRegQueryValueEx ) (
+            context,
             hKey,
     lpValueName,
     lpReserved,
@@ -888,6 +923,7 @@ LONG CeRegEnumValue(
     }
 
     return ( *context->rapi_ops->CeRegEnumValue ) (
+            context,
             hKey,
     dwIndex,
     lpszValueName,
@@ -916,6 +952,7 @@ LONG CeRegEnumKeyEx(
     }
 
     return ( *context->rapi_ops->CeRegEnumKeyEx ) (
+            context,
             hKey,
     dwIndex,
     lpName,
@@ -942,6 +979,7 @@ LONG CeRegSetValueEx(
     }
 
     return ( *context->rapi_ops->CeRegSetValueEx ) (
+            context,
             hKey,
     lpValueName,
     Reserved,
@@ -969,7 +1007,7 @@ BOOL CeCheckPassword(
         return false;
     }
 
-    return ( *context->rapi_ops->CeCheckPassword ) ( lpszPassword );
+    return ( *context->rapi_ops->CeCheckPassword ) ( context, lpszPassword );
 }
 
 
@@ -994,6 +1032,7 @@ BOOL CeCreateProcess(
     }
 
     return ( *context->rapi_ops->CeCreateProcess ) (
+            context,
             lpApplicationName,
     lpCommandLine,
     lpProcessAttributes,
@@ -1018,7 +1057,7 @@ BOOL CeGetStoreInformation(
         return false;
     }
 
-    return ( *context->rapi_ops->CeGetStoreInformation ) ( lpsi );
+    return ( *context->rapi_ops->CeGetStoreInformation ) ( context, lpsi );
 }
 
 
@@ -1034,6 +1073,7 @@ void CeGetSystemInfo(
     }
 
     return ( *context->rapi_ops->CeGetSystemInfo ) (
+            context,
             lpSystemInfo );
 }
 
@@ -1048,7 +1088,7 @@ BOOL CeGetSystemPowerStatusEx( PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL 
         return false;
     }
 
-    return ( *context->rapi_ops->CeGetSystemPowerStatusEx ) ( pSystemPowerStatus, refresh );
+    return ( *context->rapi_ops->CeGetSystemPowerStatusEx ) ( context, pSystemPowerStatus, refresh );
 }
 
 
@@ -1064,6 +1104,7 @@ BOOL CeGetVersionEx(
     }
 
     return ( *context->rapi_ops->CeGetVersionEx ) (
+            context,
             lpVersionInformation );
 }
 
@@ -1081,6 +1122,7 @@ BOOL CeOidGetInfo(
     }
 
     return ( *context->rapi_ops->CeOidGetInfo ) (
+            context,
             oid,
     poidInfo );
 }
@@ -1094,7 +1136,7 @@ HRESULT CeProcessConfig( LPCWSTR config, DWORD flags, LPWSTR* reply )
         return E_UNEXPECTED;
     }
 
-    return ( *context->rapi_ops->CeProcessConfig ) ( config, flags, reply );
+    return ( *context->rapi_ops->CeProcessConfig ) ( context, config, flags, reply );
 }
 
 
@@ -1108,7 +1150,7 @@ BOOL CeStartReplication( void )
         return false;
     }
 
-    return ( *context->rapi_ops->CeStartReplication ) ();
+    return ( *context->rapi_ops->CeStartReplication ) ( context );
 }
 
 
@@ -1120,7 +1162,7 @@ HRESULT CeSyncStart( LPCWSTR params )
         return E_UNEXPECTED;
     }
 
-    return ( *context->rapi_ops->CeSyncStart ) ( params );
+    return ( *context->rapi_ops->CeSyncStart ) ( context, params );
 }
 
 
@@ -1132,7 +1174,7 @@ HRESULT CeSyncResume( void )
         return E_UNEXPECTED;
     }
 
-    return ( *context->rapi_ops->CeSyncResume ) ();
+    return ( *context->rapi_ops->CeSyncResume ) ( context );
 }
 
 
@@ -1144,7 +1186,7 @@ HRESULT CeSyncPause( void )
         return E_UNEXPECTED;
     }
 
-    return ( *context->rapi_ops->CeSyncPause ) ();
+    return ( *context->rapi_ops->CeSyncPause ) ( context );
 }
 
 
@@ -1162,6 +1204,7 @@ BOOL CeGetSystemMemoryDivision(
     }
 
     return ( *context->rapi_ops->CeGetSystemMemoryDivision ) (
+            context,
             lpdwStoragePages,
     lpdwRamPages,
     lpdwPageSize );
@@ -1179,7 +1222,7 @@ DWORD CeSetSystemMemoryDivision(
         return 3;
     }
 
-    return ( *context->rapi_ops->CeSetSystemMemoryDivision ) ( dwStoragePages );
+    return ( *context->rapi_ops->CeSetSystemMemoryDivision ) ( context, dwStoragePages );
 }
 
 
@@ -1193,7 +1236,7 @@ BOOL CeRegCopyFile( LPCWSTR filename )
         return false;
     }
 
-    return ( *context->rapi_ops->CeRegCopyFile ) ( filename );
+    return ( *context->rapi_ops->CeRegCopyFile ) ( context, filename );
 }
 
 
@@ -1207,7 +1250,7 @@ BOOL CeRegRestoreFile( LPCWSTR filename )
         return false;
     }
 
-    return ( *context->rapi_ops->CeRegRestoreFile ) ( filename );
+    return ( *context->rapi_ops->CeRegRestoreFile ) ( context, filename );
 }
 
 
@@ -1221,7 +1264,7 @@ BOOL CeKillAllApps()
         return false;
     }
 
-    return ( *context->rapi_ops->CeKillAllApps ) ();
+    return ( *context->rapi_ops->CeKillAllApps ) ( context );
 }
 
 
@@ -1250,6 +1293,7 @@ HRESULT CeRapiInvoke(
     }
 
     return ( *context->rapi_ops->CeRapiInvoke ) (
+            context,
             pDllPath,
     pFunctionName,
     cbInput,

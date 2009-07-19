@@ -33,6 +33,7 @@ static HRESULT CeRapiInvokeCommon(
 }
 
 static HRESULT CeRapiInvokeStream( /*{{{*/
+    RapiContext *source_context,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
@@ -102,6 +103,7 @@ exit:
 }/*}}}*/
 
 static HRESULT CeRapiInvokeBuffers(
+    RapiContext *context,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
@@ -110,17 +112,12 @@ static HRESULT CeRapiInvokeBuffers(
     BYTE **ppOutput,
     DWORD dwReserved)
 {
-  RapiContext* context = rapi_context_new();
   HRESULT return_value = E_UNEXPECTED;
   HRESULT hr;
   uint32_t unknown;
   unsigned bytes_left;
   unsigned output_size;
   uint32_t last_error;
-
-  hr = rapi_context_connect(context);
-  if (FAILED(hr))
-    goto exit;
 
   hr = CeRapiInvokeCommon(
       context,
@@ -173,7 +170,7 @@ static HRESULT CeRapiInvokeBuffers(
       synce_error("Failed to read");
       break;
     }
-    rapi_context_current()->last_error = last_error;
+    context->last_error = last_error;
     synce_trace("last_error: 0x%08x", last_error);
     bytes_left -= 4;
 
@@ -223,10 +220,6 @@ static HRESULT CeRapiInvokeBuffers(
 
   } while (0);
 
-
-  /* XXX: is this really the right way? */
-  shutdown(synce_socket_get_descriptor(context->socket), SHUT_WR);
-
   if ( !rapi_buffer_recv(context->recv_buffer, context->socket) )
   {
     synce_error("rapi_buffer_recv failed");
@@ -238,7 +231,6 @@ static HRESULT CeRapiInvokeBuffers(
       rapi_buffer_get_size(context->recv_buffer));*/
 
 exit:
-  rapi_context_unref(context);
   if (SUCCEEDED(hr))
     return return_value;
   else
@@ -246,6 +238,7 @@ exit:
 }
 
 HRESULT _CeRapiInvoke( /*{{{*/
+    RapiContext *context,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
@@ -256,10 +249,10 @@ HRESULT _CeRapiInvoke( /*{{{*/
     DWORD dwReserved)
 {
   if (ppIRAPIStream)
-    return CeRapiInvokeStream(pDllPath, pFunctionName, cbInput, pInput,
+    return CeRapiInvokeStream(context, pDllPath, pFunctionName, cbInput, pInput,
         pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
   else
-    return CeRapiInvokeBuffers(pDllPath, pFunctionName, cbInput, pInput,
+    return CeRapiInvokeBuffers(context, pDllPath, pFunctionName, cbInput, pInput,
         pcbOutput, ppOutput, dwReserved);
 }/*}}}*/
 

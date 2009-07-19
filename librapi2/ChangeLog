@@ -1,3 +1,9 @@
+2009-07-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* change all backend functions to accept a rapi_context as
+	  first parameter, instead of using current_context, which
+	  is obtained by the calling wrapper functions anyway
+
 2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.14 release

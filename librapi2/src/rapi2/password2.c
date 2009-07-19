@@ -9,9 +9,9 @@
 
 
 BOOL _NotImplementedCeCheckPassword2( /*{{{*/
+		RapiContext *context,
 		LPWSTR lpszPassword)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return 0;

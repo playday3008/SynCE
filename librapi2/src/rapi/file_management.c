@@ -7,10 +7,10 @@
 #include <stdlib.h>
 
 BOOL _CeCreateDirectory(
+                RapiContext *context,
 		LPCWSTR lpPathName,
 		LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 
 	rapi_context_begin_command(context, 0x17);
@@ -27,9 +27,9 @@ BOOL _CeCreateDirectory(
 }
 
 BOOL _CeDeleteFile(
+                RapiContext *context,
 		LPCWSTR lpFileName)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 
 	rapi_context_begin_command(context, 0x1c);
@@ -45,12 +45,12 @@ BOOL _CeDeleteFile(
 }
 
 BOOL _CeFindAllFiles(
+                RapiContext *context,
 		LPCWSTR szPath,
 		DWORD dwFlags,
 		LPDWORD lpdwFoundCount,
 		LPLPCE_FIND_DATA ppFindDataArray)
 {
-	RapiContext* context = rapi_context_current();
 	uint32_t count = 0;
 
 	rapi_context_begin_command(context, 0x09);
@@ -127,10 +127,10 @@ BOOL _CeFindAllFiles(
 }
 
 HANDLE _CeFindFirstFile(
+                RapiContext *context,
 		LPCWSTR lpFileName,
 		LPCE_FIND_DATA lpFindFileData)
 {
-	RapiContext* context = rapi_context_current();
 	HANDLE handle = INVALID_HANDLE_VALUE;
 
 	rapi_context_begin_command(context, 0x00);
@@ -149,10 +149,10 @@ HANDLE _CeFindFirstFile(
 }
 
 BOOL _CeFindNextFile(
+                RapiContext *context,
 		HANDLE hFindFile,
 		LPCE_FIND_DATA lpFindFileData)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = false;
 
 	rapi_context_begin_command(context, 0x01);
@@ -171,9 +171,9 @@ BOOL _CeFindNextFile(
 }
 
 BOOL _CeFindClose(
+                RapiContext *context,
 		HANDLE hFindFile)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = false;
 
 	rapi_context_begin_command(context, 0x02);
@@ -190,10 +190,10 @@ BOOL _CeFindClose(
 
 
 DWORD _CeGetFileSize(
+                RapiContext *context,
 		HANDLE hFile,
 		LPDWORD lpFileSizeHigh)
 {
-	RapiContext* context = rapi_context_current();
 	DWORD size = INVALID_FILE_SIZE;
 
 	rapi_context_begin_command(context, 0x1d);
@@ -218,11 +218,11 @@ DWORD _CeGetFileSize(
 }
 
 DWORD _CeGetSpecialFolderPath(
+                RapiContext *context,
 		int nFolder,
 		DWORD nBufferLength,
 		LPWSTR lpBuffer)
 {
-	RapiContext* context = rapi_context_current();
 	DWORD string_length = nBufferLength;
 
 	rapi_context_begin_command(context, 0x44);
@@ -247,11 +247,11 @@ DWORD _CeGetSpecialFolderPath(
  * This function copies an existing file to a new file.
  */
 BOOL _CeCopyFile(
+                RapiContext *context,
 		LPCWSTR lpExistingFileName,
 		LPCWSTR lpNewFileName,
 		BOOL bFailIfExists)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 
 	rapi_context_begin_command(context, 0x1b);
@@ -269,10 +269,10 @@ BOOL _CeCopyFile(
 }
 
 BOOL _CeMoveFile(
+                RapiContext *context,
 		LPCWSTR lpExistingFileName,
 		LPCWSTR lpNewFileName)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 
 	rapi_context_begin_command(context, 0x1a);
@@ -289,9 +289,9 @@ BOOL _CeMoveFile(
 }
 
 BOOL _CeRemoveDirectory(
+                RapiContext *context,
 		LPCWSTR lpPathName)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = 0;
 
 	rapi_context_begin_command(context, 0x18);
@@ -307,9 +307,9 @@ BOOL _CeRemoveDirectory(
 }
 
 DWORD _CeGetFileAttributes(
+                RapiContext *context,
 		LPCWSTR lpFileName)
 {
-	RapiContext* context = rapi_context_current();
 	DWORD return_value = 0xFFFFFFFF;
 
 	rapi_context_begin_command(context, 0x03);
@@ -326,10 +326,10 @@ exit:
 }
 
 BOOL _CeSetFileAttributes(
+                RapiContext *context,
 		LPCWSTR lpFileName,
 		DWORD dwFileAttributes)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = false;
 
 	synce_trace("Setting attributes %08x", dwFileAttributes);
@@ -349,10 +349,10 @@ exit:
 }
 
 BOOL _CeSHCreateShortcut(
-  LPCWSTR lpszShortcut,
-  LPCWSTR lpszTarget)
+                RapiContext *context,
+                LPCWSTR lpszShortcut,
+                LPCWSTR lpszTarget)
 {
-  RapiContext* context = rapi_context_current();
   BOOL return_value = 0;
 
   synce_trace("Creating shortcut");

@@ -24,12 +24,12 @@
 
 
 CEOID _CeCreateDatabase(
+                RapiContext *context,
 		LPWSTR lpszName,
 		DWORD dwDbaseType,
 		WORD wNumSortOrder,
 		SORTORDERSPEC *rgSortSpecs)
 {
-	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 	int i;
 
@@ -69,9 +69,9 @@ fail:
 }
 
 BOOL _CeDeleteDatabase(/*{{{*/
+                RapiContext *context,
 		CEOID oid)
 {
-	RapiContext* context = rapi_context_current();
 	BOOL return_value = false;
 
 	rapi_database_trace("begin");
@@ -94,12 +94,12 @@ exit:
 }/*}}}*/
 
 BOOL _CeFindAllDatabases(/*{{{*/
+                RapiContext *context,
 		DWORD dwDbaseType,
 		WORD wFlags,
 		LPWORD cFindData,
 		LPLPCEDB_FIND_DATA ppFindData)
 {
-	RapiContext* context = rapi_context_current();
 	uint16_t count;
 
 	rapi_database_trace("begin");
@@ -212,9 +212,9 @@ fail:
 }/*}}}*/
 
 HANDLE _CeFindFirstDatabase(/*{{{*/
+                RapiContext *context,
 		DWORD dwDbaseType)
 {
-	RapiContext* context = rapi_context_current();
 	HANDLE return_value = INVALID_HANDLE_VALUE;
 
 	rapi_database_trace("begin");
@@ -237,9 +237,9 @@ exit:
 }/*}}}*/
 
 CEOID _CeFindNextDatabase(/*{{{*/
+                RapiContext *context,
 		HANDLE hEnum)
 {
-	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 
 	rapi_database_trace("begin");
@@ -262,13 +262,13 @@ exit:
 }/*}}}*/
 
 HANDLE _CeOpenDatabase(/*{{{*/
+                RapiContext *context,
 		PCEOID poid,
 		LPWSTR lpszName,
 		CEPROPID propid,
 		DWORD dwFlags,
 		HWND hwndNotify)
 {
-	RapiContext* context = rapi_context_current();
 	HANDLE handle = INVALID_HANDLE_VALUE;
 
 	rapi_database_trace("begin");
@@ -309,6 +309,7 @@ exit:
 
 
 CEOID _CeReadRecordProps(/*{{{*/
+                RapiContext *context,
 		HANDLE hDbase,
 		DWORD dwFlags,
 		LPWORD lpcPropID,
@@ -319,7 +320,6 @@ CEOID _CeReadRecordProps(/*{{{*/
 
 	/* need to do something with rgPropID */
 
-	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 	uint16_t prop_id_count = 0;
 	uint32_t recv_size = 0;
@@ -646,9 +646,13 @@ static bool PreparePropValForWriting(unsigned* data_offset, void *send_buf, void
 	return success;
 }/*}}}*/
 
-CEOID _CeWriteRecordProps( HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVAL* rgPropVal)/*{{{*/
+CEOID _CeWriteRecordProps(
+                RapiContext *context,
+                HANDLE hDbase,
+                CEOID oidRecord,
+                WORD cPropID,
+                CEPROPVAL* rgPropVal)/*{{{*/
 {
-	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 
 	unsigned data_offset = 0;
@@ -775,12 +779,12 @@ exit:
 
 
 CEOID _CeSeekDatabase(/*{{{*/
+                RapiContext *context,
 		HANDLE hDatabase,
 		DWORD dwSeekType,
 		DWORD dwValue,
 		LPDWORD lpdwIndex)
 {
-	RapiContext* context = rapi_context_current();
 	CEOID return_value = 0;
 
 	rapi_database_trace("begin");
@@ -829,10 +833,10 @@ fail:
 }/*}}}*/
 
 BOOL _CeDeleteRecord(/*{{{*/
-    HANDLE hDatabase,
-    CEOID oidRecord)
+                RapiContext *context,
+                HANDLE hDatabase,
+                CEOID oidRecord)
 {
-  RapiContext* context = rapi_context_current();
   BOOL return_value = false;
 
   rapi_database_trace("begin");
@@ -856,10 +860,10 @@ exit:
 }/*}}}*/
 
 BOOL _CeSetDatabaseInfo(
-    CEOID oidDbase,
-    CEDBASEINFO* pNewInfo)
+                RapiContext *context,
+                CEOID oidDbase,
+                CEDBASEINFO* pNewInfo)
 {
-	RapiContext* context = rapi_context_current();
   BOOL return_value = false;
 
 	rapi_database_trace("begin");

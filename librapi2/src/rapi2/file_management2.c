@@ -7,11 +7,11 @@
 #include <stdlib.h>
 
 DWORD _CeGetSpecialFolderPath2(
+        RapiContext *context,
         int nFolder,
         DWORD nBufferLength,
         LPWSTR lpBuffer)
 {
-    RapiContext* context = rapi_context_current();
     DWORD string_length = nBufferLength;
 
     rapi_context_begin_command(context, 0x4b);
@@ -33,12 +33,12 @@ DWORD _CeGetSpecialFolderPath2(
 
 
 BOOL _CeFindAllFiles2(
+        RapiContext *context,
         LPCWSTR szPath,
         DWORD dwFlags,
         LPDWORD lpdwFoundCount,
         LPLPCE_FIND_DATA ppFindDataArray)
 {
-    RapiContext* context = rapi_context_current();
     uint32_t count = 0;
 
     rapi_context_begin_command(context, 0x1a);
@@ -120,10 +120,10 @@ BOOL _CeFindAllFiles2(
 
 
 HANDLE _CeFindFirstFile2(
+        RapiContext *context,
         LPCWSTR lpFileName,
         LPCE_FIND_DATA lpFindFileData)
 {
-    RapiContext* context = rapi_context_current();
     HANDLE handle = INVALID_HANDLE_VALUE;
 
     rapi_context_begin_command(context, 0x11);
@@ -143,10 +143,10 @@ HANDLE _CeFindFirstFile2(
 
 
 BOOL _CeFindNextFile2(
+        RapiContext *context,
         HANDLE hFindFile,
         LPCE_FIND_DATA lpFindFileData)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = false;
 
     rapi_context_begin_command(context, 0x12);
@@ -166,9 +166,9 @@ BOOL _CeFindNextFile2(
 
 
 BOOL _CeFindClose2(
+        RapiContext *context,
         HANDLE hFindFile)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     synce_trace("begin");
@@ -187,9 +187,9 @@ BOOL _CeFindClose2(
 
 
 DWORD _CeGetFileAttributes2(
+        RapiContext *context,
         LPCWSTR lpFileName)
 {
-    RapiContext* context = rapi_context_current();
     DWORD return_value = 0xFFFFFFFF;
 
     rapi_context_begin_command(context, 0x14);
@@ -207,9 +207,9 @@ exit:
 
 
 BOOL _CeDeleteFile2(
+        RapiContext *context,
         LPCWSTR lpFileName)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     rapi_context_begin_command(context, 0x2d);
@@ -227,10 +227,10 @@ BOOL _CeDeleteFile2(
 
 
 BOOL _CeCreateDirectory2(
+        RapiContext *context,
         LPCWSTR lpPathName,
         LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     rapi_context_begin_command(context, 0x28);
@@ -250,9 +250,9 @@ BOOL _CeCreateDirectory2(
 
 
 BOOL _CeRemoveDirectory2(
+        RapiContext *context,
         LPCWSTR lpPathName)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     rapi_context_begin_command(context, 0x29);
@@ -270,10 +270,10 @@ BOOL _CeRemoveDirectory2(
 
 
 DWORD _CeGetFileSize2(
+        RapiContext *context,
         HANDLE hFile,
         LPDWORD lpFileSizeHigh)
 {
-    RapiContext* context = rapi_context_current();
     DWORD size = INVALID_FILE_SIZE;
 
     rapi_context_begin_command(context, 0x2e);
@@ -302,11 +302,11 @@ DWORD _CeGetFileSize2(
  * This function copies an existing file to a new file.
  */
 BOOL _CeCopyFile2(
+        RapiContext *context,
         LPCWSTR lpExistingFileName,
         LPCWSTR lpNewFileName,
         BOOL bFailIfExists)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     rapi_context_begin_command(context, 0x2c);
@@ -324,10 +324,10 @@ BOOL _CeCopyFile2(
 }
 
 BOOL _CeMoveFile2(
+        RapiContext *context,
         LPCWSTR lpExistingFileName,
         LPCWSTR lpNewFileName)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     rapi_context_begin_command(context, 0x2b);
@@ -344,20 +344,20 @@ BOOL _CeMoveFile2(
 }
 
 BOOL _NotImplementedCeSetFileAttributes2(
+		RapiContext *context,
 		LPCWSTR lpFileName,
 		DWORD dwFileAttributes)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;
 }
 
 BOOL _NotImplementedCeSHCreateShortcut2(
+  RapiContext *context,
   LPCWSTR lpszShortcut,
   LPCWSTR lpszTarget)
 {
-  RapiContext* context = rapi_context_current();
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
   return FALSE;

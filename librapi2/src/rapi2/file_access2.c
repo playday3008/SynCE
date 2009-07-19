@@ -8,6 +8,7 @@
 
 
 HANDLE _CeCreateFile2(
+        RapiContext *context,
         LPCWSTR lpFileName,
         DWORD dwDesiredAccess,
         DWORD dwShareMode,
@@ -16,7 +17,6 @@ HANDLE _CeCreateFile2(
         DWORD dwFlagsAndAttributes,
         HANDLE hTemplateFile)
 {
-    RapiContext* context = rapi_context_current();
     HANDLE handle = INVALID_HANDLE_VALUE;
 
     synce_trace("begin");
@@ -40,13 +40,13 @@ HANDLE _CeCreateFile2(
 
 
 BOOL _CeReadFile2(
+        RapiContext *context,
         HANDLE hFile,
         LPVOID lpBuffer,
         DWORD nNumberOfBytesToRead,
         LPDWORD lpNumberOfBytesRead,
         LPOVERLAPPED lpOverlapped)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
     uint32_t bytes_read = 0;
 
@@ -87,13 +87,13 @@ BOOL _CeReadFile2(
 
 
 BOOL _CeWriteFile2(
+        RapiContext *context,
         HANDLE hFile,
         LPCVOID lpBuffer,
         DWORD nNumberOfBytesToWrite,
         LPDWORD lpNumberOfBytesWritten,
         LPOVERLAPPED lpOverlapped)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
     uint32_t bytes_written = 0;
 
@@ -121,12 +121,12 @@ BOOL _CeWriteFile2(
 
 
 DWORD _CeSetFilePointer2(
+        RapiContext *context,
         HANDLE hFile,
         LONG lDistanceToMove,
         PLONG lpDistanceToMoveHigh,
         DWORD dwMoveMethod)
 {
-    RapiContext* context = rapi_context_current();
     DWORD return_value = 0;
 
     synce_trace("begin");
@@ -160,9 +160,9 @@ DWORD _CeSetFilePointer2(
 }
 
 BOOL _CeSetEndOfFile2(
+        RapiContext *context,
         HANDLE hFile)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     synce_trace("begin");
@@ -180,12 +180,12 @@ BOOL _CeSetEndOfFile2(
 }
 
 BOOL _CeGetFileTime2(
+        RapiContext *context,
         HANDLE hFile,
         LPFILETIME lpCreationTime,
         LPFILETIME lpLastAccessTime,
         LPFILETIME lpLastWriteTime)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = FALSE;
     FILETIME tmp_ft;
 
@@ -239,12 +239,12 @@ BOOL _CeGetFileTime2(
 
 
 BOOL _CeSetFileTime2(
+        RapiContext *context,
         HANDLE hFile,
         LPFILETIME lpCreationTime,
         LPFILETIME lpLastAccessTime,
         LPFILETIME lpLastWriteTime)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = FALSE;
 
     rapi_context_begin_command(context, 0x42);
@@ -291,9 +291,9 @@ BOOL _CeSetFileTime2(
 
 
 BOOL _CeCloseHandle2(
+        RapiContext *context,
         HANDLE hObject)
 {
-    RapiContext* context = rapi_context_current();
     BOOL return_value = 0;
 
     synce_trace("begin");

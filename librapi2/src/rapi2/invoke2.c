@@ -33,6 +33,7 @@ static HRESULT CeRapiInvokeCommon2(
 }
 
 static HRESULT CeRapiInvokeStream2( /*{{{*/
+    RapiContext* source_context,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
@@ -99,6 +100,7 @@ exit:
 
 
 static HRESULT CeRapiInvokeBuffers2(
+    RapiContext* context,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
@@ -107,7 +109,6 @@ static HRESULT CeRapiInvokeBuffers2(
     BYTE **ppOutput,
     DWORD dwReserved)
 {
-  RapiContext* context = rapi_context_current();
   HRESULT return_value = E_UNEXPECTED;
   HRESULT hr;
 
@@ -172,6 +173,7 @@ static HRESULT CeRapiInvokeBuffers2(
 }
 
 HRESULT _CeRapiInvoke2( /*{{{*/
+    RapiContext* context,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
@@ -182,10 +184,10 @@ HRESULT _CeRapiInvoke2( /*{{{*/
     DWORD dwReserved)
 {
   if (ppIRAPIStream)
-    return CeRapiInvokeStream2(pDllPath, pFunctionName, cbInput, pInput,
+    return CeRapiInvokeStream2(context, pDllPath, pFunctionName, cbInput, pInput,
         pcbOutput, ppOutput, ppIRAPIStream, dwReserved);
   else
-    return CeRapiInvokeBuffers2(pDllPath, pFunctionName, cbInput, pInput,
+    return CeRapiInvokeBuffers2(context, pDllPath, pFunctionName, cbInput, pInput,
         pcbOutput, ppOutput, dwReserved);
 }/*}}}*/
 

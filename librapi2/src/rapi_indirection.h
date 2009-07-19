@@ -2,6 +2,7 @@
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
 #include "rapi.h"
+#include "rapi_context.h"
 #include <stdlib.h>
 
 struct rapi_ops_s
@@ -9,9 +10,11 @@ struct rapi_ops_s
 #ifndef SWIG
 
     BOOL ( *CeCloseHandle ) (
+        RapiContext *context,
         HANDLE hObject );
 
     HANDLE ( *CeCreateFile ) (
+            RapiContext *context,
             LPCWSTR lpFileName,
     DWORD dwDesiredAccess,
     DWORD dwShareMode,
@@ -21,6 +24,7 @@ struct rapi_ops_s
     HANDLE hTemplateFile );
 
     BOOL ( *CeReadFile ) (
+            RapiContext *context,
             HANDLE hFile,
     LPVOID lpBuffer,
     DWORD nNumberOfBytesToRead,
@@ -28,6 +32,7 @@ struct rapi_ops_s
     LPOVERLAPPED lpOverlapped );
 
     BOOL ( *CeWriteFile ) (
+            RapiContext *context,
             HANDLE hFile,
     LPCVOID lpBuffer,
     DWORD nNumberOfBytesToWrite,
@@ -35,21 +40,25 @@ struct rapi_ops_s
     LPOVERLAPPED lpOverlapped );
 
     DWORD ( *CeSetFilePointer ) (
+            RapiContext *context,
     HANDLE hFile,
     LONG lDistanceToMove,
     PLONG lpDistanceToMoveHigh,
     DWORD dwMoveMethod );
 
     BOOL  ( *CeSetEndOfFile ) (
+            RapiContext *context,
     HANDLE hObject);
 
     BOOL ( *CeGetFileTime ) (
+            RapiContext *context,
     HANDLE hFile,
     LPFILETIME lpCreationTime,
     LPFILETIME lpLastAccessTime,
     LPFILETIME lpLastWriteTime );
 
     BOOL ( *CeSetFileTime ) (
+            RapiContext *context,
     HANDLE hFile,
     LPFILETIME lpCreationTime,
     LPFILETIME lpLastAccessTime,
@@ -65,62 +74,77 @@ struct rapi_ops_s
 #ifndef SWIG
 
     BOOL ( *CeCopyFile ) (
+            RapiContext *context,
             LPCWSTR lpExistingFileName,
     LPCWSTR lpNewFileName,
     BOOL bFailIfExists );
 
     BOOL ( *CeCreateDirectory ) (
+            RapiContext *context,
             LPCWSTR lpPathName,
     LPSECURITY_ATTRIBUTES lpSecurityAttributes );
 
     BOOL ( *CeDeleteFile ) (
+            RapiContext *context,
             LPCWSTR lpFileName );
 
     BOOL ( *CeFindAllFiles ) (
+            RapiContext *context,
             LPCWSTR szPath,
     DWORD dwFlags,
     LPDWORD lpdwFoundCount,
     LPLPCE_FIND_DATA ppFindDataArray );
 
     HANDLE ( *CeFindFirstFile ) (
+            RapiContext *context,
             LPCWSTR lpFileName,
     LPCE_FIND_DATA lpFindFileData );
 
     BOOL ( *CeFindNextFile ) (
+            RapiContext *context,
             HANDLE hFindFile,
     LPCE_FIND_DATA lpFindFileData );
 
     BOOL ( *CeFindClose ) (
+            RapiContext *context,
             HANDLE hFindFile );
 
     DWORD ( *CeGetFileAttributes ) (
+            RapiContext *context,
             LPCWSTR lpFileName );
 
     DWORD ( *CeGetFileSize ) (
+            RapiContext *context,
             HANDLE hFile,
     LPDWORD lpFileSizeHigh );
 
     DWORD ( *CeGetSpecialFolderPath ) (
+            RapiContext *context,
             int nFolder,
     DWORD nBufferLength,
     LPWSTR lpBuffer );
 
     BOOL ( *CeMoveFile ) (
+            RapiContext *context,
             LPCWSTR lpExistingFileName,
     LPCWSTR lpNewFileName );
 
     BOOL ( *CeRemoveDirectory ) (
+            RapiContext *context,
             LPCWSTR lpPathName );
 
     BOOL ( *CeSetFileAttributes ) (
+            RapiContext *context,
             LPCWSTR lpFileName,
     DWORD dwFileAttributes );
 
     BOOL ( *CeSHCreateShortcut ) (
+            RapiContext *context,
             LPCWSTR lpszShortcut,
     LPCWSTR lpszTarget );
 
-    BOOL ( *CeSyncTimeToPc ) ();
+    BOOL ( *CeSyncTimeToPc ) (
+            RapiContext *context );
 
 #endif /* SWIG */
 
@@ -132,27 +156,33 @@ struct rapi_ops_s
 #ifndef SWIG
 
     CEOID ( *CeCreateDatabase ) (
+        RapiContext *context,
         LPWSTR lpszName,
         DWORD dwDbaseType,
         WORD wNumSortOrder,
         SORTORDERSPEC *rgSortSpecs );
 
     BOOL ( *CeDeleteDatabase ) (
+            RapiContext *context,
             CEOID oid );
 
     BOOL ( *CeFindAllDatabases ) (
+            RapiContext *context,
             DWORD dwDbaseType,
     WORD wFlags,
     LPWORD cFindData,
     LPLPCEDB_FIND_DATA ppFindData );
 
     HANDLE ( *CeFindFirstDatabase ) (
+            RapiContext *context,
             DWORD dwDbaseType );
 
     CEOID ( *CeFindNextDatabase ) (
+            RapiContext *context,
             HANDLE hEnum );
 
     HANDLE ( *CeOpenDatabase ) (
+            RapiContext *context,
             PCEOID poid,
     LPWSTR lpszName,
     CEPROPID propid,
@@ -160,6 +190,7 @@ struct rapi_ops_s
     HWND hwndNotify );
 
     CEOID ( *CeReadRecordProps ) (
+            RapiContext *context,
             HANDLE hDbase,
     DWORD dwFlags,
     LPWORD lpcPropID,
@@ -168,22 +199,26 @@ struct rapi_ops_s
     LPDWORD lpcbBuffer );
 
     CEOID ( *CeSeekDatabase ) (
+            RapiContext *context,
             HANDLE hDatabase,
     DWORD dwSeekType,
     DWORD dwValue,
     LPDWORD lpdwIndex );
 
     CEOID ( *CeWriteRecordProps ) (
+            RapiContext *context,
             HANDLE hDbase,
     CEOID oidRecord,
     WORD cPropID,
     CEPROPVAL *rgPropVal );
 
     BOOL ( *CeDeleteRecord ) (
+            RapiContext *context,
             HANDLE hDatabase,
     CEOID oidRecord );
 
     BOOL ( *CeSetDatabaseInfo ) (
+            RapiContext *context,
             CEOID oidDbase,
     CEDBASEINFO* pNewInfo );
 
@@ -197,6 +232,7 @@ struct rapi_ops_s
 #ifndef SWIG
 
     LONG ( *CeRegCreateKeyEx ) (
+        RapiContext *context,
         HKEY hKey,
         LPCWSTR lpszSubKey,
         DWORD Reserved,
@@ -208,6 +244,7 @@ struct rapi_ops_s
         LPDWORD lpdwDisposition );
 
     LONG ( *CeRegOpenKeyEx ) (
+            RapiContext *context,
             HKEY hKey,
     LPCWSTR lpszSubKey,
     DWORD ulOptions,
@@ -215,17 +252,21 @@ struct rapi_ops_s
     PHKEY phkResult );
 
     LONG ( *CeRegCloseKey ) (
+            RapiContext *context,
             HKEY hKey );
 
     LONG ( *CeRegDeleteKey ) (
+            RapiContext *context,
             HKEY hKey,
             LPCWSTR lpszSubKey );
 
     LONG ( *CeRegDeleteValue ) (
+            RapiContext *context,
             HKEY hKey,
             LPCWSTR lpszValueName );
 
     LONG ( *CeRegQueryInfoKey ) (
+            RapiContext *context,
             HKEY hKey,
     LPWSTR lpClass,
     LPDWORD lpcbClass,
@@ -240,6 +281,7 @@ struct rapi_ops_s
     PFILETIME lpftLastWriteTime );
 
     LONG ( *CeRegQueryValueEx ) (
+            RapiContext *context,
             HKEY hKey,
     LPCWSTR lpValueName,
     LPDWORD lpReserved,
@@ -248,6 +290,7 @@ struct rapi_ops_s
     LPDWORD lpcbData );
 
     LONG ( *CeRegEnumValue ) (
+            RapiContext *context,
             HKEY hKey,
     DWORD dwIndex,
     LPWSTR lpszValueName,
@@ -258,6 +301,7 @@ struct rapi_ops_s
     LPDWORD lpcbData );
 
     LONG ( *CeRegEnumKeyEx ) (
+            RapiContext *context,
             HKEY hKey,
     DWORD dwIndex,
     LPWSTR lpName,
@@ -268,6 +312,7 @@ struct rapi_ops_s
     PFILETIME lpftLastWriteTime );
 
     LONG ( *CeRegSetValueEx ) (
+            RapiContext *context,
             HKEY hKey,
     LPCWSTR lpValueName,
     DWORD Reserved,
@@ -285,9 +330,11 @@ struct rapi_ops_s
 #ifndef SWIG
 
     BOOL ( *CeCheckPassword ) (
+        RapiContext *context,
         LPWSTR lpszPassword );
 
     BOOL ( *CeCreateProcess ) (
+            RapiContext *context,
             LPCWSTR lpApplicationName,
     LPCWSTR lpCommandLine,
     void* lpProcessAttributes,
@@ -300,49 +347,73 @@ struct rapi_ops_s
     LPPROCESS_INFORMATION lpProcessInformation );
 
     BOOL ( *CeGetStoreInformation ) (
+            RapiContext *context,
             LPSTORE_INFORMATION lpsi );
 
     void ( *CeGetSystemInfo ) (
+            RapiContext *context,
             LPSYSTEM_INFO lpSystemInfo );
 
-    BOOL ( *CeGetSystemPowerStatusEx ) ( PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh );
+    BOOL ( *CeGetSystemPowerStatusEx ) (
+            RapiContext *context,
+            PSYSTEM_POWER_STATUS_EX pSystemPowerStatus,
+            BOOL refresh );
 
     BOOL ( *CeGetVersionEx ) (
+            RapiContext *context,
             LPCEOSVERSIONINFO lpVersionInformation );
 
     BOOL ( *CeOidGetInfo ) (
+            RapiContext *context,
             CEOID oid,
     CEOIDINFO *poidInfo );
 
-    HRESULT ( *CeProcessConfig ) ( LPCWSTR config, DWORD flags, LPWSTR* reply );
+    HRESULT ( *CeProcessConfig ) (
+            RapiContext *context,
+            LPCWSTR config,
+            DWORD flags,
+            LPWSTR* reply );
 
-    BOOL ( *CeStartReplication ) ( void );
+    BOOL ( *CeStartReplication ) (
+            RapiContext *context );
 
-    HRESULT ( *CeSyncStart ) ( LPCWSTR params );
+    HRESULT ( *CeSyncStart ) (
+            RapiContext *context,
+            LPCWSTR params );
 
-    HRESULT ( *CeSyncResume ) ( void );
+    HRESULT ( *CeSyncResume ) (
+            RapiContext *context );
 
-    HRESULT ( *CeSyncPause ) ( void );
+    HRESULT ( *CeSyncPause ) (
+            RapiContext *context );
 
     BOOL ( *CeGetSystemMemoryDivision ) (
+            RapiContext *context,
             LPDWORD lpdwStoragePages,
     LPDWORD lpdwRamPages,
     LPDWORD lpdwPageSize );
 
     DWORD ( *CeSetSystemMemoryDivision ) (
+            RapiContext *context,
             DWORD dwStoragePages );
 
-    BOOL ( *CeRegCopyFile ) ( LPCWSTR filename );
-    BOOL ( *CeRegRestoreFile ) ( LPCWSTR filename );
+    BOOL ( *CeRegCopyFile ) (
+            RapiContext *context,
+            LPCWSTR filename );
 
-    BOOL ( *CeKillAllApps ) ();
+    BOOL ( *CeRegRestoreFile ) (
+            RapiContext *context,
+            LPCWSTR filename );
 
-	DWORD ( *CeGetDiskFreeSpaceEx)(
-			LPCTSTR _lpDirectoryName, 
-			PULARGE_INTEGER lpFreeBytesAvailable, 
-			PULARGE_INTEGER lpTotalNumberOfBytes, 
-			PULARGE_INTEGER lpTotalNumberOfFreeBytes
-			);
+    BOOL ( *CeKillAllApps ) (
+            RapiContext *context );
+
+    DWORD ( *CeGetDiskFreeSpaceEx)(
+            RapiContext *context,
+            LPCTSTR _lpDirectoryName, 
+            PULARGE_INTEGER lpFreeBytesAvailable, 
+            PULARGE_INTEGER lpTotalNumberOfBytes, 
+            PULARGE_INTEGER lpTotalNumberOfFreeBytes );
 
 
 #endif /* SWIG */
@@ -355,6 +426,7 @@ struct rapi_ops_s
 #ifndef SWIG
 
     HRESULT ( *CeRapiInvoke ) (
+            RapiContext *context,
             LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
