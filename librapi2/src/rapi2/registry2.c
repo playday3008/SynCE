@@ -1,5 +1,5 @@
 /* $Id: registry.c 2355 2006-04-07 18:47:20Z voc $ */
-#include "rapi2_api.h"
+#include "backend_ops_2.h"
 #include "rapi_context.h"
 #include <stdlib.h>
 #include <stdio.h>

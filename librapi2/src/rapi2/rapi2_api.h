@@ -1,5 +1,5 @@
-#ifndef __rapi2_api_h__
-#define __rapi2_api_h__
+#ifndef __backend_ops_2_h__
+#define __backend_ops_2_h__
 #include "rapi.h"
 #include "rapi_context.h"
 
@@ -404,4 +404,4 @@ HRESULT _CeRapiInvoke2(
 
 #endif /* SWIG */
 
-#endif /* __rapi2_api_h__ */
+#endif /* __backend_ops_2_h__ */

@@ -1,7 +1,7 @@
 /* $Id$ */
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
-#include "rapi/rapi_api.h"
+#include "backend_ops_1/backend_ops_1.h"
 #include "rapi_indirection.h"
 #include <stdlib.h>
 #if HAVE_CONFIG_H

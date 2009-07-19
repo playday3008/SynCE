@@ -3,7 +3,7 @@ AC_PREREQ(2.53)
 
 AC_INIT(librapi2, @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
 AC_CONFIG_HEADERS(rapi_config.h)
-AC_CONFIG_SRCDIR(src/rapi.c)
+AC_CONFIG_SRCDIR(src/rapi.h)
 
 AC_CANONICAL_TARGET
 
@@ -230,8 +230,8 @@ AC_OUTPUT([librapi2.pc
            src/Makefile
            src/support/Makefile
            src/config/Makefile
-           src/rapi/Makefile
-           src/rapi2/Makefile
+           src/backend_ops_1/Makefile
+           src/backend_ops_2/Makefile
            man/Makefile
            script/Makefile
            tests/Makefile

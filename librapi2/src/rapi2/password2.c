@@ -2,7 +2,7 @@
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
 #include "rapi_internal.h"
-#include "rapi2_api.h"
+#include "backend_ops_2.h"
 #include "rapi_buffer.h"
 #include "rapi_context.h"
 #include <stdlib.h>

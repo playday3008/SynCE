@@ -3,6 +3,10 @@
 	* change all backend functions to accept a rapi_context as
 	  first parameter, instead of using current_context, which
 	  is obtained by the calling wrapper functions anyway
+	* restructure source tree for rapi2 api; currently the
+	  source refers to differences in over-the-wire calls to
+	  WM5 and pre-WM5 devices as rapi1 and rapi2, these now
+	  become backend_ops_{1,2}
 
 2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
 

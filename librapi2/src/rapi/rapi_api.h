@@ -1,6 +1,6 @@
 /* $Id$ */
-#ifndef __rapi_api_h__
-#define __rapi_api_h__
+#ifndef __backend_ops_1_h__
+#define __backend_ops_1_h__
 #include "rapi.h"
 #include "rapi_context.h"
 
@@ -463,6 +463,6 @@ HRESULT _CeRapiInvoke(
 
 #endif /* SWIG */
 
-#endif /* __rapi_api_h__ */
+#endif /* __backend_ops_1_h__ */
 
 
