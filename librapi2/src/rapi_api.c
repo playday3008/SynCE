@@ -7,8 +7,53 @@
 #include "rapi_config.h"
 #endif
 
+/*
+ * Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5
+ */
+HRESULT CeRapiFreeBuffer(
+    LPVOID Buffer )
+{
+    free( Buffer );
+    return S_OK;
+}
 
-/* Indirection to the particular rapi-calls */
+HRESULT CeRapiInit( void ) /*{{{*/
+{
+    RapiContext * context = rapi_context_current();
+
+    return rapi_context_connect( context );
+} /*}}}*/
+
+STDAPI CeRapiUninit( void ) /*{{{*/
+{
+    RapiContext * context = rapi_context_current();
+
+    return rapi_context_disconnect(context);
+} /*}}}*/
+
+HRESULT CeRapiGetError( void ) /*{{{*/
+{
+    RapiContext * context = rapi_context_current();
+    return context->rapi_error;
+} /*}}}*/
+
+DWORD CeRapiGetLastError()
+{
+    RapiContext * context = rapi_context_current();
+    return context->last_error;
+}
+
+DWORD CeGetLastError( void )
+{
+    RapiContext* context = rapi_context_current();
+    return context->last_error;
+}
+
+
+/*
+ * Implementation of calls that differ on WM5 and pre-WM5
+ * devices, requires indirect calls to the correct function
+ */
 
 #ifndef SWIG
 BOOL CeCloseHandle(

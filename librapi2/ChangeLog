@@ -7,6 +7,8 @@
 	  source refers to differences in over-the-wire calls to
 	  WM5 and pre-WM5 devices as rapi1 and rapi2, these now
 	  become backend_ops_{1,2}
+	* keep standard RAPI api and our non-standard wrapper
+	  funcs separate
 
 2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
 

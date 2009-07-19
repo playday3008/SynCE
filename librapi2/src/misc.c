@@ -5,47 +5,9 @@
 #include <stdlib.h>
 #include <synce_log.h>
 
-
-/* Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5 */
-HRESULT CeRapiFreeBuffer(
-    LPVOID Buffer )
-{
-    free( Buffer );
-    return S_OK;
-}
-
-HRESULT CeRapiInit( void ) /*{{{*/
-{
-    RapiContext * context = rapi_context_current();
-
-    return rapi_context_connect( context );
-} /*}}}*/
-
-STDAPI CeRapiUninit( void ) /*{{{*/
-{
-    RapiContext * context = rapi_context_current();
-
-    return rapi_context_disconnect(context);
-} /*}}}*/
-
-HRESULT CeRapiGetError( void ) /*{{{*/
-{
-    RapiContext * context = rapi_context_current();
-    return context->rapi_error;
-} /*}}}*/
-
-DWORD CeRapiGetLastError()
-{
-    RapiContext * context = rapi_context_current();
-    return context->last_error;
-}
-
-DWORD CeGetLastError( void )
-{
-    RapiContext* context = rapi_context_current();
-    return context->last_error;
-}
-/* End Standard rapi-calls */
+/*
+ * non-standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5
+ */
 
 bool rapi_reg_create_key(/*{{{*/
         HKEY parent, const char* name, HKEY* key)
