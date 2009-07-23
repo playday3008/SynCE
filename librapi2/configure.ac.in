@@ -201,7 +201,7 @@ AM_CONDITIONAL(HAVE_PYTHON, test x$have_python = xyes)
 # checks for pthreads
 
 saved_CFLAGS="$CFLAGS"
-CFLAGS=`echo $CFLAGS | sed 's|-Werror||'`
+CFLAGS=`echo $CFLAGS | sed 's|-Werror[^[:space:]]*||'`
 
 ACX_PTHREAD([enable_threads="pthread"],[enable_threads="no"])
 CFLAGS="$saved_CFLAGS"
