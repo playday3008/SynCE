@@ -2,6 +2,7 @@
 #include "backend_ops_1.h"
 #include "rapi_context.h"
 #include "irapistream.h"
+#include "irapistream_internal.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <sys/socket.h>

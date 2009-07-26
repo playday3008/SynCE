@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "irapistream.h"
+#include "irapistream_internal.h"
 
 IRAPIStream* rapi_stream_new()/*{{{*/
 {

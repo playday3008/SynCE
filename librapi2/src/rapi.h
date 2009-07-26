@@ -20,6 +20,7 @@
 #ifndef SWIG
 #include <synce.h>
 #include <rapitypes.h>
+#include <irapistream.h>
 #endif
 
 #ifdef __cplusplus
@@ -512,26 +513,7 @@ DWORD CeGetDiskFreeSpaceEx(
  * CeRapiInvoke stuff
  */
 
-struct _IRAPIStream;
-typedef struct _IRAPIStream IRAPIStream;
-
 #ifndef SWIG
-
-ULONG IRAPIStream_Release(IRAPIStream* stream);
-
-HRESULT IRAPIStream_Read(
-		IRAPIStream* stream,
-		void *pv,
-		ULONG cb,
-		ULONG *pcbRead);
-
-HRESULT IRAPIStream_Write(
-		IRAPIStream* stream,
-		void const *pv,
-		ULONG cb,
-		ULONG *pcbWritten);
-
-int IRAPIStream_GetRawSocket(IRAPIStream* stream);
 
 HRESULT CeRapiInvoke(
 		LPCWSTR pDllPath,
