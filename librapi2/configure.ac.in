@@ -62,7 +62,7 @@ dnl Checks for libraries.
 AC_LIB_RPATH
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.14)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.15)
 
 
 dnl
