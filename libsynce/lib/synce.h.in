@@ -171,7 +171,14 @@ const char* synce_strerror(DWORD error);
 
 typedef struct _SynceInfo SynceInfo;
 
+typedef enum _SynceInfoIdField
+{
+        INFO_NAME,
+        INFO_OBJECT_PATH
+} SynceInfoIdField;
+
 SynceInfo* synce_info_new(const char* device_name);
+SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data);
 void synce_info_destroy(SynceInfo* info);
 
 const char *synce_info_get_name(SynceInfo *info);

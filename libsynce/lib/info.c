@@ -60,26 +60,31 @@ static char *STRDUP(const char* str)
   return str ? strdup(str) : NULL;
 }
 
-static SynceInfo* synce_info_from_file(const char* device_name)
+static SynceInfo* synce_info_from_file(SynceInfoIdField field, const char* data)
 {
   SynceInfo* result = calloc(1, sizeof(SynceInfo));
   bool success = false;
   char* connection_filename;
   struct configFile* config = NULL;
 
-  if (device_name) {
-    char *synce_dir;
-    if (!synce_get_directory(&synce_dir)) {
-      synce_error("unable to determine synce directory");
-      goto exit;
-    }
-    int path_len = strlen(synce_dir) + strlen(device_name) + 2;
-    connection_filename = (char *) malloc(sizeof(char) * path_len);
+  if (data) {
+    if (field == INFO_NAME) {
+      char *synce_dir;
+      if (!synce_get_directory(&synce_dir)) {
+        synce_error("unable to determine synce directory");
+        goto exit;
+      }
+      int path_len = strlen(synce_dir) + strlen(data) + 2;
+      connection_filename = (char *) malloc(sizeof(char) * path_len);
 
-    if (snprintf(connection_filename, path_len, "%s/%s", synce_dir, device_name) >= path_len) {
-      FREE(synce_dir);
-      synce_error("error determining synce connection filename");
-      goto exit;
+      if (snprintf(connection_filename, path_len, "%s/%s", synce_dir, data) >= path_len) {
+        FREE(synce_dir);
+        synce_error("error determining synce connection filename");
+        goto exit;
+      }
+    }
+    if (field == INFO_OBJECT_PATH) {
+      connection_filename = strdup(data);
     }
   }
   else
@@ -140,7 +145,7 @@ exit:
 #define ODCCM_TYPE_OBJECT_PATH_ARRAY \
   (dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH))
 
-static SynceInfo *synce_info_from_odccm(const char* device_name)
+static SynceInfo *synce_info_from_odccm(SynceInfoIdField field, const char* data)
 {
   SynceInfo *result = NULL;
   GError *error = NULL;
@@ -210,7 +215,7 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
 
   for (i = 0; i < devices->len; i++) {
     gchar *obj_path = g_ptr_array_index(devices, i);
-    gchar *name;
+    gchar *match_data = NULL;
     DBusGProxy *proxy = dbus_g_proxy_new_for_name(bus, ODCCM_SERVICE,
                                                   obj_path,
                                                   ODCCM_DEV_IFACE);
@@ -218,6 +223,48 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       g_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, obj_path);
       goto ERROR;
     }
+
+    if (data != NULL)
+    {
+      switch (field)
+        {
+        case INFO_NAME:
+          if (!dbus_g_proxy_call(proxy, "GetName", &error,
+                                 G_TYPE_INVALID,
+                                 G_TYPE_STRING, &match_data,
+                                 G_TYPE_INVALID))
+            {
+              g_warning("%s: Failed to get device name: %s", G_STRFUNC, error->message);
+              g_object_unref(proxy);
+              goto ERROR;
+            }
+          break;
+        case INFO_OBJECT_PATH:
+          match_data = g_strdup(obj_path);
+          break;
+        }
+
+      if (strcasecmp(data, match_data) != 0) {
+        g_free(match_data);
+        continue;
+      }
+    }
+
+    g_free(match_data);
+
+    if (!(result = calloc(1, sizeof(SynceInfo)))) {
+      g_critical("%s: Failed to allocate SynceInfo", G_STRFUNC);
+      g_object_unref(proxy);
+      goto ERROR;
+    }
+
+    gchar *name;
+    guint os_major;
+    guint os_minor;
+    gchar* ip;
+    guint cpu_type;
+    gchar* os_name;
+    gchar* model;
 
     if (!dbus_g_proxy_call(proxy, "GetName", &error,
                            G_TYPE_INVALID,
@@ -228,25 +275,6 @@ static SynceInfo *synce_info_from_odccm(const char* device_name)
       g_object_unref(proxy);
       goto ERROR;
     }
-
-    if ( (device_name != NULL) && (strcasecmp(device_name, name) != 0) ) {
-      g_free(name);
-      continue;
-    }
-
-    if (!(result = calloc(1, sizeof(SynceInfo)))) {
-      g_critical("%s: Failed to allocate SynceInfo", G_STRFUNC);
-      g_object_unref(proxy);
-      g_free(name);
-      goto ERROR;
-    }
-
-    guint os_major;
-    guint os_minor;
-    gchar* ip;
-    guint cpu_type;
-    gchar* os_name;
-    gchar* model;
 
     result->name = name;
     result->object_path = g_strdup(obj_path);
@@ -344,7 +372,7 @@ OUT:
 
 #if ENABLE_HAL_SUPPORT
 
-static SynceInfo *synce_info_from_hal(const char* device_name)
+static SynceInfo *synce_info_from_hal(SynceInfoIdField field, const char* data)
 {
   SynceInfo *result = NULL;
   DBusGConnection *system_bus = NULL;
@@ -357,6 +385,7 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
   gchar **device_list = NULL;
   gint num_devices;
   gboolean disabled;
+  gchar *match_data = NULL;
 
   g_type_init();
   dbus_error_init(&dbus_error);
@@ -421,29 +450,44 @@ static SynceInfo *synce_info_from_hal(const char* device_name)
             continue;
     }
 
-    gchar *name = NULL;
 
-    name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
+    if (data != NULL)
+    {
+      switch (field)
+        {
+        case INFO_NAME:
+
+          match_data = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
+          if (dbus_error_is_set(&dbus_error)) {
+                  g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+                  goto error_exit;
+          }
+          break;
+        case INFO_OBJECT_PATH:
+          match_data = g_strdup(device_list[i]);
+          break;
+        }
+
+      if (strcasecmp(data, match_data) != 0) {
+        libhal_free_string(match_data);
+        continue;
+      }
     }
 
-    if (!name)
-      continue;
+    libhal_free_string(match_data);
 
-    if ( (device_name != NULL) && (strcasecmp(device_name, name) != 0) ) {
-      libhal_free_string(name);
-      continue;
-    }
 
     if (!(result = calloc(1, sizeof(SynceInfo)))) {
       g_critical("%s: Failed to allocate SynceInfo", G_STRFUNC);
       goto error_exit;
     }
 
-    result->name = g_strdup(name);
-    libhal_free_string(name);
+    result->name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
+    if (dbus_error_is_set(&dbus_error)) {
+      g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
+      goto error_exit;
+    }
+
     result->object_path = g_strdup(device_list[i]);
 
     result->os_major = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
@@ -519,28 +563,32 @@ exit:
 }
 #endif /* ENABLE_HAL_SUPPORT */
 
-
 SynceInfo* synce_info_new(const char* device_name)
+{
+  return synce_info_new_by_field(INFO_NAME, device_name);
+}
+
+SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data)
 {
   SynceInfo* result = NULL;
 
 #if ENABLE_HAL_SUPPORT
-  result = synce_info_from_hal(device_name);
+  result = synce_info_from_hal(field, data);
 #endif
 
 #if ENABLE_ODCCM_SUPPORT
   if (!result)
-    result = synce_info_from_odccm(device_name);
+    result = synce_info_from_odccm(field, data);
 
 #if ENABLE_MIDASYNC
   if (!result)
-    result = synce_info_from_midasyncd(device_name);
+    result = synce_info_from_midasyncd(field, data);
 #endif
 #endif
 
 #if ENABLE_DCCM_FILE_SUPPORT
   if (!result)
-    result = synce_info_from_file(device_name);
+    result = synce_info_from_file(field, data);
 #endif
 
   return result;
