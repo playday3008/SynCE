@@ -1,4 +1,5 @@
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall \
+	-DLOCALSTATEDIR=\""$(localstatedir)"\"
 
 libexec_PROGRAMS = hal-dccm synce-serial-chat
 

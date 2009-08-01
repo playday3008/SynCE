@@ -236,7 +236,7 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
   priv->conn = conn;
 
   rnd = g_rand_new ();
-  priv->filename = g_strdup_printf ("/tmp/synce-%08x%08x%08x%08x.sock",
+  priv->filename = g_strdup_printf ("%s/run/synce-%08x%08x%08x%08x.sock", LOCALSTATEDIR,
       g_rand_int (rnd), g_rand_int (rnd), g_rand_int (rnd), g_rand_int (rnd));
   g_rand_free (rnd);
 
