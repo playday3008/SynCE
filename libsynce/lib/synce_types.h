@@ -102,32 +102,113 @@ typedef uint32_t  HANDLE;
 
 #define INVALID_HANDLE_VALUE ((HANDLE)-1)
 
-/* HRESULT must be a signed integer if the FAILED() macro should work */
+/* HRESULT is a composite value returned by various MS functions.
+ * The components we are concerned with are severity, facility, and code.
+ * It must be a signed integer if the FAILED() macro should work */
 typedef int32_t  HRESULT;
 
 #define STDAPI HRESULT
 
+#define SEVERITY_SUCCESS	0
+#define SEVERITY_ERROR		1
+
+#define FACILITY_NULL		0
+#define FACILITY_RPC		1
+#define FACILITY_DISPATCH	2
+#define FACILITY_STORAGE	3
+#define FACILITY_ITF		4
+#define FACILITY_WIN32		7
+#define FACILITY_WINDOWS	8
+#define FACILITY_SECURITY	9
+#define FACILITY_SSPI		9
+#define FACILITY_CONTROL	10
+#define FACILITY_CERT		11
+#define FACILITY_INTERNET	12
+#define FACILITY_MEDIASERVER	13
+#define FACILITY_MSMQ		14
+#define FACILITY_SETUPAPI	15
+#define FACILITY_SCARD		16
+#define FACILITY_COMPLUS	17
+#define FACILITY_AAF		18
+#define FACILITY_URT		19
+#define FACILITY_ACS		20
+#define FACILITY_DPLAY		21
+#define FACILITY_UMI		22
+#define FACILITY_SXS		23
+#define FACILITY_WINDOWS_CE	24
+#define FACILITY_HTTP		25
+#define FACILITY_USERMODE_COMMONLOG	26
+#define FACILITY_USERMODE_FILTER_MANAGER	31
+#define FACILITY_BACKGROUNDCOPY		32
+#define FACILITY_CONFIGURATION		33
+#define FACILITY_STATE_MANAGEMENT	34
+#define FACILITY_METADIRECTORY		35
+#define FACILITY_WINDOWSUPDATE		36
+#define FACILITY_DIRECTORYSERVICE	37
+#define FACILITY_GRAPHICS		38
+#define FACILITY_SHELL			39
+#define FACILITY_TPM_SERVICES		40
+#define FACILITY_TPM_SOFTWARE		41
+#define FACILITY_PLA			48
+#define FACILITY_FVE			49
+#define FACILITY_FWP			50
+#define FACILITY_WINRM			51
+#define FACILITY_NDIS			52
+#define FACILITY_USERMODE_HYPERVISOR	53
+#define FACILITY_CMI			54
+#define FACILITY_WINDOWS_DEFENDER	80
+
+
+/* Returns an HRESULT given the severity bit, facility code, and error code that comprise the HRESULT */
+#define MAKE_HRESULT(sev,fac,code) \
+    ((HRESULT) (((DWORD)(sev)<<31) | ((DWORD)(fac)<<16) | ((DWORD)(code))) )
+
+/* Extracts the error code portion of the HRESULT */
+#define HRESULT_CODE(hr)    ((hr) & 0xFFFF)
+
+/* Extracts the facility code of the HRESULT */
+#define HRESULT_FACILITY(hr)  (((hr) >> 16) & 0x1fff)
+
+/* Extracts the severity bit of the HRESULT */
+#define HRESULT_SEVERITY(hr)  (((hr) >> 31) & 0x1)
+ 
+/* Tests the severity bit of the SCODE or HRESULT; returns TRUE if the severity is zero and FALSE if it is one */
+#define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
+
+/* Tests the severity bit of the SCODE or HRESULT; returns TRUE if the severity is one and FALSE if it is zero */
+#define FAILED(hr) (((HRESULT)(hr)) < 0)
+
+/* Maps a system error code to an HRESULT value */
+
 /*
- * Some error codes (HRESULTs)
+ * HRESULT_FROM_WIN32(x) ideally would be a macro, however to prevent double evaluation of 'x'
+ * it is a function. If you prefer the macro, you can use __HRESULT_FROM_WIN32(x)
+ */
+#define __HRESULT_FROM_WIN32(x) ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
+
+HRESULT HRESULT_FROM_WIN32(DWORD x);
+
+/*
+ * Some predefined error codes (HRESULTs)
  */
 
+#define E_PENDING       0x8000000A
+
+#define E_NOTIMPL       0x80004001
+#define E_NOINTERFACE   0x80004002
+#define E_POINTER       0x80004003
 #define E_ABORT         0x80004004
-#define E_ACCESSDENIED  0x80070005
 #define E_FAIL          0x80004005
+#define E_UNEXPECTED    0x8000FFFF
+
+#define E_ACCESSDENIED  0x80070005
 #define E_HANDLE        0x80070006
 #define E_OUTOFMEMORY   0x8007000E
 #define E_INVALIDARG    0x80070057
-#define E_NOINTERFACE   0x80004002
-#define E_NOTIMPL       0x80004001
-#define E_OUTOFMEMORY   0x8007000E
-#define E_PENDING       0x8000000A
-#define E_POINTER       0x80004003
-#define E_UNEXPECTED    0x8000FFFF
+
 #define S_FALSE         0x00000001
 #define S_OK            0x00000000
 
-#define SUCCEEDED(x) ((x)>=0)
-#define FAILED(x) ((x)<0)
 
 /*
  * System Errors

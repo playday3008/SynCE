@@ -1,6 +1,44 @@
 /* $Id$ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "synce.h"
 #include "synce_log.h"
+
+HRESULT
+HRESULT_FROM_WIN32(DWORD x)
+{
+        return (HRESULT)(x) <= 0 ? (HRESULT)(x) : (HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000);
+}
+
+char*
+synce_strhresult(HRESULT hr)
+{
+	char *result_str = NULL;
+	size_t result_len = 0;
+	const char *sev_str = NULL;
+	const char *code_str = NULL;
+
+	if (SUCCEEDED(hr))
+		sev_str = "Success: ";
+	else
+		sev_str = "Failure: ";
+
+	if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+		code_str = synce_strerror(HRESULT_CODE(hr));
+	else
+		code_str = synce_strerror(hr);
+
+	result_len = strlen(sev_str) + strlen(code_str) + 1;
+	result_str = malloc(result_len);
+	if (!result_str)
+		return NULL;
+
+	snprintf(result_str, result_len, "%s%s", sev_str, code_str);
+
+	return result_str;
+}
 
 const char* synce_strerror(DWORD error)
 {
