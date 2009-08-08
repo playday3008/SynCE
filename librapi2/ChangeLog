@@ -4,6 +4,7 @@
 	  get a reference to this device instead of a new instance
 	* use new libsynce HRESULT handlers to return the correct types
 	  in a few cases
+	* implement more auxiliary functions
 
 2009-07-28  Mark Ellis  <mark@mpellis.org.uk>
 

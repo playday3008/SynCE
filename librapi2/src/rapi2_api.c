@@ -1369,6 +1369,7 @@ struct _IRAPIDevice {
         char *obj_path;
         SynceInfo *info;
         int refcount;
+        RAPI_DEVICESTATUS status;
 };
 
 
@@ -1428,7 +1429,15 @@ IRAPIDevice_GetConnectionInfo(IRAPIDevice *self, RAPI_CONNECTIONINFO* pConnInfo)
 HRESULT
 IRAPIDevice_GetConnectStat(IRAPIDevice *self, RAPI_DEVICESTATUS* pStat)
 {
-        return E_NOTIMPL;
+        RAPI_DEVICESTATUS *status = NULL;
+        status = calloc(1, sizeof(RAPI_DEVICESTATUS));
+        if (!status)
+                return E_OUTOFMEMORY;
+
+        *status = self->status;
+        pStat = status;
+
+        return S_OK;
 }
 
 HRESULT
@@ -1609,6 +1618,7 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
 
         newdev->obj_path = strdup(udi);
         newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+        newdev->status = RAPI_DEVICE_CONNECTED;
         newdev->refcount = 1;
 
         self->devices = g_list_append(self->devices, newdev);
@@ -1616,7 +1626,7 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
         return;
 }
 
-void
+static void
 hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
 {
         IRAPIDesktop *self = libhal_ctx_get_user_data(ctx);
@@ -1634,6 +1644,7 @@ hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
 
         synce_debug("Received device disconnected from hal: %s", udi);
 
+        ((IRAPIDevice*)device->data)->status = RAPI_DEVICE_DISCONNECTED;
         IRAPIDevice_Release(device->data);
         self->devices = g_list_delete_link(self->devices, device);
 
@@ -1659,6 +1670,7 @@ hal_disconnect(IRAPIDesktop *self)
         while (device) {
                 if (strncmp(((IRAPIDevice*)device->data)->obj_path, "/org/freedesktop/Hal/", 21) == 0) {
                         synce_debug("removing device %s", ((IRAPIDevice*)device->data)->obj_path);
+                        ((IRAPIDevice*)device->data)->status = RAPI_DEVICE_DISCONNECTED;
                         IRAPIDevice_Release((IRAPIDevice*)device->data);
                         self->devices = g_list_delete_link(self->devices, device);
                         device = self->devices;
@@ -1739,6 +1751,7 @@ hal_connect(IRAPIDesktop *self)
 
                 newdev->obj_path = strdup(udi);
                 newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+                newdev->status = RAPI_DEVICE_CONNECTED;
                 newdev->refcount = 1;
 
                 self->devices = g_list_append(self->devices, newdev);
