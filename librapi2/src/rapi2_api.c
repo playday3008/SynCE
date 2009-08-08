@@ -32,6 +32,7 @@ static IRAPIDesktop *irapi_desktop = NULL;
  */
 
 struct _IRAPISession {
+        IRAPIDevice *device;
         RapiContext *context;
         int refcount;
 };
@@ -51,6 +52,7 @@ IRAPISession_Release(IRAPISession *session)
         if (session->refcount > 0)
                 return;
 
+        IRAPIDevice_Release(session->device);
         rapi_context_unref(session->context);
         free(session);
         return;
@@ -1365,7 +1367,7 @@ IRAPISession_CeRapiInvoke(IRAPISession *session,
 
 struct _IRAPIDevice {
         char *obj_path;
-	SynceInfo *info;
+        SynceInfo *info;
         int refcount;
 };
 
@@ -1408,6 +1410,8 @@ IRAPIDevice_CreateSession(IRAPIDevice *self, IRAPISession** ppISession)
         }
 
         session->context->info = self->info;
+        IRAPIDevice_AddRef(self);
+        session->device = self;
         session->refcount = 1;
 
         *ppISession = session;
@@ -1475,7 +1479,27 @@ IRAPIEnumDevices_Release(IRAPIEnumDevices *self)
 HRESULT
 IRAPIEnumDevices_Clone(IRAPIEnumDevices *self, IRAPIEnumDevices** ppIEnum)
 {
-        return E_NOTIMPL;
+        IRAPIEnumDevices *new_enum;
+        new_enum = calloc(1, sizeof(IRAPIEnumDevices));
+        if (!new_enum)
+                return E_OUTOFMEMORY;
+        memset(new_enum, 0, sizeof(IRAPIEnumDevices));
+        new_enum->refcount = 1;
+
+        GList *device = self->devices;
+        while (device) {
+                IRAPIDevice_AddRef(device->data);
+                new_enum->devices = g_list_append(new_enum->devices, device->data);
+                new_enum->count++;
+
+                device = g_list_next(device);
+        }
+
+
+        new_enum->current = new_enum->devices;
+
+        *ppIEnum = new_enum;
+        return S_OK;
 }
 
 HRESULT
@@ -1489,8 +1513,7 @@ HRESULT
 IRAPIEnumDevices_Next(IRAPIEnumDevices *self, IRAPIDevice** ppIDevice)
 {
         if (!(self->current))
-                /* TURN THIS INTO AN HRESULT */
-                return ERROR_NO_MORE_DEVICES;
+                return MAKE_HRESULT(SEVERITY_ERROR,FACILITY_WIN32,ERROR_NO_MORE_DEVICES);
 
         *ppIDevice = self->current->data;
 
@@ -1509,7 +1532,14 @@ IRAPIEnumDevices_Reset(IRAPIEnumDevices *self)
 HRESULT
 IRAPIEnumDevices_Skip(IRAPIEnumDevices *self, ULONG cElt)
 {
-        return E_NOTIMPL;
+        uint i;
+        for (i = 0; i < cElt; i++) {
+                if (!(self->current))
+                        return MAKE_HRESULT(SEVERITY_ERROR,FACILITY_WIN32,ERROR_NO_MORE_DEVICES);
+                self->current = g_list_next(self->current);
+        }
+
+        return S_OK;
 }
 
 
@@ -1546,9 +1576,9 @@ static void
 IRAPIDesktop_device_connected_cb()
 {
         /*
-	add device data to list
-	for all sinks
-		call sink->OnDeviceConnected
+            add device data to list
+            for all sinks
+            call sink->OnDeviceConnected
         */
 }
 
@@ -1556,9 +1586,9 @@ static void
 IRAPIDesktop_device_disconnected_cb()
 {
         /*
-	for all sinks
-		call sink->OnDeviceDisconnected
-	remove device data from list
+        for all sinks
+          call sink->OnDeviceDisconnected
+        remove device data from list
         */
 }
 #endif
@@ -1569,11 +1599,22 @@ hal_device_connected_cb(LibHalContext *ctx, const char *udi)
         IRAPIDesktop *self = libhal_ctx_get_user_data(ctx);
 
         synce_debug("found device: %s", udi);
-        self->devices = g_list_append(self->devices, g_strdup(udi));
+
+
+        IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
+        if (!newdev) {
+                synce_error("failed to allocate IRAPIDevice");
+                return;
+        }
+
+        newdev->obj_path = strdup(udi);
+        newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+        newdev->refcount = 1;
+
+        self->devices = g_list_append(self->devices, newdev);
 
         return;
 }
-
 
 void
 hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
@@ -1593,7 +1634,7 @@ hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
 
         synce_debug("Received device disconnected from hal: %s", udi);
 
-        g_free(device->data);
+        IRAPIDevice_Release(device->data);
         self->devices = g_list_delete_link(self->devices, device);
 
         return;
@@ -1616,9 +1657,9 @@ hal_disconnect(IRAPIDesktop *self)
 
         GList *device = self->devices;
         while (device) {
-                if (strncmp(device->data, "/org/freedesktop/Hal/", 21) == 0) {
-                        synce_debug("removing device %s", device->data);
-                        g_free(device->data);
+                if (strncmp(((IRAPIDevice*)device->data)->obj_path, "/org/freedesktop/Hal/", 21) == 0) {
+                        synce_debug("removing device %s", ((IRAPIDevice*)device->data)->obj_path);
+                        IRAPIDevice_Release((IRAPIDevice*)device->data);
                         self->devices = g_list_delete_link(self->devices, device);
                         device = self->devices;
                         continue;
@@ -1689,7 +1730,19 @@ hal_connect(IRAPIDesktop *self)
         for (i = 0; i < num_devices; i++) {
                 udi = dev_list[i];
                 synce_debug("found device: %s", udi);
-                self->devices = g_list_append(self->devices, g_strdup(udi));
+
+                IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
+                if (!newdev) {
+                        synce_error("failed to allocate IRAPIDevice");
+                        break;
+                }
+
+                newdev->obj_path = strdup(udi);
+                newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+                newdev->refcount = 1;
+
+                self->devices = g_list_append(self->devices, newdev);
+
         }
         libhal_free_string_array(dev_list);
 
@@ -1742,21 +1795,21 @@ IRAPIDesktop_Init()
 {
         g_type_init();
 
-	IRAPIDesktop *self = NULL;
+        IRAPIDesktop *self = NULL;
 
-	self = calloc(1, sizeof(IRAPIDesktop));
-	if (!self)
-		return E_OUTOFMEMORY;
+        self = calloc(1, sizeof(IRAPIDesktop));
+        if (!self)
+                return E_OUTOFMEMORY;
 
 #if 0
-	self->sinks = NULL;
+        self->sinks = NULL;
 #endif
 
-	/*
-	   connect to hal, odccm, vdccm ?
-	   set up callbacks from hal and odccm 
-	   create initial devices
-	*/
+        /*
+           connect to hal, odccm, vdccm ?
+           set up callbacks from hal and odccm 
+           create initial devices
+        */
 
         self->dbus_connection = NULL;
         self->dbus_proxy = NULL;
@@ -1809,11 +1862,11 @@ IRAPIDesktop_Init()
 HRESULT
 static IRAPIDesktop_Uninit()
 {
-	/*
-	   destroy devices
-	   remove callbacks from hal and odccm 
-	   disconnect from hal, odccm, vdccm ?
-	*/
+        /*
+           destroy devices
+           remove callbacks from hal and odccm 
+           disconnect from hal, odccm, vdccm ?
+        */
 
         IRAPIDesktop *self = irapi_desktop;
 
@@ -1832,8 +1885,8 @@ static IRAPIDesktop_Uninit()
 
 
 
-	free(irapi_desktop);
-	irapi_desktop = NULL;
+        free(irapi_desktop);
+        irapi_desktop = NULL;
 
         return S_OK;
 }
@@ -1841,19 +1894,19 @@ static IRAPIDesktop_Uninit()
 HRESULT
 IRAPIDesktop_Get(IRAPIDesktop **ppIRAPIDesktop)
 {
-	HRESULT hr;
+        HRESULT hr;
 
-	if (irapi_desktop != NULL) {
-		*ppIRAPIDesktop = irapi_desktop;
-		return S_OK;
-	}
+        if (irapi_desktop != NULL) {
+                *ppIRAPIDesktop = irapi_desktop;
+                return S_OK;
+        }
 
-	hr = IRAPIDesktop_Init();
-	if (SUCCEEDED(hr)) {
-		*ppIRAPIDesktop = irapi_desktop;
-		return S_OK;
-	}
-	return hr;
+        hr = IRAPIDesktop_Init();
+        if (SUCCEEDED(hr)) {
+                *ppIRAPIDesktop = irapi_desktop;
+                return S_OK;
+        }
+        return hr;
 }
 
 void
@@ -1870,7 +1923,7 @@ IRAPIDesktop_Release(IRAPIDesktop *self)
         if (self->refcount > 0)
                 return;
 
-	IRAPIDesktop_Uninit();
+        IRAPIDesktop_Uninit();
         return;
 }
 
@@ -1889,24 +1942,16 @@ IRAPIDesktop_EnumDevices(IRAPIDesktop *self, IRAPIEnumDevices** ppIEnum)
 {
         IRAPIEnumDevices *enum_dev;
         enum_dev = calloc(1, sizeof(IRAPIEnumDevices));
-	if (!enum_dev)
-		return E_OUTOFMEMORY;
+        if (!enum_dev)
+                return E_OUTOFMEMORY;
         memset(enum_dev, 0, sizeof(IRAPIEnumDevices));
         enum_dev->refcount = 1;
 
         GList *device = self->devices;
         while (device) {
-                IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
-                if (!newdev) {
-                        IRAPIEnumDevices_Release(enum_dev);
-                        return E_OUTOFMEMORY;
-                }
-                newdev->obj_path = strdup(device->data);
-                newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+                IRAPIDevice_AddRef(device->data);
 
-                newdev->refcount = 1;
-
-                enum_dev->devices = g_list_append(enum_dev->devices, newdev);
+                enum_dev->devices = g_list_append(enum_dev->devices, device->data);
 
                 enum_dev->count++;
 
