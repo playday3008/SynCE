@@ -108,6 +108,8 @@ AC_OUTPUT([
 	Makefile
 	daemon/Makefile
 	pixmaps/Makefile
+	pixmaps/22x22/Makefile
+	pixmaps/48x48/Makefile
 	po/Makefile.in
 	data/Makefile
 	gvfs/Makefile
