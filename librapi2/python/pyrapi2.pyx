@@ -49,6 +49,12 @@ cdef extern from "rapi.h":
     LONG CeRegDeleteValue(HKEY hKey, LPCWSTR lpszValueName) nogil
     LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
     LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData) nogil
+    LONG CeRegQueryInfoKey ( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime ) nogil
+
+    LONG CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcbName, LPDWORD lpReserved, LPWSTR lpClass, LPDWORD lpcbClass, PFILETIME lpftLastWriteTime) nogil
+    LONG CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, LPDWORD lpcbValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
+
+
 
     # sync functions
     BOOL CeStartReplication() nogil
@@ -248,6 +254,275 @@ class RegKey(object):
     def __del__(self):
         self.close()
 
+    def keys(self):
+        """Returns an array containing all the subkeys"""
+        result = [] 
+
+        cdef DWORD index
+        cdef LPWSTR name
+        cdef DWORD name_len
+       
+        try:
+            self.rapi_session.__session_select__()
+            
+            name = <LPWSTR> malloc(255) 
+
+            finished = False 
+            
+            index = 0 
+
+            while not finished:
+                name_len = 254
+                
+                retval =  CeRegEnumKeyEx( self.handle, index, name, &name_len, NULL, NULL, NULL, NULL) 
+
+                if retval == 259L:
+                    finished = True
+
+                
+                if not finished:
+                    if retval != ERROR_SUCCESS:
+                            raise RAPIError(retval)
+                    
+                    result.append( wstr_to_utf8(name) )
+                
+                    index += 1
+            
+            return result 
+
+        finally:
+            if name != NULL:
+                free(name) 
+
+    
+
+
+    def values(self):
+        """Returns a list of tuples (value_name, value_type, value_data) of 
+        values stored in the current key"""
+       
+
+        #First determine the maximum size for the buffer that we need
+        cdef DWORD data_max_size
+        
+        
+        self.rapi_session.__session_select__()
+        retval = CeRegQueryInfoKey( self.handle, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &data_max_size , NULL, NULL) 
+        
+        result = [] 
+
+        cdef DWORD index
+        cdef LPWSTR name
+        cdef DWORD name_len
+
+        cdef DWORD type
+        cdef DWORD data_size
+        cdef LPBYTE data 
+        cdef LPDWORD dw_ptr
+
+        try:
+            name = <LPWSTR> malloc(255) 
+           
+            data = <LPBYTE> malloc(data_max_size)
+
+            
+            finished = False 
+            
+            index = 0 
+
+            while not finished:
+                name_len = 254
+                data_size = data_max_size
+
+                retval =  CeRegEnumValue( self.handle, index, name, &name_len, NULL, &type, data, &data_size) 
+
+                #If return value is 259L, then we are finished
+                if retval == 259L:
+                    finished = True
+
+                
+                if not finished:
+                    if retval != ERROR_SUCCESS:
+                            raise RAPIError(retval)
+                    
+
+                    if type == REG_NONE:
+                        value = PyString_FromStringAndSize(<char *>data, data_size)
+                    elif type == REG_SZ or type == REG_EXPAND_SZ:
+                        value = wstr_to_utf8(<LPCWSTR> data)
+                    elif type == REG_BINARY:
+                        value = PyString_FromStringAndSize(<char *>data, data_size)
+                    elif type == REG_DWORD:
+                        dw_ptr = <LPDWORD> data
+                        value = self._dword_le_to_host(dw_ptr[0])
+                    elif type == REG_DWORD_BIG_ENDIAN:
+                        dw_ptr = <LPDWORD> data
+                        value = self._dword_be_to_host(dw_ptr[0])
+                    elif type == REG_LINK:
+                        value = PyString_FromStringAndSize(<char *>data, data_size)
+                    elif type == REG_MULTI_SZ:
+                        # FIXME - this is doable
+                        value = PyString_FromStringAndSize(<char *>data, data_size)
+                    else:
+                        value = PyString_FromStringAndSize(<char *>data, data_size)
+
+                    
+                    
+                    
+                    
+                    
+                    
+                    result.append( (wstr_to_utf8(name) , type,value)    )
+                
+                    index += 1
+            
+            return result 
+
+        finally:
+            if name != NULL:
+                free(name) 
+                free(data)      
+
+    def rename_value(self, old_value_name, new_value_name):
+        """Rename a value contained in this key"""
+        self.copy_value(old_value_name, self, new_value_name) 
+        self.delete_value( old_value_name )
+
+
+    def copy_key_recursively(self, new_key ):
+        """Copy the contents of the key denoted by the RegKey object
+        old_key recursively to the key denoted by the new_key RegKey object"""
+
+        self.copy_all_values( new_key )
+
+        for (sub_key_name) in self.keys():
+            old_sub_key = self.open_sub_key( sub_key_name )
+            new_sub_key = new_key.create_sub_key(sub_key_name)
+
+            old_sub_key.copy_key_recursively( new_sub_key )
+
+            old_sub_key.close()
+            new_sub_key.close()
+
+
+
+
+
+    def rename_key(self, old_key_name, new_key_name):
+        """Rename a sub key of the current key
+
+        This is done by creating a new key and recursively copy the
+        contents of the original key to this new key"""
+       
+        old_key = self.open_sub_key( old_key_name )
+
+        new_key = self.create_sub_key( new_key_name )
+
+        old_key.copy_key_recursively( new_key )
+
+        old_key.close()
+        new_key.close()
+
+        self.delete_sub_key( old_key_name )
+        
+
+
+
+
+
+
+
+    def copy_value(self, value_name, destination_key, destination_value_name=None):
+        """Copy the value value_name to the registry key denoted by the 
+        RegKey object destination_key. 
+
+        If the destination_value_name is not given, the same name is used"""
+        
+        cdef LPWSTR value_name_w
+        cdef LPWSTR destination_value_name_w
+        cdef LPBYTE data
+        cdef DWORD data_size
+        cdef DWORD data_type
+
+        value_name_w = NULL
+        destination_value_name_w = NULL
+        data = NULL
+        
+        try: 
+            self.rapi_session.__session_select__()
+
+            if destination_value_name is None:
+                destination_value_name = value_name
+
+
+            value_name_w = wstr_from_utf8(value_name)
+            
+            data_size = 0  
+            
+            #First determine the size of the buffer we need to allocate
+            retval = CeRegQueryValueEx(self.handle, value_name_w , NULL, NULL, NULL, &data_size) 
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+            
+
+            #Now create buffer for the data and query the data
+
+            data = <LPBYTE> malloc(data_size)
+
+            retval = CeRegQueryValueEx(self.handle, value_name_w , NULL,
+                                       &data_type, data, &data_size)
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+
+            destination_value_name_w = wstr_from_utf8(destination_value_name)
+
+            
+           
+            #Create a value in the destination_key
+            retval = CeRegSetValueEx(destination_key.handle , destination_value_name_w , 0 , data_type, data, data_size)
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+            return
+
+        finally:
+            if value_name_w != NULL:
+                wstr_free_string(value_name_w)
+            if destination_value_name_w != NULL:
+                wstr_free_string(destination_value_name_w)
+            if data != NULL:
+                free(data)
+        pass
+
+    def copy_all_values(self, destination_key):
+        """Copy all values that are within the current key to the key denoted
+        by the RegKey object destination_key"""
+        for (value_name,_,_) in self.values():
+            self.copy_value( value_name, destination_key )
+
+
+    def number_of_keys_and_values(self):
+        """Returns the number of child keys and number of values stored in 
+        this key."""
+
+        cdef DWORD number_of_keys
+        cdef DWORD number_of_values
+
+        self.rapi_session.__session_select__()
+        retval = CeRegQueryInfoKey( self.handle, NULL, NULL, NULL, &number_of_keys, NULL, NULL, &number_of_values, NULL, NULL, NULL, NULL) 
+        
+        if retval != ERROR_SUCCESS:
+            raise RAPIError(retval)
+
+        return (number_of_keys, number_of_values) 
+
+
+
+
     def open_sub_key(self, sub_key):
         """Open an existing sub key of this key.
 
@@ -340,6 +615,84 @@ class RegKey(object):
         else:
             return dw
 
+
+
+
+    def get_value(self, value_name):
+        """Obtain a tuple (value_type, value) from a value contained in this
+        key
+
+        Takes as an argument the name of the value required, and returns
+        a tuple of the type of the value and the value itself, converted
+        to a python type
+        """
+        cdef LPWSTR name_w
+        cdef DWORD type
+        cdef LPBYTE data
+        cdef DWORD data_size
+        cdef LPDWORD dw_ptr
+
+        name_w = NULL
+        data = NULL
+
+        try:
+            if value_name != None:
+                name_w = wstr_from_utf8(value_name)
+            else:
+                name_w = NULL
+
+            self.rapi_session.__session_select__()
+
+            data_size = 0
+            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+                                       &type, NULL, &data_size)
+
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+            data = <LPBYTE> malloc(data_size)
+
+            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+                                       &type, data, &data_size)
+
+
+            REG_MULTI_SZ
+            if retval != ERROR_SUCCESS:
+                raise RAPIError(retval)
+
+            if type == REG_NONE:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            elif type == REG_SZ or type == REG_EXPAND_SZ:
+                value = wstr_to_utf8(<LPCWSTR> data)
+            elif type == REG_BINARY:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            elif type == REG_DWORD:
+                dw_ptr = <LPDWORD> data
+                value = self._dword_le_to_host(dw_ptr[0])
+            elif type == REG_DWORD_BIG_ENDIAN:
+                dw_ptr = <LPDWORD> data
+                value = self._dword_be_to_host(dw_ptr[0])
+            elif type == REG_LINK:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            elif type == REG_MULTI_SZ:
+                # FIXME - this is doable
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+            else:
+                value = PyString_FromStringAndSize(<char *>data, data_size)
+
+            
+
+            return (type,value)
+        finally:
+            if name_w != NULL:
+                wstr_free_string(name_w)
+
+            if data != NULL:
+                free(data)
+
+
+
+
     def query_value(self, value_name):
         """Obtain a value contained in this key
 
@@ -407,6 +760,10 @@ class RegKey(object):
             if data != NULL:
                 free(data)
 
+
+
+        
+
     def set_value(self, value_name, value_data, value_type=None):
         """Set a value contained in this key
 
@@ -459,6 +816,8 @@ class RegKey(object):
                     wstr_free_string(data)
                 else:
                     free(data)
+
+    
 
     def delete_sub_key(self, sub_key):
         """Delete a sub key of this key.

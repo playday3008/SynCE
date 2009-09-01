@@ -1,3 +1,10 @@
+2009-09-01  Guido Diepen  <guido@guidodiepen.nl>
+	* Added additional python methods to access/modify the 
+	  registry. You can now query all keys/values, rename a 
+	  key (i.e. recursive copy and delete original) and 
+	  get the data and type for a specific
+	  value in a key.
+
 2009-08-08  Mark Ellis  <mark@mpellis.org.uk>
 
 	* IRAPIDevice only exists once for each device, all funcs now
