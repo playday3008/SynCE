@@ -19,6 +19,7 @@ from constants import *
 import cPickle as pickle
 import os
 import os.path
+import urlparse
 import pyrapi2
 import libxml2
 import rapicontext
@@ -706,7 +707,87 @@ class Partnership:
 		cticset.params["AllowDTPTMultihoming"]=str(value)
 		self.rapisession.SetConfig("Sync",cticset)
 		
+		# 3. Set up the connected network
+		# Mimic ActiveSync: http://blogs.msdn.com/windowsmobile/archive/2006/11/20/wmdc-activesync-pass-through-feature.aspx
+		
+		network = self.QueryConfig("/syncpartner-config/DTPT/Network[position() = 1]","0")
+		if network and network in NETWORK_GUID:
+			self.logger.info("DTPT network is set to %s" % network)
+			self._SetDTPTnet(network)
+		else:
+			self.logger.info("DTPT network is set to automatic, unset or unknown -> automatic config")
+			proxy = self._GetLocalProxy()
+			if proxy["http"]:
+				self._SetDTPTnet("work")
+				self._SetProxy(proxy)
+			else:
+				self._SetDTPTnet("internet")
+				self._SetProxy(None)
+
 		# config done
+
+	def _GetLocalProxy(self):
+		"""TODO: read proxy settings from elsewhere too (GConf, KConfig, Firefox, ...)"""
+		proxy = { "http": os.getenv("http_proxy", None),
+		          "no_proxy": os.getenv("no_proxy", None),
+		        }
+		return proxy
+
+	def _SetDTPTnet(self, network):
+		"""
+		This setting is persistant between syncs. Must be called at least once
+		in the device's lifetime to get DTPT working.
+		"""
+		cticset = characteristics.Characteristic("CurrentDTPTNetwork", None)
+		cticset.params["DestId"] = NETWORK_GUID[network]
+		self.rapisession.SetConfig("CM_NetEntries", cticset)
+
+	def _SetProxy(self, proxy):
+		"""
+		Sends the proxy configuration to the device.  Assumes the connection
+		source is "work", it seems to be ActiveSync's behavior.
+		"""
+		if proxy is None:
+			current_proxy = self.rapisession.GetConfig("CM_ProxyEntries",
+			                                           "HTTP-%s" % NETWORK_GUID["work"])
+			if "Enable" in current_proxy.params and \
+					current_proxy.params["Enable"] == "1":
+				self.rapisession.RemoveConfig("CM_ProxyEntries",
+				                              "HTTP-%s" % NETWORK_GUID["work"])
+		else:
+			self._SetHTTPproxy(proxy["http"])
+			self._SetNoProxy(proxy["no_proxy"])
+
+	def _SetHTTPproxy(self, proxy):
+		cticset = characteristics.Characteristic("HTTP-%s" % NETWORK_GUID["work"],
+		                                         None)
+		cticset.params["SrcId"] = NETWORK_GUID["work"]
+		cticset.params["DestId"] = NETWORK_GUID["internet"]
+		cticset.params["Type"] = "1"
+		cticset.params["Enable"] = "1"
+		proxy_obj = urlparse.urlparse(proxy)
+		cticset.params["Proxy"] = proxy_obj.netloc
+		if proxy_obj.username:
+			cticset.params["UserName"] = proxy_obj.username
+		if proxy_obj.password:
+			cticset.params["Password"] = proxy_obj.password
+		self.rapisession.SetConfig("CM_ProxyEntries", cticset)
+	
+	def _SetNoProxy(self, no_proxy):
+		order = 10000 # must be > 500 (http://msdn.microsoft.com/en-us/library/aa455850.aspx)
+		for no_proxy_host in no_proxy.split(","):
+			no_proxy_host = no_proxy_host.strip() # may have spaces after commas
+			cticset = characteristics.Characteristic(str(order), None)
+			pattern = ["*://"] # use lists because adding to strings is slow (PEP-8)
+			if no_proxy_host.startswith("."):
+				pattern.append("*")
+			pattern.append(no_proxy_host)
+			pattern.append("/*")
+			cticset.params["Pattern"] = "".join(pattern)
+			cticset.params["Network"] = NETWORK_GUID["work"]
+			self.rapisession.SetConfig("CM_Mappings", cticset)
+			order += 1
+
 
 	#
 	# __str__
@@ -749,6 +830,9 @@ class Partnership:
 		dtptnode = confnode.newChild(None,"DTPT",None)
 		dtptnode.newChild(None,"Enabled","1")
 		dtptnode.newChild(None,"EnableMultihoming","0")
+		comment = self.config.newDocComment(' "auto", "internet" or "work". ')
+		dtptnode.addChild(comment)
+		dtptnode.newChild(None,"Network","auto")
 		
 		if not self._SaveConfigFile():
 			self.logger.warning("unable to save config info for partnership %s", str(self.id))
