@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<vcal>
+    <Method>
+        <Content>PUBLISH</Content>
+    </Method>
+    <Event>
+        <DateStarted>
+            <Content>20060729T073000</Content>
+        </DateStarted>
+        <DateEnd>
+            <Content>20060729T083000</Content>
+        </DateEnd>
+        <Summary>
+            <Content>Test transparency</Content>
+        </Summary>
+        <Description>
+            <Content>No transparency defined: default to OPAQUE</Content>
+        </Description>
+        <LastModified>
+            <Content>20060728T123212Z</Content>
+        </LastModified>
+    </Event>
+</vcal>

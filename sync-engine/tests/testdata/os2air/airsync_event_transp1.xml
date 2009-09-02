@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+  <BusyStatus>2</BusyStatus>
+  <DtStamp>20060728T123212Z</DtStamp>
+  <AllDayEvent>0</AllDayEvent>
+  <StartTime>20060729T073000Z</StartTime>
+  <EndTime>20060729T083000Z</EndTime>
+  <Location/>
+  <Subject>Test transparency</Subject>
+  <Rtf>JQEAAKwCAABMWkZ1LhodND8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMMgnNGUtADZmLQAMAfwnNxRgLdASAC1QAFAtUPktMTczLcEtsS5iLiMagNUukzYu8jkthDYt8S/jPjYtQTCxMCMv8i3xM2F/MM8vVC/yAOAt0y2mLWY0bS1xNTXyLnE1NrIv8TQKNQqAfTew</Rtf>
+  <Categories/>
+  <Attendees/>
+</AS:ApplicationData>

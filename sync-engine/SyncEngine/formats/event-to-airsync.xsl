@@ -19,9 +19,17 @@
                 <Reminder><xsl:value-of select="convert:event_reminder_to_airsync()"/></Reminder>
             </xsl:for-each>
 
-            <xsl:for-each select="Event/Transparency/Content[position() = 1]">
-                <BusyStatus><xsl:value-of select="convert:event_busystatus_to_airsync()"/></BusyStatus>
-            </xsl:for-each>
+            <xsl:choose>
+                <xsl:when test="Event/Transparency">
+                    <xsl:for-each select="Event/Transparency/Content[position() = 1]">
+                        <BusyStatus><xsl:value-of select="convert:event_busystatus_to_airsync()"/></BusyStatus>
+                    </xsl:for-each>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Default to OPAQUE: http://tools.ietf.org/html/rfc2445#section-4.8.2.7 -->
+                    <BusyStatus>2</BusyStatus>
+                </xsl:otherwise>
+            </xsl:choose>
 
             <xsl:for-each select="Event/LastModified[position() = 1]">
                 <DtStamp><xsl:value-of select="convert:event_dtstamp_to_airsync()"/></DtStamp>

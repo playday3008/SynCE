@@ -1139,3 +1139,5 @@ thanks to Aurelien Bompard.
 
 Proxy configuration for using dtptserver, thanks again to Aurelien Bompard.
 
+Default busy status to OPAQUE if not given. Thanks to, yes, Aurelien Bompard.
+
