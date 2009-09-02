@@ -1132,3 +1132,8 @@ Tests can now be run using python-nose, with "nosetests -v tests".
 ------------------------------
 0.14 release
 
+02/09/2009 - Mark Ellis
+-----------------------
+Gracefully pass over IPv6 addresses in dtptserver, looking for an IPv4 address, many
+thanks to Aurelien Bompard.
+

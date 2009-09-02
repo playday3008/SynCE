@@ -288,6 +288,10 @@ class NSPSession:
 				
 				if (family == socket.AF_INET):
 					ai.local_addr = (family, "0.0.0.0", 0)
+				elif (family == socket.AF_INET6):
+					# We don't handle that yet, but don't bail out, keep
+					# looking for a v4 address
+					continue
 				else:
 					raise NotImplementedError("Unhandled family %d" % family)
 				
@@ -703,6 +707,8 @@ class Hostent:
         
 		if self.h_addrtype == socket.AF_INET:
 			self.h_length = 4
+		elif self.h_addrtype == socket.AF_INET6:
+			self.h_length = 16
 		else:
 			raise NotImplementedError("Unhandled family %d" % family)
 		
@@ -816,6 +822,9 @@ class CSAddrInfo:
 		s += struct.pack(">H", port)
 		if family == socket.AF_INET:
 			s += socket.inet_aton(ascii_addr)
+			s += "\x00\x00\x00\x00\x00\x00\x00\x00"
+		elif family == socket.AF_INET6:
+			s += socket.inet_pton(family, ascii_addr)
 			s += "\x00\x00\x00\x00\x00\x00\x00\x00"
 		else:
 			raise NotImplementedError("Unhandled family %d" % family)
