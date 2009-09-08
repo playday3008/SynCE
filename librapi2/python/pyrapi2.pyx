@@ -286,7 +286,7 @@ class RegKey(object):
                     
                     result.append( wstr_to_utf8(name) )
                 
-                    index += 1
+                    index = index + 1
             
             return result 
 
@@ -374,7 +374,7 @@ class RegKey(object):
                     
                     result.append( (wstr_to_utf8(name) , type,value)    )
                 
-                    index += 1
+                    index = index + 1
             
             return result 
 

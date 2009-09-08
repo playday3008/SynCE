@@ -1,3 +1,8 @@
+2009-09-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - replace += operator, not available
+	  until pyrex 0.9.8
+
 2009-09-01  Guido Diepen  <guido@guidodiepen.nl>
 	* Added additional python methods to access/modify the 
 	  registry. You can now query all keys/values, rename a 
