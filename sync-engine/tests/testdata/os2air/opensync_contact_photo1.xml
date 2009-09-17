@@ -1,0 +1,11 @@
+<contact>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+	<Photo>
+		<Content>TestPhoto</Content>
+		<Encoding>B</Encoding>
+		<Content>TestPhoto2-ShouldNotAppear</Content>
+	</Photo>
+</contact>

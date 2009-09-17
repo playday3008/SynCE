@@ -1,0 +1,12 @@
+<contact>
+    <FileAs>
+        <Content>Linus Torvalds</Content>
+    </FileAs>
+    <FormattedName>
+        <Content>John Smith</Content>
+    </FormattedName>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+</contact>

@@ -1,24 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:C1="http://synce.org/formats/airsync_wm5/contacts" xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2">
   <C1:FileAs>John Smith</C1:FileAs>
-  <C1:Categories>
-    <C1:Category>Friends</C1:Category>
-    <C1:Category>RPI</C1:Category>
-  </C1:Categories>
-  <C1:Email1Address>js@js.edu</C1:Email1Address>
-  <C1:Email2Address>ab@js.edu</C1:Email2Address>
   <C1:LastName>Smith</C1:LastName>
   <C1:FirstName>John</C1:FirstName>
   <C1:MobilePhoneNumber>1112220000</C1:MobilePhoneNumber>
   <C1:HomePhoneNumber>3409310131</C1:HomePhoneNumber>
   <C1:HomeFaxNumber>1111111111</C1:HomeFaxNumber>
   <C1:Home2PhoneNumber>3409310132</C1:Home2PhoneNumber>
-  <C1:HomeCity>HomeCity</C1:HomeCity>
-  <C1:HomeCountry>USA</C1:HomeCountry>
-  <C1:HomePostalCode>00000</C1:HomePostalCode>
-  <C1:HomeState/>
-  <C1:HomeStreet>11 Dummy Ln</C1:HomeStreet>
-  <C1:Anniversary>19770429T00:00:00.000Z</C1:Anniversary>
-  <C1:Birthday>1952-04-29T00:00:00.000Z</C1:Birthday>
+  <C1:BusinessFaxNumber>22222</C1:BusinessFaxNumber>
+  <C1:BusinessPhoneNumber>33333</C1:BusinessPhoneNumber>
+  <C1:Business2PhoneNumber>44444</C1:Business2PhoneNumber>
+  <C1:CarPhoneNumber>55555</C1:CarPhoneNumber>
+  <C1:PagerNumber>66666</C1:PagerNumber>
+  <C1:AssistnamePhoneNumber>77777</C1:AssistnamePhoneNumber>
+  <C1:RadioPhoneNumber>88888</C1:RadioPhoneNumber>
+  <C1:CompanyMainPhone>99999</C1:CompanyMainPhone>
 </AS:ApplicationData>
 

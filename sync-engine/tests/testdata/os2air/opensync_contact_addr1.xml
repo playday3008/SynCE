@@ -1,0 +1,32 @@
+<contact>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+    <Address>
+        <Type>HOME</Type>
+        <Street>11 Dummy Ln</Street>
+        <City>HomeCity</City>
+        <Region>HomeState</Region>
+        <Country>USA</Country>
+        <PostalCode>00000</PostalCode>
+        <ExtendedAddress>Dummy ext</ExtendedAddress>
+        <PostalBox>XXX</PostalBox>
+    </Address>
+    <Address>
+        <Type>WORK</Type>
+        <Street>12 Dummy Ln</Street>
+        <City>WorkCity</City>
+        <Region>WorkState</Region>
+        <Country>Canada</Country>
+        <PostalCode>11111</PostalCode>
+    </Address>
+    <Address>
+        <Type>OTHER</Type>
+        <Street>13 Dummy Ln</Street>
+        <City>OtherCity</City>
+        <Region>OtherState</Region>
+        <Country>Mexico</Country>
+        <PostalCode>22222</PostalCode>
+    </Address>
+</contact>

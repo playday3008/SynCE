@@ -32,8 +32,12 @@
     </Telephone>
     <Telephone>
         <Content>1111111111</Content>
-        <Type>HOME</Type>
         <Type>FAX</Type>
+        <Type>HOME</Type>
+    </Telephone>
+    <Telephone>
+        <Content>3409310132</Content>
+        <Type>HOME</Type>
     </Telephone>
     <Uid>
         <Content>ztQEmP8cI4</Content>

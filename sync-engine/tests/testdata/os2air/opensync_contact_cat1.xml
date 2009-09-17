@@ -1,0 +1,10 @@
+<contact>
+    <Categories>
+        <Category>Friends</Category>
+        <Category>RPI</Category>
+    </Categories>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+</contact>

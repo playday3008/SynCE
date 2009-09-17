@@ -43,13 +43,71 @@ class OS2Air(unittest.TestCase):
         reference_file = os.path.join(self.testdatadir,
                                       "airsync_%s.xml" % suffix)
         reference = libxml2.parseFile(reference_file)
-        #print src_file
-        #print "dest:",dst.serialize("utf-8")
-        #print "refe:",reference.serialize("utf-8")
+        if dst.serialize("utf-8") != reference.serialize("utf-8"):
+            print src_file
+            print "result:",dst.serialize("utf-8")
+            print "reference:",reference.serialize("utf-8")
         assert dst.serialize("utf-8") == reference.serialize("utf-8")
 
     def test_contact_ex2(self):
         return self._compare_files("contact_ex2")
+
+    def test_contact_fileas1(self):
+        return self._compare_files("contact_fileas1")
+
+    def test_contact_fileas2(self):
+        return self._compare_files("contact_fileas2")
+
+    def test_contact_fileas3(self):
+        return self._compare_files("contact_fileas3")
+
+    def test_contact_nick1(self):
+        return self._compare_files("contact_nick1")
+
+    def test_contact_photo1(self):
+        return self._compare_files("contact_photo1")
+
+    def test_contact_addr1(self):
+        return self._compare_files("contact_addr1")
+
+    def test_contact_cat1(self):
+        return self._compare_files("contact_cat1")
+
+    def test_contact_assist1(self):
+        return self._compare_files("contact_assist1")
+
+    def test_contact_email1(self):
+        return self._compare_files("contact_email1")
+
+    def test_contact_im1(self):
+        return self._compare_files("contact_im1")
+
+    def test_contact_manager1(self):
+        return self._compare_files("contact_manager1")
+
+    def test_contact_org1(self):
+        return self._compare_files("contact_org1")
+
+    def test_contact_spouse1(self):
+        return self._compare_files("contact_spouse1")
+
+    def test_contact_tel1(self):
+        return self._compare_files("contact_tel1")
+
+    def test_contact_title1(self):
+        return self._compare_files("contact_title1")
+
+    def test_contact_url1(self):
+        return self._compare_files("contact_url1")
+
+    def test_contact_ann1(self):
+        return self._compare_files("contact_ann1")
+
+    def test_contact_bday1(self):
+        return self._compare_files("contact_bday1")
+
+    def test_contact_note1(self):
+        return self._compare_files("contact_note1")
 
     def test_contact_case1(self):
         return self._compare_files("contact_case1")

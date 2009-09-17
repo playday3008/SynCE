@@ -43,6 +43,10 @@ class Air2OS(unittest.TestCase):
         reference_file = os.path.join(self.testdatadir,
                                       "opensync_%s.xml" % suffix)
         reference = libxml2.parseFile(reference_file)
+        if dst.serialize("utf-8") != reference.serialize("utf-8"):
+            print src_file
+            print "result:",dst.serialize("utf-8")
+            print "reference:",reference.serialize("utf-8")
         assert dst.serialize("utf-8") == reference.serialize("utf-8")
 
     def test_contact_ex1(self):

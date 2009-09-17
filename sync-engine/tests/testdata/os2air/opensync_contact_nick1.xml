@@ -1,0 +1,9 @@
+<contact>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+    <Nickname>
+        <Content>Linus</Content>
+    </Nickname>
+</contact>

@@ -1,0 +1,18 @@
+<contact>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+    <EMail>
+        <Content>email1@example.com</Content>
+    </EMail>
+    <EMail>
+        <Content>email2@example.com</Content>
+    </EMail>
+    <EMail>
+        <Content>email3@example.com</Content>
+    </EMail>
+    <EMail>
+        <Content>email4@example.com</Content>
+    </EMail>
+</contact>

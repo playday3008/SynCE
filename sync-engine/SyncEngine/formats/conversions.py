@@ -116,6 +116,47 @@ def contact_birthday_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0].replace("-", "")
 
+def contact_has_type(ctx, type_string):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    curnode = transform_ctx.current()
+    s=xml2util.GetNodeValue(curnode)
+    for child in curnode.children:
+        if child.name != "Type":
+            continue
+        #print "type found:", child, "type searched:", type_string
+        if xml2util.GetNodeValue(child).upper() == type_string:
+            #print "found!"
+            return True
+    #print "not found"
+    return False
+ 
+def contact_position(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    curnode = transform_ctx.current()
+    s=xml2util.GetNodeValue(curnode)
+    # Extract the types
+    types = []
+    for child in curnode.children:
+        if child.name == "Type":
+            types.append(xml2util.GetNodeValue(child).upper())
+    types.sort()
+    position = 1
+    prevnode = curnode.prev
+    while prevnode != None:
+        if prevnode.name == curnode.name:
+            #print "found another", curnode.name
+            # Now compare types
+            prev_types = []
+            for child in prevnode.children:
+                if child.name == "Type":
+                    prev_types.append(xml2util.GetNodeValue(child).upper())
+            prev_types.sort()
+            #print "prev types:",prev_types
+            if prev_types == types:
+                position += 1
+        prevnode = prevnode.prev
+    return position
+ 
 def event_reminder_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
@@ -701,6 +742,8 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("contact_anniversary_from_airsync",   "http://synce.org/convert", contact_anniversary_from_airsync)
     libxslt.registerExtModuleFunction("contact_birthday_to_airsync",        "http://synce.org/convert", contact_birthday_to_airsync)
     libxslt.registerExtModuleFunction("contact_birthday_from_airsync",      "http://synce.org/convert", contact_birthday_from_airsync)
+    libxslt.registerExtModuleFunction("contact_has_type",                   "http://synce.org/convert", contact_has_type)
+    libxslt.registerExtModuleFunction("contact_position",                   "http://synce.org/convert", contact_position)
     libxslt.registerExtModuleFunction("event_reminder_to_airsync",          "http://synce.org/convert", event_reminder_to_airsync)
     libxslt.registerExtModuleFunction("event_reminder_from_airsync",        "http://synce.org/convert", event_reminder_from_airsync)
     libxslt.registerExtModuleFunction("event_busystatus_to_airsync",        "http://synce.org/convert", event_busystatus_to_airsync)

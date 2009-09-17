@@ -1,0 +1,11 @@
+<contact>
+    <Name>
+        <LastName>Smith</LastName>
+        <FirstName>John</FirstName>
+    </Name>
+    <Organization>
+        <Name>Example Corp.</Name>
+        <Department>Example Dept.</Department>
+        <Unit>Example Unit</Unit>
+    </Organization>
+</contact>

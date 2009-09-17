@@ -1145,3 +1145,8 @@ Default busy status to OPAQUE if not given. Thanks to, yes, Aurelien Bompard.
 -----------------------
 Allow any case in type attribute of ADR tag, from Aurelien Bompard.
 
+18/09/2009 - Aurelien Bompard
+-----------------------------
+Refactor the contact XSL stylesheets to use templates. Add many unit tests.
+
+Small addition to the DTPT debug log

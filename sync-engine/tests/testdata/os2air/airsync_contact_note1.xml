@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:C1="http://synce.org/formats/airsync_wm5/contacts" xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2">
   <C1:FileAs>John Smith</C1:FileAs>
-  <C1:FirstName>John</C1:FirstName>
   <C1:LastName>Smith</C1:LastName>
-  <C1:HomeCity>HomeCity</C1:HomeCity>
-  <C1:HomeCountry>USA</C1:HomeCountry>
-  <C1:HomePostalCode>00000</C1:HomePostalCode>
-  <C1:HomeState/>
-  <C1:HomeStreet>11 Dummy Ln</C1:HomeStreet>
+  <C1:FirstName>John</C1:FirstName>
+  <C1:Body>Dummy body</C1:Body>
 </AS:ApplicationData>
+

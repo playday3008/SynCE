@@ -269,6 +269,7 @@ class NSPSession:
 	def _handle_lookup_next(self, handle, dvalue1, buffer_size):
 
 		if self.response == None:
+			logger.debug("Resolving %s" % self.request.service_instance_name)
 			qs = QuerySet()
 			qs.service_instance_name = self.request.service_instance_name
 			qs.namespace = 12
@@ -388,6 +389,7 @@ class ConnectionSession:
 
 		port = struct.unpack(">H", buf[10:12])[0]
 		addr = socket.inet_ntoa(buf[12:16])
+		logger.debug("Connecting to %s:%s" % (addr, port))
 
 		ext_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		errno = ext_socket.connect_ex((addr, port))
