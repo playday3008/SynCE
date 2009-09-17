@@ -1141,3 +1141,7 @@ Proxy configuration for using dtptserver, thanks again to Aurelien Bompard.
 
 Default busy status to OPAQUE if not given. Thanks to, yes, Aurelien Bompard.
 
+17/09/2009 - Mark Ellis
+-----------------------
+Allow any case in type attribute of ADR tag, from Aurelien Bompard.
+

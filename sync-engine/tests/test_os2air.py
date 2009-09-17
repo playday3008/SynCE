@@ -51,6 +51,9 @@ class OS2Air(unittest.TestCase):
     def test_contact_ex2(self):
         return self._compare_files("contact_ex2")
 
+    def test_contact_case1(self):
+        return self._compare_files("contact_case1")
+
     def test_event_ex4(self):
         return self._compare_files("event_ex4")
 

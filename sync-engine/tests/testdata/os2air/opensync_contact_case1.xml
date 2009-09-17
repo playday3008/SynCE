@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contact>
+  <Uid>
+    <Content>JtE3jCC15s</Content>
+  </Uid>
+  <FormattedName>
+    <Content>John Smith</Content>
+  </FormattedName>
+  <Name>
+    <FirstName>John</FirstName>
+    <LastName>Smith</LastName>
+  </Name>
+  <Address>
+      <Type>home</Type>
+      <Street>11 Dummy Ln</Street>
+      <City>HomeCity</City>
+      <State>HomeState</State>
+      <Country>USA</Country>
+      <PostalCode>00000</PostalCode>
+  </Address>
+</contact>

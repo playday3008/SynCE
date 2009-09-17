@@ -691,6 +691,11 @@ def all_description_to_airsync(ctx):
             pass
     return ec
 
+def all_upper_case(ctx, string):
+    #parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    #s=xml2util.GetNodeValue(transform_ctx.current())
+    return string.upper()
+
 def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("contact_anniversary_to_airsync",     "http://synce.org/convert", contact_anniversary_to_airsync)
     libxslt.registerExtModuleFunction("contact_anniversary_from_airsync",   "http://synce.org/convert", contact_anniversary_from_airsync)
@@ -728,4 +733,5 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("task_prio_from_airsync",             "http://synce.org/convert", task_prio_from_airsync)
     libxslt.registerExtModuleFunction("all_description_to_airsync",         "http://synce.org/convert", all_description_to_airsync)
     libxslt.registerExtModuleFunction("all_description_from_airsync",       "http://synce.org/convert", all_description_from_airsync)
+    libxslt.registerExtModuleFunction("all_upper_case",                     "http://synce.org/convert", all_upper_case)
     
