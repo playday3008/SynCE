@@ -16,77 +16,104 @@
     <xsl:template match="ApplicationData | AS:ApplicationData">
         <vcal>
 
-        <xsl:for-each select = "C:Timezone[position() = 1]">
+            <xsl:if test="C:Timezone">
                 <xsl:value-of select="tz:ConvertASTimezoneToVcal()"/>
-        </xsl:for-each>
+            </xsl:if>
 
             <Event>
-                <xsl:for-each select="C:Reminder[position() = 1]">
-                    <Alarm>
-                        <AlarmTrigger>
-                            <Content><xsl:value-of select="convert:event_reminder_from_airsync()"/></Content>
-                            <Value>DURATION</Value>
-                            <Related>START</Related>
-                        </AlarmTrigger>
-                        <AlarmAction>DISPLAY</AlarmAction>
-                        <AlarmDescription><xsl:value-of select="Subject"/></AlarmDescription>
-                    </Alarm>
-                </xsl:for-each>
-
-                <xsl:for-each select="C:BusyStatus[position() = 1]">
-                    <Transparency><Content><xsl:value-of select="convert:event_busystatus_from_airsync()"/></Content></Transparency>
-                </xsl:for-each>
-
-                <xsl:for-each select="C:DtStamp[position() = 1]">
-                    <LastModified><Content><xsl:value-of select="convert:event_dtstamp_from_airsync()"/></Content></LastModified>
-                </xsl:for-each>
-
-                <xsl:for-each select="C:StartTime[position() = 1]">
-                    <DateStarted><xsl:value-of select="convert:event_starttime_from_airsync()"/></DateStarted>
-                </xsl:for-each>
-
-                <xsl:for-each select="C:EndTime[position() = 1]">
-                    <DateEnd><xsl:value-of select="convert:event_endtime_from_airsync()"/></DateEnd>
-                </xsl:for-each>
-
-                <Location><Content><xsl:value-of select="C:Location"/></Content></Location>
-
-                <Summary><Content><xsl:value-of select="C:Subject"/></Content></Summary>
-
-		<xsl:for-each select="C:Rtf">
-			<Description><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Description>
-		</xsl:for-each>
-
-                <xsl:for-each select="C:Sensitivity[position() = 1]">
-                    <Class><Content><xsl:value-of select="convert:event_sensitivity_from_airsync()"/></Content></Class>
-                </xsl:for-each>
-
-                <Categories>
-                    <xsl:for-each select="C:Categories">
-                        <xsl:for-each select="C:Category">
-                            <Category><xsl:value-of select="."/></Category>
-                        </xsl:for-each>
-                    </xsl:for-each>
-                </Categories>
-
-                <xsl:for-each select="C:Attendees/C:Attendee">
-                    <Attendee>
-                        <xsl:value-of select="convert:event_attendee_from_airsync()"/>
-                    </Attendee>
-                </xsl:for-each>
-
-                <xsl:for-each select="C:Recurrence[position() = 1]">
-                    <RecurrenceRule>
-                        <xsl:value-of select="convert:event_recurrence_from_airsync()"/>
-                    </RecurrenceRule>
-                </xsl:for-each>
-
-                <xsl:for-each select="C:Exceptions/C:Exception">
-                    <xsl:value-of select="convert:event_exception_from_airsync()"/>
-                </xsl:for-each>
-
+                <xsl:apply-templates/>
             </Event>
+
         </vcal>
+    </xsl:template>
+
+
+    <xsl:template match="C:Reminder">
+        <Alarm>
+            <AlarmTrigger>
+                <Content><xsl:value-of select="convert:event_reminder_from_airsync()"/></Content>
+                <Value>DURATION</Value>
+                <Related>START</Related>
+            </AlarmTrigger>
+            <AlarmAction>DISPLAY</AlarmAction>
+            <AlarmDescription><xsl:value-of select="../C:Subject"/></AlarmDescription>
+        </Alarm>
+    </xsl:template>
+
+    <xsl:template match="C:BusyStatus">
+        <Transparency><Content><xsl:value-of select="convert:event_busystatus_from_airsync()"/></Content></Transparency>
+    </xsl:template>
+
+    <xsl:template match="C:DtStamp">
+        <LastModified><Content><xsl:value-of select="convert:event_dtstamp_from_airsync()"/></Content></LastModified>
+    </xsl:template>
+
+    <xsl:template match="C:StartTime">
+        <DateStarted><xsl:value-of select="convert:event_starttime_from_airsync()"/></DateStarted>
+    </xsl:template>
+
+    <xsl:template match="C:EndTime">
+        <DateEnd><xsl:value-of select="convert:event_endtime_from_airsync()"/></DateEnd>
+    </xsl:template>
+
+    <xsl:template match="C:Location">
+        <Location><Content><xsl:value-of select="."/></Content></Location>
+    </xsl:template>
+
+    <xsl:template match="C:Subject">
+        <Summary><Content><xsl:value-of select="."/></Content></Summary>
+    </xsl:template>
+
+    <xsl:template match="C:Rtf">
+        <Description><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Description>
+    </xsl:template>
+
+    <xsl:template match="C:Sensitivity">
+        <Class><Content><xsl:value-of select="convert:event_sensitivity_from_airsync()"/></Content></Class>
+    </xsl:template>
+
+    <xsl:template match="C:Categories">
+        <Categories>
+            <xsl:apply-templates />
+        </Categories>
+    </xsl:template>
+
+    <xsl:template match="C:Category">
+        <Category><xsl:value-of select="."/></Category>
+    </xsl:template>
+
+    <xsl:template match="C:Attendees">
+        <xsl:apply-templates/>
+    </xsl:template>
+    <xsl:template match="C:Attendee">
+        <Attendee>
+            <xsl:value-of select="convert:event_attendee_from_airsync()"/>
+        </Attendee>
+    </xsl:template>
+
+    <xsl:template match="C:Recurrence">
+        <RecurrenceRule>
+            <xsl:value-of select="convert:event_recurrence_from_airsync()"/>
+        </RecurrenceRule>
+    </xsl:template>
+
+    <xsl:template match="C:Exceptions">
+        <xsl:apply-templates/>
+    </xsl:template>
+    <xsl:template match="C:Exception">
+        <xsl:if test="C:Deleted = 1">
+            <ExclusionDate>
+                <Value>DATE</Value>
+                <xsl:apply-templates/>
+            </ExclusionDate>
+        </xsl:if>
+    </xsl:template>
+    <xsl:template match="C:ExceptionStartTime">
+        <Content><xsl:value-of select="convert:event_dtstamp_short_from_airsync()"/></Content>
+    </xsl:template>
+
+    <xsl:template match="*">
+        <!-- <xsl:message>Ignored element <xsl:value-of select="name()"/></xsl:message> -->
     </xsl:template>
 
 </xsl:transform>

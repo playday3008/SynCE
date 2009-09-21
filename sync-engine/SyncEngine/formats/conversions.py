@@ -217,6 +217,10 @@ def event_dtstamp_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     return tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_EVENT)
 
+def event_dtstamp_short_from_airsync(ctx):
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    return tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_SHORT)
+
 def event_dtstamp_from_now(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     return strftime("%Y%m%dT%H%M%SZ", gmtime())
@@ -750,6 +754,7 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("event_busystatus_from_airsync",      "http://synce.org/convert", event_busystatus_from_airsync)
     libxslt.registerExtModuleFunction("event_dtstamp_to_airsync",           "http://synce.org/convert", event_dtstamp_to_airsync)
     libxslt.registerExtModuleFunction("event_dtstamp_from_airsync",         "http://synce.org/convert", event_dtstamp_from_airsync)
+    libxslt.registerExtModuleFunction("event_dtstamp_short_from_airsync",   "http://synce.org/convert", event_dtstamp_short_from_airsync)
     libxslt.registerExtModuleFunction("event_dtstamp_from_now",             "http://synce.org/convert", event_dtstamp_from_now)
     libxslt.registerExtModuleFunction("event_alldayevent_to_airsync",       "http://synce.org/convert", event_alldayevent_to_airsync)
     libxslt.registerExtModuleFunction("event_starttime_to_airsync",         "http://synce.org/convert", event_starttime_to_airsync)

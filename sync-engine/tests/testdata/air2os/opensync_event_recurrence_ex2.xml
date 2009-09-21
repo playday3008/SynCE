@@ -1,26 +1,25 @@
 <?xml version="1.0"?>
 <vcal>
-	<Event>
-		<LastModified>
-			<Content>20070120T190703Z</Content>
-		</LastModified>
-		<DateStarted>
-			<Content>20070120T203000Z</Content>
-		</DateStarted>
-		<DateEnd>
-			<Content>20070120T210000Z</Content>
-		</DateEnd>
-		<Location>
-			<Content>Event Location</Content>
-		</Location>
-		<Summary>
-			<Content>Event Subject</Content>
-		</Summary>
-		<Categories/>
-		<RecurrenceRule>
-			<Rule>UNTIL=20080808T050000Z</Rule>
-			<Rule>FREQ=WEEKLY</Rule>
-			<Rule>BYDAY=MO,TU,WE,TH,FR</Rule>
-		</RecurrenceRule>
-	</Event>
+  <Event>
+    <LastModified>
+      <Content>20070120T190703Z</Content>
+    </LastModified>
+    <DateStarted>
+      <Content>20070120T203000Z</Content>
+    </DateStarted>
+    <DateEnd>
+      <Content>20070120T210000Z</Content>
+    </DateEnd>
+    <Location>
+      <Content>Event Location</Content>
+    </Location>
+    <Summary>
+      <Content>Event Subject</Content>
+    </Summary>
+    <RecurrenceRule>
+      <Rule>UNTIL=20080808T050000Z</Rule>
+      <Rule>FREQ=WEEKLY</Rule>
+      <Rule>BYDAY=MO,TU,WE,TH,FR</Rule>
+    </RecurrenceRule>
+  </Event>
 </vcal>

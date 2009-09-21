@@ -1,53 +1,53 @@
 <?xml version="1.0"?>
 <vcal>
-	<Event>
-		<Alarm>
-			<AlarmTrigger>
-				<Content>-PT3H</Content>
-				<Value>DURATION</Value>
-				<Related>START</Related>
-			</AlarmTrigger>
-			<AlarmAction>DISPLAY</AlarmAction>
-			<AlarmDescription/>
-		</Alarm>
-		<Transparency>
-			<Content>OPAQUE</Content>
-		</Transparency>
-		<LastModified>
-			<Content>20060728T115046Z</Content>
-		</LastModified>
-		<DateStarted>
-			<Content>20060729T100000Z</Content>
-		</DateStarted>
-		<DateEnd>
-			<Content>20060729T160000Z</Content>
-		</DateEnd>
-		<Location>
-			<Content>BjArheimsbygd</Content>
-		</Location>
-		<Summary>
-			<Content>MAte</Content>
-		</Summary>
-		<Description>
-			<Content>roxor!
+  <Event>
+    <Transparency>
+      <Content>OPAQUE</Content>
+    </Transparency>
+    <Categories>
+      <Category>Arbeid</Category>
+      <Category>Sesongbasert</Category>
+    </Categories>
+    <Description>
+      <Content>roxor!
 
 foo
 </Content>
-		</Description>
-		<Class>
-			<Content>CONFIDENTIAL</Content>
-		</Class>
-		<Categories>
-			<Category>Arbeid</Category>
-			<Category>Sesongbasert</Category>
-		</Categories>
-		<Attendee>
-			<Content>MAILTO:foo@sysrq.no</Content>
-			<CommonName>Doe &quot;foo&quot; Hauge</CommonName>
-		</Attendee>
-		<Attendee>
-			<Content>MAILTO:joe@badgers.net</Content>
-			<CommonName>Joe IdsAe</CommonName>
-		</Attendee>
-	</Event>
+    </Description>
+    <LastModified>
+      <Content>20060728T115046Z</Content>
+    </LastModified>
+    <DateEnd>
+      <Content>20060729T160000Z</Content>
+    </DateEnd>
+    <Location>
+      <Content>BjArheimsbygd</Content>
+    </Location>
+    <Alarm>
+      <AlarmTrigger>
+        <Content>-PT3H</Content>
+        <Value>DURATION</Value>
+        <Related>START</Related>
+      </AlarmTrigger>
+      <AlarmAction>DISPLAY</AlarmAction>
+      <AlarmDescription>MAte</AlarmDescription>
+    </Alarm>
+    <Class>
+      <Content>CONFIDENTIAL</Content>
+    </Class>
+    <Summary>
+      <Content>MAte</Content>
+    </Summary>
+    <DateStarted>
+      <Content>20060729T100000Z</Content>
+    </DateStarted>
+    <Attendee>
+      <Content>MAILTO:foo@sysrq.no</Content>
+      <CommonName>Doe &quot;foo&quot; Hauge</CommonName>
+    </Attendee>
+    <Attendee>
+      <Content>MAILTO:joe@badgers.net</Content>
+      <CommonName>Joe IdsAe</CommonName>
+    </Attendee>
+  </Event>
 </vcal>

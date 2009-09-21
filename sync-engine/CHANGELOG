@@ -1150,3 +1150,8 @@ Allow any case in type attribute of ADR tag, from Aurelien Bompard.
 Refactor the contact XSL stylesheets to use templates. Add many unit tests.
 
 Small addition to the DTPT debug log
+
+21/09/2009 - Aurelien Bompard
+-----------------------------
+Refactor the event XSL stylesheets to use templates.
+

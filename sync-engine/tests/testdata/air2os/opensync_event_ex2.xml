@@ -1,53 +1,53 @@
 <?xml version="1.0"?>
 <vcal>
-	<Event>
-		<Alarm>
-			<AlarmTrigger>
-				<Content>-PT15M</Content>
-				<Value>DURATION</Value>
-				<Related>START</Related>
-			</AlarmTrigger>
-			<AlarmAction>DISPLAY</AlarmAction>
-			<AlarmDescription/>
-		</Alarm>
-		<Transparency>
-			<Content>OPAQUE</Content>
-		</Transparency>
-		<LastModified>
-			<Content>20070120T190703Z</Content>
-		</LastModified>
-		<DateStarted>
-			<Content>20070120T203000Z</Content>
-		</DateStarted>
-		<DateEnd>
-			<Content>20070120T210000Z</Content>
-		</DateEnd>
-		<Location>
-			<Content>Lab</Content>
-		</Location>
-		<Summary>
-			<Content>Simple appointment</Content>
-		</Summary>
-		<Description>
-			<Content>Meeting notes
+  <Event>
+    <Transparency>
+      <Content>OPAQUE</Content>
+    </Transparency>
+    <Categories>
+      <Category>Personal</Category>
+      <Category>IBM</Category>
+    </Categories>
+    <Description>
+      <Content>Meeting notes
 
 New line of notes 
 </Content>
-		</Description>
-		<Class>
-			<Content>CONFIDENTIAL</Content>
-		</Class>
-		<Categories>
-			<Category>Personal</Category>
-			<Category>IBM</Category>
-		</Categories>
-		<Attendee>
-			<Content>MAILTO:jondoe@rpi.edu</Content>
-			<CommonName>Jon Doe</CommonName>
-		</Attendee>
-		<Attendee>
-			<Content>MAILTO:jan.doe@gmail.com</Content>
-			<CommonName>Jan Doe</CommonName>
-		</Attendee>
-	</Event>
+    </Description>
+    <LastModified>
+      <Content>20070120T190703Z</Content>
+    </LastModified>
+    <DateEnd>
+      <Content>20070120T210000Z</Content>
+    </DateEnd>
+    <Location>
+      <Content>Lab</Content>
+    </Location>
+    <Alarm>
+      <AlarmTrigger>
+        <Content>-PT15M</Content>
+        <Value>DURATION</Value>
+        <Related>START</Related>
+      </AlarmTrigger>
+      <AlarmAction>DISPLAY</AlarmAction>
+      <AlarmDescription>Simple appointment</AlarmDescription>
+    </Alarm>
+    <Class>
+      <Content>CONFIDENTIAL</Content>
+    </Class>
+    <Summary>
+      <Content>Simple appointment</Content>
+    </Summary>
+    <DateStarted>
+      <Content>20070120T203000Z</Content>
+    </DateStarted>
+    <Attendee>
+      <Content>MAILTO:jondoe@rpi.edu</Content>
+      <CommonName>Jon Doe</CommonName>
+    </Attendee>
+    <Attendee>
+      <Content>MAILTO:jan.doe@gmail.com</Content>
+      <CommonName>Jan Doe</CommonName>
+    </Attendee>
+  </Event>
 </vcal>
