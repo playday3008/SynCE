@@ -726,7 +726,8 @@ def all_description_from_airsync(ctx):
 def all_description_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
-    s=xml2util.GetNodeValue(transform_ctx.current())
+    content_node = xml2util.FindChildNode(src_node, "Content")
+    s = xml2util.GetNodeValue(content_node)
     ec = ""
     if len(s) > 0:
         try:
@@ -737,8 +738,6 @@ def all_description_to_airsync(ctx):
     return ec
 
 def all_upper_case(ctx, string):
-    #parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    #s=xml2util.GetNodeValue(transform_ctx.current())
     return string.upper()
 
 def register_xslt_extension_functions():

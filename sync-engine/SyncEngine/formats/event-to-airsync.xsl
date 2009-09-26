@@ -4,88 +4,119 @@
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:convert="http://synce.org/convert"
                xmlns:tz="http://synce.org/tz"
+               xmlns="http://synce.org/formats/airsync_wm5/calendar"
                exclude-result-prefixes="convert tz">
 
     <xsl:template match="/vcal">
-
         <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns="http://synce.org/formats/airsync_wm5/calendar">
+            <xsl:apply-templates/>
+        </AS:ApplicationData>
+    </xsl:template>
 
-            <xsl:for-each select="Timezone">
-                <Timezone><xsl:value-of select="tz:ExtractTZData()"/></Timezone>
-            </xsl:for-each>
+
+    <xsl:template match="Timezone">
+        <Timezone><xsl:value-of select="tz:ExtractTZData()"/></Timezone>
+    </xsl:template>
 
 
-            <xsl:for-each select="Event/Alarm/AlarmTrigger[position() = 1]">
-                <Reminder><xsl:value-of select="convert:event_reminder_to_airsync()"/></Reminder>
-            </xsl:for-each>
+    <xsl:template match="Event">
 
+        <xsl:apply-templates/>
+
+        <xsl:if test="not(Transparency)">
+            <!-- Default to OPAQUE: http://tools.ietf.org/html/rfc2445#section-4.8.2.7 -->
+            <BusyStatus>2</BusyStatus>
+        </xsl:if>
+
+        <xsl:if test="not(LastModified/Content)">
+            <DtStamp><xsl:value-of select="convert:event_dtstamp_from_now()"/></DtStamp>
+        </xsl:if>
+    
+        <Attendees>
+            <xsl:apply-templates select="Attendee" mode="attendees"/>
+        </Attendees>
+
+    </xsl:template>
+
+    <xsl:template match="Alarm">
+        <xsl:apply-templates/>
+    </xsl:template>
+
+    <xsl:template match="AlarmTrigger">
+        <Reminder><xsl:value-of select="convert:event_reminder_to_airsync()"/></Reminder>
+    </xsl:template>
+
+    <xsl:template match="LastModified">
+        <DtStamp><xsl:value-of select="convert:event_dtstamp_to_airsync()"/></DtStamp>
+    </xsl:template>
+
+    <xsl:template match="DateStarted">
+        <xsl:choose>
+            <xsl:when test="Value = 'DATE'">
+                <AllDayEvent>1</AllDayEvent>
+            </xsl:when>
+            <xsl:otherwise>
+                <AllDayEvent>0</AllDayEvent>
+            </xsl:otherwise>
+        </xsl:choose>
+        <StartTime><xsl:value-of select="convert:event_starttime_to_airsync()"/></StartTime>
+    </xsl:template>
+
+    <xsl:template match="DateEnd">
+        <EndTime><xsl:value-of select="convert:event_endtime_to_airsync()"/></EndTime>
+    </xsl:template>
+
+    <xsl:template match="Location">
+        <Location><xsl:value-of select="Content"/></Location>
+    </xsl:template>
+
+    <xsl:template match="Summary">
+        <Subject><xsl:value-of select="Content"/></Subject>
+    </xsl:template>
+
+    <xsl:template match="Description">
+            <Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
+    </xsl:template>
+
+    <xsl:template match="Class">
+        <Sensitivity>
             <xsl:choose>
-                <xsl:when test="Event/Transparency">
-                    <xsl:for-each select="Event/Transparency/Content[position() = 1]">
-                        <BusyStatus><xsl:value-of select="convert:event_busystatus_to_airsync()"/></BusyStatus>
-                    </xsl:for-each>
+                <xsl:when test="Content = 'PRIVATE'">
+                    <xsl:text>2</xsl:text>
                 </xsl:when>
-                <xsl:otherwise>
-                    <!-- Default to OPAQUE: http://tools.ietf.org/html/rfc2445#section-4.8.2.7 -->
-                    <BusyStatus>2</BusyStatus>
+                <xsl:when test="Content = 'CONFIDENTIAL'">
+                    <xsl:text>3</xsl:text>
+                </xsl:when>
+                <xsl:otherwise> <!-- "PUBLIC" is our default value -->
+                    <xsl:text>0</xsl:text>
                 </xsl:otherwise>
             </xsl:choose>
+        </Sensitivity>
+    </xsl:template>
 
-            <xsl:for-each select="Event/LastModified[position() = 1]">
-                <DtStamp><xsl:value-of select="convert:event_dtstamp_to_airsync()"/></DtStamp>
-            </xsl:for-each>
+    <xsl:template match="Categories">
+        <Categories>
+            <xsl:apply-templates/>
+        </Categories>
+    </xsl:template>
 
-            <xsl:if test="not(Event/LastModified/Content)">
-                <DtStamp><xsl:value-of select="convert:event_dtstamp_from_now()"/></DtStamp>
-            </xsl:if>
-    
-            <xsl:for-each select="Event/DateStarted/Content[position() = 1]">
-                <AllDayEvent><xsl:value-of select="convert:event_alldayevent_to_airsync()"/></AllDayEvent>
-            </xsl:for-each>
+    <xsl:template match="Category">
+        <Category><xsl:value-of select="."/></Category>
+    </xsl:template>
 
-            <xsl:for-each select="Event/DateStarted[position() = 1]">
-                <StartTime><xsl:value-of select="convert:event_starttime_to_airsync()"/></StartTime>
-            </xsl:for-each>
+    <xsl:template match="Attendee" mode="attendees">
+        <Attendee>
+            <xsl:value-of select="convert:event_attendee_to_airsync()"/>
+        </Attendee>
+    </xsl:template>
 
-            <xsl:for-each select="Event/DateEnd[position() = 1]">
-                <EndTime><xsl:value-of select="convert:event_endtime_to_airsync()"/></EndTime>
-            </xsl:for-each>
+    <xsl:template match="RecurrenceRule">
+        <Recurrence>
+            <xsl:value-of select="convert:event_recurrence_to_airsync()"/>
+        </Recurrence>
+    </xsl:template>
 
-            <Location><xsl:value-of select="Event/Location/Content"/></Location>
-
-            <Subject><xsl:value-of select="Event/Summary/Content"/></Subject>
-
-	    <xsl:for-each select="Event/Description/Content[position() = 1]">
-		<Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
-	    </xsl:for-each>
-
-            <xsl:for-each select="Event/Class/Content[position() = 1]">
-                <Sensitivity><xsl:value-of select="convert:event_sensitivity_to_airsync()"/></Sensitivity>
-            </xsl:for-each>
-
-            <Categories>
-                <xsl:for-each select="Event/Categories">
-                    <xsl:for-each select="Category">
-                        <Category><xsl:value-of select="."/></Category>
-                    </xsl:for-each>
-                </xsl:for-each>
-            </Categories>
-
-            <Attendees>
-                <xsl:for-each select="Event/Attendee">
-                    <Attendee>
-                        <xsl:value-of select="convert:event_attendee_to_airsync()"/>
-                    </Attendee>
-                </xsl:for-each>
-            </Attendees>
-
-            <xsl:for-each select="Event/RecurrenceRule[position() = 1]">
-                <Recurrence>
-                    <xsl:value-of select="convert:event_recurrence_to_airsync()"/>
-                </Recurrence>
-            </xsl:for-each>
-
-            <xsl:for-each select="Event/ExclusionDate[position() = 1]">
+    <xsl:template match="ExclusionDate">
                 <Exceptions>
                     <xsl:for-each select="//Event/ExclusionDate">
                         <Exception>
@@ -93,9 +124,23 @@
                         </Exception>
                     </xsl:for-each>
                 </Exceptions>
-            </xsl:for-each>
+    </xsl:template>
 
-        </AS:ApplicationData>
+    <xsl:template match="Transparency">
+        <BusyStatus>
+            <xsl:choose>
+                <xsl:when test="Content = 'TRANSPARENT'">
+                    <xsl:text>0</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>2</xsl:text> <!-- 'Busy' is our default value -->
+                </xsl:otherwise>
+            </xsl:choose>
+        </BusyStatus>
+    </xsl:template>
+
+    <xsl:template match="*">
+        <xsl:message>Ignored tag <xsl:value-of select="name(.)"/></xsl:message>
     </xsl:template>
 
 </xsl:transform>
