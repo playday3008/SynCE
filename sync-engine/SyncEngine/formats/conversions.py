@@ -19,6 +19,9 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
+# Useful documentation:
+# http://www.xmldatabases.org/movabletype/archives/000291.html
+
 import libxml2
 import libxslt
 import string
@@ -97,25 +100,6 @@ def generate_vcal_byday(airsync_week, airsync_day):
 
 ### conversion functions ###
 
-def contact_anniversary_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return xml2util.GetNodeValue(transform_ctx.current()) + "T00:00:00.000Z"
-
-def contact_birthday_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    s = xml2util.GetNodeValue(transform_ctx.current())
-    return "%s-%s-%sT00:00:00.000Z" % (s[0:4], s[4:6], s[6:8])
-
-# OS0.2x has an inconsistency in date representation
-
-def contact_anniversary_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0].replace("-", "")
-
-def contact_birthday_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return xml2util.GetNodeValue(transform_ctx.current()).split("T")[0].replace("-", "")
-
 def contact_has_type(ctx, type_string):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     curnode = transform_ctx.current()
@@ -123,11 +107,8 @@ def contact_has_type(ctx, type_string):
     for child in curnode.children:
         if child.name != "Type":
             continue
-        #print "type found:", child, "type searched:", type_string
         if xml2util.GetNodeValue(child).upper() == type_string:
-            #print "found!"
             return True
-    #print "not found"
     return False
  
 def contact_position(ctx):
@@ -195,29 +176,19 @@ def event_reminder_from_airsync(ctx):
     else:
         return "-PT%iM" % s
 
-def event_busystatus_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    if xml2util.GetNodeValue(transform_ctx.current()) == "TRANSPARENT":
-        return "0"
-    else:
-        return "2" # 'Busy' is our default value
-
-def event_busystatus_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    if xml2util.GetNodeValue(transform_ctx.current()) == "0":
-        return "TRANSPARENT"
-    else:
-        return "OPAQUE" # 'Busy' is our default value
-
-def event_dtstamp_to_airsync(ctx):
+def event_time_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     return tzconv.ConvertDateNodeToUTC(transform_ctx.current())[1].strftime(DATE_FORMAT_EVENT)
 
-def event_dtstamp_from_airsync(ctx):
+def event_datetime_from_airsync(ctx, node=None):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_EVENT)
+    if node:
+        node = libxml2.xmlNode(_obj=node[0])
+    else:
+        node = transform_ctx.current()
+    return tzutils.TextToDate(xml2util.GetNodeValue(node)).strftime(DATE_FORMAT_EVENT)
 
-def event_dtstamp_short_from_airsync(ctx):
+def event_datetime_short_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     return tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current())).strftime(DATE_FORMAT_SHORT)
 
@@ -231,10 +202,6 @@ def event_alldayevent_to_airsync(ctx):
         return "0"
     else:
         return "1"
-
-def event_starttime_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzconv.ConvertDateNodeToUTC(transform_ctx.current())[1].strftime(DATE_FORMAT_EVENT)
 
 def event_starttime_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -260,11 +227,6 @@ def event_starttime_from_airsync(ctx):
     dst_node.newChild(None,"Content",result)
     return ""
 
-
-def event_endtime_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    return tzconv.ConvertDateNodeToUTC(transform_ctx.current())[1].strftime(DATE_FORMAT_EVENT)
-
 def event_endtime_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
@@ -288,48 +250,6 @@ def event_endtime_from_airsync(ctx):
         result=result[0:8]
 	
     dst_node.newChild(None,"Content",result)
-    return ""
-
-def event_sensitivity_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    s = xml2util.GetNodeValue(transform_ctx.current())
-    if s == "PRIVATE":
-        return "2"
-    elif s == "CONFIDENTIAL":
-        return "3"
-    else:
-        return "0" # 'PUBLIC' is our default value
-
-def event_sensitivity_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    s = xml2util.GetNodeValue(transform_ctx.current())
-    if s == "2":
-        return "PRIVATE"
-    elif s == "3":
-        return "CONFIDENTIAL"
-    else:
-        return "PUBLIC" # 'PUBLIC' is our default value
-
-def event_attendee_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    src_node = transform_ctx.current()
-    dst_node = transform_ctx.insertNode()
-    email = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Content"))[7:]
-    name = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "CommonName"))
-    if name != "":
-        dst_node.newChild(None, "Name", name)
-    dst_node.newChild(None, "Email", email)
-    return ""
-
-def event_attendee_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    src_node = transform_ctx.current()
-    dst_node = transform_ctx.insertNode()
-    email = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Email"))
-    name = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Name"))
-    if email != "":
-        dst_node.newChild(None, "Content", "MAILTO:%s" % email)
-    dst_node.newChild(None, "CommonName", name)
     return ""
 
 def event_recurrence_to_airsync(ctx):
@@ -513,30 +433,6 @@ def event_recurrence_from_airsync(ctx):
         # If we don't know what type of recurrence it is, we
         # can't construct its vcal rules
         raise ValueError("No recurrence type specified from Airsync")
-    return ""
-
-def event_exception_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    src_node = transform_ctx.current()
-    dst_node = transform_ctx.insertNode()
-    exclusion_date = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Content"))
-    exclusion_value = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Value"))
-    if exclusion_value.lower() != "date":
-        raise ValueError("Exclusions with values other than 'DATE' are not supported")
-    dst_node.newChild(None, "Deleted", "1")
-    dst_node.newChild(None, "ExceptionStartTime", tzutils.TextToDate(exclusion_date).strftime(DATE_FORMAT_EVENT))
-    return ""
-
-def event_exception_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    src_node = transform_ctx.current()
-    dst_node = transform_ctx.insertNode()
-    exception_deleted = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "Deleted"))
-    exception_date = xml2util.GetNodeValue(xml2util.FindChildNode(src_node, "ExceptionStartTime"))
-    if exception_deleted == "1":
-        blocknode = dst_node.newChild(None,"ExclusionDate",None)
-        blocknode.newChild(None, "Content", tzutils.TextToDate(exception_date).strftime(DATE_FORMAT_SHORT))
-        blocknode.newChild(None, "Value", "DATE")
     return ""
 
 def task_start_date_to_airsync(ctx):
@@ -741,33 +637,19 @@ def all_upper_case(ctx, string):
     return string.upper()
 
 def register_xslt_extension_functions():
-    libxslt.registerExtModuleFunction("contact_anniversary_to_airsync",     "http://synce.org/convert", contact_anniversary_to_airsync)
-    libxslt.registerExtModuleFunction("contact_anniversary_from_airsync",   "http://synce.org/convert", contact_anniversary_from_airsync)
-    libxslt.registerExtModuleFunction("contact_birthday_to_airsync",        "http://synce.org/convert", contact_birthday_to_airsync)
-    libxslt.registerExtModuleFunction("contact_birthday_from_airsync",      "http://synce.org/convert", contact_birthday_from_airsync)
     libxslt.registerExtModuleFunction("contact_has_type",                   "http://synce.org/convert", contact_has_type)
     libxslt.registerExtModuleFunction("contact_position",                   "http://synce.org/convert", contact_position)
     libxslt.registerExtModuleFunction("event_reminder_to_airsync",          "http://synce.org/convert", event_reminder_to_airsync)
     libxslt.registerExtModuleFunction("event_reminder_from_airsync",        "http://synce.org/convert", event_reminder_from_airsync)
-    libxslt.registerExtModuleFunction("event_busystatus_to_airsync",        "http://synce.org/convert", event_busystatus_to_airsync)
-    libxslt.registerExtModuleFunction("event_busystatus_from_airsync",      "http://synce.org/convert", event_busystatus_from_airsync)
-    libxslt.registerExtModuleFunction("event_dtstamp_to_airsync",           "http://synce.org/convert", event_dtstamp_to_airsync)
-    libxslt.registerExtModuleFunction("event_dtstamp_from_airsync",         "http://synce.org/convert", event_dtstamp_from_airsync)
-    libxslt.registerExtModuleFunction("event_dtstamp_short_from_airsync",   "http://synce.org/convert", event_dtstamp_short_from_airsync)
+    libxslt.registerExtModuleFunction("event_time_to_airsync",           "http://synce.org/convert", event_time_to_airsync)
+    libxslt.registerExtModuleFunction("event_datetime_from_airsync",         "http://synce.org/convert", event_datetime_from_airsync)
+    libxslt.registerExtModuleFunction("event_datetime_short_from_airsync",   "http://synce.org/convert", event_datetime_short_from_airsync)
     libxslt.registerExtModuleFunction("event_dtstamp_from_now",             "http://synce.org/convert", event_dtstamp_from_now)
     libxslt.registerExtModuleFunction("event_alldayevent_to_airsync",       "http://synce.org/convert", event_alldayevent_to_airsync)
-    libxslt.registerExtModuleFunction("event_starttime_to_airsync",         "http://synce.org/convert", event_starttime_to_airsync)
     libxslt.registerExtModuleFunction("event_starttime_from_airsync",       "http://synce.org/convert", event_starttime_from_airsync)
-    libxslt.registerExtModuleFunction("event_endtime_to_airsync",           "http://synce.org/convert", event_endtime_to_airsync)
     libxslt.registerExtModuleFunction("event_endtime_from_airsync",         "http://synce.org/convert", event_endtime_from_airsync)
-    libxslt.registerExtModuleFunction("event_sensitivity_to_airsync",       "http://synce.org/convert", event_sensitivity_to_airsync)
-    libxslt.registerExtModuleFunction("event_sensitivity_from_airsync",     "http://synce.org/convert", event_sensitivity_from_airsync)
-    libxslt.registerExtModuleFunction("event_attendee_to_airsync",          "http://synce.org/convert", event_attendee_to_airsync)
-    libxslt.registerExtModuleFunction("event_attendee_from_airsync",        "http://synce.org/convert", event_attendee_from_airsync)
     libxslt.registerExtModuleFunction("event_recurrence_to_airsync",        "http://synce.org/convert", event_recurrence_to_airsync)
     libxslt.registerExtModuleFunction("event_recurrence_from_airsync",      "http://synce.org/convert", event_recurrence_from_airsync)
-    libxslt.registerExtModuleFunction("event_exception_to_airsync",         "http://synce.org/convert", event_exception_to_airsync)
-    libxslt.registerExtModuleFunction("event_exception_from_airsync",       "http://synce.org/convert", event_exception_from_airsync)
     libxslt.registerExtModuleFunction("task_start_date_to_airsync",         "http://synce.org/convert", task_start_date_to_airsync)
     libxslt.registerExtModuleFunction("task_due_date_to_airsync",           "http://synce.org/convert", task_due_date_to_airsync)
     libxslt.registerExtModuleFunction("task_start_date_from_airsync",       "http://synce.org/convert", task_start_date_from_airsync)

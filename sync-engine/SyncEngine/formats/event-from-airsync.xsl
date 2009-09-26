@@ -41,11 +41,20 @@
     </xsl:template>
 
     <xsl:template match="C:BusyStatus">
-        <Transparency><Content><xsl:value-of select="convert:event_busystatus_from_airsync()"/></Content></Transparency>
+        <Transparency><Content>
+            <xsl:choose>
+                <xsl:when test="string(.) = '0'">
+                    <xsl:text>TRANSPARENT</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>OPAQUE</xsl:text> <!-- 'Busy' is our default value -->
+                </xsl:otherwise>
+            </xsl:choose>
+        </Content></Transparency>
     </xsl:template>
 
     <xsl:template match="C:DtStamp">
-        <LastModified><Content><xsl:value-of select="convert:event_dtstamp_from_airsync()"/></Content></LastModified>
+        <LastModified><Content><xsl:value-of select="convert:event_datetime_from_airsync()"/></Content></LastModified>
     </xsl:template>
 
     <xsl:template match="C:StartTime">
@@ -69,7 +78,19 @@
     </xsl:template>
 
     <xsl:template match="C:Sensitivity">
-        <Class><Content><xsl:value-of select="convert:event_sensitivity_from_airsync()"/></Content></Class>
+        <Class><Content>
+            <xsl:choose>
+                <xsl:when test="string(.) = '2'">
+                    <xsl:text>PRIVATE</xsl:text>
+                </xsl:when>
+                <xsl:when test="string(.) = '3'">
+                    <xsl:text>CONFIDENTIAL</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>PUBLIC</xsl:text> <!-- 'PUBLIC' is our default value -->
+                </xsl:otherwise>
+            </xsl:choose>
+        </Content></Class>
     </xsl:template>
 
     <xsl:template match="C:Categories">
@@ -87,7 +108,10 @@
     </xsl:template>
     <xsl:template match="C:Attendee">
         <Attendee>
-            <xsl:value-of select="convert:event_attendee_from_airsync()"/>
+            <xsl:if test="C:Email">
+                <Content>MAILTO:<xsl:value-of select="C:Email"/></Content>
+            </xsl:if>
+            <CommonName><xsl:value-of select="C:Name"/></CommonName>
         </Attendee>
     </xsl:template>
 
@@ -109,7 +133,7 @@
         </xsl:if>
     </xsl:template>
     <xsl:template match="C:ExceptionStartTime">
-        <Content><xsl:value-of select="convert:event_dtstamp_short_from_airsync()"/></Content>
+        <Content><xsl:value-of select="convert:event_datetime_short_from_airsync()"/></Content>
     </xsl:template>
 
     <xsl:template match="*">

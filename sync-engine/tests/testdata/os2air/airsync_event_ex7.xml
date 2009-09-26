@@ -16,14 +16,13 @@
     <Type>1</Type>
     <DayOfWeek>65</DayOfWeek>
   </Recurrence>
+  <BusyStatus>2</BusyStatus>
+  <Sensitivity>0</Sensitivity>
   <Exceptions>
     <Exception>
       <Deleted>1</Deleted>
       <ExceptionStartTime>20070203T000000Z</ExceptionStartTime>
     </Exception>
   </Exceptions>
-  <BusyStatus>2</BusyStatus>
-  <Sensitivity>0</Sensitivity>
-  <Attendees/>
 </AS:ApplicationData>
 

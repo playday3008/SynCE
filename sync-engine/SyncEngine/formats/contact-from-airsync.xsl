@@ -223,11 +223,15 @@
     </xsl:template>
 
     <xsl:template match="C1:Anniversary">
-        <Anniversary><Content><xsl:value-of select="convert:contact_anniversary_from_airsync()"/></Content></Anniversary>
+        <Anniversary><Content>
+            <xsl:value-of select="translate(substring-before(string(.),'T'),'-','')"/>
+        </Content></Anniversary>
     </xsl:template>
 
     <xsl:template match="C1:Birthday">
-        <Birthday><Content><xsl:value-of select="convert:contact_birthday_from_airsync()"/></Content></Birthday>
+        <Birthday><Content>
+            <xsl:value-of select="translate(substring-before(string(.),'T'),'-','')"/>
+        </Content></Birthday>
     </xsl:template>
 
     <xsl:template match="C1:Rtf">

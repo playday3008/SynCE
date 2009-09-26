@@ -32,9 +32,17 @@
             <DtStamp><xsl:value-of select="convert:event_dtstamp_from_now()"/></DtStamp>
         </xsl:if>
     
-        <Attendees>
-            <xsl:apply-templates select="Attendee" mode="attendees"/>
-        </Attendees>
+        <xsl:if test="Attendee">
+            <Attendees>
+                <xsl:apply-templates select="Attendee" mode="attendees"/>
+            </Attendees>
+        </xsl:if>
+
+        <xsl:if test="ExclusionDate">
+            <Exceptions>
+                <xsl:apply-templates select="ExclusionDate" mode="exclusion"/>
+            </Exceptions>
+        </xsl:if>
 
     </xsl:template>
 
@@ -47,7 +55,7 @@
     </xsl:template>
 
     <xsl:template match="LastModified">
-        <DtStamp><xsl:value-of select="convert:event_dtstamp_to_airsync()"/></DtStamp>
+        <DtStamp><xsl:value-of select="convert:event_time_to_airsync()"/></DtStamp>
     </xsl:template>
 
     <xsl:template match="DateStarted">
@@ -59,11 +67,11 @@
                 <AllDayEvent>0</AllDayEvent>
             </xsl:otherwise>
         </xsl:choose>
-        <StartTime><xsl:value-of select="convert:event_starttime_to_airsync()"/></StartTime>
+        <StartTime><xsl:value-of select="convert:event_time_to_airsync()"/></StartTime>
     </xsl:template>
 
     <xsl:template match="DateEnd">
-        <EndTime><xsl:value-of select="convert:event_endtime_to_airsync()"/></EndTime>
+        <EndTime><xsl:value-of select="convert:event_time_to_airsync()"/></EndTime>
     </xsl:template>
 
     <xsl:template match="Location">
@@ -106,7 +114,10 @@
 
     <xsl:template match="Attendee" mode="attendees">
         <Attendee>
-            <xsl:value-of select="convert:event_attendee_to_airsync()"/>
+            <xsl:if test="CommonName">
+                <Name><xsl:value-of select="CommonName"/></Name>
+            </xsl:if>
+            <Email><xsl:value-of select="substring(Content,8)"/></Email>
         </Attendee>
     </xsl:template>
 
@@ -116,14 +127,20 @@
         </Recurrence>
     </xsl:template>
 
-    <xsl:template match="ExclusionDate">
-                <Exceptions>
-                    <xsl:for-each select="//Event/ExclusionDate">
-                        <Exception>
-                            <xsl:value-of select="convert:event_exception_to_airsync()"/>
-                        </Exception>
-                    </xsl:for-each>
-                </Exceptions>
+    <xsl:template match="ExclusionDate" mode="exclusion">
+        <Exception>
+            <xsl:choose>
+                <xsl:when test="Value = 'DATE'">
+                    <Deleted>1</Deleted>
+                    <ExceptionStartTime>
+                        <xsl:value-of select="convert:event_datetime_from_airsync(Content)"/>
+                    </ExceptionStartTime>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:message>Exclusions with values other than 'DATE' are not supported</xsl:message>
+                </xsl:otherwise>
+            </xsl:choose>
+        </Exception>
     </xsl:template>
 
     <xsl:template match="Transparency">
@@ -140,7 +157,7 @@
     </xsl:template>
 
     <xsl:template match="*">
-        <xsl:message>Ignored tag <xsl:value-of select="name(.)"/></xsl:message>
+        <!-- <xsl:message>Ignored tag <xsl:value-of select="name(.)"/></xsl:message> -->
     </xsl:template>
 
 </xsl:transform>

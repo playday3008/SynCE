@@ -274,11 +274,21 @@ PO Box </xsl:text>
     </xsl:template>
 
     <xsl:template match="Anniversary">
-        <C1:Anniversary><xsl:value-of select="convert:contact_anniversary_to_airsync()"/></C1:Anniversary>
+        <C1:Anniversary>
+            <xsl:value-of select="normalize-space(.)"/>
+            <xsl:text>T00:00:00.000Z</xsl:text>
+        </C1:Anniversary>
     </xsl:template>
 
     <xsl:template match="Birthday">
-        <C1:Birthday><xsl:value-of select="convert:contact_birthday_to_airsync()"/></C1:Birthday>
+        <C1:Birthday>
+            <xsl:value-of select="substring(normalize-space(.),1,4)"/>
+            <xsl:text>-</xsl:text>
+            <xsl:value-of select="substring(normalize-space(.),5,2)"/>
+            <xsl:text>-</xsl:text>
+            <xsl:value-of select="substring(normalize-space(.),7,2)"/>
+            <xsl:text>T00:00:00.000Z</xsl:text>
+        </C1:Birthday>
     </xsl:template>
 
     <xsl:template match="Note">
