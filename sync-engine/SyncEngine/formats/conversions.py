@@ -213,13 +213,13 @@ def event_starttime_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-    # if we have a tz, we must insert the ID and convert to it
+        # if we have a tz, we must insert the ID and convert to it
 
-    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+        dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+        asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
         result = asdate.strftime(DATE_FORMAT_EVLOCAL)
     else:
-    result = asdate.strftime(DATE_FORMAT_EVENT)
+        result = asdate.strftime(DATE_FORMAT_EVENT)
 
     if allday_node != None and xml2util.GetNodeValue(allday_node) != "0":
         result=result[0:8]
@@ -237,14 +237,14 @@ def event_endtime_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-    # if we have a tz, we must insert the ID and convert to it
+        # if we have a tz, we must insert the ID and convert to it
 
-    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+        dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+        asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
 
-    result = asdate.strftime(DATE_FORMAT_EVLOCAL)
+        result = asdate.strftime(DATE_FORMAT_EVLOCAL)
     else:
-    result = asdate.strftime(DATE_FORMAT_EVENT)
+        result = asdate.strftime(DATE_FORMAT_EVENT)
 
     if allday_node != None and xml2util.GetNodeValue(allday_node) != "0":
         result=result[0:8]
@@ -360,7 +360,7 @@ def event_recurrence_to_airsync(ctx):
             # Airsync does not have a 'DayOfYear' field
             raise ValueError("Airsync does not support day-of-year yearly events")
 
-            else:
+        else:
             # we need to get the start/recurrence date from the start date
             # Get the start date - we need this to expand yearly rules
             # We should always have a start date in a legal event!
@@ -466,23 +466,23 @@ def task_start_date_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-    # if we have a tz, we must insert the ID and convert to it
+        # if we have a tz, we must insert the ID and convert to it
 
-    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
-
-    result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
-    else:
-    # if not, does the source have a UtcStartDate element?
-    nd = xml2util.FindChildNode(src_node.parent,"UtcStartDate")
-    if nd != None:
-        result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
-
-    else:
-        # we don't have this either. Better hope that the StartDate value
-        # is correct.
+        dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+        asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
 
         result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    else:
+        # if not, does the source have a UtcStartDate element?
+        nd = xml2util.FindChildNode(src_node.parent,"UtcStartDate")
+        if nd != None:
+            result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
+
+        else:
+            # we don't have this either. Better hope that the StartDate value
+            # is correct.
+
+            result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
 
     dst_node = transform_ctx.insertNode()
     dst_node.newChild(None,"Content",result)
@@ -497,23 +497,23 @@ def task_due_date_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-    # if we have a tz, we must insert the ID and convert to it
+        # if we have a tz, we must insert the ID and convert to it
 
-    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
-
-    result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
-    else:
-    # if not, does the source have a UtcStartDate element?
-    nd = xml2util.FindChildNode(src_node.parent,"UtcDueDate")
-    if nd != None:
-        result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
-
-    else:
-        # we don't have this either. Better hope that the DueDate value
-        # is correct.
+        dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+        asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
 
         result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    else:
+        # if not, does the source have a UtcStartDate element?
+        nd = xml2util.FindChildNode(src_node.parent,"UtcDueDate")
+        if nd != None:
+            result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
+
+        else:
+            # we don't have this either. Better hope that the DueDate value
+            # is correct.
+
+            result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
 
     dst_node = transform_ctx.insertNode()
     dst_node.newChild(None,"Content",result)
@@ -553,8 +553,8 @@ def task_status_from_airsync(ctx):
         base_node = transform_ctx.insertNode()
         stat_node = base_node.newChild(None, "Status", None)
         stat_node.newChild(None, "Content", "COMPLETED")
-    pcnt_node = base_node.newChild(None, "PercentComplete", None)
-    pcnt_node.newChild(None, "Content", "100")
+        pcnt_node = base_node.newChild(None, "PercentComplete", None)
+        pcnt_node.newChild(None, "Content", "100")
     return ""
 
 def task_status_to_airsync(ctx):
@@ -562,16 +562,16 @@ def task_status_to_airsync(ctx):
     curnode = transform_ctx.current()
     s=xml2util.GetNodeValue(curnode)
     if s == "COMPLETED":
-    return "1"
+        return "1"
     else:
-    # check that PercentComplete == 100% - mark it completed if
-    # this is the case.
+        # check that PercentComplete == 100% - mark it completed if
+        # this is the case.
         up = xml2util.FindChildNode(curnode.parent.parent,"PercentComplete")
         if up != None:
             ct = xml2util.FindChildNode(up,"Content")
-        if ct != None:
-            if xml2util.GetNodeValue(ct) == "100":
-                return "1"
+            if ct != None:
+                if xml2util.GetNodeValue(ct) == "100":
+                    return "1"
     return "0"
  
 # Here. let us not destroy the 'unspecified' priority when going
@@ -584,25 +584,25 @@ def task_prio_to_airsync(ctx):
     d = "0"
     s=xml2util.GetNodeValue(transform_ctx.current())
     if s > "0":
-    if s == "7":
-        d = "0"
-    elif s == "5":
-        d = "1"
-    elif s == "3":
-            d = "2"
-    else:
-        d = "0"
+        if s == "7":
+            d = "0"
+        elif s == "5":
+            d = "1"
+        elif s == "3":
+                d = "2"
+        else:
+            d = "0"
     return d
 
 def task_prio_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     s=xml2util.GetNodeValue(transform_ctx.current())
     if s == "0":
-    return "7"
+        return "7"
     elif s == "1":
-    return "5"
+        return "5"
     elif s == "2":
-    return "3"
+        return "3"
     else:
         return "0" # We can use the unspecced one here if we get such an one from Airsync
 
