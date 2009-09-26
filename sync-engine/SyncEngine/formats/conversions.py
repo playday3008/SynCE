@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+# vim: set tabstop=4 shiftwidth=4 expandtab:
 ############################################################################
 #    Copyright (C) 2006  Ole André Vadla Ravnås <oleavr@gmail.com>         #
-#    MODIFIED: 17/2/2007 Dr J A Gow: Task support added			   #
+#    MODIFIED: 17/2/2007 Dr J A Gow: Task support added                    #
 #                                                                          #
 #    This program is free software; you can redistribute it and#or modify  #
 #    it under the terms of the GNU General Public License as published by  #
@@ -57,7 +58,6 @@ MINUTES_PER_DAY     = MINUTES_PER_HOUR * 24
 vcal_days_to_airsync_days_map = { "SU" : 1,
                                   "MO" : 2,
                                   "TU" : 4,
-				  
                                   "WE" : 8,
                                   "TH" : 16,
                                   "FR" : 32,
@@ -212,18 +212,18 @@ def event_starttime_from_airsync(ctx):
     asdate = tzutils.TextToDate(xml2util.GetNodeValue(transform_ctx.current()))
 
     if tzconv.curtz() != None:
-	    
-	# if we have a tz, we must insert the ID and convert to it
-	
-	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
-    	result = asdate.strftime(DATE_FORMAT_EVLOCAL)
+
+    # if we have a tz, we must insert the ID and convert to it
+
+    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+        result = asdate.strftime(DATE_FORMAT_EVLOCAL)
     else:
-	result = asdate.strftime(DATE_FORMAT_EVENT)
+    result = asdate.strftime(DATE_FORMAT_EVENT)
 
     if allday_node != None and xml2util.GetNodeValue(allday_node) != "0":
         result=result[0:8]
-	
+
     dst_node.newChild(None,"Content",result)
     return ""
 
@@ -237,145 +237,145 @@ def event_endtime_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-	# if we have a tz, we must insert the ID and convert to it
-	
-	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+    # if we have a tz, we must insert the ID and convert to it
 
-	result = asdate.strftime(DATE_FORMAT_EVLOCAL)
+    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+
+    result = asdate.strftime(DATE_FORMAT_EVLOCAL)
     else:
-	result = asdate.strftime(DATE_FORMAT_EVENT)
+    result = asdate.strftime(DATE_FORMAT_EVENT)
 
     if allday_node != None and xml2util.GetNodeValue(allday_node) != "0":
         result=result[0:8]
-	
+
     dst_node.newChild(None,"Content",result)
     return ""
 
 def event_recurrence_to_airsync(ctx):
 
-	parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-	src_node = transform_ctx.current()
-	dst_node = transform_ctx.insertNode()
+    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    src_node = transform_ctx.current()
+    dst_node = transform_ctx.insertNode()
 
-	# Extract the rules
+    # Extract the rules
 
-	src_rules = {}
-	child = src_node.children
+    src_rules = {}
+    child = src_node.children
 
-	while child != None:
-		if child.name == "Rule":
-			rrule_val = xml2util.GetNodeValue(child)
-			sep = rrule_val.index("=")
-			key = rrule_val[:sep]
-			val = rrule_val[sep+1:]
-			src_rules[key.lower()] = val.lower()
-		child = child.next
+    while child != None:
+        if child.name == "Rule":
+            rrule_val = xml2util.GetNodeValue(child)
+            sep = rrule_val.index("=")
+            key = rrule_val[:sep]
+            val = rrule_val[sep+1:]
+            src_rules[key.lower()] = val.lower()
+        child = child.next
 
 
-	# Interval, Count, and Until rules have straightforward conversions
+    # Interval, Count, and Until rules have straightforward conversions
 
-	if src_rules.has_key("interval"):
-		dst_node.newChild(None, "Interval", src_rules["interval"])
-	if src_rules.has_key("until"):
-		dst_node.newChild(None, "Until", tzutils.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
-	if src_rules.has_key("count"):
-		dst_node.newChild(None, "Occurrences", src_rules["count"])
+    if src_rules.has_key("interval"):
+        dst_node.newChild(None, "Interval", src_rules["interval"])
+    if src_rules.has_key("until"):
+        dst_node.newChild(None, "Until", tzutils.TextToDate(src_rules["until"]).strftime(DATE_FORMAT_EVENT))
+    if src_rules.has_key("count"):
+        dst_node.newChild(None, "Occurrences", src_rules["count"])
 
-	# Handle different types of recurrences on a case-by-case basis
+    # Handle different types of recurrences on a case-by-case basis
 
-	if src_rules["freq"].lower() == "daily":
-		
-		# There really isn't much to convert in this case..
-		dst_node.newChild(None, "Type", "0")
-		
-	elif src_rules["freq"].lower() == "weekly":
-		dst_node.newChild(None, "Type", "1")
-		dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(src_rules["byday"])))
-		
-	elif src_rules["freq"].lower() == "monthly":
-		if src_rules.has_key("bymonthday"):
-			dst_node.newChild(None, "Type", "2")
-			dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
-			
-		elif src_rules.has_key("byday"):
+    if src_rules["freq"].lower() == "daily":
 
-			week, day = vcal_split_byday(src_rules["byday"])
-			dst_node.newChild(None, "Type", "3")
-			dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
-			if week >= 0:
-				dst_node.newChild(None, "WeekOfMonth", week)
-			elif week == -1:
-				# Airsync deals with this as a special case
-				dst_node.newChild(None, "WeekOfMonth", "5")
-			else:
-				# Not supported (as far as I can tell...)
-				# Airsync cannot count backwards from the end of the
-				# month in general
-				raise ValueError("Airsync does not support counting from end of month")
-		else:
-			# It seems like this should be against the rules, and filling in
-			# a default might not make sense because either of the above interpretations
-			# is equally valid.
-			raise ValueError("Monthly events must either specify BYMONTHDAY or BYDAY rules")
-	
-	elif src_rules["freq"].lower() == "yearly":
+        # There really isn't much to convert in this case..
+        dst_node.newChild(None, "Type", "0")
 
-		if src_rules.has_key("bymonth"):
-			
-			if src_rules.has_key("bymonthday"):
-				
-				dst_node.newChild(None, "Type", "5")
-				dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
-				dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
-				
-			elif src_rules.has_key("byday"):
-				
-				week, day = vcal_split_byday(src_rules["byday"])
-				dst_node.newChild(None, "Type", "6")
-				dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
-				dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
-				
-				if week >= 0:
-					dst_node.newChild(None, "WeekOfMonth", week)
-				elif week == -1:
-					# Airsync deals with this as a special case
-					dst_node.newChild(None, "WeekOfMonth", "5")
-				else:
-					# Not supported (as far as I can tell...)
-					# Airsync cannot count backwards from the end of the
-					# month in general
-					raise ValueError("Airsync does not support counting from end of month")
-			else:
-				
-				# It seems like this should be against the rules, and filling in
-				# a default might not make sense because either of the above interpretations
-				# is equally valid.
-		
-				raise ValueError("Yearly events which are by month must either specify BYMONTHDAY or BYDAY rules")
-			
-		elif src_rules.has_key("byyearday"):
+    elif src_rules["freq"].lower() == "weekly":
+        dst_node.newChild(None, "Type", "1")
+        dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(src_rules["byday"])))
 
-			# Not supported (as far as I can tell...)
-			# Airsync does not have a 'DayOfYear' field
-			raise ValueError("Airsync does not support day-of-year yearly events")
-		
-        	else:
-			# we need to get the start/recurrence date from the start date
-			# Get the start date - we need this to expand yearly rules
-			# We should always have a start date in a legal event!
-		
-			start = xml2util.FindChildNode(src_node.parent,"DateStarted")
-			utcdate=tzconv.ConvertDateNodeToUTC(start)[1]
+    elif src_rules["freq"].lower() == "monthly":
+        if src_rules.has_key("bymonthday"):
+            dst_node.newChild(None, "Type", "2")
+            dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
 
-			# We need the month and the day
-		
-			dst_node.newChild(None,"Type", "5")
-			dst_node.newChild(None,"MonthOfYear",str(utcdate.month))
-			dst_node.newChild(None,"DayOfMonth",str(utcdate.day))
+        elif src_rules.has_key("byday"):
 
-		
-	return ""
+            week, day = vcal_split_byday(src_rules["byday"])
+            dst_node.newChild(None, "Type", "3")
+            dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
+            if week >= 0:
+                dst_node.newChild(None, "WeekOfMonth", week)
+            elif week == -1:
+                # Airsync deals with this as a special case
+                dst_node.newChild(None, "WeekOfMonth", "5")
+            else:
+                # Not supported (as far as I can tell...)
+                # Airsync cannot count backwards from the end of the
+                # month in general
+                raise ValueError("Airsync does not support counting from end of month")
+        else:
+            # It seems like this should be against the rules, and filling in
+            # a default might not make sense because either of the above interpretations
+            # is equally valid.
+            raise ValueError("Monthly events must either specify BYMONTHDAY or BYDAY rules")
+
+    elif src_rules["freq"].lower() == "yearly":
+
+        if src_rules.has_key("bymonth"):
+
+            if src_rules.has_key("bymonthday"):
+
+                dst_node.newChild(None, "Type", "5")
+                dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
+                dst_node.newChild(None, "DayOfMonth", src_rules["bymonthday"])
+
+            elif src_rules.has_key("byday"):
+
+                week, day = vcal_split_byday(src_rules["byday"])
+                dst_node.newChild(None, "Type", "6")
+                dst_node.newChild(None, "MonthOfYear", src_rules["bymonth"])
+                dst_node.newChild(None, "DayOfWeek", str(vcal_days_to_airsync_days(day)))
+
+                if week >= 0:
+                    dst_node.newChild(None, "WeekOfMonth", week)
+                elif week == -1:
+                    # Airsync deals with this as a special case
+                    dst_node.newChild(None, "WeekOfMonth", "5")
+                else:
+                    # Not supported (as far as I can tell...)
+                    # Airsync cannot count backwards from the end of the
+                    # month in general
+                    raise ValueError("Airsync does not support counting from end of month")
+            else:
+
+                # It seems like this should be against the rules, and filling in
+                # a default might not make sense because either of the above interpretations
+                # is equally valid.
+
+                raise ValueError("Yearly events which are by month must either specify BYMONTHDAY or BYDAY rules")
+
+        elif src_rules.has_key("byyearday"):
+
+            # Not supported (as far as I can tell...)
+            # Airsync does not have a 'DayOfYear' field
+            raise ValueError("Airsync does not support day-of-year yearly events")
+
+            else:
+            # we need to get the start/recurrence date from the start date
+            # Get the start date - we need this to expand yearly rules
+            # We should always have a start date in a legal event!
+
+            start = xml2util.FindChildNode(src_node.parent,"DateStarted")
+            utcdate=tzconv.ConvertDateNodeToUTC(start)[1]
+
+            # We need the month and the day
+
+            dst_node.newChild(None,"Type", "5")
+            dst_node.newChild(None,"MonthOfYear",str(utcdate.month))
+            dst_node.newChild(None,"DayOfMonth",str(utcdate.day))
+
+
+    return ""
 
 def event_recurrence_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
@@ -466,23 +466,23 @@ def task_start_date_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-	# if we have a tz, we must insert the ID and convert to it
-	
-	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+    # if we have a tz, we must insert the ID and convert to it
 
-	result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+
+    result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
     else:
-	# if not, does the source have a UtcStartDate element?
-	nd = xml2util.FindChildNode(src_node.parent,"UtcStartDate")
-	if nd != None:
-		result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
-		
-	else:
-		# we don't have this either. Better hope that the StartDate value
-		# is correct.
-		
-		result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    # if not, does the source have a UtcStartDate element?
+    nd = xml2util.FindChildNode(src_node.parent,"UtcStartDate")
+    if nd != None:
+        result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
+
+    else:
+        # we don't have this either. Better hope that the StartDate value
+        # is correct.
+
+        result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
 
     dst_node = transform_ctx.insertNode()
     dst_node.newChild(None,"Content",result)
@@ -497,23 +497,23 @@ def task_due_date_from_airsync(ctx):
 
     if tzconv.curtz() != None:
 
-	# if we have a tz, we must insert the ID and convert to it
-	
-	dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
-	asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+    # if we have a tz, we must insert the ID and convert to it
 
-	result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    dst_node.newChild(None,"TimezoneID",tzconv.curtz().name)
+    asdate = tzconv.ConvertToLocal(asdate,tzconv.curtz())
+
+    result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
     else:
-	# if not, does the source have a UtcStartDate element?
-	nd = xml2util.FindChildNode(src_node.parent,"UtcDueDate")
-	if nd != None:
-		result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
+    # if not, does the source have a UtcStartDate element?
+    nd = xml2util.FindChildNode(src_node.parent,"UtcDueDate")
+    if nd != None:
+        result = tzutils.TaskTextToDate(xml2util.GetNodeValue(nd)).strftime(DATE_FORMAT_VCALTASK)
 
-	else:
-		# we don't have this either. Better hope that the DueDate value
-		# is correct.
-		
-		result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
+    else:
+        # we don't have this either. Better hope that the DueDate value
+        # is correct.
+
+        result = asdate.strftime(DATE_FORMAT_VCALTASKLOCAL)
 
     dst_node = transform_ctx.insertNode()
     dst_node.newChild(None,"Content",result)
@@ -553,8 +553,8 @@ def task_status_from_airsync(ctx):
         base_node = transform_ctx.insertNode()
         stat_node = base_node.newChild(None, "Status", None)
         stat_node.newChild(None, "Content", "COMPLETED")
-	pcnt_node = base_node.newChild(None, "PercentComplete", None)
-	pcnt_node.newChild(None, "Content", "100")
+    pcnt_node = base_node.newChild(None, "PercentComplete", None)
+    pcnt_node.newChild(None, "Content", "100")
     return ""
 
 def task_status_to_airsync(ctx):
@@ -562,16 +562,16 @@ def task_status_to_airsync(ctx):
     curnode = transform_ctx.current()
     s=xml2util.GetNodeValue(curnode)
     if s == "COMPLETED":
-	return "1"
+    return "1"
     else:
-	# check that PercentComplete == 100% - mark it completed if
-	# this is the case.
+    # check that PercentComplete == 100% - mark it completed if
+    # this is the case.
         up = xml2util.FindChildNode(curnode.parent.parent,"PercentComplete")
         if up != None:
             ct = xml2util.FindChildNode(up,"Content")
-	    if ct != None:
-	        if xml2util.GetNodeValue(ct) == "100":
-	            return "1"
+        if ct != None:
+            if xml2util.GetNodeValue(ct) == "100":
+                return "1"
     return "0"
  
 # Here. let us not destroy the 'unspecified' priority when going
@@ -584,25 +584,25 @@ def task_prio_to_airsync(ctx):
     d = "0"
     s=xml2util.GetNodeValue(transform_ctx.current())
     if s > "0":
-	if s == "7":
-	    d = "0"
-	elif s == "5":
-	    d = "1"
-	elif s == "3":
+    if s == "7":
+        d = "0"
+    elif s == "5":
+        d = "1"
+    elif s == "3":
             d = "2"
-	else:
-	    d = "0"
+    else:
+        d = "0"
     return d
 
 def task_prio_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     s=xml2util.GetNodeValue(transform_ctx.current())
     if s == "0":
-	return "7"
+    return "7"
     elif s == "1":
-	return "5"
+    return "5"
     elif s == "2":
-	return "3"
+    return "3"
     else:
         return "0" # We can use the unspecced one here if we get such an one from Airsync
 
@@ -618,7 +618,7 @@ def all_description_from_airsync(ctx):
         except pyrtfcomp.RTFException, ConvErr:
             pass
     return asnote
-	
+
 def all_description_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
