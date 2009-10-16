@@ -54,7 +54,7 @@ def unlock_device(device_path, password):
 
 	print "Authorization required for device %s." % deviceName
 
-	rc = deviceObject.ProvidePassword(password, dbus_interface='org.freedesktop.Hal.Device.Synce')
+	rc = device.ProvidePassword(password, dbus_interface='org.freedesktop.Hal.Device.Synce')
 	if (rc == True):
 		print "Authorization succeeded"
 		return 0

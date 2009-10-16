@@ -1,3 +1,7 @@
+2009-10-16  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/synce-unlock.py - small bugfix
+
 2009-08-01  Mark Ellis  <mark@mpellis.org.uk>
 
 	* put client connection socket in $libexecdir/run instead
