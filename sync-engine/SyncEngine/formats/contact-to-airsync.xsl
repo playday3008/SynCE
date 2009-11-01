@@ -91,7 +91,7 @@
             <xsl:otherwise>
                 <xsl:message><xsl:value-of select="$type"/></xsl:message>
                 <xsl:call-template name="address-elem">
-                    <xsl:with-param name="prefix" select="''"/>
+                    <xsl:with-param name="prefix" select="'Other'"/>
                 </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>

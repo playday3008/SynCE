@@ -1,0 +1,8 @@
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:C1="http://synce.org/formats/airsync_wm5/contacts" xmlns:C2="http://synce.org/formats/airsync_wm5/contacts2">
+      <C1:FileAs>Unknown address type</C1:FileAs>
+      <C1:OtherCity/>
+      <C1:OtherCountry/>
+      <C1:OtherPostalCode/>
+      <C1:OtherState/>
+      <C1:OtherStreet/>
+</AS:ApplicationData>

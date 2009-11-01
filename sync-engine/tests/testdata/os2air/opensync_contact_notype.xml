@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contact>
+  <Address>
+    <Type>DummyUnknown</Type>
+  </Address>
+  <FormattedName>
+    <Content>Unknown address type</Content>
+  </FormattedName>
+</contact>
