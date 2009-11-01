@@ -437,6 +437,10 @@ def event_recurrence_from_airsync(ctx):
 
 def task_start_date_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
+    # StartDate without DueDate is not allowed
+    duedate_node = xml2util.FindChildNode(transform_ctx.current().parent, "DueDate")
+    if not duedate_node:
+        return ""
     localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
     dst_node = transform_ctx.insertNode()
     tasks_ns = dst_node.searchNsByHref(transform_ctx.outputDoc(), "http://synce.org/formats/airsync_wm5/tasks")

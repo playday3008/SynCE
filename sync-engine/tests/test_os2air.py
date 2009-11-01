@@ -130,6 +130,18 @@ class OS2Air(unittest.TestCase):
     def test_event_transp1(self):
         return self._compare_files("event_transp1")
 
+    def test_task_ex1(self):
+        return self._compare_files("task_ex1")
+
+    def test_task_ex2(self):
+        return self._compare_files("task_ex2")
+
+    def test_task_ex3(self):
+        return self._compare_files("task_ex3")
+
+    def test_task_ex4(self):
+        return self._compare_files("task_ex4")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vcal>
+  <Todo>
+    <DateCalendarCreated>
+      <Content>20091011T091936Z</Content>
+    </DateCalendarCreated>
+    <DateDue>
+      <Content>20091011</Content>
+      <Value>DATE</Value>
+    </DateDue>
+    <LastModified>
+      <Content>20091101T122643</Content>
+    </LastModified>
+    <Summary>
+      <Content>Dummy task with date-typed due date</Content>
+    </Summary>
+    <Url>
+      <Content>http://example.com</Content>
+    </Url>
+  </Todo>
+</vcal>

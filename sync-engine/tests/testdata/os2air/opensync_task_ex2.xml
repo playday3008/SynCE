@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vcal>
+  <Todo>
+    <Class>
+      <Content>0</Content>
+    </Class>
+    <DateStarted>
+      <Content>20091102T230000Z</Content>
+    </DateStarted>
+    <DateDue>
+      <Content>20091110T230000Z</Content>
+    </DateDue>
+    <LastModified>
+      <Content>20091101T184655</Content>
+    </LastModified>
+    <Priority>
+      <Content>5</Content>
+    </Priority>
+    <Summary>
+      <Content>Dummy task with start and due dates</Content>
+    </Summary>
+  </Todo>
+</vcal>

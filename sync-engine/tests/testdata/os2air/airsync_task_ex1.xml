@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:T="http://synce.org/formats/airsync_wm5/tasks">
+    <T:DueDate>2009-10-11T00:00:00.000</T:StartDate>
+    <T:UtcDueDate>2009-10-11T00:00:00.000Z</T:UtcStartDate>
+    <T:Categories/>
+    <T:Subject>Dummy task with date-typed due date</T:Subject>
+</AS:ApplicationData>
