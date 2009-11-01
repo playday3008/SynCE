@@ -89,7 +89,7 @@
                 </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:message><xsl:value-of select="$type"/></xsl:message>
+                <!-- <xsl:message>Unknown address type : <xsl:value-of select="$type"/></xsl:message> -->
                 <xsl:call-template name="address-elem">
                     <xsl:with-param name="prefix" select="'Other'"/>
                 </xsl:call-template>

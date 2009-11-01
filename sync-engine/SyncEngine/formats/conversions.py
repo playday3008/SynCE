@@ -438,7 +438,7 @@ def event_recurrence_from_airsync(ctx):
 def task_start_date_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     # StartDate without DueDate is not allowed
-    duedate_node = xml2util.FindChildNode(transform_ctx.current().parent, "DueDate")
+    duedate_node = xml2util.FindChildNode(transform_ctx.current().parent, "DateDue")
     if not duedate_node:
         return ""
     localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
