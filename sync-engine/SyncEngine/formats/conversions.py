@@ -439,22 +439,18 @@ def task_start_date_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
     dst_node = transform_ctx.insertNode()
-    n=dst_node.newChild(None,"StartDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
-    nsNew=n.newNs("http://synce.org.formats/airsync_wm5/tasks","T")
-    n.setNs(nsNew)
-    n=dst_node.newChild(None,"UtcStartDate",utcDate.strftime(DATE_FORMAT_TASK))
-    n.setNs(nsNew)
+    tasks_ns = dst_node.searchNsByHref(transform_ctx.outputDoc(), "http://synce.org/formats/airsync_wm5/tasks")
+    n=dst_node.newChild(tasks_ns,"StartDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
+    n=dst_node.newChild(tasks_ns,"UtcStartDate",utcDate.strftime(DATE_FORMAT_TASK))
     return ""
 
 def task_due_date_to_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     localDate,utcDate = tzconv.ConvertDateNodeToUTC(transform_ctx.current())
     dst_node = transform_ctx.insertNode()
-    n=dst_node.newChild(None,"DueDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
-    nsNew=n.newNs("http://synce.org/formats/airsync_wm5/tasks","T")
-    n.setNs(nsNew)
-    n=dst_node.newChild(None,"UtcDueDate",utcDate.strftime(DATE_FORMAT_TASK))
-    n.setNs(nsNew)
+    tasks_ns = dst_node.searchNsByHref(transform_ctx.outputDoc(), "http://synce.org/formats/airsync_wm5/tasks")
+    n=dst_node.newChild(tasks_ns,"DueDate",localDate.strftime(DATE_FORMAT_TASKLOCAL))
+    n=dst_node.newChild(tasks_ns,"UtcDueDate",utcDate.strftime(DATE_FORMAT_TASK))
     return ""
 
 def task_start_date_from_airsync(ctx):
