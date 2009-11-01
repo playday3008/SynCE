@@ -51,7 +51,19 @@
         </T:Categories>
 
         <xsl:for-each select="Todo/Class/Content[position() = 1]">
-		<T:Sensitivity><xsl:value-of select="convert:event_sensitivity_to_airsync()"/></T:Sensitivity>
+		<T:Sensitivity>
+            <xsl:choose>
+                <xsl:when test="Content = 'PRIVATE'">
+                    <xsl:text>2</xsl:text>
+                </xsl:when>
+                <xsl:when test="Content = 'CONFIDENTIAL'">
+                    <xsl:text>3</xsl:text>
+                </xsl:when>
+                <xsl:otherwise> <!-- "PUBLIC" is our default value -->
+                    <xsl:text>0</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </T:Sensitivity>
 	</xsl:for-each>
 
 	<T:Subject><xsl:value-of select="Todo/Summary/Content"/></T:Subject>
