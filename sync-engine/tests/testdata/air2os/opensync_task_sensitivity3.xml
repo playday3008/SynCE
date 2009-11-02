@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<vcal xmlns:tz="http://synce.org/tz">
+	<Todo>
+		<Summary>
+			<Content>Sensitivity: confidential</Content>
+		</Summary>
+		<Class>
+			<Content>CONFIDENTIAL</Content>
+		</Class>
+	</Todo>
+</vcal>

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<vcal xmlns:tz="http://synce.org/tz">
+	<Todo>
+		<Summary>
+			<Content>Sensitivity: public</Content>
+		</Summary>
+		<Class>
+			<Content>PUBLIC</Content>
+		</Class>
+	</Todo>
+</vcal>

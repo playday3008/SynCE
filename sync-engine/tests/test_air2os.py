@@ -94,6 +94,33 @@ class Air2OS(unittest.TestCase):
     def test_task_desc1(self):
         return self._compare_files("task_desc1")
 
+    def test_task_sensitivity1(self):
+        return self._compare_files("task_sensitivity1")
+
+    def test_task_sensitivity2(self):
+        return self._compare_files("task_sensitivity2")
+
+    def test_task_sensitivity3(self):
+        return self._compare_files("task_sensitivity3")
+
+    def test_task_importance1(self):
+        return self._compare_files("task_importance1")
+
+    def test_task_importance2(self):
+        return self._compare_files("task_importance2")
+
+    def test_task_importance3(self):
+        return self._compare_files("task_importance3")
+
+    def test_task_importance4(self):
+        return self._compare_files("task_importance4")
+
+    def test_task_complete1(self):
+        return self._compare_files("task_complete1")
+
+    def test_task_complete2(self):
+        return self._compare_files("task_complete2")
+
 
 if __name__ == '__main__':
     unittest.main()

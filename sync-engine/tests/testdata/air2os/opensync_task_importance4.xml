@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<vcal xmlns:tz="http://synce.org/tz">
+	<Todo>
+		<Summary>
+			<Content>Default importance</Content>
+		</Summary>
+		<Priority>
+			<Content>0</Content>
+		</Priority>
+	</Todo>
+</vcal>

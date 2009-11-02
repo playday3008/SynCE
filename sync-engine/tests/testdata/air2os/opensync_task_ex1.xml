@@ -7,18 +7,14 @@
 		<DateDue>
 			<Content>20070208T050000Z</Content>
 		</DateDue>
-		<DateStarted>
-			<Content>20070127T050000Z</Content>
-		</DateStarted>
-		<Class>
-			<Content>0</Content>
-		</Class>
-		<Categories/>
 		<Priority>
 			<Content>5</Content>
 		</Priority>
-		<Description>
-			<Content/>
-		</Description>
+		<Class>
+			<Content>PUBLIC</Content>
+		</Class>
+		<DateStarted>
+			<Content>20070127T050000Z</Content>
+		</DateStarted>
 	</Todo>
 </vcal>
