@@ -91,6 +91,9 @@ class Air2OS(unittest.TestCase):
     def test_task_ex1(self):
         return self._compare_files("task_ex1")
 
+    def test_task_desc1(self):
+        return self._compare_files("task_desc1")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -142,6 +142,9 @@ class OS2Air(unittest.TestCase):
     def test_task_ex4(self):
         return self._compare_files("task_ex4")
 
+    def test_task_desc1(self):
+        return self._compare_files("task_desc1")
+
 
 if __name__ == '__main__':
     unittest.main()

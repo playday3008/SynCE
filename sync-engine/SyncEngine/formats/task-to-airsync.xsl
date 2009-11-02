@@ -68,7 +68,7 @@
 
 	<T:Subject><xsl:value-of select="Todo/Summary/Content"/></T:Subject>
 	
-	<xsl:for-each select="Todo/Description/Content[position() = 1]">
+	<xsl:for-each select="Todo/Description">
 		<T:Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></T:Rtf>
 	</xsl:for-each>
 

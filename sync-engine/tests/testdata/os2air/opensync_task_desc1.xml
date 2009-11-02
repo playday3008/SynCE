@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vcal xmlns:tz="http://synce.org/tz">
+  <Todo>
+    <Summary>
+      <Content>Dummy task with description</Content>
+    </Summary>
+    <Description>
+      <Content>
+This is a dummy description
+</Content>
+    </Description>
+  </Todo>
+</vcal>
