@@ -1,5 +1,4 @@
 <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:T="http://synce.org/formats/airsync_wm5/tasks">
-  <T:Sensitivity>0</T:Sensitivity>
-  <T:Importance>1</T:Importance>
-  <T:Subject>Can't have StartDate without DueDate</T:Subject>
+        <T:Subject>Importance</T:Subject>
+        <T:Importance>2</T:Importance>
 </AS:ApplicationData>

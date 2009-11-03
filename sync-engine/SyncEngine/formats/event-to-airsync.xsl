@@ -83,7 +83,7 @@
     </xsl:template>
 
     <xsl:template match="Description">
-            <Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
+        <Rtf><xsl:value-of select="convert:all_description_to_airsync()"/></Rtf>
     </xsl:template>
 
     <xsl:template match="Class">

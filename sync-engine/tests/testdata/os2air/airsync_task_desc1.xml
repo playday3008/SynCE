@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:T="http://synce.org/formats/airsync_wm5/tasks">
     <T:Subject>Dummy task with description</T:Subject>
-    <T:Categories/>
     <T:Rtf>BgEAAHACAABMWkZ1ritsoD8ACQMwAQMB9wKnAgBjaBEKwHNldALRcHJx4DAgVGFoA3ECgwBQ6wNUDzcyD9MyBgAGwwKDpxIBA+MReDA0EhUgAoArApEI5jsJbzAVwzEyvjgJtBdCCjIXQRb0ORIAHxeEGOEYExjgFcMyNTX/CbQaYgoyGmEaHBaKCaUa9v8c6woUG3YdTRt/Hwwabxbt/xyPF7gePxg4JY0YVyRMKR+dJfh9CoEBMAOyMTYDMGQnNRRgJzYXYC1QOfktADczLQAMAS2cAFAuFL0tMTcagC1QCzAwEzctse0vZjYv8S3iNi3xAcAthU0uMTctMi2xNmYtQWUFCoB9M/A=</T:Rtf>
 </AS:ApplicationData>

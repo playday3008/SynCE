@@ -566,7 +566,7 @@ def task_status_to_airsync(ctx):
     else:
         # check that PercentComplete == 100% - mark it completed if
         # this is the case.
-        up = xml2util.FindChildNode(curnode.parent.parent,"PercentComplete")
+        up = xml2util.FindChildNode(curnode.parent,"PercentComplete")
         if up != None:
             ct = xml2util.FindChildNode(up,"Content")
             if ct != None:
@@ -589,7 +589,7 @@ def task_prio_to_airsync(ctx):
         elif s == "5":
             d = "1"
         elif s == "3":
-                d = "2"
+            d = "2"
         else:
             d = "0"
     return d

@@ -1,11 +1,9 @@
 <AS:ApplicationData xmlns:AS="http://synce.org/formats/airsync_wm5/airsync" xmlns:T="http://synce.org/formats/airsync_wm5/tasks">
-  <T:DueDate>2009-11-11T00:00:00.000</T:DueDate>
-  <T:UtcDueDate>2009-11-11T00:00:00.000Z</T:UtcDueDate>
-  <T:Importance>1</T:Importance>
   <T:Sensitivity>0</T:Sensitivity>
   <T:StartDate>2009-11-03T00:00:00.000</T:StartDate>
   <T:UtcStartDate>2009-11-03T00:00:00.000Z</T:UtcStartDate>
-  <T:Categories/>
-  <T:Sensitivity>0</T:Sensitivity>
+  <T:DueDate>2009-11-11T00:00:00.000</T:DueDate>
+  <T:UtcDueDate>2009-11-11T00:00:00.000Z</T:UtcDueDate>
+  <T:Importance>1</T:Importance>
   <T:Subject>Dummy task with date-typed start and due dates</T:Subject>
 </AS:ApplicationData>
