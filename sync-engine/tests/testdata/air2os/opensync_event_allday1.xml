@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="utf-8"?>
 <vcal>
   <Timezone>
     <TimezoneID>/synce.org/DST-030605T020000-STD-100605T030000</TimezoneID>
@@ -30,45 +30,24 @@
   </Timezone>
   <Event>
     <Transparency>
-      <Content>TRANSPARENT</Content>
+      <Content>OPAQUE</Content>
     </Transparency>
-    <Description>
-      <Content/>
-    </Description>
     <LastModified>
-      <Content>20060723T092111Z</Content>
+      <Content>20091031T102020Z</Content>
     </LastModified>
     <DateEnd>
       <TimezoneID>/synce.org/DST-030605T020000-STD-100605T030000</TimezoneID>
-      <Content>19780725</Content>
+      <Content>20091031</Content>
     </DateEnd>
-    <Alarm>
-      <AlarmTrigger>
-        <Content>-PT15M</Content>
-        <Value>DURATION</Value>
-        <Related>START</Related>
-      </AlarmTrigger>
-      <AlarmAction>DISPLAY</AlarmAction>
-      <AlarmDescription>Badger AAA's Birthday</AlarmDescription>
-    </Alarm>
     <Class>
       <Content>PUBLIC</Content>
     </Class>
     <Summary>
-      <Content>Badger AAA's Birthday</Content>
+      <Content>essai</Content>
     </Summary>
     <DateStarted>
       <TimezoneID>/synce.org/DST-030605T020000-STD-100605T030000</TimezoneID>
-      <Content>19780724</Content>
+      <Content>20091030</Content>
     </DateStarted>
-    <RecurrenceRule>
-      <Rule>FREQ=YEARLY</Rule>
-      <Rule>BYMONTH=7</Rule>
-      <Rule>BYMONTHDAY=25</Rule>
-    </RecurrenceRule>
-    <ExclusionDate>
-      <Value>DATE</Value>
-      <Content>20060724</Content>
-    </ExclusionDate>
   </Event>
 </vcal>

@@ -1,5 +1,33 @@
 <?xml version="1.0"?>
 <vcal>
+  <Timezone>
+    <TimezoneID>/synce.org/DST-030605T020000-STD-100605T030000</TimezoneID>
+    <Location>Unknown/Unknown</Location>
+    <DaylightSavings>
+      <TZOffsetFrom>+0100</TZOffsetFrom>
+      <TZOffsetTo>+0200</TZOffsetTo>
+      <TimezoneName>DST</TimezoneName>
+      <DateStarted>20090329T020000</DateStarted>
+      <RecurrenceRule>
+        <Rule>FREQ=YEARLY</Rule>
+        <Rule>INTERVAL=1</Rule>
+        <Rule>BYMONTH=3</Rule>
+        <Rule>BYDAY=-1SU</Rule>
+      </RecurrenceRule>
+    </DaylightSavings>
+    <Standard>
+      <TZOffsetFrom>+0200</TZOffsetFrom>
+      <TZOffsetTo>+0100</TZOffsetTo>
+      <TimezoneName>STD</TimezoneName>
+      <DateStarted>20091025T030000</DateStarted>
+      <RecurrenceRule>
+        <Rule>FREQ=YEARLY</Rule>
+        <Rule>INTERVAL=1</Rule>
+        <Rule>BYMONTH=10</Rule>
+        <Rule>BYDAY=-1SU</Rule>
+      </RecurrenceRule>
+    </Standard>
+  </Timezone>
   <Event>
     <Transparency>
       <Content>OPAQUE</Content>
@@ -18,7 +46,8 @@ foo
       <Content>20060728T115046Z</Content>
     </LastModified>
     <DateEnd>
-      <Content>20060729T160000Z</Content>
+      <TimezoneID>/synce.org/DST-030605T020000-STD-100605T030000</TimezoneID>
+      <Content>20060729T170000</Content>
     </DateEnd>
     <Location>
       <Content>BjArheimsbygd</Content>
@@ -39,7 +68,8 @@ foo
       <Content>MAte</Content>
     </Summary>
     <DateStarted>
-      <Content>20060729T100000Z</Content>
+      <TimezoneID>/synce.org/DST-030605T020000-STD-100605T030000</TimezoneID>
+      <Content>20060729T110000</Content>
     </DateStarted>
     <Attendee>
       <Content>MAILTO:foo@sysrq.no</Content>

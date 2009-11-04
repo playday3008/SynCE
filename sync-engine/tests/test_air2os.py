@@ -121,6 +121,9 @@ class Air2OS(unittest.TestCase):
     def test_task_complete2(self):
         return self._compare_files("task_complete2")
 
+    def test_event_allday1(self):
+        return self._compare_files("event_allday1")
+
 
 if __name__ == '__main__':
     unittest.main()
