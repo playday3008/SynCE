@@ -519,93 +519,6 @@ def task_due_date_from_airsync(ctx):
     dst_node.newChild(None,"Content",result)
     return ""
 
-def task_classification_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    s = xml2util.GetNodeValue(transform_ctx.current())
-    if s == "PRIVATE":
-        return "2"
-    elif s == "CONFIDENTIAL":
-        return "3"
-    else:
-        return "0" # 'PUBLIC' is our default value
-
-def task_classification_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    s = xml2util.GetNodeValue(transform_ctx.current())
-    if s == "2":
-        return "PRIVATE"
-    elif s == "3":
-        return "CONFIDENTIAL"
-    else:
-        return "0" # 'PUBLIC' is our default value
-    
-    # We only sync the 'COMPLETED' state here. Evo2 maintains a number of 
-    # different status values for various states of a job except COMPLETED
-    # and we don't want to clobber these. AirStink seems only to maintain
-    # the two states: Not Completed and Completed. However, we force 
-    # the PercentComplete field to 100 if the task is marked as completed
-    
-def task_status_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    src_node = transform_ctx.current()
-    s=xml2util.GetNodeValue(transform_ctx.current())
-    if s == "1":
-        base_node = transform_ctx.insertNode()
-        stat_node = base_node.newChild(None, "Status", None)
-        stat_node.newChild(None, "Content", "COMPLETED")
-        pcnt_node = base_node.newChild(None, "PercentComplete", None)
-        pcnt_node.newChild(None, "Content", "100")
-    return ""
-
-def task_status_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    curnode = transform_ctx.current()
-    s=xml2util.GetNodeValue(curnode)
-    if s == "COMPLETED":
-        return "1"
-    else:
-        # check that PercentComplete == 100% - mark it completed if
-        # this is the case.
-        up = xml2util.FindChildNode(curnode.parent,"PercentComplete")
-        if up != None:
-            ct = xml2util.FindChildNode(up,"Content")
-            if ct != None:
-                if xml2util.GetNodeValue(ct) == "100":
-                    return "1"
-    return "0"
- 
-# Here. let us not destroy the 'unspecified' priority when going
-# _to_ airsync. We can't really help reassigning this as 'low' 
-# in the other direction.
-#
-
-def task_prio_to_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    d = "0"
-    s=xml2util.GetNodeValue(transform_ctx.current())
-    if s > "0":
-        if s == "7":
-            d = "0"
-        elif s == "5":
-            d = "1"
-        elif s == "3":
-            d = "2"
-        else:
-            d = "0"
-    return d
-
-def task_prio_from_airsync(ctx):
-    parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
-    s=xml2util.GetNodeValue(transform_ctx.current())
-    if s == "0":
-        return "7"
-    elif s == "1":
-        return "5"
-    elif s == "2":
-        return "3"
-    else:
-        return "0" # We can use the unspecced one here if we get such an one from Airsync
-
 def all_description_from_airsync(ctx):
     parser_ctx, transform_ctx = xml2util.ExtractContexts(ctx)
     src_node = transform_ctx.current()
@@ -654,12 +567,6 @@ def register_xslt_extension_functions():
     libxslt.registerExtModuleFunction("task_due_date_to_airsync",           "http://synce.org/convert", task_due_date_to_airsync)
     libxslt.registerExtModuleFunction("task_start_date_from_airsync",       "http://synce.org/convert", task_start_date_from_airsync)
     libxslt.registerExtModuleFunction("task_due_date_from_airsync",         "http://synce.org/convert", task_due_date_from_airsync)
-    libxslt.registerExtModuleFunction("task_classification_from_airsync",   "http://synce.org/convert", task_classification_from_airsync)
-    libxslt.registerExtModuleFunction("task_classification_to_airsync",     "http://synce.org/convert", task_classification_to_airsync)
-    libxslt.registerExtModuleFunction("task_status_from_airsync",           "http://synce.org/convert", task_status_from_airsync)
-    libxslt.registerExtModuleFunction("task_status_to_airsync",             "http://synce.org/convert", task_status_to_airsync)
-    libxslt.registerExtModuleFunction("task_prio_to_airsync",               "http://synce.org/convert", task_prio_to_airsync)
-    libxslt.registerExtModuleFunction("task_prio_from_airsync",             "http://synce.org/convert", task_prio_from_airsync)
     libxslt.registerExtModuleFunction("all_description_to_airsync",         "http://synce.org/convert", all_description_to_airsync)
     libxslt.registerExtModuleFunction("all_description_from_airsync",       "http://synce.org/convert", all_description_from_airsync)
     libxslt.registerExtModuleFunction("all_upper_case",                     "http://synce.org/convert", all_upper_case)

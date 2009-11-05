@@ -23,11 +23,17 @@
     </xsl:template>
 
     <xsl:template match="Status">
-        <T:Complete><xsl:value-of select="convert:task_status_to_airsync()"/></T:Complete>
+        <xsl:if test="not(../PercentComplete) and Content = 'COMPLETED'">
+            <T:Complete>1</T:Complete>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template match="PercentComplete">
-        <xsl:if test="not(../Status) and Content = '100'">
+        <!--
+             When in conflict, PercentComplete wins over Status.
+             That's an arbitrary decision, it can change if a good reason is found
+        -->
+        <xsl:if test="Content = '100'">
             <T:Complete>1</T:Complete>
         </xsl:if>
     </xsl:template>
@@ -37,7 +43,27 @@
     </xsl:template>
 
     <xsl:template match="Priority">
-        <T:Importance><xsl:value-of select="convert:task_prio_to_airsync()"/></T:Importance>
+        <T:Importance>
+            <!--
+                Here. let us not destroy the 'unspecified' priority when going
+                _to_ airsync. We can't really help reassigning this as 'low' 
+                in the other direction.
+            -->
+            <xsl:choose>
+                <xsl:when test="string(Content) = '7'">
+                    <xsl:text>0</xsl:text>
+                </xsl:when>
+                <xsl:when test="string(Content) = '5'">
+                    <xsl:text>1</xsl:text>
+                </xsl:when>
+                <xsl:when test="string(Content) = '3'">
+                    <xsl:text>2</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>0</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </T:Importance>
     </xsl:template>
 
     <xsl:template match="RecurrenceRule">

@@ -71,13 +71,39 @@
     </xsl:template>
 
     <xsl:template match="T:Complete">
-        <xsl:value-of select="convert:task_status_from_airsync()"/>
+        <!--
+            We only sync the 'COMPLETED' state here. Evo2 maintains a number of 
+            different status values for various states of a job except COMPLETED
+            and we don't want to clobber these. AirStink seems only to maintain
+            the two states: Not Completed and Completed. However, we force 
+            the PercentComplete field to 100 if the task is marked as completed
+        -->
+        <xsl:if test="string(.) = '1'">
+            <Status><Content>COMPLETED</Content></Status>
+            <PercentComplete><Content>100</Content></PercentComplete>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template match="T:Importance">
-        <Priority><Content><xsl:value-of select="convert:task_prio_from_airsync()"/></Content></Priority>
+        <Priority><Content>
+            <xsl:choose>
+                <xsl:when test="string(.) = '0'">
+                    <xsl:text>7</xsl:text>
+                </xsl:when>
+                <xsl:when test="string(.) = '1'">
+                    <xsl:text>5</xsl:text>
+                </xsl:when>
+                <xsl:when test="string(.) = '2'">
+                    <xsl:text>3</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                <!-- We can use the unspecced one here if we get such an one from Airsync -->
+                    <xsl:text>0</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </Content></Priority>
     </xsl:template>
-    
+
     <xsl:template match="T:Rtf">
         <Description><Content><xsl:value-of select="convert:all_description_from_airsync()"/></Content></Description>
     </xsl:template>
