@@ -1006,10 +1006,6 @@ cdef class RAPISession:
     """A connection to a Windows Mobile device."""
 
     cdef RapiConnection *rapi_conn
-    cdef HKEY_CLASSES_ROOT_regkey
-    cdef HKEY_CURRENT_USER_regkey
-    cdef HKEY_LOCAL_MACHINE_regkey
-    cdef HKEY_USERS_regkey
 
     def __cinit__(self, device=None, log_level=SYNCE_LOG_LEVEL_LOWEST, *args, **keywords):
         synce_log_set_level(log_level)
@@ -1031,10 +1027,7 @@ cdef class RAPISession:
 
 
     def __init__(self, device=None, log_level=SYNCE_LOG_LEVEL_LOWEST):
-        self.HKEY_CLASSES_ROOT_regkey       = RegKey(self, 0x80000000)
-        self.HKEY_CURRENT_USER_regkey       = RegKey(self, 0x80000001)
-        self.HKEY_LOCAL_MACHINE_regkey      = RegKey(self, 0x80000002)
-        self.HKEY_USERS_regkey              = RegKey(self, 0x80000003)
+        return
 
 
     def __dealloc__(self):
@@ -1051,13 +1044,13 @@ cdef class RAPISession:
         cdef int retval
 
         if name == "HKEY_CLASSES_ROOT" or name == "HKCR":
-            return self.HKEY_CLASSES_ROOT_regkey
+            return RegKey(self, 0x80000000)
         elif name == "HKEY_CURRENT_USER" or name == "HKCU":
-            return self.HKEY_CURRENT_USER_regkey
+            return RegKey(self, 0x80000001)
         elif name == "HKEY_LOCAL_MACHINE" or name == "HKLM":
-            return self.HKEY_LOCAL_MACHINE_regkey
+            return RegKey(self, 0x80000002)
         elif name == "HKEY_USERS" or name == "HKU":
-            return self.HKEY_USERS_regkey
+            return RegKey(self, 0x80000003)
         elif name == "name":
             return rapi_connection_get_name(self.rapi_conn)
         elif name == "os_version":

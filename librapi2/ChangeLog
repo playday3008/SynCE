@@ -1,3 +1,9 @@
+2009-11-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - don't keep the root RegKey objects as
+	  permanent attributes of a RAPISession, which results
+	  in a circular reference; generate root keys as needed
+
 2009-09-08  Mark Ellis  <mark@mpellis.org.uk>
 
 	* python/pyrapi2.pyx - replace += operator, not available
