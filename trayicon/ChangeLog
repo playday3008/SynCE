@@ -1,3 +1,7 @@
+2009-11-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add libxml compile flags
+
 2009-07-18  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add compatibility with earlier gtk2 (2.12)

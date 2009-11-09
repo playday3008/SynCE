@@ -51,6 +51,11 @@ PKG_CHECK_MODULES([NOTIFY], [libnotify >= 0.3.0])
 dnl Check for liborange
 PKG_CHECK_MODULES(LIBORANGE, liborange >= 0.3.2)
 
+dnl Check for libxml
+PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.6.0)
+AC_SUBST(XML_CFLAGS)
+AC_SUBST(XML_LIBS)
+
 dnl Checks for header files.
 
 dnl Checks for typedefs, structures, and compiler characteristics.
