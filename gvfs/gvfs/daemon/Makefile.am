@@ -61,6 +61,17 @@ EXTRA_DIST += \
 	gvfsjobqueryinfowrite.c gvfsjobqueryinfowrite.h
 endif
 
+if GVFS_VERSION_1_4
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjobstartmountable.c $(gvfs_src_dir)/daemon/gvfsjobstartmountable.h \
+	$(gvfs_src_dir)/daemon/gvfsjobstopmountable.c $(gvfs_src_dir)/daemon/gvfsjobstopmountable.h \
+	$(gvfs_src_dir)/daemon/gvfsjobpollmountable.c $(gvfs_src_dir)/daemon/gvfsjobpollmountable.h
+else
+EXTRA_DIST += \
+	gvfsjobstartmountable.c gvfsjobstartmountable.h \
+	gvfsjobstopmountable.c gvfsjobstopmountable.h \
+	gvfsjobpollmountable.c gvfsjobpollmountable.h
+endif
 
 
 if LOCAL_LIBDAEMON_SRC

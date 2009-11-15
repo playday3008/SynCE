@@ -30,6 +30,6 @@ source tree are required.
 
 The --with-gvfs-source-version option should be used to tailor the
 build system for incompatible changes in gvfs. The default is gvfs
-1.2.x
+1.4.x
 
 This software may well crash, all bug reports are welcome.

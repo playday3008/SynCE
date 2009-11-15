@@ -81,6 +81,18 @@ EXTRA_DIST += \
 	../gvfs/daemon/gvfsjobqueryinfowrite.c ../gvfs/daemon/gvfsjobqueryinfowrite.h
 endif
 
+if GVFS_VERSION_1_4
+libdaemon_la_SOURCES += \
+	$(gvfs_src_dir)/daemon/gvfsjobstartmountable.c $(gvfs_src_dir)/daemon/gvfsjobstartmountable.h \
+	$(gvfs_src_dir)/daemon/gvfsjobstopmountable.c $(gvfs_src_dir)/daemon/gvfsjobstopmountable.h \
+	$(gvfs_src_dir)/daemon/gvfsjobpollmountable.c $(gvfs_src_dir)/daemon/gvfsjobpollmountable.h
+else
+EXTRA_DIST += \
+	../gvfs/daemon/gvfsjobstartmountable.c $(gvfs_src_dir)/daemon/gvfsjobstartmountable.h \
+	../gvfs/daemon/gvfsjobstopmountable.c $(gvfs_src_dir)/daemon/gvfsjobstopmountable.h \
+	../gvfs/daemon/gvfsjobpollmountable.c $(gvfs_src_dir)/daemon/gvfsjobpollmountable.h
+endif
+
 
 mount_in_files = synce.mount.in
 mount_DATA = synce.mount

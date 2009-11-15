@@ -1,3 +1,7 @@
+2009-11-15  Mark Ellis <mark@mpellis.org.uk>
+
+	* hack the build system for incompatible changes in gvfs-1.4.x
+
 2009-08-30  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add 22x22 icon, filechooser doesn't scale the 48x48 one
