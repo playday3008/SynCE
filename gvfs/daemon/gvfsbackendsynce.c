@@ -2666,7 +2666,8 @@ synce_gvfs_mount (GVfsBackend *backend,
   g_vfs_backend_set_icon_name (backend, MOUNT_ICON_NAME);
 
   synce_mount_spec = g_mount_spec_new("synce");
-  g_mount_spec_set(synce_mount_spec, "host", synce_backend->device_name);
+  if (synce_backend->device_name != NULL)
+    g_mount_spec_set(synce_mount_spec, "host", synce_backend->device_name);
   g_vfs_backend_set_mount_spec(backend, synce_mount_spec);
   g_mount_spec_unref(synce_mount_spec);
 

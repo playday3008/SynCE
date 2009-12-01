@@ -2,6 +2,8 @@
 
 	* daemon/gvfsbackendsynce.c - check for directory in
 	  open_for_read(); this was resulting in access denied
+	* daemon/gvfsbackendsynce.c - check hostname exists
+	  before using it for mount spec
 
 2009-11-15  Mark Ellis <mark@mpellis.org.uk>
 
