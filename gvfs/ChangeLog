@@ -1,3 +1,8 @@
+2009-12-01  Mark Ellis <mark@mpellis.org.uk>
+
+	* daemon/gvfsbackendsynce.c - check for directory in
+	  open_for_read(); this was resulting in access denied
+
 2009-11-15  Mark Ellis <mark@mpellis.org.uk>
 
 	* 0.3.1 release for 1.4 gvfs series

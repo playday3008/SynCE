@@ -761,6 +761,7 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
   gchar *location = NULL;
   WCHAR *wide_path = NULL;
   HANDLE handle;
+  CE_FIND_DATA entry;
   GError *error = NULL;
 
   switch (get_location(filename, &location))
@@ -792,6 +793,34 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
   rapi_connection_select(synce_backend->rapi_conn);
 
   wide_path = wstr_from_utf8(location);
+
+  g_debug("%s: CeFindFirstFile()", G_STRFUNC);
+  handle = CeFindFirstFile(wide_path, &entry);
+  if(handle == INVALID_HANDLE_VALUE)
+    {
+      g_debug("%s: CeFindFirstFile failed", G_STRFUNC);
+
+      error = g_error_from_rapi(NULL);
+      g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
+      MUTEX_UNLOCK (synce_backend->mutex);
+      wstr_free_string(wide_path);
+      goto exit;
+    }
+  else
+    {
+      g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
+      CeFindClose(handle);
+
+      if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+	g_vfs_job_failed (G_VFS_JOB (job),
+			  G_IO_ERROR, G_IO_ERROR_IS_DIRECTORY,
+			  _("Can't open directory"));
+        MUTEX_UNLOCK (synce_backend->mutex);
+        wstr_free_string(wide_path);
+        goto exit;
+      }
+
+    }
 
   g_debug("%s: CeCreateFile()", G_STRFUNC);
   handle = CeCreateFile
