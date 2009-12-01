@@ -441,7 +441,7 @@ get_file_attributes(GVfsBackendSynce *backend,
   if (entry->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
     g_file_info_set_is_hidden(info, TRUE);
 
-  g_debug("%s: set type", G_STRFUNC);
+  g_debug("%s: set file type", G_STRFUNC);
   if (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
     g_file_info_set_file_type (info, G_FILE_TYPE_DIRECTORY);
     g_file_info_set_size (info, 0);
@@ -729,8 +729,9 @@ synce_gvfs_query_info (GVfsBackend *backend,
 
       CeFindClose(handle);
 
-      g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
-      g_debug("%s: Mime-type: %s", G_STRFUNC, g_file_info_get_content_type(info));
+      g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_name(info));
+      g_debug("%s: Display Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
+      g_debug("%s: Mime-type (content type): %s", G_STRFUNC, g_file_info_get_content_type(info));
       g_debug("%s: Ok", G_STRFUNC);
 
       g_vfs_job_succeeded (G_VFS_JOB (job));
@@ -2807,7 +2808,7 @@ g_vfs_synce_daemon_init (void)
   g_set_application_name (_("Pocket PC Filesystem Service"));
 
   openlog(g_get_prgname(), LOG_PID, LOG_USER);
-  g_log_set_default_handler(log_to_syslog, NULL);
+  g_log_set_handler(GVFS_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION, log_to_syslog, NULL);
 
   synce_log_use_syslog();
 }

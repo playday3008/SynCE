@@ -111,7 +111,9 @@ gvfsd_synce_CPPFLAGS = \
 	-DDEFAULT_BACKEND_TYPE=synce \
 	-DMAX_JOB_THREADS=1 \
 	$(LIBRAPI2_CFLAGS) \
-	-DBACKEND_TYPES='"synce", G_VFS_TYPE_BACKEND_SYNCE,'
+	-DBACKEND_TYPES='"synce", G_VFS_TYPE_BACKEND_SYNCE,' \
+	-DGVFS_LOG_DOMAIN=\"synce-gvfs\" \
+	-DG_LOG_DOMAIN=\"synce-gvfs\"
 
 gvfsd_synce_LDADD = $(libraries) $(LIBRAPI2_LIBS)
 
