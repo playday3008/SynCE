@@ -1,3 +1,8 @@
+2009-12-02  Mark Ellis  <mark@mpellis.org.uk>
+
+	* change the glade file so it doesn't unnecessarily depend on
+	  a gtk version higher than 2.12
+
 2009-11-09  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add libxml compile flags
