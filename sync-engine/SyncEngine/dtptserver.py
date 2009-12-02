@@ -97,7 +97,9 @@ class DTPTServer(threading.Thread):
 						(s, address) = self._sock.accept()
 						s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
+						# TODO: we should check here that tid doesn't already exist in thread list keys
 						tid = util.generate_id()
+
 						thd=DTPTThread(s,self,tid)
 						ix = self.AddServer(tid,thd)
 						thd.start()
@@ -147,7 +149,10 @@ class DTPTThread(threading.Thread):
 		self.tid = tid
 		self.pr,self.pw = os.pipe()
 			
-			
+	def __del__(self):
+		os.close(self.pr)
+		os.close(self.pw)
+
 	def run(self):
 			
 		ip = [self.s, self.pr]

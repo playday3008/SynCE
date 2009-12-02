@@ -1155,3 +1155,6 @@ Small addition to the DTPT debug log
 -----------------------------
 Refactor the event XSL stylesheets to use templates.
 
+02/12/2009 - Mark Ellis
+-----------------------
+Close some forgotten file descriptors in DTPTThread.
