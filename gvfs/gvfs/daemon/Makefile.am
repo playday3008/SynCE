@@ -23,8 +23,6 @@ libdaemon_sources = \
 	$(gvfs_src_dir)/daemon/gvfsjobwrite.c $(gvfs_src_dir)/daemon/gvfsjobwrite.h \
 	$(gvfs_src_dir)/daemon/gvfsjobseekwrite.c $(gvfs_src_dir)/daemon/gvfsjobseekwrite.h \
 	$(gvfs_src_dir)/daemon/gvfsjobclosewrite.c $(gvfs_src_dir)/daemon/gvfsjobclosewrite.h \
-	$(gvfs_src_dir)/daemon/gvfsjobpush.c $(gvfs_src_dir)/daemon/gvfsjobpush.h \
-	$(gvfs_src_dir)/daemon/gvfsjobpull.c $(gvfs_src_dir)/daemon/gvfsjobpull.h \
 	$(gvfs_src_dir)/daemon/gvfsjobqueryinfo.c $(gvfs_src_dir)/daemon/gvfsjobqueryinfo.h \
 	$(gvfs_src_dir)/daemon/gvfsjobqueryfsinfo.c $(gvfs_src_dir)/daemon/gvfsjobqueryfsinfo.h \
 	$(gvfs_src_dir)/daemon/gvfsjobenumerate.c $(gvfs_src_dir)/daemon/gvfsjobenumerate.h \
@@ -48,6 +46,19 @@ daemon_sources = \
 
 EXTRA_DIST = 
 
+if GVFS_VERSION_1_0
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjobpull.c $(gvfs_src_dir)/daemon/gvfsjobpull.h \
+	$(gvfs_src_dir)/daemon/gvfsjobpush.c $(gvfs_src_dir)/daemon/gvfsjobpush.h
+EXTRA_DIST += \
+	gvfsjobupload.c gvfsjobupload.h
+else
+EXTRA_DIST += \
+	gvfsjobpull.c gvfsjobpull.h \
+	gvfsjobpush.c gvfsjobpush.h
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjobupload.c $(gvfs_src_dir)/daemon/gvfsjobupload.h
+endif
 
 if GVFS_VERSION_1_2
 libdaemon_sources += \

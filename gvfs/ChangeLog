@@ -1,3 +1,7 @@
+2009-12-03  Mark Ellis <mark@mpellis.org.uk>
+
+	* enable building against pre 1.0 gvfs
+
 2009-12-01  Mark Ellis <mark@mpellis.org.uk>
 
 	* daemon/gvfsbackendsynce.c - check for directory in
