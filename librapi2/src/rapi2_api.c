@@ -1872,8 +1872,8 @@ IRAPIDesktop_Init()
         return S_OK;
 }
 
-HRESULT
-static IRAPIDesktop_Uninit()
+static HRESULT
+IRAPIDesktop_Uninit()
 {
         /*
            destroy devices

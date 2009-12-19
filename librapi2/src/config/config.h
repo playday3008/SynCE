@@ -25,7 +25,7 @@ struct _cfgjumpBlock *_cfgNewJumpBlock (struct _cfgjumpBlock *current);
 void _cfgdbgPrintConfigFile ();
 int getConfigInt (struct configFile *cfg, char *section, char *key);
 char *getConfigString (struct configFile *cfg, char *section, char *key);
-int getConfigDouble (struct configFile *cfg, char *section, char *key);
+double getConfigDouble (struct configFile *cfg, char *section, char *key);
 void unloadConfigSection (void *data);
 void unloadConfigFile (struct configFile *cfg);
 void _cfgdbgPrintConfigFile(struct configFile *cfg);

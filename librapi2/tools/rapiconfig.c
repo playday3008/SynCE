@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 
     if (0 == bytes_read)
     {
-      fprintf(stderr, "%s: Reading stopped at offset %li: %s\n",
+      fprintf(stderr, "%s: Reading stopped at offset %zi: %s\n",
           argv[0],
           p - buffer,
           strerror(errno));

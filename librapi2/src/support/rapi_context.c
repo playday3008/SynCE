@@ -221,7 +221,7 @@ get_socket_from_dccm(const gchar *unix_path)
 {
   int fd = -1, dev_fd, ret;
   struct sockaddr_un sa;
-  struct msghdr msg = { 0, };
+  struct msghdr msg = { 0, 0, 0, 0, 0, 0, 0 };
   struct cmsghdr *cmsg;
   struct iovec iov;
   char cmsg_buf[512];
@@ -487,7 +487,7 @@ HRESULT rapi_context_connect(RapiContext* context)
         {
             bool password_correct = false;
 
-            if (!synce_password_send(context->socket, password, synce_info_get_key(info)))
+            if (!synce_password_send(context->socket, password, (unsigned char)synce_info_get_key(info)))
             {
                 synce_error("failed to send password");
                 result = E_ACCESSDENIED;

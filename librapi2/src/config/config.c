@@ -257,7 +257,7 @@ int getConfigInt (struct configFile *cfg, char *section, char *key)
 	return atoi (configString);
 }
 
-int getConfigDouble (struct configFile *cfg, char *section, char *key)
+double getConfigDouble (struct configFile *cfg, char *section, char *key)
 {
 	char *configString;
 	if ( (configString=getConfigString(cfg, section, key))==NULL) {
