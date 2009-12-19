@@ -229,7 +229,6 @@ AC_OUTPUT([librapi2.pc
            Makefile
            src/Makefile
            src/support/Makefile
-           src/config/Makefile
            src/backend_ops_1/Makefile
            src/backend_ops_2/Makefile
            man/Makefile

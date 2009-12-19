@@ -31,4 +31,4 @@ noinst_HEADERS = rapi_internal.h \
 		rapi_ops.h \
 		irapistream_internal.h
 
-SUBDIRS = support backend_ops_1 backend_ops_2 config
+SUBDIRS = support backend_ops_1 backend_ops_2
