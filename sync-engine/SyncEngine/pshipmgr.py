@@ -155,12 +155,21 @@ class PartnershipManager:
 					
 			elif storetype == PSHMGR_STORETYPE_EXCH:
 				
-					pos=3;
-				
-					self.logger.debug("ReadDevicePartnerships: Found server sync source: GUID = %s, Hostname = %s, Description = %s",
-					                  guid, hostname, description)
-									
-					self.DevicePartnerships[pos-1] = Partnership(self.engine.config, pos, 0, guid, hostname, description, storetype, self.engine.deviceName,self.engine.rapi_session)
+				pos=3;
+				id=0
+
+				self.logger.debug("ReadDevicePartnerships: Found server sync source: GUID = %s, Hostname = %s, Description = %s",
+						  guid, hostname, description)
+
+				# we expect server sources to not have matching registry entries, but their seems to be
+				# the normal MS confusion, so if we find a match we accept it
+				if hostname in reg_entries:
+					discard_pos, id = reg_entries[hostname]
+					del reg_entries[hostname]
+
+               				self.logger.debug("ReadDevicePartnerships: source matches partnerhip from registry.")
+
+				self.DevicePartnerships[pos-1] = Partnership(self.engine.config, pos, id, guid, hostname, description, storetype, self.engine.deviceName,self.engine.rapi_session)
 
 			else:
 				

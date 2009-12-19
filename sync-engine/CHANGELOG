@@ -1158,3 +1158,9 @@ Refactor the event XSL stylesheets to use templates.
 02/12/2009 - Mark Ellis
 -----------------------
 Close some forgotten file descriptors in DTPTThread.
+
+12/12/2009 - Mark Ellis
+-----------------------
+Due to some cases of either Activesync partnerships masquerading as server
+sources, or server sources with matching registry entries (hey, it's M$ !),
+we now check for matching registry entries for server sources.
