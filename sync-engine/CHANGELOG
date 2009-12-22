@@ -1164,3 +1164,7 @@ Close some forgotten file descriptors in DTPTThread.
 Due to some cases of either Activesync partnerships masquerading as server
 sources, or server sources with matching registry entries (hey, it's M$ !),
 we now check for matching registry entries for server sources.
+
+22/12/2009 - Mark Ellis
+-----------------------
+Ignore unknown sync provider types, instead of abandoning.

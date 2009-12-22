@@ -140,7 +140,10 @@ class PartnershipManager:
 								id = SYNC_ITEM_WORLDMATE
 
 							if id == None:
-								raise ValueError("Unknown GUID \"%s\" for provider with name \"%s\"" % (provider.type, provider["Name"]))
+								# TODO: a non-standard provider, for now we will just ignore these
+								# but we should probably flag the partnership or have an "unknown" type
+								self.logger.info("Unknown GUID \"%s\" for provider with name \"%s\"" % (provider.type, provider["Name"]))
+								continue
 
 							self.logger.debug("ReadDevicePartnerships: provider ID is %d", id)
 
