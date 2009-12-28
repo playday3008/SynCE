@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@hal_addon_dir@/hal-synce-serial &
+
+exit 0
