@@ -18,7 +18,7 @@ DEFAULT_BROADCAST = "169.254.2.255"
 
 device_ip = False
 local_ip = False
-
+device_path = False
 
 #
 # fall back to static config
@@ -155,7 +155,7 @@ def RunDccm():
     elif log_level <= logging.WARNING:
         dccm_log_level = "3"
 
-    cmd_list = ["@LIBEXECDIR@/hal-dccm","--rndis","--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
+    cmd_list = ["@LIBEXECDIR@/hal-dccm","--rndis", "--device-path="+device_path, "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
 
     logger.debug("calling hal-dccm as:")
     logger.debug(cmd_list)
@@ -261,21 +261,44 @@ if __name__ == '__main__':
     logger.addHandler(sys_log)
 
     if os.environ.has_key("HALD_ACTION"):
-        hald_action = os.environ["HALD_ACTION"]
+        action = os.environ["HALD_ACTION"]
+        if action == "addon":
+            action = "add"
+
+        if os.environ.has_key("HAL_PROP_NET_INTERFACE"):
+            iface = os.environ["HAL_PROP_NET_INTERFACE"]
+        else:
+            logger.critical("Hal environment not set: HAL_PROP_NET_INTERFACE missing")
+            sys.exit(1)
+
+        if os.environ.has_key("HAL_PROP_INFO_UDI"):
+            device_path = os.environ["HAL_PROP_INFO_UDI"]
+        else:
+            logger.critical("Hal environment not set: HAL_PROP_INFO_UDI missing")
+            sys.exit(1)
+
+    elif os.environ.has_key("ACTION"):
+        action = os.environ["ACTION"]
+
+        if os.environ.has_key("INTERFACE"):
+            iface = os.environ["INTERFACE"]
+        else:
+            logger.critical("Udev environment not set: INTERFACE missing")
+            sys.exit(1)
+
+        if os.environ.has_key("DEVPATH"):
+            device_path = os.environ["DEVPATH"]
+        else:
+            logger.critical("Udev environment not set: DEVPATH missing")
+            sys.exit(1)
+
     else:
-        logger.warning("Hal environment not set")
+        logger.warning("Environment not set, action is missing")
         sys.exit(1)
 
     ProcessConfig()
 
-    try:
-        iface = os.environ["HAL_PROP_NET_INTERFACE"]
-    except Exception,e:
-        logger.critical("Hal environment not set: %s" % e)
-        sys.exit(1)
-
-
-    if hald_action == "addon":
+    if action == "add":
         logger.debug("running as addon for interface "+iface)
 
         RunDhclient(iface)
@@ -295,7 +318,7 @@ if __name__ == '__main__':
         logger.error("aborting ...")
         sys.exit(1)
 
-    if hald_action == "remove":
+    if action == "remove":
         logger.debug("running for removal of interface "+iface)
         EndDhclient(iface)
 

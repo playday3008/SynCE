@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -10,7 +14,12 @@
 #include <gnet.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+
+#ifdef USE_HAL
 #include <libhal.h>
+#else
+#include <gudev/gudev.h>
+#endif
 
 #include "log.h"
 #include "synce-device.h"
@@ -22,6 +31,7 @@
 
 static gchar *device_ip = NULL;
 static gchar *local_ip = NULL;
+static gchar *device_path = NULL;
 static gint log_level = 3;
 static gboolean rndis_device = FALSE;
 
@@ -31,19 +41,21 @@ static GServer *server_990;
 static GServer *server_5679;
 static SynceDevice *synce_dev;
 
-static int signal_pipe[2];
-
 static GOptionEntry options[] =
   {
     { "log-level", 'l', 0, G_OPTION_ARG_INT, &log_level, "Set log level 0 (none) to 6 (debug), default 3", NULL },
     { "device-ip", 0, 0, G_OPTION_ARG_STRING, &device_ip, "Device's IP address in dotted quad format", NULL },
     { "local-ip", 0, 0, G_OPTION_ARG_STRING, &local_ip, "Interface's local IP address in dotted quad format", NULL },
+    { "device-path", 0, 0, G_OPTION_ARG_STRING, &device_path, "Path to the device, as hal udi or sysfs path", NULL },
     { "rndis", 0, 0, G_OPTION_ARG_NONE, &rndis_device, "Interface is rndis", NULL },
     { NULL }
   };
 
 
+#ifdef USE_HAL
 /* handle the sigterm we get from hal when device is removed */
+
+static int signal_pipe[2];
 
 static void
 pipe_posix_signals(int signal)
@@ -68,7 +80,7 @@ deliver_posix_signal(GIOChannel *source, GIOCondition condition, gpointer data)
   while((status = g_io_channel_read_chars(source, buf, sizeof(int), &bytes_read, &error)) == G_IO_STATUS_NORMAL)
     {
       if(bytes_read != sizeof(int)){
-	g_critical("%s: lost data in signal pipe (expected %lu, received %lu)", G_STRFUNC, sizeof(int), bytes_read);
+	g_critical("%s: lost data in signal pipe (expected %zu, received %zi)", G_STRFUNC, sizeof(int), bytes_read);
 	continue;
       }
 
@@ -95,6 +107,7 @@ deliver_posix_signal(GIOChannel *source, GIOCondition condition, gpointer data)
   g_free(buf);
   return TRUE;
 }
+#endif /* USE_HAL */
 
 
 static void
@@ -128,13 +141,13 @@ client_connected_cb (GServer *server,
   if (local_port == 5679) {
     if (!synce_dev) {
       gnet_server_delete(server_990);
-      synce_dev = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, NULL);
+      synce_dev = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, "device-path", device_path, NULL);
       g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     }
   } else {
     if (!synce_dev) {
       gnet_server_delete(server_5679);
-      synce_dev = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, NULL);
+      synce_dev = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", "device-path", device_path, conn, NULL);
       g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(synce_dev), conn);
@@ -145,12 +158,12 @@ client_connected_cb (GServer *server,
   gnet_conn_unref (conn);
 }
 
+#ifdef USE_HAL
 static void
 hal_device_removed_callback(LibHalContext *ctx,
 			    const char *udi)
 {
-  const gchar *our_udi = g_getenv("HAL_PROP_INFO_UDI");
-  if (strcmp(our_udi, udi) != 0) 
+  if (strcmp(device_path, udi) != 0) 
     return;
 
   g_debug("%s: received hal disconnect for our device", G_STRFUNC);
@@ -159,6 +172,25 @@ hal_device_removed_callback(LibHalContext *ctx,
 
   return;
 }
+#else /* USE_HAL */
+static void
+gudev_uevent_callback(GUdevClient *client,
+		      gchar *action,
+		      GUdevDevice *device,
+		      gpointer user_data)
+{
+  g_debug("%s: received uevent %s for device %s", G_STRFUNC, action, g_udev_device_get_sysfs_path(device));
+
+  if ((strcmp(device_path, g_udev_device_get_sysfs_path(device)) != 0) && (strcmp("remove", action) != 0)) 
+    return;
+
+  g_debug("%s: received uevent remove for our device", G_STRFUNC);
+  GMainLoop *mainloop = (GMainLoop *)user_data;
+  g_main_loop_quit(mainloop);
+
+  return;
+}
+#endif /* USE_HAL */
 
 static void
 iface_list_free_func(gpointer data,
@@ -244,12 +276,17 @@ main(gint argc,
 {
   GMainLoop *mainloop;
   GError *error = NULL;
+#ifdef USE_HAL
   DBusError dbus_error;
   DBusGConnection *main_bus;
   LibHalContext *main_ctx;
   GIOChannel *signal_in = NULL;
   long fd_flags;
   struct sigaction *sigact = NULL;
+#else /* USE_HAL */
+  GUdevClient *gudev_client = NULL;
+  const gchar *subsystems[] = { "", NULL };
+#endif
 
   g_type_init ();
   gnet_init();
@@ -288,9 +325,14 @@ main(gint argc,
     g_critical("%s: local ip address required", G_STRFUNC);
     return EXIT_FAILURE;
   }
+  if (!device_path) {
+    g_critical("%s: device path required", G_STRFUNC);
+    return EXIT_FAILURE;
+  }
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
+#ifdef USE_HAL
   /* catch the SIGTERM we get from hal on device disconnect */
 
   if(pipe(signal_pipe)) {
@@ -339,14 +381,15 @@ main(gint argc,
   }
 
   g_free(sigact);
-
+#endif /* USE_HAL */
 
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
   close (STDERR_FILENO);
 
-  g_debug("%s: called with device-ip=%s, local-ip=%s", G_STRFUNC, device_ip, local_ip);
+  g_debug("%s: called with device-ip=%s, local-ip=%s, device-path=%s", G_STRFUNC, device_ip, local_ip, device_path);
 
+#ifdef USE_HAL
   dbus_error_init(&dbus_error);
 
   if (!(main_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
@@ -376,10 +419,26 @@ main(gint argc,
   }
 
   g_debug("%s: connected to hal, waiting for interface...", G_STRFUNC);
+#else /* USE_HAL */
+  gudev_client = g_udev_client_new(subsystems);
+
+  g_signal_connect(gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), mainloop);
+
+  g_debug("%s: connected to udev, waiting for interface...", G_STRFUNC);
+#endif /* USE_HAL */
 
   g_timeout_add (100, check_interface_cb, mainloop);
 
   g_main_loop_run (mainloop);
+
+#ifdef USE_HAL
+  if (!(libhal_ctx_shutdown(main_ctx, &dbus_error)))
+    g_critical("%s: failed to shutdown hal context cleanly: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
+  libhal_ctx_free(main_ctx);
+  dbus_g_connection_unref(main_bus);
+#else /* USE_HAL */
+  g_object_unref(gudev_client);
+#endif /* USE_HAL */
 
   g_debug("%s: exiting normally", G_STRFUNC);
 

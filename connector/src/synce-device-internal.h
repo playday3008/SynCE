@@ -3,7 +3,9 @@
 
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
+#ifdef USE_HAL
 #include <libhal.h>
+#endif
 
 #include "synce-connection-broker.h"
 
@@ -31,7 +33,14 @@ struct _SynceDevicePrivate
   gboolean dispose_has_run;
 
   GConn *conn;
-  gchar *udi;
+
+  /* the hal udi or sysfs path */
+  gchar *device_path;
+
+#ifndef USE_HAL
+  /* the dbus object path */
+  gchar *obj_path;
+#endif
 
   gchar *guid;
   guint os_major;
@@ -43,6 +52,8 @@ struct _SynceDevicePrivate
   guint id;
   gchar *platform_name;
   gchar *model_name;
+  gchar *ip_address;
+  gchar *iface_address;
 
   /* state */
   ControlState state;
@@ -51,8 +62,10 @@ struct _SynceDevicePrivate
 
   guint32 pw_key;
 
+#ifdef USE_HAL
   LibHalContext *hal_ctx;
   DBusGConnection *hal_bus;
+#endif
 
   DBusGMethodInvocation *pw_ctx;
 
@@ -69,7 +82,11 @@ void synce_device_provide_password (SynceDevice *self, const gchar *password, DB
 void synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx);
 void synce_device_change_password_flags (SynceDevice *self, SynceDevicePasswordFlags new_flag);
 void synce_device_conn_broker_done_cb (SynceConnectionBroker *broker, gpointer user_data);
+#ifdef USE_HAL
 void synce_device_set_hal_props (SynceDevice *device);
+#else
+void synce_device_dbus_init(SynceDevice *self);
+#endif
 
 G_END_DECLS
 

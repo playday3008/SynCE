@@ -3,14 +3,22 @@
 #endif
 
 #include <gnet.h>
+#ifdef USE_HAL
 #include <libhal.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#endif /* USE_HAL */
 #include <synce.h>
 
 #include "synce-device.h"
 #include "synce-device-internal.h"
 #include "synce-device-signals-marshal.h"
-#include "synce-device-glue.h"
+
+#ifdef USE_HAL
+#include "hal-interface-glue.h"
+#else
+#include "udev-interface-glue.h"
+#endif
+
 #include "synce-errors.h"
 
 G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
@@ -26,7 +34,11 @@ G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
 enum
 {
   PROP_CONNECTION = 1,
+#ifndef USE_HAL
+  PROP_OBJ_PATH,
+#endif
   PROP_IP_ADDRESS,
+  PROP_IFACE_ADDRESS,
 
   PROP_GUID,
   PROP_OS_MAJOR,
@@ -115,14 +127,11 @@ synce_device_provide_password_impl (SynceDevice *self,
     dbus_g_method_return_error (ctx, error);
 }
 
+#ifdef USE_HAL
 void
 synce_device_set_hal_props(SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-
-  GInetAddr *inetaddr;
-  gchar *ip_bytes;
-  gchar *ip_str;
 
   gchar *prop_name;
   DBusError error;
@@ -132,7 +141,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.name";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->name,
 					     &error);
@@ -143,7 +152,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.platform";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->platform_name,
 					     &error);
@@ -154,7 +163,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.model";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->model_name,
 					     &error);
@@ -165,7 +174,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.os_major";
   result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->os_major,
 					     &error);
@@ -176,7 +185,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.os_minor";
   result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->os_minor,
 					     &error);
@@ -187,7 +196,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.version";
   result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->version,
 					     &error);
@@ -198,7 +207,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.cpu_type";
   result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->cpu_type,
 					     &error);
@@ -209,7 +218,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.current_partner_id";
   result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->cur_partner_id,
 					     &error);
@@ -220,7 +229,7 @@ synce_device_set_hal_props(SynceDevice *self)
 
   prop_name = "pda.pocketpc.guid";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->guid,
 					     &error);
@@ -229,46 +238,32 @@ synce_device_set_hal_props(SynceDevice *self)
     dbus_error_free(&error);
   }
 
-  inetaddr = gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket);
-  ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
-  gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
-  ip_str = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
-  g_free(ip_bytes);
-
   prop_name = "pda.pocketpc.ip_address";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
-					     ip_str,
+					     priv->ip_address,
 					     &error);
   if (!result) {
     g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
     dbus_error_free(&error);
   }
-  g_free(ip_str);
-
-  inetaddr = gnet_tcp_socket_get_local_inetaddr (priv->conn->socket);
-  ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
-  gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
-  ip_str = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
-  g_free(ip_bytes);
 
   prop_name = "pda.pocketpc.iface_address";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
-					     ip_str,
+					     priv->iface_address,
 					     &error);
   if (!result) {
     g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
     dbus_error_free(&error);
   }
-  g_free(ip_str);
 
   /* for an oddity gnome-volume-manager */
   prop_name = "pda.pocketpc.hotsync_interface";
   result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->udi,
+					     priv->device_path,
 					     prop_name,
 					     priv->name,
 					     &error);
@@ -280,11 +275,11 @@ synce_device_set_hal_props(SynceDevice *self)
   /* register object on hal dbus connection */
 
   dbus_g_connection_register_g_object (priv->hal_bus,
-                                       priv->udi,
+                                       priv->device_path,
 				       G_OBJECT (self));
 
   result = libhal_device_claim_interface(priv->hal_ctx,
-					 priv->udi,
+					 priv->device_path,
 					 "org.freedesktop.Hal.Device.Synce",
 					 "<method name=\"ProvidePassword\">"
 					 "  <annotation name=\"org.freedesktop.DBus.GLib.Async\" value=\"\"/>"
@@ -303,20 +298,51 @@ synce_device_set_hal_props(SynceDevice *self)
 
   dbus_error_free(&error);
 }
-
+#else /* USE_HAL */
 void
-synce_device_change_password_flags (SynceDevice *self,
-				    SynceDevicePasswordFlags new_flag)
+synce_device_dbus_init(SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  gchar *prop_str = NULL;
-  DBusError dbus_error;
 
-  g_object_set (self, "password-flags", new_flag, NULL);
+  GError *error = NULL;
+  gchar *safe_path = NULL;
+  gchar *obj_path = NULL;
+  DBusGConnection *system_bus = NULL;
+  const gchar safe_chars[] = {
+      "abcdefghijklmnopqrstuvwxyz"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "0123456789_"
+  };
 
-  dbus_error_init(&dbus_error);
+  safe_path = g_strdup (priv->device_path);
+  g_strcanon (safe_path, safe_chars, '_');
+  obj_path = g_strdup_printf (DEVICE_BASE_OBJECT_PATH "/%s", safe_path);
+  g_free (safe_path);
 
-  switch (new_flag)
+  g_message ("%s: registering object path '%s'", G_STRFUNC, obj_path);
+
+  system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  if (system_bus == NULL) {
+    g_error ("Failed to connect to system bus: %s", error->message);
+  }
+
+  dbus_g_connection_register_g_object(system_bus,
+				      obj_path,
+				      G_OBJECT(self));
+
+  g_object_set (self, "object-path", obj_path, NULL);
+  priv->obj_path = obj_path;
+
+  return;
+}
+#endif /* USE_HAL */
+
+static const gchar *
+get_password_flag_text(SynceDevicePasswordFlags flag)
+{
+  const gchar *prop_str = NULL;
+
+  switch (flag)
     {
     case SYNCE_DEVICE_PASSWORD_FLAG_UNSET:
       prop_str = "unset";
@@ -340,8 +366,27 @@ synce_device_change_password_flags (SynceDevice *self,
       break;
     }
 
+  return prop_str;
+}
+
+void
+synce_device_change_password_flags (SynceDevice *self,
+				    SynceDevicePasswordFlags new_flag)
+{
+#ifdef USE_HAL
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  DBusError dbus_error;
+  dbus_error_init(&dbus_error);
+#endif
+  const gchar *prop_str = NULL;
+
+  g_object_set (self, "password-flags", new_flag, NULL);
+  prop_str = get_password_flag_text(new_flag);
+  g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_PASSWORD_FLAGS_CHANGED], 0, prop_str);
+
+#ifdef USE_HAL
   if (!(libhal_device_set_property_string(priv->hal_ctx,
-					  priv->udi,
+					  priv->device_path,
 					  "pda.pocketpc.password",
 					  prop_str,
 					  &dbus_error)))
@@ -349,6 +394,8 @@ synce_device_change_password_flags (SynceDevice *self,
       g_critical("%s: failed to set property \"pda.pocketpc.password\": %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
       dbus_error_free(&dbus_error);
     }
+#endif
+
   return;
 }
 
@@ -365,6 +412,120 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
   g_hash_table_remove (priv->requests, &id);
 }
 
+#ifndef USE_HAL
+gboolean
+synce_device_get_name(SynceDevice *self,
+		      gchar **name,
+		      GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *name = g_strdup (priv->name);
+  return TRUE;
+}
+
+gboolean
+synce_device_get_platform_name(SynceDevice *self,
+			       gchar **platform_name,
+			       GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *platform_name = g_strdup (priv->platform_name);
+  return TRUE;
+}
+
+gboolean
+synce_device_get_model_name(SynceDevice *self,
+			    gchar **model_name,
+			    GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *model_name = g_strdup (priv->model_name);
+  return TRUE;
+}
+
+gboolean
+synce_device_get_os_version (SynceDevice *self,
+                             guint *os_major, guint *os_minor,
+                             GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *os_major = priv->os_major;
+  *os_minor = priv->os_minor;
+  return TRUE;
+}
+
+gboolean
+synce_device_get_version(SynceDevice *self,
+			 guint *version,
+			 GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *version = priv->version;
+  return TRUE;
+}
+
+gboolean
+synce_device_get_cpu_type(SynceDevice *self,
+			  guint *cpu_type,
+			  GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *cpu_type = priv->cpu_type;
+  return TRUE;
+}
+
+gboolean
+synce_device_get_ip_address(SynceDevice *self,
+			    gchar **ip_address,
+			    GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *ip_address = g_strdup (priv->ip_address);
+  return TRUE;
+}
+
+gboolean
+synce_device_get_iface_address(SynceDevice *self,
+			       gchar **iface_address,
+			       GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *iface_address = g_strdup (priv->iface_address);
+  return TRUE;
+}
+
+gboolean
+synce_device_get_guid(SynceDevice *self,
+		      gchar **guid,
+		      GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *guid = g_strdup (priv->guid);
+  return TRUE;
+}
+
+gboolean
+synce_device_get_current_partner_id(SynceDevice *self,
+				    guint *cur_partner_id,
+				    GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  *cur_partner_id = priv->cur_partner_id;
+  return TRUE;
+}
+
+gboolean
+synce_device_get_password_flags(SynceDevice *self,
+				gchar **pw_flag,
+				GError **error)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  const gchar *pw_text = NULL;
+  pw_text = get_password_flag_text(priv->pw_flags);
+  *pw_flag = g_strdup (pw_text);
+  return TRUE;
+}
+#endif /* USE_HAL */
 
 /* class functions */
 
@@ -373,8 +534,7 @@ synce_device_init (SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  priv->udi = g_strdup(g_getenv("HAL_PROP_INFO_UDI"));
-  g_debug("%s: running for udi %s", G_STRFUNC, priv->udi);
+  g_debug("%s: running for device %s", G_STRFUNC, priv->device_path);
 
   priv->state = CTRL_STATE_HANDSHAKE;
   priv->pw_flags = SYNCE_DEVICE_PASSWORD_FLAG_UNSET;
@@ -385,6 +545,7 @@ synce_device_init (SynceDevice *self)
 					 g_free,
 					 g_object_unref);
 
+#ifdef USE_HAL
   /* hal context setup */
 
   DBusError dbus_error;
@@ -411,6 +572,7 @@ synce_device_init (SynceDevice *self)
   }
 
 exit:
+#endif /* USE_HAL */
 
   return;
 }
@@ -427,10 +589,13 @@ synce_device_dispose (GObject *obj)
   priv->dispose_has_run = TRUE;
 
   gnet_conn_unref (priv->conn);
+
+#ifdef USE_HAL
   if (priv->hal_ctx) {
     libhal_ctx_shutdown(priv->hal_ctx, NULL);
     libhal_ctx_free(priv->hal_ctx);
   }
+#endif
 
   g_hash_table_destroy (priv->requests);
 
@@ -444,13 +609,17 @@ synce_device_finalize (GObject *obj)
   SynceDevice *self = SYNCE_DEVICE (obj);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  g_free (priv->udi);
+  g_free (priv->device_path);
 
   g_free (priv->guid);
   g_free (priv->name);
   g_free (priv->platform_name);
   g_free (priv->model_name);
-
+#ifndef USE_HAL
+  g_free (priv->obj_path);
+#endif
+  g_free (priv->ip_address);
+  g_free (priv->iface_address);
   G_OBJECT_CLASS (synce_device_parent_class)->finalize (obj);
 }
 
@@ -462,16 +631,21 @@ synce_device_get_property (GObject    *obj,
 {
   SynceDevice *self = SYNCE_DEVICE (obj);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  guint32 addr;
 
   switch (property_id) {
   case PROP_CONNECTION:
     g_value_set_pointer (value, priv->conn);
     break;
+#ifndef USE_HAL
+  case PROP_OBJ_PATH:
+    g_value_set_string (value, priv->obj_path);
+    break;
+#endif
   case PROP_IP_ADDRESS:
-    gnet_inetaddr_get_bytes (gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket),
-			     (gchar *) &addr);
-    g_value_set_uint (value, addr);
+    g_value_set_string (value, priv->ip_address);
+    break;
+  case PROP_IFACE_ADDRESS:
+    g_value_set_string (value, priv->iface_address);
     break;
   case PROP_GUID:
     g_value_set_string (value, priv->guid);
@@ -534,7 +708,28 @@ synce_device_set_property (GObject      *obj,
     gnet_conn_set_callback(priv->conn, synce_device_conn_event_cb, self);
     gnet_conn_readn(priv->conn, sizeof (guint32));
 
+    GInetAddr *inetaddr = NULL;
+    gchar *ip_bytes = NULL;
+
+    inetaddr = gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket);
+    ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
+    gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
+    priv->ip_address = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
+    g_free(ip_bytes);
+
+    inetaddr = gnet_tcp_socket_get_local_inetaddr (priv->conn->socket);
+    ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
+    gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
+    priv->iface_address = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
+    g_free(ip_bytes);
+
     break;
+#ifndef USE_HAL
+  case PROP_OBJ_PATH:
+    g_free (priv->obj_path);
+    priv->obj_path = g_value_dup_string (value);
+    break;
+#endif
   case PROP_GUID:
     g_free (priv->guid);
     priv->guid = g_value_dup_string (value);
@@ -605,13 +800,31 @@ synce_device_class_init (SynceDeviceClass *klass)
                                      G_PARAM_STATIC_BLURB);
   g_object_class_install_property (obj_class, PROP_CONNECTION, param_spec);
 
-  param_spec = g_param_spec_uint ("ip-address", "IP address",
-                                  "The device' IP address.",
-                                  0, G_MAXUINT32, 0,
-                                  G_PARAM_READABLE |
-                                  G_PARAM_STATIC_NICK |
-                                  G_PARAM_STATIC_BLURB);
+#ifndef USE_HAL
+  param_spec = g_param_spec_string ("object-path", "DBus object path",
+				    "The device' object path on DBus.",
+				    NULL,
+				    G_PARAM_READWRITE |
+				    G_PARAM_STATIC_NICK |
+				    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_OBJ_PATH, param_spec);
+#endif
+
+  param_spec = g_param_spec_string ("ip-address", "IP address",
+				    "The device' IP address.",
+				    NULL,
+				    G_PARAM_READABLE |
+				    G_PARAM_STATIC_NICK |
+				    G_PARAM_STATIC_BLURB);
   g_object_class_install_property (obj_class, PROP_IP_ADDRESS, param_spec);
+
+  param_spec = g_param_spec_string ("iface-address", "Interface IP address",
+				    "The host's interface IP address.",
+				    NULL,
+				    G_PARAM_READABLE |
+				    G_PARAM_STATIC_NICK |
+				    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_IFACE_ADDRESS, param_spec);
 
   param_spec = g_param_spec_string ("guid", "Device GUID",
                                     "The device' unique ID.",
@@ -707,8 +920,8 @@ synce_device_class_init (SynceDeviceClass *klass)
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   0,
                   NULL, NULL,
-                  synce_device_marshal_VOID__UINT_UINT,
-                  G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
 
   klass->signals[SYNCE_DEVICE_SIGNAL_DISCONNECTED] =
     g_signal_new ("disconnected",

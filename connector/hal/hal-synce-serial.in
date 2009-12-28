@@ -17,6 +17,8 @@ log_level = logging.WARNING
 default_network = "192.168.131"
 pppopts = ["nodefaultroute", "noauth", "local", "crtscts"]
 
+device_path = False
+
 # ppp setup
 #
 PPPD = "/usr/sbin/pppd"
@@ -118,7 +120,7 @@ def RunDccm(device_ip, local_ip):
     elif log_level <= logging.WARNING:
         dccm_log_level = "3"
 
-    cmd_list = ["@LIBEXECDIR@/hal-dccm", "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
+    cmd_list = ["@LIBEXECDIR@/hal-dccm", "--device-path="+device_path, "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
 
     logger.debug("calling hal-dccm as:")
     logger.debug(cmd_list)
@@ -197,59 +199,146 @@ if __name__ == '__main__':
     logger.addHandler(sys_log)
 
     if os.environ.has_key("HALD_ACTION"):
-        hald_action = os.environ["HALD_ACTION"]
+        action = os.environ["HALD_ACTION"]
+        if action == "addon":
+            action = "add"
+
+        if os.environ.has_key("HAL_PROP_INFO_UDI"):
+            device_path = os.environ["HAL_PROP_INFO_UDI"]
+        else:
+            logger.critical("Hal environment not set: HAL_PROP_INFO_UDI missing")
+            sys.exit(1)
+
+        # deal with 2 port devices
+        # we want to ignore the first port
+
+        our_udi = os.environ["HAL_PROP_INFO_UDI"]
+
+        try:
+            device_haldev = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, our_udi), DBUS_HAL_DEVICE_IFACE)
+        except:
+            logger.critical("failed to connect to hal object %s: %s" % (our_udi, e))
+            sys.exit(1)
+
+        parent_udi = device_haldev.GetPropertyString("info.parent")
+
+        try:
+            hal_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, DBUS_HAL_MANAGER_OBJPATH), DBUS_HAL_MANAGER_IFACE)
+        except:
+            logger.critical("failed to connect to hal device manager: %s" % e)
+            sys.exit(1)
+
+        udilist = hal_manager.GetAllDevices()
+
+        device_udilist = []
+
+        for udi in udilist:
+            if parent_udi in udi and parent_udi != udi:
+                device_udilist.append(udi)
+
+        if len(device_udilist) > 1:
+            device_udilist.sort()
+            if our_udi != device_udilist[len(device_udilist) - 1]:
+                device_haldev.SetPropertyBoolean("pda.pocketpc.disabled", True)
+                sys.exit(0)
+
+        # get serial device file
+        if platform.system() == "FreeBSD":
+            try:
+                device_file = "/dev/ttyU"+os.environ["HAL_PROP_FREEBSD_UNIT"]
+            except Exception,e:
+                logger.critical("Hal environment not set: %s" % e)
+                sys.exit(1)
+        else:
+            try:
+                device_file = os.environ["HAL_PROP_SERIAL_DEVICE"]
+            except Exception,e:
+                logger.critical("Hal environment not set: %s" % e)
+                sys.exit(1)
+
+    elif os.environ.has_key("ACTION"):
+        action = os.environ["ACTION"]
+
+        if os.environ.has_key("DEVPATH"):
+            device_path = os.environ["DEVPATH"]
+        else:
+            logger.critical("Udev environment not set: DEVPATH missing")
+            sys.exit(1)
+
+        # need to check for 2 port devices here
+        # there are no python bindings for udev, so this is a little awkward
+
+        # get device name
+        cmd_list = ["udevadm", "info", "--path="+devpath, "--query=name"]
+        try:
+            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            output_text = proc.communicate()[0]
+        except Exception,e:
+            logger.error("failure running udevadm: %s" % e)
+            sys.exit(1)
+
+        rc = proc.returncode
+        if rc != 0:
+            logger.error("udevadm failed with return code %d", rc)
+            sys.exit(1)
+
+        devname = output_text.strip()
+
+        # get parent device path
+        match_obj = re.match('^(.+)/'+name+"/"+subsystem+'/'+name, devpath)
+        if match_obj == None:
+            logger.error("failed to get parent device path from udev")
+            sys.exit(1)
+
+        parent_devpath = match_obj.group(1)
+
+        # find all relevant child devices of the parent
+        cmd_list = ["udevadm", "info", "--export-db"]
+        try:
+            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            output_text = proc.communicate()[0]
+        except Exception,e:
+            logger.error("failure getting device db: %s" % e)
+            sys.exit(1)
+
+        rc = proc.returncode
+        if rc != 0:
+            logger.error("udevadm failed with return code %d when getting device db",rc)
+            sys.exit(1)
+
+        output_list = output_text.split('\n')
+        devpath_re = re.compile('^P: ('+parent_devpath+'.+/'+subsystem+'/.+)')
+
+        devpath_list = []
+        for line in output_list:
+            match_obj = devpath_re.match(line)
+            if match_obj != None:
+                path = match_obj.group(1)
+                devpath_list.append(path)
+
+        if len(devpath_list) > 1:
+            devpath_list.sort()
+            if device_path != devpath_list[len(devpath_list) - 1]:
+                logger.warning("found inactive port, we need to mark this somehow")
+                sys.exit(0)
+
+        # get serial device file
+        if platform.system() == "FreeBSD":
+            logger.critical("do we support udev/devicekit on FreeBSD ???")
+            sys.exit(1)
+        else:
+            try:
+                device_file = os.environ["DEVNAME"]
+            except Exception,e:
+                logger.critical("Udev environment not set: DEVNAME missing")
+                sys.exit(1)
+
     else:
-        logger.critical("Hal environment not set")
+        logger.critical("Environment not set, action is missing")
         sys.exit(1)
 
     ProcessConfig()
 
-    # deal with 2 port devices
-    # we want to ignore the first port
-
-    our_udi = os.environ["HAL_PROP_INFO_UDI"]
-
-    try:
-        device_haldev = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, our_udi), DBUS_HAL_DEVICE_IFACE)
-    except:
-        logger.critical("failed to connect to hal object %s: %s" % (our_udi, e))
-        sys.exit(1)
-
-    parent_udi = device_haldev.GetPropertyString("info.parent")
-
-    try:
-        hal_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, DBUS_HAL_MANAGER_OBJPATH), DBUS_HAL_MANAGER_IFACE)
-    except:
-        logger.critical("failed to connect to hal device manager: %s" % e)
-        sys.exit(1)
-
-    udilist = hal_manager.GetAllDevices()
-
-    device_udilist = []
-
-    for udi in udilist:
-        if parent_udi in udi and parent_udi != udi:
-            device_udilist.append(udi)
-
-    if len(device_udilist) > 1:
-        device_udilist.sort()
-        if our_udi != device_udilist[len(device_udilist) - 1]:
-            device_haldev.SetPropertyBoolean("pda.pocketpc.disabled", True)
-            sys.exit(0)
-
-
-    if platform.system() == "FreeBSD":
-        try:
-            device_file = "/dev/ttyU"+os.environ["HAL_PROP_FREEBSD_UNIT"]
-        except Exception,e:
-            logger.critical("Hal environment not set: %s" % e)
-            sys.exit(1)
-    else:
-        try:
-            device_file = os.environ["HAL_PROP_SERIAL_DEVICE"]
-        except Exception,e:
-            logger.critical("Hal environment not set: %s" % e)
-            sys.exit(1)
 
     if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
         logger.critical("unable to find a character device named "+device_file)
@@ -272,7 +361,7 @@ if __name__ == '__main__':
     # see the "linkname" option in the man page for pppd
     linkname = "synce-device"+devnum
 
-    if hald_action == "addon":
+    if action == "add":
         logger.debug("running as addon for device "+device_file)
 
         local_ip = default_network+"."+str(int(devnum) + 1)
@@ -290,7 +379,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
 
-    if hald_action == "remove":
+    if action == "remove":
         logger.debug("running for removal of device "+device_file)
         synce_serial_stop_device(linkname)
 

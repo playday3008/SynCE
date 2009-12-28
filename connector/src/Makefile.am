@@ -4,8 +4,13 @@ AM_CFLAGS = -Wall \
 libexec_PROGRAMS = hal-dccm synce-serial-chat
 
 BUILT_SOURCES = synce-device-signals-marshal.h \
-		synce-device-signals-marshal.c \
-		synce-device-glue.h
+		synce-device-signals-marshal.c
+
+if USE_HAL
+BUILT_SOURCES += hal-interface-glue.h
+else
+BUILT_SOURCES += udev-interface-glue.h
+endif
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -23,17 +28,21 @@ hal_dccm_CPPFLAGS = \
 	$(SYNCE_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GNET_CFLAGS) \
-	$(HAL_CFLAGS) \
 	$(DBUS_CFLAGS)
 
 hal_dccm_LDADD = \
 	$(SYNCE_LIBS) \
 	$(GLIB_LIBS) \
 	$(GNET_LIBS) \
-	$(HAL_LIBS) \
 	$(DBUS_LIBS)
 
-
+if USE_HAL
+hal_dccm_CPPFLAGS += $(HAL_CFLAGS)
+hal_dccm_LDADD += $(HAL_LIBS)
+else
+hal_dccm_CPPFLAGS += $(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
+hal_dccm_LDADD += $(GUDEV_LIBS)
+endif
 
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
@@ -43,7 +52,8 @@ EXTRA_DIST = synce-device-signals-marshal.list \
 dist_bin_SCRIPTS = synce-unlock.py
 
 %-glue.h: %.xml
-	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
+	dbus-binding-tool --mode=glib-server --output=$@ --prefix=synce_device $<
+#	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
 
 %-signals-marshal.h: %-signals-marshal.list
 	glib-genmarshal --header --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.h

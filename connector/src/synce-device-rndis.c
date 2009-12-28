@@ -26,9 +26,11 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
   guint os_major, os_minor, version, cpu_type, cur_partner_id, id, comp_count;
   const guchar *p = buf, *end_ptr = buf + length;
   guint consumed;
+#ifdef USE_HAL
   DBusError error;
 
   dbus_error_init(&error);
+#endif
 
   priv->state = CTRL_STATE_GOT_INFO;
 
@@ -162,7 +164,11 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
 		"model-name", model_name,
 		NULL);
 
+#ifdef USE_HAL
   synce_device_set_hal_props(SYNCE_DEVICE(self));
+#else
+  synce_device_dbus_init(SYNCE_DEVICE(self));
+#endif
 
   if (priv->pw_key != 0)
     {
@@ -200,16 +206,18 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
       priv->state = CTRL_STATE_CONNECTED;
     }
 
+#ifdef USE_HAL
   /* tell hal device is ready */
 
   g_debug("%s: notify hal that device is ready to be advertised", G_STRFUNC);
 
   if (!(libhal_device_addon_is_ready(priv->hal_ctx,
-				     priv->udi,
+				     priv->device_path,
 				     &error))) {
     g_critical("%s: failed to notify hal that device is ready: %s: %s", G_STRFUNC, error.name, error.message);
     dbus_error_free(&error);
   }
+#endif
 
   goto OUT;
 
@@ -242,7 +250,7 @@ synce_device_rndis_conn_event_cb_impl (GConn *conn,
         {
           guint32 req, v;
           GArray *resp;
-          gint i, len;
+          guint i, len;
           gchar *buf;
 
           if (event->length != 4)
