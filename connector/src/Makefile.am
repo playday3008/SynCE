@@ -47,7 +47,8 @@ endif
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
 EXTRA_DIST = synce-device-signals-marshal.list \
-		synce-device.xml
+		hal-interface.xml \
+		udev-interface.xml
 
 dist_bin_SCRIPTS = synce-unlock.py
 

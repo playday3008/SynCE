@@ -89,11 +89,11 @@ AS_AC_EXPAND(LOCALSTATEDIR, "$localstatedir")
 AS_AC_EXPAND(DATADIR, "$datadir")
 
 AC_CONFIG_FILES([
-        hal/hal-synce-rndis \
-        hal/hal-synce-serial \
-        udev/synce-udev-rndis \
-        udev/synce-udev-serial \
-        udev/synce.rules \
+        scripts/hal-synce-rndis \
+        scripts/hal-synce-serial \
+        scripts/synce-udev-rndis \
+        scripts/synce-udev-serial \
+        scripts/synce.rules \
         bluetooth/hal-synce-bluetooth \
         bluetooth/synce-bt-ipup \
         bluetooth/synce-bt-ipdown \
@@ -101,9 +101,8 @@ AC_CONFIG_FILES([
 
 AC_OUTPUT([
 	Makefile
-	hal/Makefile
+	scripts/Makefile
 	src/Makefile
 	etc/Makefile
-	udev/Makefile
 	bluetooth/Makefile
 ])
