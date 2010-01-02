@@ -1,3 +1,8 @@
+2010-01-02  Mark Ellis  <mark@mpellis.org.uk>
+
+	* change package name
+	* move connection scripts into common source dir
+
 2009-12-28  Mark Ellis  <mark@mpellis.org.uk>
 
 	* use source of synce-hal as base for synce-connector, for
