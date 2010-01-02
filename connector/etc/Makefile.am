@@ -1,4 +1,4 @@
-syncedatadir = ${datadir}/synce-hal
+syncedatadir = ${datadir}/@PACKAGE_NAME@
 syncedata_DATA = dhclient.conf
 
 halservicefile = org.freedesktop.Hal.Device.Synce.conf

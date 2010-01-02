@@ -1,8 +1,8 @@
-synce-hal
----------
+synce-connector
+---------------
 
-Synce-hal is a connection framework and dccm-implementation 
-for Windows Mobile devices that integrates with HAL.
+Synce-connector is a connection framework and dccm-implementation 
+for Windows Mobile devices that integrates with HAL or udev.
 
 Please visit the SynCE website for more information:
 
@@ -24,7 +24,7 @@ if that is unsuccessful.
 Configuration
 -------------
 Defaults should be adequate for most uses. An optional
-configuration file will be accessed at $sysconfdir/synce-hal.conf,
+configuration file will be accessed at $sysconfdir/synce-connector.conf,
 an example of which can be found in the etc directory. The most
 useful item is 'loglevel'.
 

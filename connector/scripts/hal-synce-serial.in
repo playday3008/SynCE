@@ -12,7 +12,7 @@ import ConfigParser
 import dbus
 
 # defaults
-config_file = '@SYSCONFDIR@/synce-hal.conf'
+config_file = '@SYSCONFDIR@/synce-connector.conf'
 log_level = logging.WARNING
 default_network = "192.168.131"
 pppopts = ["nodefaultroute", "noauth", "local", "crtscts"]

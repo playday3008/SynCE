@@ -8,7 +8,7 @@ import logging, logging.handlers
 import ConfigParser
 
 # defaults
-config_file = '@SYSCONFDIR@/synce-hal.conf'
+config_file = '@SYSCONFDIR@/synce-connector.conf'
 log_level = logging.WARNING
 
 DEFAULT_DEVICE_IP = "169.254.2.1"
@@ -62,7 +62,7 @@ def RunDhclient(iface):
 
     pidfile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".pid"
     leasefile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".lease"
-    configfile = "@DATADIR@/synce-hal/dhclient.conf"
+    configfile = "@DATADIR@/@PACKAGE_NAME@/dhclient.conf"
 
     cmd_list = ["dhclient","-pf",pidfile,"-lf",leasefile,"-cf",configfile,iface]
 
@@ -113,7 +113,7 @@ def EndDhclient(iface):
 
     pidfile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".pid"
     leasefile = "@LOCALSTATEDIR@/run/dhclient-synce-"+iface+".lease"
-    configfile = "@DATADIR@/synce-hal/dhclient.conf"
+    configfile = "@DATADIR@/@PACKAGE_NAME@/dhclient.conf"
 
     if os.path.isfile(pidfile) != True:
         logger.debug("no pid file %s, not releasing", pidfile)

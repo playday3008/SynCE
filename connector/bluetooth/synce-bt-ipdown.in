@@ -6,7 +6,7 @@ import logging, logging.handlers
 import ConfigParser
 
 # defaults
-config_file = '@SYSCONFDIR@/synce-hal.conf'
+config_file = '@SYSCONFDIR@/synce-connector.conf'
 log_level = logging.WARNING
 
 

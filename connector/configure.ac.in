@@ -97,7 +97,7 @@ AC_CONFIG_FILES([
         bluetooth/hal-synce-bluetooth \
         bluetooth/synce-bt-ipup \
         bluetooth/synce-bt-ipdown \
-        etc/synce-hal.conf] )
+        etc/synce-connector.conf] )
 
 AC_OUTPUT([
 	Makefile
