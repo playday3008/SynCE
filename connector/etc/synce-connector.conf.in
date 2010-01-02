@@ -1,4 +1,4 @@
-# example config file, to use copy to @SYSCONFDIR@/synce-hal.conf
+# example config file, to use copy to @SYSCONFDIR@/synce-connector.conf
 
 [general]
 
