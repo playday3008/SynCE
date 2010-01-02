@@ -147,7 +147,7 @@ client_connected_cb (GServer *server,
   } else {
     if (!synce_dev) {
       gnet_server_delete(server_5679);
-      synce_dev = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", "device-path", device_path, conn, NULL);
+      synce_dev = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, "device-path", device_path, NULL);
       g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(synce_dev), conn);

@@ -34,6 +34,7 @@ G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
 enum
 {
   PROP_CONNECTION = 1,
+  PROP_DEVICE_PATH,
 #ifndef USE_HAL
   PROP_OBJ_PATH,
 #endif
@@ -636,6 +637,9 @@ synce_device_get_property (GObject    *obj,
   case PROP_CONNECTION:
     g_value_set_pointer (value, priv->conn);
     break;
+  case PROP_DEVICE_PATH:
+    g_value_set_string (value, priv->device_path);
+    break;
 #ifndef USE_HAL
   case PROP_OBJ_PATH:
     g_value_set_string (value, priv->obj_path);
@@ -724,6 +728,10 @@ synce_device_set_property (GObject      *obj,
     g_free(ip_bytes);
 
     break;
+  case PROP_DEVICE_PATH:
+    g_free (priv->device_path);
+    priv->device_path = g_value_dup_string (value);
+    break;
 #ifndef USE_HAL
   case PROP_OBJ_PATH:
     g_free (priv->obj_path);
@@ -799,6 +807,15 @@ synce_device_class_init (SynceDeviceClass *klass)
                                      G_PARAM_STATIC_NICK |
                                      G_PARAM_STATIC_BLURB);
   g_object_class_install_property (obj_class, PROP_CONNECTION, param_spec);
+
+  param_spec = g_param_spec_string ("device-path", "Device path",
+				    "Hal or sysfs path to the device.",
+				    NULL,
+				    G_PARAM_CONSTRUCT_ONLY |
+				    G_PARAM_READWRITE |
+				    G_PARAM_STATIC_NICK |
+				    G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_DEVICE_PATH, param_spec);
 
 #ifndef USE_HAL
   param_spec = g_param_spec_string ("object-path", "DBus object path",

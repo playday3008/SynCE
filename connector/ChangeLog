@@ -2,6 +2,7 @@
 
 	* change package name
 	* move connection scripts into common source dir
+	* fix device-path property
 
 2009-12-28  Mark Ellis  <mark@mpellis.org.uk>
 
