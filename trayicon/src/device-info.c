@@ -568,7 +568,7 @@ exit:
 }
 
 
-#if GLIB_MINOR_VERSION < 14
+#if GLIB_MAJOR_VERSION < 3 && GLIB_MINOR_VERSION < 14
 static void
 get_sync_item_keys(gpointer key,
 		   gpointer value,
@@ -677,7 +677,7 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     goto exit;
   }
 
-#if GLIB_MINOR_VERSION < 14
+#if GLIB_MAJOR_VERSION < 3 && GLIB_MINOR_VERSION < 14
   g_hash_table_foreach(sync_items,
 		       get_sync_item_keys,
 		       &item_keys);
@@ -1184,7 +1184,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			  SYNCENG_DEVICENAME_COLUMN, device_name,
 			  -1);
 
-#if GLIB_MINOR_VERSION < 14
+#if GLIB_MAJOR_VERSION < 3 && GLIB_MINOR_VERSION < 14
       g_hash_table_foreach(sync_items,
 			   get_sync_item_keys,
 			   &item_keys);
