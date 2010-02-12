@@ -22,7 +22,7 @@ import sys
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtGui, QtCore, uic
+from PyQt4 import QtGui, QtCore, uic, Qt
 
 from pkg_resources import resource_filename
 
@@ -92,7 +92,8 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.activesyncStatusIcon.setIconSize( QSize( self.activesyncStatusIcon.width(),self.activesyncStatusIcon.height()) )
         #self.activesyncStatusIcon.setIcon( self.animIcons[0] ) 
         self.activesyncStatusIcon.setIcon( self.iconDisconnected ) 
-        
+
+
 
         self.animating = False
         self.animationIndex = 0 
@@ -161,6 +162,21 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.currentActiveSyncStatusPartner = ""
         self.currentActiveSyncStatusDatatype = ""
         self.mapping_pship_to_label_idx = {}
+
+        
+
+
+    def setDevicePicture(self, devicePictureFilename):
+        myDevicePicture = QtGui.QPixmap(devicePictureFilename) 
+        myScaledDevicePicture = myDevicePicture.scaled( self.labelDisplayPictureDevice.size() ) 
+        self.labelDisplayPictureDevice.setPixmap( myScaledDevicePicture ) 
+
+    def clearDevicePicture(self):
+        myEmptyPicture = QtGui.QPixmap( self.labelDisplayPictureDevice.size() ) 
+        myEmptyPicture.fill( QColor(0,0,0,0) ) 
+        self.labelDisplayPictureDevice.setPixmap( myEmptyPicture ) 
+
+    
 
     def getASLabelIdx(self, pshipName):
         if pshipName in self.mapping_pship_to_label_idx:

@@ -4,3 +4,6 @@ Some major TODO:
   installed through the program.
 
 * error handling/exception handling is still a major todo. 
+
+* Rework the GUI. Currently it does not support resizing. Make use
+  of layout manager in order to support this.

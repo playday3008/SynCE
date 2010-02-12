@@ -21,6 +21,7 @@ import gobject
 import time
 
 import os 
+import tempfile
 
 import dbus
 import dbus.service
@@ -31,7 +32,7 @@ from synceKPM.dataserver.rapiutil import *
 
 import synceKPM.constants
 
-
+    
 class DataServer(dbus.service.Object):
     def __init__(self, busConn, dataServerEventLoop):
         dbus.service.Object.__init__(self, busConn, synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_OBJPATH)
@@ -263,12 +264,50 @@ class DataServer(dbus.service.Object):
             return False
 
 
+        self.updateSyncPicture()
+
         self.updatePowerStatus()
         self.updateListInstalledPrograms()
         self.updateStorageInformation()
         #self.updatePartnerships()
+
         
         return True
+
+
+    def updateSyncPicture(self):
+        if not self.deviceIsConnected:
+            return False
+
+        rapi_session = RAPISession(None, 0)
+        
+        #If the file does not exist, then we are finished
+        try:
+            SyncIcoOnDevice = rapi_session.file_open("/Windows/sync.ico") 
+
+            SyncIcoOnDeviceContents = SyncIcoOnDevice.read() 
+            SyncIcoOnDevice.close() 
+
+            fd,filename = tempfile.mkstemp( '.ico' )
+            os.close(fd)
+
+            f = open( filename, 'w' )
+
+            f.write(SyncIcoOnDeviceContents)
+            f.close() 
+            self.DeviceDisplayPicture( filename) 
+
+        except RAPIError, e:
+            print "Failed to get sync.ico file"
+            return
+
+
+
+       
+    @dbus.service.signal('org.synce.kpm.DataServerInterface', signature='s')
+    def DeviceDisplayPicture(self, fileContents):
+        pass
+
 
 
 
@@ -295,7 +334,7 @@ class DataServer(dbus.service.Object):
                     try:
                         freeDisk,totalDisk,freeDiskTotal = rapi_session.getDiskFreeSpaceEx("\\"+folder["Name"]+"\\")
                         self._storageInformation.append( ("/%s"%folder["Name"],"\\%s\\"%folder["Name"], freeDisk,totalDisk,freeDiskTotal) )
-                    except pyrapi2.RapiError, e:
+                    except RAPIError, e:
                         print "Failed to get disk space for %s, skipping: %d: %s" % (folder["Name"], e.err_code, e)
 
 

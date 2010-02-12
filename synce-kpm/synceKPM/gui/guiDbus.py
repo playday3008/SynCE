@@ -16,6 +16,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ############################################################################## 
+import os
 
 import dbus
 import dbus.service
@@ -60,6 +61,7 @@ class GuiDbus(dbus.service.Object):
         dataServerIface.connect_to_signal("UnlockDeviceViaHost", self.handleUnlockDeviceViaHost )
         dataServerIface.connect_to_signal("UnlockDeviceViaDevice", self.handleUnlockDeviceViaDevice )
 
+        dataServerIface.connect_to_signal("DeviceDisplayPicture", self.handleDeviceDisplayPicture)
 
 
 
@@ -74,6 +76,11 @@ class GuiDbus(dbus.service.Object):
         dataServerIface.connect_to_signal( "SyncEngineStatus_SyncEndDatatype"  , self.handleSyncEngineStatus_SyncEndDatatype)
 
 
+    def handleDeviceDisplayPicture(self, pictureFilename):
+
+        self.mainwindow.setDevicePicture( pictureFilename )
+
+        os.remove( pictureFilename ) 
 
 
 
@@ -302,6 +309,8 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.updateDeviceName()
         self.mainwindow.updateDeviceOwner()
         self.mainwindow.updateDeviceModel()
+
+        self.mainwindow.clearDevicePicture()
         
         #self.labelStorageTotal.setText("")
         #self.labelStorageUsed.setText("")

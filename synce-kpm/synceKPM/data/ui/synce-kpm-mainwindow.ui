@@ -1,34 +1,35 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>synce_kpm_mainwindow</class>
- <widget class="QWidget" name="synce_kpm_mainwindow" >
-  <property name="geometry" >
+ <widget class="QWidget" name="synce_kpm_mainwindow">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>582</width>
-    <height>606</height>
+    <width>743</width>
+    <height>569</height>
    </rect>
   </property>
-  <property name="cursor" >
+  <property name="cursor">
    <cursorShape>ArrowCursor</cursorShape>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>SynCE KDE PDA Manager</string>
   </property>
-  <widget class="QGroupBox" name="groupBox" >
-   <property name="geometry" >
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>210</x>
      <y>10</y>
      <width>521</width>
      <height>51</height>
     </rect>
    </property>
-   <property name="title" >
+   <property name="title">
     <string>Device Status</string>
    </property>
-   <widget class="QLabel" name="label" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label">
+    <property name="geometry">
      <rect>
       <x>10</x>
       <y>20</y>
@@ -36,12 +37,12 @@
       <height>16</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string>Device:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_devicename" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_devicename">
+    <property name="geometry">
      <rect>
       <x>100</x>
       <y>20</y>
@@ -49,12 +50,12 @@
       <height>14</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="labelDeviceName" >
-    <property name="geometry" >
+   <widget class="QLabel" name="labelDeviceName">
+    <property name="geometry">
      <rect>
       <x>100</x>
       <y>20</y>
@@ -62,15 +63,15 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QToolButton" name="toolButtonDeviceIsLocked" >
-    <property name="enabled" >
+   <widget class="QToolButton" name="toolButtonDeviceIsLocked">
+    <property name="enabled">
      <bool>true</bool>
     </property>
-    <property name="geometry" >
+    <property name="geometry">
      <rect>
       <x>270</x>
       <y>20</y>
@@ -78,12 +79,12 @@
       <height>23</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string>...</string>
     </property>
    </widget>
-   <widget class="QLabel" name="labelDeviceIsLocked" >
-    <property name="geometry" >
+   <widget class="QLabel" name="labelDeviceIsLocked">
+    <property name="geometry">
      <rect>
       <x>300</x>
       <y>20</y>
@@ -91,54 +92,54 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="font" >
+    <property name="font">
      <font>
       <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
-    <property name="text" >
+    <property name="text">
      <string>Device is locked, please unlock</string>
     </property>
-    <property name="scaledContents" >
+    <property name="scaledContents">
      <bool>true</bool>
     </property>
    </widget>
   </widget>
-  <widget class="QPushButton" name="pushButton_Quit" >
-   <property name="geometry" >
+  <widget class="QPushButton" name="pushButton_Quit">
+   <property name="geometry">
     <rect>
-     <x>470</x>
-     <y>570</y>
+     <x>660</x>
+     <y>540</y>
      <width>75</width>
      <height>24</height>
     </rect>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>&amp;Quit</string>
    </property>
   </widget>
-  <widget class="QTabWidget" name="tabWidget" >
-   <property name="enabled" >
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="enabled">
     <bool>false</bool>
    </property>
-   <property name="geometry" >
+   <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>210</y>
-     <width>521</width>
-     <height>351</height>
+     <width>721</width>
+     <height>321</height>
     </rect>
    </property>
-   <property name="currentIndex" >
+   <property name="currentIndex">
     <number>0</number>
    </property>
-   <widget class="QWidget" name="tab" >
-    <attribute name="title" >
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
      <string>System Information</string>
     </attribute>
-    <widget class="QLabel" name="label_3" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
       <rect>
        <x>10</x>
        <y>20</y>
@@ -146,12 +147,12 @@
        <height>18</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Owner:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelDeviceOwner" >
-     <property name="geometry" >
+    <widget class="QLabel" name="labelDeviceOwner">
+     <property name="geometry">
       <rect>
        <x>150</x>
        <y>20</y>
@@ -159,12 +160,12 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_5" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
       <rect>
        <x>10</x>
        <y>50</y>
@@ -172,12 +173,12 @@
        <height>18</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Model name:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelModelName" >
-     <property name="geometry" >
+    <widget class="QLabel" name="labelModelName">
+     <property name="geometry">
       <rect>
        <x>150</x>
        <y>50</y>
@@ -185,12 +186,12 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_7" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
       <rect>
        <x>310</x>
        <y>110</y>
@@ -198,12 +199,12 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Total</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelStorageTotal" >
-     <property name="geometry" >
+    <widget class="QLabel" name="labelStorageTotal">
+     <property name="geometry">
       <rect>
        <x>370</x>
        <y>110</y>
@@ -211,15 +212,15 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="layoutDirection" >
+     <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
      </property>
-     <property name="text" >
+     <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QComboBox" name="storageSelector" >
-     <property name="geometry" >
+    <widget class="QComboBox" name="storageSelector">
+     <property name="geometry">
       <rect>
        <x>150</x>
        <y>110</y>
@@ -228,8 +229,8 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="label_9" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
       <rect>
        <x>10</x>
        <y>110</y>
@@ -237,12 +238,12 @@
        <height>18</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Storage space</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_11" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
       <rect>
        <x>310</x>
        <y>140</y>
@@ -250,12 +251,12 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Used:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelStorageUsed" >
-     <property name="geometry" >
+    <widget class="QLabel" name="labelStorageUsed">
+     <property name="geometry">
       <rect>
        <x>370</x>
        <y>140</y>
@@ -263,15 +264,15 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="layoutDirection" >
+     <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
      </property>
-     <property name="text" >
+     <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_13" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_13">
+     <property name="geometry">
       <rect>
        <x>310</x>
        <y>170</y>
@@ -279,12 +280,12 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Free:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="labelStorageFree" >
-     <property name="geometry" >
+    <widget class="QLabel" name="labelStorageFree">
+     <property name="geometry">
       <rect>
        <x>370</x>
        <y>170</y>
@@ -292,15 +293,15 @@
        <height>16</height>
       </rect>
      </property>
-     <property name="layoutDirection" >
+     <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
      </property>
-     <property name="text" >
+     <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QProgressBar" name="batteryStatus" >
-     <property name="geometry" >
+    <widget class="QProgressBar" name="batteryStatus">
+     <property name="geometry">
       <rect>
        <x>150</x>
        <y>80</y>
@@ -308,15 +309,15 @@
        <height>20</height>
       </rect>
      </property>
-     <property name="value" >
+     <property name="value">
       <number>0</number>
      </property>
-     <property name="invertedAppearance" >
+     <property name="invertedAppearance">
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label_2" >
-     <property name="geometry" >
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
       <rect>
        <x>10</x>
        <y>80</y>
@@ -324,84 +325,84 @@
        <height>18</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Battery status:</string>
      </property>
     </widget>
    </widget>
-   <widget class="QWidget" name="tab_2" >
-    <attribute name="title" >
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
      <string>Software Manager</string>
     </attribute>
-    <widget class="QListWidget" name="listInstalledPrograms" >
-     <property name="geometry" >
+    <widget class="QListWidget" name="listInstalledPrograms">
+     <property name="geometry">
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>411</width>
+       <width>611</width>
        <height>251</height>
       </rect>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_Refresh" >
-     <property name="geometry" >
+    <widget class="QPushButton" name="pushButton_Refresh">
+     <property name="geometry">
       <rect>
-       <x>430</x>
+       <x>630</x>
        <y>10</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>&amp;Refresh</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_Uninstall" >
-     <property name="geometry" >
+    <widget class="QPushButton" name="pushButton_Uninstall">
+     <property name="geometry">
       <rect>
-       <x>430</x>
+       <x>630</x>
        <y>40</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>&amp;Uninstall</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_InstallCAB" >
-     <property name="geometry" >
+    <widget class="QPushButton" name="pushButton_InstallCAB">
+     <property name="geometry">
       <rect>
        <x>10</x>
-       <y>270</y>
+       <y>260</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>&amp;Install CAB</string>
      </property>
     </widget>
    </widget>
-   <widget class="QWidget" name="tab_3" >
-    <attribute name="title" >
+   <widget class="QWidget" name="tab_3">
+    <attribute name="title">
      <string>Partnership manager</string>
     </attribute>
-    <widget class="QTreeView" name="viewPartnerships" >
-     <property name="geometry" >
+    <widget class="QTreeView" name="viewPartnerships">
+     <property name="geometry">
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>411</width>
+       <width>611</width>
        <height>251</height>
       </rect>
      </property>
-     <property name="itemsExpandable" >
+     <property name="itemsExpandable">
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="labelSyncEngineNotRunning" >
-     <property name="geometry" >
+    <widget class="QLabel" name="labelSyncEngineNotRunning">
+     <property name="geometry">
       <rect>
        <x>90</x>
        <y>110</y>
@@ -409,61 +410,61 @@
        <height>18</height>
       </rect>
      </property>
-     <property name="font" >
+     <property name="font">
       <font>
        <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Make sure Sync-Engine is running...</string>
      </property>
-     <property name="scaledContents" >
+     <property name="scaledContents">
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="button_add_pship" >
-     <property name="geometry" >
+    <widget class="QPushButton" name="button_add_pship">
+     <property name="geometry">
       <rect>
-       <x>430</x>
+       <x>630</x>
        <y>10</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Add</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="button_delete_pship" >
-     <property name="geometry" >
+    <widget class="QPushButton" name="button_delete_pship">
+     <property name="geometry">
       <rect>
-       <x>430</x>
+       <x>630</x>
        <y>40</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Delete</string>
      </property>
     </widget>
    </widget>
   </widget>
-  <widget class="QGroupBox" name="groupBox_2" >
-   <property name="geometry" >
+  <widget class="QGroupBox" name="groupBox_2">
+   <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>210</x>
      <y>70</y>
      <width>521</width>
      <height>121</height>
     </rect>
    </property>
-   <property name="title" >
+   <property name="title">
     <string>ActiveSync Status</string>
    </property>
-   <widget class="QLabel" name="label_partnership_2" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_partnership_2">
+    <property name="geometry">
      <rect>
       <x>10</x>
       <y>40</y>
@@ -471,12 +472,12 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_partnership_3" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_partnership_3">
+    <property name="geometry">
      <rect>
       <x>10</x>
       <y>60</y>
@@ -484,12 +485,12 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_partnership_1" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_partnership_1">
+    <property name="geometry">
      <rect>
       <x>10</x>
       <y>20</y>
@@ -497,12 +498,12 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QProgressBar" name="sync_progressbar" >
-    <property name="geometry" >
+   <widget class="QProgressBar" name="sync_progressbar">
+    <property name="geometry">
      <rect>
       <x>160</x>
       <y>90</y>
@@ -510,18 +511,18 @@
       <height>23</height>
      </rect>
     </property>
-    <property name="value" >
+    <property name="value">
      <number>0</number>
     </property>
-    <property name="textVisible" >
+    <property name="textVisible">
      <bool>false</bool>
     </property>
-    <property name="format" >
+    <property name="format">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_partnership_1_text" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_partnership_1_text">
+    <property name="geometry">
      <rect>
       <x>170</x>
       <y>20</y>
@@ -529,12 +530,12 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_partnership_3_text" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_partnership_3_text">
+    <property name="geometry">
      <rect>
       <x>170</x>
       <y>60</y>
@@ -542,12 +543,12 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_partnership_2_text" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_partnership_2_text">
+    <property name="geometry">
      <rect>
       <x>170</x>
       <y>40</y>
@@ -555,12 +556,12 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_sync_stat" >
-    <property name="geometry" >
+   <widget class="QLabel" name="label_sync_stat">
+    <property name="geometry">
      <rect>
       <x>10</x>
       <y>90</y>
@@ -568,15 +569,15 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QToolButton" name="activesyncStatusIcon" >
-    <property name="enabled" >
+   <widget class="QToolButton" name="activesyncStatusIcon">
+    <property name="enabled">
      <bool>true</bool>
     </property>
-    <property name="geometry" >
+    <property name="geometry">
      <rect>
       <x>450</x>
       <y>20</y>
@@ -584,12 +585,12 @@
       <height>61</height>
      </rect>
     </property>
-    <property name="text" >
+    <property name="text">
      <string>...</string>
     </property>
    </widget>
-   <widget class="QLabel" name="labelSyncEngineNotRunning_2" >
-    <property name="geometry" >
+   <widget class="QLabel" name="labelSyncEngineNotRunning_2">
+    <property name="geometry">
      <rect>
       <x>120</x>
       <y>40</y>
@@ -597,19 +598,32 @@
       <height>18</height>
      </rect>
     </property>
-    <property name="font" >
+    <property name="font">
      <font>
       <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
-    <property name="text" >
+    <property name="text">
      <string>Make sure Sync-Engine is running...</string>
     </property>
-    <property name="scaledContents" >
+    <property name="scaledContents">
      <bool>true</bool>
     </property>
    </widget>
+  </widget>
+  <widget class="QLabel" name="labelDisplayPictureDevice">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>190</width>
+     <height>190</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
   </widget>
  </widget>
  <resources/>
