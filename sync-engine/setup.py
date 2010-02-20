@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "sync-engine",
-    version = "0.14",
+    version = "0.15",
     packages = find_packages(),
     scripts = ['sync-engine',
                'tools/clean_partnerships.py',
