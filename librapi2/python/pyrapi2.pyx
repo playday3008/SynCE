@@ -294,6 +294,56 @@ class RegKey(object):
             if name != NULL:
                 free(name) 
 
+    def keys_and_childcount(self, query_child_count=False ):
+        """Returns an array containing all the subkeys"""
+        result = [] 
+
+        cdef DWORD index
+        cdef LPWSTR name
+        cdef DWORD name_len
+        cdef DWORD key_count 
+       
+        try:
+            self.rapi_session.__session_select__()
+            
+            name = <LPWSTR> malloc(255) 
+
+            finished = False 
+            
+            index = 0 
+            
+            #-1 means that no child count information is requested. 
+            #0 cannot be used, because this would collide with nodes having 0 childs
+            key_count = -1 
+
+            while not finished:
+                name_len = 254
+                
+                retval =  CeRegEnumKeyEx( self.handle, index, name, &name_len, NULL, NULL, NULL, NULL) 
+
+                if retval == 259L:
+                    finished = True
+
+                
+                if not finished:
+                    if retval != ERROR_SUCCESS:
+                            raise RAPIError(retval)
+                    
+                    if query_child_count:
+                        sub_key = self.open_sub_key( wstr_to_utf8(name) )
+                        (key_count ,_) = sub_key.number_of_keys_and_values()
+                        sub_key.close()
+                        
+                    result.append( (wstr_to_utf8(name) , key_count ) )
+                
+                    index = index + 1
+            
+            return result 
+
+        finally:
+            if name != NULL:
+                free(name) 
+
     
 
 
