@@ -173,6 +173,16 @@ class DataServer(dbus.service.Object):
         deviceObject = dbus.SystemBus().get_object("org.freedesktop.Hal",obj_path)
         device = dbus.Interface(deviceObject,"org.freedesktop.Hal.Device")
 
+        if device.PropertyExists("pda.pocketpc.connection_blocked"):
+            if device.GetPropertyInteger("pda.pocketpc.connection_blocked") == 1:
+                device = None
+                print "\n\nPlease disable your firewall. Problem with outgoing connection\n\n"
+                return 
+            if device.GetPropertyInteger("pda.pocketpc.connection_blocked") == 2:
+                device = None
+                print "\n\nPlease disable your firewall. Problem with incoming connection\n\n"
+                return 
+
         if not device.PropertyExists("pda.pocketpc.name"):
             device = None
             return
@@ -251,7 +261,6 @@ class DataServer(dbus.service.Object):
             self.handleSyncEngineStatusChange( True, True ) 
         except dbus.DBusException:
             self.handleSyncEngineStatusChange( False, False) 
-            print "SyncEngine is NOT running!!"
 
 
 
@@ -508,7 +517,7 @@ class DataServer(dbus.service.Object):
             dbus.SystemBus().get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
             self.handleOdccmStatusChange( True ) 
         except dbus.DBusException:
-            print "odccm is NOT running!!"
+            pass
 
 
         # connect to Hal device manager
@@ -533,7 +542,6 @@ class DataServer(dbus.service.Object):
             self.handleSyncEngineStatusChange( True, True ) 
         except dbus.DBusException:
             self.handleSyncEngineStatusChange( False, False) 
-            print "SyncEngine is NOT running!!"
 
      
     @dbus.service.method('org.synce.kpm.DataServerInterface')
@@ -832,6 +840,157 @@ class DataServer(dbus.service.Object):
             return deviceBindingState
         return 0
 
+
+
+    
+
+    @dbus.service.signal('org.synce.kpm.DataServerInterface', signature='i')
+    def registry_keys_finished(self, key_id):
+        pass
+
+    @dbus.service.signal('org.synce.kpm.DataServerInterface', signature='ia(si)')
+    def registry_keys(self, key_id, sub_keys_and_child_count):
+        pass
+
+    @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="is")
+    def query_registry_keys(self, key_id, key_path):
+        
+        rapi_session = RAPISession(None, 0)
+ 
+        root_key = None 
+        sub_key_path = ""
+
+        if key_path.startswith("/HKEY_CLASSES_ROOT"):
+            root_key = rapi_session.HKEY_CLASSES_ROOT
+            sub_key_path = key_path[len("/HKEY_CLASSES_ROOT"):]
+        elif key_path.startswith("/HKEY_CURRENT_USER"):
+            root_key = rapi_session.HKEY_CURRENT_USER
+            sub_key_path = key_path[len("/HKEY_CURRENT_USER"):]
+        elif key_path.startswith("/HKEY_LOCAL_MACHINE"):
+            root_key = rapi_session.HKEY_LOCAL_MACHINE
+            sub_key_path = key_path[len("/HKEY_LOCAL_MACHINE"):]
+
+        if root_key is None:
+            print key_path, " is not recognized as valid starting path"
+       
+        
+        sub_key_path = sub_key_path.replace("/", "\\")
+        
+        my_key = root_key.open_sub_key(sub_key_path)
+        
+        subkeys_and_child_count = my_key.keys_and_childcount(True)
+        my_key.close()
+
+
+        #self.registry_keys( key_id , my_subkeys )
+        self.registry_keys( key_id , subkeys_and_child_count)
+        self.registry_keys_finished( key_id )
+
+        pass
+
+    
+    @dbus.service.signal('org.synce.kpm.DataServerInterface', signature='i')
+    def registry_finished_fetching_values(self, key_id):
+        pass
+
+    @dbus.service.signal('org.synce.kpm.DataServerInterface', signature='ia(siii)axasaiaiai')
+    def registry_values(self, key_id, list_value_name_type_numerical_dataindex, list_numerical_data, list_string_data, list_binary_data, list_binary_data_from, list_binary_data_to):
+        pass
+    
+    
+    @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="is")
+    def query_registry_values(self, key_id, key_path):
+        #print "[DataServer] Querying all values for key with path: ", key_path
+        
+        rapi_session = RAPISession(None, 0)
+ 
+        root_key = None 
+        sub_key_path = ""
+
+        if key_path.startswith("/HKEY_CLASSES_ROOT"):
+            root_key = rapi_session.HKEY_CLASSES_ROOT
+            sub_key_path = key_path[len("/HKEY_CLASSES_ROOT"):]
+        elif key_path.startswith("/HKEY_CURRENT_USER"):
+            root_key = rapi_session.HKEY_CURRENT_USER
+            sub_key_path = key_path[len("/HKEY_CURRENT_USER"):]
+        elif key_path.startswith("/HKEY_LOCAL_MACHINE"):
+            root_key = rapi_session.HKEY_LOCAL_MACHINE
+            sub_key_path = key_path[len("/HKEY_LOCAL_MACHINE"):]
+
+        if root_key is None:
+            print "[ERROR] : ", path_of_key, " is not recognized as valid starting path"
+       
+        
+        sub_key_path = sub_key_path.replace("/", "\\")
+        
+        my_key = root_key.open_sub_key(sub_key_path)
+        
+        values = [] 
+        list_numerical_data = []
+        list_string_data = []
+        list_binary_data = []
+
+        list_binary_data_from = []
+        list_binary_data_to   = []
+
+        index_in_container_binary_data = 0
+
+        index_numerical_data = 0 
+        index_string_data = 0 
+        index_binary_data = 0 ; 
+        
+        for (value_name,value_type,value_data) in my_key.values():
+            #print "value name = ", value_name, "   value_type=", value_type
+            value_data_type = 0
+
+            if value_type == REG_DWORD:
+                value_data_type = 1
+            if value_type == REG_DWORD_BIG_ENDIAN:
+                value_data_type = 1
+            if value_type == REG_BINARY:
+                value_data_type = 2
+            if value_type == REG_MULTI_SZ:
+                value_data_type = 2
+           
+            
+            index_data = 0 
+
+            if value_data_type == 0:
+                index_data = index_string_data
+                index_string_data += 1
+                
+                list_string_data.append( value_data )
+            
+            if value_data_type == 1:
+                index_data = index_numerical_data
+                index_numerical_data += 1
+
+                list_numerical_data.append( value_data )
+            
+            if value_data_type == 2:
+                index_data = index_binary_data
+                index_binary_data += 1
+
+                list_binary_data_from.append( index_in_container_binary_data )
+               
+                for i in value_data:
+                    list_binary_data.append(ord(i))
+                    index_in_container_binary_data += 1 ; 
+
+                list_binary_data_to.append(index_in_container_binary_data)
+
+
+
+
+            values.append( ( value_name, value_type, value_data_type, index_data ) )
+
+
+
+        my_key.close()
+
+        self.registry_values ( key_id , values, list_numerical_data, list_string_data, list_binary_data, list_binary_data_from, list_binary_data_to ) 
+
+        pass
 
 
 

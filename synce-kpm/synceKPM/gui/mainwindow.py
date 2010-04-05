@@ -39,6 +39,11 @@ import dbus.service
 import synceKPM.constants
 import synceKPM.gui.guiDbus
 
+from synceKPM.gui.registry import Registry
+from synceKPM.gui.registrykeymodel import RegistryKeyModel
+from synceKPM.gui.registryvaluemodel import RegistryValueModel
+
+
 
 class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_synce_kpm_mainwindow):
     
@@ -163,7 +168,69 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.currentActiveSyncStatusDatatype = ""
         self.mapping_pship_to_label_idx = {}
 
+
+        self.registry = Registry(self)
+        self.registry_key_model = RegistryKeyModel( self.registry )
+        self.registry_value_model = RegistryValueModel( self.registry )
+
+        QObject.connect(self.registryKeyView, SIGNAL("clicked(QModelIndex)"), self.registry_key_model.key_clicked)
+
+        #Now just connect everything together via signals / slots.....
+        QObject.connect(self.registryKeyView, SIGNAL("expanded(QModelIndex)"), self.registry_key_model.key_expanded)
+
+        self.registryKeyView.setModel(self.registry_key_model)
+
+
+        self.registryValueView.setModel(self.registry_value_model)
+
+        self.registryValueView.setColumnWidth(0,120) 
+        self.registryValueView.setColumnWidth(1,65)  
+
+
+        self.registryKeyView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.connect(self.registryKeyView, QtCore.SIGNAL("customContextMenuRequested(const QPoint &)"), self.showKeyContextMenu)
+                
+        self.selected_key_index = None
+        self.selected_key = None
         
+
+        self._context_menu = QtGui.QMenu(self)
+        self.action_refresh = QtGui.QAction( u'Refresh', self)
+        self._context_menu.addAction(self.action_refresh)
+        
+        self.connect(self.action_refresh, SIGNAL("triggered()"), self.refresh_key )
+        
+    def set_cursor(self, is_busy):
+        if is_busy:
+            self.setCursor( QtCore.Qt.BusyCursor )
+        else:
+            self.setCursor( QtCore.Qt.ArrowCursor )
+
+
+    def refresh_key(self):
+        self.selected_key = self.registry_key_model.get_key_from_index( self.selected_key_index )
+
+        if self.selected_key != self.registry.device_root_item:
+            #print "Selected key is ", self.registry_key_model.get_key_from_index( self.selected_key_index ).name
+            self.selected_key.clear_keys(True)
+            QTimer.singleShot(10, self.refresh_key_contents )
+
+
+    def refresh_key_contents(self):
+        self.selected_key.add_fetching_key()
+        self.registry_key_model.fetch_key_subkeys( self.selected_key )
+        #TODO: do expand here
+        self.registryKeyView.collapse(  self.registry_key_model.get_key_index( self.selected_key ) )
+        self.registryKeyView.expand(  self.registry_key_model.get_key_index( self.selected_key ) )
+
+
+    def showKeyContextMenu(self, point):
+        key_index=self.registryKeyView.indexAt(point)
+        if not key_index.isValid(): 
+            return
+
+        self.selected_key_index = key_index 
+        self._context_menu.popup(QCursor.pos()) 
 
 
     def setDevicePicture(self, devicePictureFilename):
@@ -197,11 +264,11 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
 
     def cb_systray_activated(self, reason):
 
-		if reason != QtGui.QSystemTrayIcon.Context:
-			if not self.isVisible():
-				self.show()
-			else:
-				self.hide()
+        if reason != QtGui.QSystemTrayIcon.Context:
+            if not self.isVisible():
+                self.show()
+            else:
+                self.hide()
 
 
     def myDrawNoBranches(self,  painter, rect, index):
@@ -275,9 +342,9 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
             <p>SynCE-KPM allows you to manage the basic features of your 
             WM5/WM6 device under Linux like the ActiveSync application does  
             under MS-Windows.
-            <p>Copyright (c) 2008 Guido Diepen &lt;guido@guidodiepen.nl&gt;
+            <p>Copyright (c) 2008-2010 Guido Diepen &lt;guido@guidodiepen.nl&gt;
             <p>SynCE-KPM is licensed under GPL
-            """%"0.12")
+            """%"0.15")
 
 
     def updateTray(self, deviceConnected):
@@ -296,13 +363,32 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
     def updateDeviceModel(self, deviceModel="" ):
         self.labelModelName.setText( deviceModel )
 
+    def issue_warning_slow_HKCR(self):
+        self.saved_status_message = self.statusBar().currentMessage()
+        self.statusBar().showMessage( self.saved_status_message + "  ::  Please note that querying HKEY Classes Root is slow")
+        QTimer.singleShot(5000,self.remove_warning_slow_HKCR)
+
+    def remove_warning_slow_HKCR(self):
+        self.statusBar().showMessage( self.saved_status_message )
+
+
 
     def updateStatusBar(self, isConnected, deviceName=""):
         if isConnected:
-            self.statusBar().showMessage("Connected to phone %s"%deviceName)
+            self.statusBar().showMessage("Connected to device %s"%deviceName)
         else:
-            self.statusBar().showMessage("No phone connected")
+            self.statusBar().showMessage("No device connected")
 
+
+    def updateRegistryView(self, isConnected, deviceName=""):
+        if isConnected:
+            self.registry.device_root_item.name = deviceName
+            self.registry.clear_registry_model() 
+            self.registryKeyView.expand( self.registry_key_model.index(0,0,QtCore.QModelIndex()))
+        else:
+            self.registry.device_root_item.name = "DEVICE_NAME"
+            self.registry.clear_registry_model() 
+            self.registryKeyView.collapseAll()
 
 
 

@@ -61,6 +61,15 @@ class GuiDbus(dbus.service.Object):
         dataServerIface.connect_to_signal("UnlockDeviceViaHost", self.handleUnlockDeviceViaHost )
         dataServerIface.connect_to_signal("UnlockDeviceViaDevice", self.handleUnlockDeviceViaDevice )
 
+
+        dataServerIface.connect_to_signal("registry_keys_finished", self.handle_registry_keys_finished )
+        dataServerIface.connect_to_signal("registry_keys", self.handle_registry_keys )
+        dataServerIface.connect_to_signal("registry_values_finished", self.handle_registry_values_finished )
+        dataServerIface.connect_to_signal("registry_values", self.handle_registry_values )
+
+
+
+
         dataServerIface.connect_to_signal("DeviceDisplayPicture", self.handleDeviceDisplayPicture)
 
 
@@ -243,6 +252,7 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.updateTray(True)
         self.mainwindow.updateDeviceName(deviceName)
         self.mainwindow.updateStatusBar(True, deviceName)
+        self.mainwindow.updateRegistryView(True, deviceName) 
         if not alreadyConnected:
             self.mainwindow.tray.showMessage("Device connected", "The device %s just connected"%deviceName,QtGui.QSystemTrayIcon.Information, 5000)
 
@@ -305,6 +315,7 @@ class GuiDbus(dbus.service.Object):
         self.mainwindow.storageSelector.clear() 
 
         self.mainwindow.updateStatusBar(False)
+        self.mainwindow.updateRegistryView(False)
         
         self.mainwindow.updateDeviceName()
         self.mainwindow.updateDeviceOwner()
@@ -312,36 +323,6 @@ class GuiDbus(dbus.service.Object):
 
         self.mainwindow.clearDevicePicture()
         
-        #self.labelStorageTotal.setText("")
-        #self.labelStorageUsed.setText("")
-        #self.labelStorageFree.setText("")
-
-        #if self._showingUnlockMessage:
-        #     QApplication.activeWindow().close()
-        #     self._showingUnlockMessage = False
-        # 
-        # if self.installWindow.isVisible:
-        #     self.installWindow.hide()
-        # self.tabWidget.setEnabled(False)
-        # self.updateTray()
-        # self.tray.showMessage("Phone Disconnected", "The phone %s just disconnected"%self.phoneCommunicator.deviceName)
-        # self.updateStatusBar()
-        # self.updatePowerInformation()
-        # self.updateInstalledProgramsList()
-        # self.updateDeviceStatus()
-        # self.updateStorageInformation()
-        # self.labelStorageTotal.setText("")
-        # self.labelStorageUsed.setText("")
-        # self.labelStorageFree.setText("")
-        # 
-        # self.labelDeviceOwner.setText("")
-        # self.labelModelName.setText("")
-        # 
-        # self.toolButtonDeviceIsLocked.setVisible(False)
-        # self.labelDeviceIsLocked.setVisible(False)
-
-        # self.modelPartnerships.clear()
-        # return
 
 
 
@@ -499,3 +480,65 @@ class GuiDbus(dbus.service.Object):
     def provideAuthorization(self,password):
         dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
         dataServer.processAuthorization(password, dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE)
+
+
+
+    def query_registry_keys(self,key_id,  key_path):
+        """Fires a request to the dataserver for obtaining
+        all subkeys underneath the key denoted by key_path"""
+
+        dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        dataServer.query_registry_keys(key_id, key_path, 
+                                        dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE,
+                                        reply_handler=self.handle_query_registry_keys,
+                                        error_handler=self.handle_query_registry_keys_error)
+   
+    def handle_query_registry_keys(self):
+        pass
+    
+    def handle_query_registry_keys_error(self, error):
+        print error
+
+
+    def handle_registry_keys_finished(self, key_id):
+        self.mainwindow.registry.retrieve_keys_finished(key_id) ; 
+        #Notify the objects that the subkeys are ready
+        pass
+
+    def handle_registry_keys(self, key_id, subkeys_and_child_count):
+        #Notify the registry objects with the new data
+        self.mainwindow.registry.update_keys(key_id, subkeys_and_child_count)
+        pass
+
+
+
+
+    def query_registry_values(self,key_id,  key_path):
+        """Fires a request to the dataserver for obtaining
+        all values underneath the key denoted by key_path"""
+
+        dataServer = self.busConn.get_object("org.synce.kpm.dataserver","/org/synce/kpm/DataServer")
+        dataServer.query_registry_values(key_id, key_path, 
+                                        dbus_interface=synceKPM.constants.DBUS_SYNCEKPM_DATASERVER_IFACE,
+                                        reply_handler=self.handle_query_registry_values,
+                                        error_handler=self.handle_query_registry_values_error)
+   
+    def handle_query_registry_values(self):
+        pass
+    
+    def handle_query_registry_values_error(self, error):
+        print error
+
+
+    def handle_registry_values_finished(self, key_id):
+        #Notify the objects that the values are ready
+        pass
+
+    def handle_registry_values(self, key_id, value_tuples, list_numerical_data, list_string_data, list_binary_data, list_binary_data_from, list_binary_data_to ):
+        self.mainwindow.registry.update_values(key_id, value_tuples, list_numerical_data, list_string_data, list_binary_data, list_binary_data_from, list_binary_data_to)
+        pass
+
+
+
+
+

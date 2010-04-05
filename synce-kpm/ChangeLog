@@ -1,18 +1,23 @@
-2010-02-12	Guido Diepen	<guido@guidodiepen.nl>
+2010-04-05	Guido Diepen	<guido@guidodiepen.nl>
+	* Finished implementation of Registry Viewer. Now you can browse
+	  through the device registry from within SynCE-KPM
+	* Minor cleanup	
 
+2010-02-25	Guido Diepen	<guido@guidodiepen.nl>
+	* Bump version to 0.15
+	* Implement beginning of Registry Viewer
+
+2010-02-12	Guido Diepen	<guido@guidodiepen.nl>
 	* In the main screen, a picture of the device will now be 
-        shown. This picture is taken from the device itself.
+	shown. This picture is taken from the device itself.
 
 2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
-
 	* 0.14 release
 
 2009-03-27	Mark Ellis	<mark@mpellis.org.uk>
-
 	* dataserver.py - use new pyrapi2 file handling API
 
 2009-03-26	Mark Ellis	<mark@mpellis.org.uk>
-
 	* dataserver.py - add device name None to RAPISession calls
 
 2009-03-22	Guido Diepen	<guido@guidodiepen.nl>
