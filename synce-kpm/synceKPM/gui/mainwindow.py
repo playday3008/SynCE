@@ -123,6 +123,10 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
         self.tray.setIcon(self.iconDisconnected)
         self.tray.setToolTip(u"SynCE KDE PDA Manager")
         self.tray.show()
+
+
+        self.help_menu = self.menuBar().addMenu("&Help")
+        self.help_menu.addAction(self.action_about) 
         
         self.tray.connect(self.tray, SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),
                 self.cb_systray_activated)
@@ -342,6 +346,7 @@ class mainwindow(QtGui.QMainWindow, synceKPM.gui.ui_synce_kpm_mainwindow.Ui_sync
             <p>SynCE-KPM allows you to manage the basic features of your 
             WM5/WM6 device under Linux like the ActiveSync application does  
             under MS-Windows.
+            <p>For more details visit project homepage at http://www.guidodiepen.nl
             <p>Copyright (c) 2008-2010 Guido Diepen &lt;guido@guidodiepen.nl&gt;
             <p>SynCE-KPM is licensed under GPL
             """%"0.15")

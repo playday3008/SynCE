@@ -1,3 +1,6 @@
+2010-04-22	Guido Diepen	<guido@guidodiepen.nl>
+	* Add help > About menu and minor modification to about text
+
 2010-04-05	Guido Diepen	<guido@guidodiepen.nl>
 	* Finished implementation of Registry Viewer. Now you can browse
 	  through the device registry from within SynCE-KPM
