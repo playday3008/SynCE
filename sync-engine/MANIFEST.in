@@ -1,0 +1,8 @@
+graft tests
+recursive-include SyncEngine *.xsl
+recursive-include tools auth*.py
+include CHANGELOG
+graft config
+include COPYING
+graft doc
+include plugins/*README

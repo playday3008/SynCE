@@ -1168,3 +1168,7 @@ we now check for matching registry entries for server sources.
 22/12/2009 - Mark Ellis
 -----------------------
 Ignore unknown sync provider types, instead of abandoning.
+
+26/04/2010 - Mark Ellis
+-----------------------
+Add MANIFEST.in for creating distribution.
