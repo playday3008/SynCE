@@ -1,3 +1,7 @@
+2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15 release
+
 2009-08-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* lib/{errors.c,synce_types.h} - HRESULT handling funcs and macros
