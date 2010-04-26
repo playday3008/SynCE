@@ -1,3 +1,7 @@
+2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15 release
+
 2010-04-05  Guido Diepen <guido@guidodiepen.nl>
 	* python/pyrapi2.pyx - Added method that will not 
 	  only return all subkeys, but a tuple of all subkeys
