@@ -1172,3 +1172,8 @@ Ignore unknown sync provider types, instead of abandoning.
 26/04/2010 - Mark Ellis
 -----------------------
 Add MANIFEST.in for creating distribution.
+
+26/04/2010 - Mark Ellis
+-----------------------
+0.15 release
+
