@@ -1,3 +1,6 @@
+2010-04-26	Mark Ellis  <mark@mpellis.org.uk>
+	* Add MANIFEST.in for creating distribution
+
 2010-04-22	Guido Diepen	<guido@guidodiepen.nl>
 	* Add help > About menu and minor modification to about text
 
