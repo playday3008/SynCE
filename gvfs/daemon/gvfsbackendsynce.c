@@ -1363,7 +1363,7 @@ synce_gvfs_replace (GVfsBackend *backend,
 	current_etag = create_etag (&entry);
 	if (strcmp (etag, current_etag) != 0)
 	  {
-	    g_debug("%s: etags dont match", G_STRFUNC);
+	    g_debug("%s: etags don't match", G_STRFUNC);
 
 	    g_free (current_etag);
 	    g_vfs_job_failed (G_VFS_JOB (job),
