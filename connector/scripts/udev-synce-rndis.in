@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0,"@DATADIR@/@PACKAGE_NAME@")
 import synceconnector
-from synceconnector import rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig, run_dccm, process_config, get_logger
+from synceconnector import rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig, run_dccm, process_config
 
 #
 # main()
@@ -18,28 +18,26 @@ if __name__ == '__main__':
     device_ip = False
     local_ip = False
 
-    if os.environ.has_key("HALD_ACTION"):
-        action = os.environ["HALD_ACTION"]
+    if os.environ.has_key("ACTION"):
+        action = os.environ["ACTION"]
 
-        if os.environ.has_key("HAL_PROP_NET_INTERFACE"):
-            iface = os.environ["HAL_PROP_NET_INTERFACE"]
+        if os.environ.has_key("INTERFACE"):
+            iface = os.environ["INTERFACE"]
         else:
-            logger.critical("Hal environment not set: HAL_PROP_NET_INTERFACE missing")
+            logger.critical("Udev environment not set: INTERFACE missing")
             sys.exit(1)
 
-        if os.environ.has_key("HAL_PROP_INFO_UDI"):
-            device_path = os.environ["HAL_PROP_INFO_UDI"]
+        if os.environ.has_key("DEVPATH"):
+            device_path = os.environ["DEVPATH"]
         else:
-            logger.critical("Hal environment not set: HAL_PROP_INFO_UDI missing")
+            logger.critical("Udev environment not set: DEVPATH missing")
             sys.exit(1)
 
     else:
-        logger.warning("HAL environment not set, HALD_ACTION is missing")
+        logger.warning("Environment not set, ACTION is missing")
         sys.exit(1)
 
-    process_config()
-
-    if action == "addon":
+    if action == "add":
         logger.debug("running as addon for interface "+iface)
 
         device_ip, local_ip = rndis_dhcp_config(iface)

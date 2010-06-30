@@ -1,5 +1,5 @@
 #!/bin/sh
 
-@hal_addon_dir@/hal-synce-rndis &
+@LIBEXECDIR@/udev-synce-rndis &
 
 exit 0

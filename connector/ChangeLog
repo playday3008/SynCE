@@ -1,3 +1,7 @@
+2010-06-30  Mark Ellis  <mark@mpellis.org.uk>
+
+	* rearrange scripts to use common framework
+
 2010-01-02  Mark Ellis  <mark@mpellis.org.uk>
 
 	* change package name

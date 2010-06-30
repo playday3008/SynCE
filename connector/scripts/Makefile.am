@@ -1,28 +1,30 @@
-# new one
-
 halfdi = 10-synce.fdi
-udevrules = synce.rules
 
-udevscripts = \
-	synce-udev-serial \
-	synce-udev-rndis
-
-halscripts = \
-	hal-synce-rndis \
-	hal-synce-serial 
+syncedatadir = ${datadir}/@PACKAGE_NAME@
+syncedata_DATA = synceconnector.py
 
 if USE_HAL
 haldatadir = ${datadir}/hal/fdi/policy/20thirdparty
 haldata_DATA = $(halfdi)
 
-haldir = @hal_addon_dir@
-hal_SCRIPTS = $(halscripts)
+halscriptsdir = @hal_addon_dir@
+halscripts_SCRIPTS = \
+	hal-synce-rndis \
+	hal-synce-serial 
 
 else
-haldir = $(libexecdir)
-udevrulesdir = ${sysconfdir}/udev/rules.d
-udevrules_DATA = $(udevrules)
-libexec_SCRIPTS = $(udevscripts)
+
+udevrulesdir = @udev_dir@/rules.d
+udevrules_DATA = synce.rules
+
+udevstartersdir = @udev_dir@
+udevstarters_SCRIPTS = \
+	synce-udev-serial \
+	synce-udev-rndis
+
+syncedata_SCRIPTS = \
+	udev-synce-rndis \
+	udev-synce-serial
 endif
 
 EXTRA_DIST = $(halfdi)

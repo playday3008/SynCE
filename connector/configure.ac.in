@@ -73,6 +73,19 @@ if test "x$enable_udev" = "xno"; then
     AC_SUBST(hal_addon_dir)
 else
     PKG_CHECK_MODULES(GUDEV, gudev-1.0)
+
+    dnl Check for override of default udev dir
+    AC_MSG_CHECKING([udev dir])
+    AC_ARG_WITH(udev-dir, [  --with-udev-dir=PATH     Location of the udev config.],
+	       with_udev_dir="$withval", with_udev_dir="no")
+    if test "x${with_udev_dir}" = "xno"; then
+        udev_dir="`pkg-config --variable=udevdir udev`"
+        AC_MSG_RESULT([$udev_dir])
+    else
+        udev_dir="$with_udev_dir"
+        AC_MSG_RESULT([$udev_dir])
+    fi
+    AC_SUBST(udev_dir)
 fi
 
 
@@ -89,8 +102,10 @@ AS_AC_EXPAND(LOCALSTATEDIR, "$localstatedir")
 AS_AC_EXPAND(DATADIR, "$datadir")
 
 AC_CONFIG_FILES([
+        scripts/synceconnector.py \
         scripts/hal-synce-rndis \
         scripts/hal-synce-serial \
+        scripts/udev-synce-rndis \
         scripts/synce-udev-rndis \
         scripts/synce-udev-serial \
         scripts/synce.rules \
