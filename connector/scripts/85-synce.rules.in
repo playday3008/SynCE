@@ -1,0 +1,11 @@
+#
+# set up a WM device and run dccm
+#
+
+# attr doesn't seem to work, env does
+
+# parent driver=rndis_host, parent usb interface class=239 (0xef), parent usb interface subclass=1, parent usb interface protocol=1
+SUBSYSTEM=="net", DRIVERS=="rndis_host", ATTRS{bInterfaceClass}=="ef", ATTRS{bInterfaceSubClass}=="01", ATTRS{bInterfaceProtocol}=="01", ENV{pocketpc}="env-synce", RUN+="@UDEVDIR@/synce-udev-rndis"
+
+# capabilities = serial, parent driver = ipaq
+SUBSYSTEM=="tty", DRIVERS=="ipaq", ENV{pocketpc}="env-synce", RUN+="@UDEVDIR@/synce-udev-serial"

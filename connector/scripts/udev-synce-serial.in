@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import re
+import stat
+import time
+import subprocess
+import logging, logging.handlers
+import platform
+import ConfigParser
+import dbus
+
+sys.path.insert(0,"@SYNCEDATADIR@")
+import synceconnector
+from synceconnector import run_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
+
+#
+# main()
+#
+if __name__ == '__main__':
+
+    logger = get_logger("hal-synce-serial")
+
+    process_config()
+
+    device_path = False
+
+    if os.environ.has_key("ACTION"):
+        action = os.environ["ACTION"]
+
+        if os.environ.has_key("DEVPATH"):
+            device_path = os.environ["DEVPATH"]
+        else:
+            logger.critical("Udev environment not set: DEVPATH missing")
+            sys.exit(1)
+
+        # need to check for 2 port devices here
+        # there are no python bindings for udev, so this is a little awkward
+
+        # get device name
+        cmd_list = ["udevadm", "info", "--path="+devpath, "--query=name"]
+        try:
+            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            output_text = proc.communicate()[0]
+        except Exception,e:
+            logger.error("failure running udevadm: %s" % e)
+            sys.exit(1)
+
+        rc = proc.returncode
+        if rc != 0:
+            logger.error("udevadm failed with return code %d", rc)
+            sys.exit(1)
+
+        devname = output_text.strip()
+
+        # get parent device path
+        match_obj = re.match('^(.+)/'+name+"/"+subsystem+'/'+name, devpath)
+        if match_obj == None:
+            logger.error("failed to get parent device path from udev")
+            sys.exit(1)
+
+        parent_devpath = match_obj.group(1)
+
+        # find all relevant child devices of the parent
+        cmd_list = ["udevadm", "info", "--export-db"]
+        try:
+            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            output_text = proc.communicate()[0]
+        except Exception,e:
+            logger.error("failure getting device db: %s" % e)
+            sys.exit(1)
+
+        rc = proc.returncode
+        if rc != 0:
+            logger.error("udevadm failed with return code %d when getting device db",rc)
+            sys.exit(1)
+
+        output_list = output_text.split('\n')
+        devpath_re = re.compile('^P: ('+parent_devpath+'.+/'+subsystem+'/.+)')
+
+        devpath_list = []
+        for line in output_list:
+            match_obj = devpath_re.match(line)
+            if match_obj != None:
+                path = match_obj.group(1)
+                devpath_list.append(path)
+
+        if len(devpath_list) > 1:
+            devpath_list.sort()
+            if device_path != devpath_list[len(devpath_list) - 1]:
+                logger.warning("found inactive port, we need to mark this somehow")
+                sys.exit(0)
+
+        # get serial device file
+        if platform.system() == "FreeBSD":
+            logger.critical("do we support udev/devicekit on FreeBSD ???")
+            sys.exit(1)
+        else:
+            try:
+                device_file = os.environ["DEVNAME"]
+            except Exception,e:
+                logger.critical("Udev environment not set: DEVNAME missing")
+                sys.exit(1)
+
+    else:
+        logger.critical("Environment not set, action is missing")
+        sys.exit(1)
+
+    devnum = serial_get_devnum(device_file)
+    if devnum < 0:
+        sys.exit(1)
+
+    # see the "linkname" option in the man page for pppd
+    linkname = "synce-device"+devnum
+
+    if action == "add":
+        logger.debug("running as addon for device "+device_file)
+
+        local_ip, remote_ip = serial_get_address(devnum)
+
+        if serial_start_device(device_file, local_ip, remote_ip, linkname) == False:
+            logger.critical("failed to establish serial connection, aborting...")
+            sys.exit(1)
+
+        logger.debug("successfully configured interface")
+
+        run_dccm(device_path, remote_ip, local_ip, False)
+
+        logger.error("aborting ...")
+        sys.exit(1)
+
+
+    if action == "remove":
+        logger.debug("running for removal of device "+device_file)
+        if serial_stop_device(linkname) == False:
+            logger.critical("failed to take down serial connection, aborting...")
+            sys.exit(1)
+
