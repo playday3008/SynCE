@@ -2,30 +2,12 @@
 
 import sys
 import os
-import re
-import stat
-import time
-import subprocess
-import logging, logging.handlers
 import platform
-import ConfigParser
 import dbus
 
 sys.path.insert(0,"@DATADIR@/@PACKAGE_NAME@")
 import synceconnector
-from synceconnector import run_dccm, process_config
-
-# defaults
-config_file = '@SYSCONFDIR@/synce-connector.conf'
-log_level = logging.WARNING
-DEFAULT_SERIAL_NETWORK = "192.168.131"
-pppopts = ["nodefaultroute", "noauth", "local", "crtscts"]
-
-# ppp setup
-#
-PPPD = "/usr/sbin/pppd"
-VAR_PPP = "/var/run"
-DEVSPEED = '115200'
+from synceconnector import run_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
 
 DBUS_DBUS_BUSNAME       = "org.freedesktop.DBus"
 DBUS_DBUS_IFACE         = "org.freedesktop.DBus"
@@ -36,140 +18,12 @@ DBUS_HAL_MANAGER_IFACE   = "org.freedesktop.Hal.Manager"
 DBUS_HAL_MANAGER_OBJPATH = "/org/freedesktop/Hal/Manager"
 DBUS_HAL_DEVICE_IFACE    = "org.freedesktop.Hal.Device"
 
-def synce_serial_start_device(device_file, local_ip, remote_ip, linkname):
-
-    ipaddr = local_ip+":"+remote_ip
-
-    cmd_list = [PPPD, device_file, DEVSPEED, "connect", "@LIBEXECDIR@/synce-serial-chat", ipaddr, "ms-dns", local_ip]
-    for item in pppopts:
-        cmd_list.append(item)
-
-    if platform.system() != "FreeBSD":
-        cmd_list.append("linkname")
-        cmd_list.append(linkname)
-
-    logger.debug("calling pppd as:")
-    logger.debug(cmd_list)
-
-    # Now bring up the connection
-
-    # returns a Popen object
-    try:
-        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        output_text = proc.communicate()[0]
-    except Exception,e:
-        logger.error("failure running pppd: %s" % e)
-        return False
-
-    rc = proc.returncode
-
-    if rc != 0:
-        logger.error("failed to initialize ppp connection, return code %d",rc)
-        return False
-
-    return True
-
-
-def synce_serial_stop_device(linkname):
-
-    pidfile = VAR_PPP+"/ppp-"+linkname+".pid"
-
-    if os.path.isfile(pidfile) != True:
-        logger.warning("unable find a running SynCE connection for %d", linkname)
-        sys.exit(1)
-
-    while os.path.isfile(pidfile):
-        try:
-            f = open(pidfile, 'r')
-            textpid = f.readline().rstrip()
-            f.close()
-        except Exception, e:
-            logger.warning("unable to read PID from %s: %s", pidfile, e)
-            sys.exit(1)
-
-        try:
-            pid = int(textpid)
-        except Exception, e:
-            logger.error("found invalid PID in %s: %s", pidfile, e)
-            sys.exit(1)
-
-        logger.info("killing process with PID %d", pid)
-
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except Exception,e:
-            logger.error("unable stop the SynCE connection with PID %d: %s", pid, e)
-            sys.exit(1)
-
-        logger.info("requested shutdown of %s", linkname)
-
-        time.sleep(3)
-
-
-def process_config():
-
-    global log_level
-    global DEFAULT_SERIAL_NETWORK
-    global pppopts
-
-    logger = logging.getLogger("hal-synce-serial")
-
-    config = ConfigParser.ConfigParser()
-    try:
-        config.read(config_file)
-    except Exception,e:
-        logger.warning("failed to parse config file %s: %s" % (config_file, e))
-        return False
-
-    if config.has_option('general', 'loglevel'):
-        loglevel_txt = config.get('general', 'loglevel').lower()
-        if loglevel_txt == 'critical':
-            log_level = logging.CRITICAL
-        elif loglevel_txt == 'error':
-            log_level = logging.ERROR
-        elif loglevel_txt == 'warning':
-            log_level = logging.WARNING
-        elif loglevel_txt == 'info':
-            log_level = logging.INFO
-        elif loglevel_txt == 'debug':
-            log_level = logging.DEBUG
-        else:
-            logger.warning("found invalid loglevel in config file %s: %s" % (config_file, loglevel_txt))
-
-        logger.setLevel(log_level)
-
-    if config.has_option('serial', 'pppopts'):
-        extra_opts = config.get('serial', 'pppopts').split()
-        for item in extra_opts:
-            pppopts.append(item)
-
-    if config.has_option('serial', 'network'):
-        new_network = config.get('serial', 'network')
-        
-        network_re = re.compile('^(\d{1,3}\.\d{1,3}\.\d{1,3}$)')
-        network_match = network_re.match(new_network)
-        if network_match != None:
-            DEFAULT_SERIAL_NETWORK = new_network
-        else:
-            logger.warning("found invalid network in config file %s: %s" % (config_file, new_network))
-
-    return True
-
-
 #
 # main()
 #
 if __name__ == '__main__':
 
-    log_facility = logging.handlers.SysLogHandler.LOG_DAEMON
-
-    logging.basicConfig(level=logging.WARNING,
-                        format='%(asctime)s %(name)s %(levelname)s : %(message)s')
-    logger = logging.getLogger("hal-synce-serial")
-    sys_log = logging.handlers.SysLogHandler("/dev/log", log_facility)
-    syslog_form = logging.Formatter('%(name)s[%(process)d] %(levelname)s : %(message)s')
-    sys_log.setFormatter(syslog_form)
-    logger.addHandler(sys_log)
+    logger = get_logger("hal-synce-serial")
 
     device_path = False
 
@@ -231,107 +85,15 @@ if __name__ == '__main__':
                 logger.critical("Hal environment not set: %s" % e)
                 sys.exit(1)
 
-    elif os.environ.has_key("ACTION"):
-        action = os.environ["ACTION"]
-
-        if os.environ.has_key("DEVPATH"):
-            device_path = os.environ["DEVPATH"]
-        else:
-            logger.critical("Udev environment not set: DEVPATH missing")
-            sys.exit(1)
-
-        # need to check for 2 port devices here
-        # there are no python bindings for udev, so this is a little awkward
-
-        # get device name
-        cmd_list = ["udevadm", "info", "--path="+devpath, "--query=name"]
-        try:
-            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output_text = proc.communicate()[0]
-        except Exception,e:
-            logger.error("failure running udevadm: %s" % e)
-            sys.exit(1)
-
-        rc = proc.returncode
-        if rc != 0:
-            logger.error("udevadm failed with return code %d", rc)
-            sys.exit(1)
-
-        devname = output_text.strip()
-
-        # get parent device path
-        match_obj = re.match('^(.+)/'+name+"/"+subsystem+'/'+name, devpath)
-        if match_obj == None:
-            logger.error("failed to get parent device path from udev")
-            sys.exit(1)
-
-        parent_devpath = match_obj.group(1)
-
-        # find all relevant child devices of the parent
-        cmd_list = ["udevadm", "info", "--export-db"]
-        try:
-            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output_text = proc.communicate()[0]
-        except Exception,e:
-            logger.error("failure getting device db: %s" % e)
-            sys.exit(1)
-
-        rc = proc.returncode
-        if rc != 0:
-            logger.error("udevadm failed with return code %d when getting device db",rc)
-            sys.exit(1)
-
-        output_list = output_text.split('\n')
-        devpath_re = re.compile('^P: ('+parent_devpath+'.+/'+subsystem+'/.+)')
-
-        devpath_list = []
-        for line in output_list:
-            match_obj = devpath_re.match(line)
-            if match_obj != None:
-                path = match_obj.group(1)
-                devpath_list.append(path)
-
-        if len(devpath_list) > 1:
-            devpath_list.sort()
-            if device_path != devpath_list[len(devpath_list) - 1]:
-                logger.warning("found inactive port, we need to mark this somehow")
-                sys.exit(0)
-
-        # get serial device file
-        if platform.system() == "FreeBSD":
-            logger.critical("do we support udev/devicekit on FreeBSD ???")
-            sys.exit(1)
-        else:
-            try:
-                device_file = os.environ["DEVNAME"]
-            except Exception,e:
-                logger.critical("Udev environment not set: DEVNAME missing")
-                sys.exit(1)
-
     else:
         logger.critical("Environment not set, action is missing")
         sys.exit(1)
 
     process_config()
 
-
-    if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
-        logger.critical("unable to find a character device named "+device_file)
+    devnum = serial_get_devnum(device_file)
+    if devnum < 0:
         sys.exit(1)
-
-    devnum_re = re.compile('^[^0-9]*([0-9]*)$')
-    devnum_match = devnum_re.match(device_file)
-    if devnum_match != None:
-        devnum = devnum_match.group(1)
-    else:
-        devnum = 0
-
-    # Add 120 for /dev/ttyS*, to support both standard serial
-    # and USB
-    serial_re = re.compile('ttyS')
-    serial_match = serial_re.match(device_file)
-    if serial_match != None:
-        devnum = int(devnum) + 120
 
     # see the "linkname" option in the man page for pppd
     linkname = "synce-device"+devnum
@@ -339,10 +101,9 @@ if __name__ == '__main__':
     if action == "add":
         logger.debug("running as addon for device "+device_file)
 
-        local_ip = DEFAULT_SERIAL_NETWORK+"."+str(int(devnum) + 1)
-        remote_ip = DEFAULT_SERIAL_NETWORK+"."+str(int(devnum) + 129)
+        local_ip, remote_ip = serial_get_address(devnum)
 
-        if synce_serial_start_device(device_file, local_ip, remote_ip, linkname) == False:
+        if serial_start_device(device_file, local_ip, remote_ip, linkname) == False:
             logger.critical("failed to establish serial connection, aborting...")
             sys.exit(1)
 
@@ -356,5 +117,7 @@ if __name__ == '__main__':
 
     if action == "remove":
         logger.debug("running for removal of device "+device_file)
-        synce_serial_stop_device(linkname)
+        if serial_stop_device(linkname) == False:
+            logger.critical("failed to take down serial connection, aborting...")
+            sys.exit(1)
 

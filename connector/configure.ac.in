@@ -15,6 +15,19 @@ AC_PROG_RANLIB
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
+dnl Find the path to network tools
+AC_PATH_PROG([DHCLIENTPATH], [dhclient], [no])
+if test "x$DHCLIENTPATH" = "xno"; then
+   AC_MSG_ERROR([Failed to find dhclient in PATH, is it installed ?])
+fi
+
+AC_PATH_PROG([IFCONFIGPATH], [ifconfig], [no])
+if test "x$IFCONFIGpath" = "xno"; then
+   AC_MSG_ERROR([Failed to find ifconfig in PATH, is it installed ?])
+fi
+
+AC_PATH_PROG([PPPDPATH], [pppd], [/usr/sbin/pppd])
+
 dnl Check for header files.
 AC_STDC_HEADERS
 
@@ -99,16 +112,18 @@ fi
 AS_AC_EXPAND(LIBEXECDIR, "$libexecdir")
 AS_AC_EXPAND(SYSCONFDIR, "$sysconfdir")
 AS_AC_EXPAND(LOCALSTATEDIR, "$localstatedir")
-AS_AC_EXPAND(DATADIR, "$datadir")
+AS_AC_EXPAND(SYNCEDATADIR, "$datadir/${PACKAGE}")
+AS_AC_EXPAND(UDEVDIR, "$udev_dir")
 
 AC_CONFIG_FILES([
         scripts/synceconnector.py \
         scripts/hal-synce-rndis \
         scripts/hal-synce-serial \
         scripts/udev-synce-rndis \
+        scripts/udev-synce-serial \
         scripts/synce-udev-rndis \
         scripts/synce-udev-serial \
-        scripts/synce.rules \
+        scripts/85-synce.rules \
         bluetooth/hal-synce-bluetooth \
         bluetooth/synce-bt-ipup \
         bluetooth/synce-bt-ipdown \

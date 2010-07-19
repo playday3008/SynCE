@@ -3,9 +3,9 @@
 import sys
 import os
 
-sys.path.insert(0,"@DATADIR@/@PACKAGE_NAME@")
+sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
-from synceconnector import rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig, run_dccm, process_config
+from synceconnector import run_dccm, process_config, get_logger, rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig
 
 #
 # main()
@@ -13,6 +13,8 @@ from synceconnector import rndis_static_config, rndis_dhcp_config, rndis_dhcp_un
 if __name__ == '__main__':
 
     logger = get_logger("hal-synce-rndis")
+
+    process_config()
 
     device_path = False
     device_ip = False

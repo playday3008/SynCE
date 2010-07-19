@@ -27,6 +27,8 @@
 #include "synce-device-legacy.h"
 #include "utils.h"
 
+#define BUS_NAME "org.synce.dccm"
+
 /* args */
 
 static gchar *device_ip = NULL;
@@ -276,16 +278,25 @@ main(gint argc,
 {
   GMainLoop *mainloop;
   GError *error = NULL;
+  DBusGConnection *main_bus;
 #ifdef USE_HAL
   DBusError dbus_error;
-  DBusGConnection *main_bus;
   LibHalContext *main_ctx;
   GIOChannel *signal_in = NULL;
   long fd_flags;
   struct sigaction *sigact = NULL;
 #else /* USE_HAL */
+  DBusGProxy *main_bus_proxy = NULL;
+  guint req_name_result;
+  gchar *bus_name = NULL;
   GUdevClient *gudev_client = NULL;
   const gchar *subsystems[] = { "", NULL };
+
+  const gchar safe_chars[] = {
+      "abcdefghijklmnopqrstuvwxyz"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "0123456789_"
+  };
 #endif
 
   g_type_init ();
@@ -389,14 +400,15 @@ main(gint argc,
 
   g_debug("%s: called with device-ip=%s, local-ip=%s, device-path=%s", G_STRFUNC, device_ip, local_ip, device_path);
 
-#ifdef USE_HAL
-  dbus_error_init(&dbus_error);
-
   if (!(main_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
     g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
     g_error_free(error);
     return EXIT_FAILURE;
   }
+
+#ifdef USE_HAL
+  dbus_error_init(&dbus_error);
+
   if (!(main_ctx = libhal_ctx_new())) {
     g_critical("%s: failed to get libhal context", G_STRFUNC);
     return EXIT_FAILURE;
@@ -420,6 +432,32 @@ main(gint argc,
 
   g_debug("%s: connected to hal, waiting for interface...", G_STRFUNC);
 #else /* USE_HAL */
+
+  main_bus_proxy = dbus_g_proxy_new_for_name(main_bus, "org.freedesktop.DBus",
+					     "/org/freedesktop/DBus",
+					     "org.freedesktop.DBus");
+  if (main_bus_proxy == NULL) {
+    g_critical("Failed to get proxy to dbus");
+    return EXIT_FAILURE;
+  }
+
+  gchar *safe_path = g_strdup(device_path);
+  g_strcanon(safe_path, safe_chars, '_');
+  bus_name = g_strdup_printf("%s.%s", BUS_NAME, safe_path);
+  g_free(safe_path);
+
+  if (!dbus_g_proxy_call(main_bus_proxy, "RequestName", &error,
+			 G_TYPE_STRING, bus_name,
+			 G_TYPE_UINT, DBUS_NAME_FLAG_DO_NOT_QUEUE,
+			 G_TYPE_INVALID,
+			 G_TYPE_UINT, &req_name_result,
+			 G_TYPE_INVALID))
+    {
+      g_critical("Failed to get bus name %s: %s", bus_name, error->message);
+      g_free(bus_name);
+      return EXIT_FAILURE;
+    }
+
   gudev_client = g_udev_client_new(subsystems);
 
   g_signal_connect(gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), mainloop);
@@ -435,10 +473,23 @@ main(gint argc,
   if (!(libhal_ctx_shutdown(main_ctx, &dbus_error)))
     g_critical("%s: failed to shutdown hal context cleanly: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
   libhal_ctx_free(main_ctx);
-  dbus_g_connection_unref(main_bus);
 #else /* USE_HAL */
+  if (!dbus_g_proxy_call(main_bus_proxy, "ReleaseName", &error,
+			 G_TYPE_STRING, bus_name,
+			 G_TYPE_INVALID,
+			 G_TYPE_UINT, &req_name_result,
+			 G_TYPE_INVALID))
+    {
+      g_critical("Failed to cleanly release bus name %s: %s", bus_name, error->message);
+      g_free(bus_name);
+      return EXIT_FAILURE;
+    }
+  g_free(bus_name);
+  g_object_unref(main_bus_proxy);
+
   g_object_unref(gudev_client);
 #endif /* USE_HAL */
+  dbus_g_connection_unref(main_bus);
 
   g_debug("%s: exiting normally", G_STRFUNC);
 

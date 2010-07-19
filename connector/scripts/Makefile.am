@@ -15,7 +15,7 @@ halscripts_SCRIPTS = \
 else
 
 udevrulesdir = @udev_dir@/rules.d
-udevrules_DATA = synce.rules
+udevrules_DATA = 85-synce.rules
 
 udevstartersdir = @udev_dir@
 udevstarters_SCRIPTS = \

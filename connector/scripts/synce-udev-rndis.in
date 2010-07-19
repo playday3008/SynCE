@@ -1,5 +1,5 @@
 #!/bin/sh
 
-@LIBEXECDIR@/udev-synce-rndis &
+@SYNCEDATADIR@/udev-synce-rndis &
 
 exit 0

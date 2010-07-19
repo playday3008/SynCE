@@ -1,5 +1,5 @@
 #!/bin/sh
 
-@hal_addon_dir@/hal-synce-serial &
+@SYNCEDATADIR@/udev-synce-serial &
 
 exit 0
