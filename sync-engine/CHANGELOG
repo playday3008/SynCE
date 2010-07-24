@@ -1177,3 +1177,8 @@ Add MANIFEST.in for creating distribution.
 -----------------------
 0.15 release
 
+24/07/2010 - Mark Ellis
+-----------------------
+Fix bug in 0.2x plugin in use of osync_context.report_error
+
+

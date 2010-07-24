@@ -128,7 +128,7 @@ class SyncClass:
             ctx.report_success()
         except Exception, e:
             self.logger.error("connect() failed: %s", e)
-            ctx.report_error()
+            ctx.report_error(1, "Failed to connect to sync-engine: %s" % (e,))
 
     def connect(self, ctx):
         self.logger.debug("Connect() called")
