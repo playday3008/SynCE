@@ -507,6 +507,15 @@ hal_device_is_pda (LibHalContext *ctx, const char *udi, gchar **ret_ifname)
       if (strncmp ("rndis_host", drvname, 11) == 0) result = 1;
       libhal_free_string (drvname);
     }
+  else
+    {
+      g_debug("%s: drvname not set", G_STRFUNC);
+      if (dbus_error_is_set(&error))
+	{
+	  g_warning ("%s: failed with D-Bus error %s: %s\n", G_STRFUNC, error.name, error.message);
+	  dbus_error_free(&error);
+	}
+    }
 
   /* Check pda.platform property (for usb-rndis-ng) */
   gchar *pdaplatform = libhal_device_get_property_string (ctx, parentname,
@@ -516,11 +525,21 @@ hal_device_is_pda (LibHalContext *ctx, const char *udi, gchar **ret_ifname)
       if (strncmp ("pocketpc", pdaplatform, 8) == 0) result = 1;
       libhal_free_string (pdaplatform);
     }
+  else
+    {
+      g_debug("%s: pdaplatform not set", G_STRFUNC);
+      if (dbus_error_is_set(&error))
+	{
+	  g_warning ("%s: failed with D-Bus error %s: %s\n", G_STRFUNC, error.name, error.message);
+	  dbus_error_free(&error);
+	}
+    }
 
   libhal_free_string (parentname);
 
 DONE:
-  dbus_error_free (&error);
+  if (dbus_error_is_set(&error))
+    dbus_error_free (&error);
   /*g_debug ("%s: udi='%s', result=%d", G_STRFUNC, udi, result);*/
   return result;
 }
