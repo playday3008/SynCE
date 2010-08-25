@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
-from synceconnector import run_dccm, process_config, get_logger, rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig
+from synceconnector import signal_dccm, process_config, get_logger, rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig
 
 #
 # main()
@@ -39,6 +39,10 @@ if __name__ == '__main__':
         logger.warning("Environment not set, ACTION is missing")
         sys.exit(1)
 
+    logger.debug("ACTION="+action)
+    logger.debug("INTERFACE="+iface)
+    logger.debug("DEVPATH="+device_path)
+
     if action == "add":
         logger.debug("running as addon for interface "+iface)
 
@@ -54,10 +58,9 @@ if __name__ == '__main__':
 
         logger.debug("successfully configured interface")
 
-        run_dccm(device_path,device_ip,local_ip,True)
-
-        logger.error("aborting ...")
-        sys.exit(1)
+        if signal_dccm(device_path,device_ip,local_ip,True) == False:
+            logger.error("aborting ...")
+            sys.exit(1)
 
     if action == "remove":
         logger.debug("running for removal of interface "+iface)

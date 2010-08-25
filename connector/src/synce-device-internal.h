@@ -5,6 +5,8 @@
 #include <dbus/dbus-glib.h>
 #ifdef USE_HAL
 #include <libhal.h>
+#else
+#include <gudev/gudev.h>
 #endif
 
 #include "synce-connection-broker.h"
@@ -40,6 +42,7 @@ struct _SynceDevicePrivate
 #ifndef USE_HAL
   /* the dbus object path */
   gchar *obj_path;
+  GUdevClient *gudev_client;
 #endif
 
   gchar *guid;

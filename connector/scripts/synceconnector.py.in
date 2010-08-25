@@ -6,7 +6,15 @@ import re
 import subprocess
 import logging, logging.handlers
 import ConfigParser
+import dbus
 
+DBUS_DBUS_BUSNAME       = "org.freedesktop.DBus"
+DBUS_DBUS_IFACE         = "org.freedesktop.DBus"
+DBUS_DBUS_OBJPATH       = "/org/freedesktop/DBus"
+
+DBUS_SYNCE_BUSNAME         = "org.synce.dccm"
+DBUS_SYNCE_MANAGER_IFACE   = "org.synce.dccm.DeviceManager.Control"
+DBUS_SYNCE_MANAGER_OBJPATH = "/org/synce/dccm/DeviceManagerControl"
 
 # defaults
 config_file = '@SYSCONFDIR@/synce-connector.conf'
@@ -275,7 +283,7 @@ def serial_start_device(device_file, local_ip, remote_ip, linkname):
 
 
 #
-# run dccm after the interface is configured
+# run hal-dccm after the interface is configured
 #
 def run_dccm(device_path, device_ip, local_ip, rndis):
 
@@ -303,6 +311,45 @@ def run_dccm(device_path, device_ip, local_ip, rndis):
         logger.error("failed to exec hal-dccm !!: %s" % e)
 
     return
+
+
+#
+# signal hal-dccm after the interface is configured
+#
+def signal_dccm(device_path, device_ip, local_ip, rndis):
+
+    logger.debug("signalling hal-dccm ...")
+
+    dccm_log_level = "1"
+
+    if log_level <= logging.DEBUG:
+        dccm_log_level = "6"
+    elif log_level <= logging.INFO:
+        dccm_log_level = "4"
+    elif log_level <= logging.WARNING:
+        dccm_log_level = "3"
+
+    try:
+        dccm_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_SYNCE_BUSNAME, DBUS_SYNCE_MANAGER_OBJPATH), DBUS_SYNCE_MANAGER_IFACE)
+    except Exception,e:
+        logger.critical("failed to connect to dccm device manager %s: %s" % (device_path, e))
+        return False
+
+    logger.debug("signalling hal-dccm with:")
+    if rndis == True:
+        rndis_text = "True"
+    else:
+        rndis_text = "False"
+        
+    logger.debug("device-path=%s, device-ip=%s, local-ip=%s, rndis=%s" % (device_path, device_ip, local_ip, rndis_text))
+
+    try:
+        dccm_manager.DeviceConnected(device_path, device_ip, local_ip, rndis)
+    except:
+        logger.critical("failed to signal device connect to dccm device manager %s: %s" % (our_udi, e))
+        return False
+
+    return True
 
 
 def process_config():

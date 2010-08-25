@@ -3,10 +3,15 @@
 #endif
 
 #include <gnet.h>
+#include <string.h>
+
 #ifdef USE_HAL
 #include <libhal.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#else /* USE_HAL */
+#include <gudev/gudev.h>
 #endif /* USE_HAL */
+
 #include <synce.h>
 
 #include "synce-device.h"
@@ -14,14 +19,17 @@
 #include "synce-device-signals-marshal.h"
 
 #ifdef USE_HAL
-#include "hal-interface-glue.h"
+#include "synce-device-hal-glue.h"
 #else
-#include "udev-interface-glue.h"
+#include "synce-device-udev-glue.h"
 #endif
 
 #include "synce-errors.h"
 
 G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
+
+
+const gchar *udev_subsystems[] = { NULL };
 
 /* from dbus-gutils.h, dbus_connection_get_g_connection 
    appears in 0.74 */
@@ -324,13 +332,16 @@ synce_device_dbus_init(SynceDevice *self)
 
   system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
   if (system_bus == NULL) {
-    g_error ("Failed to connect to system bus: %s", error->message);
+    g_critical("Failed to connect to system bus: %s", error->message);
+    g_error_free(error);
+    return;
   }
 
   dbus_g_connection_register_g_object(system_bus,
 				      obj_path,
 				      G_OBJECT(self));
 
+  dbus_g_connection_unref(system_bus);
   g_object_set (self, "object-path", obj_path, NULL);
   priv->obj_path = obj_path;
 
@@ -414,6 +425,28 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
 }
 
 #ifndef USE_HAL
+
+static void
+gudev_uevent_callback(GUdevClient *client,
+		      gchar *action,
+		      GUdevDevice *device,
+		      gpointer user_data)
+{
+  g_debug("%s: received uevent %s for device %s", G_STRFUNC, action, g_udev_device_get_sysfs_path(device));
+
+  SynceDevice *self = SYNCE_DEVICE (user_data);
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+
+  if ((strcmp(priv->device_path, g_udev_device_get_sysfs_path(device)) != 0) && (strcmp("remove", action) != 0)) 
+    return;
+
+  g_debug("%s: received uevent remove for our device", G_STRFUNC);
+
+  g_signal_emit(self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_DISCONNECTED], 0);
+
+  return;
+}
+
 gboolean
 synce_device_get_name(SynceDevice *self,
 		      gchar **name,
@@ -572,8 +605,19 @@ synce_device_init (SynceDevice *self)
     goto exit;
   }
 
-exit:
+#else /* USE_HAL */
+  g_debug("%s: connecting to udev", G_STRFUNC);
+  if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
+    g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
+    goto exit;
+  }
+
+  if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
+    g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
+  }
 #endif /* USE_HAL */
+
+exit:
 
   return;
 }
@@ -596,7 +640,9 @@ synce_device_dispose (GObject *obj)
     libhal_ctx_shutdown(priv->hal_ctx, NULL);
     libhal_ctx_free(priv->hal_ctx);
   }
-#endif
+#else /* USE_HAL */
+  g_object_unref(priv->gudev_client);
+#endif /* USE_HAL */
 
   g_hash_table_destroy (priv->requests);
 

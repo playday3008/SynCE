@@ -13,13 +13,9 @@
 #include <glib-object.h>
 #include <gnet.h>
 #include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
 
-#ifdef USE_HAL
+#include <dbus/dbus-glib-lowlevel.h>
 #include <libhal.h>
-#else
-#include <gudev/gudev.h>
-#endif
 
 #include "log.h"
 #include "synce-device.h"
@@ -34,7 +30,7 @@
 static gchar *device_ip = NULL;
 static gchar *local_ip = NULL;
 static gchar *device_path = NULL;
-static gint log_level = 3;
+static gint log_level = 6;
 static gboolean rndis_device = FALSE;
 
 /* globals */
@@ -54,7 +50,6 @@ static GOptionEntry options[] =
   };
 
 
-#ifdef USE_HAL
 /* handle the sigterm we get from hal when device is removed */
 
 static int signal_pipe[2];
@@ -109,7 +104,6 @@ deliver_posix_signal(GIOChannel *source, GIOCondition condition, gpointer data)
   g_free(buf);
   return TRUE;
 }
-#endif /* USE_HAL */
 
 
 static void
@@ -120,7 +114,6 @@ device_disconnected_cb(SynceDevice *device,
   g_object_unref(synce_dev);
   g_main_loop_quit((GMainLoop*)user_data);
 }
-
 
 static void
 client_connected_cb (GServer *server,
@@ -160,7 +153,6 @@ client_connected_cb (GServer *server,
   gnet_conn_unref (conn);
 }
 
-#ifdef USE_HAL
 static void
 hal_device_removed_callback(LibHalContext *ctx,
 			    const char *udi)
@@ -174,25 +166,6 @@ hal_device_removed_callback(LibHalContext *ctx,
 
   return;
 }
-#else /* USE_HAL */
-static void
-gudev_uevent_callback(GUdevClient *client,
-		      gchar *action,
-		      GUdevDevice *device,
-		      gpointer user_data)
-{
-  g_debug("%s: received uevent %s for device %s", G_STRFUNC, action, g_udev_device_get_sysfs_path(device));
-
-  if ((strcmp(device_path, g_udev_device_get_sysfs_path(device)) != 0) && (strcmp("remove", action) != 0)) 
-    return;
-
-  g_debug("%s: received uevent remove for our device", G_STRFUNC);
-  GMainLoop *mainloop = (GMainLoop *)user_data;
-  g_main_loop_quit(mainloop);
-
-  return;
-}
-#endif /* USE_HAL */
 
 static void
 iface_list_free_func(gpointer data,
@@ -279,25 +252,11 @@ main(gint argc,
   GMainLoop *mainloop;
   GError *error = NULL;
   DBusGConnection *main_bus;
-#ifdef USE_HAL
   DBusError dbus_error;
   LibHalContext *main_ctx;
   GIOChannel *signal_in = NULL;
   long fd_flags;
   struct sigaction *sigact = NULL;
-#else /* USE_HAL */
-  DBusGProxy *main_bus_proxy = NULL;
-  guint req_name_result;
-  gchar *bus_name = NULL;
-  GUdevClient *gudev_client = NULL;
-  const gchar *subsystems[] = { "", NULL };
-
-  const gchar safe_chars[] = {
-      "abcdefghijklmnopqrstuvwxyz"
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      "0123456789_"
-  };
-#endif
 
   g_type_init ();
   gnet_init();
@@ -343,7 +302,6 @@ main(gint argc,
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
-#ifdef USE_HAL
   /* catch the SIGTERM we get from hal on device disconnect */
 
   if(pipe(signal_pipe)) {
@@ -392,7 +350,6 @@ main(gint argc,
   }
 
   g_free(sigact);
-#endif /* USE_HAL */
 
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
@@ -406,7 +363,6 @@ main(gint argc,
     return EXIT_FAILURE;
   }
 
-#ifdef USE_HAL
   dbus_error_init(&dbus_error);
 
   if (!(main_ctx = libhal_ctx_new())) {
@@ -431,64 +387,16 @@ main(gint argc,
   }
 
   g_debug("%s: connected to hal, waiting for interface...", G_STRFUNC);
-#else /* USE_HAL */
-
-  main_bus_proxy = dbus_g_proxy_new_for_name(main_bus, "org.freedesktop.DBus",
-					     "/org/freedesktop/DBus",
-					     "org.freedesktop.DBus");
-  if (main_bus_proxy == NULL) {
-    g_critical("Failed to get proxy to dbus");
-    return EXIT_FAILURE;
-  }
-
-  gchar *safe_path = g_strdup(device_path);
-  g_strcanon(safe_path, safe_chars, '_');
-  bus_name = g_strdup_printf("%s.%s", BUS_NAME, safe_path);
-  g_free(safe_path);
-
-  if (!dbus_g_proxy_call(main_bus_proxy, "RequestName", &error,
-			 G_TYPE_STRING, bus_name,
-			 G_TYPE_UINT, DBUS_NAME_FLAG_DO_NOT_QUEUE,
-			 G_TYPE_INVALID,
-			 G_TYPE_UINT, &req_name_result,
-			 G_TYPE_INVALID))
-    {
-      g_critical("Failed to get bus name %s: %s", bus_name, error->message);
-      g_free(bus_name);
-      return EXIT_FAILURE;
-    }
-
-  gudev_client = g_udev_client_new(subsystems);
-
-  g_signal_connect(gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), mainloop);
-
-  g_debug("%s: connected to udev, waiting for interface...", G_STRFUNC);
-#endif /* USE_HAL */
 
   g_timeout_add (100, check_interface_cb, mainloop);
 
+
   g_main_loop_run (mainloop);
 
-#ifdef USE_HAL
   if (!(libhal_ctx_shutdown(main_ctx, &dbus_error)))
     g_critical("%s: failed to shutdown hal context cleanly: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
   libhal_ctx_free(main_ctx);
-#else /* USE_HAL */
-  if (!dbus_g_proxy_call(main_bus_proxy, "ReleaseName", &error,
-			 G_TYPE_STRING, bus_name,
-			 G_TYPE_INVALID,
-			 G_TYPE_UINT, &req_name_result,
-			 G_TYPE_INVALID))
-    {
-      g_critical("Failed to cleanly release bus name %s: %s", bus_name, error->message);
-      g_free(bus_name);
-      return EXIT_FAILURE;
-    }
-  g_free(bus_name);
-  g_object_unref(main_bus_proxy);
 
-  g_object_unref(gudev_client);
-#endif /* USE_HAL */
   dbus_g_connection_unref(main_bus);
 
   g_debug("%s: exiting normally", G_STRFUNC);

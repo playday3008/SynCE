@@ -1,7 +1,7 @@
 AC_PREREQ(2.52)
 AC_INIT(synce-connector, @@VERSION@@)
 AC_CONFIG_HEADERS(config.h)
-AC_CONFIG_SRCDIR(src/main.c)
+AC_CONFIG_SRCDIR(src/main-udev.c)
 AM_INIT_AUTOMAKE
 
 AM_MAINTAINER_MODE
@@ -127,6 +127,7 @@ AC_CONFIG_FILES([
         bluetooth/hal-synce-bluetooth \
         bluetooth/synce-bt-ipup \
         bluetooth/synce-bt-ipdown \
+        etc/org.synce.dccm.service \
         etc/synce-connector.conf] )
 
 AC_OUTPUT([

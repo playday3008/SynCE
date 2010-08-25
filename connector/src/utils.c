@@ -36,6 +36,8 @@ synce_get_dbus_g_bus_proxy()
 					  "org.freedesktop.DBus");
     if (bus_proxy == NULL)
       g_critical("%s: Failed to get proxy to DBus", G_STRFUNC);
+
+    dbus_g_connection_unref(bus);
   }
   return bus_proxy;
 }

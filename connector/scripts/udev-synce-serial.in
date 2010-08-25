@@ -13,7 +13,7 @@ import dbus
 
 sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
-from synceconnector import run_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
+from synceconnector import signal_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
 
 #
 # main()
@@ -125,11 +125,9 @@ if __name__ == '__main__':
 
         logger.debug("successfully configured interface")
 
-        run_dccm(device_path, remote_ip, local_ip, False)
-
-        logger.error("aborting ...")
-        sys.exit(1)
-
+        if signal_dccm(device_path, remote_ip, local_ip, False) == False:
+            logger.error("aborting ...")
+            sys.exit(1)
 
     if action == "remove":
         logger.debug("running for removal of device "+device_file)
@@ -137,3 +135,4 @@ if __name__ == '__main__':
             logger.critical("failed to take down serial connection, aborting...")
             sys.exit(1)
 
+    sys.exit(0)
