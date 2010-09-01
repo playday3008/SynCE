@@ -25,6 +25,7 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			utils.c utils.h  \
 			device.c device.h \
 			device-manager.c device-manager.h \
+			udev-client.c udev-client.h \
 			hal-client.c hal-client.h \
 			vdccm-client.c vdccm-client.h \
 			odccm-client.c odccm-client.h \

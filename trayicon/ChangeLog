@@ -1,3 +1,7 @@
+2010-08-31  Mark Ellis  <mark@mpellis.org.uk>
+
+	* monitor connections from udev based dccm
+
 2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.15 release

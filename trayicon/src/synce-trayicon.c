@@ -45,6 +45,7 @@ IN THE SOFTWARE.
 #include "vdccm-client.h"
 #include "odccm-client.h"
 #include "hal-client.h"
+#include "udev-client.h"
 #include "device-manager.h"
 #include "stock-icons.h"
 #include "device-info.h"
@@ -57,6 +58,7 @@ struct _SynceTrayIconPrivate {
 
   GConfClient *conf_client;
   guint conf_watch_id;
+  DccmClient *udev_client;
   DccmClient *hal_client;
   DccmClient *odccm_client;
   DccmClient *vdccm_client;
@@ -355,7 +357,9 @@ trayicon_supply_password(SynceTrayIcon *self)
 
         g_object_get(device, "dccm-type", &dccm_type, NULL);
 
-        if (!(g_ascii_strcasecmp(dccm_type, "hal")))
+        if (!(g_ascii_strcasecmp(dccm_type, "udev")))
+                dccm_client_provide_password(priv->udev_client, pdaname, password);
+        else if (!(g_ascii_strcasecmp(dccm_type, "hal")))
                 dccm_client_provide_password(priv->hal_client, pdaname, password);
         else if (!(g_ascii_strcasecmp(dccm_type, "odccm")))
                 dccm_client_provide_password(priv->odccm_client, pdaname, password);
@@ -503,6 +507,11 @@ service_starting_cb(DccmClient *comms_client, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
 
+  if (IS_UDEV_CLIENT(comms_client)) {
+          event_notification(self, "Service starting", "Udev DCCM has signalled that it is starting");
+          return;
+  }
+
   if (IS_HAL_CLIENT(comms_client)) {
           event_notification(self, "Service starting", "Hal has signalled that it is starting");
           return;
@@ -525,6 +534,12 @@ service_stopping_cb(DccmClient *comms_client, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+  if (IS_UDEV_CLIENT(comms_client)) {
+          event_notification(self, "Service stopping", "Udev DCCM has signalled that it is stopping");
+          wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "udev");
+          return;
+  }
 
   if (IS_HAL_CLIENT(comms_client)) {
           event_notification(self, "Service stopping", "Hal has signalled that it is stopping");
@@ -550,6 +565,13 @@ static void
 uninit_client_comms(SynceTrayIcon *self)
 {
         SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+
+        if (IS_DCCM_CLIENT(priv->udev_client)) {
+                dccm_client_uninit_comms(priv->udev_client);
+                g_object_unref(priv->udev_client);
+                priv->udev_client = NULL;
+                wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "udev");
+        }
 
         if (IS_DCCM_CLIENT(priv->hal_client)) {
                 dccm_client_uninit_comms(priv->hal_client);
@@ -672,6 +694,39 @@ init_client_comms(SynceTrayIcon *self)
         DccmClient *comms_client = NULL;
 
         dbus_g_thread_init();
+
+        comms_client = DCCM_CLIENT(g_object_new(UDEV_CLIENT_TYPE, NULL));
+
+        g_signal_connect (G_OBJECT (comms_client), "password-rejected",
+                          G_CALLBACK (password_rejected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "password-required",
+                          G_CALLBACK (password_required_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "password-required-on-device",
+                          G_CALLBACK (password_required_on_device_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "service-starting",
+                          G_CALLBACK (service_starting_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "service-stopping",
+                          G_CALLBACK (service_stopping_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-connected",
+                          G_CALLBACK (device_connected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-disconnected",
+                          G_CALLBACK (device_disconnected_cb), self);
+
+        g_signal_connect (G_OBJECT (comms_client), "device-unlocked",
+                          G_CALLBACK (device_unlocked_cb), self);
+
+        if (!(dccm_client_init_comms(comms_client))) {
+                g_critical("%s: Unable to initialise udev dccm comms client", G_STRFUNC);
+                g_object_unref(comms_client);
+        }
+
+        priv->udev_client = comms_client;
 
         comms_client = DCCM_CLIENT(g_object_new(HAL_CLIENT_TYPE, NULL));
 
