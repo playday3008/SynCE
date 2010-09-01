@@ -1,3 +1,7 @@
+2010-08-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* support for connections through udev based connection dccm
+
 2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.15 release

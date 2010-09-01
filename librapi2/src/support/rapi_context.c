@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
+#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT
 #define DBUS_API_SUBJECT_TO_CHANGE 1
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -29,15 +29,24 @@
 
 #define RAPI_CONTEXT_DEBUG 0
 
-#if ENABLE_ODCCM_SUPPORT
+#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
 static const char* const DBUS_SERVICE       = "org.freedesktop.DBus";
 static const char* const DBUS_IFACE         = "org.freedesktop.DBus";
 static const char* const DBUS_PATH          = "/org/freedesktop/DBus";
+#endif
 
+#if ENABLE_ODCCM_SUPPORT
 static const char* const ODCCM_SERVICE      = "org.synce.odccm";
 static const char* const ODCCM_MGR_PATH     = "/org/synce/odccm/DeviceManager";
 static const char* const ODCCM_MGR_IFACE    = "org.synce.odccm.DeviceManager";
 static const char* const ODCCM_DEV_IFACE    = "org.synce.odccm.Device";
+#endif
+
+#if ENABLE_UDEV_SUPPORT
+static const char* const DCCM_SERVICE      = "org.synce.dccm";
+static const char* const DCCM_MGR_PATH     = "/org/synce/dccm/DeviceManager";
+static const char* const DCCM_MGR_IFACE    = "org.synce.dccm.DeviceManager";
+static const char* const DCCM_DEV_IFACE    = "org.synce.dccm.Device";
 #endif
 
 
@@ -214,7 +223,7 @@ void rapi_context_unref(RapiContext* context)/*{{{*/
 }/*}}}*/
 
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT
+#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT
 
 static gint
 get_socket_from_dccm(const gchar *unix_path)
@@ -266,7 +275,7 @@ OUT:
 
   return dev_fd;
 }
-#endif /* ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT */
+#endif /* ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT */
 
 
 #if ENABLE_ODCCM_SUPPORT
@@ -362,6 +371,99 @@ OUT:
 #endif /* ENABLE_ODCCM_SUPPORT */
 
 
+#if ENABLE_UDEV_SUPPORT
+
+static int
+get_connection_from_udev(SynceInfo *info)
+{
+  GError *error = NULL;
+  DBusGConnection *bus = NULL;
+  DBusGProxy *dbus_proxy = NULL;
+  DBusGProxy *dev_proxy = NULL;
+  gboolean dccm_running = FALSE;
+  gchar *unix_path = NULL;
+  gint fd = -1;
+
+  g_type_init();
+
+  bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+  if (bus == NULL)
+  {
+    synce_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
+    goto ERROR;
+  }
+
+  dbus_proxy = dbus_g_proxy_new_for_name (bus,
+                                          DBUS_SERVICE,
+                                          DBUS_PATH,
+                                          DBUS_IFACE);
+  if (dbus_proxy == NULL) {
+    synce_warning("%s: Failed to get dbus proxy object", G_STRFUNC);
+    goto ERROR;
+  }
+
+  if (!(dbus_g_proxy_call(dbus_proxy, "NameHasOwner",
+                          &error,
+                          G_TYPE_STRING, DCCM_SERVICE,
+                          G_TYPE_INVALID,
+                          G_TYPE_BOOLEAN, &dccm_running,
+                          G_TYPE_INVALID))) {
+    synce_warning("%s: Error checking owner of service %s: %s", G_STRFUNC, DCCM_SERVICE, error->message);
+    g_object_unref(dbus_proxy);
+    goto ERROR;
+  }
+
+  g_object_unref(dbus_proxy);
+  if (!dccm_running) {
+    synce_info("dccm is not running, ignoring");
+    goto ERROR;
+  }
+
+  dev_proxy = dbus_g_proxy_new_for_name(bus, DCCM_SERVICE,
+                                        synce_info_get_object_path(info),
+                                        DCCM_DEV_IFACE);
+  if (dev_proxy == NULL) {
+    synce_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, synce_info_get_object_path(info));
+    goto ERROR;
+  }
+
+  if (!dbus_g_proxy_call(dev_proxy, "RequestConnection", &error,
+                         G_TYPE_INVALID,
+                         G_TYPE_STRING, &unix_path,
+                         G_TYPE_INVALID))
+  {
+    synce_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, synce_info_get_name(info), error->message);
+    g_object_unref(dev_proxy);
+    goto ERROR;
+  }
+
+  g_object_unref(dev_proxy);
+
+  fd = get_socket_from_dccm(unix_path);
+  g_free(unix_path);
+
+  if (fd < 0)
+  {
+    synce_warning("%s: Failed to get file-descriptor from dccm for %s", G_STRFUNC, synce_info_get_name(info));
+    goto ERROR;
+  }
+
+  goto OUT;
+
+ERROR:
+  if (error != NULL)
+    g_error_free(error);
+
+OUT:
+
+  if (bus != NULL)
+    dbus_g_connection_unref (bus);
+
+  return fd;
+}
+#endif /* ENABLE_UDEV_SUPPORT */
+
+
 #if ENABLE_HAL_SUPPORT
 
 static int
@@ -449,7 +551,7 @@ HRESULT rapi_context_connect(RapiContext* context)
     /*
      *  original dccm or vdccm
      */
-    if (transport == NULL || ( strcmp(transport, "odccm") != 0 && strcmp(transport, "hal") != 0 ) ) {
+    if (transport == NULL || ( strcmp(transport, "odccm") != 0 && strcmp(transport, "hal") != 0 && strcmp(transport, "udev") != 0 ) ) {
         if (!synce_info_get_dccm_pid(info))
         {
             synce_error("DCCM PID entry not found for current connection");
@@ -511,7 +613,7 @@ HRESULT rapi_context_connect(RapiContext* context)
         context->rapi_ops = &rapi_ops;
     } else {
         /*
-         *  odccm, synce-hal, or proxy ?
+         *  odccm, synce-hal, udev, or proxy ?
          */
 #if ENABLE_ODCCM_SUPPORT
         if (strcmp(transport, "odccm") == 0) {
@@ -522,6 +624,12 @@ HRESULT rapi_context_connect(RapiContext* context)
 #if ENABLE_HAL_SUPPORT
         if (strcmp(transport, "hal") == 0) {
             synce_socket_take_descriptor(context->socket, get_connection_from_hal(info));
+        }
+        else
+#endif
+#if ENABLE_UDEV_SUPPORT
+        if (strcmp(transport, "udev") == 0) {
+            synce_socket_take_descriptor(context->socket, get_connection_from_udev(info));
         }
         else
 #endif
