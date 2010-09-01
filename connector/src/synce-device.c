@@ -342,8 +342,10 @@ synce_device_dbus_init(SynceDevice *self)
 				      G_OBJECT(self));
 
   dbus_g_connection_unref(system_bus);
+  /* we set this through the property to emit notify::oject-path */
   g_object_set (self, "object-path", obj_path, NULL);
-  priv->obj_path = obj_path;
+  g_debug("%s: obj_path set to %s", G_STRFUNC, priv->obj_path);
+  g_free(obj_path);
 
   return;
 }

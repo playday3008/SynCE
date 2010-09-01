@@ -245,6 +245,16 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
   g_rand_free (rnd);
 
   priv->server = gnet_unix_socket_server_new (priv->filename);
+  if (!(priv->server)) {
+    g_critical("%s: failed to create unix socket at %s", G_STRFUNC, priv->filename);
+
+    GError *error = g_error_new (G_FILE_ERROR, G_FILE_ERROR_FAILED,
+                         "Failed to create socket to pass connection");
+    dbus_g_method_return_error (priv->ctx, error);
+    g_free(priv->filename);
+    priv->filename = NULL;
+    return;
+  }
 
   synce_get_dbus_sender_uid (dbus_g_method_get_sender (priv->ctx), &uid);
 

@@ -80,11 +80,32 @@ device_disconnected_cb(SynceDevice *device,
 
   DeviceEntry *deventry = device_entry_iter->data;
 
-  g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, deventry->device_path);
+  gchar *obj_path = NULL;
+  g_object_get(device, "object-path", &obj_path, NULL);
+  g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, obj_path);
+  g_free(obj_path);
   device_entry_free(deventry);
   priv->devices = g_slist_delete_link(priv->devices, device_entry_iter);
 }
 
+
+static void
+device_obj_path_changed_cb(GObject    *obj,
+			   GParamSpec *param,
+			   gpointer    user_data)
+{
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
+  SynceDevice *dev = SYNCE_DEVICE(obj);
+
+  gchar *obj_path = NULL;
+  g_object_get (dev, "object-path", &obj_path, NULL);
+  if (!obj_path)
+    return;
+
+  g_debug("%s: sending connected signal for %s", G_STRFUNC, obj_path); 
+  g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_CONNECTED], 0, obj_path);
+  g_free (obj_path);
+}
 
 
 static void
@@ -141,9 +162,13 @@ client_connected_cb (GServer *server,
     }
   }
 
-  g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_CONNECTED], 0, deventry->device_path);
-
   gnet_conn_unref (conn);
+
+  g_signal_connect (deventry->device, "notify::object-path",
+		    (GCallback) device_obj_path_changed_cb,
+		    self);
+
+  return;
 }
 
 
