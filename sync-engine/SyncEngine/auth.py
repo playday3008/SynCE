@@ -25,6 +25,12 @@ HAL_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = "provide-on-device"
 HAL_DEVICE_PASSWORD_FLAG_CHECKING          = "checking"
 HAL_DEVICE_PASSWORD_FLAG_UNLOCKED          = "unlocked"
 
+UDEV_DEVICE_PASSWORD_FLAG_UNSET             = "unset"
+UDEV_DEVICE_PASSWORD_FLAG_PROVIDE           = "provide"
+UDEV_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = "provide-on-device"
+UDEV_DEVICE_PASSWORD_FLAG_CHECKING          = "checking"
+UDEV_DEVICE_PASSWORD_FLAG_UNLOCKED          = "unlocked"
+
 	
 AUTH_TOOLS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),"../tools")
 CLI_TOOL = os.path.join(AUTH_TOOLS_PATH,"authcli.py")
@@ -36,6 +42,12 @@ GUI_TOOL = os.path.join(AUTH_TOOLS_PATH,"authgui.py")
 # Is authorization required to use this device?
 	
 def IsAuthRequired(device):
+	if re.compile('/org/synce/dccm/Device/').match(device.object_path) != None:
+		flags = device.GetPasswordFlags()
+		if flags == "unset" or flags == "unlocked":
+			return False
+		return True
+
 	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
 		flags = device.GetPropertyString("pda.pocketpc.password")
 		if flags == "unset" or flags == "unlocked":
@@ -65,6 +77,12 @@ def Authorize(devpath,device,config):
         if IsAuthRequired(device) == False:
             return 1
 
+	if re.compile('/org/synce/dccm/Device/').match(device.object_path) != None:
+		flags = device.GetPasswordFlags()
+		if flags == "provide-on-device":
+			return 2
+		if flags == "pending":
+			return 0
 	if re.compile('/org/freedesktop/Hal/devices/').match(device.object_path) != None:
 		flags = device.GetPropertyString("pda.pocketpc.password")
 		if flags == "provide-on-device":

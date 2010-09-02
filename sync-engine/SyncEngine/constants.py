@@ -35,6 +35,11 @@ DBUS_HAL_MANAGER_IFACE   = "org.freedesktop.Hal.Manager"
 DBUS_HAL_MANAGER_OBJPATH = "/org/freedesktop/Hal/Manager"
 DBUS_HAL_DEVICE_IFACE    = "org.freedesktop.Hal.Device"
 
+DBUS_UDEV_BUSNAME         = "org.synce.dccm"
+DBUS_UDEV_MANAGER_IFACE   = "org.synce.dccm.DeviceManager"
+DBUS_UDEV_MANAGER_OBJPATH = "/org/synce/dccm/DeviceManager"
+DBUS_UDEV_DEVICE_IFACE    = "org.synce.dccm.Device"
+
 SYNC_ITEM_CALENDAR  = 0
 SYNC_ITEM_CONTACTS  = 1
 SYNC_ITEM_EMAIL     = 2

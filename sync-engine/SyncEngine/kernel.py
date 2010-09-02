@@ -95,8 +95,8 @@ class SyncEngine(dbus.service.Object):
 		self.autosync_triggered = False
 
 
-		self.odccm_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_DBUS_BUSNAME, DBUS_DBUS_OBJPATH), DBUS_DBUS_IFACE)
-		self.odccm_manager.connect_to_signal("NameOwnerChanged", self._CBODCCMStatusChanged)
+		self.dbus_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_DBUS_BUSNAME, DBUS_DBUS_OBJPATH), DBUS_DBUS_IFACE)
+		self.dbus_manager.connect_to_signal("NameOwnerChanged", self._CBDCCMStatusChanged)
 	
 		self.device = None
 		self.deviceName = ""
@@ -104,8 +104,22 @@ class SyncEngine(dbus.service.Object):
 		self.iface_addr = ""
 		self.partnerships = None
 
-		# Attempt to connect to a running odccm. If a running odccm is not available, we can wait for
-		# it to become available.
+		self._ODCCMConnect()
+		self._UdevConnect()
+		self._HalConnect()
+
+
+
+	#
+	# _ODCCMConnect
+	#
+	# INTERNAL
+	#
+	# Attempt to connect to a running odccm. If a running odccm is not available, we can wait for
+	# it to become available.
+	#
+
+	def _ODCCMConnect(self):
 
 		try:
 			self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
@@ -115,13 +129,45 @@ class SyncEngine(dbus.service.Object):
 
 			obj_paths = self.device_manager.GetConnectedDevices()
 			if len(obj_paths) > 0:
-				self.logger.info("__init__: connected device found")
+				self.logger.info("_ODCCMConnect: connected device found")
 				self._CBDeviceConnected(obj_paths[0])
 		except:
 			self.isOdccmRunning = False
 
+	#
+	# _UdevConnect
+	#
+	# INTERNAL
+	#
+	# Attempt to connect to a running Udev dccm. If a running dccm is not available, we can wait for
+	# it to become available.
+	#
 
-		# Attempt to connect to Hal manager
+	def _UdevConnect(self):
+
+		try:
+			self.udev_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_UDEV_BUSNAME, DBUS_UDEV_MANAGER_OBJPATH), DBUS_UDEV_MANAGER_IFACE)
+			self.udev_manager.connect_to_signal("DeviceConnected", self._CBUdevDeviceConnected)
+			self.udev_manager.connect_to_signal("DeviceDisconnected", self._CBUdevDeviceDisconnected)
+			self.isUdevRunning = True
+
+			obj_paths = self.udev_manager.GetConnectedDevices()
+			if len(obj_paths) > 0:
+				self.logger.info("_UdevConnect: connected device found")
+				self._CBUdevDeviceConnected(obj_paths[0])
+		except Exception, e:
+			self.logger.info("_UdevConnect: failed to connect to dccm: %s", e)
+			self.isUdevRunning = False
+
+	#
+	# _HalConnect
+	#
+	# INTERNAL
+	#
+	# Attempt to connect to Hal manager
+	#
+
+	def _HalConnect(self):
 
 		try:
 			self.hal_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_HAL_BUSNAME, DBUS_HAL_MANAGER_OBJPATH), DBUS_HAL_MANAGER_IFACE)
@@ -131,37 +177,38 @@ class SyncEngine(dbus.service.Object):
 			obj_paths = self.hal_manager.FindDeviceStringMatch("pda.platform", "pocketpc")
 
 			if len(obj_paths) > 0:
-				self.logger.info("__init__: connected device found")
+				self.logger.info("_HalConnect: connected device found")
 				self._CBHalDeviceConnected(obj_paths[0])
 		except Exception, inst:
-			self.logger.info("__init__: exception %s", inst)
+			self.logger.info("_HalConnect: exception %s", inst)
+
 
 	#
-	# _CBODCCMStatusChanged
+	# _CBDCCMStatusChanged
 	#
 	# INTERNAL
 	#
-	# Called upon a change of status in ODCCM. This will happen if ODCCM goes on/offline,
+	# Called upon a change of status in DCCM. This will happen if ODCCM or udev DCCM goes on/offline,
 	# and also if a device is connected.
 	#
 
-	def _CBODCCMStatusChanged(self, obj_path, param2, param3):
+	def _CBDCCMStatusChanged(self, obj_path, old_owner, new_owner):
 
 
 		if obj_path == "org.synce.odccm":
 
 			# If this parameter is empty, the odccm just came online 
 
-			if param2 == "":
+			if old_owner == "":
 				self.isOdccmRunning = True
-				self.logger.info("_CBODCCMStatusChanged: odccm came online")
+				self.logger.info("_CBDCCMStatusChanged: odccm came online")
 
 			# If this parameter is empty, the odccm just went offline
 
-			if param3 == "":
+			if new_owner == "":
 
 				self.isOdccmRunning = False
-				self.logger.info("_CBODCCMStatusChanged: odccm went offline")
+				self.logger.info("_CBDCCMStatusChanged: odccm went offline")
 
 
 			if self.isOdccmRunning:
@@ -171,20 +218,32 @@ class SyncEngine(dbus.service.Object):
 				self.devicePath = ""
 				self.iface_addr = ""
 
-				try:
-					self.device_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_ODCCM_BUSNAME, DBUS_ODCCM_OBJPATH), DBUS_ODCCM_IFACE)
-					self.device_manager.connect_to_signal("DeviceConnected", self._CBDeviceConnected)
-					self.device_manager.connect_to_signal("DeviceDisconnected", self._CBDeviceDisconnected)
-				
-					self.isOdccmRunning = True
+				self._ODCCMConnect()
 
-					obj_paths = self.device_manager.GetConnectedDevices()
-					if len(obj_paths) > 0:
-						self.logger.info("_CBODCCMStatusChanged: connected device found")
-						self._CBDeviceConnected(obj_paths[0])
-						
-				except:
-					self.isOdccmRunning = False
+		if obj_path == "org.synce.dccm":
+
+			# If this parameter is empty, the udev dccm just came online 
+
+			if old_owner == "":
+				self.isUdevRunning = True
+				self.logger.info("_CBDCCMStatusChanged: udev dccm came online")
+
+			# If this parameter is empty, the odccm just went offline
+
+			if new_owner == "":
+
+				self.isUdevRunning = False
+				self.logger.info("_CBDCCMStatusChanged: udev dccm went offline")
+
+
+			if self.isUdevRunning:
+				
+				self.device = None
+				self.deviceName = ""
+				self.devicePath = ""
+				self.iface_addr = ""
+
+				self._UdevConnect()
 
 	#
 	# _CBDeviceConnected
@@ -240,6 +299,59 @@ class SyncEngine(dbus.service.Object):
 			self.logger.info("_CBDeviceDisconnected: ignoring non-live device detach")
 
 	#
+	# _CBUdevDeviceConnected
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a device is connected.
+	#
+
+	def _CBUdevDeviceConnected(self, obj_path):
+	 
+		self.logger.info("_CBUdevDeviceConnected: device connected at path %s", obj_path)
+
+		if self.isConnected == False:
+		
+			# update config from file
+	
+			self.config.UpdateConfig()
+
+			deviceObject = dbus.SystemBus().get_object(DBUS_UDEV_BUSNAME,obj_path)
+			self.device = dbus.Interface(deviceObject,DBUS_UDEV_DEVICE_IFACE)
+       			self.device.connect_to_signal("PasswordFlagsChanged", self._CBUdevDeviceAuthStateChanged)
+			self.deviceName = self.device.GetName()
+			self.logger.info(" device %s connected" % self.deviceName)
+			self.devicePath = obj_path
+			self.iface_addr = self.device.GetIfaceAddress()
+       			if self._ProcessAuth():
+				self.OnConnect()
+		else:
+			if obj_path == self.devicePath:
+				self.logger.info("_CBUdevDeviceConnected: device already connected")
+			else:
+				self.logger.info("_CBUdevDeviceConnected: other device already connected - ignoring new device")
+
+	#
+	# _CBUdevDeviceDisconnected
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a device is disconnected
+	#
+
+	def _CBUdevDeviceDisconnected(self, obj_path):
+
+		self.logger.info("_CBUdevDeviceDisconnected: device disconnected from path %s", obj_path)
+		if self.devicePath == obj_path:
+			self.device=None
+			self.deviceName = ""
+			self.OnDisconnect()
+			self.devicePath = ""
+			self.iface_addr = ""
+		else:
+			self.logger.info("_CBUdevDeviceDisconnected: ignoring non-live device detach")
+
+	#
 	# _CBHalDeviceConnected
 	#
 	# INTERNAL
@@ -249,7 +361,7 @@ class SyncEngine(dbus.service.Object):
 
 	def _CBHalDeviceConnected(self, obj_path):
 	 
-		if self.isOdccmRunning:
+		if self.isOdccmRunning or self.isUdevRunning:
 			return
 
 		# check if it's a pocketpc
@@ -292,7 +404,7 @@ class SyncEngine(dbus.service.Object):
 
 	def _CBHalDeviceDisconnected(self, obj_path):
 
-		if self.isOdccmRunning:
+		if self.isOdccmRunning or self.isUdevRunning:
 			return
 
 		if self.devicePath == obj_path:
@@ -327,6 +439,21 @@ class SyncEngine(dbus.service.Object):
 	def _CBDeviceAuthStateChanged(self,added,removed):
 			
 		self.logger.info("_CBDeviceAuthStateChanged: device authorization state changed: reauthorizing")
+		if not self.isConnected:
+			if self._ProcessAuth():
+				self.OnConnect()
+
+	#
+	# _CBUdevDeviceAuthStateChanged
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a udev dccm device authorization state changes
+	#
+
+	def _CBUdevDeviceAuthStateChanged(self,pw_status):
+			
+		self.logger.info("_CBUdevDeviceAuthStateChanged: device authorization state changed: reauthorizing")
 		if not self.isConnected:
 			if self._ProcessAuth():
 				self.OnConnect()

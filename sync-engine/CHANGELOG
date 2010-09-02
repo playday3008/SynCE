@@ -1181,4 +1181,9 @@ Add MANIFEST.in for creating distribution.
 -----------------------
 Fix bug in 0.2x plugin in use of osync_context.report_error
 
+01/09/2010 - Mark Ellis
+-----------------------
+Use new udev based dccm
+
+
 
