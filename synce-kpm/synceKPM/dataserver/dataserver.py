@@ -43,6 +43,7 @@ class DataServer(dbus.service.Object):
 
         self.odccm_device = None
         self.hal_device = None
+        self.udev_device = None
         self.syncEngineRunning = False
 
 
@@ -118,6 +119,13 @@ class DataServer(dbus.service.Object):
                     self.onAuthorized()
 
     
+    def udev_password_flags_changed_cb( self, pwflags ):
+        if pwflags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNSET:
+            self.onAuthorized()
+        if pwflags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED:
+            self.onAuthorized()
+
+    
     
     def odccm_device_disconnected_cb(self, obj_path ):
         self.deviceDisconnected( self.deviceName )
@@ -167,6 +175,54 @@ class DataServer(dbus.service.Object):
 
         #pass
 
+
+
+    def udev_device_disconnected_cb(self, obj_path ):
+        self.deviceDisconnected( self.deviceName )
+        self.udev_device = None
+        self.deviceName   = ""
+        self.deviceIsConnected = False
+
+        self._programList = []
+        pass
+
+
+    def udev_device_connected_cb(self, obj_path, alreadyConnected=False ):
+        deviceObject = dbus.SystemBus().get_object(synceKPM.constants.DBUS_UDEV_BUSNAME, obj_path)
+        self.udev_device = dbus.Interface(deviceObject, synceKPM.constants.DBUS_UDEV_DEVICE_IFACE)
+        self.deviceName = self.udev_device.GetName()
+        self.deviceModelName = self.udev_device.GetModelName()
+
+        self.deviceConnected(self.deviceName,alreadyConnected)
+
+        __deviceOsVersion=self.udev_device.GetOsVersion()
+        self.deviceOsVersion( __deviceOsVersion )
+
+
+        #Start listening to dbus for changes in the status of authorization
+        self._sm_udev_password_flags_changed = self.udev_device.connect_to_signal("PasswordFlagsChanged", self.udev_password_flags_changed_cb)
+
+        #self.onConnect()
+
+        flags = self.udev_device.GetPasswordFlags()
+
+        if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE:
+            #This means the WM5 style
+            #self.sendMessage(ACTION_PASSWORD_NEEDED)
+            self.UnlockDeviceViaHost()
+            return 
+
+        if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
+            #print "Dealing with a WM6 phone, user must unlock device on device itself"
+            #self.sendMessage(ACTION_PASSWORD_NEEDED_ON_DEVICE)
+            self.UnlockDeviceViaDevice()
+            return 
+
+        #If the device is not locked at all, then we can build up rapi connections
+        #and notify all listeners. This is done by the onAuthorized method.
+        self.onAuthorized()
+
+        #pass
 
 
     def hal_device_connected_cb(self, obj_path, alreadyConnected=False ):
@@ -248,7 +304,9 @@ class DataServer(dbus.service.Object):
         
         self.DeviceOwner( self.getDeviceOwner() )
 
-        if self.hal_device != None:
+        if self.udev_device != None:
+            self.DeviceModel( self.udev_device.GetModelName() )
+        elif self.hal_device != None:
             self.DeviceModel( self.hal_device.GetPropertyString("pda.pocketpc.model") )
         else:
             self.DeviceModel( self.odccm_device.GetModelName() )
@@ -473,6 +531,23 @@ class DataServer(dbus.service.Object):
             self._sm_odccm_device_disconnected = None
 
 
+    def handleUdevStatusChange(self, isOnline):
+        if isOnline:
+            udevProxy      = dbus.SystemBus().get_object(synceKPM.constants.DBUS_UDEV_BUSNAME, synceKPM.constants.DBUS_UDEV_MANAGER_OBJPATH)
+            udevDevManager = dbus.Interface( udevProxy, synceKPM.constants.DBUS_UDEV_MANAGER_IFACE )
+
+            self._sm_udev_phone_connected   = udevDevManager.connect_to_signal( "DeviceConnected", self.udev_device_connected_cb )
+            self._sm_udev_phone_disconnected= udevDevManager.connect_to_signal( "DeviceDisconnected", self.udev_device_disconnected_cb )
+
+            if len(udevDevManager.GetConnectedDevices()) > 0:
+                #The device was already connected, this means that we can 
+                #call the callback function with extra param with value True
+                self.udev_device_connected_cb( udevDevManager.GetConnectedDevices()[0], True )
+        else:
+            self._sm_udev_device_connected    = None
+            self._sm_udev_device_disconnected = None
+
+
 
     def handleNameOwnerChange(self, obj_path, param2, param3):
         if obj_path == "org.synce.kpm.gui" and param3 == "":
@@ -488,6 +563,12 @@ class DataServer(dbus.service.Object):
             if param3 == "":
                 isOnline = False
             self.handleOdccmStatusChange( isOnline )
+
+        if obj_path == synceKPM.constants.DBUS_UDEV_BUSNAME:
+            isOnline = True
+            if param3 == "":
+                isOnline = False
+            self.handleUdevStatusChange( isOnline )
 
 
         if obj_path == "org.synce.SyncEngine":
@@ -516,6 +597,13 @@ class DataServer(dbus.service.Object):
         try:
             dbus.SystemBus().get_object("org.synce.odccm", "/org/synce/odccm/DeviceManager")
             self.handleOdccmStatusChange( True ) 
+        except dbus.DBusException:
+            pass
+
+
+        try:
+            dbus.SystemBus().get_object(synceKPM.constants.DBUS_UDEV_BUSNAME, synceKPM.constants.DBUS_UDEV_MANAGER_OBJPATH)
+            self.handleUdevStatusChange( True ) 
         except dbus.DBusException:
             pass
 
@@ -744,6 +832,10 @@ class DataServer(dbus.service.Object):
 
     @dbus.service.method('org.synce.kpm.DataServerInterface', in_signature="s")
     def processAuthorization(self, password):
+        if self.udev_device != None:
+            self.udev_device.ProvidePassword( password )
+            return
+
         if self.hal_device != None:
             self.hal_device_synce.ProvidePassword( password )
             return

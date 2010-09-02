@@ -2,6 +2,11 @@ DBUS_DBUS_BUSNAME       = "org.freedesktop.DBus"
 DBUS_DBUS_IFACE         = "org.freedesktop.DBus"
 DBUS_DBUS_OBJPATH       = "/org/freedesktop/DBus"
 
+DBUS_UDEV_BUSNAME         = "org.synce.dccm"
+DBUS_UDEV_MANAGER_IFACE   = "org.synce.dccm.DeviceManager"
+DBUS_UDEV_MANAGER_OBJPATH = "/org/synce/dccm/DeviceManager"
+DBUS_UDEV_DEVICE_IFACE    = "org.synce.dccm.Device"
+
 DBUS_SYNCENGINE_BUSNAME = "org.synce.SyncEngine"
 DBUS_SYNCENGINE_IFACE   = "org.synce.SyncEngine"
 DBUS_SYNCENGINE_OBJPATH = "/org/synce/SyncEngine"
