@@ -86,6 +86,7 @@ if test "x$enable_udev" = "xno"; then
     AC_SUBST(hal_addon_dir)
 else
     PKG_CHECK_MODULES(GUDEV, gudev-1.0)
+    PKG_CHECK_MODULES(UDEV, udev)
 
     dnl Check for override of default udev dir
     AC_MSG_CHECKING([udev dir])

@@ -1,7 +1,7 @@
 AM_CFLAGS = -Wall \
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"
 
-libexec_PROGRAMS = hal-dccm synce-serial-chat
+libexec_PROGRAMS = dccm synce-serial-chat
 
 BUILT_SOURCES = synce-device-signals-marshal.h \
 		synce-device-signals-marshal.c
@@ -18,7 +18,7 @@ endif
 
 CLEANFILES = $(BUILT_SOURCES)
 
-hal_dccm_SOURCES = $(BUILT_SOURCES) \
+dccm_SOURCES = $(BUILT_SOURCES) \
 		log.c log.h \
 		synce-device.c synce-device.h synce-device-internal.h \
 		synce-device-rndis.c synce-device-rndis.h \
@@ -28,30 +28,30 @@ hal_dccm_SOURCES = $(BUILT_SOURCES) \
 		utils.c utils.h
 
 if USE_HAL
-hal_dccm_SOURCES += main-hal.c
+dccm_SOURCES += main-hal.c
 else
-hal_dccm_SOURCES += main-udev.c synce-device-manager.c synce-device-manager.h \
+dccm_SOURCES += main-udev.c synce-device-manager.c synce-device-manager.h \
 		synce-device-manager-control.c synce-device-manager-control.h
 endif
 
-hal_dccm_CPPFLAGS = \
+dccm_CPPFLAGS = \
 	$(SYNCE_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GNET_CFLAGS) \
 	$(DBUS_CFLAGS)
 
-hal_dccm_LDADD = \
+dccm_LDADD = \
 	$(SYNCE_LIBS) \
 	$(GLIB_LIBS) \
 	$(GNET_LIBS) \
 	$(DBUS_LIBS)
 
 if USE_HAL
-hal_dccm_CPPFLAGS += $(HAL_CFLAGS)
-hal_dccm_LDADD += $(HAL_LIBS)
+dccm_CPPFLAGS += $(HAL_CFLAGS)
+dccm_LDADD += $(HAL_LIBS)
 else
-hal_dccm_CPPFLAGS += $(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
-hal_dccm_LDADD += $(GUDEV_LIBS)
+dccm_CPPFLAGS += $(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
+dccm_LDADD += $(GUDEV_LIBS)
 endif
 
 synce_serial_chat_SOURCES = synce-serial-chat.c
