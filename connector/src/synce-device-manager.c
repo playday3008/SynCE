@@ -64,7 +64,7 @@ device_disconnected_cb(SynceDevice *device,
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
 
-  g_debug("%s: receieved disconnect from device", G_STRFUNC);
+  g_debug("%s: received disconnect from device", G_STRFUNC);
 
   GSList *device_entry_iter = priv->devices;
   while (device_entry_iter) {
@@ -82,6 +82,7 @@ device_disconnected_cb(SynceDevice *device,
 
   gchar *obj_path = NULL;
   g_object_get(device, "object-path", &obj_path, NULL);
+  g_debug("%s: emitting disconnect for object path %s", G_STRFUNC, obj_path);
   g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, obj_path);
   g_free(obj_path);
   device_entry_free(deventry);

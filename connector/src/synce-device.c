@@ -608,6 +608,8 @@ synce_device_init (SynceDevice *self)
   }
 
 #else /* USE_HAL */
+  priv->obj_path = NULL;
+
   g_debug("%s: connecting to udev", G_STRFUNC);
   if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
     g_critical("%s: failed to initialize connection to udev", G_STRFUNC);

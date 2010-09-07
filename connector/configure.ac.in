@@ -88,6 +88,12 @@ else
     PKG_CHECK_MODULES(GUDEV, gudev-1.0)
     PKG_CHECK_MODULES(UDEV, udev)
 
+    dnl Find the path to udevadm
+    AC_PATH_PROG([UDEVADMPATH], [udevadm], [no])
+    if test "x$UDEVADMPATH" = "xno"; then
+       	AC_MSG_ERROR([Failed to find udevadm in PATH, is it installed ?])
+    fi
+
     dnl Check for override of default udev dir
     AC_MSG_CHECKING([udev dir])
     AC_ARG_WITH(udev-dir, [  --with-udev-dir=PATH     Location of the udev config.],

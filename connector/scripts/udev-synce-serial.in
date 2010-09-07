@@ -35,11 +35,17 @@ if __name__ == '__main__':
             logger.critical("Udev environment not set: DEVPATH missing")
             sys.exit(1)
 
+        if os.environ.has_key("SUBSYSTEM"):
+            subsystem = os.environ["SUBSYSTEM"]
+        else:
+            logger.critical("Udev environment not set: SUBSYSTEM missing")
+            sys.exit(1)
+
         # need to check for 2 port devices here
         # there are no python bindings for udev, so this is a little awkward
 
         # get device name
-        cmd_list = ["udevadm", "info", "--path="+devpath, "--query=name"]
+        cmd_list = ["@UDEVADMPATH@", "info", "--path="+device_path, "--query=name"]
         try:
             proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             output_text = proc.communicate()[0]
@@ -55,7 +61,7 @@ if __name__ == '__main__':
         devname = output_text.strip()
 
         # get parent device path
-        match_obj = re.match('^(.+)/'+name+"/"+subsystem+'/'+name, devpath)
+        match_obj = re.match('^(.+)/'+devname+"/"+subsystem+'/'+devname, device_path)
         if match_obj == None:
             logger.error("failed to get parent device path from udev")
             sys.exit(1)
@@ -63,12 +69,12 @@ if __name__ == '__main__':
         parent_devpath = match_obj.group(1)
 
         # find all relevant child devices of the parent
-        cmd_list = ["udevadm", "info", "--export-db"]
+        cmd_list = ["@UDEVADMPATH@", "info", "--export-db"]
         try:
             proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             output_text = proc.communicate()[0]
         except Exception,e:
-            logger.error("failure getting device db: %s" % e)
+            logger.error("failure running udevadm getting device db: %s" % e)
             sys.exit(1)
 
         rc = proc.returncode
