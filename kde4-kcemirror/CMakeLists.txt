@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.0)
 
 project(kde4-kcemirror)
 
-set(PACKAGE_VERSION "0.1")
+set(PACKAGE_VERSION "0.1.1")
 
 # configuration to build source packages
 set (CPACK_PACKAGE_NAME ${PACKAGE_NAME})
