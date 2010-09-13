@@ -90,7 +90,7 @@ void ImageViewer::saveImage()
 
     if (!fileName.isEmpty()) {
         if (!suffix.isEmpty()) {
-            if (!pm.save(fileName, suffix.upper(), 100)) {
+            if (!pm.save(fileName, suffix.upper().latin1(), 100)) {
                 KMessageBox::error(this, "Wrong image format suffix. Please specify a valid one.",
                         "Error Saving");
             }

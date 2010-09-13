@@ -1,3 +1,9 @@
+2010-09-13  Tejas Guruswamy <masterpatricko@gmail.com>
+	
+	* Build with KDE_LDFLAGS
+	* Convert QString to const char* using latin1()
+	* Up version to 0.2.2
+
 2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.2.1 release
