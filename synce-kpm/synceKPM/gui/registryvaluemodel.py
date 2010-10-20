@@ -32,13 +32,13 @@ class RegistryValueModel(QtCore.QAbstractTableModel):
             return QtCore.QVariant() 
 
         if index.column() == 0:
-            return QtCore.QVariant( self.registry.values_in_selected_key[ index.row() ].value_name    ) 
+            return QtCore.QVariant( "" + self.registry.values_in_selected_key[ index.row() ].value_name    ) 
 
         if index.column() == 1:
-            return QtCore.QVariant( self.registry.reg_type_desc[ self.registry.values_in_selected_key[ index.row() ].value_type ]   ) 
+            return QtCore.QVariant( "" + self.registry.reg_type_desc[ self.registry.values_in_selected_key[ index.row() ].value_type ]   ) 
         
         if index.column() == 2:
-            return QtCore.QVariant( self.registry.values_in_selected_key[ index.row() ].value_data_str()   ) 
+            return QtCore.QVariant( "" + self.registry.values_in_selected_key[ index.row() ].value_data_str()   ) 
 
     def headerData(self, section, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:

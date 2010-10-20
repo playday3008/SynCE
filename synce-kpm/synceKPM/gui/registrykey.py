@@ -4,7 +4,7 @@ class RegistryKey:
         #Initially, set the keys and values to empty sets
         self.keys = []
 
-        self.name = key_name
+        self.key_name = key_name
         self.parent = parent_key
 
 
@@ -35,10 +35,10 @@ class RegistryKey:
             #If we are HKCR,HKCU, HKLM then set the initial path now
             #Otherwise, construct the path based on the parent information
             if is_registry_root_key:
-                self.full_path = "/" + self.name
+                self.full_path = "/" + self.key_name
             else:
-                self.full_path = parent_key.full_path + "/" + self.name
-        
+                self.full_path = parent_key.full_path + "/" + self.key_name
+             
         
 
         #If this key needs fetching, then add a special fetching sub_key

@@ -27,13 +27,14 @@ class RegistryKeyModel(QtCore.QAbstractItemModel):
 
         if role != QtCore.Qt.DisplayRole:
             return QtCore.QVariant()
+        
 
         if index.column() > 0:
             return QtCore.QVariant() 
 
         key = self.get_key_from_index(index) 
         
-        return QtCore.QVariant( key.name )
+        return QtCore.QVariant( "" + key.key_name )
 
     def flags(self, index):
         if not index.isValid():
@@ -45,7 +46,7 @@ class RegistryKeyModel(QtCore.QAbstractItemModel):
     def headerData(self, section, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             #return self.rootItem.data(section)
-            return QtCore.QVariant( self.registry.root_item.name )
+            return QtCore.QVariant( self.registry.root_item.key_name )
 
         return QtCore.QVariant()
 
@@ -142,6 +143,6 @@ class RegistryKeyModel(QtCore.QAbstractItemModel):
 
     def key_clicked(self, index):
         key = self.get_key_from_index( index )
-        if key.name != "Fetching..." and key != self.registry.device_root_item:
+        if key.key_name != "Fetching..." and key != self.registry.device_root_item:
             self.registry.set_current_selected_key( key )
 
