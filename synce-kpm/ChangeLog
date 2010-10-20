@@ -1,3 +1,7 @@
+2010-10-20	Guido Diepen <guido@guidodiepen.nl>
+	* Fixed weird issue with PyQt not always interpreting strings correctly
+	  Now prepending string values for registry with ""
+
 2010-09-02	Mark Ellis  <mark@mpellis.org.uk>
 	* Use new udev based dccm
 
