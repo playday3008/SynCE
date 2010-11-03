@@ -39,12 +39,6 @@ struct _SynceDevicePrivate
   /* the hal udi or sysfs path */
   gchar *device_path;
 
-#ifndef USE_HAL
-  /* the dbus object path */
-  gchar *obj_path;
-  GUdevClient *gudev_client;
-#endif
-
   gchar *guid;
   guint os_major;
   guint os_minor;
@@ -68,6 +62,10 @@ struct _SynceDevicePrivate
 #ifdef USE_HAL
   LibHalContext *hal_ctx;
   DBusGConnection *hal_bus;
+#else
+  /* the dbus object path */
+  gchar *obj_path;
+  GUdevClient *gudev_client;
 #endif
 
   DBusGMethodInvocation *pw_ctx;

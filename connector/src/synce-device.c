@@ -342,7 +342,7 @@ synce_device_dbus_init(SynceDevice *self)
 				      G_OBJECT(self));
 
   dbus_g_connection_unref(system_bus);
-  /* we set this through the property to emit notify::oject-path */
+  /* we set this through the property to emit notify::object-path */
   g_object_set (self, "object-path", obj_path, NULL);
   g_debug("%s: obj_path set to %s", G_STRFUNC, priv->obj_path);
   g_free(obj_path);
@@ -439,7 +439,7 @@ gudev_uevent_callback(GUdevClient *client,
   SynceDevice *self = SYNCE_DEVICE (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  if ((strcmp(priv->device_path, g_udev_device_get_sysfs_path(device)) != 0) && (strcmp("remove", action) != 0)) 
+  if ((g_str_has_suffix(g_udev_device_get_sysfs_path(device), priv->device_path) == FALSE) || (strcmp("remove", action) != 0)) 
     return;
 
   g_debug("%s: received uevent remove for our device", G_STRFUNC);
@@ -570,16 +570,32 @@ synce_device_init (SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  g_debug("%s: running for device %s", G_STRFUNC, priv->device_path);
-
   priv->state = CTRL_STATE_HANDSHAKE;
   priv->pw_flags = SYNCE_DEVICE_PASSWORD_FLAG_UNSET;
   priv->info_buf_size = -1;
 
+  priv->req_id = 0;
   priv->requests = g_hash_table_new_full(g_int_hash,
 					 g_int_equal,
 					 g_free,
 					 g_object_unref);
+
+  priv->conn = NULL;
+  priv->device_path = NULL;
+  priv->guid = NULL;
+  priv->name = NULL;
+  priv->platform_name = NULL;
+  priv->model_name = NULL;
+  priv->ip_address = NULL;
+  priv->iface_address = NULL;
+  priv->os_major = 0;
+  priv->os_minor = 0;
+  priv->version = 0;
+  priv->cpu_type = 0;
+  priv->cur_partner_id = 0;
+  priv->id = 0;
+  priv->pw_key = 0;
+  priv->pw_ctx = NULL;
 
 #ifdef USE_HAL
   /* hal context setup */
@@ -637,7 +653,7 @@ synce_device_dispose (GObject *obj)
 
   priv->dispose_has_run = TRUE;
 
-  gnet_conn_unref (priv->conn);
+  gnet_conn_unref(priv->conn);
 
 #ifdef USE_HAL
   if (priv->hal_ctx) {
@@ -781,6 +797,8 @@ synce_device_set_property (GObject      *obj,
   case PROP_DEVICE_PATH:
     g_free (priv->device_path);
     priv->device_path = g_value_dup_string (value);
+    g_debug("%s: running for device %s", G_STRFUNC, priv->device_path);
+
     break;
 #ifndef USE_HAL
   case PROP_OBJ_PATH:

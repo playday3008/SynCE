@@ -1,6 +1,7 @@
 #include <gnet.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "synce-device-manager.h"
 #include "synce-device-manager-glue.h"
@@ -41,8 +42,9 @@ struct _SynceDeviceManagerPrivate
 #define SYNCE_DEVICE_MANAGER_GET_PRIVATE(o) \
     (G_TYPE_INSTANCE_GET_PRIVATE((o), SYNCE_TYPE_DEVICE_MANAGER, SynceDeviceManagerPrivate))
 
+
 static void
-device_entry_free(DeviceEntry *entry)
+synce_device_manager_device_entry_free(DeviceEntry *entry)
 {
   g_free(entry->device_path);
   g_free(entry->device_ip);
@@ -56,15 +58,14 @@ device_entry_free(DeviceEntry *entry)
 }
 
 
-
 static void
-device_disconnected_cb(SynceDevice *device,
-		       gpointer user_data)
+synce_device_manager_device_disconnected_cb(SynceDevice *device,
+					    gpointer user_data)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
 
-  g_debug("%s: received disconnect from device", G_STRFUNC);
+  g_debug("%s: received disconnect signal from device object", G_STRFUNC);
 
   GSList *device_entry_iter = priv->devices;
   while (device_entry_iter) {
@@ -79,29 +80,33 @@ device_disconnected_cb(SynceDevice *device,
   }
 
   DeviceEntry *deventry = device_entry_iter->data;
+  priv->devices = g_slist_delete_link(priv->devices, device_entry_iter);
 
   gchar *obj_path = NULL;
   g_object_get(device, "object-path", &obj_path, NULL);
   g_debug("%s: emitting disconnect for object path %s", G_STRFUNC, obj_path);
   g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, obj_path);
   g_free(obj_path);
-  device_entry_free(deventry);
-  priv->devices = g_slist_delete_link(priv->devices, device_entry_iter);
+  synce_device_manager_device_entry_free(deventry);
+
+  return;
 }
 
 
 static void
-device_obj_path_changed_cb(GObject    *obj,
-			   GParamSpec *param,
-			   gpointer    user_data)
+synce_device_manager_device_obj_path_changed_cb(GObject    *obj,
+						GParamSpec *param,
+						gpointer    user_data)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
   SynceDevice *dev = SYNCE_DEVICE(obj);
 
   gchar *obj_path = NULL;
   g_object_get (dev, "object-path", &obj_path, NULL);
-  if (!obj_path)
+  if (!obj_path) {
+    g_debug("%s: device set object path to NULL", G_STRFUNC);
     return;
+  }
 
   g_debug("%s: sending connected signal for %s", G_STRFUNC, obj_path); 
   g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_CONNECTED], 0, obj_path);
@@ -110,9 +115,9 @@ device_obj_path_changed_cb(GObject    *obj,
 
 
 static void
-client_connected_cb (GServer *server,
-                     GConn *conn,
-                     gpointer user_data)
+synce_device_manager_client_connected_cb(GServer *server,
+					 GConn *conn,
+					 gpointer user_data)
 {
   if (conn == NULL) {
     g_critical("%s: a connection error occured", G_STRFUNC);
@@ -131,6 +136,7 @@ client_connected_cb (GServer *server,
 
   if (!device_entry_iter) {
     g_critical("%s: connection from a non-recognised server", G_STRFUNC);
+    gnet_conn_unref(conn);
     return;
   }
 
@@ -148,25 +154,33 @@ client_connected_cb (GServer *server,
       deventry->server_990 = NULL;
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
       deventry->device = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, "device-path", deventry->device_path, NULL);
-      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(device_disconnected_cb), self);
+      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
+    } else {
+      g_warning("%s: unexpected secondary connection to port %d", G_STRFUNC, local_port);
+      gnet_conn_unref(conn);
+      return;
     }
-  } else {
+  } else if (local_port == 990) {
     if (!(deventry->device)) {
       gnet_server_delete(deventry->server_5679);
       deventry->server_5679 = NULL;
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
       deventry->device = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, "device-path", deventry->device_path, NULL);
-      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(device_disconnected_cb), self);
+      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(deventry->device), conn);
       return;
     }
+  } else {
+    g_warning("%s: unexpected connection to port %d", G_STRFUNC, local_port);
+    gnet_conn_unref(conn);
+    return;
   }
 
   gnet_conn_unref (conn);
 
   g_signal_connect (deventry->device, "notify::object-path",
-		    (GCallback) device_obj_path_changed_cb,
+		    (GCallback) synce_device_manager_device_obj_path_changed_cb,
 		    self);
 
   return;
@@ -174,14 +188,18 @@ client_connected_cb (GServer *server,
 
 
 static gboolean
-create_device(SynceDeviceManager *self, GInetAddr *local_iface, DeviceEntry *deventry)
+synce_device_manager_create_device(SynceDeviceManager *self,
+				   GInetAddr *local_iface,
+				   DeviceEntry *deventry)
 {
-  g_debug("%s: found device interface", G_STRFUNC);
+  g_debug("%s: found device interface for %s", G_STRFUNC, deventry->device_path);
+
+  deventry->iface_pending = FALSE;
 
   GInetAddr *server_990_addr = gnet_inetaddr_clone(local_iface);
   gnet_inetaddr_set_port(server_990_addr, 990);
 
-  deventry->server_990 = gnet_server_new (server_990_addr, 990, client_connected_cb, self);
+  deventry->server_990 = gnet_server_new (server_990_addr, 990, synce_device_manager_client_connected_cb, self);
   if (!(deventry->server_990)) {
     g_critical("%s: unable to listen on rndis port (990), server invalid", G_STRFUNC);
     return FALSE;
@@ -190,7 +208,7 @@ create_device(SynceDeviceManager *self, GInetAddr *local_iface, DeviceEntry *dev
   GInetAddr *server_5679_addr = gnet_inetaddr_clone(local_iface);
   gnet_inetaddr_set_port(server_5679_addr, 5679);
 
-  deventry->server_5679 = gnet_server_new (server_5679_addr, 5679, client_connected_cb, self);
+  deventry->server_5679 = gnet_server_new (server_5679_addr, 5679, synce_device_manager_client_connected_cb, self);
   if (!(deventry->server_5679)) {
     g_critical("%s: unable to listen on legacy port (5679), server invalid", G_STRFUNC);
     return FALSE;
@@ -199,7 +217,7 @@ create_device(SynceDeviceManager *self, GInetAddr *local_iface, DeviceEntry *dev
   gnet_inetaddr_unref(server_990_addr);
   gnet_inetaddr_unref(server_5679_addr);
 
-  g_debug("%s: listening for device", G_STRFUNC);
+  g_debug("%s: listening for device %s", G_STRFUNC, deventry->device_path);
 
   if (deventry->rndis)
     synce_trigger_connection(deventry->device_ip);
@@ -216,7 +234,7 @@ iface_list_free_func(gpointer data,
 
 
 static gboolean
-check_interface_cb (gpointer userdata)
+synce_device_manager_check_interface_cb (gpointer userdata)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
@@ -239,8 +257,7 @@ check_interface_cb (gpointer userdata)
 
       if ( (((DeviceEntry*)device_entry_iter->data)->iface_pending) && ((*(guint32*)iface_bytes) == (*(guint32*)local_ip_bytes)) ) {
 	local_iface = (GInetAddr*)iface_list_iter->data;
-	create_device(self, local_iface, device_entry_iter->data);
-	((DeviceEntry*)device_entry_iter->data)->iface_pending = FALSE;
+	synce_device_manager_create_device(self, local_iface, device_entry_iter->data);
 	g_free(local_ip_bytes);
 	break;
       }
@@ -269,13 +286,18 @@ check_interface_cb (gpointer userdata)
 }
 
 
-
-
 static void
-device_connected_cb(SynceDeviceManagerControl *device_manager_control, gchar *device_path, gchar *device_ip, gchar *local_ip, gboolean rndis, gpointer userdata)
+synce_device_manager_device_connected_cb(SynceDeviceManagerControl *device_manager_control,
+					 gchar *device_path,
+					 gchar *device_ip,
+					 gchar *local_ip,
+					 gboolean rndis,
+					 gpointer userdata)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
+
+  g_debug("%s: receieved device connected signal for %s", G_STRFUNC, device_path);
 
   DeviceEntry *deventry = g_new0(DeviceEntry, 1);
   if (!deventry) {
@@ -295,8 +317,43 @@ device_connected_cb(SynceDeviceManagerControl *device_manager_control, gchar *de
   if (priv->iface_check_id > 0)
     return;
 
-  priv->iface_check_id = g_timeout_add (100, check_interface_cb, self);
+  priv->iface_check_id = g_timeout_add (100, synce_device_manager_check_interface_cb, self);
 }
+
+
+gboolean
+synce_device_manager_get_connected_devices (SynceDeviceManager *self,
+                                            GPtrArray **ret,
+                                            GError **error)
+{
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  *ret = g_ptr_array_new ();
+
+  GSList *device_entry_iter = priv->devices;
+  while (device_entry_iter != NULL) {
+
+    gchar *obj_path;
+    SynceDevice *device = ((DeviceEntry*)device_entry_iter->data)->device;
+    if (device == NULL)
+      /* interface is not yet ready */
+      continue;
+
+    g_object_get (device, "object-path", &obj_path, NULL);
+    if (obj_path == NULL)
+      /* device is not yet ready */
+      continue;
+
+    g_debug("%s: found device %s with object path %s", G_STRFUNC, ((DeviceEntry*)device_entry_iter->data)->device_path, obj_path);
+
+    g_ptr_array_add (*ret, obj_path);
+
+    device_entry_iter = g_slist_next(device_entry_iter);
+  }
+
+  return TRUE;
+}
+
 
 static void
 synce_device_manager_init (SynceDeviceManager *self)
@@ -319,7 +376,7 @@ synce_device_manager_init (SynceDeviceManager *self)
   priv->devices = NULL;
   priv->control_iface = g_object_new(SYNCE_TYPE_DEVICE_MANAGER_CONTROL, NULL);
 
-  priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(device_connected_cb), self);
+  priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(synce_device_manager_device_connected_cb), self);
   priv->iface_check_id = 0;
 
   return;
@@ -338,11 +395,12 @@ synce_device_manager_dispose (GObject *obj)
 
   GSList *list_entry = priv->devices;
   while (list_entry) {
-    device_entry_free(list_entry->data);
+    synce_device_manager_device_entry_free(list_entry->data);
     list_entry = g_slist_next(list_entry);
   }
   g_slist_free(priv->devices);
 
+  g_signal_handler_disconnect(priv->control_iface, priv->control_connect_id);
   g_object_unref(priv->control_iface);
 
   if (G_OBJECT_CLASS (synce_device_manager_parent_class)->dispose)
@@ -390,34 +448,5 @@ synce_device_manager_class_init (SynceDeviceManagerClass *klass)
                                    &dbus_glib_synce_device_manager_object_info);
 }
 
-
-
-gboolean
-synce_device_manager_get_connected_devices (SynceDeviceManager *self,
-                                            GPtrArray **ret,
-                                            GError **error)
-{
-  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
-
-  *ret = g_ptr_array_new ();
-
-  GSList *device_entry_iter = priv->devices;
-  while (device_entry_iter != NULL) {
-
-    /* maybe check what auth state device is in */
-
-    gchar *obj_path;
-    SynceDevice *device = ((DeviceEntry*)device_entry_iter->data)->device;
-    g_object_get (device, "object-path", &obj_path, NULL);
-
-    g_debug("%s: found device %s with object path %s", G_STRFUNC, ((DeviceEntry*)device_entry_iter->data)->device_path, obj_path);
-
-    g_ptr_array_add (*ret, obj_path);
-
-    device_entry_iter = g_slist_next(device_entry_iter);
-  }
-
-  return TRUE;
-}
 
 
