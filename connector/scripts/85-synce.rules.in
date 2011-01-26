@@ -8,4 +8,18 @@
 SUBSYSTEM=="net", DRIVERS=="rndis_host", ATTRS{bInterfaceClass}=="ef", ATTRS{bInterfaceSubClass}=="01", ATTRS{bInterfaceProtocol}=="01", ENV{pocketpc}="env-synce", RUN+="@UDEVDIR@/synce-udev-rndis"
 
 # capabilities = serial, parent driver = ipaq
-SUBSYSTEM=="tty", DRIVERS=="ipaq", ENV{pocketpc}="env-synce", RUN+="@UDEVDIR@/synce-udev-serial"
+# If the device has more than one port, then we need to only use the last
+# one.
+# From ipaq.c we can see the choice is only ever 1 or 2 points
+# depending on bNumEndpoints being <=3 or >3 respectively.
+# So we use that knowledge to create rules to only use port_number=1
+# for 2 port devices
+SUBSYSTEM!="tty", GOTO="synce_ipaq_end"
+
+DRIVERS=="ipaq",ATTRS{bNumEndpoints}=="",        ENV{pocketpc}="env-synce"
+DRIVERS=="ipaq",ATTRS{bNumEndpoints}=="0[0123]", ENV{pocketpc}="env-synce"
+DRIVERS=="ipaq",ATTRS{port_number}=="1",         ENV{pocketpc}="env-synce"
+
+ENV{pocketpc}=="env-synce", RUN+="@UDEVDIR@/synce-udev-serial"
+
+LABEL="synce_ipaq_end"

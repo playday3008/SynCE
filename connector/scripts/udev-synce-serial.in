@@ -41,63 +41,6 @@ if __name__ == '__main__':
             logger.critical("Udev environment not set: SUBSYSTEM missing")
             sys.exit(1)
 
-        # need to check for 2 port devices here
-        # there are no python bindings for udev, so this is a little awkward
-
-        # get device name
-        cmd_list = ["@UDEVADMPATH@", "info", "--path="+device_path, "--query=name"]
-        try:
-            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output_text = proc.communicate()[0]
-        except Exception,e:
-            logger.error("failure running udevadm: %s" % e)
-            sys.exit(1)
-
-        rc = proc.returncode
-        if rc != 0:
-            logger.error("udevadm failed with return code %d", rc)
-            sys.exit(1)
-
-        devname = output_text.strip()
-
-        # get parent device path
-        match_obj = re.match('^(.+)/'+devname+"/"+subsystem+'/'+devname, device_path)
-        if match_obj == None:
-            logger.error("failed to get parent device path from udev")
-            sys.exit(1)
-
-        parent_devpath = match_obj.group(1)
-
-        # find all relevant child devices of the parent
-        cmd_list = ["@UDEVADMPATH@", "info", "--export-db"]
-        try:
-            proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output_text = proc.communicate()[0]
-        except Exception,e:
-            logger.error("failure running udevadm getting device db: %s" % e)
-            sys.exit(1)
-
-        rc = proc.returncode
-        if rc != 0:
-            logger.error("udevadm failed with return code %d when getting device db",rc)
-            sys.exit(1)
-
-        output_list = output_text.split('\n')
-        devpath_re = re.compile('^P: ('+parent_devpath+'.+/'+subsystem+'/.+)')
-
-        devpath_list = []
-        for line in output_list:
-            match_obj = devpath_re.match(line)
-            if match_obj != None:
-                path = match_obj.group(1)
-                devpath_list.append(path)
-
-        if len(devpath_list) > 1:
-            devpath_list.sort()
-            if device_path != devpath_list[len(devpath_list) - 1]:
-                logger.warning("found inactive port, we need to mark this somehow")
-                sys.exit(0)
-
         # get serial device file
         if platform.system() == "FreeBSD":
             logger.critical("do we support udev/devicekit on FreeBSD ???")
