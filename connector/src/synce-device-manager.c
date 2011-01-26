@@ -129,7 +129,7 @@ synce_device_manager_client_connected_cb(GServer *server,
 
   GSList *device_entry_iter = priv->devices;
   while (device_entry_iter) {
-    if ((((DeviceEntry*)device_entry_iter->data)->server_990 = server) || (((DeviceEntry*)device_entry_iter->data)->server_5679 = server))
+    if ((((DeviceEntry*)device_entry_iter->data)->server_990 == server) || (((DeviceEntry*)device_entry_iter->data)->server_5679 == server))
       break;
     device_entry_iter = g_slist_next(device_entry_iter);
   }

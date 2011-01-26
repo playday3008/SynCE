@@ -1,3 +1,8 @@
+2011-01-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/synce-device-manager.c - fix typo assignment
+	  instead of comparison, thanks to Karl Relton
+
 2010-06-30  Mark Ellis  <mark@mpellis.org.uk>
 
 	* rearrange scripts to use common framework
