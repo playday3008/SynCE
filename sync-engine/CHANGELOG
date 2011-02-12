@@ -1185,5 +1185,9 @@ Fix bug in 0.2x plugin in use of osync_context.report_error
 -----------------------
 Use new udev based dccm
 
+12/02/2011 - Mark Ellis
+-----------------------
+0.15.1 release
+
 
 

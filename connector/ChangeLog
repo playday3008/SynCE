@@ -1,3 +1,7 @@
+2011-02-12  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15.1 release
+
 2011-01-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* src/synce-device-manager.c - fix typo assignment
