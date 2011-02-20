@@ -1,3 +1,9 @@
+2011-02-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi2_api.c - add support for udev connections, to allow
+	  building without hal aupport
+	* 0.15.2 release
+
 2011-02-12  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.15.1 release
