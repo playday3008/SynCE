@@ -25,6 +25,8 @@ udevstarters_SCRIPTS = \
 syncedata_SCRIPTS = \
 	udev-synce-rndis \
 	udev-synce-serial
+
+bin_SCRIPTS = synce-serial
 endif
 
 EXTRA_DIST = $(halfdi)

@@ -20,7 +20,7 @@ from synceconnector import signal_dccm, process_config, get_logger, serial_stop_
 #
 if __name__ == '__main__':
 
-    logger = get_logger("hal-synce-serial")
+    logger = get_logger("udev-synce-serial")
 
     process_config()
 

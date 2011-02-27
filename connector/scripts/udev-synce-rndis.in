@@ -12,7 +12,7 @@ from synceconnector import signal_dccm, process_config, get_logger, rndis_static
 #
 if __name__ == '__main__':
 
-    logger = get_logger("hal-synce-rndis")
+    logger = get_logger("udev-synce-rndis")
 
     process_config()
 

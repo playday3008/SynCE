@@ -7,9 +7,15 @@ install various support files for ppp as detailed below.
 Depending on your distribution, some of these may need
 to be moved.
 
-$prefix/ppp/ip-down.d/synce-bt-ipdown
-$prefix/ppp/ip-up.d/synce-bt-ipup
+For hal:-
+$prefix/ppp/ip-down.d/synce-hal-bt-ipdown
+$prefix/ppp/ip-up.d/synce-hal-bt-ipup
 $prefix/ppp/peers/synce-bt-peer
+
+For udev:-
+$prefix/ppp/ip-up.d/synce-udev-bt-ipup
+$prefix/ppp/peers/synce-bt-peer
+
 
 You need to run dund with these options
 
