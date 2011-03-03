@@ -37,15 +37,23 @@ IN THE SOFTWARE.
 #include <libnotify/notify.h>
 
 #include "synce-trayicon.h"
-#include "gtop_stuff.h"
 #include "properties.h"
 #include "utils.h"
 #include "keyring.h"
 #include "dccm-client.h"
+#if ENABLE_VDCCM_SUPPORT
+#include "gtop_stuff.h"
 #include "vdccm-client.h"
+#endif
+#if ENABLE_ODCCM_SUPPORT
 #include "odccm-client.h"
+#endif
+#if ENABLE_HAL_SUPPORT
 #include "hal-client.h"
+#endif
+#if ENABLE_UDEV_SUPPORT
 #include "udev-client.h"
+#endif
 #include "device-manager.h"
 #include "stock-icons.h"
 #include "device-info.h"
@@ -58,10 +66,18 @@ struct _SynceTrayIconPrivate {
 
   GConfClient *conf_client;
   guint conf_watch_id;
+#if ENABLE_UDEV_SUPPORT
   DccmClient *udev_client;
+#endif
+#if ENABLE_HAL_SUPPORT
   DccmClient *hal_client;
+#endif
+#if ENABLE_ODCCM_SUPPORT
   DccmClient *odccm_client;
+#endif
+#if ENABLE_VDCCM_SUPPORT
   DccmClient *vdccm_client;
+#endif
   WmDeviceManager *device_list;
   GtkWidget *menu;
   NotifyNotification *notification;
@@ -357,14 +373,22 @@ trayicon_supply_password(SynceTrayIcon *self)
 
         g_object_get(device, "dccm-type", &dccm_type, NULL);
 
+#if ENABLE_UDEV_SUPPORT
         if (!(g_ascii_strcasecmp(dccm_type, "udev")))
                 dccm_client_provide_password(priv->udev_client, pdaname, password);
-        else if (!(g_ascii_strcasecmp(dccm_type, "hal")))
+#endif
+#if ENABLE_HAL_SUPPORT
+        if (!(g_ascii_strcasecmp(dccm_type, "hal")))
                 dccm_client_provide_password(priv->hal_client, pdaname, password);
-        else if (!(g_ascii_strcasecmp(dccm_type, "odccm")))
+#endif
+#if ENABLE_ODCCM_SUPPORT
+        if (!(g_ascii_strcasecmp(dccm_type, "odccm")))
                 dccm_client_provide_password(priv->odccm_client, pdaname, password);
-        else
+#endif
+#if ENABLE_VDCCM_SUPPORT
+        if (!(g_ascii_strcasecmp(dccm_type, "vdccm")))
                 dccm_client_provide_password(priv->vdccm_client, pdaname, password);
+#endif
 
         g_free(pdaname);
         g_free(password);
@@ -455,7 +479,7 @@ device_unlocked_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
   return;
 }
 
-
+#if ENABLE_VDCCM_SUPPORT
 static void
 stop_dccm ()
 {
@@ -501,31 +525,40 @@ uninit_vdccm_client_comms(SynceTrayIcon *self)
 
         return;
 }
+#endif
 
 static void
 service_starting_cb(DccmClient *comms_client, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
 
+#if ENABLE_UDEV_SUPPORT
   if (IS_UDEV_CLIENT(comms_client)) {
           event_notification(self, "Service starting", "Udev DCCM has signalled that it is starting");
           return;
   }
+#endif
 
+#if ENABLE_HAL_SUPPORT
   if (IS_HAL_CLIENT(comms_client)) {
           event_notification(self, "Service starting", "Hal has signalled that it is starting");
           return;
   }
+#endif
 
+#if ENABLE_ODCCM_SUPPORT
   if (IS_ODCCM_CLIENT(comms_client)) {
           event_notification(self, "Service starting", "Odccm has signalled that it is starting");
           return;
   }
+#endif
 
+#if ENABLE_VDCCM_SUPPORT
   if (IS_VDCCM_CLIENT(comms_client)) {
           event_notification(self, "Service starting", "Vdccm has signalled that it is starting");
           return;
   }
+#endif
 }
 
 
@@ -535,29 +568,37 @@ service_stopping_cb(DccmClient *comms_client, gpointer user_data)
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
+#if ENABLE_UDEV_SUPPORT
   if (IS_UDEV_CLIENT(comms_client)) {
           event_notification(self, "Service stopping", "Udev DCCM has signalled that it is stopping");
           wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "udev");
           return;
   }
+#endif
 
+#if ENABLE_HAL_SUPPORT
   if (IS_HAL_CLIENT(comms_client)) {
           event_notification(self, "Service stopping", "Hal has signalled that it is stopping");
           wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "hal");
           return;
   }
+#endif
 
+#if ENABLE_ODCCM_SUPPORT
   if (IS_ODCCM_CLIENT(comms_client)) {
           event_notification(self, "Service stopping", "Odccm has signalled that it is stopping");
           wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "odccm");
           return;
   }
+#endif
 
+#if ENABLE_VDCCM_SUPPORT
   if (IS_VDCCM_CLIENT(comms_client)) {
           event_notification(self, "Service stopping", "Vdccm has signalled that it is stopping");
           uninit_vdccm_client_comms(self);
           return;
   }
+#endif
 }
 
 
@@ -566,32 +607,41 @@ uninit_client_comms(SynceTrayIcon *self)
 {
         SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
+#if ENABLE_UDEV_SUPPORT
         if (IS_DCCM_CLIENT(priv->udev_client)) {
                 dccm_client_uninit_comms(priv->udev_client);
                 g_object_unref(priv->udev_client);
                 priv->udev_client = NULL;
                 wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "udev");
         }
+#endif
 
+#if ENABLE_HAL_SUPPORT
         if (IS_DCCM_CLIENT(priv->hal_client)) {
                 dccm_client_uninit_comms(priv->hal_client);
                 g_object_unref(priv->hal_client);
                 priv->hal_client = NULL;
                 wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "hal");
         }
+#endif
 
+#if ENABLE_ODCCM_SUPPORT
         if (IS_DCCM_CLIENT(priv->odccm_client)) {
                 dccm_client_uninit_comms(priv->odccm_client);
                 g_object_unref(priv->odccm_client);
                 priv->odccm_client = NULL;
                 wm_device_manager_remove_by_prop(priv->device_list, "dccm-type", "odccm");
         }
+#endif
 
+#if ENABLE_VDCCM_SUPPORT
         uninit_vdccm_client_comms(self);
+#endif
 
         return;
 }
 
+#if ENABLE_VDCCM_SUPPORT
 static gboolean
 start_dccm (SynceTrayIcon *self)
 {
@@ -686,6 +736,7 @@ init_vdccm_client_comms(SynceTrayIcon *self)
 
         return;
 }
+#endif
 
 static void
 init_client_comms(SynceTrayIcon *self)
@@ -695,6 +746,7 @@ init_client_comms(SynceTrayIcon *self)
 
         dbus_g_thread_init();
 
+#if ENABLE_UDEV_SUPPORT
         comms_client = DCCM_CLIENT(g_object_new(UDEV_CLIENT_TYPE, NULL));
 
         g_signal_connect (G_OBJECT (comms_client), "password-rejected",
@@ -727,7 +779,9 @@ init_client_comms(SynceTrayIcon *self)
         }
 
         priv->udev_client = comms_client;
+#endif
 
+#if ENABLE_HAL_SUPPORT
         comms_client = DCCM_CLIENT(g_object_new(HAL_CLIENT_TYPE, NULL));
 
         g_signal_connect (G_OBJECT (comms_client), "password-rejected",
@@ -760,7 +814,9 @@ init_client_comms(SynceTrayIcon *self)
         }
 
         priv->hal_client = comms_client;
+#endif
 
+#if ENABLE_ODCCM_SUPPORT
         comms_client = DCCM_CLIENT(g_object_new(ODCCM_CLIENT_TYPE, NULL));
 
         g_signal_connect (G_OBJECT (comms_client), "password-rejected",
@@ -793,9 +849,11 @@ init_client_comms(SynceTrayIcon *self)
         }
 
         priv->odccm_client = comms_client;
+#endif
 
+#if ENABLE_VDCCM_SUPPORT
         init_vdccm_client_comms(self);
-
+#endif
         return;
 }
 
@@ -933,6 +991,7 @@ menu_about (GtkWidget *button, SynceTrayIcon *icon)
   gtk_widget_destroy (GTK_WIDGET(about));
 }
 
+#if ENABLE_VDCCM_SUPPORT
 static void
 menu_disconnect(GtkWidget *menu_item, SynceTrayIcon *self)
 {
@@ -966,6 +1025,7 @@ menu_restart_vdccm(GtkWidget *button, SynceTrayIcon *self)
   sleep(1);
   init_vdccm_client_comms(self);
 }
+#endif
 
 static void
 menu_exit(GtkWidget *button, SynceTrayIcon *self)
@@ -1018,11 +1078,13 @@ trayicon_update_menu(SynceTrayIcon *self)
                   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_device_info), self);
                   gtk_menu_append(GTK_MENU(device_menu), entry);
 
+#if ENABLE_VDCCM_SUPPORT
                   if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
                           entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_DISCONNECT, NULL);
                           g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), self);
                           gtk_menu_append(GTK_MENU(device_menu), entry);
                   }
+#endif
 
                   g_free(device_names_iter->data);
                   device_names_iter = g_list_next(device_names_iter);
@@ -1036,6 +1098,7 @@ trayicon_update_menu(SynceTrayIcon *self)
   entry = gtk_separator_menu_item_new();
   gtk_menu_append(GTK_MENU(priv->menu), entry);
 
+#if ENABLE_VDCCM_SUPPORT
   if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
     if (dccm_is_running()) {
       entry = gtk_menu_item_new_with_label(_("Stop DCCM"));
@@ -1055,6 +1118,7 @@ trayicon_update_menu(SynceTrayIcon *self)
     entry = gtk_separator_menu_item_new();
     gtk_menu_append(GTK_MENU(priv->menu), entry);
   }
+#endif
 
   entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_PREFERENCES, NULL);
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_preferences), self);
@@ -1107,6 +1171,7 @@ prefs_changed_cb (GConfClient *client, guint id,
   key = gconf_entry_get_key(entry);
   value = gconf_entry_get_value(entry);
 
+#if ENABLE_VDCCM_SUPPORT
   if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/enable_vdccm"))) {
     gboolean enable_vdccm = gconf_value_get_bool(value);
 
@@ -1117,6 +1182,7 @@ prefs_changed_cb (GConfClient *client, guint id,
 
     return;
   }
+#endif
 
   if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/show_disconnected"))) {
     priv->show_disconnected = gconf_value_get_bool(value);

@@ -606,7 +606,7 @@ hal_status_changed_cb(DBusGProxy *proxy,
         if (strcmp(name, HAL_SERVICE) != 0)
                 return;
 
-        /* If this parameter is empty, odccm just came online */
+        /* If this parameter is empty, hal just came online */
 
         if (strcmp(old_owner, "") == 0) {
                 priv->online = TRUE;
@@ -617,7 +617,7 @@ hal_status_changed_cb(DBusGProxy *proxy,
                 return;
         }
 
-        /* If this parameter is empty, odccm just went offline */
+        /* If this parameter is empty, hal just went offline */
 
         if (strcmp(new_owner, "") == 0) {
                 priv->online = FALSE;

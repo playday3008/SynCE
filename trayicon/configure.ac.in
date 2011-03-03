@@ -21,13 +21,12 @@ PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.14)
 dnl Check for librra
 PKG_CHECK_MODULES(LIBRRA, librra >= 0.14)
 
-PKG_CHECK_MODULES(GNOME2, 
-				  glib-2.0       \
-				  gmodule-2.0    \
-				  gtk+-2.0 >= 2.12 \
-				  libgnome-2.0   \
-				  libgnomeui-2.0 \ 
-				  libgtop-2.0)
+PKG_CHECK_MODULES(GNOME2, glib-2.0       \
+			  gmodule-2.0    \
+			  gtk+-2.0 >= 2.12 \
+			  libgnome-2.0   \
+			  libgnomeui-2.0)
+
 AC_SUBST(GNOME2_CFLAGS)
 AC_SUBST(GNOME2_LIBS)
 
@@ -37,9 +36,6 @@ AM_GCONF_SOURCE_2
 dnl Check for D-Bus
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.61, dbus-glib-1 >= 0.61],
                     dbus=yes, dbus=no)
-
-dnl Check for Hal
-PKG_CHECK_MODULES(HAL, hal)
 
 dnl Check for Gnome Keyring
 PKG_CHECK_MODULES(GNOME_KEYRING, gnome-keyring-1)
@@ -55,6 +51,105 @@ dnl Check for libxml
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.6.0)
 AC_SUBST(XML_CFLAGS)
 AC_SUBST(XML_LIBS)
+
+
+dnl
+dnl whether (v)dccm connection file support is required
+dnl
+AC_ARG_ENABLE(vdccm-support,
+              [  --enable-vdccm-support  enable vdccm support],
+              enable_vdccm_support=$enableval, enable_vdccm_support=no)
+
+if ! test "$enable_vdccm_support" = "no"; then
+  dnl Check for gtop
+  PKG_CHECK_MODULES(GTOP, libgtop-2.0, gtop_found=yes, gtop_found=no)
+
+  if test "$gtop_found" = "no"; then
+    if test "$enable_vdccm_support" = "auto"; then
+      AC_MSG_NOTICE([libgtop not found, building without vdccm support])
+      enable_vdccm_support=no
+    else
+      AC_MSG_ERROR([vdccm support requested but libgtop could not be found])
+    fi
+  else
+    AC_MSG_NOTICE([Building with vdccm support])
+    AC_DEFINE(ENABLE_VDCCM_SUPPORT, 1, [Define if building with vdccm support])
+    enable_vdccm_support=yes
+  fi
+else
+  AC_MSG_NOTICE([Building without vdccm support])
+fi
+if test "$enable_vdccm_support" = "yes"; then vdccm=1; else vdccm=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_VDCCM_SUPPORT, $vdccm, [Define to 1 if you want vdccm support.])
+AM_CONDITIONAL(ENABLE_VDCCM_SUPPORT, test "x$enable_vdccm_support" = "xyes")
+
+dnl
+dnl whether odccm dbus support is required
+dnl
+AC_ARG_ENABLE(odccm-support,
+              [  --enable-odccm-support  enable odccm support (requires D-Bus)],
+              enable_odccm_support=$enableval, enable_odccm_support=no)
+
+if ! test "$enable_odccm_support" = "no"; then
+  AC_MSG_NOTICE([Building with odccm support])
+  AC_DEFINE(ENABLE_ODCCM_SUPPORT, 1, [Define if building with odccm support])
+  enable_odccm_support=yes
+else
+  AC_MSG_NOTICE([Building without odccm support])
+fi
+if test "$enable_odccm_support" = "yes"; then odccm=1; else odccm=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_ODCCM_SUPPORT, $odccm, [Define to 1 if you want odccm support.])
+AM_CONDITIONAL(ENABLE_ODCCM_SUPPORT, test "x$enable_odccm_support" = "xyes")
+
+dnl
+dnl whether hal dbus support is required
+dnl
+AC_ARG_ENABLE(hal-support,
+              [  --enable-hal-support  enable hal support (requires D-Bus)],
+              enable_hal_support=$enableval, enable_hal_support=no)
+
+if ! test "$enable_hal_support" = "no"; then
+  dnl Check for Hal
+  PKG_CHECK_MODULES(HAL, hal, hal_found=yes, hal_found=no)
+
+  if test "$hal_found" = "no"; then
+    if test "$enable_hal_support" = "auto"; then
+      AC_MSG_NOTICE([Hal not found, building without hal support])
+      enable_hal_support=no
+    else
+      AC_MSG_ERROR([Hal support requested but hal could not be found])
+    fi
+  else
+    AC_MSG_NOTICE([Building with hal support])
+    AC_DEFINE(ENABLE_HAL_SUPPORT, 1, [Define if building with hal support])
+    enable_hal_support=yes
+  fi
+else
+  AC_MSG_NOTICE([Building without hal support])
+fi
+
+if test "$enable_hal_support" = "yes"; then hal=1; else hal=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_HAL_SUPPORT, $hal, [Define to 1 if you want hal support.])
+AM_CONDITIONAL(ENABLE_HAL_SUPPORT, test "x$enable_hal_support" = "xyes")
+
+dnl
+dnl whether dbus support for udev is required
+dnl
+AC_ARG_ENABLE(udev-support,
+              [  --enable-udev-support  enable udev support (requires D-Bus)],
+              enable_udev_support=$enableval, enable_udev_support=yes)
+
+if ! test "$enable_udev_support" = "no"; then
+  AC_MSG_NOTICE([Building with udev support])
+  AC_DEFINE(ENABLE_UDEV_SUPPORT, 1, [Define if building with udev support])
+  enable_udev_support=yes
+else
+  AC_MSG_NOTICE([Building without udev support])
+fi
+if test "$enable_udev_support" = "yes"; then udev=1; else udev=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_UDEV_SUPPORT, $udev, [Define to 1 if you want udev support.])
+AM_CONDITIONAL(ENABLE_UDEV_SUPPORT, test "x$enable_udev_support" = "xyes")
+
 
 dnl Checks for header files.
 

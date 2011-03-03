@@ -1,3 +1,8 @@
+2011-03-01  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add configure options to allow disabling of dccm backends;
+	  only udev based backend is enabled by default
+
 2011-02-12  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.15.1 release
