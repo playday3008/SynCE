@@ -61,9 +61,22 @@ EXTRA_DIST = synce-device-signals-marshal.list \
 		udev-interface.xml \
 		synce-device-manager-control-signals-marshal.list \
 		synce-device-manager-control.xml \
-		synce-device-manager.xml
+		synce-device-manager.xml \
+		synce-unlock-hal.py \
+		synce-unlock-udev.py
 
-dist_bin_SCRIPTS = synce-unlock.py
+nodist_bin_SCRIPTS = synce-unlock.py
+
+if USE_HAL
+synce-unlock.py: synce-unlock-hal.py
+	cp $< $@
+else
+synce-unlock.py: synce-unlock-udev.py
+	cp $< $@
+endif
+
+clean::
+	-$(RM) synce-unlock.py
 
 synce-device-hal-glue.h: hal-interface.xml
 	dbus-binding-tool --mode=glib-server --output=$@ --prefix=synce_device $<

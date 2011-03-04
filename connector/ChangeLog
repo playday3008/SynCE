@@ -1,3 +1,7 @@
+2011-03-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add synce-unlock script for udev mode
+
 2011-02-27  Mark Ellis  <mark@mpellis.org.uk>
 
 	* configure.ac.in - make udev default option
