@@ -1,6 +1,7 @@
 2011-03-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add synce-unlock script for udev mode
+	* rename synce-unlock.py script to synce-unlock
 
 2011-02-27  Mark Ellis  <mark@mpellis.org.uk>
 
