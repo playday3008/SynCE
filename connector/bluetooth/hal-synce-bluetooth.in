@@ -3,7 +3,7 @@
 import sys
 import os
 
-sys.path.insert(0,"@DATADIR@/@PACKAGE_NAME@")
+sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
 from synceconnector import run_dccm, process_config, get_logger
 

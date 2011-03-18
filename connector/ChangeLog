@@ -1,3 +1,7 @@
+2011-03-18  Mark Ellis  <mark@mpellis.org.uk>
+
+	* correct some outstanding uses of DATADIR
+
 2011-03-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add synce-unlock script for udev mode

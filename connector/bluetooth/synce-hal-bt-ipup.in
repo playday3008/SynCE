@@ -3,7 +3,7 @@
 import sys
 import subprocess
 
-sys.path.insert(0,"@DATADIR@/@PACKAGE_NAME@")
+sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
 from synceconnector import process_config, get_logger
 

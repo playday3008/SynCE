@@ -5,7 +5,7 @@ import os
 import platform
 import dbus
 
-sys.path.insert(0,"@DATADIR@/@PACKAGE_NAME@")
+sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
 from synceconnector import run_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
 
