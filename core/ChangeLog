@@ -1,0 +1,4 @@
+2011-03-21  Mark Ellis  <mark@mpellis.org.uk>
+
+	* begin combining libsynce and librapi to form synce-core package
+
