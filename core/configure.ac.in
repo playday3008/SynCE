@@ -3,7 +3,7 @@ AC_PREREQ(2.53)
 
 AC_INIT(synce-core, @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
 AC_CONFIG_HEADERS(lib/synce_config.h)
-AC_CONFIG_SRCDIR(lib/synce.h.in)
+AC_CONFIG_SRCDIR(lib/utils/synce.h.in)
 
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
@@ -240,11 +240,12 @@ AC_CHECK_LIB(socket, socket, AC_CHECK_LIB(nsl, getpwnam), [])
 AC_CHECK_LIB(m, floor)
 CFLAGS="$saved_CFLAGS"
 
-AC_CONFIG_FILES( [lib/synce.h] )
+AC_CONFIG_FILES( [lib/utils/synce.h] )
 
 AC_OUTPUT([libsynce.pc
            Makefile
            lib/Makefile
-           lib/config/Makefile
+           lib/utils/Makefile
+           lib/utils/config/Makefile
            man/Makefile])
 
