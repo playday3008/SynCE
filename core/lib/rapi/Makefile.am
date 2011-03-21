@@ -1,6 +1,6 @@
 @SET_MAKE@
 
-INCLUDES = -I$(top_srcdir)/src/support
+INCLUDES = -I$(top_srcdir)/lib/rapi/support -I$(top_srcdir)/lib/utils
 
 ## create this library
 lib_LTLIBRARIES = librapi.la
@@ -14,9 +14,9 @@ librapi_la_CFLAGS = @LIBSYNCE_CFLAGS@ \
 	@DBUS_CFLAGS@ \
 	@HAL_CFLAGS@
 librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
-librapi_la_LIBADD = $(top_builddir)/src/support/libsupport.la \
-	$(top_builddir)/src/backend_ops_1/librapiops1.la \
-	$(top_builddir)/src/backend_ops_2/librapiops2.la \
+librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
+	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
+	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la \
 	@LIBSYNCE_LIBS@ \
 	@DBUS_LIBS@ \
 	@HAL_LIBS@

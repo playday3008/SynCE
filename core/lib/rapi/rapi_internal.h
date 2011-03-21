@@ -5,7 +5,7 @@
 #include <synce.h>
 
 #if HAVE_CONFIG_H
-#include "rapi_config.h"
+#include "synce_config.h"
 #else
 #error HAVE_CONFIG_H is not defined
 #endif

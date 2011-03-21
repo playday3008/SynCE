@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir)/lib/rapi
 
 ## create this library
 noinst_LTLIBRARIES = libsupport.la

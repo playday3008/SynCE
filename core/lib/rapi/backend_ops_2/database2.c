@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #if HAVE_CONFIG_H
-#include "rapi_config.h"
+#include "synce_config.h"
 #endif
 
 #define RAPI_DATABASE_DEBUG 0

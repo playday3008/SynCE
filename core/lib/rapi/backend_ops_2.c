@@ -5,7 +5,7 @@
 #include "rapi_ops.h"
 #include <stdlib.h>
 #if HAVE_CONFIG_H
-#include "rapi_config.h"
+#include "synce_config.h"
 #endif
 
 
