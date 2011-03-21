@@ -1,0 +1,412 @@
+2011-02-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi2_api.c - add support for udev connections, to allow
+	  building without hal aupport
+	* 0.15.2 release
+
+2011-02-12  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15.1 release
+
+2010-08-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* support for connections through udev based connection dccm
+
+2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15 release
+
+2010-04-05  Guido Diepen <guido@guidodiepen.nl>
+	* python/pyrapi2.pyx - Added method that will not 
+	  only return all subkeys, but a tuple of all subkeys
+	  and the corresponding number of subkeys for each subkey.
+
+2009-11-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - don't keep the root RegKey objects as
+	  permanent attributes of a RAPISession, which results
+	  in a circular reference; generate root keys as needed
+
+2009-09-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - replace += operator, not available
+	  until pyrex 0.9.8
+
+2009-09-01  Guido Diepen  <guido@guidodiepen.nl>
+	* Added additional python methods to access/modify the 
+	  registry. You can now query all keys/values, rename a 
+	  key (i.e. recursive copy and delete original) and 
+	  get the data and type for a specific
+	  value in a key.
+
+2009-08-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* IRAPIDevice only exists once for each device, all funcs now
+	  get a reference to this device instead of a new instance
+	* use new libsynce HRESULT handlers to return the correct types
+	  in a few cases
+	* implement more auxiliary functions
+
+2009-07-28  Mark Ellis  <mark@mpellis.org.uk>
+
+	* patches from Ilya Bakulin to fix compilation problems
+
+2009-07-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* split IRAPIStream decls into separate header
+	* initial implementation of rapi2 api - functional using
+	  synce-hal, but most utility funcs not implemented yet
+
+2009-07-21  Mark Ellis  <mark@mpellis.org.uk>
+
+	* split types out of rapi.h into rapitypes.h, available for
+	  rapi2 api
+
+2009-07-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* change all backend functions to accept a rapi_context as
+	  first parameter, instead of using current_context, which
+	  is obtained by the calling wrapper functions anyway
+	* restructure source tree for rapi2 api; currently the
+	  source refers to differences in over-the-wire calls to
+	  WM5 and pre-WM5 devices as rapi1 and rapi2, these now
+	  become backend_ops_{1,2}
+	* keep standard RAPI api and our non-standard wrapper
+	  funcs separate
+
+2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.14 release
+
+2009-07-12  Mark Ellis  <mark@mpellis.org.uk>
+
+	* implement streaming CeRapiInvoke for rapi2
+	* move non RAPI API functions that are identical for all
+	  WM versions out of the indirection mechanism, ie. 
+	  CeCopyFileA, CeRapiInvokeA, and the IRAPIStream functions
+	* deprecate CeFileCopyA() and CeRapiInvokeA() in favour of
+	  rapi_copy() and rapi_invoke(), to avoid confusion with
+	  "real" RAPI API
+
+2009-07-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* implement CeRapiInvoke for rapi2 using buffers, based on
+	  patch from David Richardson, many thanks !
+
+2009-06-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixes to CeRapiInvoke tests
+
+2009-06-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* create bootstrap script that doesn't run configure,
+	  autogen.sh call bootstrap then configure
+	* add configure options for odccm and synce-hal support,
+	  and required dbus build structure
+	* move rapi socket connection for odccm and hal from
+	  libsynce to rapi_context, add rapi_context_disconnect()
+
+2009-04-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* catch uninitialized RapiContext in function calls
+	* tidy up headers and shared constants, remove unused
+	  rapi_types.h
+	* implement reference counting on RapiContext
+
+2009-04-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* if RapiContext is auto-generated, keep it's SynceInfo
+	  for later reference
+
+2009-04-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* use synce_info_get_ functions to obtain SynceInfo parameters;
+	  new rapi_connection_get_ functions to give access to SynceInfo
+	* allow access to rapi conn through python object
+
+2009-03-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* enhance pyrapi2 registry query_value, some small fixes
+	* move file operations into a pythonic file-type class, and
+	  move some file op flags into constants.pxi as enums
+	* declare all non-python functions as nogil
+	* add pydocs
+
+2009-03-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* adjust RapiSession to allow for multiple devices,
+	  accept device name for constructor
+
+2009-03-23  Mark Ellis  <mark@mpellis.org.uk>
+
+	* configure.ac.in - require pyrex >= 0.9.6 for gil releasing
+
+2009-03-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pls.c - if no path arg, don't append backslash to
+	  My Documents path, causes wrong behaviour in rapi1
+	* tools/pcp.c - fixes to directory copying, many thanks to
+	  Pierre Ynard and cipe007 for patches
+
+2009-02-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pls.c - fix bug in listing single directory arguement
+	* tools/man/pls.1 - add comment on protecting wildcards from
+	  shell expansion
+
+2009-02-01  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi/database.c - more parameter checking, enable open
+	  database by name
+	* src/rapi/misc.c - fix database data translation in CeOidGetInfo
+	* tools/ - add prototype database tool
+
+2009-01-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/support/rapi_buffer.c - check buffer has space for trailing
+	  NULL in rapi_buffer_read_string()
+	* src/rapi2/registry2.c - buffer and parameter checks and fixes
+	* tools/synce-registry.c - tidy up and various fixes; better display
+	  and support for more value types; enable key and value delete;
+	* configure.ac.in - depend on libsynce >= 0.14 for byteswap macros
+
+2009-01-13  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.13.1 release
+	* python/pyrapi2.pyc - flagged functions that appear in nogil
+	  sections as nogil, fixes build failure with pyrex > 0.9.8.1
+
+2009-01-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.13 release
+
+2009-01-05  Mark Ellis  <mark@mpellis.org.uk>
+
+	* redo functions that release the python GIL in pyrex style
+
+2009-01-02  Mark Ellis  <mark@mpellis.org.uk>
+
+	* check for NULL returns from wstr conversions
+	* python/pyrapi2.pyx - fix warning checking for invalid handle
+
+2008-12-18  Mark Ellis  <mark@mpellis.org.uk>
+
+	* configure.ac.in - require at least python 2.3, pyrex doesn't
+	  support 2.2; check pyrex version when python > 2.4
+
+2008-10-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - enhance RAPIError exception, add error
+	  checking to remaining functions
+
+2008-10-28  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pcp.c - fix for copying <source> file to <dest> dir
+
+2008-10-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi_buffer.c - remove writev(), causes problems at least
+	  on FreeBSD, and provides no benefit
+	* configure.ac.in - remove checks for writev() and readv()
+
+2008-09-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/rapi_indirection.c - enable CeSetEndOfFile()
+
+2008-08-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* python/pyrapi2.pyx - don't segfault on empty strings
+
+2008-08-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pls.c - option for recursive listing
+	* tools/man/pls.1 - man page update for recursive listing
+
+2008-06-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* recursive directory copy for pcp
+
+2008-06-07  Mark Ellis  <mark@mpellis.org.uk>
+
+	* more useful error messages for pls and pcp
+
+2008-05-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* rewrite rapi 1 CeReadRecordProps() and CeWriteRecordProps() to
+	  account for non-32 bit host pointers
+
+2008-05-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* remaining dummy functions for unimplemented calls
+
+2008-05-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* introduced dummy functions for most calls represented in the
+	  header but not implemented, returns failure with rapi error
+	  set to E_NOTIMPL instead of segfaulting
+	* in rapi 1, pass result_2 into rapi error, this is an HRESULT
+
+2008-05-09  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* script/synce-remove-program.1: Escaped minus signs so they're not
+	hyphens. Notified by lintian.
+
+2008-05-06  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixed compiler warnings
+
+2008-04-22  Mark Ellis  <mark@mpellis.org.uk>
+
+	* implemented CeFindNextFile() & CeFindClose() in rapi2
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* script/synce-install-cab.1:
+	* script/synce-remove-program.1:
+	* tools/man/pcp.1:
+	* tools/man/pkillall.1:
+	* tools/man/pls.1:
+	* tools/man/pmkdir.1:
+	* tools/man/pmv.1:
+	* tools/man/prm.1:
+	* tools/man/prmdir.1:
+	* tools/man/prun.1:
+	* tools/man/psettime.1:
+	* tools/man/pshortcut.1:
+	* tools/man/pstatus.1:
+	* tools/man/rapiconfig.1:
+	* tools/man/synce-list-programs.1:
+	* tools/man/synce-registry.1: Escaped minus signs so they're not
+	hyphens. Notified by lintian: hyphen-used-as-minus-sign. 
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* Removed spec file.
+
+2008-04-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* modified rapi_context_connect() to deal with version 5.0
+	  that is actually WM2003
+
+2008-04-01  Mark Ellis  <mark@mpellis.org.uk>
+
+	* dummy function for rapi1 CeGetDiskFreeSpaceEx, prevents segfault
+	  when this is called
+
+2008-03-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* correct build without python bindings (bug 1708885)
+
+2008-03-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixed input buffer length in tools/rapiconfig.c
+	* fixed rapi1 CeProcessConfig (after a fashion)
+
+2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Rewrote the thread-safe code to make use of pthread_once. Instead of
+	using my own mutexes to ensure a key for the TSL was only created once, I
+	now use pthread_once to ensure that the create_key method is called only
+	once. Thanks David for pointing this out.
+
+2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Renabled the thread-safe code. Segfaults in sync-engine were
+	  caused by the fact that sync-engine tried to access rapi_context of 
+	  one thread via another thread. Resolved in sync-engine
+
+      became less stable with this. 
+2008-03-23  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Put the thread-safety code in ifdef. Turned out that sync-engine
+      became less stable with this. 
+      Currently thread-safe code has been deactivated till further notice.
+
+2008-03-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* BSD compatible fixes suggested by Bakulin Ilya, many thanks
+
+2008-03-15  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Made librapi2 thread-safe by removing the static RapiContext. This is
+	  replaced by pthreads thread local storage. 
+
+2008-01-11  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Added a non-blocking CeWriteFile (it will release GIL before starting)
+	* Added a non-blocking CeProcessConfig ( not used yet though )
+
+2008-01-11  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Increased the timeout used for reading data from the socket. Old value
+	  of 15 was causing too many timeouts. New value is set to 120 seconds.
+
+2008-01-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* added LICENSE to EXTRA_DIST
+	* added hal support to rapi_context
+
+2008-01-07  Guido Diepen  <guido@guidodiepen.nl>
+
+	* Fixed small bug in raising error in closeHandle function
+	* Added python binding for CeGetSystemInfo
+	* Added python binding for CeGetVersionEx
+
+2007-12-27  Guido Diepen  <guido@jcwodan.nl>
+
+	* Small fix in rapi2 call of CeCreateProcess2 (remove optional-read)
+	* Added python binding for CeFindAllFiles
+	* Added python binding for CeCloseHandle
+	* Added python binding for CeCreateFile
+	* Added python binding for CeReadFile
+	* Added python binding for CeWriteFilea
+	* Added python binding for CeCreateProcess
+	* Note, all of the above are initial implementations, more studying
+	  has to be done regarding error handling. Problem is inconsistency
+	  with error handling in the original microsoft code, sometimes 
+	  zero means succes, sometimes non-zero means succes
+	
+2007-12-23  Guido Diepen  <guido@jcwodan.nl>
+
+	* Added python binding for CeGetDiskFreeSpaceEx()
+	
+2007-12-23  Guido Diepen  <guido@jcwodan.nl>
+
+	* added RAPI2 implementation of CeGetDiskFreeSpaceEx()
+	  rapi call.
+	* Some minor fixes in types (also were fixed in libsynce)
+	* Updated README in rapi2 to show which methods are 
+	  implemented and which not.
+	
+2007-12-18  Guido Diepen  <guido@jcwodan.nl>
+
+	* added python binding for CeGetSystemPowerStatus
+	
+2007-12-17  Mark Ellis  <mark@mpellis.org.uk>
+
+	* more registry fixes in rapi1
+	* added CeRegDeleteKey() and CeRegDeleteValue() to rapi 1
+	
+2007-12-13  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixes to rapi_buffer_debug_ header
+	* fixes to CeRegQueryInfoKey & CeRegEnumValue in rapi1
+	* improved NULL handling in rapi2 from Guido Diepen
+	* extra functionality in synce-registry from Guido Diepen
+
+2007-12-06  Mark Ellis  <mark@mpellis.org.uk>
+
+	* patch from Guido Diepen, many thanks !!
+	* added CeRegQueryInfoKey and CeRegEnumValue2 to rapi2
+	* fix to rapi_buffer_read_string
+	* new debuging functions
+
+2007-11-28  Mark Ellis  <mark@mpellis.org.uk>
+
+	* pls.c and pcp.1 patch from Debian package
+
+2007-09-18  Mark Ellis  <mark@mpellis.org.uk>
+
+	* started Changelog !
+	* changed rapi_connection_from_path to rapi_connection_from_name
+

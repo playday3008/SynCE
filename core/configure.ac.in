@@ -19,11 +19,15 @@ case $target in
 		CFLAGS="-no-cpp-precomp $CFLAGS"
 		;;
 
+	*)
+		;;
+
 esac
 
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
@@ -166,6 +170,90 @@ AC_DEFINE_UNQUOTED(ENABLE_UDEV_SUPPORT, $udev, [Define to 1 if you want udev sup
 
 dnl Checks for header files.
 
+dnl #
+dnl # Now we must check for Python/Pyrex
+dnl #
+dnl # (need python, python headers, and pyrex)
+
+AC_ARG_ENABLE(python-bindings, AS_HELP_STRING([--disable-python-bindings], [do not build python bindings]),[enable_python=$enableval], [enable_python=auto])
+
+if test x$enable_python = xno; then
+    have_python=no
+else
+    AC_MSG_NOTICE([Checking to see if we can build Python bindings])
+    have_python=no
+    if test x$enable_python != xyes -a x$enable_python != xauto; then
+        minimum_version=$enable_python
+	enable_python=yes
+    else
+        minimum_version=2.3
+    fi
+	AM_PATH_PYTHON($minimum_version, [have_python_path=yes], [have_python_path=no] )
+	AC_CHECK_PROGS(PYREX, pyrexc)
+	AM_CHECK_PYTHON_HEADERS([have_python_header=yes], [have_python_header=no])
+	
+	if test x$have_python_path = xno -o x$have_python_header = xno -o x$PYREX != xpyrexc ; then
+            if test x$enable_python = xyes ; then
+                AC_MSG_ERROR([Building python bindings requested, but can't build them])
+            else
+                AC_MSG_NOTICE([Not building Python bindings])
+            fi
+	else
+	    if test -z "$PYTHON" ; then
+	        AC_MSG_WARN([Python not found])
+	    else
+		have_python=yes
+	    fi
+	
+	    if test x$have_python = xno ; then
+	        if test x$enable_python = xyes ; then
+	            AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings])
+		else
+		    AC_MSG_NOTICE([Not building Python bindings])
+	        fi
+	    else
+
+dnl # require at least pyrex 0.9.6
+
+		AC_MSG_CHECKING([pyrex version])
+
+		pyrex_ver=`$PYREX --version 2>&1 | sed -e 's/Pyrex version //'`
+	 	`echo "$pyrex_ver" | awk 'BEGIN { FS = "."; } { printf "export pyrex_maj_ver=%s export pyrex_min_ver=%s export pyrex_sub_ver=%s", $1, $2, $3;}'`
+
+		if test "$pyrex_min_ver" -lt 9 || test "$pyrex_sub_ver" -lt 6 ; then
+		    AC_MSG_RESULT([$pyrex_ver])
+		    if test x$enable_python = xyes ; then
+			AC_MSG_ERROR([Building python explicitly requested, but can't build python bindings, need at least pyrex 0.9.6])
+		    else
+			AC_MSG_NOTICE([Not building Python bindings, need at least pyrex 0.9.6])
+			have_python=no
+	            fi
+    		else
+		    AC_MSG_RESULT([ok])
+    		fi
+
+	    fi
+	fi
+fi
+AM_CONDITIONAL(HAVE_PYTHON, test x$have_python = xyes)
+
+# checks for pthreads
+
+saved_CFLAGS="$CFLAGS"
+[CFLAGS=`echo $CFLAGS | sed 's|-Werror[^[:space:]]*||'`]
+
+ACX_PTHREAD([enable_threads="pthread"],[enable_threads="no"])
+CFLAGS="$saved_CFLAGS"
+if test $enable_threads != "pthread"; then
+	AC_MSG_ERROR([unable to find pthreads, currently this is required])
+else
+	AC_DEFINE(HAVE_PTHREAD,1,[Define if you have POSIX threads libraries and header files.])
+	LIBS="$PTHREAD_LIBS $LIBS"
+	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+	CXXFLAGS="$PTHREAD_CFLAGS $CXXFLAGS"
+fi
+
+
 dnl Endian stuff
 AC_SUBST(WORDS_BIGENDIAN)
 AC_SUBST(BYTESWAP_HEADER,dummy)
@@ -242,10 +330,33 @@ CFLAGS="$saved_CFLAGS"
 
 AC_CONFIG_FILES( [lib/utils/synce.h] )
 
+AC_CONFIG_FILES(
+	[script/synce-install-cab],
+	[chmod +x script/synce-install-cab]
+)
+
+AC_CONFIG_FILES(
+	[script/synce-remove-program],
+	[chmod +x script/synce-remove-program]
+)
+
 AC_OUTPUT([libsynce.pc
            Makefile
            lib/Makefile
            lib/utils/Makefile
            lib/utils/config/Makefile
+           lib/rapi/Makefile
+           lib/rapi/support/Makefile
+           lib/rapi/backend_ops_1/Makefile
+           lib/rapi/backend_ops_2/Makefile
+           script/Makefile
+           tests/Makefile
+           tests/CeRapiInvoke/Makefile
+           tests/CeRapiInvoke/dll/Makefile
+           tests/rapi/Makefile
+           tools/Makefile
+           tools/man/Makefile
+           python/Makefile
+           python/tests/Makefile
            man/Makefile])
 

@@ -1,1 +1,1 @@
-SUBDIRS = utils
+SUBDIRS = utils rapi

@@ -6,7 +6,8 @@ real_MANS = synce.7 \
 	wstr_to_ascii.3 \
 	time_fields_from_filetime.3 \
 	date_from_tm.3 \
-	synce_error.3
+	synce_error.3 \
+	rapi_connection_from_name.3
 
 EXTRA_DIST = $(real_MANS)
 
