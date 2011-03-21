@@ -1,0 +1,149 @@
+2011-02-12  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15.1 release
+
+2010-08-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* support for connections through udev based connection dccm
+
+2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.15 release
+
+2009-08-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/{errors.c,synce_types.h} - HRESULT handling funcs and macros
+
+2009-07-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/{info.c,synce.h.in} - allow search/creation of SynceInfo 
+	  by object path as well as device name
+
+2009-07-16  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.14 release
+
+2009-06-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* move rapi socket connection to librapi2, store device object path
+	  in SynceInfo
+
+2009-04-14  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/info.c - clear an error correctly when fetching local_iface_ip
+
+2009-04-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add local_iface_ip to SynceInfo
+	* hide the SYnceInfo struct and create _get_ functions
+
+2009-03-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/info.c - check for hal property marking the extra
+	  port of a 4 endpoint serial device, and ignore it
+
+2009-01-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* improve readability of endian section of synce.h, add
+	  big-endian conversion macros
+
+2009-01-11  Jonny Lamb  <jonny@debian.org>
+
+	* lib/Makefile.am: Added -lm.
+
+2009-01-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.13 release
+
+2009-01-08  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/synce_log.c - check for incomplete conversion in
+	  wstr logging
+	* man/wstr_to_ascii.3 - notes about NULL return from
+	  incomplete conversion
+
+2008-12-23  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/synce_log.c - use wstr_to_current() in wstr logging 
+
+2008-12-16  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/info.c - use correct keys to get os and hardware
+	  from vdccm info file
+	* lib/info.c - check odccm is running before attempting to
+	  get devices, ignore devices from hal without
+	  pda.pocketpc.name as these are not valid
+
+2008-11-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* lib/synce_socket.c - applied patch from andyakadum
+	  to build on Solaris, many thanks !
+
+2008-05-06  Mark Ellis  <mark@mpellis.org.uk>
+
+	* update synce.7, add some comments to configure.ac.in
+
+2008-05-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add all error codes
+	* remove duplicate inet_pton.c
+	* get os_minor from dccm file if available
+	* update autotools initialisation
+
+2008-04-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* change property used to find devices through hal
+
+2008-04-13  Jonny Lamb  <jonnylamb@jonnylamb.com>
+
+	* Removed spec file.
+
+2008-04-10  Mark Ellis  <mark@mpellis.org.uk>
+
+	* added os_minor to SynceInfo to deal with version 5.0
+	  that is actually WM2003
+
+2008-02-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* manpage for logging functions
+	* update to *info* manpage
+
+2008-02-20  Mark Ellis  <mark@mpellis.org.uk>
+
+	* ignore case of device host name with odccm and hal
+
+2008-02-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* only log to syslog up to requested level
+	* wstr_to_ fixes for > 2 byte encodings, thanks to
+	  HIRANO Takahito (bug #1836234)
+
+2008-02-18  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add .so man pages to 'real' pages
+	* point to synce.7, not synce.1
+	* more error codes
+
+2008-02-11  Mark Ellis  <mark@mpellis.org.uk>
+
+	* more fully populate SynceInfo with odccm & hal
+
+2008-01-09  Mark Ellis  <mark@mpellis.org.uk>
+
+	* added LICENSE to EXTRA_DIST
+	* added hal support to synce_info_new()
+	* make (v)dccm file support optional (default=yes)
+
+2007-09-06  Mark Ellis  <mark@mpellis.org.uk>
+
+	* modified synce_info_new()
+	  - optional parameter is now device name, not path
+	  - if device name is NULL, uses first device found by odccm
+	       or active device with vdccm
+	  - with non-NULL name, looks for that device
+	
+2007-08-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* started Changelog !
+	* return from synce_strerror should be const
+	* added man pages for functions in synce.h

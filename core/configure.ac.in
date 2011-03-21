@@ -1,0 +1,250 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ(2.53)
+
+AC_INIT(libsynce, @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
+AC_CONFIG_HEADERS(lib/synce_config.h)
+AC_CONFIG_SRCDIR(lib/synce.h.in)
+
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+AM_INIT_AUTOMAKE
+
+CFLAGS="-Wall -Wsign-compare -Wno-long-long $CFLAGS"
+
+case $target in
+
+	powerpc-apple-*)
+		dnl Prevent "Undefined Macro argument list" error.
+		CFLAGS="-no-cpp-precomp $CFLAGS"
+		;;
+
+esac
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_LIBTOOL
+AC_PROG_MAKE_SET
+PKG_PROG_PKG_CONFIG
+
+dnl AM_PATH_CHECK()
+
+dnl Check for dmalloc first
+AC_ARG_WITH(dmalloc,
+		AC_HELP_STRING([--with-dmalloc=PREFIX],[use dmalloc (default is NO)]),
+[case "${withval}" in
+  yes) dmalloc=true ;;
+  no)  dmalloc=false ;;
+  *) dmalloc=true; dmalloc_prefix="-L${withval}" ;;
+esac],[dmalloc=false])
+
+if ${dmalloc}; then
+	AC_CHECK_LIB(dmalloc,main,,[
+			AC_MSG_ERROR([Can't find dmalloc library])
+		],${dmalloc_prefix})
+	AC_CHECK_HEADERS(dmalloc.h,,[
+			AC_MSG_ERROR([Can't find dmalloc.h])
+		])
+fi
+
+dnl Checks for libraries.
+AC_LIB_RPATH
+
+dnl
+dnl whether (v)dccm connection file support is required
+dnl
+AC_ARG_ENABLE(dccm-file-support,
+              [  --enable-dccm-file-support  enable dccm file support],
+              enable_dccm_file_support=$enableval, enable_dccm_file_support=yes)
+
+if ! test "$enable_dccm_file_support" = "no"; then
+  AC_MSG_NOTICE([Building with dccm file support])
+  AC_DEFINE(ENABLE_DCCM_FILE_SUPPORT, 1, [Define if building with dccm file support])
+  enable_dccm_file_support=yes
+else
+  AC_MSG_NOTICE([Building without dccm file support])
+fi
+
+if test "$enable_dccm_file_support" = "yes"; then dccm_file=1; else dccm_file=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_DCCM_FILE_SUPPORT, $dccm_file, [Define to 1 if you want dccm file support.])
+
+dnl
+dnl whether odccm dbus support is required
+dnl
+AC_ARG_ENABLE(odccm-support,
+              [  --enable-odccm-support  enable odccm support (requires D-Bus)],
+              enable_odccm_support=$enableval, enable_odccm_support=yes)
+
+if ! test "$enable_odccm_support" = "no"; then
+  dnl Check for D-Bus
+  PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
+                    dbus=yes, dbus=no)
+
+  if test "$dbus" = "no"; then
+    if test "$enable_odccm_support" = "auto"; then
+      AC_MSG_NOTICE([D-Bus not found, building without odccm support])
+      enable_odccm_support=no
+    else
+      AC_MSG_ERROR([odccm support requested but D-Bus could not be found])
+    fi
+  else
+    AC_MSG_NOTICE([Building with odccm support])
+    AC_DEFINE(ENABLE_ODCCM_SUPPORT, 1, [Define if building with odccm support])
+    enable_odccm_support=yes
+  fi
+else
+  AC_MSG_NOTICE([Building without odccm support])
+fi
+
+if test "$enable_odccm_support" = "yes"; then odccm=1; else odccm=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_ODCCM_SUPPORT, $odccm, [Define to 1 if you want odccm support.])
+
+dnl
+dnl whether hal dbus support is required
+dnl
+AC_ARG_ENABLE(hal-support,
+              [  --enable-hal-support  enable hal support (requires D-Bus)],
+              enable_hal_support=$enableval, enable_hal_support=yes)
+
+if ! test "$enable_hal_support" = "no"; then
+  dnl Check for DBus and Hal
+  PKG_CHECK_MODULES(HAL, [hal >= 0.5.8, dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
+                    hal_found=yes, hal_found=no)
+
+  if test "$hal_found" = "no"; then
+    if test "$enable_hal_support" = "auto"; then
+      AC_MSG_NOTICE([Hal not found, building without hal support])
+      enable_hal_support=no
+    else
+      AC_MSG_ERROR([Hal support requested but hal could not be found])
+    fi
+  else
+    AC_MSG_NOTICE([Building with hal support])
+    AC_DEFINE(ENABLE_HAL_SUPPORT, 1, [Define if building with hal support])
+    enable_hal_support=yes
+  fi
+else
+  AC_MSG_NOTICE([Building without hal support])
+fi
+
+if test "$enable_hal_support" = "yes"; then hal=1; else hal=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_HAL_SUPPORT, $hal, [Define to 1 if you want hal support.])
+
+dnl
+dnl whether dbus support for udev is required
+dnl
+AC_ARG_ENABLE(udev-support,
+              [  --enable-udev-support  enable udev support (requires D-Bus)],
+              enable_udev_support=$enableval, enable_udev_support=yes)
+
+if ! test "$enable_udev_support" = "no"; then
+  dnl Check for D-Bus
+  PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
+                    dbus=yes, dbus=no)
+
+  if test "$dbus" = "no"; then
+    if test "$enable_udev_support" = "auto"; then
+      AC_MSG_NOTICE([D-Bus not found, building without udev support])
+      enable_udev_support=no
+    else
+      AC_MSG_ERROR([udev support requested but D-Bus could not be found])
+    fi
+  else
+    AC_MSG_NOTICE([Building with udev support])
+    AC_DEFINE(ENABLE_UDEV_SUPPORT, 1, [Define if building with udev support])
+    enable_udev_support=yes
+  fi
+else
+  AC_MSG_NOTICE([Building without udev support])
+fi
+
+if test "$enable_udev_support" = "yes"; then udev=1; else udev=0; fi
+AC_DEFINE_UNQUOTED(ENABLE_UDEV_SUPPORT, $udev, [Define to 1 if you want udev support.])
+
+dnl Checks for header files.
+
+dnl Endian stuff
+AC_SUBST(WORDS_BIGENDIAN)
+AC_SUBST(BYTESWAP_HEADER,dummy)
+AC_SUBST(HAVE_BYTESWAP_HEADER,0)
+
+AC_C_BIGENDIAN()
+
+if test "$ac_cv_c_bigendian" = yes; then
+  WORDS_BIGENDIAN=1
+else
+  WORDS_BIGENDIAN=0
+fi
+
+AC_CHECK_HEADERS(sys/byteswap.h,[BYTESWAP_HEADER=sys/byteswap.h; HAVE_BYTESWAP_HEADER=1])
+AC_CHECK_HEADERS(byteswap.h,    [BYTESWAP_HEADER=byteswap.h;     HAVE_BYTESWAP_HEADER=1])
+
+AM_CONDITIONAL(IMPLEMENT_BSWAP_XX, test "x$HAVE_BYTESWAP_HEADER" = "x0")
+
+dnl Check where uint16_t and uint32_t may be found
+AC_SUBST(INT_HEADER)
+
+dnl Old compilers
+AC_CHECK_HEADERS(inttypes.h,[INT_HEADER=inttypes.h])
+
+dnl C99 compliant compilers
+AC_CHECK_HEADERS(stdint.h,[INT_HEADER=stdint.h])
+
+if test -z "$INT_HEADER"; then
+	AC_MSG_ERROR([Don't know how to get uint16_t and uint32_t on your system])
+fi
+
+AC_CHECK_HEADERS(stdbool.h,,[
+  AC_MSG_ERROR([Don't know how to get bool values on your system])
+])
+
+dnl For setlocale
+AC_CHECK_HEADERS(locale.h)
+dnl For nl_langinfo
+AC_CHECK_HEADERS(langinfo.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+saved_CFLAGS="$CFLAGS"
+CFLAGS=""
+AC_C_CONST
+CFLAGS="$saved_CFLAGS"
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(nl_langinfo)
+AC_CHECK_FUNCS(setlocale)
+AC_CHECK_FUNCS(poll)
+AC_REPLACE_FUNCS(inet_pton)
+
+# http://www.gnu.org/manual/autoconf-2.53/html_node/AC_LIBOBJ-vs.-LIBOBJS.html
+# This is necessary so that .o files in LIBOBJS are also built via
+# the ANSI2KNR-filtering rules.
+LIB@&t@OBJS=`echo "$LIB@&t@OBJS" | sed 's,\.[[^.]]* ,$U&,g;s,\.[[^.]]*$,$U&,'`
+LTLIBOBJS=`echo "$LIB@&t@OBJS" | sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
+AC_SUBST(LTLIBOBJS)
+
+
+AM_ICONV()
+if test "$am_cv_func_iconv" '!=' yes; then
+	AC_MSG_ERROR([iconv not found, try using --with-libiconv-prefix])
+fi
+AC_CHECK_HEADERS(iconv.h,,[
+		AC_MSG_WARN([iconv.h not found (INCICONV=$INCICONV)])
+		])
+
+saved_CFLAGS="$CFLAGS"
+CFLAGS=`echo $CFLAGS | sed 's/-Werror//'`
+AC_CHECK_LIB(socket, socket, AC_CHECK_LIB(nsl, getpwnam), [])
+AC_CHECK_LIB(m, floor)
+CFLAGS="$saved_CFLAGS"
+
+AC_CONFIG_FILES( [lib/synce.h] )
+
+AC_OUTPUT([libsynce.pc
+           Makefile
+           lib/Makefile
+           lib/config/Makefile
+           man/Makefile])
+
