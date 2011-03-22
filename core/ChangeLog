@@ -1,6 +1,7 @@
 2011-03-22  Mark Ellis  <mark@mpellis.org.uk>
 
 	* combine libsynce and librapi into a single library object
+	* reorganise man page structure
 
 2011-03-21  Mark Ellis  <mark@mpellis.org.uk>
 

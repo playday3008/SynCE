@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: libsynce
-Description: A helper library for SynCE, a framework to sync WinCE devices
+Description: The core library for SynCE, a framework to sync WinCE devices
 Version: @VERSION@
 Libs: -L${libdir} -lsynce
 Cflags: -I${includedir}
