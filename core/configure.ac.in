@@ -358,5 +358,7 @@ AC_OUTPUT([libsynce.pc
            tools/man/Makefile
            python/Makefile
            python/tests/Makefile
-           man/Makefile])
+           man/Makefile
+           man/man3/Makefile
+           man/man7/Makefile])
 
