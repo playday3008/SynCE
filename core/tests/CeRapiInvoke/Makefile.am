@@ -1,13 +1,13 @@
-AM_CXXFLAGS = @LIBSYNCE_CFLAGS@ -Wall
-AM_CFLAGS = @LIBSYNCE_CFLAGS@ -Wall
-AM_LDFLAGS = @LIBSYNCE_LIBS@
+AM_CXXFLAGS = -I$(top_srcdir)/lib/utils -Wall
+AM_CFLAGS = -I$(top_srcdir)/lib/utils -Wall
+AM_LDFLAGS = $(top_builddir)/lib/utils/libsynce.la
 
-INCLUDES = -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir)/lib/rapi
 
 noinst_PROGRAMS = CeRapiInvoke
 
-CeRapiInvoke_SOURCES = CeRapiInvoke.cc ../../tools/pcommon.c
-CeRapiInvoke_LDADD = ../../src/librapi.la
+CeRapiInvoke_SOURCES = CeRapiInvoke.cc $(top_srcdir)/tools/pcommon.c
+CeRapiInvoke_LDADD = $(top_builddir)/lib/rapi/librapi.la
 
 ##TESTS = CeRapiInvoke
 

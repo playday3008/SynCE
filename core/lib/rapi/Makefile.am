@@ -10,14 +10,14 @@ librapi_la_SOURCES = backend_ops_1.c backend_ops_2.c \
 	connection.c window.c rapi_api.c \
 	misc.c irapistream.h irapistream.c \
 	rapi2_api.c
-librapi_la_CFLAGS = @LIBSYNCE_CFLAGS@ \
+librapi_la_CFLAGS = -I$(top_srcdir)/lib/utils \
 	@DBUS_CFLAGS@ \
 	@HAL_CFLAGS@
 librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
 librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
 	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
 	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la \
-	@LIBSYNCE_LIBS@ \
+	$(top_builddir)/lib/utils/libsynce.la \
 	@DBUS_LIBS@ \
 	@HAL_LIBS@
 
