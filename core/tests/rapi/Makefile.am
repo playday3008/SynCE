@@ -1,8 +1,8 @@
 AM_CXXFLAGS = -I$(top_srcdir)/lib/utils -Wall
-AM_LDFLAGS = $(top_builddir)/lib/utils/libsynce.la
+AM_LDFLAGS = $(top_builddir)/lib/libsynce.la
 
 INCLUDES = -I$(top_srcdir)/lib/rapi -I$(top_srcdir)/lib/rapi/support
-LDADD = $(top_builddir)/lib/rapi/librapi.la
+LDADD = $(top_builddir)/lib/libsynce.la
 
 noinst_PROGRAMS = \
 	CeCreateDatabase \

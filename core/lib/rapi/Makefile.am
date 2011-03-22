@@ -3,7 +3,7 @@
 INCLUDES = -I$(top_srcdir)/lib/rapi/support -I$(top_srcdir)/lib/utils
 
 ## create this library
-lib_LTLIBRARIES = librapi.la
+noinst_LTLIBRARIES = librapi.la
 
 ## use these sources
 librapi_la_SOURCES = backend_ops_1.c backend_ops_2.c \
@@ -13,13 +13,12 @@ librapi_la_SOURCES = backend_ops_1.c backend_ops_2.c \
 librapi_la_CFLAGS = -I$(top_srcdir)/lib/utils \
 	@DBUS_CFLAGS@ \
 	@HAL_CFLAGS@
-librapi_la_LDFLAGS = -no-undefined -version-info 2:0:0
 librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
 	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
-	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la \
-	$(top_builddir)/lib/utils/libsynce.la \
-	@DBUS_LIBS@ \
-	@HAL_LIBS@
+	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la
+#	$(top_builddir)/lib/utils/libutils.la \
+#	@DBUS_LIBS@ \
+#	@HAL_LIBS@
 
 include_HEADERS = rapi.h \
 		rapitypes.h \
