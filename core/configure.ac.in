@@ -331,13 +331,13 @@ CFLAGS="$saved_CFLAGS"
 AC_CONFIG_FILES( [lib/utils/synce.h] )
 
 AC_CONFIG_FILES(
-	[script/synce-install-cab],
-	[chmod +x script/synce-install-cab]
+	[tools/synce-install-cab],
+	[chmod +x tools/synce-install-cab]
 )
 
 AC_CONFIG_FILES(
-	[script/synce-remove-program],
-	[chmod +x script/synce-remove-program]
+	[tools/synce-remove-program],
+	[chmod +x tools/synce-remove-program]
 )
 
 AC_OUTPUT([libsynce.pc
@@ -349,7 +349,6 @@ AC_OUTPUT([libsynce.pc
            lib/rapi/support/Makefile
            lib/rapi/backend_ops_1/Makefile
            lib/rapi/backend_ops_2/Makefile
-           script/Makefile
            tests/Makefile
            tests/CeRapiInvoke/Makefile
            tests/CeRapiInvoke/dll/Makefile
