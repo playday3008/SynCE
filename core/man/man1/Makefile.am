@@ -12,6 +12,8 @@ man_MANS = \
 	pstatus.1 \
 	rapiconfig.1 \
 	synce-list-programs.1 \
-	synce-registry.1
+	synce-registry.1 \
+	synce-install-cab.1 \
+	synce-remove-program.1
 
 EXTRA_DIST = $(man_MANS)
