@@ -7,8 +7,21 @@ noinst_PROGRAMS = oidinfo
 
 oidinfo_SOURCES = oidinfo.c
 
-bin_PROGRAMS = pcp pls pmkdir pmv prm prmdir prun pstatus rapiconfig pkillall pshortcut psettime \
-	synce-list-programs synce-registry synce-database
+bin_PROGRAMS = pcp \
+	pls \
+	pmkdir \
+	pmv \
+	prm \
+	prmdir \
+	prun \
+	pstatus \
+	rapiconfig \
+	pkillall \
+	pshortcut \
+	psettime \
+	synce-list-programs \
+	synce-registry \
+	synce-database
 
 pcp_SOURCES    = pcommon.c pcp.c
 pls_SOURCES    = pcommon.c pls.c
@@ -29,3 +42,6 @@ synce_registry_SOURCES = synce-registry.c pcommon.c
 synce_database_SOURCES = synce-database.c pcommon.c
 
 noinst_HEADERS = pcommon.h
+
+bin_SCRIPTS = synce-install-cab \
+	synce-remove-program
