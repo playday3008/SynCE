@@ -15,4 +15,4 @@ EXTRA_DIST = libsynce.pc.in LICENSE BUGS README.contributing README.design
 
 CLEANFILES = $(pcfiles)
 
-SUBDIRS = lib man script tools tests python .
+SUBDIRS = lib man tools tests python .
