@@ -28,6 +28,4 @@ synce_list_programs_SOURCES = synce-list-programs.c
 synce_registry_SOURCES = synce-registry.c pcommon.c
 synce_database_SOURCES = synce-database.c pcommon.c
 
-SUBDIRS = man
-
 noinst_HEADERS = pcommon.h

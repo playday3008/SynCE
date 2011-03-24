@@ -355,10 +355,10 @@ AC_OUTPUT([libsynce.pc
            tests/CeRapiInvoke/dll/Makefile
            tests/rapi/Makefile
            tools/Makefile
-           tools/man/Makefile
            python/Makefile
            python/tests/Makefile
            man/Makefile
+           man/man1/Makefile
            man/man3/Makefile
            man/man7/Makefile])
 
