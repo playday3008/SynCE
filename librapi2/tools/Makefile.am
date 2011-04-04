@@ -1,7 +1,7 @@
 AM_CFLAGS = @LIBSYNCE_CFLAGS@
 
 INCLUDES = -I$(top_srcdir)/src -I$(top_srcdir)/src/support
-LDADD = ../src/librapi.la
+LDADD = ../src/librapi.la @LIBSYNCE_LIBS@
 
 noinst_PROGRAMS = oidinfo
 
