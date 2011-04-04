@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deviceinfo version="0.2">
+
+  <!-- usb-rndis-lite -->
+
+  <device>
+    <match key="@info.parent:info.linux.driver" string="rndis_host">
+      <match key="@info.parent:usb.interface.class" int="239">
+        <match key="@info.parent:usb.interface.subclass" int="1">
+          <match key="@info.parent:usb.interface.protocol" int="1">
+            <append key="info.capabilities" type="strlist">sync</append>
+            <append key="info.capabilities" type="strlist">pda</append>
+
+            <merge key="pda.platform" type="string">pocketpc</merge>
+
+            <merge key="info.category" type="string">pda</merge>
+            <merge key="sync.engine" type="string">opensync</merge>
+            <merge key="sync.plugin" type="string">synce</merge>
+
+            <merge key="usb.product" type="string">Windows Mobile Device</merge>
+
+            <append key="info.addons" type="strlist">hal-synce-rndis</append>
+            <append key="info.callouts.remove" type="strlist">hal-synce-rndis</append>
+          </match>
+        </match>
+      </match>
+    </match>
+  </device>
+
+  <!-- usb-rndis-ng -->
+
+  <device>
+    <match key="@info.parent:pda.platform" string="pocketpc">
+      <append key="info.capabilities" type="strlist">sync</append>
+      <append key="info.capabilities" type="strlist">pda</append>
+
+      <merge key="pda.platform" type="string">pocketpc</merge>
+
+      <merge key="usb.interface.description" type="string">Windows Mobile Data Provider</merge>
+      <merge key="info.category" type="string">pda</merge>
+      <merge key="sync.engine" type="string">opensync</merge>
+      <merge key="sync.plugin" type="string">synce</merge>
+
+      <merge key="usb.product" type="string">Windows Mobile Device</merge>
+
+      <append key="info.addons" type="strlist">hal-synce-rndis</append>
+      <append key="info.callouts.remove" type="strlist">hal-synce-rndis</append>
+    </match>
+  </device>
+
+  <!-- ipaq -->
+
+  <device>
+    <match key="info.capabilities" contains="serial">
+      <match key="@info.parent:info.linux.driver" string="ipaq">
+        <append key="info.capabilities" type="strlist">sync</append>
+        <append key="info.capabilities" type="strlist">pda</append>
+        <merge key="usb.interface.description" type="string">Windows Mobile Data Provider</merge>
+        <merge key="info.category" type="string">pda</merge>
+        <merge key="sync.engine" type="string">opensync</merge>
+        <merge key="sync.plugin" type="string">synce</merge>
+
+        <merge key="usb.product" type="string">Windows Mobile Device</merge>
+
+        <append key="info.addons" type="strlist">hal-synce-serial</append>
+      </match>
+    </match>
+  </device>
+
+
+  <!-- FreeBSD ucom
+       should be more generic, but it's a good start -->
+
+  <device>
+    <match key="@info.parent:freebsd.driver" contains="ucom">
+      <match key="@info.parent:info.vendor" string="HTC">
+        <append key="info.capabilities" type="strlist">sync</append>
+        <append key="info.capabilities" type="strlist">pda</append>
+        <append key="freebsd.unit" type="copy_property">@info.parent:freebsd.unit</append>
+	
+        <merge key="pda.platform" type="string">pocketpc</merge>
+
+        <merge key="usb.interface.description" type="string">Windows Mobile Data Provider</merge>
+        <merge key="info.category" type="string">pda</merge>
+        <merge key="sync.engine" type="string">opensync</merge>
+        <merge key="sync.plugin" type="string">synce</merge>
+
+        <merge key="usb.product" type="string">Windows Mobile Device</merge>
+
+        <append key="info.addons" type="strlist">hal-synce-serial</append>
+      </match>
+    </match>
+  </device>
+
+</deviceinfo>

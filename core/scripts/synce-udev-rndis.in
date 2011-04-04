@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@SYNCEDATADIR@/udev-synce-rndis &
+
+exit 0
