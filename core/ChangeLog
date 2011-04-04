@@ -1,3 +1,7 @@
+2011-04-04  Mark Ellis  <mark@mpellis.org.uk>
+
+	* move connector components into core
+
 2011-03-22  Mark Ellis  <mark@mpellis.org.uk>
 
 	* combine libsynce and librapi into a single library object
