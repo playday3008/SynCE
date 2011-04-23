@@ -19,10 +19,9 @@ OBJECTS=fur.o fur_utils.o cache.o special.o power.o registry.o common.o special_
 all: Fur
 
 install: Fur
-	-mkdir -p @prefix@/bin
-	chmod  755 @prefix@/bin
-	cp Fur @prefix@/bin
-	chmod  755 @prefix@/bin/Fur
+	-mkdir -p $(DESTDIR)/@prefix@/bin
+	cp Fur $(DESTDIR)/@prefix@/bin
+	chmod  755 $(DESTDIR)/@prefix@/bin/Fur
 
 
 $(OBJECTS):%.o:%.c 
