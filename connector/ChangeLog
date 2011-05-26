@@ -1,3 +1,7 @@
+2011-05-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* scripts/synceconnector.py.in - rename uses of hal-dccm to dccm
+
 2011-03-19  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.15.2 release
