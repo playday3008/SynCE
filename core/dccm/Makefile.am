@@ -35,13 +35,13 @@ dccm_SOURCES += main-udev.c synce-device-manager.c synce-device-manager.h \
 endif
 
 dccm_CPPFLAGS = \
-	$(SYNCE_CFLAGS) \
+	-I$(top_srcdir)/lib/utils \
 	$(GLIB_CFLAGS) \
 	$(GNET_CFLAGS) \
 	$(DBUS_CFLAGS)
 
 dccm_LDADD = \
-	$(SYNCE_LIBS) \
+	$(top_builddir)/lib/libsynce.la \
 	$(GLIB_LIBS) \
 	$(GNET_LIBS) \
 	$(DBUS_LIBS)

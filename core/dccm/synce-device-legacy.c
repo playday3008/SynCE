@@ -1,5 +1,5 @@
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "synce_config.h"
 #endif
 
 #include <dbus/dbus-glib.h>

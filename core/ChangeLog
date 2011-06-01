@@ -1,3 +1,9 @@
+2011-06-01  Mark Ellis  <mark@mpellis.org.uk>
+
+	* scripts/synceconnector.py.in - rename uses of hal-dccm to dccm
+	* configure.ac.in - disable file dccm, odccm and hal by default
+	* dccm/ - fix build of dccm
+
 2011-04-04  Mark Ellis  <mark@mpellis.org.uk>
 
 	* move connector components into core

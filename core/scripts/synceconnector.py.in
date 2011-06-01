@@ -283,11 +283,11 @@ def serial_start_device(device_file, local_ip, remote_ip, linkname):
 
 
 #
-# run hal-dccm after the interface is configured
+# run dccm after the interface is configured
 #
 def run_dccm(device_path, device_ip, local_ip, rndis):
 
-    logger.debug("starting hal-dccm ...")
+    logger.debug("starting dccm ...")
 
     dccm_log_level = "1"
 
@@ -298,27 +298,27 @@ def run_dccm(device_path, device_ip, local_ip, rndis):
     elif log_level <= logging.WARNING:
         dccm_log_level = "3"
 
-    cmd_list = ["@LIBEXECDIR@/hal-dccm", "--device-path="+device_path, "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
+    cmd_list = ["@LIBEXECDIR@/dccm", "--device-path="+device_path, "--device-ip="+device_ip, "--local-ip="+local_ip, "--log-level="+dccm_log_level]
     if rndis == True:
         cmd_list.append("--rndis")
 
-    logger.debug("calling hal-dccm as:")
+    logger.debug("calling dccm as:")
     logger.debug(cmd_list)
 
     try:
-        os.execv("@LIBEXECDIR@/hal-dccm", cmd_list)
+        os.execv("@LIBEXECDIR@/dccm", cmd_list)
     except Exception,e:
-        logger.error("failed to exec hal-dccm !!: %s" % e)
+        logger.error("failed to exec dccm !!: %s" % e)
 
     return
 
 
 #
-# signal hal-dccm after the interface is configured
+# signal dccm after the interface is configured
 #
 def signal_dccm(device_path, device_ip, local_ip, rndis):
 
-    logger.debug("signalling hal-dccm ...")
+    logger.debug("signalling dccm ...")
 
     dccm_log_level = "1"
 
@@ -335,7 +335,7 @@ def signal_dccm(device_path, device_ip, local_ip, rndis):
         logger.critical("failed to connect to dccm device manager %s: %s" % (device_path, e))
         return False
 
-    logger.debug("signalling hal-dccm with:")
+    logger.debug("signalling dccm with:")
     if rndis == True:
         rndis_text = "True"
     else:
