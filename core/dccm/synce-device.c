@@ -31,13 +31,6 @@ G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
 
 const gchar *udev_subsystems[] = { NULL };
 
-/* from dbus-gutils.h, dbus_connection_get_g_connection 
-   appears in 0.74 */
-#if EARLY_DBUSGLIB == 1
-#define _DBUS_POINTER_SHIFT(p)   ((void*) (((char*)p) + sizeof (void*)))
-#define DBUS_G_CONNECTION_FROM_CONNECTION(x)     ((DBusGConnection*) _DBUS_POINTER_SHIFT(x))
-#endif
-
 /* properties */
 enum
 {
@@ -612,11 +605,7 @@ synce_device_init (SynceDevice *self)
 
   dbus_connection_setup_with_g_main(libhal_ctx_get_dbus_connection(priv->hal_ctx), NULL);
 
-#if EARLY_DBUSGLIB == 1
-  priv->hal_bus = DBUS_G_CONNECTION_FROM_CONNECTION (libhal_ctx_get_dbus_connection(priv->hal_ctx));
-#else
   priv->hal_bus = dbus_connection_get_g_connection(libhal_ctx_get_dbus_connection(priv->hal_ctx));
-#endif
 
   if (!libhal_ctx_set_user_data (priv->hal_ctx, self)) {
     g_critical("%s: failed to set user data for hal_ctx", G_STRFUNC);

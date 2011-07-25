@@ -77,14 +77,7 @@ dnl Check for GNet
 PKG_CHECK_MODULES(GNET, gnet-2.0)
 
 dnl Check for D-Bus
-PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60])
-
-dnl Check for earlier version of dbus-glib
-PKG_CHECK_MODULES(DBUSGLIB074, [dbus-glib-1 >= 0.74], [early_dbusglib=no], [early_dbusglib=yes])
-if test "x$early_dbusglib" = "xyes"; then
-   AC_DEFINE_UNQUOTED([EARLY_DBUSGLIB], [1], [dbus-glib older than 0.74])
-fi
-
+PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.74], dbus_found=yes, dbus_found=no)
 
 
 
@@ -114,11 +107,8 @@ AC_ARG_ENABLE(odccm-support,
               enable_odccm_support=$enableval, enable_odccm_support=no)
 
 if ! test "$enable_odccm_support" = "no"; then
-  dnl Check for D-Bus
-  PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
-                    dbus=yes, dbus=no)
-
-  if test "$dbus" = "no"; then
+  dnl do we have dbus ?
+  if test "$dbus_found" = "no"; then
     if test "$enable_odccm_support" = "auto"; then
       AC_MSG_NOTICE([D-Bus not found, building without odccm support])
       enable_odccm_support=no
@@ -146,10 +136,9 @@ AC_ARG_ENABLE(hal-support,
 
 if ! test "$enable_hal_support" = "no"; then
   dnl Check for DBus and Hal
-  PKG_CHECK_MODULES(HAL, [hal >= 0.5.8, dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
-                    hal_found=yes, hal_found=no)
+  PKG_CHECK_MODULES(HAL, [hal >= 0.5.8], hal_found=yes, hal_found=no)
 
-  if test "$hal_found" = "no"; then
+  if test "$hal_found" = "no" || test "$dbus_found" = "no"; then
     if test "$enable_hal_support" = "auto"; then
       AC_MSG_NOTICE([Hal not found, building without hal support])
       enable_hal_support=no
@@ -176,11 +165,8 @@ AC_ARG_ENABLE(udev-support,
               enable_udev_support=$enableval, enable_udev_support=yes)
 
 if ! test "$enable_udev_support" = "no"; then
-  dnl Check for D-Bus
-  PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.60],
-                    dbus=yes, dbus=no)
-
-  if test "$dbus" = "no"; then
+  dnl do we have dbus ?
+  if test "$dbus_found" = "no"; then
     if test "$enable_udev_support" = "auto"; then
       AC_MSG_NOTICE([D-Bus not found, building without udev support])
       enable_udev_support=no
