@@ -61,7 +61,8 @@ synce_trayicon_CPPFLAGS = \
 	$(GTOP_CFLAGS) \
 	$(LIBORANGE_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
-	$(XML_CFLAGS)
+	$(XML_CFLAGS) \
+	$(APP_INDICATOR_CFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GTK2_LIBS) \
@@ -74,7 +75,8 @@ synce_trayicon_LDADD = \
 	$(GTOP_LIBS) \
 	$(LIBORANGE_LIBS) \
 	$(NOTIFY_LIBS) \
-	$(XML_LIBS)
+	$(XML_LIBS) \
+	$(APP_INDICATOR_LIBS)
 
 
 noinst_HEADERS = synce-trayicon-module.h
