@@ -36,6 +36,10 @@ IN THE SOFTWARE.
 #include <synce.h>
 #include <libnotify/notify.h>
 
+#ifndef NOTIFY_CHECK_VERSION
+#define NOTIFY_CHECK_VERSION(x,y,z) 0
+#endif
+
 #include "synce-trayicon.h"
 #include "properties.h"
 #include "utils.h"
@@ -59,11 +63,12 @@ IN THE SOFTWARE.
 #include "device-info.h"
 #include "module.h"
 
-G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, GTK_TYPE_STATUS_ICON)
+G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, G_TYPE_OBJECT)
 
 typedef struct _SynceTrayIconPrivate SynceTrayIconPrivate;
 struct _SynceTrayIconPrivate {
 
+  GtkStatusIcon *status_icon;
   GConfClient *conf_client;
   guint conf_watch_id;
 #if ENABLE_UDEV_SUPPORT
@@ -125,7 +130,7 @@ set_status_tooltips(SynceTrayIcon *self)
 #if GTK_CHECK_VERSION(2,16,0)
           gtk_tooltip_set_text(tooltip, _("Not connected"));
 #else
-          gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), _("Not connected"));
+          gtk_status_icon_set_tooltip(priv->status_icon, _("Not connected"));
 #endif
           return;
   }
@@ -164,7 +169,7 @@ set_status_tooltips(SynceTrayIcon *self)
 #if GTK_CHECK_VERSION(2,16,0)
   gtk_tooltip_set_text(tooltip, tooltip_str);
 #else
-  gtk_status_icon_set_tooltip(GTK_STATUS_ICON(self), tooltip_str);
+  gtk_status_icon_set_tooltip(priv->status_icon, tooltip_str);
 #endif
   g_free(tooltip_str);
   return;
@@ -188,14 +193,14 @@ set_icon(SynceTrayIcon *self)
 
 
   if (wm_device_manager_device_all_count(priv->device_list) > 0)
-          gtk_status_icon_set_visible(GTK_STATUS_ICON(self), TRUE);
+          gtk_status_icon_set_visible(priv->status_icon, TRUE);
   else
-          gtk_status_icon_set_visible(GTK_STATUS_ICON(self), priv->show_disconnected);
+          gtk_status_icon_set_visible(priv->status_icon, priv->show_disconnected);
 
   if (is_connected(self))
-          gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_CONNECTED);
+    gtk_status_icon_set_from_icon_name(priv->status_icon, SYNCE_STOCK_CONNECTED);
   else
-          gtk_status_icon_set_from_icon_name(GTK_STATUS_ICON(self), SYNCE_STOCK_DISCONNECTED);
+          gtk_status_icon_set_from_icon_name(priv->status_icon, SYNCE_STOCK_DISCONNECTED);
 }
 
 static gboolean 
@@ -221,12 +226,19 @@ event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
     priv->notification = NULL;
   }
 
-  if (gtk_status_icon_is_embedded(GTK_STATUS_ICON(self))) {
-          priv->notification = notify_notification_new_with_status_icon (summary, body, NULL, GTK_STATUS_ICON(self));
-          notify_notification_show (priv->notification, NULL);
+    /* libnotify 0.7.0 and later has no support for attaching to widgets */
+#if NOTIFY_CHECK_VERSION(0,7,0)
+  priv->notification = notify_notification_new (summary, body, NULL);
+  notify_notification_show (priv->notification, NULL);
+#else
+  if (gtk_status_icon_is_embedded(priv->status_icon)) {
+    priv->notification = notify_notification_new_with_status_icon (summary, body, NULL, priv->status_icon);
+    notify_notification_show (priv->notification, NULL);
   } else {
-          g_debug("%s: not embedded", G_STRFUNC);
+    priv->notification = notify_notification_new (summary, body, NULL);
+    notify_notification_show (priv->notification, NULL);
   }
+#endif
 }
 
 
@@ -978,7 +990,7 @@ menu_about (GtkWidget *button, SynceTrayIcon *icon)
 
   about = gtk_about_dialog_new();
 
-  gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(about), g_get_application_name());
+  gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about), g_get_application_name());
   gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
   gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (c) 2002, David Eriksson\n"
 							    "Copyright (c) 2007 - 2009, Mark Ellis"));
@@ -1064,7 +1076,7 @@ trayicon_update_menu(SynceTrayIcon *self)
                   }
 
                   entry = gtk_menu_item_new_with_label(device_names_iter->data);
-                  gtk_menu_append(GTK_MENU(priv->menu), entry);
+                  gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
 
                   device_menu = gtk_menu_new();
                   gtk_menu_set_title(GTK_MENU(device_menu), device_names_iter->data);
@@ -1072,17 +1084,17 @@ trayicon_update_menu(SynceTrayIcon *self)
 
                   entry = gtk_menu_item_new_with_label(_("Explore with Filemanager"));
                   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_explore), self);
-                  gtk_menu_append(GTK_MENU(device_menu), entry);
+                  gtk_menu_shell_append(GTK_MENU_SHELL(device_menu), entry);
 
                   entry = gtk_menu_item_new_with_label(_("View device status"));
                   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_device_info), self);
-                  gtk_menu_append(GTK_MENU(device_menu), entry);
+                  gtk_menu_shell_append(GTK_MENU_SHELL(device_menu), entry);
 
 #if ENABLE_VDCCM_SUPPORT
                   if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
                           entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_DISCONNECT, NULL);
                           g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), self);
-                          gtk_menu_append(GTK_MENU(device_menu), entry);
+                          gtk_menu_shell_append(GTK_MENU_SHELL(device_menu), entry);
                   }
 #endif
 
@@ -1092,45 +1104,45 @@ trayicon_update_menu(SynceTrayIcon *self)
           g_list_free(device_names);
   } else {
     entry = gtk_menu_item_new_with_label(_("(No device connected)"));
-    gtk_menu_append(GTK_MENU(priv->menu), entry);
+    gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
   }
 
   entry = gtk_separator_menu_item_new();
-  gtk_menu_append(GTK_MENU(priv->menu), entry);
+  gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
 
 #if ENABLE_VDCCM_SUPPORT
   if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
     if (dccm_is_running()) {
       entry = gtk_menu_item_new_with_label(_("Stop DCCM"));
       g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_stop_vdccm), self);
-      gtk_menu_append(GTK_MENU(priv->menu), entry);
+      gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
       gtk_widget_set_sensitive(entry, !is_connected(self));
 
       entry = gtk_menu_item_new_with_label(_("Restart DCCM"));
       g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_restart_vdccm), self);
-      gtk_menu_append(GTK_MENU(priv->menu), entry);
+      gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
       gtk_widget_set_sensitive(entry, !is_connected(self));
     } else {
       entry = gtk_menu_item_new_with_label(_("Start DCCM"));
       g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_start_vdccm), self);
-      gtk_menu_append(GTK_MENU(priv->menu), entry);
+      gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
     }
     entry = gtk_separator_menu_item_new();
-    gtk_menu_append(GTK_MENU(priv->menu), entry);
+    gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
   }
 #endif
 
   entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_PREFERENCES, NULL);
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_preferences), self);
-  gtk_menu_append(GTK_MENU(priv->menu), entry);
+  gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
 	
   entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_ABOUT, NULL);
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_about), self);
-  gtk_menu_append(GTK_MENU(priv->menu), entry);
+  gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
 
   entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT, NULL);
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_exit), self);
-  gtk_menu_append(GTK_MENU(priv->menu), entry);
+  gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
 
 }
 
@@ -1251,6 +1263,7 @@ synce_trayicon_init(SynceTrayIcon *self)
   priv->disposed = FALSE;
   priv->menu = NULL;
 
+  priv->status_icon = gtk_status_icon_new();
   priv->notification = NULL;
 
   if (!notify_is_initted ())
@@ -1279,13 +1292,13 @@ synce_trayicon_init(SynceTrayIcon *self)
 		    (GCallback)device_removed_cb, self);
 
   /* visible icon */
-  g_signal_connect(G_OBJECT(self), "activate", G_CALLBACK(trayicon_activate_cb), self);
-  g_signal_connect(G_OBJECT(self), "popup-menu", G_CALLBACK(trayicon_popup_menu_cb), self);
+  g_signal_connect(G_OBJECT(priv->status_icon), "activate", G_CALLBACK(trayicon_activate_cb), self);
+  g_signal_connect(G_OBJECT(priv->status_icon), "popup-menu", G_CALLBACK(trayicon_popup_menu_cb), self);
 
 #if GTK_CHECK_VERSION(2,16,0)
   /* tooltip */
-  gtk_status_icon_set_has_tooltip(GTK_STATUS_ICON(self), TRUE);
-  g_signal_connect(G_OBJECT(self), "query-tooltip", G_CALLBACK(query_tooltip_cb), self);
+  gtk_status_icon_set_has_tooltip(priv->status_icon, TRUE);
+  g_signal_connect(G_OBJECT(priv->status_icon), "query-tooltip", G_CALLBACK(query_tooltip_cb), self);
 #endif
 
   priv->conf_watch_id = gconf_client_notify_add (priv->conf_client, 
@@ -1328,6 +1341,8 @@ synce_trayicon_dispose (GObject *obj)
   priv->disposed = TRUE;
 
   /* unref other objects */
+
+  g_object_unref(priv->status_icon);
 
   /* gconf */
   gconf_client_notify_remove(priv->conf_client, priv->conf_watch_id);

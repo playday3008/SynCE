@@ -29,12 +29,12 @@ G_BEGIN_DECLS
 
 typedef struct _SynceTrayIcon SynceTrayIcon;
 struct _SynceTrayIcon {
-  GtkStatusIcon parent;
+  GObject parent;
 };
 
 typedef struct _SynceTrayIconClass SynceTrayIconClass;
 struct _SynceTrayIconClass {
-  GtkStatusIconClass parent_class;
+  GObjectClass parent_class;
 };
 
 GType synce_trayicon_get_type (void);

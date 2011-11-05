@@ -51,7 +51,8 @@ EXTRA_DIST = dccm-client-signals-marshal.list \
 		sync-engine.xml
 
 synce_trayicon_CPPFLAGS = \
-	$(GNOME2_CFLAGS) \
+	$(GTK2_CFLAGS) \
+	$(GCONF_CFLAGS) \
 	$(GNOME_KEYRING_CFLAGS) \
 	$(LIBRAPI2_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
@@ -63,7 +64,8 @@ synce_trayicon_CPPFLAGS = \
 	$(XML_CFLAGS)
 
 synce_trayicon_LDADD = \
-	$(GNOME2_LIBS) \
+	$(GTK2_LIBS) \
+	$(GCONF_LIBS) \
 	$(GNOME_KEYRING_LIBS) \
 	$(LIBRAPI2_LIBS) \
 	$(LIBRRA_LIBS) \

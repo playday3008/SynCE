@@ -1,3 +1,11 @@
+2011-11-05  Mark Ellis  <mark@mpellis.org.uk>
+
+	* make the GtkStatusIcon a child of SynceTrayicon, rather than
+	  trayicon being a subclass of statusicon, which is inflexible
+	* fix build with recent libnotify (>= 0.7), which has no
+	  support for attaching to widgets
+	* remove obsolete libgnome items, replace deprecated functions
+
 2011-03-01  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add configure options to allow disabling of dccm backends;

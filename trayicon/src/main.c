@@ -33,8 +33,8 @@
 #include <synce_log.h>
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <glib/gi18n.h>
 #include <gtk/gtk.h>
-#include <gnome.h>
 #include <errno.h>
 
 #include "synce-trayicon.h"
@@ -49,41 +49,6 @@ static GOptionEntry options[] =
     { NULL }
   };
 
-
-static void
-init_sm (gboolean restart_immediately)
-{
-    GnomeClient *master;
-    GnomeClientFlags flags;
-                                                                                
-    master = gnome_master_client ();
-    flags = gnome_client_get_flags (master);
-    if (flags & GNOME_CLIENT_IS_CONNECTED) {
-       if (restart_immediately)
-          gnome_client_set_restart_style (master, GNOME_RESTART_IMMEDIATELY);
-       else
-          gnome_client_set_restart_style (master, GNOME_RESTART_NEVER);
-        gnome_client_flush (master);
-    }
-                                                                                
-    g_signal_connect (G_OBJECT (master), "die",
-            G_CALLBACK (gtk_main_quit), NULL);
-}
-
-static void
-unreg_sm ()
-{
-    GnomeClient *master;
-    GnomeClientFlags flags;
-                                                                                
-    master = gnome_master_client ();
-    flags = gnome_client_get_flags (master);
-    if (flags & GNOME_CLIENT_IS_CONNECTED) {
-        gnome_client_set_restart_style (master,
-                GNOME_RESTART_NEVER);
-        gnome_client_flush (master);
-    }
-}
 
 static void
 remove_obsolete_script()
@@ -102,7 +67,7 @@ main (gint argc, gchar **argv)
 {
 	int result = 1;
 	SynceTrayIcon *trayicon;
-	gboolean restart = TRUE;
+	GError *error = NULL;
 
 #ifdef ENABLE_NLS
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -110,18 +75,15 @@ main (gint argc, gchar **argv)
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
-	GOptionContext *option_context = g_option_context_new (" - gnome control for synCE");
-	g_option_context_add_main_entries (option_context, options, GETTEXT_PACKAGE);
-	gnome_program_init (PACKAGE, VERSION,
-			LIBGNOMEUI_MODULE,
-			argc, argv,
-			GNOME_PARAM_GOPTION_CONTEXT, option_context,
-			GNOME_PARAM_HUMAN_READABLE_NAME, _("SynCE Tray Icon"),
-			GNOME_PROGRAM_STANDARD_PROPERTIES,
-			NULL);
+	if (!gtk_init_with_args(&argc, &argv,
+				" - gnome control for synCE",
+				options, GETTEXT_PACKAGE,
+				&error))
+	  {
+	    g_error("%s: failed to initialise GTK: %s", G_STRFUNC, error->message);
+	  }
 
         g_set_application_name(_("SynCE Tray Icon"));
-
 
  	synce_log_set_level(log_level);
 
@@ -137,20 +99,15 @@ main (gint argc, gchar **argv)
 	else
 	{
 		g_debug("Running in foreground");
-		restart = FALSE;
 	}
 
 	remove_obsolete_script();
-
-	init_sm (restart);
 
 	trayicon = g_object_new (SYNCE_TRAYICON_TYPE, NULL);
 
 	gtk_main ();
 
 	g_object_unref(trayicon);
-
-	unreg_sm();
 
 	result = 0;
 	return result;

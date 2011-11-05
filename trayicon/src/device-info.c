@@ -2097,7 +2097,7 @@ on_app_add_button_clicked(GtkButton *button, gpointer user_data)
     g_debug("%s: requested installation of file %s", G_STRFUNC, filepath);
     result = synce_app_man_install(filepath, progress_bar_pulse, progressbar, &error);
 
-    gtk_widget_hide_all(fetchwindow);
+    gtk_widget_hide(fetchwindow);
     gtk_widget_destroy(fetchwindow);
     if (!result) {
       synce_error_dialog(_("Failed to install from file %s: %s"), filepath, error->message);
