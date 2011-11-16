@@ -43,8 +43,7 @@ mailing list.
 External requirements
 ---------------------
 
-librapi2
-libsynce
+synce-core (libsynce)
 
 
 Installation from CVS

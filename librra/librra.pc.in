@@ -4,8 +4,8 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: librra
-Description: Library to deal with synchronization with WinCE devices
+Description: Library to deal with synchronization of WinCE devices
 Version: @VERSION@
-Requires: libsynce librapi2
+Requires: libsynce
 Libs: -L${libdir} -lrra
 Cflags: -I${includedir}

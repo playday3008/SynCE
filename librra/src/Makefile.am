@@ -1,5 +1,5 @@
-AM_CFLAGS = @LIBSYNCE_CFLAGS@ @LIBRAPI2_CFLAGS@
-AM_LDFLAGS = @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@
+AM_CFLAGS = @LIBSYNCE_CFLAGS@
+AM_LDFLAGS = @LIBSYNCE_LIBS@
 
 INCLUDES = -I$(top_srcdir)/lib
 LDADD = -L$(top_builddir)/lib $(top_builddir)/lib/librra.la

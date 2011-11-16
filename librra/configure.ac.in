@@ -1,11 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(lib/syncmgr.h)
+AC_PREREQ(2.53)
+
+AC_INIT(librra, @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
+AC_CONFIG_HEADERS(rra_config.h)
+AC_CONFIG_SRCDIR(lib/syncmgr.h)
 
 dnl AC_CANONICAL_HOST
 dnl AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE(librra, 0.1)
-AM_CONFIG_HEADER(rra_config.h)
+AM_INIT_AUTOMAKE
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -16,10 +19,7 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.14)
-
-dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.14)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
 
   AC_ARG_WITH(libmimedir,
     AC_HELP_STRING(
@@ -174,4 +174,3 @@ AC_OUTPUT([librra.pc
            lib/Makefile
            man/Makefile
            python/Makefile])
-

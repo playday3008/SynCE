@@ -1,6 +1,3 @@
-AM_CFLAGS = @LIBSYNCE_CFLAGS@
-AM_LDFLAGS = @LIBSYNCE_LIBS@
-
 INCLUDES = -I..
 
 includedir = @includedir@/rra
@@ -44,5 +41,6 @@ librra_la_SOURCES = \
 	contact_ids.h      rrac_packet.h \
 	matchmaker.h
 
+librra_la_CFLAGS = @LIBSYNCE_CFLAGS@
 librra_la_LDFLAGS = -no-undefined -version-info 0:0:0
-librra_la_LIBADD   = @LTLIBOBJS@ @LIBRAPI2_LIBS@
+librra_la_LIBADD   = @LTLIBOBJS@ @LIBSYNCE_LIBS@
