@@ -1,3 +1,9 @@
+2011-11-14  Mark Ellis  <mark@mpellis.org.uk>
+
+	* update configure.ac.in, drop references to librapi2 to use
+	  synce-core
+	* update deprecated calls to gtk
+
 2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.2 release

@@ -25,11 +25,11 @@ EXTRA_DIST = gcemirror-signals-marshal.list
 
 gcemirror_CPPFLAGS = \
 	$(GTK2_CFLAGS) \
-	$(LIBRAPI2_CFLAGS)
+	$(LIBSYNCE_CFLAGS)
 
 gcemirror_LDADD = \
 	$(GTK2_LIBS) \
-	$(LIBRAPI2_LIBS)
+	$(LIBSYNCE_LIBS)
 
 
 %-signals-marshal.h: %-signals-marshal.list

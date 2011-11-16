@@ -17,10 +17,10 @@ AM_PROG_CC_C_O
 
 
 dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 > 0.13)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
 
 PKG_CHECK_MODULES(GTK2, glib-2.0       \
-			gtk+-2.0 >= 2.14)
+			gtk+-2.0 >= 2.18)
 AC_SUBST(GTK2_CFLAGS)
 AC_SUBST(GTK2_LIBS)
 
