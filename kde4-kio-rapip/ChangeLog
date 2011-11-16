@@ -1,3 +1,8 @@
+2011-11-08  Mark Ellis <mark@mpellis.org.uk>
+
+	* librapi2 has been merged into libsynce in synce-core, drop
+	  separate build dependency on it
+
 2009-01-10  Mark Ellis <mark@mpellis.org.uk>
 
 	* 0.2 release

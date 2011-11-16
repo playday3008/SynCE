@@ -1,6 +1,6 @@
 Compiling and Installing
 Requisites
-    * Install the base SynCE libraries (libsynce, librapi2) as described at
+    * Install the base SynCE libraries (synce-core) as described at
       http://www.synce.org/. If you installed binary packages provided by your
       distribution, ensure you install the -devel packages as well.
     * Make the SynCE libraries work by getting connected for the first time.

@@ -6,7 +6,7 @@ include (InstallRequiredSystemLibraries)
 
 # configuration to build source packages
 set (CPACK_PACKAGE_NAME "kde4-kio-rapip")
-set (CPACK_PACKAGE_VERSION "0.2")
+set (CPACK_PACKAGE_VERSION "0.3")
 set (CPACK_PACKAGE_VENDOR "The SynCE Project")
 set (CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README )
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "KIOSlave used to browse through a Windows Mobile PDA filesystem" )
@@ -23,7 +23,7 @@ include (KDE4Defaults)
 include (MacroLibrary)
 include(MacroOptionalAddSubdirectory)
 
-PKGCONFIG(librapi2 SYNCE_INCLUDE_DIR SYNCE_LINK_DIR SYNCE_LINK_FLAGS SYNCE_CFLAGS)
+PKGCONFIG(libsynce SYNCE_INCLUDE_DIR SYNCE_LINK_DIR SYNCE_LINK_FLAGS SYNCE_CFLAGS)
 
 add_definitions (${SYNCE_CFLAGS} ${QT_DEFINITIONS} ${KDE4_DEFINITIONS})
 include_directories (${SYNCE_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES})
