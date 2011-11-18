@@ -16,8 +16,8 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 AM_PROG_CC_C_O
 
-dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.14)
+dnl Check for libsynce
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
 dnl Check for librra
 PKG_CHECK_MODULES(LIBRRA, librra >= 0.14)
 

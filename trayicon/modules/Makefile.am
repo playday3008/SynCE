@@ -14,12 +14,12 @@ test_mod_la_SOURCES = test-mod.c
 
 test_mod_la_CPPFLAGS = \
 	$(GTK2_CFLAGS) \
-	$(LIBRAPI2_CFLAGS)
+	$(LIBSYNCE_CFLAGS)
 
 test_mod_la_LDFLAGS = -module -avoid-version
 
 test_mod_la_LIBADD = \
 	$(GTK2_LIBS) \
-	$(LIBRAPI2_LIBS)
+	$(LIBSYNCE_LIBS)
 
 

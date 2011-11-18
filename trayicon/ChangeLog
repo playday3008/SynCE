@@ -1,3 +1,8 @@
+2011-11-18  Mark Ellis  <mark@mpellis.org.uk>
+
+	* librapi2 has been merged into libsynce in synce-core, drop
+	  separate build dependency on it
+
 2011-11-05  Mark Ellis  <mark@mpellis.org.uk>
 
 	* make the GtkStatusIcon a child of SynceTrayicon, rather than

@@ -54,7 +54,7 @@ synce_trayicon_CPPFLAGS = \
 	$(GTK2_CFLAGS) \
 	$(GCONF_CFLAGS) \
 	$(GNOME_KEYRING_CFLAGS) \
-	$(LIBRAPI2_CFLAGS) \
+	$(LIBSYNCE_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
 	$(DBUS_CFLAGS) \
 	$(HAL_CFLAGS) \
@@ -68,7 +68,7 @@ synce_trayicon_LDADD = \
 	$(GTK2_LIBS) \
 	$(GCONF_LIBS) \
 	$(GNOME_KEYRING_LIBS) \
-	$(LIBRAPI2_LIBS) \
+	$(LIBSYNCE_LIBS) \
 	$(LIBRRA_LIBS) \
 	$(DBUS_LIBS) \
 	$(HAL_LIBS) \

@@ -1509,7 +1509,7 @@ partners_setup_view(WmDeviceInfo *self)
  ***********************
 */
 
-/* from librapi2 pstatus */
+/* from libsynce RAPI pstatus */
 static const char*
 version_string(CEOSVERSIONINFO* version)
 {
