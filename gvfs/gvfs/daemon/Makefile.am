@@ -1,4 +1,4 @@
-gvfs_src_dir = $(top_srcdir)/@with_gvfs_source@
+gvfs_src_dir = @with_gvfs_source@
 
 libdaemon_sources = \
 	$(gvfs_src_dir)/daemon/gvfsdaemon.c $(gvfs_src_dir)/daemon/gvfsdaemon.h \

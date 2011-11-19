@@ -218,7 +218,7 @@ g_error_from_rapi(gboolean *connection_error)
   GError *result = NULL;
   HRESULT hr;
   unsigned error;
-  int i;
+  guint i;
 
   if (connection_error)
     *connection_error = FALSE;
@@ -2427,7 +2427,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
   guint itemcount;
   WCHAR *tempwstr = NULL;
   gint index;
-  gint count;
+  guint count;
   HRESULT hr;
 
   fullpath = g_string_new(filename);
@@ -2678,8 +2678,15 @@ synce_gvfs_mount (GVfsBackend *backend,
 }
 
 static void
+#if GVFS_PRE_1_4
 synce_gvfs_unmount (GVfsBackend *backend,
 		    GVfsJobUnmount *job)
+#else
+synce_gvfs_unmount (GVfsBackend *backend,
+		    GVfsJobUnmount *job,
+		    GMountUnmountFlags flags,
+		    GMountSource *mount_source)
+#endif
 {
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(backend);
 

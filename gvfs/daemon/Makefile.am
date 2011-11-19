@@ -1,5 +1,5 @@
 
-gvfs_src_dir = $(top_srcdir)/@with_gvfs_source@
+gvfs_src_dir = @with_gvfs_source@
 
 mountdir = $(datadir)/gvfs/mounts
 
@@ -122,10 +122,10 @@ gvfsd_synce_CPPFLAGS = \
 	-DBACKEND_HEADER=gvfsbackendsynce.h \
 	-DDEFAULT_BACKEND_TYPE=synce \
 	-DMAX_JOB_THREADS=1 \
-	$(LIBRAPI2_CFLAGS) \
+	$(LIBSYNCE_CFLAGS) \
 	-DBACKEND_TYPES='"synce", G_VFS_TYPE_BACKEND_SYNCE,' \
 	-DGVFS_LOG_DOMAIN=\"synce-gvfs\" \
 	-DG_LOG_DOMAIN=\"synce-gvfs\"
 
-gvfsd_synce_LDADD = $(libraries) $(LIBRAPI2_LIBS)
+gvfsd_synce_LDADD = $(libraries) $(LIBSYNCE_LIBS)
 

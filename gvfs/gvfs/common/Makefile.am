@@ -1,5 +1,5 @@
 
-gvfs_src_dir = $(top_srcdir)/@with_gvfs_source@
+gvfs_src_dir = @with_gvfs_source@
 
 gvfs_headers = \
 	$(gvfs_src_dir)/common/gsysutils.h \

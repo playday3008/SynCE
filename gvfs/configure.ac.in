@@ -35,11 +35,11 @@ giomodulesdir=`pkg-config --variable=giomoduledir gio-2.0`
 AC_SUBST(giomodulesdir)
 
 dnl **************************
-dnl *** Check for librapi2 ***
+dnl *** Check for libsynce ***
 dnl **************************
 
-dnl Check for librapi2
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.12)
+dnl Check for libsynce
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
 
 
 AC_ARG_WITH(gvfs-source, [  --with-gvfs-source=PATH     Location of the GVFS source tree.],
@@ -47,8 +47,12 @@ AC_ARG_WITH(gvfs-source, [  --with-gvfs-source=PATH     Location of the GVFS sou
 AM_CONDITIONAL(LOCAL_LIBDAEMON_SRC, test "x$with_gvfs_source" = "xno")
 if test "x$with_gvfs_source" = "xno"; then
     AC_MSG_NOTICE([Assuming an internal gvfs source tree])
-    with_gvfs_source="${srcdir}/gvfs"
+    with_gvfs_source='$(top_srcdir)/gvfs'
 else
+    echo "${with_gvfs_source}"|grep '^/' > /dev/null 2>&1
+    if test $? -ne 0; then
+       with_gvfs_source='$(top_srcdir)/'"${with_gvfs_source}"
+    fi
     AC_MSG_NOTICE([Using gvfs source tree at ${with_gvfs_source}])
 fi
 AC_SUBST(with_gvfs_source)
@@ -67,6 +71,10 @@ AC_MSG_CHECKING([gvfs minor version])
 #gvfs_minor_ver=`echo "$with_gvfs_source_version" | sed -e 's/^.*[0-9]\{1,\}\.\([0-9]\{1,\}\).*$/\1/'`
 gvfs_minor_ver=`echo "$with_gvfs_source_version" | sed -e 's/^.*@<:@0-9@:>@\{1,\}\.\(@<:@0-9@:>@\{1,\}\).*$/\1/'`
 AC_MSG_RESULT([$gvfs_minor_ver])
+
+if test "$gvfs_major_ver" -eq 1 -a "$gvfs_minor_ver" -lt 4; then
+AC_DEFINE(GVFS_PRE_1_4, 1, [Define if building against gvfs pre version 1.4])
+fi
 
 AM_CONDITIONAL(GVFS_VERSION_1_0, test "$gvfs_major_ver" -ge 1 )
 AM_CONDITIONAL(GVFS_VERSION_1_2, test "$gvfs_major_ver" -ge 1 -a "$gvfs_minor_ver" -ge 2 )

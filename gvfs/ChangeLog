@@ -1,3 +1,11 @@
+2011-11-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* update configure.ac.in, drop references to librapi2 to use
+	  synce-core
+	* fix location of gvfs source in build system
+	* fix some signed comparison warnings
+	* update unmount function declaration
+
 2010-04-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.4 release
