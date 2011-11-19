@@ -50,6 +50,7 @@ struct _WmDeviceManagerClass {
   gint (*wm_device_manager_device_all_count) (WmDeviceManager *self);
   gint (*wm_device_manager_device_connected_count) (WmDeviceManager *self);
   gint (*wm_device_manager_device_passwordreq_count) (WmDeviceManager *self);
+  gint (*wm_device_manager_device_passwordreqondevice_count) (WmDeviceManager *self);
   WmDevice * (*wm_device_manager_find_by_name) (WmDeviceManager *self, const gchar *name);
   WmDevice * (*wm_device_manager_find_by_index) (WmDeviceManager *self, gint index);
   void (*wm_device_manager_remove_by_name) (WmDeviceManager *self, const gchar *name);
@@ -58,6 +59,7 @@ struct _WmDeviceManagerClass {
   GList * (*wm_device_manager_get_all_names) (WmDeviceManager *self);
   GList * (*wm_device_manager_get_connected_names) (WmDeviceManager *self);
   GList * (*wm_device_manager_get_passwordreq_names) (WmDeviceManager *self);
+  GList * (*wm_device_manager_get_passwordreqondevice_names) (WmDeviceManager *self);
   gboolean (*wm_device_manager_add) (WmDeviceManager *self, WmDevice *device);
   void (*wm_device_manager_unlocked) (WmDeviceManager *self, const gchar *name);
 
@@ -81,6 +83,7 @@ GType wm_device_manager_get_type (void);
 gint wm_device_manager_device_all_count(WmDeviceManager *self);
 gint wm_device_manager_device_connected_count(WmDeviceManager *self);
 gint wm_device_manager_device_passwordreq_count(WmDeviceManager *self);
+gint wm_device_manager_device_passwordreqondevice_count(WmDeviceManager *self);
 WmDevice *wm_device_manager_find_by_name(WmDeviceManager *self, const gchar *name);
 WmDevice *wm_device_manager_find_by_index(WmDeviceManager *self, gint index);
 void wm_device_manager_remove_by_name(WmDeviceManager *self, const gchar *name);
@@ -89,6 +92,7 @@ void wm_device_manager_remove_all(WmDeviceManager *self);
 GList *wm_device_manager_get_all_names(WmDeviceManager *self);
 GList *wm_device_manager_get_connected_names(WmDeviceManager *self);
 GList *wm_device_manager_get_passwordreq_names(WmDeviceManager *self);
+GList *wm_device_manager_get_passwordreqondevice_names(WmDeviceManager *self);
 gboolean wm_device_manager_add(WmDeviceManager *self, WmDevice *device);
 void wm_device_manager_unlocked(WmDeviceManager *self, const gchar *name);
 

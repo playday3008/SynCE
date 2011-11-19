@@ -1,3 +1,9 @@
+2011-11-19  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add libappindicator support, required some reworking of
+	  the menus for passworded devices
+	* require gtk >= 2.16
+
 2011-11-18  Mark Ellis  <mark@mpellis.org.uk>
 
 	* librapi2 has been merged into libsynce in synce-core, drop

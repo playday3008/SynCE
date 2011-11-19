@@ -57,6 +57,12 @@ wm_device_manager_device_passwordreq_count(WmDeviceManager *self)
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_device_passwordreq_count(self);
 }
 
+gint
+wm_device_manager_device_passwordreqondevice_count(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_device_passwordreqondevice_count(self);
+}
+
 WmDevice *
 wm_device_manager_find_by_name(WmDeviceManager *self, const gchar *name)
 {
@@ -103,6 +109,12 @@ GList *
 wm_device_manager_get_passwordreq_names(WmDeviceManager *self)
 {
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_get_passwordreq_names(self);
+}
+
+GList *
+wm_device_manager_get_passwordreqondevice_names(WmDeviceManager *self)
+{
+  return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_get_passwordreqondevice_names(self);
 }
 
 void
@@ -192,6 +204,37 @@ wm_device_manager_device_passwordreq_count_impl(WmDeviceManager *self)
     g_object_get(device, "connection-status", &connection_status, NULL);
 
     if (connection_status == DEVICE_STATUS_PASSWORD_REQUIRED)
+            count++;
+  }
+
+  return count;
+}
+
+gint
+wm_device_manager_device_passwordreqondevice_count_impl(WmDeviceManager *self)
+{
+
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return 0;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return 0;
+  }
+
+  guint connection_status;
+  guint count = 0;
+  gint i;
+  WmDevice *device = NULL;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    g_object_get(device, "connection-status", &connection_status, NULL);
+
+    if (connection_status == DEVICE_STATUS_PASSWORD_REQUIRED_ON_DEVICE)
             count++;
   }
 
@@ -445,6 +488,39 @@ wm_device_manager_get_passwordreq_names_impl(WmDeviceManager *self)
   return device_names;
 }
 
+GList *
+wm_device_manager_get_passwordreqondevice_names_impl(WmDeviceManager *self)
+{
+  if (!self) {
+    g_warning("%s: Invalid object passed", G_STRFUNC);
+    return NULL;
+  }
+  WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (priv->disposed) {
+    g_warning("%s: Disposed object passed", G_STRFUNC);
+    return NULL;
+  }
+
+  WmDevice *device = NULL;
+  GList *device_names = NULL;
+  gchar *name = NULL;
+  guint connection_status;
+  gint i;
+
+  for (i = 0; i < priv->devices->len; i++) {
+    device = g_ptr_array_index(priv->devices, i);
+    g_object_get(device, "connection-status", &connection_status, NULL);
+
+    if (connection_status == DEVICE_STATUS_PASSWORD_REQUIRED_ON_DEVICE) {
+            name = wm_device_get_name(device);
+            device_names = g_list_append(device_names, name);
+    }
+  }
+
+  return device_names;
+}
+
 gboolean
 wm_device_manager_add_impl(WmDeviceManager *self, WmDevice *device)
 {
@@ -593,6 +669,7 @@ wm_device_manager_class_init (WmDeviceManagerClass *klass)
   klass->wm_device_manager_device_all_count = &wm_device_manager_device_all_count_impl;
   klass->wm_device_manager_device_connected_count = &wm_device_manager_device_connected_count_impl;
   klass->wm_device_manager_device_passwordreq_count = &wm_device_manager_device_passwordreq_count_impl;
+  klass->wm_device_manager_device_passwordreqondevice_count = &wm_device_manager_device_passwordreqondevice_count_impl;
   klass->wm_device_manager_find_by_name = &wm_device_manager_find_by_name_impl;
   klass->wm_device_manager_find_by_index = &wm_device_manager_find_by_index_impl;
   klass->wm_device_manager_remove_by_name = &wm_device_manager_remove_by_name_impl;
@@ -601,6 +678,7 @@ wm_device_manager_class_init (WmDeviceManagerClass *klass)
   klass->wm_device_manager_get_all_names = &wm_device_manager_get_all_names_impl;
   klass->wm_device_manager_get_connected_names = &wm_device_manager_get_connected_names_impl;
   klass->wm_device_manager_get_passwordreq_names = &wm_device_manager_get_passwordreq_names_impl;
+  klass->wm_device_manager_get_passwordreqondevice_names = &wm_device_manager_get_passwordreqondevice_names_impl;
   klass->wm_device_manager_add = &wm_device_manager_add_impl;
   klass->wm_device_manager_unlocked = &wm_device_manager_unlocked_impl;
 }
