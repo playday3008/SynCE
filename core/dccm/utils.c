@@ -13,6 +13,7 @@
 #include <synce.h>
 #include <dbus/dbus-glib.h>
 #include <glib.h>
+#include <gio/gio.h>
 #include "utils.h"
 
 
@@ -204,18 +205,49 @@ exit:
   return result;
 }
 
-
-gchar*
-ip4_bytes_from_dotted_quad(gchar *ip)
+GSocket *
+synce_create_socket(const gchar *address, gint port)
 {
-  gchar **split_ip = g_strsplit(ip, ".", 4);
-  gchar *bytes = g_malloc(4);
-  gint i = 0;
-  while(i < 4) {
-    bytes[i] = atoi(split_ip[i]);
-    i++;
-  }
-  g_strfreev(split_ip);
-  return bytes;
-}
+  GError *error = NULL;
+  GSocket *socket = NULL;
+  GInetAddress *inet_address = NULL;
+  GSocketAddress *sock_address = NULL;
 
+  if (!(inet_address = g_inet_address_new_from_string(address))) {
+    g_critical("%s: failed to parse ip address: %s", G_STRFUNC, address);
+    goto error_exit;
+  }
+
+  socket = g_socket_new(G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, &error);
+  if (!socket) {
+    g_critical("%s: failed to create socket: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+  if (!(g_initable_init(G_INITABLE(socket), NULL, &error))) {
+    g_critical("%s: failed to initialise socket: %s", G_STRFUNC, error->message);
+    g_object_unref(socket);
+    goto error_exit;
+  }
+  sock_address = g_inet_socket_address_new(inet_address, port);
+  if (!(g_socket_bind(socket, sock_address, TRUE, &error))) {
+    g_critical("%s: failed to bind to port %d: %s", G_STRFUNC, port, error->message);
+    g_object_unref(socket);
+    goto error_exit;
+  }
+  if (!(g_socket_listen(socket, &error))) {
+    g_critical("%s: failed to listen to port 990: %s", G_STRFUNC, error->message);
+    g_object_unref(socket);
+    goto error_exit;
+  }
+
+  g_object_unref(sock_address);
+  g_object_unref(inet_address);
+  return socket;
+
+ error_exit:
+  if (error) g_error_free(error);
+  if (inet_address) g_object_unref(inet_address);
+  if (sock_address) g_object_unref(sock_address);
+
+  return NULL;
+}

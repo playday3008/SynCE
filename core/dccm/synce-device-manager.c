@@ -1,7 +1,8 @@
-#include <gnet.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 
 #include "synce-device-manager.h"
 #include "synce-device-manager-glue.h"
@@ -22,8 +23,7 @@ typedef struct
   gchar *local_ip;
   gboolean rndis;
   gboolean iface_pending;
-  GServer *server_990;
-  GServer *server_5679;
+  GSocketService *server;
   SynceDevice *device;
 } DeviceEntry;
 
@@ -35,7 +35,7 @@ struct _SynceDeviceManagerPrivate
 
   GSList *devices;
   SynceDeviceManagerControl *control_iface;
-  gint control_connect_id;
+  gulong control_connect_id;
   guint iface_check_id;
 };
 
@@ -49,8 +49,12 @@ synce_device_manager_device_entry_free(DeviceEntry *entry)
   g_free(entry->device_path);
   g_free(entry->device_ip);
   g_free(entry->local_ip);
-  if (entry->server_990) gnet_server_delete(entry->server_990);
-  if (entry->server_5679) gnet_server_delete(entry->server_5679);
+  if (entry->server) {
+    if (g_socket_service_is_active(entry->server)) {
+      g_socket_service_stop(entry->server);
+    }
+    g_object_unref(entry->server);
+  }
   if (entry->device) g_object_unref(entry->device);
   g_free(entry);
 
@@ -114,14 +118,15 @@ synce_device_manager_device_obj_path_changed_cb(GObject    *obj,
 }
 
 
-static void
-synce_device_manager_client_connected_cb(GServer *server,
-					 GConn *conn,
+static gboolean
+synce_device_manager_client_connected_cb(GSocketService *server,
+					 GSocketConnection *conn,
+					 GObject *source_object,
 					 gpointer user_data)
 {
   if (conn == NULL) {
     g_critical("%s: a connection error occured", G_STRFUNC);
-    return;
+    return TRUE;
   }
 
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
@@ -129,93 +134,114 @@ synce_device_manager_client_connected_cb(GServer *server,
 
   GSList *device_entry_iter = priv->devices;
   while (device_entry_iter) {
-    if ((((DeviceEntry*)device_entry_iter->data)->server_990 == server) || (((DeviceEntry*)device_entry_iter->data)->server_5679 == server))
+    if ( (((DeviceEntry*)device_entry_iter->data)->server == server) )
       break;
     device_entry_iter = g_slist_next(device_entry_iter);
   }
 
   if (!device_entry_iter) {
     g_critical("%s: connection from a non-recognised server", G_STRFUNC);
-    gnet_conn_unref(conn);
-    return;
+    return TRUE;
   }
 
   DeviceEntry *deventry = device_entry_iter->data;
+  GError *error = NULL;
 
-  GInetAddr *local_inet_addr = gnet_tcp_socket_get_local_inetaddr (conn->socket);
-  gint local_port = gnet_inetaddr_get_port(local_inet_addr);
-  gnet_inetaddr_unref(local_inet_addr);
+  GSocketAddress *local_inet_addr = g_socket_connection_get_local_address(conn, &error);
+  if (!local_inet_addr) {
+    g_critical("%s: failed to get address from new connection: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return TRUE;
+  }
+  guint local_port = g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(local_inet_addr));
+  g_object_unref(local_inet_addr);
 
   g_debug("%s: have a connection to port %d", G_STRFUNC, local_port);
 
   if (local_port == 5679) {
     if (!(deventry->device)) {
-      gnet_server_delete(deventry->server_990);
-      deventry->server_990 = NULL;
+      /*
+       * should close the socket listener on port 990 here, but can't see how to
+       */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
       deventry->device = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, "device-path", deventry->device_path, NULL);
       g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
     } else {
       g_warning("%s: unexpected secondary connection to port %d", G_STRFUNC, local_port);
-      gnet_conn_unref(conn);
-      return;
+      return TRUE;
     }
   } else if (local_port == 990) {
     if (!(deventry->device)) {
-      gnet_server_delete(deventry->server_5679);
-      deventry->server_5679 = NULL;
+      /*
+       * should close the socket listener on port 5679 here, but can't see how to
+       */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
       deventry->device = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, "device-path", deventry->device_path, NULL);
       g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(deventry->device), conn);
-      return;
+      return TRUE;
     }
   } else {
     g_warning("%s: unexpected connection to port %d", G_STRFUNC, local_port);
-    gnet_conn_unref(conn);
-    return;
+    return TRUE;
   }
-
-  gnet_conn_unref (conn);
 
   g_signal_connect (deventry->device, "notify::object-path",
 		    (GCallback) synce_device_manager_device_obj_path_changed_cb,
 		    self);
 
-  return;
+  return TRUE;
 }
 
 
 static gboolean
 synce_device_manager_create_device(SynceDeviceManager *self,
-				   GInetAddr *local_iface,
+				   const gchar *local_ip,
 				   DeviceEntry *deventry)
 {
   g_debug("%s: found device interface for %s", G_STRFUNC, deventry->device_path);
 
   deventry->iface_pending = FALSE;
 
-  GInetAddr *server_990_addr = gnet_inetaddr_clone(local_iface);
-  gnet_inetaddr_set_port(server_990_addr, 990);
+  GError *error = NULL;
+  GSocket *socket_990 = NULL;
+  GSocket *socket_5679 = NULL;
 
-  deventry->server_990 = gnet_server_new (server_990_addr, 990, synce_device_manager_client_connected_cb, self);
-  if (!(deventry->server_990)) {
-    g_critical("%s: unable to listen on rndis port (990), server invalid", G_STRFUNC);
-    return FALSE;
+  if (!(socket_990 = synce_create_socket(local_ip, 990))) {
+    g_critical("%s: failed to create listening socket on rndis port (990)", G_STRFUNC);
+    goto error_exit;
   }
 
-  GInetAddr *server_5679_addr = gnet_inetaddr_clone(local_iface);
-  gnet_inetaddr_set_port(server_5679_addr, 5679);
-
-  deventry->server_5679 = gnet_server_new (server_5679_addr, 5679, synce_device_manager_client_connected_cb, self);
-  if (!(deventry->server_5679)) {
-    g_critical("%s: unable to listen on legacy port (5679), server invalid", G_STRFUNC);
-    return FALSE;
+  if (!(socket_5679 = synce_create_socket(local_ip, 5679))) {
+    g_critical("%s: failed to create listening socket on legacy port (5679)", G_STRFUNC);
+    goto error_exit;
   }
 
-  gnet_inetaddr_unref(server_990_addr);
-  gnet_inetaddr_unref(server_5679_addr);
+  deventry->server = g_socket_service_new();
+  if (!(deventry->server)) {
+    g_critical("%s: failed to create socket service", G_STRFUNC);
+    goto error_exit;
+  }
+
+  if (!(g_socket_listener_add_socket(G_SOCKET_LISTENER(deventry->server), socket_990, NULL, &error))) {
+    g_critical("%s: failed to add 990 socket to socket service: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    goto error_exit;
+  }
+
+  if (!(g_socket_listener_add_socket(G_SOCKET_LISTENER(deventry->server), socket_5679, NULL, &error))) {
+    g_critical("%s: failed to add 5679 socket to socket service: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    goto error_exit;
+  }
+
+  g_object_unref(socket_990);
+  g_object_unref(socket_5679);
+
+  g_signal_connect(deventry->server, "incoming", G_CALLBACK(synce_device_manager_client_connected_cb), self);
+
+  g_socket_service_start(deventry->server);
 
   g_debug("%s: listening for device %s", G_STRFUNC, deventry->device_path);
 
@@ -223,15 +249,14 @@ synce_device_manager_create_device(SynceDeviceManager *self,
     synce_trigger_connection(deventry->device_ip);
 
   return TRUE;
-}
 
-static void
-iface_list_free_func(gpointer data,
-		     gpointer user_data)
-{
-  gnet_inetaddr_unref((GInetAddr*)data);
-}
+ error_exit:
+  if (socket_990) g_object_unref(socket_990);
+  if (socket_5679) g_object_unref(socket_5679);
+  if (deventry->server) g_object_unref(deventry->server);
 
+  return FALSE;
+}
 
 static gboolean
 synce_device_manager_check_interface_cb (gpointer userdata)
@@ -239,39 +264,40 @@ synce_device_manager_check_interface_cb (gpointer userdata)
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
 
-  gchar *iface_bytes, *local_ip_bytes;
-  GInetAddr *local_iface = NULL;
-
-  GList *iface_list = gnet_inetaddr_list_interfaces();
-  GList *iface_list_iter = g_list_first(iface_list);
-
+  GError *error = NULL;
   GSList *device_entry_iter = NULL;
 
-  while (iface_list_iter) {
-    iface_bytes = g_malloc0(gnet_inetaddr_get_length((GInetAddr*)iface_list_iter->data));
-    gnet_inetaddr_get_bytes((GInetAddr*)iface_list_iter->data, iface_bytes);
+  device_entry_iter = priv->devices;
+  while (device_entry_iter) {
+    gchar *local_ip = ((DeviceEntry*)device_entry_iter->data)->local_ip;
 
-    device_entry_iter = priv->devices;
-    while (device_entry_iter) {
-      local_ip_bytes = ip4_bytes_from_dotted_quad(((DeviceEntry*)device_entry_iter->data)->local_ip);
-
-      if ( (((DeviceEntry*)device_entry_iter->data)->iface_pending) && ((*(guint32*)iface_bytes) == (*(guint32*)local_ip_bytes)) ) {
-	local_iface = (GInetAddr*)iface_list_iter->data;
-	synce_device_manager_create_device(self, local_iface, device_entry_iter->data);
-	g_free(local_ip_bytes);
-	break;
-      }
-
-      g_free(local_ip_bytes);
-      device_entry_iter = g_slist_next(device_entry_iter);
+    GSocket *socket = g_socket_new(G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &error);
+    if (!socket) {
+      g_critical("%s: failed to create a socket: %s", G_STRFUNC, error->message);
+      g_error_free(error);
+      return TRUE;
     }
 
-    g_free(iface_bytes);
-    iface_list_iter = g_list_next(iface_list_iter);
+    GInetAddress *local_addr = g_inet_address_new_from_string(local_ip);
+    GInetSocketAddress *sockaddr = G_INET_SOCKET_ADDRESS(g_inet_socket_address_new(local_addr, 990));
+
+    if (g_socket_bind(socket, G_SOCKET_ADDRESS(sockaddr), TRUE, &error)) {
+      g_debug("%s: address ready", G_STRFUNC);
+      g_object_unref(socket);
+      synce_device_manager_create_device(self, ((DeviceEntry*)device_entry_iter->data)->local_ip, device_entry_iter->data);
+    } else {
+      g_debug("%s: address not yet ready, failed to bind: %s", G_STRFUNC, error->message);
+      g_error_free(error);
+      error = NULL;
+      g_object_unref(socket);
+    }
+    g_object_unref(sockaddr);
+    g_object_unref(local_addr);
+
+    device_entry_iter = g_slist_next(device_entry_iter);
   }
 
-  g_list_foreach(iface_list, iface_list_free_func, NULL);
-  g_list_free(iface_list);
+  /* check if any interfaces are still outstanding */
 
   device_entry_iter = priv->devices;
   while (device_entry_iter) {

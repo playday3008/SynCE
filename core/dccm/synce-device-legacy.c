@@ -6,6 +6,8 @@
 #include <synce.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 
 #include "synce-device.h"
 #include "synce-device-internal.h"
@@ -20,10 +22,18 @@ typedef struct _SynceDeviceLegacyPrivate SynceDeviceLegacyPrivate;
 struct _SynceDeviceLegacyPrivate {
   gint ping_count;
   gchar *password;
+  GSocketClient *rapi_sock_client;
+  GInetSocketAddress *rapi_address;
 };
 
 #define SYNCE_DEVICE_LEGACY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SYNCE_TYPE_DEVICE_LEGACY, SynceDeviceLegacyPrivate))
 
+typedef struct _PendingClientInfo PendingClientInfo;
+struct _PendingClientInfo {
+  SynceConnectionBroker *broker;
+  GSocketConnection *conn;
+  gchar *buf;
+};
 
 #define DCCM_PORT               5679
 #define DCCM_PING               0x12345678
@@ -47,7 +57,19 @@ synce_device_legacy_send_ping(gpointer data)
   SynceDeviceLegacyPrivate *priv_legacy = SYNCE_DEVICE_LEGACY_GET_PRIVATE (self);
 
   guint32 ping = GUINT32_TO_LE(DCCM_PING);
-  gnet_conn_write(priv->conn, (gchar *) &ping, sizeof(ping));
+
+  GError *error = NULL;
+  gsize written;
+  GOutputStream *ostream = g_io_stream_get_output_stream(G_IO_STREAM(priv->conn));
+  if (!(g_output_stream_write_all(ostream, (gchar *) &ping, sizeof(ping), &written, NULL, &error))) {
+    g_critical("%s: failed to send ping: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+  }
+
+  /* do a read here ? */
+  priv->iobuf = g_malloc(4);
+  GInputStream *istream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
+  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
 
   if (++priv_legacy->ping_count == DCCM_MAX_PING_COUNT) {
     gchar *name = NULL;
@@ -209,188 +231,210 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 }
 
 static void
-synce_device_legacy_conn_event_cb_impl (GConn *conn,
-					GConnEvent *event,
-					gpointer user_data)
+synce_device_legacy_conn_event_cb_impl(GObject *source_object,
+				       GAsyncResult *res,
+				       gpointer user_data)
 {
+  GInputStream *istream = G_INPUT_STREAM(source_object);
   SynceDeviceLegacy *self = SYNCE_DEVICE_LEGACY (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (SYNCE_DEVICE(self));
   SynceDeviceLegacyPrivate *priv_legacy = SYNCE_DEVICE_LEGACY_GET_PRIVATE (self);
 
+  GError *error = NULL;
+  gssize num_read = g_input_stream_read_finish(istream, res, &error);
+
   if (priv->state < CTRL_STATE_GETTING_INFO)
     {
       /* CTRL_STATE_HANDSHAKE */
-      if (event->type == GNET_CONN_READ)
-        {
-          guint32 header;
+      guint32 header;
 
-          if (event->length != 4)
-            {
-              g_warning ("%s: unexpected length", G_STRFUNC);
-              return;
-            }
+      if (num_read != 4)
+	{
+	  g_warning ("%s: unexpected length", G_STRFUNC);
+	  g_free(priv->iobuf);
+	  return;
+	}
 
-          header = GUINT32_FROM_LE (*((guint32 *) event->buffer));
+      header = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
+      g_free(priv->iobuf);
 
-          if (header == 0) {
-            /* empty packet header */
-            gnet_conn_readn (conn, 4);
-            return;
-          } else if (header < DCCM_MAX_PACKET_SIZE) {
-            if (header < DCCM_MIN_PACKET_SIZE) {
-              g_warning ("%s: undersize packet", G_STRFUNC);
-              return;
-            }
-            /* info message */
-            priv->state = CTRL_STATE_GETTING_INFO;
-            priv->info_buf_size = header;
-            gnet_conn_readn (conn, priv->info_buf_size);
-          } else {
-            /* password challenge */
-            priv->pw_key = header & 0xff;
-	    /*
-            synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
-	    */
-            gnet_conn_readn (conn, 4);
-          }
-        }
-      else if (event->type == GNET_CONN_WRITE)
-        {
-          gnet_conn_readn (conn, 4);
-        }
+      if (header == 0) {
+	/* empty packet header */
+	priv->iobuf = g_malloc(4);
+	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	return;
+      } else if (header < DCCM_MAX_PACKET_SIZE) {
+	if (header < DCCM_MIN_PACKET_SIZE) {
+	  g_warning ("%s: undersize packet", G_STRFUNC);
+	  return;
+	}
+	/* info message */
+	priv->state = CTRL_STATE_GETTING_INFO;
+	priv->info_buf_size = header;
+	priv->iobuf = g_malloc(priv->info_buf_size);
+	g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+      } else {
+	/* password challenge */
+	priv->pw_key = header & 0xff;
+	/*
+	  synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
+	*/
+	priv->iobuf = g_malloc(4);
+	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+      }
     }
   else if (priv->state < CTRL_STATE_AUTH)
     {
       /* CTRL_STATE_INFO */
-      if (event->type == GNET_CONN_READ)
-        {
-          if (event->length != priv->info_buf_size)
-            {
-              g_warning ("%s: event->length=%d != info_buf_size=%d",
-                         G_STRFUNC, event->length, priv->info_buf_size);
-              return;
-            }
+      if (num_read != priv->info_buf_size)
+	{
+	  g_warning("%s: length read=%zd != info_buf_size=%d",
+		    G_STRFUNC, num_read, priv->info_buf_size);
+	  return;
+	}
 
-          synce_device_legacy_info_received (self, (guchar *) event->buffer,
-					     event->length);
-        }
+      gchar *info_buf = g_malloc(num_read);
+      memcpy(info_buf, priv->iobuf, num_read);
+      g_free(priv->iobuf);
+      synce_device_legacy_info_received(self, (guchar *) info_buf,
+					num_read);
+      g_free(info_buf);
     }
   else if (priv->state == CTRL_STATE_AUTH)
     {
       /* CTRL_STATE_AUTH */
-      if (event->type == GNET_CONN_READ)
-        {
-          guint16 result;
+      guint16 result;
 
-          if (event->length != sizeof (guint16))
-            {
-              g_warning ("%s: event->length != 2", G_STRFUNC);
-              return;
-            }
+      if (num_read != sizeof (guint16))
+	{
+	  g_warning ("%s: read length != 2", G_STRFUNC);
+	  return;
+	}
 
-          result = GUINT16_FROM_LE (*((guint16 *) event->buffer));
+      result = GUINT16_FROM_LE (*((guint16 *) priv->iobuf));
+      g_free(priv->iobuf);
 
-          if (result != 0)
-            {
-              priv->state = CTRL_STATE_CONNECTED;
-              synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
-              g_timeout_add((DCCM_PING_INTERVAL * 1000), synce_device_legacy_send_ping, self);
-            }
-          else
-            {
-	      g_free(priv_legacy->password);
-              synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
-            }
+      if (result != 0)
+	{
+	  priv->state = CTRL_STATE_CONNECTED;
+	  synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
+	  g_timeout_add((DCCM_PING_INTERVAL * 1000), synce_device_legacy_send_ping, self);
+	}
+      else
+	{
+	  g_free(priv_legacy->password);
+	  synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
+	}
 
-          dbus_g_method_return (priv->pw_ctx, result != 0);
+      dbus_g_method_return (priv->pw_ctx, result != 0);
 
-          priv->pw_ctx = NULL;
-        }
+      priv->pw_ctx = NULL;
     }
   else if (priv->state == CTRL_STATE_CONNECTED)
     {
       /* CTRL_STATE_CONNECTED */
-      if (event->type == GNET_CONN_READ)
-        {
-          guint32 req;
+      guint32 req;
 
-          if (event->length != 4)
-            {
-              g_warning ("%s: unexpected length", G_STRFUNC);
-              return;
-            }
-          req = GUINT32_FROM_LE (*((guint32 *) event->buffer));
+      if (num_read != 4)
+	{
+	  g_warning ("%s: unexpected length", G_STRFUNC);
+	  return;
+	}
+      req = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
+      g_free(priv->iobuf);
 
-          if (req == 0) {
-            /* empty packet header */
-            gnet_conn_readn (conn, 4);
-            return;
-          }
-          if (req == DCCM_PING) {
-	    /* received a ping */
+      if (req == 0) {
+	/* empty packet header */
+	priv->iobuf = g_malloc(4);
+	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	return;
+      }
+      if (req == DCCM_PING) {
+	/* received a ping */
 
-            priv_legacy->ping_count = 0;
-          } else {
-            g_warning("%s: Received header, not a ping reply: %d", G_STRFUNC, req);
-          }
-        }
-      else
-        {
-          gnet_conn_readn (conn, 4);
-        }
+	priv_legacy->ping_count = 0;
+      } else {
+	g_warning("%s: Received header, not a ping reply: %d", G_STRFUNC, req);
+      }
     }
 }
 
 static void
-synce_device_legacy_client_event_cb (GConn *conn,
-				     GConnEvent *event,
-				     gpointer user_data)
+synce_device_legacy_client_event_cb(GObject *source_object,
+				    GAsyncResult *res,
+				    gpointer user_data)
 {
-  if (event->type == GNET_CONN_CONNECT) {
-    if (SYNCE_IS_CONNECTION_BROKER(user_data)) {
-      _synce_connection_broker_take_connection (SYNCE_CONNECTION_BROKER(user_data), conn);
-    } else {
-      g_warning("%s: not passed a connection broker", G_STRFUNC);
-    }
+  GSocketClient *sock_client = G_SOCKET_CLIENT(source_object);
+  GError *error = NULL;
+  GSocketConnection *conn = g_socket_client_connect_finish(sock_client, res, &error);
+  if (!conn) {
+    g_warning("%s: failed to obtain client RAPI connection: %s", G_STRFUNC, error->message);
+    g_error_free(error);
     return;
   }
 
-  g_warning ("%s: unhandled event", G_STRFUNC);
-
+  if (SYNCE_IS_CONNECTION_BROKER(user_data)) {
+    _synce_connection_broker_take_connection (SYNCE_CONNECTION_BROKER(user_data), conn);
+  } else {
+    g_warning("%s: not passed a connection broker", G_STRFUNC);
+  }
   return;
 }
 
+
 static void
-synce_device_legacy_client_event_password_cb (GConn *conn,
-			  GConnEvent *event,
-			  gpointer user_data)
+synce_device_legacy_client_event_password_cb(GObject *source_object,
+					     GAsyncResult *res,
+					     gpointer user_data)
 {
-  SynceConnectionBroker *broker = SYNCE_CONNECTION_BROKER (user_data);
-  guint8 result;
-  GError *error = NULL;
+  GInputStream *istream = G_INPUT_STREAM(source_object);
+
+  PendingClientInfo *info = (PendingClientInfo*)user_data;
+
+  GSocketConnection *conn = NULL;
+  SynceConnectionBroker *broker = NULL;
+  guint8 result = 0;
   DBusGMethodInvocation *ctx;
 
-  if (event->type != GNET_CONN_READ)
-    return;
+  GError *error = NULL;
+  gssize num_read = g_input_stream_read_finish(istream, res, &error);
 
+  conn = info->conn;
+  broker = SYNCE_CONNECTION_BROKER(info->broker);
+  result = *((guint8*)info->buf);
   g_object_get(broker, "context", &ctx, NULL);
 
-  if (event->length != sizeof (guint8))
-    {
-      g_warning ("%s: Failed to get password reply, event->length != 1", G_STRFUNC);
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
-                           "Failed to authenticate connection");
-      goto OUT;
-    }
+  g_free(info->buf);
+  g_free(info);
 
-  result = *((guint8 *) event->buffer);
+  if (num_read == -1) {
+    g_warning("%s: Failed to get password reply from device: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    g_object_unref(conn);
+    g_object_unref(broker);
+    error = g_error_new (SYNCE_ERRORS, NotAvailable,
+			 "Failed to authenticate connection");
+    goto OUT;
+  }
+
+  if (num_read != sizeof (guint8)) {
+    g_warning ("%s: Failed to get password reply from device, read length != 1", G_STRFUNC);
+    g_object_unref(conn);
+    g_object_unref(broker);
+    error = g_error_new (SYNCE_ERRORS, NotAvailable,
+			 "Failed to authenticate connection");
+    goto OUT;
+  }
+
+
   if (result != 0) {
     _synce_connection_broker_take_connection (broker, conn);
 
-    gnet_conn_set_callback (conn, synce_device_legacy_client_event_cb, broker);
     return;
   } else {
     g_warning("%s: Password rejected", G_STRFUNC);
+    g_object_unref(conn);
+    g_object_unref(broker);
     error = g_error_new (SYNCE_ERRORS, NotAvailable,
                          "Failed to authenticate connection");
   }
@@ -406,17 +450,28 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
   GError *error = NULL;
   SynceConnectionBroker *broker;
-  GConn *rapi_conn;
-  GInetAddr *rapi_inet_addr;
+  GSocketConnection *rapi_conn = NULL;
+  guchar *buf = NULL;
+  guint16 buf_size = 0;
+  guint i = 0;
 
   if (priv->state != CTRL_STATE_CONNECTED)
     {
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
-			   (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) ?
-          "Not authenticated, you need to call ProvidePassword with the "
-			   "correct password." : "Not yet connected.");
+      error = g_error_new(SYNCE_ERRORS, NotAvailable,
+			  (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) ?
+			  "Not authenticated, you need to call ProvidePassword with the "
+			  "correct password." : "Not yet connected.");
       goto OUT;
     }
+
+  SynceDeviceLegacyPrivate *legacy_priv = SYNCE_DEVICE_LEGACY_GET_PRIVATE (SYNCE_DEVICE_LEGACY(self));
+
+  if (!(legacy_priv->rapi_sock_client)) {
+    legacy_priv->rapi_sock_client = g_socket_client_new();
+    GInetAddress *address = g_inet_address_new_from_string(priv->ip_address);
+    legacy_priv->rapi_address = G_INET_SOCKET_ADDRESS(g_inet_socket_address_new(address, RAPI_PORT));
+    g_object_unref(address);
+  }
 
   /* 
    * Create a local copy of the global req_id variable to avoid
@@ -434,16 +489,8 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
 
   g_signal_connect (broker, "done", (GCallback) synce_device_conn_broker_done_cb, self);
 
-  SynceDeviceLegacyPrivate *legacy_priv = SYNCE_DEVICE_LEGACY_GET_PRIVATE (SYNCE_DEVICE_LEGACY(self));
-
-  rapi_inet_addr = gnet_inetaddr_clone(priv->conn->inetaddr);
-  gnet_inetaddr_set_port(rapi_inet_addr, RAPI_PORT);
-
   if (legacy_priv->password && strlen(legacy_priv->password))
     {
-      guchar *buf;
-      guint16 buf_size;
-      guint i;
 
       buf = (guchar *) wstr_from_utf8 (legacy_priv->password);
       buf_size = wstrlen ((LPCWSTR) buf) * sizeof (WCHAR);
@@ -454,21 +501,40 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
 
       buf_size = GUINT16_TO_LE (buf_size);
 
-      rapi_conn = gnet_conn_new_inetaddr(rapi_inet_addr, synce_device_legacy_client_event_password_cb, broker);
-      gnet_conn_connect(rapi_conn);
+      rapi_conn = g_socket_client_connect(legacy_priv->rapi_sock_client, legacy_priv->rapi_address, NULL, &error);
+      if (!rapi_conn) {
+	g_warning("%s: failed to obtain client RAPI connection: %s", G_STRFUNC, error->message);
+	goto OUT;
+      }
 
-      gnet_conn_write (rapi_conn, (gchar *) &buf_size, sizeof (buf_size));
-      gnet_conn_write (rapi_conn, (gchar *) buf, buf_size);
+      gsize written = 0;
+      GOutputStream *ostream = g_io_stream_get_output_stream(G_IO_STREAM(rapi_conn));
+      if (!(g_output_stream_write_all(ostream, (gchar *) &buf_size, sizeof(buf_size), &written, NULL, &error))) {
+	g_critical("%s: failed to send password header: %s", G_STRFUNC, error->message);
+	g_object_unref(rapi_conn);
+	goto OUT;
+      }
+      if (!(g_output_stream_write_all(ostream, (gchar *) buf, buf_size, &written, NULL, &error))) {
+	g_critical("%s: failed to send password: %s", G_STRFUNC, error->message);
+	g_object_unref(rapi_conn);
+	goto OUT;
+      }
 
-      gnet_conn_readn (rapi_conn, sizeof (guint8));
+      PendingClientInfo *info = g_new0(PendingClientInfo, 1);
+      info->broker = broker;
+      info->buf = g_malloc(sizeof(guint8));
+      info->conn = rapi_conn;
+      GInputStream *istream = g_io_stream_get_input_stream(G_IO_STREAM(rapi_conn));
+      g_input_stream_read_async(istream, info->buf, sizeof(guint8), G_PRIORITY_DEFAULT, NULL, synce_device_legacy_client_event_password_cb, info);
 
       goto OUT;
     }
 
-  rapi_conn = gnet_conn_new_inetaddr(rapi_inet_addr, synce_device_legacy_client_event_cb, broker);
-  gnet_conn_connect(rapi_conn);
+  g_socket_client_connect_async(legacy_priv->rapi_sock_client, legacy_priv->rapi_address, NULL, synce_device_legacy_client_event_cb, broker);
 
  OUT:
+  if (buf)
+    wstr_free_string(buf);
   if (error != NULL)
     dbus_g_method_return_error (ctx, error);
 }
@@ -515,6 +581,8 @@ synce_device_legacy_init(SynceDeviceLegacy *self)
 
   priv->ping_count = 0;
   priv->password = NULL;
+  priv->rapi_sock_client = NULL;
+  priv->rapi_address = NULL;
 }
 
 static void
@@ -522,12 +590,16 @@ synce_device_legacy_dispose (GObject *obj)
 {
   SynceDeviceLegacy *self = SYNCE_DEVICE_LEGACY(obj);
   SynceDevicePrivate *parent_priv = SYNCE_DEVICE_GET_PRIVATE (SYNCE_DEVICE(self));
+  SynceDeviceLegacyPrivate *priv_legacy = SYNCE_DEVICE_LEGACY_GET_PRIVATE (SYNCE_DEVICE_LEGACY(self));
 
   if (parent_priv->dispose_has_run) {
     return;
   }
 
   /* unref other objects */
+
+  g_object_unref(priv_legacy->rapi_sock_client);
+  g_object_unref(priv_legacy->rapi_address);
 
   if (G_OBJECT_CLASS (synce_device_legacy_parent_class)->dispose)
     G_OBJECT_CLASS (synce_device_legacy_parent_class)->dispose (obj);

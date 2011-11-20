@@ -4,12 +4,14 @@
 
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-#include <gnet.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <glib-object.h>
+#include <gio/gio.h>
+#include <gio/gunixsocketaddress.h>
 
 #include "synce-connection-broker.h"
 
@@ -45,9 +47,9 @@ struct _SynceConnectionBrokerPrivate
 
   guint id;
   DBusGMethodInvocation *ctx;
-  GConn *conn;
+  GSocketConnection *conn;
   gchar *filename;
-  GUnixSocket *server;
+  GSocketService *server;
 };
 
 #define SYNCE_CONNECTION_BROKER_GET_PRIVATE(o) \
@@ -56,6 +58,12 @@ struct _SynceConnectionBrokerPrivate
 static void
 synce_connection_broker_init (SynceConnectionBroker *self)
 {
+  SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE(self);
+
+  priv->ctx = NULL;
+  priv->conn = NULL;
+  priv->filename = NULL;
+  priv->server = NULL;
 }
 
 static void
@@ -114,10 +122,12 @@ synce_connection_broker_dispose (GObject *obj)
   priv->dispose_has_run = TRUE;
 
   if (priv->conn != NULL)
-    gnet_conn_unref (priv->conn);
+    g_object_unref (priv->conn);
 
-  if (priv->server != NULL)
-    gnet_unix_socket_unref (priv->server);
+  if (priv->server != NULL) {
+    g_socket_service_stop(priv->server);
+    g_object_unref(priv->server);
+  }
 
   if (G_OBJECT_CLASS (synce_connection_broker_parent_class)->dispose)
     G_OBJECT_CLASS (synce_connection_broker_parent_class)->dispose (obj);
@@ -175,29 +185,33 @@ synce_connection_broker_class_init (SynceConnectionBrokerClass *conn_broker_clas
 }
 
 static gboolean
-server_socket_readable_cb (GIOChannel *source,
-                           GIOCondition condition,
-                           gpointer user_data)
+server_socket_readable_cb(GSocketService *source,
+			  GSocketConnection *client_connection,
+			  GObject *source_object,
+			  gpointer user_data)
 {
   SynceConnectionBroker *self = user_data;
   SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE (self);
-  GUnixSocket *sock;
-  gint dev_fd, fd, ret;
+  gint device_fd, client_fd, ret;
   struct msghdr msg = { 0, };
   struct cmsghdr *cmsg;
-  gchar cmsg_buf[CMSG_SPACE (sizeof (dev_fd))];
+  gchar cmsg_buf[CMSG_SPACE (sizeof (device_fd))];
   struct iovec iov;
   guchar dummy_byte = 0x7f;
 
-  sock = gnet_unix_socket_server_accept_nonblock (priv->server);
-  if (sock == NULL)
-    {
-      g_warning ("%s: client disconnected?", G_STRFUNC);
-      return TRUE;
-    }
+  GSocket *client_socket = g_socket_connection_get_socket(client_connection);
+  if (client_socket == NULL) {
+    g_warning ("%s: client disconnected ?", G_STRFUNC);
+    return TRUE;
+  }
+  GSocket *device_socket = g_socket_connection_get_socket(priv->conn);
+  if (device_socket == NULL) {
+    g_warning ("%s: device disconnected ?", G_STRFUNC);
+    return TRUE;
+  }
 
-  dev_fd = g_io_channel_unix_get_fd (priv->conn->iochannel);
-  fd = g_io_channel_unix_get_fd (gnet_unix_socket_get_io_channel (sock));
+  device_fd = g_socket_get_fd(device_socket);
+  client_fd = g_socket_get_fd(client_socket);
 
   msg.msg_control = cmsg_buf;
   msg.msg_controllen = sizeof (cmsg_buf);
@@ -207,33 +221,32 @@ server_socket_readable_cb (GIOChannel *source,
   cmsg = CMSG_FIRSTHDR (&msg);
   cmsg->cmsg_level = SOL_SOCKET;
   cmsg->cmsg_type = SCM_RIGHTS;
-  cmsg->cmsg_len = CMSG_LEN (sizeof (dev_fd));
-  *((gint *) CMSG_DATA (cmsg)) = dev_fd;
+  cmsg->cmsg_len = CMSG_LEN (sizeof (device_fd));
+  *((gint *) CMSG_DATA (cmsg)) = device_fd;
 
   iov.iov_base = &dummy_byte;
   iov.iov_len = sizeof (dummy_byte);
 
-  ret = sendmsg (fd, &msg, MSG_NOSIGNAL);
+  ret = sendmsg (client_fd, &msg, MSG_NOSIGNAL);
   if (ret != 1)
     {
       g_warning ("%s: sendmsg returned %d", G_STRFUNC, ret);
     }
 
-  gnet_unix_socket_unref(sock);
-
   g_signal_emit (self, signals[DONE], 0);
 
-  return FALSE;
+  return TRUE;
 }
 
 void
 _synce_connection_broker_take_connection (SynceConnectionBroker *self,
-                                          GConn *conn)
+                                          GSocketConnection *conn)
 {
   SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE (self);
   GRand *rnd;
-  GIOChannel *chan;
   guint uid = 0;
+  GError *error = NULL;
+  GSocketAddress *sock_address = NULL;
 
   g_assert (priv->conn == NULL);
 
@@ -243,28 +256,67 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
   priv->filename = g_strdup_printf ("%s/run/synce-%08x%08x%08x%08x.sock", LOCALSTATEDIR,
       g_rand_int (rnd), g_rand_int (rnd), g_rand_int (rnd), g_rand_int (rnd));
   g_rand_free (rnd);
+  sock_address = g_unix_socket_address_new(priv->filename);
 
-  priv->server = gnet_unix_socket_server_new (priv->filename);
+  priv->server = g_socket_service_new();
   if (!(priv->server)) {
-    g_critical("%s: failed to create unix socket at %s", G_STRFUNC, priv->filename);
-
-    GError *error = g_error_new (G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                         "Failed to create socket to pass connection");
-    dbus_g_method_return_error (priv->ctx, error);
-    g_free(priv->filename);
-    priv->filename = NULL;
-    return;
+    g_critical("%s: failed to create socket service", G_STRFUNC);
+    goto error_exit;
   }
+
+  if (!(g_socket_listener_add_address(G_SOCKET_LISTENER(priv->server), sock_address, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, NULL, NULL, &error))) {
+    g_critical("%s: failed to add address to socket service: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+  /*
+  socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &error);
+  if (!socket) {
+    g_critical("%s: failed to create socket: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+  if (!(g_initable_init(G_INITABLE(socket), NULL, &error))) {
+    g_critical("%s: failed to initialise socket: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+  if (!(g_socket_bind(socket, sock_address, TRUE, &error))) {
+    g_critical("%s: failed to bind to address %s: %s", G_STRFUNC, priv->filename, error->message);
+    goto error_exit;
+  }
+  if (!(g_socket_listen(socket, &error))) {
+    g_critical("%s: failed to listen to address %s: %s", G_STRFUNC, priv->filename, error->message);
+    goto error_exit;
+  }
+  if (!(g_socket_listener_add_socket(G_SOCKET_LISTENER(priv->server), socket, NULL, &error))) {
+    g_critical("%s: failed to add socket to socket service: %s", G_STRFUNC, error->message);
+    goto error_exit;
+  }
+  g_object_unref(socket);
+  */
+  g_object_unref(sock_address);
+
+  g_signal_connect(priv->server, "incoming", G_CALLBACK(server_socket_readable_cb), self);
 
   synce_get_dbus_sender_uid (dbus_g_method_get_sender (priv->ctx), &uid);
 
   chmod (priv->filename, S_IRUSR | S_IWUSR);
   chown (priv->filename, uid, -1);
 
-  chan = gnet_unix_socket_get_io_channel (priv->server);
-  g_io_add_watch (chan, G_IO_IN, server_socket_readable_cb, self);
+  g_socket_service_start(priv->server);
 
   dbus_g_method_return (priv->ctx, priv->filename);
   priv->ctx = NULL;
-}
 
+  return;
+
+ error_exit:
+  if (error) g_error_free(error);
+  if (sock_address) g_object_unref(sock_address);
+
+  error = g_error_new (G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		       "Failed to create socket to pass connection");
+  dbus_g_method_return_error (priv->ctx, error);
+  g_free(priv->filename);
+  priv->filename = NULL;
+
+  return;
+}

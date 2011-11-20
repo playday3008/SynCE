@@ -2,6 +2,7 @@
 #define SYNCE_DEVICE_INTERNAL_H
 
 #include <glib-object.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib.h>
 #ifdef USE_HAL
 #include <libhal.h>
@@ -34,7 +35,8 @@ struct _SynceDevicePrivate
 {
   gboolean dispose_has_run;
 
-  GConn *conn;
+  GSocketConnection *conn;
+  gchar *iobuf;
 
   /* the hal udi or sysfs path */
   gchar *device_path;
@@ -88,6 +90,7 @@ void synce_device_set_hal_props (SynceDevice *device);
 #else
 void synce_device_dbus_init(SynceDevice *self);
 #endif
+void synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_data);
 
 G_END_DECLS
 

@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <unistd.h>
+#include <glib-object.h>
 #include <dbus/dbus-glib.h>
 
 #include "synce-device-manager-control.h"

@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <glib.h>
 #include <glib-object.h>
-#include <gnet.h>
 #include <dbus/dbus-glib.h>
 
 #include "synce-device-manager.h"
@@ -54,7 +53,6 @@ main(gint argc,
   SynceDeviceManager *device_manager = NULL;
 
   g_type_init ();
-  gnet_init();
 
   GOptionContext *option_context = g_option_context_new (" - keep connection to Windows Mobile device");
   g_option_context_add_main_entries (option_context, options, NULL);

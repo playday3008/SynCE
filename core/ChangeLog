@@ -1,5 +1,9 @@
 2011-07-25  Mark Ellis  <mark@mpellis.org.uk>
 
+	* use gio instead of libgnet
+
+2011-07-25  Mark Ellis  <mark@mpellis.org.uk>
+
 	* configure.ac.in, dccm/synce-device.c - remove support for very
 	  old dbus-glib
 	* configure.ac.in - clean up checking for dbus

@@ -2,7 +2,6 @@
 #define SYNCE_DEVICE_MANAGER_H
 
 #include <glib-object.h>
-#include <gnet.h>
 #include <dbus/dbus-glib.h>
 
 

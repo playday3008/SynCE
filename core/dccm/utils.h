@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <gio/gio.h>
 
 void
 synce_get_dbus_sender_uid (const gchar *sender, guint *uid);
@@ -21,5 +22,5 @@ synce_rapi_unicode_string_to_string_at_offset (const guchar *buf, const guchar *
 gboolean
 synce_trigger_connection (const gchar *device_ip);
 
-gchar*
-ip4_bytes_from_dotted_quad(gchar *ip);
+GSocket *
+synce_create_socket(const gchar *address, gint port);

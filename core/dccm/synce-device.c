@@ -2,8 +2,9 @@
 #include "synce_config.h"
 #endif
 
-#include <gnet.h>
 #include <string.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 
 #ifdef USE_HAL
 #include <libhal.h>
@@ -67,10 +68,10 @@ synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx)
   SYNCE_DEVICE_GET_CLASS(self)->synce_device_request_connection (self, ctx);
 }
 
-static void
-synce_device_conn_event_cb (GConn *conn, GConnEvent *event, gpointer user_data)
+void
+synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_data)
 {
-  SYNCE_DEVICE_GET_CLASS(user_data)->synce_device_conn_event_cb (conn, event, user_data);
+  SYNCE_DEVICE_GET_CLASS(user_data)->synce_device_conn_event_cb (istream, res, user_data);
 }
 
 void
@@ -118,13 +119,25 @@ synce_device_provide_password_impl (SynceDevice *self,
     }
 
   buf_size = GUINT16_TO_LE (buf_size);
-  gnet_conn_write (priv->conn, (gchar *) &buf_size, sizeof (buf_size));
-  gnet_conn_write (priv->conn, (gchar *) buf, buf_size);
-  gnet_conn_readn (priv->conn, sizeof (guint16));
+  gsize written = 0;
+  GOutputStream *out_stream = g_io_stream_get_output_stream(G_IO_STREAM(priv->conn));
+  if (!(g_output_stream_write_all(out_stream, (gchar *) &buf_size, sizeof (buf_size), &written, NULL, &error))) {
+    g_critical("%s: failed to send password to device: %s", G_STRFUNC, error->message);
+    goto OUT;
+  }
+  if (!(g_output_stream_write_all(out_stream, buf, buf_size, &written, NULL, &error))) {
+    g_critical("%s: failed to send password to device: %s", G_STRFUNC, error->message);
+    goto OUT;
+  }
+
+  GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
+  priv->iobuf = g_malloc(sizeof (guint16));
+  g_input_stream_read_async(in_stream, priv->iobuf, sizeof (guint16), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
 
   synce_device_change_password_flags (self, SYNCE_DEVICE_PASSWORD_FLAG_CHECKING);
 
  OUT:
+  if (buf) wstr_free_string(buf);
   if (error != NULL)
     dbus_g_method_return_error (ctx, error);
 }
@@ -574,6 +587,7 @@ synce_device_init (SynceDevice *self)
 					 g_object_unref);
 
   priv->conn = NULL;
+  priv->iobuf = NULL;
   priv->device_path = NULL;
   priv->guid = NULL;
   priv->name = NULL;
@@ -642,7 +656,8 @@ synce_device_dispose (GObject *obj)
 
   priv->dispose_has_run = TRUE;
 
-  gnet_conn_unref(priv->conn);
+  g_io_stream_close(G_IO_STREAM(priv->conn), NULL, NULL);
+  g_object_unref(priv->conn);
 
 #ifdef USE_HAL
   if (priv->hal_ctx) {
@@ -758,29 +773,27 @@ synce_device_set_property (GObject      *obj,
   case PROP_CONNECTION:
     if (priv->conn != NULL)
       {
-	gnet_conn_unref (priv->conn);
+	g_object_unref (priv->conn);
       }
 
     priv->conn = g_value_get_pointer (value);
-    gnet_conn_ref (priv->conn);
+    g_object_ref (priv->conn);
 
-    gnet_conn_set_callback(priv->conn, synce_device_conn_event_cb, self);
-    gnet_conn_readn(priv->conn, sizeof (guint32));
+    GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
+    priv->iobuf = g_malloc(sizeof (guint32));
+    g_input_stream_read_async(in_stream, priv->iobuf, sizeof (guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
 
-    GInetAddr *inetaddr = NULL;
-    gchar *ip_bytes = NULL;
+    GInetSocketAddress *address = NULL;
+    GInetAddress *inet_address = NULL;
+    address = G_INET_SOCKET_ADDRESS(g_socket_connection_get_remote_address(priv->conn, NULL));
+    inet_address = g_inet_socket_address_get_address(address);
+    priv->ip_address =  g_inet_address_to_string(inet_address);
+    g_object_unref(address);
 
-    inetaddr = gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket);
-    ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
-    gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
-    priv->ip_address = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
-    g_free(ip_bytes);
-
-    inetaddr = gnet_tcp_socket_get_local_inetaddr (priv->conn->socket);
-    ip_bytes = g_malloc(gnet_inetaddr_get_length(inetaddr));
-    gnet_inetaddr_get_bytes (inetaddr, ip_bytes);
-    priv->iface_address = g_strdup_printf("%u.%u.%u.%u", (guint8)ip_bytes[0], (guint8)ip_bytes[1], (guint8)ip_bytes[2], (guint8)ip_bytes[3]);
-    g_free(ip_bytes);
+    address = G_INET_SOCKET_ADDRESS(g_socket_connection_get_local_address(priv->conn, NULL));
+    inet_address = g_inet_socket_address_get_address(address);
+    priv->iface_address = g_inet_address_to_string(inet_address);
+    g_object_unref(address);
 
     break;
   case PROP_DEVICE_PATH:
@@ -857,8 +870,8 @@ synce_device_class_init (SynceDeviceClass *klass)
   klass->synce_device_request_connection = NULL;
   klass->synce_device_provide_password = synce_device_provide_password_impl;
 
-  param_spec = g_param_spec_pointer ("connection", "GConn object",
-                                     "GConn object.",
+  param_spec = g_param_spec_pointer ("connection", "Connection object",
+                                     "GSocketConnection object.",
                                      G_PARAM_CONSTRUCT_ONLY |
                                      G_PARAM_READWRITE |
                                      G_PARAM_STATIC_NICK |

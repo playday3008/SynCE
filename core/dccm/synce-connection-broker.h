@@ -2,6 +2,7 @@
 #define SYNCE_CONNECTION_BROKER_H
 
 #include <glib-object.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -33,7 +34,7 @@ GType synce_connection_broker_get_type (void);
 #define SYNCE_CONNECTION_BROKER_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS((obj), SYNCE_TYPE_CONNECTION_BROKER, SynceConnectionBrokerClass))
 
-void _synce_connection_broker_take_connection (SynceConnectionBroker *self, GConn *conn);
+void _synce_connection_broker_take_connection (SynceConnectionBroker *self, GSocketConnection *conn);
 
 G_END_DECLS
 

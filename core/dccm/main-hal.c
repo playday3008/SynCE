@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <glib-object.h>
-#include <gnet.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib.h>
 
 #include <dbus/dbus-glib-lowlevel.h>
@@ -35,8 +35,7 @@ static gboolean rndis_device = FALSE;
 
 /* globals */
 
-static GServer *server_990;
-static GServer *server_5679;
+static GSocketService *server;
 static SynceDevice *synce_dev;
 
 static GOptionEntry options[] =
@@ -115,33 +114,44 @@ device_disconnected_cb(SynceDevice *device,
   g_main_loop_quit((GMainLoop*)user_data);
 }
 
-static void
-client_connected_cb (GServer *server,
-                     GConn *conn,
-                     gpointer user_data)
+static gboolean
+client_connected_cb (GSocketService *server,
+		     GSocketConnection *conn,
+		     GObject *source_object,
+		     gpointer user_data)
 {
   if (conn == NULL) {
     g_critical("%s: a connection error occured", G_STRFUNC);
-    return;
+    return TRUE;
   }
 
+  GError *error = NULL;
   GMainLoop *mainloop = (GMainLoop *)user_data;
 
-  GInetAddr *local_inet_addr = gnet_tcp_socket_get_local_inetaddr (conn->socket);
-  gint local_port = gnet_inetaddr_get_port(local_inet_addr);
-  gnet_inetaddr_unref(local_inet_addr);
+  GSocketAddress *local_inet_addr = g_socket_connection_get_local_address(conn, &error);
+  if (!local_inet_addr) {
+    g_critical("%s: failed to get address from new connection: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return TRUE;
+  }
+  guint local_port = g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(local_inet_addr));
+  g_object_unref(local_inet_addr);
 
   g_debug("%s: have a connection to port %d", G_STRFUNC, local_port);
 
   if (local_port == 5679) {
     if (!synce_dev) {
-      gnet_server_delete(server_990);
+      /*
+       * should close the socket listener on port 990 here, but can't see how to
+       */
       synce_dev = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, "device-path", device_path, NULL);
       g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     }
   } else {
     if (!synce_dev) {
-      gnet_server_delete(server_5679);
+      /*
+       * should close the socket listener on port 5679 here, but can't see how to
+       */
       synce_dev = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, "device-path", device_path, NULL);
       g_signal_connect(synce_dev, "disconnected", G_CALLBACK(device_disconnected_cb), mainloop);
     } else {
@@ -149,8 +159,6 @@ client_connected_cb (GServer *server,
       return;
     }
   }
-
-  gnet_conn_unref (conn);
 }
 
 static void
@@ -167,75 +175,75 @@ hal_device_removed_callback(LibHalContext *ctx,
   return;
 }
 
-static void
-iface_list_free_func(gpointer data,
-		     gpointer user_data)
-{
-  gnet_inetaddr_unref((GInetAddr*)data);
-}
-
 static gboolean
 check_interface_cb (gpointer data)
 {
   GMainLoop *mainloop = (GMainLoop *)data;
 
-  gchar *tmp_bytes, *local_ip_bytes;
-  GInetAddr *local_iface = NULL;
-  gint addr_length;
+  gboolean *iface_ready = FALSE;
 
-  GList *iface_list = gnet_inetaddr_list_interfaces();
-  GList *iface_list_iter = g_list_first(iface_list);
-
-  local_ip_bytes = ip4_bytes_from_dotted_quad(local_ip);
-
-  while (iface_list_iter) {
-    addr_length = gnet_inetaddr_get_length((GInetAddr*)iface_list_iter->data);
-    tmp_bytes = g_malloc0(addr_length);
-    gnet_inetaddr_get_bytes((GInetAddr*)iface_list_iter->data, tmp_bytes);
-
-    if ((*(guint32*)tmp_bytes) == (*(guint32*)local_ip_bytes)) {
-      g_free(tmp_bytes);
-      local_iface = (GInetAddr*)iface_list_iter->data;
-      gnet_inetaddr_ref(local_iface);
-      break;
-    }
-
-    g_free(tmp_bytes);
-
-    iface_list_iter = g_list_next(iface_list_iter);
+  GSocket *socket = g_socket_new(G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &error);
+  if (!socket) {
+    g_critical("%s: failed to create a socket: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return TRUE;
   }
 
-  g_list_foreach(iface_list, iface_list_free_func, NULL);
-  g_list_free(iface_list);
-  g_free(local_ip_bytes);
+  GInetAddress *local_addr = g_inet_address_new_from_string(local_ip);
+  GInetSocketAddress *sockaddr = G_INET_SOCKET_ADDRESS(g_inet_socket_address_new(local_addr, 990));
 
-  if (!local_iface) {
+  iface_ready = g_socket_bind(socket, G_SOCKET_ADDRESS(sockaddr), TRUE, &error);
+  g_object_unref(socket);
+  g_object_unref(sockaddr);
+  g_object_unref(local_addr);
+
+  if (!iface_ready) {
+    g_debug("%s: address not yet ready, failed to bind: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    error = NULL;
     return TRUE;
   }
 
   g_debug("%s: found device interface", G_STRFUNC);
 
-  GInetAddr *server_990_addr = gnet_inetaddr_clone(local_iface);
-  gnet_inetaddr_set_port(server_990_addr, 990);
+  GError *error = NULL;
+  GSocket *socket_990 = NULL;
+  GSocket *socket_5679 = NULL;
 
-  server_990 = gnet_server_new (server_990_addr, 990, client_connected_cb, mainloop);
-  if (!server_990) {
-    g_critical("%s: unable to listen on rndis port (990), server invalid", G_STRFUNC);
-    g_main_loop_quit(mainloop);
+  if (!(socket_990 = synce_create_socket(local_ip, 990))) {
+    g_critical("%s: failed to create listening socket on rndis port (990)", G_STRFUNC);
+    goto error_exit;
   }
 
-  GInetAddr *server_5679_addr = gnet_inetaddr_clone(local_iface);
-  gnet_inetaddr_set_port(server_5679_addr, 5679);
-
-  server_5679 = gnet_server_new (server_5679_addr, 5679, client_connected_cb, mainloop);
-  if (!server_5679) {
-    g_critical("%s: unable to listen on legacy port (5679), server invalid", G_STRFUNC);
-    g_main_loop_quit(mainloop);
+  if (!(socket_5679 = synce_create_socket(local_ip, 5679))) {
+    g_critical("%s: failed to create listening socket on legacy port (5679)", G_STRFUNC);
+    goto error_exit;
   }
 
-  gnet_inetaddr_unref(server_990_addr);
-  gnet_inetaddr_unref(server_5679_addr);
-  gnet_inetaddr_unref(local_iface);
+  server = g_socket_service_new();
+  if (!(server)) {
+    g_critical("%s: failed to create socket service", G_STRFUNC);
+    goto error_exit;
+  }
+
+  if (!(g_socket_listener_add_socket(server, socket_990, NULL, &error))) {
+    g_critical("%s: failed to add 990 socket to socket service: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    goto error_exit;
+  }
+
+  if (!(g_socket_listener_add_socket(server, socket_5679, NULL, &error))) {
+    g_critical("%s: failed to add 5679 socket to socket service: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    goto error_exit;
+  }
+
+  g_object_unref(socket_990);
+  g_object_unref(socket_5679);
+
+  g_signal_connect(server, "incoming", G_CALLBACK(client_connected_cb), mainloop);
+
+  g_socket_service_start(server);
 
   g_debug("%s: listening for device", G_STRFUNC);
 
@@ -243,6 +251,14 @@ check_interface_cb (gpointer data)
     synce_trigger_connection (device_ip);
 
   return FALSE;
+
+ error_exit:
+  if (socket_990) g_object_unref(socket_990);
+  if (socket_5679) g_object_unref(socket_5679);
+  if (server) g_object_unref(server);
+  g_main_loop_quit(mainloop);
+
+  return TRUE;
 }
 
 gint
@@ -259,7 +275,6 @@ main(gint argc,
   struct sigaction *sigact = NULL;
 
   g_type_init ();
-  gnet_init();
 
   openlog(g_get_prgname(), LOG_PID, LOG_DAEMON);
   g_log_set_default_handler(log_to_syslog, &log_level);
@@ -392,6 +407,11 @@ main(gint argc,
 
 
   g_main_loop_run (mainloop);
+
+  if (server && g_socket_service_is_active(server)) {
+    g_socket_service_stop(server);
+    g_object_unref(server);
+  }
 
   if (!(libhal_ctx_shutdown(main_ctx, &dbus_error)))
     g_critical("%s: failed to shutdown hal context cleanly: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);

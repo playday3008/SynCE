@@ -71,10 +71,7 @@ dnl Checks for libraries.
 AC_LIB_RPATH
 
 dnl Check for GLib
-PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4])
-
-dnl Check for GNet
-PKG_CHECK_MODULES(GNET, gnet-2.0)
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4, gio-2.0 >= 2.22, gio-unix-2.0 >= 2.22])
 
 dnl Check for D-Bus
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.74], dbus_found=yes, dbus_found=no)

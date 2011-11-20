@@ -2,7 +2,7 @@
 #define SYNCE_DEVICE_H
 
 #include <glib-object.h>
-#include <gnet.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib.h>
 
 
@@ -32,7 +32,7 @@ struct _SynceDeviceClass {
 
   guint signals[SYNCE_DEVICE_LAST_SIGNAL];
 
-  void (*synce_device_conn_event_cb) (GConn *conn, GConnEvent *event, gpointer user_data);
+  void (*synce_device_conn_event_cb) (GObject *istream, GAsyncResult *res, gpointer user_data);
   void (*synce_device_request_connection) (SynceDevice *self, DBusGMethodInvocation *ctx);
   void (*synce_device_provide_password) (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
 };

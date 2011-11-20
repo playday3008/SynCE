@@ -37,13 +37,11 @@ endif
 dccm_CPPFLAGS = \
 	-I$(top_srcdir)/lib/utils \
 	$(GLIB_CFLAGS) \
-	$(GNET_CFLAGS) \
 	$(DBUS_CFLAGS)
 
 dccm_LDADD = \
 	$(top_builddir)/lib/libsynce.la \
 	$(GLIB_LIBS) \
-	$(GNET_LIBS) \
 	$(DBUS_LIBS)
 
 if USE_HAL

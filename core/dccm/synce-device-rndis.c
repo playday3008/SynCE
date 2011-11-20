@@ -2,6 +2,9 @@
 #include "synce_config.h"
 #endif
 
+#include <string.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib.h>
 #include <synce.h>
 
@@ -14,6 +17,12 @@
 
 G_DEFINE_TYPE(SynceDeviceRndis, synce_device_rndis, SYNCE_TYPE_DEVICE)
 
+typedef struct _SynceDeviceRndisPrivate SynceDeviceRndisPrivate;
+struct _SynceDeviceRndisPrivate {
+  GHashTable *pending_client_conns;
+};
+
+#define SYNCE_DEVICE_RNDIS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SYNCE_TYPE_DEVICE_RNDIS, SynceDeviceRndisPrivate))
 
 /* methods */
 
@@ -189,9 +198,17 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
 
           requestShowUnlockScreen = GUINT32_TO_LE(requestShowUnlockScreen) ;
 
-          gnet_conn_write (priv->conn, (gchar *) &requestShowUnlockScreen,
-			   sizeof (requestShowUnlockScreen));
-          gnet_conn_readn (priv->conn, sizeof (guint32));
+	  gsize written = 0;
+	  GError *error = NULL;
+	  GOutputStream *out_stream = g_io_stream_get_output_stream(G_IO_STREAM(priv->conn));
+	  if (!(g_output_stream_write_all(out_stream, (gchar *) &requestShowUnlockScreen, sizeof (requestShowUnlockScreen), &written, NULL, &error))) {
+	    g_critical("%s: failed to write control message to display unlock screen: %s", G_STRFUNC, error->message);
+	    g_error_free(error);
+	  }
+
+	  GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
+	  priv->iobuf = g_malloc(sizeof(guint32));
+	  g_input_stream_read_async(in_stream, priv->iobuf, sizeof(guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
 
           /*
            * The flag should be that the password is set AND that the device
@@ -237,173 +254,192 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint
 
 
 static void
-synce_device_rndis_conn_event_cb_impl (GConn *conn,
-				 GConnEvent *event,
-				 gpointer user_data)
+synce_device_rndis_conn_event_cb_impl(GObject *source_object,
+				      GAsyncResult *res,
+				      gpointer user_data)
 {
+  GInputStream *istream = G_INPUT_STREAM(source_object);
   SynceDeviceRndis *self = SYNCE_DEVICE_RNDIS (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (SYNCE_DEVICE(self));
 
+  GError *error = NULL;
+  gssize num_read = g_input_stream_read_finish(istream, res, &error);
+
   if (priv->state == CTRL_STATE_HANDSHAKE)
     {
-      if (event->type == GNET_CONN_READ)
-        {
-          guint32 req, v;
-          GArray *resp;
-          guint i, len;
-          gchar *buf;
+      guint32 req, v;
+      GArray *resp;
+      guint i, len;
+      gchar *buf;
 
-          if (event->length != 4)
-            {
-              g_warning ("%s: unexpected length", G_STRFUNC);
-              return;
-            }
+      if (num_read != 4)
+	{
+	  g_warning ("%s: unexpected length", G_STRFUNC);
+	  g_free(priv->iobuf);
+	  return;
+	}
 
-          req = GUINT32_FROM_LE (*((guint32 *) event->buffer));
-          resp = g_array_sized_new (FALSE, FALSE, sizeof (guint32), 1);
+      req = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
+      g_free(priv->iobuf);
+      resp = g_array_sized_new (FALSE, FALSE, sizeof (guint32), 1);
 
-          switch (req)
+      switch (req)
+	{
+	case 0:
+	  v = 3; g_array_append_val (resp, v);
+	  break;
+	case 4:
+	  priv->state = CTRL_STATE_GETTING_INFO;
+	  priv->iobuf = g_malloc(4);
+	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	  break;
+	case 6:
+	  v = 7; g_array_append_val (resp, v);
+	  v = 8; g_array_append_val (resp, v);
+	  v = 4; g_array_append_val (resp, v);
+	  v = 5; g_array_append_val (resp, v);
+	  break;
+	default:
+	  g_warning ("%s: unknown request 0x%08x", G_STRFUNC, req);
+	  break;
+	}
+
+      if (resp->len > 0)
+	{
+	  len = resp->len * sizeof (guint32);
+	  buf = g_new (gchar, len);
+
+	  for (i = 0; i < resp->len; i++)
 	    {
-            case 0:
-              v = 3; g_array_append_val (resp, v);
-              break;
-            case 4:
-              priv->state = CTRL_STATE_GETTING_INFO;
-              gnet_conn_readn (conn, 4);
-              break;
-            case 6:
-              v = 7; g_array_append_val (resp, v);
-              v = 8; g_array_append_val (resp, v);
-              v = 4; g_array_append_val (resp, v);
-              v = 5; g_array_append_val (resp, v);
-              break;
-            default:
-              g_warning ("%s: unknown request 0x%08x", G_STRFUNC, req);
-              break;
+	      v = g_array_index (resp, guint32, i);
+	      *((guint32 *)(buf + (i * sizeof (guint32)))) = GUINT32_TO_LE (v);
 	    }
 
-          if (resp->len > 0)
-            {
-              len = resp->len * sizeof (guint32);
-              buf = g_new (gchar, len);
+	  gsize written = 0;
+	  GOutputStream *out_stream = g_io_stream_get_output_stream(G_IO_STREAM(priv->conn));
+	  if (!(g_output_stream_write_all(out_stream, buf, len, &written, NULL, &error))) {
+	    g_critical("%s: failed to write control message to device: %s", G_STRFUNC, error->message);
+	    g_error_free(error);
+	  }
+	  priv->iobuf = g_malloc(4);
+	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
 
-              for (i = 0; i < resp->len; i++)
-                {
-                  v = g_array_index (resp, guint32, i);
-                  *((guint32 *)(buf + (i * sizeof (guint32)))) = GUINT32_TO_LE (v);
-                }
+	  g_free (buf);
+	}
 
-              gnet_conn_write (conn, buf, len);
-
-              g_free (buf);
-            }
-
-          g_array_free (resp, TRUE);
-        }
-      else if (event->type == GNET_CONN_WRITE)
-        {
-          gnet_conn_readn (conn, 4);
-        }
+      g_array_free (resp, TRUE);
     }
   else if (priv->state < CTRL_STATE_AUTH)
     {
-      if (event->type == GNET_CONN_READ)
-        {
-          if (priv->info_buf_size == -1)
-            {
-              if (event->length != 4)
-                {
-                  g_warning ("%s: event->length != 4", G_STRFUNC);
-                  return;
-                }
+      if (priv->info_buf_size == -1)
+	{
+	  if (num_read != 4)
+	    {
+	      g_warning ("%s: event->length != 4", G_STRFUNC);
+	      g_free(priv->iobuf);
+	      return;
+	    }
 
-              priv->info_buf_size = GUINT32_FROM_LE (*((guint32 *) event->buffer));
-              gnet_conn_readn (conn, priv->info_buf_size);
-            }
-          else
-            {
-              if (event->length != priv->info_buf_size)
-                {
-                  g_warning ("%s: event->length=%d != info_buf_size=%d",
-			     G_STRFUNC, event->length, priv->info_buf_size);
-                  return;
-                }
+	  priv->info_buf_size = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
+	  g_free(priv->iobuf);
 
-              synce_device_rndis_info_received (self, (guchar *) event->buffer,
-                                    event->length);
-            }
-        }
+	  priv->iobuf = g_malloc(priv->info_buf_size);
+	  g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	}
+      else
+	{
+	  if (num_read != priv->info_buf_size)
+	    {
+	      g_warning ("%s: length read=%zd != info_buf_size=%d",
+			 G_STRFUNC, num_read, priv->info_buf_size);
+	      g_free(priv->iobuf);
+	      return;
+	    }
+
+	  gchar *info_buf = g_malloc0(num_read);
+	  memcpy(info_buf, priv->iobuf, num_read);
+	  g_free(priv->iobuf);
+	  synce_device_rndis_info_received(self, (guchar *) info_buf,
+					   num_read);
+	  g_free(info_buf);
+	}
     }
   else if (priv->state == CTRL_STATE_AUTH)
     {
-      if (event->type == GNET_CONN_READ)
-        {
+      if (priv->pw_key != 0xffffffff) {
+	/* wm5 - password sent to device */
 
-	  if (priv->pw_key != 0xffffffff) {
-	    /* wm5 - password sent to device */
+	guint16 result;
 
-	    guint16 result;
-
-	    if (event->length != sizeof (guint16))
-	      {
-		g_warning ("%s: event->length != 2", G_STRFUNC);
-		return;
-	      }
-
-	    result = GUINT16_FROM_LE (*((guint16 *) event->buffer));
-
-	    if (result != 0)
-	      {
-		priv->state = CTRL_STATE_CONNECTED;
-		synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
-	      }
-	    else
-	      {
-		synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
-	      }
-	    dbus_g_method_return (priv->pw_ctx, result != 0);
-	    priv->pw_ctx = NULL;
-
-	  } else {
-	    /* wm6 - password entered on device */
-
-	    guint32 result;
-	    result = GUINT32_FROM_LE (*((guint32 *) event->buffer));
-	    if (result == 0)
-	      {
-		priv->state = CTRL_STATE_CONNECTED;
-		synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
-
-		guint32 extraDataForPhone ;
-		/*
-		 * This response looks like a confirmation that needs to
-		 * be sent to the phone
-		 */
-		extraDataForPhone = 0 ;
-
-		extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
-		gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone,
-				 sizeof (extraDataForPhone));
-
-		/*
-		 * I don't know what this response is for. Wiredumps showed
-		 * ActiveSync sending this also. If you don't send this value
-		 * you can briefly start a rapi session, and after short
-		 * period of time the odccm process starts using 100% CPU.
-		 */
-		extraDataForPhone = 0xc ;
-		extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
-		gnet_conn_write (priv->conn, (gchar *) &extraDataForPhone,
-				 sizeof (extraDataForPhone));
-
-	      }
-	    else
-	      {
-		g_warning("Don't understand the client response after unlocking device!") ;
-	      }
-
+	if (num_read != sizeof (guint16))
+	  {
+	    g_warning ("%s: length read != 2", G_STRFUNC);
+	    g_free(priv->iobuf);
+	    return;
 	  }
-        }
+
+	result = GUINT16_FROM_LE (*((guint16 *) priv->iobuf));
+	g_free(priv->iobuf);
+
+	if (result != 0)
+	  {
+	    priv->state = CTRL_STATE_CONNECTED;
+	    synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
+	  }
+	else
+	  {
+	    synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
+	  }
+	dbus_g_method_return (priv->pw_ctx, result != 0);
+	priv->pw_ctx = NULL;
+
+      } else {
+	/* wm6 - password entered on device */
+
+	guint32 result;
+	result = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
+	g_free(priv->iobuf);
+	if (result == 0)
+	  {
+	    priv->state = CTRL_STATE_CONNECTED;
+	    synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED);
+
+	    guint32 extraDataForPhone ;
+	    /*
+	     * This response looks like a confirmation that needs to
+	     * be sent to the phone
+	     */
+	    extraDataForPhone = 0 ;
+
+	    extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
+
+	    gsize written = 0;
+	    GOutputStream *out_stream = g_io_stream_get_output_stream(G_IO_STREAM(priv->conn));
+	    if (!(g_output_stream_write_all(out_stream, (gchar *) &extraDataForPhone, sizeof (extraDataForPhone), &written, NULL, &error))) {
+	      g_critical("%s: failed to write first password response to device: %s", G_STRFUNC, error->message);
+	      g_error_free(error);
+	    }
+
+	    /*
+	     * I don't know what this response is for. Wiredumps showed
+	     * ActiveSync sending this also. If you don't send this value
+	     * you can briefly start a rapi session, and after short
+	     * period of time the odccm process starts using 100% CPU.
+	     */
+	    extraDataForPhone = 0xc ;
+	    extraDataForPhone = GUINT32_TO_LE(extraDataForPhone) ;
+	    written = 0;
+	    if (!(g_output_stream_write_all(out_stream, (gchar *) &extraDataForPhone, sizeof (extraDataForPhone), &written, NULL, &error))) {
+	      g_critical("%s: failed to write second password response to device: %s", G_STRFUNC, error->message);
+	      g_error_free(error);
+	    }
+	  }
+	else
+	  {
+	    g_warning("Don't understand the client response after unlocking device!") ;
+	  }
+
+      }
     }
 }
 
@@ -446,7 +482,11 @@ synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvoca
   buf[1] = GUINT32_TO_LE (4);
   buf[2] = GUINT32_TO_LE (*req_id_local);
 
-  gnet_conn_write (priv->conn, (gchar *) buf, sizeof (buf));
+  gsize written = 0;
+  GOutputStream *out_stream = g_io_stream_get_output_stream(G_IO_STREAM(priv->conn));
+  if (!(g_output_stream_write_all(out_stream, (gchar *) buf, sizeof(buf), &written, NULL, &error))) {
+    g_critical("%s: failed to write out request for RAPI connection: %s", G_STRFUNC, error->message);
+  }
 
  OUT:
   if (error != NULL)
@@ -454,37 +494,76 @@ synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvoca
 }
 
 static void
-synce_device_rndis_client_event_cb (GConn *conn,
-                 GConnEvent *event,
-                 gpointer user_data)
+synce_device_rndis_client_event_cb(GObject *source_object,
+				   GAsyncResult *res,
+				   gpointer user_data)
 {
+  GInputStream *istream = G_INPUT_STREAM(source_object);
   SynceDeviceRndis *self = SYNCE_DEVICE_RNDIS (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (SYNCE_DEVICE(self));
+  SynceDeviceRndisPrivate *priv_rndis = SYNCE_DEVICE_RNDIS_GET_PRIVATE (self);
+  GSocketConnection *conn = NULL;
 
-  if (event->type == GNET_CONN_READ)
+  GError *error = NULL;
+  gssize num_read = g_input_stream_read_finish(istream, res, &error);
+  if (num_read == -1) {
+    g_warning("%s: failed to read connection ID from device: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return;
+  }
+
+  if (num_read != sizeof (guint32)) {
+    g_warning("%s: failed to read full connection ID from device", G_STRFUNC);
+    return;
+  }
+
+
+  GList *keys = g_hash_table_get_keys(priv_rndis->pending_client_conns);
+  GList *key = keys;
+  while (key) {
+    GSocketConnection *stored_conn = G_SOCKET_CONNECTION(key->data);
+    GInputStream *stored_istream = g_io_stream_get_input_stream(G_IO_STREAM(stored_conn));
+    if (stored_istream == istream) {
+      conn = stored_conn;
+      break;
+    }
+    key = g_list_next(key);
+  }
+  g_list_free(keys);
+
+  if (!conn) {
+    g_warning("%s: data receieved from unexpected connection", G_STRFUNC);
+    return;
+  }
+
+  guint32 *tmp_id = (guint32 *)g_hash_table_lookup(priv_rndis->pending_client_conns, conn);
+  guint32 id = GUINT32_FROM_LE (*(tmp_id));
+  conn = g_object_ref(conn);
+  g_hash_table_remove(priv_rndis->pending_client_conns, conn);
+
+  SynceConnectionBroker *broker = g_hash_table_lookup (priv->requests, &id);
+
+  if (broker != NULL)
     {
-      if (event->length == sizeof (guint32))
-        {
-          guint32 id = GUINT32_FROM_LE (*((guint32 *) event->buffer));
-          SynceConnectionBroker *broker = g_hash_table_lookup (priv->requests, &id);
+      _synce_connection_broker_take_connection (broker, conn);
 
-          if (broker != NULL)
-            {
-              _synce_connection_broker_take_connection (broker, conn);
-
-              return;
-            }
-        }
+      return;
     }
 
   g_warning ("%s: unhandled event", G_STRFUNC);
 }
 
 void
-synce_device_rndis_client_connected (SynceDeviceRndis *self, GConn *conn)
+synce_device_rndis_client_connected (SynceDeviceRndis *self, GSocketConnection *conn)
 {
-  gnet_conn_set_callback (conn, synce_device_rndis_client_event_cb, self);
-  gnet_conn_readn (conn, sizeof (guint32));
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
+  SynceDeviceRndisPrivate *priv_rndis = SYNCE_DEVICE_RNDIS_GET_PRIVATE (self);
+
+  g_object_ref(conn);
+  GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(conn));
+  guint *tmp_id = g_malloc(sizeof (guint32));
+  g_hash_table_insert(priv_rndis->pending_client_conns, conn, tmp_id);
+  g_input_stream_read_async(in_stream, tmp_id, sizeof (guint32), G_PRIORITY_DEFAULT, NULL, synce_device_rndis_client_event_cb, self);
 }
 
 
@@ -493,7 +572,8 @@ synce_device_rndis_client_connected (SynceDeviceRndis *self, GConn *conn)
 static void
 synce_device_rndis_init(SynceDeviceRndis *self)
 {
-
+  SynceDeviceRndisPrivate *priv_rndis = SYNCE_DEVICE_RNDIS_GET_PRIVATE (self);
+  priv_rndis->pending_client_conns = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, g_free);
 }
 
 static void
@@ -501,10 +581,13 @@ synce_device_rndis_dispose (GObject *obj)
 {
   SynceDeviceRndis *self = SYNCE_DEVICE_RNDIS(obj);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
+  SynceDeviceRndisPrivate *priv_rndis = SYNCE_DEVICE_RNDIS_GET_PRIVATE (self);
 
   if (priv->dispose_has_run) {
     return;
   }
+
+  g_hash_table_destroy(priv_rndis->pending_client_conns);
 
   /* unref other objects */
 
@@ -524,6 +607,8 @@ synce_device_rndis_class_init (SynceDeviceRndisClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   SynceDeviceClass *synce_device_class = SYNCE_DEVICE_CLASS(klass);
+
+  g_type_class_add_private (klass, sizeof (SynceDeviceRndisPrivate));
 
   gobject_class->dispose = synce_device_rndis_dispose;
   gobject_class->finalize = synce_device_rndis_finalize;
