@@ -1,27 +1,12 @@
-AC_INIT(Fur,  @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
+AC_INIT(Fur, @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
 AC_PROG_CC
 
 PKG_CONFIG_PATH=/usr/local/lib:$PKG_CONFIG_PATH
 
 AC_LANG(C)
 
-AC_CHECK_LIB([rapi],
-             [CeCreateFile],
-             [LDFLAGS="$LDFLAGS -lrapi"],
-             [AC_MSG_ERROR(librapi must be present!)])
-
-dnl AC_CHECK_LIB([rapi],
-dnl 	     [CeSetEndOfFile],
-dnl 	     [],
-dnl 	     [AC_MSG_ERROR(librapi2 must be patched and recompiled to run this version of FUR!)])
-
-AC_CHECK_LIB([rapi],
-	     [CeSetFilePointer],
-	     [],
-	     [AC_MSG_ERROR(librapi2 must be patched and recompiled to run this version of FUR!)])
-
 AC_CHECK_LIB([synce],
-             [wstr_from_ascii],
+             [CeCreateFile],
              [LDFLAGS="$LDFLAGS -lsynce"],
              [AC_MSG_ERROR(libsynce must be present!)])
 
