@@ -1,4 +1,4 @@
-AC_INIT(Fur_config,version-0.2)
+AC_INIT(Fur,  @@YOU_DID_NOT_RUN_THE_BOOTSTRAP_SCRIPT@@)
 AC_PROG_CC
 
 PKG_CONFIG_PATH=/usr/local/lib:$PKG_CONFIG_PATH
