@@ -1,7 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #ifdef HAVE_CONFIG_H
-#include "synce_config.h"
+#include "config.h"
 #endif
 #include "synce.h"
 #include "synce_log.h"

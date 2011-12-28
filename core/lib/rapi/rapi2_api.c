@@ -1,11 +1,12 @@
 /* $Id: rapi_api.c 3812 2009-07-19 18:54:50Z mark_ellis $ */
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "rapi_ops.h"
 #include "rapi_context.h"
-#if HAVE_CONFIG_H
-#include "synce_config.h"
-#endif
 #include "rapi2.h"
 
 #include <string.h>

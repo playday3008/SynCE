@@ -1,11 +1,12 @@
 /* $Id$ */
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "rapi_ops.h"
 #include "rapi_context.h"
-#if HAVE_CONFIG_H
-#include "synce_config.h"
-#endif
 
 /*
  * Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5

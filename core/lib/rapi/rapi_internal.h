@@ -2,13 +2,13 @@
 #ifndef __rapi_internal_h__
 #define __rapi_internal_h__
 
-#include <synce.h>
-
 #if HAVE_CONFIG_H
-#include "synce_config.h"
+#include "config.h"
 #else
 #error HAVE_CONFIG_H is not defined
 #endif
+
+#include <synce.h>
 
 #include <synce_log.h>
 

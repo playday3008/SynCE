@@ -1,12 +1,13 @@
 /* $Id$ */
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "backend_ops_2/backend_ops_2.h"
 #include "rapi_ops.h"
 #include <stdlib.h>
-#if HAVE_CONFIG_H
-#include "synce_config.h"
-#endif
 
 
 /* The rapi2 application interface indirection */

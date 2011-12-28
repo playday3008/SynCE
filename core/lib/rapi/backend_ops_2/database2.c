@@ -1,11 +1,12 @@
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "backend_ops_2.h"
 #include "rapi_context.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#if HAVE_CONFIG_H
-#include "synce_config.h"
-#endif
 
 #define RAPI_DATABASE_DEBUG 0
 

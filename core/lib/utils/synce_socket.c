@@ -1,4 +1,8 @@
 /* $Id$ */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "synce_socket.h"
 #include "synce_log.h"
 #include <stdlib.h>
@@ -15,7 +19,6 @@
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 #include <sys/select.h>
-#include "synce_config.h"
 
 #if !HAVE_INET_PTON
 int inet_pton(int af, const char *src, void *dst);

@@ -2,7 +2,7 @@
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
 #if HAVE_CONFIG_H
-#include "synce_config.h"
+#include "config.h"
 #endif
 #include "rapi_context.h"
 #include <stdlib.h>

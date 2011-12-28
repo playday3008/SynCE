@@ -1,5 +1,5 @@
 #ifdef HAVE_CONFIG_H
-#include "synce_config.h"
+#include "config.h"
 #endif
 
 #include <stdio.h>
