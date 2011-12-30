@@ -1,3 +1,9 @@
+2011-12-30  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fix udev rules so rndis disconnects are recognised
+	* make libgudev optional, send disconnect to dccm from udev
+	  scripts but only act on it if we don't have gudev
+
 2011-12-28  Mark Ellis  <mark@mpellis.org.uk>
 
 	* rename config header and move to root of source

@@ -501,7 +501,7 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
 
       buf_size = GUINT16_TO_LE (buf_size);
 
-      rapi_conn = g_socket_client_connect(legacy_priv->rapi_sock_client, legacy_priv->rapi_address, NULL, &error);
+      rapi_conn = g_socket_client_connect(legacy_priv->rapi_sock_client, G_SOCKET_CONNECTABLE(legacy_priv->rapi_address), NULL, &error);
       if (!rapi_conn) {
 	g_warning("%s: failed to obtain client RAPI connection: %s", G_STRFUNC, error->message);
 	goto OUT;
@@ -530,7 +530,7 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
       goto OUT;
     }
 
-  g_socket_client_connect_async(legacy_priv->rapi_sock_client, legacy_priv->rapi_address, NULL, synce_device_legacy_client_event_cb, broker);
+  g_socket_client_connect_async(legacy_priv->rapi_sock_client, G_SOCKET_CONNECTABLE(legacy_priv->rapi_address), NULL, synce_device_legacy_client_event_cb, broker);
 
  OUT:
   if (buf)

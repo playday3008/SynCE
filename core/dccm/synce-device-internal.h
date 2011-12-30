@@ -7,7 +7,9 @@
 #ifdef USE_HAL
 #include <libhal.h>
 #else
+#if HAVE_GUDEV
 #include <gudev/gudev.h>
+#endif
 #endif
 
 #include "synce-connection-broker.h"
@@ -67,7 +69,9 @@ struct _SynceDevicePrivate
 #else
   /* the dbus object path */
   gchar *obj_path;
+#if HAVE_GUDEV
   GUdevClient *gudev_client;
+#endif
 #endif
 
   DBusGMethodInvocation *pw_ctx;

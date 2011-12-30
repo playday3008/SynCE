@@ -179,10 +179,6 @@ def rndis_dhcp_unconfig(iface):
 #
 def serial_get_devnum(device_file):
 
-    if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
-        logger.critical("unable to find a character device named "+device_file)
-        return -1
-
     devnum_re = re.compile('^[^0-9]*([0-9]*)$')
     devnum_match = devnum_re.match(device_file)
     if devnum_match != None:
@@ -316,9 +312,9 @@ def run_dccm(device_path, device_ip, local_ip, rndis):
 #
 # signal dccm after the interface is configured
 #
-def signal_dccm(device_path, device_ip, local_ip, rndis):
+def signal_dccm_connect(device_path, device_ip, local_ip, rndis):
 
-    logger.debug("signalling dccm ...")
+    logger.debug("signalling dccm for connection ...")
 
     dccm_log_level = "1"
 
@@ -345,8 +341,42 @@ def signal_dccm(device_path, device_ip, local_ip, rndis):
 
     try:
         dccm_manager.DeviceConnected(device_path, device_ip, local_ip, rndis)
-    except:
-        logger.critical("failed to signal device connect to dccm device manager %s: %s" % (our_udi, e))
+    except Exception, e:
+        logger.critical("failed to signal device connect to dccm device manager %s: %s" % (DBUS_SYNCE_MANAGER_OBJPATH, e))
+        return False
+
+    return True
+
+
+#
+# signal dccm when device is disconnected
+#
+def signal_dccm_disconnect(device_path):
+
+    logger.debug("signalling dccm for disconnection ...")
+
+    dccm_log_level = "1"
+
+    if log_level <= logging.DEBUG:
+        dccm_log_level = "6"
+    elif log_level <= logging.INFO:
+        dccm_log_level = "4"
+    elif log_level <= logging.WARNING:
+        dccm_log_level = "3"
+
+    try:
+        dccm_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_SYNCE_BUSNAME, DBUS_SYNCE_MANAGER_OBJPATH), DBUS_SYNCE_MANAGER_IFACE)
+    except Exception,e:
+        logger.critical("failed to connect to dccm device manager %s: %s" % (device_path, e))
+        return False
+
+    logger.debug("signalling dccm with:")
+    logger.debug("device-path=%s" % (device_path))
+
+    try:
+        dccm_manager.DeviceDisconnected(device_path)
+    except Exception, e:
+        logger.critical("failed to signal device disconnect to dccm device manager %s: %s" % (DBUS_SYNCE_MANAGER_OBJPATH, e))
         return False
 
     return True

@@ -11,6 +11,7 @@ G_BEGIN_DECLS
 enum
 {
   SYNCE_DEVICE_MANAGER_CONTROL_DEVICE_CONNECTED,
+  SYNCE_DEVICE_MANAGER_CONTROL_DEVICE_DISCONNECTED,
   SYNCE_DEVICE_MANAGER_CONTROL_LAST_SIGNAL
 };
 
@@ -40,6 +41,9 @@ GType synce_device_manager_control_get_type (void);
 
 void
 synce_device_manager_control_device_connected(SynceDeviceManagerControl *self, gchar *device_path, gchar *device_ip, gchar *local_ip, gboolean rndis, GError **error);
+
+void
+synce_device_manager_control_device_disconnected(SynceDeviceManagerControl *self, gchar *device_path, GError **error);
 
 G_END_DECLS
 

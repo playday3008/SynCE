@@ -101,6 +101,14 @@ if __name__ == '__main__':
     if action == "add":
         logger.debug("running as addon for device "+device_file)
 
+        try:
+            if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
+                logger.critical("unable to find a character device named "+device_file)
+                sys.exit(1)
+        except Exception,e:
+            logger.critical("Error stat'ing device file %s: %s" % (device_file, e))
+            sys.exit(1)
+
         local_ip, remote_ip = serial_get_address(devnum)
 
         if serial_start_device(device_file, local_ip, remote_ip, linkname) == False:

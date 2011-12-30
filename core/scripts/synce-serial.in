@@ -18,7 +18,7 @@ import gudev
 
 sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
-from synceconnector import signal_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
+from synceconnector import signal_dccm_connect, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
 
 def print_usage():
 	print "Usage:"
@@ -81,7 +81,6 @@ if __name__ == '__main__':
         logger.critical("Failed to obtain SUBSYSTEM from udev for "+device_file+", property missing")
         sys.exit(1)
 
-
     devnum = serial_get_devnum(device_file)
     if devnum < 0:
         sys.exit(1)
@@ -92,6 +91,14 @@ if __name__ == '__main__':
     if action == "add":
         logger.debug("running for device "+device_file)
 
+        try:
+            if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
+                logger.critical("unable to find a character device named "+device_file)
+                sys.exit(1)
+        except Exception,e:
+            logger.critical("Error stat'ing device file %s: %s" % (device_file, e))
+            sys.exit(1)
+
         local_ip, remote_ip = serial_get_address(devnum)
 
         if serial_start_device(device_file, local_ip, remote_ip, linkname) == False:
@@ -100,7 +107,7 @@ if __name__ == '__main__':
 
         logger.debug("successfully configured interface")
 
-        if signal_dccm(device_path, remote_ip, local_ip, False) == False:
+        if signal_dccm_connect(device_path, remote_ip, local_ip, False) == False:
             logger.error("aborting ...")
             sys.exit(1)
 

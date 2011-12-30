@@ -221,7 +221,9 @@ if test "x$enable_udev" = "xno"; then
     AC_SUBST(hal_addon_dir)
 else
     AC_MSG_NOTICE([Building dccm for Udev])
-    PKG_CHECK_MODULES(GUDEV, gudev-1.0)
+    PKG_CHECK_MODULES(GUDEV, gudev-1.0, have_gudev=1, have_gudev=0)
+    AC_DEFINE_UNQUOTED(HAVE_GUDEV, $have_gudev, [Define to 1 for libgudev support.])
+
     PKG_CHECK_MODULES(UDEV, udev)
 
     dnl Find the path to udevadm

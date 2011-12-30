@@ -7,5 +7,8 @@
       <arg direction="in" name="local_ip" type="s"/>
       <arg direction="in" name="rndis" type="b"/>
     </method>
+    <method name="DeviceDisconnected">
+      <arg direction="in" name="device_path" type="s"/>
+    </method>
   </interface>
 </node>

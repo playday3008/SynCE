@@ -40,6 +40,7 @@ struct _SynceDeviceManagerPrivate
   GSList *devices;
   SynceDeviceManagerControl *control_iface;
   gulong control_connect_id;
+  gulong control_disconnect_id;
   guint iface_check_id;
 };
 
@@ -67,8 +68,8 @@ synce_device_manager_device_entry_free(DeviceEntry *entry)
 
 
 static void
-synce_device_manager_device_disconnected_cb(SynceDevice *device,
-					    gpointer user_data)
+synce_device_manager_device_sends_disconnected_cb(SynceDevice *device,
+						  gpointer user_data)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
@@ -169,7 +170,7 @@ synce_device_manager_client_connected_cb(GSocketService *server,
        */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
       deventry->device = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, "device-path", deventry->device_path, NULL);
-      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
+      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_sends_disconnected_cb), self);
     } else {
       g_warning("%s: unexpected secondary connection to port %d", G_STRFUNC, local_port);
       return TRUE;
@@ -181,7 +182,7 @@ synce_device_manager_client_connected_cb(GSocketService *server,
        */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
       deventry->device = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, "device-path", deventry->device_path, NULL);
-      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
+      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_sends_disconnected_cb), self);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(deventry->device), conn);
       return TRUE;
@@ -351,6 +352,51 @@ synce_device_manager_device_connected_cb(SynceDeviceManagerControl *device_manag
 }
 
 
+static void
+synce_device_manager_device_disconnected_cb(SynceDeviceManagerControl *device_manager_control,
+					    gchar *device_path,
+					    gpointer userdata)
+{
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
+
+  g_debug("%s: receieved device disconnected signal for %s", G_STRFUNC, device_path);
+
+  /*
+   * this signal comes through the udev scripts, if we have gudev we ignore this as we
+   * are monitoring udev directly
+   */
+
+#if HAVE_GUDEV
+  g_debug("%s: ignored, listening through libgudev", G_STRFUNC);
+#else
+  GSList *device_entry_iter = priv->devices;
+  while (device_entry_iter != NULL) {
+
+    if (strcmp(device_path, ((DeviceEntry*)device_entry_iter->data)->device_path) == 0) {
+      break;
+    }
+
+    device_entry_iter = g_slist_next(device_entry_iter);
+  }
+
+  if (!device_entry_iter) {
+    g_critical("%s: disconnect signal received for a non-recognised device", G_STRFUNC);
+    return;
+  }
+
+  DeviceEntry *deventry = device_entry_iter->data;
+  priv->devices = g_slist_delete_link(priv->devices, device_entry_iter);
+
+  g_debug("%s: emitting disconnect for object path %s", G_STRFUNC, device_path);
+  g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, device_path);
+  synce_device_manager_device_entry_free(deventry);
+#endif
+
+  return;
+}
+
+
 gboolean
 synce_device_manager_get_connected_devices (SynceDeviceManager *self,
                                             GPtrArray **ret,
@@ -407,6 +453,7 @@ synce_device_manager_init (SynceDeviceManager *self)
   priv->control_iface = g_object_new(SYNCE_TYPE_DEVICE_MANAGER_CONTROL, NULL);
 
   priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(synce_device_manager_device_connected_cb), self);
+  priv->control_disconnect_id = g_signal_connect(priv->control_iface, "device-disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
   priv->iface_check_id = 0;
 
   return;
@@ -431,6 +478,7 @@ synce_device_manager_dispose (GObject *obj)
   g_slist_free(priv->devices);
 
   g_signal_handler_disconnect(priv->control_iface, priv->control_connect_id);
+  g_signal_handler_disconnect(priv->control_iface, priv->control_disconnect_id);
   g_object_unref(priv->control_iface);
 
   if (G_OBJECT_CLASS (synce_device_manager_parent_class)->dispose)

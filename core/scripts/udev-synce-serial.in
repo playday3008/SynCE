@@ -13,7 +13,7 @@ import dbus
 
 sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
-from synceconnector import signal_dccm, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
+from synceconnector import signal_dccm_connect, signal_dccm_disconnect, process_config, get_logger, serial_stop_device, serial_start_device, serial_get_address, serial_get_devnum
 
 #
 # main()
@@ -66,6 +66,14 @@ if __name__ == '__main__':
     if action == "add":
         logger.debug("running as addon for device "+device_file)
 
+        try:
+            if stat.S_ISCHR(os.stat(device_file).st_mode) == 0:
+                logger.critical("unable to find a character device named "+device_file)
+                sys.exit(1)
+        except Exception,e:
+            logger.critical("Error stat'ing device file %s: %s" % (device_file, e))
+            sys.exit(1)
+
         local_ip, remote_ip = serial_get_address(devnum)
 
         if serial_start_device(device_file, local_ip, remote_ip, linkname) == False:
@@ -74,12 +82,13 @@ if __name__ == '__main__':
 
         logger.debug("successfully configured interface")
 
-        if signal_dccm(device_path, remote_ip, local_ip, False) == False:
+        if signal_dccm_connect(device_path, remote_ip, local_ip, False) == False:
             logger.error("aborting ...")
             sys.exit(1)
 
     if action == "remove":
         logger.debug("running for removal of device "+device_file)
+        signal_dccm_disconnect(device_path)
         if serial_stop_device(linkname) == False:
             logger.critical("failed to take down serial connection, aborting...")
             sys.exit(1)

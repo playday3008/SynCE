@@ -10,7 +10,9 @@
 #include <libhal.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #else /* USE_HAL */
+#if HAVE_GUDEV
 #include <gudev/gudev.h>
+#endif
 #endif /* USE_HAL */
 
 #include <synce.h>
@@ -434,6 +436,7 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
 
 #ifndef USE_HAL
 
+#if HAVE_GUDEV
 static void
 gudev_uevent_callback(GUdevClient *client,
 		      gchar *action,
@@ -454,6 +457,7 @@ gudev_uevent_callback(GUdevClient *client,
 
   return;
 }
+#endif
 
 gboolean
 synce_device_get_name(SynceDevice *self,
@@ -629,6 +633,7 @@ synce_device_init (SynceDevice *self)
 #else /* USE_HAL */
   priv->obj_path = NULL;
 
+#if HAVE_GUDEV
   g_debug("%s: connecting to udev", G_STRFUNC);
   if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
     g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
@@ -638,6 +643,7 @@ synce_device_init (SynceDevice *self)
   if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
     g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
   }
+#endif
 #endif /* USE_HAL */
 
 exit:
@@ -665,7 +671,9 @@ synce_device_dispose (GObject *obj)
     libhal_ctx_free(priv->hal_ctx);
   }
 #else /* USE_HAL */
+#if HAVE_GUDEV
   g_object_unref(priv->gudev_client);
+#endif
 #endif /* USE_HAL */
 
   g_hash_table_destroy (priv->requests);

@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
-from synceconnector import signal_dccm, process_config, get_logger, rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig
+from synceconnector import signal_dccm_connect, signal_dccm_disconnect, process_config, get_logger, rndis_static_config, rndis_dhcp_config, rndis_dhcp_unconfig
 
 #
 # main()
@@ -58,12 +58,13 @@ if __name__ == '__main__':
 
         logger.debug("successfully configured interface")
 
-        if signal_dccm(device_path,device_ip,local_ip,True) == False:
+        if signal_dccm_connect(device_path,device_ip,local_ip,True) == False:
             logger.error("aborting ...")
             sys.exit(1)
 
     if action == "remove":
         logger.debug("running for removal of interface "+iface)
+        signal_dccm_disconnect(device_path)
         rndis_dhcp_unconfig(iface)
 
     sys.exit(0)

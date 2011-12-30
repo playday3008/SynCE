@@ -88,6 +88,15 @@ synce_device_manager_control_class_init (SynceDeviceManagerControlClass *klass)
                   synce_device_manager_control_marshal_VOID__STRING_STRING_STRING_BOOLEAN,
                   G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
+  klass->signals[SYNCE_DEVICE_MANAGER_CONTROL_DEVICE_DISCONNECTED] =
+    g_signal_new ("device-disconnected",
+                  G_OBJECT_CLASS_TYPE (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
+
   dbus_g_object_type_install_info (G_TYPE_FROM_CLASS (klass),
                                    &dbus_glib_synce_device_manager_control_object_info);
 }
@@ -97,10 +106,25 @@ synce_device_manager_control_device_connected(SynceDeviceManagerControl *self, g
 {
   SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE(self);
 
+  g_debug("%s: received connect for device %s", G_STRFUNC, device_path);
   g_signal_emit(self,
 		SYNCE_DEVICE_MANAGER_CONTROL_GET_CLASS(SYNCE_DEVICE_MANAGER_CONTROL(self))->signals[SYNCE_DEVICE_MANAGER_CONTROL_DEVICE_CONNECTED],
 		0,
 		device_path, device_ip, local_ip, rndis);
+
+  return;
+}
+
+void
+synce_device_manager_control_device_disconnected(SynceDeviceManagerControl *self, gchar *device_path, GError **error)
+{
+  SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE(self);
+
+  g_debug("%s: received disconnect for device %s", G_STRFUNC, device_path);
+  g_signal_emit(self,
+		SYNCE_DEVICE_MANAGER_CONTROL_GET_CLASS(SYNCE_DEVICE_MANAGER_CONTROL(self))->signals[SYNCE_DEVICE_MANAGER_CONTROL_DEVICE_DISCONNECTED],
+		0,
+		device_path);
 
   return;
 }
