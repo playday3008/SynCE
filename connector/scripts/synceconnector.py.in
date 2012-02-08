@@ -345,8 +345,8 @@ def signal_dccm(device_path, device_ip, local_ip, rndis):
 
     try:
         dccm_manager.DeviceConnected(device_path, device_ip, local_ip, rndis)
-    except:
-        logger.critical("failed to signal device connect to dccm device manager %s: %s" % (our_udi, e))
+    except Exception,e:
+        logger.critical("failed to signal device connect to dccm device manager %s: %s" % (device_path, e))
         return False
 
     return True
