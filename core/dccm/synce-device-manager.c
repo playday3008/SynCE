@@ -250,8 +250,12 @@ synce_device_manager_create_device(SynceDeviceManager *self,
 
   g_debug("%s: listening for device %s", G_STRFUNC, deventry->device_path);
 
-  if (deventry->rndis)
+  if (deventry->rndis) {
+  g_debug("%s: triggering connection", G_STRFUNC);
     synce_trigger_connection(deventry->device_ip);
+  } else {
+  g_debug("%s: NOT triggering connection", G_STRFUNC);
+}
 
   return TRUE;
 
@@ -407,24 +411,41 @@ synce_device_manager_get_connected_devices (SynceDeviceManager *self,
   *ret = g_ptr_array_new ();
 
   GSList *device_entry_iter = priv->devices;
-  while (device_entry_iter != NULL) {
+
+  for (; device_entry_iter; device_entry_iter = g_slist_next(device_entry_iter)) {
+
+  DeviceEntry *deventry = device_entry_iter->data;
+
+  if (!deventry) {
+    g_critical("%s: DeviceEntry was null", G_STRFUNC);
+    continue;
+  }
+
+  g_debug("%s: deventry->device_path = %s", G_STRFUNC, deventry->device_path);
+  g_debug("%s: deventry->device_ip = %s", G_STRFUNC, deventry->device_ip);
+  g_debug("%s: deventry->local_ip = %s", G_STRFUNC, deventry->local_ip);
+  g_debug("%s: deventry->rndis = %s", G_STRFUNC, (deventry->rndis ? "true" : "false"));
+  g_debug("%s: deventry->iface_pending = %s", G_STRFUNC, (deventry->iface_pending ? "true" : "false"));
 
     gchar *obj_path;
     SynceDevice *device = ((DeviceEntry*)device_entry_iter->data)->device;
-    if (device == NULL)
+    if (device == NULL) {
+      g_debug("%s: device was null", G_STRFUNC);
       /* interface is not yet ready */
       continue;
+    }
 
     g_object_get (device, "object-path", &obj_path, NULL);
-    if (obj_path == NULL)
+    if (obj_path == NULL) {
+      g_debug("%s: object path was null", G_STRFUNC);
       /* device is not yet ready */
       continue;
+    }
 
     g_debug("%s: found device %s with object path %s", G_STRFUNC, ((DeviceEntry*)device_entry_iter->data)->device_path, obj_path);
 
     g_ptr_array_add (*ret, obj_path);
 
-    device_entry_iter = g_slist_next(device_entry_iter);
   }
 
   return TRUE;
