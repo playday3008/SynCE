@@ -7,5 +7,5 @@ Name: librra
 Description: Library to deal with synchronization of WinCE devices
 Version: @VERSION@
 Requires: libsynce
-Libs: -L${libdir} -lrra
+Libs: -L${libdir} -lrra -lmimedir
 Cflags: -I${includedir}
