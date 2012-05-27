@@ -2,7 +2,7 @@ plugindir=@OPENSYNC_PLUGINDIR@
 configdir=@OPENSYNC_CONFIGDIR@
 formatsdir=@OPENSYNC_FORMATSDIR@
 
-AM_CFLAGS = -Wall -Werror @PACKAGE_CFLAGS@
+AM_CFLAGS = @PACKAGE_CFLAGS@
 
 EXTRA_DIST = synce-plugin
 
@@ -18,10 +18,10 @@ synce_plugin_la_SOURCES = \
 	synce_file.h
 
 synce_plugin_la_LDFLAGS = -avoid-version -export-dynamic -module
-synce_plugin_la_LIBADD = @PACKAGE_LIBS@ @LIBS@ @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@ @LIBRRA_LIBS@
+synce_plugin_la_LIBADD = @PACKAGE_LIBS@ @LIBS@ @LIBSYNCE_LIBS@ @LIBRRA_LIBS@
 
 noinst_PROGRAMS = ft
 
 ft_SOURCES=	synce_file.c synce_file.h
-ft_CFLAGS = -DTEST_FILE -Wall -Werror @PACKAGE_CFLAGS@
-ft_LDADD = @PACKAGE_LIBS@ @LIBS@ @LIBSYNCE_LIBS@ @LIBRAPI2_LIBS@ @LIBRRA_LIBS@
+ft_CFLAGS = -DTEST_FILE @PACKAGE_CFLAGS@
+ft_LDADD = @PACKAGE_LIBS@ @LIBS@ @LIBSYNCE_LIBS@ @LIBRRA_LIBS@

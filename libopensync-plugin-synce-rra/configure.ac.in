@@ -12,15 +12,8 @@ PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
 AC_SUBST(PACKAGE_CFLAGS)
 AC_SUBST(PACKAGE_LIBS)
 
-dnl AM_PATH_RRA forgets to add mimedir to the list of dependicies.
-dnl Fix it here. 
-LIBS="-lmimedir $LIBS"
-
-PKG_CHECK_MODULES(LIBSYNCE, libsynce > 0.13)
-
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 > 0.13)
-
-PKG_CHECK_MODULES(LIBRRA, librra > 0.13)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
+PKG_CHECK_MODULES(LIBRRA, librra >= 0.16)
 
 AC_ISC_POSIX
 AC_PROG_CC
