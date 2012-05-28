@@ -27,7 +27,7 @@ include(FindPkgConfig)
 include(KDE4Defaults)
 include(MacroLibrary)
 
-pkg_check_modules( SYNCE REQUIRED librapi2 )
+pkg_check_modules( SYNCE REQUIRED libsynce )
 add_definitions(${SYNCE_CFLAGS} ${QT_DEFINITIONS} ${KDE4_DEFINITIONS})
 
 include_directories(${CMAKE_BINARY_DIR} ${SYNCE_INCLUDE_DIRS} ${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )

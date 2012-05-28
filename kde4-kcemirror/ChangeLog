@@ -1,3 +1,7 @@
+2012-05-28  Mark Ellis  <mark@mpellis.org.uk>
+
+	* change dependency on librapi2 to libsynce0 for synce-core
+
 2010-09-13  Tejas Guruswamy <masterpatricko@gmail.com>
 	* Update docbook dtd verion from 4.1.2 to 4.2
 	* Up version to 0.1.1
