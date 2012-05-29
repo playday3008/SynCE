@@ -2,6 +2,7 @@
 
 	* src/main.c - throw a g_warning and return when no device name
 	  is specified, since a g_error causes a dump
+	* 0.3 release
 
 2011-11-14  Mark Ellis  <mark@mpellis.org.uk>
 
