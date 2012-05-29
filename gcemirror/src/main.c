@@ -74,8 +74,10 @@ main(gint argc, gchar *argv[])
 
         synce_log_set_level(log_level);
 
-        if (argc < 2)
-                g_error("%s: no device specified", G_STRFUNC);
+        if (argc < 2) {
+	  g_warning("%s: no device specified", G_STRFUNC);
+	  return 1;
+	}
 
 
         gchar *pda_name = g_strdup(argv[1]);

@@ -1,3 +1,8 @@
+2012-05-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* src/main.c - throw a g_warning and return when no device name
+	  is specified, since a g_error causes a dump
+
 2011-11-14  Mark Ellis  <mark@mpellis.org.uk>
 
 	* update configure.ac.in, drop references to librapi2 to use
