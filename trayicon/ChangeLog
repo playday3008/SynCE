@@ -1,3 +1,7 @@
+2012-05-29  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.16 release
+
 2011-11-19  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add libappindicator support, required some reworking of
