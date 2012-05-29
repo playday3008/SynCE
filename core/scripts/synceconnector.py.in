@@ -210,7 +210,7 @@ def serial_stop_device(linkname):
     pidfile = VAR_PPP+"/ppp-"+linkname+".pid"
 
     if os.path.isfile(pidfile) != True:
-        logger.warning("unable find a running SynCE connection for %d", linkname)
+        logger.warning("unable find a running SynCE connection for %s", linkname)
         return False
 
     while os.path.isfile(pidfile):
