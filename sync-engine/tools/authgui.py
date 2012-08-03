@@ -17,12 +17,6 @@ import re
 ODCCM_DEVICE_PASSWORD_FLAG_SET     = 1
 ODCCM_DEVICE_PASSWORD_FLAG_PROVIDE = 2
 
-HAL_DEVICE_PASSWORD_FLAG_UNSET             = "unset"
-HAL_DEVICE_PASSWORD_FLAG_PROVIDE           = "provide"
-HAL_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = "provide-on-device"
-HAL_DEVICE_PASSWORD_FLAG_CHECKING          = "checking"
-HAL_DEVICE_PASSWORD_FLAG_UNLOCKED          = "unlocked"
-
 UDEV_DEVICE_PASSWORD_FLAG_UNSET             = "unset"
 UDEV_DEVICE_PASSWORD_FLAG_PROVIDE           = "provide"
 UDEV_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE = "provide-on-device"
@@ -75,12 +69,6 @@ class AuthGui:
 			self.deviceName = self.device.GetName()
 			return
 
-		if re.compile('/org/freedesktop/Hal/devices/').match(objpath) != None:
-			self.deviceObject = bus.get_object("org.freedesktop.Hal", objpath)
-			self.device = dbus.Interface(self.deviceObject, "org.freedesktop.Hal.Device")
-			self.deviceName = self.device.GetPropertyString("pda.pocketpc.name")
-			return
-
 		self.deviceObject = bus.get_object("org.synce.odccm", objpath)
 		self.device = dbus.Interface(self.deviceObject, "org.synce.odccm.Device")
 		self.deviceName = self.device.GetName()
@@ -102,27 +90,6 @@ class AuthGui:
 
 					if dlg.run() == gtk.RESPONSE_ACCEPT:
 						stopAsking = self.device.ProvidePassword(dlg.get_text())
-						if stopAsking:
-							rc=1
-					else:
-		    				stopAsking = True
-						rc=0
-        	        		dlg.destroy()
-			return rc
-
-		
-		if re.compile('/org/freedesktop/Hal/devices/').match(self.device.object_path) != None:
-			flags = self.device.GetPropertyString("pda.pocketpc.password")
-			rc=1
-			if flags == "provide":
-				stopAsking = False
-				while not stopAsking:
-					dlg = EntryDialog(None,	"SynCE: Password required to synchronize device",
-								"Enter password for device '%s'" % self.deviceName,
-								True)
-
-					if dlg.run() == gtk.RESPONSE_ACCEPT:
-						stopAsking = self.deviceObject.ProvidePassword(dlg.get_text(), dbus_interface='org.freedesktop.Hal.Device.Synce')
 						if stopAsking:
 							rc=1
 					else:

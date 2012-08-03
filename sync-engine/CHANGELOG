@@ -1189,5 +1189,8 @@ Use new udev based dccm
 -----------------------
 0.15.1 release
 
+02/08/2012 - Mark Ellis
+-----------------------
+Remove obsolete Hal code
 
 
