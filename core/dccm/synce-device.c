@@ -16,7 +16,7 @@
 #include "synce-device-internal.h"
 #include "synce-device-signals-marshal.h"
 
-#include "synce-device-udev-glue.h"
+#include "synce-device-glue.h"
 
 #include "synce-errors.h"
 

@@ -6,7 +6,7 @@ libexec_PROGRAMS = dccm synce-serial-chat
 BUILT_SOURCES = synce-device-signals-marshal.h \
 		synce-device-signals-marshal.c
 
-BUILT_SOURCES += synce-device-udev-glue.h \
+BUILT_SOURCES += synce-device-glue.h \
 		synce-device-manager-control-signals-marshal.h \
 		synce-device-manager-control-signals-marshal.c \
 		synce-device-manager-control-glue.h \
@@ -23,7 +23,7 @@ dccm_SOURCES = $(BUILT_SOURCES) \
 		synce-errors.c synce-errors.h \
 		utils.c utils.h
 
-dccm_SOURCES += main-udev.c synce-device-manager.c synce-device-manager.h \
+dccm_SOURCES += main.c synce-device-manager.c synce-device-manager.h \
 		synce-device-manager-control.c synce-device-manager-control.h
 
 dccm_CPPFLAGS = \
@@ -42,22 +42,13 @@ dccm_LDADD += $(GUDEV_LIBS)
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
 EXTRA_DIST = synce-device-signals-marshal.list \
-		udev-interface.xml \
+		synce-device.xml \
 		synce-device-manager-control-signals-marshal.list \
 		synce-device-manager-control.xml \
 		synce-device-manager.xml \
-		synce-unlock-udev.py
+		synce-unlock
 
-nodist_bin_SCRIPTS = synce-unlock
-
-synce-unlock: synce-unlock-udev.py
-	cp $< $@
-
-clean::
-	-$(RM) synce-unlock
-
-synce-device-udev-glue.h: udev-interface.xml
-	dbus-binding-tool --mode=glib-server --output=$@ --prefix=synce_device $<
+bin_SCRIPTS = synce-unlock
 
 %-glue.h: %.xml
 	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
