@@ -6,7 +6,7 @@
 #include "synce.h"
 #include "synce_log.h"
 #include "config/config.h"
-#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT
+#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
 #define DBUS_API_SUBJECT_TO_CHANGE 1
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -16,10 +16,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#if ENABLE_HAL_SUPPORT
-#include <dbus/dbus-glib-lowlevel.h>
-#include <libhal.h>
-#endif
 
 struct _SynceInfo
 {
@@ -561,199 +557,6 @@ OUT:
 #endif /* ENABLE_UDEV_SUPPORT */
 
 
-#if ENABLE_HAL_SUPPORT
-
-static SynceInfo *synce_info_from_hal(SynceInfoIdField field, const char* data)
-{
-  SynceInfo *result = NULL;
-  DBusGConnection *system_bus = NULL;
-  LibHalContext *hal_ctx = NULL;
-
-  GError *error = NULL;
-  DBusError dbus_error;
-
-  gint i;
-  gchar **device_list = NULL;
-  gint num_devices;
-  gboolean disabled;
-  gchar *match_data = NULL;
-
-  g_type_init();
-  dbus_error_init(&dbus_error);
-
-  if (!(system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
-    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(hal_ctx = libhal_ctx_new())) {
-    g_critical("%s: Failed to get hal context", G_STRFUNC);
-    goto error_exit;
-  }
-
-  if (!libhal_ctx_set_dbus_connection(hal_ctx, dbus_g_connection_get_connection(system_bus))) {
-    g_critical("%s: Failed to set DBus connection for hal context", G_STRFUNC);
-    goto error_exit;
-  }
-
-  if (!libhal_ctx_init(hal_ctx, &dbus_error)) {
-    g_critical("%s: Failed to initialise hal context: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
-    goto error_exit;
-  }
-
-  device_list = libhal_manager_find_device_string_match(hal_ctx,
-							"pda.platform",
-							"pocketpc",
-							&num_devices,
-							&dbus_error);
-  if (dbus_error_is_set(&dbus_error)) {
-    g_warning("%s: Failed to obtain list of attached devices: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
-    goto error_exit;
-  }
-
-  if (num_devices == 0) {
-    g_message("Hal reports no devices connected");
-    goto exit;
-  }
-
-  for (i = 0; i < num_devices; i++) {
-
-    /* discard unused ports for 4 endpoint serial devices */
-    if (libhal_device_property_exists(hal_ctx, device_list[i], "pda.pocketpc.disabled", &dbus_error)) {
-
-            disabled = libhal_device_get_property_bool(hal_ctx, device_list[i], "pda.pocketpc.disabled", &dbus_error);
-            if (dbus_error_is_set(&dbus_error)) {
-                    g_critical("%s: Failed to obtain property pda.pocketpc.disabled for device %s: %s: %s",
-                               G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-                    goto error_exit;
-            }
-
-            if (disabled)
-                    continue;
-    }
-
-    if (!(libhal_device_property_exists(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error))) {
-            if (dbus_error_is_set(&dbus_error)) {
-                    g_critical("%s: Failed to check for property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-                    goto error_exit;
-            }
-            g_message("Device %s not fully set in Hal, skipping", device_list[i]);
-            continue;
-    }
-
-
-    if (data != NULL)
-    {
-      switch (field)
-        {
-        case INFO_NAME:
-
-          match_data = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
-          if (dbus_error_is_set(&dbus_error)) {
-                  g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-                  goto error_exit;
-          }
-          break;
-        case INFO_OBJECT_PATH:
-          match_data = g_strdup(device_list[i]);
-          break;
-        }
-
-      if (strcasecmp(data, match_data) != 0) {
-        libhal_free_string(match_data);
-        continue;
-      }
-    }
-
-    libhal_free_string(match_data);
-
-
-    if (!(result = calloc(1, sizeof(SynceInfo)))) {
-      g_critical("%s: Failed to allocate SynceInfo", G_STRFUNC);
-      goto error_exit;
-    }
-
-    result->name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.name", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.name for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->object_path = g_strdup(device_list[i]);
-
-    result->os_major = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_major", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.os_major for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->os_minor = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.os_minor", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.os_minor for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->processor_type = libhal_device_get_property_uint64(hal_ctx, device_list[i], "pda.pocketpc.cpu_type", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.cpu_type for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->device_ip = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.ip_address", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.ip_address for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->local_iface_ip = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.iface_address", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_warning("%s: Failed to obtain property pda.pocketpc.iface_address for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      result->local_iface_ip = NULL;
-      dbus_error_free(&dbus_error);
-    }
-
-    result->os_name = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.platform", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.platform for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->model = libhal_device_get_property_string(hal_ctx, device_list[i], "pda.pocketpc.model", &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-      g_critical("%s: Failed to obtain property pda.pocketpc.model for device %s: %s: %s", G_STRFUNC, device_list[i], dbus_error.name, dbus_error.message);
-      goto error_exit;
-    }
-
-    result->transport = g_strdup("hal");
-
-    break;
-  }
-
-  goto exit;
-
-error_exit:
-  if (error != NULL)
-    g_error_free(error);
-  if (dbus_error_is_set(&dbus_error))
-    dbus_error_free(&dbus_error);
-  if (result)
-    synce_info_destroy(result);
-  result = NULL;
-
-exit:
-  if (device_list != NULL)
-    libhal_free_string_array(device_list);
-  if (hal_ctx != NULL) {
-    libhal_ctx_shutdown(hal_ctx, NULL);
-    libhal_ctx_free(hal_ctx);
-  }
-  if (system_bus != NULL)
-    dbus_g_connection_unref (system_bus);
-
-  return result;
-}
-#endif /* ENABLE_HAL_SUPPORT */
-
 SynceInfo* synce_info_new(const char* device_name)
 {
   return synce_info_new_by_field(INFO_NAME, device_name);
@@ -765,11 +568,6 @@ SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data)
 
 #if ENABLE_UDEV_SUPPORT
   result = synce_info_from_udev(field, data);
-#endif
-
-#if ENABLE_HAL_SUPPORT
-  if (!result)
-    result = synce_info_from_hal(field, data);
 #endif
 
 #if ENABLE_ODCCM_SUPPORT

@@ -1,3 +1,7 @@
+2012-07-02  Mark Ellis  <mark@mpellis.org.uk>
+
+	* remove obsolete hal code
+
 2012-05-29  Mark Ellis  <mark@mpellis.org.uk>
 
 	* fix type error in udev-synce-serial

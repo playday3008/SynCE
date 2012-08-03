@@ -2,7 +2,7 @@ synce-connector
 ---------------
 
 Synce-connector is a connection framework and dccm-implementation 
-for Windows Mobile devices that integrates with HAL or udev.
+for Windows Mobile devices that integrates with udev.
 
 Please visit the SynCE website for more information:
 
@@ -36,7 +36,7 @@ refined however.
 
 Bluetooth
 ---------
-Wireless interfaces are a little trickier over hal. There is an
+Wireless interfaces are a little trickier. There is an
 experimental framework, that can be enabled by a configure option,
 which has shown some success. Please see the README in the
 bluetooth directory.

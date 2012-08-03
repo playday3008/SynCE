@@ -4,12 +4,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib.h>
-#ifdef USE_HAL
-#include <libhal.h>
-#else
 #if HAVE_GUDEV
 #include <gudev/gudev.h>
-#endif
 #endif
 
 #include "synce-connection-broker.h"
@@ -40,7 +36,7 @@ struct _SynceDevicePrivate
   GSocketConnection *conn;
   gchar *iobuf;
 
-  /* the hal udi or sysfs path */
+  /* the sysfs path */
   gchar *device_path;
 
   gchar *guid;
@@ -63,15 +59,10 @@ struct _SynceDevicePrivate
 
   guint32 pw_key;
 
-#ifdef USE_HAL
-  LibHalContext *hal_ctx;
-  DBusGConnection *hal_bus;
-#else
   /* the dbus object path */
   gchar *obj_path;
 #if HAVE_GUDEV
   GUdevClient *gudev_client;
-#endif
 #endif
 
   DBusGMethodInvocation *pw_ctx;
@@ -89,11 +80,7 @@ void synce_device_provide_password (SynceDevice *self, const gchar *password, DB
 void synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx);
 void synce_device_change_password_flags (SynceDevice *self, SynceDevicePasswordFlags new_flag);
 void synce_device_conn_broker_done_cb (SynceConnectionBroker *broker, gpointer user_data);
-#ifdef USE_HAL
-void synce_device_set_hal_props (SynceDevice *device);
-#else
 void synce_device_dbus_init(SynceDevice *self);
-#endif
 void synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_data);
 
 G_END_DECLS

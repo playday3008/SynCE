@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT
+#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
 #define DBUS_API_SUBJECT_TO_CHANGE 1
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -223,7 +223,7 @@ void rapi_context_unref(RapiContext* context)/*{{{*/
 }/*}}}*/
 
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT
+#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
 
 static gint
 get_socket_from_dccm(const gchar *unix_path)
@@ -275,7 +275,7 @@ OUT:
 
   return dev_fd;
 }
-#endif /* ENABLE_ODCCM_SUPPORT || ENABLE_HAL_SUPPORT || ENABLE_UDEV_SUPPORT */
+#endif /* ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT */
 
 
 #if ENABLE_ODCCM_SUPPORT
@@ -464,68 +464,6 @@ OUT:
 #endif /* ENABLE_UDEV_SUPPORT */
 
 
-#if ENABLE_HAL_SUPPORT
-
-static int
-get_connection_from_hal(SynceInfo *info)
-{
-  DBusGConnection *system_bus = NULL;
-  DBusGProxy *dev_proxy = NULL;
-  GError *error = NULL;
-  gchar *unix_path = NULL;
-  gint fd = -1;
-
-  g_type_init();
-
-  if (!(system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
-    synce_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  dev_proxy = dbus_g_proxy_new_for_name(system_bus,
-                                        "org.freedesktop.Hal",
-                                        synce_info_get_object_path(info),
-                                        "org.freedesktop.Hal.Device.Synce");
-  if (dev_proxy == NULL) {
-    synce_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, synce_info_get_object_path(info));
-    goto error_exit;
-  }
-
-  if (!dbus_g_proxy_call(dev_proxy, "RequestConnection", &error,
-                         G_TYPE_INVALID,
-                         G_TYPE_STRING, &unix_path,
-                         G_TYPE_INVALID))
-  {
-    synce_warning("%s: Failed to get a connection for %s: %s: %s", G_STRFUNC, synce_info_get_object_path(info), synce_info_get_name(info), error->message);
-    g_object_unref(dev_proxy);
-    goto error_exit;
-  }
-
-  g_object_unref(dev_proxy);
-
-  fd = get_socket_from_dccm(unix_path);
-  g_free(unix_path);
-
-  if (fd < 0) {
-    synce_warning("%s: Failed to get file-descriptor from dccm for %s", G_STRFUNC, synce_info_get_object_path(info));
-    goto error_exit;
-  }
-
-  goto exit;
-
-error_exit:
-  if (error != NULL)
-    g_error_free(error);
-
-exit:
-  if (system_bus != NULL)
-    dbus_g_connection_unref (system_bus);
-
-  return fd;
-}
-#endif /* ENABLE_HAL_SUPPORT */
-
-
 HRESULT rapi_context_connect(RapiContext* context)
 {
     HRESULT result = E_FAIL;
@@ -551,7 +489,7 @@ HRESULT rapi_context_connect(RapiContext* context)
     /*
      *  original dccm or vdccm
      */
-    if (transport == NULL || ( strcmp(transport, "odccm") != 0 && strcmp(transport, "hal") != 0 && strcmp(transport, "udev") != 0 ) ) {
+    if (transport == NULL || ( strcmp(transport, "odccm") != 0 && strcmp(transport, "udev") != 0 ) ) {
         if (!synce_info_get_dccm_pid(info))
         {
             synce_error("DCCM PID entry not found for current connection");
@@ -613,17 +551,11 @@ HRESULT rapi_context_connect(RapiContext* context)
         context->rapi_ops = &rapi_ops;
     } else {
         /*
-         *  odccm, synce-hal, udev, or proxy ?
+         *  odccm, udev, or proxy ?
          */
 #if ENABLE_ODCCM_SUPPORT
         if (strcmp(transport, "odccm") == 0) {
             synce_socket_take_descriptor(context->socket, get_connection_from_odccm(info));
-        }
-        else
-#endif
-#if ENABLE_HAL_SUPPORT
-        if (strcmp(transport, "hal") == 0) {
-            synce_socket_take_descriptor(context->socket, get_connection_from_hal(info));
         }
         else
 #endif

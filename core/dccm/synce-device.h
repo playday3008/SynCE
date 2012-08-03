@@ -46,7 +46,6 @@ GType synce_device_get_type (void);
 #define SYNCE_IS_DEVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), SYNCE_TYPE_DEVICE))
 #define SYNCE_DEVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), SYNCE_TYPE_DEVICE, SynceDeviceClass))
 
-#ifndef USE_HAL
 gboolean synce_device_get_name (SynceDevice *self, gchar **name, GError **error);
 gboolean synce_device_get_platform_name (SynceDevice *self, gchar **platform_name, GError **error);
 gboolean synce_device_get_model_name (SynceDevice *self, gchar **model_name, GError **error);
@@ -58,7 +57,6 @@ gboolean synce_device_get_iface_address (SynceDevice *self, gchar **iface_addres
 gboolean synce_device_get_guid (SynceDevice *self, gchar **guid, GError **error);
 gboolean synce_device_get_current_partner_id (SynceDevice *self, guint *cur_partner_id, GError **error);
 gboolean synce_device_get_password_flags (SynceDevice *self, gchar **pw_flag, GError **error);
-#endif /* USE_HAL */
 
 G_END_DECLS
 

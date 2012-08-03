@@ -93,11 +93,6 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
   gchar *guid = NULL, *name = NULL, *platform_name = NULL, *model_name = NULL;
   guint os_major = 0, os_minor = 0, version = 0, cpu_type = 0, cur_partner_id = 0, id = 0;
   const guchar *p = buf, *end_ptr = buf + length;
-#ifdef USE_HAL
-  DBusError error;
-
-  dbus_error_init(&error);
-#endif
 
   priv->state = CTRL_STATE_GOT_INFO;
 
@@ -186,11 +181,7 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 		NULL);
   g_free(addr);
 
-#ifdef USE_HAL
-  synce_device_set_hal_props(SYNCE_DEVICE(self));
-#else
   synce_device_dbus_init(SYNCE_DEVICE(self));
-#endif
 
   if (priv->pw_key != 0)
     {
@@ -204,19 +195,6 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
       priv->state = CTRL_STATE_CONNECTED;
       g_timeout_add((DCCM_PING_INTERVAL * 1000), synce_device_legacy_send_ping, self);
     }
-
-#ifdef USE_HAL
-  /* tell hal device is ready */
-
-  g_debug("%s: notify hal that device is ready to be advertised", G_STRFUNC);
-
-  if (!(libhal_device_addon_is_ready(priv->hal_ctx,
-				     priv->device_path,
-				     &error))) {
-    g_critical("%s: failed to notify hal that device is ready: %s: %s", G_STRFUNC, error.name, error.message);
-    dbus_error_free(&error);
-  }
-#endif
 
   goto OUT;
 

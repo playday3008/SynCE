@@ -1,18 +1,6 @@
-halfdi = 10-synce.fdi
-
 syncedatadir = ${datadir}/@PACKAGE_NAME@
 syncedata_DATA = synceconnector.py
 
-if USE_HAL
-haldatadir = ${datadir}/hal/fdi/policy/20thirdparty
-haldata_DATA = $(halfdi)
-
-halscriptsdir = @hal_addon_dir@
-halscripts_SCRIPTS = \
-	hal-synce-rndis \
-	hal-synce-serial 
-
-else
 
 udevrulesdir = @udev_dir@/rules.d
 udevrules_DATA = 85-synce.rules
@@ -27,7 +15,4 @@ syncedata_SCRIPTS = \
 	udev-synce-serial
 
 bin_SCRIPTS = synce-serial
-endif
-
-EXTRA_DIST = $(halfdi)
 

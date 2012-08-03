@@ -6,15 +6,11 @@ libexec_PROGRAMS = dccm synce-serial-chat
 BUILT_SOURCES = synce-device-signals-marshal.h \
 		synce-device-signals-marshal.c
 
-if USE_HAL
-BUILT_SOURCES += synce-device-hal-glue.h
-else
 BUILT_SOURCES += synce-device-udev-glue.h \
 		synce-device-manager-control-signals-marshal.h \
 		synce-device-manager-control-signals-marshal.c \
 		synce-device-manager-control-glue.h \
 		synce-device-manager-glue.h
-endif
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -27,12 +23,8 @@ dccm_SOURCES = $(BUILT_SOURCES) \
 		synce-errors.c synce-errors.h \
 		utils.c utils.h
 
-if USE_HAL
-dccm_SOURCES += main-hal.c
-else
 dccm_SOURCES += main-udev.c synce-device-manager.c synce-device-manager.h \
 		synce-device-manager-control.c synce-device-manager-control.h
-endif
 
 dccm_CPPFLAGS = \
 	-I$(top_srcdir)/lib/utils \
@@ -44,40 +36,25 @@ dccm_LDADD = \
 	$(GLIB_LIBS) \
 	$(DBUS_LIBS)
 
-if USE_HAL
-dccm_CPPFLAGS += $(HAL_CFLAGS)
-dccm_LDADD += $(HAL_LIBS)
-else
 dccm_CPPFLAGS += $(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
 dccm_LDADD += $(GUDEV_LIBS)
-endif
 
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
 EXTRA_DIST = synce-device-signals-marshal.list \
-		hal-interface.xml \
 		udev-interface.xml \
 		synce-device-manager-control-signals-marshal.list \
 		synce-device-manager-control.xml \
 		synce-device-manager.xml \
-		synce-unlock-hal.py \
 		synce-unlock-udev.py
 
 nodist_bin_SCRIPTS = synce-unlock
 
-if USE_HAL
-synce-unlock: synce-unlock-hal.py
-	cp $< $@
-else
 synce-unlock: synce-unlock-udev.py
 	cp $< $@
-endif
 
 clean::
 	-$(RM) synce-unlock
-
-synce-device-hal-glue.h: hal-interface.xml
-	dbus-binding-tool --mode=glib-server --output=$@ --prefix=synce_device $<
 
 synce-device-udev-glue.h: udev-interface.xml
 	dbus-binding-tool --mode=glib-server --output=$@ --prefix=synce_device $<

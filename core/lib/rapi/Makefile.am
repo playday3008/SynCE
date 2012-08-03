@@ -11,14 +11,12 @@ librapi_la_SOURCES = backend_ops_1.c backend_ops_2.c \
 	misc.c irapistream.h irapistream.c \
 	rapi2_api.c
 librapi_la_CFLAGS = -I$(top_srcdir)/lib/utils \
-	@DBUS_CFLAGS@ \
-	@HAL_CFLAGS@
+	@DBUS_CFLAGS@
 librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
 	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
 	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la
 #	$(top_builddir)/lib/utils/libutils.la \
-#	@DBUS_LIBS@ \
-#	@HAL_LIBS@
+#	@DBUS_LIBS@
 
 include_HEADERS = rapi.h \
 		rapitypes.h \

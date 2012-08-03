@@ -6,14 +6,9 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#ifdef USE_HAL
-#include <libhal.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#else /* USE_HAL */
 #if HAVE_GUDEV
 #include <gudev/gudev.h>
 #endif
-#endif /* USE_HAL */
 
 #include <synce.h>
 
@@ -21,11 +16,7 @@
 #include "synce-device-internal.h"
 #include "synce-device-signals-marshal.h"
 
-#ifdef USE_HAL
-#include "synce-device-hal-glue.h"
-#else
 #include "synce-device-udev-glue.h"
-#endif
 
 #include "synce-errors.h"
 
@@ -39,9 +30,7 @@ enum
 {
   PROP_CONNECTION = 1,
   PROP_DEVICE_PATH,
-#ifndef USE_HAL
   PROP_OBJ_PATH,
-#endif
   PROP_IP_ADDRESS,
   PROP_IFACE_ADDRESS,
 
@@ -144,178 +133,6 @@ synce_device_provide_password_impl (SynceDevice *self,
     dbus_g_method_return_error (ctx, error);
 }
 
-#ifdef USE_HAL
-void
-synce_device_set_hal_props(SynceDevice *self)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-
-  gchar *prop_name;
-  DBusError error;
-  dbus_bool_t result;
-
-  dbus_error_init(&error);
-
-  prop_name = "pda.pocketpc.name";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->name,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.platform";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->platform_name,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.model";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->model_name,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.os_major";
-  result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->os_major,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.os_minor";
-  result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->os_minor,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.version";
-  result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->version,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.cpu_type";
-  result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->cpu_type,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.current_partner_id";
-  result = libhal_device_set_property_uint64(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->cur_partner_id,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.guid";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->guid,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.ip_address";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->ip_address,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  prop_name = "pda.pocketpc.iface_address";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->iface_address,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  /* for an oddity gnome-volume-manager */
-  prop_name = "pda.pocketpc.hotsync_interface";
-  result = libhal_device_set_property_string(priv->hal_ctx,
-					     priv->device_path,
-					     prop_name,
-					     priv->name,
-					     &error);
-  if (!result) {
-    g_critical("%s: failed to set property %s: %s: %s", G_STRFUNC, prop_name, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  /* register object on hal dbus connection */
-
-  dbus_g_connection_register_g_object (priv->hal_bus,
-                                       priv->device_path,
-				       G_OBJECT (self));
-
-  result = libhal_device_claim_interface(priv->hal_ctx,
-					 priv->device_path,
-					 "org.freedesktop.Hal.Device.Synce",
-					 "<method name=\"ProvidePassword\">"
-					 "  <annotation name=\"org.freedesktop.DBus.GLib.Async\" value=\"\"/>"
-					 "  <arg direction=\"in\" name=\"password\" type=\"s\"/>"
-					 "  <arg direction=\"out\" type=\"b\"/>"
-					 "</method>"
-					 "<method name=\"RequestConnection\">"
-					 "  <annotation name=\"org.freedesktop.DBus.GLib.Async\" value=\"\"/>"
-					 "  <arg direction=\"out\" name=\"unix_socket_path\" type=\"s\"/>"
-					 "</method>",
-					 &error);
-  if (!result) {
-    g_critical("%s: failed to claim dbus interface: %s: %s", G_STRFUNC, error.name, error.message);
-    dbus_error_free(&error);
-  }
-
-  dbus_error_free(&error);
-}
-#else /* USE_HAL */
 void
 synce_device_dbus_init(SynceDevice *self)
 {
@@ -357,7 +174,6 @@ synce_device_dbus_init(SynceDevice *self)
 
   return;
 }
-#endif /* USE_HAL */
 
 static const gchar *
 get_password_flag_text(SynceDevicePasswordFlags flag)
@@ -395,28 +211,11 @@ void
 synce_device_change_password_flags (SynceDevice *self,
 				    SynceDevicePasswordFlags new_flag)
 {
-#ifdef USE_HAL
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  DBusError dbus_error;
-  dbus_error_init(&dbus_error);
-#endif
   const gchar *prop_str = NULL;
 
   g_object_set (self, "password-flags", new_flag, NULL);
   prop_str = get_password_flag_text(new_flag);
   g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_PASSWORD_FLAGS_CHANGED], 0, prop_str);
-
-#ifdef USE_HAL
-  if (!(libhal_device_set_property_string(priv->hal_ctx,
-					  priv->device_path,
-					  "pda.pocketpc.password",
-					  prop_str,
-					  &dbus_error)))
-    {
-      g_critical("%s: failed to set property \"pda.pocketpc.password\": %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
-      dbus_error_free(&dbus_error);
-    }
-#endif
 
   return;
 }
@@ -434,7 +233,6 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
   g_hash_table_remove (priv->requests, &id);
 }
 
-#ifndef USE_HAL
 
 #if HAVE_GUDEV
 static void
@@ -571,7 +369,6 @@ synce_device_get_password_flags(SynceDevice *self,
   *pw_flag = g_strdup (pw_text);
   return TRUE;
 }
-#endif /* USE_HAL */
 
 /* class functions */
 
@@ -608,29 +405,6 @@ synce_device_init (SynceDevice *self)
   priv->pw_key = 0;
   priv->pw_ctx = NULL;
 
-#ifdef USE_HAL
-  /* hal context setup */
-
-  DBusError dbus_error;
-  dbus_error_init(&dbus_error);
-
-  priv->hal_ctx = libhal_ctx_init_direct(&dbus_error);
-  if (!(priv->hal_ctx)) {
-    g_critical("%s: failed to initialize direct hal context: %s: %s", G_STRFUNC, dbus_error.name, dbus_error.message);
-    dbus_error_free (&dbus_error);
-    goto exit;
-  }
-
-  dbus_connection_setup_with_g_main(libhal_ctx_get_dbus_connection(priv->hal_ctx), NULL);
-
-  priv->hal_bus = dbus_connection_get_g_connection(libhal_ctx_get_dbus_connection(priv->hal_ctx));
-
-  if (!libhal_ctx_set_user_data (priv->hal_ctx, self)) {
-    g_critical("%s: failed to set user data for hal_ctx", G_STRFUNC);
-    goto exit;
-  }
-
-#else /* USE_HAL */
   priv->obj_path = NULL;
 
 #if HAVE_GUDEV
@@ -644,7 +418,6 @@ synce_device_init (SynceDevice *self)
     g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
   }
 #endif
-#endif /* USE_HAL */
 
 exit:
 
@@ -665,16 +438,9 @@ synce_device_dispose (GObject *obj)
   g_io_stream_close(G_IO_STREAM(priv->conn), NULL, NULL);
   g_object_unref(priv->conn);
 
-#ifdef USE_HAL
-  if (priv->hal_ctx) {
-    libhal_ctx_shutdown(priv->hal_ctx, NULL);
-    libhal_ctx_free(priv->hal_ctx);
-  }
-#else /* USE_HAL */
 #if HAVE_GUDEV
   g_object_unref(priv->gudev_client);
 #endif
-#endif /* USE_HAL */
 
   g_hash_table_destroy (priv->requests);
 
@@ -694,9 +460,7 @@ synce_device_finalize (GObject *obj)
   g_free (priv->name);
   g_free (priv->platform_name);
   g_free (priv->model_name);
-#ifndef USE_HAL
   g_free (priv->obj_path);
-#endif
   g_free (priv->ip_address);
   g_free (priv->iface_address);
   G_OBJECT_CLASS (synce_device_parent_class)->finalize (obj);
@@ -718,11 +482,9 @@ synce_device_get_property (GObject    *obj,
   case PROP_DEVICE_PATH:
     g_value_set_string (value, priv->device_path);
     break;
-#ifndef USE_HAL
   case PROP_OBJ_PATH:
     g_value_set_string (value, priv->obj_path);
     break;
-#endif
   case PROP_IP_ADDRESS:
     g_value_set_string (value, priv->ip_address);
     break;
@@ -810,12 +572,10 @@ synce_device_set_property (GObject      *obj,
     g_debug("%s: running for device %s", G_STRFUNC, priv->device_path);
 
     break;
-#ifndef USE_HAL
   case PROP_OBJ_PATH:
     g_free (priv->obj_path);
     priv->obj_path = g_value_dup_string (value);
     break;
-#endif
   case PROP_GUID:
     g_free (priv->guid);
     priv->guid = g_value_dup_string (value);
@@ -887,7 +647,7 @@ synce_device_class_init (SynceDeviceClass *klass)
   g_object_class_install_property (obj_class, PROP_CONNECTION, param_spec);
 
   param_spec = g_param_spec_string ("device-path", "Device path",
-				    "Hal or sysfs path to the device.",
+				    "Sysfs path to the device.",
 				    NULL,
 				    G_PARAM_CONSTRUCT_ONLY |
 				    G_PARAM_READWRITE |
@@ -895,7 +655,6 @@ synce_device_class_init (SynceDeviceClass *klass)
 				    G_PARAM_STATIC_BLURB);
   g_object_class_install_property (obj_class, PROP_DEVICE_PATH, param_spec);
 
-#ifndef USE_HAL
   param_spec = g_param_spec_string ("object-path", "DBus object path",
 				    "The device' object path on DBus.",
 				    NULL,
@@ -903,7 +662,6 @@ synce_device_class_init (SynceDeviceClass *klass)
 				    G_PARAM_STATIC_NICK |
 				    G_PARAM_STATIC_BLURB);
   g_object_class_install_property (obj_class, PROP_OBJ_PATH, param_spec);
-#endif
 
   param_spec = g_param_spec_string ("ip-address", "IP address",
 				    "The device' IP address.",

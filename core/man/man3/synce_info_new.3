@@ -64,8 +64,8 @@ or the deprecated
 the current active device is selected. This is usually the last device connected, specifically that described in the active_connection file which is by default
 in the ~/.synce/ directory. With 
 .BR odccm (1)
-the first device connected will be returned. With 
-.BR synce-hal
+the first device connected will be returned. With core
+.BR dccm
 this depends on the device(s) in question, and should be considered undefined.
 .sp
 This struct should be freed with
@@ -108,8 +108,8 @@ and
 .BR os_minor .
 With 
 .BR odccm (1)
-and
-.BR synce-hal,
+and core
+.BR dccm,
 .BR dccm_pid,
 .BR password,
 .BR key,

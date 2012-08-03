@@ -12,20 +12,9 @@
 #include <string.h>
 #include <dbus/dbus-glib.h>
 
-#if ENABLE_HAL_SUPPORT
-#include <dbus/dbus-glib-lowlevel.h>
-#include <libhal.h>
-#endif
-
 #define DBUS_SERVICE "org.freedesktop.DBus"
 #define DBUS_IFACE   "org.freedesktop.DBus"
 #define DBUS_PATH    "/org/freedesktop/DBus"
-
-#if ENABLE_HAL_SUPPORT
-#define HAL_SERVICE   "org.freedesktop.Hal"
-#define HAL_MGR_PATH  "/org/freedesktop/Hal/Manager"
-#define HAL_MGR_IFACE "org.freedesktop.Hal.Manager"
-#endif
 
 #if ENABLE_UDEV_SUPPORT
 #define DCCM_SERVICE   "org.synce.dccm"
@@ -1571,12 +1560,9 @@ IRAPIEnumDevices_Skip(IRAPIEnumDevices *self, ULONG cElt)
 struct _IRAPIDesktop {
         int refcount;
 
-        /* hal */
+        /* udev */
         DBusGConnection *dbus_connection;
         DBusGProxy *dbus_proxy;
-#if ENABLE_HAL_SUPPORT
-        LibHalContext *hal_ctx;
-#endif
 #if ENABLE_UDEV_SUPPORT
         DBusGProxy *dev_mgr_proxy;
 #endif
@@ -1611,176 +1597,6 @@ IRAPIDesktop_device_disconnected_cb()
 }
 #endif
 
-#if ENABLE_HAL_SUPPORT
-static void
-hal_device_connected_cb(LibHalContext *ctx, const char *udi)
-{
-        IRAPIDesktop *self = libhal_ctx_get_user_data(ctx);
-
-        synce_debug("found device: %s", udi);
-
-
-        IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
-        if (!newdev) {
-                synce_error("failed to allocate IRAPIDevice");
-                return;
-        }
-
-        newdev->obj_path = strdup(udi);
-        newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
-        newdev->status = RAPI_DEVICE_CONNECTED;
-        newdev->refcount = 1;
-
-        self->devices = g_list_append(self->devices, newdev);
-
-        return;
-}
-
-static void
-hal_device_disconnected_cb(LibHalContext *ctx, const char *udi)
-{
-        IRAPIDesktop *self = libhal_ctx_get_user_data(ctx);
-
-        GList *device = self->devices;
-        while (device) {
-                if (strcmp(device->data, udi) == 0)
-                        break;
-
-                device = g_list_next(device);
-        }
-
-        if (!device)
-                return;
-
-        synce_debug("Received device disconnected from hal: %s", udi);
-
-        ((IRAPIDevice*)device->data)->status = RAPI_DEVICE_DISCONNECTED;
-        IRAPIDevice_Release(device->data);
-        self->devices = g_list_delete_link(self->devices, device);
-
-        return;
-}
-
-
-static void
-hal_disconnect(IRAPIDesktop *self)
-{
-        DBusError dbus_error;
-        dbus_error_init(&dbus_error);
-
-        if (!libhal_ctx_shutdown(self->hal_ctx, &dbus_error)) {
-                synce_error("Failed to shutdown hal context: %s: %s", dbus_error.name, dbus_error.message);
-                dbus_error_free(&dbus_error);
-        }
-
-        libhal_ctx_free(self->hal_ctx);
-        self->hal_ctx = NULL;
-
-        GList *device = self->devices;
-        while (device) {
-                if (strncmp(((IRAPIDevice*)device->data)->obj_path, "/org/freedesktop/Hal/", 21) == 0) {
-                        synce_debug("removing device %s", ((IRAPIDevice*)device->data)->obj_path);
-                        ((IRAPIDevice*)device->data)->status = RAPI_DEVICE_DISCONNECTED;
-                        IRAPIDevice_Release((IRAPIDevice*)device->data);
-                        self->devices = g_list_delete_link(self->devices, device);
-                        device = self->devices;
-                        continue;
-                }
-                device = g_list_next(device);
-        }
-}
-
-static void
-hal_connect(IRAPIDesktop *self)
-{
-        DBusError dbus_error;
-        gchar **dev_list = NULL;
-        gint i, num_devices;
-        gchar *udi = NULL;
-
-        dbus_error_init(&dbus_error);
-
-        if (!(self->hal_ctx = libhal_ctx_new())) {
-                synce_error("Failed to get hal context");
-                goto error_exit;
-        }
-
-        if (!libhal_ctx_set_dbus_connection(self->hal_ctx, dbus_g_connection_get_connection(self->dbus_connection))) {
-                synce_error("Failed to set DBus connection for hal context");
-                goto error_exit;
-        }
-
-        if (!libhal_ctx_set_user_data(self->hal_ctx, self)) {
-                synce_error("Failed to set user data for hal context");
-                goto error_exit;
-        }
-
-        if (!libhal_ctx_init(self->hal_ctx, &dbus_error)) {
-                synce_error("Failed to initialise hal context: %s: %s", dbus_error.name, dbus_error.message);
-                goto error_exit;
-        }
-
-        if (!libhal_ctx_set_device_added(self->hal_ctx, hal_device_connected_cb)) {
-                synce_error("Failed to set hal device added callback");
-                goto error_exit;
-        }
-
-        if (!libhal_ctx_set_device_removed(self->hal_ctx, hal_device_disconnected_cb)) {
-                synce_error("Failed to set hal device removed callback");
-                goto error_exit;
-        }
-
-#if 0 /* do we need this ? */
-        if (!libhal_ctx_set_device_property_modified(self->hal_ctx, hal_device_password_status_changed_cb)) {
-                synce_error("Failed to set hal device property modified callback");
-                goto error_exit;
-        }
-#endif
-
-        /* currently connected devices */
-
-        dev_list = libhal_manager_find_device_string_match(self->hal_ctx,
-                                                           "pda.platform",
-                                                           "pocketpc",
-                                                           &num_devices,
-                                                           &dbus_error);
-        if (dbus_error_is_set(&dbus_error)) {
-                synce_error("Failed to obtain list of attached devices: %s: %s", dbus_error.name, dbus_error.message);
-                dbus_error_free(&dbus_error);
-        }
-
-        for (i = 0; i < num_devices; i++) {
-                udi = dev_list[i];
-                synce_debug("found device: %s", udi);
-
-                IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
-                if (!newdev) {
-                        synce_error("failed to allocate IRAPIDevice");
-                        break;
-                }
-
-                newdev->obj_path = strdup(udi);
-                newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
-                newdev->status = RAPI_DEVICE_CONNECTED;
-                newdev->refcount = 1;
-
-                self->devices = g_list_append(self->devices, newdev);
-
-        }
-        libhal_free_string_array(dev_list);
-
-        return;
-
- error_exit:
-        if (dbus_error_is_set(&dbus_error))
-                dbus_error_free(&dbus_error);
-        if (self->hal_ctx) {
-                libhal_ctx_shutdown(self->hal_ctx, NULL);
-                libhal_ctx_free(self->hal_ctx);
-        }
-        return;
-}
-#endif
 
 #if ENABLE_UDEV_SUPPORT
 static void
@@ -1937,29 +1753,6 @@ dbus_name_owner_changed_cb(DBusGProxy *proxy,
 {
         IRAPIDesktop *self = (IRAPIDesktop*)user_data;
 
-#if ENABLE_HAL_SUPPORT
-        if (strcmp(name, HAL_SERVICE) == 0) {
-
-	        /* If this parameter is empty, hal just came online */
-
-                if (strcmp(old_owner, "") == 0) {
-                        synce_debug("%s: hal came online", G_STRFUNC);
-			hal_connect(self);
-
-			return;
-		}
-
-                /* If this parameter is empty, hal just went offline */
-
-                if (strcmp(new_owner, "") == 0) {
-		        g_debug("%s: hal went offline", G_STRFUNC);
-			hal_disconnect(self);
-
-			return;
-		}
-	}
-#endif
-
 #if ENABLE_UDEV_SUPPORT
         if (strcmp(name, DCCM_SERVICE) == 0) {
 
@@ -2001,21 +1794,18 @@ IRAPIDesktop_Init()
 #endif
 
         /*
-           connect to hal, odccm, vdccm ?
-           set up callbacks from hal and odccm 
+           connect to dccm, odccm, vdccm ?
+           set up callbacks from dccm and odccm 
            create initial devices
         */
 
         self->dbus_connection = NULL;
         self->dbus_proxy = NULL;
-#if ENABLE_HAL_SUPPORT
-        self->hal_ctx = NULL;
-#endif
 #if ENABLE_UDEV_SUPPORT
         self->devices = NULL;
 #endif
 
-        /* hal */
+        /* dccm */
 
         GError *error = NULL;
         gboolean has_owner = FALSE;
@@ -2038,22 +1828,6 @@ IRAPIDesktop_Init()
 
         dbus_g_proxy_connect_signal(self->dbus_proxy, "NameOwnerChanged",
                                     G_CALLBACK(dbus_name_owner_changed_cb), self, NULL);
-
-#if ENABLE_HAL_SUPPORT
-        if (!(dbus_g_proxy_call(self->dbus_proxy, "NameHasOwner",
-                                &error,
-                                G_TYPE_STRING, HAL_SERVICE,
-                                G_TYPE_INVALID,
-                                G_TYPE_BOOLEAN, &has_owner,
-                                G_TYPE_INVALID))) {
-                synce_error("%s: Error checking owner of %s: %s", G_STRFUNC, HAL_SERVICE, error->message);
-                g_error_free(error);
-                return E_FAIL;
-        }
-
-        if (has_owner)
-                hal_connect(self);
-#endif
 
 #if ENABLE_UDEV_SUPPORT
         if (!(dbus_g_proxy_call(self->dbus_proxy, "NameHasOwner",
@@ -2081,20 +1855,11 @@ IRAPIDesktop_Uninit()
 {
         /*
            destroy devices
-           remove callbacks from hal and odccm 
-           disconnect from hal, odccm, vdccm ?
+           remove callbacks from dccm and odccm 
+           disconnect from dccm, odccm, vdccm ?
         */
 
         IRAPIDesktop *self = irapi_desktop;
-
-#if ENABLE_HAL_SUPPORT
-        if (self->hal_ctx)
-                hal_disconnect(self);
-#endif
-#if ENABLE_HAL_SUPPORT
-        if (self->dev_mgr_proxy)
-                udev_disconnect(self);
-#endif
 
         dbus_g_proxy_disconnect_signal (self->dbus_proxy, "NameOwnerChanged",
                                   G_CALLBACK(dbus_name_owner_changed_cb), NULL);
