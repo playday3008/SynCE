@@ -39,10 +39,6 @@ if ENABLE_ODCCM_SUPPORT
 synce_trayicon_SOURCES += odccm-client.c odccm-client.h
 endif
 
-if ENABLE_HAL_SUPPORT
-synce_trayicon_SOURCES += hal-client.c hal-client.h
-endif
-
 if ENABLE_UDEV_SUPPORT
 synce_trayicon_SOURCES += udev-client.c udev-client.h
 endif
@@ -57,7 +53,6 @@ synce_trayicon_CPPFLAGS = \
 	$(LIBSYNCE_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
 	$(DBUS_CFLAGS) \
-	$(HAL_CFLAGS) \
 	$(GTOP_CFLAGS) \
 	$(LIBORANGE_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
@@ -71,7 +66,6 @@ synce_trayicon_LDADD = \
 	$(LIBSYNCE_LIBS) \
 	$(LIBRRA_LIBS) \
 	$(DBUS_LIBS) \
-	$(HAL_LIBS) \
 	$(GTOP_LIBS) \
 	$(LIBORANGE_LIBS) \
 	$(NOTIFY_LIBS) \

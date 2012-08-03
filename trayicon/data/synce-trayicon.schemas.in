@@ -33,7 +33,7 @@
       <default>o</default>
       <locale name="C">
         <short>** obsolete ** The dccm implementation used</short>
-        <long>** obsolete ** The dccm implementation used, 'o' for odccm (the default), 'h' for synce-hal, 'v' for vdccm.</long>
+        <long>** obsolete ** The dccm implementation used, 'o' for odccm (the default), 'v' for vdccm.</long>
       </locale>
     </schema>
 

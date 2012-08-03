@@ -127,37 +127,6 @@ AC_DEFINE_UNQUOTED(ENABLE_ODCCM_SUPPORT, $odccm, [Define to 1 if you want odccm 
 AM_CONDITIONAL(ENABLE_ODCCM_SUPPORT, test "x$enable_odccm_support" = "xyes")
 
 dnl
-dnl whether hal dbus support is required
-dnl
-AC_ARG_ENABLE(hal-support,
-              [  --enable-hal-support  enable hal support (requires D-Bus)],
-              enable_hal_support=$enableval, enable_hal_support=no)
-
-if ! test "$enable_hal_support" = "no"; then
-  dnl Check for Hal
-  PKG_CHECK_MODULES(HAL, hal, hal_found=yes, hal_found=no)
-
-  if test "$hal_found" = "no"; then
-    if test "$enable_hal_support" = "auto"; then
-      AC_MSG_NOTICE([Hal not found, building without hal support])
-      enable_hal_support=no
-    else
-      AC_MSG_ERROR([Hal support requested but hal could not be found])
-    fi
-  else
-    AC_MSG_NOTICE([Building with hal support])
-    AC_DEFINE(ENABLE_HAL_SUPPORT, 1, [Define if building with hal support])
-    enable_hal_support=yes
-  fi
-else
-  AC_MSG_NOTICE([Building without hal support])
-fi
-
-if test "$enable_hal_support" = "yes"; then hal=1; else hal=0; fi
-AC_DEFINE_UNQUOTED(ENABLE_HAL_SUPPORT, $hal, [Define to 1 if you want hal support.])
-AM_CONDITIONAL(ENABLE_HAL_SUPPORT, test "x$enable_hal_support" = "xyes")
-
-dnl
 dnl whether dbus support for udev is required
 dnl
 AC_ARG_ENABLE(udev-support,
