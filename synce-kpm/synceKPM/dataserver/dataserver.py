@@ -42,7 +42,6 @@ class DataServer(dbus.service.Object):
         self.deviceIsConnected = False 
 
         self.odccm_device = None
-        self.hal_device = None
         self.udev_device = None
         self.syncEngineRunning = False
 
@@ -76,7 +75,6 @@ class DataServer(dbus.service.Object):
         self._storageInformation = None
 
         self.deviceName   = ""
-        self.deviceHalObjPath = ""
 
 
 
@@ -107,18 +105,6 @@ class DataServer(dbus.service.Object):
             self.onAuthorized()
 
 
-    def hal_password_flags_changed_cb( self, num_changes, properties ):
-        for property in properties:
-            property_name, added, removed = property
-            if property_name == "pda.pocketpc.password":
-                flag = self.hal_device.GetPropertyString("pda.pocketpc.password")
-
-                if flag == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNSET:
-                    self.onAuthorized()
-                if flag == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNLOCKED:
-                    self.onAuthorized()
-
-    
     def udev_password_flags_changed_cb( self, pwflags ):
         if pwflags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_UNSET:
             self.onAuthorized()
@@ -225,78 +211,6 @@ class DataServer(dbus.service.Object):
         #pass
 
 
-    def hal_device_connected_cb(self, obj_path, alreadyConnected=False ):
-        deviceObject = dbus.SystemBus().get_object("org.freedesktop.Hal",obj_path)
-        device = dbus.Interface(deviceObject,"org.freedesktop.Hal.Device")
-
-        if device.PropertyExists("pda.pocketpc.connection_blocked"):
-            if device.GetPropertyInteger("pda.pocketpc.connection_blocked") == 1:
-                device = None
-                print "\n\nPlease disable your firewall. Problem with outgoing connection\n\n"
-                return 
-            if device.GetPropertyInteger("pda.pocketpc.connection_blocked") == 2:
-                device = None
-                print "\n\nPlease disable your firewall. Problem with incoming connection\n\n"
-                return 
-
-        if not device.PropertyExists("pda.pocketpc.name"):
-            device = None
-            return
-        self.hal_device = device
-        self.deviceHalObjPath = obj_path
-
-        self.hal_device_synce = dbus.Interface(deviceObject,"org.freedesktop.Hal.Device.Synce")
-
-        self.deviceName = self.hal_device.GetPropertyString("pda.pocketpc.name")
-        self.deviceModelName = self.hal_device.GetPropertyString("pda.pocketpc.model")
-
-        self.deviceConnected(self.deviceName,alreadyConnected)
-
-        os_major = self.hal_device.GetPropertyInteger("pda.pocketpc.os_major")
-        os_minor = self.hal_device.GetPropertyInteger("pda.pocketpc.os_minor")
-        __deviceOsVersion=[os_major,os_minor]
-        self.deviceOsVersion( __deviceOsVersion )
-
-        #Start listening to Hal for changes in the status of authorization
-        self._sm_hal_password_flags_changed = self.hal_device.connect_to_signal("PropertyModified", self.hal_password_flags_changed_cb)
-
-        #self.onConnect()
-
-        flags = self.hal_device.GetPropertyString("pda.pocketpc.password")
-        
-        if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE:
-            #This means the WM5 style
-            #self.sendMessage(ACTION_PASSWORD_NEEDED)
-            self.UnlockDeviceViaHost()
-            return 
-
-        if flags == synceKPM.constants.SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE:
-            #print "Dealing with a WM6 phone, user must unlock device on device itself"
-            #self.sendMessage(ACTION_PASSWORD_NEEDED_ON_DEVICE)
-            self.UnlockDeviceViaDevice()
-            return 
-
-        #If the device is not locked at all, then we can build up rapi connections
-        #and notify all listeners. This is done by the onAuthorized method.
-        self.onAuthorized()
-
-        #pass
-
-
-    def hal_device_disconnected_cb(self, obj_path):
-        if obj_path == self.deviceHalObjPath:
-            print "disconnecting device ", self.deviceName , " obj_path = ", obj_path
-            self.deviceHalObjPath = ""
-            self.deviceDisconnected( self.deviceName )
-            self.hal_device = None
-            self.hal_device_synce = None
-            self.deviceName   = ""
-            self.deviceIsConnected = False
-            self._programList = []
-        pass
-
-
-
     def onAuthorized(self):
         #Only now the device is actually connected!!
         self.deviceAuthorized()
@@ -306,8 +220,6 @@ class DataServer(dbus.service.Object):
 
         if self.udev_device != None:
             self.DeviceModel( self.udev_device.GetModelName() )
-        elif self.hal_device != None:
-            self.DeviceModel( self.hal_device.GetPropertyString("pda.pocketpc.model") )
         else:
             self.DeviceModel( self.odccm_device.GetModelName() )
         
@@ -608,23 +520,6 @@ class DataServer(dbus.service.Object):
             pass
 
 
-        # connect to Hal device manager
-
-        hal_manager = None
-        try:
-            hal_manager = dbus.Interface(dbus.SystemBus().get_object("org.freedesktop.Hal", "/org/freedesktop/Hal/Manager"), "org.freedesktop.Hal.Manager")
-            self._sm_hal_device_connected = hal_manager.connect_to_signal("DeviceAdded", self.hal_device_connected_cb)
-            self._sm_hal_device_disconnected = hal_manager.connect_to_signal("DeviceRemoved", self.hal_device_disconnected_cb)
-
-        except:
-            print "Problems connecting to Hal, is it running ?"
-
-        if hal_manager != True:
-            obj_paths = hal_manager.FindDeviceStringMatch("pda.platform", "pocketpc")
-            if len(obj_paths) > 0:
-                self.hal_device_connected_cb(obj_paths[0], True)
-
-
         try:
             self.busConn.get_object("org.synce.SyncEngine", "/org/synce/SyncEngine")
             self.handleSyncEngineStatusChange( True, True ) 
@@ -834,10 +729,6 @@ class DataServer(dbus.service.Object):
     def processAuthorization(self, password):
         if self.udev_device != None:
             self.udev_device.ProvidePassword( password )
-            return
-
-        if self.hal_device != None:
-            self.hal_device_synce.ProvidePassword( password )
             return
 
         self.odccm_device.ProvidePassword( password )
