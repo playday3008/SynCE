@@ -13,6 +13,7 @@ import dbus
 import os.path
 import config
 import re
+import logging
 
 
 ODCCM_DEVICE_PASSWORD_FLAG_SET     = 1
@@ -102,7 +103,8 @@ def Authorize(devpath,device,config):
 		else:
 			rc = 3
 	else:
-		print "auth: auth prog %s does not exist" % clist[0]
+		logger = logging.getLogger("syncengine.auth.Authorize")
+		logger.warning("auth: auth prog %s does not exist", clist[0])
 		rc = 3
 
 	return rc

@@ -1193,4 +1193,7 @@ Use new udev based dccm
 -----------------------
 Remove obsolete Hal code
 
+06/08/2012 - Mark Ellis
+-----------------------
+convert some print statements for error messages to use logger
 

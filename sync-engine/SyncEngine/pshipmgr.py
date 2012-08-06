@@ -1014,7 +1014,7 @@ class Partnership:
 			pickle.dump(self.info, f, pickle.HIGHEST_PROTOCOL)
 			f.close()
 		except Exception, e:
-			print "CreateNewBinding: Failed to save sync info: ", e
+			self.logger.error("CreateNewBinding: Failed to save sync info: ", e)
 			return False
 		
 		# mark us as successfully bound.
