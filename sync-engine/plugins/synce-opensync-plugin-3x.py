@@ -67,7 +67,7 @@ import threading
 import time
 import sys
 import logging
-import opensync
+opensync = __import__('opensync1')
 import array
 
 SYNC_ITEM_CALENDAR  = 0
@@ -250,7 +250,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 		
 		self.objtype,self.format = SUPPORTED_ITEM_TYPES[item]
 		opensync.ObjTypeSinkCallbacks.__init__(self, self.objtype)
-		self.sink.add_objformat(self.format)
+		self.sink.add_objformat(opensync.ObjFormatSink(self.format))
 
 	#
 	# connect

@@ -1197,3 +1197,7 @@ Remove obsolete Hal code
 -----------------------
 convert some print statements for error messages to use logger
 
+10/08/2012 - Mark Ellis
+-----------------------
+correct setting of objformat
+use python module opensync1 instead of opensync
