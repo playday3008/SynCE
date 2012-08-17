@@ -1201,3 +1201,8 @@ convert some print statements for error messages to use logger
 -----------------------
 correct setting of objformat
 use python module opensync1 instead of opensync
+
+17/08/2012 - Mark Ellis
+-----------------------
+Opensync python plugin has become an external module in 0.3x,
+modify our plugin to match

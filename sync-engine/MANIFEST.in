@@ -6,3 +6,4 @@ graft config
 include COPYING
 graft doc
 include plugins/*README
+include plugins/*xml

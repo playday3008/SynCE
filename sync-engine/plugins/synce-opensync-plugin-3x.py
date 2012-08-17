@@ -426,13 +426,3 @@ def discover(info):
 	info.version.plugin = "synce-opensync-plugin"
 	intermediary.Disconnect()
 
-#
-# get_sync_info
-#
-# Provide information about the plugin to Opensync
-
-def get_sync_info(plugin):
-	plugin.name = "synce-opensync-plugin"
-	plugin.longname = "Plugin to synchronize with Windows Mobile 5/6 devices"
-	plugin.description = "Developed by Dr J A Gow 2007 for Opensync version >= 0.30"
-	plugin.config_type = opensync.PLUGIN_NO_CONFIGURATION

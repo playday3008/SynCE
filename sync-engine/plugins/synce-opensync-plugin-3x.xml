@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<ExternalPlugin version="1">
+ <Name>synce-opensync-plugin</Name>
+ <LongName>Plugin to synchronize with Windows Mobile 5/6 devices</LongName>
+ <Description>Developed by Dr J A Gow 2007 for Opensync version >= 0.30</Description>
+
+ <!-- NO_CONFIGURATION, OPTIONAL_CONFIGURATION, or NEEDS_CONFIGURATION
+      This element is not required, and if not present, opensync will
+      default to NEEDS_CONFIGURATION.
+ -->
+ <ConfigType>NO_CONFIGURATION</ConfigType>
+
+ <!--
+    Usage: osync1_python_module modulename pipename
+
+    Modulename is the name, without the .py extension, of your python
+    script module, which is installed in the python-plugins/ directory.
+    This name will be used to import your module.
+
+    Pipename is given by opensync during setup for communication with
+    the engine, and you should simply use the %s placeholder.
+ -->
+ <ExternalCommand>osync1_python_module synce-opensync-plugin-3x %s</ExternalCommand>
+</ExternalPlugin>
