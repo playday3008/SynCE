@@ -26,11 +26,11 @@
 
             <xsl:for-each select="(C1:FirstName | C1:LastName | C1:MiddleName | C1:Suffix | C1:Title)[position()=1]">
                 <Name>
-                    <xsl:for-each select="../C1:FirstName">
-                        <FirstName><xsl:value-of select="."/></FirstName>
-                    </xsl:for-each>
                     <xsl:for-each select="../C1:LastName">
                         <LastName><xsl:value-of select="."/></LastName>
+                    </xsl:for-each>
+                    <xsl:for-each select="../C1:FirstName">
+                        <FirstName><xsl:value-of select="."/></FirstName>
                     </xsl:for-each>
                     <xsl:for-each select="../C1:MiddleName">
                         <Additional><xsl:value-of select="."/></Additional>

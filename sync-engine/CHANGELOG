@@ -1206,3 +1206,8 @@ use python module opensync1 instead of opensync
 -----------------------
 Opensync python plugin has become an external module in 0.3x,
 modify our plugin to match
+
+21/08/2012 - Mark Ellis
+-----------------------
+* SyncEngine/formats30/contact-from-airsync.xsl - re-order
+  FirstName and LastName elements for opensync
