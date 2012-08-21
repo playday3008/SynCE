@@ -272,14 +272,14 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	# items
 	#
 
-	def get_changes(self, info, ctx):
+	def get_changes(self, info, ctx, slow_sync):
 		
 		intermediary = intermediaries[0]
 		
 		intermediary.logger.info("Getting changes for item %s" % self.sink.get_name())
 		
 		prefill = []
-		if self.sink.get_slowsync():
+		if slow_sync:
 			intermediary.logger.info("slow sync requested for item %s" % self.sink.get_name())
 			prefill.append(TYPETONAMES[self.sink.get_name()])
 			
@@ -403,9 +403,18 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 def initialize(info):
 	logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 	intermediaries.append(EngineIntermediary())
-	info.add_objtype(ItemSink(SYNC_ITEM_CONTACTS).sink)
+
+	# save the first sink to return from initialise, this is
+	# then passed as userdata in the python module for the
+	# "Main" sink to do it's work
+	# *** is this the correct way to do this ? ***
+	sink = ItemSink(SYNC_ITEM_CONTACTS)
+	info.add_objtype(sink.sink)
+
 	info.add_objtype(ItemSink(SYNC_ITEM_CALENDAR).sink)
 	info.add_objtype(ItemSink(SYNC_ITEM_TASKS).sink)
+
+	return sink
 
 #
 # discover
@@ -418,10 +427,25 @@ def discover(info):
 	intermediary = intermediaries[0]
 	intermediary.Connect()
 	SyncTypes = intermediary.engine.GetSynchronizedItemTypes()
+
+	#create a blank config
+	config = opensync.PluginConfig()
+
 	for sink in info.objtypes:
 		for wmtype in SyncTypes:
 			if OBJ_TYPE_TO_ITEM_TYPE[sink.get_name()] == wmtype:
 				sink.available = True
+
+				# create a new resource and add it to the config
+				res = opensync.PluginResource()
+				item_type = OBJ_TYPE_TO_ITEM_TYPE[sink.get_name()]
+				res.add_objformat_sink(opensync.ObjFormatSink(SUPPORTED_ITEM_TYPES[item_type][1]))
+				res.objtype = sink.name
+				res.enabled = True
+				config.add_resource(res)
+
+	info.config = config
+
 	info.version = opensync.Version()
 	info.version.plugin = "synce-opensync-plugin"
 	intermediary.Disconnect()

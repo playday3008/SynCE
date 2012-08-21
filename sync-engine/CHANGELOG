@@ -1211,3 +1211,7 @@ modify our plugin to match
 -----------------------
 * SyncEngine/formats30/contact-from-airsync.xsl - re-order
   FirstName and LastName elements for opensync
+* plugins/synce-opensync-plugin-3x.py - slow-sync is now passed
+  as an arguement, not as a property of the sink; return a sink
+  object from initialize() to act as the "Main" sink for the
+  opensync engine; build a config in discover()
