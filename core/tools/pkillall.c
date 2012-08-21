@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
   if (!CeKillAllApps())
   {
-    fprintf(stderr,"%s: CeKillAllApps failed\n",argv[0]);
+    fprintf(stderr,"%s: CeKillAllApps failed: %s: %s\n",argv[0], synce_strerror(CeGetLastError()), synce_strerror(CeRapiGetError()));
     result = 2;
     goto exit;
   }

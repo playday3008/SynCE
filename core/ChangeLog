@@ -1,3 +1,7 @@
+2012-08-21  Mark Ellis  <mark@mpellis.org.uk>
+
+	* tools/pkillall.c - report error codes from CeKillAllApps
+
 2012-07-02  Mark Ellis  <mark@mpellis.org.uk>
 
 	* remove obsolete hal code
