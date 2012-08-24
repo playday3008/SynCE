@@ -121,7 +121,7 @@ class EngineIntermediary:
 
 	def __init__(self):
         	
-		self.logger         = logging.getLogger("SynCE")
+		self.logger         = logging.getLogger("SynCE.EngineIntermediary")
         	self.engine         = None
 		self.refcnt_connect = 0
 		self.refcnt_sync    = 0
@@ -135,11 +135,11 @@ class EngineIntermediary:
 		gobject.threads_init()
 		dbus.mainloop.glib.threads_init()
 	
-		self.logger.info("Intermediary init complete")
+		self.logger.debug("init complete")
 
 	def _EventLoopEntry(self):
 		
-		self.logger.info("Event loop starting")
+		self.logger.debug("Event loop starting")
         	self.EventLoop = gobject.MainLoop()
 		self.EventLoopStartEvent.set()
         	self.EventLoop.run()
@@ -172,7 +172,7 @@ class EngineIntermediary:
 			self.ConnectEvent.set()
 			
 		except Exception, e:
-			self.logger.error("Connection failed. Unable to connect to running SyncEngine")
+			self.logger.error("Connection failed. Unable to connect to running SyncEngine: %s", e)
 			self.ConnectEvent.set()
 			raise
 
@@ -191,12 +191,12 @@ class EngineIntermediary:
 					self.ConnectEvent.wait()
         				thread.start_new_thread(self._EventLoopEntry,())
 					self.EventLoopStartEvent.wait()
-					self.logger.debug("connection complete")
+					self.logger.info("connection complete")
 				except Exception:
 					self.logger.error("Connection failed.")
 					raise
 		self.refcnt_connect += 1
-		self.logger.error("connect exit")
+		self.logger.debug("connect exit")
 	
 	def Disconnect(self):
 		if self.refcnt_connect > 0:
@@ -249,6 +249,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	def __init__(self, item):
 		
 		self.objtype,self.format = SUPPORTED_ITEM_TYPES[item]
+		self.logger = logging.getLogger("SynCE.ItemSink("+self.objtype+")")
 		opensync.ObjTypeSinkCallbacks.__init__(self, self.objtype)
 		self.sink.add_objformat(opensync.ObjFormatSink(self.format))
 
@@ -276,23 +277,23 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 		
 		intermediary = intermediaries[0]
 		
-		intermediary.logger.info("Getting changes for item %s" % self.sink.get_name())
+		self.logger.info("Getting changes for item %s" % self.sink.get_name())
 		
 		prefill = []
 		if slow_sync:
-			intermediary.logger.info("slow sync requested for item %s" % self.sink.get_name())
+			self.logger.info("slow sync requested for item %s" % self.sink.get_name())
 			prefill.append(TYPETONAMES[self.sink.get_name()])
 			
 		intermediary.AcquireChanges()	
 		
 	        if len(prefill) > 0:
 			if intermediary.TriggerPrefill(prefill) == 0:
-				intermediary.logger.error("prefill failed")
+				self.logger.error("prefill failed")
 
-	        intermediary.logger.debug("requesting remote changes for %s objects" %self.sink.get_name())
+	        self.logger.debug("requesting remote changes for %s objects" %self.sink.get_name())
 		t = OBJ_TYPE_TO_ITEM_TYPE[self.sink.get_name()]
         	changesets = intermediary.engine.GetRemoteChanges([t])
-        	intermediary.logger.debug("got %d changesets", len(changesets))
+        	self.logger.debug("got %d changesets", len(changesets))
 
 		acks = {}	
 			
@@ -304,7 +305,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 			item_type = OBJ_TYPE_TO_ITEM_TYPE[self.sink.get_name()]
 			changes = changesets[item_type]
 		
-        		intermediary.logger.debug("processing changes for item type %d" % item_type)
+        		self.logger.debug("processing changes for item type %d" % item_type)
 
                 	acks[item_type] = []
 
@@ -323,20 +324,20 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 				osdata.set_objtype(self.sink.get_name())
                        		change.set_data(osdata)
 				
-				intermediary.logger.debug("reporting change")
+				self.logger.debug("reporting change")
 				ctx.report_change(change)
-				intermediary.logger.debug("change reported")
+				self.logger.debug("change reported")
 				
                     		acks[item_type].append(array.array('B',guid).tostring())
             	else:
-                	intermediary.logger.debug("no changes for item type %d" % item_type)
+                	self.logger.debug("no changes for item type %d" % item_type)
 
 		if acks!={}:
-            		intermediary.logger.debug("acknowledging remote changes for item type %d", item_type)
+            		self.logger.debug("acknowledging remote changes for item type %d", item_type)
             		intermediary.engine.AcknowledgeRemoteChanges(acks)
-	    		intermediary.logger.debug("acknowledgement complete")
+	    		self.logger.debug("acknowledgement complete")
 			
-		intermediary.logger.debug("exitting get_changeinfo")
+		self.logger.debug("exiting get_changeinfo")
 	
 	#
 	# commit
@@ -347,7 +348,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	def commit(self, info, ctx, chg):
 		intermediary = intermediaries[0]
 		
-		intermediary.logger.debug("commit called for item %s with change type %d", chg.uid, chg.changetype)
+		self.logger.debug("commit called for item %s with change type %d", chg.uid, chg.changetype)
 
         	if chg.objtype in OBJ_TYPE_TO_ITEM_TYPE:
                 
@@ -371,7 +372,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 	
 	def committed_all(self, info, ctx):
 		intermediary = intermediaries[0]
-		intermediary.logger.info("All SynCE items committed")
+		self.logger.info("All SynCE items committed")
 		intermediary.TransmitChanges()
 		
 	#
@@ -392,7 +393,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 
 	def sync_done(self, info, ctx):
 		intermediary = intermediaries[0]
-		intermediary.logger.info("sync_done called!")
+		self.logger.info("sync_done called!")
 
 # 
 # initialize

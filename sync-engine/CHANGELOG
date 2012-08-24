@@ -1220,3 +1220,4 @@ modify our plugin to match
 -----------------------
 * SyncEngine/formats30/contact-{to,from}-airsync.xsl - fix
   telephone conversion with opensync
+* plugins/synce-opensync-plugin-3x.py - logging changes
