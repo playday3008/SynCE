@@ -1215,3 +1215,8 @@ modify our plugin to match
   as an arguement, not as a property of the sink; return a sink
   object from initialize() to act as the "Main" sink for the
   opensync engine; build a config in discover()
+
+24/08/2012 - Mark Ellis
+-----------------------
+* SyncEngine/formats30/contact-{to,from}-airsync.xsl - fix
+  telephone conversion with opensync

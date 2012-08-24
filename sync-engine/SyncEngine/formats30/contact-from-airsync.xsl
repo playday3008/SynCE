@@ -174,7 +174,7 @@
                 </Telephone>
             </xsl:for-each>
             <xsl:for-each select="C1:CarPhoneNumber[position() = 1]">
-                <Telephone Type="Voice" Location="Car">
+                <Telephone Type="Car">
                     <Content><xsl:value-of select="."/></Content>
                 </Telephone>
             </xsl:for-each>

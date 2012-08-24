@@ -170,7 +170,7 @@
 
             <xsl:for-each select="Telephone">
                  <xsl:choose>
-                     <xsl:when test="@Location='Home' or not(@Location)">
+                     <xsl:when test="@Location='Home'">
                          <xsl:choose>
                              <xsl:when test="position()=1 and (not(@Type) or @Type='Voice')">
                                  <C1:HomePhoneNumber><xsl:value-of select="Content"/></C1:HomePhoneNumber>
@@ -196,14 +196,29 @@
                              </xsl:otherwise>
                          </xsl:choose>
                      </xsl:when>
-                     <xsl:when test="not(@Location)">
-                         <C1:MobilePhoneNumber><xsl:value-of select="current()[@Type='Cellular']/Content"/></C1:MobilePhoneNumber>
-                         <C1:CarPhoneNumber><xsl:value-of select="current()[@Type='Car']/Content"/></C1:CarPhoneNumber>
-                         <C1:PagerNumber><xsl:value-of select="current()[@Type='Pager']/Content"/></C1:PagerNumber>
-                         <C1:AssistnamePhoneNumber><xsl:value-of select="current()[@Type='Assistant']/Content"/></C1:AssistnamePhoneNumber>
-                         <C2:CompanyMainPhone><xsl:value-of select="current()[@Type='Company']/Content"/></C2:CompanyMainPhone>
-                         <C1:RadioPhoneNumber><xsl:value-of select="current()[@Type='Radio']/Content"/></C1:RadioPhoneNumber>
-                     </xsl:when>
+                     <xsl:otherwise> <!-- other type of phone numbers -->
+
+		         <xsl:choose>
+			     <xsl:when test="@Type = 'Cellular'">
+			         <C1:MobilePhoneNumber><xsl:value-of select="Content"/></C1:MobilePhoneNumber>
+                             </xsl:when>
+			     <xsl:when test="@Type = 'Car'">
+			         <C1:CarPhoneNumber><xsl:value-of select="Content"/></C1:CarPhoneNumber>
+                             </xsl:when>
+			     <xsl:when test="@Type = 'Pager'">
+			         <C1:PagerNumber><xsl:value-of select="Content"/></C1:PagerNumber>
+                             </xsl:when>
+			     <xsl:when test="@Type = 'Assistant'">
+			         <C1:AssistantPhoneNumber><xsl:value-of select="Content"/></C1:AssistantPhoneNumber>
+                             </xsl:when>
+			     <xsl:when test="@Type = 'Company'">
+			         <C1:CompanyMainPhone><xsl:value-of select="Content"/></C1:CompanyMainPhone>
+                             </xsl:when>
+			     <xsl:when test="@Type = 'Radio'">
+			         <C1:RadioPhoneNumber><xsl:value-of select="Content"/></C1:RadioPhoneNumber>
+                             </xsl:when>
+                         </xsl:choose>
+                     </xsl:otherwise>
                  </xsl:choose>
             </xsl:for-each>
 
