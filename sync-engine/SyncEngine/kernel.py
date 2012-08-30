@@ -72,7 +72,7 @@ class SyncEngine(dbus.service.Object):
 		
 		self.mainloop = mainloop
 		
-		self.logger = logging.getLogger("engine.syncengine.kernel")
+		self.logger = logging.getLogger("engine.kernel")
 		self.config = configObj
 
 		self.PshipManager = pshipmgr.PartnershipManager(self)

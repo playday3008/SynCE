@@ -25,7 +25,7 @@ import logging
 
 from exceptions import ValueError
 
-logger = logging.getLogger("engine.xmlutil")
+logger = logging.getLogger("engine.characteristics")
 
 class Characteristic:
 	

@@ -108,7 +108,7 @@ class FileSyncConfig(ConfigObject):
 	
 	def __init__(self):
 		ConfigObject.__init__(self)
-		self.logger = logging.getLogger("FileSyncConfig")
+		self.logger = logging.getLogger("engine.config.FileSyncConfig")
 		self.Disabled = 1
 		self.handlers = { "BaseFilePath" : self.validate_BaseFilePath,
 				  "Disable" : self.validate_Disable,
@@ -168,7 +168,7 @@ class FileSyncConfig(ConfigObject):
 class AutoSyncConfig(ConfigObject):
 	def __init__(self):
 		ConfigObject.__init__(self)
-		self.logger = logging.getLogger("AutoSyncConfig")
+		self.logger = logging.getLogger("engine.config.AutoSyncConfig")
 		
 		self.handlers = { "AutoSyncCommand" : self.validate_AutoSyncCommand,
 				  "Disable"         : self.validate_Disable
@@ -203,7 +203,7 @@ class AutoSyncConfig(ConfigObject):
 class GlobalConfig(ConfigObject):
 	def __init__(self):
 		ConfigObject.__init__(self)
-		self.logger = logging.getLogger("GlobalConfig")
+		self.logger = logging.getLogger("engine.config.GlobalConfig")
 		
 		self.handlers = { "SlowSyncDisable" : self.validate_SlowSyncEnable,
 		                  "AuthMethod"      : self.validate_AuthMethod,

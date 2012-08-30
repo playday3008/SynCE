@@ -35,7 +35,7 @@ class PartnershipManager:
 
 	def __init__(self, engine):
 	    
-		self.logger = logging.getLogger("engine.partnerships.Partnerships")
+		self.logger = logging.getLogger("engine.pshipmgr.PartnershipManager")
 		self.engine = engine
 
 		self.current = None
@@ -641,7 +641,7 @@ class Partnership:
 	
 	def __init__(self, config, slot, id, guid, hostname, name, storetype, devicename, rapisession):
 	
-		self.logger = logging.getLogger("engine.partnerships.Partnership")
+		self.logger = logging.getLogger("engine.pshipmgr.Partnership")
 
 		# Partnership identification
 

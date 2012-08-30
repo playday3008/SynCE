@@ -415,7 +415,7 @@ def initialize(info):
 	info.add_objtype(ItemSink(SYNC_ITEM_CALENDAR).sink)
 	info.add_objtype(ItemSink(SYNC_ITEM_TASKS).sink)
 
-	return sink
+	return
 
 #
 # discover
@@ -424,7 +424,7 @@ def initialize(info):
 # can't sync. We interrogate the device here so we actually match what the device
 # partnership is capable of.
 
-def discover(info):
+def discover(info, data):
 	intermediary = intermediaries[0]
 	intermediary.Connect()
 	SyncTypes = intermediary.engine.GetSynchronizedItemTypes()
@@ -448,6 +448,6 @@ def discover(info):
 	info.config = config
 
 	info.version = opensync.Version()
-	info.version.plugin = "synce-opensync-plugin"
+	info.version.plugin = "synce-sync"
 	intermediary.Disconnect()
 

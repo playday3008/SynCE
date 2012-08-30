@@ -12,6 +12,9 @@ import dtd
 import libxml2
 import codec
 import StringIO
+import logging
+
+logger = logging.getLogger("engine.wbxml")
 
 ###############################################################################
 # _processNode
@@ -25,19 +28,19 @@ import StringIO
 
 def _processNode(node,encoder):
 		
-	print "processNode"
-	
+	logger.debug("processNode")
+
 	if node.type == 'element':
 	
-		print "content flag:"
+		logger.debug("content flag:")
 			
 		nocontent = (node.children == None)
 	
 		# We have a tag. Handle attrs later
 	
-		print "pn: get namespace"
+		logger.debug("pn: get namespace")
 		ns=node.ns();
-		print "pn: got namespace"
+		logger.debug("pn: got namespace")
 		if ns!=None:
 			prefix = ns.content
 		else:
@@ -45,7 +48,7 @@ def _processNode(node,encoder):
 			
 		tag = (prefix,str(node.name).strip())
 		
-		print "TAG ",tag
+		logger.debug("TAG %s",tag)
 		encoder.StartTag(tag,False,nocontent)
 			
 		# process the children
@@ -59,13 +62,13 @@ def _processNode(node,encoder):
 	# process node text content
 			
 	elif node.type == 'text':
-		print "text node"
+		logger.debug("text node")
 		encoder.Content(node.content)
 	
 	# process only tags for the moment
 
 	if node.next != None:
-		print "next node - ", node.next.type
+		logger.debug("next node - %s", node.next.type)
 		_processNode(node.next,encoder)
 		
 	return
@@ -139,7 +142,7 @@ def WBXMLToXML(wbxml):
 					curTag.setNs(curNs)
 
 			if e[codec.EN_FLAGS]&2:
-				print "must get attrs"
+				logger.debug("must get attrs")
 			
 			if  not (e[codec.EN_FLAGS]&1):
 				curTag = curTag.parent
@@ -149,13 +152,13 @@ def WBXMLToXML(wbxml):
 				curTag = curTag.parent
 			else:
 				curTag = None
-				print "error: no parent"
+				logger.debug("error: no parent")
 
 		elif e[codec.EN_TYPE] == codec.EN_TYPE_CONTENT:
 			if curTag:
 				curTag.addContent(e[codec.EN_CONTENT])
 			else:
-				print "error: no node"
+				logger.debug("error: no node")
 
 	# and we should have it.
 
@@ -185,14 +188,14 @@ def XMLToWBXML(doc):
 	wbxml = StringIO.StringIO()
 	
 	# get the encoder
-	print "get encoder"
+	logger.debug("get encoder")
 	encoder = codec.WBXMLEncoder(wbxml,dtd.AirsyncDTD)
 
 	# Send the headers and process the doc.
 
-	print "write header"
+	logger.debug("write header")
 	encoder.StartWBXML()
-	print "enter processNode"
+	logger.debug("enter processNode")
 	_processNode(root,encoder)
 	
 	# recover the string and we're done

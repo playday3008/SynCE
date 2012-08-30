@@ -29,7 +29,7 @@ SVCID_INET_HOSTADDRBYNAME = "{0002A803-0000-0000-C000-000000000046}"
 WSAEFAULT = 10014
 WSAHOST_NOT_FOUND = 11001
 
-logger = logging.getLogger("engine.syncengine.dtptserver")
+logger = logging.getLogger("engine.dtptserver")
 
 
 #

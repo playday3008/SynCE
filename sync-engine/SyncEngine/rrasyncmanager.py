@@ -88,7 +88,7 @@ class FileDB:
 		self.db = {}
 		self.dbdel = {}
 		self.dbnew = []
-	        self.logger = logging.getLogger("FileDB")
+	        self.logger = logging.getLogger("engine.rrasyncmanager.FileDB")
 		self.config_dir = pship.pshippath
         	self.config_path = pship.idbpath + "-FILE"
 		self.syncdir = syncdir
@@ -379,7 +379,7 @@ class FileProcessor(Processor):
 		self.SaveDB = False
 		self.readeroids = []
 
-		self.logger = logging.getLogger("FileProcessor")
+		self.logger = logging.getLogger("engine.rrasyncmanager.FileProcessor")
 
 		# Load our initial database
 
@@ -950,7 +950,7 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
 		pyrra.RRASession.__init__(self)
-		self.logger = logging.getLogger("RRAThread")
+		self.logger = logging.getLogger("engine.rrasyncmanager.RRAThread")
 		self.stopping=0
         	self.syncmgr = None
 		self.started = 0
@@ -1104,7 +1104,7 @@ class RRASyncManager:
 	def __init__(self,engine):
 		self.engine = engine
 		self.thread = None
-		self.logger = logging.getLogger("RRASyncManager")
+		self.logger = logging.getLogger("engine.rrasyncmanager.RRASyncManager")
 
 	
 	def StartRRAEventHandler(self):

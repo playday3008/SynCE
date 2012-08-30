@@ -35,7 +35,7 @@ import random
 ###############################################################################
 
 
-logger = logging.getLogger("ItemDB")
+logger = logging.getLogger("engine.syncdb.ItemDB")
 
 class ItemDB:
 	

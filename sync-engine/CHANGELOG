@@ -1221,3 +1221,10 @@ modify our plugin to match
 * SyncEngine/formats30/contact-{to,from}-airsync.xsl - fix
   telephone conversion with opensync
 * plugins/synce-opensync-plugin-3x.py - logging changes
+
+30/08/2012 - Mark Ellis
+-----------------------
+* improve logging
+* plugins/synce-opensync-plugin-3x.py - don't return sink from
+  initialize func, accept optional data parameter in discover,
+  change plugin name to synce-sync

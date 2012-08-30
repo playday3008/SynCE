@@ -17,7 +17,7 @@ import characteristics
 import logging
 import pyrapi2
 
-logger = logging.getLogger("engine.xmlutil")
+logger = logging.getLogger("engine.rapicontext")
 
 QUERY_TYPE_GET      = 0
 QUERY_TYPE_SET      = 1

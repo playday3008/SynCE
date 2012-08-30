@@ -103,7 +103,7 @@ def Authorize(devpath,device,config):
 		else:
 			rc = 3
 	else:
-		logger = logging.getLogger("syncengine.auth.Authorize")
+		logger = logging.getLogger("engine.auth.Authorize")
 		logger.warning("auth: auth prog %s does not exist", clist[0])
 		rc = 3
 
