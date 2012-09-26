@@ -11,6 +11,7 @@ MINOR_TOOLS_LIST = rra-get-types rra-get-ids \
 	rra-contact-to-vcard rra-contact-from-vcard \
 	rra-appointment-from-vevent rra-appointment-to-vevent \
 	rra-task-from-vtodo rra-task-to-vtodo \
+	rra-file-unpack rra-file-pack \
 	rra-timezone
 
 bin_PROGRAMS = synce-matchmaker 
@@ -44,6 +45,9 @@ rra_appointment_from_vevent_SOURCES  = rra-appointment-from-vevent.c
 
 rra_task_to_vtodo_SOURCES    = rra-task-to-vtodo.c
 rra_task_from_vtodo_SOURCES  = rra-task-from-vtodo.c
+
+rra_file_unpack_SOURCES  = rra-file-unpack.c
+rra_file_pack_SOURCES  = rra-file-pack.c
 
 rra_timezone_SOURCES = rra-timezone.c
 

@@ -33,6 +33,7 @@ librra_la_SOURCES = \
 	strv.h             strv.c \
 	syncmgr.h          syncmgr.c \
 	task.h             task.c \
+	file.h             file.c \
 	timezone.h         timezone.c \
 	frontend.h         frontend.c \
 	uint32vector.h     uint32vector.c \

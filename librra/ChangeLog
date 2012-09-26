@@ -1,3 +1,8 @@
+2012-09-26  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add functions and tools for dealing with files sent
+	  over RRA
+
 2012-05-29  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.16 release
