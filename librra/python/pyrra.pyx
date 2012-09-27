@@ -18,6 +18,7 @@ cdef extern from "time.h":
 
 cdef extern from "Python.h":
 	object PyString_FromStringAndSize(char *, int)
+	int PyString_AsStringAndSize(object, char**, Py_ssize_t*)
 	void * PyCObject_AsVoidPtr(object)
 
 cdef extern from "stdlib.h":
@@ -39,6 +40,7 @@ cdef extern from "synce.h":
 	ctypedef uint16_t WCHAR
 	ctypedef uint32_t bool
 	ctypedef WCHAR *  LPCWSTR
+	ctypedef uint32_t DWORD
 	char *wstr_to_utf8(LPCWSTR unicode)
 	LPCWSTR wstr_from_utf8(char * utf8)
 	void wstr_free_string(void *str)
@@ -132,6 +134,10 @@ cdef extern from "../lib/syncmgr.h":
                                        uint32_t type_id,\
                                        uint32_t object_id)
 
+cdef extern from "../lib/file.h":
+	bool rra_file_unpack(uint8_t* data, size_t data_size, DWORD *ftype, char **path, uint8_t **file_content, size_t *file_size)
+	bool rra_file_pack(DWORD ftype, char* path, uint8_t* file_content, size_t file_size, uint8_t **data, size_t *data_size)
+
 
 #
 # Public constants
@@ -145,6 +151,11 @@ RRA_SYNCMGR_UPDATE_OBJECT  = RRA_SYNCMGR_UPDATE_OBJECT_h
 SYNCMGR_TYPE_EVENT_UNCHANGED = SYNCMGR_TYPE_EVENT_UNCHANGED_h
 SYNCMGR_TYPE_EVENT_CHANGED   = SYNCMGR_TYPE_EVENT_CHANGED_h
 SYNCMGR_TYPE_EVENT_DELETED   = SYNCMGR_TYPE_EVENT_DELETED_h
+
+# from file.h
+RRA_FILE_TYPE_UNKNOWN    = 0x00
+RRA_FILE_TYPE_DIRECTORY  = 0x10
+RRA_FILE_TYPE_FILE       = 0x20
 
 class RRASyncObjectType(object):
 	"""An RRA object type
@@ -489,3 +500,50 @@ cdef class RRASession:
 		This method should be overridden. It is called for each object id
 		passed in a call to PutMultipleObjects."""
 		return False
+
+
+def FileUnpack(data):
+	cdef DWORD ftype
+	cdef char *path
+	cdef uint8_t *file_content
+	cdef size_t file_size
+	cdef uint8_t *tmp_data
+	cdef Py_ssize_t data_len
+
+	path = NULL
+	file_content = NULL
+
+	PyString_AsStringAndSize(data, <char**>&tmp_data, &data_len)
+
+	retval = rra_file_unpack(tmp_data, data_len, &ftype, &path, &file_content, &file_size)
+	if retval != 1:
+		raise RRAError("Failed to unpack file data")
+
+	if file_size > 0:
+		value = PyString_FromStringAndSize(<char *>file_content, file_size)
+	else:
+		value = None
+
+	return (ftype,path,value)
+
+
+def FilePack(filetype,path,data=None):
+	cdef uint8_t *tmp_data
+	cdef Py_ssize_t data_len
+	cdef uint8_t *out_data
+	cdef size_t out_data_len
+
+	out_data = NULL
+	tmp_data = NULL
+	data_len = 0
+
+	if data != None:
+		PyString_AsStringAndSize(data, <char**>&tmp_data, &data_len)
+
+	retval = rra_file_pack(filetype, path, tmp_data, data_len, &out_data, &out_data_len)
+	if retval != 1:
+		raise RRAError("Failed to pack file data")
+
+	value = PyString_FromStringAndSize(<char *>out_data, out_data_len)
+
+	return value

@@ -1,3 +1,7 @@
+2012-09-27  Mark Ellis  <mark@mpellis.org.uk>
+
+	* add python functions for files sent over RRA
+
 2012-09-26  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add functions and tools for dealing with files sent
