@@ -13,7 +13,9 @@ MINOR_TOOLS_LINKS = rra-appointment-to-vevent.1 \
 	rra-subscribe.1 \
 	rra-task-from-vtodo.1 \
 	rra-task-to-vtodo.1 \
-	rra-timezone.1
+	rra-timezone.1 \
+	rra-file-unpack.1 \
+	rra-file-pack.1
 
 CLEANFILES = $(MINOR_TOOLS_LINKS)
 
