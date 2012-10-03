@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h> /* for size_t */
+#include <rapi.h>
+#include "../rra_config.h"
 
 #define GENERATOR_UTF8 1
 
@@ -16,6 +18,24 @@ typedef struct _GeneratorParam
   char* name;
   char** values;
 } GeneratorParam;
+
+typedef struct _GeneratorData
+{
+  CEPROPVAL* start;
+  CEPROPVAL* duration;
+  CEPROPVAL* type;
+  CEPROPVAL* reminder_minutes;
+  CEPROPVAL* reminder_enabled;
+  bool completed;
+  FILETIME completed_time;
+#if ENABLE_RECURRENCE
+  CEPROPVAL* recurrence_pattern;
+  CEPROPVAL* recurrence_timezone;
+  CEPROPVAL* unique;
+#endif
+  const char *codepage;
+} GeneratorData;
+
 
 struct _CEPROPVAL;
 typedef bool (*GeneratorPropertyFunc)(Generator* g, struct _CEPROPVAL* property, void* cookie);

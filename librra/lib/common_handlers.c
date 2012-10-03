@@ -4,7 +4,6 @@
 #include "parser.h"
 #include "generator.h"
 #include "appointment_ids.h"
-#include "task_ids.h"
 #include "strbuf.h"
 #include <rapi.h>
 #include <synce_log.h>
@@ -137,7 +136,7 @@ bool on_mdir_line_categories(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
   {
-    return parser_add_string_from_line(p, ID_TASK_CATEGORIES, line);
+    return parser_add_string_from_line(p, ID_CATEGORIES, line);
   }
   else
     return false;
@@ -411,7 +410,7 @@ void to_propval_trigger(Parser* parser, mdir_line* line, uint8_t related_support
 exit:
 
   parser_add_int16 (parser, ID_REMINDER_ENABLED, enable);
-  parser_add_int32 (parser, ID_REMINDER_MINUTES_BEFORE_START, duration);
+  parser_add_int32 (parser, ID_REMINDER_MINUTES_BEFORE, duration);
   parser_add_int32 (parser, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
   parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
 }

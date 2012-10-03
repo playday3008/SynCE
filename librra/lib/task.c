@@ -1,7 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "task.h"
-#include "task_ids.h"
+#include "appointment_ids.h"
 #include "timezone.h"
 #include "generator.h"
 #include "parser.h"
@@ -22,19 +22,10 @@ static uint8_t invalid_filetime_buffer[] =
    Any on_propval_* functions not here are found in common_handlers.c
 */
 
-typedef struct
-{
-  bool completed;
-  FILETIME completed_time;
-  CEPROPVAL* reminder_enabled;
-  CEPROPVAL* reminder_minutes;
-  const char *codepage;
-} TaskGeneratorData;
-
 static bool on_propval_completed(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   bool success = false;
-  TaskGeneratorData* data = (TaskGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
 
   switch (propval->propid & 0xffff)
   {
@@ -103,21 +94,21 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 
 static bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  TaskGeneratorData* data = (TaskGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->reminder_enabled = propval;
   return true;
 }
 
 static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  TaskGeneratorData* data = (TaskGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->reminder_minutes = propval;
   return true;
 }
 
 static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
-  return process_propval_notes(g, propval, cookie, ((TaskGeneratorData*)cookie)->codepage);
+  return process_propval_notes(g, propval, cookie, ((GeneratorData*)cookie)->codepage);
 }
 
 bool rra_task_to_vtodo(
@@ -132,8 +123,8 @@ bool rra_task_to_vtodo(
   bool success = false;
   Generator* generator = NULL;
   unsigned generator_flags = 0;
-  TaskGeneratorData task_generator_data;
-  memset(&task_generator_data, 0, sizeof(TaskGeneratorData));
+  GeneratorData task_generator_data;
+  memset(&task_generator_data, 0, sizeof(GeneratorData));
   task_generator_data.codepage = codepage;
 
   switch (flags & RRA_TASK_CHARSET_MASK)
@@ -152,7 +143,7 @@ bool rra_task_to_vtodo(
   if (!generator)
     goto exit;
 
-  generator_add_property(generator, ID_TASK_CATEGORIES, on_propval_categories);
+  generator_add_property(generator, ID_CATEGORIES, on_propval_categories);
   generator_add_property(generator, ID_TASK_DUE,        on_propval_due);
   generator_add_property(generator, ID_IMPORTANCE,      on_propval_importance);
   generator_add_property(generator, ID_NOTES,           on_propval_notes);
@@ -161,7 +152,7 @@ bool rra_task_to_vtodo(
   generator_add_property(generator, ID_TASK_START,      on_propval_start);
   generator_add_property(generator, ID_SUBJECT,         on_propval_subject);
   generator_add_property(generator, ID_REMINDER_ENABLED,              on_propval_reminder_enabled);
-  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_END, on_propval_reminder_minutes);
+  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE, on_propval_reminder_minutes);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;

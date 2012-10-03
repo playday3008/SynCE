@@ -34,21 +34,6 @@ static const uint8_t BLOB0067_HEADER[20] = {
 };
 #endif
 
-typedef struct _EventGeneratorData
-{
-  CEPROPVAL* start;
-  CEPROPVAL* duration;
-  CEPROPVAL* type;
-  CEPROPVAL* reminder_minutes;
-  CEPROPVAL* reminder_enabled;
-#if ENABLE_RECURRENCE
-  CEPROPVAL* recurrence_pattern;
-  CEPROPVAL* recurrence_timezone;
-  CEPROPVAL* unique;
-#endif
-  const char *codepage;
-} EventGeneratorData;
-
 /*
    Any on_propval_* functions not here are found in common_handlers.c
 */
@@ -82,28 +67,28 @@ static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cooki
 
 static bool on_propval_duration(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->duration = propval;
   return true;
 }
 
 static bool on_propval_type(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->type = propval;
   return true;
 }
 
 static bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->reminder_enabled = propval;
   return true;
 }
 
 static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->reminder_minutes = propval;
   return true;
 }
@@ -111,7 +96,7 @@ static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* 
 static bool on_propval_recurrence_pattern(Generator* g, CEPROPVAL* propval, void* cookie)
 {
 #if ENABLE_RECURRENCE
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->recurrence_pattern = propval;
 #else
   synce_warning("Recurrence support not enabled");
@@ -122,7 +107,7 @@ static bool on_propval_recurrence_pattern(Generator* g, CEPROPVAL* propval, void
 static bool on_propval_recurrence_timezone(Generator* g, CEPROPVAL* propval, void* cookie)
 {
 #if ENABLE_RECURRENCE
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->recurrence_timezone = propval;
 #else
   synce_warning("Recurrence support not enabled");
@@ -132,7 +117,7 @@ static bool on_propval_recurrence_timezone(Generator* g, CEPROPVAL* propval, voi
 
 static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->start = propval;
   return true;
 }
@@ -140,7 +125,7 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 #if ENABLE_RECURRENCE
 bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
 {
-  EventGeneratorData* data = (EventGeneratorData*)cookie;
+  GeneratorData* data = (GeneratorData*)cookie;
   data->unique = propval;
   return true;
 }
@@ -148,7 +133,7 @@ bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
 
 static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
-  return process_propval_notes(g, propval, cookie, ((EventGeneratorData*)cookie)->codepage);
+  return process_propval_notes(g, propval, cookie, ((GeneratorData*)cookie)->codepage);
 }
 
 bool rra_appointment_to_vevent(/*{{{*/
@@ -163,8 +148,8 @@ bool rra_appointment_to_vevent(/*{{{*/
   bool success = false;
   Generator* generator = NULL;
   unsigned generator_flags = 0;
-  EventGeneratorData event_generator_data;
-  memset(&event_generator_data, 0, sizeof(EventGeneratorData));
+  GeneratorData event_generator_data;
+  memset(&event_generator_data, 0, sizeof(GeneratorData));
   event_generator_data.codepage = codepage;
 
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
@@ -189,7 +174,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_APPOINTMENT_TYPE, on_propval_type);
   generator_add_property(generator, ID_LOCATION,    on_propval_location);
   generator_add_property(generator, ID_NOTES,       on_propval_notes);
-  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE_START, on_propval_reminder_minutes);
+  generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE, on_propval_reminder_minutes);
   generator_add_property(generator, ID_REMINDER_ENABLED, on_propval_reminder_enabled);
   generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
