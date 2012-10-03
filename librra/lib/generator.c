@@ -90,28 +90,28 @@ bool generator_set_data(Generator* self, const uint8_t* data, size_t data_size)/
 
   if (!data)
   {
-		synce_error("Data is NULL");
+		synce_error("RRA Calendar data is NULL");
 		goto exit;
 	}
 
 	if (data_size < 8)
 	{
-		synce_error("Invalid data size");
+		synce_error("Invalid data size for RRA calendar data");
 		goto exit;
 	}
 
 	self->propval_count = letoh32(*(uint32_t*)(data + 0));
-	synce_trace("Field count: %i", self->propval_count);
+	synce_trace("RRA calendar data field count: %i", self->propval_count);
 
 	if (0 == self->propval_count)
 	{
-		synce_error("No fields in record!");
+		synce_error("No fields in RRA calendar record!");
 		goto exit;
 	} 
 	
 	if (self->propval_count > MAX_PROPVAL_COUNT)
 	{
-		synce_error("Too many fields in record");
+		synce_error("Too many fields in RRA calendar record");
 		goto exit;
 	}
 
@@ -119,7 +119,7 @@ bool generator_set_data(Generator* self, const uint8_t* data, size_t data_size)/
 
 	if (!dbstream_to_propvals(data + 8, self->propval_count, self->propvals))
 	{
-		synce_error("Failed to convert database stream");
+		synce_error("Failed to convert RRA calendar database stream");
 		goto exit;
 	}
 

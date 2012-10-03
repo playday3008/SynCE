@@ -72,7 +72,8 @@ bool dbstream_to_propvals(/*{{{*/
 
 #if 0
 				/* what size? */
-			case CEVT_BOOL: 
+			case CEVT_BOOL:
+				synce_debug("CEVT_BOOL: unknown size");
 				printf("0x%08x/%u",  propval[i].val.boolVal, propval[i].val.boolVal); break;
 #endif
 			case CEVT_LPWSTR:
@@ -167,7 +168,8 @@ bool dbstream_from_propvals(/*{{{*/
 
 #if 0
 				/* what size? */
-			case CEVT_BOOL: 
+			case CEVT_BOOL:
+				synce_debug("CEVT_BOOL: unknown size");
 #endif
 			case CEVT_LPWSTR:
 				size += (wstrlen(propval[i].val.lpwstr) + 1) * 2;
@@ -226,7 +228,8 @@ bool dbstream_from_propvals(/*{{{*/
 
 #if 0
 				/* what size? */
-			case CEVT_BOOL: 
+			case CEVT_BOOL:
+				synce_debug("CEVT_BOOL: unknown size");
 				printf("0x%08x/%u",  propval[i].val.boolVal, propval[i].val.boolVal); break;
 #endif
 			case CEVT_LPWSTR:
