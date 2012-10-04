@@ -279,7 +279,7 @@ bool generator_add_with_type(Generator* self, const char* name, /*{{{*/
   return true;
 }/*}}}*/
 
-bool generator_add_simple_propval(Generator* self, const char* name, struct _CEPROPVAL* propval)/*{{{*/
+bool generator_add_simple_propval(Generator* self, const char* name, CEPROPVAL* propval)/*{{{*/
 {
   bool success = false;
   

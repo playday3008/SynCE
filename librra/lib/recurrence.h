@@ -4,16 +4,16 @@
 
 #include <stdbool.h>
 #include <libmimedir.h>
+#include <rapi.h>
 #include "mdir_line_vector.h"
 #include "timezone.h"
 
-struct _CEPROPVAL;
 struct _Generator;
 struct _Parser;
 
 bool recurrence_generate_rrule(
     struct _Generator* g, 
-    struct _CEPROPVAL* propval,
+    CEPROPVAL* propval,
     RRA_Timezone *tzi);
 
 bool recurrence_parse_rrule(

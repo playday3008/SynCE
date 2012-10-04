@@ -37,8 +37,7 @@ typedef struct _GeneratorData
 } GeneratorData;
 
 
-struct _CEPROPVAL;
-typedef bool (*GeneratorPropertyFunc)(Generator* g, struct _CEPROPVAL* property, void* cookie);
+typedef bool (*GeneratorPropertyFunc)(Generator* g, CEPROPVAL* property, void* cookie);
 
 Generator* generator_new(int flags, void* cookie);
 void generator_destroy(Generator* self);
@@ -54,7 +53,7 @@ bool generator_add_simple(Generator* self, const char* name, const char* value);
 bool generator_add_simple_unescaped(Generator* self, const char* name, const char* value);
 bool generator_add_with_type(Generator* self, const char* name, const char* type, const char* value);
 
-bool generator_add_simple_propval(Generator* self, const char* name, struct _CEPROPVAL* propval);
+bool generator_add_simple_propval(Generator* self, const char* name, CEPROPVAL* propval);
 
 /* for multi-parameter or multi-value lines */
 bool generator_begin_line(Generator* self, const char* name);
