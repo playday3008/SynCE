@@ -52,7 +52,7 @@ struct _Parser
   mdir_line** mimedir;
   mdir_line** iterator;
   CEPROPVAL propvals[MAX_PROPVAL_COUNT];
-	size_t propval_count;
+  size_t propval_count;
 };
 
 bool parser_duration_to_seconds(const char* duration, int* result)/*{{{*/

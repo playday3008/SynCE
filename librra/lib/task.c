@@ -395,7 +395,7 @@ bool rra_task_from_vtodo(
     goto exit;
   }
   
- 	success = true;
+  success = true;
 
 exit:
   /* destroy components (the order is important!) */
@@ -403,7 +403,7 @@ exit:
   parser_component_destroy(calendar);
   parser_component_destroy(todo);
   parser_destroy(parser);
-	return success;
+  return success;
 }
 
 

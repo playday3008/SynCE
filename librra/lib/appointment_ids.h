@@ -18,7 +18,7 @@
 #define BUSY_STATUS_BUSY           2
 #define BUSY_STATUS_OUT_OF_OFFICE  3
 
-#define ID_CATEGORIES_X      0x0016
+#define ID_CATEGORIES_X    0x0016
 #define ID_NOTES           0x0017
 
 #define ID_IMPORTANCE       0x0026

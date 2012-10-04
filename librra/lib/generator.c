@@ -86,42 +86,42 @@ bool generator_utf8(Generator* self)
 
 bool generator_set_data(Generator* self, const uint8_t* data, size_t data_size)/*{{{*/
 {
-	bool success = false;
+  bool success = false;
 
   if (!data)
   {
-		synce_error("RRA Calendar data is NULL");
-		goto exit;
-	}
+    synce_error("RRA Calendar data is NULL");
+    goto exit;
+  }
 
-	if (data_size < 8)
-	{
-		synce_error("Invalid data size for RRA calendar data");
-		goto exit;
-	}
+  if (data_size < 8)
+  {
+    synce_error("Invalid data size for RRA calendar data");
+    goto exit;
+  }
 
-	self->propval_count = letoh32(*(uint32_t*)(data + 0));
-	synce_trace("RRA calendar data field count: %i", self->propval_count);
+  self->propval_count = letoh32(*(uint32_t*)(data + 0));
+  synce_trace("RRA calendar data field count: %i", self->propval_count);
 
-	if (0 == self->propval_count)
-	{
-		synce_error("No fields in RRA calendar record!");
-		goto exit;
-	} 
+  if (0 == self->propval_count)
+  {
+    synce_error("No fields in RRA calendar record!");
+    goto exit;
+  } 
 	
-	if (self->propval_count > MAX_PROPVAL_COUNT)
-	{
-		synce_error("Too many fields in RRA calendar record");
-		goto exit;
-	}
+  if (self->propval_count > MAX_PROPVAL_COUNT)
+  {
+    synce_error("Too many fields in RRA calendar record");
+    goto exit;
+  }
 
-	self->propvals = (CEPROPVAL*)malloc(sizeof(CEPROPVAL) * self->propval_count);
+  self->propvals = (CEPROPVAL*)malloc(sizeof(CEPROPVAL) * self->propval_count);
 
-	if (!dbstream_to_propvals(data + 8, self->propval_count, self->propvals))
-	{
-		synce_error("Failed to convert RRA calendar database stream");
-		goto exit;
-	}
+  if (!dbstream_to_propvals(data + 8, self->propval_count, self->propvals))
+  {
+    synce_error("Failed to convert RRA calendar database stream");
+    goto exit;
+  }
 
   success = true;
 
@@ -181,54 +181,54 @@ bool generator_get_result(Generator* self, char** result)
 */
 static void generator_append_escaped(Generator* self, const char* str)/*{{{*/
 {
-	const char* p;
+  const char* p;
 
   assert(self);
   assert(self->buffer);
-	if (!str)
-		return;
+  if (!str)
+    return;
 
-	for (p = str; *p; p++)
-	{
-		switch (*p)
-		{
-			case '\r': 				/* CR */
-				/* ignore */
-				break;		
+  for (p = str; *p; p++)
+  {
+    switch (*p)
+    {
+    case '\r': 				/* CR */
+      /* ignore */
+      break;		
 
-			case '\n':				/* LF */
-				strbuf_append_c(self->buffer, '\\');
-				strbuf_append_c(self->buffer, 'n');
-				break;
-	
-			case '\\':
-			case ';':
-      case ',':
-        strbuf_append_c(self->buffer, '\\');
-        /* fall through */
+    case '\n':				/* LF */
+      strbuf_append_c(self->buffer, '\\');
+      strbuf_append_c(self->buffer, 'n');
+      break;
 
-			default:
-				strbuf_append_c(self->buffer, *p);
-				break;
-		}
-	}
+    case '\\':
+    case ';':
+    case ',':
+      strbuf_append_c(self->buffer, '\\');
+      /* fall through */
+
+    default:
+      strbuf_append_c(self->buffer, *p);
+      break;
+    }
+  }
 }/*}}}*/
 
 void generator_append_escaped_wstr(Generator* self, const WCHAR* wstr)/*{{{*/
 {
   assert(self);
-	if (wstr)
-	{
-		char* str = NULL;
-	 
-		if (self->flags & GENERATOR_UTF8)
-			str = wstr_to_utf8(wstr);
-		else
-			str = wstr_to_ascii(wstr);
+  if (wstr)
+  {
+    char* str = NULL;
 
-		generator_append_escaped(self, str);
-		wstr_free_string(str);
-	}
+    if (self->flags & GENERATOR_UTF8)
+      str = wstr_to_utf8(wstr);
+    else
+      str = wstr_to_ascii(wstr);
+
+    generator_append_escaped(self, str);
+    wstr_free_string(str);
+  }
 }/*}}}*/
 
 bool generator_add_simple(Generator* self, const char* name, const char* value)/*{{{*/

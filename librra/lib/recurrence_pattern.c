@@ -856,36 +856,36 @@ void rra_recurrence_pattern_calculate_real_start(RRA_RecurrencePattern *self)
     memset(days_list, 0, sizeof(days_list));
 
     if (self->days_of_week_mask & olSunday)
-            days_list[0] = 1;
+      days_list[0] = 1;
     if (self->days_of_week_mask & olMonday)
-            days_list[1] = 1;
+      days_list[1] = 1;
     if (self->days_of_week_mask & olTuesday)
-            days_list[2] = 1;
+      days_list[2] = 1;
     if (self->days_of_week_mask & olWednesday)
-            days_list[3] = 1;
+      days_list[3] = 1;
     if (self->days_of_week_mask & olThursday)
-            days_list[4] = 1;
+      days_list[4] = 1;
     if (self->days_of_week_mask & olFriday)
-            days_list[5] = 1;
+      days_list[5] = 1;
     if (self->days_of_week_mask & olSaturday)
-            days_list[6] = 1;
+      days_list[6] = 1;
 
     while(wday < 7) {
-            if (days_list[wday] == 1) {
-                    if (wday >= start_pattern_wday) {
-                            real_start_day = wday;
-                            break;
-                    }
-                    if (first == 0)
-                            first = wday;
-            }
-            wday++;
+      if (days_list[wday] == 1) {
+	if (wday >= start_pattern_wday) {
+	  real_start_day = wday;
+	  break;
+	}
+	if (first == 0)
+	  first = wday;
+      }
+      wday++;
     }
 
     if (real_start_day < 7)
-            t_tmp.tm_mday = t_tmp.tm_mday - start_pattern_wday + real_start_day;
+      t_tmp.tm_mday = t_tmp.tm_mday - start_pattern_wday + real_start_day;
     else
-            t_tmp.tm_mday = t_tmp.tm_mday - (t_tmp.tm_wday - first) + (7 * self->interval);
+      t_tmp.tm_mday = t_tmp.tm_mday - (t_tmp.tm_wday - first) + (7 * self->interval);
 
     minutes = rra_minutes_from_struct(&t_tmp);
 
@@ -906,7 +906,7 @@ void rra_recurrence_pattern_calculate_real_start(RRA_RecurrencePattern *self)
 
     if (self->day_of_month < real_start.tm_mday)
     {
-            real_start.tm_mon = real_start.tm_mon + self->interval;
+      real_start.tm_mon = real_start.tm_mon + self->interval;
     }
 
     real_start.tm_mday = self->day_of_month;
@@ -949,38 +949,38 @@ void rra_recurrence_pattern_calculate_real_start(RRA_RecurrencePattern *self)
     memset(days_list, 0, sizeof(days_list));
 
     if (self->days_of_week_mask & olSunday)
-            days_list[0] = 1;
+      days_list[0] = 1;
     if (self->days_of_week_mask & olMonday)
-            days_list[1] = 1;
+      days_list[1] = 1;
     if (self->days_of_week_mask & olTuesday)
-            days_list[2] = 1;
+      days_list[2] = 1;
     if (self->days_of_week_mask & olWednesday)
-            days_list[3] = 1;
+      days_list[3] = 1;
     if (self->days_of_week_mask & olThursday)
-            days_list[4] = 1;
+      days_list[4] = 1;
     if (self->days_of_week_mask & olFriday)
-            days_list[5] = 1;
+      days_list[5] = 1;
     if (self->days_of_week_mask & olSaturday)
-            days_list[6] = 1;
+      days_list[6] = 1;
 
     wday = t_tmp.tm_wday - 1;
 
     while(mday < days_in_month) {
-            mday++;
-            wday++;
-            if (wday == 7) wday = 0;
-            if (days_list[wday] == 1) {
-                    count++;
-                    last = mday;
-                    if ((self->instance < 5) && (count == self->instance))
-                            break;
-            }
+      mday++;
+      wday++;
+      if (wday == 7) wday = 0;
+      if (days_list[wday] == 1) {
+	count++;
+	last = mday;
+	if ((self->instance < 5) && (count == self->instance))
+	  break;
+      }
     }
 
     if (self->instance == 5)
-            t_tmp.tm_mday = last;
+      t_tmp.tm_mday = last;
     else
-            t_tmp.tm_mday = mday;
+      t_tmp.tm_mday = mday;
 
     minutes = rra_minutes_from_struct(&t_tmp);
 
@@ -1017,38 +1017,38 @@ void rra_recurrence_pattern_calculate_real_start(RRA_RecurrencePattern *self)
     memset(days_list, 0, sizeof(days_list));
 
     if (self->days_of_week_mask & olSunday)
-            days_list[0] = 1;
+      days_list[0] = 1;
     if (self->days_of_week_mask & olMonday)
-            days_list[1] = 1;
+      days_list[1] = 1;
     if (self->days_of_week_mask & olTuesday)
-            days_list[2] = 1;
+      days_list[2] = 1;
     if (self->days_of_week_mask & olWednesday)
-            days_list[3] = 1;
+      days_list[3] = 1;
     if (self->days_of_week_mask & olThursday)
-            days_list[4] = 1;
+      days_list[4] = 1;
     if (self->days_of_week_mask & olFriday)
-            days_list[5] = 1;
+      days_list[5] = 1;
     if (self->days_of_week_mask & olSaturday)
-            days_list[6] = 1;
+      days_list[6] = 1;
 
     wday = t_tmp.tm_wday - 1;
 
     while(mday < days_in_month) {
-            mday++;
-            wday++;
-            if (wday == 7) wday = 0;
-            if (days_list[wday] == 1) {
-                    count++;
-                    last = mday;
-                    if ((self->instance < 5) && (count == self->instance))
-                            break;
-            }
+      mday++;
+      wday++;
+      if (wday == 7) wday = 0;
+      if (days_list[wday] == 1) {
+	count++;
+	last = mday;
+	if ((self->instance < 5) && (count == self->instance))
+	  break;
+      }
     }
 
     if (self->instance == 5)
-            t_tmp.tm_mday = last;
+      t_tmp.tm_mday = last;
     else
-            t_tmp.tm_mday = mday;
+      t_tmp.tm_mday = mday;
 
     minutes = rra_minutes_from_struct(&t_tmp);
 
@@ -1100,38 +1100,38 @@ void rra_recurrence_pattern_calculate_real_start(RRA_RecurrencePattern *self)
     memset(days_list, 0, sizeof(days_list));
 
     if (self->days_of_week_mask & olSunday)
-            days_list[0] = 1;
+      days_list[0] = 1;
     if (self->days_of_week_mask & olMonday)
-            days_list[1] = 1;
+      days_list[1] = 1;
     if (self->days_of_week_mask & olTuesday)
-            days_list[2] = 1;
+      days_list[2] = 1;
     if (self->days_of_week_mask & olWednesday)
-            days_list[3] = 1;
+      days_list[3] = 1;
     if (self->days_of_week_mask & olThursday)
-            days_list[4] = 1;
+      days_list[4] = 1;
     if (self->days_of_week_mask & olFriday)
-            days_list[5] = 1;
+      days_list[5] = 1;
     if (self->days_of_week_mask & olSaturday)
-            days_list[6] = 1;
+      days_list[6] = 1;
 
     wday = real_start.tm_wday;
 
     while(mday < days_in_month) {
-            mday++;
-            wday++;
-            if (wday == 7) wday = 0;
-            if (days_list[wday] == 1) {
-                    count++;
-                    last = mday;
-                    if ((self->instance < 5) && (count == self->instance))
-                            break;
-            }
+      mday++;
+      wday++;
+      if (wday == 7) wday = 0;
+      if (days_list[wday] == 1) {
+	count++;
+	last = mday;
+	if ((self->instance < 5) && (count == self->instance))
+	  break;
+      }
     }
 
     if (self->instance == 5)
-            real_start.tm_mday = real_start.tm_mday + last;
+      real_start.tm_mday = real_start.tm_mday + last;
     else
-            real_start.tm_mday = real_start.tm_mday + mday;
+      real_start.tm_mday = real_start.tm_mday + mday;
 
     minutes = rra_minutes_from_struct(&real_start);
 
@@ -1195,7 +1195,7 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   }
   
   rra_exceptions_read_summary(self->exceptions, &p);
-  
+
   self->pattern_start_date = READ_UINT32(p);  p += 4;
   TRACE_DATE("Original pattern start date (localtime) = %s", self->pattern_start_date);
 

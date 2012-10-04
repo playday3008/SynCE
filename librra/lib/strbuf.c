@@ -21,7 +21,7 @@ static void strbuf_enlarge(StrBuf *strbuf, size_t size)
 StrBuf* strbuf_new (const char *init)
 {
   StrBuf* result = (StrBuf*)malloc(sizeof(StrBuf));
-	memset(result, 0, sizeof(StrBuf));
+  memset(result, 0, sizeof(StrBuf));
   strbuf_append(result, init);
   return result;
 }
@@ -50,19 +50,19 @@ StrBuf* strbuf_append (StrBuf *strbuf, const char* str)
 
 StrBuf* strbuf_append_wstr(StrBuf* strbuf, WCHAR* wstr)
 {
-	if (wstr)
-	{
-		char* ascii_str = wstr_to_ascii(wstr);
-                if (!ascii_str) {
-                        synce_warning("Failed to convert UCS2 string to ascii");
-                        return strbuf;
-                }
+  if (wstr)
+  {
+    char* ascii_str = wstr_to_ascii(wstr);
+    if (!ascii_str) {
+      synce_warning("Failed to convert UCS2 string to ascii");
+      return strbuf;
+    }
 
-		strbuf_append(strbuf, ascii_str);
-		wstr_free_string(ascii_str);
-	}
+    strbuf_append(strbuf, ascii_str);
+    wstr_free_string(ascii_str);
+  }
 
-	return strbuf;
+  return strbuf;
 }
 
 StrBuf* strbuf_append_c (StrBuf *strbuf, int c)

@@ -12,18 +12,18 @@
 
 /* flags for rra_contact_(from|to)_vcard() */
 
-#define RRA_CONTACT_NEW     				0x1
-#define RRA_CONTACT_UPDATE  				0x2
+#define RRA_CONTACT_NEW     			0x1
+#define RRA_CONTACT_UPDATE  			0x2
 #define RRA_CONTACT_COMMAND_MASK		0xf
 
-#define RRA_CONTACT_ISO8859_1				0x10
-#define RRA_CONTACT_UTF8						0x20
+#define RRA_CONTACT_ISO8859_1			0x10
+#define RRA_CONTACT_UTF8			0x20
 #define RRA_CONTACT_CHARSET_MASK		0xf0
 
-#define RRA_CONTACT_VERSION_UNKNOWN   0x000
+#define RRA_CONTACT_VERSION_UNKNOWN   		0x000
 #define RRA_CONTACT_VERSION_2_1   		0x100
 #define RRA_CONTACT_VERSION_3_0   		0x200
-#define RRA_CONTACT_VERSION_MASK			0xf00
+#define RRA_CONTACT_VERSION_MASK		0xf00
 
 #ifndef SWIG
 bool rra_contact_to_vcard(

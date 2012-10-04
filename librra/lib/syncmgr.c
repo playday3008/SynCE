@@ -155,7 +155,7 @@ static bool rra_syncmgr_retrieve_types(RRA_SyncMgr* self)/*{{{*/
   success = true;
 
 exit:
-	rrac_free(raw_object_types);
+  rrac_free(raw_object_types);
   return success;
 }/*}}}*/
 
@@ -187,7 +187,7 @@ bool rra_syncmgr_connect(RRA_SyncMgr* self, RapiConnection *connection)/*{{{*/
   if (self)
   {
     return 
-            rrac_connect(self->rrac, connection) &&
+      rrac_connect(self->rrac, connection) &&
       rra_syncmgr_retrieve_types(self);
   }
   else
@@ -934,8 +934,8 @@ bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, /*{{{*/
     void* cookie)
 {
   bool success = false;
-	uint32_t recv_object_id;
-	uint32_t recv_type_id;
+  uint32_t recv_object_id;
+  uint32_t recv_type_id;
   uint8_t* data;
   size_t data_size;
   unsigned i;
@@ -951,12 +951,12 @@ bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, /*{{{*/
       goto exit;
     }
 
-	/* Ask for object data */
-	if (!rrac_send_67(self->rrac, type_id, object_id_array, object_id_count))
-	{
+  /* Ask for object data */
+  if (!rrac_send_67(self->rrac, type_id, object_id_array, object_id_count))
+  {
     synce_error("Failed to request object data");
-		goto exit;
-	}
+    goto exit;
+  }
 
   for (i = 0; i < object_id_count; i++)
   {
@@ -983,12 +983,12 @@ bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, /*{{{*/
     rrac_free(data);
   }
 
-	/* Receive end-of-data object */
-	if (!rrac_recv_data(self->rrac, NULL, NULL, NULL, NULL))
-	{
-		synce_error("rrac_recv_data failed");
-		goto exit;
-	}
+  /* Receive end-of-data object */
+  if (!rrac_recv_data(self->rrac, NULL, NULL, NULL, NULL))
+  {
+    synce_error("rrac_recv_data failed");
+    goto exit;
+  }
 	
   success = true;
 
@@ -1242,21 +1242,20 @@ bool rra_syncmgr_put_multiple_objects(/*{{{*/
   }
 
 #if SEND_COMMAND_6F_6
-	if (!rrac_send_6f(self->rrac, 6))
-	{
-		synce_error("rrac_send_6f failed");
-		goto exit;
-	}
+  if (!rrac_send_6f(self->rrac, 6))
+  {
+    synce_error("rrac_send_6f failed");
+    goto exit;
+  }
 #endif
 
 #if SEND_COMMAND_6F_6
-	if (!rrac_recv_reply_6f_6(self->rrac))
-	{
-		synce_error("rrac_recv_reply_6f_6 failed");
-		goto exit;
-	}
+  if (!rrac_recv_reply_6f_6(self->rrac))
+  {
+    synce_error("rrac_recv_reply_6f_6 failed");
+    goto exit;
+  }
 #endif
-
 
   success = true;
 

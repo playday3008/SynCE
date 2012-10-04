@@ -50,10 +50,10 @@ static char* convert_string(const char* inbuf, const char* tocode, const char* f
 
   if ((size_t)-1 == result)
   {
-		synce_error("iconv failed: inbytesleft=%i, outbytesleft=%i, inbuf=\"%s\"", 
-				inbytesleft, outbytesleft, inbuf);
-		free(outbuf);
-		return NULL;
+    synce_error("iconv failed: inbytesleft=%i, outbytesleft=%i, inbuf=\"%s\"", 
+		inbytesleft, outbytesleft, inbuf);
+    free(outbuf);
+    return NULL;
   }
 
   *outbuf_iterator = '\0';

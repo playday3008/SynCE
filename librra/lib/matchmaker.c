@@ -109,51 +109,51 @@ static bool rra_matchmaker_open_key(RRA_Matchmaker* matchmaker, uint32_t index)
 
 bool rra_matchmaker_set_current_partner(RRA_Matchmaker* matchmaker, uint32_t index)
 {
-	return 
-		(index == 1 || index == 2) &&
-		rapi_reg_set_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
+  return 
+    (index == 1 || index == 2) &&
+    rapi_reg_set_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
 }
 
 bool rra_matchmaker_get_current_partner(RRA_Matchmaker* matchmaker, uint32_t* index)
 {
-	return 
-		rapi_reg_query_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
+  return 
+    rapi_reg_query_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
 }
 
 static bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t id)
 {
-	bool success = 
-		rra_matchmaker_create_key(matchmaker, index) &&
-		rapi_reg_set_dword(matchmaker->keys[index], PARTNER_ID, id);
+  bool success = 
+    rra_matchmaker_create_key(matchmaker, index) &&
+    rapi_reg_set_dword(matchmaker->keys[index], PARTNER_ID, id);
 
-	return success;
+  return success;
 }
 
 bool rra_matchmaker_get_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t* id)
 {
-	bool success = 
-		rra_matchmaker_open_key(matchmaker, index) &&
-		rapi_reg_query_dword(matchmaker->keys[index], PARTNER_ID, id);
+  bool success = 
+    rra_matchmaker_open_key(matchmaker, index) &&
+    rapi_reg_query_dword(matchmaker->keys[index], PARTNER_ID, id);
 
-	return success;
+  return success;
 }
 
 static bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, const char* name)
 {
-	bool success =
-		rra_matchmaker_open_key(matchmaker, index) &&
-		rapi_reg_set_string(matchmaker->keys[index], PARTNER_NAME, name);
-	
-	return success;
+  bool success =
+    rra_matchmaker_open_key(matchmaker, index) &&
+    rapi_reg_set_string(matchmaker->keys[index], PARTNER_NAME, name);
+
+  return success;
 }
 
 bool rra_matchmaker_get_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, char** name)
 {
-	bool success = 
-		rra_matchmaker_open_key(matchmaker, index) &&
-		rapi_reg_query_string(matchmaker->keys[index], PARTNER_NAME, name);
+  bool success = 
+    rra_matchmaker_open_key(matchmaker, index) &&
+    rapi_reg_query_string(matchmaker->keys[index], PARTNER_NAME, name);
 
-	return success;	
+  return success;	
 }
 
 static char* rra_matchmaker_get_filename(uint32_t id)
