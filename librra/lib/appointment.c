@@ -34,11 +34,43 @@ static const uint8_t BLOB0067_HEADER[20] = {
 };
 #endif
 
+#define VCAL_1_0_PROP_TRANSP_OPAQUE      "0"
+#define VCAL_1_0_PROP_TRANSP_TRANSPARENT "1"
+
 /*
    Any on_propval_* functions not here are found in common_handlers.c
 */
 
-static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+static bool on_propval_busy_status_vcal(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  switch (propval->val.iVal)
+  {
+    case BUSY_STATUS_FREE:
+      generator_add_simple(g, "TRANSP", VCAL_1_0_PROP_TRANSP_TRANSPARENT);
+      break;
+      
+    case BUSY_STATUS_TENTATIVE:
+      synce_warning("Busy status 'tentative' not specified for Vcal, setting to OPAQUE");
+      generator_add_simple(g, "TRANSP", VCAL_1_0_PROP_TRANSP_OPAQUE);
+      break;
+      
+    case BUSY_STATUS_BUSY:
+      generator_add_simple(g, "TRANSP", VCAL_1_0_PROP_TRANSP_OPAQUE);
+      break;
+      
+    case BUSY_STATUS_OUT_OF_OFFICE:
+      synce_warning("Busy status 'out of office' not specified for Vcal, setting to OPAQUE");
+      generator_add_simple(g, "TRANSP", VCAL_1_0_PROP_TRANSP_OPAQUE);
+      break;
+      
+    default:
+      synce_warning("Unknown busy status: %04x", propval->val.iVal);
+      break;
+  }
+  return true;
+}/*}}}*/
+
+static bool on_propval_busy_status_ical(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
   switch (propval->val.iVal)
   {
@@ -47,7 +79,8 @@ static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cooki
       break;
       
     case BUSY_STATUS_TENTATIVE:
-      synce_warning("Busy status 'tentative' not yet supported");
+      synce_warning("Busy status 'tentative' not specified for iCal, setting to OPAQUE");
+      generator_add_simple(g, "TRANSP", "OPAQUE");
       break;
       
     case BUSY_STATUS_BUSY:
@@ -55,7 +88,8 @@ static bool on_propval_busy_status(Generator* g, CEPROPVAL* propval, void* cooki
       break;
       
     case BUSY_STATUS_OUT_OF_OFFICE:
-      synce_warning("Busy status 'out of office' not yet supported");
+      synce_warning("Busy status 'out of office' not specified for iCal, setting to OPAQUE");
+      generator_add_simple(g, "TRANSP", "OPAQUE");
       break;
       
     default:
@@ -168,7 +202,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator)
     goto exit;
 
-  generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status);
+  generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status_vcal);
   generator_add_property(generator, ID_CATEGORIES,  on_propval_categories);
   generator_add_property(generator, ID_DURATION,    on_propval_duration);
   generator_add_property(generator, ID_APPOINTMENT_TYPE, on_propval_type);
@@ -431,7 +465,13 @@ static bool on_mdir_line_rrule(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 static bool on_mdir_line_transp(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
-  if (!line || STR_EQUAL(line->values[0], "OPAQUE"))
+
+  /* be forgiving of ical/vcal mix-ups and check all possibilities */
+  if (!line || STR_EQUAL(line->values[0], VCAL_1_0_PROP_TRANSP_OPAQUE))
+    parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_BUSY);
+  else if (STR_EQUAL(line->values[0], VCAL_1_0_PROP_TRANSP_TRANSPARENT))
+    parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_FREE);
+  else if (!line || STR_EQUAL(line->values[0], "OPAQUE"))
     parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_BUSY);
   else if (STR_EQUAL(line->values[0], "TRANSPARENT"))
     parser_add_int16(p, ID_BUSY_STATUS, BUSY_STATUS_FREE);
