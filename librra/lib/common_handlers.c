@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include "timezone.h"
 #include "internal.h"
 #include "rra_config.h"
 
@@ -360,7 +361,7 @@ bool on_propval_subject(Generator* g, CEPROPVAL* propval, void* cookie)
 }
 
 /*
-    VAlarm
+    Reminder / VAlarm
 */
 void to_propval_trigger(Parser* parser, mdir_line* line, uint8_t related_support)
 {
@@ -415,7 +416,7 @@ exit:
   parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
 }
 
-void to_icalendar_trigger(Generator* generator, CEPROPVAL* reminder_enabled, CEPROPVAL* reminder_minutes, uint8_t related)
+void to_icalendar_alarm(Generator* generator, CEPROPVAL* reminder_enabled, CEPROPVAL* reminder_minutes, CEPROPVAL* reminder_options, uint8_t related)
 {
   if (reminder_enabled && reminder_minutes && reminder_enabled->val.iVal)
   {
@@ -458,3 +459,88 @@ void to_icalendar_trigger(Generator* generator, CEPROPVAL* reminder_enabled, CEP
     generator_add_simple(generator, "END", "VALARM");
   }
 };
+
+bool to_vcalendar_alarm(Generator* generator, CEPROPVAL* start_time, CEPROPVAL* reminder_enabled, CEPROPVAL* reminder_minutes, CEPROPVAL* reminder_options, RRA_Timezone *tzi)
+{
+  bool success = false;
+  time_t tt_start_time = 0;
+  time_t reminder_time = 0;
+  const char *format = NULL;
+  char buffer[32];
+
+  if (reminder_enabled && reminder_minutes && reminder_enabled->val.iVal)
+  {
+    if (!parser_filetime_to_unix_time(&start_time->val.filetime, &tt_start_time))
+      goto exit;
+
+    reminder_time = tt_start_time - (reminder_minutes->val.lVal * 60);
+
+    if (!tzi)
+      format = "%Y%m%dT%H%M%SZ";
+    else
+      format = "%Y%m%dT%H%M%S";
+
+    if (tzi)
+    {
+      reminder_time = rra_timezone_convert_from_utc(tzi, reminder_time);
+    }
+
+    strftime(buffer, sizeof(buffer), format, gmtime(&tt_start_time));
+
+    if (reminder_options->val.iVal & REMINDER_SOUND)
+    {
+      generator_begin_line         (generator, "AALARM");
+
+      generator_add_value          (generator, buffer);
+      generator_add_value          (generator, ""); /* snooze time */
+      generator_add_value          (generator, ""); /* repeat count */
+      generator_add_value          (generator, ""); /* audio content */
+
+      generator_end_line           (generator);
+    }
+
+    if (reminder_options->val.iVal & REMINDER_DIALOG)
+    {
+      generator_begin_line         (generator, "DALARM");
+
+      generator_add_value          (generator, buffer);
+      generator_add_value          (generator, ""); /* snooze time */
+      generator_add_value          (generator, ""); /* repeat count */
+      generator_add_value          (generator, ""); /* display string */
+
+      generator_end_line           (generator);
+    }
+
+    if (reminder_options->val.iVal & REMINDER_LED)
+      synce_info("Cannot convert LED reminder into a vcal");
+    if (reminder_options->val.iVal & REMINDER_VIBRATE)
+      synce_info("Cannot convert vibrate reminder into a vcal");
+
+    success = true;
+  }
+  success = true;
+exit:
+  return success;
+};
+
+bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  GeneratorData* data = (GeneratorData*)cookie;
+  data->reminder_enabled = propval;
+  return true;
+}
+
+bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
+{
+  GeneratorData* data = (GeneratorData*)cookie;
+  data->reminder_minutes = propval;
+  return true;
+}
+
+bool on_propval_reminder_options(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  GeneratorData* data = (GeneratorData*)cookie;
+  data->reminder_options = propval;
+  return true;
+}
+

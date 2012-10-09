@@ -92,20 +92,6 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
-static bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  GeneratorData* data = (GeneratorData*)cookie;
-  data->reminder_enabled = propval;
-  return true;
-}
-
-static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  GeneratorData* data = (GeneratorData*)cookie;
-  data->reminder_minutes = propval;
-  return true;
-}
-
 static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
 {
   return process_propval_notes(g, propval, cookie, ((GeneratorData*)cookie)->codepage);
@@ -153,6 +139,7 @@ bool rra_task_to_vtodo(
   generator_add_property(generator, ID_SUBJECT,         on_propval_subject);
   generator_add_property(generator, ID_REMINDER_ENABLED,              on_propval_reminder_enabled);
   generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE, on_propval_reminder_minutes);
+  generator_add_property(generator, ID_REMINDER_OPTIONS, on_propval_reminder_options);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -187,10 +174,21 @@ bool rra_task_to_vtodo(
     }
   }
 
-  to_icalendar_trigger(generator,
+  to_vcalendar_alarm(generator,
+		     task_generator_data.start,
+		     task_generator_data.reminder_enabled,
+		     task_generator_data.reminder_minutes,
+		     task_generator_data.reminder_options,
+		     tzi);
+
+  /* for ical
+  to_icalendar_alarm(generator,
                        task_generator_data.reminder_enabled,
                        task_generator_data.reminder_minutes,
+                       task_generator_data.reminder_options,
                        REMINDER_RELATED_END);
+
+  */
 
   generator_add_simple(generator, "END", "VTODO");
 

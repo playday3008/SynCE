@@ -26,6 +26,7 @@ typedef struct _GeneratorData
   CEPROPVAL* type;
   CEPROPVAL* reminder_minutes;
   CEPROPVAL* reminder_enabled;
+  CEPROPVAL* reminder_options;
   bool completed;
   FILETIME completed_time;
 #if ENABLE_RECURRENCE

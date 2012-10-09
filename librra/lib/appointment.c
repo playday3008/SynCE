@@ -113,20 +113,6 @@ static bool on_propval_type(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
-static bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  GeneratorData* data = (GeneratorData*)cookie;
-  data->reminder_enabled = propval;
-  return true;
-}
-
-static bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie)
-{
-  GeneratorData* data = (GeneratorData*)cookie;
-  data->reminder_minutes = propval;
-  return true;
-}
-
 static bool on_propval_recurrence_pattern(Generator* g, CEPROPVAL* propval, void* cookie)
 {
 #if ENABLE_RECURRENCE
@@ -210,6 +196,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_NOTES,       on_propval_notes);
   generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE, on_propval_reminder_minutes);
   generator_add_property(generator, ID_REMINDER_ENABLED, on_propval_reminder_enabled);
+  generator_add_property(generator, ID_REMINDER_OPTIONS, on_propval_reminder_options);
   generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
   generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);
@@ -320,10 +307,20 @@ bool rra_appointment_to_vevent(/*{{{*/
     synce_warning("Missing start, duration or duration unit");
   }
 
-  to_icalendar_trigger(generator,
+  to_vcalendar_alarm(generator,
+		     event_generator_data.start,
+		     event_generator_data.reminder_enabled,
+		     event_generator_data.reminder_minutes,
+		     event_generator_data.reminder_options,
+		     tzi);
+
+  /* for ical
+  to_icalendar_alarm(generator,
                        event_generator_data.reminder_enabled,
                        event_generator_data.reminder_minutes,
+                       event_generator_data.reminder_options,
                        REMINDER_RELATED_START);
+  */
 
 #if ENABLE_RECURRENCE
   if (event_generator_data.recurrence_pattern)
