@@ -368,11 +368,11 @@ void to_propval_trigger(Parser* parser, mdir_line* line, uint8_t related_support
   int enable = 0;
   int duration = 0;
 
-  char** data_type = mdir_get_param_values(line, "VALUE");
-  char** related   = mdir_get_param_values(line, "RELATED");
-
   if (!line)
     goto exit;
+
+  char** data_type = mdir_get_param_values(line, "VALUE");
+  char** related   = mdir_get_param_values(line, "RELATED");
 
   /* data type must be DURATION */
   if (data_type && data_type[0])
@@ -415,6 +415,130 @@ exit:
   parser_add_int32 (parser, ID_REMINDER_OPTIONS, REMINDER_LED|REMINDER_DIALOG|REMINDER_SOUND);
   parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
 }
+
+bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->trigger = line;
+  return true;
+}/*}}}*/
+
+void to_propval_vcal_alarms(Parser* parser, char *start_time_str, mdir_line* aalarm, mdir_line* dalarm, mdir_line* palarm, mdir_line* malarm)
+{
+  int enable = 0;
+  time_t start_time = 0;
+  time_t audio_runtime = 0;
+  time_t display_runtime = 0;
+  time_t runtime = 0;
+  int minutes_before = 0;
+  int reminder_led = 0;
+  int reminder_dialog = 0;
+  int reminder_sound = 0;
+  bool is_utc = false;
+  char *audio_type = NULL;
+  char *audio_value_type = NULL;
+  char *sound_file = NULL;
+
+  if (palarm || malarm)
+    synce_info("PALARM and MALARM are not supported");
+
+  if (!aalarm && !dalarm)
+    goto exit;
+
+  if (!parser_datetime_to_unix_time(start_time_str, &start_time, &is_utc))
+  {
+    synce_warning("Failed to convert start time");
+    goto exit;
+  }
+
+  if (aalarm)
+  {
+    char** data_type = mdir_get_param_values(aalarm, "TYPE");
+    audio_type = data_type[0];
+    char** value   = mdir_get_param_values(aalarm, "VALUE");
+    audio_value_type = value[0];
+
+    char* runtime_str = aalarm->values[0];
+    char* snoozetime_str = aalarm->values[1];
+    char* repeatcount_str = aalarm->values[2];
+    char* content = aalarm->values[3];
+
+    if (!parser_datetime_to_unix_time(runtime_str, &audio_runtime, &is_utc))
+    {
+      synce_warning("Failed to convert alarm run time");
+      goto exit;
+    }
+    enable = 1;
+    reminder_sound = REMINDER_SOUND;
+    sound_file = content;
+  }
+
+  if (dalarm)
+  {
+    char* runtime_str = dalarm->values[0];
+    char* snoozetime_str = dalarm->values[1];
+    char* repeatcount_str = dalarm->values[2];
+    char* content = dalarm->values[3];
+    if (!parser_datetime_to_unix_time(runtime_str, &display_runtime, &is_utc))
+    {
+      synce_warning("Failed to convert alarm run time");
+      goto exit;
+    }
+    enable = 1;
+    reminder_dialog = REMINDER_DIALOG;
+    reminder_led = REMINDER_LED;
+  }
+
+  runtime = audio_runtime;
+  if (display_runtime)
+  {
+    if (runtime == 0)
+      runtime = display_runtime;
+    else
+      if (runtime != display_runtime)
+	synce_warning("Differing reminder times for AALARM and DALARM, using AALARM");
+  }
+
+  minutes_before = start_time - runtime;
+  enable = 1;
+
+exit:
+
+  parser_add_int16 (parser, ID_REMINDER_ENABLED, enable);
+  parser_add_int32 (parser, ID_REMINDER_MINUTES_BEFORE, minutes_before);
+  parser_add_int32 (parser, ID_REMINDER_OPTIONS, reminder_led|reminder_dialog|reminder_sound);
+  parser_add_string(parser, ID_REMINDER_SOUND_FILE, "Alarm1.wav");
+}
+
+bool on_mdir_line_aalarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->aalarm = line;
+  return true;
+}/*}}}*/
+
+bool on_mdir_line_dalarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->aalarm = line;
+  return true;
+}/*}}}*/
+
+bool on_mdir_line_palarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->aalarm = line;
+  return true;
+}/*}}}*/
+
+bool on_mdir_line_malarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  event_parser_data->aalarm = line;
+  return true;
+}/*}}}*/
+
+
 
 void to_icalendar_alarm(Generator* generator, CEPROPVAL* reminder_enabled, CEPROPVAL* reminder_minutes, CEPROPVAL* reminder_options, uint8_t related)
 {

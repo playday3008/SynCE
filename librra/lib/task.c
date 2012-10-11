@@ -208,19 +208,6 @@ exit:
    Any on_mdir_line_* functions not here are found in common_handlers.c
 */
 
-typedef struct _EventParserData
-{
-  mdir_line* trigger;
-  const char *codepage;
-} EventParserData;
-
-static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
-{
-  EventParserData* event_parser_data = (EventParserData*)cookie;
-  event_parser_data->trigger = line;
-  return true;
-}
-
 static bool on_mdir_line_completed(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
@@ -242,7 +229,11 @@ static bool on_mdir_line_due(Parser* p, mdir_line* line, void* cookie)
 static bool on_mdir_line_dtstart(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
+  {
+    EventParserData* event_parser_data = (EventParserData*)cookie;
+    event_parser_data->dtstart = line;
     return parser_add_localdate_from_line(p, ID_TASK_START, line);
+  }
   else
     return parser_add_filetime(p, ID_TASK_START, 
         (FILETIME*)invalid_filetime_buffer);
@@ -317,13 +308,23 @@ bool rra_task_from_vtodo(
       break;
   }
 
+  /* check for ical VAlarm component */
   alarm = parser_component_new("vAlarm");
-
   parser_component_add_parser_property(alarm, 
       parser_property_new("trigger", on_alarm_trigger));
 
   todo = parser_component_new("vTodo");
   parser_component_add_parser_component(todo, alarm);
+
+  /* check for vcal alarm properties */
+  parser_component_add_parser_property(todo, 
+      parser_property_new("aAlarm", on_mdir_line_aalarm));
+  parser_component_add_parser_property(todo, 
+      parser_property_new("dAlarm", on_mdir_line_dalarm));
+  parser_component_add_parser_property(todo, 
+      parser_property_new("pAlarm", on_mdir_line_palarm));
+  parser_component_add_parser_property(todo, 
+      parser_property_new("mAlarm", on_mdir_line_malarm));
 
   parser_component_add_parser_property(todo, 
       parser_property_new("Categories", on_mdir_line_categories));
@@ -375,7 +376,13 @@ bool rra_task_from_vtodo(
     goto exit;
   }
    
-  to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_END);
+  if (event_parser_data.trigger)
+    /* process ical vAlarm */
+    to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_START);
+  else if (event_parser_data.aalarm || event_parser_data.dalarm || event_parser_data.palarm || event_parser_data.malarm)
+    /* process vcal alarms */
+    to_propval_vcal_alarms(parser, event_parser_data.dtstart->values[0], event_parser_data.aalarm, event_parser_data.dalarm, event_parser_data.palarm, event_parser_data.malarm);
+
 
 #if 0
   /* Add these just for sure */

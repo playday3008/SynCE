@@ -9,9 +9,45 @@
 #include "timezone.h"
 #include "generator.h"
 #include "parser.h"
+#include "mdir_line_vector.h"
 
 struct _Generator;
 struct _Parser;
+
+typedef struct _GeneratorData
+{
+  CEPROPVAL* start;
+  CEPROPVAL* duration;
+  CEPROPVAL* type;
+  CEPROPVAL* reminder_minutes;
+  CEPROPVAL* reminder_enabled;
+  CEPROPVAL* reminder_options;
+  bool completed;
+  FILETIME completed_time;
+#if ENABLE_RECURRENCE
+  CEPROPVAL* recurrence_pattern;
+  CEPROPVAL* recurrence_timezone;
+  CEPROPVAL* unique;
+#endif
+  const char *codepage;
+} GeneratorData;
+
+typedef struct _EventParserData
+{
+  mdir_line* dtstart;
+  mdir_line* dtend;
+  mdir_line* aalarm;
+  mdir_line* dalarm;
+  mdir_line* palarm;
+  mdir_line* malarm;
+  mdir_line* trigger;
+#if ENABLE_RECURRENCE
+  RRA_MdirLineVector* exdates;
+  mdir_line* rrule;
+  mdir_line* uid;
+#endif
+  const char *codepage;
+} EventParserData;
 
 bool on_propval_categories (struct _Generator* g, CEPROPVAL* propval, void* cookie);
 bool on_propval_location   (struct _Generator* g, CEPROPVAL* propval, void* cookie);
@@ -27,6 +63,12 @@ bool on_mdir_line_class      (struct _Parser* p, mdir_line* line, void* cookie);
 bool on_mdir_line_location   (struct _Parser* p, mdir_line* line, void* cookie);
 bool on_mdir_line_summary    (struct _Parser* p, mdir_line* line, void* cookie);
 
+bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie);
+bool on_mdir_line_aalarm(Parser* p, mdir_line* line, void* cookie);
+bool on_mdir_line_dalarm(Parser* p, mdir_line* line, void* cookie);
+bool on_mdir_line_palarm(Parser* p, mdir_line* line, void* cookie);
+bool on_mdir_line_malarm(Parser* p, mdir_line* line, void* cookie);
+
 bool process_propval_notes   (struct _Generator* g, CEPROPVAL* propval, void* cookie, const char *codepage);
 bool process_mdir_line_description(struct _Parser* p, mdir_line* line, void* cookie, const char *codepage);
 
@@ -34,6 +76,7 @@ bool process_mdir_line_description(struct _Parser* p, mdir_line* line, void* coo
 #define REMINDER_RELATED_END   1
 
 void to_propval_trigger(struct _Parser* parser, mdir_line* line, uint8_t related_support);
+void to_propval_vcal_alarms(Parser* parser, char *start_time_str, mdir_line* aalarm, mdir_line* dalarm, mdir_line* palarm, mdir_line* malarm);
 
 void to_icalendar_alarm(struct _Generator* generator, CEPROPVAL* reminder_enabled, CEPROPVAL* reminder_minutes, CEPROPVAL* reminder_options, uint8_t related);
 

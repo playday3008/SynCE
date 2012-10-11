@@ -398,32 +398,12 @@ exit:
 
  ***********************************************************************/
 
-typedef struct _EventParserData
-{
-  mdir_line* dtstart;
-  mdir_line* dtend;
-  mdir_line* trigger;
-#if ENABLE_RECURRENCE
-  RRA_MdirLineVector* exdates;
-  mdir_line* rrule;
-  mdir_line* uid;
-#endif
-  const char *codepage;
-} EventParserData;
-
 static bool on_timezone_tzid(Parser* p, mdir_line* line, void* cookie)
 {
   if (line)
     synce_trace("TZID = '%s'", line->values[0]);
   return true;
 }
-
-static bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
-{
-  EventParserData* event_parser_data = (EventParserData*)cookie;
-  event_parser_data->trigger = line;
-  return true;
-}/*}}}*/
 
 static bool on_mdir_line_dtend(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
@@ -530,13 +510,24 @@ bool rra_appointment_from_vevent(/*{{{*/
   timezone = parser_component_new("vTimeZone");
   parser_component_add_parser_property(timezone, 
       parser_property_new("tzid", on_timezone_tzid));
-  
+
+  /* check for ical VAlarm component */
   alarm = parser_component_new("vAlarm");
   parser_component_add_parser_property(alarm, 
       parser_property_new("trigger", on_alarm_trigger));
 
   event = parser_component_new("vEvent");
   parser_component_add_parser_component(event, alarm);
+
+  /* check for vcal alarm properties */
+  parser_component_add_parser_property(event, 
+      parser_property_new("aAlarm", on_mdir_line_aalarm));
+  parser_component_add_parser_property(event, 
+      parser_property_new("dAlarm", on_mdir_line_dalarm));
+  parser_component_add_parser_property(event, 
+      parser_property_new("pAlarm", on_mdir_line_palarm));
+  parser_component_add_parser_property(event, 
+      parser_property_new("mAlarm", on_mdir_line_malarm));
 
   parser_component_add_parser_property(event, 
       parser_property_new("Categories", on_mdir_line_categories));
@@ -688,7 +679,12 @@ bool rra_appointment_from_vevent(/*{{{*/
     goto exit;
   }
 
-  to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_START);
+  if (event_parser_data.trigger)
+    /* process ical vAlarm */
+    to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_START);
+  else if (event_parser_data.aalarm || event_parser_data.dalarm || event_parser_data.palarm || event_parser_data.malarm)
+    /* process vcal alarms */
+    to_propval_vcal_alarms(parser, event_parser_data.dtstart->values[0], event_parser_data.aalarm, event_parser_data.dalarm, event_parser_data.palarm, event_parser_data.malarm);
 
   /* The calendar application on my HP 620LX just hangs without this! */
   parser_add_int32(parser, ID_UNKNOWN_0002, 0);

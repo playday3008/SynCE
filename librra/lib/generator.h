@@ -19,24 +19,6 @@ typedef struct _GeneratorParam
   char** values;
 } GeneratorParam;
 
-typedef struct _GeneratorData
-{
-  CEPROPVAL* start;
-  CEPROPVAL* duration;
-  CEPROPVAL* type;
-  CEPROPVAL* reminder_minutes;
-  CEPROPVAL* reminder_enabled;
-  CEPROPVAL* reminder_options;
-  bool completed;
-  FILETIME completed_time;
-#if ENABLE_RECURRENCE
-  CEPROPVAL* recurrence_pattern;
-  CEPROPVAL* recurrence_timezone;
-  CEPROPVAL* unique;
-#endif
-  const char *codepage;
-} GeneratorData;
-
 
 typedef bool (*GeneratorPropertyFunc)(Generator* g, CEPROPVAL* property, void* cookie);
 
