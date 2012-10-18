@@ -16,6 +16,11 @@ struct _RRA_Timezone;
 #define RRA_TASK_UTF8			0x20
 #define RRA_TASK_CHARSET_MASK		0xf0
 
+#define RRA_TASK_VCAL_1_0		0x100
+#define RRA_TASK_VCAL_2_0		0x200
+#define RRA_TASK_VERSION_MASK		0xf00
+#define RRA_TASK_VERSION_DEFAULT	RRA_TASK_VCAL_1_0
+
 #ifndef SWIG
 bool rra_task_to_vtodo(
     uint32_t id,

@@ -16,6 +16,11 @@ struct _RRA_Timezone;
 #define RRA_APPOINTMENT_UTF8			0x20
 #define RRA_APPOINTMENT_CHARSET_MASK		0xf0
 
+#define RRA_APPOINTMENT_VCAL_1_0		0x100
+#define RRA_APPOINTMENT_VCAL_2_0		0x200
+#define RRA_APPOINTMENT_VERSION_MASK		0xf00
+#define RRA_APPOINTMENT_VERSION_DEFAULT		RRA_APPOINTMENT_VCAL_1_0
+
 #ifndef SWIG
 bool rra_appointment_to_vevent(
     uint32_t id,

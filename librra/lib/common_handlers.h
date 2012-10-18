@@ -30,6 +30,7 @@ typedef struct _GeneratorData
   CEPROPVAL* unique;
 #endif
   const char *codepage;
+  uint32_t flags;
 } GeneratorData;
 
 typedef struct _EventParserData
@@ -47,6 +48,7 @@ typedef struct _EventParserData
   mdir_line* uid;
 #endif
   const char *codepage;
+  uint32_t flags;
 } EventParserData;
 
 bool on_propval_categories (struct _Generator* g, CEPROPVAL* propval, void* cookie);

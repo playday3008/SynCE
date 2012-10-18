@@ -113,6 +113,11 @@ bool rra_task_to_vtodo(
   memset(&task_generator_data, 0, sizeof(GeneratorData));
   task_generator_data.codepage = codepage;
 
+  if (!(flags & RRA_TASK_VERSION_MASK))
+    flags = flags | RRA_TASK_VERSION_DEFAULT;
+
+  task_generator_data.flags = flags;
+
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
     case RRA_TASK_UTF8:
@@ -144,9 +149,28 @@ bool rra_task_to_vtodo(
   if (!generator_set_data(generator, data, data_size))
     goto exit;
 
+  /*
+   * VCALENDAR container prelim
+   */
   generator_add_simple(generator, "BEGIN", "VCALENDAR");
-  generator_add_simple(generator, "VERSION", "1.0");
 
+  switch (flags & RRA_TASK_VERSION_MASK)
+  {
+  case RRA_TASK_VCAL_1_0:
+    generator_add_simple(generator, "VERSION", "1.0");
+    break;
+  case RRA_TASK_VCAL_2_0:
+    generator_add_simple(generator, "VERSION", "2.0");
+    /*
+    generator_add_simple(generator, "METHOD", "PUBLISH");
+    */
+    break;
+  }
+  generator_add_simple(generator, "PRODID", "-//SynCE//NONSGML SynCE RRA//EN");
+
+  /*
+   * VTODO data
+   */ 
   generator_add_simple(generator, "BEGIN", "VTODO");
 
   if (id != RRA_TASK_ID_UNKNOWN)
@@ -174,21 +198,27 @@ bool rra_task_to_vtodo(
     }
   }
 
-  to_vcalendar_alarm(generator,
-		     task_generator_data.start,
-		     task_generator_data.reminder_enabled,
-		     task_generator_data.reminder_minutes,
-		     task_generator_data.reminder_options,
-		     tzi);
+  switch (flags & RRA_TASK_VERSION_MASK)
+  {
+  case RRA_TASK_VCAL_1_0:
+    to_vcalendar_alarm(generator,
+		       task_generator_data.start,
+		       task_generator_data.reminder_enabled,
+		       task_generator_data.reminder_minutes,
+		       task_generator_data.reminder_options,
+		       tzi);
+    break;
 
-  /* for ical
-  to_icalendar_alarm(generator,
+  case RRA_TASK_VCAL_2_0:
+    to_icalendar_alarm(generator,
                        task_generator_data.reminder_enabled,
                        task_generator_data.reminder_minutes,
                        task_generator_data.reminder_options,
                        REMINDER_RELATED_END);
-
-  */
+    break;
+  default:
+    break;
+  }
 
   generator_add_simple(generator, "END", "VTODO");
 
@@ -286,7 +316,7 @@ bool rra_task_from_vtodo(
     RRA_Timezone* tzi,
     const char *codepage)
 {
-	bool success = false;
+  bool success = false;
   Parser* parser = NULL;
   ParserComponent* base;
   ParserComponent* calendar;
@@ -296,6 +326,12 @@ bool rra_task_from_vtodo(
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
   event_parser_data.codepage = codepage;
+
+  if (!(flags & RRA_TASK_VERSION_MASK))
+    flags = flags | RRA_TASK_VERSION_DEFAULT;
+
+  event_parser_data.flags = flags;
+
   switch (flags & RRA_TASK_CHARSET_MASK)
   {
     case RRA_TASK_UTF8:

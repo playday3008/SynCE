@@ -172,6 +172,11 @@ bool rra_appointment_to_vevent(/*{{{*/
   memset(&event_generator_data, 0, sizeof(GeneratorData));
   event_generator_data.codepage = codepage;
 
+  if (!(flags & RRA_APPOINTMENT_VERSION_MASK))
+    flags = flags | RRA_APPOINTMENT_VERSION_DEFAULT;
+
+  event_generator_data.flags = flags;
+
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
   {
     case RRA_APPOINTMENT_UTF8:
@@ -188,7 +193,18 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator)
     goto exit;
 
-  generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status_vcal);
+  switch (flags & RRA_APPOINTMENT_VERSION_MASK)
+  {
+  case RRA_APPOINTMENT_VCAL_1_0:
+    generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status_vcal);
+    break;
+  case RRA_APPOINTMENT_VCAL_2_0:
+    generator_add_property(generator, ID_BUSY_STATUS, on_propval_busy_status_ical);
+    break;
+  default:
+    break;
+  }
+
   generator_add_property(generator, ID_CATEGORIES,  on_propval_categories);
   generator_add_property(generator, ID_DURATION,    on_propval_duration);
   generator_add_property(generator, ID_APPOINTMENT_TYPE, on_propval_type);
@@ -209,22 +225,29 @@ bool rra_appointment_to_vevent(/*{{{*/
   if (!generator_set_data(generator, data, data_size))
     goto exit;
 
+  /*
+   * VCALENDAR container prelim
+   */
   generator_add_simple(generator, "BEGIN", "VCALENDAR");
-  generator_add_simple(generator, "VERSION", "1.0");
 
-#if 0 /* for iCalendar ? */
-  generator_add_simple(generator, "PRODID", "-//SynCE//NONSGML SynCE RRA//EN");
- 
   switch (flags & RRA_APPOINTMENT_VERSION_MASK)
   {
-    case RRA_APPOINTMENT_VERSION_2_0:
+    case RRA_APPOINTMENT_VCAL_1_0:
+      generator_add_simple(generator, "VERSION", "1.0");
+      break;
+    case RRA_APPOINTMENT_VCAL_2_0:
       generator_add_simple(generator, "VERSION", "2.0");
+      /*
+      generator_add_simple(generator, "METHOD", "PUBLISH");
+      */
       break;
   }
-       
-  generator_add_simple(generator, "METHOD", "PUBLISH");
-#endif
- 
+
+  generator_add_simple(generator, "PRODID", "-//SynCE//NONSGML SynCE RRA//EN");
+
+  /*
+   * VEVENT data
+   */ 
   generator_add_simple(generator, "BEGIN", "VEVENT");
 
   if (id != RRA_APPOINTMENT_ID_UNKNOWN)
@@ -307,20 +330,28 @@ bool rra_appointment_to_vevent(/*{{{*/
     synce_warning("Missing start, duration or duration unit");
   }
 
-  to_vcalendar_alarm(generator,
-		     event_generator_data.start,
-		     event_generator_data.reminder_enabled,
-		     event_generator_data.reminder_minutes,
-		     event_generator_data.reminder_options,
-		     tzi);
+  switch (flags & RRA_APPOINTMENT_VERSION_MASK)
+  {
+  case RRA_APPOINTMENT_VCAL_1_0:
+    to_vcalendar_alarm(generator,
+		       event_generator_data.start,
+		       event_generator_data.reminder_enabled,
+		       event_generator_data.reminder_minutes,
+		       event_generator_data.reminder_options,
+		       tzi);
+    break;
 
-  /* for ical
-  to_icalendar_alarm(generator,
+  case RRA_APPOINTMENT_VCAL_2_0:
+    to_icalendar_alarm(generator,
                        event_generator_data.reminder_enabled,
                        event_generator_data.reminder_minutes,
                        event_generator_data.reminder_options,
                        REMINDER_RELATED_START);
-  */
+    break;
+
+  default:
+    break;
+  }
 
 #if ENABLE_RECURRENCE
   if (event_generator_data.recurrence_pattern)
@@ -480,7 +511,7 @@ bool rra_appointment_from_vevent(/*{{{*/
     RRA_Timezone* tzi,
     const char *codepage)
 {
-	bool success = false;
+  bool success = false;
   Parser* parser = NULL;
   ParserComponent* base;
   ParserComponent* calendar;
@@ -495,6 +526,11 @@ bool rra_appointment_from_vevent(/*{{{*/
   event_parser_data.exdates = rra_mdir_line_vector_new();
 #endif
 
+  if (!(flags & RRA_APPOINTMENT_VERSION_MASK))
+    flags = flags | RRA_APPOINTMENT_VERSION_DEFAULT;
+
+  event_parser_data.flags = flags;
+
   switch (flags & RRA_APPOINTMENT_CHARSET_MASK)
   {
     case RRA_APPOINTMENT_UTF8:
@@ -507,6 +543,7 @@ bool rra_appointment_from_vevent(/*{{{*/
       break;
   }
 
+  /* check for ical VTimezone component */
   timezone = parser_component_new("vTimeZone");
   parser_component_add_parser_property(timezone, 
       parser_property_new("tzid", on_timezone_tzid));
