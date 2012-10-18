@@ -557,7 +557,7 @@ static bool parser_handle_component(Parser* p, ParserComponent* ct)/*{{{*/
       else
       {
         /* create and use temporary component type */
-        /*synce_trace("Handling unknown component '%s'", line->values[0]);*/
+        synce_trace("Handling unknown component '%s'", line->values[0]);
         other = parser_component_new(line->values[0]);
         result = parser_handle_component(p, other);
         parser_component_destroy(other);
@@ -597,10 +597,10 @@ static bool parser_handle_component(Parser* p, ParserComponent* ct)/*{{{*/
 
         pt->used = true;
       }
-      /*else
+      else
       {
         synce_trace("Property '%s' not handled", line->name);
-      }*/
+      }
     }
   }
 

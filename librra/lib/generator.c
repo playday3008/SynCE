@@ -1,6 +1,7 @@
 /* $Id$ */
 #define _GNU_SOURCE 1
 #include "generator.h"
+#include "parser.h"
 #include "dbstream.h"
 #include "strbuf.h"
 #include <rapi.h>
@@ -158,7 +159,56 @@ bool generator_run(Generator* self)
     }
     else
     {
-      synce_trace("Unhandled property id: %04x", id);
+      char *tmp_str;
+      switch (self->propvals[i].propid & 0xffff)
+      {
+      case CEVT_BLOB:
+        synce_trace("Generator: Unhandled property, id: %04x, type: BLOB", id);
+        break;
+      case CEVT_BOOL:
+        if (self->propvals[i].val.boolVal == FALSE)
+          synce_trace("Generator: Unhandled property, id: %04x, type: bool:FALSE", id);
+        else
+          synce_trace("Generator: Unhandled property, id: %04x, type: bool:TRUE", id);
+        break;
+      case CEVT_FILETIME:
+        if ((0 == self->propvals[i].val.filetime.dwLowDateTime) && (0 == self->propvals[i].val.filetime.dwHighDateTime))
+          synce_trace("Generator: Unhandled property, id: %04x, type: filetime:NULL", id);
+        else
+        {
+          time_t start_time;
+          char buffer[32];
+          parser_filetime_to_unix_time(&self->propvals[i].val.filetime, &start_time);
+          strftime(buffer, sizeof(buffer), "%Y%m%dT%H%M%SZ", gmtime(&start_time));
+          synce_trace("Generator: Unhandled property, id: %04x, type: filetime:%08x %08x=%s", id, self->propvals[i].val.filetime.dwHighDateTime,
+                      self->propvals[i].val.filetime.dwLowDateTime,
+                      buffer);
+        }
+        break;
+      case CEVT_I2:
+        synce_trace("Generator: Unhandled property, id: %04x, type: I2:%d", id, self->propvals[i].val.iVal);
+        break;
+      case CEVT_I4:
+        synce_trace("Generator: Unhandled property, id: %04x, type: I4:%d", id, self->propvals[i].val.iVal);
+        break;
+      case CEVT_LPWSTR:
+        tmp_str = wstr_to_current(self->propvals[i].val.lpwstr);
+        synce_trace("Generator: Unhandled property, id: %04x, type: WSTR:%s", id, tmp_str);
+        free(tmp_str);
+        break;
+      case CEVT_R8:
+        synce_trace("Generator: Unhandled property, id: %04x, type: R8", id);
+        break;
+      case CEVT_UI2:
+        synce_trace("Generator: Unhandled property, id: %04x, type: UI2:%u", id, self->propvals[i].val.uiVal);
+        break;
+      case CEVT_UI4:
+        synce_trace("Generator: Unhandled property, id: %04x, type: UI4:%u", id, self->propvals[i].val.uiVal);
+        break;
+      default:
+        synce_trace("Generator: Unhandled property, id: %04x, unknown type: %u", id, (self->propvals[i].propid & 0xffff));
+        break;
+      }
     }
   }
 
