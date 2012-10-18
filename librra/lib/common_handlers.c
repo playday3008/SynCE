@@ -668,3 +668,11 @@ bool on_propval_reminder_options(Generator* g, CEPROPVAL* propval, void* cookie)
   return true;
 }
 
+bool on_propval_reminder_sound_file(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  char *tmpstr;
+  tmpstr = wstr_to_current(propval->val.lpwstr);
+  synce_trace("Ignoring specified ID_REMINDER_SOUND_FILE: %s", tmpstr);
+  free(tmpstr);
+  return true;
+}

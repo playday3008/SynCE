@@ -213,6 +213,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE, on_propval_reminder_minutes);
   generator_add_property(generator, ID_REMINDER_ENABLED, on_propval_reminder_enabled);
   generator_add_property(generator, ID_REMINDER_OPTIONS, on_propval_reminder_options);
+  generator_add_property(generator, ID_REMINDER_SOUND_FILE,    on_propval_reminder_sound_file);
   generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
   generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);

@@ -59,6 +59,7 @@ bool on_propval_subject    (struct _Generator* g, CEPROPVAL* propval, void* cook
 bool on_propval_reminder_enabled(Generator* g, CEPROPVAL* propval, void* cookie);
 bool on_propval_reminder_minutes(Generator* g, CEPROPVAL* propval, void* cookie);
 bool on_propval_reminder_options(Generator* g, CEPROPVAL* propval, void* cookie);
+bool on_propval_reminder_sound_file(Generator* g, CEPROPVAL* propval, void* cookie);
 
 bool on_mdir_line_categories (struct _Parser* p, mdir_line* line, void* cookie);
 bool on_mdir_line_class      (struct _Parser* p, mdir_line* line, void* cookie);

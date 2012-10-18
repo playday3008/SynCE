@@ -145,6 +145,7 @@ bool rra_task_to_vtodo(
   generator_add_property(generator, ID_REMINDER_ENABLED,              on_propval_reminder_enabled);
   generator_add_property(generator, ID_REMINDER_MINUTES_BEFORE, on_propval_reminder_minutes);
   generator_add_property(generator, ID_REMINDER_OPTIONS, on_propval_reminder_options);
+  generator_add_property(generator, ID_REMINDER_SOUND_FILE,    on_propval_reminder_sound_file);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
