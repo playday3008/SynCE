@@ -153,7 +153,10 @@ partners_create_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
 
   RRA_Matchmaker* matchmaker = NULL;
 
-  if (!(matchmaker = rra_matchmaker_new())) {
+  RapiConnection *rapi_conn = NULL;
+  g_object_get(priv->device, "rapi-conn", &rapi_conn, NULL);
+
+  if (!(matchmaker = rra_matchmaker_new(rapi_conn))) {
     g_critical("%s: Failed to create match-maker", G_STRFUNC);
     return;
   }
@@ -234,7 +237,10 @@ partners_remove_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
 
   RRA_Matchmaker* matchmaker = NULL;
 
-  if (!(matchmaker = rra_matchmaker_new())) {
+  RapiConnection *rapi_conn = NULL;
+  g_object_get(priv->device, "rapi-conn", &rapi_conn, NULL);
+
+  if (!(matchmaker = rra_matchmaker_new(rapi_conn))) {
     g_critical("%s: Failed to create match-maker", G_STRFUNC);
     return;
   }
@@ -1364,7 +1370,10 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
   if (!wm_device_rapi_select(priv->device))
     return;
 
-  if (!(matchmaker = rra_matchmaker_new())) {
+  RapiConnection *rapi_conn = NULL;
+  g_object_get(priv->device, "rapi-conn", &rapi_conn, NULL);
+
+  if (!(matchmaker = rra_matchmaker_new(rapi_conn))) {
     g_critical("%s: Failed to create match-maker", G_STRFUNC);
     goto exit;
   }
