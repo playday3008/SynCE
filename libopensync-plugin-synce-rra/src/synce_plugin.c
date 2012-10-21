@@ -160,7 +160,7 @@ connect(OSyncContext *ctx)
         env->codepage = iconv_codepage;
 
 	//1 - creating matchmaker
-	matchmaker = rra_matchmaker_new();
+	matchmaker = rra_matchmaker_new(NULL);
 	if (!matchmaker){
 		osync_context_report_error(ctx, OSYNC_ERROR_GENERIC, "building matchmaker");
 		return;
@@ -177,7 +177,7 @@ connect(OSyncContext *ctx)
 	osync_debug("SynCE-SYNC", 4, "partner set");
 
         //3 -setting timezone
-        if (!rra_timezone_get(&(env->timezone))){
+        if (!rra_timezone_get(&(env->timezone), NULL)){
 		osync_context_report_error(ctx, OSYNC_ERROR_IO_ERROR, "getting timezone");
 		goto exit;
     	}
