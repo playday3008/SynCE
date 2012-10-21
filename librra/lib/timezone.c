@@ -49,7 +49,7 @@ static const uint8_t default_timezone[172]={
   0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
   0xc4,0xff,0xff,0xff};
 
-bool rra_timezone_get(RRA_Timezone* tzi)/*{{{*/
+bool rra_timezone_get(RRA_Timezone* tzi, RapiConnection *connection)/*{{{*/
 {
   bool success = false;
   LONG error;
@@ -66,6 +66,7 @@ bool rra_timezone_get(RRA_Timezone* tzi)/*{{{*/
     goto exit;
   }
 
+  rapi_connection_select(connection);
   if (rapi_reg_open_key(HKEY_LOCAL_MACHINE, REGISTRY_KEY_NAME, &key))
   {
     wide_value_name = wstr_from_ascii(REGISTRY_VALUE_NAME);

@@ -197,7 +197,7 @@ static bool get_rra_timezone_information(const char* argv0, RRA_Timezone* tzi, c
     hr = CeRapiInit();
     if (SUCCEEDED(hr))
     {
-      if (rra_timezone_get(tzi))
+      if (rra_timezone_get(tzi, NULL))
         success = true;
       else
         fprintf(stderr, "%s: Failed to get time zone information\n", argv0);

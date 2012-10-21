@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     goto exit;
   }
 
-  matchmaker = rra_matchmaker_new();
+  matchmaker = rra_matchmaker_new(NULL);
   if (!matchmaker)
   {
     synce_error("Failed to create match-maker");
