@@ -66,7 +66,8 @@ bool rra_timezone_get(RRA_Timezone* tzi, RapiConnection *connection)/*{{{*/
     goto exit;
   }
 
-  rapi_connection_select(connection);
+  if (connection)
+    rapi_connection_select(connection);
   if (rapi_reg_open_key(HKEY_LOCAL_MACHINE, REGISTRY_KEY_NAME, &key))
   {
     wide_value_name = wstr_from_ascii(REGISTRY_VALUE_NAME);
