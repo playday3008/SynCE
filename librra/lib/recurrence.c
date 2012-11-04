@@ -11,10 +11,12 @@
 #include "generator.h"
 #include "parser.h"
 #include "strv.h"
+#include "strbuf.h"
 #include <rapi.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #define VERBOSE 1
 
@@ -23,13 +25,24 @@
 #define MINUTES_PER_DAY   (60*24)
 #define SECONDS_PER_DAY   (60*MINUTES_PER_DAY)
 
+
+typedef enum
+{
+  RRuleFreqUnknown = 0,
+  RRuleDaily,
+  RRuleWeekly,
+  RRuleMonthly,
+  RRuleYearly
+} RRuleFreq;
+
 typedef struct
 {
   char* byday;
   int   bymonthday;
+  int   bymonth;
   int   bysetpos;
   int   count;
-  char* freq;
+  RRuleFreq freq;
   int   interval;
   char* until;
 } RRule;
@@ -57,7 +70,35 @@ static bool recurrence_generate_exceptions(
   return true;
 }
 
-static void recurrence_append_until_or_count(
+static void recurrence_append_until_or_count_vcal(
+    char* buffer, 
+    size_t size, 
+    RRA_RecurrencePattern* pattern)
+{
+  switch (pattern->flags & RecurrenceEndMask)
+  {
+    case RecurrenceEndsOnDate:
+      {
+        struct tm date = rra_minutes_to_struct(pattern->pattern_end_date + pattern->start_minute);
+        strftime(buffer, size, " %Y%m%dT%H%M%SZ", &date);
+      }
+      break;
+
+    case RecurrenceEndsAfterXOccurrences:
+      snprintf(buffer, size, " #%i", pattern->occurrences);
+      break;
+
+    case RecurrenceDoesNotEnd:
+      snprintf(buffer, size, " #0");
+      break;
+
+    default:
+      synce_warning("Unknown RecurrenceEnd");
+      break;
+  }
+}
+
+static void recurrence_append_until_or_count_ical(
     char* buffer, 
     size_t size, 
     RRA_RecurrencePattern* pattern)
@@ -95,7 +136,48 @@ static DaysOfWeekMaskName masks_and_names[] =
   {olSaturday,  "SA"},
 };
 
-static void recurrence_append_byday(
+static void recurrence_append_byday_vcal(
+    char* buffer, 
+    size_t size,
+    RRA_RecurrencePattern* pattern)
+{
+  int i;
+
+  for (i = 0; i < 7; i++)
+  {
+    if (pattern->days_of_week_mask & masks_and_names[i].mask)
+    {
+
+#if 0
+      switch (pattern->instance)
+      {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+          snprintf(buffer, size, "%i%s", pattern->instance, masks_and_names[i].name);
+          break;
+        case 5:
+          snprintf(buffer, size, "-1%s", masks_and_names[i].name);
+          break;
+        case 0:
+#endif
+          snprintf(buffer, size, " %s", masks_and_names[i].name);
+#if 0
+          break;
+        default:
+          synce_error("Invalid instance: %08x", pattern->instance);
+          break;
+      }
+#endif
+
+      size -= strlen(buffer);
+      buffer += strlen(buffer);
+    }
+  }
+}
+
+static void recurrence_append_byday_ical(
     char* buffer, 
     size_t size,
     RRA_RecurrencePattern* pattern)
@@ -148,7 +230,20 @@ static void recurrence_append_byday(
   }
 }
 
-static bool recurrence_generate_daily_rrule(
+static bool recurrence_generate_daily_rrule_vcal(
+    Generator* g,
+    RRA_RecurrencePattern* pattern)
+{
+  char buffer[256];
+  snprintf(buffer, sizeof(buffer), "D%i",
+      pattern->interval / MINUTES_PER_DAY);
+
+  recurrence_append_until_or_count_vcal(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
+}
+
+static bool recurrence_generate_daily_rrule_ical(
     Generator* g,
     RRA_RecurrencePattern* pattern)
 {
@@ -156,12 +251,26 @@ static bool recurrence_generate_daily_rrule(
   snprintf(buffer, sizeof(buffer), "FREQ=DAILY;INTERVAL=%i",
       pattern->interval / MINUTES_PER_DAY);
 
-  recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_until_or_count_ical(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
   return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
-static bool recurrence_generate_weekly_rrule(
+static bool recurrence_generate_weekly_rrule_vcal(
+    Generator* g,
+    RRA_RecurrencePattern* pattern)
+{
+  char buffer[256];
+  snprintf(buffer, sizeof(buffer), "W%i",
+      pattern->interval);
+
+  recurrence_append_byday_vcal         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_until_or_count_vcal(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
+}
+
+static bool recurrence_generate_weekly_rrule_ical(
     Generator* g,
     RRA_RecurrencePattern* pattern)
 {
@@ -169,13 +278,26 @@ static bool recurrence_generate_weekly_rrule(
   snprintf(buffer, sizeof(buffer), "FREQ=WEEKLY;INTERVAL=%i",
       pattern->interval);
 
-  recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
-  recurrence_append_byday         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_until_or_count_ical(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_byday_ical         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
   return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
-static bool recurrence_generate_monthly_rrule(
+static bool recurrence_generate_monthly_rrule_vcal(
+    Generator* g,
+    RRA_RecurrencePattern* pattern)
+{
+  char buffer[256];
+  snprintf(buffer, sizeof(buffer), "MD%i %i",
+      pattern->interval, pattern->day_of_month);
+
+  recurrence_append_until_or_count_vcal(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
+}
+
+static bool recurrence_generate_monthly_rrule_ical(
     Generator* g,
     RRA_RecurrencePattern* pattern)
 {
@@ -183,12 +305,32 @@ static bool recurrence_generate_monthly_rrule(
   snprintf(buffer, sizeof(buffer), "FREQ=MONTHLY;INTERVAL=%i;BYMONTHDAY=%i",
       pattern->interval, pattern->day_of_month);
 
-  recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_until_or_count_ical(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
   return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
-static bool recurrence_generate_monthnth_rrule(
+static bool recurrence_generate_monthnth_rrule_vcal(
+    Generator* g,
+    RRA_RecurrencePattern* pattern)
+{
+  char buffer[256];
+
+  if (pattern->instance == 5)
+    snprintf(buffer, sizeof(buffer), "MP%i 1-",
+             pattern->interval);
+  else
+    snprintf(buffer, sizeof(buffer), "MP%i %i+",
+             pattern->interval,
+             pattern->instance);
+
+  recurrence_append_byday_vcal         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_until_or_count_vcal(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+
+  return generator_add_simple_unescaped(g, "RRULE", buffer);
+}
+
+static bool recurrence_generate_monthnth_rrule_ical(
     Generator* g,
     RRA_RecurrencePattern* pattern)
 {
@@ -197,13 +339,13 @@ static bool recurrence_generate_monthnth_rrule(
       pattern->interval,
       pattern->instance);
 
-  recurrence_append_until_or_count(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
-  recurrence_append_byday         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_until_or_count_ical(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
+  recurrence_append_byday_ical         (buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), pattern);
 
   return generator_add_simple_unescaped(g, "RRULE", buffer);
 }
 
-bool recurrence_generate_rrule(
+bool recurrence_generate_rrule_vcal(
     Generator* g, 
     CEPROPVAL* propval,
     RRA_Timezone *tzi)
@@ -228,16 +370,70 @@ bool recurrence_generate_rrule(
   switch (pattern->recurrence_type)
   {
     case olRecursDaily:
-      success = recurrence_generate_daily_rrule(g, pattern);
+      success = recurrence_generate_daily_rrule_vcal(g, pattern);
       break;
     case olRecursWeekly:
-      success = recurrence_generate_weekly_rrule(g, pattern);
+      success = recurrence_generate_weekly_rrule_vcal(g, pattern);
       break;
     case olRecursMonthly:
-      success = recurrence_generate_monthly_rrule(g, pattern);
+      success = recurrence_generate_monthly_rrule_vcal(g, pattern);
       break;
     case olRecursMonthNth:
-      success = recurrence_generate_monthnth_rrule(g, pattern);
+      success = recurrence_generate_monthnth_rrule_vcal(g, pattern);
+      break;
+    default:
+      goto exit;
+  }
+
+  if (!success)
+  {
+    synce_error("Failed to generate RRULE for recurrence type %i",
+      pattern->recurrence_type);
+    goto exit;
+  }
+
+  success = recurrence_generate_exceptions(g, pattern->exceptions);
+
+exit:
+  rra_recurrence_pattern_destroy(pattern);
+  return success;
+}
+
+bool recurrence_generate_rrule_ical(
+    Generator* g, 
+    CEPROPVAL* propval,
+    RRA_Timezone *tzi)
+{
+  bool success = false;
+  RRA_RecurrencePattern* pattern = NULL;
+
+  if ((propval->propid & 0xffff) != CEVT_BLOB)
+  {
+    synce_error("CEPROPVAL is not a BLOB");
+    goto exit;
+  }
+  
+  pattern = rra_recurrence_pattern_from_buffer(propval->val.blob.lpb, propval->val.blob.dwCount, tzi);
+
+  if (!pattern)
+  {
+    synce_error("Failed to decode recurrence pattern");
+    goto exit;
+  }
+
+  switch (pattern->recurrence_type)
+  {
+    case olRecursDaily:
+      success = recurrence_generate_daily_rrule_ical(g, pattern);
+      break;
+    case olRecursWeekly:
+      success = recurrence_generate_weekly_rrule_ical(g, pattern);
+      break;
+    case olRecursMonthly:
+      success = recurrence_generate_monthly_rrule_ical(g, pattern);
+      break;
+    case olRecursMonthNth:
+      success = recurrence_generate_monthnth_rrule_ical(g, pattern);
       break;
     default:
       goto exit;
@@ -264,7 +460,210 @@ static void replace_string_with_copy(char** str, const char* value)
   *str = strdup(value);
 }
 
-static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
+static bool recurrence_initialize_rrule_vcal(const char* str, RRule* rrule)
+{
+  int i;
+
+  /** TODO - check for other whitespace, and multiple whitespace */
+  char** strv = strsplit(str, ' ');
+
+  rrule->interval = 1;
+
+  if (strv[0][0] == 'D')
+  {
+    rrule->freq = RRuleDaily;
+    rrule->interval = atoi(strv[0]+1);
+    if (strv[1])
+    {
+      if (strv[1][0] == '#')
+	rrule->count = atoi(strv[1]+1);
+      else
+	replace_string_with_copy(&rrule->until, strv[1]);
+    }
+  }
+  else if (strv[0][0] == 'W')
+  {
+    rrule->freq = RRuleWeekly;
+    rrule->interval = atoi(strv[0]+1);
+
+    StrBuf *days_list = strbuf_new(NULL);
+    for (i = 1; strv[i]; i++)
+    {
+      if (strv[i][0] == '#')
+      {
+	rrule->count = atoi(strv[i]+1);
+	break;
+      }
+      else if (isdigit(strv[i][0]))
+      {
+	replace_string_with_copy(&rrule->until, strv[i]);
+	break;
+      }
+      else
+      {
+	if (days_list->length > 0)
+	  days_list = strbuf_append(days_list,",");
+	days_list = strbuf_append(days_list,strv[i]);
+      }
+    }
+    if (days_list->length > 0)
+      replace_string_with_copy(&rrule->byday, days_list->buffer);
+    strbuf_destroy(days_list,1);
+  }
+  else if (strv[0][0] == 'M')
+  {
+    rrule->freq = RRuleMonthly;
+    if (strv[0][1] == 'D') /* by day in month, ie date */
+    {
+      rrule->interval = atoi(strv[0]+2);
+
+      int days_found = 0;
+      for (i = 1; strv[i]; i++)
+      {
+	if (strv[i][0] == '#')
+	{
+	  rrule->count = atoi(strv[i]+1);
+	  break;
+	}
+	else if (isdigit(strv[i][0]) || STR_EQUAL(strv[i],"LD"))
+	{
+	  if (strlen(strv[i]) > 2)
+	  {
+	    replace_string_with_copy(&rrule->until, strv[i]);
+	    break;
+	  }
+
+	  if (days_found == 0)
+	  {
+	    if (STR_EQUAL(strv[i],"LD"))
+	      rrule->bymonthday = -1;
+	    else
+	      rrule->bymonthday = atoi(strv[i]);
+	  }
+	  days_found++;
+	}
+      }
+
+      if (days_found > 1)
+	synce_warning("Monthly by Day (MD) can only handle one day in RRA format, in RRULE '%s'", str);
+    }
+    else if (strv[0][1] == 'P') /* by position, ie the complicated one */
+    {
+      rrule->interval = atoi(strv[0]+2);
+      /* */
+      StrBuf *days_list = strbuf_new(NULL);
+      char current_occurence_str[3];
+      for (i = 1; strv[i]; i++)
+      {
+	if (strv[i][0] == '#')
+	{
+	  rrule->count = atoi(strv[i]+1);
+	  break;
+	}
+	else if (isdigit(strv[i][0]) && strlen(strv[i]) > 2)
+	{
+	  replace_string_with_copy(&rrule->until, strv[i]);
+	  break;
+	}
+	else if (isdigit(strv[i][0]))
+	{
+	  int occurence = atoi(strv[i]);
+	  if (strv[i][1] == '+')
+	    snprintf(current_occurence_str, 2, "%d", occurence);
+	  else
+	    snprintf(current_occurence_str, 3, "-%d", occurence);
+	}
+	else
+	{
+	  if (days_list->length > 0)
+	    days_list = strbuf_append(days_list,",");
+	  days_list = strbuf_append(days_list,current_occurence_str);
+	  days_list = strbuf_append(days_list,strv[i]);
+	}
+      }
+      if (days_list->length > 0)
+	replace_string_with_copy(&rrule->bymonthday, days_list->buffer);
+      strbuf_destroy(days_list,1);
+
+    }
+    else
+      synce_error("Unexpected frequency in RRULE '%s'", str);
+  }
+  else if (strv[0][0] == 'Y')
+  {
+    rrule->freq = RRuleYearly;
+    rrule->interval = atoi(strv[0]+2);
+
+    if (strv[0][1] == 'M') /* by month number */
+    {
+      int months_found = 0;
+      for (i = 1; strv[i]; i++)
+      {
+	if (strv[i][0] == '#')
+	{
+	  rrule->count = atoi(strv[i]+1);
+	  break;
+	}
+	else if (isdigit(strv[i][0]))
+	{
+	  if (strlen(strv[i]) > 2)
+	  {
+	    replace_string_with_copy(&rrule->until, strv[i]);
+	    break;
+	  }
+
+	  if (months_found == 0)
+	  {
+	    rrule->bymonth = atoi(strv[i]);
+	  }
+	  months_found++;
+	}
+      }
+
+    }
+    else if (strv[0][1] == 'D') /* by day in year */
+    {
+      int days_found = 0;
+      for (i = 1; strv[i]; i++)
+      {
+	if (strv[i][0] == '#')
+	{
+	  rrule->count = atoi(strv[i]+1);
+	  break;
+	}
+	else if (isdigit(strv[i][0]))
+	{
+	  if (strlen(strv[i]) > 2)
+	  {
+	    replace_string_with_copy(&rrule->until, strv[i]);
+	    break;
+	  }
+
+	  if (days_found == 0)
+	  {
+	    rrule->bymonthday = atoi(strv[i]);
+	  }
+	  days_found++;
+	}
+      }
+
+      if (days_found > 1)
+	synce_warning("Yearly by Day (YD) (converted to monthly) can only handle one day in RRA format, in RRULE '%s'", str);
+
+    }
+    else
+      synce_error("Unexpected frequency in RRULE '%s'", str);
+  }
+  else
+  {
+    synce_error("Unexpected frequency in RRULE '%s'", str);
+  }
+  
+  strv_free(strv);
+  return true;
+}
+
+static bool recurrence_initialize_rrule_ical(const char* str, RRule* rrule)
 {
   int i;
   char** strv = strsplit(str, ';');
@@ -285,6 +684,8 @@ static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
 
     if (STR_EQUAL(pair[0], "BYDAY"))
       replace_string_with_copy(&rrule->byday, pair[1]);
+    else if (STR_EQUAL(pair[0], "BYMONTH"))
+      rrule->bymonth = atoi(pair[1]);
     else if (STR_EQUAL(pair[0], "BYMONTHDAY"))
       rrule->bymonthday = atoi(pair[1]);
     else if (STR_EQUAL(pair[0], "BYSETPOS"))
@@ -292,7 +693,18 @@ static bool recurrence_initialize_rrule(const char* str, RRule* rrule)
     else if (STR_EQUAL(pair[0], "COUNT"))
       rrule->count = atoi(pair[1]);
     else if (STR_EQUAL(pair[0], "FREQ"))
-      replace_string_with_copy(&rrule->freq, pair[1]);
+      {
+	if (STR_EQUAL(pair[1], "DAILY"))
+	  rrule->freq = RRuleDaily;
+	else if (STR_EQUAL(pair[1], "WEEKLY"))
+	  rrule->freq = RRuleWeekly;
+	else if (STR_EQUAL(pair[1], "MONTHLY"))
+	  rrule->freq = RRuleMonthly;
+	else if (STR_EQUAL(pair[1], "YEARLY"))
+	  rrule->freq = RRuleYearly;
+	else
+	  synce_error("Unexpected frequencey in RRULE '%s'", str);
+      }
     else if (STR_EQUAL(pair[0], "INTERVAL"))
       rrule->interval = atoi(pair[1]);
     else if (STR_EQUAL(pair[0], "UNTIL"))
@@ -451,31 +863,38 @@ bool recurrence_parse_rrule(
   }
 
   memset(&rrule, 0, sizeof(RRule));
-  if (!recurrence_initialize_rrule(mdir_rrule->values[0], &rrule))
+
+  bool rrule_init_result;
+  if (strstr(mdir_rrule->values[0],"FREQ"))
+    rrule_init_result = recurrence_initialize_rrule_ical(mdir_rrule->values[0], &rrule);
+  else
+    rrule_init_result = recurrence_initialize_rrule_vcal(mdir_rrule->values[0], &rrule);
+
+  if (!rrule_init_result)
   {
     synce_error("Failed to parse RRULE '%s'", mdir_rrule->values[0]);
     goto exit;
   }
 
-  if (!rrule.freq)
+  if (rrule.freq == RRuleFreqUnknown)
   {
     synce_error("No FREQ part in RRULE '%s'", mdir_rrule->values[0]);
     goto exit;
   }
 
-  if (STR_EQUAL(rrule.freq, "DAILY"))
+  if (rrule.freq == RRuleDaily)
   {
     pattern->recurrence_type = olRecursDaily;
     /* Convert to Daily with 24*60 times the interval (days->minutes) */
     synce_trace("Converting Interval to minutes");
     rrule.interval *= MINUTES_PER_DAY;
   }
-  else if (STR_EQUAL(rrule.freq, "WEEKLY"))
+  else if (rrule.freq == RRuleWeekly)
   {
     pattern->recurrence_type = olRecursWeekly;
     recurrence_set_days_of_week_mask(pattern, &rrule);
   }
-  else if (STR_EQUAL(rrule.freq, "MONTHLY"))
+  else if (rrule.freq == RRuleMonthly)
   {
     if (rrule.bymonthday)
     {
@@ -495,7 +914,7 @@ bool recurrence_parse_rrule(
       goto exit;
     }
   }
-  else if (STR_EQUAL(rrule.freq, "YEARLY"))
+  else if (rrule.freq == RRuleYearly)
   {
     /* Convert to Monthly with 12 times the interval */
     pattern->recurrence_type = olRecursMonthly;
@@ -505,9 +924,9 @@ bool recurrence_parse_rrule(
     {
       pattern->day_of_month = rrule.bymonthday;
     }
-    else if (rrule.bysetpos)
+    else if (rrule.bysetpos || rrule.bymonth)
     {
-      synce_error("Don't know how to handle BYSETPOS in RRULE '%s'", 
+      synce_error("Don't know how to handle BYSETPOS or BYMONTH in RRULE '%s'", 
           mdir_rrule->values[0]);
       goto exit;
     }
@@ -615,9 +1034,9 @@ bool recurrence_parse_rrule(
       goto exit;
     }
 
-    if (!parser_add_int16(p, ID_OCCURENCE, OCCURENCE_REPEATED))
+    if (!parser_add_int16(p, ID_OCCURRENCE, OCCURRENCE_REPEATED))
     {
-      synce_error("Failed to sett occurence in output");
+      synce_error("Failed to set occurrence in output");
       goto exit;
     }
   }

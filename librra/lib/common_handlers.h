@@ -25,6 +25,7 @@ typedef struct _GeneratorData
   bool completed;
   FILETIME completed_time;
 #if ENABLE_RECURRENCE
+  CEPROPVAL* occurrence;
   CEPROPVAL* recurrence_pattern;
   CEPROPVAL* recurrence_timezone;
   CEPROPVAL* unique;

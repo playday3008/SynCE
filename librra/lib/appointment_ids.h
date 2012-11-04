@@ -51,10 +51,10 @@
 #define APPOINTMENT_TYPE_ALL_DAY     1
 #define APPOINTMENT_TYPE_NORMAL      2
 
-#define ID_OCCURENCE       0x4223 
+#define ID_OCCURRENCE       0x4223 
 
-#define OCCURENCE_ONCE      0
-#define OCCURENCE_REPEATED  1
+#define OCCURRENCE_ONCE      0
+#define OCCURRENCE_REPEATED  1
 
 #define ID_REMINDER_MINUTES_BEFORE        0x4501
 #define ID_REMINDER_ENABLED               0x4503

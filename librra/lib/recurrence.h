@@ -11,7 +11,12 @@
 struct _Generator;
 struct _Parser;
 
-bool recurrence_generate_rrule(
+bool recurrence_generate_rrule_vcal(
+    struct _Generator* g, 
+    CEPROPVAL* propval,
+    RRA_Timezone *tzi);
+
+bool recurrence_generate_rrule_ical(
     struct _Generator* g, 
     CEPROPVAL* propval,
     RRA_Timezone *tzi);

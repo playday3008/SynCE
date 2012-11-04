@@ -21,7 +21,7 @@ struct _RRA_Exceptions
 #define UNKNOWN_FLAGS       0x2020
 #define KNOWN_FLAGS_MASK    3
 
-#define UNKNOWN_3004        0x3004
+#define UNKNOWN_HEADER_3004 0x3004
 #define UNKNOWN_3005        0x3005
 
 #define SHOW_AS_EXTRA       0x200a
@@ -313,7 +313,7 @@ static bool rra_exceptions_read_details(RRA_Exceptions* self, uint8_t** buffer)/
 
     if (e.bitmask & RRA_EXCEPTION_REMINDER_MINUTES_BEFORE_START)
     {
-      synce_trace("Unknown 4 changed in exception");
+      synce_trace("Reminder minutes before start changed in exception");
       rra_exception_read_integer(&p, &e.reminder_minutes_before_start);
     }
 
@@ -734,7 +734,7 @@ static bool rra_recurrence_pattern_read_header(/*{{{*/
     synce_trace("Unknown[%d] = %04x = %i", i, unknown_a[i], unknown_a[i]);
   }
 
-  if (unknown_a[0] != 0x3004)
+  if (unknown_a[0] != UNKNOWN_HEADER_3004)
     synce_warning("Expected 0x3004, got %04x", unknown_a[1]);
 
   if (unknown_a[0] != unknown_a[1])
@@ -1148,11 +1148,17 @@ RRA_RecurrencePattern* rra_recurrence_pattern_from_buffer(uint8_t* buffer, size_
   uint8_t* p = buffer;
 
   if (!tzi)
+  {
+    synce_error("No timezone provided");
     return NULL;
+  }
   
   RRA_RecurrencePattern* self = rra_recurrence_pattern_new();
   if (!self)
+  {
+    synce_error("Failed to allocate recurrence pattern");
     return NULL;
+  }
 
   rra_recurrence_pattern_read_header(self, &p);
 
@@ -1346,7 +1352,10 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
   uint8_t* p = NULL;
 
   if (!tzi)
+  {
+    synce_error("No timezone provided");
     return NULL;
+  }
 
   uint32_t localtime_pattern_start_date = self->pattern_start_date;
   uint32_t localtime_pattern_end_date   = self->pattern_end_date;
@@ -1362,8 +1371,8 @@ bool rra_recurrence_pattern_to_buffer(RRA_RecurrencePattern* self, uint8_t** buf
   *size = rra_recurrence_pattern_size(self);
   p = *buffer = calloc(1, *size);
 
-  WRITE_UINT16(p, UNKNOWN_3004); p += 2;
-  WRITE_UINT16(p, UNKNOWN_3004); p += 2;
+  WRITE_UINT16(p, UNKNOWN_HEADER_3004); p += 2;
+  WRITE_UINT16(p, UNKNOWN_HEADER_3004); p += 2;
 
    TRACE_DATE("Pattern start date (utc)       = %s", localtime_pattern_start_date);
    TRACE_DATE("Pattern end   date (utc)       = %s", localtime_pattern_end_date);

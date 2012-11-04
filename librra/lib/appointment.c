@@ -156,6 +156,13 @@ static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{
   return process_propval_notes(g, propval, cookie, ((GeneratorData*)cookie)->codepage);
 }
 
+static bool on_propval_occurrence(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  GeneratorData* data = (GeneratorData*)cookie;
+  data->occurrence = propval;
+  return true;
+}
+
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
     const uint8_t* data,
@@ -216,6 +223,7 @@ bool rra_appointment_to_vevent(/*{{{*/
   generator_add_property(generator, ID_REMINDER_SOUND_FILE,    on_propval_reminder_sound_file);
   generator_add_property(generator, ID_SENSITIVITY, on_propval_sensitivity);
   generator_add_property(generator, ID_APPOINTMENT_START,       on_propval_start);
+  generator_add_property(generator, ID_OCCURRENCE,  on_propval_occurrence);
   generator_add_property(generator, ID_RECURRENCE_PATTERN, on_propval_recurrence_pattern);
   generator_add_property(generator, ID_RECURRENCE_TIMEZONE, on_propval_recurrence_timezone);
   generator_add_property(generator, ID_SUBJECT,     on_propval_subject);
@@ -355,10 +363,83 @@ bool rra_appointment_to_vevent(/*{{{*/
   }
 
 #if ENABLE_RECURRENCE
-  if (event_generator_data.recurrence_pattern)
+  if (event_generator_data.occurrence && (event_generator_data.occurrence->val.iVal == OCCURRENCE_REPEATED))
   {
-    if (!recurrence_generate_rrule(generator, event_generator_data.recurrence_pattern, tzi))
-      synce_warning("Failed to generate RRULE from recurrence pattern.");
+    if (!event_generator_data.recurrence_pattern) {
+      synce_error("Found recurring appointment with no recurrence pattern");
+    }
+    else
+    {
+
+      /*
+       * If we've been passed a timezone, use that, otherwise try to use the timezone
+       * info in the appointment itself
+       */
+      RRA_Timezone *recurr_tzi = NULL;
+      if (tzi == NULL && event_generator_data.recurrence_timezone)
+      {
+	if ( (CEVT_BLOB == (event_generator_data.recurrence_timezone->propid & 0xffff))
+	    && event_generator_data.recurrence_timezone->val.blob.dwCount == 104)
+	{
+	  LPBYTE p = event_generator_data.recurrence_timezone->val.blob.lpb;
+
+	  recurr_tzi = calloc(1,sizeof(RRA_Timezone));
+
+	  recurr_tzi->Bias = letoh32(*((PLONG)p));
+	  p+=4;
+	  recurr_tzi->StandardBias = letoh32(*((PLONG)p));
+	  p+=4;
+	  recurr_tzi->DaylightBias = letoh32(*((PLONG)p));
+	  p+=4;
+	  /* unknown 4 bytes */
+	  p+=4;
+
+	  recurr_tzi->StandardMonthOfYear = letoh16(*((LPWORD)p));
+	  p+=2;
+	  /* unknown 2 bytes, same as unknown_1 ? */
+	  p+=2;
+	  recurr_tzi->StandardInstance = letoh16(*((LPWORD)p));
+	  p+=2;
+	  recurr_tzi->StandardStartHour = letoh16(*((LPWORD)p));
+	  p+=2;
+	  /* unknown 8 bytes */
+	  p+=8;
+	  /* unknown 2 bytes, same as unknown_3 ? */
+	  p+=2;
+	  recurr_tzi->DaylightMonthOfYear = letoh16(*((LPWORD)p));
+	  p+=2;
+	  /* unknown 2 bytes, same as unknown_4 ? */
+	  p+=2;
+	  recurr_tzi->DaylightInstance = letoh16(*((LPWORD)p));
+	  p+=2;
+	  recurr_tzi->DaylightStartHour = letoh16(*((LPWORD)p));
+	  p+=2;
+
+	  tzi = recurr_tzi;
+	}
+	else
+	  synce_error("Recurrence Timezone not a BLOB 104 bytes in length");
+      }
+
+      switch (flags & RRA_APPOINTMENT_VERSION_MASK)
+      {
+      case RRA_APPOINTMENT_VCAL_1_0:
+	if (!recurrence_generate_rrule_vcal(generator, event_generator_data.recurrence_pattern, tzi))
+	  synce_warning("Failed to generate RRULE from recurrence pattern.");
+	break;
+      case RRA_APPOINTMENT_VCAL_2_0:
+	if (!recurrence_generate_rrule_ical(generator, event_generator_data.recurrence_pattern, tzi))
+	  synce_warning("Failed to generate RRULE from recurrence pattern.");
+	break;
+      default:
+	break;
+      }
+      if (recurr_tzi)
+      {
+	tzi = NULL;
+	free(recurr_tzi);
+      }
+    }
 
     if (event_generator_data.unique && id == RRA_APPOINTMENT_ID_UNKNOWN)
     {
@@ -709,7 +790,7 @@ bool rra_appointment_from_vevent(/*{{{*/
     }
     else
 #endif
-      parser_add_int16(parser, ID_OCCURENCE, OCCURENCE_ONCE);
+      parser_add_int16(parser, ID_OCCURRENCE, OCCURRENCE_ONCE);
   }
   else
   {
