@@ -471,7 +471,7 @@ main(int argc, char** argv)
                 goto exit;
 
         if ((connection = rapi_connection_from_name(dev_name)) == NULL) {
-                fprintf(stderr, "%s: Could not find connected device '%s'\n", 
+                fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
                         argv[0], dev_name?dev_name:"(Default)");
                 goto exit;
         }
