@@ -1567,7 +1567,7 @@ struct _IRAPIDesktop {
         DBusGProxy *dev_mgr_proxy;
 #endif
 
-        /* list of device udi's ?*/
+        /* list of IRAPIDevice objects */
         GList *devices;
 
 #if 0   /* sinks to notify */
@@ -1639,8 +1639,10 @@ udev_device_disconnected_cb(DBusGProxy *proxy,
                 device = g_list_next(device);
         }
 
-        if (!device)
+        if (!device) {
+		synce_warning("Received disconnect from dccm for unfound device: %s", obj_path);
                 return;
+	}
 
         synce_debug("Received device disconnected from dccm: %s", obj_path);
 
