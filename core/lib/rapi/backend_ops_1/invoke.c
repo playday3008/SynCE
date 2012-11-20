@@ -116,7 +116,7 @@ static HRESULT CeRapiInvokeBuffers(
   HRESULT return_value = E_UNEXPECTED;
   HRESULT hr;
   uint32_t unknown;
-  unsigned bytes_left;
+  size_t bytes_left;
   unsigned output_size;
   uint32_t last_error;
 

@@ -76,7 +76,7 @@ int main(int argc, char** argv)
   WCHAR* wide_shortcut = NULL;
   WCHAR* wide_target = NULL;
   WCHAR *tmp, *tmp_quote;
-  int tmpsize;
+  size_t tmpsize;
 
   if (!handle_parameters(argc, argv, &shortcut, &target))
     goto exit;

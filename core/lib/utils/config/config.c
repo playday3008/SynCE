@@ -96,7 +96,8 @@ struct configFile *readConfigFile (char *filename)
 	
 	struct stat filestats;
 	struct configFile *cfg;
-	int fileHandle, bytesRead;
+	int fileHandle;
+	ssize_t bytesRead;
 		
 	if (stat (filename, &filestats) != 0) {
 /*		perror ("ReadConfigFile: stat");*/

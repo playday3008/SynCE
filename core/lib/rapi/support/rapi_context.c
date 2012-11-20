@@ -228,7 +228,8 @@ void rapi_context_unref(RapiContext* context)/*{{{*/
 static gint
 get_socket_from_dccm(const gchar *unix_path)
 {
-  int fd = -1, dev_fd, ret;
+  int fd = -1, dev_fd;
+  ssize_t ret;
   struct sockaddr_un sa;
   struct msghdr msg = { 0, 0, 0, 0, 0, 0, 0 };
   struct cmsghdr *cmsg;
