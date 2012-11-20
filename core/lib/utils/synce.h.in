@@ -183,17 +183,17 @@ void synce_info_destroy(SynceInfo* info);
 
 const char *synce_info_get_name(SynceInfo *info);
 const char *synce_info_get_guid(SynceInfo *info);
-bool synce_info_get_os_version(SynceInfo *info, int *os_major, int *os_minor);
-int synce_info_get_build_number(SynceInfo *info);
-int synce_info_get_processor_type(SynceInfo *info);
+bool synce_info_get_os_version(SynceInfo *info, unsigned int *os_major, unsigned int *os_minor);
+unsigned int synce_info_get_build_number(SynceInfo *info);
+unsigned int synce_info_get_processor_type(SynceInfo *info);
 const char *synce_info_get_os_name(SynceInfo *info);
 const char *synce_info_get_model(SynceInfo *info);
 
 const char *synce_info_get_device_ip(SynceInfo *info);
 const char *synce_info_get_local_ip(SynceInfo *info);
 
-int synce_info_get_partner_id_1(SynceInfo *info);
-int synce_info_get_partner_id_2(SynceInfo *info);
+unsigned int synce_info_get_partner_id_1(SynceInfo *info);
+unsigned int synce_info_get_partner_id_2(SynceInfo *info);
 
 const char *synce_info_get_object_path(SynceInfo *info);
 pid_t synce_info_get_dccm_pid(SynceInfo *info);

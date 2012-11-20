@@ -125,7 +125,7 @@ fail:
     return success;
 }
 
-bool synce_socket_connect(SynceSocket* syncesock, const char* host, int port)
+bool synce_socket_connect(SynceSocket* syncesock, const char* host, uint16_t port)
 {
 	struct sockaddr_in servaddr;
 
@@ -179,9 +179,7 @@ bool synce_socket_connect_proxy(SynceSocket* syncesock, const char* remoteIpAddr
     proxyaddr.sun_family = AF_LOCAL;
     strncpy(proxyaddr.sun_path, socketPath, sizeof(proxyaddr.sun_path));
 
-    size_t size = (offsetof (struct sockaddr_un, sun_path) + strlen(proxyaddr.sun_path) + 1);
-
-    if (connect(syncesock->fd, (struct sockaddr *) &proxyaddr, size) < 0)
+    if (connect(syncesock->fd, (struct sockaddr *) &proxyaddr, sizeof(proxyaddr)) < 0)
         goto fail;
 
     return true;
@@ -191,7 +189,7 @@ fail:
     return false;
 }
 
-bool synce_socket_listen(SynceSocket* socket, const char* host, int port)
+bool synce_socket_listen(SynceSocket* socket, const char* host, uint16_t port)
 {
 	struct sockaddr_in servaddr;
 	int sock_opt;
@@ -301,9 +299,9 @@ bool synce_socket_close(SynceSocket* socket)
 	return false;
 }
 
-bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size)
+bool synce_socket_write(SynceSocket* socket, const void* data, size_t size)
 {
-	int bytes_left = size;
+	ssize_t bytes_left = size;
 
 	if ( SYNCE_SOCKET_INVALID_DESCRIPTOR == socket->fd )
 	{
@@ -313,7 +311,7 @@ bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size)
 
 	while (bytes_left > 0)
 	{
-		int result = write(socket->fd, data, bytes_left);
+		ssize_t result = write(socket->fd, data, bytes_left);
 
 		if (result == 0)
 		{
@@ -345,9 +343,9 @@ bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size)
 	return 0 == bytes_left;
 }
 
-bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
+bool synce_socket_read(SynceSocket* socket, void* data, size_t size)
 {
-	int bytes_needed = size;
+	ssize_t bytes_needed = size;
 
 	if ( SYNCE_SOCKET_INVALID_DESCRIPTOR == socket->fd )
 	{
@@ -357,7 +355,7 @@ bool synce_socket_read(SynceSocket* socket, void* data, unsigned size)
 
 	while(bytes_needed > 0)
 	{
-		int result = read(socket->fd, data, bytes_needed);
+		ssize_t result = read(socket->fd, data, bytes_needed);
 
 		/* synce_socket_trace("read returned %i, needed %i bytes", result, bytes_needed); */
 

@@ -84,9 +84,9 @@ void rapi_connection_destroy(RapiConnection* connection);
 
 /** get information about the connected device */
 const char *rapi_connection_get_name(RapiConnection* connection);
-bool rapi_connection_get_os_version(RapiConnection* connection, int *os_major, int *os_minor);
-int rapi_connection_get_build_number(RapiConnection* connection);
-int rapi_connection_get_processor_type(RapiConnection* connection);
+bool rapi_connection_get_os_version(RapiConnection* connection, unsigned int *os_major, unsigned int *os_minor);
+unsigned int rapi_connection_get_build_number(RapiConnection* connection);
+unsigned int rapi_connection_get_processor_type(RapiConnection* connection);
 const char *rapi_connection_get_os_name(RapiConnection* connection);
 const char *rapi_connection_get_model(RapiConnection* connection);
 const char *rapi_connection_get_device_ip(RapiConnection* connection);

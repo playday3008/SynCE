@@ -21,7 +21,7 @@ static bool synce_password_encode(
 		unsigned char **encodedPassword,
 		size_t *encodedPasswordSize)
 {	
-	int length;
+	size_t length;
 	unsigned i;
 	
 	*encodedPassword = NULL;

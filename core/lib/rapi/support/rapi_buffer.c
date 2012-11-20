@@ -32,8 +32,8 @@ struct _RapiBuffer
 {
 	unsigned char* data;
 	size_t max_size;
-	unsigned bytes_used;
-	unsigned read_index;
+	size_t bytes_used;
+	size_t read_index;
 };
 
 /**
@@ -463,7 +463,7 @@ bool rapi_buffer_read_optional(RapiBuffer* buffer, void* data, size_t max_size)
 
 		if (1 == have_value)
 		{
-			int overflow = 0;
+			ssize_t overflow = 0;
 
 			if (data)
 			{
@@ -635,7 +635,7 @@ void rapi_buffer_debug_dump_buffer_from_current_point( char* desc, RapiBuffer* b
 	char chr[8 + 1];
 
 
-	printf("%s (%u bytes, %u remaining bytes):\n", desc, buffer->bytes_used, (buffer->bytes_used - buffer->read_index));
+	printf("%s (%zu bytes, %zu remaining bytes):\n", desc, buffer->bytes_used, (buffer->bytes_used - buffer->read_index));
 	for (i = buffer->read_index ; i < len + 7; i += 8) {
 		for (j = 0; j < 8; j++) 
 			if (j + i >= len) {

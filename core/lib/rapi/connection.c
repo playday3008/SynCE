@@ -86,7 +86,7 @@ rapi_connection_get_name(RapiConnection* connection)
 }
 
 bool
-rapi_connection_get_os_version(RapiConnection* connection, int *os_major, int *os_minor)
+rapi_connection_get_os_version(RapiConnection* connection, unsigned int *os_major, unsigned int *os_minor)
 {
   RapiContext *context = NULL;
   if (connection)
@@ -100,7 +100,7 @@ rapi_connection_get_os_version(RapiConnection* connection, int *os_major, int *o
   return false;
 }
 
-int
+unsigned int
 rapi_connection_get_build_number(RapiConnection* connection)
 {
   RapiContext *context = NULL;
@@ -115,7 +115,7 @@ rapi_connection_get_build_number(RapiConnection* connection)
   return 0;
 }
 
-int
+unsigned int
 rapi_connection_get_processor_type(RapiConnection* connection)
 {
   RapiContext *context = NULL;

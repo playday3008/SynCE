@@ -38,7 +38,7 @@ void synce_socket_take_descriptor(SynceSocket* socket, int fd);
 /**
  * Connect to remote service
  */
-bool synce_socket_connect(SynceSocket* socket, const char* host, int port);
+bool synce_socket_connect(SynceSocket* socket, const char* host, uint16_t port);
 
 /**
  * Connect to proxy service (vdccm)
@@ -48,7 +48,7 @@ bool synce_socket_connect_proxy(SynceSocket* syncesock, const char* remoteIpAddr
 /**
  * Open listening socket
  */
-bool synce_socket_listen(SynceSocket*, const char* host, int port);
+bool synce_socket_listen(SynceSocket*, const char* host, uint16_t port);
 
 /**
  * Accept incoming connections
@@ -63,12 +63,12 @@ bool synce_socket_close(SynceSocket* socket);
 /**
  * Write a number of bytes of data to socket
  */
-bool synce_socket_write(SynceSocket* socket, const void* data, unsigned size);
+bool synce_socket_write(SynceSocket* socket, const void* data, size_t size);
 
 /**
  * Read a number of bytes of data from a socket
  */
-bool synce_socket_read(SynceSocket* socket, void* data, unsigned size);
+bool synce_socket_read(SynceSocket* socket, void* data, size_t size);
 
 /**
  * This that can happen to a socket... :-)

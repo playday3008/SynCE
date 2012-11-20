@@ -574,7 +574,7 @@ HRESULT rapi_context_connect(RapiContext* context)
 
 	/* rapi 2 seems to be used on devices with OS version of 5.1 or greater */
 
-        int os_major = 0, os_minor = 0;
+        unsigned int os_major = 0, os_minor = 0;
         synce_info_get_os_version(info, &os_major, &os_minor);
 	if ((os_major > 4) && (os_minor > 0))
 	  context->rapi_ops = &rapi2_ops;

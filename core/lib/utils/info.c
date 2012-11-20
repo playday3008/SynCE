@@ -24,12 +24,12 @@ struct _SynceInfo
   char* local_iface_ip;
   char* password;
   int key;
-  int os_major;
-  int os_minor;
-  int build_number;
-  int processor_type;
-  int partner_id_1;
-  int partner_id_2;
+  unsigned int os_major;
+  unsigned int os_minor;
+  unsigned int build_number;
+  unsigned int processor_type;
+  unsigned int partner_id_1;
+  unsigned int partner_id_2;
   char* guid;
   char* name;
   char* os_name;
@@ -625,7 +625,7 @@ synce_info_get_name(SynceInfo *info)
 }
 
 bool
-synce_info_get_os_version(SynceInfo *info, int *os_major, int *os_minor)
+synce_info_get_os_version(SynceInfo *info, unsigned int *os_major, unsigned int *os_minor)
 {
   if (!info) return NULL;
   if ((!os_major) || (!os_minor))
@@ -636,14 +636,14 @@ synce_info_get_os_version(SynceInfo *info, int *os_major, int *os_minor)
   return true;
 }
 
-int
+unsigned int
 synce_info_get_build_number(SynceInfo *info)
 {
   if (!info) return 0;
   return info->build_number;
 }
 
-int
+unsigned int
 synce_info_get_processor_type(SynceInfo *info)
 {
   if (!info) return 0;
@@ -685,14 +685,14 @@ synce_info_get_guid(SynceInfo *info)
   return info->guid;
 }
 
-int
+unsigned int
 synce_info_get_partner_id_1(SynceInfo *info)
 {
   if (!info) return 0;
   return info->partner_id_1;
 }
 
-int
+unsigned int
 synce_info_get_partner_id_2(SynceInfo *info)
 {
   if (!info) return 0;
