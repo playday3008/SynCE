@@ -14,6 +14,7 @@
 #include "timezone.h"
 #include "internal.h"
 #include "rra_config.h"
+#include "strv.h"
 
 #if HAVE_ICONV_H
 #include <iconv.h>
@@ -365,7 +366,7 @@ bool on_propval_subject(Generator* g, CEPROPVAL* propval, void* cookie)
 */
 void to_propval_trigger(Parser* parser, mdir_line* line, uint8_t related_support)
 {
-  int enable = 0;
+  int16_t enable = 0;
   int duration = 0;
 
   if (!line)
@@ -425,19 +426,18 @@ bool on_alarm_trigger(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 
 void to_propval_vcal_alarms(Parser* parser, char *start_time_str, mdir_line* aalarm, mdir_line* dalarm, mdir_line* palarm, mdir_line* malarm)
 {
-  int enable = 0;
+  int16_t enable = 0;
   time_t start_time = 0;
   time_t audio_runtime = 0;
   time_t display_runtime = 0;
   time_t runtime = 0;
-  int minutes_before = 0;
+  time_t minutes_before = 0;
   int reminder_led = 0;
   int reminder_dialog = 0;
   int reminder_sound = 0;
   bool is_utc = false;
   char *audio_type = NULL;
   char *audio_value_type = NULL;
-  char *sound_file = NULL;
 
   if (palarm || malarm)
     synce_info("PALARM and MALARM are not supported");
@@ -454,32 +454,41 @@ void to_propval_vcal_alarms(Parser* parser, char *start_time_str, mdir_line* aal
   if (aalarm)
   {
     char** data_type = mdir_get_param_values(aalarm, "TYPE");
-    audio_type = data_type[0];
+    if (data_type && data_type[0])
+      audio_type = data_type[0];
     char** value   = mdir_get_param_values(aalarm, "VALUE");
-    audio_value_type = value[0];
+    if (value && value[0])
+      audio_value_type = value[0];
 
-    char* runtime_str = aalarm->values[0];
-    char* snoozetime_str = aalarm->values[1];
-    char* repeatcount_str = aalarm->values[2];
-    char* content = aalarm->values[3];
+    char** fields = strsplit(aalarm->values[0], ';');
+    /*
+     * fields[0] = runtime of the alarm
+     * fields[1] = time to snooze, if any
+     * fields[2] = repeatcount, if any
+     * fields[3] = name of the sound file, not meaningful to transfer directly
+    */
 
-    if (!parser_datetime_to_unix_time(runtime_str, &audio_runtime, &is_utc))
+    if (!parser_datetime_to_unix_time(fields[0], &audio_runtime, &is_utc))
     {
       synce_warning("Failed to convert alarm run time");
       goto exit;
     }
     enable = 1;
     reminder_sound = REMINDER_SOUND;
-    sound_file = content;
+    strv_free(fields);
   }
 
   if (dalarm)
   {
-    char* runtime_str = dalarm->values[0];
-    char* snoozetime_str = dalarm->values[1];
-    char* repeatcount_str = dalarm->values[2];
-    char* content = dalarm->values[3];
-    if (!parser_datetime_to_unix_time(runtime_str, &display_runtime, &is_utc))
+    char** fields = strsplit(dalarm->values[0], ';');
+    /*
+     * fields[0] = runtime of the alarm
+     * fields[1] = time to snooze, if any
+     * fields[2] = repeatcount, if any
+     * fields[3] = message to display, no field to pass it in
+    */
+
+    if (!parser_datetime_to_unix_time(fields[0], &display_runtime, &is_utc))
     {
       synce_warning("Failed to convert alarm run time");
       goto exit;
@@ -487,6 +496,7 @@ void to_propval_vcal_alarms(Parser* parser, char *start_time_str, mdir_line* aal
     enable = 1;
     reminder_dialog = REMINDER_DIALOG;
     reminder_led = REMINDER_LED;
+    strv_free(fields);
   }
 
   runtime = audio_runtime;
@@ -520,21 +530,21 @@ bool on_mdir_line_aalarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 bool on_mdir_line_dalarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
-  event_parser_data->aalarm = line;
+  event_parser_data->dalarm = line;
   return true;
 }/*}}}*/
 
 bool on_mdir_line_palarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
-  event_parser_data->aalarm = line;
+  event_parser_data->palarm = line;
   return true;
 }/*}}}*/
 
 bool on_mdir_line_malarm(Parser* p, mdir_line* line, void* cookie)/*{{{*/
 {
   EventParserData* event_parser_data = (EventParserData*)cookie;
-  event_parser_data->aalarm = line;
+  event_parser_data->malarm = line;
   return true;
 }/*}}}*/
 
@@ -615,10 +625,12 @@ bool to_vcalendar_alarm(Generator* generator, CEPROPVAL* start_time, CEPROPVAL* 
     {
       generator_begin_line         (generator, "AALARM");
 
-      generator_add_value          (generator, buffer);
-      generator_add_value          (generator, ""); /* snooze time */
-      generator_add_value          (generator, ""); /* repeat count */
-      generator_add_value          (generator, ""); /* audio content */
+      /* snooze time, repeat count, and audio file name are
+	 not used, so we append empty parts to the value */
+      char* value_str = malloc(strlen(buffer)+3+1);
+      sprintf(value_str, "%s;;;", buffer);
+      generator_add_value          (generator, value_str);
+      free(value_str);
 
       generator_end_line           (generator);
     }
@@ -627,10 +639,12 @@ bool to_vcalendar_alarm(Generator* generator, CEPROPVAL* start_time, CEPROPVAL* 
     {
       generator_begin_line         (generator, "DALARM");
 
-      generator_add_value          (generator, buffer);
-      generator_add_value          (generator, ""); /* snooze time */
-      generator_add_value          (generator, ""); /* repeat count */
-      generator_add_value          (generator, ""); /* display string */
+      /* snooze time, repeat count, and message are
+	 not used, so we append empty parts to the value */
+      char* value_str = malloc(strlen(buffer)+3+1);
+      sprintf(value_str, "%s;;;", buffer);
+      generator_add_value          (generator, value_str);
+      free(value_str);
 
       generator_end_line           (generator);
     }

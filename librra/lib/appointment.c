@@ -799,11 +799,15 @@ bool rra_appointment_from_vevent(/*{{{*/
   }
 
   if (event_parser_data.trigger)
+  {
     /* process ical vAlarm */
     to_propval_trigger(parser, event_parser_data.trigger, REMINDER_RELATED_START);
+  }
   else if (event_parser_data.aalarm || event_parser_data.dalarm || event_parser_data.palarm || event_parser_data.malarm)
+  {
     /* process vcal alarms */
     to_propval_vcal_alarms(parser, event_parser_data.dtstart->values[0], event_parser_data.aalarm, event_parser_data.dalarm, event_parser_data.palarm, event_parser_data.malarm);
+  }
 
   /* The calendar application on my HP 620LX just hangs without this! */
   parser_add_int32(parser, ID_UNKNOWN_0002, 0);
