@@ -488,16 +488,17 @@ HRESULT rapi_context_connect(RapiContext* context)
 
     const char *transport = synce_info_get_transport(info);
     /*
-     *  original dccm or vdccm
+     *  original dccm or vdccm, sanity checking
      */
     if (transport == NULL || ( strcmp(transport, "odccm") != 0 && strcmp(transport, "udev") != 0 ) ) {
-        if (!synce_info_get_dccm_pid(info))
+        pid_t dccm_pid = 0;
+        if (!(dccm_pid = synce_info_get_dccm_pid(info)))
         {
             synce_error("DCCM PID entry not found for current connection");
             goto fail;
         }
 
-        if (kill(synce_info_get_dccm_pid(info), 0) < 0)
+        if (kill(dccm_pid, 0) < 0)
         {
             if (errno != EPERM)
             {
@@ -513,6 +514,9 @@ HRESULT rapi_context_connect(RapiContext* context)
         }
     }
 
+    /*
+     *  original dccm or vdccm
+     */
     if (transport == NULL || strncmp(transport,  "ppp", 3) == 0) {
         /*
          *  original dccm or vdccm
@@ -556,13 +560,25 @@ HRESULT rapi_context_connect(RapiContext* context)
          */
 #if ENABLE_ODCCM_SUPPORT
         if (strcmp(transport, "odccm") == 0) {
-            synce_socket_take_descriptor(context->socket, get_connection_from_odccm(info));
+	  int fd = get_connection_from_odccm(info);
+	  if (fd < 0)
+	  {
+	    synce_error("failed to get context fd from odccm");
+	    goto fail;
+	  }
+	  synce_socket_take_descriptor(context->socket, fd);
         }
         else
 #endif
 #if ENABLE_UDEV_SUPPORT
         if (strcmp(transport, "udev") == 0) {
-            synce_socket_take_descriptor(context->socket, get_connection_from_udev(info));
+	  int fd = get_connection_from_udev(info);
+	  if (fd < 0)
+	  {
+	    synce_error("failed to get context fd from udev");
+	    goto fail;
+	  }
+	  synce_socket_take_descriptor(context->socket, fd);
         }
         else
 #endif
