@@ -13,10 +13,10 @@ extern "C"
 
 
 typedef struct _GUID {
-        unsigned long  Data1;
-        unsigned short Data2;
-        unsigned short Data3;
-        unsigned char  Data4[8];
+  DWORD Data1;
+  WORD Data2;
+  WORD Data3;
+  BYTE Data4[8];
 } GUID, UUID;
 
 typedef GUID RAPIDEVICEID;
@@ -38,53 +38,28 @@ typedef enum {
         RAPI_CONNECTION_NETWORK = 3
 } RAPI_CONNECTIONTYPE;
 
-
-/* http://msdn.microsoft.com/en-us/library/ms221069.aspx */
-/* WTypes.h */
-typedef WCHAR  OLECHAR;
-
-/* OLEAuto.h */
-#if 0
-typedef OLECHAR FAR * BSTR;
-#else
-typedef WCHAR BSTR;
-#endif
-
+/*
+ * The MS definition has bstrName and bstrPlatform as type BSTR,
+ * which is not a sensible option for us, so we have them as normal
+ * strings.
+ */
 typedef struct {
         RAPIDEVICEID DeviceId;
         DWORD dwOsVersionMajor;
         DWORD dwOsVersionMinor;
-        BSTR bstrName;
-        BSTR bstrPlatform;
+        char *bstrName;
+        char *bstrPlatform;
 } RAPI_DEVICEINFO;
 
 
-
-
-#define _SS_MAXSIZE 128                  // Maximum size.
-#define _SS_ALIGNSIZE (sizeof(int64_t))  // Desired alignment.
-#define _SS_PAD1SIZE (_SS_ALIGNSIZE - sizeof (short))
-#define _SS_PAD2SIZE (_SS_MAXSIZE - (sizeof (short) + _SS_PAD1SIZE \
-                                     + _SS_ALIGNSIZE))
-
-typedef struct _sockaddr_storage {
-        short ss_family;               // Address family.
-        char __ss_pad1[_SS_PAD1SIZE];  // 6 byte pad, this is to make
-                                       // implementation specific pad up to
-                                       // alignment field that follows explicit
-                                       // in the data structure.
-        int64_t __ss_align;            // Field to force desired structure.
-        char __ss_pad2[_SS_PAD2SIZE];  // 112 byte pad to achieve desired size;
-                                       // _SS_MAXSIZE value minus size of
-                                       // ss_family, __ss_pad1, and
-                                       // __ss_align fields is 112.
-} sockaddr_storage;
-
-typedef sockaddr_storage SOCKADDR_STORAGE;
-
+/*
+ * MS has ipaddr and hostIpaddr as sockaddr, which makes no sense for
+ * us since applications should not be using the naked socket connection.
+ * We'll therefore just have the textual IP addresses.
+ */
 typedef struct {
-        SOCKADDR_STORAGE ipaddr;
-        SOCKADDR_STORAGE hostIpaddr;
+        char *ipaddr;
+        char *hostIpaddr;
         RAPI_CONNECTIONTYPE connectionType;
 } RAPI_CONNECTIONINFO;
 

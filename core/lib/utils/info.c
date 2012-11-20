@@ -30,6 +30,7 @@ struct _SynceInfo
   int processor_type;
   int partner_id_1;
   int partner_id_2;
+  char* guid;
   char* name;
   char* os_name;
   char* model;
@@ -224,6 +225,17 @@ synce_info_fields_from_dbus(SynceInfo *result, DBusGProxy *proxy)
       goto ERROR;
     }
   result->device_ip = ip;
+
+  gchar* guid;
+  if (!dbus_g_proxy_call(proxy, "GetGuid", &error,
+			 G_TYPE_INVALID,
+			 G_TYPE_STRING, &guid,
+			 G_TYPE_INVALID))
+    {
+      g_warning("%s: Failed to get GUID for %s: %s", result->name, G_STRFUNC, error->message);
+      goto ERROR;
+    }
+  result->guid = guid;
 
   return TRUE;
 
@@ -664,6 +676,13 @@ synce_info_get_local_ip(SynceInfo *info)
 {
   if (!info) return NULL;
   return info->local_iface_ip;
+}
+
+const char *
+synce_info_get_guid(SynceInfo *info)
+{
+  if (!info) return NULL;
+  return info->guid;
 }
 
 int

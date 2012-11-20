@@ -182,6 +182,7 @@ SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data);
 void synce_info_destroy(SynceInfo* info);
 
 const char *synce_info_get_name(SynceInfo *info);
+const char *synce_info_get_guid(SynceInfo *info);
 bool synce_info_get_os_version(SynceInfo *info, int *os_major, int *os_minor);
 int synce_info_get_build_number(SynceInfo *info);
 int synce_info_get_processor_type(SynceInfo *info);

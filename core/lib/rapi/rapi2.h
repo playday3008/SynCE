@@ -427,6 +427,10 @@ HRESULT IRAPIEnumDevices_Skip(IRAPIEnumDevices *self, ULONG cElt);
 
 /* IRAPISink */
 
+/* These functions gain a reference to the device object, and should free the
+ * reference if they dont want it
+ */
+
 struct _IRAPISink;
 typedef struct _IRAPISink IRAPISink;
 struct _IRAPISink {

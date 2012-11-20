@@ -10,6 +10,7 @@
 #include "rapi2.h"
 
 #include <string.h>
+#include <stdio.h>
 #include <dbus/dbus-glib.h>
 
 #define DBUS_SERVICE "org.freedesktop.DBus"
@@ -25,6 +26,45 @@
 
 /* we only need one instance of IRAPIDesktop */
 static IRAPIDesktop *irapi_desktop = NULL;
+
+
+
+/*
+ * utility functions
+ */
+
+static bool
+guid_from_string(const char *str, GUID *guid)
+{
+  int matches = 0;
+  matches = sscanf(str, "{%08X-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
+		   &guid->Data1, &guid->Data2, &guid->Data3,
+		   &guid->Data4[0], &guid->Data4[1], &guid->Data4[2], &guid->Data4[3],
+		   &guid->Data4[4], &guid->Data4[5], &guid->Data4[6], &guid->Data4[7]);
+
+  if (matches == 11)
+    return TRUE;
+
+  return FALSE;
+}
+
+static char *
+guid_to_string(GUID *guid)
+{
+  char *guid_str = malloc(sizeof(char) * 39);
+  int len;
+  len = snprintf(guid_str, 39, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+		 guid->Data1, guid->Data2, guid->Data3,
+		 guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
+		 guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
+
+  if (len != 38) {
+    free(guid_str);
+    return NULL;
+  }
+
+  return guid_str;
+}
 
 
 /*
@@ -53,6 +93,7 @@ IRAPISession_Release(IRAPISession *session)
                 return;
 
         IRAPIDevice_Release(session->device);
+        rapi_context_disconnect(session->context);
         rapi_context_unref(session->context);
         free(session);
         return;
@@ -72,29 +113,25 @@ IRAPISession_CeRapiFreeBuffer(IRAPISession *session,
 HRESULT
 IRAPISession_CeRapiInit(IRAPISession *session)
 {
-        RapiContext * context = session->context;
-        return rapi_context_connect(context);
+  return rapi_context_connect(session->context);
 }
 
 HRESULT
 IRAPISession_CeRapiUninit(IRAPISession *session)
 {
-        RapiContext * context = session->context;
-        return rapi_context_disconnect(context);
+  return rapi_context_disconnect(session->context);
 }
 
 HRESULT
 IRAPISession_CeRapiGetError(IRAPISession *session)
 {
-        RapiContext * context = session->context;
-        return context->rapi_error;
+  return session->context->rapi_error;
 }
 
 DWORD
 IRAPISession_CeGetLastError(IRAPISession *session)
 {
-        RapiContext* context = session->context;
-        return context->last_error;
+  return session->context->last_error;
 }
 
 
@@ -1423,29 +1460,40 @@ IRAPIDevice_CreateSession(IRAPIDevice *self, IRAPISession** ppISession)
 HRESULT
 IRAPIDevice_GetConnectionInfo(IRAPIDevice *self, RAPI_CONNECTIONINFO* pConnInfo)
 {
-        return E_NOTIMPL;
+  if (!pConnInfo)
+    return E_INVALIDARG;
+
+  pConnInfo->ipaddr = g_strdup(synce_info_get_device_ip(self->info));
+  pConnInfo->hostIpaddr = g_strdup(synce_info_get_local_ip(self->info));
+
+  pConnInfo->connectionType = RAPI_CONNECTION_USB;
+  return S_OK;
 }
 
 HRESULT
 IRAPIDevice_GetConnectStat(IRAPIDevice *self, RAPI_DEVICESTATUS* pStat)
 {
-        RAPI_DEVICESTATUS *status = NULL;
-        status = calloc(1, sizeof(RAPI_DEVICESTATUS));
-        if (!status)
-                return E_OUTOFMEMORY;
-
-        *status = self->status;
-        pStat = status;
-
-        return S_OK;
+  *pStat = self->status;
+  return S_OK;
 }
 
 HRESULT
 IRAPIDevice_GetDeviceInfo(IRAPIDevice *self, RAPI_DEVICEINFO* pDevInfo)
 {
-        return E_NOTIMPL;
-}
+  if (!pDevInfo)
+    return E_INVALIDARG;
 
+  if (!synce_info_get_os_version(self->info, &(pDevInfo->dwOsVersionMajor), &(pDevInfo->dwOsVersionMinor)))
+    return E_FAIL;
+
+  pDevInfo->bstrName = g_strdup(synce_info_get_name(self->info));
+  pDevInfo->bstrPlatform = g_strdup(synce_info_get_os_name(self->info));
+
+  if (!guid_from_string(synce_info_get_guid(self->info), &(pDevInfo->DeviceId)))
+    return E_FAIL;
+
+  return S_OK;
+}
 
 
 /*
@@ -1570,32 +1618,11 @@ struct _IRAPIDesktop {
         /* list of IRAPIDevice objects */
         GList *devices;
 
-#if 0   /* sinks to notify */
-        GList *sinks;
-#endif
+        /* sinks to notify listeners */
+        GHashTable *sinks;
+        DWORD sink_seq_num;
+
 };
-
-#if 0
-static void
-IRAPIDesktop_device_connected_cb()
-{
-        /*
-            add device data to list
-            for all sinks
-            call sink->OnDeviceConnected
-        */
-}
-
-static void
-IRAPIDesktop_device_disconnected_cb()
-{
-        /*
-        for all sinks
-          call sink->OnDeviceDisconnected
-        remove device data from list
-        */
-}
-#endif
 
 
 #if ENABLE_UDEV_SUPPORT
@@ -1621,6 +1648,24 @@ udev_device_connected_cb(DBusGProxy *proxy,
 
         self->devices = g_list_append(self->devices, newdev);
 
+	GHashTableIter iter;
+	gpointer key, value;
+	HRESULT ret;
+
+	g_hash_table_iter_init (&iter, self->sinks);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+	  {
+
+	    if ( ((IRAPISink*)value)->IRAPISink_OnDeviceConnected )
+	      {
+		IRAPIDevice_AddRef(newdev);
+		ret = ((IRAPISink*)value)->IRAPISink_OnDeviceConnected((IRAPISink*)value, newdev);
+		/* what am I supposed to do about this return value ? */
+		if (ret != S_OK)
+		  synce_debug("error reported from IRAPISink_OnDeviceConnected: %d: %s", ret, synce_strerror(ret));
+	      }
+	  }
+
         return;
 }
 
@@ -1630,25 +1675,47 @@ udev_device_disconnected_cb(DBusGProxy *proxy,
 			    gpointer user_data)
 {
         IRAPIDesktop *self = (IRAPIDesktop*)user_data;
+	IRAPIDevice *device = NULL;
 
-        GList *device = self->devices;
-        while (device) {
-                if (strcmp(device->data, obj_path) == 0)
-                        break;
+        GList *device_el = self->devices;
+        while (device_el) {
+	  if (strcmp(((IRAPIDevice*)device_el->data)->obj_path, obj_path) == 0)
+	    break;
 
-                device = g_list_next(device);
+	  device_el = g_list_next(device_el);
         }
 
-        if (!device) {
+        if (!device_el) {
 		synce_warning("Received disconnect from dccm for unfound device: %s", obj_path);
                 return;
 	}
 
         synce_debug("Received device disconnected from dccm: %s", obj_path);
 
-        ((IRAPIDevice*)device->data)->status = RAPI_DEVICE_DISCONNECTED;
-        IRAPIDevice_Release(device->data);
-        self->devices = g_list_delete_link(self->devices, device);
+	device = ((IRAPIDevice*)device_el->data);
+        self->devices = g_list_delete_link(self->devices, device_el);
+
+        device->status = RAPI_DEVICE_DISCONNECTED;
+
+	GHashTableIter iter;
+	gpointer key, value;
+	HRESULT ret;
+
+	g_hash_table_iter_init (&iter, self->sinks);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+	  {
+
+	    if ( ((IRAPISink*)value)->IRAPISink_OnDeviceDisconnected )
+	      {
+		IRAPIDevice_AddRef(device);
+		ret = ((IRAPISink*)value)->IRAPISink_OnDeviceDisconnected((IRAPISink*)value, device);
+		/* what am I supposed to do about this return value ? */
+		if (ret != S_OK)
+		  synce_debug("error reported from IRAPISink_OnDeviceDisonnected: %d: %s", ret, synce_strerror(ret));
+	      }
+	  }
+
+        IRAPIDevice_Release(device);
 
         return;
 }
@@ -1791,9 +1858,8 @@ IRAPIDesktop_Init()
         if (!self)
                 return E_OUTOFMEMORY;
 
-#if 0
-        self->sinks = NULL;
-#endif
+        self->sinks = g_hash_table_new(g_direct_hash,g_direct_equal);
+	self->sink_seq_num = 1;
 
         /*
            connect to dccm, odccm, vdccm ?
@@ -1804,8 +1870,9 @@ IRAPIDesktop_Init()
         self->dbus_connection = NULL;
         self->dbus_proxy = NULL;
 #if ENABLE_UDEV_SUPPORT
-        self->devices = NULL;
+        self->dev_mgr_proxy = NULL;
 #endif
+        self->devices = NULL;
 
         /* dccm */
 
@@ -1863,6 +1930,14 @@ IRAPIDesktop_Uninit()
 
         IRAPIDesktop *self = irapi_desktop;
 
+        g_hash_table_destroy(self->sinks);
+	self->sinks = NULL;
+
+#if ENABLE_UDEV_SUPPORT
+	if (self->dev_mgr_proxy)
+	  udev_disconnect(self);
+#endif
+
         dbus_g_proxy_disconnect_signal (self->dbus_proxy, "NameOwnerChanged",
                                   G_CALLBACK(dbus_name_owner_changed_cb), NULL);
 
@@ -1871,9 +1946,6 @@ IRAPIDesktop_Uninit()
 
         dbus_g_connection_unref(self->dbus_connection);
         self->dbus_connection = NULL;
-
-
-
 
         free(irapi_desktop);
         irapi_desktop = NULL;
@@ -1917,14 +1989,39 @@ IRAPIDesktop_Release(IRAPIDesktop *self)
         return;
 }
 
-
 HRESULT
 IRAPIDesktop_Advise(IRAPIDesktop *self, IRAPISink* pISink, DWORD* pdwContext)
 {
-        /*
-          add sink to list of sinks;
-        */
-        return E_NOTIMPL;
+  /*
+    add sink to list of sinks;
+  */
+
+  while(TRUE) {
+    if (self->sink_seq_num == 0xffffffff)
+      self->sink_seq_num = 1;
+
+    if (g_hash_table_lookup(self->sinks, GSIZE_TO_POINTER(self->sink_seq_num))) {
+      self->sink_seq_num++;
+      continue;
+    }
+
+    break;
+  }
+
+  g_hash_table_insert(self->sinks, GSIZE_TO_POINTER(self->sink_seq_num), pISink);
+
+  *pdwContext = self->sink_seq_num;
+  return S_OK;
+}
+
+HRESULT
+IRAPIDesktop_UnAdvise(IRAPIDesktop *self, DWORD dwContext)
+{
+  if (g_hash_table_remove(self->sinks, GSIZE_TO_POINTER(dwContext)))
+    return S_OK;
+
+  synce_warning("Request to remove IRAPISink that was not registered");
+  return S_OK;
 }
 
 HRESULT
@@ -1953,15 +2050,31 @@ IRAPIDesktop_EnumDevices(IRAPIDesktop *self, IRAPIEnumDevices** ppIEnum)
         return S_OK;
 }
 
+/*
+ * we haven't got GUID (RAPIDEVICEID) for pre WM5 in dccm
+ */
 HRESULT
 IRAPIDesktop_FindDevice(IRAPIDesktop *self, RAPIDEVICEID *pDeviceID, RAPI_GETDEVICEOPCODE opFlags, IRAPIDevice** ppIDevice)
 {
-        return E_NOTIMPL;
-}
+  char *guidstr = guid_to_string(pDeviceID);
+  if (!guidstr) {
+    synce_warning("Failed to convert guid to string representation");
+    return E_FAIL;
+  }
 
-HRESULT
-IRAPIDesktop_UnAdvise(IRAPIDesktop *self, DWORD dwContext)
-{
-        return E_NOTIMPL;
+  GList *device = self->devices;
+  while (device) {
+    if (strcmp(guidstr,synce_info_get_guid(((IRAPIDevice*)(device->data))->info)) == 0)
+      break;
+    device = g_list_next(device);
+  }
+  free(guidstr);
+
+  if (!device)
+    return MAKE_HRESULT(SEVERITY_ERROR,FACILITY_WIN32,ERROR_NO_MORE_DEVICES);
+
+  IRAPIDevice_AddRef(device->data);
+  *ppIDevice = device->data;
+  return S_OK;
 }
 
