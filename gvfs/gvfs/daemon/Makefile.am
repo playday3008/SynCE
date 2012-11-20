@@ -36,7 +36,6 @@ libdaemon_sources = \
 	$(gvfs_src_dir)/daemon/gvfsjobsetattribute.c $(gvfs_src_dir)/daemon/gvfsjobsetattribute.h \
 	$(gvfs_src_dir)/daemon/gvfsjobqueryattributes.c $(gvfs_src_dir)/daemon/gvfsjobqueryattributes.h \
 	$(gvfs_src_dir)/daemon/gvfsjobcreatemonitor.c $(gvfs_src_dir)/daemon/gvfsjobcreatemonitor.h \
-	$(gvfs_src_dir)/daemon/dbus-gmain.h $(gvfs_src_dir)/daemon/dbus-gmain.c \
 	$(gvfs_src_dir)/daemon/gvfskeyring.h $(gvfs_src_dir)/daemon/gvfskeyring.c
 
 daemon_sources = \
@@ -82,6 +81,18 @@ EXTRA_DIST += \
 	gvfsjobstartmountable.c gvfsjobstartmountable.h \
 	gvfsjobstopmountable.c gvfsjobstopmountable.h \
 	gvfsjobpollmountable.c gvfsjobpollmountable.h
+endif
+
+if GVFS_VERSION_1_14
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjobprogress.c $(gvfs_src_dir)/daemon/gvfsjobprogress.h
+EXTRA_DIST += \
+	dbus-gmain.c dbus-gmain.h
+else
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/dbus-gmain.c $(gvfs_src_dir)/daemon/dbus-gmain.h
+EXTRA_DIST += \
+	gvfsjobprogress.c gvfsjobprogress.h
 endif
 
 
