@@ -147,6 +147,17 @@ uint32_t bswap_32(uint32_t x);
 
 
 /*
+ * Encode a password with a key
+ */
+
+bool synce_password_encode(
+		const char *asciiPassword,
+		unsigned char key,
+		unsigned char **encodedPassword,
+		size_t *encodedPasswordSize);
+
+
+/*
  * Configuration directory and file name stuff
  */
 

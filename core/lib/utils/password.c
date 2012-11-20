@@ -15,7 +15,7 @@ static void synce_password_free(unsigned char *encodedPassword)
 /**
  * Encode a password with a key
  */
-static bool synce_password_encode(
+bool synce_password_encode(
 		const char *asciiPassword,
 		unsigned char key,
 		unsigned char **encodedPassword,
@@ -34,8 +34,8 @@ static bool synce_password_encode(
 
 	length = strlen(asciiPassword);
 
-	*encodedPassword      = (unsigned char*)wstr_from_ascii(asciiPassword);
-	*encodedPasswordSize  = 2 * (length + 1);
+	*encodedPassword      = (unsigned char*)wstr_from_utf8(asciiPassword);
+	*encodedPasswordSize  = sizeof(WCHAR) * (length + 1);
 
 	for (i = 0; i < *encodedPasswordSize; i++)
 	{

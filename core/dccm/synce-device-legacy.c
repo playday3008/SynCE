@@ -430,8 +430,7 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
   SynceConnectionBroker *broker;
   GSocketConnection *rapi_conn = NULL;
   guchar *buf = NULL;
-  guint16 buf_size = 0;
-  guint i = 0;
+  gsize buf_size = 0;
 
   if (priv->state != CTRL_STATE_CONNECTED)
     {
@@ -469,13 +468,7 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
 
   if (legacy_priv->password && strlen(legacy_priv->password))
     {
-
-      buf = (guchar *) wstr_from_utf8 (legacy_priv->password);
-      buf_size = wstrlen ((LPCWSTR) buf) * sizeof (WCHAR);
-      for (i = 0; i < buf_size; i++)
-        {
-          buf[i] ^= priv->pw_key;
-        }
+      synce_password_encode(legacy_priv->password, priv->pw_key, &buf, &buf_size);
 
       buf_size = GUINT16_TO_LE (buf_size);
 

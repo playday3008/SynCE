@@ -90,8 +90,7 @@ synce_device_provide_password_impl (SynceDevice *self,
 
   GError *error = NULL;
   guchar *buf;
-  guint16 buf_size;
-  guint i;
+  gsize buf_size;
 
   if (priv->state != CTRL_STATE_AUTH ||
       (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) == 0)
@@ -109,13 +108,7 @@ synce_device_provide_password_impl (SynceDevice *self,
 
   priv->pw_ctx = ctx;
 
-  buf = (guchar *) wstr_from_utf8 (password);
-  buf_size = wstrlen ((LPCWSTR) buf) * sizeof (WCHAR);
-
-  for (i = 0; i < buf_size; i++)
-    {
-      buf[i] ^= priv->pw_key;
-    }
+  synce_password_encode(password, priv->pw_key, &buf, &buf_size);
 
   buf_size = GUINT16_TO_LE (buf_size);
   gsize written = 0;
@@ -444,8 +437,6 @@ synce_device_init (SynceDevice *self)
 #if HAVE_GUDEV
   priv->gudev_client = NULL;
 #endif
-
-exit:
 
   return;
 }
