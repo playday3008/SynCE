@@ -550,9 +550,9 @@ static bool recurrence_initialize_rrule_vcal(const char* str, RRule* rrule)
     else if (strv[0][1] == 'P') /* by position, ie the complicated one */
     {
       rrule->interval = atoi(strv[0]+2);
-      /* */
+
       StrBuf *days_list = strbuf_new(NULL);
-      char current_occurence_str[3];
+      int occurence = 0;
       for (i = 1; strv[i]; i++)
       {
 	if (strv[i][0] == '#')
@@ -567,24 +567,27 @@ static bool recurrence_initialize_rrule_vcal(const char* str, RRule* rrule)
 	}
 	else if (isdigit(strv[i][0]))
 	{
-	  int occurence = atoi(strv[i]);
-	  if (strv[i][1] == '+')
-	    snprintf(current_occurence_str, 2, "%d", occurence);
+	  if (occurence != 0)
+	    /* Any days following this shoukd be bound by this subsequent
+	       occurence modifier, but cant be. We'll allow them to go with
+	       the first occurrence modifier for now, but maybe we should
+	       drop them entirely */
+	    synce_info("Multiple occurence values cannot be represented by RRA in Monthly by Position recurrence");
 	  else
-	    snprintf(current_occurence_str, 3, "-%d", occurence);
+	    occurence = atoi(strv[i]);
 	}
 	else
 	{
 	  if (days_list->length > 0)
 	    days_list = strbuf_append(days_list,",");
-	  days_list = strbuf_append(days_list,current_occurence_str);
 	  days_list = strbuf_append(days_list,strv[i]);
 	}
       }
-      if (days_list->length > 0)
-	replace_string_with_copy(&rrule->bymonthday, days_list->buffer);
-      strbuf_destroy(days_list,1);
+      rrule->bysetpos = occurence;
 
+      if (days_list->length > 0)
+	replace_string_with_copy(&rrule->byday, days_list->buffer);
+      strbuf_destroy(days_list,1);
     }
     else
       synce_error("Unexpected frequency in RRULE '%s'", str);
