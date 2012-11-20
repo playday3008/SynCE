@@ -28,7 +28,7 @@ struct _SynceDeviceRndisPrivate {
 
 
 static void
-synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gint length)
+synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssize length)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (SYNCE_DEVICE(self));
   gchar *guid = NULL, *name = NULL, *platform_name = NULL, *model_name = NULL;

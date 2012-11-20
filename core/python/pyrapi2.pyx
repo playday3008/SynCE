@@ -86,7 +86,7 @@ cdef extern from "rapi.h":
 
     # connection parameters
     char *rapi_connection_get_name(RapiConnection* connection) nogil
-    int rapi_connection_get_os_version(RapiConnection* connection, int *os_major, int *os_minor) nogil
+    int rapi_connection_get_os_version(RapiConnection* connection, unsigned int *os_major, unsigned int *os_minor) nogil
     int rapi_connection_get_build_number(RapiConnection* connection) nogil
     int rapi_connection_get_processor_type(RapiConnection* connection) nogil
     char *rapi_connection_get_os_name(RapiConnection* connection) nogil
@@ -1089,8 +1089,8 @@ cdef class RAPISession:
 
 
     def __getattr__(self, name):
-        cdef int os_major
-        cdef int os_minor
+        cdef unsigned int os_major
+        cdef unsigned int os_minor
         cdef int retval
 
         if name == "HKEY_CLASSES_ROOT" or name == "HKCR":

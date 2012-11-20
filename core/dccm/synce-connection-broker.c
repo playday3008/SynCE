@@ -192,7 +192,8 @@ server_socket_readable_cb(GSocketService *source,
 {
   SynceConnectionBroker *self = user_data;
   SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE (self);
-  gint device_fd, client_fd, ret;
+  gint device_fd, client_fd;
+  ssize_t ret;
   struct msghdr msg = { 0, };
   struct cmsghdr *cmsg;
   gchar cmsg_buf[CMSG_SPACE (sizeof (device_fd))];
@@ -230,7 +231,7 @@ server_socket_readable_cb(GSocketService *source,
   ret = sendmsg (client_fd, &msg, MSG_NOSIGNAL);
   if (ret != 1)
     {
-      g_warning ("%s: sendmsg returned %d", G_STRFUNC, ret);
+      g_warning ("%s: sendmsg returned %zd", G_STRFUNC, ret);
     }
 
   g_signal_emit (self, signals[DONE], 0);

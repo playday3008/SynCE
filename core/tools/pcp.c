@@ -223,7 +223,7 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
   DWORD last_error;
   DIR *dir_handle;
   struct dirent *dir_entry;
-  bool result;
+  bool result = false;
 
   if (is_remote_file(source)) {
     src_list = calloc(1, strlen(source) + 3);
@@ -317,7 +317,7 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
     closedir(dir_handle);
   }
 
-  return true;
+  return result;
 }
 
 

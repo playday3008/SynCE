@@ -86,7 +86,7 @@ synce_device_legacy_send_ping(gpointer data)
 }
 
 static void
-synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, gint length)
+synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, gssize length)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (SYNCE_DEVICE(self));
 

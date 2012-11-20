@@ -5,7 +5,7 @@ void
 synce_get_dbus_sender_uid (const gchar *sender, guint *uid);
 
 void
-synce_print_hexdump (const void *buf, gint len);
+synce_print_hexdump (const void *buf, gssize len);
 
 gchar *
 synce_guid_to_string (const guchar *p);
@@ -23,4 +23,4 @@ gboolean
 synce_trigger_connection (const gchar *device_ip);
 
 GSocket *
-synce_create_socket(const gchar *address, gint port);
+synce_create_socket(const gchar *address, guint16 port);

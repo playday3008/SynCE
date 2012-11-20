@@ -68,7 +68,7 @@ synce_get_dbus_sender_uid(const gchar *sender, guint *uid)
 }
 
 void
-synce_print_hexdump (const void *buf, gint len)
+synce_print_hexdump (const void *buf, gssize len)
 {
   GString *s = g_string_sized_new (12);
   int i;
@@ -206,7 +206,7 @@ exit:
 }
 
 GSocket *
-synce_create_socket(const gchar *address, gint port)
+synce_create_socket(const gchar *address, guint16 port)
 {
   GError *error = NULL;
   GSocket *socket = NULL;
@@ -230,12 +230,12 @@ synce_create_socket(const gchar *address, gint port)
   }
   sock_address = g_inet_socket_address_new(inet_address, port);
   if (!(g_socket_bind(socket, sock_address, TRUE, &error))) {
-    g_critical("%s: failed to bind to port %d: %s", G_STRFUNC, port, error->message);
+    g_critical("%s: failed to bind to port %u: %s", G_STRFUNC, port, error->message);
     g_object_unref(socket);
     goto error_exit;
   }
   if (!(g_socket_listen(socket, &error))) {
-    g_critical("%s: failed to listen to port 990: %s", G_STRFUNC, error->message);
+    g_critical("%s: failed to listen to port %u: %s", G_STRFUNC, port, error->message);
     g_object_unref(socket);
     goto error_exit;
   }

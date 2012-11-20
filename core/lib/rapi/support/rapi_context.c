@@ -5,6 +5,7 @@
 #include "config.h"
 #endif
 #include "rapi_context.h"
+#include "synce.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>

@@ -221,7 +221,7 @@ absolutize_path(const char *path)
 char *
 dirname(const char *path)
 {
-	int dir_end = 0, i;
+	ssize_t dir_end = 0, i;
 	bool wildcard = FALSE;
 	char *tmp_path = NULL;
 

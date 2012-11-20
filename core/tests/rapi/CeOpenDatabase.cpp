@@ -176,7 +176,7 @@ int handle_database(HANDLE db, DWORD num_records)
 {
 #define MYBUFSIZE  (16*1024)
 	PCEPROPVAL values = NULL;
-	DWORD buffer_size = NULL;
+	DWORD buffer_size = 0;
 
 	for (unsigned i = 0; i < num_records; i++)
 	{
