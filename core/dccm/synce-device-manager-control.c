@@ -5,19 +5,28 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <glib-object.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib.h>
 
 #include "synce-device-manager-control.h"
 #include "synce-device-manager-control-glue.h"
 #include "synce-device-manager-control-signals-marshal.h"
 
-G_DEFINE_TYPE (SynceDeviceManagerControl, synce_device_manager_control, G_TYPE_OBJECT)
+
+static void     synce_device_manager_control_initable_iface_init (GInitableIface  *iface);
+static gboolean synce_device_manager_control_initable_init       (GInitable       *initable,
+								  GCancellable    *cancellable,
+								  GError         **error);
+
+G_DEFINE_TYPE_WITH_CODE (SynceDeviceManagerControl, synce_device_manager_control, G_TYPE_OBJECT,
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_control_initable_iface_init))
 
 /* private stuff */
 typedef struct _SynceDeviceManagerControlPrivate SynceDeviceManagerControlPrivate;
 
 struct _SynceDeviceManagerControlPrivate
 {
+  gboolean inited;
   gboolean dispose_has_run;
 };
 
@@ -25,16 +34,39 @@ struct _SynceDeviceManagerControlPrivate
     (G_TYPE_INSTANCE_GET_PRIVATE((o), SYNCE_TYPE_DEVICE_MANAGER_CONTROL, SynceDeviceManagerControlPrivate))
 
 static void
+synce_device_manager_control_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = synce_device_manager_control_initable_init;
+}
+
+static void
 synce_device_manager_control_init (SynceDeviceManagerControl *self)
 {
   SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE(self);
 
-  GError *error = NULL;
-  DBusGConnection *system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+  priv->inited = FALSE;
+  priv->dispose_has_run = FALSE;
+
+  return;
+}
+
+static gboolean
+synce_device_manager_control_initable_init (GInitable *initable, GCancellable *cancellable, GError **error)
+{
+  g_return_val_if_fail (SYNCE_IS_DEVICE_MANAGER_CONTROL(initable), FALSE);
+  SynceDeviceManagerControl *self = SYNCE_DEVICE_MANAGER_CONTROL(initable);
+  SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE (self);
+
+  if (cancellable != NULL) {
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			 "Cancellable initialization not supported");
+    return FALSE;
+  }
+
+  DBusGConnection *system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, error);
   if (system_bus == NULL) {
-    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return;
+    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, (*error)->message);
+    return FALSE;
   }
 
   dbus_g_connection_register_g_object (system_bus,
@@ -42,7 +74,8 @@ synce_device_manager_control_init (SynceDeviceManagerControl *self)
 				       G_OBJECT(self));
   dbus_g_connection_unref(system_bus);
 
-  return;
+  priv->inited = TRUE;
+  return TRUE;
 }
 
 static void
@@ -105,6 +138,7 @@ void
 synce_device_manager_control_device_connected(SynceDeviceManagerControl *self, gchar *device_path, gchar *device_ip, gchar *local_ip, gboolean rndis, GError **error)
 {
   SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE(self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
   g_debug("%s: received connect for device %s", G_STRFUNC, device_path);
   g_signal_emit(self,
@@ -119,6 +153,7 @@ void
 synce_device_manager_control_device_disconnected(SynceDeviceManagerControl *self, gchar *device_path, GError **error)
 {
   SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE(self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
   g_debug("%s: received disconnect for device %s", G_STRFUNC, device_path);
   g_signal_emit(self,

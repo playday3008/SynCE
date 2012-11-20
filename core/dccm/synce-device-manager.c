@@ -16,7 +16,13 @@
 #include "synce-device-legacy.h"
 #include "utils.h"
 
-G_DEFINE_TYPE (SynceDeviceManager, synce_device_manager, G_TYPE_OBJECT)
+static void     synce_device_manager_initable_iface_init (GInitableIface  *iface);
+static gboolean synce_device_manager_initable_init       (GInitable       *initable,
+							  GCancellable    *cancellable,
+							  GError          **error);
+
+G_DEFINE_TYPE_WITH_CODE (SynceDeviceManager, synce_device_manager, G_TYPE_OBJECT,
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_initable_iface_init))
 
 /* private stuff */
 
@@ -35,6 +41,7 @@ typedef struct _SynceDeviceManagerPrivate SynceDeviceManagerPrivate;
 
 struct _SynceDeviceManagerPrivate
 {
+  gboolean inited;
   gboolean dispose_has_run;
 
   GSList *devices;
@@ -169,8 +176,7 @@ synce_device_manager_client_connected_cb(GSocketService *server,
        * should close the socket listener on port 990 here, but can't see how to
        */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
-      deventry->device = g_object_new (SYNCE_TYPE_DEVICE_LEGACY, "connection", conn, "device-path", deventry->device_path, NULL);
-      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_sends_disconnected_cb), self);
+      deventry->device = g_initable_new (SYNCE_TYPE_DEVICE_LEGACY, NULL, &error, "connection", conn, "device-path", deventry->device_path, NULL);
     } else {
       g_warning("%s: unexpected secondary connection to port %d", G_STRFUNC, local_port);
       return TRUE;
@@ -181,8 +187,7 @@ synce_device_manager_client_connected_cb(GSocketService *server,
        * should close the socket listener on port 5679 here, but can't see how to
        */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
-      deventry->device = g_object_new (SYNCE_TYPE_DEVICE_RNDIS, "connection", conn, "device-path", deventry->device_path, NULL);
-      g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_sends_disconnected_cb), self);
+      deventry->device = g_initable_new (SYNCE_TYPE_DEVICE_RNDIS, NULL, &error, "connection", conn, "device-path", deventry->device_path, NULL);
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(deventry->device), conn);
       return TRUE;
@@ -192,9 +197,14 @@ synce_device_manager_client_connected_cb(GSocketService *server,
     return TRUE;
   }
 
-  g_signal_connect (deventry->device, "notify::object-path",
-		    (GCallback) synce_device_manager_device_obj_path_changed_cb,
-		    self);
+  if (!deventry->device) {
+    g_critical("%s: failed to create device object for new connection: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    return TRUE;
+  }
+
+  g_signal_connect(deventry->device, "disconnected", G_CALLBACK(synce_device_manager_device_sends_disconnected_cb), self);
+  g_signal_connect(deventry->device, "notify::object-path", G_CALLBACK(synce_device_manager_device_obj_path_changed_cb), self);
 
   return TRUE;
 }
@@ -205,6 +215,9 @@ synce_device_manager_create_device(SynceDeviceManager *self,
 				   const gchar *local_ip,
 				   DeviceEntry *deventry)
 {
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
+
   g_debug("%s: found device interface for %s", G_STRFUNC, deventry->device_path);
 
   deventry->iface_pending = FALSE;
@@ -272,6 +285,7 @@ synce_device_manager_check_interface_cb (gpointer userdata)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
 
   GError *error = NULL;
   GSList *device_entry_iter = NULL;
@@ -331,6 +345,7 @@ synce_device_manager_device_connected_cb(SynceDeviceManagerControl *device_manag
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
   g_debug("%s: receieved device connected signal for %s", G_STRFUNC, device_path);
 
@@ -363,6 +378,7 @@ synce_device_manager_device_disconnected_cb(SynceDeviceManagerControl *device_ma
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
   g_debug("%s: receieved device disconnected signal for %s", G_STRFUNC, device_path);
 
@@ -407,6 +423,7 @@ synce_device_manager_get_connected_devices (SynceDeviceManager *self,
                                             GError **error)
 {
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
 
   *ret = g_ptr_array_new ();
 
@@ -451,33 +468,64 @@ synce_device_manager_get_connected_devices (SynceDeviceManager *self,
   return TRUE;
 }
 
+/*
+ * class / object functions
+ */
+
+static void
+synce_device_manager_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = synce_device_manager_initable_init;
+}
 
 static void
 synce_device_manager_init (SynceDeviceManager *self)
 {
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
 
-  GError *error = NULL;
-  DBusGConnection *system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-  if (system_bus == NULL) {
-    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return;
+  priv->devices = NULL;
+  priv->control_iface = NULL;
+  priv->control_connect_id = 0;
+  priv->control_disconnect_id = 0;
+  priv->iface_check_id = 0;
+
+  return;
+}
+
+static gboolean
+synce_device_manager_initable_init (GInitable *initable, GCancellable *cancellable, GError **error)
+{
+  g_return_val_if_fail (SYNCE_IS_DEVICE_MANAGER(initable), FALSE);
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(initable);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  if (cancellable != NULL) {
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			 "Cancellable initialization not supported");
+    return FALSE;
   }
 
+  DBusGConnection *system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, error);
+  if (system_bus == NULL) {
+    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, (*error)->message);
+    return FALSE;
+  }
   dbus_g_connection_register_g_object (system_bus,
                                        DEVICE_MANAGER_OBJECT_PATH,
 				       G_OBJECT(self));
   dbus_g_connection_unref(system_bus);
 
-  priv->devices = NULL;
-  priv->control_iface = g_object_new(SYNCE_TYPE_DEVICE_MANAGER_CONTROL, NULL);
+  priv->control_iface = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER_CONTROL, NULL, error, NULL);
+  if (!(priv->control_iface)) {
+    g_critical("%s: failed to create manager control interface: %s", G_STRFUNC, (*error)->message);
+    return FALSE;
+  }
 
   priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(synce_device_manager_device_connected_cb), self);
   priv->control_disconnect_id = g_signal_connect(priv->control_iface, "device-disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
-  priv->iface_check_id = 0;
 
-  return;
+  priv->inited = TRUE;
+  return TRUE;
 }
 
 static void

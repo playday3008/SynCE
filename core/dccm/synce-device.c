@@ -20,7 +20,13 @@
 
 #include "synce-errors.h"
 
-G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
+static void     synce_device_initable_iface_init (GInitableIface  *iface);
+static gboolean synce_device_initable_init       (GInitable       *initable,
+						  GCancellable    *cancellable,
+						  GError          **error);
+
+G_DEFINE_TYPE_WITH_CODE (SynceDevice, synce_device, G_TYPE_OBJECT,
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_initable_iface_init))
 
 
 const gchar *udev_subsystems[] = { NULL };
@@ -80,6 +86,8 @@ synce_device_provide_password_impl (SynceDevice *self,
 				    DBusGMethodInvocation *ctx)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+
   GError *error = NULL;
   guchar *buf;
   guint16 buf_size;
@@ -137,6 +145,7 @@ void
 synce_device_dbus_init(SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
   GError *error = NULL;
   gchar *safe_path = NULL;
@@ -211,6 +220,9 @@ void
 synce_device_change_password_flags (SynceDevice *self,
 				    SynceDevicePasswordFlags new_flag)
 {
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+
   const gchar *prop_str = NULL;
 
   g_object_set (self, "password-flags", new_flag, NULL);
@@ -226,6 +238,7 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
 {
   SynceDevice *self = SYNCE_DEVICE (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
   guint id;
 
   g_object_get (broker, "id", &id, NULL);
@@ -245,6 +258,7 @@ gudev_uevent_callback(GUdevClient *client,
 
   SynceDevice *self = SYNCE_DEVICE (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
   if ((g_str_has_suffix(g_udev_device_get_sysfs_path(device), priv->device_path) == FALSE) || (strcmp("remove", action) != 0)) 
     return;
@@ -263,6 +277,7 @@ synce_device_get_name(SynceDevice *self,
 		      GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *name = g_strdup (priv->name);
   return TRUE;
 }
@@ -273,6 +288,7 @@ synce_device_get_platform_name(SynceDevice *self,
 			       GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *platform_name = g_strdup (priv->platform_name);
   return TRUE;
 }
@@ -283,6 +299,7 @@ synce_device_get_model_name(SynceDevice *self,
 			    GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *model_name = g_strdup (priv->model_name);
   return TRUE;
 }
@@ -293,6 +310,7 @@ synce_device_get_os_version (SynceDevice *self,
                              GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *os_major = priv->os_major;
   *os_minor = priv->os_minor;
   return TRUE;
@@ -304,6 +322,7 @@ synce_device_get_version(SynceDevice *self,
 			 GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *version = priv->version;
   return TRUE;
 }
@@ -314,6 +333,7 @@ synce_device_get_cpu_type(SynceDevice *self,
 			  GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *cpu_type = priv->cpu_type;
   return TRUE;
 }
@@ -324,6 +344,7 @@ synce_device_get_ip_address(SynceDevice *self,
 			    GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *ip_address = g_strdup (priv->ip_address);
   return TRUE;
 }
@@ -334,6 +355,7 @@ synce_device_get_iface_address(SynceDevice *self,
 			       GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *iface_address = g_strdup (priv->iface_address);
   return TRUE;
 }
@@ -344,6 +366,7 @@ synce_device_get_guid(SynceDevice *self,
 		      GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *guid = g_strdup (priv->guid);
   return TRUE;
 }
@@ -354,6 +377,7 @@ synce_device_get_current_partner_id(SynceDevice *self,
 				    GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   *cur_partner_id = priv->cur_partner_id;
   return TRUE;
 }
@@ -364,6 +388,7 @@ synce_device_get_password_flags(SynceDevice *self,
 				GError **error)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
   const gchar *pw_text = NULL;
   pw_text = get_password_flag_text(priv->pw_flags);
   *pw_flag = g_strdup (pw_text);
@@ -373,9 +398,18 @@ synce_device_get_password_flags(SynceDevice *self,
 /* class functions */
 
 static void
+synce_device_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = synce_device_initable_init;
+}
+
+static void
 synce_device_init (SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+
+  priv->dispose_has_run = FALSE;
+  priv->inited = FALSE;
 
   priv->state = CTRL_STATE_HANDSHAKE;
   priv->pw_flags = SYNCE_DEVICE_PASSWORD_FLAG_UNSET;
@@ -408,20 +442,47 @@ synce_device_init (SynceDevice *self)
   priv->obj_path = NULL;
 
 #if HAVE_GUDEV
-  g_debug("%s: connecting to udev", G_STRFUNC);
-  if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
-    g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
-    goto exit;
-  }
-
-  if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
-    g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
-  }
+  priv->gudev_client = NULL;
 #endif
 
 exit:
 
   return;
+}
+
+static gboolean
+synce_device_initable_init (GInitable *initable, GCancellable *cancellable, GError **error)
+{
+  g_return_val_if_fail (SYNCE_IS_DEVICE(initable), FALSE);
+  SynceDevice *self = SYNCE_DEVICE(initable);
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+
+  if (cancellable != NULL) {
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+			 "Cancellable initialization not supported");
+    return FALSE;
+  }
+
+#if HAVE_GUDEV
+  g_debug("%s: connecting to udev", G_STRFUNC);
+  if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
+    g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			 "Failed to initialize connection to udev");
+    return FALSE;
+  }
+
+  if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
+    g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			 "Failed to initialize connection to udev");
+    return FALSE;
+  }
+#endif
+
+  priv->inited = TRUE;
+
+  return TRUE;
 }
 
 static void

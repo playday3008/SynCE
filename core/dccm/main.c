@@ -115,7 +115,12 @@ main(gint argc,
       return EXIT_FAILURE;
     }
 
-  device_manager = g_object_new(SYNCE_TYPE_DEVICE_MANAGER, NULL);
+  device_manager = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER, NULL, &error, NULL);
+  if (!device_manager) {
+    g_critical("Failed to create device manager: %s", error->message);
+    g_error_free(error);
+    return EXIT_FAILURE;
+  }
 
   g_main_loop_run (mainloop);
 
