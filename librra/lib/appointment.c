@@ -163,6 +163,70 @@ static bool on_propval_occurrence(Generator* g, CEPROPVAL* propval, void* cookie
   return true;
 }
 
+static bool on_propval_attendees(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  char *name = NULL;
+  char *email = NULL;
+  char *tmp = NULL;
+  int i;
+  size_t offset;
+
+  if ((propval->propid & 0xffff) != CEVT_BLOB)
+  {
+    synce_error("For ID_ATTENDEES, expecting a BLOB");
+    return true;
+  }
+
+  LPBYTE buffer_start = propval->val.blob.lpb;
+
+  /* first field is number of entries; assuming a DWORD */
+  int num_attendees = letoh32(*((DWORD*)buffer_start));
+
+  /* following the 4 byte number of attendees are 12 empty bytes */
+  offset = 16;
+
+  for (i = 0; i < num_attendees; i++) {
+    /* Each attendee entry starts with 16 bytes, purpose unknown,
+     * followed by the name as WSTR, and email address as WSTR.
+     * The entry finishes on an 8 byte boundary
+     */
+    offset = offset + 16;
+
+    name = wstr_to_utf8((LPWSTR)(buffer_start + offset));
+    offset = offset + ((wstrlen((LPWSTR)(buffer_start + offset)) + 1) * sizeof(WCHAR));
+
+    email = wstr_to_utf8((LPWSTR)(buffer_start + offset));
+    offset = offset + ((wstrlen((LPWSTR)(buffer_start + offset)) + 1) * sizeof(WCHAR));
+
+    tmp = malloc(strlen(name) + strlen(email) + 4);
+    snprintf(tmp, strlen(name) + strlen(email) + 4, "%s <%s>", name, email);
+
+    generator_add_simple(g, "ATTENDEE", tmp);
+    free(tmp);
+
+    offset = offset + (8 - (offset % 8));
+
+    free(name);
+    free(email);
+  }
+
+  return true;
+}
+
+static bool on_propval_attendee_notified_time(Generator* g, CEPROPVAL* propval, void* cookie)/*{{{*/
+{
+  time_t start_time;
+  char buffer[32];
+  parser_filetime_to_unix_time(&propval->val.filetime, &start_time);
+  strftime(buffer, sizeof(buffer), "%Y%m%dT%H%M%SZ", gmtime(&start_time));
+  synce_debug("No vcal equivalent for ID_ATTENDEE_NOTIFIED_TIME: filetime: %08x %08x=%s",
+              propval->val.filetime.dwHighDateTime,
+              propval->val.filetime.dwLowDateTime,
+              buffer);
+  return true;
+}
+
+
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
     const uint8_t* data,
@@ -230,6 +294,8 @@ bool rra_appointment_to_vevent(/*{{{*/
 #if ENABLE_RECURRENCE
   generator_add_property(generator, ID_UNIQUE,      on_propval_unique);
 #endif
+  generator_add_property(generator, ID_ATTENDEE_NOTIFIED_TIME, on_propval_attendee_notified_time);
+  generator_add_property(generator, ID_ATTENDEES, on_propval_attendees);
 
   if (!generator_set_data(generator, data, data_size))
     goto exit;
@@ -584,6 +650,96 @@ static bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
   return process_mdir_line_description(p, line, cookie, ((EventParserData*)cookie)->codepage);
 }
 
+static bool on_mdir_line_attendee(Parser* p, mdir_line* line, void* cookie)/*{{{*/
+{
+  EventParserData* event_parser_data = (EventParserData*)cookie;
+  if (line)
+    rra_mdir_line_vector_add(event_parser_data->attendees, line);
+  return true;
+}/*}}}*/
+
+static bool process_attendees(Parser *p, RRA_MdirLineVector *attendees)/*{{{*/
+{
+  uint8_t *data = NULL;
+  size_t data_size = 0;
+  int num_attendees = 0;
+
+  if (attendees->used == 0)
+    return true;
+
+  size_t i;
+  for (i = 0; i < attendees->used; i++)
+  {
+    int matches;
+    char *name, *email;
+
+    synce_debug("ATTENDEE %d - %s", i, attendees->items[i]->values[0]);
+
+    name = malloc(strlen(attendees->items[i]->values[0]) + 1);
+    email = malloc(strlen(attendees->items[i]->values[0]) + 1);
+    matches = sscanf(attendees->items[i]->values[0], " %s < %s > ", name, email);
+
+    if (matches != 2) {
+      synce_info("Didn't find name and email address in format Name <email> in ATTENDEE line, skipping");
+      free(name);
+      free(email);
+      continue;
+    }
+
+    size_t attendee_size = 16 + ((strlen(name) + 1) * sizeof(WCHAR)) + ((strlen(email) + 1) * sizeof(WCHAR));
+    attendee_size = attendee_size + (8 - (attendee_size % 8));
+
+    uint8_t *tmp_data = realloc(data, data_size + attendee_size);
+    if (!tmp_data)
+    {
+      synce_error("Failed to allocate buffer for ATTENDEE");
+      free(data);
+      free(name);
+      free(email);
+      return false;
+    }
+
+    data = tmp_data;
+    uint8_t *p = data + data_size;
+    data_size = data_size + attendee_size;
+
+    LPWSTR widestr = NULL;
+    memset(p, 0, attendee_size);
+    p += 16;
+
+    widestr = wstr_from_utf8(name);
+    memcpy(p, widestr, (wstrlen(widestr) + 1) * sizeof(WCHAR));
+    p += ((wstrlen(widestr) + 1) * sizeof(WCHAR));
+    wstr_free_string(widestr);
+
+    widestr = wstr_from_utf8(email);
+    memcpy(p, widestr, (wstrlen(widestr) + 1) * sizeof(WCHAR));
+    p += ((wstrlen(widestr) + 1) * sizeof(WCHAR));
+    wstr_free_string(widestr);
+
+    free(name);
+    free(email);
+
+    num_attendees++;
+  }
+
+  LPBYTE blob = malloc(16 + data_size);
+
+  *(DWORD*)blob = htole32(num_attendees);
+
+  memcpy(blob+16, data, data_size);
+  free(data);
+
+  if (!parser_add_blob(p, ID_ATTENDEES, blob, 16+data_size))
+  {
+    synce_error("Failed to add ATTENDEES");
+  }
+
+  free(blob);
+
+  return true;
+}
+
 bool rra_appointment_from_vevent(/*{{{*/
     const char* vevent,
     uint32_t* id,
@@ -604,6 +760,7 @@ bool rra_appointment_from_vevent(/*{{{*/
   EventParserData event_parser_data;
   memset(&event_parser_data, 0, sizeof(EventParserData));
   event_parser_data.codepage = codepage;  
+  event_parser_data.attendees = rra_mdir_line_vector_new();
 #if ENABLE_RECURRENCE
   event_parser_data.exdates = rra_mdir_line_vector_new();
 #endif
@@ -663,6 +820,8 @@ bool rra_appointment_from_vevent(/*{{{*/
       parser_property_new("exDate", on_mdir_line_exdate));
 #endif
   parser_component_add_parser_property(event, 
+      parser_property_new("Attendee", on_mdir_line_attendee));
+  parser_component_add_parser_property(event, 
       parser_property_new("Location", on_mdir_line_location));
   parser_component_add_parser_property(event, 
       parser_property_new("RRule", on_mdir_line_rrule));
@@ -704,6 +863,8 @@ bool rra_appointment_from_vevent(/*{{{*/
   }
 
   parser_call_unused_properties(parser);
+
+  process_attendees(parser, event_parser_data.attendees);
 
   if (event_parser_data.dtstart)
   {
@@ -824,6 +985,7 @@ exit:
 #if ENABLE_RECURRENCE
   rra_mdir_line_vector_destroy(event_parser_data.exdates, true);
 #endif
+  rra_mdir_line_vector_destroy(event_parser_data.attendees, true);
   /* destroy components (the order is important!) */
   parser_component_destroy(base);
   parser_component_destroy(calendar);

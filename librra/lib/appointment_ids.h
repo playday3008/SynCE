@@ -22,6 +22,7 @@
 #define ID_NOTES           0x0017
 
 #define ID_IMPORTANCE       0x0026
+#define ID_ATTENDEES        0x0030
 
 #define IMPORTANCE_HIGH     1
 #define IMPORTANCE_NORMAL   2
@@ -30,6 +31,7 @@
 #define ID_SUBJECT         0x0037
 
 #define ID_UNKNOWN_0042    0x0042
+#define ID_ATTENDEE_NOTIFIED_TIME 0x0064 /* speculation */
 #define ID_UNIQUE          0x0067
 
 #define ID_CATEGORIES      0x4005 /* task only ? */

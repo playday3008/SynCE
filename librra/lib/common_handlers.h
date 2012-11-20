@@ -43,6 +43,7 @@ typedef struct _EventParserData
   mdir_line* palarm;
   mdir_line* malarm;
   mdir_line* trigger;
+  RRA_MdirLineVector* attendees;
 #if ENABLE_RECURRENCE
   RRA_MdirLineVector* exdates;
   mdir_line* rrule;
