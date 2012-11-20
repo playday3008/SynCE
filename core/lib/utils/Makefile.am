@@ -11,7 +11,6 @@ libutils_la_SOURCES = \
 	filetime.c \
 	info.c \
 	password.c \
-	synce.h \
 	synce_hash.h synce_hash.c \
 	synce_ini.h synce_ini.c \
 	synce_log.h synce_log.c \
@@ -19,6 +18,8 @@ libutils_la_SOURCES = \
 	synce_vector_template.h \
 	time_fields.c \
 	wstr.c
+
+nodist_libutils_la_SOURCES = synce.h
 
 if IMPLEMENT_BSWAP_XX
 libutils_la_SOURCES += bswap.c
@@ -28,7 +29,6 @@ libutils_la_CFLAGS = @DBUS_CFLAGS@
 libutils_la_LIBADD  = config/libconfig.la -lm @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@
 
 include_HEADERS = \
-	synce.h \
 	synce_hash.h \
 	synce_ini.h \
 	synce_log.h \
@@ -36,6 +36,8 @@ include_HEADERS = \
 	synce_types.h \
 	synce_sys_error.h \
 	synce_vector_template.h
+
+nodist_include_HEADERS = synce.h
 
 ##noinst_PROGRAMS = ftconv
 

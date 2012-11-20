@@ -4,9 +4,8 @@ AM_CFLAGS = -Wall \
 libexec_PROGRAMS = dccm synce-serial-chat
 
 BUILT_SOURCES = synce-device-signals-marshal.h \
-		synce-device-signals-marshal.c
-
-BUILT_SOURCES += synce-device-glue.h \
+		synce-device-signals-marshal.c \
+		synce-device-glue.h \
 		synce-device-manager-control-signals-marshal.h \
 		synce-device-manager-control-signals-marshal.c \
 		synce-device-manager-control-glue.h \
@@ -14,30 +13,30 @@ BUILT_SOURCES += synce-device-glue.h \
 
 CLEANFILES = $(BUILT_SOURCES)
 
-dccm_SOURCES = $(BUILT_SOURCES) \
-		log.c log.h \
+dccm_SOURCES = log.c log.h \
 		synce-device.c synce-device.h synce-device-internal.h \
 		synce-device-rndis.c synce-device-rndis.h \
 		synce-device-legacy.c synce-device-legacy.h \
 		synce-connection-broker.c synce-connection-broker.h \
 		synce-errors.c synce-errors.h \
-		utils.c utils.h
+		utils.c utils.h \
+		synce-device-manager.c synce-device-manager.h \
+		synce-device-manager-control.c synce-device-manager-control.h \
+		main.c 
 
-dccm_SOURCES += main.c synce-device-manager.c synce-device-manager.h \
-		synce-device-manager-control.c synce-device-manager-control.h
+nodist_dccm_SOURCES = $(BUILT_SOURCES)
 
 dccm_CPPFLAGS = \
 	-I$(top_srcdir)/lib/utils \
 	$(GLIB_CFLAGS) \
-	$(DBUS_CFLAGS)
+	$(DBUS_CFLAGS) \
+	$(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
 
 dccm_LDADD = \
 	$(top_builddir)/lib/libsynce.la \
 	$(GLIB_LIBS) \
-	$(DBUS_LIBS)
-
-dccm_CPPFLAGS += $(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
-dccm_LDADD += $(GUDEV_LIBS)
+	$(DBUS_LIBS) \
+	$(GUDEV_LIBS)
 
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
