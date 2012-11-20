@@ -72,7 +72,7 @@ int main(int argc, char** argv)
   int result = 0;
   RapiConnection* connection = NULL;
   HRESULT hr;
-  char *shortcut, *target;
+  char *shortcut = NULL, *target = NULL;
   WCHAR* wide_shortcut = NULL;
   WCHAR* wide_target = NULL;
   WCHAR *tmp, *tmp_quote;

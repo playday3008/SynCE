@@ -658,7 +658,7 @@ int read_val(const char *parent_str, const char *key_str, HKEY key, const char *
 int write_val(HKEY key, const char *value_name, DWORD value_type, const char *new_value)
 {
   LONG retval;
-  void *valBuf;
+  void *valBuf = NULL;
   int valSize;
   DWORD dwordVal;
   int success = 1;
