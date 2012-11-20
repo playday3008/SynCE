@@ -34,11 +34,12 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
   gchar *guid = NULL, *name = NULL, *platform_name = NULL, *model_name = NULL;
   guint os_major, os_minor, version, cpu_type, cur_partner_id, id, comp_count;
   const guchar *p = buf, *end_ptr = buf + length;
-  guint consumed;
+  gsize consumed;
+  gsize debug_offset;
 
   priv->state = CTRL_STATE_GOT_INFO;
 
-  g_debug("%s", G_STRFUNC);
+  g_debug("%s: info buffer length = %zu", G_STRFUNC, length);
   synce_print_hexdump (buf, length);
 
   /*
@@ -46,18 +47,20 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
    */
   if (p + 24 > end_ptr)
     {
-      g_warning ("%s: short read trying to read GUID/OsMajor/OsMinor",
-		 G_STRFUNC);
+      g_warning ("%s: short read trying to read GUID/OsMajor/OsMinor", G_STRFUNC);
       goto ERROR;
     }
 
   guid = synce_guid_to_string (p);
+  g_debug("%s: offset 0: guid: 16 bytes : %s", G_STRFUNC, guid);
   p += 16;
 
   os_major = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset 16: os_major: guint32: %d", G_STRFUNC, os_major);
   p += sizeof (guint32);
 
   os_minor = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset 20: os_minor: guint32: %d", G_STRFUNC, os_minor);
   p += sizeof (guint32);
 
   name = synce_rapi_unicode_string_to_string (p, end_ptr, 31, &consumed);
@@ -66,7 +69,9 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
       g_warning ("%s: DeviceName is out of bounds or too long", G_STRFUNC);
       goto ERROR;
     }
+  g_debug("%s: offset 24: device name: guint32 length and string: %d, %s", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)), name);
   p += consumed + sizeof (WCHAR);
+  debug_offset = 24 + consumed + sizeof(WCHAR);
 
   if (p + 20 > end_ptr)
     {
@@ -76,19 +81,29 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
     }
 
   version = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset %zu: version: guint32: %d", G_STRFUNC, debug_offset, version);
   p += sizeof (guint32);
+  debug_offset += sizeof (guint32);
 
   cpu_type = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset %zu: cpu_type: guint32: %d", G_STRFUNC, debug_offset, cpu_type);
   p += sizeof (guint32);
+  debug_offset += sizeof (guint32);
 
   /* counter or flags? */
+  g_debug("%s: offset %zu: unknown, counter or flags ?: guint32: %d", G_STRFUNC, debug_offset, GUINT32_FROM_LE (*((guint32 *) p)));
   p += sizeof (guint32);
+  debug_offset += sizeof (guint32);
 
   cur_partner_id = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset %zu: cur_partner_id: guint32: %d", G_STRFUNC, debug_offset, cur_partner_id);
   p += sizeof (guint32);
+  debug_offset += sizeof (guint32);
 
   id = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset %zu: id: guint32: %d", G_STRFUNC, debug_offset, id);
   p += sizeof (guint32);
+  debug_offset += sizeof (guint32);
 
   /* TODO: PlatformName is actually a list of strings,
    *       terminated with an extra NUL byte */
@@ -99,7 +114,9 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
       g_warning ("%s: PlatformName is out of bounds or too long", G_STRFUNC);
       goto ERROR;
     }
+  g_debug("%s: offset %zu: platform_name: guint32 length and string: %d, %s", G_STRFUNC, debug_offset, GUINT32_FROM_LE (*((guint32 *) p)), platform_name);
   p += consumed;
+  debug_offset += consumed;
 
   model_name = synce_rapi_ascii_string_to_string (p, end_ptr, 255, &consumed);
   if (model_name == NULL)
@@ -107,7 +124,9 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
       g_warning ("%s: ModelName is out of bounds or too long", G_STRFUNC);
       goto ERROR;
     }
+  g_debug("%s: offset %zu: model_name: guint32 length and string: %d, %s", G_STRFUNC, debug_offset, GUINT32_FROM_LE (*((guint32 *) p)), model_name);
   p += consumed + 1;
+  debug_offset += consumed + 1;
 
   /* TODO: parse the platform component versions,
    *       for now we just ignore them */
@@ -117,12 +136,14 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
       goto ERROR;
     }
   comp_count = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset %zu: component count: guint32: %d", G_STRFUNC, debug_offset, comp_count);
   if (comp_count > 6)
     {
       g_warning ("%s: ComponentCount %d is out of range", G_STRFUNC, comp_count);
       goto ERROR;
     }
   p += sizeof (guint32) + (comp_count * 8);
+  debug_offset += sizeof (guint32) + (comp_count * 8);
 
   if (p + 4 > end_ptr)
     {
@@ -131,7 +152,9 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
       goto ERROR;
     }
   priv->pw_key = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset %zu: password key: guint32: %d", G_STRFUNC, debug_offset, priv->pw_key);
   p += sizeof (guint32);
+  debug_offset += sizeof (guint32);
 
   if (p < buf + length)
     {
@@ -143,6 +166,7 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
           goto ERROR;
         }
       n = GUINT32_FROM_LE (*((guint32 *) p));
+      g_debug("%s: offset %zu: extra data size: guint32: %d", G_STRFUNC, debug_offset, n);
       if (p + n > end_ptr)
         {
           g_warning ("%s: short read trying to read ExtraData data", G_STRFUNC);
@@ -154,6 +178,8 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
 
       p += n;
     }
+  else
+    g_debug("%s: offset %zu: no ExtraData", G_STRFUNC, debug_offset);
 
   g_object_set (self,
 		"guid", guid,
@@ -220,14 +246,10 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
   /* TODO: do something sensible here */
 
  OUT:
-  if (guid != NULL)
-    g_free (guid);
-  if (name != NULL)
-    g_free (name);
-  if (platform_name != NULL)
-    g_free (platform_name);
-  if (model_name != NULL)
-    g_free (model_name);
+  g_free (guid);
+  g_free (name);
+  g_free (platform_name);
+  g_free (model_name);
 }
 
 
@@ -247,7 +269,8 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
     {
       guint32 req, v;
       GArray *resp;
-      guint i, len;
+      guint i;
+      gsize len;
       gchar *buf;
 
       if (num_read != 4)

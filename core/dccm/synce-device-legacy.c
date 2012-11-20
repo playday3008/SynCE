@@ -96,7 +96,7 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 
   priv->state = CTRL_STATE_GOT_INFO;
 
-  g_debug("%s", G_STRFUNC);
+  g_debug("%s: info buffer length = %zu", G_STRFUNC, length);
   synce_print_hexdump (buf, length);
 
   /*
@@ -105,39 +105,48 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 
   if (p + 24 > end_ptr)
     {
-      g_warning ("%s: short read for initial information",
-		 G_STRFUNC);
+      g_warning ("%s: short read for initial information", G_STRFUNC);
       goto ERROR;
     }
 
   /* skip first 4 bytes */
+  g_debug("%s: offset 0: unknown: guint32 ?: %d", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)));
   p += sizeof(guint32);
 
   os_major = *((guint8 *) p);
+  g_debug("%s: offset 4: os_major: guint8: %d", G_STRFUNC, os_major);
   p += sizeof (guint8);
 
   os_minor = *((guint8 *) p);
+  g_debug("%s: offset 5: os_minor: guint8: %d", G_STRFUNC, os_minor);
   p += sizeof (guint8);
 
   /* skip build number ? */
+  g_debug("%s: offset 6: unknown, build number ?: guint16 ?: %d", G_STRFUNC, GUINT16_FROM_LE (*((guint16 *) p)));
   p += sizeof (guint16);
 
   cpu_type = GUINT16_FROM_LE (*((guint16 *) p));
+  g_debug("%s: offset 8: cpu_type: guint16: %d", G_STRFUNC, cpu_type);
   p += sizeof (guint16);
 
   /* skip 2 bytes */
+  g_debug("%s: offset 10: unknown: guint16 ?: %d", G_STRFUNC, GUINT16_FROM_LE (*((guint16 *) p)));
   p += sizeof (guint16);
   /* skip 4 bytes */
+  g_debug("%s: offset 12: unknown: guint32 ?: %d", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)));
   p += sizeof(guint32);
 
   cur_partner_id = GUINT32_FROM_LE (*((guint32 *) p));
+  g_debug("%s: offset 16: cur_partner_id: guint32: %d", G_STRFUNC, cur_partner_id);
   p += sizeof (guint32);
 
   /* second partner id */
+  g_debug("%s: offset 20: second partner id ?: guint32 ?: %d", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)));
   p += sizeof (guint32);
 
   /* string information */
 
+  g_debug("%s: offset 24: offset to device name: guint32: %d", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)));
   name = synce_rapi_unicode_string_to_string_at_offset (buf, p, end_ptr);
   if (name == NULL)
     {
@@ -146,6 +155,7 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
     }
   p += sizeof (guint32);
 
+  g_debug("%s: offset 28: offset to platform name: guint32: %d", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)));
   platform_name = synce_rapi_unicode_string_to_string_at_offset (buf, p, end_ptr);
   if (platform_name == NULL)
     {
@@ -154,6 +164,7 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
     }
   p += sizeof (guint32);
 
+  g_debug("%s: offset 32: offset to model name: guint32: %d", G_STRFUNC, GUINT32_FROM_LE (*((guint32 *) p)));
   model_name = synce_rapi_unicode_string_to_string_at_offset (buf, p, end_ptr);
   if (model_name == NULL)
     {
@@ -163,12 +174,12 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 
   /* what are version, id ? */
 
-  /* we dont have guid, we'll use ip address */
-  gchar *addr;
-  g_object_get(self, "ip-address", &addr, NULL);
+  /* we dont have guid on pre WM5 devices, so we'll just pass
+   * in the whole info buffer to generate one */
+  guid = synce_guid_to_string (buf);
 
   g_object_set (self,
-		"guid", addr,
+		"guid", guid,
 		"os-major", os_major,
 		"os-minor", os_minor,
 		"name", name,
@@ -179,7 +190,6 @@ synce_device_legacy_info_received (SynceDeviceLegacy *self, const guchar *buf, g
 		"platform-name", platform_name,
 		"model-name", model_name,
 		NULL);
-  g_free(addr);
 
   synce_device_dbus_init(SYNCE_DEVICE(self));
 

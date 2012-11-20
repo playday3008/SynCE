@@ -99,7 +99,7 @@ synce_guid_to_string (const guchar *p)
 }
 
 gchar *
-synce_rapi_unicode_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, guint *bytes_consumed)
+synce_rapi_unicode_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, gsize *bytes_consumed)
 {
   gchar *ret;
   guint32 len;
@@ -127,7 +127,7 @@ synce_rapi_unicode_string_to_string (const guchar *buf, const guchar *buf_max, g
 }
 
 gchar *
-synce_rapi_ascii_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, guint *bytes_consumed)
+synce_rapi_ascii_string_to_string (const guchar *buf, const guchar *buf_max, guint max_len, gsize *bytes_consumed)
 {
   gchar *ret;
   guint32 len;
