@@ -28,6 +28,7 @@ nodist_dccm_SOURCES = $(BUILT_SOURCES)
 
 dccm_CPPFLAGS = \
 	-I$(top_srcdir)/lib/utils \
+	-I$(top_builddir)/lib/utils \
 	$(GLIB_CFLAGS) \
 	$(DBUS_CFLAGS) \
 	$(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE

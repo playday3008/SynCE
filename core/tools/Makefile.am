@@ -1,4 +1,4 @@
-AM_CFLAGS = -I$(top_srcdir)/lib/utils
+AM_CFLAGS = -I$(top_srcdir)/lib/utils -I$(top_builddir)/lib/utils
 
 INCLUDES = -I$(top_srcdir)/lib/rapi -I$(top_srcdir)/lib/rapi/support
 LDADD = $(top_builddir)/lib/libsynce.la

@@ -1,6 +1,6 @@
 @SET_MAKE@
 
-INCLUDES = -I$(top_srcdir)/lib/rapi -I$(top_srcdir)/lib/rapi/support
+INCLUDES = -I$(top_srcdir)/lib/rapi -I$(top_srcdir)/lib/rapi/support -I$(top_builddir)/lib/utils
 
 ## create this library
 noinst_LTLIBRARIES = librapiops2.la
