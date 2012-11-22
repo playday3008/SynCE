@@ -16,4 +16,3 @@ librtfcomp_la_SOURCES = constants.c \
                         rtfconvert.h \
                         utf8conv.h \
                         sysincludes.h 
-                       

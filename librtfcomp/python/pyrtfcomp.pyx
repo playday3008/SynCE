@@ -13,24 +13,27 @@ cdef extern from "rtfcomp/rtfcomp.h":
 		int		lenOpts
 		unsigned int 	isCompressed
 
-	int LZRTFCompress(unsigned char ** dest, unsigned int * outlen, unsigned char * src, int len)
-	int LZRTFDecompress(unsigned char ** dest, unsigned int * outlen, unsigned char * src, unsigned int len)
-	int LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen, unsigned char * rtfin, unsigned int rtflen, RTFOPTS * options)
-	int LZRTFConvertUTF8ToRTF(unsigned char ** rtfout, unsigned int * lenOut, unsigned char * utfin, unsigned int len, unsigned char * rtfhdr, unsigned int hdrlen, RTFOPTS * options)
-	char * LZRTFGetStringErrorCode(int ec)
+	int LZRTFCompress(unsigned char ** dest, unsigned int * outlen, unsigned char * src, int len) nogil
+	int LZRTFDecompress(unsigned char ** dest, unsigned int * outlen, unsigned char * src, unsigned int len) nogil
+	int LZRTFConvertRTFToUTF8(unsigned char ** utfout, unsigned int * utflen, unsigned char * rtfin, unsigned int rtflen, RTFOPTS * options) nogil
+	int LZRTFConvertUTF8ToRTF(unsigned char ** rtfout, unsigned int * lenOut, unsigned char * utfin, unsigned int len, unsigned char * rtfhdr, unsigned int hdrlen, RTFOPTS * options) nogil
+	char * LZRTFGetStringErrorCode(int ec) nogil
 
 cdef extern from "Python.h":
 	char *PyString_AsString(object string)
 	object PyString_FromStringAndSize(char *s, int len)
-	int PyString_AsStringAndSize(object obj, char **buffer, int *length)
+	int PyString_AsStringAndSize(object obj, char **buffer, Py_ssize_t *length)
 
 cdef extern from "stdlib.h":
-	void free(void * ptr)
+	void free(void * ptr) nogil
 
-class RTFException:
+class RTFException(Exception):
 	def __init__(self,ec):
 		self.errorcode = ec;
 		self.strdesc   = <char *>LZRTFGetStringErrorCode(ec)
+
+	def __str__(self):
+		return str(self.errorcode)+": "+str(LZRTFGetStringErrorCode(self.errorcode))
 
 	def dump(self):
 		print "Failed to convert: %s" % self.strdesc
@@ -39,9 +42,14 @@ def RTFCompress(src):
 	cdef unsigned char * result
 	cdef unsigned int reslen
 	cdef int rc
+	cdef char * source_str
+	cdef Py_ssize_t source_len
 
-	rc=LZRTFCompress(&result,&reslen,<unsigned char *>PyString_AsString(src),len(src))
-	
+	PyString_AsStringAndSize(src, &source_str, &source_len)
+
+	with nogil:
+		rc=LZRTFCompress(&result,&reslen,<unsigned char *>source_str,source_len)
+
 	if rc != 0:
 		raise RTFException(rc)
 
@@ -53,8 +61,13 @@ def RTFDecompress(src):
 	cdef unsigned char * result
 	cdef unsigned int reslen
 	cdef int rc
+	cdef char * source_str
+	cdef Py_ssize_t source_len
 
-	rc=LZRTFDecompress(&result,&reslen,<unsigned char *>PyString_AsString(src),len(src))
+	PyString_AsStringAndSize(src, &source_str, &source_len)
+
+	with nogil:
+		rc=LZRTFDecompress(&result,&reslen,<unsigned char *>source_str,source_len)
 
 	if rc != 0:
 		raise RTFException(rc)
@@ -68,11 +81,16 @@ def RTFConvertToUTF8(src, isCompressed):
 	cdef unsigned char * result
 	cdef unsigned int    reslen
 	cdef int rc
+	cdef char * source_str
+	cdef Py_ssize_t source_len
 
 	opts.lenOpts = sizeof(RTFOPTS)
 	opts.isCompressed = isCompressed
 
-	rc=LZRTFConvertRTFToUTF8(&result, &reslen, <unsigned char *>PyString_AsString(src),len(src),&opts)
+	PyString_AsStringAndSize(src, &source_str, &source_len)
+
+	with nogil:
+		rc=LZRTFConvertRTFToUTF8(&result, &reslen, <unsigned char *>source_str,source_len,&opts)
 
 	if rc != 0:
 		raise RTFException(rc)
@@ -86,11 +104,19 @@ def RTFConvertFromUTF8(src, header, isCompressed):
 	cdef unsigned char * result
 	cdef unsigned int    reslen
 	cdef int rc
+	cdef char * source_str
+	cdef Py_ssize_t source_len
+	cdef char * header_str
+	cdef Py_ssize_t header_len
 
 	opts.lenOpts = sizeof(RTFOPTS)
 	opts.isCompressed = isCompressed
 
-	rc=LZRTFConvertUTF8ToRTF(&result, &reslen, <unsigned char *>PyString_AsString(src),len(src),<unsigned char *>PyString_AsString(header), len(header), &opts)
+	PyString_AsStringAndSize(src, &source_str, &source_len)
+	PyString_AsStringAndSize(src, &header_str, &header_len)
+
+	with nogil:
+		rc=LZRTFConvertUTF8ToRTF(&result, &reslen, <unsigned char *>source_str,source_len,<unsigned char *>header_str, header_len, &opts)
 
 	if rc != 0:
 		raise RTFException(rc)
