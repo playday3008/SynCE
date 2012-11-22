@@ -1,5 +1,5 @@
 /* $Id$ */
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce.h>
 #include <synce_log.h>
 #include <errno.h>
@@ -8,7 +8,6 @@
 #include <string.h>
 #include <unistd.h>
 
-char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -30,7 +29,7 @@ static void show_usage(const char* name)
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, DWORD* flags, const char** filename)
+static bool handle_parameters(int argc, char** argv, DWORD* flags, const char** filename, char** dev_name)
 {
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
@@ -46,7 +45,7 @@ static bool handle_parameters(int argc, char** argv, DWORD* flags, const char** 
 				break;
 			
                         case 'P':
-                                dev_name = optarg;
+                                *dev_name = optarg;
                                 break;
 			
 			case 'h':
@@ -104,14 +103,19 @@ int main(int argc, char** argv)
   long bytes_left;
   LPWSTR config = NULL;
   LPWSTR reply = NULL;
-  RapiConnection* connection = NULL;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  RAPI_DEVICEINFO devinfo;
+  char* dev_name = NULL;
 
   /*
      Initialization
    */
 
-	if (!handle_parameters(argc, argv, &flags, &filename))
-		goto exit;
+  if (!handle_parameters(argc, argv, &flags, &filename, &dev_name))
+    goto exit;
 
   /*
      Read input file and convert to UNICODE
@@ -120,11 +124,11 @@ int main(int argc, char** argv)
   file = fopen(filename, "r");
   if (!file)
   {
-		fprintf(stderr, "%s: Failed to open file '%s': %s\n", 
-        argv[0],
-				filename,
-				strerror(errno));
-		goto exit;
+    fprintf(stderr, "%s: Failed to open file '%s': %s\n", 
+	    argv[0],
+	    filename,
+	    strerror(errno));
+    goto exit;
   }
 
   bytes_left = fsize(file);
@@ -133,10 +137,10 @@ int main(int argc, char** argv)
 
   if (!buffer)
   {
- 		fprintf(stderr, "%s: Failed to allocate %li bytes\n", 
-        argv[0],
-				bytes_left);
-		goto exit;
+    fprintf(stderr, "%s: Failed to allocate %li bytes\n", 
+	    argv[0],
+	    bytes_left);
+    goto exit;
   }
 
   p = buffer;
@@ -173,25 +177,62 @@ int main(int argc, char** argv)
      Do the bossanova
    */
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
-        {
-          fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                  argv[0],
-                  dev_name?dev_name:"(Default)");
-          goto exit;
-        }
-        rapi_connection_select(connection);
-	hr = CeRapiInit();
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+  {
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
 
-	if (FAILED(hr))
-	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-				argv[0],
-				synce_strerror(hr));
-		goto exit;
-	}
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+  {
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
 
-  hr = CeProcessConfig(config, flags, &reply);
+  while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+  {
+    if (dev_name == NULL)
+      break;
+
+    if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+    {
+      fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+      goto exit;
+    }
+    if (strcmp(dev_name, devinfo.bstrName) == 0)
+      break;
+  }
+
+  if (FAILED(hr))
+  {
+    fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+        argv[0],
+        dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+    device = NULL;
+    goto exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+  {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+  {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  hr = IRAPISession_CeProcessConfig(session, config, flags, &reply);
 
   if (SUCCEEDED(hr))
   {
@@ -202,12 +243,20 @@ int main(int argc, char** argv)
     } else {
             printf("%s", buffer);
     }
-    CeRapiFreeBuffer(buffer);
+    IRAPISession_CeRapiFreeBuffer(session, buffer);
     buffer = NULL;
   }
 
 exit:
-  CeRapiUninit();
+  if (session)
+  {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
 
   if (buffer)
     free(buffer);

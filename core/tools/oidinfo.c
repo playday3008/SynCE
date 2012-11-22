@@ -1,12 +1,11 @@
 /* $Id$ */
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -26,7 +25,7 @@ static void show_usage(const char* name)
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, CEOID* oid)
+static bool handle_parameters(int argc, char** argv, CEOID* oid, char** dev_name)
 {
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
@@ -40,7 +39,7 @@ static bool handle_parameters(int argc, char** argv, CEOID* oid)
 				break;
 			
                         case 'p':
-                                dev_name = optarg;
+                                *dev_name = optarg;
                                 break;
 
 			case 'h':
@@ -59,7 +58,7 @@ static bool handle_parameters(int argc, char** argv, CEOID* oid)
 		return false;
 	}
 
-	*oid = strtol(argv[optind], NULL, 0);
+	*oid = strtoul(argv[optind], NULL, 0);
 
 	return true;
 }
@@ -70,32 +69,74 @@ int main(int argc, char** argv)
 	HRESULT hr;
 	CEOID oid = 0;
 	CEOIDINFO info;
-        RapiConnection* connection = NULL;
-	
-	if (!handle_parameters(argc, argv, &oid))
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
+	char* dev_name = NULL;
+
+	if (!handle_parameters(argc, argv, &oid, &dev_name))
 		goto exit;
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
-        {
-          fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                  argv[0],
-                  dev_name?dev_name:"(Default)");
-          goto exit;
-        }
-        rapi_connection_select(connection);
-	hr = CeRapiInit();
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (dev_name == NULL)
+	    break;
+
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+	    goto exit;
+	  }
+	  if (strcmp(dev_name, devinfo.bstrName) == 0)
+	    break;
+	}
 
 	if (FAILED(hr))
 	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-				argv[0],
-				synce_strerror(hr));
-		goto exit;
+	  fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+		  argv[0],
+		  dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto exit;
+	}
+
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
 	}
 
 	memset(&info, 0, sizeof(info));
 
-	if (CeOidGetInfo(oid, &info))
+	if (IRAPISession_CeOidGetInfo(session, oid, &info))
 	{
 		switch (info.wObjType)
 		{
@@ -187,13 +228,21 @@ int main(int argc, char** argv)
 	{
 		fprintf(stderr, "%s: Failed to get object information: %s\n", 
 				argv[0],
-				synce_strerror(CeGetLastError()));
+				synce_strerror(IRAPISession_CeGetLastError(session)));
 		goto exit;
 	}
 
 	result = 0;
 
 exit:
-	CeRapiUninit();
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
 	return result;
 }

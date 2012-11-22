@@ -1,13 +1,12 @@
 /* $Id$ */
 #include "pcommon.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -27,7 +26,7 @@ static void show_usage(const char* name)
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv, char** path)
+static bool handle_parameters(int argc, char** argv, char** path, char** dev_name)
 {
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
@@ -41,7 +40,7 @@ static bool handle_parameters(int argc, char** argv, char** path)
 				break;
 			
                         case 'p':
-                                dev_name = optarg;
+                                *dev_name = optarg;
                                 break;
 			
 			case 'h':
@@ -70,37 +69,78 @@ int main(int argc, char** argv)
 {
 	int result = 1;
         char* path = NULL;
-        RapiConnection* connection = NULL;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
 	HRESULT hr;
 	WCHAR* wide_path = NULL;
+	char* dev_name = NULL;
 	
-	if (!handle_parameters(argc, argv, &path))
+	if (!handle_parameters(argc, argv, &path, &dev_name))
 		goto exit;
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
-        {
-          fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                  argv[0],
-                  dev_name?dev_name:"(Default)");
-          goto exit;
-        }
-        rapi_connection_select(connection);
-	hr = CeRapiInit();
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (dev_name == NULL)
+	    break;
+
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+	    goto exit;
+	  }
+	  if (strcmp(dev_name, devinfo.bstrName) == 0)
+	    break;
+	}
 
 	if (FAILED(hr))
 	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-				argv[0],
-				synce_strerror(hr));
-		goto exit;
+	  fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+		  argv[0],
+		  dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto exit;
 	}
 
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
 
 	convert_to_backward_slashes(path);
   
-  if (':' == path[0])
+	if (':' == path[0])
 	  wide_path = wstr_from_current(path + 1);
-  else
+	else
 	  wide_path = wstr_from_current(path);
         if (!wide_path) {
 		fprintf(stderr, "%s: Failed to convert path '%s' from current encoding to UCS2\n", 
@@ -109,14 +149,14 @@ int main(int argc, char** argv)
 		goto exit;
         }
   
-	wide_path = adjust_remote_path(wide_path, true);
+	wide_path = adjust_remote_path(session, wide_path, true);
 
-	if (!CeDeleteFile(wide_path))
+	if (!IRAPISession_CeDeleteFile(session, wide_path))
 	{
 		fprintf(stderr, "%s: Failed to remove '%s': %s\n", 
 				argv[0],
 				path,
-				synce_strerror(CeGetLastError()));
+				synce_strerror(IRAPISession_CeGetLastError(session)));
 		goto exit;
 	}
 
@@ -129,6 +169,14 @@ exit:
 	if (path)
 		free(path);
 
-	CeRapiUninit();
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
 	return result;
 }

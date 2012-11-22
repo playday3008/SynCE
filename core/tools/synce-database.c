@@ -1,5 +1,5 @@
 /* $Id: synce-registry.c 3688 2009-01-29 18:39:53Z mark_ellis $ */
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <pcommon.h>
 #include <stdio.h>
@@ -153,7 +153,7 @@ static bool handle_parameters(int argc, char** argv)
 }
 
 bool
-list_databases_by_all()
+list_databases_by_all(IRAPISession *session)
 {
         HRESULT hr;
         DWORD last_error;
@@ -167,15 +167,15 @@ list_databases_by_all()
 
         flags = FAD_OID | FAD_FLAGS | FAD_NAME | FAD_TYPE | FAD_NUM_RECORDS | FAD_NUM_SORT_ORDER | FAD_SIZE | FAD_LAST_MODIFIED | FAD_SORT_SPECS;
 
-        retval = CeFindAllDatabases(0, flags, &db_count, &find_data);
+        retval = IRAPISession_CeFindAllDatabases(session, 0, flags, &db_count, &find_data);
         if (!retval) {
-                if (FAILED(hr = CeRapiGetError())) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: Failed to enumerate databases: %s\n",
                                 prog_name, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 fprintf(stderr, "%s: Failed to enumerate databases: %s\n",
                         prog_name, synce_strerror(last_error));
                 goto exit;
@@ -195,7 +195,7 @@ list_databases_by_all()
                 free(db_name);
         }
 
-        CeRapiFreeBuffer(find_data);
+        IRAPISession_CeRapiFreeBuffer(session, find_data);
 
         result = TRUE;
  exit:
@@ -204,7 +204,7 @@ list_databases_by_all()
 
 
 bool
-list_databases_by_enum()
+list_databases_by_enum(IRAPISession *session)
 {
         HRESULT hr;
         DWORD last_error;
@@ -216,30 +216,30 @@ list_databases_by_enum()
         CEOID oid = 0;
 	CEOIDINFO info;
 
-        handle = CeFindFirstDatabase(dwDbaseType);
+        handle = IRAPISession_CeFindFirstDatabase(session, dwDbaseType);
         if (handle == INVALID_HANDLE_VALUE) {
-                if (FAILED(hr = CeRapiGetError())) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: error enumerating first database: %s\n",
                                 prog_name, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 fprintf(stderr, "%s: error enumerating first database: %s\n",
                         prog_name, synce_strerror(last_error));
                 goto exit;
 	}
 
 	memset(&info, 0, sizeof(info));
-        while ((oid = CeFindNextDatabase(handle)) != 0) {
-                if (!CeOidGetInfo(oid, &info)) {
-                        if (FAILED(hr = CeRapiGetError())) {
+        while ((oid = IRAPISession_CeFindNextDatabase(session, handle)) != 0) {
+		if (!IRAPISession_CeOidGetInfo(session, oid, &info)) {
+                        if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                                 fprintf(stderr, "%s: error getting database info: %s\n",
                                         prog_name, synce_strerror(hr));
                                 goto exit;
                         }
 
-                        last_error = CeGetLastError();
+                        last_error = IRAPISession_CeGetLastError(session);
                         fprintf(stderr, "%s: error getting database info: %s\n",
                                 prog_name, synce_strerror(last_error));
                         goto exit;
@@ -264,13 +264,13 @@ list_databases_by_enum()
         }
 
         if (oid == 0) {
-                if (FAILED(hr = CeRapiGetError())) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: error enumerating databases: %s\n",
                                 prog_name, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
 
                 if (last_error != ERROR_NO_MORE_ITEMS) {
                         fprintf(stderr, "%s: error enumerating databases: %s\n",
@@ -279,14 +279,14 @@ list_databases_by_enum()
                 }
         }
 
-        if (!CeCloseHandle(handle)) {
-                if (FAILED(hr = CeRapiGetError())) {
+        if (!IRAPISession_CeCloseHandle(session, handle)) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: error closing database enumeration: %s\n",
                                 prog_name, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 fprintf(stderr, "%s: error closing database enumeration: %s\n",
                         prog_name, synce_strerror(last_error));
                 goto exit;
@@ -298,7 +298,7 @@ list_databases_by_enum()
 }
 
 bool
-read_record(HANDLE handle)
+read_record(IRAPISession *session, HANDLE handle)
 {
         bool result = FALSE;
         HRESULT hr;
@@ -315,7 +315,7 @@ read_record(HANDLE handle)
         DWORD lpcbBuffer = 4096*4096;
         CEPROPVAL *field = NULL;
 
-        rec_oid = CeReadRecordProps(handle,
+        rec_oid = IRAPISession_CeReadRecordProps(session, handle,
                                     dwFlags, 
                                     &num_props,
                                     rgPropID,
@@ -324,13 +324,13 @@ read_record(HANDLE handle)
                                     );
 
         if (rec_oid == 0) {
-                if (FAILED(hr = CeRapiGetError())) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: error reading record: %s\n",
                                 prog_name, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 fprintf(stderr, "%s: error reading record: %s\n",
                         prog_name, synce_strerror(last_error));
                 goto exit;
@@ -384,13 +384,13 @@ read_record(HANDLE handle)
 
         result = TRUE;
  exit:
-        CeRapiFreeBuffer(buffer);
+        IRAPISession_CeRapiFreeBuffer(session, buffer);
         return result;
 }
 
 
 bool
-read_database(const char *dbname, CEOID oid)
+read_database(IRAPISession *session, const char *dbname, CEOID oid)
 {
         bool result = FALSE;
         HRESULT hr;
@@ -406,7 +406,7 @@ read_database(const char *dbname, CEOID oid)
         /* position increments after reading */
         DWORD dwFlags = CEDB_AUTOINCREMENT;
 
-        handle = CeOpenDatabase (&oid,
+        handle = IRAPISession_CeOpenDatabase (session, &oid,
                                  lpszName,
                                  propid,
                                  dwFlags,
@@ -416,13 +416,13 @@ read_database(const char *dbname, CEOID oid)
         wstr_free_string(lpszName);
 
         if (handle == INVALID_HANDLE_VALUE) {
-                if (FAILED(hr = CeRapiGetError())) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: error opening database %s: %s\n",
                                 prog_name, dbname, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 fprintf(stderr, "%s: error opening database %s: %s\n",
                         prog_name, dbname, synce_strerror(last_error));
                 goto exit;
@@ -432,19 +432,19 @@ read_database(const char *dbname, CEOID oid)
 
         for (;;) {
                 printf("record %d\n", record);
-                if (!read_record(handle))
+                if (!read_record(session, handle))
                         break;
                 record++;
         }
 
-        if (!CeCloseHandle(handle)) {
-                if (FAILED(hr = CeRapiGetError())) {
+        if (!IRAPISession_CeCloseHandle(session, handle)) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         fprintf(stderr, "%s: error closing database %s: %s\n",
                                 prog_name, dbname, synce_strerror(hr));
                         goto exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 fprintf(stderr, "%s: error closing database %s: %s\n",
                         prog_name, dbname, synce_strerror(last_error));
                 goto exit;
@@ -462,7 +462,11 @@ int
 main(int argc, char** argv)
 {
         int result = 1;
-        RapiConnection* connection = NULL;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
         HRESULT hr;
 
         prog_name = argv[0];
@@ -470,23 +474,66 @@ main(int argc, char** argv)
         if (!handle_parameters(argc,argv))
                 goto exit;
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL) {
-                fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                        argv[0], dev_name?dev_name:"(Default)");
-                goto exit;
-        }
-        rapi_connection_select(connection);
-        if (S_OK != (hr = CeRapiInit())) {
-                fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-                        argv[0], synce_strerror(hr));
-                goto exit;
-        }
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
 
-        list_databases_by_all();
-        list_databases_by_enum();
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (dev_name == NULL)
+	    break;
+
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+	    goto exit;
+	  }
+	  if (strcmp(dev_name, devinfo.bstrName) == 0)
+	    break;
+	}
+
+	if (FAILED(hr))
+	{
+	  fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+		  argv[0],
+		  dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto exit;
+	}
+
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+        list_databases_by_all(session);
+        list_databases_by_enum(session);
 
         
-        read_database("pmailAttachs", 0);
+        read_database(session, "pmailAttachs", 0);
         
         /*
         read_database("", 0x2001558);
@@ -495,7 +542,15 @@ main(int argc, char** argv)
         result = 0;
 
 exit:
-        CeRapiUninit();
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
         return result;
 }
 

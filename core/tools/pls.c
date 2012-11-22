@@ -1,6 +1,6 @@
 /* $Id$ */
 #include "pcommon.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,7 +184,7 @@ static bool print_entry(CE_FIND_DATA* entry)
 }
 
 char *
-absolutize_path(const char *path)
+absolutize_path(IRAPISession *session, const char *path)
 {
 	WCHAR path_w[MAX_PATH];
 	char *tmp_path1 = NULL;
@@ -195,7 +195,7 @@ absolutize_path(const char *path)
 
 	/* if not an absolute path, append to "My Documents" */
 
-	if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, (MAX_PATH * sizeof(WCHAR)), path_w))
+	if (!IRAPISession_CeGetSpecialFolderPath(session, CSIDL_PERSONAL, (MAX_PATH * sizeof(WCHAR)), path_w))
 	{
 		fprintf(stderr, "Unable to get the \"My Documents\" path.\n");
 		return NULL;
@@ -257,7 +257,7 @@ dirname(const char *path)
 	return tmp_path;
 }
 
-static bool list_matching_files(const char* path, bool first_pass)
+static bool list_matching_files(IRAPISession *session, const char* path, bool first_pass)
 {
 	bool success = false;
 	BOOL result;
@@ -272,7 +272,7 @@ static bool list_matching_files(const char* path, bool first_pass)
 	WCHAR *wide_path = NULL;
 	char *entry_name = NULL;
 
-	if (!(full_path = absolutize_path(path)))
+	if (!(full_path = absolutize_path(session, path)))
 	  return FALSE;
 
 	wide_path = wstr_from_current(full_path);
@@ -285,7 +285,8 @@ static bool list_matching_files(const char* path, bool first_pass)
 	free(full_path);
 	synce_trace_wstr(wide_path);
 
-	result = CeFindAllFiles(
+	result = IRAPISession_CeFindAllFiles(
+			session,
 			wide_path,
 			(show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
 		 	FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
@@ -293,13 +294,13 @@ static bool list_matching_files(const char* path, bool first_pass)
 	wstr_free_string(wide_path);
 
 	if (!result) {
-		if (FAILED(hr = CeRapiGetError())) {
+		if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 		  fprintf(stderr, "Error finding files: %08x: %s.\n",
 			  hr, synce_strerror(hr));
 		  return false;
 		}
 
-		last_error = CeGetLastError();
+		last_error = IRAPISession_CeGetLastError(session);
 		fprintf(stderr, "Error finding files: %d: %s.\n",
 			last_error, synce_strerror(last_error));
 		return false;
@@ -343,7 +344,7 @@ static bool list_matching_files(const char* path, bool first_pass)
 
                 free(base_path);
 
-		success = list_matching_files(new_path, FALSE);
+		success = list_matching_files(session, new_path, FALSE);
 
 		free(new_path);
 		goto exit;
@@ -379,7 +380,7 @@ static bool list_matching_files(const char* path, bool first_pass)
 				free(base_path);
 				free(entry_name);
 
-				list_matching_files(new_path, FALSE);
+				list_matching_files(session, new_path, FALSE);
 				free(new_path);
 			}
 		}
@@ -388,7 +389,7 @@ static bool list_matching_files(const char* path, bool first_pass)
 	success = true;
 
 exit:
-	CeRapiFreeBuffer(find_data);
+	IRAPISession_CeRapiFreeBuffer(session, find_data);
 
 	return success;
 }
@@ -397,7 +398,11 @@ exit:
 int main(int argc, char** argv)
 {
 	int result = 1;
-        RapiConnection* connection = NULL;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
 	char* path = NULL;
 	char* tmp_path = NULL;
 	HRESULT hr;
@@ -405,23 +410,59 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &path))
 		goto exit;
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
-        {
-          fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                  argv[0],
-                  dev_name?dev_name:"(Default)");
-          goto exit;
-        }
-        rapi_connection_select(connection);
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
 
-	hr = CeRapiInit();
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (dev_name == NULL)
+	    break;
+
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+	    goto exit;
+	  }
+	  if (strcmp(dev_name, devinfo.bstrName) == 0)
+	    break;
+	}
 
 	if (FAILED(hr))
 	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-				argv[0],
-				synce_strerror(hr));
-		goto exit;
+	  fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+		  argv[0],
+		  dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto exit;
+	}
+
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
 	}
 
 	if (!path)
@@ -436,7 +477,7 @@ int main(int argc, char** argv)
 		path = tmp_path;
 	}
 
-	if (!list_matching_files(path, TRUE))
+	if (!list_matching_files(session, path, TRUE))
 		goto exit;
 
 	result = 0;
@@ -445,7 +486,15 @@ exit:
 	if (path)
 		free(path);
 
-	CeRapiUninit();
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
 	return result;
 }
 

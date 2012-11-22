@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "rapi.h"
-#include "../../tools/pcommon.h"
+#include "pcommon.h"
 
 using namespace std;
 using namespace synce;

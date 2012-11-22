@@ -1,12 +1,11 @@
 /* $Id$ */
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -25,7 +24,7 @@ static void show_usage(const char* name)
       name);
 }
 
-static bool handle_parameters(int argc, char** argv)
+static bool handle_parameters(int argc, char** argv, char **dev_name)
 {
   int c;
   int log_level = SYNCE_LOG_LEVEL_LOWEST;
@@ -39,7 +38,7 @@ static bool handle_parameters(int argc, char** argv)
         break;
 
       case 'p':
-        dev_name = optarg;
+        *dev_name = optarg;
         break;
 
       case 'h':
@@ -110,7 +109,7 @@ static const char* architecture[] = {
   "ALPHA64"
 };
 
-static const char* processor(int n)
+static const char* processor(DWORD n)
 {
   const char* result;
 
@@ -210,7 +209,11 @@ void print_battery_status(const char* name, unsigned flag, unsigned lifePercent,
 int main(int argc, char** argv)
 {
   int result = 1;
-  RapiConnection* connection = NULL;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  RAPI_DEVICEINFO devinfo;
   HRESULT hr;
   CEOSVERSIONINFO version;
   SYSTEM_INFO system;
@@ -218,24 +221,63 @@ int main(int argc, char** argv)
   STORE_INFORMATION store;
   DWORD storage_pages = 0, ram_pages = 0, page_size = 0;
 
-  if (!handle_parameters(argc, argv))
+  char* dev_name = NULL;
+
+  if (!handle_parameters(argc, argv, &dev_name))
     goto exit;
 
-  if ((connection = rapi_connection_from_name(dev_name)) == NULL)
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
   {
-    fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-        argv[0],
-        dev_name?dev_name:"(Default)");
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
     goto exit;
   }
-  rapi_connection_select(connection);
-  hr = CeRapiInit();
+
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+  {
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+  {
+    if (dev_name == NULL)
+      break;
+
+    if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+    {
+      fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+      goto exit;
+    }
+    if (strcmp(dev_name, devinfo.bstrName) == 0)
+      break;
+  }
 
   if (FAILED(hr))
   {
-    fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
+    fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
         argv[0],
-        synce_strerror(hr));
+        dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+    device = NULL;
+    goto exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+  {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+  {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
     goto exit;
   }
 
@@ -246,7 +288,7 @@ int main(int argc, char** argv)
   memset(&version, 0, sizeof(version));
   version.dwOSVersionInfoSize = sizeof(version);
 
-  if (CeGetVersionEx(&version))
+  if (IRAPISession_CeGetVersionEx(session, &version))
   {
     char *details = wstr_to_current(version.szCSDVersion);
     char *platform = NULL;
@@ -282,7 +324,7 @@ int main(int argc, char** argv)
   {
     fprintf(stderr, "%s: Failed to get version information: %s\n", 
         argv[0],
-        synce_strerror(CeGetLastError()));
+        synce_strerror(IRAPISession_CeGetLastError(session)));
   }
 
   /*
@@ -291,7 +333,7 @@ int main(int argc, char** argv)
 
   memset(&system, 0, sizeof(system));
 
-  CeGetSystemInfo(&system);
+  IRAPISession_CeGetSystemInfo(session, &system);
   {
     printf(
         "System\n"
@@ -317,7 +359,7 @@ int main(int argc, char** argv)
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
 
-  if (CeGetSystemPowerStatusEx(&power, false))
+  if (IRAPISession_CeGetSystemPowerStatusEx(session, &power, false))
   {
     printf(
         "Power\n"
@@ -341,7 +383,7 @@ int main(int argc, char** argv)
   {
     fprintf(stderr, "%s: Failed to get battery status: %s\n", 
         argv[0],
-        synce_strerror(CeGetLastError()));
+        synce_strerror(IRAPISession_CeGetLastError(session)));
   }
 
   /*
@@ -349,7 +391,7 @@ int main(int argc, char** argv)
    */
   memset(&store, 0, sizeof(store));
 
-  if (CeGetStoreInformation(&store))
+  if (IRAPISession_CeGetStoreInformation(session, &store))
   {
     printf(
         "Store\n"
@@ -366,10 +408,10 @@ int main(int argc, char** argv)
   {
     fprintf(stderr, "%s: Failed to get store information: %s\n", 
         argv[0],
-        synce_strerror(CeGetLastError()));
+        synce_strerror(IRAPISession_CeGetLastError(session)));
   }
 
-  if (CeGetSystemMemoryDivision(&storage_pages, &ram_pages, &page_size))
+  if (IRAPISession_CeGetSystemMemoryDivision(session, &storage_pages, &ram_pages, &page_size))
   {
     printf(
         "Memory for storage: %i bytes (%i megabytes)\n"
@@ -382,7 +424,15 @@ int main(int argc, char** argv)
   result = 0;
 
 exit:
-  CeRapiUninit();
-  rapi_connection_destroy(connection);
+  if (session)
+  {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
+
   return result;
 }

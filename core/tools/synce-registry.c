@@ -1,5 +1,5 @@
 /* $Id$ */
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <pcommon.h>
 #include <stdio.h>
@@ -272,7 +272,7 @@ static bool handle_parameters(int argc, char** argv, char** parent_str, char** k
 	return true;
 }
 
-int delete_key(HKEY parent, const char *key_name)
+int delete_key(IRAPISession *session, HKEY parent, const char *key_name)
 {
   int result = 1;
   LONG retval;
@@ -284,7 +284,7 @@ int delete_key(HKEY parent, const char *key_name)
           return result;
   }
 
-  retval = CeRegDeleteKey(parent, key_name_wide);
+  retval = IRAPISession_CeRegDeleteKey(session, parent, key_name_wide);
   wstr_free_string(key_name_wide);
 
   if (ERROR_SUCCESS != retval)
@@ -299,7 +299,7 @@ int delete_key(HKEY parent, const char *key_name)
   return result;
 }
 
-int new_key(HKEY parent, const char *key_name)
+int new_key(IRAPISession *session, HKEY parent, const char *key_name)
 {
   int result = 1;
   LONG retval;
@@ -313,7 +313,7 @@ int new_key(HKEY parent, const char *key_name)
           return result;
   }
 
-  retval = CeRegCreateKeyEx(parent, key_name_wide, 0, 0, 0, 0, NULL, &new_key, &new_disposition);
+  retval = IRAPISession_CeRegCreateKeyEx(session, parent, key_name_wide, 0, 0, 0, 0, NULL, &new_key, &new_disposition);
   wstr_free_string(key_name_wide);
   if (ERROR_SUCCESS != retval)
   {
@@ -323,7 +323,7 @@ int new_key(HKEY parent, const char *key_name)
     return result;
   }
 
-  if (ERROR_SUCCESS != (retval = CeRegCloseKey(new_key)))
+  if (ERROR_SUCCESS != (retval = IRAPISession_CeRegCloseKey(session, new_key)))
   {
     fprintf(stderr,"Failed to close key '%s': %s\n",
             key_name,
@@ -419,7 +419,7 @@ void print_value(const char *value_name, DWORD value_type, const LPBYTE value, D
 }
 
 
-int list_key(HKEY key, const char* key_path, bool do_recurse) 
+int list_key(IRAPISession *session, HKEY key, const char* key_path, bool do_recurse) 
 { 
   int result = 1;
   int i;
@@ -450,7 +450,7 @@ int list_key(HKEY key, const char* key_path, bool do_recurse)
   /* determine the size of the holding arrays for all 
      subvalues/keys */
 
-  result = CeRegQueryInfoKey(key, NULL, NULL, NULL, 
+  result = IRAPISession_CeRegQueryInfoKey(session, key, NULL, NULL, NULL, 
 		  &lpcSubKeys, &lpcbMaxSubKeyLen, &lpcbMaxClassLen, 
 		  &lpcValues, &lpcbMaxValueNameLen, &lpcbMaxValueLen, 
 		  NULL, NULL) ;
@@ -474,7 +474,7 @@ int list_key(HKEY key, const char* key_path, bool do_recurse)
           value_size = lpcbMaxValueLen;
           memset(value, 0, value_size);
 
-          retval = CeRegEnumValue(key, i, value_name_wide,
+          retval = IRAPISession_CeRegEnumValue(session, key, i, value_name_wide,
                                   &value_name_wide_size, NULL, &value_type,
                                   value, &value_size);
 
@@ -502,7 +502,7 @@ int list_key(HKEY key, const char* key_path, bool do_recurse)
   {
           key_name_size = lpcbMaxSubKeyLen;
 
-          retval = CeRegEnumKeyEx(key, i, key_name_wide, &key_name_size,
+          retval = IRAPISession_CeRegEnumKeyEx(session, key, i, key_name_wide, &key_name_size,
                                   NULL, NULL, NULL, NULL);
           if (ERROR_NO_MORE_ITEMS == retval)
                   break;
@@ -529,11 +529,11 @@ int list_key(HKEY key, const char* key_path, bool do_recurse)
                   child_key_path = malloc(strlen(key_path) + strlen(key_name) + 2);
                   sprintf(child_key_path,"%s\\%s", key_path, key_name);
 
-                  if (rapi_reg_open_key(key, key_name, &childKey)) {
+                  if ((retval = IRAPISession_CeRegOpenKeyEx(session, key, key_name_wide, 0, 0, &childKey)) == ERROR_SUCCESS) {
                           /* We have childkey now
                              Do list_key on this */
-                          list_key(childKey, child_key_path, do_recurse);
-                  } else {
+			  list_key(session, childKey, child_key_path, do_recurse);
+		  } else {
                           fprintf(stderr, "Failed to open registry sub key '%s', skipping\n", key_name);
                   }
           }
@@ -554,30 +554,30 @@ int list_key(HKEY key, const char* key_path, bool do_recurse)
 }
 
 
-int dump_registry()
+int dump_registry(IRAPISession *session)
 {
   int result = 0;
 
   /* First the HKLM */
-  result = list_key(HKEY_LOCAL_MACHINE, "HKEY_LOCAL_MACHINE", true);
+  result = list_key(session, HKEY_LOCAL_MACHINE, "HKEY_LOCAL_MACHINE", true);
   if (result != 0) {
   	return result;
   }
 
   /* Then the HKCU */
-  result = list_key(HKEY_CURRENT_USER, "HKEY_CURRENT_USER", true );
+  result = list_key(session, HKEY_CURRENT_USER, "HKEY_CURRENT_USER", true );
   if (result != 0) {
   	return result;
   }
 
   /* And finally the HKCR */
-  result = list_key(HKEY_CLASSES_ROOT, "HKEY_CLASSES_ROOT", true );
+  result = list_key(session, HKEY_CLASSES_ROOT, "HKEY_CLASSES_ROOT", true );
 
   return result;
 }
 
 
-int delete_val(HKEY key, const char *value_name)
+int delete_val(IRAPISession *session, HKEY key, const char *value_name)
 {
   int result = 1;
   LONG retval;
@@ -589,7 +589,7 @@ int delete_val(HKEY key, const char *value_name)
           return result;
   }
 
-  retval = CeRegDeleteValue(key, value_name_wide);
+  retval = IRAPISession_CeRegDeleteValue(session, key, value_name_wide);
   if (ERROR_SUCCESS != retval)
   {
     fprintf(stderr,"Failed to delete value '%s': %s\n",
@@ -603,7 +603,7 @@ int delete_val(HKEY key, const char *value_name)
 }
 
 
-int read_val(const char *parent_str, const char *key_str, HKEY key, const char *value_name)
+int read_val(IRAPISession *session, const char *parent_str, const char *key_str, HKEY key, const char *value_name)
 {
   int result = 1;
   LONG retval;
@@ -618,7 +618,7 @@ int read_val(const char *parent_str, const char *key_str, HKEY key, const char *
           goto exit;
   }
 
-  retval = CeRegQueryValueEx(key, value_name_wide, NULL, NULL, NULL, &value_size);
+  retval = IRAPISession_CeRegQueryValueEx(session, key, value_name_wide, NULL, NULL, NULL, &value_size);
   if (ERROR_SUCCESS != retval) {
     fprintf(stderr, "%s: Failed to get size of value '%s\\%s\\%s': %s\n", 
             prog_name, parent_str, key_str, value_name,
@@ -632,7 +632,7 @@ int read_val(const char *parent_str, const char *key_str, HKEY key, const char *
           goto exit;
   }
 
-  retval = CeRegQueryValueEx(key, value_name_wide, NULL, &value_type, value, &value_size);
+  retval = IRAPISession_CeRegQueryValueEx(session, key, value_name_wide, NULL, &value_type, value, &value_size);
   if (ERROR_SUCCESS != retval) {
     fprintf(stderr, "%s: Failed to get value '%s\\%s\\%s': %s\n", 
             prog_name, parent_str, key_str, value_name,
@@ -655,7 +655,7 @@ int read_val(const char *parent_str, const char *key_str, HKEY key, const char *
 }
 
 
-int write_val(HKEY key, const char *value_name, DWORD value_type, const char *new_value)
+int write_val(IRAPISession *session, HKEY key, const char *value_name, DWORD value_type, const char *new_value)
 {
   LONG retval;
   void *valBuf = NULL;
@@ -718,7 +718,7 @@ int write_val(HKEY key, const char *value_name, DWORD value_type, const char *ne
       goto exit;
   }
 
-  retval = CeRegSetValueEx(key, value_name_wide, 0, value_type, valBuf, valSize);
+  retval = IRAPISession_CeRegSetValueEx(session, key, value_name_wide, 0, value_type, valBuf, valSize);
   if (ERROR_SUCCESS != retval) {
           fprintf(stderr, "%s: Unable to set value of '%s' to '%s' value: %s\n", 
                   prog_name, value_name, value_type_to_str(value_type),
@@ -745,41 +745,86 @@ int write_val(HKEY key, const char *value_name, DWORD value_type, const char *ne
 int main(int argc, char** argv)
 {
   int result = 1;
-  RapiConnection* connection = NULL;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  RAPI_DEVICEINFO devinfo;
   char* parent_str  = NULL;
   char* key_name          = NULL;
   char* value_name  = NULL;
   char* new_value   = NULL;
+  WCHAR* key_name_wide = NULL;
   HKEY parent;
   HKEY key = 0;
   HRESULT hr;
   DWORD value_type = REG_SZ;
+  LONG retval;
 
   prog_name = argv[0];
   
   if (!handle_parameters(argc,argv,&parent_str,&key_name,&value_name,&value_type,&new_value))
     goto exit;
 
-  if ((connection = rapi_connection_from_name(dev_name)) == NULL)
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
   {
-    fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-        argv[0],
-        dev_name?dev_name:"(Default)");
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
     goto exit;
   }
-  rapi_connection_select(connection);
-  if (S_OK != (hr = CeRapiInit()))
+
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
   {
-    fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+  {
+    if (dev_name == NULL)
+      break;
+
+    if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+    {
+      fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+      goto exit;
+    }
+    if (strcmp(dev_name, devinfo.bstrName) == 0)
+      break;
+  }
+
+  if (FAILED(hr))
+  {
+    fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
         argv[0],
-        synce_strerror(hr));
+        dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+    device = NULL;
+    goto exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+  {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+  {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
     goto exit;
   }
 
   /* Add this before anything, since we don't need the
      parent_str etc.. */
   if (action==ACTION_DUMP_REGISTRY){
-	  result = dump_registry() ;
+	  result = dump_registry(session) ;
 	  if (result != 0){
 		  fprintf(stderr, "%s: Registry dump failed...\n", prog_name); 
 	  }
@@ -816,16 +861,29 @@ int main(int argc, char** argv)
 
   if (action == ACTION_DELETEKEY)
   {
-    result = delete_key(parent, key_name);
+    result = delete_key(session, parent, key_name);
     goto exit;
   }
   else if (action == ACTION_NEWKEY)
   {
-    result = new_key(parent, key_name);
+    result = new_key(session, parent, key_name);
     goto exit;
   }
 
-  if (!rapi_reg_open_key(parent, key_name, &key))
+
+
+
+  key_name_wide = wstr_from_current(key_name);
+  if (!key_name_wide)
+  {
+    fprintf(stderr, "%s: Failed to convert registry key name '%s' from current encoding to UCS2\n", prog_name, key_name);
+    goto exit;
+  }
+  retval = IRAPISession_CeRegOpenKeyEx(session, parent, key_name_wide, 0, 0, &key);
+
+  wstr_free_string(key_name_wide);
+
+  if (retval != ERROR_SUCCESS)
   {
     fprintf(stderr, "Failed to open key: '%s\\%s'\n", parent_str, key_name);
     goto exit;
@@ -837,28 +895,38 @@ int main(int argc, char** argv)
     path = malloc(strlen(parent_str) + strlen(key_name) + 2);
 
     sprintf(path, "%s\\%s", parent_str, key_name); 
-    result = list_key(key, path, list_recurse);
+    result = list_key(session, key, path, list_recurse);
     free(path);
     goto exit;
   }
 
   if (action == ACTION_DELETEVAL)
   {
-    result = delete_val(key, value_name);
+    result = delete_val(session, key, value_name);
   }
   else if (action == ACTION_READVAL)
   {
-    result = read_val(parent_str, key_name, key, value_name);
+    result = read_val(session, parent_str, key_name, key, value_name);
   }
   else if (action == ACTION_WRITEVAL)
   {
-          result = write_val(key, value_name, value_type, new_value);
+    result = write_val(session, key, value_name, value_type, new_value);
   }
   
 exit:
   if (key)
-    CeRegCloseKey(key);
-  CeRapiUninit();
+    IRAPISession_CeRegCloseKey(session, key);
+
+  if (session)
+  {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
+
   if (key_name)
     free(key_name);
   return result;

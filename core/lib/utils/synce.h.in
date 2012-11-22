@@ -173,6 +173,7 @@ bool synce_get_script_directory(char** directory);
  */
 
 const char* synce_strerror(DWORD error);
+const char* synce_strerror_from_hresult(HRESULT hr);
 
 
 /*

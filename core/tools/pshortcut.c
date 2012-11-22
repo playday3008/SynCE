@@ -1,5 +1,5 @@
 #include "pcommon.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <getopt.h>
 
-char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -28,7 +27,7 @@ static void show_usage(const char* name)
 			,name);
 }
 
-static bool handle_parameters(int argc, char** argv, char **shortcut, char **target)
+static bool handle_parameters(int argc, char** argv, char **shortcut, char **target, char** dev_name)
 {
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
@@ -42,7 +41,7 @@ static bool handle_parameters(int argc, char** argv, char **shortcut, char **tar
 				break;
 
                         case 'p':
-                                dev_name = optarg;
+                                *dev_name = optarg;
                                 break;
 			
 			case 'h':
@@ -70,36 +69,76 @@ static bool handle_parameters(int argc, char** argv, char **shortcut, char **tar
 int main(int argc, char** argv)
 {
   int result = 0;
-  RapiConnection* connection = NULL;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  RAPI_DEVICEINFO devinfo;
   HRESULT hr;
   char *shortcut = NULL, *target = NULL;
   WCHAR* wide_shortcut = NULL;
   WCHAR* wide_target = NULL;
   WCHAR *tmp, *tmp_quote;
   size_t tmpsize;
+  char* dev_name = NULL;
 
-  if (!handle_parameters(argc, argv, &shortcut, &target))
+  if (!handle_parameters(argc, argv, &shortcut, &target, &dev_name))
     goto exit;
 
-  if ((connection = rapi_connection_from_name(dev_name)) == NULL)
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
   {
-    fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-            argv[0],
-            dev_name?dev_name:"(Default)");
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
     goto exit;
   }
-  rapi_connection_select(connection);
-  hr = CeRapiInit();
+
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+  {
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+  {
+    if (dev_name == NULL)
+      break;
+
+    if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+    {
+      fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+      goto exit;
+    }
+    if (strcmp(dev_name, devinfo.bstrName) == 0)
+      break;
+  }
 
   if (FAILED(hr))
   {
-    fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-            argv[0],
-        synce_strerror(hr));
-    result = 1;
+    fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+        argv[0],
+        dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+    device = NULL;
     goto exit;
   }
 
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+  {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+  {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+        argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
 
   convert_to_backward_slashes(shortcut);
   wide_shortcut = wstr_from_current(shortcut);
@@ -110,7 +149,7 @@ int main(int argc, char** argv)
           goto exit;
   }
 
-  wide_shortcut = adjust_remote_path(wide_shortcut, true);
+  wide_shortcut = adjust_remote_path(session, wide_shortcut, true);
 
   convert_to_backward_slashes(target);
   wide_target = wstr_from_current(target);
@@ -121,7 +160,7 @@ int main(int argc, char** argv)
           goto exit;
   }
 
-  wide_target = adjust_remote_path(wide_target, true);
+  wide_target = adjust_remote_path(session, wide_target, true);
   /* Wrap target in quotes.  This is required for paths with spaces (for some reason) */
   tmp_quote = wstr_from_current("\"");
   tmpsize = (wstrlen(wide_target) + 3) * sizeof(WCHAR);
@@ -137,12 +176,12 @@ int main(int argc, char** argv)
   wstr_free_string(tmp_quote);
   wide_target = tmp;
   
-  BOOL res = CeSHCreateShortcut(wide_shortcut, wide_target);
+  BOOL res = IRAPISession_CeSHCreateShortcut(session, wide_shortcut, wide_target);
   if (!res)
   {
     fprintf(stderr, "%s: Unable to create shortcut to '%s' at '%s': %s\n",
             argv[0],target,shortcut,
-        synce_strerror(hr));
+	    synce_strerror(IRAPISession_CeGetLastError(session)));
     result = 1;
     goto exit;
   }
@@ -157,8 +196,15 @@ int main(int argc, char** argv)
   if (target)
     free(target);
 
-  CeRapiUninit();
-  rapi_connection_destroy(connection);
+  if (session)
+  {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
   
   return result;
 }

@@ -6,7 +6,7 @@ INCLUDES = -I$(top_srcdir)/lib/rapi
 
 noinst_PROGRAMS = CeRapiInvoke
 
-CeRapiInvoke_SOURCES = CeRapiInvoke.cc $(top_srcdir)/tools/pcommon.c
+CeRapiInvoke_SOURCES = CeRapiInvoke.cc pcommon.h pcommon.c
 CeRapiInvoke_LDADD = $(top_builddir)/lib/libsynce.la
 
 ##TESTS = CeRapiInvoke

@@ -40,6 +40,11 @@ synce_strhresult(HRESULT hr)
 	return result_str;
 }
 
+const char* synce_strerror_from_hresult(HRESULT hr)
+{
+  return synce_strerror(HRESULT_CODE(hr));
+}
+
 const char* synce_strerror(DWORD error)
 {
 	char* result = NULL;

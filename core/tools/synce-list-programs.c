@@ -1,12 +1,11 @@
 /* $Id$ */
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-char* dev_name = NULL;
 
 static void show_usage(const char* name)
 {
@@ -25,7 +24,7 @@ static void show_usage(const char* name)
 			name);
 }
 
-static bool handle_parameters(int argc, char** argv)
+static bool handle_parameters(int argc, char** argv, char** dev_name)
 {
 	int c;
 	int log_level = SYNCE_LOG_LEVEL_LOWEST;
@@ -39,7 +38,7 @@ static bool handle_parameters(int argc, char** argv)
 				break;
 			
                         case 'p':
-                                dev_name = optarg;
+                                *dev_name = optarg;
                                 break;
 			
 			case 'h':
@@ -57,37 +56,78 @@ static bool handle_parameters(int argc, char** argv)
 int main(int argc, char** argv)
 {
 	int return_value = 1;
-        RapiConnection* connection = NULL;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
 	HRESULT hr;
 	LONG result;
 	HKEY parent_key;
 	WCHAR* parent_key_name = NULL;
 	WCHAR* value_name = NULL;
 	DWORD i;
-  bool smartphone = false;
+	bool smartphone = false;
+	char* dev_name = NULL;
 	
-	if (!handle_parameters(argc, argv))
+	if (!handle_parameters(argc, argv, &dev_name))
 		goto exit;
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
-        {
-          fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                  argv[0],
-                  dev_name?dev_name:"(Default)");
-          goto exit;
-        }
-        rapi_connection_select(connection);
-	hr = CeRapiInit();
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (dev_name == NULL)
+	    break;
+
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+	    goto exit;
+	  }
+	  if (strcmp(dev_name, devinfo.bstrName) == 0)
+	    break;
+	}
 
 	if (FAILED(hr))
 	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-				argv[0],
-				synce_strerror(hr));
-		goto exit;
+	  fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+		  argv[0],
+		  dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto exit;
 	}
-	
-  
+
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
         /* Path on SmartPhone 2002 */
         parent_key_name = wstr_from_current("Security\\AppInstall");
         if (!parent_key_name) {
@@ -95,7 +135,7 @@ int main(int argc, char** argv)
 		goto exit;
         }
 
-        result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
+        result = IRAPISession_CeRegOpenKeyEx(session, HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
   
 	if (ERROR_SUCCESS == result)
   {
@@ -113,7 +153,7 @@ int main(int argc, char** argv)
             goto exit;
     }
 
-    result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
+    result = IRAPISession_CeRegOpenKeyEx(session, HKEY_LOCAL_MACHINE, parent_key_name, 0, 0, &parent_key);
 
     if (ERROR_SUCCESS != result)
     {
@@ -138,7 +178,7 @@ int main(int argc, char** argv)
 		DWORD installed = 0;
 		DWORD value_size = sizeof(installed);
 
-		result = CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, NULL, NULL,
+		result = IRAPISession_CeRegEnumKeyEx(session, parent_key, i, wide_name, &name_size, NULL, NULL,
 				NULL, NULL);
 		if (ERROR_SUCCESS != result)
 			break;
@@ -156,11 +196,11 @@ int main(int argc, char** argv)
     }
     else
     {
-      result = CeRegOpenKeyEx(parent_key, wide_name, 0, 0, &program_key);
+      result = IRAPISession_CeRegOpenKeyEx(session, parent_key, wide_name, 0, 0, &program_key);
       if (ERROR_SUCCESS != result)
         continue;
 
-      result = CeRegQueryValueEx(program_key, value_name, NULL, NULL,
+      result = IRAPISession_CeRegQueryValueEx(session, program_key, value_name, NULL, NULL,
           (LPBYTE)&installed, &value_size);
 
       if (ERROR_SUCCESS == result && installed)
@@ -174,12 +214,12 @@ int main(int argc, char** argv)
                 wstr_free_string(name);
         }
       }
-      CeRegCloseKey(program_key);
+      IRAPISession_CeRegCloseKey(session, program_key);
     }
 
 	}
 
-	CeRegCloseKey(parent_key);
+	IRAPISession_CeRegCloseKey(session, parent_key);
 
 	return_value = 0;
 
@@ -187,6 +227,14 @@ exit:
 	wstr_free_string(parent_key_name);
 	wstr_free_string(value_name);
 
-	CeRapiUninit();
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
 	return return_value;
 }

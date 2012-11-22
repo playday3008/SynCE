@@ -1,6 +1,6 @@
 /* $Id$ */
 #include "pcommon.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,34 +81,44 @@ static bool handle_parameters(int argc, char** argv, char** source, char** dest)
 	return true;
 }
 
-static bool remote_copy(const char* ascii_source, const char* ascii_dest)
+static bool remote_copy(IRAPISession *session, const char* ascii_source, const char* ascii_dest)
 {
   HRESULT hr;
   DWORD last_error;
-  BOOL result;
+  BOOL result = false;
+  LPWSTR lpExistingFileNameW = NULL;
+  LPWSTR lpNewFileNameW = NULL;
 
-  result = rapi_copy_file(ascii_source+1, ascii_dest+1, false);
+  lpExistingFileNameW = wstr_from_current(ascii_source+1);
+  lpNewFileNameW      = wstr_from_current(ascii_dest+1);
+
+  if (!lpExistingFileNameW || !lpNewFileNameW)
+    goto exit;
+
+  result = IRAPISession_CeCopyFile(session, lpExistingFileNameW, lpNewFileNameW, false);
 
   if (!result) {
-    if (FAILED(hr = CeRapiGetError())) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       fprintf(stderr, "%s: failed to copy %s to %s: %s.\n",
 	      prog_name, ascii_source, ascii_dest, synce_strerror(hr));
       goto exit;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     fprintf(stderr, "%s: failed to copy %s to %s: %s.\n",
 	    prog_name, ascii_source, ascii_dest, synce_strerror(last_error));
     goto exit;
   }
 
  exit:
+  wstr_free_string(lpExistingFileNameW);
+  wstr_free_string(lpNewFileNameW);
   return result;
 }
 
 #define ANYFILE_BUFFER_SIZE (64*1024)
 
-static bool anyfile_copy(const char* source_ascii, const char* dest_ascii, size_t* bytes_copied)
+static bool anyfile_copy(IRAPISession *session, const char* source_ascii, const char* dest_ascii, size_t* bytes_copied)
 {
 	bool success = false;
 	size_t bytes_read;
@@ -123,13 +133,13 @@ static bool anyfile_copy(const char* source_ascii, const char* dest_ascii, size_
 		goto exit;
 	}
 
-	if (!(source = anyfile_open(source_ascii, READ)))
+	if (!(source = anyfile_open(source_ascii, READ, session)))
 	{
 		fprintf(stderr, "%s: Failed to open source file '%s'\n", prog_name, source_ascii);
 		goto exit;
 	}
 
-	if (!(dest = anyfile_open(dest_ascii, WRITE)))
+	if (!(dest = anyfile_open(dest_ascii, WRITE, session)))
 	{
 		fprintf(stderr, "%s: Failed to open destination file '%s'\n", prog_name, dest_ascii);
 		goto exit;
@@ -186,14 +196,14 @@ exit:
 	return success;
 }
 
-static bool copy_file(const char* source, const char* dest, size_t* bytes_copied)
+static bool copy_file(IRAPISession *session, const char* source, const char* dest, size_t* bytes_copied)
 {
 	if (is_remote_file(source) && is_remote_file(dest))
 	{
 		/*
 		 * Both are remote; use CeCopyFile()
 		 */
-		if (!remote_copy(source, dest))
+		if (!remote_copy(session, source, dest))
 		  return false;;
 	}
 	else
@@ -201,16 +211,16 @@ static bool copy_file(const char* source, const char* dest, size_t* bytes_copied
 		/*
 		 * At least one is local, Use the AnyFile functions
 		 */
-		if (!anyfile_copy(source, dest, bytes_copied))
+		if (!anyfile_copy(session, source, dest, bytes_copied))
 		  return false;
 
 	}
 	return true;
 }
 
-static bool do_copy(const char* source, const char* dest, size_t* bytes_copied);
+static bool do_copy(IRAPISession *session, const char* source, const char* dest, size_t* bytes_copied);
 
-static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
+static bool copy_dir(IRAPISession *session, const char* source, const char* dest, size_t* bytes_copied)
 {
   char *src_list, *filename;
   char *new_src, *new_dest;
@@ -239,18 +249,18 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
 
     free(src_list);
 
-    rapi_result = CeFindAllFiles(widestr, FAF_ATTRIBUTES | FAF_NAME , &itemcount, &data);
+    rapi_result = IRAPISession_CeFindAllFiles(session, widestr, FAF_ATTRIBUTES | FAF_NAME , &itemcount, &data);
     wstr_free_string(widestr);
 
     if (!rapi_result)
       {
-	if (FAILED(hr = CeRapiGetError())) {
+	if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	  fprintf(stderr, "%s: error opening directory %s: %s\n",
 		  prog_name, source, synce_strerror(hr));
 	  return false;
 	}
 
-	last_error = CeGetLastError();
+	last_error = IRAPISession_CeGetLastError(session);
 	fprintf(stderr, "%s: error opening directory %s: %s\n",
 		  prog_name, source, synce_strerror(last_error));
 	return false;
@@ -274,16 +284,16 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
       new_dest = strcat(new_dest, filename);
 
       if (data[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-	result = do_copy(new_src, new_dest, bytes_copied);
+	result = do_copy(session, new_src, new_dest, bytes_copied);
       } else {
-	result = copy_file(new_src, new_dest, bytes_copied);
+	result = copy_file(session, new_src, new_dest, bytes_copied);
       }
 
       free(new_src);
       free(new_dest);
     }
 
-    CeRapiFreeBuffer(data);
+    IRAPISession_CeRapiFreeBuffer(session, data);
   } else {
     if (!(dir_handle = opendir(source))) {
       fprintf(stderr, "%s: error opening directory %s: %s\n",
@@ -305,9 +315,9 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
       new_dest = strcat(new_dest, dir_entry->d_name);
 
       if (dir_entry->d_type == DT_DIR) {
-	result = do_copy(new_src, new_dest, bytes_copied);
+	result = do_copy(session, new_src, new_dest, bytes_copied);
       } else {
-	result = copy_file(new_src, new_dest, bytes_copied);
+	result = copy_file(session, new_src, new_dest, bytes_copied);
       }
 
       free(new_src);
@@ -321,7 +331,7 @@ static bool copy_dir(const char* source, const char* dest, size_t* bytes_copied)
 }
 
 
-static bool does_exist(const char* name)
+static bool does_exist(IRAPISession *session, const char* name)
 {
   if (is_remote_file(name))
     {
@@ -337,18 +347,18 @@ static bool does_exist(const char* name)
               return false;
       }
 
-      handle = CeFindFirstFile(tempwstr, &entry);
+      handle = IRAPISession_CeFindFirstFile(session, tempwstr, &entry);
       wstr_free_string(tempwstr);
 
       if(handle == INVALID_HANDLE_VALUE)
 	{
-	  if (FAILED(hr = CeRapiGetError())) {
+	  if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	    fprintf(stderr, "%s: error finding %s: %s\n",
 		    prog_name, name, synce_strerror(hr));
 	    return false;
 	  }
 
-	  last_error = CeGetLastError();
+	  last_error = IRAPISession_CeGetLastError(session);
 
 	  if (last_error == ERROR_NO_MORE_FILES)
 	    return false;
@@ -357,7 +367,7 @@ static bool does_exist(const char* name)
 		  prog_name, name, synce_strerror(last_error));
 	  return false;
 	}
-      CeFindClose(handle);
+      IRAPISession_CeFindClose(session, handle);
 
       return true;
     }
@@ -375,7 +385,7 @@ static bool does_exist(const char* name)
 }
 
 
-static bool is_dir(const char* name)
+static bool is_dir(IRAPISession *session, const char* name)
 {
   if (is_remote_file(name))
     {
@@ -391,23 +401,23 @@ static bool is_dir(const char* name)
               return false;
       }
 
-      handle = CeFindFirstFile(tempwstr, &entry);
+      handle = IRAPISession_CeFindFirstFile(session, tempwstr, &entry);
       wstr_free_string(tempwstr);
 
       if(handle == INVALID_HANDLE_VALUE)
 	{
-	  if (FAILED(hr = CeRapiGetError())) {
+	  if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	    fprintf(stderr, "%s: error finding %s: %s\n",
 		    prog_name, name, synce_strerror(hr));
 	    return false;
 	  }
 
-	  last_error = CeGetLastError();
+	  last_error = IRAPISession_CeGetLastError(session);
 	  fprintf(stderr, "%s: error finding %s: %s\n",
 		  prog_name, name, synce_strerror(last_error));
 	  return false;
 	}
-      CeFindClose(handle);
+      IRAPISession_CeFindClose(session, handle);
 
       if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	return true;
@@ -459,7 +469,7 @@ static char *any_basename(const char *path)
   return name;
 }
 
-static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
+static bool do_copy(IRAPISession *session, const char* source, const char* dest, size_t* bytes_copied)
 {
   bool result;
   char *dir_name;
@@ -467,14 +477,14 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
   HRESULT hr;
   DWORD last_error;
 
-  if (is_dir(source)) {
+  if (is_dir(session, source)) {
     if (!recursive) {
       fprintf(stderr, "%s: omitting directory '%s'\n", prog_name, source);
       return false;
     }
 
-    if (does_exist(dest)) {
-      if (!is_dir(dest)) {
+    if (does_exist(session, dest)) {
+      if (!is_dir(session, dest)) {
 	fprintf(stderr, "%s: cannot overwrite non-directory '%s' with directory '%s'\n", prog_name, dest, source);
 	return false;
       }
@@ -508,18 +518,18 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
               return false;
       }
 
-      rapi_result = CeCreateDirectory(tmpwstr, NULL);
+      rapi_result = IRAPISession_CeCreateDirectory(session, tmpwstr, NULL);
       wstr_free_string(tmpwstr);
 
       if (!rapi_result) {
-	if (FAILED(hr = CeRapiGetError())) {
+	if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	  fprintf(stderr, "%s: error creating directory '%s': %08x: %s\n",
 		  prog_name, actual_dest, hr, synce_strerror(hr));
 	  free(actual_dest);
 	  return false;
 	}
 
-	last_error = CeGetLastError();
+	last_error = IRAPISession_CeGetLastError(session);
 
 	if (last_error != ERROR_ALREADY_EXISTS) {
 	  fprintf(stderr, "%s: error creating directory '%s': %d: %s\n",
@@ -538,13 +548,13 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
 	}
     }
 
-    result = copy_dir(source, actual_dest, bytes_copied);
+    result = copy_dir(session, source, actual_dest, bytes_copied);
 
     free(actual_dest);
   } else {
 
-    if (does_exist(dest)) {
-      if (!is_dir(dest)) {
+    if (does_exist(session, dest)) {
+      if (!is_dir(session, dest)) {
 	fprintf(stderr, "%s: file '%s' already exists\n", prog_name, dest);
 	return false;
       }
@@ -566,7 +576,7 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
       actual_dest = strdup(dest);
     }
 
-    result = copy_file(source, actual_dest, bytes_copied);
+    result = copy_file(session, source, actual_dest, bytes_copied);
     free(actual_dest);
   }
 
@@ -576,7 +586,11 @@ static bool do_copy(const char* source, const char* dest, size_t* bytes_copied)
 int main(int argc, char** argv)
 {
 	int result = 1;
-        RapiConnection* connection = NULL;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
 	char* source = NULL;
 	char* dest = NULL;
 	HRESULT hr;
@@ -588,22 +602,59 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &source, &dest))
 		goto exit;
 
-        if ((connection = rapi_connection_from_name(dev_name)) == NULL)
-        {
-          fprintf(stderr, "%s: Could not obtain connection to device '%s'\n", 
-                  argv[0],
-                  dev_name?dev_name:"(Default)");
-          goto exit;
-        }
-        rapi_connection_select(connection);
-	hr = CeRapiInit();
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (dev_name == NULL)
+	    break;
+
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+	    goto exit;
+	  }
+	  if (strcmp(dev_name, devinfo.bstrName) == 0)
+	    break;
+	}
 
 	if (FAILED(hr))
 	{
-		fprintf(stderr, "%s: Unable to initialize RAPI: %s\n", 
-				argv[0],
-				synce_strerror(hr));
-		goto exit;
+	  fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+		  argv[0],
+		  dev_name?dev_name:"(Default)", hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto exit;
+	}
+
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+		  argv[0], hr, synce_strerror_from_hresult(hr));
+	  goto exit;
 	}
 
 	if (!dest)
@@ -647,16 +698,16 @@ int main(int argc, char** argv)
 				goto exit;
 			}
 
-			if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(mydocuments), mydocuments))
+			if (!IRAPISession_CeGetSpecialFolderPath(session, CSIDL_PERSONAL, sizeof(mydocuments), mydocuments))
 			  {
 
-			    if (FAILED(hr = CeRapiGetError())) {
+			    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 			      fprintf(stderr, "%s: Unable to get the \"My Documents\" path: %s.\n",
 				      argv[0], synce_strerror(hr));
 			      goto exit;
 			    }
 
-			    last_error = CeGetLastError();
+			    last_error = IRAPISession_CeGetLastError(session);
 			    fprintf(stderr, "%s: Unable to get the \"My Documents\" path: %s.\n",
 				    argv[0], synce_strerror(last_error));
 			    goto exit;
@@ -700,7 +751,7 @@ int main(int argc, char** argv)
 
 	start = time(NULL);
 
-	if (!do_copy(source, dest, &bytes_copied))
+	if (!do_copy(session, source, dest, &bytes_copied))
 	  goto exit;
 
 	duration = time(NULL) - start;
@@ -724,6 +775,14 @@ exit:
 	if (dest)
 		free(dest);
 
-	CeRapiUninit();
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
 	return result;
 }
