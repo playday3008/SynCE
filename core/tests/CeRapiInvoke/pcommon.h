@@ -2,7 +2,6 @@
 #define __pcommon_h__
 
 #include <synce.h>
-#include <rapi2.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -11,7 +10,7 @@ extern "C"
 
 void convert_to_backward_slashes(char* path);
 bool is_remote_file(const char* filename);
-WCHAR* adjust_remote_path(IRAPISession *session, WCHAR* old_path, bool free_path);
+WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path);
 
 struct _AnyFile;
 typedef struct _AnyFile AnyFile;
@@ -22,7 +21,7 @@ typedef enum
 	WRITE = 2
 } ANYFILE_ACCESS;
 
-AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access, IRAPISession *session);
+AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access);
 void anyfile_close(AnyFile* file);
 bool anyfile_read (AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed);
 bool anyfile_write(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed);

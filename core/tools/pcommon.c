@@ -1,6 +1,6 @@
 /* $Id$ */
 #include "pcommon.h"
-#include "rapi.h"
+#include "rapi2.h"
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ bool is_remote_file(const char* filename)
 }
 
 
-WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path)
+WCHAR* adjust_remote_path(IRAPISession *session, WCHAR* old_path, bool free_path)
 {
 	WCHAR wide_backslash[2];
 	WCHAR path[MAX_PATH];
@@ -41,7 +41,7 @@ WCHAR* adjust_remote_path(WCHAR* old_path, bool free_path)
 	if (WIDE_BACKSLASH == old_path[0])
 		return old_path;
 
-	if (!CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path))
+	if (!IRAPISession_CeGetSpecialFolderPath(session, CSIDL_PERSONAL, sizeof(path), path))
 	{
 		fprintf(stderr, "Unable to get the \"My Documents\" path.\n");
 		return NULL;
@@ -72,6 +72,7 @@ struct _AnyFile
 	ANYFILE_ACCESSOR read;
 	ANYFILE_ACCESSOR write;
 	ANYFILE_CLOSE close;
+	IRAPISession *session;
 };
 
 static void anyfile_remote_close(AnyFile* file)
@@ -79,16 +80,18 @@ static void anyfile_remote_close(AnyFile* file)
 	HRESULT hr;
 	DWORD last_error;
 
-	if (!(CeCloseHandle(file->handle.remote))) {
-	  if (FAILED(hr = CeRapiGetError())) {
+	if (!(IRAPISession_CeCloseHandle(file->session, file->handle.remote))) {
+	  if (FAILED(hr = IRAPISession_CeRapiGetError(file->session))) {
 	    synce_error("Error closing remote file: %08x: %s",
 			hr, synce_strerror(hr));
 	  } else {
-	    last_error = CeGetLastError();
+	    last_error = IRAPISession_CeGetLastError(file->session);
 	    synce_error("Error closing remote file: %d: %s",
 			last_error, synce_strerror(last_error));
 	  }
 	}
+	IRAPISession_Release(file->session);
+	file->session = NULL;
 }
 
 static bool anyfile_remote_read(AnyFile* file, unsigned char* buffer, size_t bytes, size_t* bytesAccessed)
@@ -98,15 +101,15 @@ static bool anyfile_remote_read(AnyFile* file, unsigned char* buffer, size_t byt
 
 	BOOL result;
 	DWORD lpNumberOfBytesRead = 0;
-	result = CeReadFile(file->handle.remote, buffer, bytes, &lpNumberOfBytesRead, NULL);
+	result = IRAPISession_CeReadFile(file->session, file->handle.remote, buffer, bytes, &lpNumberOfBytesRead, NULL);
 	*bytesAccessed = lpNumberOfBytesRead;
 
 	if (!result) {
-	  if (FAILED(hr = CeRapiGetError())) {
+	  if (FAILED(hr = IRAPISession_CeRapiGetError(file->session))) {
 	    synce_error("Failed to read from remote file: %08x: %s",
 			hr, synce_strerror(hr));
 	  } else {
-	    last_error = CeGetLastError();
+	    last_error = IRAPISession_CeGetLastError(file->session);
 	    synce_error("Failed to read from remote file: %d: %s",
 			last_error, synce_strerror(last_error));
 	  }
@@ -122,15 +125,15 @@ static bool anyfile_remote_write(AnyFile* file, unsigned char* buffer, size_t by
 
 	BOOL result;
 	DWORD lpNumberOfBytesWritten = 0;
-	result = CeWriteFile(file->handle.remote, buffer, bytes, &lpNumberOfBytesWritten, NULL);
+	result = IRAPISession_CeWriteFile(file->session, file->handle.remote, buffer, bytes, &lpNumberOfBytesWritten, NULL);
 	*bytesAccessed = lpNumberOfBytesWritten;
 
 	if (!result) {
-	  if (FAILED(hr = CeRapiGetError())) {
+	  if (FAILED(hr = IRAPISession_CeRapiGetError(file->session))) {
 	    synce_error("Failed to write to remote file: %08x: %s",
 			hr, synce_strerror(hr));
 	  } else {
-	    last_error = CeGetLastError();
+	    last_error = IRAPISession_CeGetLastError(file->session);
 	    synce_error("Failed to write to remote file: %d: %s",
 			last_error, synce_strerror(last_error));
 	  }
@@ -174,7 +177,7 @@ static bool anyfile_local_write(AnyFile* file, unsigned char* buffer, size_t byt
 /**
  * Open remote file for reading or writing
  */
-static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
+static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access, IRAPISession *session)
 {
 	HRESULT hr;
 	DWORD last_error;
@@ -190,12 +193,12 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 	switch (access)
 	{
 		case READ:  
-			file->handle.remote = CeCreateFile(wide_filename, GENERIC_READ, 0, NULL, 
+			file->handle.remote = IRAPISession_CeCreateFile(session, wide_filename, GENERIC_READ, 0, NULL, 
 					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 			break;
 
 		case WRITE: 
-			file->handle.remote = CeCreateFile(wide_filename, GENERIC_WRITE, 0, NULL,
+			file->handle.remote = IRAPISession_CeCreateFile(session, wide_filename, GENERIC_WRITE, 0, NULL,
 					CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 			break;
 	}
@@ -203,11 +206,11 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 	if (INVALID_HANDLE_VALUE == file->handle.remote)
 	{
 
-	  if (FAILED(hr = CeRapiGetError())) {
+	  if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	    synce_error("Failed to open file '%s': %08x: %s",
 			filename, hr, synce_strerror(hr));
 	  } else {
-	    last_error = CeGetLastError();
+	    last_error = IRAPISession_CeGetLastError(session);
 	    synce_error("Failed to open file '%s': %d: %s",
 			filename, last_error, synce_strerror(last_error));
 	  }
@@ -220,6 +223,8 @@ static AnyFile* anyfile_remote_open(const char* filename, ANYFILE_ACCESS access)
 		file->close = anyfile_remote_close;
 		file->write = anyfile_remote_write;
 		file->read  = anyfile_remote_read;
+		file->session = session;
+		IRAPISession_AddRef(session);
 	}
 
 	wstr_free_string(wide_filename);
@@ -264,7 +269,7 @@ static AnyFile* anyfile_local_open(const char* filename, ANYFILE_ACCESS access)
 /**
  * Open file
  */
-AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access)
+AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access, IRAPISession *session)
 {
     char *tmpfilename;
     AnyFile* file = NULL;
@@ -273,7 +278,7 @@ AnyFile* anyfile_open(const char* filename, ANYFILE_ACCESS access)
 	if (is_remote_file(tmpfilename))
 	{
 		convert_to_backward_slashes(tmpfilename);
-		file = anyfile_remote_open(tmpfilename + 1, access);
+		file = anyfile_remote_open(tmpfilename + 1, access, session);
 	}
 	else
 	{
