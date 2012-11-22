@@ -4,6 +4,9 @@
     <method name="GetIpAddress">
       <arg direction="out" name="ip_address" type="s"/>
     </method>
+    <method name="GetIfaceAddress">
+      <arg direction="out" name="iface_address" type="s"/>
+    </method>
     <method name="GetGuid">
       <arg direction="out" name="guid" type="s"/>
     </method>

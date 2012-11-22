@@ -38,6 +38,7 @@ enum
 {
   PROP_CONNECTION = 1,
   PROP_IP_ADDRESS,
+  PROP_IFACE_ADDRESS,
   PROP_OBJECT_PATH,
 
   PROP_GUID,
@@ -110,6 +111,12 @@ odccm_device_get_property (GObject    *obj,
     case PROP_IP_ADDRESS:
       gnet_inetaddr_get_bytes (
           gnet_tcp_socket_get_remote_inetaddr (priv->conn->socket),
+          (gchar *) &addr);
+      g_value_set_uint (value, addr);
+      break;
+    case PROP_IFACE_ADDRESS:
+      gnet_inetaddr_get_bytes (
+          gnet_tcp_socket_get_local_inetaddr (priv->conn->socket),
           (gchar *) &addr);
       g_value_set_uint (value, addr);
       break;
@@ -318,6 +325,14 @@ odccm_device_class_init (OdccmDeviceClass *dev_class)
                                   G_PARAM_STATIC_NICK |
                                   G_PARAM_STATIC_BLURB);
   g_object_class_install_property (obj_class, PROP_IP_ADDRESS, param_spec);
+
+  param_spec = g_param_spec_uint ("iface-address", "Local IP address",
+                                  "The IP address of the local interface.",
+                                  0, G_MAXUINT32, 0,
+                                  G_PARAM_READABLE |
+                                  G_PARAM_STATIC_NICK |
+                                  G_PARAM_STATIC_BLURB);
+  g_object_class_install_property (obj_class, PROP_IFACE_ADDRESS, param_spec);
 
   param_spec = g_param_spec_string ("object-path", "Object path",
                                     "The D-Bus object path.",
@@ -852,6 +867,18 @@ odccm_device_get_ip_address (OdccmDevice *self, gchar **ip_address,
 
   g_object_get (self, "ip-address", &(addr.s_addr), NULL);
   *ip_address = g_strdup (inet_ntoa (addr));
+
+  return TRUE;
+}
+
+gboolean
+odccm_device_get_iface_address (OdccmDevice *self, gchar **iface_address,
+				GError **error)
+{
+  struct in_addr addr;
+
+  g_object_get (self, "iface-address", &(addr.s_addr), NULL);
+  *iface_address = g_strdup (inet_ntoa (addr));
 
   return TRUE;
 }

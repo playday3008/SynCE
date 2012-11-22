@@ -753,17 +753,20 @@ udev_read_cb (GIOChannel *source,
   OdccmDeviceManagerPrivate *priv = ODCCM_DEVICE_MANAGER_GET_PRIVATE (user_data);
 #define UEVENT_BUFFER_SIZE 2048
   gchar buf[UEVENT_BUFFER_SIZE*2];
-  GIOError ioError;
+  GIOStatus status;
+  GError *error = NULL;
   guint buflen = 0;
   size_t bufpos;
   gboolean is_net = FALSE, is_ppp = FALSE, added = FALSE;
   gchar iface[10];
   gchar udi[UEVENT_BUFFER_SIZE];
   
-  ioError = g_io_channel_read(priv->udev_chann, &buf, sizeof(buf), &buflen);
+  status = g_io_channel_read_chars(priv->udev_chann, &buf, sizeof(buf), &buflen, &error);
 
-  if (ioError != G_IO_ERROR_NONE) {
-    g_warning("%s: error reading event",G_STRFUNC);
+  if (status != G_IO_STATUS_NORMAL) {
+    g_warning("%s: error reading event: %s",G_STRFUNC,error->message);
+    g_error_free(error);
+    error = NULL;
   }  
 
   bufpos = strlen(buf) + 1;

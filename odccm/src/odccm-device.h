@@ -61,6 +61,7 @@ GType odccm_device_get_type (void);
     (G_TYPE_INSTANCE_GET_CLASS((obj), ODCCM_TYPE_DEVICE, OdccmDeviceClass))
 
 gboolean odccm_device_get_ip_address (OdccmDevice *self, gchar **ip_address, GError **error);
+gboolean odccm_device_get_iface_address (OdccmDevice *self, gchar **iface_address, GError **error);
 gboolean odccm_device_get_guid (OdccmDevice *self, gchar **guid, GError **error);
 gboolean odccm_device_get_os_version (OdccmDevice *self, guint *os_major, guint *os_minor, GError **error);
 gboolean odccm_device_get_name (OdccmDevice *self, gchar **name, GError **error);
