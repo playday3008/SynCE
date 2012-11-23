@@ -4,7 +4,8 @@
 
 #include "rapi_internal.h"
 #include <synce_socket.h>
-#include <rapi.h>
+#include <synce.h>
+#include <rapitypes.h>
 
 struct _RapiBuffer;
 typedef struct _RapiBuffer RapiBuffer;

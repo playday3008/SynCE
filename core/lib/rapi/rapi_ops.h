@@ -1,8 +1,9 @@
 /* $Id$ */
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
-#include "rapi.h"
+#include "synce.h"
 #include "rapi_context.h"
+#include "irapistream.h"
 #include <stdlib.h>
 
 struct rapi_ops_s

@@ -2,6 +2,7 @@
 #undef __STRICT_ANSI__
 #define _GNU_SOURCE
 #include "rapi_context.h"
+#include "rapi.h"
 #include <stdlib.h>
 #include <synce_log.h>
 

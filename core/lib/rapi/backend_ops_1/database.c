@@ -530,7 +530,7 @@ CEOID _CeReadRecordProps(/*{{{*/
 		      }
 		  }
 
-		CeRapiFreeBuffer(recv_buffer);
+		free(recv_buffer);
 	}
 
 	*lpcbBuffer = out_size;
@@ -541,7 +541,7 @@ exit:
 fail:
  	rapi_database_error("failed");
 	if (recv_buffer)
-	  CeRapiFreeBuffer(recv_buffer);
+	  free(recv_buffer);
 	return 0;
 }/*}}}*/
 
@@ -772,7 +772,7 @@ CEOID _CeWriteRecordProps(
 	rapi_database_trace("return_value=0x%08x", return_value);
 
 exit:
-	CeRapiFreeBuffer(send_buf);
+	free(send_buf);
 	send_buf = NULL;
 
 	return return_value;

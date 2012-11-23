@@ -1,7 +1,8 @@
 #ifndef __backend_ops_2_h__
 #define __backend_ops_2_h__
-#include "rapi.h"
+#include "synce.h"
 #include "rapi_context.h"
+#include "irapistream.h"
 
 DWORD _CeGetSpecialFolderPath2(
         RapiContext *context,

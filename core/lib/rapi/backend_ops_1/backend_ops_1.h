@@ -1,8 +1,9 @@
 /* $Id$ */
 #ifndef __backend_ops_1_h__
 #define __backend_ops_1_h__
-#include "rapi.h"
+#include "synce.h"
 #include "rapi_context.h"
+#include "irapistream.h"
 
 #ifndef SWIG
 

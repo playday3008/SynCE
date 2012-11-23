@@ -69,7 +69,7 @@ cdef extern from "synce.h":
     ctypedef FILETIME*  PFILETIME
     ctypedef FILETIME*  LPFILETIME
 
-cdef extern from "rapi.h":
+cdef extern from "rapitypes.h":
     ctypedef void*              LPSECURITY_ATTRIBUTES
     ctypedef void*				LPOVERLAPPED
     ctypedef struct _SYSTEM_POWER_STATUS_EX: 

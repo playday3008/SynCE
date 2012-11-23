@@ -135,7 +135,7 @@ S_FALSE                 = 0x00000001
 S_OK                    = 0x00000000
 
 
-# from rapi.h
+# from rapitypes.h
 # registry value types
 REG_NONE                = 0
 REG_SZ                  = 1
