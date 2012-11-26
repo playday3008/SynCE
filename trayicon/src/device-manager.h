@@ -52,7 +52,7 @@ struct _WmDeviceManagerClass {
   gint (*wm_device_manager_device_passwordreq_count) (WmDeviceManager *self);
   gint (*wm_device_manager_device_passwordreqondevice_count) (WmDeviceManager *self);
   WmDevice * (*wm_device_manager_find_by_name) (WmDeviceManager *self, const gchar *name);
-  WmDevice * (*wm_device_manager_find_by_index) (WmDeviceManager *self, gint index);
+  WmDevice * (*wm_device_manager_find_by_index) (WmDeviceManager *self, guint index);
   void (*wm_device_manager_remove_by_name) (WmDeviceManager *self, const gchar *name);
   void (*wm_device_manager_remove_by_prop) (WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val);
   void (*wm_device_manager_remove_all) (WmDeviceManager *self);
@@ -85,7 +85,7 @@ gint wm_device_manager_device_connected_count(WmDeviceManager *self);
 gint wm_device_manager_device_passwordreq_count(WmDeviceManager *self);
 gint wm_device_manager_device_passwordreqondevice_count(WmDeviceManager *self);
 WmDevice *wm_device_manager_find_by_name(WmDeviceManager *self, const gchar *name);
-WmDevice *wm_device_manager_find_by_index(WmDeviceManager *self, gint index);
+WmDevice *wm_device_manager_find_by_index(WmDeviceManager *self, guint index);
 void wm_device_manager_remove_by_name(WmDeviceManager *self, const gchar *name);
 void wm_device_manager_remove_by_prop(WmDeviceManager *self, const gchar *prop_name, const gchar *prop_val);
 void wm_device_manager_remove_all(WmDeviceManager *self);

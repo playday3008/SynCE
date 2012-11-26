@@ -92,7 +92,7 @@ password_flags_changed_cb(DBusGProxy *proxy,
   }
 
   gchar *pdaname = NULL;
-  gint i;
+  guint i;
   const gchar *obj_path;
 
   obj_path = dbus_g_proxy_get_path(proxy);
@@ -341,7 +341,7 @@ udev_device_disconnected_cb(DBusGProxy *proxy,
 
   gchar *pdaname = NULL;
   proxy_store *p_store = NULL;
-  gint i;
+  guint i;
 
   i = 0;
   while (i < priv->dev_proxies->len) {
@@ -371,7 +371,7 @@ udev_client_provide_password_impl(UdevClient *self, const gchar *pdaname, const 
 {
   GError *error = NULL;
   gboolean password_accepted = FALSE, result;
-  gint i;
+  guint i;
   DBusGProxy *proxy = NULL;
 
   if (!self) {
@@ -460,7 +460,7 @@ udev_client_request_disconnect_impl(UdevClient *self, const gchar *pdaname)
 static void
 udev_disconnect(UdevClient *self)
 {
-  gint i;
+  guint i;
   proxy_store *p_store;
 
   UdevClientPrivate *priv = UDEV_CLIENT_GET_PRIVATE (self);
@@ -489,7 +489,7 @@ static void
 udev_connect(UdevClient *self)
 {
   GPtrArray* dev_list = NULL;
-  gint i;
+  guint i;
   gchar *obj_path = NULL;
   GError *error = NULL;
 

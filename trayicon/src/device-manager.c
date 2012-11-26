@@ -70,7 +70,7 @@ wm_device_manager_find_by_name(WmDeviceManager *self, const gchar *name)
 }
 
 WmDevice *
-wm_device_manager_find_by_index(WmDeviceManager *self, gint index)
+wm_device_manager_find_by_index(WmDeviceManager *self, guint index)
 {
   return WM_DEVICE_MANAGER_GET_CLASS (self)->wm_device_manager_find_by_index(self, index);
 }
@@ -165,7 +165,7 @@ wm_device_manager_device_connected_count_impl(WmDeviceManager *self)
 
   guint connection_status;
   guint count = 0;
-  gint i;
+  guint i;
   WmDevice *device = NULL;
 
   for (i = 0; i < priv->devices->len; i++) {
@@ -196,7 +196,7 @@ wm_device_manager_device_passwordreq_count_impl(WmDeviceManager *self)
 
   guint connection_status;
   guint count = 0;
-  gint i;
+  guint i;
   WmDevice *device = NULL;
 
   for (i = 0; i < priv->devices->len; i++) {
@@ -227,7 +227,7 @@ wm_device_manager_device_passwordreqondevice_count_impl(WmDeviceManager *self)
 
   guint connection_status;
   guint count = 0;
-  gint i;
+  guint i;
   WmDevice *device = NULL;
 
   for (i = 0; i < priv->devices->len; i++) {
@@ -245,7 +245,7 @@ WmDevice *
 wm_device_manager_find_by_name_impl(WmDeviceManager *self, const gchar *name)
 {
   WmDevice *device = NULL;
-  int i;
+  guint i;
   gchar *tmpname;
 
   if (!self) {
@@ -273,7 +273,7 @@ wm_device_manager_find_by_name_impl(WmDeviceManager *self, const gchar *name)
 }
 
 WmDevice *
-wm_device_manager_find_by_index_impl(WmDeviceManager *self, gint index)
+wm_device_manager_find_by_index_impl(WmDeviceManager *self, guint index)
 {
   WmDevice *device = NULL;
 
@@ -300,7 +300,7 @@ void
 wm_device_manager_remove_by_name_impl(WmDeviceManager *self, const gchar *name)
 {
   WmDevice *device = NULL;
-  int i;
+  guint i;
   gchar *tmpname;
 
   if (!self) {
@@ -409,7 +409,7 @@ wm_device_manager_get_all_names_impl(WmDeviceManager *self)
   WmDevice *device = NULL;
   GList *device_names = NULL;
   gchar *name = NULL;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->devices->len; i++) {
     device = g_ptr_array_index(priv->devices, i);
@@ -440,7 +440,7 @@ wm_device_manager_get_connected_names_impl(WmDeviceManager *self)
   GList *device_names = NULL;
   gchar *name = NULL;
   guint connection_status;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->devices->len; i++) {
     device = g_ptr_array_index(priv->devices, i);
@@ -473,7 +473,7 @@ wm_device_manager_get_passwordreq_names_impl(WmDeviceManager *self)
   GList *device_names = NULL;
   gchar *name = NULL;
   guint connection_status;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->devices->len; i++) {
     device = g_ptr_array_index(priv->devices, i);
@@ -506,7 +506,7 @@ wm_device_manager_get_passwordreqondevice_names_impl(WmDeviceManager *self)
   GList *device_names = NULL;
   gchar *name = NULL;
   guint connection_status;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->devices->len; i++) {
     device = g_ptr_array_index(priv->devices, i);
@@ -568,7 +568,7 @@ wm_device_manager_unlocked_impl(WmDeviceManager *self, const gchar *name)
   WmDevice *device = NULL;
   gchar *tmpname = NULL;
   guint conn_stat;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->devices->len; i++) {
           device = g_ptr_array_index(priv->devices, i);
@@ -611,7 +611,7 @@ wm_device_manager_dispose (GObject *obj)
   WmDeviceManager *self = WM_DEVICE_MANAGER(obj);
   WmDeviceManagerPrivate *priv = WM_DEVICE_MANAGER_GET_PRIVATE (self);
   WmDevice *device;
-  int i;
+  guint i;
 
   if (priv->disposed) {
     return;

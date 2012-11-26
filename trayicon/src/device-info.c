@@ -541,7 +541,7 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   }
 
   g_debug("%s: partnership name: %s", G_STRFUNC, name);
-  gint i;
+  guint i;
   for (i = 0; i < sync_items_required->len; i++) {
     g_debug("%s:     sync_items %d: %d", G_STRFUNC, i, g_array_index(sync_items_required, guint, i));
   }
@@ -1174,7 +1174,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       g_debug("%s: partnership %d host name: %s", G_STRFUNC, index, hostname);
       g_debug("%s: partnership %d device name: %s", G_STRFUNC, index, device_name);
 
-      gint i;
+      guint i;
       for (i = 0; i < sync_items_active->len; i++) {
         g_debug("%s: partnership %d   sync_items %d: %d", G_STRFUNC, index, i, g_array_index(sync_items_active, guint, i));
       }
@@ -1207,7 +1207,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 	gtk_tree_store_append (store, &sub_iter, &iter);
 
 	active = FALSE;
-	gint active_index;
+	guint active_index;
 	for (active_index = 0; active_index < sync_items_active->len; active_index++) {
 	  if (g_array_index(sync_items_active, guint, active_index) == GPOINTER_TO_UINT(tmp_list->data)) {
 	    active = TRUE;
