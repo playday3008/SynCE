@@ -1403,6 +1403,7 @@ IRAPISession_CeRapiInvoke(IRAPISession *session,
  */
 
 struct _IRAPIDevice {
+        IRAPIDesktop *desktop;
         char *obj_path;
         SynceInfo *info;
         int refcount;
@@ -1427,6 +1428,7 @@ IRAPIDevice_Release(IRAPIDevice *self)
         free(self->obj_path);
         if (self->info)
                 synce_info_destroy(self->info);
+        IRAPIDesktop_Release(self->desktop);
         free(self);
         return;
 }
@@ -1641,6 +1643,8 @@ udev_device_connected_cb(DBusGProxy *proxy,
                 return;
         }
 
+	newdev->desktop = self;
+	IRAPIDesktop_AddRef(self);
         newdev->obj_path = strdup(obj_path);
         newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
         newdev->status = RAPI_DEVICE_CONNECTED;
@@ -1799,6 +1803,8 @@ udev_connect(IRAPIDesktop *self)
                         break;
                 }
 
+		newdev->desktop = self;
+		IRAPIDesktop_AddRef(self);
                 newdev->obj_path = obj_path;
                 newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
                 newdev->status = RAPI_DEVICE_CONNECTED;
