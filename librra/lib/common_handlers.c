@@ -5,7 +5,7 @@
 #include "generator.h"
 #include "appointment_ids.h"
 #include "strbuf.h"
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <ctype.h>
 #include <assert.h>

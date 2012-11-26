@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h> /* for size_t */
-#include <rapi.h>
+#include <rapitypes.h>
 #include "../rra_config.h"
 
 #define GENERATOR_UTF8 1

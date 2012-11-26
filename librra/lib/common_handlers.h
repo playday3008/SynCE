@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <libmimedir.h>
-#include <rapi.h>
+#include <rapitypes.h>
 #include "timezone.h"
 #include "generator.h"
 #include "parser.h"

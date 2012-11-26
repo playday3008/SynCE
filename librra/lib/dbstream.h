@@ -1,7 +1,7 @@
 #ifndef __dbstream_h__
 #define __dbstream_h__
 
-#include <rapi.h>
+#include <rapitypes.h>
 
 #ifdef __cplusplus
 extern "C"

@@ -12,7 +12,7 @@
 #include "parser.h"
 #include "strv.h"
 #include "strbuf.h"
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>

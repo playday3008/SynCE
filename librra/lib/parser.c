@@ -6,7 +6,7 @@
 #include "environment.h"
 #include <synce_log.h>
 #include <synce_hash.h>
-#include <rapi.h>
+#include <rapitypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>

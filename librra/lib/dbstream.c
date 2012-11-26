@@ -1,5 +1,5 @@
 /* $Id$ */
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <string.h>
 #include <assert.h>

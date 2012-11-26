@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 #include <libmimedir.h>
-#include <rapi.h>
+#include <rapitypes.h>
 #include "mdir_line_vector.h"
 #include "timezone.h"
 

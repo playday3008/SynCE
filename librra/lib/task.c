@@ -6,7 +6,7 @@
 #include "generator.h"
 #include "parser.h"
 #include "common_handlers.h"
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <string.h>

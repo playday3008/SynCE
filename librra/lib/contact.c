@@ -8,7 +8,7 @@
 #include "dbstream.h"
 #include "strv.h"
 #include "common_handlers.h"
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>

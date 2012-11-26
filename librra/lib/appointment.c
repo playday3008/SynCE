@@ -6,7 +6,7 @@
 #include "parser.h"
 #include "strbuf.h"
 #include "strv.h"
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <string.h>
 #include <stdlib.h>

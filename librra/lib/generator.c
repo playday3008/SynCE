@@ -4,7 +4,7 @@
 #include "parser.h"
 #include "dbstream.h"
 #include "strbuf.h"
-#include <rapi.h>
+#include <rapitypes.h>
 #include <synce_log.h>
 #include <synce_hash.h>
 #include <stdlib.h>

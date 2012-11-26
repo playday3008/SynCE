@@ -1,7 +1,6 @@
 #define _GNU_SOURCE 1
 #include "file.h"
 #include <synce.h>
-#include <rapi.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
