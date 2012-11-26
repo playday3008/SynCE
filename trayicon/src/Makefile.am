@@ -16,8 +16,7 @@ BUILT_SOURCES = \
 
 CLEANFILES = $(BUILT_SOURCES)
 
-synce_trayicon_SOURCES = $(BUILT_SOURCES) \
-			main.c \
+synce_trayicon_SOURCES = main.c \
 			stock-icons.h \
 			synce-trayicon.c synce-trayicon.h \
 			properties.c properties.h \
@@ -29,6 +28,8 @@ synce_trayicon_SOURCES = $(BUILT_SOURCES) \
 			device-info.c device-info.h \
 			module.c module.h \
 			synce_app_man.c synce_app_man.h
+
+nodist_synce_trayicon_SOURCES = $(BUILT_SOURCES)
 
 if ENABLE_VDCCM_SUPPORT
 synce_trayicon_SOURCES += vdccm-client.c vdccm-client.h \
