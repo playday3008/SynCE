@@ -144,21 +144,22 @@ bool rrac_set_command_69_callback(/*{{{*/
 
 /* create server socket, call CeStartReplication(), accept command and
  * data channel */
-bool rrac_connect(RRAC* rrac, RapiConnection *connection)/*{{{*/
+bool rrac_connect(RRAC* rrac, IRAPISession *session)/*{{{*/
 {
   HRESULT hr;
   const char *ip_addr = NULL;
+  IRAPIDevice *device = NULL;
 
   rrac->server = synce_socket_new();
 
-  ip_addr = rapi_connection_get_local_ip(connection);
+  device = IRAPISession_get_device(session);
+  ip_addr = IRAPIDevice_get_local_ip(device);
+  IRAPIDevice_Release(device);
 
   if (!synce_socket_listen(rrac->server, ip_addr, RRAC_PORT))
     goto fail;
 
-  if (connection)
-    rapi_connection_select(connection);
-  hr = CeStartReplication();
+  hr = IRAPISession_CeStartReplication(session);
   if (FAILED(hr))
   {
     synce_error("CeStartReplication failed: %s", synce_strerror(hr));

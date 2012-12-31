@@ -2,7 +2,7 @@
 #define _BSD_SOURCE 1
 #include "timezone.h"
 #include "generator.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce.h>
 #include <synce_log.h>
 #include <assert.h>
@@ -49,7 +49,7 @@ static const uint8_t default_timezone[172]={
   0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
   0xc4,0xff,0xff,0xff};
 
-bool rra_timezone_get(RRA_Timezone* tzi, RapiConnection *connection)/*{{{*/
+bool rra_timezone_get(RRA_Timezone* tzi, IRAPISession *session)/*{{{*/
 {
   bool success = false;
   LONG error;
@@ -57,7 +57,8 @@ bool rra_timezone_get(RRA_Timezone* tzi, RapiConnection *connection)/*{{{*/
   WCHAR* wide_value_name = NULL;
   DWORD size = sizeof(RRA_Timezone);
   bool registry_success = false;
-  
+  WCHAR* key_name_wide = NULL;
+
   assert(sizeof(RRA_Timezone) == 172);
 
   if (!tzi)
@@ -66,13 +67,21 @@ bool rra_timezone_get(RRA_Timezone* tzi, RapiConnection *connection)/*{{{*/
     goto exit;
   }
 
-  if (connection)
-    rapi_connection_select(connection);
-  if (rapi_reg_open_key(HKEY_LOCAL_MACHINE, REGISTRY_KEY_NAME, &key))
+  key_name_wide = wstr_from_current(REGISTRY_KEY_NAME);
+  if (!key_name_wide)
+  {
+    synce_warning("Failed to convert registry key name '%s'", REGISTRY_KEY_NAME);
+    goto exit;
+  }
+
+  error = IRAPISession_CeRegOpenKeyEx(session, HKEY_LOCAL_MACHINE, key_name_wide, 0, 0, &key);
+  wstr_free_string(key_name_wide);
+
+  if (ERROR_SUCCESS == error)
   {
     wide_value_name = wstr_from_ascii(REGISTRY_VALUE_NAME);
 
-    error = CeRegQueryValueEx(key, wide_value_name, NULL, NULL, (void*)tzi, &size);
+    error = IRAPISession_CeRegQueryValueEx(session, key, wide_value_name, NULL, NULL, (void*)tzi, &size);
     if (ERROR_SUCCESS == error)
     {
       if (sizeof(RRA_Timezone) == size)
@@ -119,7 +128,7 @@ bool rra_timezone_get(RRA_Timezone* tzi, RapiConnection *connection)/*{{{*/
   
 exit:
   if (key)
-    CeRegCloseKey(key);
+    IRAPISession_CeRegCloseKey(session, key);
   wstr_free_string(wide_value_name);
   return success;
 }/*}}}*/

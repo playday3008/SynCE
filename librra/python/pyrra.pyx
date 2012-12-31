@@ -49,8 +49,8 @@ cdef extern from "synce.h":
 cdef extern from "synce_log.h":
 	void synce_log_set_level(int level)
 
-cdef extern from "rapi.h":
-	ctypedef void RapiConnection
+cdef extern from "rapi2.h":
+	ctypedef void IRAPISession
 
 cdef extern from "../lib/syncmgr.h":
 	ctypedef void  RRA_SyncMgr
@@ -84,7 +84,7 @@ cdef extern from "../lib/syncmgr.h":
 
 	void rra_syncmgr_destroy(RRA_SyncMgr * instance)
 
-	bool rra_syncmgr_connect(RRA_SyncMgr * instance, RapiConnection *connection)
+	bool rra_syncmgr_connect(RRA_SyncMgr * instance, IRAPISession *session)
 
 	void rra_syncmgr_disconnect(RRA_SyncMgr * instance)
 
@@ -146,7 +146,7 @@ cdef extern from "../lib/syncmgr.h":
 cdef extern from "../lib/matchmaker.h":
 	ctypedef void  RRA_Matchmaker
 
-	RRA_Matchmaker * rra_matchmaker_new(RapiConnection *connection)
+	RRA_Matchmaker * rra_matchmaker_new(IRAPISession *session)
 	void rra_matchmaker_destroy(RRA_Matchmaker * instance)
 	bool rra_matchmaker_set_current_partner(RRA_Matchmaker * instance, uint32_t index)
 	bool rra_matchmaker_get_current_partner(RRA_Matchmaker * instance, uint32_t* index)
@@ -162,7 +162,7 @@ cdef extern from "../lib/timezone.h":
 	ctypedef struct RRA_Timezone:
 		pass
 
-	bool rra_timezone_get(RRA_Timezone* timezone, RapiConnection *connection)
+	bool rra_timezone_get(RRA_Timezone* timezone, IRAPISession *session)
 	time_t rra_timezone_convert_from_utc(RRA_Timezone* tzi, time_t unix_time)
 	time_t rra_timezone_convert_to_utc  (RRA_Timezone* tzi, time_t unix_time)
 	void rra_timezone_create_id(RRA_Timezone* timezone, char** id)
@@ -328,20 +328,17 @@ cdef class RRASession:
 	# Connection and disconnection
 	#
 
-	def Connect(self, rapisession=None):
+	def Connect(self, rapisession):
 		"""Connect to a device.
 
 		Connect the RRA session to the device attached to the RAPISession
 		given as an argument, or the default RAPI connection if none is
 		specified. Raises an RRAError on failure."""
-		cdef RapiConnection *rapiconn
+		cdef IRAPISession *session
 
-		if rapisession == None:
-			rapiconn = NULL
-		else:
-			rapiconn = PyCObject_AsVoidPtr(rapisession.rapi_connection)
+		session = PyCObject_AsVoidPtr(rapisession.rapi_connection)
 
-		self.connected = rra_syncmgr_connect(self.instance, rapiconn)
+		self.connected = rra_syncmgr_connect(self.instance, session)
 		if self.connected == 0:
 			raise RRAError("Connection failed")
 
@@ -683,15 +680,12 @@ cdef class RRAMatchmaker:
 
 	cdef RRA_Matchmaker * instance
 	
-	def __cinit__(self, rapisession=None):
-		cdef RapiConnection *rapiconn
+	def __cinit__(self, rapisession):
+		cdef IRAPISession *session
 
-		if rapisession == None:
-			rapiconn = NULL
-		else:
-			rapiconn = PyCObject_AsVoidPtr(rapisession.rapi_connection)
+		session = PyCObject_AsVoidPtr(rapisession.rapi_connection)
 
-		self.instance = <RRA_Matchmaker *>rra_matchmaker_new(rapiconn)
+		self.instance = <RRA_Matchmaker *>rra_matchmaker_new(session)
 		if not self.instance:
 			raise RRAError("Matchmaker creation failed")
 
@@ -841,7 +835,7 @@ cdef class RRATimezone:
 	def __dealloc__(self):
 		free(self.instance)
 
-	def Get(self,rapisession=None):
+	def Get(self,rapisession):
 		"""Get the timezone information.
 
 		Gets the timezone information of the device attached to
@@ -849,14 +843,11 @@ cdef class RRATimezone:
 		connection if none is specified.
 		Raises an RRAError on failure."""
 
-		cdef RapiConnection *rapiconn
+		cdef IRAPISession *session
 
-		if rapisession == None:
-			rapiconn = NULL
-		else:
-			rapiconn = PyCObject_AsVoidPtr(rapisession.rapi_connection)
+		session = PyCObject_AsVoidPtr(rapisession.rapi_connection)
 
-		if rra_timezone_get(self.instance,rapiconn):
+		if rra_timezone_get(self.instance,session):
 			return
 
 		raise RRAError("Failed to get timezone info.")

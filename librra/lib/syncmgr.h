@@ -3,7 +3,7 @@
 #define __rra_syncmgr_h__
 
 #include <synce.h>
-#include <rapi.h>
+#include <rapi2.h>
 
 /* Constants for use with rra_syncmgr_type_from_name() */
 #define RRA_SYNCMGR_TYPE_APPOINTMENT  "Appointment"
@@ -52,7 +52,7 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self);
    Connect or disconnect from device 
  */
 
-bool rra_syncmgr_connect(RRA_SyncMgr* self, RapiConnection *connection);
+bool rra_syncmgr_connect(RRA_SyncMgr* self, IRAPISession *session);
 void rra_syncmgr_disconnect(RRA_SyncMgr* self);
 bool rra_syncmgr_is_connected(RRA_SyncMgr* self);
 

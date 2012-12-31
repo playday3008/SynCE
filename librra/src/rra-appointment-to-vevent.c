@@ -1,7 +1,6 @@
 /* $Id$ */
 #include "../lib/appointment.h"
 #include "../lib/timezone.h"
-#include <rapi.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -3,7 +3,7 @@
 #define __timezone_h__
 
 #include <synce.h>
-#include <rapi.h>
+#include <rapi2.h>
 
 typedef struct _RRA_Timezone
 {
@@ -27,7 +27,7 @@ typedef struct _RRA_Timezone
 } RRA_Timezone;
 
 /** Get time zone information from connected device */
-bool rra_timezone_get(RRA_Timezone* timezone, RapiConnection *connection);
+bool rra_timezone_get(RRA_Timezone* timezone, IRAPISession *session);
 
 #define RRA_TIMEZONE_INVALID_TIME   ((time_t)0xffffffff)
 

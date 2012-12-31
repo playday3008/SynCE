@@ -1,6 +1,6 @@
 /* $Id$ */
 #include <stdio.h>
-#include <rapi.h>
+#include <rapitypes.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

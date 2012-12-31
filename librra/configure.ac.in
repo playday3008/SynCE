@@ -19,7 +19,7 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.17)
 
   AC_ARG_WITH(libmimedir,
     AC_HELP_STRING(

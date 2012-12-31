@@ -3,7 +3,7 @@
 #define __rra_matchmaker_h__
 
 #include <synce.h>
-#include <rapi.h>
+#include <rapi2.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -17,7 +17,7 @@ extern "C"
 typedef struct _RRA_Matchmaker RRA_Matchmaker;
 
 /** Create a new matchmaker object for managing partnerships */
-RRA_Matchmaker* rra_matchmaker_new(RapiConnection *connection);
+RRA_Matchmaker* rra_matchmaker_new(IRAPISession *session);
 
 /** Destroy the resources allocated by the matchmaker object */
 void rra_matchmaker_destroy(RRA_Matchmaker* matchmaker);
@@ -60,7 +60,7 @@ bool rra_matchmaker_have_partnership(RRA_Matchmaker* matchmaker, uint32_t* index
 bool rra_matchmaker_create_partnership(RRA_Matchmaker*
       matchmaker, uint32_t* index);
 
-#define rra_matchmaker_free_partner_name(name)  rapi_reg_free_string(name)
+#define rra_matchmaker_free_partner_name(name)  wstr_free_string(name)
 
 #ifdef __cplusplus
 }

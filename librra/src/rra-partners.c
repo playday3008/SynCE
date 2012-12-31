@@ -1,6 +1,6 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include "matchmaker.h"
 #include <stdio.h>
@@ -102,6 +102,10 @@ int main(int argc, char** argv)
   RRA_Matchmaker* matchmaker = NULL;
   DWORD current_partner;
   uint32_t index = 0;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
   HRESULT hr;
   int i;
   COMMAND command = COMMAND_HELP;
@@ -109,14 +113,47 @@ int main(int argc, char** argv)
   if (!handle_parameters(argc, argv, &command, &index))
     goto exit;
 
-  hr = CeRapiInit();
-  if (FAILED(hr))
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
   {
-    synce_error("Failed to initialize RAPI");
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
     goto exit;
   }
 
-  matchmaker = rra_matchmaker_new(NULL);
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+  {
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+  {
+    fprintf(stderr, "%s: Could not find device: %08x: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    device = NULL;
+    goto exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+  {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+  {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  matchmaker = rra_matchmaker_new(session);
   if (!matchmaker)
   {
     synce_error("Failed to create match-maker");
@@ -191,7 +228,17 @@ int main(int argc, char** argv)
 
 exit:
   rra_matchmaker_destroy(matchmaker);
-  CeRapiUninit();
+
+  if (session)
+  {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
+
   return result;
 }
 

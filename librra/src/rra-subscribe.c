@@ -1,7 +1,7 @@
 /* $Id$ */
 #define _BSD_SOURCE 1
 #include "../lib/syncmgr.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,6 +104,10 @@ static bool callback (
 int main(int argc, char** argv)
 {
 	int result = 1;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
 	HRESULT hr;
 	RRA_SyncMgr* syncmgr = NULL;
 	char** type_id_list = NULL;
@@ -117,13 +121,49 @@ int main(int argc, char** argv)
 	if (!handle_parameters(argc, argv, &type_id_list, &type_id_no))
 		goto exit;
 
-	hr = CeRapiInit();
-	if (FAILED(hr))
-		goto exit;
+        if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+        {
+          fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+                  argv[0], hr, synce_strerror_from_hresult(hr));
+          goto exit;
+        }
+
+        if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+        {
+          fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+                  argv[0], hr, synce_strerror_from_hresult(hr));
+          goto exit;
+        }
+
+        if (FAILED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+        {
+          fprintf(stderr, "%s: Could not find device: %08x: %s\n", 
+                  argv[0], hr, synce_strerror_from_hresult(hr));
+          device = NULL;
+          goto exit;
+        }
+
+        IRAPIDevice_AddRef(device);
+        IRAPIEnumDevices_Release(enumdev);
+        enumdev = NULL;
+
+        if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+        {
+          fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+                  argv[0], hr, synce_strerror_from_hresult(hr));
+          goto exit;
+        }
+
+        if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+        {
+          fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+                  argv[0], hr, synce_strerror_from_hresult(hr));
+          goto exit;
+        }
 
 	syncmgr = rra_syncmgr_new();
 
-	if (!rra_syncmgr_connect(syncmgr, NULL))
+	if (!rra_syncmgr_connect(syncmgr, session))
 	{
 		fprintf(stderr, "Connection failed\n");
 		goto exit;
@@ -181,6 +221,15 @@ int main(int argc, char** argv)
 exit:
 	rra_syncmgr_destroy(syncmgr);
 	
-	CeRapiUninit();
+        if (session)
+        {
+          IRAPISession_CeRapiUninit(session);
+          IRAPISession_Release(session);
+        }
+
+        if (device) IRAPIDevice_Release(device);
+        if (enumdev) IRAPIEnumDevices_Release(enumdev);
+        if (desktop) IRAPIDesktop_Release(desktop);
+
 	return result;
 }

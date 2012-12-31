@@ -3,7 +3,7 @@
 #define _BSD_SOURCE
 #include "../lib/timezone.h"
 #include "../lib/generator.h"
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce_log.h>
 #include <errno.h>
 #include <stdio.h>
@@ -164,6 +164,11 @@ void dump_vtimezone(FILE* output, RRA_Timezone* tzi)/*{{{*/
 static bool get_rra_timezone_information(const char* argv0, RRA_Timezone* tzi, char* input)/*{{{*/
 {
   bool success = false;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  HRESULT hr;
 
   if (input)
   {
@@ -189,28 +194,67 @@ static bool get_rra_timezone_information(const char* argv0, RRA_Timezone* tzi, c
       fprintf(stderr, "%s: Unable to open time zone information file '%s': %s\n", 
           argv0, input, strerror(errno));
     }
+    return success;
   }
-  else
+
+
+
+
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
   {
-    HRESULT hr;
-
-    hr = CeRapiInit();
-    if (SUCCEEDED(hr))
-    {
-      if (rra_timezone_get(tzi, NULL))
-        success = true;
-      else
-        fprintf(stderr, "%s: Failed to get time zone information\n", argv0);
-
-      CeRapiUninit();
-    }
-    else
-    {
-      fprintf(stderr, "%s: Unable to connect to PDA: %s\n", 
-          argv0, synce_strerror(hr));
-    }
-
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+            argv0, hr, synce_strerror_from_hresult(hr));
+    goto exit;
   }
+
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+  {
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+        argv0, hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+  {
+    fprintf(stderr, "%s: Could not find device: %08x: %s\n", 
+        argv0, hr, synce_strerror_from_hresult(hr));
+    device = NULL;
+    goto exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+  {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+        argv0, hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+  {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+        argv0, hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (rra_timezone_get(tzi, session))
+    success = true;
+  else
+    fprintf(stderr, "%s: Failed to get time zone information\n", argv0);
+
+exit:
+  if (session)
+  {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
 
   return success;
 }/*}}}*/

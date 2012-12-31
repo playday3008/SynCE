@@ -25,7 +25,7 @@ static const char* PARTERSHIP_SECTION  = "partnership";
 struct _RRA_Matchmaker
 {
   HKEY keys[3];
-  RapiConnection *connection;
+  IRAPISession *session;
 };
  
 #define KEY_PARTNERS    0
@@ -33,7 +33,7 @@ struct _RRA_Matchmaker
 #define KEY_PARTNER_2   2
 #define KEY_COUNT       3
 
-RRA_Matchmaker* rra_matchmaker_new(RapiConnection *connection)
+RRA_Matchmaker* rra_matchmaker_new(IRAPISession *session)
 {
   HKEY partnersKey;
   RRA_Matchmaker* result = calloc(1, sizeof(RRA_Matchmaker));
@@ -44,9 +44,8 @@ RRA_Matchmaker* rra_matchmaker_new(RapiConnection *connection)
     return NULL;
   }
 
-  result->connection = connection;
-  if (result->connection)
-    rapi_connection_select(result->connection);
+  IRAPISession_AddRef(session);
+  result->session = session;
 
   WCHAR* name_wide = wstr_from_current(PARTNERS);
   if (!name_wide)
@@ -55,8 +54,8 @@ RRA_Matchmaker* rra_matchmaker_new(RapiConnection *connection)
     synce_error("Failed to convert registry key name to WSTR");
     return FALSE;
   }
-
-  LONG res = CeRegCreateKeyEx(HKEY_LOCAL_MACHINE,name_wide,0,NULL,0,0,NULL,&partnersKey,NULL);
+  
+  LONG res = IRAPISession_CeRegCreateKeyEx(result->session, HKEY_LOCAL_MACHINE,name_wide,0,NULL,0,0,NULL,&partnersKey,NULL);
 
   wstr_free_string(name_wide);
 
@@ -77,11 +76,10 @@ void rra_matchmaker_destroy(RRA_Matchmaker* matchmaker)
   {
     int i;
     
-    if (matchmaker->connection)
-      rapi_connection_select(matchmaker->connection);
     for (i = 0; i < KEY_COUNT; i++)
       if (matchmaker->keys[i])
-        CeRegCloseKey(matchmaker->keys[i]);
+        IRAPISession_CeRegCloseKey(matchmaker->session, matchmaker->keys[i]);
+    IRAPISession_Release(matchmaker->session);
 
     free(matchmaker);
   }
@@ -98,11 +96,17 @@ static bool rra_matchmaker_create_key(RRA_Matchmaker* matchmaker, uint32_t index
     }
     else
     {
-      if (matchmaker->connection)
-	rapi_connection_select(matchmaker->connection);
       char name[MAX_PATH];
       snprintf(name, sizeof(name), "%s\\P%i", PARTNERS, index);
-      return rapi_reg_create_key(HKEY_LOCAL_MACHINE, name, &matchmaker->keys[index]);
+
+      WCHAR* name_wide = wstr_from_current(name);
+      if (!name_wide)
+        return false;
+
+      LONG result = IRAPISession_CeRegCreateKeyEx(matchmaker->session, HKEY_LOCAL_MACHINE, name_wide, 0, NULL, 0, 0, NULL, &matchmaker->keys[index], NULL);
+      wstr_free_string(name_wide);
+
+      return ERROR_SUCCESS == result;
     }
   }
   else
@@ -120,11 +124,17 @@ static bool rra_matchmaker_open_key(RRA_Matchmaker* matchmaker, uint32_t index)
     }
     else
     {
-      if (matchmaker->connection)
-	rapi_connection_select(matchmaker->connection);
       char name[MAX_PATH];
       snprintf(name, sizeof(name), "%s\\P%i", PARTNERS, index);
-      return rapi_reg_open_key(HKEY_LOCAL_MACHINE, name, &matchmaker->keys[index]);
+
+      WCHAR* name_wide = wstr_from_current(name);
+      if (!name_wide)
+        return FALSE;
+
+      LONG result = IRAPISession_CeRegOpenKeyEx(matchmaker->session, HKEY_LOCAL_MACHINE, name_wide, 0, 0, &matchmaker->keys[index]);
+      wstr_free_string(name_wide);
+
+      return ERROR_SUCCESS == result;
     }
   }
   else
@@ -133,61 +143,122 @@ static bool rra_matchmaker_open_key(RRA_Matchmaker* matchmaker, uint32_t index)
 
 bool rra_matchmaker_set_current_partner(RRA_Matchmaker* matchmaker, uint32_t index)
 {
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
-  return 
-    (index == 1 || index == 2) &&
-    rapi_reg_set_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
+  if (!(index == 1 || index == 2))
+    return false;
+
+  WCHAR* name_wide = wstr_from_current(CURRENT_PARTNER);
+  if (!name_wide)
+    return FALSE;
+
+  LONG result = IRAPISession_CeRegSetValueEx(matchmaker->session, matchmaker->keys[KEY_PARTNERS], name_wide, 0, REG_DWORD, (BYTE*)&index, sizeof(DWORD));
+  wstr_free_string(name_wide);
+
+  return ERROR_SUCCESS == result;
 }
 
 bool rra_matchmaker_get_current_partner(RRA_Matchmaker* matchmaker, uint32_t* index)
 {
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
-  return 
-    rapi_reg_query_dword(matchmaker->keys[KEY_PARTNERS], CURRENT_PARTNER, index);
+  DWORD type;
+  DWORD size = sizeof(DWORD);
+  WCHAR* name_wide = wstr_from_current(CURRENT_PARTNER);
+  if (!name_wide)
+    return FALSE;
+
+  LONG result = IRAPISession_CeRegQueryValueEx(matchmaker->session, matchmaker->keys[KEY_PARTNERS], name_wide, NULL, &type, (LPBYTE)index, &size);
+  wstr_free_string(name_wide);
+
+  return
+    ERROR_SUCCESS == result &&
+    REG_DWORD == type &&
+    sizeof(DWORD) == size;
 }
 
 static bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t id)
 {
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
-  bool success = 
-    rra_matchmaker_create_key(matchmaker, index) &&
-    rapi_reg_set_dword(matchmaker->keys[index], PARTNER_ID, id);
+  if (!rra_matchmaker_create_key(matchmaker, index))
+    return false;
 
-  return success;
+  WCHAR* name_wide = wstr_from_current(PARTNER_ID);
+  if (!name_wide)
+    return FALSE;
+
+  LONG result = IRAPISession_CeRegSetValueEx(matchmaker->session, matchmaker->keys[index], name_wide, 0, REG_DWORD, (BYTE*)&id, sizeof(DWORD));
+  wstr_free_string(name_wide);
+
+  return ERROR_SUCCESS == result;
 }
 
 bool rra_matchmaker_get_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t* id)
 {
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
-  bool success = 
-    rra_matchmaker_open_key(matchmaker, index) &&
-    rapi_reg_query_dword(matchmaker->keys[index], PARTNER_ID, id);
+  if (!rra_matchmaker_open_key(matchmaker, index))
+    return false;
 
-  return success;
+  DWORD type;
+  DWORD size = sizeof(DWORD);
+  WCHAR* name_wide = wstr_from_current(PARTNER_ID);
+  if (!name_wide)
+    return FALSE;
+
+  LONG result = IRAPISession_CeRegQueryValueEx(matchmaker->session, matchmaker->keys[index], name_wide, NULL, &type, (LPBYTE)id, &size);
+  wstr_free_string(name_wide);
+
+  return
+    ERROR_SUCCESS == result &&
+    REG_DWORD == type &&
+    sizeof(DWORD) == size;
 }
 
 static bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, const char* name)
 {
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
-  bool success =
-    rra_matchmaker_open_key(matchmaker, index) &&
-    rapi_reg_set_string(matchmaker->keys[index], PARTNER_NAME, name);
+  if (!rra_matchmaker_open_key(matchmaker, index))
+    return false;
 
-  return success;
+  WCHAR* name_wide = wstr_from_current(PARTNER_NAME);
+  if (!name_wide)
+    return false;
+  WCHAR* value_wide = wstr_from_current(name);
+  if (!value_wide) {
+    wstr_free_string(name_wide);
+    return false;
+  }
+  DWORD size = wstrlen(value_wide);
+
+  LONG result = IRAPISession_CeRegSetValueEx(matchmaker->session, matchmaker->keys[index], name_wide, 0, REG_SZ, (BYTE*)value_wide, (size * 2) + 2);
+  wstr_free_string(name_wide);
+  wstr_free_string(value_wide);
+
+  return ERROR_SUCCESS == result;
 }
 
 bool rra_matchmaker_get_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, char** name)
 {
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
-  bool success = 
-    rra_matchmaker_open_key(matchmaker, index) &&
-    rapi_reg_query_string(matchmaker->keys[index], PARTNER_NAME, name);
+  if (!rra_matchmaker_open_key(matchmaker, index))
+    return false;
+
+  bool success = false;
+  DWORD type;
+  DWORD size = 0;
+  WCHAR* unicode = NULL;
+  WCHAR* name_wide = wstr_from_current(PARTNER_NAME);
+  if (!name_wide)
+    return FALSE;
+
+  LONG result = IRAPISession_CeRegQueryValueEx(matchmaker->session, matchmaker->keys[index], name_wide, NULL, &type, NULL, &size);
+
+  if (ERROR_SUCCESS == result && REG_SZ == type)
+  {
+    unicode = calloc(1, size);
+    result = IRAPISession_CeRegQueryValueEx(matchmaker->session, matchmaker->keys[index], name_wide, NULL, &type, (LPBYTE)unicode, &size);
+  }
+
+  if (ERROR_SUCCESS == result && REG_SZ == type)
+  {
+    *name = wstr_to_current(unicode);
+    success = true;
+  }
+
+  free(unicode);
+  wstr_free_string(name_wide);
 
   return success;	
 }
@@ -221,9 +292,6 @@ bool rra_matchmaker_new_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
     synce_error("Invalid partnership index: %i", index);
     goto exit;
   }
-
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
 
   if (!rra_matchmaker_get_partner_id(matchmaker, index, &id))
     id = 0;
@@ -300,6 +368,10 @@ bool rra_matchmaker_new_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
       goto exit;
     }
 
+    IRAPIDevice *device = IRAPISession_get_device(matchmaker->session);
+    const char *name = IRAPIDevice_get_name(device);
+    IRAPIDevice_Release(device);
+
     fprintf(file,
         "[device]\n"
         "name=%s\n"
@@ -309,7 +381,7 @@ bool rra_matchmaker_new_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
         "%s=%i\n"
         "%s=%s\n"
         ,
-        rapi_connection_get_name(NULL),
+        name,
         PARTERSHIP_SECTION,
         CURRENT_PARTNER,  index,
         PARTNER_ID,       id,
@@ -335,9 +407,6 @@ bool rra_matchmaker_clear_partnership(RRA_Matchmaker* matchmaker, uint32_t index
     synce_error("Bad index: %i", index);
     goto exit;
   }
-
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
 
   if (!rra_matchmaker_get_partner_id(matchmaker, index, &id))
     id = 0;
@@ -372,9 +441,6 @@ bool rra_matchmaker_have_partnership_at(RRA_Matchmaker* matchmaker, uint32_t ind
   bool success = false;
   uint32_t id;
   SynceIni* ini = NULL;
-
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
 
   if (!rra_matchmaker_get_partner_id(matchmaker, index, &id))
     id = 0;
@@ -453,9 +519,6 @@ bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* ind
   bool success = false;
   int i;
   uint32_t id;
-
-  if (matchmaker->connection)
-    rapi_connection_select(matchmaker->connection);
 
   if ((success = rra_matchmaker_have_partnership(matchmaker, index)))
     goto exit;

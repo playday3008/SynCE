@@ -182,12 +182,12 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self)/*{{{*/
   }
 }/*}}}*/
 
-bool rra_syncmgr_connect(RRA_SyncMgr* self, RapiConnection *connection)/*{{{*/
+bool rra_syncmgr_connect(RRA_SyncMgr* self, IRAPISession *session)/*{{{*/
 {
   if (self)
   {
     return 
-      rrac_connect(self->rrac, connection) &&
+      rrac_connect(self->rrac, session) &&
       rra_syncmgr_retrieve_types(self);
   }
   else
