@@ -11,7 +11,7 @@
 #ifndef CACHE_H
 #define CACHE_H
 
-#include <rapi.h>
+#include <synce.h>
 
 
 typedef struct cache {

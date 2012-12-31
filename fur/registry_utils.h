@@ -1,6 +1,5 @@
 #ifndef REGISTRY_UTILS_H
 #define REGISTRY_UTILS_H
-#include <rapi.h>
 #include <synce.h>
 #include <fuse.h>
 

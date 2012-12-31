@@ -10,7 +10,8 @@
 */
 #ifndef FUR_UTILS_H
 #define FUR_UTILS_H
-#include <rapi.h>
+#include <synce.h>
+#include <rapitypes.h>
 #include "cache.h"
 #include <stdio.h>
 

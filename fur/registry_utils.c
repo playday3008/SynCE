@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h> 
+#include <rapi.h> 
 
 #include "special_names.h"
 #include "macros.h"

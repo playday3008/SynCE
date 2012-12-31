@@ -97,6 +97,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <rapi.h>
 
 #include "macros.h"
 #include "special.h"

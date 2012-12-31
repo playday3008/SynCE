@@ -12,7 +12,7 @@
 #define POWER_H
 
 
-#include <rapi.h>
+#include <rapitypes.h>
 #include "cache.h"
 
 // Calculate the size of the power message file.

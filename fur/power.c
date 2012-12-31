@@ -13,6 +13,7 @@
 #include "macros.h"
 #include <stdlib.h>
 #include <string.h>
+#include <rapi.h>
 
 int power_message_size;
 
