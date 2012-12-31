@@ -13,7 +13,7 @@ import sys
 cdef extern from "Python.h":
     object PyString_FromStringAndSize ( char *, int )
     object PyCObject_FromVoidPtr(void* cobj, void (*destr)(void *))
-    
+
 cdef extern from "stdlib.h":
     void *malloc(size_t size) nogil
     void *realloc(void *ptr, size_t size) nogil
@@ -31,69 +31,95 @@ cdef extern from "synce.h":
 cdef extern from "synce_log.h":
     void synce_log_set_level(int level) nogil
 
-cdef extern from "rapi.h":
-    ctypedef void RapiConnection
+cdef extern from "rapi2.h":
+    ctypedef void IRAPISession
+    ctypedef void IRAPIDevice
+    ctypedef void IRAPIEnumDevices
+    ctypedef void IRAPIDesktop
+    ctypedef struct GUID:
+        DWORD Data1
+        WORD Data2
+        WORD Data3
+        BYTE Data4
+    ctypedef GUID RAPIDEVICEID
+    ctypedef struct RAPI_DEVICEINFO:
+        RAPIDEVICEID DeviceId
+        DWORD dwOsVersionMajor
+        DWORD dwOsVersionMinor
+        char *bstrName
+        char *bstrPlatform
 
     # connection functions
-    RapiConnection *rapi_connection_from_name(char *device_name) nogil
-    void rapi_connection_select(RapiConnection *connection) nogil
-    void rapi_connection_destroy(RapiConnection *connection) nogil
-    HRESULT CeRapiInit() nogil
-    STDAPI CeRapiUninit() nogil
+    HRESULT IRAPIDesktop_Get(IRAPIDesktop **ppIRAPIDesktop) nogil
+    void IRAPIDesktop_Release(IRAPIDesktop *self) nogil
+    HRESULT IRAPIDesktop_EnumDevices(IRAPIDesktop *self, IRAPIEnumDevices** ppIEnum) nogil
+
+    HRESULT IRAPIEnumDevices_Next(IRAPIEnumDevices *self, IRAPIDevice** ppIDevice) nogil
+    void IRAPIEnumDevices_Release(IRAPIEnumDevices *self) nogil
+
+    void IRAPIDevice_AddRef(IRAPIDevice *self) nogil
+    void IRAPIDevice_Release(IRAPIDevice *self) nogil
+    HRESULT IRAPIDevice_CreateSession(IRAPIDevice *self, IRAPISession** ppISession) nogil
+    HRESULT IRAPIDevice_GetDeviceInfo(IRAPIDevice *self, RAPI_DEVICEINFO* pDevInfo) nogil
+
+    void IRAPISession_Release(IRAPISession *session) nogil
+    HRESULT IRAPISession_CeRapiFreeBuffer(IRAPISession *session, LPVOID Buffer) nogil
+    HRESULT IRAPISession_CeRapiInit(IRAPISession *session) nogil
+    HRESULT IRAPISession_CeRapiUninit(IRAPISession *session) nogil
 
     # registry functions
-    LONG CeRegCreateKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition) nogil
-    LONG CeRegOpenKeyEx(HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult) nogil
-    LONG CeRegCloseKey(HKEY hKey) nogil
-    LONG CeRegDeleteKey(HKEY hKey, LPCWSTR lpszSubKey) nogil
-    LONG CeRegDeleteValue(HKEY hKey, LPCWSTR lpszValueName) nogil
-    LONG CeRegQueryValueEx(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
-    LONG CeRegSetValueEx(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData) nogil
-    LONG CeRegQueryInfoKey ( HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime ) nogil
+    LONG IRAPISession_CeRegCreateKeyEx(IRAPISession *session, HKEY hKey, LPCWSTR lpszSubKey, DWORD Reserved, LPWSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition) nogil
+    LONG IRAPISession_CeRegOpenKeyEx(IRAPISession *session, HKEY hKey, LPCWSTR lpszSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult) nogil
+    LONG IRAPISession_CeRegCloseKey(IRAPISession *session, HKEY hKey) nogil
+    LONG IRAPISession_CeRegDeleteKey(IRAPISession *session, HKEY hKey, LPCWSTR lpszSubKey) nogil
+    LONG IRAPISession_CeRegDeleteValue(IRAPISession *session, HKEY hKey, LPCWSTR lpszValueName) nogil
+    LONG IRAPISession_CeRegQueryValueEx(IRAPISession *session, HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
+    LONG IRAPISession_CeRegSetValueEx(IRAPISession *session, HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE *lpData, DWORD cbData) nogil
+    LONG IRAPISession_CeRegQueryInfoKey (IRAPISession *session, HKEY hKey, LPWSTR lpClass, LPDWORD lpcbClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen, LPDWORD lpcbMaxClassLen, LPDWORD lpcValues, LPDWORD lpcbMaxValueNameLen, LPDWORD lpcbMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime ) nogil
 
-    LONG CeRegEnumKeyEx( HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcbName, LPDWORD lpReserved, LPWSTR lpClass, LPDWORD lpcbClass, PFILETIME lpftLastWriteTime) nogil
-    LONG CeRegEnumValue( HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, LPDWORD lpcbValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
+    LONG IRAPISession_CeRegEnumKeyEx(IRAPISession *session, HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcbName, LPDWORD lpReserved, LPWSTR lpClass, LPDWORD lpcbClass, PFILETIME lpftLastWriteTime) nogil
+    LONG IRAPISession_CeRegEnumValue(IRAPISession *session, HKEY hKey, DWORD dwIndex, LPWSTR lpszValueName, LPDWORD lpcbValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) nogil
 
 
 
     # sync functions
-    BOOL CeStartReplication() nogil
-    HRESULT CeSyncStart(LPCWSTR params) nogil
-    HRESULT CeSyncResume() nogil
-    HRESULT CeSyncPause() nogil
-    HRESULT CeSyncTimeToPc() nogil
+    BOOL IRAPISession_CeStartReplication(IRAPISession *session) nogil
+    HRESULT IRAPISession_CeSyncStart(IRAPISession *session, LPCWSTR params) nogil
+    HRESULT IRAPISession_CeSyncResume(IRAPISession *session) nogil
+    HRESULT IRAPISession_CeSyncPause(IRAPISession *session) nogil
+    HRESULT IRAPISession_CeSyncTimeToPc(IRAPISession *session) nogil
 
     # miscellaneous functions
-    HRESULT CeProcessConfig(LPCWSTR config, DWORD flags, LPWSTR* reply) nogil
-    BOOL CeGetSystemPowerStatusEx(PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh) nogil
-    DWORD CeGetDiskFreeSpaceEx( LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes) nogil
-    BOOL CeFindAllFiles( LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray) nogil
-    BOOL CeCreateProcess( LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation) nogil
-    
-    VOID CeGetSystemInfo( LPSYSTEM_INFO lpSystemInfo) nogil
-    BOOL CeGetVersionEx( LPCEOSVERSIONINFO lpVersionInformation) nogil
+    HRESULT IRAPISession_CeProcessConfig(IRAPISession *session, LPCWSTR config, DWORD flags, LPWSTR* reply) nogil
+    BOOL IRAPISession_CeGetSystemPowerStatusEx(IRAPISession *session, PSYSTEM_POWER_STATUS_EX pSystemPowerStatus, BOOL refresh) nogil
+    DWORD IRAPISession_CeGetDiskFreeSpaceEx(IRAPISession *session, LPCTSTR _lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailable, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes) nogil
+    BOOL IRAPISession_CeFindAllFiles(IRAPISession *session, LPCWSTR szPath, DWORD dwFlags, LPDWORD lpdwFoundCount, LPLPCE_FIND_DATA ppFindDataArray) nogil
+    BOOL IRAPISession_CeCreateProcess(IRAPISession *session, LPCWSTR lpApplicationName, LPCWSTR lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPWSTR lpCurrentDirectory, void* lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation) nogil
+
+    VOID IRAPISession_CeGetSystemInfo(IRAPISession *session, LPSYSTEM_INFO lpSystemInfo) nogil
+    BOOL IRAPISession_CeGetVersionEx(IRAPISession *session, LPCEOSVERSIONINFO lpVersionInformation) nogil
 
     # file access
-    BOOL CeCloseHandle(HANDLE hObject) nogil
-    HANDLE CeCreateFile( LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) nogil
-    BOOL CeWriteFile( HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) nogil
-    BOOL CeReadFile( HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) nogil
-    DWORD CeSetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) nogil
+    BOOL IRAPISession_CeCloseHandle(IRAPISession *session, HANDLE hObject) nogil
+    HANDLE IRAPISession_CeCreateFile(IRAPISession *session, LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) nogil
+    BOOL IRAPISession_CeWriteFile(IRAPISession *session, HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) nogil
+    BOOL IRAPISession_CeReadFile(IRAPISession *session, HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) nogil
+    DWORD IRAPISession_CeSetFilePointer(IRAPISession *session, HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) nogil
 
     # error handling
-    HRESULT CeRapiGetError() nogil
-    DWORD CeGetLastError() nogil
+    HRESULT IRAPISession_CeRapiGetError(IRAPISession *session) nogil
+    DWORD IRAPISession_CeGetLastError(IRAPISession *session) nogil
 
     # connection parameters
-    char *rapi_connection_get_name(RapiConnection* connection) nogil
-    int rapi_connection_get_os_version(RapiConnection* connection, unsigned int *os_major, unsigned int *os_minor) nogil
-    int rapi_connection_get_build_number(RapiConnection* connection) nogil
-    int rapi_connection_get_processor_type(RapiConnection* connection) nogil
-    char *rapi_connection_get_os_name(RapiConnection* connection) nogil
-    char *rapi_connection_get_model(RapiConnection* connection) nogil
-    char *rapi_connection_get_device_ip(RapiConnection* connection) nogil
-    char *rapi_connection_get_local_ip(RapiConnection* connection) nogil
-    int rapi_connection_get_fd(RapiConnection* connection) nogil
+
+    char * IRAPIDevice_get_name(IRAPIDevice *self) nogil
+    int IRAPIDevice_get_os_version(IRAPIDevice *self, unsigned int *os_major, unsigned int *os_minor) nogil
+    unsigned int IRAPIDevice_get_build_number(IRAPIDevice *self) nogil
+    unsigned int IRAPIDevice_get_processor_type(IRAPIDevice *self) nogil
+    char * IRAPIDevice_get_os_name(IRAPIDevice *self) nogil
+    char * IRAPIDevice_get_model(IRAPIDevice *self) nogil
+    char * IRAPIDevice_get_device_ip(IRAPIDevice *self) nogil
+    char * IRAPIDevice_get_local_ip(IRAPIDevice *self) nogil
 
 #
 # Public constants
@@ -113,6 +139,7 @@ SYNCE_LOG_LEVEL_DEFAULT = 2
 
 # from synce_sys_error.h
 ERROR_SUCCESS           = 0
+ERROR_NO_MORE_ITEMS     = 259
 
 # from synce_types.h
 FALSE                   = 0
@@ -185,7 +212,7 @@ CSIDL_DESKTOPDIRECTORY       = 0x0010
 CSIDL_FONTS                  = 0x0014
 CSIDL_FAVORITES              = 0x0016
 
-#dwShareMode 
+#dwShareMode
 FILE_SHARE_READ              = 0x00000001
 
 # dwMoveMethod
@@ -193,7 +220,7 @@ FILE_BEGIN                   = 0
 FILE_CURRENT                 = 1
 FILE_END                     = 2
 
-#dwFlagsAndAttributes 
+#dwFlagsAndAttributes
 FILE_ATTRIBUTE_READONLY      = 0x00000001
 FILE_ATTRIBUTE_HIDDEN        = 0x00000002
 FILE_ATTRIBUTE_SYSTEM        = 0x00000004
@@ -219,33 +246,43 @@ FILE_ATTRIBUTE_SHORTCUT      = 0x00020000
 FILE_ATTRIBUTE_6             = 0x00040000
 FILE_ATTRIBUTE_7             = 0x00080000
 
+# declaration of RAPISession for other classes
+cdef class RAPISession
 
 #
 # RAPIError is a subclass of Exception
 
 class RAPIError(Exception):
     "An error resulting from a RAPI call"
-    def __init__(self, err_code=None):
+    def __init__(self, err_code=None, hresult=None, RAPISession session=None, message=None):
         cdef HRESULT hr
         cdef DWORD last_error
 
         if err_code != None:
             self.err_code = err_code
-        else:
-            hr = CeRapiGetError()
+        elif hresult != None:
+            self.err_code = ((hresult) & 0xFFFF)
+        elif session != None:
+            hr = IRAPISession_CeRapiGetError(session.rapi_conn)
             if hr < 0:
-                self.err_code = hr
+                self.err_code = ((hr) & 0xFFFF)
             else:
-                last_error = CeGetLastError()
+                last_error = IRAPISession_CeGetLastError(session.rapi_conn)
                 self.err_code = last_error
+        else:
+                self.err_code = 0
+        self.message = message
 
     def __str__(self):
-        return str(self.err_code)+": "+str(synce_strerror(self.err_code))
+        if self.message == None:
+            return str(self.err_code)+": "+str(synce_strerror(self.err_code))
+        else:
+            return self.message+": "+str(self.err_code)+": "+str(synce_strerror(self.err_code))
 
 
 class RegKey(object):
     """Registry key entry from a Windows Mobile Device"""
-    def __init__(self, rapi_session, handle, disposition=REG_OPENED_EXISTING_KEY):
+    def __init__(self, RAPISession rapi_session not None, handle, disposition=REG_OPENED_EXISTING_KEY):
         self.rapi_session = rapi_session
         self.handle = handle
         self.disposition = disposition
@@ -256,110 +293,112 @@ class RegKey(object):
 
     def keys(self):
         """Returns an array containing all the subkeys"""
-        result = [] 
+        result = []
 
         cdef DWORD index
         cdef LPWSTR name
         cdef DWORD name_len
-       
-        try:
-            self.rapi_session.__session_select__()
-            
-            name = <LPWSTR> malloc(255) 
+        cdef RAPISession session
 
-            finished = False 
-            
-            index = 0 
+        session = self.rapi_session
+
+        try:
+            name = <LPWSTR> malloc(255)
+
+            finished = False
+
+            index = 0
 
             while not finished:
                 name_len = 254
-                
-                retval =  CeRegEnumKeyEx( self.handle, index, name, &name_len, NULL, NULL, NULL, NULL) 
+
+                retval = IRAPISession_CeRegEnumKeyEx(session.rapi_conn, self.handle, index, name, &name_len, NULL, NULL, NULL, NULL)
 
                 if retval == 259L:
                     finished = True
 
-                
+
                 if not finished:
                     if retval != ERROR_SUCCESS:
-                            raise RAPIError(retval)
-                    
+                        raise RAPIError(retval)
+
                     result.append( wstr_to_utf8(name) )
-                
+
                     index = index + 1
-            
-            return result 
+
+            return result
 
         finally:
             if name != NULL:
-                free(name) 
+                free(name)
 
     def keys_and_childcount(self, query_child_count=False ):
         """Returns an array containing all the subkeys"""
-        result = [] 
+        result = []
 
         cdef DWORD index
         cdef LPWSTR name
         cdef DWORD name_len
-        cdef DWORD key_count 
-       
-        try:
-            self.rapi_session.__session_select__()
-            
-            name = <LPWSTR> malloc(255) 
+        cdef DWORD key_count
+        cdef RAPISession session
 
-            finished = False 
-            
-            index = 0 
-            
-            #-1 means that no child count information is requested. 
+        session = self.rapi_session
+
+        try:
+            name = <LPWSTR> malloc(255)
+
+            finished = False
+
+            index = 0
+
+            #-1 means that no child count information is requested.
             #0 cannot be used, because this would collide with nodes having 0 childs
-            key_count = -1 
+            key_count = -1
 
             while not finished:
                 name_len = 254
-                
-                retval =  CeRegEnumKeyEx( self.handle, index, name, &name_len, NULL, NULL, NULL, NULL) 
+
+                retval = IRAPISession_CeRegEnumKeyEx(session.rapi_conn, self.handle, index, name, &name_len, NULL, NULL, NULL, NULL)
 
                 if retval == 259L:
                     finished = True
 
-                
+
                 if not finished:
                     if retval != ERROR_SUCCESS:
                             raise RAPIError(retval)
-                    
+
                     if query_child_count:
                         sub_key = self.open_sub_key( wstr_to_utf8(name) )
                         (key_count ,_) = sub_key.number_of_keys_and_values()
                         sub_key.close()
-                        
+
                     result.append( (wstr_to_utf8(name) , key_count ) )
-                
+
                     index = index + 1
-            
-            return result 
+
+            return result
 
         finally:
             if name != NULL:
-                free(name) 
+                free(name)
 
-    
+
 
 
     def values(self):
-        """Returns a list of tuples (value_name, value_type, value_data) of 
+        """Returns a list of tuples (value_name, value_type, value_data) of
         values stored in the current key"""
-       
+
 
         #First determine the maximum size for the buffer that we need
         cdef DWORD data_max_size
-        
-        
-        self.rapi_session.__session_select__()
-        retval = CeRegQueryInfoKey( self.handle, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &data_max_size , NULL, NULL) 
-        
-        result = [] 
+        cdef RAPISession session
+
+        session = self.rapi_session
+        retval = IRAPISession_CeRegQueryInfoKey(session.rapi_conn, self.handle, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &data_max_size , NULL, NULL)
+
+        result = []
 
         cdef DWORD index
         cdef LPWSTR name
@@ -367,34 +406,34 @@ class RegKey(object):
 
         cdef DWORD type
         cdef DWORD data_size
-        cdef LPBYTE data 
+        cdef LPBYTE data
         cdef LPDWORD dw_ptr
 
         try:
-            name = <LPWSTR> malloc(255) 
-           
+            name = <LPWSTR> malloc(255)
+
             data = <LPBYTE> malloc(data_max_size)
 
-            
-            finished = False 
-            
-            index = 0 
+
+            finished = False
+
+            index = 0
 
             while not finished:
                 name_len = 254
                 data_size = data_max_size
 
-                retval =  CeRegEnumValue( self.handle, index, name, &name_len, NULL, &type, data, &data_size) 
+                retval = IRAPISession_CeRegEnumValue(session.rapi_conn, self.handle, index, name, &name_len, NULL, &type, data, &data_size)
 
                 #If return value is 259L, then we are finished
                 if retval == 259L:
                     finished = True
 
-                
+
                 if not finished:
                     if retval != ERROR_SUCCESS:
                             raise RAPIError(retval)
-                    
+
 
                     if type == REG_NONE:
                         value = PyString_FromStringAndSize(<char *>data, data_size)
@@ -416,26 +455,20 @@ class RegKey(object):
                     else:
                         value = PyString_FromStringAndSize(<char *>data, data_size)
 
-                    
-                    
-                    
-                    
-                    
-                    
                     result.append( (wstr_to_utf8(name) , type,value)    )
-                
+
                     index = index + 1
-            
-            return result 
+
+            return result
 
         finally:
             if name != NULL:
-                free(name) 
-                free(data)      
+                free(name)
+                free(data)
 
     def rename_value(self, old_value_name, new_value_name):
         """Rename a value contained in this key"""
-        self.copy_value(old_value_name, self, new_value_name) 
+        self.copy_value(old_value_name, self, new_value_name)
         self.delete_value( old_value_name )
 
 
@@ -455,15 +488,12 @@ class RegKey(object):
             new_sub_key.close()
 
 
-
-
-
     def rename_key(self, old_key_name, new_key_name):
         """Rename a sub key of the current key
 
         This is done by creating a new key and recursively copy the
         contents of the original key to this new key"""
-       
+
         old_key = self.open_sub_key( old_key_name )
 
         new_key = self.create_sub_key( new_key_name )
@@ -474,53 +504,48 @@ class RegKey(object):
         new_key.close()
 
         self.delete_sub_key( old_key_name )
-        
-
-
-
-
-
 
 
     def copy_value(self, value_name, destination_key, destination_value_name=None):
-        """Copy the value value_name to the registry key denoted by the 
-        RegKey object destination_key. 
+        """Copy the value value_name to the registry key denoted by the
+        RegKey object destination_key.
 
         If the destination_value_name is not given, the same name is used"""
-        
+
         cdef LPWSTR value_name_w
         cdef LPWSTR destination_value_name_w
         cdef LPBYTE data
         cdef DWORD data_size
         cdef DWORD data_type
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         value_name_w = NULL
         destination_value_name_w = NULL
         data = NULL
-        
-        try: 
-            self.rapi_session.__session_select__()
 
+        try:
             if destination_value_name is None:
                 destination_value_name = value_name
 
 
             value_name_w = wstr_from_utf8(value_name)
-            
-            data_size = 0  
-            
+
+            data_size = 0
+
             #First determine the size of the buffer we need to allocate
-            retval = CeRegQueryValueEx(self.handle, value_name_w , NULL, NULL, NULL, &data_size) 
+            retval = IRAPISession_CeRegQueryValueEx(session.rapi_conn, self.handle, value_name_w , NULL, NULL, NULL, &data_size)
 
             if retval != ERROR_SUCCESS:
                 raise RAPIError(retval)
-            
+
 
             #Now create buffer for the data and query the data
 
             data = <LPBYTE> malloc(data_size)
 
-            retval = CeRegQueryValueEx(self.handle, value_name_w , NULL,
+            retval = IRAPISession_CeRegQueryValueEx(session.rapi_conn, self.handle, value_name_w , NULL,
                                        &data_type, data, &data_size)
 
             if retval != ERROR_SUCCESS:
@@ -529,10 +554,10 @@ class RegKey(object):
 
             destination_value_name_w = wstr_from_utf8(destination_value_name)
 
-            
-           
+
+
             #Create a value in the destination_key
-            retval = CeRegSetValueEx(destination_key.handle , destination_value_name_w , 0 , data_type, data, data_size)
+            retval = IRAPISession_CeRegSetValueEx(session.rapi_conn, destination_key.handle , destination_value_name_w , 0 , data_type, data, data_size)
 
             if retval != ERROR_SUCCESS:
                 raise RAPIError(retval)
@@ -556,21 +581,20 @@ class RegKey(object):
 
 
     def number_of_keys_and_values(self):
-        """Returns the number of child keys and number of values stored in 
+        """Returns the number of child keys and number of values stored in
         this key."""
 
         cdef DWORD number_of_keys
         cdef DWORD number_of_values
+        cdef RAPISession session
 
-        self.rapi_session.__session_select__()
-        retval = CeRegQueryInfoKey( self.handle, NULL, NULL, NULL, &number_of_keys, NULL, NULL, &number_of_values, NULL, NULL, NULL, NULL) 
-        
+        session = self.rapi_session
+        retval = IRAPISession_CeRegQueryInfoKey(session.rapi_conn, self.handle, NULL, NULL, NULL, &number_of_keys, NULL, NULL, &number_of_values, NULL, NULL, NULL, NULL)
+
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
 
-        return (number_of_keys, number_of_values) 
-
-
+        return (number_of_keys, number_of_values)
 
 
     def open_sub_key(self, sub_key):
@@ -582,15 +606,16 @@ class RegKey(object):
 
         cdef LPWSTR sub_key_w
         cdef HKEY opened_key
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         if sub_key != None:
             sub_key_w = wstr_from_utf8(sub_key)
         else:
             sub_key_w = NULL
 
-        self.rapi_session.__session_select__()
-
-        retval = CeRegOpenKeyEx(self.handle, sub_key_w, 0, 0, &opened_key)
+        retval = IRAPISession_CeRegOpenKeyEx(session.rapi_conn, self.handle, sub_key_w, 0, 0, &opened_key)
 
         if sub_key_w != NULL:
             wstr_free_string(sub_key_w)
@@ -612,6 +637,9 @@ class RegKey(object):
         cdef DWORD disposition
         cdef LPWSTR sub_key_w
         cdef LPWSTR key_class_w
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         if sub_key != None:
             sub_key_w = wstr_from_utf8(sub_key)
@@ -620,9 +648,7 @@ class RegKey(object):
 
         key_class_w = wstr_from_utf8(key_class)
 
-        self.rapi_session.__session_select__()
-
-        retval = CeRegCreateKeyEx(self.handle, sub_key_w, 0, key_class_w,
+        retval = IRAPISession_CeRegCreateKeyEx(session.rapi_conn, self.handle, sub_key_w, 0, key_class_w,
                                   0, 0, NULL, &new_key, &disposition)
 
         if sub_key_w != NULL:
@@ -681,6 +707,9 @@ class RegKey(object):
         cdef LPBYTE data
         cdef DWORD data_size
         cdef LPDWORD dw_ptr
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         name_w = NULL
         data = NULL
@@ -691,10 +720,8 @@ class RegKey(object):
             else:
                 name_w = NULL
 
-            self.rapi_session.__session_select__()
-
             data_size = 0
-            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+            retval = IRAPISession_CeRegQueryValueEx(session.rapi_conn, self.handle, name_w, NULL,
                                        &type, NULL, &data_size)
 
             if retval != ERROR_SUCCESS:
@@ -702,7 +729,7 @@ class RegKey(object):
 
             data = <LPBYTE> malloc(data_size)
 
-            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+            retval = IRAPISession_CeRegQueryValueEx(session.rapi_conn, self.handle, name_w, NULL,
                                        &type, data, &data_size)
 
 
@@ -730,8 +757,6 @@ class RegKey(object):
             else:
                 value = PyString_FromStringAndSize(<char *>data, data_size)
 
-            
-
             return (type,value)
         finally:
             if name_w != NULL:
@@ -755,6 +780,9 @@ class RegKey(object):
         cdef LPBYTE data
         cdef DWORD data_size
         cdef LPDWORD dw_ptr
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         name_w = NULL
         data = NULL
@@ -765,10 +793,8 @@ class RegKey(object):
             else:
                 name_w = NULL
 
-            self.rapi_session.__session_select__()
-
             data_size = 0
-            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+            retval = IRAPISession_CeRegQueryValueEx(session.rapi_conn, self.handle, name_w, NULL,
                                        &type, NULL, &data_size)
 
             if retval != ERROR_SUCCESS:
@@ -776,7 +802,7 @@ class RegKey(object):
 
             data = <LPBYTE> malloc(data_size)
 
-            retval = CeRegQueryValueEx(self.handle, name_w, NULL,
+            retval = IRAPISession_CeRegQueryValueEx(session.rapi_conn, self.handle, name_w, NULL,
                                        &type, data, &data_size)
 
             if retval != ERROR_SUCCESS:
@@ -812,7 +838,7 @@ class RegKey(object):
 
 
 
-        
+
 
     def set_value(self, value_name, value_data, value_type=None):
         """Set a value contained in this key
@@ -824,6 +850,9 @@ class RegKey(object):
         cdef LPWSTR name_w
         cdef LPBYTE data
         cdef DWORD data_size
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         name_w = NULL
         data = NULL
@@ -850,9 +879,7 @@ class RegKey(object):
             else:
                 raise RAPIError(E_NOTIMPL)
 
-            self.rapi_session.__session_select__()
-
-            retval = CeRegSetValueEx(self.handle, name_w, 0, value_type, data, data_size)
+            retval = IRAPISession_CeRegSetValueEx(session.rapi_conn, self.handle, name_w, 0, value_type, data, data_size)
 
             if retval != ERROR_SUCCESS:
                 raise RAPIError(retval)
@@ -867,7 +894,7 @@ class RegKey(object):
                 else:
                     free(data)
 
-    
+
 
     def delete_sub_key(self, sub_key):
         """Delete a sub key of this key.
@@ -877,11 +904,12 @@ class RegKey(object):
         There is no return value."""
 
         cdef LPWSTR key_w
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         key_w = wstr_from_utf8(sub_key)
-        self.rapi_session.__session_select__()
-
-        retval = CeRegDeleteKey(self.handle, key_w)
+        retval = IRAPISession_CeRegDeleteKey(session.rapi_conn, self.handle, key_w)
         wstr_free_string(key_w)
 
         if retval != ERROR_SUCCESS:
@@ -896,15 +924,16 @@ class RegKey(object):
         no return value."""
 
         cdef LPWSTR name_w
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         if value_name != None:
             name_w = wstr_from_utf8(value_name)
         else:
             name_w = NULL
 
-        self.rapi_session.__session_select__()
-
-        retval = CeRegDeleteValue(self.handle, name_w)
+        retval = IRAPISession_CeRegDeleteValue(session.rapi_conn, self.handle, name_w)
 
         if name_w != NULL:
             wstr_free_string(name_w)
@@ -921,9 +950,11 @@ class RegKey(object):
         if self.handle == 0x80000000 or self.handle == 0x80000001 or self.handle == 0x80000002 or self.handle == 0x80000003 or self.handle == 0:
             return
 
-        self.rapi_session.__session_select__()
+        cdef RAPISession session
 
-        retval = CeRegCloseKey(self.handle)
+        session = self.rapi_session
+
+        retval = IRAPISession_CeRegCloseKey(session.rapi_conn, self.handle)
         self.handle = 0
         if retval != ERROR_SUCCESS:
             raise RAPIError(retval)
@@ -934,7 +965,7 @@ class RAPIFile(object):
 
     This attempts to be as close as possible to a standard Python file-like object"""
 
-    def __init__(self, rapi_session, handle, filename, mode):
+    def __init__(self, RAPISession rapi_session not None, handle, filename, mode):
         self.rapi_session = rapi_session
         self.handle = handle
         self.name = filename
@@ -954,6 +985,9 @@ class RAPIFile(object):
         cdef LPBYTE buffer
         cdef BOOL retval
         cdef DWORD total_read
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         total_read = 0
 
@@ -966,12 +1000,12 @@ class RAPIFile(object):
         buffer = NULL
 
         while TRUE:
-            retval = CeReadFile(self.handle, readbuf, bytes_to_read, &bytes_read, NULL)
+            retval = IRAPISession_CeReadFile(session.rapi_conn, self.handle, readbuf, bytes_to_read, &bytes_read, NULL)
 
             if retval == FALSE:
                 free(readbuf)
                 free(buffer)
-                raise RAPIError
+                raise RAPIError(session=self.rapi_session)
 
             if bytes_read == 0:
                 break
@@ -1007,16 +1041,19 @@ class RAPIFile(object):
         cdef DWORD bytes_to_write
         cdef DWORD bytes_written
         cdef BOOL retval
+        cdef RAPISession session
+
+        session = self.rapi_session
 
         hFile = self.handle
         lpBuffer = buffer
         bytes_to_write = len(buffer)
 
         with nogil:
-            retval = CeWriteFile(hFile, lpBuffer, bytes_to_write, &bytes_written, NULL)
+            retval = IRAPISession_CeWriteFile(session.rapi_conn, hFile, lpBuffer, bytes_to_write, &bytes_written, NULL)
 
         if retval == FALSE:
-            raise RAPIError
+            raise RAPIError(session=self.rapi_session)
 
         return bytes_written
 
@@ -1024,10 +1061,13 @@ class RAPIFile(object):
         """Return the position of the file pointer."""
 
         cdef DWORD retval
+        cdef RAPISession session
 
-        retval = CeSetFilePointer(self.handle, 0, NULL, FILE_CURRENT);
+        session = self.rapi_session
+
+        retval = IRAPISession_CeSetFilePointer(session.rapi_conn, self.handle, 0, NULL, FILE_CURRENT);
         if retval == 0xFFFFFFFF:
-            raise RAPIError
+            raise RAPIError(session=self.rapi_session)
 
         return retval
 
@@ -1035,45 +1075,98 @@ class RAPIFile(object):
         """ Set the position of the file pointer."""
 
         cdef DWORD retval
+        cdef RAPISession session
 
-        retval = CeSetFilePointer(self.handle, offset, NULL, whence);
+        session = self.rapi_session
+
+        retval = IRAPISession_CeSetFilePointer(session.rapi_conn, self.handle, offset, NULL, whence);
         if retval == 0xFFFFFFFF:
-            raise RAPIError
+            raise RAPIError(session=self.rapi_session)
 
     def close(self):
         """Close the file handle."""
 
+        cdef RAPISession session
+
+        session = self.rapi_session
+
         if self.handle == 0:
             return
 
-        retval = CeCloseHandle(self.handle) 
+        retval = IRAPISession_CeCloseHandle(session.rapi_conn, self.handle)
         self.handle = 0
         if retval == FALSE:
-            raise RAPIError
+            raise RAPIError(session=self.rapi_session)
 
 
 cdef class RAPISession:
     """A connection to a Windows Mobile device."""
 
-    cdef RapiConnection *rapi_conn
+    cdef IRAPIDevice *rapi_dev
+    cdef IRAPISession *rapi_conn
 
     def __cinit__(self, device=None, log_level=SYNCE_LOG_LEVEL_LOWEST, *args, **keywords):
+        cdef IRAPIDesktop *desktop
+        cdef IRAPIEnumDevices *enumdev
+        cdef IRAPIDevice *dev
+        cdef IRAPISession *session
+        cdef RAPI_DEVICEINFO devinfo
+        cdef HRESULT hr
+
         synce_log_set_level(log_level)
 
-        if device == None:
-            self.rapi_conn = rapi_connection_from_name(NULL)
-        else:
-            self.rapi_conn = rapi_connection_from_name(device)
+        hr = IRAPIDesktop_Get(&desktop)
+        if hr < 0:
+            raise RAPIError(hresult=hr, message="failed to initialise RAPI")
 
-        if self.rapi_conn == NULL:
-            raise RAPIError(E_FAIL)
+        hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)
+        if hr < 0:
+            IRAPIDesktop_Release(desktop)
+            raise RAPIError(hresult=hr, message="failed to get connected devices")
 
-        rapi_connection_select(self.rapi_conn)
-        
-        retval = CeRapiInit()
-        
-        if retval != 0:
-            raise RAPIError(retval)
+        hr = IRAPIEnumDevices_Next(enumdev, &dev)
+        while hr >= 0:
+            if device == None:
+                break
+
+            hr = IRAPIDevice_GetDeviceInfo(dev, &devinfo)
+            if hr < 0:
+                IRAPIEnumDevices_Release(enumdev)
+                IRAPIDesktop_Release(desktop)
+                raise RAPIError(hresult=hr, message="failure to get device info")
+
+            if device == devinfo.bstrName:
+                break;
+
+            hr = IRAPIEnumDevices_Next(enumdev, &dev)
+
+        if hr < 0:
+            IRAPIEnumDevices_Release(enumdev)
+            IRAPIDesktop_Release(desktop)
+            if device == None:
+                raise RAPIError(hresult=hr, message="Could not find default device")
+            else:
+                raise RAPIError(hresult=hr, message="Could not find device "+device)
+
+        IRAPIDevice_AddRef(dev)
+        IRAPIEnumDevices_Release(enumdev)
+        enumdev = NULL
+
+        hr = IRAPIDevice_CreateSession(dev, &session)
+        if hr < 0:
+            IRAPIDevice_Release(dev)
+            IRAPIDesktop_Release(desktop)
+            raise RAPIError(hresult=hr, message="Could not create a session to device")
+
+        hr = IRAPISession_CeRapiInit(session)
+        if hr < 0:
+            IRAPISession_Release(session)
+            IRAPIDevice_Release(dev)
+            IRAPIDesktop_Release(desktop)
+            raise RAPIError(hresult=hr, message="Unable to initialize connection to device")
+
+        self.rapi_dev = dev
+        self.rapi_conn = session
 
 
     def __init__(self, device=None, log_level=SYNCE_LOG_LEVEL_LOWEST):
@@ -1082,10 +1175,11 @@ cdef class RAPISession:
 
     def __dealloc__(self):
         if self.rapi_conn != NULL:
-            rapi_connection_select(self.rapi_conn)
-            CeRapiUninit()
-            rapi_connection_destroy(self.rapi_conn)
+            IRAPISession_CeRapiUninit(self.rapi_conn)
+            IRAPISession_Release(self.rapi_conn)
             self.rapi_conn = NULL
+        if self.rapi_dev != NULL:
+            IRAPIDevice_Release(self.rapi_dev)
 
 
     def __getattr__(self, name):
@@ -1102,36 +1196,32 @@ cdef class RAPISession:
         elif name == "HKEY_USERS" or name == "HKU":
             return RegKey(self, 0x80000003)
         elif name == "name":
-            return rapi_connection_get_name(self.rapi_conn)
+            return IRAPIDevice_get_name(self.rapi_dev)
         elif name == "os_version":
-            retval = rapi_connection_get_os_version(self.rapi_conn, &os_major, &os_minor)
+            retval = IRAPIDevice_get_os_version(self.rapi_dev, &os_major, &os_minor)
             if retval == 0:
                 return None
             else:
                 return (os_major, os_minor)
         elif name == "build_number":
-            return rapi_connection_get_build_number(self.rapi_conn)
+            return IRAPIDevice_get_build_number(self.rapi_dev)
         elif name == "processor_type":
-            return rapi_connection_get_processor_type(self.rapi_conn)
+            return IRAPIDevice_get_processor_type(self.rapi_dev)
         elif name == "os_name":
-            return rapi_connection_get_os_name(self.rapi_conn)
+            return IRAPIDevice_get_os_name(self.rapi_dev)
         elif name == "model":
-            return rapi_connection_get_model(self.rapi_conn)
+            return IRAPIDevice_get_model(self.rapi_dev)
         elif name == "device_ip":
-            return rapi_connection_get_device_ip(self.rapi_conn)
+            return IRAPIDevice_get_device_ip(self.rapi_dev)
         elif name == "local_ip":
-            return rapi_connection_get_local_ip(self.rapi_conn)
+            return IRAPIDevice_get_local_ip(self.rapi_dev)
 
-        # this gives access to the RapiConnection C object wrapped in a
+        # this gives access to the IRapisession C object wrapped in a
         # python CObject, be careful !!!
         elif name == "rapi_connection":
             return PyCObject_FromVoidPtr(<void *>self.rapi_conn, NULL)
         else:
             raise AttributeError("%s instance has no attribute '%s'" % (self.__class__.__name__, name))
-
-
-    def __session_select__(self):
-        rapi_connection_select(self.rapi_conn)
 
 
     def process_config(self, config, flags):
@@ -1143,7 +1233,7 @@ cdef class RAPISession:
         cdef LPWSTR config_w
         cdef LPWSTR reply_w
         cdef DWORD flags_c
-        cdef HRESULT retval
+        cdef HRESULT hr
         cdef char *reply
 
         reply_w = NULL;
@@ -1151,17 +1241,15 @@ cdef class RAPISession:
         config_w = wstr_from_utf8(config)
         flags_c = flags
 
-        self.__session_select__()
-
         with nogil:
-            retval = CeProcessConfig(config_w, flags_c, &reply_w)
+            hr = IRAPISession_CeProcessConfig(self.rapi_conn, config_w, flags_c, &reply_w)
             wstr_free_string(config_w)
 
             reply = wstr_to_utf8(reply_w)
             wstr_free_string(reply_w)
 
-        if retval != 0:
-            raise RAPIError(retval)
+        if hr < 0:
+            raise RAPIError(hresult=hr)
 
         if reply == NULL:
             return ""
@@ -1169,9 +1257,7 @@ cdef class RAPISession:
             return reply
 
     def start_replication(self):
-        self.__session_select__()
-
-        retval = CeStartReplication()
+        retval = IRAPISession_CeStartReplication(self.rapi_conn)
         if retval != TRUE:
             raise RAPIError(retval)
 
@@ -1180,31 +1266,23 @@ cdef class RAPISession:
 
         params_w = wstr_from_utf8(params)
 
-        self.__session_select__()
-
-        retval = CeSyncStart(params_w)
+        retval = IRAPISession_CeSyncStart(self.rapi_conn, params_w)
         wstr_free_string(params_w)
         if retval != 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
     def sync_resume(self):
-        self.__session_select__()
-
-        retval = CeSyncResume()
+        retval = IRAPISession_CeSyncResume(self.rapi_conn)
         if retval != 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
     def sync_pause(self):
-        self.__session_select__()
-
-        retval = CeSyncPause()
+        retval = IRAPISession_CeSyncPause(self.rapi_conn)
         if retval != 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
     def SyncTimeToPc(self):
-        self.__session_select__()
-
-        return CeSyncTimeToPc()
+        return IRAPISession_CeSyncTimeToPc(self.rapi_conn)
 
     def getDiskFreeSpaceEx(self, path):
         """Retrieve the amount of space on a disk volume.
@@ -1213,20 +1291,18 @@ cdef class RAPISession:
         consisting of free bytes available to the calling user, total number
         of bytes available to the user, and total free bytes."""
 
-        cdef ULARGE_INTEGER freeBytesAvailable  
-        cdef ULARGE_INTEGER totalNumberOfBytes  
-        cdef ULARGE_INTEGER totalNumberOfFreeBytes 
+        cdef ULARGE_INTEGER freeBytesAvailable
+        cdef ULARGE_INTEGER totalNumberOfBytes
+        cdef ULARGE_INTEGER totalNumberOfFreeBytes
 
-        self.__session_select__()
-
-        retval = CeGetDiskFreeSpaceEx( path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes) 
+        retval = IRAPISession_CeGetDiskFreeSpaceEx(self.rapi_conn, path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes)
 
         #This functions returns 0 if something went wrong....
         if retval == 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
         #return a tuple at the moment, maybe later make this a list
-        return (freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes) 
+        return (freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes)
 
     def getSystemPowerStatus(self, refresh):
         """Retrieves the system power status.
@@ -1236,14 +1312,12 @@ cdef class RAPISession:
         cdef SYSTEM_POWER_STATUS_EX powerStatus
         cdef BOOL retval
 
-        self.__session_select__()
-
         with nogil:
-            retval = CeGetSystemPowerStatusEx( &powerStatus, 0 )
+            retval = IRAPISession_CeGetSystemPowerStatusEx(self.rapi_conn, &powerStatus, 0 )
         #In contrast to other functions, this returns a boolean,
         #denoting whether the call was succesfull
         if retval == FALSE:
-            raise RAPIError
+            raise RAPIError(session=self)
 
         #Now construct the dictionary:
         result = dict()
@@ -1272,24 +1346,22 @@ cdef class RAPISession:
         cdef LPWSTR query_w
         query_w = wstr_from_utf8(query)
 
-        cdef LPCE_FIND_DATA find_data 
+        cdef LPCE_FIND_DATA find_data
         cdef DWORD numberOfFiles
 
         cdef CE_FIND_DATA found_file
 
-        self.__session_select__()
-
-        retval = CeFindAllFiles( query_w, flags , &numberOfFiles, &find_data )
+        retval = IRAPISession_CeFindAllFiles(self.rapi_conn, query_w, flags , &numberOfFiles, &find_data )
         wstr_free_string(query_w)
         if retval == 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
         #Now create a list of dictionaries
-        result = [] 
+        result = []
         i=0
         while i < numberOfFiles:
-            found_file = find_data[ i ] 
-            
+            found_file = find_data[ i ]
+
             this_file = dict()
 
             if flags & FAF_ATTRIBUTES:
@@ -1298,21 +1370,21 @@ cdef class RAPISession:
             if flags & FAF_CREATION_TIME:
                 this_file["CreationLowDateTime"] = found_file.ftCreationTime.dwLowDateTime
                 this_file["CreationHighDateTime"] = found_file.ftCreationTime.dwHighDateTime
-            
+
             if flags & FAF_LASTACCESS_TIME:
                 this_file["LastAccessLowDateTime"] = found_file.ftLastAccessTime.dwLowDateTime
                 this_file["LastAccessHighDateTime"] = found_file.ftLastAccessTime.dwHighDateTime
-            
+
             if flags & FAF_LASTWRITE_TIME:
                 this_file["LastWriteLowDateTime"] = found_file.ftCreationTime.dwLowDateTime
                 this_file["LastWriteHighDateTime"] = found_file.ftCreationTime.dwHighDateTime
 
             if flags & FAF_SIZE_HIGH:
                 this_file["SizeHigh"] = found_file.nFileSizeHigh
-             
+
             if flags & FAF_SIZE_LOW:
                 this_file["SizeLow"] = found_file.nFileSizeLow
-            
+
             if flags & FAF_OID:
                 this_file["OID"] = found_file.dwOID
 
@@ -1323,6 +1395,7 @@ cdef class RAPISession:
             result.append( this_file )
             i = i + 1
 
+        IRAPISession_CeRapiFreeBuffer(self.rapi_conn, find_data);
 
         return result
 
@@ -1357,20 +1430,20 @@ cdef class RAPISession:
         if "+" in mode:
             desiredAccess = desiredAccess|GENERIC_WRITE
 
-        fileHandle = CeCreateFile( filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0) 
+        fileHandle = IRAPISession_CeCreateFile(self.rapi_conn, filename_w, desiredAccess, shareMode, NULL, createDisposition, flagsAndAttributes, 0)
 
         wstr_free_string(filename_w)
         if fileHandle == <HANDLE> -1:
-            raise RAPIError
+            raise RAPIError(session=self)
 
         if mode[0] == "a":
-            seek_ret = CeSetFilePointer(fileHandle, 0, NULL, FILE_END)
+            seek_ret = IRAPISession_CeSetFilePointer(self.rapi_conn, fileHandle, 0, NULL, FILE_END)
             if seek_ret == 0xFFFFFFFF:
-                raise RAPIError
+                raise RAPIError(session=self)
 
         return RAPIFile(self, fileHandle, filename, mode)
 
-    
+
     #TODO: Provide the user with the processInformation
     def createProcess(self, applicationName, applicationParams):
         """Start a remote process.
@@ -1385,15 +1458,13 @@ cdef class RAPISession:
         applicationName_w = wstr_from_utf8(applicationName)
         applicationParams_w = wstr_from_utf8(applicationParams)
 
-        self.__session_select__()
-
-        retval = CeCreateProcess( applicationName_w, applicationParams_w, NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
+        retval = IRAPISession_CeCreateProcess(self.rapi_conn, applicationName_w, applicationParams_w, NULL, NULL, False, 0, NULL, NULL, NULL, &processInformation)
 
         wstr_free_string(applicationName_w)
         wstr_free_string(applicationParams_w)
 
         if retval == 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
         return retval
 
@@ -1404,13 +1475,11 @@ cdef class RAPISession:
         Returns a dictionary of version information."""
 
         cdef CEOSVERSIONINFO osVersionInfo
-        
-        self.__session_select__()
 
-        retval = CeGetVersionEx( &osVersionInfo)
-     
+        retval = IRAPISession_CeGetVersionEx(self.rapi_conn, &osVersionInfo)
+
         if retval == 0:
-            raise RAPIError
+            raise RAPIError(session=self)
 
 		#Now construct the dictionary:
         result = dict()
@@ -1419,20 +1488,18 @@ cdef class RAPISession:
         result["MinorVersion"]      = osVersionInfo.dwMinorVersion
         result["BuildNumber"]       = osVersionInfo.dwBuildNumber
         result["PlatformId"]        = osVersionInfo.dwPlatformId
-        
+
         return result
-    
+
     def getSystemInfo(self):
         """Obtain information about the system.
 
         Returns a dictionary containing the system information."""
 
         cdef SYSTEM_INFO systemInfo
-        
-        self.__session_select__()
 
-        CeGetSystemInfo( &systemInfo )
-        
+        IRAPISession_CeGetSystemInfo(self.rapi_conn, &systemInfo )
+
         result = dict()
         result["ProcessorArchitecture"]                 = systemInfo.wProcessorArchitecture
         result["Reserved"]                              = systemInfo.wReserved
@@ -1445,5 +1512,5 @@ cdef class RAPISession:
         result["AllocationGranularity"]                 = systemInfo.dwAllocationGranularity
         result["ProcessorLevel"]                        = systemInfo.wProcessorLevel
         result["ProcessorRevision"]                     = systemInfo.wProcessorRevision
-        
+
         return result
