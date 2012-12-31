@@ -99,6 +99,13 @@ IRAPISession_Release(IRAPISession *session)
         return;
 }
 
+IRAPIDevice *
+IRAPISession_get_device(IRAPISession *session)
+{
+        IRAPIDevice_AddRef(session->device);
+        return session->device;
+}
+
 /*
  * Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5
  */
@@ -1495,6 +1502,55 @@ IRAPIDevice_GetDeviceInfo(IRAPIDevice *self, RAPI_DEVICEINFO* pDevInfo)
     return E_FAIL;
 
   return S_OK;
+}
+
+
+const char *
+IRAPIDevice_get_name(IRAPIDevice *self)
+{
+  return synce_info_get_name(self->info);
+}
+
+bool
+IRAPIDevice_get_os_version(IRAPIDevice *self, unsigned int *os_major, unsigned int *os_minor)
+{
+  return synce_info_get_os_version(self->info, os_major, os_minor);
+}
+
+unsigned int
+IRAPIDevice_get_build_number(IRAPIDevice *self)
+{
+  return synce_info_get_build_number(self->info);
+}
+
+unsigned int
+IRAPIDevice_get_processor_type(IRAPIDevice *self)
+{
+  return synce_info_get_processor_type(self->info);
+}
+
+const char *
+IRAPIDevice_get_os_name(IRAPIDevice *self)
+{
+  return synce_info_get_os_name(self->info);
+}
+
+const char *
+IRAPIDevice_get_model(IRAPIDevice *self)
+{
+  return synce_info_get_model(self->info);
+}
+
+const char *
+IRAPIDevice_get_device_ip(IRAPIDevice *self)
+{
+  return synce_info_get_device_ip(self->info);
+}
+
+const char *
+IRAPIDevice_get_local_ip(IRAPIDevice *self)
+{
+  return synce_info_get_local_ip(self->info);
 }
 
 

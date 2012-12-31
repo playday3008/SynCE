@@ -15,15 +15,23 @@ extern "C"
 #endif
 
 
-
-/* IRAPISession */
-
 struct _IRAPISession;
 typedef struct _IRAPISession IRAPISession;
+struct _IRAPIDevice;
+typedef struct _IRAPIDevice IRAPIDevice;
+struct _IRAPIEnumDevices;
+typedef struct _IRAPIEnumDevices IRAPIEnumDevices;
+struct _IRAPIDesktop;
+typedef struct _IRAPIDesktop IRAPIDesktop;
+
+
+/* IRAPISession */
 
 void IRAPISession_AddRef(IRAPISession *session);
 
 void IRAPISession_Release(IRAPISession *session);
+
+IRAPIDevice * IRAPISession_get_device(IRAPISession *session);
 
 HRESULT IRAPISession_CeRapiFreeBuffer(IRAPISession *session,
                                       LPVOID Buffer);
@@ -385,9 +393,6 @@ HRESULT IRAPISession_CeRapiInvoke(IRAPISession *session,
 
 /* IRAPIDevice */
 
-struct _IRAPIDevice;
-typedef struct _IRAPIDevice IRAPIDevice;
-
 void IRAPIDevice_AddRef(IRAPIDevice *self);
 
 void IRAPIDevice_Release(IRAPIDevice *self);
@@ -401,13 +406,17 @@ HRESULT IRAPIDevice_GetConnectStat(IRAPIDevice *self, RAPI_DEVICESTATUS* pStat);
 
 HRESULT IRAPIDevice_GetDeviceInfo(IRAPIDevice *self, RAPI_DEVICEINFO* pDevInfo);
 
-
+const char * IRAPIDevice_get_name(IRAPIDevice *self);
+bool IRAPIDevice_get_os_version(IRAPIDevice *self, unsigned int *os_major, unsigned int *os_minor);
+unsigned int IRAPIDevice_get_build_number(IRAPIDevice *self);
+unsigned int IRAPIDevice_get_processor_type(IRAPIDevice *self);
+const char * IRAPIDevice_get_os_name(IRAPIDevice *self);
+const char * IRAPIDevice_get_model(IRAPIDevice *self);
+const char * IRAPIDevice_get_device_ip(IRAPIDevice *self);
+const char * IRAPIDevice_get_local_ip(IRAPIDevice *self);
 
 
 /* IRAPIEnumDevices */
-
-struct _IRAPIEnumDevices;
-typedef struct _IRAPIEnumDevices IRAPIEnumDevices;
 
 void IRAPIEnumDevices_AddRef(IRAPIEnumDevices *self);
 
@@ -442,9 +451,6 @@ struct _IRAPISink {
 
 
 /* IRAPIDesktop */
-
-struct _IRAPIDesktop;
-typedef struct _IRAPIDesktop IRAPIDesktop;
 
 HRESULT IRAPIDesktop_Get(IRAPIDesktop **ppIRAPIDesktop);
 
