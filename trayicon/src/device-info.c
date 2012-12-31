@@ -27,7 +27,7 @@ IN THE SOFTWARE.
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 #include <string.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <rra/matchmaker.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -153,7 +153,7 @@ partners_create_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
 
   RRA_Matchmaker* matchmaker = NULL;
 
-  RapiConnection *rapi_conn = NULL;
+  IRAPISession *rapi_conn = NULL;
   g_object_get(priv->device, "rapi-conn", &rapi_conn, NULL);
 
   if (!(matchmaker = rra_matchmaker_new(rapi_conn))) {
@@ -237,7 +237,7 @@ partners_remove_button_clicked_rra_cb (GtkWidget *widget, gpointer data)
 
   RRA_Matchmaker* matchmaker = NULL;
 
-  RapiConnection *rapi_conn = NULL;
+  IRAPISession *rapi_conn = NULL;
   g_object_get(priv->device, "rapi-conn", &rapi_conn, NULL);
 
   if (!(matchmaker = rra_matchmaker_new(rapi_conn))) {
@@ -1054,7 +1054,9 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GHashTable *sync_items = NULL;
   GList *item_keys = NULL;
 
-  if (!wm_device_rapi_select(priv->device))
+  guint connection_status;
+  g_object_get(priv->device, "connection-status", &connection_status, NULL);
+  if (connection_status != DEVICE_STATUS_CONNECTED)
     return;
 
   GtkWidget *partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
@@ -1367,10 +1369,12 @@ partners_setup_view_store_rra(WmDeviceInfo *self)
 					    G_TYPE_UINT,    /* partner id */
 					    G_TYPE_STRING); /* partner name */
 
-  if (!wm_device_rapi_select(priv->device))
+  guint connection_status;
+  g_object_get(priv->device, "connection-status", &connection_status, NULL);
+  if (connection_status != DEVICE_STATUS_CONNECTED)
     return;
 
-  RapiConnection *rapi_conn = NULL;
+  IRAPISession *rapi_conn = NULL;
   g_object_get(priv->device, "rapi-conn", &rapi_conn, NULL);
 
   if (!(matchmaker = rra_matchmaker_new(rapi_conn))) {
@@ -1615,9 +1619,14 @@ system_info_setup_view_store(WmDeviceInfo *self)
     *sys_info_store_ram, *sys_info_store_storage;
   STORE_INFORMATION store;
   DWORD storage_pages = 0, ram_pages = 0, page_size = 0;
+  IRAPISession *session = NULL;
 
-  if (!wm_device_rapi_select(priv->device))
+  guint connection_status;
+  g_object_get(priv->device, "connection-status", &connection_status, NULL);
+  if (connection_status != DEVICE_STATUS_CONNECTED)
     return;
+
+  g_object_get(priv->device, "rapi-conn", &session, NULL);
 
   memset(&store, 0, sizeof(store));
 
@@ -1626,7 +1635,7 @@ system_info_setup_view_store(WmDeviceInfo *self)
   sys_info_store_ram = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_store_ram"));
   sys_info_store_storage = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_store_storage"));
 
-  if (CeGetStoreInformation(&store)) {
+  if (IRAPISession_CeGetStoreInformation(session, &store)) {
     gchar *store_size = g_strdup_printf("%i bytes (%i MB)", store.dwStoreSize, store.dwStoreSize / (1024*1024));
     gchar *free_space = g_strdup_printf("%i bytes (%i MB)", store.dwFreeSize,  store.dwFreeSize  / (1024*1024));
 
@@ -1638,10 +1647,10 @@ system_info_setup_view_store(WmDeviceInfo *self)
   } else {
     g_warning("%s: Failed to get store information: %s",
 	      G_STRFUNC,
-	      synce_strerror(CeGetLastError()));
+	      synce_strerror(IRAPISession_CeGetLastError(session)));
   }
 
-  if (CeGetSystemMemoryDivision(&storage_pages, &ram_pages, &page_size)) {
+  if (IRAPISession_CeGetSystemMemoryDivision(session, &storage_pages, &ram_pages, &page_size)) {
     gchar *storage_size = g_strdup_printf("%i bytes (%i MB)", storage_pages * page_size, storage_pages * page_size / (1024*1024));
     gchar *ram_size = g_strdup_printf("%i bytes (%i MB)", ram_pages * page_size, ram_pages * page_size / (1024*1024));
 
@@ -1674,9 +1683,14 @@ system_info_setup_view(WmDeviceInfo *self)
   CEOSVERSIONINFO version;
   SYSTEM_INFO system;
   gchar *class, *hardware, *model_str;
+  IRAPISession *session = NULL;
 
-  if (!wm_device_rapi_select(priv->device))
+  guint connection_status;
+  g_object_get(priv->device, "connection-status", &connection_status, NULL);
+  if (connection_status != DEVICE_STATUS_CONNECTED)
     return;
+
+  g_object_get(priv->device, "rapi-conn", &session, NULL);
 
   sys_info_model = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_model"));
 
@@ -1697,7 +1711,7 @@ system_info_setup_view(WmDeviceInfo *self)
   memset(&version, 0, sizeof(version));
   version.dwOSVersionInfoSize = sizeof(version);
 
-  if (CeGetVersionEx(&version)) {
+  if (IRAPISession_CeGetVersionEx(session, &version)) {
     char *details = wstr_to_utf8(version.szCSDVersion);
     char *platform = NULL;
 
@@ -1724,7 +1738,7 @@ system_info_setup_view(WmDeviceInfo *self)
   } else {
     g_warning("%s: Failed to get version information: %s",
 	       G_STRFUNC,
-	       synce_strerror(CeGetLastError()));
+	       synce_strerror(IRAPISession_CeGetLastError(session)));
   }
 
   /* platform */
@@ -1735,7 +1749,7 @@ system_info_setup_view(WmDeviceInfo *self)
 
   memset(&system, 0, sizeof(system));
 
-  CeGetSystemInfo(&system);
+  IRAPISession_CeGetSystemInfo(session, &system);
   {
     gchar *proc_arch_str = g_strdup_printf("%i (%s)",
 					   system.wProcessorArchitecture,
@@ -1821,14 +1835,19 @@ system_power_setup_view(WmDeviceInfo *self)
     return;
   }
 
-  if (!wm_device_rapi_select(priv->device))
-    return;
-
   SYSTEM_POWER_STATUS_EX power;
   GtkWidget *sys_info_ac_status,
     *sys_info_main_batt_lifetime, *sys_info_main_batt_fulllife, *sys_info_main_batt_bar,
     *sys_info_bup_batt_lifetime, *sys_info_bup_batt_fulllife, *sys_info_bup_batt_bar;
   gchar *lifetime, *fulllife, *lifepercent;
+  IRAPISession *session = NULL;
+
+  guint connection_status;
+  g_object_get(priv->device, "connection-status", &connection_status, NULL);
+  if (connection_status != DEVICE_STATUS_CONNECTED)
+    return;
+
+  g_object_get(priv->device, "rapi-conn", &session, NULL);
 
   sys_info_ac_status = GTK_WIDGET(gtk_builder_get_object(priv->builder, "sys_info_ac_status"));
 
@@ -1842,10 +1861,10 @@ system_power_setup_view(WmDeviceInfo *self)
 
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
 
-  if (!(CeGetSystemPowerStatusEx(&power, false))) {
+  if (!(IRAPISession_CeGetSystemPowerStatusEx(session, &power, false))) {
     g_warning("%s: Failed to get battery status: %s",
 	      G_STRFUNC,
-	      synce_strerror(CeGetLastError()));
+	      synce_strerror(IRAPISession_CeGetLastError(session)));
     return;
   }
 
@@ -1996,7 +2015,9 @@ applications_setup_view_store(WmDeviceInfo *self)
     return;
   }
 
-  if (!wm_device_rapi_select(priv->device))
+  guint connection_status;
+  g_object_get(priv->device, "connection-status", &connection_status, NULL);
+  if (connection_status != DEVICE_STATUS_CONNECTED)
     return;
 
   GtkWidget *app_treeview = GTK_WIDGET(gtk_builder_get_object(priv->builder, "applications_treeview"));
@@ -2012,6 +2033,9 @@ applications_setup_view_store(WmDeviceInfo *self)
   int i = 0;
   GError *error = NULL;
   gboolean result;
+  IRAPISession *session = NULL;
+
+  g_object_get(priv->device, "rapi-conn", &session, NULL);
 
   fetchwindow = busy_window_new(_("Fetching information..."), _("Fetching the list of installed applications from the PDA."), &progressbar);
 
@@ -2022,7 +2046,7 @@ applications_setup_view_store(WmDeviceInfo *self)
     gtk_main_iteration_do(FALSE);
   }
 
-  result = synce_app_man_create_program_list(&programlist, progress_bar_pulse, progressbar, &error);
+  result = synce_app_man_create_program_list(session, &programlist, progress_bar_pulse, progressbar, &error);
   if (!result) {
     synce_error_dialog(_("Couldn't fetch the list of applications from the device: %s"), error->message);
     g_error_free(error);
@@ -2081,6 +2105,9 @@ on_app_add_button_clicked(GtkButton *button, gpointer user_data)
   gchar *message = NULL;
   gboolean result;
 
+  IRAPISession *session = NULL;
+  g_object_get(priv->device, "rapi-conn", &session, NULL);
+
   installdialog = gtk_file_chooser_dialog_new (_("Select installation file"),
 					       NULL,
 					       GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -2104,7 +2131,7 @@ on_app_add_button_clicked(GtkButton *button, gpointer user_data)
     }
 
     g_debug("%s: requested installation of file %s", G_STRFUNC, filepath);
-    result = synce_app_man_install(filepath, progress_bar_pulse, progressbar, &error);
+    result = synce_app_man_install(session, filepath, progress_bar_pulse, progressbar, &error);
 
     gtk_widget_hide(fetchwindow);
     gtk_widget_destroy(fetchwindow);
@@ -2141,6 +2168,9 @@ on_app_remove_button_clicked(GtkButton *button, gpointer user_data)
   gchar *program = NULL;
   GError *error = NULL;
 
+  IRAPISession *session = NULL;
+  g_object_get(priv->device, "rapi-conn", &session, NULL);
+
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(app_treeview));
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
     {
@@ -2149,7 +2179,7 @@ on_app_remove_button_clicked(GtkButton *button, gpointer user_data)
 			  APP_INDEX_COLUMN, &number,
 			  -1);
 
-      if (synce_app_man_uninstall(program, &error)) {
+      if (synce_app_man_uninstall(session, program, &error)) {
 	g_debug("%s: successfully removed program %s", G_STRFUNC, program);
 	synce_info_dialog(_("The program \"%s\" was successfully removed."), program);
 	applications_setup_view_store(self);

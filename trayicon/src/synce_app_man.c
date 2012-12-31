@@ -25,7 +25,7 @@
 #include <glib/gi18n.h>
 #include <synce.h>
 #include <liborange.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <string.h>
 #include <errno.h>
 #include <libxml/tree.h>
@@ -44,8 +44,8 @@ synce_app_man_error_quark (void)
 }
 
 
-gboolean
-create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+static gboolean
+create_program_list(IRAPISession *session, GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   GList *prog_list = NULL;
 
@@ -80,7 +80,7 @@ create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_d
   xmlFree(doc_string);
   xmlFreeDoc(doc);
 
-  result = CeProcessConfig(config_w, CONFIG_PROCESS_DOCUMENT, &reply_w);
+  result = IRAPISession_CeProcessConfig(session, config_w, CONFIG_PROCESS_DOCUMENT, &reply_w);
 
   wstr_free_string(config_w);
 
@@ -138,8 +138,8 @@ create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_d
   return TRUE;
 }
 
-gboolean
-create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+static gboolean
+create_program_list_legacy(IRAPISession *session, GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   LONG rapi_result;
   gboolean result = TRUE;
@@ -164,7 +164,7 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
   app_parent_key_name_utf8 = REG_PATH_SMARTPHONE_2002;
   app_parent_key_name_wide = wstr_from_utf8(app_parent_key_name_utf8);
 
-  rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
+  rapi_result = IRAPISession_CeRegOpenKeyEx(session, HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
   wstr_free_string(app_parent_key_name_wide);
 
   if (ERROR_SUCCESS == rapi_result) {
@@ -175,7 +175,7 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
     app_parent_key_name_utf8 = REG_PATH_POCKETPC_2002;
     app_parent_key_name_wide = wstr_from_utf8(app_parent_key_name_utf8);
 
-    rapi_result = CeRegOpenKeyEx(HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
+    rapi_result = IRAPISession_CeRegOpenKeyEx(session, HKEY_LOCAL_MACHINE, app_parent_key_name_wide, 0, 0, &app_parent_key);
     wstr_free_string(app_parent_key_name_wide);
 
     if (ERROR_SUCCESS != rapi_result) {
@@ -199,7 +199,7 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
     installed = 0;
     value_size = sizeof(installed);
 
-    rapi_result = CeRegEnumKeyEx(app_parent_key, app_count, app_name_wide, &app_name_size, 
+    rapi_result = IRAPISession_CeRegEnumKeyEx(session, app_parent_key, app_count, app_name_wide, &app_name_size, 
 				 NULL, NULL, NULL, NULL);
     if (rapi_result == ERROR_NO_MORE_ITEMS)
       break;
@@ -223,23 +223,23 @@ create_program_list_legacy(GList **list, SynceAppManBusyFunc busy_func, gpointer
       app_name = wstr_to_utf8(app_name_wide);
       tmp_list = g_list_append(tmp_list, app_name);
     } else {
-      rapi_result = CeRegOpenKeyEx(app_parent_key, app_name_wide, 0, 0, &app_key);
+      rapi_result = IRAPISession_CeRegOpenKeyEx(session, app_parent_key, app_name_wide, 0, 0, &app_key);
       if (ERROR_SUCCESS != rapi_result)
 	continue;
 
-      rapi_result = CeRegQueryValueEx(app_key, value_name, NULL, NULL,
+      rapi_result = IRAPISession_CeRegQueryValueEx(session, app_key, value_name, NULL, NULL,
 				 (LPBYTE)&installed, &value_size);
 
       if ((ERROR_SUCCESS == rapi_result) && installed) {
 	app_name = wstr_to_utf8(app_name_wide);
 	tmp_list = g_list_append(tmp_list, app_name);
       }
-      CeRegCloseKey(app_key);
+      IRAPISession_CeRegCloseKey(session, app_key);
     }
 
   }
 
-  CeRegCloseKey(app_parent_key);
+  IRAPISession_CeRegCloseKey(session, app_parent_key);
   wstr_free_string(value_name);
 
 exit:
@@ -257,7 +257,7 @@ exit:
 }
 
 gboolean
-synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+synce_app_man_create_program_list(IRAPISession *session, GList **list, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -266,8 +266,8 @@ synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, g
   DWORD last_error;
 
   version_info.dwOSVersionInfoSize = sizeof(CEOSVERSIONINFO);
-  if (!CeGetVersionEx(&version_info)) {
-    if (FAILED(hr = CeRapiGetError())) {
+  if (!IRAPISession_CeGetVersionEx(session, &version_info)) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -276,7 +276,7 @@ synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, g
       return FALSE;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI,
@@ -286,10 +286,10 @@ synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc busy_func, g
   }
 
   if ((version_info.dwMajorVersion < 5) || ((version_info.dwMajorVersion == 5) && (version_info.dwMinorVersion == 0))) {
-    return create_program_list_legacy(list, busy_func, busy_data, error);
+    return create_program_list_legacy(session, list, busy_func, busy_data, error);
   }
 
-  return create_program_list(list, busy_func, busy_data, error);
+  return create_program_list(session, list, busy_func, busy_data, error);
 }
 
 typedef struct _orange_cookie
@@ -411,7 +411,7 @@ extract_with_orange(const gchar *arch_file, const gchar *dest_dir, DWORD process
 }
 
 static gchar*
-get_install_dir(GError **error)
+get_install_dir(IRAPISession *session, GError **error)
 {
   WCHAR* wide_path = NULL;
   gchar *path = NULL;
@@ -427,15 +427,15 @@ get_install_dir(GError **error)
   path = g_strdup("\\Storage\\Windows\\AppMgr");
 
   wide_path = wstr_from_utf8(path);
-  handle = CeFindFirstFile(wide_path, &entry);
+  handle = IRAPISession_CeFindFirstFile(session, wide_path, &entry);
   wstr_free_string(wide_path);
 
   if (handle != INVALID_HANDLE_VALUE) {
-    CeFindClose(handle);
+    IRAPISession_CeFindClose(session, handle);
   } else {
     g_free(path);
 
-    if (FAILED(hr = CeRapiGetError())) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -444,7 +444,7 @@ get_install_dir(GError **error)
       return NULL;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     if ((last_error != ERROR_PATH_NOT_FOUND) && (last_error != ERROR_NO_MORE_FILES)) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
@@ -457,13 +457,13 @@ get_install_dir(GError **error)
     path = g_strdup("\\Windows\\AppMgr");
 
     wide_path = wstr_from_utf8(path);
-    handle = CeFindFirstFile(wide_path, &entry);
+    handle = IRAPISession_CeFindFirstFile(session, wide_path, &entry);
     wstr_free_string(wide_path);
 
     if (handle != INVALID_HANDLE_VALUE) {
-      CeFindClose(handle);
+      IRAPISession_CeFindClose(session, handle);
     } else {
-      if (FAILED(hr = CeRapiGetError())) {
+      if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	g_free(path);
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
@@ -473,7 +473,7 @@ get_install_dir(GError **error)
 	return NULL;
       }
 
-      last_error = CeGetLastError();
+      last_error = IRAPISession_CeGetLastError(session);
       if ((last_error != ERROR_PATH_NOT_FOUND) && (last_error != ERROR_NO_MORE_FILES)) {
 	g_free(path);
 	g_set_error(error,
@@ -486,10 +486,10 @@ get_install_dir(GError **error)
 
       wide_path = wstr_from_utf8(path);
 
-      result = CeCreateDirectory(wide_path, NULL);
+      result = IRAPISession_CeCreateDirectory(session, wide_path, NULL);
       wstr_free_string(wide_path);
       if (!result) {
-	if (FAILED(hr = CeRapiGetError())) {
+	if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	  g_free(path);
 	  g_set_error(error,
 		      SYNCE_APP_MAN_ERROR,
@@ -499,7 +499,7 @@ get_install_dir(GError **error)
 	  return NULL;
 	}
 
-	last_error = CeGetLastError();
+	last_error = IRAPISession_CeGetLastError(session);
 	g_free(path);
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
@@ -516,13 +516,13 @@ get_install_dir(GError **error)
   path = tmppath;
 
   wide_path = wstr_from_utf8(path);
-  handle = CeFindFirstFile(wide_path, &entry);
+  handle = IRAPISession_CeFindFirstFile(session, wide_path, &entry);
   wstr_free_string(wide_path);
 
   if (handle != INVALID_HANDLE_VALUE) {
-    CeFindClose(handle);
+    IRAPISession_CeFindClose(session, handle);
   } else {
-    if (FAILED(hr = CeRapiGetError())) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       g_free(path);
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
@@ -532,7 +532,7 @@ get_install_dir(GError **error)
       return NULL;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     if ((last_error != ERROR_PATH_NOT_FOUND) && (last_error != ERROR_NO_MORE_FILES)) {
       g_free(path);
       g_set_error(error,
@@ -545,10 +545,10 @@ get_install_dir(GError **error)
 
     wide_path = wstr_from_utf8(path);
 
-    result = CeCreateDirectory(wide_path, NULL);
+    result = IRAPISession_CeCreateDirectory(session, wide_path, NULL);
     wstr_free_string(wide_path);
     if (!result) {
-      if (FAILED(hr = CeRapiGetError())) {
+      if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	g_free(path);
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
@@ -558,7 +558,7 @@ get_install_dir(GError **error)
 	return NULL;
       }
 
-      last_error = CeGetLastError();
+      last_error = IRAPISession_CeGetLastError(session);
       g_free(path);
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
@@ -575,7 +575,7 @@ get_install_dir(GError **error)
 
 
 static gboolean
-copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+copy_to_device(IRAPISession *session, const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   gboolean result = TRUE;
   gsize bytes_read;
@@ -607,11 +607,11 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
   wide_filename = wstr_from_utf8(device_filename);
   g_free(device_filename);
 
-  dest_handle = CeCreateFile(wide_filename, GENERIC_WRITE, 0, NULL,
+  dest_handle = IRAPISession_CeCreateFile(session, wide_filename, GENERIC_WRITE, 0, NULL,
 			     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   wstr_free_string(wide_filename);
   if (INVALID_HANDLE_VALUE == dest_handle) {
-    if (FAILED(hr = CeRapiGetError())) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -622,7 +622,7 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
       goto exit;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI,
@@ -666,9 +666,9 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
 	/* End of file */
       }
     
-      retval = CeWriteFile(dest_handle, buffer, bytes_read, &bytes_written, NULL);
+      retval = IRAPISession_CeWriteFile(session, dest_handle, buffer, bytes_read, &bytes_written, NULL);
       if (!retval) {
-	if (FAILED(hr = CeRapiGetError())) {
+	if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
 	  g_set_error(error,
 		      SYNCE_APP_MAN_ERROR,
 		      SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -679,7 +679,7 @@ copy_to_device(const gchar *source, const gchar *dest_dir, SynceAppManBusyFunc b
 	  goto exit;
 	}
 
-	last_error = CeGetLastError();
+	last_error = IRAPISession_CeGetLastError(session);
 	g_set_error(error,
 		    SYNCE_APP_MAN_ERROR,
 		    SYNCE_APP_MAN_ERROR_RAPI,
@@ -708,14 +708,14 @@ exit:
     fclose(src_handle);
 
   if (dest_handle != INVALID_HANDLE_VALUE)
-    CeCloseHandle(dest_handle);
+    IRAPISession_CeCloseHandle(session, dest_handle);
 
   return result;
 }
 
 
 gboolean
-synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
+synce_app_man_install(IRAPISession *session, const gchar *filepath, SynceAppManBusyFunc busy_func, gpointer busy_data, GError **error)
 {
   gchar *install_path = NULL;
   SYSTEM_INFO system;
@@ -734,7 +734,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
     (*busy_func)(busy_data);
 
   memset(&system, 0, sizeof(system));
-  CeGetSystemInfo(&system);
+  IRAPISession_CeGetSystemInfo(session, &system);
 
   tmpdir = tempnam(g_get_tmp_dir(), "sti");
   if (g_mkdir(tmpdir, 0700) != 0) {
@@ -759,7 +759,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
 
   /* Do some install things */
 
-  install_path = get_install_dir(error);
+  install_path = get_install_dir(session, error);
   if (!install_path) {
     result = FALSE;
     goto exit;
@@ -770,7 +770,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
     gchar *cabname = tmplist->data;
     g_debug("%s: copying file %s to device", G_STRFUNC, cabname);
 
-    if (!copy_to_device(cabname, install_path, busy_func, busy_data, error)) {
+    if (!copy_to_device(session, cabname, install_path, busy_func, busy_data, error)) {
       result = FALSE;
       goto exit;
     }
@@ -781,16 +781,16 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
   wide_program = wstr_from_utf8("wceload.exe");
   memset(&info, 0, sizeof(info));
 
-  rapi_res = CeCreateProcess(wide_program, NULL, 
+  rapi_res = IRAPISession_CeCreateProcess(session, wide_program, NULL, 
 			     NULL, NULL, false, 0,
 			     NULL, NULL, NULL, 
 			     &info);
   wstr_free_string(wide_program);
-  CeCloseHandle(info.hProcess);
-  CeCloseHandle(info.hThread);
+  IRAPISession_CeCloseHandle(session, info.hProcess);
+  IRAPISession_CeCloseHandle(session, info.hThread);
 
   if (!rapi_res) {
-    if (FAILED(hr = CeRapiGetError())) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -800,7 +800,7 @@ synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc busy_func, gpoi
       goto exit;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI,
@@ -830,8 +830,8 @@ exit:
   return result;
 }
 
-gboolean
-app_uninstall(const gchar *program, GError **error)
+static gboolean
+app_uninstall(IRAPISession *session, const gchar *program, GError **error)
 {
   xmlChar *config = NULL;
   LPWSTR config_w = NULL;
@@ -869,7 +869,7 @@ app_uninstall(const gchar *program, GError **error)
 
   config_w = wstr_from_utf8((gchar *)config);
   g_free(config);
-  hr = CeProcessConfig(config_w, flags, &reply_w);
+  hr = IRAPISession_CeProcessConfig(session, config_w, flags, &reply_w);
   wstr_free_string(config_w);
 
   if (SUCCEEDED(hr)) {
@@ -889,8 +889,8 @@ app_uninstall(const gchar *program, GError **error)
   return FALSE;
 }
 
-gboolean
-app_uninstall_legacy(const gchar *program, GError **error)
+static gboolean
+app_uninstall_legacy(IRAPISession *session, const gchar *program, GError **error)
 {
   HRESULT hr;
   DWORD last_error;
@@ -906,11 +906,11 @@ app_uninstall_legacy(const gchar *program, GError **error)
   wide_parameters = wstr_from_utf8(program);
   memset(&info, 0, sizeof(info));
 
-  result = CeCreateProcess(wide_command, wide_parameters,
+  result = IRAPISession_CeCreateProcess(session, wide_command, wide_parameters,
 			   NULL, NULL, FALSE, 0, NULL, NULL, NULL,
 			   &info);
-  CeCloseHandle(info.hProcess);
-  CeCloseHandle(info.hThread);
+  IRAPISession_CeCloseHandle(session, info.hProcess);
+  IRAPISession_CeCloseHandle(session, info.hThread);
   wstr_free_string(wide_command);
   wstr_free_string(wide_parameters);
   g_free(command);
@@ -918,7 +918,7 @@ app_uninstall_legacy(const gchar *program, GError **error)
   if (result)
     return TRUE;
 
-  if (FAILED(hr = CeRapiGetError())) {
+  if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -927,7 +927,7 @@ app_uninstall_legacy(const gchar *program, GError **error)
     return FALSE;
   }
 
-  last_error = CeGetLastError();
+  last_error = IRAPISession_CeGetLastError(session);
   g_set_error(error,
 	      SYNCE_APP_MAN_ERROR,
 	      SYNCE_APP_MAN_ERROR_RAPI,
@@ -937,7 +937,7 @@ app_uninstall_legacy(const gchar *program, GError **error)
 }
 
 gboolean
-synce_app_man_uninstall(const gchar *program, GError **error)
+synce_app_man_uninstall(IRAPISession *session, const gchar *program, GError **error)
 {
   CEOSVERSIONINFO version_info;
   HRESULT hr;
@@ -948,8 +948,8 @@ synce_app_man_uninstall(const gchar *program, GError **error)
   g_debug("%s: requested removal of program %s", G_STRFUNC, program);
 
   version_info.dwOSVersionInfoSize = sizeof(CEOSVERSIONINFO);
-  if (!CeGetVersionEx(&version_info)) {
-    if (FAILED(hr = CeRapiGetError())) {
+  if (!IRAPISession_CeGetVersionEx(session, &version_info)) {
+    if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
       g_set_error(error,
 		  SYNCE_APP_MAN_ERROR,
 		  SYNCE_APP_MAN_ERROR_RAPI_TERM,
@@ -958,7 +958,7 @@ synce_app_man_uninstall(const gchar *program, GError **error)
       return FALSE;
     }
 
-    last_error = CeGetLastError();
+    last_error = IRAPISession_CeGetLastError(session);
     g_set_error(error,
 		SYNCE_APP_MAN_ERROR,
 		SYNCE_APP_MAN_ERROR_RAPI,
@@ -968,9 +968,9 @@ synce_app_man_uninstall(const gchar *program, GError **error)
   }
 
   if ((version_info.dwMajorVersion < 5) || ((version_info.dwMajorVersion == 5) && (version_info.dwMinorVersion == 0))) {
-    return app_uninstall_legacy(program, error);
+    return app_uninstall_legacy(session, program, error);
   }
 
-  return app_uninstall(program, error);
+  return app_uninstall(session, program, error);
 }
 

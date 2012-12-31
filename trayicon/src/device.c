@@ -25,7 +25,7 @@ IN THE SOFTWARE.
 #endif
 
 #include <synce.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <glib/gi18n.h>
 #include <string.h>
 
@@ -64,7 +64,8 @@ struct _WmDevicePrivate {
 
   gchar *port;
 
-  RapiConnection *rapi_conn;
+  IRAPIDevice *rapi_dev;
+  IRAPISession *rapi_conn;
 
   gboolean disposed;
 };
@@ -121,66 +122,93 @@ wm_device_rapi_connect(WmDevice *self)
         }
 
         HRESULT hr;
-        RapiConnection *rapi_conn;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
 
         if (priv->rapi_conn)
                 return TRUE;
 
         g_debug("%s: Initialising device rapi connection", G_STRFUNC);
 
-        rapi_conn = rapi_connection_from_name(priv->name);
-        if (!rapi_conn) {
-                g_critical("%s: Failed to obtain rapi connection to %s", G_STRFUNC, priv->name);
-                return FALSE;
-        }
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  g_critical("%s: failed to initialise RAPI: %d: %s",
+		     G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
 
-        rapi_connection_select(rapi_conn);
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  g_critical("%s: failed to get connected devices: %d: %s",
+		     G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
 
-        hr = CeRapiInit();
-        if (FAILED(hr)) {
-                g_critical("%s: Failed to initialise rapi connection to %s: %d: %s", G_STRFUNC, priv->name, hr, synce_strerror(hr));
-                rapi_connection_destroy(rapi_conn);
-                return FALSE;
-        }
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    g_critical("%s: failure to get device info", G_STRFUNC);
+	    goto error_exit;
+	  }
+	  if (strcmp(priv->name, devinfo.bstrName) == 0)
+	    break;
+	}
 
-        priv->rapi_conn = rapi_conn;
+	if (FAILED(hr))
+	{
+	  g_critical("%s: Could not find device '%s' in RAPI: %08x: %s",
+		     G_STRFUNC, priv->name, hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto error_exit;
+	}
 
-        priv->device_name = get_device_name_via_rapi();
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  g_critical("%s: Could not create a session to device '%s': %08x: %s",
+		     G_STRFUNC, priv->name, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  g_critical("%s: Unable to initialize connection to device '%s': %08x: %s", 
+		     G_STRFUNC, priv->name, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
+
+        priv->rapi_conn = session;
+	priv->rapi_dev = device;
+
+        priv->device_name = get_device_name_via_rapi(priv->rapi_conn);
 
         if (!(priv->device_name)) {
-                CeRapiUninit();
-                rapi_connection_destroy(rapi_conn);
-                return FALSE;
+	  g_critical("%s: Unable to obtain device name for '%s' via RAPI", 
+		     G_STRFUNC, priv->name);
+	  goto error_exit;
         }
+
+	if (desktop) IRAPIDesktop_Release(desktop);
         return TRUE;
-}
 
-gboolean
-wm_device_rapi_select(WmDevice *self)
-{
-  if (!self) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return FALSE;
-  }
-  WmDevicePrivate *priv = WM_DEVICE_GET_PRIVATE (self);
+ error_exit:
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
 
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return FALSE;
-  }
-
-  if (priv->connection_status != DEVICE_STATUS_CONNECTED) {
-    g_warning("%s: device not fully connected", G_STRFUNC);
-    return FALSE;
-  }
-
-  if (priv->rapi_conn == NULL) {
-    g_warning("%s: device has no rapi connection", G_STRFUNC);
-    return FALSE;
-  }
-
-  rapi_connection_select(priv->rapi_conn);
-  return TRUE;
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
+	return FALSE;
 }
 
 uint16_t
@@ -651,11 +679,8 @@ wm_device_get_power_status_impl(WmDevice *self)
     return NULL;
   }
 
-  if (!wm_device_rapi_select(self))
-    return NULL;
-
   memset(&power, 0, sizeof(SYSTEM_POWER_STATUS_EX));
-  if (CeGetSystemPowerStatusEx(&power, false) &&
+  if (IRAPISession_CeGetSystemPowerStatusEx(priv->rapi_conn, &power, false) &&
       BATTERY_PERCENTAGE_UNKNOWN != power.BatteryLifePercent)
     {
       power_str = g_strdup_printf("%i%% (%s)", 
@@ -690,11 +715,8 @@ wm_device_get_store_status_impl(WmDevice *self)
     return NULL;
   }
 
-  if (!wm_device_rapi_select(self))
-    return NULL;
-
   memset(&store, 0, sizeof(store));
-  if (CeGetStoreInformation(&store) && store.dwStoreSize != 0)
+  if (IRAPISession_CeGetStoreInformation(priv->rapi_conn, &store) && store.dwStoreSize != 0)
     {
       store_str = g_strdup_printf(_("%i%% (%i megabytes)"), 
 				  100 * store.dwFreeSize / store.dwStoreSize,
@@ -896,7 +918,10 @@ wm_device_set_property (GObject      *obj,
     break;
   case PROP_RAPI_CONN:
     if (priv->rapi_conn != NULL)
-	rapi_connection_destroy (priv->rapi_conn);
+    {
+      IRAPISession_CeRapiUninit(priv->rapi_conn);
+      IRAPISession_Release(priv->rapi_conn);
+    }
     priv->rapi_conn = g_value_get_pointer (value);
     break;
 
@@ -920,9 +945,8 @@ wm_device_dispose (GObject *obj)
   /* unref other objects */
 
   if (priv->rapi_conn) {
-    rapi_connection_select(priv->rapi_conn);
-    CeRapiUninit();
-    rapi_connection_destroy(priv->rapi_conn);
+    IRAPISession_CeRapiUninit(priv->rapi_conn);
+    IRAPISession_Release(priv->rapi_conn);
   }
 
   if (G_OBJECT_CLASS (wm_device_parent_class)->dispose)

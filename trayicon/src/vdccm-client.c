@@ -33,7 +33,6 @@ IN THE SOFTWARE.
 #include <string.h>
 #include <glib.h>
 #include <synce.h>
-#include <rapi.h>
 
 #include "vdccm-client.h"
 #include "dccm-client-signals-marshal.h"

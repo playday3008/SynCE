@@ -28,7 +28,6 @@ IN THE SOFTWARE.
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
 #include <synce.h>
-#include <rapi.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>

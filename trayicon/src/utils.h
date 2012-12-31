@@ -20,8 +20,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
+#include <rapi2.h>
+#include <glib.h>
+
 void synce_error_dialog(const gchar *format, ...);
 void synce_warning_dialog(const gchar *format, ...);
 void synce_info_dialog(const gchar *format, ...);
 
-gchar *get_device_name_via_rapi();
+gchar *get_device_name_via_rapi(IRAPISession *session);

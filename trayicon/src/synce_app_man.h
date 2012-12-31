@@ -19,6 +19,8 @@
 #ifndef SYNCE_APP_MAN_H
 #define SYNCE_APP_MAN_H
 
+#include <rapi2.h>
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -36,13 +38,13 @@ GQuark synce_app_man_error_quark (void);
 typedef void (*SynceAppManBusyFunc) (gpointer user_data);
 
 gboolean
-synce_app_man_install(const gchar *filepath, SynceAppManBusyFunc func, gpointer busy_data, GError **error);
+synce_app_man_install(IRAPISession *session, const gchar *filepath, SynceAppManBusyFunc func, gpointer busy_data, GError **error);
 
 gboolean
-synce_app_man_uninstall(const gchar *program, GError **error);
+synce_app_man_uninstall(IRAPISession *session, const gchar *program, GError **error);
 
 gboolean
-synce_app_man_create_program_list(GList **list, SynceAppManBusyFunc func, gpointer busy_data, GError **error);
+synce_app_man_create_program_list(IRAPISession *session, GList **list, SynceAppManBusyFunc func, gpointer busy_data, GError **error);
 
 G_END_DECLS
 
